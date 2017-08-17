@@ -30,6 +30,7 @@ func Provider() terraform.ResourceProvider {
 
 		ResourcesMap: map[string]*schema.Resource{
 			"aviatrix_gateway": resourceAviatrixGateway(),
+			"aviatrix_tunnel" : resourceTunnel(),			
 		},
 
 		ConfigureFunc: aviatrixConfigure,

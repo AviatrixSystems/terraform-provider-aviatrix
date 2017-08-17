@@ -73,19 +73,13 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	gateway := &goaviatrix.Gateway{
-		CloudType:    d.Get("cloud_type").(int),
 		AccountName:  d.Get("account_name").(string),
 		GwName:       d.Get("gw_name").(string),
-		VpcID:        d.Get("vpc_id").(string),
-		VpcReg:       d.Get("vpc_reg").(string),
-		VpcSize:      d.Get("vpc_size").(string),
-		VpcNet:       d.Get("vpc_net").(string),
 	}
-	err := client.GetGateways(gateway)
+	_, err := client.GetGateway(gateway)
 	if err != nil {
 		return fmt.Errorf("Couldn't find Aviatrix Gateway: %s", err)
 	}
-	
 	return nil
 }
 
@@ -100,7 +94,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		VpcSize:      d.Get("vpc_size").(string),
 		VpcNet:       d.Get("vpc_net").(string),
 	}
-	
+
 	log.Printf("[INFO] Updating Aviatrix gateway: %#v", gateway)
 
 	err := client.UpdateGateway(gateway)
@@ -115,12 +109,7 @@ func resourceAviatrixGatewayDelete(d *schema.ResourceData, meta interface{}) err
 	client := meta.(*goaviatrix.Client)
 	gateway := &goaviatrix.Gateway{
 		CloudType:    d.Get("cloud_type").(int),
-		AccountName:  d.Get("account_name").(string),
 		GwName:       d.Get("gw_name").(string),
-		VpcID:        d.Get("vpc_id").(string),
-		VpcReg:       d.Get("vpc_reg").(string),
-		VpcSize:      d.Get("vpc_size").(string),
-		VpcNet:       d.Get("vpc_net").(string),
 	}
 	
 	log.Printf("[INFO] Updating Aviatrix gateway: %#v", gateway)

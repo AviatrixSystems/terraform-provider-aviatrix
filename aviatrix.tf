@@ -4,12 +4,7 @@ provider "aviatrix" {
   password = "av1@Tr1x"
 }
 
-resource "aviatrix_gateway" "test_gateway1" {
-  cloud_type = 1
-  account_name = "devops"
-  gw_name = "avtxgw1"
-  vpc_id = "vpc-abcdef"
-  vpc_reg = "us-west-1"
-  vpc_size = "t2.micro"
-  vpc_net = "10.0.0.0/24"
+resource "aviatrix_tunnel" "test_tunnel1" {
+  vpc_name1 = "avtxgw1"
+  vpc_name2 = "avtxgw2"
 }
