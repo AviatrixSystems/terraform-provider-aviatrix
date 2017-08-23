@@ -1,7 +1,7 @@
 provider "aviatrix" {
   controller_ip = "13.126.166.7"
   username = "rakesh"
-  password = "av1@Tr1x"
+  password = "password"
 }
 
 resource "aviatrix_gateway" "test_gateway2" {

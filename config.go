@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"log"
 	"net/http"
-	"github.com/go-aviatrix/goaviatrix"
+	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 )
 
 type Config struct {

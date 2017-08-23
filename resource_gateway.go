@@ -3,7 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
-	"github.com/go-aviatrix/goaviatrix"
+	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 

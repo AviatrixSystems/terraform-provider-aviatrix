@@ -3,8 +3,8 @@ package aviatrix
 import (
 	"fmt"
 	"log"
-	"github.com/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 )
 
 func resourceTunnel() *schema.Resource {
