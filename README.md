@@ -1,25 +1,27 @@
-# terraform-provider-aviatrix
-
+Terraform Provider
+==================
 A basic [Terraform](http://terraform.io) provider for Aviatrix.
 
-## To observe the bug
-```
-# clone the repo to your $GOPATH:
-git clone https://github.com/rakesh568/terraform-provider-aviatrix
+Requirements
+------------
 
-# activate the provider by adding the following to `~/.terraformrc`
+-	[Terraform](https://www.terraform.io/downloads.html) 0.10.x
+-	[Go](https://golang.org/doc/install) 1.8 (to build the provider plugin)
+
+Using Aviatrix Provider
+---------------------
+
+Clone repository to your $GOPATH: `git clone https://github.com/rakesh568/terraform-provider-aviatrix`
+
+Activate the provider by adding the following to `~/.terraformrc`
+```sh
 providers {
   "aviatrix" = "/YOUR_GOPATH/bin/terraform-provider-aviatrix"
 }
-
-# install the aviatrix provider
+```
+Install the aviatrix provider
+------------------------------
+```sh
 cd terraform-provider-aviatrix
 make install
-
-# install the aviatrix provider
-cd terraform-provider-aviatrix
-make install
-
-# observe that the following works as expected:
-terraform plan
 ```
