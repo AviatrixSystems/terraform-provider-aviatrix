@@ -1,4 +1,4 @@
-all: install
+all: build
 
-install:
+build:
 	cd bin/terraform-provider-aviatrix; go install
