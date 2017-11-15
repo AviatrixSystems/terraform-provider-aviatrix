@@ -106,12 +106,12 @@ func resourceAviatrixGatewayDelete(d *schema.ResourceData, meta interface{}) err
 		CloudType:    d.Get("cloud_type").(int),
 		GwName:       d.Get("gw_name").(string),
 	}
-	
-	log.Printf("[INFO] Updating Aviatrix gateway: %#v", gateway)
+
+	log.Printf("[INFO] Deleting Aviatrix gateway: %#v", gateway)
 
 	err := client.DeleteGateway(gateway)
 	if err != nil {
-		return fmt.Errorf("Failed to update Aviatrix Gateway: %s", err)
+		return fmt.Errorf("Failed to delete Aviatrix Gateway: %s", err)
 	}
 	return nil
 }

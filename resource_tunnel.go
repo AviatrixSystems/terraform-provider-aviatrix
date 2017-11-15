@@ -107,12 +107,12 @@ func resourceTunnelDelete(d *schema.ResourceData, meta interface{}) error {
 		VpcName1:    d.Get("vpc_name1").(string),
 		VpcName2:    d.Get("vpc_name2").(string),
 	}
-	
-	log.Printf("[INFO] Updating Aviatrix tunnel: %#v", tunnel)
+
+	log.Printf("[INFO] Deleting Aviatrix tunnel: %#v", tunnel)
 
 	err := client.DeleteTunnel(tunnel)
 	if err != nil {
-		return fmt.Errorf("Failed to update Aviatrix Tunnel: %s", err)
+		return fmt.Errorf("Failed to delete Aviatrix Tunnel: %s", err)
 	}
 	return nil
 }

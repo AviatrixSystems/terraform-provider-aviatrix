@@ -1,15 +1,15 @@
 provider "aviatrix" {
-  controller_ip = "13.126.166.7"
-  username = "rakesh"
+  controller_ip = "1.2.3.4"
+  username = "admin"
   password = "password"
 }
 
-resource "aviatrix_gateway" "test_gateway2" {
+resource "aviatrix_account" "test_account" {
+  account_name = "myacc"
+  account_password = "P@55w0rd"
+  account_email = "support@aviatrix.com"
   cloud_type = 1
-  account_name = "devops"
-  gw_name = "avtxgw3"
-  vpc_id = "vpc-0d7b3664"
-  vpc_reg = "ap-south-1"
-  vpc_size = "t2.micro"
-  vpc_net = "avtxgw3_sub1~~10.3.0.0/24~~ap-south-1a"
+  aws_account_number = "123456789"
+  aws_access_key = "ABCDEFGHIJKL"
+  aws_secret_key = "ABCDEFGHIJKLabcdefghijkl"
 }
