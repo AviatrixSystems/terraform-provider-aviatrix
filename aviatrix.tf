@@ -4,12 +4,8 @@ provider "aviatrix" {
   password = "password"
 }
 
-resource "aviatrix_account" "test_account" {
-  account_name = "myacc"
-  account_password = "P@55w0rd"
-  account_email = "support@aviatrix.com"
-  cloud_type = 1
-  aws_account_number = "123456789"
-  aws_access_key = "ABCDEFGHIJKL"
-  aws_secret_key = "ABCDEFGHIJKLabcdefghijkl"
+resource "aviatrix_transpeer" "test_transpeer" {
+  source = "avtxuseastgw1"
+  nexthop = "avtxuseastgw2"
+  reachable_cidr = "10.152.0.0/16"
 }

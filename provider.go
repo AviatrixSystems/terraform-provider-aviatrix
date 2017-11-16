@@ -32,6 +32,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_account": resourceAccount(),
 			"aviatrix_gateway": resourceAviatrixGateway(),
 			"aviatrix_tunnel" : resourceTunnel(),
+			"aviatrix_transpeer" : resourceTranspeer(),
 		},
 
 		ConfigureFunc: aviatrixConfigure,
