@@ -39,6 +39,14 @@ func resourceAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional:    true,
 			},
+			"aws_role_arn": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional:    true,
+			},
+			"aws_role_ec2": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional:    true,
+			},
 			"aws_access_key": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional:    true,
@@ -58,7 +66,10 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 		AccountPassword:   	d.Get("account_password").(string),
 		AccountEmail:   	d.Get("account_email").(string),
 		CloudType:   		d.Get("cloud_type").(int),
-		AwsAccountNumber:   d.Get("aws_account_number").(string),
+		AwsAccountNumber:       d.Get("aws_account_number").(string),
+		AwsIam:                 d.Get("aws_iam").(string),
+		AwsRoleArn:             d.Get("aws_role_arn").(string),
+		AwsRoleEc2:             d.Get("aws_role_ec2").(string),
 		AwsAccessKey:   	d.Get("aws_access_key").(string),
 		AwsSecretKey:   	d.Get("aws_secret_key").(string),
 	}
