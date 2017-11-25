@@ -24,9 +24,12 @@ func (c *Config) Client() (*goaviatrix.Client, error) {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-	client,_ := goaviatrix.NewClient(c.Username, c.Password, c.ControllerIP, &http.Client{Transport: tr})
+	client, err := goaviatrix.NewClient(c.Username, c.Password, c.ControllerIP, &http.Client{Transport: tr})
 
 	log.Printf("[INFO] Aviatrix Client configured for use")
 
-	return client, nil
+	if client == nil || err != nil {
+		log.Printf("[ERROR] unable to create client: %s", err)
+	}
+	return client, err
 }

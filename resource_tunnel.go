@@ -60,8 +60,7 @@ func resourceTunnelCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Failed to create Aviatrix Tunnel: %s", err)
 	}
-	d.SetId(tunnel.VpcName1+tunnel.VpcName2)
-	//return nil
+	d.SetId(tunnel.VpcName1 + "<->" + tunnel.VpcName2)
 	return resourceTunnelRead(d, meta)
 }
 
@@ -81,6 +80,7 @@ func resourceTunnelRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("peering_hastatus", tun.PeeringHaStatus)
 	d.Set("cluster", tun.Cluster)
 	d.Set("peering_link", tun.PeeringLink)
+	d.SetId(tun.VpcName1 + "<->" + tun.VpcName2)
 	return nil
 }
 
@@ -97,7 +97,7 @@ func resourceTunnelUpdate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Failed to update Aviatrix Tunnel: %s", err)
 	}
-	d.SetId(tunnel.VpcName1+tunnel.VpcName2)
+	d.SetId(tunnel.VpcName1 + "<->" + tunnel.VpcName2)
 	return resourceTunnelRead(d, meta)
 }
 
