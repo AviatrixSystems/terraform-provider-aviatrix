@@ -6,7 +6,7 @@ Requirements
 ------------
 
 -	[Terraform](https://www.terraform.io/downloads.html) 0.10.x
--	[Go](https://golang.org/doc/install) 1.8 (to build the provider plugin)
+-	[Go](https://golang.org/doc/install) 1.8 (This will be used to build the provider plugin. Check this [doc](https://github.com/golang/go/wiki/SettingGOPATH) to setup GOPATH)
 
 Building The Provider
 ---------------------
@@ -26,7 +26,7 @@ $ make build
 ```
 
 Using Aviatrix Provider
----------------------
+-----------------------
 
 Activate the provider by adding the following to `~/.terraformrc`
 ```sh
@@ -34,3 +34,6 @@ providers {
   "aviatrix" = "/YOUR_GOPATH/bin/terraform-provider-aviatrix"
 }
 ```
+Examples
+--------
+Check examples [here](http://docs.aviatrix.com/HowTos/aviatrix_terraform.html).
