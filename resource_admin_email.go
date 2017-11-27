@@ -26,14 +26,14 @@ func resourceAdminEmail() *schema.Resource {
 
 func resourceAdminEmailCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	admin_email := d.Get("admin_email").(string)
-	log.Printf("[INFO] Creating Aviatrix Admin Email: %s", admin_email)
+	adminEmail := d.Get("admin_email").(string)
+	log.Printf("[INFO] Creating Aviatrix Admin Email: %s", adminEmail)
 
-	err := client.SetAdminEmail(admin_email)
+	err := client.SetAdminEmail(adminEmail)
 	if err != nil {
 		return fmt.Errorf("Failed to set Aviatrix Admin Email: %s", err)
 	}
-	d.SetId(admin_email)
+	d.SetId(adminEmail)
 
 	return nil
 }
@@ -42,11 +42,11 @@ func resourceAdminEmailRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	log.Printf("[INFO] Getting Aviatrix Admin Email")
 
-	admin_email, err := client.GetAdminEmail(client.Username, client.Password)
+	adminEmail, err := client.GetAdminEmail(client.Username, client.Password)
 	if err != nil {
 		return fmt.Errorf("Failed to get Aviatrix Admin Email: %s", err)
 	}
-	d.SetId(admin_email)
+	d.SetId(adminEmail)
 
 	return nil
 }

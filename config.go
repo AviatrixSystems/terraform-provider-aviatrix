@@ -7,19 +7,20 @@ import (
 	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 )
 
+// Config contains the configuration for the Aviatrix provider
+// (Username, Password, and Controller IP)
 type Config struct {
 	Username string
 	Password string
 	ControllerIP      string
 }
 
-type AviatrixClient struct {
-	AccessKey  string
-	SecretKey  string
-	Host       string
-	HttpClient *http.Client
-}
-
+// Client gets the Aviatrix client to access the Controller
+// Arguments:
+//    None
+// Returns:
+//    the aviatrix client (from goaviatrix)
+//    error (if any)
 func (c *Config) Client() (*goaviatrix.Client, error) {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},

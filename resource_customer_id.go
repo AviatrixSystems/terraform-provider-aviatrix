@@ -27,14 +27,14 @@ func resourceCustomerID() *schema.Resource {
 
 func resourceCustomerIDCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	customer_id := d.Get("customer_id").(string)
-	log.Printf("[INFO] Creating Aviatrix Customer ID: %s", customer_id)
+	customerID := d.Get("customer_id").(string)
+	log.Printf("[INFO] Creating Aviatrix Customer ID: %s", customerID)
 
-	_, err := client.SetCustomerID(customer_id)
+	_, err := client.SetCustomerID(customerID)
 	if err != nil {
 		return fmt.Errorf("Failed to set Aviatrix Customer ID: %s", err)
 	}
-	d.SetId(customer_id)
+	d.SetId(customerID)
 
 	return nil
 }
@@ -43,12 +43,12 @@ func resourceCustomerIDRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	log.Printf("[INFO] Getting Aviatrix Customer ID")
 
-	_, customer_id, err := client.GetCustomerID()
+	_, customerID, err := client.GetCustomerID()
 	if err != nil {
 		return fmt.Errorf("Failed to get Aviatrix Customer ID: %s", err)
 	}
-	d.SetId(customer_id)
-	log.Printf("[DEBUG] Customer ID: %s", customer_id)
+	d.SetId(customerID)
+	log.Printf("[DEBUG] Customer ID: %s", customerID)
 	return nil
 }
 
