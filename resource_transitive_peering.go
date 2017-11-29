@@ -69,7 +69,7 @@ func resourceTranspeerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTranspeerUpdate(d *schema.ResourceData, meta interface{}) error {
-	return fmt.Errorf("Aviatrix Transitive peering cannot be updated. Delete and create new one.")
+	return fmt.Errorf("Aviatrix transitive peering cannot be updated - delete and create new one")
 }
 
 func resourceTranspeerDelete(d *schema.ResourceData, meta interface{}) error {

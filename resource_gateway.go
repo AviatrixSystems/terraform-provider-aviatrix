@@ -76,9 +76,17 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		AccountName:  d.Get("account_name").(string),
 		GwName:       d.Get("gw_name").(string),
 	}
-	_, err := client.GetGateway(gateway)
+	gw, err := client.GetGateway(gateway)
 	if err != nil {
 		return fmt.Errorf("Couldn't find Aviatrix Gateway: %s", err)
+	}
+	if (gw != nil) {
+		d.Set("account_name", gw.AccountName)
+		d.Set("gw_name", gw.GwName)
+		d.Set("vpc_id", gw.VpcID)
+		d.Set("vpc_reg", gw.VpcRegion)
+		d.Set("vpc_size", gw.VpcSize)
+		d.Set("vpc_net", gw.VpcNet)
 	}
 	return nil
 }
