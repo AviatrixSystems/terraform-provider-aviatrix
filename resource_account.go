@@ -74,13 +74,13 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 		AwsSecretKey:   	d.Get("aws_secret_key").(string),
 	}
 
+	d.SetId(account.AccountName)
 	log.Printf("[INFO] Creating Aviatrix account: %#v", account)
 
 	err := client.CreateAccount(account)
 	if err != nil {
 		return fmt.Errorf("Failed to create Aviatrix Account: %s", err)
 	}
-	d.SetId(account.AccountName)
 	//return nil
 	return resourceAccountRead(d, meta)
 }
@@ -90,18 +90,23 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	account := &goaviatrix.Account{
 		AccountName:   		d.Get("account_name").(string),
 	}
+	log.Printf("[INFO] Looking for Aviatrix account: %#v", account)
 	acc, err := client.GetAccount(account)
 	if err != nil {
-		return fmt.Errorf("Couldn't find Aviatrix Account: %s", err)
+		return fmt.Errorf("Aviatrix Account: %s", err)
 	}
 
-	d.Set("account_name", acc.AccountName)
-	d.Set("account_email", acc.AccountEmail)
-	d.Set("cloud_type", acc.CloudType)
-	d.Set("aws_account_number", acc.AwsAccountNumber)
-	d.Set("aws_access_key", acc.AwsAccessKey)
-	d.Set("aws_secret_key", acc.AwsSecretKey)
-
+	if acc != nil {
+		d.Set("account_name", acc.AccountName)
+		d.Set("account_email", acc.AccountEmail)
+		d.Set("cloud_type", acc.CloudType)
+		d.Set("aws_account_number", acc.AwsAccountNumber)
+		d.Set("aws_access_key", acc.AwsAccessKey)
+		d.Set("aws_secret_key", acc.AwsSecretKey)
+		d.SetId(acc.AccountName)
+	} else {
+		d.SetId("")
+	}
 	return nil
 }
 

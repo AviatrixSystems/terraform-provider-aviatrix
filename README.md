@@ -11,17 +11,17 @@ Requirements
 Building The Provider
 ---------------------
 
-Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provider-$PROVIDER_NAME`
+Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provider-aviatrix`
 
 ```sh
 $ mkdir -p $GOPATH/src/github.com/terraform-providers; cd $GOPATH/src/github.com/terraform-providers
-$ git clone git@github.com:terraform-providers/terraform-provider-$PROVIDER_NAME
+$ git clone git@github.com:AviatrixSystems/terraform-provider-aviatrix
 ```
 
 Enter the provider directory and build the provider
 
 ```sh
-$ cd $GOPATH/src/github.com/terraform-providers/terraform-provider-$PROVIDER_NAME
+$ cd $GOPATH/src/github.com/terraform-providers/terraform-provider-aviatrix
 $ make build
 ```
 
@@ -31,7 +31,7 @@ Using Aviatrix Provider
 Activate the provider by adding the following to `~/.terraformrc`
 ```sh
 providers {
-  "aviatrix" = "/YOUR_GOPATH/bin/terraform-provider-aviatrix"
+  "aviatrix" = "$YOUR_GOPATH/bin/terraform-provider-aviatrix"
 }
 ```
 Examples
