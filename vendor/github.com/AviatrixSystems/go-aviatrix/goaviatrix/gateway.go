@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"encoding/json"
 	"errors"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // Gateway simple struct to hold gateway details
@@ -80,7 +79,7 @@ type Gateway struct {
 	TunnelType              string `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
 	VendorName              string `form:"vendor_name,omitempty" json:"vendor_name,omitempty"`
 	VpcID                   string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	VpcNet                  string `form:"vpc_net,omitempty" json:"vpc_cidr,omitempty"`
+	VpcNet                  string `form:"vpc_net,omitempty" json:"vpc_net,omitempty"`
 	VpcRegion               string `form:"vpc_reg,omitempty" json:"vpc_region,omitempty"`
 	VpcSize                 string `form:"vpc_size,omitempty" json:"vpc_size,omitempty"`
 	VpcSplunkIPPort         string `form:"vpc_splunk_ip_port,omitempty" json:"vpc_splunk_ip_port,omitempty"`
@@ -124,7 +123,6 @@ func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	spew.Dump(data)
 	if(!data.Return){
 		return nil, errors.New(data.Reason)
 	}

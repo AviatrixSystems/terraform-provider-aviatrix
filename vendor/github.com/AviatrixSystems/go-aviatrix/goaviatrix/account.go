@@ -22,9 +22,9 @@ type Account struct {
 	AwsRoleEc2              		string `form:"aws_role_ec2,omitempty" json:"aws_role_ec2,omitempty"`
 	AzureSubscriptionId     		string `form:"azure_subscription_id,omitempty" json:"azure_subscription_id,omitempty"`
 	ArmSubscriptionId       		string `form:"arm_subscription_id,omitempty" json:"arm_subscription_id,omitempty"`
-	ArmApplicationEndpoint  		string `form:"arm_application_endpoint,omitempty" json:"arm_application_endpoint,omitempty"`
-	ArmApplicationClientId      	string `form:"arm_application_client_id,omitempty" json:"arm_application_client_id,omitempty"`
-	ArmApplicationClientSecret  	string `form:"arm_application_client_secret,omitempty" json:"arm_application_client_secret,omitempty"`
+	ArmApplicationEndpoint  		string `form:"arm_application_endpoint,omitempty" json:"arm_ad_tenant_id,omitempty"`
+	ArmApplicationClientId      	string `form:"arm_application_client_id,omitempty" json:"arm_ad_client_id,omitempty"`
+	ArmApplicationClientSecret  	string `form:"arm_application_client_secret,omitempty" json:"arm_ad_client_secret,omitempty"`
 	AwsgovAccountNumber       		string `form:"awsgov_account_number,omitempty" json:"awsgov_account_number,omitempty"`
 	AwsgovAccessKey       			string `form:"awsgov_access_key,omitempty" json:"awsgov_access_key,omitempty"`
 	AwsgovSecretKey       			string `form:"awsgov_secret_key,omitempty" json:"awsgov_secret_key,omitempty"`
