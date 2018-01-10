@@ -5,9 +5,9 @@
 
 # Edit to enter your controller's IP, username and password to login with.
 provider "aviatrix" {
-  controller_ip = "w.x.y.z"
+  controller_ip = "52.66.90.40"
   username = "admin"
-  password = "Aviatrix123"
+  password = "Aviatrix123%23"
 }
 
 # Increase count default value to add more VPCs and subnets to launch more gateways together.
