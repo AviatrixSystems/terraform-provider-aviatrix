@@ -34,6 +34,9 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_gateway":     resourceAviatrixGateway(),
 			"aviatrix_tunnel":      resourceTunnel(),
 			"aviatrix_transpeer":   resourceTranspeer(),
+			"aviatrix_transit_vpc": resourceAviatrixTransitVpc(),
+			"aviatrix_spoke_vpc":   resourceAviatrixSpokeVpc(),
+			"aviatrix_vgw_conn":    resourceAviatrixVGWConn(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"aviatrix_caller_identity": dataSourceAviatrixCallerIdentity(),

@@ -81,7 +81,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Couldn't find Aviatrix Gateway: %s", err)
 	}
 	log.Printf("[TRACE] reading gateway %s: %#v",
-		d.Get("gw_name").(string), gw);
+		d.Get("gw_name").(string), gw)
 	if gw != nil {
 		d.Set("account_name", gw.AccountName)
 		d.Set("gw_name", gw.GwName)
@@ -106,7 +106,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Failed to update Aviatrix Gateway: %s", err)
 	}
 	d.SetId(gateway.GwName)
-	return nil;
+	return nil
 }
 
 func resourceAviatrixGatewayDelete(d *schema.ResourceData, meta interface{}) error {
