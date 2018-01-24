@@ -33,7 +33,7 @@ func resourceAviatrixVGWConn() *schema.Resource {
 			},
 			"bgp_local_as_num": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"enable_ha": &schema.Schema{
 				Type:     schema.TypeString,
