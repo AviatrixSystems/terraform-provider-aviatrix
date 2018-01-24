@@ -165,7 +165,7 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 			gateway.GwName += "-hagw"
 			err := client.DeleteGateway(gateway)
 			if err != nil {
-				return fmt.Errorf("Failed to delete Aviatrix SpokeVpc: %s", err)
+				return fmt.Errorf("Failed to delete Aviatrix SpokeVpc HA gateway: %s", err)
 			}
 		} else {
 			//HA subnet has been modified. Delete older HA GW,
@@ -173,14 +173,14 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 			gateway.GwName += "-hagw"
 			err := client.DeleteGateway(gateway)
 			if err != nil {
-				return fmt.Errorf("Failed to delete Aviatrix SpokeVpc: %s", err)
+				return fmt.Errorf("Failed to delete Aviatrix SpokeVpc HA gateway: %s", err)
 			}
 
 			gateway.GwName = d.Get("gw_name").(string)
 			//New configuration to enable HA
 			ha_err := client.EnableHaSpokeVpc(ha_gateway)
 			if ha_err != nil {
-				return fmt.Errorf("Failed to enable1 HA Aviatrix SpokeVpc: %s", err)
+				return fmt.Errorf("Failed to enable HA Aviatrix SpokeVpc: %s", err)
 			}
 		}
 		d.SetPartial("ha_subnet")
@@ -252,7 +252,7 @@ func resourceAviatrixSpokeVpcDelete(d *schema.ResourceData, meta interface{}) er
 		gateway.GwName += "-hagw"
 		err := client.DeleteGateway(gateway)
 		if err != nil {
-			return fmt.Errorf("Failed to delete Aviatrix SpokeVpc: %s", err)
+			return fmt.Errorf("Failed to delete Aviatrix SpokeVpc HA gateway: %s", err)
 		}
 	}
 	gateway.GwName = d.Get("gw_name").(string)

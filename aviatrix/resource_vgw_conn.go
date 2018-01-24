@@ -95,7 +95,7 @@ func resourceAviatrixVGWConnDelete(d *schema.ResourceData, meta interface{}) err
 	client := meta.(*goaviatrix.Client)
 	vgw_conn := &goaviatrix.VGWConn{
 		ConnName: d.Get("conn_name").(string),
-		GwName:   d.Get("gw_name").(string),
+		VPCId:    d.Get("vpc_id").(string),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix vgw_conn: %#v", vgw_conn)

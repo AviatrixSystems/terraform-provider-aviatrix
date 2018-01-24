@@ -107,7 +107,7 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 	if gw != nil {
 		d.Set("account_name", gw.AccountName)
 		d.Set("gw_name", gw.GwName)
-		d.Set("vpc_id", gw.VpcID)
+		//d.Set("vpc_id", gw.VpcID)
 		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("vpc_size", gw.VpcSize)
 	}
@@ -150,7 +150,7 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 			gateway.GwName += "-hagw"
 			err := client.DeleteGateway(gateway)
 			if err != nil {
-				return fmt.Errorf("Failed to delete Aviatrix TransitVpc: %s", err)
+				return fmt.Errorf("Failed to delete Aviatrix TransitVpc HA gateway: %s", err)
 			}
 		} else {
 			//HA subnet has been modified. Delete older HA GW,
@@ -158,14 +158,14 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 			gateway.GwName += "-hagw"
 			err := client.DeleteGateway(gateway)
 			if err != nil {
-				return fmt.Errorf("Failed to delete Aviatrix TransitVpc: %s", err)
+				return fmt.Errorf("Failed to delete Aviatrix TransitVpc HA gateway: %s", err)
 			}
 
 			gateway.GwName = d.Get("gw_name").(string)
 			//New configuration to enable HA
 			ha_err := client.EnableHaTransitVpc(ha_gateway)
 			if ha_err != nil {
-				return fmt.Errorf("Failed to enable1 HA Aviatrix TransitVpc: %s", err)
+				return fmt.Errorf("Failed to enable HA Aviatrix TransitVpc: %s", err)
 			}
 		}
 		d.SetPartial("ha_subnet")
@@ -189,7 +189,7 @@ func resourceAviatrixTransitVpcDelete(d *schema.ResourceData, meta interface{}) 
 		gateway.GwName += "-hagw"
 		err := client.DeleteGateway(gateway)
 		if err != nil {
-			return fmt.Errorf("Failed to delete Aviatrix TransitVpc: %s", err)
+			return fmt.Errorf("Failed to delete Aviatrix TransitVpc HA gateway: %s", err)
 		}
 	}
 	gateway.GwName = d.Get("gw_name").(string)
