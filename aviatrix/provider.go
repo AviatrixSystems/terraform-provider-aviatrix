@@ -37,6 +37,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_transit_vpc": resourceAviatrixTransitVpc(),
 			"aviatrix_spoke_vpc":   resourceAviatrixSpokeVpc(),
 			"aviatrix_vgw_conn":    resourceAviatrixVGWConn(),
+			"aviatrix_upgrade":     resourceAviatrixUpgrade(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"aviatrix_caller_identity": dataSourceAviatrixCallerIdentity(),
