@@ -68,24 +68,22 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		DnsServer:   d.Get("dns_server").(string),
 	}
 
-	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)
+	log.Printf("[INFO] Creating Aviatrix TransitVpc: %#v", gateway)
 
 	err := client.LaunchTransitVpc(gateway)
 	if err != nil {
 		return fmt.Errorf("Failed to create Aviatrix TransitVpc: %s", err)
 	}
-	if ha_subnet := d.Get("ha_subnet").(string); ha_subnet == "" {
-		//No HA config, just return
-		return nil
-	}
-
-	ha_gateway := &goaviatrix.TransitVpc{
-		GwName:   d.Get("gw_name").(string),
-		HASubnet: d.Get("ha_subnet").(string),
-	}
-	err = client.EnableHaTransitVpc(ha_gateway)
-	if err != nil {
-		return fmt.Errorf("Failed to enable2 HA Aviatrix TransitVpc: %s", err)
+	if ha_subnet := d.Get("ha_subnet").(string); ha_subnet != "" {
+		//Enable HA
+		ha_gateway := &goaviatrix.TransitVpc{
+			GwName:   d.Get("gw_name").(string),
+			HASubnet: d.Get("ha_subnet").(string),
+		}
+		err = client.EnableHaTransitVpc(ha_gateway)
+		if err != nil {
+			return fmt.Errorf("Failed to enable2 HA Aviatrix TransitVpc: %s", err)
+		}
 	}
 	d.SetId(gateway.GwName)
 	return nil
@@ -120,7 +118,7 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string),
 	}
-	log.Printf("[INFO] Updating Aviatrix gateway: %#v", gateway)
+	log.Printf("[INFO] Updating Aviatrix TransitVpc: %#v", gateway)
 
 	d.Partial(true)
 
@@ -181,7 +179,7 @@ func resourceAviatrixTransitVpcDelete(d *schema.ResourceData, meta interface{}) 
 		GwName:    d.Get("gw_name").(string),
 	}
 
-	log.Printf("[INFO] Deleting Aviatrix gateway: %#v", gateway)
+	log.Printf("[INFO] Deleting Aviatrix TransitVpc: %#v", gateway)
 
 	//If HA is enabled, delete HA GW first.
 	if ha_subnet := d.Get("ha_subnet").(string); ha_subnet != "" {

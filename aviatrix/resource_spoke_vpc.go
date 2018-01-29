@@ -85,17 +85,16 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		return fmt.Errorf("Failed to create Aviatrix Spoke VPC: %s", err)
 	}
-	if ha_subnet := d.Get("ha_subnet").(string); ha_subnet == "" {
-		//No HA config, just return
-		return nil
-	}
-	ha_gateway := &goaviatrix.SpokeVpc{
-		GwName:   d.Get("gw_name").(string),
-		HASubnet: d.Get("ha_subnet").(string),
-	}
-	err = client.EnableHaSpokeVpc(ha_gateway)
-	if err != nil {
-		return fmt.Errorf("Failed to enable2 HA Aviatrix TransitVpc: %s", err)
+	if ha_subnet := d.Get("ha_subnet").(string); ha_subnet != "" {
+		//Enable HA
+		ha_gateway := &goaviatrix.SpokeVpc{
+			GwName:   d.Get("gw_name").(string),
+			HASubnet: d.Get("ha_subnet").(string),
+		}
+		err = client.EnableHaSpokeVpc(ha_gateway)
+		if err != nil {
+			return fmt.Errorf("Failed to enable HA Aviatrix TransitVpc: %s", err)
+		}
 	}
 
 	if transit_gw := d.Get("transit_gw").(string); transit_gw != "" {
@@ -233,7 +232,7 @@ func resourceAviatrixSpokeVpcDelete(d *schema.ResourceData, meta interface{}) er
 		GwName:    d.Get("gw_name").(string),
 	}
 
-	log.Printf("[INFO] Deleting Aviatrix gateway: %#v", gateway)
+	log.Printf("[INFO] Deleting Aviatrix Spoke VPC: %#v", gateway)
 
 	if transit_gw := d.Get("transit_gw").(string); transit_gw != "" {
 		spoke_vpc := &goaviatrix.SpokeVpc{
