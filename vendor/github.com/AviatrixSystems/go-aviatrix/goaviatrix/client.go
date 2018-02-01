@@ -212,7 +212,7 @@ func (c *Client) Request(verb string, path string, i interface{}) (*http.Respons
 	var err error
 	if (i != nil) {
 		buf := new(bytes.Buffer)
-		if err = form.NewEncoder(buf).KeepZeros(true).DelimitWith('|').Encode(i); err != nil {
+		if err = form.NewEncoder(buf).DelimitWith('|').Encode(i); err != nil {
 			return nil, err
 		}
 		body := buf.String()
