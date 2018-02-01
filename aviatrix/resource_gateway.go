@@ -43,6 +43,10 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"public_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -66,8 +70,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Failed to create Aviatrix Gateway: %s", err)
 	}
 	d.SetId(gateway.GwName)
-	return nil
-	//return resourceAviatrixGatewayRead(d, meta)
+	return resourceAviatrixGatewayRead(d, meta)
 }
 
 func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error {
@@ -83,11 +86,8 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[TRACE] reading gateway %s: %#v",
 		d.Get("gw_name").(string), gw)
 	if gw != nil {
-		d.Set("account_name", gw.AccountName)
-		d.Set("gw_name", gw.GwName)
-		d.Set("vpc_id", gw.VpcID)
-		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("vpc_size", gw.VpcSize)
+		d.Set("public_ip", gw.PublicIP)
 	}
 	return nil
 }
