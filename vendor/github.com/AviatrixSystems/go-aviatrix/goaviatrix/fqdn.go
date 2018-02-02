@@ -14,7 +14,7 @@ type FQDN struct {
 	FQDNStatus              string `form:"status,omitempty" json:"status,omitempty"`
 	FQDNMode                string `form:"wb_mode,omitempty" json:"wb_mode,omitempty"`
 	GwList                  []string `form:"gw_name,omitempty" json:"members,omitempty"`
-	DomainList              []string `form:"domain_names[]"`
+	DomainList              []string `form:"domain_names[],omitempty"`
 }
 
 type ResultListResp struct {
@@ -92,10 +92,6 @@ func (c *Client) UpdateFQDNMode(fqdn *FQDN) (error) {
 func (c *Client) UpdateDomains(fqdn *FQDN) (error) {
 	fqdn.CID=c.CID
 	fqdn.Action="update_nfq_tag_whitelist"
-	if len(fqdn.DomainList) == 0 {
-		fqdn.DomainList = []string{}
-	}
-
 	resp,err := c.Post(c.baseURL, fqdn)
 		if err != nil {
 		return err
@@ -199,7 +195,7 @@ func (c *Client) ListDomains(fqdn *FQDN) (*FQDN, error) {
 }
 
 func (c *Client) ListGws(fqdn *FQDN) (*FQDN, error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_gateway_nfq_tag&tag_name=%s&attach=no", c.CID, fqdn.FQDNTag)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_gateway_nfq_tag&tag_name=%s", c.CID, fqdn.FQDNTag)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return nil, err

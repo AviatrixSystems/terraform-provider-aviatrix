@@ -133,7 +133,9 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 	//Update Domain list
 	if d.HasChange("domain_list") {
-		fqdn.DomainList = expandStringList(d.Get("domain_list").([]interface{}))
+		if _, ok := d.GetOk("domain_list"); ok {
+			fqdn.DomainList = expandStringList(d.Get("domain_list").([]interface{}))
+		}
 		err := client.UpdateDomains(fqdn)
 		if err != nil {
 			return fmt.Errorf("Failed to add domain : %s", err)
