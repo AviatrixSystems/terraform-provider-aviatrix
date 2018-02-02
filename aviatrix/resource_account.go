@@ -156,9 +156,16 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 		oldpass, newpass := d.GetChange("account_password")
 		err := client.UpdateAccountUser("password", account.AccountName, oldpass.(string), newpass.(string), "")
 		if err != nil {
-			return fmt.Errorf("Failed to update Aviatrix Account User: %s", err)
+			return fmt.Errorf("Failed to update Aviatrix Account User password: %s", err)
 		}
 		d.SetPartial("account_password")
+	}
+	if d.HasChange("account_email") {
+		err := client.UpdateAccountUser("email", account.AccountName, "", "", d.Get("account_email").(string))
+		if err != nil {
+			return fmt.Errorf("Failed to update Aviatrix Account User email: %s", err)
+		}
+		d.SetPartial("account_email")
 	}
 
 	d.Partial(false)
