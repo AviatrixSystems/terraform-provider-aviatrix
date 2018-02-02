@@ -18,7 +18,7 @@ type Account struct {
 	AwsIam                  		string `form:"aws_iam,omitempty" json:"aws_iam,omitempty"`
 	AwsAccessKey            		string `form:"aws_access_key,omitempty" json:"account_access_key,omitempty"`
 	AwsSecretKey            		string `form:"aws_secret_key,omitempty" json:"account_secret_access_key,omitempty"`
-	AwsRoleArn              		string `form:"aws_role_arn,omitempty" json:"aws_role_arn,omitempty"`
+	AwsRoleApp              		string `form:"aws_role_arn,omitempty" json:"aws_role_arn,omitempty"`
 	AwsRoleEc2              		string `form:"aws_role_ec2,omitempty" json:"aws_role_ec2,omitempty"`
 	AzureSubscriptionId     		string `form:"azure_subscription_id,omitempty" json:"azure_subscription_id,omitempty"`
 	ArmSubscriptionId       		string `form:"arm_subscription_id,omitempty" json:"arm_subscription_id,omitempty"`
@@ -98,6 +98,39 @@ func (c *Client) UpdateAccount(account *Account) (error) {
 	account.Action="edit_account_profile"
 	resp,err := c.Post(c.baseURL, account)
 		if err != nil {
+		return err
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return err
+	}
+	if(!data.Return){
+		return errors.New(data.Reason)
+	}
+	return nil
+}
+
+//There is no Aviatrix account user resource currently to keep things minimal.
+//Since creating an Aviatrix account by default creates a user of the same name,
+//we'll only be able to configure that default user. Also not creating a new structure
+//for Aviatrix user, and marshalling received data to JSON manually, since we
+//need Aviatrix user data only for this method.
+func (c *Client) UpdateAccountUser(what, username, oldpass, newpass, email string) (error) {
+	account := make(map[string]interface{})
+	account["CID"] = c.CID
+	account["action"] = "edit_account_user"
+	account["username"] = username
+	account["what"] = what
+	if what == "password" {
+		account["old_password"] = oldpass
+		account["new_password"] = newpass
+	}
+	if what == "email" {
+		account["email"] = email
+	}
+	log.Printf("[INFO] Parsed Aviatrix account: %#v", account)
+	resp,err := c.Post(c.baseURL, account)
+	if err != nil {
 		return err
 	}
 	var data APIResp
