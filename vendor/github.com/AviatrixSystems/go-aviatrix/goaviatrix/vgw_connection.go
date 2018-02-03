@@ -13,7 +13,6 @@ type VGWConn struct {
 	BgpVGWId                string `form:"bgp_vgw_id,omitempty" json:"bgp_vgw_id,omitempty"`
 	CID                     string `form:"CID,omitempty"`
 	ConnName                string `form:"name,omitempty" json:"name,omitempty"`
-	EnableHa           		string `form:"enable_ha,omitempty" json:"ha_status,omitempty"`
 	GwName                  string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
 	VPCId                   string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
 }
