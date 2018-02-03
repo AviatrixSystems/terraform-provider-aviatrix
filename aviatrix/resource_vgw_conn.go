@@ -35,10 +35,6 @@ func resourceAviatrixVGWConn() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"enable_ha": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 		},
 	}
 }
@@ -51,7 +47,6 @@ func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) err
 		VPCId:         d.Get("vpc_id").(string),
 		BgpVGWId:      d.Get("bgp_vgw_id").(string),
 		BgpLocalAsNum: d.Get("bgp_local_as_num").(string),
-		EnableHa:      d.Get("enable_ha").(string),
 	}
 
 	log.Printf("[INFO] Creating Aviatrix VGW Connection: %#v", vgw_conn)

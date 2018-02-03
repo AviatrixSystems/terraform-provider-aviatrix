@@ -25,7 +25,7 @@ type VGWConnListResp struct {
 }
 
 func (c *Client) CreateVGWConn(vgw_conn *VGWConn) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=connect_to_vgw&vpc_id=%s&name=%s&gw_name=%s&bgp_vgw_id=%s&bgp_local_as_num=%s&enable_ha=%s", c.CID, vgw_conn.VPCId, vgw_conn.ConnName, vgw_conn.GwName, vgw_conn.BgpVGWId, vgw_conn.BgpLocalAsNum, vgw_conn.EnableHa)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=transit_connect_vgw&vpc_id=%s&name=%s&gw_name=%s&bgp_vgw_id=%s&bgp_local_as_num=%s", c.CID, vgw_conn.VPCId, vgw_conn.ConnName, vgw_conn.GwName, vgw_conn.BgpVGWId, vgw_conn.BgpLocalAsNum)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return err
@@ -67,7 +67,7 @@ func (c *Client) UpdateVGWConn(vgw_conn *VGWConn) (error) {
 }
 
 func (c *Client) DeleteVGWConn(vgw_conn *VGWConn) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=disconnect_vgw&vpc_id=%s&name=%s", c.CID, vgw_conn.VPCId, vgw_conn.ConnName)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=transit_disconnect_vgw&vpc_id=%s&name=%s", c.CID, vgw_conn.VPCId, vgw_conn.ConnName)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return err
