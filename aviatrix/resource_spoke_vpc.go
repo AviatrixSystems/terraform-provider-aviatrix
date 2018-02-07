@@ -124,6 +124,7 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 		d.Get("gw_name").(string), gw)
 	if gw != nil {
 		d.Set("vpc_size", gw.VpcSize)
+		d.Set("public_ip", gw.PublicIP)
 	}
 	return nil
 }

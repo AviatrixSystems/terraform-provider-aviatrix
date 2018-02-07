@@ -1,4 +1,4 @@
-package goaviatrix
+ package goaviatrix
 
 import (
 	"fmt"
@@ -24,7 +24,7 @@ type VGWConnListResp struct {
 }
 
 func (c *Client) CreateVGWConn(vgw_conn *VGWConn) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=transit_connect_vgw&vpc_id=%s&name=%s&gw_name=%s&bgp_vgw_id=%s&bgp_local_as_num=%s", c.CID, vgw_conn.VPCId, vgw_conn.ConnName, vgw_conn.GwName, vgw_conn.BgpVGWId, vgw_conn.BgpLocalAsNum)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=create_vgw_connection_to_transit_gw&vpc_alias=%s&connection_name=%s&transit_gw=%s&vgw_alias=%s&bgp_local_as_number=%s", c.CID, vgw_conn.VPCId, vgw_conn.ConnName, vgw_conn.GwName, vgw_conn.BgpVGWId, vgw_conn.BgpLocalAsNum)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return err
@@ -66,9 +66,9 @@ func (c *Client) UpdateVGWConn(vgw_conn *VGWConn) (error) {
 }
 
 func (c *Client) DeleteVGWConn(vgw_conn *VGWConn) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=transit_disconnect_vgw&vpc_id=%s&name=%s", c.CID, vgw_conn.VPCId, vgw_conn.ConnName)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=delete_vgw_connection_from_transit_gw&vpc_id=%s&name=%s", c.CID, vgw_conn.VPCId, vgw_conn.ConnName)
 	resp,err := c.Get(path, nil)
-		if err != nil {
+	if err != nil {
 		return err
 	}
 	var data APIResp

@@ -15,16 +15,16 @@ type TransitVpc struct {
 	DnsServer               string `form:"dns_server,omitempty" json:"dns_server,omitempty"`
 	GwName                  string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
 	GwSize                  string `form:"gw_size,omitempty"`
-	VpcID                   string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	VpcNet                  string `form:"vpc_net,omitempty" json:"vpc_net,omitempty"`
+	VpcID                   string `form:"vpc_alias,omitempty" json:"vpc_id,omitempty"`
+	VpcNet                  string `form:"subnet_alias,omitempty" json:"vpc_net,omitempty"`
 	HASubnet                string `form:"specific_subnet,omitempty"`
-	VpcRegion               string `form:"vpc_reg,omitempty" json:"vpc_region,omitempty"`
-	VpcSize                 string `form:"vpc_size,omitempty" json:"vpc_size,omitempty"`
+	VpcRegion               string `form:"region,omitempty" json:"vpc_region,omitempty"`
+	VpcSize                 string `form:"gw_size,omitempty" json:"gw_size,omitempty"`
 }
 
 func (c *Client) LaunchTransitVpc(gateway *TransitVpc) (error) {
 	gateway.CID=c.CID
-	gateway.Action="launch_transit_vpc"
+	gateway.Action="create_transit_gw"
 	resp,err := c.Post(c.baseURL, gateway)
 		if err != nil {
 		return err
