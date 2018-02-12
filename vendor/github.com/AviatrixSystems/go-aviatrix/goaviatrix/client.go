@@ -212,7 +212,7 @@ func (c *Client) Request(verb string, path string, i interface{}) (*http.Respons
 	var err error
 	if (i != nil) {
 		buf := new(bytes.Buffer)
-		if err = form.NewEncoder(buf).DelimitWith('|').Encode(i); err != nil {
+		if err = form.NewEncoder(buf).Encode(i); err != nil {
 			return nil, err
 		}
 		body := buf.String()
@@ -222,7 +222,6 @@ func (c *Client) Request(verb string, path string, i interface{}) (*http.Respons
 		if err == nil {
 			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		}
-
 	} else {
 		req, err = http.NewRequest(verb, path, nil)
 	}
