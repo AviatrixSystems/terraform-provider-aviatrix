@@ -39,7 +39,7 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_net": &schema.Schema{
+			"subnet": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -72,7 +72,7 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		VpcID:          d.Get("vpc_id").(string),
 		VpcRegion:      d.Get("vpc_reg").(string),
 		VpcSize:        d.Get("vpc_size").(string),
-		VpcNet:         d.Get("vpc_net").(string),
+		Subnet:         d.Get("subnet").(string),
 		HASubnet:       d.Get("ha_subnet").(string),
 		EnableNAT:      d.Get("enable_nat").(string),
 		DnsServer:      d.Get("dns_server").(string),

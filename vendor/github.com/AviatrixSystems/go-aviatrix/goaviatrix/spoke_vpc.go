@@ -16,7 +16,7 @@ type SpokeVpc struct {
 	GwName                  string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
 	GwSize                  string `form:"gw_size,omitempty"`
 	VpcID                   string `form:"vpc_alias,omitempty" json:"vpc_id,omitempty"`
-	VpcNet                  string `form:"subnet_alias,omitempty" json:"vpc_net,omitempty"`
+	Subnet                  string `form:"subnet_alias,omitempty" json:"vpc_net,omitempty"`
 	VpcRegion               string `form:"region,omitempty" json:"vpc_region,omitempty"`
 	VpcSize                 string `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
 	EnableNAT               string `form:"nat_enabled,omitempty" json:"enable_nat,omitempty"`
