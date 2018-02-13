@@ -61,24 +61,6 @@ func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
-	vgw_conn := &goaviatrix.VGWConn{
-		ConnName: d.Get("conn_name").(string),
-	}
-	conn, err := client.GetVGWConn(vgw_conn)
-	if err != nil {
-		return fmt.Errorf("Couldn't find Aviatrix VGWConn: %s", err)
-	}
-	log.Printf("[TRACE] reading vgw_conn %s: %#v",
-		d.Get("conn_name").(string), conn)
-	if conn != nil {
-		d.Set("conn_name", conn.ConnName)
-		//d.Set("gw_name", conn.GwName)
-		d.Set("vpc_id", conn.VPCId)
-		//d.Set("bgp_vgw_id", conn.BgpVGWId)
-		//d.Set("bgp_local_as_num", conn.BgpLocalAsNum)
-		//d.Set("enable_ha", conn.EnableHa)
-	}
 	return nil
 }
 

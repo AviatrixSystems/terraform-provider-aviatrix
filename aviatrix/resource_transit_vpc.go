@@ -39,7 +39,7 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_net": &schema.Schema{
+			"subnet": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -64,7 +64,7 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		VpcID:       d.Get("vpc_id").(string),
 		VpcRegion:   d.Get("vpc_reg").(string),
 		VpcSize:     d.Get("vpc_size").(string),
-		VpcNet:      d.Get("vpc_net").(string),
+		Subnet:      d.Get("subnet").(string),
 		DnsServer:   d.Get("dns_server").(string),
 	}
 

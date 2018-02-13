@@ -12,7 +12,7 @@ type VGWConn struct {
 	BgpLocalAsNum           string `form:"bgp_local_as_num,omitempty" json:"bgp_local_as_num,omitempty"`
 	BgpVGWId                string `form:"bgp_vgw_id,omitempty" json:"bgp_vgw_id,omitempty"`
 	CID                     string `form:"CID,omitempty"`
-	ConnName                string `form:"name,omitempty" json:"name,omitempty"`
+	ConnName                string `form:"connection_name,omitempty" json:"name,omitempty"`
 	GwName                  string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
 	VPCId                   string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
 }
@@ -24,7 +24,7 @@ type VGWConnListResp struct {
 }
 
 func (c *Client) CreateVGWConn(vgw_conn *VGWConn) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=create_vgw_connection_to_transit_gw&vpc_alias=%s&connection_name=%s&transit_gw=%s&vgw_alias=%s&bgp_local_as_number=%s", c.CID, vgw_conn.VPCId, vgw_conn.ConnName, vgw_conn.GwName, vgw_conn.BgpVGWId, vgw_conn.BgpLocalAsNum)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=connect_transit_gw_to_vgw&vpc_alias=%s&connection_name=%s&transit_gw=%s&vgw_alias=%s&bgp_local_as_number=%s", c.CID, vgw_conn.VPCId, vgw_conn.ConnName, vgw_conn.GwName, vgw_conn.BgpVGWId, vgw_conn.BgpLocalAsNum)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return err
@@ -66,7 +66,7 @@ func (c *Client) UpdateVGWConn(vgw_conn *VGWConn) (error) {
 }
 
 func (c *Client) DeleteVGWConn(vgw_conn *VGWConn) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=delete_vgw_connection_from_transit_gw&vpc_id=%s&name=%s", c.CID, vgw_conn.VPCId, vgw_conn.ConnName)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=disconnect_transit_gw_from_vgw&vpc_alias=%s&connection_name=%s", c.CID, vgw_conn.VPCId, vgw_conn.ConnName)
 	resp,err := c.Get(path, nil)
 	if err != nil {
 		return err

@@ -78,7 +78,7 @@ func (c *Client) SpokeLeaveTransit(spoke *SpokeVpc) (error) {
 }
 
 func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=create_peer_ha_gw&vpc_name=%s&specific_subnet=%s", c.CID, spoke.GwName, spoke.HASubnet)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_spoke_ha&gw_name=%s&subnet_alias=%s", c.CID, spoke.GwName, spoke.HASubnet)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return err

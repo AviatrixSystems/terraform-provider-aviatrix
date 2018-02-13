@@ -16,7 +16,7 @@ type TransitVpc struct {
 	GwName                  string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
 	GwSize                  string `form:"gw_size,omitempty"`
 	VpcID                   string `form:"vpc_alias,omitempty" json:"vpc_id,omitempty"`
-	VpcNet                  string `form:"subnet_alias,omitempty" json:"vpc_net,omitempty"`
+	Subnet                  string `form:"subnet_alias,omitempty" json:"vpc_net,omitempty"`
 	HASubnet                string `form:"specific_subnet,omitempty"`
 	VpcRegion               string `form:"region,omitempty" json:"vpc_region,omitempty"`
 	VpcSize                 string `form:"gw_size,omitempty" json:"gw_size,omitempty"`
@@ -40,7 +40,7 @@ func (c *Client) LaunchTransitVpc(gateway *TransitVpc) (error) {
 }
 
 func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=create_peer_ha_gw&vpc_name=%s&specific_subnet=%s", c.CID, gateway.GwName, gateway.HASubnet)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_transit_ha&gw_name=%s&subnet_alias=%s", c.CID, gateway.GwName, gateway.HASubnet)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return err

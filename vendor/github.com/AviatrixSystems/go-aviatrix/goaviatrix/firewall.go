@@ -60,7 +60,7 @@ func (c *Client) UpdatePolicy(firewall *Firewall) (error) {
 
 	args, err := json.Marshal(firewall.PolicyList)
     if err != nil {
-        panic (err)
+        return err
     }
 	path = path + string(args)
 	resp,err := c.Get(path, nil)
