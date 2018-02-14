@@ -29,7 +29,7 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			},
 			"tunnel_type": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"gw_name": &schema.Schema{
 				Type:     schema.TypeString,
