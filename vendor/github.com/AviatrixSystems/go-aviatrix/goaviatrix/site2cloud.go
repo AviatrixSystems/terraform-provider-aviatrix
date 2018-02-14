@@ -97,12 +97,22 @@ func (c *Client) UpdateSite2Cloud(site2cloud *Site2Cloud) (error) {
 }
 
 func (c *Client) DeleteSite2Cloud(site2cloud *Site2Cloud) (error) {
-	site2cloud.CID=c.CID
-	site2cloud.Action="delete_site2cloud_conn"
-	resp,err := c.Post(c.baseURL, site2cloud)
-		if err != nil {
+	site2cloud.CID = c.CID
+	site2cloud.Action = "delete_site2cloud_conn"
+	verb := "POST"
+	body := fmt.Sprintf("CID=%s&action=%s&vpc_id=%s&conn_name=%s", c.CID, site2cloud.Action, site2cloud.VpcID ,site2cloud.ConnName)
+	log.Printf("[TRACE] %s %s Body: %s", verb, c.baseURL, body)
+	req, err := http.NewRequest(verb, c.baseURL, strings.NewReader(body))
+	if err == nil {
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	} else {
 		return err
 	}
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return err
+	}
+
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
