@@ -22,6 +22,7 @@ type SpokeVpc struct {
 	EnableNAT               string `form:"nat_enabled,omitempty" json:"enable_nat,omitempty"`
 	HASubnet                string `form:"specific_subnet,omitempty"`
 	TransitGateway          string `form:"transit_gw,omitempty"`
+	TagList                 string `form:"tags,omitempty"`
 }
 
 func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) (error) {

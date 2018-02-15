@@ -20,6 +20,7 @@ type TransitVpc struct {
 	HASubnet                string `form:"specific_subnet,omitempty"`
 	VpcRegion               string `form:"region,omitempty" json:"vpc_region,omitempty"`
 	VpcSize                 string `form:"gw_size,omitempty" json:"gw_size,omitempty"`
+	TagList                 string `form:"tags,omitempty"`
 }
 
 func (c *Client) LaunchTransitVpc(gateway *TransitVpc) (error) {

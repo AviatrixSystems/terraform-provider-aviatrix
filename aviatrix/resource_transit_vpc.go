@@ -5,6 +5,7 @@ import (
 	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
 	"log"
+	"strings"
 )
 
 func resourceAviatrixTransitVpc() *schema.Resource {
@@ -51,6 +52,11 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"tag_list": &schema.Schema{
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+			},
 		},
 	}
 }
@@ -66,6 +72,11 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		VpcSize:     d.Get("vpc_size").(string),
 		Subnet:      d.Get("subnet").(string),
 		DnsServer:   d.Get("dns_server").(string),
+	}
+	if _, ok := d.GetOk("tag_list"); ok {
+		tag_list := d.Get("tag_list").([]interface{})
+		tag_list_str := goaviatrix.ExpandStringList(tag_list)
+		gateway.TagList = strings.Join(tag_list_str, ",")
 	}
 
 	log.Printf("[INFO] Creating Aviatrix TransitVpc: %#v", gateway)
@@ -98,6 +109,10 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 	}
 	gw, err := client.GetGateway(gateway)
 	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("Couldn't find Aviatrix TransitVpc: %s", err)
 	}
 	log.Printf("[TRACE] reading gateway %s: %#v",
@@ -121,7 +136,36 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[INFO] Updating Aviatrix TransitVpc: %#v", gateway)
 
 	d.Partial(true)
+	if d.HasChange("tag_list") {
+		tags := &goaviatrix.Tags{
+			CloudType:    1,
+			ResourceType: "gw",
+			ResourceName: d.Get("gw_name").(string),
+		}
 
+		o, n := d.GetChange("tag_list")
+		if o == nil {
+			o = new([]interface{})
+		}
+		if n == nil {
+			n = new([]interface{})
+		}
+		os := o.([]interface{})
+		ns := n.([]interface{})
+		old_tag_list := goaviatrix.ExpandStringList(os)
+		tags.TagList = strings.Join(old_tag_list, ",")
+		err := client.DeleteTags(tags)
+		if err != nil {
+			return fmt.Errorf("Failed to delete tags : %s", err)
+		}
+		new_tag_list := goaviatrix.ExpandStringList(ns)
+		tags.TagList = strings.Join(new_tag_list, ",")
+		err = client.AddTags(tags)
+		if err != nil {
+			return fmt.Errorf("Failed to add tags : %s", err)
+		}
+		d.SetPartial("tag_list")
+	}
 	if d.HasChange("vpc_size") {
 		gateway.VpcSize = d.Get("vpc_size").(string)
 		err := client.UpdateGateway(gateway)
