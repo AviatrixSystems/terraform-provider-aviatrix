@@ -54,14 +54,14 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("Failed to create Aviatrix FQDN: %s", err)
 	}
 	if _, ok := d.GetOk("domain_list"); ok {
-		fqdn.DomainList = expandStringList(d.Get("domain_list").([]interface{}))
+		fqdn.DomainList = goaviatrix.ExpandStringList(d.Get("domain_list").([]interface{}))
 		err = client.UpdateDomains(fqdn)
 		if err != nil {
 			return fmt.Errorf("Failed to add domain : %s", err)
 		}
 	}
 	if _, ok := d.GetOk("gw_list"); ok {
-		fqdn.GwList = expandStringList(d.Get("gw_list").([]interface{}))
+		fqdn.GwList = goaviatrix.ExpandStringList(d.Get("gw_list").([]interface{}))
 		err = client.AttachGws(fqdn)
 		if err != nil {
 			return fmt.Errorf("Failed to attach GWs: %s", err)
@@ -81,6 +81,10 @@ func resourceAviatrixFQDNRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Reading Aviatrix FQDN: %#v", fqdn)
 	newfqdn, err := client.GetFQDNTag(fqdn)
 	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("Couldn't find FQDN tag: %s", err)
 	}
 	if newfqdn != nil {
@@ -134,7 +138,7 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 	//Update Domain list
 	if d.HasChange("domain_list") {
 		if _, ok := d.GetOk("domain_list"); ok {
-			fqdn.DomainList = expandStringList(d.Get("domain_list").([]interface{}))
+			fqdn.DomainList = goaviatrix.ExpandStringList(d.Get("domain_list").([]interface{}))
 		}
 		err := client.UpdateDomains(fqdn)
 		if err != nil {
@@ -153,10 +157,10 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 		os := o.([]interface{})
 		ns := n.([]interface{})
-		oldGwList := expandStringList(os)
-		newGwList := expandStringList(ns)
+		oldGwList := goaviatrix.ExpandStringList(os)
+		newGwList := goaviatrix.ExpandStringList(ns)
 		//Attach all the newly added GWs
-		toAddGws := difference(newGwList, oldGwList)
+		toAddGws := goaviatrix.Difference(newGwList, oldGwList)
 		log.Printf("[INFO] Gateways to be attached : %#v", toAddGws)
 		fqdn.GwList = toAddGws
 		err := client.AttachGws(fqdn)
@@ -164,7 +168,7 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 			return fmt.Errorf("Failed to add GW : %s", err)
 		}
 		//Detach all the removed GWs
-		toDelGws := difference(oldGwList, newGwList)
+		toDelGws := goaviatrix.Difference(oldGwList, newGwList)
 		log.Printf("[INFO] Gateways to be detached : %#v", toDelGws)
 		fqdn.GwList = toDelGws
 		err = client.DetachGws(fqdn)
@@ -185,7 +189,7 @@ func resourceAviatrixFQDNDelete(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[INFO] Deleting Aviatrix FQDN: %#v", fqdn)
 	if _, ok := d.GetOk("gw_list"); ok {
 		log.Printf("[INFO] Found GWs: %#v", fqdn)
-		fqdn.GwList = expandStringList(d.Get("gw_list").([]interface{}))
+		fqdn.GwList = goaviatrix.ExpandStringList(d.Get("gw_list").([]interface{}))
 		err := client.DetachGws(fqdn)
 		if err != nil {
 			return fmt.Errorf("Failed to detach GWs: %s", err)
@@ -197,30 +201,4 @@ func resourceAviatrixFQDNDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	return nil
-}
-
-func expandStringList(configured []interface{}) []string {
-	vs := make([]string, 0, len(configured))
-	for _, v := range configured {
-		val, ok := v.(string)
-		if ok && val != "" {
-			vs = append(vs, v.(string))
-		}
-	}
-	return vs
-}
-
-// difference returns the elements in a that aren't in b
-func difference(a, b []string) []string {
-	mb := map[string]bool{}
-	for _, x := range b {
-		mb[x] = true
-	}
-	ab := []string{}
-	for _, x := range a {
-		if _, ok := mb[x]; !ok {
-			ab = append(ab, x)
-		}
-	}
-	return ab
 }

@@ -92,9 +92,12 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Looking for Aviatrix account: %#v", account)
 	acc, err := client.GetAccount(account)
 	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("Aviatrix Account: %s", err)
 	}
-
 	if acc != nil {
 		d.Set("account_name", acc.AccountName)
 		d.Set("account_email", acc.AccountEmail)
@@ -106,8 +109,6 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("aws_access_key", acc.AwsAccessKey)
 		d.Set("aws_secret_key", acc.AwsSecretKey)
 		d.SetId(acc.AccountName)
-	} else {
-		d.SetId("")
 	}
 	return nil
 }

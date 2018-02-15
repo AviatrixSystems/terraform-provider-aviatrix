@@ -134,6 +134,7 @@ func resourceAviatrixSite2CloudDelete(d *schema.ResourceData, meta interface{}) 
 	client := meta.(*goaviatrix.Client)
 	site2cloud := &goaviatrix.Site2Cloud{
 		ConnName: d.Get("conn_name").(string),
+		VpcID:    d.Get("vpc_id").(string),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix s2c: %#v", site2cloud)

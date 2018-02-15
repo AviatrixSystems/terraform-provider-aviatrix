@@ -90,7 +90,8 @@ func (c *Client) GetPolicy(firewall *Firewall) (*Firewall, error) {
 		return nil, err
 	}
 	if(!data.Return){
-		return nil, errors.New(data.Reason)
+		log.Printf("[INFO] Couldn't find Aviatrix Firewall policies for gateway %s: %s", firewall.GwName, data.Reason)
+		return nil, ErrNotFound
 	}
 
 	return &data.Results, nil

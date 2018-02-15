@@ -75,6 +75,10 @@ func resourceAviatrixFirewallTagRead(d *schema.ResourceData, meta interface{}) e
 	}
 	fwt, err := client.GetFirewallTag(firewall_tag)
 	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("Error fetching firewall tag %s: %s", firewall_tag.Name, err)
 	}
 	log.Printf("[TRACE] Reading cidr list for tag %s: %#v", firewall_tag.Name, fwt)

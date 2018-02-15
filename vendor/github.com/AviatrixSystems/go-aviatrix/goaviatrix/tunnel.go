@@ -65,7 +65,8 @@ func (c *Client) GetTunnel(tunnel *Tunnel) (*Tunnel, error) {
 			return &tunList[i], nil
 		}
 	}
-	return nil, fmt.Errorf("Tunnel with gateways %s and %s not found", tunnel.VpcName1, tunnel.VpcName2)
+	log.Printf("Tunnel with gateways %s and %s not found", tunnel.VpcName1, tunnel.VpcName2)
+	return nil, ErrNotFound
 }
 
 func (c *Client) UpdateTunnel(tunnel *Tunnel) (error) {

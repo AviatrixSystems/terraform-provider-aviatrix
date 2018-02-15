@@ -99,7 +99,8 @@ func (c *Client) GetFirewallTag(firewall_tag *FirewallTag) (*FirewallTag, error)
 		return nil, err
 	}
 	if(!data.Return){
-		return nil, errors.New(data.Reason)
+		log.Printf("[INFO] Couldn't find Aviatrix Firewall tag %s: %s", firewall_tag.Name, data.Reason)
+		return nil, ErrNotFound
 	}
 	return &data.Results, nil
 }

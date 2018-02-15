@@ -79,6 +79,10 @@ func resourceTunnelRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	tun, err := client.GetTunnel(tunnel)
 	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("Couldn't find Aviatrix Tunnel: %s", err)
 	}
 	log.Printf("[INFO] Found Aviatrix tunnel: %#v", tun)

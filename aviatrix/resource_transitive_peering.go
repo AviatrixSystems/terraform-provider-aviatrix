@@ -59,6 +59,10 @@ func resourceTranspeerRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	transpeer, err := client.GetTranspeer(transpeer)
 	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("Couldn't find Aviatrix Transitive peering: %s", err)
 	}
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"encoding/json"
 	"errors"
+	"log"
 )
 
 // VPNUser simple struct to hold vpn_user details
@@ -60,7 +61,8 @@ func (c *Client) GetVPNUser(vpn_user *VPNUser) (*VPNUser, error) {
 			return &vulist[i], nil
 		}
 	}
-	return nil, fmt.Errorf("VPNUser %s not found", vpn_user.UserName)
+	log.Printf("VPNUser %s not found", vpn_user.UserName)
+	return nil, ErrNotFound
 }
 
 

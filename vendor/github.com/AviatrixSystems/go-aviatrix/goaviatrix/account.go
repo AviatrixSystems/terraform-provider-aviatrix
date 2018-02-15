@@ -90,7 +90,8 @@ func (c *Client) GetAccount(account *Account) (*Account, error) {
 			return &acclist[i], nil
 		}
 	}
-	return nil, nil
+	log.Printf("Couldn't find Aviatrix account %s", account.AccountName)
+	return nil, ErrNotFound
 }
 
 func (c *Client) UpdateAccount(account *Account) (error) {

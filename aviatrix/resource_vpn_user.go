@@ -61,6 +61,10 @@ func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta interface{}) error
 	}
 	vu, err := client.GetVPNUser(vpn_user)
 	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("Couldn't find Aviatrix VPNUser: %s", err)
 	}
 	log.Printf("[TRACE] Reading vpn_user %s: %#v",

@@ -1,10 +1,10 @@
 package goaviatrix
 
 import (
-	"fmt"
 	"encoding/json"
 	"errors"
-	"github.com/davecgh/go-spew/spew"
+	"log"
+	//"github.com/davecgh/go-spew/spew"
 )
 
 // Transpeer simple struct to hold transitive peering details
@@ -51,7 +51,6 @@ func (c *Client) GetTranspeer(transpeer *Transpeer) (*Transpeer, error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	spew.Dump(data)
 	if(!data.Return){
 		return nil, errors.New(data.Reason)
 	}
@@ -61,7 +60,8 @@ func (c *Client) GetTranspeer(transpeer *Transpeer) (*Transpeer, error) {
 			return &transpeerList[i], nil
 		}
 	}
-	return nil, fmt.Errorf("Transitive peering with gateways %s and %s with subnet %s not found", transpeer.Source, transpeer.Nexthop, transpeer.ReachableCidr)
+	log.Printf("Transitive peering with gateways %s and %s with subnet %s not found", transpeer.Source, transpeer.Nexthop, transpeer.ReachableCidr)
+	return nil, ErrNotFound
 }
 
 func (c *Client) UpdateTranspeer(transpeer *Transpeer) (error) {

@@ -81,6 +81,10 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	}
 	gw, err := client.GetGateway(gateway)
 	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("Couldn't find Aviatrix Gateway: %s", err)
 	}
 	log.Printf("[TRACE] reading gateway %s: %#v",

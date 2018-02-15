@@ -120,9 +120,13 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 	}
 	fw, err := client.GetPolicy(firewall)
 	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("Error fetching policy for gateway %s: %s", firewall.GwName, err)
 	}
-	log.Printf("[TRACE] reading policy for gateway %s: %#v",
+	log.Printf("[TRACE] Reading policy for gateway %s: %#v",
 		firewall.GwName, fw)
 	if fw != nil {
 		if fw.BaseAllowDeny == "allow-all" {
@@ -141,8 +145,6 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 			pl["port"] = policy.Port
 			pl["log_enable"] = policy.LogEnable
 			pl["allow_deny"] = policy.AllowDeny
-
-			log.Printf("[TRACE] Policy is ~~~ : %#v", pl)
 			policies = append(policies, pl)
 		}
 		d.Set("policy", policies)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"encoding/json"
 	"errors"
+	"log"
 )
 
 // Gateway simple struct to hold gateway details
@@ -132,7 +133,8 @@ func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
 			return &gwlist[i], nil
 		}
 	}
-	return nil, fmt.Errorf("Gateway %s not found", gateway.GwName)
+	log.Printf("Couldn't find Aviatrix gateway %s", gateway.GwName)
+	return nil, ErrNotFound
 }
 
 func (c *Client) UpdateGateway(gateway *Gateway) (error) {

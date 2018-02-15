@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 )
 
 // Gateway simple struct to hold fqdn details
@@ -147,7 +148,6 @@ func (c *Client) DetachGws(fqdn *FQDN) (error) {
 func (c *Client) GetFQDNTag(fqdn *FQDN) (*FQDN, error) {
 	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_nfq_tag_names&account_name=%s", c.CID)
 	resp,err := c.Get(path, nil)
-
 	if err != nil {
 		return nil, err
 	}
@@ -160,8 +160,9 @@ func (c *Client) GetFQDNTag(fqdn *FQDN) (*FQDN, error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	if val, ok := data["reason"]; ok {
-	    return nil, errors.New(val.(string))
+	if _, ok := data["reason"]; ok {
+		log.Printf("[INFO] Couldn't find Aviatrix FQDN tag %s: %s", fqdn.FQDNTag, data["reason"])
+		return nil, ErrNotFound
 	}
 	if val, ok := data["results"]; ok {
 		if foundTag, ok1 := val.(map[string]interface{})[fqdn.FQDNTag]; ok1 {
@@ -171,8 +172,8 @@ func (c *Client) GetFQDNTag(fqdn *FQDN) (*FQDN, error) {
 			return fqdn, nil
 		}
 	}
-
-	return nil, fmt.Errorf("FQDN Tag %s not found", fqdn.FQDNTag)
+	log.Printf("[INFO] Couldn't find Aviatrix FQDN tag %s", fqdn.FQDNTag)
+	return nil, ErrNotFound
 }
 
 func (c *Client) ListDomains(fqdn *FQDN) (*FQDN, error) {
