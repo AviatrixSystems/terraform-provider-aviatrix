@@ -25,7 +25,7 @@ type ResultListResp struct {
 }
 
 func (c *Client) CreateFQDN(fqdn *FQDN) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=add_nfq_tag&tag_name=%s", c.CID, fqdn.FQDNTag)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=add_fqdn_filter_tag&tag_name=%s", c.CID, fqdn.FQDNTag)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return err
@@ -41,7 +41,7 @@ func (c *Client) CreateFQDN(fqdn *FQDN) (error) {
 }
 
 func (c *Client) DeleteFQDN(fqdn *FQDN) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=del_nfq_tag&tag_name=%s", c.CID, fqdn.FQDNTag)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=del_fqdn_filter_tag&tag_name=%s", c.CID, fqdn.FQDNTag)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return err
@@ -58,7 +58,7 @@ func (c *Client) DeleteFQDN(fqdn *FQDN) (error) {
 
 //change state to 'enabled' or 'disabled'
 func (c *Client) UpdateFQDNStatus(fqdn *FQDN) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=set_nfq_tag_state&tag_name=%s&status=%s", c.CID, fqdn.FQDNTag, fqdn.FQDNStatus)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=set_fqdn_filter_tag_state&tag_name=%s&status=%s", c.CID, fqdn.FQDNTag, fqdn.FQDNStatus)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return err
@@ -75,7 +75,7 @@ func (c *Client) UpdateFQDNStatus(fqdn *FQDN) (error) {
 
 //Change default mode to 'white' or 'black'
 func (c *Client) UpdateFQDNMode(fqdn *FQDN) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=set_nfq_tag_wbmode&tag_name=%s&wbmode=%s", c.CID, fqdn.FQDNTag, fqdn.FQDNMode)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=set_fqdn_filter_tag_color&tag_name=%s&wbmode=%s", c.CID, fqdn.FQDNTag, fqdn.FQDNMode)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return err
@@ -92,7 +92,7 @@ func (c *Client) UpdateFQDNMode(fqdn *FQDN) (error) {
 
 func (c *Client) UpdateDomains(fqdn *FQDN) (error) {
 	fqdn.CID=c.CID
-	fqdn.Action="update_nfq_tag_whitelist"
+	fqdn.Action="set_fqdn_filter_tag_domain_names"
 	resp,err := c.Post(c.baseURL, fqdn)
 		if err != nil {
 		return err
@@ -108,7 +108,7 @@ func (c *Client) UpdateDomains(fqdn *FQDN) (error) {
 }
 
 func (c *Client) AttachGws(fqdn *FQDN) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=add_nfq_tag_member&tag_name=%s", c.CID, fqdn.FQDNTag)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=attach_fqdn_filter_tag_to_gw&tag_name=%s", c.CID, fqdn.FQDNTag)
 	for i := range fqdn.GwList {
 		newPath := path + fmt.Sprintf("&gw_name=%s", fqdn.GwList[i])
 		resp,err := c.Get(newPath, nil)
@@ -127,7 +127,7 @@ func (c *Client) AttachGws(fqdn *FQDN) (error) {
 }
 
 func (c *Client) DetachGws(fqdn *FQDN) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=del_nfq_tag_member&tag_name=%s", c.CID, fqdn.FQDNTag)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=detach_fqdn_filter_tag_from_gw&tag_name=%s", c.CID, fqdn.FQDNTag)
 	for i := range fqdn.GwList {
 		newPath := path + fmt.Sprintf("&gw_name=%s", fqdn.GwList[i])
 		resp,err := c.Get(newPath, nil)
@@ -146,7 +146,7 @@ func (c *Client) DetachGws(fqdn *FQDN) (error) {
 }
 
 func (c *Client) GetFQDNTag(fqdn *FQDN) (*FQDN, error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_nfq_tag_names&account_name=%s", c.CID)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_fqdn_filter_tags", c.CID)
 	resp,err := c.Get(path, nil)
 	if err != nil {
 		return nil, err
@@ -177,7 +177,7 @@ func (c *Client) GetFQDNTag(fqdn *FQDN) (*FQDN, error) {
 }
 
 func (c *Client) ListDomains(fqdn *FQDN) (*FQDN, error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_nfq_tag_whitelist&tag_name=%s", c.CID, fqdn.FQDNTag)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_fqdn_filter_tag_domain_names&tag_name=%s", c.CID, fqdn.FQDNTag)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return nil, err
@@ -196,7 +196,7 @@ func (c *Client) ListDomains(fqdn *FQDN) (*FQDN, error) {
 }
 
 func (c *Client) ListGws(fqdn *FQDN) (*FQDN, error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_gateway_nfq_tag&tag_name=%s", c.CID, fqdn.FQDNTag)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_fqdn_filter_tag_attached_gws&tag_name=%s", c.CID, fqdn.FQDNTag)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return nil, err
