@@ -15,12 +15,12 @@ type SpokeVpc struct {
 	DnsServer               string `form:"dns_server,omitempty" json:"dns_server,omitempty"`
 	GwName                  string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
 	GwSize                  string `form:"gw_size,omitempty"`
-	VpcID                   string `form:"vpc_alias,omitempty" json:"vpc_id,omitempty"`
-	Subnet                  string `form:"subnet_alias,omitempty" json:"vpc_net,omitempty"`
+	VpcID                   string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	Subnet                  string `form:"public_subnet,omitempty" json:"public_subnet,omitempty"`
 	VpcRegion               string `form:"region,omitempty" json:"vpc_region,omitempty"`
 	VpcSize                 string `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
 	EnableNAT               string `form:"nat_enabled,omitempty" json:"enable_nat,omitempty"`
-	HASubnet                string `form:"specific_subnet,omitempty"`
+	HASubnet                string `form:"ha_subnet,omitempty"`
 	TransitGateway          string `form:"transit_gw,omitempty"`
 	TagList                 string `form:"tags,omitempty"`
 }
@@ -79,7 +79,7 @@ func (c *Client) SpokeLeaveTransit(spoke *SpokeVpc) (error) {
 }
 
 func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_spoke_ha&gw_name=%s&subnet_alias=%s", c.CID, spoke.GwName, spoke.HASubnet)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_spoke_ha&gw_name=%s&public_subnet=%s", c.CID, spoke.GwName, spoke.HASubnet)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return err
