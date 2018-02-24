@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"encoding/json"
 	"errors"
+	"strings"
+	"log"
 )
 
 type Version struct {
@@ -25,9 +27,7 @@ func (c *Client) Upgrade(version *Version) (error) {
 	} else {
 		path = c.baseURL + fmt.Sprintf("?CID=%s&action=upgrade&version=%s", c.CID, version.Version)
 	}
-
 	resp,err := c.Get(path, nil)
-
 	if err != nil {
 		return err
 	}
@@ -35,8 +35,11 @@ func (c *Client) Upgrade(version *Version) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-
 	if(!data.Return){
+		if strings.Contains(data.Reason, "Active upgrade in progress.") {
+			log.Printf("[INFO] Returning since an active upgrade is already in progress.")
+			return nil
+		}
 		return errors.New(data.Reason)
 	}
 	return nil
