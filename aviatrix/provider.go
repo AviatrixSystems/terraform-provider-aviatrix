@@ -43,6 +43,8 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_firewall_tag": resourceAviatrixFirewallTag(),
 			"aviatrix_vpn_user":     resourceAviatrixVPNUser(),
 			"aviatrix_site2cloud":   resourceAviatrixSite2Cloud(),
+			"aviatrix_aws_peer":     resourceAWSPeer(),
+			"aviatrix_dc_extn":      resourceDCExtn(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"aviatrix_caller_identity": dataSourceAviatrixCallerIdentity(),
