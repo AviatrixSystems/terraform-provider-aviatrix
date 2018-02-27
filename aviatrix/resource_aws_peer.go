@@ -105,7 +105,7 @@ func resourceAWSPeerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAWSPeerUpdate(d *schema.ResourceData, meta interface{}) error {
-	return fmt.Errorf("AWSPeer cannot be updated. Delete and create new AWS peering.", err)
+	return fmt.Errorf("AWSPeer cannot be updated. Delete and create new AWS peering.")
 }
 
 func resourceAWSPeerDelete(d *schema.ResourceData, meta interface{}) error {
