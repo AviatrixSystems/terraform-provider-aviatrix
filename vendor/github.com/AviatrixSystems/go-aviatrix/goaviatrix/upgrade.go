@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strings"
 	"log"
+    "time"
 )
 
 type Version struct {
@@ -27,20 +28,24 @@ func (c *Client) Upgrade(version *Version) (error) {
 	} else {
 		path = c.baseURL + fmt.Sprintf("?CID=%s&action=upgrade&version=%s", c.CID, version.Version)
 	}
-	resp,err := c.Get(path, nil)
-	if err != nil {
-		return err
-	}
-	var data UpgradeResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
-	}
-	if(!data.Return){
-		if strings.Contains(data.Reason, "Active upgrade in progress.") {
-			log.Printf("[INFO] Returning since an active upgrade is already in progress.")
-			return nil
+	for i := 0; ; i++ {
+		resp,err := c.Get(path, nil)
+		if err != nil {
+			return err
 		}
-		return errors.New(data.Reason)
+		var data UpgradeResp
+		if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+			return err
+		}
+		if(!data.Return){
+			if strings.Contains(data.Reason, "Active upgrade in progress.") && i<3 {
+				log.Printf("[INFO] Active upgrade is in progress. Retry after 60 secs...")
+				time.Sleep(60 * time.Second)
+				continue
+			}
+			return errors.New(data.Reason)
+		}
+		break
 	}
 	return nil
 }
