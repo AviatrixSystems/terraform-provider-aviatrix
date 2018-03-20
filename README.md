@@ -31,7 +31,7 @@ Using Aviatrix Provider
 Activate the provider by adding the following to `~/.terraformrc`
 ```sh
 providers {
-  "aviatrix" = "$YOUR_GOPATH/bin/terraform-provider-aviatrix"
+  "aviatrix" = "$GOPATH/bin/terraform-provider-aviatrix"
 }
 ```
 Examples
