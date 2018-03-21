@@ -47,6 +47,10 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"enable_nat": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -61,6 +65,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		VpcRegion:   d.Get("vpc_reg").(string),
 		VpcSize:     d.Get("vpc_size").(string),
 		VpcNet:      d.Get("vpc_net").(string),
+		EnableNat:   d.Get("enable_nat").(string),
 	}
 
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)
@@ -68,6 +73,9 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	err := client.CreateGateway(gateway)
 	if err != nil {
 		return fmt.Errorf("Failed to create Aviatrix Gateway: %s", err)
+	}
+	if enable_nat := d.Get("enable_nat").(string); enable_nat == "yes" {
+		log.Printf("[INFO] Aviatrix NAT enabled gateway: %#v", gateway)
 	}
 	d.SetId(gateway.GwName)
 	return resourceAviatrixGatewayRead(d, meta)
