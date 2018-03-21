@@ -17,6 +17,7 @@ type Tunnel struct {
 	PeeringHaStatus string `json:"peering_ha_status"`
 	Cluster         string `json:"cluster"`
 	PeeringLink     string `json:"peering_link"`
+	EnableHA	string `json:"enable_ha"`
 }
 
 type TunnelResult struct {
@@ -30,7 +31,7 @@ type TunnelListResp struct {
 }
 
 func (c *Client) CreateTunnel(tunnel *Tunnel) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=peer_vpc_pair&vpc_name1=%s&vpc_name2=%s", c.CID, tunnel.VpcName1, tunnel.VpcName2)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=peer_vpc_pair&vpc_name1=%s&vpc_name2=%s&ha_enabled=%s", c.CID, tunnel.VpcName1, tunnel.VpcName2, tunnel.EnableHA)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return err

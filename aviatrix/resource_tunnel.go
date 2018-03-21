@@ -45,6 +45,10 @@ func resourceTunnel() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"enable_ha": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
