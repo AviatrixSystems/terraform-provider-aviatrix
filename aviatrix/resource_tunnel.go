@@ -63,6 +63,7 @@ func resourceTunnelCreate(d *schema.ResourceData, meta interface{}) error {
 		PeeringHaStatus: d.Get("peering_hastatus").(string),
 		Cluster:         d.Get("cluster").(string),
 		PeeringLink:     d.Get("peering_link").(string),
+		EnableHA:	 d.Get("enable_ha").(string),
 	}
 
 	log.Printf("[INFO] Creating Aviatrix tunnel: %#v", tunnel)
