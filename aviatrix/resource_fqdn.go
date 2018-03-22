@@ -67,6 +67,13 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 			return fmt.Errorf("Failed to attach GWs: %s", err)
 		}
 	}
+	if fqdn_status := d.Get("fqdn_status").(string); fqdn_status == "enabled" {
+		log.Printf("[INFO] Enable FQDN tag status: %#v", fqdn)
+		err := client.UpdateFQDNStatus(fqdn)
+		if err != nil {
+			return fmt.Errorf("Failed to update FQDN status : %s", err)
+		}
+	}
 	d.SetId(fqdn.FQDNTag)
 	return nil
 }
