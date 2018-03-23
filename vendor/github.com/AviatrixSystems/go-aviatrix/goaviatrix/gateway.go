@@ -49,22 +49,22 @@ type Gateway struct {
 	IntraVMRoute            string `form:"intra_vm_route,omitempty" json:"intra_vm_route,omitempty"`
 	IsHagw                  string `form:"is_hagw,omitempty" json:"is_hagw,omitempty"`
 	LdapAdditionalReq       string `form:"ldap_additional_req,omitempty"`
-	LdapBaseDn              string `form:"ldap_base_dn,omitempty"`
-	LdapBindDn              string `form:"ldap_bind_dn,omitempty"`
-	LdapCaCert              string `form:"ldap_ca_cert,omitempty"`
-	LdapClientCert          string `form:"ldap_client_cert,omitempty"`
-	LdapPassword            string `form:"ldap_password,omitempty"`
-	LdapServer              string `form:"ldap_server,omitempty"`
-	LdapUseSsl              string `form:"ldap_use_ssl,omitempty"`
-	LdapUserAttr            string `form:"ldap_user_attr,omitempty"`
+	LdapBaseDn              string `form:"ldap_base_dn,omitempty" json:"ldap_base_dn,omitempty"`
+	LdapBindDn              string `form:"ldap_bind_dn,omitempty" json:"ldap_bind_dn,omitempty"`
+	LdapCaCert              string `form:"ldap_ca_cert,omitempty" json:"ldap_ca_cert,omitempty"`
+	LdapClientCert          string `form:"ldap_client_cert,omitempty" json:"ldap_client_cert,omitempty"`
+	LdapPassword            string `form:"ldap_password,omitempty" json:"ldap_password,omitempty"`
+	LdapServer              string `form:"ldap_server,omitempty" json:"ldap_server,omitempty"`
+	LdapUseSsl              string `form:"ldap_use_ssl,omitempty" json:"ldap_use_ssl,omitempty"`
+	LdapUserAttr            string `form:"ldap_username_attribute,omitempty" json:"ldap_user_attr,omitempty`
 	LicenseID               string `form:"license_id,omitempty" json:"license_id,omitempty"`
 	MaxConn                 string `form:"max_conn,omitempty"`
 	MaxConnections          string `form:"max_connections,omitempty" json:"max_connections,omitempty"`
 	Nameservers             string `form:"nameservers,omitempty"`
-	OktaToken               string `form:"okta_token,omitempty"`
-	OktaURL                 string `form:"okta_url,omitempty"`
-	OktaUsernameSuffix      string `form:"okta_username_suffix,omitempty"`
-	OtpMode                 string `form:"otp_mode,omitempty"`
+	OktaToken               string `form:"okta_token,omitempty" json:"okta_token,omitempty"`
+	OktaURL                 string `form:"okta_url,omitempty" json:"okta_url,omitempty"`
+	OktaUsernameSuffix      string `form:"okta_username_suffix,omitempty" json:"okta_username_suffix,omitempty"`
+	OtpMode                 string `form:"otp_mode,omitempty" json:"otp_mode,omitempty"`
 	PbrDefaultGateway       string `form:"pbr_default_gateway,omitempty"`
 	PbrEnabled              string `form:"pbr_enabled,omitempty" json:"pbr_enabled,omitempty"`
 	PbrLogging              string `form:"pbr_logging,omitempty"`
@@ -86,7 +86,7 @@ type Gateway struct {
 	VpcSplunkIPPort         string `form:"vpc_splunk_ip_port,omitempty" json:"vpc_splunk_ip_port,omitempty"`
 	VpcState                string `form:"vpc_state,omitempty" json:"vpc_state,omitempty"`
 	VpcType                 string `form:"vpc_type,omitempty" json:"vpc_type,omitempty"`
-	VpnCidr                 string `form:"vpn_cidr,omitempty" json:"vpn_cidr,omitempty"`
+	VpnCidr                 string `form:"cidr,omitempty" json:"cidr,omitempty"`
 	VpnStatus               string `form:"vpn_access,omitempty" json:"vpn_status,omitempty"`
 	Zone                    string `form:"zone,omitempty" json:"zone,omitempty"`}
 
@@ -111,6 +111,23 @@ func (c *Client) CreateGateway(gateway *Gateway) (error) {
 		return errors.New(data.Reason)
 	}
 	return nil
+}
+
+func (c *Client) EnableNatGateway(gateway *Gateway) (error) {
+        gateway.CID=c.CID
+        gateway.Action="enable_nat"
+        resp,err := c.Post(c.baseURL, gateway)
+                if err != nil {
+                return err
+        }
+        var data APIResp
+        if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+                return err
+        }
+        if(!data.Return){
+                return errors.New(data.Reason)
+        }
+        return nil
 }
 
 func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
