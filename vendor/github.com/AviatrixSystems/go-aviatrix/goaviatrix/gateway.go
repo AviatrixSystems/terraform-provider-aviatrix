@@ -44,7 +44,7 @@ type Gateway struct {
 	GwSecurityGroupID       string `form:"gw_security_group_id,omitempty" json:"gw_security_group_id,omitempty"`
 	GwSize                  string `form:"gw_size,omitempty"`
 	GwSubnetID              string `form:"gw_subnet_id,omitempty" json:"gw_subnet_id,omitempty"`
-	HaEnabled               string `form:"ha_enabled,omitempty" json:"ha_enabled,omitempty"`
+	HASubnet                string `form:"ha_subnet,omitempty"`
 	InstState               string `form:"inst_state,omitempty" json:"inst_state,omitempty"`
 	IntraVMRoute            string `form:"intra_vm_route,omitempty" json:"intra_vm_route,omitempty"`
 	IsHagw                  string `form:"is_hagw,omitempty" json:"is_hagw,omitempty"`
@@ -117,6 +117,38 @@ func (c *Client) EnableNatGateway(gateway *Gateway) (error) {
         gateway.CID=c.CID
         gateway.Action="enable_nat"
         resp,err := c.Post(c.baseURL, gateway)
+                if err != nil {
+                return err
+        }
+        var data APIResp
+        if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+                return err
+        }
+        if(!data.Return){
+                return errors.New(data.Reason)
+        }
+        return nil
+}
+
+func (c *Client) EnableHaGateway(gateway *Gateway) (error) {
+        path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_vpc_ha&vpc_name=%s&specific_subnet=%s", c.CID, gateway.GwName, gateway.HASubnet)
+        resp,err := c.Get(path, nil)
+                if err != nil {
+                return err
+        }
+        var data APIResp
+        if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+                return err
+        }
+        if(!data.Return){
+                return errors.New(data.Reason)
+        }
+        return nil
+}
+
+func (c *Client) DisableHaGateway(gateway *Gateway) (error) {
+        path := c.baseURL + fmt.Sprintf("?CID=%s&action=disable_vpc_ha&vpc_name=%s", c.CID, gateway.GwName)
+        resp,err := c.Get(path, nil)
                 if err != nil {
                 return err
         }

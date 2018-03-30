@@ -43,6 +43,10 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"ha_subnet": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"public_ip": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -167,6 +171,17 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	if enable_nat := d.Get("enable_nat").(string); enable_nat == "yes" {
 		log.Printf("[INFO] Aviatrix NAT enabled gateway: %#v", gateway)
 	}
+	if ha_subnet := d.Get("ha_subnet").(string); ha_subnet != "" {
+		ha_gateway := &goaviatrix.Gateway{
+			GwName:   d.Get("gw_name").(string),
+			HASubnet: d.Get("ha_subnet").(string),
+		}
+		log.Printf("[INFO] Enable gateway HA: %#v", ha_gateway)
+		err := client.EnableHaGateway(ha_gateway)
+		if err != nil {
+			return fmt.Errorf("Failed to create GW HA: %s", err)
+		}
+	}
 	d.SetId(gateway.GwName)
 	return resourceAviatrixGatewayRead(d, meta)
 }
@@ -217,9 +232,16 @@ func resourceAviatrixGatewayDelete(d *schema.ResourceData, meta interface{}) err
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string),
 	}
-
+	//If HA is enabled, delete HA GW first.
+	if ha_subnet := d.Get("ha_subnet").(string); ha_subnet != "" {
+		//Delete HA Gw first
+		log.Printf("[INFO] Deleting Aviatrix HA gateway: %#v", gateway)
+		err := client.DisableHaGateway(gateway)
+		if err != nil {
+			return fmt.Errorf("Failed to delete Aviatrix HA gateway: %s", err)
+		}
+	}
 	log.Printf("[INFO] Deleting Aviatrix gateway: %#v", gateway)
-
 	err := client.DeleteGateway(gateway)
 	if err != nil {
 		return fmt.Errorf("Failed to delete Aviatrix Gateway: %s", err)
