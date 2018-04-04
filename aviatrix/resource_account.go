@@ -25,7 +25,7 @@ func resourceAccount() *schema.Resource {
 			},
 			"account_email": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"cloud_type": &schema.Schema{
 				Type:     schema.TypeInt,
