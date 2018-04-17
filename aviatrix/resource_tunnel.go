@@ -63,7 +63,7 @@ func resourceTunnelCreate(d *schema.ResourceData, meta interface{}) error {
 		PeeringHaStatus: d.Get("peering_hastatus").(string),
 		Cluster:         d.Get("cluster").(string),
 		PeeringLink:     d.Get("peering_link").(string),
-		EnableHA:	 d.Get("enable_ha").(string),
+		EnableHA:        d.Get("enable_ha").(string),
 	}
 
 	log.Printf("[INFO] Creating Aviatrix tunnel: %#v", tunnel)
@@ -128,11 +128,11 @@ func resourceTunnelDelete(d *schema.ResourceData, meta interface{}) error {
 	tunnel := &goaviatrix.Tunnel{
 		VpcName1: d.Get("vpc_name1").(string),
 		VpcName2: d.Get("vpc_name2").(string),
-                EnableHA: d.Get("enable_ha").(string), 
+		EnableHA: d.Get("enable_ha").(string),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix tunnel: %#v", tunnel)
-        if enable_ha := d.Get("enable_ha").(string); enable_ha == "yes" {
+	if enable_ha := d.Get("enable_ha").(string); enable_ha == "yes" {
 		// parse the hagw name
 		tunnel.VpcName1 += "-hagw"
 		tunnel.VpcName2 += "-hagw"
