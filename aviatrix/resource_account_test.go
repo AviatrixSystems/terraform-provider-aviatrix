@@ -42,7 +42,7 @@ resource "aviatrix_account" "foo" {
   cloud_type = 1
   aws_account_number = "%s"
   aws_iam = "true"
-  aws_role_arn = "arn:aws:iam::%s:role/aviatrix-role-app"
+  aws_role_app = "arn:aws:iam::%s:role/aviatrix-role-app"
   aws_role_ec2 = "arn:aws:iam::%s:role/aviatrix-role-ec2"
 }
 	`, rInt, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCOUNT_NUMBER"))
