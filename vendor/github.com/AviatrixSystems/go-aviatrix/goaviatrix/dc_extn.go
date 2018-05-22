@@ -3,11 +3,12 @@ package goaviatrix
 import (
 	"encoding/json"
 	"errors"
+        "fmt"
 	//"log"
 	//"github.com/davecgh/go-spew/spew"
 )
 
-// DCExtn simple struct to hold transitive peering details
+// DCExtn simple struct
 
 type DCExtn struct {
 	CID           	string `form:"CID,omitempty"`
@@ -71,17 +72,13 @@ func (c *Client) GetDCExtn(dc_extn *DCExtn) (*DCExtn, error) {
 }
 
 func (c *Client) UpdateDCExtn(dc_extn *DCExtn) (error) {
-	return nil
-}
-
-func (c *Client) DeleteDCExtn(dc_extn *DCExtn) (error) {
 	dc_extn.CID=c.CID
-	dc_extn.Action="delete_extended_vpc_peer"
+	dc_extn.Action="list_cidr_of_available_vpcs"
 	resp,err := c.Post(c.baseURL, dc_extn)
 		if err != nil {
 		return err
 	}
-	var data APIResp
+	var data DCExtnListResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
@@ -89,4 +86,21 @@ func (c *Client) DeleteDCExtn(dc_extn *DCExtn) (error) {
 		return errors.New(data.Reason)
 	}
 	return nil
+}
+
+func (c *Client) DeleteDCExtn(dc_extn *DCExtn) (error) {
+        path := c.baseURL + fmt.Sprintf("?action=delete_container&CID=%s&cloud_type=%d&gw_name=%s", c.CID, dc_extn.CloudType, dc_extn.GwName)
+        resp,err := c.Get(path, nil)
+
+        if err != nil {
+               return err
+        }
+        var data APIResp
+        if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+               return err
+        }
+        if(!data.Return){
+               return errors.New(data.Reason)
+        }
+        return nil
 }

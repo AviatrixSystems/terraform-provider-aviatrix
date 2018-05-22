@@ -85,9 +85,38 @@ func resourceDCExtnRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDCExtnUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceAviatrixGatewayUpdate(d, meta)
+	client := meta.(*goaviatrix.Client)
+	dc_extn := &goaviatrix.DCExtn{}
+	log.Printf("[INFO] Update available public subnet CIDR: %#v", dc_extn)
+	err := client.UpdateDCExtn(dc_extn)
+	if err != nil {
+		return fmt.Errorf("No available public CIDR or fully exhausted: %s", err)
+	}
+
+	return nil
+	//return resourceAviatrixGatewayUpdate(d, meta)
 }
 
 func resourceDCExtnDelete(d *schema.ResourceData, meta interface{}) error {
-	return resourceAviatrixGatewayDelete(d, meta)
+	client := meta.(*goaviatrix.Client)
+	dc_extn := &goaviatrix.DCExtn{
+		CloudType: d.Get("cloud_type").(int),
+		GwName:    d.Get("gw_name").(string),
+	}
+	//If HA is enabled, delete HA GW first.
+	//if ha_subnet := d.Get("ha_subnet").(string); ha_subnet != "" {
+	//Delete HA Gw first
+	//        log.Printf("[INFO] Deleting Aviatrix HA gateway: %#v", gateway)
+	//        err := client.DisableHaGateway(gateway)
+	//        if err != nil {
+	//                return fmt.Errorf("Failed to delete Aviatrix HA gateway: %s", err)
+	//        }
+	//}
+	log.Printf("[INFO] Deleting Aviatrix datacenter extension gateway: %#v", dc_extn)
+	err := client.DeleteDCExtn(dc_extn)
+	if err != nil {
+		return fmt.Errorf("Failed to delete Aviatrix Gateway: %s", err)
+	}
+	d.SetId(dc_extn.GwName)
+	return nil
 }
