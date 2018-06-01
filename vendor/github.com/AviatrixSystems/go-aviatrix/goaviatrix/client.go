@@ -52,17 +52,22 @@ type Client struct {
 // Returns:
 //    error - if any
 func (c *Client) Login() error {
-	path := c.baseURL + fmt.Sprintf("?action=login&username=%s&password=%s", c.Username, c.Password)
-	resp, err := c.Get(path, nil) 
+	account := make(map[string]interface{})
+	account["action"]="login"
+	account["username"]= c.Username
+	account["password"]= c.Password
+
+	log.Printf("[INFO] Parsed Aviatrix login: %#v", account)
+	resp,err := c.Post(c.baseURL, account)
 	if err != nil {
-		return err
-	}
+            return err
+        }
 	var data LoginResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+	    return err
 	}
 	if(!data.Return){
-		return errors.New(data.Reason)
+	    return errors.New(data.Reason)
 	}
 	log.Printf("[TRACE] CID is '%s'.", data.CID)
 	c.CID = data.CID
