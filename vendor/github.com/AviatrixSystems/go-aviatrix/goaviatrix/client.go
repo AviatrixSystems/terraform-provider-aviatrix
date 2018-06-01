@@ -57,7 +57,7 @@ func (c *Client) Login() error {
 	account["username"]= c.Username
 	account["password"]= c.Password
 
-	log.Printf("[INFO] Parsed Aviatrix login: %#v", account)
+	log.Printf("[INFO] Parsed Aviatrix login: %#v", account["username"])
 	resp,err := c.Post(c.baseURL, account)
 	if err != nil {
             return err
