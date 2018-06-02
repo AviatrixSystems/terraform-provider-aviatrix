@@ -36,6 +36,7 @@ type Gateway struct {
 	EnableClientCertSharing string `form:"enable_client_cert_sharing,omitempty"`
 	EnableElb               string `form:"enable_elb,omitempty"`
 	EnableLdap              string `form:"enable_ldap,omitempty"`
+	DnsServer               string `form:"dns_server,omitempty"`
 	EnableNat               string `form:"enable_nat,omitempty" json:"enable_nat,omitempty"`
 	EnablePbr               string `form:"enable_pbr,omitempty"`
 	Expiration              string `form:"expiration,omitempty" json:"expiration,omitempty"`

@@ -55,6 +55,10 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"dns_server": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"vpn_access": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -142,6 +146,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		VpcSize:            d.Get("vpc_size").(string),
 		VpcNet:             d.Get("vpc_net").(string),
 		EnableNat:          d.Get("enable_nat").(string),
+		DnsServer:          d.Get("dns_server").(string),
 		VpnStatus:          d.Get("vpn_access").(string),
 		VpnCidr:            d.Get("cidr").(string),
 		EnableElb:          d.Get("enable_elb").(string),
@@ -166,10 +171,17 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 
 	err := client.CreateGateway(gateway)
 	if err != nil {
+		del_err := client.DeleteGateway(gateway)
+		if del_err != nil {
+			return fmt.Errorf("Failed to auto-cleanup failed gateway: %s", del_err)
+		}
 		return fmt.Errorf("Failed to create Aviatrix Gateway: %s", err)
 	}
 	if enable_nat := d.Get("enable_nat").(string); enable_nat == "yes" {
 		log.Printf("[INFO] Aviatrix NAT enabled gateway: %#v", gateway)
+	}
+	if dns_server := d.Get("dns_server").(string); dns_server != "" {
+		log.Printf("[INFO] Aviatrix gateway DNS server: %#v", gateway)
 	}
 	if ha_subnet := d.Get("ha_subnet").(string); ha_subnet != "" {
 		ha_gateway := &goaviatrix.Gateway{
@@ -179,6 +191,10 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		log.Printf("[INFO] Enable gateway HA: %#v", ha_gateway)
 		err := client.EnableHaGateway(ha_gateway)
 		if err != nil {
+			del_err := client.DeleteGateway(gateway)
+			if del_err != nil {
+				return fmt.Errorf("Failed to auto-cleanup failed gateway: %s", del_err)
+			}
 			return fmt.Errorf("Failed to create GW HA: %s", err)
 		}
 	}
