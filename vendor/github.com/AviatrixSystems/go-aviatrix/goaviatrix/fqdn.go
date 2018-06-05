@@ -13,7 +13,7 @@ type FQDN struct {
 	Action                  string `form:"action,omitempty"`
 	CID                     string `form:"CID,omitempty"`
 	FQDNStatus              string `form:"status,omitempty" json:"status,omitempty"`
-	FQDNMode                string `form:"wb_mode,omitempty" json:"wb_mode,omitempty"`
+	FQDNMode                string `form:"color,omitempty" json:"color,omitempty"`
 	GwList                  []string `form:"gw_name,omitempty" json:"members,omitempty"`
 	DomainList              []string `form:"domain_names[],omitempty"`
 }
@@ -75,7 +75,7 @@ func (c *Client) UpdateFQDNStatus(fqdn *FQDN) (error) {
 
 //Change default mode to 'white' or 'black'
 func (c *Client) UpdateFQDNMode(fqdn *FQDN) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=set_fqdn_filter_tag_color&tag_name=%s&wbmode=%s", c.CID, fqdn.FQDNTag, fqdn.FQDNMode)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=set_fqdn_filter_tag_color&tag_name=%s&color=%s", c.CID, fqdn.FQDNTag, fqdn.FQDNMode)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return err

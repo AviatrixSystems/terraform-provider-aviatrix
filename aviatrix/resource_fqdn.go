@@ -74,6 +74,14 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 			return fmt.Errorf("Failed to update FQDN status : %s", err)
 		}
 	}
+	// update fqdn_mode when set to non-default "blacklist" mode
+	if fqdn_mode := d.Get("fqdn_mode").(string); fqdn_mode == "black" {
+		log.Printf("[INFO] Enable FQDN Mode: %#v", fqdn)
+		err := client.UpdateFQDNMode(fqdn)
+		if err != nil {
+			return fmt.Errorf("Failed to update FQDN mode : %s", err)
+		}
+	}
 	d.SetId(fqdn.FQDNTag)
 	return nil
 }
