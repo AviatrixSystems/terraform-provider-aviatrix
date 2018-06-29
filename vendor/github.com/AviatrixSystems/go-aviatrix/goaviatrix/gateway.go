@@ -46,6 +46,8 @@ type Gateway struct {
 	GwSize                  string `form:"gw_size,omitempty"`
 	GwSubnetID              string `form:"gw_subnet_id,omitempty" json:"gw_subnet_id,omitempty"`
 	HASubnet                string `form:"ha_subnet,omitempty"`
+	PeeringHASubnet         string `form:"public_subnet,omitempty"`
+	NewZone                 string `form:"new_zone,omitempty"`
 	InstState               string `form:"inst_state,omitempty" json:"inst_state,omitempty"`
 	IntraVMRoute            string `form:"intra_vm_route,omitempty" json:"intra_vm_route,omitempty"`
 	IsHagw                  string `form:"is_hagw,omitempty" json:"is_hagw,omitempty"`
@@ -130,7 +132,27 @@ func (c *Client) EnableNatGateway(gateway *Gateway) (error) {
         }
         return nil
 }
-
+func (c *Client) EnablePeeringHaGateway(gateway *Gateway) (error) {
+        gateway.CID=c.CID
+        gateway.Action="create_peering_ha_gateway"
+        resp,err := c.Post(c.baseURL, gateway)
+                if err != nil {
+                return err
+        }
+        //path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_vpc_ha&vpc_name=%s&specific_subnet=%s", c.CID, gateway.GwName, gateway.HASubnet)
+        //resp,err := c.Get(path, nil)
+        //        if err != nil {
+         //       return err
+        //}
+        var data APIResp
+        if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+                return err
+        }
+        if(!data.Return){
+                return errors.New(data.Reason)
+        }
+        return nil
+}
 func (c *Client) EnableHaGateway(gateway *Gateway) (error) {
         path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_vpc_ha&vpc_name=%s&specific_subnet=%s", c.CID, gateway.GwName, gateway.HASubnet)
         resp,err := c.Get(path, nil)
@@ -179,6 +201,7 @@ func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
 	}
 	gwlist:= data.Results
 	for i := range gwlist {
+	        //log.Printf("DEBUG  %s", gwlist[i].GwName)
 		if gwlist[i].GwName == gateway.GwName {
 			return &gwlist[i], nil
 		}

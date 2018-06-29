@@ -14,15 +14,19 @@ type Site2Cloud struct {
 	Action                  string `form:"action,omitempty"`
 	CID                     string `form:"CID,omitempty"`
 	VpcID                   string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	ConnName                string `form:"connection_name,omitempty"`
+	TunnelName              string `form:"connection_name" json:"connection_name"`
 	RemoteGwType            string `form:"remote_gateway_type,omitempty" json:"remote_gateway_type,omitempty"`
 	ConnType                string `form:"connection_type,omitempty"`
 	TunnelType              string `form:"tunnel_type,omitempty"`
 	GwName                  string `form:"primary_cloud_gateway_name"`
+	BackupGwName            string `form:"backup_gateway_name"`
 	RemoteGwIP              string `form:"remote_gateway_ip,omitempty" json:"remote_gateway_ip,omitempty"`
+	BackupRemoteGwIP        string `form:"backup_remote_gateway_ip,omitempty" json:"remote_gateway_ip,omitempty"`
 	PreSharedKey            string `form:"pre_shared_key,omitempty"`
+	BackupPreSharedKey      string `form:"backup_pre_shared_key,omitempty"`
 	RemoteSubnet            string `form:"remote_subnet_cidr,omitempty" json:"remote_subnet_cidr,omitempty"`
 	LocalSubnet             string `form:"local_subnet_cidr,omitempty" json:"local_cidr,omitempty"`
+	HAEnabled               string `form:"ha_enabled,omitempty"`
 }
 
 type Site2CloudResp struct {
@@ -47,6 +51,7 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) (error) {
 		return err
 	}
 	if(!data.Return){
+		log.Printf("[INFO] Couldn't find s2c connection %s: %s", site2cloud.TunnelName, data.Reason)
 		return errors.New(data.Reason)
 	}
 	return nil
@@ -54,7 +59,7 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) (error) {
 
 func (c *Client) GetSite2Cloud(site2cloud *Site2Cloud) (*Site2Cloud, error) {
 	site2cloud.Action="list_site2cloud_conn"
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=%s&connection_name=%s", c.CID, site2cloud.Action, site2cloud.ConnName)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=%s&connection_name=%s", c.CID, site2cloud.Action, site2cloud.TunnelName)
 	resp,err := c.Get(path, nil)
 	if err != nil {
 		return nil, err
@@ -74,7 +79,7 @@ func (c *Client) UpdateSite2Cloud(site2cloud *Site2Cloud) (error) {
 	site2cloud.CID = c.CID
 	site2cloud.Action = "edit_site2cloud_conn"
 	verb := "POST"
-	body := fmt.Sprintf("CID=%s&action=%s&vpc_id=%s&connection_name=%s&local_subnet_cidr=%s&remote_subnet_cidr=%s", c.CID, site2cloud.Action, site2cloud.VpcID ,site2cloud.ConnName ,site2cloud.LocalSubnet, site2cloud.RemoteSubnet)
+	body := fmt.Sprintf("CID=%s&action=%s&vpc_id=%s&conn_name=%s&local_subnet_cidr=%s&remote_subnet_cidr=%s", c.CID, site2cloud.Action, site2cloud.VpcID ,site2cloud.TunnelName ,site2cloud.LocalSubnet, site2cloud.RemoteSubnet)
 	log.Printf("[TRACE] %s %s Body: %s", verb, c.baseURL, body)
 	req, err := http.NewRequest(verb, c.baseURL, strings.NewReader(body))
 	if err == nil {
@@ -99,9 +104,10 @@ func (c *Client) UpdateSite2Cloud(site2cloud *Site2Cloud) (error) {
 
 func (c *Client) DeleteSite2Cloud(site2cloud *Site2Cloud) (error) {
 	site2cloud.CID = c.CID
-	site2cloud.Action = "delete_site2cloud_conn"
+	site2cloud.Action = "delete_site2cloud_connection"
 	verb := "POST"
-	body := fmt.Sprintf("CID=%s&action=%s&vpc_id=%s&connection_name=%s", c.CID, site2cloud.Action, site2cloud.VpcID ,site2cloud.ConnName)
+	body := fmt.Sprintf("CID=%s&action=%s&vpc_id=%s&connection_name=%s", c.CID, site2cloud.Action, site2cloud.VpcID ,site2cloud.TunnelName)
+
 	log.Printf("[TRACE] %s %s Body: %s", verb, c.baseURL, body)
 	req, err := http.NewRequest(verb, c.baseURL, strings.NewReader(body))
 	if err == nil {
@@ -113,7 +119,6 @@ func (c *Client) DeleteSite2Cloud(site2cloud *Site2Cloud) (error) {
 	if err != nil {
 		return err
 	}
-
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err

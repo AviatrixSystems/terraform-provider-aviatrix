@@ -131,6 +131,14 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"public_subnet": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"new_zone": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -165,17 +173,25 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		LdapPassword:       d.Get("ldap_password").(string),
 		LdapBaseDn:         d.Get("ldap_base_dn").(string),
 		LdapUserAttr:       d.Get("ldap_username_attribute").(string),
+		HASubnet:           d.Get("ha_subnet").(string),
+		PeeringHASubnet:    d.Get("public_subnet").(string),
+		NewZone:            d.Get("new_zone").(string),
 	}
 
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)
 
 	err := client.CreateGateway(gateway)
 	if err != nil {
+		log.Printf("[INFO] Failed to create Aviatrix gateway: %#v", gateway)
+		log.Printf("[INFO] Gateway auto-cleanup kicks in")
 		del_err := client.DeleteGateway(gateway)
 		if del_err != nil {
 			return fmt.Errorf("Failed to auto-cleanup failed gateway: %s", del_err)
 		}
-		return fmt.Errorf("Failed to create Aviatrix Gateway: %s", err)
+		err := client.CreateGateway(gateway)
+		if err != nil {
+			return fmt.Errorf("2nd Attempt failed to create Aviatrix Gateway: %s", err)
+		}
 	}
 	if enable_nat := d.Get("enable_nat").(string); enable_nat == "yes" {
 		log.Printf("[INFO] Aviatrix NAT enabled gateway: %#v", gateway)
@@ -183,6 +199,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	if dns_server := d.Get("dns_server").(string); dns_server != "" {
 		log.Printf("[INFO] Aviatrix gateway DNS server: %#v", gateway)
 	}
+	// ha_subnet is for Gateway HA
 	if ha_subnet := d.Get("ha_subnet").(string); ha_subnet != "" {
 		ha_gateway := &goaviatrix.Gateway{
 			GwName:   d.Get("gw_name").(string),
@@ -196,6 +213,19 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 				return fmt.Errorf("Failed to auto-cleanup failed gateway: %s", del_err)
 			}
 			return fmt.Errorf("Failed to create GW HA: %s", err)
+		}
+	}
+	// public_subnet is for Peering HA Gateway
+	if public_subnet := d.Get("public_subnet").(string); public_subnet != "" {
+		ha_gateway := &goaviatrix.Gateway{
+			GwName:          d.Get("gw_name").(string),
+			PeeringHASubnet: d.Get("public_subnet").(string),
+			NewZone:         d.Get("new_zone").(string),
+		}
+		log.Printf("[INFO] Enable peering HA: %#v", ha_gateway)
+		err := client.EnablePeeringHaGateway(ha_gateway)
+		if err != nil {
+			return fmt.Errorf("Failed to create peering HA: %s", err)
 		}
 	}
 	d.SetId(gateway.GwName)
@@ -216,8 +246,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		}
 		return fmt.Errorf("Couldn't find Aviatrix Gateway: %s", err)
 	}
-	log.Printf("[TRACE] reading gateway %s: %#v",
-		d.Get("gw_name").(string), gw)
+	log.Printf("[TRACE] reading gateway %s: %#v", d.Get("gw_name").(string), gw)
 	if gw != nil {
 		d.Set("vpc_size", gw.VpcSize)
 		d.Set("public_ip", gw.PublicIP)
@@ -248,15 +277,25 @@ func resourceAviatrixGatewayDelete(d *schema.ResourceData, meta interface{}) err
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string),
 	}
-	//If HA is enabled, delete HA GW first.
+	// ha_subnet is for Gateway HA
 	if ha_subnet := d.Get("ha_subnet").(string); ha_subnet != "" {
-		//Delete HA Gw first
-		log.Printf("[INFO] Deleting Aviatrix HA gateway: %#v", gateway)
+		log.Printf("[INFO] Deleting Aviatrix gateway HA: %#v", gateway)
 		err := client.DisableHaGateway(gateway)
 		if err != nil {
-			return fmt.Errorf("Failed to delete Aviatrix HA gateway: %s", err)
+			return fmt.Errorf("Failed to disable Aviatrix gateway HA: %s", err)
 		}
 	}
+	// public_subnet is for Peering HA
+	if public_subnet := d.Get("public_subnet").(string); public_subnet != "" {
+		//Delete backup gateway first
+		gateway.GwName += "-hagw"
+		log.Printf("[INFO] Deleting Aviatrix Backup Gateway [-hagw]: %#v", gateway)
+		err := client.DeleteGateway(gateway)
+		if err != nil {
+			return fmt.Errorf("Failed to delete backup [-hgw] gateway: %s", err)
+		}
+	}
+	gateway.GwName = d.Get("gw_name").(string)
 	log.Printf("[INFO] Deleting Aviatrix gateway: %#v", gateway)
 	err := client.DeleteGateway(gateway)
 	if err != nil {
