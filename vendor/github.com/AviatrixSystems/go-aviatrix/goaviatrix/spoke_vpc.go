@@ -16,6 +16,7 @@ type SpokeVpc struct {
 	GwName                  string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
 	GwSize                  string `form:"gw_size,omitempty"`
 	VpcID                   string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	VnetRsrcGrp             string `form:"vnet_and_resource_group_names,omitempty"`
 	Subnet                  string `form:"public_subnet,omitempty" json:"public_subnet,omitempty"`
 	VpcRegion               string `form:"region,omitempty" json:"vpc_region,omitempty"`
 	VpcSize                 string `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
@@ -43,10 +44,6 @@ func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) (error) {
 }
 
 func (c *Client) SpokeJoinTransit(spoke *SpokeVpc) (error) {
-	//enable_ha := ""
-	//if spoke.HASubnet != "" {
-	//	enable_ha = "yes"
-	//}
 	path := c.baseURL + fmt.Sprintf("?CID=%s&action=attach_spoke_to_transit_gw&spoke_gw=%s&transit_gw=%s", c.CID, spoke.GwName, spoke.TransitGateway)
 	resp,err := c.Get(path, nil)
 		if err != nil {

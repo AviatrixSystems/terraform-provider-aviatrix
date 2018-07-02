@@ -41,7 +41,7 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			},
 			"backup_gateway_name": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"pre_shared_key": &schema.Schema{
 				Type:     schema.TypeString,

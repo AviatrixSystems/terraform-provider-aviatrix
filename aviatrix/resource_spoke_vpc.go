@@ -30,7 +30,11 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 			},
 			"vpc_id": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+			},
+			"vnet_and_resource_group_names": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"vpc_reg": &schema.Schema{
 				Type:     schema.TypeString,
@@ -76,6 +80,7 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		AccountName:    d.Get("account_name").(string),
 		GwName:         d.Get("gw_name").(string),
 		VpcID:          d.Get("vpc_id").(string),
+		VnetRsrcGrp:    d.Get("vnet_and_resource_group_names").(string),
 		VpcRegion:      d.Get("vpc_reg").(string),
 		VpcSize:        d.Get("vpc_size").(string),
 		Subnet:         d.Get("subnet").(string),
@@ -83,6 +88,14 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		EnableNAT:      d.Get("enable_nat").(string),
 		DnsServer:      d.Get("dns_server").(string),
 		TransitGateway: d.Get("transit_gw").(string),
+	}
+	if cloud_type := d.Get("cloud_type").(int); cloud_type == 1 {
+		gateway.VnetRsrcGrp = ""
+		d.Set("vnet_and_resource_group_names", gateway.VnetRsrcGrp)
+	}
+	if cloud_type := d.Get("cloud_type").(int); cloud_type == 8 {
+		gateway.VpcID = ""
+		d.Set("vpc_id", gateway.VpcID)
 	}
 	if _, ok := d.GetOk("tag_list"); ok {
 		tag_list := d.Get("tag_list").([]interface{})
