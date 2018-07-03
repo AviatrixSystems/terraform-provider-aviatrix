@@ -135,7 +135,7 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"new_zone": {
+			"zone": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -175,7 +175,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		LdapUserAttr:       d.Get("ldap_username_attribute").(string),
 		HASubnet:           d.Get("ha_subnet").(string),
 		PeeringHASubnet:    d.Get("public_subnet").(string),
-		NewZone:            d.Get("new_zone").(string),
+		NewZone:            d.Get("zone").(string),
 	}
 
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)
@@ -183,15 +183,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	err := client.CreateGateway(gateway)
 	if err != nil {
 		log.Printf("[INFO] Failed to create Aviatrix gateway: %#v", gateway)
-		log.Printf("[INFO] Gateway auto-cleanup kicks in")
-		del_err := client.DeleteGateway(gateway)
-		if del_err != nil {
-			return fmt.Errorf("Failed to auto-cleanup failed gateway: %s", del_err)
-		}
-		err := client.CreateGateway(gateway)
-		if err != nil {
-			return fmt.Errorf("2nd Attempt failed to create Aviatrix Gateway: %s", err)
-		}
+		return fmt.Errorf("Failed to create Aviatrix gateway: %s", err)
 	}
 	if enable_nat := d.Get("enable_nat").(string); enable_nat == "yes" {
 		log.Printf("[INFO] Aviatrix NAT enabled gateway: %#v", gateway)
@@ -220,7 +212,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		ha_gateway := &goaviatrix.Gateway{
 			GwName:          d.Get("gw_name").(string),
 			PeeringHASubnet: d.Get("public_subnet").(string),
-			NewZone:         d.Get("new_zone").(string),
+			NewZone:         d.Get("zone").(string),
 		}
 		log.Printf("[INFO] Enable peering HA: %#v", ha_gateway)
 		err := client.EnablePeeringHaGateway(ha_gateway)

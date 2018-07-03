@@ -29,7 +29,7 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			},
 			"connection_type": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"tunnel_type": &schema.Schema{
 				Type:     schema.TypeString,
@@ -129,14 +129,17 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 	if s2c != nil {
 		d.Set("vpc_id", s2c.VpcID)
 		d.Set("remote_gateway_type", s2c.RemoteGwType)
-		d.Set("connection_type", s2c.ConnType)
 		d.Set("tunnel_type", s2c.TunnelType)
 		d.Set("remote_gateway_ip", s2c.RemoteGwIP)
 		d.Set("remote_subnet_cidr", s2c.RemoteSubnet)
 		d.Set("local_subnet_cidr", s2c.LocalSubnet)
-		d.SetId("")
+		if connection_type := d.Get("connection_type").(string); connection_type == "" {
+			//force default setting and save to .tfstate file
+			d.Set("connection_type", "unmapped")
+		}
 	}
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", d.Get("connection_name").(string), site2cloud)
+	log.Printf("[TRACE] Reading Aviatrix Site2Cloud connection_type: [%s]", d.Get("connection_type").(string))
 	d.SetId(site2cloud.TunnelName)
 	return nil
 }
@@ -150,20 +153,6 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 	d.Partial(true)
 	log.Printf("[INFO] Updating Aviatrix Site2Cloud: %#v", site2cloud)
-	if ok := d.HasChange("connection_name"); ok {
-		site2cloud.TunnelName = d.Get("connection_name").(string)
-		err := client.UpdateSite2Cloud(site2cloud)
-		if err != nil {
-			return fmt.Errorf("Failed to update Site2Cloud Tunnel Name: %s", err)
-		}
-	}
-	if ok := d.HasChange("primary_cloud_gateway_name"); ok {
-		site2cloud.GwName = d.Get("primary_cloud_gateway_name").(string)
-		err := client.UpdateSite2Cloud(site2cloud)
-		if err != nil {
-			return fmt.Errorf("Failed to update Site2Cloud primary_cloud_gateway_name : %s", err)
-		}
-	}
 	if ok := d.HasChange("remote_subnet_cidr"); ok {
 		site2cloud.RemoteSubnet = d.Get("remote_subnet_cidr").(string)
 		err := client.UpdateSite2Cloud(site2cloud)
@@ -182,7 +171,7 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 	d.Partial(false)
 	d.SetId(site2cloud.TunnelName)
-	return resourceTunnelRead(d, meta)
+	return resourceAviatrixSite2CloudRead(d, meta)
 }
 
 func resourceAviatrixSite2CloudDelete(d *schema.ResourceData, meta interface{}) error {
@@ -192,11 +181,11 @@ func resourceAviatrixSite2CloudDelete(d *schema.ResourceData, meta interface{}) 
 		TunnelName: d.Get("connection_name").(string),
 	}
 
-	log.Printf("[INFO] Deleting Aviatrix s2c vendorgo: %#v", s2c)
+	log.Printf("[INFO] Deleting Aviatrix s2c: %#v", s2c)
 
 	err := client.DeleteSite2Cloud(s2c)
 	if err != nil {
-		return fmt.Errorf("Failed to delete Aviatrix Site2Cloud vendorgo: %s", err)
+		return fmt.Errorf("Failed to delete Aviatrix Site2Cloud: %s", err)
 	}
 	return nil
 }

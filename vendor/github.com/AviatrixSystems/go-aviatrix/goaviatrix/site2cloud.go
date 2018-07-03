@@ -14,19 +14,19 @@ type Site2Cloud struct {
 	Action                  string `form:"action,omitempty"`
 	CID                     string `form:"CID,omitempty"`
 	VpcID                   string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	TunnelName              string `form:"connection_name" json:"connection_name"`
-	RemoteGwType            string `form:"remote_gateway_type,omitempty" json:"remote_gateway_type,omitempty"`
-	ConnType                string `form:"connection_type,omitempty"`
-	TunnelType              string `form:"tunnel_type,omitempty"`
-	GwName                  string `form:"primary_cloud_gateway_name"`
+	TunnelName              string `form:"connection_name" json:"name,omitempty"`
+	RemoteGwType            string `form:"remote_gateway_type,omitempty" json:"peer_type,omitempty"`
+	ConnType                string `form:"connection_type,omitempty" json:""connection_type,omitempty"`
+	TunnelType              string `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
+	GwName                  string `form:"primary_cloud_gateway_name" json:"gw_name,omitempty`
 	BackupGwName            string `form:"backup_gateway_name"`
-	RemoteGwIP              string `form:"remote_gateway_ip,omitempty" json:"remote_gateway_ip,omitempty"`
-	BackupRemoteGwIP        string `form:"backup_remote_gateway_ip,omitempty" json:"remote_gateway_ip,omitempty"`
+	RemoteGwIP              string `form:"remote_gateway_ip,omitempty" json:"peer_ip,omitempty"`
+	BackupRemoteGwIP        string `form:"backup_remote_gateway_ip,omitempty`
 	PreSharedKey            string `form:"pre_shared_key,omitempty"`
 	BackupPreSharedKey      string `form:"backup_pre_shared_key,omitempty"`
-	RemoteSubnet            string `form:"remote_subnet_cidr,omitempty" json:"remote_subnet_cidr,omitempty"`
+	RemoteSubnet            string `form:"remote_subnet_cidr,omitempty" json:"remote_cidr,omitempty"`
 	LocalSubnet             string `form:"local_subnet_cidr,omitempty" json:"local_cidr,omitempty"`
-	HAEnabled               string `form:"ha_enabled,omitempty"`
+	HAEnabled               string `form:"ha_enabled,omitempty" json:"ha_status,omitempty"`
 }
 
 type Site2CloudResp struct {
