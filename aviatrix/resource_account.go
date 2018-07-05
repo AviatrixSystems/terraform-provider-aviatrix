@@ -1,6 +1,7 @@
 package aviatrix
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -75,13 +76,30 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[INFO] Creating Aviatrix account: %#v", account)
+	if aws_iam := d.Get("aws_iam").(string); aws_iam == "true" {
+		var role_app bytes.Buffer
+		var role_ec2 bytes.Buffer
+		role_app.WriteString("arn:aws:iam::")
+		role_app.WriteString(account.AwsAccountNumber)
+		role_app.WriteString(":role/aviatrix-role-app")
+		role_ec2.WriteString("arn:aws:iam::")
+		role_ec2.WriteString(account.AwsAccountNumber)
+		role_ec2.WriteString(":role/aviatrix-role-ec2")
+		if aws_role_app := d.Get("aws_role_app").(string); aws_role_app == "" {
+			account.AwsRoleApp += role_app.String()
+		}
+		if aws_role_ec2 := d.Get("aws_role_ec2").(string); aws_role_ec2 == "" {
+			account.AwsRoleEc2 += role_ec2.String()
+		}
+		log.Printf("[TRACE] Reading Aviatrix account aws_role_app: [%s]", d.Get("aws_role_app").(string))
+		log.Printf("[TRACE] Reading Aviatrix account aws_role_ec2: [%s]", d.Get("aws_role_ec2").(string))
+	}
 	err := client.CreateAccount(account)
 	if err != nil {
 		return fmt.Errorf("Failed to create Aviatrix Account: %s", err)
 	}
 	d.SetId(account.AccountName)
-	return nil
-	//return resourceAccountRead(d, meta)
+	return resourceAccountRead(d, meta)
 }
 
 func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
@@ -103,11 +121,13 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("account_email", acc.AccountEmail)
 		d.Set("cloud_type", acc.CloudType)
 		d.Set("aws_account_number", acc.AwsAccountNumber)
-		//d.Set("aws_iam", acc.AwsIam)
-		d.Set("aws_role_app", acc.AwsRoleApp)
-		d.Set("aws_role_ec2", acc.AwsRoleEc2)
-		d.Set("aws_access_key", acc.AwsAccessKey)
-		d.Set("aws_secret_key", acc.AwsSecretKey)
+		if aws_iam := d.Get("aws_iam").(string); aws_iam != "true" {
+			//force default setting and save to .tfstate file
+			d.Set("aws_access_key", acc.AwsAccessKey)
+			d.Set("aws_secret_key", acc.AwsSecretKey)
+		} else {
+			d.Set("aws_iam", "true")
+		}
 		d.SetId(acc.AccountName)
 	}
 	return nil
@@ -137,41 +157,36 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 		if d.HasChange("aws_account_number") {
 			d.SetPartial("aws_account_number")
 		}
-		if d.HasChange("aws_access_key") {
-			d.SetPartial("aws_access_key")
-		}
-		if d.HasChange("aws_secret_key") {
-			d.SetPartial("aws_secret_key")
+		if aws_iam := d.Get("aws_iam").(string); aws_iam != "true" {
+			if d.HasChange("aws_access_key") {
+				d.SetPartial("aws_access_key")
+			}
+			if d.HasChange("aws_secret_key") {
+				d.SetPartial("aws_secret_key")
+			}
+			if ok := d.HasChange("account_email"); ok {
+				err := client.UpdateAccountUser("email", account.AccountName, "", "", d.Get("account_email").(string))
+				if err != nil {
+					return fmt.Errorf("Failed to update Aviatrix Account User email ???: %s", err)
+				}
+				d.SetPartial("account_email")
+			}
+			if ok := d.HasChange("account_password"); ok {
+				oldpass, newpass := d.GetChange("account_password")
+				err := client.UpdateAccountUser("password", account.AccountName, oldpass.(string), newpass.(string), "")
+				if err != nil {
+					return fmt.Errorf("Failed to update Aviatrix Account User password: %s", err)
+				}
+				d.SetPartial("account_password")
+			}
 		}
 		if d.HasChange("aws_iam") {
 			d.SetPartial("aws_iam")
 		}
-		if d.HasChange("aws_role_app") {
-			d.SetPartial("aws_role_app")
-		}
-		if d.HasChange("aws_role_ec2") {
-			d.SetPartial("aws_role_ec2")
-		}
-	}
-	if d.HasChange("account_password") {
-		oldpass, newpass := d.GetChange("account_password")
-		err := client.UpdateAccountUser("password", account.AccountName, oldpass.(string), newpass.(string), "")
-		if err != nil {
-			return fmt.Errorf("Failed to update Aviatrix Account User password: %s", err)
-		}
-		d.SetPartial("account_password")
-	}
-	if d.HasChange("account_email") {
-		err := client.UpdateAccountUser("email", account.AccountName, "", "", d.Get("account_email").(string))
-		if err != nil {
-			return fmt.Errorf("Failed to update Aviatrix Account User email: %s", err)
-		}
-		d.SetPartial("account_email")
 	}
 
 	d.Partial(false)
-	//return resourceAccountRead(d, meta)
-	return nil
+	return resourceAccountRead(d, meta)
 }
 
 func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
