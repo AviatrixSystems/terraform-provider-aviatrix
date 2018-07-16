@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-querystring/query"
 	"log"
 	"io/ioutil"
+	"reflect"
 	"time"
 )
 
@@ -185,20 +186,24 @@ func (c *Client) Do(verb string, req interface{}) (*http.Response, []byte, error
 			if err = json.Unmarshal(body, respdata); err != nil {
 				return resp, body, err
 			}
-			if (!respdata.Return) {
-				// TODO: This does not work.  FIXME
-				// Check if the CID has expired; if so re-login
-				if respdata.Reason == "CID is invalid or expired." && loop < 2 {
-					log.Printf("[TRACE] re-login (expired CID)")
-					time.Sleep(500 * time.Millisecond)
-					if err = c.Login(); err != nil {
-						return resp, body, err
-					}
-					// loop around again using new CID
-				} else {
-					return resp, body, errors.New(respdata.Reason)
+			// Check if the CID has expired; if so re-login
+			if respdata.Reason == "CID is invalid or expired." && loop < 2 {
+				log.Printf("[TRACE] re-login (expired CID)")
+				time.Sleep(500 * time.Millisecond)
+				if err = c.Login(); err != nil {
+					return resp, body, err
 				}
+				// update the CID value in the object passed
+				s := reflect.ValueOf(req).Elem()
+				f := s.FieldByName("CID")
+				if f.IsValid() && f.CanSet() {
+					f.SetString(c.CID)
+				}
+				// loop around again using new CID
+			} else if (!respdata.Return) {
+				return resp, body, errors.New(respdata.Reason)
 			} else {
+				// Return = True; Reason is not CID expired
 				return resp, body, nil
 			}
 		} else {

@@ -29,6 +29,7 @@ func Provider() terraform.ResourceProvider {
 
 		ResourcesMap: map[string]*schema.Resource{
 			"aviatrix_account":      resourceAccount(),
+			"aviatrix_account_user": resourceAccountUser(),
 			"aviatrix_admin_email":  resourceAdminEmail(),
 			"aviatrix_customer_id":  resourceCustomerID(),
 			"aviatrix_gateway":      resourceAviatrixGateway(),
