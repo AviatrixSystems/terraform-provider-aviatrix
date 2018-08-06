@@ -18,11 +18,11 @@ func resourceAccount() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"account_name": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"account_password": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"account_email": &schema.Schema{
 				Type:     schema.TypeString,

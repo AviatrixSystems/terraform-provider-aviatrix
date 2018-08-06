@@ -69,7 +69,7 @@ func resourceAccountUserCreate(d *schema.ResourceData, meta interface{}) error {
 			NewPassword: d.Get("new_password").(string),
 		}
 		if usere.OldPassword == "" || usere.NewPassword == "" {
-			return fmt.Errorf("new and old password required");
+			return fmt.Errorf("new and old password required")
 		}
 		err = client.UpdateAccountUserObject(usere)
 	} else {

@@ -45,7 +45,7 @@ func resourceAviatrixVersionUpgrade(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	var errv error;
+	var errv error
 	if verf.Major <= 3 && verf.Minor <= 2 {
 		errv = client.Pre32Upgrade()
 	} else {
