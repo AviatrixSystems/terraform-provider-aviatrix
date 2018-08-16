@@ -139,6 +139,10 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"cloud_instance_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -242,6 +246,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	if gw != nil {
 		d.Set("vpc_size", gw.VpcSize)
 		d.Set("public_ip", gw.PublicIP)
+		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 	}
 	return nil
 }

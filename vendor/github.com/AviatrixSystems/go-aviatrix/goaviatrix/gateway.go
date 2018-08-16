@@ -21,7 +21,7 @@ type Gateway struct {
 	ClientCertSharing       string `form:"client_cert_sharing,omitempty" json:"client_cert_sharing,omitempty"`
 	CloudType               int    `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
 	CloudnBkupGatewayInstID string `form:"cloudn_bkup_gateway_inst_id,omitempty" json:"cloudn_bkup_gateway_inst_id,omitempty"`
-	CloudnGatewayInstID     string `form:"cloudn_gateway_inst_id,omitempty"`
+	CloudnGatewayInstID     string `form:"cloudn_gateway_inst_id,omitempty" json:"cloudn_gateway_inst_id,omitempty"`
 	DirectInternet          string `form:"direct_internet,omitempty" json:"direct_internet,omitempty"`
 	DockerConsulIP          string `form:"docker_consul_ip,omitempty" json:"docker_consul_ip,omitempty"`
 	DockerNtwkCidr          string `form:"docker_ntwk_cidr,omitempty" json:"docker_ntwk_cidr,omitempty"`

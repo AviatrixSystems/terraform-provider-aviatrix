@@ -69,6 +69,10 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
+			"cloud_instance_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -147,11 +151,12 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 		}
 		return fmt.Errorf("Couldn't find Aviatrix SpokeVpc: %s", err)
 	}
-	log.Printf("[TRACE] reading gateway %s: %#v",
+	log.Printf("[TRACE] reading spoke gateway %s: %#v",
 		d.Get("gw_name").(string), gw)
 	if gw != nil {
 		d.Set("vpc_size", gw.VpcSize)
 		d.Set("public_ip", gw.PublicIP)
+		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 	}
 	return nil
 }
