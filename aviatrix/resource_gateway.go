@@ -143,6 +143,10 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"single_az_ha": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -180,6 +184,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		HASubnet:           d.Get("ha_subnet").(string),
 		PeeringHASubnet:    d.Get("public_subnet").(string),
 		NewZone:            d.Get("zone").(string),
+		SingleAZ:           d.Get("single_az_ha").(string),
 	}
 
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)
@@ -194,6 +199,18 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	if dns_server := d.Get("dns_server").(string); dns_server != "" {
 		log.Printf("[INFO] Aviatrix gateway DNS server: %#v", gateway)
+	}
+	// single_AZ enabled for Gateway
+	if single_az_ha := d.Get("single_az_ha").(string); single_az_ha == "enabled" {
+		single_az_gateway := &goaviatrix.Gateway{
+			GwName:   d.Get("gw_name").(string),
+			SingleAZ: d.Get("single_az_ha").(string),
+		}
+		log.Printf("[INFO] Enable Single AZ GW HA: %#v", single_az_gateway)
+		err := client.EnableSingleAZGateway(gateway)
+		if err != nil {
+			return fmt.Errorf("Failed to create single AZ GW HA: %s", err)
+		}
 	}
 	// ha_subnet is for Gateway HA
 	if ha_subnet := d.Get("ha_subnet").(string); ha_subnet != "" {
@@ -233,6 +250,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	gateway := &goaviatrix.Gateway{
 		AccountName: d.Get("account_name").(string),
 		GwName:      d.Get("gw_name").(string),
+	        SingleAZ:    d.Get("single_az_ha").(string),
 	}
 	gw, err := client.GetGateway(gateway)
 	if err != nil {
@@ -254,8 +272,9 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	gateway := &goaviatrix.Gateway{
-		GwName: d.Get("gw_name").(string),
-		GwSize: d.Get("vpc_size").(string),
+		GwName:   d.Get("gw_name").(string),
+		GwSize:   d.Get("vpc_size").(string),
+	        SingleAZ: d.Get("single_az_ha").(string),
 	}
 
 	log.Printf("[INFO] Updating Aviatrix gateway: %#v", gateway)

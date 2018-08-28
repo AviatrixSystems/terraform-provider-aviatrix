@@ -38,6 +38,7 @@ type Gateway struct {
 	EnableLdap              string `form:"enable_ldap,omitempty"`
 	DnsServer               string `form:"dns_server,omitempty"`
 	EnableNat               string `form:"enable_nat,omitempty" json:"enable_nat,omitempty"`
+	SingleAZ                string `form:"single_az_ha,omitempty"`
 	EnablePbr               string `form:"enable_pbr,omitempty"`
 	Expiration              string `form:"expiration,omitempty" json:"expiration,omitempty"`
 	GatewayZone             string `form:"gateway_zone,omitempty" json:"gateway_zone,omitempty"`
@@ -132,6 +133,22 @@ func (c *Client) EnableNatGateway(gateway *Gateway) (error) {
         }
         return nil
 }
+func (c *Client) EnableSingleAZGateway(gateway *Gateway) (error) {
+        gateway.CID=c.CID
+        gateway.Action="enable_single_az_ha"
+        resp,err := c.Post(c.baseURL, gateway)
+                if err != nil {
+                return err
+        }
+        var data APIResp
+        if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+                return err
+        }
+        if(!data.Return){
+                return errors.New(data.Reason)
+        }
+        return nil
+}
 func (c *Client) EnablePeeringHaGateway(gateway *Gateway) (error) {
         gateway.CID=c.CID
         gateway.Action="create_peering_ha_gateway"
@@ -139,11 +156,6 @@ func (c *Client) EnablePeeringHaGateway(gateway *Gateway) (error) {
                 if err != nil {
                 return err
         }
-        //path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_vpc_ha&vpc_name=%s&specific_subnet=%s", c.CID, gateway.GwName, gateway.HASubnet)
-        //resp,err := c.Get(path, nil)
-        //        if err != nil {
-         //       return err
-        //}
         var data APIResp
         if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
                 return err
