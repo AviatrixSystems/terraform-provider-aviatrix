@@ -51,6 +51,10 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"backup_public_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"enable_nat": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -58,6 +62,10 @@ func resourceAviatrixGateway() *schema.Resource {
 			"dns_server": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"public_dns_server": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"vpn_access": {
 				Type:     schema.TypeString,
@@ -140,6 +148,10 @@ func resourceAviatrixGateway() *schema.Resource {
 				Optional: true,
 			},
 			"cloud_instance_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"cloudn_bkup_gateway_inst_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -250,7 +262,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	gateway := &goaviatrix.Gateway{
 		AccountName: d.Get("account_name").(string),
 		GwName:      d.Get("gw_name").(string),
-	        SingleAZ:    d.Get("single_az_ha").(string),
+		SingleAZ:    d.Get("single_az_ha").(string),
 	}
 	gw, err := client.GetGateway(gateway)
 	if err != nil {
@@ -265,6 +277,16 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("vpc_size", gw.VpcSize)
 		d.Set("public_ip", gw.PublicIP)
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
+		d.Set("public_dns_server", gw.PublicDnsServer)
+		if public_subnet := d.Get("public_subnet").(string); public_subnet != "" {
+			gateway.GwName += "-hagw"
+			gw, err := client.GetGateway(gateway)
+			if err == nil {
+				d.Set("cloudn_bkup_gateway_inst_id", gw.CloudnGatewayInstID)
+				d.Set("backup_public_ip", gw.PublicIP)
+			}
+			log.Printf("[TRACE] reading peering HA gateway %s: %#v", d.Get("gw_name").(string), gw)
+		}
 	}
 	return nil
 }
@@ -274,7 +296,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	gateway := &goaviatrix.Gateway{
 		GwName:   d.Get("gw_name").(string),
 		GwSize:   d.Get("vpc_size").(string),
-	        SingleAZ: d.Get("single_az_ha").(string),
+		SingleAZ: d.Get("single_az_ha").(string),
 	}
 
 	log.Printf("[INFO] Updating Aviatrix gateway: %#v", gateway)

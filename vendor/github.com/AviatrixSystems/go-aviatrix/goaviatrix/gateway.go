@@ -37,6 +37,7 @@ type Gateway struct {
 	EnableElb               string `form:"enable_elb,omitempty"`
 	EnableLdap              string `form:"enable_ldap,omitempty"`
 	DnsServer               string `form:"dns_server,omitempty"`
+	PublicDnsServer         string `form:"public_dns_server,omitempty" json:"public_dns_server,omitempty"`
 	EnableNat               string `form:"enable_nat,omitempty" json:"enable_nat,omitempty"`
 	SingleAZ                string `form:"single_az_ha,omitempty"`
 	EnablePbr               string `form:"enable_pbr,omitempty"`

@@ -98,7 +98,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		TunnelType:         d.Get("tunnel_type").(string),
 		RemoteGwType:       d.Get("remote_gateway_type").(string),
 		RemoteGwIP:         d.Get("remote_gateway_ip").(string),
-		BackupRemoteGwIP:   d.Get("backup_remote_gateway_ip").(string),
+		RemoteGwIP2:        d.Get("backup_remote_gateway_ip").(string),
 		PreSharedKey:       d.Get("pre_shared_key").(string),
 		BackupPreSharedKey: d.Get("backup_pre_shared_key").(string),
 		RemoteSubnet:       d.Get("remote_subnet_cidr").(string),

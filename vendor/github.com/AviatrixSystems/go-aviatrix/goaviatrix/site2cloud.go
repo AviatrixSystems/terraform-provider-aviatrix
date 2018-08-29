@@ -18,10 +18,10 @@ type Site2Cloud struct {
 	RemoteGwType            string `form:"remote_gateway_type,omitempty" json:"peer_type,omitempty"`
 	ConnType                string `form:"connection_type,omitempty" json:""connection_type,omitempty"`
 	TunnelType              string `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
-	GwName                  string `form:"primary_cloud_gateway_name" json:"gw_name,omitempty`
-	BackupGwName            string `form:"backup_gateway_name"`
+	GwName                  string `form:"primary_cloud_gateway_name,omitempty" json:"gw_name,omitempty"`
+	BackupGwName            string `form:"backup_gateway_name,omitempty"`
 	RemoteGwIP              string `form:"remote_gateway_ip,omitempty" json:"peer_ip,omitempty"`
-	BackupRemoteGwIP        string `form:"backup_remote_gateway_ip,omitempty`
+	RemoteGwIP2             string `form:"backup_remote_gateway_ip,omitempty"`
 	PreSharedKey            string `form:"pre_shared_key,omitempty"`
 	BackupPreSharedKey      string `form:"backup_pre_shared_key,omitempty"`
 	RemoteSubnet            string `form:"remote_subnet_cidr,omitempty" json:"remote_cidr,omitempty"`
