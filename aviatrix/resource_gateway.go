@@ -212,7 +212,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	if dns_server := d.Get("dns_server").(string); dns_server != "" {
 		log.Printf("[INFO] Aviatrix gateway DNS server: %#v", gateway)
 	}
-	// single_AZ enabled for Gateway
+	// single_AZ enabled for Gateway. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
 	if single_az_ha := d.Get("single_az_ha").(string); single_az_ha == "enabled" {
 		single_az_gateway := &goaviatrix.Gateway{
 			GwName:   d.Get("gw_name").(string),
@@ -224,7 +224,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("Failed to create single AZ GW HA: %s", err)
 		}
 	}
-	// ha_subnet is for Gateway HA
+	// ha_subnet is for Gateway HA. Deprecated. https://docs.aviatrix.com/HowTos/gateway.html#high-availability 
 	if ha_subnet := d.Get("ha_subnet").(string); ha_subnet != "" {
 		ha_gateway := &goaviatrix.Gateway{
 			GwName:   d.Get("gw_name").(string),
@@ -240,7 +240,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("Failed to create GW HA: %s", err)
 		}
 	}
-	// public_subnet is for Peering HA Gateway
+	// public_subnet is for Peering HA Gateway. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
 	if public_subnet := d.Get("public_subnet").(string); public_subnet != "" {
 		ha_gateway := &goaviatrix.Gateway{
 			GwName:          d.Get("gw_name").(string),
