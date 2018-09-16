@@ -224,7 +224,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("Failed to create single AZ GW HA: %s", err)
 		}
 	}
-	// ha_subnet is for Gateway HA. Deprecated. https://docs.aviatrix.com/HowTos/gateway.html#high-availability 
+	// ha_subnet is for Gateway HA. Deprecated. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
 	if ha_subnet := d.Get("ha_subnet").(string); ha_subnet != "" {
 		ha_gateway := &goaviatrix.Gateway{
 			GwName:   d.Get("gw_name").(string),

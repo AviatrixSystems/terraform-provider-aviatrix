@@ -1,6 +1,6 @@
 Terraform Provider
 ==================
-A basic [Terraform](http://terraform.io) provider for Aviatrix.
+A basic [Terraform](http://terraform.io) provider for Aviatrix. Read this [tutorial](https://docs.aviatrix.com/HowTos/tf_aviatrix_howto.html) as an alternative to the README. 
 
 Requirements
 ------------
