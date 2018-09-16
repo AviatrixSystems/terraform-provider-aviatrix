@@ -15,7 +15,7 @@ Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provi
 
 ```sh
 $ mkdir -p $GOPATH/src/github.com/terraform-providers; cd $GOPATH/src/github.com/terraform-providers
-$ git clone git@github.com:AviatrixSystems/terraform-provider-aviatrix
+$ git clone https://github.com/AviatrixSystems/terraform-provider-aviatrix
 ```
 
 Enter the provider directory and build the provider
