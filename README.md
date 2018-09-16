@@ -5,8 +5,8 @@ A basic [Terraform](http://terraform.io) provider for Aviatrix.
 Requirements
 ------------
 
--	[Terraform](https://www.terraform.io/downloads.html) 0.10.x
--	[Go](https://golang.org/doc/install) 1.8 (This will be used to build the provider plugin.) 
+-	Install [Terraform](https://www.terraform.io/downloads.html) 0.10.x
+-	Install [Go](https://golang.org/doc/install) 1.8 (This will be used to build the provider plugin.) 
 -	Create a directory, go, follow this [doc](https://github.com/golang/go/wiki/SettingGOPATH) to edit ~/.bash_profile to setup GOPATH)
 
 Building The Provider
@@ -24,6 +24,7 @@ Enter the provider directory and build the provider
 
 ```sh
 $ cd $GOPATH/src/github.com/terraform-providers/terraform-provider-aviatrix
+$ make fmt
 $ make build
 ```
 
