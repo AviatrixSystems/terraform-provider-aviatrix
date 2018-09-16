@@ -6,7 +6,8 @@ Requirements
 ------------
 
 -	[Terraform](https://www.terraform.io/downloads.html) 0.10.x
--	[Go](https://golang.org/doc/install) 1.8 (This will be used to build the provider plugin. Check this [doc](https://github.com/golang/go/wiki/SettingGOPATH) to setup GOPATH)
+-	[Go](https://golang.org/doc/install) 1.8 (This will be used to build the provider plugin. 
+-       Create a directory, go, follow this [doc](https://github.com/golang/go/wiki/SettingGOPATH) to edit ~/.bash_profile to setup GOPATH)
 
 Building The Provider
 ---------------------
@@ -14,7 +15,8 @@ Building The Provider
 Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provider-aviatrix`
 
 ```sh
-$ mkdir -p $GOPATH/src/github.com/terraform-providers; cd $GOPATH/src/github.com/terraform-providers
+$ mkdir -p $GOPATH/src/github.com/terraform-providers 
+$ cd $GOPATH/src/github.com/terraform-providers
 $ git clone https://github.com/AviatrixSystems/terraform-provider-aviatrix
 ```
 
