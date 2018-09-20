@@ -5,7 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
+        "net/http"
 )
+
+type Filters struct {
+        FQDN        string `form:"fqdn,omitempty" json:"fqdn,omitempty"`
+        Protocol    string `form:"proto,omitempty" json:"proto,omitempty"`
+        Port        string `form:"port,omitempty" json:"port,omitempty"`
+}
 
 // Gateway simple struct to hold fqdn details
 type FQDN struct {
@@ -14,8 +22,8 @@ type FQDN struct {
 	CID                     string `form:"CID,omitempty"`
 	FQDNStatus              string `form:"status,omitempty" json:"status,omitempty"`
 	FQDNMode                string `form:"color,omitempty" json:"color,omitempty"`
-	GwList                  []string `form:"gw_name,omitempty" json:"members,omitempty"`
-	DomainList              []string `form:"domain_names[],omitempty"`
+	GwList                  []string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
+	DomainList              []*Filters `form:"domain_names[],omitempty" json:"domain_names,omitempty"`
 }
 
 type ResultListResp struct {
@@ -93,21 +101,36 @@ func (c *Client) UpdateFQDNMode(fqdn *FQDN) (error) {
 func (c *Client) UpdateDomains(fqdn *FQDN) (error) {
 	fqdn.CID=c.CID
 	fqdn.Action="set_fqdn_filter_tag_domain_names"
-	resp,err := c.Post(c.baseURL, fqdn)
-		if err != nil {
-		return err
-	}
-	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
-	}
-	if(!data.Return){
-		return errors.New(data.Reason)
-	}
-	return nil
+        log.Printf("[INFO] Update domains: %#v", fqdn)
+
+        verb := "POST"
+        body := fmt.Sprintf("CID=%s&action=%s&tag_name=%s", c.CID, fqdn.Action, fqdn.FQDNTag)
+        for i, dn := range fqdn.DomainList {
+                body = body + fmt.Sprintf("&domain_names[%d][fqdn]=%s&domain_names[%d][proto]=%s&domain_names[%d][port]=%s", i,dn.FQDN, i,dn.Protocol, i,dn.Port)
+        }
+        log.Printf("[TRACE] %s %s Body: %s", verb, c.baseURL, body)
+        req, err := http.NewRequest(verb, c.baseURL, strings.NewReader(body))
+        if err == nil {
+                req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+        } else {
+                return err
+        }
+        resp, err := c.HTTPClient.Do(req)
+        if err != nil {
+                return err
+        }
+        var data APIResp
+        if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+                return err
+        }
+        if(!data.Return){
+                return errors.New(data.Reason)
+        }
+        return nil
 }
 
 func (c *Client) AttachGws(fqdn *FQDN) (error) {
+        log.Printf("[TRACE] inside AttachGWs ------------------------------------------------%#v",fqdn)
 	path := c.baseURL + fmt.Sprintf("?CID=%s&action=attach_fqdn_filter_tag_to_gw&tag_name=%s", c.CID, fqdn.FQDNTag)
 	for i := range fqdn.GwList {
 		newPath := path + fmt.Sprintf("&gw_name=%s", fqdn.GwList[i])
@@ -177,24 +200,42 @@ func (c *Client) GetFQDNTag(fqdn *FQDN) (*FQDN, error) {
 }
 
 func (c *Client) ListDomains(fqdn *FQDN) (*FQDN, error) {
+	fqdn.CID=c.CID
+	fqdn.Action="list_fqdn_filter_tag_domain_names"
 	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_fqdn_filter_tag_domain_names&tag_name=%s", c.CID, fqdn.FQDNTag)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return nil, err
 	}
-	var data ResultListResp
+	var data map[string]interface{}
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	if(!data.Return){
-		return nil, errors.New(data.Reason)
+        dn := data
+	names := dn["results"].([]interface{})
+        for _, domain := range names {
+	    dn := domain.(map[string]interface{})
+	    //log.Printf("[TRACE] domain ------------------------->>>>>>>>>>>>: %#v", dn["fqdn"])
+	    //log.Printf("[TRACE] domain ------------------------->>>>>>>>>>>>: %#v", dn["protocol"])
+	    //log.Printf("[TRACE] domain ------------------------->>>>>>>>>>>>: %#v", dn["port"])
+	    fqdnFilter := Filters{
+                                FQDN:     dn["fqdn"].(string),
+                                Protocol: dn["proto"].(string),
+                                Port:     dn["port"].(string),
+            }
+	    log.Printf("[TRACE] DOMAIN key FOUND ------------------------>>>>>>>>>>>>: %#v",fqdnFilter)
+	    //fqdn.DomainList = append(fqdn.DomainList, fqdnFilter)
 	}
-	//domainList:= data.Results
-	fqdn.DomainList = data.Results
-
+	//value, ok := dn["results"].([]interface{})
+	//if ok {
+	//    log.Printf("[TRACE] ListDomains FOUND ------------------------------->>>>>>>>>>>>: %#v", value)
+	//} else {
+	//    log.Printf("[TRACE] ListDomains NOT_FOUND --------------------------->>>>>>>>>>>>: %#v", value)
+	//}
+	// error when passing value or when passing fqdnFilter
+	// TODO please return successfully the correct value of domain list
 	return fqdn, nil
 }
-
 func (c *Client) ListGws(fqdn *FQDN) (*FQDN, error) {
 	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_fqdn_filter_tag_attached_gws&tag_name=%s", c.CID, fqdn.FQDNTag)
 	resp,err := c.Get(path, nil)
@@ -206,6 +247,7 @@ func (c *Client) ListGws(fqdn *FQDN) (*FQDN, error) {
 		return nil, err
 	}
 	if(!data.Return){
+                log.Printf("[INFO] Couldn't find Aviatrix FQDN tag names: %s", fqdn.FQDNTag, data.Reason)
 		return nil, errors.New(data.Reason)
 	}
 	fqdn.GwList = data.Results
