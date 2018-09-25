@@ -40,6 +40,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_vgw_conn":     resourceAviatrixVGWConn(),
 			"aviatrix_upgrade":      resourceAviatrixUpgrade(),
 			"aviatrix_fqdn":         resourceAviatrixFQDN(),
+			"aviatrix_profile":      resourceAviatrixProfile(),
 			"aviatrix_firewall":     resourceAviatrixFirewall(),
 			"aviatrix_firewall_tag": resourceAviatrixFirewallTag(),
 			"aviatrix_vpn_user":     resourceAviatrixVPNUser(),
