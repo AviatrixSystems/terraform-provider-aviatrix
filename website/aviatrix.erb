@@ -1,25 +1,35 @@
 <% wrap_layout :inner do %>
   <% content_for :sidebar do %>
-    <div class="docs-sidebar hidden-print affix-top" role="complementary">
+  <div class="docs-sidebar hidden-print affix-top" role="complementary">
       <ul class="nav docs-sidenav">
-        <li<%#= sidebar_current("docs-home") %>>
-          <a href="/docs/providers/index.html">All Providers</a>
-        </li>
+          <li<%= sidebar_current("docs-home") %>>
+              <a href="/docs/providers/index.html">All Providers</a>
+          </li>
 
-        <li<%= sidebar_current("docs-null-index") %>>
-          <a href="/docs/providers/null/index.html">Null Provider</a>
-          <ul class="nav nav-visible">
-            <li<%= sidebar_current("docs-null-resource") %>>
-              <a href="/docs/providers/null/resource.html">Resource</a>
-            </li>
-            <li<%= sidebar_current("docs-null-data-source") %>>
-              <a href="/docs/providers/null/data_source.html">Data Source</a>
-            </li>
-          </ul>
-        </li>
+          <li<%= sidebar_current("docs-aviatrix-index") %>>
+              <a href="/docs/providers/aviatrix/index.html">Aviatrix Provider</a>
+          </li>
+
+          <li<%= sidebar_current("docs-aviatrix-resource") %>>
+              <a href="#">Resources</a>
+              <ul class="nav nav-visible">
+                  <li<%= sidebar_current("docs-aviatrix-resource-account") %>>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_account.html">aviatrix_account</a>
+                  </li>
+                  <li<%= sidebar_current("docs-aviatrix-resource-gateway") %>>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_gateway.html">aviatrix_gateway</a>
+                  </li>
+                  <li<%= sidebar_current("docs-aviatrix-resource-transpeer") %>>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_transpeer.html">aviatrix_transpeer</a>
+                  </li>
+                  <li<%= sidebar_current("docs-aviatrix-resource-tunnel") %>>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_tunnel.html">aviatrix_tunnel</a>
+                  </li>
+              </ul>
+          </li>
       </ul>
-    </div>
+  </div>
   <% end %>
 
   <%= yield %>
-<% end %>
+  <% end %>
