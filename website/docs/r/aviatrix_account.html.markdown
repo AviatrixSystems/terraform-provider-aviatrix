@@ -21,7 +21,7 @@ resource "aviatrix_account" "tempacc" {
   cloud_type = 1
   aws_account_number = "123456789012"
   aws_iam = "true"
-  aws_role_arn = "arn:aws:iam::123456789012:role/aviatrix-role-app"
+  aws_role_app = "arn:aws:iam::123456789012:role/aviatrix-role-app"
   aws_role_ec2 = "arn:aws:iam::123456789012:role/aviatrix-role-ec2"
 }
 
@@ -49,5 +49,5 @@ The following arguments are supported:
 * `aws_iam` - (Optional) AWS IAM-role based flag, this option is for UserConnect.
 * `aws_access_key` - (Optional) AWS Access Key (Required when aws_iam is "false" and when creating an account for AWS)
 * `aws_secret_key` - (Optional) AWS Secret Key (Required when aws_iam is "false" and when creating an account for AWS)
-* `aws_role_arn` - (Optional) AWS role ARN, this option is for UserConnect (Required when aws_iam is "true" and when creating an account for AWS).
-* `aws_role_ec2` - (Optional) AWS role EC2, this option is for UserConnect (Required when aws_iam is "true" and when creating an account for AWS).
+* `aws_role_app` - (Optional) AWS App role ARN, this option is for UserConnect (Required when aws_iam is "true" and when creating an account for AWS).
+* `aws_role_ec2` - (Optional) AWS EC2 role ARN, this option is for UserConnect (Required when aws_iam is "true" and when creating an account for AWS).
