@@ -2,9 +2,10 @@ package aviatrix
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
-	"log"
 )
 
 func resourceAviatrixGateway() *schema.Resource {
@@ -84,6 +85,10 @@ func resourceAviatrixGateway() *schema.Resource {
 				Optional: true,
 			},
 			"otp_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"saml_enabled": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -180,6 +185,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		EnableElb:          d.Get("enable_elb").(string),
 		SplitTunnel:        d.Get("split_tunnel").(string),
 		OtpMode:            d.Get("otp_mode").(string),
+		SamlEnabled:        d.Get("saml_enabled").(string),
 		OktaToken:          d.Get("okta_token").(string),
 		OktaURL:            d.Get("okta_url").(string),
 		OktaUsernameSuffix: d.Get("okta_username_suffix").(string),

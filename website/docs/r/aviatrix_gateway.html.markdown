@@ -36,3 +36,4 @@ The following arguments are supported:
 * `vpc_reg` - (Required) AWS region where this gateway will be launched.
 * `vpc_size` - (Required) Size of Gateway Instance.
 * `vpc_net` - (Required) A VPC Network address range selected from one of the available network ranges.
+* `saml_enabled` - (Optional) Enables Gateway SAML support.
