@@ -18,7 +18,7 @@ func resourceAccount() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"account_name": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"account_password": &schema.Schema{
 				Type:     schema.TypeString,
@@ -34,7 +34,7 @@ func resourceAccount() *schema.Resource {
 			},
 			"aws_account_number": &schema.Schema{
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"aws_iam": &schema.Schema{
 				Type:     schema.TypeString,
