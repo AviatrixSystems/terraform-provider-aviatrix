@@ -14,14 +14,13 @@ type ProfileRule struct {
 		Action      string `form:"action,omitempty" json:"action,omitempty"`
 }
 
-// Gateway simple struct to hold fqdn details
+// Gateway simple struct to hold profile details
 type Profile struct {
 	Action                  string `form:"action,omitempty"`
 	CID                     string `form:"CID,omitempty"`
 	Name                 	string `form:"tag_name,omitempty" json:"tag_name,omitempty"`
 	BaseRule              	string `form:"base_rule,omitempty" json:"status,omitempty"`
 	Policy              	[]ProfileRule `form:"domain_names[],omitempty" json:"domain_names,omitempty"`
-	FQDNMode                string `form:"color,omitempty" json:"color,omitempty"`
 	UserList                []string `form:"user_names,omitempty" json:"user_names,omitempty"`
 }
 

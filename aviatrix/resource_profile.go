@@ -96,14 +96,14 @@ func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error
 		Name: d.Get("name").(string),
 	}
 
-	log.Printf("[INFO] Reading Aviatrix FQDN: %#v", profile)
+	log.Printf("[INFO] Reading Aviatrix Profile: %#v", profile)
 	profile, err := client.GetProfile(profile)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find FQDN tag: %s", err)
+		return fmt.Errorf("couldn't find profile: %s", err)
 	}
 	d.Set("name", profile.Name)
 	log.Printf("[TRACE] Profile policy %v", profile.Policy)
