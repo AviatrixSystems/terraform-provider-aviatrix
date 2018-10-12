@@ -164,6 +164,14 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"allocate_new_eip": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"eip": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -203,6 +211,8 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		PeeringHASubnet:    d.Get("public_subnet").(string),
 		NewZone:            d.Get("zone").(string),
 		SingleAZ:           d.Get("single_az_ha").(string),
+		AllocateNewEip:     d.Get("allocate_new_eip").(string),
+		Eip:                d.Get("eip").(string),
 	}
 
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)

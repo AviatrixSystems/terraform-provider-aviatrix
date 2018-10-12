@@ -13,6 +13,7 @@ type Gateway struct {
 	Action                  string `form:"action,omitempty"`
 	AdditionalCidrs         string `form:"additional_cidrs,omitempty"`
 	AuthMethod              string `form:"auth_method,omitempty" json:"auth_method,omitempty"`
+	AllocateNewEip          string `form:"allocate_new_eip,omitempty" json:"allocate_new_eip,omitempty"`
 	BkupGatewayZone         string `form:"bkup_gateway_zone,omitempty" json:"bkup_gateway_zone,omitempty"`
 	BkupPrivateIP           string `form:"bkup_private_ip,omitempty" json:"bkup_private_ip,omitempty"`
 	CID                     string `form:"CID,omitempty"`
@@ -30,6 +31,7 @@ type Gateway struct {
 	DuoIntegrationKey       string `form:"duo_integration_key,omitempty"`
 	DuoPushMode             string `form:"duo_push_mode,omitempty"`
 	DuoSecretKey            string `form:"duo_secret_key,omitempty"`
+	Eip                     string `form:"eip,omitempty" json:"eip,omitempty"`
 	ElbDNSName              string `form:"elb_dns_name,omitempty" json:"elb_dns_name,omitempty"`
 	ElbName                 string `form:"elb_name,omitempty"`
 	ElbState                string `form:"elb_state,omitempty" json:"elb_state,omitempty"`
