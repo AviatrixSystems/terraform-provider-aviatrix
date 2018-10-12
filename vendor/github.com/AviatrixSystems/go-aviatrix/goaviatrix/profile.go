@@ -33,7 +33,7 @@ type ProfilePolicyListRule struct {
 
 type ProfilePolicyListResp struct {
 	Return  bool   `json:"return"`
-	Results map[string][]ProfileRule `json:"results"`
+	Results []ProfileRule `json:"results"`
 	Reason  string `json:"reason"`
 }
 
@@ -123,7 +123,7 @@ func (c *Client) GetProfile(profile *Profile) (*Profile, error) {
 		return nil, errors.New(data.Reason)
 		log.Printf("Couldn't find Aviatrix profile %s", profile.Name)
 	}
-	profile.Policy = data.Results["policies"]
+	profile.Policy = data.Results
 	log.Printf("[TRACE] Profile policy %s", profile.Policy)
 
 	path = c.baseURL + fmt.Sprintf("?CID=%s&action=list_user_profile_names", c.CID)
