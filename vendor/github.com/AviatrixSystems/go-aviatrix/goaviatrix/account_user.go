@@ -8,16 +8,16 @@ import (
 )
 
 type AccountUser struct {
-	CID                         	string `form:"CID,omitempty"`
+	CID                         string `form:"CID,omitempty"`
 	Action                  	string `form:"action,omitempty"`
 	UserName             		string `form:"username,omitempty" json:"username,omitempty"`
 	AccountName             	string `form:"account_name,omitempty" json:"account_name,omitempty"`
 	Email             	        string `form:"email,omitempty" json:"email,omitempty"`
-	Password         		string `form:"password,omitempty" json:"password,omitempty"`
+	Password         			string `form:"password,omitempty" json:"password,omitempty"`
 }
 
 type AccountUserEdit struct {
-	CID                         	string `form:"CID,omitempty"`
+	CID                         string `form:"CID,omitempty"`
 	Action                  	string `form:"action,omitempty"`
 	UserName             		string `form:"username,omitempty" json:"username,omitempty"`
 	AccountName             	string `form:"account_name,omitempty" json:"account_name,omitempty"`
@@ -45,7 +45,7 @@ func (c *Client) CreateAccountUser(user *AccountUser) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil
@@ -63,7 +63,7 @@ func (c *Client) GetAccountUser(user *AccountUser) (*AccountUser, error) {
 		return nil, err
 	}
 
-	if(!data.Return){
+	if !data.Return {
 		return nil, errors.New(data.Reason)
 	}
 	users:= data.AccountUserList
@@ -89,7 +89,7 @@ func (c *Client) UpdateAccountUserObject(user *AccountUserEdit) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil
@@ -105,7 +105,7 @@ func (c *Client) DeleteAccountUser(user *AccountUser) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil

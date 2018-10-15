@@ -11,8 +11,6 @@ type Account struct {
 	CID                         	string `form:"CID,omitempty"`
 	Action                  		string `form:"action,omitempty"`
 	AccountName             		string `form:"account_name,omitempty" json:"account_name,omitempty"`
-	AccountPassword         		string `form:"account_password,omitempty" json:"account_password,omitempty"`
-	AccountEmail            		string `form:"account_email,omitempty" json:"account_email_addr,omitempty"`
 	CloudType               		int    `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
 	AwsAccountNumber        		string `form:"aws_account_number,omitempty" json:"account_number,omitempty"`
 	AwsIam                  		string `form:"aws_iam,omitempty" json:"aws_iam,omitempty"`
@@ -61,7 +59,7 @@ func (c *Client) CreateAccount(account *Account) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil
@@ -79,7 +77,7 @@ func (c *Client) GetAccount(account *Account) (*Account, error) {
 		return nil, err
 	}
 
-	if(!data.Return){
+	if !data.Return {
 		return nil, errors.New(data.Reason)
 	}
 	acclist:= data.Results.AccountList
@@ -105,47 +103,16 @@ func (c *Client) UpdateAccount(account *Account) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil
 }
 
-//There is no Aviatrix account user resource currently to keep things minimal.
-//Since creating an Aviatrix account by default creates a user of the same name,
-//we'll only be able to configure that default user. Also not creating a new structure
-//for Aviatrix user, and marshalling received data to JSON manually, since we
-//need Aviatrix user data only for this method.
-func (c *Client) UpdateAccountUser(what, username, oldpass, newpass, email string) (error) {
-	account := make(map[string]interface{})
-	account["CID"] = c.CID
-	account["action"] = "edit_account_user"
-	account["username"] = username
-	account["what"] = what
-	if what == "password" {
-		account["old_password"] = oldpass
-		account["new_password"] = newpass
-	}
-	if what == "email" {
-		account["email"] = email
-	}
-	log.Printf("[INFO] Parsed Aviatrix account: %#v", account)
-	resp,err := c.Post(c.baseURL, account)
-	if err != nil {
-		return err
-	}
-	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
-	}
-	if(!data.Return){
-		return errors.New(data.Reason)
-	}
-	return nil
-}
 
 func (c *Client) DeleteAccount(account *Account) (error) {
-	path := c.baseURL + fmt.Sprintf("?action=delete_account_profile&CID=%s&account_name=%s", c.CID, account.AccountName)
+	path := c.baseURL + fmt.Sprintf("?action=delete_account_profile&CID=%s&account_name=%s",
+		c.CID, account.AccountName)
 	resp,err := c.Delete(path, nil)
 	if err != nil {
 		return err
@@ -154,7 +121,7 @@ func (c *Client) DeleteAccount(account *Account) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil

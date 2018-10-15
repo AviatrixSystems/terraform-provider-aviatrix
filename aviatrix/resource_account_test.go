@@ -20,25 +20,23 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAccountDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountConfig_basic(rInt),
+				Config: testAccAccountConfigBasic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists("aviatrix_account.foo", &account),
 					resource.TestCheckResourceAttr(
 						"aviatrix_account.foo", "account_name", fmt.Sprintf("tf-testing-%d", rInt)),
 					resource.TestCheckResourceAttr(
-						"aviatrix_account.foo", "account_email", "abc@xyz.com"),
+						"aviatrix_account.foo", "aws_iam", "true"),
 				),
 			},
 		},
 	})
 }
 
-func testAccAccountConfig_basic(rInt int) string {
+func testAccAccountConfigBasic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "foo" {
   account_name = "tf-testing-%d"
-  account_password = "Aviatrix123"
-  account_email = "abc@xyz.com"
   cloud_type = 1
   aws_account_number = "%s"
   aws_iam = "true"
@@ -52,11 +50,11 @@ func testAccCheckAccountExists(n string, account *goaviatrix.Account) resource.T
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Account Not found: %s", n)
+			return fmt.Errorf("account Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Account ID is set")
+			return fmt.Errorf("no Account ID is set")
 		}
 
 		client := testAccProvider.Meta().(*goaviatrix.Client)
@@ -72,7 +70,7 @@ func testAccCheckAccountExists(n string, account *goaviatrix.Account) resource.T
 		}
 
 		if foundAccount.AccountName != rs.Primary.ID {
-			return fmt.Errorf("Account not found")
+			return fmt.Errorf("account not found")
 		}
 
 		*account = *foundAccount
@@ -93,8 +91,8 @@ func testAccCheckAccountDestroy(s *terraform.State) error {
 		}
 		_, err := client.GetAccount(foundAccount)
 
-		if err != nil {
-			return fmt.Errorf("Account still exists")
+		if err != goaviatrix.ErrNotFound {
+			return fmt.Errorf("account still exists")
 		}
 	}
 	return nil

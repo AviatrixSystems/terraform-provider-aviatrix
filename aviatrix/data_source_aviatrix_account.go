@@ -17,35 +17,31 @@ func dataSourceAviatrixAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"account_email": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"cloud_type": &schema.Schema{
+			"cloud_type": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"aws_account_number": &schema.Schema{
+			"aws_account_number": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"aws_iam": &schema.Schema{
+			"aws_iam": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"aws_role_arn": &schema.Schema{
+			"aws_role_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"aws_role_ec2": &schema.Schema{
+			"aws_role_ec2": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"aws_access_key": &schema.Schema{
+			"aws_access_key": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"aws_secret_key": &schema.Schema{
+			"aws_secret_key": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -62,12 +58,11 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[INFO] Looking for Aviatrix account: %#v", account)
 	acc, err := client.GetAccount(account)
 	if err != nil {
-		return fmt.Errorf("Aviatrix Account: %s", err)
+		return fmt.Errorf("aviatrix Account: %s", err)
 	}
 
 	if acc != nil {
 		d.Set("account_name", acc.AccountName)
-		d.Set("account_email", acc.AccountEmail)
 		d.Set("cloud_type", acc.CloudType)
 		d.Set("aws_account_number", acc.AwsAccountNumber)
 		d.Set("aws_access_key", acc.AwsAccessKey)

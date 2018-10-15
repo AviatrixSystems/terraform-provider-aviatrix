@@ -16,8 +16,6 @@ The Account resource allows the creation and management of an Aviatrix cloud acc
 # Create Aviatrix AWS account with IAM roles
 resource "aviatrix_account" "tempacc" {
   account_name = "username"
-  account_password = "password"
-  account_email = "abc@xyz.com"
   cloud_type = 1
   aws_account_number = "123456789012"
   aws_iam = "true"
@@ -28,8 +26,6 @@ resource "aviatrix_account" "tempacc" {
 # Or you can create Aviatrix AWS account with access_key/secret key
 resource "aviatrix_account" "tempacc" {
   account_name = "username"
-  account_password = "password"
-  account_email = "abc@xyz.com"
   cloud_type = 1
   aws_account_number = "123456789012"
   aws_access_key = "ABCDEFGHIJKL"
@@ -42,8 +38,6 @@ resource "aviatrix_account" "tempacc" {
 The following arguments are supported:
 
 * `account_name` - (Required) Account name. This can be used for logging in to CloudN console or UserConnect controller.
-* `account_password` - (Required) Password for the account.
-* `account_email` - (Required) Account email address where notifications will be sent.
 * `cloud_type` - (Required) Type of cloud service provider. (Only AWS is supported currently. Enter 1 for AWS.)
 * `aws_account_number` - (Required) AWS Account number to associate with Aviatrix account.
 * `aws_iam` - (Optional) AWS IAM-role based flag, this option is for UserConnect.
