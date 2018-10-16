@@ -64,6 +64,7 @@ func resourceAviatrixProfileCreate(d *schema.ResourceData, meta interface{}) err
 	profile := &goaviatrix.Profile{
 		Name:     d.Get("name").(string),
 		BaseRule: d.Get("base_rule").(string),
+		Policy:   make([]goaviatrix.ProfileRule, 0),
 	}
 	for _, user := range d.Get("users").([]interface{}) {
 		profile.UserList = append(profile.UserList, user.(string))
@@ -93,7 +94,8 @@ func resourceAviatrixProfileCreate(d *schema.ResourceData, meta interface{}) err
 func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	profile := &goaviatrix.Profile{
-		Name: d.Get("name").(string),
+		Name:   d.Get("name").(string),
+		Policy: make([]goaviatrix.ProfileRule, 0),
 	}
 
 	log.Printf("[INFO] Reading Aviatrix Profile: %#v", profile)

@@ -10,17 +10,17 @@ import (
 func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"controller_ip": &schema.Schema{
+			"controller_ip": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: envDefaultFunc("AVIATRIX_CONTROLLER_IP"),
 			},
-			"username": &schema.Schema{
+			"username": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: envDefaultFunc("AVIATRIX_USERNAME"),
 			},
-			"password": &schema.Schema{
+			"password": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: envDefaultFunc("AVIATRIX_PASSWORD"),
@@ -40,7 +40,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_vgw_conn":     resourceAviatrixVGWConn(),
 			"aviatrix_upgrade":      resourceAviatrixUpgrade(),
 			"aviatrix_fqdn":         resourceAviatrixFQDN(),
-			"aviatrix_profile":      resourceAviatrixProfile(),
+			"aviatrix_vpn_profile":  resourceAviatrixProfile(),
 			"aviatrix_firewall":     resourceAviatrixFirewall(),
 			"aviatrix_firewall_tag": resourceAviatrixFirewallTag(),
 			"aviatrix_vpn_user":     resourceAviatrixVPNUser(),
