@@ -56,6 +56,10 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"security_group_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"enable_nat": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -294,6 +298,8 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("public_ip", gw.PublicIP)
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 		d.Set("public_dns_server", gw.PublicDnsServer)
+		d.Set("security_group_id", gw.GwSecurityGroupID)
+
 		if public_subnet := d.Get("public_subnet").(string); public_subnet != "" {
 			gateway.GwName += "-hagw"
 			gw, err := client.GetGateway(gateway)
