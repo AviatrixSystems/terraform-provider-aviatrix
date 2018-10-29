@@ -16,21 +16,21 @@ func resourceAviatrixVPNUser() *schema.Resource {
 		Delete: resourceAviatrixVPNUserDelete,
 
 		Schema: map[string]*schema.Schema{
-			"vpc_id": &schema.Schema{
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"gw_name": &schema.Schema{
+			"gw_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"user_name": &schema.Schema{
+			"user_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"user_email": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"saml_endpoint": {
 				Type:     schema.TypeString,
@@ -54,7 +54,7 @@ func resourceAviatrixVPNUserCreate(d *schema.ResourceData, meta interface{}) err
 
 	err := client.CreateVPNUser(vpn_user)
 	if err != nil {
-		return fmt.Errorf("Failed to create Aviatrix VPNUser: %s", err)
+		return fmt.Errorf("failed to create Aviatrix VPNUser: %s", err)
 	}
 	d.SetId(vpn_user.UserName)
 	return nil
@@ -71,7 +71,7 @@ func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta interface{}) error
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Couldn't find Aviatrix VPNUser: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix VPNUser: %s", err)
 	}
 	log.Printf("[TRACE] Reading vpn_user %s: %#v",
 		d.Get("user_name").(string), vu)
@@ -83,7 +83,7 @@ func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAviatrixVPNUserUpdate(d *schema.ResourceData, meta interface{}) error {
-	return fmt.Errorf("Aviatrix VPNUser doesn't support update.")
+	return fmt.Errorf("the AviatrixVPNUser resource doesn't support update")
 }
 
 func resourceAviatrixVPNUserDelete(d *schema.ResourceData, meta interface{}) error {
@@ -97,7 +97,7 @@ func resourceAviatrixVPNUserDelete(d *schema.ResourceData, meta interface{}) err
 
 	err := client.DeleteVPNUser(vpn_user)
 	if err != nil {
-		return fmt.Errorf("Failed to delete Aviatrix VPNUser: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix VPNUser: %s", err)
 	}
 	return nil
 }

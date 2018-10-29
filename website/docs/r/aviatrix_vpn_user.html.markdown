@@ -29,4 +29,6 @@ The following arguments are supported:
 * `vpc_id` - (Required) VPC Id of Aviatrix VPN gateway. Example: "vpc-abcd1234"
 * `gw_name` - (Required) If ELB is enabled, this will be the name of the ELB, else it will be the name of the Aviatrix VPN gateway. Example: "gw1"
 * `user_name` - (Required) VPN user name. Example: "user"
-* `user_email` - (Required) VPN User's email. Example: "abc@xyz.com"
+* `user_email` - (Optional) VPN User's email. Example: "abc@xyz.com"
+* `saml_endpoint` - (Optional)This is the name of the SAML endpoint to which the user is to be associated. This is required if adding user to a SAML gateway/LB.
+
