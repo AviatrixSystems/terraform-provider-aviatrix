@@ -2,9 +2,10 @@ package aviatrix
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
-	"log"
 )
 
 func resourceAviatrixVPNUser() *schema.Resource {
@@ -31,6 +32,10 @@ func resourceAviatrixVPNUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"saml_endpoint": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -38,10 +43,11 @@ func resourceAviatrixVPNUser() *schema.Resource {
 func resourceAviatrixVPNUserCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	vpn_user := &goaviatrix.VPNUser{
-		VpcID:     d.Get("vpc_id").(string),
-		GwName:    d.Get("gw_name").(string),
-		UserName:  d.Get("user_name").(string),
-		UserEmail: d.Get("user_email").(string),
+		VpcID:        d.Get("vpc_id").(string),
+		GwName:       d.Get("gw_name").(string),
+		UserName:     d.Get("user_name").(string),
+		UserEmail:    d.Get("user_email").(string),
+		SamlEndpoint: d.Get("saml_endpoint").(string),
 	}
 
 	log.Printf("[INFO] Creating Aviatrix VPN User: %#v", vpn_user)
