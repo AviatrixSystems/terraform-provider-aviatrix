@@ -41,6 +41,7 @@ The following arguments are supported:
 * `vpn_access` - (Optional) Enable user access through VPN to this container. (Supported values: "yes", "no")
 * `cidr` - (Optional) VPN CIDR block for the container (Required if vpn_access is "yes", Example: "192.168.43.0/24")
 * `enable_elb` - (Optional) Specify whether to enable ELB or not. (Required: Yes when cloud_type is "1", "4", "256" or "1024")
+* `elb_name` - (Optional) A name for the ELB that is created. If it is not specified a name is generated automatically 
 * `split_tunnel` - (Optional) Specify split tunnel mode. (Supported values: "yes", "no")
 * `otp_mode` - (Optional) Two step authentication mode. "2": DUO, "3": Okta.
 * `saml_enabled` - (Optional) This field indicates whether enabling SAML or not. (This field is available in version 3.3 or later release.) (Supported values: "yes", "no")

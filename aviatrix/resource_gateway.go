@@ -84,6 +84,10 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"elb_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"split_tunnel": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -195,6 +199,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		VpnStatus:          d.Get("vpn_access").(string),
 		VpnCidr:            d.Get("cidr").(string),
 		EnableElb:          d.Get("enable_elb").(string),
+		ElbName:          	d.Get("elb_name").(string),
 		SplitTunnel:        d.Get("split_tunnel").(string),
 		OtpMode:            d.Get("otp_mode").(string),
 		SamlEnabled:        d.Get("saml_enabled").(string),
