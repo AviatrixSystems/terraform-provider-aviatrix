@@ -24,7 +24,7 @@ func TestProvider(t *testing.T) {
 }
 
 func TestProvider_impl(t *testing.T) {
-	var _ terraform.ResourceProvider = Provider()
+	var _ = Provider()
 }
 
 func testAccPreCheck(t *testing.T) {
@@ -36,8 +36,5 @@ func testAccPreCheck(t *testing.T) {
 	}
 	if v := os.Getenv("AVIATRIX_PASSWORD"); v == "" {
 		t.Fatal("AVIATRIX_PASSWORD must be set for acceptance tests.")
-	}
-	if v := os.Getenv("AWS_ACCOUNT_NUMBER"); v == "" {
-		t.Fatal("AWS_ACCOUNT_NUMBER must be set for acceptance tests.")
 	}
 }

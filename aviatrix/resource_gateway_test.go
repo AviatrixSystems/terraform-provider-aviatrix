@@ -17,6 +17,11 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 	resourceName := "aviatrix_gateway.test"
 	accountID := os.Getenv("AWS_ACCOUNT_NUMBER")
 
+	skipGw := os.Getenv("SKIP_GATEWAY")
+	if skipGw == "yes" {
+		t.Skip("Skipping Gateway test as SKIP_GATEWAY is set")
+	}
+
 	vpcID := os.Getenv("AWS_VPC_ID")
 	if vpcID == "" {
 		t.Skip("Environment variable AWS_VPC_ID is not set")
@@ -59,12 +64,13 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 
 func testAccGatewayConfig_basic(rName string, accountID string, vpcID string, region string, vpcNet string) string {
 	return fmt.Sprintf(`
+
 resource "aviatrix_account" "test" {
 	account_name = "%[1]s"
 	account_email = "noone@aviatrix.com"
 	cloud_type = 1
 	aws_account_number = "%[2]s"
-	aws_iam = "true"
+	aws_iam = "false"
 	aws_role_app = "arn:aws:iam::%[2]s:role/aviatrix-role-app"
 	aws_role_ec2 = "arn:aws:iam::%[2]s:role/aviatrix-role-ec2"
 

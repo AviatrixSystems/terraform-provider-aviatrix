@@ -16,36 +16,36 @@ func resourceAWSPeer() *schema.Resource {
 		Delete: resourceAWSPeerDelete,
 
 		Schema: map[string]*schema.Schema{
-			"account_name1": &schema.Schema{
+			"account_name1": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"account_name2": &schema.Schema{
+			"account_name2": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_id1": &schema.Schema{
+			"vpc_id1": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_id2": &schema.Schema{
+			"vpc_id2": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_reg1": &schema.Schema{
+			"vpc_reg1": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_reg2": &schema.Schema{
+			"vpc_reg2": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"rtb_list1": &schema.Schema{
+			"rtb_list1": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
-			"rtb_list2": &schema.Schema{
+			"rtb_list2": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
@@ -56,7 +56,7 @@ func resourceAWSPeer() *schema.Resource {
 
 func resourceAWSPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	aws_peer := &goaviatrix.AWSPeer{
+	awsPeer := &goaviatrix.AWSPeer{
 		AccountName1: d.Get("account_name1").(string),
 		AccountName2: d.Get("account_name2").(string),
 		VpcID1:       d.Get("vpc_id1").(string),
@@ -66,16 +66,16 @@ func resourceAWSPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, ok := d.GetOk("rtb_list1"); ok {
-		aws_peer.RtbList1 = strings.Join(goaviatrix.ExpandStringList(d.Get("rtb_list1").([]interface{})), ",")
+		awsPeer.RtbList1 = strings.Join(goaviatrix.ExpandStringList(d.Get("rtb_list1").([]interface{})), ",")
 	}
 
 	if _, ok := d.GetOk("rtb_list2"); ok {
-		aws_peer.RtbList2 = strings.Join(goaviatrix.ExpandStringList(d.Get("rtb_list2").([]interface{})), ",")
+		awsPeer.RtbList2 = strings.Join(goaviatrix.ExpandStringList(d.Get("rtb_list2").([]interface{})), ",")
 	}
-	log.Printf("[INFO] Creating Aviatrix aws_peer: %#v", aws_peer)
-	id, err := client.CreateAWSPeer(aws_peer)
+	log.Printf("[INFO] Creating Aviatrix aws_peer: %#v", awsPeer)
+	id, err := client.CreateAWSPeer(awsPeer)
 	if err != nil {
-		return fmt.Errorf("Failed to create Aviatrix AWSPeer: %s", err)
+		return fmt.Errorf("failed to create Aviatrix AWSPeer: %s", err)
 	}
 	d.SetId(id)
 	return nil
@@ -84,17 +84,17 @@ func resourceAWSPeerCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAWSPeerRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	aws_peer := &goaviatrix.AWSPeer{
+	awsPeer := &goaviatrix.AWSPeer{
 		VpcID1: d.Get("vpc_id1").(string),
 		VpcID2: d.Get("vpc_id2").(string),
 	}
-	ap, err := client.GetAWSPeer(aws_peer)
+	ap, err := client.GetAWSPeer(awsPeer)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Couldn't find Aviatrix AWSPeer: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix AWSPeer: %s", err)
 	}
 	log.Printf("[TRACE] Reading aws_peer: %#v", ap)
 	if ap != nil {
@@ -105,21 +105,21 @@ func resourceAWSPeerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAWSPeerUpdate(d *schema.ResourceData, meta interface{}) error {
-	return fmt.Errorf("AWSPeer cannot be updated. Delete and create new AWS peering.")
+	return fmt.Errorf("the AWSPeer resource cannot be updated. Delete and create new AWS peering")
 }
 
 func resourceAWSPeerDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	aws_peer := &goaviatrix.AWSPeer{
+	awsPeer := &goaviatrix.AWSPeer{
 		VpcID1: d.Get("vpc_id1").(string),
 		VpcID2: d.Get("vpc_id2").(string),
 	}
 
-	log.Printf("[INFO] Deleting Aviatrix aws_peer: %#v", aws_peer)
+	log.Printf("[INFO] Deleting Aviatrix aws_peer: %#v", awsPeer)
 
-	err := client.DeleteAWSPeer(aws_peer)
+	err := client.DeleteAWSPeer(awsPeer)
 	if err != nil {
-		return fmt.Errorf("Failed to delete Aviatrix AWSPeer: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix AWSPeer: %s", err)
 	}
 	return nil
 }

@@ -10,9 +10,30 @@ import (
 	"testing"
 )
 
+func preAccountCheck(t *testing.T) {
+	if os.Getenv("AWS_ACCOUNT_NUMBER") == "" {
+		t.Fatal(" AWS_ACCOUNT_NUMBER must be set for acceptance tests")
+	}
+
+	if os.Getenv("AWS_ACCESS_KEY") == "" {
+		t.Fatal("AWS_ACCESS_KEY must be set for acceptance tests.")
+	}
+
+	if os.Getenv("AWS_SECRET_KEY") == "" {
+		t.Fatal("AWS_SECRET_KEY must be set for acceptance tests.")
+	}
+}
+
 func TestAccAviatrixAccount_basic(t *testing.T) {
 	var account goaviatrix.Account
 	rInt := acctest.RandInt()
+
+	skipAcc := os.Getenv("SKIP_ACCOUNT")
+	if skipAcc == "yes" {
+		t.Skip("Skipping Access Account test as SKIP_ACCOUNT is set")
+	}
+
+	preAccountCheck(t)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -26,7 +47,13 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aviatrix_account.foo", "account_name", fmt.Sprintf("tf-testing-%d", rInt)),
 					resource.TestCheckResourceAttr(
-						"aviatrix_account.foo", "aws_iam", "true"),
+						"aviatrix_account.foo", "aws_iam", "false"),
+					resource.TestCheckResourceAttr(
+						"aviatrix_account.foo", "aws_access_key",
+						os.Getenv("AWS_ACCESS_KEY")),
+					resource.TestCheckResourceAttr(
+						"aviatrix_account.foo", "aws_secret_key",
+						os.Getenv("AWS_SECRET_KEY")),
 				),
 			},
 		},
@@ -39,11 +66,11 @@ resource "aviatrix_account" "foo" {
   account_name = "tf-testing-%d"
   cloud_type = 1
   aws_account_number = "%s"
-  aws_iam = "true"
-  aws_role_app = "arn:aws:iam::%s:role/aviatrix-role-app"
-  aws_role_ec2 = "arn:aws:iam::%s:role/aviatrix-role-ec2"
+  aws_iam = "false"
+  aws_access_key = "%s"
+  aws_secret_key = "%s"
 }
-	`, rInt, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCOUNT_NUMBER"))
+	`, rInt, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"))
 }
 
 func testAccCheckAccountExists(n string, account *goaviatrix.Account) resource.TestCheckFunc {

@@ -113,7 +113,7 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 		if awsIam := d.Get("aws_iam").(string); awsIam != "true" {
 			//force default setting and save to .tfstate file
 			d.Set("aws_access_key", acc.AwsAccessKey)
-			d.Set("aws_secret_key", acc.AwsSecretKey)
+			//d.Set("aws_secret_key", acc.AwsSecretKey) # this would corrupt tf state
 		} else {
 			d.Set("aws_iam", "true")
 		}
