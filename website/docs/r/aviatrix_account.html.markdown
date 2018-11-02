@@ -27,6 +27,7 @@ resource "aviatrix_account" "tempacc" {
 resource "aviatrix_account" "tempacc" {
   account_name = "username"
   cloud_type = 1
+  aws_iam = "false"
   aws_account_number = "123456789012"
   aws_access_key = "ABCDEFGHIJKL"
   aws_secret_key = "ABCDEFGHIJKLabcdefghijkl"
@@ -45,3 +46,5 @@ The following arguments are supported:
 * `aws_secret_key` - (Optional) AWS Secret Key (Required when aws_iam is "false" and when creating an account for AWS)
 * `aws_role_app` - (Optional) AWS App role ARN, this option is for UserConnect (Required when aws_iam is "true" and when creating an account for AWS).
 * `aws_role_ec2` - (Optional) AWS EC2 role ARN, this option is for UserConnect (Required when aws_iam is "true" and when creating an account for AWS).
+
+Note: Please make sure that the IAM roles/profiles have already been created before running this, if aws_iam="true". More information on the IAM roles is at https://docs.aviatrix.com/HowTos/iam_policies.html and https://docs.aviatrix.com/HowTos/HowTo_IAM_role.html
