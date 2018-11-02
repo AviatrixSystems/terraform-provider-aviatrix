@@ -10,16 +10,16 @@ import (
 type AccountUser struct {
 	CID                         string `form:"CID,omitempty"`
 	Action                  	string `form:"action,omitempty"`
-	UserName             		string `form:"username,omitempty" json:"username,omitempty"`
-	AccountName             	string `form:"account_name,omitempty" json:"account_name,omitempty"`
-	Email             	        string `form:"email,omitempty" json:"email,omitempty"`
+	UserName             		string `form:"username,omitempty" json:"user_name,omitempty"`
+	AccountName             	string `form:"account_name,omitempty" json:"acct_names,omitempty"`
+	Email             	        string `form:"email,omitempty" json:"user_email,omitempty"`
 	Password         			string `form:"password,omitempty" json:"password,omitempty"`
 }
 
 type AccountUserEdit struct {
 	CID                         string `form:"CID,omitempty"`
 	Action                  	string `form:"action,omitempty"`
-	UserName             		string `form:"username,omitempty" json:"username,omitempty"`
+	UserName             		string `form:"username,omitempty" json:"user_name,omitempty"`
 	AccountName             	string `form:"account_name,omitempty" json:"account_name,omitempty"`
 	Email             	        string `form:"email,omitempty" json:"email,omitempty"`
 	What         		        string `form:"what,omitempty" json:"what,omitempty"`
@@ -54,7 +54,6 @@ func (c *Client) CreateAccountUser(user *AccountUser) (error) {
 func (c *Client) GetAccountUser(user *AccountUser) (*AccountUser, error) {
 	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_account_users", c.CID)
 	resp,err := c.Get(path, nil)
-
 	if err != nil {
 		return nil, err
 	}

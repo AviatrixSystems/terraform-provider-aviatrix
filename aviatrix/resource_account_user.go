@@ -15,31 +15,28 @@ func resourceAccountUser() *schema.Resource {
 		Delete: resourceAccountUserDelete,
 
 		Schema: map[string]*schema.Schema{
-			"account_name": &schema.Schema{
+			"account_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"password": &schema.Schema{
+			"password": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+			},
+			"email": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"email": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"username": &schema.Schema{
+			"username": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"old_password": &schema.Schema{
+			"old_password": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"new_password": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"what": &schema.Schema{
+			"what": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -76,7 +73,7 @@ func resourceAccountUserCreate(d *schema.ResourceData, meta interface{}) error {
 		err = client.CreateAccountUser(user)
 	}
 	if err != nil {
-		return fmt.Errorf("Failed to create Aviatrix Account User: %s", err)
+		return fmt.Errorf("failed to create Aviatrix Account User: %s", err)
 	}
 	log.Printf("[DEBUG] Aviatrix account user %s created", user.UserName)
 	d.SetId(user.UserName)
@@ -96,13 +93,13 @@ func resourceAccountUserRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Aviatrix Account User: %s", err)
+		return fmt.Errorf("aviatrix Account User: %s", err)
 	}
 	if acc != nil {
 		d.Set("account_name", acc.AccountName)
 		d.Set("email", acc.Email)
 		d.Set("username", acc.UserName)
-		d.Set("password", "")
+		// d.Set("password", "") # This will corrupt tf state
 		d.SetId(acc.UserName)
 	}
 	return nil
@@ -122,19 +119,19 @@ func resourceAccountUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.Get("what").(string) == "account_name" {
 		err := client.UpdateAccountUserObject(user)
 		if err != nil {
-			return fmt.Errorf("Failed to update Aviatrix Account User: %s", err)
+			return fmt.Errorf("failed to update Aviatrix Account User: %s", err)
 		}
 		d.SetPartial("account_name")
 	} else if d.Get("what").(string) == "email" {
 		err := client.UpdateAccountUserObject(user)
 		if err != nil {
-			return fmt.Errorf("Failed to update Aviatrix Account User: %s", err)
+			return fmt.Errorf("failed to update Aviatrix Account User: %s", err)
 		}
 		d.SetPartial("email")
 	} else if d.Get("what").(string) == "password" {
 		err := client.UpdateAccountUserObject(user)
 		if err != nil {
-			return fmt.Errorf("Failed to update Aviatrix Account User: %s", err)
+			return fmt.Errorf("failed to update Aviatrix Account User: %s", err)
 		}
 	}
 	d.Partial(false)
@@ -152,7 +149,7 @@ func resourceAccountUserDelete(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.DeleteAccountUser(user)
 	if err != nil {
-		return fmt.Errorf("Failed to delete Aviatrix Account User: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix Account User: %s", err)
 	}
 	return nil
 }
