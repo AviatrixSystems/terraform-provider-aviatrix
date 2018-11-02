@@ -2,7 +2,11 @@
 
 #### Pre-requisites
 
-The controller must be launched before hand and must have . IAM roles also must be attached before hand if any tests are to be run. The VPC's with public subnet to launch the gateways must be created before the tests. If you are running the tests on a BYOL controller, the customer ID must be set prior to the tests, otherwise run them on a PayG metered controller.
+- The controller must be launched before hand and must be up and running. 
+- IAM roles (aviatrix-role-ec2 and aviatrix-role-app) also must be created and attached if any IAM role related tests are to be run. Currently all tests are based on Access key, Secret key
+- The VPC's with public subnet to launch the gateways must be created before the tests.
+- If you are running aviatrix_aws_peer or aviatrix_peer, two VPC's with non overlapping CIDR's must be created before hand
+- If you are running the tests on a BYOL controller, the customer ID must be set prior to the tests, otherwise the tests them on a PayG metered controller.
 
 #### Skip parameters and variables
 
