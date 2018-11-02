@@ -10,6 +10,27 @@ import (
 	"testing"
 )
 
+func preAWSPeerCheck(t *testing.T, msgCommon string) (string, string, string, string) {
+	vpcID1 := os.Getenv("AWS_VPC_ID")
+	if vpcID1 == "" {
+		t.Fatal("Environment variable AWS_VPC_ID is not set" + msgCommon)
+	}
+	vpcID2 := os.Getenv("AWS_VPC_ID2")
+	if vpcID2 == "" {
+		t.Fatal("Environment variable AWS_VPC_ID2 is not set" + msgCommon)
+	}
+
+	region1 := os.Getenv("AWS_REGION")
+	if region1 == "" {
+		t.Fatal("Environment variable AWS_REGION is not set" + msgCommon)
+	}
+	region2 := os.Getenv("AWS_REGION2")
+	if region2 == "" {
+		t.Fatal("Environment variable AWS_REGION2 is not set" + msgCommon)
+	}
+	return vpcID1, vpcID2, region1, region2
+}
+
 func TestAvxAWSPeer_basic(t *testing.T) {
 	var awsPeer goaviatrix.AWSPeer
 	rInt := acctest.RandInt()
@@ -18,26 +39,11 @@ func TestAvxAWSPeer_basic(t *testing.T) {
 	if skipAcc == "yes" {
 		t.Skip("Skipping aviatrix AWS peering test as SKIP_AWS_PEER is set")
 	}
+	msgCommon := ". Set SKIP_AWS_PEER to yes to skip AWS peer tests"
 
-	preAccountCheck(t)
+	preAccountCheck(t, msgCommon)
 
-	vpcID1 := os.Getenv("VPC_ID")
-	if vpcID1 == "" {
-		t.Skip("Environment variable VPC_ID is not set")
-	}
-	vpcID2 := os.Getenv("VPC_ID2")
-	if vpcID2 == "" {
-		t.Skip("Environment variable VPC_ID2 is not set")
-	}
-
-	region1 := os.Getenv("REGION")
-	if vpcID1 == "" {
-		t.Skip("Environment variable REGION is not set")
-	}
-	region2 := os.Getenv("REGION2")
-	if vpcID2 == "" {
-		t.Skip("Environment variable REGION_2 is not set")
-	}
+	vpcID1, vpcID2, region1, region2 := preAWSPeerCheck(t, msgCommon)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -67,10 +73,6 @@ resource "aviatrix_account" "test_account" {
   aws_iam = "false"
   aws_access_key = "%s"
   aws_secret_key = "%s"
-
-	lifecycle {
-		ignore_changes = ["aws_secret_key"]
-	}
 }
 
 resource "aviatrix_aws_peer" "test_aws_peer" {

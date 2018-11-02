@@ -45,8 +45,9 @@ func resourceAccount() *schema.Resource {
 				Optional: true,
 			},
 			"aws_secret_key": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 		},
 	}

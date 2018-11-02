@@ -10,17 +10,17 @@ import (
 	"testing"
 )
 
-func preAccountCheck(t *testing.T) {
+func preAccountCheck(t *testing.T, msgEnd string) {
 	if os.Getenv("AWS_ACCOUNT_NUMBER") == "" {
-		t.Fatal(" AWS_ACCOUNT_NUMBER must be set for acceptance tests")
+		t.Fatal(" AWS_ACCOUNT_NUMBER must be set for acceptance tests" + msgEnd)
 	}
 
 	if os.Getenv("AWS_ACCESS_KEY") == "" {
-		t.Fatal("AWS_ACCESS_KEY must be set for acceptance tests.")
+		t.Fatal("AWS_ACCESS_KEY must be set for acceptance tests." + msgEnd)
 	}
 
 	if os.Getenv("AWS_SECRET_KEY") == "" {
-		t.Fatal("AWS_SECRET_KEY must be set for acceptance tests.")
+		t.Fatal("AWS_SECRET_KEY must be set for acceptance tests." + msgEnd)
 	}
 }
 
@@ -33,7 +33,7 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 		t.Skip("Skipping Access Account test as SKIP_ACCOUNT is set")
 	}
 
-	preAccountCheck(t)
+	preAccountCheck(t, ". Set SKIP_ACCOUNT to yes to skip account tests")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

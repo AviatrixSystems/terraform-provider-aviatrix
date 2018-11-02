@@ -11,31 +11,47 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func preGatewayCheck(t *testing.T, msgCommon string) (string, string, string) {
+	skipGw := os.Getenv("SKIP_GATEWAY")
+	if skipGw == "yes" {
+		t.Skip("Skipping Gateway test as SKIP_GATEWAY is set")
+	}
+
+	preAccountCheck(t, msgCommon)
+
+	vpcID := os.Getenv("AWS_VPC_ID")
+	if vpcID == "" {
+		t.Fatal("Environment variable AWS_VPC_ID is not set" + msgCommon)
+	}
+
+	region := os.Getenv("AWS_REGION")
+	if region == "" {
+		t.Fatal("Environment variable AWS_REGION is not set" + msgCommon)
+	}
+
+	vpcNet := os.Getenv("AWS_VPC_NET")
+	if vpcNet == "" {
+		t.Fatal("Environment variable AWS_VPC_NET is not set" + msgCommon)
+	}
+	return vpcID, region, vpcNet
+}
+
 func TestAccAviatrixGateway_basic(t *testing.T) {
 	var gateway goaviatrix.Gateway
 	rName := fmt.Sprintf("tf-testing-%s", acctest.RandString(5))
 	resourceName := "aviatrix_gateway.test"
-	accountID := os.Getenv("AWS_ACCOUNT_NUMBER")
+
+	msgCommon := ". Set SKIP_GATEWAY to yes to skip Gateway tests"
 
 	skipGw := os.Getenv("SKIP_GATEWAY")
 	if skipGw == "yes" {
 		t.Skip("Skipping Gateway test as SKIP_GATEWAY is set")
 	}
 
-	vpcID := os.Getenv("AWS_VPC_ID")
-	if vpcID == "" {
-		t.Skip("Environment variable AWS_VPC_ID is not set")
-	}
+	preAccountCheck(t, msgCommon)
+	accountID := os.Getenv("AWS_ACCOUNT_NUMBER")
 
-	region := os.Getenv("AWS_DEFAULT_REGION")
-	if region == "" {
-		t.Skip("Environment variable AWS_DEFAULT_REGION is not set")
-	}
-
-	vpcNet := os.Getenv("AWS_VPC_NET")
-	if vpcNet == "" {
-		t.Skip("Environment variable AWS_VPC_NET is not set")
-	}
+	vpcID, region, vpcNet := preGatewayCheck(t, msgCommon)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -43,7 +59,7 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 		CheckDestroy: testAccCheckGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayConfig_basic(rName, accountID, vpcID, region, vpcNet),
+				Config: testAccGatewayConfigBasic(rName, accountID, vpcID, region, vpcNet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(resourceName, &gateway),
 					resource.TestCheckResourceAttr(
@@ -62,45 +78,39 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 	})
 }
 
-func testAccGatewayConfig_basic(rName string, accountID string, vpcID string, region string, vpcNet string) string {
+func testAccGatewayConfigBasic(rName string, accountID string, vpcID string, region string, vpcNet string) string {
 	return fmt.Sprintf(`
 
 resource "aviatrix_account" "test" {
-	account_name = "%[1]s"
-	account_email = "noone@aviatrix.com"
-	cloud_type = 1
-	aws_account_number = "%[2]s"
-	aws_iam = "false"
-	aws_role_app = "arn:aws:iam::%[2]s:role/aviatrix-role-app"
-	aws_role_ec2 = "arn:aws:iam::%[2]s:role/aviatrix-role-ec2"
-
-	// account_email currently doesn't behave according to API docs, ignoring changes:
-	lifecycle {
-		ignore_changes = ["account_email"]
-	}
+  account_name = "%s"
+  cloud_type = 1
+  aws_account_number = "%s"
+  aws_iam = "false"
+  aws_access_key = "%s"
+  aws_secret_key = "%s"
 }
 
 resource "aviatrix_gateway" "test" {
 	cloud_type = 1
 	account_name = "${aviatrix_account.test.account_name}"
 	gw_name = "%[1]s"
-	vpc_id = "%[3]s"
-	vpc_reg = "%[4]s"
+	vpc_id = "%[5]s"
+	vpc_reg = "%[6]s"
 	vpc_size = "t2.micro"
-	vpc_net = "%[5]s"
+	vpc_net = "%[7]s"
 }
-	`, rName, accountID, vpcID, region, vpcNet)
+	`, rName, accountID, os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"), vpcID, region, vpcNet)
 }
 
 func testAccCheckGatewayExists(n string, gateway *goaviatrix.Gateway) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Gateway Not found: %s", n)
+			return fmt.Errorf("gateway Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Account ID is set")
+			return fmt.Errorf("no Account ID is set")
 		}
 
 		client := testAccProvider.Meta().(*goaviatrix.Client)
@@ -117,7 +127,7 @@ func testAccCheckGatewayExists(n string, gateway *goaviatrix.Gateway) resource.T
 		}
 
 		if foundGateway.GwName != rs.Primary.ID {
-			return fmt.Errorf("Gateway not found")
+			return fmt.Errorf("gateway not found")
 		}
 
 		*gateway = *foundGateway
@@ -140,7 +150,7 @@ func testAccCheckGatewayDestroy(s *terraform.State) error {
 		_, err := client.GetGateway(foundGateway)
 
 		if err == nil {
-			return fmt.Errorf("Gateway still exists")
+			return fmt.Errorf("gateway still exists")
 		}
 	}
 	return nil
