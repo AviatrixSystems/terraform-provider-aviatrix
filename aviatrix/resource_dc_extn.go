@@ -15,39 +15,39 @@ func resourceDCExtn() *schema.Resource {
 		Delete: resourceDCExtnDelete,
 
 		Schema: map[string]*schema.Schema{
-			"cloud_type": &schema.Schema{
+			"cloud_type": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"account_name": &schema.Schema{
+			"account_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"gw_name": &schema.Schema{
+			"gw_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_reg": &schema.Schema{
+			"vpc_reg": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"gw_size": &schema.Schema{
+			"gw_size": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"subnet_cidr": &schema.Schema{
+			"subnet_cidr": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"internet_access": &schema.Schema{
+			"internet_access": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"public_subnet": &schema.Schema{
+			"public_subnet": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tunnel_type": &schema.Schema{
+			"tunnel_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -57,7 +57,7 @@ func resourceDCExtn() *schema.Resource {
 
 func resourceDCExtnCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	dc_extn := &goaviatrix.DCExtn{
+	DCExtension := &goaviatrix.DCExtn{
 		CloudType:      d.Get("cloud_type").(int),
 		AccountName:    d.Get("account_name").(string),
 		GwName:         d.Get("gw_name").(string),
@@ -69,13 +69,13 @@ func resourceDCExtnCreate(d *schema.ResourceData, meta interface{}) error {
 		TunnelType:     d.Get("tunnel_type").(string),
 	}
 
-	log.Printf("[INFO] Creating Aviatrix DC Extension: %#v", dc_extn)
+	log.Printf("[INFO] Creating Aviatrix DC Extension: %#v", DCExtension)
 
-	err := client.CreateDCExtn(dc_extn)
+	err := client.CreateDCExtn(DCExtension)
 	if err != nil {
-		return fmt.Errorf("Failed to create Aviatrix DC Extension: %s", err)
+		return fmt.Errorf("failed to create Aviatrix DC Extension: %s", err)
 	}
-	d.SetId(dc_extn.GwName)
+	d.SetId(DCExtension.GwName)
 	return nil
 	//return resourceDCExtnRead(d, meta)
 }
@@ -86,11 +86,11 @@ func resourceDCExtnRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceDCExtnUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	dc_extn := &goaviatrix.DCExtn{}
-	log.Printf("[INFO] Update available public subnet CIDR: %#v", dc_extn)
-	err := client.UpdateDCExtn(dc_extn)
+	DCExtension := &goaviatrix.DCExtn{}
+	log.Printf("[INFO] Update available public subnet CIDR: %#v", DCExtension)
+	err := client.UpdateDCExtn(DCExtension)
 	if err != nil {
-		return fmt.Errorf("No available public CIDR or fully exhausted: %s", err)
+		return fmt.Errorf("no available public CIDR or fully exhausted: %s", err)
 	}
 
 	return nil
@@ -99,7 +99,7 @@ func resourceDCExtnUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceDCExtnDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	dc_extn := &goaviatrix.DCExtn{
+	DCExtension := &goaviatrix.DCExtn{
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string),
 	}
@@ -112,11 +112,11 @@ func resourceDCExtnDelete(d *schema.ResourceData, meta interface{}) error {
 	//                return fmt.Errorf("Failed to delete Aviatrix HA gateway: %s", err)
 	//        }
 	//}
-	log.Printf("[INFO] Deleting Aviatrix datacenter extension gateway: %#v", dc_extn)
-	err := client.DeleteDCExtn(dc_extn)
+	log.Printf("[INFO] Deleting Aviatrix datacenter extension gateway: %#v", DCExtension)
+	err := client.DeleteDCExtn(DCExtension)
 	if err != nil {
-		return fmt.Errorf("Failed to delete Aviatrix Gateway: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix Gateway: %s", err)
 	}
-	d.SetId(dc_extn.GwName)
+	d.SetId(DCExtension.GwName)
 	return nil
 }

@@ -16,35 +16,35 @@ func resourceAviatrixGateway() *schema.Resource {
 		Delete: resourceAviatrixGatewayDelete,
 
 		Schema: map[string]*schema.Schema{
-			"cloud_type": &schema.Schema{
+			"cloud_type": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"account_name": &schema.Schema{
+			"account_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"gw_name": &schema.Schema{
+			"gw_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_id": &schema.Schema{
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_reg": &schema.Schema{
+			"vpc_reg": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_size": &schema.Schema{
+			"vpc_size": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_net": &schema.Schema{
+			"vpc_net": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ha_subnet": &schema.Schema{
+			"ha_subnet": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -228,27 +228,28 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 
 	err := client.CreateGateway(gateway)
 	if err != nil {
-		log.Printf("[INFO] Failed to create Aviatrix gateway: %#v", gateway)
-		return fmt.Errorf("Failed to create Aviatrix gateway: %s", err)
+		log.Printf("[INFO] failed to create Aviatrix gateway: %#v", gateway)
+		return fmt.Errorf("failed to create Aviatrix gateway: %s", err)
 	}
-	if enable_nat := d.Get("enable_nat").(string); enable_nat == "yes" {
+	if enableNAT := d.Get("enable_nat").(string); enableNAT == "yes" {
 		log.Printf("[INFO] Aviatrix NAT enabled gateway: %#v", gateway)
 	}
-	if dns_server := d.Get("dns_server").(string); dns_server != "" {
+	if DNSServer := d.Get("dns_server").(string); DNSServer != "" {
 		log.Printf("[INFO] Aviatrix gateway DNS server: %#v", gateway)
 	}
 	// single_AZ enabled for Gateway. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
-	if single_az_ha := d.Get("single_az_ha").(string); single_az_ha == "enabled" {
-		single_az_gateway := &goaviatrix.Gateway{
+	if singleAZHA := d.Get("single_az_ha").(string); singleAZHA == "enabled" {
+		singleAZGateway := &goaviatrix.Gateway{
 			GwName:   d.Get("gw_name").(string),
 			SingleAZ: d.Get("single_az_ha").(string),
 		}
-		log.Printf("[INFO] Enable Single AZ GW HA: %#v", single_az_gateway)
+		log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
 		err := client.EnableSingleAZGateway(gateway)
 		if err != nil {
-			return fmt.Errorf("Failed to create single AZ GW HA: %s", err)
+			return fmt.Errorf("failed to create single AZ GW HA: %s", err)
 		}
 	}
+
 	// ha_subnet is for Gateway HA. Deprecated. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
 	if ha_subnet := d.Get("ha_subnet").(string); ha_subnet != "" {
 		ha_gateway := &goaviatrix.Gateway{
@@ -260,9 +261,9 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		if err != nil {
 			del_err := client.DeleteGateway(gateway)
 			if del_err != nil {
-				return fmt.Errorf("Failed to auto-cleanup failed gateway: %s", del_err)
+				return fmt.Errorf("failed to auto-cleanup failed gateway: %s", del_err)
 			}
-			return fmt.Errorf("Failed to create GW HA: %s", err)
+			return fmt.Errorf("failed to create GW HA: %s", err)
 		}
 	}
 	// public_subnet is for Peering HA Gateway. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
@@ -275,7 +276,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		log.Printf("[INFO] Enable peering HA: %#v", ha_gateway)
 		err := client.EnablePeeringHaGateway(ha_gateway)
 		if err != nil {
-			return fmt.Errorf("Failed to create peering HA: %s", err)
+			return fmt.Errorf("failed to create peering HA: %s", err)
 		}
 	}
 	d.SetId(gateway.GwName)
@@ -287,7 +288,9 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	gateway := &goaviatrix.Gateway{
 		AccountName: d.Get("account_name").(string),
 		GwName:      d.Get("gw_name").(string),
-		SingleAZ:    d.Get("single_az_ha").(string),
+	}
+	if d.Get("single_az_ha") != nil {
+		gateway.SingleAZ = d.Get("single_az_ha").(string)
 	}
 	gw, err := client.GetGateway(gateway)
 	if err != nil {
@@ -295,7 +298,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Couldn't find Aviatrix Gateway: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix Gateway: %s", err)
 	}
 	log.Printf("[TRACE] reading gateway %s: %#v", d.Get("gw_name").(string), gw)
 	if gw != nil {
@@ -305,7 +308,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("public_dns_server", gw.PublicDnsServer)
 		d.Set("security_group_id", gw.GwSecurityGroupID)
 
-		if public_subnet := d.Get("public_subnet").(string); public_subnet != "" {
+		if publicSubnet := d.Get("public_subnet").(string); publicSubnet != "" {
 			gateway.GwName += "-hagw"
 			gw, err := client.GetGateway(gateway)
 			if err == nil {
@@ -330,7 +333,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 
 	err := client.UpdateGateway(gateway)
 	if err != nil {
-		return fmt.Errorf("Failed to update Aviatrix Gateway: %s", err)
+		return fmt.Errorf("failed to update Aviatrix Gateway: %s", err)
 	}
 	d.SetId(gateway.GwName)
 	return nil
@@ -343,28 +346,28 @@ func resourceAviatrixGatewayDelete(d *schema.ResourceData, meta interface{}) err
 		GwName:    d.Get("gw_name").(string),
 	}
 	// ha_subnet is for Gateway HA
-	if ha_subnet := d.Get("ha_subnet").(string); ha_subnet != "" {
+	if HASubnet := d.Get("ha_subnet").(string); HASubnet != "" {
 		log.Printf("[INFO] Deleting Aviatrix gateway HA: %#v", gateway)
 		err := client.DisableHaGateway(gateway)
 		if err != nil {
-			return fmt.Errorf("Failed to disable Aviatrix gateway HA: %s", err)
+			return fmt.Errorf("failed to disable Aviatrix gateway HA: %s", err)
 		}
 	}
 	// public_subnet is for Peering HA
-	if public_subnet := d.Get("public_subnet").(string); public_subnet != "" {
+	if publicSubnet := d.Get("public_subnet").(string); publicSubnet != "" {
 		//Delete backup gateway first
 		gateway.GwName += "-hagw"
 		log.Printf("[INFO] Deleting Aviatrix Backup Gateway [-hagw]: %#v", gateway)
 		err := client.DeleteGateway(gateway)
 		if err != nil {
-			return fmt.Errorf("Failed to delete backup [-hgw] gateway: %s", err)
+			return fmt.Errorf("failed to delete backup [-hgw] gateway: %s", err)
 		}
 	}
 	gateway.GwName = d.Get("gw_name").(string)
 	log.Printf("[INFO] Deleting Aviatrix gateway: %#v", gateway)
 	err := client.DeleteGateway(gateway)
 	if err != nil {
-		return fmt.Errorf("Failed to delete Aviatrix Gateway: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix Gateway: %s", err)
 	}
 	return nil
 }

@@ -41,7 +41,7 @@ func (c *Client) CreateDCExtn(dc_extn *DCExtn) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return{
 		return errors.New(data.Reason)
 	}
 	return nil
@@ -58,7 +58,7 @@ func (c *Client) GetDCExtn(dc_extn *DCExtn) (*DCExtn, error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return nil, errors.New(data.Reason)
 	}
 	// dc_extnList:= data.Results
@@ -71,10 +71,10 @@ func (c *Client) GetDCExtn(dc_extn *DCExtn) (*DCExtn, error) {
 	return nil, ErrNotFound
 }
 
-func (c *Client) UpdateDCExtn(dc_extn *DCExtn) (error) {
-	dc_extn.CID=c.CID
-	dc_extn.Action="list_cidr_of_available_vpcs"
-	resp,err := c.Post(c.baseURL, dc_extn)
+func (c *Client) UpdateDCExtn(dcx *DCExtn) (error) {
+	dcx.CID=c.CID
+	dcx.Action="list_cidr_of_available_vpcs"
+	resp,err := c.Post(c.baseURL, dcx)
 		if err != nil {
 		return err
 	}
@@ -82,14 +82,14 @@ func (c *Client) UpdateDCExtn(dc_extn *DCExtn) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil
 }
 
-func (c *Client) DeleteDCExtn(dc_extn *DCExtn) (error) {
-        path := c.baseURL + fmt.Sprintf("?action=delete_container&CID=%s&cloud_type=%d&gw_name=%s", c.CID, dc_extn.CloudType, dc_extn.GwName)
+func (c *Client) DeleteDCExtn(dcx *DCExtn) (error) {
+        path := c.baseURL + fmt.Sprintf("?action=delete_container&CID=%s&cloud_type=%d&gw_name=%s", c.CID, dcx.CloudType, dcx.GwName)
         resp,err := c.Get(path, nil)
 
         if err != nil {
@@ -99,7 +99,7 @@ func (c *Client) DeleteDCExtn(dc_extn *DCExtn) (error) {
         if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
                return err
         }
-        if(!data.Return){
+        if !data.Return {
                return errors.New(data.Reason)
         }
         return nil
