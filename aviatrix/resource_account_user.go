@@ -36,6 +36,10 @@ func resourceAccountUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"new_password": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"what": {
 				Type:     schema.TypeString,
 				Optional: true,
