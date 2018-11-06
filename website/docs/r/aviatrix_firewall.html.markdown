@@ -29,7 +29,7 @@ resource "aviatrix_firewall" "test_firewall" {
             },
             {
               protocol = "tcp"
-              src_ip = "test_tag"
+              src_ip = "test_tag" # Tag name of a pre created aviatrix_firewall_tag resource
               log_enable = "off"
               dst_ip = "10.12.1.172/32"
               allow_deny = "deny"
@@ -47,8 +47,8 @@ The following arguments are supported:
 * `base_allow_deny` - (Optional) New base policy. Valid Value: "allow-all", "deny-all".
 * `base_log_enable` - (Optional) Indicates whether enable logging or not. Valid Value: "on", "off"
 * `policy` - (Optional) New access policy for the gateway. Type: String (valid JSON). 6 fields are required for each policy item: src_ip, dst_ip, protocol, port, allow_deny, log_enable. Valid values are 
-  * `src_ip` - CIDRs separated by comma or tag names such "HR" or "marketing" etc.  e.g.: "10.30.0.0/16,10.45.0.0/20".
-  * `dst_ip` - CIDRs separated by comma or tag names such "HR" or "marketing" etc.  e.g.: "10.30.0.0/16,10.45.0.0/20".
+  * `src_ip` - CIDRs separated by comma or tag names such "HR" or "marketing" etc.  e.g.: "10.30.0.0/16,10.45.0.0/20". The aviatrix_firewall_tag resource should be created prior to using the tag name
+  * `dst_ip` - CIDRs separated by comma or tag names such "HR" or "marketing" etc.  e.g.: "10.30.0.0/16,10.45.0.0/20". The aviatrix_firewall_tag resource should be created prior to using the tag name
   * `protocol`: "all", "tcp", "udp", "icmp", "sctp", "rdp", "dccp".
   * `port`: a single port or a range of port numbers. e.g.: "25", "25:1024".
   * `allow_deny`: "allow" and "deny"
