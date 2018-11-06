@@ -19,7 +19,7 @@ func TestAccAviatrixFirewall_basic(t *testing.T) {
 		t.Skip("Skipping Firewall test as SKIP_FIREWALL is set")
 	}
 	msg := ". Set SKIP_FIREWALL to yes to skip firewall tests"
-	preAccountCheck(t, msg)
+
 	preGatewayCheck(t, msg)
 
 	resource.Test(t, resource.TestCase{

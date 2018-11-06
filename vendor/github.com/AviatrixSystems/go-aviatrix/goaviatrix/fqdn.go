@@ -1,12 +1,12 @@
 package goaviatrix
 
 import (
+	"net/http"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"strings"
-        "net/http"
 )
 
 type Filters struct {
@@ -42,7 +42,7 @@ func (c *Client) CreateFQDN(fqdn *FQDN) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil
@@ -58,7 +58,7 @@ func (c *Client) DeleteFQDN(fqdn *FQDN) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil
@@ -66,7 +66,8 @@ func (c *Client) DeleteFQDN(fqdn *FQDN) (error) {
 
 //change state to 'enabled' or 'disabled'
 func (c *Client) UpdateFQDNStatus(fqdn *FQDN) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=set_fqdn_filter_tag_state&tag_name=%s&status=%s", c.CID, fqdn.FQDNTag, fqdn.FQDNStatus)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=set_fqdn_filter_tag_state&tag_name=%s&status=%s",
+		c.CID, fqdn.FQDNTag, fqdn.FQDNStatus)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return err
@@ -75,7 +76,7 @@ func (c *Client) UpdateFQDNStatus(fqdn *FQDN) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil
@@ -83,7 +84,8 @@ func (c *Client) UpdateFQDNStatus(fqdn *FQDN) (error) {
 
 //Change default mode to 'white' or 'black'
 func (c *Client) UpdateFQDNMode(fqdn *FQDN) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=set_fqdn_filter_tag_color&tag_name=%s&color=%s", c.CID, fqdn.FQDNTag, fqdn.FQDNMode)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=set_fqdn_filter_tag_color&tag_name=%s&color=%s",
+		c.CID, fqdn.FQDNTag, fqdn.FQDNMode)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return err
@@ -92,7 +94,7 @@ func (c *Client) UpdateFQDNMode(fqdn *FQDN) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil
@@ -106,7 +108,8 @@ func (c *Client) UpdateDomains(fqdn *FQDN) (error) {
         verb := "POST"
         body := fmt.Sprintf("CID=%s&action=%s&tag_name=%s", c.CID, fqdn.Action, fqdn.FQDNTag)
         for i, dn := range fqdn.DomainList {
-                body = body + fmt.Sprintf("&domain_names[%d][fqdn]=%s&domain_names[%d][proto]=%s&domain_names[%d][port]=%s", i,dn.FQDN, i,dn.Protocol, i,dn.Port)
+                body = body + fmt.Sprintf("&domain_names[%d][fqdn]=%s&domain_names[%d]" +
+                	"[proto]=%s&domain_names[%d][port]=%s", i,dn.FQDN, i,dn.Protocol, i,dn.Port)
         }
         log.Printf("[TRACE] %s %s Body: %s", verb, c.baseURL, body)
         req, err := http.NewRequest(verb, c.baseURL, strings.NewReader(body))
@@ -123,15 +126,16 @@ func (c *Client) UpdateDomains(fqdn *FQDN) (error) {
         if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
                 return err
         }
-        if(!data.Return){
+        if !data.Return {
                 return errors.New(data.Reason)
         }
         return nil
 }
 
 func (c *Client) AttachGws(fqdn *FQDN) (error) {
-        log.Printf("[TRACE] inside AttachGWs ------------------------------------------------%#v",fqdn)
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=attach_fqdn_filter_tag_to_gw&tag_name=%s", c.CID, fqdn.FQDNTag)
+	log.Printf("[TRACE] inside AttachGWs ------------------------------------------------%#v",fqdn)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=attach_fqdn_filter_tag_to_gw&tag_name=%s", c.CID,
+		fqdn.FQDNTag)
 	for i := range fqdn.GwList {
 		newPath := path + fmt.Sprintf("&gw_name=%s", fqdn.GwList[i])
 		resp,err := c.Get(newPath, nil)
@@ -142,7 +146,7 @@ func (c *Client) AttachGws(fqdn *FQDN) (error) {
 		if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 			return err
 		}
-		if(!data.Return){
+		if !data.Return {
 			return errors.New(data.Reason)
 		}
 	}
@@ -150,7 +154,8 @@ func (c *Client) AttachGws(fqdn *FQDN) (error) {
 }
 
 func (c *Client) DetachGws(fqdn *FQDN) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=detach_fqdn_filter_tag_from_gw&tag_name=%s", c.CID, fqdn.FQDNTag)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=detach_fqdn_filter_tag_from_gw&tag_name=%s", c.CID,
+		fqdn.FQDNTag)
 	for i := range fqdn.GwList {
 		newPath := path + fmt.Sprintf("&gw_name=%s", fqdn.GwList[i])
 		resp,err := c.Get(newPath, nil)
@@ -161,7 +166,7 @@ func (c *Client) DetachGws(fqdn *FQDN) (error) {
 		if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 			return err
 		}
-		if(!data.Return){
+		if !data.Return {
 			return errors.New(data.Reason)
 		}
 	}
@@ -202,7 +207,8 @@ func (c *Client) GetFQDNTag(fqdn *FQDN) (*FQDN, error) {
 func (c *Client) ListDomains(fqdn *FQDN) (*FQDN, error) {
 	fqdn.CID=c.CID
 	fqdn.Action="list_fqdn_filter_tag_domain_names"
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_fqdn_filter_tag_domain_names&tag_name=%s", c.CID, fqdn.FQDNTag)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_fqdn_filter_tag_domain_names&tag_name=%s",
+		c.CID, fqdn.FQDNTag)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return nil, err
@@ -223,8 +229,8 @@ func (c *Client) ListDomains(fqdn *FQDN) (*FQDN, error) {
                                 Protocol: dn["proto"].(string),
                                 Port:     dn["port"].(string),
             }
-	    log.Printf("[TRACE] DOMAIN key FOUND ------------------------>>>>>>>>>>>>: %#v",fqdnFilter)
-	    //fqdn.DomainList = append(fqdn.DomainList, fqdnFilter)
+	    //log.Printf("[TRACE] DOMAIN key FOUND ------------------------>>>>>>>>>>>>: %#v",fqdnFilter)
+	    fqdn.DomainList = append(fqdn.DomainList, &fqdnFilter)
 	}
 	//value, ok := dn["results"].([]interface{})
 	//if ok {
@@ -233,11 +239,11 @@ func (c *Client) ListDomains(fqdn *FQDN) (*FQDN, error) {
 	//    log.Printf("[TRACE] ListDomains NOT_FOUND --------------------------->>>>>>>>>>>>: %#v", value)
 	//}
 	// error when passing value or when passing fqdnFilter
-	// TODO please return successfully the correct value of domain list
 	return fqdn, nil
 }
 func (c *Client) ListGws(fqdn *FQDN) (*FQDN, error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_fqdn_filter_tag_attached_gws&tag_name=%s", c.CID, fqdn.FQDNTag)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_fqdn_filter_tag_attached_gws&tag_name=%s", c.CID,
+		fqdn.FQDNTag)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return nil, err
@@ -246,8 +252,9 @@ func (c *Client) ListGws(fqdn *FQDN) (*FQDN, error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	if(!data.Return){
-                log.Printf("[INFO] Couldn't find Aviatrix FQDN tag names: %s", fqdn.FQDNTag, data.Reason)
+	if !data.Return {
+                log.Printf("[INFO] Couldn't find Aviatrix FQDN tag names: %s , Reason: %s", fqdn.FQDNTag,
+                	data.Reason)
 		return nil, errors.New(data.Reason)
 	}
 	fqdn.GwList = data.Results
