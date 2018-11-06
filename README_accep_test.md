@@ -20,8 +20,8 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_account_user | SKIP_ACCOUNT_USER |                                                              |
 | aviatrix_aws_peer     | SKIP_AWS_PEER     | aviatrix_account+AWS_VPC_ID, AWS_VPC_ID2, AWS_REGION, AWS_REGION2 |
 | aviatrix_dc_extn      | SKIP_DCX          | aviatrix_account+AWS_REGION, DCX_SUBNET                      |
-| aviatrix_firewall     | SKIP_FIREWALL     |                                                              |
+| aviatrix_firewall     | SKIP_FIREWALL     | aviatrix_gateway                                             |
 | aviatrix_firewall_tag | SKIP_FIREWALL_TAG |                                                              |
-| aviatrix_gateway      | SKIP_GATEWAY      | aviatrix_account+AWS_VPC_ID2, AWS_REGION, AWS_VPC_NET        |
+| aviatrix_gateway      | SKIP_GATEWAY      | aviatrix_account+AWS_VPC_ID, AWS_REGION, AWS_VPC_NET         |
 
 

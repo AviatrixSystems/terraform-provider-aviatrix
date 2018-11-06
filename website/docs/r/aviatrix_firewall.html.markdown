@@ -25,7 +25,7 @@ resource "aviatrix_firewall" "test_firewall" {
               log_enable = "on"
               dst_ip = "10.12.0.172/32"
               allow_deny = "deny"
-              port = "0-65535"
+              port = "0:65535"
             },
             {
               protocol = "tcp"
@@ -33,7 +33,7 @@ resource "aviatrix_firewall" "test_firewall" {
               log_enable = "off"
               dst_ip = "10.12.1.172/32"
               allow_deny = "deny"
-              port = "0-65535"
+              port = "0:65535"
             }
           ]
 }

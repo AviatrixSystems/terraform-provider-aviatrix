@@ -12,11 +12,6 @@ import (
 )
 
 func preGatewayCheck(t *testing.T, msgCommon string) (string, string, string) {
-	skipGw := os.Getenv("SKIP_GATEWAY")
-	if skipGw == "yes" {
-		t.Skip("Skipping Gateway test as SKIP_GATEWAY is set")
-	}
-
 	preAccountCheck(t, msgCommon)
 
 	vpcID := os.Getenv("AWS_VPC_ID")

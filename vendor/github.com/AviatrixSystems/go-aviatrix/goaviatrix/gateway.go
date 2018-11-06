@@ -194,7 +194,7 @@ func (c *Client) DisableHaGateway(gateway *Gateway) (error) {
         if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
                 return err
         }
-        if(!data.Return){
+        if !data.Return {
                 return errors.New(data.Reason)
         }
         return nil
@@ -211,7 +211,7 @@ func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return nil, errors.New(data.Reason)
 	}
 	gwlist:= data.Results
