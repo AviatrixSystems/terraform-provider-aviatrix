@@ -50,7 +50,7 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		log.Printf("[INFO] Couldn't find s2c connection %s: %s", site2cloud.TunnelName, data.Reason)
 		return errors.New(data.Reason)
 	}
@@ -59,7 +59,8 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) (error) {
 
 func (c *Client) GetSite2Cloud(site2cloud *Site2Cloud) (*Site2Cloud, error) {
 	site2cloud.Action="list_site2cloud_conn"
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=%s&connection_name=%s", c.CID, site2cloud.Action, site2cloud.TunnelName)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=%s&connection_name=%s", c.CID, site2cloud.Action,
+		site2cloud.TunnelName)
 	resp,err := c.Get(path, nil)
 	if err != nil {
 		return nil, err
@@ -68,18 +69,26 @@ func (c *Client) GetSite2Cloud(site2cloud *Site2Cloud) (*Site2Cloud, error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return nil, errors.New(data.Reason)
 	}
+	for i:=0; i < len(data.Results.Connections); i++ {
+		conn := data.Results.Connections[i]
+		if site2cloud.VpcID == conn.VpcID{
+			return &conn, nil
+		}
+	}
+	return nil, ErrNotFound
 
-	return &data.Results.Connections[0], nil
 }
 
 func (c *Client) UpdateSite2Cloud(site2cloud *Site2Cloud) (error) {
 	site2cloud.CID = c.CID
 	site2cloud.Action = "edit_site2cloud_conn"
 	verb := "POST"
-	body := fmt.Sprintf("CID=%s&action=%s&vpc_id=%s&conn_name=%s&local_subnet_cidr=%s&remote_subnet_cidr=%s", c.CID, site2cloud.Action, site2cloud.VpcID ,site2cloud.TunnelName ,site2cloud.LocalSubnet, site2cloud.RemoteSubnet)
+	body := fmt.Sprintf("CID=%s&action=%s&vpc_id=%s&conn_name=%s&local_subnet_cidr=%s&remote_subnet_cidr=%s",
+		c.CID, site2cloud.Action, site2cloud.VpcID ,site2cloud.TunnelName ,site2cloud.LocalSubnet,
+		site2cloud.RemoteSubnet)
 	log.Printf("[TRACE] %s %s Body: %s", verb, c.baseURL, body)
 	req, err := http.NewRequest(verb, c.baseURL, strings.NewReader(body))
 	if err == nil {
@@ -106,7 +115,8 @@ func (c *Client) DeleteSite2Cloud(site2cloud *Site2Cloud) (error) {
 	site2cloud.CID = c.CID
 	site2cloud.Action = "delete_site2cloud_connection"
 	verb := "POST"
-	body := fmt.Sprintf("CID=%s&action=%s&vpc_id=%s&connection_name=%s", c.CID, site2cloud.Action, site2cloud.VpcID ,site2cloud.TunnelName)
+	body := fmt.Sprintf("CID=%s&action=%s&vpc_id=%s&connection_name=%s", c.CID, site2cloud.Action,
+		site2cloud.VpcID ,site2cloud.TunnelName)
 
 	log.Printf("[TRACE] %s %s Body: %s", verb, c.baseURL, body)
 	req, err := http.NewRequest(verb, c.baseURL, strings.NewReader(body))

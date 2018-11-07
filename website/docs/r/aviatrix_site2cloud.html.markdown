@@ -16,13 +16,14 @@ The Site2Cloud resource Creates and Manages Aviatrix Site2Cloud connection
 # Create Aviatrix site2cloud
 resource "aviatrix_site2cloud" "test_s2c" {
   vpc_id = "vpc-abcd1234"
-  conn_name = "myconn"
-  remote_gw_type = "generic"
+  connection_name = "my_conn"
+  connection_type = "unmapped"
+  remote_gateway_type = "generic"
   tunnel_type = "udp"
-  gw_name = "gw1"
-  remote_gw_ip = "5.5.5.5"
-  remote_subnet = "10.23.0.0/24"
-  local_subnet = "10.20.1.0/24"
+  primary_cloud_gateway_name = "gw1"
+  remote_gateway_ip = "5.5.5.5"
+  remote_subnet_cidr = "10.23.0.0/24"
+  local_subnet_cidr = "10.20.1.0/24"
 }
 ```
 
@@ -34,7 +35,7 @@ The following arguments are supported:
 * `backup_gateway_name` - (Optional)
 * `vpc_id` - (Required) VPC Id of the cloud gateway
 * `connection_name` - (Required) Site2Cloud Connection Name
-* `connection_type` - (Optional) Connetion Type. Valid Value(s): "mapped", "unmapped"
+* `connection_type` - (Required) Connection Type. Valid Value(s): "mapped", "unmapped"
 * `tunnel_type` - (Required) Site2Cloud Tunnel Type. Valid Value(s): "udp", "tcp"
 * `remote_gateway_type` - (Required) Remote Gateway Type. Valid Value(s): "generic", "avx", "aws", "azure", "sonicwall"
 * `remote_gateway_ip` - (Required) Remote Gateway IP
