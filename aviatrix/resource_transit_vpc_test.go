@@ -10,16 +10,16 @@ import (
 	"testing"
 )
 
-func TestAccAviatrixSpokeGw_basic(t *testing.T) {
+func TestAccAviatrixTransitGw_basic(t *testing.T) {
 	var gateway goaviatrix.Gateway
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
-	resourceName := "aviatrix_spoke_vpc.test_spoke_vpc"
+	resourceName := "aviatrix_transit_vpc.test_transit_vpc"
 
-	msgCommon := ". Set SKIP_SPOKE to yes to skip Spoke Gateway tests"
+	msgCommon := ". Set SKIP_TRANSIT to yes to skip Transit Gateway tests"
 
-	skipGw := os.Getenv("SKIP_SPOKE")
+	skipGw := os.Getenv("SKIP_TRANSIT")
 	if skipGw == "yes" {
-		t.Skip("Skipping Spoke Gateway test as SKIP_SPOKE is set")
+		t.Skip("Skipping Transit gateway test as SKIP_TRANSIT is set")
 	}
 
 	preGatewayCheck(t, msgCommon)
@@ -27,19 +27,18 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSpokeGwDestroy,
+		CheckDestroy: testAccCheckTransitGwDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpokeGwConfigBasic(rName),
+				Config: testAccTransitGwConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpokeGwExists(resourceName, &gateway),
+					testAccCheckTransitGwExists(resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_size", "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
 					resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("AWS_VPC_NET")),
 					resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AWS_REGION")),
 					resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AWS_REGION")),
-					resource.TestCheckResourceAttr(resourceName, "enable_nat", "no"),
 					resource.TestCheckResourceAttr(resourceName, "tag_list.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tag_list.0", "k1:v1"),
 					resource.TestCheckResourceAttr(resourceName, "tag_list.1", "k2:v2"),
@@ -49,7 +48,7 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 	})
 }
 
-func testAccSpokeGwConfigBasic(rName string) string {
+func testAccTransitGwConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 
 resource "aviatrix_account" "test" {
@@ -61,7 +60,7 @@ resource "aviatrix_account" "test" {
   aws_secret_key = "%s"
 }
 
-resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
+resource "aviatrix_transit_vpc" "test_transit_vpc" {
   cloud_type = 1
   account_name = "aws"
   gw_name = "tfg-%[1]s"
@@ -69,7 +68,6 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
   vpc_reg = "%[6]s"
   vpc_size = "t2.micro"
   subnet = "%[7]s"
-  enable_nat = "no"
   tag_list = ["k1:v1","k2:v2"]
 }
 
@@ -77,15 +75,15 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"))
 }
 
-func testAccCheckSpokeGwExists(n string, gateway *goaviatrix.Gateway) resource.TestCheckFunc {
+func testAccCheckTransitGwExists(n string, gateway *goaviatrix.Gateway) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("spoke gateway Not found: %s", n)
+			return fmt.Errorf("transit gateway Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no spoke gateway ID is set")
+			return fmt.Errorf("no transit gateway ID is set")
 		}
 
 		client := testAccProvider.Meta().(*goaviatrix.Client)
@@ -102,7 +100,7 @@ func testAccCheckSpokeGwExists(n string, gateway *goaviatrix.Gateway) resource.T
 		}
 
 		if foundGateway.GwName != rs.Primary.ID {
-			return fmt.Errorf("spoke gateway not found")
+			return fmt.Errorf("transit gateway not found")
 		}
 
 		*gateway = *foundGateway
@@ -111,11 +109,11 @@ func testAccCheckSpokeGwExists(n string, gateway *goaviatrix.Gateway) resource.T
 	}
 }
 
-func testAccCheckSpokeGwDestroy(s *terraform.State) error {
+func testAccCheckTransitGwDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*goaviatrix.Client)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aviatrix_spoke_vpc" {
+		if rs.Type != "aviatrix_transit_vpc" {
 			continue
 		}
 		foundGateway := &goaviatrix.Gateway{
@@ -125,7 +123,7 @@ func testAccCheckSpokeGwDestroy(s *terraform.State) error {
 		_, err := client.GetGateway(foundGateway)
 
 		if err == nil {
-			return fmt.Errorf("spoke gateway still exists")
+			return fmt.Errorf("transit gateway still exists")
 		}
 	}
 	return nil

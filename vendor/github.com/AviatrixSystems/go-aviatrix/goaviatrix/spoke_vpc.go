@@ -37,14 +37,15 @@ func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil
 }
 
 func (c *Client) SpokeJoinTransit(spoke *SpokeVpc) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=attach_spoke_to_transit_gw&spoke_gw=%s&transit_gw=%s", c.CID, spoke.GwName, spoke.TransitGateway)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=attach_spoke_to_transit_gw&spoke_gw=%s&transit_gw=%s",
+		c.CID, spoke.GwName, spoke.TransitGateway)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return err
@@ -53,14 +54,15 @@ func (c *Client) SpokeJoinTransit(spoke *SpokeVpc) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil
 }
 
 func (c *Client) SpokeLeaveTransit(spoke *SpokeVpc) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=detach_spoke_from_transit_gw&spoke_gw=%s", c.CID, spoke.GwName)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=detach_spoke_from_transit_gw&spoke_gw=%s", c.CID,
+		spoke.GwName)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return err
@@ -69,14 +71,15 @@ func (c *Client) SpokeLeaveTransit(spoke *SpokeVpc) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil
 }
 
 func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_spoke_ha&gw_name=%s&public_subnet=%s", c.CID, spoke.GwName, spoke.HASubnet)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_spoke_ha&gw_name=%s&public_subnet=%s", c.CID,
+		spoke.GwName, spoke.HASubnet)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return err

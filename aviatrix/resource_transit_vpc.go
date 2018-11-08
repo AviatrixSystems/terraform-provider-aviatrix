@@ -16,43 +16,43 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 		Delete: resourceAviatrixTransitVpcDelete,
 
 		Schema: map[string]*schema.Schema{
-			"cloud_type": &schema.Schema{
+			"cloud_type": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"account_name": &schema.Schema{
+			"account_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"gw_name": &schema.Schema{
+			"gw_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_id": &schema.Schema{
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_reg": &schema.Schema{
+			"vpc_reg": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_size": &schema.Schema{
+			"vpc_size": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"subnet": &schema.Schema{
+			"subnet": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ha_subnet": &schema.Schema{
+			"ha_subnet": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"dns_server": &schema.Schema{
+			"dns_server": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tag_list": &schema.Schema{
+			"tag_list": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
@@ -74,26 +74,26 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		DnsServer:   d.Get("dns_server").(string),
 	}
 	if _, ok := d.GetOk("tag_list"); ok {
-		tag_list := d.Get("tag_list").([]interface{})
-		tag_list_str := goaviatrix.ExpandStringList(tag_list)
-		gateway.TagList = strings.Join(tag_list_str, ",")
+		tagList := d.Get("tag_list").([]interface{})
+		tagListStr := goaviatrix.ExpandStringList(tagList)
+		gateway.TagList = strings.Join(tagListStr, ",")
 	}
 
 	log.Printf("[INFO] Creating Aviatrix TransitVpc: %#v", gateway)
 
 	err := client.LaunchTransitVpc(gateway)
 	if err != nil {
-		return fmt.Errorf("Failed to create Aviatrix TransitVpc: %s", err)
+		return fmt.Errorf("failed to create Aviatrix TransitVpc: %s", err)
 	}
-	if ha_subnet := d.Get("ha_subnet").(string); ha_subnet != "" {
+	if haSubnet := d.Get("ha_subnet").(string); haSubnet != "" {
 		//Enable HA
-		ha_gateway := &goaviatrix.TransitVpc{
+		haGateway := &goaviatrix.TransitVpc{
 			GwName:   d.Get("gw_name").(string),
 			HASubnet: d.Get("ha_subnet").(string),
 		}
-		err = client.EnableHaTransitVpc(ha_gateway)
+		err = client.EnableHaTransitVpc(haGateway)
 		if err != nil {
-			return fmt.Errorf("Failed to enable2 HA Aviatrix TransitVpc: %s", err)
+			return fmt.Errorf("failed to enable2 HA Aviatrix TransitVpc: %s", err)
 		}
 	}
 	d.SetId(gateway.GwName)
@@ -113,7 +113,7 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Couldn't find Aviatrix TransitVpc: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix TransitVpc: %s", err)
 	}
 	log.Printf("[TRACE] reading gateway %s: %#v",
 		d.Get("gw_name").(string), gw)
@@ -152,17 +152,17 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		os := o.([]interface{})
 		ns := n.([]interface{})
-		old_tag_list := goaviatrix.ExpandStringList(os)
-		tags.TagList = strings.Join(old_tag_list, ",")
+		oldTagList := goaviatrix.ExpandStringList(os)
+		tags.TagList = strings.Join(oldTagList, ",")
 		err := client.DeleteTags(tags)
 		if err != nil {
-			return fmt.Errorf("Failed to delete tags : %s", err)
+			return fmt.Errorf("failed to delete tags : %s", err)
 		}
-		new_tag_list := goaviatrix.ExpandStringList(ns)
-		tags.TagList = strings.Join(new_tag_list, ",")
+		newTagList := goaviatrix.ExpandStringList(ns)
+		tags.TagList = strings.Join(newTagList, ",")
 		err = client.AddTags(tags)
 		if err != nil {
-			return fmt.Errorf("Failed to add tags : %s", err)
+			return fmt.Errorf("failed to add tags : %s", err)
 		}
 		d.SetPartial("tag_list")
 	}
@@ -170,29 +170,29 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		gateway.VpcSize = d.Get("vpc_size").(string)
 		err := client.UpdateGateway(gateway)
 		if err != nil {
-			return fmt.Errorf("Failed to update Aviatrix TransitVpc: %s", err)
+			return fmt.Errorf("failed to update Aviatrix TransitVpc: %s", err)
 		}
 		d.SetPartial("vpc_size")
 	}
 
 	if d.HasChange("ha_subnet") {
-		ha_gateway := &goaviatrix.TransitVpc{
+		haGateway := &goaviatrix.TransitVpc{
 			GwName:   d.Get("gw_name").(string),
 			HASubnet: d.Get("ha_subnet").(string),
 		}
 		o, n := d.GetChange("ha_subnet")
 		if o == "" {
 			//New configuration to enable HA
-			err := client.EnableHaTransitVpc(ha_gateway)
+			err := client.EnableHaTransitVpc(haGateway)
 			if err != nil {
-				return fmt.Errorf("Failed to enable HA Aviatrix TransitVpc: %s", err)
+				return fmt.Errorf("failed to enable HA Aviatrix TransitVpc: %s", err)
 			}
 		} else if n == "" {
 			//Ha configuration has been deleted
 			gateway.GwName += "-hagw"
 			err := client.DeleteGateway(gateway)
 			if err != nil {
-				return fmt.Errorf("Failed to delete Aviatrix TransitVpc HA gateway: %s", err)
+				return fmt.Errorf("failed to delete Aviatrix TransitVpc HA gateway: %s", err)
 			}
 		} else {
 			//HA subnet has been modified. Delete older HA GW,
@@ -200,14 +200,14 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 			gateway.GwName += "-hagw"
 			err := client.DeleteGateway(gateway)
 			if err != nil {
-				return fmt.Errorf("Failed to delete Aviatrix TransitVpc HA gateway: %s", err)
+				return fmt.Errorf("failed to delete Aviatrix TransitVpc HA gateway: %s", err)
 			}
 
 			gateway.GwName = d.Get("gw_name").(string)
 			//New configuration to enable HA
-			ha_err := client.EnableHaTransitVpc(ha_gateway)
-			if ha_err != nil {
-				return fmt.Errorf("Failed to enable HA Aviatrix TransitVpc: %s", err)
+			haErr := client.EnableHaTransitVpc(haGateway)
+			if haErr != nil {
+				return fmt.Errorf("failed to enable HA Aviatrix TransitVpc: %s", err)
 			}
 		}
 		d.SetPartial("ha_subnet")
@@ -226,18 +226,18 @@ func resourceAviatrixTransitVpcDelete(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[INFO] Deleting Aviatrix TransitVpc: %#v", gateway)
 
 	//If HA is enabled, delete HA GW first.
-	if ha_subnet := d.Get("ha_subnet").(string); ha_subnet != "" {
+	if haSubnet := d.Get("ha_subnet").(string); haSubnet != "" {
 		//Delete HA Gw too
 		gateway.GwName += "-hagw"
 		err := client.DeleteGateway(gateway)
 		if err != nil {
-			return fmt.Errorf("Failed to delete Aviatrix TransitVpc HA gateway: %s", err)
+			return fmt.Errorf("failed to delete Aviatrix TransitVpc HA gateway: %s", err)
 		}
 	}
 	gateway.GwName = d.Get("gw_name").(string)
 	err := client.DeleteGateway(gateway)
 	if err != nil {
-		return fmt.Errorf("Failed to delete Aviatrix TransitVpc: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix TransitVpc: %s", err)
 	}
 	return nil
 }

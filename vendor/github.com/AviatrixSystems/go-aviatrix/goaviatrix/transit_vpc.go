@@ -34,14 +34,15 @@ func (c *Client) LaunchTransitVpc(gateway *TransitVpc) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil
 }
 
 func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_transit_ha&gw_name=%s&public_subnet=%s", c.CID, gateway.GwName, gateway.HASubnet)
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_transit_ha&gw_name=%s&public_subnet=%s", c.CID,
+		gateway.GwName, gateway.HASubnet)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return err
@@ -50,7 +51,7 @@ func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil
