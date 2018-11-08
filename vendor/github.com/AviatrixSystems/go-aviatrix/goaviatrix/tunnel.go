@@ -3,9 +3,9 @@ package goaviatrix
 // Tunnel simple struct to hold tunnel details
 
 import (
-	"fmt"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 )
 
@@ -17,30 +17,30 @@ type Tunnel struct {
 	PeeringHaStatus string `json:"peering_ha_status"`
 	Cluster         string `json:"cluster"`
 	PeeringLink     string `json:"peering_link"`
-	EnableHA	string `json:"enable_ha"`
+	EnableHA        string `json:"enable_ha"`
 }
 
 type TunnelResult struct {
-	PairList        []Tunnel `json:"pair_list"`
+	PairList []Tunnel `json:"pair_list"`
 }
 
 type TunnelListResp struct {
-	Return  bool   `json:"return"`
+	Return  bool         `json:"return"`
 	Results TunnelResult `json:"results"`
-	Reason  string `json:"reason"`
+	Reason  string       `json:"reason"`
 }
 
-func (c *Client) CreateTunnel(tunnel *Tunnel) (error) {
+func (c *Client) CreateTunnel(tunnel *Tunnel) error {
 	path := c.baseURL + fmt.Sprintf("?CID=%s&action=peer_vpc_pair&vpc_name1=%s&vpc_name2=%s&ha_enabled=%s", c.CID, tunnel.VpcName1, tunnel.VpcName2, tunnel.EnableHA)
-	resp,err := c.Get(path, nil)
-		if err != nil {
+	resp, err := c.Get(path, nil)
+	if err != nil {
 		return err
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil
@@ -48,7 +48,7 @@ func (c *Client) CreateTunnel(tunnel *Tunnel) (error) {
 
 func (c *Client) GetTunnel(tunnel *Tunnel) (*Tunnel, error) {
 	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_peer_vpc_pairs", c.CID)
-	resp,err := c.Get(path, nil)
+	resp, err := c.Get(path, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -56,10 +56,10 @@ func (c *Client) GetTunnel(tunnel *Tunnel) (*Tunnel, error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return nil, errors.New(data.Reason)
 	}
-	tunList:= data.Results.PairList
+	tunList := data.Results.PairList
 	for i := range tunList {
 		if tunList[i].VpcName1 == tunnel.VpcName1 && tunList[i].VpcName2 == tunnel.VpcName2 {
 			log.Printf("[DEBUG] Found %s<->%s tunnel: %#v", tunnel.VpcName1, tunnel.VpcName2, tunList[i])
@@ -70,13 +70,13 @@ func (c *Client) GetTunnel(tunnel *Tunnel) (*Tunnel, error) {
 	return nil, ErrNotFound
 }
 
-func (c *Client) UpdateTunnel(tunnel *Tunnel) (error) {
+func (c *Client) UpdateTunnel(tunnel *Tunnel) error {
 	return nil
 }
 
-func (c *Client) DeleteTunnel(tunnel *Tunnel) (error) {
+func (c *Client) DeleteTunnel(tunnel *Tunnel) error {
 	path := c.baseURL + fmt.Sprintf("?CID=%s&action=unpeer_vpc_pair&vpc_name1=%s&vpc_name2=%s", c.CID, tunnel.VpcName1, tunnel.VpcName2)
-	resp,err := c.Delete(path, nil)
+	resp, err := c.Delete(path, nil)
 
 	if err != nil {
 		return err
@@ -85,7 +85,7 @@ func (c *Client) DeleteTunnel(tunnel *Tunnel) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil

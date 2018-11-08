@@ -2,12 +2,13 @@ package aviatrix
 
 import (
 	"fmt"
+	"os"
+	"testing"
+
 	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"os"
-	"testing"
 )
 
 func preAccountCheck(t *testing.T, msgEnd string) {

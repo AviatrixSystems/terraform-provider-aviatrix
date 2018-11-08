@@ -2,9 +2,10 @@ package aviatrix
 
 import (
 	"crypto/tls"
-	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"log"
 	"net/http"
+
+	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 )
 
 // Config contains the configuration for the Aviatrix provider

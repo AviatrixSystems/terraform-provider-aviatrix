@@ -25,6 +25,9 @@ vet:
 		exit 1; \
 	fi
 
+imports:
+	goimports -w $(GOFMT_FILES)
+
 fmt:
 	gofmt -w $(GOFMT_FILES)
 

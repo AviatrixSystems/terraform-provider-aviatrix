@@ -27,5 +27,6 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_site2cloud   | SKIP_S2C          | aviatrix_gateway                                             |
 | aviatrix_spoke_vpc    | SKIP_SPOKE        | aviatrix_gateway                                             |
 | aviatrix_transit_vpc  | SKIP_TRANSIT      | aviatrix_gateway                                             |
+| aviatrix_tunnel       | SKIP_TUNNEL       | aviatrix_gateway+AWS_VPC_ID2, AWS_REGION2, AWS_VPC_NET2      |
 
 

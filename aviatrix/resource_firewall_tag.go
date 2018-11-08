@@ -2,9 +2,10 @@ package aviatrix
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
-	"log"
 )
 
 func resourceAviatrixFirewallTag() *schema.Resource {

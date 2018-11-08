@@ -2,9 +2,10 @@ package aviatrix
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
-	"log"
 )
 
 func resourceTunnel() *schema.Resource {
@@ -15,40 +16,42 @@ func resourceTunnel() *schema.Resource {
 		Delete: resourceTunnelDelete,
 
 		Schema: map[string]*schema.Schema{
-			"vpc_name1": &schema.Schema{
+			"vpc_name1": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_name2": &schema.Schema{
+			"vpc_name2": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"over_aws_peering": &schema.Schema{
+			"over_aws_peering": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"peering_state": &schema.Schema{
+			"peering_state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"peering_hastatus": &schema.Schema{
+			"peering_hastatus": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"cluster": &schema.Schema{
+			"cluster": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"peering_link": &schema.Schema{
+			"peering_link": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"enable_ha": &schema.Schema{
+			"enable_ha": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			//FIXME : Some of the above are computed. Set them correctly. Boolean valus should not be Optional to
+			// prevent tf state corruption
 		},
 	}
 }
@@ -70,7 +73,7 @@ func resourceTunnelCreate(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.CreateTunnel(tunnel)
 	if err != nil {
-		return fmt.Errorf("Failed to create Aviatrix Tunnel: %s", err)
+		return fmt.Errorf("failed to create Aviatrix Tunnel: %s", err)
 	}
 	d.SetId(tunnel.VpcName1 + "<->" + tunnel.VpcName2)
 	return resourceTunnelRead(d, meta)
@@ -88,13 +91,21 @@ func resourceTunnelRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Couldn't find Aviatrix Tunnel: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix Tunnel: %s", err)
 	}
 	log.Printf("[INFO] Found Aviatrix tunnel: %#v", tun)
-	d.Set("over_aws_peering", tun.OverAwsPeering)
+
+	if d.Get("cluster") != "" {
+		d.Set("cluster", tun.Cluster)
+	}
+	if d.Get("over_aws_peering") != "" {
+		d.Set("over_aws_peering", tun.OverAwsPeering)
+	}
+	if d.Get("peering_hastatus") != "" {
+		d.Set("peering_hastatus", tun.PeeringHaStatus)
+	}
 	d.Set("peering_state", tun.PeeringState)
-	d.Set("peering_hastatus", tun.PeeringHaStatus)
-	d.Set("cluster", tun.Cluster)
+
 	d.Set("peering_link", tun.PeeringLink)
 	d.SetId(tun.VpcName1 + "<->" + tun.VpcName2)
 	log.Printf("[INFO] Found tunnel: %#v", d)
@@ -117,7 +128,7 @@ func resourceTunnelUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.UpdateTunnel(tunnel)
 	if err != nil {
-		return fmt.Errorf("Failed to update Aviatrix Tunnel: %s", err)
+		return fmt.Errorf("failed to update Aviatrix Tunnel: %s", err)
 	}
 	d.SetId(tunnel.VpcName1 + "<->" + tunnel.VpcName2)
 	return resourceTunnelRead(d, meta)
@@ -132,13 +143,13 @@ func resourceTunnelDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix tunnel: %#v", tunnel)
-	if enable_ha := d.Get("enable_ha").(string); enable_ha == "yes" {
+	if enableHA := d.Get("enable_ha").(string); enableHA == "yes" {
 		// parse the hagw name
 		tunnel.VpcName1 += "-hagw"
 		tunnel.VpcName2 += "-hagw"
 		err := client.DeleteTunnel(tunnel)
 		if err != nil {
-			return fmt.Errorf("Failed to delete Aviatrix HA gateway: %s", err)
+			return fmt.Errorf("failed to delete Aviatrix HA gateway: %s", err)
 		}
 
 	}
@@ -146,7 +157,7 @@ func resourceTunnelDelete(d *schema.ResourceData, meta interface{}) error {
 	tunnel.VpcName2 = d.Get("vpc_name2").(string)
 	err := client.DeleteTunnel(tunnel)
 	if err != nil {
-		return fmt.Errorf("Failed to delete Aviatrix Tunnel: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix Tunnel: %s", err)
 	}
 	return nil
 }
