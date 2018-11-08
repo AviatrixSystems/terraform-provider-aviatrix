@@ -36,6 +36,8 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 					testAccCheckSpokeGwExists(resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_size", "t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-%s",
+						rName)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
 					resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("AWS_VPC_NET")),
 					resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AWS_REGION")),
@@ -64,7 +66,7 @@ resource "aviatrix_account" "test" {
 
 resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
   cloud_type = 1
-  account_name = "aws"
+  account_name = "${aviatrix_account.test.account_name}"
   gw_name = "tfg-%[1]s"
   vpc_id = "%[5]s"
   vpc_reg = "%[6]s"
