@@ -28,6 +28,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_spoke_vpc    | SKIP_SPOKE        | aviatrix_gateway                                             |
 | aviatrix_transit_vpc  | SKIP_TRANSIT      | aviatrix_gateway                                             |
 | aviatrix_tunnel       | SKIP_TUNNEL       | aviatrix_gateway+AWS_VPC_ID2, AWS_REGION2, AWS_VPC_NET2      |
+| aviatrix_vpn_profile  | SKIP_VPN_PROFILE  | aviatrix_vpn_user                                            |
 | aviatrix_vpn_user     | SKIP_VPN_USER     | aviatrix_gateway                                             |
 
 

@@ -3,6 +3,7 @@ package goaviatrix
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 	"fmt"
 	"log"
 )
@@ -120,8 +121,11 @@ func (c *Client) GetProfile(profile *Profile) (*Profile, error) {
 	}
 
 	if !data.Return {
-		return nil, errors.New(data.Reason)
 		log.Printf("Couldn't find Aviatrix profile %s", profile.Name)
+		if strings.Contains(data.Reason, "does not exist"){
+			return nil, ErrNotFound
+		}
+		return nil, errors.New(data.Reason)
 	}
 	profile.Policy = data.Results
 	log.Printf("[TRACE] Profile policy %s", profile.Policy)
