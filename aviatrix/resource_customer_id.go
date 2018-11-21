@@ -16,11 +16,10 @@ func resourceCustomerID() *schema.Resource {
 		Delete: resourceCustomerIDDelete,
 
 		Schema: map[string]*schema.Schema{
-			"customer_id": &schema.Schema{
+			"customer_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			// TODO: add license list
 		},
 	}
 }
@@ -32,9 +31,10 @@ func resourceCustomerIDCreate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.SetCustomerID(customerID)
 	if err != nil {
-		return fmt.Errorf("Failed to set Aviatrix Customer ID: %s", err)
+		return fmt.Errorf("failed to set Aviatrix Customer ID: %s", err)
 	}
-	d.SetId(customerID)
+
+	d.SetId("ControllerCustomerID")
 
 	return nil
 }
@@ -43,11 +43,12 @@ func resourceCustomerIDRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	log.Printf("[INFO] Getting Aviatrix Customer ID")
 
-	_, customerID, err := client.GetCustomerID()
+	customerID, err := client.GetCustomerID()
 	if err != nil {
-		return fmt.Errorf("Failed to get Aviatrix Customer ID: %s", err)
+		return fmt.Errorf("failed to get Aviatrix Customer ID: %s", err)
 	}
-	d.SetId(customerID)
+	d.SetId("ControllerCustomerID")
+	d.Set("customer_id", customerID)
 	log.Printf("[DEBUG] Customer ID: %s", customerID)
 	return nil
 }
@@ -57,13 +58,13 @@ func resourceCustomerIDUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCustomerIDDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	//client := meta.(*goaviatrix.Client)
 	log.Printf("[INFO] Deleting Aviatrix Customer ID")
-
-	_, err := client.SetCustomerID("")
-	if err != nil {
-		return fmt.Errorf("Failed to remove Aviatrix Customer ID: %s", err)
-	}
+	//
+	//_, err := client.DeleteCustomerID()
+	//if err != nil {
+	//	return fmt.Errorf("failed to remove Aviatrix Customer ID: %s", err)
+	//}
 
 	return nil
 }
