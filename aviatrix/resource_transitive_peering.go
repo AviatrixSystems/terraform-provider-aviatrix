@@ -8,12 +8,12 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceTranspeer() *schema.Resource {
+func resourceTransPeer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTranspeerCreate,
-		Read:   resourceTranspeerRead,
-		Update: resourceTranspeerUpdate,
-		Delete: resourceTranspeerDelete,
+		Create: resourceTransPeerCreate,
+		Read:   resourceTransPeerRead,
+		Update: resourceTransPeerUpdate,
+		Delete: resourceTransPeerDelete,
 
 		Schema: map[string]*schema.Schema{
 			"source": &schema.Schema{
@@ -32,64 +32,64 @@ func resourceTranspeer() *schema.Resource {
 	}
 }
 
-func resourceTranspeerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTransPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	transpeer := &goaviatrix.Transpeer{
+	transPeer := &goaviatrix.TransPeer{
 		Source:        d.Get("source").(string),
 		Nexthop:       d.Get("nexthop").(string),
 		ReachableCidr: d.Get("reachable_cidr").(string),
 	}
 
-	log.Printf("[INFO] Creating Aviatrix transitive peering: %#v", transpeer)
+	log.Printf("[INFO] Creating Aviatrix transitive peering: %#v", transPeer)
 
-	err := client.CreateTranspeer(transpeer)
+	err := client.CreateTransPeer(transPeer)
 	if err != nil {
-		return fmt.Errorf("Failed to create Aviatrix Transitive peering: %s", err)
+		return fmt.Errorf("failed to create Aviatrix Transitive peering: %s", err)
 	}
-	d.SetId(transpeer.Source + transpeer.Nexthop + transpeer.ReachableCidr)
+	d.SetId(transPeer.Source + transPeer.Nexthop + transPeer.ReachableCidr)
 	//return nil
-	return resourceTranspeerRead(d, meta)
+	return resourceTransPeerRead(d, meta)
 }
 
-func resourceTranspeerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTransPeerRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	transpeer := &goaviatrix.Transpeer{
+	transPeer := &goaviatrix.TransPeer{
 		Source:        d.Get("source").(string),
 		Nexthop:       d.Get("nexthop").(string),
 		ReachableCidr: d.Get("reachable_cidr").(string),
 	}
-	transpeer, err := client.GetTranspeer(transpeer)
+	transPeer, err := client.GetTransPeer(transPeer)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Couldn't find Aviatrix Transitive peering: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix Transitive peering: %s", err)
 	}
 
-	d.Set("source", transpeer.Source)
-	d.Set("nexthop", transpeer.Nexthop)
-	d.Set("reachable_cidr", transpeer.ReachableCidr)
+	d.Set("source", transPeer.Source)
+	d.Set("nexthop", transPeer.Nexthop)
+	d.Set("reachable_cidr", transPeer.ReachableCidr)
 	return nil
 }
 
-func resourceTranspeerUpdate(d *schema.ResourceData, meta interface{}) error {
-	return fmt.Errorf("Aviatrix transitive peering cannot be updated - delete and create new one")
+func resourceTransPeerUpdate(d *schema.ResourceData, meta interface{}) error {
+	return fmt.Errorf("aviatrix transitive peering cannot be updated - delete and create new one")
 }
 
-func resourceTranspeerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTransPeerDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	transpeer := &goaviatrix.Transpeer{
+	transPeer := &goaviatrix.TransPeer{
 		Source:        d.Get("source").(string),
 		Nexthop:       d.Get("nexthop").(string),
 		ReachableCidr: d.Get("reachable_cidr").(string),
 	}
 
-	log.Printf("[INFO] Deleting Aviatrix transpeer: %#v", transpeer)
+	log.Printf("[INFO] Deleting Aviatrix transpeer: %#v", transPeer)
 
-	err := client.DeleteTranspeer(transpeer)
+	err := client.DeleteTransPeer(transPeer)
 	if err != nil {
-		return fmt.Errorf("Failed to delete Aviatrix Transpeer: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix Transpeer: %s", err)
 	}
 	return nil
 }

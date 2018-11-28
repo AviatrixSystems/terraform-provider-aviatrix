@@ -7,9 +7,9 @@ import (
 	//"github.com/davecgh/go-spew/spew"
 )
 
-// Transpeer simple struct to hold transitive peering details
+// TransPeer simple struct to hold transitive peering details
 
-type Transpeer struct {
+type TransPeer struct {
 	CID           	string `form:"CID,omitempty"`
 	Action          string `form:"action,omitempty"`
 	Source          string `form:"source" json:"source"`
@@ -17,13 +17,13 @@ type Transpeer struct {
 	ReachableCidr   string `form:"reachable_cidr" json:"reachable_cidr"`
 }
 
-type TranspeerListResp struct {
+type TransPeerListResp struct {
 	Return  bool   `json:"return"`
-	Results []Transpeer `json:"results"`
+	Results []TransPeer `json:"results"`
 	Reason  string `json:"reason"`
 }
 
-func (c *Client) CreateTranspeer(transpeer *Transpeer) (error) {
+func (c *Client) CreateTransPeer(transpeer *TransPeer) (error) {
 	transpeer.CID=c.CID
 	transpeer.Action="add_extended_vpc_peer"
 	resp,err := c.Post(c.baseURL, transpeer)
@@ -40,14 +40,14 @@ func (c *Client) CreateTranspeer(transpeer *Transpeer) (error) {
 	return nil
 }
 
-func (c *Client) GetTranspeer(transpeer *Transpeer) (*Transpeer, error) {
+func (c *Client) GetTransPeer(transpeer *TransPeer) (*TransPeer, error) {
 	transpeer.CID=c.CID
 	transpeer.Action="list_extended_vpc_peer"
 	resp,err := c.Post(c.baseURL, transpeer)
 		if err != nil {
 		return nil, err
 	}
-	var data TranspeerListResp
+	var data TransPeerListResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
@@ -64,11 +64,11 @@ func (c *Client) GetTranspeer(transpeer *Transpeer) (*Transpeer, error) {
 	return nil, ErrNotFound
 }
 
-func (c *Client) UpdateTranspeer(transpeer *Transpeer) (error) {
+func (c *Client) UpdateTransPeer(transpeer *TransPeer) (error) {
 	return nil
 }
 
-func (c *Client) DeleteTranspeer(transpeer *Transpeer) (error) {
+func (c *Client) DeleteTransPeer(transpeer *TransPeer) (error) {
 	transpeer.CID=c.CID
 	transpeer.Action="delete_extended_vpc_peer"
 	resp,err := c.Post(c.baseURL, transpeer)

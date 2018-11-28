@@ -77,12 +77,12 @@ func testAccGatewayConfigBasic(rName string, accountID string, vpcID string, reg
 	return fmt.Sprintf(`
 
 resource "aviatrix_account" "test" {
-  account_name = "%s"
-  cloud_type = 1
-  aws_account_number = "%s"
-  aws_iam = "false"
-  aws_access_key = "%s"
-  aws_secret_key = "%s"
+	account_name = "%s"
+	cloud_type = 1
+	aws_account_number = "%s"
+	aws_iam = "false"
+	aws_access_key = "%s"
+	aws_secret_key = "%s"
 }
 
 resource "aviatrix_gateway" "test" {

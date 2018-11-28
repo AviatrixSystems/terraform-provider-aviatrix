@@ -72,12 +72,12 @@ func testAvxTunnelConfigBasic(rName string, vpcID1 string, vpcID2 string, region
 	subnet1 string, subnet2 string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
-  account_name = "tfa-%s"
-  cloud_type = 1
-  aws_account_number = "%s"
-  aws_iam = "false"
-  aws_access_key = "%s"
-  aws_secret_key = "%s"
+	account_name = "tfa-%s"
+	cloud_type = 1
+	aws_account_number = "%s"
+	aws_iam = "false"
+	aws_access_key = "%s"
+	aws_secret_key = "%s"
 }
 
 resource "aviatrix_gateway" "gw1" {
@@ -102,8 +102,8 @@ resource "aviatrix_gateway" "gw2" {
 }
 
 resource "aviatrix_tunnel" "foo" {
-  vpc_name1 = "${aviatrix_gateway.gw1.gw_name}"
-  vpc_name2 = "${aviatrix_gateway.gw2.gw_name}"
+	vpc_name1 = "${aviatrix_gateway.gw1.gw_name}"
+	vpc_name2 = "${aviatrix_gateway.gw2.gw_name}"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		vpcID1, vpcID2, region1, region2, subnet1, subnet2)
