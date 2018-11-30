@@ -16,23 +16,23 @@ func resourceAviatrixVGWConn() *schema.Resource {
 		Delete: resourceAviatrixVGWConnDelete,
 
 		Schema: map[string]*schema.Schema{
-			"conn_name": &schema.Schema{
+			"conn_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"gw_name": &schema.Schema{
+			"gw_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_id": &schema.Schema{
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"bgp_vgw_id": &schema.Schema{
+			"bgp_vgw_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"bgp_local_as_num": &schema.Schema{
+			"bgp_local_as_num": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -42,7 +42,7 @@ func resourceAviatrixVGWConn() *schema.Resource {
 
 func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	vgw_conn := &goaviatrix.VGWConn{
+	vgwConn := &goaviatrix.VGWConn{
 		ConnName:      d.Get("conn_name").(string),
 		GwName:        d.Get("gw_name").(string),
 		VPCId:         d.Get("vpc_id").(string),
@@ -50,13 +50,13 @@ func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) err
 		BgpLocalAsNum: d.Get("bgp_local_as_num").(string),
 	}
 
-	log.Printf("[INFO] Creating Aviatrix VGW Connection: %#v", vgw_conn)
+	log.Printf("[INFO] Creating Aviatrix VGW Connection: %#v", vgwConn)
 
-	err := client.CreateVGWConn(vgw_conn)
+	err := client.CreateVGWConn(vgwConn)
 	if err != nil {
-		return fmt.Errorf("Failed to create Aviatrix VGWConn: %s", err)
+		return fmt.Errorf("failed to create Aviatrix VGWConn: %s", err)
 	}
-	d.SetId(vgw_conn.ConnName)
+	d.SetId(vgwConn.ConnName)
 	return nil
 	//return resourceAviatrixVGWConnRead(d, meta)
 }
@@ -66,21 +66,21 @@ func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAviatrixVGWConnUpdate(d *schema.ResourceData, meta interface{}) error {
-	return fmt.Errorf("Aviatrix VGW Connection cannot be updated - delete and create new one")
+	return fmt.Errorf("aviatrix VGW Connection cannot be updated - delete and create new one")
 }
 
 func resourceAviatrixVGWConnDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	vgw_conn := &goaviatrix.VGWConn{
+	vgwConn := &goaviatrix.VGWConn{
 		ConnName: d.Get("conn_name").(string),
 		VPCId:    d.Get("vpc_id").(string),
 	}
 
-	log.Printf("[INFO] Deleting Aviatrix vgw_conn: %#v", vgw_conn)
+	log.Printf("[INFO] Deleting Aviatrix vgw_conn: %#v", vgwConn)
 
-	err := client.DeleteVGWConn(vgw_conn)
+	err := client.DeleteVGWConn(vgwConn)
 	if err != nil {
-		return fmt.Errorf("Failed to delete Aviatrix VGWConn: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix VGWConn: %s", err)
 	}
 	return nil
 }

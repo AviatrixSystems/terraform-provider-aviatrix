@@ -19,7 +19,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_account      | SKIP_ACCOUNT      | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY           |
 | aviatrix_account_user | SKIP_ACCOUNT_USER |                                                              |
 | aviatrix_aws_peer     | SKIP_AWS_PEER     | aviatrix_account+AWS_VPC_ID, AWS_VPC_ID2, AWS_REGION, AWS_REGION2 |
-| aviatrix_customer_id  | SKIP_CUSTOMER_ID  | CUSTOMER_ID
+| aviatrix_customer_id  | SKIP_CUSTOMER_ID  | CUSTOMER_ID                                                  |
 | aviatrix_dc_extn      | SKIP_DCX          | aviatrix_account+AWS_REGION, DCX_SUBNET                      |
 | aviatrix_firewall     | SKIP_FIREWALL     | aviatrix_gateway                                             |
 | aviatrix_firewall_tag | SKIP_FIREWALL_TAG |                                                              |
@@ -27,9 +27,10 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_gateway      | SKIP_GATEWAY      | aviatrix_account+AWS_VPC_ID, AWS_REGION, AWS_VPC_NET         |
 | aviatrix_site2cloud   | SKIP_S2C          | aviatrix_gateway                                             |
 | aviatrix_spoke_vpc    | SKIP_SPOKE        | aviatrix_gateway                                             |
+| aviatrix_trans_peer   | SKIP_TRANS_PEER   | aviatrix_tunnel                                              |
 | aviatrix_transit_vpc  | SKIP_TRANSIT      | aviatrix_gateway                                             |
 | aviatrix_tunnel       | SKIP_TUNNEL       | aviatrix_gateway+AWS_VPC_ID2, AWS_REGION2, AWS_VPC_NET2      |
+| aviatrix_vgw_conn     | SKIP_VGW_CONN     | aviatrix_gateway+AWS_BGP_VGW_ID                              |
 | aviatrix_vpn_profile  | SKIP_VPN_PROFILE  | aviatrix_vpn_user                                            |
 | aviatrix_vpn_user     | SKIP_VPN_USER     | aviatrix_gateway                                             |
-| aviatrix_trans_peer   | SKIP_TRANS_PEER   | aviatrix_tunnel                                              |     
 

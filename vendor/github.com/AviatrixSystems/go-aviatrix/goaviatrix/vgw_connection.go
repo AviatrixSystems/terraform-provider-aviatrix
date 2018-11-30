@@ -1,9 +1,9 @@
  package goaviatrix
 
 import (
-	"fmt"
 	"encoding/json"
 	"errors"
+	"fmt"
 )
 
 // VGWConn simple struct to hold VGW Connection details
@@ -19,12 +19,22 @@ type VGWConn struct {
 
 type VGWConnListResp struct {
 	Return  bool   `json:"return"`
-	Results []VGWConn `json:"results"`
+	Results []string `json:"results"`
 	Reason  string `json:"reason"`
 }
 
-func (c *Client) CreateVGWConn(vgw_conn *VGWConn) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=connect_transit_gw_to_vgw&vpc_id=%s&connection_name=%s&transit_gw=%s&vgw_id=%s&bgp_local_as_number=%s", c.CID, vgw_conn.VPCId, vgw_conn.ConnName, vgw_conn.GwName, vgw_conn.BgpVGWId, vgw_conn.BgpLocalAsNum)
+ type VGWConnList struct {
+	 Return  bool   `json:"return"`
+	 Results []VGWConn `json:"results"`
+	 Reason  string `json:"reason"`
+ }
+
+
+
+func (c *Client) CreateVGWConn(vgwConn *VGWConn) (error) {
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=connect_transit_gw_to_vgw&vpc_id=%s&connection_name=%s&" +
+		"transit_gw=%s&vgw_id=%s&bgp_local_as_number=%s", c.CID, vgwConn.VPCId, vgwConn.ConnName, vgwConn.GwName,
+		vgwConn.BgpVGWId, vgwConn.BgpLocalAsNum)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return err
@@ -33,40 +43,47 @@ func (c *Client) CreateVGWConn(vgw_conn *VGWConn) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return{
 		return errors.New(data.Reason)
 	}
 	return nil
 }
 
-func (c *Client) GetVGWConn(vgw_conn *VGWConn) (*VGWConn, error) {
+func (c *Client) GetVGWConn(vgwConn *VGWConn) (*VGWConn, error) {
 	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_vgw_connections", c.CID)
 	resp,err := c.Get(path, nil)
 		if err != nil {
 		return nil, err
 	}
-	var data VGWConnListResp
+	data := VGWConnListResp{
+		Return:false,
+		Results: make([]string, 0),
+		Reason: "",
+	}
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	if(!data.Return){
+
+	if !data.Return {
 		return nil, errors.New(data.Reason)
 	}
-	vgw_connlist:= data.Results
-	for i := range vgw_connlist {
-		if vgw_connlist[i].ConnName == vgw_conn.ConnName {
-			return &vgw_connlist[i], nil
+
+	vgwConnList:= data.Results
+	for i := range vgwConnList {
+		if vgwConnList[i] == vgwConn.ConnName {
+			return vgwConn, nil
 		}
 	}
-	return nil, fmt.Errorf("VGW Connection %s not found", vgw_conn.ConnName)
+	return nil, ErrNotFound
 }
 
-func (c *Client) UpdateVGWConn(vgw_conn *VGWConn) (error) {
+func (c *Client) UpdateVGWConn(vgwConn *VGWConn) (error) {
 	return nil
 }
 
-func (c *Client) DeleteVGWConn(vgw_conn *VGWConn) (error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=disconnect_transit_gw_from_vgw&vpc_id=%s&connection_name=%s", c.CID, vgw_conn.VPCId, vgw_conn.ConnName)
+func (c *Client) DeleteVGWConn(vgwConn *VGWConn) (error) {
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=disconnect_transit_gw_from_vgw&vpc_id=%s&connection_name=%s",
+		c.CID, vgwConn.VPCId, vgwConn.ConnName)
 	resp,err := c.Get(path, nil)
 	if err != nil {
 		return err
@@ -75,7 +92,7 @@ func (c *Client) DeleteVGWConn(vgw_conn *VGWConn) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil

@@ -6,7 +6,7 @@ description: |-
   Creates and manages an Aviatrix transitive peering.
 ---
 
-# aviatrix_transpeer
+# aviatrix_trans_peer
 
 The Account resource allows the creation and management of an Aviatrix transitive peering.
 
@@ -14,7 +14,7 @@ The Account resource allows the creation and management of an Aviatrix transitiv
 
 ```hcl
 # Create Aviatrix AWS transitive peering.
-resource "aviatrix_transpeer" "test_transpeer" {
+resource "aviatrix_trans_peer" "test_transpeer" {
   source = "avtxuseastgw1"
   nexthop = "avtxuseastgw2"
   reachable_cidr = "10.152.0.0/16"

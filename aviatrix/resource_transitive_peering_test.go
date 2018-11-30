@@ -39,13 +39,16 @@ func TestAvxTransPeer_basic(t *testing.T) {
 		CheckDestroy: testAvxTransPeerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAvxTransPeerConfigBasic(rName, sourceVPC, nextHopVPC, region1, region2, subnet1, subnet2, reachableCIDR),
+				Config: testAvxTransPeerConfigBasic(rName, sourceVPC, nextHopVPC, region1, region2, subnet1, subnet2,
+					reachableCIDR),
 				Check: resource.ComposeTestCheckFunc(
-					tesAvxTransPeerExists("aviatrix_trans_peer.test_trans_peer", &transpeer),
+					testAvxTransPeerExists("aviatrix_trans_peer.test_trans_peer", &transpeer),
 					resource.TestCheckResourceAttr(
-						"aviatrix_trans_peer.test_trans_peer", "source", fmt.Sprintf("tfg-%s", rName)),
+						"aviatrix_trans_peer.test_trans_peer", "source", fmt.Sprintf("tfg-%s",
+							rName)),
 					resource.TestCheckResourceAttr(
-						"aviatrix_trans_peer.test_trans_peer", "nexthop", fmt.Sprintf("tfg2-%s", rName)),
+						"aviatrix_trans_peer.test_trans_peer", "nexthop", fmt.Sprintf("tfg2-%s",
+							rName)),
 					resource.TestCheckResourceAttr(
 						"aviatrix_trans_peer.test_trans_peer", "reachable_cidr", reachableCIDR),
 				),
@@ -100,7 +103,7 @@ resource "aviatrix_trans_peer" "test_trans_peer" {
 		source, nextHop, region1, region2, subnet1, subnet2, reachableCIDR)
 }
 
-func tesAvxTransPeerExists(n string, transpeer *goaviatrix.TransPeer) resource.TestCheckFunc {
+func testAvxTransPeerExists(n string, transpeer *goaviatrix.TransPeer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
