@@ -19,32 +19,33 @@ func dataSourceAviatrixAccount() *schema.Resource {
 			},
 			"cloud_type": {
 				Type:     schema.TypeInt,
-				Optional: true,
+				Computed: true,
 			},
 			"aws_account_number": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
-			"aws_iam": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+			//"aws_iam": {
+			//	Type:     schema.TypeString,
+			//	Computed: true,
+			//},		# REST API needs to support this
 			"aws_role_arn": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"aws_role_ec2": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"aws_access_key": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
-			"aws_secret_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+			//"aws_secret_key": {
+			//	Type:      schema.TypeString,
+			//	Computed:  true,
+			//	Sensitive: true,
+			//},
 		},
 	}
 }
@@ -67,6 +68,8 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("aws_account_number", acc.AwsAccountNumber)
 		d.Set("aws_access_key", acc.AwsAccessKey)
 		d.Set("aws_secret_key", acc.AwsSecretKey)
+		d.Set("aws_role_arn", acc.AwsRoleApp)
+		d.Set("aws_role_ec2", acc.AwsRoleEc2)
 		d.SetId(acc.AccountName)
 	} else {
 		d.SetId("")
