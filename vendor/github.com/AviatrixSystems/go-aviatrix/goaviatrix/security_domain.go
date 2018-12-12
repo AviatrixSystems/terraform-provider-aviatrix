@@ -3,28 +3,35 @@ package goaviatrix
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 )
 
 // AwsTGW simple struct to hold aws_tgw details
 type SecurityDomain struct {
-	Action           string `form:"action,omitempty"`
-	CID              string `form:"CID,omitempty"`
-	Name 			 string `form:"route_domain_name,omitempty"`
-	AccountName      string `form:"account_name,omitempty"`
-	Region           string `form:"region,omitempty"`
-	AwsTgwName 		 string `form:"tgw_name,omitempty"`
+	Action      string    `form:"action, omitempty"`
+	CID         string    `form:"CID, omitempty"`
+	Name 		string    `form:"route_domain_name, omitempty"`
+	AccountName string    `form:"account_name, omitempty"`
+	Region      string    `form:"region, omitempty"`
+	AwsTgwName 	string    `form:"tgw_name, omitempty"`
 }
 
 type SecurityDomainAPIResp struct {
-	Return  bool   	 `json:"return"`
-	Results []string `json:"results"`
-	Reason  string   `json:"reason"`
+	Return  bool   	    `json:"return"`
+	Results []string    `json:"results"`
+	Reason  string      `json:"reason"`
 }
 
 type SecurityDomainList struct {
-	Return  bool   			 `json:"return"`
-	Results []SecurityDomain `json:"results"`
-	Reason  string 			 `json:"reason"`
+	Return  bool 	    `json:"return"`
+	Results []string    `json:"results"`
+	Reason  string      `json:"reason"`
+}
+
+type SecurityDomainRule struct {
+	Name            string      `form:"security_domain_name, omitempty"`
+	ConnectedDomain []string    `form:"connected_domains, omitempty"`
+	AttachedVPCs    []string    `form:"attached_vpc, omitempty"`
 }
 
 func (c *Client) CreateSecurityDomain(securityDomain *SecurityDomain) (error) {
@@ -48,7 +55,6 @@ func (c *Client) CreateSecurityDomain(securityDomain *SecurityDomain) (error) {
 func (c *Client) GetSecurityDomain(securityDomain *SecurityDomain) (string, error) {
 	securityDomain.CID = c.CID
 	securityDomain.Action = "list_route_domain_names"
-
 	resp, err := c.Post(c.baseURL, securityDomain)
 	if err != nil {
 		return "", err
@@ -62,7 +68,6 @@ func (c *Client) GetSecurityDomain(securityDomain *SecurityDomain) (string, erro
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return "", err
 	}
-
 	if !data.Return {
 		return "", errors.New(data.Reason)
 	}
@@ -93,7 +98,46 @@ func (c *Client) DeleteSecurityDomain(securityDomain *SecurityDomain) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
+	if !data.Return {
+		return errors.New(data.Reason)
+	}
 
+	return nil
+}
+
+func (c *Client) CreateDomainConnectionPolicy(awsTgw *AWSTgw, sourceDomain string, destinationDomain string) (error) {
+	path := c.baseURL + fmt.Sprintf("?action=add_connection_between_route_domains&CID=%s&account_name=%s" +
+		"&region=%s&tgw_name=%s&source_route_domain_name=%s&destination_route_domain_name=%s", c.CID,
+		awsTgw.AccountName, awsTgw.Region, awsTgw.Name, sourceDomain, destinationDomain)
+	resp, err := c.Get(path, nil)
+	if err != nil {
+		return err
+	}
+
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return err
+	}
+	if !data.Return {
+		return errors.New(data.Reason)
+	}
+
+	return nil
+}
+
+func (c *Client) DeleteDomainConnectionPolicy(awsTgw *AWSTgw, sourceDomain string, destinationDomain string) (error) {
+	path := c.baseURL + fmt.Sprintf("?action=delete_connection_between_route_domains&CID=%s&account_name=%s" +
+		"&region=%s&tgw_name=%s&source_route_domain_name=%s&destination_route_domain_name=%s", c.CID,
+		awsTgw.AccountName, awsTgw.Region, awsTgw.Name, sourceDomain, destinationDomain)
+	resp, err := c.Get(path, nil)
+	if err != nil {
+		return err
+	}
+
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return err
+	}
 	if !data.Return {
 		return errors.New(data.Reason)
 	}
