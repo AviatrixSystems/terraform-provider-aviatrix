@@ -47,7 +47,7 @@ type Gateway struct {
 	GatewayZone             string `form:"gateway_zone,omitempty" json:"gateway_zone,omitempty"`
 	GwName                  string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
 	GwSecurityGroupID       string `form:"gw_security_group_id,omitempty" json:"gw_security_group_id,omitempty"`
-	GwSize                  string `form:"gw_size,omitempty"`
+	GwSize                  string `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
 	GwSubnetID              string `form:"gw_subnet_id,omitempty" json:"gw_subnet_id,omitempty"`
 	HASubnet                string `form:"ha_subnet,omitempty"`
 	PeeringHASubnet         string `form:"public_subnet,omitempty"`
@@ -89,13 +89,15 @@ type Gateway struct {
 	VpcID                   string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
 	VpcNet                  string `form:"vpc_net,omitempty" json:"vpc_net,omitempty"`
 	VpcRegion               string `form:"vpc_reg,omitempty" json:"vpc_region,omitempty"`
-	VpcSize                 string `form:"vpc_size,omitempty" json:"vpc_size,omitempty"`
 	VpcSplunkIPPort         string `form:"vpc_splunk_ip_port,omitempty" json:"vpc_splunk_ip_port,omitempty"`
 	VpcState                string `form:"vpc_state,omitempty" json:"vpc_state,omitempty"`
 	VpcType                 string `form:"vpc_type,omitempty" json:"vpc_type,omitempty"`
 	VpnCidr                 string `form:"cidr,omitempty" json:"cidr,omitempty"`
 	VpnStatus               string `form:"vpn_access,omitempty" json:"vpn_status,omitempty"`
-	Zone                    string `form:"zone,omitempty" json:"zone,omitempty"`}
+	Zone                    string `form:"zone,omitempty" json:"zone,omitempty"`
+
+	VpcSize                 string `form:"vpc_size,omitempty" `	//Only use for gateway create
+}
 
 type GatewayListResp struct {
 	Return  bool   `json:"return"`
@@ -104,100 +106,100 @@ type GatewayListResp struct {
 }
 
 func (c *Client) CreateGateway(gateway *Gateway) (error) {
-	gateway.CID=c.CID
-	gateway.Action="connect_container"
+	gateway.CID = c.CID
+	gateway.Action = "connect_container"
 	resp,err := c.Post(c.baseURL, gateway)
-		if err != nil {
+	if err != nil {
 		return err
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil
 }
 
 func (c *Client) EnableNatGateway(gateway *Gateway) (error) {
-        gateway.CID=c.CID
-        gateway.Action="enable_nat"
-        resp,err := c.Post(c.baseURL, gateway)
-                if err != nil {
-                return err
-        }
-        var data APIResp
-        if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-                return err
-        }
-        if(!data.Return){
-                return errors.New(data.Reason)
-        }
-        return nil
+	gateway.CID=c.CID
+	gateway.Action="enable_nat"
+	resp,err := c.Post(c.baseURL, gateway)
+	if err != nil {
+		return err
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return err
+	}
+	if !data.Return {
+		return errors.New(data.Reason)
+	}
+	return nil
 }
 func (c *Client) EnableSingleAZGateway(gateway *Gateway) (error) {
-        gateway.CID=c.CID
-        gateway.Action="enable_single_az_ha"
-        resp,err := c.Post(c.baseURL, gateway)
-                if err != nil {
-                return err
-        }
-        var data APIResp
-        if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-                return err
-        }
-        if(!data.Return){
-                return errors.New(data.Reason)
-        }
-        return nil
+	gateway.CID=c.CID
+	gateway.Action="enable_single_az_ha"
+	resp,err := c.Post(c.baseURL, gateway)
+	if err != nil {
+		return err
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return err
+	}
+	if !data.Return {
+		return errors.New(data.Reason)
+	}
+	return nil
 }
 func (c *Client) EnablePeeringHaGateway(gateway *Gateway) (error) {
-        gateway.CID=c.CID
-        gateway.Action="create_peering_ha_gateway"
-        resp,err := c.Post(c.baseURL, gateway)
-                if err != nil {
-                return err
-        }
-        var data APIResp
-        if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-                return err
-        }
-        if(!data.Return){
-                return errors.New(data.Reason)
-        }
-        return nil
+	gateway.CID=c.CID
+	gateway.Action="create_peering_ha_gateway"
+	resp,err := c.Post(c.baseURL, gateway)
+	if err != nil {
+		return err
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return err
+	}
+	if !data.Return {
+		return errors.New(data.Reason)
+	}
+	return nil
 }
 func (c *Client) EnableHaGateway(gateway *Gateway) (error) {
-        path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_vpc_ha&vpc_name=%s&specific_subnet=%s", c.CID, gateway.GwName, gateway.HASubnet)
-        resp,err := c.Get(path, nil)
-                if err != nil {
-                return err
-        }
-        var data APIResp
-        if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-                return err
-        }
-        if(!data.Return){
-                return errors.New(data.Reason)
-        }
-        return nil
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_vpc_ha&vpc_name=%s&specific_subnet=%s", c.CID, gateway.GwName, gateway.HASubnet)
+	resp,err := c.Get(path, nil)
+	if err != nil {
+		return err
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return err
+	}
+	if !data.Return {
+		return errors.New(data.Reason)
+	}
+	return nil
 }
 
 func (c *Client) DisableHaGateway(gateway *Gateway) (error) {
-        path := c.baseURL + fmt.Sprintf("?CID=%s&action=disable_vpc_ha&vpc_name=%s", c.CID, gateway.GwName)
-        resp,err := c.Get(path, nil)
-                if err != nil {
-                return err
-        }
-        var data APIResp
-        if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-                return err
-        }
-        if !data.Return {
-                return errors.New(data.Reason)
-        }
-        return nil
+	path := c.baseURL + fmt.Sprintf("?CID=%s&action=disable_vpc_ha&vpc_name=%s", c.CID, gateway.GwName)
+	resp,err := c.Get(path, nil)
+	if err != nil {
+		return err
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return err
+	}
+	if !data.Return {
+		return errors.New(data.Reason)
+	}
+	return nil
 }
 
 func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
@@ -216,7 +218,6 @@ func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
 	}
 	gwlist:= data.Results
 	for i := range gwlist {
-	        //log.Printf("DEBUG  %s", gwlist[i].GwName)
 		if gwlist[i].GwName == gateway.GwName {
 			return &gwlist[i], nil
 		}
@@ -229,14 +230,14 @@ func (c *Client) UpdateGateway(gateway *Gateway) (error) {
 	gateway.CID=c.CID
 	gateway.Action="edit_gw_config"
 	resp,err := c.Post(c.baseURL, gateway)
-		if err != nil {
+	if err != nil {
 		return err
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil
@@ -253,7 +254,7 @@ func (c *Client) DeleteGateway(gateway *Gateway) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil

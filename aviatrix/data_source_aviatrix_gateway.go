@@ -12,31 +12,31 @@ func dataSourceAviatrixGateway() *schema.Resource {
 		Read: dataSourceAviatrixGatewayRead,
 
 		Schema: map[string]*schema.Schema{
-			"cloud_type": &schema.Schema{
+			"cloud_type": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"account_name": &schema.Schema{
+			"account_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"gw_name": &schema.Schema{
+			"gw_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"vpc_id": &schema.Schema{
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"vpc_reg": &schema.Schema{
+			"vpc_reg": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"vpc_size": &schema.Schema{
+			"vpc_size": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"vpc_net": &schema.Schema{
+			"vpc_net": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -52,14 +52,14 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 	}
 	gw, err := client.GetGateway(gateway)
 	if err != nil {
-		return fmt.Errorf("Couldn't find Aviatrix Gateway: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix Gateway: %s", err)
 	}
 	if gw != nil {
 		d.Set("account_name", gw.AccountName)
 		d.Set("gw_name", gw.GwName)
 		d.Set("vpc_id", gw.VpcID)
 		d.Set("vpc_reg", gw.VpcRegion)
-		d.Set("vpc_size", gw.VpcSize)
+		d.Set("vpc_size", gw.GwSize)
 		d.Set("vpc_net", gw.VpcNet)
 	}
 	return nil
