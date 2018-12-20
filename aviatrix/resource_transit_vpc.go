@@ -123,7 +123,7 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("gw_name", gw.GwName)
 		//d.Set("vpc_id", gw.VpcID)
 		d.Set("vpc_reg", gw.VpcRegion)
-		d.Set("vpc_size", gw.VpcSize)
+		d.Set("vpc_size", gw.GwSize)
 	}
 	return nil
 }
@@ -168,7 +168,7 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		d.SetPartial("tag_list")
 	}
 	if d.HasChange("vpc_size") {
-		gateway.VpcSize = d.Get("vpc_size").(string)
+		gateway.GwSize = d.Get("vpc_size").(string)
 		err := client.UpdateGateway(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to update Aviatrix TransitVpc: %s", err)

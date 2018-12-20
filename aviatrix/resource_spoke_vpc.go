@@ -155,7 +155,7 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[TRACE] reading spoke gateway %s: %#v",
 		d.Get("gw_name").(string), gw)
 	if gw != nil {
-		d.Set("vpc_size", gw.VpcSize)
+		d.Set("vpc_size", gw.GwSize)
 		d.Set("public_ip", gw.PublicIP)
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 	}
@@ -201,7 +201,7 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 		d.SetPartial("tag_list")
 	}
 	if d.HasChange("vpc_size") {
-		gateway.VpcSize = d.Get("vpc_size").(string)
+		gateway.GwSize = d.Get("vpc_size").(string)
 		err := client.UpdateGateway(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to update Aviatrix SpokeVpc: %s", err)
