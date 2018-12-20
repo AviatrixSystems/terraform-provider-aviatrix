@@ -105,7 +105,7 @@ func (c *Client) DeleteSecurityDomain(securityDomain *SecurityDomain) (error) {
 	return nil
 }
 
-func (c *Client) CreateDomainConnectionPolicy(awsTgw *AWSTgw, sourceDomain string, destinationDomain string) (error) {
+func (c *Client) CreateDomainConnection(awsTgw *AWSTgw, sourceDomain string, destinationDomain string) (error) {
 	path := c.baseURL + fmt.Sprintf("?action=add_connection_between_route_domains&CID=%s&account_name=%s" +
 		"&region=%s&tgw_name=%s&source_route_domain_name=%s&destination_route_domain_name=%s", c.CID,
 		awsTgw.AccountName, awsTgw.Region, awsTgw.Name, sourceDomain, destinationDomain)
@@ -125,7 +125,7 @@ func (c *Client) CreateDomainConnectionPolicy(awsTgw *AWSTgw, sourceDomain strin
 	return nil
 }
 
-func (c *Client) DeleteDomainConnectionPolicy(awsTgw *AWSTgw, sourceDomain string, destinationDomain string) (error) {
+func (c *Client) DeleteDomainConnection(awsTgw *AWSTgw, sourceDomain string, destinationDomain string) (error) {
 	path := c.baseURL + fmt.Sprintf("?action=delete_connection_between_route_domains&CID=%s&account_name=%s" +
 		"&region=%s&tgw_name=%s&source_route_domain_name=%s&destination_route_domain_name=%s", c.CID,
 		awsTgw.AccountName, awsTgw.Region, awsTgw.Name, sourceDomain, destinationDomain)

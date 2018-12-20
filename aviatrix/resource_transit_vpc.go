@@ -58,6 +58,10 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
+			"enable_hybrid_connection": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -65,14 +69,15 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	gateway := &goaviatrix.TransitVpc{
-		CloudType:   d.Get("cloud_type").(int),
-		AccountName: d.Get("account_name").(string),
-		GwName:      d.Get("gw_name").(string),
-		VpcID:       d.Get("vpc_id").(string),
-		VpcRegion:   d.Get("vpc_reg").(string),
-		VpcSize:     d.Get("vpc_size").(string),
-		Subnet:      d.Get("subnet").(string),
-		DnsServer:   d.Get("dns_server").(string),
+		CloudType:              d.Get("cloud_type").(int),
+		AccountName:            d.Get("account_name").(string),
+		GwName:                 d.Get("gw_name").(string),
+		VpcID:                  d.Get("vpc_id").(string),
+		VpcRegion:              d.Get("vpc_reg").(string),
+		VpcSize:                d.Get("vpc_size").(string),
+		Subnet:                 d.Get("subnet").(string),
+		DnsServer:              d.Get("dns_server").(string),
+		EnableHybridConnection: d.Get("enable_hybrid_connection").(string),
 	}
 	if _, ok := d.GetOk("tag_list"); ok {
 		tagList := d.Get("tag_list").([]interface{})
@@ -98,6 +103,15 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 	d.SetId(gateway.GwName)
+
+	enableHybridConnection := d.Get("enable_hybrid_connection").(string)
+	if enableHybridConnection == "true" {
+		err := client.AttachTransitGWForHybrid(gateway)
+		if err != nil {
+			return fmt.Errorf("failed to enable transit GW for Hybird: %s", err)
+		}
+	}
+
 	return nil
 	//return resourceAviatrixTransitVpcRead(d, meta)
 }

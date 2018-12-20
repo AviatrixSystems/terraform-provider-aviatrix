@@ -203,8 +203,10 @@ func (c *Client) DisableHaGateway(gateway *Gateway) (error) {
 }
 
 func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_vpcs_summary&account_name=%s", c.CID, gateway.AccountName)
-	resp,err := c.Get(path, nil)
+	url := "?CID=%s&action=list_vpcs_summary"
+	path := c.baseURL + fmt.Sprintf(url, c.CID)
+
+	resp, err := c.Get(path, nil)
 
 	if err != nil {
 		return nil, err
@@ -216,9 +218,10 @@ func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
 	if !data.Return {
 		return nil, errors.New(data.Reason)
 	}
-	gwlist:= data.Results
+
+	gwlist := data.Results
 	for i := range gwlist {
-		if gwlist[i].GwName == gateway.GwName {
+		if gwlist[i].GwName == gateway.GwName || gwlist[i].VpcID == gateway.VpcID {
 			return &gwlist[i], nil
 		}
 	}
@@ -244,7 +247,8 @@ func (c *Client) UpdateGateway(gateway *Gateway) (error) {
 }
 
 func (c *Client) DeleteGateway(gateway *Gateway) (error) {
-	path := c.baseURL + fmt.Sprintf("?action=delete_container&CID=%s&cloud_type=%d&gw_name=%s", c.CID, gateway.CloudType, gateway.GwName)
+	path := c.baseURL + fmt.Sprintf("?action=delete_container&CID=%s&cloud_type=%d&gw_name=%s",
+		c.CID, gateway.CloudType, gateway.GwName)
 	resp,err := c.Delete(path, nil)
 
 	if err != nil {
