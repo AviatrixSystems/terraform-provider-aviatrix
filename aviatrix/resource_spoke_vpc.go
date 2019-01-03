@@ -204,9 +204,6 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 		gateway.GwSize = d.Get("vpc_size").(string)
 		err := client.UpdateGateway(gateway)
 		if err != nil {
-
-			log.Printf("[INFO] zjin: %v", gateway)
-
 			return fmt.Errorf("failed to update Aviatrix SpokeVpc: %s", err)
 		}
 		d.SetPartial("vpc_size")
