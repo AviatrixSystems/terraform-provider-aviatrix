@@ -21,7 +21,7 @@ type TransitVpc struct {
 	VpcRegion               string `form:"region,omitempty" json:"vpc_region,omitempty"`
 	VpcSize                 string `form:"gw_size,omitempty" json:"gw_size,omitempty"`
 	TagList                 string `form:"tags,omitempty"`
-	EnableHybridConnection  string `form:"enable_hybrid_connection"`
+	EnableHybridConnection  bool   `form:"enable_hybrid_connection" json:"tgw_enabled,omitempty"`
 }
 
 func (c *Client) LaunchTransitVpc(gateway *TransitVpc) (error) {
@@ -60,6 +60,23 @@ func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) (error) {
 
 func (c *Client) AttachTransitGWForHybrid(gateway *TransitVpc) (error) {
 	path := c.baseURL + fmt.Sprintf("?action=enable_transit_gateway_interface_to_aws_tgw&CID=%s&gateway_name=%s",
+		c.CID, gateway.GwName)
+	resp,err := c.Get(path, nil)
+	if err != nil {
+		return err
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return err
+	}
+	if !data.Return {
+		return errors.New(data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) DetachTransitGWForHybrid(gateway *TransitVpc) (error) {
+	path := c.baseURL + fmt.Sprintf("?action=disable_transit_gateway_interface_to_aws_tgw&CID=%s&gateway_name=%s",
 		c.CID, gateway.GwName)
 	resp,err := c.Get(path, nil)
 	if err != nil {

@@ -29,9 +29,15 @@ type SecurityDomainList struct {
 }
 
 type SecurityDomainRule struct {
-	Name            string      `form:"security_domain_name, omitempty"`
-	ConnectedDomain []string    `form:"connected_domains, omitempty"`
-	AttachedVPCs    []string    `form:"attached_vpc, omitempty"`
+	Name            string      `json:"security_domain_name, omitempty"`
+	ConnectedDomain []string    `json:"connected_domains, omitempty"`
+	AttachedVPCs    []VPCSolo   `json:"attached_vpc, omitempty"`
+}
+
+type VPCSolo struct {
+	Region            string      `json:"vpc_region, omitempty"`
+	AccountName       string      `json:"vpc_account_name, omitempty"`
+	VpcID             string      `json:"vpc_id, omitempty"`
 }
 
 func (c *Client) CreateSecurityDomain(securityDomain *SecurityDomain) (error) {

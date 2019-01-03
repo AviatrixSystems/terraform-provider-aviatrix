@@ -59,7 +59,7 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 				Optional: true,
 			},
 			"enable_hybrid_connection": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeBool,
 				Optional: true,
 			},
 		},
@@ -77,7 +77,7 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		VpcSize:                d.Get("vpc_size").(string),
 		Subnet:                 d.Get("subnet").(string),
 		DnsServer:              d.Get("dns_server").(string),
-		EnableHybridConnection: d.Get("enable_hybrid_connection").(string),
+		EnableHybridConnection: d.Get("enable_hybrid_connection").(bool),
 	}
 	if _, ok := d.GetOk("tag_list"); ok {
 		tagList := d.Get("tag_list").([]interface{})
@@ -104,8 +104,8 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 	}
 	d.SetId(gateway.GwName)
 
-	enableHybridConnection := d.Get("enable_hybrid_connection").(string)
-	if enableHybridConnection == "true" {
+	enableHybridConnection := d.Get("enable_hybrid_connection").(bool)
+	if enableHybridConnection == true {
 		err := client.AttachTransitGWForHybrid(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to enable transit GW for Hybird: %s", err)
@@ -138,6 +138,7 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 		//d.Set("vpc_id", gw.VpcID)
 		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("vpc_size", gw.GwSize)
+		d.Set("enable_hybrid_connection", gw.EnableHybridConnection)
 	}
 	return nil
 }
@@ -227,6 +228,31 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		d.SetPartial("ha_subnet")
 	}
+
+	if d.HasChange("enable_hybrid_connection") {
+		gateway := &goaviatrix.TransitVpc{
+			CloudType:   d.Get("cloud_type").(int),
+			AccountName: d.Get("account_name").(string),
+			GwName:      d.Get("gw_name").(string),
+			VpcID:       d.Get("vpc_id").(string),
+			VpcRegion:   d.Get("vpc_reg").(string),
+		}
+		enableHybridConnection := d.Get("enable_hybrid_connection").(bool)
+		if enableHybridConnection == true {
+			err := client.AttachTransitGWForHybrid(gateway)
+			if err != nil {
+				return fmt.Errorf("failed to enable transit GW for Hybird: %s", err)
+			}
+		}
+
+		if enableHybridConnection == false {
+			err := client.DetachTransitGWForHybrid(gateway)
+			if err != nil {
+				return fmt.Errorf("failed to disable transit GW for Hybird: %s", err)
+			}
+		}
+	}
+
 	d.Partial(false)
 	return nil
 }

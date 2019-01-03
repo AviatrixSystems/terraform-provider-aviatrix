@@ -21,7 +21,7 @@ func Difference(a, b []string) []string {
 	for _, x := range b {
 		mb[x] = true
 	}
-	ab := []string{}
+	ab := make([]string, 0)
 	for _, x := range a {
 		if _, ok := mb[x]; !ok {
 			ab = append(ab, x)
@@ -30,8 +30,9 @@ func Difference(a, b []string) []string {
 	return ab
 }
 
+// DifferenceSlice returns the one-dimension elements in two-dimension slice a that aren't in two-dimension b
 func DifferenceSlice(a, b [][]string) [][]string {
-	if b == nil || len(b) == 0 {
+	if a == nil || len(a) == 0 || b == nil || len(b) == 0 {
 		return a
 	}
 
@@ -45,10 +46,10 @@ func DifferenceSlice(a, b [][]string) [][]string {
 	}
 
 	bb := make([]string, 0)
-	for i := range b{
+	for t := range b{
 		temp := ""
-		for j := range b[i] {
-			temp += b[i][j]
+		for m := range b[t] {
+			temp += b[t][m]
 		}
 		bb = append(bb, temp)
 	}
@@ -57,9 +58,9 @@ func DifferenceSlice(a, b [][]string) [][]string {
 	for x := range bb {
 		mb[bb[x]] = true
 	}
-	ab := [][]string{}
+	ab := make([][]string, 0)
 	for x := range aa {
-		if _, ok := mb[bb[x]]; !ok {
+		if _, ok := mb[aa[x]]; !ok {
 			ab = append(ab, a[x])
 		}
 	}

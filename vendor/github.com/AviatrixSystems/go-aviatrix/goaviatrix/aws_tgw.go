@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 )
 
 // AwsTGW simple struct to hold aws_tgw details
@@ -47,12 +48,13 @@ type RouteDomainDetail struct {
 
 type AttachedVPCDetail struct {
 	TgwName 	 string		`json:"tgw_name"`
-	Region		 string		`json:"regioin"`
+	Region		 string		`json:"region"`
 	VPCName      string		`json:"vpc_name"`
 	AttachmentId string		`json:"attachment_id"`
 	RouteDomain  string		`json:"route_domain"`
 	VPCCidr 	 []string	`json:"vpc_cidr"`
 	VPCId        string     `json:"vpc_id"`
+	AccountName  string     `json:"account_name"`
 }
 
 type RoutesInRouteTable struct {
@@ -86,7 +88,9 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 	awsTgw.CID = c.CID
 	path := c.baseURL + fmt.Sprintf("?action=list_route_domain_names&tgw_name=%s&CID=%s", awsTgw.Name,
 		awsTgw.CID)
+
 	resp, err := c.Get(path, nil)
+
 	if err != nil {
 		return nil, err
 	}
@@ -105,10 +109,12 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 
 	connectedDomainList := data.Results
 	connectedDomainList = append([]string{"Aviatrix_Edge_Domain"}, connectedDomainList...)
+
 	for i := range connectedDomainList {
 		dm := connectedDomainList[i]
-		path = c.baseURL + fmt.Sprintf("?action=view_route_domain_details&tgw_name=%s" +
-			"&route_domain_name=%s&CID=%s", awsTgw.Name, dm, c.CID)
+
+		path = c.baseURL + fmt.Sprintf("?action=view_route_domain_details&CID=%s&tgw_name=%s" +
+			"&route_domain_name=%s", c.CID, awsTgw.Name, dm)
 		resp, err = c.Get(path, nil)
 		if err != nil {
 			return nil, err
@@ -132,11 +138,23 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 
 		attachedVPCs := routeDomainDetail[0].AttachedVPC
 		for i := range attachedVPCs {
+
 			if dm != "Aviatrix_Edge_Domain" {
-				sdr.AttachedVPCs = append(sdr.AttachedVPCs, attachedVPCs[i].VPCId + "~~" + attachedVPCs[i].VPCName)
+				vpcSolo := VPCSolo{
+					Region:      attachedVPCs[i].Region,
+					AccountName: attachedVPCs[i].AccountName,
+					VpcID:       attachedVPCs[i].VPCId,
+				}
+				sdr.AttachedVPCs = append(sdr.AttachedVPCs, vpcSolo)
 			} else {
-				awsTgw.AttachedAviatrixTransitGW = append(awsTgw.AttachedAviatrixTransitGW, attachedVPCs[i].VPCId +
-					"~~" + attachedVPCs[i].VPCName)
+				gateway := &Gateway{
+					VpcID: attachedVPCs[i].VPCId,
+				}
+				gateway, err = c.GetGateway(gateway)
+				if err != nil {
+					return nil, err
+				}
+				awsTgw.AttachedAviatrixTransitGW = append(awsTgw.AttachedAviatrixTransitGW, gateway.GwName)
 			}
 		}
 
@@ -169,8 +187,11 @@ func (c *Client) DeleteAWSTgw(awsTgw *AWSTgw) (error) {
 	return nil
 }
 
-func (c *Client) ValidateAWSTgwDomains(domainsAll []string, domainConnAll [][]string) ([]string, [][]string,
-	[][]string, error) {
+func (c *Client) ValidateAWSTgwDomains(domainsAll []string, domainConnAll [][]string, attachedVPCAll [][]string,
+	) ([]string, [][]string, [][]string, error) {
+
+	sort.Strings(domainsAll)
+
 	numOfDomains := len(domainsAll)
 	matrix := make([][]int, numOfDomains)
 	var domainsToCreate []string
@@ -183,22 +204,61 @@ func (c *Client) ValidateAWSTgwDomains(domainsAll []string, domainConnAll [][]st
 
 	m := make(map[string]int)
 	for i := 1; i <= numOfDomains; i++ {
+		if m[domainsAll[i - 1]] != 0 {
+			err := fmt.Errorf("duplicate domains (name: %v) to create", domainsAll[i - 1])
+			return domainsToCreate, domainConnPolicy, domainConnRemove, err
+		}
 		m[domainsAll[i - 1]] = i
 	}
+
+	m1 := make(map[string]int)
+	for i := 1; i <= len(attachedVPCAll); i++ {
+		if m1[attachedVPCAll[i - 1][1]] != 0 {
+			err := fmt.Errorf("duplicate VPC IDs (ID: %v) to attach", attachedVPCAll[i - 1][1])
+			return domainsToCreate, domainConnPolicy, domainConnRemove, err
+		}
+		m1[attachedVPCAll[i - 1][1]] = i
+	}
+
+	var dmConnections []string
 
 	for i := range domainConnAll {
 		x := m[domainConnAll[i][0]]
 		y := m[domainConnAll[i][1]]
-		if x == 0 || y == 0 || x == y {
-			return domainsToCreate, domainConnPolicy, domainConnRemove, ErrNotFound
+
+		temp := "" + domainConnAll[i][0] + " - " + domainConnAll[i][1]
+		dmConnections = append(dmConnections, temp)
+
+		if x == 0 {
+			err := fmt.Errorf("unrecognized domain name (%v) in domain connection", domainConnAll[i][0])
+			return domainsToCreate, domainConnPolicy, domainConnRemove, err
 		}
+		if y == 0 {
+			err := fmt.Errorf("unrecognized domain name (%v) in domain connection", domainConnAll[i][1])
+			return domainsToCreate, domainConnPolicy, domainConnRemove, err
+		}
+		if x == y {
+			err := fmt.Errorf("connection between same domains (name: %v)", domainConnAll[i][0])
+			return domainsToCreate, domainConnPolicy, domainConnRemove, err
+		}
+
 		matrix[x - 1][y - 1] = 1
+	}
+
+	m2 := make(map[string]int)
+	for i := 1; i <= len(dmConnections); i++ {
+		if m2[dmConnections[i - 1]] != 0 {
+			err := fmt.Errorf("duplicate domain connections (%v)", dmConnections[i - 1])
+			return domainsToCreate, domainConnPolicy, domainConnRemove, err
+		}
+		m2[dmConnections[i - 1]] = i
 	}
 
 	for i := 0; i < numOfDomains; i++ {
 		for j := i + 1; j < numOfDomains; j++ {
 			if matrix[i][j] != matrix[j][i] {
-				return domainsToCreate, domainConnPolicy, domainConnRemove, ErrNotFound
+				err := fmt.Errorf("unsymmetric domain connection (%v)", "" + domainsAll[i] + " - " + domainsAll[j])
+				return domainsToCreate, domainConnPolicy, domainConnRemove, err
 			}
 		}
 	}
@@ -208,7 +268,6 @@ func (c *Client) ValidateAWSTgwDomains(domainsAll []string, domainConnAll [][]st
 	for i := 0; i < 3; i++ {
 		for j := i; j < 3; j++ {
 			if i != j {
-
 				if matrix[m[defaultX[i]] - 1][m[defaultX[j]] - 1] == 0 {
 					temp := []string{defaultX[i], defaultX[j]}
 					domainConnRemove = append(domainConnRemove, temp)
@@ -244,12 +303,12 @@ func (c *Client) AttachAviatrixTransitGWToAWSTgw(awsTgw *AWSTgw, gateway *Gatewa
 	if err != nil {
 		return err
 	}
+
 	path := c.baseURL + fmt.Sprintf("?action=attach_vpc_to_tgw&CID=%s&region=%s&vpc_account_name=%s&vpc_name="+
 		"%s&gateway_name=%s&tgw_account_name=%s&tgw_name=%s&route_domain_name=%s", c.CID, awsTgw.Region,
 		transitGw.AccountName, transitGw.VpcID, transitGw.GwName, awsTgw.AccountName, awsTgw.Name, SecurityDomainName)
 	resp, err := c.Get(path, nil)
-
-	if err != nil {
+	if err != nil  {
 		return err
 	}
 
@@ -260,16 +319,19 @@ func (c *Client) AttachAviatrixTransitGWToAWSTgw(awsTgw *AWSTgw, gateway *Gatewa
 	if !data.Return {
 		return errors.New(data.Reason)
 	}
+
 	return nil
 }
 
 func (c *Client) DetachAviatrixTransitGWToAWSTgw(awsTgw *AWSTgw, gateway *Gateway, SecurityDomainName string) (error) {
 	transitGw, err := c.GetGateway(gateway)
+
 	if err != nil {
 		return err
 	}
 	path := c.baseURL + fmt.Sprintf("?action=detach_vpc_from_tgw&CID=%s&tgw_name=%s&vpc_name=%s", c.CID,
 		awsTgw.Name, transitGw.VpcID)
+
 	resp, err := c.Get(path, nil)
 
 	if err != nil {
@@ -283,13 +345,48 @@ func (c *Client) DetachAviatrixTransitGWToAWSTgw(awsTgw *AWSTgw, gateway *Gatewa
 	if !data.Return {
 		return errors.New(data.Reason)
 	}
+
 	return nil
 }
 
-func (c *Client) AttachVpcToAWSTgw(awsTgw *AWSTgw) (error) {
+func (c *Client) AttachVpcToAWSTgw(awsTgw *AWSTgw, vpcSolo VPCSolo, SecurityDomainName string) (error) {
+	path := c.baseURL + fmt.Sprintf("?action=attach_vpc_to_tgw&region=%s&vpc_account_name=%s&vpc_name=%s" +
+		"&tgw_name=%s&route_domain_name=%s&CID=%s", awsTgw.Region, vpcSolo.AccountName, vpcSolo.VpcID, awsTgw.Name,
+		SecurityDomainName, c.CID)
+
+	resp, err := c.Get(path, nil)
+
+	if err != nil  {
+		return err
+	}
+
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return err
+	}
+	if !data.Return {
+		return errors.New(data.Reason)
+	}
+
 	return nil
 }
 
-func (c *Client) DetachVpcFromAWSTgw(awsTgw *AWSTgw) (error) {
+func (c *Client) DetachVpcFromAWSTgw(awsTgw *AWSTgw, vpcID string) (error) {
+	path := c.baseURL + fmt.Sprintf("?action=detach_vpc_from_tgw&CID=%s&tgw_name=%s&vpc_name=%s", c.CID,
+		awsTgw.Name, vpcID)
+	resp, err := c.Get(path, nil)
+
+	if err != nil {
+		return err
+	}
+
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return err
+	}
+	if !data.Return {
+		return errors.New(data.Reason)
+	}
+
 	return nil
 }
