@@ -42,6 +42,7 @@ The following arguments are supported:
 * `vpc_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", etc...
 * `subnet` - (Required) Public Subnet Info. Example: AWS: "CIDR~~ZONE~~SubnetName", etc...
 * `ha_subnet` - (Optional) HA Subnet
+* `ha_gw_size` - (Optional) HA Gateway Size
 * `enable_nat` - (Optional) Specify whether enabling NAT feature on the gateway or not. (Please disable AWS NAT instance before enabling this feature) Example: "yes", "no"
 * `dns_server` - (Optional) Specify the DNS IP
 * `transit_gw` - (Optional)  Specify the transit Gateway

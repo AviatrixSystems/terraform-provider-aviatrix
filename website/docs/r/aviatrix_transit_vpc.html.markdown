@@ -23,6 +23,7 @@ resource "aviatrix_transit_vpc" "test_transit_gw" {
   vpc_size = "t2.micro"
   subnet = "10.1.0.0/24"
   ha_subnet = "10.1.0.0/24"
+  ha_gw_size = "t2.micro"
   tag_list = ["name:value", "name1:value1", "name2:value2"]
   enable_hybrid_connection = true
 }
@@ -41,5 +42,6 @@ The following arguments are supported:
 * `subnet` - (Required) Public Subnet Name.  Example: AWS: "10.0.0.0/16\~\~us-east1c\~\~subnet1". Copy/paste from AWS Console to get the right subnet name.
 * `dns_server` - (Optional) Specify the DNS IP, only required while using a custom private DNS for the VPC.
 * `ha_subnet` - (Optional) HA Subnet.
+* `ha_gw_size` - (Optional) HA Gateway Size
 * `tag_list` - (Optional) Instance tag of cloud provider. Example: ["key1:value1","key002:value002"]
 * `enable_hybrid_connection` - (Optional) Sign of readiness for TGW connection.

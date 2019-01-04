@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
+	"log"
 )
 
 // Spoke gateway simple struct to hold spoke details
@@ -88,7 +90,12 @@ func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return{
+		if strings.Contains(data.Reason, "HA GW already exists"){
+			log.Printf("[INFO] HA is already enabled %s", data.Reason)
+			return nil
+		}
+		log.Printf("[ERROR] Enabling HA failed with error %s", data.Reason)
 		return errors.New(data.Reason)
 	}
 	return nil

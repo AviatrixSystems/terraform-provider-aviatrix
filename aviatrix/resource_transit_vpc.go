@@ -49,6 +49,10 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"ha_gw_size": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"dns_server": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -91,29 +95,54 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix TransitVpc: %s", err)
 	}
-	if haSubnet := d.Get("ha_subnet").(string); haSubnet != "" {
+	haSubnet := d.Get("ha_subnet").(string)
+	haGwSize := d.Get("ha_gw_size").(string)
+	enableHybridConnection := d.Get("enable_hybrid_connection").(bool)
+	d.SetId(gateway.GwName)
+	d.Set("ha_subnet", "")
+	d.Set("ha_gw_size", "")
+	d.Set("enableHybridConnection", false)
+	if haSubnet != "" {
 		//Enable HA
-		haGateway := &goaviatrix.TransitVpc{
+		transitGateway := &goaviatrix.TransitVpc{
 			GwName:   d.Get("gw_name").(string),
-			HASubnet: d.Get("ha_subnet").(string),
+			HASubnet: haSubnet,
 		}
-		err = client.EnableHaTransitVpc(haGateway)
+		log.Printf("[INFO] Enabling HA on Transit Gateway: %#v", haSubnet)
+		err = client.EnableHaTransitVpc(transitGateway)
 		if err != nil {
 			return fmt.Errorf("failed to enable2 HA Aviatrix TransitVpc: %s", err)
 		}
-	}
-	d.SetId(gateway.GwName)
+		d.Set("ha_subnet", haSubnet)
+		d.Set("ha_gw_size", gateway.VpcSize)
 
-	enableHybridConnection := d.Get("enable_hybrid_connection").(bool)
+		//Resize HA Gateway
+		log.Printf("[INFO]Resizing Transit HA Gateway: %#v", haGwSize)
+		if haGwSize != gateway.VpcSize {
+			d.Set("ha_gw_size", haGwSize)
+			haGateway := &goaviatrix.Gateway{
+				CloudType: d.Get("cloud_type").(int),
+				GwName:    d.Get("gw_name").(string) + "-hagw",
+			}
+			haGateway.GwSize = d.Get("ha_gw_size").(string)
+			err := client.UpdateGateway(haGateway)
+			log.Printf("[INFO] Resizing Transit HA GAteway size to: %s ", haGateway.GwSize)
+			if err != nil {
+				return fmt.Errorf("failed to update Aviatrix Transit HA Gateway size: %s", err)
+			}
+			d.Set("ha_gw_size", haGwSize)
+		}
+	}
+
 	if enableHybridConnection == true {
 		err := client.AttachTransitGWForHybrid(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to enable transit GW for Hybird: %s", err)
 		}
+		d.Set("enableHybridConnection", true)
 	}
 
-	return nil
-	//return resourceAviatrixTransitVpcRead(d, meta)
+	return resourceAviatrixTransitVpcRead(d, meta)
 }
 
 func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) error {
@@ -140,6 +169,23 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("vpc_size", gw.GwSize)
 		d.Set("enable_hybrid_connection", gw.EnableHybridConnection)
 	}
+
+	haGateway := &goaviatrix.Gateway{
+		AccountName: d.Get("account_name").(string),
+		GwName:      d.Get("gw_name").(string) + "-hagw",
+	}
+	haGw, err := client.GetGateway(haGateway)
+	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.Set("ha_gw_size", "")
+			d.Set("ha_subnet", "")
+			return nil
+		}
+		return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway: %s", err)
+	}
+	log.Printf("[INFO] Transit HA Gateway size: %s", haGw.GwSize)
+	d.Set("ha_gw_size", haGw.GwSize)
+
 	return nil
 }
 
@@ -148,6 +194,10 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 	gateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string),
+	}
+	haGateway := &goaviatrix.Gateway{
+		CloudType: d.Get("cloud_type").(int),
+		GwName:    d.Get("gw_name").(string) + "-hagw",
 	}
 	log.Printf("[INFO] Updating Aviatrix TransitVpc: %#v", gateway)
 
@@ -192,36 +242,34 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if d.HasChange("ha_subnet") {
-		haGateway := &goaviatrix.TransitVpc{
+		transitGateway := &goaviatrix.TransitVpc{
 			GwName:   d.Get("gw_name").(string),
 			HASubnet: d.Get("ha_subnet").(string),
 		}
 		o, n := d.GetChange("ha_subnet")
 		if o == "" {
 			//New configuration to enable HA
-			err := client.EnableHaTransitVpc(haGateway)
+			err := client.EnableHaTransitVpc(transitGateway)
 			if err != nil {
 				return fmt.Errorf("failed to enable HA Aviatrix TransitVpc: %s", err)
 			}
 		} else if n == "" {
 			//Ha configuration has been deleted
-			gateway.GwName += "-hagw"
-			err := client.DeleteGateway(gateway)
+			err := client.DeleteGateway(haGateway)
 			if err != nil {
 				return fmt.Errorf("failed to delete Aviatrix TransitVpc HA gateway: %s", err)
 			}
 		} else {
 			//HA subnet has been modified. Delete older HA GW,
 			// and launch new HA GW in new subnet.
-			gateway.GwName += "-hagw"
-			err := client.DeleteGateway(gateway)
+			err := client.DeleteGateway(haGateway)
 			if err != nil {
 				return fmt.Errorf("failed to delete Aviatrix TransitVpc HA gateway: %s", err)
 			}
 
 			gateway.GwName = d.Get("gw_name").(string)
 			//New configuration to enable HA
-			haErr := client.EnableHaTransitVpc(haGateway)
+			haErr := client.EnableHaTransitVpc(transitGateway)
 			if haErr != nil {
 				return fmt.Errorf("failed to enable HA Aviatrix TransitVpc: %s", err)
 			}
@@ -230,7 +278,7 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if d.HasChange("enable_hybrid_connection") {
-		gateway := &goaviatrix.TransitVpc{
+		transitGateway := &goaviatrix.TransitVpc{
 			CloudType:   d.Get("cloud_type").(int),
 			AccountName: d.Get("account_name").(string),
 			GwName:      d.Get("gw_name").(string),
@@ -239,18 +287,28 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		enableHybridConnection := d.Get("enable_hybrid_connection").(bool)
 		if enableHybridConnection == true {
-			err := client.AttachTransitGWForHybrid(gateway)
+			err := client.AttachTransitGWForHybrid(transitGateway)
 			if err != nil {
 				return fmt.Errorf("failed to enable transit GW for Hybird: %s", err)
 			}
 		}
 
 		if enableHybridConnection == false {
-			err := client.DetachTransitGWForHybrid(gateway)
+			err := client.DetachTransitGWForHybrid(transitGateway)
 			if err != nil {
 				return fmt.Errorf("failed to disable transit GW for Hybird: %s", err)
 			}
 		}
+	}
+
+	if d.HasChange("ha_gw_size") {
+		haGateway.GwSize = d.Get("ha_gw_size").(string)
+		err := client.UpdateGateway(haGateway)
+		log.Printf("[INFO] Updating Transit HA GAteway size to: %s ", haGateway.GwSize)
+		if err != nil {
+			return fmt.Errorf("failed to update Aviatrix Transit HA Gw size: %s", err)
+		}
+		d.SetPartial("ha_gw_size")
 	}
 
 	d.Partial(false)

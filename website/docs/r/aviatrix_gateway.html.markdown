@@ -62,8 +62,8 @@ The following arguments are supported:
 * `public_subnet` - Public Subnet Information while creating Peering HA Gateway. Example: AWS: "10.0.0.0/16\~\~ZONE\~\~SubnetName"
 * `zone` - (Optional) A GCE zone where this gateway will be launched. (Required when cloud_type is 4)
 * `single_az_ha` (Optional) Set to "enabled" if this feature is desired
-* `allocate_new_eip` - (Optional) When value is off, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 2.7 or later release. (Supported values : "on", "off")
-* `eip` - (Optional) When allocate_new_eip is off, use specified IP for this gateway. Available in 3.5 or later release
+* `allocate_new_eip` - (Optional) When value is off, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 2.7 or later release. (Supported values : "on", "off") (Default: "on")
+* `eip` - (Optional) Required when allocate_new_eip is "off". It uses specified EIP for this gateway. Available in 3.5 or later release
 eip
 
 The following arguments are computed - please do not edit in the resource file:

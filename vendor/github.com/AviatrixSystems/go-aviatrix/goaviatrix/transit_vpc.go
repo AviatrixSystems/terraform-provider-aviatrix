@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
+	"log"
 )
 
 // Gateway simple struct to hold gateway details
@@ -53,6 +55,12 @@ func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) (error) {
 		return err
 	}
 	if !data.Return {
+		if strings.Contains(data.Reason, "HA GW already exists"){
+			log.Printf("[INFO] HA is already enabled %s", data.Reason)
+			return nil
+		}
+		log.Printf("[ERROR] Enabling HA failed with error %s", data.Reason)
+
 		return errors.New(data.Reason)
 	}
 	return nil
