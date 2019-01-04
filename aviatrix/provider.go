@@ -48,6 +48,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_site2cloud":   resourceAviatrixSite2Cloud(),
 			"aviatrix_aws_peer":     resourceAWSPeer(),
 			"aviatrix_dc_extn":      resourceDCExtn(),
+			"aviatrix_aws_tgw":      resourceAWSTgw(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"aviatrix_caller_identity": dataSourceAviatrixCallerIdentity(),
