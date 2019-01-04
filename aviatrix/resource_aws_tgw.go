@@ -161,13 +161,13 @@ func resourceAWSTgwCreate(d *schema.ResourceData, meta interface{}) error {
 		awsTgw.AttachedAviatrixTransitGW = append(awsTgw.AttachedAviatrixTransitGW, attachedGW.(string))
 	}
 
-	m := make(map[string]int)
+	mAttachedGW := make(map[string]int)
 	for i := 1; i <= len(attachedGWAll); i++ {
-		if m[attachedGWAll[i-1]] != 0 {
+		if mAttachedGW[attachedGWAll[i-1]] != 0 {
 			return fmt.Errorf("validation of source file failed: duplicate transit gateways (ID: %v) to attach",
 				attachedGWAll[i-1])
 		}
-		m[attachedGWAll[i-1]] = i
+		mAttachedGW[attachedGWAll[i-1]] = i
 	}
 
 	domainsToCreate, domainConnPolicy, domainConnRemove, err := client.ValidateAWSTgwDomains(domainsAll, domainConnAll,
@@ -271,7 +271,7 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("aws_side_as_number", awsTgw.AwsSideAsNumber)
 	d.Set("attached_aviatrix_transit_gateway", awsTgw.AttachedAviatrixTransitGW)
 
-	m := make(map[string]map[string]interface{})
+	mSecurityDomain := make(map[string]map[string]interface{})
 
 	for _, sd := range awsTgw.SecurityDomains {
 		sdr := make(map[string]interface{})
@@ -288,7 +288,7 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		sdr["attached_vpc"] = aVPCs
 
-		m[sd.Name] = sdr
+		mSecurityDomain[sd.Name] = sdr
 	}
 
 	var securityDomains []map[string]interface{}
@@ -301,10 +301,10 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 
 		mOld[dn["security_domain_name"].(string)] = true
 
-		if m[dn["security_domain_name"].(string)] != nil {
+		if mSecurityDomain[dn["security_domain_name"].(string)] != nil {
 			mADm := make(map[string]bool)
 			aDmNew := make([]string, 0)
-			attachedDomains := m[dn["security_domain_name"].(string)]["connected_domains"].([]string)
+			attachedDomains := mSecurityDomain[dn["security_domain_name"].(string)]["connected_domains"].([]string)
 
 			for i := 0; i < len(attachedDomains); i++ {
 				mADm[attachedDomains[i]] = true
@@ -324,12 +324,12 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 
-			m[dn["security_domain_name"].(string)]["connected_domains"] = aDmNew
+			mSecurityDomain[dn["security_domain_name"].(string)]["connected_domains"] = aDmNew
 
 			mVPC := make(map[string]bool)
 			var aVPCNew []map[string]interface{}
 
-			for _, attachedVPCs := range m[dn["security_domain_name"].(string)]["attached_vpc"].([]interface{}) {
+			for _, attachedVPCs := range mSecurityDomain[dn["security_domain_name"].(string)]["attached_vpc"].([]interface{}) {
 				attachedVPC := attachedVPCs.(map[string]interface{})
 				mVPC[attachedVPC["vpc_id"].(string)] = true
 			}
@@ -342,22 +342,22 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 
-			for _, attachedVPCs := range m[dn["security_domain_name"].(string)]["attached_vpc"].([]interface{}) {
+			for _, attachedVPCs := range mSecurityDomain[dn["security_domain_name"].(string)]["attached_vpc"].([]interface{}) {
 				attachedVPC := attachedVPCs.(map[string]interface{})
 				if mVPC[attachedVPC["vpc_id"].(string)] {
 					aVPCNew = append(aVPCNew, attachedVPC)
 				}
 			}
 
-			m[dn["security_domain_name"].(string)]["attached_vpc"] = aVPCNew
+			mSecurityDomain[dn["security_domain_name"].(string)]["attached_vpc"] = aVPCNew
 
-			securityDomains = append(securityDomains, m[dn["security_domain_name"].(string)])
+			securityDomains = append(securityDomains, mSecurityDomain[dn["security_domain_name"].(string)])
 		}
 	}
 
 	for _, dn := range awsTgw.SecurityDomains {
 		if !mOld[dn.Name] {
-			securityDomains = append(securityDomains, m[dn.Name])
+			securityDomains = append(securityDomains, mSecurityDomain[dn.Name])
 		}
 	}
 
@@ -387,7 +387,7 @@ func resourceAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	d.Partial(true)
 
-	m := make(map[string]int)
+	mAttachedGWNew := make(map[string]int)
 
 	if d.HasChange("attached_aviatrix_transit_gateway") {
 		oldAGW, newAGW := d.GetChange("attached_aviatrix_transit_gateway")
@@ -405,10 +405,10 @@ func resourceAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
 		newAGWList := goaviatrix.ExpandStringList(newString)
 
 		for i := 1; i <= len(newAGWList); i++ {
-			if m[newAGWList[i-1]] != 0 {
+			if mAttachedGWNew[newAGWList[i-1]] != 0 {
 				return fmt.Errorf("validation of source file failed: duplicate transit gateways (ID: %v) to attach", newAGWList[i-1])
 			}
-			m[newAGWList[i-1]] = i
+			mAttachedGWNew[newAGWList[i-1]] = i
 		}
 
 		toAttachGWs = goaviatrix.Difference(newAGWList, oldAGWList)
