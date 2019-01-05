@@ -74,6 +74,10 @@ func (c *Client) SpokeLeaveTransit(spoke *SpokeVpc) (error) {
 		return err
 	}
 	if !data.Return {
+		if strings.Contains(data.Reason, "has not joined to any transit"){
+			log.Printf("[INFO] spoke VPC is already left from transit VPC %s", data.Reason)
+			return nil
+		}
 		return errors.New(data.Reason)
 	}
 	return nil
