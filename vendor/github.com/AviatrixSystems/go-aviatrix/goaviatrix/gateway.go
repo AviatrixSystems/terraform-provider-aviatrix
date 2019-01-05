@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strings"
 )
 
 // Gateway simple struct to hold gateway details
@@ -225,18 +224,6 @@ func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
 	for i := range gwlist {
 		if gwlist[i].GwName == gateway.GwName {
 			return &gwlist[i], nil
-		}
-		if gwlist[i].VpcID != "" {
-			if gwlist[i].VpcID == gateway.VpcID {
-				return &gwlist[i], nil
-			}
-			index := strings.Index(gwlist[i].VpcID, "~~")
-			if index > -1 {
-				vpcId := gwlist[i].VpcID[:index]
-				if vpcId == gateway.VpcID {
-					return &gwlist[i], nil
-				}
-			}
 		}
 	}
 	log.Printf("Couldn't find Aviatrix gateway %s", gateway.GwName)
