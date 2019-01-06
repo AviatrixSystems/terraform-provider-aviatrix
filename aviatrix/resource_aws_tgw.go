@@ -260,7 +260,6 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Reading AWS TGW")
 
 	awsTgw, err := client.GetAWSTgw(awsTgw)
-
 	if err != nil {
 		return fmt.Errorf("couldn't find AWS TGW: %s", awsTgw.Name)
 	}

@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"sort"
+	"strings"
 )
 
 // AwsTGW simple struct to hold aws_tgw details
@@ -64,6 +66,22 @@ type RoutesInRouteTable struct {
 	State 			string	  `json:"state"`
 	TgwAttachmentId string	  `json:"tgw_attachment_id"`
 }
+
+type VPCList struct {
+	Return  bool      `json:"return"`
+	Results []VPCInfo `json:"results"`
+	Reason  string    `json:"reason"`
+}
+
+type VPCInfo struct {
+	AccountName string `json:"account_name,omitempty"`
+	CloudType   int    `json:"cloud_type,omitempty"`
+	Region      string `json:"vpc_region,omitempty"`
+	Name        string `json:"vpc_name,omitempty"`
+	TransitVpc  string `json:"transit_vpc,omitempty"`
+	VPCId       string `json:"vpc_id,omitempty"`
+}
+
 
 func (c *Client) CreateAWSTgw(awsTgw *AWSTgw) (error) {
 	awsTgw.CID = c.CID
@@ -150,7 +168,7 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 				gateway := &Gateway{
 					VpcID: attachedVPCs[i].VPCId,
 				}
-				gateway, err = c.GetGateway(gateway)
+				gateway, err = c.GetTransitGwFromVpcID(gateway)
 				if err != nil {
 					return nil, err
 				}
@@ -389,4 +407,43 @@ func (c *Client) DetachVpcFromAWSTgw(awsTgw *AWSTgw, vpcID string) (error) {
 	}
 
 	return nil
+}
+
+func (c *Client) GetTransitGwFromVpcID(gateway *Gateway) (*Gateway, error) {
+	path := c.baseURL + fmt.Sprintf("?action=list_vpcs_summary&CID=%s", c.CID)
+	resp, err := c.Get(path, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	data := VPCList{
+		Return:false,
+		Results: make([]VPCInfo, 0),
+		Reason: "",
+	}
+
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+	if !data.Return {
+		return nil, errors.New(data.Reason)
+	}
+
+	vpcLists := data.Results
+	for i := range vpcLists {
+		vpcId := vpcLists[i].VPCId
+		if vpcLists[i].TransitVpc == "yes" && vpcId != "" {
+			index := strings.Index(vpcId, "~~")
+			if index > 0 {
+				vpcId = vpcId[:index]
+			}
+			if vpcId == gateway.VpcID {
+				gateway.GwName = vpcLists[i].Name
+				return gateway, nil
+			}
+		}
+	}
+	log.Printf("Couldn't find transit gateway attached to vpc %s", gateway.VpcID)
+	return nil, ErrNotFound
 }
