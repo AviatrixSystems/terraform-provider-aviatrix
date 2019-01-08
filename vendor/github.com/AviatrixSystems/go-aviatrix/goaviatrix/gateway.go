@@ -67,7 +67,7 @@ type Gateway struct {
 	LdapUserAttr            string `form:"ldap_username_attribute,omitempty" json:"ldap_user_attr,omitempty`
 	LicenseID               string `form:"license_id,omitempty" json:"license_id,omitempty"`
 	MaxConn                 string `form:"max_conn,omitempty"`
-	MaxConnections          string `form:"max_connections,omitempty" json:"max_connections,omitempty"`
+	//MaxConnections          string `form:"max_connections,omitempty" json:"max_connections,omitempty"`
 	Nameservers             string `form:"nameservers,omitempty"`
 	OktaToken               string `form:"okta_token,omitempty" json:"okta_token,omitempty"`
 	OktaURL                 string `form:"okta_url,omitempty" json:"okta_url,omitempty"`
