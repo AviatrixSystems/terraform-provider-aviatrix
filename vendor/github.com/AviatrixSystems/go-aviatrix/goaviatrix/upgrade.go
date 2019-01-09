@@ -1,21 +1,21 @@
 package goaviatrix
 
 import (
-	"fmt"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
-	"log"
 	"time"
 )
 
 type Version struct {
-	CID                         	string `form:"CID,omitempty"`
-	Action                  	string `form:"action,omitempty"`
-	Version		        	string `form:"version,omitempty" json:"version,omitempty"`
+	CID     string `form:"CID,omitempty"`
+	Action  string `form:"action,omitempty"`
+	Version string `form:"version,omitempty" json:"version,omitempty"`
 }
 
 type UpgradeResp struct {
@@ -26,13 +26,13 @@ type UpgradeResp struct {
 
 type VersionInfo struct {
 	CurrentVersion string `json:"current_version"`
-	LatestVersion string `json:"latest_version"`
+	LatestVersion  string `json:"latest_version"`
 }
 
 type VersionInfoResp struct {
-	Return  bool   `json:"return"`
+	Return  bool        `json:"return"`
 	Results VersionInfo `json:"results"`
-	Reason  string `json:"reason"`
+	Reason  string      `json:"reason"`
 }
 
 type AviatrixVersion struct {
@@ -41,15 +41,15 @@ type AviatrixVersion struct {
 	Build int64
 }
 
-func (c *Client) Upgrade(version *Version) (error) {
+func (c *Client) Upgrade(version *Version) error {
 	path := ""
-	if(version.Version == "") {
+	if version.Version == "" {
 		path = c.baseURL + fmt.Sprintf("?CID=%s&action=upgrade", c.CID)
 	} else {
 		path = c.baseURL + fmt.Sprintf("?CID=%s&action=upgrade&version=%s", c.CID, version.Version)
 	}
 	for i := 0; ; i++ {
-		resp,err := c.Get(path, nil)
+		resp, err := c.Get(path, nil)
 		if err != nil {
 			return err
 		}
@@ -57,8 +57,8 @@ func (c *Client) Upgrade(version *Version) (error) {
 		if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 			return err
 		}
-		if(!data.Return){
-			if strings.Contains(data.Reason, "Active upgrade in progress.") && i<3 {
+		if !data.Return {
+			if strings.Contains(data.Reason, "Active upgrade in progress.") && i < 3 {
 				log.Printf("[INFO] Active upgrade is in progress. Retry after 60 secs...")
 				time.Sleep(60 * time.Second)
 				continue
@@ -72,7 +72,7 @@ func (c *Client) Upgrade(version *Version) (error) {
 
 func (c *Client) GetCurrentVersion() (string, *AviatrixVersion, error) {
 	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_version_info", c.CID)
-	resp,err := c.Get(path, nil)
+	resp, err := c.Get(path, nil)
 
 	if err != nil {
 		return "", nil, err
@@ -82,7 +82,7 @@ func (c *Client) GetCurrentVersion() (string, *AviatrixVersion, error) {
 		return "", nil, err
 	}
 
-	if(!data.Return){
+	if !data.Return {
 		return "", nil, errors.New(data.Reason)
 	}
 
@@ -100,15 +100,15 @@ func (c *Client) GetCurrentVersion() (string, *AviatrixVersion, error) {
 	return data.Results.CurrentVersion, aver, nil
 }
 
-func (c *Client) Pre32Upgrade() (error) {
+func (c *Client) Pre32Upgrade() error {
 	privateBaseURL := strings.Replace(c.baseURL, "/v1/api", "/v1/backend1", 1)
 	params := &Version{
 		Action: "userconnect_release",
-		CID: c.CID,
+		CID:    c.CID,
 	}
 	path := privateBaseURL
 	for i := 0; ; i++ {
-		resp,err := c.Post(path, params)
+		resp, err := c.Post(path, params)
 		if err != nil {
 			return err
 		}
@@ -116,7 +116,7 @@ func (c *Client) Pre32Upgrade() (error) {
 		if resp.StatusCode == http.StatusOK {
 			body, _ := ioutil.ReadAll(resp.Body)
 			log.Printf("[TRACE] response %s", body)
-			if strings.Contains(string(body), "in progress") && i<3 {
+			if strings.Contains(string(body), "in progress") && i < 3 {
 				log.Printf("[INFO] Active upgrade is in progress. Retry after 60 secs...")
 				time.Sleep(60 * time.Second)
 			} else {

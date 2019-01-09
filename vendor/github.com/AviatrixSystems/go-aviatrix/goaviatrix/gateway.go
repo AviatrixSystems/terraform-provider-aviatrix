@@ -68,48 +68,48 @@ type Gateway struct {
 	LicenseID               string `form:"license_id,omitempty" json:"license_id,omitempty"`
 	MaxConn                 string `form:"max_conn,omitempty"`
 	//MaxConnections          string `form:"max_connections,omitempty" json:"max_connections,omitempty"`
-	Nameservers             string `form:"nameservers,omitempty"`
-	OktaToken               string `form:"okta_token,omitempty" json:"okta_token,omitempty"`
-	OktaURL                 string `form:"okta_url,omitempty" json:"okta_url,omitempty"`
-	OktaUsernameSuffix      string `form:"okta_username_suffix,omitempty" json:"okta_username_suffix,omitempty"`
-	OtpMode                 string `form:"otp_mode,omitempty" json:"otp_mode,omitempty"`
-	PbrDefaultGateway       string `form:"pbr_default_gateway,omitempty"`
-	PbrEnabled              string `form:"pbr_enabled,omitempty" json:"pbr_enabled,omitempty"`
-	PbrLogging              string `form:"pbr_logging,omitempty"`
-	PbrSubnet               string `form:"pbr_subnet,omitempty"`
-	PrivateIP               string `form:"private_ip,omitempty" json:"private_ip,omitempty"`
-	PublicIP                string `form:"public_ip,omitempty" json:"public_ip,omitempty"`
-	SamlEnabled             string `form:"saml_enabled,omitempty" json:"saml_enabled,omitempty"`
-	SandboxIP               string `form:"sandbox_ip,omitempty" json:"sandbox_ip,omitempty"`
-	SaveTemplate            string `form:"save_template,omitempty"`
-	SearchDomains           string `form:"search_domains,omitempty"`
-	SplitTunnel             string `form:"split_tunnel,omitempty" json:"split_tunnel,omitempty"`
-	TunnelName              string `form:"tunnel_name,omitempty" json:"tunnel_name,omitempty"`
-	TunnelType              string `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
-	VendorName              string `form:"vendor_name,omitempty" json:"vendor_name,omitempty"`
-	VpcID                   string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	VpcNet                  string `form:"vpc_net,omitempty" json:"vpc_net,omitempty"`
-	VpcRegion               string `form:"vpc_reg,omitempty" json:"vpc_region,omitempty"`
-	VpcSplunkIPPort         string `form:"vpc_splunk_ip_port,omitempty" json:"vpc_splunk_ip_port,omitempty"`
-	VpcState                string `form:"vpc_state,omitempty" json:"vpc_state,omitempty"`
-	VpcType                 string `form:"vpc_type,omitempty" json:"vpc_type,omitempty"`
-	VpnCidr                 string `form:"cidr,omitempty" json:"cidr,omitempty"`
-	VpnStatus               string `form:"vpn_access,omitempty" json:"vpn_status,omitempty"`
-	Zone                    string `form:"zone,omitempty" json:"zone,omitempty"`
+	Nameservers        string `form:"nameservers,omitempty"`
+	OktaToken          string `form:"okta_token,omitempty" json:"okta_token,omitempty"`
+	OktaURL            string `form:"okta_url,omitempty" json:"okta_url,omitempty"`
+	OktaUsernameSuffix string `form:"okta_username_suffix,omitempty" json:"okta_username_suffix,omitempty"`
+	OtpMode            string `form:"otp_mode,omitempty" json:"otp_mode,omitempty"`
+	PbrDefaultGateway  string `form:"pbr_default_gateway,omitempty"`
+	PbrEnabled         string `form:"pbr_enabled,omitempty" json:"pbr_enabled,omitempty"`
+	PbrLogging         string `form:"pbr_logging,omitempty"`
+	PbrSubnet          string `form:"pbr_subnet,omitempty"`
+	PrivateIP          string `form:"private_ip,omitempty" json:"private_ip,omitempty"`
+	PublicIP           string `form:"public_ip,omitempty" json:"public_ip,omitempty"`
+	SamlEnabled        string `form:"saml_enabled,omitempty" json:"saml_enabled,omitempty"`
+	SandboxIP          string `form:"sandbox_ip,omitempty" json:"sandbox_ip,omitempty"`
+	SaveTemplate       string `form:"save_template,omitempty"`
+	SearchDomains      string `form:"search_domains,omitempty"`
+	SplitTunnel        string `form:"split_tunnel,omitempty" json:"split_tunnel,omitempty"`
+	TunnelName         string `form:"tunnel_name,omitempty" json:"tunnel_name,omitempty"`
+	TunnelType         string `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
+	VendorName         string `form:"vendor_name,omitempty" json:"vendor_name,omitempty"`
+	VpcID              string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	VpcNet             string `form:"vpc_net,omitempty" json:"vpc_net,omitempty"`
+	VpcRegion          string `form:"vpc_reg,omitempty" json:"vpc_region,omitempty"`
+	VpcSplunkIPPort    string `form:"vpc_splunk_ip_port,omitempty" json:"vpc_splunk_ip_port,omitempty"`
+	VpcState           string `form:"vpc_state,omitempty" json:"vpc_state,omitempty"`
+	VpcType            string `form:"vpc_type,omitempty" json:"vpc_type,omitempty"`
+	VpnCidr            string `form:"cidr,omitempty" json:"cidr,omitempty"`
+	VpnStatus          string `form:"vpn_access,omitempty" json:"vpn_status,omitempty"`
+	Zone               string `form:"zone,omitempty" json:"zone,omitempty"`
 
-	VpcSize                 string `form:"vpc_size,omitempty" `	//Only use for gateway create
+	VpcSize string `form:"vpc_size,omitempty" ` //Only use for gateway create
 }
 
 type GatewayListResp struct {
-	Return  bool   `json:"return"`
+	Return  bool      `json:"return"`
 	Results []Gateway `json:"results"`
-	Reason  string `json:"reason"`
+	Reason  string    `json:"reason"`
 }
 
-func (c *Client) CreateGateway(gateway *Gateway) (error) {
+func (c *Client) CreateGateway(gateway *Gateway) error {
 	gateway.CID = c.CID
 	gateway.Action = "connect_container"
-	resp,err := c.Post(c.baseURL, gateway)
+	resp, err := c.Post(c.baseURL, gateway)
 	if err != nil {
 		return err
 	}
@@ -123,10 +123,10 @@ func (c *Client) CreateGateway(gateway *Gateway) (error) {
 	return nil
 }
 
-func (c *Client) EnableNatGateway(gateway *Gateway) (error) {
-	gateway.CID=c.CID
-	gateway.Action="enable_nat"
-	resp,err := c.Post(c.baseURL, gateway)
+func (c *Client) EnableNatGateway(gateway *Gateway) error {
+	gateway.CID = c.CID
+	gateway.Action = "enable_nat"
+	resp, err := c.Post(c.baseURL, gateway)
 	if err != nil {
 		return err
 	}
@@ -139,10 +139,10 @@ func (c *Client) EnableNatGateway(gateway *Gateway) (error) {
 	}
 	return nil
 }
-func (c *Client) EnableSingleAZGateway(gateway *Gateway) (error) {
-	gateway.CID=c.CID
-	gateway.Action="enable_single_az_ha"
-	resp,err := c.Post(c.baseURL, gateway)
+func (c *Client) EnableSingleAZGateway(gateway *Gateway) error {
+	gateway.CID = c.CID
+	gateway.Action = "enable_single_az_ha"
+	resp, err := c.Post(c.baseURL, gateway)
 	if err != nil {
 		return err
 	}
@@ -155,10 +155,10 @@ func (c *Client) EnableSingleAZGateway(gateway *Gateway) (error) {
 	}
 	return nil
 }
-func (c *Client) EnablePeeringHaGateway(gateway *Gateway) (error) {
-	gateway.CID=c.CID
-	gateway.Action="create_peering_ha_gateway"
-	resp,err := c.Post(c.baseURL, gateway)
+func (c *Client) EnablePeeringHaGateway(gateway *Gateway) error {
+	gateway.CID = c.CID
+	gateway.Action = "create_peering_ha_gateway"
+	resp, err := c.Post(c.baseURL, gateway)
 	if err != nil {
 		return err
 	}
@@ -171,9 +171,9 @@ func (c *Client) EnablePeeringHaGateway(gateway *Gateway) (error) {
 	}
 	return nil
 }
-func (c *Client) EnableHaGateway(gateway *Gateway) (error) {
+func (c *Client) EnableHaGateway(gateway *Gateway) error {
 	path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_vpc_ha&vpc_name=%s&specific_subnet=%s", c.CID, gateway.GwName, gateway.HASubnet)
-	resp,err := c.Get(path, nil)
+	resp, err := c.Get(path, nil)
 	if err != nil {
 		return err
 	}
@@ -187,9 +187,9 @@ func (c *Client) EnableHaGateway(gateway *Gateway) (error) {
 	return nil
 }
 
-func (c *Client) DisableHaGateway(gateway *Gateway) (error) {
+func (c *Client) DisableHaGateway(gateway *Gateway) error {
 	path := c.baseURL + fmt.Sprintf("?CID=%s&action=disable_vpc_ha&vpc_name=%s", c.CID, gateway.GwName)
-	resp,err := c.Get(path, nil)
+	resp, err := c.Get(path, nil)
 	if err != nil {
 		return err
 	}
@@ -230,10 +230,10 @@ func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
 	return nil, ErrNotFound
 }
 
-func (c *Client) UpdateGateway(gateway *Gateway) (error) {
-	gateway.CID=c.CID
-	gateway.Action="edit_gw_config"
-	resp,err := c.Post(c.baseURL, gateway)
+func (c *Client) UpdateGateway(gateway *Gateway) error {
+	gateway.CID = c.CID
+	gateway.Action = "edit_gw_config"
+	resp, err := c.Post(c.baseURL, gateway)
 	if err != nil {
 		return err
 	}
@@ -247,10 +247,10 @@ func (c *Client) UpdateGateway(gateway *Gateway) (error) {
 	return nil
 }
 
-func (c *Client) DeleteGateway(gateway *Gateway) (error) {
+func (c *Client) DeleteGateway(gateway *Gateway) error {
 	path := c.baseURL + fmt.Sprintf("?action=delete_container&CID=%s&cloud_type=%d&gw_name=%s",
 		c.CID, gateway.CloudType, gateway.GwName)
-	resp,err := c.Delete(path, nil)
+	resp, err := c.Delete(path, nil)
 
 	if err != nil {
 		return err

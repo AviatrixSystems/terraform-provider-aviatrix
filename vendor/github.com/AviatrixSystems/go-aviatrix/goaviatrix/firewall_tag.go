@@ -5,50 +5,50 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strings"
 	"net/http"
+	"strings"
 )
 
 type CIDRMember struct {
-	CIDRTag        string `form:"name,omitempty" json:"name,omitempty"`
-	CIDR           string `form:"cidr,omitempty" json:"cidr,omitempty"`
+	CIDRTag string `form:"name,omitempty" json:"name,omitempty"`
+	CIDR    string `form:"cidr,omitempty" json:"cidr,omitempty"`
 }
 
 // Gateway simple struct to hold firewall_tag details
 type FirewallTag struct {
-	CID           string `form:"CID,omitempty"`
-	Action        string `form:"action,omitempty"`
-	Name          string `form:"tag_name,omitempty" json:"tag_name,omitempty"`
-	CIDRList      []CIDRMember `form:"new_policies,omitempty" json:"members,omitempty"`
+	CID      string       `form:"CID,omitempty"`
+	Action   string       `form:"action,omitempty"`
+	Name     string       `form:"tag_name,omitempty" json:"tag_name,omitempty"`
+	CIDRList []CIDRMember `form:"new_policies,omitempty" json:"members,omitempty"`
 }
 
 type FirewallTagResp struct {
-	Return  bool   `json:"return"`
+	Return  bool        `json:"return"`
 	Results FirewallTag `json:"results"`
-	Reason  string `json:"reason"`
+	Reason  string      `json:"reason"`
 }
 
-func (c *Client) CreateFirewallTag(firewall_tag *FirewallTag) (error) {
-	firewall_tag.CID=c.CID
-	firewall_tag.Action="add_policy_tag"
+func (c *Client) CreateFirewallTag(firewall_tag *FirewallTag) error {
+	firewall_tag.CID = c.CID
+	firewall_tag.Action = "add_policy_tag"
 	log.Printf("[INFO] Setting Firewall Tag: %#v", firewall_tag)
-	resp,err := c.Post(c.baseURL, firewall_tag)
-		if err != nil {
+	resp, err := c.Post(c.baseURL, firewall_tag)
+	if err != nil {
 		return err
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil
 }
 
-func (c *Client) UpdateFirewallTag(firewall_tag *FirewallTag) (error) {
-	firewall_tag.CID=c.CID
-	firewall_tag.Action="update_policy_members"
+func (c *Client) UpdateFirewallTag(firewall_tag *FirewallTag) error {
+	firewall_tag.CID = c.CID
+	firewall_tag.Action = "update_policy_members"
 	// It is not easy to marshal nested struct to create POST body
 	// in proper format. On trying to create body using ajg/form package in client.go
 	// in usual way, it creates body like this
@@ -79,18 +79,18 @@ func (c *Client) UpdateFirewallTag(firewall_tag *FirewallTag) (error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil
 }
 
 func (c *Client) GetFirewallTag(firewall_tag *FirewallTag) (*FirewallTag, error) {
-	firewall_tag.CID=c.CID
-	firewall_tag.Action="list_policy_members"
+	firewall_tag.CID = c.CID
+	firewall_tag.Action = "list_policy_members"
 
 	log.Printf("[INFO] Getting Firewall Tag: %#v", firewall_tag)
-	resp,err := c.Post(c.baseURL, firewall_tag)
+	resp, err := c.Post(c.baseURL, firewall_tag)
 	if err != nil {
 		return nil, err
 	}
@@ -98,26 +98,26 @@ func (c *Client) GetFirewallTag(firewall_tag *FirewallTag) (*FirewallTag, error)
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
-	if(!data.Return){
+	if !data.Return {
 		log.Printf("[INFO] Couldn't find Aviatrix Firewall tag %s: %s", firewall_tag.Name, data.Reason)
 		return nil, ErrNotFound
 	}
 	return &data.Results, nil
 }
 
-func (c *Client) DeleteFirewallTag(firewall_tag *FirewallTag) (error) {
-	firewall_tag.CID=c.CID
-	firewall_tag.Action="del_policy_tag"
+func (c *Client) DeleteFirewallTag(firewall_tag *FirewallTag) error {
+	firewall_tag.CID = c.CID
+	firewall_tag.Action = "del_policy_tag"
 	log.Printf("[INFO] Deleting Firewall Tag: %#v", firewall_tag)
-	resp,err := c.Post(c.baseURL, firewall_tag)
-		if err != nil {
+	resp, err := c.Post(c.baseURL, firewall_tag)
+	if err != nil {
 		return err
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return err
 	}
-	if(!data.Return){
+	if !data.Return {
 		return errors.New(data.Reason)
 	}
 	return nil

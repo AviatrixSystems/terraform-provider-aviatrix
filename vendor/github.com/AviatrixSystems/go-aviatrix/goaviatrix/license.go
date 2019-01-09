@@ -9,24 +9,24 @@ type CustomerRequest struct {
 	CustomerID string `form:"customer_id,omitempty" json:"CustomerID" url:"customer_id"`
 }
 type License struct {
-	Verified int `json:"Verified"`
-	Type string `json:"Type"`
+	Verified   int    `json:"Verified"`
+	Type       string `json:"Type"`
 	Expiration string `json:"Expiration"`
-	Allocated int `json:"Allocated"`
-	IssueDate string `json:"IssueDate"`
-	Quantity int `json:"Quantity"`
+	Allocated  int    `json:"Allocated"`
+	IssueDate  string `json:"IssueDate"`
+	Quantity   int    `json:"Quantity"`
 }
 
 type ViewLicenseList struct {
-	LicenseList []License  `json:"license_list"`
+	LicenseList []License `json:"license_list"`
 }
 
 type SetLicenseList struct {
-	LicenseList []map[string]License  `json:"license_list"`
+	LicenseList []map[string]License `json:"license_list"`
 }
 
 type DeleteLicenseList struct {
-	LicenseList []map[string]string  `json:"license_list"`
+	LicenseList []map[string]string `json:"license_list"`
 }
 
 type ViewLicenseResponse struct {
@@ -35,17 +35,16 @@ type ViewLicenseResponse struct {
 	Reason  string `json:"reason"`
 }
 type SetLicenseResponse struct {
-	Return  bool   `json:"return"`
-	Results SetLicenseList `json:"results"`
-	Reason  string `json:"reason"`
-	CustomerID string `json:"CustomerID"`
+	Return     bool           `json:"return"`
+	Results    SetLicenseList `json:"results"`
+	Reason     string         `json:"reason"`
+	CustomerID string         `json:"CustomerID"`
 }
 
-
 type DeleteLicenseResponse struct {
-	Return  bool   `json:"return"`
+	Return  bool              `json:"return"`
 	Results DeleteLicenseList `json:"results"`
-	Reason  string `json:"reason"`
+	Reason  string            `json:"reason"`
 }
 
 func (c *Client) SetCustomerID(customerID string) (*SetLicenseList, error) {
@@ -80,7 +79,6 @@ func (c *Client) DeleteCustomerID() (*DeleteLicenseList, error) {
 	return &response.Results, err
 }
 
-
 func (c *Client) GetCustomerID() (string, error) {
 	cust := new(CustomerRequest)
 	cust.CID = c.CID
@@ -91,7 +89,7 @@ func (c *Client) GetCustomerID() (string, error) {
 		return "", err
 	}
 	if err = json.Unmarshal(body, &response); err != nil {
-		return  "", err
+		return "", err
 	}
 	return response.Results, nil
 }

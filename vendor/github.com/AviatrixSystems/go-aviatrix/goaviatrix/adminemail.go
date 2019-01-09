@@ -1,9 +1,9 @@
 package goaviatrix
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
-	"encoding/json"
 )
 
 type AdminEmailRequest struct {
@@ -11,7 +11,7 @@ type AdminEmailRequest struct {
 	Email string `form:"admin_email" url:"admin_email"`
 }
 type LoginProcRequest struct {
-	Action string `form:"action" url:"action"`
+	Action   string `form:"action" url:"action"`
 	Username string `form:"username" url:"username"`
 	Password string `form:"password" url:"password"`
 }
@@ -22,11 +22,11 @@ type AdminEmailResponse struct {
 }
 
 type LoginProcResponse struct {
-	AdminEmail string `json:"admin_email"`
-	InitialSetup bool `json:"initial_setup"`
+	AdminEmail   string `json:"admin_email"`
+	InitialSetup bool   `json:"initial_setup"`
 }
 
-func (c *Client) SetAdminEmail(adminEmail string) (error) {
+func (c *Client) SetAdminEmail(adminEmail string) error {
 	log.Printf("[TRACE] Setting admin email to '%s'", adminEmail)
 	admin := new(AdminEmailRequest)
 	admin.Email = adminEmail
@@ -57,4 +57,3 @@ func (c *Client) GetAdminEmail(username string, password string) (string, error)
 	}
 	return data.AdminEmail, nil
 }
-

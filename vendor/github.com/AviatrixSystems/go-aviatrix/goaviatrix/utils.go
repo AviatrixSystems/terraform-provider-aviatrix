@@ -1,7 +1,9 @@
 package goaviatrix
+
 import (
 	"fmt"
 )
+
 var ErrNotFound = fmt.Errorf("ErrNotFound")
 
 func ExpandStringList(configured []interface{}) []string {
@@ -37,7 +39,7 @@ func DifferenceSlice(a, b [][]string) [][]string {
 	}
 
 	aa := make([]string, 0)
-	for i := range a{
+	for i := range a {
 		temp := ""
 		for j := range a[i] {
 			temp += a[i][j]
@@ -46,7 +48,7 @@ func DifferenceSlice(a, b [][]string) [][]string {
 	}
 
 	bb := make([]string, 0)
-	for t := range b{
+	for t := range b {
 		temp := ""
 		for m := range b[t] {
 			temp += b[t][m]

@@ -1,19 +1,20 @@
 package goaviatrix
 
 import (
-	"fmt"
 	"bytes"
-	"encoding/json"
 	"crypto/tls"
-	"strings"
-	"net/http"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"reflect"
+	"strings"
+	"time"
+
 	"github.com/ajg/form"
 	"github.com/google/go-querystring/query"
-	"log"
-	"io/ioutil"
-	"reflect"
-	"time"
 )
 
 // LoginResp represents the response object from the `login` action
@@ -26,24 +27,24 @@ type LoginResp struct {
 
 // APIResp represents the basic response from any action
 type APIResp struct {
-	Return  bool   `json:"return"`
-	Reason  string `json:"reason"`
+	Return bool   `json:"return"`
+	Reason string `json:"reason"`
 }
 
 // APIRequest represents the basic fields for any request
 type APIRequest struct {
-	CID string `form:"CID,omitempty" json:"CID" url:"CID"`
+	CID    string `form:"CID,omitempty" json:"CID" url:"CID"`
 	Action string `form:"action,omitempty" json:"action" url:"action"`
 }
 
 // Client for accessing the Aviatrix Controller
 type Client struct {
-	HTTPClient *http.Client
-	Username string
-	Password string
-	CID string
+	HTTPClient   *http.Client
+	Username     string
+	Password     string
+	CID          string
 	ControllerIP string
-	baseURL string
+	baseURL      string
 }
 
 // Login to the Aviatrix controller with the username/password provided in
@@ -54,21 +55,21 @@ type Client struct {
 //    error - if any
 func (c *Client) Login() error {
 	account := make(map[string]interface{})
-	account["action"]="login"
-	account["username"]= c.Username
-	account["password"]= c.Password
+	account["action"] = "login"
+	account["username"] = c.Username
+	account["password"] = c.Password
 
 	log.Printf("[INFO] Parsed Aviatrix login: %#v", account["username"])
-	resp,err := c.Post(c.baseURL, account)
+	resp, err := c.Post(c.baseURL, account)
 	if err != nil {
-            return err
-        }
+		return err
+	}
 	var data LoginResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-	    return err
+		return err
 	}
-	if(!data.Return){
-	    return errors.New(data.Reason)
+	if !data.Return {
+		return errors.New(data.Reason)
 	}
 	log.Printf("[TRACE] CID is '%s'.", data.CID)
 	c.CID = data.CID
@@ -102,18 +103,18 @@ func (c *Client) init(controllerIP string) (*Client, error) {
 	if len(controllerIP) == 0 {
 		return nil, fmt.Errorf("Aviatrix: Client: Controller IP is not set")
 	}
-	
+
 	c.baseURL = "https://" + controllerIP + "/v1/api"
 
 	if c.HTTPClient == nil {
-	    tr := &http.Transport{
-    	    TLSClientConfig: &tls.Config{
-    	    	InsecureSkipVerify: true,
-    	    },
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
 		}
 		c.HTTPClient = &http.Client{Transport: tr}
 	}
-	if err := c.Login(); err!=nil {
+	if err := c.Login(); err != nil {
 		return nil, err
 	}
 
@@ -128,7 +129,6 @@ func (c *Client) Get(path string, i interface{}) (*http.Response, error) {
 func (c *Client) Post(path string, i interface{}) (*http.Response, error) {
 	return c.Request("POST", path, i)
 }
-
 
 // Put issues an HTTP PUT request with the given interface form-encoded.
 func (c *Client) Put(path string, i interface{}) (*http.Response, error) {
@@ -200,7 +200,7 @@ func (c *Client) Do(verb string, req interface{}) (*http.Response, []byte, error
 					f.SetString(c.CID)
 				}
 				// loop around again using new CID
-			} else if (!respdata.Return) {
+			} else if !respdata.Return {
 				return resp, body, errors.New(respdata.Reason)
 			} else {
 				// Return = True; Reason is not CID expired
@@ -220,7 +220,7 @@ func (c *Client) Request(verb string, path string, i interface{}) (*http.Respons
 	log.Printf("[TRACE] %s %s", verb, path)
 	var req *http.Request
 	var err error
-	if (i != nil) {
+	if i != nil {
 		buf := new(bytes.Buffer)
 		if err = form.NewEncoder(buf).Encode(i); err != nil {
 			return nil, err
@@ -241,4 +241,3 @@ func (c *Client) Request(verb string, path string, i interface{}) (*http.Respons
 	}
 	return c.HTTPClient.Do(req)
 }
-
