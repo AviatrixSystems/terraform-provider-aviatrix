@@ -206,8 +206,9 @@ func testAccCheckAWSTgwDestroy(s *terraform.State) error {
 			if strings.Contains(err.Error(), "does not exist") {
 				return nil
 			}
-			return fmt.Errorf("AWS TGW still exists")
+			return fmt.Errorf("AWS TGW still exists: %v", err)
 		}
+		return fmt.Errorf("AWS TGW still exists")
 	}
 	return nil
 }
