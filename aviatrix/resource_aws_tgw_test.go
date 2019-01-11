@@ -114,15 +114,6 @@ resource "aviatrix_account" "test_account2" {
     aws_secret_key = "%s"
 }
 
-resource "aviatrix_account" "test_account3" {
-    account_name = "tfaaa-%s"
-    cloud_type = 1
-    aws_account_number = "%s"
-    aws_iam = "false"
-    aws_access_key = "%s"
-    aws_secret_key = "%s"
-}
-
 resource "aviatrix_transit_vpc" "transit_gw_test" {
 	cloud_type = 1
 	account_name = "${aviatrix_account.test_account1.account_name}"
@@ -161,14 +152,13 @@ resource "aviatrix_aws_tgw" "aws_tgw_test" {
     	attached_vpc = [
 		{
 			vpc_region = "%s"
-			vpc_account_name = "${aviatrix_account.test_account3.account_name}"
+			vpc_account_name = "${aviatrix_account.test_account2.account_name}"
 			vpc_id = "%s"
         },
     	]
 	},
 	]
 }`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"),
 		rName, os.Getenv("AWS_REGION"), awsSideAsNumber, sDm, sDm,
