@@ -173,30 +173,47 @@ func (c *Client) DetachGws(fqdn *FQDN) error {
 	return nil
 }
 
-func (c *Client) GetFQDNTag(fqdn *FQDN) (*FQDN, error) {
+func (c *Client) ListFQDNTags() ([]*FQDN, error) {
 	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_fqdn_filter_tags", c.CID)
 	resp, err := c.Get(path, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	//Output result for this query is weird. FQDN tag names have
-	//been set as keys. This cannot be unmarshalled easily as we
-	//can't have a predefined structure(since tag names will be arbitrary)
-	//to decode it in. So using a map of string->interface{}
 	var data map[string]interface{}
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
 	if _, ok := data["reason"]; ok {
-		log.Printf("[INFO] Couldn't find Aviatrix FQDN tag %s: %s", fqdn.FQDNTag, data["reason"])
+		log.Printf("[INFO] Couldn't find Aviatrix FQDN tags: %s", data["reason"])
 		return nil, ErrNotFound
 	}
+	tags := make([]*FQDN, 0)
 	if val, ok := data["results"]; ok {
-		if foundTag, ok1 := val.(map[string]interface{})[fqdn.FQDNTag]; ok1 {
-			tagdata := foundTag.(map[string]interface{})
-			fqdn.FQDNMode = tagdata["wbmode"].(string)
-			fqdn.FQDNStatus = tagdata["state"].(string)
+		for tag, data := range val.(map[string]interface{}) {
+			tagData := data.(map[string]interface{})
+			fqdn := &FQDN{
+				FQDNTag:    tag,
+				FQDNMode:   tagData["wbmode"].(string),
+				FQDNStatus: tagData["state"].(string),
+			}
+			tags = append(tags, fqdn)
+		}
+	}
+
+	return tags, nil
+}
+
+func (c *Client) GetFQDNTag(fqdn *FQDN) (*FQDN, error) {
+	tags, err := c.ListFQDNTags()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, tag := range tags {
+		if tag.FQDNTag == fqdn.FQDNTag {
+			fqdn.FQDNMode = tag.FQDNMode
+			fqdn.FQDNStatus = tag.FQDNStatus
 			return fqdn, nil
 		}
 	}
@@ -241,6 +258,7 @@ func (c *Client) ListDomains(fqdn *FQDN) (*FQDN, error) {
 	// error when passing value or when passing fqdnFilter
 	return fqdn, nil
 }
+
 func (c *Client) ListGws(fqdn *FQDN) (*FQDN, error) {
 	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_fqdn_filter_tag_attached_gws&tag_name=%s", c.CID,
 		fqdn.FQDNTag)
