@@ -41,8 +41,8 @@ The following arguments are supported:
 * `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", ARM: "East US 2", etc...
 * `vpc_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", etc...
 * `subnet` - (Required) Public Subnet Info. Example: AWS: "CIDR~~ZONE~~SubnetName", etc...
-* `ha_subnet` - (Optional) HA Subnet
-* `ha_gw_size` - (Optional) HA Gateway Size
+* `ha_subnet` - (Optional) HA Subnet. Setting to empty/unset will disable HA. Setting to a valid subnet (Example: 10.12.0.0/24) will create an HA gateway on the subnet
+* `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set)(Example: "t2.micro")
 * `enable_nat` - (Optional) Specify whether enabling NAT feature on the gateway or not. (Please disable AWS NAT instance before enabling this feature) Example: "yes", "no"
 * `dns_server` - (Optional) Specify the DNS IP
 * `transit_gw` - (Optional)  Specify the transit Gateway

@@ -41,7 +41,7 @@ The following arguments are supported:
 * `vpc_size` - (Required) Size of the gateway instance.  Example: AWS: "t2.large", etc...
 * `subnet` - (Required) Public Subnet Name.  Example: AWS: "10.0.0.0/16\~\~us-east1c\~\~subnet1". Copy/paste from AWS Console to get the right subnet name.
 * `dns_server` - (Optional) Specify the DNS IP, only required while using a custom private DNS for the VPC.
-* `ha_subnet` - (Optional) HA Subnet.
-* `ha_gw_size` - (Optional) HA Gateway Size
+* `ha_subnet` - (Optional) HA Subnet. Setting to empty/unset will disable HA. Setting to a valid subnet (Example: 10.12.0.0/24) will create an HA gateway on the subnet
+* `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set)(Example: "t2.micro")
 * `tag_list` - (Optional) Instance tag of cloud provider. Example: ["key1:value1","key002:value002"]
-* `enable_hybrid_connection` - (Optional) Sign of readiness for TGW connection.
+* `enable_hybrid_connection` - (Optional) Sign of readiness for TGW connection.( Example : false)

@@ -119,7 +119,10 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		//Resize HA Gateway
 		log.Printf("[INFO]Resizing Transit HA Gateway: %#v", haGwSize)
 		if haGwSize != gateway.VpcSize {
-			d.Set("ha_gw_size", haGwSize)
+			if haGwSize == "" {
+				return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
+					"ha_subnet is set. Example: t2.micro")
+			}
 			haGateway := &goaviatrix.Gateway{
 				CloudType: d.Get("cloud_type").(int),
 				GwName:    d.Get("gw_name").(string) + "-hagw",
@@ -302,8 +305,24 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if d.HasChange("ha_gw_size") {
+		_, err := client.GetGateway(haGateway)
+		if err != nil {
+			if err == goaviatrix.ErrNotFound {
+				d.Set("ha_gw_size", "")
+				d.Set("ha_subnet", "")
+				return nil
+			}
+			return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway while trying to update HA Gw " +
+				"size: %s", err)
+		}
+
 		haGateway.GwSize = d.Get("ha_gw_size").(string)
-		err := client.UpdateGateway(haGateway)
+		if haGateway.GwSize == ""{
+			return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
+				"ha_subnet is set. Example: t2.micro")
+		}
+
+		err = client.UpdateGateway(haGateway)
 		log.Printf("[INFO] Updating Transit HA GAteway size to: %s ", haGateway.GwSize)
 		if err != nil {
 			return fmt.Errorf("failed to update Aviatrix Transit HA Gw size: %s", err)
