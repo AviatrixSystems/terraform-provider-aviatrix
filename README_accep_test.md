@@ -19,6 +19,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | Generic               | N/A               | AVIATRIX_USERNAME, AVIATRIX_PASSWORD, AVIATRIX_CONTROLLER_IP                       |
 | aviatrix_account      | SKIP_ACCOUNT      | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY                                 |
 | aviatrix_account_user | SKIP_ACCOUNT_USER |                                                                                    |
+| aviatrix_admin_email  | SKIP_ADMIN_EMAIL  |                                                                                    |
 | aviatrix_aws_peer     | SKIP_AWS_PEER     | aviatrix_account + AWS_VPC_ID, AWS_VPC_ID2, AWS_REGION, AWS_REGION2                |
 | aviatrix_aws_tgw      | SKIP_AWS_TGW      | aviatrix_account + AWS_VPC_ID, AWS_REGION, AWS_VPC_TGW_ID                          |
 | aviatrix_customer_id  | SKIP_CUSTOMER_ID  | CUSTOMER_ID                                                                        |
@@ -36,6 +37,6 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_vpn_profile  | SKIP_VPN_PROFILE  | aviatrix_vpn_user                                                                  |
 | aviatrix_vpn_user     | SKIP_VPN_USER     | aviatrix_gateway                                                                   |
 | aviatrix_data_source_account         | SKIP_DATA_ACCOUNT              | aviatrix_account                                       |
-| aviatrix_data_source_caller_identity | SKIP_DATA_CALLER_IDENTITY      | None                                                   |
+| aviatrix_data_source_caller_identity | SKIP_DATA_CALLER_IDENTITY      |                                                        |
 | aviatrix_data_source_gateway         | SKIP_DATA_GATEWAY              | aviatrix_account + AWS_VPC_ID, AWS_REGION, AWS_VPC_NET |
 

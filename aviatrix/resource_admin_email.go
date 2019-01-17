@@ -16,7 +16,7 @@ func resourceAdminEmail() *schema.Resource {
 		Delete: resourceAdminEmailDelete,
 
 		Schema: map[string]*schema.Schema{
-			"admin_email": &schema.Schema{
+			"admin_email": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -31,7 +31,7 @@ func resourceAdminEmailCreate(d *schema.ResourceData, meta interface{}) error {
 
 	err := client.SetAdminEmail(adminEmail)
 	if err != nil {
-		return fmt.Errorf("Failed to set Aviatrix Admin Email: %s", err)
+		return fmt.Errorf("failed to set Aviatrix Admin Email: %s", err)
 	}
 	d.SetId(adminEmail)
 
@@ -44,7 +44,7 @@ func resourceAdminEmailRead(d *schema.ResourceData, meta interface{}) error {
 
 	adminEmail, err := client.GetAdminEmail(client.Username, client.Password)
 	if err != nil {
-		return fmt.Errorf("Failed to get Aviatrix Admin Email: %s", err)
+		return fmt.Errorf("failed to get Aviatrix Admin Email: %s", err)
 	}
 	d.SetId(adminEmail)
 
@@ -56,13 +56,13 @@ func resourceAdminEmailUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAdminEmailDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	//client := meta.(*goaviatrix.Client)
 	log.Printf("[INFO] Deleting Aviatrix Admin Email")
-
-	err := client.SetAdminEmail("noone@aviatrix.com")
-	if err != nil {
-		return fmt.Errorf("Failed to remove Aviatrix Admin Email: %s", err)
-	}
+	//
+	//err := client.SetAdminEmail("noone@aviatrix.com")
+	//if err != nil {
+	//	return fmt.Errorf("failed to remove Aviatrix Admin Email: %s", err)
+	//}
 
 	return nil
 }
