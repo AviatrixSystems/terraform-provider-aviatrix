@@ -306,7 +306,7 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 				d.Set("ha_subnet", "")
 				return nil
 			}
-			return fmt.Errorf("couldn't find Aviatrix Spoke HA Gateway while trying to update HA Gw " +
+			return fmt.Errorf("couldn't find Aviatrix Spoke HA Gateway while trying to update HA Gw "+
 				"size: %s", err)
 		}
 		haGateway.GwSize = d.Get("ha_gw_size").(string)

@@ -75,6 +75,9 @@ func (c *Client) AttachTransitGWForHybrid(gateway *TransitVpc) error {
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		if strings.Contains(err.Error(), "already enabled tgw interface") {
+			return nil
+		}
 		return err
 	}
 	if !data.Return {

@@ -312,12 +312,12 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 				d.Set("ha_subnet", "")
 				return nil
 			}
-			return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway while trying to update HA Gw " +
+			return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway while trying to update HA Gw "+
 				"size: %s", err)
 		}
 
 		haGateway.GwSize = d.Get("ha_gw_size").(string)
-		if haGateway.GwSize == ""{
+		if haGateway.GwSize == "" {
 			return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
 				"ha_subnet is set. Example: t2.micro")
 		}
