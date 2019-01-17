@@ -71,8 +71,8 @@ data "aviatrix_gateway" "foo" {
 	gw_name      = "${aviatrix_gateway.test_gw.gw_name}"
 }
 `,
-	rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-	rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"))
+		rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"))
 }
 
 func testAccDataSourceAviatrixGateway(name string) resource.TestCheckFunc {

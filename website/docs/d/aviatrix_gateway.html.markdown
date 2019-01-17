@@ -6,7 +6,7 @@ description: |-
   Gets the Aviatrix gateway.
 ---
 
-# aviatrix_account
+# aviatrix_gateway
 
 Use this data source to get the Aviatrix gateway for use in other resources.
 

@@ -123,7 +123,7 @@ func (c *Client) Pre32Upgrade() error {
 				break
 			}
 		} else {
-			return fmt.Errorf("Status code %d", resp.StatusCode)
+			return fmt.Errorf("status code %d", resp.StatusCode)
 		}
 	}
 	return nil
