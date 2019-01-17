@@ -33,7 +33,7 @@ type Gateway struct {
 	DuoSecretKey            string `form:"duo_secret_key,omitempty"`
 	Eip                     string `form:"eip,omitempty" json:"eip,omitempty"`
 	ElbDNSName              string `form:"elb_dns_name,omitempty" json:"elb_dns_name,omitempty"`
-	ElbName                 string `form:"elb_name,omitempty"`
+	ElbName                 string `form:"elb_name,omitempty" json:"lb_name,omitempty"`
 	ElbState                string `form:"elb_state,omitempty" json:"elb_state,omitempty"`
 	EnableClientCertSharing string `form:"enable_client_cert_sharing,omitempty"`
 	EnableElb               string `form:"enable_elb,omitempty"`
@@ -208,7 +208,6 @@ func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
 	path := c.baseURL + fmt.Sprintf(url, c.CID)
 
 	resp, err := c.Get(path, nil)
-
 	if err != nil {
 		return nil, err
 	}

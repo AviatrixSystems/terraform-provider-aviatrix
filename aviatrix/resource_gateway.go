@@ -307,6 +307,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 		d.Set("public_dns_server", gw.PublicDnsServer)
 		d.Set("security_group_id", gw.GwSecurityGroupID)
+		d.Set("elb_name", gw.ElbName)
 
 		if publicSubnet := d.Get("public_subnet").(string); publicSubnet != "" {
 			gateway.GwName += "-hagw"
