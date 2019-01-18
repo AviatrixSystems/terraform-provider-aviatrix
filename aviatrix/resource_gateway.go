@@ -87,6 +87,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"elb_name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"split_tunnel": {
 				Type:     schema.TypeString,
