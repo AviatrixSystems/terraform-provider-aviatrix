@@ -5,6 +5,7 @@ import shutil
 import json
 import subprocess
 import checksumdir
+TERRAFORM_VERSION = "v0.11.11"
 
 
 def get_immediate_subdirectories(a_dir):
@@ -66,6 +67,13 @@ def generate_vendor_json(github_path, vendor_json, origin_terr="",
                                            "revisionTime": date_rev})
 
 
+def update_terraform_plugin(gopath):
+    """ Update terraform to particular release. This is required since 0.12 is not supported"""
+    os.chdir(os.path.join(*[gopath, "src", "github.com", "hashicorp", "terraform"]))
+    print("Checking out " + TERRAFORM_VERSION + " release")
+    os.system("git checkout -b b1 " + TERRAFORM_VERSION)
+
+
 def main():
     """Main function"""
     vendor_json = {"comment": "", "ignore": "test", "package": [],
@@ -86,7 +94,7 @@ def main():
     os.chdir(terraform_path)
     print("Obtaining latest dependancies using go get")
     os.system("go get")
-
+    update_terraform_plugin(gopath)
     move_everything_except(os.path.join(*[gopath, "src"]), exception_name=["github.com"],
                            dest_dir=os.path.join(*[terraform_path, "vendor"]),
                            git=True)
@@ -125,11 +133,6 @@ def main():
                            dest_dir=os.path.join(*[terraform_path, "vendor", "github.com",
                                                    "hashicorp"]),
                            git=True)
-
-
-
-    # os.system("git mv vendor/github.com/hashicorp/terraform/vendor/* vendor/")
-
 
 
 if __name__ == "__main__":

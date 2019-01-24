@@ -5,8 +5,8 @@ A basic [Terraform](http://terraform.io) provider for Aviatrix. Read this [tutor
 Requirements
 ------------
 
--	Install [Terraform](https://www.terraform.io/downloads.html) 0.10.x
--	Install [Go](https://golang.org/doc/install) 1.8 (This will be used to build the provider plugin.) 
+-	Install [Terraform](https://www.terraform.io/downloads.html) 0.10.x/0.11.x (0.12.x is incompatible)
+-	Install [Go](https://golang.org/doc/install) 1.9+ (This will be used to build the provider plugin.)
 -	Create a directory, go, follow this [doc](https://github.com/golang/go/wiki/SettingGOPATH) to edit ~/.bash_profile to setup the GOPATH environment variable)
 
 Building The Provider
@@ -58,4 +58,20 @@ If the file is not present, it should be created
 Examples
 --------
 
-Check examples [here](http://docs.aviatrix.com/HowTos/aviatrix_terraform.html).
+Check examples [here](http://docs.aviatrix.com/HowTos/aviatrix_terraform.html). (Outdated)
+
+Visit [here](https://github.com/AviatrixSystems/terraform-provider-aviatrix/tree/master/website/docs/) for the complete documentation for all resources
+
+
+Controller version
+------------------
+Due to some non-backward compatible changes in REST API not all controller versions are supported. If you find a branch with the controller version please use that branch
+Controller versions older than 3.3 are not supported
+For example:
+ UserConnect-3.3 for 3.3.x controller version
+ UserConnect-3.4 for 3.4.x controller version
+
+If you do not find a branch with the version, please use the nearest lower version
+
+master branch supports latest controller version
+We recommend you to update to the latest controller version to stay on top of fixes/features.

@@ -1,10 +1,13 @@
 # go-aviatrix - An Aviatrix SDK for Go
 
-This source code in folder goaviatrix is obsolete. The update to date and maintained source code is in [this](https://github.com/AviatrixSystems/terraform-provider-aviatrix/tree/master/vendor/github.com/AviatrixSystems/go-aviatrix/goaviatrix) folder in repos [terraform-provider-aviatrix](https://github.com/AviatrixSystems/terraform-provider-aviatrix). 
-
 This is a golang SDK for the Aviatrix REST API. It's not feature complete, and currently is only known to be used for Terraform's `aviatrix` provider.
 
+The code here is a mirror of [this](https://github.com/AviatrixSystems/terraform-provider-aviatrix/tree/master/vendor/github.com/AviatrixSystems/go-aviatrix/) folder in repo [terraform-provider-aviatrix](https://github.com/AviatrixSystems/terraform-provider-aviatrix).
+
 Full API docs are available at [apidoc](https://s3-us-west-2.amazonaws.com/avx-apidoc/index.htm)
+
+Any pull requests here will be ignored. Pull requests if any should be made at [terraform-provider-aviatrix](https://github.com/AviatrixSystems/terraform-provider-aviatrix). Commits into the vendor folder are automatically pushed into this repository
+
 
 ## Dependencies
 

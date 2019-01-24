@@ -32,13 +32,9 @@ variable "vpc_nets" {
 
 resource "aviatrix_account" "test_acc" {
   account_name = "devops"
-  account_password = "Aviatrix123"
-  account_email = "abc@xyz.com"
   cloud_type = 1
   aws_account_number = "123456789012"
   aws_iam = "true"
-  aws_role_arn = "arn:aws:iam::123456789012:role/aviatrix-role-app"
-  aws_role_ec2 = "arn:aws:iam::123456789012:role/aviatrix-role-ec2"
 }
 
 # Create count number of gateways
@@ -61,3 +57,6 @@ resource "aviatrix_tunnel" "test_tunnel" {
   vpc_name2 = "avtxgw-${(count.index+1)%3}"
   depends_on = ["aviatrix_gateway.test_gw"]
 }
+
+# For the complete documentation of all resources visit
+# https://github.com/AviatrixSystems/terraform-provider-aviatrix/tree/master/website/docs/
