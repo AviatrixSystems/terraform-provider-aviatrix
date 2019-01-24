@@ -8,6 +8,15 @@ import checksumdir
 TERRAFORM_VERSION = "v0.11.11"
 
 
+def find(name, path):
+    """ Find a directory in path"""
+    result = []
+    for root, dirs, files in os.walk(path):
+        if name in dirs:
+            result.append(os.path.join(root, name))
+    return result
+
+
 def get_immediate_subdirectories(a_dir):
     """ Get immediate subdirectories"""
     return [name for name in os.listdir(a_dir) if os.path.isdir(os.path.join(a_dir, name))]
@@ -74,6 +83,16 @@ def update_terraform_plugin(gopath):
     os.system("git checkout -b b1 " + TERRAFORM_VERSION)
 
 
+def remove_git_and_add_files(terraform_path):
+    """ Remove git dependancy"""
+    print("Removing git links")
+    vendor_folder = os.path.join(*[terraform_path, "vendor"])
+    for dir_ in find(".git", vendor_folder):
+        shutil.rmtree(dir_, ignore_errors=True)
+    os.chdir(vendor_folder)
+    os.system("git add -A .")
+
+
 def main():
     """Main function"""
     vendor_json = {"comment": "", "ignore": "test", "package": [],
@@ -85,23 +104,19 @@ def main():
     delete_everything_except(os.path.join(*[gopath, "src"]), exception_name="github.com")
     delete_everything_except(os.path.join(*[gopath, "src", "github.com"]),
                              exception_name="terraform-providers")
-    delete_everything_except(os.path.join(*[terraform_path, "vendor"]), exception_name="github.com",
-                             git=True)
+    delete_everything_except(os.path.join(*[terraform_path, "vendor"]), exception_name="github.com")
     delete_everything_except(os.path.join(*[terraform_path, "vendor", "github.com"]),
-                             exception_name="AviatrixSystems",
-                             git=True)
+                             exception_name="AviatrixSystems")
 
     os.chdir(terraform_path)
     print("Obtaining latest dependancies using go get")
     os.system("go get")
     update_terraform_plugin(gopath)
     move_everything_except(os.path.join(*[gopath, "src"]), exception_name=["github.com"],
-                           dest_dir=os.path.join(*[terraform_path, "vendor"]),
-                           git=True)
+                           dest_dir=os.path.join(*[terraform_path, "vendor"]))
     move_everything_except(os.path.join(*[gopath, "src", "github.com"]),
                            exception_name=["terraform-providers"],
-                           dest_dir=os.path.join(*[terraform_path, "vendor", "github.com"]),
-                           git=True)
+                           dest_dir=os.path.join(*[terraform_path, "vendor", "github.com"]))
 
     print("Dependencies\n-----------")
     generate_vendor_json(os.path.join(*[terraform_path, "vendor", "github.com"]), vendor_json)
@@ -118,21 +133,19 @@ def main():
 
     os.chdir(terraform_path)
     move_everything_except(hashicorp_path, exception_name=["github.com"],
-                           dest_dir=os.path.join(terraform_path, "vendor"), git=True)
+                           dest_dir=os.path.join(terraform_path, "vendor"))
     move_everything_except(os.path.join(hashicorp_path, "github.com"),
                            exception_name=["google", "hashicorp"],
-                           dest_dir=os.path.join(*[terraform_path, "vendor", "github.com"]),
-                           git=True)
+                           dest_dir=os.path.join(*[terraform_path, "vendor", "github.com"]))
     move_everything_except(os.path.join(hashicorp_path, "github.com", "google"),
                            exception_name=["go-querystring"],
                            dest_dir=os.path.join(*[terraform_path, "vendor", "github.com",
-                                                   "google"]),
-                           git=True)
+                                                   "google"]))
     move_everything_except(os.path.join(hashicorp_path, "github.com", "hashicorp"),
                            exception_name=["****"],
                            dest_dir=os.path.join(*[terraform_path, "vendor", "github.com",
-                                                   "hashicorp"]),
-                           git=True)
+                                                   "hashicorp"]))
+    remove_git_and_add_files(terraform_path)
 
 
 if __name__ == "__main__":
