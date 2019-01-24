@@ -65,13 +65,14 @@ Visit [here](https://github.com/AviatrixSystems/terraform-provider-aviatrix/tree
 
 Controller version
 ------------------
-Due to some non-backward compatible changes in REST API not all controller versions are supported. If you find a branch with the controller version please use that branch
+Due to some non-backward compatible changes in REST API not all controller versions are supported.
+If you find a branch with the controller version please use that branch
 Controller versions older than 3.3 are not supported
 For example:
- UserConnect-3.3 for 3.3.x controller version
- UserConnect-3.4 for 3.4.x controller version
+ * UserConnect-3.3 for 3.3.x controller version
+ * UserConnect-3.4 for 3.4.x controller version
 
-If you do not find a branch with the version, please use the nearest lower version
+If you do not find a branch with the version, please use the nearest higher version
 
 master branch supports latest controller version
 We recommend you to update to the latest controller version to stay on top of fixes/features.
