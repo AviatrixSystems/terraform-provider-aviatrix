@@ -14,7 +14,7 @@ func resourceAviatrixVPNUser() *schema.Resource {
 		Read:   resourceAviatrixVPNUserRead,
 		Update: resourceAviatrixVPNUserUpdate,
 		Delete: resourceAviatrixVPNUserDelete,
-		Importer: &schema.ResourceImporter{ 
+		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
@@ -65,11 +65,11 @@ func resourceAviatrixVPNUserCreate(d *schema.ResourceData, meta interface{}) err
 
 func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	
+
 	user_name := d.Get("user_name").(string)
-	if  user_name == "" {
+	if user_name == "" {
 		id := d.Id()
-		log.Printf("[DEBUG] Looks like an import, user_name is empty. Id is %s",id)
+		log.Printf("[DEBUG] Looks like an import, user_name is empty. Id is %s", id)
 		user_name = id
 	}
 	vpn_user := &goaviatrix.VPNUser{
@@ -88,9 +88,13 @@ func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta interface{}) error
 	if vu != nil {
 		d.Set("vpc_id", vu.VpcID)
 		d.Set("gw_name", vu.GwName)
-		d.Set("user_name",user_name)
-		if vu.UserEmail != "" { d.Set("user_email",vu.UserEmail) }
-		if vu.SamlEndpoint != "" { d.Set("saml_endpoint",vu.SamlEndpoint) }
+		d.Set("user_name", user_name)
+		if vu.UserEmail != "" {
+			d.Set("user_email", vu.UserEmail)
+		}
+		if vu.SamlEndpoint != "" {
+			d.Set("saml_endpoint", vu.SamlEndpoint)
+		}
 	}
 	return nil
 }
