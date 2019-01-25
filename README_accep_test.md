@@ -34,6 +34,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_transit_vpc                 | SKIP_TRANSIT                 | aviatrix_gateway                                                    |
 | aviatrix_transit_gateway_peering     | SKIP_TRANSIT_GATEWAY_PEERING | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_VPC_NET2           |
 | aviatrix_tunnel                      | SKIP_TUNNEL                  | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_VPC_NET2           |
+| aviatrix_version                     | SKIP_VERSION                 |                                                                     |
 | aviatrix_vgw_conn                    | SKIP_VGW_CONN                | aviatrix_gateway + AWS_BGP_VGW_ID                                   |
 | aviatrix_vpn_profile                 | SKIP_VPN_PROFILE             | aviatrix_vpn_user                                                   |
 | aviatrix_vpn_user                    | SKIP_VPN_USER                | aviatrix_gateway                                                    |
