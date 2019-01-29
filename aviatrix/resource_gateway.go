@@ -185,6 +185,11 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"tag_list": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+			},
 		},
 	}
 }
@@ -286,28 +291,44 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	d.SetId(gateway.GwName)
 
+	if _, ok := d.GetOk("tag_list"); ok {
+		tagList := d.Get("tag_list").([]interface{})
+		tagListStr := goaviatrix.ExpandStringList(tagList)
+		gateway.TagList = strings.Join(tagListStr, ",")
+		tags := &goaviatrix.Tags{
+			CloudType:    1,
+			ResourceType: "gw",
+			ResourceName: d.Get("gw_name").(string),
+			TagList:      gateway.TagList,
+		}
+		err = client.AddTags(tags)
+		if err != nil {
+			return fmt.Errorf("failed to add tags : %s", err)
+		}
+	}
+
 	return resourceAviatrixGatewayRead(d, meta)
 }
 
 func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	gwname := d.Get("gw_name").(string)
+	gwName := d.Get("gw_name").(string)
 	// If it is an import only Id is set
-	if gwname == "" {
+	if gwName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
 		if strings.Contains(id, "@") {
 			substr := strings.Split(id, "@")
-			account_name := substr[1]
-			gateway_name := substr[0]
-			log.Printf("[INFO] Importing %s gateway in %s account", gateway_name, account_name)
-			d.Set("account_name", account_name)
-			d.Set("gw_name", gateway_name)
+			accountName := substr[1]
+			gatewayName := substr[0]
+			log.Printf("[INFO] Importing %s gateway in %s account", gatewayName, accountName)
+			d.Set("account_name", accountName)
+			d.Set("gw_name", gatewayName)
 			// Terraform must locate a resource declared with the same Id returned
-			d.SetId(gateway_name)
+			d.SetId(gatewayName)
 		} else {
-			return fmt.Errorf("Id must be in the following format: <gateway name>@<account name>")
+			return fmt.Errorf("id must be in the following format: <gateway name>@<account name>")
 		}
 	}
 
@@ -366,7 +387,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 					// Join again using - in case it was used in the ELB Name
 					elb_name = strings.Join(parts, "-")
 				} else {
-					return fmt.Errorf("Neither elb_name or elb_dns_name returned by the API in an ELB enabled gateway")
+					return fmt.Errorf("neither elb_name or elb_dns_name returned by the API in an ELB enabled gateway")
 				}
 			}
 			d.Set("elb_name", elb_name)
@@ -462,6 +483,17 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			}
 			log.Printf("[TRACE] reading peering HA gateway %s: %#v", d.Get("gw_name").(string), gw)
 		}
+
+		tags := &goaviatrix.Tags{
+			CloudType:    1,
+			ResourceType: "gw",
+			ResourceName: d.Get("gw_name").(string),
+		}
+		tagList, err := client.GetTags(tags)
+		if err != nil {
+			return fmt.Errorf("unable to read tag_list for gateway: %v due to %v", gateway.GwName, err)
+		}
+		d.Set("tag_list", tagList)
 	}
 	return nil
 }
@@ -480,6 +512,42 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return fmt.Errorf("failed to update Aviatrix Gateway: %s", err)
 	}
+
+	d.Partial(true)
+	if d.HasChange("tag_list") {
+		tags := &goaviatrix.Tags{
+			CloudType:    1,
+			ResourceType: "gw",
+			ResourceName: d.Get("gw_name").(string),
+		}
+		o, n := d.GetChange("tag_list")
+		if o == nil {
+			o = new([]interface{})
+		}
+		if n == nil {
+			n = new([]interface{})
+		}
+		os := o.([]interface{})
+		ns := n.([]interface{})
+		oldTagList := goaviatrix.ExpandStringList(os)
+		if len(oldTagList) != 0 {
+			tags.TagList = strings.Join(oldTagList, ",")
+			err := client.DeleteTags(tags)
+			if err != nil {
+				return fmt.Errorf("failed to delete tags : %s", err)
+			}
+		}
+		newTagList := goaviatrix.ExpandStringList(ns)
+		if len(newTagList) != 0 {
+			tags.TagList = strings.Join(newTagList, ",")
+			err = client.AddTags(tags)
+			if err != nil {
+				return fmt.Errorf("failed to add tags : %s", err)
+			}
+		}
+	}
+	d.Partial(false)
+
 	d.SetId(gateway.GwName)
 	return nil
 }

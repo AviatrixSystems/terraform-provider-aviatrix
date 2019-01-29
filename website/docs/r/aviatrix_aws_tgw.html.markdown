@@ -19,7 +19,7 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
   account_name = "devops"
   region = "us-east-1"
   aws_side_as_number = "64512"
-  attached_aviatrix_transit_gameway = ["avxtransitgw", "avxtransitgw2"]
+  attached_aviatrix_transit_gateway = ["avxtransitgw", "avxtransitgw2"]
   security_domains = [
   {
     security_domain_name = "Aviatrix_Edge_Domain"
@@ -79,7 +79,7 @@ The following arguments are supported:
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `region` - (Required) Region of cloud provider(AWS).
 * `aws_side_as_number` - (Required) BGP Local ASN (Autonomous System Number). Integer between 1-65535. Example: "65001"
-* `attached_aviatrix_transit_gameway` - (Optional) A list of Names of Aviatrix Transit Gateway to attach to one of the three default domains: Aviatrix_Edge_Domain.
+* `attached_aviatrix_transit_gateway` - (Optional) A list of Names of Aviatrix Transit Gateway to attach to one of the three default domains: Aviatrix_Edge_Domain.
 * `security_domains` - (Required) Security Domains to create together with AWS TGW's creation. Three default domains are created automatically together with the AWS TGW's creation, so are the connections between any two of them. These three domains can't be deleted, but the connection between any two of them can be deleted.
     * `security_domain_name` - (Required) Three default domains ("Aviatrix_Edge_Domain", "Default_Domain" and "Shared_Service_Domain") are required with AWS TGW's creation.
     * `connected_domains` - (Optional) A list of domains connected to the domain (name: `security_domain_name`) together with its creation.

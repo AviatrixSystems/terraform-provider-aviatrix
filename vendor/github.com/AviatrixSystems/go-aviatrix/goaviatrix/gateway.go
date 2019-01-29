@@ -84,6 +84,7 @@ type Gateway struct {
 	SaveTemplate       string `form:"save_template,omitempty"`
 	SearchDomains      string `form:"search_domains,omitempty"`
 	SplitTunnel        string `form:"split_tunnel,omitempty" json:"split_tunnel,omitempty"`
+	TagList            string `form:"tags,omitempty"`
 	TunnelName         string `form:"tunnel_name,omitempty" json:"tunnel_name,omitempty"`
 	TunnelType         string `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
 	VendorName         string `form:"vendor_name,omitempty" json:"vendor_name,omitempty"`

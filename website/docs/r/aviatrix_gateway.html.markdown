@@ -22,6 +22,7 @@ resource "aviatrix_gateway" "test_gateway1" {
   vpc_reg = "us-west-1"
   vpc_size = "t2.micro"
   vpc_net = "10.0.0.0/24"
+  tag_list = ["k1:v1","k2:v2"]
 }
 ```
 
@@ -63,8 +64,9 @@ The following arguments are supported:
 * `zone` - (Optional) A GCE zone where this gateway will be launched. (Required when cloud_type is 4)
 * `single_az_ha` (Optional) Set to "enabled" if this feature is desired
 * `allocate_new_eip` - (Optional) When value is off, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 2.7 or later release. (Supported values : "on", "off") (Default: "on")
-* `eip` - (Optional) Required when allocate_new_eip is "off". It uses specified EIP for this gateway. Available in 3.5 or later release
-eip
+* `eip` - (Optional) Required when allocate_new_eip is "off". It uses specified EIP for this gateway. Available in 3.5 or later release eip
+* `tag_list` - (Optional) Instance tag of cloud provider. Example: key1:value1,key002:value002, etc...
+
 
 The following arguments are computed - please do not edit in the resource file:
 
