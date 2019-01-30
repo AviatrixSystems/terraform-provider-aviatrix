@@ -500,20 +500,51 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 
 func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	log.Printf("[INFO] Updating Aviatrix gateway: %#v", d.Get("gw_name").(string))
+
+	d.Partial(true)
+	if d.HasChange("cloud_type") {
+		return fmt.Errorf("updating cloud_type is not allowed")
+	}
+	if d.HasChange("account_name") {
+		return fmt.Errorf("updating account_name is not allowed")
+	}
+	if d.HasChange("gw_name") {
+		return fmt.Errorf("updating gw_name is not allowed")
+	}
+	if d.HasChange("vpc_id") {
+		return fmt.Errorf("updating vpc_id is not allowed")
+	}
+	if d.HasChange("vpc_reg") {
+		return fmt.Errorf("updating vpc_reg is not allowed")
+	}
+	if d.HasChange("vpc_net") {
+		return fmt.Errorf("updating vpc_net is not allowed")
+	}
+	if d.HasChange("vpn_access") {
+		return fmt.Errorf("updating vpn_access is not allowed")
+	}
+	if d.HasChange("enable_elb") {
+		return fmt.Errorf("updating enable_elb is not allowed")
+	}
+	if d.HasChange("elb_name") {
+		return fmt.Errorf("updating elb_name is not allowed")
+	}
+	if d.HasChange("otp_mode") {
+		return fmt.Errorf("updating otp_mode is not allowed")
+	}
+
 	gateway := &goaviatrix.Gateway{
 		GwName:   d.Get("gw_name").(string),
 		GwSize:   d.Get("vpc_size").(string),
 		SingleAZ: d.Get("single_az_ha").(string),
 	}
-
-	log.Printf("[INFO] Updating Aviatrix gateway: %#v", gateway)
-
 	err := client.UpdateGateway(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to update Aviatrix Gateway: %s", err)
 	}
 
-	d.Partial(true)
 	if d.HasChange("tag_list") {
 		tags := &goaviatrix.Tags{
 			CloudType:    1,
