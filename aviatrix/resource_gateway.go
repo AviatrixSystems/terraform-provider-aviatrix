@@ -548,24 +548,24 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("unable to read tag_list for gateway: %v due to %v", gateway.GwName, err)
 		}
 		d.Set("tag_list", tagList)
+		
+		if gw.VpnStatus == "enabled" && gw.SplitTunnel == "yes" {
+			splitTunnel := &goaviatrix.SplitTunnel{
+				VpcID:   gw.VpcID,
+				ElbName: gw.ElbName,
+			}
 
-		splitTunnel := &goaviatrix.SplitTunnel{
-			VpcID:   gw.VpcID,
-			ElbName: gw.ElbName,
-		}
-
-		splitTunnel1, err := client.GetSplitTunnel(splitTunnel)
-		if err != nil {
-			return fmt.Errorf("unable to read split information for gateway: %v due to %v", gw.GwName, err)
-		}
-		if splitTunnel1.SplitTunnel == "no" {
-			d.Set("name_servers", "")
-			d.Set("search_domains", "")
-			d.Set("additional_cidrs", "")
-		} else {
+			splitTunnel1, err := client.GetSplitTunnel(splitTunnel)
+			if err != nil {
+				return fmt.Errorf("unable to read split information for gateway: %v due to %v", gw.GwName, err)
+			}
 			d.Set("name_servers", splitTunnel1.NameServers)
 			d.Set("search_domains", splitTunnel1.SearchDomains)
 			d.Set("additional_cidrs", splitTunnel1.AdditionalCidrs)
+		} else {
+			d.Set("name_servers", "")
+			d.Set("search_domains", "")
+			d.Set("additional_cidrs", "")
 		}
 	}
 	return nil
