@@ -101,6 +101,21 @@ func resourceAviatrixGateway() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"name_servers": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"search_domains": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"additional_cidrs": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"otp_mode": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -239,6 +254,9 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		AllocateNewEip:     d.Get("allocate_new_eip").(string),
 		Eip:                d.Get("eip").(string),
 	}
+	if gateway.SplitTunnel != "no" {
+		gateway.SplitTunnel = "yes"
+	}
 
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)
 
@@ -309,10 +327,34 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 		err = client.AddTags(tags)
 		if err != nil {
-			return fmt.Errorf("failed to add tags : %s", err)
+			return fmt.Errorf("failed to add tags: %s", err)
 		}
 	}
-
+	if vpnAccess, ok := d.GetOk("vpn_access"); ok && vpnAccess == "yes" {
+		sTunnel := &goaviatrix.SplitTunnel{
+			SplitTunnel:     "no",
+			VpcID:           gateway.VpcID,
+			ElbName:         gateway.ElbName,
+			AdditionalCidrs: d.Get("additional_cidrs").(string),
+			NameServers:     d.Get("name_servers").(string),
+			SearchDomains:   d.Get("search_domains").(string),
+			SaveTemplate:    "no",
+		}
+		if gateway.SplitTunnel != "" {
+			sTunnel.SplitTunnel = gateway.SplitTunnel
+		}
+		if sTunnel.SplitTunnel != "" && sTunnel.SplitTunnel != "no" && sTunnel.SplitTunnel != "yes" {
+			return fmt.Errorf("split_tunnel is not set correctly")
+		}
+		if sTunnel.SplitTunnel == "yes" {
+			if sTunnel.AdditionalCidrs != "" || sTunnel.NameServers != "" || sTunnel.SearchDomains != "" {
+				err = client.ModifySplitTunnel(sTunnel)
+				if err != nil {
+					return fmt.Errorf("failed to modify split tunnel: %s", err)
+				}
+			}
+		}
+	}
 	return resourceAviatrixGatewayRead(d, meta)
 }
 
@@ -506,13 +548,31 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("unable to read tag_list for gateway: %v due to %v", gateway.GwName, err)
 		}
 		d.Set("tag_list", tagList)
+
+		splitTunnel := &goaviatrix.SplitTunnel{
+			VpcID:   gw.VpcID,
+			ElbName: gw.ElbName,
+		}
+
+		splitTunnel1, err := client.GetSplitTunnel(splitTunnel)
+		if err != nil {
+			return fmt.Errorf("unable to read split information for gateway: %v due to %v", gw.GwName, err)
+		}
+		if splitTunnel1.SplitTunnel == "no" {
+			d.Set("name_servers", "")
+			d.Set("search_domains", "")
+			d.Set("additional_cidrs", "")
+		} else {
+			d.Set("name_servers", splitTunnel1.NameServers)
+			d.Set("search_domains", splitTunnel1.SearchDomains)
+			d.Set("additional_cidrs", splitTunnel1.AdditionalCidrs)
+		}
 	}
 	return nil
 }
 
 func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-
 	log.Printf("[INFO] Updating Aviatrix gateway: %#v", d.Get("gw_name").(string))
 
 	d.Partial(true)
@@ -586,6 +646,43 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			err = client.AddTags(tags)
 			if err != nil {
 				return fmt.Errorf("failed to add tags : %s", err)
+			}
+		}
+	}
+
+	if d.HasChange("split_tunnel") || d.HasChange("additional_cidrs") ||
+		d.HasChange("name_servers") || d.HasChange("search_domains") {
+		o, n := d.GetChange("split_tunnel")
+		if o == nil {
+			o = new([]interface{})
+		}
+		if n == nil {
+			n = new([]interface{})
+		}
+		oST := o.(string)
+		nST := n.(string)
+		if oST == "" {
+			oST = "no"
+		}
+		if nST == "" {
+			nST = "no"
+		}
+		if nST != "no" && nST != "yes" {
+			return fmt.Errorf("split_tunnel is not set correctly")
+		}
+		if oST != nST || (nST == "yes" && (d.HasChange("additional_cidrs") || d.HasChange("name_servers") || d.HasChange("search_domains"))) {
+			sTunnel := &goaviatrix.SplitTunnel{
+				SplitTunnel:     nST,
+				VpcID:           d.Get("vpc_id").(string),
+				ElbName:         d.Get("elb_name").(string),
+				AdditionalCidrs: d.Get("additional_cidrs").(string),
+				NameServers:     d.Get("name_servers").(string),
+				SearchDomains:   d.Get("search_domains").(string),
+				SaveTemplate:    "no",
+			}
+			err = client.ModifySplitTunnel(sTunnel)
+			if err != nil {
+				return fmt.Errorf("failed to modify split tunnel: %s", err)
 			}
 		}
 	}

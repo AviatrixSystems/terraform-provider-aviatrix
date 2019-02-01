@@ -44,6 +44,9 @@ The following arguments are supported:
 * `enable_elb` - (Optional) Specify whether to enable ELB or not. (Required: Yes when cloud_type is "1", "4", "256" or "1024")
 * `elb_name` - (Optional) A name for the ELB that is created. If it is not specified a name is generated automatically 
 * `split_tunnel` - (Optional) Specify split tunnel mode. (Supported values: "yes", "no")
+* `name_servers` - (Optional) A list of DNS servers used to resolve domain names by a connected VPN user when Split Tunnel Mode is enabled.
+* `search_domains` - (Optional) A list of domain names that will use the NameServer when a specific name is not in the destination when Split Tunnel Mode is enabled.
+* `additional_cidrs` - (Optional) A list of destination CIDR ranges that will also go through the VPN tunnel when Split Tunnel Mode is enabled.
 * `otp_mode` - (Optional) Two step authentication mode. "2": DUO, "3": Okta.
 * `saml_enabled` - (Optional) This field indicates whether enabling SAML or not. (This field is available in version 3.3 or later release.) (Supported values: "yes", "no")
 * `okta_token` - (Optional) Token for Okta auth mode (Required: Yes if otp_mode is "3")
