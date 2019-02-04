@@ -162,6 +162,10 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Reading Aviatrix Profile: %#v", profile)
 
+	if d.HasChange("name") {
+		return fmt.Errorf("cannot change name of a profile")
+	}
+
 	if d.HasChange("base_rule") {
 		return fmt.Errorf("cannot change base rule of a profile")
 	}
