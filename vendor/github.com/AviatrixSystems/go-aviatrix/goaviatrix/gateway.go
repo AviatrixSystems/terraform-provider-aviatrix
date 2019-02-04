@@ -41,7 +41,7 @@ type Gateway struct {
 	DnsServer               string `form:"dns_server,omitempty"`
 	PublicDnsServer         string `form:"public_dns_server,omitempty" json:"public_dns_server,omitempty"`
 	EnableNat               string `form:"enable_nat,omitempty" json:"enable_nat,omitempty"`
-	SingleAZ                string `form:"single_az_ha,omitempty"`
+	SingleAZ                string `form:"single_az_ha,omitempty" json:"single_az_ha,omitempty"`
 	EnableHybridConnection  bool   `json:"tgw_enabled,omitempty"`
 	EnablePbr               string `form:"enable_pbr,omitempty"`
 	Expiration              string `form:"expiration,omitempty" json:"expiration,omitempty"`
@@ -175,6 +175,23 @@ func (c *Client) EnablePeeringHaGateway(gateway *Gateway) error {
 func (c *Client) EnableHaGateway(gateway *Gateway) error {
 	path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_vpc_ha&vpc_name=%s&specific_subnet=%s", c.CID, gateway.GwName, gateway.HASubnet)
 	resp, err := c.Get(path, nil)
+	if err != nil {
+		return err
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return err
+	}
+	if !data.Return {
+		return errors.New(data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) DisableSingleAZGateway(gateway *Gateway) error {
+	gateway.CID = c.CID
+	gateway.Action = "disable_single_az_ha"
+	resp, err := c.Post(c.baseURL, gateway)
 	if err != nil {
 		return err
 	}

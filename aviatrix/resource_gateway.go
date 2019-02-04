@@ -196,6 +196,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"single_az_ha": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"allocate_new_eip": {
 				Type:     schema.TypeString,
@@ -271,6 +272,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	if DNSServer := d.Get("dns_server").(string); DNSServer != "" {
 		log.Printf("[INFO] Aviatrix gateway DNS server: %#v", gateway)
 	}
+
 	// single_AZ enabled for Gateway. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
 	if singleAZHA := d.Get("single_az_ha").(string); singleAZHA == "enabled" {
 		singleAZGateway := &goaviatrix.Gateway{
@@ -506,7 +508,13 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("zone", gw.NewZone)
 		}
 		if gw.SingleAZ != "" {
-			d.Set("single_az_ha", gw.SingleAZ)
+			if gw.SingleAZ == "yes" {
+				d.Set("single_az_ha", "enabled")
+			} else if gw.SingleAZ == "no" {
+				d.Set("single_az_ha", "disabled")
+			} else {
+				d.Set("single_az_ha", gw.SingleAZ)
+			}
 		}
 		//	d.Set("allocate_new_eip",gw.AllocateNewEip)
 		if gw.Eip != "" {
@@ -548,7 +556,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("unable to read tag_list for gateway: %v due to %v", gateway.GwName, err)
 		}
 		d.Set("tag_list", tagList)
-		
+
 		if gw.VpnStatus == "enabled" && gw.SplitTunnel == "yes" {
 			splitTunnel := &goaviatrix.SplitTunnel{
 				VpcID:   gw.VpcID,
@@ -686,6 +694,31 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 	}
+
+	if d.HasChange("single_az_ha") {
+		singleAZGateway := &goaviatrix.Gateway{
+			GwName:   d.Get("gw_name").(string),
+			SingleAZ: d.Get("single_az_ha").(string),
+		}
+		if singleAZGateway.SingleAZ != "enabled" && singleAZGateway.SingleAZ != "disabled" {
+			return fmt.Errorf("[INFO] single_az_ha of gateway: %v is not set correctly", singleAZGateway.GwName)
+		}
+		if singleAZGateway.SingleAZ == "enabled" {
+			log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
+			err := client.EnableSingleAZGateway(gateway)
+			if err != nil {
+				return fmt.Errorf("failed to create single AZ GW HA: %s", err)
+			}
+		}
+		if singleAZGateway.SingleAZ == "disabled" {
+			log.Printf("[INFO] Disable Single AZ GW HA: %#v", singleAZGateway)
+			err := client.DisableSingleAZGateway(gateway)
+			if err != nil {
+				return fmt.Errorf("failed to disable single AZ GW HA: %s", err)
+			}
+		}
+	}
+
 	d.Partial(false)
 
 	d.SetId(gateway.GwName)
