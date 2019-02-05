@@ -364,22 +364,11 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	client := meta.(*goaviatrix.Client)
 
 	gwName := d.Get("gw_name").(string)
-	// If it is an import only Id is set
 	if gwName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
-		if strings.Contains(id, "@") {
-			substr := strings.Split(id, "@")
-			accountName := substr[1]
-			gatewayName := substr[0]
-			log.Printf("[INFO] Importing %s gateway in %s account", gatewayName, accountName)
-			d.Set("account_name", accountName)
-			d.Set("gw_name", gatewayName)
-			// Terraform must locate a resource declared with the same Id returned
-			d.SetId(gatewayName)
-		} else {
-			return fmt.Errorf("id must be in the following format: <gateway name>@<account name>")
-		}
+		d.Set("gw_name", id)
+		d.SetId(id)
 	}
 
 	gateway := &goaviatrix.Gateway{
