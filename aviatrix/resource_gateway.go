@@ -401,7 +401,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	}
 	log.Printf("[TRACE] reading gateway %s: %#v", d.Get("gw_name").(string), gw)
 	if gw != nil {
-
 		d.Set("cloud_type", gw.CloudType)
 		d.Set("account_name", gw.AccountName)
 		d.Set("gw_name", gw.GwName)
@@ -504,9 +503,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		if gw.HASubnet != "" {
 			d.Set("ha_subnet", gw.HASubnet)
 		}
-		if gw.PeeringHASubnet != "" {
-			d.Set("public_subnet", gw.PeeringHASubnet)
-		}
+		d.Set("public_subnet", gw.PeeringHASubnet)
 		if gw.NewZone != "" {
 			d.Set("zone", gw.NewZone)
 		}
@@ -540,13 +537,22 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("security_group_id", gw.GwSecurityGroupID)
 
 		if publicSubnet := d.Get("public_subnet").(string); publicSubnet != "" {
-			gateway.GwName += "-hagw"
-			gw, err := client.GetGateway(gateway)
-			if err == nil {
-				d.Set("cloudn_bkup_gateway_inst_id", gw.CloudnGatewayInstID)
-				d.Set("backup_public_ip", gw.PublicIP)
+			gatewayHaGw := &goaviatrix.Gateway{
+				AccountName: d.Get("account_name").(string),
+				GwName:      d.Get("gw_name").(string) + "-hagw",
 			}
-			log.Printf("[TRACE] reading peering HA gateway %s: %#v", d.Get("gw_name").(string), gw)
+			gwHaGw, err := client.GetGateway(gatewayHaGw)
+			if err == nil {
+				d.Set("cloudn_bkup_gateway_inst_id", gwHaGw.CloudnGatewayInstID)
+				d.Set("backup_public_ip", gwHaGw.PublicIP)
+			} else {
+				d.Set("cloudn_bkup_gateway_inst_id", "")
+				d.Set("backup_public_ip", "")
+			}
+			log.Printf("[TRACE] reading peering HA gateway %s: %#v", d.Get("gw_name").(string), gwHaGw)
+		} else {
+			d.Set("cloudn_bkup_gateway_inst_id", "")
+			d.Set("backup_public_ip", "")
 		}
 
 		tags := &goaviatrix.Tags{

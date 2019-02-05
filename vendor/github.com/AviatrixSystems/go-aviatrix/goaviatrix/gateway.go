@@ -51,7 +51,7 @@ type Gateway struct {
 	GwSize                  string `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
 	GwSubnetID              string `form:"gw_subnet_id,omitempty" json:"gw_subnet_id,omitempty"`
 	HASubnet                string `form:"ha_subnet,omitempty"`
-	PeeringHASubnet         string `form:"public_subnet,omitempty"`
+	PeeringHASubnet         string `form:"public_subnet,omitempty" json:"public_subnet,omitempty"`
 	NewZone                 string `form:"new_zone,omitempty"`
 	InstState               string `form:"inst_state,omitempty" json:"inst_state,omitempty"`
 	IntraVMRoute            string `form:"intra_vm_route,omitempty" json:"intra_vm_route,omitempty"`
