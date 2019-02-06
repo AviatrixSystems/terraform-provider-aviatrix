@@ -38,6 +38,7 @@ func resourceAviatrixVPNUser() *schema.Resource {
 			"saml_endpoint": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 		},
 	}
@@ -60,7 +61,7 @@ func resourceAviatrixVPNUserCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("failed to create Aviatrix VPNUser: %s", err)
 	}
 	d.SetId(vpn_user.UserName)
-	return nil
+	return resourceAviatrixVPNUserRead(d, meta)
 }
 
 func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta interface{}) error {
@@ -92,9 +93,7 @@ func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta interface{}) error
 		if vu.UserEmail != "" {
 			d.Set("user_email", vu.UserEmail)
 		}
-		if vu.SamlEndpoint != "" {
-			d.Set("saml_endpoint", vu.SamlEndpoint)
-		}
+		d.Set("saml_endpoint", vu.SamlEndpoint)
 	}
 	return nil
 }
