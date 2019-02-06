@@ -85,6 +85,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"cidr": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"enable_elb": {
 				Type:     schema.TypeString,
@@ -128,54 +129,67 @@ func resourceAviatrixGateway() *schema.Resource {
 			"okta_token": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"okta_url": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"okta_username_suffix": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"duo_integration_key": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"duo_secret_key": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"duo_api_hostname": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"duo_push_mode": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"enable_ldap": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"ldap_server": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"ldap_bind_dn": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"ldap_password": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"ldap_base_dn": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"ldap_username_attribute": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"public_subnet": {
 				Type:     schema.TypeString,
@@ -201,10 +215,12 @@ func resourceAviatrixGateway() *schema.Resource {
 			"allocate_new_eip": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"eip": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"tag_list": {
 				Type:     schema.TypeList,
@@ -409,9 +425,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		if gw.VpcNet != "" {
 			d.Set("vpc_net", gw.VpcNet)
 		}
-		if gw.EnableNat != "" {
-			d.Set("enable_nat", gw.EnableNat)
-		}
+		d.Set("enable_nat", gw.EnableNat)
 		if gw.DnsServer != "" {
 			d.Set("dns_server", gw.DnsServer)
 		}
@@ -424,9 +438,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				d.Set("vpn_access", gw.VpnStatus)
 			}
 		}
-		if gw.VpnCidr != "" {
-			d.Set("cidr", gw.VpnCidr)
-		}
+		d.Set("cidr", gw.VpnCidr)
 		if gw.ElbState == "enabled" {
 			d.Set("enable_elb", "yes")
 			elb_name := d.Get("elb_name")
@@ -461,45 +473,19 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		if gw.SamlEnabled != "" {
 			d.Set("saml_enabled", gw.SamlEnabled)
 		}
-		if gw.OktaToken != "" {
-			d.Set("okta_token", gw.OktaToken)
-		}
-		if gw.OktaURL != "" {
-			d.Set("okta_url", gw.OktaURL)
-		}
-		if gw.OktaUsernameSuffix != "" {
-			d.Set("okta_username_suffix", gw.OktaUsernameSuffix)
-		}
-		if gw.DuoIntegrationKey != "" {
-			d.Set("duo_integration_key", gw.DuoIntegrationKey)
-		}
-		if gw.DuoSecretKey != "" {
-			d.Set("duo_secret_key", gw.DuoSecretKey)
-		}
-		if gw.DuoAPIHostname != "" {
-			d.Set("duo_api_hostname", gw.DuoAPIHostname)
-		}
-		if gw.DuoPushMode != "" {
-			d.Set("duo_push_mode", gw.DuoPushMode)
-		}
-		if gw.EnableLdap != "" {
-			d.Set("enable_ldap", gw.EnableLdap)
-		}
-		if gw.LdapServer != "" {
-			d.Set("ldap_server", gw.LdapServer)
-		}
-		if gw.LdapBindDn != "" {
-			d.Set("ldap_bind_dn", gw.LdapBindDn)
-		}
-		if gw.LdapPassword != "" {
-			d.Set("ldap_password", gw.LdapPassword)
-		}
-		if gw.LdapBaseDn != "" {
-			d.Set("ldap_base_dn", gw.LdapBaseDn)
-		}
-		if gw.LdapUserAttr != "" {
-			d.Set("ldap_username_attribute", gw.LdapUserAttr)
-		}
+		d.Set("okta_token", gw.OktaToken)
+		d.Set("okta_url", gw.OktaURL)
+		d.Set("okta_username_suffix", gw.OktaUsernameSuffix)
+		d.Set("duo_integration_key", gw.DuoIntegrationKey)
+		d.Set("duo_secret_key", gw.DuoSecretKey)
+		d.Set("duo_api_hostname", gw.DuoAPIHostname)
+		d.Set("duo_push_mode", gw.DuoPushMode)
+		d.Set("enable_ldap", gw.EnableLdap)
+		d.Set("ldap_server", gw.LdapServer)
+		d.Set("ldap_bind_dn", gw.LdapBindDn)
+		d.Set("ldap_password", gw.LdapPassword)
+		d.Set("ldap_base_dn", gw.LdapBaseDn)
+		d.Set("ldap_username_attribute", gw.LdapUserAttr)
 		if gw.HASubnet != "" {
 			d.Set("ha_subnet", gw.HASubnet)
 		}
@@ -516,10 +502,8 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				d.Set("single_az_ha", gw.SingleAZ)
 			}
 		}
-		//	d.Set("allocate_new_eip",gw.AllocateNewEip)
-		if gw.Eip != "" {
-			d.Set("eip", gw.Eip)
-		}
+		d.Set("allocate_new_eip", gw.AllocateNewEip)
+		d.Set("eip", gw.PublicIP)
 
 		// Though go_aviatrix Gateway struct declares VpcSize as only used on gateway creation
 		// it is the attribute receiving the instance size of an existing gateway instead of
