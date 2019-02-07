@@ -255,10 +255,12 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		AllocateNewEip:     d.Get("allocate_new_eip").(string),
 		Eip:                d.Get("eip").(string),
 	}
+	if gateway.EnableElb != "yes" {
+		gateway.EnableElb = "no"
+	}
 	if gateway.SplitTunnel != "no" {
 		gateway.SplitTunnel = "yes"
 	}
-
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)
 
 	err := client.CreateGateway(gateway)
@@ -333,14 +335,25 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 	if vpnAccess, ok := d.GetOk("vpn_access"); ok && vpnAccess == "yes" {
+		gw := &goaviatrix.Gateway{
+			GwName: gateway.GwName,
+		}
+		gw1, err := client.GetGateway(gw)
+		if err != nil {
+			return fmt.Errorf("couldn't find Aviatrix Gateway: %s due to %v", gw.GwName, err)
+		}
 		sTunnel := &goaviatrix.SplitTunnel{
 			SplitTunnel:     "no",
 			VpcID:           gateway.VpcID,
-			ElbName:         gateway.ElbName,
 			AdditionalCidrs: d.Get("additional_cidrs").(string),
 			NameServers:     d.Get("name_servers").(string),
 			SearchDomains:   d.Get("search_domains").(string),
 			SaveTemplate:    "no",
+		}
+		if gw1.EnableElb != "yes" {
+			sTunnel.ElbName = gw1.GwName
+		} else {
+			sTunnel.ElbName = gw1.ElbName
 		}
 		if gateway.SplitTunnel != "" {
 			sTunnel.SplitTunnel = gateway.SplitTunnel
@@ -438,6 +451,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("elb_name", elb_name)
 		} else {
 			d.Set("enable_elb", "no")
+			d.Set("elb_name", "")
 		}
 		if gw.SplitTunnel != "" {
 			d.Set("split_tunnel", gw.SplitTunnel)
@@ -548,10 +562,13 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 
 		if gw.VpnStatus == "enabled" && gw.SplitTunnel == "yes" {
 			splitTunnel := &goaviatrix.SplitTunnel{
-				VpcID:   gw.VpcID,
-				ElbName: gw.ElbName,
+				VpcID: gw.VpcID,
 			}
-
+			if gw.EnableElb != "yes" {
+				splitTunnel.ElbName = gw.GwName
+			} else {
+				splitTunnel.ElbName = gw.ElbName
+			}
 			splitTunnel1, err := client.GetSplitTunnel(splitTunnel)
 			if err != nil {
 				return fmt.Errorf("unable to read split information for gateway: %v due to %v", gw.GwName, err)
