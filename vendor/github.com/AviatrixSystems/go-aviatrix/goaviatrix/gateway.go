@@ -23,6 +23,7 @@ type Gateway struct {
 	CloudType               int    `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
 	CloudnBkupGatewayInstID string `form:"cloudn_bkup_gateway_inst_id,omitempty" json:"cloudn_bkup_gateway_inst_id,omitempty"`
 	CloudnGatewayInstID     string `form:"cloudn_gateway_inst_id,omitempty" json:"cloudn_gateway_inst_id,omitempty"`
+	ConnectedTransit        string `json:"connected_transit,omitempty"`
 	DirectInternet          string `form:"direct_internet,omitempty" json:"direct_internet,omitempty"`
 	DockerConsulIP          string `form:"docker_consul_ip,omitempty" json:"docker_consul_ip,omitempty"`
 	DockerNtwkCidr          string `form:"docker_ntwk_cidr,omitempty" json:"docker_ntwk_cidr,omitempty"`
@@ -97,8 +98,7 @@ type Gateway struct {
 	VpnCidr            string `form:"cidr,omitempty" json:"cidr,omitempty"`
 	VpnStatus          string `form:"vpn_access,omitempty" json:"vpn_status,omitempty"`
 	Zone               string `form:"zone,omitempty" json:"zone,omitempty"`
-
-	VpcSize string `form:"vpc_size,omitempty" ` //Only use for gateway create
+	VpcSize            string `form:"vpc_size,omitempty" ` //Only use for gateway create
 }
 
 type GatewayListResp struct {

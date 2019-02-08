@@ -26,6 +26,7 @@ resource "aviatrix_transit_vpc" "test_transit_gw" {
   ha_gw_size = "t2.micro"
   tag_list = ["name:value", "name1:value1", "name2:value2"]
   enable_hybrid_connection = true
+  connected_transit = "yes"
 }
 ```
 
@@ -45,3 +46,5 @@ The following arguments are supported:
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set)(Example: "t2.micro")
 * `tag_list` - (Optional) Instance tag of cloud provider. Example: ["key1:value1","key002:value002"]
 * `enable_hybrid_connection` - (Optional) Sign of readiness for TGW connection.( Example : false)
+* `connected_transit` - (Optional) Specify Connected Transit status. (Supported values: "yes", "no")
+

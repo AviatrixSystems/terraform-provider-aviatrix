@@ -65,6 +65,12 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 			"enable_hybrid_connection": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
+			},
+			"connected_transit": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 		},
 	}
@@ -82,6 +88,7 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		Subnet:                 d.Get("subnet").(string),
 		DnsServer:              d.Get("dns_server").(string),
 		EnableHybridConnection: d.Get("enable_hybrid_connection").(bool),
+		ConnectedTransit:       d.Get("connected_transit").(string),
 	}
 	if _, ok := d.GetOk("tag_list"); ok {
 		tagList := d.Get("tag_list").([]interface{})
@@ -98,10 +105,12 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 	haSubnet := d.Get("ha_subnet").(string)
 	haGwSize := d.Get("ha_gw_size").(string)
 	enableHybridConnection := d.Get("enable_hybrid_connection").(bool)
+	connectedTransit := d.Get("connected_transit").(string)
 	d.SetId(gateway.GwName)
 	d.Set("ha_subnet", "")
 	d.Set("ha_gw_size", "")
-	d.Set("enableHybridConnection", false)
+	d.Set("enable_hybrid_connection", false)
+	d.Set("connected_transit", "no")
 	if haSubnet != "" {
 		//Enable HA
 		transitGateway := &goaviatrix.TransitVpc{
@@ -142,9 +151,16 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		if err != nil {
 			return fmt.Errorf("failed to enable transit GW for Hybird: %s", err)
 		}
-		d.Set("enableHybridConnection", true)
+		d.Set("enable_hybrid_connection", true)
 	}
 
+	if connectedTransit == "yes" {
+		err := client.EnableConnectedTransit(gateway)
+		if err != nil {
+			return fmt.Errorf("failed to enable connected transit: %s", err)
+		}
+		d.Set("connected_transit", "yes")
+	}
 	return resourceAviatrixTransitVpcRead(d, meta)
 }
 
@@ -171,6 +187,7 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("vpc_size", gw.GwSize)
 		d.Set("enable_hybrid_connection", gw.EnableHybridConnection)
+		d.Set("connected_transit", gw.ConnectedTransit)
 	}
 
 	haGateway := &goaviatrix.Gateway{
@@ -300,6 +317,32 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 			err := client.DetachTransitGWForHybrid(transitGateway)
 			if err != nil {
 				return fmt.Errorf("failed to disable transit GW for Hybird: %s", err)
+			}
+		}
+	}
+
+	if d.HasChange("connected_transit") {
+		transitGateway := &goaviatrix.TransitVpc{
+			CloudType:   d.Get("cloud_type").(int),
+			AccountName: d.Get("account_name").(string),
+			GwName:      d.Get("gw_name").(string),
+			VpcID:       d.Get("vpc_id").(string),
+			VpcRegion:   d.Get("vpc_reg").(string),
+		}
+		connectedTransit := d.Get("connected_transit").(string)
+		if connectedTransit != "yes" && connectedTransit != "no" {
+			return fmt.Errorf("connected_transit is not set correctly")
+		}
+		if connectedTransit == "yes" {
+			err := client.EnableConnectedTransit(transitGateway)
+			if err != nil {
+				return fmt.Errorf("failed to enable connected transit: %s", err)
+			}
+		}
+		if connectedTransit == "no" {
+			err := client.DisableConnectedTransit(transitGateway)
+			if err != nil {
+				return fmt.Errorf("failed to disable connected transit: %s", err)
 			}
 		}
 	}
