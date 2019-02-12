@@ -493,7 +493,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		if gw.HASubnet != "" {
 			d.Set("ha_subnet", gw.HASubnet)
 		}
-		//d.Set("peering_ha_subnet", gw.PeeringHASubnet)   #  todo : read from HA gateway
 		if gw.NewZone != "" {
 			d.Set("zone", gw.NewZone)
 		}
@@ -736,7 +735,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				return fmt.Errorf("failed to enable SNAT: %s", err)
 			}
 		}
-		d.SetPartial("vpc_size")
+		d.SetPartial("enable_nat")
 	}
 	d.Partial(false)
 
