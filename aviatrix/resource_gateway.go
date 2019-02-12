@@ -191,7 +191,7 @@ func resourceAviatrixGateway() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"public_subnet": {
+			"peering_ha_subnet": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -265,7 +265,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		LdapBaseDn:         d.Get("ldap_base_dn").(string),
 		LdapUserAttr:       d.Get("ldap_username_attribute").(string),
 		HASubnet:           d.Get("ha_subnet").(string),
-		PeeringHASubnet:    d.Get("public_subnet").(string),
+		PeeringHASubnet:    d.Get("peering_ha_subnet").(string),
 		NewZone:            d.Get("zone").(string),
 		SingleAZ:           d.Get("single_az_ha").(string),
 		AllocateNewEip:     d.Get("allocate_new_eip").(string),
@@ -273,6 +273,12 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	if gateway.EnableElb != "yes" {
 		gateway.EnableElb = "no"
+	}
+	if gateway.EnableNat != "yes" {
+		gateway.EnableNat = "no"
+	}
+	if gateway.VpnStatus != "yes" {
+		gateway.VpnStatus = "no"
 	}
 	if gateway.SplitTunnel != "no" {
 		gateway.SplitTunnel = "yes"
@@ -320,15 +326,15 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("failed to create GW HA: %s", err)
 		}
 	}
-	// public_subnet is for Peering HA Gateway. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
-	if public_subnet := d.Get("public_subnet").(string); public_subnet != "" {
-		ha_gateway := &goaviatrix.Gateway{
+	// peering_ha_subnet is for Peering HA Gateway. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
+	if peeringHaSubnet := d.Get("peering_ha_subnet").(string); peeringHaSubnet != "" {
+		peeringHaGateway := &goaviatrix.Gateway{
 			GwName:          d.Get("gw_name").(string),
-			PeeringHASubnet: d.Get("public_subnet").(string),
+			PeeringHASubnet: d.Get("peering_ha_subnet").(string),
 			NewZone:         d.Get("zone").(string),
 		}
-		log.Printf("[INFO] Enable peering HA: %#v", ha_gateway)
-		err := client.EnablePeeringHaGateway(ha_gateway)
+		log.Printf("[INFO] Enable peering HA: %#v", peeringHaGateway)
+		err := client.EnablePeeringHaGateway(peeringHaGateway)
 		if err != nil {
 			return fmt.Errorf("failed to create peering HA: %s", err)
 		}
@@ -422,9 +428,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("gw_name", gw.GwName)
 		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 		d.Set("vpc_reg", gw.VpcRegion)
-		if gw.VpcNet != "" {
-			d.Set("vpc_net", gw.VpcNet)
-		}
+		d.Set("vpc_net", gw.VpcNet)
 		d.Set("enable_nat", gw.EnableNat)
 		if gw.DnsServer != "" {
 			d.Set("dns_server", gw.DnsServer)
@@ -489,7 +493,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		if gw.HASubnet != "" {
 			d.Set("ha_subnet", gw.HASubnet)
 		}
-		d.Set("public_subnet", gw.PeeringHASubnet)
+		//d.Set("peering_ha_subnet", gw.PeeringHASubnet)   #  todo : read from HA gateway
 		if gw.NewZone != "" {
 			d.Set("zone", gw.NewZone)
 		}
@@ -520,23 +524,26 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("public_dns_server", gw.PublicDnsServer)
 		d.Set("security_group_id", gw.GwSecurityGroupID)
 
-		if publicSubnet := d.Get("public_subnet").(string); publicSubnet != "" {
-			gatewayHaGw := &goaviatrix.Gateway{
+		if peeringHaSubnet := d.Get("peering_ha_subnet").(string); peeringHaSubnet != "" {
+			peeringHaGateway := &goaviatrix.Gateway{
 				AccountName: d.Get("account_name").(string),
 				GwName:      d.Get("gw_name").(string) + "-hagw",
 			}
-			gwHaGw, err := client.GetGateway(gatewayHaGw)
+			gwHaGw, err := client.GetGateway(peeringHaGateway)
 			if err == nil {
 				d.Set("cloudn_bkup_gateway_inst_id", gwHaGw.CloudnGatewayInstID)
 				d.Set("backup_public_ip", gwHaGw.PublicIP)
+				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
 			} else {
 				d.Set("cloudn_bkup_gateway_inst_id", "")
 				d.Set("backup_public_ip", "")
+				d.Set("peering_ha_subnet", "")
 			}
 			log.Printf("[TRACE] reading peering HA gateway %s: %#v", d.Get("gw_name").(string), gwHaGw)
 		} else {
 			d.Set("cloudn_bkup_gateway_inst_id", "")
 			d.Set("backup_public_ip", "")
+			d.Set("peering_ha_subnet", "")
 		}
 
 		tags := &goaviatrix.Tags{
@@ -620,7 +627,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return fmt.Errorf("failed to update Aviatrix Gateway: %s", err)
 	}
-
 	if d.HasChange("tag_list") {
 		tags := &goaviatrix.Tags{
 			CloudType:    1,
@@ -653,7 +659,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 	}
-
 	if d.HasChange("split_tunnel") || d.HasChange("additional_cidrs") ||
 		d.HasChange("name_servers") || d.HasChange("search_domains") {
 		o, n := d.GetChange("split_tunnel")
@@ -690,7 +695,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 	}
-
 	if d.HasChange("single_az_ha") {
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName:   d.Get("gw_name").(string),
@@ -714,7 +718,26 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 	}
-
+	if d.HasChange("enable_nat") {
+		gw := &goaviatrix.Gateway{
+			CloudType: d.Get("cloud_type").(int),
+			GwName:    d.Get("gw_name").(string),
+		}
+		o, n := d.GetChange("enable_nat")
+		if o == "yes" && n == "no" {
+			err := client.DisableSNat(gw)
+			if err != nil {
+				return fmt.Errorf("failed to disable SNAT: %s", err)
+			}
+		}
+		if o == "no" && n == "yes" {
+			err := client.EnableSNat(gw)
+			if err != nil {
+				return fmt.Errorf("failed to enable SNAT: %s", err)
+			}
+		}
+		d.SetPartial("vpc_size")
+	}
 	d.Partial(false)
 
 	d.SetId(gateway.GwName)
@@ -735,8 +758,8 @@ func resourceAviatrixGatewayDelete(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("failed to disable Aviatrix gateway HA: %s", err)
 		}
 	}
-	// public_subnet is for Peering HA
-	if publicSubnet := d.Get("public_subnet").(string); publicSubnet != "" {
+	// peering_ha_subnet is for Peering HA
+	if peeringHaSubnet := d.Get("peering_ha_subnet").(string); peeringHaSubnet != "" {
 		//Delete backup gateway first
 		gateway.GwName += "-hagw"
 		log.Printf("[INFO] Deleting Aviatrix Backup Gateway [-hagw]: %#v", gateway)

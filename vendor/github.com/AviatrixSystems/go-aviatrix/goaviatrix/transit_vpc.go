@@ -20,8 +20,10 @@ type TransitVpc struct {
 	VpcID                  string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
 	Subnet                 string `form:"public_subnet,omitempty" json:"vpc_net,omitempty"`
 	HASubnet               string `form:"ha_subnet,omitempty"`
+	PeeringHASubnet        string `json:"public_subnet,omitempty"`
 	VpcRegion              string `form:"region,omitempty" json:"vpc_region,omitempty"`
 	VpcSize                string `form:"gw_size,omitempty" json:"gw_size,omitempty"`
+	EnableNAT              string `form:"nat_enabled,omitempty" json:"enable_nat,omitempty"`
 	TagList                string `form:"tags,omitempty"`
 	EnableHybridConnection bool   `form:"enable_hybrid_connection" json:"tgw_enabled,omitempty"`
 	ConnectedTransit       string `form:"connected_transit" json:"connected_transit,omitempty"`

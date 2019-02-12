@@ -52,7 +52,7 @@ type Gateway struct {
 	GwSize                  string `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
 	GwSubnetID              string `form:"gw_subnet_id,omitempty" json:"gw_subnet_id,omitempty"`
 	HASubnet                string `form:"ha_subnet,omitempty"`
-	PeeringHASubnet         string `form:"public_subnet,omitempty" json:"public_subnet,omitempty"`
+	PeeringHASubnet         string `form:"public_subnet,omitempty"`
 	NewZone                 string `form:"new_zone,omitempty"`
 	InstState               string `form:"inst_state,omitempty" json:"inst_state,omitempty"`
 	IntraVMRoute            string `form:"intra_vm_route,omitempty" json:"intra_vm_route,omitempty"`
@@ -68,37 +68,40 @@ type Gateway struct {
 	LdapUserAttr            string `form:"ldap_username_attribute,omitempty" json:"ldap_user_attr,omitempty`
 	LicenseID               string `form:"license_id,omitempty" json:"license_id,omitempty"`
 	MaxConn                 string `form:"max_conn,omitempty"`
+	NameServers             string `form:"nameservers,omitempty"`
+	OktaToken               string `form:"okta_token,omitempty" json:"okta_token,omitempty"`
+	OktaURL                 string `form:"okta_url,omitempty" json:"okta_url,omitempty"`
+	OktaUsernameSuffix      string `form:"okta_username_suffix,omitempty" json:"okta_username_suffix,omitempty"`
+	OtpMode                 string `form:"otp_mode,omitempty" json:"otp_mode,omitempty"`
+	PbrDefaultGateway       string `form:"pbr_default_gateway,omitempty"`
+	PbrEnabled              string `form:"pbr_enabled,omitempty" json:"pbr_enabled,omitempty"`
+	PbrLogging              string `form:"pbr_logging,omitempty"`
+	PbrSubnet               string `form:"pbr_subnet,omitempty"`
+	PrivateIP               string `form:"private_ip,omitempty" json:"private_ip,omitempty"`
+	PublicIP                string `form:"public_ip,omitempty" json:"public_ip,omitempty"`
+	SamlEnabled             string `form:"saml_enabled,omitempty" json:"saml_enabled,omitempty"`
+	SandboxIP               string `form:"sandbox_ip,omitempty" json:"sandbox_ip,omitempty"`
+	SaveTemplate            string `form:"save_template,omitempty"`
+	SearchDomains           string `form:"search_domains,omitempty"`
+	SplitTunnel             string `form:"split_tunnel,omitempty" json:"split_tunnel,omitempty"`
+	SpokeVpc                string `json:"spoke_vpc,omitempty"`
+	TagList                 string `form:"tags,omitempty"`
+	TransitGwName           string `form:"transit_gw_name,omitempty" json:"transit_gw_name,omitempty"`
+	TunnelName              string `form:"tunnel_name,omitempty" json:"tunnel_name,omitempty"`
+	TunnelType              string `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
+	VendorName              string `form:"vendor_name,omitempty" json:"vendor_name,omitempty"`
+	VpcID                   string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	VpcNet                  string `form:"vpc_net,omitempty" json:"public_subnet,omitempty"`
+	VpcRegion               string `form:"vpc_reg,omitempty" json:"vpc_region,omitempty"`
+	VpcSplunkIPPort         string `form:"vpc_splunk_ip_port,omitempty" json:"vpc_splunk_ip_port,omitempty"`
+	VpcState                string `form:"vpc_state,omitempty" json:"vpc_state,omitempty"`
+	VpcType                 string `form:"vpc_type,omitempty" json:"vpc_type,omitempty"`
+	VpnCidr                 string `form:"cidr,omitempty" json:"cidr,omitempty"`
+	VpnStatus               string `form:"vpn_access,omitempty" json:"vpn_status,omitempty"`
+	Zone                    string `form:"zone,omitempty" json:"zone,omitempty"`
+	VpcSize                 string `form:"vpc_size,omitempty" ` //Only use for gateway create
+
 	//MaxConnections          string `form:"max_connections,omitempty" json:"max_connections,omitempty"`
-	NameServers        string `form:"nameservers,omitempty"`
-	OktaToken          string `form:"okta_token,omitempty" json:"okta_token,omitempty"`
-	OktaURL            string `form:"okta_url,omitempty" json:"okta_url,omitempty"`
-	OktaUsernameSuffix string `form:"okta_username_suffix,omitempty" json:"okta_username_suffix,omitempty"`
-	OtpMode            string `form:"otp_mode,omitempty" json:"otp_mode,omitempty"`
-	PbrDefaultGateway  string `form:"pbr_default_gateway,omitempty"`
-	PbrEnabled         string `form:"pbr_enabled,omitempty" json:"pbr_enabled,omitempty"`
-	PbrLogging         string `form:"pbr_logging,omitempty"`
-	PbrSubnet          string `form:"pbr_subnet,omitempty"`
-	PrivateIP          string `form:"private_ip,omitempty" json:"private_ip,omitempty"`
-	PublicIP           string `form:"public_ip,omitempty" json:"public_ip,omitempty"`
-	SamlEnabled        string `form:"saml_enabled,omitempty" json:"saml_enabled,omitempty"`
-	SandboxIP          string `form:"sandbox_ip,omitempty" json:"sandbox_ip,omitempty"`
-	SaveTemplate       string `form:"save_template,omitempty"`
-	SearchDomains      string `form:"search_domains,omitempty"`
-	SplitTunnel        string `form:"split_tunnel,omitempty" json:"split_tunnel,omitempty"`
-	TagList            string `form:"tags,omitempty"`
-	TunnelName         string `form:"tunnel_name,omitempty" json:"tunnel_name,omitempty"`
-	TunnelType         string `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
-	VendorName         string `form:"vendor_name,omitempty" json:"vendor_name,omitempty"`
-	VpcID              string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	VpcNet             string `form:"vpc_net,omitempty" json:"vpc_net,omitempty"`
-	VpcRegion          string `form:"vpc_reg,omitempty" json:"vpc_region,omitempty"`
-	VpcSplunkIPPort    string `form:"vpc_splunk_ip_port,omitempty" json:"vpc_splunk_ip_port,omitempty"`
-	VpcState           string `form:"vpc_state,omitempty" json:"vpc_state,omitempty"`
-	VpcType            string `form:"vpc_type,omitempty" json:"vpc_type,omitempty"`
-	VpnCidr            string `form:"cidr,omitempty" json:"cidr,omitempty"`
-	VpnStatus          string `form:"vpn_access,omitempty" json:"vpn_status,omitempty"`
-	Zone               string `form:"zone,omitempty" json:"zone,omitempty"`
-	VpcSize            string `form:"vpc_size,omitempty" ` //Only use for gateway create
 }
 
 type GatewayListResp struct {
@@ -269,6 +272,38 @@ func (c *Client) DeleteGateway(gateway *Gateway) error {
 		c.CID, gateway.CloudType, gateway.GwName)
 	resp, err := c.Delete(path, nil)
 
+	if err != nil {
+		return err
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return err
+	}
+	if !data.Return {
+		return errors.New(data.Reason)
+	}
+	return nil
+}
+func (c *Client) EnableSNat(gateway *Gateway) error {
+	gateway.CID = c.CID
+	path := c.baseURL + fmt.Sprintf("?action=enable_snat&CID=%s&gateway_name=%s", c.CID, gateway.GwName)
+	resp, err := c.Get(path, nil)
+	if err != nil {
+		return err
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return err
+	}
+	if !data.Return {
+		return errors.New(data.Reason)
+	}
+	return nil
+}
+func (c *Client) DisableSNat(gateway *Gateway) error {
+	gateway.CID = c.CID
+	path := c.baseURL + fmt.Sprintf("?action=disable_snat&CID=%s&gateway_name=%s", c.CID, gateway.GwName)
+	resp, err := c.Get(path, nil)
 	if err != nil {
 		return err
 	}

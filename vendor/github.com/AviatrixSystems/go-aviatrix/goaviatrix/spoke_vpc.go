@@ -24,6 +24,7 @@ type SpokeVpc struct {
 	VpcSize        string `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
 	EnableNAT      string `form:"nat_enabled,omitempty" json:"enable_nat,omitempty"`
 	HASubnet       string `form:"ha_subnet,omitempty"`
+	SingleAzHa     string `form:"single_az_ha,omitempty"`
 	TransitGateway string `form:"transit_gw,omitempty"`
 	TagList        string `form:"tags,omitempty"`
 }

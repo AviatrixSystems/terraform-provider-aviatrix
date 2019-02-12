@@ -48,10 +48,17 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 			"ha_subnet": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"ha_gw_size": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
+			},
+			"enable_nat": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"dns_server": {
 				Type:     schema.TypeString,
@@ -61,6 +68,7 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
+				Computed: true,
 			},
 			"enable_hybrid_connection": {
 				Type:     schema.TypeBool,
@@ -86,9 +94,13 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		VpcRegion:              d.Get("vpc_reg").(string),
 		VpcSize:                d.Get("vpc_size").(string),
 		Subnet:                 d.Get("subnet").(string),
+		EnableNAT:              d.Get("enable_nat").(string),
 		DnsServer:              d.Get("dns_server").(string),
 		EnableHybridConnection: d.Get("enable_hybrid_connection").(bool),
 		ConnectedTransit:       d.Get("connected_transit").(string),
+	}
+	if gateway.EnableNAT != "yes" {
+		gateway.EnableNAT = "no"
 	}
 	if _, ok := d.GetOk("tag_list"); ok {
 		tagList := d.Get("tag_list").([]interface{})
@@ -145,7 +157,21 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 			d.Set("ha_gw_size", haGwSize)
 		}
 	}
-
+	if _, ok := d.GetOk("tag_list"); ok {
+		tagList := d.Get("tag_list").([]interface{})
+		tagListStr := goaviatrix.ExpandStringList(tagList)
+		gateway.TagList = strings.Join(tagListStr, ",")
+		tags := &goaviatrix.Tags{
+			CloudType:    1,
+			ResourceType: "gw",
+			ResourceName: d.Get("gw_name").(string),
+			TagList:      gateway.TagList,
+		}
+		err = client.AddTags(tags)
+		if err != nil {
+			return fmt.Errorf("failed to add tags: %s", err)
+		}
+	}
 	if enableHybridConnection == true {
 		err := client.AttachTransitGWForHybrid(gateway)
 		if err != nil {
@@ -181,13 +207,37 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[TRACE] reading gateway %s: %#v",
 		d.Get("gw_name").(string), gw)
 	if gw != nil {
+		d.Set("cloud_type", gw.CloudType)
 		d.Set("account_name", gw.AccountName)
 		d.Set("gw_name", gw.GwName)
-		//d.Set("vpc_id", gw.VpcID)
+		d.Set("subnet", gw.VpcNet)
+		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
+		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("vpc_size", gw.GwSize)
+		d.Set("enable_nat", gw.EnableNat)
 		d.Set("enable_hybrid_connection", gw.EnableHybridConnection)
 		d.Set("connected_transit", gw.ConnectedTransit)
+	}
+
+	tags := &goaviatrix.Tags{
+		CloudType:    1,
+		ResourceType: "gw",
+		ResourceName: d.Get("gw_name").(string),
+	}
+	tagList, err := client.GetTags(tags)
+	if err != nil {
+		return fmt.Errorf("unable to read tag_list for gateway: %v due to %v", gateway.GwName, err)
+	}
+	var tagListStr []string
+	if _, ok := d.GetOk("tag_list"); ok {
+		tagList1 := d.Get("tag_list").([]interface{})
+		tagListStr = goaviatrix.ExpandStringList(tagList1)
+	}
+	if len(goaviatrix.Difference(tagListStr, tagList)) != 0 || len(goaviatrix.Difference(tagList, tagListStr)) != 0 {
+		d.Set("tag_list", tagList)
+	} else {
+		d.Set("tag_list", tagListStr)
 	}
 
 	haGateway := &goaviatrix.Gateway{
@@ -203,7 +253,7 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 		}
 		return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway: %s", err)
 	}
-	log.Printf("[INFO] Transit HA Gateway size: %s", haGw.GwSize)
+	d.Set("ha_subnet", haGw.VpcNet)
 	d.Set("ha_gw_size", haGw.GwSize)
 
 	return nil
@@ -222,6 +272,30 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[INFO] Updating Aviatrix TransitVpc: %#v", gateway)
 
 	d.Partial(true)
+	if d.HasChange("cloud_type") {
+		return fmt.Errorf("updating cloud_type is not allowed")
+	}
+	if d.HasChange("account_name") {
+		return fmt.Errorf("updating account_name is not allowed")
+	}
+	if d.HasChange("gw_name") {
+		return fmt.Errorf("updating gw_name is not allowed")
+	}
+	if d.HasChange("vpc_id") {
+		return fmt.Errorf("updating vpc_id is not allowed")
+	}
+	if d.HasChange("vpc_reg") {
+		return fmt.Errorf("updating vpc_reg is not allowed")
+	}
+	if d.HasChange("vnet_and_resource_group_names") {
+		return fmt.Errorf("updating vnet_and_resource_group_names is not allowed")
+	}
+	if d.HasChange("subnet") {
+		return fmt.Errorf("updating subnet is not allowed")
+	}
+	if d.HasChange("dns_server") {
+		return fmt.Errorf("updating dns_server is not allowed")
+	}
 	if d.HasChange("tag_list") {
 		tags := &goaviatrix.Tags{
 			CloudType:    1,
@@ -260,7 +334,6 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		d.SetPartial("vpc_size")
 	}
-
 	if d.HasChange("ha_subnet") {
 		transitGateway := &goaviatrix.TransitVpc{
 			GwName:   d.Get("gw_name").(string),
@@ -296,7 +369,6 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		d.SetPartial("ha_subnet")
 	}
-
 	if d.HasChange("enable_hybrid_connection") {
 		transitGateway := &goaviatrix.TransitVpc{
 			CloudType:   d.Get("cloud_type").(int),
@@ -320,7 +392,6 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 			}
 		}
 	}
-
 	if d.HasChange("connected_transit") {
 		transitGateway := &goaviatrix.TransitVpc{
 			CloudType:   d.Get("cloud_type").(int),
@@ -346,7 +417,6 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 			}
 		}
 	}
-
 	if d.HasChange("ha_gw_size") {
 		_, err := client.GetGateway(haGateway)
 		if err != nil {
@@ -372,7 +442,26 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		d.SetPartial("ha_gw_size")
 	}
-
+	if d.HasChange("enable_nat") {
+		gw := &goaviatrix.Gateway{
+			CloudType: d.Get("cloud_type").(int),
+			GwName:    d.Get("gw_name").(string),
+		}
+		o, n := d.GetChange("enable_nat")
+		if o == "yes" && n == "no" {
+			err := client.DisableSNat(gw)
+			if err != nil {
+				return fmt.Errorf("failed to disable SNAT: %s", err)
+			}
+		}
+		if o == "no" && n == "yes" {
+			err := client.EnableSNat(gw)
+			if err != nil {
+				return fmt.Errorf("failed to enable SNAT: %s", err)
+			}
+		}
+		d.SetPartial("vpc_size")
+	}
 	d.Partial(false)
 	return nil
 }

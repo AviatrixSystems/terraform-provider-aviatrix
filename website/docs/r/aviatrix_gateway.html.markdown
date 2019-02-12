@@ -63,7 +63,7 @@ The following arguments are supported:
 * `ldap_base_dn` - (Optional) LDAP base DN (Required: Yes if enable_ldap is "yes")
 * `ldap_username_attribute` - (Optional) LDAP user attribute (Required: Yes if enable_ldap is "yes")
 * `ha_subnet` - (Optional) This is for Gateway HA. Deprecated. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
-* `public_subnet` - Public Subnet Information while creating Peering HA Gateway. Example: AWS: "10.0.0.0/16\~\~ZONE\~\~SubnetName"
+* `peering_ha_subnet` - Public Subnet Information while creating Peering HA Gateway. Example: AWS: "10.0.0.0/16\~\~ZONE\~\~SubnetName"
 * `zone` - (Optional) A GCE zone where this gateway will be launched. (Required when cloud_type is 4)
 * `single_az_ha` (Optional) Set to "enabled" if this feature is desired
 * `allocate_new_eip` - (Optional) When value is off, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 2.7 or later release. (Supported values : "on", "off") (Default: "on")
