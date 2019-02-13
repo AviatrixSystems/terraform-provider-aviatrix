@@ -63,6 +63,7 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 		if index > 0 {
 			gw.VpcID = gw.VpcID[:index]
 		}
+		d.Set("cloud_type", gw.CloudType)
 		d.Set("account_name", gw.AccountName)
 		d.Set("gw_name", gw.GwName)
 		d.Set("vpc_id", gw.VpcID)
