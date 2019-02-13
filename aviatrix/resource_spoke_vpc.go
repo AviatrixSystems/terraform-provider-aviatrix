@@ -342,7 +342,7 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 				return fmt.Errorf("failed to enable single AZ GW HA: %s", err)
 			}
 		} else {
-			return fmt.Errorf("single_az_hs is not set correctly")
+			return fmt.Errorf("single_az_ha should be only 'enabled/disabled'")
 		}
 	}
 

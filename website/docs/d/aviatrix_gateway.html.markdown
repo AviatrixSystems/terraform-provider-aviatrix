@@ -32,11 +32,12 @@ The following arguments are supported:
 * `cloud_type`   - Type of cloud service provider. (Only AWS is supported currently. Value of 1 for AWS.)
 * `account_name` - Aviatrix account name.
 * `gw_name`      - Aviatrix gateway name.
-* `vpc_id`       - AWS VPC ID.
-* `vpc_reg`      - AWS VPC Region. 
-* `vpc_size`     - Instance type.
+
 
 ## The following arguments are computed - please do not edit in the resource file:
 
+* `vpc_id`       - AWS VPC ID.
+* `vpc_reg`      - AWS VPC Region. 
+* `vpc_size`     - Instance type.
 * `public_ip` - Public IP address of the Gateway created
  
