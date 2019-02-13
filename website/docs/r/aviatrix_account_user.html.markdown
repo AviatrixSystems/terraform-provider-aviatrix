@@ -28,11 +28,6 @@ The following arguments are supported for creating user account:
 
 * `username` - (Required) Name of account user to be created.
 * `account_name` - (Required) Cloud account name of user to be created.
-* `email` - (Optional) Email of address of account user to be created.
-* `password` - (Optional) Login password for the account user to be created.
+* `email` - (Required) Email of address of account user to be created.
+* `password` - (Required) Login password for the account user to be created. If password is changed, current account will be destroyed and a new account will be created.
 
-The following arguments are supported for editing user account:
-
-* `what` - (Optional) Type of change, indicating what info of user to be changed. Valid values: "account_name", "email", "password"
-* `old_password` - (Optional) (Required, when what is "password")
-* `new_password` - (Optional) (Required, when what is "password")
