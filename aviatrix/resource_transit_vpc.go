@@ -48,37 +48,38 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 			"ha_subnet": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"ha_gw_size": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"enable_nat": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "no",
 			},
 			"dns_server": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "",
 			},
 			"tag_list": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
-				Computed: true,
+				Default:  nil,
 			},
 			"enable_hybrid_connection": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 			"connected_transit": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "no",
 			},
 		},
 	}

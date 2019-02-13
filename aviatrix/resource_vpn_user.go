@@ -38,7 +38,7 @@ func resourceAviatrixVPNUser() *schema.Resource {
 			"saml_endpoint": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 		},
 	}

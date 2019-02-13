@@ -44,6 +44,7 @@ The following arguments are supported:
 * `ha_subnet` - (Optional) HA Subnet. Setting to empty/unset will disable HA. Setting to a valid subnet (Example: 10.12.0.0/24) will create an HA gateway on the subnet
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set)(Example: "t2.micro")
 * `enable_nat` - (Optional) Specify whether enabling NAT feature on the gateway or not. (Please disable AWS NAT instance before enabling this feature) Example: "yes", "no"
+* `single_az_ha` (Optional) Set to "enabled" if this feature is desired
 * `dns_server` - (Optional) Specify the DNS IP
 * `transit_gw` - (Optional)  Specify the transit Gateway
 * `tag_list` - (Optional) Instance tag of cloud provider. Example: key1:value1,key002:value002, etc...

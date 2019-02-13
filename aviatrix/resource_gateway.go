@@ -67,7 +67,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"enable_nat": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "no",
 			},
 			"dns_server": {
 				Type:     schema.TypeString,
@@ -80,17 +80,17 @@ func resourceAviatrixGateway() *schema.Resource {
 			"vpn_access": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "no",
 			},
-			"cidr": {
+			"vpn_cidr": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"enable_elb": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "no",
 			},
 			"elb_name": {
 				Type:     schema.TypeString,
@@ -100,22 +100,22 @@ func resourceAviatrixGateway() *schema.Resource {
 			"split_tunnel": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "yes",
 			},
 			"name_servers": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"search_domains": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"additional_cidrs": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"otp_mode": {
 				Type:     schema.TypeString,
@@ -124,72 +124,72 @@ func resourceAviatrixGateway() *schema.Resource {
 			"saml_enabled": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "no",
 			},
 			"okta_token": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"okta_url": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"okta_username_suffix": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"duo_integration_key": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"duo_secret_key": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"duo_api_hostname": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"duo_push_mode": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"enable_ldap": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "no",
 			},
 			"ldap_server": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"ldap_bind_dn": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"ldap_password": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"ldap_base_dn": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"ldap_username_attribute": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"peering_ha_subnet": {
 				Type:     schema.TypeString,
@@ -210,12 +210,12 @@ func resourceAviatrixGateway() *schema.Resource {
 			"single_az_ha": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "disabled",
 			},
 			"allocate_new_eip": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "on",
 			},
 			"eip": {
 				Type:     schema.TypeString,
@@ -226,7 +226,7 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
-				Computed: true,
+				Default:  nil,
 			},
 		},
 	}
@@ -245,7 +245,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		EnableNat:          d.Get("enable_nat").(string),
 		DnsServer:          d.Get("dns_server").(string),
 		VpnStatus:          d.Get("vpn_access").(string),
-		VpnCidr:            d.Get("cidr").(string),
+		VpnCidr:            d.Get("vpn_cidr").(string),
 		EnableElb:          d.Get("enable_elb").(string),
 		ElbName:            d.Get("elb_name").(string),
 		SplitTunnel:        d.Get("split_tunnel").(string),
@@ -430,6 +430,16 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("vpc_net", gw.VpcNet)
 		d.Set("enable_nat", gw.EnableNat)
+		if gw.AllocateNewEipRead {
+			d.Set("allocate_new_eip", "on")
+		} else {
+			d.Set("allocate_new_eip", "off")
+		}
+		if gw.EnableLdapRead {
+			d.Set("enable_ldap", "yes")
+		} else {
+			d.Set("enable_ldap", "no")
+		}
 		if gw.DnsServer != "" {
 			d.Set("dns_server", gw.DnsServer)
 		}
@@ -442,7 +452,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				d.Set("vpn_access", gw.VpnStatus)
 			}
 		}
-		d.Set("cidr", gw.VpnCidr)
+		d.Set("vpn_cidr", gw.VpnCidr)
 		if gw.ElbState == "enabled" {
 			d.Set("enable_elb", "yes")
 			elb_name := d.Get("elb_name")
@@ -484,7 +494,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("duo_secret_key", gw.DuoSecretKey)
 		d.Set("duo_api_hostname", gw.DuoAPIHostname)
 		d.Set("duo_push_mode", gw.DuoPushMode)
-		d.Set("enable_ldap", gw.EnableLdap)
 		d.Set("ldap_server", gw.LdapServer)
 		d.Set("ldap_bind_dn", gw.LdapBindDn)
 		d.Set("ldap_password", gw.LdapPassword)
@@ -505,7 +514,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				d.Set("single_az_ha", gw.SingleAZ)
 			}
 		}
-		d.Set("allocate_new_eip", gw.AllocateNewEip)
 		d.Set("eip", gw.PublicIP)
 
 		// Though go_aviatrix Gateway struct declares VpcSize as only used on gateway creation

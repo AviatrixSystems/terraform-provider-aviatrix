@@ -37,6 +37,10 @@ func dataSourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"public_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -65,6 +69,7 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("vpc_size", gw.GwSize)
 		d.Set("vpc_net", gw.VpcNet)
+		d.Set("public_ip", gw.PublicIP)
 	}
 	d.SetId(gateway.GwName)
 	return nil

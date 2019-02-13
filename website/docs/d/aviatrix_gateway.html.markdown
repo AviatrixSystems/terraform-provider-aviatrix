@@ -35,4 +35,8 @@ The following arguments are supported:
 * `vpc_id`       - AWS VPC ID.
 * `vpc_reg`      - AWS VPC Region. 
 * `vpc_size`     - Instance type.
+
+## The following arguments are computed - please do not edit in the resource file:
+
+* `public_ip` - Public IP address of the Gateway created
  

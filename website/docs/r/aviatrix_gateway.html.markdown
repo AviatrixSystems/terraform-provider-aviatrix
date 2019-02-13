@@ -40,8 +40,8 @@ The following arguments are supported:
 * `enable_nat` - (Optional) Enable NAT for this container. (Supported values: "yes", "no")
 * `dns_server` - (Optional) Specify a public DNS for the gateway. This is required only if using a custom private DNS
 * `vpn_access` - (Optional) Enable user access through VPN to this container. (Supported values: "yes", "no")
-* `cidr` - (Optional) VPN CIDR block for the container (Required if vpn_access is "yes", Example: "192.168.43.0/24")
-* `enable_elb` - (Optional) Specify whether to enable ELB or not. (Required: Yes when cloud_type is "1", "4", "256" or "1024")
+* `vpn_cidr` - (Optional) VPN CIDR block for the container (Required if vpn_access is "yes", Example: "192.168.43.0/24")
+* `enable_elb` - (Optional) Specify whether to enable ELB or not. (Required: Yes when cloud_type is "1", "4", "256" or "1024", supported values "yes" and "no")
 * `elb_name` - (Optional) A name for the ELB that is created. If it is not specified a name is generated automatically 
 * `split_tunnel` - (Optional) Specify split tunnel mode. (Supported values: "yes", "no")
 * `name_servers` - (Optional) A list of DNS servers used to resolve domain names by a connected VPN user when Split Tunnel Mode is enabled.
@@ -68,7 +68,7 @@ The following arguments are supported:
 * `single_az_ha` (Optional) Set to "enabled" if this feature is desired
 * `allocate_new_eip` - (Optional) When value is off, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 2.7 or later release. (Supported values : "on", "off") (Default: "on")
 * `eip` - (Optional) Required when allocate_new_eip is "off". It uses specified EIP for this gateway. Available in 3.5 or later release eip
-* `tag_list` - (Optional) Instance tag of cloud provider. Example: key1:value1,key002:value002, etc...
+* `tag_list` - (Optional) Instance tag of cloud provider. Example: ["key1:value1", "key002:value002"]
 
 
 The following arguments are computed - please do not edit in the resource file:

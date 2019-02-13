@@ -53,37 +53,38 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 			"enable_nat": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "no",
 			},
 			"ha_subnet": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"ha_gw_size": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"single_az_ha": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "disabled",
 			},
 			"dns_server": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "",
 			},
 			"transit_gw": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"tag_list": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
-				Computed: true,
+				Default:  nil,
 			},
 			"cloud_instance_id": {
 				Type:     schema.TypeString,
@@ -323,16 +324,25 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if d.HasChange("single_az_ha") {
-		if singleAz := d.Get("single_az_ha").(string); singleAz == "enabled" {
-			singleAZGateway := &goaviatrix.Gateway{
-				GwName:   d.Get("gw_name").(string),
-				SingleAZ: singleAz,
-			}
+		_, singleAz := d.GetChange("single_az_ha")
+		singleAZGateway := &goaviatrix.Gateway{
+			GwName:   d.Get("gw_name").(string),
+			SingleAZ: singleAz.(string),
+		}
+		if singleAz == "enabled" {
 			log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
 			err := client.EnableSingleAZGateway(singleAZGateway)
 			if err != nil {
 				return fmt.Errorf("failed to enable single AZ GW HA: %s", err)
 			}
+		} else if singleAz == "disabled" {
+			log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
+			err := client.DisableSingleAZGateway(singleAZGateway)
+			if err != nil {
+				return fmt.Errorf("failed to enable single AZ GW HA: %s", err)
+			}
+		} else {
+			return fmt.Errorf("single_az_hs is not set correctly")
 		}
 	}
 

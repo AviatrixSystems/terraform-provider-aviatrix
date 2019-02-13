@@ -23,4 +23,9 @@ resource "aviatrix_version" "test_version" {
 
 The following arguments are supported:
 
-* `version` - (Optional) The release version number to which the controller will be upgraded to. If not specified, it automatically will be upgraded to the latest release. Please look at https://docs.aviatrix.com/HowTos/inline_upgrade.html for more information.
+* `target_version` - (Optional) The release version number to which the controller will be upgraded to. If not specified, it automatically will be upgraded to the latest release. Please look at https://docs.aviatrix.com/HowTos/inline_upgrade.html for more information.
+
+
+The following arguments are computed - please do not edit in the resource file:
+
+* `version` - Current version of the controller.
