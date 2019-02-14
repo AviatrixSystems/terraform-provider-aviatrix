@@ -763,7 +763,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				return fmt.Errorf("failed to update vpn cidr: %s", err)
 			}
 		} else {
-			log.Printf("[INFO] elb is not enabled for gateway: %#v", gateway.GwName)
+			log.Printf("[INFO] can't update vpn cidr because elb is disabled for gateway: %#v", gateway.GwName)
 		}
 		d.SetPartial("enable_nat")
 	}
