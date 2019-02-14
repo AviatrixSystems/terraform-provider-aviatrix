@@ -48,7 +48,6 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 			"subnet": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"enable_nat": {
 				Type:     schema.TypeString,
