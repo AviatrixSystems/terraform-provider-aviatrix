@@ -283,6 +283,9 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	if gateway.SplitTunnel != "no" {
 		gateway.SplitTunnel = "yes"
 	}
+	if gateway.EnableElb == "yes" && gateway.VpnStatus != "yes" {
+		return fmt.Errorf("can not enable elb without vpn access set to yes")
+	}
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)
 
 	err := client.CreateGateway(gateway)
