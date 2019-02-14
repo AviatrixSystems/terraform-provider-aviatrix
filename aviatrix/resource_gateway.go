@@ -67,7 +67,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"enable_nat": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "no",
 			},
 			"dns_server": {
 				Type:     schema.TypeString,
@@ -80,7 +80,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"vpn_access": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "no",
 			},
 			"cidr": {
 				Type:     schema.TypeString,
@@ -89,7 +89,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"enable_elb": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "no",
 			},
 			"elb_name": {
 				Type:     schema.TypeString,
@@ -99,22 +99,22 @@ func resourceAviatrixGateway() *schema.Resource {
 			"split_tunnel": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "yes",
 			},
 			"name_servers": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"search_domains": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"additional_cidrs": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 			},
 			"otp_mode": {
 				Type:     schema.TypeString,
@@ -123,7 +123,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"saml_enabled": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "no",
 			},
 			"okta_token": {
 				Type:     schema.TypeString,
@@ -196,11 +196,12 @@ func resourceAviatrixGateway() *schema.Resource {
 			"single_az_ha": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "disabled",
 			},
 			"allocate_new_eip": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "on",
 			},
 			"eip": {
 				Type:     schema.TypeString,
@@ -210,7 +211,7 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
-				Computed: true,
+				Default:  nil,
 			},
 		},
 	}
@@ -693,6 +694,9 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				NameServers:     d.Get("name_servers").(string),
 				SearchDomains:   d.Get("search_domains").(string),
 				SaveTemplate:    "no",
+			}
+			if sTunnel.ElbName == "" {
+				sTunnel.ElbName = gateway.GwName
 			}
 			err = client.ModifySplitTunnel(sTunnel)
 			if err != nil {
