@@ -29,14 +29,14 @@ type Gateway struct {
 	DockerConsulIP          string `form:"docker_consul_ip,omitempty" json:"docker_consul_ip,omitempty"`
 	DockerNtwkCidr          string `form:"docker_ntwk_cidr,omitempty" json:"docker_ntwk_cidr,omitempty"`
 	DockerNtwkName          string `form:"docker_ntwk_name,omitempty" json:"docker_ntwk_name,omitempty"`
-	DuoAPIHostname          string `form:"duo_api_hostname,omitempty"`
-	DuoIntegrationKey       string `form:"duo_integration_key,omitempty"`
-	DuoPushMode             string `form:"duo_push_mode,omitempty"`
-	DuoSecretKey            string `form:"duo_secret_key,omitempty"`
+	DuoAPIHostname          string `form:"duo_api_hostname,omitempty" json:"duo_api_hostname,omitempty"`
+	DuoIntegrationKey       string `form:"duo_integration_key,omitempty" json:"duo_integration_key,omitempty"`
+	DuoPushMode             string `form:"duo_push_mode,omitempty" json:"duo_push_mode,omitempty"`
+	DuoSecretKey            string `form:"duo_secret_key,omitempty" json:"duo_secret_key,omitempty"`
 	Eip                     string `form:"eip,omitempty" json:"eip,omitempty"`
 	ElbDNSName              string `form:"elb_dns_name,omitempty" json:"elb_dns_name,omitempty"`
 	ElbName                 string `form:"elb_name,omitempty" json:"lb_name,omitempty"`
-	ElbState                string `form:"elb_state,omitempty"`
+	ElbState                string `form:"elb_state,omitempty" json:"elb_state,omitempty"`
 	EnableClientCertSharing string `form:"enable_client_cert_sharing,omitempty"`
 	EnableElb               string `form:"enable_elb,omitempty"`
 	EnableLdap              string `form:"enable_ldap,omitempty"`
@@ -67,7 +67,7 @@ type Gateway struct {
 	LdapPassword            string `form:"ldap_password,omitempty" json:"ldap_password,omitempty"`
 	LdapServer              string `form:"ldap_server,omitempty" json:"ldap_server,omitempty"`
 	LdapUseSsl              string `form:"ldap_use_ssl,omitempty" json:"ldap_use_ssl,omitempty"`
-	LdapUserAttr            string `form:"ldap_username_attribute,omitempty" json:"ldap_user_attr,omitempty`
+	LdapUserAttr            string `form:"ldap_username_attribute,omitempty" json:"ldap_username_attribute,omitempty`
 	LicenseID               string `form:"license_id,omitempty" json:"license_id,omitempty"`
 	MaxConn                 string `form:"max_conn,omitempty"`
 	NameServers             string `form:"nameservers,omitempty"`
@@ -98,7 +98,7 @@ type Gateway struct {
 	VpcSplunkIPPort         string `form:"vpc_splunk_ip_port,omitempty" json:"vpc_splunk_ip_port,omitempty"`
 	VpcState                string `form:"vpc_state,omitempty" json:"vpc_state,omitempty"`
 	VpcType                 string `form:"vpc_type,omitempty" json:"vpc_type,omitempty"`
-	VpnCidr                 string `form:"cidr,omitempty" json:"cidr,omitempty"`
+	VpnCidr                 string `form:"cidr,omitempty" json:"vpn_cidr,omitempty"`
 	VpnStatus               string `form:"vpn_access,omitempty" json:"vpn_status,omitempty"`
 	Zone                    string `form:"zone,omitempty" json:"zone,omitempty"`
 	VpcSize                 string `form:"vpc_size,omitempty" ` //Only use for gateway create
@@ -305,6 +305,23 @@ func (c *Client) EnableSNat(gateway *Gateway) error {
 func (c *Client) DisableSNat(gateway *Gateway) error {
 	gateway.CID = c.CID
 	path := c.baseURL + fmt.Sprintf("?action=disable_snat&CID=%s&gateway_name=%s", c.CID, gateway.GwName)
+	resp, err := c.Get(path, nil)
+	if err != nil {
+		return err
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return err
+	}
+	if !data.Return {
+		return errors.New(data.Reason)
+	}
+	return nil
+}
+func (c *Client) UpdateVpnCidr(gateway *Gateway) error {
+	gateway.CID = c.CID
+	path := c.baseURL + fmt.Sprintf("?action=set_vpn_client_cidr&CID=%s&cidr=%s&vpc_id=%s&lb_or_gateway_name=%s", c.CID,
+		gateway.VpnCidr, gateway.VpcID, gateway.ElbName)
 	resp, err := c.Get(path, nil)
 	if err != nil {
 		return err
