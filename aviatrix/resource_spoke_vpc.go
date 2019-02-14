@@ -222,6 +222,10 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[TRACE] reading spoke gateway %s: %#v",
 		d.Get("gw_name").(string), gw)
 	if gw != nil {
+		d.Set("cloud_type", gw.CloudType)
+		d.Set("account_name", gw.AccountName)
+		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
+		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("subnet", gw.VpcNet)
 		d.Set("vpc_size", gw.GwSize)
 		d.Set("public_ip", gw.PublicIP)
@@ -322,7 +326,9 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange("dns_server") {
 		return fmt.Errorf("updating dns_server is not allowed")
 	}
-
+	if d.HasChange("subnet") {
+		return fmt.Errorf("updating subnet is not allowed")
+	}
 	if d.HasChange("single_az_ha") {
 		_, singleAz := d.GetChange("single_az_ha")
 		singleAZGateway := &goaviatrix.Gateway{
