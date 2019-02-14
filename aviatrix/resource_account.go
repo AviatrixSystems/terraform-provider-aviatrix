@@ -66,7 +66,12 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 		AwsAccessKey:     d.Get("aws_access_key").(string),
 		AwsSecretKey:     d.Get("aws_secret_key").(string),
 	}
-
+	if account.CloudType != 1 {
+		return fmt.Errorf("cloud type can only be aws (1)")
+	}
+	if account.AwsIam != "true" && account.AwsIam != "false" {
+		return fmt.Errorf("aws iam can only be 'true' or 'false'")
+	}
 	log.Printf("[INFO] Creating Aviatrix account: %#v", account)
 	if aws_iam := d.Get("aws_iam").(string); aws_iam == "true" {
 		var role_app bytes.Buffer
@@ -115,8 +120,11 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 		if awsIam := d.Get("aws_iam").(string); awsIam != "true" {
 			//force default setting and save to .tfstate file
 			d.Set("aws_access_key", acc.AwsAccessKey)
+			d.Set("aws_iam", "false")
 			//d.Set("aws_secret_key", acc.AwsSecretKey) # this would corrupt tf state
 		} else {
+			d.Set("aws_access_key", "")
+			d.Set("aws_secret_key", "")
 			d.Set("aws_iam", "true")
 		}
 		d.SetId(acc.AccountName)
@@ -139,6 +147,9 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Updating Aviatrix account: %#v", account)
 	d.Partial(true)
+	if d.HasChange("cloud_type") {
+		return fmt.Errorf("update account name is not allowed")
+	}
 	if d.HasChange("aws_account_number") || d.HasChange("aws_access_key") ||
 		d.HasChange("aws_secret_key") || d.HasChange("aws_iam") ||
 		d.HasChange("aws_role_app") || d.HasChange("aws_role_ec2") {
