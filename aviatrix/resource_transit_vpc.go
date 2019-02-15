@@ -176,7 +176,7 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 	if enableHybridConnection == true {
 		err := client.AttachTransitGWForHybrid(gateway)
 		if err != nil {
-			return fmt.Errorf("failed to enable transit GW for Hybird: %s", err)
+			return fmt.Errorf("failed to enable transit GW for Hybrid: %s", err)
 		}
 		d.Set("enable_hybrid_connection", true)
 	}
@@ -382,12 +382,12 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		if enableHybridConnection == true {
 			err := client.AttachTransitGWForHybrid(transitGateway)
 			if err != nil {
-				return fmt.Errorf("failed to enable transit GW for Hybird: %s", err)
+				return fmt.Errorf("failed to enable transit GW for Hybrid: %s", err)
 			}
 		} else if enableHybridConnection == false {
 			err := client.DetachTransitGWForHybrid(transitGateway)
 			if err != nil {
-				return fmt.Errorf("failed to disable transit GW for Hybird: %s", err)
+				return fmt.Errorf("failed to disable transit GW for Hybrid: %s", err)
 			}
 		} else {
 			return fmt.Errorf("enable_hybrid_connection can only be set to true or false")

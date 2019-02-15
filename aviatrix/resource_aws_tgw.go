@@ -156,6 +156,11 @@ func resourceAWSTgwCreate(d *schema.ResourceData, meta interface{}) error {
 		awsTgw.SecurityDomains = append(awsTgw.SecurityDomains, securityDomainRule)
 	}
 
+	defaultDomainsWithCreation := []string{"Aviatrix_Edge_Domain", "Default_Domain", "Shared_Service_Domain"}
+	if len(goaviatrix.Difference(defaultDomainsWithCreation, domainsAll)) != 0 {
+		return fmt.Errorf("one or more of the three default domains are missing")
+	}
+
 	attachedGWs := d.Get("attached_aviatrix_transit_gateway").([]interface{})
 	for _, attachedGW := range attachedGWs {
 		attachedGWAll = append(attachedGWAll, attachedGW.(string))
