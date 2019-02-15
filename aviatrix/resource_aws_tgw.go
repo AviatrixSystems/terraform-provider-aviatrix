@@ -14,6 +14,9 @@ func resourceAWSTgw() *schema.Resource {
 		Read:   resourceAWSTgwRead,
 		Update: resourceAWSTgwUpdate,
 		Delete: resourceAWSTgwDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"tgw_name": {
@@ -256,6 +259,15 @@ func resourceAWSTgwCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+	tgwName := d.Get("tgw_name").(string)
+
+	if tgwName == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import, no aws tgw name received. Import Id is %s", id)
+		d.Set("tgw_name", id)
+		d.SetId(id)
+	}
+
 	awsTgw := &goaviatrix.AWSTgw{
 		Name:            d.Get("tgw_name").(string),
 		AccountName:     d.Get("account_name").(string),
@@ -564,7 +576,7 @@ func resourceAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
 			GwName: toDetachGWs[i],
 		}
 
-		err := client.DetachAviatrixTransitGWToAWSTgw(awsTgw, gateway, "Aviatrix_Edge_Domain")
+		err := client.DetachAviatrixTransitGWFromAWSTgw(awsTgw, gateway, "Aviatrix_Edge_Domain")
 		if err != nil {
 			resourceAWSTgwRead(d, meta)
 			return fmt.Errorf("failed to detach transit GW: %s", err)
@@ -714,7 +726,7 @@ func resourceAWSTgwDelete(d *schema.ResourceData, meta interface{}) error {
 			GwName: attachedGWs[i],
 		}
 
-		err := client.DetachAviatrixTransitGWToAWSTgw(awsTgw, gateway, "Aviatrix_Edge_Domain")
+		err := client.DetachAviatrixTransitGWFromAWSTgw(awsTgw, gateway, "Aviatrix_Edge_Domain")
 		if err != nil {
 			resourceAWSTgwRead(d, meta)
 			return fmt.Errorf("failed to detach transit GW: %s", err)
