@@ -271,6 +271,9 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		AllocateNewEip:     d.Get("allocate_new_eip").(string),
 		Eip:                d.Get("eip").(string),
 	}
+	if gateway.OtpMode != "" && gateway.OtpMode != "2" && gateway.OtpMode != "3" {
+		return fmt.Errorf("otp_mode can only be '2' or '3' or nil")
+	}
 	if gateway.EnableElb != "yes" {
 		gateway.EnableElb = "no"
 	}
@@ -484,12 +487,10 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		if gw.SplitTunnel != "" {
 			d.Set("split_tunnel", gw.SplitTunnel)
 		}
-		if gw.OtpMode != "" {
-			d.Set("otp_mode", gw.OtpMode)
-		}
 		if gw.SamlEnabled != "" {
 			d.Set("saml_enabled", gw.SamlEnabled)
 		}
+		d.Set("otp_mode", gw.OtpMode)
 		d.Set("okta_token", gw.OktaToken)
 		d.Set("okta_url", gw.OktaURL)
 		d.Set("okta_username_suffix", gw.OktaUsernameSuffix)
