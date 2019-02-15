@@ -384,13 +384,13 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 			if err != nil {
 				return fmt.Errorf("failed to enable transit GW for Hybird: %s", err)
 			}
-		}
-
-		if enableHybridConnection == false {
+		} else if enableHybridConnection == false {
 			err := client.DetachTransitGWForHybrid(transitGateway)
 			if err != nil {
 				return fmt.Errorf("failed to disable transit GW for Hybird: %s", err)
 			}
+		} else {
+			return fmt.Errorf("enable_hybrid_connection can only be set to true or false")
 		}
 	}
 	if d.HasChange("connected_transit") {
