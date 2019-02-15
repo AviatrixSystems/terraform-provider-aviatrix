@@ -535,7 +535,8 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("public_dns_server", gw.PublicDnsServer)
 		d.Set("security_group_id", gw.GwSecurityGroupID)
 
-		if peeringHaSubnet := d.Get("peering_ha_subnet").(string); peeringHaSubnet != "" {
+		peeringHaSubnet := d.Get("peering_ha_subnet").(string)
+		if peeringHaSubnet != "" || gwName == "" {
 			peeringHaGateway := &goaviatrix.Gateway{
 				AccountName: d.Get("account_name").(string),
 				GwName:      d.Get("gw_name").(string) + "-hagw",
