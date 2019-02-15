@@ -95,18 +95,12 @@ func resourceTunnelRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	log.Printf("[INFO] Found Aviatrix tunnel: %#v", tun)
 
-	if d.Get("cluster") != "" {
-		d.Set("cluster", tun.Cluster)
-	}
-	if d.Get("over_aws_peering") != "" {
-		d.Set("over_aws_peering", tun.OverAwsPeering)
-	}
-	if d.Get("peering_hastatus") != "" {
-		d.Set("peering_hastatus", tun.PeeringHaStatus)
-	}
+	d.Set("cluster", tun.Cluster)
+	d.Set("over_aws_peering", tun.OverAwsPeering)
+	d.Set("peering_hastatus", tun.PeeringHaStatus)
 	d.Set("peering_state", tun.PeeringState)
-
 	d.Set("peering_link", tun.PeeringLink)
+	d.Set("enable_ha", tun.EnableHA)
 	d.SetId(tun.VpcName1 + "<->" + tun.VpcName2)
 	log.Printf("[INFO] Found tunnel: %#v", d)
 	return nil
