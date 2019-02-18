@@ -28,7 +28,9 @@ func resourceCustomerIDCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	customerID := d.Get("customer_id").(string)
 	log.Printf("[INFO] Creating Aviatrix Customer ID: %s", customerID)
-
+	if customerID == "" {
+		return fmt.Errorf("customer id can't be empty")
+	}
 	_, err := client.SetCustomerID(customerID)
 	if err != nil {
 		return fmt.Errorf("failed to set Aviatrix Customer ID: %s", err)
