@@ -117,15 +117,20 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("account_name", acc.AccountName)
 		d.Set("cloud_type", acc.CloudType)
 		d.Set("aws_account_number", acc.AwsAccountNumber)
-		if awsIam := d.Get("aws_iam").(string); awsIam != "true" {
+
+		log.Printf("zjin00: awsIam is %v", acc.AwsIam)
+
+		//if awsIam := d.Get("aws_iam").(string); awsIam != "true" {
+		if acc.AwsRoleEc2 != "" {
 			//force default setting and save to .tfstate file
-			d.Set("aws_access_key", acc.AwsAccessKey)
-			d.Set("aws_iam", "false")
-			//d.Set("aws_secret_key", acc.AwsSecretKey) # this would corrupt tf state
-		} else {
 			d.Set("aws_access_key", "")
 			d.Set("aws_secret_key", "")
 			d.Set("aws_iam", "true")
+			//d.Set("aws_secret_key", acc.AwsSecretKey) # this would corrupt tf state
+		} else {
+			d.Set("aws_access_key", acc.AwsAccessKey)
+			d.Set("aws_secret_key", "")
+			d.Set("aws_iam", "false")
 		}
 		d.SetId(acc.AccountName)
 	}
