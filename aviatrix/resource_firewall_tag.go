@@ -42,13 +42,17 @@ func resourceAviatrixFirewallTag() *schema.Resource {
 
 func resourceAviatrixFirewallTagCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	firewall_tag := &goaviatrix.FirewallTag{
+	firewallTag := &goaviatrix.FirewallTag{
 		Name: d.Get("firewall_tag").(string),
 	}
-	err := client.CreateFirewallTag(firewall_tag)
+	if firewallTag.Name == "" {
+		return fmt.Errorf("invalid choice: firewall tag can't be empty")
+	}
+	err := client.CreateFirewallTag(firewallTag)
 	if err != nil {
 		return fmt.Errorf("failed to create firewall tag: %s", err)
 	}
+	d.SetId(firewallTag.Name)
 	//If cidr list is present, update cidr list
 	if _, ok := d.GetOk("cidr_list"); ok {
 		cidrList := d.Get("cidr_list").([]interface{})
@@ -58,15 +62,17 @@ func resourceAviatrixFirewallTagCreate(d *schema.ResourceData, meta interface{})
 				CIDRTag: cm["cidr_tag_name"].(string),
 				CIDR:    cm["cidr"].(string),
 			}
-			firewall_tag.CIDRList = append(firewall_tag.CIDRList, cidrMember)
+			if cidrMember.CIDR == "" && cidrMember.CIDRTag != "" {
+				return fmt.Errorf("invalid choice: cidr_tag_name for empty cidr")
+			}
+			firewallTag.CIDRList = append(firewallTag.CIDRList, cidrMember)
 		}
-		err := client.UpdateFirewallTag(firewall_tag)
+		err := client.UpdateFirewallTag(firewallTag)
 		if err != nil {
 			return fmt.Errorf("failed to update Aviatrix FirewallTag: %s", err)
 		}
 	}
-	d.SetId(firewall_tag.Name)
-	return nil
+	return resourceAviatrixFirewallTagRead(d, meta)
 }
 
 func resourceAviatrixFirewallTagRead(d *schema.ResourceData, meta interface{}) error {
