@@ -117,9 +117,6 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("account_name", acc.AccountName)
 		d.Set("cloud_type", acc.CloudType)
 		d.Set("aws_account_number", acc.AwsAccountNumber)
-
-		log.Printf("zjin00: awsIam is %v", acc.AwsIam)
-
 		//if awsIam := d.Get("aws_iam").(string); awsIam != "true" {
 		if acc.AwsRoleEc2 != "" {
 			//force default setting and save to .tfstate file
