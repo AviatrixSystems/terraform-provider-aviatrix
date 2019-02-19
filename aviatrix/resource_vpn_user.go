@@ -53,7 +53,12 @@ func resourceAviatrixVPNUserCreate(d *schema.ResourceData, meta interface{}) err
 		UserEmail:    d.Get("user_email").(string),
 		SamlEndpoint: d.Get("saml_endpoint").(string),
 	}
-
+	if vpn_user.VpcID == "" {
+		return fmt.Errorf("invalid choice: vpc_id can't be empty")
+	}
+	if vpn_user.GwName == "" {
+		return fmt.Errorf("invalid choice: gw_name can't be empty")
+	}
 	log.Printf("[INFO] Creating Aviatrix VPN User: %#v", vpn_user)
 
 	err := client.CreateVPNUser(vpn_user)
