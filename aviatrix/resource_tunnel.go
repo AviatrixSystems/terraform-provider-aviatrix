@@ -95,8 +95,6 @@ func resourceTunnelRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	log.Printf("[INFO] Found Aviatrix tunnel: %#v", tun)
 
-	log.Printf("zjin00: tun.EnableHA is %v", tun.EnableHA)
-
 	d.Set("cluster", tun.Cluster)
 	d.Set("over_aws_peering", tun.OverAwsPeering)
 	d.Set("peering_hastatus", tun.PeeringHaStatus)
