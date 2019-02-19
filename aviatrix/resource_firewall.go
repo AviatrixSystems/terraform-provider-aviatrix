@@ -72,12 +72,6 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[INFO] Creating Aviatrix firewall: %#v", firewall)
 	if _, ok := d.GetOk("base_allow_deny"); ok {
 		firewall.BaseAllowDeny = d.Get("base_allow_deny").(string)
-		if firewall.BaseAllowDeny == "allow" {
-			firewall.BaseAllowDeny = "allow-all"
-		}
-		if firewall.BaseAllowDeny == "deny" {
-			firewall.BaseAllowDeny = "deny-all"
-		}
 	}
 	if _, ok := d.GetOk("base_log_enable"); ok {
 		firewall.BaseLogEnable = d.Get("base_log_enable").(string)
@@ -103,6 +97,14 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 				AllowDeny: pl["allow_deny"].(string),
 				LogEnable: pl["log_enable"].(string),
 			}
+			protocolDefaultVals := []string{"all", "tcp", "udp", "icmp", "sctp", "rdp", "dccp"}
+			protocolVal := []string{firewallPolicy.Protocol}
+			if firewallPolicy.Protocol == "" || len(goaviatrix.Difference(protocolVal, protocolDefaultVals)) != 0 {
+				return fmt.Errorf("protocal can only be one of {'all', 'tcp', 'udp', 'icmp', 'sctp', 'rdp', 'dccp'}")
+			}
+			if (firewallPolicy.Protocol == "all" || firewallPolicy.Protocol == "icmp") && (firewallPolicy.Port != "") {
+				return fmt.Errorf("port should be empty for protocal 'all' and 'icmp'")
+			}
 			firewall.PolicyList = append(firewall.PolicyList, firewallPolicy)
 		}
 		err := client.UpdatePolicy(firewall)
@@ -111,7 +113,7 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 	d.SetId(firewall.GwName)
-	return nil
+	return resourceAviatrixFirewallRead(d, meta)
 }
 
 func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) error {
@@ -130,11 +132,15 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[TRACE] Reading policy for gateway %s: %#v",
 		firewall.GwName, fw)
 	if fw != nil {
-		if fw.BaseAllowDeny == "allow-all" {
-			d.Set("base_allow_deny", "allow")
+		if fw.BaseAllowDeny == "allow" || fw.BaseAllowDeny == "allow-all" {
+			d.Set("base_allow_deny", "allow-all")
+		} else {
+			d.Set("base_allow_deny", "deny-all")
 		}
-		if fw.BaseAllowDeny == "deny-all" {
-			d.Set("base_allow_deny", "deny")
+		if fw.BaseLogEnable == "on" {
+			d.Set("base_log_enable", "on")
+		} else {
+			d.Set("base_log_enable", "off")
 		}
 
 		var policies []map[string]interface{}
