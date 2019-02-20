@@ -137,31 +137,33 @@ func resourceTunnelDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix tunnel: %#v", tunnel)
-	//if enableHA := d.Get("enable_ha").(string); enableHA == "yes" {
-	//	// parse the hagw name
-	//	tunnel.VpcName1 += "-hagw"
-	//	tunnel.VpcName2 += "-hagw"
-	//	err := client.DeleteTunnel(tunnel)
-	//	if err != nil {
-	//		return fmt.Errorf("failed to delete Aviatrix HA gateway: %s", err)
+	if peeringHaStatus := d.Get("peering_hastatus").(string); peeringHaStatus == "active" {
+		// parse the hagw name
+		tunnel.VpcName1 += "-hagw"
+		tunnel.VpcName2 += "-hagw"
+		err := client.DeleteTunnel(tunnel)
+		if err != nil {
+			return fmt.Errorf("failed to delete Aviatrix HA gateway: %s", err)
+		}
+	}
+
+	//tunnelHa := &goaviatrix.Tunnel{
+	//	VpcName1: tunnel.VpcName1 + "-hagw",
+	//	VpcName2: tunnel.VpcName2 + "-hagw",
+	//}
+	//_, err := client.GetTunnel(tunnelHa)
+	//if err == nil {
+	//	err1 := client.DeleteTunnel(tunnelHa)
+	//	if err1 != nil {
+	//		return fmt.Errorf("failed to delete Aviatrix HA gateway: %s", err1)
 	//	}
+	//} else if err != goaviatrix.ErrNotFound {
+	//	return fmt.Errorf("failed to delete Aviatrix HA gateway: %s", err)
 	//}
 
-	tunnelHa := &goaviatrix.Tunnel{
-		VpcName1: tunnel.VpcName1 + "-hagw",
-		VpcName2: tunnel.VpcName2 + "-hagw",
-	}
-	_, err := client.GetTunnel(tunnelHa)
-	if err == nil {
-		err1 := client.DeleteTunnel(tunnelHa)
-		if err1 != nil {
-			return fmt.Errorf("failed to delete Aviatrix HA gateway: %s", err1)
-		}
-	} else if err != goaviatrix.ErrNotFound {
-		return fmt.Errorf("failed to delete Aviatrix HA gateway: %s", err)
-	}
-
-	err = client.DeleteTunnel(tunnel)
+	tunnel.VpcName1 = d.Get("vpc_name1").(string)
+	tunnel.VpcName2 = d.Get("vpc_name2").(string)
+	err := client.DeleteTunnel(tunnel)
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix Tunnel: %s", err)
 	}
