@@ -87,7 +87,7 @@ func (c *Client) GetCurrentVersion() (string, *AviatrixVersion, error) {
 	}
 
 	// strip off "UserConnect-"
-	parts := strings.Split(data.Results.CurrentVersion[11:], ".")
+	parts := strings.Split(data.Results.CurrentVersion[12:], ".")
 	aver := &AviatrixVersion{}
 	var err1, err2, err3 error
 	aver.Major, err1 = strconv.ParseInt(parts[0], 10, 0)

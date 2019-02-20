@@ -10,9 +10,9 @@ import (
 
 func resourceAviatrixVersion() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAviatrixVersionUpgrade,
+		Create: resourceAviatrixVersionCreate,
 		Read:   resourceAviatrixVersionRead,
-		Update: resourceAviatrixVersionUpgrade,
+		Update: resourceAviatrixVersionUpdate,
 		Delete: resourceAviatrixVersionDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -28,7 +28,7 @@ func resourceAviatrixVersion() *schema.Resource {
 	}
 }
 
-func resourceAviatrixVersionUpgrade(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVersionCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	version := &goaviatrix.Version{
 		Version: d.Get("target_version").(string),
@@ -48,7 +48,6 @@ func resourceAviatrixVersionUpgrade(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("unable to get current Controller version: %s (%s)", err, current)
 		}
 	}
-
 	var err1 error
 	if verF.Major <= 3 && verF.Minor <= 2 {
 		err1 = client.Pre32Upgrade()
@@ -77,6 +76,10 @@ func resourceAviatrixVersionRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("version", current)
 
 	return nil
+}
+
+func resourceAviatrixVersionUpdate(d *schema.ResourceData, meta interface{}) error {
+	return resourceAviatrixVersionCreate(d, meta)
 }
 
 func resourceAviatrixVersionDelete(d *schema.ResourceData, meta interface{}) error {
