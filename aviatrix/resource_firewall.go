@@ -103,7 +103,7 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 				return fmt.Errorf("protocal can only be one of {'all', 'tcp', 'udp', 'icmp', 'sctp', 'rdp', 'dccp'}")
 			}
 			if (firewallPolicy.Protocol == "all" || firewallPolicy.Protocol == "icmp") && (firewallPolicy.Port != "") {
-				return fmt.Errorf("port should be empty for protocal 'all' and 'icmp'")
+				return fmt.Errorf("port should be empty for protocal 'all' or 'icmp'")
 			}
 			firewall.PolicyList = append(firewall.PolicyList, firewallPolicy)
 		}
