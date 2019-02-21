@@ -16,15 +16,15 @@ func resourceTransPeer() *schema.Resource {
 		Delete: resourceTransPeerDelete,
 
 		Schema: map[string]*schema.Schema{
-			"source": &schema.Schema{
+			"source": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"nexthop": &schema.Schema{
+			"nexthop": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"reachable_cidr": &schema.Schema{
+			"reachable_cidr": {
 				Type:     schema.TypeString,
 				Required: true,
 			},

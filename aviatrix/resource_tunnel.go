@@ -27,6 +27,7 @@ func resourceTunnel() *schema.Resource {
 			"over_aws_peering": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"peering_state": {
 				Type:     schema.TypeString,
@@ -36,10 +37,12 @@ func resourceTunnel() *schema.Resource {
 			"peering_hastatus": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"cluster": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"peering_link": {
 				Type:     schema.TypeString,
