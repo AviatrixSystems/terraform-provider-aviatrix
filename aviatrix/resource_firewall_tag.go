@@ -62,8 +62,11 @@ func resourceAviatrixFirewallTagCreate(d *schema.ResourceData, meta interface{})
 				CIDRTag: cm["cidr_tag_name"].(string),
 				CIDR:    cm["cidr"].(string),
 			}
-			if cidrMember.CIDR == "" && cidrMember.CIDRTag != "" {
-				return fmt.Errorf("invalid choice: cidr_tag_name for empty cidr")
+			if cidrMember.CIDRTag == "" {
+				return fmt.Errorf("invalid choice: cidr_tag_name can't be empty")
+			}
+			if cidrMember.CIDR == "" {
+				return fmt.Errorf("invalid choice: cidr can't be empty")
 			}
 			firewallTag.CIDRList = append(firewallTag.CIDRList, cidrMember)
 		}
