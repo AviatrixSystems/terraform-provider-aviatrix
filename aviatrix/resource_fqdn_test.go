@@ -53,12 +53,12 @@ func testAccFQDNConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 
 resource "aviatrix_account" "test" {
-  account_name = "tfa-%s"
-  cloud_type = 1
-  aws_account_number = "%s"
-  aws_iam = "false"
-  aws_access_key = "%s"
-  aws_secret_key = "%s"
+    account_name = "tfa-%s"
+	cloud_type = 1
+	aws_account_number = "%s"
+	aws_iam = "false"
+	aws_access_key = "%s"
+	aws_secret_key = "%s"
 }
 
 resource "aviatrix_gateway" "test" {
@@ -72,17 +72,17 @@ resource "aviatrix_gateway" "test" {
 }
 
 resource "aviatrix_fqdn" "foo" {
-  fqdn_tag = "tff-%[1]s"
-  fqdn_status = "enabled"
-  fqdn_mode = "white"
-  gw_list = ["${aviatrix_gateway.test.gw_name}"]
-  domain_names =  [
-      {
-                fqdn = "facebook.com"
-                proto = "tcp"
-                port = "443"
-          }
-        ]
+	fqdn_tag = "tff-%[1]s"
+	fqdn_status = "enabled"
+	fqdn_mode = "white"
+	gw_list = ["${aviatrix_gateway.test.gw_name}"]
+	domain_names =  [
+		{
+			fqdn = "facebook.com"
+			proto = "tcp"
+			port = "443"
+		}
+	]
 }
 `, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"))

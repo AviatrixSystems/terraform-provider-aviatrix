@@ -67,7 +67,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"enable_nat": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "no",
+				Computed: true,
 			},
 			"dns_server": {
 				Type:     schema.TypeString,
@@ -435,7 +435,9 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("vpc_net", gw.VpcNet)
-		d.Set("enable_nat", gw.EnableNat)
+		if gw.EnableNat != "" {
+			d.Set("enable_nat", gw.EnableNat)
+		}
 		if gw.AllocateNewEipRead {
 			d.Set("allocate_new_eip", "on")
 		} else {
