@@ -85,8 +85,8 @@ func resourceAviatrixProfileCreate(d *schema.ResourceData, meta interface{}) err
 		if profileRule.Protocol == "" || len(goaviatrix.Difference(protocolVal, protocolDefaultVals)) != 0 {
 			return fmt.Errorf("protocal can only be one of {'all', 'tcp', 'udp', 'icmp', 'sctp', 'rdp', 'dccp'}")
 		}
-		if (profileRule.Protocol == "all" || profileRule.Protocol == "icmp") && (profileRule.Port != "") {
-			return fmt.Errorf("port should be empty for protocal 'all' or 'icmp'")
+		if (profileRule.Protocol == "all" || profileRule.Protocol == "icmp") && (profileRule.Port != "0:65535") {
+			return fmt.Errorf("port should be '0:65535' for protocal 'all' or 'icmp'")
 		}
 		profile.Policy = append(profile.Policy, profileRule)
 	}

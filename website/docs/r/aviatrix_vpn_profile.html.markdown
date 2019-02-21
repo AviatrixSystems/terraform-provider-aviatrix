@@ -45,6 +45,5 @@ The following arguments are supported:
 * `policy` - (Optional) New security policy for the profile. Each policy has the following attributes:
     * `action` - (Optional) Should be the opposite of the base rule for correct behaviour. Valid values for action: "allow" and "deny"
     * `proto` - (Optional) Protocol to allow or deny. Valid values for protocol: "all", "tcp", "udp", "icmp", "sctp", "rdp", "dccp"
-    * `port` - (Optional) Port to be allowed or denied. Valid values for port: a single port or a range of port numbers
-e.g.: "25", "25:1024"
+    * `port` - (Optional) Port to be allowed or denied. Valid values for port: a single port or a range of port numbers e.g.: "25", "25:1024". For "all" and "icmp", port should only be "0:65535".
     * `target` - (Optional) CIDR to be allowed or denied. Valid values for target: IPv4 CIDRs. e.g.: "10.30.0.0/16"
