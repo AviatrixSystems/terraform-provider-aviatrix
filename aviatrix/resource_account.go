@@ -126,7 +126,6 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 			//d.Set("aws_secret_key", acc.AwsSecretKey) # this would corrupt tf state
 		} else {
 			d.Set("aws_access_key", acc.AwsAccessKey)
-			d.Set("aws_secret_key", "")
 			d.Set("aws_iam", "false")
 		}
 		d.SetId(acc.AccountName)
