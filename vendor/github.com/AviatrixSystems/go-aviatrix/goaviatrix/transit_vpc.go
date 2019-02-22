@@ -51,12 +51,12 @@ func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) error {
 	if err != nil {
 		return errors.New(("url Parsing failed for enable_transit_ha ") + err.Error())
 	}
-	attachSpokeToTransitGw := url.Values{}
-	attachSpokeToTransitGw.Add("CID", c.CID)
-	attachSpokeToTransitGw.Add("action", "enable_transit_ha")
-	attachSpokeToTransitGw.Add("gw_name", gateway.GwName)
-	attachSpokeToTransitGw.Add("public_subnet", gateway.HASubnet)
-	Url.RawQuery = attachSpokeToTransitGw.Encode()
+	enableTransitHa := url.Values{}
+	enableTransitHa.Add("CID", c.CID)
+	enableTransitHa.Add("action", "enable_transit_ha")
+	enableTransitHa.Add("gw_name", gateway.GwName)
+	enableTransitHa.Add("public_subnet", gateway.HASubnet)
+	Url.RawQuery = enableTransitHa.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
 	//path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_transit_ha&gw_name=%s&public_subnet=%s", c.CID,
@@ -86,11 +86,11 @@ func (c *Client) AttachTransitGWForHybrid(gateway *TransitVpc) error {
 	if err != nil {
 		return errors.New(("url Parsing failed for enable_transit_gateway_interface_to_aws_tgw ") + err.Error())
 	}
-	attachSpokeToTransitGw := url.Values{}
-	attachSpokeToTransitGw.Add("CID", c.CID)
-	attachSpokeToTransitGw.Add("action", "enable_transit_gateway_interface_to_aws_tgw")
-	attachSpokeToTransitGw.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = attachSpokeToTransitGw.Encode()
+	enableTransitGatewayInterfaceToAwsTgw := url.Values{}
+	enableTransitGatewayInterfaceToAwsTgw.Add("CID", c.CID)
+	enableTransitGatewayInterfaceToAwsTgw.Add("action", "enable_transit_gateway_interface_to_aws_tgw")
+	enableTransitGatewayInterfaceToAwsTgw.Add("gateway_name", gateway.GwName)
+	Url.RawQuery = enableTransitGatewayInterfaceToAwsTgw.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
 	//path := c.baseURL + fmt.Sprintf("?action=enable_transit_gateway_interface_to_aws_tgw&CID=%s&gateway_name=%s",
@@ -117,11 +117,11 @@ func (c *Client) DetachTransitGWForHybrid(gateway *TransitVpc) error {
 	if err != nil {
 		return errors.New(("url Parsing failed for disable_transit_gateway_interface_to_aws_tgw") + err.Error())
 	}
-	attachSpokeToTransitGw := url.Values{}
-	attachSpokeToTransitGw.Add("CID", c.CID)
-	attachSpokeToTransitGw.Add("action", "disable_transit_gateway_interface_to_aws_tgw")
-	attachSpokeToTransitGw.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = attachSpokeToTransitGw.Encode()
+	disableTransitGatewayInterfaceToAwsTgw := url.Values{}
+	disableTransitGatewayInterfaceToAwsTgw.Add("CID", c.CID)
+	disableTransitGatewayInterfaceToAwsTgw.Add("action", "disable_transit_gateway_interface_to_aws_tgw")
+	disableTransitGatewayInterfaceToAwsTgw.Add("gateway_name", gateway.GwName)
+	Url.RawQuery = disableTransitGatewayInterfaceToAwsTgw.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
 	//path := c.baseURL + fmt.Sprintf("?action=disable_transit_gateway_interface_to_aws_tgw&CID=%s&gateway_name=%s",
@@ -145,11 +145,11 @@ func (c *Client) EnableConnectedTransit(gateway *TransitVpc) error {
 	if err != nil {
 		return errors.New(("url Parsing failed for enable_connected_transit_on_gateway") + err.Error())
 	}
-	attachSpokeToTransitGw := url.Values{}
-	attachSpokeToTransitGw.Add("CID", c.CID)
-	attachSpokeToTransitGw.Add("action", "enable_connected_transit_on_gateway")
-	attachSpokeToTransitGw.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = attachSpokeToTransitGw.Encode()
+	enableConnectedTransitOnGateway := url.Values{}
+	enableConnectedTransitOnGateway.Add("CID", c.CID)
+	enableConnectedTransitOnGateway.Add("action", "enable_connected_transit_on_gateway")
+	enableConnectedTransitOnGateway.Add("gateway_name", gateway.GwName)
+	Url.RawQuery = enableConnectedTransitOnGateway.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
 	//path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_connected_transit_on_gateway&gateway_name=%s",
@@ -173,11 +173,11 @@ func (c *Client) DisableConnectedTransit(gateway *TransitVpc) error {
 	if err != nil {
 		return errors.New(("url Parsing failed for disable_connected_transit_on_gateway") + err.Error())
 	}
-	attachSpokeToTransitGw := url.Values{}
-	attachSpokeToTransitGw.Add("CID", c.CID)
-	attachSpokeToTransitGw.Add("action", "disable_connected_transit_on_gateway")
-	attachSpokeToTransitGw.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = attachSpokeToTransitGw.Encode()
+	disableConnectedTransitOnGateway := url.Values{}
+	disableConnectedTransitOnGateway.Add("CID", c.CID)
+	disableConnectedTransitOnGateway.Add("action", "disable_connected_transit_on_gateway")
+	disableConnectedTransitOnGateway.Add("gateway_name", gateway.GwName)
+	Url.RawQuery = disableConnectedTransitOnGateway.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
 	//path := c.baseURL + fmt.Sprintf("?CID=%s&action=disable_connected_transit_on_gateway&gateway_name=%s",
