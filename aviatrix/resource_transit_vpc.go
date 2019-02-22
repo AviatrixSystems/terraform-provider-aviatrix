@@ -15,6 +15,9 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 		Read:   resourceAviatrixTransitVpcRead,
 		Update: resourceAviatrixTransitVpcUpdate,
 		Delete: resourceAviatrixTransitVpcDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"cloud_type": {
@@ -103,6 +106,7 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 	if gateway.EnableNAT != "yes" {
 		gateway.EnableNAT = "no"
 	}
+	enableNat := gateway.EnableNAT
 	if _, ok := d.GetOk("tag_list"); ok {
 		tagList := d.Get("tag_list").([]interface{})
 		tagListStr := goaviatrix.ExpandStringList(tagList)
@@ -188,11 +192,29 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		}
 		d.Set("connected_transit", "yes")
 	}
+	if enableNat == "yes" {
+		gw := &goaviatrix.Gateway{
+			GwName: gateway.GwName,
+		}
+		err := client.EnableSNat(gw)
+		if err != nil {
+			return fmt.Errorf("failed to disable SNAT: %s", err)
+		}
+	}
 	return resourceAviatrixTransitVpcRead(d, meta)
 }
 
 func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	gwName := d.Get("gw_name").(string)
+	if gwName == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
+		d.Set("gw_name", id)
+		d.SetId(id)
+	}
+
 	gateway := &goaviatrix.Gateway{
 		AccountName: d.Get("account_name").(string),
 		GwName:      d.Get("gw_name").(string),
