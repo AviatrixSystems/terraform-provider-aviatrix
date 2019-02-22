@@ -15,6 +15,9 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 		Read:   resourceAviatrixSpokeVpcRead,
 		Update: resourceAviatrixSpokeVpcUpdate,
 		Delete: resourceAviatrixSpokeVpcDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"cloud_type": {
@@ -206,6 +209,15 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	gwName := d.Get("gw_name").(string)
+	if gwName == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
+		d.Set("gw_name", id)
+		d.SetId(id)
+	}
+
 	gateway := &goaviatrix.Gateway{
 		AccountName: d.Get("account_name").(string),
 		GwName:      d.Get("gw_name").(string),
