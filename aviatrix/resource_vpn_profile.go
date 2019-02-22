@@ -73,22 +73,24 @@ func resourceAviatrixProfileCreate(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[INFO] Creating Aviatrix Profile with users: %v", profile.UserList)
 	names := d.Get("policy").([]interface{})
 	for _, domain := range names {
-		dn := domain.(map[string]interface{})
-		profileRule := goaviatrix.ProfileRule{
-			Action:   dn["action"].(string),
-			Protocol: dn["proto"].(string),
-			Port:     dn["port"].(string),
-			Target:   dn["target"].(string),
+		if domain != nil {
+			dn := domain.(map[string]interface{})
+			profileRule := goaviatrix.ProfileRule{
+				Action:   dn["action"].(string),
+				Protocol: dn["proto"].(string),
+				Port:     dn["port"].(string),
+				Target:   dn["target"].(string),
+			}
+			protocolDefaultVals := []string{"all", "tcp", "udp", "icmp", "sctp", "rdp", "dccp"}
+			protocolVal := []string{profileRule.Protocol}
+			if profileRule.Protocol == "" || len(goaviatrix.Difference(protocolVal, protocolDefaultVals)) != 0 {
+				return fmt.Errorf("protocal can only be one of {'all', 'tcp', 'udp', 'icmp', 'sctp', 'rdp', 'dccp'}")
+			}
+			if (profileRule.Protocol == "all" || profileRule.Protocol == "icmp") && (profileRule.Port != "0:65535") {
+				return fmt.Errorf("port should be '0:65535' for protocal 'all' or 'icmp'")
+			}
+			profile.Policy = append(profile.Policy, profileRule)
 		}
-		protocolDefaultVals := []string{"all", "tcp", "udp", "icmp", "sctp", "rdp", "dccp"}
-		protocolVal := []string{profileRule.Protocol}
-		if profileRule.Protocol == "" || len(goaviatrix.Difference(protocolVal, protocolDefaultVals)) != 0 {
-			return fmt.Errorf("protocal can only be one of {'all', 'tcp', 'udp', 'icmp', 'sctp', 'rdp', 'dccp'}")
-		}
-		if (profileRule.Protocol == "all" || profileRule.Protocol == "icmp") && (profileRule.Port != "0:65535") {
-			return fmt.Errorf("port should be '0:65535' for protocal 'all' or 'icmp'")
-		}
-		profile.Policy = append(profile.Policy, profileRule)
 	}
 	log.Printf("[INFO] Creating Aviatrix Profile with Policy: %v", profile.Policy)
 	err := client.CreateProfile(profile)
