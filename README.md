@@ -6,7 +6,7 @@ Requirements
 ------------
 
 -	Install [Terraform](https://www.terraform.io/downloads.html) 0.10.x/0.11.x (0.12.x is incompatible)
--	Install [Go](https://golang.org/doc/install) 1.9+ (This will be used to build the provider plugin.)
+-	Install [Go](https://golang.org/doc/install) 1.11+ (This will be used to build the provider plugin.)
 -	Create a directory, go, follow this [doc](https://github.com/golang/go/wiki/SettingGOPATH) to edit ~/.bash_profile to setup the GOPATH environment variable)
 
 Building The Provider
