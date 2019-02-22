@@ -44,6 +44,8 @@ type AviatrixVersion struct {
 func (c *Client) Upgrade(version *Version) error {
 	path := ""
 	if version.Version == "" {
+		return nil
+	} else if version.Version == "latest" {
 		path = c.baseURL + fmt.Sprintf("?CID=%s&action=upgrade", c.CID)
 	} else {
 		path = c.baseURL + fmt.Sprintf("?CID=%s&action=upgrade&version=%s", c.CID, version.Version)

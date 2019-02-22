@@ -15,7 +15,7 @@ The AviatrixVersion resource manages the controller upgrade process
 ```hcl
 # Manage Aviatrix Controller Upgrade process
 resource "aviatrix_version" "test_version" {
-  version = "3.5"
+  version = "latest"
 }
 ```
 
@@ -23,7 +23,7 @@ resource "aviatrix_version" "test_version" {
 
 The following arguments are supported:
 
-* `target_version` - (Optional) The release version number to which the controller will be upgraded to. If not specified, it automatically will be upgraded to the latest release. Please look at https://docs.aviatrix.com/HowTos/inline_upgrade.html for more information.
+* `target_version` - (Optional) The release version number to which the controller will be upgraded to. If not specified, it will not upgrade. If set to "latest", it will be upgraded to the latest release. Please look at https://docs.aviatrix.com/HowTos/inline_upgrade.html for more information.
 
 
 The following arguments are computed - please do not edit in the resource file:
