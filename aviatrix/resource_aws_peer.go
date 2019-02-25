@@ -15,6 +15,9 @@ func resourceAWSPeer() *schema.Resource {
 		Read:   resourceAWSPeerRead,
 		Update: resourceAWSPeerUpdate,
 		Delete: resourceAWSPeerDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"account_name1": {
@@ -74,21 +77,33 @@ func resourceAWSPeerCreate(d *schema.ResourceData, meta interface{}) error {
 		awsPeer.RtbList2 = strings.Join(goaviatrix.ExpandStringList(d.Get("rtb_list2").([]interface{})), ",")
 	}
 	log.Printf("[INFO] Creating Aviatrix aws_peer: %#v", awsPeer)
-	id, err := client.CreateAWSPeer(awsPeer)
+	_, err := client.CreateAWSPeer(awsPeer)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix AWSPeer: %s", err)
 	}
-	d.SetId(id)
+	d.SetId(awsPeer.VpcID1 + "~" + awsPeer.VpcID2)
+
 	return nil
-	//return resourceAWSPeerRead(d, meta)
 }
 
 func resourceAWSPeerRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	vpcID1 := d.Get("vpc_id1").(string)
+	vpcID2 := d.Get("vpc_id2").(string)
+	if vpcID1 == "" || vpcID2 == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import, no vpc id received. Import Id is %s", id)
+		d.Set("vpc_id1", strings.Split(id, "~")[0])
+		d.Set("vpc_id2", strings.Split(id, "~")[1])
+		d.SetId(id)
+	}
+
 	awsPeer := &goaviatrix.AWSPeer{
 		VpcID1: d.Get("vpc_id1").(string),
 		VpcID2: d.Get("vpc_id2").(string),
 	}
+
 	ap, err := client.GetAWSPeer(awsPeer)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {

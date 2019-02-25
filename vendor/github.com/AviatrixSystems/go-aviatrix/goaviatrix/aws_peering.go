@@ -3,8 +3,8 @@ package goaviatrix
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
+	"net/url"
 	"regexp"
 )
 
@@ -28,32 +28,38 @@ type AwsPeerAPIResp struct {
 	Results map[string]string `json:"results"`
 }
 
-func (c *Client) CreateAWSPeer(aws_peer *AWSPeer) (string, error) {
-	aws_peer.CID = c.CID
-	aws_peer.Action = "create_aws_peering"
-	resp, err := c.Post(c.baseURL, aws_peer)
+func (c *Client) CreateAWSPeer(awsPeer *AWSPeer) (string, error) {
+	awsPeer.CID = c.CID
+	awsPeer.Action = "create_aws_peering"
+	resp, err := c.Post(c.baseURL, awsPeer)
 	if err != nil {
-		return "", err
+		return "", errors.New("HTTP Post create_aws_peering failed: " + err.Error())
 	}
 	var data AwsPeerAPIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return "", err
+		return "", errors.New("Json Decode create_aws_peering failed: " + err.Error())
 	}
 	if !data.Return {
-		return "", errors.New(data.Reason)
+		return "", errors.New("Rest API create_aws_peering Post failed: " + data.Reason)
 	}
 	r, _ := regexp.Compile(`pcx-\w+`)
 	id := r.FindString(data.Results["text"])
 	return id, nil
 }
 
-func (c *Client) GetAWSPeer(aws_peer *AWSPeer) (*AWSPeer, error) {
-	aws_peer.CID = c.CID
-	aws_peer.Action = "list_aws_peerings"
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=%s", aws_peer.CID, aws_peer.Action)
-	resp, err := c.Get(path, nil)
+func (c *Client) GetAWSPeer(awsPeer *AWSPeer) (*AWSPeer, error) {
+	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(("url Parsing failed for list_aws_peerings ") + err.Error())
+	}
+	listAwsPeering := url.Values{}
+	listAwsPeering.Add("CID", c.CID)
+	listAwsPeering.Add("action", "list_aws_peerings")
+	Url.RawQuery = listAwsPeering.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return nil, errors.New("HTTP Get list_aws_peerings failed: " + err.Error())
 	}
 
 	//Output result for this query cannot be unmarshalled
@@ -61,51 +67,52 @@ func (c *Client) GetAWSPeer(aws_peer *AWSPeer) (*AWSPeer, error) {
 	//So using a map of string->interface{}
 	var data map[string]interface{}
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, errors.New("Json Decode list_aws_peerings failed: " + err.Error())
 	}
 	if _, ok := data["reason"]; ok {
-		log.Printf("[INFO] Couldn't find AWS peering between VPCs %s and %s: %s", aws_peer.VpcID1, aws_peer.VpcID2, data["reason"])
+		log.Printf("[INFO] Couldn't find AWS peering between VPCs %s and %s: %s", awsPeer.VpcID1, awsPeer.VpcID2, data["reason"])
 		return nil, ErrNotFound
 	}
 	if val, ok := data["results"]; ok {
-		if pair_list, ok1 := val.(map[string]interface{})["pair_list"].([]interface{}); ok1 {
-			for i := range pair_list {
-				if pair_list[i].(map[string]interface{})["requester"].(map[string]interface{})["vpc_id"].(string) == aws_peer.VpcID1 && pair_list[i].(map[string]interface{})["accepter"].(map[string]interface{})["vpc_id"].(string) == aws_peer.VpcID2 {
-					aws_peer := &AWSPeer{
-						VpcID1:       pair_list[i].(map[string]interface{})["requester"].(map[string]interface{})["vpc_id"].(string),
-						VpcID2:       pair_list[i].(map[string]interface{})["accepter"].(map[string]interface{})["vpc_id"].(string),
-						AccountName1: pair_list[i].(map[string]interface{})["requester"].(map[string]interface{})["account_name"].(string),
-						AccountName2: pair_list[i].(map[string]interface{})["accepter"].(map[string]interface{})["account_name"].(string),
-						Region1:      pair_list[i].(map[string]interface{})["requester"].(map[string]interface{})["region"].(string),
-						Region2:      pair_list[i].(map[string]interface{})["accepter"].(map[string]interface{})["region"].(string),
+		if pairList, ok1 := val.(map[string]interface{})["pair_list"].([]interface{}); ok1 {
+			for i := range pairList {
+				if pairList[i].(map[string]interface{})["requester"].(map[string]interface{})["vpc_id"].(string) == awsPeer.VpcID1 &&
+					pairList[i].(map[string]interface{})["accepter"].(map[string]interface{})["vpc_id"].(string) == awsPeer.VpcID2 {
+					awsPeer := &AWSPeer{
+						VpcID1:       pairList[i].(map[string]interface{})["requester"].(map[string]interface{})["vpc_id"].(string),
+						VpcID2:       pairList[i].(map[string]interface{})["accepter"].(map[string]interface{})["vpc_id"].(string),
+						AccountName1: pairList[i].(map[string]interface{})["requester"].(map[string]interface{})["account_name"].(string),
+						AccountName2: pairList[i].(map[string]interface{})["accepter"].(map[string]interface{})["account_name"].(string),
+						Region1:      pairList[i].(map[string]interface{})["requester"].(map[string]interface{})["region"].(string),
+						Region2:      pairList[i].(map[string]interface{})["accepter"].(map[string]interface{})["region"].(string),
 					}
-					return aws_peer, nil
+					return awsPeer, nil
 				}
 			}
 		}
 	}
-	log.Printf("[INFO] No AWS peering between VPC %s and %s is present.", aws_peer.VpcID1, aws_peer.VpcID2)
+	log.Printf("[INFO] No AWS peering between VPC %s and %s is present.", awsPeer.VpcID1, awsPeer.VpcID2)
 	return nil, ErrNotFound
 }
 
-func (c *Client) UpdateAWSPeer(aws_peer *AWSPeer) error {
+func (c *Client) UpdateAWSPeer(awsPeer *AWSPeer) error {
 	return nil
 }
 
-func (c *Client) DeleteAWSPeer(aws_peer *AWSPeer) error {
-	aws_peer.CID = c.CID
-	aws_peer.Action = "delete_aws_peering"
-	resp, err := c.Post(c.baseURL, aws_peer)
+func (c *Client) DeleteAWSPeer(awsPeer *AWSPeer) error {
+	awsPeer.CID = c.CID
+	awsPeer.Action = "delete_aws_peering"
+	resp, err := c.Post(c.baseURL, awsPeer)
 	if err != nil {
-		return err
+		return errors.New("HTTP Post delete_aws_peering failed: " + err.Error())
 	}
 
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode delete_aws_peering failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API delete_aws_peering Post failed: " + data.Reason)
 	}
 	return nil
 }
