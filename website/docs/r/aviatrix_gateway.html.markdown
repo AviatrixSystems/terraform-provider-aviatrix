@@ -42,7 +42,7 @@ The following arguments are supported:
 * `vpn_access` - (Optional) Enable user access through VPN to this container. (Supported values: "yes", "no")
 * `vpn_cidr` - (Optional) VPN CIDR block for the container (Required if vpn_access is "yes", Example: "192.168.43.0/24")
 * `enable_elb` - (Optional) Specify whether to enable ELB or not. (Required: Yes when cloud_type is "1", "4", "256" or "1024", supported values "yes" and "no")
-* `elb_name` - (Optional) A name for the ELB that is created. If it is not specified a name is generated automatically 
+* `elb_name` - (Optional) A name for the ELB that is created. If it is not specified a name is generated automatically
 * `split_tunnel` - (Optional) Specify split tunnel mode. (Supported values: "yes", "no")
 * `name_servers` - (Optional) A list of DNS servers used to resolve domain names by a connected VPN user when Split Tunnel Mode is enabled.
 * `search_domains` - (Optional) A list of domain names that will use the NameServer when a specific name is not in the destination when Split Tunnel Mode is enabled.
@@ -64,6 +64,7 @@ The following arguments are supported:
 * `ldap_username_attribute` - (Optional) LDAP user attribute (Required: Yes if enable_ldap is "yes")
 * `ha_subnet` - (Optional) This is for Gateway HA. Deprecated. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
 * `peering_ha_subnet` - Public Subnet Information while creating Peering HA Gateway. Example: AWS: "10.0.0.0/16\~\~ZONE\~\~SubnetName"
+* `peering_ha_eip` - (Optional) Public IP address that you want assigned to the HA peering instance
 * `zone` - (Optional) A GCE zone where this gateway will be launched. (Required when cloud_type is 4)
 * `single_az_ha` (Optional) Set to "enabled" if this feature is desired
 * `allocate_new_eip` - (Optional) When value is off, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 2.7 or later release. (Supported values : "on", "off") (Default: "on")

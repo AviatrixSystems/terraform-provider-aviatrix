@@ -195,6 +195,11 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"peering_ha_eip": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"zone": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -335,6 +340,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	// peering_ha_subnet is for Peering HA Gateway. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
 	if peeringHaSubnet := d.Get("peering_ha_subnet").(string); peeringHaSubnet != "" {
 		peeringHaGateway := &goaviatrix.Gateway{
+			Eip:             d.Get("peering_ha_eip").(string),
 			GwName:          d.Get("gw_name").(string),
 			PeeringHASubnet: d.Get("peering_ha_subnet").(string),
 			NewZone:         d.Get("zone").(string),
@@ -548,16 +554,19 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				d.Set("cloudn_bkup_gateway_inst_id", gwHaGw.CloudnGatewayInstID)
 				d.Set("backup_public_ip", gwHaGw.PublicIP)
 				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
+				d.Set("peering_ha_eip", gwHaGw.Eip)
 			} else {
 				d.Set("cloudn_bkup_gateway_inst_id", "")
 				d.Set("backup_public_ip", "")
 				d.Set("peering_ha_subnet", "")
+				d.Set("peering_ha_eip", "")
 			}
 			log.Printf("[TRACE] reading peering HA gateway %s: %#v", d.Get("gw_name").(string), gwHaGw)
 		} else {
 			d.Set("cloudn_bkup_gateway_inst_id", "")
 			d.Set("backup_public_ip", "")
 			d.Set("peering_ha_subnet", "")
+			d.Set("peering_ha_eip", "")
 		}
 
 		tags := &goaviatrix.Tags{
@@ -621,6 +630,9 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 	if d.HasChange("vpn_access") {
 		return fmt.Errorf("updating vpn_access is not allowed")
+	}
+	if d.HasChange("peering_ha_eip") {
+		return fmt.Errorf("updating peering_ha_eip is not allowed")
 	}
 	if d.HasChange("enable_elb") {
 		return fmt.Errorf("updating enable_elb is not allowed")
