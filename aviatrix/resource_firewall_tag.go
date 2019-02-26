@@ -14,6 +14,9 @@ func resourceAviatrixFirewallTag() *schema.Resource {
 		Read:   resourceAviatrixFirewallTagRead,
 		Update: resourceAviatrixFirewallTagUpdate,
 		Delete: resourceAviatrixFirewallTagDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"firewall_tag": {
@@ -80,6 +83,15 @@ func resourceAviatrixFirewallTagCreate(d *schema.ResourceData, meta interface{})
 
 func resourceAviatrixFirewallTagRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	fTag := d.Get("firewall_tag").(string)
+	if fTag == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import, no firewall tag name received. Import Id is %s", id)
+		d.Set("firewall_tag", id)
+		d.SetId(id)
+	}
+
 	firewallTag := &goaviatrix.FirewallTag{
 		Name: d.Get("firewall_tag").(string),
 	}

@@ -72,15 +72,15 @@ func (c *Client) UpdateFirewallTag(firewall_tag *FirewallTag) error {
 	}
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return err
+		return errors.New("HTTP Post update_policy_members failed: " + err.Error())
 	}
 
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode update_policy_members failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API update_policy_members Post failed: " + data.Reason)
 	}
 	return nil
 }
@@ -92,11 +92,11 @@ func (c *Client) GetFirewallTag(firewall_tag *FirewallTag) (*FirewallTag, error)
 	log.Printf("[INFO] Getting Firewall Tag: %#v", firewall_tag)
 	resp, err := c.Post(c.baseURL, firewall_tag)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("HTTP Post list_policy_members failed: " + err.Error())
 	}
 	var data FirewallTagResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, errors.New("Json Decode list_policy_members failed: " + err.Error())
 	}
 	if !data.Return {
 		log.Printf("[INFO] Couldn't find Aviatrix Firewall tag %s: %s", firewall_tag.Name, data.Reason)
@@ -111,14 +111,14 @@ func (c *Client) DeleteFirewallTag(firewall_tag *FirewallTag) error {
 	log.Printf("[INFO] Deleting Firewall Tag: %#v", firewall_tag)
 	resp, err := c.Post(c.baseURL, firewall_tag)
 	if err != nil {
-		return err
+		return errors.New("HTTP Post del_policy_tag failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode del_policy_tag failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API del_policy_tag Post failed: " + data.Reason)
 	}
 	return nil
 }
