@@ -3,7 +3,6 @@ package goaviatrix
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/url"
 )
@@ -63,27 +62,34 @@ func (c *Client) SetBasePolicy(firewall *Firewall) error {
 }
 
 func (c *Client) UpdatePolicy(firewall *Firewall) error {
-	firewall.CID = c.CID
-	firewall.Action = "update_access_policy"
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=update_access_policy&vpc_name=%s&new_policy=", c.CID,
-		firewall.GwName)
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for update_access_policy") + err.Error())
+	}
+	updateAccessPolicy := url.Values{}
+	updateAccessPolicy.Add("CID", c.CID)
+	updateAccessPolicy.Add("action", "update_access_policy")
+	updateAccessPolicy.Add("vpc_name", firewall.GwName)
+
 	log.Printf("[INFO] Updating Aviatrix firewall for gateway: %#v", firewall)
 
 	args, err := json.Marshal(firewall.PolicyList)
 	if err != nil {
 		return err
 	}
-	path = path + string(args)
-	resp, err := c.Get(path, nil)
+	updateAccessPolicy.Add("new_policy", string(args))
+	Url.RawQuery = updateAccessPolicy.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
 	if err != nil {
-		return err
+		return errors.New("HTTP Get update_access_policy failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode update_access_policy failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API update_access_policy Get failed: " + data.Reason)
 	}
 	return nil
 }
