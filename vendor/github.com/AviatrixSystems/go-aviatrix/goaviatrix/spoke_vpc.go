@@ -59,10 +59,6 @@ func (c *Client) SpokeJoinTransit(spoke *SpokeVpc) error {
 	Url.RawQuery = attachSpokeToTransitGw.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
-	//path := c.baseURL + fmt.Sprintf("?CID=%s&action=attach_spoke_to_transit_gw&spoke_gw=%s&transit_gw=%s",
-	//	c.CID, spoke.GwName, spoke.TransitGateway)
-	//resp, err := c.Get(path, nil)
-
 	if err != nil {
 		return errors.New("HTTP Get attach_spoke_to_transit_gw failed: " + err.Error())
 	}
@@ -88,9 +84,6 @@ func (c *Client) SpokeLeaveTransit(spoke *SpokeVpc) error {
 	Url.RawQuery = detachSpokeFromTransitGw.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
-	//path := c.baseURL + fmt.Sprintf("?CID=%s&action=detach_spoke_from_transit_gw&spoke_gw=%s", c.CID,
-	//	spoke.GwName)
-	//resp, err := c.Get(path, nil)
 	if err != nil {
 		return errors.New("HTTP Get detach_spoke_from_transit_gw failed: " + err.Error())
 	}
@@ -121,9 +114,6 @@ func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 	Url.RawQuery = enableSpokeHa.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
-	//path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_spoke_ha&gw_name=%s&public_subnet=%s", c.CID,
-	//	spoke.GwName, spoke.HASubnet)
-	//resp, err := c.Get(path, nil)
 	if err != nil {
 		return errors.New("HTTP Get enable_spoke_ha failed: " + err.Error())
 	}
