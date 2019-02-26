@@ -14,6 +14,9 @@ func resourceAviatrixFirewall() *schema.Resource {
 		Read:   resourceAviatrixFirewallRead,
 		Update: resourceAviatrixFirewallUpdate,
 		Delete: resourceAviatrixFirewallDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"gw_name": {
@@ -121,6 +124,14 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+	gwName := d.Get("gw_name").(string)
+	if gwName == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
+		d.Set("gw_name", id)
+		d.SetId(id)
+	}
+
 	firewall := &goaviatrix.Firewall{
 		GwName: d.Get("gw_name").(string),
 	}
