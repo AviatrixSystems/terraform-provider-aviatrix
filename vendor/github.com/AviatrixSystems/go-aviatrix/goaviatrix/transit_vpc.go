@@ -49,7 +49,7 @@ func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return errors.New(("url Parsing failed for enable_transit_ha ") + err.Error())
+		return errors.New("url Parsing failed for enable_transit_ha " + err.Error())
 	}
 	enableTransitHa := url.Values{}
 	enableTransitHa.Add("CID", c.CID)
@@ -59,9 +59,6 @@ func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) error {
 	Url.RawQuery = enableTransitHa.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
-	//path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_transit_ha&gw_name=%s&public_subnet=%s", c.CID,
-	//	gateway.GwName, gateway.HASubnet)
-	//resp, err := c.Get(path, nil)
 	if err != nil {
 		return errors.New("HTTP Get enable_transit_ha failed: " + err.Error())
 	}
@@ -93,9 +90,6 @@ func (c *Client) AttachTransitGWForHybrid(gateway *TransitVpc) error {
 	Url.RawQuery = enableTransitGatewayInterfaceToAwsTgw.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
-	//path := c.baseURL + fmt.Sprintf("?action=enable_transit_gateway_interface_to_aws_tgw&CID=%s&gateway_name=%s",
-	//	c.CID, gateway.GwName)
-	//resp, err := c.Get(path, nil)
 	if err != nil {
 		return errors.New("HTTP Get enable_transit_gateway_interface_to_aws_tgw failed: " + err.Error())
 	}
@@ -124,9 +118,6 @@ func (c *Client) DetachTransitGWForHybrid(gateway *TransitVpc) error {
 	Url.RawQuery = disableTransitGatewayInterfaceToAwsTgw.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
-	//path := c.baseURL + fmt.Sprintf("?action=disable_transit_gateway_interface_to_aws_tgw&CID=%s&gateway_name=%s",
-	//	c.CID, gateway.GwName)
-	//resp, err := c.Get(path, nil)
 	if err != nil {
 		return errors.New("HTTP Get disable_transit_gateway_interface_to_aws_tgw failed: " + err.Error())
 	}
@@ -152,9 +143,6 @@ func (c *Client) EnableConnectedTransit(gateway *TransitVpc) error {
 	Url.RawQuery = enableConnectedTransitOnGateway.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
-	//path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_connected_transit_on_gateway&gateway_name=%s",
-	//	c.CID, gateway.GwName)
-	//resp, err := c.Get(path, nil)
 	if err != nil {
 		return errors.New("HTTP Get enable_connected_transit_on_gateway failed: " + err.Error())
 	}
@@ -180,9 +168,6 @@ func (c *Client) DisableConnectedTransit(gateway *TransitVpc) error {
 	Url.RawQuery = disableConnectedTransitOnGateway.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
-	//path := c.baseURL + fmt.Sprintf("?CID=%s&action=disable_connected_transit_on_gateway&gateway_name=%s",
-	//	c.CID, gateway.GwName)
-	//resp, err := c.Get(path, nil)
 	if err != nil {
 		return errors.New("HTTP Get disable_connected_transit_on_gateway failed: " + err.Error())
 	}
