@@ -14,6 +14,9 @@ func resourceAviatrixProfile() *schema.Resource {
 		Read:   resourceAviatrixProfileRead,
 		Update: resourceAviatrixProfileUpdate,
 		Delete: resourceAviatrixProfileDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -104,13 +107,31 @@ func resourceAviatrixProfileCreate(d *schema.ResourceData, meta interface{}) err
 
 func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	profileName := d.Get("name").(string)
+	if profileName == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import, no profile name received. Import Id is %s", id)
+		d.Set("name", id)
+		d.SetId(id)
+	}
+
 	profile := &goaviatrix.Profile{
 		Name:   d.Get("name").(string),
 		Policy: make([]goaviatrix.ProfileRule, 0),
 	}
 
+	if profileName == "" {
+		profile0, err := client.GetProfileBasePolicy(profile)
+		if err != nil {
+			return fmt.Errorf("can't get profile base policy for profile: %s", profile.Name)
+		}
+		d.Set("base_rule", profile0.BaseRule)
+	}
+
 	log.Printf("[INFO] Reading Aviatrix Profile: %#v", profile)
 	profile, err := client.GetProfile(profile)
+
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")

@@ -43,6 +43,12 @@ type ProfileUserListResp struct {
 	Reason  string              `json:"reason"`
 }
 
+type ProfileBasePolicyResp struct {
+	Return  bool   `json:"return"`
+	Results string `json:"results"`
+	Reason  string `json:"reason"`
+}
+
 func (c *Client) CreateProfile(profile *Profile) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
@@ -160,6 +166,8 @@ func (c *Client) GetProfile(profile *Profile) (*Profile, error) {
 		return nil, errors.New("Json Decode list_user_profile_names failed: " + err.Error())
 	}
 
+	//profile.BaseRule = data2.Results[profile.Name]
+	log.Printf("zjin0000: data2.Results is %v", data2.Results[profile.Name])
 	profile.UserList = data2.Results[profile.Name]
 
 	log.Printf("[TRACE] Profile list of users %s", profile.UserList)
@@ -278,4 +286,36 @@ func (c *Client) DeleteProfile(profile *Profile) error {
 		return errors.New("API Get del_user_profile failed: " + data.Reason)
 	}
 	return nil
+}
+
+func (c *Client) GetProfileBasePolicy(profile *Profile) (*Profile, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return nil, errors.New(("url Parsing failed for get_profile_base_policy") + err.Error())
+	}
+	getProfileBasePolicy := url.Values{}
+	getProfileBasePolicy.Add("CID", c.CID)
+	getProfileBasePolicy.Add("action", "get_profile_base_policy")
+	getProfileBasePolicy.Add("profile_name", profile.Name)
+	Url.RawQuery = getProfileBasePolicy.Encode()
+
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return nil, errors.New("HTTP Get get_profile_base_policy failed: " + err.Error())
+	}
+	var data ProfileBasePolicyResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode get_profile_base_policy failed: " + err.Error())
+	}
+	if !data.Return {
+		return nil, errors.New("API Get get_profile_base_policy failed: " + data.Reason)
+	} else {
+		if strings.Contains(data.Results, "allow all") {
+			profile.BaseRule = "allow_all"
+		} else if strings.Contains(data.Results, "deny all") {
+			profile.BaseRule = "deny_all"
+		}
+	}
+
+	return profile, nil
 }
