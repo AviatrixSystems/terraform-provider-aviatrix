@@ -259,8 +259,8 @@ func resourceAWSTgwCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	tgwName := d.Get("tgw_name").(string)
 
+	tgwName := d.Get("tgw_name").(string)
 	if tgwName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no aws tgw name received. Import Id is %s", id)
@@ -274,9 +274,17 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 		Region:          d.Get("region").(string),
 		AwsSideAsNumber: d.Get("aws_side_as_number").(string),
 	}
+	if tgwName == "" {
+		awsTgwFromClient, err := client.ListTgwDetails(awsTgw)
+		if err != nil {
+			return fmt.Errorf("couldn't find AWS TGW: %s", awsTgw.Name)
+		}
+		awsTgw.AwsSideAsNumber = awsTgwFromClient.AwsSideAsNumber
+		awsTgw.Region = awsTgwFromClient.Region
+		awsTgw.AccountName = awsTgwFromClient.AccountName
+	}
 
 	log.Printf("[INFO] Reading AWS TGW")
-
 	awsTgw, err := client.GetAWSTgw(awsTgw)
 	if err != nil {
 		return fmt.Errorf("couldn't find AWS TGW: %s", awsTgw.Name)
