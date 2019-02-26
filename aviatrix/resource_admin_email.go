@@ -14,6 +14,9 @@ func resourceAdminEmail() *schema.Resource {
 		Read:   resourceAdminEmailRead,
 		Update: resourceAdminEmailUpdate,
 		Delete: resourceAdminEmailDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"admin_email": {
