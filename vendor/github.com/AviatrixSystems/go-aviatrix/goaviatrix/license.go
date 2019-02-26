@@ -2,6 +2,7 @@ package goaviatrix
 
 import (
 	"encoding/json"
+	"errors"
 )
 
 type CustomerRequest struct {
@@ -48,48 +49,48 @@ type DeleteLicenseResponse struct {
 }
 
 func (c *Client) SetCustomerID(customerID string) (*SetLicenseList, error) {
-	cust := new(CustomerRequest)
-	cust.CustomerID = customerID
-	cust.CID = c.CID
-	cust.Action = "setup_customer_id"
+	customerNew := new(CustomerRequest)
+	customerNew.CustomerID = customerID
+	customerNew.CID = c.CID
+	customerNew.Action = "setup_customer_id"
 	var response SetLicenseResponse
-	_, body, err := c.Do("GET", cust)
+	_, body, err := c.Do("GET", customerNew)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("HTTP Get setup_customer_id failed: " + err.Error())
 	}
 	if err = json.Unmarshal(body, &response); err != nil {
-		return nil, err
+		return nil, errors.New("Json Decode setup_customer_id failed: " + err.Error())
 	}
 	return &response.Results, err
 }
 
 func (c *Client) DeleteCustomerID() (*DeleteLicenseList, error) {
-	cust := new(CustomerRequest)
-	cust.CustomerID = " "
-	cust.CID = c.CID
-	cust.Action = "setup_customer_id"
+	customerNew := new(CustomerRequest)
+	customerNew.CustomerID = " "
+	customerNew.CID = c.CID
+	customerNew.Action = "setup_customer_id"
 	var response DeleteLicenseResponse
-	_, body, err := c.Do("GET", cust)
+	_, body, err := c.Do("GET", customerNew)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("HTTP Get setup_customer_id failed: " + err.Error())
 	}
 	if err = json.Unmarshal(body, &response); err != nil {
-		return nil, err
+		return nil, errors.New("Json Decode setup_customer_id failed: " + err.Error())
 	}
 	return &response.Results, err
 }
 
 func (c *Client) GetCustomerID() (string, error) {
-	cust := new(CustomerRequest)
-	cust.CID = c.CID
-	cust.Action = "list_customer_id"
+	customerNew := new(CustomerRequest)
+	customerNew.CID = c.CID
+	customerNew.Action = "list_customer_id"
 	var response ViewLicenseResponse
-	_, body, err := c.Do("GET", cust)
+	_, body, err := c.Do("GET", customerNew)
 	if err != nil {
-		return "", err
+		return "", errors.New("HTTP Get list_customer_id failed: " + err.Error())
 	}
 	if err = json.Unmarshal(body, &response); err != nil {
-		return "", err
+		return "", errors.New("Json Decode list_customer_id failed: " + err.Error())
 	}
 	return response.Results, nil
 }
