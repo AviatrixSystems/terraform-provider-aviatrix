@@ -14,6 +14,9 @@ func resourceDCExtn() *schema.Resource {
 		Read:   resourceDCExtnRead,
 		Update: resourceDCExtnUpdate,
 		Delete: resourceDCExtnDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"cloud_type": {
