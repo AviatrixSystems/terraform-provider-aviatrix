@@ -39,7 +39,7 @@ resource "aviatrix_fqdn" "test_fqdn" {
 The following arguments are supported:
 
 * `fqdn_tag` - (Required) FQDN Filter Tag Name
-* `fqdn_status` - (Optional) FQDN Filter Tag Name
+* `fqdn_status` - (Optional) FQDN Filter Tag Status. Valid values: "enabled", "disabled"
 * `fqdn_mode` - (Optional) Specify the tag color to be a white-list tag or black-list tag. Valid Values: "white", "black"
 * `gw_list` - (Optional) Name of the gateway. One or more gateways as list ["gw1", "gw2"]
 * `domain_names` - (Optional) One or more domain names in a list with details as listed below
