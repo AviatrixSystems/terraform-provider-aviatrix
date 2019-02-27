@@ -74,7 +74,7 @@ func (c *Client) GetAccountUser(user *AccountUser) (*AccountUser, error) {
 	}
 	users := data.AccountUserList
 	for i := range users {
-		if users[i].UserName == user.UserName && users[i].AccountName == user.AccountName {
+		if users[i].UserName == user.UserName {
 			log.Printf("[INFO] Found Aviatrix user account %s", user.UserName)
 			return &users[i], nil
 		}

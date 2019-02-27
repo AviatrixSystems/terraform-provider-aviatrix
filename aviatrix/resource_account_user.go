@@ -2,11 +2,9 @@ package aviatrix
 
 import (
 	"fmt"
-	"log"
-	"strings"
-
 	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
+	"log"
 )
 
 func resourceAccountUser() *schema.Resource {
@@ -57,7 +55,7 @@ func resourceAccountUserCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("failed to create Aviatrix Account User: %s", err)
 	}
 	log.Printf("[DEBUG] Aviatrix account user %s created", user.UserName)
-	d.SetId(user.UserName + "/" + user.AccountName)
+	d.SetId(user.UserName)
 	return nil
 }
 
@@ -70,8 +68,7 @@ func resourceAccountUserRead(d *schema.ResourceData, meta interface{}) error {
 	if userName == "" || accountName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
-		d.Set("username", strings.Split(id, "/")[0])
-		d.Set("account_name", strings.Split(id, "/")[1])
+		d.Set("username", id)
 		d.SetId(id)
 	}
 
@@ -93,7 +90,7 @@ func resourceAccountUserRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("email", acc.Email)
 		d.Set("username", acc.UserName)
 		// d.Set("password", "") # This will corrupt tf state
-		d.SetId(acc.UserName + "/" + user.AccountName)
+		d.SetId(acc.UserName)
 	}
 	return nil
 }
