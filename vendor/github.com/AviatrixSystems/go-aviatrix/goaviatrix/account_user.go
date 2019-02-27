@@ -61,8 +61,6 @@ func (c *Client) GetAccountUser(user *AccountUser) (*AccountUser, error) {
 	Url.RawQuery = listAccountUsers.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
-	//path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_account_users", c.CID)
-	//resp, err := c.Get(path, nil)
 	if err != nil {
 		return nil, errors.New("HTTP Get list_account_users failed: " + err.Error())
 	}
@@ -115,8 +113,6 @@ func (c *Client) DeleteAccountUser(user *AccountUser) error {
 	Url.RawQuery = deleteAccountUsers.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
-	//path := c.baseURL + fmt.Sprintf("?action=delete_account_user&CID=%s&username=%s", c.CID, user.UserName)
-	//resp, err := c.Get(path, nil)
 	if err != nil {
 		return errors.New("HTTP Get delete_account_user failed: " + err.Error())
 	}

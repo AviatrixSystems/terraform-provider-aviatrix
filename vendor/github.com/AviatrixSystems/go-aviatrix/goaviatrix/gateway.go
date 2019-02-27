@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/url"
 )
 
 // Gateway simple struct to hold gateway details
@@ -117,14 +118,14 @@ func (c *Client) CreateGateway(gateway *Gateway) error {
 	gateway.Action = "connect_container"
 	resp, err := c.Post(c.baseURL, gateway)
 	if err != nil {
-		return err
+		return errors.New("HTTP Post connect_container failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode connect_container failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API connect_container Post failed: " + data.Reason)
 	}
 	return nil
 }
@@ -134,14 +135,14 @@ func (c *Client) EnableNatGateway(gateway *Gateway) error {
 	gateway.Action = "enable_nat"
 	resp, err := c.Post(c.baseURL, gateway)
 	if err != nil {
-		return err
+		return errors.New("HTTP Post enable_nat failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode enable_nat failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API enable_nat Post failed: " + data.Reason)
 	}
 	return nil
 }
@@ -150,14 +151,14 @@ func (c *Client) EnableSingleAZGateway(gateway *Gateway) error {
 	gateway.Action = "enable_single_az_ha"
 	resp, err := c.Post(c.baseURL, gateway)
 	if err != nil {
-		return err
+		return errors.New("HTTP Post enable_single_az_ha failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode enable_single_az_ha failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API enable_single_az_ha Post failed: " + data.Reason)
 	}
 	return nil
 }
@@ -166,29 +167,39 @@ func (c *Client) EnablePeeringHaGateway(gateway *Gateway) error {
 	gateway.Action = "create_peering_ha_gateway"
 	resp, err := c.Post(c.baseURL, gateway)
 	if err != nil {
-		return err
+		return errors.New("HTTP Post create_peering_ha_gateway failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode create_peering_ha_gateway failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API create_peering_ha_gateway Post failed: " + data.Reason)
 	}
 	return nil
 }
 func (c *Client) EnableHaGateway(gateway *Gateway) error {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_vpc_ha&vpc_name=%s&specific_subnet=%s", c.CID, gateway.GwName, gateway.HASubnet)
-	resp, err := c.Get(path, nil)
+	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return err
+		return errors.New(("url Parsing failed for enable_vpc_ha") + err.Error())
+	}
+	enableVpcHa := url.Values{}
+	enableVpcHa.Add("CID", c.CID)
+	enableVpcHa.Add("action", "enable_vpc_ha")
+	enableVpcHa.Add("vpc_name", gateway.GwName)
+	enableVpcHa.Add("specific_subnet", gateway.HASubnet)
+	Url.RawQuery = enableVpcHa.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get enable_vpc_ha failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode enable_vpc_ha failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API enable_vpc_ha Get failed: " + data.Reason)
 	}
 	return nil
 }
@@ -198,54 +209,69 @@ func (c *Client) DisableSingleAZGateway(gateway *Gateway) error {
 	gateway.Action = "disable_single_az_ha"
 	resp, err := c.Post(c.baseURL, gateway)
 	if err != nil {
-		return err
+		return errors.New("HTTP Post disable_single_az_ha failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode disable_single_az_ha failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API disable_single_az_ha Post failed: " + data.Reason)
 	}
 	return nil
 }
 
 func (c *Client) DisableHaGateway(gateway *Gateway) error {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=disable_vpc_ha&vpc_name=%s", c.CID, gateway.GwName)
-	resp, err := c.Get(path, nil)
+	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return err
+		return errors.New(("url Parsing failed for disable_vpc_ha") + err.Error())
+	}
+	disableVpcHa := url.Values{}
+	disableVpcHa.Add("CID", c.CID)
+	disableVpcHa.Add("action", "disable_vpc_ha")
+	disableVpcHa.Add("vpc_name", gateway.GwName)
+	Url.RawQuery = disableVpcHa.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get disable_vpc_ha failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode disable_vpc_ha failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API disable_vpc_ha Get failed: " + data.Reason)
 	}
 	return nil
 }
 
 func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
-	url := "?CID=%s&action=list_vpcs_summary"
-	path := c.baseURL + fmt.Sprintf(url, c.CID)
-
-	resp, err := c.Get(path, nil)
+	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(("url Parsing failed for list_vpcs_summary") + err.Error())
+	}
+	listVpcSummary := url.Values{}
+	listVpcSummary.Add("CID", c.CID)
+	listVpcSummary.Add("action", "list_vpcs_summary")
+	Url.RawQuery = listVpcSummary.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return nil, errors.New("HTTP Get list_vpcs_summary failed: " + err.Error())
 	}
 	var data GatewayListResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, errors.New("Json Decode list_vpcs_summary failed: " + err.Error())
 	}
 	if !data.Return {
-		return nil, errors.New(data.Reason)
+		return nil, errors.New("Rest API list_vpcs_summary Get failed: " + data.Reason)
 	}
 
-	gwlist := data.Results
-	for i := range gwlist {
-		if gwlist[i].GwName == gateway.GwName {
-			return &gwlist[i], nil
+	gwList := data.Results
+	for i := range gwList {
+		if gwList[i].GwName == gateway.GwName {
+			return &gwList[i], nil
 		}
 	}
 	log.Printf("Couldn't find Aviatrix gateway %s", gateway.GwName)
@@ -257,14 +283,14 @@ func (c *Client) UpdateGateway(gateway *Gateway) error {
 	gateway.Action = "edit_gw_config"
 	resp, err := c.Post(c.baseURL, gateway)
 	if err != nil {
-		return err
+		return errors.New("HTTP Post edit_gw_config failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode edit_gw_config failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API edit_gw_config Post failed: " + data.Reason)
 	}
 	return nil
 }
@@ -275,63 +301,88 @@ func (c *Client) DeleteGateway(gateway *Gateway) error {
 	resp, err := c.Delete(path, nil)
 
 	if err != nil {
-		return err
+		return errors.New("HTTP Get delete_container failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode delete_container failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API delete_container Get failed: " + data.Reason)
 	}
 	return nil
 }
 func (c *Client) EnableSNat(gateway *Gateway) error {
-	gateway.CID = c.CID
-	path := c.baseURL + fmt.Sprintf("?action=enable_snat&CID=%s&gateway_name=%s", c.CID, gateway.GwName)
-	resp, err := c.Get(path, nil)
+	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return err
+		return errors.New(("url Parsing failed for enable_snat") + err.Error())
+	}
+	enableSNat := url.Values{}
+	enableSNat.Add("CID", c.CID)
+	enableSNat.Add("action", "enable_snat")
+	enableSNat.Add("gateway_name", gateway.GwName)
+	Url.RawQuery = enableSNat.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get enable_snat failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode enable_snat failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API enable_snat Get failed: " + data.Reason)
 	}
 	return nil
 }
 func (c *Client) DisableSNat(gateway *Gateway) error {
-	gateway.CID = c.CID
-	path := c.baseURL + fmt.Sprintf("?action=disable_snat&CID=%s&gateway_name=%s", c.CID, gateway.GwName)
-	resp, err := c.Get(path, nil)
+	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return err
+		return errors.New(("url Parsing failed for disable_snat") + err.Error())
+	}
+	disableSNat := url.Values{}
+	disableSNat.Add("CID", c.CID)
+	disableSNat.Add("action", "disable_snat")
+	disableSNat.Add("gateway_name", gateway.GwName)
+	Url.RawQuery = disableSNat.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get disable_snat failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode disable_snat failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API disable_snat Get failed: " + data.Reason)
 	}
 	return nil
 }
 func (c *Client) UpdateVpnCidr(gateway *Gateway) error {
-	gateway.CID = c.CID
-	path := c.baseURL + fmt.Sprintf("?action=set_vpn_client_cidr&CID=%s&cidr=%s&vpc_id=%s&lb_or_gateway_name=%s", c.CID,
-		gateway.VpnCidr, gateway.VpcID, gateway.ElbName)
-	resp, err := c.Get(path, nil)
+	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return err
+		return errors.New(("url Parsing failed for set_vpn_client_cidr") + err.Error())
+	}
+	setVpnClientCIDR := url.Values{}
+	setVpnClientCIDR.Add("CID", c.CID)
+	setVpnClientCIDR.Add("action", "set_vpn_client_cidr")
+	setVpnClientCIDR.Add("cidr", gateway.VpnCidr)
+	setVpnClientCIDR.Add("vpc_id", gateway.VpcID)
+	setVpnClientCIDR.Add("lb_or_gateway_name", gateway.ElbName)
+	Url.RawQuery = setVpnClientCIDR.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get set_vpn_client_cidr failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode set_vpn_client_cidr failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API set_vpn_client_cidr Get failed: " + data.Reason)
 	}
 	return nil
 }
