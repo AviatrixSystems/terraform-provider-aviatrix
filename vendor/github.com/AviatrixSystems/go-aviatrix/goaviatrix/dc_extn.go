@@ -3,8 +3,7 @@ package goaviatrix
 import (
 	"encoding/json"
 	"errors"
-	"net/url"
-
+	"fmt"
 	//"log"
 	//"github.com/davecgh/go-spew/spew"
 )
@@ -90,17 +89,9 @@ func (c *Client) UpdateDCExtn(dcx *DCExtn) error {
 }
 
 func (c *Client) DeleteDCExtn(dcx *DCExtn) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for delete_container") + err.Error())
-	}
-	deleteContainer := url.Values{}
-	deleteContainer.Add("CID", c.CID)
-	deleteContainer.Add("action", "delete_container")
-	deleteContainer.Add("cloud_type", string(dcx.CloudType))
-	deleteContainer.Add("gw_name", dcx.GwName)
-	Url.RawQuery = deleteContainer.Encode()
-	resp, err := c.Get(Url.String(), nil)
+	path := c.baseURL + fmt.Sprintf("?action=delete_container&CID=%s&cloud_type=%d&gw_name=%s",
+		c.CID, dcx.CloudType, dcx.GwName)
+	resp, err := c.Get(path, nil)
 
 	if err != nil {
 		return errors.New("HTTP Get delete_container failed: " + err.Error())
