@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -14,6 +15,9 @@ func resourceTunnel() *schema.Resource {
 		Read:   resourceTunnelRead,
 		Update: resourceTunnelUpdate,
 		Delete: resourceTunnelDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"vpc_name1": {
@@ -78,12 +82,24 @@ func resourceTunnelCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Tunnel: %s", err)
 	}
-	d.SetId(tunnel.VpcName1 + "<->" + tunnel.VpcName2)
+	d.SetId(tunnel.VpcName1 + "~" + tunnel.VpcName2)
 	return resourceTunnelRead(d, meta)
 }
 
 func resourceTunnelRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	vpcName1 := d.Get("vpc_name1").(string)
+	vpcName2 := d.Get("vpc_name2").(string)
+
+	if vpcName1 == "" || vpcName2 == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import, no vpc names received. Import Id is %s", id)
+		d.Set("vpc_name1", strings.Split(id, "~")[0])
+		d.Set("vpc_name2", strings.Split(id, "~")[1])
+		d.SetId(id)
+	}
+
 	tunnel := &goaviatrix.Tunnel{
 		VpcName1: d.Get("vpc_name1").(string),
 		VpcName2: d.Get("vpc_name2").(string),
@@ -104,7 +120,7 @@ func resourceTunnelRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("peering_state", tun.PeeringState)
 	d.Set("peering_link", tun.PeeringLink)
 	d.Set("enable_ha", tun.EnableHA)
-	d.SetId(tun.VpcName1 + "<->" + tun.VpcName2)
+	d.SetId(tun.VpcName1 + "~" + tun.VpcName2)
 	log.Printf("[INFO] Found tunnel: %#v", d)
 	return nil
 }
@@ -127,7 +143,7 @@ func resourceTunnelUpdate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("failed to update Aviatrix Tunnel: %s", err)
 	}
-	d.SetId(tunnel.VpcName1 + "<->" + tunnel.VpcName2)
+	d.SetId(tunnel.VpcName1 + "~" + tunnel.VpcName2)
 	return resourceTunnelRead(d, meta)
 }
 
@@ -149,20 +165,6 @@ func resourceTunnelDelete(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("failed to delete Aviatrix HA gateway: %s", err)
 		}
 	}
-
-	//tunnelHa := &goaviatrix.Tunnel{
-	//	VpcName1: tunnel.VpcName1 + "-hagw",
-	//	VpcName2: tunnel.VpcName2 + "-hagw",
-	//}
-	//_, err := client.GetTunnel(tunnelHa)
-	//if err == nil {
-	//	err1 := client.DeleteTunnel(tunnelHa)
-	//	if err1 != nil {
-	//		return fmt.Errorf("failed to delete Aviatrix HA gateway: %s", err1)
-	//	}
-	//} else if err != goaviatrix.ErrNotFound {
-	//	return fmt.Errorf("failed to delete Aviatrix HA gateway: %s", err)
-	//}
 
 	tunnel.VpcName1 = d.Get("vpc_name1").(string)
 	tunnel.VpcName2 = d.Get("vpc_name2").(string)

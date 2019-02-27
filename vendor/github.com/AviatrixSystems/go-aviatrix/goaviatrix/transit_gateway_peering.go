@@ -42,9 +42,6 @@ func (c *Client) CreateTransitGatewayPeering(transitGatewayPeering *TransitGatew
 	Url.RawQuery = createInterTransitGwPeering.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
-	//path := c.baseURL + fmt.Sprintf("?CID=%s&action=create_inter_transit_gateway_peering&gateway1=%s&gateway2=%s",
-	//	c.CID, transitGatewayPeering.TransitGatewayName1, transitGatewayPeering.TransitGatewayName2)
-	//resp, err := c.Get(path, nil)
 	if err != nil {
 		return errors.New("HTTP Get create_inter_transit_gateway_peering failed: " + err.Error())
 	}
@@ -69,8 +66,6 @@ func (c *Client) GetTransitGatewayPeering(transitGatewayPeering *TransitGatewayP
 	Url.RawQuery = listInterTransitGwPeering.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
-	//path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_inter_transit_gateway_peering", c.CID)
-	//resp, err := c.Get(path, nil)
 	if err != nil {
 		return errors.New("HTTP Get list_inter_transit_gateway_peering failed: " + err.Error())
 	}
@@ -120,9 +115,6 @@ func (c *Client) DeleteTransitGatewayPeering(transitGatewayPeering *TransitGatew
 	Url.RawQuery = deleteInterTransitGwPeering.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
-	//path := c.baseURL + fmt.Sprintf("?CID=%s&action=delete_inter_transit_gateway_peering&gateway1=%s&gateway2=%s",
-	//	c.CID, transitGatewayPeering.TransitGatewayName1, transitGatewayPeering.TransitGatewayName2)
-	//resp, err := c.Delete(path, nil)
 	if err != nil {
 		return errors.New("HTTP Get delete_inter_transit_gateway_peering failed: " + err.Error())
 	}
