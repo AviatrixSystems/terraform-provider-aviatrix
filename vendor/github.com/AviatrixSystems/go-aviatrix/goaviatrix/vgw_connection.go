@@ -3,7 +3,7 @@ package goaviatrix
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"net/url"
 )
 
 // VGWConn simple struct to hold VGW Connection details
@@ -30,28 +30,47 @@ type VGWConnList struct {
 }
 
 func (c *Client) CreateVGWConn(vgwConn *VGWConn) error {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=connect_transit_gw_to_vgw&vpc_id=%s&connection_name=%s&"+
-		"transit_gw=%s&vgw_id=%s&bgp_local_as_number=%s", c.CID, vgwConn.VPCId, vgwConn.ConnName, vgwConn.GwName,
-		vgwConn.BgpVGWId, vgwConn.BgpLocalAsNum)
-	resp, err := c.Get(path, nil)
+	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return err
+		return errors.New(("url Parsing failed for connect_transit_gw_to_vgw") + err.Error())
+	}
+	connectTransitGwToVgw := url.Values{}
+	connectTransitGwToVgw.Add("CID", c.CID)
+	connectTransitGwToVgw.Add("action", "connect_transit_gw_to_vgw")
+	connectTransitGwToVgw.Add("vpc_id", vgwConn.VPCId)
+	connectTransitGwToVgw.Add("connection_name", vgwConn.ConnName)
+	connectTransitGwToVgw.Add("transit_gw", vgwConn.GwName)
+	connectTransitGwToVgw.Add("vgw_id", vgwConn.BgpVGWId)
+	connectTransitGwToVgw.Add("bgp_local_as_number", vgwConn.BgpLocalAsNum)
+	Url.RawQuery = connectTransitGwToVgw.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get connect_transit_gw_to_vgw failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode connect_transit_gw_to_vgw failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API connect_transit_gw_to_vgw Get failed: " + data.Reason)
 	}
 	return nil
 }
 
 func (c *Client) GetVGWConn(vgwConn *VGWConn) (*VGWConn, error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_vgw_connections", c.CID)
-	resp, err := c.Get(path, nil)
+	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(("url Parsing failed for list_vgw_connections") + err.Error())
+	}
+	listVgwConnections := url.Values{}
+	listVgwConnections.Add("CID", c.CID)
+	listVgwConnections.Add("action", "list_vgw_connections")
+	Url.RawQuery = listVgwConnections.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return nil, errors.New("HTTP Get list_vgw_connections failed: " + err.Error())
 	}
 	data := VGWConnListResp{
 		Return:  false,
@@ -59,11 +78,11 @@ func (c *Client) GetVGWConn(vgwConn *VGWConn) (*VGWConn, error) {
 		Reason:  "",
 	}
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, errors.New("Json Decode list_vgw_connections failed: " + err.Error())
 	}
 
 	if !data.Return {
-		return nil, errors.New(data.Reason)
+		return nil, errors.New("Rest API list_vgw_connections Get failed: " + data.Reason)
 	}
 
 	vgwConnList := data.Results
@@ -80,18 +99,27 @@ func (c *Client) UpdateVGWConn(vgwConn *VGWConn) error {
 }
 
 func (c *Client) DeleteVGWConn(vgwConn *VGWConn) error {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=disconnect_transit_gw_from_vgw&vpc_id=%s&connection_name=%s",
-		c.CID, vgwConn.VPCId, vgwConn.ConnName)
-	resp, err := c.Get(path, nil)
+	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return err
+		return errors.New(("url Parsing failed for disconnect_transit_gw_from_vgw") + err.Error())
+	}
+	disconnectTransitGwFromVgw := url.Values{}
+	disconnectTransitGwFromVgw.Add("CID", c.CID)
+	disconnectTransitGwFromVgw.Add("action", "disconnect_transit_gw_from_vgw")
+	disconnectTransitGwFromVgw.Add("vpc_id", vgwConn.VPCId)
+	disconnectTransitGwFromVgw.Add("connection_name", vgwConn.ConnName)
+	Url.RawQuery = disconnectTransitGwFromVgw.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get disconnect_transit_gw_from_vgw failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode disconnect_transit_gw_from_vgw failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API disconnect_transit_gw_from_vgw Get failed: " + data.Reason)
 	}
 	return nil
 }
