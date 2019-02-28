@@ -28,11 +28,6 @@ func resourceTunnel() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"over_aws_peering": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"peering_state": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -68,7 +63,6 @@ func resourceTunnelCreate(d *schema.ResourceData, meta interface{}) error {
 	tunnel := &goaviatrix.Tunnel{
 		VpcName1:        d.Get("vpc_name1").(string),
 		VpcName2:        d.Get("vpc_name2").(string),
-		OverAwsPeering:  d.Get("over_aws_peering").(string),
 		PeeringState:    d.Get("peering_state").(string),
 		PeeringHaStatus: d.Get("peering_hastatus").(string),
 		Cluster:         d.Get("cluster").(string),
@@ -115,7 +109,6 @@ func resourceTunnelRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Found Aviatrix tunnel: %#v", tun)
 
 	d.Set("cluster", tun.Cluster)
-	d.Set("over_aws_peering", tun.OverAwsPeering)
 	d.Set("peering_hastatus", tun.PeeringHaStatus)
 	d.Set("peering_state", tun.PeeringState)
 	d.Set("peering_link", tun.PeeringLink)
@@ -130,7 +123,6 @@ func resourceTunnelUpdate(d *schema.ResourceData, meta interface{}) error {
 	tunnel := &goaviatrix.Tunnel{
 		VpcName1:        d.Get("vpc_name1").(string),
 		VpcName2:        d.Get("vpc_name2").(string),
-		OverAwsPeering:  d.Get("over_aws_peering").(string),
 		PeeringState:    d.Get("peering_state").(string),
 		PeeringHaStatus: d.Get("peering_hastatus").(string),
 		Cluster:         d.Get("cluster").(string),

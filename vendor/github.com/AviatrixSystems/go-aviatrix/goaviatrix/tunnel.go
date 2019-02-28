@@ -12,7 +12,6 @@ import (
 type Tunnel struct {
 	VpcName1        string `json:"vpc_name1"`
 	VpcName2        string `json:"vpc_name2"`
-	OverAwsPeering  string `json:"over_aws_peering"`
 	PeeringState    string `json:"peering_state"`
 	PeeringHaStatus string `json:"peering_ha_status"`
 	Cluster         string `json:"cluster"`
