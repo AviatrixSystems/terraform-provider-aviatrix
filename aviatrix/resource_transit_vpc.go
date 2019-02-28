@@ -198,7 +198,7 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		}
 		err := client.EnableSNat(gw)
 		if err != nil {
-			return fmt.Errorf("failed to disable SNAT: %s", err)
+			return fmt.Errorf("failed to enable SNAT: %s", err)
 		}
 	}
 	return resourceAviatrixTransitVpcRead(d, meta)
@@ -406,13 +406,11 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 			if err != nil {
 				return fmt.Errorf("failed to enable transit GW for Hybrid: %s", err)
 			}
-		} else if enableHybridConnection == false {
+		} else {
 			err := client.DetachTransitGWForHybrid(transitGateway)
 			if err != nil {
 				return fmt.Errorf("failed to disable transit GW for Hybrid: %s", err)
 			}
-		} else {
-			return fmt.Errorf("enable_hybrid_connection can only be set to true or false")
 		}
 	}
 	if d.HasChange("connected_transit") {
