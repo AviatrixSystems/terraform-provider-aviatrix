@@ -51,6 +51,7 @@ func resourceTunnel() *schema.Resource {
 			"enable_ha": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "no",
 			},
 			//FIXME : Some of the above are computed. Set them correctly. Boolean valus should not be Optional to
 			// prevent tf state corruption
@@ -69,7 +70,9 @@ func resourceTunnelCreate(d *schema.ResourceData, meta interface{}) error {
 		PeeringLink:     d.Get("peering_link").(string),
 		EnableHA:        d.Get("enable_ha").(string),
 	}
-
+	if tunnel.EnableHA != "" && tunnel.EnableHA != "yes" && tunnel.EnableHA != "no" {
+		return fmt.Errorf("enable_ha can only be empty string, 'yes', or 'no'")
+	}
 	log.Printf("[INFO] Creating Aviatrix tunnel: %#v", tunnel)
 
 	err := client.CreateTunnel(tunnel)
@@ -112,7 +115,11 @@ func resourceTunnelRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("peering_hastatus", tun.PeeringHaStatus)
 	d.Set("peering_state", tun.PeeringState)
 	d.Set("peering_link", tun.PeeringLink)
-	d.Set("enable_ha", tun.EnableHA)
+	if tun.PeeringHaStatus == "active" {
+		d.Set("enable_ha", "yes")
+	} else {
+		d.Set("enable_ha", "no")
+	}
 	d.SetId(tun.VpcName1 + "~" + tun.VpcName2)
 	log.Printf("[INFO] Found tunnel: %#v", d)
 	return nil
