@@ -294,6 +294,7 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Reading AWS TGW")
 	awsTgw, err2 := client.GetAWSTgw(awsTgw)
+
 	if err2 != nil {
 		return fmt.Errorf("couldn't find AWS TGW: %s", awsTgw.Name)
 	}
@@ -317,13 +318,10 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 			aVPCs = append(aVPCs, vpcSolo)
 		}
 		sdr["attached_vpc"] = aVPCs
-
 		mSecurityDomain[sd.Name] = sdr
 	}
-
 	var securityDomains []map[string]interface{}
 	domains := d.Get("security_domains").([]interface{})
-
 	mOld := make(map[string]bool)
 
 	for _, domain := range domains {
@@ -367,6 +365,13 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 			for _, attachedVPCs := range dn["attached_vpc"].([]interface{}) {
 				attachedVPC := attachedVPCs.(map[string]interface{})
 				if mVPC[attachedVPC["vpc_id"].(string)] {
+					for _, attachedVPCsFromRefresh := range mSecurityDomain[dn["security_domain_name"].(string)]["attached_vpc"].([]interface{}) {
+						attachedVPCFromRefresh := attachedVPCsFromRefresh.(map[string]interface{})
+						if attachedVPCFromRefresh["vpc_id"] == attachedVPC["vpc_id"] {
+							attachedVPC["vpc_account_name"] = attachedVPCFromRefresh["vpc_account_name"]
+							attachedVPC["vpc_region"] = attachedVPCFromRefresh["vpc_region"]
+						}
+					}
 					aVPCNew = append(aVPCNew, attachedVPC)
 					mVPC[attachedVPC["vpc_id"].(string)] = false
 				}
@@ -378,7 +383,6 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 					aVPCNew = append(aVPCNew, attachedVPC)
 				}
 			}
-
 			mSecurityDomain[dn["security_domain_name"].(string)]["attached_vpc"] = aVPCNew
 
 			securityDomains = append(securityDomains, mSecurityDomain[dn["security_domain_name"].(string)])
@@ -390,7 +394,6 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 			securityDomains = append(securityDomains, mSecurityDomain[dn.Name])
 		}
 	}
-
 	d.Set("security_domains", securityDomains)
 
 	return nil
