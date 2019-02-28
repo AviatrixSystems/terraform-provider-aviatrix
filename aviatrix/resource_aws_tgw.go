@@ -97,6 +97,19 @@ func resourceAWSTgwCreate(d *schema.ResourceData, meta interface{}) error {
 		SecurityDomains:           make([]goaviatrix.SecurityDomainRule, 0),
 	}
 
+	if awsTgw.Name == "" {
+		return fmt.Errorf("tgw name can't be empty string")
+	}
+	if awsTgw.AccountName == "" {
+		return fmt.Errorf("account name can't be empty string")
+	}
+	if awsTgw.Region == "" {
+		return fmt.Errorf("tgw region can't be empty string")
+	}
+	if awsTgw.AwsSideAsNumber == "" {
+		return fmt.Errorf("tgw name can't be empty string")
+	}
+
 	log.Printf("[INFO] Creating AWS TGW")
 
 	var domainsAll []string
@@ -269,30 +282,22 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	awsTgw := &goaviatrix.AWSTgw{
-		Name:            d.Get("tgw_name").(string),
-		AccountName:     d.Get("account_name").(string),
-		Region:          d.Get("region").(string),
-		AwsSideAsNumber: d.Get("aws_side_as_number").(string),
+		Name: d.Get("tgw_name").(string),
 	}
-	if tgwName == "" {
-		awsTgwFromClient, err := client.ListTgwDetails(awsTgw)
-		if err != nil {
-			return fmt.Errorf("couldn't find AWS TGW: %s", awsTgw.Name)
-		}
-		awsTgw.AwsSideAsNumber = awsTgwFromClient.AwsSideAsNumber
-		awsTgw.Region = awsTgwFromClient.Region
-		awsTgw.AccountName = awsTgwFromClient.AccountName
-	}
-
-	log.Printf("[INFO] Reading AWS TGW")
-	awsTgw, err := client.GetAWSTgw(awsTgw)
+	awsTgw, err := client.ListTgwDetails(awsTgw)
 	if err != nil {
 		return fmt.Errorf("couldn't find AWS TGW: %s", awsTgw.Name)
 	}
-
 	d.Set("account_name", awsTgw.AccountName)
 	d.Set("tgw_name", awsTgw.Name)
 	d.Set("region", awsTgw.Region)
+
+	log.Printf("[INFO] Reading AWS TGW")
+	awsTgw, err2 := client.GetAWSTgw(awsTgw)
+	if err2 != nil {
+		return fmt.Errorf("couldn't find AWS TGW: %s", awsTgw.Name)
+	}
+
 	d.Set("aws_side_as_number", awsTgw.AwsSideAsNumber)
 	d.Set("attached_aviatrix_transit_gateway", awsTgw.AttachedAviatrixTransitGW)
 
@@ -411,6 +416,19 @@ func resourceAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
 	var toDetachVPCs [][]string
 
 	d.Partial(true)
+
+	if d.HasChange("tgw_name") {
+		return fmt.Errorf("updating tgw_name is not allowed")
+	}
+	if d.HasChange("account_name") {
+		return fmt.Errorf("updating account_name is not allowed")
+	}
+	if d.HasChange("region") {
+		return fmt.Errorf("updating region is not allowed")
+	}
+	if d.HasChange("aws_side_as_number") {
+		return fmt.Errorf("updating aws_side_as_number is not allowed")
+	}
 
 	mAttachedGWNew := make(map[string]int)
 
