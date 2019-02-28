@@ -120,6 +120,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"otp_mode": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "",
 			},
 			"saml_enabled": {
 				Type:     schema.TypeString,
@@ -277,7 +278,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		Eip:                d.Get("eip").(string),
 	}
 	if gateway.OtpMode != "" && gateway.OtpMode != "2" && gateway.OtpMode != "3" {
-		return fmt.Errorf("otp_mode can only be '2' or '3' or nil")
+		return fmt.Errorf("otp_mode can only be '2' or '3' or empty string")
 	}
 	if gateway.EnableElb != "yes" {
 		gateway.EnableElb = "no"
