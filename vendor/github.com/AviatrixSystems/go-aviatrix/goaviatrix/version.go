@@ -52,7 +52,7 @@ func (c *Client) Upgrade(version *Version) error {
 	attachSpokeToTransitGw.Add("action", "upgrade")
 
 	if version.Version == "" {
-		return nil
+		return errors.New("new target version is set")
 	} else if version.Version != "latest" {
 		attachSpokeToTransitGw.Add("version", version.Version)
 	}

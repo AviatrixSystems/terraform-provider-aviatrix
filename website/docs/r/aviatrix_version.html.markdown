@@ -15,7 +15,14 @@ The AviatrixVersion resource manages the controller upgrade process
 ```hcl
 # Manage Aviatrix Controller Upgrade process
 resource "aviatrix_version" "test_version" {
-  version = "latest"
+  target_version = "latest"
+}
+```
+
+```hcl
+# Manage Aviatrix Controller Upgrade process
+resource "aviatrix_version" "test_version" {
+  target_version = "4.1"
 }
 ```
 
