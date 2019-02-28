@@ -3,6 +3,7 @@ package goaviatrix
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/url"
 	"strings"
@@ -318,4 +319,19 @@ func (c *Client) GetProfileBasePolicy(profile *Profile) (*Profile, error) {
 	}
 
 	return profile, nil
+}
+
+func (c *Client) ValidateProfileRule(profileRule *ProfileRule) error {
+	if profileRule.Action != "allow" && profileRule.Action != "deny" {
+		return fmt.Errorf("valid action is only 'allow' or 'deny'")
+	}
+	protocolDefaultValues := []string{"all", "tcp", "udp", "icmp", "sctp", "rdp", "dccp"}
+	protocolVal := []string{profileRule.Protocol}
+	if profileRule.Protocol == "" || len(Difference(protocolVal, protocolDefaultValues)) != 0 {
+		return fmt.Errorf("proto can only be one of {'all', 'tcp', 'udp', 'icmp', 'sctp', 'rdp', 'dccp'}")
+	}
+	if (profileRule.Protocol == "all" || profileRule.Protocol == "icmp") && (profileRule.Port != "0:65535") {
+		return fmt.Errorf("port should be '0:65535' for protocal 'all' or 'icmp'")
+	}
+	return nil
 }
