@@ -103,8 +103,8 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		EnableHybridConnection: d.Get("enable_hybrid_connection").(bool),
 		ConnectedTransit:       d.Get("connected_transit").(string),
 	}
-	if gateway.EnableNAT != "yes" {
-		gateway.EnableNAT = "no"
+	if gateway.EnableNAT != "" && gateway.EnableNAT != "yes" && gateway.EnableNAT != "no" {
+		return fmt.Errorf("enable_nat can only be empty string, 'yes', or 'no'")
 	}
 	enableNat := gateway.EnableNAT
 	if _, ok := d.GetOk("tag_list"); ok {
