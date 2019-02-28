@@ -38,7 +38,7 @@ func resourceAdminEmailCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(adminEmail)
 
-	return nil
+	return resourceAdminEmailRead(d, meta)
 }
 
 func resourceAdminEmailRead(d *schema.ResourceData, meta interface{}) error {
@@ -49,6 +49,7 @@ func resourceAdminEmailRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("failed to get Aviatrix Admin Email: %s", err)
 	}
+	d.Set("admin_email", adminEmail)
 	d.SetId(adminEmail)
 
 	return nil

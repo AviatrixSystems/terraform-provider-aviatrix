@@ -107,7 +107,7 @@ func resourceAWSTgwCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("tgw region can't be empty string")
 	}
 	if awsTgw.AwsSideAsNumber == "" {
-		return fmt.Errorf("tgw name can't be empty string")
+		return fmt.Errorf("aws side number can't be empty string")
 	}
 
 	log.Printf("[INFO] Creating AWS TGW")
