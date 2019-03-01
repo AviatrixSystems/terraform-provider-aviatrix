@@ -49,3 +49,10 @@ The following arguments are supported:
 * `enable_hybrid_connection` - (Optional) Sign of readiness for TGW connection.( Example : false)
 * `connected_transit` - (Optional) Specify Connected Transit status. (Supported values: "yes", "no")
 
+## Import
+
+Instance transit_vpc can be imported using the gw_name, e.g.
+
+```hcl
+$ terraform import aviatrix_transit_vpc.test gw_name
+```
