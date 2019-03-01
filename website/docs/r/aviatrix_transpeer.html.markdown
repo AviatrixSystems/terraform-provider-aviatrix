@@ -28,3 +28,11 @@ The following arguments are supported:
 * `source` - (Required) Name of Source gateway.
 * `nexthop` - (Required) Name of nexthop gateway.
 * `reachable_cidr` - (Required) Destination CIDR.
+
+## Import
+
+Instance trans_peer can be imported using the source, nexthop and reachable_cidr, e.g.
+
+```hcl
+$ terraform import aviatrix_trans_peer.test source~nexthop~reachable_cidr
+```
