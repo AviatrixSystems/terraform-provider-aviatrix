@@ -120,13 +120,11 @@ func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error
 		Policy: make([]goaviatrix.ProfileRule, 0),
 	}
 
-	if profileName == "" {
-		profile0, err := client.GetProfileBasePolicy(profile)
-		if err != nil {
-			return fmt.Errorf("can't get profile base policy for profile: %s", profile.Name)
-		}
-		d.Set("base_rule", profile0.BaseRule)
+	profileBase, errBase := client.GetProfileBasePolicy(profile)
+	if errBase != nil {
+		return fmt.Errorf("can't get profile base policy for profile: %s", profile.Name)
 	}
+	d.Set("base_rule", profileBase.BaseRule)
 
 	log.Printf("[INFO] Reading Aviatrix Profile: %#v", profile)
 	profile, err := client.GetProfile(profile)

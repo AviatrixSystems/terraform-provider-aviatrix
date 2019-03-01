@@ -168,7 +168,6 @@ func (c *Client) GetProfile(profile *Profile) (*Profile, error) {
 	}
 
 	//profile.BaseRule = data2.Results[profile.Name]
-	log.Printf("zjin0000: data2.Results is %v", data2.Results[profile.Name])
 	profile.UserList = data2.Results[profile.Name]
 
 	log.Printf("[TRACE] Profile list of users %s", profile.UserList)
