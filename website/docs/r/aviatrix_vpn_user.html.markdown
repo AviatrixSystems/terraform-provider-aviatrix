@@ -34,8 +34,8 @@ The following arguments are supported:
 
 ## Import
 
-Instance vpn_user can be imported using the id, e.g.
+Instance vpn_user can be imported using the user_name, e.g.
 
 ```hcl
-$ terraform import aviatrix_vpn_user.test vpn_user.UserName
+$ terraform import aviatrix_vpn_user.test user_name
 ```
