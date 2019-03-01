@@ -135,19 +135,15 @@ func resourceAviatrixFQDNRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	fqdn := &goaviatrix.FQDN{
-		FQDNTag:    d.Get("fqdn_tag").(string),
-		FQDNStatus: d.Get("fqdn_status").(string),
-		FQDNMode:   d.Get("fqdn_mode").(string),
+		FQDNTag: d.Get("fqdn_tag").(string),
 	}
 
-	if fqdnTag == "" {
-		fqdn0, err := client.GetFQDNTag(fqdn)
-		if err != nil {
-			return fmt.Errorf("couldn't find FQDN tag: %s", err)
-		}
-		d.Set("fqdn_status", fqdn0.FQDNStatus)
-		d.Set("fqdn_mode", fqdn0.FQDNMode)
+	fqdn, err := client.GetFQDNTag(fqdn)
+	if err != nil {
+		return fmt.Errorf("couldn't find FQDN tag: %s", err)
 	}
+	d.Set("fqdn_status", fqdn.FQDNStatus)
+	d.Set("fqdn_mode", fqdn.FQDNMode)
 
 	log.Printf("[INFO] Reading Aviatrix FQDN: %#v", fqdn)
 	newfqdn, err := client.GetFQDNTag(fqdn)

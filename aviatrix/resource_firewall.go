@@ -70,7 +70,7 @@ func resourceAviatrixFirewall() *schema.Resource {
 func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	firewall := &goaviatrix.Firewall{
-		GwName: d.Get("gw_name").(string),
+		GwName:        d.Get("gw_name").(string),
 		BaseAllowDeny: d.Get("base_allow_deny").(string),
 		BaseLogEnable: d.Get("base_log_enable").(string),
 	}
@@ -103,7 +103,7 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 				LogEnable: pl["log_enable"].(string),
 			}
 			err := client.ValidatePolicy(firewallPolicy)
-			if err != nil{
+			if err != nil {
 				return fmt.Errorf("policy validation failed: %v", err)
 			}
 			firewall.PolicyList = append(firewall.PolicyList, firewallPolicy)
@@ -223,7 +223,7 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 				LogEnable: pl["log_enable"].(string),
 			}
 			err := client.ValidatePolicy(firewallPolicy)
-			if err != nil{
+			if err != nil {
 				return fmt.Errorf("policy validation failed: %v", err)
 			}
 			firewall.PolicyList = append(firewall.PolicyList, firewallPolicy)
