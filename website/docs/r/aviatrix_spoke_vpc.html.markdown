@@ -48,3 +48,11 @@ The following arguments are supported:
 * `dns_server` - (Optional) Specify the DNS IP
 * `transit_gw` - (Optional)  Specify the transit Gateway
 * `tag_list` - (Optional) Instance tag of cloud provider. Example: key1:value1,key002:value002, etc...
+
+## Import
+
+Instance spoke_vpc can be imported using the gw_name, e.g.
+
+```hcl
+$ terraform import aviatrix_spoke_vpc.test gw_name
+```
