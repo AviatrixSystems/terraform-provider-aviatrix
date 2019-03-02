@@ -80,3 +80,11 @@ The following arguments are computed - please do not edit in the resource file:
 * `security_group_id` - Security group used for the gateway.
 * `cloud_instance_id` - Instance ID of the gateway
 * `cloudn_bkup_gateway_inst_id` - Instance ID of the backup gateway
+
+## Import
+
+Instance gateway can be imported using the gw_name, e.g.
+
+```hcl
+$ terraform import aviatrix_gateway.test gw_name
+```
