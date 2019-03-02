@@ -48,3 +48,11 @@ The following arguments are supported:
     * `port` - (Optional) Port. Example "25" 
         * protocol 'all' will default to 'all' regardless of input
         * icmp type/code is expected as 0-39/0-19 or None or "ping" in the port field
+
+## Import
+
+Instance fqdn can be imported using the fqdn_tag, e.g.
+
+```hcl
+$ terraform import aviatrix_fqdn.test fqdn_tag
+```
