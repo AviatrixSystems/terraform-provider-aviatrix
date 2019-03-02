@@ -31,3 +31,10 @@ The following arguments are supported for creating user account:
 * `email` - (Required) Email of address of account user to be created.
 * `password` - (Required) Login password for the account user to be created. If password is changed, current account will be destroyed and a new account will be created.
 
+## Import
+
+Instance account_user can be imported using the username, e.g.
+
+```hcl
+$ terraform import aviatrix_account_user.test username
+```
