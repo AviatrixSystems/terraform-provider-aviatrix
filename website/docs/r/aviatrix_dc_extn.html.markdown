@@ -40,3 +40,11 @@ The following arguments are supported:
 * `internet_access` - (Optional) Indicates whether internet access would be enabled or not. Valid Values: "yes", "no".
 * `public_subnet` - (Optional) Indicates whether a public subnet CIDR would be assigned or not. Valid Values: "yes", "no".
 * `tunnel_type` - (Optional) Indicates whether tunnel is TCP-based or UDP-based. Valid Values: "tcp", "udp".
+
+## Import
+
+Instance dc_extn can be imported using the gw_name, e.g.
+
+```hcl
+$ terraform import aviatrix_dc_extn.test gw_name
+```
