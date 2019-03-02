@@ -53,3 +53,11 @@ The following arguments are supported:
   * `port`: a single port or a range of port numbers. e.g.: "25", "25:1024".
   * `allow_deny`: "allow" and "deny"
   * `log_enable`: "on" and "off"
+
+## Import
+
+Instance firewall can be imported using the gw_name, e.g.
+
+```hcl
+$ terraform import aviatrix_firewall.test gw_name
+```
