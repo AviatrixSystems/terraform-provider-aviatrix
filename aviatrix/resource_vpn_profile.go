@@ -140,9 +140,17 @@ func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[TRACE] Profile policy %v", profile.Policy)
 	log.Printf("[TRACE] Profile users %v", d.Get("users"))
 
-	d.Set("users", profile.UserList)
-	log.Printf("[TRACE] Profile userlistnew %v", profile.UserList)
-
+	var users []string
+	for _, user := range d.Get("users").([]interface{}) {
+		users = append(users, user.(string))
+	}
+	if len(goaviatrix.Difference(users, profile.UserList)) == 0 &&
+		len(goaviatrix.Difference(profile.UserList, users)) == 0 {
+		d.Set("users", users)
+	} else {
+		d.Set("users", profile.UserList)
+		log.Printf("[TRACE] Profile userlistnew %v", profile.UserList)
+	}
 	log.Printf("[TRACE] Profile policy %v", profile.Policy)
 
 	var Policies []map[string]interface{}
