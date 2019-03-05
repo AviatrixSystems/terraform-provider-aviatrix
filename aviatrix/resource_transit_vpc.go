@@ -337,15 +337,19 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		ns := n.([]interface{})
 		oldTagList := goaviatrix.ExpandStringList(os)
 		tags.TagList = strings.Join(oldTagList, ",")
-		err := client.DeleteTags(tags)
-		if err != nil {
-			return fmt.Errorf("failed to delete tags : %s", err)
+		if tags.TagList != "" {
+			err := client.DeleteTags(tags)
+			if err != nil {
+				return fmt.Errorf("failed to delete tags : %s", err)
+			}
 		}
 		newTagList := goaviatrix.ExpandStringList(ns)
 		tags.TagList = strings.Join(newTagList, ",")
-		err = client.AddTags(tags)
-		if err != nil {
-			return fmt.Errorf("failed to add tags : %s", err)
+		if tags.TagList != "" {
+			err := client.AddTags(tags)
+			if err != nil {
+				return fmt.Errorf("failed to add tags : %s", err)
+			}
 		}
 		d.SetPartial("tag_list")
 	}
