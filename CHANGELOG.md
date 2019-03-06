@@ -44,5 +44,3 @@ CHANGES
       - resource_vgw_conn
       - resource_vpn_profile
       - resource_vpn_user 
-
-
