@@ -26,10 +26,12 @@ func resourceAviatrixFirewall() *schema.Resource {
 			"base_allow_deny": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "deny-all",
 			},
 			"base_log_enable": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "off",
 			},
 			"policy": {
 				Type:     schema.TypeList,
@@ -74,11 +76,11 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 		BaseAllowDeny: d.Get("base_allow_deny").(string),
 		BaseLogEnable: d.Get("base_log_enable").(string),
 	}
-	if firewall.BaseAllowDeny != "" && firewall.BaseAllowDeny != "allow-all" && firewall.BaseAllowDeny != "deny-all" {
-		return fmt.Errorf("base_allow_deny can only be empty string, 'allow-all', or 'deny-all'")
+	if firewall.BaseAllowDeny != "allow-all" && firewall.BaseAllowDeny != "deny-all" {
+		return fmt.Errorf("base_allow_deny can only be 'allow-all', or 'deny-all'")
 	}
-	if firewall.BaseLogEnable != "" && firewall.BaseAllowDeny != "yes" && firewall.BaseAllowDeny != "no" {
-		return fmt.Errorf("base_log_enable can only be empty string, 'yes', or 'no'")
+	if firewall.BaseLogEnable != "on" && firewall.BaseLogEnable != "off" {
+		return fmt.Errorf("base_log_enable can only be 'on', or 'off'")
 	}
 	log.Printf("[INFO] Creating Aviatrix firewall: %#v", firewall)
 
