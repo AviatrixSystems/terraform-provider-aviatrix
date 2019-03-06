@@ -14,6 +14,9 @@ func resourceAviatrixFirewall() *schema.Resource {
 		Read:   resourceAviatrixFirewallRead,
 		Update: resourceAviatrixFirewallUpdate,
 		Delete: resourceAviatrixFirewallDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"gw_name": {
@@ -23,10 +26,12 @@ func resourceAviatrixFirewall() *schema.Resource {
 			"base_allow_deny": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "deny-all",
 			},
 			"base_log_enable": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "off",
 			},
 			"policy": {
 				Type:     schema.TypeList,
@@ -67,18 +72,20 @@ func resourceAviatrixFirewall() *schema.Resource {
 func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	firewall := &goaviatrix.Firewall{
-		GwName: d.Get("gw_name").(string),
+		GwName:        d.Get("gw_name").(string),
+		BaseAllowDeny: d.Get("base_allow_deny").(string),
+		BaseLogEnable: d.Get("base_log_enable").(string),
+	}
+	if firewall.BaseAllowDeny != "allow-all" && firewall.BaseAllowDeny != "deny-all" {
+		return fmt.Errorf("base_allow_deny can only be 'allow-all', or 'deny-all'")
+	}
+	if firewall.BaseLogEnable != "on" && firewall.BaseLogEnable != "off" {
+		return fmt.Errorf("base_log_enable can only be 'on', or 'off'")
 	}
 	log.Printf("[INFO] Creating Aviatrix firewall: %#v", firewall)
-	if _, ok := d.GetOk("base_allow_deny"); ok {
-		firewall.BaseAllowDeny = d.Get("base_allow_deny").(string)
-	}
-	if _, ok := d.GetOk("base_log_enable"); ok {
-		firewall.BaseLogEnable = d.Get("base_log_enable").(string)
-	}
+
 	//If base_allow_deny or base_log enable is present, set base policy
 	if firewall.BaseAllowDeny != "" || firewall.BaseLogEnable != "" {
-
 		err := client.SetBasePolicy(firewall)
 		if err != nil {
 			return fmt.Errorf("failed to set base firewall policies for GW %s: %s", firewall.GwName, err)
@@ -97,16 +104,9 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 				AllowDeny: pl["allow_deny"].(string),
 				LogEnable: pl["log_enable"].(string),
 			}
-			protocolDefaultVals := []string{"all", "tcp", "udp", "icmp", "sctp", "rdp", "dccp"}
-			protocolVal := []string{firewallPolicy.Protocol}
-			if firewallPolicy.Protocol == "" || len(goaviatrix.Difference(protocolVal, protocolDefaultVals)) != 0 {
-				return fmt.Errorf("protocal can only be one of {'all', 'tcp', 'udp', 'icmp', 'sctp', 'rdp', 'dccp'}")
-			}
-			if firewallPolicy.Protocol == "all" && firewallPolicy.Port != "0:65535" {
-				return fmt.Errorf("port should be '0:65535' for protocal 'all'")
-			}
-			if firewallPolicy.Protocol == "icmp" && (firewallPolicy.Port != "") {
-				return fmt.Errorf("port should be empty for protocal 'icmp'")
+			err := client.ValidatePolicy(firewallPolicy)
+			if err != nil {
+				return fmt.Errorf("policy validation failed: %v", err)
 			}
 			firewall.PolicyList = append(firewall.PolicyList, firewallPolicy)
 		}
@@ -121,6 +121,14 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+	gwName := d.Get("gw_name").(string)
+	if gwName == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
+		d.Set("gw_name", id)
+		d.SetId(id)
+	}
+
 	firewall := &goaviatrix.Firewall{
 		GwName: d.Get("gw_name").(string),
 	}
@@ -135,7 +143,7 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[TRACE] Reading policy for gateway %s: %#v",
 		firewall.GwName, fw)
 	if fw != nil {
-		if fw.BaseAllowDeny == "allow" || fw.BaseAllowDeny == "allow-all" {
+		if fw.BaseAllowDeny == "allow-all" {
 			d.Set("base_allow_deny", "allow-all")
 		} else {
 			d.Set("base_allow_deny", "deny-all")
@@ -215,6 +223,10 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 				Port:      pl["port"].(string),
 				AllowDeny: pl["allow_deny"].(string),
 				LogEnable: pl["log_enable"].(string),
+			}
+			err := client.ValidatePolicy(firewallPolicy)
+			if err != nil {
+				return fmt.Errorf("policy validation failed: %v", err)
 			}
 			firewall.PolicyList = append(firewall.PolicyList, firewallPolicy)
 		}

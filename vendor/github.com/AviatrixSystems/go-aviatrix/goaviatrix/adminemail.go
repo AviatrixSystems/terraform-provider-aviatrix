@@ -2,6 +2,7 @@ package goaviatrix
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 )
@@ -49,11 +50,11 @@ func (c *Client) GetAdminEmail(username string, password string) (string, error)
 	admin.Password = password
 	resp, err := c.Post(path, admin)
 	if err != nil {
-		return "", err
+		return "", errors.New("HTTP Post login_proc failed: " + err.Error())
 	}
 	var data LoginProcResponse
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return "", err
+		return "", errors.New("Json Decode login_proc failed: " + err.Error())
 	}
 	return data.AdminEmail, nil
 }

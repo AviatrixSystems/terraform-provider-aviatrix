@@ -97,6 +97,19 @@ func resourceAWSTgwCreate(d *schema.ResourceData, meta interface{}) error {
 		SecurityDomains:           make([]goaviatrix.SecurityDomainRule, 0),
 	}
 
+	if awsTgw.Name == "" {
+		return fmt.Errorf("tgw name can't be empty string")
+	}
+	if awsTgw.AccountName == "" {
+		return fmt.Errorf("account name can't be empty string")
+	}
+	if awsTgw.Region == "" {
+		return fmt.Errorf("tgw region can't be empty string")
+	}
+	if awsTgw.AwsSideAsNumber == "" {
+		return fmt.Errorf("aws side number can't be empty string")
+	}
+
 	log.Printf("[INFO] Creating AWS TGW")
 
 	var domainsAll []string
@@ -259,8 +272,8 @@ func resourceAWSTgwCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	tgwName := d.Get("tgw_name").(string)
 
+	tgwName := d.Get("tgw_name").(string)
 	if tgwName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no aws tgw name received. Import Id is %s", id)
@@ -269,22 +282,23 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	awsTgw := &goaviatrix.AWSTgw{
-		Name:            d.Get("tgw_name").(string),
-		AccountName:     d.Get("account_name").(string),
-		Region:          d.Get("region").(string),
-		AwsSideAsNumber: d.Get("aws_side_as_number").(string),
+		Name: d.Get("tgw_name").(string),
 	}
-
-	log.Printf("[INFO] Reading AWS TGW")
-
-	awsTgw, err := client.GetAWSTgw(awsTgw)
+	awsTgw, err := client.ListTgwDetails(awsTgw)
 	if err != nil {
 		return fmt.Errorf("couldn't find AWS TGW: %s", awsTgw.Name)
 	}
-
 	d.Set("account_name", awsTgw.AccountName)
 	d.Set("tgw_name", awsTgw.Name)
 	d.Set("region", awsTgw.Region)
+
+	log.Printf("[INFO] Reading AWS TGW")
+	awsTgw, err2 := client.GetAWSTgw(awsTgw)
+
+	if err2 != nil {
+		return fmt.Errorf("couldn't find AWS TGW: %s", awsTgw.Name)
+	}
+
 	d.Set("aws_side_as_number", awsTgw.AwsSideAsNumber)
 	d.Set("attached_aviatrix_transit_gateway", awsTgw.AttachedAviatrixTransitGW)
 
@@ -304,13 +318,10 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 			aVPCs = append(aVPCs, vpcSolo)
 		}
 		sdr["attached_vpc"] = aVPCs
-
 		mSecurityDomain[sd.Name] = sdr
 	}
-
 	var securityDomains []map[string]interface{}
 	domains := d.Get("security_domains").([]interface{})
-
 	mOld := make(map[string]bool)
 
 	for _, domain := range domains {
@@ -354,6 +365,13 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 			for _, attachedVPCs := range dn["attached_vpc"].([]interface{}) {
 				attachedVPC := attachedVPCs.(map[string]interface{})
 				if mVPC[attachedVPC["vpc_id"].(string)] {
+					for _, attachedVPCsFromRefresh := range mSecurityDomain[dn["security_domain_name"].(string)]["attached_vpc"].([]interface{}) {
+						attachedVPCFromRefresh := attachedVPCsFromRefresh.(map[string]interface{})
+						if attachedVPCFromRefresh["vpc_id"] == attachedVPC["vpc_id"] {
+							attachedVPC["vpc_account_name"] = attachedVPCFromRefresh["vpc_account_name"]
+							attachedVPC["vpc_region"] = attachedVPCFromRefresh["vpc_region"]
+						}
+					}
 					aVPCNew = append(aVPCNew, attachedVPC)
 					mVPC[attachedVPC["vpc_id"].(string)] = false
 				}
@@ -365,7 +383,6 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 					aVPCNew = append(aVPCNew, attachedVPC)
 				}
 			}
-
 			mSecurityDomain[dn["security_domain_name"].(string)]["attached_vpc"] = aVPCNew
 
 			securityDomains = append(securityDomains, mSecurityDomain[dn["security_domain_name"].(string)])
@@ -377,7 +394,6 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 			securityDomains = append(securityDomains, mSecurityDomain[dn.Name])
 		}
 	}
-
 	d.Set("security_domains", securityDomains)
 
 	return nil
@@ -403,6 +419,19 @@ func resourceAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
 	var toDetachVPCs [][]string
 
 	d.Partial(true)
+
+	if d.HasChange("tgw_name") {
+		return fmt.Errorf("updating tgw_name is not allowed")
+	}
+	if d.HasChange("account_name") {
+		return fmt.Errorf("updating account_name is not allowed")
+	}
+	if d.HasChange("region") {
+		return fmt.Errorf("updating region is not allowed")
+	}
+	if d.HasChange("aws_side_as_number") {
+		return fmt.Errorf("updating aws_side_as_number is not allowed")
+	}
 
 	mAttachedGWNew := make(map[string]int)
 

@@ -14,6 +14,9 @@ func resourceAviatrixFQDN() *schema.Resource {
 		Read:   resourceAviatrixFQDNRead,
 		Update: resourceAviatrixFQDNUpdate,
 		Delete: resourceAviatrixFQDNDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"fqdn_tag": {
@@ -123,11 +126,24 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 
 func resourceAviatrixFQDNRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	fqdn := &goaviatrix.FQDN{
-		FQDNTag:    d.Get("fqdn_tag").(string),
-		FQDNStatus: d.Get("fqdn_status").(string),
-		FQDNMode:   d.Get("fqdn_mode").(string),
+	fqdnTag := d.Get("fqdn_tag").(string)
+	if fqdnTag == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import, no fqdn tag received. Import Id is %s", id)
+		d.Set("fqdn_tag", id)
+		d.SetId(id)
 	}
+
+	fqdn := &goaviatrix.FQDN{
+		FQDNTag: d.Get("fqdn_tag").(string),
+	}
+
+	fqdn, err := client.GetFQDNTag(fqdn)
+	if err != nil {
+		return fmt.Errorf("couldn't find FQDN tag: %s", err)
+	}
+	d.Set("fqdn_status", fqdn.FQDNStatus)
+	d.Set("fqdn_mode", fqdn.FQDNMode)
 
 	log.Printf("[INFO] Reading Aviatrix FQDN: %#v", fqdn)
 	newfqdn, err := client.GetFQDNTag(fqdn)

@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -14,6 +15,9 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 		Read:   resourceAviatrixSite2CloudRead,
 		Update: resourceAviatrixSite2CloudUpdate,
 		Delete: resourceAviatrixSite2CloudDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {
@@ -113,12 +117,24 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	if err != nil {
 		return fmt.Errorf("failed Site2Cloud create: %s", err)
 	}
-	d.SetId(s2c.TunnelName + s2c.VpcID)
+	d.SetId(s2c.TunnelName + "~" + s2c.VpcID)
 	return resourceAviatrixSite2CloudRead(d, meta)
 }
 
 func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	tunnelName := d.Get("connection_name").(string)
+	vpcID := d.Get("vpc_id").(string)
+
+	if tunnelName == "" || vpcID == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import, no tunnel name or vpc id names received. Import Id is %s", id)
+		d.Set("connection_name", strings.Split(id, "~")[0])
+		d.Set("vpc_id", strings.Split(id, "~")[1])
+		d.SetId(id)
+	}
+
 	site2cloud := &goaviatrix.Site2Cloud{
 		TunnelName: d.Get("connection_name").(string),
 		VpcID:      d.Get("vpc_id").(string),
@@ -134,9 +150,8 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("tunnel_type", s2c.TunnelType)
 		d.Set("remote_gateway_ip", s2c.RemoteGwIP)
 		d.Set("remote_subnet_cidr", s2c.RemoteSubnet)
-		if d.Get("local_subnet_cidr") != "" {
-			d.Set("local_subnet_cidr", s2c.LocalSubnet)
-		}
+		d.Set("primary_cloud_gateway_name", s2c.GwName)
+		d.Set("local_subnet_cidr", s2c.LocalSubnet)
 		if connectionType := d.Get("connection_type").(string); connectionType == "" {
 			//force default setting and save to .tfstate file
 			d.Set("connection_type", "unmapped")
@@ -144,7 +159,7 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 	}
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", d.Get("connection_name").(string), site2cloud)
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud connection_type: [%s]", d.Get("connection_type").(string))
-	d.SetId(site2cloud.TunnelName + site2cloud.VpcID)
+	d.SetId(site2cloud.TunnelName + "~" + site2cloud.VpcID)
 	return nil
 }
 
@@ -174,7 +189,7 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		d.SetPartial("local_subnet_cidr")
 	}
 	d.Partial(false)
-	d.SetId(site2cloud.TunnelName + site2cloud.VpcID)
+	d.SetId(site2cloud.TunnelName + "~" + site2cloud.VpcID)
 	return resourceAviatrixSite2CloudRead(d, meta)
 }
 

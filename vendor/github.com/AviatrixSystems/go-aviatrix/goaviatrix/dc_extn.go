@@ -35,14 +35,14 @@ func (c *Client) CreateDCExtn(dc_extn *DCExtn) error {
 	dc_extn.Action = "create_container"
 	resp, err := c.Post(c.baseURL, dc_extn)
 	if err != nil {
-		return err
+		return errors.New("HTTP Post create_container failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode create_container failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API create_container Post failed: " + data.Reason)
 	}
 	return nil
 }
@@ -52,14 +52,14 @@ func (c *Client) GetDCExtn(dc_extn *DCExtn) (*DCExtn, error) {
 	dc_extn.Action = "list_extended_vpc_peer"
 	resp, err := c.Post(c.baseURL, dc_extn)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("HTTP Post list_extended_vpc_peer failed: " + err.Error())
 	}
 	var data DCExtnListResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, errors.New("Json Decode list_extended_vpc_peer failed: " + err.Error())
 	}
 	if !data.Return {
-		return nil, errors.New(data.Reason)
+		return nil, errors.New("Rest API list_extended_vpc_peer Post failed: " + data.Reason)
 	}
 	// dc_extnList:= data.Results
 	// for i := range dc_extnList {
@@ -76,31 +76,32 @@ func (c *Client) UpdateDCExtn(dcx *DCExtn) error {
 	dcx.Action = "list_cidr_of_available_vpcs"
 	resp, err := c.Post(c.baseURL, dcx)
 	if err != nil {
-		return err
+		return errors.New("HTTP Post list_cidr_of_available_vpcs failed: " + err.Error())
 	}
 	var data DCExtnListResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode list_cidr_of_available_vpcs failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API list_cidr_of_available_vpcs Post failed: " + data.Reason)
 	}
 	return nil
 }
 
 func (c *Client) DeleteDCExtn(dcx *DCExtn) error {
-	path := c.baseURL + fmt.Sprintf("?action=delete_container&CID=%s&cloud_type=%d&gw_name=%s", c.CID, dcx.CloudType, dcx.GwName)
+	path := c.baseURL + fmt.Sprintf("?action=delete_container&CID=%s&cloud_type=%d&gw_name=%s",
+		c.CID, dcx.CloudType, dcx.GwName)
 	resp, err := c.Get(path, nil)
 
 	if err != nil {
-		return err
+		return errors.New("HTTP Get delete_container failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode delete_container failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API delete_container Get failed: " + data.Reason)
 	}
 	return nil
 }

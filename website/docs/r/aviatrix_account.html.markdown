@@ -48,3 +48,11 @@ The following arguments are supported:
 * `aws_role_ec2` - (Optional) AWS EC2 role ARN, this option is for UserConnect (Required when aws_iam is "true" and when creating an account for AWS).
 
 Note: Please make sure that the IAM roles/profiles have already been created before running this, if aws_iam="true". More information on the IAM roles is at https://docs.aviatrix.com/HowTos/iam_policies.html and https://docs.aviatrix.com/HowTos/HowTo_IAM_role.html
+
+## Import
+
+Instance account can be imported using the account_name, e.g.
+
+```hcl
+$ terraform import aviatrix_account.test account_name
+```

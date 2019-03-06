@@ -24,3 +24,11 @@ resource "aviatrix_customer_id" "test_customer_id" {
 The following arguments are supported:
 
 * `customer_id` - (Required) The license ID provided by Aviatrix Systems
+
+## Import
+
+Instance customer_id can be imported using the customer_id, e.g.
+
+```hcl
+$ terraform import aviatrix_customer_id.test customer_id
+```

@@ -23,64 +23,65 @@ type TransPeerListResp struct {
 	Reason  string      `json:"reason"`
 }
 
-func (c *Client) CreateTransPeer(transpeer *TransPeer) error {
-	transpeer.CID = c.CID
-	transpeer.Action = "add_extended_vpc_peer"
-	resp, err := c.Post(c.baseURL, transpeer)
+func (c *Client) CreateTransPeer(transPeer *TransPeer) error {
+	transPeer.CID = c.CID
+	transPeer.Action = "add_extended_vpc_peer"
+	resp, err := c.Post(c.baseURL, transPeer)
 	if err != nil {
-		return err
+		return errors.New("HTTP Post add_extended_vpc_peer failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode add_extended_vpc_peer failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API add_extended_vpc_peer Post failed: " + data.Reason)
 	}
 	return nil
 }
 
-func (c *Client) GetTransPeer(transpeer *TransPeer) (*TransPeer, error) {
-	transpeer.CID = c.CID
-	transpeer.Action = "list_extended_vpc_peer"
-	resp, err := c.Post(c.baseURL, transpeer)
+func (c *Client) GetTransPeer(transPeer *TransPeer) (*TransPeer, error) {
+	transPeer.CID = c.CID
+	transPeer.Action = "list_extended_vpc_peer"
+	resp, err := c.Post(c.baseURL, transPeer)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("HTTP Post list_extended_vpc_peer failed: " + err.Error())
 	}
 	var data TransPeerListResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, errors.New("Json Decode list_extended_vpc_peer failed: " + err.Error())
 	}
 	if !data.Return {
-		return nil, errors.New(data.Reason)
+		return nil, errors.New("Rest API list_extended_vpc_peer Post failed: " + data.Reason)
 	}
-	transpeerList := data.Results
-	for i := range transpeerList {
-		if transpeerList[i].Source == transpeer.Source && transpeerList[i].Nexthop == transpeer.Nexthop {
-			return &transpeerList[i], nil
+	transPeerList := data.Results
+	for i := range transPeerList {
+		if transPeerList[i].Source == transPeer.Source && transPeerList[i].Nexthop == transPeer.Nexthop {
+			return &transPeerList[i], nil
 		}
 	}
-	log.Printf("Transitive peering with gateways %s and %s with subnet %s not found", transpeer.Source, transpeer.Nexthop, transpeer.ReachableCidr)
+	log.Printf("Transitive peering with gateways %s and %s with subnet %s not found",
+		transPeer.Source, transPeer.Nexthop, transPeer.ReachableCidr)
 	return nil, ErrNotFound
 }
 
-func (c *Client) UpdateTransPeer(transpeer *TransPeer) error {
+func (c *Client) UpdateTransPeer(transPeer *TransPeer) error {
 	return nil
 }
 
-func (c *Client) DeleteTransPeer(transpeer *TransPeer) error {
-	transpeer.CID = c.CID
-	transpeer.Action = "delete_extended_vpc_peer"
-	resp, err := c.Post(c.baseURL, transpeer)
+func (c *Client) DeleteTransPeer(transPeer *TransPeer) error {
+	transPeer.CID = c.CID
+	transPeer.Action = "delete_extended_vpc_peer"
+	resp, err := c.Post(c.baseURL, transPeer)
 	if err != nil {
-		return err
+		return errors.New("HTTP Post delete_extended_vpc_peer failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode delete_extended_vpc_peer failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API delete_extended_vpc_peer Post failed: " + data.Reason)
 	}
 	return nil
 }

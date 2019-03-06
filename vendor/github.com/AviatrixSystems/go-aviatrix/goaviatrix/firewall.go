@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/url"
 )
 
 type Policy struct {
@@ -33,64 +34,85 @@ type FirewallResp struct {
 }
 
 func (c *Client) SetBasePolicy(firewall *Firewall) error {
-	firewall.CID = c.CID
-	firewall.Action = "set_vpc_base_policy"
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=set_vpc_base_policy&"+
-		"vpc_name=%s&base_policy=%s&base_policy_log_enable=%s", c.CID, firewall.GwName, firewall.BaseAllowDeny,
-		firewall.BaseLogEnable)
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for attach_spoke_to_transit_gw") + err.Error())
+	}
+	setVpcBasePolicy := url.Values{}
+	setVpcBasePolicy.Add("CID", c.CID)
+	setVpcBasePolicy.Add("action", "set_vpc_base_policy")
+	setVpcBasePolicy.Add("vpc_name", firewall.GwName)
+	setVpcBasePolicy.Add("base_policy", firewall.BaseAllowDeny)
+	setVpcBasePolicy.Add("base_policy_log_enable", firewall.BaseLogEnable)
+	Url.RawQuery = setVpcBasePolicy.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
 	log.Printf("[INFO] Setting Base Policy: %#v", firewall)
 
-	resp, err := c.Get(path, nil)
 	if err != nil {
-		return err
+		return errors.New("HTTP Get set_vpc_base_policy failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode set_vpc_base_policy failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API set_vpc_base_policy Get failed: " + data.Reason)
 	}
 	return nil
 }
 
 func (c *Client) UpdatePolicy(firewall *Firewall) error {
-	firewall.CID = c.CID
-	firewall.Action = "update_access_policy"
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=update_access_policy&vpc_name=%s&new_policy=", c.CID,
-		firewall.GwName)
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for update_access_policy") + err.Error())
+	}
+	updateAccessPolicy := url.Values{}
+	updateAccessPolicy.Add("CID", c.CID)
+	updateAccessPolicy.Add("action", "update_access_policy")
+	updateAccessPolicy.Add("vpc_name", firewall.GwName)
+
 	log.Printf("[INFO] Updating Aviatrix firewall for gateway: %#v", firewall)
 
 	args, err := json.Marshal(firewall.PolicyList)
 	if err != nil {
 		return err
 	}
-	path = path + string(args)
-	resp, err := c.Get(path, nil)
+	updateAccessPolicy.Add("new_policy", string(args))
+	Url.RawQuery = updateAccessPolicy.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
 	if err != nil {
-		return err
+		return errors.New("HTTP Get update_access_policy failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode update_access_policy failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API update_access_policy Get failed: " + data.Reason)
 	}
 	return nil
 }
 
 func (c *Client) GetPolicy(firewall *Firewall) (*Firewall, error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=vpc_access_policy&vpc_name=%s", c.CID, firewall.GwName)
-	log.Printf("[INFO] Getting Policy: %#v", firewall)
-
-	resp, err := c.Get(path, nil)
+	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(("url Parsing failed for vpc_access_policy") + err.Error())
+	}
+	vpcAccessPolicy := url.Values{}
+	vpcAccessPolicy.Add("CID", c.CID)
+	vpcAccessPolicy.Add("action", "vpc_access_policy")
+	vpcAccessPolicy.Add("vpc_name", firewall.GwName)
+	Url.RawQuery = vpcAccessPolicy.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return nil, errors.New("HTTP Get vpc_access_policy failed: " + err.Error())
 	}
 	var data FirewallResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, errors.New("Json Decode vpc_access_policy failed: " + err.Error())
 	}
 	if !data.Return {
 		log.Printf("[INFO] Couldn't find Aviatrix Firewall policies for gateway %s: %s", firewall.GwName,
@@ -104,4 +126,22 @@ func (c *Client) GetPolicy(firewall *Firewall) (*Firewall, error) {
 	}
 
 	return &data.Results, nil
+}
+
+func (c *Client) ValidatePolicy(policy *Policy) error {
+	if policy.AllowDeny != "allow" && policy.AllowDeny != "deny" {
+		return fmt.Errorf("valid AllowDeny is only 'allow' or 'deny'")
+	}
+	protocolDefaultValues := []string{"all", "tcp", "udp", "icmp", "sctp", "rdp", "dccp"}
+	protocolVal := []string{policy.Protocol}
+	if policy.Protocol == "" || len(Difference(protocolVal, protocolDefaultValues)) != 0 {
+		return fmt.Errorf("protocal can only be one of {'all', 'tcp', 'udp', 'icmp', 'sctp', 'rdp', 'dccp'}")
+	}
+	if policy.Protocol == "all" && policy.Port != "0:65535" {
+		return fmt.Errorf("port should be '0:65535' for protocal 'all'")
+	}
+	if policy.Protocol == "icmp" && (policy.Port != "") {
+		return fmt.Errorf("port should be empty for protocal 'icmp'")
+	}
+	return nil
 }

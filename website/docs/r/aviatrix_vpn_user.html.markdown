@@ -32,3 +32,10 @@ The following arguments are supported:
 * `user_email` - (Optional) VPN User's email. Example: "abc@xyz.com"
 * `saml_endpoint` - (Optional)This is the name of the SAML endpoint to which the user is to be associated. This is required if adding user to a SAML gateway/LB.
 
+## Import
+
+Instance vpn_user can be imported using the user_name, e.g.
+
+```hcl
+$ terraform import aviatrix_vpn_user.test user_name
+```

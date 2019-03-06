@@ -45,3 +45,11 @@ The following arguments are supported:
 * `remote_subnet_cidr` - (Required) Remote Subnet CIDR
 * `local_subnet_cidr` - (Optional) Local Subnet CIDR
 * `ha_enabled` - (Optional) Specify whether enabling HA or not. Valid Value(s): "true", "false
+
+## Import
+
+Instance site2cloud can be imported using the connection_name and vpc_id, e.g.
+
+```hcl
+$ terraform import aviatrix_site2cloud.test connection_name~vpc_id
+```

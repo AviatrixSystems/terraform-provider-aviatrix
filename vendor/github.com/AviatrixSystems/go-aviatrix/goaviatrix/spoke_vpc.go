@@ -59,10 +59,6 @@ func (c *Client) SpokeJoinTransit(spoke *SpokeVpc) error {
 	Url.RawQuery = attachSpokeToTransitGw.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
-	//path := c.baseURL + fmt.Sprintf("?CID=%s&action=attach_spoke_to_transit_gw&spoke_gw=%s&transit_gw=%s",
-	//	c.CID, spoke.GwName, spoke.TransitGateway)
-	//resp, err := c.Get(path, nil)
-
 	if err != nil {
 		return errors.New("HTTP Get attach_spoke_to_transit_gw failed: " + err.Error())
 	}
@@ -81,16 +77,13 @@ func (c *Client) SpokeLeaveTransit(spoke *SpokeVpc) error {
 	if err != nil {
 		return errors.New(("url Parsing failed for detach_spoke_from_transit_gw") + err.Error())
 	}
-	attachSpokeToTransitGw := url.Values{}
-	attachSpokeToTransitGw.Add("CID", c.CID)
-	attachSpokeToTransitGw.Add("action", "detach_spoke_from_transit_gw")
-	attachSpokeToTransitGw.Add("spoke_gw", spoke.GwName)
-	Url.RawQuery = attachSpokeToTransitGw.Encode()
+	detachSpokeFromTransitGw := url.Values{}
+	detachSpokeFromTransitGw.Add("CID", c.CID)
+	detachSpokeFromTransitGw.Add("action", "detach_spoke_from_transit_gw")
+	detachSpokeFromTransitGw.Add("spoke_gw", spoke.GwName)
+	Url.RawQuery = detachSpokeFromTransitGw.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
-	//path := c.baseURL + fmt.Sprintf("?CID=%s&action=detach_spoke_from_transit_gw&spoke_gw=%s", c.CID,
-	//	spoke.GwName)
-	//resp, err := c.Get(path, nil)
 	if err != nil {
 		return errors.New("HTTP Get detach_spoke_from_transit_gw failed: " + err.Error())
 	}
@@ -113,17 +106,14 @@ func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 	if err != nil {
 		return errors.New(("url Parsing failed for enable_spoke_ha") + err.Error())
 	}
-	attachSpokeToTransitGw := url.Values{}
-	attachSpokeToTransitGw.Add("CID", c.CID)
-	attachSpokeToTransitGw.Add("action", "enable_spoke_ha")
-	attachSpokeToTransitGw.Add("gw_name", spoke.GwName)
-	attachSpokeToTransitGw.Add("public_subnet", spoke.HASubnet)
-	Url.RawQuery = attachSpokeToTransitGw.Encode()
+	enableSpokeHa := url.Values{}
+	enableSpokeHa.Add("CID", c.CID)
+	enableSpokeHa.Add("action", "enable_spoke_ha")
+	enableSpokeHa.Add("gw_name", spoke.GwName)
+	enableSpokeHa.Add("public_subnet", spoke.HASubnet)
+	Url.RawQuery = enableSpokeHa.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
-	//path := c.baseURL + fmt.Sprintf("?CID=%s&action=enable_spoke_ha&gw_name=%s&public_subnet=%s", c.CID,
-	//	spoke.GwName, spoke.HASubnet)
-	//resp, err := c.Get(path, nil)
 	if err != nil {
 		return errors.New("HTTP Get enable_spoke_ha failed: " + err.Error())
 	}

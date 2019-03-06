@@ -41,3 +41,11 @@ The following arguments are supported in the `provider` block:
   login to Aviatrix controller. It must be provided.
 
 * `password` - (Required) This is Aviatrix account's password corresponding to above username.
+
+## Import
+
+Instances can be imported using the id, e.g.
+
+```hcl
+$ terraform import aviatrix_instance.test myAviatrixInstanceID
+```

@@ -39,10 +39,20 @@ resource "aviatrix_fqdn" "test_fqdn" {
 The following arguments are supported:
 
 * `fqdn_tag` - (Required) FQDN Filter Tag Name
-* `fqdn_status` - (Optional) FQDN Filter Tag Name
+* `fqdn_status` - (Optional) FQDN Filter Tag Status. Valid values: "enabled", "disabled"
 * `fqdn_mode` - (Optional) Specify the tag color to be a white-list tag or black-list tag. Valid Values: "white", "black"
 * `gw_list` - (Optional) Name of the gateway. One or more gateways as list ["gw1", "gw2"]
 * `domain_names` - (Optional) One or more domain names in a list with details as listed below
     * `fqdn` - (Optional) FQDN. Example: "facebook.com" 
-    * `proto` - (Optional) Protocol. Valid values: "tcp", "udp", "icmp" 
+    * `proto` - (Optional) Protocol. Valid values: "all", "tcp", "udp", "icmp" 
     * `port` - (Optional) Port. Example "25" 
+        * protocol 'all' will default to 'all' regardless of input
+        * icmp type/code is expected as 0-39/0-19 or None or "ping" in the port field
+
+## Import
+
+Instance fqdn can be imported using the fqdn_tag, e.g.
+
+```hcl
+$ terraform import aviatrix_fqdn.test fqdn_tag
+```

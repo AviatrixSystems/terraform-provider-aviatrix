@@ -14,6 +14,9 @@ func resourceAdminEmail() *schema.Resource {
 		Read:   resourceAdminEmailRead,
 		Update: resourceAdminEmailUpdate,
 		Delete: resourceAdminEmailDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"admin_email": {
@@ -35,7 +38,7 @@ func resourceAdminEmailCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(adminEmail)
 
-	return nil
+	return resourceAdminEmailRead(d, meta)
 }
 
 func resourceAdminEmailRead(d *schema.ResourceData, meta interface{}) error {
@@ -46,6 +49,7 @@ func resourceAdminEmailRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("failed to get Aviatrix Admin Email: %s", err)
 	}
+	d.Set("admin_email", adminEmail)
 	d.SetId(adminEmail)
 
 	return nil

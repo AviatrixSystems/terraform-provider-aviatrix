@@ -14,6 +14,9 @@ func resourceAviatrixVersion() *schema.Resource {
 		Read:   resourceAviatrixVersionRead,
 		Update: resourceAviatrixVersionUpdate,
 		Delete: resourceAviatrixVersionDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"target_version": {

@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -42,22 +43,28 @@ type AviatrixVersion struct {
 }
 
 func (c *Client) Upgrade(version *Version) error {
-	path := ""
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for upgrade") + err.Error())
+	}
+	attachSpokeToTransitGw := url.Values{}
+	attachSpokeToTransitGw.Add("CID", c.CID)
+	attachSpokeToTransitGw.Add("action", "upgrade")
+
 	if version.Version == "" {
-		return nil
-	} else if version.Version == "latest" {
-		path = c.baseURL + fmt.Sprintf("?CID=%s&action=upgrade", c.CID)
-	} else {
-		path = c.baseURL + fmt.Sprintf("?CID=%s&action=upgrade&version=%s", c.CID, version.Version)
+		return errors.New("no target version is set")
+	} else if version.Version != "latest" {
+		attachSpokeToTransitGw.Add("version", version.Version)
 	}
 	for i := 0; ; i++ {
-		resp, err := c.Get(path, nil)
+		Url.RawQuery = attachSpokeToTransitGw.Encode()
+		resp, err := c.Get(Url.String(), nil)
 		if err != nil {
-			return err
+			return errors.New("HTTP Get upgrade failed: " + err.Error())
 		}
 		var data UpgradeResp
 		if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-			return err
+			return errors.New("Json Decode upgrade failed: " + err.Error())
 		}
 		if !data.Return {
 			if strings.Contains(data.Reason, "Active upgrade in progress.") && i < 3 {
@@ -65,7 +72,7 @@ func (c *Client) Upgrade(version *Version) error {
 				time.Sleep(60 * time.Second)
 				continue
 			}
-			return errors.New(data.Reason)
+			return errors.New("Rest API upgrade Get failed: " + data.Reason)
 		}
 		break
 	}
@@ -73,19 +80,26 @@ func (c *Client) Upgrade(version *Version) error {
 }
 
 func (c *Client) GetCurrentVersion() (string, *AviatrixVersion, error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_version_info", c.CID)
-	resp, err := c.Get(path, nil)
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return "", nil, errors.New(("url Parsing failed for list_version_info") + err.Error())
+	}
+	listVersionInfo := url.Values{}
+	listVersionInfo.Add("CID", c.CID)
+	listVersionInfo.Add("action", "list_version_info")
+	Url.RawQuery = listVersionInfo.Encode()
+	resp, err := c.Get(Url.String(), nil)
 
 	if err != nil {
-		return "", nil, err
+		return "", nil, errors.New("HTTP Get list_version_info failed: " + err.Error())
 	}
 	var data VersionInfoResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return "", nil, err
+		return "", nil, errors.New("Json Decode list_version_info failed: " + err.Error())
 	}
 
 	if !data.Return {
-		return "", nil, errors.New(data.Reason)
+		return "", nil, errors.New("Rest API list_version_info Get failed: " + data.Reason)
 	}
 
 	// strip off "UserConnect-"
@@ -112,7 +126,7 @@ func (c *Client) Pre32Upgrade() error {
 	for i := 0; ; i++ {
 		resp, err := c.Post(path, params)
 		if err != nil {
-			return err
+			return errors.New("HTTP Post userconnect_release failed: " + err.Error())
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusOK {

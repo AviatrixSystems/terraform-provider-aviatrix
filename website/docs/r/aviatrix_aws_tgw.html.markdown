@@ -87,4 +87,11 @@ The following arguments are supported:
         * `vpc_region` - (Required) Region of the vpc, needs to be consistent with AWS TGW's region.
         * `vpc_account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller. 
         * `vpc_id` - (Required) This parameter represents the name of the VPC which is going to be attached to the security domain (name: `security_domain_name`) which is going to be created.
- 
+
+## Import
+
+Instance aws_tgw can be imported using the tgw_name, e.g.
+
+```hcl
+$ terraform import aviatrix_aws_tgw.test tgw_name
+```

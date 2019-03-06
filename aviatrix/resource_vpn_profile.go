@@ -14,6 +14,9 @@ func resourceAviatrixProfile() *schema.Resource {
 		Read:   resourceAviatrixProfileRead,
 		Update: resourceAviatrixProfileUpdate,
 		Delete: resourceAviatrixProfileDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -67,6 +70,9 @@ func resourceAviatrixProfileCreate(d *schema.ResourceData, meta interface{}) err
 		BaseRule: d.Get("base_rule").(string),
 		Policy:   make([]goaviatrix.ProfileRule, 0),
 	}
+	if profile.Name == "" {
+		return fmt.Errorf("profile name can't be empty string")
+	}
 	for _, user := range d.Get("users").([]interface{}) {
 		profile.UserList = append(profile.UserList, user.(string))
 	}
@@ -75,21 +81,17 @@ func resourceAviatrixProfileCreate(d *schema.ResourceData, meta interface{}) err
 	for _, domain := range names {
 		if domain != nil {
 			dn := domain.(map[string]interface{})
-			profileRule := goaviatrix.ProfileRule{
+			profileRule := &goaviatrix.ProfileRule{
 				Action:   dn["action"].(string),
 				Protocol: dn["proto"].(string),
 				Port:     dn["port"].(string),
 				Target:   dn["target"].(string),
 			}
-			protocolDefaultVals := []string{"all", "tcp", "udp", "icmp", "sctp", "rdp", "dccp"}
-			protocolVal := []string{profileRule.Protocol}
-			if profileRule.Protocol == "" || len(goaviatrix.Difference(protocolVal, protocolDefaultVals)) != 0 {
-				return fmt.Errorf("protocal can only be one of {'all', 'tcp', 'udp', 'icmp', 'sctp', 'rdp', 'dccp'}")
+			err := client.ValidateProfileRule(profileRule)
+			if err != nil {
+				return fmt.Errorf("policy validation failed: %v", err)
 			}
-			if (profileRule.Protocol == "all" || profileRule.Protocol == "icmp") && (profileRule.Port != "0:65535") {
-				return fmt.Errorf("port should be '0:65535' for protocal 'all' or 'icmp'")
-			}
-			profile.Policy = append(profile.Policy, profileRule)
+			profile.Policy = append(profile.Policy, *profileRule)
 		}
 	}
 	log.Printf("[INFO] Creating Aviatrix Profile with Policy: %v", profile.Policy)
@@ -104,13 +106,29 @@ func resourceAviatrixProfileCreate(d *schema.ResourceData, meta interface{}) err
 
 func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	profileName := d.Get("name").(string)
+	if profileName == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import, no profile name received. Import Id is %s", id)
+		d.Set("name", id)
+		d.SetId(id)
+	}
+
 	profile := &goaviatrix.Profile{
 		Name:   d.Get("name").(string),
 		Policy: make([]goaviatrix.ProfileRule, 0),
 	}
 
+	profileBase, errBase := client.GetProfileBasePolicy(profile)
+	if errBase != nil {
+		return fmt.Errorf("can't get profile base policy for profile: %s", profile.Name)
+	}
+	d.Set("base_rule", profileBase.BaseRule)
+
 	log.Printf("[INFO] Reading Aviatrix Profile: %#v", profile)
 	profile, err := client.GetProfile(profile)
+
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
@@ -122,9 +140,17 @@ func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[TRACE] Profile policy %v", profile.Policy)
 	log.Printf("[TRACE] Profile users %v", d.Get("users"))
 
-	d.Set("users", profile.UserList)
-	log.Printf("[TRACE] Profile userlistnew %v", profile.UserList)
-
+	var users []string
+	for _, user := range d.Get("users").([]interface{}) {
+		users = append(users, user.(string))
+	}
+	if len(goaviatrix.Difference(users, profile.UserList)) == 0 &&
+		len(goaviatrix.Difference(profile.UserList, users)) == 0 {
+		d.Set("users", users)
+	} else {
+		d.Set("users", profile.UserList)
+		log.Printf("[TRACE] Profile userlistnew %v", profile.UserList)
+	}
 	log.Printf("[TRACE] Profile policy %v", profile.Policy)
 
 	var Policies []map[string]interface{}
@@ -138,7 +164,6 @@ func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error
 			Policies = append(Policies, policyDict)
 		}
 		d.Set("policy", Policies)
-
 	}
 	log.Printf("[INFO] Generated policies: %v", Policies)
 
@@ -161,13 +186,17 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 	names := d.Get("policy").([]interface{})
 	for _, domain := range names {
 		dn := domain.(map[string]interface{})
-		profileRule := goaviatrix.ProfileRule{
+		profileRule := &goaviatrix.ProfileRule{
 			Action:   dn["action"].(string),
 			Protocol: dn["proto"].(string),
 			Port:     dn["port"].(string),
 			Target:   dn["target"].(string),
 		}
-		profile.Policy = append(profile.Policy, profileRule)
+		err := client.ValidateProfileRule(profileRule)
+		if err != nil {
+			return fmt.Errorf("policy validation failed: %v", err)
+		}
+		profile.Policy = append(profile.Policy, *profileRule)
 	}
 
 	log.Printf("[INFO] Reading Aviatrix Profile: %#v", profile)
@@ -175,11 +204,9 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("name") {
 		return fmt.Errorf("cannot change name of a profile")
 	}
-
 	if d.HasChange("base_rule") {
 		return fmt.Errorf("cannot change base rule of a profile")
 	}
-
 	if d.HasChange("users") {
 
 		oldU, newU := d.GetChange("users")
@@ -225,7 +252,6 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 		d.SetPartial("policy")
 
 	}
-
 	d.Partial(false)
 
 	return nil

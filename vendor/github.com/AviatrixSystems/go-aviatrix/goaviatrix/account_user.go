@@ -3,8 +3,8 @@ package goaviatrix
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
+	"net/url"
 )
 
 type AccountUser struct {
@@ -38,35 +38,43 @@ func (c *Client) CreateAccountUser(user *AccountUser) error {
 	user.Action = "add_account_user"
 	resp, err := c.Post(c.baseURL, user)
 	if err != nil {
-		return err
+		return errors.New("HTTP Post add_account_user failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode add_account_user failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API add_account_user Post failed: " + data.Reason)
 	}
 	return nil
 }
 
 func (c *Client) GetAccountUser(user *AccountUser) (*AccountUser, error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_account_users", c.CID)
-	resp, err := c.Get(path, nil)
+	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(("url Parsing failed for list_account_users ") + err.Error())
+	}
+	listAccountUsers := url.Values{}
+	listAccountUsers.Add("CID", c.CID)
+	listAccountUsers.Add("action", "list_account_users")
+	Url.RawQuery = listAccountUsers.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return nil, errors.New("HTTP Get list_account_users failed: " + err.Error())
 	}
 	var data AccountUserListResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, errors.New("Json Decode list_account_users failed: " + err.Error())
 	}
 
 	if !data.Return {
-		return nil, errors.New(data.Reason)
+		return nil, errors.New("Rest API enable_transit_ha Get failed: " + data.Reason)
 	}
 	users := data.AccountUserList
 	for i := range users {
-		if users[i].UserName == user.UserName && users[i].AccountName == user.AccountName {
+		if users[i].UserName == user.UserName {
 			log.Printf("[INFO] Found Aviatrix user account %s", user.UserName)
 			return &users[i], nil
 		}
@@ -81,30 +89,39 @@ func (c *Client) UpdateAccountUserObject(user *AccountUserEdit) error {
 	user.Action = "edit_account_user"
 	resp, err := c.Post(c.baseURL, user)
 	if err != nil {
-		return err
+		return errors.New("HTTP Post edit_account_user failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode edit_account_user failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API edit_account_user Post failed: " + data.Reason)
 	}
 	return nil
 }
 
 func (c *Client) DeleteAccountUser(user *AccountUser) error {
-	path := c.baseURL + fmt.Sprintf("?action=delete_account_user&CID=%s&username=%s", c.CID, user.UserName)
-	resp, err := c.Get(path, nil)
+	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return err
+		return errors.New(("url Parsing failed for delete_account_user ") + err.Error())
+	}
+	deleteAccountUsers := url.Values{}
+	deleteAccountUsers.Add("CID", c.CID)
+	deleteAccountUsers.Add("action", "delete_account_user")
+	deleteAccountUsers.Add("username", user.UserName)
+	Url.RawQuery = deleteAccountUsers.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get delete_account_user failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode delete_account_user failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API delete_account_user Get failed: " + data.Reason)
 	}
 	return nil
 }

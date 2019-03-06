@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -83,6 +84,24 @@ type VPCInfo struct {
 	VPCId       string `json:"vpc_id,omitempty"`
 }
 
+type TGWInfoResp struct {
+	Return  bool        `json:"return"`
+	Results TGWInfoList `json:"results"`
+	Reason  string      `json:"reason"`
+}
+
+type TGWInfoList struct {
+	TgwInfo TgwInfoDetail `json:"tgw_info"`
+	TgwID   string        `json:"_id"`
+	Name    string        `json:"name"`
+}
+
+type TgwInfoDetail struct {
+	AccountName     string `json:"acct_name"`
+	Region          string `json:"region"`
+	AwsSideAsNumber int    `json:"tgw_aws_asn"`
+}
+
 func (c *Client) CreateAWSTgw(awsTgw *AWSTgw) error {
 	awsTgw.CID = c.CID
 	awsTgw.Action = "add_aws_tgw"
@@ -107,18 +126,12 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 	if err != nil {
 		return nil, errors.New(("url Parsing failed for list_route_domain_names") + err.Error())
 	}
-	addUserProfile := url.Values{}
-	addUserProfile.Add("CID", c.CID)
-	addUserProfile.Add("action", "list_route_domain_names")
-	addUserProfile.Add("tgw_name", awsTgw.Name)
-	Url.RawQuery = addUserProfile.Encode()
+	listRouteDomainNames := url.Values{}
+	listRouteDomainNames.Add("CID", c.CID)
+	listRouteDomainNames.Add("action", "list_route_domain_names")
+	listRouteDomainNames.Add("tgw_name", awsTgw.Name)
+	Url.RawQuery = listRouteDomainNames.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
-	//awsTgw.CID = c.CID
-	//path := c.baseURL + fmt.Sprintf("?action=list_route_domain_names&tgw_name=%s&CID=%s", awsTgw.Name,
-	//	awsTgw.CID)
-	//
-	//resp, err := c.Get(path, nil)
 
 	if err != nil {
 		return nil, errors.New("HTTP Get list_route_domain_names failed: " + err.Error())
@@ -150,10 +163,6 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 
 		Url.RawQuery = viewRouteDomainDetails.Encode()
 		resp, err := c.Get(Url.String(), nil)
-
-		//path = c.baseURL + fmt.Sprintf("?action=view_route_domain_details&CID=%s&tgw_name=%s"+
-		//	"&route_domain_name=%s", c.CID, awsTgw.Name, dm)
-		//resp, err = c.Get(path, nil)
 
 		if err != nil {
 			return nil, errors.New("HTTP Get view_route_domain_details failed: " + err.Error())
@@ -360,10 +369,6 @@ func (c *Client) AttachAviatrixTransitGWToAWSTgw(awsTgw *AWSTgw, gateway *Gatewa
 	Url.RawQuery = attachVpcToTgw.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
-	//path := c.baseURL + fmt.Sprintf("?action=attach_vpc_to_tgw&CID=%s&region=%s&vpc_account_name=%s&vpc_name="+
-	//	"%s&gateway_name=%s&tgw_account_name=%s&tgw_name=%s&route_domain_name=%s", c.CID, awsTgw.Region,
-	//	transitGw.AccountName, transitGw.VpcID, transitGw.GwName, awsTgw.AccountName, awsTgw.Name, SecurityDomainName)
-	//resp, err := c.Get(path, nil)
 	if err != nil {
 		return errors.New("HTTP Get attach_vpc_to_tgw failed: " + err.Error())
 	}
@@ -398,11 +403,6 @@ func (c *Client) DetachAviatrixTransitGWFromAWSTgw(awsTgw *AWSTgw, gateway *Gate
 	Url.RawQuery = detachVpcFromTgw.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
-	//path := c.baseURL + fmt.Sprintf("?action=detach_vpc_from_tgw&CID=%s&tgw_name=%s&vpc_name=%s", c.CID,
-	//	awsTgw.Name, transitGw.VpcID)
-	//
-	//resp, err := c.Get(path, nil)
-
 	if err != nil {
 		return errors.New("HTTP Get detach_vpc_from_tgw failed: " + err.Error())
 	}
@@ -434,12 +434,6 @@ func (c *Client) AttachVpcToAWSTgw(awsTgw *AWSTgw, vpcSolo VPCSolo, SecurityDoma
 	Url.RawQuery = attachVpcFromTgw.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
-	//path := c.baseURL + fmt.Sprintf("?action=attach_vpc_to_tgw&region=%s&vpc_account_name=%s&vpc_name=%s"+
-	//	"&tgw_name=%s&route_domain_name=%s&CID=%s", awsTgw.Region, vpcSolo.AccountName, vpcSolo.VpcID, awsTgw.Name,
-	//	SecurityDomainName, c.CID)
-	//
-	//resp, err := c.Get(path, nil)
-
 	if err != nil {
 		return errors.New("HTTP Get attach_vpc_to_tgw failed: " + err.Error())
 	}
@@ -468,10 +462,6 @@ func (c *Client) DetachVpcFromAWSTgw(awsTgw *AWSTgw, vpcID string) error {
 	Url.RawQuery = detachVpcFromTgw.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
-	//path := c.baseURL + fmt.Sprintf("?action=detach_vpc_from_tgw&CID=%s&tgw_name=%s&vpc_name=%s", c.CID,
-	//	awsTgw.Name, vpcID)
-	//resp, err := c.Get(path, nil)
-
 	if err != nil {
 		return errors.New("HTTP Get detach_vpc_from_tgw failed: " + err.Error())
 	}
@@ -497,9 +487,6 @@ func (c *Client) GetTransitGwFromVpcID(gateway *Gateway) (*Gateway, error) {
 	listVPCsSummary.Add("action", "list_vpcs_summary")
 	Url.RawQuery = listVPCsSummary.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
-	//path := c.baseURL + fmt.Sprintf("?action=list_vpcs_summary&CID=%s", c.CID)
-	//resp, err := c.Get(path, nil)
 
 	if err != nil {
 		return nil, errors.New("HTTP Get list_vpcs_summary failed: " + err.Error())
@@ -533,5 +520,42 @@ func (c *Client) GetTransitGwFromVpcID(gateway *Gateway) (*Gateway, error) {
 		}
 	}
 	log.Printf("Couldn't find transit gateway attached to vpc %s", gateway.VpcID)
+	return nil, ErrNotFound
+}
+
+func (c *Client) ListTgwDetails(awsTgw *AWSTgw) (*AWSTgw, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return nil, errors.New(("url Parsing failed for list_tgw_details") + err.Error())
+	}
+	listTgwDetails := url.Values{}
+	listTgwDetails.Add("CID", c.CID)
+	listTgwDetails.Add("action", "list_tgw_details")
+	listTgwDetails.Add("tgw_name", awsTgw.Name)
+
+	Url.RawQuery = listTgwDetails.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return nil, errors.New("HTTP Get list_tgw_details failed: " + err.Error())
+	}
+
+	var data TGWInfoResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode list_tgw_details failed: " + err.Error())
+	}
+	if !data.Return {
+		return nil, errors.New("Rest API list_tgw_details Get failed: " + data.Reason)
+	}
+
+	tgwInfoList := data.Results
+	if tgwInfoList.Name == awsTgw.Name {
+		tgwInfoDetail := tgwInfoList.TgwInfo
+		awsTgw.AccountName = tgwInfoDetail.AccountName
+		awsTgw.Region = tgwInfoDetail.Region
+		awsTgw.AwsSideAsNumber = strconv.Itoa(tgwInfoDetail.AwsSideAsNumber)
+		return awsTgw, nil
+	}
+
 	return nil, ErrNotFound
 }

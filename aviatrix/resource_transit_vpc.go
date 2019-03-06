@@ -15,6 +15,9 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 		Read:   resourceAviatrixTransitVpcRead,
 		Update: resourceAviatrixTransitVpcUpdate,
 		Delete: resourceAviatrixTransitVpcDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"cloud_type": {
@@ -100,9 +103,10 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		EnableHybridConnection: d.Get("enable_hybrid_connection").(bool),
 		ConnectedTransit:       d.Get("connected_transit").(string),
 	}
-	if gateway.EnableNAT != "yes" {
-		gateway.EnableNAT = "no"
+	if gateway.EnableNAT != "" && gateway.EnableNAT != "yes" && gateway.EnableNAT != "no" {
+		return fmt.Errorf("enable_nat can only be empty string, 'yes', or 'no'")
 	}
+	enableNat := gateway.EnableNAT
 	if _, ok := d.GetOk("tag_list"); ok {
 		tagList := d.Get("tag_list").([]interface{})
 		tagListStr := goaviatrix.ExpandStringList(tagList)
@@ -188,11 +192,29 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		}
 		d.Set("connected_transit", "yes")
 	}
+	if enableNat == "yes" {
+		gw := &goaviatrix.Gateway{
+			GwName: gateway.GwName,
+		}
+		err := client.EnableSNat(gw)
+		if err != nil {
+			return fmt.Errorf("failed to enable SNAT: %s", err)
+		}
+	}
 	return resourceAviatrixTransitVpcRead(d, meta)
 }
 
 func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	gwName := d.Get("gw_name").(string)
+	if gwName == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
+		d.Set("gw_name", id)
+		d.SetId(id)
+	}
+
 	gateway := &goaviatrix.Gateway{
 		AccountName: d.Get("account_name").(string),
 		GwName:      d.Get("gw_name").(string),
@@ -315,15 +337,19 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		ns := n.([]interface{})
 		oldTagList := goaviatrix.ExpandStringList(os)
 		tags.TagList = strings.Join(oldTagList, ",")
-		err := client.DeleteTags(tags)
-		if err != nil {
-			return fmt.Errorf("failed to delete tags : %s", err)
+		if tags.TagList != "" {
+			err := client.DeleteTags(tags)
+			if err != nil {
+				return fmt.Errorf("failed to delete tags : %s", err)
+			}
 		}
 		newTagList := goaviatrix.ExpandStringList(ns)
 		tags.TagList = strings.Join(newTagList, ",")
-		err = client.AddTags(tags)
-		if err != nil {
-			return fmt.Errorf("failed to add tags : %s", err)
+		if tags.TagList != "" {
+			err := client.AddTags(tags)
+			if err != nil {
+				return fmt.Errorf("failed to add tags : %s", err)
+			}
 		}
 		d.SetPartial("tag_list")
 	}
@@ -384,13 +410,11 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 			if err != nil {
 				return fmt.Errorf("failed to enable transit GW for Hybrid: %s", err)
 			}
-		} else if enableHybridConnection == false {
+		} else {
 			err := client.DetachTransitGWForHybrid(transitGateway)
 			if err != nil {
 				return fmt.Errorf("failed to disable transit GW for Hybrid: %s", err)
 			}
-		} else {
-			return fmt.Errorf("enable_hybrid_connection can only be set to true or false")
 		}
 	}
 	if d.HasChange("connected_transit") {

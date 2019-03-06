@@ -3,7 +3,7 @@ package goaviatrix
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"net/url"
 )
 
 type SplitTunnel struct {
@@ -33,36 +33,59 @@ type SplitTunnelUnit struct {
 }
 
 func (c *Client) GetSplitTunnel(splitTunnel *SplitTunnel) (*SplitTunnelUnit, error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=modify_split_tunnel&command=get&vpc_id=%s&lb_name=%s",
-		c.CID, splitTunnel.VpcID, splitTunnel.ElbName)
-	resp, err := c.Get(path, nil)
+	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(("url Parsing failed for modify_split_tunnel") + err.Error())
+	}
+	modifySplitTunnel := url.Values{}
+	modifySplitTunnel.Add("CID", c.CID)
+	modifySplitTunnel.Add("action", "modify_split_tunnel")
+	modifySplitTunnel.Add("command", "get")
+	modifySplitTunnel.Add("vpc_id", splitTunnel.VpcID)
+	modifySplitTunnel.Add("lb_name", splitTunnel.ElbName)
+	Url.RawQuery = modifySplitTunnel.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return nil, errors.New("HTTP Get modify_split_tunnel(get) failed: " + err.Error())
 	}
 	var data SplitTunnelResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, errors.New("Json Decode modify_split_tunnel(get) failed: " + err.Error())
 	}
 	if !data.Return {
-		return nil, errors.New(data.Reason)
+		return nil, errors.New("Rest API modify_split_tunnel(get) Get failed: " + data.Reason)
 	}
 	return &data.Results, nil
 }
 
 func (c *Client) ModifySplitTunnel(splitTunnel *SplitTunnel) error {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=modify_split_tunnel&command=modify&vpc_id=%s&lb_name=%s"+
-		"&split_tunnel=%s&additional_cidrs=%s&nameservers=%s&search_domains=%s", c.CID, splitTunnel.VpcID, splitTunnel.ElbName,
-		splitTunnel.SplitTunnel, splitTunnel.AdditionalCidrs, splitTunnel.NameServers, splitTunnel.SearchDomains)
-	resp, err := c.Get(path, nil)
+	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return err
+		return errors.New(("url Parsing failed for modify_split_tunnel") + err.Error())
+	}
+	modifySplitTunnel := url.Values{}
+	modifySplitTunnel.Add("CID", c.CID)
+	modifySplitTunnel.Add("action", "modify_split_tunnel")
+	modifySplitTunnel.Add("command", "modify")
+	modifySplitTunnel.Add("vpc_id", splitTunnel.VpcID)
+	modifySplitTunnel.Add("lb_name", splitTunnel.ElbName)
+	modifySplitTunnel.Add("split_tunnel", splitTunnel.SplitTunnel)
+	modifySplitTunnel.Add("additional_cidrs", splitTunnel.AdditionalCidrs)
+	modifySplitTunnel.Add("nameservers", splitTunnel.NameServers)
+	modifySplitTunnel.Add("search_domains", splitTunnel.SearchDomains)
+	Url.RawQuery = modifySplitTunnel.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get modify_split_tunnel(modify) failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode modify_split_tunnel(modify) failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API modify_split_tunnel(modify) Get failed: " + data.Reason)
 	}
 	return nil
 }

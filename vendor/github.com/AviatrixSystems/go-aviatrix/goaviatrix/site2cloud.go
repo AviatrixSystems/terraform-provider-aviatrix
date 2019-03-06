@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -44,33 +45,40 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 	site2cloud.Action = "add_site2cloud"
 	resp, err := c.Post(c.baseURL, site2cloud)
 	if err != nil {
-		return err
+		return errors.New("HTTP Post add_site2cloud failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode add_site2cloud failed: " + err.Error())
 	}
 	if !data.Return {
 		log.Printf("[INFO] Couldn't find s2c connection %s: %s", site2cloud.TunnelName, data.Reason)
-		return errors.New(data.Reason)
+		return errors.New("Rest API add_site2cloud Post failed: " + data.Reason)
 	}
 	return nil
 }
 
 func (c *Client) GetSite2Cloud(site2cloud *Site2Cloud) (*Site2Cloud, error) {
-	site2cloud.Action = "list_site2cloud_conn"
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=%s&connection_name=%s", c.CID, site2cloud.Action,
-		site2cloud.TunnelName)
-	resp, err := c.Get(path, nil)
+	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(("url Parsing failed for list_site2cloud_conn") + err.Error())
+	}
+	listSite2CloudConn := url.Values{}
+	listSite2CloudConn.Add("CID", c.CID)
+	listSite2CloudConn.Add("action", "list_site2cloud_conn")
+	listSite2CloudConn.Add("connection_name", site2cloud.TunnelName)
+	Url.RawQuery = listSite2CloudConn.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return nil, errors.New("HTTP Get list_site2cloud_conn failed: " + err.Error())
 	}
 	var data Site2CloudResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, errors.New("Json Decode list_site2cloud_conn failed: " + err.Error())
 	}
 	if !data.Return {
-		return nil, errors.New(data.Reason)
+		return nil, errors.New("Rest API list_site2cloud_conn Get failed: " + data.Reason)
 	}
 	for i := 0; i < len(data.Results.Connections); i++ {
 		conn := data.Results.Connections[i]
@@ -94,19 +102,19 @@ func (c *Client) UpdateSite2Cloud(site2cloud *Site2Cloud) error {
 	if err == nil {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	} else {
-		return err
+		return errors.New("HTTP Post NewRequest edit_site2cloud_conn failed: " + err.Error())
 	}
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return err
+		return errors.New("HTTP Post edit_site2cloud_conn failed: " + err.Error())
 	}
 
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode edit_site2cloud_conn failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API edit_site2cloud_conn Post failed: " + data.Reason)
 	}
 	return nil
 }
@@ -123,18 +131,18 @@ func (c *Client) DeleteSite2Cloud(site2cloud *Site2Cloud) error {
 	if err == nil {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	} else {
-		return err
+		return errors.New("HTTP Post NewRequest delete_site2cloud_connection failed: " + err.Error())
 	}
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return err
+		return errors.New("HTTP Post delete_site2cloud_connection failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode delete_site2cloud_connection failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API delete_site2cloud_connection Post failed: " + data.Reason)
 	}
 	return nil
 }

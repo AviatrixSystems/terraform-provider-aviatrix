@@ -15,6 +15,9 @@ func resourceAccount() *schema.Resource {
 		Read:   resourceAccountRead,
 		Update: resourceAccountUpdate,
 		Delete: resourceAccountDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"account_name": {
@@ -101,6 +104,14 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+	accountName := d.Get("account_name").(string)
+	if accountName == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import, no account name received. Import Id is %s", id)
+		d.Set("account_name", id)
+		d.SetId(id)
+	}
+
 	account := &goaviatrix.Account{
 		AccountName: d.Get("account_name").(string),
 	}

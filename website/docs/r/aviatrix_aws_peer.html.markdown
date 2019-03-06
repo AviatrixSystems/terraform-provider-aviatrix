@@ -38,3 +38,11 @@ The following arguments are supported:
 * `vpc_reg2` - (Required) Region of cloud provider. Example: AWS: "us-east-1", ARM: "East US 2", etc...
 * `rtb_list1` - (Optional) Route table ID. Valid Values: "all" OR "rtb-abcd1234" OR "rtb-abcd1234,rtb-wxyz5678" etc...
 * `rtb_list2` - (Optional) Route table ID. Valid Values: "all" OR "rtb-abcd1234" OR "rtb-abcd1234,rtb-wxyz5678" etc...
+
+## Import
+
+Instance aws_peer can be imported using the vpc_id1 and vpc_id2, e.g.
+
+```hcl
+$ terraform import aviatrix_aws_peer.test vpc_id1~vpc_id2
+```

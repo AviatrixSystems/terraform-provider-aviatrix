@@ -41,3 +41,11 @@ The following arguments are supported:
 * `cidr_list` - (Optional) A JSON file with the following:
     * `cidr_tag_name` - The name attribute of a policy. Example: "policy1"
     * `cidr` - The CIDR attribute of a policy. Example: "10.88.88.88/32"
+
+## Import
+
+Instance firewall_tag can be imported using the firewall_tag, e.g.
+
+```hcl
+$ terraform import aviatrix_firewall_tag.test firewall_tag
+```

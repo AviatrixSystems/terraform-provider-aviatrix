@@ -24,3 +24,11 @@ resource "aviatrix_admin_email" "test_adminemail" {
 The following arguments are supported:
 
 * `admin_email` - (Required) E-mail address of admin user to be set. Valid Value: Any valid e-mail address
+
+## Import
+
+Instance admin_email can be imported using the admin_email, e.g.
+
+```hcl
+$ terraform import aviatrix_admin_email.test admin_email
+```

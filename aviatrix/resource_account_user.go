@@ -2,10 +2,9 @@ package aviatrix
 
 import (
 	"fmt"
-	"log"
-
 	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
+	"log"
 )
 
 func resourceAccountUser() *schema.Resource {
@@ -14,6 +13,9 @@ func resourceAccountUser() *schema.Resource {
 		Read:   resourceAccountUserRead,
 		Update: resourceAccountUserUpdate,
 		Delete: resourceAccountUserDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"account_name": {
@@ -59,6 +61,17 @@ func resourceAccountUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAccountUserRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	userName := d.Get("username").(string)
+	accountName := d.Get("account_name").(string)
+
+	if userName == "" || accountName == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
+		d.Set("username", id)
+		d.SetId(id)
+	}
+
 	user := &goaviatrix.AccountUser{
 		AccountName: d.Get("account_name").(string),
 		UserName:    d.Get("username").(string),

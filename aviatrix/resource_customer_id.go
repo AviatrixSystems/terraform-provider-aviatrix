@@ -14,6 +14,9 @@ func resourceCustomerID() *schema.Resource {
 		Read:   resourceCustomerIDRead,
 		Update: resourceCustomerIDUpdate,
 		Delete: resourceCustomerIDDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"customer_id": {

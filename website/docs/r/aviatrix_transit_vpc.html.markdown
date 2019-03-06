@@ -44,7 +44,15 @@ The following arguments are supported:
 * `dns_server` - (Optional) Specify the DNS IP, only required while using a custom private DNS for the VPC.
 * `ha_subnet` - (Optional) HA Subnet. Setting to empty/unset will disable HA. Setting to a valid subnet (Example: 10.12.0.0/24) will create an HA gateway on the subnet
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set)(Example: "t2.micro")
+* `enable_nat` - (Optional) Enable NAT for this container. (Supported values: "yes", "no")
 * `tag_list` - (Optional) Instance tag of cloud provider. Example: ["key1:value1","key002:value002"]
 * `enable_hybrid_connection` - (Optional) Sign of readiness for TGW connection.( Example : false)
 * `connected_transit` - (Optional) Specify Connected Transit status. (Supported values: "yes", "no")
 
+## Import
+
+Instance transit_vpc can be imported using the gw_name, e.g.
+
+```hcl
+$ terraform import aviatrix_transit_vpc.test gw_name
+```

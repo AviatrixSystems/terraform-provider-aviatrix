@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/url"
 )
 
 type Account struct {
@@ -52,39 +53,46 @@ func (c *Client) CreateAccount(account *Account) error {
 	account.Action = "setup_account_profile"
 	resp, err := c.Post(c.baseURL, account)
 	if err != nil {
-		return err
+		return errors.New("HTTP Post setup_account_profile failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode setup_account_profile failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API setup_account_profile Post failed: " + data.Reason)
 	}
 	return nil
 }
 
 func (c *Client) GetAccount(account *Account) (*Account, error) {
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=list_accounts", c.CID)
-	resp, err := c.Get(path, nil)
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return nil, errors.New("url Parsing failed for list_accounts " + err.Error())
+	}
+	listAccounts := url.Values{}
+	listAccounts.Add("CID", c.CID)
+	listAccounts.Add("action", "list_accounts")
+	Url.RawQuery = listAccounts.Encode()
+	resp, err := c.Get(Url.String(), nil)
 
 	if err != nil {
-		return nil, err
+		return nil, errors.New("HTTP Get list_accounts failed: " + err.Error())
 	}
 	var data AccountListResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, errors.New("Json Decode  failed: " + err.Error())
 	}
 
 	if !data.Return {
-		return nil, errors.New(data.Reason)
+		return nil, errors.New("Rest API list_accounts Get failed: " + data.Reason)
 	}
-	acclist := data.Results.AccountList
-	for i := range acclist {
-		log.Printf("[TRACE] %s", acclist[i].AccountName)
-		if acclist[i].AccountName == account.AccountName {
+	accList := data.Results.AccountList
+	for i := range accList {
+		log.Printf("[TRACE] %s", accList[i].AccountName)
+		if accList[i].AccountName == account.AccountName {
 			log.Printf("[INFO] Found Aviatrix Account %s", account.AccountName)
-			return &acclist[i], nil
+			return &accList[i], nil
 		}
 	}
 	log.Printf("Couldn't find Aviatrix account %s", account.AccountName)
@@ -96,14 +104,14 @@ func (c *Client) UpdateAccount(account *Account) error {
 	account.Action = "edit_account_profile"
 	resp, err := c.Post(c.baseURL, account)
 	if err != nil {
-		return err
+		return errors.New("HTTP Post edit_account_profile failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode edit_account_profile failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API edit_account_profile Post failed: " + data.Reason)
 	}
 	return nil
 }
@@ -113,14 +121,14 @@ func (c *Client) DeleteAccount(account *Account) error {
 		c.CID, account.AccountName)
 	resp, err := c.Delete(path, nil)
 	if err != nil {
-		return err
+		return errors.New("HTTP delete_account_profile failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return errors.New("Json Decode delete_account_profile failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return errors.New("Rest API delete_account_profile Post failed: " + data.Reason)
 	}
 	return nil
 }
