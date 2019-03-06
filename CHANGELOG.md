@@ -1,5 +1,19 @@
+## 1.1.66 Mar 6 2019)
 
-## 1.0.242 (Tue Mar 5 2019)
+CHANGES
+ 
+  - Supports import feature for all resources
+  - URL encode error is fixed for all resources
+  - Error messages show REST api names for better understanding
+  - Added EIP for peering HA gateways
+  - Fixed port requirement for ICMP protocol in FQDN resource
+  - Deprecated over_aws_peering in aviatrix_tunnel resource
+  - Updated refresh for tgw, admin_email resource
+  - Policy validation in firewall resource
+  - Support empty tag list in transit_vpc resource
+  - Fixed VPN profile user re-ordering on refresh
+
+## 1.0.242 (Tue Feb 26 2019)
 
 CHANGES
  
