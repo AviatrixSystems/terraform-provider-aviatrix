@@ -325,7 +325,6 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
 		}
-
 		o, n := d.GetChange("tag_list")
 		if o == nil {
 			o = new([]interface{})
@@ -335,20 +334,24 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		os := o.([]interface{})
 		ns := n.([]interface{})
-		oldTagList := goaviatrix.ExpandStringList(os)
-		tags.TagList = strings.Join(oldTagList, ",")
-		if tags.TagList != "" {
-			err := client.DeleteTags(tags)
-			if err != nil {
-				return fmt.Errorf("failed to delete tags : %s", err)
+		oldList := goaviatrix.ExpandStringList(os)
+		newList := goaviatrix.ExpandStringList(ns)
+		oldTagList := goaviatrix.Difference(oldList, newList)
+		newTagList := goaviatrix.Difference(newList, oldList)
+		if len(oldTagList) != 0 || len(newTagList) != 0 {
+			if len(oldTagList) != 0 {
+				tags.TagList = strings.Join(oldTagList, ",")
+				err := client.DeleteTags(tags)
+				if err != nil {
+					return fmt.Errorf("failed to delete tags : %s", err)
+				}
 			}
-		}
-		newTagList := goaviatrix.ExpandStringList(ns)
-		tags.TagList = strings.Join(newTagList, ",")
-		if tags.TagList != "" {
-			err := client.AddTags(tags)
-			if err != nil {
-				return fmt.Errorf("failed to add tags : %s", err)
+			if len(newTagList) != 0 {
+				tags.TagList = strings.Join(newTagList, ",")
+				err := client.AddTags(tags)
+				if err != nil {
+					return fmt.Errorf("failed to add tags : %s", err)
+				}
 			}
 		}
 		d.SetPartial("tag_list")

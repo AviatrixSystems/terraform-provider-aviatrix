@@ -121,6 +121,14 @@ func (c *Client) CreateGateway(gateway *Gateway) error {
 		return errors.New("HTTP Post connect_container failed: " + err.Error())
 	}
 	var data APIResp
+
+	//buf := new(bytes.Buffer)
+	//buf.ReadFrom(resp.Body)
+	////stringData := buf.String()
+	//b := buf.Bytes()
+	//s := *(*string)(unsafe.Pointer(&b))
+	//log.Printf("zjin000: stringData is %v ", s)
+
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return errors.New("Json Decode connect_container failed: " + err.Error())
 	}
