@@ -1,4 +1,13 @@
-## 1.1.66 Mar 6 2019)
+## 1.2.10 (Mar 14 2019)
+
+CHANGES
+ 
+  - Updated peering resource to support refresh
+  - Updated site2cloud resource to support refresh of some paramters
+  - Corrected taq list reordering on gateway resource refresh
+  - Corrected VGW resource on refresh
+
+## 1.1.66 (Mar 6 2019)
 
 CHANGES
  

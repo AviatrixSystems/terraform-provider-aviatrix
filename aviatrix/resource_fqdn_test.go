@@ -69,6 +69,7 @@ resource "aviatrix_gateway" "test" {
 	vpc_reg = "%[6]s"
 	vpc_size = "t2.micro"
 	vpc_net = "%[7]s"
+    enable_nat = "yes"
 }
 
 resource "aviatrix_fqdn" "foo" {

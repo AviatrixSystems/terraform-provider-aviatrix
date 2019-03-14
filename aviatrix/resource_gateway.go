@@ -67,7 +67,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"enable_nat": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default: "no",
 			},
 			"dns_server": {
 				Type:     schema.TypeString,
@@ -555,7 +555,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				d.Set("cloudn_bkup_gateway_inst_id", gwHaGw.CloudnGatewayInstID)
 				d.Set("backup_public_ip", gwHaGw.PublicIP)
 				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
-				d.Set("peering_ha_eip", gwHaGw.Eip)
+				d.Set("peering_ha_eip", gwHaGw.PublicIP)
 			} else {
 				d.Set("cloudn_bkup_gateway_inst_id", "")
 				d.Set("backup_public_ip", "")
@@ -579,7 +579,16 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		if err != nil {
 			return fmt.Errorf("unable to read tag_list for gateway: %v due to %v", gateway.GwName, err)
 		}
-		d.Set("tag_list", tagList)
+		var tagListStr []string
+		if _, ok := d.GetOk("tag_list"); ok {
+			tagList1 := d.Get("tag_list").([]interface{})
+			tagListStr = goaviatrix.ExpandStringList(tagList1)
+		}
+		if len(goaviatrix.Difference(tagListStr, tagList)) != 0 || len(goaviatrix.Difference(tagList, tagListStr)) != 0 {
+			d.Set("tag_list", tagList)
+		} else {
+			d.Set("tag_list", tagListStr)
+		}
 
 		if gw.VpnStatus == "enabled" && gw.SplitTunnel == "yes" {
 			splitTunnel := &goaviatrix.SplitTunnel{
@@ -669,22 +678,27 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 		os := o.([]interface{})
 		ns := n.([]interface{})
-		oldTagList := goaviatrix.ExpandStringList(os)
-		if len(oldTagList) != 0 {
-			tags.TagList = strings.Join(oldTagList, ",")
-			err := client.DeleteTags(tags)
-			if err != nil {
-				return fmt.Errorf("failed to delete tags : %s", err)
+		oldList := goaviatrix.ExpandStringList(os)
+		newList := goaviatrix.ExpandStringList(ns)
+		oldTagList := goaviatrix.Difference(oldList, newList)
+		newTagList := goaviatrix.Difference(newList, oldList)
+		if len(oldTagList) != 0 || len(newTagList) != 0 {
+			if len(oldTagList) != 0 {
+				tags.TagList = strings.Join(oldTagList, ",")
+				err := client.DeleteTags(tags)
+				if err != nil {
+					return fmt.Errorf("failed to delete tags : %s", err)
+				}
+			}
+			if len(newTagList) != 0 {
+				tags.TagList = strings.Join(newTagList, ",")
+				err := client.AddTags(tags)
+				if err != nil {
+					return fmt.Errorf("failed to add tags : %s", err)
+				}
 			}
 		}
-		newTagList := goaviatrix.ExpandStringList(ns)
-		if len(newTagList) != 0 {
-			tags.TagList = strings.Join(newTagList, ",")
-			err = client.AddTags(tags)
-			if err != nil {
-				return fmt.Errorf("failed to add tags : %s", err)
-			}
-		}
+		d.SetPartial("tag_list")
 	}
 	if d.HasChange("split_tunnel") || d.HasChange("additional_cidrs") ||
 		d.HasChange("name_servers") || d.HasChange("search_domains") {
