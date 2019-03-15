@@ -1,16 +1,26 @@
+## 1.2.12 (Mar 15 2019)
+
+CHANGES
+  - Supported controller version: 4.1.981 
+  - Temporarily reverted peering resource refresh changes
+  - Temporarily reverted site2cloud resource refresh changes
+  - Updated site2cloud resource to ignore local_cidr changes
+
+  
 ## 1.2.10 (Mar 14 2019)
 
 CHANGES
- 
+  - Supported controller version: 4.1.981
   - Updated peering resource to support refresh
   - Updated site2cloud resource to support refresh of some paramters
   - Corrected taq list reordering on gateway resource refresh
   - Corrected VGW resource on refresh
 
+  
 ## 1.1.66 (Mar 6 2019)
 
 CHANGES
- 
+  - Supported controller version: 4.1.981
   - Supports import feature for all resources
   - URL encode error is fixed for all resources
   - Error messages show REST api names for better understanding
@@ -22,6 +32,7 @@ CHANGES
   - Support empty tag list in transit_vpc resource
   - Fixed VPN profile user re-ordering on refresh
 
+  
 ## 1.0.242 (Tue Feb 26 2019)
 
 CHANGES

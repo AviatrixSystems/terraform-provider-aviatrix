@@ -67,7 +67,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"enable_nat": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default: "no",
+				Default:  "no",
 			},
 			"dns_server": {
 				Type:     schema.TypeString,

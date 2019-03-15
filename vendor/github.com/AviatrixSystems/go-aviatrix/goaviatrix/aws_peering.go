@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/url"
 	"regexp"
-	"strings"
 )
 
 // AWSPeer simple struct to hold aws_peer details
@@ -87,27 +86,6 @@ func (c *Client) GetAWSPeer(awsPeer *AWSPeer) (*AWSPeer, error) {
 						Region1:      pairList[i].(map[string]interface{})["requester"].(map[string]interface{})["region"].(string),
 						Region2:      pairList[i].(map[string]interface{})["accepter"].(map[string]interface{})["region"].(string),
 					}
-
-					var rtbList1 []string
-					rTableList1 := pairList[i].(map[string]interface{})["requester"].(map[string]interface{})["peering_route_tables"].([]interface{})
-					for i := range rTableList1 {
-						rtbList1 = append(rtbList1, rTableList1[i].(string))
-					}
-					awsPeer.RtbList1 = strings.Join(rtbList1, ",")
-					if awsPeer.RtbList1 == "," {
-						awsPeer.RtbList1 = ""
-					}
-
-					var rtbList2 []string
-					rTableList2 := pairList[i].(map[string]interface{})["accepter"].(map[string]interface{})["peering_route_tables"].([]interface{})
-					for i := range rTableList2 {
-						rtbList2 = append(rtbList2, rTableList2[i].(string))
-					}
-					awsPeer.RtbList2 = strings.Join(rtbList2, ",")
-					if awsPeer.RtbList2 == "," {
-						awsPeer.RtbList2 = ""
-					}
-
 					return awsPeer, nil
 				}
 			}
