@@ -63,6 +63,7 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			"local_subnet_cidr": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"ha_enabled": {
 				Type:     schema.TypeString,
