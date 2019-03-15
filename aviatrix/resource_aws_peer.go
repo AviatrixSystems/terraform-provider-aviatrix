@@ -83,7 +83,7 @@ func resourceAWSPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(awsPeer.VpcID1 + "~" + awsPeer.VpcID2)
 
-	return resourceAWSPeerRead(d, meta)
+	return nil
 }
 
 func resourceAWSPeerRead(d *schema.ResourceData, meta interface{}) error {
@@ -116,12 +116,6 @@ func resourceAWSPeerRead(d *schema.ResourceData, meta interface{}) error {
 	if ap != nil {
 		d.Set("vpc_id1", ap.VpcID1)
 		d.Set("vpc_id2", ap.VpcID2)
-		d.Set("account_name1", ap.AccountName1)
-		d.Set("account_name2", ap.AccountName2)
-		d.Set("vpc_reg1", ap.Region1)
-		d.Set("vpc_reg2", ap.Region2)
-		d.Set("rtb_list1", strings.Split(ap.RtbList1, ","))
-		d.Set("rtb_list2", strings.Split(ap.RtbList2, ","))
 	}
 	return nil
 }
