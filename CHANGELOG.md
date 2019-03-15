@@ -2,8 +2,8 @@
 
 CHANGES
   - Supported controller version: 4.1.981 
-  - Temporaroly reverted peering resource refresh changes
-  - Temporaroly reverted site2cloud resource refresh changes
+  - Temporarily reverted peering resource refresh changes
+  - Temporarily reverted site2cloud resource refresh changes
   - Updated site2cloud resource to ignore local_cidr changes
 
   
