@@ -23,7 +23,7 @@ $ git clone https://github.com/AviatrixSystems/terraform-provider-aviatrix
 To clone on windows
 ```sh
 mkdir %GOPATH%\src\github.com\terraform-providers
-cd %GOPATH%\src\github.com\terraform-providers\terraform-provider-aviatrix
+cd %GOPATH%\src\github.com\terraform-providers
 git clone https://github.com/AviatrixSystems/terraform-provider-aviatrix
 ```
 
