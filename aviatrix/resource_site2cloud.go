@@ -68,6 +68,7 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			"ha_enabled": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "no",
 			},
 			"backup_remote_subnet_cidr": {
 				Type:     schema.TypeString,
@@ -153,6 +154,12 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("remote_subnet_cidr", s2c.RemoteSubnet)
 		d.Set("primary_cloud_gateway_name", s2c.GwName)
 		d.Set("local_subnet_cidr", s2c.LocalSubnet)
+		if s2c.HAEnabled == "disabled" {
+			d.Set("ha_enabled", "no")
+		} else {
+			d.Set("ha_enabled", "yes")
+		}
+
 		if connectionType := d.Get("connection_type").(string); connectionType == "" {
 			//force default setting and save to .tfstate file
 			d.Set("connection_type", "unmapped")
@@ -172,6 +179,43 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		TunnelName: d.Get("connection_name").(string),
 	}
 	d.Partial(true)
+	if d.HasChange("vpc_id") {
+		return fmt.Errorf("updating vpc_id is not allowed")
+	}
+	if d.HasChange("connection_name") {
+		return fmt.Errorf("updating connection_name is not allowed")
+	}
+	if d.HasChange("remote_gateway_type") {
+		return fmt.Errorf("updating remote_gateway_type is not allowed")
+	}
+	if d.HasChange("connection_type") {
+		return fmt.Errorf("updating connection_type is not allowed")
+	}
+	if d.HasChange("tunnel_type") {
+		return fmt.Errorf("updating tunnel_type is not allowed")
+	}
+	if d.HasChange("primary_cloud_gateway_name") {
+		return fmt.Errorf("updating primary_cloud_gateway_name is not allowed")
+	}
+	if d.HasChange("backup_gateway_name") {
+		return fmt.Errorf("updating backup_gateway_name is not allowed")
+	}
+	if d.HasChange("pre_shared_key") {
+		return fmt.Errorf("updating pre_shared_key is not allowed")
+	}
+	if d.HasChange("remote_gateway_ip") {
+		return fmt.Errorf("updating remote_gateway_ip is not allowed")
+	}
+	if d.HasChange("ha_enabled") {
+		return fmt.Errorf("updating ha_enabled is not allowed")
+	}
+	if d.HasChange("backup_remote_gateway_ip") {
+		return fmt.Errorf("updating backup_remote_gateway_ip is not allowed")
+	}
+	if d.HasChange("backup_pre_shared_key") {
+		return fmt.Errorf("updating backup_pre_shared_key is not allowed")
+	}
+
 	log.Printf("[INFO] Updating Aviatrix Site2Cloud: %#v", site2cloud)
 	if ok := d.HasChange("remote_subnet_cidr"); ok {
 		site2cloud.RemoteSubnet = d.Get("remote_subnet_cidr").(string)
