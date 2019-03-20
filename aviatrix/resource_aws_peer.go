@@ -49,10 +49,20 @@ func resourceAWSPeer() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
+			"rtb_list1_output": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+			},
 			"rtb_list2": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
+			},
+			"rtb_list2_output": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
 			},
 		},
 	}
@@ -116,11 +126,21 @@ func resourceAWSPeerRead(d *schema.ResourceData, meta interface{}) error {
 	if ap != nil {
 		d.Set("vpc_id1", ap.VpcID1)
 		d.Set("vpc_id2", ap.VpcID2)
+		d.Set("account_name1", ap.AccountName1)
+		d.Set("account_name2", ap.AccountName2)
+		d.Set("vpc_reg1", ap.Region1)
+		d.Set("vpc_reg2", ap.Region2)
+		d.Set("rtb_list1_output", strings.Split(ap.RtbList1, ","))
+		d.Set("rtb_list2_output", strings.Split(ap.RtbList2, ","))
 	}
+
 	return nil
 }
 
 func resourceAWSPeerUpdate(d *schema.ResourceData, meta interface{}) error {
+	if d.HasChange("rtb_list1") || d.HasChange("rtb_list2") {
+		return nil
+	}
 	return fmt.Errorf("the AWSPeer resource cannot be updated. Delete and create new AWS peering")
 }
 
