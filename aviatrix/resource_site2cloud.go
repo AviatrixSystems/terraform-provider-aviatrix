@@ -114,7 +114,9 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Site2Cloud: %#v", s2c)
-
+	if s2c.TunnelType == "tcp" {
+		s2c.SslServerPool = "192.168.44.0/24"
+	}
 	err := client.CreateSite2Cloud(s2c)
 	if err != nil {
 		return fmt.Errorf("failed Site2Cloud create: %s", err)

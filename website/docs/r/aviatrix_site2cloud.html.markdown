@@ -37,7 +37,7 @@ The following arguments are supported:
 * `connection_name` - (Required) Site2Cloud Connection Name
 * `connection_type` - (Required) Connection Type. Valid Value(s): "mapped", "unmapped"
 * `tunnel_type` - (Required) Site2Cloud Tunnel Type. Valid Value(s): "udp", "tcp"
-* `remote_gateway_type` - (Required) Remote Gateway Type. Valid Value(s): "generic", "avx", "aws", "azure", "sonicwall"
+* `remote_gateway_type` - (Required) Remote Gateway Type. Valid Value(s): "generic", "avx", "aws", "azure", "sonicwall", "oracle".
 * `remote_gateway_ip` - (Required) Remote Gateway IP
 * `backup_remote_gateway_ip` - (Optional)
 * `pre_shared_key` - (Optional) Pre-Shared Key
@@ -45,6 +45,7 @@ The following arguments are supported:
 * `remote_subnet_cidr` - (Required) Remote Subnet CIDR
 * `local_subnet_cidr` - (Required) Local Subnet CIDR
 * `ha_enabled` - (Optional) Specify whether enabling HA or not. Valid Value(s): "yes", "no"
+* `ssl_server_pool` - (Optional) Specify ssl_server_pool for tunnel_type "tcp". Default value is "192.168.44.0/24".
 
 ## Import
 

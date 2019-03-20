@@ -28,6 +28,8 @@ type Site2Cloud struct {
 	RemoteSubnet       string `form:"remote_subnet_cidr,omitempty" json:"remote_cidr,omitempty"`
 	LocalSubnet        string `form:"local_subnet_cidr,omitempty" json:"local_cidr,omitempty"`
 	HAEnabled          string `form:"ha_enabled,omitempty" json:"ha_status,omitempty"`
+	PeerType           string `form:"peer_type,omitempty"`
+	SslServerPool      string `form:"ssl_server_pool,omitempty"`
 }
 
 type Site2CloudResp struct {
