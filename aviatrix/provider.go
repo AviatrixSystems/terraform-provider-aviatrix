@@ -35,7 +35,6 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_aws_peer":                resourceAWSPeer(),
 			"aviatrix_aws_tgw":                 resourceAWSTgw(),
 			"aviatrix_customer_id":             resourceCustomerID(),
-			"aviatrix_dc_extn":                 resourceDCExtn(),
 			"aviatrix_firewall":                resourceAviatrixFirewall(),
 			"aviatrix_firewall_tag":            resourceAviatrixFirewallTag(),
 			"aviatrix_fqdn":                    resourceAviatrixFQDN(),
