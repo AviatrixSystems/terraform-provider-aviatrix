@@ -43,7 +43,7 @@ The following arguments are supported:
 * `pre_shared_key` - (Optional) Pre-Shared Key
 * `backup_pre_shared_key` - (Optional) Backup Pre-Shared Key
 * `remote_subnet_cidr` - (Required) Remote Subnet CIDR
-* `local_subnet_cidr` - (Optional) Local Subnet CIDR
+* `local_subnet_cidr` - (Required) Local Subnet CIDR
 * `ha_enabled` - (Optional) Specify whether enabling HA or not. Valid Value(s): "yes", "no"
 
 ## Import
