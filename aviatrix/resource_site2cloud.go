@@ -150,14 +150,22 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("vpc_id", s2c.VpcID)
 		d.Set("remote_gateway_type", s2c.RemoteGwType)
 		d.Set("tunnel_type", s2c.TunnelType)
-		d.Set("remote_gateway_ip", s2c.RemoteGwIP)
-		d.Set("remote_subnet_cidr", s2c.RemoteSubnet)
-		d.Set("primary_cloud_gateway_name", s2c.GwName)
 		d.Set("local_subnet_cidr", s2c.LocalSubnet)
+		d.Set("remote_subnet_cidr", s2c.RemoteSubnet)
 		if s2c.HAEnabled == "disabled" {
 			d.Set("ha_enabled", "no")
 		} else {
 			d.Set("ha_enabled", "yes")
+		}
+
+		if d.Get("ha_enabled") == "yes" {
+			d.Set("remote_gateway_ip", strings.Split(s2c.RemoteGwIP, ",")[0])
+			d.Set("backup_remote_gateway_ip", strings.Split(s2c.RemoteGwIP, ",")[1])
+			d.Set("primary_cloud_gateway_name", strings.Split(s2c.GwName, ",")[0])
+			d.Set("backup_gateway_name", strings.Split(s2c.GwName, ",")[1])
+		} else {
+			d.Set("remote_gateway_ip", s2c.RemoteGwIP)
+			d.Set("primary_cloud_gateway_name", s2c.GwName)
 		}
 
 		if connectionType := d.Get("connection_type").(string); connectionType == "" {
