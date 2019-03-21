@@ -51,7 +51,7 @@ Note: Please make sure that the IAM roles/profiles have already been created bef
 
 ## Import
 
-Instance account can be imported using the account_name, e.g.
+Instance account can be imported using the account_name (when doing import, needs to leave aws_secret_key blank), e.g.
 
 ```hcl
 $ terraform import aviatrix_account.test account_name
