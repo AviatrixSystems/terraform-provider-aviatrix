@@ -1,3 +1,14 @@
+## 1.3.12 (Mar 21 2019)
+
+CHANGES
+  - Supported controller version: 4.1.982 and 4.2.634
+  - Fixed firewall resource base_allow_deny on refresh
+  - Fixed site2cloud resource arguments on refresh, update and import
+  - Fixed aws_peer resource arguments on refresh, update and import
+  - Deprecated dc_extn resource
+  - Added version information 
+  
+
 ## 1.2.12 (Mar 15 2019)
 
 CHANGES
