@@ -183,10 +183,10 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 
 func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	site2cloud := &goaviatrix.Site2Cloud{
-		GwName:     d.Get("primary_cloud_gateway_name").(string),
-		VpcID:      d.Get("vpc_id").(string),
-		TunnelName: d.Get("connection_name").(string),
+	editSite2cloud := &goaviatrix.EditSite2Cloud{
+		GwName:   d.Get("primary_cloud_gateway_name").(string),
+		VpcID:    d.Get("vpc_id").(string),
+		ConnName: d.Get("connection_name").(string),
 	}
 	d.Partial(true)
 	if d.HasChange("vpc_id") {
@@ -226,25 +226,28 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("updating backup_pre_shared_key is not allowed")
 	}
 
-	log.Printf("[INFO] Updating Aviatrix Site2Cloud: %#v", site2cloud)
-	if ok := d.HasChange("remote_subnet_cidr"); ok {
-		site2cloud.RemoteSubnet = d.Get("remote_subnet_cidr").(string)
-		err := client.UpdateSite2Cloud(site2cloud)
-		if err != nil {
-			return fmt.Errorf("failed to update Site2Cloud remote_subnet_cidr: %s", err)
-		}
-		d.SetPartial("remote_subnet_cidr")
-	}
+	log.Printf("[INFO] Updating Aviatrix Site2Cloud: %#v", editSite2cloud)
 	if ok := d.HasChange("local_subnet_cidr"); ok {
-		site2cloud.LocalSubnet = d.Get("local_subnet_cidr").(string)
-		err := client.UpdateSite2Cloud(site2cloud)
+		editSite2cloud.CloudSubnetCidr = d.Get("local_subnet_cidr").(string)
+		editSite2cloud.NetworkType = "1"
+		err := client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
 			return fmt.Errorf("failed to update Site2Cloud local_subnet_cidr: %s", err)
 		}
 		d.SetPartial("local_subnet_cidr")
 	}
+	if ok := d.HasChange("remote_subnet_cidr"); ok {
+		editSite2cloud.CloudSubnetCidr = d.Get("remote_subnet_cidr").(string)
+		editSite2cloud.NetworkType = "2"
+		err := client.UpdateSite2Cloud(editSite2cloud)
+		if err != nil {
+			return fmt.Errorf("failed to update Site2Cloud remote_subnet_cidr: %s", err)
+		}
+		d.SetPartial("remote_subnet_cidr")
+	}
+
 	d.Partial(false)
-	d.SetId(site2cloud.TunnelName + "~" + site2cloud.VpcID)
+	d.SetId(editSite2cloud.ConnName + "~" + editSite2cloud.VpcID)
 	return resourceAviatrixSite2CloudRead(d, meta)
 }
 

@@ -30,6 +30,19 @@ type Site2Cloud struct {
 	HAEnabled          string `form:"ha_enabled,omitempty" json:"ha_status,omitempty"`
 	PeerType           string `form:"peer_type,omitempty"`
 	SslServerPool      string `form:"ssl_server_pool,omitempty"`
+	NetworkType        string `form:"network_type,omitempty"`
+	CloudSubnetCidr    string `form:"cloud_subnet_cidr,omitempty"`
+	RemoteCidr         string `form:"remote_cidr,omitempty"`
+}
+
+type EditSite2Cloud struct {
+	Action          string `form:"action,omitempty"`
+	CID             string `form:"CID,omitempty"`
+	VpcID           string `form:"vpc_id,omitempty"`
+	ConnName        string `form:"conn_name"`
+	GwName          string `form:"primary_cloud_gateway_name,omitempty"`
+	NetworkType     string `form:"network_type,omitempty"`
+	CloudSubnetCidr string `form:"cloud_subnet_cidr,omitempty"`
 }
 
 type Site2CloudResp struct {
@@ -92,21 +105,10 @@ func (c *Client) GetSite2Cloud(site2cloud *Site2Cloud) (*Site2Cloud, error) {
 
 }
 
-func (c *Client) UpdateSite2Cloud(site2cloud *Site2Cloud) error {
+func (c *Client) UpdateSite2Cloud(site2cloud *EditSite2Cloud) error {
 	site2cloud.CID = c.CID
 	site2cloud.Action = "edit_site2cloud_conn"
-	verb := "POST"
-	body := fmt.Sprintf("CID=%s&action=%s&vpc_id=%s&conn_name=%s&local_subnet_cidr=%s&remote_subnet_cidr=%s",
-		c.CID, site2cloud.Action, site2cloud.VpcID, site2cloud.TunnelName, site2cloud.LocalSubnet,
-		site2cloud.RemoteSubnet)
-	log.Printf("[TRACE] %s %s Body: %s", verb, c.baseURL, body)
-	req, err := http.NewRequest(verb, c.baseURL, strings.NewReader(body))
-	if err == nil {
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	} else {
-		return errors.New("HTTP Post NewRequest edit_site2cloud_conn failed: " + err.Error())
-	}
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.Post(c.baseURL, site2cloud)
 	if err != nil {
 		return errors.New("HTTP Post edit_site2cloud_conn failed: " + err.Error())
 	}

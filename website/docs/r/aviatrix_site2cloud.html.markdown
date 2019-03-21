@@ -43,7 +43,7 @@ The following arguments are supported:
 * `pre_shared_key` - (Optional) Pre-Shared Key
 * `backup_pre_shared_key` - (Optional) Backup Pre-Shared Key
 * `remote_subnet_cidr` - (Required) Remote Subnet CIDR
-* `local_subnet_cidr` - (Required) Local Subnet CIDR
+* `local_subnet_cidr` - (Optional) Local Subnet CIDR
 * `ha_enabled` - (Optional) Specify whether enabling HA or not. Valid Value(s): "yes", "no"
 * `ssl_server_pool` - (Optional) Specify ssl_server_pool for tunnel_type "tcp". Default value is "192.168.44.0/24".
 
