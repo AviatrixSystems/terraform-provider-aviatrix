@@ -39,6 +39,11 @@ The following arguments are supported:
 * `rtb_list1` - (Optional) Route table ID. Valid Values: "all" OR "rtb-abcd1234" OR "rtb-abcd1234,rtb-wxyz5678" etc...
 * `rtb_list2` - (Optional) Route table ID. Valid Values: "all" OR "rtb-abcd1234" OR "rtb-abcd1234,rtb-wxyz5678" etc...
 
+The following arguments are computed - please do not edit in the resource file:
+
+* `rtb_list1_output` - List of route table ID of vpc_id1.
+* `rtb_list2_output` - List of route table ID of vpc_id2.
+
 ## Import
 
 Instance aws_peer can be imported using the vpc_id1 and vpc_id2, e.g.

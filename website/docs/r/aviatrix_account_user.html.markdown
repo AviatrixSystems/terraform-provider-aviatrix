@@ -33,7 +33,7 @@ The following arguments are supported for creating user account:
 
 ## Import
 
-Instance account_user can be imported using the username, e.g.
+Instance account_user can be imported using the username (when doing import, needs to leave password argument blank), e.g.
 
 ```hcl
 $ terraform import aviatrix_account_user.test username

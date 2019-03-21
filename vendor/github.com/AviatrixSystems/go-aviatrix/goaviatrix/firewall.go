@@ -119,11 +119,6 @@ func (c *Client) GetPolicy(firewall *Firewall) (*Firewall, error) {
 			data.Reason)
 		return nil, ErrNotFound
 	}
-	if data.Results.BaseAllowDeny == "allow-all" {
-		data.Results.BaseAllowDeny = "allow"
-	} else {
-		data.Results.BaseAllowDeny = "deny"
-	}
 
 	return &data.Results, nil
 }

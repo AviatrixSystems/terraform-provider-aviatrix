@@ -7,7 +7,6 @@
 - The VPC's with public subnet to launch the gateways must be created before the tests
 - If you are running aviatrix_aws_peer or aviatrix_peer, two VPC's with non overlapping CIDR's must be created before hand
 - If you are running the tests on a BYOL controller, the customer ID must be set prior to the tests, otherwise run the tests on a PayG metered controller
-- aviatrix_dc_extn test can only be run on CloudN platform and not on UCC. CloudN must also be initialized and subnets must be configured before the tests are run
 - aviatrix_aws_tgw test only allows Transit GWs and VPCs to be attached to the TGW in the same region 
 
 #### Skip parameters and variables
@@ -23,7 +22,6 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_aws_peer                    | SKIP_AWS_PEER                | aviatrix_account + AWS_VPC_ID, AWS_VPC_ID2, AWS_REGION, AWS_REGION2 |
 | aviatrix_aws_tgw                     | SKIP_AWS_TGW                 | aviatrix_account + AWS_VPC_ID, AWS_REGION, AWS_VPC_TGW_ID           |
 | aviatrix_customer_id                 | SKIP_CUSTOMER_ID             | CUSTOMER_ID                                                         |
-| aviatrix_dc_extn                     | SKIP_DCX                     | aviatrix_account + AWS_REGION, DCX_SUBNET                           |
 | aviatrix_firewall                    | SKIP_FIREWALL                | aviatrix_gateway                                                    |
 | aviatrix_firewall_tag                | SKIP_FIREWALL_TAG            |                                                                     |
 | aviatrix_fqdn                        | SKIP_FQDN                    | aviatrix_gateway                                                    |
