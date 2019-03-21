@@ -145,7 +145,10 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 	}
 	s2c, err := client.GetSite2Cloud(site2cloud)
 	if err != nil {
-		d.SetId("")
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("couldn't find Aviatrix Site2Cloud: %s, %#v", err, s2c)
 	}
 	if s2c != nil {
