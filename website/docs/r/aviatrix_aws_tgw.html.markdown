@@ -32,7 +32,7 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
   },
   {
     security_domain_name = "Shared_Service_Domain"
-    connected_domains = ["Aviatrix_Edge_Domain", Default_Domain"]
+    connected_domains = ["Aviatrix_Edge_Domain", "Default_Domain"]
     attached_vpc = []          
   },
   {
