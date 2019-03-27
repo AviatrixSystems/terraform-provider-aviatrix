@@ -21,6 +21,7 @@ type AWSTgw struct {
 	AwsSideAsNumber           string               `form:"aws_side_asn,omitempty"`
 	AttachedAviatrixTransitGW []string             `form:"attached_aviatrix_transit_gateway,omitempty"`
 	SecurityDomains           []SecurityDomainRule `form:"security_domains,omitempty"`
+	ManageVpcAttachment       string
 }
 
 type AWSTgwAPIResp struct {
