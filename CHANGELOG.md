@@ -1,3 +1,13 @@
+## 1.4.4 (Mar 28 2019)
+
+CHANGES
+  - Supported controller version: 4.2.634
+  - Updated doc for aws_peer resource
+  - Updated fqdn resource to block updating "fqdn_tag" 
+  - Created new resource "aws_tgw_vpc_attachment" to simply manage attaching/detaching vpc to/from AWS TGW
+  - Updated aws_tgw resource to allow creating aws tgw only, and attaching/detaching vpc to/from tgw using aws_tgw_vpc_attachment
+
+
 ## 1.3.12 (Mar 21 2019)
 
 CHANGES
