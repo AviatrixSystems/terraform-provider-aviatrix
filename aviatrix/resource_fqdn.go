@@ -204,6 +204,9 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 		FQDNMode:   d.Get("fqdn_mode").(string),
 	}
 	d.Partial(true)
+	if d.HasChange("fqdn_tag") {
+		return fmt.Errorf("updating fqdn_tag is not allowed")
+	}
 	if d.HasChange("fqdn_status") {
 		err := client.UpdateFQDNStatus(fqdn)
 		if err != nil {
