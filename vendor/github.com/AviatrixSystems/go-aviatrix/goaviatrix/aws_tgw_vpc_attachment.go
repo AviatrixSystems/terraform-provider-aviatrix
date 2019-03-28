@@ -11,7 +11,6 @@ type AwsTgwVpcAttachment struct {
 	Action             string `form:"action,omitempty"`
 	CID                string `form:"CID,omitempty"`
 	TgwName            string `form:"tgw_name"`
-	TgwAccountName     string `form:"tgw_account_name"`
 	Region             string `form:"region"`
 	SecurityDomainName string `form:"security_domain_name"`
 	VpcAccountName     string `form:"vpc_account_name"`
@@ -63,7 +62,6 @@ func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment
 	if err != nil {
 		return nil, fmt.Errorf("couldn't find AWS TGW: %s", awsTgwVpcAttachment.TgwName)
 	}
-	awsTgwVpcAttachment.TgwAccountName = awsTgw.AccountName
 	awsTgwVpcAttachment.Region = awsTgw.Region
 
 	err = c.GetAwsTgwDomain(awsTgw, awsTgwVpcAttachment.SecurityDomainName)

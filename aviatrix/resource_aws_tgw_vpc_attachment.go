@@ -23,10 +23,6 @@ func resourceAwsTgwVpcAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tgw_account_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"region": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -53,7 +49,6 @@ func resourceAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta interface{})
 
 	awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
 		TgwName:            d.Get("tgw_name").(string),
-		TgwAccountName:     d.Get("tgw_account_name").(string),
 		Region:             d.Get("region").(string),
 		SecurityDomainName: d.Get("security_domain_name").(string),
 		VpcAccountName:     d.Get("vpc_account_name").(string),
@@ -98,10 +93,9 @@ func resourceAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta interface{}) e
 	}
 	if aTVA != nil {
 		d.Set("tgw_name", awsTgwVpcAttachment.TgwName)
-		d.Set("tgw_account_name", awsTgwVpcAttachment.TgwAccountName)
 		d.Set("region", awsTgwVpcAttachment.Region)
 		d.Set("security_domain_name", awsTgwVpcAttachment.SecurityDomainName)
-		d.Set("vpc_account_name", awsTgwVpcAttachment.TgwAccountName)
+		d.Set("vpc_account_name", awsTgwVpcAttachment.VpcAccountName)
 		d.Set("vpc_id", awsTgwVpcAttachment.VpcID)
 		d.SetId(awsTgwVpcAttachment.TgwName + "~" + awsTgwVpcAttachment.SecurityDomainName + "~" + awsTgwVpcAttachment.VpcID)
 		return nil
@@ -114,9 +108,6 @@ func resourceAwsTgwVpcAttachmentUpdate(d *schema.ResourceData, meta interface{})
 	d.Partial(true)
 	if d.HasChange("tgw_name") {
 		return fmt.Errorf("updating tgw_name is not allowed")
-	}
-	if d.HasChange("tgw_account_name") {
-		return fmt.Errorf("updating tgw_account_name is not allowed")
 	}
 	if d.HasChange("region") {
 		return fmt.Errorf("updating region is not allowed")
@@ -137,7 +128,6 @@ func resourceAwsTgwVpcAttachmentDelete(d *schema.ResourceData, meta interface{})
 
 	awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
 		TgwName:            d.Get("tgw_name").(string),
-		TgwAccountName:     d.Get("tgw_account_name").(string),
 		Region:             d.Get("region").(string),
 		SecurityDomainName: d.Get("security_domain_name").(string),
 		VpcAccountName:     d.Get("vpc_account_name").(string),
