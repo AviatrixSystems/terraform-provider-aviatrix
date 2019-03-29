@@ -39,8 +39,6 @@ func TestAccAviatrixAwsTgwVpcAttachment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "tgw_name", fmt.Sprintf("tft-%s", rName)),
 					resource.TestCheckResourceAttr(
-						resourceName, "tgw_account_name", fmt.Sprintf("tfa-%s", rName)),
-					resource.TestCheckResourceAttr(
 						resourceName, "region", os.Getenv("AWS_REGION")),
 					resource.TestCheckResourceAttr(
 						resourceName, "security_domain_name", sDm),
@@ -95,7 +93,6 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
 
 resource "aviatrix_aws_tgw_vpc_attachment" "test" {
     tgw_name             = "${aviatrix_aws_tgw.test_aws_tgw.tgw_name}"
-    tgw_account_name     = "${aviatrix_account.test_account.account_name}"
     region               = "%s"
     security_domain_name = "%s"
     vpc_account_name     = "${aviatrix_account.test_account.account_name}"
