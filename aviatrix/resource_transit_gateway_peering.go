@@ -21,12 +21,14 @@ func resourceTransitGatewayPeering() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"transit_gateway_name1": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The first transit gateway name to make a peer pair.",
 			},
 			"transit_gateway_name2": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The second transit gateway name to make a peer pair.",
 			},
 		},
 	}

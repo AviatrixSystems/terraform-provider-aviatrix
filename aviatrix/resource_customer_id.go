@@ -20,8 +20,9 @@ func resourceCustomerID() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"customer_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The license ID provided by Aviatrix Systems.",
 			},
 		},
 	}

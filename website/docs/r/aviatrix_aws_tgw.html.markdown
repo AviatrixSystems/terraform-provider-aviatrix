@@ -86,7 +86,7 @@ The following arguments are supported:
     * `attached_vpc` - (Optional) A list of VPCs attached to the domain (name: `security_domain_name`) together with its creation. This list needs to be null for "Aviatrix_Edge_Domain".
         * `vpc_region` - (Required) Region of the vpc, needs to be consistent with AWS TGW's region.
         * `vpc_account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller. 
-        * `vpc_id` - (Required) This parameter represents the name of the VPC which is going to be attached to the security domain (name: `security_domain_name`) which is going to be created.
+        * `vpc_id` - (Required) This parameter represents the ID of the VPC which is going to be attached to the security domain (name: `security_domain_name`) which is going to be created.
 * `manage_vpc_attachment` - (Optional) This parameter is a switch used to allow attaching VPCs to tgw using the aviatrix_aws_tgw resource. If it is set to false, attachment of vpc must be done using the aviatrix_aws_tgw_vpc_attachment resource. Valid values: true or false. Default value is true. 
 
 ## Import

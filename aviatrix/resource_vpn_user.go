@@ -20,25 +20,31 @@ func resourceAviatrixVPNUser() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "VPC Id of Aviatrix VPN gateway.",
 			},
 			"gw_name": {
 				Type:     schema.TypeString,
 				Required: true,
+				Description: "If ELB is enabled, this will be the name of the ELB, " +
+					"else it will be the name of the Aviatrix VPN gateway.",
 			},
 			"user_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "VPN user name.",
 			},
 			"user_email": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "VPN User's email.",
 			},
 			"saml_endpoint": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "This is the name of the SAML endpoint to which the user is to be associated.",
 			},
 		},
 	}

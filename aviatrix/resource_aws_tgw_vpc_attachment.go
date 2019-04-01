@@ -20,25 +20,30 @@ func resourceAwsTgwVpcAttachment() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"tgw_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Name of the AWS TGW.",
 			},
 			"region": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Region of cloud provider.",
 			},
 			"security_domain_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The name of the security domain.",
 			},
 			"vpc_account_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "This parameter represents the name of a Cloud-Account in Aviatrix controller.",
 			},
 			"vpc_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "This parameter represents the ID of the VPC.",
 			},
 		},
 	}

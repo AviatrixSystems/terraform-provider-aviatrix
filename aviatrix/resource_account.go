@@ -21,37 +21,45 @@ func resourceAccount() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"account_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Account name. This can be used for logging in to CloudN console or UserConnect controller.",
 			},
 			"cloud_type": {
-				Type:     schema.TypeInt,
-				Required: true,
+				Type:        schema.TypeInt,
+				Required:    true,
+				Description: "Type of cloud service provider.",
 			},
 			"aws_account_number": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "AWS Account number to associate with Aviatrix account.",
 			},
 			"aws_iam": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "AWS IAM-role based flag.",
 			},
 			"aws_role_app": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "AWS App role ARN.",
 			},
 			"aws_role_ec2": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "AWS EC2 role ARN.",
 			},
 			"aws_access_key": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "AWS Access Key.",
 			},
 			"aws_secret_key": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "AWS Secret Key.",
 			},
 		},
 	}

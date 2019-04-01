@@ -20,24 +20,29 @@ func resourceAviatrixVGWConn() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"conn_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The name of for Transit GW to VGW connection connection which is going to be created.",
 			},
 			"gw_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Name of the Transit Gateway.",
 			},
 			"vpc_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "VPC-ID where the Transit Gateway is located.",
 			},
 			"bgp_vgw_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Id of AWS's VGW that is used for this connection.",
 			},
 			"bgp_local_as_num": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "BGP Local ASN (Autonomous System Number). Integer between 1-65535.",
 			},
 		},
 	}

@@ -20,12 +20,14 @@ func resourceAviatrixVersion() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"target_version": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The release version number to which the controller will be upgraded to.",
 			},
 			"version": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Current version of the controller.",
 			},
 		},
 	}

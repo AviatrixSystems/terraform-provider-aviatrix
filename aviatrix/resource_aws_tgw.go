@@ -20,60 +20,72 @@ func resourceAWSTgw() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"tgw_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Name of the AWS TGW which is going to be created.",
 			},
 			"account_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "This parameter represents the name of a Cloud-Account in Aviatrix controller.",
 			},
 			"region": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Region of cloud provider.",
 			},
 			"aws_side_as_number": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "BGP Local ASN (Autonomous System Number), Integer between 1-65535.",
 			},
 			"attached_aviatrix_transit_gateway": {
 				Type: schema.TypeList,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				Optional: true,
+				Optional:    true,
+				Description: "A list of Names of Aviatrix Transit Gateway to attach to one of the three default domains.",
 			},
 			"security_domains": {
-				Type:     schema.TypeList,
-				Required: true,
+				Type:        schema.TypeList,
+				Required:    true,
+				Description: "Security Domains to create together with AWS TGW's creation.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"security_domain_name": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Name of the security domain created.",
 						},
 						"connected_domains": {
 							Type: schema.TypeList,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-							Optional: true,
+							Optional:    true,
+							Description: "A list of domains connected to the domain.",
 						},
 						"attached_vpc": {
-							Type:     schema.TypeList,
-							Optional: true,
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "A list of VPCs attached to the domain.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"vpc_region": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Region of the vpc.",
 									},
 									"vpc_account_name": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "The name of a Cloud-Account in Aviatrix controller associated with this VPC.",
 									},
 									"vpc_id": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "This parameter represents the ID of the VPC.",
 									},
 								},
 							},

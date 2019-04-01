@@ -19,22 +19,26 @@ func resourceAccountUser() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"account_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Cloud account name of user to be created.",
 			},
 			"password": {
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
-				ForceNew:  true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Sensitive:   true,
+				ForceNew:    true,
+				Description: "Login password for the account user to be created.",
 			},
 			"email": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Email of address of account user to be created.",
 			},
 			"username": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Name of account user to be created.",
 			},
 		},
 	}

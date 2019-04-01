@@ -20,8 +20,9 @@ func resourceAdminEmail() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"admin_email": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "E-mail address of admin user to be set.",
 			},
 		},
 	}

@@ -21,37 +21,44 @@ func resourceTunnel() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"vpc_name1": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The first VPC Container name to make a peer pair.",
 			},
 			"vpc_name2": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The second VPC Container name to make a peer pair.",
 			},
 			"peering_state": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Status of the tunnel.",
 			},
 			"peering_hastatus": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Status of the HA tunnel.",
 			},
 			"cluster": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Whether cluster peering is enabled. Valid inputs: 'yes' and 'no'.",
 			},
 			"peering_link": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the peering link.",
 			},
 			"enable_ha": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "no",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "no",
+				Description: "Whether Peering HA is enabled. Valid inputs: 'yes' and 'no'.",
 			},
 			//FIXME : Some of the above are computed. Set them correctly. Boolean valus should not be Optional to
 			// prevent tf state corruption

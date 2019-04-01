@@ -20,38 +20,46 @@ func resourceAviatrixFQDN() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"fqdn_tag": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "FQDN Filter Tag Name.",
 			},
 			"fqdn_status": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "FQDN Filter Tag Status. Valid values: 'enabled', 'disabled'.",
 			},
 			"fqdn_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Specify the tag color to be a white-list tag or black-list tag. 'white' or 'black'",
 			},
 			"gw_list": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "A list of gateway names.",
 			},
 			"domain_names": {
-				Type:     schema.TypeList,
-				Optional: true,
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A list of one or more domain names.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"fqdn": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "FQDN.",
 						},
 						"proto": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Protocol.",
 						},
 						"port": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Port.",
 						},
 					},
 				},
