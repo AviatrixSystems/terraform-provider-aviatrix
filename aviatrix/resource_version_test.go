@@ -37,7 +37,7 @@ func TestAccAviatrixVersion_basic(t *testing.T) {
 func testAccVersionConfigBasic() string {
 	return fmt.Sprintf(`
 resource "aviatrix_version" "foo" {
-	target_version = ""
+	target_version = "latest"
 }
 	`)
 }
