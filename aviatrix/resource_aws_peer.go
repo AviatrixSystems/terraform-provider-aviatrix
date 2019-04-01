@@ -103,7 +103,7 @@ func resourceAWSPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(awsPeer.VpcID1 + "~" + awsPeer.VpcID2)
 
-	return nil
+	return resourceAWSPeerRead(d, meta)
 }
 
 func resourceAWSPeerRead(d *schema.ResourceData, meta interface{}) error {
