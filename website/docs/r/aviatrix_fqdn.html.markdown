@@ -46,8 +46,8 @@ The following arguments are supported:
   * `fqdn` - (Optional) FQDN. Example: "facebook.com" 
   * `proto` - (Optional) Protocol. Valid values: "all", "tcp", "udp", "icmp" 
   * `port` - (Optional) Port. Example "25" 
-    * protocol 'all' will default to 'all' regardless of input
-    * icmp type/code is expected as 0-39/0-19 or None or "ping" in the port field
+    * for protocol "all", port must be set to "all"
+    * for protocol “icmp”, port must be set to “ping”
 
 ## Import
 
