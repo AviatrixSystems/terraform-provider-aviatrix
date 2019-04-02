@@ -32,7 +32,7 @@ func resourceAccount() *schema.Resource {
 			},
 			"aws_account_number": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: "AWS Account number to associate with Aviatrix account.",
 			},
 			"aws_iam": {
@@ -61,6 +61,16 @@ func resourceAccount() *schema.Resource {
 				Sensitive:   true,
 				Description: "AWS Secret Key.",
 			},
+			"gcloud_project_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "GCloud Project ID.",
+			},
+			"gcloud_project_credentials_filepath": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "GCloud Project credentials local filepath.",
+			},
 		},
 	}
 }
@@ -68,39 +78,72 @@ func resourceAccount() *schema.Resource {
 func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	account := &goaviatrix.Account{
-		AccountName:      d.Get("account_name").(string),
-		CloudType:        d.Get("cloud_type").(int),
-		AwsAccountNumber: d.Get("aws_account_number").(string),
-		AwsIam:           d.Get("aws_iam").(string),
-		AwsRoleApp:       d.Get("aws_role_app").(string),
-		AwsRoleEc2:       d.Get("aws_role_ec2").(string),
-		AwsAccessKey:     d.Get("aws_access_key").(string),
-		AwsSecretKey:     d.Get("aws_secret_key").(string),
+		AccountName:                           d.Get("account_name").(string),
+		CloudType:                             d.Get("cloud_type").(int),
+		AwsAccountNumber:                      d.Get("aws_account_number").(string),
+		AwsIam:                                d.Get("aws_iam").(string),
+		AwsRoleApp:                            d.Get("aws_role_app").(string),
+		AwsRoleEc2:                            d.Get("aws_role_ec2").(string),
+		AwsAccessKey:                          d.Get("aws_access_key").(string),
+		AwsSecretKey:                          d.Get("aws_secret_key").(string),
+		GcloudProjectName:                     d.Get("gcloud_project_id").(string),
+		GcloudProjectCredentialsFilepathLocal: d.Get("gcloud_project_credentials_filepath").(string),
 	}
-	if account.CloudType != 1 {
-		return fmt.Errorf("cloud type can only be aws (1)")
-	}
-	if account.AwsIam != "true" && account.AwsIam != "false" {
-		return fmt.Errorf("aws iam can only be 'true' or 'false'")
-	}
-	log.Printf("[INFO] Creating Aviatrix account: %#v", account)
-	if aws_iam := d.Get("aws_iam").(string); aws_iam == "true" {
-		var role_app bytes.Buffer
-		var role_ec2 bytes.Buffer
-		role_app.WriteString("arn:aws:iam::")
-		role_app.WriteString(account.AwsAccountNumber)
-		role_app.WriteString(":role/aviatrix-role-app")
-		role_ec2.WriteString("arn:aws:iam::")
-		role_ec2.WriteString(account.AwsAccountNumber)
-		role_ec2.WriteString(":role/aviatrix-role-ec2")
-		if aws_role_app := d.Get("aws_role_app").(string); aws_role_app == "" {
-			account.AwsRoleApp += role_app.String()
+	if account.CloudType == 1 {
+		if account.AwsAccountNumber == "" {
+			return fmt.Errorf("aws account number is needed for aws cloud")
 		}
-		if aws_role_ec2 := d.Get("aws_role_ec2").(string); aws_role_ec2 == "" {
-			account.AwsRoleEc2 += role_ec2.String()
+		if account.AwsIam != "true" && account.AwsIam != "false" {
+			return fmt.Errorf("aws iam can only be 'true' or 'false'")
 		}
-		log.Printf("[TRACE] Reading Aviatrix account aws_role_app: [%s]", d.Get("aws_role_app").(string))
-		log.Printf("[TRACE] Reading Aviatrix account aws_role_ec2: [%s]", d.Get("aws_role_ec2").(string))
+
+		log.Printf("[INFO] Creating Aviatrix account: %#v", account)
+		if aws_iam := d.Get("aws_iam").(string); aws_iam == "true" {
+			var role_app bytes.Buffer
+			var role_ec2 bytes.Buffer
+			role_app.WriteString("arn:aws:iam::")
+			role_app.WriteString(account.AwsAccountNumber)
+			role_app.WriteString(":role/aviatrix-role-app")
+			role_ec2.WriteString("arn:aws:iam::")
+			role_ec2.WriteString(account.AwsAccountNumber)
+			role_ec2.WriteString(":role/aviatrix-role-ec2")
+			if aws_role_app := d.Get("aws_role_app").(string); aws_role_app == "" {
+				account.AwsRoleApp += role_app.String()
+			}
+			if aws_role_ec2 := d.Get("aws_role_ec2").(string); aws_role_ec2 == "" {
+				account.AwsRoleEc2 += role_ec2.String()
+			}
+			log.Printf("[TRACE] Reading Aviatrix account aws_role_app: [%s]", d.Get("aws_role_app").(string))
+			log.Printf("[TRACE] Reading Aviatrix account aws_role_ec2: [%s]", d.Get("aws_role_ec2").(string))
+		}
+	} else if account.CloudType == 4 {
+		if account.GcloudProjectCredentialsFilepathLocal == "" {
+			return fmt.Errorf("gcloud project credentials local filepath needed to upload file to controller")
+		}
+		// read gcp credential json file into filename and contents
+		// upload the credential file into controller
+		// filepath of credential file inside the controller is hardcoded bc it won't change
+		log.Printf("[INFO] Creating Aviatrix account: %#v", account)
+		var filename, contents, controller_filepath string
+		filename, contents, err := goaviatrix.ReadFile(account.GcloudProjectCredentialsFilepathLocal)
+		if err != nil {
+			return fmt.Errorf("failed to read gcp credential file: %s", err)
+		}
+		if filename == "" {
+			return fmt.Errorf("filename is empty")
+		}
+		if contents == "" {
+			return fmt.Errorf("contents are empty")
+		}
+		account.GcloudProjectCredentialsFilename = filename
+		account.GcloudProjectCredentialsContents = contents
+		if err = client.UploadGcloudProjectCredentialsFile(account); err != nil {
+			return fmt.Errorf("failed to upload gcp credential file: %s", err)
+		}
+		controller_filepath = "/var/www/php/tmp/" + filename
+		account.GcloudProjectCredentialsFilepathController = controller_filepath
+	} else if account.CloudType != 1 && account.CloudType != 4 {
+		return fmt.Errorf("cloud type can only be either aws (1) or gcp (4)")
 	}
 	err := client.CreateAccount(account)
 	if err != nil {
@@ -135,17 +178,21 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	if acc != nil {
 		d.Set("account_name", acc.AccountName)
 		d.Set("cloud_type", acc.CloudType)
-		d.Set("aws_account_number", acc.AwsAccountNumber)
-		//if awsIam := d.Get("aws_iam").(string); awsIam != "true" {
-		if acc.AwsRoleEc2 != "" {
-			//force default setting and save to .tfstate file
-			d.Set("aws_access_key", "")
-			d.Set("aws_secret_key", "")
-			d.Set("aws_iam", "true")
-			//d.Set("aws_secret_key", acc.AwsSecretKey) # this would corrupt tf state
-		} else {
-			d.Set("aws_access_key", acc.AwsAccessKey)
-			d.Set("aws_iam", "false")
+		if acc.CloudType == 1 {
+			d.Set("aws_account_number", acc.AwsAccountNumber)
+			//if awsIam := d.Get("aws_iam").(string); awsIam != "true" {
+			if acc.AwsRoleEc2 != "" {
+				//force default setting and save to .tfstate file
+				d.Set("aws_access_key", "")
+				d.Set("aws_secret_key", "")
+				d.Set("aws_iam", "true")
+				//d.Set("aws_secret_key", acc.AwsSecretKey) # this would corrupt tf state
+			} else {
+				d.Set("aws_access_key", acc.AwsAccessKey)
+				d.Set("aws_iam", "false")
+			}
+		} else if acc.CloudType == 4 {
+			d.Set("gcloud_project_id", acc.GcloudProjectName)
 		}
 		d.SetId(acc.AccountName)
 	}
@@ -155,48 +202,93 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	account := &goaviatrix.Account{
-		AccountName:      d.Get("account_name").(string),
-		CloudType:        d.Get("cloud_type").(int),
-		AwsAccountNumber: d.Get("aws_account_number").(string),
-		AwsIam:           d.Get("aws_iam").(string),
-		AwsRoleApp:       d.Get("aws_role_app").(string),
-		AwsRoleEc2:       d.Get("aws_role_ec2").(string),
-		AwsAccessKey:     d.Get("aws_access_key").(string),
-		AwsSecretKey:     d.Get("aws_secret_key").(string),
+		AccountName:                           d.Get("account_name").(string),
+		CloudType:                             d.Get("cloud_type").(int),
+		AwsAccountNumber:                      d.Get("aws_account_number").(string),
+		AwsIam:                                d.Get("aws_iam").(string),
+		AwsRoleApp:                            d.Get("aws_role_app").(string),
+		AwsRoleEc2:                            d.Get("aws_role_ec2").(string),
+		AwsAccessKey:                          d.Get("aws_access_key").(string),
+		AwsSecretKey:                          d.Get("aws_secret_key").(string),
+		GcloudProjectName:                     d.Get("gcloud_project_id").(string),
+		GcloudProjectCredentialsFilepathLocal: d.Get("gcloud_project_credentials_filepath").(string),
 	}
 
 	log.Printf("[INFO] Updating Aviatrix account: %#v", account)
 	d.Partial(true)
 	if d.HasChange("cloud_type") {
+		return fmt.Errorf("update cloud_type is not allowed")
+	}
+	if d.HasChange("account_name") {
 		return fmt.Errorf("update account name is not allowed")
 	}
-	if d.HasChange("aws_account_number") || d.HasChange("aws_access_key") ||
-		d.HasChange("aws_secret_key") || d.HasChange("aws_iam") ||
-		d.HasChange("aws_role_app") || d.HasChange("aws_role_ec2") {
-		err := client.UpdateAccount(account)
-		if err != nil {
-			return fmt.Errorf("failed to update Aviatrix Account: %s", err)
-		}
-		if d.HasChange("aws_account_number") {
-			d.SetPartial("aws_account_number")
-		}
-		if awsIam := d.Get("aws_iam").(string); awsIam != "true" {
-			if d.HasChange("aws_access_key") {
-				d.SetPartial("aws_access_key")
+	if account.CloudType == 1 {
+		if d.HasChange("aws_account_number") || d.HasChange("aws_access_key") ||
+			d.HasChange("aws_secret_key") || d.HasChange("aws_iam") ||
+			d.HasChange("aws_role_app") || d.HasChange("aws_role_ec2") {
+			err := client.UpdateAccount(account)
+			if err != nil {
+				return fmt.Errorf("failed to update Aviatrix Account: %s", err)
 			}
-			if d.HasChange("aws_secret_key") {
-				d.SetPartial("aws_secret_key")
+			if d.HasChange("aws_account_number") {
+				d.SetPartial("aws_account_number")
+			}
+			if awsIam := d.Get("aws_iam").(string); awsIam != "true" {
+				if d.HasChange("aws_access_key") {
+					d.SetPartial("aws_access_key")
+				}
+				if d.HasChange("aws_secret_key") {
+					d.SetPartial("aws_secret_key")
+				}
+			}
+			if d.HasChange("aws_iam") {
+				d.SetPartial("aws_iam")
 			}
 		}
-		if d.HasChange("aws_iam") {
-			d.SetPartial("aws_iam")
-		}
-	}
+	} else if account.CloudType == 4 {
+		if d.HasChange("gcloud_project_id") || d.HasChange("gcloud_project_credentials_filepath") {
+			// if user changed credential filepath or wants to upload a new file (local) then will have to reupload to controller before updating account
+			// to edit gcp account, must upload another credential file
+			old_filename := account.GcloudProjectCredentialsFilename
+			old_contents := account.GcloudProjectCredentialsContents
 
+			filename, contents, err := goaviatrix.ReadFile(account.GcloudProjectCredentialsFilepathLocal)
+			if err != nil {
+				return fmt.Errorf("failed to read gcp credential file: %s", err)
+			}
+			if filename == "" {
+				return fmt.Errorf("filename is empty")
+			}
+			if contents == "" {
+				return fmt.Errorf("contents are empty")
+			}
+			if old_filename != filename || old_contents != contents {
+				account.GcloudProjectCredentialsFilename = filename
+				account.GcloudProjectCredentialsContents = contents
+				if err = client.UploadGcloudProjectCredentialsFile(account); err != nil {
+					return fmt.Errorf("failed to upload gcp credential file: %s", err)
+				}
+				controller_filepath := "/var/www/php/tmp/" + filename
+				account.GcloudProjectCredentialsFilepathController = controller_filepath
+			}
+			err = client.UpdateAccount(account)
+			if err != nil {
+				return fmt.Errorf("failed to update Aviatrix Account: %s", err)
+			}
+			if d.HasChange("gcloud_project_id") {
+				d.SetPartial("gcloud_project_id")
+			}
+			if d.HasChange("gcloud_project_credentials_filepath") {
+				d.SetPartial("gcloud_project_credentials_filepath")
+			}
+		}
+
+	}
 	d.Partial(false)
 	return resourceAccountRead(d, meta)
 }
 
+//for now, deleteing gcp account will not delete the credential file
 func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	account := &goaviatrix.Account{

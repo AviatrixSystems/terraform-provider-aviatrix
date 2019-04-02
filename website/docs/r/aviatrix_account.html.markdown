@@ -32,6 +32,14 @@ resource "aviatrix_account" "tempacc" {
   aws_access_key = "ABCDEFGHIJKL"
   aws_secret_key = "ABCDEFGHIJKLabcdefghijkl"
 }
+
+# Create Aviatrix GCP account
+resource "aviatrix_account" "tempacc_gcp" {
+  account_name = "username"
+  cloud_type = 4
+  gcloud_project_id = "aviatrix-123456"
+  gcloud_project_credentials_filepath = "/home/ubuntu/test_gcp/aviatrix-abc123.json"
+}
 ```
 
 ## Argument Reference
@@ -46,6 +54,8 @@ The following arguments are supported:
 * `aws_secret_key` - (Optional) AWS Secret Key (Required when aws_iam is "false" and when creating an account for AWS)
 * `aws_role_app` - (Optional) AWS App role ARN, this option is for UserConnect (Required when aws_iam is "true" and when creating an account for AWS).
 * `aws_role_ec2` - (Optional) AWS EC2 role ARN, this option is for UserConnect (Required when aws_iam is "true" and when creating an account for AWS).
+* `gcloud_project_id` - (Optional) GCloud Project ID
+* `gcloud_project_credentials_filepath` - (Optional) GCloud Project Credentials [local filepath].json (Required when cloud_type is 4)
 
 Note: Please make sure that the IAM roles/profiles have already been created before running this, if aws_iam="true". More information on the IAM roles is at https://docs.aviatrix.com/HowTos/iam_policies.html and https://docs.aviatrix.com/HowTos/HowTo_IAM_role.html
 
