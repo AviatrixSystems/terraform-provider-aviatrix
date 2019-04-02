@@ -17,12 +17,12 @@ The AWSPeer resource allows the creation and management of Aviatrix AWS Peering.
 resource "aviatrix_aws_peer" "test_awspeer" {
   account_name1 = "test1-account"
   account_name2 = "test2-account"
-  vpc_id1 = "vpc-abcd1234"
-  vpc_id2 = "vpc-rdef3333"
-  vpc_reg1 = "us-east-1"
-  vpc_reg2 = "us-west-1"
-  rtb_list1 = ["rtb-abcd1234"]
-  rtb_list2 = ["rtb-wxyz5678"]
+  vpc_id1       = "vpc-abcd1234"
+  vpc_id2       = "vpc-rdef3333"
+  vpc_reg1      = "us-east-1"
+  vpc_reg2      = "us-west-1"
+  rtb_list1     = ["rtb-abcd1234"]
+  rtb_list2     = ["rtb-wxyz5678"]
 }
 ```
 
@@ -48,6 +48,6 @@ The following arguments are computed - please do not edit in the resource file:
 
 Instance aws_peer can be imported using the vpc_id1 and vpc_id2, e.g.
 
-```hcl
+```
 $ terraform import aviatrix_aws_peer.test vpc_id1~vpc_id2
 ```

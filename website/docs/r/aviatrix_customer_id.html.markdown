@@ -29,6 +29,6 @@ The following arguments are supported:
 
 Instance customer_id can be imported using the customer_id, e.g.
 
-```hcl
+```
 $ terraform import aviatrix_customer_id.test customer_id
 ```

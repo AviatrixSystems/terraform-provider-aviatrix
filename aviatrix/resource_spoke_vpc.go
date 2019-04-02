@@ -84,12 +84,6 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 				Default:     "disabled",
 				Description: "Set to 'enabled' if this feature is desired.",
 			},
-			"dns_server": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "Specify the DNS IP.",
-			},
 			"transit_gw": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -126,7 +120,6 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		HASubnet:       d.Get("ha_subnet").(string),
 		EnableNAT:      d.Get("enable_nat").(string),
 		SingleAzHa:     d.Get("single_az_ha").(string),
-		DnsServer:      d.Get("dns_server").(string),
 		TransitGateway: d.Get("transit_gw").(string),
 	}
 	if gateway.EnableNAT != "yes" {
@@ -148,9 +141,6 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 	}
 	if enableNAT := d.Get("enable_nat").(string); enableNAT == "yes" {
 		log.Printf("[INFO] Aviatrix NAT enabled gateway: %#v", gateway)
-	}
-	if DNSServer := d.Get("dns_server").(string); DNSServer != "" {
-		log.Printf("[INFO] Aviatrix gateway DNS server: %#v", gateway)
 	}
 	haGwSize := d.Get("ha_gw_size").(string)
 	if singleAZHA := d.Get("single_az_ha").(string); singleAZHA == "enabled" {
@@ -258,15 +248,11 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 		d.Set("public_ip", gw.PublicIP)
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 		d.Set("enable_nat", gw.EnableNat)
-		d.Set("dns_server", gw.DnsServer)
 
 		if gw.SingleAZ == "yes" {
 			d.Set("single_az_ha", "enabled")
 		} else {
 			d.Set("single_az_ha", "disabled")
-		}
-		if gw.DnsServer != "" {
-			d.Set("dns_server", gw.DnsServer)
 		}
 	}
 
@@ -349,9 +335,6 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 	if d.HasChange("subnet") {
 		return fmt.Errorf("updating subnet is not allowed")
-	}
-	if d.HasChange("dns_server") {
-		return fmt.Errorf("updating dns_server is not allowed")
 	}
 	if d.HasChange("subnet") {
 		return fmt.Errorf("updating subnet is not allowed")

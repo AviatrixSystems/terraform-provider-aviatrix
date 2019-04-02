@@ -15,9 +15,9 @@ The AviatrixVPNUser resource manages the VPN Users
 ```hcl
 # Manage Aviatrix Controller Upgrade process
 resource "aviatrix_vpn_user" "test_vpn_user" {
-  vpc_id = "vpc-abcd1234"
-  gw_name = "gw1"
-  user_name = "username1"
+  vpc_id     = "vpc-abcd1234"
+  gw_name    = "gw1"
+  user_name  = "username1"
   user_email = "user@aviatrix.com"
 }
 ```
@@ -36,6 +36,6 @@ The following arguments are supported:
 
 Instance vpn_user can be imported using the user_name, e.g.
 
-```hcl
+```
 $ terraform import aviatrix_vpn_user.test user_name
 ```

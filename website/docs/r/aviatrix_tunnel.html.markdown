@@ -41,6 +41,6 @@ The following arguments are computed - please do not edit in the resource file:
 
 Instance tunnel can be imported using the vpc_name1 and vpc_name2, e.g.
 
-```hcl
+```
 $ terraform import aviatrix_tunnel.test vpc_name1~vpc_name2
 ```

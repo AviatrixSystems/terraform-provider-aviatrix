@@ -15,22 +15,22 @@ The Account resource allows the creation and management of an Aviatrix cloud acc
 ```hcl
 # Create Aviatrix AWS account with IAM roles
 resource "aviatrix_account" "tempacc" {
-  account_name = "username"
-  cloud_type = 1
+  account_name       = "username"
+  cloud_type         = 1
   aws_account_number = "123456789012"
-  aws_iam = "true"
-  aws_role_app = "arn:aws:iam::123456789012:role/aviatrix-role-app"
-  aws_role_ec2 = "arn:aws:iam::123456789012:role/aviatrix-role-ec2"
+  aws_iam            = "true"
+  aws_role_app       = "arn:aws:iam::123456789012:role/aviatrix-role-app"
+  aws_role_ec2       = "arn:aws:iam::123456789012:role/aviatrix-role-ec2"
 }
 
 # Or you can create Aviatrix AWS account with access_key/secret key
 resource "aviatrix_account" "tempacc" {
-  account_name = "username"
-  cloud_type = 1
-  aws_iam = "false"
+  account_name       = "username"
+  cloud_type         = 1
+  aws_iam            = "false"
   aws_account_number = "123456789012"
-  aws_access_key = "ABCDEFGHIJKL"
-  aws_secret_key = "ABCDEFGHIJKLabcdefghijkl"
+  aws_access_key     = "ABCDEFGHIJKL"
+  aws_secret_key     = "ABCDEFGHIJKLabcdefghijkl"
 }
 
 # Create Aviatrix GCP account
@@ -63,6 +63,6 @@ Note: Please make sure that the IAM roles/profiles have already been created bef
 
 Instance account can be imported using the account_name (when doing import, needs to leave aws_secret_key blank), e.g.
 
-```hcl
+```
 $ terraform import aviatrix_account.test account_name
 ```

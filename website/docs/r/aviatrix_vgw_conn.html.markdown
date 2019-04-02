@@ -15,11 +15,11 @@ The AviatrixVGWConn resource manager the Aviatrix Transit Gateway to VGW Connect
 ```hcl
 # Manage Aviatrix Controller Upgrade process
 resource "aviatrix_vgw_conn" "test_vgw_conn" {
-  conn_name = " "
-  gw_name = " "
-  vpc_id = " "
-  bgp_vgw_id = " "
-  bgp_local_as_num = " "
+  conn_name        = "my-connection-vgw-to-tgw"
+  gw_name          = "my-transit-gw"
+  vpc_id           = "vpc-abcd1234"
+  bgp_vgw_id       = "vgw-abcd1234"
+  bgp_local_as_num = "65001"
 }
 ```
 
@@ -37,6 +37,6 @@ The following arguments are supported:
 
 Instance vgw_conn can be imported using the conn_name, e.g.
 
-```hcl
+```
 $ terraform import aviatrix_vgw_conn.test conn_name
 ```

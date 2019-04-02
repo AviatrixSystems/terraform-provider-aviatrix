@@ -37,6 +37,6 @@ The following arguments are supported:
 
 Instance aws_tgw_vpc_attachment can be imported using the tgw_name, security_domain_name and vpc_id, e.g.
 
-```hcl
+```
 $ terraform import aviatrix_aws_tgw_vpc_attachment.test tgw_name~security_domain_name~vpc_id
 ```

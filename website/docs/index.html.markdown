@@ -21,8 +21,8 @@ Use the navigation to the left to read about the available resources.
 # Configure Aviatrix provider
 provider "aviatrix" {
   controller_ip = "1.2.3.4"
-  username = "admin"
-  password = "password"
+  username      = "admin"
+  password      = "password"
 }
 
 # Create a record
@@ -46,6 +46,6 @@ The following arguments are supported in the `provider` block:
 
 Instances can be imported using the id, e.g.
 
-```hcl
+```
 $ terraform import aviatrix_instance.test myAviatrixInstanceID
 ```

@@ -15,7 +15,7 @@ Use this data source to get the Aviatrix cloud account for use in other resource
 ```hcl
 # Create Aviatrix account data source
 data "aviatrix_account" "foo" {
-	account_name = "username"
+  account_name = "username"
 }
 ```
 

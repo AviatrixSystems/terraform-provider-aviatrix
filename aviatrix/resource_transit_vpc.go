@@ -73,12 +73,6 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 				Default:     "no",
 				Description: "Enable NAT for this container.",
 			},
-			"dns_server": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "Specify the DNS IP, only required while using a custom private DNS for the VPC.",
-			},
 			"tag_list": {
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -113,7 +107,6 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		VpcSize:                d.Get("vpc_size").(string),
 		Subnet:                 d.Get("subnet").(string),
 		EnableNAT:              d.Get("enable_nat").(string),
-		DnsServer:              d.Get("dns_server").(string),
 		EnableHybridConnection: d.Get("enable_hybrid_connection").(bool),
 		ConnectedTransit:       d.Get("connected_transit").(string),
 	}
@@ -329,9 +322,6 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 	if d.HasChange("subnet") {
 		return fmt.Errorf("updating subnet is not allowed")
-	}
-	if d.HasChange("dns_server") {
-		return fmt.Errorf("updating dns_server is not allowed")
 	}
 	if d.HasChange("tag_list") {
 		tags := &goaviatrix.Tags{

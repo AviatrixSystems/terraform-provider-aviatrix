@@ -15,10 +15,10 @@ The AccountUser resource allows the creation and management of Aviatrix User Acc
 ```hcl
 # Create Aviatrix User Account
 resource "aviatrix_account_user" "test_accountuser" {
-  username = "username1"
+  username     = "username1"
   account_name = "test-accountname"
-  email = "username1@testdomain.com"
-  password = "passwordforuser1-1234"
+  email        = "username1@testdomain.com"
+  password     = "passwordforuser1-1234"
 }
 ```
 
@@ -35,6 +35,6 @@ The following arguments are supported for creating user account:
 
 Instance account_user can be imported using the username (when doing import, needs to leave password argument blank), e.g.
 
-```hcl
+```
 $ terraform import aviatrix_account_user.test username
 ```

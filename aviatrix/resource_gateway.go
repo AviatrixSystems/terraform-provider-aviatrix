@@ -81,11 +81,6 @@ func resourceAviatrixGateway() *schema.Resource {
 				Default:     "no",
 				Description: "Enable NAT for this container.",
 			},
-			"dns_server": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Specify a public DNS for the gateway.",
-			},
 			"public_dns_server": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -299,7 +294,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		VpcSize:            d.Get("vpc_size").(string),
 		VpcNet:             d.Get("vpc_net").(string),
 		EnableNat:          d.Get("enable_nat").(string),
-		DnsServer:          d.Get("dns_server").(string),
 		VpnStatus:          d.Get("vpn_access").(string),
 		VpnCidr:            d.Get("vpn_cidr").(string),
 		EnableElb:          d.Get("enable_elb").(string),
@@ -354,9 +348,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	if enableNAT := d.Get("enable_nat").(string); enableNAT == "yes" {
 		log.Printf("[INFO] Aviatrix NAT enabled gateway: %#v", gateway)
-	}
-	if DNSServer := d.Get("dns_server").(string); DNSServer != "" {
-		log.Printf("[INFO] Aviatrix gateway DNS server: %#v", gateway)
 	}
 
 	// single_AZ enabled for Gateway. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
@@ -504,9 +495,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("enable_ldap", "yes")
 		} else {
 			d.Set("enable_ldap", "no")
-		}
-		if gw.DnsServer != "" {
-			d.Set("dns_server", gw.DnsServer)
 		}
 		if gw.VpnStatus != "" {
 			if gw.VpnStatus == "disabled" {
