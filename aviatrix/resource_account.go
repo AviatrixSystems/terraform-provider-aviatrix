@@ -71,6 +71,26 @@ func resourceAccount() *schema.Resource {
 				Optional:    true,
 				Description: "GCloud Project credentials local filepath.",
 			},
+			"arm_subscription_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Azure Subscription ID.",
+			},
+			"arm_directory_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Azure Directory ID.",
+			},
+			"arm_application_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Azure Application ID.",
+			},
+			"arm_application_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Azure Application Key.",
+			},
 		},
 	}
 }
@@ -88,6 +108,10 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 		AwsSecretKey:                          d.Get("aws_secret_key").(string),
 		GcloudProjectName:                     d.Get("gcloud_project_id").(string),
 		GcloudProjectCredentialsFilepathLocal: d.Get("gcloud_project_credentials_filepath").(string),
+		ArmSubscriptionId:                     d.Get("arm_subscription_id").(string),
+		ArmApplicationEndpoint:                d.Get("arm_directory_id").(string),
+		ArmApplicationClientId:                d.Get("arm_application_id").(string),
+		ArmApplicationClientSecret:            d.Get("arm_application_key").(string),
 	}
 	if account.CloudType == 1 {
 		if account.AwsAccountNumber == "" {
@@ -142,8 +166,21 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 		controller_filepath = "/var/www/php/tmp/" + filename
 		account.GcloudProjectCredentialsFilepathController = controller_filepath
-	} else if account.CloudType != 1 && account.CloudType != 4 {
-		return fmt.Errorf("cloud type can only be either aws (1) or gcp (4)")
+	} else if account.CloudType == 8 {
+		if account.ArmSubscriptionId == "" {
+			return fmt.Errorf("arm subscription id needed for azure arm cloud")
+		}
+		if account.ArmApplicationEndpoint == "" {
+			return fmt.Errorf("arm directory id needed for azure arm cloud")
+		}
+		if account.ArmApplicationClientId == "" {
+			return fmt.Errorf("arm application id needed for azure arm cloud")
+		}
+		if account.ArmApplicationClientSecret == "" {
+			return fmt.Errorf("arm application key needed for azure arm cloud")
+		}
+	} else if account.CloudType != 1 && account.CloudType != 4 && account.CloudType != 8 {
+		return fmt.Errorf("cloud type can only be either aws (1), gcp (4), or arm (8)")
 	}
 	err := client.CreateAccount(account)
 	if err != nil {
@@ -193,6 +230,11 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 			}
 		} else if acc.CloudType == 4 {
 			d.Set("gcloud_project_id", acc.GcloudProjectName)
+		} else if acc.CloudType == 8 {
+			d.Set("arm_subscription_id", acc.ArmSubscriptionId)
+			d.Set("arm_directory_id", acc.ArmApplicationEndpoint)
+			d.Set("arm_application_id", acc.ArmApplicationClientId)
+			d.Set("arm_application_key", acc.ArmApplicationClientSecret)
 		}
 		d.SetId(acc.AccountName)
 	}
@@ -212,6 +254,10 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 		AwsSecretKey:                          d.Get("aws_secret_key").(string),
 		GcloudProjectName:                     d.Get("gcloud_project_id").(string),
 		GcloudProjectCredentialsFilepathLocal: d.Get("gcloud_project_credentials_filepath").(string),
+		ArmSubscriptionId:                     d.Get("arm_subscription_id").(string),
+		ArmApplicationEndpoint:                d.Get("arm_directory_id").(string),
+		ArmApplicationClientId:                d.Get("arm_application_id").(string),
+		ArmApplicationClientSecret:            d.Get("arm_application_key").(string),
 	}
 
 	log.Printf("[INFO] Updating Aviatrix account: %#v", account)
@@ -282,7 +328,25 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 				d.SetPartial("gcloud_project_credentials_filepath")
 			}
 		}
-
+	} else if account.CloudType == 8 {
+		if d.HasChange("arm_subscription_id") || d.HasChange("arm_directory_id") || d.HasChange("arm_application_id") || d.HasChange("arm_application_key") {
+			err := client.UpdateAccount(account)
+			if err != nil {
+				return fmt.Errorf("failed to update Aviatrix Account: %s", err)
+			}
+			if d.HasChange("arm_subscription_id") {
+				d.SetPartial("arm_subscription_id")
+			}
+			if d.HasChange("arm_directory_id") {
+				d.SetPartial("arm_directory_id")
+			}
+			if d.HasChange("arm_application_id") {
+				d.SetPartial("arm_application_id")
+			}
+			if d.HasChange("arm_application_key") {
+				d.SetPartial("arm_application_key")
+			}
+		}
 	}
 	d.Partial(false)
 	return resourceAccountRead(d, meta)
