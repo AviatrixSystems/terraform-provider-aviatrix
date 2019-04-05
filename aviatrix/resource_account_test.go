@@ -12,7 +12,7 @@ import (
 )
 
 func preAccountCheck(t *testing.T, msgEnd string) {
-	if os.Getenv("SKIP_AWS_ACCOUNT")  == "no" {
+	if os.Getenv("SKIP_AWS_ACCOUNT") == "no" {
 		if os.Getenv("AWS_ACCOUNT_NUMBER") == "" {
 			t.Fatal(" AWS_ACCOUNT_NUMBER must be set for aws acceptance tests" + msgEnd)
 		}
@@ -68,7 +68,7 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 
 	if skipAWS == "yes" {
 		t.Log("Skipping AWS Access Account test as SKIP_AWS_ACCOUNT is set")
-	} else if {
+	} else {
 		resource.Test(t, resource.TestCase{
 			PreCheck:     func() { testAccPreCheck(t) },
 			Providers:    testAccProviders,
@@ -95,7 +95,7 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 	}
 	if skipGCP == "yes" {
 		t.Log("Skipping GCP Access Account test as SKIP_GCP_ACCOUNT is set")
-	} else if {
+	} else {
 		resource.Test(t, resource.TestCase{
 			PreCheck:     func() { testAccPreCheck(t) },
 			Providers:    testAccProviders,
@@ -119,8 +119,8 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 		})
 	}
 	if skipARM == "yes" {
-		t.log("Skipping ARN Access Account test as SKIP_ARM_ACCOUNT is set")
-	} else if {
+		t.Log("Skipping ARN Access Account test as SKIP_ARM_ACCOUNT is set")
+	} else {
 		resource.Test(t, resource.TestCase{
 			PreCheck:     func() { testAccPreCheck(t) },
 			Providers:    testAccProviders,
