@@ -505,6 +505,12 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				d.Set("vpn_access", gw.VpnStatus)
 			}
 		}
+		vpnAccess := d.Get("vpn_access")
+		if vpnAccess == "no" {
+			d.Set("split_tunnel", "yes")
+		} else {
+			d.Set("split_tunnel", gw.SplitTunnel)
+		}
 		d.Set("vpn_cidr", gw.VpnCidr)
 		if gw.ElbState == "enabled" {
 			d.Set("enable_elb", "yes")
@@ -530,9 +536,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		} else {
 			d.Set("enable_elb", "no")
 			d.Set("elb_name", "")
-		}
-		if gw.SplitTunnel != "" {
-			d.Set("split_tunnel", gw.SplitTunnel)
 		}
 		if gw.SamlEnabled != "" {
 			d.Set("saml_enabled", gw.SamlEnabled)
