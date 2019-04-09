@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -88,6 +89,9 @@ func resourceAviatrixVGWConnDelete(d *schema.ResourceData, meta interface{}) err
 
 	err := client.DeleteVGWConn(vgwConn)
 	if err != nil {
+		if strings.Contains(err.Error(), "does not exist") {
+			return nil
+		}
 		return fmt.Errorf("failed to delete Aviatrix VGWConn: %s", err)
 	}
 	return nil
