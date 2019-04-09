@@ -457,7 +457,15 @@ func resourceAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("aws_side_as_number") {
 		return fmt.Errorf("updating aws_side_as_number is not allowed")
 	}
-
+	if d.HasChange("manage_vpc_attachment") {
+		_, nMVA := d.GetChange("manage_vpc_attachment")
+		newManageVpcAttachment := nMVA.(bool)
+		if newManageVpcAttachment {
+			d.Set("manage_vpc_attachment", true)
+		} else {
+			d.Set("manage_vpc_attachment", false)
+		}
+	}
 	manageVpcAttachment := d.Get("manage_vpc_attachment").(bool)
 
 	mAttachedGWNew := make(map[string]int)

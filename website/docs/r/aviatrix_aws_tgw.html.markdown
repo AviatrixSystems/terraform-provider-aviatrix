@@ -89,6 +89,10 @@ The following arguments are supported:
     * `vpc_id` - (Required) This parameter represents the ID of the VPC which is going to be attached to the security domain (name: `security_domain_name`) which is going to be created.
 * `manage_vpc_attachment` - (Optional) This parameter is a switch used to allow attaching VPCs to tgw using the aviatrix_aws_tgw resource. If it is set to false, attachment of vpc must be done using the aviatrix_aws_tgw_vpc_attachment resource. Valid values: true or false. Default value is true. 
 
+-> **NOTE:** 
+
+* `manage_vpc_attachment` - If you are using/ upgraded to Aviatrix Terraform Provider v4.2+ , and an aws_tgw resource was originally created with a provider version <4.2, you must do ‘terraform apply’ to update and apply the attribute’s default value (“true”) into the state file. 
+
 ## Import
 
 Instance aws_tgw can be imported using the tgw_name, e.g.
