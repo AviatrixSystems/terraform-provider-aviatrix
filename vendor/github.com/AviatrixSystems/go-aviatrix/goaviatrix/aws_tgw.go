@@ -598,8 +598,6 @@ func (c *Client) IsVpcAttachedToTgw(awsTgw *AWSTgw, vpcSolo *VPCSolo) (bool, err
 
 	attachedVpcNames := data.Results
 
-	log.Printf("zjin00000: attachedVpcNames is %v", attachedVpcNames)
-
 	for i := range attachedVpcNames {
 		if strings.Split(attachedVpcNames[i], "~~")[0] == vpcSolo.VpcID {
 			return true, nil
