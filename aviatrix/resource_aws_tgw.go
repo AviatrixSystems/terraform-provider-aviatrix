@@ -457,6 +457,9 @@ func resourceAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("aws_side_as_number") {
 		return fmt.Errorf("updating aws_side_as_number is not allowed")
 	}
+
+	manageVpcAttachment := d.Get("manage_vpc_attachment").(bool)
+
 	if d.HasChange("manage_vpc_attachment") {
 		_, nMVA := d.GetChange("manage_vpc_attachment")
 		newManageVpcAttachment := nMVA.(bool)
@@ -466,7 +469,6 @@ func resourceAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
 			d.Set("manage_vpc_attachment", false)
 		}
 	}
-	manageVpcAttachment := d.Get("manage_vpc_attachment").(bool)
 
 	mAttachedGWNew := make(map[string]int)
 
@@ -719,10 +721,13 @@ func resourceAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
 					VpcID:       toAttachVPCs[i][1],
 				}
 
-				err := client.AttachVpcToAWSTgw(awsTgw, vpcSolo, toAttachVPCs[i][0])
-				if err != nil {
-					resourceAWSTgwRead(d, meta)
-					return fmt.Errorf("failed to attach VPC: %s", err)
+				res, _ := client.IsVpcAttachedToTgw(awsTgw, &vpcSolo)
+				if !res {
+					err := client.AttachVpcToAWSTgw(awsTgw, vpcSolo, toAttachVPCs[i][0])
+					if err != nil {
+						resourceAWSTgwRead(d, meta)
+						return fmt.Errorf("failed to attach VPC: %s", err)
+					}
 				}
 			}
 		}
@@ -744,8 +749,9 @@ func resourceAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Partial(false)
+	d.SetId(awsTgw.Name)
 
-	return nil
+	return resourceAWSTgwRead(d, meta)
 }
 
 func resourceAWSTgwDelete(d *schema.ResourceData, meta interface{}) error {
