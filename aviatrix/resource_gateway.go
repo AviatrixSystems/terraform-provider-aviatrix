@@ -324,6 +324,53 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	if gateway.OtpMode != "" && gateway.OtpMode != "2" && gateway.OtpMode != "3" {
 		return fmt.Errorf("otp_mode can only be '2' or '3' or empty string")
 	}
+	if gateway.SamlEnabled == "yes" {
+		if gateway.EnableLdap == "yes" || gateway.OtpMode != "" {
+			return fmt.Errorf("ldap and mfa can't be configured if saml is enabled")
+		}
+	}
+	if gateway.EnableLdap == "yes" && gateway.OtpMode == "3" {
+		return fmt.Errorf("ldap can't be configured along with okta authentication")
+	}
+	if gateway.EnableLdap == "yes" {
+		if gateway.LdapServer == "" {
+			return fmt.Errorf("ldap server must be set if ldap is enabled")
+		}
+		if gateway.LdapBindDn == "" {
+			return fmt.Errorf("ldap bind dn must be set if ldap is enabled")
+		}
+		if gateway.LdapPassword == "" {
+			return fmt.Errorf("ldap password must be set if ldap is enabled")
+		}
+		if gateway.LdapBaseDn == "" {
+			return fmt.Errorf("ldap base dn must be set if ldap is enabled")
+		}
+		if gateway.LdapUserAttr == "" {
+			return fmt.Errorf("ldap user attribute must be set if ldap is enabled")
+		}
+	}
+	if gateway.OtpMode == "2" {
+		if gateway.DuoIntegrationKey == "" {
+			return fmt.Errorf("duo integration key required if otp_mode set to 2")
+		}
+		if gateway.DuoSecretKey == "" {
+			return fmt.Errorf("duo secret key required if otp_mode set to 2")
+		}
+		if gateway.DuoAPIHostname == "" {
+			return fmt.Errorf("duo api hostname required if otp_mode set to 2")
+		}
+		if gateway.DuoPushMode != "auto" || gateway.DuoPushMode != "token" || gateway.DuoPushMode != "selective" {
+			return fmt.Errorf("duo push mode must be set to a valid value (auto, selective, or token)")
+		}
+	} else if gateway.OtpMode == "3" {
+		if gateway.OktaToken == "" {
+			return fmt.Errorf("okta token must be set if otp_mode is set to 3")
+		}
+		if gateway.OktaURL == "" {
+			return fmt.Errorf("okta url must be set if otp_mode is set to 3")
+		}
+	}
+
 	if gateway.EnableElb != "yes" {
 		gateway.EnableElb = "no"
 	}
@@ -540,7 +587,13 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		if gw.SamlEnabled != "" {
 			d.Set("saml_enabled", gw.SamlEnabled)
 		}
-		d.Set("otp_mode", gw.OtpMode)
+		if gw.AuthMethod == "duo_auth" || gw.AuthMethod == "duo_auth+LDAP" {
+			d.Set("otp_mode", "2")
+		} else if gw.AuthMethod == "okta_auth" {
+			d.Set("otp_mode", "3")
+		} else {
+			d.Set("otp_mode", "")
+		}
 		d.Set("okta_token", gw.OktaToken)
 		d.Set("okta_url", gw.OktaURL)
 		d.Set("okta_username_suffix", gw.OktaUsernameSuffix)
@@ -691,9 +744,9 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("elb_name") {
 		return fmt.Errorf("updating elb_name is not allowed")
 	}
-	if d.HasChange("otp_mode") {
-		return fmt.Errorf("updating otp_mode is not allowed")
-	}
+	//	if d.HasChange("otp_mode") {
+	//		return fmt.Errorf("updating otp_mode is not allowed")
+	//	}
 
 	gateway := &goaviatrix.Gateway{
 		GwName:   d.Get("gw_name").(string),
@@ -703,6 +756,100 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	err := client.UpdateGateway(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to update Aviatrix Gateway: %s", err)
+	}
+	if d.HasChange("otp_mode") || d.HasChange("enable_ldap") || d.HasChange("saml_enabled") {
+		vpn_gw := &goaviatrix.VpnGatewayAuth{
+			GwName:             d.Get("gw_name").(string),
+			ElbName:            d.Get("elb_name").(string),
+			VpcID:              d.Get("vpc_id").(string),
+			OtpMode:            d.Get("otp_mode").(string),
+			SamlEnabled:        d.Get("saml_enabled").(string),
+			OktaToken:          d.Get("okta_token").(string),
+			OktaURL:            d.Get("okta_url").(string),
+			OktaUsernameSuffix: d.Get("okta_username_suffix").(string),
+			DuoIntegrationKey:  d.Get("duo_integration_key").(string),
+			DuoSecretKey:       d.Get("duo_secret_key").(string),
+			DuoAPIHostname:     d.Get("duo_api_hostname").(string),
+			DuoPushMode:        d.Get("duo_push_mode").(string),
+			EnableLdap:         d.Get("enable_ldap").(string),
+			LdapServer:         d.Get("ldap_server").(string),
+			LdapBindDn:         d.Get("ldap_bind_dn").(string),
+			LdapPassword:       d.Get("ldap_password").(string),
+			LdapBaseDn:         d.Get("ldap_base_dn").(string),
+			LdapUserAttr:       d.Get("ldap_username_attribute").(string),
+		}
+		if vpn_gw.OtpMode != "" && vpn_gw.OtpMode != "2" && vpn_gw.OtpMode != "3" {
+			return fmt.Errorf("otp_mode can only be '2' or '3' or empty string")
+		}
+		if vpn_gw.SamlEnabled == "yes" {
+			if vpn_gw.EnableLdap == "yes" || vpn_gw.OtpMode != "" {
+				return fmt.Errorf("ldap and mfa can't be configured if saml is enabled")
+			}
+		}
+		if vpn_gw.EnableLdap == "yes" && vpn_gw.OtpMode == "3" {
+			return fmt.Errorf("ldap can't be configured along with okta authentication")
+		}
+		if vpn_gw.EnableLdap == "yes" {
+			if vpn_gw.LdapServer == "" {
+				return fmt.Errorf("ldap server must be set if ldap is enabled")
+			}
+			if vpn_gw.LdapBindDn == "" {
+				return fmt.Errorf("ldap bind dn must be set if ldap is enabled")
+			}
+			if vpn_gw.LdapPassword == "" {
+				return fmt.Errorf("ldap password must be set if ldap is enabled")
+			}
+			if vpn_gw.LdapBaseDn == "" {
+				return fmt.Errorf("ldap base dn must be set if ldap is enabled")
+			}
+			if vpn_gw.LdapUserAttr == "" {
+				return fmt.Errorf("ldap user attribute must be set if ldap is enabled")
+			}
+		}
+		if vpn_gw.OtpMode == "2" {
+			if vpn_gw.DuoIntegrationKey == "" {
+				return fmt.Errorf("duo integration key required if otp_mode set to 2")
+			}
+			if vpn_gw.DuoSecretKey == "" {
+				return fmt.Errorf("duo secret key required if otp_mode set to 2")
+			}
+			if vpn_gw.DuoAPIHostname == "" {
+				return fmt.Errorf("duo api hostname required if otp_mode set to 2")
+			}
+			if vpn_gw.DuoPushMode != "auto" || vpn_gw.DuoPushMode != "token" || vpn_gw.DuoPushMode != "selective" {
+				return fmt.Errorf("duo push mode must be set to a valid value (auto, selective, or token)")
+			}
+			if vpn_gw.EnableLdap == "yes" {
+				vpn_gw.AuthType = "duo_ldap_auth"
+			} else {
+				vpn_gw.AuthType = "duo_auth"
+			}
+		} else if vpn_gw.OtpMode == "3" {
+			if vpn_gw.OktaToken == "" {
+				return fmt.Errorf("okta token must be set if otp_mode is set to 3")
+			}
+			if vpn_gw.OktaURL == "" {
+				return fmt.Errorf("okta url must be set if otp_mode is set to 3")
+			}
+			vpn_gw.AuthType = "okta_auth"
+		} else {
+			if vpn_gw.EnableLdap == "yes" {
+				vpn_gw.AuthType = "ldap_auth"
+			} else if vpn_gw.SamlEnabled == "yes" {
+				vpn_gw.AuthType = "saml_auth"
+			} else {
+				vpn_gw.AuthType = "none"
+			}
+		}
+		if vpn_gw.ElbName != "" {
+			vpn_gw.LbOrGatewayName = vpn_gw.ElbName
+		} else {
+			vpn_gw.LbOrGatewayName = vpn_gw.GwName
+		}
+		err := client.SetVpnGatewayAuthentication(vpn_gw)
+		if err != nil {
+			return fmt.Errorf("failed to update Aviatrix VPN Gateway Authentication: %s", err)
+		}
 	}
 	if d.HasChange("tag_list") {
 		tags := &goaviatrix.Tags{
@@ -842,7 +989,8 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	d.Partial(false)
 
 	d.SetId(gateway.GwName)
-	return nil
+	return resourceAviatrixGatewayRead(d, meta)
+
 }
 
 func resourceAviatrixGatewayDelete(d *schema.ResourceData, meta interface{}) error {

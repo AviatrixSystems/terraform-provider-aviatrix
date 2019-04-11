@@ -68,7 +68,7 @@ type Gateway struct {
 	LdapPassword            string `form:"ldap_password,omitempty" json:"ldap_password,omitempty"`
 	LdapServer              string `form:"ldap_server,omitempty" json:"ldap_server,omitempty"`
 	LdapUseSsl              string `form:"ldap_use_ssl,omitempty" json:"ldap_use_ssl,omitempty"`
-	LdapUserAttr            string `form:"ldap_username_attribute,omitempty" json:"ldap_username_attribute,omitempty`
+	LdapUserAttr            string `form:"ldap_username_attribute,omitempty" json:"ldap_username_attribute,omitempty"`
 	LicenseID               string `form:"license_id,omitempty" json:"license_id,omitempty"`
 	MaxConn                 string `form:"max_conn,omitempty"`
 	NameServers             string `form:"nameservers,omitempty"`
@@ -105,6 +105,35 @@ type Gateway struct {
 	VpcSize                 string `form:"vpc_size,omitempty" ` //Only use for gateway create
 
 	//MaxConnections          string `form:"max_connections,omitempty" json:"max_connections,omitempty"`
+}
+
+type VpnGatewayAuth struct { // Used for set_vpn_gateway_authentication rest api call
+	Action             string `form:"action,omitempty"`
+	AuthType           string `form:"auth_type,omitempty" json:"auth_type,omitempty"`
+	CID                string `form:"CID,omitempty"`
+	DuoAPIHostname     string `form:"duo_api_hostname,omitempty" json:"duo_api_hostname,omitempty"`
+	DuoIntegrationKey  string `form:"duo_integration_key,omitempty" json:"duo_integration_key,omitempty"`
+	DuoPushMode        string `form:"duo_push_mode,omitempty" json:"duo_push_mode,omitempty"`
+	DuoSecretKey       string `form:"duo_secret_key,omitempty" json:"duo_secret_key,omitempty"`
+	ElbName            string `form:"elb_name,omitempty" json:"lb_name,omitempty"`
+	EnableLdap         string `form:"enable_ldap,omitempty"`
+	GwName             string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
+	LbOrGatewayName    string `form:"lb_or_gateway_name,omitempty" json:"lb_or_gateway_name,omitempty"`
+	LdapAdditionalReq  string `form:"ldap_additional_req,omitempty"`
+	LdapBaseDn         string `form:"ldap_base_dn,omitempty" json:"ldap_base_dn,omitempty"`
+	LdapBindDn         string `form:"ldap_bind_dn,omitempty" json:"ldap_bind_dn,omitempty"`
+	LdapCaCert         string `form:"ldap_ca_cert,omitempty" json:"ldap_ca_cert,omitempty"`
+	LdapClientCert     string `form:"ldap_client_cert,omitempty" json:"ldap_client_cert,omitempty"`
+	LdapPassword       string `form:"ldap_password,omitempty" json:"ldap_password,omitempty"`
+	LdapServer         string `form:"ldap_server,omitempty" json:"ldap_server,omitempty"`
+	LdapUseSsl         string `form:"ldap_use_ssl,omitempty" json:"ldap_use_ssl,omitempty"`
+	LdapUserAttr       string `form:"ldap_username_attribute,omitempty" json:"ldap_username_attribute,omitempty"`
+	OktaToken          string `form:"okta_token,omitempty" json:"okta_token,omitempty"`
+	OktaURL            string `form:"okta_url,omitempty" json:"okta_url,omitempty"`
+	OktaUsernameSuffix string `form:"okta_username_suffix,omitempty" json:"okta_username_suffix,omitempty"`
+	OtpMode            string `form:"otp_mode,omitempty" json:"otp_mode,omitempty"`
+	SamlEnabled        string `form:"saml_enabled,omitempty" json:"saml_enabled,omitempty"`
+	VpcID              string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
 }
 
 type GatewayListResp struct {
@@ -383,6 +412,23 @@ func (c *Client) UpdateVpnCidr(gateway *Gateway) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API set_vpn_client_cidr Get failed: " + data.Reason)
+	}
+	return nil
+}
+func (c *Client) SetVpnGatewayAuthentication(gateway *VpnGatewayAuth) error {
+	gateway.CID = c.CID
+	gateway.Action = "set_vpn_gateway_authentication"
+	resp, err := c.Post(c.baseURL, gateway)
+
+	if err != nil {
+		return errors.New("HTTP Post set_vpn_gateway_authentication failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode set_vpn_gateway_authentication failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API set_vpn_gateway_authentication Get failed: " + data.Reason)
 	}
 	return nil
 }
