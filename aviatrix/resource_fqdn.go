@@ -148,6 +148,10 @@ func resourceAviatrixFQDNRead(d *schema.ResourceData, meta interface{}) error {
 
 	fqdn, err := client.GetFQDNTag(fqdn)
 	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("couldn't find FQDN tag: %s", err)
 	}
 	d.Set("fqdn_status", fqdn.FQDNStatus)
