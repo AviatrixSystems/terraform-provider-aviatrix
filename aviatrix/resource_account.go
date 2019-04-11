@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAccount() *schema.Resource {

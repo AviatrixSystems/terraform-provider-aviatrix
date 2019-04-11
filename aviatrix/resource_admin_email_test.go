@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixAdminEmail_basic(t *testing.T) {

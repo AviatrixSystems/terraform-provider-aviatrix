@@ -2,10 +2,11 @@ package aviatrix
 
 import (
 	"fmt"
-	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
-	"github.com/hashicorp/terraform/helper/schema"
 	"log"
 	"strings"
+
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAwsTgwVpcAttachment() *schema.Resource {
