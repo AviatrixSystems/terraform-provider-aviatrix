@@ -359,7 +359,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		if gateway.DuoAPIHostname == "" {
 			return fmt.Errorf("duo api hostname required if otp_mode set to 2")
 		}
-		if gateway.DuoPushMode != "auto" || gateway.DuoPushMode != "token" || gateway.DuoPushMode != "selective" {
+		if gateway.DuoPushMode != "auto" && gateway.DuoPushMode != "token" && gateway.DuoPushMode != "selective" {
 			return fmt.Errorf("duo push mode must be set to a valid value (auto, selective, or token)")
 		}
 	} else if gateway.OtpMode == "3" {
@@ -816,7 +816,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			if vpn_gw.DuoAPIHostname == "" {
 				return fmt.Errorf("duo api hostname required if otp_mode set to 2")
 			}
-			if vpn_gw.DuoPushMode != "auto" || vpn_gw.DuoPushMode != "token" || vpn_gw.DuoPushMode != "selective" {
+			if vpn_gw.DuoPushMode != "auto" && vpn_gw.DuoPushMode != "token" && vpn_gw.DuoPushMode != "selective" {
 				return fmt.Errorf("duo push mode must be set to a valid value (auto, selective, or token)")
 			}
 			if vpn_gw.EnableLdap == "yes" {
