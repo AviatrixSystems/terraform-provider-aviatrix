@@ -757,7 +757,12 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return fmt.Errorf("failed to update Aviatrix Gateway: %s", err)
 	}
-	if d.HasChange("otp_mode") || d.HasChange("enable_ldap") || d.HasChange("saml_enabled") {
+	if d.HasChange("otp_mode") || d.HasChange("enable_ldap") || d.HasChange("saml_enabled") ||
+		d.HasChange("okta_token") || d.HasChange("okta_url") || d.HasChange("okta_username_suffix") ||
+		d.HasChange("duo_integration_key") || d.HasChange("duo_secret_key") || d.HasChange("duo_api_hostname") ||
+		d.HasChange("duo_push_mode") || d.HasChange("ldap_server") || d.HasChange("ldap_bind_dn") ||
+		d.HasChange("ldap_password") || d.HasChange("ldap_base_dn") || d.HasChange("ldap_username_attribute") {
+
 		vpn_gw := &goaviatrix.VpnGatewayAuth{
 			GwName:             d.Get("gw_name").(string),
 			ElbName:            d.Get("elb_name").(string),
@@ -778,6 +783,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			LdapBaseDn:         d.Get("ldap_base_dn").(string),
 			LdapUserAttr:       d.Get("ldap_username_attribute").(string),
 		}
+
 		if vpn_gw.OtpMode != "" && vpn_gw.OtpMode != "2" && vpn_gw.OtpMode != "3" {
 			return fmt.Errorf("otp_mode can only be '2' or '3' or empty string")
 		}
