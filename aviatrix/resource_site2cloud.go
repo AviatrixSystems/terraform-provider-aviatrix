@@ -190,10 +190,7 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 			d.Set("primary_cloud_gateway_name", s2c.GwName)
 		}
 
-		if connectionType := d.Get("connection_type").(string); connectionType == "" {
-			//force default setting and save to .tfstate file
-			d.Set("connection_type", "unmapped")
-		}
+		d.Set("connection_type", s2c.ConnType)
 	}
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", d.Get("connection_name").(string), site2cloud)
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud connection_type: [%s]", d.Get("connection_type").(string))
