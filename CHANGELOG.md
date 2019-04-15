@@ -1,3 +1,18 @@
+## 1.5.24 (Apr 15 2019)
+
+CHANGES
+  - Supported controller version: 4.2.764
+  - Description added for all argument
+  - GCP and Azure support added for resource_account
+  - Updated gateway resource for Split_tunnel import support
+  - Fixed migration/update issue for "manage_vpc_attachment" in aws_tgw resource
+  - Fixed failing to destroy vgw_conn deleted through UI issue
+  - Fixed refresh issue for fqdn deleted through UI
+  - Moved goaviatrix library from vendor to root folder
+  - Fixed read/refresh issue for more than 3 site2cloud instances
+  - Deprecated dns_server for gateway, transit gw, and spoke gw
+  
+  
 ## 1.4.4 (Mar 28 2019)
 
 CHANGES
