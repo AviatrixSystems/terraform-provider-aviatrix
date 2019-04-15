@@ -31,7 +31,7 @@ The following arguments are supported:
 
 Instance transit_vpc can be imported using the transit_gateway_name1 and transit_gateway_name2, e.g.
 
-```hcl
+```
 $ terraform import aviatrix_transit_gateway_peering.test transit_gateway_name1~transit_gateway_name2
 ```
 

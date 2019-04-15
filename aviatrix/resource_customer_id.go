@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceCustomerID() *schema.Resource {
@@ -20,8 +20,9 @@ func resourceCustomerID() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"customer_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The license ID provided by Aviatrix Systems.",
 			},
 		},
 	}

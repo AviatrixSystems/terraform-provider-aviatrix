@@ -11,13 +11,6 @@
       "revision": "523a5da1a92f01b01f840b61689c0340a0243532"
     }, 
     {
-      "origin": "github.com/AviatrixSystems/go-aviatrix", 
-      "path": "github.com/AviatrixSystems/go-aviatrix", 
-      "revisionTime": "Thu Jan 24 13:24:02 2019 -0800", 
-      "checksumSHA1": "9c34c5b8217ba6c695c3d010f84d78a95c9500d3", 
-      "revision": "9548d49e3799f3a3c779c2200f54d1a48d04d3fa"
-    }, 
-    {
       "origin": "github.com/google/go-querystring", 
       "path": "github.com/google/go-querystring", 
       "revisionTime": "Sun Sep 16 13:16:37 2018 +0000", 

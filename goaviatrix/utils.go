@@ -1,7 +1,11 @@
 package goaviatrix
 
 import (
+	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 )
 
 var ErrNotFound = fmt.Errorf("ErrNotFound")
@@ -67,4 +71,24 @@ func DifferenceSlice(a, b [][]string) [][]string {
 		}
 	}
 	return ab
+}
+
+func ReadFile(local_filepath string) (string, string, error) {
+	// File being read must be .json
+	// Returns filename, contents of json file, error string
+	if filepath.Ext(local_filepath) != ".json" {
+		return "", "", errors.New("Local filepath doesn't lead to a json file")
+	}
+	filename := filepath.Base(local_filepath)
+	jsonFile, err := os.Open(local_filepath)
+	if err != nil {
+		return "", "", errors.New("Failed to open local json file: " + err.Error())
+	}
+	defer jsonFile.Close()
+	byteValue, err := ioutil.ReadAll(jsonFile)
+	if err != nil {
+		return "", "", errors.New("Failed to read local json file: " + err.Error())
+	}
+	contents := string(byteValue[:])
+	return filename, contents, nil
 }

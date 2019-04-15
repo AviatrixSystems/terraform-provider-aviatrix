@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
 func dataSourceAviatrixCallerIdentity() *schema.Resource {
@@ -14,8 +14,9 @@ func dataSourceAviatrixCallerIdentity() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"cid": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Aviatrix caller identity.",
 			},
 		},
 	}

@@ -5,23 +5,45 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
 func preAccountCheck(t *testing.T, msgEnd string) {
-	if os.Getenv("AWS_ACCOUNT_NUMBER") == "" {
-		t.Fatal(" AWS_ACCOUNT_NUMBER must be set for acceptance tests" + msgEnd)
+	if os.Getenv("SKIP_AWS_ACCOUNT") == "no" {
+		if os.Getenv("AWS_ACCOUNT_NUMBER") == "" {
+			t.Fatal(" AWS_ACCOUNT_NUMBER must be set for aws acceptance tests" + msgEnd)
+		}
+		if os.Getenv("AWS_ACCESS_KEY") == "" {
+			t.Fatal("AWS_ACCESS_KEY must be set for aws acceptance tests." + msgEnd)
+		}
+		if os.Getenv("AWS_SECRET_KEY") == "" {
+			t.Fatal("AWS_SECRET_KEY must be set for aws acceptance tests." + msgEnd)
+		}
 	}
-
-	if os.Getenv("AWS_ACCESS_KEY") == "" {
-		t.Fatal("AWS_ACCESS_KEY must be set for acceptance tests." + msgEnd)
+	if os.Getenv("SKIP_GCP_ACCOUNT") == "no" {
+		if os.Getenv("GCP_ID") == "" {
+			t.Fatal("GCP_ID must be set for gcp acceptance tests." + msgEnd)
+		}
+		if os.Getenv("GCP_CREDENTIALS_FILEPATH") == "" {
+			t.Fatal("GCP_CREDENTIALS_FILEPATH must be set for gcp acceptance tests." + msgEnd)
+		}
 	}
-
-	if os.Getenv("AWS_SECRET_KEY") == "" {
-		t.Fatal("AWS_SECRET_KEY must be set for acceptance tests." + msgEnd)
+	if os.Getenv("SKIP_ARM_ACCOUNT") == "no" {
+		if os.Getenv("ARM_SUBSCRIPTION_ID") == "" {
+			t.Fatal("ARM_SUBSCRIPTION_ID must be set for arm acceptance tests." + msgEnd)
+		}
+		if os.Getenv("ARM_DIRECTORY_ID") == "" {
+			t.Fatal("ARM_DIRECTORY_ID must be set for arm acceptance tests." + msgEnd)
+		}
+		if os.Getenv("ARM_APPLICATION_ID") == "" {
+			t.Fatal("ARM_APPLICATION_ID must be set for arm acceptance tests" + msgEnd)
+		}
+		if os.Getenv("ARM_APPLICATION_KEY") == "" {
+			t.Fatal("ARM_APPLICATION_KEY must be set for arm acceptance tests" + msgEnd)
+		}
 	}
 }
 
@@ -30,41 +52,109 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	skipAcc := os.Getenv("SKIP_ACCOUNT")
+	skipAWS := os.Getenv("SKIP_AWS_ACCOUNT")
+	skipGCP := os.Getenv("SKIP_GCP_ACCOUNT")
+	skipARM := os.Getenv("SKIP_ARM_ACCOUNT")
+
 	if skipAcc == "yes" {
 		t.Skip("Skipping Access Account test as SKIP_ACCOUNT is set")
+	}
+	if skipAWS == "yes" && skipGCP == "yes" && skipARM == "yes" {
+		t.Skip("Skipping Access Account test as SKIP_AWS_ACCOUNT, SKIP_GCP_ACCOUnT, and SKIP_ARM_ACCOUNT are all set, even though SKIP_ACCOUNT isn't set")
+
 	}
 
 	preAccountCheck(t, ". Set SKIP_ACCOUNT to yes to skip account tests")
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAccountDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAccountConfigBasic(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists("aviatrix_account.foo", &account),
-					resource.TestCheckResourceAttr(
-						"aviatrix_account.foo", "account_name", fmt.Sprintf("tf-testing-%d", rInt)),
-					resource.TestCheckResourceAttr(
-						"aviatrix_account.foo", "aws_iam", "false"),
-					resource.TestCheckResourceAttr(
-						"aviatrix_account.foo", "aws_access_key",
-						os.Getenv("AWS_ACCESS_KEY")),
-					resource.TestCheckResourceAttr(
-						"aviatrix_account.foo", "aws_secret_key",
-						os.Getenv("AWS_SECRET_KEY")),
-				),
+	if skipAWS == "yes" {
+		t.Log("Skipping AWS Access Account test as SKIP_AWS_ACCOUNT is set")
+	} else {
+		resource.Test(t, resource.TestCase{
+			PreCheck:     func() { testAccPreCheck(t) },
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckAccountDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccAccountConfigAWS(rInt),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckAccountExists("aviatrix_account.aws", &account),
+						resource.TestCheckResourceAttr(
+							"aviatrix_account.aws", "account_name", fmt.Sprintf("tf-testing-aws-%d", rInt)),
+						resource.TestCheckResourceAttr(
+							"aviatrix_account.aws", "aws_iam", "false"),
+						resource.TestCheckResourceAttr(
+							"aviatrix_account.aws", "aws_access_key",
+							os.Getenv("AWS_ACCESS_KEY")),
+						resource.TestCheckResourceAttr(
+							"aviatrix_account.aws", "aws_secret_key",
+							os.Getenv("AWS_SECRET_KEY")),
+					),
+				},
 			},
-		},
-	})
+		})
+	}
+	if skipGCP == "yes" {
+		t.Log("Skipping GCP Access Account test as SKIP_GCP_ACCOUNT is set")
+	} else {
+		resource.Test(t, resource.TestCase{
+			PreCheck:     func() { testAccPreCheck(t) },
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckAccountDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccAccountConfigGCP(rInt),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckAccountExists("aviatrix_account.gcp", &account),
+						resource.TestCheckResourceAttr(
+							"aviatrix_account.gcp", "account_name", fmt.Sprintf("tf-testing-gcp-%d", rInt)),
+						resource.TestCheckResourceAttr(
+							"aviatrix_account.gcp", "gcloud_project_id",
+							os.Getenv("GCP_ID")),
+						resource.TestCheckResourceAttr(
+							"aviatrix_account.gcp", "gcloud_project_credentials_filepath",
+							os.Getenv("GCP_CREDENTIALS_FILEPATH")),
+					),
+				},
+			},
+		})
+	}
+	if skipARM == "yes" {
+		t.Log("Skipping ARN Access Account test as SKIP_ARM_ACCOUNT is set")
+	} else {
+		resource.Test(t, resource.TestCase{
+			PreCheck:     func() { testAccPreCheck(t) },
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckAccountDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccAccountConfigARM(rInt),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckAccountExists("aviatrix_account.arm", &account),
+						resource.TestCheckResourceAttr(
+							"aviatrix_account.arm", "account_name", fmt.Sprintf("tf-testing-arm-%d", rInt)),
+						resource.TestCheckResourceAttr(
+							"aviatrix_account.arm", "arm_subscription_id",
+							os.Getenv("ARM_SUBSCRIPTION_ID")),
+						resource.TestCheckResourceAttr(
+							"aviatrix_account.arm", "arm_directory_id",
+							os.Getenv("ARM_DIRECTORY_ID")),
+						resource.TestCheckResourceAttr(
+							"aviatrix_account.arm", "arm_application_id",
+							os.Getenv("ARM_APPLICATION_ID")),
+						resource.TestCheckResourceAttr(
+							"aviatrix_account.arm", "arm_application_key",
+							os.Getenv("ARM_APPLICATION_KEY")),
+					),
+				},
+			},
+		})
+	}
 }
 
-func testAccAccountConfigBasic(rInt int) string {
+func testAccAccountConfigAWS(rInt int) string {
 	return fmt.Sprintf(`
-resource "aviatrix_account" "foo" {
-  account_name = "tf-testing-%d"
+resource "aviatrix_account" "aws" {
+  account_name = "tf-testing-aws-%d"
   cloud_type = 1
   aws_account_number = "%s"
   aws_iam = "false"
@@ -72,6 +162,30 @@ resource "aviatrix_account" "foo" {
   aws_secret_key = "%s"
 }
 	`, rInt, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"))
+}
+
+func testAccAccountConfigGCP(rInt int) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "gcp" {
+  account_name = "tf-testing-gcp-%d"
+  cloud_type = 4
+  gcloud_project_id = "%s"
+  gcloud_project_credentials_filepath = "%s"
+}
+	`, rInt, os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"))
+}
+
+func testAccAccountConfigARM(rInt int) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "arm" {
+  account_name = "tf-testing-arm-%d"
+  cloud_type = 8
+  arm_subscription_id = "%s"
+  arm_directory_id = "%s"
+  arm_application_id = "%s"
+  arm_application_key = "%s"
+}
+	`, rInt, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"), os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"))
 }
 
 func testAccCheckAccountExists(n string, account *goaviatrix.Account) resource.TestCheckFunc {

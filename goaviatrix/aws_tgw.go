@@ -103,6 +103,12 @@ type TgwInfoDetail struct {
 	AwsSideAsNumber int    `json:"tgw_aws_asn"`
 }
 
+type listAttachedVpcNamesResp struct {
+	Return  bool     `json:"return"`
+	Results []string `json:"results"`
+	Reason  string   `json:"reason"`
+}
+
 func (c *Client) CreateAWSTgw(awsTgw *AWSTgw) error {
 	awsTgw.CID = c.CID
 	awsTgw.Action = "add_aws_tgw"
@@ -559,4 +565,44 @@ func (c *Client) ListTgwDetails(awsTgw *AWSTgw) (*AWSTgw, error) {
 	}
 
 	return nil, ErrNotFound
+}
+
+func (c *Client) IsVpcAttachedToTgw(awsTgw *AWSTgw, vpcSolo *VPCSolo) (bool, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return false, errors.New(("url Parsing failed for list_attached_vpc_names_to_route_domain") + err.Error())
+	}
+	listAttachedVpcNames := url.Values{}
+	listAttachedVpcNames.Add("CID", c.CID)
+	listAttachedVpcNames.Add("action", "list_attached_vpc_names_to_route_domain")
+	listAttachedVpcNames.Add("tgw_name", awsTgw.Name)
+
+	Url.RawQuery = listAttachedVpcNames.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return false, errors.New("HTTP Get list_attached_vpc_names_to_route_domain failed: " + err.Error())
+	}
+
+	data := listAttachedVpcNamesResp{
+		Return:  false,
+		Results: make([]string, 0),
+		Reason:  "",
+	}
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return false, errors.New("Json Decode list_attached_vpc_names_to_route_domain failed: " + err.Error())
+	}
+	if !data.Return {
+		return false, errors.New("Rest API list_attached_vpc_names_to_route_domain Get failed: " + data.Reason)
+	}
+
+	attachedVpcNames := data.Results
+
+	for i := range attachedVpcNames {
+		if strings.Split(attachedVpcNames[i], "~~")[0] == vpcSolo.VpcID {
+			return true, nil
+		}
+	}
+
+	return false, ErrNotFound
 }

@@ -5,10 +5,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixS2C_basic(t *testing.T) {
@@ -57,12 +57,12 @@ func testAccSS2CConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 
 resource "aviatrix_account" "test" {
-  account_name = "tfa-%s"
-  cloud_type = 1
-  aws_account_number = "%s"
-  aws_iam = "false"
-  aws_access_key = "%s"
-  aws_secret_key = "%s"
+    account_name = "tfa-%s"
+    cloud_type = 1
+    aws_account_number = "%s"
+    aws_iam = "false"
+    aws_access_key = "%s"
+    aws_secret_key = "%s"
 }
 
 resource "aviatrix_gateway" "test" {
@@ -76,14 +76,14 @@ resource "aviatrix_gateway" "test" {
 }
 
 resource "aviatrix_site2cloud" "foo" {
-  vpc_id = "${aviatrix_gateway.test.vpc_id}"
-  connection_name = "tfs-%[1]s"
-  tunnel_type = "udp"
-  primary_cloud_gateway_name = "${aviatrix_gateway.test.gw_name}"
-  remote_gateway_ip = "8.8.8.8"
-  remote_subnet_cidr= "10.23.0.0/24"
-  remote_gateway_type = "generic"
-  connection_type = "unmapped"
+    vpc_id = "${aviatrix_gateway.test.vpc_id}"
+    connection_name = "tfs-%[1]s"
+    connection_type = "unmapped"
+    remote_gateway_type = "generic"
+    tunnel_type = "udp"
+    primary_cloud_gateway_name = "${aviatrix_gateway.test.gw_name}"
+    remote_gateway_ip = "8.8.8.8"
+    remote_subnet_cidr= "10.23.0.0/24"
 }
 
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
@@ -114,7 +114,7 @@ func testAccCheckS2CExists(n string, s2c *goaviatrix.Site2Cloud) resource.TestCh
 			return err
 		}
 
-		if foundS2C.TunnelName+foundS2C.VpcID != rs.Primary.ID {
+		if foundS2C.TunnelName+"~"+foundS2C.VpcID != rs.Primary.ID {
 			return fmt.Errorf("site2cloud connection not found")
 		}
 

@@ -9,7 +9,7 @@ import (
 // VGWConn simple struct to hold VGW Connection details
 type VGWConn struct {
 	Action        string `form:"action,omitempty"`
-	BgpLocalAsNum string `form:"bgp_local_as_num,omitempty" json:"bgp_local_as_num,omitempty"`
+	BgpLocalAsNum string `form:"bgp_local_asn_num,omitempty" json:"bgp_local_asn_num,omitempty"`
 	BgpVGWId      string `form:"vgw_id,omitempty" json:"bgp_vgw_id,omitempty"`
 	CID           string `form:"CID,omitempty"`
 	ConnName      string `form:"connection_name,omitempty" json:"name,omitempty"`

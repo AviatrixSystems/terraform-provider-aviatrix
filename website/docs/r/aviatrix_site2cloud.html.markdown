@@ -15,15 +15,15 @@ The Site2Cloud resource Creates and Manages Aviatrix Site2Cloud connection
 ```hcl
 # Create Aviatrix site2cloud
 resource "aviatrix_site2cloud" "test_s2c" {
-  vpc_id = "vpc-abcd1234"
-  connection_name = "my_conn"
-  connection_type = "unmapped"
-  remote_gateway_type = "generic"
-  tunnel_type = "udp"
+  vpc_id                     = "vpc-abcd1234"
+  connection_name            = "my_conn"
+  connection_type            = "unmapped"
+  remote_gateway_type        = "generic"
+  tunnel_type                = "udp"
   primary_cloud_gateway_name = "gw1"
-  remote_gateway_ip = "5.5.5.5"
-  remote_subnet_cidr = "10.23.0.0/24"
-  local_subnet_cidr = "10.20.1.0/24"
+  remote_gateway_ip          = "5.5.5.5"
+  remote_subnet_cidr         = "10.23.0.0/24"
+  local_subnet_cidr          = "10.20.1.0/24"
 }
 ```
 
@@ -51,6 +51,6 @@ The following arguments are supported:
 
 Instance site2cloud can be imported using the connection_name and vpc_id, e.g.
 
-```hcl
+```
 $ terraform import aviatrix_site2cloud.test connection_name~vpc_id
 ```

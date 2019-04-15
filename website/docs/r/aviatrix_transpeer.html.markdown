@@ -15,8 +15,8 @@ The Account resource allows the creation and management of an Aviatrix transitiv
 ```hcl
 # Create Aviatrix AWS transitive peering.
 resource "aviatrix_trans_peer" "test_transpeer" {
-  source = "avtxuseastgw1"
-  nexthop = "avtxuseastgw2"
+  source         = "avtxuseastgw1"
+  nexthop        = "avtxuseastgw2"
   reachable_cidr = "10.152.0.0/16"
 }
 ```
@@ -33,6 +33,6 @@ The following arguments are supported:
 
 Instance trans_peer can be imported using the source, nexthop and reachable_cidr, e.g.
 
-```hcl
+```
 $ terraform import aviatrix_trans_peer.test source~nexthop~reachable_cidr
 ```

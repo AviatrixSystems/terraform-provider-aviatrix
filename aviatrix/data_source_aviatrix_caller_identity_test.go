@@ -2,10 +2,11 @@ package aviatrix
 
 import (
 	"fmt"
-	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"

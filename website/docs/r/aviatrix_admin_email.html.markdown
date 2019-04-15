@@ -29,6 +29,6 @@ The following arguments are supported:
 
 Instance admin_email can be imported using the admin_email, e.g.
 
-```hcl
+```
 $ terraform import aviatrix_admin_email.test admin_email
 ```

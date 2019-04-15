@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
 func dataSourceAviatrixAccount() *schema.Resource {
@@ -14,32 +14,38 @@ func dataSourceAviatrixAccount() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"account_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Account name. This can be used for logging in to CloudN console or UserConnect controller.",
 			},
 			"cloud_type": {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "Type of cloud service provider.",
 			},
 			"aws_account_number": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS Account number to associate with Aviatrix account.",
 			},
 			//"aws_iam": {
 			//	Type:     schema.TypeString,
 			//	Computed: true,
 			//},		# REST API needs to support this
 			"aws_role_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS App role ARN.",
 			},
 			"aws_role_ec2": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS EC2 role ARN",
 			},
 			"aws_access_key": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS Access Key.",
 			},
 			//"aws_secret_key": {
 			//	Type:      schema.TypeString,

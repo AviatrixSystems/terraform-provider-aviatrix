@@ -15,27 +15,27 @@ The Firewall resource allows the creation and management of Aviatrix Firewall Po
 ```hcl
 # Create Aviatrix Firewall Policy
 resource "aviatrix_firewall" "test_firewall" {
-  gw_name = "gateway-1"
+  gw_name         = "gateway-1"
   base_allow_deny =  "allow-all"
   base_log_enable = "off"
-  policy = [
-            {
-              protocol = "tcp"
-              src_ip = "10.15.0.224/32"
-              log_enable = "on"
-              dst_ip = "10.12.0.172/32"
-              allow_deny = "deny"
-              port = "0:65535"
-            },
-            {
-              protocol = "tcp"
-              src_ip = "test_tag" # Tag name of a pre created aviatrix_firewall_tag resource
-              log_enable = "off"
-              dst_ip = "10.12.1.172/32"
-              allow_deny = "deny"
-              port = "0:65535"
-            }
-          ]
+  policy          = [
+  {
+    protocol   = "tcp"
+    src_ip     = "10.15.0.224/32"
+    log_enable = "on"
+    dst_ip     = "10.12.0.172/32"
+    allow_deny = "deny"
+    port       = "0:65535"
+  },
+  {
+    protocol   = "tcp"
+    src_ip     = "test_tag" # Tag name of a pre created aviatrix_firewall_tag resource
+    log_enable = "off"
+    dst_ip     = "10.12.1.172/32"
+    allow_deny = "deny"
+    port       = "0:65535"
+  }
+  ]
 }
 ```
 
@@ -58,6 +58,6 @@ The following arguments are supported:
 
 Instance firewall can be imported using the gw_name, e.g.
 
-```hcl
+```
 $ terraform import aviatrix_firewall.test gw_name
 ```

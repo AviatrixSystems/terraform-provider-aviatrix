@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
 func TestAccAviatrixVersion_basic(t *testing.T) {
@@ -37,7 +37,7 @@ func TestAccAviatrixVersion_basic(t *testing.T) {
 func testAccVersionConfigBasic() string {
 	return fmt.Sprintf(`
 resource "aviatrix_version" "foo" {
-	target_version = ""
+	target_version = "latest"
 }
 	`)
 }

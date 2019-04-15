@@ -41,6 +41,6 @@ The following arguments are computed - please do not edit in the resource file:
 
 Instance version can be imported using the target_version, e.g.
 
-```hcl
+```
 $ terraform import aviatrix_version.test target_version
 ```

@@ -15,22 +15,22 @@ The Profile resource allows the creation and management of an Aviatrix VPN VPN U
 ```hcl
 # Create Aviatrix AWS VPN User Profile
 resource "aviatrix_vpn_profile" "test_profile1" {
-  name = "my_profile"
+  name      = "my_profile"
   base_rule = "allow_all"
-  users = ["user1", "user2"]
-  policy = [
-    {
-     action = "deny"
-     proto = "tcp"
-     port = "443"
-     target = "10.0.0.0/32"
-    },
-    {
-     action = "deny"
-     proto = "tcp"
-     port = "443"
-     target = "10.0.0.1/32"
-    }
+  users     = ["user1", "user2"]
+  policy    = [
+  { 
+    action = "deny"
+    proto  = "tcp"
+    port   = "443"
+    target = "10.0.0.0/32"
+  },
+  {
+    action = "deny"
+    proto  = "tcp"
+    port   = "443"
+    target = "10.0.0.1/32"
+  }
   ]
 }
 ```
@@ -43,15 +43,15 @@ The following arguments are supported:
 * `base_rule` - (Optional) Base policy rule of  the profile to be added. Enter "allow_all" or "deny_all", based on whether you want a white list or black list
 * `users` - (Optional) List of VPN users to attach to this profile
 * `policy` - (Optional) New security policy for the profile. Each policy has the following attributes:
-    * `action` - (Optional) Should be the opposite of the base rule for correct behaviour. Valid values for action: "allow" and "deny"
-    * `proto` - (Optional) Protocol to allow or deny. Valid values for protocol: "all", "tcp", "udp", "icmp", "sctp", "rdp", "dccp"
-    * `port` - (Optional) Port to be allowed or denied. Valid values for port: a single port or a range of port numbers e.g.: "25", "25:1024". For "all" and "icmp", port should only be "0:65535".
-    * `target` - (Optional) CIDR to be allowed or denied. Valid values for target: IPv4 CIDRs. e.g.: "10.30.0.0/16"
+  * `action` - (Optional) Should be the opposite of the base rule for correct behaviour. Valid values for action: "allow" and "deny"
+  * `proto` - (Optional) Protocol to allow or deny. Valid values for protocol: "all", "tcp", "udp", "icmp", "sctp", "rdp", "dccp"
+  * `port` - (Optional) Port to be allowed or denied. Valid values for port: a single port or a range of port numbers e.g.: "25", "25:1024". For "all" and "icmp", port should only be "0:65535".
+  * `target` - (Optional) CIDR to be allowed or denied. Valid values for target: IPv4 CIDRs. e.g.: "10.30.0.0/16"
 
 ## Import
 
 Instance vpn_profile can be imported using the name, e.g.
 
-```hcl
+```
 $ terraform import aviatrix_vpn_profile.test name
 ```

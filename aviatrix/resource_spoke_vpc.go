@@ -5,8 +5,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixSpokeVpc() *schema.Resource {
@@ -21,76 +21,86 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"cloud_type": {
-				Type:     schema.TypeInt,
-				Required: true,
+				Type:        schema.TypeInt,
+				Required:    true,
+				Description: "Type of cloud service provider.",
 			},
 			"account_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "This parameter represents the name of a Cloud-Account in Aviatrix controller.",
 			},
 			"gw_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Name of the gateway which is going to be created.",
 			},
 			"vpc_id": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "VPC-ID/VNet-Name of cloud provider.",
 			},
 			"vnet_and_resource_group_names": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The string consisted of name of (Azure) VNet and name Resource-Group.",
 			},
 			"vpc_reg": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Region of cloud provider.",
 			},
 			"vpc_size": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Size of the gateway instance.",
 			},
 			"subnet": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Public Subnet Info.",
 			},
 			"enable_nat": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "no",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "no",
+				Description: "Specify whether enabling NAT feature on the gateway or not.",
 			},
 			"ha_subnet": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "HA Subnet.",
 			},
 			"ha_gw_size": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "HA Gateway Size.",
 			},
 			"single_az_ha": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "disabled",
-			},
-			"dns_server": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "disabled",
+				Description: "Set to 'enabled' if this feature is desired.",
 			},
 			"transit_gw": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "Specify the transit Gateway.",
 			},
 			"tag_list": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-				Default:  nil,
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Default:     nil,
+				Description: "Instance tag of cloud provider.",
 			},
 			"cloud_instance_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Cloud instance ID.",
 			},
 		},
 	}
@@ -110,7 +120,6 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		HASubnet:       d.Get("ha_subnet").(string),
 		EnableNAT:      d.Get("enable_nat").(string),
 		SingleAzHa:     d.Get("single_az_ha").(string),
-		DnsServer:      d.Get("dns_server").(string),
 		TransitGateway: d.Get("transit_gw").(string),
 	}
 	if gateway.EnableNAT != "yes" {
@@ -132,9 +141,6 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 	}
 	if enableNAT := d.Get("enable_nat").(string); enableNAT == "yes" {
 		log.Printf("[INFO] Aviatrix NAT enabled gateway: %#v", gateway)
-	}
-	if DNSServer := d.Get("dns_server").(string); DNSServer != "" {
-		log.Printf("[INFO] Aviatrix gateway DNS server: %#v", gateway)
 	}
 	haGwSize := d.Get("ha_gw_size").(string)
 	if singleAZHA := d.Get("single_az_ha").(string); singleAZHA == "enabled" {
@@ -242,15 +248,11 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 		d.Set("public_ip", gw.PublicIP)
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 		d.Set("enable_nat", gw.EnableNat)
-		d.Set("dns_server", gw.DnsServer)
 
 		if gw.SingleAZ == "yes" {
 			d.Set("single_az_ha", "enabled")
 		} else {
 			d.Set("single_az_ha", "disabled")
-		}
-		if gw.DnsServer != "" {
-			d.Set("dns_server", gw.DnsServer)
 		}
 	}
 
@@ -333,9 +335,6 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 	if d.HasChange("subnet") {
 		return fmt.Errorf("updating subnet is not allowed")
-	}
-	if d.HasChange("dns_server") {
-		return fmt.Errorf("updating dns_server is not allowed")
 	}
 	if d.HasChange("subnet") {
 		return fmt.Errorf("updating subnet is not allowed")

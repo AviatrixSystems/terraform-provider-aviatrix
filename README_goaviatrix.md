@@ -1,12 +1,9 @@
-# go-aviatrix - An Aviatrix SDK for Go
+# goaviatrix - An Aviatrix SDK for Go
 
-This is a golang SDK for the Aviatrix REST API. It's not feature complete, and currently is only known to be used for Terraform's `aviatrix` provider.
+The goaviatrix subfolder can be used as a golang SDK for the Aviatrix REST API. It's not feature complete, and currently is only known to be used for the aviatrix Terraform provider.
 
-The code here is a mirror of [this](https://github.com/AviatrixSystems/terraform-provider-aviatrix/tree/master/vendor/github.com/AviatrixSystems/go-aviatrix/) folder in repo [terraform-provider-aviatrix](https://github.com/AviatrixSystems/terraform-provider-aviatrix).
 
 Full API docs are available at [apidoc](https://s3-us-west-2.amazonaws.com/avx-apidoc/index.htm)
-
-Any pull requests here will be ignored. Pull requests if any should be made at [terraform-provider-aviatrix](https://github.com/AviatrixSystems/terraform-provider-aviatrix). Commits into the vendor folder are automatically pushed into this repository
 
 
 ## Dependencies
@@ -24,7 +21,7 @@ import (
     "log"
     "crypto/tls"
     "net/http"
-    "github.com/go-aviatrix/goaviatrix"
+    "github.com/AviatrixSystems/terraform-provider-aviatrix/goaviatrix"
 )
 
 func main() {

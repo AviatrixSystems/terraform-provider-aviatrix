@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixFirewallTag() *schema.Resource {
@@ -20,21 +20,25 @@ func resourceAviatrixFirewallTag() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"firewall_tag": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "This parameter represents the name of a Cloud-Account in Aviatrix controller.",
 			},
 			"cidr_list": {
-				Type:     schema.TypeList,
-				Optional: true,
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "A JSON file with information of 'cidr_tag_name' and 'cidr'.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cidr_tag_name": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The name attribute of a policy.",
 						},
 						"cidr": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The CIDR attribute of a policy.",
 						},
 					},
 				},

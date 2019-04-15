@@ -5,8 +5,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAWSPeer() *schema.Resource {
@@ -21,48 +21,58 @@ func resourceAWSPeer() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"account_name1": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "This parameter represents the name of a Cloud-Account in Aviatrix controller.",
 			},
 			"account_name2": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "This parameter represents the name of a Cloud-Account in Aviatrix controller.",
 			},
 			"vpc_id1": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "VPC-ID/VNet-Name of cloud provider.",
 			},
 			"vpc_id2": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "VPC-ID/VNet-Name of cloud provider.",
 			},
 			"vpc_reg1": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Region of cloud provider.",
 			},
 			"vpc_reg2": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Region of cloud provider.",
 			},
 			"rtb_list1": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "List of Route table ID.",
 			},
 			"rtb_list1_output": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Computed:    true,
+				Description: "List of route table ID of vpc_id1.",
 			},
 			"rtb_list2": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "List of Route table ID.",
 			},
 			"rtb_list2_output": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Computed:    true,
+				Description: "List of route table ID of vpc_id2.",
 			},
 		},
 	}
@@ -93,7 +103,7 @@ func resourceAWSPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(awsPeer.VpcID1 + "~" + awsPeer.VpcID2)
 
-	return nil
+	return resourceAWSPeerRead(d, meta)
 }
 
 func resourceAWSPeerRead(d *schema.ResourceData, meta interface{}) error {

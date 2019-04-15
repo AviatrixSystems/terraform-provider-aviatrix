@@ -97,7 +97,7 @@ func (c *Client) GetSite2Cloud(site2cloud *Site2Cloud) (*Site2Cloud, error) {
 	}
 	for i := 0; i < len(data.Results.Connections); i++ {
 		conn := data.Results.Connections[i]
-		if site2cloud.VpcID == conn.VpcID {
+		if site2cloud.VpcID == conn.VpcID && site2cloud.TunnelName == conn.TunnelName {
 			return &conn, nil
 		}
 	}

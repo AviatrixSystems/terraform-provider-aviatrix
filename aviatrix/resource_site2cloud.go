@@ -5,8 +5,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixSite2Cloud() *schema.Resource {
@@ -21,74 +21,91 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "VPC Id of the cloud gateway.",
 			},
 			"connection_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Site2Cloud Connection Name.",
 			},
 			"remote_gateway_type": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Remote gateway type.",
 			},
 			"connection_type": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Connection Type.",
 			},
 			"tunnel_type": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Site2Cloud Tunnel Type.",
 			},
 			"primary_cloud_gateway_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Primary Cloud Gateway Name.",
 			},
 			"backup_gateway_name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Backup gateway name.",
 			},
 			"pre_shared_key": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Pre-Shared Key.",
 			},
 			"remote_gateway_ip": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Remote Gateway IP.",
 			},
 			"remote_subnet_cidr": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Remote Subnet CIDR.",
 			},
 			"local_subnet_cidr": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Local Subnet CIDR.",
 			},
 			"ha_enabled": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "no",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "no",
+				Description: "Specify whether enabling HA or not.",
 			},
 			"backup_remote_subnet_cidr": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Backup remote subnet CIDR.",
 			},
 			"backup_remote_gateway_name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Backup remote gateway name.",
 			},
 			"backup_remote_gateway_ip": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Backup remote remote gateway IP.",
 			},
 			"backup_pre_shared_key": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Backup Pre-Shared Key.",
 			},
 			"private_route_encryption": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Private route encryption.",
 			},
 		},
 	}

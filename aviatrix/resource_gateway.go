@@ -5,8 +5,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAviatrixGateway() *schema.Resource {
@@ -21,218 +21,263 @@ func resourceAviatrixGateway() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"cloud_type": {
-				Type:     schema.TypeInt,
-				Required: true,
+				Type:        schema.TypeInt,
+				Required:    true,
+				Description: "Type of cloud service provider.",
 			},
 			"account_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Account name. This account will be used to launch Aviatrix gateway.",
 			},
 			"gw_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Aviatrix gateway unique name.",
 			},
 			"vpc_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "ID of legacy VPC/Vnet to be connected.",
 			},
 			"vpc_reg": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Region where this gateway will be launched.",
 			},
 			"vpc_size": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Size of Gateway Instance.",
 			},
 			"vpc_net": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "A VPC Network address range selected from one of the available network ranges.",
 			},
 			"ha_subnet": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "This is for Gateway HA. Deprecated.",
 			},
 			"public_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Public IP address of the Gateway created.",
 			},
 			"backup_public_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Private IP address of the Gateway created.",
 			},
 			"security_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Security group used for the gateway.",
 			},
 			"enable_nat": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "no",
-			},
-			"dns_server": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "no",
+				Description: "Enable NAT for this container.",
 			},
 			"public_dns_server": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "NS server used by the gateway.",
 			},
 			"vpn_access": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "no",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "no",
+				Description: "Enable user access through VPN to this container.",
 			},
 			"vpn_cidr": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "VPN CIDR block for the container.",
 			},
 			"enable_elb": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "no",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "no",
+				Description: "Specify whether to enable ELB or not.",
 			},
 			"elb_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "A name for the ELB that is created.",
 			},
 			"split_tunnel": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "yes",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "yes",
+				Description: "Specify split tunnel mode.",
 			},
 			"name_servers": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
+				Description: "A list of DNS servers used to resolve domain names by " +
+					"a connected VPN user when Split Tunnel Mode is enabled.",
 			},
 			"search_domains": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
+				Description: "A list of domain names that will use the NameServer " +
+					"when a specific name is not in the destination when Split Tunnel Mode is enabled.",
 			},
 			"additional_cidrs": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
+				Description: "A list of destination CIDR ranges that will also go through the VPN tunnel " +
+					"when Split Tunnel Mode is enabled.",
 			},
 			"otp_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "Two step authentication mode.",
 			},
 			"saml_enabled": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "no",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "no",
+				Description: "This field indicates whether enabling SAML or not.",
 			},
 			"okta_token": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "Token for Okta auth mode.",
 			},
 			"okta_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "URL for Okta auth mode.",
 			},
 			"okta_username_suffix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "Username suffix for Okta auth mode.",
 			},
 			"duo_integration_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "Integration key for DUO auth mode.",
 			},
 			"duo_secret_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "Secret key for DUO auth mode.",
 			},
 			"duo_api_hostname": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "API hostname for DUO auth mode.",
 			},
 			"duo_push_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "Push mode for DUO auth.",
 			},
 			"enable_ldap": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "no",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "no",
+				Description: "Specify whether to enable LDAP or not. Supported values: 'yes' and 'no'.",
 			},
 			"ldap_server": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "LDAP server address. Required: Yes if enable_ldap is 'yes'.",
 			},
 			"ldap_bind_dn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "LDAP bind DN. Required: Yes if enable_ldap is 'yes'.",
 			},
 			"ldap_password": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "LDAP password. Required: Yes if enable_ldap is 'yes'.",
 			},
 			"ldap_base_dn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "LDAP base DN. Required: Yes if enable_ldap is 'yes'.",
 			},
 			"ldap_username_attribute": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "LDAP user attribute. Required: Yes if enable_ldap is 'yes'.",
 			},
 			"peering_ha_subnet": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Public Subnet Information while creating Peering HA Gateway, only subnet is accepted.",
 			},
 			"peering_ha_eip": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Public IP address that you want assigned to the HA peering instance.",
 			},
 			"zone": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "A GCE zone where this gateway will be launched.",
 			},
 			"cloud_instance_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Instance ID of the gateway.",
 			},
 			"cloudn_bkup_gateway_inst_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Instance ID of the backup gateway.",
 			},
 			"single_az_ha": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "disabled",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "disabled",
+				Description: "Set to 'enabled' if this feature is desired.",
 			},
 			"allocate_new_eip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "on",
+				Description: "When value is off, reuse an idle address in Elastic IP pool for this gateway. " +
+					"Otherwise, allocate a new Elastic IP and use it for this gateway.",
 			},
 			"eip": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Required when allocate_new_eip is 'off'. It uses specified EIP for this gateway.",
 			},
 			"tag_list": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-				Default:  nil,
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Default:     nil,
+				Description: "Instance tag of cloud provider.",
 			},
 		},
 	}
@@ -249,7 +294,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		VpcSize:            d.Get("vpc_size").(string),
 		VpcNet:             d.Get("vpc_net").(string),
 		EnableNat:          d.Get("enable_nat").(string),
-		DnsServer:          d.Get("dns_server").(string),
 		VpnStatus:          d.Get("vpn_access").(string),
 		VpnCidr:            d.Get("vpn_cidr").(string),
 		EnableElb:          d.Get("enable_elb").(string),
@@ -280,6 +324,53 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	if gateway.OtpMode != "" && gateway.OtpMode != "2" && gateway.OtpMode != "3" {
 		return fmt.Errorf("otp_mode can only be '2' or '3' or empty string")
 	}
+	if gateway.SamlEnabled == "yes" {
+		if gateway.EnableLdap == "yes" || gateway.OtpMode != "" {
+			return fmt.Errorf("ldap and mfa can't be configured if saml is enabled")
+		}
+	}
+	if gateway.EnableLdap == "yes" && gateway.OtpMode == "3" {
+		return fmt.Errorf("ldap can't be configured along with okta authentication")
+	}
+	if gateway.EnableLdap == "yes" {
+		if gateway.LdapServer == "" {
+			return fmt.Errorf("ldap server must be set if ldap is enabled")
+		}
+		if gateway.LdapBindDn == "" {
+			return fmt.Errorf("ldap bind dn must be set if ldap is enabled")
+		}
+		if gateway.LdapPassword == "" {
+			return fmt.Errorf("ldap password must be set if ldap is enabled")
+		}
+		if gateway.LdapBaseDn == "" {
+			return fmt.Errorf("ldap base dn must be set if ldap is enabled")
+		}
+		if gateway.LdapUserAttr == "" {
+			return fmt.Errorf("ldap user attribute must be set if ldap is enabled")
+		}
+	}
+	if gateway.OtpMode == "2" {
+		if gateway.DuoIntegrationKey == "" {
+			return fmt.Errorf("duo integration key required if otp_mode set to 2")
+		}
+		if gateway.DuoSecretKey == "" {
+			return fmt.Errorf("duo secret key required if otp_mode set to 2")
+		}
+		if gateway.DuoAPIHostname == "" {
+			return fmt.Errorf("duo api hostname required if otp_mode set to 2")
+		}
+		if gateway.DuoPushMode != "auto" && gateway.DuoPushMode != "token" && gateway.DuoPushMode != "selective" {
+			return fmt.Errorf("duo push mode must be set to a valid value (auto, selective, or token)")
+		}
+	} else if gateway.OtpMode == "3" {
+		if gateway.OktaToken == "" {
+			return fmt.Errorf("okta token must be set if otp_mode is set to 3")
+		}
+		if gateway.OktaURL == "" {
+			return fmt.Errorf("okta url must be set if otp_mode is set to 3")
+		}
+	}
+
 	if gateway.EnableElb != "yes" {
 		gateway.EnableElb = "no"
 	}
@@ -304,9 +395,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	if enableNAT := d.Get("enable_nat").(string); enableNAT == "yes" {
 		log.Printf("[INFO] Aviatrix NAT enabled gateway: %#v", gateway)
-	}
-	if DNSServer := d.Get("dns_server").(string); DNSServer != "" {
-		log.Printf("[INFO] Aviatrix gateway DNS server: %#v", gateway)
 	}
 
 	// single_AZ enabled for Gateway. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
@@ -455,9 +543,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		} else {
 			d.Set("enable_ldap", "no")
 		}
-		if gw.DnsServer != "" {
-			d.Set("dns_server", gw.DnsServer)
-		}
 		if gw.VpnStatus != "" {
 			if gw.VpnStatus == "disabled" {
 				d.Set("vpn_access", "no")
@@ -466,6 +551,12 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			} else {
 				d.Set("vpn_access", gw.VpnStatus)
 			}
+		}
+		vpnAccess := d.Get("vpn_access")
+		if vpnAccess == "no" {
+			d.Set("split_tunnel", "yes")
+		} else {
+			d.Set("split_tunnel", gw.SplitTunnel)
 		}
 		d.Set("vpn_cidr", gw.VpnCidr)
 		if gw.ElbState == "enabled" {
@@ -493,13 +584,16 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("enable_elb", "no")
 			d.Set("elb_name", "")
 		}
-		if gw.SplitTunnel != "" {
-			d.Set("split_tunnel", gw.SplitTunnel)
-		}
 		if gw.SamlEnabled != "" {
 			d.Set("saml_enabled", gw.SamlEnabled)
 		}
-		d.Set("otp_mode", gw.OtpMode)
+		if gw.AuthMethod == "duo_auth" || gw.AuthMethod == "duo_auth+LDAP" {
+			d.Set("otp_mode", "2")
+		} else if gw.AuthMethod == "okta_auth" {
+			d.Set("otp_mode", "3")
+		} else {
+			d.Set("otp_mode", "")
+		}
 		d.Set("okta_token", gw.OktaToken)
 		d.Set("okta_url", gw.OktaURL)
 		d.Set("okta_username_suffix", gw.OktaUsernameSuffix)
@@ -650,9 +744,9 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("elb_name") {
 		return fmt.Errorf("updating elb_name is not allowed")
 	}
-	if d.HasChange("otp_mode") {
-		return fmt.Errorf("updating otp_mode is not allowed")
-	}
+	//	if d.HasChange("otp_mode") {
+	//		return fmt.Errorf("updating otp_mode is not allowed")
+	//	}
 
 	gateway := &goaviatrix.Gateway{
 		GwName:   d.Get("gw_name").(string),
@@ -662,6 +756,106 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	err := client.UpdateGateway(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to update Aviatrix Gateway: %s", err)
+	}
+	if d.HasChange("otp_mode") || d.HasChange("enable_ldap") || d.HasChange("saml_enabled") ||
+		d.HasChange("okta_token") || d.HasChange("okta_url") || d.HasChange("okta_username_suffix") ||
+		d.HasChange("duo_integration_key") || d.HasChange("duo_secret_key") || d.HasChange("duo_api_hostname") ||
+		d.HasChange("duo_push_mode") || d.HasChange("ldap_server") || d.HasChange("ldap_bind_dn") ||
+		d.HasChange("ldap_password") || d.HasChange("ldap_base_dn") || d.HasChange("ldap_username_attribute") {
+
+		vpn_gw := &goaviatrix.VpnGatewayAuth{
+			GwName:             d.Get("gw_name").(string),
+			ElbName:            d.Get("elb_name").(string),
+			VpcID:              d.Get("vpc_id").(string),
+			OtpMode:            d.Get("otp_mode").(string),
+			SamlEnabled:        d.Get("saml_enabled").(string),
+			OktaToken:          d.Get("okta_token").(string),
+			OktaURL:            d.Get("okta_url").(string),
+			OktaUsernameSuffix: d.Get("okta_username_suffix").(string),
+			DuoIntegrationKey:  d.Get("duo_integration_key").(string),
+			DuoSecretKey:       d.Get("duo_secret_key").(string),
+			DuoAPIHostname:     d.Get("duo_api_hostname").(string),
+			DuoPushMode:        d.Get("duo_push_mode").(string),
+			EnableLdap:         d.Get("enable_ldap").(string),
+			LdapServer:         d.Get("ldap_server").(string),
+			LdapBindDn:         d.Get("ldap_bind_dn").(string),
+			LdapPassword:       d.Get("ldap_password").(string),
+			LdapBaseDn:         d.Get("ldap_base_dn").(string),
+			LdapUserAttr:       d.Get("ldap_username_attribute").(string),
+		}
+
+		if vpn_gw.OtpMode != "" && vpn_gw.OtpMode != "2" && vpn_gw.OtpMode != "3" {
+			return fmt.Errorf("otp_mode can only be '2' or '3' or empty string")
+		}
+		if vpn_gw.SamlEnabled == "yes" {
+			if vpn_gw.EnableLdap == "yes" || vpn_gw.OtpMode != "" {
+				return fmt.Errorf("ldap and mfa can't be configured if saml is enabled")
+			}
+		}
+		if vpn_gw.EnableLdap == "yes" && vpn_gw.OtpMode == "3" {
+			return fmt.Errorf("ldap can't be configured along with okta authentication")
+		}
+		if vpn_gw.EnableLdap == "yes" {
+			if vpn_gw.LdapServer == "" {
+				return fmt.Errorf("ldap server must be set if ldap is enabled")
+			}
+			if vpn_gw.LdapBindDn == "" {
+				return fmt.Errorf("ldap bind dn must be set if ldap is enabled")
+			}
+			if vpn_gw.LdapPassword == "" {
+				return fmt.Errorf("ldap password must be set if ldap is enabled")
+			}
+			if vpn_gw.LdapBaseDn == "" {
+				return fmt.Errorf("ldap base dn must be set if ldap is enabled")
+			}
+			if vpn_gw.LdapUserAttr == "" {
+				return fmt.Errorf("ldap user attribute must be set if ldap is enabled")
+			}
+		}
+		if vpn_gw.OtpMode == "2" {
+			if vpn_gw.DuoIntegrationKey == "" {
+				return fmt.Errorf("duo integration key required if otp_mode set to 2")
+			}
+			if vpn_gw.DuoSecretKey == "" {
+				return fmt.Errorf("duo secret key required if otp_mode set to 2")
+			}
+			if vpn_gw.DuoAPIHostname == "" {
+				return fmt.Errorf("duo api hostname required if otp_mode set to 2")
+			}
+			if vpn_gw.DuoPushMode != "auto" && vpn_gw.DuoPushMode != "token" && vpn_gw.DuoPushMode != "selective" {
+				return fmt.Errorf("duo push mode must be set to a valid value (auto, selective, or token)")
+			}
+			if vpn_gw.EnableLdap == "yes" {
+				vpn_gw.AuthType = "duo_ldap_auth"
+			} else {
+				vpn_gw.AuthType = "duo_auth"
+			}
+		} else if vpn_gw.OtpMode == "3" {
+			if vpn_gw.OktaToken == "" {
+				return fmt.Errorf("okta token must be set if otp_mode is set to 3")
+			}
+			if vpn_gw.OktaURL == "" {
+				return fmt.Errorf("okta url must be set if otp_mode is set to 3")
+			}
+			vpn_gw.AuthType = "okta_auth"
+		} else {
+			if vpn_gw.EnableLdap == "yes" {
+				vpn_gw.AuthType = "ldap_auth"
+			} else if vpn_gw.SamlEnabled == "yes" {
+				vpn_gw.AuthType = "saml_auth"
+			} else {
+				vpn_gw.AuthType = "none"
+			}
+		}
+		if vpn_gw.ElbName != "" {
+			vpn_gw.LbOrGatewayName = vpn_gw.ElbName
+		} else {
+			vpn_gw.LbOrGatewayName = vpn_gw.GwName
+		}
+		err := client.SetVpnGatewayAuthentication(vpn_gw)
+		if err != nil {
+			return fmt.Errorf("failed to update Aviatrix VPN Gateway Authentication: %s", err)
+		}
 	}
 	if d.HasChange("tag_list") {
 		tags := &goaviatrix.Tags{
@@ -801,7 +995,8 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	d.Partial(false)
 
 	d.SetId(gateway.GwName)
-	return nil
+	return resourceAviatrixGatewayRead(d, meta)
+
 }
 
 func resourceAviatrixGatewayDelete(d *schema.ResourceData, meta interface{}) error {

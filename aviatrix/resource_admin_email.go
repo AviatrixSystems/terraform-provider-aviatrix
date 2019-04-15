@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceAdminEmail() *schema.Resource {
@@ -20,8 +20,9 @@ func resourceAdminEmail() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"admin_email": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "E-mail address of admin user to be set.",
 			},
 		},
 	}

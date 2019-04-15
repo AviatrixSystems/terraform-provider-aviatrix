@@ -5,8 +5,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/go-aviatrix/goaviatrix"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
 func resourceTransPeer() *schema.Resource {
@@ -21,16 +21,19 @@ func resourceTransPeer() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"source": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Name of Source gateway.",
 			},
 			"nexthop": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Name of nexthop gateway.",
 			},
 			"reachable_cidr": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Destination CIDR.",
 			},
 		},
 	}
