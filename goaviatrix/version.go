@@ -14,9 +14,10 @@ import (
 )
 
 type Version struct {
-	CID     string `form:"CID,omitempty"`
-	Action  string `form:"action,omitempty"`
-	Version string `form:"version,omitempty" json:"version,omitempty"`
+	CID           string `form:"CID,omitempty"`
+	Action        string `form:"action,omitempty"`
+	TargetVersion string `form:"version,omitempty"`
+	Version       string `json:"version,omitempty"`
 }
 
 type UpgradeResp struct {
@@ -143,4 +144,33 @@ func (c *Client) Pre32Upgrade() error {
 		}
 	}
 	return nil
+}
+
+func (c *Client) GetLatestVersion() (string, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return "", errors.New(("url Parsing failed for list_version_info") + err.Error())
+	}
+	listVersionInfo := url.Values{}
+	listVersionInfo.Add("CID", c.CID)
+	listVersionInfo.Add("action", "list_version_info")
+	Url.RawQuery = listVersionInfo.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return "", errors.New("HTTP Get list_version_info failed: " + err.Error())
+	}
+	var data VersionInfoResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return "", errors.New("Json Decode list_version_info failed: " + err.Error())
+	}
+
+	if !data.Return {
+		return "", errors.New("Rest API list_version_info Get failed: " + data.Reason)
+	}
+
+	if data.Results.CurrentVersion != "" {
+		return data.Results.LatestVersion, nil
+	}
+	return "", nil
 }
