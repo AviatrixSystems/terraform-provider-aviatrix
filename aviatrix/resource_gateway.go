@@ -176,6 +176,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"duo_secret_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				Default:     "",
 				Description: "Secret key for DUO auth mode.",
 			},
@@ -212,6 +213,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"ldap_password": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				Default:     "",
 				Description: "LDAP password. Required: Yes if enable_ldap is 'yes'.",
 			},
@@ -598,12 +600,12 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("okta_url", gw.OktaURL)
 		d.Set("okta_username_suffix", gw.OktaUsernameSuffix)
 		d.Set("duo_integration_key", gw.DuoIntegrationKey)
-		d.Set("duo_secret_key", gw.DuoSecretKey)
+		//d.Set("duo_secret_key", gw.DuoSecretKey)		//prevent from reading sensitive info
 		d.Set("duo_api_hostname", gw.DuoAPIHostname)
 		d.Set("duo_push_mode", gw.DuoPushMode)
 		d.Set("ldap_server", gw.LdapServer)
 		d.Set("ldap_bind_dn", gw.LdapBindDn)
-		d.Set("ldap_password", gw.LdapPassword)
+		//d.Set("ldap_password", gw.LdapPassword)		//prevent from reading sensitive info
 		d.Set("ldap_base_dn", gw.LdapBaseDn)
 		d.Set("ldap_username_attribute", gw.LdapUserAttr)
 		if gw.HASubnet != "" {
