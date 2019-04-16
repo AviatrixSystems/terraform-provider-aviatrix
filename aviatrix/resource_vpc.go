@@ -88,6 +88,9 @@ func resourceVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		Cidr:        d.Get("cidr").(string),
 	}
 
+	if vpc.Region == "" {
+		return fmt.Errorf("region can not be empty")
+	}
 	aviatrixTransitVpc := d.Get("aviatrix_transit_vpc").(bool)
 	if aviatrixTransitVpc {
 		vpc.AviatrixTransitVpc = "yes"
