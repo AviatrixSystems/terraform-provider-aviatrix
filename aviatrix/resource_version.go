@@ -66,9 +66,10 @@ func resourceAviatrixVersionCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	newCurrent, _, _ := client.GetCurrentVersion()
 	log.Printf("Upgrade complete (now %s)", newCurrent)
+	d.Set("version", newCurrent)
 	d.SetId(newCurrent)
 
-	return resourceAviatrixVersionRead(d, meta)
+	return nil
 }
 
 func resourceAviatrixVersionRead(d *schema.ResourceData, meta interface{}) error {
@@ -89,10 +90,13 @@ func resourceAviatrixVersionRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("unable to read current Controller version: %s (%s)", err, current)
 	}
 	log.Printf("Version read completes (now %s)", current)
-
 	d.SetId(current)
+
+	latestVersion, _ := client.GetLatestVersion()
+	if latestVersion != "" && current != latestVersion {
+		d.Set("target_version", current)
+	}
 	d.Set("version", current)
-	d.Set("target_version", current)
 
 	return nil
 }
