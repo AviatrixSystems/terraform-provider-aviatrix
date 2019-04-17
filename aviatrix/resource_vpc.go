@@ -132,7 +132,6 @@ func resourceVpcRead(d *schema.ResourceData, meta interface{}) error {
 		Name: d.Get("name").(string),
 	}
 	vC, err := client.GetVpc(vpc)
-
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
@@ -145,10 +144,14 @@ func resourceVpcRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("cloud_type", vC.CloudType)
 	d.Set("account_name", vC.AccountName)
-	d.Set("egion", vC.Region)
+	d.Set("region", vC.Region)
 	d.Set("name", vC.Name)
 	d.Set("cidr", vC.Cidr)
-	d.Set("aviatrix_transit_vpc", vC.AviatrixTransitVpc)
+	if vC.AviatrixTransitVpc == "yes" {
+		d.Set("aviatrix_transit_vpc", true)
+	} else {
+		d.Set("aviatrix_transit_vpc", false)
+	}
 	d.Set("vpc_id", vC.VpcID[0])
 
 	var subnetList []map[string]string

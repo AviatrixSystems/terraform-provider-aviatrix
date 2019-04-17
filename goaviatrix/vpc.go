@@ -16,7 +16,7 @@ type Vpc struct {
 	Region             string       `form:"region,omitempty" json:"vpc_region,omitempty"`
 	Name               string       `form:"pool_name,omitempty" json:"pool_name,omitempty"`
 	Cidr               string       `form:"vpc_cidr,omitempty" json:"vpc_cidr,omitempty"`
-	AviatrixTransitVpc string       `form:"aviatrix_transit_vpc,omitempty" json:"aviatrix_transit_vpc,omitempty"`
+	AviatrixTransitVpc string       `form:"aviatrix_transit_vpc,omitempty"`
 	VpcID              string       `json:"vpc_list,omitempty"`
 	Subnets            []SubnetInfo `json:"subnets,omitempty"`
 }
@@ -27,7 +27,7 @@ type VpcEdit struct {
 	Region             string       `form:"region,omitempty" json:"vpc_region,omitempty"`
 	Name               string       `form:"pool_name,omitempty" json:"pool_name,omitempty"`
 	Cidr               string       `form:"vpc_cidr,omitempty" json:"vpc_cidr,omitempty"`
-	AviatrixTransitVpc bool         `form:"aviatrix_transit_vpc,omitempty" json:"avx_transit_vpc,omitempty"`
+	AviatrixTransitVpc bool         `json:"avx_transit_vpc,omitempty"`
 	VpcID              []string     `json:"vpc_list,omitempty"`
 	Subnets            []SubnetInfo `json:"subnets,omitempty"`
 }
