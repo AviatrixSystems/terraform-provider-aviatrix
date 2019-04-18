@@ -765,6 +765,10 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		d.HasChange("duo_push_mode") || d.HasChange("ldap_server") || d.HasChange("ldap_bind_dn") ||
 		d.HasChange("ldap_password") || d.HasChange("ldap_base_dn") || d.HasChange("ldap_username_attribute") {
 
+		if vpnAccess := d.Get("vpn_access").(string); vpnAccess != "yes" {
+			return fmt.Errorf("vpn_access must be set to yes to modify vpn authentication")
+		}
+
 		vpn_gw := &goaviatrix.VpnGatewayAuth{
 			GwName:             d.Get("gw_name").(string),
 			ElbName:            d.Get("elb_name").(string),
