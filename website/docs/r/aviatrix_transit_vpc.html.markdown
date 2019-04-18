@@ -13,10 +13,10 @@ The AviatrixTransitVpc resource manages the Aviatrix Transit Network Gateways
 ## Example Usage
 
 ```hcl
-# Manage Aviatrix Transit Network Gateways
-resource "aviatrix_transit_vpc" "test_transit_gw" {
+# Manage Aviatrix Transit Network Gateways in aws
+resource "aviatrix_transit_vpc" "test_transit_gw_aws" {
   cloud_type               = 1
-  account_name             = "devops"
+  account_name             = "devops_aws"
   gw_name                  = "transit"
   vpc_id                   = "vpc-abcd1234"
   vpc_reg                  = "us-east-1"
@@ -28,6 +28,21 @@ resource "aviatrix_transit_vpc" "test_transit_gw" {
   enable_hybrid_connection = true
   connected_transit        = "yes"
 }
+
+# Manage Aviatrix Transit Network Gateways in azure
+resource "aviatrix_transit_vpc" "test_transit_gw_azure" {
+  cloud_type               = 8
+  account_name             = "devops_azure"
+  gw_name                  = "transit"
+  vnet_name_resource_group = "vnet1:hello"
+  vpc_reg                  = "West US"
+  vpc_size                 = "Standard_B1s"
+  subnet                   = "10.30.0.0/24"
+  ha_subnet                = "10.30.0.0/24"
+  ha_gw_size               = "Standard_B1s"
+  connected_transit        = "yes"
+}
+
 ```
 
 ## Argument Reference
@@ -45,8 +60,8 @@ The following arguments are supported:
 * `ha_subnet` - (Optional) HA Subnet. Setting to empty/unset will disable HA. Setting to a valid subnet. (Example: 10.12.0.0/24) will create an HA gateway on the subnet.
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set). (Example: "t2.micro")
 * `enable_nat` - (Optional) Enable NAT for this container. (Supported values: "yes", "no")
-* `tag_list` - (Optional) Instance tag of cloud provider. Only supports aws for now. Example: ["key1:value1","key002:value002"]
-* `enable_hybrid_connection` - (Optional) Sign of readiness for TGW connection. Only supports aws for now. (Example : false)
+* `tag_list` - (Optional) Instance tag of cloud provider. Only supported for aws. Example: ["key1:value1","key002:value002"]
+* `enable_hybrid_connection` - (Optional) Sign of readiness for TGW connection. Only supported for aws. (Example : false)
 * `connected_transit` - (Optional) Specify Connected Transit status. (Supported values: "yes", "no")
 
 -> **NOTE:** The following arguments are deprecated:
