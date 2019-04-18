@@ -283,6 +283,8 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("enable_nat", gw.EnableNat)
 		if gw.CloudType == 1 {
 			d.Set("enable_hybrid_connection", gw.EnableHybridConnection)
+		} else {
+			d.Set("enable_hybrid_connection", false)
 		}
 		d.Set("connected_transit", gw.ConnectedTransit)
 	}
@@ -356,8 +358,8 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 	if d.HasChange("vpc_reg") {
 		return fmt.Errorf("updating vpc_reg is not allowed")
 	}
-	if d.HasChange("vnet_and_resource_group_names") {
-		return fmt.Errorf("updating vnet_and_resource_group_names is not allowed")
+	if d.HasChange("vnet_name_resource_group") {
+		return fmt.Errorf("updating vnet_and_resource_group is not allowed")
 	}
 	if d.HasChange("subnet") {
 		return fmt.Errorf("updating subnet is not allowed")
