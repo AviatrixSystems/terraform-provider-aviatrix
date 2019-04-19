@@ -17,9 +17,9 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | ------------------------------------ | ---------------------------- | ------------------------------------------------------------------- |
 | Generic                              | N/A                          | AVIATRIX_USERNAME, AVIATRIX_PASSWORD, AVIATRIX_CONTROLLER_IP        |
 | aviatrix_account                     | SKIP_ACCOUNT                 | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY                  |
-|				                       | SKIP_AWS_ACCOUNT	          | GCP_ID, GCP_CREDENTIALS_FILEPATH,                                   |
-|                     		           | SKIP_GCP_ACCOUNT	          | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID,	        |
-|				                       | SKIP_ARM_ACCOUNT	          | ARM_APPLICATION_KEY						                            |	
+|		                       | SKIP_AWS_ACCOUNT	      | GCP_ID, GCP_CREDENTIALS_FILEPATH,                                   |
+|                     		       | SKIP_GCP_ACCOUNT	      | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID,	    |
+|		                       | SKIP_ARM_ACCOUNT	      | ARM_APPLICATION_KEY						    |	
 | aviatrix_account_user                | SKIP_ACCOUNT_USER            |                                                                     |
 | aviatrix_admin_email                 | SKIP_ADMIN_EMAIL             |                                                                     |
 | aviatrix_aws_peer                    | SKIP_AWS_PEER                | aviatrix_account + AWS_VPC_ID, AWS_VPC_ID2, AWS_REGION, AWS_REGION2 |
@@ -31,7 +31,10 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_fqdn                        | SKIP_FQDN                    | aviatrix_gateway                                                    |
 | aviatrix_gateway                     | SKIP_GATEWAY                 | aviatrix_account + AWS_VPC_ID, AWS_REGION, AWS_VPC_NET              |
 | aviatrix_site2cloud                  | SKIP_S2C                     | aviatrix_gateway                                                    |
-| aviatrix_spoke_vpc                   | SKIP_SPOKE                   | aviatrix_gateway                                                    |
+| aviatrix_spoke_vpc                   | SKIP_SPOKE                   | aviatrix_gateway + GCP_VPC_ID, GCP_ZONE, GCP_VPC_NET,		    |
+|				       | SKIP_AWS_SPOKE		      |                   ARM_VNET_ID, ARM_REGION, ARM_SUBNET		    |
+|				       | SKIP_GCP_SPOKE		      |									    |
+|				       | SKIP_ARM_SPOKE		      |									    |
 | aviatrix_trans_peer                  | SKIP_TRANS_PEER              | aviatrix_tunnel                                                     |
 | aviatrix_transit_vpc                 | SKIP_TRANSIT                 | aviatrix_gateway                                                    |
 |                                      | SKIP_TRANSIT_AWS             | aviatrix_gateway in AWS                                             |

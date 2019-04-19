@@ -21,13 +21,14 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 	skipGw := os.Getenv("SKIP_SPOKE")
 	skipAWS := os.Getenv("SKIP_AWS_SPOKE")
 	skipGCP := os.Getenv("SKIP_GCP_SPOKE")
+	skipARM := os.Getenv("SKIP_ARM_SPOKE")
 
 	if skipGw == "yes" {
 		t.Skip("Skipping Spoke Gateway test as SKIP_SPOKE is set")
 	}
 
-	if skipAWS == "yes" && skipGCP == "yes" {
-		t.Skip("Skipping Spoke Gateway test as SKIP_AWS_SPOKE and SKIP_GCP_SPOKE are all set, even though SKIP_SPOKE isn't set")
+	if skipAWS == "yes" && skipGCP == "yes" && skipARM == "yes" {
+		t.Skip("Skipping Spoke Gateway test as SKIP_AWS_SPOKE, SKIP_GCP_SPOKE, and SKIP_ARM_SPOKE are all set, even though SKIP_SPOKE isn't set")
 	}
 
 	preGatewayCheck(t, msgCommon)
@@ -79,6 +80,31 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("GCP_VPC_ID")),
 						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("GCP_VPC_NET")),
 						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("GCP_ZONE")),
+						resource.TestCheckResourceAttr(resourceName, "enable_nat", "no"),
+					),
+				},
+			},
+		})
+	}
+	if skipARM == "yes" {
+		t.Log("Skipping ARM Spoke Gateway test as SKIP_ARM_SPOKE is set")
+	} else {
+		resource.Test(t, resource.TestCase{
+			PreCheck:     func() { testAccPreCheck(t) },
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckSpokeGwDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccSpokeGwConfigARM(rName),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckSpokeGwExists(resourceName, &gateway),
+						resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-arm-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "vpc_size", "Standard_D2"),
+						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-arm-%s",
+							rName)),
+						resource.TestCheckResourceAttr(resourceName, "vnet_and_resource_group_names", os.Getenv("ARM_VNET_ID")),
+						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("ARM_SUBNET")),
+						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("ARM_REGION")),
 						resource.TestCheckResourceAttr(resourceName, "enable_nat", "no"),
 					),
 				},
@@ -138,6 +164,34 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
 
         `, rName, os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"),
 		os.Getenv("GCP_VPC_ID"), os.Getenv("GCP_ZONE"), os.Getenv("GCP_VPC_NET"))
+}
+
+func testAccSpokeGwConfigARM(rName string) string {
+	return fmt.Sprintf(`
+
+resource "aviatrix_account" "test" {
+  account_name = "tfa-arm-%s"
+  cloud_type = 8
+  arm_subscription_id = "%s"
+  arm_directory_id = "%s"
+  arm_application_id = "%s"
+  arm_application_key = "%s"
+}
+
+resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
+  cloud_type = 8
+  account_name = "${aviatrix_account.test.account_name}"
+  gw_name = "tfg-arm-%[1]s"
+  vnet_and_resource_group_names = "%[6]s"
+  vpc_reg = "%[7]s"
+  vpc_size = "Standard_D2"
+  subnet = "%[8]s"
+  enable_nat = "no"
+}
+
+        `, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
+		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),
+		os.Getenv("ARM_VNET_ID"), os.Getenv("ARM_REGION"), os.Getenv("ARM_SUBNET"))
 }
 
 func testAccCheckSpokeGwExists(n string, gateway *goaviatrix.Gateway) resource.TestCheckFunc {
