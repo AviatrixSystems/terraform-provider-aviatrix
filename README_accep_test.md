@@ -31,7 +31,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_fqdn                        | SKIP_FQDN                    | aviatrix_gateway                                                    |
 | aviatrix_gateway                     | SKIP_GATEWAY                 | aviatrix_account + AWS_VPC_ID, AWS_REGION, AWS_VPC_NET              |
 | aviatrix_site2cloud                  | SKIP_S2C                     | aviatrix_gateway                                                    |
-| aviatrix_spoke_vpc                   | SKIP_SPOKE                   | aviatrix_gateway + GCP_VPC_ID, GCP_ZONE, GCP_VPC_NET,		    |
+| aviatrix_spoke_vpc                   | SKIP_SPOKE                   | aviatrix_gateway + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET,		    |
 |				       | SKIP_AWS_SPOKE		      |                   ARM_VNET_ID, ARM_REGION, ARM_SUBNET		    |
 |				       | SKIP_GCP_SPOKE		      |									    |
 |				       | SKIP_ARM_SPOKE		      |									    |

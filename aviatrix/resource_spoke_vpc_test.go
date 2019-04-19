@@ -78,7 +78,7 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-gcp-%s",
 							rName)),
 						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("GCP_VPC_ID")),
-						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("GCP_VPC_NET")),
+						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("GCP_SUBNET")),
 						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("GCP_ZONE")),
 						resource.TestCheckResourceAttr(resourceName, "enable_nat", "no"),
 					),
@@ -163,7 +163,7 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
 }
 
         `, rName, os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"),
-		os.Getenv("GCP_VPC_ID"), os.Getenv("GCP_ZONE"), os.Getenv("GCP_VPC_NET"))
+		os.Getenv("GCP_VPC_ID"), os.Getenv("GCP_ZONE"), os.Getenv("GCP_SUBNET"))
 }
 
 func testAccSpokeGwConfigARM(rName string) string {
