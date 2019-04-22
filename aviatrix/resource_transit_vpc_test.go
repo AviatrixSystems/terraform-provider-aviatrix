@@ -95,7 +95,7 @@ func TestAccAviatrixTransitGw_basic(t *testing.T) {
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckTransitGwExists(resourceNameArm, &gateway),
 						resource.TestCheckResourceAttr(resourceNameArm, "gw_name", fmt.Sprintf("tfg-%s", rName)),
-						resource.TestCheckResourceAttr(resourceNameArm, "vpc_size", "Standard_B1s"),
+						resource.TestCheckResourceAttr(resourceNameArm, "vpc_size", os.Getenv("ARM_GW_SIZE")),
 						resource.TestCheckResourceAttr(resourceNameArm, "account_name", fmt.Sprintf("tfaz-%s",
 							rName)),
 						resource.TestCheckResourceAttr(resourceNameArm, "vnet_name_resource_group",
@@ -155,12 +155,12 @@ resource "aviatrix_transit_vpc" "test_transit_vpc_arm" {
     gw_name                  = "tfg-%[1]s"
     vnet_name_resource_group = "%[6]s"
     vpc_reg                  = "%[7]s"
-    vpc_size                 = "Standard_B1s"
-    subnet                   = "%[8]s"
+    vpc_size                 = "%[8]s"
+    subnet                   = "%[9]s"
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"), os.Getenv("ARM_APPLICATION_ID"),
 		os.Getenv("ARM_APPLICATION_KEY"), os.Getenv("ARM_VNET_ID"), os.Getenv("ARM_REGION"),
-		os.Getenv("ARM_SUBNET"))
+		os.Getenv("ARM_GW_SIZE"), os.Getenv("ARM_SUBNET"))
 }
 
 func testAccCheckTransitGwExists(n string, gateway *goaviatrix.Gateway) resource.TestCheckFunc {
