@@ -110,7 +110,13 @@ func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 	enableSpokeHa.Add("CID", c.CID)
 	enableSpokeHa.Add("action", "enable_spoke_ha")
 	enableSpokeHa.Add("gw_name", spoke.GwName)
-	enableSpokeHa.Add("public_subnet", spoke.HASubnet)
+	if spoke.CloudType == 1 || spoke.CloudType == 8 {
+		enableSpokeHa.Add("public_subnet", spoke.HASubnet)
+	} else if spoke.CloudType == 4 {
+		enableSpokeHa.Add("new_zone", spoke.HASubnet)
+	} else {
+		return errors.New("Invalid cloud type")
+	}
 	Url.RawQuery = enableSpokeHa.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
