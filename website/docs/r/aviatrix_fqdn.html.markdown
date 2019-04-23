@@ -60,6 +60,10 @@ The following arguments are supported:
     * for protocol "all", port must be set to "all"
     * for protocol “icmp”, port must be set to “ping”
 
+-> **NOTE:** 
+
+* If you are using/ upgraded to Aviatrix Terraform Provider v4.2+ , and an fqdn resource was originally created with a provider version <4.2, you must modify your configuration file to match current format, and do ‘terraform refresh’ to update the state file to current format. 
+
 ## Import
 
 Instance fqdn can be imported using the fqdn_tag, e.g.
