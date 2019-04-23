@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -18,19 +19,41 @@ type Filters struct {
 
 // Gateway simple struct to hold fqdn details
 type FQDN struct {
-	FQDNTag    string     `form:"tag_name,omitempty" json:"tag_name,omitempty"`
-	Action     string     `form:"action,omitempty"`
-	CID        string     `form:"CID,omitempty"`
-	FQDNStatus string     `form:"status,omitempty" json:"status,omitempty"`
-	FQDNMode   string     `form:"color,omitempty" json:"color,omitempty"`
-	GwList     []string   `form:"gw_name,omitempty" json:"gw_name,omitempty"`
-	DomainList []*Filters `form:"domain_names[],omitempty" json:"domain_names,omitempty"`
+	FQDNTag         string        `form:"tag_name,omitempty" json:"tag_name,omitempty"`
+	Action          string        `form:"action,omitempty"`
+	CID             string        `form:"CID,omitempty"`
+	FQDNStatus      string        `form:"status,omitempty" json:"status,omitempty"`
+	FQDNMode        string        `form:"color,omitempty" json:"color,omitempty"`
+	GwFilterTagList []GwFilterTag `form:"gw_name,omitempty" json:"gw_name,omitempty"`
+	DomainList      []*Filters    `form:"domain_names[],omitempty" json:"domain_names,omitempty"`
+}
+
+type GwFilterTag struct {
+	Name         string   `json:"gw_name, omitempty"`
+	SourceIPList []string `json:"source_ip_list, omitempty"`
 }
 
 type ResultListResp struct {
 	Return  bool     `json:"return"`
 	Results []string `json:"results"`
 	Reason  string   `json:"reason"`
+}
+
+type GetFqdnExceptionRuleResp struct {
+	Return  bool   `json:"return"`
+	Results string `json:"results"`
+	Reason  string `json:"reason"`
+}
+
+type ResultListSourceIPResp struct {
+	Return  bool       `json:"return"`
+	Results GwSourceIP `json:"results"`
+	Reason  string     `json:"reason"`
+}
+
+type GwSourceIP struct {
+	ConfiguredIPs []string `json:"configured_ips"`
+	VpcSubnets    []string `json:"vpc_subnets"`
 }
 
 func (c *Client) CreateFQDN(fqdn *FQDN) error {
@@ -170,35 +193,35 @@ func (c *Client) UpdateDomains(fqdn *FQDN) error {
 }
 
 func (c *Client) AttachGws(fqdn *FQDN) error {
-	log.Printf("[TRACE] inside AttachGWs ------------------------------------------------%#v", fqdn)
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New("url Parsing failed for attach_fqdn_filter_tag_to_gw " + err.Error())
-	}
-	attachFQDNFilterTagToGw := url.Values{}
-	attachFQDNFilterTagToGw.Add("CID", c.CID)
-	attachFQDNFilterTagToGw.Add("action", "attach_fqdn_filter_tag_to_gw")
-	attachFQDNFilterTagToGw.Add("tag_name", fqdn.FQDNTag)
-
-	for i := range fqdn.GwList {
-		attachFQDNFilterTagToGw.Add("gw_name", fqdn.GwList[i])
-		Url.RawQuery = attachFQDNFilterTagToGw.Encode()
-		resp, err := c.Get(Url.String(), nil)
-		if err != nil {
-			return errors.New("HTTP Get attach_fqdn_filter_tag_to_gw failed: " + err.Error())
-		}
-		var data APIResp
-		if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-			return errors.New("Json Decode attach_fqdn_filter_tag_to_gw failed: " + err.Error())
-		}
-		if !data.Return {
-			return errors.New("Rest API attach_fqdn_filter_tag_to_gw Get failed: " + data.Reason)
-		}
-	}
+	//log.Printf("[TRACE] inside AttachGWs ------------------------------------------------%#v", fqdn)
+	//Url, err := url.Parse(c.baseURL)
+	//if err != nil {
+	//	return errors.New("url Parsing failed for attach_fqdn_filter_tag_to_gw " + err.Error())
+	//}
+	//attachFQDNFilterTagToGw := url.Values{}
+	//attachFQDNFilterTagToGw.Add("CID", c.CID)
+	//attachFQDNFilterTagToGw.Add("action", "attach_fqdn_filter_tag_to_gw")
+	//attachFQDNFilterTagToGw.Add("tag_name", fqdn.FQDNTag)
+	//
+	//for i := range fqdn.GwList {
+	//	attachFQDNFilterTagToGw.Add("gw_name", fqdn.GwList[i])
+	//	Url.RawQuery = attachFQDNFilterTagToGw.Encode()
+	//	resp, err := c.Get(Url.String(), nil)
+	//	if err != nil {
+	//		return errors.New("HTTP Get attach_fqdn_filter_tag_to_gw failed: " + err.Error())
+	//	}
+	//	var data APIResp
+	//	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	//		return errors.New("Json Decode attach_fqdn_filter_tag_to_gw failed: " + err.Error())
+	//	}
+	//	if !data.Return {
+	//		return errors.New("Rest API attach_fqdn_filter_tag_to_gw Get failed: " + data.Reason)
+	//	}
+	//}
 	return nil
 }
 
-func (c *Client) DetachGws(fqdn *FQDN) error {
+func (c *Client) DetachGws(fqdn *FQDN, gwList []string) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
 		return errors.New("url Parsing failed for detach_fqdn_filter_tag_from_gw " + err.Error())
@@ -208,8 +231,8 @@ func (c *Client) DetachGws(fqdn *FQDN) error {
 	detachFQDNFilterTagToGw.Add("action", "detach_fqdn_filter_tag_from_gw")
 	detachFQDNFilterTagToGw.Add("tag_name", fqdn.FQDNTag)
 
-	for i := range fqdn.GwList {
-		detachFQDNFilterTagToGw.Add("gw_name", fqdn.GwList[i])
+	for i := range gwList {
+		detachFQDNFilterTagToGw.Add("gw_name", gwList[i])
 		Url.RawQuery = detachFQDNFilterTagToGw.Encode()
 		resp, err := c.Get(Url.String(), nil)
 		if err != nil {
@@ -325,7 +348,7 @@ func (c *Client) ListDomains(fqdn *FQDN) (*FQDN, error) {
 	return fqdn, nil
 }
 
-func (c *Client) ListGws(fqdn *FQDN) (*FQDN, error) {
+func (c *Client) ListGws(fqdn *FQDN) ([]string, error) {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
 		return nil, errors.New("url Parsing failed for list_fqdn_filter_tag_attached_gws " + err.Error())
@@ -349,7 +372,191 @@ func (c *Client) ListGws(fqdn *FQDN) (*FQDN, error) {
 			data.Reason)
 		return nil, errors.New("Rest API list_fqdn_filter_tag_attached_gws Get failed: " + data.Reason)
 	}
-	fqdn.GwList = data.Results
 
+	return data.Results, nil
+}
+
+func (c *Client) EnableExceptionRule(fqdn *FQDN) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New("url Parsing failed for enable_fqdn_exception_rule " + err.Error())
+	}
+	enableFqdnExceptionRule := url.Values{}
+	enableFqdnExceptionRule.Add("CID", c.CID)
+	enableFqdnExceptionRule.Add("action", "enable_fqdn_exception_rule")
+	Url.RawQuery = enableFqdnExceptionRule.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get enable_fqdn_exception_rule failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode detach_fqdn_filter_tag_from_gw failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API detach_fqdn_filter_tag_from_gw Get failed: " + data.Reason)
+	}
+
+	return nil
+}
+
+func (c *Client) DisableExceptionRule(fqdn *FQDN) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New("url Parsing failed for disable_fqdn_exception_rule " + err.Error())
+	}
+	disableFqdnExceptionRule := url.Values{}
+	disableFqdnExceptionRule.Add("CID", c.CID)
+	disableFqdnExceptionRule.Add("action", "disable_fqdn_exception_rule")
+	Url.RawQuery = disableFqdnExceptionRule.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get disable_fqdn_exception_rule failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_fqdn_exception_rule failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API disable_fqdn_exception_rule Get failed: " + data.Reason)
+	}
+
+	return nil
+}
+
+func (c *Client) GetExceptionRuleStatus(fqdn *FQDN) (bool, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return false, errors.New("url Parsing failed for get_fqdn_exception_rule_status " + err.Error())
+	}
+	getFqdnExceptionRuleStatus := url.Values{}
+	getFqdnExceptionRuleStatus.Add("CID", c.CID)
+	getFqdnExceptionRuleStatus.Add("action", "get_fqdn_exception_rule_status")
+	Url.RawQuery = getFqdnExceptionRuleStatus.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return false, errors.New("HTTP Get get_fqdn_exception_rule_status failed: " + err.Error())
+	}
+	data := GetFqdnExceptionRuleResp{
+		Return:  false,
+		Results: "",
+		Reason:  "",
+	}
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return false, errors.New("Json Decode get_fqdn_exception_rule_status failed: " + err.Error())
+	}
+	if !data.Return {
+		return false, errors.New("Rest API get_fqdn_exception_rule_status Get failed: " + data.Reason)
+	}
+
+	if data.Results == "disabled" {
+		return false, nil
+	}
+	return true, nil
+}
+
+func (c *Client) AttachTagToGw(fqdn *FQDN, gateway *Gateway) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New("url Parsing failed for attach_fqdn_filter_tag_to_gw " + err.Error())
+	}
+	attachFQDNFilterTagToGw := url.Values{}
+	attachFQDNFilterTagToGw.Add("CID", c.CID)
+	attachFQDNFilterTagToGw.Add("action", "attach_fqdn_filter_tag_to_gw")
+	attachFQDNFilterTagToGw.Add("tag_name", fqdn.FQDNTag)
+	attachFQDNFilterTagToGw.Add("gw_name", gateway.GwName)
+	Url.RawQuery = attachFQDNFilterTagToGw.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return errors.New("HTTP Get attach_fqdn_filter_tag_to_gw failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode attach_fqdn_filter_tag_to_gw failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API attach_fqdn_filter_tag_to_gw Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) UpdateSourceIPFilters(fqdn *FQDN, gateway *Gateway, sourceIPs []string) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New("url Parsing failed for update_fqdn_filter_tag_source_ip_filters " + err.Error())
+	}
+	attachFQDNFilterTagToGw := url.Values{}
+	attachFQDNFilterTagToGw.Add("CID", c.CID)
+	attachFQDNFilterTagToGw.Add("action", "update_fqdn_filter_tag_source_ip_filters")
+	attachFQDNFilterTagToGw.Add("tag_name", fqdn.FQDNTag)
+	attachFQDNFilterTagToGw.Add("gateway_name", gateway.GwName)
+	if len(sourceIPs) != 0 {
+		for i := range sourceIPs {
+			attachFQDNFilterTagToGw.Add("source_ips["+strconv.Itoa(i)+"]", sourceIPs[i])
+		}
+	}
+
+	Url.RawQuery = attachFQDNFilterTagToGw.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return errors.New("HTTP Get update_fqdn_filter_tag_source_ip_filters failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode update_fqdn_filter_tag_source_ip_filters failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API update_fqdn_filter_tag_source_ip_filters Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) GetGwFilterTagList(fqdn *FQDN) (*FQDN, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return nil, errors.New("url Parsing failed for list_fqdn_filter_tag_source_ip_filters: " + err.Error())
+	}
+
+	listGws, err := c.ListGws(fqdn)
+	if err != nil {
+		return nil, errors.New("failed for list_fqdn_filter_tag_source_ip_filters: " + err.Error())
+	}
+
+	var gwFilterTagList []GwFilterTag
+
+	for i := range listGws {
+		listFQDNFilterTagSourceIpFilters := url.Values{}
+		listFQDNFilterTagSourceIpFilters.Add("CID", c.CID)
+		listFQDNFilterTagSourceIpFilters.Add("action", "list_fqdn_filter_tag_source_ip_filters")
+		listFQDNFilterTagSourceIpFilters.Add("tag_name", fqdn.FQDNTag)
+		listFQDNFilterTagSourceIpFilters.Add("gateway_name", listGws[i])
+
+		Url.RawQuery = listFQDNFilterTagSourceIpFilters.Encode()
+		resp, err := c.Get(Url.String(), nil)
+		if err != nil {
+			return nil, errors.New("HTTP Get list_fqdn_filter_tag_source_ip_filters failed: " + err.Error())
+		}
+		var data ResultListSourceIPResp
+		if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+			return nil, errors.New("Json Decode list_fqdn_filter_tag_source_ip_filters failed: " + err.Error())
+		}
+		if !data.Return {
+			return nil, errors.New("Rest API list_fqdn_filter_tag_source_ip_filters Get failed: " + data.Reason)
+		}
+
+		var gwFilterTag GwFilterTag
+		gwFilterTag.Name = listGws[i]
+		sourceIPs := make([]string, 0)
+		for j := range data.Results.ConfiguredIPs {
+			sourceIPs = append(sourceIPs, strings.Split(data.Results.ConfiguredIPs[j], "~~")[0])
+		}
+		gwFilterTag.SourceIPList = sourceIPs
+		gwFilterTagList = append(gwFilterTagList, gwFilterTag)
+	}
+
+	fqdn.GwFilterTagList = gwFilterTagList
 	return fqdn, nil
 }
