@@ -14,9 +14,6 @@ func resourceAviatrixFQDNMigrateState(
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AVIATRIX FQDN State v0; migrating to v1")
-
-		log.Printf("zjin000: nothing wrong here")
-
 		return migrateFQDNStateV0toV1(is)
 	default:
 		return is, fmt.Errorf("unexpected schema version: %d", v)
@@ -28,9 +25,6 @@ func migrateFQDNStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceSta
 		log.Println("[DEBUG] Empty FQDN State; nothing to migrate.")
 		return is, nil
 	}
-
-	log.Printf("zjin001: nothing wrong here")
-
 	log.Printf("[DEBUG] Attributes before migration: %#v", is.Attributes)
 
 	is.Attributes["gw_filter_tag_list.#"] = is.Attributes["gw_list.#"]
