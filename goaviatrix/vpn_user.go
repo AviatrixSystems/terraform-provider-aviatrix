@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/url"
 )
 
@@ -23,6 +22,16 @@ type VPNUserListResp struct {
 	Return  bool      `json:"return"`
 	Results []VPNUser `json:"results"`
 	Reason  string    `json:"reason"`
+}
+
+type VPNUserResp struct {
+	Return  bool        `json:"return"`
+	Results VPNUserInfo `json:"results"`
+	Reason  string      `json:"reason"`
+}
+
+type VPNUserInfo struct {
+	VpnUser VPNUser `json:"vpn_user"`
 }
 
 func (c *Client) CreateVPNUser(vpnUser *VPNUser) error {
@@ -54,34 +63,65 @@ func (c *Client) CreateVPNUser(vpnUser *VPNUser) error {
 	return nil
 }
 
+//func (c *Client) GetVPNUser(vpnUser *VPNUser) (*VPNUser, error) {
+//	Url, err := url.Parse(c.baseURL)
+//	if err != nil {
+//		return nil, errors.New(("url Parsing failed for list_vpn_users") + err.Error())
+//	}
+//	listVpnUsers := url.Values{}
+//	listVpnUsers.Add("CID", c.CID)
+//	listVpnUsers.Add("action", "list_vpn_users")
+//	Url.RawQuery = listVpnUsers.Encode()
+//	resp, err := c.Get(Url.String(), nil)
+//
+//	if err != nil {
+//		return nil, errors.New("HTTP Get list_vpn_users failed: " + err.Error())
+//	}
+//	var data VPNUserListResp
+//	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+//		return nil, errors.New("Json Decode list_vpn_users failed: " + err.Error())
+//	}
+//	if !data.Return {
+//		return nil, errors.New("Rest API list_vpn_users Get failed: " + data.Reason)
+//	}
+//	vuList := data.Results
+//	for i := range vuList {
+//		if vuList[i].UserName == vpnUser.UserName {
+//			return &vuList[i], nil
+//		}
+//	}
+//	log.Printf("VPNUser %s not found", vpnUser.UserName)
+//	return nil, ErrNotFound
+//}
+
 func (c *Client) GetVPNUser(vpnUser *VPNUser) (*VPNUser, error) {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return nil, errors.New(("url Parsing failed for list_vpn_users") + err.Error())
+		return nil, errors.New(("url Parsing failed for get_vpn_user_by_name") + err.Error())
 	}
-	listVpnUsers := url.Values{}
-	listVpnUsers.Add("CID", c.CID)
-	listVpnUsers.Add("action", "list_vpn_users")
-	Url.RawQuery = listVpnUsers.Encode()
+	getVpnUserByName := url.Values{}
+	getVpnUserByName.Add("CID", c.CID)
+	getVpnUserByName.Add("action", "get_vpn_user_by_name")
+	getVpnUserByName.Add("username", vpnUser.UserName)
+
+	Url.RawQuery = getVpnUserByName.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
 	if err != nil {
-		return nil, errors.New("HTTP Get list_vpn_users failed: " + err.Error())
+		return nil, errors.New("HTTP Get get_vpn_user_by_name failed: " + err.Error())
 	}
-	var data VPNUserListResp
+	var data VPNUserResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_vpn_users failed: " + err.Error())
+		return nil, errors.New("Json Decode get_vpn_user_by_name failed: " + err.Error())
 	}
 	if !data.Return {
-		return nil, errors.New("Rest API list_vpn_users Get failed: " + data.Reason)
+		return nil, errors.New("Rest API get_vpn_user_by_name Get failed: " + data.Reason)
 	}
-	vuList := data.Results
-	for i := range vuList {
-		if vuList[i].UserName == vpnUser.UserName {
-			return &vuList[i], nil
-		}
+
+	if data.Results.VpnUser.UserName != "" {
+		return &data.Results.VpnUser, nil
 	}
-	log.Printf("VPNUser %s not found", vpnUser.UserName)
+
 	return nil, ErrNotFound
 }
 
