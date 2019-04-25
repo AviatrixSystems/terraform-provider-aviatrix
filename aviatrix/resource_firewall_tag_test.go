@@ -50,17 +50,17 @@ func TestAccAviatrixFirewallTag_basic(t *testing.T) {
 func testAccFirewallTagConfigBasic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aviatrix_firewall_tag" "foo" {
-  firewall_tag = "tft-%d"
-  cidr_list = [
-                {
-                  cidr_tag_name = "a1"
-                  cidr = "10.1.0.0/24"
-                },
-                {
-                  cidr_tag_name = "b1"
-                  cidr = "10.2.0.0/24"
-                }
-              ]
+	firewall_tag = "tft-%d"
+	cidr_list = [
+	{
+		cidr_tag_name = "a1"
+		cidr = "10.1.0.0/24"
+	},
+	{
+		cidr_tag_name = "b1"
+		cidr = "10.2.0.0/24"
+	}
+	]
 }
 	`, rInt)
 }

@@ -70,8 +70,7 @@ data "aviatrix_gateway" "foo" {
 	account_name = "${aviatrix_gateway.test_gw.account_name}"
 	gw_name      = "${aviatrix_gateway.test_gw.gw_name}"
 }
-`,
-		rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"))
 }
 

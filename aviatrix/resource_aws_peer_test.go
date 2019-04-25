@@ -68,21 +68,21 @@ func TestAvxAWSPeer_basic(t *testing.T) {
 func testAvxAWSPeerConfigBasic(rInt int, vpcID1 string, vpcID2 string, region1 string, region2 string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account" {
-  account_name       = "tf-testing-%d"
-  cloud_type         = 1
-  aws_account_number = "%s"
-  aws_iam            = "false"
-  aws_access_key     = "%s"
-  aws_secret_key     = "%s"
+	account_name       = "tf-testing-%d"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = "false"
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
 }
 
 resource "aviatrix_aws_peer" "test_aws_peer" {
-  account_name1 = "${aviatrix_account.test_account.account_name}"
-  account_name2 = "${aviatrix_account.test_account.account_name}"
-  vpc_id1       = "%s"
-  vpc_id2       = "%s"
-  vpc_reg1      = "%s"
-  vpc_reg2      = "%s"
+	account_name1 = "${aviatrix_account.test_account.account_name}"
+	account_name2 = "${aviatrix_account.test_account.account_name}"
+	vpc_id1       = "%s"
+	vpc_id2       = "%s"
+	vpc_reg1      = "%s"
+	vpc_reg2      = "%s"
 }
 	`, rInt, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		vpcID1, vpcID2, region1, region2)

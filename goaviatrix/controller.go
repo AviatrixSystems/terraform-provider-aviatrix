@@ -15,6 +15,18 @@ type ControllerHttpAccessResp struct {
 	Reason string `json:"reason"`
 }
 
+type GetSecurityGroupManagementResp struct {
+	Return  bool              `json:"return"`
+	Results SecurityGroupInfo `json:"results"`
+	Reason  string            `json:"reason"`
+}
+
+type SecurityGroupInfo struct {
+	State       string `json:"state"`
+	AccountName string `json:"account_name"`
+	Response    string `json:"response"`
+}
+
 func (c *Client) EnableHttpAccess() error {
 	url := "?CID=%s&action=config_http_access&operation=enable"
 	path := c.baseURL + fmt.Sprintf(url, c.CID)
@@ -150,4 +162,80 @@ func (c *Client) GetExceptionRuleStatus() (bool, error) {
 		return false, nil
 	}
 	return true, nil
+}
+
+func (c *Client) EnableSecurityGroupManagement(account string) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New("url Parsing failed for enable_controller_security_group_management " + err.Error())
+	}
+	enableSecurityGroupManagement := url.Values{}
+	enableSecurityGroupManagement.Add("CID", c.CID)
+	enableSecurityGroupManagement.Add("action", "enable_controller_security_group_management")
+	enableSecurityGroupManagement.Add("access_account_name", account)
+	Url.RawQuery = enableSecurityGroupManagement.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get enable_controller_security_group_management failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_controller_security_group_management failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API enable_controller_security_group_management Get failed: " + data.Reason)
+	}
+
+	return nil
+}
+
+func (c *Client) DisableSecurityGroupManagement() error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New("url Parsing failed for disable_controller_security_group_management " + err.Error())
+	}
+	disableSecurityGroupManagement := url.Values{}
+	disableSecurityGroupManagement.Add("CID", c.CID)
+	disableSecurityGroupManagement.Add("action", "disable_controller_security_group_management")
+	Url.RawQuery = disableSecurityGroupManagement.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get disable_controller_security_group_management failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_controller_security_group_management failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API disable_controller_security_group_management Get failed: " + data.Reason)
+	}
+
+	return nil
+}
+
+func (c *Client) GetSecurityGroupManagementStatus() (*SecurityGroupInfo, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return nil, errors.New("url Parsing failed for get_controller_security_group_management_status " + err.Error())
+	}
+	getSecurityGroupManagementStatus := url.Values{}
+	getSecurityGroupManagementStatus.Add("CID", c.CID)
+	getSecurityGroupManagementStatus.Add("action", "get_controller_security_group_management_status")
+	Url.RawQuery = getSecurityGroupManagementStatus.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return nil, errors.New("HTTP Get get_controller_security_group_management_status failed: " + err.Error())
+	}
+	var data GetSecurityGroupManagementResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode get_controller_security_group_management_status failed: " + err.Error())
+	}
+	if !data.Return {
+		return nil, errors.New("Rest API get_controller_security_group_management_status Get failed: " + data.Reason)
+	}
+
+	return &data.Results, nil
 }

@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"os"
 	"strings"
 	"testing"
@@ -12,6 +13,7 @@ import (
 )
 
 func TestAccAviatrixControllerConfig_basic(t *testing.T) {
+	rName := fmt.Sprintf("%s", acctest.RandString(5))
 
 	skipAcc := os.Getenv("SKIP_CONTROLLER_CONFIG")
 	if skipAcc == "yes" {
@@ -27,26 +29,38 @@ func TestAccAviatrixControllerConfig_basic(t *testing.T) {
 		CheckDestroy: testAccCheckControllerConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccControllerConfigBasic(),
+				Config: testAccControllerConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControllerConfigExists(resourceName),
-					resource.TestCheckResourceAttr(
-						resourceName, "http_access", "true"),
-					resource.TestCheckResourceAttr(
-						resourceName, "fqdn_exception_rule", "false"),
+					resource.TestCheckResourceAttr(resourceName, "sg_management_account_name",
+						fmt.Sprintf("tfa-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "fqdn_exception_rule", "false"),
+					resource.TestCheckResourceAttr(resourceName, "http_access", "true"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_management", "true"),
 				),
 			},
 		},
 	})
 }
 
-func testAccControllerConfigBasic() string {
+func testAccControllerConfigBasic(rName string) string {
 	return fmt.Sprintf(`
-resource "aviatrix_controller_config" "test_controller_config" {
-	http_access         = true
-	fqdn_exception_rule = false
+resource "aviatrix_account" "test_account" {
+    account_name       = "tfa-%s"
+    cloud_type         = 1
+    aws_account_number = "%s"
+    aws_iam            = "false"
+    aws_access_key     = "%s"
+    aws_secret_key     = "%s"
 }
-	`)
+
+resource "aviatrix_controller_config" "test_controller_config" {
+	sg_management_account_name = "${aviatrix_account.test_account.account_name}"
+	fqdn_exception_rule 	   = false
+	http_access         	   = true
+	security_group_management  = true
+}
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"))
 }
 
 func testAccCheckControllerConfigExists(n string) resource.TestCheckFunc {
@@ -64,6 +78,7 @@ func testAccCheckControllerConfigExists(n string) resource.TestCheckFunc {
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
 			return fmt.Errorf("controller config ID not found")
 		}
+
 		return nil
 	}
 }
