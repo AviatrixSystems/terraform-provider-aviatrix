@@ -51,7 +51,6 @@ func TestAccFQDN_basic(t *testing.T) {
 
 func testAccFQDNConfigBasic(rName string) string {
 	return fmt.Sprintf(`
-
 resource "aviatrix_account" "test" {
     account_name = "tfa-%s"
 	cloud_type = 1
@@ -90,7 +89,7 @@ resource "aviatrix_fqdn" "foo" {
 	}
 	]
 }
-`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"))
 }
 

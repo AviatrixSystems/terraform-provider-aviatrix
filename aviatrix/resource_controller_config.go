@@ -162,22 +162,6 @@ func resourceControllerConfigUpdate(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-// Returns to default controller configuration
 func resourceControllerConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
-	d.Set("http_access", false)
-	err := client.DisableHttpAccess()
-	if err != nil {
-		log.Printf("[ERROR] Failed to disable http access on controller %s", d.Id())
-		return err
-	}
-
-	d.Set("fqdn_exception_rule", true)
-	err = client.EnableExceptionRule()
-	if err != nil {
-		log.Printf("[ERROR] Failed to enable exception rule on controller %s", d.Id())
-		return err
-	}
-
 	return nil
 }

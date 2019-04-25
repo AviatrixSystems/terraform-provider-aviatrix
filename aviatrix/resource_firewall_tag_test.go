@@ -62,7 +62,7 @@ resource "aviatrix_firewall_tag" "foo" {
                 }
               ]
 }
-`, rInt)
+	`, rInt)
 }
 
 func testAccCheckFirewallTagExists(n string, firewallTag *goaviatrix.FirewallTag) resource.TestCheckFunc {

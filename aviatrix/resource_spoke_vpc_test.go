@@ -117,24 +117,24 @@ func testAccSpokeGwConfigAWS(rName string) string {
 	return fmt.Sprintf(`
 
 resource "aviatrix_account" "test" {
-  account_name = "tfa-aws-%s"
-  cloud_type = 1
-  aws_account_number = "%s"
-  aws_iam = "false"
-  aws_access_key = "%s"
-  aws_secret_key = "%s"
+	account_name 	   = "tfa-aws-%s"
+	cloud_type 		   = 1
+	aws_account_number = "%s"
+	aws_iam 		   = "false"
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
 }
 
 resource "aviatrix_spoke_vpc" "test_spoke_vpc_aws" {
-  cloud_type = 1
-  account_name = "${aviatrix_account.test.account_name}"
-  gw_name = "tfg-aws-%[1]s"
-  vpc_id = "%[5]s"
-  vpc_reg = "%[6]s"
-  vpc_size = "t2.micro"
-  subnet = "%[7]s"
-  enable_nat = "no"
-  tag_list = ["k1:v1","k2:v2"]
+	cloud_type   = 1
+	account_name = "${aviatrix_account.test.account_name}"
+	gw_name 	 = "tfg-aws-%[1]s"
+	vpc_id 	     = "%[5]s"
+	vpc_reg 	 = "%[6]s"
+	vpc_size 	 = "t2.micro"
+	subnet 		 = "%[7]s"
+	enable_nat   = "no"
+	tag_list     = ["k1:v1","k2:v2"]
 }
 
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
@@ -145,21 +145,21 @@ func testAccSpokeGwConfigGCP(rName string) string {
 	return fmt.Sprintf(`
 
 resource "aviatrix_account" "test" {
-  account_name = "tfa-gcp-%s"
-  cloud_type = 4
-  gcloud_project_id = "%s"
-  gcloud_project_credentials_filepath = "%s"
+	account_name 						= "tfa-gcp-%s"
+	cloud_type 							= 4
+	gcloud_project_id 					= "%s"
+	gcloud_project_credentials_filepath = "%s"
 }
 
 resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
-  cloud_type = 4
-  account_name = "${aviatrix_account.test.account_name}"
-  gw_name = "tfg-gcp-%[1]s"
-  vpc_id = "%[4]s"
-  vpc_reg = "%[5]s"
-  vpc_size = "f1-micro"
-  subnet = "%[6]s"
-  enable_nat = "no"
+	cloud_type   = 4
+	account_name = "${aviatrix_account.test.account_name}"
+	gw_name 	 = "tfg-gcp-%[1]s"
+	vpc_id 	     = "%[4]s"
+	vpc_reg      = "%[5]s"
+	vpc_size     = "f1-micro"
+	subnet       = "%[6]s"
+	enable_nat   = "no"
 }
 
         `, rName, os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"),
@@ -168,28 +168,26 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
 
 func testAccSpokeGwConfigARM(rName string) string {
 	return fmt.Sprintf(`
-
 resource "aviatrix_account" "test" {
-  account_name = "tfa-arm-%s"
-  cloud_type = 8
-  arm_subscription_id = "%s"
-  arm_directory_id = "%s"
-  arm_application_id = "%s"
-  arm_application_key = "%s"
+	account_name 		= "tfa-arm-%s"
+	cloud_type 			= 8
+	arm_subscription_id = "%s"
+	arm_directory_id    = "%s"
+	arm_application_id  = "%s"
+	arm_application_key = "%s"
 }
 
 resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
-  cloud_type = 8
-  account_name = "${aviatrix_account.test.account_name}"
-  gw_name = "tfg-arm-%[1]s"
-  vnet_and_resource_group_names = "%[6]s"
-  vpc_reg = "%[7]s"
-  vpc_size = "Standard_D2"
-  subnet = "%[8]s"
-  enable_nat = "no"
+	cloud_type 					  = 8
+	account_name 				  = "${aviatrix_account.test.account_name}"
+	gw_name 					  = "tfg-arm-%[1]s"
+	vnet_and_resource_group_names = "%[6]s"
+	vpc_reg 					  = "%[7]s"
+	vpc_size 					  = "Standard_D2"
+	subnet 						  = "%[8]s"
+	enable_nat 					  = "no"
 }
-
-        `, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
+	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
 		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),
 		os.Getenv("ARM_VNET_ID"), os.Getenv("ARM_REGION"), os.Getenv("ARM_SUBNET"))
 }

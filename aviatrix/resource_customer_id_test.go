@@ -50,12 +50,10 @@ func TestAccAviatrixCustomerID_basic(t *testing.T) {
 
 func testAccCustomerIDConfigBasic(customerId string) string {
 	return fmt.Sprintf(`
-
 resource"aviatrix_customer_id" "test_customer_id" {
     customer_id = "%s"
 }
-
-`, customerId)
+	`, customerId)
 }
 
 func testAccCheckCustomerIDExists(n string) resource.TestCheckFunc {

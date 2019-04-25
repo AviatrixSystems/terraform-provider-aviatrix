@@ -113,7 +113,6 @@ func TestAccAviatrixTransitGw_basic(t *testing.T) {
 
 func testAccTransitGwConfigBasicAws(rName string) string {
 	return fmt.Sprintf(`
-
 resource "aviatrix_account" "test_aws" {
     account_name       = "tfa-%s"
     cloud_type         = 1
@@ -139,7 +138,6 @@ resource "aviatrix_transit_vpc" "test_transit_vpc_aws" {
 
 func testAccTransitGwConfigBasicArm(rName string) string {
 	return fmt.Sprintf(`
-
 resource "aviatrix_account" "test_arm" {
     account_name        = "tfaz-%s"
     cloud_type          = 8
