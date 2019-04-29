@@ -65,17 +65,49 @@ func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix VGWConn: %s", err)
 	}
-	d.SetId(vgwConn.ConnName)
-
-	return nil
+	d.SetId(vgwConn.ConnName + "~" + vgwConn.VPCId)
+	return resourceAviatrixVGWConnRead(d, meta)
 }
 
 func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*goaviatrix.Client)
+
+	connName := d.Get("conn_name").(string)
+	vpcID := d.Get("vpc_id").(string)
+	if connName == "" || vpcID == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import, no connection name received. Import Id is %s", id)
+		d.Set("conn_name", strings.Split(id, "~")[0])
+		d.Set("vpc_id", strings.Split(id, "~")[1])
+		d.SetId(id)
+	}
+
+	vgwConn := &goaviatrix.VGWConn{
+		ConnName: d.Get("conn_name").(string),
+		VPCId:    d.Get("vpc_id").(string),
+	}
+	vConn, err := client.GetVGWConnDetail(vgwConn)
+	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("couldn't find Aviatrix VGW Connection: %s", err)
+	}
+	log.Printf("[INFO] Found Aviatrix VGW Connection: %#v", vConn)
+
+	d.Set("conn_name", vConn.ConnName)
+	d.Set("gw_name", vConn.GwName)
+	d.Set("vpc_id", vConn.VPCId)
+	d.Set("bgp_vgw_id", vConn.BgpVGWId)
+	d.Set("bgp_local_as_num", vConn.BgpLocalAsNum)
+
+	d.SetId(vConn.ConnName + "~" + vConn.VPCId)
 	return nil
 }
 
 func resourceAviatrixVGWConnUpdate(d *schema.ResourceData, meta interface{}) error {
-	return fmt.Errorf("aviatrix VGW Connection cannot be updated - delete and create new one")
+	return fmt.Errorf("aviatrix VGW Connection cannot be updated - delete and create a new one")
 }
 
 func resourceAviatrixVGWConnDelete(d *schema.ResourceData, meta interface{}) error {

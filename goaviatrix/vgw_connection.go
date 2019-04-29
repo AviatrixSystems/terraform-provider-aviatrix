@@ -29,6 +29,24 @@ type VGWConnList struct {
 	Reason  string    `json:"reason"`
 }
 
+type VGWConnDetailResp struct {
+	Return  bool          `json:"return"`
+	Results VGWConnDetail `json:"results"`
+	Reason  string        `json:"reason"`
+}
+
+type VGWConnDetail struct {
+	Connections ConnectionDetail `json:"connections"`
+}
+
+type ConnectionDetail struct {
+	ConnName      []string `json:"name"`
+	GwName        []string `json:"gw_name"`
+	VPCId         []string `json:"vpc_id"`
+	BgpVGWId      []string `json:"bgp_vgw_id"`
+	BgpLocalAsNum []string `json:"bgp_local_asn_number"`
+}
+
 func (c *Client) CreateVGWConn(vgwConn *VGWConn) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
@@ -122,4 +140,39 @@ func (c *Client) DeleteVGWConn(vgwConn *VGWConn) error {
 		return errors.New("Rest API disconnect_transit_gw_from_vgw Get failed: " + data.Reason)
 	}
 	return nil
+}
+
+func (c *Client) GetVGWConnDetail(vgwConn *VGWConn) (*VGWConn, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return nil, errors.New(("url Parsing failed for get_site2cloud_conn_detail") + err.Error())
+	}
+	listVgwConnections := url.Values{}
+	listVgwConnections.Add("CID", c.CID)
+	listVgwConnections.Add("action", "get_site2cloud_conn_detail")
+	listVgwConnections.Add("vpc_id", vgwConn.VPCId)
+	listVgwConnections.Add("conn_name", vgwConn.ConnName)
+	Url.RawQuery = listVgwConnections.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return nil, errors.New("HTTP Get get_site2cloud_conn_detail failed: " + err.Error())
+	}
+	var data VGWConnDetailResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode get_site2cloud_conn_detail failed: " + err.Error())
+	}
+	if !data.Return {
+		return nil, errors.New("Rest API get_site2cloud_conn_detail Get failed: " + data.Reason)
+	}
+
+	if data.Results.Connections.ConnName[0] != "" {
+		vgwConn.VPCId = data.Results.Connections.VPCId[0]
+		vgwConn.GwName = data.Results.Connections.GwName[0]
+		vgwConn.BgpVGWId = data.Results.Connections.BgpVGWId[0]
+		vgwConn.BgpLocalAsNum = data.Results.Connections.BgpLocalAsNum[0]
+		return vgwConn, nil
+	}
+
+	return nil, ErrNotFound
 }
