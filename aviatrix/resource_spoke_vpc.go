@@ -415,7 +415,12 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 	} else if d.HasChange("tag_list") && gateway.CloudType != 1 {
 		return fmt.Errorf("adding tags is only supported for aws, cloud_type must be set to 1")
 	}
+
+	//Get primary gw size if vpc_size changed, to be used later on for ha gateway size update
+	primaryGwSize := d.Get("vpc_size").(string)
 	if d.HasChange("vpc_size") {
+		old, _ := d.GetChange("vpc_size")
+		primaryGwSize = old.(string)
 		gateway.GwSize = d.Get("vpc_size").(string)
 		err := client.UpdateGateway(gateway)
 		if err != nil {
@@ -424,6 +429,7 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 		d.SetPartial("vpc_size")
 	}
 
+	newHaGwEnabled := false
 	if d.HasChange("ha_subnet") {
 		spokeGateway := &goaviatrix.SpokeVpc{
 			GwName:    d.Get("gw_name").(string),
@@ -438,6 +444,7 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 			if err != nil {
 				return fmt.Errorf("failed to enable HA Aviatrix SpokeVpc: %s", err)
 			}
+			newHaGwEnabled = true
 		} else if n == "" {
 			//Ha configuration has been deleted
 			err := client.DeleteGateway(haGateway)
@@ -461,10 +468,14 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 		d.SetPartial("ha_subnet")
 	}
-	if d.HasChange("ha_gw_size") {
-		originalGwSize := d.Get("vpc_size").(string)
-		haGateway.GwSize = d.Get("ha_gw_size").(string)
-		if haGateway.GwSize != originalGwSize {
+	if d.HasChange("ha_gw_size") || newHaGwEnabled {
+		newHaGwSize := d.Get("ha_gw_size").(string)
+		if !newHaGwEnabled || (newHaGwSize != primaryGwSize) {
+			// MODIFIES HA GW SIZE if
+			// Ha gateway wasn't newly configured
+			// OR
+			// newly configured Ha gateway is set to be different size than primary gateway
+			// (when ha gateway is enabled, it's size is by default the same as primary gateway)
 			_, err := client.GetGateway(haGateway)
 			if err != nil {
 				if err == goaviatrix.ErrNotFound {
@@ -475,6 +486,7 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 				return fmt.Errorf("couldn't find Aviatrix Spoke HA Gateway while trying to update HA Gw "+
 					"size: %s", err)
 			}
+			haGateway.GwSize = d.Get("ha_gw_size").(string)
 			if haGateway.GwSize == "" {
 				return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
 					"ha_subnet is set. Example: t2.micro")
