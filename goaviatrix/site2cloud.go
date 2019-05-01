@@ -35,6 +35,13 @@ type Site2Cloud struct {
 	RemoteCidr          string `form:"remote_cidr,omitempty"`
 	RemoteSubnetVirtual string `form:"virtual_remote_subnet_cidr,omitempty" json:"virtual_remote_subnet_cidr,omitempty"`
 	LocalSubnetVirtual  string `form:"virtual_local_subnet_cidr,omitempty" json:"virtual_local_subnet_cidr,omitempty"`
+	AlgorithmsEnabled   bool
+	Phase1Auth          string `form:"phase1_auth,omitempty"`
+	Phase1DhGroups      string `form:"phase1_dh_group,omitempty"`
+	Phase1Encrption     string `form:"phase1_encryption,omitempty"`
+	Phase2Auth          string `form:"phase2_auth,omitempty"`
+	Phase2DhGroups      string `form:"phase2_dh_group,omitempty"`
+	Phase2Encrption     string `form:"phase2_encryption,omitempty"`
 }
 
 type EditSite2Cloud struct {
@@ -58,28 +65,29 @@ type Site2CloudConnList struct {
 }
 
 type EditSite2CloudConnDetail struct {
-	VpcID        []string     `json:"vpc_id,omitempty"`
-	TunnelName   []string     `json:"name,omitempty"`
-	ConnType     string       `json:"type,omitempty"`
-	TunnelType   []string     `json:"tunnel_type,omitempty"`
-	GwName       []string     `json:"gw_name,omitempty"`
-	BackupGwName []string     `json:"backup_gateway_name,omitempty"`
-	RemoteGwIP   []string     `json:"remote_gateway_ip,omitempty"`
-	RemoteGwIP2  []string     `json:"backup_remote_gateway_ip,omitempty"`
-	Tunnels      []TunnelInfo `json:"tunnels,omitempty"`
+	VpcID               []string      `json:"vpc_id,omitempty"`
+	TunnelName          []string      `json:"name,omitempty"`
+	ConnType            string        `json:"type,omitempty"`
+	TunnelType          []string      `json:"tunnel_type,omitempty"`
+	GwName              []string      `json:"gw_name,omitempty"`
+	BackupGwName        []string      `json:"backup_gateway_name,omitempty"`
+	RemoteGwIP          []string      `json:"remote_gateway_ip,omitempty"`
+	RemoteGwIP2         []string      `json:"backup_remote_gateway_ip,omitempty"`
+	Tunnels             []TunnelInfo  `json:"tunnels,omitempty"`
+	RemoteSubnet        string        `json:"real_remote_cidr,omitempty"`
+	LocalSubnet         string        `json:"real_local_cidr,omitempty"`
+	RemoteCidr          string        `json:"remote_cidr,omitempty"`
+	LocalCidr           string        `json:"local_cidr,omitempty"`
+	HAEnabled           string        `json:"ha_status,omitempty"`
+	PeerType            string        `json:"peer_type,omitempty"`
+	RemoteSubnetVirtual string        `json:"virt_remote_cidr,omitempty"`
+	LocalSubnetVirtual  string        `json:"virt_local_cidr,omitempty"`
+	Algorithm           AlgorithmInfo `json:"algorithm,omitempty"`
 	//PreSharedKey        string `json:"pre_shared_key,omitempty"`
 	//BackupPreSharedKey  string `json:"backup_pre_shared_key,omitempty"`
-	RemoteSubnet string `json:"real_remote_cidr,omitempty"`
-	LocalSubnet  string `json:"real_local_cidr,omitempty"`
-	RemoteCidr   string `json:"remote_cidr,omitempty"`
-	LocalCidr    string `json:"local_cidr,omitempty"`
-	HAEnabled    string `json:"ha_status,omitempty"`
-	PeerType     string `json:"peer_type,omitempty"`
 	//SslServerPool       string `json:"ssl_server_pool,omitempty"`
 	//NetworkType         string `json:"network_type,omitempty"`
 	//CloudSubnetCidr     string `json:"cloud_subnet_cidr,omitempty"`
-	RemoteSubnetVirtual string `json:"virt_remote_cidr,omitempty"`
-	LocalSubnetVirtual  string `json:"virt_local_cidr,omitempty"`
 }
 
 type Site2CloudConnDetailResp struct {
@@ -99,6 +107,15 @@ type TunnelInfo struct {
 	PeerIP       string `json:"peer_ip"`
 	GwName       string `json:"gw_name"`
 	TunnelStatus string `json:"tunnel_status"`
+}
+
+type AlgorithmInfo struct {
+	Phase1Auth      []string `json:"ph1_auth"`
+	Phase1DhGroups  []string `json:"ph1_dh"`
+	Phase1Encrption []string `json:"ph1_encr"`
+	Phase2Auth      []string `json:"ph2_auth"`
+	Phase2DhGroups  []string `json:"ph2_dh"`
+	Phase2Encrption []string `json:"ph2_encr"`
 }
 
 func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
@@ -173,6 +190,7 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 	if !data.Return {
 		return nil, errors.New("Rest API get_site2cloud_conn_detail Get failed: " + data.Reason)
 	}
+
 	s2cConnDetail := data.Results.Connections
 	if len(s2cConnDetail.TunnelName) != 0 {
 		site2cloud.GwName = s2cConnDetail.GwName[0]
@@ -196,6 +214,18 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 				site2cloud.BackupGwName = s2cConnDetail.Tunnels[i].GwName
 				site2cloud.RemoteGwIP2 = s2cConnDetail.Tunnels[i].PeerIP
 			}
+		}
+
+		site2cloud.Phase1Auth = s2cConnDetail.Algorithm.Phase1Auth[0]
+		site2cloud.Phase1DhGroups = s2cConnDetail.Algorithm.Phase1DhGroups[0]
+		site2cloud.Phase1Encrption = s2cConnDetail.Algorithm.Phase1Encrption[0]
+		site2cloud.Phase2Auth = s2cConnDetail.Algorithm.Phase2Auth[0]
+		site2cloud.Phase2DhGroups = s2cConnDetail.Algorithm.Phase2DhGroups[0]
+		site2cloud.Phase2Encrption = s2cConnDetail.Algorithm.Phase2Encrption[0]
+		if s2cConnDetail.Algorithm.Phase1Auth[0] != "" {
+			site2cloud.AlgorithmsEnabled = true
+		} else {
+			site2cloud.AlgorithmsEnabled = false
 		}
 		return site2cloud, nil
 	}
@@ -244,6 +274,35 @@ func (c *Client) DeleteSite2Cloud(site2cloud *Site2Cloud) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API delete_site2cloud_connection Post failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) Site2CloudAlgorithmCheck(site2cloud *Site2Cloud) error {
+	Phase1AuthList := []string{"SHA-1", "SHA-256", "SHA-384", "SHA-512"}
+	Phase1DhGroupsList := []string{"1", "2", "5", "14", "15", "16", "17", "18"}
+	Phase1EncrptionList := []string{"AES-128-CBC", "AES-192-CBC", "AES-256-CBC", "3DES"}
+	Phase2AuthList := []string{"HMAC-SHA-1", "HMAC-SHA-256", "HMAC-SHA-384", "HMAC-SHA-512", "NO-AUTH"}
+	Phase2DhGroupsList := []string{"1", "2", "5", "14", "15", "16", "17", "18"}
+	Phase2EncrptionList := []string{"AES-128-CBC", "AES-128-GCM-64", "AES-128-GCM-96", "AES-128-GCM-128", "AES-128-CBC", "AES-192-CBC", "AES-256-CBC", "3DES", "NULL-ENCR"}
+
+	if !Contains(Phase1AuthList, site2cloud.Phase1Auth) {
+		return errors.New("invalid value for phase_1_authentication")
+	}
+	if !Contains(Phase1DhGroupsList, site2cloud.Phase1DhGroups) {
+		return errors.New("invalid value for phase_1_dh_groups")
+	}
+	if !Contains(Phase1EncrptionList, site2cloud.Phase1Encrption) {
+		return errors.New("invalid value for phase_1_encryption")
+	}
+	if !Contains(Phase2AuthList, site2cloud.Phase2Auth) {
+		return errors.New("invalid value for phase_2_authentication")
+	}
+	if !Contains(Phase2DhGroupsList, site2cloud.Phase2DhGroups) {
+		return errors.New("invalid value for phase_2_dh_groups")
+	}
+	if !Contains(Phase2EncrptionList, site2cloud.Phase2Encrption) {
+		return errors.New("invalid value for phase_2_encryption")
 	}
 	return nil
 }

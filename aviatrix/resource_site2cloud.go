@@ -117,6 +117,41 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Optional:    true,
 				Description: "Local Subnet CIDR (Virtual).",
 			},
+			"algorithms_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "",
+			},
+			"phase_1_authentication": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "",
+			},
+			"phase_2_authentication": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "",
+			},
+			"phase_1_dh_groups": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "",
+			},
+			"phase_2_dh_groups": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "",
+			},
+			"phase_1_encryption": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "",
+			},
+			"phase_2_encryption": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "",
+			},
 		},
 	}
 }
@@ -151,6 +186,58 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	} else if s2c.ConnType == "unmapped" && (s2c.RemoteSubnetVirtual != "" || s2c.LocalSubnetVirtual != "") {
 		return fmt.Errorf("'remote_subnet_virtual' and 'local_subnet_virtual' both should be empty for " +
 			"connection type: ummapped")
+	}
+
+	s2c.Phase1Auth = d.Get("phase_1_authentication").(string)
+	s2c.Phase1DhGroups = d.Get("phase_1_dh_groups").(string)
+	s2c.Phase1Encrption = d.Get("phase_1_encryption").(string)
+	s2c.Phase2Auth = d.Get("phase_2_authentication").(string)
+	s2c.Phase2DhGroups = d.Get("phase_2_dh_groups").(string)
+	s2c.Phase2Encrption = d.Get("phase_2_encryption").(string)
+
+	algorithmEnabled := d.Get("algorithms_enabled").(bool)
+	if algorithmEnabled {
+		if s2c.Phase1Auth == "" {
+			return fmt.Errorf("invalid phase_1_authentication")
+		}
+		if s2c.Phase1DhGroups == "" {
+			return fmt.Errorf("invalid phase_1_dh_groups")
+		}
+		if s2c.Phase1Encrption == "" {
+			return fmt.Errorf("invalid phase_1_encryption")
+		}
+		if s2c.Phase2Auth == "" {
+			return fmt.Errorf("invalid phase_2_authentication")
+		}
+		if s2c.Phase2DhGroups == "" {
+			return fmt.Errorf("invalid phase_2_dh_groups")
+		}
+		if s2c.Phase2Encrption == "" {
+			return fmt.Errorf("invalid phase_2_encryption")
+		}
+		err := client.Site2CloudAlgorithmCheck(s2c)
+		if err != nil {
+			return fmt.Errorf("algorithm values check failed: %s", err)
+		}
+	} else {
+		if s2c.Phase1Auth != "" {
+			return fmt.Errorf("alorightm is off, phase_1_authentication should be empty")
+		}
+		if s2c.Phase1DhGroups != "" {
+			return fmt.Errorf("alorightm is off, phase_1_dh_groups should be empty")
+		}
+		if s2c.Phase1Encrption != "" {
+			return fmt.Errorf("alorightm is off, phase_1_encryption should be empty")
+		}
+		if s2c.Phase2Auth != "" {
+			return fmt.Errorf("alorightm is off, phase_2_authentication should be empty")
+		}
+		if s2c.Phase2DhGroups != "" {
+			return fmt.Errorf("alorightm is off, phase_2_dh_groups should be empty")
+		}
+		if s2c.Phase2Encrption != "" {
+			return fmt.Errorf("alorightm is off, phase_2_encryption should be empty")
+		}
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Site2Cloud: %#v", s2c)
@@ -213,9 +300,22 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 			d.Set("primary_cloud_gateway_name", s2c.GwName)
 		}
 
-		d.Set("remote_subnet_virtual", s2c.RemoteSubnetVirtual)
-		d.Set("local_subnet_virtual", s2c.LocalSubnetVirtual)
 		d.Set("connection_type", s2c.ConnType)
+		if s2c.ConnType == "mapped" {
+			d.Set("remote_subnet_virtual", s2c.RemoteSubnetVirtual)
+			d.Set("local_subnet_virtual", s2c.LocalSubnetVirtual)
+		}
+
+		d.Set("algorithms_enabled", s2c.AlgorithmsEnabled)
+
+		if s2c.AlgorithmsEnabled {
+			d.Set("phase_1_authentication", s2c.Phase1Auth)
+			d.Set("phase_2_authentication", s2c.Phase2Auth)
+			d.Set("phase_1_dh_groups", s2c.Phase1DhGroups)
+			d.Set("phase_2_dh_groups", s2c.Phase2DhGroups)
+			d.Set("phase_1_encryption", s2c.Phase1Encrption)
+			d.Set("phase_2_encryption", s2c.Phase2Encrption)
+		}
 	}
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", d.Get("connection_name").(string), site2cloud)
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud connection_type: [%s]", d.Get("connection_type").(string))
@@ -266,6 +366,27 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 	if d.HasChange("backup_pre_shared_key") {
 		return fmt.Errorf("updating backup_pre_shared_key is not allowed")
+	}
+	if d.HasChange("algorithms_enabled") {
+		return fmt.Errorf("updating algorithms_enabled is not allowed")
+	}
+	if d.HasChange("phase_1_authentication") {
+		return fmt.Errorf("updating phase_1_authentication is not allowed")
+	}
+	if d.HasChange("phase_2_authentication") {
+		return fmt.Errorf("updating phase_2_authentication is not allowed")
+	}
+	if d.HasChange("phase_1_dh_groups") {
+		return fmt.Errorf("updating phase_1_dh_groups is not allowed")
+	}
+	if d.HasChange("phase_2_dh_groups") {
+		return fmt.Errorf("updating phase_2_dh_groups is not allowed")
+	}
+	if d.HasChange("phase_1_encryption") {
+		return fmt.Errorf("updating phase_1_encryption is not allowed")
+	}
+	if d.HasChange("phase_2_encryption") {
+		return fmt.Errorf("updating phase_2_encryption is not allowed")
 	}
 
 	log.Printf("[INFO] Updating Aviatrix Site2Cloud: %#v", editSite2cloud)
