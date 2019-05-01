@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -62,6 +63,7 @@ func resourceControllerConfigCreate(d *schema.ResourceData, meta interface{}) er
 			log.Printf("[INFO] Http Access is already enabled")
 		} else {
 			err = client.EnableHttpAccess()
+			time.Sleep(10 * time.Second)
 		}
 	} else {
 		curStatus, _ := client.GetHttpAccessEnabled()
@@ -69,6 +71,7 @@ func resourceControllerConfigCreate(d *schema.ResourceData, meta interface{}) er
 			log.Printf("[INFO] Http Access is already disabled")
 		} else {
 			err = client.DisableHttpAccess()
+			time.Sleep(10 * time.Second)
 		}
 	}
 	if err != nil {
@@ -179,12 +182,14 @@ func resourceControllerConfigUpdate(d *schema.ResourceData, meta interface{}) er
 		httpAccess := d.Get("http_access").(bool)
 		if httpAccess {
 			err := client.EnableHttpAccess()
+			time.Sleep(10 * time.Second)
 			if err != nil {
 				log.Printf("[ERROR] Failed to enable http access on controller %s", d.Id())
 				return err
 			}
 		} else {
 			err := client.DisableHttpAccess()
+			time.Sleep(10 * time.Second)
 			if err != nil {
 				log.Printf("[ERROR] Failed to disable http access on controller %s", d.Id())
 				return err
@@ -239,6 +244,7 @@ func resourceControllerConfigDelete(d *schema.ResourceData, meta interface{}) er
 	curStatusHttp, _ := client.GetHttpAccessEnabled()
 	if curStatusHttp != "Disabled" {
 		err := client.DisableHttpAccess()
+		time.Sleep(10 * time.Second)
 		if err != nil {
 			log.Printf("[ERROR] Failed to disable http access on controller %s", d.Id())
 			return err

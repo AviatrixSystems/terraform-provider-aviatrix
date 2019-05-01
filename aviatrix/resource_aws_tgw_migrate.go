@@ -2,8 +2,9 @@ package aviatrix
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform/terraform"
 	"log"
+
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func resourceAviatrixAWSTgwMigrateState(
