@@ -142,9 +142,15 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		LocalSubnetVirtual:  d.Get("local_subnet_virtual").(string),
 	}
 
-	if s2c.ConnType == "Mapped" && (s2c.RemoteSubnetVirtual == "" || s2c.LocalSubnetVirtual == "") {
+	if s2c.ConnType != "mapped" && s2c.ConnType != "unmapped" {
+		return fmt.Errorf("'connection_type' should be 'mapped' or 'unmapped'")
+	}
+	if s2c.ConnType == "mapped" && (s2c.RemoteSubnetVirtual == "" || s2c.LocalSubnetVirtual == "") {
 		return fmt.Errorf("'remote_subnet_virtual' and 'local_subnet_virtual' are both required for " +
 			"connection type: mapped")
+	} else if s2c.ConnType == "unmapped" && (s2c.RemoteSubnetVirtual != "" || s2c.LocalSubnetVirtual != "") {
+		return fmt.Errorf("'remote_subnet_virtual' and 'local_subnet_virtual' both should be empty for " +
+			"connection type: ummapped")
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Site2Cloud: %#v", s2c)

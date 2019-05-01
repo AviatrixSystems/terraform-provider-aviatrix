@@ -58,18 +58,21 @@ type Site2CloudConnList struct {
 }
 
 type EditSite2CloudConnDetail struct {
-	VpcID        []string `json:"vpc_id,omitempty"`
-	TunnelName   []string `json:"name,omitempty"`
-	ConnType     string   `json:"type,omitempty"`
-	TunnelType   string   `json:"tunnel_type,omitempty"`
-	GwName       []string `json:"gw_name,omitempty"`
-	BackupGwName []string `json:"backup_gateway_name,omitempty"`
-	RemoteGwIP   []string `json:"remote_gateway_ip,omitempty"`
-	RemoteGwIP2  []string `json:"backup_remote_gateway_ip,omitempty"`
+	VpcID        []string     `json:"vpc_id,omitempty"`
+	TunnelName   []string     `json:"name,omitempty"`
+	ConnType     string       `json:"type,omitempty"`
+	TunnelType   []string     `json:"tunnel_type,omitempty"`
+	GwName       []string     `json:"gw_name,omitempty"`
+	BackupGwName []string     `json:"backup_gateway_name,omitempty"`
+	RemoteGwIP   []string     `json:"remote_gateway_ip,omitempty"`
+	RemoteGwIP2  []string     `json:"backup_remote_gateway_ip,omitempty"`
+	Tunnels      []TunnelInfo `json:"tunnels,omitempty"`
 	//PreSharedKey        string `json:"pre_shared_key,omitempty"`
 	//BackupPreSharedKey  string `json:"backup_pre_shared_key,omitempty"`
 	RemoteSubnet string `json:"real_remote_cidr,omitempty"`
 	LocalSubnet  string `json:"real_local_cidr,omitempty"`
+	RemoteCidr   string `json:"remote_cidr,omitempty"`
+	LocalCidr    string `json:"local_cidr,omitempty"`
 	HAEnabled    string `json:"ha_status,omitempty"`
 	PeerType     string `json:"peer_type,omitempty"`
 	//SslServerPool       string `json:"ssl_server_pool,omitempty"`
@@ -87,6 +90,15 @@ type Site2CloudConnDetailResp struct {
 
 type Site2CloudConnDetailList struct {
 	Connections EditSite2CloudConnDetail `json:"connections"`
+}
+
+type TunnelInfo struct {
+	Status       string `json:"status"`
+	IPAddr       string `json:"ip_addr"`
+	Name         string `json:"name"`
+	PeerIP       string `json:"peer_ip"`
+	GwName       string `json:"gw_name"`
+	TunnelStatus string `json:"tunnel_status"`
 }
 
 func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
@@ -161,22 +173,32 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 	if !data.Return {
 		return nil, errors.New("Rest API get_site2cloud_conn_detail Get failed: " + data.Reason)
 	}
-	if len(data.Results.Connections.TunnelName) != 0 {
-		site2cloud.GwName = data.Results.Connections.GwName[0]
-		site2cloud.ConnType = data.Results.Connections.ConnType
-		site2cloud.TunnelType = data.Results.Connections.TunnelType
-		site2cloud.RemoteGwType = data.Results.Connections.PeerType
-		site2cloud.RemoteGwIP = data.Results.Connections.RemoteGwIP[0]
-		site2cloud.RemoteSubnet = data.Results.Connections.RemoteSubnet
-		site2cloud.LocalSubnet = data.Results.Connections.LocalSubnet
-		site2cloud.HAEnabled = data.Results.Connections.HAEnabled
-		site2cloud.RemoteSubnetVirtual = data.Results.Connections.RemoteSubnetVirtual
-		site2cloud.LocalSubnetVirtual = data.Results.Connections.LocalSubnetVirtual
-		site2cloud.BackupGwName = data.Results.Connections.BackupGwName[0]
-		site2cloud.RemoteGwIP2 = data.Results.Connections.RemoteGwIP2[0]
+	s2cConnDetail := data.Results.Connections
+	if len(s2cConnDetail.TunnelName) != 0 {
+		site2cloud.GwName = s2cConnDetail.GwName[0]
+		site2cloud.ConnType = s2cConnDetail.ConnType
+		site2cloud.TunnelType = s2cConnDetail.TunnelType[0]
+		site2cloud.RemoteGwType = s2cConnDetail.PeerType
+		if site2cloud.ConnType == "mapped" {
+			site2cloud.RemoteSubnet = s2cConnDetail.RemoteSubnet
+			site2cloud.LocalSubnet = s2cConnDetail.LocalSubnet
+			site2cloud.RemoteSubnetVirtual = s2cConnDetail.RemoteSubnetVirtual
+			site2cloud.LocalSubnetVirtual = s2cConnDetail.LocalSubnetVirtual
+		} else {
+			site2cloud.RemoteSubnet = s2cConnDetail.RemoteCidr
+			site2cloud.LocalSubnet = s2cConnDetail.LocalCidr
+		}
+		site2cloud.HAEnabled = s2cConnDetail.HAEnabled
+		for i := range s2cConnDetail.Tunnels {
+			if s2cConnDetail.Tunnels[i].GwName == site2cloud.GwName {
+				site2cloud.RemoteGwIP = s2cConnDetail.Tunnels[i].PeerIP
+			} else if s2cConnDetail.Tunnels[i].GwName == site2cloud.GwName+"-hagw" {
+				site2cloud.BackupGwName = s2cConnDetail.Tunnels[i].GwName
+				site2cloud.RemoteGwIP2 = s2cConnDetail.Tunnels[i].PeerIP
+			}
+		}
 		return site2cloud, nil
 	}
-
 	return nil, ErrNotFound
 }
 
