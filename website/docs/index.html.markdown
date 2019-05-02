@@ -20,9 +20,10 @@ Use the navigation to the left to read about the available resources.
 ```hcl
 # Configure Aviatrix provider
 provider "aviatrix" {
-  controller_ip = "1.2.3.4"
-  username      = "admin"
-  password      = "password"
+  controller_ip           = "1.2.3.4"
+  username                = "admin"
+  password                = "password"
+  skip_verison_validation = false
 }
 
 # Create a record
@@ -41,6 +42,8 @@ The following arguments are supported in the `provider` block:
   login to Aviatrix controller. It must be provided.
 
 * `password` - (Required) This is Aviatrix account's password corresponding to above username.
+
+* `skip_version_validation` - (Optional) Default: false. If set to true, it skips checking whether current Terraform branch supports current controller version.
 
 ## Import
 

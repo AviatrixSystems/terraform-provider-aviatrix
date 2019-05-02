@@ -20,9 +20,7 @@ func TestAccAviatrixVersion_basic(t *testing.T) {
 
 	resourceName := "aviatrix_version.foo"
 	resource.Test(t, resource.TestCase{
-		//PreCheck:     func() { testAccPreCheck(t) },
-		PreCheck: func() { testAccPreCheckVersionValidation(t) },
-
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersVersionValidation,
 		CheckDestroy: testAccCheckVersionDestroy,
 		Steps: []resource.TestStep{

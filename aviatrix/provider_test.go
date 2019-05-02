@@ -28,7 +28,6 @@ func init() {
 }
 
 func TestProvider(t *testing.T) {
-
 	if err := Provider().(*schema.Provider).InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -47,20 +46,5 @@ func testAccPreCheck(t *testing.T) {
 	}
 	if v := os.Getenv("AVIATRIX_PASSWORD"); v == "" {
 		t.Fatal("AVIATRIX_PASSWORD must be set for acceptance tests.")
-	}
-}
-
-func testAccPreCheckVersionValidation(t *testing.T) {
-	if v := os.Getenv("AVIATRIX_CONTROLLER_IP"); v == "" {
-		t.Fatal("AVIATRIX_CONTROLLER_IP must be set for acceptance tests.")
-	}
-	if v := os.Getenv("AVIATRIX_USERNAME"); v == "" {
-		t.Fatal("AVIATRIX_USERNAME must be set for acceptance tests.")
-	}
-	if v := os.Getenv("AVIATRIX_PASSWORD"); v == "" {
-		t.Fatal("AVIATRIX_PASSWORD must be set for acceptance tests.")
-	}
-	if v := os.Getenv("AVIATRIX_SKIP_VERSION_VALIDATION"); v != "true" {
-		t.Fatal("AVIATRIX_SKIP_VERSION_VALIDATION must be set 'true' for acceptance test of version resource.")
 	}
 }
