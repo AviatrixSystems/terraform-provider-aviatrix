@@ -113,6 +113,76 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Optional:    true,
 				Description: "Local Subnet CIDR (Virtual).",
 			},
+			"custom_algorithms": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Switch to enable custom/non-default algorithms for IPSec Authentication/Encryption.",
+			},
+			"phase_1_authentication": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Phase one Authentication. Valid values: 'SHA-1', 'SHA-256', 'SHA-384' and 'SHA-512'.",
+			},
+			"phase_2_authentication": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "Phase two Authentication. Valid values: 'NO-AUTH', 'HMAC-SHA-1', 'HMAC-SHA-256', " +
+					"'HMAC-SHA-384' and 'HMAC-SHA-512'.",
+			},
+			"phase_1_dh_groups": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Phase one DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'.",
+			},
+			"phase_2_dh_groups": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Phase two DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'.",
+			},
+			"phase_1_encryption": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "Phase one Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC' and " +
+					"'AES-256-CBC'.",
+			},
+			"phase_2_encryption": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "Phase two Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC', " +
+					"'AES-256-CBC', 'AES-128-GCM-64', 'AES-128-GCM-96' and 'AES-128-GCM-128'.",
+			},
+			"private_route_encryption": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Private route encryption switch.",
+			},
+			"route_table_list": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Default:     nil,
+				Description: "",
+			},
+			"remote_gateway_latitude": {
+				Type:        schema.TypeFloat,
+				Optional:    true,
+				Description: "",
+			},
+			"remote_gateway_longitude": {
+				Type:        schema.TypeFloat,
+				Optional:    true,
+				Description: "",
+			},
+			"backup_remote_gateway_latitude": {
+				Type:        schema.TypeFloat,
+				Optional:    true,
+				Description: "",
+			},
+			"backup_remote_gateway_longitude": {
+				Type:        schema.TypeFloat,
+				Optional:    true,
+				Description: "",
+			},
 		},
 	}
 }
@@ -149,10 +219,89 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 			"connection type: ummapped")
 	}
 
+	s2c.Phase1Auth = d.Get("phase_1_authentication").(string)
+	s2c.Phase1DhGroups = d.Get("phase_1_dh_groups").(string)
+	s2c.Phase1Encryption = d.Get("phase_1_encryption").(string)
+	s2c.Phase2Auth = d.Get("phase_2_authentication").(string)
+	s2c.Phase2DhGroups = d.Get("phase_2_dh_groups").(string)
+	s2c.Phase2Encryption = d.Get("phase_2_encryption").(string)
+
+	customAlgorithms := d.Get("custom_algorithms").(bool)
+	if s2c.TunnelType == "tcp" && customAlgorithms {
+		return fmt.Errorf("custom_algorithms is not supported for tunnel type 'tcp'")
+	}
+	if customAlgorithms {
+		if s2c.Phase1Auth == "" {
+			return fmt.Errorf("invalid phase_1_authentication")
+		}
+		if s2c.Phase1DhGroups == "" {
+			return fmt.Errorf("invalid phase_1_dh_groups")
+		}
+		if s2c.Phase1Encryption == "" {
+			return fmt.Errorf("invalid phase_1_encryption")
+		}
+		if s2c.Phase2Auth == "" {
+			return fmt.Errorf("invalid phase_2_authentication")
+		}
+		if s2c.Phase2DhGroups == "" {
+			return fmt.Errorf("invalid phase_2_dh_groups")
+		}
+		if s2c.Phase2Encryption == "" {
+			return fmt.Errorf("invalid phase_2_encryption")
+		}
+		err := client.Site2CloudAlgorithmCheck(s2c)
+		if err != nil {
+			return fmt.Errorf("algorithm values check failed: %s", err)
+		}
+	} else {
+		if s2c.Phase1Auth != "" {
+			return fmt.Errorf("custom_algorithms is disabled, phase_1_authentication should be empty")
+		}
+		if s2c.Phase1DhGroups != "" {
+			return fmt.Errorf("custom_algorithms is disabled, phase_1_dh_groups should be empty")
+		}
+		if s2c.Phase1Encryption != "" {
+			return fmt.Errorf("custom_algorithms is disabled, phase_1_encryption should be empty")
+		}
+		if s2c.Phase2Auth != "" {
+			return fmt.Errorf("custom_algorithms is disabled, phase_2_authentication should be empty")
+		}
+		if s2c.Phase2DhGroups != "" {
+			return fmt.Errorf("custom_algorithms is disabled, phase_2_dh_groups should be empty")
+		}
+		if s2c.Phase2Encryption != "" {
+			return fmt.Errorf("custom_algorithms is disabled, phase_2_encryption should be empty")
+		}
+	}
+
+	privateRouteEncryption := d.Get("private_route_encryption").(bool)
+	var routeTableList []string
+	rTList := d.Get("route_table_list").([]interface{})
+	for i := range rTList {
+		routeTableList = append(routeTableList, rTList[i].(string))
+	}
+
+	if privateRouteEncryption {
+		s2c.PrivateRouteEncryption = "true"
+		s2c.RouteTableList = routeTableList
+		s2c.RemoteGwLatitude = d.Get("remote_gateway_latitude").(float64)
+		s2c.RemoteGwLongitude = d.Get("remote_gateway_longitude").(float64)
+		if s2c.HAEnabled == "yes" {
+			s2c.BackupRemoteGwLatitude = d.Get("backup_remote_gateway_latitude").(float64)
+			s2c.BackupRemoteGwLongitude = d.Get("backup_remote_gateway_longitude").(float64)
+		}
+	} else {
+		s2c.PrivateRouteEncryption = "false"
+		if len(routeTableList) != 0 {
+			return fmt.Errorf("private route encryption is disabled, route_table_list should be empty")
+		}
+	}
+
 	log.Printf("[INFO] Creating Aviatrix Site2Cloud: %#v", s2c)
 	if s2c.TunnelType == "tcp" {
 		s2c.SslServerPool = "192.168.44.0/24"
 	}
+
 	err := client.CreateSite2Cloud(s2c)
 	if err != nil {
 		return fmt.Errorf("failed Site2Cloud create: %s", err)
@@ -215,8 +364,10 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 			d.Set("local_subnet_virtual", s2c.LocalSubnetVirtual)
 		}
 	}
+
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", d.Get("connection_name").(string), site2cloud)
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud connection_type: [%s]", d.Get("connection_type").(string))
+
 	d.SetId(site2cloud.TunnelName + "~" + site2cloud.VpcID)
 	return nil
 }
@@ -270,6 +421,24 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 	if d.HasChange("local_subnet_virtual") {
 		return fmt.Errorf("updating local_subnet_virtual is not allowed")
+	}
+	if d.HasChange("private_route_encryption") {
+		return fmt.Errorf("updating private_route_encryption is not allowed")
+	}
+	if d.HasChange("route_table_list") {
+		return fmt.Errorf("updating route_table_list is not allowed")
+	}
+	if d.HasChange("remote_gateway_latitude") {
+		return fmt.Errorf("updating remote_gateway_latitude is not allowed")
+	}
+	if d.HasChange("remote_gateway_longitude") {
+		return fmt.Errorf("updating remote_gateway_longitude is not allowed")
+	}
+	if d.HasChange("backup_remote_gateway_latitude") {
+		return fmt.Errorf("updating backup_remote_gateway_latitude is not allowed")
+	}
+	if d.HasChange("backup_remote_gateway_longitude") {
+		return fmt.Errorf("updating backup_remote_gateway_longitude is not allowed")
 	}
 
 	log.Printf("[INFO] Updating Aviatrix Site2Cloud: %#v", editSite2cloud)
