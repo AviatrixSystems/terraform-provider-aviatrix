@@ -1,3 +1,16 @@
+## 1.6.29 (May 3 2019)
+
+CHANGES
+  - Supported controller version: 4.2.764
+  - GCP and Azure support added for resource_spoke_gateway
+  - Azure support added for resource_transit_vpc
+  - Added support for FQDN source_ip filtering
+  - Added controller configuration resource
+  - Added migration support for aws_tgw resource
+  - Added exception_rule support
+  - Added security_group_management support
+  - Added controller version check functionality
+
 ## 1.5.24 (Apr 15 2019)
 
 CHANGES
