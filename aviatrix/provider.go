@@ -1,10 +1,10 @@
 package aviatrix
 
 import (
-	"os"
-
+	"errors"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
+	"os"
 )
 
 // Provider returns a schema.Provider for Aviatrix.
@@ -26,6 +26,11 @@ func Provider() terraform.ResourceProvider {
 				Required:    true,
 				DefaultFunc: envDefaultFunc("AVIATRIX_PASSWORD"),
 			},
+			"skip_version_validation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -36,6 +41,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_aws_tgw":                 resourceAWSTgw(),
 			"aviatrix_aws_tgw_vpc_attachment":  resourceAwsTgwVpcAttachment(),
 			"aviatrix_customer_id":             resourceCustomerID(),
+			"aviatrix_controller_config":       resourceControllerConfig(),
 			"aviatrix_firewall":                resourceAviatrixFirewall(),
 			"aviatrix_firewall_tag":            resourceAviatrixFirewallTag(),
 			"aviatrix_fqdn":                    resourceAviatrixFQDN(),
@@ -70,14 +76,34 @@ func envDefaultFunc(k string) schema.SchemaDefaultFunc {
 	}
 }
 
-func envDefaultFuncAllowMissing(k string) schema.SchemaDefaultFunc {
-	return func() (interface{}, error) {
-		v := os.Getenv(k)
-		return v, nil
+func aviatrixConfigure(d *schema.ResourceData) (interface{}, error) {
+	config := Config{
+		ControllerIP: d.Get("controller_ip").(string),
+		Username:     d.Get("username").(string),
+		Password:     d.Get("password").(string),
 	}
+
+	supportedVersion := "4.2"
+
+	skipVersionValidation := d.Get("skip_version_validation").(bool)
+	if skipVersionValidation {
+		return config.Client()
+	}
+
+	client, err := config.Client()
+	if err != nil {
+		return nil, err
+	}
+
+	err = client.ControllerVersionValidation(supportedVersion)
+	if err != nil {
+		return nil, errors.New("controller version validation failed: " + err.Error())
+	}
+
+	return client, nil
 }
 
-func aviatrixConfigure(d *schema.ResourceData) (interface{}, error) {
+func aviatrixConfigureWithoutVersionValidation(d *schema.ResourceData) (interface{}, error) {
 	config := Config{
 		ControllerIP: d.Get("controller_ip").(string),
 		Username:     d.Get("username").(string),

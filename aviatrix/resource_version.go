@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -65,25 +66,62 @@ func resourceAviatrixVersionCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	newCurrent, _, _ := client.GetCurrentVersion()
 	log.Printf("Upgrade complete (now %s)", newCurrent)
+	d.Set("version", newCurrent)
 	d.SetId(newCurrent)
 
-	return resourceAviatrixVersionRead(d, meta)
+	return nil
 }
 
 func resourceAviatrixVersionRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	curVersion := d.Get("version").(string)
+	if curVersion == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import, no version received. Import Id is %s", id)
+		d.Set("version", id)
+		d.Set("target_version", id)
+		d.SetId(id)
+		return nil
+	}
 
 	current, _, err := client.GetCurrentVersion()
 	if err != nil {
 		return fmt.Errorf("unable to read current Controller version: %s (%s)", err, current)
 	}
 	log.Printf("Version read completes (now %s)", current)
+	d.SetId(current)
+
+	latestVersion, _ := client.GetLatestVersion()
+	if latestVersion != "" && current != latestVersion {
+		d.Set("target_version", current)
+	}
 	d.Set("version", current)
 
 	return nil
 }
 
 func resourceAviatrixVersionUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*goaviatrix.Client)
+
+	curVersion := d.Get("version").(string)
+	cur := strings.Split(curVersion, ".")
+
+	latestVersion, _ := client.GetLatestVersion()
+	latest := strings.Split(latestVersion, ".")
+
+	targetVersion := d.Get("target_version").(string)
+
+	if targetVersion == "latest" {
+		if latestVersion != "" {
+			for i := range cur {
+				if cur[i] != latest[i] {
+					return resourceAviatrixVersionCreate(d, meta)
+				}
+			}
+		}
+		return nil
+	}
 	return resourceAviatrixVersionCreate(d, meta)
 }
 

@@ -18,6 +18,9 @@ func resourceAWSTgw() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		SchemaVersion: 1,
+		MigrateState:  resourceAviatrixAWSTgwMigrateState,
+
 		Schema: map[string]*schema.Schema{
 			"tgw_name": {
 				Type:        schema.TypeString,

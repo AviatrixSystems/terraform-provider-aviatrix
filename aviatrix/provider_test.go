@@ -11,10 +11,19 @@ import (
 var testAccProviders map[string]terraform.ResourceProvider
 var testAccProvider *schema.Provider
 
+var testAccProvidersVersionValidation map[string]terraform.ResourceProvider
+var testAccProviderVersionValidation *schema.Provider
+
 func init() {
 	testAccProvider = Provider().(*schema.Provider)
 	testAccProviders = map[string]terraform.ResourceProvider{
 		"aviatrix": testAccProvider,
+	}
+
+	testAccProviderVersionValidation = Provider().(*schema.Provider)
+	testAccProviderVersionValidation.ConfigureFunc = aviatrixConfigureWithoutVersionValidation
+	testAccProvidersVersionValidation = map[string]terraform.ResourceProvider{
+		"aviatrix": testAccProviderVersionValidation,
 	}
 }
 

@@ -75,7 +75,6 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 
 func testAccGatewayConfigBasic(rName string, accountID string, vpcID string, region string, vpcNet string) string {
 	return fmt.Sprintf(`
-
 resource "aviatrix_account" "test" {
 	account_name = "%s"
 	cloud_type = 1

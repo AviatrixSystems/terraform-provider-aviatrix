@@ -59,7 +59,6 @@ func TestAccAviatrixVPNProfile_basic(t *testing.T) {
 
 func testAccVPNProfileConfigBasic(rName string) string {
 	return fmt.Sprintf(`
-
 resource "aviatrix_account" "test_account" {
     account_name = "tfa-%s"
     cloud_type = 1
@@ -84,10 +83,10 @@ resource "aviatrix_gateway" "test_gw" {
 }
 
 resource "aviatrix_vpn_user" "test_vpn_user" {
-  vpc_id = "${aviatrix_gateway.test_gw.vpc_id}"
-  gw_name = "${aviatrix_gateway.test_gw.elb_name}"
-  user_name = "tfu-%s"
-  user_email = "user@xyz.com"
+	vpc_id = "${aviatrix_gateway.test_gw.vpc_id}"
+	gw_name = "${aviatrix_gateway.test_gw.elb_name}"
+	user_name = "tfu-%s"
+	user_email = "user@xyz.com"
 }
 
 resource "aviatrix_vpn_profile" "test_vpn_profile" {
@@ -103,8 +102,7 @@ resource "aviatrix_vpn_profile" "test_vpn_profile" {
     }
     ]
 }
-
-`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"), rName, rName,
 		rName)
 }

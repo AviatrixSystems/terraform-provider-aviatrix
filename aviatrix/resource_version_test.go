@@ -21,7 +21,7 @@ func TestAccAviatrixVersion_basic(t *testing.T) {
 	resourceName := "aviatrix_version.foo"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		Providers:    testAccProvidersVersionValidation,
 		CheckDestroy: testAccCheckVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -52,7 +52,7 @@ func testAccCheckVersionExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no Version is set")
 		}
 
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
 
 		foundVersion, _, err := client.GetCurrentVersion()
 		if err != nil {
@@ -67,7 +67,7 @@ func testAccCheckVersionExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckVersionDestroy(s *terraform.State) error {
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_version" {

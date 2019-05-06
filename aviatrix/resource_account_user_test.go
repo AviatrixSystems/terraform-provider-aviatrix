@@ -46,10 +46,10 @@ func TestAccAviatrixAccountUser_basic(t *testing.T) {
 func testAccAccountUserConfigBasic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account_user" "foo" {
-  username = "tf-testing-%d"
-  account_name = "admin"
-  email = "abc@xyz.com"
-  password = "Password-1234^"
+	username = "tf-testing-%d"
+	account_name = "admin"
+	email = "abc@xyz.com"
+	password = "Password-1234^"
 }
 	`, rInt)
 }

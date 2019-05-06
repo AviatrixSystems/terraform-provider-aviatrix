@@ -176,6 +176,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"duo_secret_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				Default:     "",
 				Description: "Secret key for DUO auth mode.",
 			},
@@ -212,6 +213,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"ldap_password": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				Default:     "",
 				Description: "LDAP password. Required: Yes if enable_ldap is 'yes'.",
 			},
@@ -442,7 +444,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	d.SetId(gateway.GwName)
 
-	if _, ok := d.GetOk("tag_list"); ok {
+	if _, ok := d.GetOk("tag_list"); ok && gateway.CloudType == 1 {
 		tagList := d.Get("tag_list").([]interface{})
 		tagListStr := goaviatrix.ExpandStringList(tagList)
 		gateway.TagList = strings.Join(tagListStr, ",")
@@ -456,7 +458,10 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		if err != nil {
 			return fmt.Errorf("failed to add tags: %s", err)
 		}
+	} else if ok && gateway.CloudType != 1 {
+		return fmt.Errorf("adding tags only supported for aws, cloud_type must be 1")
 	}
+
 	if vpnAccess, ok := d.GetOk("vpn_access"); ok && vpnAccess == "yes" {
 		gw := &goaviatrix.Gateway{
 			GwName: gateway.GwName,
@@ -598,12 +603,12 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("okta_url", gw.OktaURL)
 		d.Set("okta_username_suffix", gw.OktaUsernameSuffix)
 		d.Set("duo_integration_key", gw.DuoIntegrationKey)
-		d.Set("duo_secret_key", gw.DuoSecretKey)
+		//d.Set("duo_secret_key", gw.DuoSecretKey)		//prevent from reading sensitive info
 		d.Set("duo_api_hostname", gw.DuoAPIHostname)
 		d.Set("duo_push_mode", gw.DuoPushMode)
 		d.Set("ldap_server", gw.LdapServer)
 		d.Set("ldap_bind_dn", gw.LdapBindDn)
-		d.Set("ldap_password", gw.LdapPassword)
+		//d.Set("ldap_password", gw.LdapPassword)		//prevent from reading sensitive info
 		d.Set("ldap_base_dn", gw.LdapBaseDn)
 		d.Set("ldap_username_attribute", gw.LdapUserAttr)
 		if gw.HASubnet != "" {
@@ -664,24 +669,26 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("peering_ha_eip", "")
 		}
 
-		tags := &goaviatrix.Tags{
-			CloudType:    1,
-			ResourceType: "gw",
-			ResourceName: d.Get("gw_name").(string),
-		}
-		tagList, err := client.GetTags(tags)
-		if err != nil {
-			return fmt.Errorf("unable to read tag_list for gateway: %v due to %v", gateway.GwName, err)
-		}
-		var tagListStr []string
-		if _, ok := d.GetOk("tag_list"); ok {
-			tagList1 := d.Get("tag_list").([]interface{})
-			tagListStr = goaviatrix.ExpandStringList(tagList1)
-		}
-		if len(goaviatrix.Difference(tagListStr, tagList)) != 0 || len(goaviatrix.Difference(tagList, tagListStr)) != 0 {
-			d.Set("tag_list", tagList)
-		} else {
-			d.Set("tag_list", tagListStr)
+		if gw.CloudType == 1 {
+			tags := &goaviatrix.Tags{
+				CloudType:    1,
+				ResourceType: "gw",
+				ResourceName: d.Get("gw_name").(string),
+			}
+			tagList, err := client.GetTags(tags)
+			if err != nil {
+				return fmt.Errorf("unable to read tag_list for gateway: %v due to %v", gateway.GwName, err)
+			}
+			var tagListStr []string
+			if _, ok := d.GetOk("tag_list"); ok {
+				tagList1 := d.Get("tag_list").([]interface{})
+				tagListStr = goaviatrix.ExpandStringList(tagList1)
+			}
+			if len(goaviatrix.Difference(tagListStr, tagList)) != 0 || len(goaviatrix.Difference(tagList, tagListStr)) != 0 {
+				d.Set("tag_list", tagList)
+			} else {
+				d.Set("tag_list", tagListStr)
+			}
 		}
 
 		if gw.VpnStatus == "enabled" && gw.SplitTunnel == "yes" {
@@ -749,9 +756,10 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	//	}
 
 	gateway := &goaviatrix.Gateway{
-		GwName:   d.Get("gw_name").(string),
-		GwSize:   d.Get("vpc_size").(string),
-		SingleAZ: d.Get("single_az_ha").(string),
+		CloudType: d.Get("cloud_type").(int),
+		GwName:    d.Get("gw_name").(string),
+		GwSize:    d.Get("vpc_size").(string),
+		SingleAZ:  d.Get("single_az_ha").(string),
 	}
 	err := client.UpdateGateway(gateway)
 	if err != nil {
@@ -762,6 +770,10 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		d.HasChange("duo_integration_key") || d.HasChange("duo_secret_key") || d.HasChange("duo_api_hostname") ||
 		d.HasChange("duo_push_mode") || d.HasChange("ldap_server") || d.HasChange("ldap_bind_dn") ||
 		d.HasChange("ldap_password") || d.HasChange("ldap_base_dn") || d.HasChange("ldap_username_attribute") {
+
+		if vpnAccess := d.Get("vpn_access").(string); vpnAccess != "yes" {
+			return fmt.Errorf("vpn_access must be set to yes to modify vpn authentication")
+		}
 
 		vpn_gw := &goaviatrix.VpnGatewayAuth{
 			GwName:             d.Get("gw_name").(string),
@@ -857,7 +869,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("failed to update Aviatrix VPN Gateway Authentication: %s", err)
 		}
 	}
-	if d.HasChange("tag_list") {
+	if d.HasChange("tag_list") && gateway.CloudType == 1 {
 		tags := &goaviatrix.Tags{
 			CloudType:    1,
 			ResourceType: "gw",
@@ -893,7 +905,10 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 		d.SetPartial("tag_list")
+	} else if d.HasChange("tag_list") && gateway.CloudType != 1 {
+		return fmt.Errorf("adding tags is only supported for aws, cloud_type must be set to 1")
 	}
+
 	if d.HasChange("split_tunnel") || d.HasChange("additional_cidrs") ||
 		d.HasChange("name_servers") || d.HasChange("search_domains") {
 		o, n := d.GetChange("split_tunnel")

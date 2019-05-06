@@ -53,38 +53,38 @@ func TestAccAviatrixAwsTgwVpcAttachment_basic(t *testing.T) {
 func testAvxAwsTgwVpcAttachmentConfigBasic(rName string, awsSideAsNumber string, sDm string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account" {
-    account_name = "tfa-%s"
-    cloud_type = 1
+    account_name       = "tfa-%s"
+    cloud_type 		   = 1
     aws_account_number = "%s"
-    aws_iam = "false"
-    aws_access_key = "%s"
-    aws_secret_key = "%s"
+    aws_iam 		   = "false"
+    aws_access_key     = "%s"
+    aws_secret_key     = "%s"
 }
 
 resource "aviatrix_aws_tgw" "test_aws_tgw" {
-    tgw_name = "tft-%s"
-	account_name = "${aviatrix_account.test_account.account_name}"
-	region = "%s"
+    tgw_name           = "tft-%s"
+	account_name       = "${aviatrix_account.test_account.account_name}"
+	region 			   = "%s"
     aws_side_as_number = "%s"
     security_domains = [
 	{
     	security_domain_name = "Aviatrix_Edge_Domain"
-    	connected_domains = ["Default_Domain","Shared_Service_Domain","%s"]
+    	connected_domains    = ["Default_Domain","Shared_Service_Domain","%s"]
     },
     {
     	security_domain_name = "Default_Domain"
-    	connected_domains = ["Aviatrix_Edge_Domain","Shared_Service_Domain"]
-    	attached_vpc = []
+    	connected_domains    = ["Aviatrix_Edge_Domain","Shared_Service_Domain"]
+    	attached_vpc         = []
     },
     {
     	security_domain_name = "Shared_Service_Domain"
-    	connected_domains = ["Aviatrix_Edge_Domain","Default_Domain"]
-    	attached_vpc = []
+    	connected_domains    = ["Aviatrix_Edge_Domain","Default_Domain"]
+    	attached_vpc         = []
     },
     {
     	security_domain_name = "%s"
-    	connected_domains = ["Aviatrix_Edge_Domain"]
-    	attached_vpc = [
+    	connected_domains    = ["Aviatrix_Edge_Domain"]
+    	attached_vpc         = [
     	]
 	},
 	]
@@ -98,8 +98,7 @@ resource "aviatrix_aws_tgw_vpc_attachment" "test" {
     vpc_account_name     = "${aviatrix_account.test_account.account_name}"
     vpc_id               = "%s"
 }
-
-`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, os.Getenv("AWS_REGION"), awsSideAsNumber, sDm, sDm, os.Getenv("AWS_REGION"), sDm,
 		os.Getenv("AWS_VPC_ID"))
 }

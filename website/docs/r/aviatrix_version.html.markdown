@@ -32,10 +32,13 @@ The following arguments are supported:
 
 * `target_version` - (Optional) The release version number to which the controller will be upgraded to. If not specified, controller will not be upgraded. If set to "latest", controller will be upgraded to the latest release. Please look at https://docs.aviatrix.com/HowTos/inline_upgrade.html for more information.
 
-
 The following arguments are computed - please do not edit in the resource file:
 
 * `version` - Current version of the controller.
+
+-> **NOTE:** 
+
+In order to make version resource work correctly for all cases including upgrading from a version lower than current Terraform branch's supported controller version, 'skip_version_validation' needs to be set to true in provider resource.
 
 ## Import
 

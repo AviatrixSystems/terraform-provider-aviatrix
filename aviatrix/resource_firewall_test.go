@@ -73,8 +73,6 @@ func TestAccAviatrixFirewall_basic(t *testing.T) {
 
 func testAccFirewallConfigBasic(rName string) string {
 	return fmt.Sprintf(`
-
-
 resource "aviatrix_account" "test_account" {
   account_name = "tfa-%s"
   cloud_type = 1

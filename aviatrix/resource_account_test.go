@@ -154,12 +154,12 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 func testAccAccountConfigAWS(rInt int) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "aws" {
-  account_name = "tf-testing-aws-%d"
-  cloud_type = 1
-  aws_account_number = "%s"
-  aws_iam = "false"
-  aws_access_key = "%s"
-  aws_secret_key = "%s"
+	account_name       = "tf-testing-aws-%d"
+	cloud_type 		   = 1
+	aws_account_number = "%s"
+	aws_iam            = "false"
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
 }
 	`, rInt, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"))
 }
@@ -167,10 +167,10 @@ resource "aviatrix_account" "aws" {
 func testAccAccountConfigGCP(rInt int) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "gcp" {
-  account_name = "tf-testing-gcp-%d"
-  cloud_type = 4
-  gcloud_project_id = "%s"
-  gcloud_project_credentials_filepath = "%s"
+	account_name                        = "tf-testing-gcp-%d"
+	cloud_type                          = 4
+	gcloud_project_id                   = "%s"
+	gcloud_project_credentials_filepath = "%s"
 }
 	`, rInt, os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"))
 }
@@ -178,12 +178,12 @@ resource "aviatrix_account" "gcp" {
 func testAccAccountConfigARM(rInt int) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "arm" {
-  account_name = "tf-testing-arm-%d"
-  cloud_type = 8
-  arm_subscription_id = "%s"
-  arm_directory_id = "%s"
-  arm_application_id = "%s"
-  arm_application_key = "%s"
+	account_name        = "tf-testing-arm-%d"
+	cloud_type          = 8
+	arm_subscription_id = "%s"
+	arm_directory_id    = "%s"
+	arm_application_id  = "%s"
+	arm_application_key = "%s"
 }
 	`, rInt, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"), os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"))
 }
