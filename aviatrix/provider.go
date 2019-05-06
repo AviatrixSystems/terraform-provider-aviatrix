@@ -7,6 +7,8 @@ import (
 	"os"
 )
 
+const supportedVersion = "4.3"
+
 // Provider returns a schema.Provider for Aviatrix.
 func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
@@ -83,8 +85,6 @@ func aviatrixConfigure(d *schema.ResourceData) (interface{}, error) {
 		Username:     d.Get("username").(string),
 		Password:     d.Get("password").(string),
 	}
-
-	supportedVersion := "4.2"
 
 	skipVersionValidation := d.Get("skip_version_validation").(bool)
 	if skipVersionValidation {
