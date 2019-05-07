@@ -761,6 +761,10 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		GwSize:    d.Get("vpc_size").(string),
 		SingleAZ:  d.Get("single_az_ha").(string),
 	}
+	peeringHaGateway := &goaviatrix.Gateway{
+		CloudType: d.Get("cloud_type").(int),
+		GwName:    d.Get("gw_name").(string) + "-hagw",
+	}
 	err := client.UpdateGateway(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to update Aviatrix Gateway: %s", err)
@@ -1006,6 +1010,38 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			log.Printf("[INFO] can't update vpn cidr because elb is disabled for gateway: %#v", gateway.GwName)
 		}
 		d.SetPartial("enable_nat")
+	}
+	if d.HasChange("peering_ha_subnet") {
+		gw := &goaviatrix.Gateway{
+			Eip:             d.Get("peering_ha_eip").(string),
+			GwName:          d.Get("gw_name").(string),
+			PeeringHASubnet: d.Get("peering_ha_subnet").(string),
+			NewZone:         d.Get("zone").(string),
+		}
+		o, n := d.GetChange("peering_ha_subnet")
+		if o == "" {
+			err := client.EnablePeeringHaGateway(gw)
+			if err != nil {
+				return fmt.Errorf("failed to enable Aviatrix peering HA gateway: %s", err)
+			}
+		} else if n == "" {
+			err := client.DeleteGateway(peeringHaGateway)
+			if err != nil {
+				return fmt.Errorf("failed to delete Aviatrix peering HA gateway: %s", err)
+			}
+		} else {
+			err := client.DeleteGateway(peeringHaGateway)
+			if err != nil {
+				return fmt.Errorf("failed to delete Aviatrix peering HA gateway: %s", err)
+			}
+
+			gateway.GwName = d.Get("gw_name").(string)
+			haErr := client.EnablePeeringHaGateway(gw)
+			if haErr != nil {
+				return fmt.Errorf("failed to enable Aviatrix peering HA gateway: %s", err)
+			}
+		}
+		d.SetPartial("ha_subnet")
 	}
 	d.Partial(false)
 
