@@ -194,10 +194,10 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 
 	s2c.Phase1Auth = d.Get("phase_1_authentication").(string)
 	s2c.Phase1DhGroups = d.Get("phase_1_dh_groups").(string)
-	s2c.Phase1Encrption = d.Get("phase_1_encryption").(string)
+	s2c.Phase1Encryption = d.Get("phase_1_encryption").(string)
 	s2c.Phase2Auth = d.Get("phase_2_authentication").(string)
 	s2c.Phase2DhGroups = d.Get("phase_2_dh_groups").(string)
-	s2c.Phase2Encrption = d.Get("phase_2_encryption").(string)
+	s2c.Phase2Encryption = d.Get("phase_2_encryption").(string)
 
 	customAlgorithms := d.Get("custom_algorithms").(bool)
 	if s2c.TunnelType == "tcp" && customAlgorithms {
@@ -210,7 +210,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		if s2c.Phase1DhGroups == "" {
 			return fmt.Errorf("invalid phase_1_dh_groups")
 		}
-		if s2c.Phase1Encrption == "" {
+		if s2c.Phase1Encryption == "" {
 			return fmt.Errorf("invalid phase_1_encryption")
 		}
 		if s2c.Phase2Auth == "" {
@@ -219,7 +219,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		if s2c.Phase2DhGroups == "" {
 			return fmt.Errorf("invalid phase_2_dh_groups")
 		}
-		if s2c.Phase2Encrption == "" {
+		if s2c.Phase2Encryption == "" {
 			return fmt.Errorf("invalid phase_2_encryption")
 		}
 		err := client.Site2CloudAlgorithmCheck(s2c)
@@ -228,22 +228,22 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	} else {
 		if s2c.Phase1Auth != "" {
-			return fmt.Errorf("alorightm is off, phase_1_authentication should be empty")
+			return fmt.Errorf("custom_algorithms is disabled, phase_1_authentication should be empty")
 		}
 		if s2c.Phase1DhGroups != "" {
-			return fmt.Errorf("alorightm is off, phase_1_dh_groups should be empty")
+			return fmt.Errorf("custom_algorithms is disabled, phase_1_dh_groups should be empty")
 		}
-		if s2c.Phase1Encrption != "" {
-			return fmt.Errorf("alorightm is off, phase_1_encryption should be empty")
+		if s2c.Phase1Encryption != "" {
+			return fmt.Errorf("custom_algorithms is disabled, phase_1_encryption should be empty")
 		}
 		if s2c.Phase2Auth != "" {
-			return fmt.Errorf("alorightm is off, phase_2_authentication should be empty")
+			return fmt.Errorf("custom_algorithms is disabled, phase_2_authentication should be empty")
 		}
 		if s2c.Phase2DhGroups != "" {
-			return fmt.Errorf("alorightm is off, phase_2_dh_groups should be empty")
+			return fmt.Errorf("custom_algorithms is disabled, phase_2_dh_groups should be empty")
 		}
-		if s2c.Phase2Encrption != "" {
-			return fmt.Errorf("alorightm is off, phase_2_encryption should be empty")
+		if s2c.Phase2Encryption != "" {
+			return fmt.Errorf("custom_algorithms is disabled, phase_2_encryption should be empty")
 		}
 	}
 
@@ -320,8 +320,8 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 			d.Set("phase_2_authentication", s2c.Phase2Auth)
 			d.Set("phase_1_dh_groups", s2c.Phase1DhGroups)
 			d.Set("phase_2_dh_groups", s2c.Phase2DhGroups)
-			d.Set("phase_1_encryption", s2c.Phase1Encrption)
-			d.Set("phase_2_encryption", s2c.Phase2Encrption)
+			d.Set("phase_1_encryption", s2c.Phase1Encryption)
+			d.Set("phase_2_encryption", s2c.Phase2Encryption)
 		}
 	}
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", d.Get("connection_name").(string), site2cloud)
