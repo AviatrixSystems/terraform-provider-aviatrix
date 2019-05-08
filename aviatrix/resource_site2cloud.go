@@ -31,19 +31,20 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Description: "Site2Cloud Connection Name.",
 			},
 			"remote_gateway_type": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Remote gateway type.",
+				Type:     schema.TypeString,
+				Required: true,
+				Description: "Remote gateway type. Valid values: 'generic', 'avx', 'aws', 'azure', 'sonicwall', " +
+					"and 'oracle'.",
 			},
 			"connection_type": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Connection Type.",
+				Description: "Connection Type. Valid values: 'mapped' and 'unmapped'.",
 			},
 			"tunnel_type": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Site2Cloud Tunnel Type.",
+				Description: "Site2Cloud Tunnel Type. Valid values: 'udp' and 'tcp'",
 			},
 			"primary_cloud_gateway_name": {
 				Type:        schema.TypeString,
@@ -117,40 +118,43 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Optional:    true,
 				Description: "Local Subnet CIDR (Virtual).",
 			},
-			"algorithms_enabled": {
+			"custom_algorithms": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "",
+				Description: "Switch to enable custom/non-default algorithms for IPSec Authentication/Encryption.",
 			},
 			"phase_1_authentication": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "",
+				Description: "Phase one Authentication. Valid values: 'SHA-1', 'SHA-256', 'SHA-384' and 'SHA-512'.",
 			},
 			"phase_2_authentication": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "",
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "Phase two Authentication. Valid values: 'NO-AUTH', 'HMAC-SHA-1', 'HMAC-SHA-256', " +
+					"'HMAC-SHA-384' and 'HMAC-SHA-512'.",
 			},
 			"phase_1_dh_groups": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "",
+				Description: "Phase one DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'.",
 			},
 			"phase_2_dh_groups": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "",
+				Description: "Phase two DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'.",
 			},
 			"phase_1_encryption": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "",
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "Phase one Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC' and " +
+					"'AES-256-CBC'.",
 			},
 			"phase_2_encryption": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "",
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "Phase two Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC', " +
+					"'AES-256-CBC', 'AES-128-GCM-64', 'AES-128-GCM-96' and 'AES-128-GCM-128'.",
 			},
 		},
 	}
@@ -195,8 +199,11 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	s2c.Phase2DhGroups = d.Get("phase_2_dh_groups").(string)
 	s2c.Phase2Encrption = d.Get("phase_2_encryption").(string)
 
-	algorithmEnabled := d.Get("algorithms_enabled").(bool)
-	if algorithmEnabled {
+	customAlgorithms := d.Get("custom_algorithms").(bool)
+	if s2c.TunnelType == "tcp" && customAlgorithms {
+		return fmt.Errorf("custom_algorithms is not supported for tunnel type 'tcp'")
+	}
+	if customAlgorithms {
 		if s2c.Phase1Auth == "" {
 			return fmt.Errorf("invalid phase_1_authentication")
 		}
@@ -306,9 +313,9 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 			d.Set("local_subnet_virtual", s2c.LocalSubnetVirtual)
 		}
 
-		d.Set("algorithms_enabled", s2c.AlgorithmsEnabled)
+		d.Set("algorithms_enabled", s2c.CustomAlgorithms)
 
-		if s2c.AlgorithmsEnabled {
+		if s2c.CustomAlgorithms {
 			d.Set("phase_1_authentication", s2c.Phase1Auth)
 			d.Set("phase_2_authentication", s2c.Phase2Auth)
 			d.Set("phase_1_dh_groups", s2c.Phase1DhGroups)
