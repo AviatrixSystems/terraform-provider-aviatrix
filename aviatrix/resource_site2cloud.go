@@ -160,28 +160,27 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
-				Default:     nil,
-				Description: "",
+				Description: "Route tables to modify.",
 			},
 			"remote_gateway_latitude": {
 				Type:        schema.TypeFloat,
 				Optional:    true,
-				Description: "",
+				Description: "Latitude of remote gateway.",
 			},
 			"remote_gateway_longitude": {
 				Type:        schema.TypeFloat,
 				Optional:    true,
-				Description: "",
+				Description: "Longitude of remote gateway.",
 			},
 			"backup_remote_gateway_latitude": {
 				Type:        schema.TypeFloat,
 				Optional:    true,
-				Description: "",
+				Description: "Latitude of backup remote gateway.",
 			},
 			"backup_remote_gateway_longitude": {
 				Type:        schema.TypeFloat,
 				Optional:    true,
-				Description: "",
+				Description: "Longitude of backup remote gateway.",
 			},
 		},
 	}
