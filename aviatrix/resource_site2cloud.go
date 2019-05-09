@@ -103,11 +103,6 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Optional:    true,
 				Description: "Backup Pre-Shared Key.",
 			},
-			"private_route_encryption": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Private route encryption.",
-			},
 			"remote_subnet_virtual": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -117,44 +112,6 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Local Subnet CIDR (Virtual).",
-			},
-			"custom_algorithms": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Switch to enable custom/non-default algorithms for IPSec Authentication/Encryption.",
-			},
-			"phase_1_authentication": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Phase one Authentication. Valid values: 'SHA-1', 'SHA-256', 'SHA-384' and 'SHA-512'.",
-			},
-			"phase_2_authentication": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Description: "Phase two Authentication. Valid values: 'NO-AUTH', 'HMAC-SHA-1', 'HMAC-SHA-256', " +
-					"'HMAC-SHA-384' and 'HMAC-SHA-512'.",
-			},
-			"phase_1_dh_groups": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Phase one DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'.",
-			},
-			"phase_2_dh_groups": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Phase two DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'.",
-			},
-			"phase_1_encryption": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Description: "Phase one Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC' and " +
-					"'AES-256-CBC'.",
-			},
-			"phase_2_encryption": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Description: "Phase two Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC', " +
-					"'AES-256-CBC', 'AES-128-GCM-64', 'AES-128-GCM-96' and 'AES-128-GCM-128'.",
 			},
 		},
 	}
@@ -190,61 +147,6 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	} else if s2c.ConnType == "unmapped" && (s2c.RemoteSubnetVirtual != "" || s2c.LocalSubnetVirtual != "") {
 		return fmt.Errorf("'remote_subnet_virtual' and 'local_subnet_virtual' both should be empty for " +
 			"connection type: ummapped")
-	}
-
-	s2c.Phase1Auth = d.Get("phase_1_authentication").(string)
-	s2c.Phase1DhGroups = d.Get("phase_1_dh_groups").(string)
-	s2c.Phase1Encryption = d.Get("phase_1_encryption").(string)
-	s2c.Phase2Auth = d.Get("phase_2_authentication").(string)
-	s2c.Phase2DhGroups = d.Get("phase_2_dh_groups").(string)
-	s2c.Phase2Encryption = d.Get("phase_2_encryption").(string)
-
-	customAlgorithms := d.Get("custom_algorithms").(bool)
-	if s2c.TunnelType == "tcp" && customAlgorithms {
-		return fmt.Errorf("custom_algorithms is not supported for tunnel type 'tcp'")
-	}
-	if customAlgorithms {
-		if s2c.Phase1Auth == "" {
-			return fmt.Errorf("invalid phase_1_authentication")
-		}
-		if s2c.Phase1DhGroups == "" {
-			return fmt.Errorf("invalid phase_1_dh_groups")
-		}
-		if s2c.Phase1Encryption == "" {
-			return fmt.Errorf("invalid phase_1_encryption")
-		}
-		if s2c.Phase2Auth == "" {
-			return fmt.Errorf("invalid phase_2_authentication")
-		}
-		if s2c.Phase2DhGroups == "" {
-			return fmt.Errorf("invalid phase_2_dh_groups")
-		}
-		if s2c.Phase2Encryption == "" {
-			return fmt.Errorf("invalid phase_2_encryption")
-		}
-		err := client.Site2CloudAlgorithmCheck(s2c)
-		if err != nil {
-			return fmt.Errorf("algorithm values check failed: %s", err)
-		}
-	} else {
-		if s2c.Phase1Auth != "" {
-			return fmt.Errorf("custom_algorithms is disabled, phase_1_authentication should be empty")
-		}
-		if s2c.Phase1DhGroups != "" {
-			return fmt.Errorf("custom_algorithms is disabled, phase_1_dh_groups should be empty")
-		}
-		if s2c.Phase1Encryption != "" {
-			return fmt.Errorf("custom_algorithms is disabled, phase_1_encryption should be empty")
-		}
-		if s2c.Phase2Auth != "" {
-			return fmt.Errorf("custom_algorithms is disabled, phase_2_authentication should be empty")
-		}
-		if s2c.Phase2DhGroups != "" {
-			return fmt.Errorf("custom_algorithms is disabled, phase_2_dh_groups should be empty")
-		}
-		if s2c.Phase2Encryption != "" {
-			return fmt.Errorf("custom_algorithms is disabled, phase_2_encryption should be empty")
-		}
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Site2Cloud: %#v", s2c)
@@ -312,17 +214,6 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 			d.Set("remote_subnet_virtual", s2c.RemoteSubnetVirtual)
 			d.Set("local_subnet_virtual", s2c.LocalSubnetVirtual)
 		}
-
-		d.Set("algorithms_enabled", s2c.CustomAlgorithms)
-
-		if s2c.CustomAlgorithms {
-			d.Set("phase_1_authentication", s2c.Phase1Auth)
-			d.Set("phase_2_authentication", s2c.Phase2Auth)
-			d.Set("phase_1_dh_groups", s2c.Phase1DhGroups)
-			d.Set("phase_2_dh_groups", s2c.Phase2DhGroups)
-			d.Set("phase_1_encryption", s2c.Phase1Encryption)
-			d.Set("phase_2_encryption", s2c.Phase2Encryption)
-		}
 	}
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", d.Get("connection_name").(string), site2cloud)
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud connection_type: [%s]", d.Get("connection_type").(string))
@@ -373,27 +264,6 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 	if d.HasChange("backup_pre_shared_key") {
 		return fmt.Errorf("updating backup_pre_shared_key is not allowed")
-	}
-	if d.HasChange("algorithms_enabled") {
-		return fmt.Errorf("updating algorithms_enabled is not allowed")
-	}
-	if d.HasChange("phase_1_authentication") {
-		return fmt.Errorf("updating phase_1_authentication is not allowed")
-	}
-	if d.HasChange("phase_2_authentication") {
-		return fmt.Errorf("updating phase_2_authentication is not allowed")
-	}
-	if d.HasChange("phase_1_dh_groups") {
-		return fmt.Errorf("updating phase_1_dh_groups is not allowed")
-	}
-	if d.HasChange("phase_2_dh_groups") {
-		return fmt.Errorf("updating phase_2_dh_groups is not allowed")
-	}
-	if d.HasChange("phase_1_encryption") {
-		return fmt.Errorf("updating phase_1_encryption is not allowed")
-	}
-	if d.HasChange("phase_2_encryption") {
-		return fmt.Errorf("updating phase_2_encryption is not allowed")
 	}
 
 	log.Printf("[INFO] Updating Aviatrix Site2Cloud: %#v", editSite2cloud)

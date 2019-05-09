@@ -1,8 +1,9 @@
 package goaviatrix
 
 import (
-	"github.com/pkg/errors"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 func (c *Client) ControllerVersionValidation(supportedVersion string) error {

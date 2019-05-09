@@ -2,9 +2,10 @@ package aviatrix
 
 import (
 	"errors"
+	"os"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
-	"os"
 )
 
 const supportedVersion = "4.3"
