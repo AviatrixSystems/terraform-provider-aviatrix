@@ -1,3 +1,15 @@
+## 1.7.18 (May 9 2019)
+
+CHANGES
+  - Supported controller version: 4.3.1253
+  - Added new vpc resource
+  - Added support for connection type “mapped”
+  - Fixed connection_type read/refresh issue
+  - Fixed vgwConn resource refresh/import issue
+  - Set supportedVersion as a global variable
+  - Updated GevVPNUser to by get_vpn_user_by_name instead of list_vpn_users 
+  
+  
 ## 1.6.29 (May 3 2019)
 
 CHANGES
@@ -10,6 +22,7 @@ CHANGES
   - Added exception_rule support
   - Added security_group_management support
   - Added controller version check functionality
+  
 
 ## 1.5.24 (Apr 15 2019)
 
