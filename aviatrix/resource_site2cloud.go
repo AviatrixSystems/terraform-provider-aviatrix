@@ -265,6 +265,12 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 	if d.HasChange("backup_pre_shared_key") {
 		return fmt.Errorf("updating backup_pre_shared_key is not allowed")
 	}
+	if d.HasChange("remote_subnet_virtual") {
+		return fmt.Errorf("updating remote_subnet_virtual is not allowed")
+	}
+	if d.HasChange("local_subnet_virtual") {
+		return fmt.Errorf("updating local_subnet_virtual is not allowed")
+	}
 
 	log.Printf("[INFO] Updating Aviatrix Site2Cloud: %#v", editSite2cloud)
 	if ok := d.HasChange("local_subnet_cidr"); ok {
