@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 )
 
 // VPNUser simple struct to hold vpn_user details
@@ -115,11 +116,18 @@ func (c *Client) GetVPNUser(vpnUser *VPNUser) (*VPNUser, error) {
 		return nil, errors.New("Json Decode get_vpn_user_by_name failed: " + err.Error())
 	}
 	if !data.Return {
+		if strings.Contains(data.Reason, "Invalid VPN username") {
+			return nil, ErrNotFound
+		}
 		return nil, errors.New("Rest API get_vpn_user_by_name Get failed: " + data.Reason)
 	}
 
 	if data.Results.VpnUser.UserName != "" {
-		return &data.Results.VpnUser, nil
+		if data.Results.VpnUser.UserName == vpnUser.UserName {
+			return &data.Results.VpnUser, nil
+		} else {
+			return nil, errors.New("VPN user name does not match from response")
+		}
 	}
 
 	return nil, ErrNotFound
