@@ -108,7 +108,11 @@ func (c *Client) GetCurrentVersion() (string, *AviatrixVersion, error) {
 	aver := &AviatrixVersion{}
 	var err1, err2, err3 error
 	aver.Major, err1 = strconv.ParseInt(parts[0], 10, 0)
-	aver.Minor, err2 = strconv.ParseInt(parts[1], 10, 0)
+	if strings.Contains(parts[1], "-patch") {
+		aver.Minor, err2 = strconv.ParseInt(strings.Split(parts[1], "-")[0], 10, 0)
+	} else {
+		aver.Minor, err2 = strconv.ParseInt(parts[1], 10, 0)
+	}
 	aver.Build, err3 = strconv.ParseInt(parts[2], 10, 0)
 	if err1 != nil || err2 != nil || err3 != nil {
 		log.Printf("[WARN] Unable to get current version: %s|%s|%s (when parsing '%s')", err1, err2, err3, data.Results.CurrentVersion[11:])
