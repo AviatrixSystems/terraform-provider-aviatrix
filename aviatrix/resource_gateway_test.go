@@ -69,6 +69,11 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 						resourceName, "vpc_reg", region),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
