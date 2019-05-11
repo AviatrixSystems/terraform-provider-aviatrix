@@ -97,6 +97,12 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 				Default:     "no",
 				Description: "Specify Connected Transit status.",
 			},
+			"insane_mode": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable Insane Mode for Transit. Valid values: true, false. If insane mode is enabled, gateway size has to at least be c5 size.",
+			},
 		},
 	}
 }
@@ -133,6 +139,16 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("enable_nat can only be empty string, 'yes', or 'no'")
 	}
 	enableNat := gateway.EnableNAT
+
+	insaneMode := d.Get("insane_mode").(bool)
+	if insaneMode == true && cloudType != 1 {
+		return fmt.Errorf("insane_mode is only support for aws (cloud_type = 1)")
+	}
+	if insaneMode == true {
+		gateway.InsaneMode = "on"
+	} else {
+		gateway.InsaneMode = "off"
+	}
 
 	if _, ok := d.GetOk("tag_list"); ok {
 		if cloudType != 1 {
@@ -287,6 +303,11 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 			d.Set("enable_hybrid_connection", false)
 		}
 		d.Set("connected_transit", gw.ConnectedTransit)
+		if gw.InsaneMode == "yes" {
+			d.Set("insane_mode", true)
+		} else {
+			d.Set("insane_mode", false)
+		}
 	}
 
 	if gw.CloudType == 1 {
@@ -363,6 +384,9 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 	if d.HasChange("subnet") {
 		return fmt.Errorf("updating subnet is not allowed")
+	}
+	if d.HasChange("insane_mode") {
+		return fmt.Errorf("updating insane_mode is not allowed")
 	}
 	if gateway.CloudType == 1 {
 		if d.HasChange("tag_list") {

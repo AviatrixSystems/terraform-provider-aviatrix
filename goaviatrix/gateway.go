@@ -56,6 +56,7 @@ type Gateway struct {
 	GwSubnetID              string `form:"gw_subnet_id,omitempty" json:"gw_subnet_id,omitempty"`
 	PeeringHASubnet         string `form:"public_subnet,omitempty"`
 	NewZone                 string `form:"new_zone,omitempty"`
+	InsaneMode              string `form:"insane_mode,omitempty" json:"high_perf,omitempty"`
 	InstState               string `form:"inst_state,omitempty" json:"inst_state,omitempty"`
 	IntraVMRoute            string `form:"intra_vm_route,omitempty" json:"intra_vm_route,omitempty"`
 	IsHagw                  string `form:"is_hagw,omitempty" json:"is_hagw,omitempty"`

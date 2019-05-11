@@ -63,6 +63,7 @@ The following arguments are supported:
 * `tag_list` - (Optional) Instance tag of cloud provider. Only supported for aws. Example: ["key1:value1","key002:value002"]
 * `enable_hybrid_connection` - (Optional) Sign of readiness for TGW connection. Only supported for aws. (Example : false)
 * `connected_transit` - (Optional) Specify Connected Transit status. (Supported values: "yes", "no")
+* `insane_mode` - (Optional) Specify Insane Mode high performance gateway. Insane Mode gateway size must be at least c5 size. If enabled, will look for spare /26 segment to create a new subnet; must be formatted AWS: "10.0.0.0/26\~\~us-east1c. (Only available for AWS) (Supported values: true, false)
 
 -> **NOTE:** The following arguments are deprecated:
 
