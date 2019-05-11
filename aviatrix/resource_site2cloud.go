@@ -31,19 +31,20 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Description: "Site2Cloud Connection Name.",
 			},
 			"remote_gateway_type": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Remote gateway type.",
+				Type:     schema.TypeString,
+				Required: true,
+				Description: "Remote gateway type. Valid values: 'generic', 'avx', 'aws', 'azure', 'sonicwall', " +
+					"and 'oracle'.",
 			},
 			"connection_type": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Connection Type.",
+				Description: "Connection Type. Valid values: 'mapped' and 'unmapped'.",
 			},
 			"tunnel_type": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Site2Cloud Tunnel Type.",
+				Description: "Site2Cloud Tunnel Type. Valid values: 'udp' and 'tcp'",
 			},
 			"primary_cloud_gateway_name": {
 				Type:        schema.TypeString,
@@ -102,10 +103,15 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Optional:    true,
 				Description: "Backup Pre-Shared Key.",
 			},
-			"private_route_encryption": {
+			"remote_subnet_virtual": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Private route encryption.",
+				Description: "Remote Subnet CIDR (Virtual).",
+			},
+			"local_subnet_virtual": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Local Subnet CIDR (Virtual).",
 			},
 		},
 	}
@@ -114,20 +120,33 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	s2c := &goaviatrix.Site2Cloud{
-		GwName:             d.Get("primary_cloud_gateway_name").(string),
-		BackupGwName:       d.Get("backup_gateway_name").(string),
-		VpcID:              d.Get("vpc_id").(string),
-		TunnelName:         d.Get("connection_name").(string),
-		ConnType:           d.Get("connection_type").(string),
-		TunnelType:         d.Get("tunnel_type").(string),
-		RemoteGwType:       d.Get("remote_gateway_type").(string),
-		RemoteGwIP:         d.Get("remote_gateway_ip").(string),
-		RemoteGwIP2:        d.Get("backup_remote_gateway_ip").(string),
-		PreSharedKey:       d.Get("pre_shared_key").(string),
-		BackupPreSharedKey: d.Get("backup_pre_shared_key").(string),
-		RemoteSubnet:       d.Get("remote_subnet_cidr").(string),
-		LocalSubnet:        d.Get("local_subnet_cidr").(string),
-		HAEnabled:          d.Get("ha_enabled").(string),
+		GwName:              d.Get("primary_cloud_gateway_name").(string),
+		BackupGwName:        d.Get("backup_gateway_name").(string),
+		VpcID:               d.Get("vpc_id").(string),
+		TunnelName:          d.Get("connection_name").(string),
+		ConnType:            d.Get("connection_type").(string),
+		TunnelType:          d.Get("tunnel_type").(string),
+		RemoteGwType:        d.Get("remote_gateway_type").(string),
+		RemoteGwIP:          d.Get("remote_gateway_ip").(string),
+		RemoteGwIP2:         d.Get("backup_remote_gateway_ip").(string),
+		PreSharedKey:        d.Get("pre_shared_key").(string),
+		BackupPreSharedKey:  d.Get("backup_pre_shared_key").(string),
+		RemoteSubnet:        d.Get("remote_subnet_cidr").(string),
+		LocalSubnet:         d.Get("local_subnet_cidr").(string),
+		HAEnabled:           d.Get("ha_enabled").(string),
+		RemoteSubnetVirtual: d.Get("remote_subnet_virtual").(string),
+		LocalSubnetVirtual:  d.Get("local_subnet_virtual").(string),
+	}
+
+	if s2c.ConnType != "mapped" && s2c.ConnType != "unmapped" {
+		return fmt.Errorf("'connection_type' should be 'mapped' or 'unmapped'")
+	}
+	if s2c.ConnType == "mapped" && (s2c.RemoteSubnetVirtual == "" || s2c.LocalSubnetVirtual == "") {
+		return fmt.Errorf("'remote_subnet_virtual' and 'local_subnet_virtual' are both required for " +
+			"connection type: mapped")
+	} else if s2c.ConnType == "unmapped" && (s2c.RemoteSubnetVirtual != "" || s2c.LocalSubnetVirtual != "") {
+		return fmt.Errorf("'remote_subnet_virtual' and 'local_subnet_virtual' both should be empty for " +
+			"connection type: ummapped")
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Site2Cloud: %#v", s2c)
@@ -147,7 +166,6 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 
 	tunnelName := d.Get("connection_name").(string)
 	vpcID := d.Get("vpc_id").(string)
-
 	if tunnelName == "" || vpcID == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no tunnel name or vpc id names received. Import Id is %s", id)
@@ -160,7 +178,7 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 		TunnelName: d.Get("connection_name").(string),
 		VpcID:      d.Get("vpc_id").(string),
 	}
-	s2c, err := client.GetSite2Cloud(site2cloud)
+	s2c, err := client.GetSite2CloudConnDetail(site2cloud)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
@@ -168,6 +186,7 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 		}
 		return fmt.Errorf("couldn't find Aviatrix Site2Cloud: %s, %#v", err, s2c)
 	}
+
 	if s2c != nil {
 		d.Set("vpc_id", s2c.VpcID)
 		d.Set("remote_gateway_type", s2c.RemoteGwType)
@@ -181,18 +200,19 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 		}
 
 		if d.Get("ha_enabled") == "yes" {
-			d.Set("remote_gateway_ip", strings.Split(s2c.RemoteGwIP, ",")[0])
-			d.Set("backup_remote_gateway_ip", strings.Split(s2c.RemoteGwIP, ",")[1])
-			d.Set("primary_cloud_gateway_name", strings.Split(s2c.GwName, ",")[0])
-			d.Set("backup_gateway_name", strings.Split(s2c.GwName, ",")[1])
+			d.Set("remote_gateway_ip", s2c.RemoteGwIP)
+			d.Set("backup_remote_gateway_ip", s2c.RemoteGwIP2)
+			d.Set("primary_cloud_gateway_name", s2c.GwName)
+			d.Set("backup_gateway_name", s2c.BackupGwName)
 		} else {
 			d.Set("remote_gateway_ip", s2c.RemoteGwIP)
 			d.Set("primary_cloud_gateway_name", s2c.GwName)
 		}
 
-		if connectionType := d.Get("connection_type").(string); connectionType == "" {
-			//force default setting and save to .tfstate file
-			d.Set("connection_type", "unmapped")
+		d.Set("connection_type", s2c.ConnType)
+		if s2c.ConnType == "mapped" {
+			d.Set("remote_subnet_virtual", s2c.RemoteSubnetVirtual)
+			d.Set("local_subnet_virtual", s2c.LocalSubnetVirtual)
 		}
 	}
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", d.Get("connection_name").(string), site2cloud)
@@ -244,6 +264,12 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 	if d.HasChange("backup_pre_shared_key") {
 		return fmt.Errorf("updating backup_pre_shared_key is not allowed")
+	}
+	if d.HasChange("remote_subnet_virtual") {
+		return fmt.Errorf("updating remote_subnet_virtual is not allowed")
+	}
+	if d.HasChange("local_subnet_virtual") {
+		return fmt.Errorf("updating local_subnet_virtual is not allowed")
 	}
 
 	log.Printf("[INFO] Updating Aviatrix Site2Cloud: %#v", editSite2cloud)

@@ -52,42 +52,42 @@ func resourceAviatrixVPNUser() *schema.Resource {
 
 func resourceAviatrixVPNUserCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	vpn_user := &goaviatrix.VPNUser{
+	vpnUser := &goaviatrix.VPNUser{
 		VpcID:        d.Get("vpc_id").(string),
 		GwName:       d.Get("gw_name").(string),
 		UserName:     d.Get("user_name").(string),
 		UserEmail:    d.Get("user_email").(string),
 		SamlEndpoint: d.Get("saml_endpoint").(string),
 	}
-	if vpn_user.VpcID == "" {
+	if vpnUser.VpcID == "" {
 		return fmt.Errorf("invalid choice: vpc_id can't be empty")
 	}
-	if vpn_user.GwName == "" {
+	if vpnUser.GwName == "" {
 		return fmt.Errorf("invalid choice: gw_name can't be empty")
 	}
-	log.Printf("[INFO] Creating Aviatrix VPN User: %#v", vpn_user)
+	log.Printf("[INFO] Creating Aviatrix VPN User: %#v", vpnUser)
 
-	err := client.CreateVPNUser(vpn_user)
+	err := client.CreateVPNUser(vpnUser)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix VPNUser: %s", err)
 	}
-	d.SetId(vpn_user.UserName)
+	d.SetId(vpnUser.UserName)
 	return resourceAviatrixVPNUserRead(d, meta)
 }
 
 func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	user_name := d.Get("user_name").(string)
-	if user_name == "" {
+	userName := d.Get("user_name").(string)
+	if userName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, user_name is empty. Id is %s", id)
-		user_name = id
+		userName = id
 	}
-	vpn_user := &goaviatrix.VPNUser{
-		UserName: user_name,
+	vpnUser := &goaviatrix.VPNUser{
+		UserName: userName,
 	}
-	vu, err := client.GetVPNUser(vpn_user)
+	vu, err := client.GetVPNUser(vpnUser)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
@@ -95,12 +95,11 @@ func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta interface{}) error
 		}
 		return fmt.Errorf("couldn't find Aviatrix VPNUser: %s", err)
 	}
-	log.Printf("[TRACE] Reading vpn_user %s: %#v",
-		user_name, vu)
+	log.Printf("[TRACE] Reading vpn_user %s: %#v", userName, vu)
 	if vu != nil {
 		d.Set("vpc_id", vu.VpcID)
 		d.Set("gw_name", vu.GwName)
-		d.Set("user_name", user_name)
+		d.Set("user_name", userName)
 		if vu.UserEmail != "" {
 			d.Set("user_email", vu.UserEmail)
 		}
@@ -115,14 +114,14 @@ func resourceAviatrixVPNUserUpdate(d *schema.ResourceData, meta interface{}) err
 
 func resourceAviatrixVPNUserDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	vpn_user := &goaviatrix.VPNUser{
+	vpnUser := &goaviatrix.VPNUser{
 		UserName: d.Get("user_name").(string),
 		VpcID:    d.Get("vpc_id").(string),
 	}
 
-	log.Printf("[INFO] Deleting Aviatrix VPNUser: %#v", vpn_user)
+	log.Printf("[INFO] Deleting Aviatrix VPNUser: %#v", vpnUser)
 
-	err := client.DeleteVPNUser(vpn_user)
+	err := client.DeleteVPNUser(vpnUser)
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix VPNUser: %s", err)
 	}

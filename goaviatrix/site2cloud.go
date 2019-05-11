@@ -12,27 +12,29 @@ import (
 
 // Site2Cloud simple struct to hold site2cloud details
 type Site2Cloud struct {
-	Action             string `form:"action,omitempty"`
-	CID                string `form:"CID,omitempty"`
-	VpcID              string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	TunnelName         string `form:"connection_name" json:"name,omitempty"`
-	RemoteGwType       string `form:"remote_gateway_type,omitempty" json:"peer_type,omitempty"`
-	ConnType           string `form:"connection_type,omitempty" json:""connection_type,omitempty"`
-	TunnelType         string `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
-	GwName             string `form:"primary_cloud_gateway_name,omitempty" json:"gw_name,omitempty"`
-	BackupGwName       string `form:"backup_gateway_name,omitempty"`
-	RemoteGwIP         string `form:"remote_gateway_ip,omitempty" json:"peer_ip,omitempty"`
-	RemoteGwIP2        string `form:"backup_remote_gateway_ip,omitempty"`
-	PreSharedKey       string `form:"pre_shared_key,omitempty"`
-	BackupPreSharedKey string `form:"backup_pre_shared_key,omitempty"`
-	RemoteSubnet       string `form:"remote_subnet_cidr,omitempty" json:"remote_cidr,omitempty"`
-	LocalSubnet        string `form:"local_subnet_cidr,omitempty" json:"local_cidr,omitempty"`
-	HAEnabled          string `form:"ha_enabled,omitempty" json:"ha_status,omitempty"`
-	PeerType           string `form:"peer_type,omitempty"`
-	SslServerPool      string `form:"ssl_server_pool,omitempty"`
-	NetworkType        string `form:"network_type,omitempty"`
-	CloudSubnetCidr    string `form:"cloud_subnet_cidr,omitempty"`
-	RemoteCidr         string `form:"remote_cidr,omitempty"`
+	Action              string `form:"action,omitempty"`
+	CID                 string `form:"CID,omitempty"`
+	VpcID               string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	TunnelName          string `form:"connection_name" json:"name,omitempty"`
+	RemoteGwType        string `form:"remote_gateway_type,omitempty"`
+	ConnType            string `form:"connection_type,omitempty" json:"type,omitempty"`
+	TunnelType          string `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
+	GwName              string `form:"primary_cloud_gateway_name,omitempty" json:"gw_name,omitempty"`
+	BackupGwName        string `form:"backup_gateway_name,omitempty"`
+	RemoteGwIP          string `form:"remote_gateway_ip,omitempty" json:"peer_ip,omitempty"`
+	RemoteGwIP2         string `form:"backup_remote_gateway_ip,omitempty"`
+	PreSharedKey        string `form:"pre_shared_key,omitempty"`
+	BackupPreSharedKey  string `form:"backup_pre_shared_key,omitempty"`
+	RemoteSubnet        string `form:"remote_subnet_cidr,omitempty" json:"remote_cidr,omitempty"`
+	LocalSubnet         string `form:"local_subnet_cidr,omitempty" json:"local_cidr,omitempty"`
+	HAEnabled           string `form:"ha_enabled,omitempty" json:"ha_status,omitempty"`
+	PeerType            string `form:"peer_type,omitempty"`
+	SslServerPool       string `form:"ssl_server_pool,omitempty"`
+	NetworkType         string `form:"network_type,omitempty"`
+	CloudSubnetCidr     string `form:"cloud_subnet_cidr,omitempty"`
+	RemoteCidr          string `form:"remote_cidr,omitempty"`
+	RemoteSubnetVirtual string `form:"virtual_remote_subnet_cidr,omitempty" json:"virtual_remote_subnet_cidr,omitempty"`
+	LocalSubnetVirtual  string `form:"virtual_local_subnet_cidr,omitempty" json:"virtual_local_subnet_cidr,omitempty"`
 }
 
 type EditSite2Cloud struct {
@@ -53,6 +55,50 @@ type Site2CloudResp struct {
 
 type Site2CloudConnList struct {
 	Connections []Site2Cloud `json:"connections"`
+}
+
+type EditSite2CloudConnDetail struct {
+	VpcID               []string     `json:"vpc_id,omitempty"`
+	TunnelName          []string     `json:"name,omitempty"`
+	ConnType            string       `json:"type,omitempty"`
+	TunnelType          []string     `json:"tunnel_type,omitempty"`
+	GwName              []string     `json:"gw_name,omitempty"`
+	BackupGwName        []string     `json:"backup_gateway_name,omitempty"`
+	RemoteGwIP          []string     `json:"remote_gateway_ip,omitempty"`
+	RemoteGwIP2         []string     `json:"backup_remote_gateway_ip,omitempty"`
+	Tunnels             []TunnelInfo `json:"tunnels,omitempty"`
+	RemoteSubnet        string       `json:"real_remote_cidr,omitempty"`
+	LocalSubnet         string       `json:"real_local_cidr,omitempty"`
+	RemoteCidr          string       `json:"remote_cidr,omitempty"`
+	LocalCidr           string       `json:"local_cidr,omitempty"`
+	HAEnabled           string       `json:"ha_status,omitempty"`
+	PeerType            string       `json:"peer_type,omitempty"`
+	RemoteSubnetVirtual string       `json:"virt_remote_cidr,omitempty"`
+	LocalSubnetVirtual  string       `json:"virt_local_cidr,omitempty"`
+	//PreSharedKey        string `json:"pre_shared_key,omitempty"`
+	//BackupPreSharedKey  string `json:"backup_pre_shared_key,omitempty"`
+	//SslServerPool       string `json:"ssl_server_pool,omitempty"`
+	//NetworkType         string `json:"network_type,omitempty"`
+	//CloudSubnetCidr     string `json:"cloud_subnet_cidr,omitempty"`
+}
+
+type Site2CloudConnDetailResp struct {
+	Return  bool                     `json:"return"`
+	Results Site2CloudConnDetailList `json:"results"`
+	Reason  string                   `json:"reason"`
+}
+
+type Site2CloudConnDetailList struct {
+	Connections EditSite2CloudConnDetail `json:"connections"`
+}
+
+type TunnelInfo struct {
+	Status       string `json:"status"`
+	IPAddr       string `json:"ip_addr"`
+	Name         string `json:"name"`
+	PeerIP       string `json:"peer_ip"`
+	GwName       string `json:"gw_name"`
+	TunnelStatus string `json:"tunnel_status"`
 }
 
 func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
@@ -102,7 +148,59 @@ func (c *Client) GetSite2Cloud(site2cloud *Site2Cloud) (*Site2Cloud, error) {
 		}
 	}
 	return nil, ErrNotFound
+}
 
+func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return nil, errors.New(("url Parsing failed for get_site2cloud_conn_detail") + err.Error())
+	}
+	getSite2CloudConnDetail := url.Values{}
+	getSite2CloudConnDetail.Add("CID", c.CID)
+	getSite2CloudConnDetail.Add("action", "get_site2cloud_conn_detail")
+	getSite2CloudConnDetail.Add("conn_name", site2cloud.TunnelName)
+	getSite2CloudConnDetail.Add("vpc_id", site2cloud.VpcID)
+	Url.RawQuery = getSite2CloudConnDetail.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return nil, errors.New("HTTP Get get_site2cloud_conn_detail failed: " + err.Error())
+	}
+	var data Site2CloudConnDetailResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode get_site2cloud_conn_detail failed: " + err.Error())
+	}
+	if !data.Return {
+		return nil, errors.New("Rest API get_site2cloud_conn_detail Get failed: " + data.Reason)
+	}
+
+	s2cConnDetail := data.Results.Connections
+	if len(s2cConnDetail.TunnelName) != 0 {
+		site2cloud.GwName = s2cConnDetail.GwName[0]
+		site2cloud.ConnType = s2cConnDetail.ConnType
+		site2cloud.TunnelType = s2cConnDetail.TunnelType[0]
+		site2cloud.RemoteGwType = s2cConnDetail.PeerType
+		if site2cloud.ConnType == "mapped" {
+			site2cloud.RemoteSubnet = s2cConnDetail.RemoteSubnet
+			site2cloud.LocalSubnet = s2cConnDetail.LocalSubnet
+			site2cloud.RemoteSubnetVirtual = s2cConnDetail.RemoteSubnetVirtual
+			site2cloud.LocalSubnetVirtual = s2cConnDetail.LocalSubnetVirtual
+		} else {
+			site2cloud.RemoteSubnet = s2cConnDetail.RemoteCidr
+			site2cloud.LocalSubnet = s2cConnDetail.LocalCidr
+		}
+		site2cloud.HAEnabled = s2cConnDetail.HAEnabled
+		for i := range s2cConnDetail.Tunnels {
+			if s2cConnDetail.Tunnels[i].GwName == site2cloud.GwName {
+				site2cloud.RemoteGwIP = s2cConnDetail.Tunnels[i].PeerIP
+			} else if s2cConnDetail.Tunnels[i].GwName == site2cloud.GwName+"-hagw" {
+				site2cloud.BackupGwName = s2cConnDetail.Tunnels[i].GwName
+				site2cloud.RemoteGwIP2 = s2cConnDetail.Tunnels[i].PeerIP
+			}
+		}
+		return site2cloud, nil
+	}
+	return nil, ErrNotFound
 }
 
 func (c *Client) UpdateSite2Cloud(site2cloud *EditSite2Cloud) error {

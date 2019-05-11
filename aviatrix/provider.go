@@ -2,10 +2,13 @@ package aviatrix
 
 import (
 	"errors"
+	"os"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
-	"os"
 )
+
+const supportedVersion = "4.3"
 
 // Provider returns a schema.Provider for Aviatrix.
 func Provider() terraform.ResourceProvider {
@@ -40,6 +43,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_aws_peer":                resourceAWSPeer(),
 			"aviatrix_aws_tgw":                 resourceAWSTgw(),
 			"aviatrix_aws_tgw_vpc_attachment":  resourceAwsTgwVpcAttachment(),
+			"aviatrix_vpc":                     resourceVpc(),
 			"aviatrix_customer_id":             resourceCustomerID(),
 			"aviatrix_controller_config":       resourceControllerConfig(),
 			"aviatrix_firewall":                resourceAviatrixFirewall(),
@@ -82,8 +86,6 @@ func aviatrixConfigure(d *schema.ResourceData) (interface{}, error) {
 		Username:     d.Get("username").(string),
 		Password:     d.Get("password").(string),
 	}
-
-	supportedVersion := "4.2"
 
 	skipVersionValidation := d.Get("skip_version_validation").(bool)
 	if skipVersionValidation {
