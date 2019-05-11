@@ -235,6 +235,11 @@ func resourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Public IP address that you want assigned to the HA peering instance.",
 			},
+			"peering_ha_gw_size": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Peering HA Gateway Size.",
+			},
 			"zone": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -393,6 +398,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		log.Printf("[INFO] Aviatrix NAT enabled gateway: %#v", gateway)
 	}
 
+	peeringHaGwSize := d.Get("peering_ha_gw_size").(string)
 	// single_AZ enabled for Gateway. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
 	if singleAZHA := d.Get("single_az_ha").(string); singleAZHA == "enabled" {
 		singleAZGateway := &goaviatrix.Gateway{
@@ -418,6 +424,24 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		err := client.EnablePeeringHaGateway(peeringHaGateway)
 		if err != nil {
 			return fmt.Errorf("failed to create peering HA: %s", err)
+		}
+
+		log.Printf("[INFO] Resizing Peering HA Gateway: %#v", peeringHaGwSize)
+		if peeringHaGwSize != gateway.VpcSize {
+			if peeringHaGwSize == "" {
+				return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for this resource if peering_ha_subnet is set. Example: t2.micro")
+			}
+			peeringHaGateway := &goaviatrix.Gateway{
+				CloudType: d.Get("cloud_type").(int),
+				GwName:    d.Get("gw_name").(string) + "-hagw", //CHECK THE NAME of peering ha gateway in controller, test out first. just assuming it has that suffix
+			}
+			peeringHaGateway.GwSize = peeringHaGwSize
+			err := client.UpdateGateway(peeringHaGateway)
+			log.Printf("[INFO] Resizing Peering Ha Gateway size to: %s,", peeringHaGateway.GwSize)
+			if err != nil {
+				return fmt.Errorf("failed to update Aviatrix Peering HA Gateway size: &s", err)
+			}
+			d.Set("peering_ha_gw_size", peeringHaGwSize)
 		}
 	}
 	d.SetId(gateway.GwName)
@@ -630,11 +654,13 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				d.Set("backup_public_ip", gwHaGw.PublicIP)
 				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
 				d.Set("peering_ha_eip", gwHaGw.PublicIP)
+				d.Set("peering_ha_gw_size", gwHaGw.GwSize)
 			} else {
 				d.Set("cloudn_bkup_gateway_inst_id", "")
 				d.Set("backup_public_ip", "")
 				d.Set("peering_ha_subnet", "")
 				d.Set("peering_ha_eip", "")
+				d.Set("peering_ha_gw_size", "")
 			}
 			log.Printf("[TRACE] reading peering HA gateway %s: %#v", d.Get("gw_name").(string), gwHaGw)
 		} else {
@@ -737,10 +763,19 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string) + "-hagw",
 	}
-	err := client.UpdateGateway(gateway)
-	if err != nil {
-		return fmt.Errorf("failed to update Aviatrix Gateway: %s", err)
+
+	// Get primary gw size if vpc_size changed, to be used later on for peering ha gw size update
+	primaryGwSize := d.Get("vpc_size").(string)
+	if d.HasChange("vpc_size") {
+		old, _ := d.GetChange("vpc_size")
+		primaryGwSize = old.(string)
+		err := client.UpdateGateway(gateway)
+		if err != nil {
+			return fmt.Errorf("failed to update Aviatrix Gateway: %s", err)
+		}
+		d.SetPartial("vpc_size")
 	}
+
 	if d.HasChange("otp_mode") || d.HasChange("enable_ldap") || d.HasChange("saml_enabled") ||
 		d.HasChange("okta_token") || d.HasChange("okta_url") || d.HasChange("okta_username_suffix") ||
 		d.HasChange("duo_integration_key") || d.HasChange("duo_secret_key") || d.HasChange("duo_api_hostname") ||
@@ -915,7 +950,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				SearchDomains:   d.Get("search_domains").(string),
 				SaveTemplate:    "no",
 			}
-			err = client.ModifySplitTunnel(sTunnel)
+			err := client.ModifySplitTunnel(sTunnel)
 			if err != nil {
 				return fmt.Errorf("failed to modify split tunnel: %s", err)
 			}
@@ -983,6 +1018,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 		d.SetPartial("enable_nat")
 	}
+	newHaGwEnabled := false
 	if d.HasChange("peering_ha_subnet") {
 		gw := &goaviatrix.Gateway{
 			Eip:             d.Get("peering_ha_eip").(string),
@@ -996,6 +1032,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			if err != nil {
 				return fmt.Errorf("failed to enable Aviatrix peering HA gateway: %s", err)
 			}
+			newHaGwEnabled = true
 		} else if n == "" {
 			err := client.DeleteGateway(peeringHaGateway)
 			if err != nil {
@@ -1015,6 +1052,41 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 		d.SetPartial("peering_ha_subnet")
 	}
+
+	if d.HasChange("peering_ha_gw_size") || newHaGwEnabled {
+		newHaGwSize := d.Get("peering_ha_gw_size").(string)
+		if !newHaGwEnabled || (newHaGwSize != primaryGwSize) {
+			// MODIFIES Peering HA GW SIZE if
+			// Ha gateway wasn't newly configured
+			// OR
+			// newly configured peering HA gateway is set to be different size than primary gateway
+			// (when peering ha gateway is enabled, it's size is by default the same as primary gateway)
+			_, err := client.GetGateway(peeringHaGateway)
+			if err != nil {
+				if err == goaviatrix.ErrNotFound {
+					d.Set("peering_ha_gw_size", "")
+					d.Set("peering_ha_subnet", "")
+					return nil
+				}
+				return fmt.Errorf("couldn't find Aviatrix Peering HA Gateway while trying to update HA Gw "+
+					"size: %s", err)
+			}
+			log.Printf("[INFO] gw found")
+			peeringHaGateway.GwSize = d.Get("peering_ha_gw_size").(string)
+			if peeringHaGateway.GwSize == "" {
+				return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for this resource if " +
+					"peering_ha_subnet is set. Example: t2.micro")
+			}
+			log.Printf("[INFO] about to update peering ha gw size")
+			err = client.UpdateGateway(peeringHaGateway)
+			log.Printf("[INFO] Updating Peering HA GAteway size to: %s ", peeringHaGateway.GwSize)
+			if err != nil {
+				return fmt.Errorf("failed to update Aviatrix Peering HA Gw size: %s", err)
+			}
+		}
+		d.SetPartial("peering_ha_gw_size")
+	}
+
 	d.Partial(false)
 
 	d.SetId(gateway.GwName)
