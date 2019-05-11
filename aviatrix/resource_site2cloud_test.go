@@ -28,7 +28,7 @@ func TestAccAviatrixS2C_basic(t *testing.T) {
 		CheckDestroy: testAccCheckS2CDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSS2CConfigBasic(rName),
+				Config: testAccS2CConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckS2CExists("aviatrix_site2cloud.foo", &s2c),
 					resource.TestCheckResourceAttr("aviatrix_site2cloud.foo", "connection_name",
@@ -53,7 +53,7 @@ func TestAccAviatrixS2C_basic(t *testing.T) {
 	})
 }
 
-func testAccSS2CConfigBasic(rName string) string {
+func testAccS2CConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
     account_name 	   = "tfa-%s"

@@ -32,7 +32,7 @@ func preAWSPeerCheck(t *testing.T, msgCommon string) (string, string, string, st
 	return vpcID1, vpcID2, region1, region2
 }
 
-func TestAvxAWSPeer_basic(t *testing.T) {
+func TestAccAviatrixAWSPeer_basic(t *testing.T) {
 	var awsPeer goaviatrix.AWSPeer
 	rInt := acctest.RandInt()
 
@@ -49,12 +49,12 @@ func TestAvxAWSPeer_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAvxAWSPeerDestroy,
+		CheckDestroy: testAccCheckAWSPeerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAvxAWSPeerConfigBasic(rInt, vpcID1, vpcID2, region1, region2),
+				Config: testAccAWSPeerConfigBasic(rInt, vpcID1, vpcID2, region1, region2),
 				Check: resource.ComposeTestCheckFunc(
-					tesAvxAWSPeerExists("aviatrix_aws_peer.test_aws_peer", &awsPeer),
+					tesAccCheckAWSPeerExists("aviatrix_aws_peer.test_aws_peer", &awsPeer),
 					resource.TestCheckResourceAttr(
 						"aviatrix_aws_peer.test_aws_peer", "vpc_id1", vpcID1),
 					resource.TestCheckResourceAttr(
@@ -65,7 +65,7 @@ func TestAvxAWSPeer_basic(t *testing.T) {
 	})
 }
 
-func testAvxAWSPeerConfigBasic(rInt int, vpcID1 string, vpcID2 string, region1 string, region2 string) string {
+func testAccAWSPeerConfigBasic(rInt int, vpcID1 string, vpcID2 string, region1 string, region2 string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account" {
 	account_name       = "tf-testing-%d"
@@ -88,7 +88,7 @@ resource "aviatrix_aws_peer" "test_aws_peer" {
 		vpcID1, vpcID2, region1, region2)
 }
 
-func tesAvxAWSPeerExists(n string, awsPeer *goaviatrix.AWSPeer) resource.TestCheckFunc {
+func tesAccCheckAWSPeerExists(n string, awsPeer *goaviatrix.AWSPeer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -126,7 +126,7 @@ func tesAvxAWSPeerExists(n string, awsPeer *goaviatrix.AWSPeer) resource.TestChe
 	}
 }
 
-func testAvxAWSPeerDestroy(s *terraform.State) error {
+func testAccCheckAWSPeerDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*goaviatrix.Client)
 
 	for _, rs := range s.RootModule().Resources {

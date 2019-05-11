@@ -37,7 +37,7 @@ func preAvxTunnelCheck(t *testing.T, msgCommon string) (string, string, string, 
 	return vpcID1, region1, subnet1, vpcID2, region2, subnet2
 }
 
-func TestAvxTunnel_basic(t *testing.T) {
+func TestAccAviatrixTunnel_basic(t *testing.T) {
 	var tun goaviatrix.Tunnel
 	rName := acctest.RandString(5)
 
@@ -52,12 +52,12 @@ func TestAvxTunnel_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAvxTunnelDestroy,
+		CheckDestroy: testAccCheckTunnelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAvxTunnelConfigBasic(rName, vpcID1, vpcID2, region1, region2, subnet1, subnet2),
+				Config: testAccTunnelConfigBasic(rName, vpcID1, vpcID2, region1, region2, subnet1, subnet2),
 				Check: resource.ComposeTestCheckFunc(
-					tesAvxTunnelExists("aviatrix_tunnel.foo", &tun),
+					tesAccCheckTunnelExists("aviatrix_tunnel.foo", &tun),
 					resource.TestCheckResourceAttr(
 						"aviatrix_tunnel.foo", "vpc_name1", fmt.Sprintf("tfg-%s", rName)),
 					resource.TestCheckResourceAttr(
@@ -68,7 +68,7 @@ func TestAvxTunnel_basic(t *testing.T) {
 	})
 }
 
-func testAvxTunnelConfigBasic(rName string, vpcID1 string, vpcID2 string, region1 string, region2 string,
+func testAccTunnelConfigBasic(rName string, vpcID1 string, vpcID2 string, region1 string, region2 string,
 	subnet1 string, subnet2 string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
@@ -109,7 +109,7 @@ resource "aviatrix_tunnel" "foo" {
 		vpcID1, vpcID2, region1, region2, subnet1, subnet2)
 }
 
-func tesAvxTunnelExists(n string, tunnel *goaviatrix.Tunnel) resource.TestCheckFunc {
+func tesAccCheckTunnelExists(n string, tunnel *goaviatrix.Tunnel) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -147,7 +147,7 @@ func tesAvxTunnelExists(n string, tunnel *goaviatrix.Tunnel) resource.TestCheckF
 	}
 }
 
-func testAvxTunnelDestroy(s *terraform.State) error {
+func testAccCheckTunnelDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*goaviatrix.Client)
 
 	for _, rs := range s.RootModule().Resources {

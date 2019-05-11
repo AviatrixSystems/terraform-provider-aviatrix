@@ -11,7 +11,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func TestAccFQDN_basic(t *testing.T) {
+func TestAccAviatrixFQDN_basic(t *testing.T) {
 	var fqdn goaviatrix.FQDN
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
 
