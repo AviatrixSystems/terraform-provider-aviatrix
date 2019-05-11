@@ -54,7 +54,6 @@ type Gateway struct {
 	GwSecurityGroupID       string `form:"gw_security_group_id,omitempty" json:"gw_security_group_id,omitempty"`
 	GwSize                  string `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
 	GwSubnetID              string `form:"gw_subnet_id,omitempty" json:"gw_subnet_id,omitempty"`
-	HASubnet                string `form:"ha_subnet,omitempty"`
 	PeeringHASubnet         string `form:"public_subnet,omitempty"`
 	NewZone                 string `form:"new_zone,omitempty"`
 	InstState               string `form:"inst_state,omitempty" json:"inst_state,omitempty"`
@@ -207,31 +206,6 @@ func (c *Client) EnablePeeringHaGateway(gateway *Gateway) error {
 	}
 	return nil
 }
-func (c *Client) EnableHaGateway(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for enable_vpc_ha") + err.Error())
-	}
-	enableVpcHa := url.Values{}
-	enableVpcHa.Add("CID", c.CID)
-	enableVpcHa.Add("action", "enable_vpc_ha")
-	enableVpcHa.Add("vpc_name", gateway.GwName)
-	enableVpcHa.Add("specific_subnet", gateway.HASubnet)
-	Url.RawQuery = enableVpcHa.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return errors.New("HTTP Get enable_vpc_ha failed: " + err.Error())
-	}
-	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_vpc_ha failed: " + err.Error())
-	}
-	if !data.Return {
-		return errors.New("Rest API enable_vpc_ha Get failed: " + data.Reason)
-	}
-	return nil
-}
 
 func (c *Client) DisableSingleAZGateway(gateway *Gateway) error {
 	gateway.CID = c.CID
@@ -246,31 +220,6 @@ func (c *Client) DisableSingleAZGateway(gateway *Gateway) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API disable_single_az_ha Post failed: " + data.Reason)
-	}
-	return nil
-}
-
-func (c *Client) DisableHaGateway(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for disable_vpc_ha") + err.Error())
-	}
-	disableVpcHa := url.Values{}
-	disableVpcHa.Add("CID", c.CID)
-	disableVpcHa.Add("action", "disable_vpc_ha")
-	disableVpcHa.Add("vpc_name", gateway.GwName)
-	Url.RawQuery = disableVpcHa.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return errors.New("HTTP Get disable_vpc_ha failed: " + err.Error())
-	}
-	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_vpc_ha failed: " + err.Error())
-	}
-	if !data.Return {
-		return errors.New("Rest API disable_vpc_ha Get failed: " + data.Reason)
 	}
 	return nil
 }

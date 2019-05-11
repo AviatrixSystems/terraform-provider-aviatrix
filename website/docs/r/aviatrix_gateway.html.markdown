@@ -61,7 +61,6 @@ The following arguments are supported:
 * `ldap_password` - (Optional) LDAP password. (Required: Yes if enable_ldap is "yes")
 * `ldap_base_dn` - (Optional) LDAP base DN. (Required: Yes if enable_ldap is "yes")
 * `ldap_username_attribute` - (Optional) LDAP user attribute. (Required: Yes if enable_ldap is "yes")
-* `ha_subnet` - (Optional) This is for Gateway HA. Deprecated. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
 * `peering_ha_subnet` - Public Subnet Information while creating Peering HA Gateway, only subnet is accepted. Example: AWS: "10.0.0.0/16"
 * `peering_ha_eip` - (Optional) Public IP address that you want assigned to the HA peering instance.
 * `zone` - (Optional) A GCE zone where this gateway will be launched. (Required when cloud_type is 4)

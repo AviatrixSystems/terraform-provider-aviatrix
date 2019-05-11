@@ -55,11 +55,6 @@ func resourceAviatrixGateway() *schema.Resource {
 				Required:    true,
 				Description: "A VPC Network address range selected from one of the available network ranges.",
 			},
-			"ha_subnet": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "This is for Gateway HA. Deprecated.",
-			},
 			"public_ip": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -316,7 +311,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		LdapPassword:       d.Get("ldap_password").(string),
 		LdapBaseDn:         d.Get("ldap_base_dn").(string),
 		LdapUserAttr:       d.Get("ldap_username_attribute").(string),
-		HASubnet:           d.Get("ha_subnet").(string),
 		PeeringHASubnet:    d.Get("peering_ha_subnet").(string),
 		NewZone:            d.Get("zone").(string),
 		SingleAZ:           d.Get("single_az_ha").(string),
@@ -412,22 +406,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	// ha_subnet is for Gateway HA. Deprecated. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
-	if ha_subnet := d.Get("ha_subnet").(string); ha_subnet != "" {
-		ha_gateway := &goaviatrix.Gateway{
-			GwName:   d.Get("gw_name").(string),
-			HASubnet: d.Get("ha_subnet").(string),
-		}
-		log.Printf("[INFO] Enable gateway HA: %#v", ha_gateway)
-		err := client.EnableHaGateway(ha_gateway)
-		if err != nil {
-			del_err := client.DeleteGateway(gateway)
-			if del_err != nil {
-				return fmt.Errorf("failed to auto-cleanup failed gateway: %s", del_err)
-			}
-			return fmt.Errorf("failed to create GW HA: %s", err)
-		}
-	}
 	// peering_ha_subnet is for Peering HA Gateway. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
 	if peeringHaSubnet := d.Get("peering_ha_subnet").(string); peeringHaSubnet != "" {
 		peeringHaGateway := &goaviatrix.Gateway{
@@ -611,9 +589,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		//d.Set("ldap_password", gw.LdapPassword)		//prevent from reading sensitive info
 		d.Set("ldap_base_dn", gw.LdapBaseDn)
 		d.Set("ldap_username_attribute", gw.LdapUserAttr)
-		if gw.HASubnet != "" {
-			d.Set("ha_subnet", gw.HASubnet)
-		}
 		if gw.NewZone != "" {
 			d.Set("zone", gw.NewZone)
 		}
@@ -751,9 +726,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("elb_name") {
 		return fmt.Errorf("updating elb_name is not allowed")
 	}
-	//	if d.HasChange("otp_mode") {
-	//		return fmt.Errorf("updating otp_mode is not allowed")
-	//	}
 
 	gateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
@@ -1041,7 +1013,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				return fmt.Errorf("failed to enable Aviatrix peering HA gateway: %s", err)
 			}
 		}
-		d.SetPartial("ha_subnet")
+		d.SetPartial("peering_ha_subnet")
 	}
 	d.Partial(false)
 
@@ -1055,14 +1027,6 @@ func resourceAviatrixGatewayDelete(d *schema.ResourceData, meta interface{}) err
 	gateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string),
-	}
-	// ha_subnet is for Gateway HA
-	if HASubnet := d.Get("ha_subnet").(string); HASubnet != "" {
-		log.Printf("[INFO] Deleting Aviatrix gateway HA: %#v", gateway)
-		err := client.DisableHaGateway(gateway)
-		if err != nil {
-			return fmt.Errorf("failed to disable Aviatrix gateway HA: %s", err)
-		}
 	}
 	// peering_ha_subnet is for Peering HA
 	if peeringHaSubnet := d.Get("peering_ha_subnet").(string); peeringHaSubnet != "" {
