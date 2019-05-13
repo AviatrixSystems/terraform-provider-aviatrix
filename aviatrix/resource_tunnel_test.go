@@ -40,6 +40,7 @@ func preAvxTunnelCheck(t *testing.T, msgCommon string) (string, string, string, 
 func TestAccAviatrixTunnel_basic(t *testing.T) {
 	var tun goaviatrix.Tunnel
 	rName := acctest.RandString(5)
+	resourceName := "aviatrix_tunnel.foo"
 
 	skipAcc := os.Getenv("SKIP_TUNNEL")
 	if skipAcc == "yes" {
@@ -59,10 +60,15 @@ func TestAccAviatrixTunnel_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					tesAccCheckTunnelExists("aviatrix_tunnel.foo", &tun),
 					resource.TestCheckResourceAttr(
-						"aviatrix_tunnel.foo", "vpc_name1", fmt.Sprintf("tfg-%s", rName)),
+						resourceName, "vpc_name1", fmt.Sprintf("tfg-%s", rName)),
 					resource.TestCheckResourceAttr(
-						"aviatrix_tunnel.foo", "vpc_name2", fmt.Sprintf("tfg2-%s", rName)),
+						resourceName, "vpc_name2", fmt.Sprintf("tfg2-%s", rName)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

@@ -40,6 +40,11 @@ func TestAccAviatrixControllerConfig_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_group_management", "true"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

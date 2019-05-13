@@ -21,7 +21,7 @@ func preAvxTransitGatewayPeeringCheck(t *testing.T, msgCommon string) (string, s
 func TestAccAviatrixTransitGatewayPeering_basic(t *testing.T) {
 	rName := acctest.RandString(5)
 
-	sourceName := "aviatrix_transit_gateway_peering.foo"
+	resourceName := "aviatrix_transit_gateway_peering.foo"
 
 	skipAcc := os.Getenv("SKIP_TRANSIT_GATEWAY_PEERING")
 	if skipAcc == "yes" {
@@ -42,10 +42,15 @@ func TestAccAviatrixTransitGatewayPeering_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					tesAccCheckTransitGatewayPeeringExists("aviatrix_transit_gateway_peering.foo"),
 					resource.TestCheckResourceAttr(
-						sourceName, "transit_gateway_name1", fmt.Sprintf("tfg-%s", rName)),
+						resourceName, "transit_gateway_name1", fmt.Sprintf("tfg-%s", rName)),
 					resource.TestCheckResourceAttr(
-						sourceName, "transit_gateway_name2", fmt.Sprintf("tfg2-%s", rName)),
+						resourceName, "transit_gateway_name2", fmt.Sprintf("tfg2-%s", rName)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

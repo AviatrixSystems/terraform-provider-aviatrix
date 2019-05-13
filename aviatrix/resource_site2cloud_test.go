@@ -14,6 +14,7 @@ import (
 func TestAccAviatrixS2C_basic(t *testing.T) {
 	var s2c goaviatrix.Site2Cloud
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	resourceName := "aviatrix_site2cloud.foo"
 
 	skipAcc := os.Getenv("SKIP_S2C")
 	if skipAcc == "yes" {
@@ -31,23 +32,28 @@ func TestAccAviatrixS2C_basic(t *testing.T) {
 				Config: testAccS2CConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckS2CExists("aviatrix_site2cloud.foo", &s2c),
-					resource.TestCheckResourceAttr("aviatrix_site2cloud.foo", "connection_name",
+					resource.TestCheckResourceAttr(resourceName, "connection_name",
 						fmt.Sprintf("tfs-%s", rName)),
-					resource.TestCheckResourceAttr("aviatrix_site2cloud.foo", "vpc_id",
+					resource.TestCheckResourceAttr(resourceName, "vpc_id",
 						os.Getenv("AWS_VPC_ID")),
-					resource.TestCheckResourceAttr("aviatrix_site2cloud.foo", "tunnel_type", "udp"),
-					resource.TestCheckResourceAttr("aviatrix_site2cloud.foo", "primary_cloud_gateway_name",
+					resource.TestCheckResourceAttr(resourceName, "tunnel_type", "udp"),
+					resource.TestCheckResourceAttr(resourceName, "primary_cloud_gateway_name",
 						fmt.Sprintf("tfg-%s", rName)),
 
-					resource.TestCheckResourceAttr("aviatrix_site2cloud.foo", "remote_gateway_ip",
+					resource.TestCheckResourceAttr(resourceName, "remote_gateway_ip",
 						"8.8.8.8"),
-					resource.TestCheckResourceAttr("aviatrix_site2cloud.foo", "remote_subnet_cidr",
+					resource.TestCheckResourceAttr(resourceName, "remote_subnet_cidr",
 						"10.23.0.0/24"),
-					resource.TestCheckResourceAttr("aviatrix_site2cloud.foo", "remote_gateway_type",
+					resource.TestCheckResourceAttr(resourceName, "remote_gateway_type",
 						"generic"),
-					resource.TestCheckResourceAttr("aviatrix_site2cloud.foo", "connection_type",
+					resource.TestCheckResourceAttr(resourceName, "connection_type",
 						"unmapped"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

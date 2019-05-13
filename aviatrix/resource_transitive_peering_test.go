@@ -22,6 +22,7 @@ func preTransPeerCheck(t *testing.T, msgCommon string) (string, string, string, 
 func TestAccAviatrixTransPeer_basic(t *testing.T) {
 	var transpeer goaviatrix.TransPeer
 	rName := acctest.RandString(5)
+	resourceName := "aviatrix_trans_peer.test_trans_peer"
 
 	skipAcc := os.Getenv("SKIP_TRANS_PEER")
 	if skipAcc == "yes" {
@@ -44,14 +45,17 @@ func TestAccAviatrixTransPeer_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccTransPeerExists("aviatrix_trans_peer.test_trans_peer", &transpeer),
 					resource.TestCheckResourceAttr(
-						"aviatrix_trans_peer.test_trans_peer", "source", fmt.Sprintf("tfg-%s",
-							rName)),
+						resourceName, "source", fmt.Sprintf("tfg-%s", rName)),
 					resource.TestCheckResourceAttr(
-						"aviatrix_trans_peer.test_trans_peer", "nexthop", fmt.Sprintf("tfg2-%s",
-							rName)),
+						resourceName, "nexthop", fmt.Sprintf("tfg2-%s", rName)),
 					resource.TestCheckResourceAttr(
-						"aviatrix_trans_peer.test_trans_peer", "reachable_cidr", reachableCIDR),
+						resourceName, "reachable_cidr", reachableCIDR),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

@@ -35,6 +35,7 @@ func preAWSPeerCheck(t *testing.T, msgCommon string) (string, string, string, st
 func TestAccAviatrixAWSPeer_basic(t *testing.T) {
 	var awsPeer goaviatrix.AWSPeer
 	rInt := acctest.RandInt()
+	resourceName := "aviatrix_aws_peer.test_aws_peer"
 
 	skipAcc := os.Getenv("SKIP_AWS_PEER")
 	if skipAcc == "yes" {
@@ -54,12 +55,17 @@ func TestAccAviatrixAWSPeer_basic(t *testing.T) {
 			{
 				Config: testAccAWSPeerConfigBasic(rInt, vpcID1, vpcID2, region1, region2),
 				Check: resource.ComposeTestCheckFunc(
-					tesAccCheckAWSPeerExists("aviatrix_aws_peer.test_aws_peer", &awsPeer),
+					tesAccCheckAWSPeerExists(resourceName, &awsPeer),
 					resource.TestCheckResourceAttr(
-						"aviatrix_aws_peer.test_aws_peer", "vpc_id1", vpcID1),
+						resourceName, "vpc_id1", vpcID1),
 					resource.TestCheckResourceAttr(
-						"aviatrix_aws_peer.test_aws_peer", "vpc_id2", vpcID2),
+						resourceName, "vpc_id2", vpcID2),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

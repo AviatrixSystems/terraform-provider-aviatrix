@@ -59,6 +59,11 @@ func TestAccAviatrixVGWConn_basic(t *testing.T) {
 						resourceName, "bgp_local_as_num", "6451"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

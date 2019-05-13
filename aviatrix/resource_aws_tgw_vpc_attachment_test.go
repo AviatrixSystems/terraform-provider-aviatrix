@@ -46,6 +46,11 @@ func TestAccAviatrixAwsTgwVpcAttachment_basic(t *testing.T) {
 						resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

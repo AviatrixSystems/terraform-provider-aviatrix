@@ -45,6 +45,11 @@ func TestAccAviatrixFQDN_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "domain_names.0.port", "443"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
