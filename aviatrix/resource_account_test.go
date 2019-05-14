@@ -103,6 +103,7 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 		t.Log("Skipping GCP Access Account test as SKIP_GCP_ACCOUNT is set")
 	} else {
 		resourceName := "aviatrix_account.gcp"
+		importStateVerifyIgnore = append(importStateVerifyIgnore, "gcloud_project_credentials_filepath")
 		resource.Test(t, resource.TestCase{
 			PreCheck:     func() { testAccPreCheck(t) },
 			Providers:    testAccProviders,
