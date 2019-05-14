@@ -572,7 +572,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			} else {
 				d.Set("allocate_new_eip", "off")
 			}
-		} if gw.CloudType == 4 || gw.CloudType == 8 {
+		} else if gw.CloudType == 4 || gw.CloudType == 8 {
 			// gcp and arm gateways don't have the option to allocate new eip's
 			// default for allocate_new_eip is on
 			d.Set("allocate_new_eip", "on")
