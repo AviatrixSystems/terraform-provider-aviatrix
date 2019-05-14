@@ -459,8 +459,7 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 				return fmt.Errorf("failed to delete Aviatrix TransitVpc HA gateway: %s", err)
 			}
 		} else {
-			//HA subnet has been modified. Delete older HA GW,
-			// and launch new HA GW in new subnet.
+			//HA subnet has been modified. Delete older HA GW, and launch new HA GW in new subnet.
 			err := client.DeleteGateway(haGateway)
 			if err != nil {
 				return fmt.Errorf("failed to delete Aviatrix TransitVpc HA gateway: %s", err)

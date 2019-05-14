@@ -81,22 +81,22 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 func testAccGatewayConfigBasic(rName string, accountID string, vpcID string, region string, vpcNet string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
-	account_name = "%s"
-	cloud_type = 1
+	account_name       = "%s"
+	cloud_type         = 1
 	aws_account_number = "%s"
-	aws_iam = "false"
-	aws_access_key = "%s"
-	aws_secret_key = "%s"
+	aws_iam            = "false"
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
 }
 
 resource "aviatrix_gateway" "test" {
-	cloud_type = 1
+	cloud_type   = 1
 	account_name = "${aviatrix_account.test.account_name}"
-	gw_name = "%[1]s"
-	vpc_id = "%[5]s"
-	vpc_reg = "%[6]s"
-	vpc_size = "t2.micro"
-	vpc_net = "%[7]s"
+	gw_name      = "%[1]s"
+	vpc_id       = "%[5]s"
+	vpc_reg      = "%[6]s"
+	vpc_size     = "t2.micro"
+	vpc_net      = "%[7]s"
 }
 	`, rName, accountID, os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"), vpcID, region, vpcNet)
 }

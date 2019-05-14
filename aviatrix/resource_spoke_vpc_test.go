@@ -74,10 +74,12 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("AWS_VPC_NET")),
 						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AWS_REGION")),
 						resource.TestCheckResourceAttr(resourceName, "enable_nat", "no"),
-						resource.TestCheckResourceAttr(resourceName, "tag_list.#", "2"),
-						resource.TestCheckResourceAttr(resourceName, "tag_list.0", "k1:v1"),
-						resource.TestCheckResourceAttr(resourceName, "tag_list.1", "k2:v2"),
 					),
+				},
+				{
+					ResourceName:      resourceName,
+					ImportState:       true,
+					ImportStateVerify: true,
 				},
 			},
 		})
@@ -104,6 +106,11 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "enable_nat", "no"),
 					),
 				},
+				{
+					ResourceName:      resourceName,
+					ImportState:       true,
+					ImportStateVerify: true,
+				},
 			},
 		})
 	}
@@ -129,6 +136,11 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "enable_nat", "no"),
 					),
 				},
+				{
+					ResourceName:      resourceName,
+					ImportState:       true,
+					ImportStateVerify: true,
+				},
 			},
 		})
 	}
@@ -140,7 +152,6 @@ func testAccSpokeGwConfigAWS(rName string) string {
 		awsGwSize = "t2.micro"
 	}
 	return fmt.Sprintf(`
-
 resource "aviatrix_account" "test" {
 	account_name 	   = "tfa-aws-%s"
 	cloud_type 		   = 1
@@ -151,17 +162,15 @@ resource "aviatrix_account" "test" {
 }
 
 resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
-  cloud_type = 1
-  account_name = "${aviatrix_account.test.account_name}"
-  gw_name = "tfg-aws-%[1]s"
-  vpc_id = "%[5]s"
-  vpc_reg = "%[6]s"
-  vpc_size = "%[7]s"
-  subnet = "%[8]s"
-  enable_nat = "no"
-  tag_list = ["k1:v1","k2:v2"]
+    cloud_type = 1
+    account_name = "${aviatrix_account.test.account_name}"
+    gw_name = "tfg-aws-%[1]s"
+    vpc_id = "%[5]s"
+    vpc_reg = "%[6]s"
+    vpc_size = "%[7]s"
+    subnet = "%[8]s"
+    enable_nat = "no"
 }
-
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_VPC_NET"))
 }
@@ -172,7 +181,6 @@ func testAccSpokeGwConfigGCP(rName string) string {
 		gcpGwSize = "f1-micro"
 	}
 	return fmt.Sprintf(`
-
 resource "aviatrix_account" "test" {
 	account_name 						= "tfa-gcp-%s"
 	cloud_type 							= 4
@@ -181,17 +189,16 @@ resource "aviatrix_account" "test" {
 }
 
 resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
-  cloud_type = 4
-  account_name = "${aviatrix_account.test.account_name}"
-  gw_name = "tfg-gcp-%[1]s"
-  vpc_id = "%[4]s"
-  vpc_reg = "%[5]s"
-  vpc_size = "%[6]s"
-  subnet = "%[7]s"
-  enable_nat = "no"
+    cloud_type = 4
+    account_name = "${aviatrix_account.test.account_name}"
+    gw_name = "tfg-gcp-%[1]s"
+    vpc_id = "%[4]s"
+    vpc_reg = "%[5]s"
+    vpc_size = "%[6]s"
+    subnet = "%[7]s"
+    enable_nat = "no"
 }
-
-        `, rName, os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"),
+	`, rName, os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"),
 		os.Getenv("GCP_VPC_ID"), os.Getenv("GCP_ZONE"), gcpGwSize, os.Getenv("GCP_SUBNET"))
 }
 
@@ -207,14 +214,14 @@ resource "aviatrix_account" "test" {
 }
 
 resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
-  cloud_type = 8
-  account_name = "${aviatrix_account.test.account_name}"
-  gw_name = "tfg-arm-%[1]s"
-  vnet_and_resource_group_names = "%[6]s"
-  vpc_reg = "%[7]s"
-  vpc_size = "%[8]s"
-  subnet = "%[9]s"
-  enable_nat = "no"
+    cloud_type = 8
+    account_name = "${aviatrix_account.test.account_name}"
+    gw_name = "tfg-arm-%[1]s"
+    vnet_and_resource_group_names = "%[6]s"
+    vpc_reg = "%[7]s"
+    vpc_size = "%[8]s"
+    subnet = "%[9]s"
+    enable_nat = "no"
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
 		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),

@@ -429,17 +429,19 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		log.Printf("[INFO] Resizing Peering HA Gateway: %#v", peeringHaGwSize)
 		if peeringHaGwSize != gateway.VpcSize {
 			if peeringHaGwSize == "" {
-				return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for this resource if peering_ha_subnet is set. Example: t2.micro")
+				return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for " +
+					"this resource if peering_ha_subnet is set. Example: t2.micro")
 			}
 			peeringHaGateway := &goaviatrix.Gateway{
 				CloudType: d.Get("cloud_type").(int),
-				GwName:    d.Get("gw_name").(string) + "-hagw", //CHECK THE NAME of peering ha gateway in controller, test out first. just assuming it has that suffix
+				GwName:    d.Get("gw_name").(string) + "-hagw", //CHECK THE NAME of peering ha gateway in
+				// controller, test out first. just assuming it has that suffix
 			}
 			peeringHaGateway.GwSize = peeringHaGwSize
 			err := client.UpdateGateway(peeringHaGateway)
 			log.Printf("[INFO] Resizing Peering Ha Gateway size to: %s,", peeringHaGateway.GwSize)
 			if err != nil {
-				return fmt.Errorf("failed to update Aviatrix Peering HA Gateway size: &s", err)
+				return fmt.Errorf("failed to update Aviatrix Peering HA Gateway size: %s", err)
 			}
 			d.Set("peering_ha_gw_size", peeringHaGwSize)
 		}
@@ -660,7 +662,9 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				d.Set("backup_public_ip", "")
 				d.Set("peering_ha_subnet", "")
 				d.Set("peering_ha_eip", "")
-				d.Set("peering_ha_gw_size", "")
+				if err != goaviatrix.ErrNotFound {
+					d.Set("peering_ha_gw_size", "")
+				}
 			}
 			log.Printf("[TRACE] reading peering HA gateway %s: %#v", d.Get("gw_name").(string), gwHaGw)
 		} else {

@@ -26,7 +26,7 @@ func TestAccAviatrixAWSTgw_basic(t *testing.T) {
 	preAccountCheck(t, msg)
 
 	awsSideAsNumber := "64512"
-	sDm := "mySdn"
+	sDm := "zSecurityDomain"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -64,19 +64,15 @@ func TestAccAviatrixAWSTgw_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "security_domains.1.security_domain_name", "Default_Domain"),
 					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.1.connected_domains.#", "2"),
+						resourceName, "security_domains.1.connected_domains.#", "1"),
 					resource.TestCheckResourceAttr(
 						resourceName, "security_domains.1.connected_domains.0", "Aviatrix_Edge_Domain"),
 					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.1.connected_domains.1", "Shared_Service_Domain"),
-					resource.TestCheckResourceAttr(
 						resourceName, "security_domains.2.security_domain_name", "Shared_Service_Domain"),
 					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.2.connected_domains.#", "2"),
+						resourceName, "security_domains.2.connected_domains.#", "1"),
 					resource.TestCheckResourceAttr(
 						resourceName, "security_domains.2.connected_domains.0", "Aviatrix_Edge_Domain"),
-					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.2.connected_domains.1", "Default_Domain"),
 					resource.TestCheckResourceAttr(
 						resourceName, "security_domains.3.security_domain_name", sDm),
 					resource.TestCheckResourceAttr(
@@ -137,12 +133,12 @@ resource "aviatrix_aws_tgw" "aws_tgw_test" {
     },
     {
     	security_domain_name = "Default_Domain"
-    	connected_domains    = ["Aviatrix_Edge_Domain","Shared_Service_Domain"]
+    	connected_domains    = ["Aviatrix_Edge_Domain"]
     	attached_vpc         = []
     },
     {
     	security_domain_name = "Shared_Service_Domain"
-    	connected_domains    = ["Aviatrix_Edge_Domain","Default_Domain"]
+    	connected_domains    = ["Aviatrix_Edge_Domain"]
     	attached_vpc         = []
     },
     {
