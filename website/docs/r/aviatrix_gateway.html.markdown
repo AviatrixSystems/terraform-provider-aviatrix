@@ -47,6 +47,17 @@ resource "aviatrix_gateway" "test_gateway_arm" {
   vpc_net      = "10.13.0.0/24"
 }
 
+# Create Aviatrix AWS gateway with Peering HA enabled
+resource "aviatrix_gateway" "test_gateway_aws" {
+  cloud_type   = 1
+  account_name = "devops"
+  gw_name      = "avtxgw1"
+  vpc_id       = "vpc-abcdef"
+  vpc_reg      = "us-west-1"
+  vpc_size     = "t2.micro"
+  vpc_net      = "10.0.0.0/24"
+  peering_ha_subnet = "10.0.0.0/24"
+}
 # Create Aviatrix GCP gateway with Peering HA enabled
 resource "aviatrix_gateway" "test_gateway_gcp" {
   cloud_type   = 4
@@ -56,7 +67,7 @@ resource "aviatrix_gateway" "test_gateway_gcp" {
   vpc_reg      = "us-west1-b"
   vpc_size     = "f1-micro"
   vpc_net      = "10.12.0.0/24"
-  peering_ha_subnet = "us-west1-c"
+  peering_ha_zone = "us-west1-c"
 }
 
 ```
@@ -96,7 +107,8 @@ The following arguments are supported:
 * `ldap_password` - (Optional) LDAP password. (Required: Yes if enable_ldap is "yes")
 * `ldap_base_dn` - (Optional) LDAP base DN. (Required: Yes if enable_ldap is "yes")
 * `ldap_username_attribute` - (Optional) LDAP user attribute. (Required: Yes if enable_ldap is "yes")
-* `peering_ha_subnet` - Public Subnet Information while creating Peering HA Gateway, only subnet is accepted. Example: AWS: "10.0.0.0/16". If enabling Peering HA for a GCP gateway, enter a valid zone. (Example: us-west1-c)
+* `peering_ha_subnet` - (Optional) Public Subnet Information while creating Peering HA Gateway, only subnet is accepted. Required for AWS/ARM if enabling Peering HA. Example: AWS: "10.0.0.0/16".
+* `peering_ha_zone` - (Optional) Zone information for creating Peering HA Gateway, only zone is accepted. Required for GCP if enabling Peering HA. (Example: GCP: "us-west1-c")
 * `peering_ha_eip` - (Optional) Public IP address that you want assigned to the HA peering instance. Only available for AWS.
 * `peering_ha_gw_size` - (Optional) Size of the Peering HA Gateway.
 * `single_az_ha` (Optional) Set to "enabled" if this feature is desired.
