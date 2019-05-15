@@ -23,32 +23,32 @@ func resourceAWSPeer() *schema.Resource {
 			"account_name1": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "This parameter represents the name of a Cloud-Account in Aviatrix controller.",
+				Description: "This parameter represents the name of an AWS Cloud-Account in Aviatrix controller.",
 			},
 			"account_name2": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "This parameter represents the name of a Cloud-Account in Aviatrix controller.",
+				Description: "This parameter represents the name of an AWS Cloud-Account in Aviatrix controller.",
 			},
 			"vpc_id1": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "VPC-ID/VNet-Name of cloud provider.",
+				Description: "VPC-ID of AWS cloud.",
 			},
 			"vpc_id2": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "VPC-ID/VNet-Name of cloud provider.",
+				Description: "VPC-ID of AWS cloud.",
 			},
 			"vpc_reg1": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Region of cloud provider.",
+				Description: "Region of AWS cloud.",
 			},
 			"vpc_reg2": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Region of cloud provider.",
+				Description: "Region of AWS cloud.",
 			},
 			"rtb_list1": {
 				Type:        schema.TypeList,
