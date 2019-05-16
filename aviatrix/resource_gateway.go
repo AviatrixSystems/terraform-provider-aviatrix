@@ -227,6 +227,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"peering_ha_subnet": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Default:     "",
 				Description: "Public Subnet Information while creating Peering HA Gateway, only subnet is accepted.",
 			},
 			"peering_ha_eip": {
@@ -238,6 +239,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"peering_ha_gw_size": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Default:     "",
 				Description: "Peering HA Gateway Size.",
 			},
 			"zone": {
@@ -387,6 +389,14 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	if gateway.EnableElb == "yes" && gateway.VpnStatus != "yes" {
 		return fmt.Errorf("can not enable elb without vpn access set to yes")
 	}
+
+	peeringHaGwSize := d.Get("peering_ha_gw_size").(string)
+	peeringHaSubnet := d.Get("peering_ha_subnet").(string)
+	if peeringHaGwSize == "" && peeringHaSubnet != "" {
+		return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for " +
+			"this resource if peering_ha_subnet is set. Example: t2.micro")
+	}
+
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)
 
 	err := client.CreateGateway(gateway)
@@ -398,7 +408,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		log.Printf("[INFO] Aviatrix NAT enabled gateway: %#v", gateway)
 	}
 
-	peeringHaGwSize := d.Get("peering_ha_gw_size").(string)
 	// single_AZ enabled for Gateway. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
 	if singleAZHA := d.Get("single_az_ha").(string); singleAZHA == "enabled" {
 		singleAZGateway := &goaviatrix.Gateway{
@@ -413,7 +422,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	// peering_ha_subnet is for Peering HA Gateway. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
-	if peeringHaSubnet := d.Get("peering_ha_subnet").(string); peeringHaSubnet != "" {
+	if peeringHaSubnet != "" {
 		peeringHaGateway := &goaviatrix.Gateway{
 			Eip:             d.Get("peering_ha_eip").(string),
 			GwName:          d.Get("gw_name").(string),

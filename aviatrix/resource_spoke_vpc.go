@@ -135,6 +135,14 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 	} else {
 		return fmt.Errorf("invalid cloud type, it can only be aws (1), gcp (4), arm (8)")
 	}
+
+	haSubnet := d.Get("ha_subnet").(string)
+	haGwSize := d.Get("ha_gw_size").(string)
+	if haGwSize == "" && haSubnet != "" {
+		return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
+			"ha_subnet is set. Example: t2.micro")
+	}
+
 	log.Printf("[INFO] Creating Aviatrix Spoke VPC: %#v", gateway)
 
 	err := client.LaunchSpokeVpc(gateway)
@@ -144,7 +152,6 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 	if enableNAT := d.Get("enable_nat").(string); enableNAT == "yes" {
 		log.Printf("[INFO] Aviatrix NAT enabled gateway: %#v", gateway)
 	}
-	haGwSize := d.Get("ha_gw_size").(string)
 	if singleAZHA := d.Get("single_az_ha").(string); singleAZHA == "enabled" {
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName:   d.Get("gw_name").(string),
@@ -156,7 +163,7 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("failed to create single AZ GW HA: %s", err)
 		}
 	}
-	if haSubnet := d.Get("ha_subnet").(string); haSubnet != "" {
+	if haSubnet != "" {
 		//Enable HA
 		haGateway := &goaviatrix.SpokeVpc{
 			GwName:    d.Get("gw_name").(string),

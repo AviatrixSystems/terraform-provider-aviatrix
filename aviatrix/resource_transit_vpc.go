@@ -159,14 +159,19 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		gateway.TagList = strings.Join(tagListStr, ",")
 	}
 
+	haSubnet := d.Get("ha_subnet").(string)
+	haGwSize := d.Get("ha_gw_size").(string)
+	if haGwSize == "" && haSubnet != "" {
+		return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
+			"ha_subnet is set. Example: t2.micro")
+	}
+
 	log.Printf("[INFO] Creating Aviatrix TransitVpc: %#v", gateway)
 
 	err := client.LaunchTransitVpc(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix TransitVpc: %s", err)
 	}
-	haSubnet := d.Get("ha_subnet").(string)
-	haGwSize := d.Get("ha_gw_size").(string)
 	enableHybridConnection := d.Get("enable_hybrid_connection").(bool)
 	if enableHybridConnection && cloudType != 1 {
 		return fmt.Errorf("'enable_hybrid_connection' is only supported for AWS cloud type 1")
