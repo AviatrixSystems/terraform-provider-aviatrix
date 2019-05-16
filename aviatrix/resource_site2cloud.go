@@ -9,6 +9,13 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
+const Phase1AuthDefault = "SHA-1"
+const Phase1DhGroupDefault = "2"
+const Phase1EncryptionDefault = "AES-256-CBC"
+const Phase2AuthDefault = "HMAC-SHA-1"
+const Phase2DhGroupDefault = "2"
+const Phase2EncryptionDefault = "AES-256-CBC"
+
 func resourceAviatrixSite2Cloud() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixSite2CloudCreate,
@@ -230,23 +237,11 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("custom_algorithms is not supported for tunnel type 'tcp'")
 	}
 	if customAlgorithms {
-		if s2c.Phase1Auth == "" {
-			return fmt.Errorf("invalid phase_1_authentication")
-		}
-		if s2c.Phase1DhGroups == "" {
-			return fmt.Errorf("invalid phase_1_dh_groups")
-		}
-		if s2c.Phase1Encryption == "" {
-			return fmt.Errorf("invalid phase_1_encryption")
-		}
-		if s2c.Phase2Auth == "" {
-			return fmt.Errorf("invalid phase_2_authentication")
-		}
-		if s2c.Phase2DhGroups == "" {
-			return fmt.Errorf("invalid phase_2_dh_groups")
-		}
-		if s2c.Phase2Encryption == "" {
-			return fmt.Errorf("invalid phase_2_encryption")
+		if s2c.Phase1Auth == Phase1AuthDefault && s2c.Phase2Auth == Phase2AuthDefault &&
+			s2c.Phase1DhGroups == Phase1DhGroupDefault && s2c.Phase2DhGroups == Phase2DhGroupDefault &&
+			s2c.Phase1Encryption == Phase1EncryptionDefault && s2c.Phase2Encryption == Phase2EncryptionDefault {
+			return fmt.Errorf("custom_algorithms is enabled, cannot use defalut values for " +
+				"all six algorithm parameters")
 		}
 		err := client.Site2CloudAlgorithmCheck(s2c)
 		if err != nil {
@@ -255,21 +250,33 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	} else {
 		if s2c.Phase1Auth != "" {
 			return fmt.Errorf("custom_algorithms is disabled, phase_1_authentication should be empty")
+		} else {
+			s2c.Phase1Auth = Phase1AuthDefault
 		}
 		if s2c.Phase1DhGroups != "" {
 			return fmt.Errorf("custom_algorithms is disabled, phase_1_dh_groups should be empty")
+		} else {
+			s2c.Phase1DhGroups = Phase1DhGroupDefault
 		}
 		if s2c.Phase1Encryption != "" {
 			return fmt.Errorf("custom_algorithms is disabled, phase_1_encryption should be empty")
+		} else {
+			s2c.Phase1Encryption = Phase1EncryptionDefault
 		}
 		if s2c.Phase2Auth != "" {
 			return fmt.Errorf("custom_algorithms is disabled, phase_2_authentication should be empty")
+		} else {
+			s2c.Phase2Auth = Phase2AuthDefault
 		}
 		if s2c.Phase2DhGroups != "" {
 			return fmt.Errorf("custom_algorithms is disabled, phase_2_dh_groups should be empty")
+		} else {
+			s2c.Phase2DhGroups = Phase2DhGroupDefault
 		}
 		if s2c.Phase2Encryption != "" {
 			return fmt.Errorf("custom_algorithms is disabled, phase_2_encryption should be empty")
+		} else {
+			s2c.Phase2Encryption = Phase2EncryptionDefault
 		}
 	}
 
@@ -362,6 +369,15 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 			d.Set("remote_subnet_virtual", s2c.RemoteSubnetVirtual)
 			d.Set("local_subnet_virtual", s2c.LocalSubnetVirtual)
 		}
+
+		if s2c.CustomAlgorithms {
+			d.Set("phase_1_authentication", s2c.Phase1Auth)
+			d.Set("phase_2_authentication", s2c.Phase2Auth)
+			d.Set("phase_1_dh_groups", s2c.Phase1DhGroups)
+			d.Set("phase_2_dh_groups", s2c.Phase2DhGroups)
+			d.Set("phase_1_encryption", s2c.Phase1Encryption)
+			d.Set("phase_2_encryption", s2c.Phase2Encryption)
+		}
 	}
 
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", d.Get("connection_name").(string), site2cloud)
@@ -420,6 +436,27 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 	if d.HasChange("local_subnet_virtual") {
 		return fmt.Errorf("updating local_subnet_virtual is not allowed")
+	}
+	if d.HasChange("custom_algorithms") {
+		return fmt.Errorf("updating custom_algorithms is not allowed")
+	}
+	if d.HasChange("phase_1_authentication") {
+		return fmt.Errorf("updating backup_remote_gateway_longitude is not allowed")
+	}
+	if d.HasChange("phase_2_authentication") {
+		return fmt.Errorf("updating phase_2_authentication is not allowed")
+	}
+	if d.HasChange("phase_1_dh_groups") {
+		return fmt.Errorf("updating phase_1_dh_groups is not allowed")
+	}
+	if d.HasChange("phase_2_dh_groups") {
+		return fmt.Errorf("updating phase_2_dh_groups is not allowed")
+	}
+	if d.HasChange("phase_1_encryption") {
+		return fmt.Errorf("updating phase_1_encryption is not allowed")
+	}
+	if d.HasChange("phase_2_encryption") {
+		return fmt.Errorf("updating phase_2_encryption is not allowed")
 	}
 	if d.HasChange("private_route_encryption") {
 		return fmt.Errorf("updating private_route_encryption is not allowed")

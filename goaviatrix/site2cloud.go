@@ -72,23 +72,24 @@ type Site2CloudConnList struct {
 }
 
 type EditSite2CloudConnDetail struct {
-	VpcID               []string     `json:"vpc_id,omitempty"`
-	TunnelName          []string     `json:"name,omitempty"`
-	ConnType            string       `json:"type,omitempty"`
-	TunnelType          []string     `json:"tunnel_type,omitempty"`
-	GwName              []string     `json:"gw_name,omitempty"`
-	BackupGwName        []string     `json:"backup_gateway_name,omitempty"`
-	RemoteGwIP          []string     `json:"remote_gateway_ip,omitempty"`
-	RemoteGwIP2         []string     `json:"backup_remote_gateway_ip,omitempty"`
-	Tunnels             []TunnelInfo `json:"tunnels,omitempty"`
-	RemoteSubnet        string       `json:"real_remote_cidr,omitempty"`
-	LocalSubnet         string       `json:"real_local_cidr,omitempty"`
-	RemoteCidr          string       `json:"remote_cidr,omitempty"`
-	LocalCidr           string       `json:"local_cidr,omitempty"`
-	HAEnabled           string       `json:"ha_status,omitempty"`
-	PeerType            string       `json:"peer_type,omitempty"`
-	RemoteSubnetVirtual string       `json:"virt_remote_cidr,omitempty"`
-	LocalSubnetVirtual  string       `json:"virt_local_cidr,omitempty"`
+	VpcID               []string      `json:"vpc_id,omitempty"`
+	TunnelName          []string      `json:"name,omitempty"`
+	ConnType            string        `json:"type,omitempty"`
+	TunnelType          []string      `json:"tunnel_type,omitempty"`
+	GwName              []string      `json:"gw_name,omitempty"`
+	BackupGwName        []string      `json:"backup_gateway_name,omitempty"`
+	RemoteGwIP          []string      `json:"remote_gateway_ip,omitempty"`
+	RemoteGwIP2         []string      `json:"backup_remote_gateway_ip,omitempty"`
+	Tunnels             []TunnelInfo  `json:"tunnels,omitempty"`
+	RemoteSubnet        string        `json:"real_remote_cidr,omitempty"`
+	LocalSubnet         string        `json:"real_local_cidr,omitempty"`
+	RemoteCidr          string        `json:"remote_cidr,omitempty"`
+	LocalCidr           string        `json:"local_cidr,omitempty"`
+	HAEnabled           string        `json:"ha_status,omitempty"`
+	PeerType            string        `json:"peer_type,omitempty"`
+	RemoteSubnetVirtual string        `json:"virt_remote_cidr,omitempty"`
+	LocalSubnetVirtual  string        `json:"virt_local_cidr,omitempty"`
+	Algorithm           AlgorithmInfo `json:"algorithm,omitempty"`
 	//PreSharedKey        string `json:"pre_shared_key,omitempty"`
 	//BackupPreSharedKey  string `json:"backup_pre_shared_key,omitempty"`
 	//SslServerPool       string `json:"ssl_server_pool,omitempty"`
@@ -116,12 +117,12 @@ type TunnelInfo struct {
 }
 
 type AlgorithmInfo struct {
-	Phase1Auth      []string `json:"ph1_auth"`
-	Phase1DhGroups  []string `json:"ph1_dh"`
-	Phase1Encrption []string `json:"ph1_encr"`
-	Phase2Auth      []string `json:"ph2_auth"`
-	Phase2DhGroups  []string `json:"ph2_dh"`
-	Phase2Encrption []string `json:"ph2_encr"`
+	Phase1Auth      []string `json:"ph1_auth,omitempty"`
+	Phase1DhGroups  []string `json:"ph1_dh,omitempty"`
+	Phase1Encrption []string `json:"ph1_encr,omitempty"`
+	Phase2Auth      []string `json:"ph2_auth,omitempty"`
+	Phase2DhGroups  []string `json:"ph2_dh,omitempty"`
+	Phase2Encrption []string `json:"ph2_encr,omitempty"`
 }
 
 //func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
@@ -290,6 +291,27 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 				site2cloud.RemoteGwIP2 = s2cConnDetail.Tunnels[i].PeerIP
 			}
 		}
+		if s2cConnDetail.Algorithm.Phase1Auth[0] == "SHA-1" && s2cConnDetail.Algorithm.Phase2Auth[0] == "HMAC-SHA-1" &&
+			s2cConnDetail.Algorithm.Phase1DhGroups[0] == "2" && s2cConnDetail.Algorithm.Phase2DhGroups[0] == "2" &&
+			s2cConnDetail.Algorithm.Phase1Encrption[0] == "AES-256-CBC" &&
+			s2cConnDetail.Algorithm.Phase2Encrption[0] == "AES-256-CBC" {
+			site2cloud.CustomAlgorithms = false
+			site2cloud.Phase1Auth = ""
+			site2cloud.Phase2Auth = ""
+			site2cloud.Phase1DhGroups = ""
+			site2cloud.Phase2DhGroups = ""
+			site2cloud.Phase1Encryption = ""
+			site2cloud.Phase2Encryption = ""
+		} else {
+			site2cloud.CustomAlgorithms = true
+			site2cloud.Phase1Auth = s2cConnDetail.Algorithm.Phase1Auth[0]
+			site2cloud.Phase2Auth = s2cConnDetail.Algorithm.Phase2Auth[0]
+			site2cloud.Phase1DhGroups = s2cConnDetail.Algorithm.Phase1DhGroups[0]
+			site2cloud.Phase2DhGroups = s2cConnDetail.Algorithm.Phase2DhGroups[0]
+			site2cloud.Phase1Encryption = s2cConnDetail.Algorithm.Phase1Encrption[0]
+			site2cloud.Phase2Encryption = s2cConnDetail.Algorithm.Phase2Encrption[0]
+		}
+
 		return site2cloud, nil
 	}
 	return nil, ErrNotFound
