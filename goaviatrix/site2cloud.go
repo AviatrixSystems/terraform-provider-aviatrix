@@ -90,6 +90,7 @@ type EditSite2CloudConnDetail struct {
 	RemoteSubnetVirtual string        `json:"virt_remote_cidr,omitempty"`
 	LocalSubnetVirtual  string        `json:"virt_local_cidr,omitempty"`
 	Algorithm           AlgorithmInfo `json:"algorithm,omitempty"`
+	RouteTableList      []string      `json:"rtbls,omitempty"`
 	//PreSharedKey        string `json:"pre_shared_key,omitempty"`
 	//BackupPreSharedKey  string `json:"backup_pre_shared_key,omitempty"`
 	//SslServerPool       string `json:"ssl_server_pool,omitempty"`
@@ -310,6 +311,12 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 			site2cloud.Phase2DhGroups = s2cConnDetail.Algorithm.Phase2DhGroups[0]
 			site2cloud.Phase1Encryption = s2cConnDetail.Algorithm.Phase1Encrption[0]
 			site2cloud.Phase2Encryption = s2cConnDetail.Algorithm.Phase2Encrption[0]
+		}
+		if len(s2cConnDetail.RouteTableList) > 0 {
+			site2cloud.RouteTableList = s2cConnDetail.RouteTableList
+			site2cloud.PrivateRouteEncryption = "true"
+		} else {
+			site2cloud.PrivateRouteEncryption = "false"
 		}
 
 		return site2cloud, nil

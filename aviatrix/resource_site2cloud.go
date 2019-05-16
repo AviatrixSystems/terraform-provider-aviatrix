@@ -287,7 +287,9 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		routeTableList = append(routeTableList, rTList[i].(string))
 	}
 
-	if privateRouteEncryption {
+	if privateRouteEncryption && len(routeTableList) == 0 {
+		return fmt.Errorf("private_route_encryption is enabled, route_table_list cannot be empty")
+	} else if privateRouteEncryption {
 		s2c.PrivateRouteEncryption = "true"
 		s2c.RouteTableList = routeTableList
 		s2c.RemoteGwLatitude = d.Get("remote_gateway_latitude").(float64)
@@ -378,6 +380,13 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 			d.Set("phase_1_encryption", s2c.Phase1Encryption)
 			d.Set("phase_2_encryption", s2c.Phase2Encryption)
 		}
+
+		if s2c.PrivateRouteEncryption == "true" {
+			d.Set("private_route_encryption", true)
+			d.Set("route_table_list", s2c.RouteTableList)
+		} else {
+			d.Set("private_route_encryption", false)
+		}
 	}
 
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", d.Get("connection_name").(string), site2cloud)
@@ -463,18 +472,6 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 	if d.HasChange("route_table_list") {
 		return fmt.Errorf("updating route_table_list is not allowed")
-	}
-	if d.HasChange("remote_gateway_latitude") {
-		return fmt.Errorf("updating remote_gateway_latitude is not allowed")
-	}
-	if d.HasChange("remote_gateway_longitude") {
-		return fmt.Errorf("updating remote_gateway_longitude is not allowed")
-	}
-	if d.HasChange("backup_remote_gateway_latitude") {
-		return fmt.Errorf("updating backup_remote_gateway_latitude is not allowed")
-	}
-	if d.HasChange("backup_remote_gateway_longitude") {
-		return fmt.Errorf("updating backup_remote_gateway_longitude is not allowed")
 	}
 
 	log.Printf("[INFO] Updating Aviatrix Site2Cloud: %#v", editSite2cloud)
