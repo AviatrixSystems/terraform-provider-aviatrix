@@ -322,20 +322,19 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 			d.Set("ha_gw_size", "")
 			d.Set("ha_subnet", "")
 			d.Set("ha_zone", "")
-			//return nil
 		}
 		return fmt.Errorf("couldn't find Aviatrix SpokeVpc HA Gateway: %s", err)
+	} else {
+		log.Printf("[INFO] Spoke HA Gateway size: %s", haGw.GwSize)
+		if haGw.CloudType == 1 || haGw.CloudType == 8 {
+			d.Set("ha_subnet", haGw.VpcNet)
+			d.Set("ha_zone", "")
+		} else if haGw.CloudType == 4 {
+			d.Set("ha_zone", haGw.GatewayZone)
+			d.Set("ha_subnet", "")
+		}
+		d.Set("ha_gw_size", haGw.GwSize)
 	}
-	log.Printf("[INFO] Spoke HA Gateway size: %s", haGw.GwSize)
-	if haGw.CloudType == 1 || haGw.CloudType == 8 {
-		d.Set("ha_subnet", haGw.VpcNet)
-		d.Set("ha_zone", "")
-	} else if haGw.CloudType == 4 {
-		d.Set("ha_zone", haGw.GatewayZone)
-		d.Set("ha_subnet", "")
-	}
-	d.Set("ha_gw_size", haGw.GwSize)
-
 	return nil
 }
 
