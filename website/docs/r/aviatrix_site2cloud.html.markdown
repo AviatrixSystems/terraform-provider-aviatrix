@@ -64,7 +64,8 @@ The following arguments are supported:
 
 -> **NOTE:** 
 
-* `custom_algorithms` - Only supported by 'UDP' tunnel type. If set to true, the six algorithm arguments cannot all be default value. If set to false, default values will be used for all six algorithm arguments.
+* `custom_algorithms` - Only supported for 'udp' tunnel type. If set to true, the six algorithm arguments cannot all be default value. If set to false, default values will be used for all six algorithm arguments.
+* `ssl_server_pool` - Only supported for 'tcp' tunnel type. If not set, default value will be used. If set, needs to be set to a different value than default value.
 
 ## Import
 

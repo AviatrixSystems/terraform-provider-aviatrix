@@ -9,12 +9,13 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-const Phase1AuthDefault = "SHA-1"
-const Phase1DhGroupDefault = "2"
-const Phase1EncryptionDefault = "AES-256-CBC"
-const Phase2AuthDefault = "HMAC-SHA-1"
-const Phase2DhGroupDefault = "2"
-const Phase2EncryptionDefault = "AES-256-CBC"
+//const Phase1AuthDefault = "SHA-1"
+//const Phase1DhGroupDefault = "2"
+//const Phase1EncryptionDefault = "AES-256-CBC"
+//const Phase2AuthDefault = "HMAC-SHA-1"
+//const Phase2DhGroupDefault = "2"
+//const Phase2EncryptionDefault = "AES-256-CBC"
+//const SslServerPoolDefault = "192.168.44.0/24"
 
 func resourceAviatrixSite2Cloud() *schema.Resource {
 	return &schema.Resource{
@@ -189,6 +190,11 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Optional:    true,
 				Description: "Longitude of backup remote gateway.",
 			},
+			"ssl_server_pool": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Specify ssl_server_pool for tunnel_type 'tcp'. Default value is '192.168.44.0/24'",
+			},
 		},
 	}
 }
@@ -237,9 +243,12 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("custom_algorithms is not supported for tunnel type 'tcp'")
 	}
 	if customAlgorithms {
-		if s2c.Phase1Auth == Phase1AuthDefault && s2c.Phase2Auth == Phase2AuthDefault &&
-			s2c.Phase1DhGroups == Phase1DhGroupDefault && s2c.Phase2DhGroups == Phase2DhGroupDefault &&
-			s2c.Phase1Encryption == Phase1EncryptionDefault && s2c.Phase2Encryption == Phase2EncryptionDefault {
+		if s2c.Phase1Auth == goaviatrix.Phase1AuthDefault &&
+			s2c.Phase2Auth == goaviatrix.Phase2AuthDefault &&
+			s2c.Phase1DhGroups == goaviatrix.Phase1DhGroupDefault &&
+			s2c.Phase2DhGroups == goaviatrix.Phase2DhGroupDefault &&
+			s2c.Phase1Encryption == goaviatrix.Phase1EncryptionDefault &&
+			s2c.Phase2Encryption == goaviatrix.Phase2EncryptionDefault {
 			return fmt.Errorf("custom_algorithms is enabled, cannot use defalut values for " +
 				"all six algorithm parameters")
 		}
@@ -251,32 +260,32 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		if s2c.Phase1Auth != "" {
 			return fmt.Errorf("custom_algorithms is disabled, phase_1_authentication should be empty")
 		} else {
-			s2c.Phase1Auth = Phase1AuthDefault
+			s2c.Phase1Auth = goaviatrix.Phase1AuthDefault
 		}
 		if s2c.Phase1DhGroups != "" {
 			return fmt.Errorf("custom_algorithms is disabled, phase_1_dh_groups should be empty")
 		} else {
-			s2c.Phase1DhGroups = Phase1DhGroupDefault
+			s2c.Phase1DhGroups = goaviatrix.Phase1DhGroupDefault
 		}
 		if s2c.Phase1Encryption != "" {
 			return fmt.Errorf("custom_algorithms is disabled, phase_1_encryption should be empty")
 		} else {
-			s2c.Phase1Encryption = Phase1EncryptionDefault
+			s2c.Phase1Encryption = goaviatrix.Phase1EncryptionDefault
 		}
 		if s2c.Phase2Auth != "" {
 			return fmt.Errorf("custom_algorithms is disabled, phase_2_authentication should be empty")
 		} else {
-			s2c.Phase2Auth = Phase2AuthDefault
+			s2c.Phase2Auth = goaviatrix.Phase2AuthDefault
 		}
 		if s2c.Phase2DhGroups != "" {
 			return fmt.Errorf("custom_algorithms is disabled, phase_2_dh_groups should be empty")
 		} else {
-			s2c.Phase2DhGroups = Phase2DhGroupDefault
+			s2c.Phase2DhGroups = goaviatrix.Phase2DhGroupDefault
 		}
 		if s2c.Phase2Encryption != "" {
 			return fmt.Errorf("custom_algorithms is disabled, phase_2_encryption should be empty")
 		} else {
-			s2c.Phase2Encryption = Phase2EncryptionDefault
+			s2c.Phase2Encryption = goaviatrix.Phase2EncryptionDefault
 		}
 	}
 
@@ -305,11 +314,25 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	log.Printf("[INFO] Creating Aviatrix Site2Cloud: %#v", s2c)
+	sslServerPool := d.Get("ssl_server_pool").(string)
+
+	if s2c.TunnelType == "udp" && sslServerPool != "" {
+		return fmt.Errorf("ssl_server_pool only supports tunnel type 'tcp'")
+	}
+	if s2c.TunnelType == "tcp" && s2c.RemoteGwType != "avx" {
+		return fmt.Errorf("only 'avx' remote gateway type is supported for tunnel type 'tcp'")
+	}
 	if s2c.TunnelType == "tcp" {
-		s2c.SslServerPool = "192.168.44.0/24"
+		if sslServerPool == goaviatrix.SslServerPoolDefault {
+			return fmt.Errorf("'192.168.44.0/24' is default, please specify a different value for ssl_server_pool")
+		} else if sslServerPool == "" {
+			s2c.SslServerPool = goaviatrix.SslServerPoolDefault
+		} else {
+			s2c.SslServerPool = sslServerPool
+		}
 	}
 
+	log.Printf("[INFO] Creating Aviatrix Site2Cloud: %#v", s2c)
 	err := client.CreateSite2Cloud(s2c)
 	if err != nil {
 		return fmt.Errorf("failed Site2Cloud create: %s", err)
@@ -386,6 +409,10 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 			d.Set("route_table_list", s2c.RouteTableList)
 		} else {
 			d.Set("private_route_encryption", false)
+		}
+
+		if s2c.SslServerPool != "" {
+			d.Set("ssl_server_pool", s2c.SslServerPool)
 		}
 	}
 
@@ -472,6 +499,9 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 	if d.HasChange("route_table_list") {
 		return fmt.Errorf("updating route_table_list is not allowed")
+	}
+	if d.HasChange("ssl_server_pool") {
+		return fmt.Errorf("updating ssl_server_pool is not allowed")
 	}
 
 	log.Printf("[INFO] Updating Aviatrix Site2Cloud: %#v", editSite2cloud)

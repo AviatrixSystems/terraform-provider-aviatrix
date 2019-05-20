@@ -11,6 +11,14 @@ import (
 	"strings"
 )
 
+const Phase1AuthDefault = "SHA-1"
+const Phase1DhGroupDefault = "2"
+const Phase1EncryptionDefault = "AES-256-CBC"
+const Phase2AuthDefault = "HMAC-SHA-1"
+const Phase2DhGroupDefault = "2"
+const Phase2EncryptionDefault = "AES-256-CBC"
+const SslServerPoolDefault = "192.168.44.0/24"
+
 // Site2Cloud simple struct to hold site2cloud details
 type Site2Cloud struct {
 	Action                  string   `form:"action,omitempty"`
@@ -91,9 +99,10 @@ type EditSite2CloudConnDetail struct {
 	LocalSubnetVirtual  string        `json:"virt_local_cidr,omitempty"`
 	Algorithm           AlgorithmInfo `json:"algorithm,omitempty"`
 	RouteTableList      []string      `json:"rtbls,omitempty"`
+	SslServerPool       []string      `json:"ssl_server_pool,omitempty"`
+
 	//PreSharedKey        string `json:"pre_shared_key,omitempty"`
 	//BackupPreSharedKey  string `json:"backup_pre_shared_key,omitempty"`
-	//SslServerPool       string `json:"ssl_server_pool,omitempty"`
 	//NetworkType         string `json:"network_type,omitempty"`
 	//CloudSubnetCidr     string `json:"cloud_subnet_cidr,omitempty"`
 }
@@ -168,6 +177,10 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 	addSite2cloud.Add("phase2_auth", site2cloud.Phase2Auth)
 	addSite2cloud.Add("phase2_dh_group", site2cloud.Phase2DhGroups)
 	addSite2cloud.Add("phase2_encryption", site2cloud.Phase2Encryption)
+
+	if site2cloud.TunnelType == "tcp" {
+		addSite2cloud.Add("ssl_server_pool", site2cloud.SslServerPool)
+	}
 
 	if site2cloud.PrivateRouteEncryption == "true" {
 		addSite2cloud.Add("private_route_encryption", site2cloud.PrivateRouteEncryption)
@@ -292,10 +305,12 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 				site2cloud.RemoteGwIP2 = s2cConnDetail.Tunnels[i].PeerIP
 			}
 		}
-		if s2cConnDetail.Algorithm.Phase1Auth[0] == "SHA-1" && s2cConnDetail.Algorithm.Phase2Auth[0] == "HMAC-SHA-1" &&
-			s2cConnDetail.Algorithm.Phase1DhGroups[0] == "2" && s2cConnDetail.Algorithm.Phase2DhGroups[0] == "2" &&
-			s2cConnDetail.Algorithm.Phase1Encrption[0] == "AES-256-CBC" &&
-			s2cConnDetail.Algorithm.Phase2Encrption[0] == "AES-256-CBC" {
+		if s2cConnDetail.Algorithm.Phase1Auth[0] == Phase1AuthDefault &&
+			s2cConnDetail.Algorithm.Phase2Auth[0] == Phase2AuthDefault &&
+			s2cConnDetail.Algorithm.Phase1DhGroups[0] == Phase1DhGroupDefault &&
+			s2cConnDetail.Algorithm.Phase2DhGroups[0] == Phase2DhGroupDefault &&
+			s2cConnDetail.Algorithm.Phase1Encrption[0] == Phase1EncryptionDefault &&
+			s2cConnDetail.Algorithm.Phase2Encrption[0] == Phase2EncryptionDefault {
 			site2cloud.CustomAlgorithms = false
 			site2cloud.Phase1Auth = ""
 			site2cloud.Phase2Auth = ""
@@ -318,7 +333,9 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 		} else {
 			site2cloud.PrivateRouteEncryption = "false"
 		}
-
+		if s2cConnDetail.SslServerPool[0] != "192.168.44.0/24" {
+			site2cloud.SslServerPool = s2cConnDetail.SslServerPool[0]
+		}
 		return site2cloud, nil
 	}
 	return nil, ErrNotFound
