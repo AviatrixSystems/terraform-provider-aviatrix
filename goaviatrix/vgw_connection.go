@@ -8,13 +8,14 @@ import (
 
 // VGWConn simple struct to hold VGW Connection details
 type VGWConn struct {
-	Action        string `form:"action,omitempty"`
-	BgpLocalAsNum string `form:"bgp_local_asn_num,omitempty" json:"bgp_local_asn_num,omitempty"`
-	BgpVGWId      string `form:"vgw_id,omitempty" json:"bgp_vgw_id,omitempty"`
-	CID           string `form:"CID,omitempty"`
-	ConnName      string `form:"connection_name,omitempty" json:"name,omitempty"`
-	GwName        string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
-	VPCId         string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	Action                     string `form:"action,omitempty"`
+	BgpLocalAsNum              string `form:"bgp_local_asn_num,omitempty" json:"bgp_local_asn_num,omitempty"`
+	BgpVGWId                   string `form:"vgw_id,omitempty" json:"bgp_vgw_id,omitempty"`
+	CID                        string `form:"CID,omitempty"`
+	ConnName                   string `form:"connection_name,omitempty" json:"name,omitempty"`
+	GwName                     string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
+	VPCId                      string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	EnableAdvertiseTransitCidr bool
 }
 
 type VGWConnListResp struct {
@@ -40,11 +41,18 @@ type VGWConnDetail struct {
 }
 
 type ConnectionDetail struct {
-	ConnName      []string `json:"name"`
-	GwName        []string `json:"gw_name"`
-	VPCId         []string `json:"vpc_id"`
-	BgpVGWId      []string `json:"bgp_vgw_id"`
-	BgpLocalAsNum []string `json:"bgp_local_asn_number"`
+	ConnName             []string `json:"name"`
+	GwName               []string `json:"gw_name"`
+	VPCId                []string `json:"vpc_id"`
+	BgpVGWId             []string `json:"bgp_vgw_id"`
+	BgpLocalAsNum        []string `json:"bgp_local_asn_number"`
+	AdvertiseTransitCidr string   `json:"advertise_transit_cidr"`
+}
+
+type VGWConnEnableAdvertiseTransitCidrResp struct {
+	Return  bool   `json:"return"`
+	Results string `json:"results"`
+	Reason  string `json:"reason"`
 }
 
 func (c *Client) CreateVGWConn(vgwConn *VGWConn) error {
@@ -171,8 +179,67 @@ func (c *Client) GetVGWConnDetail(vgwConn *VGWConn) (*VGWConn, error) {
 		vgwConn.GwName = data.Results.Connections.GwName[0]
 		vgwConn.BgpVGWId = data.Results.Connections.BgpVGWId[0]
 		vgwConn.BgpLocalAsNum = data.Results.Connections.BgpLocalAsNum[0]
+		if data.Results.Connections.AdvertiseTransitCidr == "yes" {
+			vgwConn.EnableAdvertiseTransitCidr = true
+		} else if data.Results.Connections.AdvertiseTransitCidr == "no" {
+			vgwConn.EnableAdvertiseTransitCidr = false
+		}
 		return vgwConn, nil
 	}
 
 	return nil, ErrNotFound
+}
+
+func (c *Client) EnableAdvertiseTransitCidr(vgwConn *VGWConn) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for enable_advertise_transit_cidr") + err.Error())
+	}
+	enableAdvertiseTransitCidr := url.Values{}
+	enableAdvertiseTransitCidr.Add("CID", c.CID)
+	enableAdvertiseTransitCidr.Add("action", "enable_advertise_transit_cidr")
+	enableAdvertiseTransitCidr.Add("vpc_id", vgwConn.VPCId)
+	enableAdvertiseTransitCidr.Add("connection_name", vgwConn.ConnName)
+
+	Url.RawQuery = enableAdvertiseTransitCidr.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get enable_advertise_transit_cidr failed: " + err.Error())
+	}
+	var data VGWConnEnableAdvertiseTransitCidrResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_advertise_transit_cidr failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API enable_advertise_transit_cidr Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) DisableAdvertiseTransitCidr(vgwConn *VGWConn) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for disable_advertise_transit_cidr") + err.Error())
+	}
+	disableAdvertiseTransitCidr := url.Values{}
+	disableAdvertiseTransitCidr.Add("CID", c.CID)
+	disableAdvertiseTransitCidr.Add("action", "disable_advertise_transit_cidr")
+	disableAdvertiseTransitCidr.Add("vpc_id", vgwConn.VPCId)
+	disableAdvertiseTransitCidr.Add("connection_name", vgwConn.ConnName)
+
+	Url.RawQuery = disableAdvertiseTransitCidr.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get disable_advertise_transit_cidr failed: " + err.Error())
+	}
+	var data VGWConnEnableAdvertiseTransitCidrResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_advertise_transit_cidr failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API disable_advertise_transit_cidr Get failed: " + data.Reason)
+	}
+	return nil
 }

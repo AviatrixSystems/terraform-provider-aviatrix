@@ -45,6 +45,11 @@ func resourceAviatrixVGWConn() *schema.Resource {
 				Required:    true,
 				Description: "BGP Local ASN (Autonomous System Number). Integer between 1-65535.",
 			},
+			"enable_advertise_transit_cidr": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Switch to Enable/Disable advertise transit VPC network CIDR.",
+			},
 		},
 	}
 }
@@ -66,6 +71,14 @@ func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("failed to create Aviatrix VGWConn: %s", err)
 	}
 	d.SetId(vgwConn.ConnName + "~" + vgwConn.VPCId)
+
+	enableAdvertiseTransitCidr := d.Get("enable_advertise_transit_cidr").(bool)
+	if enableAdvertiseTransitCidr {
+		err := client.EnableAdvertiseTransitCidr(vgwConn)
+		if err != nil {
+			return fmt.Errorf("failed to enable advertise transit CIDR: %s", err)
+		}
+	}
 	return resourceAviatrixVGWConnRead(d, meta)
 }
 
@@ -101,13 +114,55 @@ func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("vpc_id", vConn.VPCId)
 	d.Set("bgp_vgw_id", vConn.BgpVGWId)
 	d.Set("bgp_local_as_num", vConn.BgpLocalAsNum)
+	d.Set("enable_advertise_transit_cidr", vConn.EnableAdvertiseTransitCidr)
 
 	d.SetId(vConn.ConnName + "~" + vConn.VPCId)
 	return nil
 }
 
 func resourceAviatrixVGWConnUpdate(d *schema.ResourceData, meta interface{}) error {
-	return fmt.Errorf("aviatrix VGW Connection cannot be updated - delete and create a new one")
+	client := meta.(*goaviatrix.Client)
+
+	vgwConn := &goaviatrix.VGWConn{
+		ConnName: d.Get("conn_name").(string),
+		VPCId:    d.Get("vpc_id").(string),
+	}
+
+	d.Partial(true)
+	if d.HasChange("conn_name") {
+		return fmt.Errorf("updating conn_name is not allowed")
+	}
+	if d.HasChange("gw_name") {
+		return fmt.Errorf("updating gw_name is not allowed")
+	}
+	if d.HasChange("vpc_id") {
+		return fmt.Errorf("updating vpc_id is not allowed")
+	}
+	if d.HasChange("bgp_vgw_id") {
+		return fmt.Errorf("updating bgp_vgw_id is not allowed")
+	}
+	if d.HasChange("bgp_local_as_num") {
+		return fmt.Errorf("updating bgp_local_as_num is not allowed")
+	}
+
+	if d.HasChange("enable_advertise_transit_cidr") {
+		enableAdvertiseTransitCidr := d.Get("enable_advertise_transit_cidr").(bool)
+		if enableAdvertiseTransitCidr {
+			err := client.EnableAdvertiseTransitCidr(vgwConn)
+			if err != nil {
+				return fmt.Errorf("failed to enable advertise transit CIDR: %s", err)
+			}
+		} else {
+			err := client.DisableAdvertiseTransitCidr(vgwConn)
+			if err != nil {
+				return fmt.Errorf("failed to disable advertise transit CIDR: %s", err)
+			}
+		}
+		d.SetPartial("enable_advertise_transit_cidr")
+	}
+	d.Partial(false)
+
+	return nil
 }
 
 func resourceAviatrixVGWConnDelete(d *schema.ResourceData, meta interface{}) error {
