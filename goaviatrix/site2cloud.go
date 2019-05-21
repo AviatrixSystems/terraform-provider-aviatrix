@@ -57,6 +57,7 @@ type Site2Cloud struct {
 	BackupRemoteGwLongitude float64  `form:"backup_remote_gateway_longitude,omitempty"`
 	RouteTableList          []string `form:"route_table_list,omitempty"`
 	CustomAlgorithms        bool
+	DeadPeerDetection       bool
 }
 
 type EditSite2Cloud struct {
@@ -80,27 +81,27 @@ type Site2CloudConnList struct {
 }
 
 type EditSite2CloudConnDetail struct {
-	VpcID               []string      `json:"vpc_id,omitempty"`
-	TunnelName          []string      `json:"name,omitempty"`
-	ConnType            string        `json:"type,omitempty"`
-	TunnelType          []string      `json:"tunnel_type,omitempty"`
-	GwName              []string      `json:"gw_name,omitempty"`
-	BackupGwName        []string      `json:"backup_gateway_name,omitempty"`
-	RemoteGwIP          []string      `json:"remote_gateway_ip,omitempty"`
-	RemoteGwIP2         []string      `json:"backup_remote_gateway_ip,omitempty"`
-	Tunnels             []TunnelInfo  `json:"tunnels,omitempty"`
-	RemoteSubnet        string        `json:"real_remote_cidr,omitempty"`
-	LocalSubnet         string        `json:"real_local_cidr,omitempty"`
-	RemoteCidr          string        `json:"remote_cidr,omitempty"`
-	LocalCidr           string        `json:"local_cidr,omitempty"`
-	HAEnabled           string        `json:"ha_status,omitempty"`
-	PeerType            string        `json:"peer_type,omitempty"`
-	RemoteSubnetVirtual string        `json:"virt_remote_cidr,omitempty"`
-	LocalSubnetVirtual  string        `json:"virt_local_cidr,omitempty"`
-	Algorithm           AlgorithmInfo `json:"algorithm,omitempty"`
-	RouteTableList      []string      `json:"rtbls,omitempty"`
-	SslServerPool       []string      `json:"ssl_server_pool,omitempty"`
-
+	VpcID                   []string      `json:"vpc_id,omitempty"`
+	TunnelName              []string      `json:"name,omitempty"`
+	ConnType                string        `json:"type,omitempty"`
+	TunnelType              []string      `json:"tunnel_type,omitempty"`
+	GwName                  []string      `json:"gw_name,omitempty"`
+	BackupGwName            []string      `json:"backup_gateway_name,omitempty"`
+	RemoteGwIP              []string      `json:"remote_gateway_ip,omitempty"`
+	RemoteGwIP2             []string      `json:"backup_remote_gateway_ip,omitempty"`
+	Tunnels                 []TunnelInfo  `json:"tunnels,omitempty"`
+	RemoteSubnet            string        `json:"real_remote_cidr,omitempty"`
+	LocalSubnet             string        `json:"real_local_cidr,omitempty"`
+	RemoteCidr              string        `json:"remote_cidr,omitempty"`
+	LocalCidr               string        `json:"local_cidr,omitempty"`
+	HAEnabled               string        `json:"ha_status,omitempty"`
+	PeerType                string        `json:"peer_type,omitempty"`
+	RemoteSubnetVirtual     string        `json:"virt_remote_cidr,omitempty"`
+	LocalSubnetVirtual      string        `json:"virt_local_cidr,omitempty"`
+	Algorithm               AlgorithmInfo `json:"algorithm,omitempty"`
+	RouteTableList          []string      `json:"rtbls,omitempty"`
+	SslServerPool           []string      `json:"ssl_server_pool,omitempty"`
+	DeadPeerDetectionConfig string        `json:"dpd_config,omitempty"`
 	//PreSharedKey        string `json:"pre_shared_key,omitempty"`
 	//BackupPreSharedKey  string `json:"backup_pre_shared_key,omitempty"`
 	//NetworkType         string `json:"network_type,omitempty"`
@@ -336,6 +337,12 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 		if s2cConnDetail.SslServerPool[0] != "192.168.44.0/24" {
 			site2cloud.SslServerPool = s2cConnDetail.SslServerPool[0]
 		}
+		if s2cConnDetail.DeadPeerDetectionConfig == "enable" {
+			site2cloud.DeadPeerDetection = true
+		} else if s2cConnDetail.DeadPeerDetectionConfig == "disable" {
+			site2cloud.DeadPeerDetection = false
+		}
+
 		return site2cloud, nil
 	}
 	return nil, ErrNotFound
@@ -413,6 +420,60 @@ func (c *Client) Site2CloudAlgorithmCheck(site2cloud *Site2Cloud) error {
 	}
 	if !Contains(Phase2EncryptionList, site2cloud.Phase2Encryption) {
 		return errors.New("invalid value for phase_2_encryption")
+	}
+	return nil
+}
+
+func (c *Client) EnableDeadPeerDetection(site2cloud *Site2Cloud) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for enable_dpd_config") + err.Error())
+	}
+	enableDPDConfig := url.Values{}
+	enableDPDConfig.Add("CID", c.CID)
+	enableDPDConfig.Add("action", "enable_dpd_config")
+	enableDPDConfig.Add("vpc_id", site2cloud.VpcID)
+	enableDPDConfig.Add("connection_name", site2cloud.TunnelName)
+
+	Url.RawQuery = enableDPDConfig.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get enable_dpd_config failed: " + err.Error())
+	}
+	var data VGWConnEnableAdvertiseTransitCidrResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_dpd_config failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API enable_dpd_config Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) DisableDeadPeerDetection(site2cloud *Site2Cloud) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for disable_dpd_config") + err.Error())
+	}
+	disableDPDConfig := url.Values{}
+	disableDPDConfig.Add("CID", c.CID)
+	disableDPDConfig.Add("action", "disable_dpd_config")
+	disableDPDConfig.Add("vpc_id", site2cloud.VpcID)
+	disableDPDConfig.Add("connection_name", site2cloud.TunnelName)
+
+	Url.RawQuery = disableDPDConfig.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get disable_dpd_config failed: " + err.Error())
+	}
+	var data VGWConnEnableAdvertiseTransitCidrResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_dpd_config failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API disable_dpd_config Get failed: " + data.Reason)
 	}
 	return nil
 }

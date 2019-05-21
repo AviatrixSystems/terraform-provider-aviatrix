@@ -9,14 +9,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-//const Phase1AuthDefault = "SHA-1"
-//const Phase1DhGroupDefault = "2"
-//const Phase1EncryptionDefault = "AES-256-CBC"
-//const Phase2AuthDefault = "HMAC-SHA-1"
-//const Phase2DhGroupDefault = "2"
-//const Phase2EncryptionDefault = "AES-256-CBC"
-//const SslServerPoolDefault = "192.168.44.0/24"
-
 func resourceAviatrixSite2Cloud() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixSite2CloudCreate,
@@ -26,6 +18,9 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		SchemaVersion: 1,
+		MigrateState:  resourceAviatrixSite2CloudMigrateState,
 
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {
@@ -195,6 +190,12 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Optional:    true,
 				Description: "Specify ssl_server_pool for tunnel_type 'tcp'. Default value is '192.168.44.0/24'",
 			},
+			"enable_dead_peer_detection": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Switch to Enable/Disable Deed Peer Detection for an existing site2cloud connection.",
+			},
 		},
 	}
 }
@@ -337,7 +338,17 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	if err != nil {
 		return fmt.Errorf("failed Site2Cloud create: %s", err)
 	}
+
 	d.SetId(s2c.TunnelName + "~" + s2c.VpcID)
+
+	enableDeadPeerDetection := d.Get("enable_dead_peer_detection").(bool)
+	if !enableDeadPeerDetection {
+		err := client.DisableDeadPeerDetection(s2c)
+		if err != nil {
+			return fmt.Errorf("failed to disable dead peer detection: %s", err)
+		}
+	}
+
 	return resourceAviatrixSite2CloudRead(d, meta)
 }
 
@@ -414,6 +425,8 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 		if s2c.SslServerPool != "" {
 			d.Set("ssl_server_pool", s2c.SslServerPool)
 		}
+
+		d.Set("enable_dead_peer_detection", s2c.DeadPeerDetection)
 	}
 
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", d.Get("connection_name").(string), site2cloud)
@@ -522,6 +535,25 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("failed to update Site2Cloud remote_subnet_cidr: %s", err)
 		}
 		d.SetPartial("remote_subnet_cidr")
+	}
+	if d.HasChange("enable_dead_peer_detection") {
+		s2c := &goaviatrix.Site2Cloud{
+			VpcID:      d.Get("vpc_id").(string),
+			TunnelName: d.Get("connection_name").(string),
+		}
+		enableDeadPeerDetection := d.Get("enable_dead_peer_detection").(bool)
+		if enableDeadPeerDetection {
+			err := client.EnableDeadPeerDetection(s2c)
+			if err != nil {
+				return fmt.Errorf("failed to enable deed peer detection: %s", err)
+			}
+		} else {
+			err := client.DisableDeadPeerDetection(s2c)
+			if err != nil {
+				return fmt.Errorf("failed to disable deed peer detection: %s", err)
+			}
+		}
+		d.SetPartial("enable_dead_peer_detection")
 	}
 
 	d.Partial(false)

@@ -61,11 +61,13 @@ The following arguments are supported:
 * `backup_remote_gateway_latitude` - (Optional) Latitude of backup remote gateway. Does not support refresh.
 * `backup_remote_gateway_longitude` - (Optional) Longitude of backup remote gateway. Does not support refresh.	 
 * `ssl_server_pool` - (Optional) Specify ssl_server_pool for tunnel_type "tcp". Default value is "192.168.44.0/24".
+* `enable_dead_peer_detection` - (Optional) Switch to Enable/Disable Deed Peer Detection for an existing site2cloud connection. Default value: true.
 
 -> **NOTE:** 
 
 * `custom_algorithms` - Only supported for 'udp' tunnel type. If set to true, the six algorithm arguments cannot all be default value. If set to false, default values will be used for all six algorithm arguments.
 * `ssl_server_pool` - Only supported for 'tcp' tunnel type. If not set, default value will be used. If set, needs to be set to a different value than default value.
+* `enable_dead_peer_detection` - If you are using/upgraded to Aviatrix Terraform Provider v4.6+ , and an site2cloud resource was originally created with a provider version <4.6, you must do ‘terraform refresh’ to update and apply the attribute’s default value (“true”) into the state file.
 
 ## Import
 
