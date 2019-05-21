@@ -398,9 +398,12 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 
 	peeringHaGwSize := d.Get("peering_ha_gw_size").(string)
 	peeringHaSubnet := d.Get("peering_ha_subnet").(string)
-	if peeringHaGwSize == "" && peeringHaSubnet != "" {
-		return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for " +
-			"this resource if peering_ha_subnet is set. Example: t2.micro")
+	peeringHaZone := d.Get("peering_ha_zone").(string)
+	if peeringHaSubnet != "" || peeringHaZone != "" {
+		if peeringHaGwSize == "" {
+			return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for " +
+				"this resource if peering_ha_subnet or peering_ha_zone is set. Example: t2.micro")
+		}
 	}
 
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)
@@ -429,8 +432,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	// peering_ha_subnet is for Peering HA Gateway. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
-	peeringHaSubnet := d.Get("peering_ha_subnet").(string)
-	peeringHaZone := d.Get("peering_ha_zone").(string)
 	if peeringHaSubnet != "" || peeringHaZone != "" {
 		peeringHaGateway := &goaviatrix.Gateway{
 			Eip:       d.Get("peering_ha_eip").(string),
@@ -708,15 +709,17 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				d.Set("peering_ha_eip", gwHaGw.PublicIP)
 				d.Set("peering_ha_gw_size", gwHaGw.GwSize)
 			} else {
+				if err == goaviatrix.ErrNotFound && gwName == "" {
+					log.Printf("[DEBUG] Peering HA Gateway was not found during import, please confirm if primary gateway has peering HA enabled.")
+				} else {
+					return fmt.Errorf("unable to find peering ha gateway: %s", err)
+				}
 				d.Set("cloudn_bkup_gateway_inst_id", "")
 				d.Set("backup_public_ip", "")
 				d.Set("peering_ha_subnet", "")
 				d.Set("peering_ha_zone", "")
-
 				d.Set("peering_ha_eip", "")
-				if err != goaviatrix.ErrNotFound {
-					d.Set("peering_ha_gw_size", "")
-				}
+				d.Set("peering_ha_gw_size", "")
 			}
 			log.Printf("[TRACE] reading peering HA gateway %s: %#v", d.Get("gw_name").(string), gwHaGw)
 		} else {
