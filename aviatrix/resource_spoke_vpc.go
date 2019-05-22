@@ -323,8 +323,9 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 			d.Set("ha_gw_size", "")
 			d.Set("ha_subnet", "")
 			d.Set("ha_zone", "")
+		} else {
+			return fmt.Errorf("couldn't find Aviatrix SpokeVpc HA Gateway: %s", err)
 		}
-		return fmt.Errorf("couldn't find Aviatrix SpokeVpc HA Gateway: %s", err)
 	} else {
 		log.Printf("[INFO] Spoke HA Gateway size: %s", haGw.GwSize)
 		if haGw.CloudType == 1 || haGw.CloudType == 8 {
