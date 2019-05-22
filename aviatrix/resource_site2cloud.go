@@ -250,7 +250,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 			s2c.Phase2DhGroups == goaviatrix.Phase2DhGroupDefault &&
 			s2c.Phase1Encryption == goaviatrix.Phase1EncryptionDefault &&
 			s2c.Phase2Encryption == goaviatrix.Phase2EncryptionDefault {
-			return fmt.Errorf("custom_algorithms is enabled, cannot use defalut values for " +
+			return fmt.Errorf("custom_algorithms is enabled, cannot use default values for " +
 				"all six algorithm parameters")
 		}
 		err := client.Site2CloudAlgorithmCheck(s2c)
