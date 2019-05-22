@@ -189,7 +189,7 @@ func (c *Client) GetVGWConnDetail(vgwConn *VGWConn) (*VGWConn, error) {
 		vgwConn.BgpLocalAsNum = data.Results.Connections.BgpLocalAsNum[0]
 		if data.Results.Connections.AdvertiseTransitCidr == "yes" {
 			vgwConn.EnableAdvertiseTransitCidr = true
-		} else if data.Results.Connections.AdvertiseTransitCidr == "no" {
+		} else {
 			vgwConn.EnableAdvertiseTransitCidr = false
 		}
 		if len(data.Results.Connections.BgpManualSpokeAdvertiseCidrs) != 0 {

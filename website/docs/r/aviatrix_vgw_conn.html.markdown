@@ -35,6 +35,10 @@ The following arguments are supported:
 * `enable_advertise_transit_cidr` - (Optional) Switch to Enable/Disable advertise transit VPC network CIDR for a vgw connection.
 * `bgp_manual_spoke_advertise_cidrs` - (Optional) Intended CIDR list to advertise to VGW.
 
+-> **NOTE:** 
+
+* `enable_advertise_transit_cidr` - If you are using/upgraded to Aviatrix Terraform Provider v4.6+ , and a vgw_conn resource was originally created with a provider version <4.6, you must do ‘terraform refresh’ to update and apply the attribute’s default value (“false”) into the state file.
+
 ## Import
 
 Instance vgw_conn can be imported using the conn_name, e.g.

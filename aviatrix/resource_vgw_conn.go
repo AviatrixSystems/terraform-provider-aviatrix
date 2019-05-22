@@ -19,6 +19,9 @@ func resourceAviatrixVGWConn() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		SchemaVersion: 1,
+		MigrateState:  resourceAviatrixVGWConnMigrateState,
+
 		Schema: map[string]*schema.Schema{
 			"conn_name": {
 				Type:        schema.TypeString,
@@ -48,6 +51,7 @@ func resourceAviatrixVGWConn() *schema.Resource {
 			"enable_advertise_transit_cidr": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     false,
 				Description: "Switch to Enable/Disable advertise transit VPC network CIDR.",
 			},
 			"bgp_manual_spoke_advertise_cidrs": {
