@@ -293,7 +293,15 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("cloud_type", gw.CloudType)
 		d.Set("account_name", gw.AccountName)
 		d.Set("gw_name", gw.GwName)
-		d.Set("subnet", gw.VpcNet)
+		if gw.InsaneMode == "yes" {
+			// Append the availability zone to the subnet of insane gateway
+			var strs []string
+			strs = append(strs, gw.VpcNet, gw.GatewayZone)
+			subnetInsane := strings.Join(strs, "~~")
+			d.Set("subnet", subnetInsane)
+		} else {
+			d.Set("subnet", gw.VpcNet)
+		}
 		if gw.CloudType == 1 {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 		} else if gw.CloudType == 8 {
