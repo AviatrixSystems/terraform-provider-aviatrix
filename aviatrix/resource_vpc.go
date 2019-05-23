@@ -18,6 +18,9 @@ func resourceVpc() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		SchemaVersion: 1,
+		MigrateState:  resourceAviatrixVpcMigrateState,
+
 		Schema: map[string]*schema.Schema{
 			"cloud_type": {
 				Type:        schema.TypeInt,
@@ -49,6 +52,12 @@ func resourceVpc() *schema.Resource {
 				Optional:    true,
 				Default:     false,
 				Description: "Specify the VPC as Aviatrix Transit VPC or not.",
+			},
+			"aviatrix_firenet_vpc": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Specify the VPC as Aviatrix FireNet VPC or not.",
 			},
 			"vpc_id": {
 				Type:        schema.TypeString,
@@ -91,16 +100,25 @@ func resourceVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	if vpc.Region == "" {
 		return fmt.Errorf("region can not be empty")
 	}
+
 	aviatrixTransitVpc := d.Get("aviatrix_transit_vpc").(bool)
-	if aviatrixTransitVpc {
-		vpc.AviatrixTransitVpc = "yes"
-	} else {
-		vpc.AviatrixTransitVpc = "no"
+	aviatrixFireNetVpc := d.Get("aviatrix_firenet_vpc").(bool)
+
+	if aviatrixTransitVpc && aviatrixFireNetVpc {
+		return fmt.Errorf("vpc cannot be aviatrix transit vpc and aviatrix firenet vpc at the same time")
 	}
 
-	if vpc.AviatrixTransitVpc == "yes" {
+	if aviatrixTransitVpc {
+		vpc.AviatrixTransitVpc = "yes"
 		log.Printf("[INFO] Creating a new Aviatrix Transit VPC: %#v", vpc)
-	} else {
+	}
+
+	if aviatrixFireNetVpc {
+		vpc.AviatrixFireNetVpc = "yes"
+		log.Printf("[INFO] Creating a new Aviatrix FireNet VPC: %#v", vpc)
+	}
+
+	if !aviatrixTransitVpc && !aviatrixFireNetVpc {
 		log.Printf("[INFO] Creating a new VPC: %#v", vpc)
 	}
 
@@ -151,6 +169,12 @@ func resourceVpcRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("aviatrix_transit_vpc", true)
 	} else {
 		d.Set("aviatrix_transit_vpc", false)
+	}
+
+	if vC.AviatrixFireNetVpc == "yes" {
+		d.Set("aviatrix_firenet_vpc", true)
+	} else {
+		d.Set("aviatrix_firenet_vpc", false)
 	}
 	d.Set("vpc_id", vC.VpcID)
 

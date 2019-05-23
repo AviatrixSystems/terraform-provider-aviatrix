@@ -17,10 +17,11 @@ The vpc resource allows the creation and management of an VPC.
 resource "aviatrix_vpc" "test_vpc" {
   cloud_type           = 1
   account_name         = "devops"
-  region           = "us-west-1"
-  name             = "vpcTest"
-  cidr             = "10.0.0.0/16"
+  region               = "us-west-1"
+  name                 = "vpcTest"
+  cidr                 = "10.0.0.0/16"
   aviatrix_transit_vpc = false
+  aviatrix_firenet_vpc = false
 }
 ```
 
@@ -33,7 +34,12 @@ The following arguments are supported:
 * `name` - (Required) Name of the vpc which is going to be created.
 * `region` - (Required) Region of cloud provider. Example: AWS: "us-east-1", ARM: "East US 2", etc...
 * `cidr` - (Required) VPC cidr.
-* `aviatrix_transit_vpc` - (Optional) Specify whether it is an aviatrix transit vpc. (Supported values: true, false. Default: false.)
+* `aviatrix_transit_vpc` - (Optional) Specify whether it is an aviatrix transit vpc. (Supported values: true, false. Default: false)
+* `aviatrix_firenet_vpc` - (Optional) Specify whether it is an aviatrix firenet vpc. (Supported values: true, false. Default: false)
+
+-> **NOTE:** 
+
+* `aviatrix_firenet_vpc` - If you are using/upgraded to Aviatrix Terraform Provider R1.8+/UserConnect-4.6 , and an vpc resource was originally created with a provider version < R1.8/UserConnect-4.6, you must do ‘terraform refresh’ to update and apply the attribute’s default value (“false”) into the state file.
 
 ## Import
 

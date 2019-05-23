@@ -17,6 +17,7 @@ type Vpc struct {
 	Name               string       `form:"pool_name,omitempty" json:"pool_name,omitempty"`
 	Cidr               string       `form:"vpc_cidr,omitempty" json:"vpc_cidr,omitempty"`
 	AviatrixTransitVpc string       `form:"aviatrix_transit_vpc,omitempty"`
+	AviatrixFireNetVpc string       `form:"aviatrix_firenet_vpc,omitempty"`
 	VpcID              string       `json:"vpc_list,omitempty"`
 	Subnets            []SubnetInfo `json:"subnets,omitempty"`
 }
@@ -28,6 +29,7 @@ type VpcEdit struct {
 	Name               string       `form:"pool_name,omitempty" json:"pool_name,omitempty"`
 	Cidr               string       `form:"vpc_cidr,omitempty" json:"vpc_cidr,omitempty"`
 	AviatrixTransitVpc bool         `json:"avx_transit_vpc,omitempty"`
+	AviatrixFireNetVpc bool         `json:"avx_firenet_vpc,omitempty"`
 	VpcID              []string     `json:"vpc_list,omitempty"`
 	Subnets            []SubnetInfo `json:"subnets,omitempty"`
 }
@@ -61,6 +63,8 @@ func (c *Client) CreateVpc(vpc *Vpc) error {
 	createCustomVpc.Add("pool_name", vpc.Name)
 	createCustomVpc.Add("vpc_cidr", vpc.Cidr)
 	createCustomVpc.Add("aviatrix_transit_vpc", vpc.AviatrixTransitVpc)
+	createCustomVpc.Add("aviatrix_firenet_vpc", vpc.AviatrixFireNetVpc)
+
 	Url.RawQuery = createCustomVpc.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
@@ -111,6 +115,11 @@ func (c *Client) GetVpc(vpc *Vpc) (*Vpc, error) {
 				vpc.AviatrixTransitVpc = "yes"
 			} else {
 				vpc.AviatrixTransitVpc = "no"
+			}
+			if allVpcPoolVpcListResp[i].AviatrixFireNetVpc {
+				vpc.AviatrixFireNetVpc = "yes"
+			} else {
+				vpc.AviatrixFireNetVpc = "no"
 			}
 			vpc.VpcID = allVpcPoolVpcListResp[i].VpcID[0]
 			vpc.Subnets = allVpcPoolVpcListResp[i].Subnets

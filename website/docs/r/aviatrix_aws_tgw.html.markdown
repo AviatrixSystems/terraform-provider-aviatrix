@@ -91,7 +91,7 @@ The following arguments are supported:
 
 -> **NOTE:** 
 
-* `manage_vpc_attachment` - If you are using/ upgraded to Aviatrix Terraform Provider v4.2+ , and an aws_tgw resource was originally created with a provider version <4.2, you must do ‘terraform refresh’ to update and apply the attribute’s default value (“true”) into the state file. 
+* `manage_vpc_attachment` - If you are using/upgraded to Aviatrix Terraform Provider v4.2+ , and an aws_tgw resource was originally created with a provider version <4.2, you must do ‘terraform refresh’ to update and apply the attribute’s default value (“true”) into the state file. 
 
 ## Import
 
