@@ -62,6 +62,7 @@ The following arguments are supported:
 * `enable_nat` - (Optional) Enable NAT for this container. (Supported values: "yes", "no")
 * `tag_list` - (Optional) Instance tag of cloud provider. Only supported for aws. Example: ["key1:value1","key002:value002"]
 * `enable_hybrid_connection` - (Optional) Sign of readiness for TGW connection. Only supported for aws. (Example : false)
+* `enable_firenet_interfaces` - (Optional) Sign of readiness for FireNet connection. Valid values: true and false. Default: false.
 * `connected_transit` - (Optional) Specify Connected Transit status. (Supported values: "yes", "no")
 * `insane_mode` - (Optional) Specify Insane Mode high performance gateway. Insane Mode gateway size must be at least c5 size. If enabled, will look for spare /26 segment to create a new subnet. (Only available for AWS) (Supported values: true, false)
 * `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit Gateway. Required if insane_mode is enabled.
@@ -71,6 +72,7 @@ The following arguments are supported:
 -> **NOTE:** The following arguments are deprecated:
 
 * `dns_server` - Specify the DNS IP, only required while using a custom private DNS for the VPC.
+* `enable_firenet_interfaces` - If you are using/upgraded to Aviatrix Terraform Provider R1.8+/UserConnect-4.6 , and a transit_vpc resource was originally created with a provider version < R1.8/UserConnect-4.6, you must do ‘terraform refresh’ to update and apply the attribute’s default value (“false”) into the state file.
 
 ## Import
 
