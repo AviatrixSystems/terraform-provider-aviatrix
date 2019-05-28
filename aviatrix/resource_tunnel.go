@@ -42,12 +42,6 @@ func resourceTunnel() *schema.Resource {
 				Computed:    true,
 				Description: "Status of the HA tunnel.",
 			},
-			"cluster": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Whether cluster peering is enabled. Valid inputs: 'yes' and 'no'.",
-			},
 			"peering_link": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -60,8 +54,6 @@ func resourceTunnel() *schema.Resource {
 				Default:     "no",
 				Description: "Whether Peering HA is enabled. Valid inputs: 'yes' and 'no'.",
 			},
-			//FIXME : Some of the above are computed. Set them correctly. Boolean valus should not be Optional to
-			// prevent tf state corruption
 		},
 	}
 }
@@ -73,7 +65,6 @@ func resourceTunnelCreate(d *schema.ResourceData, meta interface{}) error {
 		VpcName2:        d.Get("vpc_name2").(string),
 		PeeringState:    d.Get("peering_state").(string),
 		PeeringHaStatus: d.Get("peering_hastatus").(string),
-		Cluster:         d.Get("cluster").(string),
 		PeeringLink:     d.Get("peering_link").(string),
 		EnableHA:        d.Get("enable_ha").(string),
 	}
@@ -118,7 +109,6 @@ func resourceTunnelRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	log.Printf("[INFO] Found Aviatrix tunnel: %#v", tun)
 
-	d.Set("cluster", tun.Cluster)
 	d.Set("peering_hastatus", tun.PeeringHaStatus)
 	d.Set("peering_state", tun.PeeringState)
 	d.Set("peering_link", tun.PeeringLink)
@@ -139,7 +129,6 @@ func resourceTunnelUpdate(d *schema.ResourceData, meta interface{}) error {
 		VpcName2:        d.Get("vpc_name2").(string),
 		PeeringState:    d.Get("peering_state").(string),
 		PeeringHaStatus: d.Get("peering_hastatus").(string),
-		Cluster:         d.Get("cluster").(string),
 		PeeringLink:     d.Get("peering_link").(string),
 	}
 
