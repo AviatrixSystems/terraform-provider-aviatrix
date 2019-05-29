@@ -61,7 +61,8 @@ func resourceAccountUserCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	log.Printf("[DEBUG] Aviatrix account user %s created", user.UserName)
 	d.SetId(user.UserName)
-	return nil
+
+	return resourceAccountUserRead(d, meta)
 }
 
 func resourceAccountUserRead(d *schema.ResourceData, meta interface{}) error {

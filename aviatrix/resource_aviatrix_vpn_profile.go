@@ -109,7 +109,7 @@ func resourceAviatrixProfileCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	d.SetId(profile.Name)
 
-	return nil
+	return resourceAviatrixProfileRead(d, meta)
 }
 
 func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error {

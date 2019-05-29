@@ -42,7 +42,7 @@ func resourceCustomerIDCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId("ControllerCustomerID")
 
-	return nil
+	return resourceCustomerIDRead(d, meta)
 }
 
 func resourceCustomerIDRead(d *schema.ResourceData, meta interface{}) error {
