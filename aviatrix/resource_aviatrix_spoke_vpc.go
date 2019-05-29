@@ -35,16 +35,6 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 				Required:    true,
 				Description: "Name of the gateway which is going to be created.",
 			},
-			"vpc_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "VPC-ID/VNet-Name of cloud provider.",
-			},
-			"vnet_and_resource_group_names": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The string consisted of name of (Azure) VNet and name Resource-Group.",
-			},
 			"vpc_reg": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -59,6 +49,16 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Public Subnet Info.",
+			},
+			"vpc_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "VPC-ID/VNet-Name of cloud provider.",
+			},
+			"vnet_and_resource_group_names": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The string consisted of name of (Azure) VNet and name Resource-Group.",
 			},
 			"enable_nat": {
 				Type:        schema.TypeString,

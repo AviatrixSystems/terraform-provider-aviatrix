@@ -42,14 +42,6 @@ func resourceAWSTgw() *schema.Resource {
 				Required:    true,
 				Description: "BGP Local ASN (Autonomous System Number), Integer between 1-65535.",
 			},
-			"attached_aviatrix_transit_gateway": {
-				Type: schema.TypeList,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Optional:    true,
-				Description: "A list of Names of Aviatrix Transit Gateway to attach to one of the three default domains.",
-			},
 			"security_domains": {
 				Type:        schema.TypeList,
 				Required:    true,
@@ -95,6 +87,14 @@ func resourceAWSTgw() *schema.Resource {
 						},
 					},
 				},
+			},
+			"attached_aviatrix_transit_gateway": {
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional:    true,
+				Description: "A list of Names of Aviatrix Transit Gateway to attach to one of the three default domains.",
 			},
 			"manage_vpc_attachment": {
 				Type:     schema.TypeBool,

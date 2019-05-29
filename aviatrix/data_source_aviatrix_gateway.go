@@ -13,20 +13,20 @@ func dataSourceAviatrixGateway() *schema.Resource {
 		Read: dataSourceAviatrixGatewayRead,
 
 		Schema: map[string]*schema.Schema{
-			"cloud_type": {
-				Type:        schema.TypeInt,
-				Computed:    true,
-				Description: "Type of cloud service provider.",
+			"gw_name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Gateway name. This can be used for getting gateway.",
 			},
 			"account_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Account name. This can be used for logging in to CloudN console or UserConnect controller.",
 			},
-			"gw_name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Gateway name. This can be used for getting gateway.",
+			"cloud_type": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "Type of cloud service provider.",
 			},
 			"vpc_id": {
 				Type:        schema.TypeString,

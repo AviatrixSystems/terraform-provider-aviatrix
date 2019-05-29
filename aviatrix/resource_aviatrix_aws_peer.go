@@ -56,17 +56,17 @@ func resourceAWSPeer() *schema.Resource {
 				Optional:    true,
 				Description: "List of Route table ID.",
 			},
-			"rtb_list1_output": {
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Computed:    true,
-				Description: "List of route table ID of vpc_id1.",
-			},
 			"rtb_list2": {
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Description: "List of Route table ID.",
+			},
+			"rtb_list1_output": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Computed:    true,
+				Description: "List of route table ID of vpc_id1.",
 			},
 			"rtb_list2_output": {
 				Type:        schema.TypeList,

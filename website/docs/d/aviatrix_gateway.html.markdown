@@ -24,8 +24,8 @@ data "aviatrix_gateway" "foo" {
 
 The following arguments are supported:
 
-* `account_name` - (Optional) Account name. This can be used for logging in to CloudN console or UserConnect controller.
 * `gw_name` - (Required) Gateway name. This can be used for getting gateway.
+* `account_name` - (Optional) Account name. This can be used for logging in to CloudN console or UserConnect controller.
 
 ## Attribute Reference
 

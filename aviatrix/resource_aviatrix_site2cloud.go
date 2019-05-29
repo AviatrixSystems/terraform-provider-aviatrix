@@ -54,16 +54,6 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Required:    true,
 				Description: "Primary Cloud Gateway Name.",
 			},
-			"backup_gateway_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Backup gateway name.",
-			},
-			"pre_shared_key": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Pre-Shared Key.",
-			},
 			"remote_gateway_ip": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -73,6 +63,16 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Remote Subnet CIDR.",
+			},
+			"backup_gateway_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Backup gateway name.",
+			},
+			"pre_shared_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Pre-Shared Key.",
 			},
 			"local_subnet_cidr": {
 				Type:        schema.TypeString,

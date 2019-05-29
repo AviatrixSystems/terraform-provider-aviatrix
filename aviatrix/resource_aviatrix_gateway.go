@@ -55,32 +55,13 @@ func resourceAviatrixGateway() *schema.Resource {
 				Required:    true,
 				Description: "A VPC Network address range selected from one of the available network ranges.",
 			},
-			"public_ip": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Public IP address of the Gateway created.",
-			},
-			"backup_public_ip": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Private IP address of the Gateway created.",
-			},
-			"security_group_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Security group used for the gateway.",
-			},
 			"enable_nat": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "no",
 				Description: "Enable NAT for this container.",
 			},
-			"public_dns_server": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "NS server used by the gateway.",
-			},
+
 			"vpn_access": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -248,16 +229,6 @@ func resourceAviatrixGateway() *schema.Resource {
 				Default:     "",
 				Description: "Peering HA Gateway Size.",
 			},
-			"cloud_instance_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Instance ID of the gateway.",
-			},
-			"cloudn_bkup_gateway_inst_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Instance ID of the backup gateway.",
-			},
 			"single_az_ha": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -283,6 +254,36 @@ func resourceAviatrixGateway() *schema.Resource {
 				Optional:    true,
 				Default:     nil,
 				Description: "Instance tag of cloud provider.",
+			},
+			"public_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Public IP address of the Gateway created.",
+			},
+			"backup_public_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Private IP address of the Gateway created.",
+			},
+			"security_group_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Security group used for the gateway.",
+			},
+			"public_dns_server": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "NS server used by the gateway.",
+			},
+			"cloud_instance_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Instance ID of the gateway.",
+			},
+			"cloudn_bkup_gateway_inst_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Instance ID of the backup gateway.",
 			},
 		},
 	}

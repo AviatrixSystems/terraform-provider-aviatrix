@@ -19,7 +19,6 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
   account_name                      = "devops"
   region                            = "us-east-1"
   aws_side_as_number                = "64512"
-  attached_aviatrix_transit_gateway = ["avxtransitgw", "avxtransitgw2"]
   security_domains = [
   {
     security_domain_name = "Aviatrix_Edge_Domain"
@@ -68,6 +67,7 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
     ]          
   },
   ]
+  attached_aviatrix_transit_gateway = ["avxtransitgw", "avxtransitgw2"]
 }
 ```
 
@@ -79,7 +79,6 @@ The following arguments are supported:
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `region` - (Required) Region of cloud provider(AWS).
 * `aws_side_as_number` - (Required) BGP Local ASN (Autonomous System Number). Integer between 1-65535. Example: "65001"
-* `attached_aviatrix_transit_gateway` - (Optional) A list of Names of Aviatrix Transit Gateway to attach to one of the three default domains: Aviatrix_Edge_Domain.
 * `security_domains` - (Required) Security Domains to create together with AWS TGW's creation. Three default domains are created automatically together with the AWS TGW's creation, so are the connections between any two of them. These three domains can't be deleted, but the connection between any two of them can be deleted.
   * `security_domain_name` - (Required) Three default domains ("Aviatrix_Edge_Domain", "Default_Domain" and "Shared_Service_Domain") are required with AWS TGW's creation.
   * `connected_domains` - (Optional) A list of domains connected to the domain (name: `security_domain_name`) together with its creation.
@@ -87,6 +86,7 @@ The following arguments are supported:
     * `vpc_region` - (Required) Region of the vpc, needs to be consistent with AWS TGW's region.
     * `vpc_account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller. 
     * `vpc_id` - (Required) This parameter represents the ID of the VPC which is going to be attached to the security domain (name: `security_domain_name`) which is going to be created.
+* `attached_aviatrix_transit_gateway` - (Optional) A list of Names of Aviatrix Transit Gateway to attach to one of the three default domains: Aviatrix_Edge_Domain.
 * `manage_vpc_attachment` - (Optional) This parameter is a switch used to allow attaching VPCs to tgw using the aviatrix_aws_tgw resource. If it is set to false, attachment of vpc must be done using the aviatrix_aws_tgw_vpc_attachment resource. Valid values: true or false. Default value is true. 
 
 -> **NOTE:** 
