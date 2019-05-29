@@ -309,6 +309,10 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	awsTgw, err := client.ListTgwDetails(awsTgw)
 	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("couldn't find AWS TGW: %s", awsTgw.Name)
 	}
 	d.Set("account_name", awsTgw.AccountName)

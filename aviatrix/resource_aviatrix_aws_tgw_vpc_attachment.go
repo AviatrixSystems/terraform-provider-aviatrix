@@ -95,6 +95,10 @@ func resourceAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta interface{}) e
 
 	aTVA, err := client.GetAwsTgwVpcAttachment(awsTgwVpcAttachment)
 	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("failed to get Aviatrix Aws Tgw Vpc Attach: %s", err)
 	}
 	if aTVA != nil {
