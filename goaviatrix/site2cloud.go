@@ -102,10 +102,6 @@ type EditSite2CloudConnDetail struct {
 	RouteTableList          []string      `json:"rtbls,omitempty"`
 	SslServerPool           []string      `json:"ssl_server_pool,omitempty"`
 	DeadPeerDetectionConfig string        `json:"dpd_config,omitempty"`
-	//PreSharedKey        string `json:"pre_shared_key,omitempty"`
-	//BackupPreSharedKey  string `json:"backup_pre_shared_key,omitempty"`
-	//NetworkType         string `json:"network_type,omitempty"`
-	//CloudSubnetCidr     string `json:"cloud_subnet_cidr,omitempty"`
 }
 
 type Site2CloudConnDetailResp struct {
@@ -135,24 +131,6 @@ type AlgorithmInfo struct {
 	Phase2DhGroups  []string `json:"ph2_dh,omitempty"`
 	Phase2Encrption []string `json:"ph2_encr,omitempty"`
 }
-
-//func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
-//	site2cloud.CID = c.CID
-//	site2cloud.Action = "add_site2cloud"
-//	resp, err := c.Post(c.baseURL, site2cloud)
-//	if err != nil {
-//		return errors.New("HTTP Post add_site2cloud failed: " + err.Error())
-//	}
-//	var data APIResp
-//	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-//		return errors.New("Json Decode add_site2cloud failed: " + err.Error())
-//	}
-//	if !data.Return {
-//		log.Printf("[INFO] Couldn't find s2c connection %s: %s", site2cloud.TunnelName, data.Reason)
-//		return errors.New("Rest API add_site2cloud Post failed: " + data.Reason)
-//	}
-//	return nil
-//}
 
 func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 	Url, err := url.Parse(c.baseURL)

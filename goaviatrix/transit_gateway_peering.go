@@ -8,19 +8,8 @@ import (
 )
 
 type TransitGatewayPeering struct {
-	//Name                string `form:"name,omitempty" json:"name,omitempty"`
 	TransitGatewayName1 string `form:"gateway_1,omitempty" json:"gateway_1,omitempty"`
 	TransitGatewayName2 string `form:"gateway_2,omitempty" json:"gateway_2,omitempty"`
-	//OverAwsPeering      string `form:"over_aws_peering,omitempty" json:"over_aws_peering,omitempty"`
-	//PeeringHaStatus     string `form:"peering_ha_status,omitempty" json:"peering_ha_status,omitempty"`
-	//HighPerf            string `form:"high_perf,omitempty" json:"high_perf,omitempty"`
-	//TimeStamp           string `form:"timestamp,omitempty" json:"timestamp,omitempty"`
-	//State               string `form:"state,omitempty" json:"state,omitempty"`
-	//Modified            string `form:"modified,omitempty" json:"modified,omitempty"`
-	//Expiration          string `form:"expiration,omitempty" json:"expiration,omitempty"`
-	//TxBytes             string `form:"tx_bytes,omitempty" json:"tx_bytes,omitempty"`
-	//LicenseId           string `form:"license_id,omitempty" json:"license_id,omitempty"`
-	//RxBytes             string `form:"rx_bytes,omitempty" json:"rx_bytes,omitempty"`
 }
 
 type TransitGatewayPeeringAPIResp struct {

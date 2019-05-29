@@ -104,7 +104,6 @@ type Gateway struct {
 	Zone                    string `form:"zone,omitempty" json:"zone,omitempty"`
 	VpcSize                 string `form:"vpc_size,omitempty" ` //Only use for gateway create
 	DMZEnabled              string `json:"dmz_enabled,omitempty"`
-	//MaxConnections          string `form:"max_connections,omitempty" json:"max_connections,omitempty"`
 }
 
 type GatewayDetail struct {

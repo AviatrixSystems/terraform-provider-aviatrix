@@ -64,13 +64,6 @@ func resourceCustomerIDUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCustomerIDDelete(d *schema.ResourceData, meta interface{}) error {
-	//client := meta.(*goaviatrix.Client)
 	log.Printf("[INFO] Deleting Aviatrix Customer ID")
-	//
-	//_, err := client.DeleteCustomerID()
-	//if err != nil {
-	//	return fmt.Errorf("failed to remove Aviatrix Customer ID: %s", err)
-	//}
-
 	return nil
 }

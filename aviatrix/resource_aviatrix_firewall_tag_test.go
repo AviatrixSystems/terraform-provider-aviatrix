@@ -77,7 +77,6 @@ func testAccCheckFirewallTagExists(n string, firewallTag *goaviatrix.FirewallTag
 		if !ok {
 			return fmt.Errorf("firewall tag Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no tag ID is set")
 		}
@@ -89,15 +88,12 @@ func testAccCheckFirewallTagExists(n string, firewallTag *goaviatrix.FirewallTag
 		}
 
 		_, err := client.GetFirewallTag(foundTag)
-
 		if err != nil {
 			return err
 		}
-
 		if foundTag.Name != rs.Primary.ID {
 			return fmt.Errorf("firewall tag not found")
 		}
-
 		*firewallTag = *foundTag
 
 		return nil

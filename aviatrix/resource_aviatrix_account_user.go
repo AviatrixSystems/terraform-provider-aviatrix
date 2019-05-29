@@ -94,7 +94,6 @@ func resourceAccountUserRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("account_name", acc.AccountName)
 		d.Set("email", acc.Email)
 		d.Set("username", acc.UserName)
-		// d.Set("password", "") # This will corrupt tf state
 		d.SetId(acc.UserName)
 	}
 	return nil

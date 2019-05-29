@@ -131,19 +131,15 @@ func testAccTransPeerExists(n string, transpeer *goaviatrix.TransPeer) resource.
 		if err != nil {
 			return err
 		}
-
 		if foundTransPeer.Source != rs.Primary.Attributes["source"] {
 			return fmt.Errorf("source Not found in created attributes")
 		}
-
 		if foundTransPeer.Nexthop != rs.Primary.Attributes["nexthop"] {
 			return fmt.Errorf("nexthop Not found in created attributes")
 		}
-
 		if foundTransPeer.ReachableCidr != rs.Primary.Attributes["reachable_cidr"] {
 			return fmt.Errorf("reachable_cidr Not found in created attributes")
 		}
-
 		*transpeer = *foundTransPeer
 
 		return nil

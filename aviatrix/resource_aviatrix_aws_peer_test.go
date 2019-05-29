@@ -113,19 +113,15 @@ func tesAccCheckAWSPeerExists(n string, awsPeer *goaviatrix.AWSPeer) resource.Te
 		}
 
 		_, err := client.GetAWSPeer(foundPeer)
-
 		if err != nil {
 			return err
 		}
-
 		if foundPeer.VpcID1 != rs.Primary.Attributes["vpc_id1"] {
 			return fmt.Errorf("vpc_id1 Not found in created attributes")
 		}
-
 		if foundPeer.VpcID2 != rs.Primary.Attributes["vpc_id2"] {
 			return fmt.Errorf("vpc_id2 Not found in created attributes")
 		}
-
 		*awsPeer = *foundPeer
 
 		return nil

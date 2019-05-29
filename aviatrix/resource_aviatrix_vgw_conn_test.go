@@ -123,15 +123,12 @@ func testAccCheckVGWConnExists(n string, vgwConn *goaviatrix.VGWConn) resource.T
 		}
 
 		foundVGWConn2, err := client.GetVGWConn(foundVGWConn)
-
 		if err != nil {
 			return err
 		}
-
 		if foundVGWConn2.ConnName != rs.Primary.Attributes["conn_name"] {
 			return fmt.Errorf("conn_name Not found in created attributes")
 		}
-
 		*vgwConn = *foundVGWConn
 
 		return nil
@@ -155,7 +152,6 @@ func testAccCheckVGWConnDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetVGWConn(foundVGWConn)
-
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("vgw connection still exists")
 		}

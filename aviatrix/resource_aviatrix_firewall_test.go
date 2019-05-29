@@ -145,7 +145,6 @@ func testAccCheckFirewallExists(n string, firewall *goaviatrix.Firewall) resourc
 		if !ok {
 			return fmt.Errorf("firewall Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no firewall ID is set")
 		}
@@ -161,11 +160,9 @@ func testAccCheckFirewallExists(n string, firewall *goaviatrix.Firewall) resourc
 		if err != nil {
 			return err
 		}
-
 		if foundFirewall.GwName != rs.Primary.ID {
 			return fmt.Errorf("firewall not found")
 		}
-
 		*firewall = *foundFirewall
 
 		return nil

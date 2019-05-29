@@ -130,15 +130,12 @@ func testAccCheckVPNProfileExists(n string, vpnProfile *goaviatrix.Profile) reso
 		}
 
 		foundVPNProfile2, err := client.GetProfile(foundVPNProfile)
-
 		if err != nil {
 			return err
 		}
-
 		if foundVPNProfile2.Name != rs.Primary.ID {
 			return fmt.Errorf("VPN profile not found")
 		}
-
 		*vpnProfile = *foundVPNProfile
 
 		return nil

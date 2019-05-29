@@ -209,7 +209,6 @@ func testAccCheckAccountExists(n string, account *goaviatrix.Account) resource.T
 		if !ok {
 			return fmt.Errorf("account Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no Account ID is set")
 		}
@@ -225,11 +224,9 @@ func testAccCheckAccountExists(n string, account *goaviatrix.Account) resource.T
 		if err != nil {
 			return err
 		}
-
 		if foundAccount.AccountName != rs.Primary.ID {
 			return fmt.Errorf("account not found")
 		}
-
 		*account = *foundAccount
 
 		return nil

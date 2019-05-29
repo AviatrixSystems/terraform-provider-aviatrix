@@ -100,9 +100,6 @@ func testAccCheckCustomerIDDestroy(s *terraform.State) error {
 		if err != nil {
 			return fmt.Errorf("could not retrieve Customer ID due to err: %v", err)
 		}
-		//if foundCustomerID != " " {
-		//	return fmt.Errorf("customer ID is not unset correctly")
-		//}
 	}
 	return nil
 }

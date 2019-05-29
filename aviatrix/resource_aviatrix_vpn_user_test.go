@@ -108,15 +108,12 @@ func testAccCheckVPNUserExists(n string, vpnUser *goaviatrix.VPNUser) resource.T
 		}
 
 		foundVPNUser2, err := client.GetVPNUser(foundVPNUser)
-
 		if err != nil {
 			return err
 		}
-
 		if foundVPNUser2.UserName != rs.Primary.ID {
 			return fmt.Errorf("VPN user not found")
 		}
-
 		*vpnUser = *foundVPNUser
 
 		return nil

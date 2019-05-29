@@ -58,7 +58,6 @@ func testAccCheckAdminEmailExists(n string) resource.TestCheckFunc {
 		if !ok {
 			return fmt.Errorf("admin email Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no Admin Email is set")
 		}
@@ -70,7 +69,6 @@ func testAccCheckAdminEmailExists(n string) resource.TestCheckFunc {
 		if err != nil {
 			return err
 		}
-
 		if foundAdminEmail != rs.Primary.Attributes["admin_email"] {
 			return fmt.Errorf("admin email not found")
 		}

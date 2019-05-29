@@ -104,7 +104,6 @@ func testAccCheckFQDNExists(n string, fqdn *goaviatrix.FQDN) resource.TestCheckF
 		if !ok {
 			return fmt.Errorf("FQDN Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no FQDN ID is set")
 		}
@@ -116,15 +115,12 @@ func testAccCheckFQDNExists(n string, fqdn *goaviatrix.FQDN) resource.TestCheckF
 		}
 
 		_, err := client.GetFQDNTag(foundFQDN)
-
 		if err != nil {
 			return err
 		}
-
 		if foundFQDN.FQDNTag != rs.Primary.ID {
 			return fmt.Errorf("FQDN not found")
 		}
-
 		*fqdn = *foundFQDN
 
 		return nil

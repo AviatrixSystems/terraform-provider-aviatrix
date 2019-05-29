@@ -61,13 +61,6 @@ func resourceAdminEmailUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAdminEmailDelete(d *schema.ResourceData, meta interface{}) error {
-	//client := meta.(*goaviatrix.Client)
 	log.Printf("[INFO] Deleting Aviatrix Admin Email")
-	//
-	//err := client.SetAdminEmail("noone@aviatrix.com")
-	//if err != nil {
-	//	return fmt.Errorf("failed to remove Aviatrix Admin Email: %s", err)
-	//}
-
 	return nil
 }

@@ -100,7 +100,6 @@ func testAccCheckS2CExists(n string, s2c *goaviatrix.Site2Cloud) resource.TestCh
 		if !ok {
 			return fmt.Errorf("site2cloud Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no site2cloud ID is set")
 		}
@@ -113,15 +112,12 @@ func testAccCheckS2CExists(n string, s2c *goaviatrix.Site2Cloud) resource.TestCh
 		}
 
 		_, err := client.GetSite2Cloud(foundS2C)
-
 		if err != nil {
 			return err
 		}
-
 		if foundS2C.TunnelName+"~"+foundS2C.VpcID != rs.Primary.ID {
 			return fmt.Errorf("site2cloud connection not found")
 		}
-
 		*s2c = *foundS2C
 
 		return nil

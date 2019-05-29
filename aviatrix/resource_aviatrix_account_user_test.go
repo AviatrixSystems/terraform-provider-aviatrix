@@ -68,7 +68,6 @@ func testAccCheckAccountUserExists(n string, account *goaviatrix.AccountUser) re
 		if !ok {
 			return fmt.Errorf("account Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no Account ID is set")
 		}
@@ -85,11 +84,9 @@ func testAccCheckAccountUserExists(n string, account *goaviatrix.AccountUser) re
 		if err == goaviatrix.ErrNotFound {
 			return fmt.Errorf("account not found in REST response")
 		}
-
 		if foundAccount.UserName != rs.Primary.ID {
 			return fmt.Errorf("account not found")
 		}
-
 		*account = *foundAccount
 
 		return nil

@@ -96,15 +96,12 @@ func testAccCheckVpcExists(n string, vpc *goaviatrix.Vpc) resource.TestCheckFunc
 		}
 
 		foundVpc2, err := client.GetVpc(foundVpc)
-
 		if err != nil {
 			return err
 		}
-
 		if foundVpc2.Name != rs.Primary.ID {
 			return fmt.Errorf("VPC not found")
 		}
-
 		*vpc = *foundVpc2
 
 		return nil

@@ -1,7 +1,5 @@
 package goaviatrix
 
-// Tunnel simple struct to hold tunnel details
-
 import (
 	"encoding/json"
 	"errors"

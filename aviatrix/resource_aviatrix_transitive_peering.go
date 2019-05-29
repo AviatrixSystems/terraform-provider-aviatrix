@@ -53,8 +53,8 @@ func resourceTransPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Transitive peering: %s", err)
 	}
+
 	d.SetId(transPeer.Source + "~" + transPeer.Nexthop + "~" + transPeer.ReachableCidr)
-	//return nil
 	return resourceTransPeerRead(d, meta)
 }
 

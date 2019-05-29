@@ -183,8 +183,8 @@ func testAccCheckAWSTgwExists(n string, awsTgw *goaviatrix.AWSTgw) resource.Test
 		if foundAwsTgw2.Name != rs.Primary.ID {
 			return fmt.Errorf("AWS TGW not found")
 		}
-
 		*awsTgw = *foundAwsTgw
+
 		return nil
 	}
 }

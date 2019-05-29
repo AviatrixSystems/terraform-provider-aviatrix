@@ -293,7 +293,6 @@ func testAccCheckGatewayExists(n string, gateway *goaviatrix.Gateway) resource.T
 		if !ok {
 			return fmt.Errorf("gateway Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no Account ID is set")
 		}
@@ -306,15 +305,12 @@ func testAccCheckGatewayExists(n string, gateway *goaviatrix.Gateway) resource.T
 		}
 
 		_, err := client.GetGateway(foundGateway)
-
 		if err != nil {
 			return err
 		}
-
 		if foundGateway.GwName != rs.Primary.ID {
 			return fmt.Errorf("gateway not found")
 		}
-
 		*gateway = *foundGateway
 
 		return nil

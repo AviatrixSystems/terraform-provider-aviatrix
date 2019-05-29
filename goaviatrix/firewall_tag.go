@@ -49,15 +49,6 @@ func (c *Client) CreateFirewallTag(firewall_tag *FirewallTag) error {
 func (c *Client) UpdateFirewallTag(firewall_tag *FirewallTag) error {
 	firewall_tag.CID = c.CID
 	firewall_tag.Action = "update_policy_members"
-	// It is not easy to marshal nested struct to create POST body
-	// in proper format. On trying to create body using ajg/form package in client.go
-	// in usual way, it creates body like this
-	// CID=CrQ6FRPrv1FgGIv139gT&action=update_policy_members&new_policies.0.cidr=10.0.0.0/24&new_policies.0.name=a1&new_policies.1.cidr=10.1.0.0/24&new_policies.1.name=b1&tag_name=ranjan3
-	// which is not understandable by our controller
-	// Controller expects body key/value in array format like this
-	// CID=CrQ6FRPrv1FgGIv139gT&action=update_policy_members&new_policies[0][cidr]=10.0.0.0/24&new_policies[0][name]=a1&new_policies[1][cidr]=10.1.0.0/24&new_policies[1][name]=b1&tag_name=ranjan3
-	// So we are constructing body(and also sending request) here itself without calling Client.Post in client.go.
-	// See this for more details https://stackoverflow.com/questions/48735329/golang-form-encode-nested-struct
 	verb := "POST"
 	body := fmt.Sprintf("CID=%s&action=%s&tag_name=%s", c.CID, firewall_tag.Action, firewall_tag.Name)
 	for i, cidr := range firewall_tag.CIDRList {
