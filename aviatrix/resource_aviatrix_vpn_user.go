@@ -12,7 +12,6 @@ func resourceAviatrixVPNUser() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixVPNUserCreate,
 		Read:   resourceAviatrixVPNUserRead,
-		Update: resourceAviatrixVPNUserUpdate,
 		Delete: resourceAviatrixVPNUserDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -22,28 +21,33 @@ func resourceAviatrixVPNUser() *schema.Resource {
 			"vpc_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "VPC Id of Aviatrix VPN gateway.",
 			},
 			"gw_name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 				Description: "If ELB is enabled, this will be the name of the ELB, " +
 					"else it will be the name of the Aviatrix VPN gateway.",
 			},
 			"user_name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "VPN user name.",
 			},
 			"user_email": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "VPN User's email.",
 			},
 			"saml_endpoint": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
+				ForceNew:    true,
 				Description: "This is the name of the SAML endpoint to which the user is to be associated.",
 			},
 		},
@@ -106,10 +110,6 @@ func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("saml_endpoint", vu.SamlEndpoint)
 	}
 	return nil
-}
-
-func resourceAviatrixVPNUserUpdate(d *schema.ResourceData, meta interface{}) error {
-	return fmt.Errorf("the AviatrixVPNUser resource doesn't support update")
 }
 
 func resourceAviatrixVPNUserDelete(d *schema.ResourceData, meta interface{}) error {

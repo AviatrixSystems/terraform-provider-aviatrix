@@ -13,7 +13,6 @@ func resourceAWSPeer() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAWSPeerCreate,
 		Read:   resourceAWSPeerRead,
-		Update: resourceAWSPeerUpdate,
 		Delete: resourceAWSPeerDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -23,43 +22,51 @@ func resourceAWSPeer() *schema.Resource {
 			"account_name1": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "This parameter represents the name of an AWS Cloud-Account in Aviatrix controller.",
 			},
 			"account_name2": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "This parameter represents the name of an AWS Cloud-Account in Aviatrix controller.",
 			},
 			"vpc_id1": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "VPC-ID of AWS cloud.",
 			},
 			"vpc_id2": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "VPC-ID of AWS cloud.",
 			},
 			"vpc_reg1": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Region of AWS cloud.",
 			},
 			"vpc_reg2": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Region of AWS cloud.",
 			},
 			"rtb_list1": {
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
+				ForceNew:    true,
 				Description: "List of Route table ID.",
 			},
 			"rtb_list2": {
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
+				ForceNew:    true,
 				Description: "List of Route table ID.",
 			},
 			"rtb_list1_output": {
@@ -145,13 +152,6 @@ func resourceAWSPeerRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
-}
-
-func resourceAWSPeerUpdate(d *schema.ResourceData, meta interface{}) error {
-	if d.HasChange("rtb_list1") || d.HasChange("rtb_list2") {
-		return nil
-	}
-	return fmt.Errorf("the AWSPeer resource cannot be updated. Delete and create new AWS peering")
 }
 
 func resourceAWSPeerDelete(d *schema.ResourceData, meta interface{}) error {

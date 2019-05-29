@@ -12,7 +12,6 @@ func resourceVpc() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceVpcCreate,
 		Read:   resourceVpcRead,
-		Update: resourceVpcUpdate,
 		Delete: resourceVpcDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -25,37 +24,44 @@ func resourceVpc() *schema.Resource {
 			"cloud_type": {
 				Type:        schema.TypeInt,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Type of cloud service provider.",
 			},
 			"account_name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Account name. This account will be used to create an Aviatrix VPC.",
 			},
 			"region": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Region where this gateway will be launched.",
 			},
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Name of the VPC to be created.",
 			},
 			"cidr": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Subnet of the VPC to be created.",
 			},
 			"aviatrix_transit_vpc": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				ForceNew:    true,
 				Default:     false,
 				Description: "Specify the VPC as Aviatrix Transit VPC or not.",
 			},
 			"aviatrix_firenet_vpc": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				ForceNew:    true,
 				Default:     false,
 				Description: "Specify the VPC as Aviatrix FireNet VPC or not.",
 			},
@@ -189,10 +195,6 @@ func resourceVpcRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("subnets", subnetList)
 
 	return nil
-}
-
-func resourceVpcUpdate(d *schema.ResourceData, meta interface{}) error {
-	return fmt.Errorf("aviatrix VPC does not support update - delete and create new one")
 }
 
 func resourceVpcDelete(d *schema.ResourceData, meta interface{}) error {

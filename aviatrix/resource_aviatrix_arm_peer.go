@@ -13,7 +13,6 @@ func resourceARMPeer() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceARMPeerCreate,
 		Read:   resourceARMPeerRead,
-		Update: resourceARMPeerUpdate,
 		Delete: resourceARMPeerDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -23,31 +22,37 @@ func resourceARMPeer() *schema.Resource {
 			"account_name1": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "This parameter represents the name of an Azure Cloud-Account in Aviatrix controller.",
 			},
 			"account_name2": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "This parameter represents the name of an Azure Cloud-Account in Aviatrix controller.",
 			},
 			"vnet_name_resource_group1": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "VNet-Name of Azure cloud.",
 			},
 			"vnet_name_resource_group2": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "VNet-Name of Azure cloud.",
 			},
 			"vnet_reg1": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Region of Azure cloud.",
 			},
 			"vnet_reg2": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Region of Azure cloud.",
 			},
 			"vnet_cidr1": {
@@ -126,10 +131,6 @@ func resourceARMPeerRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
-}
-
-func resourceARMPeerUpdate(d *schema.ResourceData, meta interface{}) error {
-	return fmt.Errorf("the ARMPeer resource cannot be updated. Delete and create new ARM peering")
 }
 
 func resourceARMPeerDelete(d *schema.ResourceData, meta interface{}) error {

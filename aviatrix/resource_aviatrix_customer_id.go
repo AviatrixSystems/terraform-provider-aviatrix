@@ -12,7 +12,6 @@ func resourceCustomerID() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceCustomerIDCreate,
 		Read:   resourceCustomerIDRead,
-		Update: resourceCustomerIDUpdate,
 		Delete: resourceCustomerIDDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -22,6 +21,7 @@ func resourceCustomerID() *schema.Resource {
 			"customer_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The license ID provided by Aviatrix Systems.",
 			},
 		},
@@ -57,10 +57,6 @@ func resourceCustomerIDRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("customer_id", customerID)
 	log.Printf("[DEBUG] Customer ID: %s", customerID)
 	return nil
-}
-
-func resourceCustomerIDUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceCustomerIDCreate(d, meta)
 }
 
 func resourceCustomerIDDelete(d *schema.ResourceData, meta interface{}) error {

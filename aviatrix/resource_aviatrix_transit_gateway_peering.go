@@ -13,7 +13,6 @@ func resourceTransitGatewayPeering() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceTransitGatewayPeeringCreate,
 		Read:   resourceTransitGatewayPeeringRead,
-		Update: resourceTransitGatewayPeeringUpdate,
 		Delete: resourceTransitGatewayPeeringDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -23,11 +22,13 @@ func resourceTransitGatewayPeering() *schema.Resource {
 			"transit_gateway_name1": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The first transit gateway name to make a peer pair.",
 			},
 			"transit_gateway_name2": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The second transit gateway name to make a peer pair.",
 			},
 		},
@@ -81,10 +82,6 @@ func resourceTransitGatewayPeeringRead(d *schema.ResourceData, meta interface{})
 	d.SetId(transitGatewayPeering.TransitGatewayName1 + "~" + transitGatewayPeering.TransitGatewayName2)
 	log.Printf("[INFO] Found Transit Gateway peering: %#v", d)
 	return nil
-}
-
-func resourceTransitGatewayPeeringUpdate(d *schema.ResourceData, meta interface{}) error {
-	return fmt.Errorf("the AviatrixTransitGatewayPeering resource doesn't support update")
 }
 
 func resourceTransitGatewayPeeringDelete(d *schema.ResourceData, meta interface{}) error {

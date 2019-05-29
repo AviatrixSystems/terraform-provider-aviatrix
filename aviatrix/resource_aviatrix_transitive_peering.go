@@ -13,7 +13,6 @@ func resourceTransPeer() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceTransPeerCreate,
 		Read:   resourceTransPeerRead,
-		Update: resourceTransPeerUpdate,
 		Delete: resourceTransPeerDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -23,16 +22,19 @@ func resourceTransPeer() *schema.Resource {
 			"source": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Name of Source gateway.",
 			},
 			"nexthop": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Name of nexthop gateway.",
 			},
 			"reachable_cidr": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Destination CIDR.",
 			},
 		},
@@ -93,10 +95,6 @@ func resourceTransPeerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("nexthop", transPeer.Nexthop)
 	d.Set("reachable_cidr", transPeer.ReachableCidr)
 	return nil
-}
-
-func resourceTransPeerUpdate(d *schema.ResourceData, meta interface{}) error {
-	return fmt.Errorf("aviatrix transitive peering cannot be updated - delete and create new one")
 }
 
 func resourceTransPeerDelete(d *schema.ResourceData, meta interface{}) error {
