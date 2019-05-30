@@ -506,6 +506,10 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			SearchDomains:   d.Get("search_domains").(string),
 			SaveTemplate:    "no",
 		}
+		if gateway.CloudType == 4 {
+			// GCP vpn gw needs gcloud project ID included within rest api call
+			sTunnel.VpcID = gw1.VpcID
+		}
 		if gw1.EnableElb != "yes" {
 			sTunnel.ElbName = gw1.GwName
 		} else {
@@ -877,6 +881,23 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			LdapUserAttr:       d.Get("ldap_username_attribute").(string),
 		}
 
+		if gateway.CloudType == 4 {
+			// GCP vpn gw rest api call needs gcloud project id included in vpc id
+			gw := &goaviatrix.Gateway{
+				GwName: gateway.GwName,
+			}
+			gw1, err := client.GetGateway(gw)
+			if err != nil {
+				return fmt.Errorf("couldn't find Aviatrix Gateway: %s due to %v", gw.GwName, err)
+			}
+			vpn_gw.VpcID = gw1.VpcID
+			if gw1.ElbState != "enabled" {
+				vpn_gw.ElbName = gw1.GwName
+			} else {
+				vpn_gw.ElbName = gw1.ElbName
+			}
+		}
+
 		if vpn_gw.OtpMode != "" && vpn_gw.OtpMode != "2" && vpn_gw.OtpMode != "3" {
 			return fmt.Errorf("otp_mode can only be '2' or '3' or empty string")
 		}
@@ -1010,6 +1031,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		if nST != "no" && nST != "yes" {
 			return fmt.Errorf("split_tunnel is not set correctly")
 		}
+
 		if oST != nST || (nST == "yes" && (d.HasChange("additional_cidrs") || d.HasChange("name_servers") || d.HasChange("search_domains"))) {
 			sTunnel := &goaviatrix.SplitTunnel{
 				SplitTunnel:     nST,
@@ -1019,6 +1041,24 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				NameServers:     d.Get("name_servers").(string),
 				SearchDomains:   d.Get("search_domains").(string),
 				SaveTemplate:    "no",
+			}
+
+			if gateway.CloudType == 4 {
+				// ELB name is computed, search for gw to get elb name
+				gw := &goaviatrix.Gateway{
+					GwName: gateway.GwName,
+				}
+				gw1, err := client.GetGateway(gw)
+				if err != nil {
+					return fmt.Errorf("couldn't find Aviatrix Gateway: %s due to %v", gw.GwName, err)
+				}
+				if gw1.ElbState != "enabled" {
+					sTunnel.ElbName = gw1.GwName
+				} else {
+					sTunnel.ElbName = gw1.ElbName
+				}
+				// VPC ID for gcp needs to include gcloud project ID
+				sTunnel.VpcID = gw1.VpcID
 			}
 			err := client.ModifySplitTunnel(sTunnel)
 			if err != nil {
