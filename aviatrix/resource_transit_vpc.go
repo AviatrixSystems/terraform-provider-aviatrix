@@ -61,11 +61,11 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 				Description: "Public Subnet Name.",
 			},
 			"insane_mode_az": {
-				Type:	     schema.TypeString,
+				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
 				Description: "AZ of subnet being created for Insane Mode Transit Gateway. Required if insane_mode is enabled",
-			}
+			},
 			"ha_subnet": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -73,10 +73,11 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 				Description: "HA Subnet.",
 			},
 			"ha_insane_mode_az": {
-				Type:	     schema.TypeString,
+				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "AZ of subnet being created for Insane Mode Transit HA Gateway. Required if insane_mode is enabled and ha_subnet is set."
+				Description: "AZ of subnet being created for Insane Mode Transit HA Gateway. Required if insane_mode is enabled and ha_subnet is set.",
+			},
 			"ha_gw_size": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -156,11 +157,11 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		if cloudType != 1 {
 			return fmt.Errorf("insane_mode is only support for aws (cloud_type = 1)")
 		}
-		if insane_mode_az == "" {
+		if d.Get("insane_mode_az").(string) == "" {
 			return fmt.Errorf("insane_mode_az needed if insane_mode is enabled")
 		}
 		if d.Get("ha_subnet").(string) != "" && d.Get("ha_insane_mode_az").(string) == "" {
-			return fmt.Errof("ha_insane_mode_az needed if insane_mode is enabled and ha_subnet is set")
+			return fmt.Errorf("ha_insane_mode_az needed if insane_mode is enabled and ha_subnet is set")
 		}
 	}
 	if insaneMode == true {
@@ -217,8 +218,8 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		if insaneMode == true {
 			var haStrs []string
 			insaneModeHaAz := d.Get("ha_insane_mode_az").(string)
-			haStrs = append(haStrs, HaSubnet, insaneModeHaAz)
-			HaSubnet = strings.Join(haStrs, "~~")
+			haStrs = append(haStrs, haSubnet, insaneModeHaAz)
+			haSubnet = strings.Join(haStrs, "~~")
 			transitGateway.HASubnet = haSubnet
 		}
 
@@ -228,7 +229,9 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("failed to enable2 HA Aviatrix TransitVpc: %s", err)
 		}
 		d.Set("ha_subnet", haSubnet)
-		d.Set("ha_insane_mode_az", insaneModeHaAz)
+		if insaneMode == true {
+			d.Set("ha_insane_mode_az", d.Get("ha_insane_mode_az").(string))
+		}
 		d.Set("ha_gw_size", gateway.VpcSize)
 
 		//Resize HA Gateway
@@ -491,11 +494,22 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		d.SetPartial("vpc_size")
 	}
-	if d.HasChange("ha_subnet") {
+	if d.HasChange("ha_subnet") || d.HasChange("ha_insane_mode_az") {
 		transitGateway := &goaviatrix.TransitVpc{
 			GwName:   d.Get("gw_name").(string),
 			HASubnet: d.Get("ha_subnet").(string),
 		}
+		if d.Get("insane_mode").(bool) == true {
+			var haStrs []string
+			insaneModeHaAz := d.Get("ha_insane_mode_az").(string)
+
+			if insaneModeHaAz == "" {
+				return fmt.Errorf("ha_insane_mode_az needed if insane_mode is enabled and ha_subnet is set")
+			}
+			haStrs = append(haStrs, transitGateway.HASubnet, insaneModeHaAz)
+			transitGateway.HASubnet = strings.Join(haStrs, "~~")
+		}
+
 		o, n := d.GetChange("ha_subnet")
 		if o == "" {
 			//New configuration to enable HA
