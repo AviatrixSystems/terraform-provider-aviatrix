@@ -115,9 +115,7 @@ type VpnGatewayAuth struct { // Used for set_vpn_gateway_authentication rest api
 	DuoIntegrationKey  string `form:"duo_integration_key,omitempty" json:"duo_integration_key,omitempty"`
 	DuoPushMode        string `form:"duo_push_mode,omitempty" json:"duo_push_mode,omitempty"`
 	DuoSecretKey       string `form:"duo_secret_key,omitempty" json:"duo_secret_key,omitempty"`
-	ElbName            string `form:"elb_name,omitempty" json:"lb_name,omitempty"`
 	EnableLdap         string `form:"enable_ldap,omitempty"`
-	GwName             string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
 	LbOrGatewayName    string `form:"lb_or_gateway_name,omitempty" json:"lb_or_gateway_name,omitempty"`
 	LdapAdditionalReq  string `form:"ldap_additional_req,omitempty"`
 	LdapBaseDn         string `form:"ldap_base_dn,omitempty" json:"ldap_base_dn,omitempty"`

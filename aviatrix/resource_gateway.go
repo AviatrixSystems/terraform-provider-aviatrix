@@ -615,25 +615,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("vpn_cidr", gw.VpnCidr)
 		if gw.ElbState == "enabled" {
 			d.Set("enable_elb", "yes")
-			elb_name := d.Get("elb_name")
-			// Versions prior to 4.0 won't return elb_name, so deduce it from elb_dns_name
-			if elb_name == "" {
-				elb_dns_name := gw.ElbDNSName
-				log.Printf("[INFO] Controllers prior to 4.0 do not return elb_name. Deducing from elb_dns_name")
-				if elb_dns_name != "" {
-					hostname := strings.Split(elb_dns_name, ".")[0]
-					// AWS adds - followed by a random string after the name given to the ELB
-					parts := strings.Split(hostname, "-")
-					// Remove random string added by AWS
-					parts[len(parts)-1] = ""
-					parts = parts[:len(parts)-1]
-					// Join again using - in case it was used in the ELB Name
-					elb_name = strings.Join(parts, "-")
-				} else {
-					return fmt.Errorf("neither elb_name or elb_dns_name returned by the API in an ELB enabled gateway")
-				}
-			}
-			d.Set("elb_name", elb_name)
+			d.Set("elb_name", gw.ElbName)
 		} else {
 			d.Set("enable_elb", "no")
 			d.Set("elb_name", "")
@@ -861,8 +843,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		vpn_gw := &goaviatrix.VpnGatewayAuth{
-			GwName:             d.Get("gw_name").(string),
-			ElbName:            d.Get("elb_name").(string),
 			VpcID:              d.Get("vpc_id").(string),
 			OtpMode:            d.Get("otp_mode").(string),
 			SamlEnabled:        d.Get("saml_enabled").(string),
@@ -891,11 +871,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				return fmt.Errorf("couldn't find Aviatrix Gateway: %s due to %v", gw.GwName, err)
 			}
 			vpn_gw.VpcID = gw1.VpcID
-			if gw1.ElbState != "enabled" {
-				vpn_gw.ElbName = gw1.GwName
-			} else {
-				vpn_gw.ElbName = gw1.ElbName
-			}
 		}
 
 		if vpn_gw.OtpMode != "" && vpn_gw.OtpMode != "2" && vpn_gw.OtpMode != "3" {
@@ -961,10 +936,10 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				vpn_gw.AuthType = "none"
 			}
 		}
-		if vpn_gw.ElbName != "" {
-			vpn_gw.LbOrGatewayName = vpn_gw.ElbName
+		if d.Get("enable_elb").(string) == "yes" {
+			vpn_gw.LbOrGatewayName = d.Get("elb_name").(string)
 		} else {
-			vpn_gw.LbOrGatewayName = vpn_gw.GwName
+			vpn_gw.LbOrGatewayName = d.Get("gw_name").(string)
 		}
 		err := client.SetVpnGatewayAuthentication(vpn_gw)
 		if err != nil {
