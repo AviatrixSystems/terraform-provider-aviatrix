@@ -18,22 +18,20 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | ------------------------------------ | ---------------------------- | --------------------------------------------------------------------- |
 | Generic                              | N/A                          | AVIATRIX_USERNAME, AVIATRIX_PASSWORD, AVIATRIX_CONTROLLER_IP          |
 | aviatrix_account                     | SKIP_ACCOUNT                 | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY                    |
-|		                       | SKIP_AWS_ACCOUNT	      | GCP_ID, GCP_CREDENTIALS_FILEPATH,                                     |
-|                     		       | SKIP_GCP_ACCOUNT	      | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID,	      |
-|		                       | SKIP_ARM_ACCOUNT	      | ARM_APPLICATION_KEY					              |	
+|		                               | SKIP_AWS_ACCOUNT	          | GCP_ID, GCP_CREDENTIALS_FILEPATH,                                     |
+|                     		           | SKIP_GCP_ACCOUNT	          | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID,	          |
+|		                               | SKIP_ARM_ACCOUNT	          | ARM_APPLICATION_KEY					                                  |	
 | aviatrix_account_user                | SKIP_ACCOUNT_USER            |                                                                       |
-| aviatrix_admin_email                 | SKIP_ADMIN_EMAIL             |                                                                       |
 | aviatrix_arm_peer                    | SKIP_ARM_PEER                | aviatrix_account + ARM_VNET_ID, ARM_VNET_ID2, ARM_REGION, ARM_REGION2 |
 | aviatrix_aws_peer                    | SKIP_AWS_PEER                | aviatrix_account + AWS_VPC_ID, AWS_VPC_ID2, AWS_REGION, AWS_REGION2   |
 | aviatrix_aws_tgw                     | SKIP_AWS_TGW                 | aviatrix_account + AWS_VPC_ID, AWS_REGION, AWS_VPC_TGW_ID             |
 | aviatrix_aws_tgw_vpc_attachment      | SKIP_AWS_TGW_VPC_ATTACHMENT  | aviatrix_account + AWS_VPC_ID, AWS_REGION, AWS_VPC_TGW_ID             |
 | aviatrix_controller_config           | SKIP_CONTROLLER_CONFIG       | aviatrix_account                                                      |
-| aviatrix_customer_id                 | SKIP_CUSTOMER_ID             | CUSTOMER_ID                                                           |
 | aviatrix_firewall                    | SKIP_FIREWALL                | aviatrix_gateway                                                      |
 | aviatrix_firewall_tag                | SKIP_FIREWALL_TAG            |                                                                       |
 | aviatrix_fqdn                        | SKIP_FQDN                    | aviatrix_gateway                                                      |
 | aviatrix_gateway                     | SKIP_GATEWAY                 | aviatrix_account                                                      |
-|				       | SKIP_AWS_GATEWAY             |		+ AWS_VPC_ID, AWS_REGION, AWS_VPC_NET, AWS_GW_SIZE (optional) |
+|				                       | SKIP_AWS_GATEWAY             |		    + AWS_VPC_ID, AWS_REGION, AWS_VPC_NET, AWS_GW_SIZE (optional) |
 |                                      | SKIP_GCP_GATEWAY             |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)    |
 |                                      | SKIP_ARM_GATEWAY             |         + ARM_VNET_ID, ARM_REGION, ARM_SUBNET, ARM_GW_SIZE            |
 | aviatrix_site2cloud                  | SKIP_S2C                     | aviatrix_gateway                                                      |
