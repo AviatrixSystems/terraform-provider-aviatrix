@@ -30,12 +30,12 @@ func TestAccAviatrixAwsTgwVpcAttachment_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAvxAwsTgwVpcAttachmentDestroy,
+		CheckDestroy: testAccCheckAwsTgwVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAvxAwsTgwVpcAttachmentConfigBasic(rName, awsSideAsNumber, sDm),
+				Config: testAccAwsTgwVpcAttachmentConfigBasic(rName, awsSideAsNumber, sDm),
 				Check: resource.ComposeTestCheckFunc(
-					tesAvxAwsTgwVpcAttachmentExists(resourceName, &awsTgwVpcAttachment),
+					tesAccCheckAwsTgwVpcAttachmentExists(resourceName, &awsTgwVpcAttachment),
 					resource.TestCheckResourceAttr(
 						resourceName, "tgw_name", fmt.Sprintf("tft-%s", rName)),
 					resource.TestCheckResourceAttr(
@@ -46,11 +46,16 @@ func TestAccAviatrixAwsTgwVpcAttachment_basic(t *testing.T) {
 						resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
-func testAvxAwsTgwVpcAttachmentConfigBasic(rName string, awsSideAsNumber string, sDm string) string {
+func testAccAwsTgwVpcAttachmentConfigBasic(rName string, awsSideAsNumber string, sDm string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account" {
     account_name       = "tfa-%s"
@@ -103,7 +108,7 @@ resource "aviatrix_aws_tgw_vpc_attachment" "test" {
 		os.Getenv("AWS_VPC_ID"))
 }
 
-func tesAvxAwsTgwVpcAttachmentExists(n string, awsTgwVpcAttachment *goaviatrix.AwsTgwVpcAttachment) resource.TestCheckFunc {
+func tesAccCheckAwsTgwVpcAttachmentExists(n string, awsTgwVpcAttachment *goaviatrix.AwsTgwVpcAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -139,7 +144,7 @@ func tesAvxAwsTgwVpcAttachmentExists(n string, awsTgwVpcAttachment *goaviatrix.A
 	}
 }
 
-func testAvxAwsTgwVpcAttachmentDestroy(s *terraform.State) error {
+func testAccCheckAwsTgwVpcAttachmentDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*goaviatrix.Client)
 
 	for _, rs := range s.RootModule().Resources {

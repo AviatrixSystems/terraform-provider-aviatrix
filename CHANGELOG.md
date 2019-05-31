@@ -1,3 +1,14 @@
+## 1.8.26 (May 30 2019)
+
+CHANGES
+  - Supported controller version: 4.3.1275
+  - Deprecated “ha_subnet” (gateway HA) completely from gateway
+  - Added ability to configure gateway size for peering HA gateway in gateway resource
+  - Added acceptance test support for import feature for all resources
+  - Added insane mode support in transit_vpc
+  - Added new resource arm_peer
+  - Added GCP support in gateway
+  
 ## 1.7.18 (May 9 2019)
 
 CHANGES

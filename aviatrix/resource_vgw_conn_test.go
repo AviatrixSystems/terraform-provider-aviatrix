@@ -24,7 +24,7 @@ func preVGWConnCheck(t *testing.T, msgCommon string) (string, string) {
 	return vpcID, bgpVGWId
 }
 
-func TestAviatrixVGWConn_basic(t *testing.T) {
+func TestAccAviatrixVGWConn_basic(t *testing.T) {
 	var vgwConn goaviatrix.VGWConn
 	rName := acctest.RandString(5)
 
@@ -41,12 +41,12 @@ func TestAviatrixVGWConn_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAviatrixVGWConnDestroy,
+		CheckDestroy: testAccCheckVGWConnDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAviatrixVGWConnConfigBasic(rName),
+				Config: testAccVGWConnConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					tesAviatrixVGWConnExists(resourceName, &vgwConn),
+					testAccCheckVGWConnExists(resourceName, &vgwConn),
 					resource.TestCheckResourceAttr(
 						resourceName, "conn_name", fmt.Sprintf("tfc-%s", rName)),
 					resource.TestCheckResourceAttr(
@@ -59,11 +59,16 @@ func TestAviatrixVGWConn_basic(t *testing.T) {
 						resourceName, "bgp_local_as_num", "6451"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
-func testAviatrixVGWConnConfigBasic(rName string) string {
+func testAccVGWConnConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account" {
 	account_name = "tfa-%s"
@@ -96,7 +101,7 @@ resource "aviatrix_vgw_conn" "test_vgw_conn" {
 		rName, os.Getenv("AWS_BGP_VGW_ID"))
 }
 
-func tesAviatrixVGWConnExists(n string, vgwConn *goaviatrix.VGWConn) resource.TestCheckFunc {
+func testAccCheckVGWConnExists(n string, vgwConn *goaviatrix.VGWConn) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -133,7 +138,7 @@ func tesAviatrixVGWConnExists(n string, vgwConn *goaviatrix.VGWConn) resource.Te
 	}
 }
 
-func testAviatrixVGWConnDestroy(s *terraform.State) error {
+func testAccCheckVGWConnDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*goaviatrix.Client)
 
 	for _, rs := range s.RootModule().Resources {

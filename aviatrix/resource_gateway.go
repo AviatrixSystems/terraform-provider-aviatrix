@@ -55,11 +55,6 @@ func resourceAviatrixGateway() *schema.Resource {
 				Required:    true,
 				Description: "A VPC Network address range selected from one of the available network ranges.",
 			},
-			"ha_subnet": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "This is for Gateway HA. Deprecated.",
-			},
 			"public_ip": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -232,7 +227,14 @@ func resourceAviatrixGateway() *schema.Resource {
 			"peering_ha_subnet": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Public Subnet Information while creating Peering HA Gateway, only subnet is accepted.",
+				Default:     "",
+				Description: "Public Subnet Information while creating Peering HA Gateway, only subnet is accepted. Required to create peering ha gateway if cloud_type = 1 or 8 (aws or arm)",
+			},
+			"peering_ha_zone": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "Zone information for creating Peering HA Gateway. Required to create peering ha gateway if cloud_type = 4 (gcp)",
 			},
 			"peering_ha_eip": {
 				Type:        schema.TypeString,
@@ -240,10 +242,11 @@ func resourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Public IP address that you want assigned to the HA peering instance.",
 			},
-			"zone": {
+			"peering_ha_gw_size": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "A GCE zone where this gateway will be launched.",
+				Default:     "",
+				Description: "Peering HA Gateway Size.",
 			},
 			"cloud_instance_id": {
 				Type:        schema.TypeString,
@@ -292,7 +295,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		AccountName:        d.Get("account_name").(string),
 		GwName:             d.Get("gw_name").(string),
 		VpcID:              d.Get("vpc_id").(string),
-		VpcRegion:          d.Get("vpc_reg").(string),
 		VpcSize:            d.Get("vpc_size").(string),
 		VpcNet:             d.Get("vpc_net").(string),
 		EnableNat:          d.Get("enable_nat").(string),
@@ -316,12 +318,17 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		LdapPassword:       d.Get("ldap_password").(string),
 		LdapBaseDn:         d.Get("ldap_base_dn").(string),
 		LdapUserAttr:       d.Get("ldap_username_attribute").(string),
-		HASubnet:           d.Get("ha_subnet").(string),
-		PeeringHASubnet:    d.Get("peering_ha_subnet").(string),
-		NewZone:            d.Get("zone").(string),
 		SingleAZ:           d.Get("single_az_ha").(string),
 		AllocateNewEip:     d.Get("allocate_new_eip").(string),
 		Eip:                d.Get("eip").(string),
+	}
+	if gateway.CloudType == 1 || gateway.CloudType == 8 {
+		gateway.VpcRegion = d.Get("vpc_reg").(string)
+	} else if gateway.CloudType == 4 {
+		// for gcp, rest api asks for "zone" rather than vpc region
+		gateway.Zone = d.Get("vpc_reg").(string)
+	} else {
+		return fmt.Errorf("invalid cloud type, it can only be aws (1), gcp (4), or arm (8)")
 	}
 	if gateway.OtpMode != "" && gateway.OtpMode != "2" && gateway.OtpMode != "3" {
 		return fmt.Errorf("otp_mode can only be '2' or '3' or empty string")
@@ -388,6 +395,17 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	if gateway.EnableElb == "yes" && gateway.VpnStatus != "yes" {
 		return fmt.Errorf("can not enable elb without vpn access set to yes")
 	}
+
+	peeringHaGwSize := d.Get("peering_ha_gw_size").(string)
+	peeringHaSubnet := d.Get("peering_ha_subnet").(string)
+	peeringHaZone := d.Get("peering_ha_zone").(string)
+	if peeringHaSubnet != "" || peeringHaZone != "" {
+		if peeringHaGwSize == "" {
+			return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for " +
+				"this resource if peering_ha_subnet or peering_ha_zone is set. Example: t2.micro")
+		}
+	}
+
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)
 
 	err := client.CreateGateway(gateway)
@@ -395,6 +413,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		log.Printf("[INFO] failed to create Aviatrix gateway: %#v", gateway)
 		return fmt.Errorf("failed to create Aviatrix gateway: %s", err)
 	}
+	d.SetId(gateway.GwName)
 	if enableNAT := d.Get("enable_nat").(string); enableNAT == "yes" {
 		log.Printf("[INFO] Aviatrix NAT enabled gateway: %#v", gateway)
 	}
@@ -412,37 +431,46 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	// ha_subnet is for Gateway HA. Deprecated. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
-	if ha_subnet := d.Get("ha_subnet").(string); ha_subnet != "" {
-		ha_gateway := &goaviatrix.Gateway{
-			GwName:   d.Get("gw_name").(string),
-			HASubnet: d.Get("ha_subnet").(string),
-		}
-		log.Printf("[INFO] Enable gateway HA: %#v", ha_gateway)
-		err := client.EnableHaGateway(ha_gateway)
-		if err != nil {
-			del_err := client.DeleteGateway(gateway)
-			if del_err != nil {
-				return fmt.Errorf("failed to auto-cleanup failed gateway: %s", del_err)
-			}
-			return fmt.Errorf("failed to create GW HA: %s", err)
-		}
-	}
 	// peering_ha_subnet is for Peering HA Gateway. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
-	if peeringHaSubnet := d.Get("peering_ha_subnet").(string); peeringHaSubnet != "" {
+	if peeringHaSubnet != "" || peeringHaZone != "" {
 		peeringHaGateway := &goaviatrix.Gateway{
-			Eip:             d.Get("peering_ha_eip").(string),
-			GwName:          d.Get("gw_name").(string),
-			PeeringHASubnet: d.Get("peering_ha_subnet").(string),
-			NewZone:         d.Get("zone").(string),
+			Eip:       d.Get("peering_ha_eip").(string),
+			GwName:    d.Get("gw_name").(string),
+			CloudType: d.Get("cloud_type").(int),
+		}
+		if peeringHaGateway.CloudType == 1 || peeringHaGateway.CloudType == 8 {
+			peeringHaGateway.PeeringHASubnet = peeringHaSubnet
+			d.Set("peering_ha_zone", "")
+		} else if peeringHaGateway.CloudType == 4 {
+			peeringHaGateway.NewZone = peeringHaZone
+			d.Set("peering_ha_subnet", "")
 		}
 		log.Printf("[INFO] Enable peering HA: %#v", peeringHaGateway)
 		err := client.EnablePeeringHaGateway(peeringHaGateway)
 		if err != nil {
 			return fmt.Errorf("failed to create peering HA: %s", err)
 		}
+
+		log.Printf("[INFO] Resizing Peering HA Gateway: %#v", peeringHaGwSize)
+		if peeringHaGwSize != gateway.VpcSize {
+			if peeringHaGwSize == "" {
+				return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for " +
+					"this resource if peering_ha_subnet is set. Example: t2.micro")
+			}
+			peeringHaGateway := &goaviatrix.Gateway{
+				CloudType: d.Get("cloud_type").(int),
+				GwName:    d.Get("gw_name").(string) + "-hagw", //CHECK THE NAME of peering ha gateway in
+				// controller, test out first. just assuming it has that suffix
+			}
+			peeringHaGateway.GwSize = peeringHaGwSize
+			err := client.UpdateGateway(peeringHaGateway)
+			log.Printf("[INFO] Resizing Peering Ha Gateway size to: %s,", peeringHaGateway.GwSize)
+			if err != nil {
+				return fmt.Errorf("failed to update Aviatrix Peering HA Gateway size: %s", err)
+			}
+			d.Set("peering_ha_gw_size", peeringHaGwSize)
+		}
 	}
-	d.SetId(gateway.GwName)
 
 	if _, ok := d.GetOk("tag_list"); ok && gateway.CloudType == 1 {
 		tagList := d.Get("tag_list").([]interface{})
@@ -477,6 +505,10 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			NameServers:     d.Get("name_servers").(string),
 			SearchDomains:   d.Get("search_domains").(string),
 			SaveTemplate:    "no",
+		}
+		if gateway.CloudType == 4 {
+			// GCP vpn gw needs gcloud project ID included within rest api call
+			sTunnel.VpcID = gw1.VpcID
 		}
 		if gw1.EnableElb != "yes" {
 			sTunnel.ElbName = gw1.GwName
@@ -532,16 +564,33 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("cloud_type", gw.CloudType)
 		d.Set("account_name", gw.AccountName)
 		d.Set("gw_name", gw.GwName)
-		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
-		d.Set("vpc_reg", gw.VpcRegion)
+		if gw.CloudType == 1 {
+			// aws vpc_id returns as <vpc_id>~~<other vpc info>
+			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
+			d.Set("vpc_reg", gw.VpcRegion)
+		} else if gw.CloudType == 4 {
+			// gcp vpc_id returns as <vpc_id>~-~<other vpc info>
+			d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0])
+			d.Set("vpc_reg", gw.GatewayZone)
+		} else if gw.CloudType == 8 {
+			d.Set("vpc_id", gw.VpcID)
+			d.Set("vpc_reg", gw.VpcRegion)
+		}
+
 		d.Set("vpc_net", gw.VpcNet)
 		if gw.EnableNat != "" {
 			d.Set("enable_nat", gw.EnableNat)
 		}
-		if gw.AllocateNewEipRead {
+		if gw.CloudType == 1 {
+			if gw.AllocateNewEipRead {
+				d.Set("allocate_new_eip", "on")
+			} else {
+				d.Set("allocate_new_eip", "off")
+			}
+		} else if gw.CloudType == 4 || gw.CloudType == 8 {
+			// gcp and arm gateways don't have the option to allocate new eip's
+			// default for allocate_new_eip is on
 			d.Set("allocate_new_eip", "on")
-		} else {
-			d.Set("allocate_new_eip", "off")
 		}
 		if gw.EnableLdapRead {
 			d.Set("enable_ldap", "yes")
@@ -566,25 +615,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("vpn_cidr", gw.VpnCidr)
 		if gw.ElbState == "enabled" {
 			d.Set("enable_elb", "yes")
-			elb_name := d.Get("elb_name")
-			// Versions prior to 4.0 won't return elb_name, so deduce it from elb_dns_name
-			if elb_name == "" {
-				elb_dns_name := gw.ElbDNSName
-				log.Printf("[INFO] Controllers prior to 4.0 do not return elb_name. Deducing from elb_dns_name")
-				if elb_dns_name != "" {
-					hostname := strings.Split(elb_dns_name, ".")[0]
-					// AWS adds - followed by a random string after the name given to the ELB
-					parts := strings.Split(hostname, "-")
-					// Remove random string added by AWS
-					parts[len(parts)-1] = ""
-					parts = parts[:len(parts)-1]
-					// Join again using - in case it was used in the ELB Name
-					elb_name = strings.Join(parts, "-")
-				} else {
-					return fmt.Errorf("neither elb_name or elb_dns_name returned by the API in an ELB enabled gateway")
-				}
-			}
-			d.Set("elb_name", elb_name)
+			d.Set("elb_name", gw.ElbName)
 		} else {
 			d.Set("enable_elb", "no")
 			d.Set("elb_name", "")
@@ -611,9 +642,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		//d.Set("ldap_password", gw.LdapPassword)		//prevent from reading sensitive info
 		d.Set("ldap_base_dn", gw.LdapBaseDn)
 		d.Set("ldap_username_attribute", gw.LdapUserAttr)
-		if gw.HASubnet != "" {
-			d.Set("ha_subnet", gw.HASubnet)
-		}
 		if gw.NewZone != "" {
 			d.Set("zone", gw.NewZone)
 		}
@@ -644,7 +672,8 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("security_group_id", gw.GwSecurityGroupID)
 
 		peeringHaSubnet := d.Get("peering_ha_subnet").(string)
-		if peeringHaSubnet != "" || gwName == "" {
+		peeringHaZone := d.Get("peering_ha_zone").(string)
+		if peeringHaSubnet != "" || peeringHaZone != "" || gwName == "" {
 			peeringHaGateway := &goaviatrix.Gateway{
 				AccountName: d.Get("account_name").(string),
 				GwName:      d.Get("gw_name").(string) + "-hagw",
@@ -653,20 +682,39 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			if err == nil {
 				d.Set("cloudn_bkup_gateway_inst_id", gwHaGw.CloudnGatewayInstID)
 				d.Set("backup_public_ip", gwHaGw.PublicIP)
-				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
+				if gwHaGw.CloudType == 1 || gwHaGw.CloudType == 8 {
+					d.Set("peering_ha_subnet", gwHaGw.VpcNet)
+					d.Set("peering_ha_zone", "")
+				} else if gwHaGw.CloudType == 4 {
+					d.Set("peering_ha_zone", gwHaGw.GatewayZone)
+					d.Set("Peering_ha_subnet", "")
+				} else {
+					d.Set("peering_ha_subnet", "")
+					log.Printf("[DEBUG] Invalid cloud type")
+				}
 				d.Set("peering_ha_eip", gwHaGw.PublicIP)
+				d.Set("peering_ha_gw_size", gwHaGw.GwSize)
 			} else {
+				if err == goaviatrix.ErrNotFound && gwName == "" {
+					log.Printf("[DEBUG] Peering HA Gateway was not found during import, please confirm if primary gateway has peering HA enabled.")
+				} else {
+					return fmt.Errorf("unable to find peering ha gateway: %s", err)
+				}
 				d.Set("cloudn_bkup_gateway_inst_id", "")
 				d.Set("backup_public_ip", "")
 				d.Set("peering_ha_subnet", "")
+				d.Set("peering_ha_zone", "")
 				d.Set("peering_ha_eip", "")
+				d.Set("peering_ha_gw_size", "")
 			}
 			log.Printf("[TRACE] reading peering HA gateway %s: %#v", d.Get("gw_name").(string), gwHaGw)
 		} else {
 			d.Set("cloudn_bkup_gateway_inst_id", "")
 			d.Set("backup_public_ip", "")
 			d.Set("peering_ha_subnet", "")
+			d.Set("peering_ha_zone", "")
 			d.Set("peering_ha_eip", "")
+			d.Set("peering_ha_gw_size", "")
 		}
 
 		if gw.CloudType == 1 {
@@ -742,18 +790,24 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("vpn_access") {
 		return fmt.Errorf("updating vpn_access is not allowed")
 	}
-	if d.HasChange("peering_ha_eip") {
-		return fmt.Errorf("updating peering_ha_eip is not allowed")
-	}
 	if d.HasChange("enable_elb") {
 		return fmt.Errorf("updating enable_elb is not allowed")
 	}
 	if d.HasChange("elb_name") {
 		return fmt.Errorf("updating elb_name is not allowed")
 	}
-	//	if d.HasChange("otp_mode") {
-	//		return fmt.Errorf("updating otp_mode is not allowed")
-	//	}
+	if d.HasChange("allocate_new_eip") {
+		return fmt.Errorf("updating allocate_new_eip is not allowed")
+	}
+	if d.HasChange("eip") {
+		return fmt.Errorf("updating eip is not allowed")
+	}
+	if d.HasChange("peering_ha_eip") {
+		o, n := d.GetChange("peering_ha_eip")
+		if o != "" && n != "" {
+			return fmt.Errorf("updating peering_ha_eip is not allowed")
+		}
+	}
 
 	gateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
@@ -765,10 +819,19 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string) + "-hagw",
 	}
-	err := client.UpdateGateway(gateway)
-	if err != nil {
-		return fmt.Errorf("failed to update Aviatrix Gateway: %s", err)
+
+	// Get primary gw size if vpc_size changed, to be used later on for peering ha gw size update
+	primaryGwSize := d.Get("vpc_size").(string)
+	if d.HasChange("vpc_size") {
+		old, _ := d.GetChange("vpc_size")
+		primaryGwSize = old.(string)
+		err := client.UpdateGateway(gateway)
+		if err != nil {
+			return fmt.Errorf("failed to update Aviatrix Gateway: %s", err)
+		}
+		d.SetPartial("vpc_size")
 	}
+
 	if d.HasChange("otp_mode") || d.HasChange("enable_ldap") || d.HasChange("saml_enabled") ||
 		d.HasChange("okta_token") || d.HasChange("okta_url") || d.HasChange("okta_username_suffix") ||
 		d.HasChange("duo_integration_key") || d.HasChange("duo_secret_key") || d.HasChange("duo_api_hostname") ||
@@ -780,8 +843,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		vpn_gw := &goaviatrix.VpnGatewayAuth{
-			GwName:             d.Get("gw_name").(string),
-			ElbName:            d.Get("elb_name").(string),
 			VpcID:              d.Get("vpc_id").(string),
 			OtpMode:            d.Get("otp_mode").(string),
 			SamlEnabled:        d.Get("saml_enabled").(string),
@@ -798,6 +859,18 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			LdapPassword:       d.Get("ldap_password").(string),
 			LdapBaseDn:         d.Get("ldap_base_dn").(string),
 			LdapUserAttr:       d.Get("ldap_username_attribute").(string),
+		}
+
+		if gateway.CloudType == 4 {
+			// GCP vpn gw rest api call needs gcloud project id included in vpc id
+			gw := &goaviatrix.Gateway{
+				GwName: gateway.GwName,
+			}
+			gw1, err := client.GetGateway(gw)
+			if err != nil {
+				return fmt.Errorf("couldn't find Aviatrix Gateway: %s due to %v", gw.GwName, err)
+			}
+			vpn_gw.VpcID = gw1.VpcID
 		}
 
 		if vpn_gw.OtpMode != "" && vpn_gw.OtpMode != "2" && vpn_gw.OtpMode != "3" {
@@ -863,10 +936,10 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				vpn_gw.AuthType = "none"
 			}
 		}
-		if vpn_gw.ElbName != "" {
-			vpn_gw.LbOrGatewayName = vpn_gw.ElbName
+		if d.Get("enable_elb").(string) == "yes" {
+			vpn_gw.LbOrGatewayName = d.Get("elb_name").(string)
 		} else {
-			vpn_gw.LbOrGatewayName = vpn_gw.GwName
+			vpn_gw.LbOrGatewayName = d.Get("gw_name").(string)
 		}
 		err := client.SetVpnGatewayAuthentication(vpn_gw)
 		if err != nil {
@@ -933,6 +1006,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		if nST != "no" && nST != "yes" {
 			return fmt.Errorf("split_tunnel is not set correctly")
 		}
+
 		if oST != nST || (nST == "yes" && (d.HasChange("additional_cidrs") || d.HasChange("name_servers") || d.HasChange("search_domains"))) {
 			sTunnel := &goaviatrix.SplitTunnel{
 				SplitTunnel:     nST,
@@ -943,7 +1017,25 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				SearchDomains:   d.Get("search_domains").(string),
 				SaveTemplate:    "no",
 			}
-			err = client.ModifySplitTunnel(sTunnel)
+
+			if gateway.CloudType == 4 {
+				// ELB name is computed, search for gw to get elb name
+				gw := &goaviatrix.Gateway{
+					GwName: gateway.GwName,
+				}
+				gw1, err := client.GetGateway(gw)
+				if err != nil {
+					return fmt.Errorf("couldn't find Aviatrix Gateway: %s due to %v", gw.GwName, err)
+				}
+				if gw1.ElbState != "enabled" {
+					sTunnel.ElbName = gw1.GwName
+				} else {
+					sTunnel.ElbName = gw1.ElbName
+				}
+				// VPC ID for gcp needs to include gcloud project ID
+				sTunnel.VpcID = gw1.VpcID
+			}
+			err := client.ModifySplitTunnel(sTunnel)
 			if err != nil {
 				return fmt.Errorf("failed to modify split tunnel: %s", err)
 			}
@@ -1011,25 +1103,47 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 		d.SetPartial("enable_nat")
 	}
-	if d.HasChange("peering_ha_subnet") {
+	newHaGwEnabled := false
+	if d.HasChange("peering_ha_subnet") || d.HasChange("peering_ha_zone") {
 		gw := &goaviatrix.Gateway{
-			Eip:             d.Get("peering_ha_eip").(string),
-			GwName:          d.Get("gw_name").(string),
-			PeeringHASubnet: d.Get("peering_ha_subnet").(string),
-			NewZone:         d.Get("zone").(string),
+			Eip:       d.Get("peering_ha_eip").(string),
+			GwName:    d.Get("gw_name").(string),
+			CloudType: d.Get("cloud_type").(int),
 		}
-		o, n := d.GetChange("peering_ha_subnet")
-		if o == "" {
+		oldSubnet, newSubnet := d.GetChange("peering_ha_subnet")
+		oldZone, newZone := d.GetChange("peering_ha_zone")
+		deleteHaGw := false
+		changeHaGw := false
+		if gw.CloudType == 1 || gw.CloudType == 8 {
+			gw.PeeringHASubnet = d.Get("peering_ha_subnet").(string)
+			if oldSubnet == "" && newSubnet != "" {
+				newHaGwEnabled = true
+			} else if oldSubnet != "" && newSubnet == "" {
+				deleteHaGw = true
+			} else if oldSubnet != "" && newSubnet != "" {
+				changeHaGw = true
+			}
+		} else if gw.CloudType == 4 {
+			gw.NewZone = d.Get("peering_ha_zone").(string)
+			if oldZone == "" && newZone != "" {
+				newHaGwEnabled = true
+			} else if oldZone != "" && newZone == "" {
+				deleteHaGw = true
+			} else if oldZone != "" && newZone != "" {
+				changeHaGw = true
+			}
+		}
+		if newHaGwEnabled {
 			err := client.EnablePeeringHaGateway(gw)
 			if err != nil {
 				return fmt.Errorf("failed to enable Aviatrix peering HA gateway: %s", err)
 			}
-		} else if n == "" {
+		} else if deleteHaGw {
 			err := client.DeleteGateway(peeringHaGateway)
 			if err != nil {
 				return fmt.Errorf("failed to delete Aviatrix peering HA gateway: %s", err)
 			}
-		} else {
+		} else if changeHaGw {
 			err := client.DeleteGateway(peeringHaGateway)
 			if err != nil {
 				return fmt.Errorf("failed to delete Aviatrix peering HA gateway: %s", err)
@@ -1041,8 +1155,43 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				return fmt.Errorf("failed to enable Aviatrix peering HA gateway: %s", err)
 			}
 		}
-		d.SetPartial("ha_subnet")
+		d.SetPartial("peering_ha_subnet")
+		d.SetPartial("peering_ha_zone")
 	}
+
+	if d.HasChange("peering_ha_gw_size") || newHaGwEnabled {
+		newHaGwSize := d.Get("peering_ha_gw_size").(string)
+		if !newHaGwEnabled || (newHaGwSize != primaryGwSize) {
+			// MODIFIES Peering HA GW SIZE if
+			// Ha gateway wasn't newly configured
+			// OR
+			// newly configured peering HA gateway is set to be different size than primary gateway
+			// (when peering ha gateway is enabled, it's size is by default the same as primary gateway)
+			_, err := client.GetGateway(peeringHaGateway)
+			if err != nil {
+				if err == goaviatrix.ErrNotFound {
+					d.Set("peering_ha_gw_size", "")
+					d.Set("peering_ha_subnet", "")
+					d.Set("peering_ha_zone", "")
+					return nil
+				}
+				return fmt.Errorf("couldn't find Aviatrix Peering HA Gateway while trying to update HA Gw "+
+					"size: %s", err)
+			}
+			peeringHaGateway.GwSize = d.Get("peering_ha_gw_size").(string)
+			if peeringHaGateway.GwSize == "" {
+				return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for this resource if " +
+					"peering_ha_subnet or peering_ha_zone is set. Example: t2.micro or us-west1-b respectively")
+			}
+			err = client.UpdateGateway(peeringHaGateway)
+			log.Printf("[INFO] Updating Peering HA Gateway size to: %s ", peeringHaGateway.GwSize)
+			if err != nil {
+				return fmt.Errorf("failed to update Aviatrix Peering HA Gw size: %s", err)
+			}
+		}
+		d.SetPartial("peering_ha_gw_size")
+	}
+
 	d.Partial(false)
 
 	d.SetId(gateway.GwName)
@@ -1056,16 +1205,10 @@ func resourceAviatrixGatewayDelete(d *schema.ResourceData, meta interface{}) err
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string),
 	}
-	// ha_subnet is for Gateway HA
-	if HASubnet := d.Get("ha_subnet").(string); HASubnet != "" {
-		log.Printf("[INFO] Deleting Aviatrix gateway HA: %#v", gateway)
-		err := client.DisableHaGateway(gateway)
-		if err != nil {
-			return fmt.Errorf("failed to disable Aviatrix gateway HA: %s", err)
-		}
-	}
 	// peering_ha_subnet is for Peering HA
-	if peeringHaSubnet := d.Get("peering_ha_subnet").(string); peeringHaSubnet != "" {
+	peeringHaSubnet := d.Get("peering_ha_subnet").(string)
+	peeringHaZone := d.Get("peering_ha_zone").(string)
+	if peeringHaSubnet != "" || peeringHaZone != "" {
 		//Delete backup gateway first
 		gateway.GwName += "-hagw"
 		log.Printf("[INFO] Deleting Aviatrix Backup Gateway [-hagw]: %#v", gateway)

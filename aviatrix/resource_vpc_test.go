@@ -46,6 +46,11 @@ func TestAccAviatrixVpc_basic(t *testing.T) {
 						resourceName, "cidr", "10.0.0.0/16"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

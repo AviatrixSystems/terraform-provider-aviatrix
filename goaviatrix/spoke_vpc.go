@@ -24,6 +24,7 @@ type SpokeVpc struct {
 	VpcSize        string `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
 	EnableNAT      string `form:"nat_enabled,omitempty" json:"enable_nat,omitempty"`
 	HASubnet       string `form:"ha_subnet,omitempty"`
+	HAZone         string `form:"new_zone,omitempty"`
 	SingleAzHa     string `form:"single_az_ha,omitempty"`
 	TransitGateway string `form:"transit_gw,omitempty"`
 	TagList        string `form:"tags,omitempty"`
@@ -113,7 +114,7 @@ func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 	if spoke.CloudType == 1 || spoke.CloudType == 8 {
 		enableSpokeHa.Add("public_subnet", spoke.HASubnet)
 	} else if spoke.CloudType == 4 {
-		enableSpokeHa.Add("new_zone", spoke.HASubnet)
+		enableSpokeHa.Add("new_zone", spoke.HAZone)
 	} else {
 		return errors.New("Invalid cloud type")
 	}
