@@ -18,10 +18,10 @@ func preAvxTransitGatewayPeeringCheck(t *testing.T, msgCommon string) (string, s
 	return vpcID1, region1, subnet1, subnet1, vpcID2, region2, subnet2, subnet2
 }
 
-func TestAccAviatrixTransitGatewayPeering_basic(t *testing.T) {
+func TestAvxTransitGatewayPeering_basic(t *testing.T) {
 	rName := acctest.RandString(5)
 
-	resourceName := "aviatrix_transit_gateway_peering.foo"
+	sourceName := "aviatrix_transit_gateway_peering.foo"
 
 	skipAcc := os.Getenv("SKIP_TRANSIT_GATEWAY_PEERING")
 	if skipAcc == "yes" {
@@ -34,29 +34,24 @@ func TestAccAviatrixTransitGatewayPeering_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckTransitGatewayPeeringDestroy,
+		CheckDestroy: testAvxTransitGatewayPeeringDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayPeeringConfigBasic(rName, vpcID1, vpcID2, region1, region2,
+				Config: testAvxTransitGatewayPeeringConfigBasic(rName, vpcID1, vpcID2, region1, region2,
 					subnet1, subnet2, haSubnet1, haSubnet2),
 				Check: resource.ComposeTestCheckFunc(
-					tesAccCheckTransitGatewayPeeringExists("aviatrix_transit_gateway_peering.foo"),
+					tesAvxTransitGatewayPeeringExists("aviatrix_transit_gateway_peering.foo"),
 					resource.TestCheckResourceAttr(
-						resourceName, "transit_gateway_name1", fmt.Sprintf("tfg-%s", rName)),
+						sourceName, "transit_gateway_name1", fmt.Sprintf("tfg-%s", rName)),
 					resource.TestCheckResourceAttr(
-						resourceName, "transit_gateway_name2", fmt.Sprintf("tfg2-%s", rName)),
+						sourceName, "transit_gateway_name2", fmt.Sprintf("tfg2-%s", rName)),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func testAccTransitGatewayPeeringConfigBasic(rName string, vpcID1 string, vpcID2 string, region1 string, region2 string,
+func testAvxTransitGatewayPeeringConfigBasic(rName string, vpcID1 string, vpcID2 string, region1 string, region2 string,
 	subnet1 string, subnet2 string, haSubnet1 string, haSubnet2 string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
@@ -100,7 +95,7 @@ resource "aviatrix_transit_gateway_peering" "foo" {
 		rName, vpcID1, region1, subnet1, haSubnet1, rName, vpcID2, region2, subnet2, haSubnet2)
 }
 
-func tesAccCheckTransitGatewayPeeringExists(n string) resource.TestCheckFunc {
+func tesAvxTransitGatewayPeeringExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -124,7 +119,7 @@ func tesAccCheckTransitGatewayPeeringExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckTransitGatewayPeeringDestroy(s *terraform.State) error {
+func testAvxTransitGatewayPeeringDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*goaviatrix.Client)
 
 	for _, rs := range s.RootModule().Resources {

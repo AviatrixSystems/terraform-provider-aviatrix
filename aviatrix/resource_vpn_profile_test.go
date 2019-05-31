@@ -14,7 +14,6 @@ import (
 func TestAccAviatrixVPNProfile_basic(t *testing.T) {
 	var vpnProfile goaviatrix.Profile
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
-	resourceName := "aviatrix_vpn_profile.test_vpn_profile"
 
 	skipAcc := os.Getenv("SKIP_VPN_PROFILE")
 	if skipAcc == "yes" {
@@ -34,29 +33,25 @@ func TestAccAviatrixVPNProfile_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNProfileExists("aviatrix_vpn_profile.test_vpn_profile", &vpnProfile),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", fmt.Sprintf("tfp-%s", rName)),
+						"aviatrix_vpn_profile.test_vpn_profile", "name", fmt.Sprintf("tfp-%s", rName)),
 					resource.TestCheckResourceAttr(
-						resourceName, "base_rule", "allow_all"),
+						"aviatrix_vpn_profile.test_vpn_profile", "base_rule", "allow_all"),
 					resource.TestCheckResourceAttr(
-						resourceName, "users.#", "1"),
+						"aviatrix_vpn_profile.test_vpn_profile", "users.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "users.0", fmt.Sprintf("tfu-%s", rName)),
+						"aviatrix_vpn_profile.test_vpn_profile", "users.0", fmt.Sprintf("tfu-%s",
+							rName)),
 					resource.TestCheckResourceAttr(
-						resourceName, "policy.#", "1"),
+						"aviatrix_vpn_profile.test_vpn_profile", "policy.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "policy.0.action", "deny"),
+						"aviatrix_vpn_profile.test_vpn_profile", "policy.0.action", "deny"),
 					resource.TestCheckResourceAttr(
-						resourceName, "policy.0.proto", "tcp"),
+						"aviatrix_vpn_profile.test_vpn_profile", "policy.0.proto", "tcp"),
 					resource.TestCheckResourceAttr(
-						resourceName, "policy.0.port", "443"),
+						"aviatrix_vpn_profile.test_vpn_profile", "policy.0.port", "443"),
 					resource.TestCheckResourceAttr(
-						resourceName, "policy.0.target", "10.0.0.0/32"),
+						"aviatrix_vpn_profile.test_vpn_profile", "policy.0.target", "10.0.0.0/32"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})

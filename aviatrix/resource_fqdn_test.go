@@ -11,7 +11,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func TestAccAviatrixFQDN_basic(t *testing.T) {
+func TestAccFQDN_basic(t *testing.T) {
 	var fqdn goaviatrix.FQDN
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
 
@@ -44,11 +44,6 @@ func TestAccAviatrixFQDN_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "domain_names.0.proto", "tcp"),
 					resource.TestCheckResourceAttr(resourceName, "domain_names.0.port", "443"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})

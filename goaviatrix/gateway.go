@@ -54,9 +54,9 @@ type Gateway struct {
 	GwSecurityGroupID       string `form:"gw_security_group_id,omitempty" json:"gw_security_group_id,omitempty"`
 	GwSize                  string `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
 	GwSubnetID              string `form:"gw_subnet_id,omitempty" json:"gw_subnet_id,omitempty"`
+	HASubnet                string `form:"ha_subnet,omitempty"`
 	PeeringHASubnet         string `form:"public_subnet,omitempty"`
 	NewZone                 string `form:"new_zone,omitempty"`
-	InsaneMode              string `form:"insane_mode,omitempty" json:"high_perf,omitempty"`
 	InstState               string `form:"inst_state,omitempty" json:"inst_state,omitempty"`
 	IntraVMRoute            string `form:"intra_vm_route,omitempty" json:"intra_vm_route,omitempty"`
 	IsHagw                  string `form:"is_hagw,omitempty" json:"is_hagw,omitempty"`
@@ -115,7 +115,9 @@ type VpnGatewayAuth struct { // Used for set_vpn_gateway_authentication rest api
 	DuoIntegrationKey  string `form:"duo_integration_key,omitempty" json:"duo_integration_key,omitempty"`
 	DuoPushMode        string `form:"duo_push_mode,omitempty" json:"duo_push_mode,omitempty"`
 	DuoSecretKey       string `form:"duo_secret_key,omitempty" json:"duo_secret_key,omitempty"`
+	ElbName            string `form:"elb_name,omitempty" json:"lb_name,omitempty"`
 	EnableLdap         string `form:"enable_ldap,omitempty"`
+	GwName             string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
 	LbOrGatewayName    string `form:"lb_or_gateway_name,omitempty" json:"lb_or_gateway_name,omitempty"`
 	LdapAdditionalReq  string `form:"ldap_additional_req,omitempty"`
 	LdapBaseDn         string `form:"ldap_base_dn,omitempty" json:"ldap_base_dn,omitempty"`
@@ -205,6 +207,31 @@ func (c *Client) EnablePeeringHaGateway(gateway *Gateway) error {
 	}
 	return nil
 }
+func (c *Client) EnableHaGateway(gateway *Gateway) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for enable_vpc_ha") + err.Error())
+	}
+	enableVpcHa := url.Values{}
+	enableVpcHa.Add("CID", c.CID)
+	enableVpcHa.Add("action", "enable_vpc_ha")
+	enableVpcHa.Add("vpc_name", gateway.GwName)
+	enableVpcHa.Add("specific_subnet", gateway.HASubnet)
+	Url.RawQuery = enableVpcHa.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get enable_vpc_ha failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_vpc_ha failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API enable_vpc_ha Get failed: " + data.Reason)
+	}
+	return nil
+}
 
 func (c *Client) DisableSingleAZGateway(gateway *Gateway) error {
 	gateway.CID = c.CID
@@ -219,6 +246,31 @@ func (c *Client) DisableSingleAZGateway(gateway *Gateway) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API disable_single_az_ha Post failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) DisableHaGateway(gateway *Gateway) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for disable_vpc_ha") + err.Error())
+	}
+	disableVpcHa := url.Values{}
+	disableVpcHa.Add("CID", c.CID)
+	disableVpcHa.Add("action", "disable_vpc_ha")
+	disableVpcHa.Add("vpc_name", gateway.GwName)
+	Url.RawQuery = disableVpcHa.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get disable_vpc_ha failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_vpc_ha failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API disable_vpc_ha Get failed: " + data.Reason)
 	}
 	return nil
 }

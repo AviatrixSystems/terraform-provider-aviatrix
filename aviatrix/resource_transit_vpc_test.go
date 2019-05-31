@@ -68,12 +68,10 @@ func TestAccAviatrixTransitGw_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameAws, "vpc_id", os.Getenv("AWS_VPC_ID")),
 						resource.TestCheckResourceAttr(resourceNameAws, "subnet", os.Getenv("AWS_VPC_NET")),
 						resource.TestCheckResourceAttr(resourceNameAws, "vpc_reg", os.Getenv("AWS_REGION")),
+						resource.TestCheckResourceAttr(resourceNameAws, "tag_list.#", "2"),
+						resource.TestCheckResourceAttr(resourceNameAws, "tag_list.0", "k1:v1"),
+						resource.TestCheckResourceAttr(resourceNameAws, "tag_list.1", "k2:v2"),
 					),
-				},
-				{
-					ResourceName:      resourceNameAws,
-					ImportState:       true,
-					ImportStateVerify: true,
 				},
 			},
 		})
@@ -106,11 +104,6 @@ func TestAccAviatrixTransitGw_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameArm, "vpc_reg", os.Getenv("ARM_REGION")),
 					),
 				},
-				{
-					ResourceName:      resourceNameArm,
-					ImportState:       true,
-					ImportStateVerify: true,
-				},
 			},
 		})
 	} else {
@@ -137,6 +130,7 @@ resource "aviatrix_transit_vpc" "test_transit_vpc_aws" {
     vpc_reg      = "%[6]s"
     vpc_size     = "t2.micro"
     subnet       = "%[7]s"
+    tag_list     = ["k1:v1","k2:v2"]
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"))

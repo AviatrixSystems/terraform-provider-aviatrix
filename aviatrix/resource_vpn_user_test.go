@@ -14,7 +14,6 @@ import (
 func TestAccAviatrixVPNUser_basic(t *testing.T) {
 	var vpnUser goaviatrix.VPNUser
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
-	resourceName := "aviatrix_vpn_user.test_vpn_user"
 
 	skipAcc := os.Getenv("SKIP_VPN_USER")
 	if skipAcc == "yes" {
@@ -34,19 +33,15 @@ func TestAccAviatrixVPNUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNUserExists("aviatrix_vpn_user.test_vpn_user", &vpnUser),
 					resource.TestCheckResourceAttr(
-						resourceName, "gw_name", fmt.Sprintf("tfl-%s", rName)),
+						"aviatrix_vpn_user.test_vpn_user", "gw_name", fmt.Sprintf("tfl-%s", rName)),
 					resource.TestCheckResourceAttr(
-						resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
+						"aviatrix_vpn_user.test_vpn_user", "vpc_id", os.Getenv("AWS_VPC_ID")),
 					resource.TestCheckResourceAttr(
-						resourceName, "user_email", "user@xyz.com"),
+						"aviatrix_vpn_user.test_vpn_user", "user_email", "user@xyz.com"),
 					resource.TestCheckResourceAttr(
-						resourceName, "user_name", fmt.Sprintf("tfu-%s", rName)),
+						"aviatrix_vpn_user.test_vpn_user", "user_name", fmt.Sprintf("tfu-%s",
+							rName)),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})

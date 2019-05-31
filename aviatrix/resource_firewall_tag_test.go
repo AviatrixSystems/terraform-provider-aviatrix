@@ -14,7 +14,6 @@ import (
 func TestAccAviatrixFirewallTag_basic(t *testing.T) {
 	var ftag goaviatrix.FirewallTag
 	rInt := acctest.RandInt()
-	resourceName := "aviatrix_firewall_tag.foo"
 
 	skipAcc := os.Getenv("SKIP_FIREWALL_TAG")
 	if skipAcc == "yes" {
@@ -31,23 +30,18 @@ func TestAccAviatrixFirewallTag_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallTagExists("aviatrix_firewall_tag.foo", &ftag),
 					resource.TestCheckResourceAttr(
-						resourceName, "firewall_tag", fmt.Sprintf("tft-%d", rInt)),
+						"aviatrix_firewall_tag.foo", "firewall_tag", fmt.Sprintf("tft-%d", rInt)),
 					resource.TestCheckResourceAttr(
-						resourceName, "cidr_list.#", "2"),
+						"aviatrix_firewall_tag.foo", "cidr_list.#", "2"),
 					resource.TestCheckResourceAttr(
-						resourceName, "cidr_list.0.cidr", "10.1.0.0/24"),
+						"aviatrix_firewall_tag.foo", "cidr_list.0.cidr", "10.1.0.0/24"),
 					resource.TestCheckResourceAttr(
-						resourceName, "cidr_list.0.cidr_tag_name", "a1"),
+						"aviatrix_firewall_tag.foo", "cidr_list.0.cidr_tag_name", "a1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "cidr_list.1.cidr", "10.2.0.0/24"),
+						"aviatrix_firewall_tag.foo", "cidr_list.1.cidr", "10.2.0.0/24"),
 					resource.TestCheckResourceAttr(
-						resourceName, "cidr_list.1.cidr_tag_name", "b1"),
+						"aviatrix_firewall_tag.foo", "cidr_list.1.cidr_tag_name", "b1"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})

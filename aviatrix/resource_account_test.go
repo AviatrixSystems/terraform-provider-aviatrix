@@ -50,7 +50,6 @@ func preAccountCheck(t *testing.T, msgEnd string) {
 func TestAccAviatrixAccount_basic(t *testing.T) {
 	var account goaviatrix.Account
 	rInt := acctest.RandInt()
-	importStateVerifyIgnore := []string{"aws_secret_key"}
 
 	skipAcc := os.Getenv("SKIP_ACCOUNT")
 	skipAWS := os.Getenv("SKIP_AWS_ACCOUNT")
@@ -70,7 +69,6 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 	if skipAWS == "yes" {
 		t.Log("Skipping AWS Access Account test as SKIP_AWS_ACCOUNT is set")
 	} else {
-		resourceName := "aviatrix_account.aws"
 		resource.Test(t, resource.TestCase{
 			PreCheck:     func() { testAccPreCheck(t) },
 			Providers:    testAccProviders,
@@ -79,22 +77,18 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 				{
 					Config: testAccAccountConfigAWS(rInt),
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckAccountExists(resourceName, &account),
+						testAccCheckAccountExists("aviatrix_account.aws", &account),
 						resource.TestCheckResourceAttr(
-							resourceName, "account_name", fmt.Sprintf("tf-testing-aws-%d", rInt)),
+							"aviatrix_account.aws", "account_name", fmt.Sprintf("tf-testing-aws-%d", rInt)),
 						resource.TestCheckResourceAttr(
-							resourceName, "aws_iam", "false"),
+							"aviatrix_account.aws", "aws_iam", "false"),
 						resource.TestCheckResourceAttr(
-							resourceName, "aws_access_key", os.Getenv("AWS_ACCESS_KEY")),
+							"aviatrix_account.aws", "aws_access_key",
+							os.Getenv("AWS_ACCESS_KEY")),
 						resource.TestCheckResourceAttr(
-							resourceName, "aws_secret_key", os.Getenv("AWS_SECRET_KEY")),
+							"aviatrix_account.aws", "aws_secret_key",
+							os.Getenv("AWS_SECRET_KEY")),
 					),
-				},
-				{
-					ResourceName:            resourceName,
-					ImportState:             true,
-					ImportStateVerify:       true,
-					ImportStateVerifyIgnore: importStateVerifyIgnore,
 				},
 			},
 		})
@@ -102,8 +96,6 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 	if skipGCP == "yes" {
 		t.Log("Skipping GCP Access Account test as SKIP_GCP_ACCOUNT is set")
 	} else {
-		resourceName := "aviatrix_account.gcp"
-		importStateVerifyIgnore = append(importStateVerifyIgnore, "gcloud_project_credentials_filepath")
 		resource.Test(t, resource.TestCase{
 			PreCheck:     func() { testAccPreCheck(t) },
 			Providers:    testAccProviders,
@@ -112,20 +104,16 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 				{
 					Config: testAccAccountConfigGCP(rInt),
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckAccountExists(resourceName, &account),
+						testAccCheckAccountExists("aviatrix_account.gcp", &account),
 						resource.TestCheckResourceAttr(
-							resourceName, "account_name", fmt.Sprintf("tf-testing-gcp-%d", rInt)),
+							"aviatrix_account.gcp", "account_name", fmt.Sprintf("tf-testing-gcp-%d", rInt)),
 						resource.TestCheckResourceAttr(
-							resourceName, "gcloud_project_id", os.Getenv("GCP_ID")),
+							"aviatrix_account.gcp", "gcloud_project_id",
+							os.Getenv("GCP_ID")),
 						resource.TestCheckResourceAttr(
-							resourceName, "gcloud_project_credentials_filepath", os.Getenv("GCP_CREDENTIALS_FILEPATH")),
+							"aviatrix_account.gcp", "gcloud_project_credentials_filepath",
+							os.Getenv("GCP_CREDENTIALS_FILEPATH")),
 					),
-				},
-				{
-					ResourceName:            resourceName,
-					ImportState:             true,
-					ImportStateVerify:       true,
-					ImportStateVerifyIgnore: importStateVerifyIgnore,
 				},
 			},
 		})
@@ -133,7 +121,6 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 	if skipARM == "yes" {
 		t.Log("Skipping ARN Access Account test as SKIP_ARM_ACCOUNT is set")
 	} else {
-		resourceName := "aviatrix_account.arm"
 		resource.Test(t, resource.TestCase{
 			PreCheck:     func() { testAccPreCheck(t) },
 			Providers:    testAccProviders,
@@ -142,24 +129,22 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 				{
 					Config: testAccAccountConfigARM(rInt),
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckAccountExists(resourceName, &account),
+						testAccCheckAccountExists("aviatrix_account.arm", &account),
 						resource.TestCheckResourceAttr(
-							resourceName, "account_name", fmt.Sprintf("tf-testing-arm-%d", rInt)),
+							"aviatrix_account.arm", "account_name", fmt.Sprintf("tf-testing-arm-%d", rInt)),
 						resource.TestCheckResourceAttr(
-							resourceName, "arm_subscription_id", os.Getenv("ARM_SUBSCRIPTION_ID")),
+							"aviatrix_account.arm", "arm_subscription_id",
+							os.Getenv("ARM_SUBSCRIPTION_ID")),
 						resource.TestCheckResourceAttr(
-							resourceName, "arm_directory_id", os.Getenv("ARM_DIRECTORY_ID")),
+							"aviatrix_account.arm", "arm_directory_id",
+							os.Getenv("ARM_DIRECTORY_ID")),
 						resource.TestCheckResourceAttr(
-							resourceName, "arm_application_id", os.Getenv("ARM_APPLICATION_ID")),
+							"aviatrix_account.arm", "arm_application_id",
+							os.Getenv("ARM_APPLICATION_ID")),
 						resource.TestCheckResourceAttr(
-							resourceName, "arm_application_key", os.Getenv("ARM_APPLICATION_KEY")),
+							"aviatrix_account.arm", "arm_application_key",
+							os.Getenv("ARM_APPLICATION_KEY")),
 					),
-				},
-				{
-					ResourceName:            resourceName,
-					ImportState:             true,
-					ImportStateVerify:       true,
-					ImportStateVerifyIgnore: importStateVerifyIgnore,
 				},
 			},
 		})

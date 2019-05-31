@@ -35,11 +35,6 @@ func TestAccAviatrixAdminEmail_basic(t *testing.T) {
 						resourceName, "admin_email", "abc@xyz.com"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }

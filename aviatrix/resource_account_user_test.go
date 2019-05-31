@@ -14,8 +14,6 @@ import (
 func TestAccAviatrixAccountUser_basic(t *testing.T) {
 	var account goaviatrix.AccountUser
 	rInt := acctest.RandInt()
-	resourceName := "aviatrix_account_user.foo"
-	importStateVerifyIgnore := []string{"password"}
 
 	skipAcc := os.Getenv("SKIP_ACCOUNT_USER")
 	if skipAcc == "yes" {
@@ -32,20 +30,14 @@ func TestAccAviatrixAccountUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountUserExists("aviatrix_account_user.foo", &account),
 					resource.TestCheckResourceAttr(
-						resourceName, "username", fmt.Sprintf("tf-testing-%d", rInt)),
+						"aviatrix_account_user.foo", "username", fmt.Sprintf("tf-testing-%d", rInt)),
 					resource.TestCheckResourceAttr(
-						resourceName, "email", "abc@xyz.com"),
+						"aviatrix_account_user.foo", "email", "abc@xyz.com"),
 					resource.TestCheckResourceAttr(
-						resourceName, "account_name", "admin"),
+						"aviatrix_account_user.foo", "account_name", "admin"),
 					resource.TestCheckResourceAttr(
-						resourceName, "password", "Password-1234^"),
+						"aviatrix_account_user.foo", "password", "Password-1234^"),
 				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: importStateVerifyIgnore,
 			},
 		},
 	})

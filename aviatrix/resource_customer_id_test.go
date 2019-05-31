@@ -22,14 +22,13 @@ func preCustomerIDCheck(t *testing.T, msgCommon string) string {
 }
 
 func TestAccAviatrixCustomerID_basic(t *testing.T) {
+
 	skipAcc := os.Getenv("SKIP_CUSTOMER_ID")
 	if skipAcc == "yes" {
 		t.Skip("Skipping customer ID test as SKIP_CUSTOMER_ID is set")
 	}
 	msgCommon := ". Set SKIP_CUSTOMER_ID to yes to skip Customer ID tests"
 	customerId := preCustomerIDCheck(t, msgCommon)
-
-	resourceName := "aviatrix_customer_id.test_customer_id"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -41,14 +40,9 @@ func TestAccAviatrixCustomerID_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerIDExists("aviatrix_customer_id.test_customer_id"),
 					resource.TestCheckResourceAttr(
-						resourceName, "customer_id",
+						"aviatrix_customer_id.test_customer_id", "customer_id",
 						os.Getenv("CUSTOMER_ID")),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})

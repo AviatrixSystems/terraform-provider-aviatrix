@@ -28,7 +28,6 @@ type TransitVpc struct {
 	TagList                string `form:"tags,omitempty"`
 	EnableHybridConnection bool   `form:"enable_hybrid_connection" json:"tgw_enabled,omitempty"`
 	ConnectedTransit       string `form:"connected_transit" json:"connected_transit,omitempty"`
-	InsaneMode             string `form:"insane_mode,omitempty"`
 }
 
 func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {

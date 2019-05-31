@@ -40,7 +40,6 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_account":                 resourceAccount(),
 			"aviatrix_account_user":            resourceAccountUser(),
 			"aviatrix_admin_email":             resourceAdminEmail(),
-			"aviatrix_arm_peer":                resourceARMPeer(),
 			"aviatrix_aws_peer":                resourceAWSPeer(),
 			"aviatrix_aws_tgw":                 resourceAWSTgw(),
 			"aviatrix_aws_tgw_vpc_attachment":  resourceAwsTgwVpcAttachment(),
