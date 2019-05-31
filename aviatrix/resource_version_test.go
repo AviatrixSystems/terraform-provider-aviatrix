@@ -19,6 +19,8 @@ func TestAccAviatrixVersion_basic(t *testing.T) {
 	preAccountCheck(t, ". Set SKIP_VERSION to yes to skip admin email tests")
 
 	resourceName := "aviatrix_version.foo"
+	importStateVerifyIgnore := []string{"target_version"}
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersVersionValidation,
@@ -29,6 +31,12 @@ func TestAccAviatrixVersion_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVersionExists(resourceName),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: importStateVerifyIgnore,
 			},
 		},
 	})

@@ -14,7 +14,7 @@ The Account resource allows the creation and management of an Aviatrix gateway.
 
 ```hcl
 # Create Aviatrix AWS gateway
-resource "aviatrix_gateway" "test_gateway1" {
+resource "aviatrix_gateway" "test_gateway_aws" {
   cloud_type   = 1
   account_name = "devops"
   gw_name      = "avtxgw1"
@@ -24,6 +24,52 @@ resource "aviatrix_gateway" "test_gateway1" {
   vpc_net      = "10.0.0.0/24"
   tag_list     = ["k1:v1","k2:v2"]
 }
+
+# Create Aviatrix GCP gateway
+resource "aviatrix_gateway" "test_gateway_gcp" {
+  cloud_type   = 4
+  account_name = "devops-gcp"
+  gw_name      = "avtxgw-gcp"
+  vpc_id       = "gcp-gw-vpc"
+  vpc_reg      = "us-west1-b"
+  vpc_size     = "f1-micro"
+  vpc_net      = "10.12.0.0/24"
+}
+
+# Create Aviatrix ARM gateway
+resource "aviatrix_gateway" "test_gateway_arm" {
+  cloud_type   = 8
+  account_name = "devops-arm"
+  gw_name      = "avtxgw-arm"
+  vpc_id       = "gateway:test-gw-123"
+  vpc_reg      = "West US"
+  vpc_size     = "Standard_D2"
+  vpc_net      = "10.13.0.0/24"
+}
+
+# Create Aviatrix AWS gateway with Peering HA enabled
+resource "aviatrix_gateway" "test_gateway_aws" {
+  cloud_type   = 1
+  account_name = "devops"
+  gw_name      = "avtxgw1"
+  vpc_id       = "vpc-abcdef"
+  vpc_reg      = "us-west-1"
+  vpc_size     = "t2.micro"
+  vpc_net      = "10.0.0.0/24"
+  peering_ha_subnet = "10.0.0.0/24"
+}
+# Create Aviatrix GCP gateway with Peering HA enabled
+resource "aviatrix_gateway" "test_gateway_gcp" {
+  cloud_type   = 4
+  account_name = "devops-gcp"
+  gw_name      = "avtxgw-gcp"
+  vpc_id       = "gcp-gw-vpc"
+  vpc_reg      = "us-west1-b"
+  vpc_size     = "f1-micro"
+  vpc_net      = "10.12.0.0/24"
+  peering_ha_zone = "us-west1-c"
+}
+
 ```
 
 ## Argument Reference
@@ -34,7 +80,7 @@ The following arguments are supported:
 * `account_name` - (Required) Account name. This account will be used to launch Aviatrix gateway.
 * `gw_name` - (Required) Aviatrix gateway unique name.
 * `vpc_id` - (Required) ID of legacy VPC/Vnet to be connected. A string that is consisted of VPC/Vnet name and cloud provider's resource name. Please check the "Gateway" page on Aviatrix controller GUI for the precise value if needed. (Example:  "vpc-abcd1234" )
-* `vpc_reg` - (Required) Region where this gateway will be launched. (Example: us-east-1)
+* `vpc_reg` - (Required) Region where this gateway will be launched. (Example: us-east-1) If creating GCP gateway, enter a valid zone for vpc_reg. (Example: us-west1-c)
 * `vpc_size` - (Required) Size of Gateway Instance. e.g.: "t2.micro"
 * `vpc_net` - (Required) A VPC Network address range selected from one of the available network ranges. ( Example: "172.31.0.0/20")
 * `enable_nat` - (Optional) Enable NAT for this container. (Supported values: "yes", "no")
@@ -61,14 +107,14 @@ The following arguments are supported:
 * `ldap_password` - (Optional) LDAP password. (Required: Yes if enable_ldap is "yes")
 * `ldap_base_dn` - (Optional) LDAP base DN. (Required: Yes if enable_ldap is "yes")
 * `ldap_username_attribute` - (Optional) LDAP user attribute. (Required: Yes if enable_ldap is "yes")
-* `ha_subnet` - (Optional) This is for Gateway HA. Deprecated. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
-* `peering_ha_subnet` - Public Subnet Information while creating Peering HA Gateway, only subnet is accepted. Example: AWS: "10.0.0.0/16"
-* `peering_ha_eip` - (Optional) Public IP address that you want assigned to the HA peering instance.
-* `zone` - (Optional) A GCE zone where this gateway will be launched. (Required when cloud_type is 4)
+* `peering_ha_subnet` - (Optional) Public Subnet Information while creating Peering HA Gateway, only subnet is accepted. Required for AWS/ARM if enabling Peering HA. Example: AWS: "10.0.0.0/16".
+* `peering_ha_zone` - (Optional) Zone information for creating Peering HA Gateway, only zone is accepted. Required for GCP if enabling Peering HA. (Example: GCP: "us-west1-c")
+* `peering_ha_eip` - (Optional) Public IP address that you want assigned to the HA peering instance. Only available for AWS.
+* `peering_ha_gw_size` - (Optional) Size of the Peering HA Gateway.
 * `single_az_ha` (Optional) Set to "enabled" if this feature is desired.
-* `allocate_new_eip` - (Optional) When value is off, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 2.7 or later release. (Supported values : "on", "off") (Default: "on")
-* `eip` - (Optional) Required when allocate_new_eip is "off". It uses specified EIP for this gateway. Available in 3.5 or later release eip.
-* `tag_list` - (Optional) Instance tag of cloud provider. Example: ["key1:value1", "key002:value002"]
+* `allocate_new_eip` - (Optional) When value is off, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 2.7 or later release. (Supported values : "on", "off") (Default: "on") Option not available for GCP and ARM gateways, they will automatically allocate new eip's.
+* `eip` - (Optional) Required when allocate_new_eip is "off". It uses specified EIP for this gateway. Available in 3.5 or later release eip. Only available for AWS.
+* `tag_list` - (Optional) Instance tag of cloud provider. Example: ["key1:value1", "key002:value002"] Only available for AWS.
 
 The following arguments are computed - please do not edit in the resource file:
 
@@ -82,6 +128,7 @@ The following arguments are computed - please do not edit in the resource file:
 -> **NOTE:** The following arguments are deprecated:
 
 * `dns_server` - Specify the DNS IP, only required while using a custom private DNS for the VPC.
+* `peering_ha_gw_size` - If you are using/upgraded to Aviatrix Terraform Provider v4.3+, and a peering-HA gateway was originally created with a provider version <4.3, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also input this attribute and its value to its corresponding gateway resource in your `.tf` file. 
 
 ## Import
 

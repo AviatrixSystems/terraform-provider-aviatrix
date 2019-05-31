@@ -19,9 +19,10 @@ func preTransPeerCheck(t *testing.T, msgCommon string) (string, string, string, 
 	return source, region1, subnet1, nextHop, region2, subnet2, reachableCIDR
 }
 
-func TestAvxTransPeer_basic(t *testing.T) {
+func TestAccAviatrixTransPeer_basic(t *testing.T) {
 	var transpeer goaviatrix.TransPeer
 	rName := acctest.RandString(5)
+	resourceName := "aviatrix_trans_peer.test_trans_peer"
 
 	skipAcc := os.Getenv("SKIP_TRANS_PEER")
 	if skipAcc == "yes" {
@@ -36,28 +37,31 @@ func TestAvxTransPeer_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAvxTransPeerDestroy,
+		CheckDestroy: testAccTransPeerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAvxTransPeerConfigBasic(rName, sourceVPC, nextHopVPC, region1, region2, subnet1, subnet2,
+				Config: testAccTransPeerConfigBasic(rName, sourceVPC, nextHopVPC, region1, region2, subnet1, subnet2,
 					reachableCIDR),
 				Check: resource.ComposeTestCheckFunc(
-					testAvxTransPeerExists("aviatrix_trans_peer.test_trans_peer", &transpeer),
+					testAccTransPeerExists("aviatrix_trans_peer.test_trans_peer", &transpeer),
 					resource.TestCheckResourceAttr(
-						"aviatrix_trans_peer.test_trans_peer", "source", fmt.Sprintf("tfg-%s",
-							rName)),
+						resourceName, "source", fmt.Sprintf("tfg-%s", rName)),
 					resource.TestCheckResourceAttr(
-						"aviatrix_trans_peer.test_trans_peer", "nexthop", fmt.Sprintf("tfg2-%s",
-							rName)),
+						resourceName, "nexthop", fmt.Sprintf("tfg2-%s", rName)),
 					resource.TestCheckResourceAttr(
-						"aviatrix_trans_peer.test_trans_peer", "reachable_cidr", reachableCIDR),
+						resourceName, "reachable_cidr", reachableCIDR),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func testAvxTransPeerConfigBasic(rName string, source string, nextHop string, region1 string, region2 string,
+func testAccTransPeerConfigBasic(rName string, source string, nextHop string, region1 string, region2 string,
 	subnet1 string, subnet2 string, reachableCIDR string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
@@ -103,7 +107,7 @@ resource "aviatrix_trans_peer" "test_trans_peer" {
 		source, nextHop, region1, region2, subnet1, subnet2, reachableCIDR)
 }
 
-func testAvxTransPeerExists(n string, transpeer *goaviatrix.TransPeer) resource.TestCheckFunc {
+func testAccTransPeerExists(n string, transpeer *goaviatrix.TransPeer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -146,7 +150,7 @@ func testAvxTransPeerExists(n string, transpeer *goaviatrix.TransPeer) resource.
 	}
 }
 
-func testAvxTransPeerDestroy(s *terraform.State) error {
+func testAccTransPeerDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*goaviatrix.Client)
 
 	for _, rs := range s.RootModule().Resources {

@@ -152,7 +152,7 @@ func resourceVpcRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("aviatrix_transit_vpc", false)
 	}
-	d.Set("vpc_id", vC.VpcID[0])
+	d.Set("vpc_id", vC.VpcID)
 
 	var subnetList []map[string]string
 	for _, subnet := range vC.Subnets {
