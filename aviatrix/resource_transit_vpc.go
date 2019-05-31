@@ -64,7 +64,7 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "AZ of subnet being created for Insane Mode Transit Gateway. Required if insane_mode is enabled",
+				Description: "AZ of subnet being created for Insane Mode Transit Gateway. Required if insane_mode is enabled.",
 			},
 			"ha_subnet": {
 				Type:        schema.TypeString,
