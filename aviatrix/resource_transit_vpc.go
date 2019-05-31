@@ -391,15 +391,8 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 		}
 		return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway: %s", err)
 	}
-	if haGw.InsaneMode == "yes" {
-		// Append the availability zone to the subnet of the insane gateway
-		var haStrs []string
-		haStrs = append(haStrs, haGw.VpcNet, haGw.GatewayZone)
-		subnetHaInsane := strings.Join(haStrs, "~~")
-		d.Set("ha_subnet", subnetHaInsane)
-	} else {
-		d.Set("ha_subnet", haGw.VpcNet)
-	}
+	d.Set("ha_subnet", haGw.VpcNet)
+
 	d.Set("ha_gw_size", haGw.GwSize)
 	if haGw.InsaneMode == "yes" {
 		d.Set("ha_insane_mode_az", haGw.GatewayZone)
