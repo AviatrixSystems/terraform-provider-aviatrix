@@ -54,12 +54,6 @@ func resourceAviatrixVGWConn() *schema.Resource {
 				Default:     false,
 				Description: "Switch to Enable/Disable advertise transit VPC network CIDR.",
 			},
-			"bgp_manual_spoke_advertise_cidrs": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "Intended CIDR list to advertise to VGW.",
-			},
 		},
 	}
 }
@@ -85,15 +79,6 @@ func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) err
 	enableAdvertiseTransitCidr := d.Get("enable_advertise_transit_cidr").(bool)
 	if enableAdvertiseTransitCidr {
 		err := client.EnableAdvertiseTransitCidr(vgwConn)
-		if err != nil {
-			return fmt.Errorf("failed to enable advertise transit CIDR: %s", err)
-		}
-	}
-
-	bgpManualSpokeAdvertiseCidrs := d.Get("bgp_manual_spoke_advertise_cidrs").(string)
-	if bgpManualSpokeAdvertiseCidrs != "" {
-		vgwConn.BgpManualSpokeAdvertiseCidrs = bgpManualSpokeAdvertiseCidrs
-		err := client.SetBgpManualSpokeAdvertisedNetworks(vgwConn)
 		if err != nil {
 			return fmt.Errorf("failed to enable advertise transit CIDR: %s", err)
 		}
@@ -135,10 +120,6 @@ func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("bgp_vgw_id", vConn.BgpVGWId)
 	d.Set("bgp_local_as_num", vConn.BgpLocalAsNum)
 	d.Set("enable_advertise_transit_cidr", vConn.EnableAdvertiseTransitCidr)
-
-	if vgwConn.BgpManualSpokeAdvertiseCidrs != "" {
-		d.Set("bgp_manual_spoke_advertise_cidrs", vConn.BgpManualSpokeAdvertiseCidrs)
-	}
 
 	d.SetId(vConn.ConnName + "~" + vConn.VPCId)
 	return nil
@@ -183,23 +164,6 @@ func resourceAviatrixVGWConnUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 		d.SetPartial("enable_advertise_transit_cidr")
-	}
-
-	if d.HasChange("bgp_manual_spoke_advertise_cidrs") {
-		bgpManualSpokeAdvertiseCidrs := d.Get("bgp_manual_spoke_advertise_cidrs").(string)
-		if bgpManualSpokeAdvertiseCidrs != "" {
-			vgwConn.BgpManualSpokeAdvertiseCidrs = bgpManualSpokeAdvertiseCidrs
-			err := client.SetBgpManualSpokeAdvertisedNetworks(vgwConn)
-			if err != nil {
-				return fmt.Errorf("failed to set bgp manual spoke advertise CIDRs: %s", err)
-			}
-		} else {
-			err := client.DisableBgpManualSpokeAdvertisedNetworks(vgwConn)
-			if err != nil {
-				return fmt.Errorf("failed to disable bgp manual spoke advertise CIDRs: %s", err)
-			}
-		}
-		d.SetPartial("bgp_manual_spoke_advertise_cidrs")
 	}
 
 	d.Partial(false)
