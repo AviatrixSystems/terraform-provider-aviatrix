@@ -44,6 +44,16 @@ func resourceControllerConfig() *schema.Resource {
 				Default:     true,
 				Description: "A system-wide mode. Default: true.",
 			},
+			"target_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The release version number to which the controller will be upgraded to.",
+			},
+			"version": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Current version of the controller.",
+			},
 		},
 	}
 }
@@ -118,6 +128,19 @@ func resourceControllerConfigCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("failed to configure controller Security Group Management: %s", err)
 	}
 
+	version := &goaviatrix.Version{
+		Version: d.Get("target_version").(string),
+	}
+	if version.Version != "" {
+		err := client.Upgrade(version)
+		if err != nil {
+			return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
+		}
+
+		newCurrent, _, _ := client.GetCurrentVersion()
+		log.Printf("Upgrade complete (now %s)", newCurrent)
+	}
+
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return resourceControllerConfigRead(d, meta)
 }
@@ -155,7 +178,6 @@ func resourceControllerConfigRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return fmt.Errorf("could not read Aviatrix Controller Security Group Management Status: %s", err)
 	}
-
 	if sgm != nil {
 		if sgm.State == "Enabled" {
 			d.Set("security_group_management", true)
@@ -166,6 +188,15 @@ func resourceControllerConfigRead(d *schema.ResourceData, meta interface{}) erro
 	} else {
 		return fmt.Errorf("could not read Aviatrix Controller Security Group Management Status")
 	}
+	current, _, err := client.GetCurrentVersion()
+	if err != nil {
+		return fmt.Errorf("unable to read current Controller version: %s (%s)", err, current)
+	}
+	latestVersion, _ := client.GetLatestVersion()
+	if latestVersion != "" && current != latestVersion {
+		d.Set("target_version", current)
+	}
+	d.Set("version", current)
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
@@ -234,8 +265,35 @@ func resourceControllerConfigUpdate(d *schema.ResourceData, meta interface{}) er
 		d.SetPartial("security_group_management")
 	}
 
+	curVersion := d.Get("version").(string)
+	cur := strings.Split(curVersion, ".")
+	latestVersion, _ := client.GetLatestVersion()
+	latest := strings.Split(latestVersion, ".")
+	targetVersion := d.Get("target_version").(string)
+	version := &goaviatrix.Version{
+		Version: d.Get("target_version").(string),
+	}
+	if targetVersion == "latest" {
+		if latestVersion != "" {
+			for i := range cur {
+				if cur[i] != latest[i] {
+					err := client.Upgrade(version)
+					if err != nil {
+						return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
+					}
+					break
+				}
+			}
+		}
+	} else {
+		err := client.Upgrade(version)
+		if err != nil {
+			return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
+		}
+	}
+
 	d.Partial(false)
-	return nil
+	return resourceControllerConfigRead(d, meta)
 }
 
 func resourceControllerConfigDelete(d *schema.ResourceData, meta interface{}) error {

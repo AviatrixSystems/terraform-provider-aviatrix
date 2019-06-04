@@ -55,7 +55,6 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_transit_gateway_peering": resourceTransitGatewayPeering(),
 			"aviatrix_transit_vpc":             resourceAviatrixTransitVpc(),
 			"aviatrix_tunnel":                  resourceTunnel(),
-			"aviatrix_version":                 resourceAviatrixVersion(),
 			"aviatrix_vgw_conn":                resourceAviatrixVGWConn(),
 			"aviatrix_vpn_profile":             resourceAviatrixProfile(),
 			"aviatrix_vpn_user":                resourceAviatrixVPNUser(),
