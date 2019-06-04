@@ -203,7 +203,6 @@ func (c *Client) Do(verb string, req interface{}) (*http.Response, []byte, error
 			} else if !respdata.Return {
 				return resp, body, errors.New(respdata.Reason)
 			} else {
-				// Return = True; Reason is not CID expired
 				return resp, body, nil
 			}
 		} else {

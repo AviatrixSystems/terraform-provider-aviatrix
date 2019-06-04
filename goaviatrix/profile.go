@@ -66,12 +66,6 @@ func (c *Client) CreateProfile(profile *Profile) error {
 		return errors.New("HTTP Get add_user_profile failed: " + err.Error())
 	}
 	var data APIResp
-	//buf := new(bytes.Buffer)
-	//buf.ReadFrom(resp.Body)
-	//stringData := buf.String()
-	//if err = json.Unmarshal([]byte(stringData), &data); err != nil {
-	//	return errors.New("Json Decode add_user_profile failed: " + err.Error())
-	//}
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return errors.New("Json Decode add_user_profile failed: " + err.Error())
 	}

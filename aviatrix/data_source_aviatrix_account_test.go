@@ -31,14 +31,9 @@ func TestAccDataSourceAviatrixAccount_basic(t *testing.T) {
 					testAccDataSourceAviatrixAccount(resourceName),
 					resource.TestCheckResourceAttr(
 						resourceName, "account_name", fmt.Sprintf("tf-testing-%s", rName)),
-					//resource.TestCheckResourceAttr(
-					//	resourceName, "aws_iam", "false"),
 					resource.TestCheckResourceAttr(
 						resourceName, "aws_access_key",
 						os.Getenv("AWS_ACCESS_KEY")),
-					//resource.TestCheckResourceAttr(
-					//	resourceName, "aws_secret_key",
-					//	os.Getenv("AWS_SECRET_KEY")),
 				),
 			},
 		},

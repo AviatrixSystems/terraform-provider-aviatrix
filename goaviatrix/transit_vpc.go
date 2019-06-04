@@ -31,6 +31,20 @@ type TransitVpc struct {
 	InsaneMode             string `form:"insane_mode,omitempty"`
 }
 
+type TransitGwFireNetInterfaces struct {
+	VpcName                  string `json:"vpc_name"`
+	VpcRegion                string `json:"vpc_region"`
+	TransitVpc               string `json:"transit_vpc"`
+	FireNetInterfacesEnabled bool   `json:"dmz_enabled"`
+	Name                     string `json:"name"`
+}
+
+type TransitGwFireNetInterfacesResp struct {
+	Return  bool                       `json:"return"`
+	Results TransitGwFireNetInterfaces `json:"results"`
+	Reason  string                     `json:"reason"`
+}
+
 func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 	gateway.CID = c.CID
 	gateway.Action = "create_transit_gw"
@@ -179,6 +193,56 @@ func (c *Client) DisableConnectedTransit(gateway *TransitVpc) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API disable_connected_transit_on_gateway Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) EnableGatewayFireNetInterfaces(gateway *TransitVpc) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for enable_gateway_firenet_interfaces") + err.Error())
+	}
+	disableConnectedTransitOnGateway := url.Values{}
+	disableConnectedTransitOnGateway.Add("CID", c.CID)
+	disableConnectedTransitOnGateway.Add("action", "enable_gateway_firenet_interfaces")
+	disableConnectedTransitOnGateway.Add("gateway_name", gateway.GwName)
+
+	Url.RawQuery = disableConnectedTransitOnGateway.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return errors.New("HTTP Post enable_gateway_firenet_interfaces failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_gateway_firenet_interfaces failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API enable_gateway_firenet_interfaces Post failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) DisableGatewayFireNetInterfaces(gateway *TransitVpc) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for disable_gateway_firenet_interfaces") + err.Error())
+	}
+	disableConnectedTransitOnGateway := url.Values{}
+	disableConnectedTransitOnGateway.Add("CID", c.CID)
+	disableConnectedTransitOnGateway.Add("action", "disable_gateway_firenet_interfaces")
+	disableConnectedTransitOnGateway.Add("gateway", gateway.GwName)
+
+	Url.RawQuery = disableConnectedTransitOnGateway.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return errors.New("HTTP Post disable_gateway_firenet_interfaces failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_gateway_firenet_interfaces failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API disable_gateway_firenet_interfaces Post failed: " + data.Reason)
 	}
 	return nil
 }

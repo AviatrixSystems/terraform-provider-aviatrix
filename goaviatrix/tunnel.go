@@ -14,7 +14,6 @@ type Tunnel struct {
 	VpcName2        string `json:"vpc_name2"`
 	PeeringState    string `json:"peering_state"`
 	PeeringHaStatus string `json:"peering_ha_status"`
-	Cluster         string `json:"cluster"`
 	PeeringLink     string `json:"peering_link"`
 	EnableHA        string `json:"enable_ha"`
 }

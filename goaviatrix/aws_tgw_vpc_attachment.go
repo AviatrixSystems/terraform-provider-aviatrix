@@ -72,7 +72,7 @@ func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment
 	aTVA, err := c.GetAwsTgwDomainAttachedVpc(awsTgwVpcAttachment)
 	if err != nil {
 		if err == ErrNotFound {
-			return nil, errors.New("security domain does not have attached vpc: " + awsTgwVpcAttachment.VpcID)
+			return nil, err
 		}
 		return nil, errors.New("could not get security domain details: " + err.Error())
 	}

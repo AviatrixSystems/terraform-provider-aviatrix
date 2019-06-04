@@ -103,8 +103,14 @@ type Gateway struct {
 	VpnStatus               string `form:"vpn_access,omitempty" json:"vpn_status,omitempty"`
 	Zone                    string `form:"zone,omitempty" json:"zone,omitempty"`
 	VpcSize                 string `form:"vpc_size,omitempty" ` //Only use for gateway create
+	DMZEnabled              string `json:"dmz_enabled,omitempty"`
+}
 
-	//MaxConnections          string `form:"max_connections,omitempty" json:"max_connections,omitempty"`
+type GatewayDetail struct {
+	AccountName string `form:"account_name,omitempty" json:"account_name,omitempty"`
+	Action      string `form:"action,omitempty"`
+	GwName      string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
+	DMZEnabled  bool   `json:"dmz_enabled,omitempty"`
 }
 
 type VpnGatewayAuth struct { // Used for set_vpn_gateway_authentication rest api call
@@ -138,6 +144,12 @@ type GatewayListResp struct {
 	Return  bool      `json:"return"`
 	Results []Gateway `json:"results"`
 	Reason  string    `json:"reason"`
+}
+
+type GatewayDetailApiResp struct {
+	Return  bool          `json:"return"`
+	Results GatewayDetail `json:"results"`
+	Reason  string        `json:"reason"`
 }
 
 func (c *Client) CreateGateway(gateway *Gateway) error {
@@ -251,6 +263,37 @@ func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
 			return &gwList[i], nil
 		}
 	}
+	log.Printf("Couldn't find Aviatrix gateway %s", gateway.GwName)
+	return nil, ErrNotFound
+}
+
+func (c *Client) GetGatewayDetail(gateway *Gateway) (*GatewayDetail, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return nil, errors.New(("url Parsing failed for list_vpc_by_name") + err.Error())
+	}
+	listVpcByName := url.Values{}
+	listVpcByName.Add("CID", c.CID)
+	listVpcByName.Add("action", "list_vpc_by_name")
+	listVpcByName.Add("vpc_name", gateway.GwName)
+
+	Url.RawQuery = listVpcByName.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return nil, errors.New("HTTP Get list_vpc_by_name failed: " + err.Error())
+	}
+	var data GatewayDetailApiResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode list_vpc_by_name failed: " + err.Error())
+	}
+	if !data.Return {
+		return nil, errors.New("Rest API list_vpc_by_name Get failed: " + data.Reason)
+	}
+	if data.Results.GwName == gateway.GwName {
+		return &data.Results, nil
+	}
+
 	log.Printf("Couldn't find Aviatrix gateway %s", gateway.GwName)
 	return nil, ErrNotFound
 }

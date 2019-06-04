@@ -552,6 +552,9 @@ func (c *Client) ListTgwDetails(awsTgw *AWSTgw) (*AWSTgw, error) {
 		return nil, errors.New("Json Decode list_tgw_details failed: " + err.Error())
 	}
 	if !data.Return {
+		if strings.Contains(data.Reason, "does not exist") {
+			return nil, ErrNotFound
+		}
 		return nil, errors.New("Rest API list_tgw_details Get failed: " + data.Reason)
 	}
 

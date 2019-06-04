@@ -193,31 +193,6 @@ func (c *Client) UpdateDomains(fqdn *FQDN) error {
 }
 
 func (c *Client) AttachGws(fqdn *FQDN) error {
-	//log.Printf("[TRACE] inside AttachGWs ------------------------------------------------%#v", fqdn)
-	//Url, err := url.Parse(c.baseURL)
-	//if err != nil {
-	//	return errors.New("url Parsing failed for attach_fqdn_filter_tag_to_gw " + err.Error())
-	//}
-	//attachFQDNFilterTagToGw := url.Values{}
-	//attachFQDNFilterTagToGw.Add("CID", c.CID)
-	//attachFQDNFilterTagToGw.Add("action", "attach_fqdn_filter_tag_to_gw")
-	//attachFQDNFilterTagToGw.Add("tag_name", fqdn.FQDNTag)
-	//
-	//for i := range fqdn.GwList {
-	//	attachFQDNFilterTagToGw.Add("gw_name", fqdn.GwList[i])
-	//	Url.RawQuery = attachFQDNFilterTagToGw.Encode()
-	//	resp, err := c.Get(Url.String(), nil)
-	//	if err != nil {
-	//		return errors.New("HTTP Get attach_fqdn_filter_tag_to_gw failed: " + err.Error())
-	//	}
-	//	var data APIResp
-	//	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-	//		return errors.New("Json Decode attach_fqdn_filter_tag_to_gw failed: " + err.Error())
-	//	}
-	//	if !data.Return {
-	//		return errors.New("Rest API attach_fqdn_filter_tag_to_gw Get failed: " + data.Reason)
-	//	}
-	//}
 	return nil
 }
 
@@ -327,24 +302,14 @@ func (c *Client) ListDomains(fqdn *FQDN) (*FQDN, error) {
 	names := dn["results"].([]interface{})
 	for _, domain := range names {
 		dn := domain.(map[string]interface{})
-		//log.Printf("[TRACE] domain ------------------------->>>>>>>>>>>>: %#v", dn["fqdn"])
-		//log.Printf("[TRACE] domain ------------------------->>>>>>>>>>>>: %#v", dn["protocol"])
-		//log.Printf("[TRACE] domain ------------------------->>>>>>>>>>>>: %#v", dn["port"])
 		fqdnFilter := Filters{
 			FQDN:     dn["fqdn"].(string),
 			Protocol: dn["proto"].(string),
 			Port:     dn["port"].(string),
 		}
-		//log.Printf("[TRACE] DOMAIN key FOUND ------------------------>>>>>>>>>>>>: %#v",fqdnFilter)
 		fqdn.DomainList = append(fqdn.DomainList, &fqdnFilter)
 	}
-	//value, ok := dn["results"].([]interface{})
-	//if ok {
-	//    log.Printf("[TRACE] ListDomains FOUND ------------------------------->>>>>>>>>>>>: %#v", value)
-	//} else {
-	//    log.Printf("[TRACE] ListDomains NOT_FOUND --------------------------->>>>>>>>>>>>: %#v", value)
-	//}
-	// error when passing value or when passing fqdnFilter
+
 	return fqdn, nil
 }
 

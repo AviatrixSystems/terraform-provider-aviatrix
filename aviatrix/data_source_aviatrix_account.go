@@ -28,10 +28,6 @@ func dataSourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS Account number to associate with Aviatrix account.",
 			},
-			//"aws_iam": {
-			//	Type:     schema.TypeString,
-			//	Computed: true,
-			//},		# REST API needs to support this
 			"aws_role_arn": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -47,11 +43,6 @@ func dataSourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS Access Key.",
 			},
-			//"aws_secret_key": {
-			//	Type:      schema.TypeString,
-			//	Computed:  true,
-			//	Sensitive: true,
-			//},
 		},
 	}
 }
