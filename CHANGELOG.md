@@ -1,3 +1,17 @@
+## 1.9.28 (Jun 3 2019)
+
+CHANGES
+  - Supported controller version: 4.6.569
+  - Added private route encryption support in site2cloud
+  - Added custom algorithm support in site2cloud
+  - Added ssl server pool support for "tcp" tunnel type in site2cloud
+  - Added dead peer detection support in site2cloud
+  - Added advertise transit CIDR support in vgw_conn
+  - Added aviatrix firenet vpc support in vpc
+  - Added enable firenet interfaces support in transit_vpc
+  - Deprecated "cluster" in tunnel resource
+  - Deprecated admin_email and customer_id resources
+  
 ## 1.8.26 (May 30 2019)
 
 CHANGES
