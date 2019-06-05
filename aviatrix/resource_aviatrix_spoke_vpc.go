@@ -19,6 +19,9 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		SchemaVersion: 1,
+		MigrateState:  resourceSpokeVpcMigrateState,
+
 		Schema: map[string]*schema.Schema{
 			"cloud_type": {
 				Type:        schema.TypeInt,
