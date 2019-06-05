@@ -273,22 +273,24 @@ func resourceControllerConfigUpdate(d *schema.ResourceData, meta interface{}) er
 	version := &goaviatrix.Version{
 		Version: d.Get("target_version").(string),
 	}
-	if targetVersion == "latest" {
-		if latestVersion != "" {
-			for i := range cur {
-				if cur[i] != latest[i] {
-					err := client.Upgrade(version)
-					if err != nil {
-						return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
+	if targetVersion != "" {
+		if targetVersion == "latest" {
+			if latestVersion != "" {
+				for i := range cur {
+					if cur[i] != latest[i] {
+						err := client.Upgrade(version)
+						if err != nil {
+							return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
+						}
+						break
 					}
-					break
 				}
 			}
-		}
-	} else {
-		err := client.Upgrade(version)
-		if err != nil {
-			return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
+		} else {
+			err := client.Upgrade(version)
+			if err != nil {
+				return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
+			}
 		}
 	}
 
