@@ -139,8 +139,7 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "vpc_size", os.Getenv("ARM_GW_SIZE")),
 						resource.TestCheckResourceAttr(resourceName,
 							"account_name", fmt.Sprintf("tfa-arm-%s", rName)),
-						resource.TestCheckResourceAttr(resourceName,
-							"vnet_and_resource_group_names", os.Getenv("ARM_VNET_ID")),
+						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("ARM_VNET_ID")),
 						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("ARM_SUBNET")),
 						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("ARM_REGION")),
 						resource.TestCheckResourceAttr(resourceName, "enable_nat", "no"),
@@ -228,7 +227,7 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
     cloud_type                    = 8
     account_name                  = "${aviatrix_account.test.account_name}"
     gw_name                       = "tfg-arm-%[1]s"
-    vnet_and_resource_group_names = "%[6]s"
+    vpc_id                        = "%[6]s"
     vpc_reg                       = "%[7]s"
     vpc_size                      = "%[8]s"
     subnet                        = "%[9]s"

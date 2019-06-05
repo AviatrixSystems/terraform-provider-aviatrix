@@ -35,6 +35,11 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 				Required:    true,
 				Description: "Name of the gateway which is going to be created.",
 			},
+			"vpc_id": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "VPC-ID/VNet-Name of cloud provider.",
+			},
 			"vpc_reg": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -49,16 +54,6 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Public Subnet Info.",
-			},
-			"vpc_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "VPC-ID/VNet-Name of cloud provider.",
-			},
-			"vnet_and_resource_group_names": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The string consisted of name of (Azure) VNet and name Resource-Group.",
 			},
 			"enable_nat": {
 				Type:        schema.TypeString,
@@ -118,8 +113,6 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		CloudType:      d.Get("cloud_type").(int),
 		AccountName:    d.Get("account_name").(string),
 		GwName:         d.Get("gw_name").(string),
-		VpcID:          d.Get("vpc_id").(string),
-		VnetRsrcGrp:    d.Get("vnet_and_resource_group_names").(string),
 		VpcRegion:      d.Get("vpc_reg").(string),
 		VpcSize:        d.Get("vpc_size").(string),
 		Subnet:         d.Get("subnet").(string),
@@ -133,11 +126,15 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		gateway.EnableNAT = "no"
 	}
 	if gateway.CloudType == 1 || gateway.CloudType == 4 {
-		gateway.VnetRsrcGrp = ""
-		d.Set("vnet_and_resource_group_names", gateway.VnetRsrcGrp)
+		gateway.VpcID = d.Get("vpc_id").(string)
+		if gateway.VpcID == "" {
+			return fmt.Errorf("'vpc_id' cannot be empty for creating a spoke gw")
+		}
 	} else if gateway.CloudType == 8 {
-		gateway.VpcID = ""
-		d.Set("vpc_id", gateway.VpcID)
+		gateway.VNetNameResourceGroup = d.Get("vpc_id").(string)
+		if gateway.VNetNameResourceGroup == "" {
+			return fmt.Errorf("'vpc_id' cannot be empty for creating a spoke gw")
+		}
 	} else {
 		return fmt.Errorf("invalid cloud type, it can only be aws (1), gcp (4), arm (8)")
 	}
@@ -270,7 +267,7 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0]) //gcp vpc_id returns as <vpc_id>~-~<other vpc info> in rest api
 			d.Set("vpc_reg", gw.GatewayZone)                   //gcp vpc_reg returns as gateway_zone in json
 		} else if gw.CloudType == 8 {
-			d.Set("vnet_and_resource_group_names", gw.VpcID)
+			d.Set("vpc_id", gw.VpcID)
 			d.Set("vpc_reg", gw.VpcRegion)
 		}
 		d.Set("subnet", gw.VpcNet)
@@ -367,9 +364,6 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 	if d.HasChange("vpc_reg") {
 		return fmt.Errorf("updating vpc_reg is not allowed")
-	}
-	if d.HasChange("vnet_and_resource_group_names") {
-		return fmt.Errorf("updating vnet_and_resource_group_names is not allowed")
 	}
 	if d.HasChange("subnet") {
 		return fmt.Errorf("updating subnet is not allowed")
