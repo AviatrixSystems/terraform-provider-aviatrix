@@ -125,9 +125,12 @@ The following arguments are computed - please do not edit in the resource file:
 * `cloud_instance_id` - Instance ID of the gateway.
 * `cloudn_bkup_gateway_inst_id` - Instance ID of the backup gateway.
 
--> **NOTE:** The following arguments are deprecated:
+The following arguments are deprecated:
 
 * `dns_server` - Specify the DNS IP, only required while using a custom private DNS for the VPC.
+
+-> **NOTE:** 
+
 * `peering_ha_gw_size` - If you are using/upgraded to Aviatrix Terraform Provider v4.3+, and a peering-HA gateway was originally created with a provider version <4.3, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also input this attribute and its value to its corresponding gateway resource in your `.tf` file. 
 
 ## Import

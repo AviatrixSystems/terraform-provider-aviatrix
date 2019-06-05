@@ -72,7 +72,7 @@ The following arguments are supported:
 * `transit_gw` - (Optional)  Specify the transit Gateway.
 * `tag_list` - (Optional) Instance tag of cloud provider. Example: key1:value1,key002:value002, etc... Only AWS (cloud_type is "1") is supported
 
--> **NOTE:** The following arguments are deprecated:
+The following arguments are deprecated:
 
 * `dns_server` - Specify the DNS IP, only required while using a custom private DNS for the VPC.
 

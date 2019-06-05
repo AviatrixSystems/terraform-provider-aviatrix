@@ -62,7 +62,7 @@ The following arguments are supported:
 
 -> **NOTE:** 
 
-* If you are using/ upgraded to Aviatrix Terraform Provider v4.2+ , and an fqdn resource was originally created with a provider version <4.2, you must modify your configuration file to match current format, and do ‘terraform refresh’ to update the state file to current format. 
+* If you are using/upgraded to Aviatrix Terraform Provider v4.2+ , and an fqdn resource was originally created with a provider version <4.2, you must modify your configuration file to match current format, and do ‘terraform refresh’ to update the state file to current format. 
 
 ## Import
 

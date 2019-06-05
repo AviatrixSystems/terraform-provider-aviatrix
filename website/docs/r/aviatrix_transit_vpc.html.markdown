@@ -69,9 +69,12 @@ The following arguments are supported:
 * `ha_insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit HA Gateway. Required if insane_mode is enabled and ha_subnet is set.
 
 
--> **NOTE:** The following arguments are deprecated:
+The following arguments are deprecated:
 
 * `dns_server` - Specify the DNS IP, only required while using a custom private DNS for the VPC.
+
+-> **NOTE:** 
+
 * `enable_firenet_interfaces` - If you are using/upgraded to Aviatrix Terraform Provider R1.8+/UserConnect-4.6 , and a transit_vpc resource was originally created with a provider version < R1.8/UserConnect-4.6, you must do ‘terraform refresh’ to update and apply the attribute’s default value (“false”) into the state file.
 
 ## Import
