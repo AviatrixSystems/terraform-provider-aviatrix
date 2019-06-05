@@ -100,7 +100,7 @@ func TestAccAviatrixTransitGw_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameArm, "vpc_size", os.Getenv("ARM_GW_SIZE")),
 						resource.TestCheckResourceAttr(resourceNameArm, "account_name", fmt.Sprintf("tfaz-%s",
 							rName)),
-						resource.TestCheckResourceAttr(resourceNameArm, "vnet_name_resource_group",
+						resource.TestCheckResourceAttr(resourceNameArm, "vpc_id",
 							os.Getenv("ARM_VNET_ID")),
 						resource.TestCheckResourceAttr(resourceNameArm, "subnet", os.Getenv("ARM_SUBNET")),
 						resource.TestCheckResourceAttr(resourceNameArm, "vpc_reg", os.Getenv("ARM_REGION")),
@@ -157,7 +157,7 @@ resource "aviatrix_transit_vpc" "test_transit_vpc_arm" {
     cloud_type               = 8
     account_name             = "${aviatrix_account.test_arm.account_name}"
     gw_name                  = "tfg-%[1]s"
-    vnet_name_resource_group = "%[6]s"
+    vpc_id                   = "%[6]s"
     vpc_reg                  = "%[7]s"
     vpc_size                 = "%[8]s"
     subnet                   = "%[9]s"
