@@ -53,7 +53,6 @@ The following arguments are supported:
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `gw_name` - (Required) Name of the gateway which is going to be created.
 * `vpc_id` - (Optional) VPC-ID/VNet-Name of cloud provider. Required if for aws. Example: AWS: "vpc-abcd1234", GCP: "mygooglecloudvpcname", etc...
-* `vnet_name_resource_group` - (Optional) VPC-ID/VNet-Name of cloud provider. Required if for azure. ARM: "VNet_Name:Resource_Group_Name".
 * `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", ARM: "East US 2", etc...
 * `vpc_size` - (Required) Size of the gateway instance.  Example: AWS: "t2.large", etc...
 * `subnet` - (Required) Public Subnet CIDR.  Example: AWS: "10.0.0.0/24". Copy/paste from AWS Console to get the right subnet CIDR.
@@ -72,10 +71,13 @@ The following arguments are supported:
 The following arguments are deprecated:
 
 * `dns_server` - Specify the DNS IP, only required while using a custom private DNS for the VPC.
+* `vnet_name_resource_group` - (Optional) VPC-ID/VNet-Name of cloud provider. Required if for azure. ARM: "VNet_Name:Resource_Group_Name". It is replaced by "vpc_id".
 
 -> **NOTE:** 
 
 * `enable_firenet_interfaces` - If you are using/upgraded to Aviatrix Terraform Provider R1.8+/UserConnect-4.6 , and a transit_vpc resource was originally created with a provider version < R1.8/UserConnect-4.6, you must do ‘terraform refresh’ to update and apply the attribute’s default value (“false”) into the state file.
+* `vnet_name_resource_group` - If you are using/upgraded to Aviatrix Terraform Provider R1.10+/UserConnect-4.6 , and an ARM transit_vpc resource was originally created with a provider version < R1.10/UserConnect-4.6, you must replace "vnet_name_resource_group" with "vpc_id" in your configuration file, and do ‘terraform refresh’ to set its value to "vpc_id" and apply it into the state file.
+
 
 ## Import
 

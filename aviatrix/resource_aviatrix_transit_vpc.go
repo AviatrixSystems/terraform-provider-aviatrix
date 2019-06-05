@@ -19,7 +19,7 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 		MigrateState:  resourceTransitVpcMigrateState,
 
 		Schema: map[string]*schema.Schema{
@@ -60,11 +60,6 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 				Description: "AZ of subnet being created for Insane Mode Transit Gateway. Required if insane_mode is enabled.",
 			},
 			"vpc_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "VPC-ID/VNet-Name of cloud provider.",
-			},
-			"vnet_name_resource_group": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "VPC-ID/VNet-Name of cloud provider.",
@@ -150,9 +145,9 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a transit gw for aws vpc")
 		}
 	} else if cloudType == 8 {
-		gateway.VNetNameResourceGroup = d.Get("vnet_name_resource_group").(string)
+		gateway.VNetNameResourceGroup = d.Get("vpc_id").(string)
 		if gateway.VNetNameResourceGroup == "" {
-			return fmt.Errorf("'vnet_name_resource_group' cannot be empty for creating a transit gw for azure vnet")
+			return fmt.Errorf("'vpc_id' cannot be empty for creating a transit gw for azure vnet")
 		}
 	}
 
@@ -351,7 +346,7 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 		if gw.CloudType == 1 {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 		} else if gw.CloudType == 8 {
-			d.Set("vnet_name_resource_group", gw.VpcID)
+			d.Set("vpc_id", gw.VpcID)
 		}
 		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("vpc_size", gw.GwSize)
@@ -452,9 +447,6 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 	if d.HasChange("vpc_reg") {
 		return fmt.Errorf("updating vpc_reg is not allowed")
-	}
-	if d.HasChange("vnet_name_resource_group") {
-		return fmt.Errorf("updating vnet_and_resource_group is not allowed")
 	}
 	if d.HasChange("subnet") {
 		return fmt.Errorf("updating subnet is not allowed")
