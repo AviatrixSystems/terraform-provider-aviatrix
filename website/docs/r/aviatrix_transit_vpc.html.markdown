@@ -34,7 +34,7 @@ resource "aviatrix_transit_vpc" "test_transit_gw_azure" {
   cloud_type               = 8
   account_name             = "devops_azure"
   gw_name                  = "transit"
-  vnet_name_resource_group = "vnet1:hello"
+  vpc_id                   = "vnet1:hello"
   vpc_reg                  = "West US"
   vpc_size                 = "Standard_B1s"
   subnet                   = "10.30.0.0/24"
