@@ -31,16 +31,16 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 	msgCommon := ". Set SKIP_SPOKE to yes to skip Spoke Gateway tests"
 
 	skipGw := os.Getenv("SKIP_SPOKE")
-	skipAWS := os.Getenv("SKIP_AWS_SPOKE")
-	skipGCP := os.Getenv("SKIP_GCP_SPOKE")
-	skipARM := os.Getenv("SKIP_ARM_SPOKE")
+	skipAWS := os.Getenv("SKIP_SPOKE_AWS")
+	skipGCP := os.Getenv("SKIP_SPOKE_GCP")
+	skipARM := os.Getenv("SKIP_SPOKE_ARM")
 
 	if skipGw == "yes" {
 		t.Skip("Skipping Spoke Gateway test as SKIP_SPOKE is set")
 	}
 
 	if skipAWS == "yes" && skipGCP == "yes" && skipARM == "yes" {
-		t.Skip("Skipping Spoke Gateway test as SKIP_AWS_SPOKE, SKIP_GCP_SPOKE, and SKIP_ARM_SPOKE are all set, " +
+		t.Skip("Skipping Spoke Gateway test as SKIP_SPOKE_AWS, SKIP_SPOKE_GCP, and SKIP_SPOKE_ARM are all set, " +
 			"even though SKIP_SPOKE isn't set")
 	}
 
@@ -58,7 +58,7 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 		gcpGwSize = "f1-micro"
 	}
 	if skipAWS == "yes" {
-		t.Log("Skipping AWS Spoke Gateway test as SKIP_AWS_SPOKE is set")
+		t.Log("Skipping AWS Spoke Gateway test as SKIP_SPOKE_AWS is set")
 	} else {
 		resource.Test(t, resource.TestCase{
 			PreCheck:     func() { testAccPreCheck(t) },
@@ -90,7 +90,7 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 		})
 	}
 	if skipGCP == "yes" {
-		t.Log("Skipping GCP Spoke Gateway test as SKIP_GCP_SPOKE is set")
+		t.Log("Skipping GCP Spoke Gateway test as SKIP_SPOKE_GCP is set")
 	} else {
 		resource.Test(t, resource.TestCase{
 			PreCheck:     func() { testAccPreCheck(t) },
@@ -122,7 +122,7 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 		})
 	}
 	if skipARM == "yes" {
-		t.Log("Skipping ARM Spoke Gateway test as SKIP_ARM_SPOKE is set")
+		t.Log("Skipping ARM Spoke Gateway test as SKIP_SPOKE_ARM is set")
 	} else {
 		importStateVerifyIgnore = append(importStateVerifyIgnore, "vpc_id")
 		resource.Test(t, resource.TestCase{

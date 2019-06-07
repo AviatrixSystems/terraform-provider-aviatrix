@@ -36,13 +36,13 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |                                      | SKIP_ARM_GATEWAY             |         + ARM_VNET_ID, ARM_REGION, ARM_SUBNET, ARM_GW_SIZE            |
 | aviatrix_site2cloud                  | SKIP_S2C                     | aviatrix_gateway                                                      |
 | aviatrix_spoke_vpc                   | SKIP_SPOKE                   | aviatrix_gateway                                                      |
-|                                      | SKIP_AWS_SPOKE               |         + AWS_VPC_ID, AWS_REGION, AWS_VPC_NET, AWS_GW_SIZE (optional) |
-|                                      | SKIP_GCP_SPOKE               |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)    |
-|                                      | SKIP_ARM_SPOKE               |         + ARM_VNET_ID, ARM_REGION, ARM_SUBNET, ARM_GW_SIZE            |
+|                                      | SKIP_SPOKE_AWS               |         + AWS_VPC_ID, AWS_REGION, AWS_VPC_NET, AWS_GW_SIZE (optional) |
+|                                      | SKIP_SPOKE_GCP               |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)    |
+|                                      | SKIP_SPOKE_ARM               |         + ARM_VNET_ID, ARM_REGION, ARM_SUBNET, ARM_GW_SIZE            |
 | aviatrix_trans_peer                  | SKIP_TRANS_PEER              | aviatrix_tunnel                                                       |
 | aviatrix_transit_vpc                 | SKIP_TRANSIT                 | aviatrix_gateway                                                      |
 |                                      | SKIP_TRANSIT_AWS             | aviatrix_gateway in AWS                                               |
-|                                      | SKIP_TRANSIT_AZURE           | aviatrix_gateway in AZURE                                             |
+|                                      | SKIP_TRANSIT_ARM             | aviatrix_gateway in ARM                                             |
 | aviatrix_transit_gateway_peering     | SKIP_TRANSIT_GATEWAY_PEERING | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_VPC_NET2             |
 | aviatrix_tunnel                      | SKIP_TUNNEL                  | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_VPC_NET2             |
 | aviatrix_version                     | SKIP_VERSION                 |                                                                       |

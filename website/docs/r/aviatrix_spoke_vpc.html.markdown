@@ -42,7 +42,7 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc_gcp" {
 # Set Aviatrix arm spoke_vpc
 resource "aviatrix_spoke_vpc" "test_spoke_vpc_arm" {
   cloud_type   = 8
-  account_name = "my-aws"
+  account_name = "my-arm"
   gw_name      = "spoke-gw-01"
   vpc_id       = "spoke:test-spoke-gw-123"
   vpc_reg      = "West US"
