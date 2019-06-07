@@ -631,7 +631,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		} else {
 			d.Set("otp_mode", "")
 		}
-		d.Set("okta_token", gw.OktaToken)
 		d.Set("okta_url", gw.OktaURL)
 		d.Set("okta_username_suffix", gw.OktaUsernameSuffix)
 		d.Set("duo_integration_key", gw.DuoIntegrationKey)
