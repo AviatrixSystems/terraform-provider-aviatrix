@@ -41,8 +41,8 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc_gcp" {
 
 # Set Aviatrix arm spoke_vpc
 resource "aviatrix_spoke_vpc" "test_spoke_vpc_arm" {
-  cloud_type   = 1
-  account_name = "my-aws"
+  cloud_type   = 8
+  account_name = "my-arm"
   gw_name      = "spoke-gw-01"
   vpc_id       = "spoke:test-spoke-gw-123"
   vpc_reg      = "West US"
@@ -59,8 +59,7 @@ The following arguments are supported:
 * `cloud_type` - (Required) Type of cloud service provider. AWS=1, GCP=4, ARM=8
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `gw_name` - (Required) Name of the gateway which is going to be created.
-* `vpc_id` - (Optional) VPC-ID/VNet-Name of cloud provider. Example: AWS: "vpc-abcd1234", etc... (Required if cloud_type is "1" or "4")
-* `vnet_and_resource_group_names` - (Optional) The string consisted of name of (Azure) VNet and name Resource-Group. Valid Value(s): Refer to Aviatrix controller GUI. (Required if cloud_type is "8")
+* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Example: AWS: "vpc-abcd1234", etc... (Required if cloud_type is "1" or "4")
 * `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", GCP: "us-west1-b", ARM: "East US 2", etc...
 * `vpc_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", GCP: "f1.micro", ARM: "StandardD2", etc...
 * `subnet` - (Required) Public Subnet Info. Example: AWS: "CIDR~~ZONE~~SubnetName", etc...
@@ -72,9 +71,13 @@ The following arguments are supported:
 * `transit_gw` - (Optional)  Specify the transit Gateway.
 * `tag_list` - (Optional) Instance tag of cloud provider. Example: key1:value1,key002:value002, etc... Only AWS (cloud_type is "1") is supported
 
--> **NOTE:** The following arguments are deprecated:
+The following arguments are deprecated:
 
 * `dns_server` - Specify the DNS IP, only required while using a custom private DNS for the VPC.
+
+-> **NOTE:** 
+
+* `vnet_and_resource_group_names` - If you are using/upgraded to Aviatrix Terraform Provider R1.10+/UserConnect-4.6 , and an ARM spoke_vpc resource was originally created with a provider version < R1.10/UserConnect-4.6, you must replace "vnet_and_resource_group_names" with "vpc_id" in your configuration file, and do ‘terraform refresh’ to set its value to "vpc_id" and apply it into the state file.
 
 ## Import
 

@@ -10,24 +10,24 @@ import (
 
 // Spoke gateway simple struct to hold spoke details
 type SpokeVpc struct {
-	AccountName    string `form:"account_name,omitempty" json:"account_name,omitempty"`
-	Action         string `form:"action,omitempty"`
-	CID            string `form:"CID,omitempty"`
-	CloudType      int    `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
-	DnsServer      string `form:"dns_server,omitempty" json:"dns_server,omitempty"`
-	GwName         string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
-	GwSize         string `form:"gw_size,omitempty"`
-	VpcID          string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	VnetRsrcGrp    string `form:"vnet_and_resource_group_names,omitempty"`
-	Subnet         string `form:"public_subnet,omitempty" json:"public_subnet,omitempty"`
-	VpcRegion      string `form:"region,omitempty" json:"vpc_region,omitempty"`
-	VpcSize        string `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
-	EnableNAT      string `form:"nat_enabled,omitempty" json:"enable_nat,omitempty"`
-	HASubnet       string `form:"ha_subnet,omitempty"`
-	HAZone         string `form:"new_zone,omitempty"`
-	SingleAzHa     string `form:"single_az_ha,omitempty"`
-	TransitGateway string `form:"transit_gw,omitempty"`
-	TagList        string `form:"tags,omitempty"`
+	AccountName           string `form:"account_name,omitempty" json:"account_name,omitempty"`
+	Action                string `form:"action,omitempty"`
+	CID                   string `form:"CID,omitempty"`
+	CloudType             int    `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
+	DnsServer             string `form:"dns_server,omitempty" json:"dns_server,omitempty"`
+	GwName                string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
+	GwSize                string `form:"gw_size,omitempty"`
+	VpcID                 string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	VNetNameResourceGroup string `form:"vnet_and_resource_group_names,omitempty"`
+	Subnet                string `form:"public_subnet,omitempty" json:"public_subnet,omitempty"`
+	VpcRegion             string `form:"region,omitempty" json:"vpc_region,omitempty"`
+	VpcSize               string `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
+	EnableNAT             string `form:"nat_enabled,omitempty" json:"enable_nat,omitempty"`
+	HASubnet              string `form:"ha_subnet,omitempty"`
+	HAZone                string `form:"new_zone,omitempty"`
+	SingleAzHa            string `form:"single_az_ha,omitempty"`
+	TransitGateway        string `form:"transit_gw,omitempty"`
+	TagList               string `form:"tags,omitempty"`
 }
 
 func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) error {
@@ -116,7 +116,7 @@ func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 	} else if spoke.CloudType == 4 {
 		enableSpokeHa.Add("new_zone", spoke.HAZone)
 	} else {
-		return errors.New("Invalid cloud type")
+		return errors.New("invalid cloud type")
 	}
 	Url.RawQuery = enableSpokeHa.Encode()
 	resp, err := c.Get(Url.String(), nil)

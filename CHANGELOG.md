@@ -1,3 +1,10 @@
+## 1.10.10 (Jun 7 2019)
+
+CHANGES
+  - Supported controller version: 4.6.604
+  - Deprecated "vnet_and_resource_group_names" in spoke_vpc and replaced it with "vpc_id"
+  - Deprecated "vnet_name_resource_group" in transit_vpc and replaced it with "vpc_id"
+    
 ## 1.9.28 (Jun 3 2019)
 
 CHANGES
