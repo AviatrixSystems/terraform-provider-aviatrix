@@ -138,6 +138,8 @@ func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error
 
 	if vgwConn.BgpManualSpokeAdvertiseCidrs != "" {
 		d.Set("bgp_manual_spoke_advertise_cidrs", vConn.BgpManualSpokeAdvertiseCidrs)
+	} else {
+		d.Set("bgp_manual_spoke_advertise_cidrs", "")
 	}
 
 	d.SetId(vConn.ConnName + "~" + vConn.VPCId)
