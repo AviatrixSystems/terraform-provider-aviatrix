@@ -50,6 +50,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_vpc                         | SKIP_VPC                     | aviatrix_account                                                      |
 | aviatrix_vpn_profile                 | SKIP_VPN_PROFILE             | aviatrix_vpn_user                                                     |
 | aviatrix_vpn_user                    | SKIP_VPN_USER                | aviatrix_gateway                                                      |
+| aviatrix_vpn_user_accelerator	       | SKIP_VPN_USER_ACCELERATOR    | aviatrix_gateway						      |
 | aviatrix_data_source_account         | SKIP_DATA_ACCOUNT            | aviatrix_account                                                      |
 | aviatrix_data_source_caller_identity | SKIP_DATA_CALLER_IDENTITY    |                                                                       |
 | aviatrix_data_source_gateway         | SKIP_DATA_GATEWAY            | aviatrix_account + AWS_VPC_ID, AWS_REGION, AWS_VPC_NET                |
