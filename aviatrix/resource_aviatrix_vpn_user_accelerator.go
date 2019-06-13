@@ -114,16 +114,20 @@ func resourceAviatrixVPNUserAcceleratorDelete(d *schema.ResourceData, meta inter
 		return fmt.Errorf("unable to read endpoint list for User Accelerator due to %v", err)
 	}
 	if elbList != nil {
+		xlr := &goaviatrix.VpnUserXlr{}
+
 		// Removes the specified elb from the Vpn User Accelerator List
 		newList := goaviatrix.Difference(elbList, toDelete)
-		elbListStrings := strings.Join(newList, "\",\"")
-		str := "[\"" + elbListStrings + "\"]"
-		xlr := &goaviatrix.VpnUserXlr{
-			Endpoints: str,
+		if len(newList) > 0 {
+			elbListStrings := strings.Join(newList, "\",\"")
+			str := "[\"" + elbListStrings + "\"]"
+			xlr.Endpoints = str
+		} else {
+			xlr.Endpoints = "[]"
 		}
 		err := client.UpdateVpnUserAccelerator(xlr)
 		if err != nil {
-			return fmt.Errorf("unable to remove elb in Vpn User Accelerator")
+			return fmt.Errorf("unable to remove elb in Vpn User Accelerator due to %v", err)
 		}
 	}
 	return nil
