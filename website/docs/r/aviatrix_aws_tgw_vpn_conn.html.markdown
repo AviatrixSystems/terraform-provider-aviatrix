@@ -49,8 +49,8 @@ The following arguments are computed - please do not edit in the resource file:
  
 ## Import
  
-Instance aws_tgw_vpn_conn can be imported using the tgw_name, vpn_id and connection_name, e.g.
+Instance aws_tgw_vpn_conn can be imported using the tgw_name, connection_name, e.g.
  
 ```
-$ terraform import aviatrix_aws_tgw_vpn_conn.test tgw_name~vpn_id~~connection_name
+$ terraform import aviatrix_aws_tgw_vpn_conn.test tgw_name~connection_name
 ```

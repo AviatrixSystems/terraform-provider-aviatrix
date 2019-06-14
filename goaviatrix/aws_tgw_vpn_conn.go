@@ -122,47 +122,6 @@ func (c *Client) GetAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (*AwsTgwVpnConn,
 	return nil, ErrNotFound
 }
 
-func (c *Client) GetAwsTgwVpnConnVpnId(awsTgwVpnConn *AwsTgwVpnConn) (string, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return "", errors.New(("url Parsing failed for list_attached_vpc_names_to_route_domain") + err.Error())
-	}
-	listAttachedVpcNamesToRouteDomain := url.Values{}
-	listAttachedVpcNamesToRouteDomain.Add("CID", c.CID)
-	listAttachedVpcNamesToRouteDomain.Add("action", "list_attached_vpc_names_to_route_domain")
-	listAttachedVpcNamesToRouteDomain.Add("tgw_name", awsTgwVpnConn.TgwName)
-	listAttachedVpcNamesToRouteDomain.Add("route_domain_name", awsTgwVpnConn.RouteDomainName)
-	listAttachedVpcNamesToRouteDomain.Add("resource_type", "vpn")
-
-	Url.RawQuery = listAttachedVpcNamesToRouteDomain.Encode()
-
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return "", errors.New("HTTP Get list_attached_vpc_names_to_route_domain failed: " + err.Error())
-	}
-
-	var data GetAwsTgwVpnConnVpnIdResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return "", errors.New("Json Decode list_attached_vpc_names_to_route_domain failed: " + err.Error())
-	}
-
-	if !data.Return {
-		return "", errors.New("Rest API list_attached_vpc_names_to_route_domain Get failed: " + data.Reason)
-	}
-
-	allVpnID := data.Results
-	for i := range allVpnID {
-		if allVpnID[i] == "" || !strings.Contains(allVpnID[i], "~~") {
-			continue
-		}
-		if strings.Split(allVpnID[i], "~~")[1] == awsTgwVpnConn.ConnName {
-			return strings.Split(allVpnID[i], "~~")[0], nil
-		}
-	}
-
-	return "", ErrNotFound
-}
-
 func (c *Client) DeleteAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) error {
 	awsTgwVpnConn.CID = c.CID
 	awsTgwVpnConn.Action = "detach_vpn_from_tgw"

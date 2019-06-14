@@ -75,14 +75,14 @@ func resourceAviatrixAwsTgwVpnConnCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if awsTgwVpnConn.RouteDomainName != "Default_Domain" {
-		return fmt.Errorf("invalid 'route_domain_name'. only 'Default_Domain' is supported")
+		return fmt.Errorf("invalid 'route_domain_name'. Only 'Default_Domain' is supported")
 	}
 
 	remoteAsn := d.Get("remote_as_number").(string)
 	remoteCIDR := d.Get("remote_cidr").(string)
 
 	if remoteAsn != "" && remoteCIDR != "" {
-		return fmt.Errorf("remote_asn and remote_cidr cannot be set at the same time. Please choose: " +
+		return fmt.Errorf("remote_asn and remote_cidr cannot be set at the same time. Please choose to set: " +
 			"remote_asw or remote_cidr")
 	}
 
@@ -150,6 +150,7 @@ func resourceAviatrixAwsTgwVpnConnRead(d *schema.ResourceData, meta interface{})
 	d.Set("vpn_id", vpnConn.VpnID)
 
 	d.SetId(vpnConn.TgwName + "~" + vpnConn.ConnName)
+
 	return nil
 }
 
