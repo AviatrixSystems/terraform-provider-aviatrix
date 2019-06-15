@@ -95,12 +95,12 @@ func resourceAviatrixAwsTgwVpnConnCreate(d *schema.ResourceData, meta interface{
 
 	log.Printf("[INFO] Creating Aviatrix AWS TGW VPN Connection: %#v", awsTgwVpnConn)
 
-	err := client.CreateAwsTgwVpnConn(awsTgwVpnConn)
+	vpnID, err := client.CreateAwsTgwVpnConn(awsTgwVpnConn)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix AWS TGW VPN Connection: %s", err)
 	}
 
-	d.SetId(awsTgwVpnConn.TgwName + "~" + awsTgwVpnConn.ConnName)
+	d.SetId(awsTgwVpnConn.TgwName + "~" + vpnID)
 
 	return resourceAviatrixAwsTgwVpnConnRead(d, meta)
 }
@@ -109,9 +109,9 @@ func resourceAviatrixAwsTgwVpnConnRead(d *schema.ResourceData, meta interface{})
 	client := meta.(*goaviatrix.Client)
 
 	tgwName := d.Get("tgw_name").(string)
-	connName := d.Get("connection_name").(string)
+	vpnID := d.Get("vpn_id").(string)
 
-	if tgwName == "" || connName == "" {
+	if tgwName == "" || vpnID == "" {
 		id := d.Id()
 
 		log.Printf("[DEBUG] Looks like an import. Import Id is %s", id)
@@ -121,14 +121,14 @@ func resourceAviatrixAwsTgwVpnConnRead(d *schema.ResourceData, meta interface{})
 		}
 
 		d.Set("tgw_name", strings.Split(id, "~")[0])
-		d.Set("connection_name", strings.Split(id, "~")[1])
+		d.Set("vpn_id", strings.Split(id, "~")[1])
 
 		d.SetId(id)
 	}
 
 	awsTgwVpnConn := &goaviatrix.AwsTgwVpnConn{
-		TgwName:  d.Get("tgw_name").(string),
-		ConnName: d.Get("connection_name").(string),
+		TgwName: d.Get("tgw_name").(string),
+		VpnID:   d.Get("vpn_id").(string),
 	}
 
 	vpnConn, err := client.GetAwsTgwVpnConn(awsTgwVpnConn)
@@ -149,7 +149,7 @@ func resourceAviatrixAwsTgwVpnConnRead(d *schema.ResourceData, meta interface{})
 	d.Set("remote_cidr", vpnConn.RemoteCIDR)
 	d.Set("vpn_id", vpnConn.VpnID)
 
-	d.SetId(vpnConn.TgwName + "~" + vpnConn.ConnName)
+	d.SetId(vpnConn.TgwName + "~" + vpnConn.VpnID)
 
 	return nil
 }
@@ -157,9 +157,8 @@ func resourceAviatrixAwsTgwVpnConnRead(d *schema.ResourceData, meta interface{})
 func resourceAviatrixAwsTgwVpnConnDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	awsTgwVpnConn := &goaviatrix.AwsTgwVpnConn{
-		TgwName:  d.Get("tgw_name").(string),
-		VpnID:    d.Get("vpn_id").(string),
-		ConnName: d.Get("connection_name").(string),
+		TgwName: d.Get("tgw_name").(string),
+		VpnID:   d.Get("vpn_id").(string),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix aws_tgw_vpn_conn: %#v", awsTgwVpnConn)

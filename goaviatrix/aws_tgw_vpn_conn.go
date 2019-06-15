@@ -31,6 +31,12 @@ type AwsTgwVpnConnEdit struct {
 	VpnID           string   `json:"vpc_id,omitempty"`
 }
 
+type AwsTgwVpnConnCreateResp struct {
+	Return  bool   `json:"return"`
+	Results string `json:"results"`
+	Reason  string `json:"reason"`
+}
+
 type AwsTgwVpnConnResp struct {
 	Return  bool                `json:"return"`
 	Results []AwsTgwVpnConnEdit `json:"results"`
@@ -43,10 +49,10 @@ type GetAwsTgwVpnConnVpnIdResp struct {
 	Reason  string   `json:"reason"`
 }
 
-func (c *Client) CreateAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) error {
+func (c *Client) CreateAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (string, error) {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return errors.New(("url Parsing failed for connect_transit_gw_to_vgw") + err.Error())
+		return "", errors.New(("url Parsing failed for connect_transit_gw_to_vgw") + err.Error())
 	}
 	attachEdgeVpnToTgw := url.Values{}
 	attachEdgeVpnToTgw.Add("CID", c.CID)
@@ -62,19 +68,26 @@ func (c *Client) CreateAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) error {
 
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
-		return errors.New("HTTP Get attach_edge_vpn_to_tgw failed: " + err.Error())
+		return "", errors.New("HTTP Get attach_edge_vpn_to_tgw failed: " + err.Error())
 	}
 
-	var data APIResp
+	var data AwsTgwVpnConnCreateResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode attach_edge_vpn_to_tgw failed: " + err.Error())
+		return "", errors.New("Json Decode attach_edge_vpn_to_tgw failed: " + err.Error())
 	}
 
 	if !data.Return {
-		return errors.New("Rest API attach_edge_vpn_to_tgw Get failed: " + data.Reason)
+		return "", errors.New("Rest API attach_edge_vpn_to_tgw Get failed: " + data.Reason)
 	}
 
-	return nil
+	if !strings.Contains(data.Results, "vpn-") {
+		return "", errors.New("cannot get vpn_id from result text")
+	}
+
+	tempStr := strings.Split(data.Results, "vpn-")[1]
+	vpnID := "vpn-" + tempStr[0:17]
+
+	return vpnID, nil
 }
 
 func (c *Client) GetAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (*AwsTgwVpnConn, error) {
@@ -106,9 +119,9 @@ func (c *Client) GetAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (*AwsTgwVpnConn,
 
 	allAwsTgwVpnConn := data.Results
 	for i := range allAwsTgwVpnConn {
-		if allAwsTgwVpnConn[i].TgwName == awsTgwVpnConn.TgwName && allAwsTgwVpnConn[i].ConnName == awsTgwVpnConn.ConnName {
+		if allAwsTgwVpnConn[i].TgwName == awsTgwVpnConn.TgwName && allAwsTgwVpnConn[i].VpnID == awsTgwVpnConn.VpnID {
 			awsTgwVpnConn.RouteDomainName = allAwsTgwVpnConn[i].RouteDomainName
-			awsTgwVpnConn.VpnID = allAwsTgwVpnConn[i].VpnID
+			awsTgwVpnConn.ConnName = allAwsTgwVpnConn[i].ConnName
 			awsTgwVpnConn.PublicIP = allAwsTgwVpnConn[i].PublicIP
 			awsTgwVpnConn.OnpremASN = allAwsTgwVpnConn[i].OnpremASN
 			awsTgwVpnConn.RemoteCIDR = strings.Join(allAwsTgwVpnConn[i].RemoteCIDR, ",")
@@ -131,6 +144,7 @@ func (c *Client) DeleteAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) error {
 	}
 
 	var data APIResp
+
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return errors.New("Json Decode detach_vpn_from_tgw failed: " + err.Error())
 	}
