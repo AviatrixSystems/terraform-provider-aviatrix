@@ -60,7 +60,7 @@ func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Inside IP CIDR for Tunnel 1. A /32 CIDR in 169/254.0.0/16.",
+				Description: "Inside IP CIDR for Tunnel 1. A /32 CIDR in 169.254.0.0/16.",
 			},
 			"pre_shared_key_tun_1": {
 				Type:     schema.TypeString,
@@ -73,7 +73,7 @@ func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Inside IP CIDR for Tunnel 2. A /32 CIDR in 169/254.0.0/16.",
+				Description: "Inside IP CIDR for Tunnel 2. A /32 CIDR in 169.254.0.0/16.",
 			},
 			"pre_shared_key_tun_2": {
 				Type:     schema.TypeString,
