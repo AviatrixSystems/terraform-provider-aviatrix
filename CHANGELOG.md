@@ -1,9 +1,20 @@
+## 1.11.16 (Jun 18 2019)
+
+CHANGES
+  - Supported controller version: 4.7.378
+  - Deprecated version resource, and moved version functionality to controller config
+  - Added "bgp_manual_spoke_advertise_cidr" support in vgw_conn
+  - Created a new resource vpn_user_accelerator
+  - Created a new resource to support attaching/detaching vpn to tgw in aws_tgw
+  
+  
 ## 1.10.10 (Jun 7 2019)
 
 CHANGES
   - Supported controller version: 4.6.604
   - Deprecated "vnet_and_resource_group_names" in spoke_vpc and replaced it with "vpc_id"
   - Deprecated "vnet_name_resource_group" in transit_vpc and replaced it with "vpc_id"
+  
     
 ## 1.9.28 (Jun 3 2019)
 
@@ -19,6 +30,7 @@ CHANGES
   - Deprecated "cluster" in tunnel resource
   - Deprecated admin_email and customer_id resources
   
+  
 ## 1.8.26 (May 30 2019)
 
 CHANGES
@@ -29,6 +41,7 @@ CHANGES
   - Added insane mode support in transit_vpc
   - Added new resource arm_peer
   - Added GCP support in gateway
+  
   
 ## 1.7.18 (May 9 2019)
 

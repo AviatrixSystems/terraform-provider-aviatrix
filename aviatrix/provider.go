@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-const supportedVersion = "4.6"
+const supportedVersion = "4.7"
 
 // Provider returns a schema.Provider for Aviatrix.
 func Provider() terraform.ResourceProvider {
@@ -43,6 +43,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_aws_peer":                resourceAWSPeer(),
 			"aviatrix_aws_tgw":                 resourceAWSTgw(),
 			"aviatrix_aws_tgw_vpc_attachment":  resourceAwsTgwVpcAttachment(),
+			"aviatrix_aws_tgw_vpn_conn":        resourceAviatrixAwsTgwVpnConn(),
 			"aviatrix_vpc":                     resourceVpc(),
 			"aviatrix_controller_config":       resourceControllerConfig(),
 			"aviatrix_firewall":                resourceAviatrixFirewall(),
@@ -55,10 +56,10 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_transit_gateway_peering": resourceTransitGatewayPeering(),
 			"aviatrix_transit_vpc":             resourceAviatrixTransitVpc(),
 			"aviatrix_tunnel":                  resourceTunnel(),
-			"aviatrix_version":                 resourceAviatrixVersion(),
 			"aviatrix_vgw_conn":                resourceAviatrixVGWConn(),
 			"aviatrix_vpn_profile":             resourceAviatrixProfile(),
 			"aviatrix_vpn_user":                resourceAviatrixVPNUser(),
+			"aviatrix_vpn_user_accelerator":    resourceAviatrixVPNUserAccelerator(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"aviatrix_caller_identity": dataSourceAviatrixCallerIdentity(),

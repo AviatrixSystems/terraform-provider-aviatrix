@@ -98,27 +98,16 @@ func (c *Client) GetCurrentVersion() (string, *AviatrixVersion, error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return "", nil, errors.New("Json Decode list_version_info failed: " + err.Error())
 	}
-
 	if !data.Return {
 		return "", nil, errors.New("Rest API list_version_info Get failed: " + data.Reason)
 	}
 
-	// strip off "UserConnect-"
-	parts := strings.Split(data.Results.CurrentVersion[12:], ".")
-	aver := &AviatrixVersion{}
-	var err1, err2, err3 error
-	aver.Major, err1 = strconv.ParseInt(parts[0], 10, 0)
-	if strings.Contains(parts[1], "-patch") {
-		aver.Minor, err2 = strconv.ParseInt(strings.Split(parts[1], "-")[0], 10, 0)
-	} else {
-		aver.Minor, err2 = strconv.ParseInt(parts[1], 10, 0)
+	curVersion, aVer, err := ParseVersion(data.Results.CurrentVersion)
+	if err != nil {
+		return "", aVer, err
 	}
-	aver.Build, err3 = strconv.ParseInt(parts[2], 10, 0)
-	if err1 != nil || err2 != nil || err3 != nil {
-		log.Printf("[WARN] Unable to get current version: %s|%s|%s (when parsing '%s')", err1, err2, err3, data.Results.CurrentVersion[11:])
-		return data.Results.CurrentVersion, nil, err
-	}
-	return data.Results.CurrentVersion, aver, nil
+
+	return curVersion, aVer, nil
 }
 
 func (c *Client) Pre32Upgrade() error {
@@ -168,13 +157,44 @@ func (c *Client) GetLatestVersion() (string, error) {
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return "", errors.New("Json Decode list_version_info failed: " + err.Error())
 	}
-
 	if !data.Return {
 		return "", errors.New("Rest API list_version_info Get failed: " + data.Reason)
 	}
 
-	if data.Results.CurrentVersion != "" {
-		return data.Results.LatestVersion, nil
+	latestVersion, _, err := ParseVersion(data.Results.LatestVersion)
+	if err != nil {
+		return "", err
 	}
-	return "", nil
+
+	return latestVersion, nil
+}
+
+func ParseVersion(version string) (string, *AviatrixVersion, error) {
+	if strings.HasPrefix(version, "UserConnect-") {
+		version = version[12:]
+	}
+	if version == "" {
+		return "", nil, errors.New("unable to parse version information since it is empty")
+	}
+
+	parts := strings.Split(version, ".")
+	aver := &AviatrixVersion{}
+	var err1, err2, err3 error
+	aver.Major, err1 = strconv.ParseInt(parts[0], 10, 0)
+	if len(parts) >= 2 {
+		if strings.Contains(parts[1], "-") {
+			aver.Minor, err2 = strconv.ParseInt(strings.Split(parts[1], "-")[0], 10, 0)
+		} else {
+			aver.Minor, err2 = strconv.ParseInt(parts[1], 10, 0)
+		}
+	} else {
+		return "", aver, errors.New("unable to get latest version when parsing version information")
+	}
+	if len(parts) >= 3 {
+		aver.Build, err3 = strconv.ParseInt(parts[2], 10, 0)
+	}
+	if err1 != nil || err2 != nil || err3 != nil {
+		return "", aver, errors.New("unable to get latest version when parsing version information")
+	}
+	return strconv.FormatInt(aver.Major, 10) + "." + strconv.FormatInt(aver.Minor, 10), aver, nil
 }

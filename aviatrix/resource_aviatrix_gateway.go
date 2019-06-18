@@ -129,6 +129,7 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
+				Sensitive:   true,
 				Description: "Token for Okta auth mode.",
 			},
 			"okta_url": {
