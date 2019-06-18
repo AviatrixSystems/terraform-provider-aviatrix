@@ -10,25 +10,33 @@ import (
 
 // VGWConn simple struct to hold VGW Connection details
 type AwsTgwVpnConn struct {
-	Action          string `form:"action,omitempty"`
-	TgwName         string `form:"tgw_name,omitempty"`
-	RouteDomainName string `form:"route_domain_name,omitempty"`
-	CID             string `form:"CID,omitempty"`
-	ConnName        string `form:"connection_name,omitempty"`
-	PublicIP        string `form:"public_ip,omitempty"`
-	OnpremASN       string `form:"onprem_asn,omitempty"`
-	RemoteCIDR      string `form:"remote_cidr,omitempty"`
-	VpnID           string `form:"vpn_id,omitempty"`
+	Action           string `form:"action,omitempty"`
+	TgwName          string `form:"tgw_name,omitempty"`
+	RouteDomainName  string `form:"route_domain_name,omitempty"`
+	CID              string `form:"CID,omitempty"`
+	ConnName         string `form:"connection_name,omitempty"`
+	PublicIP         string `form:"public_ip,omitempty"`
+	OnpremASN        string `form:"onprem_asn,omitempty"`
+	RemoteCIDR       string `form:"remote_cidr,omitempty"`
+	VpnID            string `form:"vpn_id,omitempty"`
+	InsideIpCIDRTun1 string `form:"inside_ip_cidr_tun_1,omitempty"`
+	InsideIpCIDRTun2 string `form:"inside_ip_cidr_tun_2,omitempty"`
+	PreSharedKeyTun1 string `form:"pre_shared_key_tun_1,omitempty"`
+	PreSharedKeyTun2 string `form:"pre_shared_key_tun_2,omitempty"`
 }
 
 type AwsTgwVpnConnEdit struct {
-	TgwName         string   `json:"tgw_name,omitempty"`
-	RouteDomainName string   `json:"associated_route_domain_name,omitempty"`
-	ConnName        string   `json:"vpc_name,omitempty"`
-	PublicIP        string   `json:"public_ip,omitempty"`
-	OnpremASN       string   `json:"aws_side_asn,omitempty"`
-	RemoteCIDR      []string `json:"remote_cidrs,omitempty"`
-	VpnID           string   `json:"vpc_id,omitempty"`
+	TgwName          string   `json:"tgw_name,omitempty"`
+	RouteDomainName  string   `json:"associated_route_domain_name,omitempty"`
+	ConnName         string   `json:"vpc_name,omitempty"`
+	PublicIP         string   `json:"public_ip,omitempty"`
+	OnpremASN        string   `json:"aws_side_asn,omitempty"`
+	RemoteCIDR       []string `json:"remote_cidrs,omitempty"`
+	VpnID            string   `json:"vpc_id,omitempty"`
+	InsideIpCIDRTun1 string   `json:"inside_ip_cidr_tun_1,omitempty"`
+	InsideIpCIDRTun2 string   `json:"inside_ip_cidr_tun_2,omitempty"`
+	PreSharedKeyTun1 string   `json:"pre_shared_key_tun_1,omitempty"`
+	PreSharedKeyTun2 string   `json:"pre_shared_key_tun_2,omitempty"`
 }
 
 type AwsTgwVpnConnCreateResp struct {
@@ -63,6 +71,18 @@ func (c *Client) CreateAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (string, erro
 	attachEdgeVpnToTgw.Add("public_ip", awsTgwVpnConn.PublicIP)
 	attachEdgeVpnToTgw.Add("onprem_asn", awsTgwVpnConn.OnpremASN)
 	attachEdgeVpnToTgw.Add("remote_cidr", awsTgwVpnConn.RemoteCIDR)
+	if awsTgwVpnConn.InsideIpCIDRTun1 != "" {
+		attachEdgeVpnToTgw.Add("inside_ip_cidr_tun_1", awsTgwVpnConn.InsideIpCIDRTun1)
+	}
+	if awsTgwVpnConn.InsideIpCIDRTun2 != "" {
+		attachEdgeVpnToTgw.Add("inside_ip_cidr_tun_2", awsTgwVpnConn.InsideIpCIDRTun2)
+	}
+	if awsTgwVpnConn.PreSharedKeyTun1 != "" {
+		attachEdgeVpnToTgw.Add("pre_shared_key_tun_1", awsTgwVpnConn.PreSharedKeyTun1)
+	}
+	if awsTgwVpnConn.PreSharedKeyTun2 != "" {
+		attachEdgeVpnToTgw.Add("pre_shared_key_tun_2", awsTgwVpnConn.PreSharedKeyTun2)
+	}
 
 	Url.RawQuery = attachEdgeVpnToTgw.Encode()
 
@@ -125,6 +145,18 @@ func (c *Client) GetAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (*AwsTgwVpnConn,
 			awsTgwVpnConn.PublicIP = allAwsTgwVpnConn[i].PublicIP
 			awsTgwVpnConn.OnpremASN = allAwsTgwVpnConn[i].OnpremASN
 			awsTgwVpnConn.RemoteCIDR = strings.Join(allAwsTgwVpnConn[i].RemoteCIDR, ",")
+			if allAwsTgwVpnConn[i].InsideIpCIDRTun1 != "" {
+				awsTgwVpnConn.InsideIpCIDRTun1 = allAwsTgwVpnConn[i].InsideIpCIDRTun1
+			}
+			if allAwsTgwVpnConn[i].PreSharedKeyTun1 != "" {
+				awsTgwVpnConn.PreSharedKeyTun1 = allAwsTgwVpnConn[i].PreSharedKeyTun1
+			}
+			if allAwsTgwVpnConn[i].InsideIpCIDRTun2 != "" {
+				awsTgwVpnConn.InsideIpCIDRTun2 = allAwsTgwVpnConn[i].InsideIpCIDRTun2
+			}
+			if allAwsTgwVpnConn[i].PreSharedKeyTun2 != "" {
+				awsTgwVpnConn.PreSharedKeyTun2 = allAwsTgwVpnConn[i].PreSharedKeyTun2
+			}
 
 			log.Printf("[DEBUG] Found AwsTgwVpnConn: %#v", awsTgwVpnConn)
 
