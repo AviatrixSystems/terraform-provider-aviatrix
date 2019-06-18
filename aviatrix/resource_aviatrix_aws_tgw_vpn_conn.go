@@ -63,9 +63,10 @@ func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
 				Description: "Inside IP CIDR for Tunnel 1. A /32 CIDR in 169.254.0.0/16.",
 			},
 			"pre_shared_key_tun_1": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+				ForceNew:  true,
 				Description: "Pre-Shared Key for Tunnel 1. A 8-64 character string with alphanumeric, " +
 					"underscore(_) and dot(.). It cannot start with 0",
 			},
@@ -76,9 +77,10 @@ func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
 				Description: "Inside IP CIDR for Tunnel 2. A /32 CIDR in 169.254.0.0/16.",
 			},
 			"pre_shared_key_tun_2": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+				ForceNew:  true,
 				Description: "Pre-Shared Key for Tunnel 2. A 8-64 character string with alphanumeric, " +
 					"underscore(_) and dot(.). It cannot start with 0",
 			},
@@ -179,9 +181,7 @@ func resourceAviatrixAwsTgwVpnConnRead(d *schema.ResourceData, meta interface{})
 	d.Set("remote_cidr", vpnConn.RemoteCIDR)
 	d.Set("vpn_id", vpnConn.VpnID)
 	d.Set("inside_ip_cidr_tun_1", vpnConn.InsideIpCIDRTun1)
-	d.Set("pre_shared_key_tun_1", vpnConn.PreSharedKeyTun1)
 	d.Set("inside_ip_cidr_tun_2", vpnConn.InsideIpCIDRTun2)
-	d.Set("pre_shared_key_tun_2", vpnConn.PreSharedKeyTun2)
 
 	d.SetId(vpnConn.TgwName + "~" + vpnConn.VpnID)
 
