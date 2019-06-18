@@ -56,6 +56,32 @@ func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "Remote CIDRs joined as a string with ','.",
 			},
+			"inside_ip_cidr_tun_1": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Inside IP CIDR for Tunnel 1. A /32 CIDR in 169/254.0.0/16.",
+			},
+			"pre_shared_key_tun_1": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Description: "Pre-Shared Key for Tunnel 1. A 8-64 character string with alphanumeric, " +
+					"underscore(_) and dot(.). It cannot start with 0",
+			},
+			"inside_ip_cidr_tun_2": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Inside IP CIDR for Tunnel 2. A /32 CIDR in 169/254.0.0/16.",
+			},
+			"pre_shared_key_tun_2": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Description: "Pre-Shared Key for Tunnel 2. A 8-64 character string with alphanumeric, " +
+					"underscore(_) and dot(.). It cannot start with 0",
+			},
 			"vpn_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -68,10 +94,14 @@ func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
 func resourceAviatrixAwsTgwVpnConnCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	awsTgwVpnConn := &goaviatrix.AwsTgwVpnConn{
-		TgwName:         d.Get("tgw_name").(string),
-		ConnName:        d.Get("connection_name").(string),
-		PublicIP:        d.Get("public_ip").(string),
-		RouteDomainName: d.Get("route_domain_name").(string),
+		TgwName:          d.Get("tgw_name").(string),
+		ConnName:         d.Get("connection_name").(string),
+		PublicIP:         d.Get("public_ip").(string),
+		RouteDomainName:  d.Get("route_domain_name").(string),
+		InsideIpCIDRTun1: d.Get("inside_ip_cidr_tun_1").(string),
+		InsideIpCIDRTun2: d.Get("inside_ip_cidr_tun_2").(string),
+		PreSharedKeyTun1: d.Get("pre_shared_key_tun_1").(string),
+		PreSharedKeyTun2: d.Get("pre_shared_key_tun_2").(string),
 	}
 
 	if awsTgwVpnConn.RouteDomainName != "Default_Domain" {
@@ -148,6 +178,10 @@ func resourceAviatrixAwsTgwVpnConnRead(d *schema.ResourceData, meta interface{})
 	d.Set("remote_as_number", vpnConn.OnpremASN)
 	d.Set("remote_cidr", vpnConn.RemoteCIDR)
 	d.Set("vpn_id", vpnConn.VpnID)
+	d.Set("inside_ip_cidr_tun_1", vpnConn.InsideIpCIDRTun1)
+	d.Set("pre_shared_key_tun_1", vpnConn.PreSharedKeyTun1)
+	d.Set("inside_ip_cidr_tun_2", vpnConn.InsideIpCIDRTun2)
+	d.Set("pre_shared_key_tun_2", vpnConn.PreSharedKeyTun2)
 
 	d.SetId(vpnConn.TgwName + "~" + vpnConn.VpnID)
 
