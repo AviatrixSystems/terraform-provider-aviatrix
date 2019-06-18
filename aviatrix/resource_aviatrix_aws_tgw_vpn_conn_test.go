@@ -116,8 +116,8 @@ func tesAccCheckAwsTgwVpnConnExists(n string, awsTgwVpnConn *goaviatrix.AwsTgwVp
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
 		foundAwsTgwVpnConn := &goaviatrix.AwsTgwVpnConn{
-			TgwName:  rs.Primary.Attributes["tgw_name"],
-			ConnName: rs.Primary.Attributes["connection_name"],
+			TgwName: rs.Primary.Attributes["tgw_name"],
+			VpnID:   rs.Primary.Attributes["vpn_id"],
 		}
 
 		foundAwsTgwVpnConn2, err := client.GetAwsTgwVpnConn(foundAwsTgwVpnConn)
@@ -149,8 +149,8 @@ func testAccCheckAwsTgwVpnConnDestroy(s *terraform.State) error {
 		}
 
 		foundAwsTgwVpnConn := &goaviatrix.AwsTgwVpnConn{
-			TgwName:  rs.Primary.Attributes["tgw_name"],
-			ConnName: rs.Primary.Attributes["connection_name"],
+			TgwName: rs.Primary.Attributes["tgw_name"],
+			VpnID:   rs.Primary.Attributes["vpn_id"],
 		}
 
 		_, err := client.GetAwsTgwVpnConn(foundAwsTgwVpnConn)
