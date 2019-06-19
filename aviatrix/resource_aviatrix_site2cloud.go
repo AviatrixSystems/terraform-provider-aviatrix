@@ -72,6 +72,7 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			"pre_shared_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				Description: "Pre-Shared Key.",
 			},
 			"local_subnet_cidr": {
@@ -104,6 +105,7 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			"backup_pre_shared_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				Description: "Backup Pre-Shared Key.",
 			},
 			"remote_subnet_virtual": {
