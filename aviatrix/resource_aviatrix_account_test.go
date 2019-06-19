@@ -134,6 +134,9 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 		t.Log("Skipping ARN Access Account test as SKIP_ARM_ACCOUNT is set")
 	} else {
 		resourceName := "aviatrix_account.arm"
+		importStateVerifyIgnore = append(importStateVerifyIgnore, "arm_directory_id")
+		importStateVerifyIgnore = append(importStateVerifyIgnore, "arm_application_id")
+		importStateVerifyIgnore = append(importStateVerifyIgnore, "arm_application_key")
 		resource.Test(t, resource.TestCase{
 			PreCheck:     func() { testAccPreCheck(t) },
 			Providers:    testAccProviders,
