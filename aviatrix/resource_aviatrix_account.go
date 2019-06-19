@@ -79,16 +79,19 @@ func resourceAccount() *schema.Resource {
 			"arm_directory_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				Description: "Azure Directory ID.",
 			},
 			"arm_application_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				Description: "Azure Application ID.",
 			},
 			"arm_application_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				Description: "Azure Application Key.",
 			},
 		},
@@ -230,9 +233,6 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("gcloud_project_id", acc.GcloudProjectName)
 		} else if acc.CloudType == 8 {
 			d.Set("arm_subscription_id", acc.ArmSubscriptionId)
-			d.Set("arm_directory_id", acc.ArmApplicationEndpoint)
-			d.Set("arm_application_id", acc.ArmApplicationClientId)
-			d.Set("arm_application_key", acc.ArmApplicationClientSecret)
 		}
 		d.SetId(acc.AccountName)
 	}
