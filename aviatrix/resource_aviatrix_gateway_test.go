@@ -243,30 +243,30 @@ resource "aviatrix_gateway" "test_gw_aws" {
 func testAccGatewayConfigBasicGCP(rName string, gcpGwSize string, gcpVpcId string, gcpZone string, gcpSubnet string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_acc_gcp" {
-        account_name = "tf-acc-gcp-%s"
-        cloud_type = 4
+	account_name = "tf-acc-gcp-%s"
+	cloud_type = 4
 	gcloud_project_id = "%s"
 	gcloud_project_credentials_filepath = "%s"
 }
 
 resource "aviatrix_gateway" "test_gw_gcp" {
-        cloud_type = 4
-        account_name = "${aviatrix_account.test_acc_gcp.account_name}"
-        gw_name = "tf-testing-gcp-%[1]s"
-        vpc_id = "%[4]s"
-        vpc_reg = "%[5]s"
-        vpc_size = "%[6]s"
-        vpc_net = "%[7]s"
+	cloud_type = 4
+	account_name = "${aviatrix_account.test_acc_gcp.account_name}"
+	gw_name = "tf-testing-gcp-%[1]s"
+	vpc_id = "%[4]s"
+	vpc_reg = "%[5]s"
+	vpc_size = "%[6]s"
+	vpc_net = "%[7]s"
 }
-        `, rName, os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"),
+	`, rName, os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"),
 		gcpVpcId, gcpZone, gcpGwSize, gcpSubnet)
 }
 
 func testAccGatewayConfigBasicARM(rName string, armGwSize string, armVnetId string, armRegion string, armSubnet string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_acc_arm" {
-        account_name = "tf-acc-arm-%s"
-        cloud_type = 8
+	account_name = "tf-acc-arm-%s"
+	cloud_type = 8
 	arm_subscription_id = "%s"
 	arm_directory_id = "%s"
 	arm_application_id = "%s"
@@ -274,13 +274,13 @@ resource "aviatrix_account" "test_acc_arm" {
 }
 
 resource "aviatrix_gateway" "test_gw_arm" {
-        cloud_type = 8
-        account_name = "${aviatrix_account.test_acc_arm.account_name}"
-        gw_name = "tf-testing-arm-%[1]s"
-        vpc_id = "%[6]s"
-        vpc_reg = "%[7]s"
-        vpc_size = "%[8]s"
-        vpc_net = "%[9]s"
+	cloud_type = 8
+	account_name = "${aviatrix_account.test_acc_arm.account_name}"
+	gw_name = "tf-testing-arm-%[1]s"
+	vpc_id = "%[6]s"
+	vpc_reg = "%[7]s"
+	vpc_size = "%[8]s"
+	vpc_net = "%[9]s"
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
 		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),
