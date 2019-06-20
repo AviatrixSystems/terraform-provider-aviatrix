@@ -1,3 +1,11 @@
+## 1.12.12 (Jun 20 2019)
+
+CHANGES
+  - Supported controller version: 4.7.378
+  - Added support of Inside IP CIDR and Pre Shared Key for tunnel 1 and 2
+  - Added defer function in gateway
+
+
 ## 1.11.16 (Jun 18 2019)
 
 CHANGES
