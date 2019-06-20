@@ -710,17 +710,19 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				d.Set("peering_ha_eip", gwHaGw.PublicIP)
 				d.Set("peering_ha_gw_size", gwHaGw.GwSize)
 			} else {
-				if err == goaviatrix.ErrNotFound && gwName == "" {
-					log.Printf("[DEBUG] Peering HA Gateway was not found during import, please confirm if primary gateway has peering HA enabled.")
-				} else if err == goaviatrix.ErrNotFound {
+				if err != goaviatrix.ErrNotFound {
+					return fmt.Errorf("unable to find peering ha gateway: %s", err)
+				} else {
+					if gwName == "" {
+						log.Printf("[DEBUG] Peering HA Gateway was not found during import, please confirm " +
+							"if primary gateway has peering HA enabled.")
+					}
 					d.Set("cloudn_bkup_gateway_inst_id", "")
 					d.Set("backup_public_ip", "")
 					d.Set("peering_ha_subnet", "")
 					d.Set("peering_ha_zone", "")
 					d.Set("peering_ha_eip", "")
 					d.Set("peering_ha_gw_size", "")
-				} else {
-					return fmt.Errorf("unable to find peering ha gateway: %s", err)
 				}
 			}
 			log.Printf("[TRACE] reading peering HA gateway %s: %#v", d.Get("gw_name").(string), gwHaGw)
