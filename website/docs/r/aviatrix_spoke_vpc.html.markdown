@@ -56,7 +56,7 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc_arm" {
 
 The following arguments are supported:
 
-* `cloud_type` - (Required) Type of cloud service provider. AWS=1, GCP=4, ARM=8
+* `cloud_type` - (Required) Type of cloud service provider. AWS=1, GCP=4, ARM=8.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `gw_name` - (Required) Name of the gateway which is going to be created.
 * `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Example: AWS: "vpc-abcd1234", etc... (Required if cloud_type is "1" or "4")
@@ -65,10 +65,10 @@ The following arguments are supported:
 * `subnet` - (Required) Public Subnet Info. Example: AWS: "CIDR~~ZONE~~SubnetName", etc...
 * `ha_subnet` - (Optional) HA Subnet. Required for enabling HA for AWS/ARM gateways. Setting to empty/unset will disable HA. Setting to a valid subnet (Example: 10.12.0.0/24) will create an HA gateway on the subnet.
 * `ha_zone` - (Optional) HA Zone. Required for enabling HA for GCP gateway. Setting to empty/unset will disable HA. Setting to a valid zone (Example: us-west1-c) will create an HA gateway in the zone.
-* `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set)(Example: "t2.micro")
-* `enable_nat` - (Optional) Specify whether enabling NAT feature on the gateway or not. (Please disable AWS NAT instance before enabling this feature) Example: "yes", "no"
+* `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set)(Example: "t2.micro").
+* `enable_nat` - (Optional) Specify whether enabling NAT feature on the gateway or not. (Please disable AWS NAT instance before enabling this feature) Example: "yes", "no".
 * `single_az_ha` (Optional) Set to "enabled" if this feature is desired.
-* `transit_gw` - (Optional)  Specify the transit Gateway.
+* `transit_gw` - (Optional) Specify the transit Gateway.
 * `tag_list` - (Optional) Instance tag of cloud provider. Example: key1:value1,key002:value002, etc... Only AWS (cloud_type is "1") is supported
 
 The following arguments are deprecated:
