@@ -1214,7 +1214,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(gateway.GwName)
 	return resourceAviatrixGatewayRead(d, meta)
-
 }
 
 func resourceAviatrixGatewayDelete(d *schema.ResourceData, meta interface{}) error {
