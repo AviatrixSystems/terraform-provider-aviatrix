@@ -343,6 +343,9 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(s2c.TunnelName + "~" + s2c.VpcID)
 
+	flag := false
+	defer resourceAviatrixSite2CloudReadIfRequired(d, meta, &flag)
+
 	enableDeadPeerDetection := d.Get("enable_dead_peer_detection").(bool)
 	if !enableDeadPeerDetection {
 		err := client.DisableDeadPeerDetection(s2c)
@@ -351,7 +354,15 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return resourceAviatrixSite2CloudRead(d, meta)
+	return resourceAviatrixSite2CloudReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixSite2CloudReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixSite2CloudRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) error {

@@ -98,7 +98,11 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix FQDN: %s", err)
 	}
+
 	d.SetId(fqdn.FQDNTag)
+
+	flag := false
+	defer resourceAviatrixFQDNReadIfRequired(d, meta, &flag)
 
 	if _, ok := d.GetOk("domain_names"); ok {
 		names := d.Get("domain_names").([]interface{})
@@ -119,7 +123,6 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 		if err != nil {
 			return fmt.Errorf("failed to add domain : %s", err)
 		}
-		d.Set("domain_names", fqdn.DomainList)
 	}
 
 	gwFilterTags := d.Get("gw_filter_tag_list").([]interface{})
@@ -145,6 +148,7 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 			}
 		}
 	}
+
 	if fqdnStatus := d.Get("fqdn_status").(string); fqdnStatus == "enabled" {
 		log.Printf("[INOF] Enable FQDN tag status: %#v", fqdn)
 		err := client.UpdateFQDNStatus(fqdn)
@@ -162,7 +166,15 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	return resourceAviatrixFQDNRead(d, meta)
+	return resourceAviatrixFQDNReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixFQDNReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixFQDNRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixFQDNRead(d *schema.ResourceData, meta interface{}) error {
