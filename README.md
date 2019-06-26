@@ -51,9 +51,18 @@ providers {
   "aviatrix" = "$GOPATH/bin/terraform-provider-aviatrix"
 }
 ```
-For Windows, the file should be at '%APPDATA%\terraform.rc'. Do not change $GOPATH to %GOPATH%
+For Windows, the file should be at '%APPDATA%\terraform.rc'. Do not change $GOPATH to %GOPATH%. 
 
-If the file is not present, it should be created
+In Windows, for terraform 0.11.8 and lower use the above text.
+
+In Windows, for terraform 0.11.9 and higher use the following at '%APPDATA%\terraform.rc'
+```sh
+providers {
+  "aviatrix" = "$GOPATH/bin/terraform-provider-aviatrix.exe"
+}
+```
+
+If the rc file is not present, it should be created
 
 Examples
 --------
