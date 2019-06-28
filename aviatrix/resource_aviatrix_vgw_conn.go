@@ -80,12 +80,17 @@ func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix VGWConn: %s", err)
 	}
+
 	d.SetId(vgwConn.ConnName + "~" + vgwConn.VPCId)
+
+	flag := false
+	defer resourceAviatrixVGWConnReadIfRequired(d, meta, &flag)
 
 	enableAdvertiseTransitCidr := d.Get("enable_advertise_transit_cidr").(bool)
 	if enableAdvertiseTransitCidr {
 		err := client.EnableAdvertiseTransitCidr(vgwConn)
 		if err != nil {
+			resourceAviatrixVGWConnRead(d, meta)
 			return fmt.Errorf("failed to enable advertise transit CIDR: %s", err)
 		}
 	}
@@ -95,11 +100,20 @@ func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) err
 		vgwConn.BgpManualSpokeAdvertiseCidrs = bgpManualSpokeAdvertiseCidrs
 		err := client.SetBgpManualSpokeAdvertisedNetworks(vgwConn)
 		if err != nil {
+			resourceAviatrixVGWConnRead(d, meta)
 			return fmt.Errorf("failed to enable advertise transit CIDR: %s", err)
 		}
 	}
 
-	return resourceAviatrixVGWConnRead(d, meta)
+	return resourceAviatrixVGWConnReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixVGWConnReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixVGWConnRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error {
@@ -143,6 +157,7 @@ func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	d.SetId(vConn.ConnName + "~" + vConn.VPCId)
+
 	return nil
 }
 

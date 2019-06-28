@@ -229,6 +229,9 @@ func resourceAWSTgwCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(awsTgw.Name)
 
+	flag := false
+	defer resourceAWSTgwReadIfRequired(d, meta, &flag)
+
 	for i := range domainsToCreate {
 		securityDomain := &goaviatrix.SecurityDomain{
 			Name:        domainsToCreate[i],
@@ -238,7 +241,6 @@ func resourceAWSTgwCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.CreateSecurityDomain(securityDomain)
 		if err != nil {
-			resourceAWSTgwRead(d, meta)
 			return fmt.Errorf("failed to create Security Domain: %s", err)
 		}
 	}
@@ -247,7 +249,6 @@ func resourceAWSTgwCreate(d *schema.ResourceData, meta interface{}) error {
 		if len(domainConnPolicy[i]) == 2 {
 			err := client.CreateDomainConnection(awsTgw, domainConnPolicy[i][0], domainConnPolicy[i][1])
 			if err != nil {
-				resourceAWSTgwRead(d, meta)
 				return fmt.Errorf("failed to create security domain connection: %s", err)
 			}
 		}
@@ -257,7 +258,6 @@ func resourceAWSTgwCreate(d *schema.ResourceData, meta interface{}) error {
 		if len(domainConnRemove[i]) == 2 {
 			err := client.DeleteDomainConnection(awsTgw, domainConnRemove[i][0], domainConnRemove[i][1])
 			if err != nil {
-				resourceAWSTgwRead(d, meta)
 				return fmt.Errorf("failed to delete domain connection: %s", err)
 			}
 		}
@@ -269,7 +269,6 @@ func resourceAWSTgwCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 		err := client.AttachAviatrixTransitGWToAWSTgw(awsTgw, gateway, "Aviatrix_Edge_Domain")
 		if err != nil {
-			resourceAWSTgwRead(d, meta)
 			return fmt.Errorf("failed to attach transit GW: %s", err)
 		}
 	}
@@ -283,13 +282,20 @@ func resourceAWSTgwCreate(d *schema.ResourceData, meta interface{}) error {
 			}
 			err := client.AttachVpcToAWSTgw(awsTgw, vpcSolo, attachedVPCAll[i][0])
 			if err != nil {
-				resourceAWSTgwRead(d, meta)
 				return fmt.Errorf("failed to attach VPC: %s", err)
 			}
 		}
 	}
 
-	return resourceAWSTgwRead(d, meta)
+	return resourceAWSTgwReadIfRequired(d, meta, &flag)
+}
+
+func resourceAWSTgwReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAWSTgwRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {

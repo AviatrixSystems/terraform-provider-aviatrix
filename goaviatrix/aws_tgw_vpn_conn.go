@@ -40,9 +40,14 @@ type AwsTgwVpnConnEdit struct {
 }
 
 type AwsTgwVpnConnCreateResp struct {
-	Return  bool   `json:"return"`
-	Results string `json:"results"`
-	Reason  string `json:"reason"`
+	Return  bool    `json:"return"`
+	Results vpnInfo `json:"results"`
+	Reason  string  `json:"reason"`
+}
+
+type vpnInfo struct {
+	Text  string `json:"text,omitempty"`
+	VpnID string `json:"vpn_id,omitempty"`
 }
 
 type AwsTgwVpnConnResp struct {
@@ -100,14 +105,11 @@ func (c *Client) CreateAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (string, erro
 		return "", errors.New("Rest API attach_edge_vpn_to_tgw Get failed: " + data.Reason)
 	}
 
-	if !strings.Contains(data.Results, "vpn-") {
-		return "", errors.New("cannot get vpn_id from result text")
+	if data.Results.VpnID == "" {
+		return "", errors.New("could not get vpn_id information")
 	}
 
-	tempStr := strings.Split(data.Results, "vpn-")[1]
-	vpnID := "vpn-" + tempStr[0:17]
-
-	return vpnID, nil
+	return data.Results.VpnID, nil
 }
 
 func (c *Client) GetAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (*AwsTgwVpnConn, error) {

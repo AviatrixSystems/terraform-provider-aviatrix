@@ -180,15 +180,6 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		gateway.InsaneMode = "off"
 	}
 
-	if _, ok := d.GetOk("tag_list"); ok {
-		if cloudType != 1 {
-			return fmt.Errorf("'tag_list' is only supported for AWS cloud type 1")
-		}
-		tagList := d.Get("tag_list").([]interface{})
-		tagListStr := goaviatrix.ExpandStringList(tagList)
-		gateway.TagList = strings.Join(tagListStr, ",")
-	}
-
 	haSubnet := d.Get("ha_subnet").(string)
 	haGwSize := d.Get("ha_gw_size").(string)
 	if haGwSize == "" && haSubnet != "" {
@@ -202,17 +193,12 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix TransitVpc: %s", err)
 	}
-	enableHybridConnection := d.Get("enable_hybrid_connection").(bool)
-	if enableHybridConnection && cloudType != 1 {
-		return fmt.Errorf("'enable_hybrid_connection' is only supported for AWS cloud type 1")
-	}
-	connectedTransit := d.Get("connected_transit").(string)
+
 	d.SetId(gateway.GwName)
-	d.Set("ha_subnet", "")
-	d.Set("ha_gw_size", "")
-	d.Set("ha_insane_mode_az", "")
-	d.Set("enable_hybrid_connection", false)
-	d.Set("connected_transit", "no")
+
+	flag := false
+	defer resourceAviatrixTransitVpcReadIfRequired(d, meta, &flag)
+
 	if haSubnet != "" {
 		//Enable HA
 		transitGateway := &goaviatrix.TransitVpc{
@@ -228,15 +214,11 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		log.Printf("[INFO] Enabling HA on Transit Gateway: %#v", haSubnet)
+
 		err = client.EnableHaTransitVpc(transitGateway)
 		if err != nil {
 			return fmt.Errorf("failed to enable2 HA Aviatrix TransitVpc: %s", err)
 		}
-		d.Set("ha_subnet", haSubnet)
-		if insaneMode == true {
-			d.Set("ha_insane_mode_az", d.Get("ha_insane_mode_az").(string))
-		}
-		d.Set("ha_gw_size", gateway.VpcSize)
 
 		//Resize HA Gateway
 		log.Printf("[INFO]Resizing Transit HA Gateway: %#v", haGwSize)
@@ -255,9 +237,9 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 			if err != nil {
 				return fmt.Errorf("failed to update Aviatrix Transit HA Gateway size: %s", err)
 			}
-			d.Set("ha_gw_size", haGwSize)
 		}
 	}
+
 	if _, ok := d.GetOk("tag_list"); ok {
 		if cloudType != 1 {
 			return fmt.Errorf("'tag_list' is only supported for AWS cloud type 1")
@@ -276,6 +258,11 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("failed to add tags: %s", err)
 		}
 	}
+
+	enableHybridConnection := d.Get("enable_hybrid_connection").(bool)
+	if enableHybridConnection && cloudType != 1 {
+		return fmt.Errorf("'enable_hybrid_connection' is only supported for AWS cloud type 1")
+	}
 	if enableHybridConnection == true {
 		if cloudType != 1 {
 			return fmt.Errorf("'enable_hybrid_connection' is only supported for AWS cloud type 1")
@@ -286,13 +273,14 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	connectedTransit := d.Get("connected_transit").(string)
 	if connectedTransit == "yes" {
 		err := client.EnableConnectedTransit(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to enable connected transit: %s", err)
 		}
-		d.Set("connected_transit", "yes")
 	}
+
 	if enableNat == "yes" {
 		gw := &goaviatrix.Gateway{
 			GwName: gateway.GwName,
@@ -310,7 +298,16 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("failed to enable transit GW for FireNet Interfaces: %s", err)
 		}
 	}
-	return resourceAviatrixTransitVpcRead(d, meta)
+
+	return resourceAviatrixTransitVpcReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixTransitVpcReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixTransitVpcRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) error {
@@ -328,6 +325,7 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 		AccountName: d.Get("account_name").(string),
 		GwName:      d.Get("gw_name").(string),
 	}
+
 	gw, err := client.GetGateway(gateway)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
@@ -336,8 +334,9 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 		}
 		return fmt.Errorf("couldn't find Aviatrix TransitVpc: %s", err)
 	}
-	log.Printf("[TRACE] reading gateway %s: %#v",
-		d.Get("gw_name").(string), gw)
+
+	log.Printf("[TRACE] reading gateway %s: %#v", d.Get("gw_name").(string), gw)
+
 	if gw != nil {
 		d.Set("cloud_type", gw.CloudType)
 		d.Set("account_name", gw.AccountName)
@@ -409,7 +408,6 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway: %s", err)
 	}
 	d.Set("ha_subnet", haGw.VpcNet)
-
 	d.Set("ha_gw_size", haGw.GwSize)
 	if haGw.InsaneMode == "yes" {
 		d.Set("ha_insane_mode_az", haGw.GatewayZone)
@@ -456,49 +454,6 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 	if d.HasChange("insane_mode_az") {
 		return fmt.Errorf("updating insane_mode_az is not allowed")
-	}
-	if gateway.CloudType == 1 {
-		if d.HasChange("tag_list") {
-			tags := &goaviatrix.Tags{
-				CloudType:    1,
-				ResourceType: "gw",
-				ResourceName: d.Get("gw_name").(string),
-			}
-			o, n := d.GetChange("tag_list")
-			if o == nil {
-				o = new([]interface{})
-			}
-			if n == nil {
-				n = new([]interface{})
-			}
-			os := o.([]interface{})
-			ns := n.([]interface{})
-			oldList := goaviatrix.ExpandStringList(os)
-			newList := goaviatrix.ExpandStringList(ns)
-			oldTagList := goaviatrix.Difference(oldList, newList)
-			newTagList := goaviatrix.Difference(newList, oldList)
-			if len(oldTagList) != 0 || len(newTagList) != 0 {
-				if len(oldTagList) != 0 {
-					tags.TagList = strings.Join(oldTagList, ",")
-					err := client.DeleteTags(tags)
-					if err != nil {
-						return fmt.Errorf("failed to delete tags : %s", err)
-					}
-				}
-				if len(newTagList) != 0 {
-					tags.TagList = strings.Join(newTagList, ",")
-					err := client.AddTags(tags)
-					if err != nil {
-						return fmt.Errorf("failed to add tags : %s", err)
-					}
-				}
-			}
-			d.SetPartial("tag_list")
-		}
-	} else {
-		if d.HasChange("tag_list") {
-			return fmt.Errorf("'tag_list' is only supported for AWS cloud type 1")
-		}
 	}
 
 	if d.HasChange("vpc_size") {
@@ -554,6 +509,51 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		d.SetPartial("ha_subnet")
 	}
+
+	if gateway.CloudType == 1 {
+		if d.HasChange("tag_list") {
+			tags := &goaviatrix.Tags{
+				CloudType:    1,
+				ResourceType: "gw",
+				ResourceName: d.Get("gw_name").(string),
+			}
+			o, n := d.GetChange("tag_list")
+			if o == nil {
+				o = new([]interface{})
+			}
+			if n == nil {
+				n = new([]interface{})
+			}
+			os := o.([]interface{})
+			ns := n.([]interface{})
+			oldList := goaviatrix.ExpandStringList(os)
+			newList := goaviatrix.ExpandStringList(ns)
+			oldTagList := goaviatrix.Difference(oldList, newList)
+			newTagList := goaviatrix.Difference(newList, oldList)
+			if len(oldTagList) != 0 || len(newTagList) != 0 {
+				if len(oldTagList) != 0 {
+					tags.TagList = strings.Join(oldTagList, ",")
+					err := client.DeleteTags(tags)
+					if err != nil {
+						return fmt.Errorf("failed to delete tags : %s", err)
+					}
+				}
+				if len(newTagList) != 0 {
+					tags.TagList = strings.Join(newTagList, ",")
+					err := client.AddTags(tags)
+					if err != nil {
+						return fmt.Errorf("failed to add tags : %s", err)
+					}
+				}
+			}
+			d.SetPartial("tag_list")
+		}
+	} else {
+		if d.HasChange("tag_list") {
+			return fmt.Errorf("'tag_list' is only supported for AWS cloud type 1")
+		}
+	}
+
 	if gateway.CloudType == 1 {
 		if d.HasChange("enable_hybrid_connection") {
 			transitGateway := &goaviatrix.TransitVpc{
@@ -581,6 +581,7 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("'enable_hybrid_connection' is only supported for AWS cloud type 1")
 		}
 	}
+
 	if d.HasChange("connected_transit") {
 		transitGateway := &goaviatrix.TransitVpc{
 			CloudType:   d.Get("cloud_type").(int),
@@ -606,6 +607,7 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 			}
 		}
 	}
+
 	if d.HasChange("ha_gw_size") {
 		_, err := client.GetGateway(haGateway)
 		if err != nil {
@@ -631,6 +633,7 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		d.SetPartial("ha_gw_size")
 	}
+
 	if d.HasChange("enable_nat") {
 		gw := &goaviatrix.Gateway{
 			CloudType: d.Get("cloud_type").(int),
@@ -703,10 +706,12 @@ func resourceAviatrixTransitVpcDelete(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("failed to delete Aviatrix TransitVpc HA gateway: %s", err)
 		}
 	}
+
 	gateway.GwName = d.Get("gw_name").(string)
 	err := client.DeleteGateway(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix TransitVpc: %s", err)
 	}
+
 	return nil
 }

@@ -41,8 +41,8 @@ The following arguments are supported:
 
 ## Import
 
-Instance vgw_conn can be imported using the conn_name, e.g.
+Instance vgw_conn can be imported using the conn_name and vpc_id, e.g.
 
 ```
-$ terraform import aviatrix_vgw_conn.test conn_name
+$ terraform import aviatrix_vgw_conn.test conn_name~vpc_id
 ```

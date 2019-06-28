@@ -128,6 +128,7 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 	if gateway.EnableNAT != "yes" {
 		gateway.EnableNAT = "no"
 	}
+
 	if gateway.CloudType == 1 || gateway.CloudType == 4 {
 		gateway.VpcID = d.Get("vpc_id").(string)
 		if gateway.VpcID == "" {
@@ -158,11 +159,16 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Spoke VPC: %s", err)
 	}
+
 	d.SetId(gateway.GwName)
+
+	flag := false
+	defer resourceAviatrixSpokeVpcReadIfRequired(d, meta, &flag)
 
 	if enableNAT := d.Get("enable_nat").(string); enableNAT == "yes" {
 		log.Printf("[INFO] Aviatrix NAT enabled gateway: %#v", gateway)
 	}
+
 	if singleAZHA := d.Get("single_az_ha").(string); singleAZHA == "enabled" {
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName:   d.Get("gw_name").(string),
@@ -174,6 +180,7 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("failed to create single AZ GW HA: %s", err)
 		}
 	}
+
 	if haSubnet != "" || haZone != "" {
 		//Enable HA
 		haGateway := &goaviatrix.SpokeVpc{
@@ -188,6 +195,7 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		log.Printf("[INFO]Resizing Spoke HA Gateway: %#v", haGwSize)
+
 		if haGwSize != gateway.VpcSize {
 			if haGwSize == "" {
 				return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
@@ -224,6 +232,7 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 	} else if ok && gateway.CloudType != 1 {
 		return fmt.Errorf("adding tags only supported for aws, cloud_type must be 1")
 	}
+
 	if transitGwName := d.Get("transit_gw").(string); transitGwName != "" {
 		//No HA config, just return
 		err := client.SpokeJoinTransit(gateway)
@@ -232,7 +241,15 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	return resourceAviatrixSpokeVpcRead(d, meta)
+	return resourceAviatrixSpokeVpcReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixSpokeVpcReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixSpokeVpcRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) error {
@@ -258,8 +275,9 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 		}
 		return fmt.Errorf("couldn't find Aviatrix SpokeVpc: %s", err)
 	}
-	log.Printf("[TRACE] reading spoke gateway %s: %#v",
-		d.Get("gw_name").(string), gw)
+
+	log.Printf("[TRACE] reading spoke gateway %s: %#v", d.Get("gw_name").(string), gw)
+
 	if gw != nil {
 		d.Set("cloud_type", gw.CloudType)
 		d.Set("account_name", gw.AccountName)
@@ -291,6 +309,7 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 	} else {
 		d.Set("transit_gw", "")
 	}
+
 	if gw.CloudType == 1 {
 		tags := &goaviatrix.Tags{
 			CloudType:    1,
@@ -337,6 +356,7 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 		}
 		d.Set("ha_gw_size", haGw.GwSize)
 	}
+
 	return nil
 }
 
@@ -350,6 +370,7 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string) + "-hagw",
 	}
+
 	log.Printf("[INFO] Updating Aviatrix gateway: %#v", gateway)
 
 	d.Partial(true)
@@ -508,6 +529,7 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 		d.SetPartial("ha_subnet")
 		d.SetPartial("ha_zone")
 	}
+
 	if d.HasChange("ha_gw_size") || newHaGwEnabled {
 		newHaGwSize := d.Get("ha_gw_size").(string)
 		if !newHaGwEnabled || (newHaGwSize != primaryGwSize) {
@@ -540,6 +562,7 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 		d.SetPartial("ha_gw_size")
 	}
+
 	if d.HasChange("enable_nat") {
 		gw := &goaviatrix.Gateway{
 			CloudType: d.Get("cloud_type").(int),
@@ -560,6 +583,7 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 		d.SetPartial("vpc_size")
 	}
+
 	if d.HasChange("transit_gw") {
 		spokeVPC := &goaviatrix.SpokeVpc{
 			CloudType:      d.Get("cloud_type").(int),
@@ -595,9 +619,10 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 		d.SetPartial("transit_gw")
 	}
-	d.Partial(false)
 
+	d.Partial(false)
 	d.SetId(gateway.GwName)
+
 	return resourceAviatrixSpokeVpcRead(d, meta)
 }
 

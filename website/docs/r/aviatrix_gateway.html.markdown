@@ -132,6 +132,7 @@ The following arguments are deprecated:
 -> **NOTE:** 
 
 * `peering_ha_gw_size` - If you are using/upgraded to Aviatrix Terraform Provider v4.3+, and a peering-HA gateway was originally created with a provider version <4.3, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also input this attribute and its value to its corresponding gateway resource in your `.tf` file. 
+* `enable_nat` - In order for the FQDN feature to be enabled for the specified gateway, "enable_nat" must be set to “yes”. If it is not set at gateway creation, creation of FQDN resource will automatically enable SNAT and users must rectify the diff in the Terraform state by setting "enable_nat = 'yes'" in their config file.
 
 ## Import
 
