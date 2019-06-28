@@ -17,10 +17,10 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | Test module name                     | Skip parameter               | Required variables                                                    |
 | ------------------------------------ | ---------------------------- | --------------------------------------------------------------------- |
 | Generic                              | N/A                          | AVIATRIX_USERNAME, AVIATRIX_PASSWORD, AVIATRIX_CONTROLLER_IP          |
-| aviatrix_account                     | SKIP_ACCOUNT                 | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY                    |
-|		                               | SKIP_AWS_ACCOUNT	          | GCP_ID, GCP_CREDENTIALS_FILEPATH,                                     |
-|                     		           | SKIP_GCP_ACCOUNT	          | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID,	          |
-|		                               | SKIP_ARM_ACCOUNT	          | ARM_APPLICATION_KEY					                                  |	
+| aviatrix_account                     | SKIP_ACCOUNT                 |                     |
+|		                                   | SKIP_AWS_ACCOUNT	            | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY                                     |
+|                     		             | SKIP_GCP_ACCOUNT	            | GCP_ID, GCP_CREDENTIALS_FILEPATH	          |
+|		                                   | SKIP_ARM_ACCOUNT	            | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID, ARM_APPLICATION_KEY					                                  |	
 | aviatrix_account_user                | SKIP_ACCOUNT_USER            |                                                                       |
 | aviatrix_arm_peer                    | SKIP_ARM_PEER                | aviatrix_account + ARM_VNET_ID, ARM_VNET_ID2, ARM_REGION, ARM_REGION2 |
 | aviatrix_aws_peer                    | SKIP_AWS_PEER                | aviatrix_account + AWS_VPC_ID, AWS_VPC_ID2, AWS_REGION, AWS_REGION2   |
