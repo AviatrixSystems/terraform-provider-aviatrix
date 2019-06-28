@@ -12,6 +12,7 @@ CHANGES
 
 CHANGES
   - Supported controller version: 4.7.378
+  - Supported Terraform version: 0.11.*
   - Added support of Inside IP CIDR and Pre Shared Key for tunnel 1 and 2
   - Added defer function in gateway
 
@@ -20,6 +21,7 @@ CHANGES
 
 CHANGES
   - Supported controller version: 4.7.378
+  - Supported Terraform version: 0.11.*
   - Deprecated version resource, and moved version functionality to controller config
   - Added "bgp_manual_spoke_advertise_cidr" support in vgw_conn
   - Created a new resource vpn_user_accelerator
@@ -30,6 +32,7 @@ CHANGES
 
 CHANGES
   - Supported controller version: 4.6.604
+  - Supported Terraform version: 0.11.*
   - Deprecated "vnet_and_resource_group_names" in spoke_vpc and replaced it with "vpc_id"
   - Deprecated "vnet_name_resource_group" in transit_vpc and replaced it with "vpc_id"
   
@@ -38,6 +41,7 @@ CHANGES
 
 CHANGES
   - Supported controller version: 4.6.569
+  - Supported Terraform version: 0.11.*
   - Added private route encryption support in site2cloud
   - Added custom algorithm support in site2cloud
   - Added ssl server pool support for "tcp" tunnel type in site2cloud
@@ -53,6 +57,7 @@ CHANGES
 
 CHANGES
   - Supported controller version: 4.3.1275
+  - Supported Terraform version: 0.11.*
   - Deprecated “ha_subnet” (gateway HA) completely from gateway
   - Added ability to configure gateway size for peering HA gateway in gateway resource
   - Added acceptance test support for import feature for all resources
@@ -65,6 +70,7 @@ CHANGES
 
 CHANGES
   - Supported controller version: 4.3.1253
+  - Supported Terraform version: 0.11.*
   - Added new vpc resource
   - Added support for connection type “mapped”
   - Fixed connection_type read/refresh issue
@@ -77,6 +83,7 @@ CHANGES
 
 CHANGES
   - Supported controller version: 4.2.764
+  - Supported Terraform version: 0.11.*
   - GCP and Azure support added for resource_spoke_gateway
   - Azure support added for resource_transit_vpc
   - Added support for FQDN source_ip filtering
@@ -91,6 +98,7 @@ CHANGES
 
 CHANGES
   - Supported controller version: 4.2.764
+  - Supported Terraform version: 0.11.*
   - Description added for all argument
   - GCP and Azure support added for resource_account
   - Updated gateway resource for Split_tunnel import support
@@ -106,6 +114,7 @@ CHANGES
 
 CHANGES
   - Supported controller version: 4.2.634
+  - Supported Terraform version: 0.11.*
   - Updated doc for aws_peer resource
   - Updated fqdn resource to block updating "fqdn_tag" 
   - Created new resource "aws_tgw_vpc_attachment" to simply manage attaching/detaching vpc to/from AWS TGW
@@ -116,6 +125,7 @@ CHANGES
 
 CHANGES
   - Supported controller version: 4.1.982 and 4.2.634
+  - Supported Terraform version: 0.11.*
   - Fixed firewall resource base_allow_deny on refresh
   - Fixed site2cloud resource arguments on refresh, update and import
   - Fixed aws_peer resource arguments on refresh, update and import
@@ -126,7 +136,8 @@ CHANGES
 ## 1.2.12 (Mar 15 2019)
 
 CHANGES
-  - Supported controller version: 4.1.981 
+  - Supported controller version: 4.1.981
+  - Supported Terraform version: 0.11.* 
   - Temporarily reverted peering resource refresh changes
   - Temporarily reverted site2cloud resource refresh changes
   - Updated site2cloud resource to ignore local_cidr changes
@@ -136,6 +147,7 @@ CHANGES
 
 CHANGES
   - Supported controller version: 4.1.981
+  - Supported Terraform version: 0.11.*
   - Updated peering resource to support refresh
   - Updated site2cloud resource to support refresh of some paramters
   - Corrected taq list reordering on gateway resource refresh
@@ -146,6 +158,7 @@ CHANGES
 
 CHANGES
   - Supported controller version: 4.1.981
+  - Supported Terraform version: 0.11.*
   - Supports import feature for all resources
   - URL encode error is fixed for all resources
   - Error messages show REST api names for better understanding
@@ -164,6 +177,7 @@ CHANGES
  
   - First versioned release
   - Supported controller version: 4.1.981
+  - Supported Terraform version: 0.11.*
   - Supports create, destroy, refresh, update, acceptance tests for most of the following resources
       - data_source_aviatrix_account
       - data_source_aviatrix_caller_identity
