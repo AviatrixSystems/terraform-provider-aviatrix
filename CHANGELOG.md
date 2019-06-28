@@ -1,3 +1,13 @@
+## 1.13.14 (Jun 28 2019)
+
+CHANGES
+  - Supported controller version: 4.7.419
+  - Supported Terraform version: 0.11.*
+  - Added defer function in transit_vpc, spoke_vpc, aws_tgw, site2cloud, vgw_conn, and fqdn
+  - Added Terraform Feature Changelist
+  - Added test-infra for Hashicorp acceptance
+  
+  
 ## 1.12.12 (Jun 20 2019)
 
 CHANGES
