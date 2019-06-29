@@ -85,6 +85,7 @@ The following arguments are supported:
 * `vpc_net` - (Required) A VPC Network address range selected from one of the available network ranges. ( Example: "172.31.0.0/20")
 * `enable_nat` - (Optional) Enable NAT for this container. (Supported values: "yes", "no")
 * `vpn_access` - (Optional) Enable user access through VPN to this container. (Supported values: "yes", "no")
+* `max_vpn_conn` - (Optional) Maximum number of active VPN users allowed to be connected to this gateway. Make sure the number is smaller than the VPN CIDR block (e.g. 100)
 * `vpn_cidr` - (Optional) VPN CIDR block for the container. (Required if vpn_access is "yes", Example: "192.168.43.0/24")
 * `enable_elb` - (Optional) Specify whether to enable ELB or not. (Required: Yes when cloud_type is "1", "4", "256" or "1024", supported values "yes" and "no")
 * `elb_name` - (Optional) A name for the ELB that is created. If it is not specified a name is generated automatically

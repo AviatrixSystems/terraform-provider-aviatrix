@@ -70,7 +70,7 @@ type Gateway struct {
 	LdapUseSsl              string `form:"ldap_use_ssl,omitempty" json:"ldap_use_ssl,omitempty"`
 	LdapUserAttr            string `form:"ldap_username_attribute,omitempty" json:"ldap_username_attribute,omitempty"`
 	LicenseID               string `form:"license_id,omitempty" json:"license_id,omitempty"`
-	MaxConn                 string `form:"max_conn,omitempty"`
+	MaxConn                 string `form:"max_connections,omitempty" json:"max_connections,omitempty"`
 	NameServers             string `form:"nameservers,omitempty"`
 	OktaToken               string `form:"okta_token,omitempty" json:"okta_token,omitempty"`
 	OktaURL                 string `form:"okta_url,omitempty" json:"okta_url,omitempty"`
@@ -100,7 +100,7 @@ type Gateway struct {
 	VpcState                string `form:"vpc_state,omitempty" json:"vpc_state,omitempty"`
 	VpcType                 string `form:"vpc_type,omitempty" json:"vpc_type,omitempty"`
 	VpnCidr                 string `form:"cidr,omitempty" json:"vpn_cidr,omitempty"`
-	VpnStatus               string `form:"vpn_access,omitempty" json:"vpn_status,omitempty"`
+	VpnStatus               string `form:"vpn_status,omitempty" json:"vpn_status,omitempty"`
 	Zone                    string `form:"zone,omitempty" json:"zone,omitempty"`
 	VpcSize                 string `form:"vpc_size,omitempty" ` //Only use for gateway create
 	DMZEnabled              string `json:"dmz_enabled,omitempty"`
@@ -403,6 +403,32 @@ func (c *Client) UpdateVpnCidr(gateway *Gateway) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API set_vpn_client_cidr Get failed: " + data.Reason)
+	}
+	return nil
+}
+func (c *Client) UpdateMaxVpnConn(gateway *Gateway) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for set_vpn_client_cidr") + err.Error())
+	}
+	setMaxVpnConn := url.Values{}
+	setMaxVpnConn.Add("CID", c.CID)
+	setMaxVpnConn.Add("action", "set_vpn_max_connection")
+	setMaxVpnConn.Add("max_connections", gateway.MaxConn)
+	setMaxVpnConn.Add("vpc_id", gateway.VpcID)
+	setMaxVpnConn.Add("lb_or_gateway_name", gateway.ElbName)
+	Url.RawQuery = setMaxVpnConn.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get set_vpn_max_connection failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode set_vpn_max_connection failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API set_vpn_max_connection Get failed: " + data.Reason)
 	}
 	return nil
 }
