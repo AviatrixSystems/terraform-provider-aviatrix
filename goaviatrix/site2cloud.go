@@ -257,6 +257,9 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 		return nil, errors.New("Json Decode get_site2cloud_conn_detail failed: " + err.Error())
 	}
 	if !data.Return {
+		if strings.Contains(data.Reason, "does not exist") {
+			return nil, ErrNotFound
+		}
 		return nil, errors.New("Rest API get_site2cloud_conn_detail Get failed: " + data.Reason)
 	}
 
@@ -323,6 +326,7 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 
 		return site2cloud, nil
 	}
+
 	return nil, ErrNotFound
 }
 
