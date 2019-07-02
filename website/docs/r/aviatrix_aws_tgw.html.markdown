@@ -43,20 +43,19 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
       "Shared_Service_Domain"
     ]    
     attached_vpc         = []      
-  },
-  {
+  }
+  security_domains {
     security_domain_name = "Shared_Service_Domain"
     connected_domains    = [
       "Aviatrix_Edge_Domain", 
       "Default_Domain"
     ]
     attached_vpc         = []          
-  },
-  {
+  }
+  security_domains {
     security_domain_name = "SDN1"
     connected_domains    = ["Aviatrix_Edge_Domain"]
-    attached_vpc         = [
-    {
+    attached_vpc {
       vpc_account_name = "devops1"
       vpc_id           = "vpc-0e2fac2b91"
       vpc_region       = "us-east-1"
