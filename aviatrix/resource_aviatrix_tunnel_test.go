@@ -87,6 +87,7 @@ resource "aviatrix_account" "test" {
 }
 
 resource "aviatrix_gateway" "gw1" {
+<<<<<<< HEAD
 	cloud_type   = 1
 	account_name = "${aviatrix_account.test.account_name}"
 	gw_name      = "tfg-%[1]s"
@@ -94,10 +95,20 @@ resource "aviatrix_gateway" "gw1" {
 	vpc_reg      = "%[7]s"
 	vpc_size     = "t2.micro"
 	vpc_net      = "%[9]s"
+=======
+	cloud_type = 1
+	account_name = aviatrix_account.test.account_name
+	gw_name = "tfg-%[1]s"
+	vpc_id = "%[5]s"
+	vpc_reg = "%[7]s"
+	vpc_size = "t2.micro"
+	vpc_net = "%[9]s"
+>>>>>>> Implement all resource in terraform .12 (#525)
 }
 
 
 resource "aviatrix_gateway" "gw2" {
+<<<<<<< HEAD
 	cloud_type   = 1
 	account_name = "${aviatrix_account.test.account_name}"
 	gw_name      = "tfg2-%[1]s"
@@ -105,11 +116,20 @@ resource "aviatrix_gateway" "gw2" {
 	vpc_reg      = "%[8]s"
 	vpc_size     = "t2.micro"
 	vpc_net      = "%[10]s"
+=======
+	cloud_type = 1
+	account_name = aviatrix_account.test.account_name
+	gw_name = "tfg2-%[1]s"
+	vpc_id = "%[6]s"
+	vpc_reg = "%[8]s"
+	vpc_size = "t2.micro"
+	vpc_net = "%[10]s"
+>>>>>>> Implement all resource in terraform .12 (#525)
 }
 
 resource "aviatrix_tunnel" "foo" {
-	vpc_name1 = "${aviatrix_gateway.gw1.gw_name}"
-	vpc_name2 = "${aviatrix_gateway.gw2.gw_name}"
+	vpc_name1 = aviatrix_gateway.gw1.gw_name
+	vpc_name2 = aviatrix_gateway.gw2.gw_name
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		vpcID1, vpcID2, region1, region2, subnet1, subnet2)

@@ -131,7 +131,7 @@ resource "aviatrix_account" "test_aws" {
 
 resource "aviatrix_transit_vpc" "test_transit_vpc_aws" {
     cloud_type   = 1
-    account_name = "${aviatrix_account.test_aws.account_name}"
+    account_name = aviatrix_account.test_aws.account_name
     gw_name      = "tfg-%[1]s"
     vpc_id       = "%[5]s"
     vpc_reg      = "%[6]s"
@@ -154,6 +154,7 @@ resource "aviatrix_account" "test_arm" {
 }
 
 resource "aviatrix_transit_vpc" "test_transit_vpc_arm" {
+<<<<<<< HEAD
     cloud_type   = 8
     account_name = "${aviatrix_account.test_arm.account_name}"
     gw_name      = "tfg-%[1]s"
@@ -161,6 +162,15 @@ resource "aviatrix_transit_vpc" "test_transit_vpc_arm" {
     vpc_reg      = "%[7]s"
     vpc_size     = "%[8]s"
     subnet       = "%[9]s"
+=======
+    cloud_type               = 8
+    account_name             = aviatrix_account.test_arm.account_name
+    gw_name                  = "tfg-%[1]s"
+    vpc_id                   = "%[6]s"
+    vpc_reg                  = "%[7]s"
+    vpc_size                 = "%[8]s"
+    subnet                   = "%[9]s"
+>>>>>>> Implement all resource in terraform .12 (#525)
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"), os.Getenv("ARM_APPLICATION_ID"),
 		os.Getenv("ARM_APPLICATION_KEY"), os.Getenv("ARM_VNET_ID"), os.Getenv("ARM_REGION"),

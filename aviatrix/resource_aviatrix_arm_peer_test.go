@@ -83,8 +83,8 @@ resource "aviatrix_account" "test_account" {
 }
 
 resource "aviatrix_arm_peer" "test_arm_peer" {
-	account_name1             = "${aviatrix_account.test_account.account_name}"
-	account_name2             = "${aviatrix_account.test_account.account_name}"
+	account_name1             = aviatrix_account.test_account.account_name
+	account_name2             = aviatrix_account.test_account.account_name
 	vnet_name_resource_group1 = "%s"
 	vnet_name_resource_group2 = "%s"
 	vnet_reg1                 = "%s"

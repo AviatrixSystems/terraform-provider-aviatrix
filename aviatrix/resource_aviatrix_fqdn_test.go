@@ -67,7 +67,11 @@ resource "aviatrix_account" "test" {
 
 resource "aviatrix_gateway" "test" {
 	cloud_type   = 1
+<<<<<<< HEAD
 	account_name = "${aviatrix_account.test.account_name}"
+=======
+	account_name = aviatrix_account.test.account_name
+>>>>>>> Implement all resource in terraform .12 (#525)
 	gw_name      = "tfg-%[1]s"
 	vpc_id       = "%[5]s"
 	vpc_reg      = "%[6]s"
@@ -77,6 +81,7 @@ resource "aviatrix_gateway" "test" {
 }
 
 resource "aviatrix_fqdn" "foo" {
+<<<<<<< HEAD
 	fqdn_tag           = "tff-%[1]s"
 	fqdn_status        = "enabled"
 	fqdn_mode          = "white"
@@ -89,10 +94,22 @@ resource "aviatrix_fqdn" "foo" {
 	domain_names =  [
 	{
 		fqdn  = "facebook.com"
+=======
+	fqdn_tag    = "tff-%[1]s"
+	fqdn_status = "enabled"
+	fqdn_mode   = "white"
+
+	gw_filter_tag_list {
+		gw_name = aviatrix_gateway.test.gw_name
+		source_ip_list = []
+	}
+
+	domain_names {
+		fqdn = "facebook.com"
+>>>>>>> Implement all resource in terraform .12 (#525)
 		proto = "tcp"
 		port  = "443"
 	}
-	]
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"))

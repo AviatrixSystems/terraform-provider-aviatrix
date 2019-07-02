@@ -228,6 +228,7 @@ resource "aviatrix_account" "test_acc_aws" {
 }
 
 resource "aviatrix_gateway" "test_gw_aws" {
+<<<<<<< HEAD
 	cloud_type   = 1
 	account_name = "${aviatrix_account.test_acc_aws.account_name}"
 	gw_name      = "tf-testing-aws-%[1]s"
@@ -235,6 +236,15 @@ resource "aviatrix_gateway" "test_gw_aws" {
 	vpc_reg      = "%[6]s"
 	vpc_size     = "%[7]s"
 	vpc_net      = "%[8]s"
+=======
+	cloud_type = 1
+	account_name = aviatrix_account.test_acc_aws.account_name
+	gw_name = "tf-testing-aws-%[1]s"
+	vpc_id = "%[5]s"
+	vpc_reg = "%[6]s"
+	vpc_size = "%[7]s"
+	vpc_net = "%[8]s"
+>>>>>>> Implement all resource in terraform .12 (#525)
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		awsVpcId, awsRegion, awsGwSize, awsVpcNet)
@@ -250,6 +260,7 @@ resource "aviatrix_account" "test_acc_gcp" {
 }
 
 resource "aviatrix_gateway" "test_gw_gcp" {
+<<<<<<< HEAD
 	cloud_type   = 4
 	account_name = "${aviatrix_account.test_acc_gcp.account_name}"
 	gw_name      = "tf-testing-gcp-%[1]s"
@@ -257,6 +268,15 @@ resource "aviatrix_gateway" "test_gw_gcp" {
 	vpc_reg      = "%[5]s"
 	vpc_size     = "%[6]s"
 	vpc_net      = "%[7]s"
+=======
+	cloud_type = 4
+	account_name = aviatrix_account.test_acc_gcp.account_name
+	gw_name = "tf-testing-gcp-%[1]s"
+	vpc_id = "%[4]s"
+	vpc_reg = "%[5]s"
+	vpc_size = "%[6]s"
+	vpc_net = "%[7]s"
+>>>>>>> Implement all resource in terraform .12 (#525)
 }
 	`, rName, os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"),
 		gcpVpcId, gcpZone, gcpGwSize, gcpSubnet)
@@ -274,6 +294,7 @@ resource "aviatrix_account" "test_acc_arm" {
 }
 
 resource "aviatrix_gateway" "test_gw_arm" {
+<<<<<<< HEAD
 	cloud_type   = 8
 	account_name = "${aviatrix_account.test_acc_arm.account_name}"
 	gw_name      = "tf-testing-arm-%[1]s"
@@ -281,6 +302,15 @@ resource "aviatrix_gateway" "test_gw_arm" {
 	vpc_reg      = "%[7]s"
 	vpc_size     = "%[8]s"
 	vpc_net      = "%[9]s"
+=======
+	cloud_type = 8
+	account_name = aviatrix_account.test_acc_arm.account_name
+	gw_name = "tf-testing-arm-%[1]s"
+	vpc_id = "%[6]s"
+	vpc_reg = "%[7]s"
+	vpc_size = "%[8]s"
+	vpc_net = "%[9]s"
+>>>>>>> Implement all resource in terraform .12 (#525)
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
 		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),

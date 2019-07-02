@@ -18,28 +18,31 @@ resource "aviatrix_fqdn" "test_fqdn" {
   fqdn_tag     = "my_tag"
   fqdn_status  = "enabled"
   fqdn_mode    = "white"
-  gw_filter_tag_list = [
-  {
+  
+  gw_filter_tag_list {
     gw_name        = "gwTest1"
-    source_ip_list = ["172.31.0.0/16", "172.31.0.0/20"]
-  },
-  {
+    source_ip_list = [
+      "172.31.0.0/16", 
+      "172.31.0.0/20"
+    ]
+  }
+  gw_filter_tag_list {
     gw_name        = "gwTest2"
-    source_ip_list = ["30.0.0.0/16"]
+    source_ip_list = [
+      "30.0.0.0/16",
+    ]
   },
-  ]
-  domain_names = [
-  {
+  
+  domain_names {
     fqdn  = "facebook.com"
     proto = "tcp"
     port  = "443"
-  },
-  {
+  }
+  domain_names {
     fqdn  = "reddit.com"
     proto = "tcp"
     port  = "443"
   }
-  ]
 }
 ```
 

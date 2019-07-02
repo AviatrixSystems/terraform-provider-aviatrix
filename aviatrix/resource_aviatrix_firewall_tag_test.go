@@ -57,16 +57,19 @@ func testAccFirewallTagConfigBasic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aviatrix_firewall_tag" "foo" {
 	firewall_tag = "tft-%d"
-	cidr_list = [
-	{
+	cidr_list {
 		cidr_tag_name = "a1"
 		cidr          = "10.1.0.0/24"
+<<<<<<< HEAD
 	},
 	{
+=======
+	}
+	cidr_list {
+>>>>>>> Implement all resource in terraform .12 (#525)
 		cidr_tag_name = "b1"
 		cidr          = "10.2.0.0/24"
 	}
-	]
 }
 	`, rInt)
 }
@@ -91,9 +94,11 @@ func testAccCheckFirewallTagExists(n string, firewallTag *goaviatrix.FirewallTag
 		if err != nil {
 			return err
 		}
+
 		if foundTag.Name != rs.Primary.ID {
 			return fmt.Errorf("firewall tag not found")
 		}
+
 		*firewallTag = *foundTag
 
 		return nil

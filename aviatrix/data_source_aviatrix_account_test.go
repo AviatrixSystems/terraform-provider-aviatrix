@@ -52,7 +52,7 @@ resource "aviatrix_account" "test" {
 }
 
 data "aviatrix_account" "foo" {
-	account_name = "${aviatrix_account.test.id}"
+	account_name = aviatrix_account.test.id
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"))
 }

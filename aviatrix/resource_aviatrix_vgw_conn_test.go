@@ -80,6 +80,7 @@ resource "aviatrix_account" "test_account" {
 }
 
 resource "aviatrix_transit_vpc" "test_transit_vpc" {
+<<<<<<< HEAD
 	account_name = "${aviatrix_account.test_account.account_name}"
 	cloud_type   = 1
 	gw_name      = "tfg-%s"
@@ -94,6 +95,22 @@ resource "aviatrix_vgw_conn" "test_vgw_conn" {
 	gw_name          = "${aviatrix_transit_vpc.test_transit_vpc.gw_name}"
 	vpc_id           = "${aviatrix_transit_vpc.test_transit_vpc.vpc_id}"
 	bgp_vgw_id       = "%s"
+=======
+	account_name = aviatrix_account.test_account.account_name
+	cloud_type = 1
+	gw_name = "tfg-%s"
+	vpc_id = "%s"
+	vpc_reg = "%s"
+	vpc_size = "t2.micro"
+	subnet = "%s"
+}
+
+resource "aviatrix_vgw_conn" "test_vgw_conn" {
+	conn_name = "tfc-%s"
+	gw_name = aviatrix_transit_vpc.test_transit_vpc.gw_name
+	vpc_id = aviatrix_transit_vpc.test_transit_vpc.vpc_id
+	bgp_vgw_id = "%s"
+>>>>>>> Implement all resource in terraform .12 (#525)
 	bgp_local_as_num = "6451"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),

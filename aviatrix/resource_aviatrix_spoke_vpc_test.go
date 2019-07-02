@@ -173,7 +173,7 @@ resource "aviatrix_account" "test" {
 
 resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
     cloud_type   = 1
-    account_name = "${aviatrix_account.test.account_name}"
+    account_name = aviatrix_account.test.account_name
     gw_name      = "tfg-aws-%[1]s"
     vpc_id       = "%[5]s"
     vpc_reg      = "%[6]s"
@@ -200,13 +200,14 @@ resource "aviatrix_account" "test" {
 
 resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
     cloud_type   = 4
-    account_name = "${aviatrix_account.test.account_name}"
+    account_name = aviatrix_account.test.account_name
     gw_name      = "tfg-gcp-%[1]s"
     vpc_id       = "%[4]s"
     vpc_reg      = "%[5]s"
     vpc_size     = "%[6]s"
     subnet       = "%[7]s"
     enable_nat   = "no"
+    single_az_ha = "enabled"
 }
 	`, rName, os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"),
 		os.Getenv("GCP_VPC_ID"), os.Getenv("GCP_ZONE"), gcpGwSize, os.Getenv("GCP_SUBNET"))
@@ -225,7 +226,11 @@ resource "aviatrix_account" "test" {
 
 resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
     cloud_type   = 8
+<<<<<<< HEAD
     account_name = "${aviatrix_account.test.account_name}"
+=======
+    account_name = aviatrix_account.test.account_name
+>>>>>>> Implement all resource in terraform .12 (#525)
     gw_name      = "tfg-arm-%[1]s"
     vpc_id       = "%[6]s"
     vpc_reg      = "%[7]s"

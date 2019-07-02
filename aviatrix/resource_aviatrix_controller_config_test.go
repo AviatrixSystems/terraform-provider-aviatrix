@@ -61,7 +61,7 @@ resource "aviatrix_account" "test_account" {
 }
 
 resource "aviatrix_controller_config" "test_controller_config" {
-	sg_management_account_name = "${aviatrix_account.test_account.account_name}"
+	sg_management_account_name = aviatrix_account.test_account.account_name
 	fqdn_exception_rule 	   = false
 	http_access         	   = true
 	security_group_management  = true

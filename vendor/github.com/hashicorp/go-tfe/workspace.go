@@ -31,6 +31,9 @@ type Workspaces interface {
 	// Delete a workspace by its name.
 	Delete(ctx context.Context, organization string, workspace string) error
 
+	// RemoveVCSConnection from a workspace.
+	RemoveVCSConnection(ctx context.Context, organization, workspace string) (*Workspace, error)
+
 	// Lock a workspace by its ID.
 	Lock(ctx context.Context, workspaceID string, options WorkspaceLockOptions) (*Workspace, error)
 
@@ -71,6 +74,7 @@ type Workspace struct {
 	Name                 string                `jsonapi:"attr,name"`
 	Operations           bool                  `jsonapi:"attr,operations"`
 	Permissions          *WorkspacePermissions `jsonapi:"attr,permissions"`
+	QueueAllRuns         bool                  `jsonapi:"attr,queue-all-runs"`
 	TerraformVersion     string                `jsonapi:"attr,terraform-version"`
 	VCSRepo              *VCSRepo              `jsonapi:"attr,vcs-repo"`
 	WorkingDirectory     string                `jsonapi:"attr,working-directory"`
@@ -97,10 +101,13 @@ type WorkspaceActions struct {
 // WorkspacePermissions represents the workspace permissions.
 type WorkspacePermissions struct {
 	CanDestroy        bool `json:"can-destroy"`
+	CanForceUnlock    bool `json:"can-force-unlock"`
 	CanLock           bool `json:"can-lock"`
+	CanQueueApply     bool `json:"can-queue-apply"`
 	CanQueueDestroy   bool `json:"can-queue-destroy"`
 	CanQueueRun       bool `json:"can-queue-run"`
 	CanReadSettings   bool `json:"can-read-settings"`
+	CanUnlock         bool `json:"can-unlock"`
 	CanUpdate         bool `json:"can-update"`
 	CanUpdateVariable bool `json:"can-update-variable"`
 }
@@ -151,6 +158,10 @@ type WorkspaceCreateOptions struct {
 	// and _. This will be used as an identifier and must be unique in the
 	// organization.
 	Name *string `jsonapi:"attr,name"`
+
+	// Whether to queue all runs. Unless this is set to true, runs triggered by
+	// a webhook will not be queued until at least one run is manually queued.
+	QueueAllRuns *bool `jsonapi:"attr,queue-all-runs,omitempty"`
 
 	// The version of Terraform to use for this workspace. Upon creating a
 	// workspace, the latest version is selected unless otherwise specified.
@@ -254,6 +265,10 @@ type WorkspaceUpdateOptions struct {
 	// API and UI.
 	Name *string `jsonapi:"attr,name,omitempty"`
 
+	// Whether to queue all runs. Unless this is set to true, runs triggered by
+	// a webhook will not be queued until at least one run is manually queued.
+	QueueAllRuns *bool `jsonapi:"attr,queue-all-runs,omitempty"`
+
 	// The version of Terraform to use for this workspace.
 	TerraformVersion *string `jsonapi:"attr,terraform-version,omitempty"`
 
@@ -261,7 +276,7 @@ type WorkspaceUpdateOptions struct {
 	// object. To modify a workspace's existing VCS repo, include whichever of
 	// the keys below you wish to modify. To add a new VCS repo to a workspace
 	// that didn't previously have one, include at least the oauth-token-id and
-	// identifier keys.  VCSRepo *VCSRepo `jsonapi:"relation,vcs-repo,om-tempty"`
+	// identifier keys.
 	VCSRepo *VCSRepoOptions `jsonapi:"attr,vcs-repo,omitempty"`
 
 	// A relative path that Terraform will execute within. This defaults to the
@@ -322,6 +337,41 @@ func (s *workspaces) Delete(ctx context.Context, organization, workspace string)
 	}
 
 	return s.client.do(ctx, req, nil)
+}
+
+// workspaceRemoveVCSConnectionOptions
+type workspaceRemoveVCSConnectionOptions struct {
+	ID      string          `jsonapi:"primary,workspaces"`
+	VCSRepo *VCSRepoOptions `jsonapi:"attr,vcs-repo"`
+}
+
+// RemoveVCSConnection from a workspace.
+func (s *workspaces) RemoveVCSConnection(ctx context.Context, organization, workspace string) (*Workspace, error) {
+	if !validStringID(&organization) {
+		return nil, errors.New("invalid value for organization")
+	}
+	if !validStringID(&workspace) {
+		return nil, errors.New("invalid value for workspace")
+	}
+
+	u := fmt.Sprintf(
+		"organizations/%s/workspaces/%s",
+		url.QueryEscape(organization),
+		url.QueryEscape(workspace),
+	)
+
+	req, err := s.client.newRequest("PATCH", u, &workspaceRemoveVCSConnectionOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	w := &Workspace{}
+	err = s.client.do(ctx, req, w)
+	if err != nil {
+		return nil, err
+	}
+
+	return w, nil
 }
 
 // WorkspaceLockOptions represents the options for locking a workspace.

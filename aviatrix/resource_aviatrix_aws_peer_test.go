@@ -83,8 +83,8 @@ resource "aviatrix_account" "test_account" {
 }
 
 resource "aviatrix_aws_peer" "test_aws_peer" {
-	account_name1 = "${aviatrix_account.test_account.account_name}"
-	account_name2 = "${aviatrix_account.test_account.account_name}"
+	account_name1 = aviatrix_account.test_account.account_name
+	account_name2 = aviatrix_account.test_account.account_name
 	vpc_id1       = "%s"
 	vpc_id2       = "%s"
 	vpc_reg1      = "%s"

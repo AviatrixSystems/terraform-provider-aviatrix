@@ -34,20 +34,15 @@ func TestAccAviatrixS2C_basic(t *testing.T) {
 					testAccCheckS2CExists("aviatrix_site2cloud.foo", &s2c),
 					resource.TestCheckResourceAttr(resourceName, "connection_name",
 						fmt.Sprintf("tfs-%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "vpc_id",
-						os.Getenv("AWS_VPC_ID")),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
 					resource.TestCheckResourceAttr(resourceName, "tunnel_type", "udp"),
 					resource.TestCheckResourceAttr(resourceName, "primary_cloud_gateway_name",
 						fmt.Sprintf("tfg-%s", rName)),
 
-					resource.TestCheckResourceAttr(resourceName, "remote_gateway_ip",
-						"8.8.8.8"),
-					resource.TestCheckResourceAttr(resourceName, "remote_subnet_cidr",
-						"10.23.0.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "remote_gateway_type",
-						"generic"),
-					resource.TestCheckResourceAttr(resourceName, "connection_type",
-						"unmapped"),
+					resource.TestCheckResourceAttr(resourceName, "remote_gateway_ip", "8.8.8.8"),
+					resource.TestCheckResourceAttr(resourceName, "remote_subnet_cidr", "10.23.0.0/24"),
+					resource.TestCheckResourceAttr(resourceName, "remote_gateway_type", "generic"),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "unmapped"),
 				),
 			},
 			{
@@ -72,7 +67,7 @@ resource "aviatrix_account" "test" {
 
 resource "aviatrix_gateway" "test" {
 	cloud_type   = 1
-	account_name = "${aviatrix_account.test.account_name}"
+	account_name = aviatrix_account.test.account_name
 	gw_name      = "tfg-%[1]s"
 	vpc_id       = "%[5]s"
 	vpc_reg      = "%[6]s"
@@ -81,12 +76,12 @@ resource "aviatrix_gateway" "test" {
 }
 
 resource "aviatrix_site2cloud" "foo" {
-    vpc_id                     = "${aviatrix_gateway.test.vpc_id}"
+    vpc_id                     = aviatrix_gateway.test.vpc_id
     connection_name 		   = "tfs-%[1]s"
     connection_type            = "unmapped"
     remote_gateway_type        = "generic"
     tunnel_type                = "udp"
-    primary_cloud_gateway_name = "${aviatrix_gateway.test.gw_name}"
+    primary_cloud_gateway_name = aviatrix_gateway.test.gw_name
     remote_gateway_ip          = "8.8.8.8"
     remote_subnet_cidr         = "10.23.0.0/24"
 }

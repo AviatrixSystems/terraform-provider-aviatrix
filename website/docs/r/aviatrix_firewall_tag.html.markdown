@@ -16,16 +16,14 @@ The FirewallTag resource allows the creation and management of Aviatrix Firewall
 # Create Aviatrix Firewall Tag
 resource "aviatrix_firewall_tag" "test_firewall_tag" {
   firewall_tag = "test-firewall-tag"
-  cidr_list    = [
-  {
+  cidr_list {
     cidr_tag_name = "a1"
     cidr          = "10.1.0.0/24"
-  },
-  {
+  }
+  cidr_list {
     cidr_tag_name = "b1"
     cidr          = "10.2.0.0/24"
   }
-  ]
 }
 ```
 

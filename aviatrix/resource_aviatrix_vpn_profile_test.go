@@ -75,7 +75,11 @@ resource "aviatrix_account" "test_account" {
 
 resource "aviatrix_gateway" "test_gw" {
 	cloud_type   = 1
+<<<<<<< HEAD
 	account_name = "${aviatrix_account.test_account.account_name}"
+=======
+	account_name = aviatrix_account.test_account.account_name
+>>>>>>> Implement all resource in terraform .12 (#525)
 	gw_name      = "tfg-%s"
 	vpc_id       = "%s"
 	vpc_reg      = "%s"
@@ -83,14 +87,22 @@ resource "aviatrix_gateway" "test_gw" {
 	vpc_net      = "%s"
     vpn_access   = "yes"
     vpn_cidr     = "192.168.43.0/24" 
+<<<<<<< HEAD
     max_vpn_conn = "100"
+=======
+>>>>>>> Implement all resource in terraform .12 (#525)
 	enable_elb   = "yes"
 	elb_name     = "tfl-%s"
 }
 
 resource "aviatrix_vpn_user" "test_vpn_user" {
+<<<<<<< HEAD
 	vpc_id     = "${aviatrix_gateway.test_gw.vpc_id}"
 	gw_name    = "${aviatrix_gateway.test_gw.elb_name}"
+=======
+	vpc_id     = aviatrix_gateway.test_gw.vpc_id
+	gw_name    = aviatrix_gateway.test_gw.elb_name
+>>>>>>> Implement all resource in terraform .12 (#525)
 	user_name  = "tfu-%s"
 	user_email = "user@xyz.com"
 }
@@ -98,15 +110,19 @@ resource "aviatrix_vpn_user" "test_vpn_user" {
 resource "aviatrix_vpn_profile" "test_vpn_profile" {
     name      = "tfp-%s"
     base_rule = "allow_all"
+<<<<<<< HEAD
     users     = ["${aviatrix_vpn_user.test_vpn_user.user_name}"]
     policy    = [
     {
+=======
+    users = [aviatrix_vpn_user.test_vpn_user.user_name]
+    policy {
+>>>>>>> Implement all resource in terraform .12 (#525)
         action = "deny"
         proto  = "tcp"
         port   = "443"
         target = "10.0.0.0/32"
     }
-    ]
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"), rName, rName,
