@@ -207,7 +207,6 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
     vpc_size     = "%[6]s"
     subnet       = "%[7]s"
     enable_nat   = "no"
-    single_az_ha = "enabled"
 }
 	`, rName, os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"),
 		os.Getenv("GCP_VPC_ID"), os.Getenv("GCP_ZONE"), gcpGwSize, os.Getenv("GCP_SUBNET"))
