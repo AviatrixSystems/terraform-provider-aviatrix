@@ -192,7 +192,10 @@ func resourceVpcRead(d *schema.ResourceData, meta interface{}) error {
 
 		subnetList = append(subnetList, sub)
 	}
-	d.Set("subnets", subnetList)
+
+	if err := d.Set("subnets", subnetList); err != nil {
+		log.Printf("[WARN] Error setting subnets for (%s): %s", d.Id(), err)
+	}
 
 	return nil
 }

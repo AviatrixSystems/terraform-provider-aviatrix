@@ -126,8 +126,13 @@ func resourceARMPeerRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("account_name2", armP.AccountName2)
 		d.Set("vnet_reg1", armP.Region1)
 		d.Set("vnet_reg2", armP.Region2)
-		d.Set("vnet_cidr1", armP.VNetCidr1)
-		d.Set("vnet_cidr2", armP.VNetCidr2)
+
+		if err := d.Set("vnet_cidr1", armP.VNetCidr1); err != nil {
+			log.Printf("[WARN] Error setting vnet_cidr1 for (%s): %s", d.Id(), err)
+		}
+		if err := d.Set("vnet_cidr2", armP.VNetCidr2); err != nil {
+			log.Printf("[WARN] Error setting vnet_cidr2 for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

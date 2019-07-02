@@ -171,7 +171,10 @@ func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error
 			policyDict["port"] = policy.Port
 			Policies = append(Policies, policyDict)
 		}
-		d.Set("policy", Policies)
+
+		if err := d.Set("policy", Policies); err != nil {
+			log.Printf("[WARN] Error setting policy for (%s): %s", d.Id(), err)
+		}
 	}
 	log.Printf("[INFO] Generated policies: %v", Policies)
 

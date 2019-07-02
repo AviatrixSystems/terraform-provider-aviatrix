@@ -331,8 +331,12 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 	if err2 != nil {
 		return fmt.Errorf("couldn't find AWS TGW: %s", awsTgw.Name)
 	}
+
 	d.Set("aws_side_as_number", awsTgw.AwsSideAsNumber)
-	d.Set("attached_aviatrix_transit_gateway", awsTgw.AttachedAviatrixTransitGW)
+
+	if err := d.Set("attached_aviatrix_transit_gateway", awsTgw.AttachedAviatrixTransitGW); err != nil {
+		log.Printf("[WARN] Error setting attached_aviatrix_transit_gateway for (%s): %s", d.Id(), err)
+	}
 
 	manageVpcAttachment := d.Get("manage_vpc_attachment").(bool)
 
@@ -432,7 +436,10 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 			securityDomains = append(securityDomains, mSecurityDomain[dn.Name])
 		}
 	}
-	d.Set("security_domains", securityDomains)
+
+	if err := d.Set("security_domains", securityDomains); err != nil {
+		log.Printf("[WARN] Error setting security_domains for (%s): %s", d.Id(), err)
+	}
 
 	return nil
 }

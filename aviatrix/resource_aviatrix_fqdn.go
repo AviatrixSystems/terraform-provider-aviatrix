@@ -240,7 +240,9 @@ func resourceAviatrixFQDNRead(d *schema.ResourceData, meta interface{}) error {
 
 		log.Printf("[INOF] 3Enable FQDN tag status: %#v", fqdn)
 
-		d.Set("domain_names", filter)
+		if d.Set("domain_names", filter); err != nil {
+			log.Printf("[WARN] Error setting domain_names for (%s): %s", d.Id(), err)
+		}
 	}
 
 	newfqdn, err = client.GetGwFilterTagList(newfqdn)
@@ -304,7 +306,10 @@ func resourceAviatrixFQDNRead(d *schema.ResourceData, meta interface{}) error {
 			gwFilterTagList = append(gwFilterTagList, mGwFilterTags[gwFilterTag.Name])
 		}
 	}
-	d.Set("gw_filter_tag_list", gwFilterTagList)
+
+	if err := d.Set("gw_filter_tag_list", gwFilterTagList); err != nil {
+		log.Printf("[WARN] Error setting gw_filter_tag_list for (%s): %s", d.Id(), err)
+	}
 
 	return nil
 }
