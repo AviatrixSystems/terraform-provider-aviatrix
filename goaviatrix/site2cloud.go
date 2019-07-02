@@ -281,10 +281,10 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 		site2cloud.HAEnabled = s2cConnDetail.HAEnabled
 		for i := range s2cConnDetail.Tunnels {
 			if s2cConnDetail.Tunnels[i].GwName == site2cloud.GwName {
-				site2cloud.RemoteGwIP = s2cConnDetail.Tunnels[i].IPAddr
+				site2cloud.RemoteGwIP = s2cConnDetail.Tunnels[i].PeerIP
 			} else if s2cConnDetail.Tunnels[i].GwName == site2cloud.GwName+"-hagw" {
 				site2cloud.BackupGwName = s2cConnDetail.Tunnels[i].GwName
-				site2cloud.RemoteGwIP2 = s2cConnDetail.Tunnels[i].IPAddr
+				site2cloud.RemoteGwIP2 = s2cConnDetail.Tunnels[i].PeerIP
 			}
 		}
 		if s2cConnDetail.Algorithm.Phase1Auth[0] == Phase1AuthDefault &&
