@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -197,6 +198,8 @@ func resourceAviatrixAwsTgwVpnConnDelete(d *schema.ResourceData, meta interface{
 	log.Printf("[INFO] Deleting Aviatrix aws_tgw_vpn_conn: %#v", awsTgwVpnConn)
 
 	err := client.DeleteAwsTgwVpnConn(awsTgwVpnConn)
+
+	time.Sleep(40 * time.Second)
 
 	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
