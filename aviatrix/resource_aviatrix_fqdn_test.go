@@ -57,56 +57,35 @@ func TestAccAviatrixFQDN_basic(t *testing.T) {
 func testAccFQDNConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
-    account_name       = "tfa-%s"
+	account_name       = "tfa-%s"
 	cloud_type         = 1
 	aws_account_number = "%s"
 	aws_iam            = "false"
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_gateway" "test" {
 	cloud_type   = 1
-<<<<<<< HEAD
-	account_name = "${aviatrix_account.test.account_name}"
-=======
 	account_name = aviatrix_account.test.account_name
->>>>>>> Implement all resource in terraform .12 (#525)
 	gw_name      = "tfg-%[1]s"
 	vpc_id       = "%[5]s"
 	vpc_reg      = "%[6]s"
 	vpc_size     = "t2.micro"
 	vpc_net      = "%[7]s"
-    enable_nat   = "yes"
+	enable_nat   = "yes"
 }
-
 resource "aviatrix_fqdn" "foo" {
-<<<<<<< HEAD
-	fqdn_tag           = "tff-%[1]s"
-	fqdn_status        = "enabled"
-	fqdn_mode          = "white"
-	gw_filter_tag_list = [
-	{
-		gw_name        = "${aviatrix_gateway.test.gw_name}"
-		source_ip_list = []
-	}
-	]
-	domain_names =  [
-	{
-		fqdn  = "facebook.com"
-=======
 	fqdn_tag    = "tff-%[1]s"
 	fqdn_status = "enabled"
 	fqdn_mode   = "white"
 
 	gw_filter_tag_list {
-		gw_name = aviatrix_gateway.test.gw_name
+		gw_name        = aviatrix_gateway.test.gw_name
 		source_ip_list = []
 	}
 
 	domain_names {
-		fqdn = "facebook.com"
->>>>>>> Implement all resource in terraform .12 (#525)
+		fqdn  = "facebook.com"
 		proto = "tcp"
 		port  = "443"
 	}

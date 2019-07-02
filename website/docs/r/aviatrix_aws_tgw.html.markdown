@@ -70,6 +70,11 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
       vpc_id           = "vpc-032005cc371"
       vpc_region       = "us-east-1"
     }
+    attached_vpc { 
+      vpc_account_name = "devops"
+      vpc_id           = "vpc-032005cc371"
+      vpc_region       = "us-east-1"
+    }
   }
   security_domains {
     connected_domains    = [

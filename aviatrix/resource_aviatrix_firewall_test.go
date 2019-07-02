@@ -80,82 +80,48 @@ func TestAccAviatrixFirewall_basic(t *testing.T) {
 func testAccFirewallConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account" {
-    account_name       = "tfa-%s"
-    cloud_type         = 1
-    aws_account_number = "%s"
-    aws_iam            = "false"
-    aws_access_key     = "%s"
-    aws_secret_key     = "%s"
+	account_name       = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = "false"
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_gateway" "test_gw" {
-<<<<<<< HEAD
 	cloud_type   = 1
-	account_name = "${aviatrix_account.test_account.account_name}"
+	account_name = aviatrix_account.test_account.account_name
 	gw_name      = "tfg-%s"
 	vpc_id       = "%s"
 	vpc_reg      = "%s"
 	vpc_size     = "t2.micro"
 	vpc_net      = "%s"
-=======
-	cloud_type = 1
-	account_name = aviatrix_account.test_account.account_name
-	gw_name = "tfg-%s"
-	vpc_id = "%s"
-	vpc_reg = "%s"
-	vpc_size = "t2.micro"
-	vpc_net = "%s"
->>>>>>> Implement all resource in terraform .12 (#525)
 }
-
 resource "aviatrix_firewall_tag" "foo" {
-    firewall_tag = "tft-%s"
-    cidr_list {
+	firewall_tag = "tft-%s"
+	cidr_list {
 		cidr_tag_name = "a1"
-<<<<<<< HEAD
 		cidr          = "10.1.0.0/24"
-	},
-	{
-=======
-		cidr = "10.1.0.0/24"
 	}
 	cidr_list {
->>>>>>> Implement all resource in terraform .12 (#525)
 		cidr_tag_name = "b1"
 		cidr          = "10.2.0.0/24"
 	}
 }
-
 resource "aviatrix_firewall" "test_firewall" {
-<<<<<<< HEAD
-    gw_name         = "${aviatrix_gateway.test_gw.gw_name}"
-    base_allow_deny =  "allow-all"
-    base_log_enable = "off"
-    policy          = [
-	{
-=======
-    gw_name         = aviatrix_gateway.test_gw.gw_name
-    base_allow_deny =  "allow-all"
-    base_log_enable = "off"
-    policy {
->>>>>>> Implement all resource in terraform .12 (#525)
+	gw_name         = aviatrix_gateway.test_gw.gw_name
+	base_allow_deny = "allow-all"
+	base_log_enable = "off"
+	policy {
 		protocol   = "tcp"
 		src_ip     = "10.15.0.224/32"
 		log_enable = "on"
 		dst_ip     = "10.12.0.172/32"
 		allow_deny = "deny"
 		port       = "0:65535"
-<<<<<<< HEAD
-	},
-	{
-		protocol   = "tcp"
-		src_ip     = "${aviatrix_firewall_tag.foo.firewall_tag}"
-=======
 	}
 	policy {
 		protocol   = "tcp"
 		src_ip     = aviatrix_firewall_tag.foo.firewall_tag
->>>>>>> Implement all resource in terraform .12 (#525)
 		log_enable = "off"
 		dst_ip     = "10.12.1.172/32"
 		allow_deny = "deny"

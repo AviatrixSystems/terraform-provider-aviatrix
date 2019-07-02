@@ -60,73 +60,48 @@ func TestAccAviatrixAwsTgwVpnConn_basic(t *testing.T) {
 func testAccAwsTgwVpnConnConfigBasic(rName string, awsSideAsNumber string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account" {
-    account_name       = "tfa-%s"
-    cloud_type 		   = 1
-    aws_account_number = "%s"
-    aws_iam 		   = "false"
-    aws_access_key     = "%s"
-    aws_secret_key     = "%s"
+	account_name       = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam	           = "false"
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_aws_tgw" "test_aws_tgw" {
-<<<<<<< HEAD
-    tgw_name           = "tft-%s"
-	account_name       = "${aviatrix_account.test_account.account_name}"
-	region 			   = "%s"
-    aws_side_as_number = "64512"
-    security_domains   = [
-	{
-    	security_domain_name = "Aviatrix_Edge_Domain"
-    	connected_domains    = ["Default_Domain","Shared_Service_Domain"]
-    },
-    {
-    	security_domain_name = "Default_Domain"
-    	connected_domains    = ["Aviatrix_Edge_Domain","Shared_Service_Domain"]
-    	attached_vpc         = []
-    },
-    {
-    	security_domain_name = "Shared_Service_Domain"
-    	connected_domains    = ["Aviatrix_Edge_Domain","Default_Domain"]
-    	attached_vpc         = []
-    },
-	]
-=======
-    account_name          = aviatrix_account.test_account.account_name
-    aws_side_as_number    = "64512"
->>>>>>> Implement all resource in terraform .12 (#525)
-    manage_vpc_attachment = false
-    region                = "%s"
-    tgw_name              = "tft-%s"
-
-    security_domains {
-        connected_domains    = [
-            "Default_Domain",
-            "Shared_Service_Domain",
-        ]
-        security_domain_name = "Aviatrix_Edge_Domain"
-    }
-    security_domains {
-        connected_domains    = [
-            "Aviatrix_Edge_Domain",
+	account_name          = aviatrix_account.test_account.account_name
+	aws_side_as_number    = "64512"
+	manage_vpc_attachment = false
+	region                = "%s"
+	tgw_name              = "tft-%s"
+	security_domains {
+		connected_domains    = [
+			"Default_Domain",
 			"Shared_Service_Domain"
-        ]
-        security_domain_name = "Default_Domain"
-    }
-    security_domains {
-        connected_domains    = [
-            "Aviatrix_Edge_Domain",
+		]
+		security_domain_name = "Aviatrix_Edge_Domain"
+	}
+	security_domains {
+		connected_domains    = [
+			"Aviatrix_Edge_Domain",
+			"Shared_Service_Domain"
+		]
+		security_domain_name = "Default_Domain"
+	}
+	security_domains {
+		connected_domains    = [
+			"Aviatrix_Edge_Domain",
 			"Default_Domain"
-        ]
-        security_domain_name = "Shared_Service_Domain"
-    }
+		]
+		security_domain_name = "Shared_Service_Domain"
+	}
 }
-
 resource "aviatrix_aws_tgw_vpn_conn" "test" {
-    tgw_name          = aviatrix_aws_tgw.test_aws_tgw.tgw_name
-    route_domain_name = "Default_Domain"
-    connection_name   = "tfc-%s"
-    public_ip         = "40.0.0.0"
-    remote_as_number  = "%s"
+	tgw_name          = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+	route_domain_name = "Default_Domain"
+	connection_name   = "tfc-%s"
+	public_ip         = "40.0.0.0"
+	remote_as_number  = "%s"
+
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_REGION"), rName, rName, awsSideAsNumber)

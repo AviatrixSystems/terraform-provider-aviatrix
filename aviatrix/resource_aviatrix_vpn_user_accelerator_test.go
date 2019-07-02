@@ -49,43 +49,27 @@ func TestAccAviatrixVPNUserAccelerator_basic(t *testing.T) {
 func testAccVPNUserAcceleratorConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account" {
-    account_name 	   = "tfa-%s"
-    cloud_type 		   = 1
-    aws_account_number = "%s"
-    aws_iam 	       = "false"
-    aws_access_key 	   = "%s"
-    aws_secret_key     = "%s"
+	account_name 	   = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = "false"
+	aws_access_key 	   = "%s"
+	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_gateway" "test_gw" {
-<<<<<<< HEAD
 	cloud_type   = 1
-	account_name = "${aviatrix_account.test_account.account_name}"
+	account_name = aviatrix_account.test_account.account_name
 	gw_name      = "tfg-%[1]s"
-	vpc_id 		 = "%[5]s"
-	vpc_reg 	 = "%[6]s"
-	vpc_size 	 = "t2.micro"
-	vpc_net 	 = "%[7]s"
+	vpc_id       = "%[5]s"
+	vpc_reg      = "%[6]s"
+	vpc_size     = "t2.micro"
+	vpc_net      = "%[7]s"
 	vpn_access   = "yes"
 	vpn_cidr     = "192.168.43.0/24"
-    max_vpn_conn = "100"
+	max_vpn_conn = "100"
 	enable_elb   = "yes"
 	elb_name     = "tflb-%[1]s"
-=======
-	cloud_type = 1
-	account_name = aviatrix_account.test_account.account_name
-	gw_name = "tfg-%[1]s"
-	vpc_id = "%[5]s"
-	vpc_reg = "%[6]s"
-	vpc_size = "t2.micro"
-	vpc_net = "%[7]s"
-	vpn_access = "yes"
-	vpn_cidr = "192.168.43.0/24"
-	enable_elb = "yes"
-	elb_name = "tflb-%[1]s"
->>>>>>> Implement all resource in terraform .12 (#525)
 }
-
 resource "aviatrix_vpn_user_accelerator" "test_elb" {
 	elb_name = aviatrix_gateway.test_gw.elb_name
 }

@@ -60,13 +60,8 @@ resource "aviatrix_firewall_tag" "foo" {
 	cidr_list {
 		cidr_tag_name = "a1"
 		cidr          = "10.1.0.0/24"
-<<<<<<< HEAD
-	},
-	{
-=======
 	}
 	cidr_list {
->>>>>>> Implement all resource in terraform .12 (#525)
 		cidr_tag_name = "b1"
 		cidr          = "10.2.0.0/24"
 	}
