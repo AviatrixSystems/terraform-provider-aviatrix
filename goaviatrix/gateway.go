@@ -100,7 +100,7 @@ type Gateway struct {
 	VpcState                string `form:"vpc_state,omitempty" json:"vpc_state,omitempty"`
 	VpcType                 string `form:"vpc_type,omitempty" json:"vpc_type,omitempty"`
 	VpnCidr                 string `form:"cidr,omitempty" json:"vpn_cidr,omitempty"`
-	VpnStatus               string `form:"vpn_status,omitempty" json:"vpn_status,omitempty"`
+	VpnStatus               string `form:"vpn_access,omitempty" json:"vpn_status,omitempty"`
 	Zone                    string `form:"zone,omitempty" json:"zone,omitempty"`
 	VpcSize                 string `form:"vpc_size,omitempty" ` //Only use for gateway create
 	DMZEnabled              string `json:"dmz_enabled,omitempty"`
