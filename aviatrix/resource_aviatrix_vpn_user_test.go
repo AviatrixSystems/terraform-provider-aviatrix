@@ -73,6 +73,7 @@ resource "aviatrix_gateway" "test_gw" {
 	vpc_net = "%s"
     vpn_access = "yes"
     vpn_cidr = "192.168.43.0/24" 
+    max_vpn_conn = "100"
 	enable_elb = "yes"
 	elb_name = "tfl-%s"
 }

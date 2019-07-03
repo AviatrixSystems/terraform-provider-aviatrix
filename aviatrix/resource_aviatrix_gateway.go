@@ -526,7 +526,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			// GCP vpn gw needs gcloud project ID included within rest api call
 			sTunnel.VpcID = gw1.VpcID
 		}
-		gateway.MaxConn = d.Get("max_vpn_conn").(string)
 		if gw1.EnableElb != "yes" {
 			sTunnel.ElbName = gw1.GwName
 		} else {
