@@ -13,6 +13,7 @@ import (
 
 func TestAccAviatrixVPNUser_basic(t *testing.T) {
 	var vpnUser goaviatrix.VPNUser
+
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
 	resourceName := "aviatrix_vpn_user.test_vpn_user"
 
@@ -110,9 +111,11 @@ func testAccCheckVPNUserExists(n string, vpnUser *goaviatrix.VPNUser) resource.T
 		if err != nil {
 			return err
 		}
+
 		if foundVPNUser2.UserName != rs.Primary.ID {
 			return fmt.Errorf("VPN user not found")
 		}
+
 		*vpnUser = *foundVPNUser
 
 		return nil
@@ -126,12 +129,14 @@ func testAccCheckVPNUserDestroy(s *terraform.State) error {
 		if rs.Type != "aviatrix_vpn_user" {
 			continue
 		}
+
 		foundVPNUser := &goaviatrix.VPNUser{
 			UserEmail: rs.Primary.Attributes["user_email"],
 			VpcID:     rs.Primary.Attributes["vpc_id"],
 			UserName:  rs.Primary.Attributes["user_name"],
 			GwName:    rs.Primary.Attributes["gw_name"],
 		}
+
 		_, err := client.GetVPNUser(foundVPNUser)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("VPN User still exists")

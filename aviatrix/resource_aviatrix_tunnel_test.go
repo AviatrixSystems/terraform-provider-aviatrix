@@ -39,6 +39,7 @@ func preAvxTunnelCheck(t *testing.T, msgCommon string) (string, string, string, 
 
 func TestAccAviatrixTunnel_basic(t *testing.T) {
 	var tun goaviatrix.Tunnel
+
 	rName := acctest.RandString(5)
 	resourceName := "aviatrix_tunnel.foo"
 
@@ -130,7 +131,6 @@ func tesAccCheckTunnelExists(n string, tunnel *goaviatrix.Tunnel) resource.TestC
 		}
 
 		_, err := client.GetTunnel(foundTunnel)
-
 		if err != nil {
 			return err
 		}
@@ -156,12 +156,13 @@ func testAccCheckTunnelDestroy(s *terraform.State) error {
 		if rs.Type != "aviatrix_tunnel" {
 			continue
 		}
+
 		foundTunnel := &goaviatrix.Tunnel{
 			VpcName1: rs.Primary.Attributes["vpc_name1"],
 			VpcName2: rs.Primary.Attributes["vpc_name2"],
 		}
-		_, err := client.GetTunnel(foundTunnel)
 
+		_, err := client.GetTunnel(foundTunnel)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("aviatrix tunnel still exists")
 		}

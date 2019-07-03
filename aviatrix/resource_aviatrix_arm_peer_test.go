@@ -34,6 +34,7 @@ func preARMPeerCheck(t *testing.T, msgCommon string) (string, string, string, st
 
 func TestAccAviatrixARMPeer_basic(t *testing.T) {
 	var armPeer goaviatrix.ARMPeer
+
 	rInt := acctest.RandInt()
 	resourceName := "aviatrix_arm_peer.test_arm_peer"
 
@@ -116,14 +117,17 @@ func tesAccCheckARMPeerExists(n string, armPeer *goaviatrix.ARMPeer) resource.Te
 		if err != nil {
 			return err
 		}
+
 		if foundPeer.VNet1 != rs.Primary.Attributes["vnet_name_resource_group1"] {
 			return fmt.Errorf("vnet_name_resource_group1 Not found in created attributes")
 		}
+
 		if foundPeer.VNet2 != rs.Primary.Attributes["vnet_name_resource_group2"] {
 			return fmt.Errorf("vnet_name_resource_group2 Not found in created attributes")
 		}
 
 		*armPeer = *foundPeer
+
 		return nil
 	}
 }
@@ -135,10 +139,12 @@ func testAccCheckARMPeerDestroy(s *terraform.State) error {
 		if rs.Type != "aviatrix_arm_peer" {
 			continue
 		}
+
 		foundPeer := &goaviatrix.ARMPeer{
 			VNet1: rs.Primary.Attributes["vnet_name_resource_group1"],
 			VNet2: rs.Primary.Attributes["vnet_name_resource_group2"],
 		}
+
 		_, err := client.GetARMPeer(foundPeer)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("armPeer still exists")

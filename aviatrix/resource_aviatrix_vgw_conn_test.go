@@ -26,6 +26,7 @@ func preVGWConnCheck(t *testing.T, msgCommon string) (string, string) {
 
 func TestAccAviatrixVGWConn_basic(t *testing.T) {
 	var vgwConn goaviatrix.VGWConn
+
 	rName := acctest.RandString(5)
 
 	resourceName := "aviatrix_vgw_conn.test_vgw_conn"
@@ -124,9 +125,11 @@ func testAccCheckVGWConnExists(n string, vgwConn *goaviatrix.VGWConn) resource.T
 		if err != nil {
 			return err
 		}
+
 		if foundVGWConn2.ConnName != rs.Primary.Attributes["conn_name"] {
 			return fmt.Errorf("conn_name Not found in created attributes")
 		}
+
 		*vgwConn = *foundVGWConn
 
 		return nil

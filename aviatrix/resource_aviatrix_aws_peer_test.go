@@ -34,6 +34,7 @@ func preAWSPeerCheck(t *testing.T, msgCommon string) (string, string, string, st
 
 func TestAccAviatrixAWSPeer_basic(t *testing.T) {
 	var awsPeer goaviatrix.AWSPeer
+
 	rInt := acctest.RandInt()
 	resourceName := "aviatrix_aws_peer.test_aws_peer"
 
@@ -116,9 +117,11 @@ func tesAccCheckAWSPeerExists(n string, awsPeer *goaviatrix.AWSPeer) resource.Te
 		if err != nil {
 			return err
 		}
+
 		if foundPeer.VpcID1 != rs.Primary.Attributes["vpc_id1"] {
 			return fmt.Errorf("vpc_id1 Not found in created attributes")
 		}
+
 		if foundPeer.VpcID2 != rs.Primary.Attributes["vpc_id2"] {
 			return fmt.Errorf("vpc_id2 Not found in created attributes")
 		}
@@ -135,12 +138,13 @@ func testAccCheckAWSPeerDestroy(s *terraform.State) error {
 		if rs.Type != "aviatrix_aws_peer" {
 			continue
 		}
+
 		foundPeer := &goaviatrix.AWSPeer{
 			VpcID1: rs.Primary.Attributes["vpc_id1"],
 			VpcID2: rs.Primary.Attributes["vpc_id2"],
 		}
-		_, err := client.GetAWSPeer(foundPeer)
 
+		_, err := client.GetAWSPeer(foundPeer)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("awsPeer still exists")
 		}

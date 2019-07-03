@@ -13,6 +13,7 @@ import (
 
 func TestAccAviatrixVPNProfile_basic(t *testing.T) {
 	var vpnProfile goaviatrix.Profile
+
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
 	resourceName := "aviatrix_vpn_profile.test_vpn_profile"
 
@@ -129,9 +130,11 @@ func testAccCheckVPNProfileExists(n string, vpnProfile *goaviatrix.Profile) reso
 		if err != nil {
 			return err
 		}
+
 		if foundVPNProfile2.Name != rs.Primary.ID {
 			return fmt.Errorf("VPN profile not found")
 		}
+
 		*vpnProfile = *foundVPNProfile
 
 		return nil
@@ -145,9 +148,11 @@ func testAccCheckVPNProfileDestroy(s *terraform.State) error {
 		if rs.Type != "aviatrix_vpn_profile" {
 			continue
 		}
+
 		foundVPNProfile := &goaviatrix.Profile{
 			Name: rs.Primary.Attributes["name"],
 		}
+
 		_, err := client.GetProfile(foundVPNProfile)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("VPN Profile still exists")

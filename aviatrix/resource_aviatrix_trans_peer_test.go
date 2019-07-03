@@ -21,6 +21,7 @@ func preTransPeerCheck(t *testing.T, msgCommon string) (string, string, string, 
 
 func TestAccAviatrixTransPeer_basic(t *testing.T) {
 	var transpeer goaviatrix.TransPeer
+
 	rName := acctest.RandString(5)
 	resourceName := "aviatrix_trans_peer.test_trans_peer"
 
@@ -123,19 +124,22 @@ func testAccTransPeerExists(n string, transpeer *goaviatrix.TransPeer) resource.
 		}
 
 		_, err := client.GetTransPeer(foundTransPeer)
-
 		if err != nil {
 			return err
 		}
+
 		if foundTransPeer.Source != rs.Primary.Attributes["source"] {
 			return fmt.Errorf("source Not found in created attributes")
 		}
+
 		if foundTransPeer.Nexthop != rs.Primary.Attributes["nexthop"] {
 			return fmt.Errorf("nexthop Not found in created attributes")
 		}
+
 		if foundTransPeer.ReachableCidr != rs.Primary.Attributes["reachable_cidr"] {
 			return fmt.Errorf("reachable_cidr Not found in created attributes")
 		}
+
 		*transpeer = *foundTransPeer
 
 		return nil
@@ -154,8 +158,8 @@ func testAccTransPeerDestroy(s *terraform.State) error {
 			Nexthop:       rs.Primary.Attributes["nexthop"],
 			ReachableCidr: rs.Primary.Attributes["reachable_cidr"],
 		}
-		_, err := client.GetTransPeer(foundTransPeer)
 
+		_, err := client.GetTransPeer(foundTransPeer)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("transpeer still exists")
 		}

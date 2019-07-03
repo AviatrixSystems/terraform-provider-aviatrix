@@ -13,6 +13,7 @@ import (
 
 func TestAccAviatrixFirewall_basic(t *testing.T) {
 	var firewall goaviatrix.Firewall
+
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
 	resourceName := "aviatrix_firewall.test_firewall"
 
@@ -56,8 +57,7 @@ func TestAccAviatrixFirewall_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "policy.1.protocol", "tcp"),
 					resource.TestCheckResourceAttr(
-						resourceName, "policy.1.src_ip", fmt.Sprintf("tft-%s",
-							rName)),
+						resourceName, "policy.1.src_ip", fmt.Sprintf("tft-%s", rName)),
 					resource.TestCheckResourceAttr(
 						resourceName, "policy.1.log_enable", "off"),
 					resource.TestCheckResourceAttr(
@@ -149,13 +149,14 @@ func testAccCheckFirewallExists(n string, firewall *goaviatrix.Firewall) resourc
 		}
 
 		_, err := client.GetPolicy(foundFirewall)
-
 		if err != nil {
 			return err
 		}
+
 		if foundFirewall.GwName != rs.Primary.ID {
 			return fmt.Errorf("firewall not found")
 		}
+
 		*firewall = *foundFirewall
 
 		return nil
@@ -169,9 +170,11 @@ func testAccCheckFirewallDestroy(s *terraform.State) error {
 		if rs.Type != "aviatrix_firewall" {
 			continue
 		}
+
 		foundFirewall := &goaviatrix.Firewall{
 			GwName: rs.Primary.Attributes["gw_name"],
 		}
+
 		_, err := client.GetPolicy(foundFirewall)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("firewall still exists")

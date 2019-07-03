@@ -13,6 +13,7 @@ import (
 
 func TestAccAviatrixFirewallTag_basic(t *testing.T) {
 	var ftag goaviatrix.FirewallTag
+
 	rInt := acctest.RandInt()
 	resourceName := "aviatrix_firewall_tag.foo"
 
@@ -75,6 +76,7 @@ func testAccCheckFirewallTagExists(n string, firewallTag *goaviatrix.FirewallTag
 		if !ok {
 			return fmt.Errorf("firewall tag Not found: %s", n)
 		}
+
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no tag ID is set")
 		}
@@ -110,8 +112,8 @@ func testAccCheckFirewallTagDestroy(s *terraform.State) error {
 		foundTag := &goaviatrix.FirewallTag{
 			Name: rs.Primary.Attributes["firewall_tag"],
 		}
-		_, err := client.GetFirewallTag(foundTag)
 
+		_, err := client.GetFirewallTag(foundTag)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("firewall tag still exists after destroy")
 		}

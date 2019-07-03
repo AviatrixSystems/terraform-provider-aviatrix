@@ -71,6 +71,7 @@ func preGatewayCheckARM(t *testing.T, msgCommon string) (string, string, string,
 
 func TestAccAviatrixGateway_basic(t *testing.T) {
 	var gateway goaviatrix.Gateway
+
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
 	msgCommon := ". Set SKIP_GATEWAY to yes to skip Gateway tests"
 
@@ -290,6 +291,7 @@ func testAccCheckGatewayExists(n string, gateway *goaviatrix.Gateway) resource.T
 		if !ok {
 			return fmt.Errorf("gateway Not found: %s", n)
 		}
+
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no Account ID is set")
 		}
@@ -305,9 +307,11 @@ func testAccCheckGatewayExists(n string, gateway *goaviatrix.Gateway) resource.T
 		if err != nil {
 			return err
 		}
+
 		if foundGateway.GwName != rs.Primary.ID {
 			return fmt.Errorf("gateway not found")
 		}
+
 		*gateway = *foundGateway
 
 		return nil
@@ -325,8 +329,8 @@ func testAccCheckGatewayDestroy(s *terraform.State) error {
 			GwName:      rs.Primary.Attributes["gw_name"],
 			AccountName: rs.Primary.Attributes["account_name"],
 		}
-		_, err := client.GetGateway(foundGateway)
 
+		_, err := client.GetGateway(foundGateway)
 		if err == nil {
 			return fmt.Errorf("gateway still exists")
 		}

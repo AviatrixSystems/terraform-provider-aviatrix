@@ -13,6 +13,7 @@ import (
 
 func TestAccAviatrixAwsTgwVpcAttachment_basic(t *testing.T) {
 	var awsTgwVpcAttachment goaviatrix.AwsTgwVpcAttachment
+
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
 	resourceName := "aviatrix_aws_tgw_vpc_attachment.test"
 
@@ -67,11 +68,11 @@ resource "aviatrix_account" "test_account" {
 }
 
 resource "aviatrix_aws_tgw" "test_aws_tgw" {
-	account_name= aviatrix_account.test_account.account_name
-	aws_side_as_number= "%s"
+	account_name          = aviatrix_account.test_account.account_name
+	aws_side_as_number    = "%s"
 	manage_vpc_attachment = false
-	region= "%s"
-	tgw_name= "tft-%s"
+	region                = "%s"
+	tgw_name              = "tft-%s"
 
 	security_domains {
 		connected_domains    = [
@@ -132,19 +133,24 @@ func tesAccCheckAwsTgwVpcAttachmentExists(n string, awsTgwVpcAttachment *goaviat
 			SecurityDomainName: rs.Primary.Attributes["security_domain_name"],
 			VpcID:              rs.Primary.Attributes["vpc_id"],
 		}
+
 		foundAwsTgwVpcAttachment2, err := client.GetAwsTgwVpcAttachment(foundAwsTgwVpcAttachment)
 		if err != nil {
 			return err
 		}
+
 		if foundAwsTgwVpcAttachment2.TgwName != rs.Primary.Attributes["tgw_name"] {
 			return fmt.Errorf("tgw_name Not found in created attributes")
 		}
+
 		if foundAwsTgwVpcAttachment2.SecurityDomainName != rs.Primary.Attributes["security_domain_name"] {
 			return fmt.Errorf("security_domain_name Not found in created attributes")
 		}
+
 		if foundAwsTgwVpcAttachment2.VpcID != rs.Primary.Attributes["vpc_id"] {
 			return fmt.Errorf("vpc_id Not found in created attributes")
 		}
+
 		*awsTgwVpcAttachment = *foundAwsTgwVpcAttachment2
 
 		return nil
@@ -158,15 +164,18 @@ func testAccCheckAwsTgwVpcAttachmentDestroy(s *terraform.State) error {
 		if rs.Type != "aviatrix_aws_tgw_vpc_attachment" {
 			continue
 		}
+
 		foundAwsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
 			TgwName:            rs.Primary.Attributes["tgw_name"],
 			SecurityDomainName: rs.Primary.Attributes["security_domain_name"],
 			VpcID:              rs.Primary.Attributes["vpc_id"],
 		}
+
 		_, err := client.GetAwsTgwVpcAttachment(foundAwsTgwVpcAttachment)
 		if err == nil {
 			return fmt.Errorf("aviatrix AWS TGW VPC ATTACH still exists")
 		}
+
 		return nil
 	}
 

@@ -83,15 +83,18 @@ func testAccCheckVPNUserAcceleratorExists(n string) resource.TestCheckFunc {
 		if !ok {
 			return fmt.Errorf("vpn user accelerator not found : %s", n)
 		}
+
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no vpn user accelerator ID is set")
 		}
+
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
 		elbList, err := client.GetVpnUserAccelerator()
 		if err != nil {
 			return err
 		}
+
 		if !goaviatrix.Contains(elbList, rs.Primary.ID) {
 			return fmt.Errorf("vpn user accelerator ID not found")
 		}
@@ -112,6 +115,7 @@ func testAccCheckVPNUserAcceleratorDestroy(s *terraform.State) error {
 		if err != nil {
 			return fmt.Errorf("error retrieving vpn user accelerator: %s", err)
 		}
+
 		if goaviatrix.Contains(elbList, rs.Primary.ID) {
 			return fmt.Errorf("vpn user accelerator still exists")
 		}

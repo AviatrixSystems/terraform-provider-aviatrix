@@ -13,6 +13,7 @@ import (
 
 func TestAccAviatrixFQDN_basic(t *testing.T) {
 	var fqdn goaviatrix.FQDN
+
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
 
 	skipAcc := os.Getenv("SKIP_FQDN")
@@ -100,6 +101,7 @@ func testAccCheckFQDNExists(n string, fqdn *goaviatrix.FQDN) resource.TestCheckF
 		if !ok {
 			return fmt.Errorf("FQDN Not found: %s", n)
 		}
+
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no FQDN ID is set")
 		}
@@ -114,9 +116,11 @@ func testAccCheckFQDNExists(n string, fqdn *goaviatrix.FQDN) resource.TestCheckF
 		if err != nil {
 			return err
 		}
+
 		if foundFQDN.FQDNTag != rs.Primary.ID {
 			return fmt.Errorf("FQDN not found")
 		}
+
 		*fqdn = *foundFQDN
 
 		return nil
@@ -133,8 +137,8 @@ func testAccCheckFQDNDestroy(s *terraform.State) error {
 		foundFQDN := &goaviatrix.FQDN{
 			FQDNTag: rs.Primary.Attributes["fqdn_tag"],
 		}
-		_, err := client.GetFQDNTag(foundFQDN)
 
+		_, err := client.GetFQDNTag(foundFQDN)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("FQDN still exists")
 		}

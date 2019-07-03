@@ -13,6 +13,7 @@ import (
 
 func TestAccAviatrixAwsTgwVpnConn_basic(t *testing.T) {
 	var awsTgwVpnConn goaviatrix.AwsTgwVpnConn
+
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
 	resourceName := "aviatrix_aws_tgw_vpn_conn.test"
 
@@ -101,7 +102,6 @@ resource "aviatrix_aws_tgw_vpn_conn" "test" {
 	connection_name   = "tfc-%s"
 	public_ip         = "40.0.0.0"
 	remote_as_number  = "%s"
-
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_REGION"), rName, rName, awsSideAsNumber)
@@ -125,7 +125,6 @@ func tesAccCheckAwsTgwVpnConnExists(n string, awsTgwVpnConn *goaviatrix.AwsTgwVp
 		}
 
 		foundAwsTgwVpnConn2, err := client.GetAwsTgwVpnConn(foundAwsTgwVpnConn)
-
 		if err != nil {
 			return err
 		}
@@ -158,7 +157,6 @@ func testAccCheckAwsTgwVpnConnDestroy(s *terraform.State) error {
 		}
 
 		_, err := client.GetAwsTgwVpnConn(foundAwsTgwVpnConn)
-
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("aviatrix AWS TGW VPN CONN still exists")
 		}

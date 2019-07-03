@@ -75,6 +75,7 @@ func testAccCheckControllerConfigExists(n string) resource.TestCheckFunc {
 		if !ok {
 			return fmt.Errorf("controller config ID Not found: %s", n)
 		}
+
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no controller config ID is set")
 		}
@@ -96,6 +97,7 @@ func testAccCheckControllerConfigDestroy(s *terraform.State) error {
 		if rs.Type != "aviatrix_controller_config" {
 			continue
 		}
+
 		_, err := client.GetHttpAccessEnabled()
 		if err != nil {
 			return fmt.Errorf("could not retrieve Http Access Status due to err: %v", err)

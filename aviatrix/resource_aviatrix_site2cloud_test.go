@@ -13,6 +13,7 @@ import (
 
 func TestAccAviatrixS2C_basic(t *testing.T) {
 	var s2c goaviatrix.Site2Cloud
+
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
 	resourceName := "aviatrix_site2cloud.foo"
 
@@ -38,7 +39,6 @@ func TestAccAviatrixS2C_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tunnel_type", "udp"),
 					resource.TestCheckResourceAttr(resourceName, "primary_cloud_gateway_name",
 						fmt.Sprintf("tfg-%s", rName)),
-
 					resource.TestCheckResourceAttr(resourceName, "remote_gateway_ip", "8.8.8.8"),
 					resource.TestCheckResourceAttr(resourceName, "remote_subnet_cidr", "10.23.0.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "remote_gateway_type", "generic"),
@@ -95,6 +95,7 @@ func testAccCheckS2CExists(n string, s2c *goaviatrix.Site2Cloud) resource.TestCh
 		if !ok {
 			return fmt.Errorf("site2cloud Not found: %s", n)
 		}
+
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no site2cloud ID is set")
 		}
@@ -110,9 +111,11 @@ func testAccCheckS2CExists(n string, s2c *goaviatrix.Site2Cloud) resource.TestCh
 		if err != nil {
 			return err
 		}
+
 		if foundS2C.TunnelName+"~"+foundS2C.VpcID != rs.Primary.ID {
 			return fmt.Errorf("site2cloud connection not found")
 		}
+
 		*s2c = *foundS2C
 
 		return nil
@@ -126,12 +129,13 @@ func testAccCheckS2CDestroy(s *terraform.State) error {
 		if rs.Type != "aviatrix_site2cloud" {
 			continue
 		}
+
 		foundS2C := &goaviatrix.Site2Cloud{
 			TunnelName: rs.Primary.Attributes["connection_name"],
 			VpcID:      rs.Primary.Attributes["vpc_id"],
 		}
-		_, err := client.GetSite2Cloud(foundS2C)
 
+		_, err := client.GetSite2Cloud(foundS2C)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("site2cloud still exists")
 		}
