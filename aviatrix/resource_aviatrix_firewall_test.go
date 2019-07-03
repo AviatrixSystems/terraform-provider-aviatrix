@@ -88,7 +88,7 @@ resource "aviatrix_account" "test_account" {
 	aws_secret_key     = "%s"
 }
 resource "aviatrix_gateway" "test_gw" {
-	cloud_type   = 1
+cloud_type   = 1
 	account_name = aviatrix_account.test_account.account_name
 	gw_name      = "tfg-%s"
 	vpc_id       = "%s"
