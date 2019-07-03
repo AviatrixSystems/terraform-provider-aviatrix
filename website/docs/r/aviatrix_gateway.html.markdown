@@ -25,6 +25,20 @@ resource "aviatrix_gateway" "test_gateway_aws" {
   tag_list     = ["k1:v1","k2:v2"]
 }
 
+# Create Aviatrix AWS gateway with VPN enabled
+resource "aviatrix_gateway" "test_gateway_aws" {
+  cloud_type   = 1
+  account_name = "devops"
+  gw_name      = "avtxgw1"
+  vpc_id       = "vpc-abcdef"
+  vpc_reg      = "us-west-1"
+  vpc_size     = "t2.micro"
+  vpc_net      = "10.0.0.0/24"
+  vpn_acess    = "yes"
+  vpn_cidr     = "192.168.43.0/24"
+  max_vpn_conn = "100"
+}
+
 # Create Aviatrix GCP gateway
 resource "aviatrix_gateway" "test_gateway_gcp" {
   cloud_type   = 4
@@ -49,24 +63,24 @@ resource "aviatrix_gateway" "test_gateway_arm" {
 
 # Create Aviatrix AWS gateway with Peering HA enabled
 resource "aviatrix_gateway" "test_gateway_aws" {
-  cloud_type   = 1
-  account_name = "devops"
-  gw_name      = "avtxgw1"
-  vpc_id       = "vpc-abcdef"
-  vpc_reg      = "us-west-1"
-  vpc_size     = "t2.micro"
-  vpc_net      = "10.0.0.0/24"
+  cloud_type        = 1
+  account_name      = "devops"
+  gw_name           = "avtxgw1"
+  vpc_id            = "vpc-abcdef"
+  vpc_reg           = "us-west-1"
+  vpc_size          = "t2.micro"
+  vpc_net           = "10.0.0.0/24"
   peering_ha_subnet = "10.0.0.0/24"
 }
 # Create Aviatrix GCP gateway with Peering HA enabled
 resource "aviatrix_gateway" "test_gateway_gcp" {
-  cloud_type   = 4
-  account_name = "devops-gcp"
-  gw_name      = "avtxgw-gcp"
-  vpc_id       = "gcp-gw-vpc"
-  vpc_reg      = "us-west1-b"
-  vpc_size     = "f1-micro"
-  vpc_net      = "10.12.0.0/24"
+  cloud_type      = 4
+  account_name    = "devops-gcp"
+  gw_name         = "avtxgw-gcp"
+  vpc_id          = "gcp-gw-vpc"
+  vpc_reg         = "us-west1-b"
+  vpc_size        = "f1-micro"
+  vpc_net         = "10.12.0.0/24"
   peering_ha_zone = "us-west1-c"
 }
 
