@@ -203,9 +203,9 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
 	gw_name      = "tfg-gcp-%[1]s"
 	vpc_id       = "%[4]s"
 	vpc_reg      = "%[5]s"
-	vpc_size     = "%[6]s"
+	gw_size      = "%[6]s"
 	subnet       = "%[7]s"
-	enable_nat   = "no"
+	enable_nat   = false
 }
 	`, rName, os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"),
 		os.Getenv("GCP_VPC_ID"), os.Getenv("GCP_ZONE"), gcpGwSize, os.Getenv("GCP_SUBNET"))
@@ -227,9 +227,9 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
 	gw_name      = "tfg-arm-%[1]s"
 	vpc_id       = "%[6]s"
 	vpc_reg      = "%[7]s"
-	vpc_size     = "%[8]s"
+	gw_size      = "%[8]s"
 	subnet       = "%[9]s"
-	enable_nat   = "no"
+	enable_nat   = false
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
 		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),
