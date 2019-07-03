@@ -77,10 +77,10 @@ func testAccARMPeerConfigBasic(rInt int, vNet1 string, vNet2 string, region1 str
 resource "aviatrix_account" "test_account" {
 	account_name        = "tf-testing-%d"
 	cloud_type          = 8
-    arm_subscription_id = "%s"
-    arm_directory_id    = "%s"
-    arm_application_id  = "%s"
-    arm_application_key = "%s"
+	arm_subscription_id = "%s"
+	arm_directory_id    = "%s"
+	arm_application_id  = "%s"
+	arm_application_key = "%s"
 }
 
 resource "aviatrix_arm_peer" "test_arm_peer" {

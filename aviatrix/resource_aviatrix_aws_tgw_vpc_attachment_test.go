@@ -98,7 +98,7 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
 	}
 	security_domains {
 		connected_domains    = [
-			"Aviatrix_Edge_Domain",
+			"Aviatrix_Edge_Domain"
 		]
 		security_domain_name = "%s"
 	}
