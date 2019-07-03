@@ -69,27 +69,27 @@ resource "aviatrix_account" "test" {
 }
 
 resource "aviatrix_transit_vpc" "transitGw1" {
-    cloud_type   = 1
-    account_name = aviatrix_account.test.account_name
-    gw_name      = "tfg-%s"
-    vpc_id       = "%s"
-    vpc_reg      = "%s"
-    vpc_size     = "t2.micro"
-    subnet       = "%s"
-    ha_subnet    = "%s"
-    ha_gw_size   = "t2.micro"
+	cloud_type   = 1
+	account_name = aviatrix_account.test.account_name
+	gw_name      = "tfg-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	vpc_size     = "t2.micro"
+	subnet       = "%s"
+	ha_subnet    = "%s"
+	ha_gw_size   = "t2.micro"
 }
 
 resource "aviatrix_transit_vpc" "transitGw2" {
-    cloud_type   = 1
-    account_name = aviatrix_account.test.account_name
-    gw_name      = "tfg2-%s"
-    vpc_id       = "%s"
-    vpc_reg      = "%s"
-    vpc_size     = "t2.micro"
-    subnet       = "%s"
-    ha_subnet    = "%s"
-    ha_gw_size   = "t2.micro"
+	cloud_type   = 1
+	account_name = aviatrix_account.test.account_name
+	gw_name      = "tfg2-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	vpc_size     = "t2.micro"
+	subnet       = "%s"
+	ha_subnet    = "%s"
+	ha_gw_size   = "t2.micro"
 }
 
 resource "aviatrix_transit_gateway_peering" "foo" {
