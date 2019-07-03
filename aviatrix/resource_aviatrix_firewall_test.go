@@ -80,22 +80,22 @@ func TestAccAviatrixFirewall_basic(t *testing.T) {
 func testAccFirewallConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account" {
-    account_name = "tfa-%s"
-    cloud_type = 1
+    account_name       = "tfa-%s"
+    cloud_type         = 1
     aws_account_number = "%s"
-    aws_iam = "false"
-    aws_access_key = "%s"
-    aws_secret_key = "%s"
+    aws_iam            = "false"
+    aws_access_key     = "%s"
+    aws_secret_key     = "%s"
 }
 
 resource "aviatrix_gateway" "test_gw" {
-	cloud_type = 1
+	cloud_type   = 1
 	account_name = "${aviatrix_account.test_account.account_name}"
-	gw_name = "tfg-%s"
-	vpc_id = "%s"
-	vpc_reg = "%s"
-	vpc_size = "t2.micro"
-	vpc_net = "%s"
+	gw_name      = "tfg-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	vpc_size     = "t2.micro"
+	vpc_net      = "%s"
 }
 
 resource "aviatrix_firewall_tag" "foo" {
@@ -103,35 +103,35 @@ resource "aviatrix_firewall_tag" "foo" {
     cidr_list = [
 	{
 		cidr_tag_name = "a1"
-		cidr = "10.1.0.0/24"
+		cidr          = "10.1.0.0/24"
 	},
 	{
 		cidr_tag_name = "b1"
-		cidr = "10.2.0.0/24"
+		cidr          = "10.2.0.0/24"
 	}
 	]
 }
 
 resource "aviatrix_firewall" "test_firewall" {
-    gw_name = "${aviatrix_gateway.test_gw.gw_name}"
+    gw_name         = "${aviatrix_gateway.test_gw.gw_name}"
     base_allow_deny =  "allow-all"
     base_log_enable = "off"
-    policy = [
+    policy          = [
 	{
-		protocol = "tcp"
-		src_ip = "10.15.0.224/32"
+		protocol   = "tcp"
+		src_ip     = "10.15.0.224/32"
 		log_enable = "on"
-		dst_ip = "10.12.0.172/32"
+		dst_ip     = "10.12.0.172/32"
 		allow_deny = "deny"
-		port = "0:65535"
+		port       = "0:65535"
 	},
 	{
-		protocol = "tcp"
-		src_ip = "${aviatrix_firewall_tag.foo.firewall_tag}"
+		protocol   = "tcp"
+		src_ip     = "${aviatrix_firewall_tag.foo.firewall_tag}"
 		log_enable = "off"
-		dst_ip = "10.12.1.172/32"
+		dst_ip     = "10.12.1.172/32"
 		allow_deny = "deny"
-		port = "0:65535"
+		port       = "0:65535"
 	}
 	]
 }

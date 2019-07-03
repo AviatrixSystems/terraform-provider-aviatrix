@@ -71,29 +71,29 @@ func TestAccAviatrixVGWConn_basic(t *testing.T) {
 func testAccVGWConnConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account" {
-	account_name = "tfa-%s"
-	cloud_type = 1
+	account_name       = "tfa-%s"
+	cloud_type         = 1
 	aws_account_number = "%s"
-	aws_iam = "false"
-	aws_access_key = "%s"
-	aws_secret_key = "%s"
+	aws_iam            = "false"
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
 }
 
 resource "aviatrix_transit_vpc" "test_transit_vpc" {
 	account_name = "${aviatrix_account.test_account.account_name}"
-	cloud_type = 1
-	gw_name = "tfg-%s"
-	vpc_id = "%s"
-	vpc_reg = "%s"
-	vpc_size = "t2.micro"
-	subnet = "%s"
+	cloud_type   = 1
+	gw_name      = "tfg-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	vpc_size     = "t2.micro"
+	subnet       = "%s"
 }
 
 resource "aviatrix_vgw_conn" "test_vgw_conn" {
-	conn_name = "tfc-%s"
-	gw_name = "${aviatrix_transit_vpc.test_transit_vpc.gw_name}"
-	vpc_id = "${aviatrix_transit_vpc.test_transit_vpc.vpc_id}"
-	bgp_vgw_id = "%s"
+	conn_name        = "tfc-%s"
+	gw_name          = "${aviatrix_transit_vpc.test_transit_vpc.gw_name}"
+	vpc_id           = "${aviatrix_transit_vpc.test_transit_vpc.vpc_id}"
+	bgp_vgw_id       = "%s"
 	bgp_local_as_num = "6451"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),

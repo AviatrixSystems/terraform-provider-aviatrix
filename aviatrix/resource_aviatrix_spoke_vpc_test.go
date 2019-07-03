@@ -224,14 +224,14 @@ resource "aviatrix_account" "test" {
 }
 
 resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
-    cloud_type                    = 8
-    account_name                  = "${aviatrix_account.test.account_name}"
-    gw_name                       = "tfg-arm-%[1]s"
-    vpc_id                        = "%[6]s"
-    vpc_reg                       = "%[7]s"
-    vpc_size                      = "%[8]s"
-    subnet                        = "%[9]s"
-    enable_nat                    = "no"
+    cloud_type   = 8
+    account_name = "${aviatrix_account.test.account_name}"
+    gw_name      = "tfg-arm-%[1]s"
+    vpc_id       = "%[6]s"
+    vpc_reg      = "%[7]s"
+    vpc_size     = "%[8]s"
+    subnet       = "%[9]s"
+    enable_nat   = "no"
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
 		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),

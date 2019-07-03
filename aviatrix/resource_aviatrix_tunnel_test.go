@@ -78,33 +78,33 @@ func testAccTunnelConfigBasic(rName string, vpcID1 string, vpcID2 string, region
 	subnet1 string, subnet2 string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
-	account_name = "tfa-%s"
-	cloud_type = 1
+	account_name       = "tfa-%s"
+	cloud_type         = 1
 	aws_account_number = "%s"
-	aws_iam = "false"
-	aws_access_key = "%s"
-	aws_secret_key = "%s"
+	aws_iam            = "false"
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
 }
 
 resource "aviatrix_gateway" "gw1" {
-	cloud_type = 1
+	cloud_type   = 1
 	account_name = "${aviatrix_account.test.account_name}"
-	gw_name = "tfg-%[1]s"
-	vpc_id = "%[5]s"
-	vpc_reg = "%[7]s"
-	vpc_size = "t2.micro"
-	vpc_net = "%[9]s"
+	gw_name      = "tfg-%[1]s"
+	vpc_id       = "%[5]s"
+	vpc_reg      = "%[7]s"
+	vpc_size     = "t2.micro"
+	vpc_net      = "%[9]s"
 }
 
 
 resource "aviatrix_gateway" "gw2" {
-	cloud_type = 1
+	cloud_type   = 1
 	account_name = "${aviatrix_account.test.account_name}"
-	gw_name = "tfg2-%[1]s"
-	vpc_id = "%[6]s"
-	vpc_reg = "%[8]s"
-	vpc_size = "t2.micro"
-	vpc_net = "%[10]s"
+	gw_name      = "tfg2-%[1]s"
+	vpc_id       = "%[6]s"
+	vpc_reg      = "%[8]s"
+	vpc_size     = "t2.micro"
+	vpc_net      = "%[10]s"
 }
 
 resource "aviatrix_tunnel" "foo" {
