@@ -214,7 +214,7 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
 func testAccSpokeGwConfigARM(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
-	account_name        = "tfa-arm-%s"
+  account_name        = "tfa-arm-%s"
 	cloud_type          = 8
 	arm_subscription_id = "%s"
 	arm_directory_id    = "%s"
