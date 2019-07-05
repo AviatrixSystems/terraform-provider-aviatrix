@@ -1138,6 +1138,9 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				VpcID:     d.Get("vpc_id").(string),
 				ElbName:   d.Get("elb_name").(string),
 			}
+			if gw.ElbName == "" {
+				gw.ElbName = d.Get("gw_name").(string)
+			}
 			_, n := d.GetChange("max_vpn_conn")
 			gw.MaxConn = n.(string)
 			err := client.UpdateMaxVpnConn(gw)
