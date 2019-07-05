@@ -1131,7 +1131,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		d.SetPartial("enable_nat")
 	}
 	if d.HasChange("max_vpn_conn") {
-		if d.Get("vpn_access").(string) == "yes" && d.Get("enable_elb").(string) == "yes" {
+		if d.Get("vpn_access").(string) == "yes" {
 			gw := &goaviatrix.Gateway{
 				CloudType: d.Get("cloud_type").(int),
 				GwName:    d.Get("gw_name").(string),
@@ -1145,7 +1145,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				return fmt.Errorf("failed to update max vpn connections: %s", err)
 			}
 		} else {
-			log.Printf("[INFO] can't update max vpn connections because elb is disabled for gateway: %#v", gateway.GwName)
+			log.Printf("[INFO] can't update max vpn connections because vpn is disabled for gateway: %#v", gateway.GwName)
 		}
 		d.SetPartial("max_vpn_conn")
 	}
