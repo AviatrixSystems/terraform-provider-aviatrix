@@ -116,7 +116,7 @@ resource "aviatrix_transit_vpc" "transit_gw_test" {
 	gw_name                  = "tfg-%s"
 	vpc_id                   = "%s"
 	vpc_reg                  = "%s"
-	vpc_size                 = "t2.micro"
+	gw_size                  = "t2.micro"
 	subnet                   = "%s"
 	enable_hybrid_connection = true
 }

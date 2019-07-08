@@ -20,12 +20,12 @@ func resourceTunnel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"vpc_name1": {
+			"gw_name1": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The first VPC Container name to make a peer pair.",
 			},
-			"vpc_name2": {
+			"gw_name2": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The second VPC Container name to make a peer pair.",
@@ -61,8 +61,8 @@ func resourceTunnel() *schema.Resource {
 func resourceTunnelCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	tunnel := &goaviatrix.Tunnel{
-		VpcName1:        d.Get("vpc_name1").(string),
-		VpcName2:        d.Get("vpc_name2").(string),
+		VpcName1:        d.Get("gw_name1").(string),
+		VpcName2:        d.Get("gw_name2").(string),
 		PeeringState:    d.Get("peering_state").(string),
 		PeeringHaStatus: d.Get("peering_hastatus").(string),
 		PeeringLink:     d.Get("peering_link").(string),
@@ -84,20 +84,20 @@ func resourceTunnelCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceTunnelRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	vpcName1 := d.Get("vpc_name1").(string)
-	vpcName2 := d.Get("vpc_name2").(string)
+	vpcName1 := d.Get("gw_name1").(string)
+	vpcName2 := d.Get("gw_name2").(string)
 
 	if vpcName1 == "" || vpcName2 == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no vpc names received. Import Id is %s", id)
-		d.Set("vpc_name1", strings.Split(id, "~")[0])
-		d.Set("vpc_name2", strings.Split(id, "~")[1])
+		d.Set("gw_name1", strings.Split(id, "~")[0])
+		d.Set("gw_name2", strings.Split(id, "~")[1])
 		d.SetId(id)
 	}
 
 	tunnel := &goaviatrix.Tunnel{
-		VpcName1: d.Get("vpc_name1").(string),
-		VpcName2: d.Get("vpc_name2").(string),
+		VpcName1: d.Get("gw_name1").(string),
+		VpcName2: d.Get("gw_name2").(string),
 	}
 	tun, err := client.GetTunnel(tunnel)
 	if err != nil {
@@ -125,8 +125,8 @@ func resourceTunnelRead(d *schema.ResourceData, meta interface{}) error {
 func resourceTunnelUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	tunnel := &goaviatrix.Tunnel{
-		VpcName1:        d.Get("vpc_name1").(string),
-		VpcName2:        d.Get("vpc_name2").(string),
+		VpcName1:        d.Get("gw_name1").(string),
+		VpcName2:        d.Get("gw_name2").(string),
 		PeeringState:    d.Get("peering_state").(string),
 		PeeringHaStatus: d.Get("peering_hastatus").(string),
 		PeeringLink:     d.Get("peering_link").(string),
@@ -145,8 +145,8 @@ func resourceTunnelUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceTunnelDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	tunnel := &goaviatrix.Tunnel{
-		VpcName1: d.Get("vpc_name1").(string),
-		VpcName2: d.Get("vpc_name2").(string),
+		VpcName1: d.Get("gw_name1").(string),
+		VpcName2: d.Get("gw_name2").(string),
 		EnableHA: d.Get("enable_ha").(string),
 	}
 
@@ -161,8 +161,8 @@ func resourceTunnelDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	tunnel.VpcName1 = d.Get("vpc_name1").(string)
-	tunnel.VpcName2 = d.Get("vpc_name2").(string)
+	tunnel.VpcName1 = d.Get("gw_name1").(string)
+	tunnel.VpcName2 = d.Get("gw_name2").(string)
 	err := client.DeleteTunnel(tunnel)
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix Tunnel: %s", err)

@@ -63,7 +63,7 @@ func TestAccAviatrixTransitGw_basic(t *testing.T) {
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckTransitGwExists(resourceNameAws, &gateway),
 						resource.TestCheckResourceAttr(resourceNameAws, "gw_name", fmt.Sprintf("tfg-%s", rName)),
-						resource.TestCheckResourceAttr(resourceNameAws, "vpc_size", "t2.micro"),
+						resource.TestCheckResourceAttr(resourceNameAws, "gw_size", "t2.micro"),
 						resource.TestCheckResourceAttr(resourceNameAws, "account_name", fmt.Sprintf("tfa-%s", rName)),
 						resource.TestCheckResourceAttr(resourceNameAws, "vpc_id", os.Getenv("AWS_VPC_ID")),
 						resource.TestCheckResourceAttr(resourceNameAws, "subnet", os.Getenv("AWS_VPC_NET")),
@@ -97,7 +97,7 @@ func TestAccAviatrixTransitGw_basic(t *testing.T) {
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckTransitGwExists(resourceNameArm, &gateway),
 						resource.TestCheckResourceAttr(resourceNameArm, "gw_name", fmt.Sprintf("tfg-%s", rName)),
-						resource.TestCheckResourceAttr(resourceNameArm, "vpc_size", os.Getenv("ARM_GW_SIZE")),
+						resource.TestCheckResourceAttr(resourceNameArm, "gw_size", os.Getenv("ARM_GW_SIZE")),
 						resource.TestCheckResourceAttr(resourceNameArm, "account_name", fmt.Sprintf("tfaz-%s", rName)),
 						resource.TestCheckResourceAttr(resourceNameArm, "vpc_id", os.Getenv("ARM_VNET_ID")),
 						resource.TestCheckResourceAttr(resourceNameArm, "subnet", os.Getenv("ARM_SUBNET")),
@@ -133,7 +133,7 @@ resource "aviatrix_transit_vpc" "test_transit_vpc_aws" {
 	gw_name      = "tfg-%[1]s"
 	vpc_id       = "%[5]s"
 	vpc_reg      = "%[6]s"
-	vpc_size     = "t2.micro"
+	gw_size     = "t2.micro"
 	subnet       = "%[7]s"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
@@ -157,7 +157,7 @@ resource "aviatrix_transit_vpc" "test_transit_vpc_arm" {
 	gw_name      = "tfg-%[1]s"
 	vpc_id       = "%[6]s"
 	vpc_reg      = "%[7]s"
-	vpc_size     = "%[8]s"
+	gw_size     = "%[8]s"
 	subnet       = "%[9]s"
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"), os.Getenv("ARM_APPLICATION_ID"),

@@ -48,7 +48,7 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 				Required:    true,
 				Description: "Region of cloud provider.",
 			},
-			"vpc_size": {
+			"gw_size": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Size of the gateway instance.",
@@ -131,7 +131,7 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		GwName:                 d.Get("gw_name").(string),
 		VpcID:                  d.Get("vpc_id").(string),
 		VpcRegion:              d.Get("vpc_reg").(string),
-		VpcSize:                d.Get("vpc_size").(string),
+		VpcSize:                d.Get("gw_size").(string),
 		Subnet:                 d.Get("subnet").(string),
 		EnableNAT:              d.Get("enable_nat").(string),
 		EnableHybridConnection: d.Get("enable_hybrid_connection").(bool),
@@ -348,7 +348,7 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 			d.Set("vpc_id", gw.VpcID)
 		}
 		d.Set("vpc_reg", gw.VpcRegion)
-		d.Set("vpc_size", gw.GwSize)
+		d.Set("gw_size", gw.GwSize)
 		d.Set("enable_nat", gw.EnableNat)
 		if gw.CloudType == 1 {
 			d.Set("enable_hybrid_connection", gw.EnableHybridConnection)
@@ -460,13 +460,13 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("updating insane_mode_az is not allowed")
 	}
 
-	if d.HasChange("vpc_size") {
-		gateway.GwSize = d.Get("vpc_size").(string)
+	if d.HasChange("gw_size") {
+		gateway.GwSize = d.Get("gw_size").(string)
 		err := client.UpdateGateway(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to update Aviatrix TransitVpc: %s", err)
 		}
-		d.SetPartial("vpc_size")
+		d.SetPartial("gw_size")
 	}
 	if d.HasChange("ha_subnet") || d.HasChange("ha_insane_mode_az") {
 		transitGateway := &goaviatrix.TransitVpc{
@@ -656,7 +656,7 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 				return fmt.Errorf("failed to enable SNAT: %s", err)
 			}
 		}
-		d.SetPartial("vpc_size")
+		d.SetPartial("gw_size")
 	}
 
 	if d.HasChange("enable_firenet_interfaces") {

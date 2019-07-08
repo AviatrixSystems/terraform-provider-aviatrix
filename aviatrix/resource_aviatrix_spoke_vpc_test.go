@@ -72,7 +72,7 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 						testAccCheckSpokeGwExists(resourceName, &gateway),
 						resource.TestCheckResourceAttr(resourceName,
 							"gw_name", fmt.Sprintf("tfg-aws-%s", rName)),
-						resource.TestCheckResourceAttr(resourceName, "vpc_size", awsGwSize),
+						resource.TestCheckResourceAttr(resourceName, "gw_size", awsGwSize),
 						resource.TestCheckResourceAttr(resourceName,
 							"account_name", fmt.Sprintf("tfa-aws-%s", rName)),
 						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
@@ -104,7 +104,7 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 						testAccCheckSpokeGwExists(resourceName, &gateway),
 						resource.TestCheckResourceAttr(resourceName,
 							"gw_name", fmt.Sprintf("tfg-gcp-%s", rName)),
-						resource.TestCheckResourceAttr(resourceName, "vpc_size", gcpGwSize),
+						resource.TestCheckResourceAttr(resourceName, "gw_size", gcpGwSize),
 						resource.TestCheckResourceAttr(resourceName,
 							"account_name", fmt.Sprintf("tfa-gcp-%s", rName)),
 						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("GCP_VPC_ID")),
@@ -137,7 +137,7 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 						testAccCheckSpokeGwExists(resourceName, &gateway),
 						resource.TestCheckResourceAttr(resourceName,
 							"gw_name", fmt.Sprintf("tfg-arm-%s", rName)),
-						resource.TestCheckResourceAttr(resourceName, "vpc_size", os.Getenv("ARM_GW_SIZE")),
+						resource.TestCheckResourceAttr(resourceName, "gw_size", os.Getenv("ARM_GW_SIZE")),
 						resource.TestCheckResourceAttr(resourceName,
 							"account_name", fmt.Sprintf("tfa-arm-%s", rName)),
 						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("ARM_VNET_ID")),
@@ -177,7 +177,7 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
 	gw_name      = "tfg-aws-%[1]s"
 	vpc_id       = "%[5]s"
 	vpc_reg      = "%[6]s"
-	vpc_size     = "%[7]s"
+	gw_size      = "%[7]s"
 	subnet       = "%[8]s"
 	enable_nat   = "no"
 }

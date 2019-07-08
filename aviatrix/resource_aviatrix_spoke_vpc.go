@@ -48,7 +48,7 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 				Required:    true,
 				Description: "Region of cloud provider.",
 			},
-			"vpc_size": {
+			"gw_size": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Size of the gateway instance.",
@@ -117,7 +117,7 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		AccountName:    d.Get("account_name").(string),
 		GwName:         d.Get("gw_name").(string),
 		VpcRegion:      d.Get("vpc_reg").(string),
-		VpcSize:        d.Get("vpc_size").(string),
+		VpcSize:        d.Get("gw_size").(string),
 		Subnet:         d.Get("subnet").(string),
 		HASubnet:       d.Get("ha_subnet").(string),
 		EnableNAT:      d.Get("enable_nat").(string),
@@ -292,7 +292,7 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 			d.Set("vpc_reg", gw.VpcRegion)
 		}
 		d.Set("subnet", gw.VpcNet)
-		d.Set("vpc_size", gw.GwSize)
+		d.Set("gw_size", gw.GwSize)
 		d.Set("public_ip", gw.PublicIP)
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 		d.Set("enable_nat", gw.EnableNat)
@@ -459,17 +459,17 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("adding tags is only supported for aws, cloud_type must be set to 1")
 	}
 
-	//Get primary gw size if vpc_size changed, to be used later on for ha gateway size update
-	primaryGwSize := d.Get("vpc_size").(string)
-	if d.HasChange("vpc_size") {
-		old, _ := d.GetChange("vpc_size")
+	//Get primary gw size if gw_size changed, to be used later on for ha gateway size update
+	primaryGwSize := d.Get("gw_size").(string)
+	if d.HasChange("gw_size") {
+		old, _ := d.GetChange("gw_size")
 		primaryGwSize = old.(string)
-		gateway.GwSize = d.Get("vpc_size").(string)
+		gateway.GwSize = d.Get("gw_size").(string)
 		err := client.UpdateGateway(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to update Aviatrix SpokeVpc: %s", err)
 		}
-		d.SetPartial("vpc_size")
+		d.SetPartial("gw_size")
 	}
 
 	newHaGwEnabled := false
@@ -585,7 +585,7 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 				return fmt.Errorf("failed to enable SNAT: %s", err)
 			}
 		}
-		d.SetPartial("vpc_size")
+		d.SetPartial("gw_size")
 	}
 
 	if d.HasChange("transit_gw") {

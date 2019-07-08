@@ -85,7 +85,7 @@ resource "aviatrix_transit_vpc" "test_transit_vpc" {
 	gw_name      = "tfg-%s"
 	vpc_id       = "%s"
 	vpc_reg      = "%s"
-	vpc_size     = "t2.micro"
+	gw_size      = "t2.micro"
 	subnet       = "%s"
 }
 resource "aviatrix_vgw_conn" "test_vgw_conn" {

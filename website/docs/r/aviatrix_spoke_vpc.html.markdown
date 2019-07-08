@@ -20,7 +20,7 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc_aws" {
   gw_name      = "spoke-gw-aws"
   vpc_id       = "vpc-abcd123~~spoke-vpc-01"
   vpc_reg      = "us-west-1"
-  vpc_size     = "t2.micro"
+  gw_size      = "t2.micro"
   subnet       = "10.11.0.0/24~~us-west-1b~~spoke-vpc-01-pubsub"
   enable_nat   = "no"
   dns_server   = "8.8.8.8"
@@ -37,7 +37,7 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc_gcp" {
   gw_name      = "spoke-gw-gcp"
   vpc_id       = "gcp-spoke-vpc"
   vpc_reg      = "us-west1-b"
-  vpc_size     = "t2.micro"
+  gw_size      = "t2.micro"
   subnet       = "10.12.0.0/24"
   enable_nat   = "no"
 }
@@ -49,7 +49,7 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc_arm" {
   gw_name      = "spoke-gw-01"
   vpc_id       = "spoke:test-spoke-gw-123"
   vpc_reg      = "West US"
-  vpc_size     = "t2.micro"
+  gw_size      = "t2.micro"
   subnet       = "10.13.0.0/24"
   enable_nat   = "no"
 }
@@ -64,7 +64,7 @@ The following arguments are supported:
 * `gw_name` - (Required) Name of the gateway which is going to be created.
 * `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Example: AWS: "vpc-abcd1234", etc... (Required if cloud_type is "1" or "4")
 * `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", GCP: "us-west1-b", ARM: "East US 2", etc...
-* `vpc_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", GCP: "f1.micro", ARM: "StandardD2", etc...
+* `gw_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", GCP: "f1.micro", ARM: "StandardD2", etc...
 * `subnet` - (Required) Public Subnet Info. Example: AWS: "CIDR~~ZONE~~SubnetName", etc...
 * `ha_subnet` - (Optional) HA Subnet. Required for enabling HA for AWS/ARM gateways. Setting to empty/unset will disable HA. Setting to a valid subnet (Example: 10.12.0.0/24) will create an HA gateway on the subnet.
 * `ha_zone` - (Optional) HA Zone. Required for enabling HA for GCP gateway. Setting to empty/unset will disable HA. Setting to a valid zone (Example: us-west1-c) will create an HA gateway in the zone.

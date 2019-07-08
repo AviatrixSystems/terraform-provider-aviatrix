@@ -79,8 +79,8 @@ resource "aviatrix_gateway" "gw1" {
 	gw_name      = "tfg-%[1]s"
 	vpc_id       = "%[5]s"
 	vpc_reg      = "%[7]s"
-	vpc_size     = "t2.micro"
-	vpc_net      = "%[9]s"
+	gw_size      = "t2.micro"
+	subnet       = "%[9]s"
 }
 resource "aviatrix_gateway" "gw2" {
 	cloud_type   = 1
@@ -88,16 +88,16 @@ resource "aviatrix_gateway" "gw2" {
 	gw_name      = "tfg2-%[1]s"
 	vpc_id       = "%[6]s"
 	vpc_reg      = "%[8]s"
-	vpc_size     = "t2.micro"
-	vpc_net      = "%[10]s"
+	gw_size      = "t2.micro"
+	subnet       = "%[10]s"
 }
 resource "aviatrix_tunnel" "foo" {
-	vpc_name1 = aviatrix_gateway.gw1.gw_name
-	vpc_name2 = aviatrix_gateway.gw2.gw_name
+	gw_name1 = aviatrix_gateway.gw1.gw_name
+	gw_name2 = aviatrix_gateway.gw2.gw_name
 }
 resource "aviatrix_trans_peer" "test_trans_peer" {
-	source         = aviatrix_tunnel.foo.vpc_name1
-	nexthop        = aviatrix_tunnel.foo.vpc_name2
+	source         = aviatrix_tunnel.foo.gw_name1
+	nexthop        = aviatrix_tunnel.foo.gw_name2
 	reachable_cidr = "%s"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),

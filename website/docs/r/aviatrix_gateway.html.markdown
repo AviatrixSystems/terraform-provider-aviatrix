@@ -35,8 +35,8 @@ resource "aviatrix_gateway" "test_gateway_aws" {
   gw_name      = "avtxgw1"
   vpc_id       = "vpc-abcdef"
   vpc_reg      = "us-west-1"
-  vpc_size     = "t2.micro"
-  vpc_net      = "10.0.0.0/24"
+  gw_size      = "t2.micro"
+  subnet       = "10.0.0.0/24"
   vpn_acess    = "yes"
   vpn_cidr     = "192.168.43.0/24"
   max_vpn_conn = "100"
@@ -49,8 +49,8 @@ resource "aviatrix_gateway" "test_gateway_gcp" {
   gw_name      = "avtxgw-gcp"
   vpc_id       = "gcp-gw-vpc"
   vpc_reg      = "us-west1-b"
-  vpc_size     = "f1-micro"
-  vpc_net      = "10.12.0.0/24"
+  gw_size      = "f1-micro"
+  subnet       = "10.12.0.0/24"
 }
 
 # Create Aviatrix ARM gateway
@@ -60,8 +60,8 @@ resource "aviatrix_gateway" "test_gateway_arm" {
   gw_name      = "avtxgw-arm"
   vpc_id       = "gateway:test-gw-123"
   vpc_reg      = "West US"
-  vpc_size     = "Standard_D2"
-  vpc_net      = "10.13.0.0/24"
+  gw_size      = "Standard_D2"
+  subnet       = "10.13.0.0/24"
 }
 
 # Create Aviatrix AWS gateway with Peering HA enabled
@@ -71,8 +71,8 @@ resource "aviatrix_gateway" "test_gateway_aws" {
   gw_name           = "avtxgw1"
   vpc_id            = "vpc-abcdef"
   vpc_reg           = "us-west-1"
-  vpc_size          = "t2.micro"
-  vpc_net           = "10.0.0.0/24"
+  gw_size           = "t2.micro"
+  subnet            = "10.0.0.0/24"
   peering_ha_subnet = "10.0.0.0/24"
 }
 # Create Aviatrix GCP gateway with Peering HA enabled
@@ -82,8 +82,8 @@ resource "aviatrix_gateway" "test_gateway_gcp" {
   gw_name         = "avtxgw-gcp"
   vpc_id          = "gcp-gw-vpc"
   vpc_reg         = "us-west1-b"
-  vpc_size        = "f1-micro"
-  vpc_net         = "10.12.0.0/24"
+  gw_size         = "f1-micro"
+  subnet          = "10.12.0.0/24"
   peering_ha_zone = "us-west1-c"
 }
 
@@ -98,8 +98,8 @@ The following arguments are supported:
 * `gw_name` - (Required) Aviatrix gateway unique name.
 * `vpc_id` - (Required) ID of legacy VPC/Vnet to be connected. A string that is consisted of VPC/Vnet name and cloud provider's resource name. Please check the "Gateway" page on Aviatrix controller GUI for the precise value if needed. (Example:  "vpc-abcd1234" )
 * `vpc_reg` - (Required) Region where this gateway will be launched. (Example: us-east-1) If creating GCP gateway, enter a valid zone for vpc_reg. (Example: us-west1-c)
-* `vpc_size` - (Required) Size of Gateway Instance. e.g.: "t2.micro"
-* `vpc_net` - (Required) A VPC Network address range selected from one of the available network ranges. ( Example: "172.31.0.0/20")
+* `gw_size` - (Required) Size of Gateway Instance. e.g.: "t2.micro"
+* `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. ( Example: "172.31.0.0/20")
 * `enable_nat` - (Optional) Enable NAT for this container. (Supported values: "yes", "no")
 * `vpn_access` - (Optional) Enable user access through VPN to this container. (Supported values: "yes", "no")
 * `vpn_cidr` - (Optional) VPN CIDR block for the container. (Required if vpn_access is "yes", Example: "192.168.43.0/24")

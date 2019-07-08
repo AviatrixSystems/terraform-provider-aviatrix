@@ -20,7 +20,7 @@ resource "aviatrix_transit_vpc" "test_transit_gw_aws" {
   gw_name                  = "transit"
   vpc_id                   = "vpc-abcd1234"
   vpc_reg                  = "us-east-1"
-  vpc_size                 = "t2.micro"
+  gw_size                  = "t2.micro"
   subnet                   = "10.1.0.0/24"
   ha_subnet                = "10.1.0.0/24"
   ha_gw_size               = "t2.micro"
@@ -40,7 +40,7 @@ resource "aviatrix_transit_vpc" "test_transit_gw_azure" {
   gw_name                  = "transit"
   vpc_id                   = "vnet1:hello"
   vpc_reg                  = "West US"
-  vpc_size                 = "Standard_B1s"
+  gw_size                  = "Standard_B1s"
   subnet                   = "10.30.0.0/24"
   ha_subnet                = "10.30.0.0/24"
   ha_gw_size               = "Standard_B1s"
@@ -58,7 +58,7 @@ The following arguments are supported:
 * `gw_name` - (Required) Name of the gateway which is going to be created.
 * `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Required if for aws. Example: AWS: "vpc-abcd1234", GCP: "mygooglecloudvpcname", etc...
 * `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", ARM: "East US 2", etc...
-* `vpc_size` - (Required) Size of the gateway instance.  Example: AWS: "t2.large", etc...
+* `gw_size` - (Required) Size of the gateway instance.  Example: AWS: "t2.large", etc...
 * `subnet` - (Required) Public Subnet CIDR.  Example: AWS: "10.0.0.0/24". Copy/paste from AWS Console to get the right subnet CIDR.
 * `ha_subnet` - (Optional) HA Subnet CIDR. Example: "10.12.0.0/24".Setting to empty/unset will disable HA. Setting to a valid subnet CIDR  will create an HA gateway on the subnet.
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set). (Example: "t2.micro")

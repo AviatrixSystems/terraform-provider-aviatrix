@@ -46,12 +46,12 @@ func resourceAviatrixGateway() *schema.Resource {
 				Required:    true,
 				Description: "Region where this gateway will be launched.",
 			},
-			"vpc_size": {
+			"gw_size": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Size of Gateway Instance.",
 			},
-			"vpc_net": {
+			"subnet": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "A VPC Network address range selected from one of the available network ranges.",
@@ -304,8 +304,8 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		AccountName:        d.Get("account_name").(string),
 		GwName:             d.Get("gw_name").(string),
 		VpcID:              d.Get("vpc_id").(string),
-		VpcSize:            d.Get("vpc_size").(string),
-		VpcNet:             d.Get("vpc_net").(string),
+		VpcSize:            d.Get("gw_size").(string),
+		VpcNet:             d.Get("subnet").(string),
 		EnableNat:          d.Get("enable_nat").(string),
 		VpnStatus:          d.Get("vpn_access").(string),
 		VpnCidr:            d.Get("vpn_cidr").(string),
@@ -604,7 +604,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("vpc_reg", gw.VpcRegion)
 		}
 
-		d.Set("vpc_net", gw.VpcNet)
+		d.Set("subnet", gw.VpcNet)
 		if gw.EnableNat != "" {
 			d.Set("enable_nat", gw.EnableNat)
 		}
@@ -686,10 +686,10 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		// it is the attribute receiving the instance size of an existing gateway instead of
 		// GwSize. (at least in v3.5)
 		if gw.GwSize != "" {
-			d.Set("vpc_size", gw.GwSize)
+			d.Set("gw_size", gw.GwSize)
 		} else {
 			if gw.VpcSize != "" {
-				d.Set("vpc_size", gw.VpcSize)
+				d.Set("gw_size", gw.VpcSize)
 			}
 		}
 		d.Set("public_ip", gw.PublicIP)
@@ -817,8 +817,8 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("vpc_reg") {
 		return fmt.Errorf("updating vpc_reg is not allowed")
 	}
-	if d.HasChange("vpc_net") {
-		return fmt.Errorf("updating vpc_net is not allowed")
+	if d.HasChange("subnet") {
+		return fmt.Errorf("updating subnet is not allowed")
 	}
 	if d.HasChange("vpn_access") {
 		return fmt.Errorf("updating vpn_access is not allowed")
@@ -845,7 +845,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	gateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string),
-		GwSize:    d.Get("vpc_size").(string),
+		GwSize:    d.Get("gw_size").(string),
 		SingleAZ:  d.Get("single_az_ha").(string),
 	}
 	peeringHaGateway := &goaviatrix.Gateway{
@@ -853,16 +853,16 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		GwName:    d.Get("gw_name").(string) + "-hagw",
 	}
 
-	// Get primary gw size if vpc_size changed, to be used later on for peering ha gw size update
-	primaryGwSize := d.Get("vpc_size").(string)
-	if d.HasChange("vpc_size") {
-		old, _ := d.GetChange("vpc_size")
+	// Get primary gw size if gw_size changed, to be used later on for peering ha gw size update
+	primaryGwSize := d.Get("gw_size").(string)
+	if d.HasChange("gw_size") {
+		old, _ := d.GetChange("gw_size")
 		primaryGwSize = old.(string)
 		err := client.UpdateGateway(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to update Aviatrix Gateway: %s", err)
 		}
-		d.SetPartial("vpc_size")
+		d.SetPartial("gw_size")
 	}
 
 	if d.HasChange("otp_mode") || d.HasChange("enable_ldap") || d.HasChange("saml_enabled") ||

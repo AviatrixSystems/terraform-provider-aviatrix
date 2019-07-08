@@ -22,11 +22,11 @@ func preGatewayCheck(t *testing.T, msgCommon string) (string, string, string) {
 	if awsRegion == "" {
 		t.Fatal("Environment variable AWS_REGION is not set" + msgCommon)
 	}
-	awsVpcNet := os.Getenv("AWS_VPC_NET")
-	if awsVpcNet == "" {
-		t.Fatal("Environment variable AWS_VPC_NET is not set" + msgCommon)
+	awsSubnet := os.Getenv("AWS_SUBNET")
+	if awsSubnet == "" {
+		t.Fatal("Environment variable AWS_SUBNET is not set" + msgCommon)
 	}
-	return awsVpcId, awsRegion, awsVpcNet
+	return awsVpcId, awsRegion, awsSubnet
 }
 
 func preGatewayCheckGCP(t *testing.T, msgCommon string) (string, string, string) {
@@ -121,11 +121,11 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(
 							resourceNameAws, "gw_name", fmt.Sprintf("tf-testing-aws-%s", rName)),
 						resource.TestCheckResourceAttr(
-							resourceNameAws, "vpc_size", awsGwSize),
+							resourceNameAws, "gw_size", awsGwSize),
 						resource.TestCheckResourceAttr(
 							resourceNameAws, "vpc_id", awsVpcId),
 						resource.TestCheckResourceAttr(
-							resourceNameAws, "vpc_net", awsVpcNet),
+							resourceNameAws, "subnet", awsVpcNet),
 						resource.TestCheckResourceAttr(
 							resourceNameAws, "vpc_reg", awsRegion),
 					),
@@ -159,11 +159,11 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(
 							resourceNameGcp, "gw_name", fmt.Sprintf("tf-testing-gcp-%s", rName)),
 						resource.TestCheckResourceAttr(
-							resourceNameGcp, "vpc_size", gcpGwSize),
+							resourceNameGcp, "gw_size", gcpGwSize),
 						resource.TestCheckResourceAttr(
 							resourceNameGcp, "vpc_id", gcpVpcId),
 						resource.TestCheckResourceAttr(
-							resourceNameGcp, "vpc_net", gcpSubnet),
+							resourceNameGcp, "subnet", gcpSubnet),
 						resource.TestCheckResourceAttr(
 							resourceNameGcp, "vpc_reg", gcpZone),
 					),
@@ -197,11 +197,11 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(
 							resourceNameArm, "gw_name", fmt.Sprintf("tf-testing-arm-%s", rName)),
 						resource.TestCheckResourceAttr(
-							resourceNameArm, "vpc_size", armGwSize),
+							resourceNameArm, "gw_size", armGwSize),
 						resource.TestCheckResourceAttr(
 							resourceNameArm, "vpc_id", armVnetId),
 						resource.TestCheckResourceAttr(
-							resourceNameArm, "vpc_net", armSubnet),
+							resourceNameArm, "subnet", armSubnet),
 						resource.TestCheckResourceAttr(
 							resourceNameArm, "vpc_reg", armRegion),
 					),
@@ -233,8 +233,8 @@ resource "aviatrix_gateway" "test_gw_aws" {
 	gw_name      = "tf-testing-aws-%[1]s"
 	vpc_id       = "%[5]s"
 	vpc_reg      = "%[6]s"
-	vpc_size     = "%[7]s"
-	vpc_net      = "%[8]s"
+	gw_size      = "%[7]s"
+	subnet       = "%[8]s"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		awsVpcId, awsRegion, awsGwSize, awsVpcNet)
@@ -254,8 +254,8 @@ resource "aviatrix_gateway" "test_gw_gcp" {
 	gw_name      = "tf-testing-gcp-%[1]s"
 	vpc_id       = "%[4]s"
 	vpc_reg      = "%[5]s"
-	vpc_size     = "%[6]s"
-	vpc_net      = "%[7]s"
+	gw_size      = "%[6]s"
+	subnet       = "%[7]s"
 }
 	`, rName, os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"),
 		gcpVpcId, gcpZone, gcpGwSize, gcpSubnet)
@@ -277,8 +277,8 @@ resource "aviatrix_gateway" "test_gw_arm" {
 	gw_name      = "tf-testing-arm-%[1]s"
 	vpc_id       = "%[6]s"
 	vpc_reg      = "%[7]s"
-	vpc_size     = "%[8]s"
-	vpc_net      = "%[9]s"
+	gw_size      = "%[8]s"
+	subnet       = "%[9]s"
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
 		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),
