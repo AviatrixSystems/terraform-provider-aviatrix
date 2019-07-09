@@ -2,7 +2,7 @@ data "aws_caller_identity" "current" {}
 
 # This is not part of this role should not be destroyed
 # module "aviatrix-iam-roles" {
-#   source            = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-iam-roles"
+#   source            = "github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-iam-roles?ref=terraform_0.11"
 #   master-account-id = "${data.aws_caller_identity.current.account_id}"
 # }
 
@@ -13,16 +13,15 @@ module "aviatrix_controller_vpc" {
   aws_region           = "${var.aws_region2}"
 }
 module "aviatrix-controller-build" {
-    source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-build"
+    source = "github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-build?ref=terraform_0.11"
     vpc                = "${module.aviatrix_controller_vpc.vpc}"
     subnet             = "${module.aviatrix_controller_vpc.subnet_id}"
     keypair            = "${var.keypair}"
     # ec2role            = "${module.aviatrix-iam-roles.aviatrix-role-ec2-name}"  # This can be used from the module aviatrix-iam-roles above, but since it cannot be deleted, it is harcoded
     ec2role            = "aviatrix-role-ec2"
-    termination_protection = false
 }
 module "aviatrix-controller-initialize" {
-    source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-initialize"
+    source = "github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-initialize?ref=terraform_0.11"
     admin_password     = "${var.admin_password}"
     admin_email        = "${var.admin_email}"
     private_ip         = "${module.aviatrix-controller-build.private_ip}"
