@@ -45,12 +45,9 @@ func TestAccAviatrixTransPeer_basic(t *testing.T) {
 					reachableCIDR),
 				Check: resource.ComposeTestCheckFunc(
 					testAccTransPeerExists("aviatrix_trans_peer.test_trans_peer", &transpeer),
-					resource.TestCheckResourceAttr(
-						resourceName, "source", fmt.Sprintf("tfg-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "nexthop", fmt.Sprintf("tfg2-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "reachable_cidr", reachableCIDR),
+					resource.TestCheckResourceAttr(resourceName, "source", fmt.Sprintf("tfg-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "nexthop", fmt.Sprintf("tfg2-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "reachable_cidr", reachableCIDR),
 				),
 			},
 			{
@@ -110,7 +107,6 @@ func testAccTransPeerExists(n string, transpeer *goaviatrix.TransPeer) resource.
 		if !ok {
 			return fmt.Errorf("transpeer Not Created: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no transpeer ID is set")
 		}
@@ -127,21 +123,17 @@ func testAccTransPeerExists(n string, transpeer *goaviatrix.TransPeer) resource.
 		if err != nil {
 			return err
 		}
-
 		if foundTransPeer.Source != rs.Primary.Attributes["source"] {
 			return fmt.Errorf("source Not found in created attributes")
 		}
-
 		if foundTransPeer.Nexthop != rs.Primary.Attributes["nexthop"] {
 			return fmt.Errorf("nexthop Not found in created attributes")
 		}
-
 		if foundTransPeer.ReachableCidr != rs.Primary.Attributes["reachable_cidr"] {
 			return fmt.Errorf("reachable_cidr Not found in created attributes")
 		}
 
 		*transpeer = *foundTransPeer
-
 		return nil
 	}
 }
@@ -164,5 +156,6 @@ func testAccTransPeerDestroy(s *terraform.State) error {
 			return fmt.Errorf("transpeer still exists")
 		}
 	}
+
 	return nil
 }

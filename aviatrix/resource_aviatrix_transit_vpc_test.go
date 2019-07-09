@@ -66,7 +66,7 @@ func TestAccAviatrixTransitGw_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceNameAws, "gw_size", "t2.micro"),
 						resource.TestCheckResourceAttr(resourceNameAws, "account_name", fmt.Sprintf("tfa-%s", rName)),
 						resource.TestCheckResourceAttr(resourceNameAws, "vpc_id", os.Getenv("AWS_VPC_ID")),
-						resource.TestCheckResourceAttr(resourceNameAws, "subnet", os.Getenv("AWS_VPC_NET")),
+						resource.TestCheckResourceAttr(resourceNameAws, "subnet", os.Getenv("AWS_SUBNET")),
 						resource.TestCheckResourceAttr(resourceNameAws, "vpc_reg", os.Getenv("AWS_REGION")),
 					),
 				},
@@ -133,7 +133,7 @@ resource "aviatrix_transit_vpc" "test_transit_vpc_aws" {
 	gw_name      = "tfg-%[1]s"
 	vpc_id       = "%[5]s"
 	vpc_reg      = "%[6]s"
-	gw_size     = "t2.micro"
+	gw_size      = "t2.micro"
 	subnet       = "%[7]s"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
@@ -157,7 +157,7 @@ resource "aviatrix_transit_vpc" "test_transit_vpc_arm" {
 	gw_name      = "tfg-%[1]s"
 	vpc_id       = "%[6]s"
 	vpc_reg      = "%[7]s"
-	gw_size     = "%[8]s"
+	gw_size      = "%[8]s"
 	subnet       = "%[9]s"
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"), os.Getenv("ARM_APPLICATION_ID"),
@@ -171,7 +171,6 @@ func testAccCheckTransitGwExists(n string, gateway *goaviatrix.Gateway) resource
 		if !ok {
 			return fmt.Errorf("transit gateway Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no transit gateway ID is set")
 		}
@@ -186,13 +185,11 @@ func testAccCheckTransitGwExists(n string, gateway *goaviatrix.Gateway) resource
 		if err != nil {
 			return err
 		}
-
 		if foundGateway.GwName != rs.Primary.ID {
 			return fmt.Errorf("transit gateway not found")
 		}
 
 		*gateway = *foundGateway
-
 		return nil
 	}
 }
@@ -215,5 +212,6 @@ func testAccCheckTransitGwDestroy(s *terraform.State) error {
 			return fmt.Errorf("transit gateway still exists")
 		}
 	}
+
 	return nil
 }

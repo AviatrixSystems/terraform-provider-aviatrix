@@ -95,6 +95,7 @@ func resourceVpc() *schema.Resource {
 
 func resourceVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	vpc := &goaviatrix.Vpc{
 		CloudType:   d.Get("cloud_type").(int),
 		AccountName: d.Get("account_name").(string),
@@ -137,7 +138,6 @@ func resourceVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(vpc.Name)
-
 	return resourceVpcRead(d, meta)
 }
 
@@ -155,6 +155,7 @@ func resourceVpcRead(d *schema.ResourceData, meta interface{}) error {
 	vpc := &goaviatrix.Vpc{
 		Name: d.Get("name").(string),
 	}
+
 	vC, err := client.GetVpc(vpc)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
@@ -182,6 +183,7 @@ func resourceVpcRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("aviatrix_firenet_vpc", false)
 	}
+
 	d.Set("vpc_id", vC.VpcID)
 
 	var subnetList []map[string]string
@@ -202,6 +204,7 @@ func resourceVpcRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceVpcDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	vpc := &goaviatrix.Vpc{
 		AccountName: d.Get("account_name").(string),
 		Name:        d.Get("name").(string),

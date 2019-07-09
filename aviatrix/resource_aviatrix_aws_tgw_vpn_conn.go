@@ -95,6 +95,7 @@ func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
 
 func resourceAviatrixAwsTgwVpnConnCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	awsTgwVpnConn := &goaviatrix.AwsTgwVpnConn{
 		TgwName:          d.Get("tgw_name").(string),
 		ConnName:         d.Get("connection_name").(string),
@@ -133,7 +134,6 @@ func resourceAviatrixAwsTgwVpnConnCreate(d *schema.ResourceData, meta interface{
 	}
 
 	d.SetId(awsTgwVpnConn.TgwName + "~" + vpnID)
-
 	return resourceAviatrixAwsTgwVpnConnRead(d, meta)
 }
 
@@ -205,6 +205,7 @@ func resourceAviatrixAwsTgwVpnConnDelete(d *schema.ResourceData, meta interface{
 		if strings.Contains(err.Error(), "does not exist") {
 			return nil
 		}
+
 		return fmt.Errorf("failed to delete Aviatrix AwsTgwVpnConn: %s", err)
 	}
 

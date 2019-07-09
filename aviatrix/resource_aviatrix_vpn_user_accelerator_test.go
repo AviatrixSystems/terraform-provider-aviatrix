@@ -83,7 +83,6 @@ func testAccCheckVPNUserAcceleratorExists(n string) resource.TestCheckFunc {
 		if !ok {
 			return fmt.Errorf("vpn user accelerator not found : %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no vpn user accelerator ID is set")
 		}
@@ -94,7 +93,6 @@ func testAccCheckVPNUserAcceleratorExists(n string) resource.TestCheckFunc {
 		if err != nil {
 			return err
 		}
-
 		if !goaviatrix.Contains(elbList, rs.Primary.ID) {
 			return fmt.Errorf("vpn user accelerator ID not found")
 		}
@@ -120,5 +118,6 @@ func testAccCheckVPNUserAcceleratorDestroy(s *terraform.State) error {
 			return fmt.Errorf("vpn user accelerator still exists")
 		}
 	}
+
 	return nil
 }

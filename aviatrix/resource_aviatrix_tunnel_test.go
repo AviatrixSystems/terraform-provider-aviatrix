@@ -60,10 +60,8 @@ func TestAccAviatrixTunnel_basic(t *testing.T) {
 				Config: testAccTunnelConfigBasic(rName, vpcID1, vpcID2, region1, region2, subnet1, subnet2),
 				Check: resource.ComposeTestCheckFunc(
 					tesAccCheckTunnelExists("aviatrix_tunnel.foo", &tun),
-					resource.TestCheckResourceAttr(
-						resourceName, "gw_name1", fmt.Sprintf("tfg-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "gw_name2", fmt.Sprintf("tfg2-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_name1", fmt.Sprintf("tfg-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_name2", fmt.Sprintf("tfg2-%s", rName)),
 				),
 			},
 			{
@@ -118,7 +116,6 @@ func tesAccCheckTunnelExists(n string, tunnel *goaviatrix.Tunnel) resource.TestC
 		if !ok {
 			return fmt.Errorf("aviatrix tunnel Not Created: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no aviatrix tunnel ID is set")
 		}
@@ -134,17 +131,14 @@ func tesAccCheckTunnelExists(n string, tunnel *goaviatrix.Tunnel) resource.TestC
 		if err != nil {
 			return err
 		}
-
 		if foundTunnel.VpcName1 != rs.Primary.Attributes["gw_name1"] {
 			return fmt.Errorf("gw_name1 Not found in created attributes")
 		}
-
 		if foundTunnel.VpcName2 != rs.Primary.Attributes["gw_name2"] {
 			return fmt.Errorf("gw_name2 Not found in created attributes")
 		}
 
 		*tunnel = *foundTunnel
-
 		return nil
 	}
 }
@@ -167,5 +161,6 @@ func testAccCheckTunnelDestroy(s *terraform.State) error {
 			return fmt.Errorf("aviatrix tunnel still exists")
 		}
 	}
+
 	return nil
 }

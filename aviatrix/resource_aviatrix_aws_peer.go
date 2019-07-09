@@ -87,6 +87,7 @@ func resourceAWSPeer() *schema.Resource {
 
 func resourceAWSPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	awsPeer := &goaviatrix.AWSPeer{
 		AccountName1: d.Get("account_name1").(string),
 		AccountName2: d.Get("account_name2").(string),
@@ -103,13 +104,15 @@ func resourceAWSPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("rtb_list2"); ok {
 		awsPeer.RtbList2 = strings.Join(goaviatrix.ExpandStringList(d.Get("rtb_list2").([]interface{})), ",")
 	}
+
 	log.Printf("[INFO] Creating Aviatrix aws_peer: %#v", awsPeer)
+
 	_, err := client.CreateAWSPeer(awsPeer)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix AWSPeer: %s", err)
 	}
-	d.SetId(awsPeer.VpcID1 + "~" + awsPeer.VpcID2)
 
+	d.SetId(awsPeer.VpcID1 + "~" + awsPeer.VpcID2)
 	return resourceAWSPeerRead(d, meta)
 }
 
@@ -139,7 +142,9 @@ func resourceAWSPeerRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		return fmt.Errorf("couldn't find Aviatrix AWSPeer: %s", err)
 	}
+
 	log.Printf("[TRACE] Reading aws_peer: %#v", ap)
+
 	if ap != nil {
 		d.Set("vpc_id1", ap.VpcID1)
 		d.Set("vpc_id2", ap.VpcID2)
@@ -172,5 +177,6 @@ func resourceAWSPeerDelete(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix AWSPeer: %s", err)
 	}
+
 	return nil
 }

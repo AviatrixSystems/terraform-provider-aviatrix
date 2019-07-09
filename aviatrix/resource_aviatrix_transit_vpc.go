@@ -83,10 +83,10 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 				Description: "HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set).",
 			},
 			"enable_nat": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     "no",
-				Description: "Enable NAT for this container.",
+				Default:     false,
+				Description: "Enable or disable NAT for this container.",
 			},
 			"tag_list": {
 				Type:        schema.TypeList,
@@ -102,9 +102,9 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 				Description: "Sign of readiness for TGW connection.",
 			},
 			"connected_transit": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     "no",
+				Default:     false,
 				Description: "Specify Connected Transit status.",
 			},
 			"insane_mode": {
@@ -125,6 +125,7 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 
 func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	gateway := &goaviatrix.TransitVpc{
 		CloudType:              d.Get("cloud_type").(int),
 		AccountName:            d.Get("account_name").(string),
@@ -133,9 +134,21 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		VpcRegion:              d.Get("vpc_reg").(string),
 		VpcSize:                d.Get("gw_size").(string),
 		Subnet:                 d.Get("subnet").(string),
-		EnableNAT:              d.Get("enable_nat").(string),
 		EnableHybridConnection: d.Get("enable_hybrid_connection").(bool),
-		ConnectedTransit:       d.Get("connected_transit").(string),
+	}
+
+	enableNAT := d.Get("enable_nat").(bool)
+	if enableNAT {
+		gateway.EnableNAT = "yes"
+	} else {
+		gateway.EnableNAT = "no"
+	}
+
+	connectedTransit := d.Get("connected_transit").(bool)
+	if connectedTransit {
+		gateway.ConnectedTransit = "yes"
+	} else {
+		gateway.ConnectedTransit = "no"
 	}
 
 	cloudType := d.Get("cloud_type").(int)
@@ -150,11 +163,6 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a transit gw for azure vnet")
 		}
 	}
-
-	if gateway.EnableNAT != "" && gateway.EnableNAT != "yes" && gateway.EnableNAT != "no" {
-		return fmt.Errorf("enable_nat can only be empty string, 'yes', or 'no'")
-	}
-	enableNat := gateway.EnableNAT
 
 	insaneMode := d.Get("insane_mode").(bool)
 	if insaneMode == true {
@@ -273,15 +281,14 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	connectedTransit := d.Get("connected_transit").(string)
-	if connectedTransit == "yes" {
+	if connectedTransit {
 		err := client.EnableConnectedTransit(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to enable connected transit: %s", err)
 		}
 	}
 
-	if enableNat == "yes" {
+	if enableNAT {
 		gw := &goaviatrix.Gateway{
 			GwName: gateway.GwName,
 		}
@@ -349,13 +356,25 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 		}
 		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("gw_size", gw.GwSize)
-		d.Set("enable_nat", gw.EnableNat)
+
+		if gw.EnableNat == "yes" {
+			d.Set("enable_nat", true)
+		} else {
+			d.Set("enable_nat", false)
+		}
+
 		if gw.CloudType == 1 {
 			d.Set("enable_hybrid_connection", gw.EnableHybridConnection)
 		} else {
 			d.Set("enable_hybrid_connection", false)
 		}
-		d.Set("connected_transit", gw.ConnectedTransit)
+
+		if gw.ConnectedTransit == "yes" {
+			d.Set("connected_transit", true)
+		} else {
+			d.Set("connected_transit", false)
+		}
+
 		if gw.InsaneMode == "yes" {
 			d.Set("insane_mode", true)
 			d.Set("insane_mode_az", gw.GatewayZone)
@@ -435,6 +454,7 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[INFO] Updating Aviatrix TransitVpc: %#v", gateway)
 
 	d.Partial(true)
+
 	if d.HasChange("cloud_type") {
 		return fmt.Errorf("updating cloud_type is not allowed")
 	}
@@ -678,11 +698,13 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Partial(false)
+
 	return nil
 }
 
 func resourceAviatrixTransitVpcDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	gateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string),
@@ -696,6 +718,7 @@ func resourceAviatrixTransitVpcDelete(d *schema.ResourceData, meta interface{}) 
 			CloudType: d.Get("cloud_type").(int),
 			GwName:    d.Get("gw_name").(string),
 		}
+
 		err := client.DisableGatewayFireNetInterfaces(gw)
 		if err != nil {
 			return fmt.Errorf("failed to disable transit GW for FireNet Interfaces: %s", err)
@@ -705,6 +728,7 @@ func resourceAviatrixTransitVpcDelete(d *schema.ResourceData, meta interface{}) 
 	//If HA is enabled, delete HA GW first.
 	if haSubnet := d.Get("ha_subnet").(string); haSubnet != "" {
 		gateway.GwName += "-hagw"
+
 		err := client.DeleteGateway(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to delete Aviatrix TransitVpc HA gateway: %s", err)
@@ -712,6 +736,7 @@ func resourceAviatrixTransitVpcDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	gateway.GwName = d.Get("gw_name").(string)
+
 	err := client.DeleteGateway(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix TransitVpc: %s", err)

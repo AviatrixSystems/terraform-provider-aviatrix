@@ -34,14 +34,10 @@ func TestAccAviatrixVPNUser_basic(t *testing.T) {
 				Config: testAccVPNUserConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNUserExists("aviatrix_vpn_user.test_vpn_user", &vpnUser),
-					resource.TestCheckResourceAttr(
-						resourceName, "gw_name", fmt.Sprintf("tfl-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
-					resource.TestCheckResourceAttr(
-						resourceName, "user_email", "user@xyz.com"),
-					resource.TestCheckResourceAttr(
-						resourceName, "user_name", fmt.Sprintf("tfu-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfl-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
+					resource.TestCheckResourceAttr(resourceName, "user_email", "user@xyz.com"),
+					resource.TestCheckResourceAttr(resourceName, "user_name", fmt.Sprintf("tfu-%s", rName)),
 				),
 			},
 			{
@@ -93,7 +89,6 @@ func testAccCheckVPNUserExists(n string, vpnUser *goaviatrix.VPNUser) resource.T
 		if !ok {
 			return fmt.Errorf("VPN User Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no VPN User ID is set")
 		}
@@ -111,13 +106,11 @@ func testAccCheckVPNUserExists(n string, vpnUser *goaviatrix.VPNUser) resource.T
 		if err != nil {
 			return err
 		}
-
 		if foundVPNUser2.UserName != rs.Primary.ID {
 			return fmt.Errorf("VPN user not found")
 		}
 
 		*vpnUser = *foundVPNUser
-
 		return nil
 	}
 }
@@ -142,5 +135,6 @@ func testAccCheckVPNUserDestroy(s *terraform.State) error {
 			return fmt.Errorf("VPN User still exists")
 		}
 	}
+
 	return nil
 }

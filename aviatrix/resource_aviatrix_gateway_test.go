@@ -118,16 +118,11 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 					Config: testAccGatewayConfigBasicAWS(rName, awsGwSize, awsVpcId, awsRegion, awsVpcNet),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckGatewayExists(resourceNameAws, &gateway),
-						resource.TestCheckResourceAttr(
-							resourceNameAws, "gw_name", fmt.Sprintf("tf-testing-aws-%s", rName)),
-						resource.TestCheckResourceAttr(
-							resourceNameAws, "gw_size", awsGwSize),
-						resource.TestCheckResourceAttr(
-							resourceNameAws, "vpc_id", awsVpcId),
-						resource.TestCheckResourceAttr(
-							resourceNameAws, "subnet", awsVpcNet),
-						resource.TestCheckResourceAttr(
-							resourceNameAws, "vpc_reg", awsRegion),
+						resource.TestCheckResourceAttr(resourceNameAws, "gw_name", fmt.Sprintf("tf-testing-aws-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameAws, "gw_size", awsGwSize),
+						resource.TestCheckResourceAttr(resourceNameAws, "vpc_id", awsVpcId),
+						resource.TestCheckResourceAttr(resourceNameAws, "subnet", awsVpcNet),
+						resource.TestCheckResourceAttr(resourceNameAws, "vpc_reg", awsRegion),
 					),
 				},
 				{
@@ -156,16 +151,11 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 					Config: testAccGatewayConfigBasicGCP(rName, gcpGwSize, gcpVpcId, gcpZone, gcpSubnet),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckGatewayExists(resourceNameGcp, &gateway),
-						resource.TestCheckResourceAttr(
-							resourceNameGcp, "gw_name", fmt.Sprintf("tf-testing-gcp-%s", rName)),
-						resource.TestCheckResourceAttr(
-							resourceNameGcp, "gw_size", gcpGwSize),
-						resource.TestCheckResourceAttr(
-							resourceNameGcp, "vpc_id", gcpVpcId),
-						resource.TestCheckResourceAttr(
-							resourceNameGcp, "subnet", gcpSubnet),
-						resource.TestCheckResourceAttr(
-							resourceNameGcp, "vpc_reg", gcpZone),
+						resource.TestCheckResourceAttr(resourceNameGcp, "gw_name", fmt.Sprintf("tf-testing-gcp-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameGcp, "gw_size", gcpGwSize),
+						resource.TestCheckResourceAttr(resourceNameGcp, "vpc_id", gcpVpcId),
+						resource.TestCheckResourceAttr(resourceNameGcp, "subnet", gcpSubnet),
+						resource.TestCheckResourceAttr(resourceNameGcp, "vpc_reg", gcpZone),
 					),
 				},
 				{
@@ -194,16 +184,11 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 					Config: testAccGatewayConfigBasicARM(rName, armGwSize, armVnetId, armRegion, armSubnet),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckGatewayExists(resourceNameArm, &gateway),
-						resource.TestCheckResourceAttr(
-							resourceNameArm, "gw_name", fmt.Sprintf("tf-testing-arm-%s", rName)),
-						resource.TestCheckResourceAttr(
-							resourceNameArm, "gw_size", armGwSize),
-						resource.TestCheckResourceAttr(
-							resourceNameArm, "vpc_id", armVnetId),
-						resource.TestCheckResourceAttr(
-							resourceNameArm, "subnet", armSubnet),
-						resource.TestCheckResourceAttr(
-							resourceNameArm, "vpc_reg", armRegion),
+						resource.TestCheckResourceAttr(resourceNameArm, "gw_name", fmt.Sprintf("tf-testing-arm-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameArm, "gw_size", armGwSize),
+						resource.TestCheckResourceAttr(resourceNameArm, "vpc_id", armVnetId),
+						resource.TestCheckResourceAttr(resourceNameArm, "subnet", armSubnet),
+						resource.TestCheckResourceAttr(resourceNameArm, "vpc_reg", armRegion),
 					),
 				},
 				{
@@ -291,7 +276,6 @@ func testAccCheckGatewayExists(n string, gateway *goaviatrix.Gateway) resource.T
 		if !ok {
 			return fmt.Errorf("gateway Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no Account ID is set")
 		}
@@ -307,13 +291,11 @@ func testAccCheckGatewayExists(n string, gateway *goaviatrix.Gateway) resource.T
 		if err != nil {
 			return err
 		}
-
 		if foundGateway.GwName != rs.Primary.ID {
 			return fmt.Errorf("gateway not found")
 		}
 
 		*gateway = *foundGateway
-
 		return nil
 	}
 }

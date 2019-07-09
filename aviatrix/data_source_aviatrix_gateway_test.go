@@ -29,16 +29,11 @@ func TestAccDataSourceAviatrixGateway_basic(t *testing.T) {
 				Config: testAccDataSourceAviatrixGatewayConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAviatrixGateway(resourceName),
-					resource.TestCheckResourceAttr(
-						resourceName, "account_name", fmt.Sprintf("tfa-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "gw_name", fmt.Sprintf("tfg-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
-					resource.TestCheckResourceAttr(
-						resourceName, "vpc_reg", os.Getenv("AWS_REGION")),
-					resource.TestCheckResourceAttr(
-						resourceName, "vpc_size", "t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
+					resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AWS_REGION")),
+					resource.TestCheckResourceAttr(resourceName, "vpc_size", "t2.micro"),
 				),
 			},
 		},

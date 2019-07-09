@@ -37,14 +37,10 @@ func TestAccAviatrixAwsTgwVpcAttachment_basic(t *testing.T) {
 				Config: testAccAwsTgwVpcAttachmentConfigBasic(rName, awsSideAsNumber, sDm),
 				Check: resource.ComposeTestCheckFunc(
 					tesAccCheckAwsTgwVpcAttachmentExists(resourceName, &awsTgwVpcAttachment),
-					resource.TestCheckResourceAttr(
-						resourceName, "tgw_name", fmt.Sprintf("tft-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "region", os.Getenv("AWS_REGION")),
-					resource.TestCheckResourceAttr(
-						resourceName, "security_domain_name", sDm),
-					resource.TestCheckResourceAttr(
-						resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
+					resource.TestCheckResourceAttr(resourceName, "tgw_name", fmt.Sprintf("tft-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "region", os.Getenv("AWS_REGION")),
+					resource.TestCheckResourceAttr(resourceName, "security_domain_name", sDm),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
 				),
 			},
 			{
@@ -138,21 +134,17 @@ func tesAccCheckAwsTgwVpcAttachmentExists(n string, awsTgwVpcAttachment *goaviat
 		if err != nil {
 			return err
 		}
-
 		if foundAwsTgwVpcAttachment2.TgwName != rs.Primary.Attributes["tgw_name"] {
 			return fmt.Errorf("tgw_name Not found in created attributes")
 		}
-
 		if foundAwsTgwVpcAttachment2.SecurityDomainName != rs.Primary.Attributes["security_domain_name"] {
 			return fmt.Errorf("security_domain_name Not found in created attributes")
 		}
-
 		if foundAwsTgwVpcAttachment2.VpcID != rs.Primary.Attributes["vpc_id"] {
 			return fmt.Errorf("vpc_id Not found in created attributes")
 		}
 
 		*awsTgwVpcAttachment = *foundAwsTgwVpcAttachment2
-
 		return nil
 	}
 }

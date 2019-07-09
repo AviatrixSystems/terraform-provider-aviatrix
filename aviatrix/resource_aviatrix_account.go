@@ -100,6 +100,7 @@ func resourceAccount() *schema.Resource {
 
 func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	account := &goaviatrix.Account{
 		AccountName:                           d.Get("account_name").(string),
 		CloudType:                             d.Get("cloud_type").(int),
@@ -116,6 +117,7 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 		ArmApplicationClientId:                d.Get("arm_application_id").(string),
 		ArmApplicationClientSecret:            d.Get("arm_application_key").(string),
 	}
+
 	if account.CloudType == 1 {
 		if account.AwsAccountNumber == "" {
 			return fmt.Errorf("aws account number is needed for aws cloud")
@@ -185,16 +187,20 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	} else if account.CloudType != 1 && account.CloudType != 4 && account.CloudType != 8 {
 		return fmt.Errorf("cloud type can only be either aws (1), gcp (4), or arm (8)")
 	}
+
 	err := client.CreateAccount(account)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Account: %s", err)
 	}
+
 	d.SetId(account.AccountName)
+
 	return resourceAccountRead(d, meta)
 }
 
 func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	accountName := d.Get("account_name").(string)
 	if accountName == "" {
 		id := d.Id()
@@ -206,7 +212,9 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	account := &goaviatrix.Account{
 		AccountName: d.Get("account_name").(string),
 	}
+
 	log.Printf("[INFO] Looking for Aviatrix account: %#v", account)
+
 	acc, err := client.GetAccount(account)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
@@ -215,6 +223,7 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		return fmt.Errorf("aviatrix Account: %s", err)
 	}
+
 	if acc != nil {
 		d.Set("account_name", acc.AccountName)
 		d.Set("cloud_type", acc.CloudType)
@@ -236,11 +245,13 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		d.SetId(acc.AccountName)
 	}
+
 	return nil
 }
 
 func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	account := &goaviatrix.Account{
 		AccountName:                           d.Get("account_name").(string),
 		CloudType:                             d.Get("cloud_type").(int),
@@ -259,13 +270,17 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[INFO] Updating Aviatrix account: %#v", account)
+
 	d.Partial(true)
+
 	if d.HasChange("cloud_type") {
 		return fmt.Errorf("update cloud_type is not allowed")
 	}
+
 	if d.HasChange("account_name") {
 		return fmt.Errorf("update account name is not allowed")
 	}
+
 	if account.CloudType == 1 {
 		if d.HasChange("aws_account_number") || d.HasChange("aws_access_key") ||
 			d.HasChange("aws_secret_key") || d.HasChange("aws_iam") ||
@@ -346,7 +361,9 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
+
 	d.Partial(false)
+
 	return resourceAccountRead(d, meta)
 }
 
@@ -363,5 +380,6 @@ func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix Account: %s", err)
 	}
+
 	return nil
 }

@@ -37,6 +37,7 @@ func resourceTransitGatewayPeering() *schema.Resource {
 
 func resourceTransitGatewayPeeringCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
 		TransitGatewayName1: d.Get("transit_gateway_name1").(string),
 		TransitGatewayName2: d.Get("transit_gateway_name2").(string),
@@ -48,6 +49,7 @@ func resourceTransitGatewayPeeringCreate(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Transit Gateway peering: %s", err)
 	}
+
 	d.SetId(transitGatewayPeering.TransitGatewayName1 + "~" + transitGatewayPeering.TransitGatewayName2)
 	return resourceTransitGatewayPeeringRead(d, meta)
 }
@@ -86,6 +88,7 @@ func resourceTransitGatewayPeeringRead(d *schema.ResourceData, meta interface{})
 
 func resourceTransitGatewayPeeringDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
 		TransitGatewayName1: d.Get("transit_gateway_name1").(string),
 		TransitGatewayName2: d.Get("transit_gateway_name2").(string),
@@ -97,5 +100,6 @@ func resourceTransitGatewayPeeringDelete(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix Transit Gateway peering: %s", err)
 	}
+
 	return nil
 }

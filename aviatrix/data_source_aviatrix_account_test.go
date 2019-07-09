@@ -29,10 +29,8 @@ func TestAccDataSourceAviatrixAccount_basic(t *testing.T) {
 				Config: testAccDataSourceAviatrixAccountConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAviatrixAccount(resourceName),
-					resource.TestCheckResourceAttr(
-						resourceName, "account_name", fmt.Sprintf("tf-testing-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "aws_access_key", os.Getenv("AWS_ACCESS_KEY")),
+					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tf-testing-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "aws_access_key", os.Getenv("AWS_ACCESS_KEY")),
 				),
 			},
 		},

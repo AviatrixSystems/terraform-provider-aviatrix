@@ -33,8 +33,7 @@ func TestAccAviatrixControllerConfig_basic(t *testing.T) {
 				Config: testAccControllerConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControllerConfigExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "sg_management_account_name",
-						fmt.Sprintf("tfa-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "sg_management_account_name", fmt.Sprintf("tfa-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "fqdn_exception_rule", "false"),
 					resource.TestCheckResourceAttr(resourceName, "http_access", "true"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_management", "true"),
@@ -75,7 +74,6 @@ func testAccCheckControllerConfigExists(n string) resource.TestCheckFunc {
 		if !ok {
 			return fmt.Errorf("controller config ID Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no controller config ID is set")
 		}

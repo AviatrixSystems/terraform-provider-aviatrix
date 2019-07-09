@@ -22,7 +22,7 @@ type SpokeVpc struct {
 	Subnet                string `form:"public_subnet,omitempty" json:"public_subnet,omitempty"`
 	VpcRegion             string `form:"region,omitempty" json:"vpc_region,omitempty"`
 	VpcSize               string `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
-	EnableNAT             string `form:"nat_enabled,omitempty" json:"enable_nat,omitempty"`
+	EnableNat             string `form:"nat_enabled,omitempty" json:"enable_nat,omitempty"`
 	HASubnet              string `form:"ha_subnet,omitempty"`
 	HAZone                string `form:"new_zone,omitempty"`
 	SingleAzHa            string `form:"single_az_ha,omitempty"`

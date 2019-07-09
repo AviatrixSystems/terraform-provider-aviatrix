@@ -24,7 +24,9 @@ func dataSourceAviatrixCallerIdentity() *schema.Resource {
 
 func dataSourceAviatrixCallerIdentityRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	log.Printf("[DEBUG] CID is '%s'", client.CID)
+
 	d.SetId(time.Now().UTC().String())
 	d.Set("cid", client.CID)
 	return nil

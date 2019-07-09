@@ -27,10 +27,10 @@ func resourceAviatrixFQDN() *schema.Resource {
 				Required:    true,
 				Description: "FQDN Filter Tag Name.",
 			},
-			"fqdn_status": {
-				Type:        schema.TypeString,
+			"fqdn_enabled": {
+				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "FQDN Filter Tag Status. Valid values: 'enabled', 'disabled'.",
+				Description: "FQDN Filter Tag Status. Valid values: true or false.",
 			},
 			"fqdn_mode": {
 				Type:        schema.TypeString,
@@ -87,11 +87,19 @@ func resourceAviatrixFQDN() *schema.Resource {
 
 func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	fqdn := &goaviatrix.FQDN{
-		FQDNTag:    d.Get("fqdn_tag").(string),
-		FQDNStatus: d.Get("fqdn_status").(string),
-		FQDNMode:   d.Get("fqdn_mode").(string),
+		FQDNTag:  d.Get("fqdn_tag").(string),
+		FQDNMode: d.Get("fqdn_mode").(string),
 	}
+
+	fqdnStatus := d.Get("fqdn_enabled").(bool)
+	if fqdnStatus {
+		fqdn.FQDNStatus = "enabled"
+	} else {
+		fqdn.FQDNStatus = "disabled"
+	}
+
 	log.Printf("[INFO] Creating Aviatrix FQDN: %#v", fqdn)
 
 	err := client.CreateFQDN(fqdn)
@@ -149,8 +157,11 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	if fqdnStatus := d.Get("fqdn_status").(string); fqdnStatus == "enabled" {
+	if fqdnStatus := d.Get("fqdn_enabled").(bool); fqdnStatus {
+		fqdn.FQDNStatus = "enabled"
+
 		log.Printf("[INOF] Enable FQDN tag status: %#v", fqdn)
+
 		err := client.UpdateFQDNStatus(fqdn)
 		if err != nil {
 			return fmt.Errorf("failed to update FQDN status : %s", err)
@@ -200,7 +211,13 @@ func resourceAviatrixFQDNRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		return fmt.Errorf("couldn't find FQDN tag: %s", err)
 	}
-	d.Set("fqdn_status", fqdn.FQDNStatus)
+
+	if fqdn.FQDNStatus == "enabled" {
+		d.Set("fqdn_enabled", true)
+	} else {
+		d.Set("fqdn_enabled", false)
+	}
+
 	d.Set("fqdn_mode", fqdn.FQDNMode)
 
 	log.Printf("[INFO] Reading Aviatrix FQDN: %#v", fqdn)
@@ -214,8 +231,12 @@ func resourceAviatrixFQDNRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if newfqdn != nil {
-		if _, ok := d.GetOk("fqdn_status"); ok {
-			d.Set("fqdn_status", newfqdn.FQDNStatus)
+		if _, ok := d.GetOk("fqdn_enabled"); ok {
+			if fqdn.FQDNStatus == "enabled" {
+				d.Set("fqdn_enabled", true)
+			} else {
+				d.Set("fqdn_enabled", false)
+			}
 		}
 		if _, ok := d.GetOk("fqdn_mode"); ok {
 			d.Set("fqdn_mode", newfqdn.FQDNMode)
@@ -319,19 +340,27 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 
 	fqdn := &goaviatrix.FQDN{
 		FQDNTag:    d.Get("fqdn_tag").(string),
-		FQDNStatus: d.Get("fqdn_status").(string),
+		FQDNStatus: d.Get("fqdn_enabled").(string),
 		FQDNMode:   d.Get("fqdn_mode").(string),
 	}
+
+	fqdnStatus := d.Get("fqdn_enabled").(bool)
+	if fqdnStatus {
+		fqdn.FQDNStatus = "enabled"
+	} else {
+		fqdn.FQDNStatus = "disabled"
+	}
+
 	d.Partial(true)
 	if d.HasChange("fqdn_tag") {
 		return fmt.Errorf("updating fqdn_tag is not allowed")
 	}
-	if d.HasChange("fqdn_status") {
+	if d.HasChange("fqdn_enabled") {
 		err := client.UpdateFQDNStatus(fqdn)
 		if err != nil {
 			return fmt.Errorf("failed to update FQDN status : %s", err)
 		}
-		d.SetPartial("fqdn_status")
+		d.SetPartial("fqdn_enabled")
 	}
 	if d.HasChange("fqdn_mode") {
 		err := client.UpdateFQDNMode(fqdn)
@@ -452,5 +481,6 @@ func resourceAviatrixFQDNDelete(d *schema.ResourceData, meta interface{}) error 
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix FQDN: %s", err)
 	}
+
 	return nil
 }

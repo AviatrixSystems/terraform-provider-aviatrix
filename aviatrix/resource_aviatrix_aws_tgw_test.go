@@ -38,52 +38,29 @@ func TestAccAviatrixAWSTgw_basic(t *testing.T) {
 				Config: testAccAWSTgwConfigBasic(rName, awsSideAsNumber, sDm),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTgwExists(resourceName, &awsTgw),
-					resource.TestCheckResourceAttr(
-						resourceName, "tgw_name", fmt.Sprintf("tft-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "account_name", fmt.Sprintf("tfaa-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "region", os.Getenv("AWS_REGION")),
-					resource.TestCheckResourceAttr(
-						resourceName, "aws_side_as_number", awsSideAsNumber),
-					resource.TestCheckResourceAttr(
-						resourceName, "attached_aviatrix_transit_gateway.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "attached_aviatrix_transit_gateway.0", fmt.Sprintf("tfg-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.#", "4"),
-					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.0.security_domain_name", "Aviatrix_Edge_Domain"),
-					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.0.connected_domains.#", "3"),
-					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.0.connected_domains.0", "Default_Domain"),
-					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.0.connected_domains.1", "Shared_Service_Domain"),
-					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.0.connected_domains.2", sDm),
-					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.1.security_domain_name", "Default_Domain"),
-					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.1.connected_domains.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.1.connected_domains.0", "Aviatrix_Edge_Domain"),
-					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.2.security_domain_name", "Shared_Service_Domain"),
-					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.2.connected_domains.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.2.connected_domains.0", "Aviatrix_Edge_Domain"),
-					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.3.security_domain_name", sDm),
-					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.3.connected_domains.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.3.connected_domains.0", "Aviatrix_Edge_Domain"),
-					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.3.attached_vpc.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "security_domains.3.attached_vpc.0.vpc_id", os.Getenv("AWS_VPC_TGW_ID")),
+					resource.TestCheckResourceAttr(resourceName, "tgw_name", fmt.Sprintf("tft-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfaa-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "region", os.Getenv("AWS_REGION")),
+					resource.TestCheckResourceAttr(resourceName, "aws_side_as_number", awsSideAsNumber),
+					resource.TestCheckResourceAttr(resourceName, "attached_aviatrix_transit_gateway.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attached_aviatrix_transit_gateway.0", fmt.Sprintf("tfg-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "security_domains.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "security_domains.0.security_domain_name", "Aviatrix_Edge_Domain"),
+					resource.TestCheckResourceAttr(resourceName, "security_domains.0.connected_domains.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "security_domains.0.connected_domains.0", "Default_Domain"),
+					resource.TestCheckResourceAttr(resourceName, "security_domains.0.connected_domains.1", "Shared_Service_Domain"),
+					resource.TestCheckResourceAttr(resourceName, "security_domains.0.connected_domains.2", sDm),
+					resource.TestCheckResourceAttr(resourceName, "security_domains.1.security_domain_name", "Default_Domain"),
+					resource.TestCheckResourceAttr(resourceName, "security_domains.1.connected_domains.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_domains.1.connected_domains.0", "Aviatrix_Edge_Domain"),
+					resource.TestCheckResourceAttr(resourceName, "security_domains.2.security_domain_name", "Shared_Service_Domain"),
+					resource.TestCheckResourceAttr(resourceName, "security_domains.2.connected_domains.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_domains.2.connected_domains.0", "Aviatrix_Edge_Domain"),
+					resource.TestCheckResourceAttr(resourceName, "security_domains.3.security_domain_name", sDm),
+					resource.TestCheckResourceAttr(resourceName, "security_domains.3.connected_domains.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_domains.3.connected_domains.0", "Aviatrix_Edge_Domain"),
+					resource.TestCheckResourceAttr(resourceName, "security_domains.3.attached_vpc.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_domains.3.attached_vpc.0.vpc_id", os.Getenv("AWS_VPC_TGW_ID")),
 				),
 			},
 		},
@@ -188,13 +165,11 @@ func testAccCheckAWSTgwExists(n string, awsTgw *goaviatrix.AWSTgw) resource.Test
 		if err != nil {
 			return err
 		}
-
 		if foundAwsTgw2.Name != rs.Primary.ID {
 			return fmt.Errorf("AWS TGW not found")
 		}
 
 		*awsTgw = *foundAwsTgw
-
 		return nil
 	}
 }
@@ -221,5 +196,6 @@ func testAccCheckAWSTgwDestroy(s *terraform.State) error {
 
 		return fmt.Errorf("AWS TGW still exists")
 	}
+
 	return nil
 }

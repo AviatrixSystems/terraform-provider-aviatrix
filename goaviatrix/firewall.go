@@ -9,22 +9,22 @@ import (
 )
 
 type Policy struct {
-	SrcIP     string `form:"s_ip,omitempty" json:"s_ip,omitempty"`
-	DstIP     string `form:"d_ip,omitempty" json:"d_ip,omitempty"`
-	Protocol  string `form:"protocol,omitempty" json:"protocol,omitempty"`
-	Port      string `form:"port,omitempty" json:"port,omitempty"`
-	AllowDeny string `form:"deny_allow,omitempty" json:"deny_allow,omitempty"`
-	LogEnable string `form:"log_enable,omitempty" json:"log_enable,omitempty"`
+	SrcIP      string `form:"s_ip,omitempty" json:"s_ip,omitempty"`
+	DstIP      string `form:"d_ip,omitempty" json:"d_ip,omitempty"`
+	Protocol   string `form:"protocol,omitempty" json:"protocol,omitempty"`
+	Port       string `form:"port,omitempty" json:"port,omitempty"`
+	Action     string `form:"deny_allow,omitempty" json:"deny_allow,omitempty"`
+	LogEnabled string `form:"log_enable,omitempty" json:"log_enable,omitempty"`
 }
 
 // Gateway simple struct to hold firewall details
 type Firewall struct {
-	CID           string    `form:"CID,omitempty"`
-	Action        string    `form:"action,omitempty"`
-	GwName        string    `form:"vpc_name,omitempty" json:"vpc_name,omitempty"`
-	BaseAllowDeny string    `form:"base_policy,omitempty" json:"base_policy,omitempty"`
-	BaseLogEnable string    `form:"base_policy_log_enable,omitempty" json:"base_policy_log_enable,omitempty"`
-	PolicyList    []*Policy `form:"new_policy[],omitempty" json:"security_rules,omitempty"`
+	CID            string    `form:"CID,omitempty"`
+	Action         string    `form:"action,omitempty"`
+	GwName         string    `form:"vpc_name,omitempty" json:"vpc_name,omitempty"`
+	BasePolicy     string    `form:"base_policy,omitempty" json:"base_policy,omitempty"`
+	BaseLogEnabled string    `form:"base_policy_log_enable,omitempty" json:"base_policy_log_enable,omitempty"`
+	PolicyList     []*Policy `form:"new_policy[],omitempty" json:"security_rules,omitempty"`
 }
 
 type FirewallResp struct {
@@ -42,8 +42,8 @@ func (c *Client) SetBasePolicy(firewall *Firewall) error {
 	setVpcBasePolicy.Add("CID", c.CID)
 	setVpcBasePolicy.Add("action", "set_vpc_base_policy")
 	setVpcBasePolicy.Add("vpc_name", firewall.GwName)
-	setVpcBasePolicy.Add("base_policy", firewall.BaseAllowDeny)
-	setVpcBasePolicy.Add("base_policy_log_enable", firewall.BaseLogEnable)
+	setVpcBasePolicy.Add("base_policy", firewall.BasePolicy)
+	setVpcBasePolicy.Add("base_policy_log_enable", firewall.BaseLogEnabled)
 	Url.RawQuery = setVpcBasePolicy.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
@@ -124,7 +124,7 @@ func (c *Client) GetPolicy(firewall *Firewall) (*Firewall, error) {
 }
 
 func (c *Client) ValidatePolicy(policy *Policy) error {
-	if policy.AllowDeny != "allow" && policy.AllowDeny != "deny" {
+	if policy.Action != "allow" && policy.Action != "deny" {
 		return fmt.Errorf("valid AllowDeny is only 'allow' or 'deny'")
 	}
 	protocolDefaultValues := []string{"all", "tcp", "udp", "icmp", "sctp", "rdp", "dccp"}

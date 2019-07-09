@@ -57,10 +57,8 @@ func TestAccAviatrixAWSPeer_basic(t *testing.T) {
 				Config: testAccAWSPeerConfigBasic(rInt, vpcID1, vpcID2, region1, region2),
 				Check: resource.ComposeTestCheckFunc(
 					tesAccCheckAWSPeerExists(resourceName, &awsPeer),
-					resource.TestCheckResourceAttr(
-						resourceName, "vpc_id1", vpcID1),
-					resource.TestCheckResourceAttr(
-						resourceName, "vpc_id2", vpcID2),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id1", vpcID1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id2", vpcID2),
 				),
 			},
 			{
@@ -101,7 +99,6 @@ func tesAccCheckAWSPeerExists(n string, awsPeer *goaviatrix.AWSPeer) resource.Te
 		if !ok {
 			return fmt.Errorf("awsPeer Not Created: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no AWSPeer ID is set")
 		}
@@ -117,16 +114,14 @@ func tesAccCheckAWSPeerExists(n string, awsPeer *goaviatrix.AWSPeer) resource.Te
 		if err != nil {
 			return err
 		}
-
 		if foundPeer.VpcID1 != rs.Primary.Attributes["vpc_id1"] {
 			return fmt.Errorf("vpc_id1 Not found in created attributes")
 		}
-
 		if foundPeer.VpcID2 != rs.Primary.Attributes["vpc_id2"] {
 			return fmt.Errorf("vpc_id2 Not found in created attributes")
 		}
-		*awsPeer = *foundPeer
 
+		*awsPeer = *foundPeer
 		return nil
 	}
 }
@@ -149,5 +144,6 @@ func testAccCheckAWSPeerDestroy(s *terraform.State) error {
 			return fmt.Errorf("awsPeer still exists")
 		}
 	}
+
 	return nil
 }

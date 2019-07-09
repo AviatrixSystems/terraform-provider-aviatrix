@@ -43,6 +43,7 @@ func resourceTransPeer() *schema.Resource {
 
 func resourceTransPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	transPeer := &goaviatrix.TransPeer{
 		Source:        d.Get("source").(string),
 		Nexthop:       d.Get("nexthop").(string),
@@ -94,6 +95,7 @@ func resourceTransPeerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("source", transPeer.Source)
 	d.Set("nexthop", transPeer.Nexthop)
 	d.Set("reachable_cidr", transPeer.ReachableCidr)
+
 	return nil
 }
 
@@ -111,5 +113,6 @@ func resourceTransPeerDelete(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix Transpeer: %s", err)
 	}
+
 	return nil
 }

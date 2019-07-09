@@ -53,7 +53,9 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 	account := &goaviatrix.Account{
 		AccountName: d.Get("account_name").(string),
 	}
+
 	log.Printf("[INFO] Looking for Aviatrix account: %#v", account)
+
 	acc, err := client.GetAccount(account)
 	if err != nil {
 		return fmt.Errorf("aviatrix Account: %s", err)
@@ -71,5 +73,6 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 	} else {
 		d.SetId("")
 	}
+
 	return nil
 }

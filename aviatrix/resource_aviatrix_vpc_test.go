@@ -34,18 +34,12 @@ func TestAccAviatrixVpc_basic(t *testing.T) {
 				Config: testAccVpcConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists("aviatrix_vpc.test_vpc", &vpc),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", fmt.Sprintf("tfg-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "account_name", fmt.Sprintf("tfa-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "cloud_type", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "aviatrix_transit_vpc", "false"),
-					resource.TestCheckResourceAttr(
-						resourceName, "region", os.Getenv("AWS_REGION")),
-					resource.TestCheckResourceAttr(
-						resourceName, "cidr", "10.0.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tfg-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloud_type", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aviatrix_transit_vpc", "false"),
+					resource.TestCheckResourceAttr(resourceName, "region", os.Getenv("AWS_REGION")),
+					resource.TestCheckResourceAttr(resourceName, "cidr", "10.0.0.0/16"),
 				),
 			},
 			{
@@ -86,7 +80,6 @@ func testAccCheckVpcExists(n string, vpc *goaviatrix.Vpc) resource.TestCheckFunc
 		if !ok {
 			return fmt.Errorf("VPC Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no VPC ID is set")
 		}
@@ -101,13 +94,11 @@ func testAccCheckVpcExists(n string, vpc *goaviatrix.Vpc) resource.TestCheckFunc
 		if err != nil {
 			return err
 		}
-
 		if foundVpc2.Name != rs.Primary.ID {
 			return fmt.Errorf("VPC not found")
 		}
 
 		*vpc = *foundVpc2
-
 		return nil
 	}
 }
@@ -129,5 +120,6 @@ func testAccCheckVpcDestroy(s *terraform.State) error {
 			return fmt.Errorf("VPC still exists")
 		}
 	}
+
 	return nil
 }

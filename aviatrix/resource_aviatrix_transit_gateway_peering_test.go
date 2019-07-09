@@ -41,10 +41,8 @@ func TestAccAviatrixTransitGatewayPeering_basic(t *testing.T) {
 					subnet1, subnet2, haSubnet1, haSubnet2),
 				Check: resource.ComposeTestCheckFunc(
 					tesAccCheckTransitGatewayPeeringExists("aviatrix_transit_gateway_peering.foo"),
-					resource.TestCheckResourceAttr(
-						resourceName, "transit_gateway_name1", fmt.Sprintf("tfg-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "transit_gateway_name2", fmt.Sprintf("tfg2-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_name1", fmt.Sprintf("tfg-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_name2", fmt.Sprintf("tfg2-%s", rName)),
 				),
 			},
 			{
@@ -106,7 +104,6 @@ func tesAccCheckTransitGatewayPeeringExists(n string) resource.TestCheckFunc {
 		if !ok {
 			return fmt.Errorf("aviatrix transit gateway peering Not Created: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no aviatrix transit gateway peering ID is set")
 		}
@@ -145,5 +142,6 @@ func testAccCheckTransitGatewayPeeringDestroy(s *terraform.State) error {
 			return fmt.Errorf("aviatrix transit gateway peering still exists")
 		}
 	}
+
 	return nil
 }

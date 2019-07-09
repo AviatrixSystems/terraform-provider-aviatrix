@@ -34,24 +34,15 @@ func TestAccAviatrixVPNProfile_basic(t *testing.T) {
 				Config: testAccVPNProfileConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNProfileExists("aviatrix_vpn_profile.test_vpn_profile", &vpnProfile),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", fmt.Sprintf("tfp-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "base_rule", "allow_all"),
-					resource.TestCheckResourceAttr(
-						resourceName, "users.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "users.0", fmt.Sprintf("tfu-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "policy.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "policy.0.action", "deny"),
-					resource.TestCheckResourceAttr(
-						resourceName, "policy.0.proto", "tcp"),
-					resource.TestCheckResourceAttr(
-						resourceName, "policy.0.port", "443"),
-					resource.TestCheckResourceAttr(
-						resourceName, "policy.0.target", "10.0.0.0/32"),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tfp-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "base_rule", "allow_all"),
+					resource.TestCheckResourceAttr(resourceName, "users.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "users.0", fmt.Sprintf("tfu-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy.0.action", "deny"),
+					resource.TestCheckResourceAttr(resourceName, "policy.0.proto", "tcp"),
+					resource.TestCheckResourceAttr(resourceName, "policy.0.port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "policy.0.target", "10.0.0.0/32"),
 				),
 			},
 			{
@@ -115,7 +106,6 @@ func testAccCheckVPNProfileExists(n string, vpnProfile *goaviatrix.Profile) reso
 		if !ok {
 			return fmt.Errorf("VPN Profile Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no VPN Profile ID is set")
 		}
@@ -130,13 +120,11 @@ func testAccCheckVPNProfileExists(n string, vpnProfile *goaviatrix.Profile) reso
 		if err != nil {
 			return err
 		}
-
 		if foundVPNProfile2.Name != rs.Primary.ID {
 			return fmt.Errorf("VPN profile not found")
 		}
 
 		*vpnProfile = *foundVPNProfile
-
 		return nil
 	}
 }
@@ -158,5 +146,6 @@ func testAccCheckVPNProfileDestroy(s *terraform.State) error {
 			return fmt.Errorf("VPN Profile still exists")
 		}
 	}
+
 	return nil
 }

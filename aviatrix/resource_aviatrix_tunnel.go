@@ -49,10 +49,10 @@ func resourceTunnel() *schema.Resource {
 				Description: "Name of the peering link.",
 			},
 			"enable_ha": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     "no",
-				Description: "Whether Peering HA is enabled. Valid inputs: 'yes' and 'no'.",
+				Default:     false,
+				Description: "Whether Peering HA is enabled. Valid inputs: true or false.",
 			},
 		},
 	}
@@ -60,23 +60,29 @@ func resourceTunnel() *schema.Resource {
 
 func resourceTunnelCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	tunnel := &goaviatrix.Tunnel{
 		VpcName1:        d.Get("gw_name1").(string),
 		VpcName2:        d.Get("gw_name2").(string),
 		PeeringState:    d.Get("peering_state").(string),
 		PeeringHaStatus: d.Get("peering_hastatus").(string),
 		PeeringLink:     d.Get("peering_link").(string),
-		EnableHA:        d.Get("enable_ha").(string),
 	}
-	if tunnel.EnableHA != "" && tunnel.EnableHA != "yes" && tunnel.EnableHA != "no" {
-		return fmt.Errorf("enable_ha can only be empty string, 'yes', or 'no'")
+
+	enableHA := d.Get("enable_ha").(bool)
+	if enableHA {
+		tunnel.EnableHA = "yes"
+	} else {
+		tunnel.EnableHA = "no"
 	}
+
 	log.Printf("[INFO] Creating Aviatrix tunnel: %#v", tunnel)
 
 	err := client.CreateTunnel(tunnel)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Tunnel: %s", err)
 	}
+
 	d.SetId(tunnel.VpcName1 + "~" + tunnel.VpcName2)
 	return resourceTunnelRead(d, meta)
 }
@@ -112,18 +118,23 @@ func resourceTunnelRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("peering_hastatus", tun.PeeringHaStatus)
 	d.Set("peering_state", tun.PeeringState)
 	d.Set("peering_link", tun.PeeringLink)
+
 	if tun.PeeringHaStatus == "active" {
-		d.Set("enable_ha", "yes")
+		d.Set("enable_ha", true)
 	} else {
-		d.Set("enable_ha", "no")
+		d.Set("enable_ha", false)
 	}
+
 	d.SetId(tun.VpcName1 + "~" + tun.VpcName2)
+
 	log.Printf("[INFO] Found tunnel: %#v", d)
+
 	return nil
 }
 
 func resourceTunnelUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	tunnel := &goaviatrix.Tunnel{
 		VpcName1:        d.Get("gw_name1").(string),
 		VpcName2:        d.Get("gw_name2").(string),
@@ -138,12 +149,15 @@ func resourceTunnelUpdate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("failed to update Aviatrix Tunnel: %s", err)
 	}
+
 	d.SetId(tunnel.VpcName1 + "~" + tunnel.VpcName2)
+
 	return resourceTunnelRead(d, meta)
 }
 
 func resourceTunnelDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	tunnel := &goaviatrix.Tunnel{
 		VpcName1: d.Get("gw_name1").(string),
 		VpcName2: d.Get("gw_name2").(string),
@@ -163,9 +177,11 @@ func resourceTunnelDelete(d *schema.ResourceData, meta interface{}) error {
 
 	tunnel.VpcName1 = d.Get("gw_name1").(string)
 	tunnel.VpcName2 = d.Get("gw_name2").(string)
+
 	err := client.DeleteTunnel(tunnel)
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix Tunnel: %s", err)
 	}
+
 	return nil
 }

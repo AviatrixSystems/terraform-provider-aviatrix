@@ -57,10 +57,8 @@ func TestAccAviatrixARMPeer_basic(t *testing.T) {
 				Config: testAccARMPeerConfigBasic(rInt, vNet1, vNet2, region1, region2),
 				Check: resource.ComposeTestCheckFunc(
 					tesAccCheckARMPeerExists(resourceName, &armPeer),
-					resource.TestCheckResourceAttr(
-						resourceName, "vnet_name_resource_group1", vNet1),
-					resource.TestCheckResourceAttr(
-						resourceName, "vnet_name_resource_group2", vNet2),
+					resource.TestCheckResourceAttr(resourceName, "vnet_name_resource_group1", vNet1),
+					resource.TestCheckResourceAttr(resourceName, "vnet_name_resource_group2", vNet2),
 				),
 			},
 			{
@@ -117,17 +115,14 @@ func tesAccCheckARMPeerExists(n string, armPeer *goaviatrix.ARMPeer) resource.Te
 		if err != nil {
 			return err
 		}
-
 		if foundPeer.VNet1 != rs.Primary.Attributes["vnet_name_resource_group1"] {
 			return fmt.Errorf("vnet_name_resource_group1 Not found in created attributes")
 		}
-
 		if foundPeer.VNet2 != rs.Primary.Attributes["vnet_name_resource_group2"] {
 			return fmt.Errorf("vnet_name_resource_group2 Not found in created attributes")
 		}
 
 		*armPeer = *foundPeer
-
 		return nil
 	}
 }

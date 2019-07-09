@@ -66,6 +66,7 @@ func resourceAviatrixVGWConn() *schema.Resource {
 
 func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	vgwConn := &goaviatrix.VGWConn{
 		ConnName:      d.Get("conn_name").(string),
 		GwName:        d.Get("gw_name").(string),
@@ -157,7 +158,6 @@ func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	d.SetId(vConn.ConnName + "~" + vConn.VPCId)
-
 	return nil
 }
 
@@ -170,6 +170,7 @@ func resourceAviatrixVGWConnUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.Partial(true)
+
 	if d.HasChange("conn_name") {
 		return fmt.Errorf("updating conn_name is not allowed")
 	}
@@ -220,11 +221,13 @@ func resourceAviatrixVGWConnUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.Partial(false)
+
 	return nil
 }
 
 func resourceAviatrixVGWConnDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	vgwConn := &goaviatrix.VGWConn{
 		ConnName: d.Get("conn_name").(string),
 		VPCId:    d.Get("vpc_id").(string),
@@ -239,5 +242,6 @@ func resourceAviatrixVGWConnDelete(d *schema.ResourceData, meta interface{}) err
 		}
 		return fmt.Errorf("failed to delete Aviatrix VGWConn: %s", err)
 	}
+
 	return nil
 }

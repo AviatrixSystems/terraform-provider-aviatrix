@@ -69,7 +69,6 @@ func resourceAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	d.SetId(awsTgwVpcAttachment.TgwName + "~" + awsTgwVpcAttachment.SecurityDomainName + "~" + awsTgwVpcAttachment.VpcID)
-
 	return resourceAwsTgwVpcAttachmentRead(d, meta)
 }
 

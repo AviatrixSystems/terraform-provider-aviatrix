@@ -46,7 +46,7 @@ The following arguments are supported:
 * `local_subnet_cidr` - (Optional) Local Subnet CIDR. Required for connection type "mapped".
 * `remote_subnet_virtual` - Remote Subnet CIDR (Virtual). Required for connection type "mapped" only.
 * `local_subnet_virtual` - Local Subnet CIDR (Virtual). Required for connection type "mapped" only.
-* `ha_enabled` - (Optional) Specify whether enabling HA or not. Valid Value(s): "yes", "no".
+* `ha_enabled` - (Optional) Specify whether enabling HA or not. Valid Values: true or false.
 * `custom_algorithms` - (Optional) Switch to enable custom/non-default algorithms for IPSec Authentication/Encryption. Valid values: true or false.
 * `phase_1_authentication` - (Optional) Phase one Authentication. Valid values: 'SHA-1', 'SHA-256', 'SHA-384' and 'SHA-512'. Default value: 'SHA-1'.
 * `phase_2_authentication` - (Optional) Phase two Authentication. Valid values: 'NO-AUTH', 'HMAC-SHA-1', 'HMAC-SHA-256', 'HMAC-SHA-384' and 'HMAC-SHA-512'. Default value: 'HMAC-SHA-1'.

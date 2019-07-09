@@ -48,16 +48,11 @@ func TestAccAviatrixVGWConn_basic(t *testing.T) {
 				Config: testAccVGWConnConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVGWConnExists(resourceName, &vgwConn),
-					resource.TestCheckResourceAttr(
-						resourceName, "conn_name", fmt.Sprintf("tfc-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "gw_name", fmt.Sprintf("tfg-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "vpc_id", vpcID),
-					resource.TestCheckResourceAttr(
-						resourceName, "bgp_vgw_id", bgpVGWId),
-					resource.TestCheckResourceAttr(
-						resourceName, "bgp_local_as_num", "6451"),
+					resource.TestCheckResourceAttr(resourceName, "conn_name", fmt.Sprintf("tfc-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", vpcID),
+					resource.TestCheckResourceAttr(resourceName, "bgp_vgw_id", bgpVGWId),
+					resource.TestCheckResourceAttr(resourceName, "bgp_local_as_num", "6451"),
 				),
 			},
 			{
@@ -106,7 +101,6 @@ func testAccCheckVGWConnExists(n string, vgwConn *goaviatrix.VGWConn) resource.T
 		if !ok {
 			return fmt.Errorf("vgw connection Not created: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no VGW connection ID is set")
 		}
@@ -125,13 +119,11 @@ func testAccCheckVGWConnExists(n string, vgwConn *goaviatrix.VGWConn) resource.T
 		if err != nil {
 			return err
 		}
-
 		if foundVGWConn2.ConnName != rs.Primary.Attributes["conn_name"] {
 			return fmt.Errorf("conn_name Not found in created attributes")
 		}
 
 		*vgwConn = *foundVGWConn
-
 		return nil
 	}
 }
@@ -157,5 +149,6 @@ func testAccCheckVGWConnDestroy(s *terraform.State) error {
 			return fmt.Errorf("vgw connection still exists")
 		}
 	}
+
 	return nil
 }

@@ -59,9 +59,9 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 				Description: "Public Subnet Info.",
 			},
 			"enable_nat": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     "no",
+				Default:     false,
 				Description: "Specify whether enabling NAT feature on the gateway or not.",
 			},
 			"ha_subnet": {
@@ -83,9 +83,9 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 				Description: "HA Gateway Size.",
 			},
 			"single_az_ha": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     "disabled",
+				Default:     false,
 				Description: "Set to 'enabled' if this feature is desired.",
 			},
 			"transit_gw": {
@@ -112,6 +112,7 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 
 func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	gateway := &goaviatrix.SpokeVpc{
 		CloudType:      d.Get("cloud_type").(int),
 		AccountName:    d.Get("account_name").(string),
@@ -120,13 +121,25 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		VpcSize:        d.Get("gw_size").(string),
 		Subnet:         d.Get("subnet").(string),
 		HASubnet:       d.Get("ha_subnet").(string),
-		EnableNAT:      d.Get("enable_nat").(string),
-		SingleAzHa:     d.Get("single_az_ha").(string),
 		TransitGateway: d.Get("transit_gw").(string),
 	}
 
-	if gateway.EnableNAT != "yes" {
-		gateway.EnableNAT = "no"
+	enableNat := d.Get("enable_nat").(bool)
+	if enableNat {
+		gateway.EnableNat = "yes"
+	} else {
+		gateway.EnableNat = "no"
+	}
+
+	singleAZ := d.Get("single_az_ha").(bool)
+	if singleAZ {
+		gateway.SingleAzHa = "enabled"
+	} else {
+		gateway.SingleAzHa = "disabled"
+	}
+
+	if gateway.EnableNat != "yes" {
+		gateway.EnableNat = "no"
 	}
 
 	if gateway.CloudType == 1 || gateway.CloudType == 4 {
@@ -165,14 +178,14 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 	flag := false
 	defer resourceAviatrixSpokeVpcReadIfRequired(d, meta, &flag)
 
-	if enableNAT := d.Get("enable_nat").(string); enableNAT == "yes" {
+	if enableNat {
 		log.Printf("[INFO] Aviatrix NAT enabled gateway: %#v", gateway)
 	}
 
-	if singleAZHA := d.Get("single_az_ha").(string); singleAZHA == "enabled" {
+	if singleAZ {
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName:   d.Get("gw_name").(string),
-			SingleAZ: d.Get("single_az_ha").(string),
+			SingleAZ: "enabled",
 		}
 		log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
 		err := client.EnableSingleAZGateway(singleAZGateway)
@@ -267,6 +280,7 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 		AccountName: d.Get("account_name").(string),
 		GwName:      d.Get("gw_name").(string),
 	}
+
 	gw, err := client.GetGateway(gateway)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
@@ -291,16 +305,22 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 			d.Set("vpc_id", gw.VpcID)
 			d.Set("vpc_reg", gw.VpcRegion)
 		}
+
 		d.Set("subnet", gw.VpcNet)
 		d.Set("gw_size", gw.GwSize)
 		d.Set("public_ip", gw.PublicIP)
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
-		d.Set("enable_nat", gw.EnableNat)
+
+		if gw.EnableNat == "enabled" {
+			d.Set("enable_nat", true)
+		} else {
+			d.Set("enable_nat", false)
+		}
 
 		if gw.SingleAZ == "yes" {
-			d.Set("single_az_ha", "enabled")
+			d.Set("single_az_ha", true)
 		} else {
-			d.Set("single_az_ha", "disabled")
+			d.Set("single_az_ha", false)
 		}
 	}
 
@@ -340,6 +360,7 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 		AccountName: d.Get("account_name").(string),
 		GwName:      d.Get("gw_name").(string) + "-hagw",
 	}
+
 	haGw, err := client.GetGateway(haGateway)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
@@ -366,10 +387,12 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 
 func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	gateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string),
 	}
+
 	haGateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string) + "-hagw",
@@ -378,6 +401,7 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[INFO] Updating Aviatrix gateway: %#v", gateway)
 
 	d.Partial(true)
+
 	if d.HasChange("cloud_type") {
 		return fmt.Errorf("updating cloud_type is not allowed")
 	}
@@ -625,6 +649,7 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.Partial(false)
+
 	d.SetId(gateway.GwName)
 
 	return resourceAviatrixSpokeVpcRead(d, meta)
@@ -632,6 +657,7 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAviatrixSpokeVpcDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	gateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string),
@@ -661,10 +687,13 @@ func resourceAviatrixSpokeVpcDelete(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("failed to delete Aviatrix SpokeVpc HA gateway: %s", err)
 		}
 	}
+
 	gateway.GwName = d.Get("gw_name").(string)
+
 	err := client.DeleteGateway(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix SpokeVpc: %s", err)
 	}
+
 	return nil
 }

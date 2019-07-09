@@ -16,7 +16,7 @@ The FQDN resource manages FQDN filtering for Aviatrix Gateway
 # Set Aviatrix Gateway FQDN filter
 resource "aviatrix_fqdn" "test_fqdn" {
   fqdn_tag     = "my_tag"
-  fqdn_status  = "enabled"
+  fqdn_enabled = true
   fqdn_mode    = "white"
   
   gw_filter_tag_list {
@@ -51,8 +51,8 @@ resource "aviatrix_fqdn" "test_fqdn" {
 The following arguments are supported:
 
 * `fqdn_tag` - (Required) FQDN Filter Tag Name.
-* `fqdn_status` - (Optional) FQDN Filter Tag Status. Valid values: "enabled", "disabled".
-* `fqdn_mode` - (Optional) Specify the tag color to be a white-list tag or black-list tag. Valid Values: "white", "black".
+* `fqdn_enabled` - (Optional) FQDN Filter Tag Status. Valid value: true or false.
+* `fqdn_mode` - (Optional) Specify the tag color to be a white-list tag or black-list tag. Valid value: "white" or "black".
 * `gw_filter_tag_list` - (Optional) A list of gateways to attach to the specific tag.
   * `gw_name` - (Optional) Name of the gateway to attach to the specific tag. 
   * `source_ip_list` - (Optional) List of source IPs in the VPC qualified for a specific tag.

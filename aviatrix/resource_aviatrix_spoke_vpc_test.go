@@ -18,6 +18,7 @@ func preSpokeGatewayCheck(t *testing.T, msgCommon string) string {
 	if armGwSize == "" {
 		t.Fatal("Environment variable ARM_GW_SIZE is not set" + msgCommon)
 	}
+
 	return armGwSize
 }
 
@@ -70,15 +71,13 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 					Config: testAccSpokeGwConfigAWS(rName),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckSpokeGwExists(resourceName, &gateway),
-						resource.TestCheckResourceAttr(resourceName,
-							"gw_name", fmt.Sprintf("tfg-aws-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-aws-%s", rName)),
 						resource.TestCheckResourceAttr(resourceName, "gw_size", awsGwSize),
-						resource.TestCheckResourceAttr(resourceName,
-							"account_name", fmt.Sprintf("tfa-aws-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-aws-%s", rName)),
 						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
 						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("AWS_VPC_NET")),
 						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AWS_REGION")),
-						resource.TestCheckResourceAttr(resourceName, "enable_nat", "no"),
+						resource.TestCheckResourceAttr(resourceName, "enable_nat", "false"),
 					),
 				},
 				{
@@ -102,15 +101,13 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 					Config: testAccSpokeGwConfigGCP(rName),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckSpokeGwExists(resourceName, &gateway),
-						resource.TestCheckResourceAttr(resourceName,
-							"gw_name", fmt.Sprintf("tfg-gcp-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-gcp-%s", rName)),
 						resource.TestCheckResourceAttr(resourceName, "gw_size", gcpGwSize),
-						resource.TestCheckResourceAttr(resourceName,
-							"account_name", fmt.Sprintf("tfa-gcp-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-gcp-%s", rName)),
 						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("GCP_VPC_ID")),
 						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("GCP_SUBNET")),
 						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("GCP_ZONE")),
-						resource.TestCheckResourceAttr(resourceName, "enable_nat", "no"),
+						resource.TestCheckResourceAttr(resourceName, "enable_nat", "false"),
 					),
 				},
 				{
@@ -135,15 +132,13 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 					Config: testAccSpokeGwConfigARM(rName),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckSpokeGwExists(resourceName, &gateway),
-						resource.TestCheckResourceAttr(resourceName,
-							"gw_name", fmt.Sprintf("tfg-arm-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-arm-%s", rName)),
 						resource.TestCheckResourceAttr(resourceName, "gw_size", os.Getenv("ARM_GW_SIZE")),
-						resource.TestCheckResourceAttr(resourceName,
-							"account_name", fmt.Sprintf("tfa-arm-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-arm-%s", rName)),
 						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("ARM_VNET_ID")),
 						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("ARM_SUBNET")),
 						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("ARM_REGION")),
-						resource.TestCheckResourceAttr(resourceName, "enable_nat", "no"),
+						resource.TestCheckResourceAttr(resourceName, "enable_nat", "false"),
 					),
 				},
 				{
@@ -179,7 +174,7 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
 	vpc_reg      = "%[6]s"
 	gw_size      = "%[7]s"
 	subnet       = "%[8]s"
-	enable_nat   = "no"
+	enable_nat   = false
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_VPC_NET"))
@@ -243,7 +238,6 @@ func testAccCheckSpokeGwExists(n string, gateway *goaviatrix.Gateway) resource.T
 		if !ok {
 			return fmt.Errorf("spoke gateway Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no spoke gateway ID is set")
 		}
@@ -259,13 +253,11 @@ func testAccCheckSpokeGwExists(n string, gateway *goaviatrix.Gateway) resource.T
 		if err != nil {
 			return err
 		}
-
 		if foundGateway.GwName != rs.Primary.ID {
 			return fmt.Errorf("spoke gateway not found")
 		}
 
 		*gateway = *foundGateway
-
 		return nil
 	}
 }
@@ -287,5 +279,6 @@ func testAccCheckSpokeGwDestroy(s *terraform.State) error {
 			return fmt.Errorf("spoke gateway still exists")
 		}
 	}
+
 	return nil
 }

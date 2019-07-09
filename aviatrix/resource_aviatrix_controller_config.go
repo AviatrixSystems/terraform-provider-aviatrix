@@ -60,6 +60,7 @@ func resourceControllerConfig() *schema.Resource {
 
 func resourceControllerConfigCreate(d *schema.ResourceData, meta interface{}) error {
 	var err error
+
 	account := d.Get("sg_management_account_name").(string)
 
 	client := meta.(*goaviatrix.Client)
@@ -142,7 +143,6 @@ func resourceControllerConfigCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
-
 	return resourceControllerConfigRead(d, meta)
 }
 

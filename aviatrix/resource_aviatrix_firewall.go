@@ -24,17 +24,17 @@ func resourceAviatrixFirewall() *schema.Resource {
 				Required:    true,
 				Description: "The name of gateway.",
 			},
-			"base_allow_deny": {
+			"base_policy": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "deny-all",
 				Description: "New base policy.",
 			},
-			"base_log_enable": {
-				Type:        schema.TypeString,
+			"base_log_enabled": {
+				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     "off",
-				Description: "Indicates whether enable logging or not.",
+				Default:     false,
+				Description: "Indicates whether enable logging or not. Valid values: true or false.",
 			},
 			"policy": {
 				Type:        schema.TypeList,
@@ -62,15 +62,15 @@ func resourceAviatrixFirewall() *schema.Resource {
 							Optional:    true,
 							Description: "A single port or a range of port numbers.",
 						},
-						"allow_deny": {
+						"action": {
 							Type:        schema.TypeString,
 							Optional:    true,
 							Description: "Valid values: 'allow' and 'deny'.",
 						},
-						"log_enable": {
-							Type:        schema.TypeString,
+						"log_enabled": {
+							Type:        schema.TypeBool,
 							Optional:    true,
-							Description: "Valid values: 'on' and 'off'.",
+							Description: "Valid values: true or false.",
 						},
 					},
 				},
@@ -81,21 +81,27 @@ func resourceAviatrixFirewall() *schema.Resource {
 
 func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	firewall := &goaviatrix.Firewall{
-		GwName:        d.Get("gw_name").(string),
-		BaseAllowDeny: d.Get("base_allow_deny").(string),
-		BaseLogEnable: d.Get("base_log_enable").(string),
+		GwName:     d.Get("gw_name").(string),
+		BasePolicy: d.Get("base_policy").(string),
 	}
-	if firewall.BaseAllowDeny != "allow-all" && firewall.BaseAllowDeny != "deny-all" {
-		return fmt.Errorf("base_allow_deny can only be 'allow-all', or 'deny-all'")
+
+	if firewall.BasePolicy != "allow-all" && firewall.BasePolicy != "deny-all" {
+		return fmt.Errorf("base_policy can only be 'allow-all', or 'deny-all'")
 	}
-	if firewall.BaseLogEnable != "on" && firewall.BaseLogEnable != "off" {
-		return fmt.Errorf("base_log_enable can only be 'on', or 'off'")
+
+	baseLogEnabled := d.Get("base_log_enabled").(bool)
+	if baseLogEnabled {
+		firewall.BaseLogEnabled = "on"
+	} else {
+		firewall.BaseLogEnabled = "off"
 	}
+
 	log.Printf("[INFO] Creating Aviatrix firewall: %#v", firewall)
 
-	//If base_allow_deny or base_log enable is present, set base policy
-	if firewall.BaseAllowDeny != "" || firewall.BaseLogEnable != "" {
+	//If base_policy or base_log enable is present, set base policy
+	if firewall.BasePolicy != "" {
 		err := client.SetBasePolicy(firewall)
 		if err != nil {
 			return fmt.Errorf("failed to set base firewall policies for GW %s: %s", firewall.GwName, err)
@@ -107,30 +113,41 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 		for _, policy := range policies {
 			pl := policy.(map[string]interface{})
 			firewallPolicy := &goaviatrix.Policy{
-				SrcIP:     pl["src_ip"].(string),
-				DstIP:     pl["dst_ip"].(string),
-				Protocol:  pl["protocol"].(string),
-				Port:      pl["port"].(string),
-				AllowDeny: pl["allow_deny"].(string),
-				LogEnable: pl["log_enable"].(string),
+				SrcIP:    pl["src_ip"].(string),
+				DstIP:    pl["dst_ip"].(string),
+				Protocol: pl["protocol"].(string),
+				Port:     pl["port"].(string),
+				Action:   pl["action"].(string),
 			}
+
+			logEnabled := pl["log_enabled"].(interface{}).(bool)
+			if logEnabled {
+				firewallPolicy.LogEnabled = "on"
+			} else {
+				firewallPolicy.LogEnabled = "off"
+			}
+
 			err := client.ValidatePolicy(firewallPolicy)
 			if err != nil {
 				return fmt.Errorf("policy validation failed: %v", err)
 			}
+
 			firewall.PolicyList = append(firewall.PolicyList, firewallPolicy)
 		}
+
 		err := client.UpdatePolicy(firewall)
 		if err != nil {
 			return fmt.Errorf("failed to create Aviatrix Firewall: %s", err)
 		}
 	}
+
 	d.SetId(firewall.GwName)
 	return resourceAviatrixFirewallRead(d, meta)
 }
 
 func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	gwName := d.Get("gw_name").(string)
 	if gwName == "" {
 		id := d.Id()
@@ -142,6 +159,7 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 	firewall := &goaviatrix.Firewall{
 		GwName: d.Get("gw_name").(string),
 	}
+
 	fw, err := client.GetPolicy(firewall)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
@@ -150,18 +168,20 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 		}
 		return fmt.Errorf("error fetching policy for gateway %s: %s", firewall.GwName, err)
 	}
-	log.Printf("[TRACE] Reading policy for gateway %s: %#v",
-		firewall.GwName, fw)
+
+	log.Printf("[TRACE] Reading policy for gateway %s: %#v", firewall.GwName, fw)
+
 	if fw != nil {
-		if fw.BaseAllowDeny == "allow-all" {
-			d.Set("base_allow_deny", "allow-all")
+		if fw.BasePolicy == "allow-all" {
+			d.Set("base_policy", "allow-all")
 		} else {
-			d.Set("base_allow_deny", "deny-all")
+			d.Set("base_policy", "deny-all")
 		}
-		if fw.BaseLogEnable == "on" {
-			d.Set("base_log_enable", "on")
+
+		if fw.BaseLogEnabled == "on" {
+			d.Set("base_log_enabled", true)
 		} else {
-			d.Set("base_log_enable", "off")
+			d.Set("base_log_enabled", false)
 		}
 
 		var policies []map[string]interface{}
@@ -171,8 +191,14 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 			pl["dst_ip"] = policy.DstIP
 			pl["protocol"] = policy.Protocol
 			pl["port"] = policy.Port
-			pl["log_enable"] = policy.LogEnable
-			pl["allow_deny"] = policy.AllowDeny
+
+			if policy.LogEnabled == "on" {
+				pl["log_enabled"] = true
+			} else {
+				pl["log_enabled"] = false
+			}
+
+			pl["action"] = policy.Action
 			policies = append(policies, pl)
 		}
 
@@ -186,28 +212,34 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 
 func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	firewall := &goaviatrix.Firewall{
 		GwName: d.Get("gw_name").(string),
 	}
+
 	d.Partial(true)
+
 	log.Printf("[INFO] Creating Aviatrix firewall: %#v", firewall)
-	if ok := d.HasChange("base_allow_deny"); ok {
-		firewall.BaseAllowDeny = d.Get("base_allow_deny").(string)
-		if firewall.BaseAllowDeny == "allow" {
-			firewall.BaseAllowDeny = "allow-all"
+
+	if ok := d.HasChange("base_policy"); ok {
+		firewall.BasePolicy = d.Get("base_policy").(string)
+		if firewall.BasePolicy == "allow" {
+			firewall.BasePolicy = "allow-all"
 		}
-		if firewall.BaseAllowDeny == "deny" {
-			firewall.BaseAllowDeny = "deny-all"
+		if firewall.BasePolicy == "deny" {
+			firewall.BasePolicy = "deny-all"
 		}
-		firewall.BaseLogEnable = d.Get("base_log_enable").(string)
+		firewall.BaseLogEnabled = d.Get("base_log_enabled").(string)
 	}
-	if ok := d.HasChange("base_log_enable"); ok {
-		firewall.BaseAllowDeny = d.Get("base_allow_deny").(string)
-		firewall.BaseLogEnable = d.Get("base_log_enable").(string)
+
+	if ok := d.HasChange("base_log_enabled"); ok {
+		firewall.BasePolicy = d.Get("base_policy").(string)
+		firewall.BaseLogEnabled = d.Get("base_log_enabled").(string)
 	}
-	//If base_allow_deny or base_log enable is present, first delete
+
+	//If base_policy or base_log enable is present, first delete
 	//existing policies, set base policy, and then reapply deleted policies.
-	if firewall.BaseAllowDeny != "" || firewall.BaseLogEnable != "" {
+	if firewall.BasePolicy != "" || firewall.BaseLogEnabled != "" {
 		firewall.PolicyList = make([]*goaviatrix.Policy, 0)
 		err := client.UpdatePolicy(firewall)
 		if err != nil {
@@ -217,48 +249,63 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 		if err != nil {
 			return fmt.Errorf("failed to set base firewall policies for GW %s: %s", firewall.GwName, err)
 		}
-		if d.HasChange("base_allow_deny") {
-			d.SetPartial("base_allow_deny")
+		if d.HasChange("base_policy") {
+			d.SetPartial("base_policy")
 		}
-		if d.HasChange("base_log_enable") {
-			d.SetPartial("base_log_enable")
+		if d.HasChange("base_log_enabled") {
+			d.SetPartial("base_log_enabled")
 		}
 	}
+
 	//If policy list is present, update policy list
 	if _, ok := d.GetOk("policy"); ok {
 		policies := d.Get("policy").([]interface{})
 		for _, policy := range policies {
 			pl := policy.(map[string]interface{})
 			firewallPolicy := &goaviatrix.Policy{
-				SrcIP:     pl["src_ip"].(string),
-				DstIP:     pl["dst_ip"].(string),
-				Protocol:  pl["protocol"].(string),
-				Port:      pl["port"].(string),
-				AllowDeny: pl["allow_deny"].(string),
-				LogEnable: pl["log_enable"].(string),
+				SrcIP:    pl["src_ip"].(string),
+				DstIP:    pl["dst_ip"].(string),
+				Protocol: pl["protocol"].(string),
+				Port:     pl["port"].(string),
+				Action:   pl["action"].(string),
 			}
+
+			if pl["log_enabled"].(interface{}).(bool) {
+				firewallPolicy.LogEnabled = string("on")
+			} else {
+				firewallPolicy.LogEnabled = string("off")
+			}
+
 			err := client.ValidatePolicy(firewallPolicy)
 			if err != nil {
 				return fmt.Errorf("policy validation failed: %v", err)
 			}
+
 			firewall.PolicyList = append(firewall.PolicyList, firewallPolicy)
 		}
+
 		err := client.UpdatePolicy(firewall)
 		if err != nil {
 			return fmt.Errorf("failed to create Aviatrix Firewall: %s", err)
 		}
+
 		d.SetPartial("policy")
 	}
+
 	d.Partial(false)
+
 	return nil
 }
 
 func resourceAviatrixFirewallDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	firewall := &goaviatrix.Firewall{
 		GwName: d.Get("gw_name").(string),
 	}
+
 	firewall.PolicyList = make([]*goaviatrix.Policy, 0)
+
 	err := client.UpdatePolicy(firewall)
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix Firewall policy list: %s", err)
@@ -269,5 +316,6 @@ func resourceAviatrixFirewallDelete(d *schema.ResourceData, meta interface{}) er
 	//both base_policy and base_policy_log_enable together to the
 	//opposite of their current values gives error.
 	//Add base policy resetting after the bug gets fixed
+
 	return nil
 }
