@@ -113,7 +113,6 @@ func testAccCheckVPNUserAcceleratorDestroy(s *terraform.State) error {
 		if err != nil {
 			return fmt.Errorf("error retrieving vpn user accelerator: %s", err)
 		}
-
 		if goaviatrix.Contains(elbList, rs.Primary.ID) {
 			return fmt.Errorf("vpn user accelerator still exists")
 		}

@@ -293,7 +293,6 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.Partial(false)
-
 	return nil
 }
 

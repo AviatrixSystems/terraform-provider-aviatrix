@@ -9,12 +9,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceTunnel() *schema.Resource {
+func resourceAviatrixTunnel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTunnelCreate,
-		Read:   resourceTunnelRead,
-		Update: resourceTunnelUpdate,
-		Delete: resourceTunnelDelete,
+		Create: resourceAviatrixTunnelCreate,
+		Read:   resourceAviatrixTunnelRead,
+		Update: resourceAviatrixTunnelUpdate,
+		Delete: resourceAviatrixTunnelDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -58,7 +58,7 @@ func resourceTunnel() *schema.Resource {
 	}
 }
 
-func resourceTunnelCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTunnelCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	tunnel := &goaviatrix.Tunnel{
@@ -84,10 +84,10 @@ func resourceTunnelCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(tunnel.VpcName1 + "~" + tunnel.VpcName2)
-	return resourceTunnelRead(d, meta)
+	return resourceAviatrixTunnelRead(d, meta)
 }
 
-func resourceTunnelRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTunnelRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	vpcName1 := d.Get("gw_name1").(string)
@@ -126,13 +126,10 @@ func resourceTunnelRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(tun.VpcName1 + "~" + tun.VpcName2)
-
-	log.Printf("[INFO] Found tunnel: %#v", d)
-
 	return nil
 }
 
-func resourceTunnelUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTunnelUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	tunnel := &goaviatrix.Tunnel{
@@ -151,11 +148,10 @@ func resourceTunnelUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(tunnel.VpcName1 + "~" + tunnel.VpcName2)
-
-	return resourceTunnelRead(d, meta)
+	return resourceAviatrixTunnelRead(d, meta)
 }
 
-func resourceTunnelDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTunnelDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	tunnel := &goaviatrix.Tunnel{

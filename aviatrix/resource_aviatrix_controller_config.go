@@ -10,12 +10,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceControllerConfig() *schema.Resource {
+func resourceAviatrixControllerConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceControllerConfigCreate,
-		Read:   resourceControllerConfigRead,
-		Update: resourceControllerConfigUpdate,
-		Delete: resourceControllerConfigDelete,
+		Create: resourceAviatrixControllerConfigCreate,
+		Read:   resourceAviatrixControllerConfigRead,
+		Update: resourceAviatrixControllerConfigUpdate,
+		Delete: resourceAviatrixControllerConfigDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -58,7 +58,7 @@ func resourceControllerConfig() *schema.Resource {
 	}
 }
 
-func resourceControllerConfigCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interface{}) error {
 	var err error
 
 	account := d.Get("sg_management_account_name").(string)
@@ -143,10 +143,10 @@ func resourceControllerConfigCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
-	return resourceControllerConfigRead(d, meta)
+	return resourceAviatrixControllerConfigRead(d, meta)
 }
 
-func resourceControllerConfigRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	log.Printf("[INFO] Getting controller %s configuration", d.Id())
@@ -208,11 +208,10 @@ func resourceControllerConfigRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("version", current)
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
-
 	return nil
 }
 
-func resourceControllerConfigUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	account := d.Get("sg_management_account_name").(string)
 
@@ -307,11 +306,10 @@ func resourceControllerConfigUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.Partial(false)
-
-	return resourceControllerConfigRead(d, meta)
+	return resourceAviatrixControllerConfigRead(d, meta)
 }
 
-func resourceControllerConfigDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixControllerConfigDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	d.Set("http_access", false)
 	curStatusHttp, _ := client.GetHttpAccessEnabled()

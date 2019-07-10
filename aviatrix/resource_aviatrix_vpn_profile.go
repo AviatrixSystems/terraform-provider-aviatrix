@@ -183,7 +183,6 @@ func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[INFO] Generated policies: %v", Policies)
 
 	d.SetId(profile.Name)
-
 	return nil
 }
 
@@ -268,8 +267,8 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 		d.SetPartial("policy")
 
 	}
-	d.Partial(false)
 
+	d.Partial(false)
 	return nil
 }
 

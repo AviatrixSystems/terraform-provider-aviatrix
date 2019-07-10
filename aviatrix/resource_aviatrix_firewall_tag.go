@@ -167,7 +167,6 @@ func resourceAviatrixFirewallTagUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	d.Partial(false)
-
 	return nil
 }
 

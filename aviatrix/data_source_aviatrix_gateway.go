@@ -67,7 +67,6 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return fmt.Errorf("couldn't find Aviatrix Gateway: %s", err)
 	}
-
 	if gw != nil {
 		index := strings.Index(gw.VpcID, "~~")
 		if index > 0 {

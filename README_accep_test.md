@@ -32,20 +32,27 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_firewall_tag                | SKIP_FIREWALL_TAG            |                                                                       |
 | aviatrix_fqdn                        | SKIP_FQDN                    | aviatrix_gateway                                                      |
 | aviatrix_gateway                     | SKIP_GATEWAY                 | aviatrix_account                                                      |
-|				                       | SKIP_AWS_GATEWAY             |		    + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional) |
+|				                       | SKIP_AWS_GATEWAY             |		    + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)  |
 |                                      | SKIP_GCP_GATEWAY             |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)    |
 |                                      | SKIP_ARM_GATEWAY             |         + ARM_VNET_ID, ARM_REGION, ARM_SUBNET, ARM_GW_SIZE            |
 | aviatrix_site2cloud                  | SKIP_S2C                     | aviatrix_gateway                                                      |
+| aviatrix_spoke_gateway               | SKIP_SPOKE_GATEWAY           | aviatrix_gateway                                                      |
+|                                      | SKIP_SPOKE_GATEWAY_AWS       |         + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)  |
+|                                      | SKIP_SPOKE_GATEWAY_GCP       |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)    |
+|                                      | SKIP_SPOKE_GATEWAY_ARM       |         + ARM_VNET_ID, ARM_REGION, ARM_SUBNET, ARM_GW_SIZE            |
 | aviatrix_spoke_vpc                   | SKIP_SPOKE                   | aviatrix_gateway                                                      |
-|                                      | SKIP_SPOKE_AWS               |         + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional) |
+|                                      | SKIP_SPOKE_AWS               |         + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)  |
 |                                      | SKIP_SPOKE_GCP               |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)    |
 |                                      | SKIP_SPOKE_ARM               |         + ARM_VNET_ID, ARM_REGION, ARM_SUBNET, ARM_GW_SIZE            |
 | aviatrix_trans_peer                  | SKIP_TRANS_PEER              | aviatrix_tunnel                                                       |
+| aviatrix_transit_gateway             | SKIP_TRANSIT_GATEWAY         | aviatrix_gateway                                                      |
+|                                      | SKIP_TRANSIT_GATEWAY_AWS     | aviatrix_gateway in AWS                                               |
+|                                      | SKIP_TRANSIT_GATEWAY_ARM     | aviatrix_gateway in ARM                                               |
 | aviatrix_transit_vpc                 | SKIP_TRANSIT                 | aviatrix_gateway                                                      |
 |                                      | SKIP_TRANSIT_AWS             | aviatrix_gateway in AWS                                               |
 |                                      | SKIP_TRANSIT_ARM             | aviatrix_gateway in ARM                                               |
-| aviatrix_transit_gateway_peering     | SKIP_TRANSIT_GATEWAY_PEERING | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2             |
-| aviatrix_tunnel                      | SKIP_TUNNEL                  | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2             |
+| aviatrix_transit_gateway_peering     | SKIP_TRANSIT_GATEWAY_PEERING | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2              |
+| aviatrix_tunnel                      | SKIP_TUNNEL                  | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2              |
 | aviatrix_version                     | SKIP_VERSION                 |                                                                       |
 | aviatrix_vgw_conn                    | SKIP_VGW_CONN                | aviatrix_gateway + AWS_BGP_VGW_ID                                     |
 | aviatrix_vpc                         | SKIP_VPC                     | aviatrix_account                                                      |

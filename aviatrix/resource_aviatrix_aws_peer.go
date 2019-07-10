@@ -9,11 +9,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceAWSPeer() *schema.Resource {
+func resourceAviatrixAWSPeer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAWSPeerCreate,
-		Read:   resourceAWSPeerRead,
-		Delete: resourceAWSPeerDelete,
+		Create: resourceAviatrixAWSPeerCreate,
+		Read:   resourceAviatrixAWSPeerRead,
+		Delete: resourceAviatrixAWSPeerDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -85,7 +85,7 @@ func resourceAWSPeer() *schema.Resource {
 	}
 }
 
-func resourceAWSPeerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	awsPeer := &goaviatrix.AWSPeer{
@@ -100,7 +100,6 @@ func resourceAWSPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("rtb_list1"); ok {
 		awsPeer.RtbList1 = strings.Join(goaviatrix.ExpandStringList(d.Get("rtb_list1").([]interface{})), ",")
 	}
-
 	if _, ok := d.GetOk("rtb_list2"); ok {
 		awsPeer.RtbList2 = strings.Join(goaviatrix.ExpandStringList(d.Get("rtb_list2").([]interface{})), ",")
 	}
@@ -113,10 +112,10 @@ func resourceAWSPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(awsPeer.VpcID1 + "~" + awsPeer.VpcID2)
-	return resourceAWSPeerRead(d, meta)
+	return resourceAviatrixAWSPeerRead(d, meta)
 }
 
-func resourceAWSPeerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSPeerRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	vpcID1 := d.Get("vpc_id1").(string)
@@ -164,7 +163,7 @@ func resourceAWSPeerRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAWSPeerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSPeerDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	awsPeer := &goaviatrix.AWSPeer{
 		VpcID1: d.Get("vpc_id1").(string),

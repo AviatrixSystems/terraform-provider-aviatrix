@@ -40,7 +40,7 @@ func resourceAviatrixVPNUserAcceleratorCreate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("unable to read endpoint list for User Accelerator due to %v", err)
 	}
 	if goaviatrix.Contains(elbList, elb) {
-		return fmt.Errorf("ELB is already included in the VPN User Accelerator. Import into terraform rather than create a new resource.")
+		return fmt.Errorf("elb is already included in the VPN User Accelerator. Import into terraform rather than create a new resource")
 	} else {
 		elbList = append(elbList, elb)
 		elbListStrings := strings.Join(elbList, "\",\"")
@@ -131,6 +131,7 @@ func resourceAviatrixVPNUserAcceleratorDelete(d *schema.ResourceData, meta inter
 		} else {
 			xlr.Endpoints = "[]"
 		}
+
 		err := client.UpdateVpnUserAccelerator(xlr)
 		if err != nil {
 			return fmt.Errorf("unable to remove elb in Vpn User Accelerator due to %v", err)

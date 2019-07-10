@@ -457,7 +457,6 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud connection_type: [%s]", d.Get("connection_type").(string))
 
 	d.SetId(site2cloud.TunnelName + "~" + site2cloud.VpcID)
-
 	return nil
 }
 
@@ -588,9 +587,7 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Partial(false)
-
 	d.SetId(editSite2cloud.ConnName + "~" + editSite2cloud.VpcID)
-
 	return resourceAviatrixSite2CloudRead(d, meta)
 }
 

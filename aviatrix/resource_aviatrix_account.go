@@ -9,12 +9,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceAccount() *schema.Resource {
+func resourceAviatrixAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAccountCreate,
-		Read:   resourceAccountRead,
-		Update: resourceAccountUpdate,
-		Delete: resourceAccountDelete,
+		Create: resourceAviatrixAccountCreate,
+		Read:   resourceAviatrixAccountRead,
+		Update: resourceAviatrixAccountUpdate,
+		Delete: resourceAviatrixAccountDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -98,7 +98,7 @@ func resourceAccount() *schema.Resource {
 	}
 }
 
-func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	account := &goaviatrix.Account{
@@ -194,11 +194,10 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(account.AccountName)
-
-	return resourceAccountRead(d, meta)
+	return resourceAviatrixAccountRead(d, meta)
 }
 
-func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	accountName := d.Get("account_name").(string)
@@ -249,7 +248,7 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	account := &goaviatrix.Account{
@@ -363,12 +362,11 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Partial(false)
-
-	return resourceAccountRead(d, meta)
+	return resourceAviatrixAccountRead(d, meta)
 }
 
 //for now, deleteing gcp account will not delete the credential file
-func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	account := &goaviatrix.Account{
 		AccountName: d.Get("account_name").(string),

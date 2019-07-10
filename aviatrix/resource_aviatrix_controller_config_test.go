@@ -101,5 +101,6 @@ func testAccCheckControllerConfigDestroy(s *terraform.State) error {
 			return fmt.Errorf("could not retrieve Http Access Status due to err: %v", err)
 		}
 	}
+
 	return nil
 }

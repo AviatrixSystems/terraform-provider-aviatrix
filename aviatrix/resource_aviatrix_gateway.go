@@ -860,6 +860,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("additional_cidrs", "")
 		}
 	}
+
 	return nil
 }
 
@@ -1326,7 +1327,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.Partial(false)
-
 	d.SetId(gateway.GwName)
 	return resourceAviatrixGatewayRead(d, meta)
 }

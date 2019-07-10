@@ -60,7 +60,6 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return fmt.Errorf("aviatrix Account: %s", err)
 	}
-
 	if acc != nil {
 		d.Set("account_name", acc.AccountName)
 		d.Set("cloud_type", acc.CloudType)

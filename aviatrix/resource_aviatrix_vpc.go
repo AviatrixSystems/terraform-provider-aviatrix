@@ -8,11 +8,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceVpc() *schema.Resource {
+func resourceAviatrixVpc() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVpcCreate,
-		Read:   resourceVpcRead,
-		Delete: resourceVpcDelete,
+		Create: resourceAviatrixVpcCreate,
+		Read:   resourceAviatrixVpcRead,
+		Delete: resourceAviatrixVpcDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -93,7 +93,7 @@ func resourceVpc() *schema.Resource {
 	}
 }
 
-func resourceVpcCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	vpc := &goaviatrix.Vpc{
@@ -138,10 +138,10 @@ func resourceVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(vpc.Name)
-	return resourceVpcRead(d, meta)
+	return resourceAviatrixVpcRead(d, meta)
 }
 
-func resourceVpcRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	vpcName := d.Get("name").(string)
@@ -202,7 +202,7 @@ func resourceVpcRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceVpcDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVpcDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	vpc := &goaviatrix.Vpc{

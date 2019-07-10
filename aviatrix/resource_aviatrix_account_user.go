@@ -8,12 +8,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceAccountUser() *schema.Resource {
+func resourceAviatrixAccountUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAccountUserCreate,
-		Read:   resourceAccountUserRead,
-		Update: resourceAccountUserUpdate,
-		Delete: resourceAccountUserDelete,
+		Create: resourceAviatrixAccountUserCreate,
+		Read:   resourceAviatrixAccountUserRead,
+		Update: resourceAviatrixAccountUserUpdate,
+		Delete: resourceAviatrixAccountUserDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -45,7 +45,7 @@ func resourceAccountUser() *schema.Resource {
 	}
 }
 
-func resourceAccountUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountUserCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	user := &goaviatrix.AccountUser{
@@ -65,10 +65,10 @@ func resourceAccountUserCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Aviatrix account user %s created", user.UserName)
 
 	d.SetId(user.UserName)
-	return resourceAccountUserRead(d, meta)
+	return resourceAviatrixAccountUserRead(d, meta)
 }
 
-func resourceAccountUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountUserRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	userName := d.Get("username").(string)
@@ -96,7 +96,6 @@ func resourceAccountUserRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		return fmt.Errorf("aviatrix Account User: %s", err)
 	}
-
 	if acc != nil {
 		d.Set("account_name", acc.AccountName)
 		d.Set("email", acc.Email)
@@ -107,7 +106,7 @@ func resourceAccountUserRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAccountUserUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	user := &goaviatrix.AccountUserEdit{
@@ -142,11 +141,10 @@ func resourceAccountUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Partial(false)
-
 	return nil
 }
 
-func resourceAccountUserDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountUserDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	user := &goaviatrix.AccountUser{

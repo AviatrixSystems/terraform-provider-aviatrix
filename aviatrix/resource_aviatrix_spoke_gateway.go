@@ -9,18 +9,15 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceAviatrixSpokeVpc() *schema.Resource {
+func resourceAviatrixSpokeGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAviatrixSpokeVpcCreate,
-		Read:   resourceAviatrixSpokeVpcRead,
-		Update: resourceAviatrixSpokeVpcUpdate,
-		Delete: resourceAviatrixSpokeVpcDelete,
+		Create: resourceAviatrixSpokeGatewayCreate,
+		Read:   resourceAviatrixSpokeGatewayRead,
+		Update: resourceAviatrixSpokeGatewayUpdate,
+		Delete: resourceAviatrixSpokeGatewayDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-
-		SchemaVersion: 1,
-		MigrateState:  resourceSpokeVpcMigrateState,
 
 		Schema: map[string]*schema.Schema{
 			"cloud_type": {
@@ -110,7 +107,7 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 	}
 }
 
-func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	gateway := &goaviatrix.SpokeVpc{
@@ -176,7 +173,7 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 	d.SetId(gateway.GwName)
 
 	flag := false
-	defer resourceAviatrixSpokeVpcReadIfRequired(d, meta, &flag)
+	defer resourceAviatrixSpokeGatewayReadIfRequired(d, meta, &flag)
 
 	if enableNat {
 		log.Printf("[INFO] Aviatrix NAT enabled gateway: %#v", gateway)
@@ -257,15 +254,15 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 	return resourceAviatrixSpokeVpcReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixSpokeVpcReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixSpokeGatewayReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
 	if !(*flag) {
 		*flag = true
-		return resourceAviatrixSpokeVpcRead(d, meta)
+		return resourceAviatrixSpokeGatewayRead(d, meta)
 	}
 	return nil
 }
 
-func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	gwName := d.Get("gw_name").(string)
@@ -385,7 +382,7 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	gateway := &goaviatrix.Gateway{
@@ -653,7 +650,7 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 	return resourceAviatrixSpokeVpcRead(d, meta)
 }
 
-func resourceAviatrixSpokeVpcDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSpokeGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	gateway := &goaviatrix.Gateway{

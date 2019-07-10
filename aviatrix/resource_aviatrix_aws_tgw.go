@@ -8,12 +8,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceAWSTgw() *schema.Resource {
+func resourceAviatrixAWSTgw() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAWSTgwCreate,
-		Read:   resourceAWSTgwRead,
-		Update: resourceAWSTgwUpdate,
-		Delete: resourceAWSTgwDelete,
+		Create: resourceAviatrixAWSTgwCreate,
+		Read:   resourceAviatrixAWSTgwRead,
+		Update: resourceAviatrixAWSTgwUpdate,
+		Delete: resourceAviatrixAWSTgwDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -105,7 +105,7 @@ func resourceAWSTgw() *schema.Resource {
 	}
 }
 
-func resourceAWSTgwCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	awsTgw := &goaviatrix.AWSTgw{
@@ -230,7 +230,7 @@ func resourceAWSTgwCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(awsTgw.Name)
 
 	flag := false
-	defer resourceAWSTgwReadIfRequired(d, meta, &flag)
+	defer resourceAviatrixAWSTgwReadIfRequired(d, meta, &flag)
 
 	for i := range domainsToCreate {
 		securityDomain := &goaviatrix.SecurityDomain{
@@ -287,18 +287,18 @@ func resourceAWSTgwCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceAWSTgwReadIfRequired(d, meta, &flag)
+	return resourceAviatrixAWSTgwReadIfRequired(d, meta, &flag)
 }
 
-func resourceAWSTgwReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixAWSTgwReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
 	if !(*flag) {
 		*flag = true
-		return resourceAWSTgwRead(d, meta)
+		return resourceAviatrixAWSTgwRead(d, meta)
 	}
 	return nil
 }
 
-func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	tgwName := d.Get("tgw_name").(string)
@@ -444,7 +444,7 @@ func resourceAWSTgwRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Updating AWS TGW")
 
 	client := meta.(*goaviatrix.Client)
@@ -668,7 +668,7 @@ func resourceAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		err := client.DetachAviatrixTransitGWFromAWSTgw(awsTgw, gateway, "Aviatrix_Edge_Domain")
 		if err != nil {
-			resourceAWSTgwRead(d, meta)
+			resourceAviatrixAWSTgwRead(d, meta)
 			return fmt.Errorf("failed to detach transit GW: %s", err)
 		}
 	}
@@ -683,7 +683,7 @@ func resourceAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		err := client.CreateSecurityDomain(securityDomain)
 		if err != nil {
-			resourceAWSTgwRead(d, meta)
+			resourceAviatrixAWSTgwRead(d, meta)
 			return fmt.Errorf("failed to create Security Domain: %s", err)
 		}
 	}
@@ -692,7 +692,7 @@ func resourceAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
 		if len(domainConnPolicy[i]) == 2 {
 			err := client.CreateDomainConnection(awsTgw, domainConnPolicy[i][0], domainConnPolicy[i][1])
 			if err != nil {
-				resourceAWSTgwRead(d, meta)
+				resourceAviatrixAWSTgwRead(d, meta)
 				return fmt.Errorf("failed to create security domain connection: %s", err)
 			}
 		}
@@ -702,7 +702,7 @@ func resourceAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
 		if len(domainConnRemove[i]) == 2 {
 			err := client.DeleteDomainConnection(awsTgw, domainConnRemove[i][0], domainConnRemove[i][1])
 			if err != nil {
-				resourceAWSTgwRead(d, meta)
+				resourceAviatrixAWSTgwRead(d, meta)
 				return fmt.Errorf("failed to delete domain connection: %s", err)
 			}
 		}
@@ -713,7 +713,7 @@ func resourceAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
 			if len(toDetachVPCs[i]) == 4 {
 				err := client.DetachVpcFromAWSTgw(awsTgw, toDetachVPCs[i][1])
 				if err != nil {
-					resourceAWSTgwRead(d, meta)
+					resourceAviatrixAWSTgwRead(d, meta)
 					return fmt.Errorf("failed to detach VPC: %s", err)
 				}
 			}
@@ -727,7 +727,7 @@ func resourceAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		err := client.AttachAviatrixTransitGWToAWSTgw(awsTgw, gateway, "Aviatrix_Edge_Domain")
 		if err != nil {
-			resourceAWSTgwRead(d, meta)
+			resourceAviatrixAWSTgwRead(d, meta)
 			return fmt.Errorf("failed to attach transit GW: %s", err)
 		}
 	}
@@ -745,7 +745,7 @@ func resourceAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
 				if !res {
 					err := client.AttachVpcToAWSTgw(awsTgw, vpcSolo, toAttachVPCs[i][0])
 					if err != nil {
-						resourceAWSTgwRead(d, meta)
+						resourceAviatrixAWSTgwRead(d, meta)
 						return fmt.Errorf("failed to attach VPC: %s", err)
 					}
 				}
@@ -763,18 +763,17 @@ func resourceAWSTgwUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		err := client.DeleteSecurityDomain(securityDomain)
 		if err != nil {
-			resourceAWSTgwRead(d, meta)
+			resourceAviatrixAWSTgwRead(d, meta)
 			return fmt.Errorf("failed to delete Security Domain: %s", err)
 		}
 	}
 
 	d.Partial(false)
 	d.SetId(awsTgw.Name)
-
-	return resourceAWSTgwRead(d, meta)
+	return resourceAviatrixAWSTgwRead(d, meta)
 }
 
-func resourceAWSTgwDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	awsTgw := &goaviatrix.AWSTgw{
 		Name:                      d.Get("tgw_name").(string),
@@ -806,7 +805,7 @@ func resourceAWSTgwDelete(d *schema.ResourceData, meta interface{}) error {
 			if len(attachedVPCs[i]) == 4 {
 				err := client.DetachVpcFromAWSTgw(awsTgw, attachedVPCs[i][1])
 				if err != nil {
-					resourceAWSTgwRead(d, meta)
+					resourceAviatrixAWSTgwRead(d, meta)
 					return fmt.Errorf("failed to detach VPC: %s", err)
 				}
 			}
@@ -825,7 +824,7 @@ func resourceAWSTgwDelete(d *schema.ResourceData, meta interface{}) error {
 
 		err := client.DetachAviatrixTransitGWFromAWSTgw(awsTgw, gateway, "Aviatrix_Edge_Domain")
 		if err != nil {
-			resourceAWSTgwRead(d, meta)
+			resourceAviatrixAWSTgwRead(d, meta)
 			return fmt.Errorf("failed to detach transit GW: %s", err)
 		}
 	}

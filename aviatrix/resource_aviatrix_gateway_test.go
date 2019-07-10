@@ -317,5 +317,6 @@ func testAccCheckGatewayDestroy(s *terraform.State) error {
 			return fmt.Errorf("gateway still exists")
 		}
 	}
+
 	return nil
 }

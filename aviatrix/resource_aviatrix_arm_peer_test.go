@@ -145,5 +145,6 @@ func testAccCheckARMPeerDestroy(s *terraform.State) error {
 			return fmt.Errorf("armPeer still exists")
 		}
 	}
+
 	return nil
 }

@@ -9,11 +9,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceARMPeer() *schema.Resource {
+func resourceAviatrixARMPeer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceARMPeerCreate,
-		Read:   resourceARMPeerRead,
-		Delete: resourceARMPeerDelete,
+		Create: resourceAviatrixARMPeerCreate,
+		Read:   resourceAviatrixARMPeerRead,
+		Delete: resourceAviatrixARMPeerDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -71,7 +71,7 @@ func resourceARMPeer() *schema.Resource {
 	}
 }
 
-func resourceARMPeerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixARMPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	armPeer := &goaviatrix.ARMPeer{
@@ -91,10 +91,10 @@ func resourceARMPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(armPeer.VNet1 + "~" + armPeer.VNet2)
-	return resourceARMPeerRead(d, meta)
+	return resourceAviatrixARMPeerRead(d, meta)
 }
 
-func resourceARMPeerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixARMPeerRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	vNet1 := d.Get("vnet_name_resource_group1").(string)
@@ -142,7 +142,7 @@ func resourceARMPeerRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceARMPeerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixARMPeerDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	armPeer := &goaviatrix.ARMPeer{

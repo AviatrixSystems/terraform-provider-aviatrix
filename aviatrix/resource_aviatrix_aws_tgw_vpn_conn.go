@@ -184,7 +184,6 @@ func resourceAviatrixAwsTgwVpnConnRead(d *schema.ResourceData, meta interface{})
 	d.Set("inside_ip_cidr_tun_2", vpnConn.InsideIpCIDRTun2)
 
 	d.SetId(vpnConn.TgwName + "~" + vpnConn.VpnID)
-
 	return nil
 }
 

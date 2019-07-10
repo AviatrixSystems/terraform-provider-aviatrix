@@ -241,5 +241,6 @@ func testAccCheckAccountDestroy(s *terraform.State) error {
 			return fmt.Errorf("account still exists")
 		}
 	}
+
 	return nil
 }

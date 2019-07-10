@@ -9,18 +9,15 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceAviatrixTransitVpc() *schema.Resource {
+func resourceAviatrixTransitGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAviatrixTransitVpcCreate,
-		Read:   resourceAviatrixTransitVpcRead,
-		Update: resourceAviatrixTransitVpcUpdate,
-		Delete: resourceAviatrixTransitVpcDelete,
+		Create: resourceAviatrixTransitGatewayCreate,
+		Read:   resourceAviatrixTransitGatewayRead,
+		Update: resourceAviatrixTransitGatewayUpdate,
+		Delete: resourceAviatrixTransitGatewayDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-
-		SchemaVersion: 2,
-		MigrateState:  resourceTransitVpcMigrateState,
 
 		Schema: map[string]*schema.Schema{
 			"cloud_type": {
@@ -123,7 +120,7 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 	}
 }
 
-func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	gateway := &goaviatrix.TransitVpc{
@@ -205,7 +202,7 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 	d.SetId(gateway.GwName)
 
 	flag := false
-	defer resourceAviatrixTransitVpcReadIfRequired(d, meta, &flag)
+	defer resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 
 	if haSubnet != "" {
 		//Enable HA
@@ -309,15 +306,15 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 	return resourceAviatrixTransitVpcReadIfRequired(d, meta, &flag)
 }
 
-func resourceAviatrixTransitVpcReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+func resourceAviatrixTransitGatewayReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
 	if !(*flag) {
 		*flag = true
-		return resourceAviatrixTransitVpcRead(d, meta)
+		return resourceAviatrixTransitGatewayRead(d, meta)
 	}
 	return nil
 }
 
-func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	gwName := d.Get("gw_name").(string)
@@ -441,7 +438,7 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	gateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
@@ -701,7 +698,7 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAviatrixTransitVpcDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	gateway := &goaviatrix.Gateway{
