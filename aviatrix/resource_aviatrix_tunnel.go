@@ -157,10 +157,10 @@ func resourceAviatrixTunnelDelete(d *schema.ResourceData, meta interface{}) erro
 	tunnel := &goaviatrix.Tunnel{
 		VpcName1: d.Get("gw_name1").(string),
 		VpcName2: d.Get("gw_name2").(string),
-		EnableHA: d.Get("enable_ha").(string),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix tunnel: %#v", tunnel)
+
 	if peeringHaStatus := d.Get("peering_hastatus").(string); peeringHaStatus == "active" {
 		// parse the hagw name
 		tunnel.VpcName1 += "-hagw"
