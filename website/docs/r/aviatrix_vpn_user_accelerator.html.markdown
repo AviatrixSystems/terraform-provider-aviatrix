@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_vpn_user_accelerator
 
-The AviatrixVPNUserAccelerator resource manages the Aviatrix VPN User Accelerators.
+The aviatrix_vpn_user_accelerator resource manages the Aviatrix VPN User Accelerators.
 
 ## Example Usage
 

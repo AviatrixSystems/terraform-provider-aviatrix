@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_account_user
 
-The AccountUser resource allows the creation and management of Aviatrix User Accounts.
+The aviatrix_account_user resource allows the creation and management of Aviatrix User Accounts.
 
 ## Example Usage
 

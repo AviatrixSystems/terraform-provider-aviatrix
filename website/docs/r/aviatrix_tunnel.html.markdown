@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_tunnel
 
-The Tunnel resource allows the creation and management of Aviatrix tunnels.
+The aviatrix_tunnel resource allows the creation and management of Aviatrix tunnels.
 
 ## Example Usage
 

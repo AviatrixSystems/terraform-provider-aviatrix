@@ -8,7 +8,9 @@ description: |-
 
 # aviatrix_spoke_vpc
 
-The SpokeVpc resource allows to create and manage Aviatrix Spoke Gateways.
+The aviatrix_spoke_vpc resource allows to create and manage Aviatrix Spoke Gateways.
+
+-> **NOTE:** The spoke_Vpc resource is deprecated. It is kept for backward compatibility and will be removed in the future. Please use spoke_gateway instead. Need to remove it from state file and import as aviatrix_spoke_gateway if it is already in state.
 
 ## Example Usage
 

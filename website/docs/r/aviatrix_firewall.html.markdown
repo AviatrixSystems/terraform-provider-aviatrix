@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_firewall
 
-The Firewall resource allows the creation and management of Aviatrix Firewall Policies.
+The aviatrix_firewall resource allows the creation and management of Aviatrix Firewall Policies.
 
 ## Example Usage
 

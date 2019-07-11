@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_aws_peer
 
-The AWSPeer resource allows the creation and management of Aviatrix AWS Peerings.
+The aviatrix_aws_peer resource allows the creation and management of Aviatrix AWS Peerings.
 
 ## Example Usage
 

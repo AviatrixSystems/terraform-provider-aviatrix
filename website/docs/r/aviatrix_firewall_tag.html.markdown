@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_firewall_tag
 
-The FirewallTag resource allows the creation and management of Aviatrix Firewall Tags.
+The aviatrix_firewall_tag resource allows the creation and management of Aviatrix Firewall Tags.
 
 ## Example Usage
 

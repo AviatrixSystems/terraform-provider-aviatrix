@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_vpn_profile
 
-The Profile resource allows the creation and management of Aviatrix VPN VPN User Profiles.
+The aviatrix_vpn_profile resource allows the creation and management of Aviatrix VPN VPN User Profiles.
 
 ## Example Usage
 

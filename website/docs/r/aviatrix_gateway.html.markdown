@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_gateway
 
-The Account resource allows the creation and management of Aviatrix gateways.
+The aviatrix_gateway resource allows the creation and management of Aviatrix gateways.
 
 ## Example Usage
 

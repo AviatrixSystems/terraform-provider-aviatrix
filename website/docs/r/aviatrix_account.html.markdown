@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_account
 
-The Account resource allows the creation and management of Aviatrix cloud accounts.
+The aviatrix_account resource allows the creation and management of Aviatrix cloud accounts.
 
 ## Example Usage
 

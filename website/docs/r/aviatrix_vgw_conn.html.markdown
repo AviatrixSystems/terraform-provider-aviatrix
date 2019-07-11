@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_vgw_conn
 
-The AviatrixVGWConn resource managers the Aviatrix Transit Gateway to VGW Connection.
+The aviatrix_vgw_conn resource managers the Aviatrix Transit Gateway to VGW Connection.
 
 ## Example Usage
 

@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_vpc
 
-The VPC resource allows the creation and management of VPCs.
+The aviatrix_vpc resource allows the creation and management of VPCs.
 
 ## Example Usage
 

@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_arm_peer
 
-The ARMPeer resource allows the creation and management of Aviatrix ARM Peerings.
+The aviatrix_arm_peer resource allows the creation and management of Aviatrix ARM Peerings.
 
 ## Example Usage
 

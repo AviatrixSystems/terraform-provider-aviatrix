@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_aws_tgw
 
-The AviatrixAWSTgw resource allows the creation and management of AWS TGWs.
+The aviatrix_aws_tgw resource allows the creation and management of AWS TGWs.
 
 ## Example Usage
 

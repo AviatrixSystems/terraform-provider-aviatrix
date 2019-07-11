@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_vpn_user
 
-The AviatrixVPNUser resource creates and manages VPN Users.
+The aviatrix_vpn_user resource creates and manages VPN Users.
 
 ## Example Usage
 

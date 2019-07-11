@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_transit_gateway_peering
 
-The TransitGatewayPeering resource allows the creation and management of Aviatrix Transit Gateway Peerings.
+The aviatrix_transit_gateway_peering resource allows the creation and management of Aviatrix Transit Gateway Peerings.
 
 ## Example Usage
 

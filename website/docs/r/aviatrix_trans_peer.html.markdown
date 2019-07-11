@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_trans_peer
 
-The Account resource allows the creation and management of Aviatrix Transitive Peerings.
+The aviatrix_trans_peer resource allows the creation and management of Aviatrix Transitive Peerings.
 
 ## Example Usage
 

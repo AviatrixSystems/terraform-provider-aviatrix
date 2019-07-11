@@ -8,7 +8,7 @@ description: |-
  
 # aviatrix_aws_tgw_vpn_conn
  
-The AwsTgwVpnConn resource allows the creation and management of Aviatrix AWS TGW VPN Connections.
+The aviatrix_aws_tgw_vpn_conn resource allows the creation and management of Aviatrix AWS TGW VPN Connections.
  
 ## Example Usage
  

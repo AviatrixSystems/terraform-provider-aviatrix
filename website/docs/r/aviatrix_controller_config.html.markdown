@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_controller_config
 
-The ControllerConfig resource allows the creation and management of an Aviatrix controller config.
+The aviatrix_controller_config resource allows the creation and management of an Aviatrix controller config.
 
 ## Example Usage
 

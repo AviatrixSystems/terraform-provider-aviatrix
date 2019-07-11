@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_transit_gateway
 
-The AviatrixTransitGateway resource creates and manages the Aviatrix Transit Network Gateways.
+The aviatrix_transit_gateway resource creates and manages the Aviatrix Transit Network Gateways.
 
 ## Example Usage
 

@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_spoke_gateway
 
-The SpokeGateway resource allows to create and manage Aviatrix Spoke Gateways.
+The aviatrix_spoke_gateway resource allows to create and manage Aviatrix Spoke Gateways.
 
 ## Example Usage
 
