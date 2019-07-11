@@ -72,10 +72,6 @@ output "ARM_SUBNET" {
   value = "${module.aviatrix_arm_vpc1.subnet}"
 }
 
-output "ARM_GW_SIZE" {
-  value = "${module.aviatrix_arm_vpc1.subnet}"
-}
-
 output "ARM_VNET_ID2" {
   value = "${module.aviatrix_arm_vpc2.vnet}:${module.aviatrix_arm_vpc2.group}"
 } 
