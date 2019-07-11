@@ -3,17 +3,17 @@ layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_arm_peer"
 sidebar_current: "docs-aviatrix-resource-arm-peer"
 description: |-
-  Creates and manages Aviatrix ARM Peering
+  Creates and manages Aviatrix ARM Peerings
 ---
 
 # aviatrix_arm_peer
 
-The ARMPeer resource allows the creation and management of Aviatrix ARM Peering.
+The ARMPeer resource allows the creation and management of Aviatrix ARM Peerings.
 
 ## Example Usage
 
 ```hcl
-# Create Aviatrix ARM Peering
+# Create an Aviatrix ARM Peering
 resource "aviatrix_arm_peer" "test_armpeer" {
   account_name1             = "test1-account"
   account_name2             = "test2-account"

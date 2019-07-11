@@ -3,17 +3,17 @@ layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_controller_config"
 sidebar_current: "docs-aviatrix-resource-controller-config"
 description: |-
-  Creates and manages an Aviatrix controller config resource.
+  Creates and manages an Aviatrix controller config resource
 ---
 
 # aviatrix_controller_config
 
-The Account resource allows the creation and management of an Aviatrix controller config.
+The ControllerConfig resource allows the creation and management of an Aviatrix controller config.
 
 ## Example Usage
 
 ```hcl
-# Create Aviatrix Controller Config
+# Create an Aviatrix Controller Config
 resource "aviatrix_controller_config" "test_controller_config" {
   sg_management_account_name = "username"
   http_access                = true
@@ -23,7 +23,7 @@ resource "aviatrix_controller_config" "test_controller_config" {
 ```
 
 ```hcl
-# Create Aviatrix Controller Config with Controller Upgrade
+# Create an Aviatrix Controller Config with Controller Upgrade
 resource "aviatrix_controller_config" "test_controller_config" {
   sg_management_account_name = "username"
   http_access                = true

@@ -3,7 +3,7 @@ layout: "aviatrix"
 page_title: "Provider: Aviatrix"
 sidebar_current: "docs-aviatrix-index"
 description: |-
-  The Aviatrix provider is used to interact with Aviatrix organization resources.
+  The Aviatrix provider is used to interact with Aviatrix organization resources
 ---
 
 # Aviatrix Provider
@@ -34,15 +34,11 @@ resource "aviatrix_account" "myacc" {
 
 ## Argument Reference
 
-The following arguments are supported in the `provider` block:
+The following arguments are supported:
 
 * `controller_ip` - (Required) This is Aviatrix controller's public IP. It must be provided.
-
-* `username` - (Required) This is  Aviatrix account username which will be used to 
-  login to Aviatrix controller. It must be provided.
-
+* `username` - (Required) This is  Aviatrix account username which will be used to ogin to Aviatrix controller. It must be provided.
 * `password` - (Required) This is Aviatrix account's password corresponding to above username.
-
 * `skip_version_validation` - (Optional) Default: false. If set to true, it skips checking whether current Terraform branch supports current controller version.
 
 ## Import

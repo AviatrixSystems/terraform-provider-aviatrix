@@ -3,17 +3,17 @@ layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_aws_tgw_vpc_attachment"
 sidebar_current: "docs-aviatrix-resource-aws_tgw_vpc_attachment"
 description: |-
-  Manages attaching or detaching VPCs to aws tgw
+  Manages attaching or detaching VPCs to/from an AWS TGW
 ---
 
 # aviatrix_aws_tgw
 
-The AviatrixAwsTgwVpcAttachment resource manages attaching or detaching VPCs to AWS TGW
+The AviatrixAwsTgwVpcAttachment resource manages attaching or detaching VPCs to/from an AWS TGW.
 
 ## Example Usage
 
 ```hcl
-# Manage attaching or detaching VPCs to aws tgw
+# Create an Aviatrix AWS TGW VPC Attachment 
 resource "aviatrix_aws_tgw_vpc_attachment" "test" {
   tgw_name             = "tgwTest"
   region               = "us-east-1"

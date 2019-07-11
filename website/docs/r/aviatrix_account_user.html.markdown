@@ -13,7 +13,7 @@ The AccountUser resource allows the creation and management of Aviatrix User Acc
 ## Example Usage
 
 ```hcl
-# Create Aviatrix User Account
+# Create an Aviatrix User Account
 resource "aviatrix_account_user" "test_accountuser" {
   username     = "username1"
   account_name = "test-accountname"

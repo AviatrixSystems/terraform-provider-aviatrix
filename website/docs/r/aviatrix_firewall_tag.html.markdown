@@ -13,7 +13,7 @@ The FirewallTag resource allows the creation and management of Aviatrix Firewall
 ## Example Usage
 
 ```hcl
-# Create Aviatrix Firewall Tag
+# Create an Aviatrix Firewall Tag
 resource "aviatrix_firewall_tag" "test_firewall_tag" {
   firewall_tag = "test-firewall-tag"
   cidr_list {

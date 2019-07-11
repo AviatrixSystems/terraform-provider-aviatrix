@@ -8,12 +8,12 @@ description: |-
 
 # aviatrix_fqdn
 
-The FQDN resource manages FQDN filtering for Aviatrix Gateway
+The FQDN resource manages FQDN filtering for Aviatrix Gateway.
 
 ## Example Usage
 
 ```hcl
-# Set Aviatrix Gateway FQDN filter
+# Create an Aviatrix Gateway FQDN filter
 resource "aviatrix_fqdn" "test_fqdn" {
   fqdn_tag     = "my_tag"
   fqdn_enabled = true
@@ -58,10 +58,10 @@ The following arguments are supported:
   * `source_ip_list` - (Optional) List of source IPs in the VPC qualified for a specific tag.
 * `domain_names` - (Optional) One or more domain names in a list with details as listed below:
   * `fqdn` - (Optional) FQDN. Example: "facebook.com" 
-  * `proto` - (Optional) Protocol. Valid values: "all", "tcp", "udp", "icmp" 
-  * `port` - (Optional) Port. Example "25" 
-    * for protocol "all", port must be set to "all"
-    * for protocol “icmp”, port must be set to “ping”
+  * `proto` - (Optional) Protocol. Valid values: "all", "tcp", "udp", "icmp".
+  * `port` - (Optional) Port. Example "25".
+    * For protocol "all", port must be set to "all".
+    * For protocol “icmp”, port must be set to “ping”.
 
 -> **NOTE:** 
 

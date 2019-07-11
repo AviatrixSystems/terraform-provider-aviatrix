@@ -3,17 +3,17 @@ layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_aws_peer"
 sidebar_current: "docs-aviatrix-resource-aws-peer"
 description: |-
-  Creates and manages Aviatrix AWS Peering
+  Creates and manages Aviatrix AWS Peerings
 ---
 
 # aviatrix_aws_peer
 
-The AWSPeer resource allows the creation and management of Aviatrix AWS Peering.
+The AWSPeer resource allows the creation and management of Aviatrix AWS Peerings.
 
 ## Example Usage
 
 ```hcl
-# Create Aviatrix AWS Peering
+# Create an Aviatrix AWS Peering 
 resource "aviatrix_aws_peer" "test_awspeer" {
   account_name1 = "test1-account"
   account_name2 = "test2-account"
@@ -40,8 +40,8 @@ The following arguments are supported:
 * `vpc_id2` - (Required) VPC-ID of AWS cloud. Example: AWS: "vpc-abcd1234", etc...
 * `vpc_reg1` - (Required) Region of AWS cloud. Example: AWS: "us-east-1", etc...
 * `vpc_reg2` - (Required) Region of AWS cloud. Example: AWS: "us-east-1", etc...
-* `rtb_list1` - (Optional) List of Route table ID. Valid Values: ["all"] OR ["rtb-abcd1234"] OR ["rtb-abcd1234,rtb-wxyz5678"] etc...
-* `rtb_list2` - (Optional) List of Route table ID. Valid Values: ["all"] OR ["rtb-abcd1234"] OR ["rtb-abcd1234,rtb-wxyz5678"] etc...
+* `rtb_list1` - (Optional) List of Route table ID. Valid Values: ["all"], ["rtb-abcd1234"] OR ["rtb-abcd1234,rtb-wxyz5678"] etc...
+* `rtb_list2` - (Optional) List of Route table ID. Valid Values: ["all"], ["rtb-abcd1234"] OR ["rtb-abcd1234,rtb-wxyz5678"] etc...
 
 The following arguments are computed - please do not edit in the resource file:
 
