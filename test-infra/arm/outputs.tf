@@ -1,9 +1,9 @@
 output "vnet" {
-   value = "${azurerm_subnet.aviatrix.virtual_network_name}"
+   value = azurerm_subnet.aviatrix.virtual_network_name
 } 
 output "group" {
-   value = "${azurerm_subnet.aviatrix.resource_group_name}"
+   value = azurerm_subnet.aviatrix.resource_group_name
 }
 output "subnet" {
-   value = "${azurerm_subnet.aviatrix.address_prefix}"
+   value = azurerm_subnet.aviatrix.address_prefix
 }

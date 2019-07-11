@@ -23,7 +23,7 @@ resource "aviatrix_fqdn" "test_fqdn" {
     gw_name        = "gwTest1"
     source_ip_list = [
       "172.31.0.0/16", 
-      "172.31.0.0/20"
+      "172.31.0.0/20",
     ]
   }
   gw_filter_tag_list {
@@ -31,7 +31,7 @@ resource "aviatrix_fqdn" "test_fqdn" {
     source_ip_list = [
       "30.0.0.0/16",
     ]
-  },
+  }
   
   domain_names {
     fqdn  = "facebook.com"

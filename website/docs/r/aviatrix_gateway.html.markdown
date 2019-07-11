@@ -22,7 +22,10 @@ resource "aviatrix_gateway" "test_gateway_aws" {
   vpc_reg      = "us-west-1"
   vpc_size     = "t2.micro"
   vpc_net      = "10.0.0.0/24"
-  tag_list     = ["k1:v1","k2:v2"]
+  tag_list     = [
+    "k1:v1",
+    "k2:v2",
+  ]
 }
 
 # Create Aviatrix AWS gateway with VPN enabled

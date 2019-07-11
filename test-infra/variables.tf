@@ -1,6 +1,7 @@
 variable "gcp_credentials_file_path" {
   description = "Location of the GCP credentials to use."
 }
+
 variable "gcp_project_id1" {}
 variable "gcp_region1" {default="us-west1"}
 variable "gcp_vpc_cidr1" {default="10.50.0.0/16"}

@@ -19,7 +19,7 @@ resource "aviatrix_vpn_profile" "test_profile1" {
   base_rule = "allow_all"
   users     = [
     "user1", 
-    "user2"
+    "user2",
   ]
   policy { 
     action = "deny"
