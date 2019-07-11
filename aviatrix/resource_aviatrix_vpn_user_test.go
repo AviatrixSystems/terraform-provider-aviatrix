@@ -55,32 +55,33 @@ func TestAccAviatrixVPNUser_basic(t *testing.T) {
 func testAccVPNUserConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account" {
-    account_name = "tfa-%s"
-    cloud_type = 1
+    account_name       = "tfa-%s"
+    cloud_type         = 1
     aws_account_number = "%s"
-    aws_iam = "false"
-    aws_access_key = "%s"
-    aws_secret_key = "%s"
+    aws_iam            = "false"
+    aws_access_key     = "%s"
+    aws_secret_key     = "%s"
 }
 
 resource "aviatrix_gateway" "test_gw" {
-	cloud_type = 1
+	cloud_type   = 1
 	account_name = "${aviatrix_account.test_account.account_name}"
-	gw_name = "tfg-%s"
-	vpc_id = "%s"
-	vpc_reg = "%s"
-	vpc_size = "t2.micro"
-	vpc_net = "%s"
-    vpn_access = "yes"
-    vpn_cidr = "192.168.43.0/24" 
-	enable_elb = "yes"
-	elb_name = "tfl-%s"
+	gw_name      = "tfg-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	vpc_size     = "t2.micro"
+	vpc_net      = "%s"
+    vpn_access   = "yes"
+    vpn_cidr     = "192.168.43.0/24" 
+    max_vpn_conn = "100"
+	enable_elb   = "yes"
+	elb_name     = "tfl-%s"
 }
 
 resource "aviatrix_vpn_user" "test_vpn_user" {
-    vpc_id = "${aviatrix_gateway.test_gw.vpc_id}"
-    gw_name = "${aviatrix_gateway.test_gw.elb_name}"
-    user_name = "tfu-%s"
+    vpc_id     = "${aviatrix_gateway.test_gw.vpc_id}"
+    gw_name    = "${aviatrix_gateway.test_gw.elb_name}"
+    user_name  = "tfu-%s"
     user_email = "user@xyz.com"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),

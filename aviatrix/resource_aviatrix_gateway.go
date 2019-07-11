@@ -92,6 +92,12 @@ func resourceAviatrixGateway() *schema.Resource {
 				Default:     "yes",
 				Description: "Specify split tunnel mode.",
 			},
+			"max_vpn_conn": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "Maximum connection of VPN access.",
+			},
 			"name_servers": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -304,6 +310,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		VpnCidr:            d.Get("vpn_cidr").(string),
 		EnableElb:          d.Get("enable_elb").(string),
 		ElbName:            d.Get("elb_name").(string),
+		MaxConn:            d.Get("max_vpn_conn").(string),
 		SplitTunnel:        d.Get("split_tunnel").(string),
 		OtpMode:            d.Get("otp_mode").(string),
 		SamlEnabled:        d.Get("saml_enabled").(string),
@@ -627,8 +634,10 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		vpnAccess := d.Get("vpn_access")
 		if vpnAccess == "no" {
 			d.Set("split_tunnel", "yes")
+			d.Set("max_vpn_conn", "")
 		} else {
 			d.Set("split_tunnel", gw.SplitTunnel)
+			d.Set("max_vpn_conn", gw.MaxConn)
 		}
 		d.Set("vpn_cidr", gw.VpnCidr)
 		if gw.ElbState == "enabled" {
@@ -1120,6 +1129,28 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			log.Printf("[INFO] can't update vpn cidr because elb is disabled for gateway: %#v", gateway.GwName)
 		}
 		d.SetPartial("enable_nat")
+	}
+	if d.HasChange("max_vpn_conn") {
+		if d.Get("vpn_access").(string) == "yes" {
+			gw := &goaviatrix.Gateway{
+				CloudType: d.Get("cloud_type").(int),
+				GwName:    d.Get("gw_name").(string),
+				VpcID:     d.Get("vpc_id").(string),
+				ElbName:   d.Get("elb_name").(string),
+			}
+			if gw.ElbName == "" {
+				gw.ElbName = d.Get("gw_name").(string)
+			}
+			_, n := d.GetChange("max_vpn_conn")
+			gw.MaxConn = n.(string)
+			err := client.UpdateMaxVpnConn(gw)
+			if err != nil {
+				return fmt.Errorf("failed to update max vpn connections: %s", err)
+			}
+		} else {
+			log.Printf("[INFO] can't update max vpn connections because vpn is disabled for gateway: %#v", gateway.GwName)
+		}
+		d.SetPartial("max_vpn_conn")
 	}
 	newHaGwEnabled := false
 	if d.HasChange("peering_ha_subnet") || d.HasChange("peering_ha_zone") {

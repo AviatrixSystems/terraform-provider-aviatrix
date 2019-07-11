@@ -59,6 +59,9 @@ func (c *Client) CreateVPNUser(vpnUser *VPNUser) error {
 		return errors.New("Json Decode add_vpn_user failed: " + err.Error())
 	}
 	if !data.Return {
+		if strings.Contains(data.Reason, "Sending VPN certificates to email") {
+			return nil
+		}
 		return errors.New("Rest API add_vpn_user Get failed: " + data.Reason)
 	}
 	return nil

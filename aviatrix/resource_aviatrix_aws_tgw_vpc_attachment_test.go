@@ -93,15 +93,15 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
     	]
 	},
 	]
-    manage_vpc_attachment = false
+	manage_vpc_attachment = false
 }
 
 resource "aviatrix_aws_tgw_vpc_attachment" "test" {
-    tgw_name             = "${aviatrix_aws_tgw.test_aws_tgw.tgw_name}"
-    region               = "%s"
-    security_domain_name = "%s"
-    vpc_account_name     = "${aviatrix_account.test_account.account_name}"
-    vpc_id               = "%s"
+	tgw_name             = "${aviatrix_aws_tgw.test_aws_tgw.tgw_name}"
+	region               = "%s"
+	security_domain_name = "%s"
+	vpc_account_name     = "${aviatrix_account.test_account.account_name}"
+	vpc_id               = "%s"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, os.Getenv("AWS_REGION"), awsSideAsNumber, sDm, sDm, os.Getenv("AWS_REGION"), sDm,

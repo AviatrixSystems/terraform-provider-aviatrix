@@ -5,13 +5,13 @@
 
 Otherwise, this list does not really apply. Please view the below list for details regarding this:
 1. If a customer is transitioning to use Terraform to manage existing infrastructure, it is recommended to start from the latest Controller and Aviatrix Terraform provider version, and use the Terraform Export feature and import their infrastructure for a quick and easy migration.
-  - **Please note that "Export" is still a beta feature (for 4.3)**
+  - **Please note that "Export" is still a beta feature (and only up-to-date for 4.3 at the moment)**
   - Customer can still choose to manually write their config file to their own specifications and use ``terraform import`` to bring their infrastructure into Terraform state management
 2. If a customer is adopting Terraform for the first time, clean slate, this changelist does not apply whatsoever. They simply need to follow the appropriate doc to setup their Terraform environment and use the Terraform documentation corresponding to their Controller version to begin using Terraform
 
 ---
 
-``Last updated: R1.12 (UserConnect-4.7-patch)``
+``Last updated: R1.14 (UserConnect-4.7-patch)``
 
 
 ---
@@ -102,3 +102,9 @@ Otherwise, this list does not really apply. Please view the below list for detai
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
 |(new) | aws_tgw_vpn_conn | inside_ip_cidr_tun_1, pre_shared_key_tun_1/2 | **No**; Terraform support added to a new 4.6 feature on Controller. The original new **aws_tgw_vpn_conn** resource was released in R1.11.11 |
+
+
+## R1.14.15 (UserConnect-4.7.474)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(new) | gateway        | max_vpn_conn      | **Yes**; if any vpn-gateway was created before this release, add this attribute to .tf file(s) and specify the corresponding value(s), which may be viewed on the Controller's Gateway Page. Any new vpn-gateway created on or after this release must specify this parameter. Default is 100 |

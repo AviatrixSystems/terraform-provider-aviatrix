@@ -25,6 +25,20 @@ resource "aviatrix_gateway" "test_gateway_aws" {
   tag_list     = ["k1:v1","k2:v2"]
 }
 
+# Create Aviatrix AWS gateway with VPN enabled
+resource "aviatrix_gateway" "test_gateway_aws" {
+  cloud_type   = 1
+  account_name = "devops"
+  gw_name      = "avtxgw1"
+  vpc_id       = "vpc-abcdef"
+  vpc_reg      = "us-west-1"
+  vpc_size     = "t2.micro"
+  vpc_net      = "10.0.0.0/24"
+  vpn_acess    = "yes"
+  vpn_cidr     = "192.168.43.0/24"
+  max_vpn_conn = "100"
+}
+
 # Create Aviatrix GCP gateway
 resource "aviatrix_gateway" "test_gateway_gcp" {
   cloud_type   = 4
@@ -49,24 +63,24 @@ resource "aviatrix_gateway" "test_gateway_arm" {
 
 # Create Aviatrix AWS gateway with Peering HA enabled
 resource "aviatrix_gateway" "test_gateway_aws" {
-  cloud_type   = 1
-  account_name = "devops"
-  gw_name      = "avtxgw1"
-  vpc_id       = "vpc-abcdef"
-  vpc_reg      = "us-west-1"
-  vpc_size     = "t2.micro"
-  vpc_net      = "10.0.0.0/24"
+  cloud_type        = 1
+  account_name      = "devops"
+  gw_name           = "avtxgw1"
+  vpc_id            = "vpc-abcdef"
+  vpc_reg           = "us-west-1"
+  vpc_size          = "t2.micro"
+  vpc_net           = "10.0.0.0/24"
   peering_ha_subnet = "10.0.0.0/24"
 }
 # Create Aviatrix GCP gateway with Peering HA enabled
 resource "aviatrix_gateway" "test_gateway_gcp" {
-  cloud_type   = 4
-  account_name = "devops-gcp"
-  gw_name      = "avtxgw-gcp"
-  vpc_id       = "gcp-gw-vpc"
-  vpc_reg      = "us-west1-b"
-  vpc_size     = "f1-micro"
-  vpc_net      = "10.12.0.0/24"
+  cloud_type      = 4
+  account_name    = "devops-gcp"
+  gw_name         = "avtxgw-gcp"
+  vpc_id          = "gcp-gw-vpc"
+  vpc_reg         = "us-west1-b"
+  vpc_size        = "f1-micro"
+  vpc_net         = "10.12.0.0/24"
   peering_ha_zone = "us-west1-c"
 }
 
@@ -86,6 +100,7 @@ The following arguments are supported:
 * `enable_nat` - (Optional) Enable NAT for this container. (Supported values: "yes", "no")
 * `vpn_access` - (Optional) Enable user access through VPN to this container. (Supported values: "yes", "no")
 * `vpn_cidr` - (Optional) VPN CIDR block for the container. (Required if vpn_access is "yes", Example: "192.168.43.0/24")
+* `max_vpn_conn` - (Optional) Maximum number of active VPN users allowed to be connected to this gateway. (Required if vpn_access is "yes". Make sure the number is smaller than the VPN CIDR block, e.g. 100)
 * `enable_elb` - (Optional) Specify whether to enable ELB or not. (Required: Yes when cloud_type is "1", "4", "256" or "1024", supported values "yes" and "no")
 * `elb_name` - (Optional) A name for the ELB that is created. If it is not specified a name is generated automatically
 * `split_tunnel` - (Optional) Specify split tunnel mode. (Supported values: "yes", "no")
@@ -133,6 +148,7 @@ The following arguments are deprecated:
 
 * `peering_ha_gw_size` - If you are using/upgraded to Aviatrix Terraform Provider v4.3+, and a peering-HA gateway was originally created with a provider version <4.3, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also input this attribute and its value to its corresponding gateway resource in your `.tf` file. 
 * `enable_nat` - In order for the FQDN feature to be enabled for the specified gateway, "enable_nat" must be set to “yes”. If it is not set at gateway creation, creation of FQDN resource will automatically enable SNAT and users must rectify the diff in the Terraform state by setting "enable_nat = 'yes'" in their config file.
+* `max_vpn_conn` - If you are using/upgraded to Aviatrix Terraform Provider v4.7+, and a gateway with VPN enabled was originally created with a provider version <4.7, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also input this attribute and its value to "100" in your `.tf` file.
 
 ## Import
 

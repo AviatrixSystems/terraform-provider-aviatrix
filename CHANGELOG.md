@@ -1,3 +1,12 @@
+## 1.14.15 (Jul 11 2019)
+
+CHANGES
+  - Supported controller version: 4.7.474
+  - Supported Terraform version: 0.11.*
+  - Added max_vpn_conn support in gateway
+  - Updated Terraform Feature Changelist
+  
+
 ## 1.13.14 (Jun 28 2019)
 
 CHANGES

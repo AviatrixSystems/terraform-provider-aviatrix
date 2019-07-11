@@ -60,12 +60,12 @@ func testAccTransitGatewayPeeringConfigBasic(rName string, vpcID1 string, vpcID2
 	subnet1 string, subnet2 string, haSubnet1 string, haSubnet2 string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
-	account_name = "tfa-%s"
-	cloud_type = 1
+	account_name       = "tfa-%s"
+	cloud_type         = 1
 	aws_account_number = "%s"
-	aws_iam = "false"
-	aws_access_key = "%s"
-	aws_secret_key = "%s"
+	aws_iam            = "false"
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
 }
 
 resource "aviatrix_transit_vpc" "transitGw1" {

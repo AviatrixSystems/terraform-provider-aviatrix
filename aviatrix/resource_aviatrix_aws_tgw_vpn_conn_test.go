@@ -73,7 +73,7 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
 	account_name       = "${aviatrix_account.test_account.account_name}"
 	region 			   = "%s"
     aws_side_as_number = "64512"
-    security_domains = [
+    security_domains   = [
 	{
     	security_domain_name = "Aviatrix_Edge_Domain"
     	connected_domains    = ["Default_Domain","Shared_Service_Domain"]
