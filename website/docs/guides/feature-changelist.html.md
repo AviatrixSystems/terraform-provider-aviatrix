@@ -19,7 +19,8 @@ Otherwise, this list does not really apply. Please view the below list for detai
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
 |(new) | transit_vpc    | enable_hybrid_connection | **No**, Terraform support added to an existing functionality on Controller. **Unless** the customer has enabled this on that transit gw through Controller, they must rectify the diff by adding that line in their config file and doing a ``terraform refresh`` |
-|(new) |  spoke_vpc     | ha_gw_size        | **Yes**; if customer has HA enabled for their transit gw, they must also update their config file for ea/ spoke gw's respective sizes |
+|(new) |  spoke_vpc     | ha_gw_size        | **Yes**; if customer has HA enabled for their spoke gw, they must also update their config file for ea/ spoke gw's respective sizes |
+|(new) | transit_vpc    | ha_gw_size        | **Yes**; if  customer has HA enabled for their transit gw, they must also update their config file for ea/ transit gw's respective sizes |
 
 
 ## R1.1.66 (UserConnect-4.1.981)
@@ -96,6 +97,7 @@ Otherwise, this list does not really apply. Please view the below list for detai
 |:----:|----------------|:-----------------:|----------------------------|
 |(deprecated) | version | --                | **Yes**; if Controller version was being managed using this resource, remove from .tf file. This functionality has been moved to **controller_config** resource as an attribute |
 |(new) | controller_config | target_version | **No**; see above. This is an optional attribute and only needs to be set one wants/ requires Controller version management to be done through Terraform |
+|(new) | vgw_conn       | bgp_manual_spoke_advertise_cidrs | **No**; Terraform support added for new 4.7 feature on Controller |
 
 
 ## R1.12.12 (UserConnect-4.7.378)
