@@ -3,7 +3,6 @@ data "aws_caller_identity" "current" {}
 # This is not part of this role should not be destroyed
 # module "aviatrix-iam-roles" {
 #   source            = "github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-iam-roles?ref=terraform_0.11"
-#   master-account-id = "${data.aws_caller_identity.current.account_id}"
 # }
 
 module "aviatrix_controller_vpc" {
