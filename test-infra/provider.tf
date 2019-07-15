@@ -14,14 +14,3 @@ provider "azurerm" {
   client_id       = "${var.azure_client_id}"
   client_secret   = "${var.azure_client_secret}"
 }
-#provider "aviatrix" {
-#  controller_ip   = "${var.aviatrix_controller_ip}"
-#  username        = "${var.aviatrix_username}"
-#  password        = "${var.aviatrix_password}"
-#}
-provider "aviatrix" {
-    username      = "admin"
-    password      = "${module.aviatrix-controller-build.private_ip}"
-    controller_ip = "${module.aviatrix-controller-build.public_ip}"
-}
-
