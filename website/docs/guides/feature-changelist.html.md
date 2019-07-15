@@ -11,7 +11,7 @@ Otherwise, this list does not really apply. Please view the below list for detai
 
 ---
 
-``Last updated: R1.14 (UserConnect-4.7-patch)``
+``Last updated: R1.15 (UserConnect-4.7-patch); Terraform v0.12``
 
 
 ---
@@ -20,7 +20,7 @@ Otherwise, this list does not really apply. Please view the below list for detai
 |:----:|----------------|:-----------------:|----------------------------|
 |(new) | transit_vpc    | enable_hybrid_connection | **No**, Terraform support added to an existing functionality on Controller. **Unless** the customer has enabled this on that transit gw through Controller, they must rectify the diff by adding that line in their config file and doing a ``terraform refresh`` |
 |(new) |  spoke_vpc     | ha_gw_size        | **Yes**; if customer has HA enabled for their spoke gw, they must also update their config file for ea/ spoke gw's respective sizes |
-|(new) | transit_vpc    | ha_gw_size        | **Yes**; if  customer has HA enabled for their transit gw, they must also update their config file for ea/ transit gw's respective sizes |
+|(new) | transit_vpc    | ha_gw_size        | **Yes**; if customer has HA enabled for their transit gw, they must also update their config file for ea/ transit gw's respective sizes |
 
 
 ## R1.1.66 (UserConnect-4.1.981)
@@ -110,3 +110,13 @@ Otherwise, this list does not really apply. Please view the below list for detai
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
 |(new) | gateway        | max_vpn_conn      | **Yes**; if any vpn-gateway was created before this release, add this attribute to .tf file(s) and specify the corresponding value(s), which may be viewed on the Controller's Gateway Page. Any new vpn-gateway created on or after this release must specify this parameter. Default is 100 |
+
+
+## R1.15.22 (UserConnect-4.7.494) (Terraform v0.12)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(changed) | aws_tgw    | security_domains, attached_vpc | **Yes**; due to Hashicorp's Terraform v0.12 release, syntactical changes were introduced. Most notably, map attributes become written as separate blocks |
+|(changed) | firewall   | policy            | **Yes**; see above for details |
+|(changed) | firewall_tag | cidr_list       | **Yes**; see above for details |
+|(changed) | fqdn       | gw_filter_tag_list, domain_names | **Yes**; see above for details |
+|(changed) | vpn_profile| policy            | **Yes**; see above for details |
