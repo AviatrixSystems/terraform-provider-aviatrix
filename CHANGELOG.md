@@ -1,3 +1,13 @@
+## 1.15.05 (Jul 15 2019)
+
+CHANGES
+  - Supported controller version: 4.7.474
+  - Supported Terraform version: 0.11.*
+  - Updated Terraform Feature Changelist
+  - Updated test infra
+  - Added 10s sleep time before updating split tunnel for vpn gateway creation
+  
+  
 ## 1.14.15 (Jul 11 2019)
 
 CHANGES

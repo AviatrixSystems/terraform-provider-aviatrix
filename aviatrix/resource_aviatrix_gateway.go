@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -539,6 +540,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 		if sTunnel.SplitTunnel == "yes" {
 			if sTunnel.AdditionalCidrs != "" || sTunnel.NameServers != "" || sTunnel.SearchDomains != "" {
+				time.Sleep(10 * time.Second)
 				err = client.ModifySplitTunnel(sTunnel)
 				if err != nil {
 					return fmt.Errorf("failed to modify split tunnel: %s", err)
