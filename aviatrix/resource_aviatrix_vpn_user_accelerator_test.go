@@ -62,12 +62,12 @@ resource "aviatrix_gateway" "test_gw" {
 	gw_name      = "tfg-%[1]s"
 	vpc_id       = "%[5]s"
 	vpc_reg      = "%[6]s"
-	vpc_size     = "t2.micro"
-	vpc_net      = "%[7]s"
-	vpn_access   = "yes"
+	gw_size      = "t2.micro"
+	subnet       = "%[7]s"
+	vpn_access   = true
 	vpn_cidr     = "192.168.43.0/24"
 	max_vpn_conn = "100"
-	enable_elb   = "yes"
+	enable_elb   = true
 	elb_name     = "tflb-%[1]s"
 }
 resource "aviatrix_vpn_user_accelerator" "test_elb" {

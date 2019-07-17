@@ -36,7 +36,7 @@ func resourceAviatrixAccount() *schema.Resource {
 				Description: "AWS Account number to associate with Aviatrix account.",
 			},
 			"aws_iam": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "AWS IAM-role based flag.",
 			},
@@ -105,7 +105,6 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		AccountName:                           d.Get("account_name").(string),
 		CloudType:                             d.Get("cloud_type").(int),
 		AwsAccountNumber:                      d.Get("aws_account_number").(string),
-		AwsIam:                                d.Get("aws_iam").(string),
 		AwsRoleApp:                            d.Get("aws_role_app").(string),
 		AwsRoleEc2:                            d.Get("aws_role_ec2").(string),
 		AwsAccessKey:                          d.Get("aws_access_key").(string),
@@ -118,6 +117,13 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		ArmApplicationClientSecret:            d.Get("arm_application_key").(string),
 	}
 
+	awsIam := d.Get("aws_iam").(bool)
+	if awsIam {
+		account.AwsIam = "true"
+	} else {
+		account.AwsIam = "false"
+	}
+
 	if account.CloudType == 1 {
 		if account.AwsAccountNumber == "" {
 			return fmt.Errorf("aws account number is needed for aws cloud")
@@ -127,7 +133,7 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		log.Printf("[INFO] Creating Aviatrix account: %#v", account)
-		if aws_iam := d.Get("aws_iam").(string); aws_iam == "true" {
+		if aws_iam := d.Get("aws_iam").(bool); aws_iam {
 			var role_app bytes.Buffer
 			var role_ec2 bytes.Buffer
 			role_app.WriteString("arn:aws:iam::")
@@ -232,10 +238,10 @@ func resourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) error
 				//force default setting and save to .tfstate file
 				d.Set("aws_access_key", "")
 				d.Set("aws_secret_key", "")
-				d.Set("aws_iam", "true")
+				d.Set("aws_iam", true)
 			} else {
 				d.Set("aws_access_key", acc.AwsAccessKey)
-				d.Set("aws_iam", "false")
+				d.Set("aws_iam", false)
 			}
 		} else if acc.CloudType == 4 {
 			d.Set("gcloud_project_id", acc.GcloudProjectName)
@@ -255,7 +261,6 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 		AccountName:                           d.Get("account_name").(string),
 		CloudType:                             d.Get("cloud_type").(int),
 		AwsAccountNumber:                      d.Get("aws_account_number").(string),
-		AwsIam:                                d.Get("aws_iam").(string),
 		AwsRoleApp:                            d.Get("aws_role_app").(string),
 		AwsRoleEc2:                            d.Get("aws_role_ec2").(string),
 		AwsAccessKey:                          d.Get("aws_access_key").(string),
@@ -266,6 +271,13 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 		ArmApplicationEndpoint:                d.Get("arm_directory_id").(string),
 		ArmApplicationClientId:                d.Get("arm_application_id").(string),
 		ArmApplicationClientSecret:            d.Get("arm_application_key").(string),
+	}
+
+	awsIam := d.Get("aws_iam").(bool)
+	if awsIam {
+		account.AwsIam = "true"
+	} else {
+		account.AwsIam = "false"
 	}
 
 	log.Printf("[INFO] Updating Aviatrix account: %#v", account)

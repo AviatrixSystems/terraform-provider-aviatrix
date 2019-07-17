@@ -164,7 +164,7 @@ resource "aviatrix_account" "aws" {
 	account_name       = "tf-testing-aws-%d"
 	cloud_type         = 1
 	aws_account_number = "%s"
-	aws_iam            = "false"
+	aws_iam            = false
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }

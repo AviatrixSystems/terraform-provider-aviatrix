@@ -234,7 +234,13 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if ok := d.HasChange("base_log_enabled"); ok {
 		firewall.BasePolicy = d.Get("base_policy").(string)
-		firewall.BaseLogEnabled = d.Get("base_log_enabled").(string)
+
+		baseLogEnabled := d.Get("base_log_enabled").(bool)
+		if baseLogEnabled {
+			firewall.BaseLogEnabled = "on"
+		} else {
+			firewall.BaseLogEnabled = "off"
+		}
 	}
 
 	//If base_policy or base_log enable is present, first delete

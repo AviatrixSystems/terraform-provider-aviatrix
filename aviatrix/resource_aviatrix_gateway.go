@@ -913,8 +913,15 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string),
 		GwSize:    d.Get("gw_size").(string),
-		SingleAZ:  d.Get("single_az_ha").(string),
 	}
+
+	singleAZ := d.Get("single_az_ha").(bool)
+	if singleAZ {
+		gateway.SingleAZ = "enabled"
+	} else {
+		gateway.SingleAZ = "disabled"
+	}
+
 	peeringHaGateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string) + "-hagw",
@@ -945,7 +952,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		vpn_gw := &goaviatrix.VpnGatewayAuth{
 			VpcID:              d.Get("vpc_id").(string),
 			OtpMode:            d.Get("otp_mode").(string),
-			SamlEnabled:        d.Get("saml_enabled").(string),
 			OktaToken:          d.Get("okta_token").(string),
 			OktaURL:            d.Get("okta_url").(string),
 			OktaUsernameSuffix: d.Get("okta_username_suffix").(string),
@@ -953,12 +959,25 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			DuoSecretKey:       d.Get("duo_secret_key").(string),
 			DuoAPIHostname:     d.Get("duo_api_hostname").(string),
 			DuoPushMode:        d.Get("duo_push_mode").(string),
-			EnableLdap:         d.Get("enable_ldap").(string),
 			LdapServer:         d.Get("ldap_server").(string),
 			LdapBindDn:         d.Get("ldap_bind_dn").(string),
 			LdapPassword:       d.Get("ldap_password").(string),
 			LdapBaseDn:         d.Get("ldap_base_dn").(string),
 			LdapUserAttr:       d.Get("ldap_username_attribute").(string),
+		}
+
+		samlEnabled := d.Get("saml_enabled").(bool)
+		if samlEnabled {
+			vpn_gw.SamlEnabled = "yes"
+		} else {
+			vpn_gw.SamlEnabled = "no"
+		}
+
+		enableLdap := d.Get("enable_ldap").(bool)
+		if enableLdap {
+			vpn_gw.EnableLdap = "yes"
+		} else {
+			vpn_gw.EnableLdap = "no"
 		}
 
 		if gateway.CloudType == 4 {
@@ -1036,7 +1055,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				vpn_gw.AuthType = "none"
 			}
 		}
-		if d.Get("enable_elb").(string) == "yes" {
+		if d.Get("enable_elb").(bool) {
 			vpn_gw.LbOrGatewayName = d.Get("elb_name").(string)
 		} else {
 			vpn_gw.LbOrGatewayName = d.Get("gw_name").(string)
@@ -1095,27 +1114,23 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		if n == nil {
 			n = new([]interface{})
 		}
-		oST := o.(string)
-		nST := n.(string)
-		if oST == "" {
-			oST = "no"
-		}
-		if nST == "" {
-			nST = "no"
-		}
-		if nST != "no" && nST != "yes" {
-			return fmt.Errorf("split_tunnel is not set correctly")
-		}
+		oST := o.(bool)
+		nST := n.(bool)
 
-		if oST != nST || (nST == "yes" && (d.HasChange("additional_cidrs") || d.HasChange("name_servers") || d.HasChange("search_domains"))) {
+		if oST != nST || (nST && (d.HasChange("additional_cidrs") || d.HasChange("name_servers") || d.HasChange("search_domains"))) {
 			sTunnel := &goaviatrix.SplitTunnel{
-				SplitTunnel:     nST,
 				VpcID:           d.Get("vpc_id").(string),
 				ElbName:         d.Get("elb_name").(string),
 				AdditionalCidrs: d.Get("additional_cidrs").(string),
 				NameServers:     d.Get("name_servers").(string),
 				SearchDomains:   d.Get("search_domains").(string),
 				SaveTemplate:    "no",
+			}
+
+			if nST {
+				sTunnel.SplitTunnel = "yes"
+			} else {
+				sTunnel.SplitTunnel = "no"
 			}
 
 			if gateway.CloudType == 4 {
@@ -1135,6 +1150,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				// VPC ID for gcp needs to include gcloud project ID
 				sTunnel.VpcID = gw1.VpcID
 			}
+
 			err := client.ModifySplitTunnel(sTunnel)
 			if err != nil {
 				return fmt.Errorf("failed to modify split tunnel: %s", err)
@@ -1143,9 +1159,16 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 	if d.HasChange("single_az_ha") {
 		singleAZGateway := &goaviatrix.Gateway{
-			GwName:   d.Get("gw_name").(string),
-			SingleAZ: d.Get("single_az_ha").(string),
+			GwName: d.Get("gw_name").(string),
 		}
+
+		singleAZ := d.Get("single_az_ha").(bool)
+		if singleAZ {
+			singleAZGateway.SingleAZ = "enabled"
+		} else {
+			singleAZGateway.SingleAZ = "disabled"
+		}
+
 		if singleAZGateway.SingleAZ != "enabled" && singleAZGateway.SingleAZ != "disabled" {
 			return fmt.Errorf("[INFO] single_az_ha of gateway: %v is not set correctly", singleAZGateway.GwName)
 		}
@@ -1171,13 +1194,23 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		o, n := d.GetChange("enable_nat")
-		if o == "yes" && n == "no" {
+		if o == nil {
+			o = new([]interface{})
+		}
+		if n == nil {
+			n = new([]interface{})
+		}
+		oEN := o.(bool)
+		nEN := n.(bool)
+
+		if oEN {
 			err := client.DisableSNat(gw)
 			if err != nil {
 				return fmt.Errorf("failed to disable SNAT: %s", err)
 			}
 		}
-		if o == "no" && n == "yes" {
+
+		if !oEN && nEN {
 			err := client.EnableSNat(gw)
 			if err != nil {
 				return fmt.Errorf("failed to enable SNAT: %s", err)
@@ -1206,7 +1239,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			log.Printf("[INFO] can't update vpn cidr because elb is disabled for gateway: %#v", gateway.GwName)
 		}
 
-		d.SetPartial("enable_nat")
+		d.SetPartial("vpn_cidr")
 	}
 	if d.HasChange("max_vpn_conn") {
 		if d.Get("vpn_access").(string) == "yes" {

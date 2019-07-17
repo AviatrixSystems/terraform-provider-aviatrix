@@ -614,17 +614,20 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 			VpcID:       d.Get("vpc_id").(string),
 			VpcRegion:   d.Get("vpc_reg").(string),
 		}
-		connectedTransit := d.Get("connected_transit").(string)
-		if connectedTransit != "yes" && connectedTransit != "no" {
-			return fmt.Errorf("connected_transit is not set correctly")
+		connectedTransit := d.Get("connected_transit").(bool)
+		if connectedTransit {
+			transitGateway.ConnectedTransit = "yes"
+		} else {
+			transitGateway.ConnectedTransit = "no"
 		}
-		if connectedTransit == "yes" {
+
+		if connectedTransit {
 			err := client.EnableConnectedTransit(transitGateway)
 			if err != nil {
 				return fmt.Errorf("failed to enable connected transit: %s", err)
 			}
 		}
-		if connectedTransit == "no" {
+		if !connectedTransit {
 			err := client.DisableConnectedTransit(transitGateway)
 			if err != nil {
 				return fmt.Errorf("failed to disable connected transit: %s", err)
@@ -663,14 +666,15 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 			CloudType: d.Get("cloud_type").(int),
 			GwName:    d.Get("gw_name").(string),
 		}
-		o, n := d.GetChange("enable_nat")
-		if o == "yes" && n == "no" {
+
+		enableNat := d.Get("enable_nat").(bool)
+
+		if enableNat {
 			err := client.DisableSNat(gw)
 			if err != nil {
 				return fmt.Errorf("failed to disable SNAT: %s", err)
 			}
-		}
-		if o == "no" && n == "yes" {
+		} else {
 			err := client.EnableSNat(gw)
 			if err != nil {
 				return fmt.Errorf("failed to enable SNAT: %s", err)
@@ -698,7 +702,7 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Partial(false)
-	return nil
+	return resourceAviatrixTransitVpcRead(d, meta)
 }
 
 func resourceAviatrixTransitVpcDelete(d *schema.ResourceData, meta interface{}) error {

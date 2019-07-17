@@ -57,8 +57,8 @@ resource "aviatrix_gateway" "test_gw" {
 	gw_name      = "tfg-%s"
 	vpc_id       = "%s"
 	vpc_reg      = "%s"
-	vpc_size     = "t2.micro"
-	vpc_net      = "%s"
+	gw_size      = "t2.micro"
+	subnet       = "%s"
 }
 
 data "aviatrix_gateway" "foo" {
@@ -66,7 +66,7 @@ data "aviatrix_gateway" "foo" {
 	gw_name      = aviatrix_gateway.test_gw.gw_name
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"))
+		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"))
 }
 
 func testAccDataSourceAviatrixGateway(name string) resource.TestCheckFunc {

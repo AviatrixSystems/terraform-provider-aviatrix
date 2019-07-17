@@ -38,7 +38,7 @@ func preGatewayCheckGCP(t *testing.T, msgCommon string) (string, string, string)
 	}
 	gcpZone := os.Getenv("GCP_ZONE")
 	if gcpZone == "" {
-		t.Fatal("Environment variable GCP_REGION is not set" + msgCommon)
+		t.Fatal("Environment variable GCP_ZONE is not set" + msgCommon)
 	}
 	gcpSubnet := os.Getenv("GCP_SUBNET")
 	if gcpSubnet == "" {

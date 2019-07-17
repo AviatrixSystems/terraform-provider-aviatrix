@@ -611,22 +611,21 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			VpcID:       d.Get("vpc_id").(string),
 			VpcRegion:   d.Get("vpc_reg").(string),
 		}
-		connectedTransit := d.Get("connected_transit").(string)
-		if connectedTransit != "yes" && connectedTransit != "no" {
-			return fmt.Errorf("connected_transit is not set correctly")
-		}
-		if connectedTransit == "yes" {
+		connectedTransit := d.Get("connected_transit").(bool)
+
+		if connectedTransit {
 			err := client.EnableConnectedTransit(transitGateway)
 			if err != nil {
 				return fmt.Errorf("failed to enable connected transit: %s", err)
 			}
-		}
-		if connectedTransit == "no" {
+		} else {
 			err := client.DisableConnectedTransit(transitGateway)
 			if err != nil {
 				return fmt.Errorf("failed to disable connected transit: %s", err)
 			}
 		}
+
+		d.SetPartial("connected_transit")
 	}
 
 	if d.HasChange("ha_gw_size") {
@@ -652,6 +651,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if err != nil {
 			return fmt.Errorf("failed to update Aviatrix Transit HA Gw size: %s", err)
 		}
+
 		d.SetPartial("ha_gw_size")
 	}
 
@@ -660,19 +660,20 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			CloudType: d.Get("cloud_type").(int),
 			GwName:    d.Get("gw_name").(string),
 		}
-		o, n := d.GetChange("enable_nat")
-		if o == "yes" && n == "no" {
+		enableNat := d.Get("enable_nat").(bool)
+
+		if enableNat {
 			err := client.DisableSNat(gw)
 			if err != nil {
 				return fmt.Errorf("failed to disable SNAT: %s", err)
 			}
-		}
-		if o == "no" && n == "yes" {
+		} else {
 			err := client.EnableSNat(gw)
 			if err != nil {
 				return fmt.Errorf("failed to enable SNAT: %s", err)
 			}
 		}
+
 		d.SetPartial("gw_size")
 	}
 
@@ -681,7 +682,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			GwName: gateway.GwName,
 		}
 		enableFireNetInterfaces := d.Get("enable_firenet_interfaces").(bool)
-		if enableFireNetInterfaces == true {
+		if enableFireNetInterfaces {
 			err := client.EnableGatewayFireNetInterfaces(transitGW)
 			if err != nil {
 				return fmt.Errorf("failed to enable transit GW for FireNet Interfaces: %s", err)
@@ -695,7 +696,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	}
 
 	d.Partial(false)
-	return nil
+	return resourceAviatrixTransitGatewayRead(d, meta)
 }
 
 func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface{}) error {

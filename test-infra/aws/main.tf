@@ -1,7 +1,7 @@
 resource "aws_vpc" "vpc" {
   cidr_block         = var.aws_vpc_cidr
   enable_classiclink = "false"
-  tags {
+  tags = {
     Name = "aviatrix-vpc"
   }
 }
@@ -9,13 +9,13 @@ resource "aws_subnet" "vpc-public" {
   vpc_id                  = aws_vpc.vpc.id
   cidr_block              = var.aws_vpc_subnet
   map_public_ip_on_launch = "true"
-  tags {
+  tags = {
     Name = "aviatrix-public"
   }
 }
 resource "aws_internet_gateway" "vpc-gw" {
   vpc_id = aws_vpc.vpc.id
-  tags {
+  tags = {
     Name = "aviatrix-igw"
   }
 }
@@ -25,7 +25,7 @@ resource "aws_route_table" "vpc-route" {
     cidr_block = "0.0.0.0/0"
     gateway_id = "${aws_internet_gateway.vpc-gw.id}"
   }
-  tags {
+  tags = {
     Name = "aviatrix-route"
   }
   lifecycle {

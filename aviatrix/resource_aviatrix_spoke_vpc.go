@@ -421,18 +421,25 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("updating subnet is not allowed")
 	}
 	if d.HasChange("single_az_ha") {
-		_, singleAz := d.GetChange("single_az_ha")
 		singleAZGateway := &goaviatrix.Gateway{
-			GwName:   d.Get("gw_name").(string),
-			SingleAZ: singleAz.(string),
+			GwName: d.Get("gw_name").(string),
 		}
-		if singleAz == "enabled" {
+
+		singleAZ := d.Get("single_az_ha").(bool)
+
+		if singleAZ {
+			singleAZGateway.SingleAZ = "enabled"
+		} else {
+			singleAZGateway.SingleAZ = "disabled"
+		}
+
+		if singleAZGateway.SingleAZ == "enabled" {
 			log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
 			err := client.EnableSingleAZGateway(singleAZGateway)
 			if err != nil {
 				return fmt.Errorf("failed to enable single AZ GW HA: %s", err)
 			}
-		} else if singleAz == "disabled" {
+		} else if singleAZGateway.SingleAZ == "disabled" {
 			log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
 			err := client.DisableSingleAZGateway(singleAZGateway)
 			if err != nil {
@@ -596,20 +603,22 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 			CloudType: d.Get("cloud_type").(int),
 			GwName:    d.Get("gw_name").(string),
 		}
-		o, n := d.GetChange("enable_nat")
-		if o == "yes" && n == "no" {
+
+		enableNat := d.Get("enable_nat").(bool)
+
+		if enableNat {
 			err := client.DisableSNat(gw)
 			if err != nil {
 				return fmt.Errorf("failed to disable SNAT: %s", err)
 			}
-		}
-		if o == "no" && n == "yes" {
+		} else {
 			err := client.EnableSNat(gw)
 			if err != nil {
 				return fmt.Errorf("failed to enable SNAT: %s", err)
 			}
 		}
-		d.SetPartial("gw_size")
+
+		d.SetPartial("enable_nat")
 	}
 
 	if d.HasChange("transit_gw") {

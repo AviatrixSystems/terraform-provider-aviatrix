@@ -339,9 +339,8 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 	client := meta.(*goaviatrix.Client)
 
 	fqdn := &goaviatrix.FQDN{
-		FQDNTag:    d.Get("fqdn_tag").(string),
-		FQDNStatus: d.Get("fqdn_enabled").(string),
-		FQDNMode:   d.Get("fqdn_mode").(string),
+		FQDNTag:  d.Get("fqdn_tag").(string),
+		FQDNMode: d.Get("fqdn_mode").(string),
 	}
 
 	fqdnStatus := d.Get("fqdn_enabled").(bool)
