@@ -565,12 +565,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			sTunnel.VpcID = gw1.VpcID
 		}
 
-		if gw1.EnableElb != "yes" {
-			sTunnel.ElbName = gw1.GwName
-		} else {
-			sTunnel.ElbName = gw1.ElbName
-		}
-
 		sTunnel.SplitTunnel = gateway.SplitTunnel
 		if sTunnel.SplitTunnel == "yes" {
 			if sTunnel.AdditionalCidrs != "" || sTunnel.NameServers != "" || sTunnel.SearchDomains != "" {
@@ -695,7 +689,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 
 		d.Set("vpn_cidr", gw.VpnCidr)
 
-		if gw.ElbState == "yes" {
+		if gw.ElbState == "enabled" {
 			d.Set("enable_elb", true)
 			d.Set("elb_name", gw.ElbName)
 		} else {
@@ -703,12 +697,10 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("elb_name", "")
 		}
 
-		if gw.SamlEnabled != "" {
-			if gw.SplitTunnel == "yes" {
-				d.Set("saml_enabled", true)
-			} else {
-				d.Set("saml_enabled", false)
-			}
+		if gw.SamlEnabled == "yes" {
+			d.Set("saml_enabled", true)
+		} else {
+			d.Set("saml_enabled", false)
 		}
 
 		if gw.AuthMethod == "duo_auth" || gw.AuthMethod == "duo_auth+LDAP" {
