@@ -91,7 +91,7 @@ resource "aviatrix_vgw_conn" "test_vgw_conn" {
 	bgp_local_as_num = "6451"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"),
+		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"),
 		rName, os.Getenv("AWS_BGP_VGW_ID"))
 }
 

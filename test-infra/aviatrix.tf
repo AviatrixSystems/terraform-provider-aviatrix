@@ -71,7 +71,7 @@ module "aviatrix_aws_vpc2" {
   aws_region     = var.aws_region2
 }
 resource "aws_vpn_gateway" "vgw" {
-  vpc_id = module.aviatrix_aws_vpc1.vpc
+  vpc_id = module.aviatrix_aws_vpc2.vpc
   tags = {
     Name = "aviatrix-vgw"
   }

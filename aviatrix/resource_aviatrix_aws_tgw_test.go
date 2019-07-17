@@ -60,7 +60,7 @@ func TestAccAviatrixAWSTgw_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_domains.3.connected_domains.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_domains.3.connected_domains.0", "Aviatrix_Edge_Domain"),
 					resource.TestCheckResourceAttr(resourceName, "security_domains.3.attached_vpc.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "security_domains.3.attached_vpc.0.vpc_id", os.Getenv("AWS_VPC_TGW_ID")),
+					resource.TestCheckResourceAttr(resourceName, "security_domains.3.attached_vpc.0.vpc_id", os.Getenv("AWS_VPC_ID2")),
 				),
 			},
 		},
@@ -140,9 +140,9 @@ resource "aviatrix_aws_tgw" "aws_tgw_test" {
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"),
-		awsSideAsNumber, os.Getenv("AWS_REGION"), rName, sDm, sDm, os.Getenv("AWS_VPC_TGW_ID"),
-		os.Getenv("AWS_REGION"))
+		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"),
+		awsSideAsNumber, os.Getenv("AWS_REGION"), rName, sDm, sDm, os.Getenv("AWS_VPC_ID2"),
+		os.Getenv("AWS_REGION2"))
 }
 
 func testAccCheckAWSTgwExists(n string, awsTgw *goaviatrix.AWSTgw) resource.TestCheckFunc {

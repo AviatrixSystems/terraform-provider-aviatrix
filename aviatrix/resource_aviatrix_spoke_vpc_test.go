@@ -75,7 +75,7 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "gw_size", awsGwSize),
 						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-aws-%s", rName)),
 						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
-						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("AWS_VPC_NET")),
+						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("AWS_SUBNET")),
 						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AWS_REGION")),
 						resource.TestCheckResourceAttr(resourceName, "enable_nat", "false"),
 					),
@@ -177,7 +177,7 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
 	enable_nat   = false
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_VPC_NET"))
+		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_SUBNET"))
 }
 
 func testAccSpokeGwConfigGCP(rName string) string {

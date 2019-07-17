@@ -74,7 +74,7 @@ resource "aviatrix_vpn_user_accelerator" "test_elb" {
 	elb_name = aviatrix_gateway.test_gw.elb_name
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"))
+		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"))
 }
 
 func testAccCheckVPNUserAcceleratorExists(n string) resource.TestCheckFunc {
