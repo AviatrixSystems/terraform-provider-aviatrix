@@ -61,7 +61,7 @@ resource "aviatrix_account" "test" {
 	account_name       = "tfa-%s"
 	cloud_type         = 1
 	aws_account_number = "%s"
-	aws_iam            = "false"
+	aws_iam            = false
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }

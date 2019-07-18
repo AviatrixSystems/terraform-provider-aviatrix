@@ -63,7 +63,7 @@ output "GCP_ZONE" {
 }
 
 output "ARM_REGION" {
-  value = provider.azurerm.region
+  value = var.azure_region1
 } 
 
 output "ARM_VNET_ID" {
@@ -79,7 +79,7 @@ output "ARM_VNET_ID2" {
 }
 
 output "ARM_REGION2" {
-  value = provider.azurerm.region
+  value = var.azure_region2
 }
 
 output "AWS_VPC_ID" {
@@ -99,10 +99,10 @@ output "AWS_SUBNET2" {
 }
 
 output "AWS_REGION" {
-  value = provider.aws.region
+  value = data.aws_region.current.name
 }
 
 output "AWS_REGION2" {
-  value = provider.aws.region
+  value = data.aws_region.current.name
 }
 

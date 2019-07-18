@@ -1,4 +1,5 @@
 data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
 # This is not part of this role should not be destroyed
 # module "aviatrix-iam-roles" {
