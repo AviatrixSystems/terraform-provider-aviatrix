@@ -74,7 +74,7 @@ resource "aviatrix_account" "test_account" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-resource "aviatrix_transit_vpc" "test_transit_vpc" {
+resource "aviatrix_transit_gateway" "test_transit_vpc" {
 	account_name = aviatrix_account.test_account.account_name
 	cloud_type   = 1
 	gw_name      = "tfg-%s"
@@ -85,8 +85,8 @@ resource "aviatrix_transit_vpc" "test_transit_vpc" {
 }
 resource "aviatrix_vgw_conn" "test_vgw_conn" {
 	conn_name        = "tfc-%s"
-	gw_name          = aviatrix_transit_vpc.test_transit_vpc.gw_name
-	vpc_id           = aviatrix_transit_vpc.test_transit_vpc.vpc_id
+	gw_name          = aviatrix_transit_gateway.test_transit_vpc.gw_name
+	vpc_id           = aviatrix_transit_gateway.test_transit_vpc.vpc_id
 	bgp_vgw_id       = "%s"
 	bgp_local_as_num = "6451"
 }

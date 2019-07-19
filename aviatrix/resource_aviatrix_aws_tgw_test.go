@@ -87,7 +87,7 @@ resource "aviatrix_account" "test_account2" {
 	aws_secret_key     = "%s"
 }
 
-resource "aviatrix_transit_vpc" "transit_gw_test" {
+resource "aviatrix_transit_gateway" "transit_gw_test" {
 	cloud_type               = 1
 	account_name             = aviatrix_account.test_account1.account_name
 	gw_name                  = "tfg-%s"
@@ -100,7 +100,7 @@ resource "aviatrix_transit_vpc" "transit_gw_test" {
 
 resource "aviatrix_aws_tgw" "aws_tgw_test" {
 	account_name                      = aviatrix_account.test_account2.account_name
-	attached_aviatrix_transit_gateway = [aviatrix_transit_vpc.transit_gw_test.gw_name]
+	attached_aviatrix_transit_gateway = [aviatrix_transit_gateway.transit_gw_test.gw_name]
 	aws_side_as_number                = "%s"
 	manage_vpc_attachment             = true
 	region                            = "%s"

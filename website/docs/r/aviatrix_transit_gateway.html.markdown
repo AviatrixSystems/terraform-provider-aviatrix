@@ -24,9 +24,13 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
   subnet                   = "10.1.0.0/24"
   ha_subnet                = "10.1.0.0/24"
   ha_gw_size               = "t2.micro"
-  tag_list                 = ["name:value", "name1:value1", "name2:value2"]
+  tag_list                 = [
+    "name:value", 
+    "name1:value1", 
+    "name2:value2",
+  ]
   enable_hybrid_connection = true
-  connected_transit        = "yes"
+  connected_transit        = true
 }
 
 # Create an Aviatrix Transit Network Gateway in ARM
@@ -40,7 +44,7 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_azure" {
   subnet                   = "10.30.0.0/24"
   ha_subnet                = "10.30.0.0/24"
   ha_gw_size               = "Standard_B1s"
-  connected_transit        = "yes"
+  connected_transit        = true
 }
 
 ```

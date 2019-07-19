@@ -66,7 +66,7 @@ resource "aviatrix_account" "test" {
 	aws_secret_key     = "%s"
 }
 
-resource "aviatrix_transit_vpc" "transitGw1" {
+resource "aviatrix_transit_gateway" "transitGw1" {
 	cloud_type   = 1
 	account_name = aviatrix_account.test.account_name
 	gw_name      = "tfg-%s"
@@ -78,7 +78,7 @@ resource "aviatrix_transit_vpc" "transitGw1" {
 	ha_gw_size   = "t2.micro"
 }
 
-resource "aviatrix_transit_vpc" "transitGw2" {
+resource "aviatrix_transit_gateway" "transitGw2" {
 	cloud_type   = 1
 	account_name = aviatrix_account.test.account_name
 	gw_name      = "tfg2-%s"
@@ -91,8 +91,8 @@ resource "aviatrix_transit_vpc" "transitGw2" {
 }
 
 resource "aviatrix_transit_gateway_peering" "foo" {
-	transit_gateway_name1 = aviatrix_transit_vpc.transitGw1.gw_name
-	transit_gateway_name2 = aviatrix_transit_vpc.transitGw2.gw_name
+	transit_gateway_name1 = aviatrix_transit_gateway.transitGw1.gw_name
+	transit_gateway_name2 = aviatrix_transit_gateway.transitGw2.gw_name
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, vpcID1, region1, subnet1, haSubnet1, rName, vpcID2, region2, subnet2, haSubnet2)
