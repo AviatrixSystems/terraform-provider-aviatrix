@@ -117,7 +117,7 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
 	subnet       = "%[7]s"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"))
+		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"))
 }
 
 func testAccTransitGatewayConfigBasicArm(rName string) string {
