@@ -192,11 +192,11 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			"ha_subnet is set. Example: t2.micro")
 	}
 
-	log.Printf("[INFO] Creating Aviatrix TransitVpc: %#v", gateway)
+	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
 
 	err := client.LaunchTransitVpc(gateway)
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix TransitVpc: %s", err)
+		return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
 	}
 
 	d.SetId(gateway.GwName)
@@ -222,7 +222,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 		err = client.EnableHaTransitVpc(transitGateway)
 		if err != nil {
-			return fmt.Errorf("failed to enable2 HA Aviatrix TransitVpc: %s", err)
+			return fmt.Errorf("failed to enable2 HA Aviatrix Transit Gateway: %s", err)
 		}
 
 		//Resize HA Gateway
@@ -336,7 +336,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix TransitVpc: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix Transit Gateway: %s", err)
 	}
 
 	log.Printf("[TRACE] reading gateway %s: %#v", d.Get("gw_name").(string), gw)
@@ -382,7 +382,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 		gwDetail, err := client.GetGatewayDetail(gw)
 		if err != nil {
-			return fmt.Errorf("couldn't get Aviatrix TransitVpc: %s", err)
+			return fmt.Errorf("couldn't get Aviatrix Transit Gateway: %s", err)
 		}
 		d.Set("enable_firenet_interfaces", gwDetail.DMZEnabled)
 	}
@@ -448,7 +448,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string) + "-hagw",
 	}
-	log.Printf("[INFO] Updating Aviatrix TransitVpc: %#v", gateway)
+	log.Printf("[INFO] Updating Aviatrix Transit Gateway: %#v", gateway)
 
 	d.Partial(true)
 
@@ -481,7 +481,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		gateway.GwSize = d.Get("gw_size").(string)
 		err := client.UpdateGateway(gateway)
 		if err != nil {
-			return fmt.Errorf("failed to update Aviatrix TransitVpc: %s", err)
+			return fmt.Errorf("failed to update Aviatrix Transit Gateway: %s", err)
 		}
 		d.SetPartial("gw_size")
 	}
@@ -506,26 +506,26 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			//New configuration to enable HA
 			err := client.EnableHaTransitVpc(transitGateway)
 			if err != nil {
-				return fmt.Errorf("failed to enable HA Aviatrix TransitVpc: %s", err)
+				return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
 			}
 		} else if n == "" {
 			//Ha configuration has been deleted
 			err := client.DeleteGateway(haGateway)
 			if err != nil {
-				return fmt.Errorf("failed to delete Aviatrix TransitVpc HA gateway: %s", err)
+				return fmt.Errorf("failed to delete Aviatrix Transit Gateway HA gateway: %s", err)
 			}
 		} else {
 			//HA subnet has been modified. Delete older HA GW, and launch new HA GW in new subnet.
 			err := client.DeleteGateway(haGateway)
 			if err != nil {
-				return fmt.Errorf("failed to delete Aviatrix TransitVpc HA gateway: %s", err)
+				return fmt.Errorf("failed to delete Aviatrix Transit Gateway HA gateway: %s", err)
 			}
 
 			gateway.GwName = d.Get("gw_name").(string)
 			//New configuration to enable HA
 			haErr := client.EnableHaTransitVpc(transitGateway)
 			if haErr != nil {
-				return fmt.Errorf("failed to enable HA Aviatrix TransitVpc: %s", err)
+				return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
 			}
 		}
 		d.SetPartial("ha_subnet")
@@ -707,7 +707,7 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 		GwName:    d.Get("gw_name").(string),
 	}
 
-	log.Printf("[INFO] Deleting Aviatrix TransitVpc: %#v", gateway)
+	log.Printf("[INFO] Deleting Aviatrix Transit Gateway: %#v", gateway)
 
 	enableFireNetInterfaces := d.Get("enable_firenet_interfaces").(bool)
 	if enableFireNetInterfaces == true {
@@ -728,7 +728,7 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 
 		err := client.DeleteGateway(gateway)
 		if err != nil {
-			return fmt.Errorf("failed to delete Aviatrix TransitVpc HA gateway: %s", err)
+			return fmt.Errorf("failed to delete Aviatrix Transit Gateway HA gateway: %s", err)
 		}
 	}
 
@@ -736,7 +736,7 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 
 	err := client.DeleteGateway(gateway)
 	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix TransitVpc: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix Transit Gateway: %s", err)
 	}
 
 	return nil

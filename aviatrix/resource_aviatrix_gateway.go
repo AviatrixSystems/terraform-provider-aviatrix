@@ -377,9 +377,9 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 
 	allocateNewEip := d.Get("allocate_new_eip").(bool)
 	if allocateNewEip {
-		gateway.AllocateNewEip = "yes"
+		gateway.AllocateNewEip = "on"
 	} else {
-		gateway.AllocateNewEip = "no"
+		gateway.AllocateNewEip = "off"
 	}
 
 	if gateway.CloudType == 1 || gateway.CloudType == 8 {
@@ -557,6 +557,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			AdditionalCidrs: d.Get("additional_cidrs").(string),
 			NameServers:     d.Get("name_servers").(string),
 			SearchDomains:   d.Get("search_domains").(string),
+			ElbName:         d.Get("elb_name").(string),
 			SaveTemplate:    "no",
 		}
 
@@ -1099,17 +1100,9 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 
 	if d.HasChange("split_tunnel") || d.HasChange("additional_cidrs") ||
 		d.HasChange("name_servers") || d.HasChange("search_domains") {
-		o, n := d.GetChange("split_tunnel")
-		if o == nil {
-			o = new([]interface{})
-		}
-		if n == nil {
-			n = new([]interface{})
-		}
-		oST := o.(bool)
-		nST := n.(bool)
+		splitTunnel := d.Get("split_tunnel").(bool)
 
-		if oST != nST || (nST && (d.HasChange("additional_cidrs") || d.HasChange("name_servers") || d.HasChange("search_domains"))) {
+		if splitTunnel && (d.HasChange("additional_cidrs") || d.HasChange("name_servers") || d.HasChange("search_domains")) {
 			sTunnel := &goaviatrix.SplitTunnel{
 				VpcID:           d.Get("vpc_id").(string),
 				ElbName:         d.Get("elb_name").(string),
@@ -1119,17 +1112,14 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				SaveTemplate:    "no",
 			}
 
-			if nST {
-				sTunnel.SplitTunnel = "yes"
-			} else {
-				sTunnel.SplitTunnel = "no"
-			}
+			sTunnel.SplitTunnel = "yes"
 
 			if gateway.CloudType == 4 {
 				// ELB name is computed, search for gw to get elb name
 				gw := &goaviatrix.Gateway{
 					GwName: gateway.GwName,
 				}
+
 				gw1, err := client.GetGateway(gw)
 				if err != nil {
 					return fmt.Errorf("couldn't find Aviatrix Gateway: %s due to %v", gw.GwName, err)
@@ -1185,24 +1175,19 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			GwName:    d.Get("gw_name").(string),
 		}
 
-		o, n := d.GetChange("enable_nat")
-		if o == nil {
-			o = new([]interface{})
+		enableNat := d.Get("enable_nat").(bool)
+		if enableNat {
+			gw.EnableNat = "yes"
+		} else {
+			gw.EnableNat = "no"
 		}
-		if n == nil {
-			n = new([]interface{})
-		}
-		oEN := o.(bool)
-		nEN := n.(bool)
 
-		if oEN {
+		if enableNat {
 			err := client.DisableSNat(gw)
 			if err != nil {
 				return fmt.Errorf("failed to disable SNAT: %s", err)
 			}
-		}
-
-		if !oEN && nEN {
+		} else {
 			err := client.EnableSNat(gw)
 			if err != nil {
 				return fmt.Errorf("failed to enable SNAT: %s", err)
@@ -1212,7 +1197,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		d.SetPartial("enable_nat")
 	}
 	if d.HasChange("vpn_cidr") {
-		if d.Get("vpn_access").(string) == "yes" && d.Get("enable_elb").(string) == "yes" {
+		if d.Get("vpn_access").(bool) && d.Get("enable_elb").(bool) {
 			gw := &goaviatrix.Gateway{
 				CloudType: d.Get("cloud_type").(int),
 				GwName:    d.Get("gw_name").(string),
@@ -1234,7 +1219,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		d.SetPartial("vpn_cidr")
 	}
 	if d.HasChange("max_vpn_conn") {
-		if d.Get("vpn_access").(string) == "yes" {
+		if d.Get("vpn_access").(bool) {
 			gw := &goaviatrix.Gateway{
 				CloudType: d.Get("cloud_type").(int),
 				GwName:    d.Get("gw_name").(string),
@@ -1256,6 +1241,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		} else {
 			log.Printf("[INFO] can't update max vpn connections because vpn is disabled for gateway: %#v", gateway.GwName)
 		}
+
 		d.SetPartial("max_vpn_conn")
 	}
 	newHaGwEnabled := false
