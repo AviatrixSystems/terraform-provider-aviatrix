@@ -411,7 +411,7 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 			d.Set("ha_enabled", true)
 		}
 
-		if d.Get("ha_enabled") == "yes" {
+		if d.Get("ha_enabled").(bool) {
 			d.Set("remote_gateway_ip", s2c.RemoteGwIP)
 			d.Set("backup_remote_gateway_ip", s2c.RemoteGwIP2)
 			d.Set("primary_cloud_gateway_name", s2c.GwName)
