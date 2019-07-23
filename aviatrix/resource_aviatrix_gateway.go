@@ -1183,14 +1183,14 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if enableNat {
-			err := client.DisableSNat(gw)
-			if err != nil {
-				return fmt.Errorf("failed to disable SNAT: %s", err)
-			}
-		} else {
 			err := client.EnableSNat(gw)
 			if err != nil {
 				return fmt.Errorf("failed to enable SNAT: %s", err)
+			}
+		} else {
+			err := client.DisableSNat(gw)
+			if err != nil {
+				return fmt.Errorf("failed to disable SNAT: %s", err)
 			}
 		}
 
