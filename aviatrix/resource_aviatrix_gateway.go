@@ -1048,11 +1048,12 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				vpn_gw.AuthType = "none"
 			}
 		}
-		if d.Get("enable_elb").(bool) {
+		if enableElb := d.Get("enable_elb").(bool); enableElb {
 			vpn_gw.LbOrGatewayName = d.Get("elb_name").(string)
 		} else {
 			vpn_gw.LbOrGatewayName = d.Get("gw_name").(string)
 		}
+
 		err := client.SetVpnGatewayAuthentication(vpn_gw)
 		if err != nil {
 			return fmt.Errorf("failed to update Aviatrix VPN Gateway Authentication: %s", err)
