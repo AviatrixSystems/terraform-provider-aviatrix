@@ -308,7 +308,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("public_ip", gw.PublicIP)
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 
-		if gw.EnableNat == "enabled" {
+		if gw.EnableNat == "yes" {
 			d.Set("enable_nat", true)
 		} else {
 			d.Set("enable_nat", false)
@@ -604,14 +604,14 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		enableNat := d.Get("enable_nat").(bool)
 
 		if enableNat {
-			err := client.DisableSNat(gw)
-			if err != nil {
-				return fmt.Errorf("failed to disable SNAT: %s", err)
-			}
-		} else {
 			err := client.EnableSNat(gw)
 			if err != nil {
 				return fmt.Errorf("failed to enable SNAT: %s", err)
+			}
+		} else {
+			err := client.DisableSNat(gw)
+			if err != nil {
+				return fmt.Errorf("failed to disable SNAT: %s", err)
 			}
 		}
 
