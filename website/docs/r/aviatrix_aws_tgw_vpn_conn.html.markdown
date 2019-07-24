@@ -39,9 +39,9 @@ The following arguments are supported:
 * `tgw_name` - (Required) This parameter represents the name of an AWS TGW.
 * `route_domain_name` - (Required) The name of a route domain, to which the vpn will be attached. Only "Default_Domain" is supported now.
 * `connection_name` - (Required) Unique name of the connection.
-* `public_ip` - (Required) Public IP address. Example: "40.0.0.0", etc...
-* `remote_as_number` - (Optional) AWS side as a number. Integer between 1-65535. Example: "12", etc...
-* `remote_cidr` - (Optional) Remote CIDRs separated by ",". Example: AWS: "16.0.0.0/16,16.1.0.0/16", etc...
+* `public_ip` - (Required) Public IP address. Example: "40.0.0.0".
+* `remote_as_number` - (Optional) AWS side as a number. Integer between 1-65535. Example: "12".
+* `remote_cidr` - (Optional) Remote CIDRs separated by ",". Example: AWS: "16.0.0.0/16,16.1.0.0/16".
 * `inside_ip_cidr_tun_1` - (Optional) Inside IP CIDR for Tunnel 1. A /30 CIDR in 169.254.0.0/16.
 * `pre_shared_key_tun_1` - (Optional) Pre-Shared Key for Tunnel 1. A 8-64 character string with alphanumeric underscore(_) and dot(.). It cannot start with 0.
 * `inside_ip_cidr_tun_2` - (Optional) Inside IP CIDR for Tunnel 2. A /30 CIDR in 169.254.0.0/16.

@@ -13,7 +13,7 @@ The aviatrix_trans_peer resource allows the creation and management of Aviatrix 
 ## Example Usage
 
 ```hcl
-# Create an Aviatrix AWS transitive peering
+# Create an Aviatrix AWS Transitive Peering
 resource "aviatrix_trans_peer" "test_trans_peer" {
   source         = "avtxuseastgw1"
   nexthop        = "avtxuseastgw2"

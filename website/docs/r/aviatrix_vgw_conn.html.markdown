@@ -13,7 +13,7 @@ The aviatrix_vgw_conn resource managers the Aviatrix Transit Gateway to VGW Conn
 ## Example Usage
 
 ```hcl
-# Create an Aviatrix vgw connection
+# Create an Aviatrix Vgw Connection
 resource "aviatrix_vgw_conn" "test_vgw_conn" {
   conn_name        = "my-connection-vgw-to-tgw"
   gw_name          = "my-transit-gw"

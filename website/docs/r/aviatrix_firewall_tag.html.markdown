@@ -31,10 +31,10 @@ resource "aviatrix_firewall_tag" "test_firewall_tag" {
 
 The following arguments are supported:
 
-* `firewall_tag` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller. Type: String
+* `firewall_tag` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `cidr_list` - (Optional) A JSON file with the following:
-  * `cidr_tag_name` - The name attribute of a policy. Example: "policy1"
-  * `cidr` - The CIDR attribute of a policy. Example: "10.88.88.88/32"
+  * `cidr_tag_name` - The name attribute of a policy. Example: "policy1".
+  * `cidr` - The CIDR attribute of a policy. Example: "10.88.88.88/32".
 
 ## Import
 

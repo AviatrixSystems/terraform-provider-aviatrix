@@ -30,10 +30,10 @@ The following arguments are supported:
 
 * `account_name1` - (Required) This parameter represents the name of an Azure Cloud-Account in Aviatrix controller.
 * `account_name2` - (Required) This parameter represents the name of an Azure Cloud-Account in Aviatrix controller.
-* `vnet_name_resource_group1` - (Required) VNet-Name of Azure cloud. Example: "VNet_Name:Resource_Group_Name", etc...
-* `vnet_name_resource_group2` - (Required) VNet-Name of Azure cloud. Example: "VNet_Name:Resource_Group_Name", etc...
-* `vnet_reg1` - (Required) Region of Azure cloud. Example: "East US 2", etc...
-* `vnet_reg2` - (Required) Region of Azure cloud. Example: "East US 2", etc...
+* `vnet_name_resource_group1` - (Required) VNet-Name of Azure cloud. Example: "VNet_Name:Resource_Group_Name".
+* `vnet_name_resource_group2` - (Required) VNet-Name of Azure cloud. Example: "VNet_Name:Resource_Group_Name".
+* `vnet_reg1` - (Required) Region of Azure cloud. Example: "East US 2".
+* `vnet_reg2` - (Required) Region of Azure cloud. Example: "East US 2".
 
 The following arguments are computed - please do not edit in the resource file:
 

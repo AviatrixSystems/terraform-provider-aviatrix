@@ -37,16 +37,16 @@ resource "aviatrix_transit_vpc" "test_transit_gw_aws" {
 
 # Manage Aviatrix Transit Network Gateways in azure
 resource "aviatrix_transit_vpc" "test_transit_gw_azure" {
-  cloud_type               = 8
-  account_name             = "devops_azure"
-  gw_name                  = "transit"
-  vpc_id                   = "vnet1:hello"
-  vpc_reg                  = "West US"
-  vpc_size                 = "Standard_B1s"
-  subnet                   = "10.30.0.0/24"
-  ha_subnet                = "10.30.0.0/24"
-  ha_gw_size               = "Standard_B1s"
-  connected_transit        = "yes"
+  cloud_type        = 8
+  account_name      = "devops_azure"
+  gw_name           = "transit"
+  vpc_id            = "vnet1:hello"
+  vpc_reg           = "West US"
+  vpc_size          = "Standard_B1s"
+  subnet            = "10.30.0.0/24"
+  ha_subnet         = "10.30.0.0/24"
+  ha_gw_size        = "Standard_B1s"
+  connected_transit = "yes"
 }
 
 ```

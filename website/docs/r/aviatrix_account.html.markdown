@@ -13,7 +13,7 @@ The aviatrix_account resource allows the creation and management of Aviatrix clo
 ## Example Usage
 
 ```hcl
-# Create an Aviatrix AWS account with IAM roles
+# Create an Aviatrix AWS Account with IAM roles
 resource "aviatrix_account" "tempacc" {
   account_name       = "username"
   cloud_type         = 1
@@ -23,7 +23,7 @@ resource "aviatrix_account" "tempacc" {
   aws_role_ec2       = "arn:aws:iam::123456789012:role/aviatrix-role-ec2"
 }
 
-# Or you can create an Aviatrix AWS account with access_key/secret key
+# Or you can create an Aviatrix AWS Account with access_key/secret key
 resource "aviatrix_account" "tempacc" {
   account_name       = "username"
   cloud_type         = 1
@@ -33,7 +33,7 @@ resource "aviatrix_account" "tempacc" {
   aws_secret_key     = "ABCDEFGHIJKLabcdefghijkl"
 }
 
-# Create an Aviatrix GCP account
+# Create an Aviatrix GCP Account
 resource "aviatrix_account" "tempacc_gcp" {
   account_name                        = "username"
   cloud_type                          = 4
@@ -41,14 +41,14 @@ resource "aviatrix_account" "tempacc_gcp" {
   gcloud_project_credentials_filepath = "/home/ubuntu/test_gcp/aviatrix-abc123.json"
 }
 
-# Create an Aviatrix Azure ARM account
+# Create an Aviatrix Azure ARM Account
 resource "aviatrix_account" "tempacc_arm" {
-  account_name         = "username"
-  cloud_type           = 8
-  arm_subscription_id  =  "12345678-abcd-efgh-ijkl-123456789abc"
-  arm_directory_id     =  "abcdefgh-1234-5678-9100-abc123456789"
-  arm_application_id   =  "1234abcd-12ab-34cd-56ef-abcdef123456"
-  arm_application_key  =  "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe=" 
+  account_name        = "username"
+  cloud_type          = 8
+  arm_subscription_id =  "12345678-abcd-efgh-ijkl-123456789abc"
+  arm_directory_id    =  "abcdefgh-1234-5678-9100-abc123456789"
+  arm_application_id  =  "1234abcd-12ab-34cd-56ef-abcdef123456"
+  arm_application_key =  "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe=" 
 }
 ```
 
@@ -57,7 +57,7 @@ resource "aviatrix_account" "tempacc_arm" {
 The following arguments are supported:
 
 * `account_name` - (Required) Account name. This can be used for logging in to CloudN console or UserConnect controller.
-* `cloud_type` - (Required) Type of cloud service provider. Only AWS, GCP, and ARM are supported currently. Enter 1 for AWS, 4 for GCP, 8 for ARM).
+* `cloud_type` - (Required) Type of cloud service provider. Only AWS, GCP, and ARM are supported currently. Enter 1 for AWS, 4 for GCP, 8 for ARM.
 * `aws_account_number` - (Optional) AWS Account number to associate with Aviatrix account. Required when creating an account for AWS.
 * `aws_iam` - (Optional) AWS IAM-role based flag, this option is for UserConnect.
 * `aws_access_key` - (Optional) AWS Access Key. Required when aws_iam is "false" and when creating an account for AWS.

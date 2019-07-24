@@ -131,11 +131,9 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 					Config: testAccSpokeGwConfigARM(rName),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckSpokeGwExists(resourceName, &gateway),
-						resource.TestCheckResourceAttr(resourceName,
-							"gw_name", fmt.Sprintf("tfg-arm-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-arm-%s", rName)),
 						resource.TestCheckResourceAttr(resourceName, "vpc_size", os.Getenv("ARM_GW_SIZE")),
-						resource.TestCheckResourceAttr(resourceName,
-							"account_name", fmt.Sprintf("tfa-arm-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-arm-%s", rName)),
 						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("ARM_VNET_ID")),
 						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("ARM_SUBNET")),
 						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("ARM_REGION")),
