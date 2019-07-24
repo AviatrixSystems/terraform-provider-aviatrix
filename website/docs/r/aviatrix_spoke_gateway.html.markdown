@@ -15,40 +15,40 @@ The aviatrix_spoke_gateway resource allows to create and manage Aviatrix Spoke G
 ```hcl
 # Create an Aviatrix aws spoke_gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
-  cloud_type   = 1
-  account_name = "my-aws"
-  gw_name      = "spoke-gw-aws"
-  vpc_id       = "vpc-abcd123~~spoke-vpc-01"
-  vpc_reg      = "us-west-1"
-  gw_size      = "t2.micro"
-  subnet       = "10.11.0.0/24~~us-west-1b~~spoke-vpc-01-pubsub"
-  enable_nat   = "no"
-  dns_server   = "8.8.8.8"
-  tag_list     = ["k1:v1","k2:v2"]
+  cloud_type    = 1
+  account_name  = "my-aws"
+  gw_name       = "spoke-gw-aws"
+  vpc_id        = "vpc-abcd123~~spoke-vpc-01"
+  vpc_reg       = "us-west-1"
+  gw_size       = "t2.micro"
+  subnet        = "10.11.0.0/24~~us-west-1b~~spoke-vpc-01-pubsub"
+  enable_snat   = false
+  dns_server    = "8.8.8.8"
+  tag_list      = ["k1:v1","k2:v2"]
 }
 
 # Create an Aviatrix gcp spoke_gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_gcp" {
-  cloud_type   = 4
-  account_name = "my-gcp"
-  gw_name      = "spoke-gw-gcp"
-  vpc_id       = "gcp-spoke-vpc"
-  vpc_reg      = "us-west1-b"
-  gw_size      = "t2.micro"
-  subnet       = "10.12.0.0/24"
-  enable_nat   = "no"
+  cloud_type    = 4
+  account_name  = "my-gcp"
+  gw_name       = "spoke-gw-gcp"
+  vpc_id        = "gcp-spoke-vpc"
+  vpc_reg       = "us-west1-b"
+  gw_size       = "t2.micro"
+  subnet        = "10.12.0.0/24"
+  enable_snat   = false
 }
 
 # Create an Aviatrix arm spoke_gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_arm" {
-  cloud_type   = 8
-  account_name = "my-arm"
-  gw_name      = "spoke-gw-01"
-  vpc_id       = "spoke:test-spoke-gw-123"
-  vpc_reg      = "West US"
-  gw_size      = "t2.micro"
-  subnet       = "10.13.0.0/24"
-  enable_nat   = "no"
+  cloud_type    = 8
+  account_name  = "my-arm"
+  gw_name       = "spoke-gw-01"
+  vpc_id        = "spoke:test-spoke-gw-123"
+  vpc_reg       = "West US"
+  gw_size       = "t2.micro"
+  subnet        = "10.13.0.0/24"
+  enable_snat   = false
 }
 ```
 
@@ -66,7 +66,7 @@ The following arguments are supported:
 * `ha_subnet` - (Optional) HA Subnet. Required for enabling HA for AWS/ARM gateways. Setting to empty/unset will disable HA. Setting to a valid subnet will create an HA gateway on the subnet. Example: "10.12.0.0/24".
 * `ha_zone` - (Optional) HA Zone. Required for enabling HA for GCP gateway. Setting to empty/unset will disable HA. Setting to a valid zone will create an HA gateway in the zone. Example: "us-west1-c".
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set). Example: "t2.micro".
-* `enable_nat` - (Optional) Specify whether enabling NAT feature on the gateway or not. (Please disable AWS NAT instance before enabling this feature.) Supported values: true, false.
+* `enable_snat` - (Optional) Specify whether enabling Source NAT feature on the gateway or not. Please disable AWS NAT instance before enabling this feature. Supported values: true, false.
 * `single_az_ha` (Optional) Set to true if this feature is desired. Supported values: true, false.
 * `transit_gw` - (Optional) Specify the transit Gateway.
 * `tag_list` - (Optional) Instance tag of cloud provider. Only AWS, cloud_type is "1", is supported. Example: ["key1:value1", "key002:value002"]. 

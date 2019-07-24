@@ -100,7 +100,7 @@ The following arguments are supported:
 * `vpc_reg` - (Required) Region where this gateway will be launched. Example: us-east-1; If creating GCP gateway, enter a valid zone for vpc_reg. Example: us-west1-c.
 * `gw_size` - (Required) Size of Gateway Instance. Example: "t2.micro".
 * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20".
-* `enable_nat` - (Optional) Enable NAT for this container. Supported values: true, false.
+* `enable_snat` - (Optional) Enable Source NAT for this container. Supported values: true, false.
 * `vpn_access` - (Optional) Enable user access through VPN to this container. Supported values: true, false.
 * `vpn_cidr` - (Optional) VPN CIDR block for the container. Required if vpn_access is "yes". Example: "192.168.43.0/24".
 * `max_vpn_conn` - (Optional) Maximum number of active VPN users allowed to be connected to this gateway. Required if vpn_access is "yes". Make sure the number is smaller than the VPN CIDR block. Example: 100.
@@ -150,7 +150,7 @@ The following arguments are deprecated:
 -> **NOTE:** 
 
 * `peering_ha_gw_size` - If you are using/upgraded to Aviatrix Terraform Provider v4.3+, and a peering-HA gateway was originally created with a provider version <4.3, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also input this attribute and its value to its corresponding gateway resource in your `.tf` file. 
-* `enable_nat` - In order for the FQDN feature to be enabled for the specified gateway, "enable_nat" must be set to “yes”. If it is not set at gateway creation, creation of FQDN resource will automatically enable SNAT and users must rectify the diff in the Terraform state by setting "enable_nat = 'yes'" in their config file.
+* `enable_snat` - In order for the FQDN feature to be enabled for the specified gateway, "enable_snat" must be set to “yes”. If it is not set at gateway creation, creation of FQDN resource will automatically enable SNAT and users must rectify the diff in the Terraform state by setting "enable_snat = true" in their config file.
 * `max_vpn_conn` - If you are using/upgraded to Aviatrix Terraform Provider v4.7+, and a gateway with VPN enabled was originally created with a provider version <4.7, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also input this attribute and its value to "100" in your `.tf` file.
 
 ## Import

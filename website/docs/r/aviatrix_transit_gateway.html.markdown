@@ -62,7 +62,7 @@ The following arguments are supported:
 * `subnet` - (Required) Public Subnet CIDR. Copy/paste from AWS Console to get the right subnet CIDR. Example: AWS: "10.0.0.0/24".
 * `ha_subnet` - (Optional) HA Subnet CIDR. Setting to empty/unset will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24".
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set). Example: "t2.micro".
-* `enable_nat` - (Optional) Enable NAT for this container. Supported values: true, false.
+* `enable_snat` - (Optional) Enable Source NAT for this container. Supported values: true, false.
 * `tag_list` - (Optional) Instance tag of cloud provider. Only supported for aws. Example: ["key1:value1","key002:value002"].
 * `enable_hybrid_connection` - (Optional) Sign of readiness for TGW connection. Only supported for aws. Example: false.
 * `enable_firenet_interfaces` - (Optional) Sign of readiness for FireNet connection. Valid values: true, false. Default: false.

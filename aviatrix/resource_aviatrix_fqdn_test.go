@@ -72,7 +72,7 @@ resource "aviatrix_gateway" "test" {
 	vpc_reg      = "%[6]s"
 	gw_size      = "t2.micro"
 	subnet       = "%[7]s"
-	enable_nat   = true
+	enable_snat  = true
 }
 resource "aviatrix_fqdn" "foo" {
 	fqdn_tag     = "tff-%[1]s"

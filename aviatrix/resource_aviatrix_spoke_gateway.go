@@ -55,11 +55,11 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Required:    true,
 				Description: "Public Subnet Info.",
 			},
-			"enable_nat": {
+			"enable_snat": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Specify whether enabling NAT feature on the gateway or not.",
+				Description: "Specify whether enabling Source NAT feature on the gateway or not.",
 			},
 			"ha_subnet": {
 				Type:        schema.TypeString,
@@ -121,7 +121,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		TransitGateway: d.Get("transit_gw").(string),
 	}
 
-	enableNat := d.Get("enable_nat").(bool)
+	enableNat := d.Get("enable_snat").(bool)
 	if enableNat {
 		gateway.EnableNat = "yes"
 	} else {
@@ -309,9 +309,9 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 
 		if gw.EnableNat == "yes" {
-			d.Set("enable_nat", true)
+			d.Set("enable_snat", true)
 		} else {
-			d.Set("enable_nat", false)
+			d.Set("enable_snat", false)
 		}
 
 		if gw.SingleAZ == "yes" {
@@ -595,13 +595,13 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		d.SetPartial("ha_gw_size")
 	}
 
-	if d.HasChange("enable_nat") {
+	if d.HasChange("enable_snat") {
 		gw := &goaviatrix.Gateway{
 			CloudType: d.Get("cloud_type").(int),
 			GwName:    d.Get("gw_name").(string),
 		}
 
-		enableNat := d.Get("enable_nat").(bool)
+		enableNat := d.Get("enable_snat").(bool)
 
 		if enableNat {
 			err := client.EnableSNat(gw)
@@ -615,7 +615,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			}
 		}
 
-		d.SetPartial("enable_nat")
+		d.SetPartial("enable_snat")
 	}
 
 	if d.HasChange("transit_gw") {

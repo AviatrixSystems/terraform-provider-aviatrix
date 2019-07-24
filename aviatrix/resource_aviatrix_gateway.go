@@ -56,11 +56,11 @@ func resourceAviatrixGateway() *schema.Resource {
 				Required:    true,
 				Description: "A VPC Network address range selected from one of the available network ranges.",
 			},
-			"enable_nat": {
+			"enable_snat": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Enable NAT for this container.",
+				Description: "Enable Source NAT for this container.",
 			},
 
 			"vpn_access": {
@@ -326,7 +326,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		Eip:                d.Get("eip").(string),
 	}
 
-	enableNat := d.Get("enable_nat").(bool)
+	enableNat := d.Get("enable_snat").(bool)
 	if enableNat {
 		gateway.EnableNat = "yes"
 	} else {
@@ -643,9 +643,9 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("subnet", gw.VpcNet)
 
 		if gw.EnableNat == "yes" {
-			d.Set("enable_nat", true)
+			d.Set("enable_snat", true)
 		} else {
-			d.Set("enable_nat", false)
+			d.Set("enable_snat", false)
 		}
 
 		if gw.CloudType == 1 {
@@ -1170,13 +1170,13 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 	}
-	if d.HasChange("enable_nat") {
+	if d.HasChange("enable_snat") {
 		gw := &goaviatrix.Gateway{
 			CloudType: d.Get("cloud_type").(int),
 			GwName:    d.Get("gw_name").(string),
 		}
 
-		enableNat := d.Get("enable_nat").(bool)
+		enableNat := d.Get("enable_snat").(bool)
 		if enableNat {
 			gw.EnableNat = "yes"
 		} else {
@@ -1195,7 +1195,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 
-		d.SetPartial("enable_nat")
+		d.SetPartial("enable_snat")
 	}
 	if d.HasChange("vpn_cidr") {
 		if d.Get("vpn_access").(bool) && d.Get("enable_elb").(bool) {

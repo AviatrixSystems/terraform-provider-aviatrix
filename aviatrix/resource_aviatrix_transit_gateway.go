@@ -79,11 +79,11 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     "",
 				Description: "HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set).",
 			},
-			"enable_nat": {
+			"enable_snat": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Enable or disable NAT for this container.",
+				Description: "Enable or disable Source NAT for this container.",
 			},
 			"tag_list": {
 				Type:        schema.TypeList,
@@ -134,7 +134,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		EnableHybridConnection: d.Get("enable_hybrid_connection").(bool),
 	}
 
-	enableNAT := d.Get("enable_nat").(bool)
+	enableNAT := d.Get("enable_snat").(bool)
 	if enableNAT {
 		gateway.EnableNAT = "yes"
 	} else {
@@ -355,9 +355,9 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("gw_size", gw.GwSize)
 
 		if gw.EnableNat == "yes" {
-			d.Set("enable_nat", true)
+			d.Set("enable_snat", true)
 		} else {
-			d.Set("enable_nat", false)
+			d.Set("enable_snat", false)
 		}
 
 		if gw.CloudType == 1 {
@@ -655,12 +655,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		d.SetPartial("ha_gw_size")
 	}
 
-	if d.HasChange("enable_nat") {
+	if d.HasChange("enable_snat") {
 		gw := &goaviatrix.Gateway{
 			CloudType: d.Get("cloud_type").(int),
 			GwName:    d.Get("gw_name").(string),
 		}
-		enableNat := d.Get("enable_nat").(bool)
+		enableNat := d.Get("enable_snat").(bool)
 
 		if enableNat {
 			err := client.EnableSNat(gw)
