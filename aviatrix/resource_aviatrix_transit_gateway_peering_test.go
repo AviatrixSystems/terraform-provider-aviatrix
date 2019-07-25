@@ -69,32 +69,32 @@ resource "aviatrix_account" "test" {
 }
 
 resource "aviatrix_transit_vpc" "transitGw1" {
-    cloud_type   = 1
-    account_name = "${aviatrix_account.test.account_name}"
-    gw_name      = "tfg-%s"
-    vpc_id       = "%s"
-    vpc_reg      = "%s"
-    vpc_size     = "t2.micro"
-    subnet       = "%s"
-    ha_subnet    = "%s"
-    ha_gw_size   = "t2.micro"
+	cloud_type   = 1
+	account_name = aviatrix_account.test.account_name
+	gw_name      = "tfg-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	vpc_size     = "t2.micro"
+	subnet       = "%s"
+	ha_subnet    = "%s"
+	ha_gw_size   = "t2.micro"
 }
 
 resource "aviatrix_transit_vpc" "transitGw2" {
-    cloud_type   = 1
-    account_name = "${aviatrix_account.test.account_name}"
-    gw_name      = "tfg2-%s"
-    vpc_id       = "%s"
-    vpc_reg      = "%s"
-    vpc_size     = "t2.micro"
-    subnet       = "%s"
-    ha_subnet    = "%s"
-    ha_gw_size   = "t2.micro"
+	cloud_type   = 1
+	account_name = aviatrix_account.test.account_name
+	gw_name      = "tfg2-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	vpc_size     = "t2.micro"
+	subnet       = "%s"
+	ha_subnet    = "%s"
+	ha_gw_size   = "t2.micro"
 }
 
 resource "aviatrix_transit_gateway_peering" "foo" {
-	transit_gateway_name1 = "${aviatrix_transit_vpc.transitGw1.gw_name}"
-	transit_gateway_name2 = "${aviatrix_transit_vpc.transitGw2.gw_name}"
+	transit_gateway_name1 = aviatrix_transit_vpc.transitGw1.gw_name
+	transit_gateway_name2 = aviatrix_transit_vpc.transitGw2.gw_name
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, vpcID1, region1, subnet1, haSubnet1, rName, vpcID2, region2, subnet2, haSubnet2)
@@ -106,6 +106,7 @@ func tesAccCheckTransitGatewayPeeringExists(n string) resource.TestCheckFunc {
 		if !ok {
 			return fmt.Errorf("aviatrix transit gateway peering Not Created: %s", n)
 		}
+
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no aviatrix transit gateway peering ID is set")
 		}
@@ -116,10 +117,12 @@ func tesAccCheckTransitGatewayPeeringExists(n string) resource.TestCheckFunc {
 			TransitGatewayName1: rs.Primary.Attributes["transit_gateway_name1"],
 			TransitGatewayName2: rs.Primary.Attributes["transit_gateway_name2"],
 		}
+
 		err := client.GetTransitGatewayPeering(foundTransitGatewayPeering)
 		if err != nil {
 			return err
 		}
+
 		return nil
 	}
 }
@@ -131,10 +134,12 @@ func testAccCheckTransitGatewayPeeringDestroy(s *terraform.State) error {
 		if rs.Type != "aviatrix_transit_gateway_peering" {
 			continue
 		}
+
 		foundTransitGatewayPeering := &goaviatrix.TransitGatewayPeering{
 			TransitGatewayName1: rs.Primary.Attributes["transit_gateway_name1"],
 			TransitGatewayName2: rs.Primary.Attributes["transit_gateway_name2"],
 		}
+
 		err := client.GetTransitGatewayPeering(foundTransitGatewayPeering)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("aviatrix transit gateway peering still exists")

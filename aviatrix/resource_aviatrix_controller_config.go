@@ -142,6 +142,7 @@ func resourceControllerConfigCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
+
 	return resourceControllerConfigRead(d, meta)
 }
 
@@ -188,17 +189,26 @@ func resourceControllerConfigRead(d *schema.ResourceData, meta interface{}) erro
 	} else {
 		return fmt.Errorf("could not read Aviatrix Controller Security Group Management Status")
 	}
+
+	log.Printf("zjin00: target_version %v", d.Get("target_version"))
+
 	current, _, err := client.GetCurrentVersion()
 	if err != nil {
 		return fmt.Errorf("unable to read current Controller version: %s (%s)", err, current)
 	}
-	latestVersion, _ := client.GetLatestVersion()
-	if latestVersion != "" && current != latestVersion {
+
+	targetVersion := d.Get("target_version")
+
+	if targetVersion == "latest" {
 		d.Set("target_version", current)
+	} else {
+		d.Set("target_version", targetVersion)
 	}
+
 	d.Set("version", current)
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
+
 	return nil
 }
 
@@ -265,15 +275,16 @@ func resourceControllerConfigUpdate(d *schema.ResourceData, meta interface{}) er
 		d.SetPartial("security_group_management")
 	}
 
-	curVersion := d.Get("version").(string)
-	cur := strings.Split(curVersion, ".")
-	latestVersion, _ := client.GetLatestVersion()
-	latest := strings.Split(latestVersion, ".")
-	targetVersion := d.Get("target_version").(string)
-	version := &goaviatrix.Version{
-		Version: d.Get("target_version").(string),
-	}
-	if targetVersion != "" {
+	if d.HasChange("target_version") {
+		curVersion := d.Get("version").(string)
+		cur := strings.Split(curVersion, ".")
+		latestVersion, _ := client.GetLatestVersion()
+		latest := strings.Split(latestVersion, ".")
+		version := &goaviatrix.Version{
+			Version: d.Get("target_version").(string),
+		}
+
+		targetVersion := d.Get("target_version").(string)
 		if targetVersion == "latest" {
 			if latestVersion != "" {
 				for i := range cur {
@@ -292,9 +303,11 @@ func resourceControllerConfigUpdate(d *schema.ResourceData, meta interface{}) er
 				return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
 			}
 		}
+		d.SetPartial("target_version")
 	}
 
 	d.Partial(false)
+
 	return resourceControllerConfigRead(d, meta)
 }
 

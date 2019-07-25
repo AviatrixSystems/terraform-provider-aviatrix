@@ -1,3 +1,12 @@
+## 1.16.20 (Jul 25 2019)
+
+CHANGES
+  - Supported controller version: 4.7.520
+  - Supported Terraform version: 0.12.*
+  - Updated Terraform Feature Changelist
+  - Use Go Mod
+  
+  
 ## 1.15.05 (Jul 15 2019)
 
 CHANGES

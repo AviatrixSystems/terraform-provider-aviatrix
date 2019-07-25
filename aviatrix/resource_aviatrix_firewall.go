@@ -175,7 +175,10 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 			pl["allow_deny"] = policy.AllowDeny
 			policies = append(policies, pl)
 		}
-		d.Set("policy", policies)
+
+		if err := d.Set("policy", policies); err != nil {
+			log.Printf("[WARN] Error setting policy for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

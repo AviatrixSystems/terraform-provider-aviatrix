@@ -118,7 +118,10 @@ func resourceAviatrixFirewallTagRead(d *schema.ResourceData, meta interface{}) e
 
 			cidrList = append(cidrList, cm)
 		}
-		d.Set("cidr_list", cidrList)
+
+		if err := d.Set("cidr_list", cidrList); err != nil {
+			log.Printf("[WARN] Error setting cidr_list for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

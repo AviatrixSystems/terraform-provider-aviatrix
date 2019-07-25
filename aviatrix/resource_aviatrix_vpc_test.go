@@ -13,6 +13,7 @@ import (
 
 func TestAccAviatrixVpc_basic(t *testing.T) {
 	var vpc goaviatrix.Vpc
+
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
 	resourceName := "aviatrix_vpc.test_vpc"
 
@@ -20,6 +21,7 @@ func TestAccAviatrixVpc_basic(t *testing.T) {
 	if skipAcc == "yes" {
 		t.Skip("Skipping VPC test as SKIP_VPC is set")
 	}
+
 	msgCommon := ". Set SKIP_VPC to yes to skip VPC tests"
 	preAccountCheck(t, msgCommon)
 
@@ -59,12 +61,12 @@ func testAccVpcConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 
 resource "aviatrix_account" "test_account" {
-    account_name       = "tfa-%s"
-    cloud_type         = 1
-    aws_account_number = "%s"
-    aws_iam            = "false"
-    aws_access_key     = "%s"
-    aws_secret_key     = "%s"
+	account_name       = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = "false"
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
 }
 
 resource "aviatrix_vpc" "test_vpc" {
@@ -99,9 +101,11 @@ func testAccCheckVpcExists(n string, vpc *goaviatrix.Vpc) resource.TestCheckFunc
 		if err != nil {
 			return err
 		}
+
 		if foundVpc2.Name != rs.Primary.ID {
 			return fmt.Errorf("VPC not found")
 		}
+
 		*vpc = *foundVpc2
 
 		return nil
@@ -115,9 +119,11 @@ func testAccCheckVpcDestroy(s *terraform.State) error {
 		if rs.Type != "aviatrix_vpc" {
 			continue
 		}
+
 		foundVpc := &goaviatrix.Vpc{
 			Name: rs.Primary.Attributes["name"],
 		}
+
 		_, err := client.GetVpc(foundVpc)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("VPC still exists")

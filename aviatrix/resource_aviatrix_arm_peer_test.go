@@ -34,6 +34,7 @@ func preARMPeerCheck(t *testing.T, msgCommon string) (string, string, string, st
 
 func TestAccAviatrixARMPeer_basic(t *testing.T) {
 	var armPeer goaviatrix.ARMPeer
+
 	rInt := acctest.RandInt()
 	resourceName := "aviatrix_arm_peer.test_arm_peer"
 
@@ -76,15 +77,15 @@ func testAccARMPeerConfigBasic(rInt int, vNet1 string, vNet2 string, region1 str
 resource "aviatrix_account" "test_account" {
 	account_name        = "tf-testing-%d"
 	cloud_type          = 8
-    arm_subscription_id = "%s"
-    arm_directory_id    = "%s"
-    arm_application_id  = "%s"
-    arm_application_key = "%s"
+	arm_subscription_id = "%s"
+	arm_directory_id    = "%s"
+	arm_application_id  = "%s"
+	arm_application_key = "%s"
 }
 
 resource "aviatrix_arm_peer" "test_arm_peer" {
-	account_name1             = "${aviatrix_account.test_account.account_name}"
-	account_name2             = "${aviatrix_account.test_account.account_name}"
+	account_name1             = aviatrix_account.test_account.account_name
+	account_name2             = aviatrix_account.test_account.account_name
 	vnet_name_resource_group1 = "%s"
 	vnet_name_resource_group2 = "%s"
 	vnet_reg1                 = "%s"
@@ -116,14 +117,17 @@ func tesAccCheckARMPeerExists(n string, armPeer *goaviatrix.ARMPeer) resource.Te
 		if err != nil {
 			return err
 		}
+
 		if foundPeer.VNet1 != rs.Primary.Attributes["vnet_name_resource_group1"] {
 			return fmt.Errorf("vnet_name_resource_group1 Not found in created attributes")
 		}
+
 		if foundPeer.VNet2 != rs.Primary.Attributes["vnet_name_resource_group2"] {
 			return fmt.Errorf("vnet_name_resource_group2 Not found in created attributes")
 		}
 
 		*armPeer = *foundPeer
+
 		return nil
 	}
 }
@@ -135,10 +139,12 @@ func testAccCheckARMPeerDestroy(s *terraform.State) error {
 		if rs.Type != "aviatrix_arm_peer" {
 			continue
 		}
+
 		foundPeer := &goaviatrix.ARMPeer{
 			VNet1: rs.Primary.Attributes["vnet_name_resource_group1"],
 			VNet2: rs.Primary.Attributes["vnet_name_resource_group2"],
 		}
+
 		_, err := client.GetARMPeer(foundPeer)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("armPeer still exists")

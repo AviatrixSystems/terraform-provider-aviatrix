@@ -17,21 +17,22 @@ The Profile resource allows the creation and management of an Aviatrix VPN VPN U
 resource "aviatrix_vpn_profile" "test_profile1" {
   name      = "my_profile"
   base_rule = "allow_all"
-  users     = ["user1", "user2"]
-  policy    = [
-  { 
+  users     = [
+    "user1", 
+    "user2",
+  ]
+  policy { 
     action = "deny"
     proto  = "tcp"
     port   = "443"
     target = "10.0.0.0/32"
-  },
-  {
+  }
+  policy {
     action = "deny"
     proto  = "tcp"
     port   = "443"
     target = "10.0.0.1/32"
   }
-  ]
 }
 ```
 

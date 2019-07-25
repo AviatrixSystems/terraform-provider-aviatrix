@@ -21,6 +21,7 @@ func preTransPeerCheck(t *testing.T, msgCommon string) (string, string, string, 
 
 func TestAccAviatrixTransPeer_basic(t *testing.T) {
 	var transpeer goaviatrix.TransPeer
+
 	rName := acctest.RandString(5)
 	resourceName := "aviatrix_trans_peer.test_trans_peer"
 
@@ -72,35 +73,31 @@ resource "aviatrix_account" "test" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_gateway" "gw1" {
 	cloud_type   = 1
-	account_name = "${aviatrix_account.test.account_name}"
+	account_name = aviatrix_account.test.account_name
 	gw_name      = "tfg-%[1]s"
 	vpc_id       = "%[5]s"
 	vpc_reg      = "%[7]s"
 	vpc_size     = "t2.micro"
 	vpc_net      = "%[9]s"
 }
-
 resource "aviatrix_gateway" "gw2" {
 	cloud_type   = 1
-	account_name = "${aviatrix_account.test.account_name}"
+	account_name = aviatrix_account.test.account_name
 	gw_name      = "tfg2-%[1]s"
 	vpc_id       = "%[6]s"
 	vpc_reg      = "%[8]s"
 	vpc_size     = "t2.micro"
 	vpc_net      = "%[10]s"
 }
-
 resource "aviatrix_tunnel" "foo" {
-	vpc_name1 = "${aviatrix_gateway.gw1.gw_name}"
-	vpc_name2 = "${aviatrix_gateway.gw2.gw_name}"
+	vpc_name1 = aviatrix_gateway.gw1.gw_name
+	vpc_name2 = aviatrix_gateway.gw2.gw_name
 }
-
 resource "aviatrix_trans_peer" "test_trans_peer" {
-	source         = "${aviatrix_tunnel.foo.vpc_name1}"
-	nexthop        = "${aviatrix_tunnel.foo.vpc_name2}"
+	source         = aviatrix_tunnel.foo.vpc_name1
+	nexthop        = aviatrix_tunnel.foo.vpc_name2
 	reachable_cidr = "%s"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
@@ -127,19 +124,22 @@ func testAccTransPeerExists(n string, transpeer *goaviatrix.TransPeer) resource.
 		}
 
 		_, err := client.GetTransPeer(foundTransPeer)
-
 		if err != nil {
 			return err
 		}
+
 		if foundTransPeer.Source != rs.Primary.Attributes["source"] {
 			return fmt.Errorf("source Not found in created attributes")
 		}
+
 		if foundTransPeer.Nexthop != rs.Primary.Attributes["nexthop"] {
 			return fmt.Errorf("nexthop Not found in created attributes")
 		}
+
 		if foundTransPeer.ReachableCidr != rs.Primary.Attributes["reachable_cidr"] {
 			return fmt.Errorf("reachable_cidr Not found in created attributes")
 		}
+
 		*transpeer = *foundTransPeer
 
 		return nil
@@ -158,8 +158,8 @@ func testAccTransPeerDestroy(s *terraform.State) error {
 			Nexthop:       rs.Primary.Attributes["nexthop"],
 			ReachableCidr: rs.Primary.Attributes["reachable_cidr"],
 		}
-		_, err := client.GetTransPeer(foundTransPeer)
 
+		_, err := client.GetTransPeer(foundTransPeer)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("transpeer still exists")
 		}

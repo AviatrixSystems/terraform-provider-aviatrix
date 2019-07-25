@@ -23,6 +23,7 @@ func preSpokeGatewayCheck(t *testing.T, msgCommon string) string {
 
 func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 	var gateway goaviatrix.Gateway
+
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
 	importStateVerifyIgnore := []string{"gcloud_project_credentials_filepath", "vnet_and_resource_group_names"}
 
@@ -163,23 +164,22 @@ func testAccSpokeGwConfigAWS(rName string) string {
 	}
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
-	account_name 	   = "tfa-aws-%s"
-	cloud_type 		   = 1
+	account_name       = "tfa-aws-%s"
+	cloud_type         = 1
 	aws_account_number = "%s"
-	aws_iam 		   = "false"
+	aws_iam            = "false"
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
-    cloud_type   = 1
-    account_name = "${aviatrix_account.test.account_name}"
-    gw_name      = "tfg-aws-%[1]s"
-    vpc_id       = "%[5]s"
-    vpc_reg      = "%[6]s"
-    vpc_size     = "%[7]s"
-    subnet       = "%[8]s"
-    enable_nat   = "no"
+	cloud_type   = 1
+	account_name = aviatrix_account.test.account_name
+	gw_name      = "tfg-aws-%[1]s"
+	vpc_id       = "%[5]s"
+	vpc_reg      = "%[6]s"
+	vpc_size     = "%[7]s"
+	subnet       = "%[8]s"
+	enable_nat   = "no"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_VPC_NET"))
@@ -192,21 +192,20 @@ func testAccSpokeGwConfigGCP(rName string) string {
 	}
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
-	account_name 						= "tfa-gcp-%s"
-	cloud_type 							= 4
-	gcloud_project_id 					= "%s"
+	account_name                        = "tfa-gcp-%s"
+	cloud_type                          = 4
+	gcloud_project_id                   = "%s"
 	gcloud_project_credentials_filepath = "%s"
 }
-
 resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
-    cloud_type   = 4
-    account_name = "${aviatrix_account.test.account_name}"
-    gw_name      = "tfg-gcp-%[1]s"
-    vpc_id       = "%[4]s"
-    vpc_reg      = "%[5]s"
-    vpc_size     = "%[6]s"
-    subnet       = "%[7]s"
-    enable_nat   = "no"
+	cloud_type   = 4
+	account_name = aviatrix_account.test.account_name
+	gw_name      = "tfg-gcp-%[1]s"
+	vpc_id       = "%[4]s"
+	vpc_reg      = "%[5]s"
+	vpc_size     = "%[6]s"
+	subnet       = "%[7]s"
+	enable_nat   = "no"
 }
 	`, rName, os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"),
 		os.Getenv("GCP_VPC_ID"), os.Getenv("GCP_ZONE"), gcpGwSize, os.Getenv("GCP_SUBNET"))
@@ -215,23 +214,22 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
 func testAccSpokeGwConfigARM(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
-	account_name 		= "tfa-arm-%s"
-	cloud_type 			= 8
+	account_name        = "tfa-arm-%s"
+	cloud_type          = 8
 	arm_subscription_id = "%s"
 	arm_directory_id    = "%s"
 	arm_application_id  = "%s"
 	arm_application_key = "%s"
 }
-
 resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
-    cloud_type   = 8
-    account_name = "${aviatrix_account.test.account_name}"
-    gw_name      = "tfg-arm-%[1]s"
-    vpc_id       = "%[6]s"
-    vpc_reg      = "%[7]s"
-    vpc_size     = "%[8]s"
-    subnet       = "%[9]s"
-    enable_nat   = "no"
+	cloud_type   = 8
+	account_name = aviatrix_account.test.account_name
+	gw_name      = "tfg-arm-%[1]s"
+	vpc_id       = "%[6]s"
+	vpc_reg      = "%[7]s"
+	vpc_size     = "%[8]s"
+	subnet       = "%[9]s"
+	enable_nat   = "no"
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
 		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),
@@ -258,7 +256,6 @@ func testAccCheckSpokeGwExists(n string, gateway *goaviatrix.Gateway) resource.T
 		}
 
 		_, err := client.GetGateway(foundGateway)
-
 		if err != nil {
 			return err
 		}
@@ -284,8 +281,8 @@ func testAccCheckSpokeGwDestroy(s *terraform.State) error {
 			GwName:      rs.Primary.Attributes["gw_name"],
 			AccountName: rs.Primary.Attributes["account_name"],
 		}
-		_, err := client.GetGateway(foundGateway)
 
+		_, err := client.GetGateway(foundGateway)
 		if err == nil {
 			return fmt.Errorf("spoke gateway still exists")
 		}

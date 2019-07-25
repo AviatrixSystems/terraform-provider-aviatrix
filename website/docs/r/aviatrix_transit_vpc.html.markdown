@@ -24,7 +24,11 @@ resource "aviatrix_transit_vpc" "test_transit_gw_aws" {
   subnet                   = "10.1.0.0/24"
   ha_subnet                = "10.1.0.0/24"
   ha_gw_size               = "t2.micro"
-  tag_list                 = ["name:value", "name1:value1", "name2:value2"]
+  tag_list                 = [
+    "name:value", 
+    "name1:value1", 
+    "name2:value2"
+  ]
   enable_hybrid_connection = true
   connected_transit        = "yes"
 }

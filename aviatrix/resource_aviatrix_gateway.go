@@ -762,9 +762,13 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				tagListStr = goaviatrix.ExpandStringList(tagList1)
 			}
 			if len(goaviatrix.Difference(tagListStr, tagList)) != 0 || len(goaviatrix.Difference(tagList, tagListStr)) != 0 {
-				d.Set("tag_list", tagList)
+				if err := d.Set("tag_list", tagList); err != nil {
+					log.Printf("[WARN] Error setting tag_list for (%s): %s", d.Id(), err)
+				}
 			} else {
-				d.Set("tag_list", tagListStr)
+				if err := d.Set("tag_list", tagListStr); err != nil {
+					log.Printf("[WARN] Error setting tag_list for (%s): %s", d.Id(), err)
+				}
 			}
 		}
 

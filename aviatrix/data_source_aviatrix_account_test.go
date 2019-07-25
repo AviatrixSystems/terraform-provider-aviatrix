@@ -32,8 +32,7 @@ func TestAccDataSourceAviatrixAccount_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "account_name", fmt.Sprintf("tf-testing-%s", rName)),
 					resource.TestCheckResourceAttr(
-						resourceName, "aws_access_key",
-						os.Getenv("AWS_ACCESS_KEY")),
+						resourceName, "aws_access_key", os.Getenv("AWS_ACCESS_KEY")),
 				),
 			},
 		},
@@ -43,16 +42,16 @@ func TestAccDataSourceAviatrixAccount_basic(t *testing.T) {
 func testAccDataSourceAviatrixAccountConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
-	account_name = "tf-testing-%s"
-	cloud_type = 1
+	account_name       = "tf-testing-%s"
+	cloud_type         = 1
 	aws_account_number = "%s"
-	aws_iam = "false"
-	aws_access_key = "%s"
-	aws_secret_key = "%s"
+	aws_iam            = "false"
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
 }
 
 data "aviatrix_account" "foo" {
-	account_name = "${aviatrix_account.test.id}"
+	account_name = aviatrix_account.test.id
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"))
 }

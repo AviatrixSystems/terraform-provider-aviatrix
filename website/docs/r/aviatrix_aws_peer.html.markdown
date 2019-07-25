@@ -21,8 +21,12 @@ resource "aviatrix_aws_peer" "test_awspeer" {
   vpc_id2       = "vpc-rdef3333"
   vpc_reg1      = "us-east-1"
   vpc_reg2      = "us-west-1"
-  rtb_list1     = ["rtb-abcd1234"]
-  rtb_list2     = ["rtb-wxyz5678"]
+  rtb_list1     = [
+    "rtb-abcd1234",
+  ]
+  rtb_list2     = [
+    "rtb-wxyz5678",
+  ]
 }
 ```
 

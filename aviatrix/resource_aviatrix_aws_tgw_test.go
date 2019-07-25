@@ -14,6 +14,7 @@ import (
 
 func TestAccAviatrixAWSTgw_basic(t *testing.T) {
 	var awsTgw goaviatrix.AWSTgw
+
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
 	resourceName := "aviatrix_aws_tgw.aws_tgw_test"
 
@@ -92,26 +93,26 @@ func TestAccAviatrixAWSTgw_basic(t *testing.T) {
 func testAccAWSTgwConfigBasic(rName string, awsSideAsNumber string, sDm string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account1" {
-    account_name       = "tfa-%s"
-    cloud_type         = 1
-    aws_account_number = "%s"
-    aws_iam            = "false"
-    aws_access_key     = "%s"
-    aws_secret_key     = "%s"
+	account_name       = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = "false"
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
 }
 
 resource "aviatrix_account" "test_account2" {
-    account_name       = "tfaa-%s"
-    cloud_type         = 1
-    aws_account_number = "%s"
-    aws_iam            = "false"
-    aws_access_key     = "%s"
-    aws_secret_key     = "%s"
+	account_name       = "tfaa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = "false"
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
 }
 
 resource "aviatrix_transit_vpc" "transit_gw_test" {
 	cloud_type               = 1
-	account_name             = "${aviatrix_account.test_account1.account_name}"
+	account_name             = aviatrix_account.test_account1.account_name
 	gw_name                  = "tfg-%s"
 	vpc_id                   = "%s"
 	vpc_reg                  = "%s"
@@ -121,44 +122,50 @@ resource "aviatrix_transit_vpc" "transit_gw_test" {
 }
 
 resource "aviatrix_aws_tgw" "aws_tgw_test" {
-    tgw_name                          = "tft-%s"
-	account_name                      = "${aviatrix_account.test_account2.account_name}"
+	account_name                      = aviatrix_account.test_account2.account_name
+	attached_aviatrix_transit_gateway = [aviatrix_transit_vpc.transit_gw_test.gw_name]
+	aws_side_as_number                = "%s"
+	manage_vpc_attachment             = true
 	region                            = "%s"
-    aws_side_as_number                = "%s"
-    attached_aviatrix_transit_gateway = ["${aviatrix_transit_vpc.transit_gw_test.gw_name}"]
-    security_domains                  = [
-	{
-    	security_domain_name = "Aviatrix_Edge_Domain"
-    	connected_domains    = ["Default_Domain","Shared_Service_Domain","%s"]
-    },
-    {
-    	security_domain_name = "Default_Domain"
-    	connected_domains    = ["Aviatrix_Edge_Domain"]
-    	attached_vpc         = []
-    },
-    {
-    	security_domain_name = "Shared_Service_Domain"
-    	connected_domains    = ["Aviatrix_Edge_Domain"]
-    	attached_vpc         = []
-    },
-    {
-    	security_domain_name = "%s"
-    	connected_domains    = ["Aviatrix_Edge_Domain"]
-    	attached_vpc         = [
-		{
-			vpc_region       = "%s"
-			vpc_account_name = "${aviatrix_account.test_account2.account_name}"
+	tgw_name                          = "tft-%s"
+
+	security_domains {
+		connected_domains    = [
+			"Default_Domain",
+			"Shared_Service_Domain",
+			"%s"
+		]
+		security_domain_name = "Aviatrix_Edge_Domain"
+	}
+	security_domains {
+		connected_domains    = [
+			"Aviatrix_Edge_Domain"
+		]
+		security_domain_name = "Default_Domain"
+	}
+	security_domains {
+		connected_domains    = [
+			"Aviatrix_Edge_Domain"
+		]
+		security_domain_name = "Shared_Service_Domain"
+	}
+	security_domains {
+		connected_domains    = [
+			"Aviatrix_Edge_Domain"
+		]
+		security_domain_name = "%s"
+		attached_vpc {
+			vpc_account_name = aviatrix_account.test_account2.account_name
 			vpc_id           = "%s"
-        },
-    	]
-	},
-	]
+			vpc_region       = "%s"
+		}
+	}
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"),
-		rName, os.Getenv("AWS_REGION"), awsSideAsNumber, sDm, sDm,
-		os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_TGW_ID"))
+		awsSideAsNumber, os.Getenv("AWS_REGION"), rName, sDm, sDm, os.Getenv("AWS_VPC_TGW_ID"),
+		os.Getenv("AWS_REGION"))
 }
 
 func testAccCheckAWSTgwExists(n string, awsTgw *goaviatrix.AWSTgw) resource.TestCheckFunc {
@@ -176,13 +183,16 @@ func testAccCheckAWSTgwExists(n string, awsTgw *goaviatrix.AWSTgw) resource.Test
 		foundAwsTgw := &goaviatrix.AWSTgw{
 			Name: rs.Primary.Attributes["tgw_name"],
 		}
+
 		foundAwsTgw2, err := client.GetAWSTgw(foundAwsTgw)
 		if err != nil {
 			return err
 		}
+
 		if foundAwsTgw2.Name != rs.Primary.ID {
 			return fmt.Errorf("AWS TGW not found")
 		}
+
 		*awsTgw = *foundAwsTgw
 
 		return nil
@@ -196,9 +206,11 @@ func testAccCheckAWSTgwDestroy(s *terraform.State) error {
 		if rs.Type != "aviatrix_aws_tgw" {
 			continue
 		}
+
 		foundAWSTgw := &goaviatrix.AWSTgw{
 			Name: rs.Primary.Attributes["tgw_name"],
 		}
+
 		_, err := client.GetAWSTgw(foundAWSTgw)
 		if err != nil {
 			if strings.Contains(err.Error(), "does not exist") {
@@ -206,6 +218,7 @@ func testAccCheckAWSTgwDestroy(s *terraform.State) error {
 			}
 			return fmt.Errorf("AWS TGW still exists: %v", err)
 		}
+
 		return fmt.Errorf("AWS TGW still exists")
 	}
 	return nil

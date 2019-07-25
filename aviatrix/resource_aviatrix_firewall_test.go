@@ -13,6 +13,7 @@ import (
 
 func TestAccAviatrixFirewall_basic(t *testing.T) {
 	var firewall goaviatrix.Firewall
+
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
 	resourceName := "aviatrix_firewall.test_firewall"
 
@@ -56,8 +57,7 @@ func TestAccAviatrixFirewall_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "policy.1.protocol", "tcp"),
 					resource.TestCheckResourceAttr(
-						resourceName, "policy.1.src_ip", fmt.Sprintf("tft-%s",
-							rName)),
+						resourceName, "policy.1.src_ip", fmt.Sprintf("tft-%s", rName)),
 					resource.TestCheckResourceAttr(
 						resourceName, "policy.1.log_enable", "off"),
 					resource.TestCheckResourceAttr(
@@ -80,60 +80,53 @@ func TestAccAviatrixFirewall_basic(t *testing.T) {
 func testAccFirewallConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account" {
-    account_name       = "tfa-%s"
-    cloud_type         = 1
-    aws_account_number = "%s"
-    aws_iam            = "false"
-    aws_access_key     = "%s"
-    aws_secret_key     = "%s"
+	account_name       = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = "false"
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_gateway" "test_gw" {
 	cloud_type   = 1
-	account_name = "${aviatrix_account.test_account.account_name}"
+	account_name = aviatrix_account.test_account.account_name
 	gw_name      = "tfg-%s"
 	vpc_id       = "%s"
 	vpc_reg      = "%s"
 	vpc_size     = "t2.micro"
 	vpc_net      = "%s"
 }
-
 resource "aviatrix_firewall_tag" "foo" {
-    firewall_tag = "tft-%s"
-    cidr_list = [
-	{
+	firewall_tag = "tft-%s"
+	cidr_list {
 		cidr_tag_name = "a1"
 		cidr          = "10.1.0.0/24"
-	},
-	{
+	}
+	cidr_list {
 		cidr_tag_name = "b1"
 		cidr          = "10.2.0.0/24"
 	}
-	]
 }
-
 resource "aviatrix_firewall" "test_firewall" {
-    gw_name         = "${aviatrix_gateway.test_gw.gw_name}"
-    base_allow_deny =  "allow-all"
-    base_log_enable = "off"
-    policy          = [
-	{
+	gw_name         = aviatrix_gateway.test_gw.gw_name
+	base_allow_deny = "allow-all"
+	base_log_enable = "off"
+	policy {
 		protocol   = "tcp"
 		src_ip     = "10.15.0.224/32"
 		log_enable = "on"
 		dst_ip     = "10.12.0.172/32"
 		allow_deny = "deny"
 		port       = "0:65535"
-	},
-	{
+	}
+	policy {
 		protocol   = "tcp"
-		src_ip     = "${aviatrix_firewall_tag.foo.firewall_tag}"
+		src_ip     = aviatrix_firewall_tag.foo.firewall_tag
 		log_enable = "off"
 		dst_ip     = "10.12.1.172/32"
 		allow_deny = "deny"
 		port       = "0:65535"
 	}
-	]
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"), rName)
@@ -156,13 +149,14 @@ func testAccCheckFirewallExists(n string, firewall *goaviatrix.Firewall) resourc
 		}
 
 		_, err := client.GetPolicy(foundFirewall)
-
 		if err != nil {
 			return err
 		}
+
 		if foundFirewall.GwName != rs.Primary.ID {
 			return fmt.Errorf("firewall not found")
 		}
+
 		*firewall = *foundFirewall
 
 		return nil
@@ -176,9 +170,11 @@ func testAccCheckFirewallDestroy(s *terraform.State) error {
 		if rs.Type != "aviatrix_firewall" {
 			continue
 		}
+
 		foundFirewall := &goaviatrix.Firewall{
 			GwName: rs.Primary.Attributes["gw_name"],
 		}
+
 		_, err := client.GetPolicy(foundFirewall)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("firewall still exists")

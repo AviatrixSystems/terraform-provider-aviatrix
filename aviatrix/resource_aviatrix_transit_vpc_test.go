@@ -33,6 +33,7 @@ func preGatewayCheckArm(t *testing.T, msgCommon string) (string, string, string)
 
 func TestAccAviatrixTransitGw_basic(t *testing.T) {
 	var gateway goaviatrix.Gateway
+
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
 
 	skipGw := os.Getenv("SKIP_TRANSIT")
@@ -63,8 +64,7 @@ func TestAccAviatrixTransitGw_basic(t *testing.T) {
 						testAccCheckTransitGwExists(resourceNameAws, &gateway),
 						resource.TestCheckResourceAttr(resourceNameAws, "gw_name", fmt.Sprintf("tfg-%s", rName)),
 						resource.TestCheckResourceAttr(resourceNameAws, "vpc_size", "t2.micro"),
-						resource.TestCheckResourceAttr(resourceNameAws, "account_name", fmt.Sprintf("tfa-%s",
-							rName)),
+						resource.TestCheckResourceAttr(resourceNameAws, "account_name", fmt.Sprintf("tfa-%s", rName)),
 						resource.TestCheckResourceAttr(resourceNameAws, "vpc_id", os.Getenv("AWS_VPC_ID")),
 						resource.TestCheckResourceAttr(resourceNameAws, "subnet", os.Getenv("AWS_VPC_NET")),
 						resource.TestCheckResourceAttr(resourceNameAws, "vpc_reg", os.Getenv("AWS_REGION")),
@@ -98,10 +98,8 @@ func TestAccAviatrixTransitGw_basic(t *testing.T) {
 						testAccCheckTransitGwExists(resourceNameArm, &gateway),
 						resource.TestCheckResourceAttr(resourceNameArm, "gw_name", fmt.Sprintf("tfg-%s", rName)),
 						resource.TestCheckResourceAttr(resourceNameArm, "vpc_size", os.Getenv("ARM_GW_SIZE")),
-						resource.TestCheckResourceAttr(resourceNameArm, "account_name", fmt.Sprintf("tfaz-%s",
-							rName)),
-						resource.TestCheckResourceAttr(resourceNameArm, "vpc_id",
-							os.Getenv("ARM_VNET_ID")),
+						resource.TestCheckResourceAttr(resourceNameArm, "account_name", fmt.Sprintf("tfaz-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameArm, "vpc_id", os.Getenv("ARM_VNET_ID")),
 						resource.TestCheckResourceAttr(resourceNameArm, "subnet", os.Getenv("ARM_SUBNET")),
 						resource.TestCheckResourceAttr(resourceNameArm, "vpc_reg", os.Getenv("ARM_REGION")),
 					),
@@ -121,22 +119,22 @@ func TestAccAviatrixTransitGw_basic(t *testing.T) {
 func testAccTransitGwConfigBasicAws(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_aws" {
-    account_name       = "tfa-%s"
-    cloud_type         = 1
-    aws_account_number = "%s"
-    aws_iam            = "false"
-    aws_access_key     = "%s"
-    aws_secret_key     = "%s"
+	account_name       = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = "false"
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
 }
 
 resource "aviatrix_transit_vpc" "test_transit_vpc_aws" {
-    cloud_type   = 1
-    account_name = "${aviatrix_account.test_aws.account_name}"
-    gw_name      = "tfg-%[1]s"
-    vpc_id       = "%[5]s"
-    vpc_reg      = "%[6]s"
-    vpc_size     = "t2.micro"
-    subnet       = "%[7]s"
+	cloud_type   = 1
+	account_name = aviatrix_account.test_aws.account_name
+	gw_name      = "tfg-%[1]s"
+	vpc_id       = "%[5]s"
+	vpc_reg      = "%[6]s"
+	vpc_size     = "t2.micro"
+	subnet       = "%[7]s"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"))
@@ -145,22 +143,22 @@ resource "aviatrix_transit_vpc" "test_transit_vpc_aws" {
 func testAccTransitGwConfigBasicArm(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_arm" {
-    account_name        = "tfaz-%s"
-    cloud_type          = 8
-    arm_subscription_id = "%s"
-    arm_directory_id    = "%s"
-    arm_application_id  = "%s"
-    arm_application_key = "%s"
+	account_name        = "tfaz-%s"
+	cloud_type          = 8
+	arm_subscription_id = "%s"
+	arm_directory_id    = "%s"
+	arm_application_id  = "%s"
+	arm_application_key = "%s"
 }
 
 resource "aviatrix_transit_vpc" "test_transit_vpc_arm" {
-    cloud_type   = 8
-    account_name = "${aviatrix_account.test_arm.account_name}"
-    gw_name      = "tfg-%[1]s"
-    vpc_id       = "%[6]s"
-    vpc_reg      = "%[7]s"
-    vpc_size     = "%[8]s"
-    subnet       = "%[9]s"
+	cloud_type   = 8
+	account_name = aviatrix_account.test_arm.account_name
+	gw_name      = "tfg-%[1]s"
+	vpc_id       = "%[6]s"
+	vpc_reg      = "%[7]s"
+	vpc_size     = "%[8]s"
+	subnet       = "%[9]s"
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"), os.Getenv("ARM_APPLICATION_ID"),
 		os.Getenv("ARM_APPLICATION_KEY"), os.Getenv("ARM_VNET_ID"), os.Getenv("ARM_REGION"),
@@ -188,9 +186,11 @@ func testAccCheckTransitGwExists(n string, gateway *goaviatrix.Gateway) resource
 		if err != nil {
 			return err
 		}
+
 		if foundGateway.GwName != rs.Primary.ID {
 			return fmt.Errorf("transit gateway not found")
 		}
+
 		*gateway = *foundGateway
 
 		return nil
@@ -204,12 +204,13 @@ func testAccCheckTransitGwDestroy(s *terraform.State) error {
 		if rs.Type != "aviatrix_transit_vpc" {
 			continue
 		}
+
 		foundGateway := &goaviatrix.Gateway{
 			GwName:      rs.Primary.Attributes["gw_name"],
 			AccountName: rs.Primary.Attributes["account_name"],
 		}
-		_, err := client.GetGateway(foundGateway)
 
+		_, err := client.GetGateway(foundGateway)
 		if err == nil {
 			return fmt.Errorf("transit gateway still exists")
 		}

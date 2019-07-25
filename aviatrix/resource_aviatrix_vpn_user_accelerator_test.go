@@ -49,31 +49,29 @@ func TestAccAviatrixVPNUserAccelerator_basic(t *testing.T) {
 func testAccVPNUserAcceleratorConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account" {
-    account_name 	   = "tfa-%s"
-    cloud_type 		   = 1
-    aws_account_number = "%s"
-    aws_iam 	       = "false"
-    aws_access_key 	   = "%s"
-    aws_secret_key     = "%s"
+	account_name 	   = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = "false"
+	aws_access_key 	   = "%s"
+	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_gateway" "test_gw" {
 	cloud_type   = 1
-	account_name = "${aviatrix_account.test_account.account_name}"
+	account_name = aviatrix_account.test_account.account_name
 	gw_name      = "tfg-%[1]s"
-	vpc_id 		 = "%[5]s"
-	vpc_reg 	 = "%[6]s"
-	vpc_size 	 = "t2.micro"
-	vpc_net 	 = "%[7]s"
+	vpc_id       = "%[5]s"
+	vpc_reg      = "%[6]s"
+	vpc_size     = "t2.micro"
+	vpc_net      = "%[7]s"
 	vpn_access   = "yes"
 	vpn_cidr     = "192.168.43.0/24"
-    max_vpn_conn = "100"
+	max_vpn_conn = "100"
 	enable_elb   = "yes"
 	elb_name     = "tflb-%[1]s"
 }
-
 resource "aviatrix_vpn_user_accelerator" "test_elb" {
-	elb_name = "${aviatrix_gateway.test_gw.elb_name}"
+	elb_name = aviatrix_gateway.test_gw.elb_name
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"))
@@ -85,15 +83,18 @@ func testAccCheckVPNUserAcceleratorExists(n string) resource.TestCheckFunc {
 		if !ok {
 			return fmt.Errorf("vpn user accelerator not found : %s", n)
 		}
+
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no vpn user accelerator ID is set")
 		}
+
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
 		elbList, err := client.GetVpnUserAccelerator()
 		if err != nil {
 			return err
 		}
+
 		if !goaviatrix.Contains(elbList, rs.Primary.ID) {
 			return fmt.Errorf("vpn user accelerator ID not found")
 		}
@@ -114,6 +115,7 @@ func testAccCheckVPNUserAcceleratorDestroy(s *terraform.State) error {
 		if err != nil {
 			return fmt.Errorf("error retrieving vpn user accelerator: %s", err)
 		}
+
 		if goaviatrix.Contains(elbList, rs.Primary.ID) {
 			return fmt.Errorf("vpn user accelerator still exists")
 		}

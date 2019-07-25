@@ -35,16 +35,16 @@ resource "aviatrix_account" "tempacc" {
 
 # Create Aviatrix GCP account
 resource "aviatrix_account" "tempacc_gcp" {
-  account_name = "username"
-  cloud_type = 4
-  gcloud_project_id = "aviatrix-123456"
+  account_name                        = "username"
+  cloud_type                          = 4
+  gcloud_project_id                   = "aviatrix-123456"
   gcloud_project_credentials_filepath = "/home/ubuntu/test_gcp/aviatrix-abc123.json"
 }
 
 # Create Aviatrix Azure ARM account 
 resource "aviatrix_account" "tempacc_arm" {
-  account_name = "username"
-  cloud_type = 8
+  account_name         = "username"
+  cloud_type           = 8
   arm_subscription_id  =  "12345678-abcd-efgh-ijkl-123456789abc"
   arm_directory_id     =  "abcdefgh-1234-5678-9100-abc123456789"
   arm_application_id   =  "1234abcd-12ab-34cd-56ef-abcdef123456"

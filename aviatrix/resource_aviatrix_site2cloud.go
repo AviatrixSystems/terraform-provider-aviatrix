@@ -430,7 +430,10 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 
 		if s2c.PrivateRouteEncryption == "true" {
 			d.Set("private_route_encryption", true)
-			d.Set("route_table_list", s2c.RouteTableList)
+
+			if err := d.Set("route_table_list", s2c.RouteTableList); err != nil {
+				log.Printf("[WARN] Error setting route_table_list for (%s): %s", d.Id(), err)
+			}
 		} else {
 			d.Set("private_route_encryption", false)
 		}

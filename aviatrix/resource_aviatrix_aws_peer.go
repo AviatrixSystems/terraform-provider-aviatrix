@@ -147,8 +147,13 @@ func resourceAWSPeerRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("account_name2", ap.AccountName2)
 		d.Set("vpc_reg1", ap.Region1)
 		d.Set("vpc_reg2", ap.Region2)
-		d.Set("rtb_list1_output", strings.Split(ap.RtbList1, ","))
-		d.Set("rtb_list2_output", strings.Split(ap.RtbList2, ","))
+
+		if err := d.Set("rtb_list1_output", strings.Split(ap.RtbList1, ",")); err != nil {
+			log.Printf("[WARN] Error setting rtb_list1_output for (%s): %s", d.Id(), err)
+		}
+		if err := d.Set("rtb_list2_output", strings.Split(ap.RtbList2, ",")); err != nil {
+			log.Printf("[WARN] Error setting rtb_list2_output for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

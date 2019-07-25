@@ -26,6 +26,7 @@ func preVGWConnCheck(t *testing.T, msgCommon string) (string, string) {
 
 func TestAccAviatrixVGWConn_basic(t *testing.T) {
 	var vgwConn goaviatrix.VGWConn
+
 	rName := acctest.RandString(5)
 
 	resourceName := "aviatrix_vgw_conn.test_vgw_conn"
@@ -78,9 +79,8 @@ resource "aviatrix_account" "test_account" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_transit_vpc" "test_transit_vpc" {
-	account_name = "${aviatrix_account.test_account.account_name}"
+	account_name = aviatrix_account.test_account.account_name
 	cloud_type   = 1
 	gw_name      = "tfg-%s"
 	vpc_id       = "%s"
@@ -88,11 +88,10 @@ resource "aviatrix_transit_vpc" "test_transit_vpc" {
 	vpc_size     = "t2.micro"
 	subnet       = "%s"
 }
-
 resource "aviatrix_vgw_conn" "test_vgw_conn" {
 	conn_name        = "tfc-%s"
-	gw_name          = "${aviatrix_transit_vpc.test_transit_vpc.gw_name}"
-	vpc_id           = "${aviatrix_transit_vpc.test_transit_vpc.vpc_id}"
+	gw_name          = aviatrix_transit_vpc.test_transit_vpc.gw_name
+	vpc_id           = aviatrix_transit_vpc.test_transit_vpc.vpc_id
 	bgp_vgw_id       = "%s"
 	bgp_local_as_num = "6451"
 }
@@ -126,9 +125,11 @@ func testAccCheckVGWConnExists(n string, vgwConn *goaviatrix.VGWConn) resource.T
 		if err != nil {
 			return err
 		}
+
 		if foundVGWConn2.ConnName != rs.Primary.Attributes["conn_name"] {
 			return fmt.Errorf("conn_name Not found in created attributes")
 		}
+
 		*vgwConn = *foundVGWConn
 
 		return nil

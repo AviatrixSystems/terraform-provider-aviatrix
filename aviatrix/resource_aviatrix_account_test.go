@@ -49,6 +49,7 @@ func preAccountCheck(t *testing.T, msgEnd string) {
 
 func TestAccAviatrixAccount_basic(t *testing.T) {
 	var account goaviatrix.Account
+
 	rInt := acctest.RandInt()
 	importStateVerifyIgnore := []string{"aws_secret_key"}
 
@@ -173,7 +174,7 @@ func testAccAccountConfigAWS(rInt int) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "aws" {
 	account_name       = "tf-testing-aws-%d"
-	cloud_type 		   = 1
+	cloud_type         = 1
 	aws_account_number = "%s"
 	aws_iam            = "false"
 	aws_access_key     = "%s"
@@ -223,13 +224,14 @@ func testAccCheckAccountExists(n string, account *goaviatrix.Account) resource.T
 		}
 
 		_, err := client.GetAccount(foundAccount)
-
 		if err != nil {
 			return err
 		}
+
 		if foundAccount.AccountName != rs.Primary.ID {
 			return fmt.Errorf("account not found")
 		}
+
 		*account = *foundAccount
 
 		return nil
@@ -243,11 +245,12 @@ func testAccCheckAccountDestroy(s *terraform.State) error {
 		if rs.Type != "aviatrix_account" {
 			continue
 		}
+
 		foundAccount := &goaviatrix.Account{
 			AccountName: rs.Primary.Attributes["account_name"],
 		}
-		_, err := client.GetAccount(foundAccount)
 
+		_, err := client.GetAccount(foundAccount)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("account still exists")
 		}

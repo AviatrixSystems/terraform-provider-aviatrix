@@ -39,6 +39,7 @@ func preAvxTunnelCheck(t *testing.T, msgCommon string) (string, string, string, 
 
 func TestAccAviatrixTunnel_basic(t *testing.T) {
 	var tun goaviatrix.Tunnel
+
 	rName := acctest.RandString(5)
 	resourceName := "aviatrix_tunnel.foo"
 
@@ -85,31 +86,27 @@ resource "aviatrix_account" "test" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_gateway" "gw1" {
 	cloud_type   = 1
-	account_name = "${aviatrix_account.test.account_name}"
+	account_name = aviatrix_account.test.account_name
 	gw_name      = "tfg-%[1]s"
 	vpc_id       = "%[5]s"
 	vpc_reg      = "%[7]s"
 	vpc_size     = "t2.micro"
 	vpc_net      = "%[9]s"
 }
-
-
 resource "aviatrix_gateway" "gw2" {
 	cloud_type   = 1
-	account_name = "${aviatrix_account.test.account_name}"
+	account_name = aviatrix_account.test.account_name
 	gw_name      = "tfg2-%[1]s"
 	vpc_id       = "%[6]s"
 	vpc_reg      = "%[8]s"
 	vpc_size     = "t2.micro"
 	vpc_net      = "%[10]s"
 }
-
 resource "aviatrix_tunnel" "foo" {
-	vpc_name1 = "${aviatrix_gateway.gw1.gw_name}"
-	vpc_name2 = "${aviatrix_gateway.gw2.gw_name}"
+	vpc_name1 = aviatrix_gateway.gw1.gw_name
+	vpc_name2 = aviatrix_gateway.gw2.gw_name
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		vpcID1, vpcID2, region1, region2, subnet1, subnet2)
@@ -134,7 +131,6 @@ func tesAccCheckTunnelExists(n string, tunnel *goaviatrix.Tunnel) resource.TestC
 		}
 
 		_, err := client.GetTunnel(foundTunnel)
-
 		if err != nil {
 			return err
 		}
@@ -160,12 +156,13 @@ func testAccCheckTunnelDestroy(s *terraform.State) error {
 		if rs.Type != "aviatrix_tunnel" {
 			continue
 		}
+
 		foundTunnel := &goaviatrix.Tunnel{
 			VpcName1: rs.Primary.Attributes["vpc_name1"],
 			VpcName2: rs.Primary.Attributes["vpc_name2"],
 		}
-		_, err := client.GetTunnel(foundTunnel)
 
+		_, err := client.GetTunnel(foundTunnel)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("aviatrix tunnel still exists")
 		}

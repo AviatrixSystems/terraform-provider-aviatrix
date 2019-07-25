@@ -24,7 +24,10 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc_aws" {
   subnet       = "10.11.0.0/24~~us-west-1b~~spoke-vpc-01-pubsub"
   enable_nat   = "no"
   dns_server   = "8.8.8.8"
-  tag_list     = ["k1:v1","k2:v2"]
+  tag_list     = [
+    "k1:v1",
+    "k2:v2",
+  ]
 }
 
 # Set Aviatrix gcp spoke_vpc

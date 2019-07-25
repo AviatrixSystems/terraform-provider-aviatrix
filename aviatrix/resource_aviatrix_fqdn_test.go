@@ -13,6 +13,7 @@ import (
 
 func TestAccAviatrixFQDN_basic(t *testing.T) {
 	var fqdn goaviatrix.FQDN
+
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
 
 	skipAcc := os.Getenv("SKIP_FQDN")
@@ -57,42 +58,38 @@ func TestAccAviatrixFQDN_basic(t *testing.T) {
 func testAccFQDNConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
-    account_name       = "tfa-%s"
+	account_name       = "tfa-%s"
 	cloud_type         = 1
 	aws_account_number = "%s"
 	aws_iam            = "false"
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_gateway" "test" {
 	cloud_type   = 1
-	account_name = "${aviatrix_account.test.account_name}"
+	account_name = aviatrix_account.test.account_name
 	gw_name      = "tfg-%[1]s"
 	vpc_id       = "%[5]s"
 	vpc_reg      = "%[6]s"
 	vpc_size     = "t2.micro"
 	vpc_net      = "%[7]s"
-    enable_nat   = "yes"
+	enable_nat   = "yes"
 }
-
 resource "aviatrix_fqdn" "foo" {
-	fqdn_tag           = "tff-%[1]s"
-	fqdn_status        = "enabled"
-	fqdn_mode          = "white"
-	gw_filter_tag_list = [
-	{
-		gw_name        = "${aviatrix_gateway.test.gw_name}"
+	fqdn_tag    = "tff-%[1]s"
+	fqdn_status = "enabled"
+	fqdn_mode   = "white"
+
+	gw_filter_tag_list {
+		gw_name        = aviatrix_gateway.test.gw_name
 		source_ip_list = []
 	}
-	]
-	domain_names =  [
-	{
+
+	domain_names {
 		fqdn  = "facebook.com"
 		proto = "tcp"
 		port  = "443"
 	}
-	]
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"))
@@ -104,6 +101,7 @@ func testAccCheckFQDNExists(n string, fqdn *goaviatrix.FQDN) resource.TestCheckF
 		if !ok {
 			return fmt.Errorf("FQDN Not found: %s", n)
 		}
+
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no FQDN ID is set")
 		}
@@ -118,9 +116,11 @@ func testAccCheckFQDNExists(n string, fqdn *goaviatrix.FQDN) resource.TestCheckF
 		if err != nil {
 			return err
 		}
+
 		if foundFQDN.FQDNTag != rs.Primary.ID {
 			return fmt.Errorf("FQDN not found")
 		}
+
 		*fqdn = *foundFQDN
 
 		return nil
@@ -137,8 +137,8 @@ func testAccCheckFQDNDestroy(s *terraform.State) error {
 		foundFQDN := &goaviatrix.FQDN{
 			FQDNTag: rs.Primary.Attributes["fqdn_tag"],
 		}
-		_, err := client.GetFQDNTag(foundFQDN)
 
+		_, err := client.GetFQDNTag(foundFQDN)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("FQDN still exists")
 		}
