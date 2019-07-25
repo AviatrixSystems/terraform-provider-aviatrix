@@ -33,10 +33,9 @@ func TestAccAviatrixControllerConfig_basic(t *testing.T) {
 				Config: testAccControllerConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControllerConfigExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "sg_management_account_name", fmt.Sprintf("tfa-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "fqdn_exception_rule", "false"),
 					resource.TestCheckResourceAttr(resourceName, "http_access", "true"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_management", "true"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_management", "false"),
 				),
 			},
 			{
@@ -60,10 +59,9 @@ resource "aviatrix_account" "test_account" {
 }
 
 resource "aviatrix_controller_config" "test_controller_config" {
-	sg_management_account_name = aviatrix_account.test_account.account_name
 	fqdn_exception_rule 	   = false
 	http_access         	   = true
-	security_group_management  = true
+	security_group_management  = false
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"))
 }
