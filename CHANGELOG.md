@@ -1,3 +1,24 @@
+## 2.0.36 (Jul 25 2019)
+
+CHANGES
+  - Supported controller version: 4.7.520
+  - Supported Terraform version: 0.12.*
+  - Added Terraform Feature Changelist v2
+  - Added new resource aviatrix_spoke_gateway
+  - Added new resource aviatrix_transit_gateway
+  - Renamed "vpc_size" and "vpc_net" to "gw_size" and "subnet" respectively, changed "enable_nat" to "enable_snat" and its type from
+  string to boolean in gateway resource
+  - Renamed "vpc_name1" and "vpc_name2" to "gw_name1" and "gw_name2" respectively in tunnel resource
+  - Renamed "base_allow_deny" to "base_policy", renamed "base_log_enable" to "base_log_enabled" and changed its type from string
+  to boolean, renamed "allow_deny" to "action", renamed "log_enable" to "log_enabled" and changed its type from string to boolean
+  in firewall resource
+  - Renamed "fqdn_status" to "fqdn_enabled" in fqdn resource
+  - Changed type from string to boolean for "vpn_access", "enable_elb", "split_tunnel", "saml_enabled", "enable_ldap", "single_az_ha",
+  and "allocate_new_eip" in gateway resource
+  - Changed type from string to boolean for "ha_enabled" in site2cloud resource
+  - Changed type from string to boolean for "enable_ha" in tunnel resource
+  
+  
 ## 1.16.20 (Jul 25 2019)
 
 CHANGES

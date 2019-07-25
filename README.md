@@ -1,6 +1,8 @@
 Terraform Provider
 ==================
-A basic [Terraform](http://terraform.io) provider for Aviatrix. Read this [tutorial](https://docs.aviatrix.com/HowTos/tf_aviatrix_howto.html) as an alternative to the README, only if the instructions are unclear.
+A basic [Terraform](http://terraform.io) provider for Aviatrix. Read this [tutorial](https://docs.aviatrix.com/HowTos/tf_aviatrix_howto.html) as an alternative to the README, only if the instructions are unclear. 
+
+-> **NOTE:** This release has a big structure change from release v1.*, please read this [changelist-v2](https://github.com/AviatrixSystems/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist-v2.html.md) first, and change your cloud infrastructures accordingly.
 
 Requirements
 ------------
