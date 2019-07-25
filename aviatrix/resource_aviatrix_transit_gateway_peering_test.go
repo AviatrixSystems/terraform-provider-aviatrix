@@ -41,10 +41,8 @@ func TestAccAviatrixTransitGatewayPeering_basic(t *testing.T) {
 					subnet1, subnet2, haSubnet1, haSubnet2),
 				Check: resource.ComposeTestCheckFunc(
 					tesAccCheckTransitGatewayPeeringExists("aviatrix_transit_gateway_peering.foo"),
-					resource.TestCheckResourceAttr(
-						resourceName, "transit_gateway_name1", fmt.Sprintf("tfg-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "transit_gateway_name2", fmt.Sprintf("tfg2-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_name1", fmt.Sprintf("tfg-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_name2", fmt.Sprintf("tfg2-%s", rName)),
 				),
 			},
 			{
@@ -63,38 +61,38 @@ resource "aviatrix_account" "test" {
 	account_name       = "tfa-%s"
 	cloud_type         = 1
 	aws_account_number = "%s"
-	aws_iam            = "false"
+	aws_iam            = false
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
 
-resource "aviatrix_transit_vpc" "transitGw1" {
+resource "aviatrix_transit_gateway" "transitGw1" {
 	cloud_type   = 1
 	account_name = aviatrix_account.test.account_name
 	gw_name      = "tfg-%s"
 	vpc_id       = "%s"
 	vpc_reg      = "%s"
-	vpc_size     = "t2.micro"
+	gw_size      = "t2.micro"
 	subnet       = "%s"
 	ha_subnet    = "%s"
 	ha_gw_size   = "t2.micro"
 }
 
-resource "aviatrix_transit_vpc" "transitGw2" {
+resource "aviatrix_transit_gateway" "transitGw2" {
 	cloud_type   = 1
 	account_name = aviatrix_account.test.account_name
 	gw_name      = "tfg2-%s"
 	vpc_id       = "%s"
 	vpc_reg      = "%s"
-	vpc_size     = "t2.micro"
+	gw_size      = "t2.micro"
 	subnet       = "%s"
 	ha_subnet    = "%s"
 	ha_gw_size   = "t2.micro"
 }
 
 resource "aviatrix_transit_gateway_peering" "foo" {
-	transit_gateway_name1 = aviatrix_transit_vpc.transitGw1.gw_name
-	transit_gateway_name2 = aviatrix_transit_vpc.transitGw2.gw_name
+	transit_gateway_name1 = aviatrix_transit_gateway.transitGw1.gw_name
+	transit_gateway_name2 = aviatrix_transit_gateway.transitGw2.gw_name
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, vpcID1, region1, subnet1, haSubnet1, rName, vpcID2, region2, subnet2, haSubnet2)
@@ -106,7 +104,6 @@ func tesAccCheckTransitGatewayPeeringExists(n string) resource.TestCheckFunc {
 		if !ok {
 			return fmt.Errorf("aviatrix transit gateway peering Not Created: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no aviatrix transit gateway peering ID is set")
 		}
@@ -145,5 +142,6 @@ func testAccCheckTransitGatewayPeeringDestroy(s *terraform.State) error {
 			return fmt.Errorf("aviatrix transit gateway peering still exists")
 		}
 	}
+
 	return nil
 }

@@ -8,15 +8,15 @@ description: |-
 
 # aviatrix_fqdn
 
-The FQDN resource manages FQDN filtering for Aviatrix Gateway
+The aviatrix_fqdn resource manages FQDN filtering for Aviatrix Gateway.
 
 ## Example Usage
 
 ```hcl
-# Set Aviatrix Gateway FQDN filter
+# Create an Aviatrix Gateway FQDN filter
 resource "aviatrix_fqdn" "test_fqdn" {
   fqdn_tag     = "my_tag"
-  fqdn_status  = "enabled"
+  fqdn_enabled = true
   fqdn_mode    = "white"
   
   gw_filter_tag_list {
@@ -51,17 +51,17 @@ resource "aviatrix_fqdn" "test_fqdn" {
 The following arguments are supported:
 
 * `fqdn_tag` - (Required) FQDN Filter Tag Name.
-* `fqdn_status` - (Optional) FQDN Filter Tag Status. Valid values: "enabled", "disabled".
-* `fqdn_mode` - (Optional) Specify the tag color to be a white-list tag or black-list tag. Valid Values: "white", "black".
+* `fqdn_enabled` - (Optional) FQDN Filter Tag Status. Valid values: true, false.
+* `fqdn_mode` - (Optional) Specify the tag color to be a white-list tag or black-list tag. Valid values: "white", "black".
 * `gw_filter_tag_list` - (Optional) A list of gateways to attach to the specific tag.
   * `gw_name` - (Optional) Name of the gateway to attach to the specific tag. 
   * `source_ip_list` - (Optional) List of source IPs in the VPC qualified for a specific tag.
 * `domain_names` - (Optional) One or more domain names in a list with details as listed below:
-  * `fqdn` - (Optional) FQDN. Example: "facebook.com" 
-  * `proto` - (Optional) Protocol. Valid values: "all", "tcp", "udp", "icmp" 
-  * `port` - (Optional) Port. Example "25" 
-    * for protocol "all", port must be set to "all"
-    * for protocol “icmp”, port must be set to “ping”
+  * `fqdn` - (Optional) FQDN. Example: "facebook.com".
+  * `proto` - (Optional) Protocol. Valid values: "all", "tcp", "udp", "icmp".
+  * `port` - (Optional) Port. Example "25".
+    * For protocol "all", port must be set to "all".
+    * For protocol “icmp”, port must be set to “ping”.
 
 -> **NOTE:** 
 

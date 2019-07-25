@@ -56,7 +56,11 @@ output "GCP_VPC_ID" {
 
 output "GCP_SUBNET" {
   value = module.aviatrix_gcp_vpc1.subnet
-} 
+}
+
+output "GCP_ZONE" {
+  value = var.gcp_zone1
+}
 
 output "ARM_REGION" {
   value = var.azure_region1
@@ -72,11 +76,15 @@ output "ARM_SUBNET" {
 
 output "ARM_VNET_ID2" {
   value = "${module.aviatrix_arm_vpc2.vnet}:${module.aviatrix_arm_vpc2.group}"
-} 
+}
 
 output "ARM_REGION2" {
   value = var.azure_region2
-} 
+}
+
+output "ARM_GW_SIZE" {
+  value = var.azure_gw_size
+}
 
 output "AWS_VPC_ID" {
   value = module.aviatrix_aws_vpc1.vpc
@@ -92,5 +100,13 @@ output "AWS_VPC_ID2" {
 
 output "AWS_SUBNET2" {
   value = module.aviatrix_aws_vpc2.subnet
-} 
+}
+
+output "AWS_REGION" {
+  value = data.aws_region.current.name
+}
+
+output "AWS_REGION2" {
+  value = data.aws_region.current.name
+}
 

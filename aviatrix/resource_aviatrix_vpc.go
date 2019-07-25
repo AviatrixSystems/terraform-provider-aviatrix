@@ -8,11 +8,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceVpc() *schema.Resource {
+func resourceAviatrixVpc() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVpcCreate,
-		Read:   resourceVpcRead,
-		Delete: resourceVpcDelete,
+		Create: resourceAviatrixVpcCreate,
+		Read:   resourceAviatrixVpcRead,
+		Delete: resourceAviatrixVpcDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -93,8 +93,9 @@ func resourceVpc() *schema.Resource {
 	}
 }
 
-func resourceVpcCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	vpc := &goaviatrix.Vpc{
 		CloudType:   d.Get("cloud_type").(int),
 		AccountName: d.Get("account_name").(string),
@@ -137,11 +138,10 @@ func resourceVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(vpc.Name)
-
-	return resourceVpcRead(d, meta)
+	return resourceAviatrixVpcRead(d, meta)
 }
 
-func resourceVpcRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	vpcName := d.Get("name").(string)
@@ -155,6 +155,7 @@ func resourceVpcRead(d *schema.ResourceData, meta interface{}) error {
 	vpc := &goaviatrix.Vpc{
 		Name: d.Get("name").(string),
 	}
+
 	vC, err := client.GetVpc(vpc)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
@@ -182,6 +183,7 @@ func resourceVpcRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("aviatrix_firenet_vpc", false)
 	}
+
 	d.Set("vpc_id", vC.VpcID)
 
 	var subnetList []map[string]string
@@ -200,8 +202,9 @@ func resourceVpcRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceVpcDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVpcDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	vpc := &goaviatrix.Vpc{
 		AccountName: d.Get("account_name").(string),
 		Name:        d.Get("name").(string),

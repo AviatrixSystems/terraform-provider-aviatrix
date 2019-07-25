@@ -37,16 +37,11 @@ func TestAccAviatrixAwsTgwVpnConn_basic(t *testing.T) {
 				Config: testAccAwsTgwVpnConnConfigBasic(rName, awsSideAsNumber),
 				Check: resource.ComposeTestCheckFunc(
 					tesAccCheckAwsTgwVpnConnExists(resourceName, &awsTgwVpnConn),
-					resource.TestCheckResourceAttr(
-						resourceName, "tgw_name", fmt.Sprintf("tft-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "route_domain_name", "Default_Domain"),
-					resource.TestCheckResourceAttr(
-						resourceName, "connection_name", fmt.Sprintf("tfc-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "public_ip", "40.0.0.0"),
-					resource.TestCheckResourceAttr(
-						resourceName, "remote_as_number", awsSideAsNumber),
+					resource.TestCheckResourceAttr(resourceName, "tgw_name", fmt.Sprintf("tft-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "route_domain_name", "Default_Domain"),
+					resource.TestCheckResourceAttr(resourceName, "connection_name", fmt.Sprintf("tfc-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "public_ip", "40.0.0.0"),
+					resource.TestCheckResourceAttr(resourceName, "remote_as_number", awsSideAsNumber),
 				),
 			},
 			{
@@ -64,7 +59,7 @@ resource "aviatrix_account" "test_account" {
 	account_name       = "tfa-%s"
 	cloud_type         = 1
 	aws_account_number = "%s"
-	aws_iam	           = "false"
+	aws_iam	           = false
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
@@ -128,17 +123,14 @@ func tesAccCheckAwsTgwVpnConnExists(n string, awsTgwVpnConn *goaviatrix.AwsTgwVp
 		if err != nil {
 			return err
 		}
-
 		if foundAwsTgwVpnConn2.TgwName != rs.Primary.Attributes["tgw_name"] {
 			return fmt.Errorf("tgw_name Not found in created attributes")
 		}
-
 		if foundAwsTgwVpnConn2.ConnName != rs.Primary.Attributes["connection_name"] {
 			return fmt.Errorf("connection_name Not found in created attributes")
 		}
 
 		*awsTgwVpnConn = *foundAwsTgwVpnConn
-
 		return nil
 	}
 }

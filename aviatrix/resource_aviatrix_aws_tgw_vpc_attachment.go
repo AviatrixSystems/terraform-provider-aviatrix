@@ -9,12 +9,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceAwsTgwVpcAttachment() *schema.Resource {
+func resourceAviatrixAwsTgwVpcAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsTgwVpcAttachmentCreate,
-		Read:   resourceAwsTgwVpcAttachmentRead,
-		Update: resourceAwsTgwVpcAttachmentUpdate,
-		Delete: resourceAwsTgwVpcAttachmentDelete,
+		Create: resourceAviatrixAwsTgwVpcAttachmentCreate,
+		Read:   resourceAviatrixAwsTgwVpcAttachmentRead,
+		Update: resourceAviatrixAwsTgwVpcAttachmentUpdate,
+		Delete: resourceAviatrixAwsTgwVpcAttachmentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -50,7 +50,7 @@ func resourceAwsTgwVpcAttachment() *schema.Resource {
 	}
 }
 
-func resourceAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
@@ -69,11 +69,10 @@ func resourceAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	d.SetId(awsTgwVpcAttachment.TgwName + "~" + awsTgwVpcAttachment.SecurityDomainName + "~" + awsTgwVpcAttachment.VpcID)
-
-	return resourceAwsTgwVpcAttachmentRead(d, meta)
+	return resourceAviatrixAwsTgwVpcAttachmentRead(d, meta)
 }
 
-func resourceAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	tgwName := d.Get("tgw_name").(string)
@@ -114,7 +113,7 @@ func resourceAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta interface{}) e
 	return fmt.Errorf("no Aviatrix Aws Tgw Vpc Attach found")
 }
 
-func resourceAwsTgwVpcAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAwsTgwVpcAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	d.Partial(true)
 	if d.HasChange("tgw_name") {
 		return fmt.Errorf("updating tgw_name is not allowed")
@@ -128,12 +127,12 @@ func resourceAwsTgwVpcAttachmentUpdate(d *schema.ResourceData, meta interface{})
 	if d.HasChange("vpc_id") {
 		return fmt.Errorf("updating vpc_id is not allowed")
 	}
-	d.Partial(false)
 
-	return resourceAwsTgwVpcAttachmentRead(d, meta)
+	d.Partial(false)
+	return resourceAviatrixAwsTgwVpcAttachmentRead(d, meta)
 }
 
-func resourceAwsTgwVpcAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAwsTgwVpcAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{

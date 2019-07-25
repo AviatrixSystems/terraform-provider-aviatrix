@@ -3,17 +3,17 @@ layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_trans_peer"
 sidebar_current: "docs-aviatrix-resource-trans-peer"
 description: |-
-  Creates and manages an Aviatrix transitive peering.
+  Creates and manages Aviatrix Transitive Peerings
 ---
 
 # aviatrix_trans_peer
 
-The Account resource allows the creation and management of an Aviatrix transitive peering.
+The aviatrix_trans_peer resource allows the creation and management of Aviatrix Transitive Peerings.
 
 ## Example Usage
 
 ```hcl
-# Create Aviatrix AWS transitive peering.
+# Create an Aviatrix AWS Transitive Peering
 resource "aviatrix_trans_peer" "test_trans_peer" {
   source         = "avtxuseastgw1"
   nexthop        = "avtxuseastgw2"

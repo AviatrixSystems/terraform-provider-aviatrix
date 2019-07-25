@@ -40,7 +40,7 @@ func resourceAviatrixVPNUserAcceleratorCreate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("unable to read endpoint list for User Accelerator due to %v", err)
 	}
 	if goaviatrix.Contains(elbList, elb) {
-		return fmt.Errorf("ELB is already included in the VPN User Accelerator. Import into terraform rather than create a new resource.")
+		return fmt.Errorf("elb is already included in the VPN User Accelerator. Import into terraform rather than create a new resource")
 	} else {
 		elbList = append(elbList, elb)
 		elbListStrings := strings.Join(elbList, "\",\"")
@@ -65,6 +65,7 @@ func resourceAviatrixVPNUserAcceleratorCreate(d *schema.ResourceData, meta inter
 			}
 		}
 	}
+
 	d.SetId(elb)
 	return resourceAviatrixVPNUserAcceleratorRead(d, meta)
 }
@@ -80,9 +81,11 @@ func resourceAviatrixVPNUserAcceleratorRead(d *schema.ResourceData, meta interfa
 		elbName = id
 		d.SetId(id)
 	}
+
 	log.Printf("[DEBUG] elbName: %s", elbName)
 
 	log.Printf("[INFO] Reading User Accelerator LB List")
+
 	elbList, err := client.GetVpnUserAccelerator()
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
@@ -91,7 +94,9 @@ func resourceAviatrixVPNUserAcceleratorRead(d *schema.ResourceData, meta interfa
 		}
 		return fmt.Errorf("unable to read endpoint list for User Accelerator due to %v", err)
 	}
+
 	log.Printf("[DEBUG] elbList: %s", elbList)
+
 	if elbList != nil {
 		if goaviatrix.Contains(elbList, elbName) {
 			d.Set("elb_name", elbName)
@@ -106,6 +111,7 @@ func resourceAviatrixVPNUserAcceleratorRead(d *schema.ResourceData, meta interfa
 
 func resourceAviatrixVPNUserAcceleratorDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	elbName := d.Get("elb_name").(string)
 	toDelete := []string{elbName}
 
@@ -125,10 +131,12 @@ func resourceAviatrixVPNUserAcceleratorDelete(d *schema.ResourceData, meta inter
 		} else {
 			xlr.Endpoints = "[]"
 		}
+
 		err := client.UpdateVpnUserAccelerator(xlr)
 		if err != nil {
 			return fmt.Errorf("unable to remove elb in Vpn User Accelerator due to %v", err)
 		}
 	}
+
 	return nil
 }

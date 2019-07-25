@@ -3,17 +3,17 @@ layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_arm_peer"
 sidebar_current: "docs-aviatrix-resource-arm-peer"
 description: |-
-  Creates and manages Aviatrix ARM Peering
+  Creates and manages Aviatrix ARM Peerings
 ---
 
 # aviatrix_arm_peer
 
-The ARMPeer resource allows the creation and management of Aviatrix ARM Peering.
+The aviatrix_arm_peer resource allows the creation and management of Aviatrix ARM Peerings.
 
 ## Example Usage
 
 ```hcl
-# Create Aviatrix ARM Peering
+# Create an Aviatrix ARM Peering
 resource "aviatrix_arm_peer" "test_armpeer" {
   account_name1             = "test1-account"
   account_name2             = "test2-account"
@@ -30,10 +30,10 @@ The following arguments are supported:
 
 * `account_name1` - (Required) This parameter represents the name of an Azure Cloud-Account in Aviatrix controller.
 * `account_name2` - (Required) This parameter represents the name of an Azure Cloud-Account in Aviatrix controller.
-* `vnet_name_resource_group1` - (Required) VNet-Name of Azure cloud. Example: "VNet_Name:Resource_Group_Name", etc...
-* `vnet_name_resource_group2` - (Required) VNet-Name of Azure cloud. Example: "VNet_Name:Resource_Group_Name", etc...
-* `vnet_reg1` - (Required) Region of Azure cloud. Example: "East US 2", etc...
-* `vnet_reg2` - (Required) Region of Azure cloud. Example: "East US 2", etc...
+* `vnet_name_resource_group1` - (Required) VNet-Name of Azure cloud. Example: "VNet_Name:Resource_Group_Name".
+* `vnet_name_resource_group2` - (Required) VNet-Name of Azure cloud. Example: "VNet_Name:Resource_Group_Name".
+* `vnet_reg1` - (Required) Region of Azure cloud. Example: "East US 2".
+* `vnet_reg2` - (Required) Region of Azure cloud. Example: "East US 2".
 
 The following arguments are computed - please do not edit in the resource file:
 

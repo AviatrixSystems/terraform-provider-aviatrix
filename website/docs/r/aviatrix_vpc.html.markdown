@@ -3,17 +3,17 @@ layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_vpc"
 sidebar_current: "docs-aviatrix-resource-vpc"
 description: |-
-  Creates and manages an VPC.
+  Creates and manages VPCs.
 ---
 
 # aviatrix_vpc
 
-The vpc resource allows the creation and management of an VPC.
+The aviatrix_vpc resource allows the creation and management of VPCs.
 
 ## Example Usage
 
 ```hcl
-# Create a new VPC
+# Create a VPC
 resource "aviatrix_vpc" "test_vpc" {
   cloud_type           = 1
   account_name         = "devops"
@@ -32,10 +32,10 @@ The following arguments are supported:
 * `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Use 1 for AWS.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `name` - (Required) Name of the vpc which is going to be created.
-* `region` - (Required) Region of cloud provider. Example: AWS: "us-east-1", ARM: "East US 2", etc...
+* `region` - (Required) Region of cloud provider. Example: AWS: "us-east-1", ARM: "East US 2".
 * `cidr` - (Required) VPC cidr.
-* `aviatrix_transit_vpc` - (Optional) Specify whether it is an aviatrix transit vpc. (Supported values: true, false. Default: false)
-* `aviatrix_firenet_vpc` - (Optional) Specify whether it is an aviatrix firenet vpc. (Supported values: true, false. Default: false)
+* `aviatrix_transit_vpc` - (Optional) Specify whether it is an aviatrix transit vpc. Supported values: true, false. Default: false.
+* `aviatrix_firenet_vpc` - (Optional) Specify whether it is an aviatrix firenet vpc. Supported values: true, false. Default: false.
 
 -> **NOTE:** 
 

@@ -34,14 +34,10 @@ func TestAccAviatrixVPNUser_basic(t *testing.T) {
 				Config: testAccVPNUserConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNUserExists("aviatrix_vpn_user.test_vpn_user", &vpnUser),
-					resource.TestCheckResourceAttr(
-						resourceName, "gw_name", fmt.Sprintf("tfl-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
-					resource.TestCheckResourceAttr(
-						resourceName, "user_email", "user@xyz.com"),
-					resource.TestCheckResourceAttr(
-						resourceName, "user_name", fmt.Sprintf("tfu-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfl-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
+					resource.TestCheckResourceAttr(resourceName, "user_email", "user@xyz.com"),
+					resource.TestCheckResourceAttr(resourceName, "user_name", fmt.Sprintf("tfu-%s", rName)),
 				),
 			},
 			{
@@ -59,7 +55,7 @@ resource "aviatrix_account" "test_account" {
 	account_name       = "tfa-%s"
 	cloud_type         = 1
 	aws_account_number = "%s"
-	aws_iam            = "false"
+	aws_iam            = false
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
@@ -69,12 +65,12 @@ resource "aviatrix_gateway" "test_gw" {
 	gw_name      = "tfg-%s"
 	vpc_id       = "%s"
 	vpc_reg      = "%s"
-	vpc_size     = "t2.micro"
-	vpc_net      = "%s"
-	vpn_access   = "yes"
+	gw_size      = "t2.micro"
+	subnet       = "%s"
+	vpn_access   = true
 	vpn_cidr     = "192.168.43.0/24"
 	max_vpn_conn = "100" 
-	enable_elb   = "yes"
+	enable_elb   = true
 	elb_name     = "tfl-%s"
 }
 resource "aviatrix_vpn_user" "test_vpn_user" {
@@ -84,7 +80,7 @@ resource "aviatrix_vpn_user" "test_vpn_user" {
 	user_email = "user@xyz.com"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"), rName, rName)
+		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName, rName)
 }
 
 func testAccCheckVPNUserExists(n string, vpnUser *goaviatrix.VPNUser) resource.TestCheckFunc {
@@ -93,7 +89,6 @@ func testAccCheckVPNUserExists(n string, vpnUser *goaviatrix.VPNUser) resource.T
 		if !ok {
 			return fmt.Errorf("VPN User Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no VPN User ID is set")
 		}
@@ -111,13 +106,11 @@ func testAccCheckVPNUserExists(n string, vpnUser *goaviatrix.VPNUser) resource.T
 		if err != nil {
 			return err
 		}
-
 		if foundVPNUser2.UserName != rs.Primary.ID {
 			return fmt.Errorf("VPN user not found")
 		}
 
 		*vpnUser = *foundVPNUser
-
 		return nil
 	}
 }
@@ -142,5 +135,6 @@ func testAccCheckVPNUserDestroy(s *terraform.State) error {
 			return fmt.Errorf("VPN User still exists")
 		}
 	}
+
 	return nil
 }

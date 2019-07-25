@@ -32,14 +32,10 @@ func TestAccAviatrixAccountUser_basic(t *testing.T) {
 				Config: testAccAccountUserConfigBasic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountUserExists("aviatrix_account_user.foo", &account),
-					resource.TestCheckResourceAttr(
-						resourceName, "username", fmt.Sprintf("tf-testing-%d", rInt)),
-					resource.TestCheckResourceAttr(
-						resourceName, "email", "abc@xyz.com"),
-					resource.TestCheckResourceAttr(
-						resourceName, "account_name", "admin"),
-					resource.TestCheckResourceAttr(
-						resourceName, "password", "Password-1234^"),
+					resource.TestCheckResourceAttr(resourceName, "username", fmt.Sprintf("tf-testing-%d", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "email", "abc@xyz.com"),
+					resource.TestCheckResourceAttr(resourceName, "account_name", "admin"),
+					resource.TestCheckResourceAttr(resourceName, "password", "Password-1234^"),
 				),
 			},
 			{
@@ -69,7 +65,6 @@ func testAccCheckAccountUserExists(n string, account *goaviatrix.AccountUser) re
 		if !ok {
 			return fmt.Errorf("account Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no Account ID is set")
 		}
@@ -85,13 +80,11 @@ func testAccCheckAccountUserExists(n string, account *goaviatrix.AccountUser) re
 		if err == goaviatrix.ErrNotFound {
 			return fmt.Errorf("account not found in REST response")
 		}
-
 		if foundAccount.UserName != rs.Primary.ID {
 			return fmt.Errorf("account not found")
 		}
 
 		*account = *foundAccount
-
 		return nil
 	}
 }

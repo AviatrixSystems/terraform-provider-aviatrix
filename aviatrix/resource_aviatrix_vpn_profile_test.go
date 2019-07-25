@@ -34,24 +34,15 @@ func TestAccAviatrixVPNProfile_basic(t *testing.T) {
 				Config: testAccVPNProfileConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNProfileExists("aviatrix_vpn_profile.test_vpn_profile", &vpnProfile),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", fmt.Sprintf("tfp-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "base_rule", "allow_all"),
-					resource.TestCheckResourceAttr(
-						resourceName, "users.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "users.0", fmt.Sprintf("tfu-%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "policy.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "policy.0.action", "deny"),
-					resource.TestCheckResourceAttr(
-						resourceName, "policy.0.proto", "tcp"),
-					resource.TestCheckResourceAttr(
-						resourceName, "policy.0.port", "443"),
-					resource.TestCheckResourceAttr(
-						resourceName, "policy.0.target", "10.0.0.0/32"),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tfp-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "base_rule", "allow_all"),
+					resource.TestCheckResourceAttr(resourceName, "users.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "users.0", fmt.Sprintf("tfu-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy.0.action", "deny"),
+					resource.TestCheckResourceAttr(resourceName, "policy.0.proto", "tcp"),
+					resource.TestCheckResourceAttr(resourceName, "policy.0.port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "policy.0.target", "10.0.0.0/32"),
 				),
 			},
 			{
@@ -69,7 +60,7 @@ resource "aviatrix_account" "test_account" {
 	account_name       = "tfa-%s"
 	cloud_type         = 1
 	aws_account_number = "%s"
-	aws_iam            = "false"
+	aws_iam            = false
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
@@ -79,12 +70,12 @@ resource "aviatrix_gateway" "test_gw" {
 	gw_name      = "tfg-%s"
 	vpc_id       = "%s"
 	vpc_reg      = "%s"
-	vpc_size     = "t2.micro"
-	vpc_net      = "%s"
-	vpn_access   = "yes"
+	gw_size      = "t2.micro"
+	subnet       = "%s"
+	vpn_access   = true
 	vpn_cidr     = "192.168.43.0/24" 
 	max_vpn_conn = "100"
-	enable_elb   = "yes"
+	enable_elb   = true
 	elb_name     = "tfl-%s"
 }
 resource "aviatrix_vpn_user" "test_vpn_user" {
@@ -105,7 +96,7 @@ resource "aviatrix_vpn_profile" "test_vpn_profile" {
 	}
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"), rName, rName,
+		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName, rName,
 		rName)
 }
 
@@ -115,7 +106,6 @@ func testAccCheckVPNProfileExists(n string, vpnProfile *goaviatrix.Profile) reso
 		if !ok {
 			return fmt.Errorf("VPN Profile Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no VPN Profile ID is set")
 		}
@@ -130,13 +120,11 @@ func testAccCheckVPNProfileExists(n string, vpnProfile *goaviatrix.Profile) reso
 		if err != nil {
 			return err
 		}
-
 		if foundVPNProfile2.Name != rs.Primary.ID {
 			return fmt.Errorf("VPN profile not found")
 		}
 
 		*vpnProfile = *foundVPNProfile
-
 		return nil
 	}
 }
@@ -158,5 +146,6 @@ func testAccCheckVPNProfileDestroy(s *terraform.State) error {
 			return fmt.Errorf("VPN Profile still exists")
 		}
 	}
+
 	return nil
 }

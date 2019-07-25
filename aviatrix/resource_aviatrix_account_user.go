@@ -8,12 +8,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceAccountUser() *schema.Resource {
+func resourceAviatrixAccountUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAccountUserCreate,
-		Read:   resourceAccountUserRead,
-		Update: resourceAccountUserUpdate,
-		Delete: resourceAccountUserDelete,
+		Create: resourceAviatrixAccountUserCreate,
+		Read:   resourceAviatrixAccountUserRead,
+		Update: resourceAviatrixAccountUserUpdate,
+		Delete: resourceAviatrixAccountUserDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -45,8 +45,9 @@ func resourceAccountUser() *schema.Resource {
 	}
 }
 
-func resourceAccountUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountUserCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	user := &goaviatrix.AccountUser{
 		AccountName: d.Get("account_name").(string),
 		Password:    d.Get("password").(string),
@@ -55,17 +56,19 @@ func resourceAccountUserCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[INFO] Creating Aviatrix account user: %#v", user)
+
 	err := client.CreateAccountUser(user)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Account User: %s", err)
 	}
-	log.Printf("[DEBUG] Aviatrix account user %s created", user.UserName)
-	d.SetId(user.UserName)
 
-	return resourceAccountUserRead(d, meta)
+	log.Printf("[DEBUG] Aviatrix account user %s created", user.UserName)
+
+	d.SetId(user.UserName)
+	return resourceAviatrixAccountUserRead(d, meta)
 }
 
-func resourceAccountUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountUserRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	userName := d.Get("username").(string)
@@ -82,7 +85,9 @@ func resourceAccountUserRead(d *schema.ResourceData, meta interface{}) error {
 		AccountName: d.Get("account_name").(string),
 		UserName:    d.Get("username").(string),
 	}
+
 	log.Printf("[INFO] Looking for Aviatrix account user: %#v", user)
+
 	acc, err := client.GetAccountUser(user)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
@@ -97,24 +102,31 @@ func resourceAccountUserRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("username", acc.UserName)
 		d.SetId(acc.UserName)
 	}
+
 	return nil
 }
 
-func resourceAccountUserUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	user := &goaviatrix.AccountUserEdit{
 		AccountName: d.Get("account_name").(string),
 		Email:       d.Get("email").(string),
 		UserName:    d.Get("username").(string),
 	}
+
 	d.Partial(true)
+
 	log.Printf("[INFO] Updating Aviatrix account user: %#v", user)
+
 	if d.HasChange("username") {
 		return fmt.Errorf("update username is not allowed")
 	}
+
 	if d.HasChange("account_name") {
 		return fmt.Errorf("change account name for an existing user is not allowed")
 	}
+
 	if d.HasChange("email") {
 		_, n := d.GetChange("email")
 		if n == nil {
@@ -132,8 +144,9 @@ func resourceAccountUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAccountUserDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountUserDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	user := &goaviatrix.AccountUser{
 		AccountName: d.Get("account_name").(string),
 		UserName:    d.Get("username").(string),
@@ -145,5 +158,6 @@ func resourceAccountUserDelete(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix Account User: %s", err)
 	}
+
 	return nil
 }

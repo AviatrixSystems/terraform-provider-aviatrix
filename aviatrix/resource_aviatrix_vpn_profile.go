@@ -69,8 +69,8 @@ func resourceAviatrixProfile() *schema.Resource {
 }
 
 func resourceAviatrixProfileCreate(d *schema.ResourceData, meta interface{}) error {
-
 	client := meta.(*goaviatrix.Client)
+
 	log.Printf("[INFO] Creating Aviatrix Profile: %v %T", d.Get("users"), d.Get("users"))
 
 	profile := &goaviatrix.Profile{
@@ -84,7 +84,9 @@ func resourceAviatrixProfileCreate(d *schema.ResourceData, meta interface{}) err
 	for _, user := range d.Get("users").([]interface{}) {
 		profile.UserList = append(profile.UserList, user.(string))
 	}
+
 	log.Printf("[INFO] Creating Aviatrix Profile with users: %v", profile.UserList)
+
 	names := d.Get("policy").([]interface{})
 	for _, domain := range names {
 		if domain != nil {
@@ -102,13 +104,15 @@ func resourceAviatrixProfileCreate(d *schema.ResourceData, meta interface{}) err
 			profile.Policy = append(profile.Policy, *profileRule)
 		}
 	}
+
 	log.Printf("[INFO] Creating Aviatrix Profile with Policy: %v", profile.Policy)
+
 	err := client.CreateProfile(profile)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Profile: %s", err)
 	}
-	d.SetId(profile.Name)
 
+	d.SetId(profile.Name)
 	return resourceAviatrixProfileRead(d, meta)
 }
 
@@ -179,12 +183,12 @@ func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[INFO] Generated policies: %v", Policies)
 
 	d.SetId(profile.Name)
-
 	return nil
 }
 
 func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	profile := &goaviatrix.Profile{
 		Name: d.Get("name").(string),
 	}
@@ -263,28 +267,33 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 		d.SetPartial("policy")
 
 	}
-	d.Partial(false)
 
+	d.Partial(false)
 	return nil
 }
 
 func resourceAviatrixProfileDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	profile := &goaviatrix.Profile{
 		Name: d.Get("name").(string),
 	}
 	log.Printf("[INFO] Deleting Aviatrix Profile: %#v", profile)
 	if _, ok := d.GetOk("users"); ok {
 		log.Printf("[INFO] Found users: %#v", d.Get("users"))
+
 		profile.UserList = goaviatrix.ExpandStringList(d.Get("users").([]interface{}))
+
 		err := client.DetachUsers(profile)
 		if err != nil {
 			return fmt.Errorf("failed to detach Users: %s", err)
 		}
 	}
+
 	err := client.DeleteProfile(profile)
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix Profile: %s", err)
 	}
+
 	return nil
 }

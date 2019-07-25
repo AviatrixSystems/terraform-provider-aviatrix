@@ -35,11 +35,10 @@ func TestAccAviatrixFQDN_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFQDNExists(resourceName, &fqdn),
 					resource.TestCheckResourceAttr(resourceName, "fqdn_tag", fmt.Sprintf("tff-%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "fqdn_status", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "fqdn_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "fqdn_mode", "white"),
 					resource.TestCheckResourceAttr(resourceName, "gw_filter_tag_list.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "gw_filter_tag_list.0.gw_name",
-						fmt.Sprintf("tfg-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "gw_filter_tag_list.0.gw_name", fmt.Sprintf("tfg-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "domain_names.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "domain_names.0.fqdn", "facebook.com"),
 					resource.TestCheckResourceAttr(resourceName, "domain_names.0.proto", "tcp"),
@@ -61,7 +60,7 @@ resource "aviatrix_account" "test" {
 	account_name       = "tfa-%s"
 	cloud_type         = 1
 	aws_account_number = "%s"
-	aws_iam            = "false"
+	aws_iam            = false
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
@@ -71,14 +70,14 @@ resource "aviatrix_gateway" "test" {
 	gw_name      = "tfg-%[1]s"
 	vpc_id       = "%[5]s"
 	vpc_reg      = "%[6]s"
-	vpc_size     = "t2.micro"
-	vpc_net      = "%[7]s"
-	enable_nat   = "yes"
+	gw_size      = "t2.micro"
+	subnet       = "%[7]s"
+	enable_snat  = true
 }
 resource "aviatrix_fqdn" "foo" {
-	fqdn_tag    = "tff-%[1]s"
-	fqdn_status = "enabled"
-	fqdn_mode   = "white"
+	fqdn_tag     = "tff-%[1]s"
+	fqdn_enabled = true
+	fqdn_mode    = "white"
 
 	gw_filter_tag_list {
 		gw_name        = aviatrix_gateway.test.gw_name
@@ -92,7 +91,7 @@ resource "aviatrix_fqdn" "foo" {
 	}
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_NET"))
+		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"))
 }
 
 func testAccCheckFQDNExists(n string, fqdn *goaviatrix.FQDN) resource.TestCheckFunc {
@@ -101,7 +100,6 @@ func testAccCheckFQDNExists(n string, fqdn *goaviatrix.FQDN) resource.TestCheckF
 		if !ok {
 			return fmt.Errorf("FQDN Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no FQDN ID is set")
 		}
@@ -116,13 +114,11 @@ func testAccCheckFQDNExists(n string, fqdn *goaviatrix.FQDN) resource.TestCheckF
 		if err != nil {
 			return err
 		}
-
 		if foundFQDN.FQDNTag != rs.Primary.ID {
 			return fmt.Errorf("FQDN not found")
 		}
 
 		*fqdn = *foundFQDN
-
 		return nil
 	}
 }
@@ -143,5 +139,6 @@ func testAccCheckFQDNDestroy(s *terraform.State) error {
 			return fmt.Errorf("FQDN still exists")
 		}
 	}
+
 	return nil
 }

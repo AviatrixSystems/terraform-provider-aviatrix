@@ -59,7 +59,6 @@ func testAccDataSourceAviatrixCallerIdentity(name string) resource.TestCheckFunc
 		if err != nil {
 			return fmt.Errorf("valid CID was not returned. Get version API gave the following Error: %v", err)
 		}
-
 		if !strings.Contains(version, ".") {
 			return fmt.Errorf("valid CID was not returned. Get version API gave the wrong version")
 		}

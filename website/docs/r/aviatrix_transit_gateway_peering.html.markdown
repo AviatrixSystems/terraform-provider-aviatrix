@@ -3,17 +3,17 @@ layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_transit_gateway_peering"
 sidebar_current: "docs-aviatrix-resource-transit_gateway_peering"
 description: |-
-  Creates and manages an Aviatrix transit gateway peering.
+  Creates and manages Aviatrix transit Gateway Peerings
 ---
 
 # aviatrix_transit_gateway_peering
 
-The Account resource allows the creation and management of an Aviatrix transit gateway peering.
+The aviatrix_transit_gateway_peering resource allows the creation and management of Aviatrix Transit Gateway Peerings.
 
 ## Example Usage
 
 ```hcl
-# Create Aviatrix transit gateway peering
+# Create an Aviatrix Transit Gateway Peering
 resource "aviatrix_transit_gateway_peering" "foo" {
   transit_gateway_name1 = "transitGw1"
   transit_gateway_name2 = "transitGw2"
@@ -24,8 +24,8 @@ resource "aviatrix_transit_gateway_peering" "foo" {
 
 The following arguments are supported:
 
-* `transit_gateway_name1` - (Required) The first transit gateway name to make a peer pair
-* `transit_gateway_name2` - (Required) The second transit gateway name to make a peer pair
+* `transit_gateway_name1` - (Required) The first transit gateway name to make a peer pair.
+* `transit_gateway_name2` - (Required) The second transit gateway name to make a peer pair.
 
 ## Import
 

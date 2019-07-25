@@ -9,11 +9,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceTransPeer() *schema.Resource {
+func resourceAviatrixTransPeer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTransPeerCreate,
-		Read:   resourceTransPeerRead,
-		Delete: resourceTransPeerDelete,
+		Create: resourceAviatrixTransPeerCreate,
+		Read:   resourceAviatrixTransPeerRead,
+		Delete: resourceAviatrixTransPeerDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -41,8 +41,9 @@ func resourceTransPeer() *schema.Resource {
 	}
 }
 
-func resourceTransPeerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	transPeer := &goaviatrix.TransPeer{
 		Source:        d.Get("source").(string),
 		Nexthop:       d.Get("nexthop").(string),
@@ -57,10 +58,10 @@ func resourceTransPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(transPeer.Source + "~" + transPeer.Nexthop + "~" + transPeer.ReachableCidr)
-	return resourceTransPeerRead(d, meta)
+	return resourceAviatrixTransPeerRead(d, meta)
 }
 
-func resourceTransPeerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransPeerRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	sourceGw := d.Get("source").(string)
@@ -94,10 +95,11 @@ func resourceTransPeerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("source", transPeer.Source)
 	d.Set("nexthop", transPeer.Nexthop)
 	d.Set("reachable_cidr", transPeer.ReachableCidr)
+
 	return nil
 }
 
-func resourceTransPeerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransPeerDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	transPeer := &goaviatrix.TransPeer{
 		Source:        d.Get("source").(string),
@@ -111,5 +113,6 @@ func resourceTransPeerDelete(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix Transpeer: %s", err)
 	}
+
 	return nil
 }

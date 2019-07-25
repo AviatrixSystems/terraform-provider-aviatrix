@@ -23,3 +23,8 @@ provider "azurerm" {
 #  password      = var.aviatrix_password
 #}
 
+provider "aviatrix" {
+  username      = "admin"
+  password      = module.aviatrix-controller-build.private_ip
+  controller_ip = module.aviatrix-controller-build.public_ip
+}

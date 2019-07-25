@@ -33,11 +33,9 @@ func TestAccAviatrixControllerConfig_basic(t *testing.T) {
 				Config: testAccControllerConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControllerConfigExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "sg_management_account_name",
-						fmt.Sprintf("tfa-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "fqdn_exception_rule", "false"),
 					resource.TestCheckResourceAttr(resourceName, "http_access", "true"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_management", "true"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_management", "false"),
 				),
 			},
 			{
@@ -55,16 +53,15 @@ resource "aviatrix_account" "test_account" {
 	account_name       = "tfa-%s"
 	cloud_type         = 1
 	aws_account_number = "%s"
-	aws_iam            = "false"
+	aws_iam            = false
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
 
 resource "aviatrix_controller_config" "test_controller_config" {
-	sg_management_account_name = aviatrix_account.test_account.account_name
 	fqdn_exception_rule 	   = false
 	http_access         	   = true
-	security_group_management  = true
+	security_group_management  = false
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"))
 }
@@ -75,7 +72,6 @@ func testAccCheckControllerConfigExists(n string) resource.TestCheckFunc {
 		if !ok {
 			return fmt.Errorf("controller config ID Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no controller config ID is set")
 		}
@@ -103,5 +99,6 @@ func testAccCheckControllerConfigDestroy(s *terraform.State) error {
 			return fmt.Errorf("could not retrieve Http Access Status due to err: %v", err)
 		}
 	}
+
 	return nil
 }

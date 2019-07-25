@@ -56,6 +56,7 @@ func resourceAviatrixVPNUser() *schema.Resource {
 
 func resourceAviatrixVPNUserCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	vpnUser := &goaviatrix.VPNUser{
 		VpcID:        d.Get("vpc_id").(string),
 		GwName:       d.Get("gw_name").(string),
@@ -63,6 +64,7 @@ func resourceAviatrixVPNUserCreate(d *schema.ResourceData, meta interface{}) err
 		UserEmail:    d.Get("user_email").(string),
 		SamlEndpoint: d.Get("saml_endpoint").(string),
 	}
+
 	if vpnUser.VpcID == "" {
 		return fmt.Errorf("invalid choice: vpc_id can't be empty")
 	}
@@ -75,6 +77,7 @@ func resourceAviatrixVPNUserCreate(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix VPNUser: %s", err)
 	}
+
 	d.SetId(vpnUser.UserName)
 	return resourceAviatrixVPNUserRead(d, meta)
 }
@@ -88,6 +91,7 @@ func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[DEBUG] Looks like an import, user_name is empty. Id is %s", id)
 		userName = id
 	}
+
 	vpnUser := &goaviatrix.VPNUser{
 		UserName: userName,
 	}
@@ -99,7 +103,9 @@ func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta interface{}) error
 		}
 		return fmt.Errorf("couldn't find Aviatrix VPNUser: %s", err)
 	}
+
 	log.Printf("[TRACE] Reading vpn_user %s: %#v", userName, vu)
+
 	if vu != nil {
 		d.Set("vpc_id", vu.VpcID)
 		d.Set("gw_name", vu.GwName)
@@ -109,11 +115,13 @@ func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta interface{}) error
 		}
 		d.Set("saml_endpoint", vu.SamlEndpoint)
 	}
+
 	return nil
 }
 
 func resourceAviatrixVPNUserDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	vpnUser := &goaviatrix.VPNUser{
 		UserName: d.Get("user_name").(string),
 		VpcID:    d.Get("vpc_id").(string),
@@ -125,5 +133,6 @@ func resourceAviatrixVPNUserDelete(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix VPNUser: %s", err)
 	}
+
 	return nil
 }

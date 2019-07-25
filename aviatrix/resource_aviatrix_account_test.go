@@ -81,14 +81,10 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 					Config: testAccAccountConfigAWS(rInt),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckAccountExists(resourceName, &account),
-						resource.TestCheckResourceAttr(
-							resourceName, "account_name", fmt.Sprintf("tf-testing-aws-%d", rInt)),
-						resource.TestCheckResourceAttr(
-							resourceName, "aws_iam", "false"),
-						resource.TestCheckResourceAttr(
-							resourceName, "aws_access_key", os.Getenv("AWS_ACCESS_KEY")),
-						resource.TestCheckResourceAttr(
-							resourceName, "aws_secret_key", os.Getenv("AWS_SECRET_KEY")),
+						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tf-testing-aws-%d", rInt)),
+						resource.TestCheckResourceAttr(resourceName, "aws_iam", "false"),
+						resource.TestCheckResourceAttr(resourceName, "aws_access_key", os.Getenv("AWS_ACCESS_KEY")),
+						resource.TestCheckResourceAttr(resourceName, "aws_secret_key", os.Getenv("AWS_SECRET_KEY")),
 					),
 				},
 				{
@@ -114,12 +110,9 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 					Config: testAccAccountConfigGCP(rInt),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckAccountExists(resourceName, &account),
-						resource.TestCheckResourceAttr(
-							resourceName, "account_name", fmt.Sprintf("tf-testing-gcp-%d", rInt)),
-						resource.TestCheckResourceAttr(
-							resourceName, "gcloud_project_id", os.Getenv("GCP_ID")),
-						resource.TestCheckResourceAttr(
-							resourceName, "gcloud_project_credentials_filepath", os.Getenv("GCP_CREDENTIALS_FILEPATH")),
+						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tf-testing-gcp-%d", rInt)),
+						resource.TestCheckResourceAttr(resourceName, "gcloud_project_id", os.Getenv("GCP_ID")),
+						resource.TestCheckResourceAttr(resourceName, "gcloud_project_credentials_filepath", os.Getenv("GCP_CREDENTIALS_FILEPATH")),
 					),
 				},
 				{
@@ -147,16 +140,11 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 					Config: testAccAccountConfigARM(rInt),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckAccountExists(resourceName, &account),
-						resource.TestCheckResourceAttr(
-							resourceName, "account_name", fmt.Sprintf("tf-testing-arm-%d", rInt)),
-						resource.TestCheckResourceAttr(
-							resourceName, "arm_subscription_id", os.Getenv("ARM_SUBSCRIPTION_ID")),
-						resource.TestCheckResourceAttr(
-							resourceName, "arm_directory_id", os.Getenv("ARM_DIRECTORY_ID")),
-						resource.TestCheckResourceAttr(
-							resourceName, "arm_application_id", os.Getenv("ARM_APPLICATION_ID")),
-						resource.TestCheckResourceAttr(
-							resourceName, "arm_application_key", os.Getenv("ARM_APPLICATION_KEY")),
+						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tf-testing-arm-%d", rInt)),
+						resource.TestCheckResourceAttr(resourceName, "arm_subscription_id", os.Getenv("ARM_SUBSCRIPTION_ID")),
+						resource.TestCheckResourceAttr(resourceName, "arm_directory_id", os.Getenv("ARM_DIRECTORY_ID")),
+						resource.TestCheckResourceAttr(resourceName, "arm_application_id", os.Getenv("ARM_APPLICATION_ID")),
+						resource.TestCheckResourceAttr(resourceName, "arm_application_key", os.Getenv("ARM_APPLICATION_KEY")),
 					),
 				},
 				{
@@ -176,7 +164,7 @@ resource "aviatrix_account" "aws" {
 	account_name       = "tf-testing-aws-%d"
 	cloud_type         = 1
 	aws_account_number = "%s"
-	aws_iam            = "false"
+	aws_iam            = false
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
@@ -227,13 +215,11 @@ func testAccCheckAccountExists(n string, account *goaviatrix.Account) resource.T
 		if err != nil {
 			return err
 		}
-
 		if foundAccount.AccountName != rs.Primary.ID {
 			return fmt.Errorf("account not found")
 		}
 
 		*account = *foundAccount
-
 		return nil
 	}
 }
@@ -255,5 +241,6 @@ func testAccCheckAccountDestroy(s *terraform.State) error {
 			return fmt.Errorf("account still exists")
 		}
 	}
+
 	return nil
 }

@@ -9,11 +9,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceTransitGatewayPeering() *schema.Resource {
+func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTransitGatewayPeeringCreate,
-		Read:   resourceTransitGatewayPeeringRead,
-		Delete: resourceTransitGatewayPeeringDelete,
+		Create: resourceAviatrixTransitGatewayPeeringCreate,
+		Read:   resourceAviatrixTransitGatewayPeeringRead,
+		Delete: resourceAviatrixTransitGatewayPeeringDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -35,8 +35,9 @@ func resourceTransitGatewayPeering() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayPeeringCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
 		TransitGatewayName1: d.Get("transit_gateway_name1").(string),
 		TransitGatewayName2: d.Get("transit_gateway_name2").(string),
@@ -48,11 +49,12 @@ func resourceTransitGatewayPeeringCreate(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Transit Gateway peering: %s", err)
 	}
+
 	d.SetId(transitGatewayPeering.TransitGatewayName1 + "~" + transitGatewayPeering.TransitGatewayName2)
-	return resourceTransitGatewayPeeringRead(d, meta)
+	return resourceAviatrixTransitGatewayPeeringRead(d, meta)
 }
 
-func resourceTransitGatewayPeeringRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	transitGwName1 := d.Get("transit_gateway_name1").(string)
@@ -79,13 +81,14 @@ func resourceTransitGatewayPeeringRead(d *schema.ResourceData, meta interface{})
 		}
 		return fmt.Errorf("couldn't find Aviatrix Transit Gateway peering: %s", err)
 	}
+
 	d.SetId(transitGatewayPeering.TransitGatewayName1 + "~" + transitGatewayPeering.TransitGatewayName2)
-	log.Printf("[INFO] Found Transit Gateway peering: %#v", d)
 	return nil
 }
 
-func resourceTransitGatewayPeeringDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitGatewayPeeringDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
 		TransitGatewayName1: d.Get("transit_gateway_name1").(string),
 		TransitGatewayName2: d.Get("transit_gateway_name2").(string),
@@ -97,5 +100,6 @@ func resourceTransitGatewayPeeringDelete(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix Transit Gateway peering: %s", err)
 	}
+
 	return nil
 }

@@ -9,12 +9,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceAccount() *schema.Resource {
+func resourceAviatrixAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAccountCreate,
-		Read:   resourceAccountRead,
-		Update: resourceAccountUpdate,
-		Delete: resourceAccountDelete,
+		Create: resourceAviatrixAccountCreate,
+		Read:   resourceAviatrixAccountRead,
+		Update: resourceAviatrixAccountUpdate,
+		Delete: resourceAviatrixAccountDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -36,7 +36,7 @@ func resourceAccount() *schema.Resource {
 				Description: "AWS Account number to associate with Aviatrix account.",
 			},
 			"aws_iam": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "AWS IAM-role based flag.",
 			},
@@ -98,13 +98,13 @@ func resourceAccount() *schema.Resource {
 	}
 }
 
-func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	account := &goaviatrix.Account{
 		AccountName:                           d.Get("account_name").(string),
 		CloudType:                             d.Get("cloud_type").(int),
 		AwsAccountNumber:                      d.Get("aws_account_number").(string),
-		AwsIam:                                d.Get("aws_iam").(string),
 		AwsRoleApp:                            d.Get("aws_role_app").(string),
 		AwsRoleEc2:                            d.Get("aws_role_ec2").(string),
 		AwsAccessKey:                          d.Get("aws_access_key").(string),
@@ -116,6 +116,14 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 		ArmApplicationClientId:                d.Get("arm_application_id").(string),
 		ArmApplicationClientSecret:            d.Get("arm_application_key").(string),
 	}
+
+	awsIam := d.Get("aws_iam").(bool)
+	if awsIam {
+		account.AwsIam = "true"
+	} else {
+		account.AwsIam = "false"
+	}
+
 	if account.CloudType == 1 {
 		if account.AwsAccountNumber == "" {
 			return fmt.Errorf("aws account number is needed for aws cloud")
@@ -125,7 +133,7 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[INFO] Creating Aviatrix account: %#v", account)
-		if aws_iam := d.Get("aws_iam").(string); aws_iam == "true" {
+		if aws_iam := d.Get("aws_iam").(bool); aws_iam {
 			var role_app bytes.Buffer
 			var role_ec2 bytes.Buffer
 			role_app.WriteString("arn:aws:iam::")
@@ -185,16 +193,19 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	} else if account.CloudType != 1 && account.CloudType != 4 && account.CloudType != 8 {
 		return fmt.Errorf("cloud type can only be either aws (1), gcp (4), or arm (8)")
 	}
+
 	err := client.CreateAccount(account)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Account: %s", err)
 	}
+
 	d.SetId(account.AccountName)
-	return resourceAccountRead(d, meta)
+	return resourceAviatrixAccountRead(d, meta)
 }
 
-func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	accountName := d.Get("account_name").(string)
 	if accountName == "" {
 		id := d.Id()
@@ -206,7 +217,9 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	account := &goaviatrix.Account{
 		AccountName: d.Get("account_name").(string),
 	}
+
 	log.Printf("[INFO] Looking for Aviatrix account: %#v", account)
+
 	acc, err := client.GetAccount(account)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
@@ -215,6 +228,7 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		return fmt.Errorf("aviatrix Account: %s", err)
 	}
+
 	if acc != nil {
 		d.Set("account_name", acc.AccountName)
 		d.Set("cloud_type", acc.CloudType)
@@ -224,10 +238,10 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 				//force default setting and save to .tfstate file
 				d.Set("aws_access_key", "")
 				d.Set("aws_secret_key", "")
-				d.Set("aws_iam", "true")
+				d.Set("aws_iam", true)
 			} else {
 				d.Set("aws_access_key", acc.AwsAccessKey)
-				d.Set("aws_iam", "false")
+				d.Set("aws_iam", false)
 			}
 		} else if acc.CloudType == 4 {
 			d.Set("gcloud_project_id", acc.GcloudProjectName)
@@ -236,16 +250,17 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		d.SetId(acc.AccountName)
 	}
+
 	return nil
 }
 
-func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	account := &goaviatrix.Account{
 		AccountName:                           d.Get("account_name").(string),
 		CloudType:                             d.Get("cloud_type").(int),
 		AwsAccountNumber:                      d.Get("aws_account_number").(string),
-		AwsIam:                                d.Get("aws_iam").(string),
 		AwsRoleApp:                            d.Get("aws_role_app").(string),
 		AwsRoleEc2:                            d.Get("aws_role_ec2").(string),
 		AwsAccessKey:                          d.Get("aws_access_key").(string),
@@ -258,14 +273,25 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 		ArmApplicationClientSecret:            d.Get("arm_application_key").(string),
 	}
 
+	awsIam := d.Get("aws_iam").(bool)
+	if awsIam {
+		account.AwsIam = "true"
+	} else {
+		account.AwsIam = "false"
+	}
+
 	log.Printf("[INFO] Updating Aviatrix account: %#v", account)
+
 	d.Partial(true)
+
 	if d.HasChange("cloud_type") {
 		return fmt.Errorf("update cloud_type is not allowed")
 	}
+
 	if d.HasChange("account_name") {
 		return fmt.Errorf("update account name is not allowed")
 	}
+
 	if account.CloudType == 1 {
 		if d.HasChange("aws_account_number") || d.HasChange("aws_access_key") ||
 			d.HasChange("aws_secret_key") || d.HasChange("aws_iam") ||
@@ -346,12 +372,13 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
+
 	d.Partial(false)
-	return resourceAccountRead(d, meta)
+	return resourceAviatrixAccountRead(d, meta)
 }
 
 //for now, deleteing gcp account will not delete the credential file
-func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	account := &goaviatrix.Account{
 		AccountName: d.Get("account_name").(string),
@@ -363,5 +390,6 @@ func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix Account: %s", err)
 	}
+
 	return nil
 }

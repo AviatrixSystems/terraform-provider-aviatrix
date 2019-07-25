@@ -31,18 +31,12 @@ func TestAccAviatrixFirewallTag_basic(t *testing.T) {
 				Config: testAccFirewallTagConfigBasic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallTagExists("aviatrix_firewall_tag.foo", &ftag),
-					resource.TestCheckResourceAttr(
-						resourceName, "firewall_tag", fmt.Sprintf("tft-%d", rInt)),
-					resource.TestCheckResourceAttr(
-						resourceName, "cidr_list.#", "2"),
-					resource.TestCheckResourceAttr(
-						resourceName, "cidr_list.0.cidr", "10.1.0.0/24"),
-					resource.TestCheckResourceAttr(
-						resourceName, "cidr_list.0.cidr_tag_name", "a1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "cidr_list.1.cidr", "10.2.0.0/24"),
-					resource.TestCheckResourceAttr(
-						resourceName, "cidr_list.1.cidr_tag_name", "b1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_tag", fmt.Sprintf("tft-%d", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "cidr_list.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_list.0.cidr", "10.1.0.0/24"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_list.0.cidr_tag_name", "a1"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_list.1.cidr", "10.2.0.0/24"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_list.1.cidr_tag_name", "b1"),
 				),
 			},
 			{
@@ -76,7 +70,6 @@ func testAccCheckFirewallTagExists(n string, firewallTag *goaviatrix.FirewallTag
 		if !ok {
 			return fmt.Errorf("firewall tag Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no tag ID is set")
 		}
@@ -91,13 +84,11 @@ func testAccCheckFirewallTagExists(n string, firewallTag *goaviatrix.FirewallTag
 		if err != nil {
 			return err
 		}
-
 		if foundTag.Name != rs.Primary.ID {
 			return fmt.Errorf("firewall tag not found")
 		}
 
 		*firewallTag = *foundTag
-
 		return nil
 	}
 }
@@ -118,5 +109,6 @@ func testAccCheckFirewallTagDestroy(s *terraform.State) error {
 			return fmt.Errorf("firewall tag still exists after destroy")
 		}
 	}
+
 	return nil
 }

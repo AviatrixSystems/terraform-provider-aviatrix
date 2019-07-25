@@ -8,12 +8,12 @@ description: |-
 
 # aviatrix_vgw_conn
 
-The AviatrixVGWConn resource manager the Aviatrix Transit Gateway to VGW Connection
+The aviatrix_vgw_conn resource managers the Aviatrix Transit Gateway to VGW Connection.
 
 ## Example Usage
 
 ```hcl
-# Manage Aviatrix Controller Upgrade process
+# Create an Aviatrix Vgw Connection
 resource "aviatrix_vgw_conn" "test_vgw_conn" {
   conn_name        = "my-connection-vgw-to-tgw"
   gw_name          = "my-transit-gw"
@@ -27,13 +27,13 @@ resource "aviatrix_vgw_conn" "test_vgw_conn" {
 
 The following arguments are supported:
 
-* `conn_name` - (Required) The name of for Transit GW to VGW connection connection which is going to be created. Example: "my-connection-vgw-to-tgw"
-* `gw_name` - (Required) Name of the Transit Gateway. Example: "my-transit-gw"
-* `vpc_id` - (Required) VPC-ID where the Transit Gateway is located. Example: AWS: "vpc-abcd1234"
-* `bgp_vgw_id` - (Required) Id of AWS's VGW that is used for this connection. Example: "vgw-abcd1234"
-* `bgp_local_as_num` - (Required) BGP Local ASN (Autonomous System Number). Integer between 1-65535. Example: "65001"
+* `conn_name` - (Required) The name of for Transit GW to VGW connection connection which is going to be created. Example: "my-connection-vgw-to-tgw".
+* `gw_name` - (Required) Name of the Transit Gateway. Example: "my-transit-gw".
+* `vpc_id` - (Required) VPC-ID where the Transit Gateway is located. Example: AWS: "vpc-abcd1234".
+* `bgp_vgw_id` - (Required) Id of AWS's VGW that is used for this connection. Example: "vgw-abcd1234".
+* `bgp_local_as_num` - (Required) BGP Local ASN (Autonomous System Number). Integer between 1-65535. Example: "65001".
 * `enable_advertise_transit_cidr` - (Optional) Switch to Enable/Disable advertise transit VPC network CIDR for a vgw connection.
-* `bgp_manual_spoke_advertise_cidrs` - (Optional) Intended CIDR list to advertise to VGW. Example: "10.2.0.0/16,10.4.0.0/16"
+* `bgp_manual_spoke_advertise_cidrs` - (Optional) Intended CIDR list to advertise to VGW. Example: "10.2.0.0/16,10.4.0.0/16".
 
 -> **NOTE:** 
 

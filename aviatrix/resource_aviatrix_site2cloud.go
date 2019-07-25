@@ -82,9 +82,9 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Description: "Local Subnet CIDR.",
 			},
 			"ha_enabled": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     "no",
+				Default:     false,
 				Description: "Specify whether enabling HA or not.",
 			},
 			"backup_remote_subnet_cidr": {
@@ -204,6 +204,7 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 
 func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	s2c := &goaviatrix.Site2Cloud{
 		GwName:              d.Get("primary_cloud_gateway_name").(string),
 		BackupGwName:        d.Get("backup_gateway_name").(string),
@@ -218,9 +219,15 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		BackupPreSharedKey:  d.Get("backup_pre_shared_key").(string),
 		RemoteSubnet:        d.Get("remote_subnet_cidr").(string),
 		LocalSubnet:         d.Get("local_subnet_cidr").(string),
-		HAEnabled:           d.Get("ha_enabled").(string),
 		RemoteSubnetVirtual: d.Get("remote_subnet_virtual").(string),
 		LocalSubnetVirtual:  d.Get("local_subnet_virtual").(string),
+	}
+
+	haEnabled := d.Get("ha_enabled").(bool)
+	if haEnabled {
+		s2c.HAEnabled = "yes"
+	} else {
+		s2c.HAEnabled = "no"
 	}
 
 	if s2c.ConnType != "mapped" && s2c.ConnType != "unmapped" {
@@ -336,6 +343,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Site2Cloud: %#v", s2c)
+
 	err := client.CreateSite2Cloud(s2c)
 	if err != nil {
 		return fmt.Errorf("failed Site2Cloud create: %s", err)
@@ -398,12 +406,12 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("local_subnet_cidr", s2c.LocalSubnet)
 		d.Set("remote_subnet_cidr", s2c.RemoteSubnet)
 		if s2c.HAEnabled == "disabled" {
-			d.Set("ha_enabled", "no")
+			d.Set("ha_enabled", false)
 		} else {
-			d.Set("ha_enabled", "yes")
+			d.Set("ha_enabled", true)
 		}
 
-		if d.Get("ha_enabled") == "yes" {
+		if d.Get("ha_enabled").(bool) {
 			d.Set("remote_gateway_ip", s2c.RemoteGwIP)
 			d.Set("backup_remote_gateway_ip", s2c.RemoteGwIP2)
 			d.Set("primary_cloud_gateway_name", s2c.GwName)
@@ -454,12 +462,15 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 
 func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	editSite2cloud := &goaviatrix.EditSite2Cloud{
 		GwName:   d.Get("primary_cloud_gateway_name").(string),
 		VpcID:    d.Get("vpc_id").(string),
 		ConnName: d.Get("connection_name").(string),
 	}
+
 	d.Partial(true)
+
 	if d.HasChange("vpc_id") {
 		return fmt.Errorf("updating vpc_id is not allowed")
 	}
@@ -534,6 +545,7 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	log.Printf("[INFO] Updating Aviatrix Site2Cloud: %#v", editSite2cloud)
+
 	if ok := d.HasChange("local_subnet_cidr"); ok {
 		editSite2cloud.CloudSubnetCidr = d.Get("local_subnet_cidr").(string)
 		editSite2cloud.NetworkType = "1"
@@ -543,6 +555,7 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		d.SetPartial("local_subnet_cidr")
 	}
+
 	if ok := d.HasChange("remote_subnet_cidr"); ok {
 		editSite2cloud.CloudSubnetCidr = d.Get("remote_subnet_cidr").(string)
 		editSite2cloud.NetworkType = "2"
@@ -552,6 +565,7 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		d.SetPartial("remote_subnet_cidr")
 	}
+
 	if d.HasChange("enable_dead_peer_detection") {
 		s2c := &goaviatrix.Site2Cloud{
 			VpcID:      d.Get("vpc_id").(string),
@@ -579,6 +593,7 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 
 func resourceAviatrixSite2CloudDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	s2c := &goaviatrix.Site2Cloud{
 		VpcID:      d.Get("vpc_id").(string),
 		TunnelName: d.Get("connection_name").(string),
@@ -590,5 +605,6 @@ func resourceAviatrixSite2CloudDelete(d *schema.ResourceData, meta interface{}) 
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix Site2Cloud: %s", err)
 	}
+
 	return nil
 }

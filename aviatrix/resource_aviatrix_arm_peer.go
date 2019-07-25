@@ -9,11 +9,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceARMPeer() *schema.Resource {
+func resourceAviatrixARMPeer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceARMPeerCreate,
-		Read:   resourceARMPeerRead,
-		Delete: resourceARMPeerDelete,
+		Create: resourceAviatrixARMPeerCreate,
+		Read:   resourceAviatrixARMPeerRead,
+		Delete: resourceAviatrixARMPeerDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -71,8 +71,9 @@ func resourceARMPeer() *schema.Resource {
 	}
 }
 
-func resourceARMPeerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixARMPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	armPeer := &goaviatrix.ARMPeer{
 		AccountName1: d.Get("account_name1").(string),
 		AccountName2: d.Get("account_name2").(string),
@@ -83,16 +84,17 @@ func resourceARMPeerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[INFO] Creating Aviatrix arm_peer: %#v", armPeer)
+
 	err := client.CreateARMPeer(armPeer)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix ARMPeer: %s", err)
 	}
-	d.SetId(armPeer.VNet1 + "~" + armPeer.VNet2)
 
-	return resourceARMPeerRead(d, meta)
+	d.SetId(armPeer.VNet1 + "~" + armPeer.VNet2)
+	return resourceAviatrixARMPeerRead(d, meta)
 }
 
-func resourceARMPeerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixARMPeerRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	vNet1 := d.Get("vnet_name_resource_group1").(string)
@@ -118,7 +120,9 @@ func resourceARMPeerRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		return fmt.Errorf("couldn't find Aviatrix ARMPeer: %s", err)
 	}
+
 	log.Printf("[TRACE] Reading arm_peer: %#v", armP)
+
 	if armP != nil {
 		d.Set("vnet_name_resource_group1", armP.VNet1)
 		d.Set("vnet_name_resource_group2", armP.VNet2)
@@ -138,8 +142,9 @@ func resourceARMPeerRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceARMPeerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixARMPeerDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	armPeer := &goaviatrix.ARMPeer{
 		VNet1: d.Get("vnet_name_resource_group1").(string),
 		VNet2: d.Get("vnet_name_resource_group2").(string),
@@ -151,5 +156,6 @@ func resourceARMPeerDelete(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix ARMPeer: %s", err)
 	}
+
 	return nil
 }

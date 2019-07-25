@@ -54,9 +54,11 @@ func dataSourceAviatrixGateway() *schema.Resource {
 
 func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	gateway := &goaviatrix.Gateway{
 		GwName: d.Get("gw_name").(string),
 	}
+
 	if d.Get("account_name").(string) != "" {
 		gateway.AccountName = d.Get("account_name").(string)
 	}
@@ -79,6 +81,7 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("vpc_net", gw.VpcNet)
 		d.Set("public_ip", gw.PublicIP)
 	}
+
 	d.SetId(gateway.GwName)
 	return nil
 }
