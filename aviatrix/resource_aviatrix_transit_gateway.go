@@ -162,7 +162,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	}
 
 	insaneMode := d.Get("insane_mode").(bool)
-	if insaneMode == true {
+	if insaneMode {
 		if cloudType != 1 {
 			return fmt.Errorf("insane_mode is only support for aws (cloud_type = 1)")
 		}
@@ -173,7 +173,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("ha_insane_mode_az needed if insane_mode is enabled and ha_subnet is set")
 		}
 	}
-	if insaneMode == true {
+	if insaneMode {
 		gateway.InsaneMode = "on"
 
 		// Append availability zone to subnet
@@ -210,7 +210,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			GwName:   d.Get("gw_name").(string),
 			HASubnet: haSubnet,
 		}
-		if insaneMode == true {
+		if insaneMode {
 			var haStrs []string
 			insaneModeHaAz := d.Get("ha_insane_mode_az").(string)
 			haStrs = append(haStrs, haSubnet, insaneModeHaAz)
@@ -222,11 +222,12 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 		err = client.EnableHaTransitVpc(transitGateway)
 		if err != nil {
-			return fmt.Errorf("failed to enable2 HA Aviatrix Transit Gateway: %s", err)
+			return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
 		}
 
 		//Resize HA Gateway
 		log.Printf("[INFO]Resizing Transit HA Gateway: %#v", haGwSize)
+
 		if haGwSize != gateway.VpcSize {
 			if haGwSize == "" {
 				return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
@@ -237,8 +238,10 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 				GwName:    d.Get("gw_name").(string) + "-hagw",
 			}
 			haGateway.GwSize = d.Get("ha_gw_size").(string)
-			err := client.UpdateGateway(haGateway)
+
 			log.Printf("[INFO] Resizing Transit HA GAteway size to: %s ", haGateway.GwSize)
+
+			err := client.UpdateGateway(haGateway)
 			if err != nil {
 				return fmt.Errorf("failed to update Aviatrix Transit HA Gateway size: %s", err)
 			}
@@ -258,6 +261,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			ResourceName: d.Get("gw_name").(string),
 			TagList:      gateway.TagList,
 		}
+
 		err = client.AddTags(tags)
 		if err != nil {
 			return fmt.Errorf("failed to add tags: %s", err)
@@ -268,10 +272,11 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	if enableHybridConnection && cloudType != 1 {
 		return fmt.Errorf("'enable_hybrid_connection' is only supported for AWS cloud type 1")
 	}
-	if enableHybridConnection == true {
+	if enableHybridConnection {
 		if cloudType != 1 {
 			return fmt.Errorf("'enable_hybrid_connection' is only supported for AWS cloud type 1")
 		}
+
 		err := client.AttachTransitGWForHybrid(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to enable transit GW for Hybrid: %s", err)
@@ -289,6 +294,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		gw := &goaviatrix.Gateway{
 			GwName: gateway.GwName,
 		}
+
 		err := client.EnableSNat(gw)
 		if err != nil {
 			return fmt.Errorf("failed to enable SNAT: %s", err)
@@ -303,7 +309,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAviatrixTransitVpcReadIfRequired(d, meta, &flag)
+	return resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 }
 
 func resourceAviatrixTransitGatewayReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
@@ -346,11 +352,13 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("account_name", gw.AccountName)
 		d.Set("gw_name", gw.GwName)
 		d.Set("subnet", gw.VpcNet)
+
 		if gw.CloudType == 1 {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 		} else if gw.CloudType == 8 {
 			d.Set("vpc_id", gw.VpcID)
 		}
+
 		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("gw_size", gw.GwSize)
 
@@ -384,6 +392,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		if err != nil {
 			return fmt.Errorf("couldn't get Aviatrix Transit Gateway: %s", err)
 		}
+
 		d.Set("enable_firenet_interfaces", gwDetail.DMZEnabled)
 	}
 
@@ -393,10 +402,12 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
 		}
+
 		tagList, err := client.GetTags(tags)
 		if err != nil {
 			return fmt.Errorf("unable to read tag_list for gateway: %v due to %v", gateway.GwName, err)
 		}
+
 		var tagListStr []string
 		if _, ok := d.GetOk("tag_list"); ok {
 			tagList1 := d.Get("tag_list").([]interface{})
@@ -427,8 +438,10 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 		return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway: %s", err)
 	}
+
 	d.Set("ha_subnet", haGw.VpcNet)
 	d.Set("ha_gw_size", haGw.GwSize)
+
 	if haGw.InsaneMode == "yes" {
 		d.Set("ha_insane_mode_az", haGw.GatewayZone)
 	} else {
@@ -479,10 +492,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("gw_size") {
 		gateway.GwSize = d.Get("gw_size").(string)
+
 		err := client.UpdateGateway(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to update Aviatrix Transit Gateway: %s", err)
 		}
+
 		d.SetPartial("gw_size")
 	}
 	if d.HasChange("ha_subnet") || d.HasChange("ha_insane_mode_az") {
@@ -490,6 +505,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			GwName:   d.Get("gw_name").(string),
 			HASubnet: d.Get("ha_subnet").(string),
 		}
+
 		if d.Get("insane_mode").(bool) == true {
 			var haStrs []string
 			insaneModeHaAz := d.Get("ha_insane_mode_az").(string)
