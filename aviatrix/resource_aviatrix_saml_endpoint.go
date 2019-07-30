@@ -3,7 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
-	
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
@@ -21,17 +21,19 @@ func resourceSamlEndpoint() *schema.Resource {
 			"endpoint_name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "SAML Endpoint Name",
 			},
 			"idp_metadata_type": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Type of IDP Metadata",
 			},
 			"idp_metadata": {
 				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
+				ForceNew:    true,
 				Description: "IDP Metadata",
 			},
 		},
@@ -40,17 +42,19 @@ func resourceSamlEndpoint() *schema.Resource {
 
 func resourceSamlEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	samlEndpoint := &goaviatrix.SamlEndpoint{
-		EndPointName:     d.Get("endpoint_name").(string),
-		IdpMetadataType:  d.Get("idp_metadata_type").(string),
-		IdpMetadata:      d.Get("idp_metadata").(string),
-		EntityIdType:     "Hostname",
+		EndPointName:    d.Get("endpoint_name").(string),
+		IdpMetadataType: d.Get("idp_metadata_type").(string),
+		IdpMetadata:     d.Get("idp_metadata").(string),
+		EntityIdType:    "Hostname",
 	}
 
 	err := client.CreateSamlEndpoint(samlEndpoint)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix SAML endpoint: %s", err)
 	}
+
 	d.SetId(samlEndpoint.EndPointName)
 	return resourceSamlEndpointRead(d, meta)
 }
@@ -70,6 +74,7 @@ func resourceSamlEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	samlEndpoint := &goaviatrix.SamlEndpoint{
 		EndPointName: d.Get("endpoint_name").(string),
 	}
+
 	saml, err := client.GetSamlEndpoint(samlEndpoint)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
@@ -78,11 +83,13 @@ func resourceSamlEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		return fmt.Errorf("couldn't find Aviatrix SAML Endpoint: %s", err)
 	}
+
 	log.Printf("[INFO] Found Aviatrix SAML Endpoint: %#v", saml)
 
 	d.Set("endpoint_name", saml.EndPointName)
 	d.Set("idp_metadata_type", saml.IdpMetadataType)
 	d.Set("idp_metadata", saml.IdpMetadata)
+
 	d.SetId(saml.EndPointName)
 	log.Printf("[INFO] Found SAML Endpoint: %#v", d)
 	return nil
@@ -90,16 +97,19 @@ func resourceSamlEndpointRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceSamlEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	samlEndpoint := &goaviatrix.SamlEndpoint{
-		EndPointName:     d.Get("endpoint_name").(string),
+		EndPointName: d.Get("endpoint_name").(string),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix SAML Endpoint: %#v", samlEndpoint)
 
 	samlEndpoint.EndPointName = d.Get("endpoint_name").(string)
+
 	err := client.DeleteSamlEndpoint(samlEndpoint)
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix SAML Endpoint: %s", err)
 	}
+
 	return nil
 }

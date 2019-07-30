@@ -3,7 +3,7 @@ layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_saml_endpoint"
 sidebar_current: "docs-aviatrix-resource-saml-endpoint"
 description: |-
-  Creates and manages an Aviatrix SAML Endpoint.
+  Creates and manages an Aviatrix SAML Endpoint
 ---
 
 # aviatrix_saml_endpoint

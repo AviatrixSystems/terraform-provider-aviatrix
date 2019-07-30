@@ -1,21 +1,21 @@
 package goaviatrix
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"errors"
-	"log"
-	"net/url"
-	"net/http"
-    "crypto/tls"
 	"io/ioutil"
+	"log"
+	"net/http"
+	"net/url"
 	"time"
 )
 
 type SamlEndpoint struct {
-	EndPointName     string `json:"name"`
-	IdpMetadataType  string `json:"idp_metadata_type"`
-	IdpMetadata      string `json:"idp_metadata"`
-	EntityIdType     string `json:"entity_id"`
+	EndPointName    string `json:"name"`
+	IdpMetadataType string `json:"idp_metadata_type"`
+	IdpMetadata     string `json:"idp_metadata"`
+	EntityIdType    string `json:"entity_id"`
 }
 
 type SamlList struct {
@@ -31,9 +31,9 @@ type SamlList struct {
 }
 
 type SamlListResp struct {
-	Return  bool         `json:"return"`
-	Results []SamlList   `json:"results"`
-	Reason  string       `json:"reason"`
+	Return  bool       `json:"return"`
+	Results []SamlList `json:"results"`
+	Reason  string     `json:"reason"`
 }
 
 func (c *Client) CreateSamlEndpoint(samlEndpoint *SamlEndpoint) error {
@@ -91,7 +91,7 @@ func (c *Client) GetSamlEndpoint(samlEndpoint *SamlEndpoint) (*SamlEndpoint, err
 			log.Printf("[DEBUG] Found SAML endpoint %s: %#v", samlEndpoint.EndPointName, samlList[i])
 			tr := &http.Transport{
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-    		}
+			}
 			client := &http.Client{Transport: tr}
 			time.Sleep(5 * time.Second)
 			resp, err := client.Get(samlList[i].IdpMetadataUrl)
@@ -106,10 +106,10 @@ func (c *Client) GetSamlEndpoint(samlEndpoint *SamlEndpoint) (*SamlEndpoint, err
 					return nil, errors.New("Cannot read IDP Metadata: " + err.Error())
 				}
 				responseSamlEndpoint := SamlEndpoint{
-					EndPointName: samlList[i].Name,
-					IdpMetadata: string(bodyBytes),
+					EndPointName:    samlList[i].Name,
+					IdpMetadata:     string(bodyBytes),
 					IdpMetadataType: "Text",
-					EntityIdType: "Hostname",
+					EntityIdType:    "Hostname",
 				}
 				return &responseSamlEndpoint, nil
 			} else {
