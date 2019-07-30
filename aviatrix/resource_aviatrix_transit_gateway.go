@@ -190,7 +190,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 	insaneMode := d.Get("insane_mode").(bool)
 	if insaneMode {
-		if cloudType != 1 || cloudType != 8 {
+		if cloudType != 1 && cloudType != 8 {
 			return fmt.Errorf("insane_mode is only supported for aws and arm (cloud_type = 1 or 8)")
 		}
 		if cloudType == 1 {
