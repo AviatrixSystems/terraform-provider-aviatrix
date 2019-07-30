@@ -198,17 +198,17 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	flag := false
 	defer resourceAviatrixSpokeGatewayReadIfRequired(d, meta, &flag)
 
-	if singleAZ {
+	if !singleAZ {
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName:   d.Get("gw_name").(string),
-			SingleAZ: "enabled",
+			SingleAZ: "disabled",
 		}
 
-		log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
+		log.Printf("[INFO] Disable Single AZ GW HA: %#v", singleAZGateway)
 
-		err := client.EnableSingleAZGateway(singleAZGateway)
+		err := client.DisableSingleAZGateway(singleAZGateway)
 		if err != nil {
-			return fmt.Errorf("failed to create single AZ GW HA: %s", err)
+			return fmt.Errorf("failed to disable single AZ GW HA: %s", err)
 		}
 	}
 
@@ -489,6 +489,8 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("failed to disable single AZ GW HA: %s", err)
 			}
 		}
+
+		d.SetPartial("single_az_ha")
 	}
 
 	if d.HasChange("tag_list") && gateway.CloudType == 1 {
