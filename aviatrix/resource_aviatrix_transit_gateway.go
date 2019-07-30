@@ -190,24 +190,23 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 	insaneMode := d.Get("insane_mode").(bool)
 	if insaneMode {
-		if cloudType != 1 {
-			return fmt.Errorf("insane_mode is only support for aws (cloud_type = 1)")
+		if cloudType != 1 || cloudType != 8 {
+			return fmt.Errorf("insane_mode is only supported for aws and arm (cloud_type = 1 or 8)")
 		}
-		if d.Get("insane_mode_az").(string) == "" {
-			return fmt.Errorf("insane_mode_az needed if insane_mode is enabled")
+		if cloudType == 1 {
+			if d.Get("insane_mode_az").(string) == "" {
+				return fmt.Errorf("insane_mode_az needed if insane_mode is enabled for aws cloud")
+			}
+			if d.Get("ha_subnet").(string) != "" && d.Get("ha_insane_mode_az").(string) == "" {
+				return fmt.Errorf("ha_insane_mode_az needed if insane_mode is enabled for aws cloud and ha_subnet is set")
+			}
+			// Append availability zone to subnet
+			var strs []string
+			insaneModeAz := d.Get("insane_mode_az").(string)
+			strs = append(strs, gateway.Subnet, insaneModeAz)
+			gateway.Subnet = strings.Join(strs, "~~")
 		}
-		if d.Get("ha_subnet").(string) != "" && d.Get("ha_insane_mode_az").(string) == "" {
-			return fmt.Errorf("ha_insane_mode_az needed if insane_mode is enabled and ha_subnet is set")
-		}
-	}
-	if insaneMode {
 		gateway.InsaneMode = "on"
-
-		// Append availability zone to subnet
-		var strs []string
-		insaneModeAz := d.Get("insane_mode_az").(string)
-		strs = append(strs, gateway.Subnet, insaneModeAz)
-		gateway.Subnet = strings.Join(strs, "~~")
 	} else {
 		gateway.InsaneMode = "off"
 	}
@@ -422,7 +421,11 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 		if gw.InsaneMode == "yes" {
 			d.Set("insane_mode", true)
-			d.Set("insane_mode_az", gw.GatewayZone)
+			if gw.CloudType == 1 {
+				d.Set("insane_mode_az", gw.GatewayZone)
+			} else {
+				d.Set("insane_mode_az", "")
+			}
 		} else {
 			d.Set("insane_mode", false)
 			d.Set("insane_mode_az", "")
@@ -484,7 +487,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("ha_gw_size", haGw.GwSize)
 	}
 
-	if haGw.InsaneMode == "yes" {
+	if haGw.InsaneMode == "yes" && haGw.CloudType == 1 {
 		d.Set("ha_insane_mode_az", haGw.GatewayZone)
 	} else {
 		d.Set("ha_insane_mode_az", "")
@@ -552,7 +555,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			transitGateway.Eip = d.Get("ha_eip").(string)
 		}
 
-		if d.Get("insane_mode").(bool) == true {
+		if d.Get("insane_mode").(bool) == true && haGateway.CloudType == 1 {
 			var haStrs []string
 			insaneModeHaAz := d.Get("ha_insane_mode_az").(string)
 
@@ -676,7 +679,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			VpcRegion:   d.Get("vpc_reg").(string),
 		}
 		connectedTransit := d.Get("connected_transit").(bool)
-
 		if connectedTransit {
 			err := client.EnableConnectedTransit(transitGateway)
 			if err != nil {
@@ -698,6 +700,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			if err == goaviatrix.ErrNotFound {
 				d.Set("ha_gw_size", "")
 				d.Set("ha_subnet", "")
+				d.Set("ha_insane_mode_az", "")
 				return nil
 			}
 			return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway while trying to update HA Gw "+
@@ -738,7 +741,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 
-		d.SetPartial("gw_size")
+		d.SetPartial("enable_snat")
 	}
 
 	if d.HasChange("enable_firenet_interfaces") {
@@ -757,6 +760,8 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("failed to remove transit GW for FireNet Interfaces: %s", err)
 			}
 		}
+
+		d.SetPartial("enable_firenet_interfaces")
 	}
 
 	d.Partial(false)
@@ -774,7 +779,7 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 	log.Printf("[INFO] Deleting Aviatrix Transit Gateway: %#v", gateway)
 
 	enableFireNetInterfaces := d.Get("enable_firenet_interfaces").(bool)
-	if enableFireNetInterfaces == true {
+	if enableFireNetInterfaces {
 		gw := &goaviatrix.TransitVpc{
 			CloudType: d.Get("cloud_type").(int),
 			GwName:    d.Get("gw_name").(string),
@@ -782,7 +787,7 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 
 		err := client.DisableGatewayFireNetInterfaces(gw)
 		if err != nil {
-			return fmt.Errorf("failed to disable transit GW for FireNet Interfaces: %s", err)
+			return fmt.Errorf("failed to disable Aviatrix Transit Gateway for FireNet Interfaces: %s", err)
 		}
 	}
 
