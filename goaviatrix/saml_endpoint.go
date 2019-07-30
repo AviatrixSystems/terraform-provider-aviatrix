@@ -16,6 +16,7 @@ type SamlEndpoint struct {
 	IdpMetadataType string `json:"idp_metadata_type"`
 	IdpMetadata     string `json:"idp_metadata"`
 	EntityIdType    string `json:"entity_id"`
+	CustomEntityId  string `json:"custom_entity_id"`
 }
 
 type SamlList struct {

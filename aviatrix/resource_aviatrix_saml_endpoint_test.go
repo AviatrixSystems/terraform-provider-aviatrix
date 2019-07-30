@@ -33,6 +33,7 @@ func preAvxSamlEndpointCheck(t *testing.T, msgCommon string) (string, string) {
 
 func TestAccAviatrixSamlEndpoint_basic(t *testing.T) {
 	var samlEndpoint goaviatrix.SamlEndpoint
+
 	rName := acctest.RandString(5)
 	resourceName := "aviatrix_saml_endpoint.foo"
 
@@ -53,12 +54,9 @@ func TestAccAviatrixSamlEndpoint_basic(t *testing.T) {
 				Config: testAccSamlEndpointConfigBasic(rName, idpMetadata, idpMetadataType),
 				Check: resource.ComposeTestCheckFunc(
 					tesAccCheckSamlEndpointExists("aviatrix_saml_endpoint.foo", &samlEndpoint),
-					resource.TestCheckResourceAttr(
-						resourceName, "endpoint_name", fmt.Sprintf("%s", rName)),
-					resource.TestCheckResourceAttr(
-						resourceName, "idp_metadata", fmt.Sprintf("%s", idpMetadata)),
-					resource.TestCheckResourceAttr(
-						resourceName, "idp_metadata_type", fmt.Sprintf("%s", idpMetadataType)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_name", fmt.Sprintf("%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "idp_metadata", fmt.Sprintf("%s", idpMetadata)),
+					resource.TestCheckResourceAttr(resourceName, "idp_metadata_type", fmt.Sprintf("%s", idpMetadataType)),
 				),
 			},
 			{
@@ -73,10 +71,9 @@ func TestAccAviatrixSamlEndpoint_basic(t *testing.T) {
 func testAccSamlEndpointConfigBasic(rName string, idpMetadata string, idpMetadataType string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_saml_endpoint" "foo" {
-    endpoint_name     = "%s"
-    idp_metadata_type = "%s"
-    idp_metadata      = "%s"
-    entity_id         = "Hostname"
+	endpoint_name     = "%s"
+	idp_metadata_type = "%s"
+	idp_metadata      = "%s"
 }
 	`, rName, idpMetadataType, idpMetadata)
 }
@@ -87,7 +84,6 @@ func tesAccCheckSamlEndpointExists(n string, samlEndpoint *goaviatrix.SamlEndpoi
 		if !ok {
 			return fmt.Errorf("aviatrix Saml Endpoint Not Created: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no aviatrix Saml Endpoint ID is set")
 		}
@@ -99,11 +95,9 @@ func tesAccCheckSamlEndpointExists(n string, samlEndpoint *goaviatrix.SamlEndpoi
 		}
 
 		_, err := client.GetSamlEndpoint(foundSamlEndpoint)
-
 		if err != nil {
 			return err
 		}
-
 		if foundSamlEndpoint.EndPointName != rs.Primary.Attributes["endpoint_name"] {
 			return fmt.Errorf("endpoint_name Not found in created attributes")
 		}
@@ -121,11 +115,12 @@ func testAccCheckSamlEndpointDestroy(s *terraform.State) error {
 		if rs.Type != "aviatrix_saml_endpoint" {
 			continue
 		}
+
 		foundSamlEndpoint := &goaviatrix.SamlEndpoint{
 			EndPointName: rs.Primary.Attributes["endpoint_name"],
 		}
-		_, err := client.GetSamlEndpoint(foundSamlEndpoint)
 
+		_, err := client.GetSamlEndpoint(foundSamlEndpoint)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("aviatrix Saml Endpoint still exists")
 		}
