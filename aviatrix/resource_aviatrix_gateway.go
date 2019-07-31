@@ -56,13 +56,18 @@ func resourceAviatrixGateway() *schema.Resource {
 				Required:    true,
 				Description: "A VPC Network address range selected from one of the available network ranges.",
 			},
+			"insane_mode_az": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "AZ of subnet being created for Insane Mode Gateway. Required if insane_mode is set.",
+			},
 			"enable_snat": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
 				Description: "Enable Source NAT for this container.",
 			},
-
 			"vpn_access": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -217,13 +222,19 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "Public Subnet Information while creating Peering HA Gateway, only subnet is accepted. Required to create peering ha gateway if cloud_type = 1 or 8 (aws or arm)",
+				Description: "Public Subnet Information while creating Peering HA Gateway, only subnet is accepted. Required to create peering ha gateway if cloud_type = 1 or 8 (AWS or ARM)",
 			},
 			"peering_ha_zone": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
 				Description: "Zone information for creating Peering HA Gateway. Required to create peering ha gateway if cloud_type = 4 (gcp)",
+			},
+			"peering_ha_insane_mode_az": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "AZ of subnet being created for Insane Mode Peering HA Gateway. Required if insane_mode is set.",
 			},
 			"peering_ha_eip": {
 				Type:        schema.TypeString,
@@ -262,6 +273,12 @@ func resourceAviatrixGateway() *schema.Resource {
 				Optional:    true,
 				Default:     nil,
 				Description: "Instance tag of cloud provider.",
+			},
+			"insane_mode": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable Insane Mode for Gateway. Valid values: true, false.",
 			},
 			"public_ip": {
 				Type:        schema.TypeString,
@@ -388,7 +405,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		// for gcp, rest api asks for "zone" rather than vpc region
 		gateway.Zone = d.Get("vpc_reg").(string)
 	} else {
-		return fmt.Errorf("invalid cloud type, it can only be aws (1), gcp (4), or arm (8)")
+		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), or ARM (8)")
 	}
 	if gateway.OtpMode != "" && gateway.OtpMode != "2" && gateway.OtpMode != "3" {
 		return fmt.Errorf("otp_mode can only be '2' or '3' or empty string")
@@ -444,6 +461,29 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("can not enable elb without vpn access set to yes")
 	}
 
+	insaneMode := d.Get("insane_mode").(bool)
+	if insaneMode {
+		if gateway.CloudType != 1 && gateway.CloudType != 8 {
+			return fmt.Errorf("insane_mode is only supported for AWS and ARM (cloud_type = 1 or 8)")
+		}
+		if gateway.CloudType == 1 {
+			if d.Get("insane_mode_az").(string) == "" {
+				return fmt.Errorf("insane_mode_az needed if insane_mode is enabled for AWS cloud")
+			}
+			if d.Get("peering_ha_subnet").(string) != "" && d.Get("peering_ha_insane_mode_az").(string) == "" {
+				return fmt.Errorf("ha_insane_mode_az needed if insane_mode is enabled for AWS cloud and ha_subnet is set")
+			}
+			// Append availability zone to subnet
+			var strs []string
+			insaneModeAz := d.Get("insane_mode_az").(string)
+			strs = append(strs, gateway.VpcNet, insaneModeAz)
+			gateway.VpcNet = strings.Join(strs, "~~")
+		}
+		gateway.InsaneMode = "on"
+	} else {
+		gateway.InsaneMode = "off"
+	}
+
 	peeringHaGwSize := d.Get("peering_ha_gw_size").(string)
 	peeringHaSubnet := d.Get("peering_ha_subnet").(string)
 	peeringHaZone := d.Get("peering_ha_zone").(string)
@@ -489,7 +529,17 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			GwName:    d.Get("gw_name").(string),
 			CloudType: d.Get("cloud_type").(int),
 		}
-		if peeringHaGateway.CloudType == 1 || peeringHaGateway.CloudType == 8 {
+
+		if peeringHaGateway.CloudType == 1 {
+			peeringHaGateway.PeeringHASubnet = peeringHaSubnet
+			if insaneMode {
+				var peeringHaStrs []string
+				peeringHaInsaneModeAz := d.Get("peering_ha_insane_mode_az").(string)
+				peeringHaStrs = append(peeringHaStrs, peeringHaSubnet, peeringHaInsaneModeAz)
+				peeringHaSubnet = strings.Join(peeringHaStrs, "~~")
+				peeringHaGateway.PeeringHASubnet = peeringHaSubnet
+			}
+		} else if peeringHaGateway.CloudType == 8 {
 			peeringHaGateway.PeeringHASubnet = peeringHaSubnet
 		} else if peeringHaGateway.CloudType == 4 {
 			peeringHaGateway.NewZone = peeringHaZone
@@ -539,7 +589,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("failed to add tags: %s", err)
 		}
 	} else if ok && gateway.CloudType != 1 {
-		return fmt.Errorf("adding tags only supported for aws, cloud_type must be 1")
+		return fmt.Errorf("adding tags only supported for AWS, cloud_type must be 1")
 	}
 
 	if vpnStatus {
@@ -629,7 +679,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("gw_name", gw.GwName)
 
 		if gw.CloudType == 1 {
-			// aws vpc_id returns as <vpc_id>~~<other vpc info>
+			// AWS vpc_id returns as <vpc_id>~~<other vpc info>
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 			d.Set("vpc_reg", gw.VpcRegion)
 		} else if gw.CloudType == 4 {
@@ -656,7 +706,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				d.Set("allocate_new_eip", false)
 			}
 		} else if gw.CloudType == 4 || gw.CloudType == 8 {
-			// gcp and arm gateways don't have the option to allocate new eip's
+			// GCP and ARM gateways don't have the option to allocate new eip's
 			// default for allocate_new_eip is on
 			d.Set("allocate_new_eip", true)
 		}
@@ -753,6 +803,18 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("public_dns_server", gw.PublicDnsServer)
 		d.Set("security_group_id", gw.GwSecurityGroupID)
 
+		if gw.InsaneMode == "yes" {
+			d.Set("insane_mode", true)
+			if gw.CloudType == 1 {
+				d.Set("insane_mode_az", gw.GatewayZone)
+			} else {
+				d.Set("insane_mode_az", "")
+			}
+		} else {
+			d.Set("insane_mode", false)
+			d.Set("insane_mode_az", "")
+		}
+
 		peeringHaSubnet := d.Get("peering_ha_subnet").(string)
 		peeringHaZone := d.Get("peering_ha_zone").(string)
 		if peeringHaSubnet != "" || peeringHaZone != "" || gwName == "" {
@@ -760,23 +822,29 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				AccountName: d.Get("account_name").(string),
 				GwName:      d.Get("gw_name").(string) + "-hagw",
 			}
-
+			d.Set("cloudn_bkup_gateway_inst_id", "")
+			d.Set("backup_public_ip", "")
+			d.Set("peering_ha_subnet", "")
+			d.Set("peering_ha_zone", "")
+			d.Set("peering_ha_eip", "")
+			d.Set("peering_ha_gw_size", "")
+			d.Set("peering_ha_insane_mode_az", "")
 			gwHaGw, err := client.GetGateway(peeringHaGateway)
 			if err == nil {
 				d.Set("cloudn_bkup_gateway_inst_id", gwHaGw.CloudnGatewayInstID)
 				d.Set("backup_public_ip", gwHaGw.PublicIP)
-				if gwHaGw.CloudType == 1 || gwHaGw.CloudType == 8 {
-					d.Set("peering_ha_subnet", gwHaGw.VpcNet)
-					d.Set("peering_ha_zone", "")
-				} else if gwHaGw.CloudType == 4 {
-					d.Set("peering_ha_zone", gwHaGw.GatewayZone)
-					d.Set("Peering_ha_subnet", "")
-				} else {
-					d.Set("peering_ha_subnet", "")
-					log.Printf("[DEBUG] Invalid cloud type")
-				}
 				d.Set("peering_ha_eip", gwHaGw.PublicIP)
 				d.Set("peering_ha_gw_size", gwHaGw.GwSize)
+				if gwHaGw.CloudType == 1 {
+					d.Set("peering_ha_subnet", gwHaGw.VpcNet)
+					if gwHaGw.InsaneMode == "yes" {
+						d.Set("peering_ha_insane_mode_az", gwHaGw.GatewayZone)
+					}
+				} else if gwHaGw.CloudType == 8 {
+					d.Set("peering_ha_subnet", gwHaGw.VpcNet)
+				} else if gwHaGw.CloudType == 4 {
+					d.Set("peering_ha_zone", gwHaGw.GatewayZone)
+				}
 			} else {
 				if err != goaviatrix.ErrNotFound {
 					return fmt.Errorf("unable to find peering ha gateway: %s", err)
@@ -785,12 +853,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 						log.Printf("[DEBUG] Peering HA Gateway was not found during import, please confirm " +
 							"if primary gateway has peering HA enabled.")
 					}
-					d.Set("cloudn_bkup_gateway_inst_id", "")
-					d.Set("backup_public_ip", "")
-					d.Set("peering_ha_subnet", "")
-					d.Set("peering_ha_zone", "")
-					d.Set("peering_ha_eip", "")
-					d.Set("peering_ha_gw_size", "")
 				}
 			}
 			log.Printf("[TRACE] reading peering HA gateway %s: %#v", d.Get("gw_name").(string), gwHaGw)
@@ -801,6 +863,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("peering_ha_zone", "")
 			d.Set("peering_ha_eip", "")
 			d.Set("peering_ha_gw_size", "")
+			d.Set("peering_ha_insane_mode_az", "")
 		}
 
 		if gw.CloudType == 1 {
@@ -895,6 +958,12 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 	if d.HasChange("eip") {
 		return fmt.Errorf("updating eip is not allowed")
+	}
+	if d.HasChange("insane_mode") {
+		return fmt.Errorf("updating insane_mode is not allowed")
+	}
+	if d.HasChange("insane_mode_az") {
+		return fmt.Errorf("updating insane_mode_az is not allowed")
 	}
 	if d.HasChange("peering_ha_eip") {
 		o, n := d.GetChange("peering_ha_eip")
@@ -1099,7 +1168,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 		d.SetPartial("tag_list")
 	} else if d.HasChange("tag_list") && gateway.CloudType != 1 {
-		return fmt.Errorf("adding tags is only supported for aws, cloud_type must be set to 1")
+		return fmt.Errorf("adding tags is only supported for AWS, cloud_type must be set to 1")
 	}
 
 	if d.HasChange("split_tunnel") || d.HasChange("additional_cidrs") ||
@@ -1249,11 +1318,21 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		d.SetPartial("max_vpn_conn")
 	}
 	newHaGwEnabled := false
-	if d.HasChange("peering_ha_subnet") || d.HasChange("peering_ha_zone") {
+	if d.HasChange("peering_ha_subnet") || d.HasChange("peering_ha_zone") || d.HasChange("peering_ha_insane_mode_az") {
 		gw := &goaviatrix.Gateway{
 			Eip:       d.Get("peering_ha_eip").(string),
 			GwName:    d.Get("gw_name").(string),
 			CloudType: d.Get("cloud_type").(int),
+		}
+
+		if d.Get("insane_mode").(bool) == true && gw.CloudType == 1 {
+			var haStrs []string
+			peeringHaInsaneModeAz := d.Get("peering_ha_insane_mode_az").(string)
+			if peeringHaInsaneModeAz == "" {
+				return fmt.Errorf("peering_ha_insane_mode_az needed if insane_mode is enabled and peering_ha_subnet is set")
+			}
+			haStrs = append(haStrs, gw.PeeringHASubnet, peeringHaInsaneModeAz)
+			gw.PeeringHASubnet = strings.Join(haStrs, "~~")
 		}
 
 		oldSubnet, newSubnet := d.GetChange("peering_ha_subnet")
@@ -1305,6 +1384,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 
 		d.SetPartial("peering_ha_subnet")
 		d.SetPartial("peering_ha_zone")
+		d.SetPartial("peering_ha_insane_mode_az")
 	}
 
 	if d.HasChange("peering_ha_gw_size") || newHaGwEnabled {
@@ -1321,6 +1401,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 					d.Set("peering_ha_gw_size", "")
 					d.Set("peering_ha_subnet", "")
 					d.Set("peering_ha_zone", "")
+					d.Set("peering_ha_insane_mode_az", "")
 					return nil
 				}
 				return fmt.Errorf("couldn't find Aviatrix Peering HA Gateway while trying to update HA Gw "+
