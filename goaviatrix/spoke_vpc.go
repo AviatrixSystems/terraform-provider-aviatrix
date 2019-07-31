@@ -31,6 +31,7 @@ type SpokeVpc struct {
 	ReuseEip              string `form:"reuse_eip,omitempty"`
 	AllocateNewEipRead    bool   `json:"newly_allocated_eip,omitempty"`
 	Eip                   string `form:"eip,omitempty" json:"eip,omitempty"`
+	InsaneMode            string `form:"insane_mode,omitempty"`
 }
 
 func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) error {
