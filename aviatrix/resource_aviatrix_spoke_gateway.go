@@ -195,37 +195,37 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	insaneMode := d.Get("insane_mode").(bool)
-        insaneModeAz := d.Get("insane_mode_az").(string)
-        haZone := d.Get("ha_zone").(string)
-        haSubnet := d.Get("ha_subnet").(string)
-        haGwSize := d.Get("ha_gw_size").(string)
-        haInsaneModeAz := d.Get("ha_insane_mode_az").(string)
-        if insaneMode == true {
-                if gateway.CloudType != 1 && gateway.CloudType != 8 {
-                        return fmt.Errorf("insane_mode is only supported for aws and arm (cloud_type = 1 or 8)")
-                }
-                if gateway.CloudType == 1 {
-                        if insaneModeAz == "" {
-                                return fmt.Errorf("insane_mode_az needed if insane_mode is enabled for aws cloud")
-                        }
-                        if haSubnet != "" && haInsaneModeAz == "" {
-                                return fmt.Errorf("ha_insane_mode_az needed if insane_mode is enabled for aws cloud and ha_subnet is set")
-                        }
-                        // Append availability zone to subnet
-                        var strs []string
-                        strs = append(strs, gateway.Subnet, insaneModeAz)
-                        gateway.Subnet = strings.Join(strs, "~~")
-                }
-                gateway.InsaneMode = "on"
-        } else {
-                gateway.InsaneMode = "off"
-        }
-        if haZone != "" || haSubnet != "" {
-                if haGwSize == "" {
-                        return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
-                                "ha_subnet or ha_zone is set. Example: t2.micro")
-                }
-        }
+	insaneModeAz := d.Get("insane_mode_az").(string)
+	haZone := d.Get("ha_zone").(string)
+	haSubnet := d.Get("ha_subnet").(string)
+	haGwSize := d.Get("ha_gw_size").(string)
+	haInsaneModeAz := d.Get("ha_insane_mode_az").(string)
+	if insaneMode == true {
+		if gateway.CloudType != 1 && gateway.CloudType != 8 {
+			return fmt.Errorf("insane_mode is only supported for aws and arm (cloud_type = 1 or 8)")
+		}
+		if gateway.CloudType == 1 {
+			if insaneModeAz == "" {
+				return fmt.Errorf("insane_mode_az needed if insane_mode is enabled for aws cloud")
+			}
+			if haSubnet != "" && haInsaneModeAz == "" {
+				return fmt.Errorf("ha_insane_mode_az needed if insane_mode is enabled for aws cloud and ha_subnet is set")
+			}
+			// Append availability zone to subnet
+			var strs []string
+			strs = append(strs, gateway.Subnet, insaneModeAz)
+			gateway.Subnet = strings.Join(strs, "~~")
+		}
+		gateway.InsaneMode = "on"
+	} else {
+		gateway.InsaneMode = "off"
+	}
+	if haZone != "" || haSubnet != "" {
+		if haGwSize == "" {
+			return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
+				"ha_subnet or ha_zone is set. Example: t2.micro")
+		}
+	}
 
 	log.Printf("[INFO] Creating Aviatrix Spoke Gateway: %#v", gateway)
 
