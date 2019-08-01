@@ -61,6 +61,19 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Specify whether enabling Source NAT feature on the gateway or not.",
 			},
+			"allocate_new_eip": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+				Description: "If false, reuse an idle address in Elastic IP pool for this gateway. " +
+					"Otherwise, allocate a new Elastic IP and use it for this gateway.",
+			},
+			"eip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "Required when allocate_new_eip is false. It uses specified EIP for this gateway.",
+			},
 			"ha_subnet": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -78,6 +91,12 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Optional:    true,
 				Default:     "",
 				Description: "HA Gateway Size.",
+			},
+			"ha_eip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "Public IP address that you want assigned to the HA Spoke Gateway.",
 			},
 			"single_az_ha": {
 				Type:        schema.TypeBool,
@@ -133,6 +152,14 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		gateway.SingleAzHa = "enabled"
 	} else {
 		gateway.SingleAzHa = "disabled"
+	}
+
+	allocateNewEip := d.Get("allocate_new_eip").(bool)
+	if allocateNewEip {
+		gateway.ReuseEip = "off"
+	} else {
+		gateway.ReuseEip = "on"
+		gateway.Eip = d.Get("eip").(string)
 	}
 
 	if gateway.CloudType == 1 || gateway.CloudType == 4 {
@@ -193,6 +220,8 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			HASubnet:  haSubnet,
 			HAZone:    haZone,
 		}
+
+		haGateway.Eip = d.Get("ha_eip").(string)
 
 		err = client.EnableHaSpokeVpc(haGateway)
 		if err != nil {
@@ -292,20 +321,31 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	if gw != nil {
 		d.Set("cloud_type", gw.CloudType)
 		d.Set("account_name", gw.AccountName)
+
 		if gw.CloudType == 1 {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0]) //aws vpc_id returns as <vpc_id>~~<other vpc info> in rest api
 			d.Set("vpc_reg", gw.VpcRegion)                    //aws vpc_reg returns as vpc_region in rest api
+
+			if gw.AllocateNewEipRead {
+				d.Set("allocate_new_eip", true)
+			} else {
+				d.Set("allocate_new_eip", false)
+			}
 		} else if gw.CloudType == 4 {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0]) //gcp vpc_id returns as <vpc_id>~-~<other vpc info> in rest api
 			d.Set("vpc_reg", gw.GatewayZone)                   //gcp vpc_reg returns as gateway_zone in json
+
+			d.Set("allocate_new_eip", true)
 		} else if gw.CloudType == 8 {
 			d.Set("vpc_id", gw.VpcID)
 			d.Set("vpc_reg", gw.VpcRegion)
+
+			d.Set("allocate_new_eip", true)
 		}
+		d.Set("eip", gw.PublicIP)
 
 		d.Set("subnet", gw.VpcNet)
 		d.Set("gw_size", gw.GwSize)
-		d.Set("public_ip", gw.PublicIP)
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 
 		if gw.EnableNat == "yes" {
@@ -376,6 +416,8 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("ha_zone", haGw.GatewayZone)
 			d.Set("ha_subnet", "")
 		}
+
+		d.Set("ha_eip", haGw.PublicIP)
 		d.Set("ha_gw_size", haGw.GwSize)
 	}
 

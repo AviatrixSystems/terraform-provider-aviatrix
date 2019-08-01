@@ -247,14 +247,14 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
-				Description: "When value is off, reuse an idle address in Elastic IP pool for this gateway. " +
+				Description: "When value is false, reuse an idle address in Elastic IP pool for this gateway. " +
 					"Otherwise, allocate a new Elastic IP and use it for this gateway.",
 			},
 			"eip": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description: "Required when allocate_new_eip is 'off'. It uses specified EIP for this gateway.",
+				Description: "Required when allocate_new_eip is false. It uses specified EIP for this gateway.",
 			},
 			"tag_list": {
 				Type:        schema.TypeList,

@@ -28,6 +28,9 @@ type SpokeVpc struct {
 	SingleAzHa            string `form:"single_az_ha,omitempty"`
 	TransitGateway        string `form:"transit_gw,omitempty"`
 	TagList               string `form:"tags,omitempty"`
+	ReuseEip              string `form:"reuse_eip,omitempty"`
+	AllocateNewEipRead    bool   `json:"newly_allocated_eip,omitempty"`
+	Eip                   string `form:"eip,omitempty" json:"eip,omitempty"`
 }
 
 func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) error {
@@ -111,6 +114,8 @@ func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 	enableSpokeHa.Add("CID", c.CID)
 	enableSpokeHa.Add("action", "enable_spoke_ha")
 	enableSpokeHa.Add("gw_name", spoke.GwName)
+	enableSpokeHa.Add("eip", spoke.Eip)
+
 	if spoke.CloudType == 1 || spoke.CloudType == 8 {
 		enableSpokeHa.Add("public_subnet", spoke.HASubnet)
 	} else if spoke.CloudType == 4 {
