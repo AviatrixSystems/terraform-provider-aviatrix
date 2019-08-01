@@ -43,8 +43,9 @@ type AllVpcPoolVpcListResp struct {
 }
 
 type SubnetInfo struct {
-	Cidr string `json:"cidr, omitempty"`
-	Name string `json:"name, omitempty"`
+	Cidr     string `json:"cidr, omitempty"`
+	Name     string `json:"name, omitempty"`
+	SubnetID string `json:"id, omitempty"`
 }
 
 func (c *Client) CreateVpc(vpc *Vpc) error {
