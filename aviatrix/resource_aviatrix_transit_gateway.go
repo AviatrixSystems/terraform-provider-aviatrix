@@ -545,7 +545,10 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		transitGateway := &goaviatrix.TransitVpc{
 			GwName:   d.Get("gw_name").(string),
 			HASubnet: d.Get("ha_subnet").(string),
-			Eip:      d.Get("ha_eip").(string),
+		}
+
+		if d.Get("cloud_type").(int) == 1 {
+			transitGateway.Eip = d.Get("ha_eip").(string)
 		}
 
 		if d.Get("insane_mode").(bool) == true {
@@ -643,7 +646,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				VpcRegion:   d.Get("vpc_reg").(string),
 			}
 			enableHybridConnection := d.Get("enable_hybrid_connection").(bool)
-			if enableHybridConnection == true {
+			if enableHybridConnection {
 				err := client.AttachTransitGWForHybrid(transitGateway)
 				if err != nil {
 					return fmt.Errorf("failed to enable transit GW for Hybrid: %s", err)

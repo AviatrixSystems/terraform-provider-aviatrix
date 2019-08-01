@@ -404,6 +404,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("ha_gw_size", "")
 			d.Set("ha_subnet", "")
 			d.Set("ha_zone", "")
+			d.Set("ha_eip", "")
 		} else {
 			return fmt.Errorf("couldn't find Aviatrix SpokeGateway HA Gateway: %s", err)
 		}
@@ -548,6 +549,10 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		spokeGw := &goaviatrix.SpokeVpc{
 			GwName:    d.Get("gw_name").(string),
 			CloudType: d.Get("cloud_type").(int),
+		}
+
+		if spokeGw.CloudType == 1 {
+			spokeGw.Eip = d.Get("ha_eip").(string)
 		}
 
 		oldSubnet, newSubnet := d.GetChange("ha_subnet")
