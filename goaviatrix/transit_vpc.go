@@ -29,6 +29,9 @@ type TransitVpc struct {
 	EnableHybridConnection bool   `form:"enable_hybrid_connection" json:"tgw_enabled,omitempty"`
 	ConnectedTransit       string `form:"connected_transit" json:"connected_transit,omitempty"`
 	InsaneMode             string `form:"insane_mode,omitempty"`
+	ReuseEip               string `form:"reuse_eip,omitempty"`
+	AllocateNewEipRead     bool   `json:"newly_allocated_eip,omitempty"`
+	Eip                    string `form:"eip,omitempty"`
 }
 
 type TransitGwFireNetInterfaces struct {
@@ -72,6 +75,8 @@ func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) error {
 	enableTransitHa.Add("action", "enable_transit_ha")
 	enableTransitHa.Add("gw_name", gateway.GwName)
 	enableTransitHa.Add("public_subnet", gateway.HASubnet)
+	enableTransitHa.Add("eip", gateway.Eip)
+
 	Url.RawQuery = enableTransitHa.Encode()
 	resp, err := c.Get(Url.String(), nil)
 

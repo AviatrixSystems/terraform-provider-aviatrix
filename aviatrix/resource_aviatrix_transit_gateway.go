@@ -61,6 +61,19 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     "",
 				Description: "AZ of subnet being created for Insane Mode Transit Gateway. Required if insane_mode is enabled.",
 			},
+			"allocate_new_eip": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+				Description: "If false, reuse an idle address in Elastic IP pool for this gateway. " +
+					"Otherwise, allocate a new Elastic IP and use it for this gateway.",
+			},
+			"eip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "Required when allocate_new_eip is false. It uses specified EIP for this gateway.",
+			},
 			"ha_subnet": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -78,6 +91,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Optional:    true,
 				Default:     "",
 				Description: "HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set).",
+			},
+			"ha_eip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "Public IP address that you want assigned to the HA Transit Gateway.",
 			},
 			"enable_snat": {
 				Type:        schema.TypeBool,
@@ -148,6 +167,14 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		gateway.ConnectedTransit = "no"
 	}
 
+	allocateNewEip := d.Get("allocate_new_eip").(bool)
+	if allocateNewEip {
+		gateway.ReuseEip = "off"
+	} else {
+		gateway.ReuseEip = "on"
+		gateway.Eip = d.Get("eip").(string)
+	}
+
 	cloudType := d.Get("cloud_type").(int)
 	if cloudType == 1 {
 		gateway.VpcID = d.Get("vpc_id").(string)
@@ -209,7 +236,9 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		transitGateway := &goaviatrix.TransitVpc{
 			GwName:   d.Get("gw_name").(string),
 			HASubnet: haSubnet,
+			Eip:      d.Get("ha_eip").(string),
 		}
+
 		if insaneMode {
 			var haStrs []string
 			insaneModeHaAz := d.Get("ha_insane_mode_az").(string)
@@ -233,6 +262,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
 					"ha_subnet is set. Example: t2.micro")
 			}
+
 			haGateway := &goaviatrix.Gateway{
 				CloudType: d.Get("cloud_type").(int),
 				GwName:    d.Get("gw_name").(string) + "-hagw",
@@ -272,6 +302,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	if enableHybridConnection && cloudType != 1 {
 		return fmt.Errorf("'enable_hybrid_connection' is only supported for AWS cloud type 1")
 	}
+
 	if enableHybridConnection {
 		if cloudType != 1 {
 			return fmt.Errorf("'enable_hybrid_connection' is only supported for AWS cloud type 1")
@@ -355,9 +386,17 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 		if gw.CloudType == 1 {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
+			if gw.AllocateNewEipRead {
+				d.Set("allocate_new_eip", true)
+			} else {
+				d.Set("allocate_new_eip", false)
+			}
 		} else if gw.CloudType == 8 {
 			d.Set("vpc_id", gw.VpcID)
+			d.Set("allocate_new_eip", true)
 		}
+
+		d.Set("eip", gw.PublicIP)
 
 		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("gw_size", gw.GwSize)
@@ -434,13 +473,15 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("ha_gw_size", "")
 			d.Set("ha_subnet", "")
 			d.Set("ha_insane_mode_az", "")
+			d.Set("ha_eip", "")
 			return nil
 		}
 		return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway: %s", err)
+	} else {
+		d.Set("ha_eip", haGw.PublicIP)
+		d.Set("ha_subnet", haGw.VpcNet)
+		d.Set("ha_gw_size", haGw.GwSize)
 	}
-
-	d.Set("ha_subnet", haGw.VpcNet)
-	d.Set("ha_gw_size", haGw.GwSize)
 
 	if haGw.InsaneMode == "yes" {
 		d.Set("ha_insane_mode_az", haGw.GatewayZone)
@@ -504,6 +545,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		transitGateway := &goaviatrix.TransitVpc{
 			GwName:   d.Get("gw_name").(string),
 			HASubnet: d.Get("ha_subnet").(string),
+			Eip:      d.Get("ha_eip").(string),
 		}
 
 		if d.Get("insane_mode").(bool) == true {
