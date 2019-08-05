@@ -1270,23 +1270,19 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		d.SetPartial("enable_snat")
 	}
 	if d.HasChange("vpn_cidr") {
-		if d.Get("vpn_access").(bool) && d.Get("enable_elb").(bool) {
+		if d.Get("vpn_access").(bool) {
 			gw := &goaviatrix.Gateway{
 				CloudType: d.Get("cloud_type").(int),
 				GwName:    d.Get("gw_name").(string),
-				VpcID:     d.Get("vpc_id").(string),
-				ElbName:   d.Get("elb_name").(string),
+				VpnCidr:   d.Get("vpn_cidr").(string),
 			}
-
-			_, n := d.GetChange("vpn_cidr")
-			gw.VpnCidr = n.(string)
 
 			err := client.UpdateVpnCidr(gw)
 			if err != nil {
 				return fmt.Errorf("failed to update vpn cidr: %s", err)
 			}
 		} else {
-			log.Printf("[INFO] can't update vpn cidr because elb is disabled for gateway: %#v", gateway.GwName)
+			log.Printf("[INFO] can't update vpn cidr because vpn_access is disabled for gateway: %#v", gateway.GwName)
 		}
 
 		d.SetPartial("vpn_cidr")
