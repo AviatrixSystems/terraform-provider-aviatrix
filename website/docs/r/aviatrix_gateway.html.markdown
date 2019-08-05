@@ -130,7 +130,7 @@ The following arguments are supported:
 * `peering_ha_eip` - (Optional) Public IP address that you want assigned to the HA peering instance. Only available for AWS.
 * `peering_ha_gw_size` - (Optional) Size of the Peering HA Gateway.
 * `single_az_ha` (Optional) Set to true if this feature is desired. Supported values: true, false.
-* `allocate_new_eip` - (Optional) When value is off, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 2.7 or later release. Supported values: true, false. Default: true. Option not available for GCP and ARM gateways, they will automatically allocate new eip's.
+* `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 2.7 or later release. Supported values: true, false. Default: true. Option not available for GCP and ARM gateways, they will automatically allocate new eip's.
 * `eip` - (Optional) Required when allocate_new_eip is false. It uses specified EIP for this gateway. Available in 3.5 or later release eip. Only available for AWS.
 * `tag_list` - (Optional) Instance tag of cloud provider. Only available for AWS. Example: ["key1:value1", "key2:value2"].
 
