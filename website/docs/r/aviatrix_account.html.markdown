@@ -45,10 +45,10 @@ resource "aviatrix_account" "tempacc_gcp" {
 resource "aviatrix_account" "tempacc_arm" {
   account_name        = "username"
   cloud_type          = 8
-  arm_subscription_id =  "12345678-abcd-efgh-ijkl-123456789abc"
-  arm_directory_id    =  "abcdefgh-1234-5678-9100-abc123456789"
-  arm_application_id  =  "1234abcd-12ab-34cd-56ef-abcdef123456"
-  arm_application_key =  "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe=" 
+  arm_subscription_id = "12345678-abcd-efgh-ijkl-123456789abc"
+  arm_directory_id    = "abcdefgh-1234-5678-9100-abc123456789"
+  arm_application_id  = "1234abcd-12ab-34cd-56ef-abcdef123456"
+  arm_application_key = "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe=" 
 }
 ```
 
