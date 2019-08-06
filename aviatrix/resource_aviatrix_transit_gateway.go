@@ -95,7 +95,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"ha_eip": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "",
+				Computed:    true,
 				Description: "Public IP address that you want assigned to the HA Transit Gateway.",
 			},
 			"enable_snat": {

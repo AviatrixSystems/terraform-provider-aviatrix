@@ -95,7 +95,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 			"ha_eip": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "",
+				Computed:    true,
 				Description: "Public IP address that you want assigned to the HA Spoke Gateway.",
 			},
 			"single_az_ha": {
