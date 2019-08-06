@@ -390,13 +390,12 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				d.Set("allocate_new_eip", true)
 			} else {
 				d.Set("allocate_new_eip", false)
+				d.Set("eip", gw.PublicIP)
 			}
 		} else if gw.CloudType == 8 {
 			d.Set("vpc_id", gw.VpcID)
 			d.Set("allocate_new_eip", true)
 		}
-
-		d.Set("eip", gw.PublicIP)
 
 		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("gw_size", gw.GwSize)
