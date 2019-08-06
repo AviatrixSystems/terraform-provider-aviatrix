@@ -380,6 +380,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 				d.Set("allocate_new_eip", true)
 			} else {
 				d.Set("allocate_new_eip", false)
+				d.Set("eip", gw.PublicIP)
 			}
 		} else if gw.CloudType == 4 {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0]) //gcp vpc_id returns as <vpc_id>~-~<other vpc info> in rest api
@@ -392,7 +393,6 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 
 			d.Set("allocate_new_eip", true)
 		}
-		d.Set("eip", gw.PublicIP)
 
 		d.Set("subnet", gw.VpcNet)
 		d.Set("gw_size", gw.GwSize)
