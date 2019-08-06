@@ -71,7 +71,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"eip": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "",
+				Computed:    true,
 				Description: "Required when allocate_new_eip is false. It uses specified EIP for this gateway.",
 			},
 			"ha_subnet": {
