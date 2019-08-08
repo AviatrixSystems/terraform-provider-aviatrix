@@ -39,12 +39,12 @@ This phase involves first upgrading the Controller to 4.7. Afterwards, customers
     - https://docs.aviatrix.com/HowTos/inline_upgrade.html
   - Controller Release Notes:
     - https://docs.aviatrix.com/HowTos/UCC_Release_Notes.html
-- Update Terraform files (.tf) as necessary. Please reference documentation linked below to note specific changes to any resource attributes that you may be using in your configuration:
+2. Update Terraform files (.tf) as necessary. Please reference documentation linked below to note specific changes to any resource attributes that you may be using in your configuration:
   - Please refer **up to** R1.14's table (for Terraform 0.11) (compatible with Controller 4.7):
   - https://github.com/AviatrixSystems/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist.html.md
   - Aviatrix Terraform Provider Release Notes:
     - https://github.com/AviatrixSystems/terraform-provider-aviatrix/releases
-- Update Aviatrix Terraform provider:
+3. Update Aviatrix Terraform provider:
   - Navigate to Aviatrix Terraform provider directory:
     - Mac:
       - ``cd $GOPATH/src/github.com/terraform-providers``
@@ -61,7 +61,7 @@ This phase involves first upgrading the Controller to 4.7. Afterwards, customers
     - Windows:
       - ``go fmt``
       - ``go install``
-- Navigate to your Terraform directory/ directories and refresh Terraform state to update:
+4. Navigate to your Terraform directory/ directories and refresh Terraform state to update:
   - ``terraform refresh``
   - Please perform a plan command to note any deltas:
     - ``terraform plan``
@@ -75,7 +75,7 @@ This phase involves upgrading Hashicorp's Terraform from v0.11 to v0.12. As far 
 1. Upgrade Terraform version to v0.12:
   - Hashicorp Terraform Upgrade documentation:
     - https://www.terraform.io/upgrade-guides/0-12.html
-- Update Terraform files (.tf) as necessary. Please reference documentation linked below to note specific changes to any resource attributes that you may be using in your configuration:
+2. Update Terraform files (.tf) as necessary. Please reference documentation linked below to note specific changes to any resource attributes that you may be using in your configuration:
   - Please follow the **R1.16's table** (for Terraform 0.12) (compatible with Controller 4.7):
     - https://github.com/AviatrixSystems/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist.html.md#r11620-userconnect-47520-terraform-v012
   - The same table is shown below for your convenience:
@@ -107,7 +107,7 @@ This phase involves upgrading Hashicorp's Terraform from v0.11 to v0.12. As far 
     - Windows:
       - ``go fmt``
       - ``go install``
-- Navigate to your Terraform directory/ directories and refresh Terraform state to update:
+4. Navigate to your Terraform directory/ directories and refresh Terraform state to update:
   - ``terraform refresh``
   - Please perform a plan command to note any deltas:
     - ``terraform plan``
@@ -118,7 +118,7 @@ This phase involves upgrading Hashicorp's Terraform from v0.11 to v0.12. As far 
 **Summary:** This will be the largest phase in terms of the upgrade process. While this phase only involves upgrading the customer's (.tf) files as necessary, the amount of changes from R1.xx to R2.0+ are not small. Afterwards, customers must upgrade their Aviatrix Terraform provider version, and then perform ``terraform refresh`` or ``terraform import`` as necessary.
 1. Update Terraform files (.tf) as necessary. Please reference documentation linked below to note specific changes to any resource attributes that you may be using in your configuration:
   - https://github.com/AviatrixSystems/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist-v2.html.md
-- Update Aviatrix Terraform provider:
+2. Update Aviatrix Terraform provider:
   - Navigate to Aviatrix Terraform provider directory:
     - Mac:
       - ``cd $GOPATH/src/github.com/terraform-providers``
@@ -135,7 +135,7 @@ This phase involves upgrading Hashicorp's Terraform from v0.11 to v0.12. As far 
     - Windows:
       - ``go fmt``
       - ``go install``
-- Navigate to your Terraform directory/ directories and refresh/ import to update:
+3. Navigate to your Terraform directory/ directories and refresh/ import to update:
   - **Rules to determine whether to refresh or import:**
   - **NOTE:** Rules listed in terms of priority. Import takes precedence over refresh; meaning if your resource has one of the below import rules apply, that resource will require an import no matter how many of the refresh rules apply to it
     - If you are using **transit_vpc** or **spoke_vpc** resources, note they are deprecated and support will eventually be removed. **transit_gateway** and **spoke_gateway** will replace them respectively. ``terraform import`` for these resources must be done to rectify the state
