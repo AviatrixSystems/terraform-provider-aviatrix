@@ -98,7 +98,7 @@ The following arguments are supported:
 * `gw_name` - (Required) Aviatrix gateway unique name.
 * `vpc_id` - (Required) ID of legacy VPC/Vnet to be connected. A string that is consisted of VPC/Vnet name and cloud provider's resource name. Please check the "Gateway" page on Aviatrix controller GUI for the precise value if needed. Example: "vpc-abcd1234".
 * `vpc_reg` - (Required) Region where this gateway will be launched. Example: "us-east-1". If creating GCP gateway, enter a valid zone for vpc_reg. Example: "us-west1-c".
-* `gw_size` - (Required) Size of Gateway Instance. Example: "t2.micro".
+* `gw_size` - (Required) Size of Gateway Instance. Please note that updating the gateway size will cause a restart; gateway will be down temporarily until re-size is complete. Example: "t2.micro". 
 * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20".
 * `enable_snat` - (Optional) Enable Source NAT for this container. Supported values: true, false.
 * `vpn_access` - (Optional) Enable user access through VPN to this container. Supported values: true, false.
@@ -118,7 +118,7 @@ The following arguments are supported:
 * `duo_integration_key` - (Optional) Integration key for DUO auth mode. Required if otp_mode is "2".
 * `duo_secret_key` - (Optional) Secret key for DUO auth mode. Required if otp_mode is "2".
 * `duo_api_hostname` - (Optional) API hostname for DUO auth mode. Required: Yes if otp_mode is "2".
-* `duo_push_mode` - (Optional) Push mode for DUO auth. Required if otp_mode is "2". Valid values: "auto", "selective" and "token". 
+* `duo_push_mode` - (Optional) Push mode for DUO auth. Required if otp_mode is "2". Valid values: "auto", "selective" and "token".
 * `enable_ldap` - (Optional) Specify whether to enable LDAP or not. Supported values: true, false.
 * `ldap_server` - (Optional) LDAP server address. Required if enable_ldap is true.
 * `ldap_bind_dn` - (Optional) LDAP bind DN. Required if enable_ldap is true.
@@ -147,9 +147,9 @@ The following arguments are deprecated:
 
 * `dns_server` - Specify the DNS IP, only required while using a custom private DNS for the VPC.
 
--> **NOTE:** 
+-> **NOTE:**
 
-* `peering_ha_gw_size` - If you are using/upgraded to Aviatrix Terraform Provider v4.3+, and a peering-HA gateway was originally created with a provider version <4.3, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also input this attribute and its value to its corresponding gateway resource in your `.tf` file. 
+* `peering_ha_gw_size` - If you are using/upgraded to Aviatrix Terraform Provider v4.3+, and a peering-HA gateway was originally created with a provider version <4.3, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also input this attribute and its value to its corresponding gateway resource in your `.tf` file.
 * `enable_snat` - In order for the FQDN feature to be enabled for the specified gateway, "enable_snat" must be set to “yes”. If it is not set at gateway creation, creation of FQDN resource will automatically enable SNAT and users must rectify the diff in the Terraform state by setting "enable_snat = true" in their config file.
 * `max_vpn_conn` - If you are using/upgraded to Aviatrix Terraform Provider v4.7+, and a gateway with VPN enabled was originally created with a provider version <4.7, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also input this attribute and its value to "100" in your `.tf` file.
 
