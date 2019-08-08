@@ -23,7 +23,7 @@ In this document, we broke down the upgrade process in multiple phases to make i
 In summary:
 
 | Phase | Notes           | From (Controller / Provider / Terraform) | To (Controller / Provider / Terraform)  | Effort   |
-|:-----:|:----------------:|:----------------------------------------:|:----:|:--------:|:--------------:|
+|:-----:|:---------------:|:----------------------------------------:|:---------------------------------------:|:--------:|
 | 1     | Upgrade Controller | <4.7 / R1.xx / v0.11.x | **4.7** / R1.xx / v0.11.x | low |
 | 2     | Upgrade Terraform | 4.7 / R1.xx / v0.11.x | 4.7 / R1.xx / **v0.12.x** | low   |
 | 3     | Upgrade Provider  | 4.7 / R1.xx / v0.12.x   | 4.7 / **R2.0** / v0.12.x | non-trivial |
