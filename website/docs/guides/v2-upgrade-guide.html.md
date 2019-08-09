@@ -62,6 +62,7 @@ This phase involves first upgrading the Controller to 4.7. Afterwards, customers
       - ``go fmt``
       - ``go install``
 4. Navigate to your Terraform directory/ directories and refresh Terraform state to update:
+  - ``terraform init`` - to reinitialise a working Terraform environment for the current directory
   - ``terraform refresh``
   - Please perform a plan command to note any deltas:
     - ``terraform plan``
@@ -108,6 +109,7 @@ This phase involves upgrading Hashicorp's Terraform from v0.11 to v0.12. As far 
       - ``go fmt``
       - ``go install``
 4. Navigate to your Terraform directory/ directories and refresh Terraform state to update:
+  - ``terraform init`` - to reinitialise a working Terraform environment for the current directory
   - ``terraform refresh``
   - Please perform a plan command to note any deltas:
     - ``terraform plan``
@@ -136,6 +138,7 @@ This phase involves upgrading Hashicorp's Terraform from v0.11 to v0.12. As far 
       - ``go fmt``
       - ``go install``
 3. Navigate to your Terraform directory/ directories and refresh/ import to update:
+  - ``terraform init`` - to reinitialise a working Terraform environment for the current directory
   - **Rules to determine whether to refresh or import:**
   - **NOTE:** Rules listed in terms of priority. Import takes precedence over refresh; meaning if your resource has one of the below import rules apply, that resource will require an import no matter how many of the refresh rules apply to it
     - If you are using **transit_vpc** or **spoke_vpc** resources, note they are deprecated and support will eventually be removed. **transit_gateway** and **spoke_gateway** will replace them respectively. ``terraform import`` for these resources must be done to rectify the state
