@@ -11,6 +11,8 @@ type VGWConn struct {
 	Action                       string `form:"action,omitempty"`
 	BgpLocalAsNum                string `form:"bgp_local_asn_num,omitempty" json:"bgp_local_asn_num,omitempty"`
 	BgpVGWId                     string `form:"vgw_id,omitempty" json:"bgp_vgw_id,omitempty"`
+	BgpVGWAccount                string `form:"bgp_vgw_account_name,omitempty" json:"bgp_vgw_account,omitempty"`
+	BgpVGWRegion                 string `form:"bgp_vgw_region,omitempty" json:"bgp_vgw_region,omitempty"`
 	CID                          string `form:"CID,omitempty"`
 	ConnName                     string `form:"connection_name,omitempty" json:"name,omitempty"`
 	GwName                       string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
@@ -46,6 +48,8 @@ type ConnectionDetail struct {
 	GwName                       []string   `json:"gw_name"`
 	VPCId                        []string   `json:"vpc_id"`
 	BgpVGWId                     []string   `json:"bgp_vgw_id"`
+	BgpVGWAccount                []string   `json:"bgp_vgw_account"`
+	BgpVGWRegion                 []string   `json:"bgp_vgw_region"`
 	BgpLocalAsNum                []string   `json:"bgp_local_asn_number"`
 	AdvertiseTransitCidr         string     `json:"advertise_transit_cidr"`
 	BgpManualSpokeAdvertiseCidrs [][]string `json:"bgp_manual_spoke_advertise_cidrs"`
@@ -75,6 +79,8 @@ func (c *Client) CreateVGWConn(vgwConn *VGWConn) error {
 	connectTransitGwToVgw.Add("connection_name", vgwConn.ConnName)
 	connectTransitGwToVgw.Add("transit_gw", vgwConn.GwName)
 	connectTransitGwToVgw.Add("vgw_id", vgwConn.BgpVGWId)
+	connectTransitGwToVgw.Add("bgp_vgw_account_name", vgwConn.BgpVGWAccount)
+	connectTransitGwToVgw.Add("bgp_vgw_region", vgwConn.BgpVGWRegion)
 	connectTransitGwToVgw.Add("bgp_local_as_number", vgwConn.BgpLocalAsNum)
 	Url.RawQuery = connectTransitGwToVgw.Encode()
 	resp, err := c.Get(Url.String(), nil)
@@ -186,6 +192,8 @@ func (c *Client) GetVGWConnDetail(vgwConn *VGWConn) (*VGWConn, error) {
 		vgwConn.VPCId = data.Results.Connections.VPCId[0]
 		vgwConn.GwName = data.Results.Connections.GwName[0]
 		vgwConn.BgpVGWId = data.Results.Connections.BgpVGWId[0]
+		vgwConn.BgpVGWAccount = data.Results.Connections.BgpVGWAccount[0]
+		vgwConn.BgpVGWRegion = data.Results.Connections.BgpVGWRegion[0]
 		vgwConn.BgpLocalAsNum = data.Results.Connections.BgpLocalAsNum[0]
 		if data.Results.Connections.AdvertiseTransitCidr == "yes" {
 			vgwConn.EnableAdvertiseTransitCidr = true
