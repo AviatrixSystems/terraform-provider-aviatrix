@@ -43,6 +43,16 @@ func resourceAviatrixVGWConn() *schema.Resource {
 				Required:    true,
 				Description: "Id of AWS's VGW that is used for this connection.",
 			},
+			"bgp_vgw_account": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Account of AWS's VGW that is used for this connection.",
+			},
+			"bgp_vgw_region": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Region of AWS's VGW that is used for this connection.",
+			},
 			"bgp_local_as_num": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -72,6 +82,8 @@ func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) err
 		GwName:        d.Get("gw_name").(string),
 		VPCId:         d.Get("vpc_id").(string),
 		BgpVGWId:      d.Get("bgp_vgw_id").(string),
+		BgpVGWAccount: d.Get("bgp_vgw_account").(string),
+		BgpVGWRegion:  d.Get("bgp_vgw_region").(string),
 		BgpLocalAsNum: d.Get("bgp_local_as_num").(string),
 	}
 
@@ -148,6 +160,8 @@ func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("gw_name", vConn.GwName)
 	d.Set("vpc_id", vConn.VPCId)
 	d.Set("bgp_vgw_id", vConn.BgpVGWId)
+	d.Set("bgp_vgw_account", vConn.BgpVGWAccount)
+	d.Set("bgp_vgw_region", vConn.BgpVGWRegion)
 	d.Set("bgp_local_as_num", vConn.BgpLocalAsNum)
 	d.Set("enable_advertise_transit_cidr", vConn.EnableAdvertiseTransitCidr)
 
@@ -182,6 +196,12 @@ func resourceAviatrixVGWConnUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 	if d.HasChange("bgp_vgw_id") {
 		return fmt.Errorf("updating bgp_vgw_id is not allowed")
+	}
+	if d.HasChange("bgp_vgw_account") {
+		return fmt.Errorf("updating bgp_vgw_account is not allowed")
+	}
+	if d.HasChange("bgp_vgw_region") {
+		return fmt.Errorf("updating bgp_vgw_region is not allowed")
 	}
 	if d.HasChange("bgp_local_as_num") {
 		return fmt.Errorf("updating bgp_local_as_num is not allowed")
