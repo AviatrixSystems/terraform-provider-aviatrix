@@ -257,6 +257,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	if _, ok := d.GetOk("tag_list"); ok && gateway.CloudType == 1 {
 		tagList := d.Get("tag_list").([]interface{})
 		tagListStr := goaviatrix.ExpandStringList(tagList)
+		tagListStr = goaviatrix.TagListStrColon(tagListStr)
 		gateway.TagList = strings.Join(tagListStr, ",")
 		tags := &goaviatrix.Tags{
 			CloudType:    1,
@@ -511,6 +512,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		newTagList := goaviatrix.Difference(newList, oldList)
 		if len(oldTagList) != 0 || len(newTagList) != 0 {
 			if len(oldTagList) != 0 {
+				oldTagList = goaviatrix.TagListStrColon(oldTagList)
 				tags.TagList = strings.Join(oldTagList, ",")
 				err := client.DeleteTags(tags)
 				if err != nil {
@@ -518,6 +520,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				}
 			}
 			if len(newTagList) != 0 {
+				newTagList = goaviatrix.TagListStrColon(newTagList)
 				tags.TagList = strings.Join(newTagList, ",")
 				err := client.AddTags(tags)
 				if err != nil {
