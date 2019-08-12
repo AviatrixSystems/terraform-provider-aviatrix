@@ -54,6 +54,8 @@ func TestAccAviatrixVGWConn_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_id", vpcID),
 					resource.TestCheckResourceAttr(resourceName, "bgp_vgw_id", bgpVGWId),
+					resource.TestCheckResourceAttr(resourceName, "bgp_vgw_account", fmt.Sprintf("tfa-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "bgp_vgw_region", os.Getenv("AWS_REGION2")),
 					resource.TestCheckResourceAttr(resourceName, "bgp_local_as_num", "6451"),
 				),
 			},
@@ -90,11 +92,13 @@ resource "aviatrix_vgw_conn" "test_vgw_conn" {
 	gw_name          = aviatrix_transit_gateway.test_transit_vpc.gw_name
 	vpc_id           = aviatrix_transit_gateway.test_transit_vpc.vpc_id
 	bgp_vgw_id       = "%s"
+	bgp_vgw_account  = aviatrix_account.test_account.account_name
+	bgp_vgw_region   = "%s"
 	bgp_local_as_num = "6451"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"),
-		rName, os.Getenv("AWS_BGP_VGW_ID"))
+		rName, os.Getenv("AWS_BGP_VGW_ID"), os.Getenv("AWS_REGION2"))
 }
 
 func testAccCheckVGWConnExists(n string, vgwConn *goaviatrix.VGWConn) resource.TestCheckFunc {
@@ -114,6 +118,8 @@ func testAccCheckVGWConnExists(n string, vgwConn *goaviatrix.VGWConn) resource.T
 			GwName:        rs.Primary.Attributes["gw_name"],
 			VPCId:         rs.Primary.Attributes["vpc_id"],
 			BgpVGWId:      rs.Primary.Attributes["bgp_vgw_id"],
+			BgpVGWAccount: rs.Primary.Attributes["bgp_vgw_account"],
+			BgpVGWRegion:  rs.Primary.Attributes["bgp_vgw_region"],
 			BgpLocalAsNum: rs.Primary.Attributes["bgp_local_as_num"],
 		}
 
@@ -143,6 +149,8 @@ func testAccCheckVGWConnDestroy(s *terraform.State) error {
 			GwName:        rs.Primary.Attributes["gw_name"],
 			VPCId:         rs.Primary.Attributes["vpc_id"],
 			BgpVGWId:      rs.Primary.Attributes["bgp_vgw_id"],
+			BgpVGWAccount: rs.Primary.Attributes["bgp_vgw_account"],
+			BgpVGWRegion:  rs.Primary.Attributes["bgp_vgw_region"],
 			BgpLocalAsNum: rs.Primary.Attributes["bgp_local_as_num"],
 		}
 
