@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/url"
+	"strings"
 )
 
 type SplitTunnel struct {
@@ -85,6 +86,9 @@ func (c *Client) ModifySplitTunnel(splitTunnel *SplitTunnel) error {
 		return errors.New("Json Decode modify_split_tunnel(modify) failed: " + err.Error())
 	}
 	if !data.Return {
+		if strings.Contains(data.Reason, "Nothing to modify") {
+			return nil
+		}
 		return errors.New("Rest API modify_split_tunnel(modify) Get failed: " + data.Reason)
 	}
 	return nil
