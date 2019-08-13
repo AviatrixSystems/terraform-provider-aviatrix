@@ -20,8 +20,8 @@ resource "aviatrix_gateway" "test_gateway_aws" {
   gw_name      = "avtxgw1"
   vpc_id       = "vpc-abcdef"
   vpc_reg      = "us-west-1"
-  vpc_size     = "t2.micro"
-  vpc_net      = "10.0.0.0/24"
+  gw_size      = "t2.micro"
+  subnet       = "10.0.0.0/24"
   tag_list     = [
     "k1:v1",
     "k2:v2",
