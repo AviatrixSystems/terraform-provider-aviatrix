@@ -35,68 +35,47 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
   }
   security_domains {
     connected_domains    = [
-      "Aviatrix_Edge_Domain",
-    ]
-    security_domain_name = "Default_Domain"
-    connected_domains    = [
       "Aviatrix_Edge_Domain", 
       "Shared_Service_Domain",
     ]    
-    attached_vpc         = []      
+    security_domain_name = "Default_Domain"
   }
   security_domains {
-    security_domain_name = "Shared_Service_Domain"
     connected_domains    = [
       "Aviatrix_Edge_Domain", 
       "Default_Domain",
     ]
-    attached_vpc         = []          
+    security_domain_name = "Shared_Service_Domain"
   }
   security_domains {
-    security_domain_name = "SDN1"
     connected_domains    = [
       "Aviatrix_Edge_Domain",
     ]
+    security_domain_name = "SDN1"
+    
     attached_vpc {
       vpc_account_name = "devops1"
       vpc_id           = "vpc-0e2fac2b91"
       vpc_region       = "us-east-1"
     }
+    
     attached_vpc {
       vpc_account_name = "devops1"
       vpc_id           = "vpc-0c63660a16"
       vpc_region       = "us-east-1"
     }
+    
     attached_vpc { 
       vpc_account_name = "devops"
       vpc_id           = "vpc-032005cc371"
       vpc_region       = "us-east-1"
     }
-    attached_vpc { 
-      vpc_account_name = "devops"
-      vpc_id           = "vpc-032005cc371"
-      vpc_region       = "us-east-1"
-    }
   }
-  security_domains {
-    connected_domains    = [
-      "Aviatrix_Edge_Domain",
-    ]
-      security_domain_name = "Shared_Service_Domain"
-  }
-  security_domains {
-    connected_domains    = [
-      "Aviatrix_Edge_Domain",
-    ]
-    security_domain_name = "mysdn1"
-  }
-  security_domains {
-    connected_domains    = []
-    security_domain_name = "mysdn3"
-  }
+  
   security_domains {
     connected_domains    = []
     security_domain_name = "mysdn2"
+    
     attached_vpc { 
       vpc_region       = "us-east-1"
       vpc_account_name = "devops"
