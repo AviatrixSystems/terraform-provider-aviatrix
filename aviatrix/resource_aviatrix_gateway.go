@@ -280,12 +280,6 @@ func resourceAviatrixGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable Insane Mode for Gateway. Valid values: true, false.",
 			},
-			"enable_active_mesh": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: "Enable Active Mesh Mode for Gateway. Valid values: true, false.",
-			},
 			"public_ip": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -635,15 +629,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	if !d.Get("enable_active_mesh").(bool) {
-		gateway.EnableActiveMesh = "no"
-
-		err := client.DisableActiveMesh(gateway)
-		if err != nil {
-			return fmt.Errorf("couldn't disable Active Mode for Aviatrix Gateway: %s", err)
-		}
-	}
-
 	return resourceAviatrixGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -930,12 +915,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("name_servers", "")
 			d.Set("search_domains", "")
 			d.Set("additional_cidrs", "")
-		}
-
-		if gw.EnableActiveMesh == "yes" {
-			d.Set("enable_active_mesh", true)
-		} else {
-			d.Set("enable_active_mesh", false)
 		}
 	}
 
@@ -1437,29 +1416,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		d.SetPartial("peering_ha_gw_size")
-	}
-
-	if d.HasChange("enable_active_mesh") {
-		gw := &goaviatrix.Gateway{
-			GwName: d.Get("gw_name").(string),
-		}
-
-		enableActiveMesh := d.Get("enable_active_mesh").(bool)
-		if enableActiveMesh {
-			gw.EnableActiveMesh = "yes"
-			err := client.EnableActiveMesh(gw)
-			if err != nil {
-				return fmt.Errorf("failed to enable Active Mesh Mode: %s", err)
-			}
-		} else {
-			gw.EnableActiveMesh = "no"
-			err := client.DisableActiveMesh(gw)
-			if err != nil {
-				return fmt.Errorf("failed to disable Active Mesh Mode: %s", err)
-			}
-		}
-
-		d.SetPartial("enable_active_mesh")
 	}
 
 	d.Partial(false)
