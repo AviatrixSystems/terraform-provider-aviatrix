@@ -11,7 +11,7 @@ Otherwise, this list does not really apply. Please view the below list for detai
 
 ---
 
-``Last updated: R1.15 (UserConnect-4.7-patch); Terraform v0.12``
+``Last updated: R1.16 (UserConnect-4.7-patch); Terraform v0.12``
 
 
 ---
