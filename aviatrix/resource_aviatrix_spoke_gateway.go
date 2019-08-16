@@ -135,6 +135,12 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable Insane Mode for Spoke Gateway. Valid values: true, false. If insane mode is enabled, gateway size has to at least be c5 size.",
 			},
+			"enable_active_mesh": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable Active Mesh Mode for Gateway. Valid values: true, false.",
+			},
 			"cloud_instance_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -330,6 +336,18 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	if !d.Get("enable_active_mesh").(bool) {
+		gw := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+		gw.EnableActiveMesh = "no"
+
+		err := client.DisableActiveMesh(gw)
+		if err != nil {
+			return fmt.Errorf("couldn't disable Active Mode for Aviatrix Gateway: %s", err)
+		}
+	}
+
 	return resourceAviatrixSpokeGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -420,6 +438,12 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		} else {
 			d.Set("insane_mode", false)
 			d.Set("insane_mode_az", "")
+		}
+
+		if gw.EnableActiveMesh == "yes" {
+			d.Set("enable_active_mesh", true)
+		} else {
+			d.Set("enable_active_mesh", false)
 		}
 	}
 
@@ -792,6 +816,27 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 
 		d.SetPartial("transit_gw")
+	}
+
+	if d.HasChange("enable_active_mesh") {
+		gw := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+
+		enableActiveMesh := d.Get("enable_active_mesh").(bool)
+		if enableActiveMesh {
+			gw.EnableActiveMesh = "yes"
+			err := client.EnableActiveMesh(gw)
+			if err != nil {
+				return fmt.Errorf("failed to enable Active Mesh Mode: %s", err)
+			}
+		} else {
+			gw.EnableActiveMesh = "no"
+			err := client.DisableActiveMesh(gw)
+			if err != nil {
+				return fmt.Errorf("failed to disable Active Mesh Mode: %s", err)
+			}
+		}
 	}
 
 	d.Partial(false)
