@@ -37,7 +37,7 @@ resource "aviatrix_gateway" "test_gateway_aws" {
   vpc_reg      = "us-west-1"
   gw_size      = "t2.micro"
   subnet       = "10.0.0.0/24"
-  vpn_acess    = "yes"
+  vpn_access    = "yes"
   vpn_cidr     = "192.168.43.0/24"
   max_vpn_conn = "100"
 }

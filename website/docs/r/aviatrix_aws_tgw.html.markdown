@@ -29,17 +29,19 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
     connected_domains    = [
       "Default_Domain",
       "Shared_Service_Domain",
-      "mysdn1",
+      "mysdn1"
     ]
     security_domain_name = "Aviatrix_Edge_Domain"
   }
+  
   security_domains {
     connected_domains    = [
       "Aviatrix_Edge_Domain", 
-      "Shared_Service_Domain",
+      "Shared_Service_Domain"
     ]    
     security_domain_name = "Default_Domain"
   }
+  
   security_domains {
     connected_domains    = [
       "Aviatrix_Edge_Domain", 
@@ -47,6 +49,7 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
     ]
     security_domain_name = "Shared_Service_Domain"
   }
+  
   security_domains {
     connected_domains    = [
       "Aviatrix_Edge_Domain",
@@ -73,7 +76,6 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
   }
   
   security_domains {
-    connected_domains    = []
     security_domain_name = "mysdn2"
     
     attached_vpc { 

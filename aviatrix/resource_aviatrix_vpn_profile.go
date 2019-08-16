@@ -43,22 +43,22 @@ func resourceAviatrixProfile() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"action": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 							Description: "The opposite of the base rule for correct behaviour. 'allow' or 'deny'.",
 						},
 						"proto": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 							Description: "Protocol to allow or deny.",
 						},
 						"port": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 							Description: "Port to be allowed or denied.",
 						},
 						"target": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 							Description: "CIDR to be allowed or denied.",
 						},
 					},
