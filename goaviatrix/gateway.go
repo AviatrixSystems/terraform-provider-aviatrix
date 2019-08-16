@@ -104,6 +104,7 @@ type Gateway struct {
 	Zone                    string `form:"zone,omitempty" json:"zone,omitempty"`
 	VpcSize                 string `form:"vpc_size,omitempty" ` //Only use for gateway create
 	DMZEnabled              string `json:"dmz_enabled,omitempty"`
+	EnableActiveMesh        string `form:"enable_activemesh,omitempty" json:"enable_activemesh,omitempty"`
 }
 
 type GatewayDetail struct {
@@ -332,6 +333,7 @@ func (c *Client) DeleteGateway(gateway *Gateway) error {
 	}
 	return nil
 }
+
 func (c *Client) EnableSNat(gateway *Gateway) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
@@ -356,6 +358,7 @@ func (c *Client) EnableSNat(gateway *Gateway) error {
 	}
 	return nil
 }
+
 func (c *Client) DisableSNat(gateway *Gateway) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
@@ -380,6 +383,7 @@ func (c *Client) DisableSNat(gateway *Gateway) error {
 	}
 	return nil
 }
+
 func (c *Client) UpdateVpnCidr(gateway *Gateway) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
@@ -405,6 +409,7 @@ func (c *Client) UpdateVpnCidr(gateway *Gateway) error {
 	}
 	return nil
 }
+
 func (c *Client) UpdateMaxVpnConn(gateway *Gateway) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
@@ -431,6 +436,7 @@ func (c *Client) UpdateMaxVpnConn(gateway *Gateway) error {
 	}
 	return nil
 }
+
 func (c *Client) SetVpnGatewayAuthentication(gateway *VpnGatewayAuth) error {
 	gateway.CID = c.CID
 	gateway.Action = "set_vpn_gateway_authentication"
@@ -445,6 +451,56 @@ func (c *Client) SetVpnGatewayAuthentication(gateway *VpnGatewayAuth) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API set_vpn_gateway_authentication Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) EnableActiveMesh(gateway *Gateway) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for disable_activemesh") + err.Error())
+	}
+	enableSNat := url.Values{}
+	enableSNat.Add("CID", c.CID)
+	enableSNat.Add("action", "enable_activemesh")
+	enableSNat.Add("gateway_name", gateway.GwName)
+	Url.RawQuery = enableSNat.Encode()
+
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return errors.New("HTTP Get enable_activemesh failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_activemesh failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API enable_activemesh Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) DisableActiveMesh(gateway *Gateway) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for disable_activemesh") + err.Error())
+	}
+	enableSNat := url.Values{}
+	enableSNat.Add("CID", c.CID)
+	enableSNat.Add("action", "disable_activemesh")
+	enableSNat.Add("gateway_name", gateway.GwName)
+	Url.RawQuery = enableSNat.Encode()
+
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return errors.New("HTTP Get disable_activemesh failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_activemesh failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API disable_activemesh Get failed: " + data.Reason)
 	}
 	return nil
 }
