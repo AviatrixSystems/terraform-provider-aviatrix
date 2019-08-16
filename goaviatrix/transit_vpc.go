@@ -32,6 +32,7 @@ type TransitVpc struct {
 	ReuseEip               string `form:"reuse_eip,omitempty"`
 	AllocateNewEipRead     bool   `json:"newly_allocated_eip,omitempty"`
 	Eip                    string `form:"eip,omitempty"`
+	EnableActiveMesh       string `form:"enable_activemesh,omitempty" json:"enable_activemesh,omitempty"`
 }
 
 type TransitGwFireNetInterfaces struct {

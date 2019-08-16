@@ -135,6 +135,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Specify whether to enable firenet interfaces or not.",
 			},
+			"enable_active_mesh": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable Active Mesh Mode for Gateway. Valid values: true, false.",
+			},
 		},
 	}
 }
@@ -340,6 +346,18 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if !d.Get("enable_active_mesh").(bool) {
+		gw := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+		gw.EnableActiveMesh = "no"
+
+		err := client.DisableActiveMesh(gw)
+		if err != nil {
+			return fmt.Errorf("couldn't disable Active Mode for Aviatrix Gateway: %s", err)
+		}
+	}
+
 	return resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -437,6 +455,12 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 
 		d.Set("enable_firenet_interfaces", gwDetail.DMZEnabled)
+
+		if gw.EnableActiveMesh == "yes" {
+			d.Set("enable_active_mesh", true)
+		} else {
+			d.Set("enable_active_mesh", false)
+		}
 	}
 
 	if gw.CloudType == 1 {
@@ -762,6 +786,27 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 
 		d.SetPartial("enable_firenet_interfaces")
+	}
+
+	if d.HasChange("enable_active_mesh") {
+		gw := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+
+		enableActiveMesh := d.Get("enable_active_mesh").(bool)
+		if enableActiveMesh {
+			gw.EnableActiveMesh = "yes"
+			err := client.EnableActiveMesh(gw)
+			if err != nil {
+				return fmt.Errorf("failed to enable Active Mesh Mode: %s", err)
+			}
+		} else {
+			gw.EnableActiveMesh = "no"
+			err := client.DisableActiveMesh(gw)
+			if err != nil {
+				return fmt.Errorf("failed to disable Active Mesh Mode: %s", err)
+			}
+		}
 	}
 
 	d.Partial(false)
