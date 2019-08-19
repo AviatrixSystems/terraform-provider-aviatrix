@@ -18,7 +18,7 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
   account_name                      = "devops"
   attached_aviatrix_transit_gateway = [
      "avxtransitgw",
-     "avxtransitgw2",
+     "avxtransitgw2"
   ]
   aws_side_as_number                = "64512"
   manage_vpc_attachment             = true
@@ -45,14 +45,14 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
   security_domains {
     connected_domains    = [
       "Aviatrix_Edge_Domain", 
-      "Default_Domain",
+      "Default_Domain"
     ]
     security_domain_name = "Shared_Service_Domain"
   }
   
   security_domains {
     connected_domains    = [
-      "Aviatrix_Edge_Domain",
+      "Aviatrix_Edge_Domain"
     ]
     security_domain_name = "SDN1"
     
