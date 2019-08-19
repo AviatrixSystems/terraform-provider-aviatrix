@@ -51,8 +51,8 @@ The following arguments are supported:
   * `dst_ip` - (Required) CIDRs separated by comma or tag names such "HR" or "marketing" etc. Example: "10.30.0.0/16,10.45.0.0/20". The aviatrix_firewall_tag resource should be created prior to using the tag name.
   * `protocol`- (Optional): "all", "tcp", "udp", "icmp", "sctp", "rdp", "dccp".
   * `port` - (Required) a single port or a range of port numbers. e.g.: "25", "25:1024".
-  * `action`- (Required) Valida values: "allow", "deny".
-  * `log_enabled`- (Optional) Valida values: true or false. Default value: false.
+  * `action`- (Required) Valid values: "allow", "deny".
+  * `log_enabled`- (Optional) Valid values: true, false. Default value: false.
 
 ## Import
 
