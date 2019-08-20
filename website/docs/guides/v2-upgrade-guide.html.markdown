@@ -1,3 +1,11 @@
+---
+layout: "aviatrix"
+page_title: "Aviatrix: Upgrade Guide"
+sidebar_current: "docs-aviatrix-guides-v2-upgrade-guide"
+description: |-
+  The Aviatrix provider Upgrade Guide
+---
+
 # Aviatrix Terraform Provider Upgrade Guide (R1.x to R2.x)
 **USAGE:** For customers who are currently already using Terraform to manage their infrastructure prior to Controller 4.7 and are looking to upgrade their Controller to 4.7.501+ due to Field Notice 005 or other reasons, please follow along for guidance on the upgrade process to ensure a smooth transition.
 

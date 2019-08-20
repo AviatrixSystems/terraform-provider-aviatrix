@@ -1,3 +1,11 @@
+---
+layout: "aviatrix"
+page_title: "Guides: Aviatrix Feature Changelist (v2)"
+sidebar_current: "docs-aviatrix-guides-feature-changelist-v2"
+description: |-
+  The Aviatrix provider Feature Changelist (v2) Guide
+---
+
 # Terraform Feature Changelist (v2)
 **USAGE:** Tracks customer-impacting changes to Terraform environment (existing resources) throughout releases from R2.0 to present. New resources may be tracked in the Release Notes.
 
