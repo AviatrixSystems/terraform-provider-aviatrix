@@ -20,8 +20,8 @@ resource "aviatrix_gateway" "test_gateway_aws" {
   gw_name      = "avtxgw1"
   vpc_id       = "vpc-abcdef"
   vpc_reg      = "us-west-1"
-  vpc_size     = "t2.micro"
-  vpc_net      = "10.0.0.0/24"
+  gw_size      = "t2.micro"
+  subnet       = "10.0.0.0/24"
   tag_list     = [
     "k1:v1",
     "k2:v2",
@@ -37,7 +37,7 @@ resource "aviatrix_gateway" "test_gateway_aws" {
   vpc_reg      = "us-west-1"
   gw_size      = "t2.micro"
   subnet       = "10.0.0.0/24"
-  vpn_acess    = "yes"
+  vpn_access    = "yes"
   vpn_cidr     = "192.168.43.0/24"
   max_vpn_conn = "100"
 }
@@ -98,7 +98,7 @@ The following arguments are supported:
 * `gw_name` - (Required) Aviatrix gateway unique name.
 * `vpc_id` - (Required) ID of legacy VPC/Vnet to be connected. A string that is consisted of VPC/Vnet name and cloud provider's resource name. Please check the "Gateway" page on Aviatrix controller GUI for the precise value if needed. Example: "vpc-abcd1234".
 * `vpc_reg` - (Required) Region where this gateway will be launched. Example: "us-east-1". If creating GCP gateway, enter a valid zone for vpc_reg. Example: "us-west1-c".
-* `gw_size` - (Required) Size of Gateway Instance. Example: "t2.micro".
+* `gw_size` - (Required) Size of Gateway Instance. Please note that updating the gateway size will cause a restart; gateway will be down temporarily until re-size is complete. Example: "t2.micro". 
 * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20".
 * `enable_snat` - (Optional) Enable Source NAT for this container. Supported values: true, false.
 * `vpn_access` - (Optional) Enable user access through VPN to this container. Supported values: true, false.
@@ -118,7 +118,7 @@ The following arguments are supported:
 * `duo_integration_key` - (Optional) Integration key for DUO auth mode. Required if otp_mode is "2".
 * `duo_secret_key` - (Optional) Secret key for DUO auth mode. Required if otp_mode is "2".
 * `duo_api_hostname` - (Optional) API hostname for DUO auth mode. Required: Yes if otp_mode is "2".
-* `duo_push_mode` - (Optional) Push mode for DUO auth. Required if otp_mode is "2". Valid values: "auto", "selective" and "token". 
+* `duo_push_mode` - (Optional) Push mode for DUO auth. Required if otp_mode is "2". Valid values: "auto", "selective" and "token".
 * `enable_ldap` - (Optional) Specify whether to enable LDAP or not. Supported values: true, false.
 * `ldap_server` - (Optional) LDAP server address. Required if enable_ldap is true.
 * `ldap_bind_dn` - (Optional) LDAP bind DN. Required if enable_ldap is true.
@@ -130,7 +130,7 @@ The following arguments are supported:
 * `peering_ha_eip` - (Optional) Public IP address that you want assigned to the HA peering instance. Only available for AWS.
 * `peering_ha_gw_size` - (Optional) Size of the Peering HA Gateway.
 * `single_az_ha` (Optional) Set to true if this feature is desired. Supported values: true, false.
-* `allocate_new_eip` - (Optional) When value is off, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 2.7 or later release. Supported values: true, false. Default: true. Option not available for GCP and ARM gateways, they will automatically allocate new eip's.
+* `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 2.7 or later release. Supported values: true, false. Default: true. Option not available for GCP and ARM gateways, they will automatically allocate new eip's.
 * `eip` - (Optional) Required when allocate_new_eip is false. It uses specified EIP for this gateway. Available in 3.5 or later release eip. Only available for AWS.
 * `tag_list` - (Optional) Instance tag of cloud provider. Only available for AWS. Example: ["key1:value1", "key2:value2"].
 
@@ -147,9 +147,9 @@ The following arguments are deprecated:
 
 * `dns_server` - Specify the DNS IP, only required while using a custom private DNS for the VPC.
 
--> **NOTE:** 
+-> **NOTE:**
 
-* `peering_ha_gw_size` - If you are using/upgraded to Aviatrix Terraform Provider v4.3+, and a peering-HA gateway was originally created with a provider version <4.3, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also input this attribute and its value to its corresponding gateway resource in your `.tf` file. 
+* `peering_ha_gw_size` - If you are using/upgraded to Aviatrix Terraform Provider v4.3+, and a peering-HA gateway was originally created with a provider version <4.3, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also input this attribute and its value to its corresponding gateway resource in your `.tf` file.
 * `enable_snat` - In order for the FQDN feature to be enabled for the specified gateway, "enable_snat" must be set to “yes”. If it is not set at gateway creation, creation of FQDN resource will automatically enable SNAT and users must rectify the diff in the Terraform state by setting "enable_snat = true" in their config file.
 * `max_vpn_conn` - If you are using/upgraded to Aviatrix Terraform Provider v4.7+, and a gateway with VPN enabled was originally created with a provider version <4.7, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also input this attribute and its value to "100" in your `.tf` file.
 

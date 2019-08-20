@@ -45,7 +45,7 @@ func resourceAviatrixFQDN() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"gw_name": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 							Description: "Name of the gateway to attach to the specific tag.",
 						},
 						"source_ip_list": {
@@ -65,17 +65,17 @@ func resourceAviatrixFQDN() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"fqdn": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 							Description: "FQDN.",
 						},
 						"proto": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 							Description: "Protocol.",
 						},
 						"port": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 							Description: "Port.",
 						},
 					},

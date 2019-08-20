@@ -13,13 +13,13 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.0 (UserConnect-4.7-patch)``
+``Last updated: R2.1 (UserConnect-4.7-patch)``
 
 
 ---
 
 ## R2.0 (UserConnect-4.7-patch) (Terraform v0.12)
-**NOTICE:** With the Release of Aviatrix v.2, there is major restructuring of our code as well as major changes such as renaming of attributes, resources, and attribute values. All these changes are all in the name of standardization  of naming conventions and resources. Although we recognize that it is a major inconvenience to customers, we believe that these changes will benefit everyone in the long-term not only for customer clarity but ease of future feature-implementations and code maintenance.
+**NOTICE:** With the Release of Aviatrix v.2, there is major restructuring of our code as well as major changes such as renaming of attributes, resources, and attribute values. All these changes are all in the name of standardization of naming conventions and resources. Although we recognize that it is a major inconvenience to customers, we believe that these changes will benefit everyone in the long-term not only for customer clarity but ease of future feature-implementations and code maintenance.
 
 For most changes, unless stated otherwise in the tables below, after editing the respective .tf files, a simple ``terraform refresh`` should rectify the state of the infrastructure.
 
@@ -67,3 +67,10 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |(changed) | transit_vpc --> transit_gateway | enable_nat | **Yes**, if migrating to **transit_gateway** resource; Accepted values are changed to **true** or **false**. Please note this attribute was also renamed. See **Attribute Renaming** table above <br><br> Please see **Resource Renaming** table for full instructions |
 |(changed) | --         | connected_transit | **Yes**, if migrating to **transit_gateway** resource; Accepted values are changed to **true** or **false** <br><br> Please see **Resource Renaming** table for full instructions |
 |(changed) | tunnel     | enable_ha         | **Yes**; Accepted values are changed to **true** or **false** |
+
+
+## R2.1 (UserConnect4.7-patch) (Terraform v0.12)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(new) | transit_gateway| allocate_new_eip, eip, ha_eip | **No**; Terraform support added to feature already available for regular gateway resource. By default, ``allocate_new_eip`` will be set to **true**. Only works for AWS |
+|(new) | spoke_gateway  | allocate_new_eip, eip, ha_eip | **No**; see above for details |

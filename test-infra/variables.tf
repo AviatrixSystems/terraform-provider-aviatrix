@@ -32,7 +32,11 @@ variable "aws_vpc_subnet3" {default="192.168.0.0/24"}
 variable "aws_access_key" {}
 variable "aws_secret_key" {}
 
+variable "IDP_METADATA" {default="ThisIsATest"}
+variable "IDP_METADATA_TYPE"  {default="Text"}
+
 variable "admin_password" {default="Aviatrix123#"}
 variable "admin_email" {default="abc@xyz.com"}
 variable "access_account_name" {default="aws_init_acc"}
 variable "keypair"  {default="aviatrix-key"}
+

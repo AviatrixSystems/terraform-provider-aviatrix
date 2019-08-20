@@ -44,32 +44,34 @@ func resourceAviatrixFirewall() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"src_ip": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 							Description: "CIDRs separated by comma or tag names such 'HR' or 'marketing' etc.",
 						},
 						"dst_ip": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 							Description: "CIDRs separated by comma or tag names such 'HR' or 'marketing' etc.",
 						},
 						"protocol": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Default:     "all",
 							Description: "'all', 'tcp', 'udp', 'icmp', 'sctp', 'rdp', 'dccp'.",
 						},
 						"port": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 							Description: "A single port or a range of port numbers.",
 						},
 						"action": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 							Description: "Valid values: 'allow' and 'deny'.",
 						},
 						"log_enabled": {
 							Type:        schema.TypeBool,
 							Optional:    true,
+							Default:     false,
 							Description: "Valid values: true or false.",
 						},
 					},

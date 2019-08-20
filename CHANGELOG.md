@@ -1,3 +1,13 @@
+## 2.1.29 (Aug 19 2019)
+
+CHANGES
+  - Supported controller version: 4.7.585
+  - Supported Terraform version: 0.12.*
+  - Added new attribute support of allocate_new_eip, eip, ha_eip in spoke_gateway
+  - Added new attribute support of allocate_new_eip, eip, ha_eip in transit_gateway
+  - Added new resource saml_endpoint, currently only "Text" is supported
+  
+  
 ## 2.0.36 (Jul 25 2019)
 
 CHANGES

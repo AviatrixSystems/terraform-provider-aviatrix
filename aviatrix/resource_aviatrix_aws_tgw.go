@@ -69,17 +69,17 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"vpc_region": {
 										Type:        schema.TypeString,
-										Optional:    true,
+										Required:    true,
 										Description: "Region of the vpc.",
 									},
 									"vpc_account_name": {
 										Type:        schema.TypeString,
-										Optional:    true,
+										Required:    true,
 										Description: "The name of a Cloud-Account in Aviatrix controller associated with this VPC.",
 									},
 									"vpc_id": {
 										Type:        schema.TypeString,
-										Optional:    true,
+										Required:    true,
 										Description: "This parameter represents the ID of the VPC.",
 									},
 								},
@@ -138,7 +138,6 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 	var domainConnAll [][]string
 	var attachedGWAll []string
 	var attachedVPCAll [][]string
-
 	domains := d.Get("security_domains").([]interface{})
 	for _, domain := range domains {
 

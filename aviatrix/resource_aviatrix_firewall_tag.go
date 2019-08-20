@@ -32,12 +32,12 @@ func resourceAviatrixFirewallTag() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"cidr_tag_name": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 							Description: "The name attribute of a policy.",
 						},
 						"cidr": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Required:    true,
 							Description: "The CIDR attribute of a policy.",
 						},
 					},

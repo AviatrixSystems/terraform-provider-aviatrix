@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var ErrNotFound = fmt.Errorf("ErrNotFound")
@@ -77,7 +78,7 @@ func ReadFile(local_filepath string) (string, string, error) {
 	// File being read must be .json
 	// Returns filename, contents of json file, error string
 	if filepath.Ext(local_filepath) != ".json" {
-		return "", "", errors.New("Local filepath doesn't lead to a json file")
+		return "", "", errors.New("local filepath doesn't lead to a json file")
 	}
 	filename := filepath.Base(local_filepath)
 	jsonFile, err := os.Open(local_filepath)
@@ -100,4 +101,15 @@ func Contains(slice []string, item string) bool {
 	}
 	_, ok := set[item]
 	return ok
+}
+
+func TagListStrColon(tagListStr []string) []string {
+	if tagListStr != nil {
+		for i := range tagListStr {
+			tagListStr[i] = strings.ReplaceAll(tagListStr[i], ":", "\\\\:")
+			tagListStr[i] = strings.Replace(tagListStr[i], "\\\\:", ":", 1)
+		}
+		return tagListStr
+	}
+	return nil
 }

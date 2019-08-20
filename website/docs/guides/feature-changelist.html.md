@@ -11,7 +11,7 @@ Otherwise, this list does not really apply. Please view the below list for detai
 
 ---
 
-``Last updated: R1.15 (UserConnect-4.7-patch); Terraform v0.12``
+``Last updated: R1.16 (UserConnect-4.7-patch); Terraform v0.12``
 
 
 ---
@@ -112,7 +112,7 @@ Otherwise, this list does not really apply. Please view the below list for detai
 |(new) | gateway        | max_vpn_conn      | **Yes**; if any vpn-gateway was created before this release, add this attribute to .tf file(s) and specify the corresponding value(s), which may be viewed on the Controller's Gateway Page. Any new vpn-gateway created on or after this release must specify this parameter. Default is 100 |
 
 
-## R1.15.22 (UserConnect-4.7.494) (Terraform v0.12)
+## R1.16.20 (UserConnect-4.7.520) (Terraform v0.12)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
 |(changed) | aws_tgw    | security_domains, attached_vpc | **Yes**; due to Hashicorp's Terraform v0.12 release, syntactical changes were introduced. Most notably, map attributes become written as separate blocks |

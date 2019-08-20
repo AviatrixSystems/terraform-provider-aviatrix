@@ -61,6 +61,19 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Specify whether enabling Source NAT feature on the gateway or not.",
 			},
+			"allocate_new_eip": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+				Description: "If false, reuse an idle address in Elastic IP pool for this gateway. " +
+					"Otherwise, allocate a new Elastic IP and use it for this gateway.",
+			},
+			"eip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Required when allocate_new_eip is false. It uses specified EIP for this gateway.",
+			},
 			"ha_subnet": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -78,6 +91,12 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Optional:    true,
 				Default:     "",
 				Description: "HA Gateway Size.",
+			},
+			"ha_eip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Public IP address that you want assigned to the HA Spoke Gateway.",
 			},
 			"single_az_ha": {
 				Type:        schema.TypeBool,
@@ -135,8 +154,12 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		gateway.SingleAzHa = "disabled"
 	}
 
-	if gateway.EnableNat != "yes" {
-		gateway.EnableNat = "no"
+	allocateNewEip := d.Get("allocate_new_eip").(bool)
+	if allocateNewEip {
+		gateway.ReuseEip = "off"
+	} else {
+		gateway.ReuseEip = "on"
+		gateway.Eip = d.Get("eip").(string)
 	}
 
 	if gateway.CloudType == 1 || gateway.CloudType == 4 {
@@ -163,11 +186,11 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	log.Printf("[INFO] Creating Aviatrix Spoke VPC: %#v", gateway)
+	log.Printf("[INFO] Creating Aviatrix Spoke Gateway: %#v", gateway)
 
 	err := client.LaunchSpokeVpc(gateway)
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix Spoke VPC: %s", err)
+		return fmt.Errorf("failed to create Aviatrix Spoke Gateway: %s", err)
 	}
 
 	d.SetId(gateway.GwName)
@@ -175,16 +198,14 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	flag := false
 	defer resourceAviatrixSpokeGatewayReadIfRequired(d, meta, &flag)
 
-	if enableNat {
-		log.Printf("[INFO] Aviatrix NAT enabled gateway: %#v", gateway)
-	}
-
 	if singleAZ {
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName:   d.Get("gw_name").(string),
 			SingleAZ: "enabled",
 		}
+
 		log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
+
 		err := client.EnableSingleAZGateway(singleAZGateway)
 		if err != nil {
 			return fmt.Errorf("failed to create single AZ GW HA: %s", err)
@@ -199,9 +220,12 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			HASubnet:  haSubnet,
 			HAZone:    haZone,
 		}
+
+		haGateway.Eip = d.Get("ha_eip").(string)
+
 		err = client.EnableHaSpokeVpc(haGateway)
 		if err != nil {
-			return fmt.Errorf("failed to enable HA Aviatrix TransitVpc: %s", err)
+			return fmt.Errorf("failed to enable HA Aviatrix SpokeGateway: %s", err)
 		}
 
 		log.Printf("[INFO]Resizing Spoke HA Gateway: %#v", haGwSize)
@@ -211,16 +235,21 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
 					"ha_subnet or ha_zone is set. Example: t2.micro us-west1-b")
 			}
+
 			haGateway := &goaviatrix.Gateway{
 				CloudType: d.Get("cloud_type").(int),
 				GwName:    d.Get("gw_name").(string) + "-hagw",
 			}
+
 			haGateway.GwSize = d.Get("ha_gw_size").(string)
+
+			log.Printf("[INFO] Resizing Spoke HA Gateway size to: %s ", haGateway.GwSize)
+
 			err := client.UpdateGateway(haGateway)
-			log.Printf("[INFO] Resizing Spoke HA GAteway size to: %s ", haGateway.GwSize)
 			if err != nil {
-				return fmt.Errorf("failed to update Aviatrix Transit HA Gateway size: %s", err)
+				return fmt.Errorf("failed to update Aviatrix Spoke HA Gateway size: %s", err)
 			}
+
 			d.Set("ha_gw_size", haGwSize)
 		}
 	}
@@ -228,6 +257,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	if _, ok := d.GetOk("tag_list"); ok && gateway.CloudType == 1 {
 		tagList := d.Get("tag_list").([]interface{})
 		tagListStr := goaviatrix.ExpandStringList(tagList)
+		tagListStr = goaviatrix.TagListStrColon(tagListStr)
 		gateway.TagList = strings.Join(tagListStr, ",")
 		tags := &goaviatrix.Tags{
 			CloudType:    1,
@@ -247,11 +277,11 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		//No HA config, just return
 		err := client.SpokeJoinTransit(gateway)
 		if err != nil {
-			return fmt.Errorf("failed to join TransitVpc: %s", err)
+			return fmt.Errorf("failed to join TransitGateway: %s", err)
 		}
 	}
 
-	return resourceAviatrixSpokeVpcReadIfRequired(d, meta, &flag)
+	return resourceAviatrixSpokeGatewayReadIfRequired(d, meta, &flag)
 }
 
 func resourceAviatrixSpokeGatewayReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
@@ -284,7 +314,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix SpokeVpc: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix SpokeGateway: %s", err)
 	}
 
 	log.Printf("[TRACE] reading spoke gateway %s: %#v", d.Get("gw_name").(string), gw)
@@ -292,20 +322,31 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	if gw != nil {
 		d.Set("cloud_type", gw.CloudType)
 		d.Set("account_name", gw.AccountName)
+
 		if gw.CloudType == 1 {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0]) //aws vpc_id returns as <vpc_id>~~<other vpc info> in rest api
 			d.Set("vpc_reg", gw.VpcRegion)                    //aws vpc_reg returns as vpc_region in rest api
+
+			if gw.AllocateNewEipRead {
+				d.Set("allocate_new_eip", true)
+			} else {
+				d.Set("allocate_new_eip", false)
+			}
 		} else if gw.CloudType == 4 {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0]) //gcp vpc_id returns as <vpc_id>~-~<other vpc info> in rest api
 			d.Set("vpc_reg", gw.GatewayZone)                   //gcp vpc_reg returns as gateway_zone in json
+
+			d.Set("allocate_new_eip", true)
 		} else if gw.CloudType == 8 {
 			d.Set("vpc_id", gw.VpcID)
 			d.Set("vpc_reg", gw.VpcRegion)
+
+			d.Set("allocate_new_eip", true)
 		}
+		d.Set("eip", gw.PublicIP)
 
 		d.Set("subnet", gw.VpcNet)
 		d.Set("gw_size", gw.GwSize)
-		d.Set("public_ip", gw.PublicIP)
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 
 		if gw.EnableNat == "yes" {
@@ -364,8 +405,9 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("ha_gw_size", "")
 			d.Set("ha_subnet", "")
 			d.Set("ha_zone", "")
+			d.Set("ha_eip", "")
 		} else {
-			return fmt.Errorf("couldn't find Aviatrix SpokeVpc HA Gateway: %s", err)
+			return fmt.Errorf("couldn't find Aviatrix SpokeGateway HA Gateway: %s", err)
 		}
 	} else {
 		log.Printf("[INFO] Spoke HA Gateway size: %s", haGw.GwSize)
@@ -376,6 +418,8 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("ha_zone", haGw.GatewayZone)
 			d.Set("ha_subnet", "")
 		}
+
+		d.Set("ha_eip", haGw.PublicIP)
 		d.Set("ha_gw_size", haGw.GwSize)
 	}
 
@@ -432,18 +476,18 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 
 		if singleAZGateway.SingleAZ == "enabled" {
 			log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
+
 			err := client.EnableSingleAZGateway(singleAZGateway)
 			if err != nil {
 				return fmt.Errorf("failed to enable single AZ GW HA: %s", err)
 			}
-		} else if singleAZGateway.SingleAZ == "disabled" {
-			log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
+		} else {
+			log.Printf("[INFO] Disable Single AZ GW HA: %#v", singleAZGateway)
+
 			err := client.DisableSingleAZGateway(singleAZGateway)
 			if err != nil {
-				return fmt.Errorf("failed to enable single AZ GW HA: %s", err)
+				return fmt.Errorf("failed to disable single AZ GW HA: %s", err)
 			}
-		} else {
-			return fmt.Errorf("single_az_ha should be only 'enabled/disabled'")
 		}
 	}
 
@@ -468,6 +512,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		newTagList := goaviatrix.Difference(newList, oldList)
 		if len(oldTagList) != 0 || len(newTagList) != 0 {
 			if len(oldTagList) != 0 {
+				oldTagList = goaviatrix.TagListStrColon(oldTagList)
 				tags.TagList = strings.Join(oldTagList, ",")
 				err := client.DeleteTags(tags)
 				if err != nil {
@@ -475,6 +520,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				}
 			}
 			if len(newTagList) != 0 {
+				newTagList = goaviatrix.TagListStrColon(newTagList)
 				tags.TagList = strings.Join(newTagList, ",")
 				err := client.AddTags(tags)
 				if err != nil {
@@ -482,6 +528,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				}
 			}
 		}
+
 		d.SetPartial("tag_list")
 	} else if d.HasChange("tag_list") && gateway.CloudType != 1 {
 		return fmt.Errorf("adding tags is only supported for aws, cloud_type must be set to 1")
@@ -495,7 +542,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		gateway.GwSize = d.Get("gw_size").(string)
 		err := client.UpdateGateway(gateway)
 		if err != nil {
-			return fmt.Errorf("failed to update Aviatrix SpokeVpc: %s", err)
+			return fmt.Errorf("failed to update Aviatrix SpokeGateway: %s", err)
 		}
 		d.SetPartial("gw_size")
 	}
@@ -505,6 +552,10 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		spokeGw := &goaviatrix.SpokeVpc{
 			GwName:    d.Get("gw_name").(string),
 			CloudType: d.Get("cloud_type").(int),
+		}
+
+		if spokeGw.CloudType == 1 {
+			spokeGw.Eip = d.Get("ha_eip").(string)
 		}
 
 		oldSubnet, newSubnet := d.GetChange("ha_subnet")
@@ -534,28 +585,28 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			//New configuration to enable HA
 			err := client.EnableHaSpokeVpc(spokeGw)
 			if err != nil {
-				return fmt.Errorf("failed to enable HA Aviatrix SpokeVpc: %s", err)
+				return fmt.Errorf("failed to enable HA Aviatrix SpokeGateway: %s", err)
 			}
 			newHaGwEnabled = true
 		} else if deleteHaGw {
 			//Ha configuration has been deleted
 			err := client.DeleteGateway(haGateway)
 			if err != nil {
-				return fmt.Errorf("failed to delete Aviatrix SpokeVpc HA gateway: %s", err)
+				return fmt.Errorf("failed to delete Aviatrix SpokeGateway HA gateway: %s", err)
 			}
 		} else if changeHaGw {
 			//HA subnet has been modified. Delete older HA GW,
 			// and launch new HA GW in new subnet.
 			err := client.DeleteGateway(haGateway)
 			if err != nil {
-				return fmt.Errorf("failed to delete Aviatrix SpokeVpc HA gateway: %s", err)
+				return fmt.Errorf("failed to delete Aviatrix SpokeGateway HA gateway: %s", err)
 			}
 
 			gateway.GwName = d.Get("spokeGw_name").(string)
 			//New configuration to enable HA
 			haErr := client.EnableHaSpokeVpc(spokeGw)
 			if haErr != nil {
-				return fmt.Errorf("failed to enable HA Aviatrix SpokeVpc: %s", err)
+				return fmt.Errorf("failed to enable HA Aviatrix SpokeGateway: %s", err)
 			}
 		}
 		d.SetPartial("ha_subnet")
@@ -578,8 +629,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 					d.Set("ha_zone", "")
 					return nil
 				}
-				return fmt.Errorf("couldn't find Aviatrix Spoke HA Gateway while trying to update HA Gw "+
-					"size: %s", err)
+				return fmt.Errorf("couldn't find Aviatrix Spoke HA Gateway while trying to update HA Gw size: %s", err)
 			}
 			haGateway.GwSize = d.Get("ha_gw_size").(string)
 			if haGateway.GwSize == "" {
@@ -631,32 +681,33 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			//New configuration to join to transit GW
 			err := client.SpokeJoinTransit(spokeVPC)
 			if err != nil {
-				return fmt.Errorf("failed to join transit VPC: %s", err)
+				return fmt.Errorf("failed to join Transit Gateway: %s", err)
 			}
 		} else if n == "" {
 			//Transit GW has been deleted, leave transit GW.
 			err := client.SpokeLeaveTransit(spokeVPC)
 			if err != nil {
-				return fmt.Errorf("failed to leave transit VPC: %s", err)
+				return fmt.Errorf("failed to leave Transit Gateway: %s", err)
 			}
 		} else {
 			//Change transit GW
 			err := client.SpokeLeaveTransit(spokeVPC)
 			if err != nil {
-				return fmt.Errorf("failed to leave transit VPC: %s", err)
+				return fmt.Errorf("failed to leave Transit Gateway: %s", err)
 			}
 
 			err = client.SpokeJoinTransit(spokeVPC)
 			if err != nil {
-				return fmt.Errorf("failed to join transit VPC: %s", err)
+				return fmt.Errorf("failed to join Transit Gateway: %s", err)
 			}
 		}
+
 		d.SetPartial("transit_gw")
 	}
 
 	d.Partial(false)
 	d.SetId(gateway.GwName)
-	return resourceAviatrixSpokeVpcRead(d, meta)
+	return resourceAviatrixSpokeGatewayRead(d, meta)
 }
 
 func resourceAviatrixSpokeGatewayDelete(d *schema.ResourceData, meta interface{}) error {
@@ -667,7 +718,7 @@ func resourceAviatrixSpokeGatewayDelete(d *schema.ResourceData, meta interface{}
 		GwName:    d.Get("gw_name").(string),
 	}
 
-	log.Printf("[INFO] Deleting Aviatrix Spoke VPC: %#v", gateway)
+	log.Printf("[INFO] Deleting Aviatrix Spoke Gateway: %#v", gateway)
 
 	if transitGw := d.Get("transit_gw").(string); transitGw != "" {
 		spokeVPC := &goaviatrix.SpokeVpc{
@@ -676,7 +727,7 @@ func resourceAviatrixSpokeGatewayDelete(d *schema.ResourceData, meta interface{}
 
 		err := client.SpokeLeaveTransit(spokeVPC)
 		if err != nil {
-			return fmt.Errorf("failed to leave transit VPC: %s", err)
+			return fmt.Errorf("failed to leave Transit Gateway: %s", err)
 		}
 	}
 
@@ -688,7 +739,7 @@ func resourceAviatrixSpokeGatewayDelete(d *schema.ResourceData, meta interface{}
 		gateway.GwName += "-hagw"
 		err := client.DeleteGateway(gateway)
 		if err != nil {
-			return fmt.Errorf("failed to delete Aviatrix SpokeVpc HA gateway: %s", err)
+			return fmt.Errorf("failed to delete Aviatrix SpokeGateway HA gateway: %s", err)
 		}
 	}
 
@@ -696,7 +747,7 @@ func resourceAviatrixSpokeGatewayDelete(d *schema.ResourceData, meta interface{}
 
 	err := client.DeleteGateway(gateway)
 	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix SpokeVpc: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix SpokeGateway: %s", err)
 	}
 
 	return nil

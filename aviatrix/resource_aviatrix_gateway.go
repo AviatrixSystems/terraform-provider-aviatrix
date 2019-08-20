@@ -247,14 +247,14 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
-				Description: "When value is off, reuse an idle address in Elastic IP pool for this gateway. " +
+				Description: "When value is false, reuse an idle address in Elastic IP pool for this gateway. " +
 					"Otherwise, allocate a new Elastic IP and use it for this gateway.",
 			},
 			"eip": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
-				Description: "Required when allocate_new_eip is 'off'. It uses specified EIP for this gateway.",
+				Description: "Required when allocate_new_eip is false. It uses specified EIP for this gateway.",
 			},
 			"tag_list": {
 				Type:        schema.TypeList,
@@ -525,6 +525,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	if _, ok := d.GetOk("tag_list"); ok && gateway.CloudType == 1 {
 		tagList := d.Get("tag_list").([]interface{})
 		tagListStr := goaviatrix.ExpandStringList(tagList)
+		tagListStr = goaviatrix.TagListStrColon(tagListStr)
 		gateway.TagList = strings.Join(tagListStr, ",")
 		tags := &goaviatrix.Tags{
 			CloudType:    1,
@@ -1080,6 +1081,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		newTagList := goaviatrix.Difference(newList, oldList)
 		if len(oldTagList) != 0 || len(newTagList) != 0 {
 			if len(oldTagList) != 0 {
+				oldTagList = goaviatrix.TagListStrColon(oldTagList)
 				tags.TagList = strings.Join(oldTagList, ",")
 				err := client.DeleteTags(tags)
 				if err != nil {
@@ -1087,6 +1089,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				}
 			}
 			if len(newTagList) != 0 {
+				newTagList = goaviatrix.TagListStrColon(newTagList)
 				tags.TagList = strings.Join(newTagList, ",")
 				err := client.AddTags(tags)
 				if err != nil {
