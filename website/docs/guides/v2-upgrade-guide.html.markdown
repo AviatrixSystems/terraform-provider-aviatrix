@@ -48,9 +48,9 @@ This phase involves first upgrading the Controller to 4.7. Afterwards, customers
     - https://docs.aviatrix.com/HowTos/UCC_Release_Notes.html
 2. Update Terraform files (.tf) as necessary. Please reference documentation linked below to note specific changes to any resource attributes that you may be using in your configuration:
   - Please refer **up to** R1.14's table (for Terraform 0.11) (compatible with Controller 4.7):
-  - https://github.com/terraform-provider/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist.html
+  - https://github.com/terraform-providers/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist.html.markdown
   - Aviatrix Terraform Provider Release Notes:
-    - https://github.com/AviatrixSystems/terraform-provider-aviatrix/releases
+    - https://github.com/terraform-providers/terraform-provider-aviatrix/releases
 3. Update Aviatrix Terraform provider:
   - Navigate to Aviatrix Terraform provider directory:
     - Mac:
@@ -150,7 +150,7 @@ This phase involves upgrading Hashicorp's Terraform from v0.11 to v0.12. As far 
     - https://www.hashicorp.com/blog/announcing-terraform-0-12
 2. Update Terraform files (.tf) as necessary. Please reference documentation linked below to note specific changes to any resource attributes that you may be using in your configuration:
   - Please follow the **R1.16's table** (for Terraform 0.12) (compatible with Controller 4.7):
-    - https://github.com/terraform-providers/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist.html.#r11620-userconnect-47520-terraform-v012
+    - https://github.com/terraform-providers/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist.html.markdown#r11620-userconnect-47520-terraform-v012
   - The same table is shown below for your convenience:
 
 ### R1.16.20 (UserConnect-4.7.520) (Terraform v0.12)
@@ -262,7 +262,7 @@ Navigate to your local Aviatrix Terraform provider repository, which by default,
 ## Phase 3: Upgrading Aviatrix Terraform Provider to R2.0
 **Summary:** This will be the largest phase in terms of the upgrade process. While this phase only involves upgrading the customer's (.tf) files as necessary, the amount of changes from R1.xx to R2.0+ are not small. Afterwards, customers must upgrade their Aviatrix Terraform provider version, and then perform ``terraform refresh`` or ``terraform import`` as necessary.
 1. Update Terraform files (.tf) as necessary. Please reference documentation linked below to note specific changes to any resource attributes that you may be using in your configuration:
-  - https://github.com/terraform-providers/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist-v2.html
+  - https://github.com/terraform-providers/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist-v2.html.markdown
 2. Update Aviatrix Terraform provider:
   - Navigate to Aviatrix Terraform provider directory:
     - Mac:
@@ -361,5 +361,5 @@ Now, to determine whether or not to do a ``terraform refresh`` or ``terraform im
 - Any updates/ future releases for the Aviatrix Terraform provider will continue to be documented here:
   - https://github.com/terraform-providers/terraform-provider-aviatrix/releases
 - Any updates/ future releases for R2.0+ that might impact customers will continue to be documented here:
-  - https://github.com/terraform-providers/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist-v2.html
+  - https://github.com/terraform-providers/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist-v2.html.markdown
   - Any future necessary changes will only be simple and only require small tweaks and a ``terraform refresh``
