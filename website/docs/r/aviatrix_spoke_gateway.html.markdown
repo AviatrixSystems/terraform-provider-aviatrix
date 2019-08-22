@@ -71,7 +71,7 @@ The following arguments are supported:
 * `single_az_ha` (Optional) Set to true if this feature is desired. Supported values: true, false.
 * `transit_gw` - (Optional) Specify the transit Gateway.
 * `tag_list` - (Optional) Instance tag of cloud provider. Only AWS, cloud_type is "1", is supported. Example: ["key1:value1", "key2:value2"]. 
-* `enable_active_mesh` - (Optional) Enable Active Mesh Mode for Spoke Gateway. Valid values: true, false. Default value: false.
+* `enable_active_mesh` - (Optional) Switch to Enable/Disable Active Mesh Mode for Spoke Gateway. Valid values: true, false. Default value: false.
 
 ## Import
 
