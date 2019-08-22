@@ -165,35 +165,24 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 		dn := domain.(map[string]interface{})
 		domainsAll = append(domainsAll, dn["security_domain_name"].(string))
 
-		var afd, ned, nfd bool
-		if dn["aviatrix_firewall"] == nil {
-			afd = false
-		} else {
-			afd = dn["aviatrix_firewall"].(bool)
-		}
-		if dn["native_egress"] == nil {
-			ned = false
-		} else {
-			ned = dn["native_egress"].(bool)
-		}
-		if dn["native_firewall"] == nil {
-			nfd = false
-		} else {
-			nfd = dn["native_firewall"].(bool)
-		}
-
 		securityDomainRule := goaviatrix.SecurityDomainRule{
-			Name:                   dn["security_domain_name"].(string),
-			AviatrixFirewallDomain: afd,
-			NativeEgressDomain:     ned,
-			NativeFirewallDomain:   nfd,
+			Name: dn["security_domain_name"].(string),
+		}
+		if dn["aviatrix_firewall"].(bool) {
+			securityDomainRule.AviatrixFirewallDomain = true
+		}
+		if dn["native_egress"].(bool) {
+			securityDomainRule.NativeEgressDomain = true
+		}
+		if dn["native_firewall"].(bool) {
+			securityDomainRule.NativeFirewallDomain = true
 		}
 
 		if !client.SecurityDomainRuleValidation(&securityDomainRule) {
 			return fmt.Errorf("only one or none of 'firewall_domain', 'native_egress' and 'native_firewall' could be set true")
 		}
 
-		mapSecurityDomainRule[securityDomainRule.Name] = [3]bool{afd, ned, nfd}
+		mapSecurityDomainRule[securityDomainRule.Name] = [3]bool{securityDomainRule.AviatrixFirewallDomain, securityDomainRule.NativeEgressDomain, securityDomainRule.NativeFirewallDomain}
 
 		for _, connectedDomain := range dn["connected_domains"].([]interface{}) {
 			securityDomainRule.ConnectedDomain = append(securityDomainRule.ConnectedDomain, connectedDomain.(string))
@@ -590,31 +579,21 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 
 			domainsOld = append(domainsOld, dn["security_domain_name"].(string))
 
-			var afdOld, nedOld, nfdOld bool
-			if dn["aviatrix_firewall"] == nil {
-				afdOld = false
-			} else {
-				afdOld = dn["aviatrix_firewall"].(bool)
-			}
-			if dn["native_egress"] == nil {
-				nedOld = false
-			} else {
-				nedOld = dn["native_egress"].(bool)
-			}
-			if dn["native_firewall"] == nil {
-				nfdOld = false
-			} else {
-				nfdOld = dn["native_firewall"].(bool)
-			}
-
 			securityDomainRule := goaviatrix.SecurityDomainRule{
-				Name:                   dn["security_domain_name"].(string),
-				AviatrixFirewallDomain: afdOld,
-				NativeEgressDomain:     nedOld,
-				NativeFirewallDomain:   nfdOld,
+				Name: dn["security_domain_name"].(string),
 			}
 
-			mapSecurityDomainsOld[securityDomainRule.Name] = [3]bool{afdOld, nedOld, nfdOld}
+			if dn["aviatrix_firewall"].(bool) {
+				securityDomainRule.AviatrixFirewallDomain = true
+			}
+			if dn["native_egress"].(bool) {
+				securityDomainRule.NativeEgressDomain = true
+			}
+			if dn["native_firewall"].(bool) {
+				securityDomainRule.NativeFirewallDomain = true
+			}
+
+			mapSecurityDomainsOld[securityDomainRule.Name] = [3]bool{securityDomainRule.AviatrixFirewallDomain, securityDomainRule.NativeEgressDomain, securityDomainRule.NativeFirewallDomain}
 
 			for _, connectedDomain := range dn["connected_domains"].([]interface{}) {
 				securityDomainRule.ConnectedDomain = append(securityDomainRule.ConnectedDomain, connectedDomain.(string))
@@ -657,43 +636,33 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 
 			domainsNew = append(domainsNew, dn["security_domain_name"].(string))
 
-			var afdNew, nedNew, nfdNew bool
-			if dn["aviatrix_firewall"] == nil {
-				afdNew = false
-			} else {
-				afdNew = dn["aviatrix_firewall"].(bool)
-			}
-			if dn["native_egress"] == nil {
-				nedNew = false
-			} else {
-				nedNew = dn["native_egress"].(bool)
-			}
-			if dn["native_firewall"] == nil {
-				nfdNew = false
-			} else {
-				nfdNew = dn["native_firewall"].(bool)
-			}
-
 			securityDomainRule := goaviatrix.SecurityDomainRule{
 				Name: dn["security_domain_name"].(string),
+			}
+			if dn["aviatrix_firewall"].(bool) {
+				securityDomainRule.AviatrixFirewallDomain = true
+			}
+			if dn["native_egress"].(bool) {
+				securityDomainRule.NativeEgressDomain = true
+			}
+			if dn["native_firewall"].(bool) {
+				securityDomainRule.NativeFirewallDomain = true
 			}
 
 			if !client.SecurityDomainRuleValidation(&securityDomainRule) {
 				return fmt.Errorf("only one or none of 'firewall_domain', 'native_egress' and 'native_firewall' could be set true")
 			}
 
-			mapSecurityDomainsNew[securityDomainRule.Name] = [3]bool{afdNew, nedNew, nfdNew}
+			mapSecurityDomainsNew[securityDomainRule.Name] = [3]bool{securityDomainRule.AviatrixFirewallDomain, securityDomainRule.NativeEgressDomain, securityDomainRule.NativeFirewallDomain}
 
 			if val, ok := mapSecurityDomainsOld[securityDomainRule.Name]; ok {
-
-				log.Printf("zjin00: securityDomainRule.Name is %v", securityDomainRule.Name)
-				if val[0] != afdNew {
+				if val[0] != securityDomainRule.AviatrixFirewallDomain {
 					return fmt.Errorf("cannot update 'aviatrix_firewall'")
 				}
-				if val[1] != nedNew {
+				if val[1] != securityDomainRule.NativeEgressDomain {
 					return fmt.Errorf("cannot update 'native_egress'")
 				}
-				if val[2] != nfdNew {
+				if val[2] != securityDomainRule.NativeFirewallDomain {
 					return fmt.Errorf("cannot update 'native_firewall'")
 				}
 			}
