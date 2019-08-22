@@ -139,7 +139,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Enable Active Mesh Mode for Gateway. Valid values: true, false.",
+				Description: "Switch to Enable/Disable Active Mesh Mode for Spoke Gateway. Valid values: true, false.",
 			},
 			"cloud_instance_id": {
 				Type:        schema.TypeString,
@@ -336,13 +336,13 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if !d.Get("enable_active_mesh").(bool) {
+	if d.Get("enable_active_mesh").(bool) {
 		gw := &goaviatrix.Gateway{
 			GwName: d.Get("gw_name").(string),
 		}
-		gw.EnableActiveMesh = "no"
+		gw.EnableActiveMesh = "yes"
 
-		err := client.DisableActiveMesh(gw)
+		err := client.EnableActiveMesh(gw)
 		if err != nil {
 			return fmt.Errorf("couldn't disable Active Mode for Aviatrix Gateway: %s", err)
 		}
