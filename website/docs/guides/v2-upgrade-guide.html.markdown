@@ -49,9 +49,9 @@ This phase involves first upgrading the Controller to 4.7. Afterwards, customers
     - https://docs.aviatrix.com/HowTos/UCC_Release_Notes.html
 2. Update Terraform files (.tf) as necessary. Please reference documentation linked below to note specific changes to any resource attributes that you may be using in your configuration:
   - Please refer **up to** R1.14's table (for Terraform 0.11) (compatible with Controller 4.7):
-  - https://github.com/AviatrixSystems/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist.html.md
+  - https://github.com/terraform-providers/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist.html.md
   - Aviatrix Terraform Provider Release Notes:
-    - https://github.com/AviatrixSystems/terraform-provider-aviatrix/releases
+    - https://github.com/terraform-providers/terraform-provider-aviatrix/releases
 3. Update Aviatrix Terraform provider:
   - Navigate to Aviatrix Terraform provider directory:
     - Mac:
@@ -137,7 +137,7 @@ resource "aviatrix_gateway" "aws_vpn_gw" {
 ```
 After completion of editing your Terraform files, the rest of this phase is as simple as updating your Aviatrix Terraform provider repository and using the correct corresponding release.
 
-Navigate to your local Aviatrix Terraform provider repository, which by default, if setup according to our initial setup doc [here](https://github.com/AviatrixSystems/terraform-provider-aviatrix/blob/master/README.md), is ``$GOPATH/src/github.com/terraform-providers``. We will then use Git to pull latest changes from our remote repository (``git pull``), and switch to the branch that corresponds with our Controller version (``git checkout UserConnect-4.7-TF.11``). Build the provider as according to Step 3 depending on your OS. Finally, navigate back to where your Terraform files reside, and perform a ``terraform init`` to reinitialise the Terraform environment for the current directory based on the new provider, and run a ``terraform refresh``. A ``terraform plan`` may be performed to catch any deltas. If there are still any deltas, you may fix and repeat the refresh/ plan steps again.
+Navigate to your local Aviatrix Terraform provider repository, which by default, if setup according to our initial setup doc [here](https://github.com/terraform-providers/terraform-provider-aviatrix/blob/master/README.md), is ``$GOPATH/src/github.com/terraform-providers``. We will then use Git to pull latest changes from our remote repository (``git pull``), and switch to the branch that corresponds with our Controller version (``git checkout UserConnect-4.7-TF.11``). Build the provider as according to Step 3 depending on your OS. Finally, navigate back to where your Terraform files reside, and perform a ``terraform init`` to reinitialise the Terraform environment for the current directory based on the new provider, and run a ``terraform refresh``. A ``terraform plan`` may be performed to catch any deltas. If there are still any deltas, you may fix and repeat the refresh/ plan steps again.
 
 ---
 ## Phase 2: Upgrading Hashicorp's Terraform to v0.12
@@ -151,7 +151,7 @@ This phase involves upgrading Hashicorp's Terraform from v0.11 to v0.12. As far 
     - https://www.hashicorp.com/blog/announcing-terraform-0-12
 2. Update Terraform files (.tf) as necessary. Please reference documentation linked below to note specific changes to any resource attributes that you may be using in your configuration:
   - Please follow the **R1.16's table** (for Terraform 0.12) (compatible with Controller 4.7):
-    - https://github.com/AviatrixSystems/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist.html.md#r11620-userconnect-47520-terraform-v012
+    - https://github.com/terraform-providers/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist.html.md#r11620-userconnect-47520-terraform-v012
   - The same table is shown below for your convenience:
 
 ### R1.16.20 (UserConnect-4.7.520) (Terraform v0.12)
@@ -257,13 +257,13 @@ resource "aviatrix_vpn_profile" "vpn-profile-1" {
 ```
 Once again, as in Phase 1, you will have to update your Aviatrix Terraform provider repository and use the correct corresponding release.
 
-Navigate to your local Aviatrix Terraform provider repository, which by default, if setup according to our initial setup doc [here](https://github.com/AviatrixSystems/terraform-provider-aviatrix/blob/master/README.md), is ``$GOPATH/src/github.com/terraform-providers``. We will then use Git to pull latest changes from our remote repository (``git pull``), and switch to the branch that corresponds with our Controller version (``git checkout UserConnect-4.7-TF.12-v1``). Build the provider as according to Step 3 depending on your OS. Finally, navigate back to where your Terraform files reside, and perform a ``terraform init`` to reinitialise the Terraform environment for the current directory based on the new provider, and run a ``terraform refresh``. A ``terraform plan`` may be performed to catch any deltas. If there are still any deltas, you may fix and repeat the refresh/ plan steps again.
+Navigate to your local Aviatrix Terraform provider repository, which by default, if setup according to our initial setup doc [here](https://github.com/terraform-providers/terraform-provider-aviatrix/blob/master/README.md), is ``$GOPATH/src/github.com/terraform-providers``. We will then use Git to pull latest changes from our remote repository (``git pull``), and switch to the branch that corresponds with our Controller version (``git checkout UserConnect-4.7-TF.12-v1``). Build the provider as according to Step 3 depending on your OS. Finally, navigate back to where your Terraform files reside, and perform a ``terraform init`` to reinitialise the Terraform environment for the current directory based on the new provider, and run a ``terraform refresh``. A ``terraform plan`` may be performed to catch any deltas. If there are still any deltas, you may fix and repeat the refresh/ plan steps again.
 
 ---
 ## Phase 3: Upgrading Aviatrix Terraform Provider to R2.0
 **Summary:** This will be the largest phase in terms of the upgrade process. While this phase only involves upgrading the customer's (.tf) files as necessary, the amount of changes from R1.xx to R2.0+ are not small. Afterwards, customers must upgrade their Aviatrix Terraform provider version, and then perform ``terraform refresh`` or ``terraform import`` as necessary.
 1. Update Terraform files (.tf) as necessary. Please reference documentation linked below to note specific changes to any resource attributes that you may be using in your configuration:
-  - https://github.com/AviatrixSystems/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist-v2.html.md
+  - https://github.com/terraform-providers/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist-v2.html.md
 2. Update Aviatrix Terraform provider:
   - Navigate to Aviatrix Terraform provider directory:
     - Mac:
@@ -353,14 +353,14 @@ resource "aviatrix_gateway" "aws_vpn_gw" {
 
 Once again, as in the previous two phases, you will have to update your Aviatrix Terraform provider repository and use the correct corresponding release.
 
-Navigate to your local Aviatrix Terraform provider repository, which by default, if setup according to our initial setup doc [here](https://github.com/AviatrixSystems/terraform-provider-aviatrix/blob/master/README.md), is ``$GOPATH/src/github.com/terraform-providers``. We will then use Git to pull latest changes from our remote repository (``git pull``), and switch to the branch that corresponds with our Controller version (``git checkout UserConnect-4.7-TF.12-v2``). Build the provider as according to Step 3 depending on your OS. Finally, navigate back to where your Terraform files reside, and perform a ``terraform init`` to reinitialise the Terraform environment for the current directory based on the new provider.
+Navigate to your local Aviatrix Terraform provider repository, which by default, if setup according to our initial setup doc [here](https://github.com/terraform-providers/terraform-provider-aviatrix/blob/master/README.md), is ``$GOPATH/src/github.com/terraform-providers``. We will then use Git to pull latest changes from our remote repository (``git pull``), and switch to the branch that corresponds with our Controller version (``git checkout UserConnect-4.7-TF.12-v2``). Build the provider as according to Step 3 depending on your OS. Finally, navigate back to where your Terraform files reside, and perform a ``terraform init`` to reinitialise the Terraform environment for the current directory based on the new provider.
 
 Now, to determine whether or not to do a ``terraform refresh`` or ``terraform import``, refer to the rules in Step 3 of this phase. In this example, according to the stated rules, because attributes ``vpc_size`` and ``vpc_net`` got renamed, and ``enable_nat`` got renamed and changed to accept boolean, it would seem this gateway resource would only need a ``terraform refresh``. However, because this vpn-gateway uses the attribute ``vpn_access``, whose only change is that the accepted value got changed to boolean, this resource would need to a ``terraform import`` instead, because the import rule would take precedence over refresh. After performing the necessary ``terraform refresh`` / ``terraform import`` (per resource), a ``terraform plan`` may be performed to catch any deltas. If there are still any deltas, you may fix and repeat again.
 
 ---
 ## Beyond Phase 3: to infinity and beyond ~
 - Any updates/ future releases for the Aviatrix Terraform provider will continue to be documented here:
-  - https://github.com/AviatrixSystems/terraform-provider-aviatrix/releases
+  - https://github.com/terraform-providers/terraform-provider-aviatrix/releases
 - Any updates/ future releases for R2.0+ that might impact customers will continue to be documented here:
-  - https://github.com/AviatrixSystems/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist-v2.html.md
+  - https://github.com/terraform-providers/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist-v2.html.md
   - Any future necessary changes will only be simple and only require small tweaks and a ``terraform refresh``
