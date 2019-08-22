@@ -43,12 +43,15 @@ type RouteDomainAPIResp struct {
 }
 
 type RouteDomainDetail struct {
-	Associations         []string             `json:"associations"`
-	Name                 string               `json:"name"`
-	ConnectedRouteDomain []string             `json:"connected_route_domain"`
-	AttachedVPC          []AttachedVPCDetail  `json:"attached_vpc"`
-	RoutesInRouteTable   []RoutesInRouteTable `json:"routes_in_route_table"`
-	RouteTableId         string               `json:"route_table_id"`
+	Associations           []string             `json:"associations"`
+	Name                   string               `json:"name"`
+	ConnectedRouteDomain   []string             `json:"connected_route_domain"`
+	AttachedVPC            []AttachedVPCDetail  `json:"attached_vpc"`
+	RoutesInRouteTable     []RoutesInRouteTable `json:"routes_in_route_table"`
+	RouteTableId           string               `json:"route_table_id"`
+	AviatrixFirewallDomain bool                 `json:"firewall_domain"`
+	NativeEgressDomain     bool                 `json:"egress_domain"`
+	NativeFirewallDomain   bool                 `json:"native_firewall_domain"`
 }
 
 type AttachedVPCDetail struct {
@@ -183,9 +186,11 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 			return nil, errors.New("Rest API view_route_domain_details Get failed: " + data1.Reason)
 		}
 		routeDomainDetail := data1.Results
-
 		sdr := SecurityDomainRule{
-			Name: routeDomainDetail[0].Name,
+			Name:                   routeDomainDetail[0].Name,
+			AviatrixFirewallDomain: routeDomainDetail[0].AviatrixFirewallDomain,
+			NativeEgressDomain:     routeDomainDetail[0].NativeEgressDomain,
+			NativeFirewallDomain:   routeDomainDetail[0].NativeFirewallDomain,
 		}
 		for i := range routeDomainDetail[0].ConnectedRouteDomain {
 			sdr.ConnectedDomain = append(sdr.ConnectedDomain, routeDomainDetail[0].ConnectedRouteDomain[i])
