@@ -2,7 +2,7 @@ Terraform Provider
 ==================
 A basic [Terraform](http://terraform.io) provider for Aviatrix. Read this [tutorial](https://docs.aviatrix.com/HowTos/tf_aviatrix_howto.html) as an alternative to the README, only if the instructions are unclear. 
 
--> **NOTE:** This release has a big structure change from release v1.*, please read this [changelist-v2](https://github.com/AviatrixSystems/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist-v2.html.md) first, and change your cloud infrastructures accordingly.
+-> **NOTE:** This release has a big structure change from release v1.*, please read this [changelist-v2](https://github.com/terraform-providers/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist-v2.html.md) first, and change your cloud infrastructures accordingly.
 
 Requirements
 ------------
@@ -19,14 +19,14 @@ Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provi
 ```sh
 $ mkdir -p $GOPATH/src/github.com/terraform-providers
 $ cd $GOPATH/src/github.com/terraform-providers
-$ git clone https://github.com/AviatrixSystems/terraform-provider-aviatrix
+$ git clone https://github.com/terraform-providers/terraform-provider-aviatrix
 ```
 
 To clone on windows
 ```sh
 mkdir %GOPATH%\src\github.com\terraform-providers
 cd %GOPATH%\src\github.com\terraform-providers
-git clone https://github.com/AviatrixSystems/terraform-provider-aviatrix
+git clone https://github.com/terraform-providers/terraform-provider-aviatrix
 ```
 
 Enter the provider directory and build the provider
@@ -71,7 +71,7 @@ Examples
 
 Check examples [here](http://docs.aviatrix.com/HowTos/aviatrix_terraform.html). (Outdated)
 
-Visit [here](https://github.com/AviatrixSystems/terraform-provider-aviatrix/tree/master/website/docs/) for the complete documentation for all resources
+Visit [here](https://github.com/terraform-providers/terraform-provider-aviatrix/tree/master/website/docs/) for the complete documentation for all resources
 
 
 Controller version
