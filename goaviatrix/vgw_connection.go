@@ -227,6 +227,7 @@ func (c *Client) EnableAdvertiseTransitCidr(vgwConn *VGWConn) error {
 	enableAdvertiseTransitCidr.Add("action", "enable_advertise_transit_cidr")
 	enableAdvertiseTransitCidr.Add("vpc_id", vgwConn.VPCId)
 	enableAdvertiseTransitCidr.Add("connection_name", vgwConn.ConnName)
+	enableAdvertiseTransitCidr.Add("gateway_name", vgwConn.GwName)
 
 	Url.RawQuery = enableAdvertiseTransitCidr.Encode()
 	resp, err := c.Get(Url.String(), nil)
@@ -254,6 +255,7 @@ func (c *Client) DisableAdvertiseTransitCidr(vgwConn *VGWConn) error {
 	disableAdvertiseTransitCidr.Add("action", "disable_advertise_transit_cidr")
 	disableAdvertiseTransitCidr.Add("vpc_id", vgwConn.VPCId)
 	disableAdvertiseTransitCidr.Add("connection_name", vgwConn.ConnName)
+	disableAdvertiseTransitCidr.Add("gateway_name", vgwConn.GwName)
 
 	Url.RawQuery = disableAdvertiseTransitCidr.Encode()
 	resp, err := c.Get(Url.String(), nil)

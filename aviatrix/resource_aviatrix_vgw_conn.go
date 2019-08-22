@@ -180,6 +180,7 @@ func resourceAviatrixVGWConnUpdate(d *schema.ResourceData, meta interface{}) err
 
 	vgwConn := &goaviatrix.VGWConn{
 		ConnName: d.Get("conn_name").(string),
+		GwName:   d.Get("gw_name").(string),
 		VPCId:    d.Get("vpc_id").(string),
 	}
 
