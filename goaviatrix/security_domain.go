@@ -8,12 +8,15 @@ import (
 
 // AwsTGW simple struct to hold aws_tgw details
 type SecurityDomain struct {
-	Action      string `form:"action, omitempty"`
-	CID         string `form:"CID, omitempty"`
-	Name        string `form:"route_domain_name, omitempty"`
-	AccountName string `form:"account_name, omitempty"`
-	Region      string `form:"region, omitempty"`
-	AwsTgwName  string `form:"tgw_name, omitempty"`
+	Action                 string `form:"action, omitempty"`
+	CID                    string `form:"CID, omitempty"`
+	Name                   string `form:"route_domain_name, omitempty"`
+	AccountName            string `form:"account_name, omitempty"`
+	Region                 string `form:"region, omitempty"`
+	AwsTgwName             string `form:"tgw_name, omitempty"`
+	AviatrixFirewallDomain bool   `form:"firewall_domain, omitempty"`
+	NativeEgressDomain     bool   `form:"native_egress_domain, omitempty"`
+	NativeFirewallDomain   bool   `form:"native_firewall_domain, omitempty"`
 }
 
 type SecurityDomainAPIResp struct {
@@ -29,9 +32,12 @@ type SecurityDomainList struct {
 }
 
 type SecurityDomainRule struct {
-	Name            string    `json:"security_domain_name, omitempty"`
-	ConnectedDomain []string  `json:"connected_domains, omitempty"`
-	AttachedVPCs    []VPCSolo `json:"attached_vpc, omitempty"`
+	Name                   string    `json:"security_domain_name, omitempty"`
+	ConnectedDomain        []string  `json:"connected_domains, omitempty"`
+	AttachedVPCs           []VPCSolo `json:"attached_vpc, omitempty"`
+	AviatrixFirewallDomain bool      `json:"firewall_domain, omitempty"`
+	NativeEgressDomain     bool      `json:"egress_domain, omitempty"`
+	NativeFirewallDomain   bool      `json:"native_firewall_domain, omitempty"`
 }
 
 type VPCSolo struct {
@@ -171,4 +177,22 @@ func (c *Client) DeleteDomainConnection(awsTgw *AWSTgw, sourceDomain string, des
 	}
 
 	return nil
+}
+
+func (c *Client) SecurityDomainRuleValidation(securityDomainRule *SecurityDomainRule) bool {
+	num := 0
+	if securityDomainRule.AviatrixFirewallDomain {
+		num += 1
+	}
+	if securityDomainRule.NativeEgressDomain {
+		num += 1
+	}
+	if securityDomainRule.NativeFirewallDomain {
+		num += 1
+	}
+
+	if num > 1 {
+		return false
+	}
+	return true
 }
