@@ -96,6 +96,9 @@ The following arguments are supported:
 * `aws_side_as_number` - (Required) BGP Local ASN (Autonomous System Number). Integer between 1-65535. Example: "65001".
 * `security_domains` - (Required) Security Domains to create together with AWS TGW's creation. Three default domains are created automatically together with the AWS TGW's creation, so are the connections between any two of them. These three domains can't be deleted, but the connection between any two of them can be deleted.
   * `security_domain_name` - (Required) Three default domains ("Aviatrix_Edge_Domain", "Default_Domain" and "Shared_Service_Domain") are required with AWS TGW's creation.
+  * `aviatrix_firewall` - (Optional) Set to true if the security domain is an aviatrix firewall domain. Valid values: true, false. Default value: false.
+  * `native_egress` - (Optional) Set to true if the security domain is a native egress domain. Valid values: true, false. Default value: false.
+  * `native_firewall` - (Optional) Set to true if the security domain is a native firewall domain. Valid values: true, false. Default value: false.
   * `connected_domains` - (Optional) A list of domains connected to the domain (name: `security_domain_name`) together with its creation.
   * `attached_vpc` - (Optional) A list of VPCs attached to the domain (name: `security_domain_name`) together with its creation. This list needs to be null for "Aviatrix_Edge_Domain".
     * `vpc_region` - (Required) Region of the vpc, needs to be consistent with AWS TGW's region.
