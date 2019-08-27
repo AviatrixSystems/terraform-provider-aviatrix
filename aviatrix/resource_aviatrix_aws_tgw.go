@@ -89,7 +89,7 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 							Type:        schema.TypeBool,
 							Optional:    true,
 							Default:     false,
-							Description: "Set to true if the security domain is a aviatrix firewall domain.",
+							Description: "Set to true if the security domain is an aviatrix firewall domain.",
 						},
 						"native_egress": {
 							Type:        schema.TypeBool,
