@@ -157,7 +157,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		CloudType:      d.Get("cloud_type").(int),
 		AccountName:    d.Get("account_name").(string),
 		GwName:         d.Get("gw_name").(string),
-		VpcRegion:      d.Get("vpc_reg").(string),
 		VpcSize:        d.Get("gw_size").(string),
 		Subnet:         d.Get("subnet").(string),
 		HASubnet:       d.Get("ha_subnet").(string),
@@ -200,13 +199,22 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("invalid cloud type, it can only be aws (1), gcp (4), arm (8)")
 	}
 
+	if gateway.CloudType == 1 || gateway.CloudType == 8 {
+		gateway.VpcRegion = d.Get("vpc_reg").(string)
+	} else if gateway.CloudType == 4 {
+		// for gcp, rest api asks for "zone" rather than vpc region
+		gateway.Zone = d.Get("vpc_reg").(string)
+	} else {
+		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), or ARM (8)")
+	}
+
 	insaneMode := d.Get("insane_mode").(bool)
 	insaneModeAz := d.Get("insane_mode_az").(string)
 	haZone := d.Get("ha_zone").(string)
 	haSubnet := d.Get("ha_subnet").(string)
 	haGwSize := d.Get("ha_gw_size").(string)
 	haInsaneModeAz := d.Get("ha_insane_mode_az").(string)
-	if insaneMode == true {
+	if insaneMode {
 		if gateway.CloudType != 1 && gateway.CloudType != 8 {
 			return fmt.Errorf("insane_mode is only supported for aws and arm (cloud_type = 1 or 8)")
 		}
