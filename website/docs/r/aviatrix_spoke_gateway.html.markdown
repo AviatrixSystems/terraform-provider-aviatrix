@@ -33,7 +33,7 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_gcp" {
   gw_name      = "spoke-gw-gcp"
   vpc_id       = "gcp-spoke-vpc"
   vpc_reg      = "us-west1-b"
-  gw_size      = "t2.micro"
+  gw_size      = "n1-standard-1"
   subnet       = "10.12.0.0/24"
   enable_snat  = false
 }
@@ -45,7 +45,7 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_arm" {
   gw_name      = "spoke-gw-01"
   vpc_id       = "spoke:test-spoke-gw-123"
   vpc_reg      = "West US"
-  gw_size      = "t2.micro"
+  gw_size      = "Standard_B1s"
   subnet       = "10.13.0.0/24"
   enable_snat  = false
 }
@@ -60,7 +60,7 @@ The following arguments are supported:
 * `gw_name` - (Required) Name of the gateway which is going to be created.
 * `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Required if cloud_type is "1" or "4". Example: AWS: "vpc-abcd1234". 
 * `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", GCP: "us-west1-b", ARM: "East US 2".
-* `gw_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", GCP: "f1.micro", ARM: "StandardD2".
+* `gw_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", GCP: "n1-standard-1", ARM: "Standard_B1s".
 * `subnet` - (Required) Public Subnet Info. Example: AWS: "172.31.0.0/20".
 * `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 4.7 or later release. Supported values: true, false. Default: true. Option not available for GCP and ARM gateways, they will automatically allocate new eip's.
 * `eip` - (Optional) Required when allocate_new_eip is false. It uses specified EIP for this gateway. Available in 4.7 or later release.
