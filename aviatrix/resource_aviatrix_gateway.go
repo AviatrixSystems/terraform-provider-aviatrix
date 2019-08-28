@@ -399,7 +399,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		gateway.AllocateNewEip = "off"
 	}
 
-	if gateway.CloudType == 1 || gateway.CloudType == 8 {
+	if gateway.CloudType == 1 || gateway.CloudType == 8 || gateway.CloudType == 16 {
 		gateway.VpcRegion = d.Get("vpc_reg").(string)
 	} else if gateway.CloudType == 4 {
 		// for gcp, rest api asks for "zone" rather than vpc region
@@ -539,7 +539,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 				peeringHaSubnet = strings.Join(peeringHaStrs, "~~")
 				peeringHaGateway.PeeringHASubnet = peeringHaSubnet
 			}
-		} else if peeringHaGateway.CloudType == 8 {
+		} else if peeringHaGateway.CloudType == 8 || peeringHaGateway.CloudType == 16 {
 			peeringHaGateway.PeeringHASubnet = peeringHaSubnet
 		} else if peeringHaGateway.CloudType == 4 {
 			peeringHaGateway.NewZone = peeringHaZone
@@ -678,7 +678,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("account_name", gw.AccountName)
 		d.Set("gw_name", gw.GwName)
 
-		if gw.CloudType == 1 {
+		if gw.CloudType == 1 || gw.CloudType == 16 {
 			// AWS vpc_id returns as <vpc_id>~~<other vpc info>
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 			d.Set("vpc_reg", gw.VpcRegion)
@@ -840,7 +840,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 					if gwHaGw.InsaneMode == "yes" {
 						d.Set("peering_ha_insane_mode_az", gwHaGw.GatewayZone)
 					}
-				} else if gwHaGw.CloudType == 8 {
+				} else if gwHaGw.CloudType == 8 || gwHaGw.CloudType == 16 {
 					d.Set("peering_ha_subnet", gwHaGw.VpcNet)
 				} else if gwHaGw.CloudType == 4 {
 					d.Set("peering_ha_zone", gwHaGw.GatewayZone)
