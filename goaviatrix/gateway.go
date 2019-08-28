@@ -458,7 +458,7 @@ func (c *Client) SetVpnGatewayAuthentication(gateway *VpnGatewayAuth) error {
 func (c *Client) EnableActiveMesh(gateway *Gateway) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return errors.New(("url Parsing failed for enable_activemesh") + err.Error())
+		return errors.New(("url Parsing failed for enable_gateway_activemesh") + err.Error())
 	}
 	enableSNat := url.Values{}
 	enableSNat.Add("CID", c.CID)

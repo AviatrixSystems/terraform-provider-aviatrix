@@ -236,6 +236,18 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	flag := false
 	defer resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 
+	if d.Get("enable_active_mesh").(bool) {
+		gw := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+		gw.EnableActiveMesh = "yes"
+
+		err := client.EnableActiveMesh(gw)
+		if err != nil {
+			return fmt.Errorf("couldn't enable Active Mode for Aviatrix Transit Gateway: %s", err)
+		}
+	}
+
 	if haSubnet != "" {
 		//Enable HA
 		transitGateway := &goaviatrix.TransitVpc{
@@ -343,18 +355,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		err := client.EnableGatewayFireNetInterfaces(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to enable transit GW for FireNet Interfaces: %s", err)
-		}
-	}
-
-	if d.Get("enable_active_mesh").(bool) {
-		gw := &goaviatrix.Gateway{
-			GwName: d.Get("gw_name").(string),
-		}
-		gw.EnableActiveMesh = "yes"
-
-		err := client.EnableActiveMesh(gw)
-		if err != nil {
-			return fmt.Errorf("couldn't disable Active Mode for Aviatrix Gateway: %s", err)
 		}
 	}
 
