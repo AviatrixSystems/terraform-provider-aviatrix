@@ -49,7 +49,7 @@ resource "aviatrix_gateway" "test_gateway_gcp" {
   gw_name      = "avtxgw-gcp"
   vpc_id       = "gcp-gw-vpc"
   vpc_reg      = "us-west1-b"
-  gw_size      = "n1-stardard-1"
+  gw_size      = "n1-standard-1"
   subnet       = "10.12.0.0/24"
 }
 
@@ -82,7 +82,7 @@ resource "aviatrix_gateway" "test_gateway_gcp" {
   gw_name         = "avtxgw-gcp"
   vpc_id          = "gcp-gw-vpc"
   vpc_reg         = "us-west1-b"
-  gw_size         = "n1-stardard-1"
+  gw_size         = "n1-standard-1"
   subnet          = "10.12.0.0/24"
   peering_ha_zone = "us-west1-c"
 }
