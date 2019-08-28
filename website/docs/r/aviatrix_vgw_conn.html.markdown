@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_vgw_conn"
-sidebar_current: "docs-aviatrix-resource-vgw_conn"
 description: |-
   Manages the Aviatrix Transit Gateway to VGW Connection
 ---

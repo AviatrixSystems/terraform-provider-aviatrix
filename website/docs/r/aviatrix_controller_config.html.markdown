@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_controller_config"
-sidebar_current: "docs-aviatrix-resource-controller-config"
 description: |-
   Creates and manages an Aviatrix controller config resource
 ---

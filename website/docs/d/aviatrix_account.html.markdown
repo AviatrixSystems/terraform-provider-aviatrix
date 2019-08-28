@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_account"
-sidebar_current: "docs-aviatrix-data_source-account"
 description: |-
   Gets the an Aviatrix cloud account.
 ---

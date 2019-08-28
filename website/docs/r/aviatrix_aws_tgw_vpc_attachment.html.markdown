@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_aws_tgw_vpc_attachment"
-sidebar_current: "docs-aviatrix-resource-aws_tgw_vpc_attachment"
 description: |-
   Manages attaching or detaching VPCs to/from an AWS TGW
 ---

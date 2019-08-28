@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_transit_gateway_peering"
-sidebar_current: "docs-aviatrix-resource-transit_gateway_peering"
 description: |-
   Creates and manages Aviatrix transit Gateway Peerings
 ---

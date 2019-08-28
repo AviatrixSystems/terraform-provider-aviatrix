@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_aws_tgw_vpn_conn"
-sidebar_current: "docs-aviatrix-resource-aws-tgw-vpn-conn"
 description: |-
   Creates and manages Aviatrix AWS TGW VPN Connections
 ---

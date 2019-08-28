@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_account_user"
-sidebar_current: "docs-aviatrix-resource-account-user"
 description: |-
   Creates and manages Aviatrix User Accounts
 ---

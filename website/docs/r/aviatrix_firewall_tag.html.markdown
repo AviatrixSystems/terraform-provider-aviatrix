@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_firewall_tag"
-sidebar_current: "docs-aviatrix-resource-firewall-tag"
 description: |-
   Creates and manages Aviatrix Firewall Tags
 ---

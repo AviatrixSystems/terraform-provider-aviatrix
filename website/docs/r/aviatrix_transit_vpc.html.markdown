@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_transit_vpc"
-sidebar_current: "docs-aviatrix-resource-transit_vpc"
 description: |-
   Creates and Manages the Aviatrix Transit Network Gateways
 ---

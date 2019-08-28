@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Provider: Aviatrix"
-sidebar_current: "docs-aviatrix-index"
 description: |-
   The Aviatrix provider is used to interact with Aviatrix organization resources
 ---

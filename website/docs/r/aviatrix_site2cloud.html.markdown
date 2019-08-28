@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_site2cloud"
-sidebar_current: "docs-aviatrix-resource-site2cloud"
 description: |-
   Creates and Manages Aviatrix Site2Cloud connections
 ---

@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_trans_peer"
-sidebar_current: "docs-aviatrix-resource-trans-peer"
 description: |-
   Creates and manages Aviatrix Transitive Peerings
 ---

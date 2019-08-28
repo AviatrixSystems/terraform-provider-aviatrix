@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: Upgrade Guide"
-sidebar_current: "docs-aviatrix-guides-v2-upgrade-guide"
 description: |-
   The Aviatrix provider Upgrade Guide
 ---

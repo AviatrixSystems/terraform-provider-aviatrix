@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_spoke_gateway"
-sidebar_current: "docs-aviatrix-resource-spoke_gateway"
 description: |-
   Creates and Manages Aviatrix Spoke Gateways
 ---

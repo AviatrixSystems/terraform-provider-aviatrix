@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_firewall"
-sidebar_current: "docs-aviatrix-resource-firewall"
 description: |-
   Creates and manages Aviatrix Firewall Policies
 ---

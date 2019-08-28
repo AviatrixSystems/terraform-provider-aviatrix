@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_gateway"
-sidebar_current: "docs-aviatrix-data_source-gateway"
 description: |-
   Gets the Aviatrix gateway.
 ---

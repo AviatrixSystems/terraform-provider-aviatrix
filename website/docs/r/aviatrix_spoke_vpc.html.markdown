@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_spoke_vpc"
-sidebar_current: "docs-aviatrix-resource-spoke_vpc"
 description: |-
   Creates and Manages Aviatrix Spoke Gateways
 ---

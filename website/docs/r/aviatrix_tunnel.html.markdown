@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_tunnel"
-sidebar_current: "docs-aviatrix-resource-tunnel"
 description: |-
   Creates and manages Aviatrix Tunnels.
 ---

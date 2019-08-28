@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_aws_peer"
-sidebar_current: "docs-aviatrix-resource-aws-peer"
 description: |-
   Creates and manages Aviatrix AWS Peerings
 ---
