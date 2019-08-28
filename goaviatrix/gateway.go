@@ -458,24 +458,24 @@ func (c *Client) SetVpnGatewayAuthentication(gateway *VpnGatewayAuth) error {
 func (c *Client) EnableActiveMesh(gateway *Gateway) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return errors.New(("url Parsing failed for disable_activemesh") + err.Error())
+		return errors.New(("url Parsing failed for enable_activemesh") + err.Error())
 	}
 	enableSNat := url.Values{}
 	enableSNat.Add("CID", c.CID)
-	enableSNat.Add("action", "enable_activemesh")
+	enableSNat.Add("action", "enable_gateway_activemesh")
 	enableSNat.Add("gateway_name", gateway.GwName)
 	Url.RawQuery = enableSNat.Encode()
 
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
-		return errors.New("HTTP Get enable_activemesh failed: " + err.Error())
+		return errors.New("HTTP Get enable_gateway_activemesh failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_activemesh failed: " + err.Error())
+		return errors.New("Json Decode enable_gateway_activemesh failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New("Rest API enable_activemesh Get failed: " + data.Reason)
+		return errors.New("Rest API enable_gateway_activemesh Get failed: " + data.Reason)
 	}
 	return nil
 }
@@ -483,24 +483,24 @@ func (c *Client) EnableActiveMesh(gateway *Gateway) error {
 func (c *Client) DisableActiveMesh(gateway *Gateway) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return errors.New(("url Parsing failed for disable_activemesh") + err.Error())
+		return errors.New(("url Parsing failed for disable_gateway_activemesh") + err.Error())
 	}
 	enableSNat := url.Values{}
 	enableSNat.Add("CID", c.CID)
-	enableSNat.Add("action", "disable_activemesh")
+	enableSNat.Add("action", "disable_gateway_activemesh")
 	enableSNat.Add("gateway_name", gateway.GwName)
 	Url.RawQuery = enableSNat.Encode()
 
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
-		return errors.New("HTTP Get disable_activemesh failed: " + err.Error())
+		return errors.New("HTTP Get disable_gateway_activemesh failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_activemesh failed: " + err.Error())
+		return errors.New("Json Decode disable_gateway_activemesh failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New("Rest API disable_activemesh Get failed: " + data.Reason)
+		return errors.New("Rest API disable_gateway_activemesh Get failed: " + data.Reason)
 	}
 	return nil
 }
