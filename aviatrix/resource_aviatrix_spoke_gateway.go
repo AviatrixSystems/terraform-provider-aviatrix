@@ -253,6 +253,18 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	flag := false
 	defer resourceAviatrixSpokeGatewayReadIfRequired(d, meta, &flag)
 
+	if d.Get("enable_active_mesh").(bool) {
+		gw := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+		gw.EnableActiveMesh = "yes"
+
+		err := client.EnableActiveMesh(gw)
+		if err != nil {
+			return fmt.Errorf("couldn't enable Active Mode for Aviatrix Spoke Gateway: %s", err)
+		}
+	}
+
 	if !singleAZ {
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName:   d.Get("gw_name").(string),
@@ -341,18 +353,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		err := client.SpokeJoinTransit(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to join Transit Gateway: %s", err)
-		}
-	}
-
-	if d.Get("enable_active_mesh").(bool) {
-		gw := &goaviatrix.Gateway{
-			GwName: d.Get("gw_name").(string),
-		}
-		gw.EnableActiveMesh = "yes"
-
-		err := client.EnableActiveMesh(gw)
-		if err != nil {
-			return fmt.Errorf("couldn't disable Active Mode for Aviatrix Gateway: %s", err)
 		}
 	}
 
