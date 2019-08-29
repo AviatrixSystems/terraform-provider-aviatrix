@@ -37,7 +37,7 @@ resource "aviatrix_gateway" "test_gateway_aws" {
   vpc_reg      = "us-west-1"
   gw_size      = "t2.micro"
   subnet       = "10.0.0.0/24"
-  vpn_access    = "yes"
+  vpn_access   = "yes"
   vpn_cidr     = "192.168.43.0/24"
   max_vpn_conn = "100"
 }
@@ -62,6 +62,17 @@ resource "aviatrix_gateway" "test_gateway_arm" {
   vpc_reg      = "West US"
   gw_size      = "Standard_D2"
   subnet       = "10.13.0.0/24"
+}
+
+# Create an Aviatrix Oracle Gateway
+resource "aviatrix_gateway" "test_gateway_oracle" {
+  cloud_type   = 16
+  account_name = "devops-oracle"
+  gw_name      = "avtxgw-oracle"
+  vpc_id       = "vpc-oracle-test"
+  vpc_reg      = "us-ashburn-1"
+  gw_size      = "VM.Standard2.2"
+  subnet       = "10.7.0.0/16"
 }
 
 # Create an Aviatrix AWS Gateway with Peering HA enabled
@@ -104,7 +115,7 @@ The following arguments are supported:
 * `vpn_access` - (Optional) Enable user access through VPN to this container. Supported values: true, false.
 * `vpn_cidr` - (Optional) VPN CIDR block for the container. Required if vpn_access is true. Example: "192.168.43.0/24".
 * `max_vpn_conn` - (Optional) Maximum number of active VPN users allowed to be connected to this gateway. Required if vpn_access is true. Make sure the number is smaller than the VPN CIDR block. Example: 100.
-* `enable_elb` - (Optional) Specify whether to enable ELB or not. Supported values: true, false.
+* `enable_elb` - (Optional) Specify whether to enable ELB or not. Not supported for Oracle gateways. Supported values: true, false.
 * `elb_name` - (Optional) A name for the ELB that is created. If it is not specified, a name is generated automatically.
 * `split_tunnel` - (Optional) Specify split tunnel mode. Supported values: true, false.
 * `name_servers` - (Optional) A list of DNS servers used to resolve domain names by a connected VPN user when Split Tunnel Mode is enabled.
@@ -130,7 +141,7 @@ The following arguments are supported:
 * `peering_ha_eip` - (Optional) Public IP address that you want assigned to the HA peering instance. Only available for AWS.
 * `peering_ha_gw_size` - (Optional) Size of the Peering HA Gateway.
 * `single_az_ha` (Optional) Set to true if this feature is desired. Supported values: true, false.
-* `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 2.7 or later release. Supported values: true, false. Default: true. Option not available for GCP and ARM gateways, they will automatically allocate new eip's.
+* `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 2.7 or later release. Supported values: true, false. Default: true. Option not available for GCP, ARM and Oracle gateways, they will automatically allocate new eip's.
 * `eip` - (Optional) Required when allocate_new_eip is false. It uses specified EIP for this gateway. Available in 3.5 or later release eip. Only available for AWS.
 * `tag_list` - (Optional) Instance tag of cloud provider. Only available for AWS. Example: ["key1:value1", "key2:value2"].
 

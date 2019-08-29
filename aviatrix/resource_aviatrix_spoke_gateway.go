@@ -185,7 +185,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		gateway.Eip = d.Get("eip").(string)
 	}
 
-	if gateway.CloudType == 1 || gateway.CloudType == 4 {
+	if gateway.CloudType == 1 || gateway.CloudType == 4 || gateway.CloudType == 16 {
 		gateway.VpcID = d.Get("vpc_id").(string)
 		if gateway.VpcID == "" {
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a spoke gw")
@@ -199,7 +199,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("invalid cloud type, it can only be aws (1), gcp (4), arm (8)")
 	}
 
-	if gateway.CloudType == 1 || gateway.CloudType == 8 {
+	if gateway.CloudType == 1 || gateway.CloudType == 8 || gateway.CloudType == 16 {
 		gateway.VpcRegion = d.Get("vpc_reg").(string)
 	} else if gateway.CloudType == 4 {
 		// for gcp, rest api asks for "zone" rather than vpc region
@@ -412,7 +412,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("vpc_reg", gw.GatewayZone)                   //gcp vpc_reg returns as gateway_zone in json
 
 			d.Set("allocate_new_eip", true)
-		} else if gw.CloudType == 8 {
+		} else if gw.CloudType == 8 || gw.CloudType == 16 {
 			d.Set("vpc_id", gw.VpcID)
 			d.Set("vpc_reg", gw.VpcRegion)
 

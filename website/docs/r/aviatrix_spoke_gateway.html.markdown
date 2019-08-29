@@ -50,6 +50,17 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_arm" {
   subnet       = "10.13.0.0/24"
   enable_snat  = false
 }
+
+# Create an Aviatrix Oracle Spoke Gateway
+resource "aviatrix_spoke_gateway" "test_spoke_gateway_oracle" {
+  cloud_type   = 16
+  account_name = "devops-oracle"
+  gw_name      = "avtxgw-oracle"
+  vpc_id       = "vpc-oracle-test"
+  vpc_reg      = "us-ashburn-1"
+  gw_size      = "VM.Standard2.2"
+  subnet       = "10.7.0.0/16"
+}
 ```
 
 ## Argument Reference
@@ -63,7 +74,7 @@ The following arguments are supported:
 * `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", GCP: "us-west1-b", ARM: "East US 2".
 * `gw_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", GCP: "n1-standard-1", ARM: "Standard_B1s".
 * `subnet` - (Required) Public Subnet Info. Example: AWS: "172.31.0.0/20".
-* `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 4.7 or later release. Supported values: true, false. Default: true. Option not available for GCP and ARM gateways, they will automatically allocate new eip's.
+* `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 4.7 or later release. Supported values: true, false. Default: true. Option not available for GCP, ARM and Oracle gateways, they will automatically allocate new eip's.
 * `eip` - (Optional) Required when allocate_new_eip is false. It uses specified EIP for this gateway. Available in 4.7 or later release.
 * `ha_zone` - (Optional) HA Zone. Required for enabling HA for GCP gateway. Setting to empty/unset will disable HA. Setting to a valid zone will create an HA gateway in the zone. Example: "us-west1-c".
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set). Example: "t2.micro".

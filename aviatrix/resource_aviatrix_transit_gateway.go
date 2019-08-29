@@ -182,7 +182,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	}
 
 	cloudType := d.Get("cloud_type").(int)
-	if cloudType == 1 {
+	if cloudType == 1 || cloudType == 16 {
 		gateway.VpcID = d.Get("vpc_id").(string)
 		if gateway.VpcID == "" {
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a transit gw for aws vpc")
@@ -409,11 +409,10 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			} else {
 				d.Set("allocate_new_eip", false)
 			}
-		} else if gw.CloudType == 8 {
+		} else if gw.CloudType == 8 || gw.CloudType == 16 {
 			d.Set("vpc_id", gw.VpcID)
 			d.Set("allocate_new_eip", true)
 		}
-
 		d.Set("eip", gw.PublicIP)
 
 		d.Set("vpc_reg", gw.VpcRegion)
