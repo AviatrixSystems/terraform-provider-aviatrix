@@ -21,11 +21,13 @@ func TestAccAviatrixControllerConfig_basic(t *testing.T) {
 		t.Skip("Skipping Controller Config test as SKIP_CONTROLLER_CONFIG is set")
 	}
 	msgCommon := ". Set SKIP_CONTROLLER_CONFIG to yes to skip Controller Config tests"
-	preAccountCheck(t, msgCommon)
 	resourceName := "aviatrix_controller_config.test_controller_config"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAccountCheck(t, msgCommon)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckControllerConfigDestroy,
 		Steps: []resource.TestStep{

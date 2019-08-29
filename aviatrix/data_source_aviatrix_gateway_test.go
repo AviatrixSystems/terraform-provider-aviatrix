@@ -19,10 +19,11 @@ func TestAccDataSourceAviatrixGateway_basic(t *testing.T) {
 		t.Skip("Skipping Data Source Gateway test as SKIP_DATA_GATEWAY is set")
 	}
 
-	preGatewayCheck(t, ". Set SKIP_DATA_GATEWAY to yes to skip Data Source Gateway tests")
-
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preGatewayCheck(t, ". Set SKIP_DATA_GATEWAY to yes to skip Data Source Gateway tests")
+		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

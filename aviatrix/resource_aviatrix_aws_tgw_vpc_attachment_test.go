@@ -23,13 +23,14 @@ func TestAccAviatrixAwsTgwVpcAttachment_basic(t *testing.T) {
 	}
 	msg := ". Set SKIP_AWS_TGW_VPC_ATTACHMENT to yes to skip AWS TGW VPC ATTACH tests"
 
-	preAccountCheck(t, msg)
-
 	awsSideAsNumber := "64512"
 	sDm := "mySdn"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAccountCheck(t, msg)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsTgwVpcAttachmentDestroy,
 		Steps: []resource.TestStep{

@@ -23,10 +23,12 @@ func TestAccAviatrixVpc_basic(t *testing.T) {
 	}
 
 	msgCommon := ". Set SKIP_VPC to yes to skip VPC tests"
-	preAccountCheck(t, msgCommon)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAccountCheck(t, msgCommon)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{

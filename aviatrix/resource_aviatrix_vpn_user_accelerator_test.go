@@ -21,10 +21,11 @@ func TestAccAviatrixVPNUserAccelerator_basic(t *testing.T) {
 	}
 	msgCommon := ". Set SKIP_VPN_USER_ACCELERATOR to skip VPN User Accelerator tests"
 
-	preGatewayCheck(t, msgCommon)
-
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preGatewayCheck(t, msgCommon)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVPNUserAcceleratorDestroy,
 		Steps: []resource.TestStep{

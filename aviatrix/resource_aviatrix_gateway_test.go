@@ -88,9 +88,6 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 			"even though SKIP_GATEWAY isn't set")
 	}
 
-	//Checking resources have needed environment variables set
-	preAccountCheck(t, msgCommon)
-
 	//Setting default values for AWS_GW_SIZE and GCP_GW_SIZE
 	awsGwSize := os.Getenv("AWS_GW_SIZE")
 	gcpGwSize := os.Getenv("GCP_GW_SIZE")
@@ -104,13 +101,17 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 	if skipAWS == "yes" {
 		t.Log("Skipping AWS Gateway test as SKIP_AWS_GATEWAY is set")
 	} else {
+		var awsVpcId, awsRegion, awsVpcNet string
 		resourceNameAws := "aviatrix_gateway.test_gw_aws"
 		msgCommonAws := ". Set SKIP_AWS_GATEWAY to yes to skip AWS Gateway tests"
 
-		awsVpcId, awsRegion, awsVpcNet := preGatewayCheck(t, msgCommonAws)
-
 		resource.Test(t, resource.TestCase{
-			PreCheck:     func() { testAccPreCheck(t) },
+			PreCheck: func() {
+				testAccPreCheck(t)
+				//Checking resources have needed environment variables set
+				preAccountCheck(t, msgCommon)
+				awsVpcId, awsRegion, awsVpcNet = preGatewayCheck(t, msgCommonAws)
+			},
 			Providers:    testAccProviders,
 			CheckDestroy: testAccCheckGatewayDestroy,
 			Steps: []resource.TestStep{
@@ -137,13 +138,17 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 	if skipGCP == "yes" {
 		t.Log("Skipping GCP Gateway test as SKIP_GCP_GATEWAY is set")
 	} else {
+		var gcpVpcId, gcpZone, gcpSubnet string
 		resourceNameGcp := "aviatrix_gateway.test_gw_gcp"
 		msgCommonGcp := ". Set SKIP_GCP_GATEWAY to yes to skip GCP Gateway tests"
 
-		gcpVpcId, gcpZone, gcpSubnet := preGatewayCheckGCP(t, msgCommonGcp)
-
 		resource.Test(t, resource.TestCase{
-			PreCheck:     func() { testAccPreCheck(t) },
+			PreCheck: func() {
+				testAccPreCheck(t)
+				//Checking resources have needed environment variables set
+				preAccountCheck(t, msgCommon)
+				gcpVpcId, gcpZone, gcpSubnet = preGatewayCheckGCP(t, msgCommonGcp)
+			},
 			Providers:    testAccProviders,
 			CheckDestroy: testAccCheckGatewayDestroy,
 			Steps: []resource.TestStep{
@@ -170,13 +175,17 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 	if skipARM == "yes" {
 		t.Log("Skipping ARM Gateway test as SKIP_ARM_GATEWAY is set")
 	} else {
+		var armVnetId, armRegion, armSubnet, armGwSize string
 		resourceNameArm := "aviatrix_gateway.test_gw_arm"
 		msgCommonArm := ". Set SKIP_ARM_GATEWAY to yes to skip ARM Gateway tests"
 
-		armVnetId, armRegion, armSubnet, armGwSize := preGatewayCheckARM(t, msgCommonArm)
-
 		resource.Test(t, resource.TestCase{
-			PreCheck:     func() { testAccPreCheck(t) },
+			PreCheck: func() {
+				testAccPreCheck(t)
+				//Checking resources have needed environment variables set
+				preAccountCheck(t, msgCommon)
+				armVnetId, armRegion, armSubnet, armGwSize = preGatewayCheckARM(t, msgCommonArm)
+			},
 			Providers:    testAccProviders,
 			CheckDestroy: testAccCheckGatewayDestroy,
 			Steps: []resource.TestStep{

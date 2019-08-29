@@ -33,7 +33,7 @@ func preAvxSamlEndpointCheck(t *testing.T, msgCommon string) (string, string) {
 
 func TestAccAviatrixSamlEndpoint_basic(t *testing.T) {
 	var samlEndpoint goaviatrix.SamlEndpoint
-
+	var idpMetadata, idpMetadataType string
 	rName := acctest.RandString(5)
 	resourceName := "aviatrix_saml_endpoint.foo"
 
@@ -43,10 +43,11 @@ func TestAccAviatrixSamlEndpoint_basic(t *testing.T) {
 	}
 	msgCommon := ". Set SKIP_SAML_ENDPOINT to yes to skip Aviatrix SAML Endpoint tests"
 
-	idpMetadata, idpMetadataType := preAvxSamlEndpointCheck(t, msgCommon)
-
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			idpMetadata, idpMetadataType = preAvxSamlEndpointCheck(t, msgCommon)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSamlEndpointDestroy,
 		Steps: []resource.TestStep{

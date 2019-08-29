@@ -34,6 +34,7 @@ func preAWSPeerCheck(t *testing.T, msgCommon string) (string, string, string, st
 
 func TestAccAviatrixAWSPeer_basic(t *testing.T) {
 	var awsPeer goaviatrix.AWSPeer
+	var vpcID1, vpcID2, region1, region2 string
 
 	rInt := acctest.RandInt()
 	resourceName := "aviatrix_aws_peer.test_aws_peer"
@@ -44,12 +45,12 @@ func TestAccAviatrixAWSPeer_basic(t *testing.T) {
 	}
 	msgCommon := ". Set SKIP_AWS_PEER to yes to skip AWS peer tests"
 
-	preAccountCheck(t, msgCommon)
-
-	vpcID1, vpcID2, region1, region2 := preAWSPeerCheck(t, msgCommon)
-
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAccountCheck(t, msgCommon)
+			vpcID1, vpcID2, region1, region2 = preAWSPeerCheck(t, msgCommon)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPeerDestroy,
 		Steps: []resource.TestStep{

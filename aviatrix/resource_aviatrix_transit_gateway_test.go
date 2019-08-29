@@ -31,10 +31,11 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 		resourceNameAws := "aviatrix_transit_gateway.test_transit_gateway_aws"
 		msgCommonAws := ". Set SKIP_TRANSIT_GATEWAY_AWS to yes to skip Transit Gateway tests in aws"
 
-		preGatewayCheck(t, msgCommonAws)
-
 		resource.Test(t, resource.TestCase{
-			PreCheck:     func() { testAccPreCheck(t) },
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preGatewayCheck(t, msgCommonAws)
+			},
 			Providers:    testAccProviders,
 			CheckDestroy: testAccCheckTransitGatewayDestroy,
 			Steps: []resource.TestStep{
@@ -65,10 +66,12 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 		resourceNameArm := "aviatrix_transit_gateway.test_transit_gateway_arm"
 
 		msgCommonArm := ". Set SKIP_TRANSIT_GATEWAY_ARM to yes to skip Transit Gateway tests in ARM"
-		preGatewayCheckArm(t, msgCommonArm)
 
 		resource.Test(t, resource.TestCase{
-			PreCheck:     func() { testAccPreCheck(t) },
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preGatewayCheckArm(t, msgCommonArm)
+			},
 			Providers:    testAccProviders,
 			CheckDestroy: testAccCheckTransitGatewayDestroy,
 			Steps: []resource.TestStep{

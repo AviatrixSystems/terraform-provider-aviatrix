@@ -26,6 +26,7 @@ func preVGWConnCheck(t *testing.T, msgCommon string) (string, string) {
 
 func TestAccAviatrixVGWConn_basic(t *testing.T) {
 	var vgwConn goaviatrix.VGWConn
+	var vpcID, bgpVGWId string
 
 	rName := acctest.RandString(5)
 
@@ -37,10 +38,11 @@ func TestAccAviatrixVGWConn_basic(t *testing.T) {
 	}
 	msgCommon := ". Set SKIP_VGW_CONN to yes to skip VGW connection tests"
 
-	vpcID, bgpVGWId := preVGWConnCheck(t, msgCommon)
-
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			vpcID, bgpVGWId = preVGWConnCheck(t, msgCommon)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVGWConnDestroy,
 		Steps: []resource.TestStep{

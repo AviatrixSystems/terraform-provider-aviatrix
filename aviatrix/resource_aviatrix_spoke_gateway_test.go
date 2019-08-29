@@ -35,9 +35,6 @@ func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 			"and SKIP_SPOKE_GATEWAY_ARM are all set, even though SKIP_SPOKE_GATEWAY isn't set")
 	}
 
-	preGatewayCheck(t, msgCommon)
-	preSpokeGatewayCheck(t, msgCommon)
-
 	//Setting default values for AWS_GW_SIZE and GCP_GW_SIZE
 	awsGwSize := os.Getenv("AWS_GW_SIZE")
 	gcpGwSize := os.Getenv("GCP_GW_SIZE")
@@ -52,7 +49,11 @@ func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 		t.Log("Skipping AWS Spoke Gateway test as SKIP_SPOKE_GATEWAY_AWS is set")
 	} else {
 		resource.Test(t, resource.TestCase{
-			PreCheck:     func() { testAccPreCheck(t) },
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preGatewayCheck(t, msgCommon)
+				preSpokeGatewayCheck(t, msgCommon)
+			},
 			Providers:    testAccProviders,
 			CheckDestroy: testAccCheckSpokeGatewayDestroy,
 			Steps: []resource.TestStep{
@@ -82,7 +83,11 @@ func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 		t.Log("Skipping GCP Spoke Gateway test as SKIP_SPOKE_GATEWAY_GCP is set")
 	} else {
 		resource.Test(t, resource.TestCase{
-			PreCheck:     func() { testAccPreCheck(t) },
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preGatewayCheck(t, msgCommon)
+				preSpokeGatewayCheck(t, msgCommon)
+			},
 			Providers:    testAccProviders,
 			CheckDestroy: testAccCheckSpokeGatewayDestroy,
 			Steps: []resource.TestStep{
@@ -113,7 +118,11 @@ func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 	} else {
 		importStateVerifyIgnore = append(importStateVerifyIgnore, "vpc_id")
 		resource.Test(t, resource.TestCase{
-			PreCheck:     func() { testAccPreCheck(t) },
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preGatewayCheck(t, msgCommon)
+				preSpokeGatewayCheck(t, msgCommon)
+			},
 			Providers:    testAccProviders,
 			CheckDestroy: testAccCheckSpokeGatewayDestroy,
 			Steps: []resource.TestStep{

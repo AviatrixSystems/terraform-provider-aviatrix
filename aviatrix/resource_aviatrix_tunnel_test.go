@@ -39,7 +39,7 @@ func preAvxTunnelCheck(t *testing.T, msgCommon string) (string, string, string, 
 
 func TestAccAviatrixTunnel_basic(t *testing.T) {
 	var tun goaviatrix.Tunnel
-
+	var vpcID1, region1, subnet1, vpcID2, region2, subnet2 string
 	rName := acctest.RandString(5)
 	resourceName := "aviatrix_tunnel.foo"
 
@@ -49,10 +49,11 @@ func TestAccAviatrixTunnel_basic(t *testing.T) {
 	}
 	msgCommon := ". Set SKIP_TUNNEL to yes to skip Aviatrix peering tunnel tests"
 
-	vpcID1, region1, subnet1, vpcID2, region2, subnet2 := preAvxTunnelCheck(t, msgCommon)
-
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			vpcID1, region1, subnet1, vpcID2, region2, subnet2 = preAvxTunnelCheck(t, msgCommon)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckTunnelDestroy,
 		Steps: []resource.TestStep{

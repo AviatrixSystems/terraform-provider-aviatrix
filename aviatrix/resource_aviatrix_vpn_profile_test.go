@@ -23,10 +23,11 @@ func TestAccAviatrixVPNProfile_basic(t *testing.T) {
 	}
 	msg := ". Set SKIP_VPN_PROFILE to yes to skip VPN Profile tests"
 
-	preGatewayCheck(t, msg)
-
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preGatewayCheck(t, msg)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVPNProfileDestroy,
 		Steps: []resource.TestStep{
