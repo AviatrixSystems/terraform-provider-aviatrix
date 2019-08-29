@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Guides: Aviatrix Feature Changelist (v2)"
-sidebar_current: "docs-aviatrix-guides-feature-changelist-v2"
 description: |-
   The Aviatrix provider Feature Changelist (v2) Guide
 ---

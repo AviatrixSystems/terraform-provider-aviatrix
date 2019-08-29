@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
-page_title: "Aviatrix: aviatrix_data_gateway"
-sidebar_current: "docs-aviatrix-data_source-gateway"
+page_title: "Aviatrix: aviatrix_gateway"
 description: |-
   Gets the Aviatrix gateway.
 ---
@@ -37,7 +36,6 @@ The following arguments are supported:
 
 * `cloud_type` - Type of cloud service provider. (Only AWS is supported currently. Value of 1 for AWS.)
 * `vpc_id` - AWS VPC ID.
-* `vpc_reg` - AWS VPC Region. 
+* `vpc_reg` - AWS VPC Region.
 * `vpc_size` - Instance type.
 * `public_ip` - Public IP address of the Gateway created
- 

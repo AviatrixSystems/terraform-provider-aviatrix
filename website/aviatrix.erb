@@ -2,122 +2,124 @@
   <% content_for :sidebar do %>
   <div class="docs-sidebar hidden-print affix-top" role="complementary">
       <ul class="nav docs-sidenav">
-          <li<%= sidebar_current("docs-home") %>>
+          <li>
               <a href="/docs/providers/index.html">All Providers</a>
           </li>
 
-          <li<%= sidebar_current("docs-aviatrix-index") %>>
+          <li>
               <a href="/docs/providers/aviatrix/index.html">Aviatrix Provider</a>
           </li>
 
-          <li<%= sidebar_current("docs-aviatrix-guides") %>>
+          <li>
               <a href="#">Guides</a>
               <ul class="nav nav-visible">
-                  <li<%= sidebar_current("docs-aviatrix-guides-feature-changelist") %>>
+                  <li>
                       <a href="/docs/providers/aviatrix/guides/feature-changelist.html">Aviatrix Feature Changelist</a>
                   </li>
-                  <li<%= sidebar_current("docs-aviatrix_guides-feature-changelist-v2") %>>
+                  <li>
                       <a href="/docs/providers/aviatrix/guides/feature-changelist-v2.html">Aviatrix Feature Changelist v2</a>
                   </li>
-                  <li<%= sidebar_current("docs-aviatrix-guides-v2-upgrade-guide") %>>
+                  <li>
                       <a href="/docs/providers/aviatrix/guides/v2-upgrade-guide.html">Aviatrix R2.0 Upgrade Guide</a>
                   </li>
-
-          <li<%= sidebar_current("docs-aviatrix-resource") %>>
-              <a href="#">Resources</a>
-              <ul class="nav nav-visible">
-                  <li<%= sidebar_current("docs-aviatrix-resource-account") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_account.html">aviatrix_account</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-account-user") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_account_user.html">aviatrix_account_user</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-arm-peer") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_arm_peer.html">aviatrix_arm_peer</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-aws-peer") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_aws_peer.html">aviatrix_aws_peer</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-aws-tgw") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_aws_tgw.html">aviatrix_aws_tgw</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-aws-tgw-vpc-attachment") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_aws_tgw_vpc_attachment.html">aviatrix_aws_tgw_vpc_attachment</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-aws-tgw-vpn-conn") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_aws_tgw_vpn_conn.html">aviatrix_aws_tgw_vpn_conn</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-controller-config") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_controller_config.html">aviatrix_controller_config</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-firewall") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_firewall.html">aviatrix_firewall</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-firewall-tag") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_firewall_tag.html">aviatrix_firewall_tag</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-fqdn") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_fqdn.html">aviatrix_fqdn</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-gateway") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_gateway.html">aviatrix_gateway</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-saml-endpoint") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_saml_endpoint.html">aviatrix_saml_endpoint</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-site2cloud") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_site2cloud.html">aviatrix_site2cloud</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-spoke-vpc") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_spoke_vpc.html">aviatrix_spoke_vpc</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-spoke-gateway") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_spoke_gateway.html">aviatrix_spoke_gateway</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-transit-gateway") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_transit_gateway.html">aviatrix_transit_gateway</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-transit-gateway-peering") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_transit_gateway_peering.html">aviatrix_transit_gateway_peering</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-transit-vpc") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_transit_vpc.html">aviatrix_transit_vpc</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-trans-peer") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_trans_peer.html">aviatrix_trans_peer</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-tunnel") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_tunnel.html">aviatrix_tunnel</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-vgw-conn") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_vgw_conn.html">aviatrix_vgw_conn</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-vpc") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_vpc.html">aviatrix_vpc</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-vpn-profile") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_vpn_profile.html">aviatrix_vpn_profile</a>
-                  </li>
-                  <li<%= sidebar_current("docs-aviatrix-resource-vpn-user") %>>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_vpn_user.html">aviatrix_vpn_user</a>
-                  </li>
-            		  <li<%= sidebar_current("docs-aviatrix-resource-vpn-user-accelerator") %>>
-            		      <a href="/docs/providers/aviatrix/r/aviatrix_vpn_user_accelerator.html">aviatrix_vpn_user_accelerator</a>
-            		  </li>
               </ul>
           </li>
 
-          <li<%= sidebar_current("docs-aviatrix-datasource") %>>
+          <li>
+              <a href="#">Resources</a>
+              <ul class="nav nav-visible">
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_account.html">aviatrix_account</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_account_user.html">aviatrix_account_user</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_arm_peer.html">aviatrix_arm_peer</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_aws_peer.html">aviatrix_aws_peer</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_aws_tgw.html">aviatrix_aws_tgw</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_aws_tgw_vpc_attachment.html">aviatrix_aws_tgw_vpc_attachment</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_aws_tgw_vpn_conn.html">aviatrix_aws_tgw_vpn_conn</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_controller_config.html">aviatrix_controller_config</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_firewall.html">aviatrix_firewall</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_firewall_tag.html">aviatrix_firewall_tag</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_fqdn.html">aviatrix_fqdn</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_gateway.html">aviatrix_gateway</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_saml_endpoint.html">aviatrix_saml_endpoint</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_site2cloud.html">aviatrix_site2cloud</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_spoke_vpc.html">aviatrix_spoke_vpc</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_spoke_gateway.html">aviatrix_spoke_gateway</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_transit_gateway.html">aviatrix_transit_gateway</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_transit_gateway_peering.html">aviatrix_transit_gateway_peering</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_transit_vpc.html">aviatrix_transit_vpc</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_trans_peer.html">aviatrix_trans_peer</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_tunnel.html">aviatrix_tunnel</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_vgw_conn.html">aviatrix_vgw_conn</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_vpc.html">aviatrix_vpc</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_vpn_profile.html">aviatrix_vpn_profile</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_vpn_user.html">aviatrix_vpn_user</a>
+                  </li>
+                  <li>
+                      <a href="/docs/providers/aviatrix/r/aviatrix_vpn_user_accelerator.html">aviatrix_vpn_user_accelerator</a>
+                  </li>
+              </ul>
+          </li>
+
+          <li>
               <a href="#">Data Sources</a>
               <ul class="nav nav-visible">
-                  <li<%= sidebar_current("docs-aviatrix-data_source-account") %>>
-                      <a href="/docs/providers/aviatrix/d/aviatrix_account.html">aviatrix_data_account</a>
+                  <li>
+                      <a href="/docs/providers/aviatrix/d/aviatrix_account.html">aviatrix_account</a>
                   </li>
-                  <li<%= sidebar_current("docs-aviatrix-data_source-caller_identity") %>>
-                      <a href="/docs/providers/aviatrix/d/aviatrix_caller_identity.html">aviatrix_data_caller_identity</a>
+                  <li>
+                      <a href="/docs/providers/aviatrix/d/aviatrix_caller_identity.html">aviatrix_caller_identity</a>
                   </li>
-                  <li<%= sidebar_current("docs-aviatrix-data_source-gateway") %>>
-                      <a href="/docs/providers/aviatrix/d/aviatrix_gateway.html">aviatrix_data_gateway</a>
+                  <li>
+                      <a href="/docs/providers/aviatrix/d/aviatrix_gateway.html">aviatrix_gateway</a>
                   </li>
               </ul>
           </li>

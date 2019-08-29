@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_arm_peer"
-sidebar_current: "docs-aviatrix-resource-arm-peer"
 description: |-
   Creates and manages Aviatrix ARM Peerings
 ---

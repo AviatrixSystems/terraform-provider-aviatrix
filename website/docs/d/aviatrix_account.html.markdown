@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
-page_title: "Aviatrix: aviatrix_data_account"
-sidebar_current: "docs-aviatrix-data_source-account"
+page_title: "Aviatrix: aviatrix_account"
 description: |-
   Gets the an Aviatrix cloud account.
 ---
@@ -29,6 +28,6 @@ The following arguments are supported:
 
 * `cloud_type` - Type of cloud service provider. (Only AWS is supported currently. Value of 1 for AWS.)
 * `aws_account_number` - AWS Account number to associate with Aviatrix account.
-* `aws_access_key` - AWS Access Key. 
+* `aws_access_key` - AWS Access Key.
 * `aws_role_app` - AWS App role ARN.
 * `aws_role_ec2` - AWS EC2 role ARN.

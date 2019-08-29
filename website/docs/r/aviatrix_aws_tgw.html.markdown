@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_aws_tgw"
-sidebar_current: "docs-aviatrix-resource-aws_tgw"
 description: |-
   Creates and manages Aviatrix AWS TGWs
 ---

@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_vpn_profile"
-sidebar_current: "docs-aviatrix-resource-vpn-profile"
 description: |-
   Creates and manages Aviatrix VPN User Profiles.
 ---

@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
-page_title: "Aviatrix: aviatrix_data_caller_identity"
-sidebar_current: "docs-aviatrix-data_source-caller_identity"
+page_title: "Aviatrix: aviatrix_caller_identity"
 description: |-
   Gets the an Aviatrix caller identity.
 ---

@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_vpc"
-sidebar_current: "docs-aviatrix-resource-vpc"
 description: |-
   Creates and manages VPCs.
 ---

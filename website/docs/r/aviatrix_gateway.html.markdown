@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_gateway"
-sidebar_current: "docs-aviatrix-resource-gateway"
 description: |-
   Creates and manages Aviatrix gateways.
 ---

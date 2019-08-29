@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_fqdn"
-sidebar_current: "docs-aviatrix-resource-fqdn"
 description: |-
   Manages Aviatrix FQDN filtering for Gateway
 ---

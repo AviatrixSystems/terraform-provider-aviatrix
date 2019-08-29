@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_account"
-sidebar_current: "docs-aviatrix-resource-account"
 description: |-
   Creates and manages Aviatrix cloud Accounts
 ---

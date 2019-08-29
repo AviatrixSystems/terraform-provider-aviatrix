@@ -1,7 +1,6 @@
 ---
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_vpn_user_accelerator"
-sidebar_current: "docs-aviatrix-resource-vpn_user_accelerator"
 description: |-
   Manages the Aviatrix VPN User Accelerators
 ---
