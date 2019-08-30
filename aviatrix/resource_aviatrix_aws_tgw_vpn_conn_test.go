@@ -24,12 +24,13 @@ func TestAccAviatrixAwsTgwVpnConn_basic(t *testing.T) {
 
 	msg := ". Set SKIP_AWS_TGW_VPN_CONN to yes to skip AWS TGW VPN CONN tests"
 
-	preAccountCheck(t, msg)
-
 	awsSideAsNumber := "12"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAccountCheck(t, msg)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsTgwVpnConnDestroy,
 		Steps: []resource.TestStep{

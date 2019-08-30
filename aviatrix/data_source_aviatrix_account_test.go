@@ -19,10 +19,11 @@ func TestAccDataSourceAviatrixAccount_basic(t *testing.T) {
 		t.Skip("Skipping Data Source Account test as SKIP_DATA_ACCOUNT is set")
 	}
 
-	preAccountCheck(t, ". Set SKIP_DATA_ACCOUNT to yes to skip Data Source Account tests")
-
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAccountCheck(t, ". Set SKIP_DATA_ACCOUNT to yes to skip Data Source Account tests")
+		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

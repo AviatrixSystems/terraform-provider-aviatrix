@@ -22,10 +22,11 @@ func TestAccDataSourceAviatrixCallerIdentity_basic(t *testing.T) {
 		t.Skip("Skipping Data Source Caller Identity test as SKIP_DATA_CALLER_IDENTITY is set")
 	}
 
-	preAccountCheck(t, ". Set SKIP_DATA_CALLER_IDENTITY to yes to skip Data Source Caller Identity tests")
-
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAccountCheck(t, ". Set SKIP_DATA_CALLER_IDENTITY to yes to skip Data Source Caller Identity tests")
+		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

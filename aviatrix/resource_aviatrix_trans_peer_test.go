@@ -21,6 +21,7 @@ func preTransPeerCheck(t *testing.T, msgCommon string) (string, string, string, 
 
 func TestAccAviatrixTransPeer_basic(t *testing.T) {
 	var transpeer goaviatrix.TransPeer
+	var sourceVPC, region1, subnet1, nextHopVPC, region2, subnet2, reachableCIDR string
 
 	rName := acctest.RandString(5)
 	resourceName := "aviatrix_trans_peer.test_trans_peer"
@@ -31,12 +32,12 @@ func TestAccAviatrixTransPeer_basic(t *testing.T) {
 	}
 	msgCommon := ". Set SKIP_TRANS_PEER to yes to skip transitive peer tests"
 
-	preAccountCheck(t, msgCommon)
-
-	sourceVPC, region1, subnet1, nextHopVPC, region2, subnet2, reachableCIDR := preTransPeerCheck(t, msgCommon)
-
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAccountCheck(t, msgCommon)
+			sourceVPC, region1, subnet1, nextHopVPC, region2, subnet2, reachableCIDR = preTransPeerCheck(t, msgCommon)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccTransPeerDestroy,
 		Steps: []resource.TestStep{

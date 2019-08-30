@@ -21,12 +21,13 @@ func TestAccAviatrixFQDN_basic(t *testing.T) {
 		t.Skip("Skipping FQDN test as SKIP_FQDN is set")
 	}
 
-	preGatewayCheck(t, ". Set SKIP_FQDN to yes to skip FQDN tests")
-
 	resourceName := "aviatrix_fqdn.foo"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preGatewayCheck(t, ". Set SKIP_FQDN to yes to skip FQDN tests")
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFQDNDestroy,
 		Steps: []resource.TestStep{

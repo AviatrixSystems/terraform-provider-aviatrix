@@ -24,13 +24,14 @@ func TestAccAviatrixAWSTgw_basic(t *testing.T) {
 	}
 	msg := ". Set SKIP_AWS_TGW to yes to skip AWS TGW  tests"
 
-	preAccountCheck(t, msg)
-
 	awsSideAsNumber := "64512"
 	sDm := "zSecurityDomain"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAccountCheck(t, msg)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTgwDestroy,
 		Steps: []resource.TestStep{

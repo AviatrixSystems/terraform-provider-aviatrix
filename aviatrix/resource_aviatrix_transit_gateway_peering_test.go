@@ -20,6 +20,7 @@ func preAvxTransitGatewayPeeringCheck(t *testing.T, msgCommon string) (string, s
 
 func TestAccAviatrixTransitGatewayPeering_basic(t *testing.T) {
 	rName := acctest.RandString(5)
+	var vpcID1, region1, subnet1, haSubnet1, vpcID2, region2, subnet2, haSubnet2 string
 
 	resourceName := "aviatrix_transit_gateway_peering.foo"
 
@@ -29,10 +30,11 @@ func TestAccAviatrixTransitGatewayPeering_basic(t *testing.T) {
 	}
 	msgCommon := ". Set SKIP_TRANSIT_GATEWAY_PEERING to yes to skip Aviatrix transit gateway peering tests"
 
-	vpcID1, region1, subnet1, haSubnet1, vpcID2, region2, subnet2, haSubnet2 := preAvxTransitGatewayPeeringCheck(t, msgCommon)
-
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			vpcID1, region1, subnet1, haSubnet1, vpcID2, region2, subnet2, haSubnet2 = preAvxTransitGatewayPeeringCheck(t, msgCommon)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckTransitGatewayPeeringDestroy,
 		Steps: []resource.TestStep{

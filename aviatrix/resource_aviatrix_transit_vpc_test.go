@@ -51,10 +51,11 @@ func TestAccAviatrixTransitGw_basic(t *testing.T) {
 		resourceNameAws := "aviatrix_transit_vpc.test_transit_vpc_aws"
 		msgCommonAws := ". Set SKIP_TRANSIT_AWS to yes to skip Transit Gateway tests in aws"
 
-		preGatewayCheck(t, msgCommonAws)
-
 		resource.Test(t, resource.TestCase{
-			PreCheck:     func() { testAccPreCheck(t) },
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preGatewayCheck(t, msgCommonAws)
+			},
 			Providers:    testAccProviders,
 			CheckDestroy: testAccCheckTransitGwDestroy,
 			Steps: []resource.TestStep{

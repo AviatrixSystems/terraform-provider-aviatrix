@@ -66,14 +66,15 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 
 	}
 
-	preAccountCheck(t, ". Set SKIP_ACCOUNT to yes to skip account tests")
-
 	if skipAWS == "yes" {
 		t.Log("Skipping AWS Access Account test as SKIP_AWS_ACCOUNT is set")
 	} else {
 		resourceName := "aviatrix_account.aws"
 		resource.Test(t, resource.TestCase{
-			PreCheck:     func() { testAccPreCheck(t) },
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preAccountCheck(t, ". Set SKIP_ACCOUNT to yes to skip account tests")
+			},
 			Providers:    testAccProviders,
 			CheckDestroy: testAccCheckAccountDestroy,
 			Steps: []resource.TestStep{

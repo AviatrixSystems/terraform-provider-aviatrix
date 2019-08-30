@@ -34,7 +34,7 @@ func preARMPeerCheck(t *testing.T, msgCommon string) (string, string, string, st
 
 func TestAccAviatrixARMPeer_basic(t *testing.T) {
 	var armPeer goaviatrix.ARMPeer
-
+	var vNet1, vNet2, region1, region2 string
 	rInt := acctest.RandInt()
 	resourceName := "aviatrix_arm_peer.test_arm_peer"
 
@@ -44,12 +44,12 @@ func TestAccAviatrixARMPeer_basic(t *testing.T) {
 	}
 	msgCommon := ". Set SKIP_ARM_PEER to yes to skip AWS peer tests"
 
-	preAccountCheck(t, msgCommon)
-
-	vNet1, vNet2, region1, region2 := preARMPeerCheck(t, msgCommon)
-
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preAccountCheck(t, msgCommon)
+			vNet1, vNet2, region1, region2 = preARMPeerCheck(t, msgCommon)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckARMPeerDestroy,
 		Steps: []resource.TestStep{
