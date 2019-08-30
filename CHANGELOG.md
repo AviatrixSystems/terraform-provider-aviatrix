@@ -1,4 +1,4 @@
-## 2.2.0 (Unreleased)
+## 2.2.0 (August 30, 2019)
 
 - Initial Release for 'terraform init'
 
