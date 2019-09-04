@@ -419,7 +419,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				d.Set("allocate_new_eip", false)
 			}
 		} else if gw.CloudType == 4 {
-			d.Set("vpc_id", gw.VpcID)
+			d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0])
 			d.Set("vpc_reg", gw.GatewayZone)
 			d.Set("allocate_new_eip", true)
 		} else if gw.CloudType == 8 || gw.CloudType == 16 {
