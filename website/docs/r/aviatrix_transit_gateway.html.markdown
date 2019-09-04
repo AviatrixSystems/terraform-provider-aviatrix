@@ -46,7 +46,7 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_azure" {
   connected_transit = true
 }
 
-# Create an Aviatrix Oracle Spoke Gateway
+# Create an Aviatrix Oracle Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_oracle" {
   cloud_type   = 16
   account_name = "devops-oracle"
@@ -55,6 +55,17 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_oracle" {
   vpc_reg      = "us-ashburn-1"
   gw_size      = "VM.Standard2.2"
   subnet       = "10.7.0.0/16"
+}
+
+# Create an Aviatrix GCP Transit Network Gateway
+resource "aviatrix_transit_gateway" "test_transit_gateway_gcp" {
+  cloud_type   = 4
+  account_name = "devops-gcp"
+  gw_name      = "avtxgw-gcp"
+  vpc_id       = "vpc-gcp-test"
+  vpc_reg      = "us-west2-a"
+  gw_size      = "n1-standard-1"
+  subnet       = "10.8.0.0/16"
 }
 ```
 
@@ -65,9 +76,9 @@ The following arguments are supported:
 * `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Use 1 for AWS.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `gw_name` - (Required) Name of the gateway which is going to be created.
-* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Required if for aws. Example: AWS: "vpc-abcd1234", GCP: "mygooglecloudvpcname".
-* `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", ARM: "East US 2".
-* `gw_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large".
+* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Required if for aws. Example: AWS: "vpc-abcd1234", GCP: "vpc-gcp-test".
+* `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", ARM: "East US 2", Oracle: "us-ashburn-1", GCP: "us-west2-a".
+* `gw_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", ARM: "Standard_B1s", Oracle: "VM.Standard2.2", GCP: "n1-standard-1".
 * `subnet` - (Required) Public Subnet CIDR. Copy/paste from AWS Console to get the right subnet CIDR. Example: AWS: "10.0.0.0/24".
 * `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 4.7 or later release. Supported values: true, false. Default: true. Option not available for GCP, ARM and Oracle gateways, they will automatically allocate new eip's.
 * `eip` - (Optional) Required when allocate_new_eip is false. It uses specified EIP for this gateway. Available in 4.7 or later release.
