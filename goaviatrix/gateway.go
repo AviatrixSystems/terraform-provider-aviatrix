@@ -387,25 +387,25 @@ func (c *Client) DisableSNat(gateway *Gateway) error {
 func (c *Client) UpdateVpnCidr(gateway *Gateway) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return errors.New(("url Parsing failed for edit_gateway_vpn_cidr") + err.Error())
+		return errors.New(("url Parsing failed for edit_vpn_gateway_virtual_address_range") + err.Error())
 	}
 	setVpnClientCIDR := url.Values{}
 	setVpnClientCIDR.Add("CID", c.CID)
-	setVpnClientCIDR.Add("action", "edit_gateway_vpn_cidr")
+	setVpnClientCIDR.Add("action", "edit_vpn_gateway_virtual_address_range")
 	setVpnClientCIDR.Add("vpn_cidr", gateway.VpnCidr)
 	setVpnClientCIDR.Add("gateway_name", gateway.GwName)
 	Url.RawQuery = setVpnClientCIDR.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
 	if err != nil {
-		return errors.New("HTTP Get edit_gateway_vpn_cidr failed: " + err.Error())
+		return errors.New("HTTP Get edit_vpn_gateway_virtual_address_range failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_gateway_vpn_cidr failed: " + err.Error())
+		return errors.New("Json Decode edit_vpn_gateway_virtual_address_range failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New("Rest API edit_gateway_vpn_cidr Get failed: " + data.Reason)
+		return errors.New("Rest API edit_vpn_gateway_virtual_address_range Get failed: " + data.Reason)
 	}
 	return nil
 }
