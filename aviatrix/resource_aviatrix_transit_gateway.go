@@ -153,7 +153,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		AccountName:            d.Get("account_name").(string),
 		GwName:                 d.Get("gw_name").(string),
 		VpcID:                  d.Get("vpc_id").(string),
-		VpcRegion:              d.Get("vpc_reg").(string),
 		VpcSize:                d.Get("gw_size").(string),
 		Subnet:                 d.Get("subnet").(string),
 		EnableHybridConnection: d.Get("enable_hybrid_connection").(bool),
@@ -182,7 +181,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	}
 
 	cloudType := d.Get("cloud_type").(int)
-	if cloudType == 1 || cloudType == 16 {
+	if cloudType == 1 || cloudType == 4 || cloudType == 16 {
 		gateway.VpcID = d.Get("vpc_id").(string)
 		if gateway.VpcID == "" {
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a transit gw for aws vpc")
@@ -192,6 +191,15 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if gateway.VNetNameResourceGroup == "" {
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a transit gw for azure vnet")
 		}
+	}
+
+	if gateway.CloudType == 1 || gateway.CloudType == 8 || gateway.CloudType == 16 {
+		gateway.VpcRegion = d.Get("vpc_reg").(string)
+	} else if gateway.CloudType == 4 {
+		// for gcp, rest api asks for "zone" rather than vpc region
+		gateway.Zone = d.Get("vpc_reg").(string)
+	} else {
+		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), or ARM (8)")
 	}
 
 	insaneMode := d.Get("insane_mode").(bool)
@@ -404,18 +412,23 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 		if gw.CloudType == 1 {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
+			d.Set("vpc_reg", gw.VpcRegion)
 			if gw.AllocateNewEipRead {
 				d.Set("allocate_new_eip", true)
 			} else {
 				d.Set("allocate_new_eip", false)
 			}
+		} else if gw.CloudType == 4 {
+			d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0])
+			d.Set("vpc_reg", gw.GatewayZone)
+			d.Set("allocate_new_eip", true)
 		} else if gw.CloudType == 8 || gw.CloudType == 16 {
 			d.Set("vpc_id", gw.VpcID)
+			d.Set("vpc_reg", gw.VpcRegion)
 			d.Set("allocate_new_eip", true)
 		}
-		d.Set("eip", gw.PublicIP)
 
-		d.Set("vpc_reg", gw.VpcRegion)
+		d.Set("eip", gw.PublicIP)
 		d.Set("gw_size", gw.GwSize)
 
 		if gw.EnableNat == "yes" {
