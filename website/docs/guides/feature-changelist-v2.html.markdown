@@ -20,7 +20,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.1 (UserConnect-4.7-patch)``
+``Last updated: R2.3 (UserConnect-5.0)``
 
 
 ---
@@ -81,3 +81,13 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |:----:|----------------|:-----------------:|----------------------------|
 |(new) | transit_gateway| allocate_new_eip, eip, ha_eip | **No**; Terraform support added to feature already available for regular gateway resource. By default, ``allocate_new_eip`` will be set to **true**. Only works for AWS |
 |(new) | spoke_gateway  | allocate_new_eip, eip, ha_eip | **No**; see above for details |
+
+
+## R2.3 (UserConnect5.0) (Terraform v0.12)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(new) | vgw_conn       | vgw_account, vgw_region | **Yes**; if customer has a **vgw_conn** resource, they must add these two attributes and their respective values to their config file and perform a ```terraform refresh```
+|(new) | gateway        | insane_mode, insane_mode_az, peering_ha_insane_mode_az | **No**; Terraform added support for insane mode for Azure-related resources |
+|(new) | spoke_gateway, transit_gateway | insane_mode, insane_mode_az, ha_insane_mode_az | **No**; see above for details |
+|(new) | aws_tgw        | aviatrix_firewall, native_egress, native_firewall | **No**; Terraform support added to feature already available through Controller. These are new optional attributes for Terraform |
+|(new) | spoke_gateway, transit_gateway | enable_active_mesh | **No**; Terraform support released alongside new feature available in Controller 5.0. New optional feature. Default value: **false** |
