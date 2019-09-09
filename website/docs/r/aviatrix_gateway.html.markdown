@@ -85,20 +85,20 @@ resource "aviatrix_gateway" "test_gateway_gcp" {
   subnet          = "10.12.0.0/24"
   peering_ha_zone = "us-west1-c"
 }
-
 ```
 
 ## Argument Reference
 
 The following arguments are supported:
 
-* `cloud_type` - (Required) Type of cloud service provider. Only AWS is supported currently. Enter 1 for AWS.
+* `cloud_type` - (Required) Type of cloud service provider. AWS=1, GCP=4, ARM=8.
 * `account_name` - (Required) Account name. This account will be used to launch Aviatrix gateway.
 * `gw_name` - (Required) Aviatrix gateway unique name.
 * `vpc_id` - (Required) ID of legacy VPC/Vnet to be connected. A string that is consisted of VPC/Vnet name and cloud provider's resource name. Please check the "Gateway" page on Aviatrix controller GUI for the precise value if needed. Example: "vpc-abcd1234".
 * `vpc_reg` - (Required) Region where this gateway will be launched. Example: "us-east-1". If creating GCP gateway, enter a valid zone for vpc_reg. Example: "us-west1-c".
 * `gw_size` - (Required) Size of Gateway Instance. Please note that updating the gateway size will cause a restart; gateway will be down temporarily until re-size is complete. Example: "t2.micro". 
 * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20".
+* `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Gateway. Required for AWS if insane_mode is set. Example: AWS: "us-west-1a".
 * `enable_snat` - (Optional) Enable Source NAT for this container. Supported values: true, false.
 * `vpn_access` - (Optional) Enable user access through VPN to this container. Supported values: true, false.
 * `vpn_cidr` - (Optional) VPN CIDR block for the container. Required if vpn_access is true. Example: "192.168.43.0/24".
@@ -126,12 +126,14 @@ The following arguments are supported:
 * `ldap_username_attribute` - (Optional) LDAP user attribute. Required if enable_ldap is true.
 * `peering_ha_subnet` - (Optional) Public Subnet Information while creating Peering HA Gateway, only subnet is accepted. Required for AWS/ARM if enabling Peering HA. Example: AWS: "10.0.0.0/16".
 * `peering_ha_zone` - (Optional) Zone information for creating Peering HA Gateway, only zone is accepted. Required for GCP if enabling Peering HA. Example: GCP: "us-west1-c".
+* `peering_ha_insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Peering HA Gateway. Required for AWS if insane_mode is set and peering_ha_subnet is set. Example: AWS: "us-west-1a".
 * `peering_ha_eip` - (Optional) Public IP address that you want assigned to the HA peering instance. Only available for AWS.
 * `peering_ha_gw_size` - (Optional) Size of the Peering HA Gateway.
 * `single_az_ha` (Optional) Set to true if this feature is desired. Supported values: true, false.
 * `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 2.7 or later release. Supported values: true, false. Default: true. Option not available for GCP and ARM gateways, they will automatically allocate new eip's.
 * `eip` - (Optional) Required when allocate_new_eip is false. It uses specified EIP for this gateway. Available in 3.5 or later release eip. Only available for AWS.
 * `tag_list` - (Optional) Instance tag of cloud provider. Only available for AWS. Example: ["key1:value1", "key2:value2"].
+* `insane_mode` - (Optional) Enable Insane Mode for Gateway. Insane Mode Gateway size must be at least c5 (AWS) or Standard_D3_v2 (ARM). If set, will look for spare /26 segment to create a new subnet. Only supported for AWS or ARM. Supported values: true, false.
 
 The following arguments are computed - please do not edit in the resource file:
 
