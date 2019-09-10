@@ -135,6 +135,16 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Specify whether to enable firenet interfaces or not.",
 			},
+			"tgw_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Name of tgw for transit gateway to connect to when 'enable_firenet_interfaces' is enabled.",
+			},
+			"domain_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Name of the firewall domain in tgw for transit gateway to connect to. Required if 'tgw_name' is given.",
+			},
 			"enable_active_mesh": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -359,10 +369,24 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	}
 
 	enableFireNetInterfaces := d.Get("enable_firenet_interfaces").(bool)
+	tgwName := d.Get("tgw_name").(string)
+	domainName := d.Get("domain_name").(string)
 	if enableFireNetInterfaces {
 		err := client.EnableGatewayFireNetInterfaces(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to enable transit GW for FireNet Interfaces: %s", err)
+		}
+		if tgwName != "" && domainName != "" {
+			err := client.ConnectTransitGwToTGW(gateway, tgwName, domainName)
+			if err != nil {
+				return fmt.Errorf("failed to connect transit GW to TGW: %s: %s", tgwName, err)
+			}
+		} else if tgwName != "" || domainName != "" {
+			return fmt.Errorf("both 'tgw_name' and 'domain_name' should be given for transit GW to connect to TGW")
+		}
+	} else {
+		if tgwName != "" || domainName != "" {
+			return fmt.Errorf("both 'tgw_name' and 'domain_name' should be empty since 'enable_firenet_interfaces' is not enabled")
 		}
 	}
 
@@ -467,6 +491,26 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 
 		d.Set("enable_firenet_interfaces", gwDetail.DMZEnabled)
+		if gwDetail.DMZEnabled {
+			fireNet := &goaviatrix.FireNet{
+				VpcID: d.Get("vpc_id").(string),
+			}
+			fireNetDetail, err := client.GetFireNet(fireNet)
+			if err != nil {
+				if err == goaviatrix.ErrNotFound {
+					log.Printf("no FireNet is found")
+				}
+				log.Printf("couldn't read FireNet detail: %s ", err)
+			} else {
+				if fireNetDetail.Gateway[0].DomainName != "" {
+					d.Set("domain_name", fireNetDetail.Gateway[0].DomainName)
+				}
+				if fireNetDetail.Gateway[0].TgwID != "" {
+					tgwName := strings.Split(fireNetDetail.Gateway[0].TgwID, "~~")[0]
+					d.Set("tgw_name", strings.Split(tgwName, " ("))
+				}
+			}
+		}
 
 		if gw.EnableActiveMesh == "yes" {
 			d.Set("enable_active_mesh", true)
@@ -783,12 +827,24 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	if d.HasChange("enable_firenet_interfaces") {
 		transitGW := &goaviatrix.TransitVpc{
 			GwName: gateway.GwName,
+			VpcID:  d.Get("vpc_id").(string),
 		}
 		enableFireNetInterfaces := d.Get("enable_firenet_interfaces").(bool)
 		if enableFireNetInterfaces {
 			err := client.EnableGatewayFireNetInterfaces(transitGW)
 			if err != nil {
 				return fmt.Errorf("failed to enable transit GW for FireNet Interfaces: %s", err)
+			}
+
+			tgwName := d.Get("tgw_name").(string)
+			domainName := d.Get("domain_name").(string)
+			if tgwName != "" && domainName != "" {
+				err := client.ConnectTransitGwToTGW(transitGW, tgwName, domainName)
+				if err != nil {
+					return fmt.Errorf("failed to connect transit GW to TGW: %s: %s", tgwName, err)
+				}
+			} else if tgwName != "" || domainName != "" {
+				return fmt.Errorf("both 'tgw_name' and 'domain_name' should be given for transit GW to connect to TGW")
 			}
 		} else {
 			err := client.DisableGatewayFireNetInterfaces(transitGW)
@@ -840,11 +896,17 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 		gw := &goaviatrix.TransitVpc{
 			CloudType: d.Get("cloud_type").(int),
 			GwName:    d.Get("gw_name").(string),
+			VpcID:     d.Get("vpc_id").(string),
 		}
 
-		err := client.DisableGatewayFireNetInterfaces(gw)
+		err := client.DisconnectTransitGwFromTGW(gw)
 		if err != nil {
-			return fmt.Errorf("failed to disable Aviatrix Transit Gateway for FireNet Interfaces: %s", err)
+			return fmt.Errorf("couldn't delete Transit GW due to failing to disconnect transit GW from TGW: %s", err)
+		}
+
+		err = client.DisableGatewayFireNetInterfaces(gw)
+		if err != nil {
+			return fmt.Errorf("couldn't delete Transit GW due to failing to disable Aviatrix Transit Gateway for FireNet Interfaces: %s", err)
 		}
 	}
 
