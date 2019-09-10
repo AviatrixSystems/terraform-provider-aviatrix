@@ -22,7 +22,7 @@ provider "aviatrix" {
   controller_ip           = "1.2.3.4"
   username                = "admin"
   password                = "password"
-  skip_verison_validation = false
+  skip_version_validation = false
 }
 
 # Create a record
