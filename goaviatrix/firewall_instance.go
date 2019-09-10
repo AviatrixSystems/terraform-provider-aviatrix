@@ -20,6 +20,7 @@ type FirewallInstance struct {
 	IamRole             string `form:"iam_role,omitempty" json:"iam_role,omitempty"`
 	BootstrapBucketName string `form:"bootstrap_bucket_name,omitempty" json:"bootstrap_bucket_name,omitempty"`
 	InstanceID          string `form:"firewall_id,omitempty" json:"instance_id,omitempty"`
+	Enabled             bool   `form:"enabled,omitempty" json:"enabled,omitempty"`
 }
 
 type FirewallInstanceResp struct {
