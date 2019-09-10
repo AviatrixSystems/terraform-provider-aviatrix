@@ -958,6 +958,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 
 func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	log.Printf("[INFO] Updating Aviatrix gateway: %#v", d.Get("gw_name").(string))
 
 	d.Partial(true)
