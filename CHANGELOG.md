@@ -1,4 +1,4 @@
-## 2.3.35 (Sep 10 2019)
+## 2.3.35 (September 10, 2019)
 
 CHANGES
   - Supported controller version: 5.0.2632
@@ -10,13 +10,14 @@ CHANGES
   - Added "vgw_account" and "vgw_region" support in resource_vaviatrix_gw_conn
   - Added support of creating "aviatrix_firewall", "native_egress" or "native_aviatrix" domain in resource_aviatrix_aws_tgw
   - Fixed enable/disable advertise_cidrs issue in resource_aviatrix_vgw_conn
-  - Added active_mesh mode support for resource_aviatrix_spoke_gateway and resource_aviatrix_transit_gateway, default value: false
-  
+  - Added active_mesh mode support for resource_aviatrix_spoke_gateway and resource_aviatrix_transit_gateway, default value: false 
 
-## 2.2.0 (Aug 30 2019)
+## 2.2.0 (August 30, 2019)
 
+CHANGES
+  - Supported controller version: 4.7.591
+  - Supported Terraform version: 0.12.*
   - Initial Release for 'terraform init'
-
 
 ## 2.1.29 (Aug 19 2019)
 
