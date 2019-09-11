@@ -48,7 +48,7 @@ This phase involves first upgrading the Controller to 4.7. Afterwards, customers
     - https://docs.aviatrix.com/HowTos/UCC_Release_Notes.html
 2. Update Terraform files (.tf) as necessary. Please reference documentation linked below to note specific changes to any resource attributes that you may be using in your configuration:
   - Please refer **up to** R1.14's table (for Terraform 0.11) (compatible with Controller 4.7):
-    - https://www.terraform.io/docs/providers/aviatrix/guides/feature-changelist-v2.html
+    - https://www.terraform.io/docs/providers/aviatrix/guides/feature-changelist.html
   - Aviatrix Terraform Provider Release Notes:
     - https://github.com/terraform-providers/terraform-provider-aviatrix/releases
 3. Update Aviatrix Terraform provider:
