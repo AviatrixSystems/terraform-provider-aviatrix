@@ -48,9 +48,9 @@ This phase involves first upgrading the Controller to 4.7. Afterwards, customers
     - https://docs.aviatrix.com/HowTos/UCC_Release_Notes.html
 2. Update Terraform files (.tf) as necessary. Please reference documentation linked below to note specific changes to any resource attributes that you may be using in your configuration:
   - Please refer **up to** R1.14's table (for Terraform 0.11) (compatible with Controller 4.7):
-  - https://github.com/terraform-provider/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist.html
+    - https://www.terraform.io/docs/providers/aviatrix/guides/feature-changelist-v2.html
   - Aviatrix Terraform Provider Release Notes:
-    - https://github.com/AviatrixSystems/terraform-provider-aviatrix/releases
+    - https://github.com/terraform-providers/terraform-provider-aviatrix/releases
 3. Update Aviatrix Terraform provider:
   - Navigate to Aviatrix Terraform provider directory:
     - Mac:
@@ -361,5 +361,5 @@ Now, to determine whether or not to do a ``terraform refresh`` or ``terraform im
 - Any updates/ future releases for the Aviatrix Terraform provider will continue to be documented here:
   - https://github.com/terraform-providers/terraform-provider-aviatrix/releases
 - Any updates/ future releases for R2.0+ that might impact customers will continue to be documented here:
-  - https://github.com/terraform-providers/terraform-provider-aviatrix/blob/master/website/docs/guides/feature-changelist-v2.html
+  - https://www.terraform.io/docs/providers/aviatrix/guides/feature-changelist-v2.html
   - Any future necessary changes will only be simple and only require small tweaks and a ``terraform refresh``
