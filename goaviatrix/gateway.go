@@ -104,6 +104,7 @@ type Gateway struct {
 	Zone                    string `form:"zone,omitempty" json:"zone,omitempty"`
 	VpcSize                 string `form:"vpc_size,omitempty" ` //Only use for gateway create
 	DMZEnabled              string `json:"dmz_enabled,omitempty"`
+	EnableActiveMesh        string `form:"enable_activemesh,omitempty" json:"enable_activemesh,omitempty"`
 }
 
 type GatewayDetail struct {
@@ -332,6 +333,7 @@ func (c *Client) DeleteGateway(gateway *Gateway) error {
 	}
 	return nil
 }
+
 func (c *Client) EnableSNat(gateway *Gateway) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
@@ -356,6 +358,7 @@ func (c *Client) EnableSNat(gateway *Gateway) error {
 	}
 	return nil
 }
+
 func (c *Client) DisableSNat(gateway *Gateway) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
@@ -380,32 +383,33 @@ func (c *Client) DisableSNat(gateway *Gateway) error {
 	}
 	return nil
 }
+
 func (c *Client) UpdateVpnCidr(gateway *Gateway) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return errors.New(("url Parsing failed for set_vpn_client_cidr") + err.Error())
+		return errors.New(("url Parsing failed for edit_vpn_gateway_virtual_address_range") + err.Error())
 	}
 	setVpnClientCIDR := url.Values{}
 	setVpnClientCIDR.Add("CID", c.CID)
-	setVpnClientCIDR.Add("action", "set_vpn_client_cidr")
-	setVpnClientCIDR.Add("cidr", gateway.VpnCidr)
-	setVpnClientCIDR.Add("vpc_id", gateway.VpcID)
-	setVpnClientCIDR.Add("lb_or_gateway_name", gateway.ElbName)
+	setVpnClientCIDR.Add("action", "edit_vpn_gateway_virtual_address_range")
+	setVpnClientCIDR.Add("vpn_cidr", gateway.VpnCidr)
+	setVpnClientCIDR.Add("gateway_name", gateway.GwName)
 	Url.RawQuery = setVpnClientCIDR.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
 	if err != nil {
-		return errors.New("HTTP Get set_vpn_client_cidr failed: " + err.Error())
+		return errors.New("HTTP Get edit_vpn_gateway_virtual_address_range failed: " + err.Error())
 	}
 	var data APIResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode set_vpn_client_cidr failed: " + err.Error())
+		return errors.New("Json Decode edit_vpn_gateway_virtual_address_range failed: " + err.Error())
 	}
 	if !data.Return {
-		return errors.New("Rest API set_vpn_client_cidr Get failed: " + data.Reason)
+		return errors.New("Rest API edit_vpn_gateway_virtual_address_range Get failed: " + data.Reason)
 	}
 	return nil
 }
+
 func (c *Client) UpdateMaxVpnConn(gateway *Gateway) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
@@ -432,6 +436,7 @@ func (c *Client) UpdateMaxVpnConn(gateway *Gateway) error {
 	}
 	return nil
 }
+
 func (c *Client) SetVpnGatewayAuthentication(gateway *VpnGatewayAuth) error {
 	gateway.CID = c.CID
 	gateway.Action = "set_vpn_gateway_authentication"
@@ -446,6 +451,56 @@ func (c *Client) SetVpnGatewayAuthentication(gateway *VpnGatewayAuth) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API set_vpn_gateway_authentication Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) EnableActiveMesh(gateway *Gateway) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for enable_gateway_activemesh") + err.Error())
+	}
+	enableSNat := url.Values{}
+	enableSNat.Add("CID", c.CID)
+	enableSNat.Add("action", "enable_gateway_activemesh")
+	enableSNat.Add("gateway_name", gateway.GwName)
+	Url.RawQuery = enableSNat.Encode()
+
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return errors.New("HTTP Get enable_gateway_activemesh failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_gateway_activemesh failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API enable_gateway_activemesh Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) DisableActiveMesh(gateway *Gateway) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for disable_gateway_activemesh") + err.Error())
+	}
+	enableSNat := url.Values{}
+	enableSNat.Add("CID", c.CID)
+	enableSNat.Add("action", "disable_gateway_activemesh")
+	enableSNat.Add("gateway_name", gateway.GwName)
+	Url.RawQuery = enableSNat.Encode()
+
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return errors.New("HTTP Get disable_gateway_activemesh failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_gateway_activemesh failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API disable_gateway_activemesh Get failed: " + data.Reason)
 	}
 	return nil
 }

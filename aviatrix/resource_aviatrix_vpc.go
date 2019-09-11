@@ -86,6 +86,11 @@ func resourceAviatrixVpc() *schema.Resource {
 							Optional:    true,
 							Description: "Subnet name.",
 						},
+						"subnet_id": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Subnet ID.",
+						},
 					},
 				},
 			},
@@ -191,6 +196,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		sub := make(map[string]string)
 		sub["cidr"] = subnet.Cidr
 		sub["name"] = subnet.Name
+		sub["subnet_id"] = subnet.SubnetID
 
 		subnetList = append(subnetList, sub)
 	}

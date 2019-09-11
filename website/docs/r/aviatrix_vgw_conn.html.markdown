@@ -18,6 +18,8 @@ resource "aviatrix_vgw_conn" "test_vgw_conn" {
   gw_name          = "my-transit-gw"
   vpc_id           = "vpc-abcd1234"
   bgp_vgw_id       = "vgw-abcd1234"
+  bgp_vgw_account  = "dev-account-1"  
+  bgp_vgw_region   = "us-east-1"
   bgp_local_as_num = "65001"
 }
 ```
@@ -30,6 +32,8 @@ The following arguments are supported:
 * `gw_name` - (Required) Name of the Transit Gateway. Example: "my-transit-gw".
 * `vpc_id` - (Required) VPC-ID where the Transit Gateway is located. Example: AWS: "vpc-abcd1234".
 * `bgp_vgw_id` - (Required) Id of AWS's VGW that is used for this connection. Example: "vgw-abcd1234".
+* `bgp_vgw_account` - (Required) Account of AWS's VGW that is used for this connection. Example: "dev-account-1".
+* `bgp_vgw_region` - (Required) Region of AWS's VGW that is used for this connection. Example: "us-east-1".
 * `bgp_local_as_num` - (Required) BGP Local ASN (Autonomous System Number). Integer between 1-65535. Example: "65001".
 * `enable_advertise_transit_cidr` - (Optional) Switch to Enable/Disable advertise transit VPC network CIDR for a vgw connection.
 * `bgp_manual_spoke_advertise_cidrs` - (Optional) Intended CIDR list to advertise to VGW. Example: "10.2.0.0/16,10.4.0.0/16".
