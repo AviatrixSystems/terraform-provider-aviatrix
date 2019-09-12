@@ -105,8 +105,6 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("failed to create a new firewall instance: %s", err)
 	}
 
-	log.Printf("zjin00: instanceID is %v", instanceID)
-
 	d.SetId(instanceID)
 	return resourceAviatrixFirewallInstanceRead(d, meta)
 }
@@ -127,9 +125,6 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	}
 
 	fI, err := client.GetFirewallInstance(firewallInstance)
-
-	log.Printf("zjin01: fI is %v", fI)
-
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
