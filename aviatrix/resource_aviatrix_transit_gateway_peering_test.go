@@ -11,16 +11,22 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func preAvxTransitGatewayPeeringCheck(t *testing.T, msgCommon string) (string, string, string, string, string, string,
-	string, string) {
-	vpcID1, region1, subnet1 := preGatewayCheck(t, msgCommon)
-	vpcID2, region2, subnet2 := preGateway2Check(t, msgCommon)
-	return vpcID1, region1, subnet1, subnet1, vpcID2, region2, subnet2, subnet2
+func preAvxTransitGatewayPeeringCheck(t *testing.T, msgCommon string) {
+	preGatewayCheck(t, msgCommon)
+	preGateway2Check(t, msgCommon)
 }
 
 func TestAccAviatrixTransitGatewayPeering_basic(t *testing.T) {
 	rName := acctest.RandString(5)
-	var vpcID1, region1, subnet1, haSubnet1, vpcID2, region2, subnet2, haSubnet2 string
+	vpcID1 := os.Getenv("AWS_VPC_ID")
+	region1 := os.Getenv("AWS_REGION")
+	subnet1 := os.Getenv("AWS_SUBNET")
+	haSubnet1 := os.Getenv("AWS_SUBNET")
+
+	vpcID2 := os.Getenv("AWS_VPC_ID2")
+	region2 := os.Getenv("AWS_REGION2")
+	subnet2 := os.Getenv("AWS_SUBNET2")
+	haSubnet2 := os.Getenv("AWS_SUBNET2")
 
 	resourceName := "aviatrix_transit_gateway_peering.foo"
 
@@ -33,7 +39,7 @@ func TestAccAviatrixTransitGatewayPeering_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			vpcID1, region1, subnet1, haSubnet1, vpcID2, region2, subnet2, haSubnet2 = preAvxTransitGatewayPeeringCheck(t, msgCommon)
+			preAvxTransitGatewayPeeringCheck(t, msgCommon)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckTransitGatewayPeeringDestroy,

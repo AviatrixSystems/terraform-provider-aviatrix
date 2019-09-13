@@ -11,7 +11,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func preAWSPeerCheck(t *testing.T, msgCommon string) (string, string, string, string) {
+func preAWSPeerCheck(t *testing.T, msgCommon string) {
 	vpcID1 := os.Getenv("AWS_VPC_ID")
 	if vpcID1 == "" {
 		t.Fatal("Environment variable AWS_VPC_ID is not set" + msgCommon)
@@ -29,12 +29,14 @@ func preAWSPeerCheck(t *testing.T, msgCommon string) (string, string, string, st
 	if region2 == "" {
 		t.Fatal("Environment variable AWS_REGION2 is not set" + msgCommon)
 	}
-	return vpcID1, vpcID2, region1, region2
 }
 
 func TestAccAviatrixAWSPeer_basic(t *testing.T) {
 	var awsPeer goaviatrix.AWSPeer
-	var vpcID1, vpcID2, region1, region2 string
+	vpcID1 := os.Getenv("AWS_VPC_ID")
+	vpcID2 := os.Getenv("AWS_VPC_ID2")
+	region1 := os.Getenv("AWS_REGION")
+	region2 := os.Getenv("AWS_REGION2")
 
 	rInt := acctest.RandInt()
 	resourceName := "aviatrix_aws_peer.test_aws_peer"
@@ -49,7 +51,7 @@ func TestAccAviatrixAWSPeer_basic(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 			preAccountCheck(t, msgCommon)
-			vpcID1, vpcID2, region1, region2 = preAWSPeerCheck(t, msgCommon)
+			preAWSPeerCheck(t, msgCommon)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPeerDestroy,

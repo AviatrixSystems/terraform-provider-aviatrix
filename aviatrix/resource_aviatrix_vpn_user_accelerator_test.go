@@ -44,7 +44,6 @@ func TestAccAviatrixVPNUserAccelerator_basic(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func testAccVPNUserAcceleratorConfigBasic(rName string) string {

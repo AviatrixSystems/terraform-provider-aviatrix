@@ -11,17 +11,21 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func preTransPeerCheck(t *testing.T, msgCommon string) (string, string, string, string, string, string, string) {
-	source, region1, subnet1, nextHop, region2, subnet2 := preAvxTunnelCheck(t, msgCommon)
-
-	reachableCIDR := "192.168.0.0/16"
-
-	return source, region1, subnet1, nextHop, region2, subnet2, reachableCIDR
+func preTransPeerCheck(t *testing.T, msgCommon string) {
+	preAvxTunnelCheck(t, msgCommon)
 }
 
 func TestAccAviatrixTransPeer_basic(t *testing.T) {
 	var transpeer goaviatrix.TransPeer
-	var sourceVPC, region1, subnet1, nextHopVPC, region2, subnet2, reachableCIDR string
+	sourceVPC := os.Getenv("AWS_VPC_ID")
+	region1 := os.Getenv("AWS_REGION")
+	subnet1 := os.Getenv("AWS_SUBNET")
+
+	nextHopVPC := os.Getenv("AWS_VPC_ID2")
+	region2 := os.Getenv("AWS_REGION2")
+	subnet2 := os.Getenv("AWS_SUBNET2")
+
+	reachableCIDR := "192.168.0.0/16"
 
 	rName := acctest.RandString(5)
 	resourceName := "aviatrix_trans_peer.test_trans_peer"
@@ -36,7 +40,7 @@ func TestAccAviatrixTransPeer_basic(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 			preAccountCheck(t, msgCommon)
-			sourceVPC, region1, subnet1, nextHopVPC, region2, subnet2, reachableCIDR = preTransPeerCheck(t, msgCommon)
+			preTransPeerCheck(t, msgCommon)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccTransPeerDestroy,

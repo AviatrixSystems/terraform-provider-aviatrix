@@ -106,6 +106,10 @@ output "AWS_REGION" {
   value = data.aws_region.current.name
 }
 
+output "AWS_REGION2" {
+  value = data.aws_region.current.name
+}
+
 output "IDP_METADATA" {
   value = var.IDP_METADATA
 }

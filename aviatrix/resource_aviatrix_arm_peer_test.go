@@ -11,7 +11,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func preARMPeerCheck(t *testing.T, msgCommon string) (string, string, string, string) {
+func preARMPeerCheck(t *testing.T, msgCommon string) {
 	vNet1 := os.Getenv("ARM_VNET_ID")
 	if vNet1 == "" {
 		t.Fatal("Environment variable ARM_VNET_ID is not set" + msgCommon)
@@ -29,12 +29,15 @@ func preARMPeerCheck(t *testing.T, msgCommon string) (string, string, string, st
 	if region2 == "" {
 		t.Fatal("Environment variable ARM_REGION2 is not set" + msgCommon)
 	}
-	return vNet1, vNet2, region1, region2
 }
 
 func TestAccAviatrixARMPeer_basic(t *testing.T) {
 	var armPeer goaviatrix.ARMPeer
-	var vNet1, vNet2, region1, region2 string
+	vNet1 := os.Getenv("ARM_VNET_ID")
+	vNet2 := os.Getenv("ARM_VNET_ID2")
+	region1 := os.Getenv("ARM_REGION")
+	region2 := os.Getenv("ARM_REGION2")
+
 	rInt := acctest.RandInt()
 	resourceName := "aviatrix_arm_peer.test_arm_peer"
 
@@ -48,7 +51,7 @@ func TestAccAviatrixARMPeer_basic(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 			preAccountCheck(t, msgCommon)
-			vNet1, vNet2, region1, region2 = preARMPeerCheck(t, msgCommon)
+			preARMPeerCheck(t, msgCommon)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckARMPeerDestroy,
@@ -92,6 +95,7 @@ resource "aviatrix_arm_peer" "test_arm_peer" {
 	`, rInt, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
 		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),
 		vNet1, vNet2, region1, region2)
+
 }
 
 func tesAccCheckARMPeerExists(n string, armPeer *goaviatrix.ARMPeer) resource.TestCheckFunc {

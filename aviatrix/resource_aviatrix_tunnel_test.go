@@ -11,7 +11,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func preGateway2Check(t *testing.T, msgCommon string) (string, string, string) {
+func preGateway2Check(t *testing.T, msgCommon string) {
 	preAccountCheck(t, msgCommon)
 
 	vpcID2 := os.Getenv("AWS_VPC_ID2")
@@ -28,19 +28,23 @@ func preGateway2Check(t *testing.T, msgCommon string) (string, string, string) {
 	if vpcNet2 == "" {
 		t.Fatal("Environment variable AWS_SUBNET2 is not set" + msgCommon)
 	}
-	return vpcID2, region2, vpcNet2
 }
 
-func preAvxTunnelCheck(t *testing.T, msgCommon string) (string, string, string, string, string, string) {
-	vpcID1, region1, subnet1 := preGatewayCheck(t, msgCommon)
-	vpcID2, region2, subnet2 := preGateway2Check(t, msgCommon)
-	return vpcID1, region1, subnet1, vpcID2, region2, subnet2
+func preAvxTunnelCheck(t *testing.T, msgCommon string) {
+	preGatewayCheck(t, msgCommon)
+	preGateway2Check(t, msgCommon)
 }
 
 func TestAccAviatrixTunnel_basic(t *testing.T) {
 	var tun goaviatrix.Tunnel
-	var vpcID1, region1, subnet1, vpcID2, region2, subnet2 string
 	rName := acctest.RandString(5)
+	vpcID1 := os.Getenv("AWS_VPC_ID")
+	region1 := os.Getenv("AWS_REGION")
+	subnet1 := os.Getenv("AWS_SUBNET")
+
+	vpcID2 := os.Getenv("AWS_VPC_ID2")
+	region2 := os.Getenv("AWS_REGION2")
+	subnet2 := os.Getenv("AWS_SUBNET2")
 	resourceName := "aviatrix_tunnel.foo"
 
 	skipAcc := os.Getenv("SKIP_TUNNEL")
@@ -52,7 +56,7 @@ func TestAccAviatrixTunnel_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			vpcID1, region1, subnet1, vpcID2, region2, subnet2 = preAvxTunnelCheck(t, msgCommon)
+			preAvxTunnelCheck(t, msgCommon)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckTunnelDestroy,
