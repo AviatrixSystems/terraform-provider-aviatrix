@@ -53,7 +53,7 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 		awsGwSize = "t2.micro"
 	}
 	if gcpGwSize == "" {
-		gcpGwSize = "f1-micro"
+		gcpGwSize = "n1-standard-1"
 	}
 	if skipAWS == "yes" {
 		t.Log("Skipping AWS Spoke Gateway test as SKIP_SPOKE_AWS is set")
@@ -191,7 +191,7 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
 func testAccSpokeGwConfigGCP(rName string) string {
 	gcpGwSize := os.Getenv("GCP_GW_SIZE")
 	if gcpGwSize == "" {
-		gcpGwSize = "f1-micro"
+		gcpGwSize = "n1-standard-1"
 	}
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
@@ -232,6 +232,7 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
 	vpc_reg      = "%[7]s"
 	vpc_size     = "%[8]s"
 	subnet       = "%[9]s"
+	single_az_ha = "enabled"
 	enable_nat   = "no"
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),

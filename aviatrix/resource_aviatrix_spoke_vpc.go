@@ -116,7 +116,6 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		CloudType:      d.Get("cloud_type").(int),
 		AccountName:    d.Get("account_name").(string),
 		GwName:         d.Get("gw_name").(string),
-		VpcRegion:      d.Get("vpc_reg").(string),
 		VpcSize:        d.Get("vpc_size").(string),
 		Subnet:         d.Get("subnet").(string),
 		HASubnet:       d.Get("ha_subnet").(string),
@@ -141,6 +140,15 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		}
 	} else {
 		return fmt.Errorf("invalid cloud type, it can only be aws (1), gcp (4), arm (8)")
+	}
+
+	if gateway.CloudType == 1 || gateway.CloudType == 8 {
+		gateway.VpcRegion = d.Get("vpc_reg").(string)
+	} else if gateway.CloudType == 4 {
+		// for gcp, rest api asks for "zone" rather than vpc region
+		gateway.Zone = d.Get("vpc_reg").(string)
+	} else {
+		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), or ARM (8)")
 	}
 
 	haZone := d.Get("ha_zone").(string)
@@ -169,13 +177,13 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		log.Printf("[INFO] Aviatrix NAT enabled gateway: %#v", gateway)
 	}
 
-	if singleAZHA := d.Get("single_az_ha").(string); singleAZHA == "enabled" {
+	if singleAZHA := d.Get("single_az_ha").(string); singleAZHA == "disabled" {
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName:   d.Get("gw_name").(string),
 			SingleAZ: d.Get("single_az_ha").(string),
 		}
-		log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
-		err := client.EnableSingleAZGateway(singleAZGateway)
+		log.Printf("[INFO] Disable Single AZ GW HA: %#v", singleAZGateway)
+		err := client.DisableSingleAZGateway(singleAZGateway)
 		if err != nil {
 			return fmt.Errorf("failed to create single AZ GW HA: %s", err)
 		}

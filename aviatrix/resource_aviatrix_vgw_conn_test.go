@@ -11,22 +11,20 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func preVGWConnCheck(t *testing.T, msgCommon string) (string, string) {
+func preVGWConnCheck(t *testing.T, msgCommon string) {
 	preAccountCheck(t, msgCommon)
-
-	vpcID, _, _ := preGatewayCheck(t, msgCommon)
+	preGatewayCheck(t, msgCommon)
 
 	bgpVGWId := os.Getenv("AWS_BGP_VGW_ID")
 	if bgpVGWId == "" {
 		t.Fatal("Environment variable AWS_BGP_VGW_ID is not set" + msgCommon)
 	}
-
-	return vpcID, bgpVGWId
 }
 
 func TestAccAviatrixVGWConn_basic(t *testing.T) {
 	var vgwConn goaviatrix.VGWConn
-	var vpcID, bgpVGWId string
+	vpcID := os.Getenv("AWS_VPC_ID")
+	bgpVGWId := os.Getenv("AWS_BGP_VGW_ID")
 
 	rName := acctest.RandString(5)
 
@@ -41,7 +39,7 @@ func TestAccAviatrixVGWConn_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			vpcID, bgpVGWId = preVGWConnCheck(t, msgCommon)
+			preVGWConnCheck(t, msgCommon)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVGWConnDestroy,

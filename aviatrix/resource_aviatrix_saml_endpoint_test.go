@@ -26,14 +26,14 @@ func preSamlEndpointCheck(t *testing.T, msgCommon string) (string, string) {
 	return idpMetadata, idpMetadataType
 }
 
-func preAvxSamlEndpointCheck(t *testing.T, msgCommon string) (string, string) {
-	idpMetadata, idpMetadataType := preSamlEndpointCheck(t, msgCommon)
-	return idpMetadata, idpMetadataType
+func preAvxSamlEndpointCheck(t *testing.T, msgCommon string) {
+	preSamlEndpointCheck(t, msgCommon)
 }
 
 func TestAccAviatrixSamlEndpoint_basic(t *testing.T) {
 	var samlEndpoint goaviatrix.SamlEndpoint
-	var idpMetadata, idpMetadataType string
+	idpMetadata := os.Getenv("IDP_METADATA")
+	idpMetadataType := os.Getenv("IDP_METADATA_TYPE")
 	rName := acctest.RandString(5)
 	resourceName := "aviatrix_saml_endpoint.foo"
 
@@ -46,7 +46,7 @@ func TestAccAviatrixSamlEndpoint_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			idpMetadata, idpMetadataType = preAvxSamlEndpointCheck(t, msgCommon)
+			preAvxSamlEndpointCheck(t, msgCommon)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSamlEndpointDestroy,

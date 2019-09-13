@@ -11,7 +11,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func preGatewayCheck(t *testing.T, msgCommon string) (string, string, string) {
+func preGatewayCheck(t *testing.T, msgCommon string) {
 	preAccountCheck(t, msgCommon)
 
 	awsVpcId := os.Getenv("AWS_VPC_ID")
@@ -26,10 +26,9 @@ func preGatewayCheck(t *testing.T, msgCommon string) (string, string, string) {
 	if awsSubnet == "" {
 		t.Fatal("Environment variable AWS_SUBNET is not set" + msgCommon)
 	}
-	return awsVpcId, awsRegion, awsSubnet
 }
 
-func preGatewayCheckGCP(t *testing.T, msgCommon string) (string, string, string) {
+func preGatewayCheckGCP(t *testing.T, msgCommon string) {
 	preAccountCheck(t, msgCommon)
 
 	gcpVpcId := os.Getenv("GCP_VPC_ID")
@@ -44,10 +43,9 @@ func preGatewayCheckGCP(t *testing.T, msgCommon string) (string, string, string)
 	if gcpSubnet == "" {
 		t.Fatal("Environment variable GCP_SUBNET is not set" + msgCommon)
 	}
-	return gcpVpcId, gcpZone, gcpSubnet
 }
 
-func preGatewayCheckARM(t *testing.T, msgCommon string) (string, string, string, string) {
+func preGatewayCheckARM(t *testing.T, msgCommon string) {
 	preAccountCheck(t, msgCommon)
 
 	armVnetId := os.Getenv("ARM_VNET_ID")
@@ -66,7 +64,6 @@ func preGatewayCheckARM(t *testing.T, msgCommon string) (string, string, string,
 	if armGwSize == "" {
 		t.Fatal("Environment variable ARM_GW_SIZE is not set" + msgCommon)
 	}
-	return armVnetId, armRegion, armSubnet, armGwSize
 }
 
 func TestAccAviatrixGateway_basic(t *testing.T) {
@@ -95,13 +92,15 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 		awsGwSize = "t2.micro"
 	}
 	if gcpGwSize == "" {
-		gcpGwSize = "f1-micro"
+		gcpGwSize = "n1-standard-1"
 	}
 
 	if skipAWS == "yes" {
 		t.Log("Skipping AWS Gateway test as SKIP_AWS_GATEWAY is set")
 	} else {
-		var awsVpcId, awsRegion, awsVpcNet string
+		awsVpcId := os.Getenv("AWS_VPC_ID")
+		awsRegion := os.Getenv("AWS_REGION")
+		awsVpcNet := os.Getenv("AWS_SUBNET")
 		resourceNameAws := "aviatrix_gateway.test_gw_aws"
 		msgCommonAws := ". Set SKIP_AWS_GATEWAY to yes to skip AWS Gateway tests"
 
@@ -110,7 +109,7 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 				testAccPreCheck(t)
 				//Checking resources have needed environment variables set
 				preAccountCheck(t, msgCommon)
-				awsVpcId, awsRegion, awsVpcNet = preGatewayCheck(t, msgCommonAws)
+				preGatewayCheck(t, msgCommonAws)
 			},
 			Providers:    testAccProviders,
 			CheckDestroy: testAccCheckGatewayDestroy,
@@ -138,7 +137,9 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 	if skipGCP == "yes" {
 		t.Log("Skipping GCP Gateway test as SKIP_GCP_GATEWAY is set")
 	} else {
-		var gcpVpcId, gcpZone, gcpSubnet string
+		gcpZone := os.Getenv("GCP_ZONE")
+		gcpVpcId := os.Getenv("GCP_VPC_ID")
+		gcpSubnet := os.Getenv("GCP_SUBNET")
 		resourceNameGcp := "aviatrix_gateway.test_gw_gcp"
 		msgCommonGcp := ". Set SKIP_GCP_GATEWAY to yes to skip GCP Gateway tests"
 
@@ -147,7 +148,7 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 				testAccPreCheck(t)
 				//Checking resources have needed environment variables set
 				preAccountCheck(t, msgCommon)
-				gcpVpcId, gcpZone, gcpSubnet = preGatewayCheckGCP(t, msgCommonGcp)
+				preGatewayCheckGCP(t, msgCommonGcp)
 			},
 			Providers:    testAccProviders,
 			CheckDestroy: testAccCheckGatewayDestroy,
@@ -175,7 +176,10 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 	if skipARM == "yes" {
 		t.Log("Skipping ARM Gateway test as SKIP_ARM_GATEWAY is set")
 	} else {
-		var armVnetId, armRegion, armSubnet, armGwSize string
+		armVnetId := os.Getenv("ARM_VNET_ID")
+		armRegion := os.Getenv("ARM_REGION")
+		armSubnet := os.Getenv("ARM_SUBNET")
+		armGwSize := os.Getenv("ARM_GW_SIZE")
 		resourceNameArm := "aviatrix_gateway.test_gw_arm"
 		msgCommonArm := ". Set SKIP_ARM_GATEWAY to yes to skip ARM Gateway tests"
 
@@ -184,7 +188,7 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 				testAccPreCheck(t)
 				//Checking resources have needed environment variables set
 				preAccountCheck(t, msgCommon)
-				armVnetId, armRegion, armSubnet, armGwSize = preGatewayCheckARM(t, msgCommonArm)
+				preGatewayCheckARM(t, msgCommonArm)
 			},
 			Providers:    testAccProviders,
 			CheckDestroy: testAccCheckGatewayDestroy,
@@ -208,7 +212,6 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 			},
 		})
 	}
-
 }
 
 func testAccGatewayConfigBasicAWS(rName string, awsGwSize string, awsVpcId string, awsRegion string, awsVpcNet string) string {
