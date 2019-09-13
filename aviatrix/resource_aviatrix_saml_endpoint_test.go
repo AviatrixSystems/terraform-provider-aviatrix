@@ -11,7 +11,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func preSamlEndpointCheck(t *testing.T, msgCommon string) (string, string) {
+func preSamlEndpointCheck(t *testing.T, msgCommon string) {
 	preAccountCheck(t, msgCommon)
 
 	idpMetadata := os.Getenv("IDP_METADATA")
@@ -22,12 +22,6 @@ func preSamlEndpointCheck(t *testing.T, msgCommon string) (string, string) {
 	if idpMetadataType == "" {
 		t.Fatal("Environment variable IDP_METADATA_TYPE is not set" + msgCommon)
 	}
-
-	return idpMetadata, idpMetadataType
-}
-
-func preAvxSamlEndpointCheck(t *testing.T, msgCommon string) {
-	preSamlEndpointCheck(t, msgCommon)
 }
 
 func TestAccAviatrixSamlEndpoint_basic(t *testing.T) {
@@ -46,7 +40,7 @@ func TestAccAviatrixSamlEndpoint_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			preAvxSamlEndpointCheck(t, msgCommon)
+			preSamlEndpointCheck(t, msgCommon)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSamlEndpointDestroy,
