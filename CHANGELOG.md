@@ -1,4 +1,6 @@
-## 2.3.36 (Unreleased)
+## 2.3.37 (Unreleased)
+
+## 2.3.36 (September 13, 2019)
 
   - Supported controller version: 5.0.2675
   - Supported Terraform version: 0.12.*  
