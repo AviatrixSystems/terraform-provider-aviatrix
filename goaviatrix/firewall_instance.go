@@ -105,34 +105,6 @@ func (c *Client) GetFirewallInstance(firewallInstance *FirewallInstance) (*Firew
 	return nil, ErrNotFound
 }
 
-func (c *Client) DisassociateFirewallInstance(firewallInstance *FirewallInstance) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for disassociate_firewall_with_firenet: ") + err.Error())
-	}
-	disassociateFirewallWithFirenet := url.Values{}
-	disassociateFirewallWithFirenet.Add("CID", c.CID)
-	disassociateFirewallWithFirenet.Add("action", "disassociate_firewall_with_firenet")
-	disassociateFirewallWithFirenet.Add("vpc_id", firewallInstance.VpcID)
-	disassociateFirewallWithFirenet.Add("firewall_id", firewallInstance.InstanceID)
-
-	Url.RawQuery = disassociateFirewallWithFirenet.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get disassociate_firewall_with_firenet failed: " + err.Error())
-	}
-
-	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode disassociate_firewall_with_firenet failed: " + err.Error())
-	}
-	if !data.Return {
-		return errors.New("Rest API disassociate_firewall_with_firenet Get failed: " + data.Reason)
-	}
-
-	return nil
-}
-
 func (c *Client) DeleteFirewallInstance(firewallInstance *FirewallInstance) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
