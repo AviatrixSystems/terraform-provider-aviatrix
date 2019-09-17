@@ -158,6 +158,7 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 	var attachedVPCAll [][]string
 
 	mapSecurityDomainRule := make(map[string][3]bool)
+	mapFireNetVpc := make(map[string]bool)
 
 	domains := d.Get("security_domains").([]interface{})
 	for _, domain := range domains {
@@ -170,6 +171,7 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 		if dn["aviatrix_firewall"].(bool) {
 			securityDomainRule.AviatrixFirewallDomain = true
+			mapFireNetVpc[securityDomainRule.Name] = true
 		}
 		if dn["native_egress"].(bool) {
 			securityDomainRule.NativeEgressDomain = true
@@ -318,9 +320,16 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 				AccountName: attachedVPCAll[i][2],
 				VpcID:       attachedVPCAll[i][1],
 			}
-			err := client.AttachVpcToAWSTgw(awsTgw, vpcSolo, attachedVPCAll[i][0])
-			if err != nil {
-				return fmt.Errorf("failed to attach VPC: %s", err)
+			if mapFireNetVpc[attachedVPCAll[i][0]] {
+				err := client.ConnectFireNetWithTgw(awsTgw, vpcSolo, attachedVPCAll[i][0])
+				if err != nil {
+					return fmt.Errorf("failed to attach FireNet VPC: %s", err)
+				}
+			} else {
+				err := client.AttachVpcToAWSTgw(awsTgw, vpcSolo, attachedVPCAll[i][0])
+				if err != nil {
+					return fmt.Errorf("failed to attach VPC: %s", err)
+				}
 			}
 		}
 	}
@@ -503,6 +512,8 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 	var domainConnRemove [][]string
 	var toAttachVPCs [][]string
 	var toDetachVPCs [][]string
+	var mapOldFireNetVpc map[string]bool
+	var mapNewFireNetVpc map[string]bool
 
 	d.Partial(true)
 
@@ -585,6 +596,7 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 
 			if dn["aviatrix_firewall"].(bool) {
 				securityDomainRule.AviatrixFirewallDomain = true
+				mapOldFireNetVpc[securityDomainRule.Name] = true
 			}
 			if dn["native_egress"].(bool) {
 				securityDomainRule.NativeEgressDomain = true
@@ -641,6 +653,7 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 			}
 			if dn["aviatrix_firewall"].(bool) {
 				securityDomainRule.AviatrixFirewallDomain = true
+				mapNewFireNetVpc[securityDomainRule.Name] = true
 			}
 			if dn["native_egress"].(bool) {
 				securityDomainRule.NativeEgressDomain = true
@@ -798,10 +811,17 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 	if manageVpcAttachment {
 		for i := range toDetachVPCs {
 			if len(toDetachVPCs[i]) == 4 {
-				err := client.DetachVpcFromAWSTgw(awsTgw, toDetachVPCs[i][1])
-				if err != nil {
-					resourceAviatrixAWSTgwRead(d, meta)
-					return fmt.Errorf("failed to detach VPC: %s", err)
+				if mapOldFireNetVpc[toDetachVPCs[i][0]] {
+					err := client.DisconnectFireNetFromTgw(awsTgw, toDetachVPCs[i][1])
+					if err != nil {
+						return fmt.Errorf("failed to detach FireNet VPC: %s", err)
+					}
+				} else {
+					err := client.DetachVpcFromAWSTgw(awsTgw, toDetachVPCs[i][1])
+					if err != nil {
+						resourceAviatrixAWSTgwRead(d, meta)
+						return fmt.Errorf("failed to detach VPC: %s", err)
+					}
 				}
 			}
 		}
@@ -830,10 +850,16 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 
 				res, _ := client.IsVpcAttachedToTgw(awsTgw, &vpcSolo)
 				if !res {
-					err := client.AttachVpcToAWSTgw(awsTgw, vpcSolo, toAttachVPCs[i][0])
-					if err != nil {
-						resourceAviatrixAWSTgwRead(d, meta)
-						return fmt.Errorf("failed to attach VPC: %s", err)
+					if mapNewFireNetVpc[toAttachVPCs[i][0]] {
+						err := client.ConnectFireNetWithTgw(awsTgw, vpcSolo, toAttachVPCs[i][0])
+						if err != nil {
+							return fmt.Errorf("failed to attach FireNet VPC: %s", err)
+						}
+					} else {
+						err := client.AttachVpcToAWSTgw(awsTgw, vpcSolo, toAttachVPCs[i][0])
+						if err != nil {
+							return fmt.Errorf("failed to attach VPC: %s", err)
+						}
 					}
 				}
 			}
@@ -873,6 +899,8 @@ func resourceAviatrixAWSTgwDelete(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[INFO] Deleting AWS TGW")
 
+	mapFireNetVpc := make(map[string]bool)
+
 	manageVpcAttachment := d.Get("manage_vpc_attachment").(bool)
 	if manageVpcAttachment {
 		var attachedVPCs [][]string
@@ -885,15 +913,27 @@ func resourceAviatrixAWSTgwDelete(d *schema.ResourceData, meta interface{}) erro
 
 				temp := []string{dn["security_domain_name"].(string), aVPC["vpc_id"].(string),
 					aVPC["vpc_account_name"].(string), aVPC["vpc_region"].(string)}
+
+				if dn["aviatrix_firewall"].(bool) {
+					mapFireNetVpc[dn["security_domain_name"].(string)] = true
+				}
+
 				attachedVPCs = append(attachedVPCs, temp)
 			}
 		}
 		for i := range attachedVPCs {
 			if len(attachedVPCs[i]) == 4 {
-				err := client.DetachVpcFromAWSTgw(awsTgw, attachedVPCs[i][1])
-				if err != nil {
-					resourceAviatrixAWSTgwRead(d, meta)
-					return fmt.Errorf("failed to detach VPC: %s", err)
+				if mapFireNetVpc[attachedVPCs[i][0]] {
+					err := client.DisconnectFireNetFromTgw(awsTgw, attachedVPCs[i][1])
+					if err != nil {
+						return fmt.Errorf("failed to detach FireNet VPC: %s", err)
+					}
+				} else {
+					err := client.DetachVpcFromAWSTgw(awsTgw, attachedVPCs[i][1])
+					if err != nil {
+						resourceAviatrixAWSTgwRead(d, meta)
+						return fmt.Errorf("failed to detach VPC: %s", err)
+					}
 				}
 			}
 		}
