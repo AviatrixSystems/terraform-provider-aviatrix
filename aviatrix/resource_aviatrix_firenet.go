@@ -297,7 +297,7 @@ func resourceAviatrixFireNetDelete(d *schema.ResourceData, meta interface{}) err
 
 				err := client.DisassociateFirewallFromFireNet(firewall)
 				if err != nil {
-					return fmt.Errorf("failed to Assocate firewall: %v to FireNet: %s", firewall.InstanceID, err)
+					return fmt.Errorf("failed to disassociate firewall: %v to FireNet: %s", firewall.InstanceID, err)
 				}
 			}
 		}
