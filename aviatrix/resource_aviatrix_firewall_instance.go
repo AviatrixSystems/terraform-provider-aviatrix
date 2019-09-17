@@ -163,7 +163,7 @@ func resourceAviatrixFirewallInstanceDelete(d *schema.ResourceData, meta interfa
 		InstanceID: d.Get("instance_id").(string),
 	}
 
-	err := client.DisassociateFirewallInstance(firewallInstance)
+	err := client.DisassociateFirewallFromFireNet(firewallInstance)
 	if err != nil {
 		return fmt.Errorf("failed to disassociate firewall instance: %s", err)
 	}
