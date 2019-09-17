@@ -117,6 +117,9 @@ func (c *Client) AssociateFirewallWithFireNet(firewallInstance *FirewallInstance
 		return errors.New("Json Decode associate_firewall_with_firenet failed: " + err.Error())
 	}
 	if !data.Return {
+		if strings.Contains(data.Reason, "already associated") {
+			return nil
+		}
 		return errors.New("Rest API associate_firewall_with_firenet Get failed: " + data.Reason)
 	}
 	return nil
@@ -143,6 +146,9 @@ func (c *Client) DisassociateFirewallFromFireNet(firewallInstance *FirewallInsta
 		return errors.New("Json Decode disassociate_firewall_with_firenet failed: " + err.Error())
 	}
 	if !data.Return {
+		if strings.Contains(data.Reason, "not found") {
+			return nil
+		}
 		return errors.New("Rest API disassociate_firewall_with_firenet Get failed: " + data.Reason)
 	}
 	return nil
@@ -246,6 +252,58 @@ func (c *Client) DetachFirewallFromFireNet(firewallInstance *FirewallInstance) e
 	}
 	if !data.Return {
 		return errors.New("Rest API detach_firewall_from_firenet Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) ConnectFireNetWithTgw(awsTgw *AWSTgw, vpcSolo VPCSolo, SecurityDomainName string) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for connect_firenet_with_tgw") + err.Error())
+	}
+	connectFireNetWithTgw := url.Values{}
+	connectFireNetWithTgw.Add("CID", c.CID)
+	connectFireNetWithTgw.Add("action", "connect_firenet_with_tgw")
+	connectFireNetWithTgw.Add("vpc_id", vpcSolo.VpcID)
+	connectFireNetWithTgw.Add("tgw_name", awsTgw.Name)
+	connectFireNetWithTgw.Add("domain_name", SecurityDomainName)
+	Url.RawQuery = connectFireNetWithTgw.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get connect_firenet_with_tgw failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode connect_firenet_with_tgw failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API connect_firenet_with_tgw Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) DisconnectFireNetFromTgw(awsTgw *AWSTgw, vpcID string) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for disconnect_firenet_with_tgw") + err.Error())
+	}
+	disconnectFireNetWithTgw := url.Values{}
+	disconnectFireNetWithTgw.Add("CID", c.CID)
+	disconnectFireNetWithTgw.Add("action", "disconnect_firenet_with_tgw")
+	disconnectFireNetWithTgw.Add("vpc_name", vpcID)
+	Url.RawQuery = disconnectFireNetWithTgw.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get disconnect_firenet_with_tgw failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode disconnect_firenet_with_tgw failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API disconnect_firenet_with_tgw Get failed: " + data.Reason)
 	}
 	return nil
 }
