@@ -291,7 +291,7 @@ func (c *Client) DisconnectFireNetFromTgw(awsTgw *AWSTgw, vpcID string) error {
 	disconnectFireNetWithTgw := url.Values{}
 	disconnectFireNetWithTgw.Add("CID", c.CID)
 	disconnectFireNetWithTgw.Add("action", "disconnect_firenet_with_tgw")
-	disconnectFireNetWithTgw.Add("vpc_name", vpcID)
+	disconnectFireNetWithTgw.Add("vpc_id", vpcID)
 	Url.RawQuery = disconnectFireNetWithTgw.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
