@@ -76,25 +76,28 @@ resource "aviatrix_gateway" "test_gateway_oracle" {
 
 # Create an Aviatrix AWS Gateway with Peering HA enabled
 resource "aviatrix_gateway" "test_gateway_aws" {
-  cloud_type        = 1
-  account_name      = "devops"
-  gw_name           = "avtxgw1"
-  vpc_id            = "vpc-abcdef"
-  vpc_reg           = "us-west-1"
-  gw_size           = "t2.micro"
-  subnet            = "10.0.0.0/24"
-  peering_ha_subnet = "10.0.0.0/24"
+  cloud_type         = 1
+  account_name       = "devops"
+  gw_name            = "avtxgw1"
+  vpc_id             = "vpc-abcdef"
+  vpc_reg            = "us-west-1"
+  gw_size            = "t2.micro"
+  subnet             = "10.0.0.0/24"
+  peering_ha_subnet  = "10.0.0.0/24"
+  peering_ha_gw_size = "t2.micro"
 }
+
 # Create an Aviatrix GCP Gateway with Peering HA enabled
 resource "aviatrix_gateway" "test_gateway_gcp" {
-  cloud_type      = 4
-  account_name    = "devops-gcp"
-  gw_name         = "avtxgw-gcp"
-  vpc_id          = "gcp-gw-vpc"
-  vpc_reg         = "us-west1-b"
-  gw_size         = "n1-standard-1"
-  subnet          = "10.12.0.0/24"
-  peering_ha_zone = "us-west1-c"
+  cloud_type         = 4
+  account_name       = "devops-gcp"
+  gw_name            = "avtxgw-gcp"
+  vpc_id             = "gcp-gw-vpc"
+  vpc_reg            = "us-west1-b"
+  gw_size            = "n1-standard-1"
+  subnet             = "10.12.0.0/24"
+  peering_ha_zone    = "us-west1-c"
+  peering_ha_gw_size = "n1-standard-1"
 }
 ```
 
