@@ -23,7 +23,10 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
   subnet       = "10.11.0.0/24~~us-west-1b~~spoke-vpc-01-pubsub"
   enable_snat  = false
   dns_server   = "8.8.8.8"
-  tag_list     = ["k1:v1","k2:v2"]
+  tag_list     = [
+    "k1:v1",
+    "k2:v2",
+  ]
 }
 
 # Create an Aviatrix GCP Spoke Gateway
@@ -76,7 +79,7 @@ The following arguments are supported:
 * `insane_mode_az` - (Required) AZ of subnet being created for Insane Mode Spoke Gateway. Required for AWS if insane_mode is enabled. Example: AWS: "us-west-1a".
 * `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 4.7 or later release. Supported values: true, false. Default: true. Option not available for GCP, ARM and Oracle gateways, they will automatically allocate new eip's.
 * `eip` - (Optional) Required when allocate_new_eip is false. It uses specified EIP for this gateway. Available in 4.7 or later release.
-* `ha_subnet` - (Optional) HA Subnet. Required for enabling HA for AWS/ARM gateway.
+* `ha_subnet` - (Optional) HA Subnet. Required for enabling HA for AWS/ARM gateway. Setting to empty/unset will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24"
 * `ha_zone` - (Optional) HA Zone. Required for enabling HA for GCP gateway. Setting to empty/unset will disable HA. Setting to a valid zone will create an HA gateway in the zone. Example: "us-west1-c".
 * `ha_insane_mode_az` (Optional) AZ of subnet being created for Insane Mode Spoke HA Gateway. Required for AWS if insane_mode is enabled and ha_subnet is set. Example: AWS: "us-west-1a".
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set). Example: "t2.micro".

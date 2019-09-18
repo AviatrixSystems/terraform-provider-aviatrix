@@ -32,6 +32,19 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
   connected_transit        = true
 }
 
+# Create an Aviatrix GCP Transit Network Gateway
+resource "aviatrix_transit_gateway" "test_transit_gateway_gcp" {
+  cloud_type   = 4
+  account_name = "devops-gcp"
+  gw_name      = "avtxgw-gcp"
+  vpc_id       = "vpc-gcp-test"
+  vpc_reg      = "us-west2-a"
+  gw_size      = "n1-standard-1"
+  subnet       = "10.8.0.0/16"
+  ha_zone      = "us-west2-b"
+  ha_gw_size   = "n1-standard-1"
+}
+
 # Create an Aviatrix ARM Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_azure" {
   cloud_type        = 8
@@ -56,17 +69,6 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_oracle" {
   gw_size      = "VM.Standard2.2"
   subnet       = "10.7.0.0/16"
 }
-
-# Create an Aviatrix GCP Transit Network Gateway
-resource "aviatrix_transit_gateway" "test_transit_gateway_gcp" {
-  cloud_type   = 4
-  account_name = "devops-gcp"
-  gw_name      = "avtxgw-gcp"
-  vpc_id       = "vpc-gcp-test"
-  vpc_reg      = "us-west2-a"
-  gw_size      = "n1-standard-1"
-  subnet       = "10.8.0.0/16"
-}
 ```
 
 ## Argument Reference
@@ -82,7 +84,8 @@ The following arguments are supported:
 * `subnet` - (Required) Public Subnet CIDR. Copy/paste from AWS Console to get the right subnet CIDR. Example: AWS: "10.0.0.0/24".
 * `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 4.7 or later release. Supported values: true, false. Default: true. Option not available for GCP, ARM and Oracle gateways, they will automatically allocate new eip's.
 * `eip` - (Optional) Required when allocate_new_eip is false. It uses specified EIP for this gateway. Available in 4.7 or later release.
-* `ha_subnet` - (Optional) HA Subnet CIDR. Setting to empty/unset will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24".
+* `ha_subnet` - (Optional) HA Subnet CIDR. Required for enabling HA for AWS/ARM gateway. Setting to empty/unset will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24".
+* `ha_zone` - (Optional) HA Zone. Required for enabling HA for GCP gateway. Setting to empty/unset will disable HA. Setting to a valid zone will create an HA gateway in the zone. Example: "us-west1-c".
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set). Example: "t2.micro".
 * `ha_eip` - (Optional) Public IP address that you want to assign to the HA peering instance. If no value is given, a new eip will automatically allocated. Only available for AWS.
 * `enable_snat` - (Optional) Enable Source NAT for this container. Supported values: true, false.
