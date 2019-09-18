@@ -263,7 +263,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if haSubnet != "" {
+	if haSubnet != "" || haZone != "" {
 		//Enable HA
 		transitGateway := &goaviatrix.TransitVpc{
 			CloudType: d.Get("cloud_type").(int),
@@ -526,6 +526,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		if err == goaviatrix.ErrNotFound {
 			d.Set("ha_gw_size", "")
 			d.Set("ha_subnet", "")
+			d.Set("ha_zone", "")
 			d.Set("ha_insane_mode_az", "")
 			d.Set("ha_eip", "")
 			return nil
