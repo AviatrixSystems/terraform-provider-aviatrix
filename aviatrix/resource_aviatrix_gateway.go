@@ -530,6 +530,10 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			CloudType: d.Get("cloud_type").(int),
 		}
 
+		if peeringHaZone != "" && peeringHaGateway.CloudType != 4 {
+			return fmt.Errorf("'peering_ha_zone' is for enabling Peering HA for GCP gateway only")
+		}
+
 		if peeringHaGateway.CloudType == 1 {
 			peeringHaGateway.PeeringHASubnet = peeringHaSubnet
 			if insaneMode {
