@@ -21,6 +21,7 @@ type TransitVpc struct {
 	VNetNameResourceGroup  string `form:"vnet_and_resource_group_names,omitempty" json:"vpc_id,omitempty"`
 	Subnet                 string `form:"public_subnet,omitempty" json:"vpc_net,omitempty"`
 	HASubnet               string `form:"ha_subnet,omitempty"`
+	HAZone                 string `form:"new_zone,omitempty"`
 	PeeringHASubnet        string `json:"public_subnet,omitempty"`
 	VpcRegion              string `form:"region,omitempty" json:"vpc_region,omitempty"`
 	VpcSize                string `form:"gw_size,omitempty" json:"gw_size,omitempty"`
@@ -76,8 +77,13 @@ func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) error {
 	enableTransitHa.Add("CID", c.CID)
 	enableTransitHa.Add("action", "enable_transit_ha")
 	enableTransitHa.Add("gw_name", gateway.GwName)
-	enableTransitHa.Add("public_subnet", gateway.HASubnet)
 	enableTransitHa.Add("eip", gateway.Eip)
+
+	if gateway.CloudType == 4 {
+		enableTransitHa.Add("new_zone", gateway.HAZone)
+	} else {
+		enableTransitHa.Add("public_subnet", gateway.HASubnet)
+	}
 
 	Url.RawQuery = enableTransitHa.Encode()
 	resp, err := c.Get(Url.String(), nil)
