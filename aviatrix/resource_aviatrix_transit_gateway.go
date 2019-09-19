@@ -19,6 +19,9 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		SchemaVersion: 1,
+		MigrateState:  resourceAviatrixTransitGatewayMigrateState,
+
 		Schema: map[string]*schema.Schema{
 			"cloud_type": {
 				Type:        schema.TypeInt,
