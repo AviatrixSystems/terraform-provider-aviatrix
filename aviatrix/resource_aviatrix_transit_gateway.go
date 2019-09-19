@@ -894,7 +894,9 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 	}
 
 	//If HA is enabled, delete HA GW first.
-	if haSubnet := d.Get("ha_subnet").(string); haSubnet != "" {
+	haSubnet := d.Get("ha_subnet").(string)
+	haZone := d.Get("ha_zone").(string)
+	if haSubnet != "" || haZone != "" {
 		gateway.GwName += "-hagw"
 
 		err := client.DeleteGateway(gateway)
