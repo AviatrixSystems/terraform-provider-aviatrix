@@ -19,6 +19,9 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		SchemaVersion: 1,
+		MigrateState:  resourceAviatrixTransitGatewayMigrateState,
+
 		Schema: map[string]*schema.Schema{
 			"cloud_type": {
 				Type:        schema.TypeInt,
@@ -141,7 +144,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable Insane Mode for Transit. Valid values: true, false. If insane mode is enabled, gateway size has to at least be c5 size.",
 			},
-			"enable_firenet_interfaces": {
+			"enable_firenet": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
@@ -405,8 +408,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	enableFireNetInterfaces := d.Get("enable_firenet_interfaces").(bool)
-	if enableFireNetInterfaces {
+	enableFireNet := d.Get("enable_firenet").(bool)
+	if enableFireNet {
 		err := client.EnableGatewayFireNetInterfaces(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to enable transit GW for FireNet Interfaces: %s", err)
@@ -535,7 +538,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("couldn't get Aviatrix Transit Gateway: %s", err)
 		}
 
-		d.Set("enable_firenet_interfaces", gwDetail.DMZEnabled)
+		d.Set("enable_firenet", gwDetail.DMZEnabled)
 
 		if gw.EnableActiveMesh == "yes" {
 			d.Set("enable_active_mesh", true)
@@ -814,34 +817,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if gateway.CloudType == 1 {
-		if d.HasChange("enable_hybrid_connection") {
-			transitGateway := &goaviatrix.TransitVpc{
-				CloudType:   d.Get("cloud_type").(int),
-				AccountName: d.Get("account_name").(string),
-				GwName:      d.Get("gw_name").(string),
-				VpcID:       d.Get("vpc_id").(string),
-				VpcRegion:   d.Get("vpc_reg").(string),
-			}
-			enableHybridConnection := d.Get("enable_hybrid_connection").(bool)
-			if enableHybridConnection {
-				err := client.AttachTransitGWForHybrid(transitGateway)
-				if err != nil {
-					return fmt.Errorf("failed to enable transit GW for Hybrid: %s", err)
-				}
-			} else {
-				err := client.DetachTransitGWForHybrid(transitGateway)
-				if err != nil {
-					return fmt.Errorf("failed to disable transit GW for Hybrid: %s", err)
-				}
-			}
-		}
-	} else {
-		if d.HasChange("enable_hybrid_connection") {
-			return fmt.Errorf("'enable_hybrid_connection' is only supported for AWS cloud type 1")
-		}
-	}
-
 	if d.HasChange("connected_transit") {
 		transitGateway := &goaviatrix.TransitVpc{
 			CloudType:   d.Get("cloud_type").(int),
@@ -916,13 +891,13 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		d.SetPartial("enable_snat")
 	}
 
-	if d.HasChange("enable_firenet_interfaces") {
+	if d.HasChange("enable_firenet") {
 		transitGW := &goaviatrix.TransitVpc{
 			GwName: gateway.GwName,
 			VpcID:  d.Get("vpc_id").(string),
 		}
-		enableFireNetInterfaces := d.Get("enable_firenet_interfaces").(bool)
-		if enableFireNetInterfaces {
+		enableFireNet := d.Get("enable_firenet").(bool)
+		if enableFireNet {
 			err := client.EnableGatewayFireNetInterfaces(transitGW)
 			if err != nil {
 				return fmt.Errorf("failed to enable transit GW for FireNet Interfaces: %s", err)
@@ -934,7 +909,35 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 
-		d.SetPartial("enable_firenet_interfaces")
+		d.SetPartial("enable_firenet")
+	}
+
+	if gateway.CloudType == 1 {
+		if d.HasChange("enable_hybrid_connection") {
+			transitGateway := &goaviatrix.TransitVpc{
+				CloudType:   d.Get("cloud_type").(int),
+				AccountName: d.Get("account_name").(string),
+				GwName:      d.Get("gw_name").(string),
+				VpcID:       d.Get("vpc_id").(string),
+				VpcRegion:   d.Get("vpc_reg").(string),
+			}
+			enableHybridConnection := d.Get("enable_hybrid_connection").(bool)
+			if enableHybridConnection {
+				err := client.AttachTransitGWForHybrid(transitGateway)
+				if err != nil {
+					return fmt.Errorf("failed to enable transit GW for Hybrid: %s", err)
+				}
+			} else {
+				err := client.DetachTransitGWForHybrid(transitGateway)
+				if err != nil {
+					return fmt.Errorf("failed to disable transit GW for Hybrid: %s", err)
+				}
+			}
+		}
+	} else {
+		if d.HasChange("enable_hybrid_connection") {
+			return fmt.Errorf("'enable_hybrid_connection' is only supported for AWS cloud type 1")
+		}
 	}
 
 	if d.HasChange("enable_active_mesh") {
@@ -996,8 +999,8 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 
 	log.Printf("[INFO] Deleting Aviatrix Transit Gateway: %#v", gateway)
 
-	enableFireNetInterfaces := d.Get("enable_firenet_interfaces").(bool)
-	if enableFireNetInterfaces {
+	enableFireNet := d.Get("enable_firenet").(bool)
+	if enableFireNet {
 		gw := &goaviatrix.TransitVpc{
 			CloudType: d.Get("cloud_type").(int),
 			GwName:    d.Get("gw_name").(string),
