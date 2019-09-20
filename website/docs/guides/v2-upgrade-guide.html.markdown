@@ -12,10 +12,19 @@ description: |-
 In summary:
 
 **Current Setup/ Configuration:**
+
 - Controller <4.7
 - Terraform v0.11.x
 - Aviatrix Terraform provider R1.xx
 - Looking to upgrade Controller to 4.7+
+
+---
+### Important
+As Aviatrix is now an official Terraform provider, the process to setup and upgrade between versions have been significantly simplified. Upgrading to newer releases is as simple as specifying the "version" in the Aviatrix "provider" block, and running a ``terraform init``. Customers no longer need to source from Github and build our provider locally.
+
+Customers who previously have used Aviatrix as a provider prior to may transition to the official provider by following Step 5.2 in our [setup tutorial](https://docs.aviatrix.com/HowTos/tf_aviatrix_howto.html#troubleshooting).
+
+For any further questions, please check out our [Support Center](https://docs.aviatrix.com/Support/support_center_terraform.html).
 
 ---
 ## Context
@@ -226,6 +235,7 @@ resource "aviatrix_vpn_profile" "vpn-profile-1" {
 }
 ```
 With the new Terraform v0.12, the vpn_profile resource, along with others, as documented in the **R1.16** table above, the map attributes are now written as separate blocks, as seen below (only relevant section shown):
+
 ```
 # v0.12 Example .tf file
 ...
@@ -261,6 +271,7 @@ Navigate to your local Aviatrix Terraform provider repository, which by default,
 ---
 ## Phase 3: Upgrading Aviatrix Terraform Provider to R2.0
 **Summary:** This will be the largest phase in terms of the upgrade process. While this phase only involves upgrading the customer's (.tf) files as necessary, the amount of changes from R1.xx to R2.0+ are not small. Afterwards, customers must upgrade their Aviatrix Terraform provider version, and then perform ``terraform refresh`` or ``terraform import`` as necessary.
+
 1. Update Terraform files (.tf) as necessary. Please reference documentation linked below to note specific changes to any resource attributes that you may be using in your configuration:
   - https://www.terraform.io/docs/providers/aviatrix/guides/feature-changelist-v2.html
 2. Update Aviatrix Terraform provider:
@@ -294,6 +305,7 @@ Navigate to your local Aviatrix Terraform provider repository, which by default,
 Phase 3 will definitely be a larger task, but is still nothing too different from what has been done in the previous 2 phases. Here we will use an example to demonstrate the refresh/ import rules more clearly.
 
 Let's say you have finished Phase 2, and are currently on Controller 4.7, Terraform v0.12 and now you need to upgrade your Aviatrix Terraform provider to R2.0. Let's take the completed vpn-configuration example from Phase 1:
+
 ```
 # VPN_setup.tf
 
@@ -324,6 +336,7 @@ resource "aviatrix_gateway" "aws_vpn_gw" {
 We will now need to update our Terraform file(s). In this case, note that due to the attribute re-naming, we will have to rename attributes such as ``vpc_size`` and ``vpc_net`` to ``gw_size`` and ``subnet``, respectively, as it is much more clear as to what these attributes refer to. ``enable_nat`` must also be changed to ``enable_snat`` here. In addition, due to boolean standardization, ``enable_snat``'s accepted value is changed from 'yes'/'no' to true/ false. ``vpn_access`` here did not get renamed, but the accepted value has also changed to boolean.
 
 The updated file should now look something like:
+
 ```
 # Updated VPN_setup.tf
 ...
