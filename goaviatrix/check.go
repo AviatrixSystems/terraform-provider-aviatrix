@@ -16,7 +16,7 @@ func (c *Client) ControllerVersionValidation(supportedVersion string) error {
 	currVersion := strings.Split(currentVersion, ".")
 	if suppVersion[0] != currVersion[0] || suppVersion[1] != currVersion[1] {
 		return errors.New("current Terraform branch supports controller version: UserConnect-" + supportedVersion +
-			". Please go to 'https://www.terraform.io/docs/configuration/providers.html#version-provider-versions' for version construct instructions")
+			". Please go to 'https://www.terraform.io/docs/providers/aviatrix/guides/release-compatibility.html' for version construct instructions")
 	}
 
 	return nil
