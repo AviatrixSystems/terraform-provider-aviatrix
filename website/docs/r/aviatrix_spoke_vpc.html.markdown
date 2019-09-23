@@ -79,9 +79,7 @@ The following arguments are deprecated:
 
 * `dns_server` - Specify the DNS IP, only required while using a custom private DNS for the VPC.
 
--> **NOTE:** 
-
-* `vnet_and_resource_group_names` - If you are using/upgraded to Aviatrix Terraform Provider R1.10+/UserConnect-4.6 , and an ARM spoke_vpc resource was originally created with a provider version < R1.10/UserConnect-4.6, you must replace "vnet_and_resource_group_names" with "vpc_id" in your configuration file, and do ‘terraform refresh’ to set its value to "vpc_id" and apply it into the state file.
+-> **NOTE:** `vnet_and_resource_group_names` - If you are using/upgraded to Aviatrix Terraform Provider R1.10+, and an ARM spoke_vpc resource was originally created with a provider version < R1.10, you must replace "vnet_and_resource_group_names" with "vpc_id" in your configuration file, and do ‘terraform refresh’ to set its value to "vpc_id" and apply it into the state file.
 
 ## Import
 

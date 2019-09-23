@@ -64,10 +64,9 @@ The following arguments are supported:
     * For protocol "all", port must be set to "all".
     * For protocol “icmp”, port must be set to “ping”.
 
--> **NOTE:** 
+-> **NOTE:** If you are using/upgraded to Aviatrix Terraform Provider R1.5+, and an fqdn resource was originally created with a provider version <R1.5, you must modify your configuration file to match current format, and do ‘terraform refresh’ to update the state file to current format. 
 
-* If you are using/upgraded to Aviatrix Terraform Provider v4.2+ , and an fqdn resource was originally created with a provider version <4.2, you must modify your configuration file to match current format, and do ‘terraform refresh’ to update the state file to current format. 
-* In order for the FQDN feature to be enabled, “enable_nat” must be set to “yes” in the specified gateway. If it is not set at gateway creation, creation of FQDN resource will automatically enable SNAT and users must rectify the diff in the Terraform state by setting "enable_nat = 'yes'"in their gateway resource.
+-> **NOTE:** In order for the FQDN feature to be enabled, “enable_snat” must be set to true in the specified gateway. If it is not set at gateway creation, creation of FQDN resource will automatically enable SNAT and users must rectify the diff in the Terraform state by setting "enable_nat = true"in their gateway resource.
 
 ## Import
 

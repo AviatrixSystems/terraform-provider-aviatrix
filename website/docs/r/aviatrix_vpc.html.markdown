@@ -36,9 +36,7 @@ The following arguments are supported:
 * `aviatrix_transit_vpc` - (Optional) Specify whether it is an aviatrix transit vpc. Supported values: true, false. Default: false.
 * `aviatrix_firenet_vpc` - (Optional) Specify whether it is an aviatrix firenet vpc. Supported values: true, false. Default: false.
 
--> **NOTE:** 
-
-* `aviatrix_firenet_vpc` - If you are using/upgraded to Aviatrix Terraform Provider R1.8+/UserConnect-4.6 , and an vpc resource was originally created with a provider version < R1.8/UserConnect-4.6, you must do ‘terraform refresh’ to update and apply the attribute’s default value (“false”) into the state file.
+-> **NOTE:** `aviatrix_firenet_vpc` - If you are using/upgraded to Aviatrix Terraform Provider R1.8+, and an vpc resource was originally created with a provider version < R1.8, you must do ‘terraform refresh’ to update and apply the attribute’s default value (false) into the state file.
 
 ## Import
 
