@@ -615,6 +615,9 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			ElbName:         d.Get("elb_name").(string),
 			SaveTemplate:    "no",
 		}
+		if sTunnel.ElbName == "" {
+			sTunnel.ElbName = gw.GwName
+		}
 
 		if gateway.CloudType == 4 {
 			// GCP vpn gw needs gcloud project ID included within rest api call
@@ -709,7 +712,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			} else {
 				d.Set("allocate_new_eip", false)
 			}
-		} else if gw.CloudType == 4 || gw.CloudType == 8 {
+		} else if gw.CloudType == 4 || gw.CloudType == 8 || gw.CloudType == 16 {
 			// GCP and ARM gateways don't have the option to allocate new eip's
 			// default for allocate_new_eip is on
 			d.Set("allocate_new_eip", true)
