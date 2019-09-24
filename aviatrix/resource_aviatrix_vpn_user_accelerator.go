@@ -55,7 +55,7 @@ func resourceAviatrixVPNUserAcceleratorCreate(d *schema.ResourceData, meta inter
 		if err != nil {
 			// retry in case of not found elb after waiting
 			if strings.Contains(err.Error(), "Endpoint not found") || strings.Contains(err.Error(), "not active") {
-				time.Sleep(180 * time.Second)
+				time.Sleep(240 * time.Second)
 				err := client.UpdateVpnUserAccelerator(xlr)
 				if err != nil {
 					return fmt.Errorf("failed to create Vpn User Accelerator: %s", err)
