@@ -25,19 +25,21 @@ func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 	skipAWS := os.Getenv("SKIP_SPOKE_GATEWAY_AWS")
 	skipGCP := os.Getenv("SKIP_SPOKE_GATEWAY_GCP")
 	skipARM := os.Getenv("SKIP_SPOKE_GATEWAY_ARM")
+	skipOCI := os.Getenv("SKIP_SPOKE_GATEWAY_OCI")
 
 	if skipGw == "yes" {
 		t.Skip("Skipping Spoke Gateway test as SKIP_SPOKE_GATEWAY is set")
 	}
 
-	if skipAWS == "yes" && skipGCP == "yes" && skipARM == "yes" {
+	if skipAWS == "yes" && skipGCP == "yes" && skipARM == "yes" && skipOCI == "yes" {
 		t.Skip("Skipping Spoke Gateway test as SKIP_SPOKE_GATEWAY_AWS, SKIP_SPOKE_GATEWAY_GCP, " +
-			"and SKIP_SPOKE_GATEWAY_ARM are all set, even though SKIP_SPOKE_GATEWAY isn't set")
+			"SKIP_SPOKE_GATEWAY_ARM, and SKIP_SPOKE_GATEWAY_OCI are all set, even though SKIP_SPOKE_GATEWAY isn't set")
 	}
 
 	//Setting default values for AWS_GW_SIZE and GCP_GW_SIZE
 	awsGwSize := os.Getenv("AWS_GW_SIZE")
 	gcpGwSize := os.Getenv("GCP_GW_SIZE")
+	ociGwSize := os.Getenv("OCI_GW_SIZE")
 
 	if awsGwSize == "" {
 		awsGwSize = "t2.micro"
@@ -45,6 +47,10 @@ func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 	if gcpGwSize == "" {
 		gcpGwSize = "n1-standard-1"
 	}
+	if ociGwSize == "" {
+		ociGwSize = "VM.Standard2.2"
+	}
+
 	if skipAWS == "yes" {
 		t.Log("Skipping AWS Spoke Gateway test as SKIP_SPOKE_GATEWAY_AWS is set")
 	} else {
@@ -79,6 +85,7 @@ func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 			},
 		})
 	}
+
 	if skipGCP == "yes" {
 		t.Log("Skipping GCP Spoke Gateway test as SKIP_SPOKE_GATEWAY_GCP is set")
 	} else {
@@ -113,6 +120,7 @@ func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 			},
 		})
 	}
+
 	if skipARM == "yes" {
 		t.Log("Skipping ARM Spoke Gateway test as SKIP_SPOKE_GATEWAY_ARM is set")
 	} else {
@@ -136,6 +144,41 @@ func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("ARM_VNET_ID")),
 						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("ARM_SUBNET")),
 						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("ARM_REGION")),
+						resource.TestCheckResourceAttr(resourceName, "enable_snat", "false"),
+					),
+				},
+				{
+					ResourceName:            resourceName,
+					ImportState:             true,
+					ImportStateVerify:       true,
+					ImportStateVerifyIgnore: importStateVerifyIgnore,
+				},
+			},
+		})
+	}
+
+	if skipOCI == "yes" {
+		t.Log("Skipping OCI Spoke Gateway test as SKIP_SPOKE_GATEWAY_OCI is set")
+	} else {
+		//importStateVerifyIgnore = append(importStateVerifyIgnore, "vpc_id")
+		resource.Test(t, resource.TestCase{
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preGatewayCheckOCI(t, msgCommon)
+			},
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckSpokeGatewayDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccSpokeGatewayConfigOCI(rName),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckSpokeGatewayExists(resourceName, &gateway),
+						resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-oci-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "gw_size", ociGwSize),
+						//resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-arm-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("OCI_VPC_ID")),
+						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("OCI_SUBNET")),
+						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("OCI_REGION")),
 						resource.TestCheckResourceAttr(resourceName, "enable_snat", "false"),
 					),
 				},
@@ -231,6 +274,25 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
 		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),
 		os.Getenv("ARM_VNET_ID"), os.Getenv("ARM_REGION"),
 		os.Getenv("ARM_GW_SIZE"), os.Getenv("ARM_SUBNET"))
+}
+
+func testAccSpokeGatewayConfigOCI(rName string) string {
+	ociGwSize := os.Getenv("OCI_GW_SIZE")
+	if ociGwSize == "" {
+		ociGwSize = "VM.Standard2.2"
+	}
+	return fmt.Sprintf(`
+resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
+	cloud_type   = 16
+	account_name = "zjinOracle"
+	gw_name      = "tfg-oci-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	gw_size      = "%s"
+	subnet       = "%s"
+	enable_snat  = false
+}
+	`, rName, os.Getenv("OCI_VPC_ID"), os.Getenv("OCI_REGION"), ociGwSize, os.Getenv("OCI_SUBNET"))
 }
 
 func testAccCheckSpokeGatewayExists(n string, gateway *goaviatrix.Gateway) resource.TestCheckFunc {
