@@ -94,6 +94,26 @@ func ReadFile(local_filepath string) (string, string, error) {
 	return filename, contents, nil
 }
 
+func ReadPemFile(local_filepath string) (string, string, error) {
+	// File being read must be .pem
+	// Returns filename, contents of pem file, error string
+	if filepath.Ext(local_filepath) != ".pem" {
+		return "", "", errors.New("local filepath doesn't lead to a pem file")
+	}
+	filename := filepath.Base(local_filepath)
+	pemFile, err := os.Open(local_filepath)
+	if err != nil {
+		return "", "", errors.New("Failed to open local pem file: " + err.Error())
+	}
+	defer pemFile.Close()
+	byteValue, err := ioutil.ReadAll(pemFile)
+	if err != nil {
+		return "", "", errors.New("Failed to read local pem file: " + err.Error())
+	}
+	contents := string(byteValue[:])
+	return filename, contents, nil
+}
+
 func Contains(slice []string, item string) bool {
 	set := make(map[string]struct{}, len(slice))
 	for _, s := range slice {
