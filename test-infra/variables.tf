@@ -32,6 +32,17 @@ variable "aws_vpc_subnet3" {default="192.168.0.0/24"}
 variable "aws_access_key" {}
 variable "aws_secret_key" {}
 
+variable "oci_tenancy_id" {}
+variable "oci_user_id" {}
+variable "oci_compartment_id" {}
+variable "oci_api_key_firepath" {
+  description = "Location of the OCI credentials to use."
+}
+variable "oci_region1" {default="us-ashburn-1"}
+variable "oci_vpc_cidr1" {default="10.10.0.0/16"}
+variable "oci_subnet1" {default="10.10.0.0/16"}
+variable "oci_fingerprint" {}
+
 variable "IDP_METADATA" {default="ThisIsATest"}
 variable "IDP_METADATA_TYPE"  {default="Text"}
 
