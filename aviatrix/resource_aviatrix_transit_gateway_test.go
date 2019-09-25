@@ -47,9 +47,9 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 					Config: testAccTransitGatewayConfigBasicAWS(rName),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckTransitGatewayExists(resourceNameAws, &gateway),
-						resource.TestCheckResourceAttr(resourceNameAws, "gw_name", fmt.Sprintf("tfg-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameAws, "gw_name", fmt.Sprintf("tfg-aws-%s", rName)),
 						resource.TestCheckResourceAttr(resourceNameAws, "gw_size", "t2.micro"),
-						resource.TestCheckResourceAttr(resourceNameAws, "account_name", fmt.Sprintf("tfa-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameAws, "account_name", fmt.Sprintf("tfa-aws-%s", rName)),
 						resource.TestCheckResourceAttr(resourceNameAws, "vpc_id", os.Getenv("AWS_VPC_ID")),
 						resource.TestCheckResourceAttr(resourceNameAws, "subnet", os.Getenv("AWS_SUBNET")),
 						resource.TestCheckResourceAttr(resourceNameAws, "vpc_reg", os.Getenv("AWS_REGION")),
@@ -83,9 +83,9 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 					Config: testAccTransitGatewayConfigBasicARM(rName),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckTransitGatewayExists(resourceNameArm, &gateway),
-						resource.TestCheckResourceAttr(resourceNameArm, "gw_name", fmt.Sprintf("tfg-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameArm, "gw_name", fmt.Sprintf("tfg-arm-%s", rName)),
 						resource.TestCheckResourceAttr(resourceNameArm, "gw_size", os.Getenv("ARM_GW_SIZE")),
-						resource.TestCheckResourceAttr(resourceNameArm, "account_name", fmt.Sprintf("tfaz-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameArm, "account_name", fmt.Sprintf("tfa-arm-%s", rName)),
 						resource.TestCheckResourceAttr(resourceNameArm, "vpc_id", os.Getenv("ARM_VNET_ID")),
 						resource.TestCheckResourceAttr(resourceNameArm, "subnet", os.Getenv("ARM_SUBNET")),
 						resource.TestCheckResourceAttr(resourceNameArm, "vpc_reg", os.Getenv("ARM_REGION")),
@@ -165,7 +165,7 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 						testAccCheckTransitGatewayExists(resourceNameOCI, &gateway),
 						resource.TestCheckResourceAttr(resourceNameOCI, "gw_name", fmt.Sprintf("tfg-oci-%s", rName)),
 						resource.TestCheckResourceAttr(resourceNameOCI, "gw_size", ociGwSize),
-						//resource.TestCheckResourceAttr(resourceNameOCI, "account_name", fmt.Sprintf("tfa-oci-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameOCI, "account_name", fmt.Sprintf("tfa-oci-%s", rName)),
 						resource.TestCheckResourceAttr(resourceNameOCI, "vpc_id", os.Getenv("OCI_VPC_ID")),
 						resource.TestCheckResourceAttr(resourceNameOCI, "subnet", os.Getenv("OCI_SUBNET")),
 						resource.TestCheckResourceAttr(resourceNameOCI, "vpc_reg", os.Getenv("OCI_REGION")),
@@ -185,8 +185,8 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 
 func testAccTransitGatewayConfigBasicAWS(rName string) string {
 	return fmt.Sprintf(`
-resource "aviatrix_account" "test_aws" {
-	account_name       = "tfa-%s"
+resource "aviatrix_account" "test_acc_aws" {
+	account_name       = "tfa-aws-%s"
 	cloud_type         = 1
 	aws_account_number = "%s"
 	aws_iam            = false
@@ -196,8 +196,8 @@ resource "aviatrix_account" "test_aws" {
 
 resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
 	cloud_type   = 1
-	account_name = aviatrix_account.test_aws.account_name
-	gw_name      = "tfg-%[1]s"
+	account_name = aviatrix_account.test_acc_aws.account_name
+	gw_name      = "tfg-aws-%[1]s"
 	vpc_id       = "%[5]s"
 	vpc_reg      = "%[6]s"
 	gw_size      = "t2.micro"
@@ -209,8 +209,8 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
 
 func testAccTransitGatewayConfigBasicARM(rName string) string {
 	return fmt.Sprintf(`
-resource "aviatrix_account" "test_arm" {
-	account_name        = "tfaz-%s"
+resource "aviatrix_account" "test_acc_arm" {
+	account_name        = "tfa-arm-%s"
 	cloud_type          = 8
 	arm_subscription_id = "%s"
 	arm_directory_id    = "%s"
@@ -220,8 +220,8 @@ resource "aviatrix_account" "test_arm" {
 
 resource "aviatrix_transit_gateway" "test_transit_gateway_arm" {
 	cloud_type   = 8
-	account_name = aviatrix_account.test_arm.account_name
-	gw_name      = "tfg-%[1]s"
+	account_name = aviatrix_account.test_acc_arm.account_name
+	gw_name      = "tfg-arm-%[1]s"
 	vpc_id       = "%[6]s"
 	vpc_reg      = "%[7]s"
 	gw_size      = "%[8]s"
@@ -238,7 +238,7 @@ func testAccTransitGatewayConfigBasicGCP(rName string) string {
 		gcpGwSize = "n1-standard-1"
 	}
 	return fmt.Sprintf(`
-resource "aviatrix_account" "test_gcp" {
+resource "aviatrix_account" "test_acc_gcp" {
 	account_name                        = "tfa-gcp-%s"
 	cloud_type                          = 4
 	gcloud_project_id                   = "%s"
@@ -247,7 +247,7 @@ resource "aviatrix_account" "test_gcp" {
 
 resource "aviatrix_transit_gateway" "test_transit_gateway_gcp" {
 	cloud_type   = 4
-	account_name = aviatrix_account.test_gcp.account_name
+	account_name = aviatrix_account.test_acc_gcp.account_name
 	gw_name      = "tfg-gcp-%[1]s"
 	vpc_id       = "%[4]s"
 	vpc_reg      = "%[5]s"
@@ -264,16 +264,27 @@ func testAccTransitGatewayConfigBasicOCI(rName string) string {
 		ociGwSize = "VM.Standard2.2"
 	}
 	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_oci" {
+	account_name                 = "tfa-oci-%s"
+	cloud_type                   = 16
+	oci_tenancy_id               = "%s"
+	oci_user_id                  = "%s"
+	oci_compartment_id           = "%s"
+	oci_api_private_key_filepath = "%s"
+}
+
 resource "aviatrix_transit_gateway" "test_transit_gateway_oci" {
 	cloud_type   = 16
-	account_name = "zjinOracle"
-	gw_name      = "tfg-oci-%s"
-	vpc_id       = "%s"
-	vpc_reg      = "%s"
-	gw_size      = "%s"
-	subnet       = "%s"
+	account_name = aviatrix_account.test_acc_oci.account_name
+	gw_name      = "tfg-oci-%[1]s"
+	vpc_id       = "%[6]s"
+	vpc_reg      = "%[7]s"
+	gw_size      = "%[8]s"
+	subnet       = "%[9]s"
 }
-	`, rName, os.Getenv("OCI_VPC_ID"), os.Getenv("OCI_REGION"), ociGwSize, os.Getenv("OCI_SUBNET"))
+	`, rName, os.Getenv("OCI_TENANCY_ID"), os.Getenv("OCI_USER_ID"), os.Getenv("OCI_COMPARTMENT_ID"),
+		os.Getenv("OCI_API_KEY_FILEPATH"), os.Getenv("OCI_VPC_ID"), os.Getenv("OCI_REGION"),
+		ociGwSize, os.Getenv("OCI_SUBNET"))
 }
 
 func testAccCheckTransitGatewayExists(n string, gateway *goaviatrix.Gateway) resource.TestCheckFunc {

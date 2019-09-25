@@ -445,7 +445,7 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 	return resourceAviatrixAccountRead(d, meta)
 }
 
-//for now, deleteing gcp account will not delete the credential file
+//for now, deleting gcp account will not delete the credential file
 func resourceAviatrixAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	account := &goaviatrix.Account{
