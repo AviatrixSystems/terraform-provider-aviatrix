@@ -12,7 +12,7 @@ The aviatrix_vpc resource allows the creation and management of VPCs.
 ## Example Usage
 
 ```hcl
-# Create a VPC
+# Create an AWS VPC
 resource "aviatrix_vpc" "test_vpc" {
   cloud_type           = 1
   account_name         = "devops"
@@ -28,7 +28,7 @@ resource "aviatrix_vpc" "test_vpc" {
 
 The following arguments are supported:
 
-* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Use 1 for AWS.
+* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1) is supported.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `name` - (Required) Name of the vpc which is going to be created.
 * `region` - (Required) Region of cloud provider. Example: AWS: "us-east-1", ARM: "East US 2".
