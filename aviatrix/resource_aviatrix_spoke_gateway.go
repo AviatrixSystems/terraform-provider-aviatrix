@@ -505,7 +505,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		}
 	} else {
 		log.Printf("[INFO] Spoke HA Gateway size: %s", haGw.GwSize)
-		if haGw.CloudType == 1 || haGw.CloudType == 8 {
+		if haGw.CloudType == 1 || haGw.CloudType == 8 || haGw.CloudType == 16 {
 			d.Set("ha_subnet", haGw.VpcNet)
 			d.Set("ha_zone", "")
 		} else if haGw.CloudType == 4 {
@@ -681,7 +681,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		oldZone, newZone := d.GetChange("ha_zone")
 		deleteHaGw := false
 		changeHaGw := false
-		if spokeGw.CloudType == 1 || spokeGw.CloudType == 8 {
+		if spokeGw.CloudType == 1 || spokeGw.CloudType == 8 || spokeGw.CloudType == 16 {
 			spokeGw.HASubnet = d.Get("ha_subnet").(string)
 			if oldSubnet == "" && newSubnet != "" {
 				newHaGwEnabled = true
