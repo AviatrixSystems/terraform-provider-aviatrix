@@ -36,8 +36,8 @@ type Account struct {
 	ArmChinaApplicationEndpoint                string `form:"arm_china_application_endpoint,omitempty" json:"arm_china_application_endpoint,omitempty"`
 	ArmChinaApplicationClientId                string `form:"arm_china_application_client_id,omitempty" json:"arm_china_application_client_id,omitempty"`
 	ArmChinaApplicationClientSecret            string `form:"arm_china_application_client_secret,omitempty" json:"arm_china_application_client_secret,omitempty"`
-	GcloudProjectCredentialsFilename           string `form:"filename,omitempty"`
-	GcloudProjectCredentialsContents           string `form:"contents,omitempty"`
+	ProjectCredentialsFilename                 string `form:"filename,omitempty"` //Applies for both GCP and OCI
+	ProjectCredentialsContents                 string `form:"contents,omitempty"` //Applies for both GCP and OCI
 	GcloudProjectCredentialsFilepathLocal      string `form:"gcloud_project_credentials_local,omitempty"`
 	GcloudProjectCredentialsFilepathController string `form:"gcloud_project_credentials,omitempty"`
 	GcloudProjectName                          string `form:"gcloud_project_name,omitempty" json:"project,omitempty"`
@@ -45,8 +45,6 @@ type Account struct {
 	OciUserID                                  string `form:"oci_user_id" json:"oci_user_id,omitempty"`
 	OciCompartmentID                           string `form:"oci_compartment_id" json:"oci_compartment_id,omitempty"`
 	OciApiPrivateKeyFilePath                   string `form:"oci_api_key_path" json:"oci_api_private_key_filepath,omitempty"`
-	OciApiPrivateKeyFilename                   string `form:"filename,omitempty"`
-	OciApiPrivateKeyFileContents               string `form:"contents,omitempty"`
 }
 
 type AccountResult struct {
