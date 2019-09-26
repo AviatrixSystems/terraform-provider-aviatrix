@@ -1193,6 +1193,9 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 
 			sTunnel.SplitTunnel = "yes"
+			if sTunnel.ElbName == "" {
+				sTunnel.ElbName = d.Get("gw_name").(string)
+			}
 
 			if gateway.CloudType == 4 {
 				// ELB name is computed, search for gw to get elb name
