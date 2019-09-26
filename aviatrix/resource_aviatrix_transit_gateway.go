@@ -533,7 +533,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 		return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway: %s", err)
 	} else {
-		if haGw.CloudType == 1 || haGw.CloudType == 8 {
+		if haGw.CloudType == 1 || haGw.CloudType == 8 || haGw.CloudType == 16 {
 			d.Set("ha_subnet", haGw.VpcNet)
 			d.Set("ha_zone", "")
 		} else if haGw.CloudType == 4 {
