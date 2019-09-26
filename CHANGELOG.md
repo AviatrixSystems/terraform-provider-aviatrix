@@ -1,4 +1,21 @@
-## 2.3.37 (Unreleased)
+## 2.4.0 (Unreleased)
+
+NOTES:
+  - Supported controller version: UserConnect-5.0.2761
+  - Supported Terraform version: 0.12.*  
+  
+FEATURES:
+  - Add support for OCI (Oracle Cloud Infrastructure) in resource_aviatrix_account
+  - Add support for OCI in resource_aviatrix_gateway, resource_aviatrix_spoke_gateway and resource_aviatrix_transit_gateway
+  - Add support for GCP in resource_aviatrix_transit_gateway
+  - Update test-infra to support acceptance test for OCI 
+  
+ENHANCEMENTS
+  - Add "description" as an attribute under policy in resource_aviatrix_firewall
+  
+BUG FIXES:
+  - Fix the issue that HA gateway could not be deleted before primary gateway for GCP transit gateway
+
 ## 2.3.36 (September 16, 2019)
 
   - Supported controller version: 5.0.2675
