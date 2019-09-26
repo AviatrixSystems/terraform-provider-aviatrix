@@ -110,6 +110,34 @@ output "AWS_REGION2" {
   value = data.aws_region.current.name
 }
 
+output "OCI_VPC_ID" {
+  value = module.aviatrix_oci_vpc1.vpc_id
+}
+
+output "OCI_REGION" {
+  value = var.oci_region1
+}
+
+output "OCI_SUBNET" {
+  value = module.aviatrix_oci_vpc1.subnet
+}
+
+output "OCI_TENANCY_ID" {
+  value = var.oci_tenancy_id
+}
+
+output "OCI_USER_ID" {
+  value = var.oci_user_id
+}
+
+output "OCI_COMPARTMENT_ID" {
+  value = var.oci_compartment_id
+}
+
+output "OCI_API_KEY_FILEPATH" {
+  value = var.oci_api_key_firepath
+}
+
 output "IDP_METADATA" {
   value = var.IDP_METADATA
 }
