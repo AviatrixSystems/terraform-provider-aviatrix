@@ -12,7 +12,7 @@ The aviatrix_vpc resource allows the creation and management of VPCs.
 ## Example Usage
 
 ```hcl
-# Create a VPC
+# Create an AWS VPC
 resource "aviatrix_vpc" "test_vpc" {
   cloud_type           = 1
   account_name         = "devops"
@@ -28,7 +28,7 @@ resource "aviatrix_vpc" "test_vpc" {
 
 The following arguments are supported:
 
-* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Use 1 for AWS.
+* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1) is supported.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `name` - (Required) Name of the vpc which is going to be created.
 * `region` - (Required) Region of cloud provider. Example: AWS: "us-east-1", ARM: "East US 2".
@@ -36,9 +36,7 @@ The following arguments are supported:
 * `aviatrix_transit_vpc` - (Optional) Specify whether it is an aviatrix transit vpc. Supported values: true, false. Default: false.
 * `aviatrix_firenet_vpc` - (Optional) Specify whether it is an aviatrix firenet vpc. Supported values: true, false. Default: false.
 
--> **NOTE:** 
-
-* `aviatrix_firenet_vpc` - If you are using/upgraded to Aviatrix Terraform Provider R1.8+/UserConnect-4.6 , and an vpc resource was originally created with a provider version < R1.8/UserConnect-4.6, you must do ‘terraform refresh’ to update and apply the attribute’s default value (“false”) into the state file.
+-> **NOTE:** `aviatrix_firenet_vpc` - If you are using/upgraded to Aviatrix Terraform Provider R1.8+, and an vpc resource was originally created with a provider version < R1.8, you must do ‘terraform refresh’ to update and apply the attribute’s default value (false) into the state file.
 
 ## Import
 

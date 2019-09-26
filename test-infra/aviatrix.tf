@@ -71,6 +71,11 @@ module "aviatrix_aws_vpc2" {
   aws_vpc_subnet = var.aws_vpc_subnet2
   aws_region     = var.aws_region2
 }
+module "aviatrix_oci_vpc1" {
+  source         = "./oci"
+  oci_compartment_id = var.oci_compartment_id
+  oci_vpc_cidr1 = var.oci_vpc_cidr1
+}
 resource "aws_vpn_gateway" "vgw" {
   vpc_id = module.aviatrix_aws_vpc2.vpc
   tags = {

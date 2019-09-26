@@ -198,6 +198,9 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 
 		attachedVPCs := routeDomainDetail[0].AttachedVPC
 		for i := range attachedVPCs {
+			if strings.Contains(attachedVPCs[i].VPCId, "vpn-") {
+				continue
+			}
 
 			if dm != "Aviatrix_Edge_Domain" {
 				vpcSolo := VPCSolo{

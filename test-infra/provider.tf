@@ -23,6 +23,17 @@ provider "azurerm" {
 #  password      = var.aviatrix_password
 #}
 
+provider "oci" {
+  tenancy_ocid     = var.oci_tenancy_id
+  user_ocid        = var.oci_user_id
+  fingerprint      = var.oci_fingerprint
+  private_key_path = var.oci_api_key_firepath
+  region           = var.oci_region1
+}
+data "oci_identity_availability_domains" "ads" {
+  compartment_id = var.oci_compartment_id
+}
+
 provider "aviatrix" {
   username      = "admin"
   password      = module.aviatrix-controller-build.private_ip

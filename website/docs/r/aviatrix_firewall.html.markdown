@@ -25,15 +25,17 @@ resource "aviatrix_firewall" "test_firewall" {
     dst_ip      = "10.12.0.172/32"
     action      = "deny"
     port        = "0:65535"
+    description = "This is policy no.1"
   }
   
   policy {
     protocol    = "tcp"
-    src_ip      = "test_tag" # Tag name of a pre created aviatrix_firewall_tag resource
+    src_ip      = "10.15.1.224/32"
     log_enabled = false
     dst_ip      = "10.12.1.172/32"
     action      = "deny"
     port        = "0:65535"
+    description = "This is policy no.2"
   }
 }
 ```
@@ -49,9 +51,10 @@ The following arguments are supported:
   * `src_ip` - (Required) CIDRs separated by comma or tag names such "HR" or "marketing" etc. Example: "10.30.0.0/16,10.45.0.0/20". The aviatrix_firewall_tag resource should be created prior to using the tag name.
   * `dst_ip` - (Required) CIDRs separated by comma or tag names such "HR" or "marketing" etc. Example: "10.30.0.0/16,10.45.0.0/20". The aviatrix_firewall_tag resource should be created prior to using the tag name.
   * `protocol`- (Optional): "all", "tcp", "udp", "icmp", "sctp", "rdp", "dccp".
-  * `port` - (Required) a single port or a range of port numbers. e.g.: "25", "25:1024".
+  * `port` - (Required) a single port or a range of port numbers. Example: "25", "25:1024".
   * `action`- (Required) Valid values: "allow", "deny".
   * `log_enabled`- (Optional) Valid values: true, false. Default value: false.
+  * `description`- (Optional) Description of the policy. Example: "This is policy no.1".
 
 ## Import
 

@@ -21,13 +21,17 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 		t.Skip("Skipping Transit gateway test as SKIP_TRANSIT_GATEWAY is set")
 	}
 
-	skipGwAws := os.Getenv("SKIP_TRANSIT_GATEWAY_AWS")
-	skipGwArm := os.Getenv("SKIP_TRANSIT_GATEWAY_ARM")
-	if skipGwAws == "yes" && skipGwArm == "yes" {
-		t.Skip("Skipping Transit gateway test in aws as SKIP_TRANSIT_GATEWAY_AWS and SKIP_TRANSIT_GATEWAY_ARM are both set")
+	skipGwAWS := os.Getenv("SKIP_TRANSIT_GATEWAY_AWS")
+	skipGwARM := os.Getenv("SKIP_TRANSIT_GATEWAY_ARM")
+	skipGwGCP := os.Getenv("SKIP_TRANSIT_GATEWAY_GCP")
+	skipGwOCI := os.Getenv("SKIP_TRANSIT_GATEWAY_OCI")
+
+	if skipGwAWS == "yes" && skipGwARM == "yes" && skipGwGCP == "yes" && skipGwOCI == "yes" {
+		t.Skip("Skipping Transit gateway test in aws as SKIP_TRANSIT_GATEWAY_AWS, SKIP_TRANSIT_GATEWAY_ARM, " +
+			"SKIP_TRANSIT_GATEWAY_GCP and SKIP_TRANSIT_GATEWAY_OCI are all set")
 	}
 
-	if skipGwAws != "yes" {
+	if skipGwAWS != "yes" {
 		resourceNameAws := "aviatrix_transit_gateway.test_transit_gateway_aws"
 		msgCommonAws := ". Set SKIP_TRANSIT_GATEWAY_AWS to yes to skip Transit Gateway tests in aws"
 
@@ -40,12 +44,12 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 			CheckDestroy: testAccCheckTransitGatewayDestroy,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccTransitGatewayConfigBasicAws(rName),
+					Config: testAccTransitGatewayConfigBasicAWS(rName),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckTransitGatewayExists(resourceNameAws, &gateway),
-						resource.TestCheckResourceAttr(resourceNameAws, "gw_name", fmt.Sprintf("tfg-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameAws, "gw_name", fmt.Sprintf("tfg-aws-%s", rName)),
 						resource.TestCheckResourceAttr(resourceNameAws, "gw_size", "t2.micro"),
-						resource.TestCheckResourceAttr(resourceNameAws, "account_name", fmt.Sprintf("tfa-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameAws, "account_name", fmt.Sprintf("tfa-aws-%s", rName)),
 						resource.TestCheckResourceAttr(resourceNameAws, "vpc_id", os.Getenv("AWS_VPC_ID")),
 						resource.TestCheckResourceAttr(resourceNameAws, "subnet", os.Getenv("AWS_SUBNET")),
 						resource.TestCheckResourceAttr(resourceNameAws, "vpc_reg", os.Getenv("AWS_REGION")),
@@ -62,7 +66,7 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 		t.Log("Skipping Transit gateway test in aws as SKIP_TRANSIT_GATEWAY_AWS is set")
 	}
 
-	if skipGwArm != "yes" {
+	if skipGwARM != "yes" {
 		resourceNameArm := "aviatrix_transit_gateway.test_transit_gateway_arm"
 
 		msgCommonArm := ". Set SKIP_TRANSIT_GATEWAY_ARM to yes to skip Transit Gateway tests in ARM"
@@ -76,12 +80,12 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 			CheckDestroy: testAccCheckTransitGatewayDestroy,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccTransitGatewayConfigBasicArm(rName),
+					Config: testAccTransitGatewayConfigBasicARM(rName),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckTransitGatewayExists(resourceNameArm, &gateway),
-						resource.TestCheckResourceAttr(resourceNameArm, "gw_name", fmt.Sprintf("tfg-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameArm, "gw_name", fmt.Sprintf("tfg-arm-%s", rName)),
 						resource.TestCheckResourceAttr(resourceNameArm, "gw_size", os.Getenv("ARM_GW_SIZE")),
-						resource.TestCheckResourceAttr(resourceNameArm, "account_name", fmt.Sprintf("tfaz-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameArm, "account_name", fmt.Sprintf("tfa-arm-%s", rName)),
 						resource.TestCheckResourceAttr(resourceNameArm, "vpc_id", os.Getenv("ARM_VNET_ID")),
 						resource.TestCheckResourceAttr(resourceNameArm, "subnet", os.Getenv("ARM_SUBNET")),
 						resource.TestCheckResourceAttr(resourceNameArm, "vpc_reg", os.Getenv("ARM_REGION")),
@@ -97,12 +101,92 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 	} else {
 		t.Log("Skipping Transit gateway test in aws as SKIP_TRANSIT_GATEWAY_ARM is set")
 	}
+
+	if skipGwGCP != "yes" {
+		resourceNameGCP := "aviatrix_transit_gateway.test_transit_gateway_gcp"
+		gcpGwSize := os.Getenv("GCP_GW_SIZE")
+		if gcpGwSize == "" {
+			gcpGwSize = "n1-standard-1"
+		}
+
+		msgCommonGCP := ". Set SKIP_TRANSIT_GATEWAY_GCP to yes to skip Transit Gateway tests in GCP"
+
+		resource.Test(t, resource.TestCase{
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preGatewayCheckGCP(t, msgCommonGCP)
+			},
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckTransitGatewayDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccTransitGatewayConfigBasicGCP(rName),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckTransitGatewayExists(resourceNameGCP, &gateway),
+						resource.TestCheckResourceAttr(resourceNameGCP, "gw_name", fmt.Sprintf("tfg-gcp-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameGCP, "gw_size", gcpGwSize),
+						resource.TestCheckResourceAttr(resourceNameGCP, "account_name", fmt.Sprintf("tfa-gcp-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameGCP, "vpc_id", os.Getenv("GCP_VPC_ID")),
+						resource.TestCheckResourceAttr(resourceNameGCP, "subnet", os.Getenv("GCP_SUBNET")),
+						resource.TestCheckResourceAttr(resourceNameGCP, "vpc_reg", os.Getenv("GCP_ZONE")),
+					),
+				},
+				{
+					ResourceName:      resourceNameGCP,
+					ImportState:       true,
+					ImportStateVerify: true,
+				},
+			},
+		})
+	} else {
+		t.Log("Skipping Transit gateway test in aws as SKIP_TRANSIT_GATEWAY_GCP is set")
+	}
+
+	if skipGwOCI != "yes" {
+		resourceNameOCI := "aviatrix_transit_gateway.test_transit_gateway_oci"
+		ociGwSize := os.Getenv("OCI_GW_SIZE")
+		if ociGwSize == "" {
+			ociGwSize = "VM.Standard2.2"
+		}
+
+		msgCommonOCI := ". Set SKIP_TRANSIT_GATEWAY_OCI to yes to skip Transit Gateway tests in OCI"
+
+		resource.Test(t, resource.TestCase{
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preGatewayCheckGCP(t, msgCommonOCI)
+			},
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckTransitGatewayDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccTransitGatewayConfigBasicOCI(rName),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckTransitGatewayExists(resourceNameOCI, &gateway),
+						resource.TestCheckResourceAttr(resourceNameOCI, "gw_name", fmt.Sprintf("tfg-oci-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameOCI, "gw_size", ociGwSize),
+						resource.TestCheckResourceAttr(resourceNameOCI, "account_name", fmt.Sprintf("tfa-oci-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameOCI, "vpc_id", os.Getenv("OCI_VPC_ID")),
+						resource.TestCheckResourceAttr(resourceNameOCI, "subnet", os.Getenv("OCI_SUBNET")),
+						resource.TestCheckResourceAttr(resourceNameOCI, "vpc_reg", os.Getenv("OCI_REGION")),
+					),
+				},
+				{
+					ResourceName:      resourceNameOCI,
+					ImportState:       true,
+					ImportStateVerify: true,
+				},
+			},
+		})
+	} else {
+		t.Log("Skipping Transit gateway test in aws as SKIP_TRANSIT_GATEWAY_OCI is set")
+	}
 }
 
-func testAccTransitGatewayConfigBasicAws(rName string) string {
+func testAccTransitGatewayConfigBasicAWS(rName string) string {
 	return fmt.Sprintf(`
-resource "aviatrix_account" "test_aws" {
-	account_name       = "tfa-%s"
+resource "aviatrix_account" "test_acc_aws" {
+	account_name       = "tfa-aws-%s"
 	cloud_type         = 1
 	aws_account_number = "%s"
 	aws_iam            = false
@@ -112,8 +196,8 @@ resource "aviatrix_account" "test_aws" {
 
 resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
 	cloud_type   = 1
-	account_name = aviatrix_account.test_aws.account_name
-	gw_name      = "tfg-%[1]s"
+	account_name = aviatrix_account.test_acc_aws.account_name
+	gw_name      = "tfg-aws-%[1]s"
 	vpc_id       = "%[5]s"
 	vpc_reg      = "%[6]s"
 	gw_size      = "t2.micro"
@@ -123,10 +207,10 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"))
 }
 
-func testAccTransitGatewayConfigBasicArm(rName string) string {
+func testAccTransitGatewayConfigBasicARM(rName string) string {
 	return fmt.Sprintf(`
-resource "aviatrix_account" "test_arm" {
-	account_name        = "tfaz-%s"
+resource "aviatrix_account" "test_acc_arm" {
+	account_name        = "tfa-arm-%s"
 	cloud_type          = 8
 	arm_subscription_id = "%s"
 	arm_directory_id    = "%s"
@@ -136,8 +220,8 @@ resource "aviatrix_account" "test_arm" {
 
 resource "aviatrix_transit_gateway" "test_transit_gateway_arm" {
 	cloud_type   = 8
-	account_name = aviatrix_account.test_arm.account_name
-	gw_name      = "tfg-%[1]s"
+	account_name = aviatrix_account.test_acc_arm.account_name
+	gw_name      = "tfg-arm-%[1]s"
 	vpc_id       = "%[6]s"
 	vpc_reg      = "%[7]s"
 	gw_size      = "%[8]s"
@@ -146,6 +230,61 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_arm" {
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"), os.Getenv("ARM_APPLICATION_ID"),
 		os.Getenv("ARM_APPLICATION_KEY"), os.Getenv("ARM_VNET_ID"), os.Getenv("ARM_REGION"),
 		os.Getenv("ARM_GW_SIZE"), os.Getenv("ARM_SUBNET"))
+}
+
+func testAccTransitGatewayConfigBasicGCP(rName string) string {
+	gcpGwSize := os.Getenv("GCP_GW_SIZE")
+	if gcpGwSize == "" {
+		gcpGwSize = "n1-standard-1"
+	}
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_gcp" {
+	account_name                        = "tfa-gcp-%s"
+	cloud_type                          = 4
+	gcloud_project_id                   = "%s"
+	gcloud_project_credentials_filepath = "%s"
+}
+
+resource "aviatrix_transit_gateway" "test_transit_gateway_gcp" {
+	cloud_type   = 4
+	account_name = aviatrix_account.test_acc_gcp.account_name
+	gw_name      = "tfg-gcp-%[1]s"
+	vpc_id       = "%[4]s"
+	vpc_reg      = "%[5]s"
+	gw_size      = "%[6]s"
+	subnet       = "%[7]s"
+}
+	`, rName, os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"),
+		os.Getenv("GCP_VPC_ID"), os.Getenv("GCP_ZONE"), gcpGwSize, os.Getenv("GCP_SUBNET"))
+}
+
+func testAccTransitGatewayConfigBasicOCI(rName string) string {
+	ociGwSize := os.Getenv("OCI_GW_SIZE")
+	if ociGwSize == "" {
+		ociGwSize = "VM.Standard2.2"
+	}
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_oci" {
+	account_name                 = "tfa-oci-%s"
+	cloud_type                   = 16
+	oci_tenancy_id               = "%s"
+	oci_user_id                  = "%s"
+	oci_compartment_id           = "%s"
+	oci_api_private_key_filepath = "%s"
+}
+
+resource "aviatrix_transit_gateway" "test_transit_gateway_oci" {
+	cloud_type   = 16
+	account_name = aviatrix_account.test_acc_oci.account_name
+	gw_name      = "tfg-oci-%[1]s"
+	vpc_id       = "%[6]s"
+	vpc_reg      = "%[7]s"
+	gw_size      = "%[8]s"
+	subnet       = "%[9]s"
+}
+	`, rName, os.Getenv("OCI_TENANCY_ID"), os.Getenv("OCI_USER_ID"), os.Getenv("OCI_COMPARTMENT_ID"),
+		os.Getenv("OCI_API_KEY_FILEPATH"), os.Getenv("OCI_VPC_ID"), os.Getenv("OCI_REGION"),
+		ociGwSize, os.Getenv("OCI_SUBNET"))
 }
 
 func testAccCheckTransitGatewayExists(n string, gateway *goaviatrix.Gateway) resource.TestCheckFunc {

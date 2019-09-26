@@ -41,6 +41,12 @@ type Account struct {
 	GcloudProjectCredentialsFilepathLocal      string `form:"gcloud_project_credentials_local,omitempty"`
 	GcloudProjectCredentialsFilepathController string `form:"gcloud_project_credentials,omitempty"`
 	GcloudProjectName                          string `form:"gcloud_project_name,omitempty" json:"project,omitempty"`
+	OciTenancyID                               string `form:"oci_tenancy_id" json:"oci_tenancy_id,omitempty"`
+	OciUserID                                  string `form:"oci_user_id" json:"oci_user_id,omitempty"`
+	OciCompartmentID                           string `form:"oci_compartment_id" json:"oci_compartment_id,omitempty"`
+	OciApiPrivateKeyFilePath                   string `form:"oci_api_key_path" json:"oci_api_private_key_filepath,omitempty"`
+	OciApiPrivateKeyFilename                   string `form:"filename,omitempty"`
+	OciApiPrivateKeyFileContents               string `form:"contents,omitempty"`
 }
 
 type AccountResult struct {
@@ -138,6 +144,23 @@ func (c *Client) DeleteAccount(account *Account) error {
 }
 
 func (c *Client) UploadGcloudProjectCredentialsFile(account *Account) error {
+	account.CID = c.CID
+	account.Action = "upload_file"
+	resp, err := c.Post(c.baseURL, account)
+	if err != nil {
+		return errors.New("HTTP Post upload_file failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode upload_file failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API upload_file Post failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) UploadOciApiPrivateKeyFile(account *Account) error {
 	account.CID = c.CID
 	account.Action = "upload_file"
 	resp, err := c.Post(c.baseURL, account)

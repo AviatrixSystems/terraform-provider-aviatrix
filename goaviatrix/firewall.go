@@ -9,12 +9,13 @@ import (
 )
 
 type Policy struct {
-	SrcIP      string `form:"s_ip,omitempty" json:"s_ip,omitempty"`
-	DstIP      string `form:"d_ip,omitempty" json:"d_ip,omitempty"`
-	Protocol   string `form:"protocol,omitempty" json:"protocol,omitempty"`
-	Port       string `form:"port,omitempty" json:"port,omitempty"`
-	Action     string `form:"deny_allow,omitempty" json:"deny_allow,omitempty"`
-	LogEnabled string `form:"log_enable,omitempty" json:"log_enable,omitempty"`
+	SrcIP       string `form:"s_ip,omitempty" json:"s_ip,omitempty"`
+	DstIP       string `form:"d_ip,omitempty" json:"d_ip,omitempty"`
+	Protocol    string `form:"protocol,omitempty" json:"protocol,omitempty"`
+	Port        string `form:"port,omitempty" json:"port,omitempty"`
+	Action      string `form:"deny_allow,omitempty" json:"deny_allow,omitempty"`
+	LogEnabled  string `form:"log_enable,omitempty" json:"log_enable,omitempty"`
+	Description string `form:"description,omitempty" json:"description,omitempty"`
 }
 
 // Gateway simple struct to hold firewall details

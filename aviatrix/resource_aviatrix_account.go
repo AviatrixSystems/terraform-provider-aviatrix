@@ -69,7 +69,7 @@ func resourceAviatrixAccount() *schema.Resource {
 			"gcloud_project_credentials_filepath": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "GCloud Project credentials local filepath.",
+				Description: "GCloud Project credentials local file path.",
 			},
 			"arm_subscription_id": {
 				Type:        schema.TypeString,
@@ -94,6 +94,30 @@ func resourceAviatrixAccount() *schema.Resource {
 				Sensitive:   true,
 				Description: "Azure Application Key.",
 			},
+			"oci_tenancy_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "OCI Tenancy OCID.",
+			},
+			"oci_user_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "OCI User OCID.",
+			},
+			"oci_compartment_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "OCI Compartment OCID.",
+			},
+			"oci_api_private_key_filepath": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "OCI API Private Key local file path.",
+			},
 		},
 	}
 }
@@ -115,6 +139,10 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		ArmApplicationEndpoint:                d.Get("arm_directory_id").(string),
 		ArmApplicationClientId:                d.Get("arm_application_id").(string),
 		ArmApplicationClientSecret:            d.Get("arm_application_key").(string),
+		OciTenancyID:                          d.Get("oci_tenancy_id").(string),
+		OciUserID:                             d.Get("oci_user_id").(string),
+		OciCompartmentID:                      d.Get("oci_compartment_id").(string),
+		OciApiPrivateKeyFilePath:              d.Get("oci_api_private_key_filepath").(string),
 	}
 
 	awsIam := d.Get("aws_iam").(bool)
@@ -190,8 +218,40 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		if account.ArmApplicationClientSecret == "" {
 			return fmt.Errorf("arm application key needed for azure arm cloud")
 		}
-	} else if account.CloudType != 1 && account.CloudType != 4 && account.CloudType != 8 {
-		return fmt.Errorf("cloud type can only be either aws (1), gcp (4), or arm (8)")
+	} else if account.CloudType == 16 {
+		if account.OciTenancyID == "" {
+			return fmt.Errorf("oci tenancy ocid needed for oracle cloud")
+		}
+		if account.OciUserID == "" {
+			return fmt.Errorf("oci user id needed for oracle cloud")
+		}
+		if account.OciCompartmentID == "" {
+			return fmt.Errorf("oci compartment ocid needed for oracle cloud")
+		}
+		if account.OciApiPrivateKeyFilePath == "" {
+			return fmt.Errorf("oci api private key filepath needed to upload file to controller")
+		}
+
+		var filename, contents, ociApiPrivateKey string
+		filename, contents, err := goaviatrix.ReadPemFile(account.OciApiPrivateKeyFilePath)
+		if err != nil {
+			return fmt.Errorf("failed to read oci private key file: %s", err)
+		}
+		if filename == "" {
+			return fmt.Errorf("filename is empty")
+		}
+		if contents == "" {
+			return fmt.Errorf("contents are empty")
+		}
+		account.OciApiPrivateKeyFilename = filename
+		account.OciApiPrivateKeyFileContents = contents
+		if err = client.UploadOciApiPrivateKeyFile(account); err != nil {
+			return fmt.Errorf("failed to upload oci api private key file: %s", err)
+		}
+		ociApiPrivateKey = "/var/www/php/tmp/" + filename
+		account.OciApiPrivateKeyFilePath = ociApiPrivateKey
+	} else if account.CloudType != 1 && account.CloudType != 4 && account.CloudType != 8 && account.CloudType != 16 {
+		return fmt.Errorf("cloud type can only be either aws (1), gcp (4), arm (8), or oci(16)")
 	}
 
 	err := client.CreateAccount(account)
@@ -271,6 +331,10 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 		ArmApplicationEndpoint:                d.Get("arm_directory_id").(string),
 		ArmApplicationClientId:                d.Get("arm_application_id").(string),
 		ArmApplicationClientSecret:            d.Get("arm_application_key").(string),
+		OciTenancyID:                          d.Get("oci_tenancy_id").(string),
+		OciUserID:                             d.Get("oci_user_id").(string),
+		OciCompartmentID:                      d.Get("oci_compartment_id").(string),
+		OciApiPrivateKeyFilePath:              d.Get("oci_api_private_key_filepath").(string),
 	}
 
 	awsIam := d.Get("aws_iam").(bool)
@@ -371,13 +435,17 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 				d.SetPartial("arm_application_key")
 			}
 		}
+	} else if account.CloudType == 16 {
+		if d.HasChange("oci_tenancy_id") || d.HasChange("oci_user_id") || d.HasChange("oci_compartment_id") || d.HasChange("oci_api_private_key_filepath") {
+			return fmt.Errorf("updating OCI account is not supported")
+		}
 	}
 
 	d.Partial(false)
 	return resourceAviatrixAccountRead(d, meta)
 }
 
-//for now, deleteing gcp account will not delete the credential file
+//for now, deleting gcp account will not delete the credential file
 func resourceAviatrixAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	account := &goaviatrix.Account{

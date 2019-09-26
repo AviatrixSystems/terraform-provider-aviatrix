@@ -74,6 +74,12 @@ func resourceAviatrixFirewall() *schema.Resource {
 							Default:     false,
 							Description: "Valid values: true or false.",
 						},
+						"description": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Description of this firewall policy.",
+						},
 					},
 				},
 			},
@@ -115,11 +121,12 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 		for _, policy := range policies {
 			pl := policy.(map[string]interface{})
 			firewallPolicy := &goaviatrix.Policy{
-				SrcIP:    pl["src_ip"].(string),
-				DstIP:    pl["dst_ip"].(string),
-				Protocol: pl["protocol"].(string),
-				Port:     pl["port"].(string),
-				Action:   pl["action"].(string),
+				SrcIP:       pl["src_ip"].(string),
+				DstIP:       pl["dst_ip"].(string),
+				Protocol:    pl["protocol"].(string),
+				Port:        pl["port"].(string),
+				Action:      pl["action"].(string),
+				Description: pl["description"].(string),
 			}
 
 			logEnabled := pl["log_enabled"].(interface{}).(bool)
@@ -193,6 +200,7 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 			pl["dst_ip"] = policy.DstIP
 			pl["protocol"] = policy.Protocol
 			pl["port"] = policy.Port
+			pl["description"] = policy.Description
 
 			if policy.LogEnabled == "on" {
 				pl["log_enabled"] = true
@@ -271,11 +279,12 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 		for _, policy := range policies {
 			pl := policy.(map[string]interface{})
 			firewallPolicy := &goaviatrix.Policy{
-				SrcIP:    pl["src_ip"].(string),
-				DstIP:    pl["dst_ip"].(string),
-				Protocol: pl["protocol"].(string),
-				Port:     pl["port"].(string),
-				Action:   pl["action"].(string),
+				SrcIP:       pl["src_ip"].(string),
+				DstIP:       pl["dst_ip"].(string),
+				Protocol:    pl["protocol"].(string),
+				Port:        pl["port"].(string),
+				Action:      pl["action"].(string),
+				Description: pl["description"].(string),
 			}
 
 			if pl["log_enabled"].(interface{}).(bool) {
