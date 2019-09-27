@@ -73,7 +73,7 @@ func resourceAviatrixVpc() *schema.Resource {
 			"subnets": {
 				Type:        schema.TypeList,
 				Computed:    true,
-				Description: "Subnets of the VPC to be created.",
+				Description: "List of subnet of the VPC to be created.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cidr": {
