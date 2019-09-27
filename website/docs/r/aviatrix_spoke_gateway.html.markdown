@@ -17,12 +17,11 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
   cloud_type   = 1
   account_name = "my-aws"
   gw_name      = "spoke-gw-aws"
-  vpc_id       = "vpc-abcd123~~spoke-vpc-01"
+  vpc_id       = "vpc-abcd123"
   vpc_reg      = "us-west-1"
   gw_size      = "t2.micro"
-  subnet       = "10.11.0.0/24~~us-west-1b~~spoke-vpc-01-pubsub"
+  subnet       = "10.11.0.0/24"
   enable_snat  = false
-  dns_server   = "8.8.8.8"
   tag_list     = [
     "k1:v1",
     "k2:v2",
@@ -72,7 +71,7 @@ The following arguments are supported:
 * `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), ARM(8), and OCI(16) are supported.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `gw_name` - (Required) Name of the gateway which is going to be created.
-* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Required if for aws. Example: AWS: "vpc-abcd1234", GCP: "vpc-gcp-test", ARM: "vnet1:hello", OCI: "vpc-oracle-test1". 
+* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Required if for aws. Example: AWS: "vpc-abcd1234", GCP: "vpc-gcp-test", ARM: "vnet1:hello", OCI: "vpc-oracle-test1".
 * `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", GCP: "us-west2-a", ARM: "East US 2", Oracle: "us-ashburn-1".
 * `gw_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", ARM: "Standard_B1s", Oracle: "VM.Standard2.2", GCP: "n1-standard-1".
 * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20".
@@ -87,7 +86,7 @@ The following arguments are supported:
 * `enable_snat` - (Optional) Specify whether enabling Source NAT feature on the gateway or not. Please disable AWS NAT instance before enabling this feature. Supported values: true, false.
 * `single_az_ha` (Optional) Set to true if this feature is desired. Supported values: true, false.
 * `transit_gw` - (Optional) Specify the transit Gateway.
-* `tag_list` - (Optional) Instance tag of cloud provider. Only AWS, cloud_type is "1", is supported. Example: ["key1:value1", "key2:value2"]. 
+* `tag_list` - (Optional) Instance tag of cloud provider. Only AWS, cloud_type is "1", is supported. Example: ["key1:value1", "key2:value2"].
 * `insane_mode` - (Optional) Enable Insane Mode for Spoke Gateway. Insane Mode gateway size has to be at least c5 (AWS) or Standard_D3_v2 (ARM). If enabled, will look for spare /26 segment to create a new subnet. Only supported for AWS and ARM. Supported values: true, false.
 * `enable_active_mesh` - (Optional) Switch to Enable/Disable Active Mesh Mode for Spoke Gateway. Valid values: true, false. Default value: false.
 

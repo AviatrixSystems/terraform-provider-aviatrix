@@ -9,7 +9,7 @@ description: |-
 
 The Aviatrix provider is used to interact with Aviatrix organization resources.
 
-The provider allows you to manage your Aviatrix organization's gateway,tunnels, and other resources easily.
+The provider allows you to manage your Aviatrix organization's gateways, tunnels, and other resources easily.
 It needs to be configured with the proper credentials before it can be used.
 
 Use the navigation to the left to read about the available resources.
@@ -25,7 +25,7 @@ provider "aviatrix" {
   skip_version_validation = false
 }
 
-# Create a record
+# Create an access account
 resource "aviatrix_account" "myacc" {
   # ...
 }
@@ -38,7 +38,7 @@ The following arguments are supported:
 * `controller_ip` - (Required) This is Aviatrix controller's public IP. It must be provided.
 * `username` - (Required) This is  Aviatrix account username which will be used to ogin to Aviatrix controller. It must be provided.
 * `password` - (Required) This is Aviatrix account's password corresponding to above username.
-* `skip_version_validation` - (Optional) Default: false. If set to true, it skips checking whether current Terraform branch supports current controller version.
+* `skip_version_validation` - (Optional) Default: false. If set to true, it skips checking whether current Terraform provider supports current Controller version.
 
 ## Import
 

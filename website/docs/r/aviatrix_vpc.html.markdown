@@ -33,10 +33,10 @@ The following arguments are supported:
 * `name` - (Required) Name of the vpc which is going to be created.
 * `region` - (Required) Region of cloud provider. Example: AWS: "us-east-1", ARM: "East US 2".
 * `cidr` - (Required) VPC cidr.
-* `aviatrix_transit_vpc` - (Optional) Specify whether it is an aviatrix transit vpc. Supported values: true, false. Default: false.
-* `aviatrix_firenet_vpc` - (Optional) Specify whether it is an aviatrix firenet vpc. Supported values: true, false. Default: false.
+* `aviatrix_transit_vpc` - (Optional) Specify whether it is an Aviatrix Transit VPC. Supported values: true, false. Default: false.
+* `aviatrix_firenet_vpc` - (Optional) Specify whether it is an Aviatrix Firenet VPC. Supported values: true, false. Default: false.
 
--> **NOTE:** `aviatrix_firenet_vpc` - If you are using/upgraded to Aviatrix Terraform Provider R1.8+, and an vpc resource was originally created with a provider version < R1.8, you must do ‘terraform refresh’ to update and apply the attribute’s default value (false) into the state file.
+-> **NOTE:** `aviatrix_firenet_vpc` - If you are using/upgraded to Aviatrix Terraform Provider R1.8+, and an VPC resource was originally created with a provider version < R1.8, you must do ‘terraform refresh’ to update and apply the attribute’s default value (false) into the state file.
 
 ## Import
 

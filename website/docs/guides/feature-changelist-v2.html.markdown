@@ -21,7 +21,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.3 (UserConnect-5.0)``
+``Last updated: R2.4 (UserConnect-5.0)``
 
 
 ---
@@ -92,3 +92,10 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |(new) | spoke_gateway, transit_gateway | insane_mode, insane_mode_az, ha_insane_mode_az | **No**; see above for details |
 |(new) | aws_tgw        | aviatrix_firewall, native_egress, native_firewall | **No**; Terraform support added to feature already available through Controller. These are new optional attributes for Terraform |
 |(new) | spoke_gateway, transit_gateway | enable_active_mesh | **No**; Terraform support released alongside new feature available in Controller 5.0. New optional feature. Default value: **false** |
+
+
+## R2.4 (UserConnect5.0) (Terraform v0.12)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(new) | firewall       | description       | **No**; Terraform support added to feature already available for stateful firewall policies. This attribute is optional by default |
+|(new) | account        | oci_tenancy_id, oci_user_id, oci_compartment_id, oci_api_private_key_filepath | **No**; Terraform now supports Oracle Cloud, hence the new attributes needed to create an Oracle access account |
