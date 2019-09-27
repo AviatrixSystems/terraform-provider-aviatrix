@@ -198,8 +198,8 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		if contents == "" {
 			return fmt.Errorf("contents are empty")
 		}
-		account.GcloudProjectCredentialsFilename = filename
-		account.GcloudProjectCredentialsContents = contents
+		account.ProjectCredentialsFilename = filename
+		account.ProjectCredentialsContents = contents
 		if err = client.UploadGcloudProjectCredentialsFile(account); err != nil {
 			return fmt.Errorf("failed to upload gcp credential file: %s", err)
 		}
@@ -243,8 +243,8 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		if contents == "" {
 			return fmt.Errorf("contents are empty")
 		}
-		account.OciApiPrivateKeyFilename = filename
-		account.OciApiPrivateKeyFileContents = contents
+		account.ProjectCredentialsFilename = filename
+		account.ProjectCredentialsContents = contents
 		if err = client.UploadOciApiPrivateKeyFile(account); err != nil {
 			return fmt.Errorf("failed to upload oci api private key file: %s", err)
 		}
@@ -383,8 +383,8 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 		if d.HasChange("gcloud_project_id") || d.HasChange("gcloud_project_credentials_filepath") {
 			// if user changed credential filepath or wants to upload a new file (local) then will have to reupload to controller before updating account
 			// to edit gcp account, must upload another credential file
-			old_filename := account.GcloudProjectCredentialsFilename
-			old_contents := account.GcloudProjectCredentialsContents
+			old_filename := account.ProjectCredentialsFilename
+			old_contents := account.ProjectCredentialsContents
 
 			filename, contents, err := goaviatrix.ReadFile(account.GcloudProjectCredentialsFilepathLocal)
 			if err != nil {
@@ -397,8 +397,8 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 				return fmt.Errorf("contents are empty")
 			}
 			if old_filename != filename || old_contents != contents {
-				account.GcloudProjectCredentialsFilename = filename
-				account.GcloudProjectCredentialsContents = contents
+				account.ProjectCredentialsFilename = filename
+				account.ProjectCredentialsContents = contents
 				if err = client.UploadGcloudProjectCredentialsFile(account); err != nil {
 					return fmt.Errorf("failed to upload gcp credential file: %s", err)
 				}
