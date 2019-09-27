@@ -33,8 +33,8 @@ The following arguments are supported:
 * `name` - (Required) Name of the vpc which is going to be created.
 * `region` - (Required) Region of cloud provider. Example: AWS: "us-east-1", ARM: "East US 2".
 * `cidr` - (Required) VPC cidr.
-* `aviatrix_transit_vpc` - (Optional) Specify whether it is an aviatrix transit vpc. Supported values: true, false. Default: false.
-* `aviatrix_firenet_vpc` - (Optional) Specify whether it is an aviatrix firenet vpc. Supported values: true, false. Default: false.
+* `aviatrix_transit_vpc` - (Optional) Specify whether it is an Aviatrix Transit VPC. Supported values: true, false. Default: false.
+* `aviatrix_firenet_vpc` - (Optional) Specify whether it is an Aviatrix Firenet VPC. Supported values: true, false. Default: false.
 
 The following arguments are computed - please do not edit in the resource file:
  

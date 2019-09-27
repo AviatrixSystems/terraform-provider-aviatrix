@@ -17,7 +17,7 @@ resource "aviatrix_account" "tempacc" {
   account_name       = "username"
   cloud_type         = 1
   aws_account_number = "123456789012"
-  aws_iam            = "true"
+  aws_iam            = true
   aws_role_app       = "arn:aws:iam::123456789012:role/aviatrix-role-app"
   aws_role_ec2       = "arn:aws:iam::123456789012:role/aviatrix-role-ec2"
 }
@@ -26,7 +26,7 @@ resource "aviatrix_account" "tempacc" {
 resource "aviatrix_account" "tempacc" {
   account_name       = "username"
   cloud_type         = 1
-  aws_iam            = "false"
+  aws_iam            = false
   aws_account_number = "123456789012"
   aws_access_key     = "ABCDEFGHIJKL"
   aws_secret_key     = "ABCDEFGHIJKLabcdefghijkl"
@@ -47,7 +47,7 @@ resource "aviatrix_account" "tempacc_arm" {
   arm_subscription_id = "12345678-abcd-efgh-ijkl-123456789abc"
   arm_directory_id    = "abcdefgh-1234-5678-9100-abc123456789"
   arm_application_id  = "1234abcd-12ab-34cd-56ef-abcdef123456"
-  arm_application_key = "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe=" 
+  arm_application_key = "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe="
 }
 
 # Create an Aviatrix Oracle OCI Account
@@ -57,7 +57,7 @@ resource "aviatrix_account" "tempacc_oci" {
   oci_tenancy_id               = "ocid1.tenancy.oc1..aaaaaaaa"
   oci_user_id                  = "ocid1.user.oc1..aaaaaaaazly"
   oci_compartment_id           = "ocid1.tenancy.oc1..aaaaaaaaxo"
-  oci_api_private_key_filepath = "/Users/public/Documents/oci_api_key.pem" 
+  oci_api_private_key_filepath = "/Users/public/Documents/oci_api_key.pem"
 }
 ```
 
