@@ -42,6 +42,7 @@ type Gateway struct {
 	EnableElb               string `form:"enable_elb,omitempty"`
 	EnableLdap              string `form:"enable_ldap,omitempty"`
 	EnableLdapRead          bool   `json:"enable_ldap,omitempty"`
+	EnableVpcDnsServer      string `json:"use_vpc_dns,omitempty"`
 	DnsServer               string `form:"dns_server,omitempty"`
 	PublicDnsServer         string `form:"public_dns_server,omitempty" json:"public_dns_server,omitempty"`
 	EnableNat               string `form:"enable_nat,omitempty" json:"enable_nat,omitempty"`
@@ -501,6 +502,56 @@ func (c *Client) DisableActiveMesh(gateway *Gateway) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API disable_gateway_activemesh Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) EnableVpcDnsServer(gateway *Gateway) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for enable_vpc_dns_server") + err.Error())
+	}
+	enableSNat := url.Values{}
+	enableSNat.Add("CID", c.CID)
+	enableSNat.Add("action", "enable_vpc_dns_server")
+	enableSNat.Add("gateway_name", gateway.GwName)
+	Url.RawQuery = enableSNat.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get enable_vpc_dns_server failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_vpc_dns_server failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API enable_vpc_dns_server Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) DisableVpcDnsServer(gateway *Gateway) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for disable_vpc_dns_server") + err.Error())
+	}
+	disableSNat := url.Values{}
+	disableSNat.Add("CID", c.CID)
+	disableSNat.Add("action", "disable_vpc_dns_server")
+	disableSNat.Add("gateway_name", gateway.GwName)
+	Url.RawQuery = disableSNat.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get disable_vpc_dns_server failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_vpc_dns_server failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API disable_vpc_dns_server Get failed: " + data.Reason)
 	}
 	return nil
 }
