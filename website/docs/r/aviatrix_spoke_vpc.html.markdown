@@ -74,7 +74,6 @@ The following arguments are supported:
 * `single_az_ha` - (Optional) Set to "enabled" if this feature is desired.
 * `transit_gw` - (Optional) Specify the transit Gateway.
 * `tag_list` - (Optional) Instance tag of cloud provider. Example: key1:value1,key002:value002, etc... Only AWS (cloud_type is "1") is supported
-* `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Valid values: true, false. Default value: false.
 
 The following arguments are deprecated:
 

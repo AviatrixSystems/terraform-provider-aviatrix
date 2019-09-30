@@ -71,7 +71,6 @@ The following arguments are supported:
 * `insane_mode` - (Optional) Specify Insane Mode high performance gateway. Insane Mode gateway size must be at least c5 size. If enabled, will look for spare /26 segment to create a new subnet. Only available for AWS. Supported values: true, false.
 * `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit Gateway. Required if insane_mode is enabled.
 * `ha_insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit HA Gateway. Required if insane_mode is enabled and ha_subnet is set.
-* `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Valid values: true, false. Default value: false.
 
 The following arguments are deprecated:
 
