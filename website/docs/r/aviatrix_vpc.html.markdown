@@ -46,7 +46,7 @@ The following arguments are computed - please do not edit in the resource file:
 
 -> **NOTE:** `aviatrix_firenet_vpc` - If you are using/ upgraded to Aviatrix Terraform Provider R1.8+, and an vpc resource was originally created with a provider version < R1.8, you must do ‘terraform refresh’ to update and apply the attribute’s default value (false) into the state file.
 
--> **NOTE:** `subnets` - If created as a FireNet VPC, four public subnets will be created: 2 subnets for firewall & gateway management, and 2 firewall & ingress/egress management
+-> **NOTE:** `subnets` - If created as a FireNet VPC, four public subnets will be created in the following order: subnet for firewall-mgmt in the first zone, subnet for ingress-egress in the first zone, subnet for firewall-mgmt in the second zone, and subnet for ingress-egress in the second zone.
 
 ## Import
 
