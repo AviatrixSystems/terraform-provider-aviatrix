@@ -145,7 +145,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Enable vpc_dns_server for Gateway. Valid values: true, false.",
+				Description: "Enable vpc_dns_server for Gateway. Only supports AWS. Valid values: true, false.",
 			},
 			"cloud_instance_id": {
 				Type:        schema.TypeString,
