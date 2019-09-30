@@ -141,6 +141,12 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Switch to Enable/Disable Active Mesh Mode for Spoke Gateway. Valid values: true, false.",
 			},
+			"enable_vpc_dns_server": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable vpc_dns_server for Gateway. Only supports AWS. Valid values: true, false.",
+			},
 			"cloud_instance_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -356,6 +362,20 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	enableVpcDnsServer := d.Get("enable_vpc_dns_server").(bool)
+	if enableVpcDnsServer {
+		gwVpcDnsServer := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+
+		log.Printf("[INFO] Enable VPC DNS Server: %#v", gwVpcDnsServer)
+
+		err := client.EnableVpcDnsServer(gwVpcDnsServer)
+		if err != nil {
+			return fmt.Errorf("failed to enable VPC DNS Server: %s", err)
+		}
+	}
+
 	return resourceAviatrixSpokeGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -452,6 +472,12 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("enable_active_mesh", true)
 		} else {
 			d.Set("enable_active_mesh", false)
+		}
+
+		if gw.EnableVpcDnsServer == "Enabled" {
+			d.Set("enable_vpc_dns_server", true)
+		} else {
+			d.Set("enable_vpc_dns_server", false)
 		}
 	}
 
@@ -845,6 +871,28 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("failed to disable Active Mesh Mode: %s", err)
 			}
 		}
+	}
+
+	if d.HasChange("enable_vpc_dns_server") {
+		gw := &goaviatrix.Gateway{
+			CloudType: d.Get("cloud_type").(int),
+			GwName:    d.Get("gw_name").(string),
+		}
+
+		enableVpcDnsServer := d.Get("enable_vpc_dns_server").(bool)
+		if enableVpcDnsServer {
+			err := client.EnableVpcDnsServer(gw)
+			if err != nil {
+				return fmt.Errorf("failed to enable VPC DNS Server: %s", err)
+			}
+		} else {
+			err := client.DisableVpcDnsServer(gw)
+			if err != nil {
+				return fmt.Errorf("failed to disable VPC DNS Server: %s", err)
+			}
+		}
+
+		d.SetPartial("enable_vpc_dns_server")
 	}
 
 	d.Partial(false)

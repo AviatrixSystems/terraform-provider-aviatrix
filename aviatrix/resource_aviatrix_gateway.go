@@ -280,6 +280,12 @@ func resourceAviatrixGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable Insane Mode for Gateway. Valid values: true, false.",
 			},
+			"enable_vpc_dns_server": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable vpc_dns_server for Gateway. Only supports AWS. Valid values: true, false.",
+			},
 			"public_ip": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -636,6 +642,20 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	enableVpcDnsServer := d.Get("enable_vpc_dns_server").(bool)
+	if enableVpcDnsServer {
+		gwVpcDnsServer := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+
+		log.Printf("[INFO] Enable VPC DNS Server: %#v", gwVpcDnsServer)
+
+		err := client.EnableVpcDnsServer(gwVpcDnsServer)
+		if err != nil {
+			return fmt.Errorf("failed to enable VPC DNS Server: %s", err)
+		}
+	}
+
 	return resourceAviatrixGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -820,6 +840,12 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		} else {
 			d.Set("insane_mode", false)
 			d.Set("insane_mode_az", "")
+		}
+
+		if gw.EnableVpcDnsServer == "Enabled" {
+			d.Set("enable_vpc_dns_server", true)
+		} else {
+			d.Set("enable_vpc_dns_server", false)
 		}
 
 		peeringHaSubnet := d.Get("peering_ha_subnet").(string)
@@ -1426,6 +1452,28 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		d.SetPartial("peering_ha_gw_size")
+	}
+
+	if d.HasChange("enable_vpc_dns_server") {
+		gw := &goaviatrix.Gateway{
+			CloudType: d.Get("cloud_type").(int),
+			GwName:    d.Get("gw_name").(string),
+		}
+
+		enableVpcDnsServer := d.Get("enable_vpc_dns_server").(bool)
+		if enableVpcDnsServer {
+			err := client.EnableVpcDnsServer(gw)
+			if err != nil {
+				return fmt.Errorf("failed to enable VPC DNS Server: %s", err)
+			}
+		} else {
+			err := client.DisableVpcDnsServer(gw)
+			if err != nil {
+				return fmt.Errorf("failed to disable VPC DNS Server: %s", err)
+			}
+		}
+
+		d.SetPartial("enable_vpc_dns_server")
 	}
 
 	d.Partial(false)
