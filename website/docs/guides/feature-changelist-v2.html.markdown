@@ -13,7 +13,7 @@ description: |-
 Otherwise, this list does not really apply. Please view the below list for details regarding this:
 
 1. If a customer is transitioning to use Terraform to manage existing infrastructure, it is recommended to start from the latest Controller and Aviatrix Terraform provider version, and use the Terraform Export feature and import their infrastructure for a quick and easy migration.
-  - **Please note that "Export" is still a beta feature (and only up-to-date for 4.3 at the moment)**
+  - **Please note that "Export" is still a beta feature (and only up-to-date for 4.7 at the moment)**
   - Customer can still choose to manually write their config file to their own specifications and use ``terraform import`` to bring their infrastructure into Terraform state management
 2. If a customer is adopting Terraform for the first time, with no pre-existing infrastructure/ for managing new infrastructure, this changelist does not apply whatsoever. They simply need to follow the appropriate doc to setup their Terraform environment and use the Terraform documentation corresponding to their Controller version to begin using Terraform.
 
@@ -21,7 +21,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.4 (UserConnect-5.0)``
+``Last updated: R2.5 (UserConnect-5.1)``
 
 
 ---
@@ -99,3 +99,9 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |:----:|----------------|:-----------------:|----------------------------|
 |(new) | firewall       | description       | **No**; Terraform support added to feature already available for stateful firewall policies. This attribute is optional by default |
 |(new) | account        | oci_tenancy_id, oci_user_id, oci_compartment_id, oci_api_private_key_filepath | **No**; Terraform now supports Oracle Cloud, hence the new attributes needed to create an Oracle access account |
+
+
+## R2.5 (UserConnect5.1) (Terraform v0.12)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(new) | gateway, spoke_gateway, transit_gateway | enable_vpc_dns_server | **No**; Terraform added support for enabling/ disabling VPC DNS server. This attribute is optional, and set 'false' by default. This feature is only available on AWS |
