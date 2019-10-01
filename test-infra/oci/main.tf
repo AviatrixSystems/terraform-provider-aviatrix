@@ -8,3 +8,9 @@ resource "oci_core_subnet" "subnet" {
   compartment_id = var.oci_compartment_id
   vcn_id         = oci_core_vcn.vpc.id
 }
+
+resource "oci_core_internet_gateway" "vpc-gw" {
+  display_name   = "oracle-igw"
+  compartment_id = var.oci_compartment_id
+  vcn_id         = oci_core_vcn.vpc.id
+}
