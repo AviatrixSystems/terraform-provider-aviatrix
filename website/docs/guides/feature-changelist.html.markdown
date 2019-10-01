@@ -13,7 +13,7 @@ description: |-
 Otherwise, this list does not really apply. Please view the below list for details regarding this:
 
 1. If a customer is transitioning to use Terraform to manage existing infrastructure, it is recommended to start from the latest Controller and Aviatrix Terraform provider version, and use the Terraform Export feature and import their infrastructure for a quick and easy migration.
-  - **Please note that "Export" is still a beta feature (and only up-to-date for 4.3 at the moment)**
+  - **Please note that "Export" is still a beta feature (and only up-to-date for 4.7 at the moment)**
   - Customer can still choose to manually write their config file to their own specifications and use ``terraform import`` to bring their infrastructure into Terraform state management
 2. If a customer is adopting Terraform for the first time, clean slate, this changelist does not apply whatsoever. They simply need to follow the appropriate doc to setup their Terraform environment and use the Terraform documentation corresponding to their Controller version to begin using Terraform
 

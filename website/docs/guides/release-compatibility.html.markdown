@@ -14,7 +14,7 @@ description: |-
 
 ---
 
-``Last updated: R2.4 (UserConnect-5.0)``
+``Last updated: R2.5 (UserConnect-5.1)``
 
 
 ---
