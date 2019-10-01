@@ -387,7 +387,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	}
 
 	enableVpcDnsServer := d.Get("enable_vpc_dns_server").(bool)
-	if enableVpcDnsServer {
+	if d.Get("cloud_type").(int) == 1 && enableVpcDnsServer {
 		gwVpcDnsServer := &goaviatrix.Gateway{
 			GwName: d.Get("gw_name").(string),
 		}
@@ -398,6 +398,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if err != nil {
 			return fmt.Errorf("failed to enable VPC DNS Server: %s", err)
 		}
+	} else if enableVpcDnsServer {
+		return fmt.Errorf("'enable_vpc_dns_server' only supports AWS(1)")
 	}
 
 	return resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
@@ -508,7 +510,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("enable_active_mesh", false)
 		}
 
-		if gw.EnableVpcDnsServer == "Enabled" {
+		if gw.CloudType == 1 && gw.EnableVpcDnsServer == "Enabled" {
 			d.Set("enable_vpc_dns_server", true)
 		} else {
 			d.Set("enable_vpc_dns_server", false)
@@ -892,7 +894,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if d.HasChange("enable_vpc_dns_server") {
+	if d.HasChange("enable_vpc_dns_server") && d.Get("cloud_type").(int) == 1 {
 		gw := &goaviatrix.Gateway{
 			CloudType: d.Get("cloud_type").(int),
 			GwName:    d.Get("gw_name").(string),
@@ -912,6 +914,8 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 
 		d.SetPartial("enable_vpc_dns_server")
+	} else if d.HasChange("enable_vpc_dns_server") {
+		return fmt.Errorf("'enable_vpc_dns_server' only supports AWS(1)")
 	}
 
 	d.Partial(false)
