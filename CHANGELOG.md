@@ -1,4 +1,15 @@
-## 2.4.1 (Unreleased)
+## 2.5.0 (Unreleased)
+
+NOTES:
+  - Supported controller version: UserConnect-5.1.738
+  - Supported Terraform version: 0.12.*  
+  
+FEATURES:
+  - Add support for enabling/disabling vpc_dns_server for AWS in resource_aviatrix_gateway, resource_aviatrix_spoke_gateway, and resource_aviatrix_transit_gateway
+  
+ENHANCEMENTS:
+  - Implement a shell script tool to export test-infra output for acceptance test
+  
 ## 2.4.0 (September 27, 2019)
 
 NOTES:
@@ -11,7 +22,7 @@ FEATURES:
   - Add support for GCP in resource_aviatrix_transit_gateway
   - Update test-infra to support acceptance test for OCI 
   
-ENHANCEMENTS
+ENHANCEMENTS:
   - Add "description" as an attribute under policy in resource_aviatrix_firewall
   
 BUG FIXES:
