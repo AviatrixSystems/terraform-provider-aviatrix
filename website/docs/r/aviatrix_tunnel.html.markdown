@@ -27,7 +27,9 @@ The following arguments are supported:
 * `gw_name2` - (Required) The second VPC Container name to make a peer pair.
 * `enable_ha` - (Optional) Whether Peering HA is enabled. Valid values: true, false.
 
-The following arguments are computed - please do not edit in the resource file:
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `peering_state` - (Computed) Status of the tunnel.
 * `peering_hastatus` - (Computed) Status of the HA tunnel.

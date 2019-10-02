@@ -12,7 +12,7 @@ Use this data source to get the Aviatrix gateway for use in other resources.
 ## Example Usage
 
 ```hcl
-# Create Aviatrix gateway data source
+# Create an Aviatrix gateway data source
 data "aviatrix_gateway" "foo" {
   account_name = "username"
   gw_name      = "gatewayname"
@@ -28,14 +28,12 @@ The following arguments are supported:
 
 ## Attribute Reference
 
+In addition to all arguments above, the following attributes are exported:
+
 * `account_name` - Aviatrix account name.
 * `gw_name` - Aviatrix gateway name.
-
-
-## The following arguments are computed - please do not edit in the resource file:
-
-* `cloud_type` - Type of cloud service provider. (Only AWS is supported currently. Value of 1 for AWS.)
-* `vpc_id` - AWS VPC ID.
-* `vpc_reg` - AWS VPC Region.
+* `cloud_type` - Type of cloud service provider.
+* `vpc_id` - VPC ID.
+* `vpc_reg` - VPC Region.
 * `vpc_size` - Instance type.
-* `public_ip` - Public IP address of the Gateway created
+* `public_ip` - Public IP address of the Gateway created.

@@ -124,7 +124,7 @@ The following arguments are supported:
 * `search_domains` - (Optional) A list of domain names that will use the NameServer when a specific name is not in the destination when Split Tunnel Mode is enabled.
 * `additional_cidrs` - (Optional) A list of destination CIDR ranges that will also go through the VPN tunnel when Split Tunnel Mode is enabled.
 * `otp_mode` - (Optional) Two step authentication mode. "2": DUO, "3": Okta.
-* `saml_enabled` - (Optional) This field indicates whether enabling SAML or not. This field is available in version 3.3 or later release. Supported values: true, false.
+* `saml_enabled` - (Optional) This field indicates whether enabling SAML or not. This field is available in controller version 3.3 or later release. Supported values: true, false.
 * `okta_token` - (Optional) Token for Okta auth mode. Required if otp_mode is "3".
 * `okta_url` - (Optional) URL for Okta auth mode. Required if otp_mode is "3".
 * `okta_username_suffix` - (Optional) Username suffix for Okta auth mode. Example: "aviatrix.com".
@@ -144,13 +144,15 @@ The following arguments are supported:
 * `peering_ha_eip` - (Optional) Public IP address that you want assigned to the HA peering instance. Only available for AWS.
 * `peering_ha_gw_size` - (Optional) Size of the Peering HA Gateway.
 * `single_az_ha` (Optional) Set to true if this feature is desired. Supported values: true, false.
-* `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in 2.7 or later release. Supported values: true, false. Default: true. Option not available for GCP, ARM and Oracle gateways, they will automatically allocate new eip's.
-* `eip` - (Optional) Required when allocate_new_eip is false. It uses specified EIP for this gateway. Available in 3.5 or later release eip. Only available for AWS.
+* `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in controller 2.7 or later release. Supported values: true, false. Default: true. Option not available for GCP, ARM and Oracle gateways, they will automatically allocate new eip's.
+* `eip` - (Optional) Required when allocate_new_eip is false. It uses specified EIP for this gateway. Available in controller 3.5 or later release. Only available for AWS.
 * `tag_list` - (Optional) Instance tag of cloud provider. Only available for AWS. Example: ["key1:value1", "key2:value2"].
 * `insane_mode` - (Optional) Enable Insane Mode for Gateway. Insane Mode Gateway size must be at least c5 (AWS) or Standard_D3_v2 (ARM). If set, will look for spare /26 segment to create a new subnet. Only supported for AWS or ARM. Supported values: true, false.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS. Valid values: true, false. Default value: false.
 
-The following arguments are computed - please do not edit in the resource file:
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `public_ip` - Public IP address of the Gateway created.
 * `backup_public_ip` - Private IP address of the Gateway created.
