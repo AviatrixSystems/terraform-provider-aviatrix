@@ -1,4 +1,4 @@
-## 2.5.0 (Unreleased)
+## 2.5.0 (October 02, 2019)
 
 NOTES:
   - Supported controller version: UserConnect-5.1.738
