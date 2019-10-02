@@ -12,7 +12,7 @@ Use this data source to get the Aviatrix caller identity for use in other resour
 ## Example Usage
 
 ```hcl
-# Create an Aviatrix caller identity data source
+# Aviatrix caller identity data source
 data "aviatrix_caller_identity" "foo" {
 
 }

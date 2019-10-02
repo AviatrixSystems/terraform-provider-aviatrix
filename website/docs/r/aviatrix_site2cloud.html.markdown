@@ -62,6 +62,12 @@ The following arguments are supported:
 * `ssl_server_pool` - (Optional) Specify ssl_server_pool for tunnel_type "tcp". Default value: "192.168.44.0/24".
 * `enable_dead_peer_detection` - (Optional) Switch to Enable/Disable Deed Peer Detection for an existing site2cloud connection. Default value: true.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `local_subnet_cidr` - Local subnet CIDR.
+
 -> **NOTE:** `custom_algorithms` - Only supported for 'udp' tunnel type. If set to true, the six algorithm arguments cannot all be default value. If set to false, default values will be used for all six algorithm arguments.
 
 -> **NOTE:** `ssl_server_pool` - Only supported for 'tcp' tunnel type. If not set, default value will be used. If set, needs to be set to a different value than default value.

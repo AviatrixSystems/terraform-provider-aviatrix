@@ -12,7 +12,7 @@ Use this data source to get the Aviatrix gateway for use in other resources.
 ## Example Usage
 
 ```hcl
-# Create an Aviatrix gateway data source
+# Aviatrix gateway data source
 data "aviatrix_gateway" "foo" {
   account_name = "username"
   gw_name      = "gatewayname"

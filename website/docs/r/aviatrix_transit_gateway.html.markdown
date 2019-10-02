@@ -99,6 +99,13 @@ The following arguments are supported:
 * `enable_active_mesh` - (Optional) Switch to Enable/Disable Active Mesh Mode for Transit Gateway. Valid values: true, false. Default value: false.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS. Valid values: true, false. Default value: false.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `eip` - Public IP address assigned to the gateway.
+* `ha_eip` - Public IP address assigned to the HA gateway.
+
 ## Import
 
 Instance transit_gateway can be imported using the gw_name, e.g.
