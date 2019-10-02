@@ -12,7 +12,7 @@ Use this data source to get the Aviatrix caller identity for use in other resour
 ## Example Usage
 
 ```hcl
-# Create Aviatrix caller identity data source
+# Aviatrix caller identity data source
 data "aviatrix_caller_identity" "foo" {
 
 }
@@ -26,4 +26,6 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-* `cid` - (Computed) Aviatrix caller identity.
+In addition to all arguments above, the following attributes are exported:
+
+* `cid` - Aviatrix caller identity.

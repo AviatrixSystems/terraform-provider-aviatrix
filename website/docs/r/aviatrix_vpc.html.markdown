@@ -36,7 +36,9 @@ The following arguments are supported:
 * `aviatrix_transit_vpc` - (Optional) Specify whether it is an Aviatrix Transit VPC. Supported values: true, false. Default: false.
 * `aviatrix_firenet_vpc` - (Optional) Specify whether it is an Aviatrix Firenet VPC. Supported values: true, false. Default: false.
 
-The following arguments are computed - please do not edit in the resource file:
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
  
 * `vpc_id` - ID of the vpc to be created.
 * `subnets` - List of subnet of the VPC to be created.

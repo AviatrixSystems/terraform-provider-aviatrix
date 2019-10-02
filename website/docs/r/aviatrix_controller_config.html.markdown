@@ -42,7 +42,9 @@ The following arguments are supported:
 * `security_group_management` - (Optional) Used to manage the Controller instance’s inbound rules from gateways. Default: false.
 * `target_version` - (Optional) The release version number to which the controller will be upgraded to. If not specified, controller will not be upgraded. If set to "latest", controller will be upgraded to the latest release. Please look at https://docs.aviatrix.com/HowTos/inline_upgrade.html for more information.
 
-The following arguments are computed - please do not edit in the resource file:
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `version` - Current version of the controller.
 

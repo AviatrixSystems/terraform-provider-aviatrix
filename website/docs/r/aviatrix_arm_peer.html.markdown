@@ -34,7 +34,9 @@ The following arguments are supported:
 * `vnet_reg1` - (Required) Region of Azure cloud. Example: "East US 2".
 * `vnet_reg2` - (Required) Region of Azure cloud. Example: "East US 2".
 
-The following arguments are computed - please do not edit in the resource file:
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `vnet_cidr1` - List of VNet CIDR of vnet_name_resource_group1.
 * `vnet_cidr2` - List of VNet CIDR of vnet_name_resource_group2.
