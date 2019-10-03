@@ -43,6 +43,12 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				ForceNew:    true,
 				Description: "Firewall image.",
 			},
+			"firewall_size": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Firewall size.",
+			},
 			"egress_subnet": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -90,6 +96,7 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		GwName:              d.Get("gw_name").(string),
 		FirewallName:        d.Get("firewall_name").(string),
 		FirewallImage:       d.Get("firewall_image").(string),
+		FirewallSize:        d.Get("firewall_size").(string),
 		EgressSubnet:        d.Get("egress_subnet").(string),
 		ManagementSubnet:    d.Get("management_subnet").(string),
 		KeyName:             d.Get("key_name").(string),
@@ -99,7 +106,7 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 
 	instanceID, err := client.CreateFirewallInstance(firewallInstance)
 	if err != nil {
-		if err != goaviatrix.ErrNotFound {
+		if err == goaviatrix.ErrNotFound {
 			return fmt.Errorf("failed to get firewall instance information")
 		}
 		return fmt.Errorf("failed to create a new firewall instance: %s", err)
@@ -138,6 +145,7 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	d.Set("vpc_id", fI.VpcID)
 	d.Set("gw_name", fI.GwName)
 	d.Set("firewall_name", strings.Split(fI.KeyName, "_")[1])
+	d.Set("firewall_image", fI.FirewallImage)
 	d.Set("firewall_image", fI.FirewallImage)
 	d.Set("egress_subnet", fI.EgressSubnet)
 	d.Set("management_subnet", fI.ManagementSubnet)

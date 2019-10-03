@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/url"
-	"strings"
+	"strconv"
 )
 
 type FirewallInstance struct {
@@ -14,6 +14,7 @@ type FirewallInstance struct {
 	GwName              string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
 	FirewallName        string `form:"firewall_name,omitempty" json:"firewall_name,omitempty"`
 	FirewallImage       string `form:"firewall_image,omitempty" json:"firewall_image,omitempty"`
+	FirewallSize        string `form:"firewall_size,omitempty" json:"firewall_size,omitempty"`
 	EgressSubnet        string `form:"egress_subnet,omitempty" json:"egress_subnet,omitempty"`
 	ManagementSubnet    string `form:"management_subnet,omitempty" json:"management_subnet,omitempty"`
 	KeyName             string `form:"key_name,omitempty" json:"key_name,omitempty"`
@@ -30,9 +31,14 @@ type FirewallInstanceResp struct {
 }
 
 type FirewallInstanceCreateResp struct {
-	Return  bool   `json:"return"`
-	Results string `json:"results"`
-	Reason  string `json:"reason"`
+	Return  bool                         `json:"return"`
+	Results FirewallInstanceCreateResult `json:"results"`
+	Reason  string                       `json:"reason"`
+}
+
+type FirewallInstanceCreateResult struct {
+	Text       string `json:"text"`
+	FirewallID string `json:"firewall_id"`
 }
 
 func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (string, error) {
@@ -40,19 +46,21 @@ func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (str
 	if err != nil {
 		return "", errors.New(("url Parsing failed for add_firewall_instance: ") + err.Error())
 	}
-	getInstanceById := url.Values{}
-	getInstanceById.Add("CID", c.CID)
-	getInstanceById.Add("action", "add_firewall_instance")
-	getInstanceById.Add("gw_name", firewallInstance.GwName)
-	getInstanceById.Add("firewall_name", firewallInstance.FirewallName)
-	getInstanceById.Add("firewall_image", firewallInstance.FirewallImage)
-	getInstanceById.Add("egress_subnet", firewallInstance.EgressSubnet)
-	getInstanceById.Add("management_subnet", firewallInstance.ManagementSubnet)
-	getInstanceById.Add("key_name", firewallInstance.InstanceID)
-	getInstanceById.Add("iam_role", firewallInstance.InstanceID)
-	getInstanceById.Add("bootstrap_bucket_name", firewallInstance.InstanceID)
+	addFirewallInstance := url.Values{}
+	addFirewallInstance.Add("CID", c.CID)
+	addFirewallInstance.Add("action", "add_firewall_instance")
+	addFirewallInstance.Add("gw_name", firewallInstance.GwName)
+	addFirewallInstance.Add("firewall_name", firewallInstance.FirewallName)
+	addFirewallInstance.Add("firewall_image", firewallInstance.FirewallImage)
+	addFirewallInstance.Add("firewall_size", firewallInstance.FirewallSize)
+	addFirewallInstance.Add("egress_subnet", firewallInstance.EgressSubnet)
+	addFirewallInstance.Add("management_subnet", firewallInstance.ManagementSubnet)
+	addFirewallInstance.Add("key_name", firewallInstance.InstanceID)
+	addFirewallInstance.Add("iam_role", firewallInstance.InstanceID)
+	addFirewallInstance.Add("bootstrap_bucket_name", firewallInstance.InstanceID)
+	addFirewallInstance.Add("no_associate", strconv.FormatBool(true))
 
-	Url.RawQuery = getInstanceById.Encode()
+	Url.RawQuery = addFirewallInstance.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
 		return "", errors.New("HTTP Get add_firewall_instance failed: " + err.Error())
@@ -65,12 +73,9 @@ func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (str
 	if !data.Return {
 		return "", errors.New("Rest API add_firewall_instance Get failed: " + data.Reason)
 	}
-
-	index := strings.Index(data.Results, "-")
-	if index != -1 {
-		return data.Results[index-1 : index+18], nil
+	if data.Results.FirewallID != "" {
+		return data.Results.FirewallID, nil
 	}
-
 	return "", ErrNotFound
 }
 
@@ -97,11 +102,9 @@ func (c *Client) GetFirewallInstance(firewallInstance *FirewallInstance) (*Firew
 	if !data.Return {
 		return nil, errors.New("Rest API get_instance_by_id Get failed: " + data.Reason)
 	}
-
 	if data.Results.InstanceID == firewallInstance.InstanceID {
 		return &data.Results, nil
 	}
-
 	return nil, ErrNotFound
 }
 
@@ -129,6 +132,5 @@ func (c *Client) DeleteFirewallInstance(firewallInstance *FirewallInstance) erro
 	if !data.Return {
 		return errors.New("Rest API delete_firenet_firewall_instance Get failed: " + data.Reason)
 	}
-
 	return nil
 }
