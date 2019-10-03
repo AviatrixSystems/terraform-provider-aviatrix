@@ -25,18 +25,18 @@ func resourceAviatrixFireNet() *schema.Resource {
 				Required:    true,
 				Description: "VPC ID.",
 			},
-			"gw_name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of the gateway to launch the firewall instance.",
-			},
-			"firewall_instance": {
+			"firewall_instance_association": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Description: "A list of firewall instances associated to the gateway.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"instance_id": {
+						"gw_name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Name of the gateway to launch the firewall instance.",
+						},
+						"firewall_id": {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: "Firewall instance ID.",
@@ -46,11 +46,26 @@ func resourceAviatrixFireNet() *schema.Resource {
 							Required:    true,
 							Description: "Firewall instance name.",
 						},
-						"enabled": {
+						"attached": {
 							Type:        schema.TypeBool,
 							Optional:    true,
 							Default:     false,
 							Description: "Switch to attach/detach firewall instance to/from firenet.",
+						},
+						"lan_interface": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "",
+						},
+						"management_interface": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "",
+						},
+						"egress_interface": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "",
 						},
 					},
 				},
