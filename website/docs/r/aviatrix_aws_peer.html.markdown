@@ -42,7 +42,9 @@ The following arguments are supported:
 * `rtb_list1` - (Optional) List of Route table ID. Valid Values: ["all"], ["rtb-abcd1234"] OR ["rtb-abcd1234,rtb-wxyz5678"].
 * `rtb_list2` - (Optional) List of Route table ID. Valid Values: ["all"], ["rtb-abcd1234"] OR ["rtb-abcd1234,rtb-wxyz5678"].
 
-The following arguments are computed - please do not edit in the resource file:
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `rtb_list1_output` - List of route table ID of vpc_id1.
 * `rtb_list2_output` - List of route table ID of vpc_id2.

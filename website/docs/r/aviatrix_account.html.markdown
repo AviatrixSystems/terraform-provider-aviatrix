@@ -82,7 +82,7 @@ The following arguments are supported:
 * `oci_tenancy_id` - (Optional)Oracle OCI Tenancy ID. Required when creating an account for OCI.
 * `oci_user_id` - (Optional) Oracle OCI User ID. Required when creating an account for OCI.
 * `oci_compartment_id` - (Optional) Oracle OCI Compartment ID. Required when creating an account for OCI.
-* `"oci_api_private_key_filepath` - (Optional) Oracle OCI API Private Key local file path. Required when creating an account for OCI.
+* `oci_api_private_key_filepath` - (Optional) Oracle OCI API Private Key local file path. Required when creating an account for OCI.
 
 -> **NOTE:** Please make sure that the IAM roles/profiles have already been created before running this, if aws_iam = "true". More information on the IAM roles is at https://docs.aviatrix.com/HowTos/iam_policies.html and https://docs.aviatrix.com/HowTos/HowTo_IAM_role.html
 
