@@ -5,11 +5,12 @@ description: |-
   The Aviatrix provider Release Compatibility Guide
 ---
 
-# Aviatrix  Provider: Release Compatibility Chart
+# Aviatrix Provider: Release Compatibility Chart
 
-**USAGE:** Quick at-a-glance access to Aviatrix Terraform provider's release compatibility with the Controller release versions. New resources and features may be tracked in the Release Notes.
+## USAGE:
+Quick at-a-glance access to Aviatrix Terraform provider's release compatibility with the Controller release versions. New resources and features may be tracked in the Release Notes.
 
-**NOTE:** This only provides a quick glance at version compatibility between platforms. Please check the release notes for full details on new features, changes and deprecations [here](https://github.com/terraform-providers/terraform-provider-aviatrix/releases).
+-> **NOTE:** This only provides a quick glance at version compatibility between platforms. Please check the release notes for full details on new features, changes and deprecations [here](https://www.terraform.io/docs/providers/aviatrix/guides/release-notes.html).
 
 
 ---
