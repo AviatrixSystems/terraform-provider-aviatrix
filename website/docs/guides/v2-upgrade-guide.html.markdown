@@ -24,7 +24,7 @@ In summary:
 ### !! Important !!
 As Aviatrix is now an official Terraform provider, the process to setup and upgrade between versions have been significantly simplified. Upgrading to newer releases is as simple as specifying the "version" in the Aviatrix "provider" block, and running a ``terraform init``. Customers no longer need to source from Github and build our provider locally.
 
-Customers who previously have used Aviatrix as a provider prior to officiation may transition to the official provider by following Step 5.2 in our [setup tutorial](https://docs.aviatrix.com/HowTos/tf_aviatrix_howto.html#troubleshooting).
+Customers who previously have used Aviatrix as a provider prior to official acceptance may transition to the official provider by following Step 5.2 in our [setup tutorial](https://docs.aviatrix.com/HowTos/tf_aviatrix_howto.html#troubleshooting).
 
 For any further questions, please check out our [Support Center](https://docs.aviatrix.com/Support/support_center_terraform.html).
 
