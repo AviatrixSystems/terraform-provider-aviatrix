@@ -36,7 +36,7 @@ func resourceAviatrixFireNet() *schema.Resource {
 							Required:    true,
 							Description: "Name of the gateway to launch the firewall instance.",
 						},
-						"firewall_id": {
+						"instance_id": {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: "Firewall instance ID.",
@@ -77,11 +77,10 @@ func resourceAviatrixFireNet() *schema.Resource {
 func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	log.Printf("[INFO] Creating an Aviatrix Firenet on gateawy: %v, vpc: %T", d.Get("gw_name"), d.Get("vpc_id"))
+	log.Printf("[INFO] Creating an Aviatrix Firenet on vpc: %s", d.Get("vpc_id"))
 
 	fireNet := &goaviatrix.FireNet{
 		VpcID:            d.Get("vpc_id").(string),
-		GwName:           d.Get("gw_name").(string),
 		FirewallInstance: make([]goaviatrix.FirewallInstance, 0),
 	}
 
@@ -95,22 +94,25 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 	flag := false
 	defer resourceAviatrixFireNetReadIfRequired(d, meta, &flag)
 
-	firewallInstanceList := d.Get("firewall_instance").([]interface{})
+	firewallInstanceList := d.Get("firewall_instance_association").([]interface{})
 	for _, firewallInstance := range firewallInstanceList {
 		if firewallInstance != nil {
 			fI := firewallInstance.(map[string]interface{})
 			firewall := &goaviatrix.FirewallInstance{}
 			firewall.VpcID = fireNet.VpcID
-			firewall.GwName = fireNet.GwName
+			firewall.GwName = fI["gw_name"].(string)
 			firewall.InstanceID = fI["instance_id"].(string)
 			firewall.FirewallName = fI["firewall_name"].(string)
+			firewall.LanInterface = fI["lan_interface"].(string)
+			firewall.ManagementInterface = fI["management_interface"].(string)
+			firewall.EgressInterface = fI["egress_interface"].(string)
 
 			err := client.AssociateFirewallWithFireNet(firewall)
 			if err != nil {
 				return fmt.Errorf("failed to Associate firewall: %v to FireNet: %s", firewall.InstanceID, err)
 			}
 
-			if fI["enabled"].(bool) {
+			if fI["attached"].(bool) {
 				err := client.AttachFirewallToFireNet(firewall)
 				if err != nil {
 					return fmt.Errorf("failed to Attach firewall: %v to FireNet: %s", firewall.InstanceID, err)
@@ -295,24 +297,21 @@ func resourceAviatrixFireNetDelete(d *schema.ResourceData, meta interface{}) err
 	client := meta.(*goaviatrix.Client)
 
 	fireNet := &goaviatrix.FireNet{
-		VpcID:  d.Get("vpc_id").(string),
-		GwName: d.Get("gw_name").(string),
+		VpcID: d.Get("vpc_id").(string),
 	}
 
-	firewallInstanceList := d.Get("firewall_instance").([]interface{})
+	firewallInstanceList := d.Get("firewall_instance_association").([]interface{})
 	if firewallInstanceList != nil {
 		for _, firewallInstance := range firewallInstanceList {
 			if firewallInstance != nil {
 				fI := firewallInstance.(map[string]interface{})
 				firewall := &goaviatrix.FirewallInstance{}
 				firewall.VpcID = fireNet.VpcID
-				firewall.GwName = fireNet.GwName
 				firewall.InstanceID = fI["instance_id"].(string)
-				firewall.FirewallName = fI["firewall_name"].(string)
 
 				err := client.DisassociateFirewallFromFireNet(firewall)
 				if err != nil {
-					return fmt.Errorf("failed to disassociate firewall: %v to FireNet: %s", firewall.InstanceID, err)
+					return fmt.Errorf("failed to disassociate firewall: %v from FireNet: %s", firewall.InstanceID, err)
 				}
 			}
 		}
