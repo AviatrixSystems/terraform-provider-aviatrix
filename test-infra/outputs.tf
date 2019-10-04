@@ -135,7 +135,7 @@ output "OCI_COMPARTMENT_ID" {
 }
 
 output "OCI_API_KEY_FILEPATH" {
-  value = var.oci_api_key_firepath
+  value = var.oci_api_key_filepath
 }
 
 output "IDP_METADATA" {
