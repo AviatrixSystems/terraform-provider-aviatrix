@@ -70,6 +70,18 @@ func resourceAviatrixFireNet() *schema.Resource {
 					},
 				},
 			},
+			"inspection_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable/Disable traffic inspection.",
+			},
+			"egress_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable/Disable egress through firewall.",
+			},
 		},
 	}
 }
@@ -121,6 +133,22 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	if inspectionEnabled := d.Get("inspection_enabled").(bool); inspectionEnabled {
+		fireNet.Inspection = true
+		err := client.EditFireNetInspection(fireNet)
+		if err != nil {
+			return fmt.Errorf("couldn't disable inspection due to %v", err)
+		}
+	}
+
+	if egressEnabled := d.Get("egress_enabled").(bool); egressEnabled {
+		fireNet.FirewallEgress = true
+		err := client.EditFireNetInspection(fireNet)
+		if err != nil {
+			return fmt.Errorf("couldn't disable egress due to %v", err)
+		}
+	}
+
 	return resourceAviatrixFireNetReadIfRequired(d, meta, &flag)
 }
 
@@ -159,14 +187,29 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[INFO] Found FireNet: %#v", vpcID)
 
 	d.Set("vpc_id", strings.Split(fireNetDetail.VpcID, "~~")[0])
-	d.Set("gw_name", fireNetDetail.Gateway[0].GwName)
+
+	if fireNetDetail.Inspection == "yes" {
+		d.Set("inspection_enabled", true)
+	} else {
+		d.Set("inspection_enabled", false)
+	}
+	if fireNetDetail.FirewallEgress == "yes" {
+		d.Set("egress_enabled", true)
+	} else {
+		d.Set("egress_enabled", false)
+	}
 
 	var firewallInstance []map[string]interface{}
 	for _, instance := range fireNetDetail.FirewallInstance {
 		fI := make(map[string]interface{})
 		fI["instance_id"] = instance.InstanceID
 		fI["firewall_name"] = instance.FirewallName
-		fI["enabled"] = instance.Enabled == true
+		fI["attached"] = instance.Enabled == true
+		fI["gw_name"] = instance.GwName
+
+		//fI["lan_interface"]
+		//fI["management_interface"].(string)
+		//fI["egress_interface"].(string)
 
 		firewallInstance = append(firewallInstance, fI)
 	}
@@ -188,11 +231,11 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("vpc_id") {
 		return fmt.Errorf("updating vpc_id is not allowed")
 	}
-	if d.HasChange("gw_name") {
-		return fmt.Errorf("updating gw_name is not allowed")
-	}
+	//if d.HasChange("gw_name") {
+	//	return fmt.Errorf("updating gw_name is not allowed")
+	//}
 
-	if d.HasChange("firewall_instance") {
+	if d.HasChange("firewall_instance_association") {
 		mapOldFirewall := make(map[string]map[string]interface{})
 		mapNewFirewall := make(map[string]map[string]interface{})
 		mapFirewall := make(map[string]map[string]interface{})
@@ -287,7 +330,51 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 
-		d.SetPartial("firewall_instance")
+		d.SetPartial("firewall_instance_association")
+	}
+
+	if d.HasChange("inspection_enabled") {
+		fn := &goaviatrix.FireNet{
+			VpcID: d.Get("vpc_id").(string),
+		}
+
+		if d.Get("inspection_enabled").(bool) {
+			fn.Inspection = true
+			err := client.EditFireNetInspection(fn)
+			if err != nil {
+				return fmt.Errorf("failed to enable inspection on fireNet: %v", err)
+			}
+		} else {
+			fn.Inspection = false
+			err := client.EditFireNetInspection(fn)
+			if err != nil {
+				return fmt.Errorf("failed to disable inspection on fireNet: %v", err)
+			}
+		}
+
+		d.SetPartial("inspection_enabled")
+	}
+
+	if d.HasChange("egress_enabled") {
+		fn := &goaviatrix.FireNet{
+			VpcID: d.Get("vpc_id").(string),
+		}
+
+		if d.Get("egress_enabled").(bool) {
+			fn.FirewallEgress = true
+			err := client.EditFireNetEgress(fn)
+			if err != nil {
+				return fmt.Errorf("failed to enable firewall egress on fireNet: %v", err)
+			}
+		} else {
+			fn.FirewallEgress = false
+			err := client.EditFireNetEgress(fn)
+			if err != nil {
+				return fmt.Errorf("failed to enable firewall egress on fireNet: %v", err)
+			}
+		}
+
+		d.SetPartial("egress_enabled")
 	}
 
 	return resourceAviatrixFireNetRead(d, meta)
