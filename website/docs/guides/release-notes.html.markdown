@@ -177,6 +177,7 @@ Please see the [R2.0 feature changelist table](https://www.terraform.io/docs/pro
   - **aviatrix_vgw_conn**
 2. Added test-infra for Hashicorp acceptance
 
+
 ## 1.12.12
 ### Notes:
 - Release date: **(20 Jun 2019)**
