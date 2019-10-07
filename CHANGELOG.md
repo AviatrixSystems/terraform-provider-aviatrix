@@ -1,22 +1,3 @@
----
-layout: "aviatrix"
-page_title: "Guides: Release Notes"
-description: |-
-  The Aviatrix provider Release Notes
----
-
-# Aviatrix Provider: Release Notes
-
-## USAGE:
-Track all Aviatrix Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
-
----
-
-``Last updated: R2.5 (UserConnect-5.1)``
-
-
----
-
 ## 2.5.1 (Unreleased)
 
 
