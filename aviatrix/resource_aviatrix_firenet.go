@@ -26,11 +26,6 @@ func resourceAviatrixFireNet() *schema.Resource {
 				Description: "VPC ID.",
 			},
 			"firewall_instance_association": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "A list of firewall instances associated to the gateway.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
 						"gw_name": {
 							Type:        schema.TypeString,
 							Required:    true,

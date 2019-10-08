@@ -69,6 +69,7 @@ func (c *Client) GetFireNet(fireNet *FireNet) (*FireNetDetail, error) {
 	if err != nil {
 		return nil, errors.New(("url Parsing failed for show_firenet_detail: ") + err.Error())
 	}
+  
 	showFireNetDetail := url.Values{}
 	showFireNetDetail.Add("CID", c.CID)
 	showFireNetDetail.Add("action", "show_firenet_detail")
@@ -97,7 +98,6 @@ func (c *Client) AssociateFirewallWithFireNet(firewallInstance *FirewallInstance
 	if err != nil {
 		return errors.New(("url Parsing failed for associate_firewall_with_firenet: ") + err.Error())
 	}
-
 	associateFirewallWithFireNet := url.Values{}
 	associateFirewallWithFireNet.Add("CID", c.CID)
 	associateFirewallWithFireNet.Add("action", "associate_firewall_with_firenet")

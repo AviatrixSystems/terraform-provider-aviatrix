@@ -107,6 +107,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Public IP address that you want assigned to the HA Transit Gateway.",
 			},
+			"single_az_ha": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Set to 'enabled' if this feature is desired.",
+			},
 			"enable_snat": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -178,6 +184,13 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		gateway.EnableNAT = "yes"
 	} else {
 		gateway.EnableNAT = "no"
+	}
+
+	singleAZ := d.Get("single_az_ha").(bool)
+	if singleAZ {
+		gateway.SingleAzHa = "enabled"
+	} else {
+		gateway.SingleAzHa = "disabled"
 	}
 
 	connectedTransit := d.Get("connected_transit").(bool)
@@ -269,6 +282,20 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		err := client.EnableActiveMesh(gw)
 		if err != nil {
 			return fmt.Errorf("couldn't enable Active Mode for Aviatrix Transit Gateway: %s", err)
+		}
+	}
+
+	if !singleAZ {
+		singleAZGateway := &goaviatrix.Gateway{
+			GwName:   d.Get("gw_name").(string),
+			SingleAZ: "disabled",
+		}
+
+		log.Printf("[INFO] Disable Single AZ GW HA: %#v", singleAZGateway)
+
+		err := client.DisableSingleAZGateway(singleAZGateway)
+		if err != nil {
+			return fmt.Errorf("failed to disable single AZ GW HA: %s", err)
 		}
 	}
 
@@ -476,6 +503,12 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("enable_snat", false)
 		}
 
+		if gw.SingleAZ == "yes" {
+			d.Set("single_az_ha", true)
+		} else {
+			d.Set("single_az_ha", false)
+		}
+
 		if gw.CloudType == 1 {
 			d.Set("enable_hybrid_connection", gw.EnableHybridConnection)
 		} else {
@@ -621,6 +654,36 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("insane_mode_az") {
 		return fmt.Errorf("updating insane_mode_az is not allowed")
+	}
+	if d.HasChange("single_az_ha") {
+		singleAZGateway := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+
+		singleAZ := d.Get("single_az_ha").(bool)
+
+		if singleAZ {
+			singleAZGateway.SingleAZ = "enabled"
+		} else {
+			singleAZGateway.SingleAZ = "disabled"
+		}
+
+		if singleAZGateway.SingleAZ == "enabled" {
+			log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
+
+			err := client.EnableSingleAZGateway(singleAZGateway)
+			if err != nil {
+				return fmt.Errorf("failed to enable single AZ GW HA: %s", err)
+			}
+		} else if singleAZGateway.SingleAZ == "disabled" {
+			log.Printf("[INFO] Disable Single AZ GW HA: %#v", singleAZGateway)
+			err := client.DisableSingleAZGateway(singleAZGateway)
+			if err != nil {
+				return fmt.Errorf("failed to disable single AZ GW HA: %s", err)
+			}
+		}
+
+		d.SetPartial("single_az_ha")
 	}
 
 	if d.HasChange("gw_size") {

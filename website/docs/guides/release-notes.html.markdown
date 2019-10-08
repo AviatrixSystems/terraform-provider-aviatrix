@@ -1,8 +1,25 @@
-## 2.5.1 (Unreleased)
+---
+layout: "aviatrix"
+page_title: "Guides: Release Notes"
+description: |-
+  The Aviatrix provider Release Notes
+---
+
+# Aviatrix Provider: Release Notes
+
+## USAGE:
+Track all Aviatrix Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
+
+---
+
+``Last updated: R2.5 (UserConnect-5.1)``
 
 
-## 2.5.0 (October 02, 2019)
+---
+
+## 2.5.0
 ### Notes:
+- Release date: **(2 Oct 2019)**
 - Supported Controller version: **UserConnect-5.1.738**
 - Supported Terraform version: **v0.12.x**
 
@@ -16,8 +33,9 @@
 1. Implemented a shell script tool to export test-infra output for acceptance test
 
 
-## 2.4.0 (September 27, 2019)
+## 2.4.0
 ### Notes:
+- Release date: **(27 Sep 2019)**
 - Supported Controller version: **UserConnect-5.0.2761**
 - Supported Terraform version: **v0.12.x**
 
@@ -37,8 +55,9 @@
 1. Fixed issue where HA gateway could not be deleted before the primary gateway for GCP transit gateway
 
 
-## 2.3.36 (September 16, 2019)
+## 2.3.36
 ### Notes:
+- Release date: **(16 Sep 2019)**
 - Supported Controller version: **UserConnect-5.0.2675**
 - Supported Controller version: **v0.12.x**
 
@@ -46,8 +65,9 @@
 1. Fixed acceptance test cases
 
 
-## 2.3.35 (September 10, 2019)
+## 2.3.35
 ### Notes:
+- Release date: **(10 Sep 2019)**
 - Supported Controller version: **UserConnect-5.0.2632**
 - Supported Terraform version: **v0.12.x**
 
@@ -71,15 +91,17 @@
 1. Fixed enabling/ disabling advertising CIDRs issue in **aviatrix_vgw_conn**
 
 
-## 2.2.0 (August 30, 2019)
+## 2.2.0
 ### Notes:
+- Release date: **(30 Aug 2019)**
 - Supported Controller version: **UserConnect-4.7.591**
 - Supported Terraform version: **v0.12.x**
 - Initial Release for Official provider to allow: ``terraform init`` setup
 
 
-## 2.1.29 (Aug 19 2019)
+## 2.1.29
 ### Notes:
+- Release date: **(19 Aug 2019)**
 - Supported Controller version: **UserConnect-4.7.585**
 - Supported Terraform version: **v0.12.x**
 
@@ -90,8 +112,9 @@
 2. Added new resource: **aviatrix_saml_endpoint**. Currently only supports text IDP metadata type
 
 
-## 2.0.36 (Jul 25 2019)
+## 2.0.36
 ### Notes:
+- Release date: **(25 Jul 2019)**
 - Supported Controller version: **UserConnect-4.7.520**
 - Supported Terraform version: **v0.12.x**
 
@@ -102,8 +125,9 @@ Please see the [R2.0 feature changelist table](https://www.terraform.io/docs/pro
 
 ---
 
-## 1.16.20 (Jul 25 2019)
+## 1.16.20
 ### Notes:
+- Release date: **(25 Jul 2019)**
 - Supported Controller version: **UserConnect-4.7.520**
 - Supported Terraform version: **v0.12.x**
 - Updated R1.x Feature Changelist
@@ -113,8 +137,9 @@ Please see the [R2.0 feature changelist table](https://www.terraform.io/docs/pro
 2. Now uses Go Mod
 
 
-## 1.15.05 (Jul 15 2019)
+## 1.15.05
 ### Notes:
+- Release date: **(15 Jul 2019)**
 - Supported Controller version: **UserConnect-4.7.474**
 - Supported Terraform version: **v0.11.x**
 - Updated R1.x Feature Changelist
@@ -124,8 +149,9 @@ Please see the [R2.0 feature changelist table](https://www.terraform.io/docs/pro
 2. Updated test-infra
 
 
-## 1.14.15 (Jul 11 2019)
+## 1.14.15
 ### Notes:
+- Release date: **(11 Jul 2019)**
 - Supported Controller version: **UserConnect-4.7.474**
 - Supported Terraform version: **v0.11.x**
 - Updated R1.x Feature Changelist
@@ -134,8 +160,9 @@ Please see the [R2.0 feature changelist table](https://www.terraform.io/docs/pro
 1. Added support for ``max_vpn_conn`` in **aviatrix_gateway** resource
 
 
-## 1.13.14 (Jun 28 2019)
+## 1.13.14
 ### Notes:
+- Release date: **(28 Jun 2019)**
 - Supported Controller version: **UserConnect-4.7.419**
 - Supported Terraform version: **v0.11.x**
 - Added R1.x Feature Changelist
@@ -151,8 +178,9 @@ Please see the [R2.0 feature changelist table](https://www.terraform.io/docs/pro
 2. Added test-infra for Hashicorp acceptance
 
 
-## 1.12.12 (Jun 20 2019)
+## 1.12.12
 ### Notes:
+- Release date: **(20 Jun 2019)**
 - Supported Controller version: **UserConnect-4.7.378**
 - Supported Terraform version: **v0.11.x**
 
@@ -167,8 +195,9 @@ Please see the [R2.0 feature changelist table](https://www.terraform.io/docs/pro
 1. Added defer function for **aviatrix_gateway**
 
 
-## 1.11.16 (Jun 18 2019)
+## 1.11.16
 ### Notes:
+- Release date: **(18 Jun 2019)**
 - Supported Controller version: **UserConnect-4.7.378**
 - Supported Terraform version: **v0.11.x**
 
@@ -181,8 +210,9 @@ Please see the [R2.0 feature changelist table](https://www.terraform.io/docs/pro
 1. Deprecated **version** resource, and changed to an attribute ``target_version`` under **aviatrix_controller_config** to consolidate controller configuration behaviors under one resource
 
 
-## 1.10.10 (Jun 7 2019)
+## 1.10.10
 ### Notes:
+- Release date: **(7 Jun 2019)**
 - Supported Controller version: **UserConnect-4.6.604**
 - Supported Terraform version: **v0.11.x**
 
@@ -190,8 +220,9 @@ Please see the [R2.0 feature changelist table](https://www.terraform.io/docs/pro
 1. Deprecated ``vnet_and_resource_group_names`` and ``vnet_name_resource_group`` in **aviatrix_spoke_vpc** and **aviatrix_transit_vpc**, respectively and replaced with ``vpc_id`` in order to standardize attributes across various cloud providers
 
 
-## 1.9.28 (Jun 3 2019)
+## 1.9.28
 ### Notes:
+- Release date: **(3 Jun 2019)**
 - Supported Controller version: **UserConnect-4.6.569**
 - Supported Terraform version: **v0.11.x**
 
@@ -212,8 +243,9 @@ Please see the [R2.0 feature changelist table](https://www.terraform.io/docs/pro
 2. Deprecated ``cluster`` from **aviatrix_tunnel** resource due to being a deprecated feature in the Controller
 
 
-## 1.8.26 (May 30 2019)
+## 1.8.26
 ### Notes:
+- Release date: **(30 May 2019)**
 - Supported Controller version: **UserConnect-4.3.1275**
 - Supported Terraform version: **v0.11.x**
 
@@ -228,8 +260,9 @@ Please see the [R2.0 feature changelist table](https://www.terraform.io/docs/pro
 1. Deprecated ``ha_subnet`` from **aviatrix_gateway**
 
 
-## 1.7.18 (May 9 2019)
+## 1.7.18
 ### Notes:
+- Release date: **(9 May 2019)**
 - Supported Controller version: **UserConnect-4.3.1253**
 - Supported Terraform version: **v0.11.x**
 
@@ -246,8 +279,9 @@ Please see the [R2.0 feature changelist table](https://www.terraform.io/docs/pro
 2. Fixed **aviatrix_vgw_conn** read/ refresh/ import issue
 
 
-## 1.6.29 (May 3 2019)
+## 1.6.29
 ### Notes:
+- Release date: **(3 May 2019)**
 - Supported Controller version: **UserConnect-4.2.764**
 - Supported Terraform version: **v0.11.x**
 
@@ -265,8 +299,9 @@ Please see the [R2.0 feature changelist table](https://www.terraform.io/docs/pro
 1. Added controller version checking in the provider to ensure compatibility between Aviatrix Terraform provider and Controller
 
 
-## 1.5.24 (Apr 15 2019)
+## 1.5.24
 ### Notes:
+- Release date: **(15 Apr 2019)**
 - Supported Controller version: **UserConnect-4.2.764**
 - Supported Terraform version: **v0.11.x**
 
@@ -289,8 +324,9 @@ Please see the [R2.0 feature changelist table](https://www.terraform.io/docs/pro
 4. Fixed read/ refresh issue for **aviatrix_site2cloud** where resource count exceeds 3
 
 
-## 1.4.4 (Mar 28 2019)
+## 1.4.4
 ### Notes:
+- Release date: **(28 Mar 2019)**
 - Supported Controller version: **UserConnect-4.2.634**
 - Supported Terraform version: **v0.11.x**
 
@@ -303,8 +339,9 @@ Please see the [R2.0 feature changelist table](https://www.terraform.io/docs/pro
 3. updated **aviatrix_fqdn** to block updating ``fqdn_tag``
 
 
-## 1.3.12 (Mar 21 2019)
+## 1.3.12
 ### Notes:
+- Release date: **(21 Mar 2019)**
 - Supported Controller version: **UserConnect-4.1.982** and **4.2.634**
 - Supported Terraform version: **v0.11.x**
 
@@ -318,8 +355,9 @@ Please see the [R2.0 feature changelist table](https://www.terraform.io/docs/pro
 3. Fixed **aviatrix_aws_peer**'s refresh, update and import issues
 
 
-## 1.2.12 (Mar 15 2019)
+## 1.2.12
 ### Notes:
+- Release date: **(15 Mar 2019)**
 - Supported Controller version: **UserConnect-4.1.981**
 - Supported Terraform version: **v0.11.x**
 
@@ -332,11 +370,12 @@ Please see the [R2.0 feature changelist table](https://www.terraform.io/docs/pro
 1. Fixed **aviatrix_site2cloud** to ignore ``local_subnet_cidr`` changes
 
 
-## 1.2.10 (Mar 14 2019)
+## 1.2.10
 
 -> **NOTE:** This release is unsupported and deprecated
 
 ### Notes:
+- Release date: **(14 Mar 2019)**
 - Supported Controller version: **UserConnect-4.1.981**
 - Supported Terraform version: **v0.11.x**
 
@@ -348,8 +387,9 @@ Please see the [R2.0 feature changelist table](https://www.terraform.io/docs/pro
   - **aviatrix_vgw_conn**
 
 
-## 1.1.66 (Mar 6 2019)
+## 1.1.66
 ### Notes:
+- Release date: **(6 Mar 2019)**
 - Supported Controller version: **UserConnect-4.1.981**
 - Supported Terraform version: **v0.11.x**
 
@@ -372,8 +412,9 @@ Please see the [R2.0 feature changelist table](https://www.terraform.io/docs/pro
 4. Fixed **aviatrix_vpn_user** re-ordering issue on refresh
 
 
-## 1.0.242 (Feb 26 2019)
+## 1.0.242
 ### Notes:
+- Release date: **(26 Feb 2019)**
 - Supported Controller version: **UserConnect-4.1.981**
 - Supported Terraform version: **v0.11.x**
 

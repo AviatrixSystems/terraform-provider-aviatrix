@@ -35,7 +35,7 @@ variable "aws_secret_key" {}
 variable "oci_tenancy_id" {}
 variable "oci_user_id" {}
 variable "oci_compartment_id" {}
-variable "oci_api_key_firepath" {
+variable "oci_api_key_filepath" {
   description = "Location of the OCI credentials to use."
 }
 variable "oci_region1" {default="us-ashburn-1"}
