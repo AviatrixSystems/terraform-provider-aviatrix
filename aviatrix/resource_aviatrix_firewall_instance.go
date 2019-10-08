@@ -84,6 +84,26 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				Computed:    true,
 				Description: "Bootstrap bucket name.",
 			},
+			"lan_interface": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "",
+			},
+			"management_interface": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "",
+			},
+			"egress_interface": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "",
+			},
+			"public_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "",
+			},
 		},
 	}
 }
@@ -149,6 +169,11 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	d.Set("instance_id", fI.InstanceID)
 	d.Set("egress_subnet", fI.EgressSubnet)
 	d.Set("management_subnet", fI.ManagementSubnet)
+
+	d.Set("lan_interface", fI.LanInterface)
+	d.Set("management_interface", fI.ManagementInterface)
+	d.Set("egress_interface", fI.EgressInterface)
+	d.Set("public_ip", fI.ManagementPublicIP)
 
 	if d.Get("key_name") != "" {
 		d.Set("key_name", fI.KeyName)

@@ -51,10 +51,13 @@ type GatewayInfo struct {
 }
 
 type FirewallInstanceInfo struct {
-	Enabled      bool   `json:"enabled"`
-	GwName       string `json:"gateway"`
-	InstanceID   string `json:"id"`
-	FirewallName string `json:"name"`
+	Enabled             bool   `json:"enabled"`
+	GwName              string `json:"gateway"`
+	InstanceID          string `json:"id"`
+	FirewallName        string `json:"name"`
+	LanInterface        string `json:"lan_interface_id,omitempty"`
+	ManagementInterface string `json:"management_interface_id,omitempty"`
+	EgressInterface     string `json:"egress_interface_id,omitempty"`
 }
 
 func (c *Client) CreateFireNet(fireNet *FireNet) error {

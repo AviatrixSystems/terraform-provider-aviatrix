@@ -22,9 +22,10 @@ type FirewallInstance struct {
 	BootstrapBucketName string `form:"bootstrap_bucket_name,omitempty" json:"bootstrap_bucket_name,omitempty"`
 	InstanceID          string `form:"firewall_id,omitempty" json:"instance_id,omitempty"`
 	Attached            bool
-	LanInterface        string
-	ManagementInterface string
-	EgressInterface     string
+	LanInterface        string `form:"lan_interface,omitempty" json:"lan_interface_id,omitempty"`
+	ManagementInterface string `form:"management_interface,omitempty" json:"management_interface_id,omitempty"`
+	EgressInterface     string `form:"egress_interface,omitempty" json:"egress_interface_id,omitempty"`
+	ManagementPublicIP  string `json:"management_public_ip,omitempty"`
 }
 
 type FirewallInstanceResp struct {

@@ -46,12 +46,6 @@ func resourceAviatrixFireNet() *schema.Resource {
 							Required:    true,
 							Description: "Firewall instance name.",
 						},
-						"attached": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Default:     false,
-							Description: "Switch to attach/detach firewall instance to/from firenet.",
-						},
 						"lan_interface": {
 							Type:        schema.TypeString,
 							Optional:    true,
@@ -67,13 +61,19 @@ func resourceAviatrixFireNet() *schema.Resource {
 							Optional:    true,
 							Description: "",
 						},
+						"attached": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     false,
+							Description: "Switch to attach/detach firewall instance to/from firenet.",
+						},
 					},
 				},
 			},
 			"inspection_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
+				Default:     true,
 				Description: "Enable/Disable traffic inspection.",
 			},
 			"egress_enabled": {
@@ -133,8 +133,8 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	if inspectionEnabled := d.Get("inspection_enabled").(bool); inspectionEnabled {
-		fireNet.Inspection = true
+	if inspectionEnabled := d.Get("inspection_enabled").(bool); !inspectionEnabled {
+		fireNet.Inspection = false
 		err := client.EditFireNetInspection(fireNet)
 		if err != nil {
 			return fmt.Errorf("couldn't disable inspection due to %v", err)
@@ -145,7 +145,7 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 		fireNet.FirewallEgress = true
 		err := client.EditFireNetInspection(fireNet)
 		if err != nil {
-			return fmt.Errorf("couldn't disable egress due to %v", err)
+			return fmt.Errorf("couldn't enable egress due to %v", err)
 		}
 	}
 
@@ -204,12 +204,11 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 		fI := make(map[string]interface{})
 		fI["instance_id"] = instance.InstanceID
 		fI["firewall_name"] = instance.FirewallName
-		fI["attached"] = instance.Enabled == true
 		fI["gw_name"] = instance.GwName
-
-		//fI["lan_interface"]
-		//fI["management_interface"].(string)
-		//fI["egress_interface"].(string)
+		fI["lan_interface"] = instance.LanInterface
+		fI["management_interface"] = instance.ManagementInterface
+		fI["egress_interface"] = instance.EgressInterface
+		fI["attached"] = instance.Enabled == true
 
 		firewallInstance = append(firewallInstance, fI)
 	}
@@ -231,16 +230,13 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("vpc_id") {
 		return fmt.Errorf("updating vpc_id is not allowed")
 	}
-	//if d.HasChange("gw_name") {
-	//	return fmt.Errorf("updating gw_name is not allowed")
-	//}
 
 	if d.HasChange("firewall_instance_association") {
 		mapOldFirewall := make(map[string]map[string]interface{})
 		mapNewFirewall := make(map[string]map[string]interface{})
 		mapFirewall := make(map[string]map[string]interface{})
 
-		oldFI, newFI := d.GetChange("firewall_instance")
+		oldFI, newFI := d.GetChange("firewall_instance_association")
 		if oldFI == nil {
 			oldFI = new([]interface{})
 		}
@@ -258,7 +254,7 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 				fI := firewallInstance.(map[string]interface{})
 				if _, ok := mapOldFirewall[fI["instance_id"].(string)]; ok {
 					oFI := mapOldFirewall[fI["instance_id"].(string)]
-					if oFI["enabled"] != fI["enabled"] {
+					if oFI["attached"] != fI["attached"] {
 						mapFirewall[fI["instance_id"].(string)] = fI
 					}
 					delete(mapOldFirewall, fI["instance_id"].(string))
@@ -276,13 +272,16 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 				firewall.GwName = d.Get("gw_name").(string)
 				firewall.InstanceID = fI["instance_id"].(string)
 				firewall.FirewallName = fI["firewall_name"].(string)
+				firewall.LanInterface = fI["lan_interface"].(string)
+				firewall.ManagementInterface = fI["management_interface"].(string)
+				firewall.EgressInterface = fI["egress_interface"].(string)
 
 				err := client.AssociateFirewallWithFireNet(firewall)
 				if err != nil {
 					return fmt.Errorf("failed to Associate firewall: %v to FireNet: %s", firewall.InstanceID, err)
 				}
 
-				if fI["enabled"].(bool) {
+				if fI["attached"].(bool) {
 					err := client.AttachFirewallToFireNet(firewall)
 					if err != nil {
 						return fmt.Errorf("failed to Attach firewall: %v to FireNet: %s", firewall.InstanceID, err)
@@ -299,8 +298,11 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 				firewall.GwName = d.Get("gw_name").(string)
 				firewall.InstanceID = fI["instance_id"].(string)
 				firewall.FirewallName = fI["firewall_name"].(string)
+				firewall.LanInterface = fI["lan_interface"].(string)
+				firewall.ManagementInterface = fI["management_interface"].(string)
+				firewall.EgressInterface = fI["egress_interface"].(string)
 
-				if fI["enabled"].(bool) {
+				if fI["attached"].(bool) {
 					err := client.AttachFirewallToFireNet(firewall)
 					if err != nil {
 						return fmt.Errorf("failed to Attach firewall: %v to FireNet: %s", firewall.InstanceID, err)
@@ -322,6 +324,9 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 				firewall.GwName = d.Get("gw_name").(string)
 				firewall.InstanceID = fI["instance_id"].(string)
 				firewall.FirewallName = fI["firewall_name"].(string)
+				firewall.LanInterface = fI["lan_interface"].(string)
+				firewall.ManagementInterface = fI["management_interface"].(string)
+				firewall.EgressInterface = fI["egress_interface"].(string)
 
 				err := client.DisassociateFirewallFromFireNet(firewall)
 				if err != nil {
@@ -338,7 +343,7 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 			VpcID: d.Get("vpc_id").(string),
 		}
 
-		if d.Get("inspection_enabled").(bool) {
+		if inspectionEnabled := d.Get("inspection_enabled").(bool); inspectionEnabled {
 			fn.Inspection = true
 			err := client.EditFireNetInspection(fn)
 			if err != nil {
@@ -360,7 +365,7 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 			VpcID: d.Get("vpc_id").(string),
 		}
 
-		if d.Get("egress_enabled").(bool) {
+		if egressEnabled := d.Get("egress_enabled").(bool); egressEnabled {
 			fn.FirewallEgress = true
 			err := client.EditFireNetEgress(fn)
 			if err != nil {
