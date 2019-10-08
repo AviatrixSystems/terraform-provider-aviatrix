@@ -13,6 +13,8 @@ type FireNet struct {
 	VpcID            string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
 	GwName           string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
 	FirewallInstance []FirewallInstance
+	FirewallEgress   bool `form:"firewall_egress,omitempty" json:"firewall_egress,omitempty"`
+	Inspection       bool `form:"inspection,omitempty" json:"inspection,omitempty"`
 }
 
 type FireNetDetail struct {
@@ -20,6 +22,8 @@ type FireNetDetail struct {
 	VpcID            string                 `json:"vpc_id,omitempty"`
 	FirewallInstance []FirewallInstanceInfo `json:"firewall,omitempty"`
 	Gateway          []GatewayInfo          `json:"gateway,omitempty"`
+	FirewallEgress   string                 `json:"firewall_egress,omitempty"`
+	Inspection       string                 `json:"inspection,omitempty"`
 }
 
 type GetFireNetResp struct {
@@ -47,10 +51,13 @@ type GatewayInfo struct {
 }
 
 type FirewallInstanceInfo struct {
-	Enabled      bool   `json:"enabled"`
-	GwName       string `json:"gateway"`
-	InstanceID   string `json:"id"`
-	FirewallName string `json:"name"`
+	Enabled             bool   `json:"enabled"`
+	GwName              string `json:"gateway"`
+	InstanceID          string `json:"id"`
+	FirewallName        string `json:"name"`
+	LanInterface        string `json:"lan_interface_id,omitempty"`
+	ManagementInterface string `json:"management_interface_id,omitempty"`
+	EgressInterface     string `json:"egress_interface_id,omitempty"`
 }
 
 func (c *Client) CreateFireNet(fireNet *FireNet) error {
@@ -62,12 +69,13 @@ func (c *Client) GetFireNet(fireNet *FireNet) (*FireNetDetail, error) {
 	if err != nil {
 		return nil, errors.New(("url Parsing failed for show_firenet_detail: ") + err.Error())
 	}
-	getFireNetDetail := url.Values{}
-	getFireNetDetail.Add("CID", c.CID)
-	getFireNetDetail.Add("action", "show_firenet_detail")
-	getFireNetDetail.Add("vpc_id", fireNet.VpcID)
+  
+	showFireNetDetail := url.Values{}
+	showFireNetDetail.Add("CID", c.CID)
+	showFireNetDetail.Add("action", "show_firenet_detail")
+	showFireNetDetail.Add("vpc_id", fireNet.VpcID)
 
-	Url.RawQuery = getFireNetDetail.Encode()
+	Url.RawQuery = showFireNetDetail.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
 		return nil, errors.New("HTTP Get show_firenet_detail failed: " + err.Error())
@@ -90,12 +98,6 @@ func (c *Client) AssociateFirewallWithFireNet(firewallInstance *FirewallInstance
 	if err != nil {
 		return errors.New(("url Parsing failed for associate_firewall_with_firenet: ") + err.Error())
 	}
-
-	interfaces, err := c.GetInterfaceInformation(firewallInstance)
-	if err != nil || len(interfaces) != 3 {
-		return errors.New(("failed to read interface information: ") + err.Error())
-	}
-
 	associateFirewallWithFireNet := url.Values{}
 	associateFirewallWithFireNet.Add("CID", c.CID)
 	associateFirewallWithFireNet.Add("action", "associate_firewall_with_firenet")
@@ -103,9 +105,9 @@ func (c *Client) AssociateFirewallWithFireNet(firewallInstance *FirewallInstance
 	associateFirewallWithFireNet.Add("gateway_name", firewallInstance.GwName)
 	associateFirewallWithFireNet.Add("firewall_id", firewallInstance.InstanceID)
 	associateFirewallWithFireNet.Add("firewall_name", firewallInstance.FirewallName)
-	associateFirewallWithFireNet.Add("lan_interface", interfaces[0])
-	associateFirewallWithFireNet.Add("egress_interface", interfaces[1])
-	associateFirewallWithFireNet.Add("management_interface", interfaces[2])
+	associateFirewallWithFireNet.Add("lan_interface", firewallInstance.LanInterface)
+	associateFirewallWithFireNet.Add("management_interface", firewallInstance.ManagementInterface)
+	associateFirewallWithFireNet.Add("egress_interface", firewallInstance.EgressInterface)
 
 	Url.RawQuery = associateFirewallWithFireNet.Encode()
 	resp, err := c.Get(Url.String(), nil)
@@ -152,54 +154,6 @@ func (c *Client) DisassociateFirewallFromFireNet(firewallInstance *FirewallInsta
 		return errors.New("Rest API disassociate_firewall_with_firenet Get failed: " + data.Reason)
 	}
 	return nil
-}
-
-func (c *Client) GetInterfaceInformation(firewallInstance *FirewallInstance) ([]string, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for list_firenet: ") + err.Error())
-	}
-	listFireNet := url.Values{}
-	listFireNet.Add("CID", c.CID)
-	listFireNet.Add("action", "list_firenet")
-	listFireNet.Add("subaction", "instance")
-	listFireNet.Add("vpc_id", firewallInstance.VpcID)
-	listFireNet.Add("gateway_name", firewallInstance.GwName)
-
-	Url.RawQuery = listFireNet.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get list_firenet failed: " + err.Error())
-	}
-	var data ListFireNetResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_firenet failed: " + err.Error())
-	}
-	if !data.Return {
-		return nil, errors.New("Rest API list_firenet Get failed: " + data.Reason)
-	}
-	for _, instance := range data.Results.Instances {
-		if strings.Contains(instance, firewallInstance.InstanceID) {
-			var temp [3]string
-			var result []string
-			for _, interfaceStr := range data.Results.Interfaces[instance] {
-				if strings.Contains(interfaceStr, "lan") {
-					temp[0] = interfaceStr
-				} else if strings.Contains(interfaceStr, "egress") {
-					temp[1] = interfaceStr
-				} else if strings.Contains(interfaceStr, "management") {
-					temp[2] = interfaceStr
-				}
-			}
-			for i := 0; i < 3; i++ {
-				if temp[i] != "" {
-					result = append(result, temp[i])
-				}
-			}
-			return result, nil
-		}
-	}
-	return nil, ErrNotFound
 }
 
 func (c *Client) AttachFirewallToFireNet(firewallInstance *FirewallInstance) error {
@@ -304,6 +258,68 @@ func (c *Client) DisconnectFireNetFromTgw(awsTgw *AWSTgw, vpcID string) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API disconnect_firenet_with_tgw Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) EditFireNetInspection(fireNet *FireNet) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for edit_firenet") + err.Error())
+	}
+	editFireNet := url.Values{}
+	editFireNet.Add("CID", c.CID)
+	editFireNet.Add("action", "edit_firenet")
+	editFireNet.Add("vpc_id", fireNet.VpcID)
+	if fireNet.Inspection {
+		editFireNet.Add("inspection", "true")
+	} else {
+		editFireNet.Add("inspection", "false")
+	}
+
+	Url.RawQuery = editFireNet.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get edit_firenet failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode edit_firenet failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API edit_firenet Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) EditFireNetEgress(fireNet *FireNet) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for edit_firenet") + err.Error())
+	}
+	editFireNet := url.Values{}
+	editFireNet.Add("CID", c.CID)
+	editFireNet.Add("action", "edit_firenet")
+	editFireNet.Add("vpc_id", fireNet.VpcID)
+	if fireNet.FirewallEgress {
+		editFireNet.Add("firewall_egress", "true")
+	} else {
+		editFireNet.Add("firewall_egress", "false")
+	}
+
+	Url.RawQuery = editFireNet.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get edit_firenet failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode edit_firenet failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API edit_firenet Get failed: " + data.Reason)
 	}
 	return nil
 }
