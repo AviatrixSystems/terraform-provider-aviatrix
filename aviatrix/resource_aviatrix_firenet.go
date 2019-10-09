@@ -127,7 +127,7 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 				firewall.ManagementInterface = fI["management_interface"].(string)
 				firewall.EgressInterface = fI["egress_interface"].(string)
 			}
-			log.Printf("zjin000: firewall is %v", firewall)
+
 			err := client.AssociateFirewallWithFireNet(firewall)
 			if err != nil {
 				return fmt.Errorf("failed to Associate firewall: %v to FireNet: %s", firewall.InstanceID, err)
@@ -244,7 +244,6 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 		mapOldFirewall := make(map[string]map[string]interface{})
 		mapNewFirewall := make(map[string]map[string]interface{})
 		mapFirewall := make(map[string]map[string]interface{})
-		log.Printf("zjin00: nothing is wrong here")
 		oldFI, newFI := d.GetChange("firewall_instance_association")
 		if oldFI == nil {
 			oldFI = new([]interface{})
@@ -258,7 +257,6 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 				mapOldFirewall[fI["instance_id"].(string)] = fI
 			}
 		}
-		log.Printf("zjin01: nothing is wrong here")
 
 		if newFI != nil {
 			for _, firewallInstance := range newFI.([]interface{}) {
@@ -274,7 +272,6 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 				}
 			}
 		}
-		log.Printf("zjin02: nothing is wrong here")
 
 		if mapNewFirewall != nil {
 			for key := range mapNewFirewall {
@@ -289,7 +286,6 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 					firewall.ManagementInterface = fI["management_interface"].(string)
 					firewall.EgressInterface = fI["egress_interface"].(string)
 				}
-				log.Printf("zjin05: firewall is %v", firewall)
 
 				err := client.AssociateFirewallWithFireNet(firewall)
 				if err != nil {
@@ -304,7 +300,6 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 				}
 			}
 		}
-		log.Printf("zjin03: nothing is wrong here")
 
 		if mapFirewall != nil {
 			for key := range mapFirewall {
@@ -319,7 +314,6 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 					firewall.ManagementInterface = fI["management_interface"].(string)
 					firewall.EgressInterface = fI["egress_interface"].(string)
 				}
-				log.Printf("zjin05: nothing is wrong here")
 
 				if fI["attached"].(bool) {
 					err := client.AttachFirewallToFireNet(firewall)
