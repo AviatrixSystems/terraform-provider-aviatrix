@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -74,6 +75,54 @@ func resourceAviatrixVpc() *schema.Resource {
 				Type:        schema.TypeList,
 				Computed:    true,
 				Description: "List of subnet of the VPC to be created.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cidr": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Subnet cidr.",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Subnet name.",
+						},
+						"subnet_id": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Subnet ID.",
+						},
+					},
+				},
+			},
+			"public_subnets": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "List of public subnet of the VPC to be created.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cidr": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Subnet cidr.",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Subnet name.",
+						},
+						"subnet_id": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Subnet ID.",
+						},
+					},
+				},
+			},
+			"private_subnets": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "List of private subnet of the VPC to be created.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cidr": {
@@ -192,6 +241,8 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vpc_id", vC.VpcID)
 
 	var subnetList []map[string]string
+	var publicSubnetList []map[string]string
+	var privateSubnetList []map[string]string
 	for _, subnet := range vC.Subnets {
 		sub := make(map[string]string)
 		sub["cidr"] = subnet.Cidr
@@ -199,10 +250,22 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		sub["subnet_id"] = subnet.SubnetID
 
 		subnetList = append(subnetList, sub)
+		if strings.Contains(subnet.Name, "Public") {
+			publicSubnetList = append(publicSubnetList, sub)
+		}
+		if strings.Contains(subnet.Name, "Private") {
+			privateSubnetList = append(privateSubnetList, sub)
+		}
 	}
 
 	if err := d.Set("subnets", subnetList); err != nil {
 		log.Printf("[WARN] Error setting subnets for (%s): %s", d.Id(), err)
+	}
+	if err := d.Set("public_subnets", publicSubnetList); err != nil {
+		log.Printf("[WARN] Error setting public subnets for (%s): %s", d.Id(), err)
+	}
+	if err := d.Set("private_subnets", privateSubnetList); err != nil {
+		log.Printf("[WARN] Error setting private subnets for (%s): %s", d.Id(), err)
 	}
 
 	return nil
