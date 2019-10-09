@@ -364,10 +364,11 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 			if err != nil {
 				return fmt.Errorf("failed to update Aviatrix Account: %s", err)
 			}
+
 			if d.HasChange("aws_account_number") {
 				d.SetPartial("aws_account_number")
 			}
-			if awsIam := d.Get("aws_iam").(string); awsIam != "true" {
+			if awsIam := d.Get("aws_iam").(bool); !awsIam {
 				if d.HasChange("aws_access_key") {
 					d.SetPartial("aws_access_key")
 				}
