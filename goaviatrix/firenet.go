@@ -69,7 +69,7 @@ func (c *Client) GetFireNet(fireNet *FireNet) (*FireNetDetail, error) {
 	if err != nil {
 		return nil, errors.New(("url Parsing failed for show_firenet_detail: ") + err.Error())
 	}
-  
+
 	showFireNetDetail := url.Values{}
 	showFireNetDetail.Add("CID", c.CID)
 	showFireNetDetail.Add("action", "show_firenet_detail")
@@ -103,11 +103,13 @@ func (c *Client) AssociateFirewallWithFireNet(firewallInstance *FirewallInstance
 	associateFirewallWithFireNet.Add("action", "associate_firewall_with_firenet")
 	associateFirewallWithFireNet.Add("vpc_id", firewallInstance.VpcID)
 	associateFirewallWithFireNet.Add("gateway_name", firewallInstance.GwName)
-	associateFirewallWithFireNet.Add("firewall_id", firewallInstance.InstanceID)
 	associateFirewallWithFireNet.Add("firewall_name", firewallInstance.FirewallName)
-	associateFirewallWithFireNet.Add("lan_interface", firewallInstance.LanInterface)
-	associateFirewallWithFireNet.Add("management_interface", firewallInstance.ManagementInterface)
-	associateFirewallWithFireNet.Add("egress_interface", firewallInstance.EgressInterface)
+	if firewallInstance.VendorType == "firewall_instance" {
+		associateFirewallWithFireNet.Add("firewall_id", firewallInstance.InstanceID)
+		associateFirewallWithFireNet.Add("lan_interface", firewallInstance.LanInterface)
+		associateFirewallWithFireNet.Add("management_interface", firewallInstance.ManagementInterface)
+		associateFirewallWithFireNet.Add("egress_interface", firewallInstance.EgressInterface)
+	}
 
 	Url.RawQuery = associateFirewallWithFireNet.Encode()
 	resp, err := c.Get(Url.String(), nil)
