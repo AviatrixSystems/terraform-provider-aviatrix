@@ -26,6 +26,7 @@ type FirewallInstance struct {
 	ManagementInterface string `form:"management_interface,omitempty" json:"management_interface_id,omitempty"`
 	EgressInterface     string `form:"egress_interface,omitempty" json:"egress_interface_id,omitempty"`
 	ManagementPublicIP  string `json:"management_public_ip,omitempty"`
+	VendorType          string
 }
 
 type FirewallInstanceResp struct {
