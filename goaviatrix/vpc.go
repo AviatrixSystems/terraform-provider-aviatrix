@@ -18,6 +18,8 @@ type Vpc struct {
 	AviatrixFireNetVpc string       `form:"aviatrix_firenet_vpc,omitempty"`
 	VpcID              string       `json:"vpc_list,omitempty"`
 	Subnets            []SubnetInfo `json:"subnets,omitempty"`
+	PublicSubnets      []SubnetInfo
+	PrivateSubnets     []SubnetInfo
 }
 
 type VpcEdit struct {
