@@ -48,23 +48,30 @@ func resourceAviatrixFireNet() *schema.Resource {
 							Description: "ID of Firewall instance, or FQDN Gateway's gw_name.",
 						},
 						"firewall_name": {
-							Type:        schema.TypeString,
-							Optional:    true,
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+
 							Description: "Firewall instance name, or FQDN Gateway's gw_name, required if it is a firewall instance.",
 						},
 						"lan_interface": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Default:     "",
 							Description: "Lan interface ID, required if it is a firewall instance.",
 						},
 						"management_interface": {
-							Type:        schema.TypeString,
-							Optional:    true,
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+
 							Description: "Management interface ID, required if it is a firewall instance.",
 						},
 						"egress_interface": {
-							Type:        schema.TypeString,
-							Optional:    true,
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+
 							Description: "Egress interface ID, required if it is a firewall instance.",
 						},
 						"attached": {
@@ -216,6 +223,10 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 		fI["attached"] = instance.Enabled == true
 		if instance.VendorType == "Aviatrix FQDN Gateway" {
 			fI["vendor_type"] = "fqdn_gateway"
+			fI["firewall_name"] = ""
+			fI["lan_interface"] = ""
+			fI["management_interface"] = ""
+			fI["egress_interface"] = ""
 		} else {
 			fI["vendor_type"] = "firewall_instance"
 			fI["firewall_name"] = instance.FirewallName
