@@ -58,6 +58,7 @@ type FirewallInstanceInfo struct {
 	LanInterface        string `json:"lan_interface_id,omitempty"`
 	ManagementInterface string `json:"management_interface_id,omitempty"`
 	EgressInterface     string `json:"egress_interface_id,omitempty"`
+	VendorType          string `json:"vendor,omitempty"`
 }
 
 func (c *Client) CreateFireNet(fireNet *FireNet) error {
@@ -103,9 +104,9 @@ func (c *Client) AssociateFirewallWithFireNet(firewallInstance *FirewallInstance
 	associateFirewallWithFireNet.Add("action", "associate_firewall_with_firenet")
 	associateFirewallWithFireNet.Add("vpc_id", firewallInstance.VpcID)
 	associateFirewallWithFireNet.Add("gateway_name", firewallInstance.GwName)
-	associateFirewallWithFireNet.Add("firewall_name", firewallInstance.FirewallName)
+	associateFirewallWithFireNet.Add("firewall_id", firewallInstance.InstanceID)
 	if firewallInstance.VendorType == "firewall_instance" {
-		associateFirewallWithFireNet.Add("firewall_id", firewallInstance.InstanceID)
+		associateFirewallWithFireNet.Add("firewall_name", firewallInstance.FirewallName)
 		associateFirewallWithFireNet.Add("lan_interface", firewallInstance.LanInterface)
 		associateFirewallWithFireNet.Add("management_interface", firewallInstance.ManagementInterface)
 		associateFirewallWithFireNet.Add("egress_interface", firewallInstance.EgressInterface)
@@ -290,6 +291,9 @@ func (c *Client) EditFireNetInspection(fireNet *FireNet) error {
 		return errors.New("Json Decode edit_firenet failed: " + err.Error())
 	}
 	if !data.Return {
+		if strings.Contains(data.Reason, "configuration not changed") {
+			return nil
+		}
 		return errors.New("Rest API edit_firenet Get failed: " + data.Reason)
 	}
 	return nil
@@ -321,6 +325,9 @@ func (c *Client) EditFireNetEgress(fireNet *FireNet) error {
 		return errors.New("Json Decode edit_firenet failed: " + err.Error())
 	}
 	if !data.Return {
+		if strings.Contains(data.Reason, "configuration not changed") {
+			return nil
+		}
 		return errors.New("Rest API edit_firenet Get failed: " + data.Reason)
 	}
 	return nil
