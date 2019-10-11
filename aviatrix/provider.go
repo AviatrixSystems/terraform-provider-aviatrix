@@ -67,9 +67,10 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_vpn_user_accelerator":    resourceAviatrixVPNUserAccelerator(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"aviatrix_caller_identity": dataSourceAviatrixCallerIdentity(),
-			"aviatrix_account":         dataSourceAviatrixAccount(),
-			"aviatrix_gateway":         dataSourceAviatrixGateway(),
+			"aviatrix_account":                    dataSourceAviatrixAccount(),
+			"aviatrix_caller_identity":            dataSourceAviatrixCallerIdentity(),
+			"aviatrix_firenet_vendor_integration": dataSourceAviatrixFireNetVendorIntegration(),
+			"aviatrix_gateway":                    dataSourceAviatrixGateway(),
 		},
 		ConfigureFunc: aviatrixConfigure,
 	}
