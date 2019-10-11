@@ -114,7 +114,6 @@ The following arguments are deprecated:
 -> **NOTE:** 
 
 * `enable_firenet` - If you are using/upgraded to Aviatrix Terraform Provider R2.5+/UserConnect-5.0+ , and an AWS transit_gateway resource with "enable_firenet_interfaces" enabled was created with a provider version < R2.5/ UserConnect-5.0, you must replace "enable_firenet_interfaces" with "enable_firenet" in your configuration file, and do ‘terraform refresh’ to set its value to "enable_firenet" and apply it into the state file.
->>>>>>> Update transit_gateway to replace "enable_firenet_interfaces" with "enable_firenet" (#54)
 
 ## Import
 

@@ -259,15 +259,15 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	flag := false
 	defer resourceAviatrixSpokeGatewayReadIfRequired(d, meta, &flag)
 
-	if d.Get("enable_active_mesh").(bool) {
+	if enableActiveMesh := d.Get("enable_active_mesh").(bool); !enableActiveMesh {
 		gw := &goaviatrix.Gateway{
 			GwName: d.Get("gw_name").(string),
 		}
-		gw.EnableActiveMesh = "yes"
+		gw.EnableActiveMesh = "no"
 
-		err := client.EnableActiveMesh(gw)
+		err := client.DisableActiveMesh(gw)
 		if err != nil {
-			return fmt.Errorf("couldn't enable Active Mode for Aviatrix Spoke Gateway: %s", err)
+			return fmt.Errorf("couldn't disable Active Mode for Aviatrix Spoke Gateway: %s", err)
 		}
 	}
 
