@@ -5,7 +5,7 @@ description: |-
   Creates and manages Aviatrix FireNets
 ---
 
-# aviatrix_firewall_instance
+# aviatrix_firenet
 
 The aviatrix_firenet resource allows the creation and management of Aviatrix FireNets.
 
@@ -13,7 +13,7 @@ The aviatrix_firenet resource allows the creation and management of Aviatrix Fir
 
 ```hcl
 # Create an Aviatrix FireNet associated to a Firewall Instance
-resource "aviatrix_firewall" "test_firewall" {
+resource "aviatrix_firenet" "test_firenet" {
   vpc_id             = "vpc-032005cc371"
   inspection_enabled = true
   egress_enabled     = false
@@ -30,7 +30,7 @@ resource "aviatrix_firewall" "test_firewall" {
 }
 
 # Create an Aviatrix FireNet associated to an FQDN Gateway
-resource "aviatrix_firewall" "test_firewall" {
+resource "aviatrix_firenet" "test_firenet" {
   vpc_id             = "vpc-032005cc371"
   inspection_enabled = true
   egress_enabled     = false
