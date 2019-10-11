@@ -512,8 +512,8 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 	var domainConnRemove [][]string
 	var toAttachVPCs [][]string
 	var toDetachVPCs [][]string
-	var mapOldFireNetVpc map[string]bool
-	var mapNewFireNetVpc map[string]bool
+	mapOldFireNetVpc := make(map[string]bool)
+	mapNewFireNetVpc := make(map[string]bool)
 
 	d.Partial(true)
 
