@@ -10,33 +10,35 @@ import (
 
 // Gateway simple struct to hold gateway details
 type TransitVpc struct {
-	AccountName            string `form:"account_name,omitempty" json:"account_name,omitempty"`
-	Action                 string `form:"action,omitempty"`
-	CID                    string `form:"CID,omitempty"`
-	CloudType              int    `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
-	DnsServer              string `form:"dns_server,omitempty" json:"dns_server,omitempty"`
-	GwName                 string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
-	GwSize                 string `form:"gw_size,omitempty"`
-	VpcID                  string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	VNetNameResourceGroup  string `form:"vnet_and_resource_group_names,omitempty" json:"vpc_id,omitempty"`
-	Subnet                 string `form:"public_subnet,omitempty" json:"vpc_net,omitempty"`
-	HASubnet               string `form:"ha_subnet,omitempty"`
-	HAZone                 string `form:"new_zone,omitempty"`
-	PeeringHASubnet        string `json:"public_subnet,omitempty"`
-	VpcRegion              string `form:"region,omitempty" json:"vpc_region,omitempty"`
-	VpcSize                string `form:"gw_size,omitempty" json:"gw_size,omitempty"`
-	EnableNAT              string `form:"nat_enabled,omitempty" json:"enable_nat,omitempty"`
-	SingleAzHa             string `form:"single_az_ha,omitempty"`
-	EnableVpcDnsServer     string `json:"use_vpc_dns,omitempty"`
-	TagList                string `form:"tags,omitempty"`
-	EnableHybridConnection bool   `form:"enable_hybrid_connection" json:"tgw_enabled,omitempty"`
-	ConnectedTransit       string `form:"connected_transit" json:"connected_transit,omitempty"`
-	InsaneMode             string `form:"insane_mode,omitempty"`
-	ReuseEip               string `form:"reuse_eip,omitempty"`
-	AllocateNewEipRead     bool   `json:"newly_allocated_eip,omitempty"`
-	Eip                    string `form:"eip,omitempty"`
-	EnableActiveMesh       string `form:"enable_activemesh,omitempty" json:"enable_activemesh,omitempty"`
-	Zone                   string `form:"zone,omitempty" json:"zone,omitempty"`
+	AccountName                  string `form:"account_name,omitempty" json:"account_name,omitempty"`
+	Action                       string `form:"action,omitempty"`
+	CID                          string `form:"CID,omitempty"`
+	CloudType                    int    `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
+	DnsServer                    string `form:"dns_server,omitempty" json:"dns_server,omitempty"`
+	GwName                       string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
+	GwSize                       string `form:"gw_size,omitempty"`
+	VpcID                        string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	VNetNameResourceGroup        string `form:"vnet_and_resource_group_names,omitempty" json:"vpc_id,omitempty"`
+	Subnet                       string `form:"public_subnet,omitempty" json:"vpc_net,omitempty"`
+	HASubnet                     string `form:"ha_subnet,omitempty"`
+	HAZone                       string `form:"new_zone,omitempty"`
+	PeeringHASubnet              string `json:"public_subnet,omitempty"`
+	VpcRegion                    string `form:"region,omitempty" json:"vpc_region,omitempty"`
+	VpcSize                      string `form:"gw_size,omitempty" json:"gw_size,omitempty"`
+	EnableNAT                    string `form:"nat_enabled,omitempty" json:"enable_nat,omitempty"`
+	SingleAzHa                   string `form:"single_az_ha,omitempty"`
+	EnableVpcDnsServer           string `json:"use_vpc_dns,omitempty"`
+	TagList                      string `form:"tags,omitempty"`
+	EnableHybridConnection       bool   `form:"enable_hybrid_connection" json:"tgw_enabled,omitempty"`
+	ConnectedTransit             string `form:"connected_transit" json:"connected_transit,omitempty"`
+	InsaneMode                   string `form:"insane_mode,omitempty"`
+	ReuseEip                     string `form:"reuse_eip,omitempty"`
+	AllocateNewEipRead           bool   `json:"newly_allocated_eip,omitempty"`
+	Eip                          string `form:"eip,omitempty"`
+	EnableActiveMesh             string `form:"enable_activemesh,omitempty" json:"enable_activemesh,omitempty"`
+	Zone                         string `form:"zone,omitempty" json:"zone,omitempty"`
+	EnableAdvertiseTransitCidr   bool
+	BgpManualSpokeAdvertiseCidrs string `form:"bgp_manual_spoke,omitempty"`
 }
 
 type TransitGwFireNetInterfaces struct {
@@ -258,6 +260,92 @@ func (c *Client) DisableGatewayFireNetInterfaces(gateway *TransitVpc) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API disable_gateway_firenet_interfaces Post failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) EnableAdvertiseTransitCidr(transitGw *TransitVpc) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for enable_advertise_transit_cidr") + err.Error())
+	}
+	enableAdvertiseTransitCidr := url.Values{}
+	enableAdvertiseTransitCidr.Add("CID", c.CID)
+	enableAdvertiseTransitCidr.Add("action", "enable_advertise_transit_cidr")
+	enableAdvertiseTransitCidr.Add("gateway_name", transitGw.GwName)
+	if transitGw.EnableAdvertiseTransitCidr {
+		enableAdvertiseTransitCidr.Add("advertise_transit_cidr", "yes")
+	} else {
+		enableAdvertiseTransitCidr.Add("advertise_transit_cidr", "no")
+	}
+
+	Url.RawQuery = enableAdvertiseTransitCidr.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get enable_advertise_transit_cidr failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_advertise_transit_cidr failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API enable_advertise_transit_cidr Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) DisableAdvertiseTransitCidr(transitGw *TransitVpc) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for disable_advertise_transit_cidr") + err.Error())
+	}
+	enableAdvertiseTransitCidr := url.Values{}
+	enableAdvertiseTransitCidr.Add("CID", c.CID)
+	enableAdvertiseTransitCidr.Add("action", "disable_advertise_transit_cidr")
+	enableAdvertiseTransitCidr.Add("gateway_name", transitGw.GwName)
+	enableAdvertiseTransitCidr.Add("advertise_transit_cidr", "no")
+
+	Url.RawQuery = enableAdvertiseTransitCidr.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get disable_advertise_transit_cidr failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_advertise_transit_cidr failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API disable_advertise_transit_cidr Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) SetBgpManualSpokeAdvertisedNetworks(transitGw *TransitVpc) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for edit_aviatrix_transit_advanced_config") + err.Error())
+	}
+	editTransitAdvancedConfig := url.Values{}
+	editTransitAdvancedConfig.Add("CID", c.CID)
+	editTransitAdvancedConfig.Add("action", "edit_aviatrix_transit_advanced_config")
+	editTransitAdvancedConfig.Add("subaction", "bgp_manual_spoke")
+	editTransitAdvancedConfig.Add("gateway_name", transitGw.GwName)
+	editTransitAdvancedConfig.Add("bgp_manual_spoke_advertise_cidrs", transitGw.BgpManualSpokeAdvertiseCidrs)
+
+	Url.RawQuery = editTransitAdvancedConfig.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get edit_aviatrix_transit_advanced_config failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode edit_aviatrix_transit_advanced_config failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API edit_aviatrix_transit_advanced_config Get failed: " + data.Reason)
 	}
 	return nil
 }

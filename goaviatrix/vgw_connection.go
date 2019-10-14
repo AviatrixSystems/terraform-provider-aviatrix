@@ -8,17 +8,15 @@ import (
 
 // VGWConn simple struct to hold VGW Connection details
 type VGWConn struct {
-	Action                       string `form:"action,omitempty"`
-	BgpLocalAsNum                string `form:"bgp_local_asn_num,omitempty" json:"bgp_local_asn_num,omitempty"`
-	BgpVGWId                     string `form:"vgw_id,omitempty" json:"bgp_vgw_id,omitempty"`
-	BgpVGWAccount                string `form:"bgp_vgw_account_name,omitempty" json:"bgp_vgw_account,omitempty"`
-	BgpVGWRegion                 string `form:"bgp_vgw_region,omitempty" json:"bgp_vgw_region,omitempty"`
-	CID                          string `form:"CID,omitempty"`
-	ConnName                     string `form:"connection_name,omitempty" json:"name,omitempty"`
-	GwName                       string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
-	VPCId                        string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	EnableAdvertiseTransitCidr   bool
-	BgpManualSpokeAdvertiseCidrs string `form:"cidr,omitempty"`
+	Action        string `form:"action,omitempty"`
+	BgpLocalAsNum string `form:"bgp_local_asn_num,omitempty" json:"bgp_local_asn_num,omitempty"`
+	BgpVGWId      string `form:"vgw_id,omitempty" json:"bgp_vgw_id,omitempty"`
+	BgpVGWAccount string `form:"bgp_vgw_account_name,omitempty" json:"bgp_vgw_account,omitempty"`
+	BgpVGWRegion  string `form:"bgp_vgw_region,omitempty" json:"bgp_vgw_region,omitempty"`
+	CID           string `form:"CID,omitempty"`
+	ConnName      string `form:"connection_name,omitempty" json:"name,omitempty"`
+	GwName        string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
+	VPCId         string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
 }
 
 type VGWConnListResp struct {
@@ -44,15 +42,13 @@ type VGWConnDetail struct {
 }
 
 type ConnectionDetail struct {
-	ConnName                     []string   `json:"name"`
-	GwName                       []string   `json:"gw_name"`
-	VPCId                        []string   `json:"vpc_id"`
-	BgpVGWId                     []string   `json:"bgp_vgw_id"`
-	BgpVGWAccount                []string   `json:"bgp_vgw_account"`
-	BgpVGWRegion                 []string   `json:"bgp_vgw_region"`
-	BgpLocalAsNum                []string   `json:"bgp_local_asn_number"`
-	AdvertiseTransitCidr         string     `json:"advertise_transit_cidr"`
-	BgpManualSpokeAdvertiseCidrs [][]string `json:"bgp_manual_spoke_advertise_cidrs"`
+	ConnName      []string `json:"name"`
+	GwName        []string `json:"gw_name"`
+	VPCId         []string `json:"vpc_id"`
+	BgpVGWId      []string `json:"bgp_vgw_id"`
+	BgpVGWAccount []string `json:"bgp_vgw_account"`
+	BgpVGWRegion  []string `json:"bgp_vgw_region"`
+	BgpLocalAsNum []string `json:"bgp_local_asn_number"`
 }
 
 type VGWConnEnableAdvertiseTransitCidrResp struct {
@@ -195,135 +191,8 @@ func (c *Client) GetVGWConnDetail(vgwConn *VGWConn) (*VGWConn, error) {
 		vgwConn.BgpVGWAccount = data.Results.Connections.BgpVGWAccount[0]
 		vgwConn.BgpVGWRegion = data.Results.Connections.BgpVGWRegion[0]
 		vgwConn.BgpLocalAsNum = data.Results.Connections.BgpLocalAsNum[0]
-		if data.Results.Connections.AdvertiseTransitCidr == "yes" {
-			vgwConn.EnableAdvertiseTransitCidr = true
-		} else {
-			vgwConn.EnableAdvertiseTransitCidr = false
-		}
-		if len(data.Results.Connections.BgpManualSpokeAdvertiseCidrs) != 0 {
-			bgpMSAN := ""
-			for i := range data.Results.Connections.BgpManualSpokeAdvertiseCidrs[0] {
-				if i == 0 {
-					bgpMSAN = bgpMSAN + data.Results.Connections.BgpManualSpokeAdvertiseCidrs[0][i]
-				} else {
-					bgpMSAN = bgpMSAN + "," + data.Results.Connections.BgpManualSpokeAdvertiseCidrs[0][i]
-				}
-			}
-			vgwConn.BgpManualSpokeAdvertiseCidrs = bgpMSAN
-		}
 		return vgwConn, nil
 	}
 
 	return nil, ErrNotFound
-}
-
-func (c *Client) EnableAdvertiseTransitCidr(vgwConn *VGWConn) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for enable_advertise_transit_cidr") + err.Error())
-	}
-	enableAdvertiseTransitCidr := url.Values{}
-	enableAdvertiseTransitCidr.Add("CID", c.CID)
-	enableAdvertiseTransitCidr.Add("action", "enable_advertise_transit_cidr")
-	enableAdvertiseTransitCidr.Add("vpc_id", vgwConn.VPCId)
-	enableAdvertiseTransitCidr.Add("connection_name", vgwConn.ConnName)
-	enableAdvertiseTransitCidr.Add("gateway_name", vgwConn.GwName)
-
-	Url.RawQuery = enableAdvertiseTransitCidr.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return errors.New("HTTP Get enable_advertise_transit_cidr failed: " + err.Error())
-	}
-	var data VGWConnEnableAdvertiseTransitCidrResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_advertise_transit_cidr failed: " + err.Error())
-	}
-	if !data.Return {
-		return errors.New("Rest API enable_advertise_transit_cidr Get failed: " + data.Reason)
-	}
-	return nil
-}
-
-func (c *Client) DisableAdvertiseTransitCidr(vgwConn *VGWConn) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for disable_advertise_transit_cidr") + err.Error())
-	}
-	disableAdvertiseTransitCidr := url.Values{}
-	disableAdvertiseTransitCidr.Add("CID", c.CID)
-	disableAdvertiseTransitCidr.Add("action", "disable_advertise_transit_cidr")
-	disableAdvertiseTransitCidr.Add("vpc_id", vgwConn.VPCId)
-	disableAdvertiseTransitCidr.Add("connection_name", vgwConn.ConnName)
-	disableAdvertiseTransitCidr.Add("gateway_name", vgwConn.GwName)
-
-	Url.RawQuery = disableAdvertiseTransitCidr.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return errors.New("HTTP Get disable_advertise_transit_cidr failed: " + err.Error())
-	}
-	var data VGWConnEnableAdvertiseTransitCidrResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_advertise_transit_cidr failed: " + err.Error())
-	}
-	if !data.Return {
-		return errors.New("Rest API disable_advertise_transit_cidr Get failed: " + data.Reason)
-	}
-	return nil
-}
-
-func (c *Client) SetBgpManualSpokeAdvertisedNetworks(vgwConn *VGWConn) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for set_bgp_manual_spoke_advertised_networks") + err.Error())
-	}
-	setBgpManualSpokeAdvertisedNetworks := url.Values{}
-	setBgpManualSpokeAdvertisedNetworks.Add("CID", c.CID)
-	setBgpManualSpokeAdvertisedNetworks.Add("action", "set_bgp_manual_spoke_advertised_networks")
-	setBgpManualSpokeAdvertisedNetworks.Add("vpc_id", vgwConn.VPCId)
-	setBgpManualSpokeAdvertisedNetworks.Add("connection_name", vgwConn.ConnName)
-	setBgpManualSpokeAdvertisedNetworks.Add("cidr", vgwConn.BgpManualSpokeAdvertiseCidrs)
-
-	Url.RawQuery = setBgpManualSpokeAdvertisedNetworks.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return errors.New("HTTP Get set_bgp_manual_spoke_advertised_networks failed: " + err.Error())
-	}
-	var data VGWConnBgpManualSpokeAdvertisedNetworksResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode set_bgp_manual_spoke_advertised_networks failed: " + err.Error())
-	}
-	if !data.Return {
-		return errors.New("Rest API set_bgp_manual_spoke_advertised_networks Get failed: " + data.Reason)
-	}
-	return nil
-}
-
-func (c *Client) DisableBgpManualSpokeAdvertisedNetworks(vgwConn *VGWConn) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for disable_bgp_manual_spoke_advertised_networks") + err.Error())
-	}
-	disableBgpManualSpokeAdvertisedNetworks := url.Values{}
-	disableBgpManualSpokeAdvertisedNetworks.Add("CID", c.CID)
-	disableBgpManualSpokeAdvertisedNetworks.Add("action", "disable_bgp_manual_spoke_advertised_networks")
-	disableBgpManualSpokeAdvertisedNetworks.Add("vpc_id", vgwConn.VPCId)
-	disableBgpManualSpokeAdvertisedNetworks.Add("connection_name", vgwConn.ConnName)
-
-	Url.RawQuery = disableBgpManualSpokeAdvertisedNetworks.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return errors.New("HTTP Get disable_bgp_manual_spoke_advertised_networks failed: " + err.Error())
-	}
-	var data VGWConnBgpManualSpokeAdvertisedNetworksResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_bgp_manual_spoke_advertised_networks failed: " + err.Error())
-	}
-	if !data.Return {
-		return errors.New("Rest API disable_bgp_manual_spoke_advertised_networks Get failed: " + data.Reason)
-	}
-	return nil
 }
