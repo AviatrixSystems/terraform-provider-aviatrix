@@ -85,10 +85,10 @@ This phase involves first upgrading the Controller to 4.7. Afterwards, customers
 ### Example Walk-through
 Say you are upgrading from Controller 4.1, Terraform v0.11, Aviatrix Terraform provider R1.1. And for example, you are using Terraform to manage your topology consisting of single AWS VPN gateway that you use to connect VPN users. Your Terraform file(s) might look something like this:
 
-```
+```hcl
 # VPN_setup.tf
 
-...
+# ...
 
 resource "aviatrix_gateway" "aws_vpn_gw" {
   cloud_type    = 1
@@ -105,27 +105,27 @@ resource "aviatrix_gateway" "aws_vpn_gw" {
   enable_elb    = "yes"
   elb_name      = "example-elb-name"
 
-  ...
+  # ...
 
 }
 
 resource "aviatrix_vpn_user" "vpn_user_1" {
-  ...
+  # ...
 }
 
-...
+# ...
 ```
 According to the table **R1.5** for UserConnect-4.2, the attribute ``dns_server`` for gateway resource is deprecated and to remove it from your file(s) if you are using it. In addition, according to the table **R1.14** for UserConnect-4.7, the attribute ``max_vpn_conn`` is a new and required for any vpn-gateway from this release moving forward. So in summary, in this example, you will have to remove ``dns_server`` and add ``max_vpn_conn`` into your gateway resource. Your file(s) should now look something like this (only relevant section shown):
 
-```
+```hcl
 # VPN_setup.tf
 
-...
+# ...
 
 resource "aviatrix_gateway" "aws_vpn_gw" {
   cloud_type    = 1
   account_name  = "devops"
-  ...
+  # ...
   vpc_net       = "10.0.0.0/24"
 
   # note that dns_server is removed
@@ -135,11 +135,11 @@ resource "aviatrix_gateway" "aws_vpn_gw" {
   enable_elb    = "yes"
   elb_name      = "example-elb-name"
 
-  ...
+  # ...
 
 }
 
-...
+# ...
 ```
 After completion of editing your Terraform files, the rest of this phase is as simple as updating your Aviatrix Terraform provider repository and using the correct corresponding release.
 
@@ -195,17 +195,17 @@ As stated previously, as far as the Aviatrix Terraform provider is concerned, Ha
 
 For example, if your Terraform manages a VPN-configuration that includes a vpn-gateway, vpn-users and some profiles, it might currently look something like this in v0.11:
 
-```
+```hcl
 # v0.11 Example .tf file
-...
+# ...
 
 # VPN-related resources
 resource "aviatrix_gateway" "vpn-gw" {
-  ...
+  # ...
 }
 
 resource "aviatrix_vpn_user" "vpn-user-1" {
-  ...
+  # ...
 }
 
 resource "aviatrix_vpn_profile" "vpn-profile-1" {
@@ -231,12 +231,12 @@ resource "aviatrix_vpn_profile" "vpn-profile-1" {
 ```
 With the new Terraform v0.12, the vpn_profile resource, along with others, as documented in the **R1.16** table above, the map attributes are now written as separate blocks, as seen below (only relevant section shown):
 
-```
+```hcl
 # v0.12 Example .tf file
-...
+# ...
 
 # VPN-related resources
-...
+# ...
 
 resource "aviatrix_vpn_profile" "vpn-profile-1" {
   name      = "vpn_profile_1"
@@ -301,10 +301,10 @@ Phase 3 will definitely be a larger task, but is still nothing too different fro
 
 Let's say you have finished Phase 2, and are currently on Controller 4.7, Terraform v0.12 and now you need to upgrade your Aviatrix Terraform provider to R2.0. Let's take the completed vpn-configuration example from Phase 1:
 
-```
+```hcl
 # VPN_setup.tf
 
-...
+# ...
 
 resource "aviatrix_gateway" "aws_vpn_gw" {
   cloud_type    = 1
@@ -323,7 +323,7 @@ resource "aviatrix_gateway" "aws_vpn_gw" {
   elb_name      = "example-elb-name"
 
   enable_nat    = "yes"
-  ...
+  # ...
 
 }
 ```
@@ -332,9 +332,9 @@ We will now need to update our Terraform file(s). In this case, note that due to
 
 The updated file should now look something like:
 
-```
+```hcl
 # Updated VPN_setup.tf
-...
+# ...
 
 resource "aviatrix_gateway" "aws_vpn_gw" {
   cloud_type    = 1
@@ -353,7 +353,7 @@ resource "aviatrix_gateway" "aws_vpn_gw" {
   elb_name      = "example-elb-name"
 
   enable_snat   = true # enable_nat = "yes" -> enable_snat = true
-  ...
+  # ...
 
 }
 ```

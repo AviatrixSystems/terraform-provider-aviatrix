@@ -21,32 +21,48 @@ Quick at-a-glance access to Aviatrix Terraform provider's release compatibility 
 ---
 
 
-| Terraform Version | Aviatrix Provider Version | Supported Controller Version |
+| Terraform Version (v) | Aviatrix Provider Version (R) | Supported Controller Version |
 |:-----------------:|:-------------------------:|:----------------------------:|
-| v0.11             | R1.0                      | UserConnect-4.0              |
-| v0.11             | R1.1                      | UserConnect-4.1              |
-| v0.11             | R1.2                      | UserConnect-4.1              |
-| v0.11             | R1.3                      | UserConnect-4.2              |
-| v0.11             | R1.4                      | UserConnect-4.2              |
-| v0.11             | R1.5                      | UserConnect-4.2              |
-| v0.11             | R1.6                      | UserConnect-4.2              |
-| v0.11             | R1.7                      | UserConnect-4.3              |
-| v0.11             | R1.8                      | UserConnect-4.3              |
-| v0.11             | R1.9                      | UserConnect-4.6              |
-| v0.11             | R1.10                     | UserConnect-4.6              |
-| v0.11             | R1.11                     | UserConnect-4.7              |
-| v0.11             | R1.12                     | UserConnect-4.7              |
-| v0.11             | R1.13                     | UserConnect-4.7              |
-| v0.11             | R1.14                     | UserConnect-4.7              |
-| v0.11             | R1.15                     | UserConnect-4.7              |
-| **v0.12 <sup>1</sup>** | R1.16                | UserConnect-4.7              |
-| v0.12             | **R2.0 <sup>2</sup>**     | UserConnect-4.7              |
-| v0.12             | R2.1                      | UserConnect-4.7              |
-| v0.12             | R2.2                      | UserConnect-4.7              |
-| v0.12             | R2.3                      | UserConnect-5.0              |
-| v0.12             | R2.4                      | UserConnect-5.0              |
-| v0.12             | R2.5                      | UserConnect-5.1              |
+| 0.11              | 1.0                      | UserConnect-4.0              |
+| 0.11              | 1.1                      | UserConnect-4.1              |
+| 0.11              | 1.2                      | UserConnect-4.1              |
+| 0.11              | 1.3                      | UserConnect-4.2              |
+| 0.11              | 1.4                      | UserConnect-4.2              |
+| 0.11              | 1.5                      | UserConnect-4.2              |
+| 0.11              | 1.6                      | UserConnect-4.2              |
+| 0.11              | 1.7                      | UserConnect-4.3              |
+| 0.11              | 1.8                      | UserConnect-4.3              |
+| 0.11              | 1.9                      | UserConnect-4.6              |
+| 0.11              | 1.10                     | UserConnect-4.6              |
+| 0.11              | 1.11                     | UserConnect-4.7              |
+| 0.11              | 1.12                     | UserConnect-4.7              |
+| 0.11              | 1.13                     | UserConnect-4.7              |
+| 0.11              | 1.14                     | UserConnect-4.7              |
+| 0.11              | 1.15                     | UserConnect-4.7              |
+| **0.12 <sup>1</sup>** | 1.16                 | UserConnect-4.7              |
+| 0.12              | **2.0 <sup>2</sup>**     | UserConnect-4.7              |
+| 0.12              | 2.1                      | UserConnect-4.7              |
+| 0.12              | 2.2                      | UserConnect-4.7              |
+| 0.12              | 2.3                      | UserConnect-5.0              |
+| 0.12              | 2.4                      | UserConnect-5.0              |
+| 0.12              | 2.5                      | UserConnect-5.1              |
 
 **<sup>1</sup>** : Note that Terraform v0.12 is not backwards-compatible with previous Terraform versions. For R1.16, there will be a need to change some syntax in the Terraform configuration files. Please see Hashicorp's [announcement](https://www.hashicorp.com/blog/announcing-terraform-0-12) for more information
 
 **<sup>2</sup>** : With R2.0, there is major code restructuring that includes attribute/resource renaming and changes to attribute values. We *highly* recommend customers reference the [R2.0 upgrade guide](https://www.terraform.io/docs/providers/aviatrix/guides/v2-upgrade-guide.html) for detailed instructions before upgrading to R2.0
+
+## Example:
+If your Aviatrix Controller is on UserConnect-5.0.x, you should be using Hashicorp Terraform v0.12.x and our Aviatrix provider R2.4.
+
+Although R2.3 is also compatible with UserConnect-5.0, we recommend using the latest compatible provider version corresponding to the Controller.
+
+```hcl
+
+provider "aviatrix" {
+  controller_ip           = "1.2.3.4"
+  username                = "admin"
+  password                = "password"
+  skip_version_validation = false
+  version                 = "2.4.0"
+}
+```
