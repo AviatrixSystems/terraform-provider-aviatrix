@@ -162,6 +162,18 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable vpc_dns_server for Gateway. Only supports AWS. Valid values: true, false.",
 			},
+			"enable_advertise_transit_cidr": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Switch to Enable/Disable advertise transit VPC network CIDR.",
+			},
+			"bgp_manual_spoke_advertise_cidrs": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "Intended CIDR list to advertise to VGW.",
+			},
 		},
 	}
 }
@@ -432,6 +444,23 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("'enable_vpc_dns_server' only supports AWS(1)")
 	}
 
+	enableAdvertiseTransitCidr := d.Get("enable_advertise_transit_cidr").(bool)
+	if enableAdvertiseTransitCidr {
+		err := client.EnableAdvertiseTransitCidr(gateway)
+		if err != nil {
+			return fmt.Errorf("failed to enable advertise transit CIDR: %s", err)
+		}
+	}
+
+	bgpManualSpokeAdvertiseCidrs := d.Get("bgp_manual_spoke_advertise_cidrs").(string)
+	if bgpManualSpokeAdvertiseCidrs != "" {
+		gateway.BgpManualSpokeAdvertiseCidrs = bgpManualSpokeAdvertiseCidrs
+		err := client.SetBgpManualSpokeAdvertisedNetworks(gateway)
+		if err != nil {
+			return fmt.Errorf("failed to set BGP Manual Spoke Advertise Cidrs: %s", err)
+		}
+	}
+
 	return resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -550,6 +579,31 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("enable_vpc_dns_server", true)
 		} else {
 			d.Set("enable_vpc_dns_server", false)
+		}
+
+		if gwDetail.EnableAdvertiseTransitCidr == "yes" {
+			d.Set("enable_advertise_transit_cidr", true)
+		} else {
+			d.Set("enable_advertise_transit_cidr", false)
+		}
+
+		var bgpManualSpokeAdvertiseCidrs []string
+		if _, ok := d.GetOk("bgp_manual_spoke_advertise_cidrs"); ok {
+			bgpManualSpokeAdvertiseCidrs = strings.Split(d.Get("bgp_manual_spoke_advertise_cidrs").(string), ",")
+		}
+		if len(goaviatrix.Difference(bgpManualSpokeAdvertiseCidrs, gwDetail.BgpManualSpokeAdvertiseCidrs)) != 0 ||
+			len(goaviatrix.Difference(gwDetail.BgpManualSpokeAdvertiseCidrs, bgpManualSpokeAdvertiseCidrs)) != 0 {
+			bgpMSAN := ""
+			for i := range gwDetail.BgpManualSpokeAdvertiseCidrs {
+				if i == 0 {
+					bgpMSAN = bgpMSAN + gwDetail.BgpManualSpokeAdvertiseCidrs[i]
+				} else {
+					bgpMSAN = bgpMSAN + "," + gwDetail.BgpManualSpokeAdvertiseCidrs[i]
+				}
+			}
+			d.Set("bgp_manual_spoke_advertise_cidrs", bgpMSAN)
+		} else {
+			d.Set("bgp_manual_spoke_advertise_cidrs", d.Get("bgp_manual_spoke_advertise_cidrs").(string))
 		}
 	}
 
@@ -983,6 +1037,41 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		d.SetPartial("enable_vpc_dns_server")
 	} else if d.HasChange("enable_vpc_dns_server") {
 		return fmt.Errorf("'enable_vpc_dns_server' only supports AWS(1)")
+	}
+
+	if d.HasChange("enable_advertise_transit_cidr") {
+		transitGw := &goaviatrix.TransitVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		enableAdvertiseTransitCidr := d.Get("enable_advertise_transit_cidr").(bool)
+		if enableAdvertiseTransitCidr {
+			transitGw.EnableAdvertiseTransitCidr = true
+			err := client.EnableAdvertiseTransitCidr(transitGw)
+			if err != nil {
+				return fmt.Errorf("failed to enable advertise transit CIDR: %s", err)
+			}
+		} else {
+			transitGw.EnableAdvertiseTransitCidr = false
+			err := client.DisableAdvertiseTransitCidr(transitGw)
+			if err != nil {
+				return fmt.Errorf("failed to disable advertise transit CIDR: %s", err)
+			}
+		}
+		d.SetPartial("enable_advertise_transit_cidr")
+	}
+
+	if d.HasChange("bgp_manual_spoke_advertise_cidrs") {
+		transitGw := &goaviatrix.TransitVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		bgpManualSpokeAdvertiseCidrs := d.Get("bgp_manual_spoke_advertise_cidrs").(string)
+		transitGw.BgpManualSpokeAdvertiseCidrs = bgpManualSpokeAdvertiseCidrs
+		err := client.SetBgpManualSpokeAdvertisedNetworks(transitGw)
+		if err != nil {
+			return fmt.Errorf("failed to set bgp manual spoke advertise CIDRs: %s", err)
+		}
+
+		d.SetPartial("bgp_manual_spoke_advertise_cidrs")
 	}
 
 	d.Partial(false)

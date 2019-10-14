@@ -109,10 +109,12 @@ type Gateway struct {
 }
 
 type GatewayDetail struct {
-	AccountName string `form:"account_name,omitempty" json:"account_name,omitempty"`
-	Action      string `form:"action,omitempty"`
-	GwName      string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
-	DMZEnabled  bool   `json:"dmz_enabled,omitempty"`
+	AccountName                  string   `form:"account_name,omitempty" json:"account_name,omitempty"`
+	Action                       string   `form:"action,omitempty"`
+	GwName                       string   `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
+	DMZEnabled                   bool     `json:"dmz_enabled,omitempty"`
+	EnableAdvertiseTransitCidr   string   `json:"advertise_transit_cidr,omitempty"`
+	BgpManualSpokeAdvertiseCidrs []string `json:"bgp_manual_spoke_advertise_cidrs"`
 }
 
 type VpnGatewayAuth struct { // Used for set_vpn_gateway_authentication rest api call

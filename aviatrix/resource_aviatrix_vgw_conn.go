@@ -13,7 +13,6 @@ func resourceAviatrixVGWConn() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixVGWConnCreate,
 		Read:   resourceAviatrixVGWConnRead,
-		Update: resourceAviatrixVGWConnUpdate,
 		Delete: resourceAviatrixVGWConnDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -26,49 +25,44 @@ func resourceAviatrixVGWConn() *schema.Resource {
 			"conn_name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "The name of for Transit GW to VGW connection connection which is going to be created.",
 			},
 			"gw_name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Name of the Transit Gateway.",
 			},
 			"vpc_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "VPC-ID where the Transit Gateway is located.",
 			},
 			"bgp_vgw_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Id of AWS's VGW that is used for this connection.",
 			},
 			"bgp_vgw_account": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Account of AWS's VGW that is used for this connection.",
 			},
 			"bgp_vgw_region": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Region of AWS's VGW that is used for this connection.",
 			},
 			"bgp_local_as_num": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "BGP Local ASN (Autonomous System Number). Integer between 1-65535.",
-			},
-			"enable_advertise_transit_cidr": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Switch to Enable/Disable advertise transit VPC network CIDR.",
-			},
-			"bgp_manual_spoke_advertise_cidrs": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "Intended CIDR list to advertise to VGW.",
 			},
 		},
 	}
@@ -95,38 +89,7 @@ func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.SetId(vgwConn.ConnName + "~" + vgwConn.VPCId)
-
-	flag := false
-	defer resourceAviatrixVGWConnReadIfRequired(d, meta, &flag)
-
-	enableAdvertiseTransitCidr := d.Get("enable_advertise_transit_cidr").(bool)
-	if enableAdvertiseTransitCidr {
-		err := client.EnableAdvertiseTransitCidr(vgwConn)
-		if err != nil {
-			resourceAviatrixVGWConnRead(d, meta)
-			return fmt.Errorf("failed to enable advertise transit CIDR: %s", err)
-		}
-	}
-
-	bgpManualSpokeAdvertiseCidrs := d.Get("bgp_manual_spoke_advertise_cidrs").(string)
-	if bgpManualSpokeAdvertiseCidrs != "" {
-		vgwConn.BgpManualSpokeAdvertiseCidrs = bgpManualSpokeAdvertiseCidrs
-		err := client.SetBgpManualSpokeAdvertisedNetworks(vgwConn)
-		if err != nil {
-			resourceAviatrixVGWConnRead(d, meta)
-			return fmt.Errorf("failed to enable advertise transit CIDR: %s", err)
-		}
-	}
-
-	return resourceAviatrixVGWConnReadIfRequired(d, meta, &flag)
-}
-
-func resourceAviatrixVGWConnReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
-	if !(*flag) {
-		*flag = true
-		return resourceAviatrixVGWConnRead(d, meta)
-	}
-	return nil
+	return resourceAviatrixVGWConnRead(d, meta)
 }
 
 func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error {
@@ -163,86 +126,8 @@ func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("bgp_vgw_account", vConn.BgpVGWAccount)
 	d.Set("bgp_vgw_region", vConn.BgpVGWRegion)
 	d.Set("bgp_local_as_num", vConn.BgpLocalAsNum)
-	d.Set("enable_advertise_transit_cidr", vConn.EnableAdvertiseTransitCidr)
-
-	if vgwConn.BgpManualSpokeAdvertiseCidrs != "" {
-		d.Set("bgp_manual_spoke_advertise_cidrs", vConn.BgpManualSpokeAdvertiseCidrs)
-	} else {
-		d.Set("bgp_manual_spoke_advertise_cidrs", "")
-	}
 
 	d.SetId(vConn.ConnName + "~" + vConn.VPCId)
-	return nil
-}
-
-func resourceAviatrixVGWConnUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
-
-	vgwConn := &goaviatrix.VGWConn{
-		ConnName: d.Get("conn_name").(string),
-		GwName:   d.Get("gw_name").(string),
-		VPCId:    d.Get("vpc_id").(string),
-	}
-
-	d.Partial(true)
-
-	if d.HasChange("conn_name") {
-		return fmt.Errorf("updating conn_name is not allowed")
-	}
-	if d.HasChange("gw_name") {
-		return fmt.Errorf("updating gw_name is not allowed")
-	}
-	if d.HasChange("vpc_id") {
-		return fmt.Errorf("updating vpc_id is not allowed")
-	}
-	if d.HasChange("bgp_vgw_id") {
-		return fmt.Errorf("updating bgp_vgw_id is not allowed")
-	}
-	if d.HasChange("bgp_vgw_account") {
-		return fmt.Errorf("updating bgp_vgw_account is not allowed")
-	}
-	if d.HasChange("bgp_vgw_region") {
-		return fmt.Errorf("updating bgp_vgw_region is not allowed")
-	}
-	if d.HasChange("bgp_local_as_num") {
-		return fmt.Errorf("updating bgp_local_as_num is not allowed")
-	}
-
-	if d.HasChange("enable_advertise_transit_cidr") {
-		enableAdvertiseTransitCidr := d.Get("enable_advertise_transit_cidr").(bool)
-		if enableAdvertiseTransitCidr {
-			err := client.EnableAdvertiseTransitCidr(vgwConn)
-			if err != nil {
-				return fmt.Errorf("failed to enable advertise transit CIDR: %s", err)
-			}
-		} else {
-			err := client.DisableAdvertiseTransitCidr(vgwConn)
-			if err != nil {
-				return fmt.Errorf("failed to disable advertise transit CIDR: %s", err)
-			}
-		}
-		d.SetPartial("enable_advertise_transit_cidr")
-	}
-
-	if d.HasChange("bgp_manual_spoke_advertise_cidrs") {
-		bgpManualSpokeAdvertiseCidrs := d.Get("bgp_manual_spoke_advertise_cidrs").(string)
-		if bgpManualSpokeAdvertiseCidrs != "" {
-			vgwConn.BgpManualSpokeAdvertiseCidrs = bgpManualSpokeAdvertiseCidrs
-			err := client.SetBgpManualSpokeAdvertisedNetworks(vgwConn)
-			if err != nil {
-				return fmt.Errorf("failed to set bgp manual spoke advertise CIDRs: %s", err)
-			}
-		} else {
-			err := client.DisableBgpManualSpokeAdvertisedNetworks(vgwConn)
-			if err != nil {
-				return fmt.Errorf("failed to disable bgp manual spoke advertise CIDRs: %s", err)
-			}
-		}
-		d.SetPartial("bgp_manual_spoke_advertise_cidrs")
-	}
-
-	d.Partial(false)
-
 	return nil
 }
 
