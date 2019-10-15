@@ -37,9 +37,9 @@ resource "aviatrix_controller_config" "test_controller_config" {
 The following arguments are supported:
 
 * `sg_management_account_name` - (Optional) Cloud account name of user.
-* `http_access` - (Optional) Switch for http access. Default: false.
-* `fqdn_exception_rule` - (Optional) A system-wide mode. Default: true.
-* `security_group_management` - (Optional) Used to manage the Controller instance’s inbound rules from gateways. Default: false.
+* `http_access` - (Optional) Switch for http access. Valid values: true, false. Default value: false.
+* `fqdn_exception_rule` - (Optional) A system-wide mode. Valida values: true, false. Defaultvalue: true.
+* `security_group_management` - (Optional) Used to manage the Controller instance’s inbound rules from gateways. Valid values: true, false. Default value: false.
 * `target_version` - (Optional) The release version number to which the controller will be upgraded to. If not specified, controller will not be upgraded. If set to "latest", controller will be upgraded to the latest release. Please look at https://docs.aviatrix.com/HowTos/inline_upgrade.html for more information.
 
 ## Attribute Reference
