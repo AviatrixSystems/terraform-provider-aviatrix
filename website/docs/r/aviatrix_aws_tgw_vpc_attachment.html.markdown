@@ -13,7 +13,7 @@ The aviatrix_aws_tgw resource manages attaching or detaching VPCs to/from an AWS
 
 ```hcl
 # Create an Aviatrix AWS TGW VPC Attachment 
-resource "aviatrix_aws_tgw_vpc_attachment" "test" {
+resource "aviatrix_aws_tgw_vpc_attachment" "test_aws_tgw_vpc_attachment" {
   tgw_name             = "tgwTest"
   region               = "us-east-1"
   security_domain_name = "mySdn"

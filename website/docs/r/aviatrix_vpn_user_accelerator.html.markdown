@@ -13,7 +13,7 @@ The aviatrix_vpn_user_accelerator resource manages the Aviatrix VPN User Acceler
 
 ```hcl
 # Create an Aviatrix Vpn User Accelerator
-resource "aviatrix_vpn_user_accelerator" "test_xlr" {
+resource "aviatrix_vpn_user_accelerator" "test_vpc_accelerator" {
   elb_name = "Aviatrix-vpc-abcd2134"
 }
 ```

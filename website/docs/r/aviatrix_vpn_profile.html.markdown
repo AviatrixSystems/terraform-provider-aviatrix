@@ -13,7 +13,7 @@ The aviatrix_vpn_profile resource allows the creation and management of Aviatrix
 
 ```hcl
 # Create an Aviatrix AWS VPN User Profile
-resource "aviatrix_vpn_profile" "test_profile1" {
+resource "aviatrix_vpn_profile" "test_vpn_profile" {
   name      = "my_profile"
   base_rule = "allow_all"
   users     = [

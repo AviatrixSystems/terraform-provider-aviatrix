@@ -13,7 +13,7 @@ The aviatrix_transit_gateway_peering resource allows the creation and management
 
 ```hcl
 # Create an Aviatrix Transit Gateway Peering
-resource "aviatrix_transit_gateway_peering" "foo" {
+resource "aviatrix_transit_gateway_peering" "test_transit_gateway_peering" {
   transit_gateway_name1 = "transitGw1"
   transit_gateway_name2 = "transitGw2"
 }

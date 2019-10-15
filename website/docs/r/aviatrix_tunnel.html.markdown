@@ -13,7 +13,7 @@ The aviatrix_tunnel resource allows the creation and management of Aviatrix tunn
 
 ```hcl
 # Create an Aviatrix AWS Tunnel
-resource "aviatrix_tunnel" "test_tunnel1" {
+resource "aviatrix_tunnel" "test_tunnel" {
   gw_name1 = "avtxgw1"
   gw_name2 = "avtxgw2"
 }

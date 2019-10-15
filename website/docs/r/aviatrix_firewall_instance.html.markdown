@@ -13,7 +13,7 @@ The aviatrix_firewall_instance resource allows the creation and management of Av
 
 ```hcl
 # Create an Aviatrix Firewall Instance
-resource "aviatrix_firewall" "test_firewall" {
+resource "aviatrix_firewall_instance" "test_firewall_instance" {
   vpc_id            = "vpc-032005cc371"
   gw_name           = "avx_firenet_gw"
   firewall_name     = "avx_firewall_instance"
