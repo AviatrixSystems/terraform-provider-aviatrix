@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 type FirewallInstance struct {
@@ -14,7 +15,7 @@ type FirewallInstance struct {
 	GwName              string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
 	FirewallName        string `form:"firewall_name,omitempty" json:"firewall_name,omitempty"`
 	FirewallImage       string `form:"firewall_image,omitempty" json:"firewall_image,omitempty"`
-	FirewallSize        string `form:"firewall_size,omitempty" json:"firewall_size,omitempty"`
+	FirewallSize        string `form:"firewall_size,omitempty" json:"instance_size,omitempty"`
 	EgressSubnet        string `form:"egress_subnet,omitempty" json:"egress_subnet,omitempty"`
 	ManagementSubnet    string `form:"management_subnet,omitempty" json:"management_subnet,omitempty"`
 	KeyName             string `form:"key_name,omitempty" json:"key_name,omitempty"`
@@ -105,6 +106,9 @@ func (c *Client) GetFirewallInstance(firewallInstance *FirewallInstance) (*Firew
 		return nil, errors.New("Json Decode get_instance_by_id failed: " + err.Error())
 	}
 	if !data.Return {
+		if strings.Contains(data.Reason, "Unrecognized firewall instance_id") {
+			return nil, ErrNotFound
+		}
 		return nil, errors.New("Rest API get_instance_by_id Get failed: " + data.Reason)
 	}
 	if data.Results.InstanceID == firewallInstance.InstanceID {

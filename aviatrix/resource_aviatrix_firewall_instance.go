@@ -166,6 +166,7 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	d.Set("gw_name", fI.GwName)
 	d.Set("firewall_name", strings.Split(fI.KeyName, "_")[1])
 	d.Set("firewall_image", fI.FirewallImage)
+	d.Set("firewall_size", fI.FirewallSize)
 	d.Set("instance_id", fI.InstanceID)
 	d.Set("egress_subnet", fI.EgressSubnet)
 	d.Set("management_subnet", fI.ManagementSubnet)
@@ -196,14 +197,9 @@ func resourceAviatrixFirewallInstanceDelete(d *schema.ResourceData, meta interfa
 		InstanceID: d.Get("instance_id").(string),
 	}
 
-	err := client.DisassociateFirewallFromFireNet(firewallInstance)
-	if err != nil {
-		return fmt.Errorf("failed to disassociate firewall instance: %s", err)
-	}
-
 	log.Printf("[INFO] Deleting firewall instance: %#v", firewallInstance)
 
-	err = client.DeleteFirewallInstance(firewallInstance)
+	err := client.DeleteFirewallInstance(firewallInstance)
 	if err != nil {
 		return fmt.Errorf("failed to delete firewall instance: %s", err)
 	}
