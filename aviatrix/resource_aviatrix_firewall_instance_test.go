@@ -65,7 +65,7 @@ resource "aviatrix_vpc" "test_vpc" {
 	account_name         = aviatrix_account.test_account.account_name
 	region               = "%s"
 	name                 = "vpc-for-firenet"
-	cidr                 = "%s"	
+	cidr                 = "10.10.0.0/24"	
 	aviatrix_firenet_vpc = true
 }
 resource "aviatrix_transit_gateway" "test_transit_gateway" {
@@ -90,7 +90,7 @@ resource "aviatrix_firewall_instance" "test_firewall_instance" {
 	egress_subnet     = aviatrix_vpc.test_vpc.subnets[1].cidr
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName, rName)
+		os.Getenv("AWS_REGION"), rName, rName)
 }
 
 func testAccCheckFirewallInstanceExists(n string, firewallInstance *goaviatrix.FirewallInstance) resource.TestCheckFunc {
