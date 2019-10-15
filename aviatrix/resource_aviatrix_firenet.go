@@ -3,7 +3,6 @@ package aviatrix
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -186,7 +185,6 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("vpc_id", id)
 		d.SetId(id)
 	}
-
 	fireNet := &goaviatrix.FireNet{
 		VpcID: d.Get("vpc_id").(string),
 	}
@@ -200,9 +198,9 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("couldn't find FireNet: %s", err)
 	}
 
-	log.Printf("[INFO] Found FireNet: %#v", vpcID)
+	log.Printf("[INFO] Found FireNet: %#v", fireNetDetail.VpcID)
 
-	d.Set("vpc_id", strings.Split(fireNetDetail.VpcID, "~~")[0])
+	d.Set("vpc_id", fireNetDetail.VpcID)
 
 	if fireNetDetail.Inspection == "yes" {
 		d.Set("inspection_enabled", true)
@@ -242,7 +240,7 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[WARN] Error setting 'firewall_instance' for (%s): %s", d.Id(), err)
 	}
 
-	d.SetId(vpcID)
+	d.SetId(fireNetDetail.VpcID)
 	return nil
 }
 

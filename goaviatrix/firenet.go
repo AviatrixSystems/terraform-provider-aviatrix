@@ -86,9 +86,13 @@ func (c *Client) GetFireNet(fireNet *FireNet) (*FireNetDetail, error) {
 		return nil, errors.New("Json Decode show_firenet_detail failed: " + err.Error())
 	}
 	if !data.Return {
+		if strings.Contains(data.Reason, "not found in DB") {
+			return nil, ErrNotFound
+		}
 		return nil, errors.New("Rest API show_firenet_detail Get failed: " + data.Reason)
 	}
 	if strings.Split(data.Results.VpcID, "~~")[0] == fireNet.VpcID {
+		data.Results.VpcID = fireNet.VpcID
 		return &data.Results, nil
 	}
 	return nil, ErrNotFound
