@@ -13,7 +13,7 @@ The Account resource allows the creation and management of an Aviatrix SAML Endp
 
 ```hcl
 # Create Aviatrix AWS SAML Endpoint
-resource "aviatrix_saml_endpoint" "saml_endpoint" {
+resource "aviatrix_saml_endpoint" "test_saml_endpoint" {
   endpoint_name     = "saml-test"
   idp_metadata_type = "Text"
   idp_metadata      = "${var.idp_metadata}"
