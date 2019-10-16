@@ -21,6 +21,7 @@ module "aviatrix-controller-build" {
   #ec2role                = module.aviatrix-iam-roles.aviatrix-role-ec2-name  # This can be used from the module aviatrix-iam-roles above, but since it cannot be deleted, it is harcoded
   ec2role                = "aviatrix-role-ec2"
   termination_protection = false
+  type                   = var.type
 }
 module "aviatrix-controller-initialize" {
   source              = "github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-initialize?ref=terraform_0.12"
@@ -30,6 +31,7 @@ module "aviatrix-controller-initialize" {
   public_ip           = module.aviatrix-controller-build.public_ip
   access_account_name = var.access_account_name
   aws_account_id      = data.aws_caller_identity.current.account_id
+  customer_license_id = var.customer_id
 }
 
 output "result" {
