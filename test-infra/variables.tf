@@ -50,4 +50,6 @@ variable "admin_password" {default="Aviatrix123#"}
 variable "admin_email" {default="abc@xyz.com"}
 variable "access_account_name" {default="aws_init_acc"}
 variable "keypair"  {default="aviatrix-key"}
+variable "type"  {default="metered"}
+variable "customer_id" {default = ""}
 
