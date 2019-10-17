@@ -15,7 +15,7 @@ The aviatrix_firewall_instance resource allows the creation and management of Av
 # Create an Aviatrix Firewall Instance
 resource "aviatrix_firewall_instance" "test_firewall_instance" {
   vpc_id            = "vpc-032005cc371"
-  gw_name           = "avx_firenet_gw"
+  firenet_gw_name   = "avx_firenet_gw"
   firewall_name     = "avx_firewall_instance"
   firewall_image    = "Palo Alto Networks VM-Series Next-Generation Firewall Bundle 1"
   firewall_size     = "m5.xlarge"
@@ -29,7 +29,7 @@ resource "aviatrix_firewall_instance" "test_firewall_instance" {
 The following arguments are supported:
 
 * `vpc_id` - (Required) ID of the Security VPC.
-* `gw_name` - (Required) Name of the primary FireNet gateway.
+* `firenet_gw_name` - (Required) Name of the primary FireNet gateway.
 * `firewall_name` - (Required) Name of the firewall instance to be created.
 * `firewall_image` - (Required) One of the AWS AMIs from Palo Alto Networks.
 * `firewall_size` - (Required) Instance size of the firewall. Example: "m5.xlarge".  
@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
                                                                       
 ## Import
 
-Instance firewall_instance can be imported using the gw_name, e.g.
+Instance firewall_instance can be imported using the instance_id, e.g.
 
 ```
 $ terraform import aviatrix_firewall_instance.test instance_id

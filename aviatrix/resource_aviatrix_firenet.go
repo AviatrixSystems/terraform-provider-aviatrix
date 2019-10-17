@@ -30,7 +30,7 @@ func resourceAviatrixFireNet() *schema.Resource {
 				Description: "List of firewall instances to be associated with fireNet.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"gw_name": {
+						"firenet_gw_name": {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: "Name of the gateway to launch the firewall instance.",
@@ -38,8 +38,8 @@ func resourceAviatrixFireNet() *schema.Resource {
 						"vendor_type": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Default:     "firewall_instance",
-							Description: "Indication it is a firewall instance or FQDN gateway to be associated to fireNet. Valid values: 'firewall_instance', 'fqdn_gateway'.",
+							Default:     "Generic",
+							Description: "Indication it is a firewall instance or FQDN gateway to be associated to fireNet. Valid values: 'Generic', 'fqdn_gateway'.",
 						},
 						"instance_id": {
 							Type:        schema.TypeString,
@@ -124,10 +124,10 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 			fI := firewallInstance.(map[string]interface{})
 			firewall := &goaviatrix.FirewallInstance{}
 			firewall.VpcID = fireNet.VpcID
-			firewall.GwName = fI["gw_name"].(string)
+			firewall.GwName = fI["firenet_gw_name"].(string)
 			firewall.InstanceID = fI["instance_id"].(string)
 			firewall.VendorType = fI["vendor_type"].(string)
-			if firewall.VendorType == "firewall_instance" {
+			if firewall.VendorType == "Generic" {
 				firewall.FirewallName = fI["firewall_name"].(string)
 				firewall.LanInterface = fI["lan_interface"].(string)
 				firewall.ManagementInterface = fI["management_interface"].(string)
@@ -217,7 +217,7 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 	for _, instance := range fireNetDetail.FirewallInstance {
 		fI := make(map[string]interface{})
 		fI["instance_id"] = instance.InstanceID
-		fI["gw_name"] = instance.GwName
+		fI["firenet_gw_name"] = instance.GwName
 		fI["attached"] = instance.Enabled == true
 		if instance.VendorType == "Aviatrix FQDN Gateway" {
 			fI["vendor_type"] = "fqdn_gateway"
@@ -226,7 +226,7 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 			fI["management_interface"] = ""
 			fI["egress_interface"] = ""
 		} else {
-			fI["vendor_type"] = "firewall_instance"
+			fI["vendor_type"] = "Generic"
 			fI["firewall_name"] = instance.FirewallName
 			fI["lan_interface"] = instance.LanInterface
 			fI["management_interface"] = instance.ManagementInterface
@@ -292,10 +292,10 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 				fI := mapFirewall[key]
 				firewall := &goaviatrix.FirewallInstance{}
 				firewall.VpcID = d.Get("vpc_id").(string)
-				firewall.GwName = fI["gw_name"].(string)
+				firewall.GwName = fI["firenet_gw_name"].(string)
 				firewall.InstanceID = fI["instance_id"].(string)
 				firewall.VendorType = fI["vendor_type"].(string)
-				if firewall.VendorType == "firewall_instance" {
+				if firewall.VendorType == "Generic" {
 					firewall.FirewallName = fI["firewall_name"].(string)
 					firewall.LanInterface = fI["lan_interface"].(string)
 					firewall.ManagementInterface = fI["management_interface"].(string)
@@ -321,10 +321,10 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 				fI := mapOldFirewall[key]
 				firewall := &goaviatrix.FirewallInstance{}
 				firewall.VpcID = d.Get("vpc_id").(string)
-				firewall.GwName = fI["gw_name"].(string)
+				firewall.GwName = fI["firenet_gw_name"].(string)
 				firewall.InstanceID = fI["instance_id"].(string)
 				firewall.VendorType = fI["vendor_type"].(string)
-				if firewall.VendorType == "firewall_instance" {
+				if firewall.VendorType == "Generic" {
 					firewall.FirewallName = fI["firewall_name"].(string)
 					firewall.LanInterface = fI["lan_interface"].(string)
 					firewall.ManagementInterface = fI["management_interface"].(string)
@@ -343,10 +343,10 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 				fI := mapNewFirewall[key]
 				firewall := &goaviatrix.FirewallInstance{}
 				firewall.VpcID = d.Get("vpc_id").(string)
-				firewall.GwName = fI["gw_name"].(string)
+				firewall.GwName = fI["firenet_gw_name"].(string)
 				firewall.InstanceID = fI["instance_id"].(string)
 				firewall.VendorType = fI["vendor_type"].(string)
-				if firewall.VendorType == "firewall_instance" {
+				if firewall.VendorType == "Generic" {
 					firewall.FirewallName = fI["firewall_name"].(string)
 					firewall.LanInterface = fI["lan_interface"].(string)
 					firewall.ManagementInterface = fI["management_interface"].(string)

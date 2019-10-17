@@ -38,7 +38,7 @@ func TestAccAviatrixFireNet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "inspection_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "egress_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_instance_association.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "firewall_instance_association.0.gw_name", fmt.Sprintf("tftg-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "firewall_instance_association.0.firenet_gw_name", fmt.Sprintf("tftg-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "firewall_instance_association.0.firewall_name", fmt.Sprintf("tffw-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "firewall_instance_association.0.attached", "true"),
 				),
@@ -84,7 +84,7 @@ resource "aviatrix_transit_gateway" "test_transit_gateway" {
 }
 resource "aviatrix_firewall_instance" "test_firewall_instance" {
 	vpc_id            = aviatrix_vpc.test_vpc.vpc_id
-	gw_name           = aviatrix_transit_gateway.test_transit_gateway.gw_name
+	firenet_gw_name   = aviatrix_transit_gateway.test_transit_gateway.gw_name
 	firewall_name     = "tffw-%s"
 	firewall_image    = "Palo Alto Networks VM-Series Next-Generation Firewall Bundle 1"
 	firewall_size     = "m5.xlarge"
@@ -97,7 +97,7 @@ resource "aviatrix_firenet" "test_firenet" {
 	egress_enabled     = false
 
 	firewall_instance_association {
-		gw_name              = aviatrix_transit_gateway.test_transit_gateway.gw_name
+		firenet_gw_name      = aviatrix_transit_gateway.test_transit_gateway.gw_name
 		instance_id          = aviatrix_firewall_instance.test_firewall_instance.instance_id
 		firewall_name        = aviatrix_firewall_instance.test_firewall_instance.firewall_name
 		attached             = true

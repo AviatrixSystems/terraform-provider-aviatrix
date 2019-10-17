@@ -109,7 +109,7 @@ func (c *Client) AssociateFirewallWithFireNet(firewallInstance *FirewallInstance
 	associateFirewallWithFireNet.Add("vpc_id", firewallInstance.VpcID)
 	associateFirewallWithFireNet.Add("gateway_name", firewallInstance.GwName)
 	associateFirewallWithFireNet.Add("firewall_id", firewallInstance.InstanceID)
-	if firewallInstance.VendorType == "firewall_instance" {
+	if firewallInstance.VendorType == "Generic" {
 		associateFirewallWithFireNet.Add("firewall_name", firewallInstance.FirewallName)
 		associateFirewallWithFireNet.Add("lan_interface", firewallInstance.LanInterface)
 		associateFirewallWithFireNet.Add("management_interface", firewallInstance.ManagementInterface)
