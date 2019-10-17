@@ -61,9 +61,9 @@ func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (str
 	addFirewallInstance.Add("firewall_size", firewallInstance.FirewallSize)
 	addFirewallInstance.Add("egress_subnet", firewallInstance.EgressSubnet)
 	addFirewallInstance.Add("management_subnet", firewallInstance.ManagementSubnet)
-	addFirewallInstance.Add("key_name", firewallInstance.InstanceID)
-	addFirewallInstance.Add("iam_role", firewallInstance.InstanceID)
-	addFirewallInstance.Add("bootstrap_bucket_name", firewallInstance.InstanceID)
+	addFirewallInstance.Add("key_name", firewallInstance.KeyName)
+	addFirewallInstance.Add("iam_role", firewallInstance.IamRole)
+	addFirewallInstance.Add("bootstrap_bucket_name", firewallInstance.BootstrapBucketName)
 	addFirewallInstance.Add("no_associate", strconv.FormatBool(true))
 
 	Url.RawQuery = addFirewallInstance.Encode()
