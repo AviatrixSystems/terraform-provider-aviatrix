@@ -25,7 +25,7 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				ForceNew:    true,
 				Description: "ID of the Security VPC.",
 			},
-			"gw_name": {
+			"firenet_gw_name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
@@ -113,7 +113,7 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 
 	firewallInstance := &goaviatrix.FirewallInstance{
 		VpcID:               d.Get("vpc_id").(string),
-		GwName:              d.Get("gw_name").(string),
+		GwName:              d.Get("firenet_gw_name").(string),
 		FirewallName:        d.Get("firewall_name").(string),
 		FirewallImage:       d.Get("firewall_image").(string),
 		FirewallSize:        d.Get("firewall_size").(string),
@@ -163,7 +163,7 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	log.Printf("[INFO] Found Firewall Instance: %#v", firewallInstance)
 
 	d.Set("vpc_id", fI.VpcID)
-	d.Set("gw_name", fI.GwName)
+	d.Set("firenet_gw_name", fI.GwName)
 	d.Set("firewall_name", strings.Split(fI.KeyName, "_")[1])
 	d.Set("firewall_image", fI.FirewallImage)
 	d.Set("firewall_size", fI.FirewallSize)

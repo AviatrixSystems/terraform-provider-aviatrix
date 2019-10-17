@@ -35,7 +35,7 @@ func TestAccAviatrixFirewallInstance_basic(t *testing.T) {
 				Config: testAccFirewallInstanceConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallInstanceExists(resourceName, &firewallInstance),
-					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tftg-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "firenet_gw_name", fmt.Sprintf("tftg-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "firewall_name", fmt.Sprintf("tffw-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "firewall_image", "Palo Alto Networks VM-Series Next-Generation Firewall Bundle 1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_size", "m5.xlarge"),
@@ -82,7 +82,7 @@ resource "aviatrix_transit_gateway" "test_transit_gateway" {
 }
 resource "aviatrix_firewall_instance" "test_firewall_instance" {
 	vpc_id            = aviatrix_vpc.test_vpc.vpc_id
-	gw_name           = aviatrix_transit_gateway.test_transit_gateway.gw_name
+	firenet_gw_name   = aviatrix_transit_gateway.test_transit_gateway.gw_name
 	firewall_name     = "tffw-%s"
 	firewall_image    = "Palo Alto Networks VM-Series Next-Generation Firewall Bundle 1"
 	firewall_size     = "m5.xlarge"

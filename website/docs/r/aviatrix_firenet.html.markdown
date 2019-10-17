@@ -19,7 +19,7 @@ resource "aviatrix_firenet" "test_firenet" {
   egress_enabled     = false
   
   firewall_instance_association {
-    gw_name              = "avx_firenet_gw"
+    firenet_gw_name      = "avx_firenet_gw"
     instance_id          = "i-09dc118db6a1eb901"
     firewall_name        = "avx_firewall_instance"
     attached             = true
@@ -52,8 +52,8 @@ The following arguments are supported:
 * `inspection_enabled` - (Optional) Enable/Disable traffic inspection. Valid values: true, false. Default value: true.
 * `egress_enabled` - (Optional) Enable/Disable egress through firewall. Valid values: true, false. Default value: false.
 * `firewall_instance_association` - (Optional) List of firewall instances to be associated with fireNet.
-  * `gw_name` - (Required) Name of the primary FireNet gateway.
-  * `vendor_type` - (Required) Type of the firewall. Valid values: "firewall_instance", "fqdn_gateway". Default value: "firewall_instance".  
+  * `firenet_gw_name` - (Required) Name of the primary FireNet gateway.
+  * `vendor_type` - (Required) Type of the firewall. Valid values: "Generic", "fqdn_gateway". Default value: "Generic".  
   * `firewall_name` - (Required) Firewall instance name. If associating FQDN gateway to fireNet, it is FQDN gateway's gw_name.
   * `instance_id` - (Required) ID of Firewall instance, required if it is a firewall instance.
   * `lan_interface`- (Optional) Lan interface ID, required if it is a firewall instance.
