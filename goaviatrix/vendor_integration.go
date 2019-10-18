@@ -17,6 +17,8 @@ type VendorInfo struct {
 	Password     string `form:"password,omitempty"`
 	RouteTable   string `form:"route_table,omitempty"`
 	PublicIP     string `form:"public_ip,omitempty"`
+	Save         bool
+	Synchronize  bool `form:"sync,omitempty"`
 }
 
 func (c *Client) EditFireNetFirewallVendorInfo(vendorInfo *VendorInfo) error {

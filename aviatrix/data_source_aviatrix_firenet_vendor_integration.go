@@ -52,12 +52,12 @@ func dataSourceAviatrixFireNetVendorIntegration() *schema.Resource {
 				Optional:    true,
 				Description: "Specify the firewall virtual Router name you wish the Controller to program. If left unspecified, the Controller programs the firewall’s default router.",
 			},
-			"save_enabled": {
+			"save": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "Switch to save or not.",
 			},
-			"sync_enabled": {
+			"synchronize": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "Switch to sync or not.",
@@ -92,15 +92,15 @@ func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta
 		Password:     d.Get("password").(string),
 		RouteTable:   d.Get("route_table").(string),
 		PublicIP:     d.Get("public_ip").(string),
+		Save:         d.Get("save").(bool),
+		Synchronize:  d.Get("synchronize").(bool),
 	}
 
-	saveEnabled := d.Get("save_enabled").(bool)
-	syncEnabled := d.Get("sync_enabled").(bool)
-	if saveEnabled && syncEnabled {
-		return fmt.Errorf("can't do 'save' and 'sync' at the same time for vendor integration")
+	if vendorInfo.Save && vendorInfo.Synchronize {
+		return fmt.Errorf("can't do 'save' and 'synchronize' at the same time for vendor integration")
 	}
 
-	if saveEnabled {
+	if vendorInfo.Save {
 		err := client.EditFireNetFirewallVendorInfo(vendorInfo)
 		if err != nil {
 			d.SetId("")
@@ -108,11 +108,11 @@ func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta
 		}
 	}
 
-	if syncEnabled {
+	if vendorInfo.Synchronize {
 		err := client.ShowFireNetFirewallVendorConfig(vendorInfo)
 		if err != nil {
 			d.SetId("")
-			return fmt.Errorf("failed to 'sync' FireNet Firewall Vendor Info: %s", err)
+			return fmt.Errorf("failed to 'synchronize' FireNet Firewall Vendor Info: %s", err)
 		}
 	}
 
