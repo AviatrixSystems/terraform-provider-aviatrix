@@ -127,6 +127,9 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 			firewall.GwName = fI["firenet_gw_name"].(string)
 			firewall.InstanceID = fI["instance_id"].(string)
 			firewall.VendorType = fI["vendor_type"].(string)
+			if firewall.VendorType != "Generic" && firewall.VendorType != "fqdn_gateway" {
+				return fmt.Errorf("invalid vendor_type, it can only be 'Generic' or 'fqdn_gateway'")
+			}
 			if firewall.VendorType == "Generic" {
 				firewall.FirewallName = fI["firewall_name"].(string)
 				firewall.LanInterface = fI["lan_interface"].(string)
@@ -295,6 +298,9 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 				firewall.GwName = fI["firenet_gw_name"].(string)
 				firewall.InstanceID = fI["instance_id"].(string)
 				firewall.VendorType = fI["vendor_type"].(string)
+				if firewall.VendorType != "Generic" && firewall.VendorType != "fqdn_gateway" {
+					return fmt.Errorf("invalid vendor_type, it can only be 'Generic' or 'fqdn_gateway'")
+				}
 				if firewall.VendorType == "Generic" {
 					firewall.FirewallName = fI["firewall_name"].(string)
 					firewall.LanInterface = fI["lan_interface"].(string)
@@ -324,6 +330,9 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 				firewall.GwName = fI["firenet_gw_name"].(string)
 				firewall.InstanceID = fI["instance_id"].(string)
 				firewall.VendorType = fI["vendor_type"].(string)
+				if firewall.VendorType != "Generic" && firewall.VendorType != "fqdn_gateway" {
+					return fmt.Errorf("invalid vendor_type, it can only be 'Generic' or 'fqdn_gateway'")
+				}
 				if firewall.VendorType == "Generic" {
 					firewall.FirewallName = fI["firewall_name"].(string)
 					firewall.LanInterface = fI["lan_interface"].(string)
@@ -346,6 +355,9 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 				firewall.GwName = fI["firenet_gw_name"].(string)
 				firewall.InstanceID = fI["instance_id"].(string)
 				firewall.VendorType = fI["vendor_type"].(string)
+				if firewall.VendorType != "Generic" && firewall.VendorType != "fqdn_gateway" {
+					return fmt.Errorf("invalid vendor_type, it can only be 'Generic' or 'fqdn_gateway'")
+				}
 				if firewall.VendorType == "Generic" {
 					firewall.FirewallName = fI["firewall_name"].(string)
 					firewall.LanInterface = fI["lan_interface"].(string)
