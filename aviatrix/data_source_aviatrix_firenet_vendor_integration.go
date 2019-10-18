@@ -55,11 +55,13 @@ func dataSourceAviatrixFireNetVendorIntegration() *schema.Resource {
 			"save": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     false,
 				Description: "Switch to save or not.",
 			},
 			"synchronize": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     false,
 				Description: "Switch to sync or not.",
 			},
 		},
