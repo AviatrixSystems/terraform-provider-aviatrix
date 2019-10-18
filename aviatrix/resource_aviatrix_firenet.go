@@ -135,6 +135,10 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 				firewall.LanInterface = fI["lan_interface"].(string)
 				firewall.ManagementInterface = fI["management_interface"].(string)
 				firewall.EgressInterface = fI["egress_interface"].(string)
+			} else {
+				if d.Get("inspection_enabled").(bool) || !d.Get("egress_enabled").(bool) {
+					return fmt.Errorf("'inspection_enabled' should be false, and 'egress_enabled' should be true for vendor type: fqdn_gateawy")
+				}
 			}
 
 			err := client.AssociateFirewallWithFireNet(firewall)
@@ -161,7 +165,7 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 
 	if egressEnabled := d.Get("egress_enabled").(bool); egressEnabled {
 		fireNet.FirewallEgress = true
-		err := client.EditFireNetInspection(fireNet)
+		err := client.EditFireNetEgress(fireNet)
 		if err != nil {
 			return fmt.Errorf("couldn't enable egress due to %v", err)
 		}
@@ -306,6 +310,10 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 					firewall.LanInterface = fI["lan_interface"].(string)
 					firewall.ManagementInterface = fI["management_interface"].(string)
 					firewall.EgressInterface = fI["egress_interface"].(string)
+				} else {
+					if d.Get("inspection_enabled").(bool) || !d.Get("egress_enabled").(bool) {
+						return fmt.Errorf("'inspection_enabled' should be false, and 'egress_enabled' should be true for vendor type: fqdn_gateawy")
+					}
 				}
 
 				if fI["attached"].(bool) {
@@ -338,6 +346,10 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 					firewall.LanInterface = fI["lan_interface"].(string)
 					firewall.ManagementInterface = fI["management_interface"].(string)
 					firewall.EgressInterface = fI["egress_interface"].(string)
+				} else {
+					if d.Get("inspection_enabled").(bool) || !d.Get("egress_enabled").(bool) {
+						return fmt.Errorf("'inspection_enabled' should be false, and 'egress_enabled' should be true for vendor type: fqdn_gateawy")
+					}
 				}
 
 				err := client.DisassociateFirewallFromFireNet(firewall)
@@ -363,6 +375,10 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 					firewall.LanInterface = fI["lan_interface"].(string)
 					firewall.ManagementInterface = fI["management_interface"].(string)
 					firewall.EgressInterface = fI["egress_interface"].(string)
+				} else {
+					if d.Get("inspection_enabled").(bool) || !d.Get("egress_enabled").(bool) {
+						return fmt.Errorf("'inspection_enabled' should be false, and 'egress_enabled' should be true for vendor type: fqdn_gateawy")
+					}
 				}
 
 				err := client.AssociateFirewallWithFireNet(firewall)
