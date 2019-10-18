@@ -61,9 +61,9 @@ The following arguments are supported:
   * `egress_interface`- (Optional) Egress interface ID, required if it is a firewall instance.
   * `attached`- (Optional) Switch to attach/detach firewall instance to/from fireNet. Valid values: true, false. Default value: false.
 
--> **NOTE:** `inspection_enabled` - Default value is true for associating firewall instance to fireNet; false for associating FQDN gateway to fireNet.
+-> **NOTE:** `inspection_enabled` - Default value is true for associating firewall instance to fireNet. Only false is supported for associating FQDN gateway to fireNet.
 
--> **NOTE:** `egress_enabled` - Default value is false for associating firewall instance to fireNet; true for associating FQDN gateway to fireNet.
+-> **NOTE:** `egress_enabled` - Default value is false for associating firewall instance to fireNet. Only true is supported for associating FQDN gateway to fireNet.
 
 -> **NOTE:** `firewall_instance_association` - If associating FQDN gateway to fireNet, "single_az_ha" needs to be enabled for the FQDN gateway.
                                                                       
