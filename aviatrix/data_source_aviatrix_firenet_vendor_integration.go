@@ -25,32 +25,42 @@ func dataSourceAviatrixFireNetVendorIntegration() *schema.Resource {
 			"vendor_type": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Vendor type.",
+				Description: "Select PAN.",
 			},
 			"public_ip": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Management Public IP.",
+				Description: "The public IP address of the firewall management interface for API calls from the Aviatrix Controller.",
 			},
 			"username": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "",
+				Description: "Firewall login name for API calls from the Controller. For example, admin-api, as shown in the screen shot.",
 			},
 			"password": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "",
+				Description: "Firewall login password for API calls.",
 			},
 			"firewall_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "",
+				Description: "Name of firewall instance.",
 			},
 			"route_table": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "AWS Access Key.",
+				Description: "Specify the firewall virtual Router name you wish the Controller to program. If left unspecified, the Controller programs the firewall’s default router.",
+			},
+			"save_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Switch to save or not.",
+			},
+			"sync_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Switch to sync or not.",
 			},
 		},
 	}
@@ -74,22 +84,38 @@ func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta
 	}
 
 	vendorInfo := &goaviatrix.VendorInfo{
-		VpcID:        d.Get("vpc_id,omitempty").(string),
-		InstanceID:   d.Get("instance_id,omitempty").(string),
-		FirewallName: d.Get("vendor_type,omitempty").(string),
-		VendorType:   d.Get("public_ip,omitempty").(string),
-		Username:     d.Get("username,omitempty").(string),
-		Password:     d.Get("password,omitempty").(string),
-		RouteTable:   d.Get("firewall_name,omitempty").(string),
-		PublicIP:     d.Get("route_table,omitempty").(string),
+		VpcID:        d.Get("vpc_id").(string),
+		InstanceID:   d.Get("instance_id").(string),
+		FirewallName: d.Get("firewall_name").(string),
+		VendorType:   d.Get("vendor_type").(string),
+		Username:     d.Get("username").(string),
+		Password:     d.Get("password").(string),
+		RouteTable:   d.Get("route_table").(string),
+		PublicIP:     d.Get("public_ip").(string),
 	}
 
-	err = client.EditFirenetFirewallVendorInfo(vendorInfo)
-	if err != nil {
-		d.SetId("")
-		return fmt.Errorf("failed to edit FireNet Firewall Vendor Info: %s", err)
+	saveEnabled := d.Get("save_enabled").(bool)
+	syncEnabled := d.Get("sync_enabled").(bool)
+	if saveEnabled && syncEnabled {
+		return fmt.Errorf("can't do 'save' and 'sync' at the same time for vendor integration")
 	}
+
+	if saveEnabled {
+		err := client.EditFireNetFirewallVendorInfo(vendorInfo)
+		if err != nil {
+			d.SetId("")
+			return fmt.Errorf("failed to 'save' FireNet Firewall Vendor Info: %s", err)
+		}
+	}
+
+	if syncEnabled {
+		err := client.ShowFireNetFirewallVendorConfig(vendorInfo)
+		if err != nil {
+			d.SetId("")
+			return fmt.Errorf("failed to 'sync' FireNet Firewall Vendor Info: %s", err)
+		}
+	}
+
 	d.SetId(firewallInstance.InstanceID)
-
 	return nil
 }

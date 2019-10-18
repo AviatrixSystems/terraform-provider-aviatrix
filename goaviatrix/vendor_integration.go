@@ -19,7 +19,7 @@ type VendorInfo struct {
 	PublicIP     string `form:"public_ip,omitempty"`
 }
 
-func (c *Client) EditFirenetFirewallVendorInfo(vendorInfo *VendorInfo) error {
+func (c *Client) EditFireNetFirewallVendorInfo(vendorInfo *VendorInfo) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
 		return errors.New(("url Parsing failed for edit_firenet_firewall_vendor_info") + err.Error())
@@ -49,6 +49,35 @@ func (c *Client) EditFirenetFirewallVendorInfo(vendorInfo *VendorInfo) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API edit_firenet_firewall_vendor_info Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) ShowFireNetFirewallVendorConfig(vendorInfo *VendorInfo) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for show_firenet_firewall_vendor_config") + err.Error())
+	}
+
+	showFireNetFirewallVendorConfig := url.Values{}
+	showFireNetFirewallVendorConfig.Add("CID", c.CID)
+	showFireNetFirewallVendorConfig.Add("action", "show_firenet_firewall_vendor_config")
+	showFireNetFirewallVendorConfig.Add("vpc_id", vendorInfo.VpcID)
+	showFireNetFirewallVendorConfig.Add("firewall_id", vendorInfo.InstanceID)
+	showFireNetFirewallVendorConfig.Add("sync", "true")
+
+	Url.RawQuery = showFireNetFirewallVendorConfig.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get show_firenet_firewall_vendor_config failed: " + err.Error())
+	}
+	var data APIResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return errors.New("Json Decode show_firenet_firewall_vendor_config failed: " + err.Error())
+	}
+	if !data.Return {
+		return errors.New("Rest API show_firenet_firewall_vendor_config Get failed: " + data.Reason)
 	}
 	return nil
 }
