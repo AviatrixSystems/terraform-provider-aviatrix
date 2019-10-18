@@ -12,7 +12,7 @@ Use this data source to get the Aviatrix cloud account for use in other resource
 ## Example Usage
 
 ```hcl
-# Aviatrix account data source
+# Aviatrix Account Data Source
 data "aviatrix_account" "foo" {
   account_name = "username"
 }
