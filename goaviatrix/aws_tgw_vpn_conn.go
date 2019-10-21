@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"log"
@@ -90,25 +91,25 @@ func (c *Client) CreateAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (string, erro
 	}
 
 	Url.RawQuery = attachEdgeVpnToTgw.Encode()
-
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
 		return "", errors.New("HTTP Get attach_edge_vpn_to_tgw failed: " + err.Error())
 	}
 
 	var data AwsTgwVpnConnCreateResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return "", errors.New("Json Decode attach_edge_vpn_to_tgw failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return "", errors.New("Json Decode attach_edge_vpn_to_tgw failed: " + err.Error() + "\n Body: " + bodyString)
 	}
-
 	if !data.Return {
 		return "", errors.New("Rest API attach_edge_vpn_to_tgw Get failed: " + data.Reason)
 	}
-
 	if data.Results.VpnID == "" {
 		return "", errors.New("could not get vpn_id information")
 	}
-
 	return data.Results.VpnID, nil
 }
 
@@ -122,19 +123,20 @@ func (c *Client) GetAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (*AwsTgwVpnConn,
 	listAllTgwAttachments.Add("action", "list_all_tgw_attachments")
 	listAllTgwAttachments.Add("tgw_name", awsTgwVpnConn.TgwName)
 	listAllTgwAttachments.Add("resource_type", "vpn")
-
 	Url.RawQuery = listAllTgwAttachments.Encode()
-
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
 		return nil, errors.New("HTTP Get list_all_tgw_attachments failed: " + err.Error())
 	}
 
 	var data AwsTgwVpnConnResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_all_tgw_attachments failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode list_all_tgw_attachments failed: " + err.Error() + "\n Body: " + bodyString)
 	}
-
 	if !data.Return {
 		return nil, errors.New("Rest API list_all_tgw_attachments Get failed: " + data.Reason)
 	}
@@ -178,14 +180,15 @@ func (c *Client) DeleteAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) error {
 	}
 
 	var data APIResp
-
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode detach_vpn_from_tgw failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode detach_vpn_from_tgw failed: " + err.Error() + "\n Body: " + bodyString)
 	}
-
 	if !data.Return {
 		return errors.New("Rest API detach_vpn_from_tgw Post failed: " + data.Reason)
 	}
-
 	return nil
 }

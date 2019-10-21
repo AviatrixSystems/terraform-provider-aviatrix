@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"log"
@@ -45,8 +46,12 @@ func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) error {
 		return errors.New("HTTP Post create_spoke_gw failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode create_spoke_gw failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode create_spoke_gw failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API create_spoke_gw Post failed: " + data.Reason)
@@ -66,13 +71,16 @@ func (c *Client) SpokeJoinTransit(spoke *SpokeVpc) error {
 	attachSpokeToTransitGw.Add("transit_gw", spoke.TransitGateway)
 	Url.RawQuery = attachSpokeToTransitGw.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get attach_spoke_to_transit_gw failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode attach_spoke_to_transit_gw failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode attach_spoke_to_transit_gw failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API attach_spoke_to_transit_gw Get failed: " + data.Reason)
@@ -91,13 +99,16 @@ func (c *Client) SpokeLeaveTransit(spoke *SpokeVpc) error {
 	detachSpokeFromTransitGw.Add("spoke_gw", spoke.GwName)
 	Url.RawQuery = detachSpokeFromTransitGw.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get detach_spoke_from_transit_gw failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode detach_spoke_from_transit_gw failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode detach_spoke_from_transit_gw failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		if strings.Contains(data.Reason, "has not joined to any transit") {
@@ -134,8 +145,12 @@ func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 		return errors.New("HTTP Get enable_spoke_ha failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_spoke_ha failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_spoke_ha failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		if strings.Contains(data.Reason, "HA GW already exists") {

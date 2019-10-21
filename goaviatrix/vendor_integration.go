@@ -1,9 +1,11 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"net/url"
+	"strings"
 )
 
 type VendorInfo struct {
@@ -38,16 +40,18 @@ func (c *Client) EditFireNetFirewallVendorInfo(vendorInfo *VendorInfo) error {
 	editFireNetFirewallVendorInfo.Add("password", vendorInfo.Password)
 	editFireNetFirewallVendorInfo.Add("route_table", vendorInfo.RouteTable)
 	editFireNetFirewallVendorInfo.Add("public_ip", vendorInfo.PublicIP)
-
 	Url.RawQuery = editFireNetFirewallVendorInfo.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get edit_firenet_firewall_vendor_info failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_firenet_firewall_vendor_info failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode edit_firenet_firewall_vendor_info failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API edit_firenet_firewall_vendor_info Get failed: " + data.Reason)
@@ -75,8 +79,12 @@ func (c *Client) ShowFireNetFirewallVendorConfig(vendorInfo *VendorInfo) error {
 		return errors.New("HTTP Get show_firenet_firewall_vendor_config failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode show_firenet_firewall_vendor_config failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode show_firenet_firewall_vendor_config failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API show_firenet_firewall_vendor_config Get failed: " + data.Reason)

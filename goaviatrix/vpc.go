@@ -1,11 +1,13 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"log"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 type Vpc struct {
@@ -65,16 +67,18 @@ func (c *Client) CreateVpc(vpc *Vpc) error {
 	createCustomVpc.Add("vpc_cidr", vpc.Cidr)
 	createCustomVpc.Add("aviatrix_transit_vpc", vpc.AviatrixTransitVpc)
 	createCustomVpc.Add("aviatrix_firenet_vpc", vpc.AviatrixFireNetVpc)
-
 	Url.RawQuery = createCustomVpc.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get create_custom_vpc failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode create_custom_vpc failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode create_custom_vpc failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API create_custom_vpc Get failed: " + data.Reason)
@@ -97,8 +101,12 @@ func (c *Client) GetVpc(vpc *Vpc) (*Vpc, error) {
 		return nil, errors.New("HTTP Get list_custom_vpcs failed: " + err.Error())
 	}
 	var data VpcResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_custom_vpcs failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode list_custom_vpcs failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return nil, errors.New("Rest API list_custom_vpcs Get failed: " + data.Reason)
@@ -148,13 +156,16 @@ func (c *Client) DeleteVpc(vpc *Vpc) error {
 	createCustomVpc.Add("pool_name", vpc.Name)
 	Url.RawQuery = createCustomVpc.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get delete_custom_vpc failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_custom_vpc failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode delete_custom_vpc failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API delete_custom_vpc Get failed: " + data.Reason)

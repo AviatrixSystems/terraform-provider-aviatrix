@@ -1,11 +1,13 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 )
 
 // Controller Http Access enabled get result struct
@@ -35,7 +37,11 @@ func (c *Client) EnableHttpAccess() error {
 		return err
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
 		return err
 	}
 	if !data.Return {
@@ -53,7 +59,11 @@ func (c *Client) DisableHttpAccess() error {
 		return err
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
 		return err
 	}
 	if !data.Return {
@@ -71,7 +81,11 @@ func (c *Client) GetHttpAccessEnabled() (string, error) {
 		return "", err
 	}
 	var data ControllerHttpAccessResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
 		return "", err
 	}
 	if !data.Return {
@@ -97,8 +111,12 @@ func (c *Client) EnableExceptionRule() error {
 		return errors.New("HTTP Get enable_fqdn_exception_rule failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode detach_fqdn_filter_tag_from_gw failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode detach_fqdn_filter_tag_from_gw failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API detach_fqdn_filter_tag_from_gw Get failed: " + data.Reason)
@@ -122,8 +140,12 @@ func (c *Client) DisableExceptionRule() error {
 		return errors.New("HTTP Get disable_fqdn_exception_rule failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_fqdn_exception_rule failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_fqdn_exception_rule failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API disable_fqdn_exception_rule Get failed: " + data.Reason)
@@ -151,13 +173,16 @@ func (c *Client) GetExceptionRuleStatus() (bool, error) {
 		Results: "",
 		Reason:  "",
 	}
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return false, errors.New("Json Decode get_fqdn_exception_rule_status failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return false, errors.New("Json Decode get_fqdn_exception_rule_status failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return false, errors.New("Rest API get_fqdn_exception_rule_status Get failed: " + data.Reason)
 	}
-
 	if data.Results == "disabled" {
 		return false, nil
 	}
@@ -180,13 +205,16 @@ func (c *Client) EnableSecurityGroupManagement(account string) error {
 		return errors.New("HTTP Get enable_controller_security_group_management failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_controller_security_group_management failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_controller_security_group_management failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API enable_controller_security_group_management Get failed: " + data.Reason)
 	}
-
 	return nil
 }
 
@@ -205,13 +233,16 @@ func (c *Client) DisableSecurityGroupManagement() error {
 		return errors.New("HTTP Get disable_controller_security_group_management failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_controller_security_group_management failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_controller_security_group_management failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API disable_controller_security_group_management Get failed: " + data.Reason)
 	}
-
 	return nil
 }
 
@@ -225,17 +256,19 @@ func (c *Client) GetSecurityGroupManagementStatus() (*SecurityGroupInfo, error) 
 	getSecurityGroupManagementStatus.Add("action", "get_controller_security_group_management_status")
 	Url.RawQuery = getSecurityGroupManagementStatus.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return nil, errors.New("HTTP Get get_controller_security_group_management_status failed: " + err.Error())
 	}
 	var data GetSecurityGroupManagementResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode get_controller_security_group_management_status failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode get_controller_security_group_management_status failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return nil, errors.New("Rest API get_controller_security_group_management_status Get failed: " + data.Reason)
 	}
-
 	return &data.Results, nil
 }

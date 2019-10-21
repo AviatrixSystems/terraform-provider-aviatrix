@@ -1,9 +1,11 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"log"
+	"strings"
 	//"github.com/davecgh/go-spew/spew"
 )
 
@@ -31,8 +33,12 @@ func (c *Client) CreateTransPeer(transPeer *TransPeer) error {
 		return errors.New("HTTP Post add_extended_vpc_peer failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode add_extended_vpc_peer failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode add_extended_vpc_peer failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API add_extended_vpc_peer Post failed: " + data.Reason)
@@ -48,8 +54,12 @@ func (c *Client) GetTransPeer(transPeer *TransPeer) (*TransPeer, error) {
 		return nil, errors.New("HTTP Post list_extended_vpc_peer failed: " + err.Error())
 	}
 	var data TransPeerListResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_extended_vpc_peer failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode list_extended_vpc_peer failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return nil, errors.New("Rest API list_extended_vpc_peer Post failed: " + data.Reason)
@@ -77,8 +87,12 @@ func (c *Client) DeleteTransPeer(transPeer *TransPeer) error {
 		return errors.New("HTTP Post delete_extended_vpc_peer failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_extended_vpc_peer failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode delete_extended_vpc_peer failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API delete_extended_vpc_peer Post failed: " + data.Reason)

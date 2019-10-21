@@ -1,11 +1,13 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 )
 
 type Policy struct {
@@ -47,15 +49,17 @@ func (c *Client) SetBasePolicy(firewall *Firewall) error {
 	setVpcBasePolicy.Add("base_policy_log_enable", firewall.BaseLogEnabled)
 	Url.RawQuery = setVpcBasePolicy.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	log.Printf("[INFO] Setting Base Policy: %#v", firewall)
-
 	if err != nil {
 		return errors.New("HTTP Get set_vpc_base_policy failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode set_vpc_base_policy failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode set_vpc_base_policy failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API set_vpc_base_policy Get failed: " + data.Reason)
@@ -72,9 +76,7 @@ func (c *Client) UpdatePolicy(firewall *Firewall) error {
 	updateAccessPolicy.Add("CID", c.CID)
 	updateAccessPolicy.Add("action", "update_access_policy")
 	updateAccessPolicy.Add("vpc_name", firewall.GwName)
-
 	log.Printf("[INFO] Updating Aviatrix firewall for gateway: %#v", firewall)
-
 	args, err := json.Marshal(firewall.PolicyList)
 	if err != nil {
 		return err
@@ -82,13 +84,16 @@ func (c *Client) UpdatePolicy(firewall *Firewall) error {
 	updateAccessPolicy.Add("new_policy", string(args))
 	Url.RawQuery = updateAccessPolicy.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get update_access_policy failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode update_access_policy failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode update_access_policy failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API update_access_policy Get failed: " + data.Reason)
@@ -107,13 +112,16 @@ func (c *Client) GetPolicy(firewall *Firewall) (*Firewall, error) {
 	vpcAccessPolicy.Add("vpc_name", firewall.GwName)
 	Url.RawQuery = vpcAccessPolicy.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return nil, errors.New("HTTP Get vpc_access_policy failed: " + err.Error())
 	}
 	var data FirewallResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode vpc_access_policy failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode vpc_access_policy failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		log.Printf("[INFO] Couldn't find Aviatrix Firewall policies for gateway %s: %s", firewall.GwName,
