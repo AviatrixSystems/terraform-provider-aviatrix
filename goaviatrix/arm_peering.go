@@ -1,10 +1,12 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"log"
 	"net/url"
+	"strings"
 )
 
 // ARMPeer simple struct to hold arm_peer details
@@ -35,8 +37,12 @@ func (c *Client) CreateARMPeer(armPeer *ARMPeer) error {
 		return errors.New("HTTP Post arm_peer_vnet_pair failed: " + err.Error())
 	}
 	var data ArmPeerAPIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode arm_peer_vnet_pair failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode arm_peer_vnet_pair failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API arm_peer_vnet_pair Post failed: " + data.Reason)
@@ -60,8 +66,12 @@ func (c *Client) GetARMPeer(armPeer *ARMPeer) (*ARMPeer, error) {
 		return nil, errors.New("HTTP Get list_arm_peer_vnet_pairs failed: " + err.Error())
 	}
 	var data map[string]interface{}
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_arm_peer_vnet_pairs failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode list_arm_peer_vnet_pairs failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if _, ok := data["reason"]; ok {
 		log.Printf("[INFO] Couldn't find ARM peering between VPCs %s and %s: %s", armPeer.VNet1, armPeer.VNet2, data["reason"])
@@ -123,10 +133,13 @@ func (c *Client) DeleteARMPeer(armPeer *ARMPeer) error {
 	}
 
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode arm_unpeer_vnet_pair failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode arm_unpeer_vnet_pair failed: " + err.Error() + "\n Body: " + bodyString)
 	}
-
 	if !data.Return {
 		return errors.New("Rest API arm_unpeer_vnet_pair Post failed: " + data.Reason)
 	}

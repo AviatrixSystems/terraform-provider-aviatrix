@@ -1,9 +1,11 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"net/url"
+	"strings"
 )
 
 // AwsTGW simple struct to hold aws_tgw details
@@ -54,13 +56,16 @@ func (c *Client) CreateSecurityDomain(securityDomain *SecurityDomain) error {
 		return errors.New("HTTP Post add_route_domain failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode add_route_domain failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode add_route_domain failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API add_route_domain Post failed: " + data.Reason)
 	}
-
 	return nil
 }
 
@@ -77,20 +82,22 @@ func (c *Client) GetSecurityDomain(securityDomain *SecurityDomain) (string, erro
 		Results: make([]string, 0),
 		Reason:  "",
 	}
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return "", errors.New("Json Decode list_route_domain_names failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return "", errors.New("Json Decode list_route_domain_names failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return "", errors.New("Rest API list_route_domain_names Post failed: " + data.Reason)
 	}
-
 	securityDomainList := data.Results
 	for i := range securityDomainList {
 		if securityDomainList[i] == securityDomain.Name {
 			return securityDomainList[i], nil
 		}
 	}
-
 	return "", ErrNotFound
 }
 
@@ -107,13 +114,16 @@ func (c *Client) DeleteSecurityDomain(securityDomain *SecurityDomain) error {
 	}
 
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_route_domain failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode delete_route_domain failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API delete_route_domain Post failed: " + data.Reason)
 	}
-
 	return nil
 }
 
@@ -132,19 +142,21 @@ func (c *Client) CreateDomainConnection(awsTgw *AWSTgw, sourceDomain string, des
 	addConnectionBetweenRouteDomains.Add("destination_route_domain_name", destinationDomain)
 	Url.RawQuery = addConnectionBetweenRouteDomains.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get add_connection_between_route_domains failed: " + err.Error())
 	}
 
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode add_connection_between_route_domains failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode add_connection_between_route_domains failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API add_connection_between_route_domains Get failed: " + data.Reason)
 	}
-
 	return nil
 }
 
@@ -163,14 +175,17 @@ func (c *Client) DeleteDomainConnection(awsTgw *AWSTgw, sourceDomain string, des
 	deleteConnectionBetweenRouteDomains.Add("destination_route_domain_name", destinationDomain)
 	Url.RawQuery = deleteConnectionBetweenRouteDomains.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get delete_connection_between_route_domains failed: " + err.Error())
 	}
 
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_connection_between_route_domains failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode delete_connection_between_route_domains failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API delete_connection_between_route_domains Get failed: " + data.Reason)
@@ -190,7 +205,6 @@ func (c *Client) SecurityDomainRuleValidation(securityDomainRule *SecurityDomain
 	if securityDomainRule.NativeFirewallDomain {
 		num += 1
 	}
-
 	if num > 1 {
 		return false
 	}

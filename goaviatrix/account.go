@@ -1,11 +1,13 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 )
 
 type Account struct {
@@ -65,8 +67,12 @@ func (c *Client) CreateAccount(account *Account) error {
 		return errors.New("HTTP Post setup_account_profile failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode setup_account_profile failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode setup_account_profile failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API setup_account_profile Post failed: " + data.Reason)
@@ -84,15 +90,18 @@ func (c *Client) GetAccount(account *Account) (*Account, error) {
 	listAccounts.Add("action", "list_accounts")
 	Url.RawQuery = listAccounts.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return nil, errors.New("HTTP Get list_accounts failed: " + err.Error())
 	}
-	var data AccountListResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode  failed: " + err.Error())
-	}
 
+	var data AccountListResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode list_accounts failed: " + err.Error() + "\n Body: " + bodyString)
+	}
 	if !data.Return {
 		return nil, errors.New("Rest API list_accounts Get failed: " + data.Reason)
 	}
@@ -115,8 +124,12 @@ func (c *Client) UpdateAccount(account *Account) error {
 		return errors.New("HTTP Post edit_account_profile failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_account_profile failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode edit_account_profile failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API edit_account_profile Post failed: " + data.Reason)
@@ -132,8 +145,12 @@ func (c *Client) DeleteAccount(account *Account) error {
 		return errors.New("HTTP delete_account_profile failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_account_profile failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode delete_account_profile failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API delete_account_profile Post failed: " + data.Reason)
@@ -149,8 +166,12 @@ func (c *Client) UploadGcloudProjectCredentialsFile(account *Account) error {
 		return errors.New("HTTP Post upload_file failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode upload_file failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode upload_file failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API upload_file Post failed: " + data.Reason)
@@ -166,8 +187,12 @@ func (c *Client) UploadOciApiPrivateKeyFile(account *Account) error {
 		return errors.New("HTTP Post upload_file failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode upload_file failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode upload_file failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API upload_file Post failed: " + data.Reason)

@@ -1,10 +1,12 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"log"
 	"net/url"
+	"strings"
 )
 
 type AccountUser struct {
@@ -41,8 +43,12 @@ func (c *Client) CreateAccountUser(user *AccountUser) error {
 		return errors.New("HTTP Post add_account_user failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode add_account_user failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode add_account_user failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API add_account_user Post failed: " + data.Reason)
@@ -65,10 +71,13 @@ func (c *Client) GetAccountUser(user *AccountUser) (*AccountUser, error) {
 		return nil, errors.New("HTTP Get list_account_users failed: " + err.Error())
 	}
 	var data AccountUserListResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_account_users failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode list_account_users failed: " + err.Error() + "\n Body: " + bodyString)
 	}
-
 	if !data.Return {
 		return nil, errors.New("Rest API enable_transit_ha Get failed: " + data.Reason)
 	}
@@ -92,8 +101,12 @@ func (c *Client) UpdateAccountUserObject(user *AccountUserEdit) error {
 		return errors.New("HTTP Post edit_account_user failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_account_user failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode edit_account_user failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API edit_account_user Post failed: " + data.Reason)
@@ -112,13 +125,16 @@ func (c *Client) DeleteAccountUser(user *AccountUser) error {
 	deleteAccountUsers.Add("username", user.UserName)
 	Url.RawQuery = deleteAccountUsers.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get delete_account_user failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_account_user failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode delete_account_user failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API delete_account_user Get failed: " + data.Reason)

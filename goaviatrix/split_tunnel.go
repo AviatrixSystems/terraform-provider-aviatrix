@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"net/url"
@@ -51,8 +52,12 @@ func (c *Client) GetSplitTunnel(splitTunnel *SplitTunnel) (*SplitTunnelUnit, err
 		return nil, errors.New("HTTP Get modify_split_tunnel(get) failed: " + err.Error())
 	}
 	var data SplitTunnelResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode modify_split_tunnel(get) failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode modify_split_tunnel(get) failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return nil, errors.New("Rest API modify_split_tunnel(get) Get failed: " + data.Reason)
@@ -77,13 +82,16 @@ func (c *Client) ModifySplitTunnel(splitTunnel *SplitTunnel) error {
 	modifySplitTunnel.Add("search_domains", splitTunnel.SearchDomains)
 	Url.RawQuery = modifySplitTunnel.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get modify_split_tunnel(modify) failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode modify_split_tunnel(modify) failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode modify_split_tunnel(modify) failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		if strings.Contains(data.Reason, "Nothing to modify") {

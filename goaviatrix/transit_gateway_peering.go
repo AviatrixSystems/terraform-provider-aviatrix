@@ -1,10 +1,12 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"log"
 	"net/url"
+	"strings"
 )
 
 type TransitGatewayPeering struct {
@@ -30,13 +32,16 @@ func (c *Client) CreateTransitGatewayPeering(transitGatewayPeering *TransitGatew
 	createInterTransitGwPeering.Add("gateway2", transitGatewayPeering.TransitGatewayName2)
 	Url.RawQuery = createInterTransitGwPeering.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get create_inter_transit_gateway_peering failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode create_inter_transit_gateway_peering failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode create_inter_transit_gateway_peering failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API create_inter_transit_gateway_peering Get failed: " + data.Reason)
@@ -59,8 +64,12 @@ func (c *Client) GetTransitGatewayPeering(transitGatewayPeering *TransitGatewayP
 		return errors.New("HTTP Get list_inter_transit_gateway_peering failed: " + err.Error())
 	}
 	var data TransitGatewayPeeringAPIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode list_inter_transit_gateway_peering failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode list_inter_transit_gateway_peering failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API list_inter_transit_gateway_peering Get failed: " + data.Reason)
@@ -103,13 +112,16 @@ func (c *Client) DeleteTransitGatewayPeering(transitGatewayPeering *TransitGatew
 	deleteInterTransitGwPeering.Add("gateway2", transitGatewayPeering.TransitGatewayName2)
 	Url.RawQuery = deleteInterTransitGwPeering.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get delete_inter_transit_gateway_peering failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_inter_transit_gateway_peering failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode delete_inter_transit_gateway_peering failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API delete_inter_transit_gateway_peering Get failed: " + data.Reason)

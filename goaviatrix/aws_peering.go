@@ -1,11 +1,13 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"log"
 	"net/url"
 	"regexp"
+	"strings"
 )
 
 // AWSPeer simple struct to hold aws_peer details
@@ -36,8 +38,12 @@ func (c *Client) CreateAWSPeer(awsPeer *AWSPeer) (string, error) {
 		return "", errors.New("HTTP Post create_aws_peering failed: " + err.Error())
 	}
 	var data AwsPeerAPIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return "", errors.New("Json Decode create_aws_peering failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return "", errors.New("Json Decode create_aws_peering failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return "", errors.New("Rest API create_aws_peering Post failed: " + data.Reason)
@@ -57,7 +63,6 @@ func (c *Client) GetAWSPeer(awsPeer *AWSPeer) (*AWSPeer, error) {
 	listAwsPeering.Add("action", "list_aws_peerings")
 	Url.RawQuery = listAwsPeering.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return nil, errors.New("HTTP Get list_aws_peerings failed: " + err.Error())
 	}
@@ -66,8 +71,12 @@ func (c *Client) GetAWSPeer(awsPeer *AWSPeer) (*AWSPeer, error) {
 	//easily into our defined struct AWSPeer.
 	//So using a map of string->interface{}
 	var data map[string]interface{}
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_aws_peerings failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode list_aws_peerings failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if _, ok := data["reason"]; ok {
 		log.Printf("[INFO] Couldn't find AWS peering between VPCs %s and %s: %s", awsPeer.VpcID1, awsPeer.VpcID2, data["reason"])
@@ -108,8 +117,12 @@ func (c *Client) DeleteAWSPeer(awsPeer *AWSPeer) error {
 	}
 
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_aws_peering failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode delete_aws_peering failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API delete_aws_peering Post failed: " + data.Reason)

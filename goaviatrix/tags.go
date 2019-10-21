@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -34,8 +35,12 @@ func (c *Client) AddTags(tags *Tags) error {
 		return errors.New("HTTP Post add_resource_tags failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode add_resource_tags failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode add_resource_tags failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API add_resource_tags Post failed: " + data.Reason)
@@ -50,10 +55,13 @@ func (c *Client) GetTags(tags *Tags) ([]string, error) {
 	if err != nil {
 		return nil, errors.New("HTTP Post list_resource_tags failed: " + err.Error())
 	}
-
 	var data TagAPIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_resource_tags failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode list_resource_tags failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return nil, errors.New("Rest API list_resource_tags Post failed: " + data.Reason)
@@ -101,8 +109,12 @@ func (c *Client) DeleteTags(tags *Tags) error {
 		return errors.New("HTTP Post delete_resource_tags failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_resource_tags failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode delete_resource_tags failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API delete_resource_tags Post failed: " + data.Reason)

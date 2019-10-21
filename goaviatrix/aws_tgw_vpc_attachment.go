@@ -1,10 +1,12 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 )
 
 type AwsTgwVpcAttachment struct {
@@ -38,19 +40,21 @@ func (c *Client) CreateAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachm
 	attachVpcFromTgw.Add("route_domain_name", awsTgwVpcAttachment.SecurityDomainName)
 	Url.RawQuery = attachVpcFromTgw.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get attach_vpc_to_tgw failed: " + err.Error())
 	}
 
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode attach_vpc_to_tgw failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode attach_vpc_to_tgw failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API attach_vpc_to_tgw Get failed: " + data.Reason)
 	}
-
 	return nil
 }
 
@@ -96,14 +100,17 @@ func (c *Client) DeleteAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachm
 	detachVpcFromTgw.Add("vpc_name", awsTgwVpcAttachment.VpcID)
 	Url.RawQuery = detachVpcFromTgw.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get detach_vpc_from_tgw failed: " + err.Error())
 	}
 
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode detach_vpc_from_tgw failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode detach_vpc_from_tgw failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API detach_vpc_from_tgw Get failed: " + data.Reason)
@@ -140,8 +147,12 @@ func (c *Client) GetAwsTgwDomain(awsTgw *AWSTgw, sDM string) error {
 		Results: make([]string, 0),
 		Reason:  "",
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode list_route_domain_names failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode list_route_domain_names failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API list_route_domain_names Get failed: " + data.Reason)
@@ -172,8 +183,12 @@ func (c *Client) GetAwsTgwDomainAttachedVpc(awsTgwVpcAttachment *AwsTgwVpcAttach
 	}
 
 	var data RouteDomainAPIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return awsTgwVpcAttachment, errors.New("Json Decode view_route_domain_details failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return awsTgwVpcAttachment, errors.New("Json Decode view_route_domain_details failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return awsTgwVpcAttachment, errors.New("Rest API view_route_domain_details Get failed: " + data.Reason)
