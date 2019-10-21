@@ -175,7 +175,7 @@ func (c *Client) GetProfile(profile *Profile) (*Profile, error) {
 	buf.ReadFrom(resp.Body)
 	bodyString = buf.String()
 	bodyIoCopy = strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data2); err != nil {
 		return nil, errors.New("Json Decode list_user_profile_names failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	//profile.BaseRule = data2.Results[profile.Name]
