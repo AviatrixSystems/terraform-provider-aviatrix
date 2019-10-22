@@ -12,10 +12,35 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.5 (UserConnect-5.1)``
+``Last updated: R2.6 (UserConnect-5.1)``
 
 
 ---
+
+## 2.6.0
+### Notes:
+- Supported Controller version: **UserConnect-5.1.935**
+- Supported Terraform version: **v0.12.x**
+
+### Features:
+1. New resources:
+  - **aviatrix_firewall_instance**
+  - **aviatrix_firenet**
+2. New data source:
+  - **aviatrix_firenet_vendor_integration**
+3. Added support to create security domain of ``aviatrix_firewall``, ``native_egress`` or ``native_firewall`` in **aviatrix_aws_tgw**
+4. Added support to attach/detach FireNet VPC to/from TGW in **aviatrix_aws_tgw**
+
+### Enhancements:
+1. Separated ``subnets`` to ``public_subnets`` and ``private_subnets`` in **aviatrix_vpc**
+2. Moved ``enable_advertise_transit_cidr`` and ``bgp_manual_spoke_advertise_cidrs`` from **aviatrix_vgw_conn** to **aviatrix_transit_gateway**, and made **aviatrix_vgw_conn** non-updatable
+3. Added option to use ``byol`` for test-infra, and updated test-infra to support acceptance test for new resources and data sources
+4. Added err body printing for the err that can not decode output of rest api
+5. Renamed ``enable_firenet_interfaces`` to ``enable_firenet`` in **aviatrix_transit_gateway**
+
+### Bug Fixes:
+1. Fixed issue where updating aviatrix_account's aws_account_number causes crash
+
 
 ## 2.5.0
 ### Notes:
