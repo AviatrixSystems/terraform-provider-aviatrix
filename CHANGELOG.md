@@ -1,3 +1,4 @@
+## 2.6.1 (Unreleased)
 ## 2.6.0 (October 22, 2019)
 ### Notes:
 - Supported Controller version: **UserConnect-5.1.935**
