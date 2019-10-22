@@ -1,4 +1,27 @@
-## 2.5.1 (Unreleased)
+## 2.6.0 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-5.1.935**
+- Supported Terraform version: **v0.12.x**
+
+### Features:
+1. New resources:
+  - **aviatrix_firewall_instance**
+  - **aviatrix_firenet**
+2. New data source:
+  - **aviatrix_firenet_vendor_integration**
+3. Added support to create security domain of ``aviatrix_firewall``, ``native_egress`` or ``native_firewall`` in **aviatrix_aws_tgw**
+4. Added support to attach/detach firenet vpc to/from tgw in **aviatrix_aws_tgw**
+
+### Enhancements:
+1. Separated ``subnets`` to ``public_subnets" and "private_subnets" in in **aviatrix_vpc**
+2. Made active_mesh be enabled in creation of spoke_gateway and transit_gateway
+3. Moved ``enable_advertise_transit_cidr`` and ``bgp_manual_spoke_advertise_cidrs`` from **aviatrix_vgw_conn** to **aviatrix_transit_gateway**, and made **aviatrix_vgw_conn** non-updatable
+4. Added option to use ``byol`` for test-infra, and updated test-infra to support acceptance test for new resources and data sources
+5. Added err body printing for the err that can not decode output of rest api
+6. Renamed ``enable_firenet_interfaces`` to ``enable_firenet`` in **aviatrix_transit_gateway**
+
+### Bug Fixes:
+1. Fixed the issue that updating account_number causes crash
 
 
 ## 2.5.0 (October 02, 2019)
