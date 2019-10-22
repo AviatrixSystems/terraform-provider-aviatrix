@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-const supportedVersion = "5.2"
+var supportedVersions = []string{"5.1", "5.2"}
 
 // Provider returns a schema.Provider for Aviatrix.
 func Provider() terraform.ResourceProvider {
@@ -103,7 +103,7 @@ func aviatrixConfigure(d *schema.ResourceData) (interface{}, error) {
 		return nil, err
 	}
 
-	err = client.ControllerVersionValidation(supportedVersion)
+	err = client.ControllerVersionValidation(supportedVersions)
 	if err != nil {
 		return nil, errors.New("controller version validation failed: " + err.Error())
 	}
