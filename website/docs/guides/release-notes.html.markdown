@@ -37,9 +37,10 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 3. Added option to use ``byol`` for test-infra, and updated test-infra to support acceptance test for new resources and data sources
 4. Added err body printing for the err that can not decode output of rest api
 5. Renamed ``enable_firenet_interfaces`` to ``enable_firenet`` in **aviatrix_transit_gateway**
+6. Added option to enable/disable ``single_az_ha`` in **aviatrix_transit_gateway**
 
 ### Bug Fixes:
-1. Fixed issue where updating aviatrix_account's aws_account_number causes crash
+1. Fixed issue where updating **aviatrix_account**'s ``aws_account_number`` causes crash
 
 
 ## 2.5.0
