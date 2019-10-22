@@ -13,15 +13,14 @@
 4. Added support to attach/detach firenet vpc to/from tgw in **aviatrix_aws_tgw**
 
 ### Enhancements:
-1. Separated ``subnets`` to ``public_subnets" and "private_subnets" in in **aviatrix_vpc**
-2. Made active_mesh be enabled in creation of spoke_gateway and transit_gateway
-3. Moved ``enable_advertise_transit_cidr`` and ``bgp_manual_spoke_advertise_cidrs`` from **aviatrix_vgw_conn** to **aviatrix_transit_gateway**, and made **aviatrix_vgw_conn** non-updatable
-4. Added option to use ``byol`` for test-infra, and updated test-infra to support acceptance test for new resources and data sources
-5. Added err body printing for the err that can not decode output of rest api
-6. Renamed ``enable_firenet_interfaces`` to ``enable_firenet`` in **aviatrix_transit_gateway**
+1. Separated ``subnets`` to ``public_subnets`` and ``private_subnets`` in **aviatrix_vpc**
+2. Moved ``enable_advertise_transit_cidr`` and ``bgp_manual_spoke_advertise_cidrs`` from **aviatrix_vgw_conn** to **aviatrix_transit_gateway**, and made **aviatrix_vgw_conn** non-updatable
+3. Added option to use ``byol`` for test-infra, and updated test-infra to support acceptance test for new resources and data sources
+4. Added err body printing for the err that can not decode output of rest api
+5. Renamed ``enable_firenet_interfaces`` to ``enable_firenet`` in **aviatrix_transit_gateway**
 
 ### Bug Fixes:
-1. Fixed the issue that updating account_number causes crash
+1. Fixed issue where updating aviatrix_account's aws_account_number causes crash
 
 
 ## 2.5.0 (October 02, 2019)
