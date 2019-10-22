@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -66,8 +67,12 @@ func (c *Client) CreateProfile(profile *Profile) error {
 		return errors.New("HTTP Get add_user_profile failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode add_user_profile failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode add_user_profile failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API add_user_profile Get failed: " + data.Reason)
@@ -80,15 +85,17 @@ func (c *Client) CreateProfile(profile *Profile) error {
 	updateProfilePolicy.Add("profile_name", profile.Name)
 	updateProfilePolicy.Add("policy", string(policyStr))
 	Url.RawQuery = updateProfilePolicy.Encode()
-
 	log.Printf("[INFO] Creating Aviatrix Profile with Policy: %v", Url.String())
-
 	resp, err = c.Get(Url.String(), nil)
 	if err != nil {
 		return errors.New("HTTP Get update_profile_policy failed: " + err.Error())
 	}
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode update_profile_policy failed: " + err.Error())
+	buf = new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString = buf.String()
+	bodyIoCopy = strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode update_profile_policy failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API update_profile_policy failed: " + data.Reason)
@@ -106,8 +113,12 @@ func (c *Client) CreateProfile(profile *Profile) error {
 		if err != nil {
 			return errors.New("HTTP Get add_profile_member failed: " + err.Error())
 		}
-		if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-			return errors.New("Json Decode add_profile_member failed: " + err.Error())
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(resp.Body)
+		bodyString := buf.String()
+		bodyIoCopy := strings.NewReader(bodyString)
+		if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+			return errors.New("Json Decode add_profile_member failed: " + err.Error() + "\n Body: " + bodyString)
 		}
 		if !data.Return {
 			return errors.New("API Get add_profile_member failed: " + data.Reason)
@@ -133,10 +144,13 @@ func (c *Client) GetProfile(profile *Profile) (*Profile, error) {
 		return nil, errors.New("HTTP Get list_profile_policies failed: " + err.Error())
 	}
 	var data ProfilePolicyListResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_profile_policies failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode list_profile_policies failed: " + err.Error() + "\n Body: " + bodyString)
 	}
-
 	if !data.Return {
 		log.Printf("Couldn't find Aviatrix profile %s", profile.Name)
 		if strings.Contains(data.Reason, "does not exist") {
@@ -157,15 +171,16 @@ func (c *Client) GetProfile(profile *Profile) (*Profile, error) {
 		return nil, errors.New("HTTP Get list_user_profile_names failed: " + err.Error())
 	}
 	var data2 ProfileUserListResp
-	if err = json.NewDecoder(resp.Body).Decode(&data2); err != nil {
-		return nil, errors.New("Json Decode list_user_profile_names failed: " + err.Error())
+	buf = new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString = buf.String()
+	bodyIoCopy = strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data2); err != nil {
+		return nil, errors.New("Json Decode list_user_profile_names failed: " + err.Error() + "\n Body: " + bodyString)
 	}
-
 	//profile.BaseRule = data2.Results[profile.Name]
 	profile.UserList = data2.Results[profile.Name]
-
 	log.Printf("[TRACE] Profile list of users %s", profile.UserList)
-
 	return profile, nil
 }
 
@@ -183,14 +198,18 @@ func (c *Client) UpdateProfilePolicy(profile *Profile) error {
 	updateProfilePolicy.Add("profile_name", profile.Name)
 	updateProfilePolicy.Add("policy", string(policyStr))
 	Url.RawQuery = updateProfilePolicy.Encode()
-
-	var data APIResp
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
 		return errors.New("HTTP Get update_profile_policy failed: " + err.Error())
 	}
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode update_profile_policy failed: " + err.Error())
+
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode update_profile_policy failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API update_profile_policy failed: " + data.Reason)
@@ -212,13 +231,17 @@ func (c *Client) AttachUsers(profile *Profile) error {
 		addProfileMember.Add("username", user)
 		Url.RawQuery = addProfileMember.Encode()
 
-		var data APIResp
 		resp, err := c.Get(Url.String(), nil)
 		if err != nil {
 			return errors.New("HTTP Get add_profile_member failed: " + err.Error())
 		}
-		if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-			return errors.New("Json Decode add_profile_member failed: " + err.Error())
+		var data APIResp
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(resp.Body)
+		bodyString := buf.String()
+		bodyIoCopy := strings.NewReader(bodyString)
+		if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+			return errors.New("Json Decode add_profile_member failed: " + err.Error() + "\n Body: " + bodyString)
 		}
 		if !data.Return {
 			return errors.New("API Get add_profile_member failed: " + data.Reason)
@@ -240,20 +263,22 @@ func (c *Client) DetachUsers(profile *Profile) error {
 		delProfileMember.Add("profile_name", profile.Name)
 		delProfileMember.Add("username", user)
 		Url.RawQuery = delProfileMember.Encode()
-
-		var data APIResp
 		resp, err := c.Get(Url.String(), nil)
 		if err != nil {
 			return errors.New("HTTP Get del_profile_member failed: " + err.Error())
 		}
-		if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-			return errors.New("Json Decode del_profile_member failed: " + err.Error())
+		var data APIResp
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(resp.Body)
+		bodyString := buf.String()
+		bodyIoCopy := strings.NewReader(bodyString)
+		if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+			return errors.New("Json Decode del_profile_member failed: " + err.Error() + "\n Body: " + bodyString)
 		}
 		if !data.Return {
 			return errors.New("API Get del_profile_member failed: " + data.Reason)
 		}
 	}
-
 	return nil
 }
 
@@ -273,8 +298,12 @@ func (c *Client) DeleteProfile(profile *Profile) error {
 		return errors.New("HTTP Get del_user_profile failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode del_user_profile failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode del_user_profile failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("API Get del_user_profile failed: " + data.Reason)
@@ -298,8 +327,12 @@ func (c *Client) GetProfileBasePolicy(profile *Profile) (*Profile, error) {
 		return nil, errors.New("HTTP Get get_profile_base_policy failed: " + err.Error())
 	}
 	var data ProfileBasePolicyResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode get_profile_base_policy failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode get_profile_base_policy failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return nil, errors.New("API Get get_profile_base_policy failed: " + data.Reason)

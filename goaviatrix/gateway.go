@@ -1,11 +1,13 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 )
 
 // Gateway simple struct to hold gateway details
@@ -164,8 +166,12 @@ func (c *Client) CreateGateway(gateway *Gateway) error {
 		return errors.New("HTTP Post connect_container failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode connect_container failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode connect_container failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API connect_container Post failed: " + data.Reason)
@@ -181,8 +187,12 @@ func (c *Client) EnableNatGateway(gateway *Gateway) error {
 		return errors.New("HTTP Post enable_nat failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_nat failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_nat failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API enable_nat Post failed: " + data.Reason)
@@ -197,8 +207,12 @@ func (c *Client) EnableSingleAZGateway(gateway *Gateway) error {
 		return errors.New("HTTP Post enable_single_az_ha failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_single_az_ha failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_single_az_ha failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API enable_single_az_ha Post failed: " + data.Reason)
@@ -213,8 +227,12 @@ func (c *Client) EnablePeeringHaGateway(gateway *Gateway) error {
 		return errors.New("HTTP Post create_peering_ha_gateway failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode create_peering_ha_gateway failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode create_peering_ha_gateway failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API create_peering_ha_gateway Post failed: " + data.Reason)
@@ -230,8 +248,12 @@ func (c *Client) DisableSingleAZGateway(gateway *Gateway) error {
 		return errors.New("HTTP Post disable_single_az_ha failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_single_az_ha failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_single_az_ha failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API disable_single_az_ha Post failed: " + data.Reason)
@@ -249,13 +271,16 @@ func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
 	listVpcSummary.Add("action", "list_vpcs_summary")
 	Url.RawQuery = listVpcSummary.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return nil, errors.New("HTTP Get list_vpcs_summary failed: " + err.Error())
 	}
 	var data GatewayListResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_vpcs_summary failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode list_vpcs_summary failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return nil, errors.New("Rest API list_vpcs_summary Get failed: " + data.Reason)
@@ -280,16 +305,18 @@ func (c *Client) GetGatewayDetail(gateway *Gateway) (*GatewayDetail, error) {
 	listVpcByName.Add("CID", c.CID)
 	listVpcByName.Add("action", "list_vpc_by_name")
 	listVpcByName.Add("vpc_name", gateway.GwName)
-
 	Url.RawQuery = listVpcByName.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return nil, errors.New("HTTP Get list_vpc_by_name failed: " + err.Error())
 	}
 	var data GatewayDetailApiResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_vpc_by_name failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode list_vpc_by_name failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return nil, errors.New("Rest API list_vpc_by_name Get failed: " + data.Reason)
@@ -310,8 +337,12 @@ func (c *Client) UpdateGateway(gateway *Gateway) error {
 		return errors.New("HTTP Post edit_gw_config failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_gw_config failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode edit_gw_config failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API edit_gw_config Post failed: " + data.Reason)
@@ -323,13 +354,16 @@ func (c *Client) DeleteGateway(gateway *Gateway) error {
 	path := c.baseURL + fmt.Sprintf("?action=delete_container&CID=%s&cloud_type=%d&gw_name=%s",
 		c.CID, gateway.CloudType, gateway.GwName)
 	resp, err := c.Delete(path, nil)
-
 	if err != nil {
 		return errors.New("HTTP Get delete_container failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_container failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode delete_container failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API delete_container Get failed: " + data.Reason)
@@ -348,13 +382,16 @@ func (c *Client) EnableSNat(gateway *Gateway) error {
 	enableSNat.Add("gateway_name", gateway.GwName)
 	Url.RawQuery = enableSNat.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get enable_snat failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_snat failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_snat failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API enable_snat Get failed: " + data.Reason)
@@ -373,13 +410,16 @@ func (c *Client) DisableSNat(gateway *Gateway) error {
 	disableSNat.Add("gateway_name", gateway.GwName)
 	Url.RawQuery = disableSNat.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get disable_snat failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_snat failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_snat failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API disable_snat Get failed: " + data.Reason)
@@ -399,13 +439,16 @@ func (c *Client) UpdateVpnCidr(gateway *Gateway) error {
 	setVpnClientCIDR.Add("gateway_name", gateway.GwName)
 	Url.RawQuery = setVpnClientCIDR.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get edit_vpn_gateway_virtual_address_range failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_vpn_gateway_virtual_address_range failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode edit_vpn_gateway_virtual_address_range failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API edit_vpn_gateway_virtual_address_range Get failed: " + data.Reason)
@@ -426,13 +469,16 @@ func (c *Client) UpdateMaxVpnConn(gateway *Gateway) error {
 	setMaxVpnConn.Add("lb_or_gateway_name", gateway.ElbName)
 	Url.RawQuery = setMaxVpnConn.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get set_vpn_max_connection failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode set_vpn_max_connection failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode set_vpn_max_connection failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API set_vpn_max_connection Get failed: " + data.Reason)
@@ -449,8 +495,12 @@ func (c *Client) SetVpnGatewayAuthentication(gateway *VpnGatewayAuth) error {
 		return errors.New("HTTP Post set_vpn_gateway_authentication failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode set_vpn_gateway_authentication failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode set_vpn_gateway_authentication failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API set_vpn_gateway_authentication Get failed: " + data.Reason)
@@ -468,14 +518,17 @@ func (c *Client) EnableActiveMesh(gateway *Gateway) error {
 	enableSNat.Add("action", "enable_gateway_activemesh")
 	enableSNat.Add("gateway_name", gateway.GwName)
 	Url.RawQuery = enableSNat.Encode()
-
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
 		return errors.New("HTTP Get enable_gateway_activemesh failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_gateway_activemesh failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_gateway_activemesh failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API enable_gateway_activemesh Get failed: " + data.Reason)
@@ -493,14 +546,17 @@ func (c *Client) DisableActiveMesh(gateway *Gateway) error {
 	enableSNat.Add("action", "disable_gateway_activemesh")
 	enableSNat.Add("gateway_name", gateway.GwName)
 	Url.RawQuery = enableSNat.Encode()
-
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
 		return errors.New("HTTP Get disable_gateway_activemesh failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_gateway_activemesh failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_gateway_activemesh failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API disable_gateway_activemesh Get failed: " + data.Reason)
@@ -519,13 +575,16 @@ func (c *Client) EnableVpcDnsServer(gateway *Gateway) error {
 	enableSNat.Add("gateway_name", gateway.GwName)
 	Url.RawQuery = enableSNat.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get enable_vpc_dns_server failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_vpc_dns_server failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_vpc_dns_server failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API enable_vpc_dns_server Get failed: " + data.Reason)
@@ -544,13 +603,16 @@ func (c *Client) DisableVpcDnsServer(gateway *Gateway) error {
 	disableSNat.Add("gateway_name", gateway.GwName)
 	Url.RawQuery = disableSNat.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get disable_vpc_dns_server failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_vpc_dns_server failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_vpc_dns_server failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API disable_vpc_dns_server Get failed: " + data.Reason)

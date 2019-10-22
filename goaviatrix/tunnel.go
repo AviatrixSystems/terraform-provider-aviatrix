@@ -3,10 +3,12 @@ package goaviatrix
 // Tunnel simple struct to hold tunnel details
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"log"
 	"net/url"
+	"strings"
 )
 
 type Tunnel struct {
@@ -46,8 +48,12 @@ func (c *Client) CreateTunnel(tunnel *Tunnel) error {
 		return errors.New("HTTP Get peer_vpc_pair failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode peer_vpc_pair failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode peer_vpc_pair failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API peer_vpc_pair Get failed: " + data.Reason)
@@ -65,13 +71,16 @@ func (c *Client) GetTunnel(tunnel *Tunnel) (*Tunnel, error) {
 	listPeerVpcPairs.Add("action", "list_peer_vpc_pairs")
 	Url.RawQuery = listPeerVpcPairs.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return nil, errors.New("HTTP Get list_peer_vpc_pairs failed: " + err.Error())
 	}
 	var data TunnelListResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_peer_vpc_pairs failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode list_peer_vpc_pairs failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return nil, errors.New("Rest API list_peer_vpc_pairs Get failed: " + data.Reason)
@@ -103,13 +112,16 @@ func (c *Client) DeleteTunnel(tunnel *Tunnel) error {
 	unPeerVpcPair.Add("vpc_name2", tunnel.VpcName2)
 	Url.RawQuery = unPeerVpcPair.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get unpeer_vpc_pair failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode unpeer_vpc_pair failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode unpeer_vpc_pair failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API unpeer_vpc_pair Get failed: " + data.Reason)

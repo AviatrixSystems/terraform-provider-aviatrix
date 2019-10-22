@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"log"
@@ -63,8 +64,12 @@ func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 		return errors.New("HTTP Post create_transit_gw failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode create_transit_gw failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode create_transit_gw failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API create_transit_gw Post failed: " + data.Reason)
@@ -96,8 +101,12 @@ func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) error {
 		return errors.New("HTTP Get enable_transit_ha failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_transit_ha failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_transit_ha failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		if strings.Contains(data.Reason, "HA GW already exists") {
@@ -127,11 +136,15 @@ func (c *Client) AttachTransitGWForHybrid(gateway *TransitVpc) error {
 		return errors.New("HTTP Get enable_transit_gateway_interface_to_aws_tgw failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
 		if strings.Contains(err.Error(), "already enabled tgw interface") {
 			return nil
 		}
-		return errors.New("Json Decode enable_transit_gateway_interface_to_aws_tgw failed: " + err.Error())
+		return errors.New("Json Decode enable_transit_gateway_interface_to_aws_tgw failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API enable_transit_gateway_interface_to_aws_tgw Get failed: " + data.Reason)
@@ -155,8 +168,12 @@ func (c *Client) DetachTransitGWForHybrid(gateway *TransitVpc) error {
 		return errors.New("HTTP Get disable_transit_gateway_interface_to_aws_tgw failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_transit_gateway_interface_to_aws_tgw failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_transit_gateway_interface_to_aws_tgw failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API disable_transit_gateway_interface_to_aws_tgw Get failed: " + data.Reason)
@@ -180,8 +197,12 @@ func (c *Client) EnableConnectedTransit(gateway *TransitVpc) error {
 		return errors.New("HTTP Get enable_connected_transit_on_gateway failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_connected_transit_on_gateway failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_connected_transit_on_gateway failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API enable_connected_transit_on_gateway Get failed: " + data.Reason)
@@ -200,13 +221,16 @@ func (c *Client) DisableConnectedTransit(gateway *TransitVpc) error {
 	disableConnectedTransitOnGateway.Add("gateway_name", gateway.GwName)
 	Url.RawQuery = disableConnectedTransitOnGateway.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get disable_connected_transit_on_gateway failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_connected_transit_on_gateway failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_connected_transit_on_gateway failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API disable_connected_transit_on_gateway Get failed: " + data.Reason)
@@ -223,15 +247,18 @@ func (c *Client) EnableGatewayFireNetInterfaces(gateway *TransitVpc) error {
 	disableConnectedTransitOnGateway.Add("CID", c.CID)
 	disableConnectedTransitOnGateway.Add("action", "enable_gateway_firenet_interfaces")
 	disableConnectedTransitOnGateway.Add("gateway_name", gateway.GwName)
-
 	Url.RawQuery = disableConnectedTransitOnGateway.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
 		return errors.New("HTTP Post enable_gateway_firenet_interfaces failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_gateway_firenet_interfaces failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_gateway_firenet_interfaces failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API enable_gateway_firenet_interfaces Post failed: " + data.Reason)
@@ -248,15 +275,18 @@ func (c *Client) DisableGatewayFireNetInterfaces(gateway *TransitVpc) error {
 	disableConnectedTransitOnGateway.Add("CID", c.CID)
 	disableConnectedTransitOnGateway.Add("action", "disable_gateway_firenet_interfaces")
 	disableConnectedTransitOnGateway.Add("gateway", gateway.GwName)
-
 	Url.RawQuery = disableConnectedTransitOnGateway.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
 		return errors.New("HTTP Post disable_gateway_firenet_interfaces failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_gateway_firenet_interfaces failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_gateway_firenet_interfaces failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API disable_gateway_firenet_interfaces Post failed: " + data.Reason)
@@ -281,13 +311,16 @@ func (c *Client) EnableAdvertiseTransitCidr(transitGw *TransitVpc) error {
 
 	Url.RawQuery = enableAdvertiseTransitCidr.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get enable_advertise_transit_cidr failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_advertise_transit_cidr failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_advertise_transit_cidr failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API enable_advertise_transit_cidr Get failed: " + data.Reason)
@@ -313,8 +346,12 @@ func (c *Client) DisableAdvertiseTransitCidr(transitGw *TransitVpc) error {
 		return errors.New("HTTP Get disable_advertise_transit_cidr failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_advertise_transit_cidr failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_advertise_transit_cidr failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API disable_advertise_transit_cidr Get failed: " + data.Reason)
@@ -333,16 +370,18 @@ func (c *Client) SetBgpManualSpokeAdvertisedNetworks(transitGw *TransitVpc) erro
 	editTransitAdvancedConfig.Add("subaction", "bgp_manual_spoke")
 	editTransitAdvancedConfig.Add("gateway_name", transitGw.GwName)
 	editTransitAdvancedConfig.Add("bgp_manual_spoke_advertise_cidrs", transitGw.BgpManualSpokeAdvertiseCidrs)
-
 	Url.RawQuery = editTransitAdvancedConfig.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get edit_aviatrix_transit_advanced_config failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_aviatrix_transit_advanced_config failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode edit_aviatrix_transit_advanced_config failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API edit_aviatrix_transit_advanced_config Get failed: " + data.Reason)

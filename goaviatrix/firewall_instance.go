@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"net/url"
@@ -65,7 +66,6 @@ func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (str
 	addFirewallInstance.Add("iam_role", firewallInstance.IamRole)
 	addFirewallInstance.Add("bootstrap_bucket_name", firewallInstance.BootstrapBucketName)
 	addFirewallInstance.Add("no_associate", strconv.FormatBool(true))
-
 	Url.RawQuery = addFirewallInstance.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
@@ -73,8 +73,12 @@ func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (str
 	}
 
 	var data FirewallInstanceCreateResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return "", errors.New("Json Decode add_firewall_instance failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return "", errors.New("Json Decode add_firewall_instance failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return "", errors.New("Rest API add_firewall_instance Get failed: " + data.Reason)
@@ -94,16 +98,18 @@ func (c *Client) GetFirewallInstance(firewallInstance *FirewallInstance) (*Firew
 	getInstanceById.Add("CID", c.CID)
 	getInstanceById.Add("action", "get_instance_by_id")
 	getInstanceById.Add("instance_id", firewallInstance.InstanceID)
-
 	Url.RawQuery = getInstanceById.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
 		return nil, errors.New("HTTP Get get_instance_by_id failed: " + err.Error())
 	}
-
 	var data FirewallInstanceResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode get_instance_by_id failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode get_instance_by_id failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		if strings.Contains(data.Reason, "Unrecognized firewall instance_id") {
@@ -127,7 +133,6 @@ func (c *Client) DeleteFirewallInstance(firewallInstance *FirewallInstance) erro
 	deleteFirenetFirewallInstance.Add("action", "delete_firenet_firewall_instance")
 	deleteFirenetFirewallInstance.Add("vpc_id", firewallInstance.VpcID)
 	deleteFirenetFirewallInstance.Add("firewall_id", firewallInstance.InstanceID)
-
 	Url.RawQuery = deleteFirenetFirewallInstance.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
@@ -135,8 +140,12 @@ func (c *Client) DeleteFirewallInstance(firewallInstance *FirewallInstance) erro
 	}
 
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_firenet_firewall_instance failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode delete_firenet_firewall_instance failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API delete_firenet_firewall_instance Get failed: " + data.Reason)

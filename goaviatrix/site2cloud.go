@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -196,8 +197,12 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 		return errors.New("HTTP Get add_site2cloud failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode add_site2cloud failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode add_site2cloud failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API add_site2cloud Get failed: " + data.Reason)
@@ -221,8 +226,12 @@ func (c *Client) GetSite2Cloud(site2cloud *Site2Cloud) (*Site2Cloud, error) {
 		return nil, errors.New("HTTP Get list_site2cloud_conn failed: " + err.Error())
 	}
 	var data Site2CloudResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_site2cloud_conn failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode list_site2cloud_conn failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return nil, errors.New("Rest API list_site2cloud_conn Get failed: " + data.Reason)
@@ -248,13 +257,16 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 	getSite2CloudConnDetail.Add("vpc_id", site2cloud.VpcID)
 	Url.RawQuery = getSite2CloudConnDetail.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return nil, errors.New("HTTP Get get_site2cloud_conn_detail failed: " + err.Error())
 	}
 	var data Site2CloudConnDetailResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode get_site2cloud_conn_detail failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode get_site2cloud_conn_detail failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		if strings.Contains(data.Reason, "does not exist") {
@@ -339,8 +351,12 @@ func (c *Client) UpdateSite2Cloud(site2cloud *EditSite2Cloud) error {
 	}
 
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_site2cloud_conn failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode edit_site2cloud_conn failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API edit_site2cloud_conn Post failed: " + data.Reason)
@@ -367,8 +383,12 @@ func (c *Client) DeleteSite2Cloud(site2cloud *Site2Cloud) error {
 		return errors.New("HTTP Post delete_site2cloud_connection failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_site2cloud_connection failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode delete_site2cloud_connection failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API delete_site2cloud_connection Post failed: " + data.Reason)
@@ -424,8 +444,12 @@ func (c *Client) EnableDeadPeerDetection(site2cloud *Site2Cloud) error {
 		return errors.New("HTTP Get enable_dpd_config failed: " + err.Error())
 	}
 	var data VGWConnEnableAdvertiseTransitCidrResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_dpd_config failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_dpd_config failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API enable_dpd_config Get failed: " + data.Reason)
@@ -443,16 +467,18 @@ func (c *Client) DisableDeadPeerDetection(site2cloud *Site2Cloud) error {
 	disableDPDConfig.Add("action", "disable_dpd_config")
 	disableDPDConfig.Add("vpc_id", site2cloud.VpcID)
 	disableDPDConfig.Add("connection_name", site2cloud.TunnelName)
-
 	Url.RawQuery = disableDPDConfig.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get disable_dpd_config failed: " + err.Error())
 	}
 	var data VGWConnEnableAdvertiseTransitCidrResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_dpd_config failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_dpd_config failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API disable_dpd_config Get failed: " + data.Reason)

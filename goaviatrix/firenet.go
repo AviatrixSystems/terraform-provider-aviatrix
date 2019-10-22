@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"net/url"
@@ -70,20 +71,22 @@ func (c *Client) GetFireNet(fireNet *FireNet) (*FireNetDetail, error) {
 	if err != nil {
 		return nil, errors.New(("url Parsing failed for show_firenet_detail: ") + err.Error())
 	}
-
 	showFireNetDetail := url.Values{}
 	showFireNetDetail.Add("CID", c.CID)
 	showFireNetDetail.Add("action", "show_firenet_detail")
 	showFireNetDetail.Add("vpc_id", fireNet.VpcID)
-
 	Url.RawQuery = showFireNetDetail.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
 		return nil, errors.New("HTTP Get show_firenet_detail failed: " + err.Error())
 	}
 	var data GetFireNetResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode show_firenet_detail failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode show_firenet_detail failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		if strings.Contains(data.Reason, "not found in DB") {
@@ -122,8 +125,12 @@ func (c *Client) AssociateFirewallWithFireNet(firewallInstance *FirewallInstance
 		return errors.New("HTTP Get associate_firewall_with_firenet failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode associate_firewall_with_firenet failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode associate_firewall_with_firenet failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		if strings.Contains(data.Reason, "already associated") {
@@ -151,8 +158,12 @@ func (c *Client) DisassociateFirewallFromFireNet(firewallInstance *FirewallInsta
 		return errors.New("HTTP Get disassociate_firewall_with_firenet failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode disassociate_firewall_with_firenet failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode disassociate_firewall_with_firenet failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		if strings.Contains(data.Reason, "not found") {
@@ -181,8 +192,12 @@ func (c *Client) AttachFirewallToFireNet(firewallInstance *FirewallInstance) err
 		return errors.New("HTTP Get attach_firewall_to_firenet failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode attach_firewall_to_firenet failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode attach_firewall_to_firenet failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API attach_firewall_to_firenet Get failed: " + data.Reason)
@@ -195,21 +210,23 @@ func (c *Client) DetachFirewallFromFireNet(firewallInstance *FirewallInstance) e
 	if err != nil {
 		return errors.New(("url Parsing failed for detach_firewall_from_firenet: ") + err.Error())
 	}
-
 	detachFirewallFromFireNet := url.Values{}
 	detachFirewallFromFireNet.Add("CID", c.CID)
 	detachFirewallFromFireNet.Add("action", "detach_firewall_from_firenet")
 	detachFirewallFromFireNet.Add("vpc_id", firewallInstance.VpcID)
 	detachFirewallFromFireNet.Add("firewall_id", firewallInstance.InstanceID)
-
 	Url.RawQuery = detachFirewallFromFireNet.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
 		return errors.New("HTTP Get detach_firewall_from_firenet failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode detach_firewall_from_firenet failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode detach_firewall_from_firenet failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API detach_firewall_from_firenet Get failed: " + data.Reason)
@@ -235,8 +252,12 @@ func (c *Client) ConnectFireNetWithTgw(awsTgw *AWSTgw, vpcSolo VPCSolo, Security
 		return errors.New("HTTP Get connect_firenet_with_tgw failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode connect_firenet_with_tgw failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode connect_firenet_with_tgw failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API connect_firenet_with_tgw Get failed: " + data.Reason)
@@ -260,8 +281,12 @@ func (c *Client) DisconnectFireNetFromTgw(awsTgw *AWSTgw, vpcID string) error {
 		return errors.New("HTTP Get disconnect_firenet_with_tgw failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode disconnect_firenet_with_tgw failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode disconnect_firenet_with_tgw failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API disconnect_firenet_with_tgw Get failed: " + data.Reason)
@@ -283,16 +308,18 @@ func (c *Client) EditFireNetInspection(fireNet *FireNet) error {
 	} else {
 		editFireNet.Add("inspection", "false")
 	}
-
 	Url.RawQuery = editFireNet.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get edit_firenet failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_firenet failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode edit_firenet failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		if strings.Contains(data.Reason, "configuration not changed") {
@@ -317,16 +344,18 @@ func (c *Client) EditFireNetEgress(fireNet *FireNet) error {
 	} else {
 		editFireNet.Add("firewall_egress", "false")
 	}
-
 	Url.RawQuery = editFireNet.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get edit_firenet failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_firenet failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode edit_firenet failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		if strings.Contains(data.Reason, "configuration not changed") {

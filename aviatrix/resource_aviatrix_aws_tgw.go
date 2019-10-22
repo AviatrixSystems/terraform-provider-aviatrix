@@ -376,7 +376,7 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 
 	awsTgw, err2 := client.GetAWSTgw(awsTgw)
 	if err2 != nil {
-		return fmt.Errorf("couldn't find AWS TGW: %s", awsTgw.Name)
+		return fmt.Errorf("couldn't find AWS TGW: %s", tgwName)
 	}
 
 	d.Set("aws_side_as_number", awsTgw.AwsSideAsNumber)

@@ -37,7 +37,7 @@ resource "aviatrix_firenet" "test_firenet" {
   
   firewall_instance_association {
     gw_name       = "avx_firenet_gw"
-    firewall_name = "avx_fqdn_gateway"
+    instance_id   = "avx_fqdn_gateway"
     vendor_type   = "fqdn_gateway"
     attached      = true
   }
@@ -54,8 +54,8 @@ The following arguments are supported:
 * `firewall_instance_association` - (Optional) List of firewall instances to be associated with fireNet.
   * `firenet_gw_name` - (Required) Name of the primary FireNet gateway.
   * `vendor_type` - (Required) Type of the firewall. Valid values: "Generic", "fqdn_gateway". Default value: "Generic".  
-  * `firewall_name` - (Required) Firewall instance name. If associating FQDN gateway to fireNet, it is FQDN gateway's gw_name.
-  * `instance_id` - (Required) ID of Firewall instance, required if it is a firewall instance.
+  * `instance_id` - (Required) ID of Firewall instance, if associating FQDN gateway to fireNet, it is FQDN gateway's gw_name..
+  * `firewall_name` - (Optional) Firewall instance name, required if it is a firewall instance.
   * `lan_interface`- (Optional) Lan interface ID, required if it is a firewall instance.
   * `management_interface` - (Optional) Management interface ID, required if it is a firewall instance.
   * `egress_interface`- (Optional) Egress interface ID, required if it is a firewall instance.

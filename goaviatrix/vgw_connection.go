@@ -1,9 +1,11 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"net/url"
+	"strings"
 )
 
 // VGWConn simple struct to hold VGW Connection details
@@ -80,13 +82,16 @@ func (c *Client) CreateVGWConn(vgwConn *VGWConn) error {
 	connectTransitGwToVgw.Add("bgp_local_as_number", vgwConn.BgpLocalAsNum)
 	Url.RawQuery = connectTransitGwToVgw.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get connect_transit_gw_to_vgw failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode connect_transit_gw_to_vgw failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode connect_transit_gw_to_vgw failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API connect_transit_gw_to_vgw Get failed: " + data.Reason)
@@ -113,14 +118,16 @@ func (c *Client) GetVGWConn(vgwConn *VGWConn) (*VGWConn, error) {
 		Results: make([]string, 0),
 		Reason:  "",
 	}
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_vgw_connections failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode list_vgw_connections failed: " + err.Error() + "\n Body: " + bodyString)
 	}
-
 	if !data.Return {
 		return nil, errors.New("Rest API list_vgw_connections Get failed: " + data.Reason)
 	}
-
 	vgwConnList := data.Results
 	for i := range vgwConnList {
 		if vgwConnList[i] == vgwConn.ConnName {
@@ -146,13 +153,16 @@ func (c *Client) DeleteVGWConn(vgwConn *VGWConn) error {
 	disconnectTransitGwFromVgw.Add("connection_name", vgwConn.ConnName)
 	Url.RawQuery = disconnectTransitGwFromVgw.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get disconnect_transit_gw_from_vgw failed: " + err.Error())
 	}
 	var data APIResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return errors.New("Json Decode disconnect_transit_gw_from_vgw failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode disconnect_transit_gw_from_vgw failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return errors.New("Rest API disconnect_transit_gw_from_vgw Get failed: " + data.Reason)
@@ -172,18 +182,20 @@ func (c *Client) GetVGWConnDetail(vgwConn *VGWConn) (*VGWConn, error) {
 	listVgwConnections.Add("conn_name", vgwConn.ConnName)
 	Url.RawQuery = listVgwConnections.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return nil, errors.New("HTTP Get get_site2cloud_conn_detail failed: " + err.Error())
 	}
 	var data VGWConnDetailResp
-	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode get_site2cloud_conn_detail failed: " + err.Error())
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode get_site2cloud_conn_detail failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		return nil, errors.New("Rest API get_site2cloud_conn_detail Get failed: " + data.Reason)
 	}
-
 	if data.Results.Connections.ConnName[0] != "" {
 		vgwConn.VPCId = data.Results.Connections.VPCId[0]
 		vgwConn.GwName = data.Results.Connections.GwName[0]
@@ -193,6 +205,5 @@ func (c *Client) GetVGWConnDetail(vgwConn *VGWConn) (*VGWConn, error) {
 		vgwConn.BgpLocalAsNum = data.Results.Connections.BgpLocalAsNum[0]
 		return vgwConn, nil
 	}
-
 	return nil, ErrNotFound
 }
