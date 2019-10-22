@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_firewall_instance"
 description: |-
-  Creates and manages Aviatrix Firewall Instances
+  Creates and deletes Aviatrix Firewall Instances
 ---
 
 # aviatrix_firewall_instance
 
-The aviatrix_firewall_instance resource allows the creation and management of Aviatrix Firewall Instances.
+The aviatrix_firewall_instance resource allows the creation and deletion of Aviatrix Firewall Instances.
 
 ## Example Usage
 
