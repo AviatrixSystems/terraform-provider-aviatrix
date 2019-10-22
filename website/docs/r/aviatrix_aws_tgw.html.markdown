@@ -117,4 +117,4 @@ Instance aws_tgw can be imported using the tgw_name, e.g.
 $ terraform import aviatrix_aws_tgw.test tgw_name
 ```
 
-If "manage_vpc_attachment" is set to "false", import action will also import the information of the VPCs attached to tgw into the state file. Will need to do "Terraform Apply" to sync "manage_vpc_attachment" to "false".
+-> **NOTE:** If "manage_vpc_attachment" is set to "false", import action will also import the information of the VPCs attached to tgw into the state file. Will need to do "Terraform Apply" to sync "manage_vpc_attachment" to "false".
