@@ -66,7 +66,7 @@ func resourceAviatrixFirewall() *schema.Resource {
 						"action": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "Valid values: 'allow', 'deny' or 'force-drop'.",
+							Description: "Valid values: 'allow', 'deny' or 'force-drop'(in stateful firewall rule to allow immediate packet dropping on established sessions).",
 						},
 						"log_enabled": {
 							Type:        schema.TypeBool,
@@ -180,7 +180,7 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[TRACE] Reading policy for gateway %s: %#v", firewall.GwName, fw)
 
-	mapPolicy := make(map[string]map[string]interface{})
+	policyMap := make(map[string]map[string]interface{})
 	if fw != nil {
 		if fw.BasePolicy == "allow-all" {
 			d.Set("base_policy", "allow-all")
@@ -207,7 +207,7 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 				pl["log_enabled"] = false
 			}
 			key := policy.SrcIP + "~" + policy.DstIP + "~" + policy.Protocol + "~" + policy.Port
-			mapPolicy[key] = pl
+			policyMap[key] = pl
 		}
 	}
 
@@ -232,18 +232,18 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 			}
 
 			key := firewallPolicy.SrcIP + "~" + firewallPolicy.DstIP + "~" + firewallPolicy.Protocol + "~" + firewallPolicy.Port
-			if val, ok := mapPolicy[key]; ok {
+			if val, ok := policyMap[key]; ok {
 				if goaviatrix.CompareMapOfInterface(pl, val) {
 					policiesFromFile = append(policiesFromFile, pl)
-					delete(mapPolicy, key)
+					delete(policyMap, key)
 					continue
 				}
 			}
 			policiesFromFile = append(policiesFromFile, pl)
 		}
-		if len(mapPolicy) != 0 {
-			for key := range mapPolicy {
-				policiesFromFile = append(policiesFromFile, mapPolicy[key])
+		if len(policyMap) != 0 {
+			for key := range policyMap {
+				policiesFromFile = append(policiesFromFile, policyMap[key])
 			}
 		}
 	}
