@@ -133,3 +133,23 @@ func TagListStrColon(tagListStr []string) []string {
 	}
 	return nil
 }
+
+func CompareMapOfInterface(map1 map[string]interface{}, map2 map[string]interface{}) bool {
+	if map1 == nil && map2 == nil {
+		return true
+	}
+	if map1 == nil || map2 == nil || len(map1) != len(map2) {
+		return false
+	}
+
+	for key := range map1 {
+		if val, ok := map2[key]; ok {
+			if map1[key] != val {
+				return false
+			}
+			continue
+		}
+		return false
+	}
+	return true
+}

@@ -66,7 +66,7 @@ func resourceAviatrixFirewall() *schema.Resource {
 						"action": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "Valid values: 'allow' and 'deny'.",
+							Description: "Valid values: 'allow', 'deny' or 'force-drop'.",
 						},
 						"log_enabled": {
 							Type:        schema.TypeBool,
@@ -180,43 +180,77 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[TRACE] Reading policy for gateway %s: %#v", firewall.GwName, fw)
 
+	mapPolicy := make(map[string]map[string]interface{})
 	if fw != nil {
 		if fw.BasePolicy == "allow-all" {
 			d.Set("base_policy", "allow-all")
 		} else {
 			d.Set("base_policy", "deny-all")
 		}
-
 		if fw.BaseLogEnabled == "on" {
 			d.Set("base_log_enabled", true)
 		} else {
 			d.Set("base_log_enabled", false)
 		}
 
-		var policies []map[string]interface{}
 		for _, policy := range fw.PolicyList {
 			pl := make(map[string]interface{})
 			pl["src_ip"] = policy.SrcIP
 			pl["dst_ip"] = policy.DstIP
 			pl["protocol"] = policy.Protocol
 			pl["port"] = policy.Port
+			pl["action"] = policy.Action
 			pl["description"] = policy.Description
-
 			if policy.LogEnabled == "on" {
 				pl["log_enabled"] = true
 			} else {
 				pl["log_enabled"] = false
 			}
-
-			pl["action"] = policy.Action
-			policies = append(policies, pl)
-		}
-
-		if err := d.Set("policy", policies); err != nil {
-			log.Printf("[WARN] Error setting policy for (%s): %s", d.Id(), err)
+			key := policy.SrcIP + "~" + policy.DstIP + "~" + policy.Protocol + "~" + policy.Port
+			mapPolicy[key] = pl
 		}
 	}
 
+	var policiesFromFile []map[string]interface{}
+	if _, ok := d.GetOk("policy"); ok {
+		policies := d.Get("policy").([]interface{})
+		for _, policy := range policies {
+			pl := policy.(map[string]interface{})
+			firewallPolicy := &goaviatrix.Policy{
+				SrcIP:       pl["src_ip"].(string),
+				DstIP:       pl["dst_ip"].(string),
+				Protocol:    pl["protocol"].(string),
+				Port:        pl["port"].(string),
+				Action:      pl["action"].(string),
+				Description: pl["description"].(string),
+			}
+			logEnabled := pl["log_enabled"].(interface{}).(bool)
+			if logEnabled {
+				firewallPolicy.LogEnabled = "on"
+			} else {
+				firewallPolicy.LogEnabled = "off"
+			}
+
+			key := firewallPolicy.SrcIP + "~" + firewallPolicy.DstIP + "~" + firewallPolicy.Protocol + "~" + firewallPolicy.Port
+			if val, ok := mapPolicy[key]; ok {
+				if goaviatrix.CompareMapOfInterface(pl, val) {
+					policiesFromFile = append(policiesFromFile, pl)
+					delete(mapPolicy, key)
+					continue
+				}
+			}
+			policiesFromFile = append(policiesFromFile, pl)
+		}
+		if len(mapPolicy) != 0 {
+			for key := range mapPolicy {
+				policiesFromFile = append(policiesFromFile, mapPolicy[key])
+			}
+		}
+	}
+
+	if err := d.Set("policy", policiesFromFile); err != nil {
+		log.Printf("[WARN] Error setting policy for (%s): %s", d.Id(), err)
+	}
 	return nil
 }
 
@@ -274,7 +308,7 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	//If policy list is present, update policy list
-	if _, ok := d.GetOk("policy"); ok {
+	if ok := d.HasChange("policy"); ok {
 		policies := d.Get("policy").([]interface{})
 		for _, policy := range policies {
 			pl := policy.(map[string]interface{})
