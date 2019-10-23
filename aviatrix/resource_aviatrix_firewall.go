@@ -236,10 +236,8 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 				if goaviatrix.CompareMapOfInterface(pl, val) {
 					policiesFromFile = append(policiesFromFile, pl)
 					delete(policyMap, key)
-					continue
 				}
 			}
-			policiesFromFile = append(policiesFromFile, pl)
 		}
 		if len(policyMap) != 0 {
 			for key := range policyMap {
