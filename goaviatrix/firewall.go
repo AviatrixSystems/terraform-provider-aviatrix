@@ -133,8 +133,8 @@ func (c *Client) GetPolicy(firewall *Firewall) (*Firewall, error) {
 }
 
 func (c *Client) ValidatePolicy(policy *Policy) error {
-	if policy.Action != "allow" && policy.Action != "deny" {
-		return fmt.Errorf("valid AllowDeny is only 'allow' or 'deny'")
+	if policy.Action != "allow" && policy.Action != "deny" && policy.Action != "force-drop" {
+		return fmt.Errorf("valid AllowDeny is only 'allow', 'deny' or 'force-drop'")
 	}
 	protocolDefaultValues := []string{"all", "tcp", "udp", "icmp", "sctp", "rdp", "dccp"}
 	protocolVal := []string{policy.Protocol}
