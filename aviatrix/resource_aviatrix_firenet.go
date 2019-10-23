@@ -47,9 +47,9 @@ func resourceAviatrixFireNet() *schema.Resource {
 							Description: "Indication it is a firewall instance or FQDN gateway to be associated to fireNet. Valid values: 'Generic', 'fqdn_gateway'. Value 'fqdn_gateway' is required for FQDN gateway.",
 						},
 						"firewall_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
 							Description: "Firewall instance name, or FQDN Gateway's gw_name, required if it is a firewall instance.",
 						},
 						"lan_interface": {
@@ -59,15 +59,15 @@ func resourceAviatrixFireNet() *schema.Resource {
 							Description: "Lan interface ID, required if it is a firewall instance.",
 						},
 						"management_interface": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
 							Description: "Management interface ID, required if it is a firewall instance.",
 						},
 						"egress_interface": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
 							Description: "Egress interface ID, required if it is a firewall instance.",
 						},
 						"attached": {
