@@ -1210,21 +1210,20 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("split_tunnel") || d.HasChange("additional_cidrs") ||
 		d.HasChange("name_servers") || d.HasChange("search_domains") {
 		splitTunnel := d.Get("split_tunnel").(bool)
+		sTunnel := &goaviatrix.SplitTunnel{
+			VpcID:   d.Get("vpc_id").(string),
+			ElbName: d.Get("elb_name").(string),
+		}
+		if sTunnel.ElbName == "" {
+			sTunnel.ElbName = d.Get("gw_name").(string)
+		}
 
 		if splitTunnel && (d.HasChange("additional_cidrs") || d.HasChange("name_servers") || d.HasChange("search_domains")) {
-			sTunnel := &goaviatrix.SplitTunnel{
-				VpcID:           d.Get("vpc_id").(string),
-				ElbName:         d.Get("elb_name").(string),
-				AdditionalCidrs: d.Get("additional_cidrs").(string),
-				NameServers:     d.Get("name_servers").(string),
-				SearchDomains:   d.Get("search_domains").(string),
-				SaveTemplate:    "no",
-			}
-
+			sTunnel.AdditionalCidrs = d.Get("additional_cidrs").(string)
+			sTunnel.NameServers = d.Get("name_servers").(string)
+			sTunnel.SearchDomains = d.Get("search_domains").(string)
+			sTunnel.SaveTemplate = "no"
 			sTunnel.SplitTunnel = "yes"
-			if sTunnel.ElbName == "" {
-				sTunnel.ElbName = d.Get("gw_name").(string)
-			}
 
 			if gateway.CloudType == 4 {
 				// ELB name is computed, search for gw to get elb name
@@ -1249,8 +1248,18 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			if err != nil {
 				return fmt.Errorf("failed to modify split tunnel: %s", err)
 			}
+		} else if !splitTunnel && (d.Get("additional_cidrs").(string) != "" || d.Get("name_servers").(string) != "" || d.Get("search_domains").(string) != "") {
+			return fmt.Errorf("to disable split_tunnel, following three attributes should be null: " +
+				"'additional_cidrs', 'name_servers', and 'search_domains'")
+		} else if !splitTunnel {
+			sTunnel.SplitTunnel = "no"
+			err := client.ModifySplitTunnel(sTunnel)
+			if err != nil {
+				return fmt.Errorf("failed to disable split tunnel: %s", err)
+			}
 		}
 	}
+
 	if d.HasChange("single_az_ha") {
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName: d.Get("gw_name").(string),
