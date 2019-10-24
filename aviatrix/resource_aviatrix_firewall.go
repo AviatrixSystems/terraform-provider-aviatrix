@@ -212,37 +212,35 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	var policiesFromFile []map[string]interface{}
-	if _, ok := d.GetOk("policy"); ok {
-		policies := d.Get("policy").([]interface{})
-		for _, policy := range policies {
-			pl := policy.(map[string]interface{})
-			firewallPolicy := &goaviatrix.Policy{
-				SrcIP:       pl["src_ip"].(string),
-				DstIP:       pl["dst_ip"].(string),
-				Protocol:    pl["protocol"].(string),
-				Port:        pl["port"].(string),
-				Action:      pl["action"].(string),
-				Description: pl["description"].(string),
-			}
-			logEnabled := pl["log_enabled"].(interface{}).(bool)
-			if logEnabled {
-				firewallPolicy.LogEnabled = "on"
-			} else {
-				firewallPolicy.LogEnabled = "off"
-			}
+	policies := d.Get("policy").([]interface{})
+	for _, policy := range policies {
+		pl := policy.(map[string]interface{})
+		firewallPolicy := &goaviatrix.Policy{
+			SrcIP:       pl["src_ip"].(string),
+			DstIP:       pl["dst_ip"].(string),
+			Protocol:    pl["protocol"].(string),
+			Port:        pl["port"].(string),
+			Action:      pl["action"].(string),
+			Description: pl["description"].(string),
+		}
+		logEnabled := pl["log_enabled"].(interface{}).(bool)
+		if logEnabled {
+			firewallPolicy.LogEnabled = "on"
+		} else {
+			firewallPolicy.LogEnabled = "off"
+		}
 
-			key := firewallPolicy.SrcIP + "~" + firewallPolicy.DstIP + "~" + firewallPolicy.Protocol + "~" + firewallPolicy.Port
-			if val, ok := policyMap[key]; ok {
-				if goaviatrix.CompareMapOfInterface(pl, val) {
-					policiesFromFile = append(policiesFromFile, pl)
-					delete(policyMap, key)
-				}
+		key := firewallPolicy.SrcIP + "~" + firewallPolicy.DstIP + "~" + firewallPolicy.Protocol + "~" + firewallPolicy.Port
+		if val, ok := policyMap[key]; ok {
+			if goaviatrix.CompareMapOfInterface(pl, val) {
+				policiesFromFile = append(policiesFromFile, pl)
+				delete(policyMap, key)
 			}
 		}
-		if len(policyMap) != 0 {
-			for key := range policyMap {
-				policiesFromFile = append(policiesFromFile, policyMap[key])
-			}
+	}
+	if len(policyMap) != 0 {
+		for key := range policyMap {
+			policiesFromFile = append(policiesFromFile, policyMap[key])
 		}
 	}
 
