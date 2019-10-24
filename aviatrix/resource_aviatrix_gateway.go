@@ -1281,8 +1281,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			if err != nil {
 				return fmt.Errorf("failed to create single AZ GW HA: %s", err)
 			}
-		}
-		if singleAZGateway.SingleAZ == "disabled" {
+		} else if singleAZGateway.SingleAZ == "disabled" {
 			log.Printf("[INFO] Disable Single AZ GW HA: %#v", singleAZGateway)
 			err := client.DisableSingleAZGateway(gateway)
 			if err != nil {
