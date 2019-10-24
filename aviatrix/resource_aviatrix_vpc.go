@@ -218,8 +218,13 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 				}
 				vpc.Subnets = append(vpc.Subnets, subnetInfo)
 			}
+		} else {
+			return fmt.Errorf("subnets is required to be non-empty for GCP provider")
 		}
+	} else if _, ok := d.GetOk("subnets"); ok {
+		return fmt.Errorf("subnets is required to be empty for providers other than GCP")
 	}
+
 	err := client.CreateVpc(vpc)
 	if err != nil {
 		if vpc.AviatrixTransitVpc == "yes" {
