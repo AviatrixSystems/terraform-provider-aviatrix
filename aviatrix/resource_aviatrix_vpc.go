@@ -44,33 +44,33 @@ func resourceAviatrixVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Region of cloud provider. Required except for GCP provider.",
+				Description: "Region of cloud provider. Required to be empty for GCP provider, and non-empty for other providers.",
 			},
 			"cidr": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Subnet of the VPC to be created. Required except for GCP provider.",
+				Description: "Subnet of the VPC to be created. Required to be empty for GCP provider, and non-empty for other providers.",
 			},
 			"aviatrix_transit_vpc": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				ForceNew:    true,
 				Default:     false,
-				Description: "Specify the VPC as Aviatrix Transit VPC or not.",
+				Description: "Specify the VPC as Aviatrix Transit VPC or not. Required to be false for GCP provider.",
 			},
 			"aviatrix_firenet_vpc": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				ForceNew:    true,
 				Default:     false,
-				Description: "Specify the VPC as Aviatrix FireNet VPC or not.",
+				Description: "Specify the VPC as Aviatrix FireNet VPC or not. Required to be false for GCP provider.",
 			},
 			"subnets": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Computed:    true,
-				Description: "List of subnets of the VPC to be created; to be specify for GCP provider.",
+				Description: "List of subnets of the VPC to be created. Required to be non-empty for GCP provider, and empty for other providers.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"region": {
