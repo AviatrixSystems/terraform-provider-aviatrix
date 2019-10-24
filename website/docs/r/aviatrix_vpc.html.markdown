@@ -22,6 +22,25 @@ resource "aviatrix_vpc" "test_vpc" {
   aviatrix_transit_vpc = false
   aviatrix_firenet_vpc = false
 }
+
+# Create a GCP VPC
+resource "aviatrix_vpc" "test-vpc" {
+  cloud_type           = 4
+  account_name         = "devops"
+  name                 = "vpcTest"
+
+  subnets {
+    name   = "subnet-1"
+    region = "us-west1"
+    cidr   = "10.10.0.0/24"
+  }
+
+  subnets {
+    name   = "subnet-2"
+    region = "us-west2"
+    cidr  = "10.11.0.0/24"
+  }
+}
 ```
 
 ## Argument Reference
@@ -31,10 +50,14 @@ The following arguments are supported:
 * `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1) is supported.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `name` - (Required) Name of the vpc to be created.
-* `region` - (Required) Region of cloud provider. Example: AWS: "us-east-1", ARM: "East US 2".
-* `cidr` - (Required) VPC cidr.
-* `aviatrix_transit_vpc` - (Optional) Specify whether it is an Aviatrix Transit VPC. Valid values: true, false. Default: false.
-* `aviatrix_firenet_vpc` - (Optional) Specify whether it is an Aviatrix Firenet VPC. Valid values: true, false. Default: false.
+* `region` - (Optional) Region of cloud provider. Required to be empty for GCP provider, and non-empty for other providers. Example: AWS: "us-east-1", ARM: "East US 2".
+* `cidr` - (Optional) VPC cidr. Required to be empty for GCP provider, and non-empty for other providers. Example: "10.11.0.0/24".
+* `subnets` - (Optional) List of subnets to be specify for GCP provider. Required to be non-empty for GCP provider, and empty for other providers.
+  * `region` - Region of this subnet.
+  * `cidr` - CIDR block.
+  * `name` - Name of this subnet.
+* `aviatrix_transit_vpc` - (Optional) Specify whether it is an Aviatrix Transit VPC. Required to be false for GCP provider. Valid values: true, false. Default: false.
+* `aviatrix_firenet_vpc` - (Optional) Specify whether it is an Aviatrix Firenet VPC. Required to be false for GCP provider. Valid values: true, false. Default: false.
 
 ## Attribute Reference
 

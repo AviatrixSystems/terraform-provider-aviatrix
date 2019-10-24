@@ -19,7 +19,7 @@ type Vpc struct {
 	AviatrixTransitVpc string       `form:"aviatrix_transit_vpc,omitempty"`
 	AviatrixFireNetVpc string       `form:"aviatrix_firenet_vpc,omitempty"`
 	VpcID              string       `json:"vpc_list,omitempty"`
-	Subnets            []SubnetInfo `json:"subnets,omitempty"`
+	Subnets            []SubnetInfo `form:"subnet_list,omitempty" json:"subnets,omitempty"`
 	PublicSubnets      []SubnetInfo
 	PrivateSubnets     []SubnetInfo
 }
@@ -47,6 +47,7 @@ type AllVpcPoolVpcListResp struct {
 }
 
 type SubnetInfo struct {
+	Region   string `json:"region, omitempty"`
 	Cidr     string `json:"cidr, omitempty"`
 	Name     string `json:"name, omitempty"`
 	SubnetID string `json:"id, omitempty"`
@@ -62,11 +63,23 @@ func (c *Client) CreateVpc(vpc *Vpc) error {
 	createCustomVpc.Add("action", "create_custom_vpc")
 	createCustomVpc.Add("cloud_type", strconv.Itoa(vpc.CloudType))
 	createCustomVpc.Add("account_name", vpc.AccountName)
-	createCustomVpc.Add("region", vpc.Region)
 	createCustomVpc.Add("pool_name", vpc.Name)
-	createCustomVpc.Add("vpc_cidr", vpc.Cidr)
-	createCustomVpc.Add("aviatrix_transit_vpc", vpc.AviatrixTransitVpc)
-	createCustomVpc.Add("aviatrix_firenet_vpc", vpc.AviatrixFireNetVpc)
+	if vpc.CloudType != 4 {
+		createCustomVpc.Add("region", vpc.Region)
+		createCustomVpc.Add("vpc_cidr", vpc.Cidr)
+		createCustomVpc.Add("aviatrix_transit_vpc", vpc.AviatrixTransitVpc)
+		createCustomVpc.Add("aviatrix_firenet_vpc", vpc.AviatrixFireNetVpc)
+	} else {
+		if vpc.Subnets != nil && len(vpc.Subnets) != 0 {
+			i := 0
+			for _, subnetInfo := range vpc.Subnets {
+				createCustomVpc.Add("subnet_list["+strconv.Itoa(i)+"][name]", subnetInfo.Name)
+				createCustomVpc.Add("subnet_list["+strconv.Itoa(i)+"][region]", subnetInfo.Region)
+				createCustomVpc.Add("subnet_list["+strconv.Itoa(i)+"][cidr]", subnetInfo.Cidr)
+				i++
+			}
+		}
+	}
 	Url.RawQuery = createCustomVpc.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
