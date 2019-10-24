@@ -40,7 +40,6 @@ resource "aviatrix_vpc" "test-vpc" {
     region = "us-west2"
     cidr  = "10.11.0.0/24"
   }
-
 }
 ```
 
