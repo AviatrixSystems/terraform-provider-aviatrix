@@ -21,7 +21,7 @@ func (c *Client) ControllerVersionValidation(supportedVersions []string) error {
 
 	for i := 0; i < len(supportedVersions); i++ {
 		suppVersion := strings.Split(supportedVersions[i], ".")
-		if len(supportedVersions) < 2 {
+		if len(suppVersion) < 2 {
 			return errors.New("" + supportedVersions[i] + " is not set correctly, correct example: '5.1'")
 		}
 		if suppVersion[0] == currVersion[0] && suppVersion[1] == currVersion[1] {
