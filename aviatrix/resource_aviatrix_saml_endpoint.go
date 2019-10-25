@@ -43,6 +43,13 @@ func resourceAviatrixSamlEndpoint() *schema.Resource {
 				ForceNew:    true,
 				Description: "Custom Entity ID. Required to be non-empty for 'Custom' Entity ID type, empty for 'Hostname'.",
 			},
+			"msg_template": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				ForceNew:    true,
+				Description: "Custom SAML Request Template.",
+			},
 		},
 	}
 }
@@ -54,6 +61,7 @@ func resourceAviatrixSamlEndpointCreate(d *schema.ResourceData, meta interface{}
 		EndPointName:    d.Get("endpoint_name").(string),
 		IdpMetadataType: d.Get("idp_metadata_type").(string),
 		IdpMetadata:     d.Get("idp_metadata").(string),
+		MsgTemplate:     d.Get("msg_template").(string),
 	}
 
 	customEntityID := d.Get("custom_entity_id").(string)
@@ -104,6 +112,7 @@ func resourceAviatrixSamlEndpointRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("idp_metadata_type", saml.IdpMetadataType)
 	d.Set("idp_metadata", saml.IdpMetadata)
 	d.Set("custom_entity_id", saml.CustomEntityId)
+	d.Set("msg_template", saml.MsgTemplate)
 
 	d.SetId(saml.EndPointName)
 	log.Printf("[INFO] Found SAML Endpoint: %#v", d)
