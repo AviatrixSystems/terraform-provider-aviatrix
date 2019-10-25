@@ -69,6 +69,7 @@ func resourceAviatrixVpc() *schema.Resource {
 			"subnets": {
 				Type:        schema.TypeList,
 				Optional:    true,
+				ForceNew:    true,
 				Computed:    true,
 				Description: "List of subnets of the VPC to be created. Required to be non-empty for GCP provider, and empty for other providers.",
 				Elem: &schema.Resource{
@@ -246,6 +247,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Looks like an import, no vpc names received. Import Id is %s", id)
 		d.Set("name", id)
 		d.SetId(id)
+		return resourceAviatrixVpcRead(d, meta)
 	}
 
 	vpc := &goaviatrix.Vpc{
@@ -339,6 +341,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] Error setting private subnets for (%s): %s", d.Id(), err)
 	}
 
+	d.SetId(vpcName)
 	return nil
 }
 
