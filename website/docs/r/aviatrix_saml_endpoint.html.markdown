@@ -27,7 +27,8 @@ The following arguments are supported:
 * `endpoint_name` - (Required) The SAML Endpoint name.
 * `idp_metadata_type` - (Required) The IDP Metadata type. At the moment only "Text" is supported.
 * `idp_metadata` - (Required) The IDP Metadata from SAML provider. Normally the metadata is in XML format which may contain special characters. Best practice is encode metadata in base64 and set here `${base64decode(var.idp_metadata)}`.
-* `custom_entity_id` - (Required) Custom Entity ID. Required to be non-empty for 'Custom' Entity ID type, empty for 'Hostname' Entity ID type.
+* `custom_entity_id` - (Optional) Custom Entity ID. Required to be non-empty for 'Custom' Entity ID type, empty for 'Hostname' Entity ID type.
+* `msg_template` - (Optional) Custom SAML Request Template.
 
 ## Import
 

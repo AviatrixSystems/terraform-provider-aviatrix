@@ -2,41 +2,25 @@ package goaviatrix
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
-	"log"
-	"net/http"
 	"net/url"
 	"strings"
-	"time"
 )
 
 type SamlEndpoint struct {
-	EndPointName    string `json:"name"`
-	IdpMetadataType string `json:"idp_metadata_type"`
-	IdpMetadata     string `json:"idp_metadata"`
-	EntityIdType    string `json:"entity_id"`
-	CustomEntityId  string `json:"custom_entity_id"`
+	EndPointName    string `form:"name,omitempty" json:"name,omitempty"`
+	IdpMetadataType string `form:"metadata_type,omitempty" json:"metadata_type,omitempty"`
+	IdpMetadata     string `form:"idp_metadata,omitempty" json:"idp_metadata,omitempty"`
+	EntityIdType    string `form:"entity_id,omitempty" json:"entity_id,omitempty"`
+	CustomEntityId  string `form:"custom_entityID,omitempty" json:"custom_entityID,omitempty"`
+	MsgTemplate     string `form:"msgtemplate,omitempty" json:"msgtemplate,omitempty"`
 }
 
-type SamlList struct {
-	Name            string `json:"name"`
-	IdpMetadataUrl  string `json:"idp_metadata_url"`
-	ClAccountType   string `json:"cl_account_type"`
-	ControllerLogin bool   `json:"controller_login"`
-	SamlEnabled     string `json:"saml_enabled"`
-	TestSSO         string `json:"test_sso"`
-	SpAcsUrl        string `json:"sp_acs_url"`
-	MsgTemplate     string `json:"msgtemplate"`
-	SpMetadataUrl   string `json:"sp_metadata_url"`
-}
-
-type SamlListResp struct {
-	Return  bool       `json:"return"`
-	Results []SamlList `json:"results"`
-	Reason  string     `json:"reason"`
+type SamlResp struct {
+	Return  bool         `json:"return"`
+	Results SamlEndpoint `json:"results"`
+	Reason  string       `json:"reason"`
 }
 
 func (c *Client) CreateSamlEndpoint(samlEndpoint *SamlEndpoint) error {
@@ -44,16 +28,16 @@ func (c *Client) CreateSamlEndpoint(samlEndpoint *SamlEndpoint) error {
 	if err != nil {
 		return errors.New(("url Parsing failed for create_saml_endpoint ") + err.Error())
 	}
-	saml := url.Values{}
-	saml.Add("CID", c.CID)
-	saml.Add("action", "create_saml_endpoint")
-	saml.Add("endpoint_name", samlEndpoint.EndPointName)
-	saml.Add("idp_metadata_type", samlEndpoint.IdpMetadataType)
-	saml.Add("idp_metadata", samlEndpoint.IdpMetadata)
-	saml.Add("entity_id", samlEndpoint.EntityIdType)
-	Url.RawQuery = saml.Encode()
+	createSamlEndpoint := url.Values{}
+	createSamlEndpoint.Add("CID", c.CID)
+	createSamlEndpoint.Add("action", "create_saml_endpoint")
+	createSamlEndpoint.Add("endpoint_name", samlEndpoint.EndPointName)
+	createSamlEndpoint.Add("idp_metadata_type", samlEndpoint.IdpMetadataType)
+	createSamlEndpoint.Add("idp_metadata", samlEndpoint.IdpMetadata)
+	createSamlEndpoint.Add("entity_id", samlEndpoint.CustomEntityId)
+	createSamlEndpoint.Add("msgtemplate", samlEndpoint.MsgTemplate)
+	Url.RawQuery = createSamlEndpoint.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
 		return errors.New("HTTP Get create_saml_endpoint failed: " + err.Error())
 	}
@@ -74,62 +58,36 @@ func (c *Client) CreateSamlEndpoint(samlEndpoint *SamlEndpoint) error {
 func (c *Client) GetSamlEndpoint(samlEndpoint *SamlEndpoint) (*SamlEndpoint, error) {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return nil, errors.New(("url Parsing failed for list_saml_endpoints ") + err.Error())
+		return nil, errors.New(("url Parsing failed for get_saml_endpoint_information ") + err.Error())
 	}
-	listSamlEndpoints := url.Values{}
-	listSamlEndpoints.Add("CID", c.CID)
-	listSamlEndpoints.Add("action", "list_saml_endpoints")
-	Url.RawQuery = listSamlEndpoints.Encode()
+	getSamlEndpointInformation := url.Values{}
+	getSamlEndpointInformation.Add("CID", c.CID)
+	getSamlEndpointInformation.Add("action", "get_saml_endpoint_information")
+	getSamlEndpointInformation.Add("endpoint_name", samlEndpoint.EndPointName)
+	Url.RawQuery = getSamlEndpointInformation.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
-		return nil, errors.New("HTTP Get list_saml_endpoints failed: " + err.Error())
+		return nil, errors.New("HTTP Get get_saml_endpoint_information failed: " + err.Error())
 	}
-	var data SamlListResp
+	var data SamlResp
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
 	bodyString := buf.String()
 	bodyIoCopy := strings.NewReader(bodyString)
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_saml_endpoints failed: " + err.Error() + "\n Body: " + bodyString)
+		return nil, errors.New("Json Decode get_saml_endpoint_information failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
-		return nil, errors.New("Rest API list_saml_endpoints Get failed: " + data.Reason)
-	}
-	samlList := data.Results
-	for i := range samlList {
-		if samlList[i].Name == samlEndpoint.EndPointName {
-			log.Printf("[DEBUG] Found SAML endpoint %s: %#v", samlEndpoint.EndPointName, samlList[i])
-			tr := &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			}
-			client := &http.Client{Transport: tr}
-			time.Sleep(5 * time.Second)
-			resp, err := client.Get(samlList[i].IdpMetadataUrl)
-			if err != nil {
-				return nil, errors.New("Cannot get IDP Metadata: " + err.Error())
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode == http.StatusOK {
-				bodyBytes, err := ioutil.ReadAll(resp.Body)
-				if err != nil {
-					return nil, errors.New("Cannot read IDP Metadata: " + err.Error())
-				}
-				responseSamlEndpoint := SamlEndpoint{
-					EndPointName:    samlList[i].Name,
-					IdpMetadata:     string(bodyBytes),
-					IdpMetadataType: "Text",
-					EntityIdType:    "Hostname",
-				}
-				return &responseSamlEndpoint, nil
-			} else {
-				return nil, errors.New("Cannot get IDP Metadata from " + samlList[i].IdpMetadataUrl + " : " + resp.Status)
-			}
+		if strings.Contains(data.Reason, "Invalid SAML endpoint name") {
+			return nil, ErrNotFound
 		}
+		return nil, errors.New("Rest API get_saml_endpoint_information Get failed: " + data.Reason)
 	}
-	log.Printf("SAML Endpoint %s not found", samlEndpoint.EndPointName)
-	return nil, ErrNotFound
+	samlEndpoint.CustomEntityId = data.Results.CustomEntityId
+	samlEndpoint.IdpMetadataType = data.Results.IdpMetadataType
+	samlEndpoint.IdpMetadata = data.Results.IdpMetadata
+	samlEndpoint.MsgTemplate = data.Results.MsgTemplate
+	return samlEndpoint, nil
 }
 
 func (c *Client) DeleteSamlEndpoint(samlEndpoint *SamlEndpoint) error {
