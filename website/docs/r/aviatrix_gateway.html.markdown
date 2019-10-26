@@ -125,6 +125,7 @@ The following arguments are supported:
 * `additional_cidrs` - (Optional) A list of destination CIDR ranges that will also go through the VPN tunnel when Split Tunnel Mode is enabled.
 * `otp_mode` - (Optional) Two step authentication mode. "2": DUO, "3": Okta.
 * `saml_enabled` - (Optional) This field indicates whether enabling SAML or not. This field is available in controller version 3.3 or later release. Supported values: true, false.
+* `enable_vpn_nat` - (Optional) This field indicates whether enabling VPN NAT or not. Only supported for VPN gateway. Valid values: true, false. Default value: true.
 * `okta_token` - (Optional) Token for Okta auth mode. Required if otp_mode is "3".
 * `okta_url` - (Optional) URL for Okta auth mode. Required if otp_mode is "3".
 * `okta_username_suffix` - (Optional) Username suffix for Okta auth mode. Example: "aviatrix.com".

@@ -108,6 +108,7 @@ type Gateway struct {
 	VpcSize                 string `form:"vpc_size,omitempty" ` //Only use for gateway create
 	DMZEnabled              string `json:"dmz_enabled,omitempty"`
 	EnableActiveMesh        string `form:"enable_activemesh,omitempty" json:"enable_activemesh,omitempty"`
+	EnableVpnNat            bool   `form:"dns,omitempty" `
 }
 
 type GatewayDetail struct {
@@ -117,6 +118,7 @@ type GatewayDetail struct {
 	DMZEnabled                   bool     `json:"dmz_enabled,omitempty"`
 	EnableAdvertiseTransitCidr   string   `json:"advertise_transit_cidr,omitempty"`
 	BgpManualSpokeAdvertiseCidrs []string `json:"bgp_manual_spoke_advertise_cidrs"`
+	VpnNat                       bool     `json:"vpn_nat"`
 }
 
 type VpnGatewayAuth struct { // Used for set_vpn_gateway_authentication rest api call
@@ -616,6 +618,74 @@ func (c *Client) DisableVpcDnsServer(gateway *Gateway) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API disable_vpc_dns_server Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) EnableVpnNat(gateway *Gateway) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for enable_nat_on_vpn_gateway") + err.Error())
+	}
+	enableVpnNat := url.Values{}
+	enableVpnNat.Add("CID", c.CID)
+	enableVpnNat.Add("action", "enable_nat_on_vpn_gateway")
+	enableVpnNat.Add("vpc_id", gateway.VpcID)
+	if gateway.ElbName != "" {
+		enableVpnNat.Add("lb_or_gateway_name", gateway.ElbName)
+	} else {
+		enableVpnNat.Add("lb_or_gateway_name", gateway.GwName)
+	}
+	enableVpnNat.Add("dns", "yes")
+	Url.RawQuery = enableVpnNat.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return errors.New("HTTP Get enable_nat_on_vpn_gateway failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode enable_nat_on_vpn_gateway failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API enable_nat_on_vpn_gateway Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) DisableVpnNat(gateway *Gateway) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for disable_nat_on_vpn_gateway") + err.Error())
+	}
+	disableVpnNat := url.Values{}
+	disableVpnNat.Add("CID", c.CID)
+	disableVpnNat.Add("action", "disable_nat_on_vpn_gateway")
+	disableVpnNat.Add("vpc_id", gateway.VpcID)
+	if gateway.ElbName != "" {
+		disableVpnNat.Add("lb_or_gateway_name", gateway.ElbName)
+	} else {
+		disableVpnNat.Add("lb_or_gateway_name", gateway.GwName)
+	}
+	disableVpnNat.Add("dns", "no")
+	Url.RawQuery = disableVpnNat.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return errors.New("HTTP Get disable_nat_on_vpn_gateway failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode disable_nat_on_vpn_gateway failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API disable_nat_on_vpn_gateway Get failed: " + data.Reason)
 	}
 	return nil
 }

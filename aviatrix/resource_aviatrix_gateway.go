@@ -135,7 +135,13 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "This field indicates whether enabling SAML or not.",
+				Description: "This field indicates whether to enable SAML or not.",
+			},
+			"enable_vpn_nat": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "This field indicates whether to enable VPN NAT or not. Only supported for VPN gateway. Valid values: true, false. Default value: true.",
 			},
 			"okta_token": {
 				Type:        schema.TypeString,
@@ -464,7 +470,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if gateway.EnableElb == "yes" && gateway.VpnStatus != "yes" {
-		return fmt.Errorf("can not enable elb without vpn access set to yes")
+		return fmt.Errorf("can not enable elb without VPN access set to yes")
 	}
 
 	insaneMode := d.Get("insane_mode").(bool)
@@ -602,6 +608,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("adding tags only supported for AWS, cloud_type must be 1")
 	}
 
+	enableVpnNat := d.Get("enable_vpn_nat").(bool)
 	if vpnStatus {
 		gw := &goaviatrix.Gateway{
 			GwName: gateway.GwName,
@@ -640,6 +647,15 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 				}
 			}
 		}
+
+		if !enableVpnNat {
+			err := client.DisableVpnNat(gateway)
+			if err != nil {
+				return fmt.Errorf("failed to disable VPN NAT: %s", err)
+			}
+		}
+	} else if !enableVpnNat {
+		return fmt.Errorf("'enable_vpc_nat' is only supported for vpn gateway. Can't disable it")
 	}
 
 	enableVpcDnsServer := d.Get("enable_vpc_dns_server").(bool)
@@ -749,8 +765,19 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		if gw.VpnStatus != "" {
 			if gw.VpnStatus == "disabled" {
 				d.Set("vpn_access", false)
+				d.Set("enable_vpn_nat", true)
 			} else if gw.VpnStatus == "enabled" {
 				d.Set("vpn_access", true)
+				gateway.VpcID = d.Get("vpc_id").(string)
+				gwDetail, err := client.GetGatewayDetail(gateway)
+				if err != nil {
+					return fmt.Errorf("couldn't get Detail info for VPN gateway: %s due to: %s", gateway.GwName, err)
+				}
+				if gwDetail.VpnNat {
+					d.Set("enable_vpn_nat", true)
+				} else {
+					d.Set("enable_vpn_nat", false)
+				}
 			}
 		}
 
@@ -1487,6 +1514,34 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		d.SetPartial("enable_vpc_dns_server")
 	} else if d.HasChange("enable_vpc_dns_server") {
 		return fmt.Errorf("'enable_vpc_dns_server' only supports AWS(1)")
+	}
+
+	if d.HasChange("enable_vpn_nat") {
+		if !d.Get("vpn_access").(bool) {
+			return fmt.Errorf("'enable_vpc_nat' is only supported for vpn gateway. Can't updated it for Non VPN Gateway")
+		} else {
+			gw := &goaviatrix.Gateway{
+				CloudType:    d.Get("cloud_type").(int),
+				GwName:       d.Get("gw_name").(string),
+				VpcID:        d.Get("vpc_id").(string),
+				ElbName:      d.Get("elb_name").(string),
+				EnableVpnNat: true,
+			}
+
+			if d.Get("enable_vpn_nat").(bool) {
+				err := client.EnableVpnNat(gw)
+				if err != nil {
+					return fmt.Errorf("failed to enable VPN NAT: %s", err)
+				}
+			} else if !d.Get("enable_vpn_nat").(bool) {
+				err := client.DisableVpnNat(gw)
+				if err != nil {
+					return fmt.Errorf("failed to disable VPN NAT: %s", err)
+				}
+			}
+		}
+
+		d.SetPartial("enable_vpn_nat")
 	}
 
 	d.Partial(false)
