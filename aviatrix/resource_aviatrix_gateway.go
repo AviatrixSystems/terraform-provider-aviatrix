@@ -1524,6 +1524,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				CloudType:    d.Get("cloud_type").(int),
 				GwName:       d.Get("gw_name").(string),
 				VpcID:        d.Get("vpc_id").(string),
+				ElbName:      d.Get("elb_name").(string),
 				EnableVpnNat: true,
 			}
 

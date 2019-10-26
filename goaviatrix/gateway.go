@@ -631,7 +631,11 @@ func (c *Client) EnableVpnNat(gateway *Gateway) error {
 	enableVpnNat.Add("CID", c.CID)
 	enableVpnNat.Add("action", "enable_nat_on_vpn_gateway")
 	enableVpnNat.Add("vpc_id", gateway.VpcID)
-	enableVpnNat.Add("lb_or_gateway_name", gateway.GwName)
+	if gateway.ElbName != "" {
+		enableVpnNat.Add("lb_or_gateway_name", gateway.ElbName)
+	} else {
+		enableVpnNat.Add("lb_or_gateway_name", gateway.GwName)
+	}
 	enableVpnNat.Add("dns", "yes")
 	Url.RawQuery = enableVpnNat.Encode()
 	resp, err := c.Get(Url.String(), nil)
@@ -661,7 +665,11 @@ func (c *Client) DisableVpnNat(gateway *Gateway) error {
 	disableVpnNat.Add("CID", c.CID)
 	disableVpnNat.Add("action", "disable_nat_on_vpn_gateway")
 	disableVpnNat.Add("vpc_id", gateway.VpcID)
-	disableVpnNat.Add("lb_or_gateway_name", gateway.GwName)
+	if gateway.ElbName != "" {
+		disableVpnNat.Add("lb_or_gateway_name", gateway.ElbName)
+	} else {
+		disableVpnNat.Add("lb_or_gateway_name", gateway.GwName)
+	}
 	disableVpnNat.Add("dns", "no")
 	Url.RawQuery = disableVpnNat.Encode()
 	resp, err := c.Get(Url.String(), nil)
