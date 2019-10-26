@@ -141,7 +141,7 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     true,
-				Description: "This field indicates whether to enable VPN NAT or not.",
+				Description: "This field indicates whether to enable VPN NAT or not. Only supported for VPN gateway. Valid values: true, false. Default value: true.",
 			},
 			"okta_token": {
 				Type:        schema.TypeString,
