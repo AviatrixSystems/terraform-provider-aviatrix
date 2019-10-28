@@ -3,7 +3,6 @@ package aviatrix
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -164,7 +163,7 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 
 	d.Set("vpc_id", fI.VpcID)
 	d.Set("firenet_gw_name", fI.GwName)
-	d.Set("firewall_name", strings.Split(fI.KeyName, "_")[1])
+	d.Set("firewall_name", fI.FirewallName)
 	d.Set("firewall_image", fI.FirewallImage)
 	d.Set("firewall_size", fI.FirewallSize)
 	d.Set("instance_id", fI.InstanceID)
