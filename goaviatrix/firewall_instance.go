@@ -14,7 +14,7 @@ type FirewallInstance struct {
 	Action              string `form:"action,omitempty"`
 	VpcID               string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
 	GwName              string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
-	FirewallName        string `form:"firewall_name,omitempty" json:"firewall_name,omitempty"`
+	FirewallName        string `form:"firewall_name,omitempty"`
 	FirewallImage       string `form:"firewall_image,omitempty" json:"firewall_image,omitempty"`
 	FirewallSize        string `form:"firewall_size,omitempty" json:"instance_size,omitempty"`
 	EgressSubnet        string `form:"egress_subnet,omitempty" json:"egress_subnet,omitempty"`
@@ -118,6 +118,12 @@ func (c *Client) GetFirewallInstance(firewallInstance *FirewallInstance) (*Firew
 		return nil, errors.New("Rest API get_instance_by_id Get failed: " + data.Reason)
 	}
 	if data.Results.InstanceID == firewallInstance.InstanceID {
+		if strings.HasPrefix(data.Results.KeyName, "vpc-") {
+			index := strings.Index(data.Results.KeyName, "_")
+			if index > -1 {
+				data.Results.FirewallName = data.Results.KeyName[index+1:]
+			}
+		}
 		return &data.Results, nil
 	}
 	return nil, ErrNotFound
