@@ -328,6 +328,12 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	if len(subnetsMap) != 0 {
 		for key := range subnetsMap {
 			subnetsFromFile = append(subnetsFromFile, subnetsMap[key])
+			if strings.Contains(subnetsMap[key]["name"].(string), "Public") {
+				publicSubnetList = append(publicSubnetList, subnetsMap[key])
+			}
+			if strings.Contains(subnetsMap[key]["name"].(string), "private") {
+				publicSubnetList = append(privateSubnetList, subnetsMap[key])
+			}
 		}
 	}
 
