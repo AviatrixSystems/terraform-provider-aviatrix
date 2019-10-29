@@ -3,7 +3,6 @@ package aviatrix
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -101,64 +100,6 @@ func resourceAviatrixVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "ID of the VPC created.",
-			},
-			"public_subnets": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "List of public subnet of the VPC to be created.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"region": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Subnet region.",
-						},
-						"cidr": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Subnet cidr.",
-						},
-						"name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Subnet name.",
-						},
-						"subnet_id": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Subnet ID.",
-						},
-					},
-				},
-			},
-			"private_subnets": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "List of private subnet of the VPC to be created.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"region": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Subnet region.",
-						},
-						"cidr": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Subnet cidr.",
-						},
-						"name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Subnet name.",
-						},
-						"subnet_id": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Subnet ID.",
-						},
-					},
-				},
 			},
 		},
 	}
@@ -286,65 +227,58 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vpc_id", vC.VpcID)
 
 	subnetsMap := make(map[string]map[string]interface{})
+	var subnetsKeyArry []string
 	for _, subnet := range vC.Subnets {
 		subnetInfo := make(map[string]interface{})
-		subnetInfo["region"] = subnet.Region
+		if vC.CloudType == 4 {
+			subnetInfo["region"] = subnet.Region
+		}
 		subnetInfo["cidr"] = subnet.Cidr
 		subnetInfo["name"] = subnet.Name
-		subnetInfo["subnet_id"] = subnet.SubnetID
+		if vC.CloudType != 4 {
+			subnetInfo["subnet_id"] = subnet.SubnetID
+		}
 
-		key := subnet.Region + "~" + subnet.Cidr + "~" + subnet.Name + "~" + subnet.SubnetID
+		var key string
+		if vC.CloudType == 4 {
+			key = subnet.Region + "~" + subnet.Cidr + "~" + subnet.Name
+		} else {
+			key = subnet.Cidr + "~" + subnet.Name + "~" + subnet.SubnetID
+		}
 		subnetsMap[key] = subnetInfo
+		subnetsKeyArry = append(subnetsKeyArry, key)
 	}
 
 	var subnetsFromFile []map[string]interface{}
-	var publicSubnetList []map[string]interface{}
-	var privateSubnetList []map[string]interface{}
-	subnets := d.Get("subnets").([]interface{})
-	for _, subnet := range subnets {
-		sub := subnet.(map[string]interface{})
-		subnetInfo := &goaviatrix.SubnetInfo{
-			Region:   sub["region"].(string),
-			Cidr:     sub["cidr"].(string),
-			Name:     sub["name"].(string),
-			SubnetID: sub["subnet_id"].(string),
-		}
-
-		key := subnetInfo.Region + "~" + subnetInfo.Cidr + "~" + subnetInfo.Name + "~" + subnetInfo.SubnetID
-		if val, ok := subnetsMap[key]; ok {
-			if goaviatrix.CompareMapOfInterface(sub, val) {
-				subnetsFromFile = append(subnetsFromFile, sub)
-				delete(subnetsMap, key)
+	if vC.CloudType == 4 {
+		subnets := d.Get("subnets").([]interface{})
+		for _, subnet := range subnets {
+			sub := subnet.(map[string]interface{})
+			subnetInfo := &goaviatrix.SubnetInfo{
+				Cidr:   sub["cidr"].(string),
+				Name:   sub["name"].(string),
+				Region: sub["region"].(string),
 			}
-		}
 
-		if strings.Contains(subnetInfo.Name, "Public") {
-			publicSubnetList = append(publicSubnetList, sub)
-		}
-		if strings.Contains(subnetInfo.Name, "Private") {
-			privateSubnetList = append(privateSubnetList, sub)
+			key := subnetInfo.Region + "~" + subnetInfo.Cidr + "~" + subnetInfo.Name
+			if val, ok := subnetsMap[key]; ok {
+				if goaviatrix.CompareMapOfInterface(sub, val) {
+					subnetsFromFile = append(subnetsFromFile, sub)
+					delete(subnetsMap, key)
+				}
+			}
 		}
 	}
-	if len(subnetsMap) != 0 {
-		for key := range subnetsMap {
-			subnetsFromFile = append(subnetsFromFile, subnetsMap[key])
-			if strings.Contains(subnetsMap[key]["name"].(string), "Public") {
-				publicSubnetList = append(publicSubnetList, subnetsMap[key])
-			}
-			if strings.Contains(subnetsMap[key]["name"].(string), "private") {
-				publicSubnetList = append(privateSubnetList, subnetsMap[key])
+	if len(subnetsKeyArry) != 0 {
+		for i := 0; i < len(subnetsKeyArry); i++ {
+			if subnetsMap[subnetsKeyArry[i]] != nil {
+				subnetsFromFile = append(subnetsFromFile, subnetsMap[subnetsKeyArry[i]])
 			}
 		}
 	}
 
 	if err := d.Set("subnets", subnetsFromFile); err != nil {
 		log.Printf("[WARN] Error setting subnets for (%s): %s", d.Id(), err)
-	}
-	if err := d.Set("public_subnets", publicSubnetList); err != nil {
-		log.Printf("[WARN] Error setting public subnets for (%s): %s", d.Id(), err)
-	}
-	if err := d.Set("private_subnets", privateSubnetList); err != nil {
-		log.Printf("[WARN] Error setting private subnets for (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(vpcName)
