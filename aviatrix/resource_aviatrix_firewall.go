@@ -181,6 +181,7 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[TRACE] Reading policy for gateway %s: %#v", firewall.GwName, fw)
 
 	policyMap := make(map[string]map[string]interface{})
+	var policyKeyArray []string
 	if fw != nil {
 		if fw.BasePolicy == "allow-all" {
 			d.Set("base_policy", "allow-all")
@@ -208,6 +209,7 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 			}
 			key := policy.SrcIP + "~" + policy.DstIP + "~" + policy.Protocol + "~" + policy.Port
 			policyMap[key] = pl
+			policyKeyArray = append(policyKeyArray, key)
 		}
 	}
 
@@ -238,9 +240,11 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 			}
 		}
 	}
-	if len(policyMap) != 0 {
-		for key := range policyMap {
-			policiesFromFile = append(policiesFromFile, policyMap[key])
+	if len(policyKeyArray) != 0 {
+		for i := 0; i < len(policyKeyArray); i++ {
+			if policyMap[policyKeyArray[i]] != nil {
+				policiesFromFile = append(policiesFromFile, policyMap[policyKeyArray[i]])
+			}
 		}
 	}
 

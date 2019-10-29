@@ -227,7 +227,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vpc_id", vC.VpcID)
 
 	subnetsMap := make(map[string]map[string]interface{})
-	var subnetsKeyArry []string
+	var subnetsKeyArray []string
 	for _, subnet := range vC.Subnets {
 		subnetInfo := make(map[string]interface{})
 		if vC.CloudType == 4 {
@@ -246,7 +246,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 			key = subnet.Cidr + "~" + subnet.Name + "~" + subnet.SubnetID
 		}
 		subnetsMap[key] = subnetInfo
-		subnetsKeyArry = append(subnetsKeyArry, key)
+		subnetsKeyArray = append(subnetsKeyArray, key)
 	}
 
 	var subnetsFromFile []map[string]interface{}
@@ -269,10 +269,10 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
-	if len(subnetsKeyArry) != 0 {
-		for i := 0; i < len(subnetsKeyArry); i++ {
-			if subnetsMap[subnetsKeyArry[i]] != nil {
-				subnetsFromFile = append(subnetsFromFile, subnetsMap[subnetsKeyArry[i]])
+	if len(subnetsKeyArray) != 0 {
+		for i := 0; i < len(subnetsKeyArray); i++ {
+			if subnetsMap[subnetsKeyArray[i]] != nil {
+				subnetsFromFile = append(subnetsFromFile, subnetsMap[subnetsKeyArray[i]])
 			}
 		}
 	}
