@@ -5,7 +5,7 @@ description: |-
   Manages attaching or detaching VPCs to/from an AWS TGW
 ---
 
-# aviatrix_aws_tgw
+# aviatrix_aws_tgw_vpc_attachment
 
 The aviatrix_aws_tgw resource manages attaching or detaching VPCs to/from an AWS TGW.
 
