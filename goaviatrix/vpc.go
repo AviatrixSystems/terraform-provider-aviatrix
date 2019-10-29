@@ -185,3 +185,42 @@ func (c *Client) DeleteVpc(vpc *Vpc) error {
 	}
 	return nil
 }
+
+func (c *Client) IsFireNetVpc(vpcID string) (bool, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return false, errors.New(("url Parsing failed for list_custom_vpcs ") + err.Error())
+	}
+	listPeerVpcPairs := url.Values{}
+	listPeerVpcPairs.Add("CID", c.CID)
+	listPeerVpcPairs.Add("action", "list_custom_vpcs")
+	Url.RawQuery = listPeerVpcPairs.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return false, errors.New("HTTP Get list_custom_vpcs failed: " + err.Error())
+	}
+	var data VpcResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return false, errors.New("Json Decode list_custom_vpcs failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return false, errors.New("Rest API list_custom_vpcs Get failed: " + data.Reason)
+	}
+	allVpcPoolVpcListResp := data.Results.AllVpcPoolVpcList
+	for i := range allVpcPoolVpcListResp {
+		if len(allVpcPoolVpcListResp[i].VpcID) != 0 && allVpcPoolVpcListResp[i].VpcID[0] == vpcID {
+			log.Printf("[DEBUG] Found VPC: %#v", allVpcPoolVpcListResp[i])
+			if allVpcPoolVpcListResp[i].AviatrixFireNetVpc {
+				return true, nil
+			} else {
+				return false, ErrNotFound
+			}
+		}
+	}
+	log.Printf("VPC not found")
+	return false, ErrNotFound
+}

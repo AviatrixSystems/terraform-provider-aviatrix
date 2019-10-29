@@ -19,9 +19,7 @@ resource "aviatrix_controller_config" "test_controller_config" {
   fqdn_exception_rule        = false
   security_group_management  = true
 }
-```
 
-```hcl
 # Create an Aviatrix Controller Config with Controller Upgrade
 resource "aviatrix_controller_config" "test_controller_config" {
   sg_management_account_name = "username"
