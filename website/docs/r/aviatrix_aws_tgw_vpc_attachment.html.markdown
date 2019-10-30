@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_aws_tgw_vpc_attachment"
 description: |-
-  Manages attaching or detaching VPCs to/from an AWS TGW
+  Manages attaching/detaching VPC to/from an AWS TGW, and FireNet Gateway to TGW Firewall Domain
 ---
 
 # aviatrix_aws_tgw_vpc_attachment
 
-The aviatrix_aws_tgw_vpc_attachment resource manages attaching or detaching VPCs to/from an AWS TGW.
+The aviatrix_aws_tgw_vpc_attachment resource manages attaching/detaching VPC to/from an AWS TGW, and FireNet Gateway to TGW Firewall Domain.
 
 ## Example Usage
 
@@ -31,6 +31,8 @@ The following arguments are supported:
 * `security_domain_name` - (Required & ForceNew) The name of the security domain, to which the VPC will be attached. If changed, the VPC will be detached from the old domain, and attached to the new domain.
 * `vpc_account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller, which is associated with the VPC. 
 * `vpc_id` - (Required) This parameter represents the ID of the VPC which is going to be attached to the security domain (name: `security_domain_name`).
+
+-> **NOTE:** If used to attach/detach FireNet Gateway to/from TGW Firewall Domain, "vpc_id" is the ID of the Security VPC, and "security_domain_name" is the domain name of the Aviatrix Firewall Domain in TGW.
 
 ## Import
 

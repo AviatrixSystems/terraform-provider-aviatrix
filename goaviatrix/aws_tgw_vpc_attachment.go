@@ -58,6 +58,36 @@ func (c *Client) CreateAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachm
 	return nil
 }
 
+func (c *Client) CreateAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for attach_vpc_to_tgw: ") + err.Error())
+	}
+	connectFireNetWithTgw := url.Values{}
+	connectFireNetWithTgw.Add("CID", c.CID)
+	connectFireNetWithTgw.Add("action", "connect_firenet_with_tgw")
+	connectFireNetWithTgw.Add("vpc_id", awsTgwVpcAttachment.VpcID)
+	connectFireNetWithTgw.Add("tgw_name", awsTgwVpcAttachment.TgwName)
+	connectFireNetWithTgw.Add("domain_name", awsTgwVpcAttachment.SecurityDomainName)
+	Url.RawQuery = connectFireNetWithTgw.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return errors.New("HTTP Get connect_firenet_with_tgw failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode connect_firenet_with_tgw failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API connect_firenet_with_tgw Get failed: " + data.Reason)
+	}
+	return nil
+}
+
 func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment) (*AwsTgwVpcAttachment, error) {
 	awsTgw := &AWSTgw{
 		Name: awsTgwVpcAttachment.TgwName,
@@ -116,6 +146,35 @@ func (c *Client) DeleteAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachm
 		return errors.New("Rest API detach_vpc_from_tgw Get failed: " + data.Reason)
 	}
 
+	return nil
+}
+
+func (c *Client) DeleteAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for disconnect_firenet_with_tgw") + err.Error())
+	}
+	disconnectFireNetWithTgw := url.Values{}
+	disconnectFireNetWithTgw.Add("CID", c.CID)
+	disconnectFireNetWithTgw.Add("action", "disconnect_firenet_with_tgw")
+	disconnectFireNetWithTgw.Add("vpc_id", awsTgwVpcAttachment.VpcID)
+	Url.RawQuery = disconnectFireNetWithTgw.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get disconnect_firenet_with_tgw failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode disconnect_firenet_with_tgw failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API disconnect_firenet_with_tgw Get failed: " + data.Reason)
+	}
 	return nil
 }
 
@@ -201,6 +260,5 @@ func (c *Client) GetAwsTgwDomainAttachedVpc(awsTgwVpcAttachment *AwsTgwVpcAttach
 			return awsTgwVpcAttachment, nil
 		}
 	}
-
 	return nil, ErrNotFound
 }

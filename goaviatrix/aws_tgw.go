@@ -237,6 +237,39 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 	return awsTgw, nil
 }
 
+func (c *Client) IsFirewallSecurityDomain(tgwName string, domainName string) (bool, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return false, errors.New(("url Parsing failed for list_route_domain_names") + err.Error())
+	}
+	viewRouteDomainDetails := url.Values{}
+	viewRouteDomainDetails.Add("CID", c.CID)
+	viewRouteDomainDetails.Add("action", "view_route_domain_details")
+	viewRouteDomainDetails.Add("tgw_name", tgwName)
+	viewRouteDomainDetails.Add("route_domain_name", domainName)
+	Url.RawQuery = viewRouteDomainDetails.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return false, errors.New("HTTP Get view_route_domain_details failed: " + err.Error())
+	}
+	var data RouteDomainAPIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return false, errors.New("Json Decode view_route_domain_details failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return false, errors.New("Rest API view_route_domain_details Get failed: " + data.Reason)
+	}
+	routeDomainDetail := data.Results
+	if routeDomainDetail[0].AviatrixFirewallDomain {
+		return true, nil
+	}
+	return false, ErrNotFound
+}
+
 func (c *Client) UpdateAWSTgw(awsTgw *AWSTgw) error {
 	return nil
 }
