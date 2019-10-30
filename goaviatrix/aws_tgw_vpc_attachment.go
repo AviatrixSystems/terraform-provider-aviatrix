@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
-
-	"github.com/terraform-providers/terraform-provider-aviatrix-backup/goaviatrix"
 )
 
 type AwsTgwVpcAttachment struct {
@@ -30,76 +28,62 @@ type DomainListResp struct {
 func (c *Client) CreateAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return errors.New(("url Parsing failed for attach_vpc_to_tgw: ") + err.Error())
+		return errors.New(("url Parsing failed for attach_vpc_to_tgw") + err.Error())
 	}
-
-	isFireNetVpc, err := c.IsFireNetVpc(awsTgwVpcAttachment.VpcID)
+	attachVpcFromTgw := url.Values{}
+	attachVpcFromTgw.Add("CID", c.CID)
+	attachVpcFromTgw.Add("action", "attach_vpc_to_tgw")
+	attachVpcFromTgw.Add("region", awsTgwVpcAttachment.Region)
+	attachVpcFromTgw.Add("vpc_account_name", awsTgwVpcAttachment.VpcAccountName)
+	attachVpcFromTgw.Add("vpc_name", awsTgwVpcAttachment.VpcID)
+	attachVpcFromTgw.Add("tgw_name", awsTgwVpcAttachment.TgwName)
+	attachVpcFromTgw.Add("route_domain_name", awsTgwVpcAttachment.SecurityDomainName)
+	Url.RawQuery = attachVpcFromTgw.Encode()
+	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
-			return errors.New("could not find VPC with ID: " + awsTgwVpcAttachment.VpcID)
-		}
-		return errors.New(("could not find VPC due to: ") + err.Error())
-	}
-
-	isFirewallSecurityDomain, err := c.IsFirewallSecurityDomain(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.SecurityDomainName)
-	if err != nil {
-		if err == goaviatrix.ErrNotFound {
-			return errors.New("could not find Security Domain: " + awsTgwVpcAttachment.VpcID)
-		}
-		return errors.New(("could not find Security Domain due to: ") + err.Error())
+		return errors.New("HTTP Get attach_vpc_to_tgw failed: " + err.Error())
 	}
 
 	var data APIResp
 	buf := new(bytes.Buffer)
-	if isFireNetVpc && isFirewallSecurityDomain {
-		connectFireNetWithTgw := url.Values{}
-		connectFireNetWithTgw.Add("CID", c.CID)
-		connectFireNetWithTgw.Add("action", "connect_firenet_with_tgw")
-		connectFireNetWithTgw.Add("vpc_id", awsTgwVpcAttachment.VpcID)
-		connectFireNetWithTgw.Add("tgw_name", awsTgwVpcAttachment.TgwName)
-		connectFireNetWithTgw.Add("domain_name", awsTgwVpcAttachment.SecurityDomainName)
-		Url.RawQuery = connectFireNetWithTgw.Encode()
-		resp, err := c.Get(Url.String(), nil)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode attach_vpc_to_tgw failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API attach_vpc_to_tgw Get failed: " + data.Reason)
+	}
+	return nil
+}
 
-		if err != nil {
-			return errors.New("HTTP Get connect_firenet_with_tgw failed: " + err.Error())
-		}
-		buf.ReadFrom(resp.Body)
-		bodyString := buf.String()
-		bodyIoCopy := strings.NewReader(bodyString)
-		if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-			return errors.New("Json Decode connect_firenet_with_tgw failed: " + err.Error() + "\n Body: " + bodyString)
-		}
-		if !data.Return {
-			return errors.New("Rest API connect_firenet_with_tgw Get failed: " + data.Reason)
-		}
-	} else if !isFireNetVpc && !isFirewallSecurityDomain {
-		attachVpcFromTgw := url.Values{}
-		attachVpcFromTgw.Add("CID", c.CID)
-		attachVpcFromTgw.Add("action", "attach_vpc_to_tgw")
-		attachVpcFromTgw.Add("region", awsTgwVpcAttachment.Region)
-		attachVpcFromTgw.Add("vpc_account_name", awsTgwVpcAttachment.VpcAccountName)
-		attachVpcFromTgw.Add("vpc_name", awsTgwVpcAttachment.VpcID)
-		attachVpcFromTgw.Add("tgw_name", awsTgwVpcAttachment.TgwName)
-		attachVpcFromTgw.Add("route_domain_name", awsTgwVpcAttachment.SecurityDomainName)
-		Url.RawQuery = attachVpcFromTgw.Encode()
-		resp, err := c.Get(Url.String(), nil)
-		if err != nil {
-			return errors.New("HTTP Get attach_vpc_to_tgw failed: " + err.Error())
-		}
-		buf.ReadFrom(resp.Body)
-		bodyString := buf.String()
-		bodyIoCopy := strings.NewReader(bodyString)
-		if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-			return errors.New("Json Decode attach_vpc_to_tgw failed: " + err.Error() + "\n Body: " + bodyString)
-		}
-		if !data.Return {
-			return errors.New("Rest API attach_vpc_to_tgw Get failed: " + data.Reason)
-		}
-	} else if isFireNetVpc && !isFirewallSecurityDomain {
-		return errors.New("could not attach a FireNet VPC to a Non Firewall Security Domain")
-	} else {
-		return errors.New("could not attach an Non FireNet VPC to an Firewall Security Domain")
+func (c *Client) CreateAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for attach_vpc_to_tgw: ") + err.Error())
+	}
+	connectFireNetWithTgw := url.Values{}
+	connectFireNetWithTgw.Add("CID", c.CID)
+	connectFireNetWithTgw.Add("action", "connect_firenet_with_tgw")
+	connectFireNetWithTgw.Add("vpc_id", awsTgwVpcAttachment.VpcID)
+	connectFireNetWithTgw.Add("tgw_name", awsTgwVpcAttachment.TgwName)
+	connectFireNetWithTgw.Add("domain_name", awsTgwVpcAttachment.SecurityDomainName)
+	Url.RawQuery = connectFireNetWithTgw.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return errors.New("HTTP Get connect_firenet_with_tgw failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode connect_firenet_with_tgw failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API connect_firenet_with_tgw Get failed: " + data.Reason)
 	}
 	return nil
 }
@@ -162,6 +146,35 @@ func (c *Client) DeleteAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachm
 		return errors.New("Rest API detach_vpc_from_tgw Get failed: " + data.Reason)
 	}
 
+	return nil
+}
+
+func (c *Client) DeleteAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for disconnect_firenet_with_tgw") + err.Error())
+	}
+	disconnectFireNetWithTgw := url.Values{}
+	disconnectFireNetWithTgw.Add("CID", c.CID)
+	disconnectFireNetWithTgw.Add("action", "disconnect_firenet_with_tgw")
+	disconnectFireNetWithTgw.Add("vpc_id", awsTgwVpcAttachment.VpcID)
+	Url.RawQuery = disconnectFireNetWithTgw.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get disconnect_firenet_with_tgw failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode disconnect_firenet_with_tgw failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API disconnect_firenet_with_tgw Get failed: " + data.Reason)
+	}
 	return nil
 }
 
