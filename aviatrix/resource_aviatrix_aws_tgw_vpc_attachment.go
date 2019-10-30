@@ -61,14 +61,6 @@ func resourceAviatrixAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta inte
 		VpcID:              d.Get("vpc_id").(string),
 	}
 
-	isFireNetVpc, err := client.IsFireNetVpc(awsTgwVpcAttachment.VpcID)
-	if err != nil {
-		if err == goaviatrix.ErrNotFound {
-			return fmt.Errorf("could not find VPC with ID: " + awsTgwVpcAttachment.VpcID)
-		}
-		return fmt.Errorf(("could not find VPC due to: ") + err.Error())
-	}
-
 	isFirewallSecurityDomain, err := client.IsFirewallSecurityDomain(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.SecurityDomainName)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
@@ -77,20 +69,14 @@ func resourceAviatrixAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta inte
 		return fmt.Errorf(("could not find Security Domain due to: ") + err.Error())
 	}
 
-	if isFireNetVpc && !isFirewallSecurityDomain {
-		return fmt.Errorf("could not attach a FireNet VPC to a Non Firewall Security Domain")
-	} else if !isFireNetVpc && isFirewallSecurityDomain {
-		return fmt.Errorf("could not attach an Non FireNet VPC to an Firewall Security Domain")
-	}
-
 	log.Printf("[INFO] Attaching vpc: %s to tgw %s", awsTgwVpcAttachment.VpcID, awsTgwVpcAttachment.TgwName)
 
-	if isFireNetVpc && isFirewallSecurityDomain {
+	if isFirewallSecurityDomain {
 		err := client.CreateAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment)
 		if err != nil {
 			return fmt.Errorf("failed to create Aviatrix Aws Tgw Vpc Attach for FireNet: %s", err)
 		}
-	} else if !isFireNetVpc && !isFirewallSecurityDomain {
+	} else {
 		err := client.CreateAwsTgwVpcAttachment(awsTgwVpcAttachment)
 		if err != nil {
 			return fmt.Errorf("failed to create Aviatrix Aws Tgw Vpc Attach: %s", err)
@@ -172,15 +158,15 @@ func resourceAviatrixAwsTgwVpcAttachmentDelete(d *schema.ResourceData, meta inte
 		VpcID:              d.Get("vpc_id").(string),
 	}
 
-	isFireNetVpc, err := client.IsFireNetVpc(awsTgwVpcAttachment.VpcID)
+	isFirewallSecurityDomain, err := client.IsFirewallSecurityDomain(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.SecurityDomainName)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
-			return fmt.Errorf("could not find VPC with ID: " + awsTgwVpcAttachment.VpcID)
+			return fmt.Errorf("could not find Security Domain: " + awsTgwVpcAttachment.VpcID)
 		}
-		return fmt.Errorf(("could not find VPC due to: ") + err.Error())
+		return fmt.Errorf(("could not find Security Domain due to: ") + err.Error())
 	}
 
-	if isFireNetVpc {
+	if isFirewallSecurityDomain {
 		err := client.DeleteAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment)
 		if err != nil {
 			return fmt.Errorf("failed to detach FireNet VPC from TGW: %s", err)
