@@ -26,9 +26,9 @@ type Account struct {
 	ArmApplicationEndpoint                     string `form:"arm_application_endpoint,omitempty" json:"arm_ad_tenant_id,omitempty"`
 	ArmApplicationClientId                     string `form:"arm_application_client_id,omitempty" json:"arm_ad_client_id,omitempty"`
 	ArmApplicationClientSecret                 string `form:"arm_application_client_secret,omitempty" json:"arm_ad_client_secret,omitempty"`
-	AwsgovAccountNumber                        string `form:"awsgov_account_number,omitempty" json:"awsgov_account_number,omitempty"`
-	AwsgovAccessKey                            string `form:"awsgov_access_key,omitempty" json:"awsgov_access_key,omitempty"`
-	AwsgovSecretKey                            string `form:"awsgov_secret_key,omitempty" json:"awsgov_secret_key,omitempty"`
+	AwsgovAccountNumber                        string `form:"awsgov_account_number,omitempty" json:"awsgovcloud_account_number,omitempty"`
+	AwsgovAccessKey                            string `form:"awsgov_access_key,omitempty" json:"awsgovcloud_access_key,omitempty"`
+	AwsgovSecretKey                            string `form:"awsgov_secret_key,omitempty" json:"awsgovcloud_secret_key,omitempty"`
 	AwsgovCloudtrailBucket                     string `form:"awsgov_cloudtrail_bucket,omitempty" json:"awsgov_cloudtrail_bucket,omitempty"`
 	AzurechinaSubscriptionId                   string `form:"azurechina_subscription_id,omitempty" json:"azurechina_subscription_id,omitempty"`
 	AwschinaAccountNumber                      string `form:"awschina_account_number,omitempty" json:"awschina_account_number,omitempty"`

@@ -61,17 +61,17 @@ func resourceAviatrixAccount() *schema.Resource {
 				Sensitive:   true,
 				Description: "AWS Secret Key.",
 			},
-			"aws_gov_account_number": {
+			"awsgov_account_number": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "AWS Gov Account number to associate with Aviatrix account.",
 			},
-			"aws_gov_access_key": {
+			"awsgov_access_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "AWS Gov Access Key.",
 			},
-			"aws_gov_secret_key": {
+			"awsgov_secret_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
@@ -149,9 +149,9 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		AwsRoleEc2:                            d.Get("aws_role_ec2").(string),
 		AwsAccessKey:                          d.Get("aws_access_key").(string),
 		AwsSecretKey:                          d.Get("aws_secret_key").(string),
-		AwsgovAccountNumber:                   d.Get("aws_gov_account_number").(string),
-		AwsgovAccessKey:                       d.Get("aws_gov_access_key").(string),
-		AwsgovSecretKey:                       d.Get("aws_gov_secret_key").(string),
+		AwsgovAccountNumber:                   d.Get("awsgov_account_number").(string),
+		AwsgovAccessKey:                       d.Get("awsgov_access_key").(string),
+		AwsgovSecretKey:                       d.Get("awsgov_secret_key").(string),
 		GcloudProjectName:                     d.Get("gcloud_project_id").(string),
 		GcloudProjectCredentialsFilepathLocal: d.Get("gcloud_project_credentials_filepath").(string),
 		ArmSubscriptionId:                     d.Get("arm_subscription_id").(string),
@@ -337,8 +337,8 @@ func resourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) error
 		} else if acc.CloudType == 8 {
 			d.Set("arm_subscription_id", acc.ArmSubscriptionId)
 		} else if acc.CloudType == 256 {
-			d.Set("aws_gov_account_number", acc.AwsgovAccountNumber)
-			d.Set("aws_gov_access_key", acc.AwsgovAccessKey)
+			d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
+			d.Set("awsgov_access_key", acc.AwsgovAccessKey)
 		}
 		d.SetId(acc.AccountName)
 	}
@@ -357,9 +357,9 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 		AwsRoleEc2:                            d.Get("aws_role_ec2").(string),
 		AwsAccessKey:                          d.Get("aws_access_key").(string),
 		AwsSecretKey:                          d.Get("aws_secret_key").(string),
-		AwsgovAccountNumber:                   d.Get("aws_gov_account_number").(string),
-		AwsgovAccessKey:                       d.Get("aws_gov_access_key").(string),
-		AwsgovSecretKey:                       d.Get("aws_gov_secret_key").(string),
+		AwsgovAccountNumber:                   d.Get("awsgov_account_number").(string),
+		AwsgovAccessKey:                       d.Get("awsgov_access_key").(string),
+		AwsgovSecretKey:                       d.Get("awsgov_secret_key").(string),
 		GcloudProjectName:                     d.Get("gcloud_project_id").(string),
 		GcloudProjectCredentialsFilepathLocal: d.Get("gcloud_project_credentials_filepath").(string),
 		ArmSubscriptionId:                     d.Get("arm_subscription_id").(string),
@@ -476,19 +476,19 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("updating OCI account is not supported")
 		}
 	} else if account.CloudType == 256 {
-		if d.HasChange("aws_gov_account_number") || d.HasChange("aws_gov_access_key") || d.HasChange("aws_gov_secret_key") {
+		if d.HasChange("awsgov_account_number") || d.HasChange("awsgov_access_key") || d.HasChange("awsgov_secret_key") {
 			err := client.UpdateAccount(account)
 			if err != nil {
 				return fmt.Errorf("failed to update Aviatrix Account: %s", err)
 			}
-			if d.HasChange("aws_gov_account_number") {
-				d.SetPartial("aws_gov_account_number")
+			if d.HasChange("awsgov_account_number") {
+				d.SetPartial("awsgov_account_number")
 			}
-			if d.HasChange("aws_gov_access_key") {
-				d.SetPartial("aws_gov_access_key")
+			if d.HasChange("awsgov_access_key") {
+				d.SetPartial("awsgov_access_key")
 			}
-			if d.HasChange("aws_gov_secret_key") {
-				d.SetPartial("aws_gov_secret_key")
+			if d.HasChange("awsgov_secret_key") {
+				d.SetPartial("awsgov_secret_key")
 			}
 		}
 	}
