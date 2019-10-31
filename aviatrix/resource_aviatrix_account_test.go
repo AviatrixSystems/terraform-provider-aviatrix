@@ -59,6 +59,17 @@ func preAccountCheck(t *testing.T, msgEnd string) {
 			t.Fatal("OCI_API_KEY_FILEPATH must be set for oci acceptance tests. " + msgEnd)
 		}
 	}
+	if os.Getenv("SKIP_ACCOUNT_AWSGOV") == "no" {
+		if os.Getenv("AWSGOV_ACCOUNT_NUMBER") == "" {
+			t.Fatal("AWSGOV_ACCOUNT_NUMBER must be set for aws gov acceptance tests. " + msgEnd)
+		}
+		if os.Getenv("AWSGOV_ACCESS_KEY") == "" {
+			t.Fatal("AWSGOV_ACCESS_KEY must be set for aws gov acceptance tests. " + msgEnd)
+		}
+		if os.Getenv("AWSGOV_SECRET_KEY") == "" {
+			t.Fatal("AWSGOV_SECRET_KEY must be set for aws gov acceptance tests. " + msgEnd)
+		}
+	}
 }
 
 func TestAccAviatrixAccount_basic(t *testing.T) {
@@ -72,13 +83,14 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 	skipGCP := os.Getenv("SKIP_ACCOUNT_GCP")
 	skipARM := os.Getenv("SKIP_ACCOUNT_ARM")
 	skipOCI := os.Getenv("SKIP_ACCOUNT_OCI")
+	skipAWSGOV := os.Getenv("SKIP_ACCOUNT_AWSGOV")
 
 	if skipAcc == "yes" {
 		t.Skip("Skipping Access Account test as SKIP_ACCOUNT is set")
 	}
-	if skipAWS == "yes" && skipGCP == "yes" && skipARM == "yes" && skipOCI == "yes" {
+	if skipAWS == "yes" && skipGCP == "yes" && skipARM == "yes" && skipOCI == "yes" && skipAWSGOV == "yes" {
 		t.Skip("Skipping Access Account test as SKIP_ACCOUNT_AWS, SKIP_ACCOUNT_GCP, SKIP_ACCOUNT_ARM, " +
-			"and SKIP_ACCOUNT_OCI are all set, even though SKIP_ACCOUNT isn't set")
+			"SKIP_ACCOUNT_OCI, and SKIP_ACCOUNT_AWSGOV are all set, even though SKIP_ACCOUNT isn't set")
 	}
 
 	if skipAWS == "yes" {
@@ -208,6 +220,37 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 			},
 		})
 	}
+	if skipAWSGOV == "yes" {
+		t.Log("Skipping AWSGOV Access Account test as SKIP_ACCOUNT_AWSGOV is set")
+	} else {
+		resourceName := "aviatrix_account.awsgov"
+		resource.Test(t, resource.TestCase{
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preAccountCheck(t, ". Set SKIP_ACCOUNT to yes to skip account tests")
+			},
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckAccountDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccAccountConfigAWSGOV(rInt),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckAccountExists(resourceName, &account),
+						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-awsgov-%d", rInt)),
+						resource.TestCheckResourceAttr(resourceName, "awsgov_account_number", os.Getenv("AWSGOV_ACCOUNT_NUMBER")),
+						resource.TestCheckResourceAttr(resourceName, "awsgov_access_key", os.Getenv("AWSGOV_ACCESS_KEY")),
+						resource.TestCheckResourceAttr(resourceName, "awsgov_secret_key", os.Getenv("AWSGOV_SECRET_KEY")),
+					),
+				},
+				{
+					ResourceName:            resourceName,
+					ImportState:             true,
+					ImportStateVerify:       true,
+					ImportStateVerifyIgnore: importStateVerifyIgnore,
+				},
+			},
+		})
+	}
 }
 
 func testAccAccountConfigAWS(rInt int) string {
@@ -260,6 +303,18 @@ resource "aviatrix_account" "oci" {
 }
 	`, rInt, os.Getenv("OCI_TENANCY_ID"), os.Getenv("OCI_USER_ID"),
 		os.Getenv("OCI_COMPARTMENT_ID"), os.Getenv("OCI_API_KEY_FILEPATH"))
+}
+
+func testAccAccountConfigAWSGOV(rInt int) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "awsgov" {
+	account_name       		= "tfa-awsgov-%d"
+	cloud_type         		= 256
+	awsgov_account_number = "%s"
+	awsgov_access_key     = "%s"
+	awsgov_secret_key     = "%s"
+}
+	`, rInt, os.Getenv("AWSGOV_ACCOUNT_NUMBER"), os.Getenv("AWSGOV_ACCESS_KEY"), os.Getenv("AWSGOV_SECRET_KEY"))
 }
 
 func testAccCheckAccountExists(n string, account *goaviatrix.Account) resource.TestCheckFunc {
