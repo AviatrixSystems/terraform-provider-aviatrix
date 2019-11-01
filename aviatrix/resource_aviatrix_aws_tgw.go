@@ -86,7 +86,7 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 										Type:        schema.TypeString,
 										Optional:    true,
 										Default:     "",
-										Description: "Customized Spoke VPC Routes.",
+										Description: "Customized Spoke VPC Routes. It allows the admin to enter non-RFC1918 routes in the VPC route table targeting the TGW.",
 									},
 									"disable_local_route_propagation": {
 										Type:        schema.TypeBool,
