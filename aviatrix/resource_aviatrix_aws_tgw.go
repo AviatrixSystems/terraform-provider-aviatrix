@@ -200,8 +200,8 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 
 		for _, connectedDomain := range dn["connected_domains"].([]interface{}) {
 			securityDomainRule.ConnectedDomain = append(securityDomainRule.ConnectedDomain, connectedDomain.(string))
-			temp := []string{dn["security_domain_name"].(string), connectedDomain.(string)}
-			domainConnAll = append(domainConnAll, temp)
+			tempDomainConn := []string{dn["security_domain_name"].(string), connectedDomain.(string)}
+			domainConnAll = append(domainConnAll, tempDomainConn)
 		}
 
 		for _, attachedVPCs := range dn["attached_vpc"].([]interface{}) {
@@ -239,22 +239,22 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 
 			securityDomainRule.AttachedVPCs = append(securityDomainRule.AttachedVPCs, vpcSolo)
 
-			temp := []string{dn["security_domain_name"].(string), attachedVPC["vpc_id"].(string),
+			tempAttachedVPC := []string{dn["security_domain_name"].(string), attachedVPC["vpc_id"].(string),
 				attachedVPC["vpc_account_name"].(string), attachedVPC["vpc_region"].(string)}
 
 			if attachedVPC["disable_local_route_propagation"].(bool) {
-				temp = append(temp, "yes")
+				tempAttachedVPC = append(tempAttachedVPC, "yes")
 			} else {
-				temp = append(temp, "no")
+				tempAttachedVPC = append(tempAttachedVPC, "no")
 			}
 
 			if attachedVPC["customized_routes"].(string) != "" {
-				temp = append(temp, attachedVPC["customized_routes"].(string))
+				tempAttachedVPC = append(tempAttachedVPC, attachedVPC["customized_routes"].(string))
 			} else {
-				temp = append(temp, "")
+				tempAttachedVPC = append(tempAttachedVPC, "")
 			}
 
-			attachedVPCAll = append(attachedVPCAll, temp)
+			attachedVPCAll = append(attachedVPCAll, tempAttachedVPC)
 		}
 
 		awsTgw.SecurityDomains = append(awsTgw.SecurityDomains, securityDomainRule)
@@ -646,8 +646,8 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 
 			for _, connectedDomain := range dn["connected_domains"].([]interface{}) {
 				securityDomainRule.ConnectedDomain = append(securityDomainRule.ConnectedDomain, connectedDomain.(string))
-				temp := []string{dn["security_domain_name"].(string), connectedDomain.(string)}
-				domainConnOld = append(domainConnOld, temp)
+				tempDomainConn := []string{dn["security_domain_name"].(string), connectedDomain.(string)}
+				domainConnOld = append(domainConnOld, tempDomainConn)
 			}
 
 			for _, attachedVPCs := range dn["attached_vpc"].([]interface{}) {
@@ -667,21 +667,21 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 				}
 				securityDomainRule.AttachedVPCs = append(securityDomainRule.AttachedVPCs, vpcSolo)
 
-				temp := []string{dn["security_domain_name"].(string), attachedVPC["vpc_id"].(string),
+				tempAttachedVPC := []string{dn["security_domain_name"].(string), attachedVPC["vpc_id"].(string),
 					attachedVPC["vpc_account_name"].(string), attachedVPC["vpc_region"].(string)}
 				if attachedVPC["disable_local_route_propagation"].(bool) {
-					temp = append(temp, "yes")
+					tempAttachedVPC = append(tempAttachedVPC, "yes")
 				} else {
-					temp = append(temp, "no")
+					tempAttachedVPC = append(tempAttachedVPC, "no")
 				}
 
 				if attachedVPC["customized_routes"].(string) != "" {
-					temp = append(temp, attachedVPC["customized_routes"].(string))
+					tempAttachedVPC = append(tempAttachedVPC, attachedVPC["customized_routes"].(string))
 				} else {
-					temp = append(temp, "")
+					tempAttachedVPC = append(tempAttachedVPC, "")
 				}
 
-				attachedVPCOld = append(attachedVPCOld, temp)
+				attachedVPCOld = append(attachedVPCOld, tempAttachedVPC)
 			}
 
 		}
@@ -732,8 +732,8 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 
 			for _, connectedDomain := range dn["connected_domains"].([]interface{}) {
 				securityDomainRule.ConnectedDomain = append(securityDomainRule.ConnectedDomain, connectedDomain.(string))
-				temp := []string{dn["security_domain_name"].(string), connectedDomain.(string)}
-				domainConnNew = append(domainConnNew, temp)
+				tempDomainConn := []string{dn["security_domain_name"].(string), connectedDomain.(string)}
+				domainConnNew = append(domainConnNew, tempDomainConn)
 			}
 
 			for _, attachedVPCs := range dn["attached_vpc"].([]interface{}) {
@@ -771,21 +771,21 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 
 				securityDomainRule.AttachedVPCs = append(securityDomainRule.AttachedVPCs, vpcSolo)
 
-				temp := []string{dn["security_domain_name"].(string), attachedVPC["vpc_id"].(string),
+				tempAttachedVPC := []string{dn["security_domain_name"].(string), attachedVPC["vpc_id"].(string),
 					attachedVPC["vpc_account_name"].(string), attachedVPC["vpc_region"].(string)}
 				if attachedVPC["disable_local_route_propagation"].(bool) {
-					temp = append(temp, "yes")
+					tempAttachedVPC = append(tempAttachedVPC, "yes")
 				} else {
-					temp = append(temp, "no")
+					tempAttachedVPC = append(tempAttachedVPC, "no")
 				}
 
 				if attachedVPC["customized_routes"].(string) != "" {
-					temp = append(temp, attachedVPC["customized_routes"].(string))
+					tempAttachedVPC = append(tempAttachedVPC, attachedVPC["customized_routes"].(string))
 				} else {
-					temp = append(temp, "")
+					tempAttachedVPC = append(tempAttachedVPC, "")
 				}
 
-				attachedVPCNew = append(attachedVPCNew, temp)
+				attachedVPCNew = append(attachedVPCNew, tempAttachedVPC)
 			}
 
 		}
@@ -979,14 +979,14 @@ func resourceAviatrixAWSTgwDelete(d *schema.ResourceData, meta interface{}) erro
 			for _, aVPCs := range dn["attached_vpc"].([]interface{}) {
 				aVPC := aVPCs.(map[string]interface{})
 
-				temp := []string{dn["security_domain_name"].(string), aVPC["vpc_id"].(string),
+				tempAttachedVPC := []string{dn["security_domain_name"].(string), aVPC["vpc_id"].(string),
 					aVPC["vpc_account_name"].(string), aVPC["vpc_region"].(string)}
 
 				if dn["aviatrix_firewall"].(bool) {
 					mapFireNetVpc[dn["security_domain_name"].(string)] = true
 				}
 
-				attachedVPCs = append(attachedVPCs, temp)
+				attachedVPCs = append(attachedVPCs, tempAttachedVPC)
 			}
 		}
 		for i := range attachedVPCs {
