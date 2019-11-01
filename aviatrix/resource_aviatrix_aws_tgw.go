@@ -82,6 +82,18 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 										Required:    true,
 										Description: "This parameter represents the ID of the VPC.",
 									},
+									"customized_routes": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Default:     "",
+										Description: "Customized Spoke VPC Routes. It allows the admin to enter non-RFC1918 routes in the VPC route table targeting the TGW.",
+									},
+									"disable_local_route_propagation": {
+										Type:        schema.TypeBool,
+										Optional:    true,
+										Default:     false,
+										Description: "Switch to allow admin not to propagate the VPC CIDR to the security domain/TGW route table that it is being attached to.",
+									},
 								},
 							},
 						},
@@ -188,8 +200,8 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 
 		for _, connectedDomain := range dn["connected_domains"].([]interface{}) {
 			securityDomainRule.ConnectedDomain = append(securityDomainRule.ConnectedDomain, connectedDomain.(string))
-			temp := []string{dn["security_domain_name"].(string), connectedDomain.(string)}
-			domainConnAll = append(domainConnAll, temp)
+			tempDomainConn := []string{dn["security_domain_name"].(string), connectedDomain.(string)}
+			domainConnAll = append(domainConnAll, tempDomainConn)
 		}
 
 		for _, attachedVPCs := range dn["attached_vpc"].([]interface{}) {
@@ -205,9 +217,11 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 			}
 
 			vpcSolo := goaviatrix.VPCSolo{
-				Region:      attachedVPC["vpc_region"].(string),
-				AccountName: attachedVPC["vpc_account_name"].(string),
-				VpcID:       attachedVPC["vpc_id"].(string),
+				Region:                       attachedVPC["vpc_region"].(string),
+				AccountName:                  attachedVPC["vpc_account_name"].(string),
+				VpcID:                        attachedVPC["vpc_id"].(string),
+				CustomizedRoutes:             attachedVPC["customized_routes"].(string),
+				DisableLocalRoutePropagation: attachedVPC["disable_local_route_propagation"].(bool),
 			}
 
 			if vpcSolo.Region == "" {
@@ -225,10 +239,22 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 
 			securityDomainRule.AttachedVPCs = append(securityDomainRule.AttachedVPCs, vpcSolo)
 
-			temp := []string{dn["security_domain_name"].(string), attachedVPC["vpc_id"].(string),
+			tempAttachedVPC := []string{dn["security_domain_name"].(string), attachedVPC["vpc_id"].(string),
 				attachedVPC["vpc_account_name"].(string), attachedVPC["vpc_region"].(string)}
 
-			attachedVPCAll = append(attachedVPCAll, temp)
+			if attachedVPC["disable_local_route_propagation"].(bool) {
+				tempAttachedVPC = append(tempAttachedVPC, "yes")
+			} else {
+				tempAttachedVPC = append(tempAttachedVPC, "no")
+			}
+
+			if attachedVPC["customized_routes"].(string) != "" {
+				tempAttachedVPC = append(tempAttachedVPC, attachedVPC["customized_routes"].(string))
+			} else {
+				tempAttachedVPC = append(tempAttachedVPC, "")
+			}
+
+			attachedVPCAll = append(attachedVPCAll, tempAttachedVPC)
 		}
 
 		awsTgw.SecurityDomains = append(awsTgw.SecurityDomains, securityDomainRule)
@@ -314,12 +340,19 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	for i := range attachedVPCAll {
-		if len(attachedVPCAll[i]) == 4 {
+		if len(attachedVPCAll[i]) == 6 {
 			vpcSolo := goaviatrix.VPCSolo{
-				Region:      attachedVPCAll[i][3],
-				AccountName: attachedVPCAll[i][2],
-				VpcID:       attachedVPCAll[i][1],
+				Region:           attachedVPCAll[i][3],
+				AccountName:      attachedVPCAll[i][2],
+				VpcID:            attachedVPCAll[i][1],
+				CustomizedRoutes: attachedVPCAll[i][5],
 			}
+			if attachedVPCAll[i][4] == "yes" {
+				vpcSolo.DisableLocalRoutePropagation = true
+			} else {
+				vpcSolo.DisableLocalRoutePropagation = false
+			}
+
 			if mapFireNetVpc[attachedVPCAll[i][0]] {
 				err := client.ConnectFireNetWithTgw(awsTgw, vpcSolo, attachedVPCAll[i][0])
 				if err != nil {
@@ -403,6 +436,8 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 				vpcSolo["vpc_region"] = attachedVPC.Region
 				vpcSolo["vpc_account_name"] = attachedVPC.AccountName
 				vpcSolo["vpc_id"] = attachedVPC.VpcID
+				vpcSolo["customized_routes"] = attachedVPC.CustomizedRoutes
+				vpcSolo["disable_local_route_propagation"] = attachedVPC.DisableLocalRoutePropagation
 				aVPCs = append(aVPCs, vpcSolo)
 			}
 			sdr["attached_vpc"] = aVPCs
@@ -461,6 +496,8 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 							if attachedVPCFromRefresh["vpc_id"] == attachedVPC["vpc_id"] {
 								attachedVPC["vpc_account_name"] = attachedVPCFromRefresh["vpc_account_name"]
 								attachedVPC["vpc_region"] = attachedVPCFromRefresh["vpc_region"]
+								attachedVPC["customized_routes"] = attachedVPCFromRefresh["customized_routes"]
+								attachedVPC["disable_local_route_propagation"] = attachedVPCFromRefresh["disable_local_route_propagation"]
 							}
 						}
 						aVPCNew = append(aVPCNew, attachedVPC)
@@ -609,8 +646,8 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 
 			for _, connectedDomain := range dn["connected_domains"].([]interface{}) {
 				securityDomainRule.ConnectedDomain = append(securityDomainRule.ConnectedDomain, connectedDomain.(string))
-				temp := []string{dn["security_domain_name"].(string), connectedDomain.(string)}
-				domainConnOld = append(domainConnOld, temp)
+				tempDomainConn := []string{dn["security_domain_name"].(string), connectedDomain.(string)}
+				domainConnOld = append(domainConnOld, tempDomainConn)
 			}
 
 			for _, attachedVPCs := range dn["attached_vpc"].([]interface{}) {
@@ -622,16 +659,29 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 				}
 
 				vpcSolo := goaviatrix.VPCSolo{
-					Region:      attachedVPC["vpc_region"].(string),
-					AccountName: attachedVPC["vpc_account_name"].(string),
-					VpcID:       attachedVPC["vpc_id"].(string),
+					Region:                       attachedVPC["vpc_region"].(string),
+					AccountName:                  attachedVPC["vpc_account_name"].(string),
+					VpcID:                        attachedVPC["vpc_id"].(string),
+					CustomizedRoutes:             attachedVPC["customized_routes"].(string),
+					DisableLocalRoutePropagation: attachedVPC["disable_local_route_propagation"].(bool),
 				}
 				securityDomainRule.AttachedVPCs = append(securityDomainRule.AttachedVPCs, vpcSolo)
 
-				temp := []string{dn["security_domain_name"].(string), attachedVPC["vpc_id"].(string),
+				tempAttachedVPC := []string{dn["security_domain_name"].(string), attachedVPC["vpc_id"].(string),
 					attachedVPC["vpc_account_name"].(string), attachedVPC["vpc_region"].(string)}
+				if attachedVPC["disable_local_route_propagation"].(bool) {
+					tempAttachedVPC = append(tempAttachedVPC, "yes")
+				} else {
+					tempAttachedVPC = append(tempAttachedVPC, "no")
+				}
 
-				attachedVPCOld = append(attachedVPCOld, temp)
+				if attachedVPC["customized_routes"].(string) != "" {
+					tempAttachedVPC = append(tempAttachedVPC, attachedVPC["customized_routes"].(string))
+				} else {
+					tempAttachedVPC = append(tempAttachedVPC, "")
+				}
+
+				attachedVPCOld = append(attachedVPCOld, tempAttachedVPC)
 			}
 
 		}
@@ -682,8 +732,8 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 
 			for _, connectedDomain := range dn["connected_domains"].([]interface{}) {
 				securityDomainRule.ConnectedDomain = append(securityDomainRule.ConnectedDomain, connectedDomain.(string))
-				temp := []string{dn["security_domain_name"].(string), connectedDomain.(string)}
-				domainConnNew = append(domainConnNew, temp)
+				tempDomainConn := []string{dn["security_domain_name"].(string), connectedDomain.(string)}
+				domainConnNew = append(domainConnNew, tempDomainConn)
 			}
 
 			for _, attachedVPCs := range dn["attached_vpc"].([]interface{}) {
@@ -699,9 +749,11 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 				}
 
 				vpcSolo := goaviatrix.VPCSolo{
-					Region:      attachedVPC["vpc_region"].(string),
-					AccountName: attachedVPC["vpc_account_name"].(string),
-					VpcID:       attachedVPC["vpc_id"].(string),
+					Region:                       attachedVPC["vpc_region"].(string),
+					AccountName:                  attachedVPC["vpc_account_name"].(string),
+					VpcID:                        attachedVPC["vpc_id"].(string),
+					CustomizedRoutes:             attachedVPC["customized_routes"].(string),
+					DisableLocalRoutePropagation: attachedVPC["disable_local_route_propagation"].(bool),
 				}
 
 				if vpcSolo.Region == "" {
@@ -719,10 +771,21 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 
 				securityDomainRule.AttachedVPCs = append(securityDomainRule.AttachedVPCs, vpcSolo)
 
-				temp := []string{dn["security_domain_name"].(string), attachedVPC["vpc_id"].(string),
+				tempAttachedVPC := []string{dn["security_domain_name"].(string), attachedVPC["vpc_id"].(string),
 					attachedVPC["vpc_account_name"].(string), attachedVPC["vpc_region"].(string)}
+				if attachedVPC["disable_local_route_propagation"].(bool) {
+					tempAttachedVPC = append(tempAttachedVPC, "yes")
+				} else {
+					tempAttachedVPC = append(tempAttachedVPC, "no")
+				}
 
-				attachedVPCNew = append(attachedVPCNew, temp)
+				if attachedVPC["customized_routes"].(string) != "" {
+					tempAttachedVPC = append(tempAttachedVPC, attachedVPC["customized_routes"].(string))
+				} else {
+					tempAttachedVPC = append(tempAttachedVPC, "")
+				}
+
+				attachedVPCNew = append(attachedVPCNew, tempAttachedVPC)
 			}
 
 		}
@@ -810,7 +873,7 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if manageVpcAttachment {
 		for i := range toDetachVPCs {
-			if len(toDetachVPCs[i]) == 4 {
+			if len(toDetachVPCs[i]) == 6 {
 				if mapOldFireNetVpc[toDetachVPCs[i][0]] {
 					err := client.DisconnectFireNetFromTgw(awsTgw, toDetachVPCs[i][1])
 					if err != nil {
@@ -841,13 +904,18 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if manageVpcAttachment {
 		for i := range toAttachVPCs {
-			if len(toAttachVPCs[i]) == 4 {
+			if len(toAttachVPCs[i]) == 6 {
 				vpcSolo := goaviatrix.VPCSolo{
-					Region:      toAttachVPCs[i][3],
-					AccountName: toAttachVPCs[i][2],
-					VpcID:       toAttachVPCs[i][1],
+					Region:           toAttachVPCs[i][3],
+					AccountName:      toAttachVPCs[i][2],
+					VpcID:            toAttachVPCs[i][1],
+					CustomizedRoutes: toAttachVPCs[i][5],
 				}
-
+				if toAttachVPCs[i][4] == "yes" {
+					vpcSolo.DisableLocalRoutePropagation = true
+				} else {
+					vpcSolo.DisableLocalRoutePropagation = false
+				}
 				res, _ := client.IsVpcAttachedToTgw(awsTgw, &vpcSolo)
 				if !res {
 					if mapNewFireNetVpc[toAttachVPCs[i][0]] {
@@ -911,14 +979,14 @@ func resourceAviatrixAWSTgwDelete(d *schema.ResourceData, meta interface{}) erro
 			for _, aVPCs := range dn["attached_vpc"].([]interface{}) {
 				aVPC := aVPCs.(map[string]interface{})
 
-				temp := []string{dn["security_domain_name"].(string), aVPC["vpc_id"].(string),
+				tempAttachedVPC := []string{dn["security_domain_name"].(string), aVPC["vpc_id"].(string),
 					aVPC["vpc_account_name"].(string), aVPC["vpc_region"].(string)}
 
 				if dn["aviatrix_firewall"].(bool) {
 					mapFireNetVpc[dn["security_domain_name"].(string)] = true
 				}
 
-				attachedVPCs = append(attachedVPCs, temp)
+				attachedVPCs = append(attachedVPCs, tempAttachedVPC)
 			}
 		}
 		for i := range attachedVPCs {
