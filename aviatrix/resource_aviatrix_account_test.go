@@ -224,6 +224,7 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 		t.Log("Skipping AWSGOV Access Account test as SKIP_ACCOUNT_AWSGOV is set")
 	} else {
 		resourceName := "aviatrix_account.awsgov"
+		importStateVerifyIgnore = append(importStateVerifyIgnore, "awsgov_secret_key")
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
