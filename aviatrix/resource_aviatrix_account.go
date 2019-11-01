@@ -279,7 +279,7 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		if account.AwsgovSecretKey == "" {
 			return fmt.Errorf("aws gov secret key needed for aws gov cloud")
 		}
-	} else if account.CloudType != 1 && account.CloudType != 4 && account.CloudType != 8 && account.CloudType != 16 && account.CloudType != 256 {
+	} else {
 		return fmt.Errorf("cloud type can only be either aws (1), gcp (4), arm (8), oci(16), or aws gov (256)")
 	}
 
