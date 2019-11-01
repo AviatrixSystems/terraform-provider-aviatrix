@@ -69,7 +69,7 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
     
     attached_vpc { 
       vpc_account_name = "devops"
-      vpc_id           = "vpc-032005cc371"
+      vpc_id           = "vpc-032005cc444"
       vpc_region       = "us-east-1"
     }
   }
@@ -78,10 +78,17 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
     security_domain_name = "mysdn2"
     
     attached_vpc { 
-      vpc_region       = "us-east-1"
-      vpc_account_name = "devops"
-      vpc_id           = "vpc-032005cc371" 
+      vpc_region                      = "us-east-1"
+      vpc_account_name                = "devops"
+      vpc_id                          = "vpc-03200566666" 
+      customized_routes               = "10.8.0.0/16,10.9.0.0/16"
+      disable_local_route_propagation = true
     }
+  }
+  
+  security_domains {
+    security_domain_name = "firewall-domain"
+    aviatrix_firewall    = true
   }
 }
 ```
@@ -104,6 +111,8 @@ The following arguments are supported:
     * `vpc_region` - (Required) Region of the vpc, needs to be consistent with AWS TGW's region.
     * `vpc_account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller. 
     * `vpc_id` - (Required) This parameter represents the ID of the VPC which is going to be attached to the security domain (name: `security_domain_name`) which is going to be created.
+    * `customized_routes` - (Optional) Customized Spoke VPC Routes. Example: "10.8.0.0/16,10.9.0.0/16,10.10.0.0/16".
+    * `disable_local_route_propagation` - (Optional) Switch to allow admin not to propagate the VPC CIDR to the security domain/TGW route table that it is being attached to. Valid values: true, false. Default value: false.
 * `attached_aviatrix_transit_gateway` - (Optional) A list of Names of Aviatrix Transit Gateway to attach to one of the three default domains: Aviatrix_Edge_Domain.
 * `manage_vpc_attachment` - (Optional) This parameter is a switch used to allow attaching VPCs to tgw using the aviatrix_aws_tgw resource. If it is set to false, attachment of vpc must be done using the aviatrix_aws_tgw_vpc_attachment resource. Valid values: true or false. Default value is true. 
 
