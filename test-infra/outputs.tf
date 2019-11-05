@@ -22,6 +22,18 @@ output "AWS_SECRET_KEY" {
   value = var.aws_secret_key
 }
 
+output "AWSGOV_ACCOUNT_NUMBER" {
+  value = var.awsgov_account_number
+}
+
+output "AWSGOV_ACCESS_KEY" {
+  value = var.awsgov_access_key
+}
+
+output "AWSGOV_SECRET_KEY" {
+  value = var.awsgov_secret_key
+}
+
 output "ARM_SUBSCRIPTION_ID" {
   value = var.azure_subscription_id
 }
