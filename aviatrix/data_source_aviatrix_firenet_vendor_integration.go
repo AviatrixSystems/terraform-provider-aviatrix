@@ -53,6 +53,18 @@ func dataSourceAviatrixFireNetVendorIntegration() *schema.Resource {
 				Optional:    true,
 				Description: "Specify the firewall virtual Router name you wish the Controller to program. If left unspecified, the Controller programs the firewall’s default router.",
 			},
+			"number_of_retries": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     0,
+				Description: "Number of retries for 'save' or 'synchronize'.",
+			},
+			"retry_interval": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     300,
+				Description: "Retry interval in seconds for `save` or `synchronize`.",
+			},
 			"save": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -103,48 +115,38 @@ func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta
 		return fmt.Errorf("can't do 'save' and 'synchronize' at the same time for vendor integration")
 	}
 
-	isRetry := true
-	if vendorInfo.Save && isRetry {
+	numberOfRetries := d.Get("number_of_retries").(int)
+	retryInterval := d.Get("retry_interval").(int)
+
+	if vendorInfo.Save {
 		var err error
 		for i := 0; ; i++ {
 			err = client.EditFireNetFirewallVendorInfo(vendorInfo)
 			if err == nil {
 				break
 			}
-			if i <= 5 {
-				time.Sleep(300 * time.Second)
+			if i < numberOfRetries {
+				time.Sleep(time.Duration(retryInterval) * time.Second)
 			} else {
 				d.SetId("")
 				return fmt.Errorf("failed to 'save' FireNet Firewall Vendor Info: %s", err)
 			}
 		}
-	} else if vendorInfo.Save {
-		err := client.EditFireNetFirewallVendorInfo(vendorInfo)
-		if err != nil {
-			d.SetId("")
-			return fmt.Errorf("failed to 'save' FireNet Firewall Vendor Info: %s", err)
-		}
 	}
 
-	if vendorInfo.Synchronize && isRetry {
+	if vendorInfo.Synchronize {
 		var err error
 		for i := 0; ; i++ {
 			err = client.ShowFireNetFirewallVendorConfig(vendorInfo)
 			if err == nil {
 				break
 			}
-			if i <= 5 {
-				time.Sleep(300 * time.Second)
+			if i < numberOfRetries {
+				time.Sleep(time.Duration(retryInterval) * time.Second)
 			} else {
 				d.SetId("")
 				return fmt.Errorf("failed to 'synchronize' FireNet Firewall Vendor Info: %s", err)
 			}
-		}
-	} else if vendorInfo.Synchronize {
-		err := client.ShowFireNetFirewallVendorConfig(vendorInfo)
-		if err != nil {
-			d.SetId("")
-			return fmt.Errorf("failed to 'synchronize' FireNet Firewall Vendor Info: %s", err)
 		}
 	}
 
