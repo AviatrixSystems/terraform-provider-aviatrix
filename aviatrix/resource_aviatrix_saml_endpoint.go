@@ -109,9 +109,8 @@ func resourceAviatrixSamlEndpointRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("idp_metadata_type", saml.IdpMetadataType)
 	d.Set("idp_metadata", saml.IdpMetadata)
 	d.Set("custom_entity_id", saml.CustomEntityId)
-	if saml.CustomEntityId == "dummy" {
+	if saml.MsgTemplate == "dummy" {
 		d.Set("custom_saml_request_template", "")
-
 	} else {
 		d.Set("custom_saml_request_template", saml.MsgTemplate)
 	}
