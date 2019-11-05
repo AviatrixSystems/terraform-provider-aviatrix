@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -103,18 +104,34 @@ func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta
 	}
 
 	if vendorInfo.Save {
-		err := client.EditFireNetFirewallVendorInfo(vendorInfo)
-		if err != nil {
-			d.SetId("")
-			return fmt.Errorf("failed to 'save' FireNet Firewall Vendor Info: %s", err)
+		var err error
+		for i := 0; ; i++ {
+			err = client.EditFireNetFirewallVendorInfo(vendorInfo)
+			if err == nil {
+				break
+			}
+			if i <= 5 {
+				time.Sleep(300 * time.Second)
+			} else {
+				d.SetId("")
+				return fmt.Errorf("failed to 'save' FireNet Firewall Vendor Info: %s", err)
+			}
 		}
 	}
 
 	if vendorInfo.Synchronize {
-		err := client.ShowFireNetFirewallVendorConfig(vendorInfo)
-		if err != nil {
-			d.SetId("")
-			return fmt.Errorf("failed to 'synchronize' FireNet Firewall Vendor Info: %s", err)
+		var err error
+		for i := 0; ; i++ {
+			err = client.ShowFireNetFirewallVendorConfig(vendorInfo)
+			if err == nil {
+				break
+			}
+			if i <= 5 {
+				time.Sleep(300 * time.Second)
+			} else {
+				d.SetId("")
+				return fmt.Errorf("failed to 'synchronize' FireNet Firewall Vendor Info: %s", err)
+			}
 		}
 	}
 
