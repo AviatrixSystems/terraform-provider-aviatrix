@@ -62,8 +62,8 @@ func dataSourceAviatrixFireNetVendorIntegration() *schema.Resource {
 			"retry_interval": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     0,
-				Description: "Number of retries for 'save' or 'synchronize'.",
+				Default:     300,
+				Description: "Retry interval in seconds of retries for `save` or `synchronize`.",
 			},
 			"save": {
 				Type:        schema.TypeBool,
@@ -126,7 +126,7 @@ func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta
 				break
 			}
 			if i < numberOfRetries {
-				time.Sleep(time.Duration(retryInterval) * time.Minute)
+				time.Sleep(time.Duration(retryInterval) * time.Second)
 			} else {
 				d.SetId("")
 				return fmt.Errorf("failed to 'save' FireNet Firewall Vendor Info: %s", err)
@@ -142,7 +142,7 @@ func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta
 				break
 			}
 			if i < numberOfRetries {
-				time.Sleep(time.Duration(retryInterval) * time.Minute)
+				time.Sleep(time.Duration(retryInterval) * time.Second)
 			} else {
 				d.SetId("")
 				return fmt.Errorf("failed to 'synchronize' FireNet Firewall Vendor Info: %s", err)

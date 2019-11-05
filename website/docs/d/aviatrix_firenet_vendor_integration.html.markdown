@@ -38,7 +38,7 @@ The following arguments are supported:
 * `firewall_name` - (Optional) Name of firewall instance.
 * `route_table` - (Optional) Specify the firewall virtual Router name you wish the Controller to program. If left unspecified, the Controller programs the firewall’s default router.
 * `number_of_retries` - (Optional) Number of retries for `save` or `synchronize`. Example: 1. Default value: 0.
-* `retry_interval` - (Optional) Retry interval in minutes of retries for `save` or `synchronize`. Example: 1. Default value: 0.
+* `retry_interval` - (Optional) Retry interval in seconds of retries for `save` or `synchronize`. Example: 120. Default value: 300.
 * `save` - (Optional) Switch to save or not.
 * `synchronize` - (Optional) Switch to sync or not.
 
