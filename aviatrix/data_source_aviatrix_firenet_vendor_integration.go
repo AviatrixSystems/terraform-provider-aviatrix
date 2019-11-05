@@ -63,7 +63,7 @@ func dataSourceAviatrixFireNetVendorIntegration() *schema.Resource {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Default:     300,
-				Description: "Retry interval in seconds of retries for `save` or `synchronize`.",
+				Description: "Retry interval in seconds for `save` or `synchronize`.",
 			},
 			"save": {
 				Type:        schema.TypeBool,
