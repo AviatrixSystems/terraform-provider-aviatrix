@@ -1,4 +1,26 @@
-## 2.6.1 (Unreleased)
+## 2.7.0 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-5.1.935**
+- Supported Terraform version: **v0.12.x**
+
+### Features:
+1. Added support of attaching/detaching fireNet vpc to/from TGW in **aviatrix_aws_tgw_vpc_attachment**
+2. Added support to create aviatrix_vpc of GCP provider in **aviatrix_vpc**
+3. Added support of ``custom_saml_request_template`` in **aviatrix_saml_endpoint**
+4. Added support of ``customized_routes`` and ``disable_local_route_propagation`` in **aviatrix_aws_tgw** 
+5. Added option of retries for ``save`` or ``synchronize`` in **data_source_aviatrix_firenet_vendor_integration**
+
+### Enhancements:
+1. Reverted separating ``subnets`` to ``public_subnets`` and ``private_subnets`` in **aviatrix_vpc**
+2. Changed calling ``update_access_policy`` from get to post in **aviatrix_firewall**
+
+### Bug Fixes:
+1. Fixed issue where it is unable to disable gateway ``split_tunnel``
+2. Fixed issue where terraform refresh is not working for firewall policy
+3. Fixed ``subnets`` reorder issue after import in **aviatrix_vpc**
+4. Fixed the issue where creating with special characters causes parsing issue in **aviatrix_firewall_instance**
+
+
 ## 2.6.0 (October 22, 2019)
 ### Notes:
 - Supported Controller version: **UserConnect-5.1.935**
