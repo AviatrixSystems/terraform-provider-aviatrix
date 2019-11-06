@@ -36,10 +36,11 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_firewall_tag                | SKIP_FIREWALL_TAG            |                                                                       |
 | aviatrix_fqdn                        | SKIP_FQDN                    | aviatrix_gateway                                                      |
 | aviatrix_gateway                     | SKIP_GATEWAY                 | aviatrix_account                                                      |
-|				                       | SKIP_GATEWAY_AWS             |		    + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)  |
+|				                               | SKIP_GATEWAY_AWS             |		    + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)  |
 |                                      | SKIP_GATEWAY_GCP             |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)    |
 |                                      | SKIP_GATEWAY_ARM             |         + ARM_VNET_ID, ARM_REGION, ARM_SUBNET, ARM_GW_SIZE            |
 |                                      | SKIP_GATEWAY_OCI             |         + OCI_VPC_ID, OCI_REGION, OCI_SUBNET, OCI_GW_SIZE(optional)   |
+|                                      | SKIP_GATEWAY_AWSGOV          |         + AWSGOV_VPC_ID, AWSGOV_REGION, AWSGOV_SUBNET, AWSGOV_GW_SIZE(optional)   |
 | aviatrix_saml_endpoint               | SKIP_SAML_ENDPOINT           | IDP_METADATA, IDP_METADATA_TYPE                                       |
 | aviatrix_site2cloud                  | SKIP_S2C                     | aviatrix_gateway                                                      |
 | aviatrix_spoke_gateway               | SKIP_SPOKE_GATEWAY           | aviatrix_gateway                                                      |
