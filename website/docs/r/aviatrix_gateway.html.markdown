@@ -74,6 +74,21 @@ resource "aviatrix_gateway" "test_gateway_oracle" {
   subnet       = "10.7.0.0/16"
 }
 
+# Create an Aviatrix AWSGOV Gateway
+resource "aviatrix_gateway" "test_gateway_awsgov" {
+  cloud_type   = 256
+  account_name = "devops-awsgov"
+  gw_name      = "avtxgw-awsgov"
+  vpc_id       = "vpc-abcdef"
+  vpc_reg      = "us-gov-west-1"
+  gw_size      = "t2.micro"
+  subnet       = "10.0.0.0/24"
+  tag_list     = [
+    "k1:v1",
+    "k2:v2",
+  ]
+}
+
 # Create an Aviatrix AWS Gateway with Peering HA enabled
 resource "aviatrix_gateway" "test_gateway_aws" {
   cloud_type         = 1
@@ -105,14 +120,14 @@ resource "aviatrix_gateway" "test_gateway_gcp" {
 
 The following arguments are supported:
 
-* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), ARM(8), and OCI(16) are supported.
+* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), ARM(8), OCI(16), and AWSGOV(256) are supported.
 * `account_name` - (Required) Account name. This account will be used to launch Aviatrix gateway.
 * `gw_name` - (Required) Aviatrix gateway unique name.
-* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Required if for aws. Example: AWS: "vpc-abcd1234", GCP: "vpc-gcp-test", ARM: "vnet1:hello", OCI: "vpc-oracle-test1".
+* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Example: AWS: "vpc-abcd1234", GCP: "vpc-gcp-test", ARM: "vnet1:hello", OCI: "vpc-oracle-test1".
 * `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", GCP: "us-west2-a", ARM: "East US 2", Oracle: "us-ashburn-1".
 * `gw_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", ARM: "Standard_B1s", Oracle: "VM.Standard2.2", GCP: "n1-standard-1".
 * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20".
-* `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Gateway. Required for AWS if insane_mode is set. Example: AWS: "us-west-1a".
+* `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Gateway. Required for AWS and AWSGOV if insane_mode is set. Example: AWS: "us-west-1a".
 * `enable_snat` - (Optional) Enable Source NAT for this container. Supported values: true, false. Default value: false.
 * `vpn_access` - (Optional) Enable user access through VPN to this container. Supported values: true, false.
 * `vpn_cidr` - (Optional) VPN CIDR block for the container. Required if vpn_access is true. Example: "192.168.43.0/24".
@@ -147,9 +162,9 @@ The following arguments are supported:
 * `single_az_ha` (Optional) Set to true if this feature is desired. Supported values: true, false.
 * `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in controller 2.7 or later release. Supported values: true, false. Default: true. Option not available for GCP, ARM and Oracle gateways, they will automatically allocate new eip's.
 * `eip` - (Optional) Required when allocate_new_eip is false. It uses specified EIP for this gateway. Available in controller 3.5 or later release. Only available for AWS.
-* `tag_list` - (Optional) Instance tag of cloud provider. Only available for AWS. Example: ["key1:value1", "key2:value2"].
-* `insane_mode` - (Optional) Enable Insane Mode for Gateway. Insane Mode Gateway size must be at least c5 (AWS) or Standard_D3_v2 (ARM). If set, will look for spare /26 segment to create a new subnet. Only supported for AWS or ARM. Supported values: true, false.
-* `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS. Valid values: true, false. Default value: false.
+* `tag_list` - (Optional) Instance tag of cloud provider. Only available for AWS and AWSGOV. Example: ["key1:value1", "key2:value2"].
+* `insane_mode` - (Optional) Enable Insane Mode for Gateway. Insane Mode Gateway size must be at least c5 (AWS) or Standard_D3_v2 (ARM). If set, will look for spare /26 segment to create a new subnet. Only supported for AWS, AWSGOV or ARM. Supported values: true, false.
+* `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS and AWSGOV. Valid values: true, false. Default value: false.
 
 ## Attribute Reference
 
