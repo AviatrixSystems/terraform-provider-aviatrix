@@ -9,7 +9,7 @@ description: |-
 
 The aviatrix_spoke_vpc resource allows to create and manage Aviatrix Spoke Gateways.
 
--> **NOTE:** The spoke_Vpc resource is deprecated. It is kept for backward compatibility and will be removed in the future. Please use spoke_gateway instead. Need to remove it from state file and import as aviatrix_spoke_gateway if it is already in state.
+!> **WARNING:** The aviatrix_spoke_vpc resource is deprecated. It is kept for backward compatibility and will be removed in the future. Please use spoke_gateway instead. Need to remove it from state file and import as aviatrix_spoke_gateway if it is already in state.
 
 ## Example Usage
 
@@ -63,7 +63,7 @@ The following arguments are supported:
 * `cloud_type` - (Required) Type of cloud service provider. AWS=1, GCP=4, ARM=8.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `gw_name` - (Required) Name of the gateway which is going to be created.
-* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Required if cloud_type is "1" or "4". Example: AWS: "vpc-abcd1234", etc... 
+* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Required if cloud_type is "1" or "4". Example: AWS: "vpc-abcd1234", etc...
 * `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", GCP: "us-west1-b", ARM: "East US 2", etc...
 * `vpc_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", GCP: "f1.micro", ARM: "StandardD2", etc...
 * `subnet` - (Required) Public Subnet Info. Example: AWS: "CIDRZONESubnetName", etc...
