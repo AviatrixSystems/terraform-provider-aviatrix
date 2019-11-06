@@ -11,7 +11,7 @@ output "AVIATRIX_PASSWORD" {
 }
 
 output "AWS_ACCOUNT_NUMBER" {
-  value = data.aws_caller_identity.current.account_id
+  value = data.aws_caller_identity.current_aws.account_id
 }
 
 output "AWS_ACCESS_KEY" {
@@ -115,11 +115,23 @@ output "AWS_SUBNET2" {
 }
 
 output "AWS_REGION" {
-  value = data.aws_region.current.name
+  value = data.aws_region.current_aws.name
 }
 
 output "AWS_REGION2" {
-  value = data.aws_region.current.name
+  value = data.aws_region.current_aws.name
+}
+
+output "AWSGOV_VPC_ID" {
+  value = module.aviatrix_aws_vpc1.vpc
+}
+
+output "AWSGOV_SUBNET" {
+  value = module.aviatrix_aws_vpc1.subnet
+}
+
+output "AWSGOV_REGION" {
+  value = data.aws_region.current_awsgov.name
 }
 
 output "OCI_VPC_ID" {
