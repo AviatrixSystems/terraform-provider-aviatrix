@@ -9,7 +9,7 @@ description: |-
 
 The aviatrix_transit_vpc resource creates and manages the Aviatrix Transit Network Gateways.
 
--> **NOTE:** The aviatrix_transit_vpc resource is deprecated. It is kept for backward compatibility and will be removed in the future. Please use transit_gateway instead. Need to remove it from state file and import as aviatrix_transit_gateway if it is already in state.
+!> **WARNING:** The aviatrix_transit_vpc resource is deprecated. It is kept for backward compatibility and will be removed in the future. Please use transit_gateway instead. Need to remove it from state file and import as aviatrix_transit_gateway if it is already in state.
 
 ## Example Usage
 
@@ -26,8 +26,8 @@ resource "aviatrix_transit_vpc" "test_transit_gw_aws" {
   ha_subnet                = "10.1.0.0/24"
   ha_gw_size               = "t2.micro"
   tag_list                 = [
-    "name:value", 
-    "name1:value1", 
+    "name:value",
+    "name1:value1",
     "name2:value2"
   ]
   enable_hybrid_connection = true
