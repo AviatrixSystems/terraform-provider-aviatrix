@@ -65,6 +65,6 @@ provider "aviatrix" {
   username                = "admin"
   password                = "password"
   skip_version_validation = false
-  version                 = "2.4.0"
+  version                 = "2.7.0"
 }
 ```

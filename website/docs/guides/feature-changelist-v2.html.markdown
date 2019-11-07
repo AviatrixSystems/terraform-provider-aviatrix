@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.6 (UserConnect-5.1)``
+``Last updated: R2.7 (UserConnect-5.1)``
 
 
 ---
@@ -99,7 +99,7 @@ For most changes, unless stated otherwise in the tables below, after editing the
 ## R2.4 (UserConnect5.0) (Terraform v0.12)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
-|(new) | firewall       | description       | **No**; Terraform support added to feature already available for stateful firewall policies. This attribute is optional by default |
+|(new) | firewall       | description       | **Yes**; Terraform support added to feature already available for stateful firewall policies. This attribute is optional by default. If customer already has a description set through the Controller, they must add the description attribute and its corresponding value to their Terraform file and perform a ``terraform refresh`` to rectify the diff  |
 |(new) | account        | oci_tenancy_id, oci_user_id, oci_compartment_id, oci_api_private_key_filepath | **No**; Terraform now supports Oracle Cloud, hence the new attributes needed to create an Oracle access account |
 
 
@@ -115,4 +115,14 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |(deprecated) | vgw_conn | enable_advertise_transit_cidr, bgp_manual_spoke_advertise_cidrs | **Yes**; functionality migrated over to **transit_gateway** resource. In order to maintain same functionality, customer must cut-paste the these two attributes and their respective values into the corresponding **transit_gateway** and perform a ```terraform refresh``` |
 |(new) | transit_gateway | enable_advertise_transit_cidr, bgp_manual_spoke_advertise_cidrs | **No**; action required depends on above stated for **vgw_conn**. If customer does not have **vgw_conn** that originally advertised any sort of CIDR before this release, no action is required
 |(changed) | -- | enable_firenet_interfaces | **Yes**; if customer is using **transit_gateway** and has set ``enable_firenet_interfaces``, attribute must be renamed to ``enable_firenet`` and a ``terraform refresh`` must be performed |
-|(new) | -- | single_az_ha | **No**; Terraform support added for enabling/ disabling ``single_az_ha`` for **transit_gateway**. Unless customer has originally enabled ``single_az_ha`` through Controller prior to this release, then this attribute must be set to **true**, and a ``terraform refresh`` must be performed to rectify the state |
+|(new) | -- | single_az_ha | **Yes**; Terraform support added for enabling/ disabling ``single_az_ha`` for **transit_gateway**. If customer has originally enabled ``single_az_ha`` through Controller prior to this release, then this attribute must be set to **true**, and a ``terraform refresh`` must be performed to rectify the state |
+
+
+## R2.7 (UserConnect5.1) (Terraform v0.12)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(new) | vpc            | subnets           | **No**; Terraform support added for creating a GCP VPC. If customer wants to manage their existing GCP VPC through Terraform, they must write a matching configuration for the existing GCP VPC and perform a ``terraform import`` to bring it into the state |
+|(deprecated) | --      | public_subnets, private_subnets | **Yes**; if customers have referenced these 2 attributes that were added in the previous release R2.6, they must change reference back to whichever ``subnets`` it corresponds to and perform a ``terraform refresh`` |
+|(new) | saml_endpoint  | custom_saml_request_template | **No**; Terraform support added for using custom SAML templates for the endpoint |
+|(new) | aws_tgw        | customized_routes, disable_local_route_propagation | **No**; Terraform support added for Controller 5.0 feature. Customers may now use customized routes and disable local route propogation when attaching a VPC to their TGW |
+|(new) | gateway        | enable_vpn_nat    | **Yes**; Terraform support added for Controller 5.0 feature. If customers have enabled/ disabled VPN NAT feature through the Controller for their VPN gateway, they must specify this attribute and its corresponding value in Terraform and perform a ``terraform refresh`` |
