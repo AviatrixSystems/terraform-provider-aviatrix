@@ -7,7 +7,7 @@
 - The VPC's with public subnet to launch the gateways must be created before the tests
 - If you are running aviatrix_aws_peer or aviatrix_peer, two VPC's with non overlapping CIDR's must be created before hand
 - If you are running the tests on a BYOL controller, the customer ID must be set prior to the tests, otherwise run the tests on a PayG metered controller
-- aviatrix_aws_tgw test only allows Transit GWs and VPCs to be attached to the TGW in the same region 
+- aviatrix_aws_tgw test only allows Transit GWs and VPCs to be attached to the TGW in the same region
 - AWS_ACCOUNT_NUMBER should be the same one used for controller launch
 
 #### Skip parameters and variables
@@ -18,10 +18,11 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | ------------------------------------ | ---------------------------- | --------------------------------------------------------------------- |
 | Generic                              | N/A                          | AVIATRIX_USERNAME, AVIATRIX_PASSWORD, AVIATRIX_CONTROLLER_IP          |
 | aviatrix_account                     | SKIP_ACCOUNT                 |                                                                       |
-|		                               | SKIP_ACCOUNT_AWS	          | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY                    |
-|                     		           | SKIP_ACCOUNT_GCP	          | GCP_ID, GCP_CREDENTIALS_FILEPATH	                                  |
-|		                               | SKIP_ACCOUNT_ARM	          | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID, ARM_APPLICATION_KEY |	
-|                     		           | SKIP_ACCOUNT_OCI	          | OCI_TENANCY_ID, OCI_USER_ID, OCI_COMPARTMENT_ID, OCI_API_KEY_FILEPATH |
+|		                                   | SKIP_ACCOUNT_AWS	            | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY                    |
+|                     		             | SKIP_ACCOUNT_GCP	            | GCP_ID, GCP_CREDENTIALS_FILEPATH	                                  |
+|		                                   | SKIP_ACCOUNT_ARM	            | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID, ARM_APPLICATION_KEY |
+|                     		             | SKIP_ACCOUNT_OCI	            | OCI_TENANCY_ID, OCI_USER_ID, OCI_COMPARTMENT_ID, OCI_API_KEY_FILEPATH |
+|		                                   | SKIP_ACCOUNT_AWSGOV          | AWSGOV_ACCOUNT_NUMBER, AWSGOV_ACCESS_KEY, AWSGOV_SECRET_KEY           |
 | aviatrix_account_user                | SKIP_ACCOUNT_USER            |                                                                       |
 | aviatrix_arm_peer                    | SKIP_ARM_PEER                | aviatrix_account + ARM_VNET_ID, ARM_VNET_ID2, ARM_REGION, ARM_REGION2 |
 | aviatrix_aws_peer                    | SKIP_AWS_PEER                | aviatrix_account + AWS_VPC_ID, AWS_VPC_ID2, AWS_REGION, AWS_REGION2   |
@@ -35,10 +36,11 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_firewall_tag                | SKIP_FIREWALL_TAG            |                                                                       |
 | aviatrix_fqdn                        | SKIP_FQDN                    | aviatrix_gateway                                                      |
 | aviatrix_gateway                     | SKIP_GATEWAY                 | aviatrix_account                                                      |
-|				                       | SKIP_GATEWAY_AWS             |		    + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)  |
+|				                               | SKIP_GATEWAY_AWS             |		    + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)  |
 |                                      | SKIP_GATEWAY_GCP             |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)    |
 |                                      | SKIP_GATEWAY_ARM             |         + ARM_VNET_ID, ARM_REGION, ARM_SUBNET, ARM_GW_SIZE            |
 |                                      | SKIP_GATEWAY_OCI             |         + OCI_VPC_ID, OCI_REGION, OCI_SUBNET, OCI_GW_SIZE(optional)   |
+|                                      | SKIP_GATEWAY_AWSGOV          |         + AWSGOV_VPC_ID, AWSGOV_REGION, AWSGOV_SUBNET, AWSGOV_GW_SIZE(optional)   |
 | aviatrix_saml_endpoint               | SKIP_SAML_ENDPOINT           | IDP_METADATA, IDP_METADATA_TYPE                                       |
 | aviatrix_site2cloud                  | SKIP_S2C                     | aviatrix_gateway                                                      |
 | aviatrix_spoke_gateway               | SKIP_SPOKE_GATEWAY           | aviatrix_gateway                                                      |
@@ -71,4 +73,3 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_data_source_caller_identity | SKIP_DATA_CALLER_IDENTITY    |                                                                       |
 | aviatrix_data_source_firenet_vendor_integration | SKIP_DATA_FIRENET_VENDOR_INTEGRATION    | aviatrix_account + AWS_REGION, Palo Alto VM series |
 | aviatrix_data_source_gateway         | SKIP_DATA_GATEWAY            | aviatrix_gateway                                                      |
-

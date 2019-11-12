@@ -2,6 +2,14 @@ provider "aws" {
   region     = var.aws_region3
   access_key = var.aws_access_key
   secret_key = var.aws_secret_key
+  alias      = "reg"
+}
+
+provider "aws" {
+  region     = var.awsgov_region1
+  access_key = var.awsgov_access_key
+  secret_key = var.awsgov_secret_key
+  alias      = "gov"
 }
 
 provider "google" {

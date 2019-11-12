@@ -32,6 +32,13 @@ variable "aws_vpc_subnet3" {default="192.168.0.0/24"}
 variable "aws_access_key" {}
 variable "aws_secret_key" {}
 
+variable "awsgov_region1" {default="us-gov-west-1"}
+variable "awsgov_vpc_cidr1" {default="10.10.0.0/16"}
+variable "awsgov_vpc_subnet1" {default="10.10.0.0/24"}
+variable "awsgov_access_key" {}
+variable "awsgov_secret_key" {}
+variable "awsgov_account_number" {}
+
 variable "oci_tenancy_id" {}
 variable "oci_user_id" {}
 variable "oci_compartment_id" {}

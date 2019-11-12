@@ -83,6 +83,23 @@ func preGatewayCheckOCI(t *testing.T, msgCommon string) {
 	}
 }
 
+func preGatewayCheckAWSGOV(t *testing.T, msgCommon string) {
+	preAccountCheck(t, msgCommon)
+
+	awsgovVpcId := os.Getenv("AWSGOV_VPC_ID")
+	if awsgovVpcId == "" {
+		t.Fatal("Environment variable AWSGOV_VPC_ID is not set" + msgCommon)
+	}
+	awsgovRegion := os.Getenv("AWSGOV_REGION")
+	if awsgovRegion == "" {
+		t.Fatal("Environment variable AWSGOV_REGION is not set" + msgCommon)
+	}
+	awsgovSubnet := os.Getenv("AWSGOV_SUBNET")
+	if awsgovSubnet == "" {
+		t.Fatal("Environment variable AWSGOV_SUBNET is not set" + msgCommon)
+	}
+}
+
 func TestAccAviatrixGateway_basic(t *testing.T) {
 	var gateway goaviatrix.Gateway
 
@@ -94,19 +111,21 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 	skipGCP := os.Getenv("SKIP_GATEWAY_GCP")
 	skipARM := os.Getenv("SKIP_GATEWAY_ARM")
 	skipOCI := os.Getenv("SKIP_GATEWAY_OCI")
+	skipAWSGOV := os.Getenv("SKIP_GATEWAY_AWSGOV")
 
 	if skipGw == "yes" {
 		t.Skip("Skipping Gateway test as SKIP_GATEWAY is set")
 	}
-	if skipAWS == "yes" && skipGCP == "yes" && skipARM == "yes" && skipOCI == "yes" {
+	if skipAWS == "yes" && skipGCP == "yes" && skipARM == "yes" && skipOCI == "yes" && skipAWSGOV == "yes" {
 		t.Skip("Skipping Gateway test as SKIP_GATEWAY_AWS, SKIP_GATEWAY_GCP, SKIP_GATEWAY_ARM " +
-			"and SKIP_GATEWAY_OCI are all set, even though SKIP_GATEWAY isn't set")
+			",SKIP_GATEWAY_OCI, and SKIP_GATEWAY_AWSGOV are all set, even though SKIP_GATEWAY isn't set")
 	}
 
 	//Setting default values for AWS_GW_SIZE and GCP_GW_SIZE
 	awsGwSize := os.Getenv("AWS_GW_SIZE")
 	gcpGwSize := os.Getenv("GCP_GW_SIZE")
 	ociGwSize := os.Getenv("OCI_GW_SIZE")
+	awsgovGwSize := os.Getenv("AWSGOV_GW_SIZE")
 	if awsGwSize == "" {
 		awsGwSize = "t2.micro"
 	}
@@ -115,6 +134,9 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 	}
 	if ociGwSize == "" {
 		ociGwSize = "VM.Standard2.2"
+	}
+	if awsgovGwSize == "" {
+		awsgovGwSize = "t2.micro"
 	}
 
 	if skipAWS == "yes" {
@@ -273,6 +295,45 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 			},
 		})
 	}
+
+	if skipAWSGOV == "yes" {
+		t.Log("Skipping AWSGOV Gateway test as SKIP_GATEWAY_AWSGOV is set")
+	} else {
+		awsgovVpcId := os.Getenv("AWSGOV_VPC_ID")
+		awsgovRegion := os.Getenv("AWSGOV_REGION")
+		awsgovVpcNet := os.Getenv("AWSGOV_SUBNET")
+		resourceNameAwsgov := "aviatrix_gateway.test_gw_awsgov"
+		msgCommonAwsgov := ". Set SKIP_GATEWAY_AWSGOV to yes to skip AWSGOV Gateway tests"
+
+		resource.Test(t, resource.TestCase{
+			PreCheck: func() {
+				testAccPreCheck(t)
+				//Checking resources have needed environment variables set
+				preAccountCheck(t, msgCommon)
+				preGatewayCheckAWSGOV(t, msgCommonAwsgov)
+			},
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckGatewayDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccGatewayConfigBasicAWSGOV(rName, awsgovGwSize, awsgovVpcId, awsgovRegion, awsgovVpcNet),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckGatewayExists(resourceNameAwsgov, &gateway),
+						resource.TestCheckResourceAttr(resourceNameAwsgov, "gw_name", fmt.Sprintf("tfg-awsgov-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameAwsgov, "gw_size", awsgovGwSize),
+						resource.TestCheckResourceAttr(resourceNameAwsgov, "vpc_id", awsgovVpcId),
+						resource.TestCheckResourceAttr(resourceNameAwsgov, "subnet", awsgovVpcNet),
+						resource.TestCheckResourceAttr(resourceNameAwsgov, "vpc_reg", awsgovRegion),
+					),
+				},
+				{
+					ResourceName:      resourceNameAwsgov,
+					ImportState:       true,
+					ImportStateVerify: true,
+				},
+			},
+		})
+	}
 }
 
 func testAccGatewayConfigBasicAWS(rName string, awsGwSize string, awsVpcId string, awsRegion string, awsVpcNet string) string {
@@ -369,6 +430,29 @@ resource "aviatrix_gateway" "test_gw_oci" {
 	`,
 		rName, os.Getenv("OCI_TENANCY_ID"), os.Getenv("OCI_USER_ID"), os.Getenv("OCI_COMPARTMENT_ID"),
 		os.Getenv("OCI_API_KEY_FILEPATH"), ociVpcId, ociRegion, ociGwSize, ociSubnet)
+}
+
+func testAccGatewayConfigBasicAWSGOV(rName string, awsgovGwSize string, awsgovVpcId string, awsgovRegion string, awsgovVpcNet string) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "test_acc_awsgov" {
+	account_name       = "tf-acc-awsgov-%s"
+	cloud_type         = 256
+	awsgov_account_number = "%s"
+	awsgov_access_key     = "%s"
+	awsgov_secret_key     = "%s"
+}
+
+resource "aviatrix_gateway" "test_gw_awsgov" {
+	cloud_type   = 256
+	account_name = aviatrix_account.test_acc_awsgov.account_name
+	gw_name      = "tfg-awsgov-%[1]s"
+	vpc_id       = "%[5]s"
+	vpc_reg      = "%[6]s"
+	gw_size      = "%[7]s"
+	subnet       = "%[8]s"
+}
+	`, rName, os.Getenv("AWSGOV_ACCOUNT_NUMBER"), os.Getenv("AWSGOV_ACCESS_KEY"), os.Getenv("AWSGOV_SECRET_KEY"),
+		awsgovVpcId, awsgovRegion, awsgovGwSize, awsgovVpcNet)
 }
 
 func testAccCheckGatewayExists(n string, gateway *goaviatrix.Gateway) resource.TestCheckFunc {

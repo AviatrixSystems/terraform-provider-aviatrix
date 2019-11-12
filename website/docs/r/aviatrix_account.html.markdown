@@ -59,6 +59,16 @@ resource "aviatrix_account" "tempacc_oci" {
   oci_compartment_id           = "ocid1.tenancy.oc1..aaaaaaaaxo"
   oci_api_private_key_filepath = "/Users/public/Documents/oci_api_key.pem"
 }
+
+# Create an Aviatrix AWS Gov Account
+resource "aviatrix_account" "tempacc_awsgov" {
+  account_name       = "username"
+  cloud_type         = 256
+  awsgov_account_number = "123456789012"
+  awsgov_access_key     = "ABCDEFGHIJKL"
+  awsgov_secret_key     = "ABCDEFGHIJKLabcdefghijkl"
+}
+
 ```
 
 ## Argument Reference
@@ -66,7 +76,7 @@ resource "aviatrix_account" "tempacc_oci" {
 The following arguments are supported:
 
 * `account_name` - (Required) Account name. This can be used for logging in to CloudN console or UserConnect controller.
-* `cloud_type` - (Required) Type of cloud service provider. Only AWS, GCP, ARM and OCI are supported currently. Enter 1 for AWS, 4 for GCP, 8 for ARM, 16 for OCI.
+* `cloud_type` - (Required) Type of cloud service provider. Only AWS, GCP, ARM, OCI, and AWS Gov are supported currently. Enter 1 for AWS, 4 for GCP, 8 for ARM, 16 for OCI, 256 for AWS Gov.
 * `aws_account_number` - (Optional) AWS Account number to associate with Aviatrix account. Required when creating an account for AWS.
 * `aws_iam` - (Optional) AWS IAM-role based flag, this option is for UserConnect.
 * `aws_access_key` - (Optional) AWS Access Key. Required when aws_iam is "false" and when creating an account for AWS.
@@ -83,6 +93,9 @@ The following arguments are supported:
 * `oci_user_id` - (Optional) Oracle OCI User ID. Required when creating an account for OCI.
 * `oci_compartment_id` - (Optional) Oracle OCI Compartment ID. Required when creating an account for OCI.
 * `oci_api_private_key_filepath` - (Optional) Oracle OCI API Private Key local file path. Required when creating an account for OCI.
+* `awsgov_account_number` - (Optional) AWS Gov Account number to associate with Aviatrix account. Required when creating an account for AWS Gov.
+* `awsgov_access_key` - (Optional) AWS Access Key. Required when creating an account for AWS Gov.
+* `awsgov_secret_key` - (Optional) AWS Secret Key. Required when creating an account for AWS Gov.
 
 -> **NOTE:** Please make sure that the IAM roles/profiles have already been created before running this, if aws_iam = "true". More information on the IAM roles is at https://docs.aviatrix.com/HowTos/iam_policies.html and https://docs.aviatrix.com/HowTos/HowTo_IAM_role.html
 

@@ -11,7 +11,7 @@ output "AVIATRIX_PASSWORD" {
 }
 
 output "AWS_ACCOUNT_NUMBER" {
-  value = data.aws_caller_identity.current.account_id
+  value = data.aws_caller_identity.current_aws.account_id
 }
 
 output "AWS_ACCESS_KEY" {
@@ -20,6 +20,18 @@ output "AWS_ACCESS_KEY" {
 
 output "AWS_SECRET_KEY" {
   value = var.aws_secret_key
+}
+
+output "AWSGOV_ACCOUNT_NUMBER" {
+  value = var.awsgov_account_number
+}
+
+output "AWSGOV_ACCESS_KEY" {
+  value = var.awsgov_access_key
+}
+
+output "AWSGOV_SECRET_KEY" {
+  value = var.awsgov_secret_key
 }
 
 output "ARM_SUBSCRIPTION_ID" {
@@ -103,11 +115,23 @@ output "AWS_SUBNET2" {
 }
 
 output "AWS_REGION" {
-  value = data.aws_region.current.name
+  value = data.aws_region.current_aws.name
 }
 
 output "AWS_REGION2" {
-  value = data.aws_region.current.name
+  value = data.aws_region.current_aws.name
+}
+
+output "AWSGOV_VPC_ID" {
+  value = module.aviatrix_aws_vpc1.vpc
+}
+
+output "AWSGOV_SUBNET" {
+  value = module.aviatrix_aws_vpc1.subnet
+}
+
+output "AWSGOV_REGION" {
+  value = data.aws_region.current_awsgov.name
 }
 
 output "OCI_VPC_ID" {
