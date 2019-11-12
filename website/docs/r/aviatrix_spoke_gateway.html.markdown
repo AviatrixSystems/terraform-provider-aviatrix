@@ -87,7 +87,7 @@ The following arguments are supported:
 * `single_az_ha` (Optional) Set to true if this feature is desired. Supported values: true, false.
 * `transit_gw` - (Optional) Specify the transit Gateway.
 * `tag_list` - (Optional) Instance tag of cloud provider. Only AWS, cloud_type is "1", is supported. Example: ["key1:value1", "key2:value2"].
-* `insane_mode` - (Optional) Enable Insane Mode for Spoke Gateway. Insane Mode gateway size has to be at least c5 (AWS) or Standard_D3_v2 (ARM). If enabled, will look for spare /26 segment to create a new subnet. Only supported for AWS and ARM. Supported values: true, false.
+* `insane_mode` - (Optional) Enable Insane Mode for Spoke Gateway. Insane Mode gateway size has to be at least c5 (AWS) or Standard_D3_v2 (ARM). If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet. Only supported for AWS and ARM. Supported values: true, false.
 * `enable_active_mesh` - (Optional) Switch to Enable/Disable Active Mesh Mode for Spoke Gateway. Valid values: true, false. Default value: false.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS. Valid values: true, false. Default value: false.
 
@@ -98,6 +98,8 @@ In addition to all arguments above, the following attributes are exported:
 * `eip` - Public IP address assigned to the gateway.
 * `ha_eip` - Public IP address assigned to the HA gateway.
 * `cloud_instance_id` - Cloud Instance ID.
+
+-> **NOTE:** `subnet` - If `insane_mode` is enabled, you must specify a valid /26 CIDR segment of the VPC specified. This will then create a new subnet to be used for the corresponding gateway. You cannot specify an existing /26 subnet.
 
 ## Import
 

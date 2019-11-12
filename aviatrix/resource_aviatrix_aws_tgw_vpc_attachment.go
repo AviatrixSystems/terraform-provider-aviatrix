@@ -61,11 +61,26 @@ func resourceAviatrixAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta inte
 		VpcID:              d.Get("vpc_id").(string),
 	}
 
+	isFirewallSecurityDomain, err := client.IsFirewallSecurityDomain(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.SecurityDomainName)
+	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			return fmt.Errorf("could not find Security Domain: " + awsTgwVpcAttachment.VpcID)
+		}
+		return fmt.Errorf(("could not find Security Domain due to: ") + err.Error())
+	}
+
 	log.Printf("[INFO] Attaching vpc: %s to tgw %s", awsTgwVpcAttachment.VpcID, awsTgwVpcAttachment.TgwName)
 
-	err := client.CreateAwsTgwVpcAttachment(awsTgwVpcAttachment)
-	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix Aws Tgw Vpc Attach: %s", err)
+	if isFirewallSecurityDomain {
+		err := client.CreateAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment)
+		if err != nil {
+			return fmt.Errorf("failed to create Aviatrix Aws Tgw Vpc Attach for FireNet: %s", err)
+		}
+	} else {
+		err := client.CreateAwsTgwVpcAttachment(awsTgwVpcAttachment)
+		if err != nil {
+			return fmt.Errorf("failed to create Aviatrix Aws Tgw Vpc Attach: %s", err)
+		}
 	}
 
 	d.SetId(awsTgwVpcAttachment.TgwName + "~" + awsTgwVpcAttachment.SecurityDomainName + "~" + awsTgwVpcAttachment.VpcID)
@@ -143,11 +158,24 @@ func resourceAviatrixAwsTgwVpcAttachmentDelete(d *schema.ResourceData, meta inte
 		VpcID:              d.Get("vpc_id").(string),
 	}
 
-	log.Printf("[INFO] Detaching vpc: %s from tgw %s", awsTgwVpcAttachment.VpcID, awsTgwVpcAttachment.TgwName)
-
-	err := client.DeleteAwsTgwVpcAttachment(awsTgwVpcAttachment)
+	isFirewallSecurityDomain, err := client.IsFirewallSecurityDomain(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.SecurityDomainName)
 	if err != nil {
-		return fmt.Errorf("failed to detach vpc from tgw: %s", err)
+		if err == goaviatrix.ErrNotFound {
+			return fmt.Errorf("could not find Security Domain: " + awsTgwVpcAttachment.VpcID)
+		}
+		return fmt.Errorf(("could not find Security Domain due to: ") + err.Error())
+	}
+
+	if isFirewallSecurityDomain {
+		err := client.DeleteAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment)
+		if err != nil {
+			return fmt.Errorf("failed to detach FireNet VPC from TGW: %s", err)
+		}
+	} else {
+		err := client.DeleteAwsTgwVpcAttachment(awsTgwVpcAttachment)
+		if err != nil {
+			return fmt.Errorf("failed to detach VPC from TGW: %s", err)
+		}
 	}
 
 	return nil

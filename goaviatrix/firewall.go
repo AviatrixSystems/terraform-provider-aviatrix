@@ -27,7 +27,8 @@ type Firewall struct {
 	GwName         string    `form:"vpc_name,omitempty" json:"vpc_name,omitempty"`
 	BasePolicy     string    `form:"base_policy,omitempty" json:"base_policy,omitempty"`
 	BaseLogEnabled string    `form:"base_policy_log_enable,omitempty" json:"base_policy_log_enable,omitempty"`
-	PolicyList     []*Policy `form:"new_policy[],omitempty" json:"security_rules,omitempty"`
+	PolicyList     []*Policy `json:"security_rules,omitempty"`
+	NewPolicy      string    `form:"new_policy,omitempty"`
 }
 
 type FirewallResp struct {
@@ -68,24 +69,16 @@ func (c *Client) SetBasePolicy(firewall *Firewall) error {
 }
 
 func (c *Client) UpdatePolicy(firewall *Firewall) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for update_access_policy") + err.Error())
-	}
-	updateAccessPolicy := url.Values{}
-	updateAccessPolicy.Add("CID", c.CID)
-	updateAccessPolicy.Add("action", "update_access_policy")
-	updateAccessPolicy.Add("vpc_name", firewall.GwName)
-	log.Printf("[INFO] Updating Aviatrix firewall for gateway: %#v", firewall)
+	firewall.CID = c.CID
+	firewall.Action = "update_access_policy"
 	args, err := json.Marshal(firewall.PolicyList)
 	if err != nil {
 		return err
 	}
-	updateAccessPolicy.Add("new_policy", string(args))
-	Url.RawQuery = updateAccessPolicy.Encode()
-	resp, err := c.Get(Url.String(), nil)
+	firewall.NewPolicy = string(args)
+	resp, err := c.Post(c.baseURL, firewall)
 	if err != nil {
-		return errors.New("HTTP Get update_access_policy failed: " + err.Error())
+		return errors.New("HTTP Post update_access_policy failed: " + err.Error())
 	}
 	var data APIResp
 	buf := new(bytes.Buffer)

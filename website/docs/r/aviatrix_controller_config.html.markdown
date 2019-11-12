@@ -20,7 +20,6 @@ resource "aviatrix_controller_config" "test_controller_config" {
   security_group_management  = true
 }
 ```
-
 ```hcl
 # Create an Aviatrix Controller Config with Controller Upgrade
 resource "aviatrix_controller_config" "test_controller_config" {

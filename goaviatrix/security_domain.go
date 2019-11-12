@@ -43,9 +43,11 @@ type SecurityDomainRule struct {
 }
 
 type VPCSolo struct {
-	Region      string `json:"vpc_region, omitempty"`
-	AccountName string `json:"vpc_account_name, omitempty"`
-	VpcID       string `json:"vpc_id, omitempty"`
+	Region                       string `json:"vpc_region, omitempty"`
+	AccountName                  string `json:"vpc_account_name, omitempty"`
+	VpcID                        string `json:"vpc_id, omitempty"`
+	CustomizedRoutes             string `json:", omitempty"`
+	DisableLocalRoutePropagation bool   `json:", omitempty"`
 }
 
 func (c *Client) CreateSecurityDomain(securityDomain *SecurityDomain) error {

@@ -113,6 +113,22 @@ type listAttachedVpcNamesResp struct {
 	Reason  string   `json:"reason"`
 }
 
+type AttachmentRouteTableDetailsAPIResp struct {
+	Return  bool                        `json:"return"`
+	Results AttachmentRouteTableDetails `json:"results"`
+	Reason  string                      `json:"reason"`
+}
+
+type AttachmentRouteTableDetails struct {
+	VpcId                        string   `json:"vpc_id"`
+	VpcName                      string   `json:"vpc_name"`
+	VpcRegion                    string   `json:"vpc_region"`
+	VpcAccount                   string   `json:"vpc_account"`
+	RouteDomainName              string   `json:"route_domain_name"`
+	CustomizedRoutes             []string `json:"customized_routes"`
+	DisableLocalRoutePropagation bool     `json:"disable_local_propagation"`
+}
+
 func (c *Client) CreateAWSTgw(awsTgw *AWSTgw) error {
 	awsTgw.CID = c.CID
 	awsTgw.Action = "add_aws_tgw"
@@ -214,10 +230,41 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 			}
 
 			if dm != "Aviatrix_Edge_Domain" {
+				listAttachmentRouteTableDetails := url.Values{}
+				listAttachmentRouteTableDetails.Add("CID", c.CID)
+				listAttachmentRouteTableDetails.Add("action", "list_attachment_route_table_details")
+				listAttachmentRouteTableDetails.Add("tgw_name", awsTgw.Name)
+				listAttachmentRouteTableDetails.Add("attachment_name", attachedVPCs[i].VPCId)
+				Url.RawQuery = listAttachmentRouteTableDetails.Encode()
+				resp, err := c.Get(Url.String(), nil)
+				if err != nil {
+					return nil, errors.New("HTTP Get list_attachment_route_table_details failed: " + err.Error())
+				}
+
+				var data2 AttachmentRouteTableDetailsAPIResp
+				buf = new(bytes.Buffer)
+				buf.ReadFrom(resp.Body)
+				bodyString = buf.String()
+				bodyIoCopy = strings.NewReader(bodyString)
+				if err = json.NewDecoder(bodyIoCopy).Decode(&data2); err != nil {
+					return nil, errors.New("Json Decode list_attachment_route_table_details failed: " + err.Error() + "\n Body: " + bodyString)
+				}
+				if !data2.Return {
+					return nil, errors.New("Rest API list_attachment_route_table_details Get failed: " + data1.Reason)
+				}
 				vpcSolo := VPCSolo{
-					Region:      attachedVPCs[i].Region,
-					AccountName: attachedVPCs[i].AccountName,
-					VpcID:       attachedVPCs[i].VPCId,
+					Region:                       attachedVPCs[i].Region,
+					AccountName:                  attachedVPCs[i].AccountName,
+					VpcID:                        attachedVPCs[i].VPCId,
+					DisableLocalRoutePropagation: data2.Results.DisableLocalRoutePropagation,
+				}
+				if data2.Results.CustomizedRoutes != nil && len(data2.Results.CustomizedRoutes) != 0 {
+					customizedRoutes := ""
+					length := len(data2.Results.CustomizedRoutes)
+					for i := 0; i < length-1; i++ {
+						customizedRoutes += data2.Results.CustomizedRoutes[i] + ","
+					}
+					vpcSolo.CustomizedRoutes = customizedRoutes + data2.Results.CustomizedRoutes[length-1]
 				}
 				sdr.AttachedVPCs = append(sdr.AttachedVPCs, vpcSolo)
 			} else {
@@ -235,6 +282,42 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 		awsTgw.SecurityDomains = append(awsTgw.SecurityDomains, sdr)
 	}
 	return awsTgw, nil
+}
+
+func (c *Client) IsFirewallSecurityDomain(tgwName string, domainName string) (bool, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return false, errors.New(("url Parsing failed for list_route_domain_names") + err.Error())
+	}
+	viewRouteDomainDetails := url.Values{}
+	viewRouteDomainDetails.Add("CID", c.CID)
+	viewRouteDomainDetails.Add("action", "view_route_domain_details")
+	viewRouteDomainDetails.Add("tgw_name", tgwName)
+	viewRouteDomainDetails.Add("route_domain_name", domainName)
+	Url.RawQuery = viewRouteDomainDetails.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return false, errors.New("HTTP Get view_route_domain_details failed: " + err.Error())
+	}
+	var data RouteDomainAPIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return false, errors.New("Json Decode view_route_domain_details failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return false, errors.New("Rest API view_route_domain_details Get failed: " + data.Reason)
+	}
+	routeDomainDetail := data.Results
+	if routeDomainDetail != nil && len(routeDomainDetail) != 0 {
+		if routeDomainDetail[0].AviatrixFirewallDomain {
+			return true, nil
+		}
+		return false, nil
+	}
+	return false, ErrNotFound
 }
 
 func (c *Client) UpdateAWSTgw(awsTgw *AWSTgw) error {
@@ -462,6 +545,12 @@ func (c *Client) AttachVpcToAWSTgw(awsTgw *AWSTgw, vpcSolo VPCSolo, SecurityDoma
 	attachVpcFromTgw.Add("vpc_name", vpcSolo.VpcID)
 	attachVpcFromTgw.Add("tgw_name", awsTgw.Name)
 	attachVpcFromTgw.Add("route_domain_name", SecurityDomainName)
+	if vpcSolo.DisableLocalRoutePropagation {
+		attachVpcFromTgw.Add("disable_local_route_propagation", "yes")
+	}
+	if vpcSolo.CustomizedRoutes != "" {
+		attachVpcFromTgw.Add("customized_routes", vpcSolo.CustomizedRoutes)
+	}
 	Url.RawQuery = attachVpcFromTgw.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
@@ -591,7 +680,6 @@ func (c *Client) ListTgwDetails(awsTgw *AWSTgw) (*AWSTgw, error) {
 		}
 		return nil, errors.New("Rest API list_tgw_details Get failed: " + data.Reason)
 	}
-
 	tgwInfoList := data.Results
 	if tgwInfoList.Name == awsTgw.Name {
 		tgwInfoDetail := tgwInfoList.TgwInfo

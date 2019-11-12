@@ -26,29 +26,25 @@ func resourceAviatrixSamlEndpoint() *schema.Resource {
 				Description: "SAML Endpoint Name.",
 			},
 			"idp_metadata_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				//ForceNew:    true,
+				Type:        schema.TypeString,
+				Required:    true,
 				Description: "Type of IDP Metadata.",
 			},
 			"idp_metadata": {
-				Type:     schema.TypeString,
-				Required: true,
-				//ForceNew:    true,
+				Type:        schema.TypeString,
+				Required:    true,
 				Description: "IDP Metadata.",
 			},
 			"custom_entity_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
-				//ForceNew:    true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
 				Description: "Custom Entity ID. Required to be non-empty for 'Custom' Entity ID type, empty for 'Hostname'.",
 			},
 			"custom_saml_request_template": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
-				//ForceNew:    true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
 				Description: "Custom SAML Request Template.",
 			},
 		},
@@ -113,11 +109,10 @@ func resourceAviatrixSamlEndpointRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("idp_metadata_type", saml.IdpMetadataType)
 	d.Set("idp_metadata", saml.IdpMetadata)
 	d.Set("custom_entity_id", saml.CustomEntityId)
-	if saml.CustomEntityId == "dummy" {
-		d.Set("msg_template", "")
-
+	if saml.MsgTemplate == "dummy" {
+		d.Set("custom_saml_request_template", "")
 	} else {
-		d.Set("msg_template", saml.MsgTemplate)
+		d.Set("custom_saml_request_template", saml.MsgTemplate)
 	}
 
 	d.SetId(saml.EndPointName)
