@@ -250,7 +250,7 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 					return nil, errors.New("Json Decode list_attachment_route_table_details failed: " + err.Error() + "\n Body: " + bodyString)
 				}
 				if !data2.Return {
-					return nil, errors.New("Rest API list_attachment_route_table_details Get failed: " + data1.Reason)
+					return nil, errors.New("Rest API list_attachment_route_table_details Get failed: " + data2.Reason)
 				}
 				vpcSolo := VPCSolo{
 					Region:                       attachedVPCs[i].Region,
@@ -729,4 +729,35 @@ func (c *Client) IsVpcAttachedToTgw(awsTgw *AWSTgw, vpcSolo *VPCSolo) (bool, err
 		}
 	}
 	return false, ErrNotFound
+}
+
+func (c *Client) GetAttachmentRouteTableDetails(tgwName string, attachmentName string) (*AttachmentRouteTableDetails, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return nil, errors.New(("url Parsing failed for list_attachment_route_table_details") + err.Error())
+	}
+	listAttachmentRouteTableDetails := url.Values{}
+	listAttachmentRouteTableDetails.Add("CID", c.CID)
+	listAttachmentRouteTableDetails.Add("action", "list_attachment_route_table_details")
+	listAttachmentRouteTableDetails.Add("tgw_name", tgwName)
+	listAttachmentRouteTableDetails.Add("attachment_name", attachmentName)
+	Url.RawQuery = listAttachmentRouteTableDetails.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return nil, errors.New("HTTP Get list_attachment_route_table_details failed: " + err.Error())
+	}
+
+	var data AttachmentRouteTableDetailsAPIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode list_attachment_route_table_details failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return nil, errors.New("Rest API list_attachment_route_table_details Get failed: " + data.Reason)
+	}
+
+	return &data.Results, nil
 }
