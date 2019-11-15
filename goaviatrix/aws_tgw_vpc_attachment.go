@@ -10,13 +10,15 @@ import (
 )
 
 type AwsTgwVpcAttachment struct {
-	Action             string `form:"action,omitempty"`
-	CID                string `form:"CID,omitempty"`
-	TgwName            string `form:"tgw_name"`
-	Region             string `form:"region"`
-	SecurityDomainName string `form:"security_domain_name"`
-	VpcAccountName     string `form:"vpc_account_name"`
-	VpcID              string `form:"vpc_id"`
+	Action                       string `form:"action,omitempty"`
+	CID                          string `form:"CID,omitempty"`
+	TgwName                      string `form:"tgw_name"`
+	Region                       string `form:"region"`
+	SecurityDomainName           string `form:"security_domain_name"`
+	VpcAccountName               string `form:"vpc_account_name"`
+	VpcID                        string `form:"vpc_id"`
+	CustomizedRoutes             string `form:"customized_routes, omitempty" json:"customized_routes, omitempty"`
+	DisableLocalRoutePropagation bool   `form:"disable_local_route_propagation, omitempty" json:"disable_local_route_propagation, omitempty"`
 }
 
 type DomainListResp struct {
@@ -38,6 +40,12 @@ func (c *Client) CreateAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachm
 	attachVpcFromTgw.Add("vpc_name", awsTgwVpcAttachment.VpcID)
 	attachVpcFromTgw.Add("tgw_name", awsTgwVpcAttachment.TgwName)
 	attachVpcFromTgw.Add("route_domain_name", awsTgwVpcAttachment.SecurityDomainName)
+	if awsTgwVpcAttachment.DisableLocalRoutePropagation {
+		attachVpcFromTgw.Add("disable_local_route_propagation", "yes")
+	}
+	if awsTgwVpcAttachment.CustomizedRoutes != "" {
+		attachVpcFromTgw.Add("customized_routes", awsTgwVpcAttachment.CustomizedRoutes)
+	}
 	Url.RawQuery = attachVpcFromTgw.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
@@ -109,6 +117,25 @@ func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment
 			return nil, err
 		}
 		return nil, errors.New("could not get security domain details: " + err.Error())
+	}
+
+	ARTDetail, err := c.GetAttachmentRouteTableDetails(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.VpcID)
+	if err != nil {
+		return nil, errors.New("could not get Attachment Route Table Details: " + err.Error())
+	}
+	if ARTDetail != nil {
+		aTVA.DisableLocalRoutePropagation = ARTDetail.DisableLocalRoutePropagation
+		if ARTDetail.CustomizedRoutes != nil && len(ARTDetail.CustomizedRoutes) != 0 {
+			customizedRoutes := ""
+			length := len(ARTDetail.CustomizedRoutes)
+			for i := 0; i < length-1; i++ {
+				customizedRoutes += ARTDetail.CustomizedRoutes[i] + ","
+			}
+			aTVA.CustomizedRoutes = customizedRoutes + ARTDetail.CustomizedRoutes[length-1]
+		}
+	} else {
+		aTVA.DisableLocalRoutePropagation = false
+		aTVA.CustomizedRoutes = ""
 	}
 
 	return aTVA, nil

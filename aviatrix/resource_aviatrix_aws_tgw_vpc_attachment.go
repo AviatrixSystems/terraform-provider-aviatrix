@@ -46,6 +46,20 @@ func resourceAviatrixAwsTgwVpcAttachment() *schema.Resource {
 				Required:    true,
 				Description: "This parameter represents the ID of the VPC.",
 			},
+			"customized_routes": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Default:     "",
+				Description: "Customized Spoke VPC Routes. It allows the admin to enter non-RFC1918 routes in the VPC route table targeting the TGW.",
+			},
+			"disable_local_route_propagation": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				ForceNew:    true,
+				Default:     false,
+				Description: "Switch to allow admin not to propagate the VPC CIDR to the security domain/TGW route table that it is being attached to.",
+			},
 		},
 	}
 }
@@ -54,11 +68,13 @@ func resourceAviatrixAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta inte
 	client := meta.(*goaviatrix.Client)
 
 	awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
-		TgwName:            d.Get("tgw_name").(string),
-		Region:             d.Get("region").(string),
-		SecurityDomainName: d.Get("security_domain_name").(string),
-		VpcAccountName:     d.Get("vpc_account_name").(string),
-		VpcID:              d.Get("vpc_id").(string),
+		TgwName:                      d.Get("tgw_name").(string),
+		Region:                       d.Get("region").(string),
+		SecurityDomainName:           d.Get("security_domain_name").(string),
+		VpcAccountName:               d.Get("vpc_account_name").(string),
+		VpcID:                        d.Get("vpc_id").(string),
+		CustomizedRoutes:             d.Get("customized_routes").(string),
+		DisableLocalRoutePropagation: d.Get("disable_local_route_propagation").(bool),
 	}
 
 	isFirewallSecurityDomain, err := client.IsFirewallSecurityDomain(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.SecurityDomainName)
@@ -116,11 +132,13 @@ func resourceAviatrixAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta interf
 		return fmt.Errorf("failed to get Aviatrix Aws Tgw Vpc Attach: %s", err)
 	}
 	if aTVA != nil {
-		d.Set("tgw_name", awsTgwVpcAttachment.TgwName)
-		d.Set("region", awsTgwVpcAttachment.Region)
-		d.Set("security_domain_name", awsTgwVpcAttachment.SecurityDomainName)
-		d.Set("vpc_account_name", awsTgwVpcAttachment.VpcAccountName)
-		d.Set("vpc_id", awsTgwVpcAttachment.VpcID)
+		d.Set("tgw_name", aTVA.TgwName)
+		d.Set("region", aTVA.Region)
+		d.Set("security_domain_name", aTVA.SecurityDomainName)
+		d.Set("vpc_account_name", aTVA.VpcAccountName)
+		d.Set("vpc_id", aTVA.VpcID)
+		d.Set("disable_local_route_propagation", aTVA.DisableLocalRoutePropagation)
+		d.Set("customized_routes", aTVA.CustomizedRoutes)
 		d.SetId(awsTgwVpcAttachment.TgwName + "~" + awsTgwVpcAttachment.SecurityDomainName + "~" + awsTgwVpcAttachment.VpcID)
 		return nil
 	}
