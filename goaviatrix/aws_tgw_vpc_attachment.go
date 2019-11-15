@@ -111,7 +111,7 @@ func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment
 		return nil, errors.New("aws tgw does not have security domain: " + err.Error())
 	}
 
-	aTVA, err := c.GetAwsTgwDomainAttachedVpc(awsTgwVpcAttachment)
+	aTVA, err := c.GetVPCAttachmentRouteTableDetails(awsTgwVpcAttachment)
 	if err != nil {
 		if err == ErrNotFound {
 			return nil, err
@@ -254,7 +254,7 @@ func (c *Client) GetAwsTgwDomain(awsTgw *AWSTgw, sDM string) error {
 	return nil
 }
 
-func (c *Client) GetAwsTgwDomainAttachedVpc(awsTgwVpcAttachment *AwsTgwVpcAttachment) (*AwsTgwVpcAttachment, error) {
+func (c *Client) GetVPCAttachmentRouteTableDetails(awsTgwVpcAttachment *AwsTgwVpcAttachment) (*AwsTgwVpcAttachment, error) {
 	Url, err := url.Parse(c.baseURL)
 	viewRouteDomainDetails := url.Values{}
 	viewRouteDomainDetails.Add("CID", c.CID)
