@@ -30,22 +30,22 @@ resource "aviatrix_site2cloud" "test_s2c" {
 
 The following arguments are supported:
 
-* `primary_cloud_gateway_name` - (Required) Primary Cloud Gateway Name.
-* `backup_gateway_name` - (Optional) Backup gateway name.
 * `vpc_id` - (Required) VPC Id of the cloud gateway.
 * `connection_name` - (Required) Site2Cloud Connection Name.
+* `remote_gateway_type` - (Required) Remote Gateway Type. Valid Values: "generic", "avx", "aws", "azure", "sonicwall", "oracle".
 * `connection_type` - (Required) Connection Type. Valid Values: "mapped", "unmapped".
 * `tunnel_type` - (Required) Site2Cloud Tunnel Type. Valid Values: "udp", "tcp".
-* `remote_gateway_type` - (Required) Remote Gateway Type. Valid Values: "generic", "avx", "aws", "azure", "sonicwall", "oracle".
+* `primary_cloud_gateway_name` - (Required) Primary Cloud Gateway Name.
 * `remote_gateway_ip` - (Required) Remote Gateway IP.
-* `backup_remote_gateway_ip` - (Optional) Backup Remote Gateway IP.
-* `pre_shared_key` - (Optional) Pre-Shared Key.
-* `backup_pre_shared_key` - (Optional) Backup Pre-Shared Key.
 * `remote_subnet_cidr` - (Required) Remote Subnet CIDR.
+* `backup_gateway_name` - (Optional) Backup gateway name.
+* `pre_shared_key` - (Optional) Pre-Shared Key.
 * `local_subnet_cidr` - (Optional) Local Subnet CIDR. Required for connection type "mapped".
+* `ha_enabled` - (Optional) Specify whether enabling HA or not. Valid Values: true, false.
+* `backup_remote_gateway_ip` - (Optional) Backup Remote Gateway IP.
+* `backup_pre_shared_key` - (Optional) Backup Pre-Shared Key.
 * `remote_subnet_virtual` - Remote Subnet CIDR (Virtual). Required for connection type "mapped" only.
 * `local_subnet_virtual` - Local Subnet CIDR (Virtual). Required for connection type "mapped" only.
-* `ha_enabled` - (Optional) Specify whether enabling HA or not. Valid Values: true, false.
 * `custom_algorithms` - (Optional) Switch to enable custom/non-default algorithms for IPSec Authentication/Encryption. Valid values: true, false.
 * `phase_1_authentication` - (Optional) Phase one Authentication. Valid values: 'SHA-1', 'SHA-256', 'SHA-384' and 'SHA-512'. Default value: 'SHA-1'.
 * `phase_2_authentication` - (Optional) Phase two Authentication. Valid values: 'NO-AUTH', 'HMAC-SHA-1', 'HMAC-SHA-256', 'HMAC-SHA-384' and 'HMAC-SHA-512'. Default value: 'HMAC-SHA-1'.

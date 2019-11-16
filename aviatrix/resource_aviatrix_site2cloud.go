@@ -87,16 +87,6 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Default:     false,
 				Description: "Specify whether enabling HA or not.",
 			},
-			"backup_remote_subnet_cidr": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Backup remote subnet CIDR.",
-			},
-			"backup_remote_gateway_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Backup remote gateway name.",
-			},
 			"backup_remote_gateway_ip": {
 				Type:        schema.TypeString,
 				Optional:    true,
