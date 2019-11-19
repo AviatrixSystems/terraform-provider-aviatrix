@@ -64,13 +64,12 @@ func resourceAviatrixAWSTgwDirectConnCreate(d *schema.ResourceData, meta interfa
 		AllowedPrefix:         d.Get("allowed_prefix").(string),
 	}
 
-	_, err := client.CreateAwsTgwDirectConn(awsTgwDirectConn)
+	err := client.CreateAwsTgwDirectConn(awsTgwDirectConn)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix AWS TGW Direct Connection: %s", err)
 	}
 
 	d.SetId(awsTgwDirectConn.TgwName + "~" + awsTgwDirectConn.DirectConnGwID)
-	return nil
 	return resourceAviatrixAwsTgwVpnConnRead(d, meta)
 }
 
