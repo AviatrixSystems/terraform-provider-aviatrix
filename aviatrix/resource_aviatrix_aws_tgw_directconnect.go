@@ -70,16 +70,16 @@ func resourceAviatrixAWSTgwDirectConnectCreate(d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(awsTgwDirectConn.TgwName + "~" + awsTgwDirectConn.DxGatewayID)
-	return resourceAviatrixAwsTgwVpnConnRead(d, meta)
+	return resourceAviatrixAWSTgwDirectConnectRead(d, meta)
 }
 
 func resourceAviatrixAWSTgwDirectConnectRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	tgwName := d.Get("tgw_name").(string)
-	directConnGwID := d.Get("dx_gateway_id").(string)
+	directConnectGatewayID := d.Get("dx_gateway_id").(string)
 
-	if tgwName == "" || directConnGwID == "" {
+	if tgwName == "" || directConnectGatewayID == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import. Import Id is %s", id)
 		if !strings.Contains(id, "~") {
