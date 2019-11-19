@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-type AwsTgwDirectConn struct {
+type AwsTgwDirectConnect struct {
 	CID                      string `form:"CID,omitempty"`
 	Action                   string `form:"action,omitempty"`
 	TgwName                  string `form:"tgw_name,omitempty"`
@@ -35,10 +35,10 @@ type AwsTgwDirectConnResp struct {
 	Reason  string                 `json:"reason"`
 }
 
-func (c *Client) CreateAwsTgwDirectConn(awsTgwDirectConn *AwsTgwDirectConn) error {
-	awsTgwDirectConn.CID = c.CID
-	awsTgwDirectConn.Action = "attach_direct_connect_to_tgw"
-	resp, err := c.Post(c.baseURL, awsTgwDirectConn)
+func (c *Client) CreateAwsTgwDirectConnect(awsTgwDirectConnect *AwsTgwDirectConnect) error {
+	awsTgwDirectConnect.CID = c.CID
+	awsTgwDirectConnect.Action = "attach_direct_connect_to_tgw"
+	resp, err := c.Post(c.baseURL, awsTgwDirectConnect)
 	if err != nil {
 		return errors.New("HTTP Post attach_direct_connect_to_tgw failed: " + err.Error())
 	}
@@ -57,7 +57,7 @@ func (c *Client) CreateAwsTgwDirectConn(awsTgwDirectConn *AwsTgwDirectConn) erro
 	return nil
 }
 
-func (c *Client) GetAwsTgwDirectConn(awsTgwDirectConn *AwsTgwDirectConn) (*AwsTgwDirectConn, error) {
+func (c *Client) GetAwsTgwDirectConnect(awsTgwDirectConnect *AwsTgwDirectConnect) (*AwsTgwDirectConnect, error) {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
 		return nil, errors.New(("url Parsing failed for list_all_tgw_attachments") + err.Error())
@@ -65,7 +65,7 @@ func (c *Client) GetAwsTgwDirectConn(awsTgwDirectConn *AwsTgwDirectConn) (*AwsTg
 	listAllTgwAttachments := url.Values{}
 	listAllTgwAttachments.Add("CID", c.CID)
 	listAllTgwAttachments.Add("action", "list_all_tgw_attachments")
-	listAllTgwAttachments.Add("tgw_name", awsTgwDirectConn.TgwName)
+	listAllTgwAttachments.Add("tgw_name", awsTgwDirectConnect.TgwName)
 	Url.RawQuery = listAllTgwAttachments.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
@@ -85,21 +85,21 @@ func (c *Client) GetAwsTgwDirectConn(awsTgwDirectConn *AwsTgwDirectConn) (*AwsTg
 	}
 	allAwsTgwDirectConn := data.Results
 	for i := range allAwsTgwDirectConn {
-		if allAwsTgwDirectConn[i].TgwName == awsTgwDirectConn.TgwName && allAwsTgwDirectConn[i].DxGatewayID == awsTgwDirectConn.DxGatewayID {
-			awsTgwDirectConn.DirectConnectAccountName = allAwsTgwDirectConn[i].DirectConnectAccountName
-			awsTgwDirectConn.SecurityDomainName = allAwsTgwDirectConn[i].SecurityDomainName
-			awsTgwDirectConn.AllowedPrefix = strings.Join(allAwsTgwDirectConn[i].AllowedPrefix, ",")
-			log.Printf("[DEBUG] Found Aws Tgw Direct Conn: %#v", awsTgwDirectConn)
-			return awsTgwDirectConn, nil
+		if allAwsTgwDirectConn[i].TgwName == awsTgwDirectConnect.TgwName && allAwsTgwDirectConn[i].DxGatewayID == awsTgwDirectConnect.DxGatewayID {
+			awsTgwDirectConnect.DirectConnectAccountName = allAwsTgwDirectConn[i].DirectConnectAccountName
+			awsTgwDirectConnect.SecurityDomainName = allAwsTgwDirectConn[i].SecurityDomainName
+			awsTgwDirectConnect.AllowedPrefix = strings.Join(allAwsTgwDirectConn[i].AllowedPrefix, ",")
+			log.Printf("[DEBUG] Found Aws Tgw Direct Conn: %#v", awsTgwDirectConnect)
+			return awsTgwDirectConnect, nil
 		}
 	}
 	return nil, ErrNotFound
 }
 
-func (c *Client) UpdateDirectConnAllowedPrefix(awsTgwDirectConn *AwsTgwDirectConn) error {
-	awsTgwDirectConn.CID = c.CID
-	awsTgwDirectConn.Action = "update_tgw_directconnect_allowed_prefix"
-	resp, err := c.Post(c.baseURL, awsTgwDirectConn)
+func (c *Client) UpdateDirectConnAllowedPrefix(awsTgwDirectConnect *AwsTgwDirectConnect) error {
+	awsTgwDirectConnect.CID = c.CID
+	awsTgwDirectConnect.Action = "update_tgw_directconnect_allowed_prefix"
+	resp, err := c.Post(c.baseURL, awsTgwDirectConnect)
 	if err != nil {
 		return errors.New("HTTP Post update_tgw_directconnect_allowed_prefix failed: " + err.Error())
 	}
@@ -118,10 +118,10 @@ func (c *Client) UpdateDirectConnAllowedPrefix(awsTgwDirectConn *AwsTgwDirectCon
 	return nil
 }
 
-func (c *Client) DeleteAwsTgwDirectConn(awsTgwDirectConn *AwsTgwDirectConn) error {
-	awsTgwDirectConn.CID = c.CID
-	awsTgwDirectConn.Action = "detach_directconnect_from_tgw"
-	resp, err := c.Post(c.baseURL, awsTgwDirectConn)
+func (c *Client) DeleteAwsTgwDirectConnect(awsTgwDirectConnect *AwsTgwDirectConnect) error {
+	awsTgwDirectConnect.CID = c.CID
+	awsTgwDirectConnect.Action = "detach_directconnect_from_tgw"
+	resp, err := c.Post(c.baseURL, awsTgwDirectConnect)
 	if err != nil {
 		return errors.New("HTTP Post detach_directconnect_from_tgw failed: " + err.Error())
 	}
