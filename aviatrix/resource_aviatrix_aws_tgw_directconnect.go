@@ -9,12 +9,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceAviatrixAWSTgwDirectConn() *schema.Resource {
+func resourceAviatrixAWSTgwDirectConnect() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAviatrixAWSTgwDirectConnCreate,
-		Read:   resourceAviatrixAWSTgwDirectConnRead,
-		Update: resourceAviatrixAWSTgwDirectConnUpdate,
-		Delete: resourceAviatrixAWSTgwDirectConnDelete,
+		Create: resourceAviatrixAWSTgwDirectConnectCreate,
+		Read:   resourceAviatrixAWSTgwDirectConnectRead,
+		Update: resourceAviatrixAWSTgwDirectConnectUpdate,
+		Delete: resourceAviatrixAWSTgwDirectConnectDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -26,23 +26,23 @@ func resourceAviatrixAWSTgwDirectConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "This parameter represents the name of an AWS TGW.",
 			},
-			"direct_conn_account_name": {
+			"directconnect_account_name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "",
+				Description: "This parameter represents the name of an Account in Aviatrix controller.",
 			},
-			"direct_conn_gw_id": {
+			"dx_gateway_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "",
+				Description: "This parameter represents the name of a Direct Connect Gateway ID.",
 			},
-			"route_domain_name": {
+			"security_domain_name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "AWS side as a number. Integer between 1-65535. Example: '12'.",
+				Description: "The name of an Aviatrix security domain, to which the direct connect gateway will be attached.",
 			},
 			"allowed_prefix": {
 				Type:        schema.TypeString,
@@ -53,15 +53,15 @@ func resourceAviatrixAWSTgwDirectConn() *schema.Resource {
 	}
 }
 
-func resourceAviatrixAWSTgwDirectConnCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwDirectConnectCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	awsTgwDirectConn := &goaviatrix.AwsTgwDirectConn{
-		TgwName:               d.Get("tgw_name").(string),
-		DirectConnAccountName: d.Get("direct_conn_account_name").(string),
-		DirectConnGwID:        d.Get("direct_conn_gw_id").(string),
-		RouteDomainName:       d.Get("route_domain_name").(string),
-		AllowedPrefix:         d.Get("allowed_prefix").(string),
+		TgwName:                  d.Get("tgw_name").(string),
+		DirectConnectAccountName: d.Get("directconnect_account_name").(string),
+		DxGatewayID:              d.Get("dx_gateway_id").(string),
+		SecurityDomainName:       d.Get("security_domain_name").(string),
+		AllowedPrefix:            d.Get("allowed_prefix").(string),
 	}
 
 	err := client.CreateAwsTgwDirectConn(awsTgwDirectConn)
@@ -69,15 +69,15 @@ func resourceAviatrixAWSTgwDirectConnCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("failed to create Aviatrix AWS TGW Direct Connection: %s", err)
 	}
 
-	d.SetId(awsTgwDirectConn.TgwName + "~" + awsTgwDirectConn.DirectConnGwID)
+	d.SetId(awsTgwDirectConn.TgwName + "~" + awsTgwDirectConn.DxGatewayID)
 	return resourceAviatrixAwsTgwVpnConnRead(d, meta)
 }
 
-func resourceAviatrixAWSTgwDirectConnRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwDirectConnectRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	tgwName := d.Get("tgw_name").(string)
-	directConnGwID := d.Get("direct_conn_gw_id").(string)
+	directConnGwID := d.Get("dx_gateway_id").(string)
 
 	if tgwName == "" || directConnGwID == "" {
 		id := d.Id()
@@ -86,13 +86,13 @@ func resourceAviatrixAWSTgwDirectConnRead(d *schema.ResourceData, meta interface
 			log.Printf("[DEBUG] Import Id: %s is invalid", id)
 		}
 		d.Set("tgw_name", strings.Split(id, "~")[0])
-		d.Set("direct_conn_gw_id", strings.Split(id, "~")[1])
+		d.Set("dx_gateway_id", strings.Split(id, "~")[1])
 		d.SetId(id)
 	}
 
 	awsTgwDirectConn := &goaviatrix.AwsTgwDirectConn{
-		TgwName:        d.Get("tgw_name").(string),
-		DirectConnGwID: d.Get("direct_conn_gw_id").(string),
+		TgwName:     d.Get("tgw_name").(string),
+		DxGatewayID: d.Get("dx_gateway_id").(string),
 	}
 
 	directConn, err := client.GetAwsTgwDirectConn(awsTgwDirectConn)
@@ -106,21 +106,21 @@ func resourceAviatrixAWSTgwDirectConnRead(d *schema.ResourceData, meta interface
 	log.Printf("[INFO] Found Aviatrix Aws Tgw Direct Connection: %#v", directConn)
 
 	d.Set("tgw_name", directConn.TgwName)
-	d.Set("direct_conn_account_name", directConn.DirectConnAccountName)
-	d.Set("direct_conn_gw_id", directConn.DirectConnGwID)
-	d.Set("route_domain_name", directConn.RouteDomainName)
+	d.Set("directconnect_account_name", directConn.DirectConnectAccountName)
+	d.Set("dx_gateway_id", directConn.DxGatewayID)
+	d.Set("security_domain_name", directConn.SecurityDomainName)
 	d.Set("allowed_prefix", directConn.AllowedPrefix)
-	d.SetId(directConn.TgwName + "~" + directConn.DirectConnGwID)
+	d.SetId(directConn.TgwName + "~" + directConn.DxGatewayID)
 
 	return nil
 }
 
-func resourceAviatrixAWSTgwDirectConnUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwDirectConnectUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	awsTgwDirectConn := &goaviatrix.AwsTgwDirectConn{
-		TgwName:          d.Get("tgw_name").(string),
-		DirectConnGwName: d.Get("direct_conn_gw_id").(string),
+		TgwName:       d.Get("tgw_name").(string),
+		DxGatewayName: d.Get("dx_gateway_id").(string),
 	}
 
 	d.Partial(true)
@@ -135,14 +135,14 @@ func resourceAviatrixAWSTgwDirectConnUpdate(d *schema.ResourceData, meta interfa
 		d.SetPartial("allowed_prefix")
 	}
 
-	return resourceAviatrixAWSTgwDirectConnRead(d, meta)
+	return resourceAviatrixAWSTgwDirectConnectRead(d, meta)
 }
 
-func resourceAviatrixAWSTgwDirectConnDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAWSTgwDirectConnectDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	awsTgwDirectConn := &goaviatrix.AwsTgwDirectConn{
-		TgwName:          d.Get("tgw_name").(string),
-		DirectConnGwName: d.Get("direct_conn_gw_id").(string),
+		TgwName:         d.Get("tgw_name").(string),
+		DirectConnectID: d.Get("dx_gateway_id").(string),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix AWS TGW Direct Conn: %#v", awsTgwDirectConn)

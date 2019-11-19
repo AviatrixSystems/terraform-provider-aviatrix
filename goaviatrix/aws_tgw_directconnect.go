@@ -10,23 +10,23 @@ import (
 )
 
 type AwsTgwDirectConn struct {
-	CID                   string `form:"CID,omitempty"`
-	Action                string `form:"action,omitempty"`
-	TgwName               string `form:"tgw_name,omitempty"`
-	DirectConnAccountName string `form:"directconnect_account_name,omitempty"`
-	DirectConnGwID        string `form:"directconnect_gateway_id,omitempty"`
-	DirectConnGwName      string `form:"directconnect_gateway_name,omitempty"`
-	RouteDomainName       string `form:"route_domain_name,omitempty"`
-	AllowedPrefix         string `form:"allowed_prefix,omitempty"`
-	DirectconnectID       string `form:"directconnect_id, omitempty"`
+	CID                      string `form:"CID,omitempty"`
+	Action                   string `form:"action,omitempty"`
+	TgwName                  string `form:"tgw_name,omitempty"`
+	DirectConnectAccountName string `form:"directconnect_account_name,omitempty"`
+	DxGatewayID              string `form:"directconnect_gateway_id,omitempty"`
+	DxGatewayName            string `form:"directconnect_gateway_name,omitempty"`
+	SecurityDomainName       string `form:"route_domain_name,omitempty"`
+	AllowedPrefix            string `form:"allowed_prefix,omitempty"`
+	DirectConnectID          string `form:"directconnect_id, omitempty"`
 }
 
 type AwsTgwDirectConnEdit struct {
-	TgwName               string   `json:"tgw_name,omitempty"`
-	DirectConnAccountName string   `json:"acct_name,omitempty"`
-	DirectConnGwID        string   `json:"name,omitempty"`
-	RouteDomainName       string   `json:"associated_route_domain_name,omitempty"`
-	AllowedPrefix         []string `json:"allowed_prefix,omitempty"`
+	TgwName                  string   `json:"tgw_name,omitempty"`
+	DirectConnectAccountName string   `json:"acct_name,omitempty"`
+	DxGatewayID              string   `json:"name,omitempty"`
+	SecurityDomainName       string   `json:"associated_route_domain_name,omitempty"`
+	AllowedPrefix            []string `json:"allowed_prefix,omitempty"`
 }
 
 type AwsTgwDirectConnResp struct {
@@ -85,9 +85,9 @@ func (c *Client) GetAwsTgwDirectConn(awsTgwDirectConn *AwsTgwDirectConn) (*AwsTg
 	}
 	allAwsTgwDirectConn := data.Results
 	for i := range allAwsTgwDirectConn {
-		if allAwsTgwDirectConn[i].TgwName == awsTgwDirectConn.TgwName && allAwsTgwDirectConn[i].DirectConnGwID == awsTgwDirectConn.DirectConnGwID {
-			awsTgwDirectConn.DirectConnAccountName = allAwsTgwDirectConn[i].DirectConnAccountName
-			awsTgwDirectConn.RouteDomainName = allAwsTgwDirectConn[i].RouteDomainName
+		if allAwsTgwDirectConn[i].TgwName == awsTgwDirectConn.TgwName && allAwsTgwDirectConn[i].DxGatewayID == awsTgwDirectConn.DxGatewayID {
+			awsTgwDirectConn.DirectConnectAccountName = allAwsTgwDirectConn[i].DirectConnectAccountName
+			awsTgwDirectConn.SecurityDomainName = allAwsTgwDirectConn[i].SecurityDomainName
 			awsTgwDirectConn.AllowedPrefix = strings.Join(allAwsTgwDirectConn[i].AllowedPrefix, ",")
 			log.Printf("[DEBUG] Found Aws Tgw Direct Conn: %#v", awsTgwDirectConn)
 			return awsTgwDirectConn, nil
