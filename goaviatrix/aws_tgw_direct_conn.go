@@ -35,12 +35,12 @@ type AwsTgwDirectConnResp struct {
 	Reason  string                 `json:"reason"`
 }
 
-func (c *Client) CreateAwsTgwDirectConn(awsTgwDirectConn *AwsTgwDirectConn) (string, error) {
+func (c *Client) CreateAwsTgwDirectConn(awsTgwDirectConn *AwsTgwDirectConn) error {
 	awsTgwDirectConn.CID = c.CID
 	awsTgwDirectConn.Action = "attach_direct_connect_to_tgw"
 	resp, err := c.Post(c.baseURL, awsTgwDirectConn)
 	if err != nil {
-		return "", errors.New("HTTP Post attach_direct_connect_to_tgw failed: " + err.Error())
+		return errors.New("HTTP Post attach_direct_connect_to_tgw failed: " + err.Error())
 	}
 
 	var data APIResp
@@ -49,12 +49,12 @@ func (c *Client) CreateAwsTgwDirectConn(awsTgwDirectConn *AwsTgwDirectConn) (str
 	bodyString := buf.String()
 	bodyIoCopy := strings.NewReader(bodyString)
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return "", errors.New("Json Decode attach_direct_connect_to_tgw failed: " + err.Error() + "\n Body: " + bodyString)
+		return errors.New("Json Decode attach_direct_connect_to_tgw failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
-		return "", errors.New("Rest API attach_direct_connect_to_tgw Get failed: " + data.Reason)
+		return errors.New("Rest API attach_direct_connect_to_tgw Get failed: " + data.Reason)
 	}
-	return "", nil
+	return nil
 }
 
 func (c *Client) GetAwsTgwDirectConn(awsTgwDirectConn *AwsTgwDirectConn) (*AwsTgwDirectConn, error) {
