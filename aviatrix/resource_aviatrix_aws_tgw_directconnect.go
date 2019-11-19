@@ -56,7 +56,7 @@ func resourceAviatrixAWSTgwDirectConnect() *schema.Resource {
 func resourceAviatrixAWSTgwDirectConnectCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	awsTgwDirectConn := &goaviatrix.AwsTgwDirectConn{
+	awsTgwDirectConnect := &goaviatrix.AwsTgwDirectConnect{
 		TgwName:                  d.Get("tgw_name").(string),
 		DirectConnectAccountName: d.Get("directconnect_account_name").(string),
 		DxGatewayID:              d.Get("dx_gateway_id").(string),
@@ -64,12 +64,12 @@ func resourceAviatrixAWSTgwDirectConnectCreate(d *schema.ResourceData, meta inte
 		AllowedPrefix:            d.Get("allowed_prefix").(string),
 	}
 
-	err := client.CreateAwsTgwDirectConn(awsTgwDirectConn)
+	err := client.CreateAwsTgwDirectConnect(awsTgwDirectConnect)
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix AWS TGW Direct Connection: %s", err)
+		return fmt.Errorf("failed to create Aviatrix AWS TGW Direct Connect: %s", err)
 	}
 
-	d.SetId(awsTgwDirectConn.TgwName + "~" + awsTgwDirectConn.DxGatewayID)
+	d.SetId(awsTgwDirectConnect.TgwName + "~" + awsTgwDirectConnect.DxGatewayID)
 	return resourceAviatrixAWSTgwDirectConnectRead(d, meta)
 }
 
@@ -90,27 +90,27 @@ func resourceAviatrixAWSTgwDirectConnectRead(d *schema.ResourceData, meta interf
 		d.SetId(id)
 	}
 
-	awsTgwDirectConn := &goaviatrix.AwsTgwDirectConn{
+	awsTgwDirectConnect := &goaviatrix.AwsTgwDirectConnect{
 		TgwName:     d.Get("tgw_name").(string),
 		DxGatewayID: d.Get("dx_gateway_id").(string),
 	}
 
-	directConn, err := client.GetAwsTgwDirectConn(awsTgwDirectConn)
+	directConnect, err := client.GetAwsTgwDirectConnect(awsTgwDirectConnect)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix Aws Tgw Direct Connection: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix Aws Tgw Direct Connect: %s", err)
 	}
-	log.Printf("[INFO] Found Aviatrix Aws Tgw Direct Connection: %#v", directConn)
+	log.Printf("[INFO] Found Aviatrix Aws Tgw Direct Connect: %#v", directConnect)
 
-	d.Set("tgw_name", directConn.TgwName)
-	d.Set("directconnect_account_name", directConn.DirectConnectAccountName)
-	d.Set("dx_gateway_id", directConn.DxGatewayID)
-	d.Set("security_domain_name", directConn.SecurityDomainName)
-	d.Set("allowed_prefix", directConn.AllowedPrefix)
-	d.SetId(directConn.TgwName + "~" + directConn.DxGatewayID)
+	d.Set("tgw_name", directConnect.TgwName)
+	d.Set("directconnect_account_name", directConnect.DirectConnectAccountName)
+	d.Set("dx_gateway_id", directConnect.DxGatewayID)
+	d.Set("security_domain_name", directConnect.SecurityDomainName)
+	d.Set("allowed_prefix", directConnect.AllowedPrefix)
+	d.SetId(directConnect.TgwName + "~" + directConnect.DxGatewayID)
 
 	return nil
 }
@@ -118,19 +118,19 @@ func resourceAviatrixAWSTgwDirectConnectRead(d *schema.ResourceData, meta interf
 func resourceAviatrixAWSTgwDirectConnectUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	awsTgwDirectConn := &goaviatrix.AwsTgwDirectConn{
+	awsTgwDirectConnect := &goaviatrix.AwsTgwDirectConnect{
 		TgwName:       d.Get("tgw_name").(string),
 		DxGatewayName: d.Get("dx_gateway_id").(string),
 	}
 
 	d.Partial(true)
 
-	log.Printf("[INFO] Updating Aviatrix Site2Cloud: %#v", awsTgwDirectConn)
+	log.Printf("[INFO] Updating Aviatrix Site2Cloud: %#v", awsTgwDirectConnect)
 	if ok := d.HasChange("allowed_prefix"); ok {
-		awsTgwDirectConn.AllowedPrefix = d.Get("allowed_prefix").(string)
-		err := client.UpdateDirectConnAllowedPrefix(awsTgwDirectConn)
+		awsTgwDirectConnect.AllowedPrefix = d.Get("allowed_prefix").(string)
+		err := client.UpdateDirectConnAllowedPrefix(awsTgwDirectConnect)
 		if err != nil {
-			return fmt.Errorf("failed to update Aws Tgw Direct Conn Allowed Prefix: %s", err)
+			return fmt.Errorf("failed to update Aws Tgw Direct Connect Allowed Prefix: %s", err)
 		}
 		d.SetPartial("allowed_prefix")
 	}
@@ -140,16 +140,16 @@ func resourceAviatrixAWSTgwDirectConnectUpdate(d *schema.ResourceData, meta inte
 
 func resourceAviatrixAWSTgwDirectConnectDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	awsTgwDirectConn := &goaviatrix.AwsTgwDirectConn{
+	awsTgwDirectConnect := &goaviatrix.AwsTgwDirectConnect{
 		TgwName:         d.Get("tgw_name").(string),
 		DirectConnectID: d.Get("dx_gateway_id").(string),
 	}
 
-	log.Printf("[INFO] Deleting Aviatrix AWS TGW Direct Conn: %#v", awsTgwDirectConn)
+	log.Printf("[INFO] Deleting Aviatrix AWS TGW Direct Connect: %#v", awsTgwDirectConnect)
 
-	err := client.DeleteAwsTgwDirectConn(awsTgwDirectConn)
+	err := client.DeleteAwsTgwDirectConnect(awsTgwDirectConnect)
 	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix AWS TGW Direct Conn: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix AWS TGW Direct Connect: %s", err)
 	}
 
 	return nil
