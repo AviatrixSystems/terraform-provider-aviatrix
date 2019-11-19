@@ -30,29 +30,26 @@ func resourceAviatrixTunnel() *schema.Resource {
 				Required:    true,
 				Description: "The second VPC Container name to make a peer pair.",
 			},
-			"peering_state": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Status of the tunnel.",
-			},
-			"peering_hastatus": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Status of the HA tunnel.",
-			},
-			"peering_link": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Name of the peering link.",
-			},
 			"enable_ha": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
 				Description: "Whether Peering HA is enabled. Valid inputs: true or false.",
+			},
+			"peering_state": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Status of the tunnel.",
+			},
+			"peering_hastatus": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Status of the HA tunnel.",
+			},
+			"peering_link": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Name of the peering link.",
 			},
 		},
 	}
