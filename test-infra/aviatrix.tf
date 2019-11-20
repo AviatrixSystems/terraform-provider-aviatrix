@@ -10,7 +10,7 @@ data "aws_region" "current_awsgov" {provider = aws.gov}
 # }
 
 module "aviatrix_controller_vpc" {
-  providers {
+  providers = {
     aws = aws.reg
   }
   source         = "./aws"
@@ -19,7 +19,7 @@ module "aviatrix_controller_vpc" {
   aws_region     = var.aws_region2
 }
 module "aviatrix-controller-build" {
-  providers {
+  providers = {
     aws = aws.reg
   }
   source                 = "github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-build?ref=terraform_0.12"
@@ -32,7 +32,7 @@ module "aviatrix-controller-build" {
   type                   = var.type
 }
 module "aviatrix-controller-initialize" {
-  providers {
+  providers = {
     aws = aws.reg
   }
   source              = "github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-initialize?ref=terraform_0.12"
@@ -41,7 +41,7 @@ module "aviatrix-controller-initialize" {
   private_ip          = module.aviatrix-controller-build.private_ip
   public_ip           = module.aviatrix-controller-build.public_ip
   access_account_name = var.access_account_name
-  aws_account_id      = data.aws_caller_identity.current.account_id
+  aws_account_id      = data.aws_caller_identity.current_aws.account_id
   customer_license_id = var.customer_id
 }
 
@@ -73,7 +73,7 @@ module "aviatrix_arm_vpc2" {
   azure_vpc_subnet = var.azure_vpc_subnet2
 }
 module "aviatrix_aws_vpc1" {
-  providers {
+  providers = {
     aws = aws.reg
   }
   source         = "./aws"
@@ -82,7 +82,7 @@ module "aviatrix_aws_vpc1" {
   aws_region     = var.aws_region1
 }
 module "aviatrix_aws_vpc2" {
-  providers {
+  providers = {
     aws = aws.reg
   }
   source         = "./aws"
@@ -91,7 +91,7 @@ module "aviatrix_aws_vpc2" {
   aws_region     = var.aws_region2
 }
 module "aviatrix_awsgov_vpc" {
-  providers {
+  providers = {
     aws = aws.gov
   }
   source         = "./aws"
@@ -110,4 +110,8 @@ resource "aws_vpn_gateway" "vgw" {
   tags = {
     Name = "aviatrix-vgw"
   }
+}
+resource "aws_dx_gateway" "dx-gateway" {
+  name            = "aws-dx-gateway"
+  amazon_side_asn = "64512"
 }
