@@ -1,6 +1,5 @@
-data "aws_caller_identity" "current_aws" {provider = aws.reg}
-data "aws_region" "current_aws" {provider = aws.reg}
-
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 data "aws_caller_identity" "current_awsgov" {provider = aws.gov}
 data "aws_region" "current_awsgov" {provider = aws.gov}
 # This is not part of this role should not be destroyed
@@ -10,18 +9,12 @@ data "aws_region" "current_awsgov" {provider = aws.gov}
 # }
 
 module "aviatrix_controller_vpc" {
-  providers = {
-    aws = aws.reg
-  }
   source         = "./aws"
   aws_vpc_cidr   = var.aws_vpc_cidr2
   aws_vpc_subnet = var.aws_vpc_subnet2
   aws_region     = var.aws_region2
 }
 module "aviatrix-controller-build" {
-  providers = {
-    aws = aws.reg
-  }
   source                 = "github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-build?ref=terraform_0.12"
   vpc                    = module.aviatrix_controller_vpc.vpc
   subnet                 = module.aviatrix_controller_vpc.subnet_id
@@ -32,16 +25,13 @@ module "aviatrix-controller-build" {
   type                   = var.type
 }
 module "aviatrix-controller-initialize" {
-  providers = {
-    aws = aws.reg
-  }
   source              = "github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-initialize?ref=terraform_0.12"
   admin_password      = var.admin_password
   admin_email         = var.admin_email
   private_ip          = module.aviatrix-controller-build.private_ip
   public_ip           = module.aviatrix-controller-build.public_ip
   access_account_name = var.access_account_name
-  aws_account_id      = data.aws_caller_identity.current_aws.account_id
+  aws_account_id      = data.aws_caller_identity.current.account_id
   customer_license_id = var.customer_id
 }
 
@@ -73,18 +63,12 @@ module "aviatrix_arm_vpc2" {
   azure_vpc_subnet = var.azure_vpc_subnet2
 }
 module "aviatrix_aws_vpc1" {
-  providers = {
-    aws = aws.reg
-  }
   source         = "./aws"
   aws_vpc_cidr   = var.aws_vpc_cidr1
   aws_vpc_subnet = var.aws_vpc_subnet1
   aws_region     = var.aws_region1
 }
 module "aviatrix_aws_vpc2" {
-  providers = {
-    aws = aws.reg
-  }
   source         = "./aws"
   aws_vpc_cidr   = var.aws_vpc_cidr2
   aws_vpc_subnet = var.aws_vpc_subnet2
@@ -105,7 +89,6 @@ module "aviatrix_oci_vpc1" {
   oci_vpc_cidr1 = var.oci_vpc_cidr1
 }
 resource "aws_vpn_gateway" "vgw" {
-  provider = aws.reg
   vpc_id = module.aviatrix_aws_vpc2.vpc
   tags = {
     Name = "aviatrix-vgw"
