@@ -25,7 +25,7 @@ The following arguments are supported:
 
 * `gw_name1` - (Required) The first VPC Container name to make a peer pair.
 * `gw_name2` - (Required) The second VPC Container name to make a peer pair.
-* `enable_ha` - (Optional) Whether Peering HA is enabled. Valid values: true, false.
+* `enable_ha` - (Optional) Whether Peering HA is enabled. Valid values: true, false. Default value: false.
 
 ## Attribute Reference
 

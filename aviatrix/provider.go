@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-var supportedVersions = []string{"5.1"}
+var supportedVersions = []string{"5.1", "5.2"}
 
 // Provider returns a schema.Provider for Aviatrix.
 func Provider() terraform.ResourceProvider {
@@ -42,6 +42,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_arm_peer":                resourceAviatrixARMPeer(),
 			"aviatrix_aws_peer":                resourceAviatrixAWSPeer(),
 			"aviatrix_aws_tgw":                 resourceAviatrixAWSTgw(),
+			"aviatrix_aws_tgw_directconnect":   resourceAviatrixAWSTgwDirectConnect(),
 			"aviatrix_aws_tgw_vpc_attachment":  resourceAviatrixAwsTgwVpcAttachment(),
 			"aviatrix_aws_tgw_vpn_conn":        resourceAviatrixAwsTgwVpnConn(),
 			"aviatrix_controller_config":       resourceAviatrixControllerConfig(),
