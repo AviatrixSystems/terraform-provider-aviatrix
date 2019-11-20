@@ -18,15 +18,16 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | ------------------------------------ | ---------------------------- | --------------------------------------------------------------------- |
 | Generic                              | N/A                          | AVIATRIX_USERNAME, AVIATRIX_PASSWORD, AVIATRIX_CONTROLLER_IP          |
 | aviatrix_account                     | SKIP_ACCOUNT                 |                                                                       |
-|		                                   | SKIP_ACCOUNT_AWS	            | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY                    |
-|                     		             | SKIP_ACCOUNT_GCP	            | GCP_ID, GCP_CREDENTIALS_FILEPATH	                                  |
-|		                                   | SKIP_ACCOUNT_ARM	            | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID, ARM_APPLICATION_KEY |
-|                     		             | SKIP_ACCOUNT_OCI	            | OCI_TENANCY_ID, OCI_USER_ID, OCI_COMPARTMENT_ID, OCI_API_KEY_FILEPATH |
-|		                                   | SKIP_ACCOUNT_AWSGOV          | AWSGOV_ACCOUNT_NUMBER, AWSGOV_ACCESS_KEY, AWSGOV_SECRET_KEY           |
+|		                               | SKIP_ACCOUNT_AWS	          | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY                    |
+|                     		           | SKIP_ACCOUNT_GCP	          | GCP_ID, GCP_CREDENTIALS_FILEPATH	                                  |
+|		                               | SKIP_ACCOUNT_ARM	          | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID, ARM_APPLICATION_KEY |
+|                     		           | SKIP_ACCOUNT_OCI	          | OCI_TENANCY_ID, OCI_USER_ID, OCI_COMPARTMENT_ID, OCI_API_KEY_FILEPATH |
+|		                               | SKIP_ACCOUNT_AWSGOV          | AWSGOV_ACCOUNT_NUMBER, AWSGOV_ACCESS_KEY, AWSGOV_SECRET_KEY           |
 | aviatrix_account_user                | SKIP_ACCOUNT_USER            |                                                                       |
 | aviatrix_arm_peer                    | SKIP_ARM_PEER                | aviatrix_account + ARM_VNET_ID, ARM_VNET_ID2, ARM_REGION, ARM_REGION2 |
 | aviatrix_aws_peer                    | SKIP_AWS_PEER                | aviatrix_account + AWS_VPC_ID, AWS_VPC_ID2, AWS_REGION, AWS_REGION2   |
 | aviatrix_aws_tgw                     | SKIP_AWS_TGW                 | aviatrix_account + AWS_VPC_ID, AWS_REGION, AWS_VPC_TGW_ID             |
+| aviatrix_aws_tgw_directconnect       | SKIP_AWS_TGW_DIRECTCONNECT   | aviatrix_aws_tgw + AWS_DX_GATEWAY                                     |
 | aviatrix_aws_tgw_vpc_attachment      | SKIP_AWS_TGW_VPC_ATTACHMENT  | aviatrix_aws_tgw                                                      |
 | aviatrix_aws_tgw_vpn_conn            | SKIP_AWS_TGW_VPN_CONN        | aviatrix_aws_tgw                                                      |
 | aviatrix_controller_config           | SKIP_CONTROLLER_CONFIG       | aviatrix_account                                                      |
@@ -36,7 +37,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_firewall_tag                | SKIP_FIREWALL_TAG            |                                                                       |
 | aviatrix_fqdn                        | SKIP_FQDN                    | aviatrix_gateway                                                      |
 | aviatrix_gateway                     | SKIP_GATEWAY                 | aviatrix_account                                                      |
-|				                               | SKIP_GATEWAY_AWS             |		    + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)  |
+|				                       | SKIP_GATEWAY_AWS             |		    + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)  |
 |                                      | SKIP_GATEWAY_GCP             |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)    |
 |                                      | SKIP_GATEWAY_ARM             |         + ARM_VNET_ID, ARM_REGION, ARM_SUBNET, ARM_GW_SIZE            |
 |                                      | SKIP_GATEWAY_OCI             |         + OCI_VPC_ID, OCI_REGION, OCI_SUBNET, OCI_GW_SIZE(optional)   |

@@ -122,6 +122,10 @@ output "AWS_REGION2" {
   value = data.aws_region.current_aws.name
 }
 
+output "AWS_DX_GATEWAY_ID" {
+  value = aws_dx_gateway.dx-gateway.id
+}
+
 output "AWSGOV_VPC_ID" {
   value = module.aviatrix_aws_vpc1.vpc
 }
