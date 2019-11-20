@@ -26,43 +26,43 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			"vpc_id": {
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew: true,
+				ForceNew:    true,
 				Description: "VPC Id of the cloud gateway.",
 			},
 			"connection_name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew: true,
+				ForceNew:    true,
 				Description: "Site2Cloud Connection Name.",
 			},
 			"remote_gateway_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
 				Description: "Remote gateway type. Valid values: 'generic', 'avx', 'aws', 'azure', 'sonicwall' and 'oracle'.",
 			},
 			"connection_type": {
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew: true,
+				ForceNew:    true,
 				Description: "Connection Type. Valid values: 'mapped' and 'unmapped'.",
 			},
 			"tunnel_type": {
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew: true,
+				ForceNew:    true,
 				Description: "Site2Cloud Tunnel Type. Valid values: 'udp' and 'tcp'",
 			},
 			"primary_cloud_gateway_name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew: true,
+				ForceNew:    true,
 				Description: "Primary Cloud Gateway Name.",
 			},
 			"remote_gateway_ip": {
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew: true,
+				ForceNew:    true,
 				Description: "Remote Gateway IP.",
 			},
 			"remote_subnet_cidr": {
@@ -73,14 +73,14 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			"backup_gateway_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew: true,
+				ForceNew:    true,
 				Description: "Backup gateway name.",
 			},
 			"pre_shared_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				ForceNew: true,
+				ForceNew:    true,
 				Description: "Pre-Shared Key.",
 			},
 			"local_subnet_cidr": {
@@ -92,45 +92,45 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			"ha_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				ForceNew: true,
+				ForceNew:    true,
 				Default:     false,
 				Description: "Specify whether enabling HA or not.",
 			},
 			"backup_remote_gateway_ip": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew: true,
+				ForceNew:    true,
 				Description: "Backup remote remote gateway IP.",
 			},
 			"backup_pre_shared_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew: true,
+				ForceNew:    true,
 				Sensitive:   true,
 				Description: "Backup Pre-Shared Key.",
 			},
 			"remote_subnet_virtual": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew: true,
+				ForceNew:    true,
 				Description: "Remote Subnet CIDR (Virtual).",
 			},
 			"local_subnet_virtual": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew: true,
+				ForceNew:    true,
 				Description: "Local Subnet CIDR (Virtual).",
 			},
 			"custom_algorithms": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				ForceNew: true,
+				ForceNew:    true,
 				Description: "Switch to enable custom/non-default algorithms for IPSec Authentication/Encryption.",
 			},
 			"phase_1_authentication": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew: true,
+				ForceNew:    true,
 				Description: "Phase one Authentication. Valid values: 'SHA-1', 'SHA-256', 'SHA-384' and 'SHA-512'.",
 			},
 			"phase_2_authentication": {
@@ -143,13 +143,13 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			"phase_1_dh_groups": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew: true,
+				ForceNew:    true,
 				Description: "Phase one DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'.",
 			},
 			"phase_2_dh_groups": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew: true,
+				ForceNew:    true,
 				Description: "Phase two DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'.",
 			},
 			"phase_1_encryption": {
@@ -169,14 +169,14 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			"private_route_encryption": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				ForceNew: true,
+				ForceNew:    true,
 				Description: "Private route encryption switch.",
 			},
 			"route_table_list": {
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
-				ForceNew: true,
+				ForceNew:    true,
 				Description: "Route tables to modify.",
 			},
 			"remote_gateway_latitude": {
@@ -202,7 +202,7 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			"ssl_server_pool": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew: true,
+				ForceNew:    true,
 				Description: "Specify ssl_server_pool for tunnel_type 'tcp'. Default value is '192.168.44.0/24'",
 			},
 			"enable_dead_peer_detection": {
