@@ -26,37 +26,43 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			"vpc_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew: true,
 				Description: "VPC Id of the cloud gateway.",
 			},
 			"connection_name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew: true,
 				Description: "Site2Cloud Connection Name.",
 			},
 			"remote_gateway_type": {
 				Type:     schema.TypeString,
 				Required: true,
-				Description: "Remote gateway type. Valid values: 'generic', 'avx', 'aws', 'azure', 'sonicwall', " +
-					"and 'oracle'.",
+				ForceNew: true,
+				Description: "Remote gateway type. Valid values: 'generic', 'avx', 'aws', 'azure', 'sonicwall' and 'oracle'.",
 			},
 			"connection_type": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew: true,
 				Description: "Connection Type. Valid values: 'mapped' and 'unmapped'.",
 			},
 			"tunnel_type": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew: true,
 				Description: "Site2Cloud Tunnel Type. Valid values: 'udp' and 'tcp'",
 			},
 			"primary_cloud_gateway_name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew: true,
 				Description: "Primary Cloud Gateway Name.",
 			},
 			"remote_gateway_ip": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew: true,
 				Description: "Remote Gateway IP.",
 			},
 			"remote_subnet_cidr": {
@@ -67,12 +73,14 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			"backup_gateway_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew: true,
 				Description: "Backup gateway name.",
 			},
 			"pre_shared_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
+				ForceNew: true,
 				Description: "Pre-Shared Key.",
 			},
 			"local_subnet_cidr": {
@@ -84,77 +92,91 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			"ha_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				ForceNew: true,
 				Default:     false,
 				Description: "Specify whether enabling HA or not.",
 			},
 			"backup_remote_gateway_ip": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew: true,
 				Description: "Backup remote remote gateway IP.",
 			},
 			"backup_pre_shared_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew: true,
 				Sensitive:   true,
 				Description: "Backup Pre-Shared Key.",
 			},
 			"remote_subnet_virtual": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew: true,
 				Description: "Remote Subnet CIDR (Virtual).",
 			},
 			"local_subnet_virtual": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew: true,
 				Description: "Local Subnet CIDR (Virtual).",
 			},
 			"custom_algorithms": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				ForceNew: true,
 				Description: "Switch to enable custom/non-default algorithms for IPSec Authentication/Encryption.",
 			},
 			"phase_1_authentication": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew: true,
 				Description: "Phase one Authentication. Valid values: 'SHA-1', 'SHA-256', 'SHA-384' and 'SHA-512'.",
 			},
 			"phase_2_authentication": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				Description: "Phase two Authentication. Valid values: 'NO-AUTH', 'HMAC-SHA-1', 'HMAC-SHA-256', " +
 					"'HMAC-SHA-384' and 'HMAC-SHA-512'.",
 			},
 			"phase_1_dh_groups": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew: true,
 				Description: "Phase one DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'.",
 			},
 			"phase_2_dh_groups": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew: true,
 				Description: "Phase two DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'.",
 			},
 			"phase_1_encryption": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				Description: "Phase one Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC' and " +
 					"'AES-256-CBC'.",
 			},
 			"phase_2_encryption": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				Description: "Phase two Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC', " +
 					"'AES-256-CBC', 'AES-128-GCM-64', 'AES-128-GCM-96' and 'AES-128-GCM-128'.",
 			},
 			"private_route_encryption": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				ForceNew: true,
 				Description: "Private route encryption switch.",
 			},
 			"route_table_list": {
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
+				ForceNew: true,
 				Description: "Route tables to modify.",
 			},
 			"remote_gateway_latitude": {
@@ -180,6 +202,7 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			"ssl_server_pool": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew: true,
 				Description: "Specify ssl_server_pool for tunnel_type 'tcp'. Default value is '192.168.44.0/24'",
 			},
 			"enable_dead_peer_detection": {
@@ -460,80 +483,6 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Partial(true)
-
-	if d.HasChange("vpc_id") {
-		return fmt.Errorf("updating vpc_id is not allowed")
-	}
-	if d.HasChange("connection_name") {
-		return fmt.Errorf("updating connection_name is not allowed")
-	}
-	if d.HasChange("remote_gateway_type") {
-		return fmt.Errorf("updating remote_gateway_type is not allowed")
-	}
-	if d.HasChange("connection_type") {
-		return fmt.Errorf("updating connection_type is not allowed")
-	}
-	if d.HasChange("tunnel_type") {
-		return fmt.Errorf("updating tunnel_type is not allowed")
-	}
-	if d.HasChange("primary_cloud_gateway_name") {
-		return fmt.Errorf("updating primary_cloud_gateway_name is not allowed")
-	}
-	if d.HasChange("backup_gateway_name") {
-		return fmt.Errorf("updating backup_gateway_name is not allowed")
-	}
-	if d.HasChange("pre_shared_key") {
-		return fmt.Errorf("updating pre_shared_key is not allowed")
-	}
-	if d.HasChange("remote_gateway_ip") {
-		return fmt.Errorf("updating remote_gateway_ip is not allowed")
-	}
-	if d.HasChange("ha_enabled") {
-		return fmt.Errorf("updating ha_enabled is not allowed")
-	}
-	if d.HasChange("backup_remote_gateway_ip") {
-		return fmt.Errorf("updating backup_remote_gateway_ip is not allowed")
-	}
-	if d.HasChange("backup_pre_shared_key") {
-		return fmt.Errorf("updating backup_pre_shared_key is not allowed")
-	}
-	if d.HasChange("remote_subnet_virtual") {
-		return fmt.Errorf("updating remote_subnet_virtual is not allowed")
-	}
-	if d.HasChange("local_subnet_virtual") {
-		return fmt.Errorf("updating local_subnet_virtual is not allowed")
-	}
-	if d.HasChange("custom_algorithms") {
-		return fmt.Errorf("updating custom_algorithms is not allowed")
-	}
-	if d.HasChange("phase_1_authentication") {
-		return fmt.Errorf("updating backup_remote_gateway_longitude is not allowed")
-	}
-	if d.HasChange("phase_2_authentication") {
-		return fmt.Errorf("updating phase_2_authentication is not allowed")
-	}
-	if d.HasChange("phase_1_dh_groups") {
-		return fmt.Errorf("updating phase_1_dh_groups is not allowed")
-	}
-	if d.HasChange("phase_2_dh_groups") {
-		return fmt.Errorf("updating phase_2_dh_groups is not allowed")
-	}
-	if d.HasChange("phase_1_encryption") {
-		return fmt.Errorf("updating phase_1_encryption is not allowed")
-	}
-	if d.HasChange("phase_2_encryption") {
-		return fmt.Errorf("updating phase_2_encryption is not allowed")
-	}
-	if d.HasChange("private_route_encryption") {
-		return fmt.Errorf("updating private_route_encryption is not allowed")
-	}
-	if d.HasChange("route_table_list") {
-		return fmt.Errorf("updating route_table_list is not allowed")
-	}
-	if d.HasChange("ssl_server_pool") {
-		return fmt.Errorf("updating ssl_server_pool is not allowed")
-	}
-
 	log.Printf("[INFO] Updating Aviatrix Site2Cloud: %#v", editSite2cloud)
 
 	if ok := d.HasChange("local_subnet_cidr"); ok {
