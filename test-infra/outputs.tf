@@ -11,7 +11,7 @@ output "AVIATRIX_PASSWORD" {
 }
 
 output "AWS_ACCOUNT_NUMBER" {
-  value = data.aws_caller_identity.current_aws.account_id
+  value = data.aws_caller_identity.current.account_id
 }
 
 output "AWS_ACCESS_KEY" {
@@ -23,7 +23,7 @@ output "AWS_SECRET_KEY" {
 }
 
 output "AWSGOV_ACCOUNT_NUMBER" {
-  value = var.awsgov_account_number
+  value = data.aws_caller_identity.current_awsgov.account_id
 }
 
 output "AWSGOV_ACCESS_KEY" {
@@ -60,11 +60,11 @@ output "GCP_CREDENTIALS_FILEPATH"{
 
 output "AWS_BGP_VGW_ID" {
   value = aws_vpn_gateway.vgw.id
-} 
+}
 
 output "GCP_VPC_ID" {
   value = module.aviatrix_gcp_vpc1.vpc_id
-} 
+}
 
 output "GCP_SUBNET" {
   value = module.aviatrix_gcp_vpc1.subnet
@@ -76,7 +76,7 @@ output "GCP_ZONE" {
 
 output "ARM_REGION" {
   value = var.azure_region1
-} 
+}
 
 output "ARM_VNET_ID" {
   value = "${module.aviatrix_arm_vpc1.vnet}:${module.aviatrix_arm_vpc1.group}"
@@ -100,26 +100,26 @@ output "ARM_GW_SIZE" {
 
 output "AWS_VPC_ID" {
   value = module.aviatrix_aws_vpc1.vpc
-} 
+}
 
 output "AWS_SUBNET" {
   value = module.aviatrix_aws_vpc1.subnet
-} 
+}
 
 output "AWS_VPC_ID2" {
   value = module.aviatrix_aws_vpc2.vpc
-} 
+}
 
 output "AWS_SUBNET2" {
   value = module.aviatrix_aws_vpc2.subnet
 }
 
 output "AWS_REGION" {
-  value = data.aws_region.current_aws.name
+  value = data.aws_region.current.name
 }
 
 output "AWS_REGION2" {
-  value = data.aws_region.current_aws.name
+  value = data.aws_region.current.name
 }
 
 output "AWS_DX_GATEWAY_ID" {
@@ -173,4 +173,3 @@ output "IDP_METADATA" {
 output "IDP_METADATA_TYPE" {
   value = var.IDP_METADATA_TYPE
 }
-
