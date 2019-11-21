@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -331,11 +330,11 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 
 	gateway := &goaviatrix.Gateway{
 		CloudType:          d.Get("cloud_type").(int),
-		AccountName:        d.Get("account_name").(string),
 		GwName:             d.Get("gw_name").(string),
+		AccountName:        d.Get("account_name").(string),
 		VpcID:              d.Get("vpc_id").(string),
-		VpcSize:            d.Get("gw_size").(string),
 		VpcNet:             d.Get("subnet").(string),
+		VpcSize:            d.Get("gw_size").(string),
 		VpnCidr:            d.Get("vpn_cidr").(string),
 		ElbName:            d.Get("elb_name").(string),
 		MaxConn:            d.Get("max_vpn_conn").(string),
@@ -352,63 +351,11 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		LdapPassword:       d.Get("ldap_password").(string),
 		LdapBaseDn:         d.Get("ldap_base_dn").(string),
 		LdapUserAttr:       d.Get("ldap_username_attribute").(string),
+		AdditionalCidrs:    d.Get("additional_cidrs").(string),
+		NameServers:        d.Get("name_servers").(string),
+		SearchDomains:      d.Get("search_domains").(string),
 		Eip:                d.Get("eip").(string),
-	}
-
-	enableNat := d.Get("enable_snat").(bool)
-	if enableNat {
-		gateway.EnableNat = "yes"
-	} else {
-		gateway.EnableNat = "no"
-	}
-
-	vpnStatus := d.Get("vpn_access").(bool)
-	if vpnStatus {
-		gateway.VpnStatus = "yes"
-	} else {
-		gateway.VpnStatus = "no"
-	}
-
-	enableElb := d.Get("enable_elb").(bool)
-	if enableElb {
-		gateway.EnableElb = "yes"
-	} else {
-		gateway.EnableElb = "no"
-	}
-
-	splitTunnel := d.Get("split_tunnel").(bool)
-	if splitTunnel {
-		gateway.SplitTunnel = "yes"
-	} else {
-		gateway.SplitTunnel = "no"
-	}
-
-	samlEnabled := d.Get("saml_enabled").(bool)
-	if samlEnabled {
-		gateway.SamlEnabled = "yes"
-	} else {
-		gateway.SamlEnabled = "no"
-	}
-
-	enableLdap := d.Get("enable_ldap").(bool)
-	if enableLdap {
-		gateway.EnableLdap = "yes"
-	} else {
-		gateway.EnableLdap = "no"
-	}
-
-	singleAZ := d.Get("single_az_ha").(bool)
-	if singleAZ {
-		gateway.SingleAZ = "enabled"
-	} else {
-		gateway.SingleAZ = "disabled"
-	}
-
-	allocateNewEip := d.Get("allocate_new_eip").(bool)
-	if allocateNewEip {
-		gateway.AllocateNewEip = "on"
-	} else {
-		gateway.AllocateNewEip = "off"
+		SaveTemplate:       "no",
 	}
 
 	if gateway.CloudType == 1 || gateway.CloudType == 8 || gateway.CloudType == 16 || gateway.CloudType == 256 {
@@ -419,58 +366,19 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	} else {
 		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), ARM (8), OCI (16), or AWSGOV (256)")
 	}
-	if gateway.OtpMode != "" && gateway.OtpMode != "2" && gateway.OtpMode != "3" {
-		return fmt.Errorf("otp_mode can only be '2' or '3' or empty string")
-	}
-	if gateway.SamlEnabled == "yes" {
-		if gateway.EnableLdap == "yes" || gateway.OtpMode != "" {
-			return fmt.Errorf("ldap and mfa can't be configured if saml is enabled")
-		}
-	}
-	if gateway.EnableLdap == "yes" && gateway.OtpMode == "3" {
-		return fmt.Errorf("ldap can't be configured along with okta authentication")
-	}
-	if gateway.EnableLdap == "yes" {
-		if gateway.LdapServer == "" {
-			return fmt.Errorf("ldap server must be set if ldap is enabled")
-		}
-		if gateway.LdapBindDn == "" {
-			return fmt.Errorf("ldap bind dn must be set if ldap is enabled")
-		}
-		if gateway.LdapPassword == "" {
-			return fmt.Errorf("ldap password must be set if ldap is enabled")
-		}
-		if gateway.LdapBaseDn == "" {
-			return fmt.Errorf("ldap base dn must be set if ldap is enabled")
-		}
-		if gateway.LdapUserAttr == "" {
-			return fmt.Errorf("ldap user attribute must be set if ldap is enabled")
-		}
-	}
-	if gateway.OtpMode == "2" {
-		if gateway.DuoIntegrationKey == "" {
-			return fmt.Errorf("duo integration key required if otp_mode set to 2")
-		}
-		if gateway.DuoSecretKey == "" {
-			return fmt.Errorf("duo secret key required if otp_mode set to 2")
-		}
-		if gateway.DuoAPIHostname == "" {
-			return fmt.Errorf("duo api hostname required if otp_mode set to 2")
-		}
-		if gateway.DuoPushMode != "auto" && gateway.DuoPushMode != "token" && gateway.DuoPushMode != "selective" {
-			return fmt.Errorf("duo push mode must be set to a valid value (auto, selective, or token)")
-		}
-	} else if gateway.OtpMode == "3" {
-		if gateway.OktaToken == "" {
-			return fmt.Errorf("okta token must be set if otp_mode is set to 3")
-		}
-		if gateway.OktaURL == "" {
-			return fmt.Errorf("okta url must be set if otp_mode is set to 3")
-		}
+
+	enableNat := d.Get("enable_snat").(bool)
+	if enableNat {
+		gateway.EnableNat = "yes"
+	} else {
+		gateway.EnableNat = "no"
 	}
 
-	if gateway.EnableElb == "yes" && gateway.VpnStatus != "yes" {
-		return fmt.Errorf("can not enable elb without VPN access set to yes")
+	allocateNewEip := d.Get("allocate_new_eip").(bool)
+	if allocateNewEip {
+		gateway.AllocateNewEip = "on"
+	} else {
+		gateway.AllocateNewEip = "off"
 	}
 
 	insaneMode := d.Get("insane_mode").(bool)
@@ -496,13 +404,94 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		gateway.InsaneMode = "off"
 	}
 
-	peeringHaGwSize := d.Get("peering_ha_gw_size").(string)
-	peeringHaSubnet := d.Get("peering_ha_subnet").(string)
-	peeringHaZone := d.Get("peering_ha_zone").(string)
-	if peeringHaSubnet != "" || peeringHaZone != "" {
-		if peeringHaGwSize == "" {
-			return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for " +
-				"this resource if peering_ha_subnet or peering_ha_zone is set. Example: t2.micro")
+	samlEnabled := d.Get("saml_enabled").(bool)
+	if samlEnabled {
+		gateway.SamlEnabled = "yes"
+	} else {
+		gateway.SamlEnabled = "no"
+	}
+
+	splitTunnel := d.Get("split_tunnel").(bool)
+	if splitTunnel {
+		gateway.SplitTunnel = "yes"
+	} else {
+		gateway.SplitTunnel = "no"
+	}
+
+	enableElb := d.Get("enable_elb").(bool)
+	if enableElb {
+		gateway.EnableElb = "yes"
+	} else {
+		gateway.EnableElb = "no"
+	}
+
+	enableLdap := d.Get("enable_ldap").(bool)
+	if enableLdap {
+		gateway.EnableLdap = "yes"
+	} else {
+		gateway.EnableLdap = "no"
+	}
+
+	vpnStatus := d.Get("vpn_access").(bool)
+	if vpnStatus {
+		gateway.VpnStatus = "yes"
+
+		if gateway.SamlEnabled == "yes" {
+			if gateway.EnableLdap == "yes" || gateway.OtpMode != "" {
+				return fmt.Errorf("ldap and mfa can't be configured if saml is enabled")
+			}
+		}
+
+		if gateway.OtpMode != "" && gateway.OtpMode != "2" && gateway.OtpMode != "3" {
+			return fmt.Errorf("otp_mode can only be '2' or '3' or empty string")
+		}
+
+		if gateway.EnableLdap == "yes" && gateway.OtpMode == "3" {
+			return fmt.Errorf("ldap can't be configured along with okta authentication")
+		}
+		if gateway.EnableLdap == "yes" {
+			if gateway.LdapServer == "" {
+				return fmt.Errorf("ldap server must be set if ldap is enabled")
+			}
+			if gateway.LdapBindDn == "" {
+				return fmt.Errorf("ldap bind dn must be set if ldap is enabled")
+			}
+			if gateway.LdapPassword == "" {
+				return fmt.Errorf("ldap password must be set if ldap is enabled")
+			}
+			if gateway.LdapBaseDn == "" {
+				return fmt.Errorf("ldap base dn must be set if ldap is enabled")
+			}
+			if gateway.LdapUserAttr == "" {
+				return fmt.Errorf("ldap user attribute must be set if ldap is enabled")
+			}
+		}
+		if gateway.OtpMode == "2" {
+			if gateway.DuoIntegrationKey == "" {
+				return fmt.Errorf("duo integration key required if otp_mode set to 2")
+			}
+			if gateway.DuoSecretKey == "" {
+				return fmt.Errorf("duo secret key required if otp_mode set to 2")
+			}
+			if gateway.DuoAPIHostname == "" {
+				return fmt.Errorf("duo api hostname required if otp_mode set to 2")
+			}
+			if gateway.DuoPushMode != "auto" && gateway.DuoPushMode != "token" && gateway.DuoPushMode != "selective" {
+				return fmt.Errorf("duo push mode must be set to a valid value (auto, selective, or token)")
+			}
+		} else if gateway.OtpMode == "3" {
+			if gateway.OktaToken == "" {
+				return fmt.Errorf("okta token must be set if otp_mode is set to 3")
+			}
+			if gateway.OktaURL == "" {
+				return fmt.Errorf("okta url must be set if otp_mode is set to 3")
+			}
+		}
+
+	} else {
+		gateway.VpnStatus = "no"
+		if gateway.EnableElb == "yes" {
+			return fmt.Errorf("can not enable elb without VPN access set to yes")
 		}
 	}
 
@@ -513,13 +502,24 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		log.Printf("[INFO] failed to create Aviatrix gateway: %#v", gateway)
 		return fmt.Errorf("failed to create Aviatrix gateway: %s", err)
 	}
-
 	d.SetId(gateway.GwName)
 
 	flag := false
 	defer resourceAviatrixGatewayReadIfRequired(d, meta, &flag)
 
-	// single_AZ enabled for Gateway. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
+	enableVpnNat := d.Get("enable_vpn_nat").(bool)
+	if vpnStatus {
+		if !enableVpnNat {
+			err := client.DisableVpnNat(gateway)
+			if err != nil {
+				return fmt.Errorf("failed to disable VPN NAT: %s", err)
+			}
+		}
+	} else if !enableVpnNat {
+		return fmt.Errorf("'enable_vpc_nat' is only supported for vpn gateway. Can't disable it")
+	}
+
+	singleAZ := d.Get("single_az_ha").(bool)
 	if singleAZ {
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName:   d.Get("gw_name").(string),
@@ -535,6 +535,15 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	// peering_ha_subnet is for Peering HA Gateway. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
+	peeringHaGwSize := d.Get("peering_ha_gw_size").(string)
+	peeringHaSubnet := d.Get("peering_ha_subnet").(string)
+	peeringHaZone := d.Get("peering_ha_zone").(string)
+	if peeringHaSubnet != "" || peeringHaZone != "" {
+		if peeringHaGwSize == "" {
+			return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for " +
+				"this resource if peering_ha_subnet or peering_ha_zone is set. Example: t2.micro")
+		}
+	}
 	if peeringHaSubnet != "" || peeringHaZone != "" {
 		peeringHaGateway := &goaviatrix.Gateway{
 			Eip:       d.Get("peering_ha_eip").(string),
@@ -610,56 +619,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	} else if ok && gateway.CloudType != 1 && gateway.CloudType != 256 {
 		return fmt.Errorf("adding tags only supported for AWS and AWSGOV, cloud_type must be 1 or 256")
-	}
-
-	enableVpnNat := d.Get("enable_vpn_nat").(bool)
-	if vpnStatus {
-		gw := &goaviatrix.Gateway{
-			GwName: gateway.GwName,
-		}
-
-		gw1, err := client.GetGateway(gw)
-		if err != nil {
-			return fmt.Errorf("couldn't find Aviatrix Gateway: %s due to %v", gw.GwName, err)
-		}
-
-		sTunnel := &goaviatrix.SplitTunnel{
-			SplitTunnel:     "no",
-			VpcID:           gateway.VpcID,
-			AdditionalCidrs: d.Get("additional_cidrs").(string),
-			NameServers:     d.Get("name_servers").(string),
-			SearchDomains:   d.Get("search_domains").(string),
-			ElbName:         d.Get("elb_name").(string),
-			SaveTemplate:    "no",
-		}
-		if sTunnel.ElbName == "" {
-			sTunnel.ElbName = gw.GwName
-		}
-
-		if gateway.CloudType == 4 {
-			// GCP vpn gw needs gcloud project ID included within rest api call
-			sTunnel.VpcID = gw1.VpcID
-		}
-
-		sTunnel.SplitTunnel = gateway.SplitTunnel
-		if sTunnel.SplitTunnel == "yes" {
-			if sTunnel.AdditionalCidrs != "" || sTunnel.NameServers != "" || sTunnel.SearchDomains != "" {
-				time.Sleep(10 * time.Second)
-				err = client.ModifySplitTunnel(sTunnel)
-				if err != nil {
-					return fmt.Errorf("failed to modify split tunnel: %s", err)
-				}
-			}
-		}
-
-		if !enableVpnNat {
-			err := client.DisableVpnNat(gateway)
-			if err != nil {
-				return fmt.Errorf("failed to disable VPN NAT: %s", err)
-			}
-		}
-	} else if !enableVpnNat {
-		return fmt.Errorf("'enable_vpc_nat' is only supported for vpn gateway. Can't disable it")
 	}
 
 	enableVpcDnsServer := d.Get("enable_vpc_dns_server").(bool)
