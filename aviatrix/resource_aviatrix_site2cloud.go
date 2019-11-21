@@ -239,6 +239,9 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	haEnabled := d.Get("ha_enabled").(bool)
 	if haEnabled {
 		s2c.HAEnabled = "yes"
+		if s2c.GwName+"-hagw" != s2c.BackupGwName {
+			return fmt.Errorf("'backup_gateway_name' should be primary gateway's HA gateway")
+		}
 	} else {
 		s2c.HAEnabled = "no"
 	}
