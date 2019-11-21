@@ -516,7 +516,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 	} else if !enableVpnNat {
-		return fmt.Errorf("'enable_vpc_nat' is only supported for vpn gateway. Can't disable it")
+		return fmt.Errorf("'enable_vpc_nat' is only supported for vpn gateway. Can't modify it for non-vpn gateway")
 	}
 
 	singleAZ := d.Get("single_az_ha").(bool)
