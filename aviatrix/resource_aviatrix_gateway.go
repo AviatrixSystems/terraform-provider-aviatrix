@@ -927,11 +927,10 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			splitTunnel := &goaviatrix.SplitTunnel{
 				VpcID: gw.VpcID,
 			}
-
-			if gw.EnableElb != "yes" {
-				splitTunnel.ElbName = gw.GwName
-			} else {
+			if gw.ElbState == "enabled" {
 				splitTunnel.ElbName = gw.ElbName
+			} else {
+				splitTunnel.ElbName = gw.GwName
 			}
 			splitTunnel1, err := client.GetSplitTunnel(splitTunnel)
 			if err != nil {
