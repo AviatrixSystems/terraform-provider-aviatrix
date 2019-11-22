@@ -67,6 +67,80 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Specify whether enabling Source NAT feature on the gateway or not.",
 			},
+			"mode": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "single",
+				Description: "",
+			},
+			"policy": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"src_ip": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "CIDRs separated by comma or tag names such 'HR' or 'marketing' etc.",
+						},
+						"src_port": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "CIDRs separated by comma or tag names such 'HR' or 'marketing' etc.",
+						},
+						"dst_ip": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "CIDRs separated by comma or tag names such 'HR' or 'marketing' etc.",
+						},
+						"dst_port": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "CIDRs separated by comma or tag names such 'HR' or 'marketing' etc.",
+						},
+						"protocol": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "all",
+							Description: "'all', 'tcp', 'udp', 'icmp', 'sctp', 'rdp', 'dccp'.",
+						},
+						"interface": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "A single port or a range of port numbers.",
+						},
+						"connection": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "A single port or a range of port numbers.",
+						},
+						"mark": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Valid values: 'allow', 'deny' or 'force-drop'(in stateful firewall rule to allow immediate packet dropping on established sessions).",
+						},
+						"new_src_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     false,
+							Description: "Valid values: true or false.",
+						},
+						"new_src_port": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Description of this firewall policy.",
+						},
+						"exclude_rtb": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "",
+							Description: "Description of this firewall policy.",
+						},
+					},
+				},
+			},
 			"allocate_new_eip": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -181,12 +255,23 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		TransitGateway: d.Get("transit_gw").(string),
 	}
 
+	log.Printf("zjin00: nothing wrong here")
+
 	enableNat := d.Get("enable_snat").(bool)
-	if enableNat {
+	mode := d.Get("mode").(string)
+	log.Printf("zjin01: nothing wrong here")
+
+	if enableNat && mode == "single" {
+		log.Printf("zjin02: nothing wrong here")
+
+		if d.Get("policy") != nil {
+			log.Printf("zjin03: nothing wrong here %v", d.Get("policy"))
+
+			return fmt.Errorf("'policy' should be empty for 'mode' of 'single'")
+		}
 		gateway.EnableNat = "yes"
-	} else {
-		gateway.EnableNat = "no"
 	}
+	log.Printf("zjin04: nothing wrong here")
 
 	singleAZ := d.Get("single_az_ha").(bool)
 	if singleAZ {
@@ -410,6 +495,66 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		err := client.EnableEncryptVolume(gwEncVolume)
 		if err != nil {
 			return fmt.Errorf("failed to enable encrypt gateway volume for %s due to %s", gwEncVolume.GwName, err)
+		}
+	}
+	if enableNat && mode == "secondary" {
+		if d.Get("policy").(interface{}) != nil {
+			return fmt.Errorf("'policy' should be empty for 'snat_type' of 'secondary'")
+		}
+		gwToEnableSNat := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+		gwToEnableSNat.EnableNat = "yes"
+		gwToEnableSNat.Mode = "secondary"
+		err := client.EnableSNat(gwToEnableSNat)
+		if err != nil {
+			return fmt.Errorf("failed to enable SNAT of 'multiple IPs': %s", err)
+		}
+	} else if enableNat && mode == "custom" {
+
+		log.Printf("zjin05: nothing wrong here")
+
+		if d.Get("policy") == nil {
+			return fmt.Errorf("'policy' shouldn't be empty for 'snat_type' of 'custom'")
+		}
+		gwToEnableSNat := &goaviatrix.Gateway{
+			GatewayName: d.Get("gw_name").(string),
+		}
+		gwToEnableSNat.EnableNat = "yes"
+		gwToEnableSNat.Mode = "custom"
+		log.Printf("zjin06: nothing wrong here")
+
+		if _, ok := d.GetOk("policy"); ok {
+			policies := d.Get("policy").([]interface{})
+			for _, policy := range policies {
+				pl := policy.(map[string]interface{})
+				customPolicy := &goaviatrix.CustomPolicy{
+					SrcIP:      pl["src_ip"].(string),
+					SrcPort:    pl["src_port"].(string),
+					DstIP:      pl["dst_ip"].(string),
+					DstPort:    pl["dst_port"].(string),
+					Protocol:   pl["protocol"].(string),
+					Interface:  pl["interface"].(string),
+					Connection: pl["connection"].(string),
+					Mark:       pl["mark"].(string),
+					NewSrcIP:   pl["new_src_ip"].(string),
+					NewSrcPort: pl["new_src_port"].(string),
+					ExcludeRTB: pl["exclude_rtb"].(string),
+				}
+				//err := client.ValidatePolicy(firewallPolicy)
+				//if err != nil {
+				//	return fmt.Errorf("policy validation failed: %v", err)
+				//}
+				gwToEnableSNat.Policy = append(gwToEnableSNat.Policy, *customPolicy)
+			}
+		}
+		log.Printf("zjin06: nothing wrong here")
+
+		err := client.EnableSNat(gwToEnableSNat)
+		log.Printf("zjin06: nothing wrong here")
+
+		if err != nil {
+			return fmt.Errorf("failed to enable SNAT of 'customized snat': %s", err)
 		}
 	}
 

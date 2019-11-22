@@ -115,6 +115,20 @@ type Gateway struct {
 	CustomerManagedKeys         string `form:"customer_managed_keys,omitempty" json:"customer_managed_keys,omitempty"`
 }
 
+type CustomPolicy struct {
+	SrcIP      string `form:"src_ip,omitempty" json:"src_ip,omitempty"`
+	SrcPort    string `form:"src_port,omitempty" json:"src_port,omitempty"`
+	DstIP      string `form:"dst_ip,omitempty" json:"dst_ip,omitempty"`
+	DstPort    string `form:"dst_port,omitempty" json:"dst_port,omitempty"`
+	Protocol   string `form:"protocol,omitempty" json:"protocol,omitempty"`
+	Interface  string `form:"interface,omitempty" json:"interface,omitempty"`
+	Connection string `form:"connection,omitempty" json:"connection,omitempty"`
+	Mark       string `form:"mark,omitempty" json:"mark,omitempty"`
+	NewSrcIP   string `form:"new_src_ip,omitempty" json:"new_src_ip,omitempty"`
+	NewSrcPort string `form:"new_src_port,omitempty" json:"new_src_port,omitempty"`
+	ExcludeRTB string `form:"exclude_rtb,omitempty" json:"exclude_rtb,omitempty"`
+}
+
 type GatewayDetail struct {
 	AccountName                  string   `form:"account_name,omitempty" json:"account_name,omitempty"`
 	Action                       string   `form:"action,omitempty"`
@@ -377,17 +391,65 @@ func (c *Client) DeleteGateway(gateway *Gateway) error {
 	return nil
 }
 
+//func (c *Client) EnableSNat(gateway *Gateway) error {
+//	Url, err := url.Parse(c.baseURL)
+//	if err != nil {
+//		return errors.New(("url Parsing failed for enable_snat") + err.Error())
+//	}
+//	enableSNat := url.Values{}
+//	enableSNat.Add("CID", c.CID)
+//	enableSNat.Add("action", "enable_snat")
+//	enableSNat.Add("gateway_name", gateway.GwName)
+//	if gateway.Mode == "secondary" {
+//		enableSNat.Add("mode", gateway.Mode)
+//	} else if gateway.Mode == "custom" {
+//		enableSNat.Add("mode", gateway.Mode)
+//		if gateway.Policy != nil && len(gateway.Policy) != 0 {
+//			i := 0
+//			for _, policy := range gateway.Policy {
+//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][src_ip]", policy.SrcIP)
+//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][src_port]", policy.SrcPort)
+//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][dst_ip]", policy.DstIP)
+//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][dst_port]", policy.DstPort)
+//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][protocol]", policy.Protocol)
+//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][interface]", policy.Interface)
+//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][connection]", policy.Connection)
+//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][mark]", policy.Mark)
+//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][new_src_ip]", policy.NewSrcIP)
+//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][new_src_port]", policy.NewSrcPort)
+//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][exclude_rtb]", policy.ExcludeRTB)
+//				i++
+//			}
+//		}
+//	}
+//	Url.RawQuery = enableSNat.Encode()
+//	resp, err := c.Get(Url.String(), nil)
+//	if err != nil {
+//		return errors.New("HTTP Get enable_snat failed: " + err.Error())
+//	}
+//	var data APIResp
+//	buf := new(bytes.Buffer)
+//	buf.ReadFrom(resp.Body)
+//	bodyString := buf.String()
+//	bodyIoCopy := strings.NewReader(bodyString)
+//	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+//		return errors.New("Json Decode enable_snat failed: " + err.Error() + "\n Body: " + bodyString)
+//	}
+//	if !data.Return {
+//		return errors.New("Rest API enable_snat Get failed: " + data.Reason)
+//	}
+//	return nil
+//}
+
 func (c *Client) EnableSNat(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
+	gateway.CID = c.CID
+	gateway.Action = "enable_snat"
+	args, err := json.Marshal(gateway.Policy)
 	if err != nil {
-		return errors.New(("url Parsing failed for enable_snat") + err.Error())
+		return err
 	}
-	enableSNat := url.Values{}
-	enableSNat.Add("CID", c.CID)
-	enableSNat.Add("action", "enable_snat")
-	enableSNat.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = enableSNat.Encode()
-	resp, err := c.Get(Url.String(), nil)
+	gateway.PolicyList = string(args)
+	resp, err := c.Post(c.baseURL, gateway)
 	if err != nil {
 		return errors.New("HTTP Get enable_snat failed: " + err.Error())
 	}
