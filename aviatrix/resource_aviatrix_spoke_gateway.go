@@ -627,12 +627,6 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("gw_size", gw.GwSize)
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 
-		if gw.EnableNat == "yes" {
-			d.Set("enable_snat", true)
-		} else {
-			d.Set("enable_snat", false)
-		}
-
 		if gw.SingleAZ == "yes" {
 			d.Set("single_az_ha", true)
 		} else {
@@ -661,6 +655,24 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("enable_vpc_dns_server", true)
 		} else {
 			d.Set("enable_vpc_dns_server", false)
+		}
+
+		if gw.EnableNat == "yes" {
+			d.Set("enable_snat", true)
+
+			log.Printf("zjin0000: gw.Mode is %s", gw.Mode)
+
+			if gw.Mode == "customized" {
+				gwDetail, err := client.GetGatewayDetail(gateway)
+				if err != nil {
+					return fmt.Errorf("couldn't get detail information of Aviatrix Spoke Gateway: %s due to: %s", gw.GwName, err)
+				}
+				if err := d.Set("policy", gwDetail.Policy); err != nil {
+					log.Printf("[WARN] Error setting 'policy' for (%s): %s", d.Id(), err)
+				}
+			}
+		} else {
+			d.Set("enable_snat", false)
 		}
 	}
 

@@ -135,8 +135,9 @@ type GatewayDetail struct {
 	GwName                       string   `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
 	DMZEnabled                   bool     `json:"dmz_enabled,omitempty"`
 	EnableAdvertiseTransitCidr   string   `json:"advertise_transit_cidr,omitempty"`
-	BgpManualSpokeAdvertiseCidrs []string `json:"bgp_manual_spoke_advertise_cidrs"`
-	VpnNat                       bool     `json:"vpn_nat"`
+	BgpManualSpokeAdvertiseCidrs []string `json:"bgp_manual_spoke_advertise_cidrs,omitempty"`
+	VpnNat                       bool     `json:"vpn_nat,omitempty"`
+	Policy                       string   `json:"snat_ip_port_list,omitempty"`
 }
 
 type VpnGatewayAuth struct { // Used for set_vpn_gateway_authentication rest api call
@@ -341,6 +342,23 @@ func (c *Client) GetGatewayDetail(gateway *Gateway) (*GatewayDetail, error) {
 	if !data.Return {
 		return nil, errors.New("Rest API list_vpc_by_name Get failed: " + data.Reason)
 	}
+
+	var policyList []map[string]interface{}
+	err = json.Unmarshal([]byte(data.Results.Policy), &policyList)
+	if err != nil {
+
+	}
+
+	for _, policy := range policyList {
+
+		// convert map to array of Person struct
+		var p CustomPolicy
+		p.SrcIP = fmt.Sprintf("%s", policy["src_ip"])
+		p.DstIP = fmt.Sprintf("%s", policy["dst_ip"])
+
+	}
+	log.Printf("zjin000: policyList is %v", policyList)
+
 	if data.Results.GwName == gateway.GwName {
 		return &data.Results, nil
 	}
