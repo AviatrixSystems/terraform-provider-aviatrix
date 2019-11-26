@@ -23,7 +23,7 @@ output "AWS_SECRET_KEY" {
 }
 
 output "AWSGOV_ACCOUNT_NUMBER" {
-  value = data.aws_caller_identity.current_awsgov.account_id
+  value = var.awsgov_account_number
 }
 
 output "AWSGOV_ACCESS_KEY" {

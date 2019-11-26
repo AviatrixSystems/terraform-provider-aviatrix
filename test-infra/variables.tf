@@ -37,6 +37,7 @@ variable "awsgov_vpc_cidr1" {default="10.10.0.0/16"}
 variable "awsgov_vpc_subnet1" {default="10.10.0.0/24"}
 variable "awsgov_access_key" {}
 variable "awsgov_secret_key" {}
+variable "awsgov_account_number" {}
 
 variable "oci_tenancy_id" {}
 variable "oci_user_id" {}
@@ -50,11 +51,11 @@ variable "oci_subnet1" {default="10.10.0.0/16"}
 variable "oci_fingerprint" {}
 
 variable "IDP_METADATA" {default="ThisIsATest"}
-variable "IDP_METADATA_TYPE"  {default="Text"}
+variable "IDP_METADATA_TYPE" {default="Text"}
 
 variable "admin_password" {default="Aviatrix123#"}
 variable "admin_email" {default="abc@xyz.com"}
 variable "access_account_name" {default="aws_init_acc"}
-variable "keypair"  {default="aviatrix-key"}
-variable "type"  {default="metered"}
+variable "keypair" {default="aviatrix-key"}
+variable "type" {default="metered"}
 variable "customer_id" {default = ""}
