@@ -63,7 +63,6 @@ resource "aviatrix_account" "test_account" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_aws_tgw" "test_aws_tgw" {
 	account_name          = aviatrix_account.test_account.account_name
 	aws_side_as_number    = "%s"
@@ -100,7 +99,6 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
 		security_domain_name = "%s"
 	}
 }
-
 resource "aviatrix_aws_tgw_vpc_attachment" "test" {
 	tgw_name             = aviatrix_aws_tgw.test_aws_tgw.tgw_name
 	region               = "%s"

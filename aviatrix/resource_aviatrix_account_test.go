@@ -308,9 +308,9 @@ resource "aviatrix_account" "oci" {
 
 func testAccAccountConfigAWSGOV(rInt int) string {
 	return fmt.Sprintf(`
-resource "aviatrix_account" "awsgov" {
-	account_name       		= "tfa-awsgov-%d"
-	cloud_type         		= 256
+	resource "aviatrix_account" "awsgov" {
+	account_name          = "tfa-awsgov-%d"
+	cloud_type            = 256
 	awsgov_account_number = "%s"
 	awsgov_access_key     = "%s"
 	awsgov_secret_key     = "%s"

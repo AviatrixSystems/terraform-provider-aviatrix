@@ -83,7 +83,6 @@ resource "aviatrix_account" "test_account" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_aws_peer" "test_aws_peer" {
 	account_name1 = aviatrix_account.test_account.account_name
 	account_name2 = aviatrix_account.test_account.account_name

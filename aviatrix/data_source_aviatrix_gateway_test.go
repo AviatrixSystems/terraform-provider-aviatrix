@@ -51,7 +51,6 @@ resource "aviatrix_account" "test_account" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_gateway" "test_gw" {
 	cloud_type   = 1
 	account_name = aviatrix_account.test_account.id
@@ -61,7 +60,6 @@ resource "aviatrix_gateway" "test_gw" {
 	gw_size      = "t2.micro"
 	subnet       = "%s"
 }
-
 data "aviatrix_gateway" "foo" {
 	account_name = aviatrix_gateway.test_gw.account_name
 	gw_name      = aviatrix_gateway.test_gw.gw_name

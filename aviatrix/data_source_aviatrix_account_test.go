@@ -48,7 +48,6 @@ resource "aviatrix_account" "test" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-
 data "aviatrix_account" "foo" {
 	account_name = aviatrix_account.test.id
 }

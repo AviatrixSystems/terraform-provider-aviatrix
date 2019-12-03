@@ -346,7 +346,6 @@ resource "aviatrix_account" "test_acc_aws" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_gateway" "test_gw_aws" {
 	cloud_type   = 1
 	account_name = aviatrix_account.test_acc_aws.account_name
@@ -368,7 +367,6 @@ resource "aviatrix_account" "test_acc_gcp" {
 	gcloud_project_id                   = "%s"
 	gcloud_project_credentials_filepath = "%s"
 }
-
 resource "aviatrix_gateway" "test_gw_gcp" {
 	cloud_type   = 4
 	account_name = aviatrix_account.test_acc_gcp.account_name
@@ -392,7 +390,6 @@ resource "aviatrix_account" "test_acc_arm" {
 	arm_application_id  = "%s"
 	arm_application_key = "%s"
 }
-
 resource "aviatrix_gateway" "test_gw_arm" {
 	cloud_type   = 8
 	account_name = aviatrix_account.test_acc_arm.account_name
@@ -417,7 +414,6 @@ resource "aviatrix_account" "test_acc_oci" {
 	oci_compartment_id           = "%s"
 	oci_api_private_key_filepath = "%s"
 }
-
 resource "aviatrix_gateway" "test_gw_oci" {
 	cloud_type   = 16
 	account_name = aviatrix_account.test_acc_oci.account_name
@@ -435,13 +431,12 @@ resource "aviatrix_gateway" "test_gw_oci" {
 func testAccGatewayConfigBasicAWSGOV(rName string, awsgovGwSize string, awsgovVpcId string, awsgovRegion string, awsgovVpcNet string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_acc_awsgov" {
-	account_name       = "tf-acc-awsgov-%s"
-	cloud_type         = 256
+	account_name          = "tf-acc-awsgov-%s"
+	cloud_type            = 256
 	awsgov_account_number = "%s"
 	awsgov_access_key     = "%s"
 	awsgov_secret_key     = "%s"
 }
-
 resource "aviatrix_gateway" "test_gw_awsgov" {
 	cloud_type   = 256
 	account_name = aviatrix_account.test_acc_awsgov.account_name
