@@ -64,7 +64,6 @@ resource "aviatrix_account" "test" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_gateway" "test" {
 	cloud_type   = 1
 	account_name = aviatrix_account.test.account_name
@@ -74,7 +73,6 @@ resource "aviatrix_gateway" "test" {
 	gw_size      = "t2.micro"
 	subnet       = "%[7]s"
 }
-
 resource "aviatrix_site2cloud" "foo" {
 	vpc_id                     = aviatrix_gateway.test.vpc_id
 	connection_name            = "tfs-%[1]s"

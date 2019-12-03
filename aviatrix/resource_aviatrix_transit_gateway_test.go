@@ -193,7 +193,6 @@ resource "aviatrix_account" "test_acc_aws" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
 	cloud_type   = 1
 	account_name = aviatrix_account.test_acc_aws.account_name
@@ -217,7 +216,6 @@ resource "aviatrix_account" "test_acc_arm" {
 	arm_application_id  = "%s"
 	arm_application_key = "%s"
 }
-
 resource "aviatrix_transit_gateway" "test_transit_gateway_arm" {
 	cloud_type   = 8
 	account_name = aviatrix_account.test_acc_arm.account_name
@@ -244,7 +242,6 @@ resource "aviatrix_account" "test_acc_gcp" {
 	gcloud_project_id                   = "%s"
 	gcloud_project_credentials_filepath = "%s"
 }
-
 resource "aviatrix_transit_gateway" "test_transit_gateway_gcp" {
 	cloud_type   = 4
 	account_name = aviatrix_account.test_acc_gcp.account_name
@@ -272,7 +269,6 @@ resource "aviatrix_account" "test_acc_oci" {
 	oci_compartment_id           = "%s"
 	oci_api_private_key_filepath = "%s"
 }
-
 resource "aviatrix_transit_gateway" "test_transit_gateway_oci" {
 	cloud_type   = 16
 	account_name = aviatrix_account.test_acc_oci.account_name

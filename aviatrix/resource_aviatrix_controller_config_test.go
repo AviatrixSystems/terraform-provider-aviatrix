@@ -59,7 +59,6 @@ resource "aviatrix_account" "test_account" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_controller_config" "test_controller_config" {
 	fqdn_exception_rule 	   = false
 	http_access         	   = true

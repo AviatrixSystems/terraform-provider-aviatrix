@@ -55,7 +55,6 @@ func TestAccAviatrixVpc_basic(t *testing.T) {
 
 func testAccVpcConfigBasic(rName string) string {
 	return fmt.Sprintf(`
-
 resource "aviatrix_account" "test_account" {
 	account_name       = "tfa-%s"
 	cloud_type         = 1
@@ -64,7 +63,6 @@ resource "aviatrix_account" "test_account" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_vpc" "test_vpc" {
 	cloud_type   = 1
 	account_name = "${aviatrix_account.test_account.account_name}"

@@ -207,7 +207,6 @@ resource "aviatrix_account" "test_acc_aws" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
 	cloud_type   = 1
 	account_name = aviatrix_account.test_acc_aws.account_name
@@ -234,7 +233,6 @@ resource "aviatrix_account" "test_acc_gcp" {
 	gcloud_project_id                   = "%s"
 	gcloud_project_credentials_filepath = "%s"
 }
-
 resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
 	cloud_type   = 4
 	account_name = aviatrix_account.test_acc_gcp.account_name
@@ -259,7 +257,6 @@ resource "aviatrix_account" "test_acc_arm" {
 	arm_application_id  = "%s"
 	arm_application_key = "%s"
 }
-
 resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
 	cloud_type   = 8
 	account_name = aviatrix_account.test_acc_arm.account_name
