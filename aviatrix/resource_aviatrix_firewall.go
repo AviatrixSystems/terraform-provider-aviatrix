@@ -140,6 +140,9 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 			if err != nil {
 				return fmt.Errorf("policy validation failed: %v", err)
 			}
+			if firewallPolicy.Protocol == "all" {
+				firewallPolicy.Port = ""
+			}
 
 			firewall.PolicyList = append(firewall.PolicyList, firewallPolicy)
 		}
@@ -199,7 +202,11 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 			pl["src_ip"] = policy.SrcIP
 			pl["dst_ip"] = policy.DstIP
 			pl["protocol"] = policy.Protocol
-			pl["port"] = policy.Port
+			if policy.Protocol == "all" && policy.Port == "" {
+				pl["port"] = "0:65535"
+			} else {
+				pl["port"] = policy.Port
+			}
 			pl["action"] = policy.Action
 			pl["description"] = policy.Description
 			if policy.LogEnabled == "on" {
@@ -330,6 +337,9 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 			err := client.ValidatePolicy(firewallPolicy)
 			if err != nil {
 				return fmt.Errorf("policy validation failed: %v", err)
+			}
+			if firewallPolicy.Protocol == "all" {
+				firewallPolicy.Port = ""
 			}
 
 			firewall.PolicyList = append(firewall.PolicyList, firewallPolicy)
