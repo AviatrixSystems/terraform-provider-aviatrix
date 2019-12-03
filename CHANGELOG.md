@@ -12,7 +12,6 @@
 
 ### Enhancements:
 1. Added support for updating in **aviatrix_site2cloud** by ForceNew
-2. Blocked setting a non-backup peering-HA gateway as the ``back_gateway_name`` in **aviatrix_site2cloud**
 
 ### Bug Fixes:
 1. Fixed an issue that caused an inability to manage a VPN gateway's ``split_tunnel`` attributes after creating the **aviatrix_gateway** 
