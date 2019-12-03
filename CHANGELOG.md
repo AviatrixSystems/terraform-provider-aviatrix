@@ -1,4 +1,23 @@
-## 2.7.1 (Unreleased)
+## 2.8.0 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-5.1.1179** and **UserConnect-5.2.1956** 
+- Supported Terraform version: **v0.12.x**
+
+### Features:
+1. Added support for aws gov access account in **aviatrix_account**
+2. Added support for ``customized_routes`` and ``disable_local_route_propagation`` in **aviatrix_aws_tgw_vpc_attachment**
+3. Added a link to view the feature compatibility doc online
+4. New resources:
+  - **aviatrix_aws_tgw_directconnect**
+
+### Enhancements:
+1. Added support for editing in **aviatrix_site2cloud**
+2. Added blocking setting ``back_gateway_name`` as non-ha_gateway of primary gateway in **aviatrix_site2cloud**
+
+### Bug Fixes:
+1. Fixed the issue where it is unable to manage vpn gw w/split tunnel attributes after creation in **aviatrix_gateway** 
+
+
 ## 2.7.0 (November 07, 2019)
 ### Notes:
 - Supported Controller version: **UserConnect-5.1.973**
