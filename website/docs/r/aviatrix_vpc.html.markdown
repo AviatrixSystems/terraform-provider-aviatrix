@@ -2,7 +2,7 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_vpc"
 description: |-
-  Creates and manages VPCs.
+  Creates and manages VPCs
 ---
 
 # aviatrix_vpc

@@ -2,7 +2,7 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_gateway"
 description: |-
-  Creates and manages Aviatrix gateways.
+  Creates and manages Aviatrix Gateways
 ---
 
 # aviatrix_gateway
