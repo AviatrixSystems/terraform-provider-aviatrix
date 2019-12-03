@@ -17,7 +17,7 @@ resource "aviatrix_firenet" "test_firenet" {
   vpc_id             = "vpc-032005cc371"
   inspection_enabled = true
   egress_enabled     = false
-  
+
   firewall_instance_association {
     firenet_gw_name      = "avx_firenet_gw"
     instance_id          = "i-09dc118db6a1eb901"
@@ -28,13 +28,14 @@ resource "aviatrix_firenet" "test_firenet" {
     egress_interface     = "eni-03b8dd53a1a731481"
   }
 }
-
+```
+```hcl
 # Create an Aviatrix FireNet associated to an FQDN Gateway
 resource "aviatrix_firenet" "test_firenet" {
   vpc_id             = "vpc-032005cc371"
   inspection_enabled = true
   egress_enabled     = false
-  
+
   firewall_instance_association {
     firenet_gw_name = "avx_firenet_gw"
     instance_id     = "avx_fqdn_gateway"
@@ -66,7 +67,7 @@ The following arguments are supported:
 -> **NOTE:** `egress_enabled` - Default value is false for associating firewall instance to fireNet. Only true is supported for associating FQDN gateway to fireNet.
 
 -> **NOTE:** `firewall_instance_association` - If associating FQDN gateway to fireNet, "single_az_ha" needs to be enabled for the FQDN gateway.
-                                                                      
+
 ## Import
 
 Instance firenet can be imported using the vpc_id, e.g.

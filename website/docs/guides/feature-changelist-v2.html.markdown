@@ -15,7 +15,7 @@ Tracks customer-impacting changes to Terraform environment (existing resources) 
 Otherwise, this list does not really apply. Please view the below list for details regarding this:
 
 1. If a customer is transitioning to use Terraform to manage existing infrastructure, it is recommended to start from the latest Controller and Aviatrix Terraform provider version, and use the Terraform Export feature and import their infrastructure for a quick and easy migration.
-  - **Please note that "Export" is still a beta feature (and only up-to-date for 4.7 at the moment)**
+  - **Please note that "Export" is still a beta feature (and only up-to-date for U4.7 at the moment)**
   - Customer can still choose to manually write their config file to their own specifications and use ``terraform import`` to bring their infrastructure into Terraform state management
 2. If a customer is adopting Terraform for the first time, with no pre-existing infrastructure/ for managing new infrastructure, this changelist does not apply whatsoever. They simply need to follow our [Terraform tutorial](https://docs.aviatrix.com/HowTos/tf_aviatrix_howto.html) to setup their Terraform environment and use the Terraform documentation featured on the left sidebar.
 
@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.7 (UserConnect-5.1)``
+``Last updated: R2.8 (UserConnect-5.2)``
 
 
 ---
@@ -79,14 +79,14 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |(changed) | tunnel     | enable_ha         | **Yes**; Accepted values are changed to **true** or **false** |
 
 
-## R2.1 (UserConnect4.7-patch) (Terraform v0.12)
+## R2.1 (UserConnect-4.7-patch) (Terraform v0.12)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
 |(new) | transit_gateway| allocate_new_eip, eip, ha_eip | **No**; Terraform support added to feature already available for regular gateway resource. By default, ``allocate_new_eip`` will be set to **true**. Only works for AWS |
 |(new) | spoke_gateway  | allocate_new_eip, eip, ha_eip | **No**; see above for details |
 
 
-## R2.3 (UserConnect5.0) (Terraform v0.12)
+## R2.3 (UserConnect-5.0) (Terraform v0.12)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
 |(new) | vgw_conn       | vgw_account, vgw_region | **Yes**; if customer has a **vgw_conn** resource, they must add these two attributes and their respective values to their config file and perform a ```terraform refresh```
@@ -96,20 +96,20 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |(new) | spoke_gateway, transit_gateway | enable_active_mesh | **No**; Terraform support released alongside new feature available in Controller 5.0. New optional feature. Default value: **false** |
 
 
-## R2.4 (UserConnect5.0) (Terraform v0.12)
+## R2.4 (UserConnect-5.0) (Terraform v0.12)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
 |(new) | firewall       | description       | **Yes**; Terraform support added to feature already available for stateful firewall policies. This attribute is optional by default. If customer already has a description set through the Controller, they must add the description attribute and its corresponding value to their Terraform file and perform a ``terraform refresh`` to rectify the diff  |
 |(new) | account        | oci_tenancy_id, oci_user_id, oci_compartment_id, oci_api_private_key_filepath | **No**; Terraform now supports Oracle Cloud, hence the new attributes needed to create an Oracle access account |
 
 
-## R2.5 (UserConnect5.1) (Terraform v0.12)
+## R2.5 (UserConnect-5.1) (Terraform v0.12)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
 |(new) | gateway, spoke_gateway, transit_gateway | enable_vpc_dns_server | **No**; Terraform added support for enabling/ disabling VPC DNS server. This attribute is optional, and set 'false' by default. This feature is only available on AWS |
 
 
-## R2.6 (UserConnect5.1) (Terraform v0.12)
+## R2.6 (UserConnect-5.1) (Terraform v0.12)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
 |(deprecated) | vgw_conn | enable_advertise_transit_cidr, bgp_manual_spoke_advertise_cidrs | **Yes**; functionality migrated over to **transit_gateway** resource. In order to maintain same functionality, customer must cut-paste the these two attributes and their respective values into the corresponding **transit_gateway** and perform a ```terraform refresh``` |
@@ -118,11 +118,18 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |(new) | -- | single_az_ha | **Yes**; Terraform support added for enabling/ disabling ``single_az_ha`` for **transit_gateway**. If customer has originally enabled ``single_az_ha`` through Controller prior to this release, then this attribute must be set to **true**, and a ``terraform refresh`` must be performed to rectify the state |
 
 
-## R2.7 (UserConnect5.1) (Terraform v0.12)
+## R2.7 (UserConnect-5.1) (Terraform v0.12)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
 |(new) | vpc            | subnets           | **No**; Terraform support added for creating a GCP VPC. If customer wants to manage their existing GCP VPC through Terraform, they must write a matching configuration for the existing GCP VPC and perform a ``terraform import`` to bring it into the state |
 |(deprecated) | --      | public_subnets, private_subnets | **Yes**; if customers have referenced these 2 attributes that were added in the previous release R2.6, they must change reference back to whichever ``subnets`` it corresponds to and perform a ``terraform refresh`` |
 |(new) | saml_endpoint  | custom_saml_request_template | **No**; Terraform support added for using custom SAML templates for the endpoint |
-|(new) | aws_tgw        | customized_routes, disable_local_route_propagation | **No**; Terraform support added for Controller 5.0 feature. Customers may now use customized routes and disable local route propogation when attaching a VPC to their TGW |
+|(new) | aws_tgw        | customized_routes, disable_local_route_propagation | **No**; Terraform support added for Controller 5.0 feature. Customers may now use customized routes and disable local route propagation when attaching a VPC to their TGW |
 |(new) | gateway        | enable_vpn_nat    | **Yes**; Terraform support added for Controller 5.0 feature. If customers have enabled/ disabled VPN NAT feature through the Controller for their VPN gateway, they must specify this attribute and its corresponding value in Terraform and perform a ``terraform refresh`` |
+
+
+## R2.8 (UserConnect-5.1, 5.2) (Terraform v0.12)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(new) | account        | awsgov_account_number, awsgov_access_key, awsgov_secret_key | **No**; Terraform now supports AWS GovCloud accounts, hence the new attributes |
+|(new) | aws_tgw_vpc_attachment | customized_routes, disable_local_route_propagation | **No**; Terraform support added for Controller 5.0 feature. Customers may now use customized routes and disable local route propagation when attaching a VPC to their TGW, managing them separately outside the TGW resource |

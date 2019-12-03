@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_vpc"
 description: |-
-  Creates and manages VPCs.
+  Creates and manages VPCs
 ---
 
 # aviatrix_vpc
 
-The aviatrix_vpc resource allows the creation and management of VPCs.
+The aviatrix_vpc resource allows the creation and management of VPCs of various cloud types.
 
 ## Example Usage
 
@@ -22,7 +22,8 @@ resource "aviatrix_vpc" "test_vpc" {
   aviatrix_transit_vpc = false
   aviatrix_firenet_vpc = false
 }
-
+```
+```hcl
 # Create a GCP VPC
 resource "aviatrix_vpc" "test-vpc" {
   cloud_type           = 4
@@ -62,13 +63,13 @@ The following arguments are supported:
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
- 
+
 * `vpc_id` - ID of the vpc to be created.
 * `subnets` - List of subnet of the VPC to be created.
   * `cidr` - CIDR block.
   * `name` - Name of this subnet.
   * `subnet_id` - ID of this subnet.
-    
+
 -> **NOTE:** `aviatrix_firenet_vpc` - If you are using/ upgraded to Aviatrix Terraform Provider R1.8+, and an vpc resource was originally created with a provider version < R1.8, you must do ‘terraform refresh’ to update and apply the attribute’s default value (false) into the state file.
 
 -> **NOTE:** `subnets` - If created as a FireNet VPC, four public subnets will be created in the following order: subnet for firewall-mgmt in the first zone, subnet for ingress-egress in the first zone, subnet for firewall-mgmt in the second zone, and subnet for ingress-egress in the second zone.

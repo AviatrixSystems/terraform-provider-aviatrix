@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_vpn_user_accelerator"
 description: |-
-  Manages the Aviatrix VPN User Accelerators
+  Manages the Aviatrix VPN User Accelerator
 ---
 
 # aviatrix_vpn_user_accelerator
 
-The aviatrix_vpn_user_accelerator resource manages the Aviatrix VPN User Accelerators.
+The aviatrix_vpn_user_accelerator resource manages the Aviatrix VPN User Accelerator.
 
 ## Example Usage
 

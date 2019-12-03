@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_vpn_profile"
 description: |-
-  Creates and manages Aviatrix VPN User Profiles.
+  Creates and manages Aviatrix VPN user profiles
 ---
 
 # aviatrix_vpn_profile
 
-The aviatrix_vpn_profile resource allows the creation and management of Aviatrix VPN VPN User Profiles.
+The aviatrix_vpn_profile resource allows the creation and management of Aviatrix VPN user profiles.
 
 ## Example Usage
 
@@ -17,17 +17,17 @@ resource "aviatrix_vpn_profile" "test_vpn_profile" {
   name      = "my_profile"
   base_rule = "allow_all"
   users     = [
-    "user1", 
+    "user1",
     "user2"
   ]
-  
-  policy { 
+
+  policy {
     action = "deny"
     proto  = "tcp"
     port   = "443"
     target = "10.0.0.0/32"
   }
-  
+
   policy {
     action = "deny"
     proto  = "tcp"

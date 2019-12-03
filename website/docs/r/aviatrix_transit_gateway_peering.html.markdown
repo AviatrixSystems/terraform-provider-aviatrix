@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_transit_gateway_peering"
 description: |-
-  Creates and manages Aviatrix transit Gateway Peerings
+  Creates and manages Aviatrix transit gateway peerings
 ---
 
 # aviatrix_transit_gateway_peering
 
-The aviatrix_transit_gateway_peering resource allows the creation and management of Aviatrix Transit Gateway Peerings.
+The aviatrix_transit_gateway_peering resource allows the creation and management of Aviatrix transit gateway peerings.
 
 ## Example Usage
 
@@ -28,10 +28,8 @@ The following arguments are supported:
 
 ## Import
 
-Instance transit_vpc can be imported using the transit_gateway_name1 and transit_gateway_name2, e.g.
+Instance transit_gateway_peering can be imported using the transit_gateway_name1 and transit_gateway_name2, e.g.
 
 ```
 $ terraform import aviatrix_transit_gateway_peering.test transit_gateway_name1~transit_gateway_name2
 ```
-
-

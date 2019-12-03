@@ -2,7 +2,7 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_tunnel"
 description: |-
-  Creates and manages Aviatrix Tunnels.
+  Creates and manages Aviatrix tunnels
 ---
 
 # aviatrix_tunnel

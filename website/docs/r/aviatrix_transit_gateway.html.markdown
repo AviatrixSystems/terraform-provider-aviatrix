@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_transit_gateway"
 description: |-
-  Creates and Manages the Aviatrix Transit Network Gateways
+  Creates and Manages the Aviatrix transit network gateways
 ---
 
 # aviatrix_transit_gateway
 
-The aviatrix_transit_gateway resource creates and manages the Aviatrix Transit Network Gateways.
+The aviatrix_transit_gateway resource creates and manages the Aviatrix transit network gateways.
 
 ## Example Usage
 
@@ -31,7 +31,8 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
   enable_hybrid_connection = true
   connected_transit        = true
 }
-
+```
+```hcl
 # Create an Aviatrix GCP Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_gcp" {
   cloud_type   = 4
@@ -44,7 +45,8 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_gcp" {
   ha_zone      = "us-west2-b"
   ha_gw_size   = "n1-standard-1"
 }
-
+```
+```hcl
 # Create an Aviatrix ARM Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_azure" {
   cloud_type        = 8
@@ -58,7 +60,8 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_azure" {
   ha_gw_size        = "Standard_B1s"
   connected_transit = true
 }
-
+```
+```hcl
 # Create an Aviatrix Oracle Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_oracle" {
   cloud_type   = 16

@@ -12,7 +12,7 @@ The aviatrix_vpn_user resource creates and manages VPN Users.
 ## Example Usage
 
 ```hcl
-# Create an Aviatrix Vpn User
+# Create an Aviatrix VPN User
 resource "aviatrix_vpn_user" "test_vpn_user" {
   vpc_id     = "vpc-abcd1234"
   gw_name    = "gw1"
