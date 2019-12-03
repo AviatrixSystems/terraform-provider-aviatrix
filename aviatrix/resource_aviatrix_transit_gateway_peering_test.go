@@ -73,7 +73,6 @@ resource "aviatrix_account" "test" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_transit_gateway" "transitGw1" {
 	cloud_type   = 1
 	account_name = aviatrix_account.test.account_name
@@ -85,7 +84,6 @@ resource "aviatrix_transit_gateway" "transitGw1" {
 	ha_subnet    = "%s"
 	ha_gw_size   = "t2.micro"
 }
-
 resource "aviatrix_transit_gateway" "transitGw2" {
 	cloud_type   = 1
 	account_name = aviatrix_account.test.account_name
@@ -97,7 +95,6 @@ resource "aviatrix_transit_gateway" "transitGw2" {
 	ha_subnet    = "%s"
 	ha_gw_size   = "t2.micro"
 }
-
 resource "aviatrix_transit_gateway_peering" "foo" {
 	transit_gateway_name1 = aviatrix_transit_gateway.transitGw1.gw_name
 	transit_gateway_name2 = aviatrix_transit_gateway.transitGw2.gw_name

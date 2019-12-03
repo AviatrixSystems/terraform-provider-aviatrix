@@ -78,7 +78,6 @@ resource "aviatrix_account" "test_account1" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_account" "test_account2" {
 	account_name       = "tfaa-%s"
 	cloud_type         = 1
@@ -87,7 +86,6 @@ resource "aviatrix_account" "test_account2" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_transit_gateway" "transit_gw_test" {
 	cloud_type               = 1
 	account_name             = aviatrix_account.test_account1.account_name
@@ -98,7 +96,6 @@ resource "aviatrix_transit_gateway" "transit_gw_test" {
 	subnet                   = "%s"
 	enable_hybrid_connection = true
 }
-
 resource "aviatrix_aws_tgw" "aws_tgw_test" {
 	account_name                      = aviatrix_account.test_account2.account_name
 	attached_aviatrix_transit_gateway = [aviatrix_transit_gateway.transit_gw_test.gw_name]

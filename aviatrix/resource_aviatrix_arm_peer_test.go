@@ -83,7 +83,6 @@ resource "aviatrix_account" "test_account" {
 	arm_application_id  = "%s"
 	arm_application_key = "%s"
 }
-
 resource "aviatrix_arm_peer" "test_arm_peer" {
 	account_name1             = aviatrix_account.test_account.account_name
 	account_name2             = aviatrix_account.test_account.account_name
