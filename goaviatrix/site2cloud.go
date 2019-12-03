@@ -294,7 +294,7 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 		for i := range s2cConnDetail.Tunnels {
 			if s2cConnDetail.Tunnels[i].GwName == site2cloud.GwName {
 				site2cloud.RemoteGwIP = s2cConnDetail.Tunnels[i].PeerIP
-			} else if s2cConnDetail.Tunnels[i].GwName == site2cloud.GwName+"-hagw" {
+			} else {
 				site2cloud.BackupGwName = s2cConnDetail.Tunnels[i].GwName
 				site2cloud.RemoteGwIP2 = s2cConnDetail.Tunnels[i].PeerIP
 			}
