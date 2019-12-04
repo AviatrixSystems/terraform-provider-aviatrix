@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_trans_peer"
 description: |-
-  Creates and manages Aviatrix Transitive Peerings
+  Creates and manages Aviatrix transitive peerings
 ---
 
 # aviatrix_trans_peer
 
-The aviatrix_trans_peer resource allows the creation and management of Aviatrix Transitive Peerings.
+The aviatrix_trans_peer resource allows the creation and management of Aviatrix transitive peerings.
 
 ## Example Usage
 

@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_arm_peer"
 description: |-
-  Creates and manages Aviatrix ARM Peerings
+  Creates and manages Aviatrix ARM peerings
 ---
 
 # aviatrix_arm_peer
 
-The aviatrix_arm_peer resource allows the creation and management of Aviatrix ARM Peerings.
+The aviatrix_arm_peer resource allows the creation and management of Aviatrix ARM peerings.
 
 ## Example Usage
 

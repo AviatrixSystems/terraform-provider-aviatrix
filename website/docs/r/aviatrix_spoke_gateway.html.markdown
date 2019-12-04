@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_spoke_gateway"
 description: |-
-  Creates and Manages Aviatrix Spoke Gateways
+  Creates and Manages Aviatrix spoke gateways
 ---
 
 # aviatrix_spoke_gateway
 
-The aviatrix_spoke_gateway resource allows to create and manage Aviatrix Spoke Gateways.
+The aviatrix_spoke_gateway resource allows to create and manage Aviatrix spoke gateways.
 
 ## Example Usage
 
@@ -27,7 +27,8 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
     "k2:v2",
   ]
 }
-
+```
+```hcl
 # Create an Aviatrix GCP Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_gcp" {
   cloud_type   = 4
@@ -39,7 +40,8 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_gcp" {
   subnet       = "10.12.0.0/24"
   enable_snat  = false
 }
-
+```
+```hcl
 # Create an Aviatrix ARM Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_arm" {
   cloud_type   = 8
@@ -51,7 +53,8 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_arm" {
   subnet       = "10.13.0.0/24"
   enable_snat  = false
 }
-
+```
+```hcl
 # Create an Aviatrix Oracle Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_oracle" {
   cloud_type   = 16

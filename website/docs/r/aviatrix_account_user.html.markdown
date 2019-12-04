@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_account_user"
 description: |-
-  Creates and manages Aviatrix User Accounts
+  Creates and manages Aviatrix user accounts
 ---
 
 # aviatrix_account_user
 
-The aviatrix_account_user resource allows the creation and management of Aviatrix User Accounts.
+The aviatrix_account_user resource allows the creation and management of Aviatrix user accounts.
 
 ## Example Usage
 

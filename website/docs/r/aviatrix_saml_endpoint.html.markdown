@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_saml_endpoint
 
-The Account resource allows the creation and management of an Aviatrix SAML Endpoint.
+The Account resource allows the creation and management of an Aviatrix SAML endpoint.
 
 ## Example Usage
 

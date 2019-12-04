@@ -2,7 +2,7 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_account"
 description: |-
-  Creates and manages Aviatrix cloud Accounts
+  Creates and manages Aviatrix cloud accounts
 ---
 
 # aviatrix_account
@@ -21,7 +21,8 @@ resource "aviatrix_account" "tempacc" {
   aws_role_app       = "arn:aws:iam::123456789012:role/aviatrix-role-app"
   aws_role_ec2       = "arn:aws:iam::123456789012:role/aviatrix-role-ec2"
 }
-
+```
+```hcl
 # Or you can create an Aviatrix AWS Account with access_key/secret key
 resource "aviatrix_account" "tempacc" {
   account_name       = "username"
@@ -31,7 +32,8 @@ resource "aviatrix_account" "tempacc" {
   aws_access_key     = "ABCDEFGHIJKL"
   aws_secret_key     = "ABCDEFGHIJKLabcdefghijkl"
 }
-
+```
+```hcl
 # Create an Aviatrix GCP Account
 resource "aviatrix_account" "tempacc_gcp" {
   account_name                        = "username"
@@ -39,7 +41,8 @@ resource "aviatrix_account" "tempacc_gcp" {
   gcloud_project_id                   = "aviatrix-123456"
   gcloud_project_credentials_filepath = "/home/ubuntu/test_gcp/aviatrix-abc123.json"
 }
-
+```
+```hcl
 # Create an Aviatrix Azure ARM Account
 resource "aviatrix_account" "tempacc_arm" {
   account_name        = "username"
@@ -49,7 +52,8 @@ resource "aviatrix_account" "tempacc_arm" {
   arm_application_id  = "1234abcd-12ab-34cd-56ef-abcdef123456"
   arm_application_key = "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe="
 }
-
+```
+```hcl
 # Create an Aviatrix Oracle OCI Account
 resource "aviatrix_account" "tempacc_oci" {
   account_name                 = "username"
@@ -59,16 +63,16 @@ resource "aviatrix_account" "tempacc_oci" {
   oci_compartment_id           = "ocid1.tenancy.oc1..aaaaaaaaxo"
   oci_api_private_key_filepath = "/Users/public/Documents/oci_api_key.pem"
 }
-
+```
+```hcl
 # Create an Aviatrix AWS Gov Account
 resource "aviatrix_account" "tempacc_awsgov" {
-  account_name       = "username"
-  cloud_type         = 256
+  account_name          = "username"
+  cloud_type            = 256
   awsgov_account_number = "123456789012"
   awsgov_access_key     = "ABCDEFGHIJKL"
   awsgov_secret_key     = "ABCDEFGHIJKLabcdefghijkl"
 }
-
 ```
 
 ## Argument Reference
@@ -101,7 +105,7 @@ The following arguments are supported:
 
 ## Import
 
-Instance account can be imported using the account_name (when doing import, needs to leave aws_secret_key blank), e.g.
+Instance account can be imported using the account_name (when doing import, need to leave aws_secret_key blank), e.g.
 
 ```
 $ terraform import aviatrix_account.test account_name

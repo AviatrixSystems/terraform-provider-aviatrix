@@ -2,17 +2,17 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_vgw_conn"
 description: |-
-  Manages the Aviatrix Transit Gateway to VGW Connection
+  Manages the Aviatrix Transit Gateway to VGW
 ---
 
 # aviatrix_vgw_conn
 
-The aviatrix_vgw_conn resource managers the Aviatrix Transit Gateway to VGW Connection.
+The aviatrix_vgw_conn resource manages the connection between the Aviatrix transit gateway and AWS VGW.
 
 ## Example Usage
 
 ```hcl
-# Create an Aviatrix Vgw Connection
+# Create an Aviatrix VGW Connection
 resource "aviatrix_vgw_conn" "test_vgw_conn" {
   conn_name        = "my-connection-vgw-to-tgw"
   gw_name          = "my-transit-gw"

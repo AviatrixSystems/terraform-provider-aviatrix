@@ -12,10 +12,30 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.7 (UserConnect-5.1)``
+``Last updated: R2.8 (UserConnect-5.1, 5.2)``
 
 
 ---
+
+## 2.8.0
+### Notes:
+- Release date: **(4 Dec 2019)**
+- Supported Controller versions: **UserConnect-5.1.1179** and **UserConnect-5.2.1956**
+- Supported Terraform version: **v0.12.x**
+
+### Features:
+1. Added support for AWS GovCloud in **aviatrix_account**
+2. Added support for ``customized_routes`` and ``disable_local_route_propagation`` in **aviatrix_aws_tgw_vpc_attachment**
+3. Added a link to view the feature compatibility doc online
+4. New resources:
+  - **aviatrix_aws_tgw_directconnect**
+
+### Enhancements:
+1. Added support for updating **aviatrix_site2cloud** by ForceNew
+
+### Bug Fixes:
+1. Fixed an issue that caused an inability to manage a VPN gateway's ``split_tunnel`` attributes after creating the **aviatrix_gateway**
+
 
 ## 2.7.0
 ### Notes:

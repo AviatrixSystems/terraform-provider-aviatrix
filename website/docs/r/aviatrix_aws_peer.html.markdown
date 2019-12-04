@@ -2,17 +2,17 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_aws_peer"
 description: |-
-  Creates and manages Aviatrix AWS Peerings
+  Creates and manages Aviatrix AWS peerings
 ---
 
 # aviatrix_aws_peer
 
-The aviatrix_aws_peer resource allows the creation and management of Aviatrix AWS Peerings.
+The aviatrix_aws_peer resource allows the creation and management of Aviatrix AWS peerings.
 
 ## Example Usage
 
 ```hcl
-# Create an Aviatrix AWS Peering 
+# Create an Aviatrix AWS Peering
 resource "aviatrix_aws_peer" "test_awspeer" {
   account_name1 = "test1-account"
   account_name2 = "test2-account"
