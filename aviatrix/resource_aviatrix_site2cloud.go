@@ -124,6 +124,7 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			"custom_algorithms": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     false,
 				ForceNew:    true,
 				Description: "Switch to enable custom/non-default algorithms for IPSec Authentication/Encryption.",
 			},
@@ -169,6 +170,7 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			"private_route_encryption": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     false,
 				ForceNew:    true,
 				Description: "Private route encryption switch.",
 			},
@@ -239,9 +241,6 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	haEnabled := d.Get("ha_enabled").(bool)
 	if haEnabled {
 		s2c.HAEnabled = "yes"
-		if s2c.GwName+"-hagw" != s2c.BackupGwName {
-			return fmt.Errorf("'backup_gateway_name' should be primary gateway's HA gateway")
-		}
 	} else {
 		s2c.HAEnabled = "no"
 	}
@@ -421,13 +420,13 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("tunnel_type", s2c.TunnelType)
 		d.Set("local_subnet_cidr", s2c.LocalSubnet)
 		d.Set("remote_subnet_cidr", s2c.RemoteSubnet)
-		if s2c.HAEnabled == "disabled" {
-			d.Set("ha_enabled", false)
-		} else {
+		if s2c.HAEnabled == "enabled" {
 			d.Set("ha_enabled", true)
+		} else {
+			d.Set("ha_enabled", false)
 		}
 
-		if d.Get("ha_enabled").(bool) {
+		if s2c.HAEnabled == "enabled" {
 			d.Set("remote_gateway_ip", s2c.RemoteGwIP)
 			d.Set("backup_remote_gateway_ip", s2c.RemoteGwIP2)
 			d.Set("primary_cloud_gateway_name", s2c.GwName)
@@ -444,12 +443,15 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 		}
 
 		if s2c.CustomAlgorithms {
+			d.Set("custom_algorithms", true)
 			d.Set("phase_1_authentication", s2c.Phase1Auth)
 			d.Set("phase_2_authentication", s2c.Phase2Auth)
 			d.Set("phase_1_dh_groups", s2c.Phase1DhGroups)
 			d.Set("phase_2_dh_groups", s2c.Phase2DhGroups)
 			d.Set("phase_1_encryption", s2c.Phase1Encryption)
 			d.Set("phase_2_encryption", s2c.Phase2Encryption)
+		} else {
+			d.Set("custom_algorithms", false)
 		}
 
 		if s2c.PrivateRouteEncryption == "true" {

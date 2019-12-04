@@ -2,7 +2,7 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_vpn_profile"
 description: |-
-  Creates and manages Aviatrix VPN user profiles
+  Creates and manages Aviatrix VPN User Profiles
 ---
 
 # aviatrix_vpn_profile
