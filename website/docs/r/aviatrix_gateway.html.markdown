@@ -172,7 +172,8 @@ The following arguments are supported:
 * `tag_list` - (Optional) Instance tag of cloud provider. Only available for AWS and AWSGov. Example: ["key1:value1", "key2:value2"].
 * `insane_mode` - (Optional) Enable Insane Mode for Gateway. Insane Mode Gateway size must be at least c5 (AWS) or Standard_D3_v2 (ARM). If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet. Only supported for AWS, AWSGov or ARM. Valid values: true, false.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS and AWSGov. Valid values: true, false. Default value: false.
-
+* `enable_designated_gateway` - (Optional) Enable 'designated_gateway' feature for Gateway. Only supports AWS. Valid values: true, false. Default value: false.
+* `additional_cidrs_designated_gateway` - (Optional) A list of CIDR ranges separated by comma to configure when 'designated_gateway' feature is enabled. Example: "10.8.0.0/16,10.9.0.0/16,10.10.0.0/16".
 
 ## Attribute Reference
 
