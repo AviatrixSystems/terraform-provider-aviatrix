@@ -291,6 +291,18 @@ func resourceAviatrixGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable vpc_dns_server for Gateway. Only supports AWS. Valid values: true, false.",
 			},
+			"enable_designated_gateway": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable 'designated_gateway' feature for Gateway. Only supports AWS. Valid values: true, false.",
+			},
+			"additional_cidrs_designated_gateway": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "A list of CIDR ranges separated by comma to configure when 'designated_gateway' feature is enabled.",
+			},
 			"public_ip": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -495,6 +507,20 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	peeringHaGwSize := d.Get("peering_ha_gw_size").(string)
+	peeringHaSubnet := d.Get("peering_ha_subnet").(string)
+	peeringHaZone := d.Get("peering_ha_zone").(string)
+	enableDesignatedGw := d.Get("enable_designated_gateway").(bool)
+	if enableDesignatedGw {
+		if gateway.CloudType != 1 {
+			return fmt.Errorf("'designated_gateway' feature is only supported for AWS provider(cloud_type: 1)")
+		}
+		if peeringHaSubnet != "" || peeringHaZone != "" {
+			return fmt.Errorf("can't enable HA for gateway with 'designated_gateway' enabled")
+		}
+		gateway.EnableDesignatedGateway = "true"
+	}
+
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)
 
 	err := client.CreateGateway(gateway)
@@ -534,17 +560,26 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	if enableDesignatedGw {
+		additionalCidrsDesignatedGw := d.Get("additional_cidrs_designated_gateway").(string)
+		if additionalCidrsDesignatedGw != "" {
+			designatedGw := &goaviatrix.Gateway{
+				GwName:                      d.Get("gw_name").(string),
+				AdditionalCidrsDesignatedGw: additionalCidrsDesignatedGw,
+			}
+			err := client.EditDesignatedGateway(designatedGw)
+			if err != nil {
+				return fmt.Errorf("failed to edit additional cidrs for 'designated_gateway' feature due to %s", err)
+			}
+		}
+	}
+
 	// peering_ha_subnet is for Peering HA Gateway. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
-	peeringHaGwSize := d.Get("peering_ha_gw_size").(string)
-	peeringHaSubnet := d.Get("peering_ha_subnet").(string)
-	peeringHaZone := d.Get("peering_ha_zone").(string)
 	if peeringHaSubnet != "" || peeringHaZone != "" {
 		if peeringHaGwSize == "" {
 			return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for " +
 				"this resource if peering_ha_subnet or peering_ha_zone is set. Example: t2.micro")
 		}
-	}
-	if peeringHaSubnet != "" || peeringHaZone != "" {
 		peeringHaGateway := &goaviatrix.Gateway{
 			Eip:       d.Get("peering_ha_eip").(string),
 			GwName:    d.Get("gw_name").(string),
@@ -717,6 +752,14 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			// GCP and ARM gateways don't have the option to allocate new eip's
 			// default for allocate_new_eip is on
 			d.Set("allocate_new_eip", true)
+		}
+
+		if gw.CloudType == 1 && (gw.EnableDesignatedGateway == "Yes" || gw.EnableDesignatedGateway == "yes") {
+			d.Set("enable_designated_gateway", true)
+			d.Set("additional_cidrs_designated_gateway", gw.AdditionalCidrsDesignatedGw)
+		} else {
+			d.Set("enable_designated_gateway", false)
+			d.Set("additional_cidrs_designated_gateway", "")
 		}
 
 		if gw.EnableLdapRead {
@@ -999,6 +1042,9 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		if o != "" && n != "" {
 			return fmt.Errorf("updating peering_ha_eip is not allowed")
 		}
+	}
+	if d.HasChange("enable_designated_gateway") {
+		return fmt.Errorf("updating enable_designated_gateway is not allowed")
 	}
 
 	gateway := &goaviatrix.Gateway{
@@ -1313,6 +1359,23 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 
 		d.SetPartial("enable_snat")
 	}
+	if d.HasChange("additional_cidrs_designated_gateway") {
+		if !d.Get("enable_designated_gateway").(bool) {
+			return fmt.Errorf("failed to edit additional cidrs for 'designated_gateway' since it is not enabled")
+		}
+		if d.Get("cloud_type").(int) != 1 {
+			return fmt.Errorf("'designated_gateway' is only supported for AWS provider (cloud_type: 1)")
+		}
+		designatedGw := &goaviatrix.Gateway{
+			GwName:                      d.Get("gw_name").(string),
+			AdditionalCidrsDesignatedGw: d.Get("additional_cidrs_designated_gateway").(string),
+		}
+		err := client.EditDesignatedGateway(designatedGw)
+		if err != nil {
+			return fmt.Errorf("failed to edit additional cidrs for 'designated_gateway' feature due to %s", err)
+		}
+		d.SetPartial("additional_cidrs_designated_gateway")
+	}
 	if d.HasChange("vpn_cidr") {
 		if d.Get("vpn_access").(bool) {
 			gw := &goaviatrix.Gateway{
@@ -1359,6 +1422,9 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 	newHaGwEnabled := false
 	if d.HasChange("peering_ha_subnet") || d.HasChange("peering_ha_zone") || d.HasChange("peering_ha_insane_mode_az") {
+		if d.Get("enable_designated_gateway").(bool) {
+			return fmt.Errorf("can't update HA status for gateway with 'designated_gateway' enabled")
+		}
 		gw := &goaviatrix.Gateway{
 			Eip:       d.Get("peering_ha_eip").(string),
 			GwName:    d.Get("gw_name").(string),
