@@ -57,8 +57,8 @@ The following arguments are supported:
   * `region` - Region of this subnet.
   * `cidr` - CIDR block.
   * `name` - Name of this subnet.
-* `aviatrix_transit_vpc` - (Optional) Specify whether it is an Aviatrix Transit VPC. Required to be false for GCP provider. Valid values: true, false. Default: false.
-* `aviatrix_firenet_vpc` - (Optional) Specify whether it is an Aviatrix Firenet VPC. Required to be false for GCP provider. Valid values: true, false. Default: false.
+* `aviatrix_transit_vpc` - (Optional) Specify whether it is an Aviatrix Transit VPC. Only supported for AWS provider, required to be false for other providers. Valid values: true, false. Default: false.
+* `aviatrix_firenet_vpc` - (Optional) Specify whether it is an Aviatrix FireNet VPC. Only supported for AWS provider, required to be false for other providers. Valid values: true, false. Default: false.
 
 ## Attribute Reference
 

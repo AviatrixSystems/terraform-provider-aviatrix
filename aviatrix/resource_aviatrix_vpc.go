@@ -130,8 +130,8 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	aviatrixTransitVpc := d.Get("aviatrix_transit_vpc").(bool)
 	aviatrixFireNetVpc := d.Get("aviatrix_firenet_vpc").(bool)
 
-	if (aviatrixFireNetVpc || aviatrixTransitVpc) && vpc.CloudType == 4 {
-		return fmt.Errorf("currently 'aviatrix_transit_vpc' and 'aviatrix_firenet_vpc' are not supported for GCP provider")
+	if (aviatrixFireNetVpc || aviatrixTransitVpc) && vpc.CloudType != 1 {
+		return fmt.Errorf("currently 'aviatrix_transit_vpc' and 'aviatrix_firenet_vpc' are only supported for AWS provider")
 	}
 	if aviatrixTransitVpc && aviatrixFireNetVpc {
 		return fmt.Errorf("vpc cannot be aviatrix transit vpc and aviatrix firenet vpc at the same time")
