@@ -695,7 +695,7 @@ func (c *Client) DisableVpnNat(gateway *Gateway) error {
 func (c *Client) EditDesignatedGateway(gateway *Gateway) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return errors.New(("url Parsing failed for 'set_designated_gateway_additional_cidr_list'") + err.Error())
+		return errors.New(("url Parsing failed for 'EditDesignatedGateway': ") + err.Error())
 	}
 	disableVpnNat := url.Values{}
 	disableVpnNat.Add("CID", c.CID)
