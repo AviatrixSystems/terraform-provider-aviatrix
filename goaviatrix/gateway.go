@@ -697,12 +697,12 @@ func (c *Client) EditDesignatedGateway(gateway *Gateway) error {
 	if err != nil {
 		return errors.New(("url Parsing failed for 'EditDesignatedGateway': ") + err.Error())
 	}
-	disableVpnNat := url.Values{}
-	disableVpnNat.Add("CID", c.CID)
-	disableVpnNat.Add("action", "set_designated_gateway_additional_cidr_list")
-	disableVpnNat.Add("gateway_name", gateway.GwName)
-	disableVpnNat.Add("additional_cidr_list", gateway.AdditionalCidrsDesignatedGw)
-	Url.RawQuery = disableVpnNat.Encode()
+	editDesignatedGateway := url.Values{}
+	editDesignatedGateway.Add("CID", c.CID)
+	editDesignatedGateway.Add("action", "set_designated_gateway_additional_cidr_list")
+	editDesignatedGateway.Add("gateway_name", gateway.GwName)
+	editDesignatedGateway.Add("additional_cidr_list", gateway.AdditionalCidrsDesignatedGw)
+	Url.RawQuery = editDesignatedGateway.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
 		return errors.New("HTTP Get 'set_designated_gateway_additional_cidr_list' failed: " + err.Error())
