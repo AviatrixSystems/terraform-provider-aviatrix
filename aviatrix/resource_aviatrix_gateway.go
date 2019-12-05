@@ -754,7 +754,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("allocate_new_eip", true)
 		}
 
-		if gw.CloudType == 1 && (gw.EnableDesignatedGateway == "Yes" || gw.EnableDesignatedGateway == "yes") {
+		if gw.EnableDesignatedGateway == "Yes" || gw.EnableDesignatedGateway == "yes" {
 			d.Set("enable_designated_gateway", true)
 			d.Set("additional_cidrs_designated_gateway", gw.AdditionalCidrsDesignatedGw)
 		} else {
