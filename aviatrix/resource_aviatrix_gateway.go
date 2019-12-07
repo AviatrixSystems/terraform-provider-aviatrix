@@ -303,6 +303,18 @@ func resourceAviatrixGateway() *schema.Resource {
 				Default:     "",
 				Description: "A list of CIDR ranges separated by comma to configure when 'designated_gateway' feature is enabled.",
 			},
+			"enable_encrypt_volume": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable encrypt gateway EBS volume. Only supported for AWS provider. Valid values: true, false. Default value: false.",
+			},
+			"customer_managed_keys": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Customer managed key ID.",
+			},
 			"public_ip": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -521,6 +533,18 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		gateway.EnableDesignatedGateway = "true"
 	}
 
+	enableEncryptVolume := d.Get("enable_encrypt_volume").(bool)
+	customerManagedKeys := d.Get("customer_managed_keys").(string)
+	if enableEncryptVolume && d.Get("cloud_type").(int) != 1 {
+		return fmt.Errorf("'enable_encrypt_volume' is only supported for AWS provider (cloud_type: 1)")
+	}
+	if !enableEncryptVolume && customerManagedKeys != "" {
+		return fmt.Errorf("'customer_managed_keys' should be empty since Encrypt Volume is not enabled")
+	}
+	if enableEncryptVolume && d.Get("single_az_ha").(bool) {
+		return fmt.Errorf("'single_az_ha' needs to be disabled to encrypt gateway EBS volume")
+	}
+
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)
 
 	err := client.CreateGateway(gateway)
@@ -670,6 +694,17 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	} else if enableVpcDnsServer {
 		return fmt.Errorf("'enable_vpc_dns_server' only supports AWS(1) and AWSGOV(256)")
+	}
+
+	if enableEncryptVolume {
+		gwEncVolume := &goaviatrix.Gateway{
+			GwName:              d.Get("gw_name").(string),
+			CustomerManagedKeys: customerManagedKeys,
+		}
+		err := client.EnableEncryptVolume(gwEncVolume)
+		if err != nil {
+			return fmt.Errorf("failed to enable encrypt gateway volume for %s due to %s", gwEncVolume.GwName, err)
+		}
 	}
 
 	return resourceAviatrixGatewayReadIfRequired(d, meta, &flag)
@@ -846,7 +881,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				d.Set("single_az_ha", false)
 			}
 		}
-
+		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
 		d.Set("eip", gw.PublicIP)
 
 		// Though go_aviatrix Gateway struct declares VpcSize as only used on gateway creation
@@ -1578,6 +1613,29 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		d.SetPartial("enable_vpn_nat")
+	}
+
+	if d.HasChange("enable_encrypt_volume") {
+		if d.Get("enable_encrypt_volume").(bool) {
+			if d.Get("cloud_type").(int) != 1 {
+				return fmt.Errorf("'enable_encrypt_volume' is only supported for AWS provider (cloud_type: 1)")
+			}
+			if d.Get("single_az_ha").(bool) {
+				return fmt.Errorf("'single_az_ha' needs to be disabled to encrypt gateway EBS volume")
+			}
+			gwEncVolume := &goaviatrix.Gateway{
+				GwName:              d.Get("gw_name").(string),
+				CustomerManagedKeys: d.Get("customer_managed_keys").(string),
+			}
+			err := client.EnableEncryptVolume(gwEncVolume)
+			if err != nil {
+				return fmt.Errorf("failed to enable encrypt gateway volume for %s due to %s", gwEncVolume.GwName, err)
+			}
+		} else {
+			return fmt.Errorf("can't disable Encrypt Volume for gateway: %s", gateway.GwName)
+		}
+	} else if d.HasChange("customer_managed_keys") {
+		return fmt.Errorf("updating customer_managed_keys only is not allowed")
 	}
 
 	d.Partial(false)
