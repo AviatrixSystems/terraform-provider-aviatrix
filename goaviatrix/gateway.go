@@ -111,6 +111,8 @@ type Gateway struct {
 	EnableVpnNat                bool   `form:"dns,omitempty" `
 	EnableDesignatedGateway     string `form:"designated_gateway,omitempty" json:"designated_gateway,omitempty"`
 	AdditionalCidrsDesignatedGw string `form:"additional_cidr_list,omitempty" json:"summarized_cidrs,omitempty"`
+	EnableEncryptVolume         bool   `json:"gw_enc,omitempty"`
+	CustomerManagedKeys         string `form:"customer_managed_keys,omitempty" json:"customer_managed_keys,omitempty"`
 }
 
 type GatewayDetail struct {
@@ -717,6 +719,37 @@ func (c *Client) EditDesignatedGateway(gateway *Gateway) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API 'set_designated_gateway_additional_cidr_list' Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) EnableEncryptVolume(gateway *Gateway) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for 'EnableEncryptVolume': ") + err.Error())
+	}
+	encryptGatewayVolume := url.Values{}
+	encryptGatewayVolume.Add("CID", c.CID)
+	encryptGatewayVolume.Add("action", "encrypt_gateway_volume")
+	encryptGatewayVolume.Add("gateway_name", gateway.GwName)
+	if gateway.CustomerManagedKeys != "" {
+		encryptGatewayVolume.Add("customer_managed_keys", gateway.CustomerManagedKeys)
+	}
+	Url.RawQuery = encryptGatewayVolume.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return errors.New("HTTP Get 'encrypt_gateway_volume' failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode 'encrypt_gateway_volume' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API 'encrypt_gateway_volume' Get failed: " + data.Reason)
 	}
 	return nil
 }
