@@ -24,7 +24,7 @@ func resourceAviatrixGeoVPN() *schema.Resource {
 				Type:        schema.TypeInt,
 				Required:    true,
 				ForceNew:    true,
-				Description: "",
+				Description: "Type of cloud service provider, requires an integer value. Currently only AWS(1) is supported.",
 			},
 			"account_name": {
 				Type:        schema.TypeString,
@@ -32,17 +32,17 @@ func resourceAviatrixGeoVPN() *schema.Resource {
 				ForceNew:    true,
 				Description: "This parameter represents the name of a Cloud-Account in Aviatrix controller.",
 			},
-			"domain_name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "The hosted domain name. It must be hosted by AWS Route53 or Azure DNS in the selected account.",
-			},
 			"service_name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				Description: "The hostname that users will connect to. A DNS record will be created for this name in the specified domain name.",
+			},
+			"domain_name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The hosted domain name. It must be hosted by AWS Route53 or Azure DNS in the selected account.",
 			},
 			"elb_dns_names": {
 				Type: schema.TypeList,
@@ -62,8 +62,8 @@ func resourceAviatrixGeoVPNCreate(d *schema.ResourceData, meta interface{}) erro
 	geoVPN := &goaviatrix.GeoVPN{
 		CloudType:   d.Get("cloud_type").(int),
 		AccountName: d.Get("account_name").(string),
-		DomainName:  d.Get("domain_name").(string),
 		ServiceName: d.Get("service_name").(string),
+		DomainName:  d.Get("domain_name").(string),
 	}
 
 	log.Printf("[INFO] Enabling Aviatrix Geo VPN: %#v", geoVPN)
@@ -83,7 +83,7 @@ func resourceAviatrixGeoVPNCreate(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("failed to enable Aviatrix Geo VPN due to: %s", err)
 	}
 
-	d.SetId(geoVPN.DomainName + "~" + geoVPN.ServiceName)
+	d.SetId(geoVPN.ServiceName + "~" + geoVPN.DomainName)
 
 	flag := false
 	defer resourceAviatrixGeoVPNReadIfRequired(d, meta, &flag)
@@ -116,15 +116,15 @@ func resourceAviatrixGeoVPNRead(d *schema.ResourceData, meta interface{}) error 
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no domain name or service name received. Import id is %s", id)
 		d.Set("cloud_type", 1)
-		d.Set("domain_name", strings.Split(id, "~")[0])
-		d.Set("service_name", strings.Split(id, "~")[1])
+		d.Set("service_name", strings.Split(id, "~")[0])
+		d.Set("domain_name", strings.Split(id, "~")[1])
 		d.SetId(id)
 	}
 
 	geoVPN := &goaviatrix.GeoVPN{
 		CloudType:   d.Get("cloud_type").(int),
-		DomainName:  d.Get("domain_name").(string),
 		ServiceName: d.Get("service_name").(string),
+		DomainName:  d.Get("domain_name").(string),
 	}
 
 	geoVPNDetail, err := client.GetGeoVPNInfo(geoVPN)
@@ -138,8 +138,8 @@ func resourceAviatrixGeoVPNRead(d *schema.ResourceData, meta interface{}) error 
 
 	d.Set("cloud_type", geoVPNDetail.CloudType)
 	d.Set("account_name", geoVPNDetail.AccountName)
-	d.Set("domain_name", geoVPNDetail.DomainName)
 	d.Set("service_name", geoVPNDetail.ServiceName)
+	d.Set("domain_name", geoVPNDetail.DomainName)
 	if err := d.Set("elb_dns_names", geoVPNDetail.ElbDNSNames); err != nil {
 		log.Printf("[WARN] Error setting 'elb_dns_names' for (%s): %s", d.Id(), err)
 	}
@@ -154,8 +154,8 @@ func resourceAviatrixGeoVPNUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	geoVPN := &goaviatrix.GeoVPN{
 		CloudType:   d.Get("cloud_type").(int),
-		DomainName:  d.Get("domain_name").(string),
 		ServiceName: d.Get("service_name").(string),
+		DomainName:  d.Get("domain_name").(string),
 	}
 
 	var toDeleteElbs []string
@@ -192,9 +192,9 @@ func resourceAviatrixGeoVPNUpdate(d *schema.ResourceData, meta interface{}) erro
 				return fmt.Errorf("failed to add ELB: %s to Aviatrix Geo VPN due to: %s", toAddElbs[i], err)
 			}
 		}
+		d.SetPartial("elb_dns_names")
 	}
 
-	d.SetId(geoVPN.ElbDNSName)
 	return resourceAviatrixGeoVPNRead(d, meta)
 }
 

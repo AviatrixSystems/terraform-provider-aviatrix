@@ -15,8 +15,8 @@ type GeoVPN struct {
 	Action      string   `form:"action,omitempty"`
 	CID         string   `form:"CID,omitempty"`
 	CloudType   int      `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
-	DomainName  string   `form:"domain_name,omitempty" json:"domain_name,omitempty"`
 	ServiceName string   `form:"cname,omitempty" json:"cname,omitempty"`
+	DomainName  string   `form:"domain_name,omitempty" json:"domain_name,omitempty"`
 	ElbDNSName  string   `form:"elb_dns_name,omitempty"`
 	ElbDNSNames []string `json:"elb_dns_name,omitempty"`
 }
@@ -24,8 +24,8 @@ type GeoVPN struct {
 type GeoVPNEdit struct {
 	AccountName string         `json:"account_name,omitempty"`
 	CloudType   int            `json:"cloud_type,omitempty"`
-	DomainName  string         `json:"domain_name,omitempty"`
 	ServiceName string         `json:"cname,omitempty"`
+	DomainName  string         `json:"domain_name,omitempty"`
 	ElbDNSNames []GeoVPNPolicy `json:"geo_vpn_policy,omitempty"`
 }
 
@@ -88,6 +88,9 @@ func (c *Client) GetGeoVPNInfo(geoVPN *GeoVPN) (*GeoVPN, error) {
 	}
 
 	if data.Results.ServiceName == geoVPN.ServiceName && data.Results.DomainName == geoVPN.DomainName {
+		geoVPN.AccountName = data.Results.AccountName
+		geoVPN.ServiceName = data.Results.ServiceName
+		geoVPN.DomainName = data.Results.DomainName
 		elbDNSNameList := make([]string, 0)
 		for i := 0; i < len(data.Results.ElbDNSNames); i++ {
 			elbDNS := data.Results.ElbDNSNames[i]
