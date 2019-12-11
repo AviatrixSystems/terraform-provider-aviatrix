@@ -23,25 +23,25 @@ func resourceAviatrixGeoVPN() *schema.Resource {
 			"cloud_type": {
 				Type:     schema.TypeInt,
 				Required: true,
-				//ForceNew:    true,
+				ForceNew:    true,
 				Description: "",
 			},
 			"account_name": {
 				Type:     schema.TypeString,
 				Required: true,
-				//ForceNew:    true,
+				ForceNew:    true,
 				Description: "This parameter represents the name of a Cloud-Account in Aviatrix controller.",
 			},
 			"domain_name": {
 				Type:     schema.TypeString,
 				Required: true,
-				//ForceNew:    true,
+				ForceNew:    true,
 				Description: "The hosted domain name. It must be hosted by AWS Route53 or Azure DNS in the selected account.",
 			},
 			"service_name": {
 				Type:     schema.TypeString,
 				Required: true,
-				//ForceNew:    true,
+				ForceNew:    true,
 				Description: "The hostname that users will connect to. A DNS record will be created for this name in the specified domain name.",
 			},
 			"elb_dns_names": {
@@ -110,13 +110,8 @@ func resourceAviatrixGeoVPNReadIfRequired(d *schema.ResourceData, meta interface
 func resourceAviatrixGeoVPNRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	log.Printf("zjin00: nothing is wrong here")
-
 	domainName := d.Get("domain_name").(string)
 	serviceName := d.Get("service_name").(string)
-	log.Printf("zjin01: domainName is %s", domainName)
-	log.Printf("zjin02: serviceName is %s", serviceName)
-
 	if domainName == "" || serviceName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no domain name or service name received. Import id is %s", id)
@@ -132,12 +127,7 @@ func resourceAviatrixGeoVPNRead(d *schema.ResourceData, meta interface{}) error 
 		ServiceName: d.Get("service_name").(string),
 	}
 
-	log.Printf("zjin03: geoVPN is %v", geoVPN)
-
 	geoVPNDetail, err := client.GetGeoVPNInfo(geoVPN)
-
-	log.Printf("zjin04: geoVPNDetail is %v", geoVPNDetail)
-
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
