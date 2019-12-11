@@ -21,26 +21,26 @@ func resourceAviatrixGeoVPN() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"cloud_type": {
-				Type:     schema.TypeInt,
-				Required: true,
+				Type:        schema.TypeInt,
+				Required:    true,
 				ForceNew:    true,
 				Description: "",
 			},
 			"account_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 				ForceNew:    true,
 				Description: "This parameter represents the name of a Cloud-Account in Aviatrix controller.",
 			},
 			"domain_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 				ForceNew:    true,
 				Description: "The hosted domain name. It must be hosted by AWS Route53 or Azure DNS in the selected account.",
 			},
 			"service_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
 				ForceNew:    true,
 				Description: "The hostname that users will connect to. A DNS record will be created for this name in the specified domain name.",
 			},
