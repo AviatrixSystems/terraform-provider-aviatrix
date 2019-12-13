@@ -113,16 +113,35 @@ type Gateway struct {
 	AdditionalCidrsDesignatedGw string `form:"additional_cidr_list,omitempty" json:"summarized_cidrs,omitempty"`
 	EnableEncryptVolume         bool   `json:"gw_enc,omitempty"`
 	CustomerManagedKeys         string `form:"customer_managed_keys,omitempty" json:"customer_managed_keys,omitempty"`
+	SnatMode                    string `form:"mode,omitempty" json:"snat_target,omitempty"`
+	SnatPolicy                  []PolicyRule
+	SnatPolicyList              string `form:"policy_list,omitempty" json:"policy_list,omitempty"`
+	GatewayName                 string `form:"gateway_name,omitempty" json:"gateway_name,omitempty"`
+}
+
+type PolicyRule struct {
+	SrcIP      string `form:"src_ip,omitempty" json:"src_ip,omitempty"`
+	SrcPort    string `form:"src_port,omitempty" json:"src_port,omitempty"`
+	DstIP      string `form:"dst_ip,omitempty" json:"dst_ip,omitempty"`
+	DstPort    string `form:"dst_port,omitempty" json:"dst_port,omitempty"`
+	Protocol   string `form:"protocol,omitempty" json:"protocol,omitempty"`
+	Interface  string `form:"interface,omitempty" json:"interface,omitempty"`
+	Connection string `form:"connection,omitempty" json:"connection,omitempty"`
+	Mark       string `form:"mark,omitempty" json:"mark,omitempty"`
+	NewSrcIP   string `form:"new_src_ip,omitempty" json:"new_src_ip,omitempty"`
+	NewSrcPort string `form:"new_src_port,omitempty" json:"new_src_port,omitempty"`
+	ExcludeRTB string `form:"exclude_rtb,omitempty" json:"exclude_rtb,omitempty"`
 }
 
 type GatewayDetail struct {
-	AccountName                  string   `form:"account_name,omitempty" json:"account_name,omitempty"`
-	Action                       string   `form:"action,omitempty"`
-	GwName                       string   `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
-	DMZEnabled                   bool     `json:"dmz_enabled,omitempty"`
-	EnableAdvertiseTransitCidr   string   `json:"advertise_transit_cidr,omitempty"`
-	BgpManualSpokeAdvertiseCidrs []string `json:"bgp_manual_spoke_advertise_cidrs"`
-	VpnNat                       bool     `json:"vpn_nat"`
+	AccountName                  string       `form:"account_name,omitempty" json:"account_name,omitempty"`
+	Action                       string       `form:"action,omitempty"`
+	GwName                       string       `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
+	DMZEnabled                   bool         `json:"dmz_enabled,omitempty"`
+	EnableAdvertiseTransitCidr   string       `json:"advertise_transit_cidr,omitempty"`
+	BgpManualSpokeAdvertiseCidrs []string     `json:"bgp_manual_spoke_advertise_cidrs,omitempty"`
+	VpnNat                       bool         `json:"vpn_nat,omitempty"`
+	SnatPolicy                   []PolicyRule `json:"snat_ip_port_list,omitempty"`
 }
 
 type VpnGatewayAuth struct { // Used for set_vpn_gateway_authentication rest api call
@@ -378,16 +397,14 @@ func (c *Client) DeleteGateway(gateway *Gateway) error {
 }
 
 func (c *Client) EnableSNat(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
+	gateway.CID = c.CID
+	gateway.Action = "enable_snat"
+	args, err := json.Marshal(gateway.SnatPolicy)
 	if err != nil {
-		return errors.New(("url Parsing failed for enable_snat") + err.Error())
+		return err
 	}
-	enableSNat := url.Values{}
-	enableSNat.Add("CID", c.CID)
-	enableSNat.Add("action", "enable_snat")
-	enableSNat.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = enableSNat.Encode()
-	resp, err := c.Get(Url.String(), nil)
+	gateway.SnatPolicyList = string(args)
+	resp, err := c.Post(c.baseURL, gateway)
 	if err != nil {
 		return errors.New("HTTP Get enable_snat failed: " + err.Error())
 	}

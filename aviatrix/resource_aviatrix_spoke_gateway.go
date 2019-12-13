@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -66,6 +67,77 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Optional:    true,
 				Default:     false,
 				Description: "Specify whether enabling Source NAT feature on the gateway or not.",
+			},
+			"snat_mode": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "primary",
+				Description: "",
+			},
+			"snat_policy": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"src_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "A source IP address range where the policy rule applies.",
+						},
+						"src_port": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "A source port that the policy rule applies.",
+						},
+						"dst_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "A destination IP address range where the policy rule applies.",
+						},
+						"dst_port": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "A destination port where the policy rule applies.",
+						},
+						"protocol": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "A destination port protocol where the policy rule applies.",
+						},
+						"interface": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "An output interface where the policy rule applies.",
+						},
+						"connection": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Default:     "None",
+							Description: "None.",
+						},
+						"mark": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "A tag or mark of a TCP session where the policy rule applies.",
+						},
+						"new_src_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The changed source IP address when all specified qualifier conditions meet. One of the rule fields must be specified for this rule to take effect.",
+						},
+						"new_src_port": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The translated destination port when all specified qualifier conditions meet. One of the rule field must be specified for this rule to take effect.",
+						},
+						"exclude_rtb": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "This field specifies which VPC private route table will not be programmed with the default route entry.",
+						},
+					},
+				},
 			},
 			"allocate_new_eip": {
 				Type:     schema.TypeBool,
@@ -180,12 +252,13 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		HASubnet:       d.Get("ha_subnet").(string),
 		TransitGateway: d.Get("transit_gw").(string),
 	}
-
-	enableNat := d.Get("enable_snat").(bool)
-	if enableNat {
+	enableSNat := d.Get("enable_snat").(bool)
+	snatMode := d.Get("snat_mode").(string)
+	if enableSNat && snatMode == "primary" {
+		if len(d.Get("snat_policy").([]interface{})) != 0 {
+			return fmt.Errorf("'snat_policy' should be empty for 'snat_mode' of 'primary'")
+		}
 		gateway.EnableNat = "yes"
-	} else {
-		gateway.EnableNat = "no"
 	}
 
 	singleAZ := d.Get("single_az_ha").(bool)
@@ -412,6 +485,55 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("failed to enable encrypt gateway volume for %s due to %s", gwEncVolume.GwName, err)
 		}
 	}
+	if enableSNat && snatMode == "secondary" {
+		if len(d.Get("snat_policy").([]interface{})) != 0 {
+			return fmt.Errorf("'snat_policy' should be empty for 'snat_type' of 'secondary'")
+		}
+		gwToEnableSNat := &goaviatrix.Gateway{
+			GatewayName: d.Get("gw_name").(string),
+		}
+		gwToEnableSNat.EnableNat = "yes"
+		gwToEnableSNat.SnatMode = "secondary"
+		err := client.EnableSNat(gwToEnableSNat)
+		if err != nil {
+			return fmt.Errorf("failed to enable SNAT of 'secondary': %s", err)
+		}
+	} else if enableSNat && snatMode == "custom" {
+		if len(d.Get("snat_policy").([]interface{})) == 0 {
+			return fmt.Errorf("'snat_policy' shouldn't be empty for 'snat_type' of 'custom'")
+		}
+		gwToEnableSNat := &goaviatrix.Gateway{
+			GatewayName: d.Get("gw_name").(string),
+		}
+		gwToEnableSNat.EnableNat = "yes"
+		gwToEnableSNat.SnatMode = "custom"
+		if _, ok := d.GetOk("snat_policy"); ok {
+			policies := d.Get("snat_policy").([]interface{})
+			for _, policy := range policies {
+				pl := policy.(map[string]interface{})
+				customPolicy := &goaviatrix.PolicyRule{
+					SrcIP:      pl["src_ip"].(string),
+					SrcPort:    pl["src_port"].(string),
+					DstIP:      pl["dst_ip"].(string),
+					DstPort:    pl["dst_port"].(string),
+					Protocol:   pl["protocol"].(string),
+					Interface:  pl["interface"].(string),
+					Connection: pl["connection"].(string),
+					Mark:       pl["mark"].(string),
+					NewSrcIP:   pl["new_src_ip"].(string),
+					NewSrcPort: pl["new_src_port"].(string),
+					ExcludeRTB: pl["exclude_rtb"].(string),
+				}
+				gwToEnableSNat.SnatPolicy = append(gwToEnableSNat.SnatPolicy, *customPolicy)
+			}
+		}
+		time.Sleep(60 * time.Second)
+
+		err := client.EnableSNat(gwToEnableSNat)
+		if err != nil {
+			return fmt.Errorf("failed to enable SNAT of 'custom': %s", err)
+		}
+	}
 
 	return resourceAviatrixSpokeGatewayReadIfRequired(d, meta, &flag)
 }
@@ -482,12 +604,6 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("gw_size", gw.GwSize)
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 
-		if gw.EnableNat == "yes" {
-			d.Set("enable_snat", true)
-		} else {
-			d.Set("enable_snat", false)
-		}
-
 		if gw.SingleAZ == "yes" {
 			d.Set("single_az_ha", true)
 		} else {
@@ -516,6 +632,43 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("enable_vpc_dns_server", true)
 		} else {
 			d.Set("enable_vpc_dns_server", false)
+		}
+
+		if gw.EnableNat == "yes" {
+			d.Set("enable_snat", true)
+			if gw.SnatMode == "customized" {
+				d.Set("snat_mode", "custom")
+				gwDetail, err := client.GetGatewayDetail(gateway)
+				if err != nil {
+					return fmt.Errorf("couldn't get detail information of Aviatrix Spoke Gateway: %s due to: %s", gw.GwName, err)
+				}
+				var snatPolicy []map[string]interface{}
+				for _, policy := range gwDetail.SnatPolicy {
+					sP := make(map[string]interface{})
+					sP["src_ip"] = policy.SrcIP
+					sP["src_port"] = policy.SrcPort
+					sP["dst_ip"] = policy.DstIP
+					sP["dst_port"] = policy.DstPort
+					sP["protocol"] = policy.Protocol
+					sP["interface"] = policy.Interface
+					sP["connection"] = policy.Connection
+					sP["mark"] = policy.Mark
+					sP["new_src_ip"] = policy.NewSrcIP
+					sP["new_src_port"] = policy.NewSrcPort
+					sP["exclude_rtb"] = policy.ExcludeRTB
+					snatPolicy = append(snatPolicy, sP)
+				}
+
+				if err := d.Set("snat_policy", snatPolicy); err != nil {
+					log.Printf("[WARN] Error setting 'snat_policy' for (%s): %s", d.Id(), err)
+				}
+			} else if gw.SnatMode == "secondary" {
+				d.Set("snat_mode", "secondary")
+			} else {
+				d.Set("snat_mode", "primary")
+			}
+		} else {
+			d.Set("enable_snat", false)
 		}
 	}
 
@@ -831,26 +984,181 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	}
 
 	if d.HasChange("enable_snat") {
-		gw := &goaviatrix.Gateway{
-			CloudType: d.Get("cloud_type").(int),
-			GwName:    d.Get("gw_name").(string),
-		}
-
-		enableNat := d.Get("enable_snat").(bool)
-
-		if enableNat {
-			err := client.EnableSNat(gw)
-			if err != nil {
-				return fmt.Errorf("failed to enable SNAT: %s", err)
+		enableSNat := d.Get("enable_snat").(bool)
+		if enableSNat {
+			gw := &goaviatrix.Gateway{
+				CloudType:   d.Get("cloud_type").(int),
+				GatewayName: d.Get("gw_name").(string),
+			}
+			snatMode := d.Get("snat_mode").(string)
+			if snatMode == "secondary" {
+				if len(d.Get("snat_policy").([]interface{})) != 0 {
+					return fmt.Errorf("'snat_policy' should be empty for 'snat_type' of 'secondary'")
+				}
+				gw.EnableNat = "yes"
+				gw.SnatMode = "secondary"
+				err := client.EnableSNat(gw)
+				if err != nil {
+					return fmt.Errorf("failed to enable SNAT for 'snat_type' of 'secondary': %s", err)
+				}
+			} else if snatMode == "custom" {
+				if len(d.Get("snat_policy").([]interface{})) == 0 {
+					return fmt.Errorf("'snat_policy' shouldn't be empty for 'snat_type' of 'custom'")
+				}
+				gw.EnableNat = "yes"
+				gw.SnatMode = "custom"
+				if _, ok := d.GetOk("snat_policy"); ok {
+					policies := d.Get("snat_policy").([]interface{})
+					for _, policy := range policies {
+						pl := policy.(map[string]interface{})
+						customPolicy := &goaviatrix.PolicyRule{
+							SrcIP:      pl["src_ip"].(string),
+							SrcPort:    pl["src_port"].(string),
+							DstIP:      pl["dst_ip"].(string),
+							DstPort:    pl["dst_port"].(string),
+							Protocol:   pl["protocol"].(string),
+							Interface:  pl["interface"].(string),
+							Connection: pl["connection"].(string),
+							Mark:       pl["mark"].(string),
+							NewSrcIP:   pl["new_src_ip"].(string),
+							NewSrcPort: pl["new_src_port"].(string),
+							ExcludeRTB: pl["exclude_rtb"].(string),
+						}
+						gw.SnatPolicy = append(gw.SnatPolicy, *customPolicy)
+					}
+				}
+				err := client.EnableSNat(gw)
+				if err != nil {
+					return fmt.Errorf("failed to enable SNAT of for 'snat_type' of 'custom': %s", err)
+				}
+			} else if snatMode == "primary" {
+				if len(d.Get("snat_policy").([]interface{})) != 0 {
+					return fmt.Errorf("'snat_policy' should be empty for 'snat_type' of 'primary'")
+				}
+				gw.EnableNat = "yes"
+				gw.SnatMode = "primary"
+				err := client.EnableSNat(gw)
+				if err != nil {
+					return fmt.Errorf("failed to enable SNAT of 'primary': %s", err)
+				}
 			}
 		} else {
+			if len(d.Get("snat_policy").([]interface{})) != 0 {
+				return fmt.Errorf("'snat_policy' should be empty for disabling SNAT")
+			}
+			gw := &goaviatrix.Gateway{
+				CloudType: d.Get("cloud_type").(int),
+				GwName:    d.Get("gw_name").(string),
+			}
 			err := client.DisableSNat(gw)
 			if err != nil {
 				return fmt.Errorf("failed to disable SNAT: %s", err)
 			}
 		}
+	} else if d.Get("enable_snat").(bool) {
+		if !d.HasChange("snat_mode") && d.Get("snat_mode").(string) == "custom" && d.HasChange("snat_policy") {
+			if len(d.Get("snat_policy").([]interface{})) == 0 {
+				return fmt.Errorf("'snat_policy' shouldn't be empty for 'snat_type' of 'custom'")
+			}
+			gw := &goaviatrix.Gateway{
+				CloudType:   d.Get("cloud_type").(int),
+				GatewayName: d.Get("gw_name").(string),
+			}
+			gw.EnableNat = "yes"
+			gw.SnatMode = "custom"
+			if _, ok := d.GetOk("snat_policy"); ok {
+				policies := d.Get("snat_policy").([]interface{})
+				for _, policy := range policies {
+					pl := policy.(map[string]interface{})
+					customPolicy := &goaviatrix.PolicyRule{
+						SrcIP:      pl["src_ip"].(string),
+						SrcPort:    pl["src_port"].(string),
+						DstIP:      pl["dst_ip"].(string),
+						DstPort:    pl["dst_port"].(string),
+						Protocol:   pl["protocol"].(string),
+						Interface:  pl["interface"].(string),
+						Connection: pl["connection"].(string),
+						Mark:       pl["mark"].(string),
+						NewSrcIP:   pl["new_src_ip"].(string),
+						NewSrcPort: pl["new_src_port"].(string),
+						ExcludeRTB: pl["exclude_rtb"].(string),
+					}
+					gw.SnatPolicy = append(gw.SnatPolicy, *customPolicy)
+				}
+			}
+			err := client.EnableSNat(gw)
+			if err != nil {
+				return fmt.Errorf("failed to update 'snat_policy' for 'snat_type' of 'custom': %s", err)
+			}
+		} else if d.HasChange("snat_mode") || d.HasChange("snat_policy") {
+			gw := &goaviatrix.Gateway{
+				CloudType: d.Get("cloud_type").(int),
+				GwName:    d.Get("gw_name").(string),
+			}
+			err := client.DisableSNat(gw)
+			if err != nil {
+				return fmt.Errorf("failed to disable SNAT: %s", err)
+			}
 
-		d.SetPartial("enable_snat")
+			gw.GatewayName = d.Get("gw_name").(string)
+			snatMode := d.Get("snat_mode").(string)
+			if snatMode == "secondary" {
+				if len(d.Get("snat_policy").([]interface{})) != 0 {
+					return fmt.Errorf("'snat_policy' should be empty for 'snat_type' of 'secondary'")
+				}
+				gw.EnableNat = "yes"
+				gw.SnatMode = "secondary"
+				err := client.EnableSNat(gw)
+				if err != nil {
+					return fmt.Errorf("failed to enable SNAT for 'snat_type' of 'secondary': %s", err)
+				}
+			} else if snatMode == "custom" {
+				if len(d.Get("snat_policy").([]interface{})) == 0 {
+					return fmt.Errorf("'snat_policy' shouldn't be empty for 'snat_type' of 'custom'")
+				}
+				gw.EnableNat = "yes"
+				gw.SnatMode = "custom"
+
+				if _, ok := d.GetOk("snat_policy"); ok {
+					policies := d.Get("snat_policy").([]interface{})
+					for _, policy := range policies {
+						pl := policy.(map[string]interface{})
+						customPolicy := &goaviatrix.PolicyRule{
+							SrcIP:      pl["src_ip"].(string),
+							SrcPort:    pl["src_port"].(string),
+							DstIP:      pl["dst_ip"].(string),
+							DstPort:    pl["dst_port"].(string),
+							Protocol:   pl["protocol"].(string),
+							Interface:  pl["interface"].(string),
+							Connection: pl["connection"].(string),
+							Mark:       pl["mark"].(string),
+							NewSrcIP:   pl["new_src_ip"].(string),
+							NewSrcPort: pl["new_src_port"].(string),
+							ExcludeRTB: pl["exclude_rtb"].(string),
+						}
+						gw.SnatPolicy = append(gw.SnatPolicy, *customPolicy)
+					}
+				}
+				err := client.EnableSNat(gw)
+				if err != nil {
+					return fmt.Errorf("failed to enable SNAT of 'secondary': %s", err)
+				}
+			} else if snatMode == "primary" {
+				if len(d.Get("snat_policy").([]interface{})) != 0 {
+					return fmt.Errorf("'snat_policy' should be empty for 'snat_type' of 'primary'")
+				}
+				err := client.EnableSNat(gw)
+				if err != nil {
+					return fmt.Errorf("failed to enable SNAT of 'primary': %s", err)
+				}
+			}
+		}
+	} else if !d.Get("enable_snat").(bool) {
+		if d.HasChange("snat_mode") || d.HasChange("snat_policy") {
+			if d.Get("snat_policy").(interface{}) == nil {
+				return fmt.Errorf("source NAT is disabled, can't update 'snat_mode' or 'snat_policy'")
+			}
+		}
 	}
 
 	if d.HasChange("transit_gw") {
