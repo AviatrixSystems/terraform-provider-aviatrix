@@ -113,9 +113,13 @@ type Gateway struct {
 	AdditionalCidrsDesignatedGw string `form:"additional_cidr_list,omitempty" json:"summarized_cidrs,omitempty"`
 	EnableEncryptVolume         bool   `json:"gw_enc,omitempty"`
 	CustomerManagedKeys         string `form:"customer_managed_keys,omitempty" json:"customer_managed_keys,omitempty"`
+	SnatMode                    string `form:"mode,omitempty" json:"snat_target,omitempty"`
+	SnatPolicy                  []PolicyRule
+	SnatPolicyList              string `form:"policy_list,omitempty" json:"policy_list,omitempty"`
+	GatewayName                 string `form:"gateway_name,omitempty" json:"gateway_name,omitempty"`
 }
 
-type CustomPolicy struct {
+type PolicyRule struct {
 	SrcIP      string `form:"src_ip,omitempty" json:"src_ip,omitempty"`
 	SrcPort    string `form:"src_port,omitempty" json:"src_port,omitempty"`
 	DstIP      string `form:"dst_ip,omitempty" json:"dst_ip,omitempty"`
@@ -130,14 +134,14 @@ type CustomPolicy struct {
 }
 
 type GatewayDetail struct {
-	AccountName                  string   `form:"account_name,omitempty" json:"account_name,omitempty"`
-	Action                       string   `form:"action,omitempty"`
-	GwName                       string   `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
-	DMZEnabled                   bool     `json:"dmz_enabled,omitempty"`
-	EnableAdvertiseTransitCidr   string   `json:"advertise_transit_cidr,omitempty"`
-	BgpManualSpokeAdvertiseCidrs []string `json:"bgp_manual_spoke_advertise_cidrs,omitempty"`
-	VpnNat                       bool     `json:"vpn_nat,omitempty"`
-	Policy                       string   `json:"snat_ip_port_list,omitempty"`
+	AccountName                  string       `form:"account_name,omitempty" json:"account_name,omitempty"`
+	Action                       string       `form:"action,omitempty"`
+	GwName                       string       `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
+	DMZEnabled                   bool         `json:"dmz_enabled,omitempty"`
+	EnableAdvertiseTransitCidr   string       `json:"advertise_transit_cidr,omitempty"`
+	BgpManualSpokeAdvertiseCidrs []string     `json:"bgp_manual_spoke_advertise_cidrs,omitempty"`
+	VpnNat                       bool         `json:"vpn_nat,omitempty"`
+	SnatPolicy                   []PolicyRule `json:"snat_ip_port_list,omitempty"`
 }
 
 type VpnGatewayAuth struct { // Used for set_vpn_gateway_authentication rest api call
@@ -342,23 +346,6 @@ func (c *Client) GetGatewayDetail(gateway *Gateway) (*GatewayDetail, error) {
 	if !data.Return {
 		return nil, errors.New("Rest API list_vpc_by_name Get failed: " + data.Reason)
 	}
-
-	var policyList []map[string]interface{}
-	err = json.Unmarshal([]byte(data.Results.Policy), &policyList)
-	if err != nil {
-
-	}
-
-	for _, policy := range policyList {
-
-		// convert map to array of Person struct
-		var p CustomPolicy
-		p.SrcIP = fmt.Sprintf("%s", policy["src_ip"])
-		p.DstIP = fmt.Sprintf("%s", policy["dst_ip"])
-
-	}
-	log.Printf("zjin000: policyList is %v", policyList)
-
 	if data.Results.GwName == gateway.GwName {
 		return &data.Results, nil
 	}
@@ -409,64 +396,14 @@ func (c *Client) DeleteGateway(gateway *Gateway) error {
 	return nil
 }
 
-//func (c *Client) EnableSNat(gateway *Gateway) error {
-//	Url, err := url.Parse(c.baseURL)
-//	if err != nil {
-//		return errors.New(("url Parsing failed for enable_snat") + err.Error())
-//	}
-//	enableSNat := url.Values{}
-//	enableSNat.Add("CID", c.CID)
-//	enableSNat.Add("action", "enable_snat")
-//	enableSNat.Add("gateway_name", gateway.GwName)
-//	if gateway.Mode == "secondary" {
-//		enableSNat.Add("mode", gateway.Mode)
-//	} else if gateway.Mode == "custom" {
-//		enableSNat.Add("mode", gateway.Mode)
-//		if gateway.Policy != nil && len(gateway.Policy) != 0 {
-//			i := 0
-//			for _, policy := range gateway.Policy {
-//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][src_ip]", policy.SrcIP)
-//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][src_port]", policy.SrcPort)
-//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][dst_ip]", policy.DstIP)
-//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][dst_port]", policy.DstPort)
-//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][protocol]", policy.Protocol)
-//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][interface]", policy.Interface)
-//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][connection]", policy.Connection)
-//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][mark]", policy.Mark)
-//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][new_src_ip]", policy.NewSrcIP)
-//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][new_src_port]", policy.NewSrcPort)
-//				enableSNat.Add("policy_list["+strconv.Itoa(i)+"][exclude_rtb]", policy.ExcludeRTB)
-//				i++
-//			}
-//		}
-//	}
-//	Url.RawQuery = enableSNat.Encode()
-//	resp, err := c.Get(Url.String(), nil)
-//	if err != nil {
-//		return errors.New("HTTP Get enable_snat failed: " + err.Error())
-//	}
-//	var data APIResp
-//	buf := new(bytes.Buffer)
-//	buf.ReadFrom(resp.Body)
-//	bodyString := buf.String()
-//	bodyIoCopy := strings.NewReader(bodyString)
-//	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-//		return errors.New("Json Decode enable_snat failed: " + err.Error() + "\n Body: " + bodyString)
-//	}
-//	if !data.Return {
-//		return errors.New("Rest API enable_snat Get failed: " + data.Reason)
-//	}
-//	return nil
-//}
-
 func (c *Client) EnableSNat(gateway *Gateway) error {
 	gateway.CID = c.CID
 	gateway.Action = "enable_snat"
-	args, err := json.Marshal(gateway.Policy)
+	args, err := json.Marshal(gateway.SnatPolicy)
 	if err != nil {
 		return err
 	}
-	gateway.PolicyList = string(args)
+	gateway.SnatPolicyList = string(args)
 	resp, err := c.Post(c.baseURL, gateway)
 	if err != nil {
 		return errors.New("HTTP Get enable_snat failed: " + err.Error())
