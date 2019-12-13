@@ -112,7 +112,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 						},
 						"connection": {
 							Type:        schema.TypeString,
-							Required:    true,
+							Optional:    true,
 							Default:     "None",
 							Description: "None.",
 						},
