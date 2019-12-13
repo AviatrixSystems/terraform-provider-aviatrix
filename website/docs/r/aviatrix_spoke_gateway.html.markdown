@@ -100,6 +100,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `elb_dns_name` - ELB DNS name.
 * `eip` - Public IP address assigned to the gateway.
 * `ha_eip` - Public IP address assigned to the HA gateway.
 * `cloud_instance_id` - Cloud Instance ID.

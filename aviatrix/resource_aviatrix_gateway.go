@@ -315,6 +315,11 @@ func resourceAviatrixGateway() *schema.Resource {
 				Sensitive:   true,
 				Description: "Customer managed key ID.",
 			},
+			"elb_dns_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "ELB DNS Name.",
+			},
 			"public_ip": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -841,6 +846,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		if gw.ElbState == "enabled" {
 			d.Set("enable_elb", true)
 			d.Set("elb_name", gw.ElbName)
+			d.Set("elb_dns_name", gw.ElbDNSName)
 		} else {
 			d.Set("enable_elb", false)
 			d.Set("elb_name", "")
