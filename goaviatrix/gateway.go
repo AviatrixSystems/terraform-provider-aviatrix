@@ -115,8 +115,10 @@ type Gateway struct {
 	CustomerManagedKeys         string `form:"customer_managed_keys,omitempty" json:"customer_managed_keys,omitempty"`
 	SnatMode                    string `form:"mode,omitempty" json:"snat_target,omitempty"`
 	SnatPolicy                  []PolicyRule
-	SnatPolicyList              string `form:"policy_list,omitempty" json:"policy_list,omitempty"`
-	GatewayName                 string `form:"gateway_name,omitempty" json:"gateway_name,omitempty"`
+	SnatPolicyList              string `form:"policy_list,omitempty"`
+	GatewayName                 string `form:"gateway_name,omitempty"`
+	DnatPolicy                  []PolicyRule
+	DnatPolicyList              string `form:"policy_list,omitempty"`
 }
 
 type PolicyRule struct {
@@ -142,6 +144,7 @@ type GatewayDetail struct {
 	BgpManualSpokeAdvertiseCidrs []string     `json:"bgp_manual_spoke_advertise_cidrs,omitempty"`
 	VpnNat                       bool         `json:"vpn_nat,omitempty"`
 	SnatPolicy                   []PolicyRule `json:"snat_ip_port_list,omitempty"`
+	DnatPolicy                   []PolicyRule `json:"dnat_ip_port_list,omitempty"`
 }
 
 type VpnGatewayAuth struct { // Used for set_vpn_gateway_authentication rest api call
@@ -446,6 +449,32 @@ func (c *Client) DisableSNat(gateway *Gateway) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API disable_snat Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) UpdateDNat(gateway *Gateway) error {
+	gateway.CID = c.CID
+	gateway.Action = "update_dnat_config"
+	args, err := json.Marshal(gateway.DnatPolicy)
+	if err != nil {
+		return err
+	}
+	gateway.DnatPolicyList = string(args)
+	resp, err := c.Post(c.baseURL, gateway)
+	if err != nil {
+		return errors.New("HTTP Get update_dnat_config failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode update_dnat_config failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API update_dnat_config Get failed: " + data.Reason)
 	}
 	return nil
 }

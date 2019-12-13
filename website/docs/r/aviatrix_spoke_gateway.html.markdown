@@ -100,6 +100,18 @@ The following arguments are supported:
   * `new_src_ip` - (Optional) The changed source IP address when all specified qualifier conditions meet. One of the rule fields must be specified for this rule to take effect.
   * `new_src_port` - (Optional) The translated destination port when all specified qualifier conditions meet. One of the rule field must be specified for this rule to take effect.
   * `exclude_rtb` - (Optional) This field specifies which VPC private route table will not be programmed with the default route entry.
+* `dnat_policy` - (Optional) Policy rule applied for enabling Destination NAT (DNAT), which allows you to change the destination to a virtual address range.
+  * `src_ip` - (Optional) A source IP address range where the policy rule applies.
+  * `src_port` - (Optional) A source port that the policy rule applies.
+  * `dst_ip` - (Optional) A destination IP address range where the policy rule applies.
+  * `dst_port` - (Optional) A destination port where the policy rule applies.
+  * `protocol` - (Optional) A destination port protocol where the policy rule applies.
+  * `interface` - (Optional) An output interface where the policy rule applies.
+  * `connection` - (Optional) Default value: "None".
+  * `mark` - (Optional) A tag or mark of a TCP session where the policy rule applies.
+  * `new_src_ip` - (Optional) The changed source IP address when all specified qualifier conditions meet. One of the rule fields must be specified for this rule to take effect.
+  * `new_src_port` - (Optional) The translated destination port when all specified qualifier conditions meet. One of the rule field must be specified for this rule to take effect.
+  * `exclude_rtb` - (Optional) This field specifies which VPC private route table will not be programmed with the default route entry.
 * `single_az_ha` (Optional) Set to true if this feature is desired. Valid values: true, false.
 * `transit_gw` - (Optional) Specify the transit Gateway.
 * `tag_list` - (Optional) Instance tag of cloud provider. Only AWS, cloud_type is "1", is supported. Example: ["key1:value1", "key2:value2"].
