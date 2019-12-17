@@ -23,23 +23,23 @@ resource "aws_route_table" "vpc-route" {
   vpc_id = aws_vpc.vpc.id
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.vpc-gw.id}"
+    gateway_id = aws_internet_gateway.vpc-gw.id
   }
   tags = {
     Name = "aviatrix-route"
   }
   lifecycle {
-    ignore_changes = ["route"]
+    ignore_changes = [route]
   }
 }
 resource "aws_route_table_association" "vpc-ra" {
   subnet_id          = aws_subnet.vpc-public.id
   route_table_id     = aws_route_table.vpc-route.id
   depends_on         = [
-    "aws_subnet.vpc-public",
-    "aws_route_table.vpc-route",
-    "aws_internet_gateway.vpc-gw",
-    "aws_vpc.vpc",
+    aws_subnet.vpc-public,
+    aws_route_table.vpc-route,
+    aws_internet_gateway.vpc-gw,
+    aws_vpc.vpc,
   ]
 }
 

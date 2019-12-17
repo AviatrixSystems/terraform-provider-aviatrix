@@ -27,7 +27,6 @@ func TestAccAviatrixGeoVPN_basic(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 			preGatewayCheck(t, ". Set SKIP_GEO_VPN to yes to skip Geo VPN tests")
-			preGateway2Check(t, ". Set SKIP_GEO_VPN to yes to skip Geo VPN tests")
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGeoVPNDestroy,
@@ -39,7 +38,7 @@ func TestAccAviatrixGeoVPN_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "service_name", "vpn"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", os.Getenv("DOMAIN_NAME")),
-					resource.TestCheckResourceAttr(resourceName, "elb_dns_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "elb_dns_names.#", "1"),
 				),
 			},
 			{
@@ -61,7 +60,7 @@ resource "aviatrix_account" "test" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-resource "aviatrix_gateway" "test_vpn_gw1" {
+resource "aviatrix_gateway" "test_vpn_gw" {
 	cloud_type   = 1
 	account_name = aviatrix_account.test.account_name
 	gw_name      = "tfg-%[1]s"
@@ -75,34 +74,17 @@ resource "aviatrix_gateway" "test_vpn_gw1" {
 	enable_elb   = true
 	elb_name     = "elb-test1"
 }
-resource "aviatrix_gateway" "test_vpn_gw2" {
-	cloud_type   = 1
-	account_name = aviatrix_account.test.account_name
-	gw_name      = "tfg2-%[1]s"
-	vpc_id       = "%[8]s"
-	vpc_reg      = "%[9]s"
-	gw_size      = "t2.micro"
-	subnet       = "%[10]s"
-	vpn_access   = true
-	vpn_cidr     = "192.168.44.0/24"
-	max_vpn_conn = "100"
-	enable_elb   = true
-	elb_name     = "elb-test2"
-}
 resource "aviatrix_geo_vpn" "foo" {
 	cloud_type    = 1
 	account_name  = aviatrix_account.test.account_name
 	service_name  = "vpn"
-	domain_name   = "%[11]s"
+	domain_name   = "%[8]s"
 	elb_dns_names = [
-		aviatrix_gateway.test_vpn_gw1.elb_dns_name,
-		aviatrix_gateway.test_vpn_gw2.elb_dns_name,
+		aviatrix_gateway.test_vpn_gw.elb_dns_name,
 	]
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"),
-		os.Getenv("AWS_VPC_ID2"), os.Getenv("AWS_REGION2"), os.Getenv("AWS_SUBNET2"),
-		os.Getenv("DOMAIN_NAME"))
+		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), os.Getenv("DOMAIN_NAME"))
 }
 
 func testAccCheckGeoVPNExists(n string, geoVPN *goaviatrix.GeoVPN) resource.TestCheckFunc {

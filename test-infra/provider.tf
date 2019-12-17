@@ -12,7 +12,7 @@ provider "aws" {
 }
 
 provider "google" {
-  credentials = "${file(var.gcp_credentials_file_path)}"
+  credentials = var.gcp_credentials_file_path
   region      = var.gcp_region1
   project     = var.gcp_project_id1
 }
