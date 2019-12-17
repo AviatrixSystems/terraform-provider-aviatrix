@@ -84,6 +84,9 @@ func (c *Client) GetGeoVPNInfo(geoVPN *GeoVPN) (*GeoVPN, error) {
 		return nil, errors.New("Json Decode get_geo_vpn_info failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
+		if strings.Contains(data.Reason, "Geo VPN is not enbled") || strings.Contains(data.Reason, "Geo VPN is not enabled") {
+			return nil, ErrNotFound
+		}
 		return nil, errors.New("Rest API get_geo_vpn_info Get failed: " + data.Reason)
 	}
 
