@@ -14,6 +14,7 @@ The aviatrix_geo_vpn resource enables and manages the Aviatrix Geo VPN.
 ```hcl
 # Create an Aviatrix Geo VPN
 resource "aviatrix_geo_vpn" "test_geo_vpn" {
+  cloud_type    = 1
   account_name  = "devops-aws"
   service_name  = "vpn"
   domain_name   = "aviatrix.live"
