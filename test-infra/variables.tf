@@ -31,6 +31,7 @@ variable "aws_vpc_subnet2" {default="10.20.0.0/24"}
 variable "aws_vpc_subnet3" {default="192.168.0.0/24"}
 variable "aws_access_key" {}
 variable "aws_secret_key" {}
+variable "domain_name" {}
 
 variable "awsgov_region1" {default="us-gov-west-1"}
 variable "awsgov_vpc_cidr1" {default="10.10.0.0/16"}

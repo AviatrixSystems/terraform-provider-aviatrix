@@ -126,6 +126,10 @@ output "AWS_DX_GATEWAY_ID" {
   value = aws_dx_gateway.dx-gateway.id
 }
 
+output "DOMAIN_NAME" {
+  value = var.domain_name
+}
+
 output "AWSGOV_VPC_ID" {
   value = module.aviatrix_aws_vpc1.vpc
 }
