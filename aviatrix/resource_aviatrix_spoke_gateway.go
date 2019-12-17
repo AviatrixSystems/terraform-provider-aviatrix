@@ -326,6 +326,8 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("'snat_policy' should be empty for 'snat_mode' of 'primary'")
 		}
 		gateway.EnableNat = "yes"
+	} else if !enableSNat && snatMode != "primary" {
+		return fmt.Errorf("'snat_mode' should be empty since SNAT is disabled")
 	}
 
 	singleAZ := d.Get("single_az_ha").(bool)
@@ -1175,6 +1177,9 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		} else {
 			if len(d.Get("snat_policy").([]interface{})) != 0 {
 				return fmt.Errorf("'snat_policy' should be empty for disabling SNAT")
+			}
+			if d.Get("snat_mode").(string) != "primary" {
+				return fmt.Errorf("'snat_mode' should be set empty or to 'primary' for disabling SNAT")
 			}
 			gw := &goaviatrix.Gateway{
 				CloudType: d.Get("cloud_type").(int),
