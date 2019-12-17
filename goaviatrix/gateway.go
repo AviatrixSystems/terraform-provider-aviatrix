@@ -115,10 +115,9 @@ type Gateway struct {
 	CustomerManagedKeys         string `form:"customer_managed_keys,omitempty" json:"customer_managed_keys,omitempty"`
 	SnatMode                    string `form:"mode,omitempty" json:"snat_target,omitempty"`
 	SnatPolicy                  []PolicyRule
-	SnatPolicyList              string `form:"policy_list,omitempty"`
+	PolicyList                  string `form:"policy_list,omitempty"`
 	GatewayName                 string `form:"gateway_name,omitempty"`
 	DnatPolicy                  []PolicyRule
-	DnatPolicyList              string `form:"policy_list,omitempty"`
 }
 
 type PolicyRule struct {
@@ -406,7 +405,7 @@ func (c *Client) EnableSNat(gateway *Gateway) error {
 	if err != nil {
 		return err
 	}
-	gateway.SnatPolicyList = string(args)
+	gateway.PolicyList = string(args)
 	resp, err := c.Post(c.baseURL, gateway)
 	if err != nil {
 		return errors.New("HTTP Get enable_snat failed: " + err.Error())
@@ -460,7 +459,7 @@ func (c *Client) UpdateDNat(gateway *Gateway) error {
 	if err != nil {
 		return err
 	}
-	gateway.DnatPolicyList = string(args)
+	gateway.PolicyList = string(args)
 	resp, err := c.Post(c.baseURL, gateway)
 	if err != nil {
 		return errors.New("HTTP Get update_dnat_config failed: " + err.Error())
