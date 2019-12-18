@@ -1504,8 +1504,8 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 	if d.HasChange("enable_snat") {
 		gw := &goaviatrix.Gateway{
-			CloudType: d.Get("cloud_type").(int),
-			GwName:    d.Get("gw_name").(string),
+			CloudType:   d.Get("cloud_type").(int),
+			GatewayName: d.Get("gw_name").(string),
 		}
 
 		enableNat := d.Get("enable_snat").(bool)

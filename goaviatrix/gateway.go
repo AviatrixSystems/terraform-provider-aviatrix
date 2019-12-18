@@ -425,16 +425,9 @@ func (c *Client) EnableSNat(gateway *Gateway) error {
 }
 
 func (c *Client) DisableSNat(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for disable_snat") + err.Error())
-	}
-	disableSNat := url.Values{}
-	disableSNat.Add("CID", c.CID)
-	disableSNat.Add("action", "disable_snat")
-	disableSNat.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = disableSNat.Encode()
-	resp, err := c.Get(Url.String(), nil)
+	gateway.CID = c.CID
+	gateway.Action = "disable_snat"
+	resp, err := c.Post(c.baseURL, gateway)
 	if err != nil {
 		return errors.New("HTTP Get disable_snat failed: " + err.Error())
 	}
