@@ -435,7 +435,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 	if enableNAT {
 		gw := &goaviatrix.Gateway{
-			GwName: gateway.GwName,
+			GatewayName: gateway.GwName,
 		}
 
 		err := client.EnableSNat(gw)
@@ -961,8 +961,8 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("enable_snat") {
 		gw := &goaviatrix.Gateway{
-			CloudType: d.Get("cloud_type").(int),
-			GwName:    d.Get("gw_name").(string),
+			CloudType:   d.Get("cloud_type").(int),
+			GatewayName: d.Get("gw_name").(string),
 		}
 		enableNat := d.Get("enable_snat").(bool)
 

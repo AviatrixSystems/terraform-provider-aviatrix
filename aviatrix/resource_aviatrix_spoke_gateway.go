@@ -1182,8 +1182,8 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("'snat_mode' should be set empty or to 'primary' for disabling SNAT")
 			}
 			gw := &goaviatrix.Gateway{
-				CloudType: d.Get("cloud_type").(int),
-				GwName:    d.Get("gw_name").(string),
+				CloudType:   d.Get("cloud_type").(int),
+				GatewayName: d.Get("gw_name").(string),
 			}
 			err := client.DisableSNat(gw)
 			if err != nil {
@@ -1227,8 +1227,8 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			}
 		} else if d.HasChange("snat_mode") || d.HasChange("snat_policy") {
 			gw := &goaviatrix.Gateway{
-				CloudType: d.Get("cloud_type").(int),
-				GwName:    d.Get("gw_name").(string),
+				CloudType:   d.Get("cloud_type").(int),
+				GatewayName: d.Get("gw_name").(string),
 			}
 			err := client.DisableSNat(gw)
 			if err != nil {
