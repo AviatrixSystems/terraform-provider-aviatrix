@@ -895,7 +895,13 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 
 		if gw.EnableDesignatedGateway == "Yes" || gw.EnableDesignatedGateway == "yes" {
 			d.Set("enable_designated_gateway", true)
-			d.Set("additional_cidrs_designated_gateway", gw.AdditionalCidrsDesignatedGw)
+			cidrsTF := strings.Split(d.Get("additional_cidrs_designated_gateway").(string), ",")
+			cidrsRESTAPI := strings.Split(gw.AdditionalCidrsDesignatedGw, ",")
+			if len(goaviatrix.Difference(cidrsTF, cidrsRESTAPI)) == 0 && len(goaviatrix.Difference(cidrsRESTAPI, cidrsTF)) == 0 {
+				d.Set("additional_cidrs_designated_gateway", d.Get("additional_cidrs_designated_gateway").(string))
+			} else {
+				d.Set("additional_cidrs_designated_gateway", gw.AdditionalCidrsDesignatedGw)
+			}
 		} else {
 			d.Set("enable_designated_gateway", false)
 			d.Set("additional_cidrs_designated_gateway", "")
