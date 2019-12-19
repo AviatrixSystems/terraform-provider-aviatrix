@@ -4,20 +4,20 @@
 - Supported Terraform version: **v0.12.x**
 
 ### Features:
-1. Added support for Designated Gateway in **aviatrix_gateway**
-2. Added support for enabling Encrypt EBS Volume in **aviatrix_gateway**
-3. Added Source NAT support of 'secondary' and 'custom' in **aviatrix_spoke_gateway**
-4. Added Destination NAT support in **aviatrix_gateway** and **aviatrix_spoke_gateway**
+1. Added support for "Designated Gateway" feature in **aviatrix_gateway**
+2. Added support for encrypting the AWS EBS volume in **aviatrix_gateway**
+3. Added support for "secondary" and "custom" Source NAT in **aviatrix_spoke_gateway**
+4. Added support for Destination NAT in **aviatrix_gateway** and **aviatrix_spoke_gateway**
 5. New resources:
   - **aviatrix_geo_vpn**
 
 ### Enhancements:
-1. Migrated Terraform provider plugin sdk instead of using the core
+1. Migrated from Terraform Core to new Terraform Plugin SDK
 2. Added ``elb_dns_name`` as a computed attribute in **aviatrix_gateway**
 3. Added coverage for **aviatrix_geo_vpn** in test-infra
 
 ### Bug Fixes:
-1. Fixed the issue where gateway's ``additional_cidrs_designated_gateway`` reads a diff when refreshing after create in **aviatrix_gateway** 
+1. Fixed issue where read-back for **aviatrix_gateway**'s ``additional_cidrs_designated_gateway`` incorrectly displayed deltas 
 
 
 ## 2.8.0 (December 05, 2019)
