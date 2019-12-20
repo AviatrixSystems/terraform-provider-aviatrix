@@ -86,7 +86,7 @@ The following arguments are supported:
 * `ha_insane_mode_az` (Optional) AZ of subnet being created for Insane Mode Spoke HA Gateway. Required for AWS if insane_mode is enabled and ha_subnet is set. Example: AWS: "us-west-1a".
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set). Example: "t2.micro".
 * `ha_eip` - (Optional) Public IP address that you want to assign to the HA peering instance. If no value is given, a new eip will automatically allocated. Only available for AWS.
-* `enable_snat` - (Optional) Specify whether enabling Source NAT feature on the gateway or not. Please disable AWS NAT instance before enabling this feature. Valid values: true, false.
+* `enable_snat` - (Optional) Specify whether enabling Source NAT feature on the gateway or not. Please disable AWS NAT instance before enabling this feature. Currently only supports AWS(1) and ARM(8). Valid values: true, false.
 * `snat_mode` - (Optional) Valid values: "primary", "secondary" and "custom". Default value: "primary".
 * `snat_policy` - (Optional) Policy rule applied for "snat_mode" of "custom".
   * `src_ip` - (Optional) A source IP address range where the policy rule applies.
@@ -100,7 +100,7 @@ The following arguments are supported:
   * `new_src_ip` - (Optional) The changed source IP address when all specified qualifier conditions meet. One of the rule fields must be specified for this rule to take effect.
   * `new_src_port` - (Optional) The translated destination port when all specified qualifier conditions meet. One of the rule field must be specified for this rule to take effect.
   * `exclude_rtb` - (Optional) This field specifies which VPC private route table will not be programmed with the default route entry.
-* `dnat_policy` - (Optional) Policy rule applied for enabling Destination NAT (DNAT), which allows you to change the destination to a virtual address range.
+* `dnat_policy` - (Optional) Policy rule applied for enabling Destination NAT (DNAT), which allows you to change the destination to a virtual address range. Currently only supports AWS(1) and ARM(8).
   * `src_ip` - (Optional) A source IP address range where the policy rule applies.
   * `src_port` - (Optional) A source port that the policy rule applies.
   * `dst_ip` - (Optional) A destination IP address range where the policy rule applies.
@@ -125,7 +125,6 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `elb_dns_name` - ELB DNS name.
 * `eip` - Public IP address assigned to the gateway.
 * `ha_eip` - Public IP address assigned to the HA gateway.
 * `cloud_instance_id` - Cloud Instance ID.
