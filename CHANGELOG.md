@@ -1,6 +1,6 @@
 ## 2.9.0 (Unreleased)
 ### Notes:
-- Supported Controller version: **UserConnect-5.2.2047** 
+- Supported Controller version: **UserConnect-5.2.2048** 
 - Supported Terraform version: **v0.12.x**
 
 ### Features:
