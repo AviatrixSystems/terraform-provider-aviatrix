@@ -15,7 +15,7 @@ Tracks customer-impacting changes to Terraform environment (existing resources) 
 Otherwise, this list does not really apply. Please view the below list for details regarding this:
 
 1. If a customer is transitioning to use Terraform to manage existing infrastructure, it is recommended to start from the latest Controller and Aviatrix Terraform provider version, and use the Terraform Export feature and import their infrastructure for a quick and easy migration.
-  - **Please note that "Export" is still a beta feature (and only up-to-date for U4.7 at the moment)**
+  - **Please note that "Export" is still a beta feature (and only up-to-date for U5.1 at the moment)**
   - Customer can still choose to manually write their config file to their own specifications and use ``terraform import`` to bring their infrastructure into Terraform state management
 2. If a customer is adopting Terraform for the first time, with no pre-existing infrastructure/ for managing new infrastructure, this changelist does not apply whatsoever. They simply need to follow our [Terraform tutorial](https://docs.aviatrix.com/HowTos/tf_aviatrix_howto.html) to setup their Terraform environment and use the Terraform documentation featured on the left sidebar.
 
@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.8 (UserConnect-5.2)``
+``Last updated: R2.9 (UserConnect-5.2)``
 
 
 ---
@@ -133,3 +133,12 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |:----:|----------------|:-----------------:|----------------------------|
 |(new) | account        | awsgov_account_number, awsgov_access_key, awsgov_secret_key | **No**; Terraform now supports AWS GovCloud accounts, hence the new attributes |
 |(new) | aws_tgw_vpc_attachment | customized_routes, disable_local_route_propagation | **No**; Terraform support added for Controller 5.0 feature. Customers may now use customized routes and disable local route propagation when attaching a VPC to their TGW, managing them separately outside the TGW resource |
+
+
+## R2.9 (UserConnect-5.2) (Terraform v0.12)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(new) | gateway        | enable_designated_gateway, additional_cidrs_designated_gateway | **No**; Terraform now supports the "designated gateway" feature. If customer wants to manage their existing gateway with this feature enabled, they must write a matching configuration for the existing gateway and perform a ``terraform import`` to bring it into the state |
+|(new) | --             | enable_encrypt_volume | **Yes**; Terraform now supports encrypting EBS volumes. If an existing gateway in Terraform state has had their EBS volume encrypted through the GUI, this attribute must be set to **true**, and a ``terraform refresh`` must be performed to rectify the state |
+|(new) | --             | dnat_policy       | **Yes**; Terraform now supports DNAT. If an existing gateway in Terraform state has had DNAT policies set through the GUI, corresponding ``dnat_policy`` blocks must be added and a ``terraform refresh`` must be performed to rectify the state |
+|(new) | spoke_gateway  | snat_policy       | **Yes**; Terraform now supports custom SNAT or multi-IP SNAT. If an existing spoke gateway in Terraform state has had SNAT policies set through the GUI, corresponding ``snat_policy`` blocks must be added and a ``terraform refresh`` must be performed to rectify the state |

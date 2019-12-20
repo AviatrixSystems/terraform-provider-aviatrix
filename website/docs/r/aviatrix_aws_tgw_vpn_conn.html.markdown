@@ -20,12 +20,8 @@ resource "aviatrix_aws_tgw_vpn_conn" "test_aws_tgw_vpn_conn" {
   public_ip         = "40.0.0.0"
   remote_as_number  = "12"
 }
-<<<<<<< HEAD
 ```
 ```hcl
-=======
-
->>>>>>> 730af7a6cbc3c805b9264813bbeee393c14bd708
 # Create an Aviatrix AWS TGW VPN Connection (static)
 resource "aviatrix_aws_tgw_vpn_conn" "test_aws_tgw_vpn_conn" {
   tgw_name          = "myawstgw1"
