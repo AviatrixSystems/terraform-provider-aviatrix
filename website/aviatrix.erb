@@ -1,153 +1,287 @@
 <% wrap_layout :inner do %>
   <% content_for :sidebar do %>
-  <div class="docs-sidebar hidden-print affix-top" role="complementary">
+    <div class="docs-sidebar hidden-print affix-top" role="complementary">
       <ul class="nav docs-sidenav">
-          <li>
-              <a href="/docs/providers/index.html">All Providers</a>
-          </li>
+        <li>
+            <a href="/docs/providers/index.html">All Providers</a>
+        </li>
 
-          <li>
-              <a href="/docs/providers/aviatrix/index.html">Aviatrix Provider</a>
-          </li>
+        <li>
+            <a href="/docs/providers/aviatrix/index.html">Aviatrix Provider</a>
+        </li>
 
-          <li>
-              <a href="#">Guides</a>
-              <ul class="nav nav-visible">
-                  <li>
-                      <a href="/docs/providers/aviatrix/guides/release-notes.html">Release Notes</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/guides/release-compatibility.html">Release Compatibility Chart</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/guides/v2-upgrade-guide.html">Aviatrix R2.x Upgrade Guide</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/guides/feature-changelist.html">Aviatrix R1.x Feature Changelist</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/guides/feature-changelist-v2.html">Aviatrix R2.x Feature Changelist</a>
-                  </li>
+        <li>
+          <a href="#">Guides</a>
+          <ul class="nav nav-visible">
+            <li>
+                <a href="/docs/providers/aviatrix/guides/release-notes.html">Release Notes</a>
+            </li>
+            <li>
+                <a href="/docs/providers/aviatrix/guides/release-compatibility.html">Release Compatibility Chart</a>
+            </li>
+            <li>
+                <a href="/docs/providers/aviatrix/guides/v2-upgrade-guide.html">Aviatrix R2.x Upgrade Guide</a>
+            </li>
+            <li>
+                <a href="/docs/providers/aviatrix/guides/feature-changelist.html">Aviatrix R1.x Feature Changelist</a>
+            </li>
+            <li>
+                <a href="/docs/providers/aviatrix/guides/feature-changelist-v2.html">Aviatrix R2.x Feature Changelist</a>
+            </li>
+          </ul>
+        </li>
 
-              </ul>
-          </li>
-
-          <li>
-              <a href="#">Resources</a>
-              <ul class="nav nav-visible">
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_account.html">aviatrix_account</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_account_user.html">aviatrix_account_user</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_arm_peer.html">aviatrix_arm_peer</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_aws_peer.html">aviatrix_aws_peer</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_aws_tgw.html">aviatrix_aws_tgw</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_aws_tgw_directconnect.html">aviatrix_aws_tgw_directconnect</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_aws_tgw_vpc_attachment.html">aviatrix_aws_tgw_vpc_attachment</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_aws_tgw_vpn_conn.html">aviatrix_aws_tgw_vpn_conn</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_controller_config.html">aviatrix_controller_config</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_firenet.html">aviatrix_firenet</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_firewall.html">aviatrix_firewall</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_firewall_instance.html">aviatrix_firewall_instance</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_firewall_tag.html">aviatrix_firewall_tag</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_fqdn.html">aviatrix_fqdn</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_gateway.html">aviatrix_gateway</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_geo_vpn.html">aviatrix_geo_vpn</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_saml_endpoint.html">aviatrix_saml_endpoint</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_site2cloud.html">aviatrix_site2cloud</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_spoke_vpc.html">aviatrix_spoke_vpc</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_spoke_gateway.html">aviatrix_spoke_gateway</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_transit_gateway.html">aviatrix_transit_gateway</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_transit_gateway_peering.html">aviatrix_transit_gateway_peering</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_transit_vpc.html">aviatrix_transit_vpc</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_trans_peer.html">aviatrix_trans_peer</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_tunnel.html">aviatrix_tunnel</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_vgw_conn.html">aviatrix_vgw_conn</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_vpc.html">aviatrix_vpc</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_vpn_profile.html">aviatrix_vpn_profile</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_vpn_user.html">aviatrix_vpn_user</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/r/aviatrix_vpn_user_accelerator.html">aviatrix_vpn_user_accelerator</a>
-                  </li>
-              </ul>
-          </li>
-
-          <li>
+        <li>
+          <a href="#">Accounts</a>
+          <ul class="nav">
+            <li>
               <a href="#">Data Sources</a>
-              <ul class="nav nav-visible">
-                  <li>
-                      <a href="/docs/providers/aviatrix/d/aviatrix_account.html">aviatrix_account</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/d/aviatrix_caller_identity.html">aviatrix_caller_identity</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/d/aviatrix_firenet_vendor_integration.html">aviatrix_firenet_vendor_integration</a>
-                  </li>
-                  <li>
-                      <a href="/docs/providers/aviatrix/d/aviatrix_gateway.html">aviatrix_gateway</a>
-                  </li>
+              <ul class="nav nav-auto-expand">
+                <li>
+                    <a href="/docs/providers/aviatrix/d/aviatrix_account.html">aviatrix_account</a>
+                </li>
               </ul>
-          </li>
+            </li>
+            <li>
+              <a href="#">Resources</a>
+              <ul class="nav nav-auto-expand">
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_account.html">aviatrix_account</a>
+                </li>
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_account_user.html">aviatrix_account_user</a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#">Gateway</a>
+          <ul class="nav">
+            <li>
+              <a href="#">Data Sources</a>
+              <ul class="nav nav-auto-expand">
+                <li>
+                    <a href="/docs/providers/aviatrix/d/aviatrix_gateway.html">aviatrix_gateway</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">Resources</a>
+              <ul class="nav nav-auto-expand">
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_gateway.html">aviatrix_gateway</a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#">TGW Orchestrator</a>
+          <ul class="nav">
+            <li>
+              <a href="#">Resources</a>
+              <ul class="nav nav-auto-expand">
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_aws_tgw.html">aviatrix_aws_tgw</a>
+                </li>
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_aws_tgw_directconnect.html">aviatrix_aws_tgw_directconnect</a>
+                </li>
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_aws_tgw_vpc_attachment.html">aviatrix_aws_tgw_vpc_attachment</a>
+                </li>
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_aws_tgw_vpn_conn.html">aviatrix_aws_tgw_vpn_conn</a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#">Transit Network</a>
+          <ul class="nav">
+            <li>
+              <a href="#">Deprecated</a>
+              <ul class="nav">
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_spoke_vpc.html">aviatrix_spoke_vpc</a>
+                </li>
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_transit_vpc.html">aviatrix_transit_vpc</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">Resources</a>
+              <ul class="nav nav-auto-expand">
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_spoke_gateway.html">aviatrix_spoke_gateway</a>
+                </li>
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_transit_gateway.html">aviatrix_transit_gateway</a>
+                </li>
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_transit_gateway_peering.html">aviatrix_transit_gateway_peering</a>
+                </li>
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_vgw_conn.html">aviatrix_vgw_conn</a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#">Firewall Network</a>
+          <ul class="nav">
+            <li>
+              <a href="#">Data Sources</a>
+              <ul class="nav nav-auto-expand">
+                <li>
+                    <a href="/docs/providers/aviatrix/d/aviatrix_firenet_vendor_integration.html">aviatrix_firenet_vendor_integration</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">Resources</a>
+              <ul class="nav nav-auto-expand">
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_firenet.html">aviatrix_firenet</a>
+                </li>
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_firewall_instance.html">aviatrix_firewall_instance</a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#">Peering</a>
+          <ul class="nav">
+            <li>
+              <a href="#">Resources</a>
+              <ul class="nav nav-auto-expand">
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_arm_peer.html">aviatrix_arm_peer</a>
+                </li>
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_aws_peer.html">aviatrix_aws_peer</a>
+                </li>
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_trans_peer.html">aviatrix_trans_peer</a>
+                </li>
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_tunnel.html">aviatrix_tunnel</a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#">Site2Cloud</a>
+          <ul class="nav">
+            <li>
+              <a href="#">Resources</a>
+              <ul class="nav nav-auto-expand">
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_site2cloud.html">aviatrix_site2cloud</a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#">OpenVPN</a>
+          <ul class="nav">
+            <li>
+              <a href="#">Resources</a>
+              <ul class="nav nav-auto-expand">
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_geo_vpn.html">aviatrix_geo_vpn</a>
+                </li>
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_saml_endpoint.html">aviatrix_saml_endpoint</a>
+                </li>
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_vpn_profile.html">aviatrix_vpn_profile</a>
+                </li>
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_vpn_user.html">aviatrix_vpn_user</a>
+                </li>
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_vpn_user_accelerator.html">aviatrix_vpn_user_accelerator</a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#">Security</a>
+          <ul class="nav">
+            <li>
+              <a href="#">Resources</a>
+              <ul class="nav nav-auto-expand">
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_firewall.html">aviatrix_firewall</a>
+                </li>
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_firewall_tag.html">aviatrix_firewall_tag</a>
+                </li>
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_fqdn.html">aviatrix_fqdn</a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#">Useful Tools</a>
+          <ul class="nav">
+            <li>
+              <a href="#">Resources</a>
+              <ul class="nav nav-auto-expand">
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_vpc.html">aviatrix_vpc</a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#">Settings</a>
+          <ul class="nav">
+            <li>
+              <a href="#">Data Sources</a>
+              <ul class="nav nav-auto-expand">
+                <li>
+                    <a href="/docs/providers/aviatrix/d/aviatrix_caller_identity.html">aviatrix_caller_identity</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="#">Resources</a>
+              <ul class="nav nav-auto-expand">
+                <li>
+                    <a href="/docs/providers/aviatrix/r/aviatrix_controller_config.html">aviatrix_controller_config</a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
       </ul>
-  </div>
+    </div>
   <% end %>
 
   <%= yield %>
-  <% end %>
+<% end %>
