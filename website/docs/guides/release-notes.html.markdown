@@ -17,9 +17,32 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
+## 2.9.0
+### Notes:
+- Release date: **(20 Dec 2019)**
+- Supported Controller version: **UserConnect-5.2.2047**
+- Supported Terraform version: **v0.12.x**
+
+### Features:
+1. Added support for "Designated Gateway" feature in **aviatrix_gateway**
+2. Added support for encrypting the AWS EBS volume in **aviatrix_gateway**
+3. Added support for "secondary" and "custom" Source NAT in AWS/ARM **aviatrix_spoke_gateway**
+4. Added support for Destination NAT in AWS/ARM **aviatrix_gateway** and **aviatrix_spoke_gateway**
+5. New resources:
+  - **aviatrix_geo_vpn**
+
+### Enhancements:
+1. Migrated from Terraform Core to new Terraform Plugin SDK
+2. Added ``elb_dns_name`` as a computed attribute in **aviatrix_gateway**
+3. Added coverage for **aviatrix_geo_vpn** in test-infra
+
+### Bug Fixes:
+1. Fixed issue where read-back for **aviatrix_gateway**'s ``additional_cidrs_designated_gateway`` incorrectly displayed deltas
+
+
 ## 2.8.0
 ### Notes:
-- Release date: **(4 Dec 2019)**
+- Release date: **(5 Dec 2019)**
 - Supported Controller versions: **UserConnect-5.1.1179** and **UserConnect-5.2.1987**
 - Supported Terraform version: **v0.12.x**
 

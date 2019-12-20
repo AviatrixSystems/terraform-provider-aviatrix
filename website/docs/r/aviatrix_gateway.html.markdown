@@ -136,7 +136,7 @@ The following arguments are supported:
 * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane-mode).**
 * `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Gateway. Required for AWS and AWSGov if insane_mode is set. Example: AWS: "us-west-1a".
 * `enable_snat` - (Optional) Enable Source NAT for this container. Valid values: true, false. Default value: false. **NOTE: If using SNAT for FQDN use-case, please see notes [here](#fqdn).**
-* `dnat_policy` - (Optional) Policy rule applied for enabling Destination NAT (DNAT), which allows you to change the destination to a virtual address range.
+* `dnat_policy` - (Optional) Policy rule applied for enabling Destination NAT (DNAT), which allows you to change the destination to a virtual address range. Currently only supports AWS(1) and ARM(8).
   * `src_ip` - (Optional) A source IP address range where the policy rule applies.
   * `src_port` - (Optional) A source port that the policy rule applies.
   * `dst_ip` - (Optional) A destination IP address range where the policy rule applies.
@@ -193,6 +193,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `elb_dns_name` - ELB DNS name.
 * `public_ip` - Public IP address of the Gateway created.
 * `backup_public_ip` - Private IP address of the Gateway created.
 * `public_dns_server` - DNS server used by the gateway. Default is "8.8.8.8", can be overridden with the VPC's setting.
