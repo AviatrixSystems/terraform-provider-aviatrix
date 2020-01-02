@@ -29,6 +29,44 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
 }
 ```
 ```hcl
+# Create an Aviatrix AWS Spoke Gateway with SNAT and DNAT enabled
+resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
+  cloud_type   = 1
+  account_name = "my-aws"
+  gw_name      = "spoke-gw-aws"
+  vpc_id       = "vpc-abcd123"
+  vpc_reg      = "us-west-1"
+  gw_size      = "t2.micro"
+  subnet       = "10.11.0.0/24"
+  enable_snat  = true
+  snat_mode    = "custom"
+  snat_policy {
+    src_ip       = "21.0.0.0/24"
+    src_port     = 53
+    dst_ip       = "22.0.0.0/24"
+    dst_port     = 54
+    protocol     = "tcp"
+    interface    = "eth0"
+    connection   = "None"
+    mark         = 71
+    new_src_ip   = "23.0.0.0"
+    new_src_port = 55
+  }
+  dnat_policy {
+    src_ip       = "30.0.0.0/24"
+    src_port     = 60
+    dst_ip       = "31.0.0.0/24"
+    dst_port     = 61
+    protocol     = "tcp"
+    interface    = "eth0"
+    connection   = "None"
+    mark         = 80
+    new_src_ip   = "32.0.0.0"
+    new_src_port = 62
+  }
+}
+```
+```hcl
 # Create an Aviatrix GCP Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_gcp" {
   cloud_type   = 4
@@ -75,10 +113,10 @@ The following arguments are supported:
 * `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), ARM(8), and OCI(16) are supported.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `gw_name` - (Required) Name of the gateway which is going to be created.
-* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Required if for aws. Example: AWS: "vpc-abcd1234", GCP: "vpc-gcp-test", ARM: "vnet1:hello", OCI: "vpc-oracle-test1".
+* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Example: AWS: "vpc-abcd1234", GCP: "vpc-gcp-test", ARM: "vnet1:hello", OCI: "vpc-oracle-test1".
 * `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", GCP: "us-west2-a", ARM: "East US 2", Oracle: "us-ashburn-1".
 * `gw_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", ARM: "Standard_B1s", Oracle: "VM.Standard2.2", GCP: "n1-standard-1".
-* `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20".
+* `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode).**
 
 ### HA
 * `single_az_ha` (Optional) Set to true if this feature is desired. Valid values: true, false.
@@ -108,7 +146,7 @@ The following arguments are supported:
   * `new_src_port` - (Optional) The translated destination port when all specified qualifier conditions meet. One of the rule field must be specified for this rule to take effect.
   * `exclude_rtb` - (Optional) This field specifies which VPC private route table will not be programmed with the default route entry.
 
-  
+
 * `dnat_policy` - (Optional) Policy rule applied for enabling Destination NAT (DNAT), which allows you to change the destination to a virtual address range. Currently only supports AWS(1) and ARM(8).
   * `src_ip` - (Optional) A source IP address range where the policy rule applies.
   * `src_port` - (Optional) A source port that the policy rule applies.
@@ -144,7 +182,6 @@ In addition to all arguments above, the following attributes are exported:
 * `ha_eip` - Public IP address assigned to the HA gateway.
 * `cloud_instance_id` - Cloud Instance ID.
 
--> **NOTE:** `subnet` - If `insane_mode` is enabled, you must specify a valid /26 CIDR segment of the VPC specified. This will then create a new subnet to be used for the corresponding gateway. You cannot specify an existing /26 subnet.
 
 ## Import
 
@@ -153,3 +190,8 @@ Instance spoke_gateway can be imported using the gw_name, e.g.
 ```
 $ terraform import aviatrix_spoke_gateway.test gw_name
 ```
+
+
+## Notes
+### insane_mode
+If `insane_mode` is enabled, you must specify a valid /26 CIDR segment of the VPC specified for the `subnet`. This will then create a new subnet to be used for the corresponding gateway. You cannot specify an existing /26 subnet.
