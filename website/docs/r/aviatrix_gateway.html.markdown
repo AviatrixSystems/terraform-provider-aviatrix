@@ -2,7 +2,7 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_gateway"
 description: |-
-  Creates and manages Aviatrix Gateways
+  Creates and manages Aviatrix gateways
 ---
 
 # aviatrix_gateway
@@ -161,12 +161,12 @@ The following arguments are supported:
 * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode).**
 
 ### HA
+* `single_az_ha` (Optional) When value is true, Controller monitors the health of the gateway and restarts the gateway if it becomes unreachable. Valid values: true, false.
 * `peering_ha_subnet` - (Optional) Public subnet CIDR to create Peering HA Gateway in. Required for AWS/ARM if enabling Peering HA. Example: AWS: "10.0.0.0/16".
 * `peering_ha_zone` - (Optional) Zone information for creating Peering HA Gateway, only zone is accepted. Required for GCP if enabling Peering HA. Example: GCP: "us-west1-c".
 * `peering_ha_insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Peering HA Gateway. Required for AWS if insane_mode is set and peering_ha_subnet is set. Example: AWS: "us-west-1a".
 * `peering_ha_eip` - (Optional) Public IP address that you want assigned to the HA peering instance. Only available for AWS.
 * `peering_ha_gw_size` - (Optional) Size of the Peering HA Gateway to be created. **NOTE: Please see notes [here](#peering_ha_gw_size) in regards to any deltas found in your state with the addition of this argument in R1.8.**
-* `single_az_ha` (Optional) When value is true, Controller monitors the health of the gateway and restarts the gateway if it becomes unreachable. Valid values: true, false.
 
 ### Insane Mode
 * `insane_mode` - (Optional) Enable Insane Mode for Gateway. Insane Mode Gateway size must be at least c5 (AWS) or Standard_D3_v2 (ARM). If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet. Only supported for AWS, AWSGov or ARM. Valid values: true, false.
