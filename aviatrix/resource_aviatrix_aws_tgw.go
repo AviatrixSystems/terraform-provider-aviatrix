@@ -851,22 +851,22 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	for i := range domainConnPolicy {
-		if len(domainConnPolicy[i]) == 2 {
-			err := client.CreateDomainConnection(awsTgw, domainConnPolicy[i][0], domainConnPolicy[i][1])
-			if err != nil {
-				resourceAviatrixAWSTgwRead(d, meta)
-				return fmt.Errorf("failed to create security domain connection: %s", err)
-			}
-		}
-	}
-
 	for i := range domainConnRemove {
 		if len(domainConnRemove[i]) == 2 {
 			err := client.DeleteDomainConnection(awsTgw, domainConnRemove[i][0], domainConnRemove[i][1])
 			if err != nil {
 				resourceAviatrixAWSTgwRead(d, meta)
 				return fmt.Errorf("failed to delete domain connection: %s", err)
+			}
+		}
+	}
+
+	for i := range domainConnPolicy {
+		if len(domainConnPolicy[i]) == 2 {
+			err := client.CreateDomainConnection(awsTgw, domainConnPolicy[i][0], domainConnPolicy[i][1])
+			if err != nil {
+				resourceAviatrixAWSTgwRead(d, meta)
+				return fmt.Errorf("failed to create security domain connection: %s", err)
 			}
 		}
 	}
