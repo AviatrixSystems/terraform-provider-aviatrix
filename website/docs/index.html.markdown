@@ -2,14 +2,12 @@
 layout: "aviatrix"
 page_title: "Provider: Aviatrix"
 description: |-
-  The Aviatrix provider is used to interact with Aviatrix organization resources
+  The Aviatrix provider is used to interact with Aviatrix resources
 ---
 
 # Aviatrix Provider
 
-The Aviatrix provider is used to interact with Aviatrix organization resources.
-
-This provider allows you to manage your Aviatrix organization's gateways, tunnels, and other resources easily. It needs to be configured with the proper credentials before it can be used.
+The Aviatrix provider is used to interact with the many resources supported by Aviatrix, which can be built upon various cloud infrastructure providers such as AWS, Azure, Google Cloud, and Oracle Cloud. It needs to be configured with the proper credentials before it can be used.
 
 Use the navigation to the left to read about the available resources.
 
