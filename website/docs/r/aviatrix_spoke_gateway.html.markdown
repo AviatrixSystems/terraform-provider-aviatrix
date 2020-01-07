@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_spoke_gateway"
 description: |-
-  Creates and Manages Aviatrix spoke gateways
+  Creates and manages Aviatrix spoke gateways
 ---
 
 # aviatrix_spoke_gateway
 
-The aviatrix_spoke_gateway resource allows to create and manage Aviatrix spoke gateways.
+The aviatrix_spoke_gateway resource allows the creation and management of Aviatrix spoke gateways.
 
 ## Example Usage
 
@@ -26,6 +26,44 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
     "k1:v1",
     "k2:v2",
   ]
+}
+```
+```hcl
+# Create an Aviatrix AWS Spoke Gateway with SNAT and DNAT enabled
+resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
+  cloud_type   = 1
+  account_name = "my-aws"
+  gw_name      = "spoke-gw-aws"
+  vpc_id       = "vpc-abcd123"
+  vpc_reg      = "us-west-1"
+  gw_size      = "t2.micro"
+  subnet       = "10.11.0.0/24"
+  enable_snat  = true
+  snat_mode    = "custom"
+  snat_policy {
+    src_ip       = "21.0.0.0/24"
+    src_port     = 53
+    dst_ip       = "22.0.0.0/24"
+    dst_port     = 54
+    protocol     = "tcp"
+    interface    = "eth0"
+    connection   = "None"
+    mark         = 71
+    new_src_ip   = "23.0.0.0"
+    new_src_port = 55
+  }
+  dnat_policy {
+    src_ip       = "30.0.0.0/24"
+    src_port     = 60
+    dst_ip       = "31.0.0.0/24"
+    dst_port     = 61
+    protocol     = "tcp"
+    interface    = "eth0"
+    connection   = "None"
+    mark         = 80
+    new_src_ip   = "32.0.0.0"
+    new_src_port = 62
+  }
 }
 ```
 ```hcl
@@ -71,21 +109,28 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_oracle" {
 
 The following arguments are supported:
 
+### Required
 * `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), ARM(8), and OCI(16) are supported.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `gw_name` - (Required) Name of the gateway which is going to be created.
-* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Required if for aws. Example: AWS: "vpc-abcd1234", GCP: "vpc-gcp-test", ARM: "vnet1:hello", OCI: "vpc-oracle-test1".
+* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Example: AWS: "vpc-abcd1234", GCP: "vpc-gcp-test", ARM: "vnet1:hello", OCI: "vpc-oracle-test1".
 * `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", GCP: "us-west2-a", ARM: "East US 2", Oracle: "us-ashburn-1".
 * `gw_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", ARM: "Standard_B1s", Oracle: "VM.Standard2.2", GCP: "n1-standard-1".
-* `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20".
-* `insane_mode_az` - (Required) AZ of subnet being created for Insane Mode Spoke Gateway. Required for AWS if insane_mode is enabled. Example: AWS: "us-west-1a".
-* `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in controller 4.7 or later release. Valid values: true, false. Default: true. Option not available for GCP, ARM and Oracle gateways, they will automatically allocate new eip's.
-* `eip` - (Optional) Required when allocate_new_eip is false. It uses specified EIP for this gateway. Available in controller 4.7 or later release.
+* `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode).**
+
+### HA
+* `single_az_ha` (Optional) Set to true if this feature is desired. Valid values: true, false.
 * `ha_subnet` - (Optional) HA Subnet. Required for enabling HA for AWS/ARM gateway. Setting to empty/unset will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24"
 * `ha_zone` - (Optional) HA Zone. Required for enabling HA for GCP gateway. Setting to empty/unset will disable HA. Setting to a valid zone will create an HA gateway in the zone. Example: "us-west1-c".
 * `ha_insane_mode_az` (Optional) AZ of subnet being created for Insane Mode Spoke HA Gateway. Required for AWS if insane_mode is enabled and ha_subnet is set. Example: AWS: "us-west-1a".
-* `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set). Example: "t2.micro".
 * `ha_eip` - (Optional) Public IP address that you want to assign to the HA peering instance. If no value is given, a new eip will automatically allocated. Only available for AWS.
+* `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set). Example: "t2.micro".
+
+### Insane Mode
+* `insane_mode` - (Optional) Enable Insane Mode for Spoke Gateway. Insane Mode gateway size has to be at least c5 (AWS) or Standard_D3_v2 (ARM). If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet. Only supported for AWS and ARM. Valid values: true, false.
+* `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Spoke Gateway. Required for AWS if insane_mode is enabled. Example: AWS: "us-west-1a".
+
+### SNAT/DNAT
 * `enable_snat` - (Optional) Specify whether enabling Source NAT feature on the gateway or not. Please disable AWS NAT instance before enabling this feature. Currently only supports AWS(1) and ARM(8). Valid values: true, false.
 * `snat_mode` - (Optional) Valid values: "primary", "secondary" and "custom". Default value: "primary".
 * `snat_policy` - (Optional) Policy rule applied for "snat_mode" of "custom".
@@ -100,6 +145,8 @@ The following arguments are supported:
   * `new_src_ip` - (Optional) The changed source IP address when all specified qualifier conditions meet. One of the rule fields must be specified for this rule to take effect.
   * `new_src_port` - (Optional) The translated destination port when all specified qualifier conditions meet. One of the rule field must be specified for this rule to take effect.
   * `exclude_rtb` - (Optional) This field specifies which VPC private route table will not be programmed with the default route entry.
+
+
 * `dnat_policy` - (Optional) Policy rule applied for enabling Destination NAT (DNAT), which allows you to change the destination to a virtual address range. Currently only supports AWS(1) and ARM(8).
   * `src_ip` - (Optional) A source IP address range where the policy rule applies.
   * `src_port` - (Optional) A source port that the policy rule applies.
@@ -112,12 +159,18 @@ The following arguments are supported:
   * `new_src_ip` - (Optional) The changed source IP address when all specified qualifier conditions meet. One of the rule fields must be specified for this rule to take effect.
   * `new_src_port` - (Optional) The translated destination port when all specified qualifier conditions meet. One of the rule field must be specified for this rule to take effect.
   * `exclude_rtb` - (Optional) This field specifies which VPC private route table will not be programmed with the default route entry.
-* `single_az_ha` (Optional) Set to true if this feature is desired. Valid values: true, false.
+
+### Misc.
 * `transit_gw` - (Optional) Specify the transit Gateway.
+* `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in controller 4.7 or later release. Valid values: true, false. Default: true. Option not available for GCP, ARM and Oracle gateways, they will automatically allocate new eip's.
+* `eip` - (Optional) Required when allocate_new_eip is false. It uses specified EIP for this gateway. Available in controller 4.7 or later release.
 * `tag_list` - (Optional) Instance tag of cloud provider. Only AWS, cloud_type is "1", is supported. Example: ["key1:value1", "key2:value2"].
-* `insane_mode` - (Optional) Enable Insane Mode for Spoke Gateway. Insane Mode gateway size has to be at least c5 (AWS) or Standard_D3_v2 (ARM). If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet. Only supported for AWS and ARM. Valid values: true, false.
+
+
 * `enable_active_mesh` - (Optional) Switch to Enable/Disable Active Mesh Mode for Spoke Gateway. Valid values: true, false. Default value: false.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS. Valid values: true, false. Default value: false.
+
+
 * `enable_encrypt_volume` - (Optional) Enable Encrypt EBS Volume feature for Gateway. Only supports AWS. Valid values: true, false. Default value: false.
 * `customer_managed_keys` - (Optional and Sensitive) Customer managed key ID.
 
@@ -129,7 +182,6 @@ In addition to all arguments above, the following attributes are exported:
 * `ha_eip` - Public IP address assigned to the HA gateway.
 * `cloud_instance_id` - Cloud Instance ID.
 
--> **NOTE:** `subnet` - If `insane_mode` is enabled, you must specify a valid /26 CIDR segment of the VPC specified. This will then create a new subnet to be used for the corresponding gateway. You cannot specify an existing /26 subnet.
 
 ## Import
 
@@ -138,3 +190,8 @@ Instance spoke_gateway can be imported using the gw_name, e.g.
 ```
 $ terraform import aviatrix_spoke_gateway.test gw_name
 ```
+
+
+## Notes
+### insane_mode
+If `insane_mode` is enabled, you must specify a valid /26 CIDR segment of the VPC specified for the `subnet`. This will then create a new subnet to be used for the corresponding gateway. You cannot specify an existing /26 subnet.
