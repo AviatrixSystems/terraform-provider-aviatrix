@@ -2,7 +2,7 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_geo_vpn"
 description: |-
-  Enables and Manages the Aviatrix Geo VPN
+  Enables and manages the Aviatrix Geo VPN
 ---
 
 # aviatrix_geo_vpn
@@ -37,3 +37,8 @@ The following arguments are supported:
 
 ## Import
 
+Instance geo_vpn can be imported using the service name and domain name, e.g.
+
+```
+$ terraform import aviatrix_geo_vpn.test service_name~domain_name
+```
