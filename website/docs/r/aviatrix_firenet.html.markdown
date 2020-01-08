@@ -9,6 +9,8 @@ description: |-
 
 The aviatrix_firenet resource allows the creation and management of Aviatrix FireNets.
 
+~> **NOTE:** This resource is used in conjunction with multiple other resources that may include, and are not limited to: "firewall_instance", "aws_tgw", and "transit_gateway" resources, under the Aviatrix FireNet solution. Explicit dependencies may be set using `depends_on`. For more information on proper FireNet configuration, please see the workflow [here](https://docs.aviatrix.com/HowTos/firewall_network_workflow.html).
+
 ## Example Usage
 
 ```hcl
