@@ -27,7 +27,7 @@ func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 	skipGwOCI := os.Getenv("SKIP_TRANSIT_GATEWAY_OCI")
 
 	if skipGwAWS == "yes" && skipGwARM == "yes" && skipGwGCP == "yes" && skipGwOCI == "yes" {
-		t.Skip("Skipping Transit gateway test in aws as SKIP_TRANSIT_GATEWAY_AWS, SKIP_TRANSIT_GATEWAY_ARM, " +
+		t.Skip("Skipping Transit gateway test as SKIP_TRANSIT_GATEWAY_AWS, SKIP_TRANSIT_GATEWAY_ARM, " +
 			"SKIP_TRANSIT_GATEWAY_GCP and SKIP_TRANSIT_GATEWAY_OCI are all set")
 	}
 
