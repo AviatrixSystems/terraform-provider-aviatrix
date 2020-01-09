@@ -73,6 +73,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_caller_identity":            dataSourceAviatrixCallerIdentity(),
 			"aviatrix_firenet_vendor_integration": dataSourceAviatrixFireNetVendorIntegration(),
 			"aviatrix_gateway":                    dataSourceAviatrixGateway(),
+			"aviatrix_spoke_gateway":              dataSourceAviatrixSpokeGateway(),
 			"aviatrix_transit_gateway":            dataSourceAviatrixTransitGateway(),
 		},
 		ConfigureFunc: aviatrixConfigure,
