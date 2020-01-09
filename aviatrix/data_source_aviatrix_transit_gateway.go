@@ -46,7 +46,7 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 			"subnet": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "VPC Network address range of the Transit Gateway created.",
+				Description: "Range of the subnet where the transit gateway is launched.",
 			},
 			"public_ip": {
 				Type:        schema.TypeString,

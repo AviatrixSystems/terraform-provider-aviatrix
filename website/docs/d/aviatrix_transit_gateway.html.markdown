@@ -36,6 +36,6 @@ In addition to all arguments above, the following attributes are exported:
 * `vpc_id` - VPC ID.
 * `vpc_reg` - VPC Region.
 * `gw_size` - Instance type.
-* `subnet` - VPC Network address range.
+* `subnet` - Range of the subnet where the transit gateway is launched.
 * `public_ip` - Public IP address of the Gateway created.
 
