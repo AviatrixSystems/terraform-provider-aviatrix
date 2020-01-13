@@ -92,13 +92,13 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 									"subnets": {
 										Type:        schema.TypeString,
 										Optional:    true,
-										Default:     "",
+										Computed:    true,
 										Description: "Advanced option. VPC subnets separated by ',' to attach to the VPC. If left blank, Aviatrix Controller automatically selects a subnet representing each AZ for the VPC attachment.",
 									},
 									"route_tables": {
 										Type:        schema.TypeString,
 										Optional:    true,
-										Default:     "",
+										Computed:    true,
 										Description: "Advanced option. Route tables separated by ',' to participate in TGW Orchestrator, i.e., learned routes will be propagated to these route tables.",
 									},
 									"customized_route_advertisement": {
@@ -549,6 +549,8 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 										len(goaviatrix.Difference(subnetsFromReadList, subnetsFromConfigList)) != 0 {
 										attachedVPC["subnets"] = attachedVPCFromRefresh["subnets"]
 									}
+								} else {
+									attachedVPC["subnets"] = attachedVPCFromRefresh["subnets"]
 								}
 								if attachedVPC["route_tables"].(string) != "" {
 									routeTablesFromConfigList := strings.Split(attachedVPC["route_tables"].(string), ",")
@@ -566,6 +568,8 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 										attachedVPCFromRefresh["route_tables"] != "All" {
 										attachedVPC["route_tables"] = attachedVPCFromRefresh["route_tables"]
 									}
+								} else {
+									attachedVPC["route_tables"] = attachedVPCFromRefresh["route_tables"]
 								}
 								attachedVPC["vpc_region"] = attachedVPCFromRefresh["vpc_region"]
 								attachedVPC["customized_routes"] = attachedVPCFromRefresh["customized_routes"]
