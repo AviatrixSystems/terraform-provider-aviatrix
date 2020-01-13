@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -86,13 +87,31 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 										Type:        schema.TypeString,
 										Optional:    true,
 										Default:     "",
-										Description: "Customized Spoke VPC Routes. It allows the admin to enter non-RFC1918 routes in the VPC route table targeting the TGW.",
+										Description: "Advanced option. Customized Spoke VPC Routes. It allows the admin to enter non-RFC1918 routes in the VPC route table targeting the TGW.",
+									},
+									"subnets": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Computed:    true,
+										Description: "Advanced option. VPC subnets separated by ',' to attach to the VPC. If left blank, Aviatrix Controller automatically selects a subnet representing each AZ for the VPC attachment.",
+									},
+									"route_tables": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Computed:    true,
+										Description: "Advanced option. Route tables separated by ',' to participate in TGW Orchestrator, i.e., learned routes will be propagated to these route tables.",
+									},
+									"customized_route_advertisement": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Default:     "",
+										Description: "Advanced option. Customized route(s) to advertise.",
 									},
 									"disable_local_route_propagation": {
 										Type:        schema.TypeBool,
 										Optional:    true,
 										Default:     false,
-										Description: "Switch to allow admin not to propagate the VPC CIDR to the security domain/TGW route table that it is being attached to.",
+										Description: "Advanced option. Switch to allow admin not to propagate the VPC CIDR to the security domain/TGW route table that it is being attached to.",
 									},
 								},
 							},
@@ -220,7 +239,10 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 				Region:                       attachedVPC["vpc_region"].(string),
 				AccountName:                  attachedVPC["vpc_account_name"].(string),
 				VpcID:                        attachedVPC["vpc_id"].(string),
+				Subnets:                      attachedVPC["subnets"].(string),
+				RouteTables:                  attachedVPC["route_tables"].(string),
 				CustomizedRoutes:             attachedVPC["customized_routes"].(string),
+				CustomizedRouteAdvertisement: attachedVPC["customized_route_advertisement"].(string),
 				DisableLocalRoutePropagation: attachedVPC["disable_local_route_propagation"].(bool),
 			}
 
@@ -250,6 +272,24 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 
 			if attachedVPC["customized_routes"].(string) != "" {
 				tempAttachedVPC = append(tempAttachedVPC, attachedVPC["customized_routes"].(string))
+			} else {
+				tempAttachedVPC = append(tempAttachedVPC, "")
+			}
+
+			if attachedVPC["customized_route_advertisement"].(string) != "" {
+				tempAttachedVPC = append(tempAttachedVPC, attachedVPC["customized_route_advertisement"].(string))
+			} else {
+				tempAttachedVPC = append(tempAttachedVPC, "")
+			}
+
+			if attachedVPC["subnets"].(string) != "" {
+				tempAttachedVPC = append(tempAttachedVPC, attachedVPC["subnets"].(string))
+			} else {
+				tempAttachedVPC = append(tempAttachedVPC, "")
+			}
+
+			if attachedVPC["route_tables"].(string) != "" {
+				tempAttachedVPC = append(tempAttachedVPC, attachedVPC["route_tables"].(string))
 			} else {
 				tempAttachedVPC = append(tempAttachedVPC, "")
 			}
@@ -340,12 +380,15 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	for i := range attachedVPCAll {
-		if len(attachedVPCAll[i]) == 6 {
+		if len(attachedVPCAll[i]) == 9 {
 			vpcSolo := goaviatrix.VPCSolo{
-				Region:           attachedVPCAll[i][3],
-				AccountName:      attachedVPCAll[i][2],
-				VpcID:            attachedVPCAll[i][1],
-				CustomizedRoutes: attachedVPCAll[i][5],
+				Region:                       attachedVPCAll[i][3],
+				AccountName:                  attachedVPCAll[i][2],
+				VpcID:                        attachedVPCAll[i][1],
+				CustomizedRoutes:             attachedVPCAll[i][5],
+				CustomizedRouteAdvertisement: attachedVPCAll[i][6],
+				Subnets:                      attachedVPCAll[i][7],
+				RouteTables:                  attachedVPCAll[i][8],
 			}
 			if attachedVPCAll[i][4] == "yes" {
 				vpcSolo.DisableLocalRoutePropagation = true
@@ -437,6 +480,9 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 				vpcSolo["vpc_account_name"] = attachedVPC.AccountName
 				vpcSolo["vpc_id"] = attachedVPC.VpcID
 				vpcSolo["customized_routes"] = attachedVPC.CustomizedRoutes
+				vpcSolo["customized_route_advertisement"] = attachedVPC.CustomizedRouteAdvertisement
+				vpcSolo["subnets"] = attachedVPC.Subnets
+				vpcSolo["route_tables"] = attachedVPC.RouteTables
 				vpcSolo["disable_local_route_propagation"] = attachedVPC.DisableLocalRoutePropagation
 				aVPCs = append(aVPCs, vpcSolo)
 			}
@@ -495,8 +541,39 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 							attachedVPCFromRefresh := attachedVPCsFromRefresh.(map[string]interface{})
 							if attachedVPCFromRefresh["vpc_id"] == attachedVPC["vpc_id"] {
 								attachedVPC["vpc_account_name"] = attachedVPCFromRefresh["vpc_account_name"]
+								if attachedVPC["subnets"].(string) != "" {
+									subnetsFromConfigList := strings.Split(attachedVPC["subnets"].(string), ",")
+									var subnetsFromReadList []string
+									subnetsFromReadList = strings.Split(attachedVPCFromRefresh["subnets"].(string), ",")
+									if len(goaviatrix.Difference(subnetsFromConfigList, subnetsFromReadList)) != 0 ||
+										len(goaviatrix.Difference(subnetsFromReadList, subnetsFromConfigList)) != 0 {
+										attachedVPC["subnets"] = attachedVPCFromRefresh["subnets"]
+									}
+								} else {
+									attachedVPC["subnets"] = attachedVPCFromRefresh["subnets"]
+								}
+								if attachedVPC["route_tables"].(string) != "" {
+									routeTablesFromConfigList := strings.Split(attachedVPC["route_tables"].(string), ",")
+									for i := 0; i < len(routeTablesFromConfigList); i++ {
+										routeTablesFromConfigList[i] = strings.TrimSpace(routeTablesFromConfigList[i])
+									}
+									var routeTablesFromReadList []string
+									routeTablesFromReadList = strings.Split(attachedVPCFromRefresh["route_tables"].(string), ",")
+									for i := 0; i < len(routeTablesFromReadList); i++ {
+										routeTablesFromReadList[i] = strings.TrimSpace(routeTablesFromReadList[i])
+									}
+									if (len(goaviatrix.Difference(routeTablesFromConfigList, routeTablesFromReadList)) != 0 ||
+										len(goaviatrix.Difference(routeTablesFromReadList, routeTablesFromConfigList)) != 0) &&
+										attachedVPCFromRefresh["route_tables"] != "ALL" &&
+										attachedVPCFromRefresh["route_tables"] != "All" {
+										attachedVPC["route_tables"] = attachedVPCFromRefresh["route_tables"]
+									}
+								} else {
+									attachedVPC["route_tables"] = attachedVPCFromRefresh["route_tables"]
+								}
 								attachedVPC["vpc_region"] = attachedVPCFromRefresh["vpc_region"]
 								attachedVPC["customized_routes"] = attachedVPCFromRefresh["customized_routes"]
+								attachedVPC["customized_route_advertisement"] = attachedVPCFromRefresh["customized_route_advertisement"]
 								attachedVPC["disable_local_route_propagation"] = attachedVPCFromRefresh["disable_local_route_propagation"]
 							}
 						}
@@ -662,7 +739,10 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 					Region:                       attachedVPC["vpc_region"].(string),
 					AccountName:                  attachedVPC["vpc_account_name"].(string),
 					VpcID:                        attachedVPC["vpc_id"].(string),
+					Subnets:                      attachedVPC["subnets"].(string),
+					RouteTables:                  attachedVPC["route_tables"].(string),
 					CustomizedRoutes:             attachedVPC["customized_routes"].(string),
+					CustomizedRouteAdvertisement: attachedVPC["customized_route_advertisement"].(string),
 					DisableLocalRoutePropagation: attachedVPC["disable_local_route_propagation"].(bool),
 				}
 				securityDomainRule.AttachedVPCs = append(securityDomainRule.AttachedVPCs, vpcSolo)
@@ -677,6 +757,24 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 
 				if attachedVPC["customized_routes"].(string) != "" {
 					tempAttachedVPC = append(tempAttachedVPC, attachedVPC["customized_routes"].(string))
+				} else {
+					tempAttachedVPC = append(tempAttachedVPC, "")
+				}
+
+				if attachedVPC["customized_route_advertisement"].(string) != "" {
+					tempAttachedVPC = append(tempAttachedVPC, attachedVPC["customized_route_advertisement"].(string))
+				} else {
+					tempAttachedVPC = append(tempAttachedVPC, "")
+				}
+
+				if attachedVPC["subnets"].(string) != "" {
+					tempAttachedVPC = append(tempAttachedVPC, attachedVPC["subnets"].(string))
+				} else {
+					tempAttachedVPC = append(tempAttachedVPC, "")
+				}
+
+				if attachedVPC["route_tables"].(string) != "" {
+					tempAttachedVPC = append(tempAttachedVPC, attachedVPC["route_tables"].(string))
 				} else {
 					tempAttachedVPC = append(tempAttachedVPC, "")
 				}
@@ -752,7 +850,10 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 					Region:                       attachedVPC["vpc_region"].(string),
 					AccountName:                  attachedVPC["vpc_account_name"].(string),
 					VpcID:                        attachedVPC["vpc_id"].(string),
+					Subnets:                      attachedVPC["subnets"].(string),
+					RouteTables:                  attachedVPC["route_tables"].(string),
 					CustomizedRoutes:             attachedVPC["customized_routes"].(string),
+					CustomizedRouteAdvertisement: attachedVPC["customized_route_advertisement"].(string),
 					DisableLocalRoutePropagation: attachedVPC["disable_local_route_propagation"].(bool),
 				}
 
@@ -781,6 +882,24 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 
 				if attachedVPC["customized_routes"].(string) != "" {
 					tempAttachedVPC = append(tempAttachedVPC, attachedVPC["customized_routes"].(string))
+				} else {
+					tempAttachedVPC = append(tempAttachedVPC, "")
+				}
+
+				if attachedVPC["customized_route_advertisement"].(string) != "" {
+					tempAttachedVPC = append(tempAttachedVPC, attachedVPC["customized_route_advertisement"].(string))
+				} else {
+					tempAttachedVPC = append(tempAttachedVPC, "")
+				}
+
+				if attachedVPC["subnets"].(string) != "" {
+					tempAttachedVPC = append(tempAttachedVPC, attachedVPC["subnets"].(string))
+				} else {
+					tempAttachedVPC = append(tempAttachedVPC, "")
+				}
+
+				if attachedVPC["route_tables"].(string) != "" {
+					tempAttachedVPC = append(tempAttachedVPC, attachedVPC["route_tables"].(string))
 				} else {
 					tempAttachedVPC = append(tempAttachedVPC, "")
 				}
@@ -904,12 +1023,15 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if manageVpcAttachment {
 		for i := range toAttachVPCs {
-			if len(toAttachVPCs[i]) == 6 {
+			if len(toAttachVPCs[i]) == 9 {
 				vpcSolo := goaviatrix.VPCSolo{
-					Region:           toAttachVPCs[i][3],
-					AccountName:      toAttachVPCs[i][2],
-					VpcID:            toAttachVPCs[i][1],
-					CustomizedRoutes: toAttachVPCs[i][5],
+					Region:                       toAttachVPCs[i][3],
+					AccountName:                  toAttachVPCs[i][2],
+					VpcID:                        toAttachVPCs[i][1],
+					CustomizedRoutes:             toAttachVPCs[i][5],
+					CustomizedRouteAdvertisement: toAttachVPCs[i][6],
+					Subnets:                      toAttachVPCs[i][7],
+					RouteTables:                  toAttachVPCs[i][8],
 				}
 				if toAttachVPCs[i][4] == "yes" {
 					vpcSolo.DisableLocalRoutePropagation = true

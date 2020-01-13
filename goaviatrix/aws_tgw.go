@@ -125,7 +125,10 @@ type AttachmentRouteTableDetails struct {
 	VpcRegion                    string   `json:"vpc_region"`
 	VpcAccount                   string   `json:"vpc_account"`
 	RouteDomainName              string   `json:"route_domain_name"`
+	Subnets                      []string `json:"attach_subnet_list"`
+	RouteTables                  string   `json:"route_table_list"`
 	CustomizedRoutes             []string `json:"customized_routes"`
+	CustomizedRouteAdvertisement []string `json:"customized_routes_advertise"`
 	DisableLocalRoutePropagation bool     `json:"disable_local_propagation"`
 }
 
@@ -257,6 +260,7 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 					AccountName:                  attachedVPCs[i].AccountName,
 					VpcID:                        attachedVPCs[i].VPCId,
 					DisableLocalRoutePropagation: data2.Results.DisableLocalRoutePropagation,
+					RouteTables:                  data2.Results.RouteTables,
 				}
 				if data2.Results.CustomizedRoutes != nil && len(data2.Results.CustomizedRoutes) != 0 {
 					customizedRoutes := ""
@@ -265,6 +269,22 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 						customizedRoutes += data2.Results.CustomizedRoutes[i] + ","
 					}
 					vpcSolo.CustomizedRoutes = customizedRoutes + data2.Results.CustomizedRoutes[length-1]
+				}
+				if data2.Results.CustomizedRouteAdvertisement != nil && len(data2.Results.CustomizedRouteAdvertisement) != 0 {
+					customizedRouteAdvertisement := ""
+					length := len(data2.Results.CustomizedRouteAdvertisement)
+					for i := 0; i < length-1; i++ {
+						customizedRouteAdvertisement += data2.Results.CustomizedRouteAdvertisement[i] + ","
+					}
+					vpcSolo.CustomizedRouteAdvertisement = customizedRouteAdvertisement + data2.Results.CustomizedRouteAdvertisement[length-1]
+				}
+				if data2.Results.Subnets != nil && len(data2.Results.Subnets) != 0 {
+					subnets := ""
+					length := len(data2.Results.Subnets)
+					for i := 0; i < length-1; i++ {
+						subnets += strings.Split(data2.Results.Subnets[i], "~~")[0] + ","
+					}
+					vpcSolo.Subnets = subnets + strings.Split(data2.Results.Subnets[length-1], "~~")[0]
 				}
 				sdr.AttachedVPCs = append(sdr.AttachedVPCs, vpcSolo)
 			} else {
@@ -550,6 +570,15 @@ func (c *Client) AttachVpcToAWSTgw(awsTgw *AWSTgw, vpcSolo VPCSolo, SecurityDoma
 	}
 	if vpcSolo.CustomizedRoutes != "" {
 		attachVpcFromTgw.Add("customized_routes", vpcSolo.CustomizedRoutes)
+	}
+	if vpcSolo.CustomizedRouteAdvertisement != "" {
+		attachVpcFromTgw.Add("customized_route_advertisement", vpcSolo.CustomizedRouteAdvertisement)
+	}
+	if vpcSolo.Subnets != "" {
+		attachVpcFromTgw.Add("subnet_list", vpcSolo.Subnets)
+	}
+	if vpcSolo.CustomizedRoutes != "" {
+		attachVpcFromTgw.Add("route_table_list", vpcSolo.RouteTables)
 	}
 	Url.RawQuery = attachVpcFromTgw.Encode()
 	resp, err := c.Get(Url.String(), nil)
