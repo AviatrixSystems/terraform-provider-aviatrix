@@ -18,7 +18,10 @@ type AwsTgwVpcAttachment struct {
 	VpcAccountName               string `form:"vpc_account_name"`
 	VpcID                        string `form:"vpc_id"`
 	CustomizedRoutes             string `form:"customized_routes, omitempty" json:"customized_routes, omitempty"`
-	DisableLocalRoutePropagation bool   `form:"disable_local_route_propagation, omitempty" json:"disable_local_route_propagation, omitempty"`
+	Subnets                      string
+	RouteTables                  string
+	CustomizedRouteAdvertisement string
+	DisableLocalRoutePropagation bool `form:"disable_local_route_propagation, omitempty" json:"disable_local_route_propagation, omitempty"`
 }
 
 type DomainListResp struct {
@@ -45,6 +48,15 @@ func (c *Client) CreateAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachm
 	}
 	if awsTgwVpcAttachment.CustomizedRoutes != "" {
 		attachVpcFromTgw.Add("customized_routes", awsTgwVpcAttachment.CustomizedRoutes)
+	}
+	if awsTgwVpcAttachment.CustomizedRouteAdvertisement != "" {
+		attachVpcFromTgw.Add("customized_route_advertisement", awsTgwVpcAttachment.CustomizedRouteAdvertisement)
+	}
+	if awsTgwVpcAttachment.Subnets != "" {
+		attachVpcFromTgw.Add("subnet_list", awsTgwVpcAttachment.Subnets)
+	}
+	if awsTgwVpcAttachment.RouteTables != "" {
+		attachVpcFromTgw.Add("route_table_list", awsTgwVpcAttachment.RouteTables)
 	}
 	Url.RawQuery = attachVpcFromTgw.Encode()
 	resp, err := c.Get(Url.String(), nil)
@@ -133,9 +145,29 @@ func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment
 			}
 			aTVA.CustomizedRoutes = customizedRoutes + ARTDetail.CustomizedRoutes[length-1]
 		}
+		if ARTDetail.Subnets != nil && len(ARTDetail.Subnets) != 0 {
+			subnets := ""
+			length := len(ARTDetail.Subnets)
+			for i := 0; i < length-1; i++ {
+				subnets += strings.Split(ARTDetail.Subnets[i], "~~")[0] + ","
+			}
+			aTVA.Subnets = subnets + strings.Split(ARTDetail.Subnets[length-1], "~~")[0]
+		}
+		aTVA.RouteTables = ARTDetail.RouteTables
+		if ARTDetail.CustomizedRouteAdvertisement != nil && len(ARTDetail.CustomizedRouteAdvertisement) != 0 {
+			customizedRouteAdvertisement := ""
+			length := len(ARTDetail.CustomizedRouteAdvertisement)
+			for i := 0; i < length-1; i++ {
+				customizedRouteAdvertisement += ARTDetail.CustomizedRouteAdvertisement[i] + ","
+			}
+			aTVA.CustomizedRouteAdvertisement = customizedRouteAdvertisement + ARTDetail.CustomizedRouteAdvertisement[length-1]
+		}
 	} else {
 		aTVA.DisableLocalRoutePropagation = false
 		aTVA.CustomizedRoutes = ""
+		aTVA.Subnets = ""
+		aTVA.RouteTables = ""
+		aTVA.CustomizedRouteAdvertisement = ""
 	}
 
 	return aTVA, nil
