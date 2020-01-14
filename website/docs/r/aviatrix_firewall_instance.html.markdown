@@ -35,6 +35,7 @@ The following arguments are supported:
 * `firewall_size` - (Required) Instance size of the firewall. Example: "m5.xlarge".  
 * `management_subnet` - (Required) Management Interface Subnet. Select the subnet whose name contains “gateway and firewall management”.
 * `egress_subnet` - (Required) Egress Interface Subnet. Select the subnet whose name contains “FW-ingress-egress”.
+* `firewall_image_version` - (Optional) Version of firewall image.
 * `key_name`- (Optional) The .pem file name for SSH access to the firewall instance.
 * `iam_role` - (Optional) In advanced mode, create an IAM Role on the AWS account that launched the FireNet gateway. Create a policy to attach to the role. The policy is to allow access to “Bootstrap Bucket”.
 * `bootstrap_bucket_name`- (Optional) In advanced mode, specify a bootstrap bucket name where the initial configuration and policy file is stored.
