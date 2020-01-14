@@ -183,7 +183,7 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	d.Set("egress_interface", fI.EgressInterface)
 	d.Set("public_ip", fI.ManagementPublicIP)
 
-	if d.Get("firewall_image_version") != "" {
+	if fI.FirewallImageVersion != "" {
 		d.Set("firewall_image_version", fI.FirewallImageVersion)
 	}
 	if d.Get("key_name") != "" {
