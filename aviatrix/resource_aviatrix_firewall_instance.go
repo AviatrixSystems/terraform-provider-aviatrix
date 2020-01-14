@@ -60,6 +60,12 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				ForceNew:    true,
 				Description: "Management Interface Subnet.",
 			},
+			"firewall_image_version": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Version of firewall image.",
+			},
 			"key_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -111,16 +117,17 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 	client := meta.(*goaviatrix.Client)
 
 	firewallInstance := &goaviatrix.FirewallInstance{
-		VpcID:               d.Get("vpc_id").(string),
-		GwName:              d.Get("firenet_gw_name").(string),
-		FirewallName:        d.Get("firewall_name").(string),
-		FirewallImage:       d.Get("firewall_image").(string),
-		FirewallSize:        d.Get("firewall_size").(string),
-		EgressSubnet:        d.Get("egress_subnet").(string),
-		ManagementSubnet:    d.Get("management_subnet").(string),
-		KeyName:             d.Get("key_name").(string),
-		IamRole:             d.Get("iam_role").(string),
-		BootstrapBucketName: d.Get("bootstrap_bucket_name").(string),
+		VpcID:                d.Get("vpc_id").(string),
+		GwName:               d.Get("firenet_gw_name").(string),
+		FirewallName:         d.Get("firewall_name").(string),
+		FirewallImage:        d.Get("firewall_image").(string),
+		FirewallImageVersion: d.Get("firewall_image_version").(string),
+		FirewallSize:         d.Get("firewall_size").(string),
+		EgressSubnet:         d.Get("egress_subnet").(string),
+		ManagementSubnet:     d.Get("management_subnet").(string),
+		KeyName:              d.Get("key_name").(string),
+		IamRole:              d.Get("iam_role").(string),
+		BootstrapBucketName:  d.Get("bootstrap_bucket_name").(string),
 	}
 
 	instanceID, err := client.CreateFirewallInstance(firewallInstance)
@@ -165,6 +172,7 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	d.Set("firenet_gw_name", fI.GwName)
 	d.Set("firewall_name", fI.FirewallName)
 	d.Set("firewall_image", fI.FirewallImage)
+	d.Set("firewall_image", fI.FirewallImage)
 	d.Set("firewall_size", fI.FirewallSize)
 	d.Set("instance_id", fI.InstanceID)
 	d.Set("egress_subnet", fI.EgressSubnet)
@@ -175,6 +183,9 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	d.Set("egress_interface", fI.EgressInterface)
 	d.Set("public_ip", fI.ManagementPublicIP)
 
+	if d.Get("firewall_image_version") != "" {
+		d.Set("firewall_image_version", fI.FirewallImageVersion)
+	}
 	if d.Get("key_name") != "" {
 		d.Set("key_name", fI.KeyName)
 	}

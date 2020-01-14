@@ -10,25 +10,26 @@ import (
 )
 
 type FirewallInstance struct {
-	CID                 string `form:"CID,omitempty"`
-	Action              string `form:"action,omitempty"`
-	VpcID               string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	GwName              string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
-	FirewallName        string `form:"firewall_name,omitempty" json:"instance_name,omitempty"`
-	FirewallImage       string `form:"firewall_image,omitempty" json:"firewall_image,omitempty"`
-	FirewallSize        string `form:"firewall_size,omitempty" json:"instance_size,omitempty"`
-	EgressSubnet        string `form:"egress_subnet,omitempty" json:"egress_subnet,omitempty"`
-	ManagementSubnet    string `form:"management_subnet,omitempty" json:"management_subnet,omitempty"`
-	KeyName             string `form:"key_name,omitempty" json:"key_name,omitempty"`
-	IamRole             string `form:"iam_role,omitempty" json:"iam_role,omitempty"`
-	BootstrapBucketName string `form:"bootstrap_bucket_name,omitempty" json:"bootstrap_bucket_name,omitempty"`
-	InstanceID          string `form:"firewall_id,omitempty" json:"instance_id,omitempty"`
-	Attached            bool
-	LanInterface        string `form:"lan_interface,omitempty" json:"lan_interface_id,omitempty"`
-	ManagementInterface string `form:"management_interface,omitempty" json:"management_interface_id,omitempty"`
-	EgressInterface     string `form:"egress_interface,omitempty" json:"egress_interface_id,omitempty"`
-	ManagementPublicIP  string `json:"management_public_ip,omitempty"`
-	VendorType          string
+	CID                  string `form:"CID,omitempty"`
+	Action               string `form:"action,omitempty"`
+	VpcID                string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	GwName               string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
+	FirewallName         string `form:"firewall_name,omitempty" json:"instance_name,omitempty"`
+	FirewallImage        string `form:"firewall_image,omitempty" json:"firewall_image,omitempty"`
+	FirewallImageVersion string `form:"firewall_image_version,omitempty" json:"firewall_image_version,omitempty"`
+	FirewallSize         string `form:"firewall_size,omitempty" json:"instance_size,omitempty"`
+	EgressSubnet         string `form:"egress_subnet,omitempty" json:"egress_subnet,omitempty"`
+	ManagementSubnet     string `form:"management_subnet,omitempty" json:"management_subnet,omitempty"`
+	KeyName              string `form:"key_name,omitempty" json:"key_name,omitempty"`
+	IamRole              string `form:"iam_role,omitempty" json:"iam_role,omitempty"`
+	BootstrapBucketName  string `form:"bootstrap_bucket_name,omitempty" json:"bootstrap_bucket_name,omitempty"`
+	InstanceID           string `form:"firewall_id,omitempty" json:"instance_id,omitempty"`
+	Attached             bool
+	LanInterface         string `form:"lan_interface,omitempty" json:"lan_interface_id,omitempty"`
+	ManagementInterface  string `form:"management_interface,omitempty" json:"management_interface_id,omitempty"`
+	EgressInterface      string `form:"egress_interface,omitempty" json:"egress_interface_id,omitempty"`
+	ManagementPublicIP   string `json:"management_public_ip,omitempty"`
+	VendorType           string
 }
 
 type FirewallInstanceResp struct {
@@ -59,6 +60,9 @@ func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (str
 	addFirewallInstance.Add("gw_name", firewallInstance.GwName)
 	addFirewallInstance.Add("firewall_name", firewallInstance.FirewallName)
 	addFirewallInstance.Add("firewall_image", firewallInstance.FirewallImage)
+	if firewallInstance.FirewallImageVersion != "" {
+		addFirewallInstance.Add("firewall_image_version", firewallInstance.FirewallImageVersion)
+	}
 	addFirewallInstance.Add("firewall_size", firewallInstance.FirewallSize)
 	addFirewallInstance.Add("egress_subnet", firewallInstance.EgressSubnet)
 	addFirewallInstance.Add("management_subnet", firewallInstance.ManagementSubnet)
