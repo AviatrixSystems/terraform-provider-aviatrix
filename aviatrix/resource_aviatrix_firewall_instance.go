@@ -172,7 +172,6 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	d.Set("firenet_gw_name", fI.GwName)
 	d.Set("firewall_name", fI.FirewallName)
 	d.Set("firewall_image", fI.FirewallImage)
-	d.Set("firewall_image", fI.FirewallImage)
 	d.Set("firewall_size", fI.FirewallSize)
 	d.Set("instance_id", fI.InstanceID)
 	d.Set("egress_subnet", fI.EgressSubnet)
