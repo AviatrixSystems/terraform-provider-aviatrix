@@ -51,14 +51,35 @@ func resourceAviatrixAwsTgwVpcAttachment() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Default:     "",
-				Description: "Customized Spoke VPC Routes. It allows the admin to enter non-RFC1918 routes in the VPC route table targeting the TGW.",
+				Description: "Advanced option. Customized Spoke VPC Routes. It allows the admin to enter non-RFC1918 routes in the VPC route table targeting the TGW.",
+			},
+			"subnets": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Computed:    true,
+				Description: "Advanced option. VPC subnets separated by ',' to attach to the VPC. If left blank, Aviatrix Controller automatically selects a subnet representing each AZ for the VPC attachment.",
+			},
+			"route_tables": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Computed:    true,
+				Description: "Advanced option. Route tables separated by ',' to participate in TGW Orchestrator, i.e., learned routes will be propagated to these route tables.",
+			},
+			"customized_route_advertisement": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Default:     "",
+				Description: "Advanced option. Customized route(s) to advertise.",
 			},
 			"disable_local_route_propagation": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				ForceNew:    true,
 				Default:     false,
-				Description: "Switch to allow admin not to propagate the VPC CIDR to the security domain/TGW route table that it is being attached to.",
+				Description: "Advanced option. Switch to allow admin not to propagate the VPC CIDR to the security domain/TGW route table that it is being attached to.",
 			},
 		},
 	}
@@ -74,6 +95,9 @@ func resourceAviatrixAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta inte
 		VpcAccountName:               d.Get("vpc_account_name").(string),
 		VpcID:                        d.Get("vpc_id").(string),
 		CustomizedRoutes:             d.Get("customized_routes").(string),
+		Subnets:                      d.Get("subnets").(string),
+		RouteTables:                  d.Get("route_tables").(string),
+		CustomizedRouteAdvertisement: d.Get("customized_route_advertisement").(string),
 		DisableLocalRoutePropagation: d.Get("disable_local_route_propagation").(bool),
 	}
 
@@ -138,7 +162,44 @@ func resourceAviatrixAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta interf
 		d.Set("vpc_account_name", aTVA.VpcAccountName)
 		d.Set("vpc_id", aTVA.VpcID)
 		d.Set("disable_local_route_propagation", aTVA.DisableLocalRoutePropagation)
+
+		if d.Get("subnets").(string) != "" {
+			subnetsFromConfigList := strings.Split(d.Get("subnets").(string), ",")
+			var subnetsFromReadList []string
+			subnetsFromReadList = strings.Split(aTVA.Subnets, ",")
+			if len(goaviatrix.Difference(subnetsFromConfigList, subnetsFromReadList)) == 0 ||
+				len(goaviatrix.Difference(subnetsFromReadList, subnetsFromConfigList)) == 0 {
+				d.Set("subnets", d.Get("subnets").(string))
+			} else {
+				d.Set("subnets", aTVA.Subnets)
+			}
+		} else {
+			d.Set("subnets", aTVA.Subnets)
+		}
+		if d.Get("route_tables").(string) != "" {
+			routeTablesFromConfigList := strings.Split(d.Get("route_tables").(string), ",")
+			for i := 0; i < len(routeTablesFromConfigList); i++ {
+				routeTablesFromConfigList[i] = strings.TrimSpace(routeTablesFromConfigList[i])
+			}
+			var routeTablesFromReadList []string
+			routeTablesFromReadList = strings.Split(aTVA.RouteTables, ",")
+			for i := 0; i < len(routeTablesFromReadList); i++ {
+				routeTablesFromReadList[i] = strings.TrimSpace(routeTablesFromReadList[i])
+			}
+			if (len(goaviatrix.Difference(routeTablesFromConfigList, routeTablesFromReadList)) != 0 ||
+				len(goaviatrix.Difference(routeTablesFromReadList, routeTablesFromConfigList)) != 0) &&
+				aTVA.RouteTables != "ALL" &&
+				aTVA.RouteTables != "All" {
+				d.Set("route_tables", aTVA.RouteTables)
+			} else {
+				d.Set("route_tables", d.Get("route_tables").(string))
+			}
+		} else {
+			d.Set("route_tables", aTVA.RouteTables)
+		}
+
 		d.Set("customized_routes", aTVA.CustomizedRoutes)
+		d.Set("customized_route_advertisement", aTVA.CustomizedRouteAdvertisement)
 		d.SetId(awsTgwVpcAttachment.TgwName + "~" + awsTgwVpcAttachment.SecurityDomainName + "~" + awsTgwVpcAttachment.VpcID)
 		return nil
 	}
