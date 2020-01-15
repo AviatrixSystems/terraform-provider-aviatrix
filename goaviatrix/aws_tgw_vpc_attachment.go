@@ -321,3 +321,33 @@ func (c *Client) GetVPCAttachmentRouteTableDetails(awsTgwVpcAttachment *AwsTgwVp
 	}
 	return nil, ErrNotFound
 }
+
+func (c *Client) EditTgwSpokeVpcCustomizedRoutes(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for edit_tgw_spoke_vpc_customized_routes: ") + err.Error())
+	}
+	editTgwSpokeVpcCustomizedRoutes := url.Values{}
+	editTgwSpokeVpcCustomizedRoutes.Add("CID", c.CID)
+	editTgwSpokeVpcCustomizedRoutes.Add("action", "edit_tgw_spoke_vpc_customized_routes")
+	editTgwSpokeVpcCustomizedRoutes.Add("tgw_name", awsTgwVpcAttachment.TgwName)
+	editTgwSpokeVpcCustomizedRoutes.Add("vpc_id", awsTgwVpcAttachment.VpcID)
+	editTgwSpokeVpcCustomizedRoutes.Add("route_list", awsTgwVpcAttachment.CustomizedRoutes)
+	Url.RawQuery = editTgwSpokeVpcCustomizedRoutes.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return errors.New("HTTP Get 'edit_tgw_spoke_vpc_customized_routes' failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode 'edit_tgw_spoke_vpc_customized_routes' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API 'edit_tgw_spoke_vpc_customized_routes' Get failed: " + data.Reason)
+	}
+	return nil
+}

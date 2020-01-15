@@ -49,7 +49,6 @@ func resourceAviatrixAwsTgwVpcAttachment() *schema.Resource {
 			"customized_routes": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew:    true,
 				Default:     "",
 				Description: "Advanced option. Customized Spoke VPC Routes. It allows the admin to enter non-RFC1918 routes in the VPC route table targeting the TGW.",
 			},
@@ -208,6 +207,8 @@ func resourceAviatrixAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAviatrixAwsTgwVpcAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*goaviatrix.Client)
+
 	d.Partial(true)
 	if d.HasChange("tgw_name") {
 		return fmt.Errorf("updating tgw_name is not allowed")
@@ -220,6 +221,17 @@ func resourceAviatrixAwsTgwVpcAttachmentUpdate(d *schema.ResourceData, meta inte
 	}
 	if d.HasChange("vpc_id") {
 		return fmt.Errorf("updating vpc_id is not allowed")
+	}
+	if d.HasChange("customized_routes") {
+		awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
+			TgwName:          d.Get("tgw_name").(string),
+			VpcID:            d.Get("vpc_id").(string),
+			CustomizedRoutes: d.Get("customized_routes").(string),
+		}
+		err := client.EditTgwSpokeVpcCustomizedRoutes(awsTgwVpcAttachment)
+		if err != nil {
+			return fmt.Errorf("failed to update spoke vpc customized routes: %s", err)
+		}
 	}
 
 	d.Partial(false)
