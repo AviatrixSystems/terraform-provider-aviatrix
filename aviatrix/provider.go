@@ -71,6 +71,7 @@ func Provider() terraform.ResourceProvider {
 		DataSourcesMap: map[string]*schema.Resource{
 			"aviatrix_account":                    dataSourceAviatrixAccount(),
 			"aviatrix_caller_identity":            dataSourceAviatrixCallerIdentity(),
+			"aviatrix_firenet":                    dataSourceAviatrixFireNet(),
 			"aviatrix_firenet_vendor_integration": dataSourceAviatrixFireNetVendorIntegration(),
 			"aviatrix_gateway":                    dataSourceAviatrixGateway(),
 			"aviatrix_spoke_gateway":              dataSourceAviatrixSpokeGateway(),
