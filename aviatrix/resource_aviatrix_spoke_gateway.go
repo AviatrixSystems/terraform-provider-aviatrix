@@ -292,6 +292,24 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable encrypt gateway EBS volume. Only supported for AWS provider. Valid values: true, false. Default value: false.",
 			},
+			"customized_routes": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "A list of comma separated CIDRs to be customized for the spoke VPC.",
+			},
+			"filtered_routes": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "A list of comma separated CIDRs to be filtered from the spoke VPC route table.",
+			},
+			"customized_routes_advertisement": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "A list of comma separated CIDRs to be excluded from being advertised to.",
+			},
 			"customer_managed_keys": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -638,6 +656,42 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	if customizedRoutes := d.Get("customized_routes").(string); customizedRoutes != "" {
+		spokeGateway := &goaviatrix.Gateway{
+			GwName:           d.Get("gw_name").(string),
+			CustomizedRoutes: strings.Split(customizedRoutes, ","),
+		}
+		err := client.EditCustomRoutes(spokeGateway)
+		log.Printf("[INFO] Editing customized routes of spoke gateway: %s ", spokeGateway.GwName)
+		if err != nil {
+			return fmt.Errorf("failed to edit customized routes of spoke gateway: %s due to: %s", spokeGateway.GwName, err)
+		}
+	}
+
+	if filteredRoutes := d.Get("filtered_routes").(string); filteredRoutes != "" {
+		spokeGateway := &goaviatrix.Gateway{
+			GwName:         d.Get("gw_name").(string),
+			FilteredRoutes: strings.Split(filteredRoutes, ","),
+		}
+		err := client.EditFilterRoutes(spokeGateway)
+		log.Printf("[INFO] Editing filtered routes of spoke gateway: %s ", spokeGateway.GwName)
+		if err != nil {
+			return fmt.Errorf("failed to edit filtered routes of spoke gateway: %s due to: %s", spokeGateway.GwName, err)
+		}
+	}
+
+	if customizedRoutesAdvertisement := d.Get("customized_routes_advertisement").(string); customizedRoutesAdvertisement != "" {
+		spokeGateway := &goaviatrix.Gateway{
+			GwName:                        d.Get("gw_name").(string),
+			CustomizedRoutesAdvertisement: strings.Split(customizedRoutesAdvertisement, ","),
+		}
+		err := client.EditCustomizedRoutesAdvertisement(spokeGateway)
+		log.Printf("[INFO] Editing customized routes advertisement of spoke gateway: %s ", spokeGateway.GwName)
+		if err != nil {
+			return fmt.Errorf("failed to edit customized routes advertisement of spoke gateway: %s due to: %s", spokeGateway.GwName, err)
+		}
+	}
+
 	return resourceAviatrixSpokeGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -801,6 +855,16 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("enable_snat", false)
 			d.Set("snat_mode", "primary")
 			d.Set("snat_policy", nil)
+		}
+
+		if len(gw.CustomizedRoutes) != 0 {
+			d.Set("customized_routes", strings.Join(gw.CustomizedRoutes, ","))
+		}
+		if len(gw.FilteredRoutes) != 0 {
+			d.Set("filtered_routes", strings.Join(gw.FilteredRoutes, ","))
+		}
+		if len(gw.CustomizedRoutes) != 0 {
+			d.Set("customized_routes_advertisement", strings.Join(gw.CustomizedRoutesAdvertisement, ","))
 		}
 	}
 
@@ -1431,6 +1495,45 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		if err != nil {
 			return fmt.Errorf("failed to update DNAT: %s", err)
 		}
+	}
+
+	if d.HasChange("customized_routes") {
+		spokeGateway := &goaviatrix.Gateway{
+			GwName:           d.Get("gw_name").(string),
+			CustomizedRoutes: strings.Split(d.Get("customized_routes").(string), ","),
+		}
+		err := client.EditCustomRoutes(spokeGateway)
+		log.Printf("[INFO] Editing customized routes of spoke gateway: %s ", spokeGateway.GwName)
+		if err != nil {
+			return fmt.Errorf("failed to edit customized routes of spoke gateway: %s due to: %s", spokeGateway.GwName, err)
+		}
+		d.SetPartial("customized_routes")
+	}
+
+	if d.HasChange("filtered_routes") {
+		spokeGateway := &goaviatrix.Gateway{
+			GwName:         d.Get("gw_name").(string),
+			FilteredRoutes: strings.Split(d.Get("filtered_routes").(string), ","),
+		}
+		err := client.EditFilterRoutes(spokeGateway)
+		log.Printf("[INFO] Editing customized routes of spoke gateway: %s ", spokeGateway.GwName)
+		if err != nil {
+			return fmt.Errorf("failed to edit customized routes of spoke gateway: %s due to: %s", spokeGateway.GwName, err)
+		}
+		d.SetPartial("filtered_routes")
+	}
+
+	if d.HasChange("customized_routes_advertisement") {
+		spokeGateway := &goaviatrix.Gateway{
+			GwName:                        d.Get("gw_name").(string),
+			CustomizedRoutesAdvertisement: strings.Split(d.Get("customized_routes_advertisement").(string), ","),
+		}
+		err := client.EditCustomizedRoutesAdvertisement(spokeGateway)
+		log.Printf("[INFO] Editing customized routes of spoke gateway: %s ", spokeGateway.GwName)
+		if err != nil {
+			return fmt.Errorf("failed to edit customized routes of spoke gateway: %s due to: %s", spokeGateway.GwName, err)
+		}
+		d.SetPartial("customized_routes_advertisement")
 	}
 
 	d.Partial(false)
