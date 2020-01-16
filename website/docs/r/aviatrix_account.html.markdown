@@ -81,7 +81,7 @@ The following arguments are supported:
 
 * `account_name` - (Required) Account name. This can be used for logging in to CloudN console or UserConnect controller.
 * `cloud_type` - (Required) Type of cloud service provider. Only AWS, GCP, ARM, OCI, and AWS Gov are supported currently. Enter 1 for AWS, 4 for GCP, 8 for ARM, 16 for OCI, 256 for AWS Gov.
-* `aws_account_number` - (Optional) AWS Account number to associate with Aviatrix account. Required when creating an account for AWS.
+* `aws_account_number` - (Optional) AWS Account number to associate with Aviatrix account. Required when creating an account for AWS. Should be 12 digits. Example: "123456789012".
 * `aws_iam` - (Optional) AWS IAM-role based flag, this option is for UserConnect.
 * `aws_access_key` - (Optional) AWS Access Key. Required when aws_iam is "false" and when creating an account for AWS.
 * `aws_secret_key` - (Optional) AWS Secret Key. Required when aws_iam is "false" and when creating an account for AWS.
