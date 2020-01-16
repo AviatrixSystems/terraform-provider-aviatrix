@@ -121,6 +121,7 @@ type Gateway struct {
 	CustomizedRoutes              []string `json:"customized_cidr_list,omitempty"`
 	FilteredRoutes                []string `json:"filtering_cidr_list,omitempty"`
 	CustomizedRoutesAdvertisement []string `json:"advertise_cidr_list,omitempty"`
+	ExcludeCidrList               []string `json:"exclude_cidr_list,omitempty"`
 }
 
 type PolicyRule struct {
@@ -804,7 +805,7 @@ func (c *Client) EditCustomRoutes(gateway *Gateway) error {
 	editGatewayCustomRoutes.Add("CID", c.CID)
 	editGatewayCustomRoutes.Add("action", "edit_gateway_custom_routes")
 	editGatewayCustomRoutes.Add("gateway_name", gateway.GwName)
-	editGatewayCustomRoutes.Add("customized_cidr_list", strings.Join(gateway.CustomizedRoutes, ","))
+	editGatewayCustomRoutes.Add("cidr", strings.Join(gateway.CustomizedRoutes, ","))
 	Url.RawQuery = editGatewayCustomRoutes.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
@@ -833,7 +834,7 @@ func (c *Client) EditFilterRoutes(gateway *Gateway) error {
 	editGatewayFilterRoutes.Add("CID", c.CID)
 	editGatewayFilterRoutes.Add("action", "edit_gateway_filter_routes")
 	editGatewayFilterRoutes.Add("gateway_name", gateway.GwName)
-	editGatewayFilterRoutes.Add("filtering_cidr_list", strings.Join(gateway.FilteredRoutes, ","))
+	editGatewayFilterRoutes.Add("cidr", strings.Join(gateway.FilteredRoutes, ","))
 	Url.RawQuery = editGatewayFilterRoutes.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
@@ -862,7 +863,7 @@ func (c *Client) EditCustomizedRoutesAdvertisement(gateway *Gateway) error {
 	editGatewayFilterRoutes.Add("CID", c.CID)
 	editGatewayFilterRoutes.Add("action", "edit_gateway_advertised_cidr")
 	editGatewayFilterRoutes.Add("gateway_name", gateway.GwName)
-	editGatewayFilterRoutes.Add("advertise_cidr_list", strings.Join(gateway.CustomizedRoutesAdvertisement, ","))
+	editGatewayFilterRoutes.Add("cidr", strings.Join(gateway.CustomizedRoutesAdvertisement, ","))
 	Url.RawQuery = editGatewayFilterRoutes.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {

@@ -661,10 +661,17 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			GwName:           d.Get("gw_name").(string),
 			CustomizedRoutes: strings.Split(customizedRoutes, ","),
 		}
-		err := client.EditCustomRoutes(spokeGateway)
-		log.Printf("[INFO] Editing customized routes of spoke gateway: %s ", spokeGateway.GwName)
-		if err != nil {
-			return fmt.Errorf("failed to edit customized routes of spoke gateway: %s due to: %s", spokeGateway.GwName, err)
+		for i := 0; ; i++ {
+			log.Printf("[INFO] Editing customized routes of spoke gateway: %s ", spokeGateway.GwName)
+			err := client.EditCustomRoutes(spokeGateway)
+			if err == nil {
+				break
+			}
+			if i <= 10 && strings.Contains(err.Error(), "when it is down") {
+				time.Sleep(10 * time.Second)
+			} else {
+				return fmt.Errorf("failed to edit customized routes of spoke gateway: %s due to: %s", spokeGateway.GwName, err)
+			}
 		}
 	}
 
@@ -673,10 +680,17 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			GwName:         d.Get("gw_name").(string),
 			FilteredRoutes: strings.Split(filteredRoutes, ","),
 		}
-		err := client.EditFilterRoutes(spokeGateway)
-		log.Printf("[INFO] Editing filtered routes of spoke gateway: %s ", spokeGateway.GwName)
-		if err != nil {
-			return fmt.Errorf("failed to edit filtered routes of spoke gateway: %s due to: %s", spokeGateway.GwName, err)
+		for i := 0; ; i++ {
+			log.Printf("[INFO] Editing filtered routes of spoke gateway: %s ", spokeGateway.GwName)
+			err := client.EditFilterRoutes(spokeGateway)
+			if err == nil {
+				break
+			}
+			if i <= 10 && strings.Contains(err.Error(), "when it is down") {
+				time.Sleep(10 * time.Second)
+			} else {
+				return fmt.Errorf("failed to edit filtered routes of spoke gateway: %s due to: %s", spokeGateway.GwName, err)
+			}
 		}
 	}
 
@@ -685,10 +699,17 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			GwName:                        d.Get("gw_name").(string),
 			CustomizedRoutesAdvertisement: strings.Split(customizedRoutesAdvertisement, ","),
 		}
-		err := client.EditCustomizedRoutesAdvertisement(spokeGateway)
-		log.Printf("[INFO] Editing customized routes advertisement of spoke gateway: %s ", spokeGateway.GwName)
-		if err != nil {
-			return fmt.Errorf("failed to edit customized routes advertisement of spoke gateway: %s due to: %s", spokeGateway.GwName, err)
+		for i := 0; ; i++ {
+			log.Printf("[INFO] Editing customized routes advertisement of spoke gateway: %s ", spokeGateway.GwName)
+			err := client.EditCustomizedRoutesAdvertisement(spokeGateway)
+			if err == nil {
+				break
+			}
+			if i <= 10 && strings.Contains(err.Error(), "when it is down") {
+				time.Sleep(10 * time.Second)
+			} else {
+				return fmt.Errorf("failed to edit customized routes advertisement of spoke gateway: %s due to: %s", spokeGateway.GwName, err)
+			}
 		}
 	}
 
@@ -858,13 +879,39 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if len(gw.CustomizedRoutes) != 0 {
-			d.Set("customized_routes", strings.Join(gw.CustomizedRoutes, ","))
+			if customizedRoutes := d.Get("customized_routes").(string); customizedRoutes != "" {
+				customizedRoutesArray := strings.Split(customizedRoutes, ",")
+				if len(goaviatrix.Difference(customizedRoutesArray, gw.CustomizedRoutes)) == 0 &&
+					len(goaviatrix.Difference(gw.CustomizedRoutes, customizedRoutesArray)) == 0 {
+					d.Set("customized_routes", customizedRoutes)
+				} else {
+					d.Set("customized_routes", strings.Join(gw.CustomizedRoutes, ","))
+				}
+			} else {
+				d.Set("customized_routes", strings.Join(gw.CustomizedRoutes, ","))
+			}
+		} else {
+			d.Set("customized_routes", "")
 		}
 		if len(gw.FilteredRoutes) != 0 {
 			d.Set("filtered_routes", strings.Join(gw.FilteredRoutes, ","))
+		} else {
+			d.Set("filtered_routes", "")
 		}
 		if len(gw.CustomizedRoutes) != 0 {
-			d.Set("customized_routes_advertisement", strings.Join(gw.CustomizedRoutesAdvertisement, ","))
+			if customizedRoutesAdvertisement := d.Get("customized_routes_advertisement").(string); customizedRoutesAdvertisement != "" {
+				customizedRoutesAdvertisementArray := strings.Split(customizedRoutesAdvertisement, ",")
+				if len(goaviatrix.Difference(customizedRoutesAdvertisementArray, gw.CustomizedRoutesAdvertisement)) == 0 &&
+					len(goaviatrix.Difference(gw.CustomizedRoutesAdvertisement, customizedRoutesAdvertisementArray)) == 0 {
+					d.Set("customized_routes_advertisement", customizedRoutesAdvertisement)
+				} else {
+					d.Set("customized_routes", strings.Join(gw.CustomizedRoutesAdvertisement, ","))
+				}
+			} else {
+				d.Set("customized_routes", strings.Join(gw.CustomizedRoutesAdvertisement, ","))
+			}
+		} else {
+			d.Set("customized_routes_advertisement", "")
 		}
 	}
 

@@ -102,27 +102,21 @@ The following arguments are supported:
 ### SNAT
 * `enable_snat` - (Optional) Enable Source NAT for this container. Valid values: true, false.
 
-
 ### Misc.
 * `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in controller 4.7 or later release. Valid values: true, false. Default: true. Option not available for GCP, ARM and Oracle gateways, they will automatically allocate new eip's.
 * `eip` - (Optional) Required when allocate_new_eip is false. It uses specified EIP for this gateway. Available in controller 4.7 or later release.
 * `tag_list` - (Optional) Instance tag of cloud provider. Only supported for AWS. Example: ["key1:value1","key2:value2"].
-
-
 * `connected_transit` - (Optional) Specify Connected Transit status. If enabled, it allows spokes to run traffics to other spokes via transit gateway. Valid values: true, false. Default value: false.
 * `enable_hybrid_connection` - (Optional) Sign of readiness for TGW connection. Only supported for AWS. Example: false.
 * `enable_firenet` - (Optional) Sign of readiness for FireNet connection. Valid values: true, false. Default value: false. **NOTE: If previously using an older provider version R2.5 where attribute name was `enable_firenet_interfaces`, please see notes [here](#enable_firenet).**
-
-
 * `enable_advertise_transit_cidr` - (Optional) Switch to Enable/Disable advertise transit VPC network CIDR for a vgw connection. Available as of R2.6. **NOTE: If previously enabled through vgw_conn resource prior to provider version R2.6, please see notes [here](#cidr-advertising).**
 * `bgp_manual_spoke_advertise_cidrs` - (Optional) Intended CIDR list to advertise to VGW. Example: "10.2.0.0/16,10.4.0.0/16". Available as of R2.6. **NOTE: If previously enabled through vgw_conn resource prior to provider version R2.6, please see notes [here](#cidr-advertising).**
-
-
 * `enable_active_mesh` - (Optional) Switch to Enable/Disable Active Mesh Mode for Transit Gateway. Valid values: true, false. Default value: false.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS. Valid values: true, false. Default value: false.
-
-
 * `enable_encrypt_volume` - (Optional) Enable Encrypt EBS Volume feature for Gateway. Only supports AWS. Valid values: true, false. Default value: false.
+* `customized_routes` - (Optional) A list of comma separated CIDRs to be customized for the transit VPC. Example: "10.0.0.0/116,10.2.0.0/16".
+* `filtered_routes` - (Optional) A list of comma separated CIDRs to be filtered from the transit VPC route table. Example: "10.2.0.0/116,10.3.0.0/16".
+* `customized_routes_advertisement` - (Optional) A list of comma separated CIDRs to be excluded from being advertised to. Example: "10.4.0.0/116,10.5.0.0/16".
 * `customer_managed_keys` - (Optional and Sensitive) Customer managed key ID.
 
 ## Attribute Reference
@@ -136,7 +130,6 @@ The following arguments are deprecated:
 
 * `enable_firenet_interfaces` - (Optional) Sign of readiness for FireNet connection. Valid values: true, false. Default value: false.
 
-
 ## Import
 
 Instance transit_gateway can be imported using the gw_name, e.g.
@@ -144,7 +137,6 @@ Instance transit_gateway can be imported using the gw_name, e.g.
 ```
 $ terraform import aviatrix_transit_gateway.test gw_name
 ```
-
 
 ## Notes
 ### CIDR advertising
