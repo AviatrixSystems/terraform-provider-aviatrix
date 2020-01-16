@@ -34,6 +34,13 @@ func resourceAviatrixAccount() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "AWS Account number to associate with Aviatrix account. Should be 12 digits.",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if len(v) != 12 {
+						errs = append(errs, fmt.Errorf("%q must be 12 digits, got: %s", key, val))
+					}
+					return
+				},
 			},
 			"aws_iam": {
 				Type:        schema.TypeBool,
@@ -162,10 +169,6 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		OciUserID:                             d.Get("oci_user_id").(string),
 		OciCompartmentID:                      d.Get("oci_compartment_id").(string),
 		OciApiPrivateKeyFilePath:              d.Get("oci_api_private_key_filepath").(string),
-	}
-
-	if account.AwsAccountNumber != "" && len(account.AwsAccountNumber) != 12 {
-		return fmt.Errorf("aws_account_number should be 12 digits")
 	}
 
 	awsIam := d.Get("aws_iam").(bool)
@@ -374,10 +377,6 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 		OciUserID:                             d.Get("oci_user_id").(string),
 		OciCompartmentID:                      d.Get("oci_compartment_id").(string),
 		OciApiPrivateKeyFilePath:              d.Get("oci_api_private_key_filepath").(string),
-	}
-
-	if account.AwsAccountNumber != "" && len(account.AwsAccountNumber) != 12 {
-		return fmt.Errorf("aws_account_number should be 12 digits")
 	}
 
 	awsIam := d.Get("aws_iam").(bool)
