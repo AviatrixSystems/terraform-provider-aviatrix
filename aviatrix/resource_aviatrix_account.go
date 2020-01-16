@@ -38,6 +38,13 @@ func resourceAviatrixAccount() *schema.Resource {
 					v := val.(string)
 					if len(v) != 12 {
 						errs = append(errs, fmt.Errorf("%q must be 12 digits, got: %s", key, val))
+					} else {
+						for _, r := range v {
+							if r-'0' < 0 || r-'0' > 9 {
+								errs = append(errs, fmt.Errorf("%q must be 12 digits, got: %s", key, val))
+								break
+							}
+						}
 					}
 					return
 				},
