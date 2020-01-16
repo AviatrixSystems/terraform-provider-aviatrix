@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -179,6 +180,24 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Optional:    true,
 				Default:     false,
 				Description: "Enable encrypt gateway EBS volume. Only supported for AWS provider. Valid values: true, false. Default value: false.",
+			},
+			"customized_routes": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "A list of comma separated CIDRs to be customized for the transit VPC.",
+			},
+			"filtered_routes": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "A list of comma separated CIDRs to be filtered from the transit VPC route table.",
+			},
+			"customized_routes_advertisement": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "A list of comma separated CIDRs to be excluded from being advertised to.",
 			},
 			"customer_managed_keys": {
 				Type:        schema.TypeString,
@@ -496,6 +515,63 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if customizedRoutes := d.Get("customized_routes").(string); customizedRoutes != "" {
+		transitGateway := &goaviatrix.Gateway{
+			GwName:           d.Get("gw_name").(string),
+			CustomizedRoutes: strings.Split(customizedRoutes, ","),
+		}
+		for i := 0; ; i++ {
+			log.Printf("[INFO] Editing customized routes of transit gateway: %s ", transitGateway.GwName)
+			err := client.EditCustomRoutes(transitGateway)
+			if err == nil {
+				break
+			}
+			if i <= 10 && strings.Contains(err.Error(), "when it is down") {
+				time.Sleep(10 * time.Second)
+			} else {
+				return fmt.Errorf("failed to edit customized routes of transit gateway: %s due to: %s", transitGateway.GwName, err)
+			}
+		}
+	}
+
+	if filteredRoutes := d.Get("filtered_routes").(string); filteredRoutes != "" {
+		transitGateway := &goaviatrix.Gateway{
+			GwName:         d.Get("gw_name").(string),
+			FilteredRoutes: strings.Split(filteredRoutes, ","),
+		}
+		for i := 0; ; i++ {
+			log.Printf("[INFO] Editing filtered routes of transit gateway: %s ", transitGateway.GwName)
+			err := client.EditFilterRoutes(transitGateway)
+			if err == nil {
+				break
+			}
+			if i <= 10 && strings.Contains(err.Error(), "when it is down") {
+				time.Sleep(10 * time.Second)
+			} else {
+				return fmt.Errorf("failed to edit filtered routes of transit gateway: %s due to: %s", transitGateway.GwName, err)
+			}
+		}
+	}
+
+	if customizedRoutesAdvertisement := d.Get("customized_routes_advertisement").(string); customizedRoutesAdvertisement != "" {
+		transitGateway := &goaviatrix.Gateway{
+			GwName:                        d.Get("gw_name").(string),
+			CustomizedRoutesAdvertisement: strings.Split(customizedRoutesAdvertisement, ","),
+		}
+		for i := 0; ; i++ {
+			log.Printf("[INFO] Editing customized routes advertisement of transit gateway: %s ", transitGateway.GwName)
+			err := client.EditCustomizedRoutesAdvertisement(transitGateway)
+			if err == nil {
+				break
+			}
+			if i <= 10 && strings.Contains(err.Error(), "when it is down") {
+				time.Sleep(10 * time.Second)
+			} else {
+				return fmt.Errorf("failed to edit customized routes advertisement of transit gateway: %s due to: %s", transitGateway.GwName, err)
+			}
+		}
+	}
+
 	return resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -596,6 +672,42 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		} else {
 			d.Set("insane_mode", false)
 			d.Set("insane_mode_az", "")
+		}
+
+		if len(gw.CustomizedRoutes) != 0 {
+			if customizedRoutes := d.Get("customized_routes").(string); customizedRoutes != "" {
+				customizedRoutesArray := strings.Split(customizedRoutes, ",")
+				if len(goaviatrix.Difference(customizedRoutesArray, gw.CustomizedRoutes)) == 0 &&
+					len(goaviatrix.Difference(gw.CustomizedRoutes, customizedRoutesArray)) == 0 {
+					d.Set("customized_routes", customizedRoutes)
+				} else {
+					d.Set("customized_routes", strings.Join(gw.CustomizedRoutes, ","))
+				}
+			} else {
+				d.Set("customized_routes", strings.Join(gw.CustomizedRoutes, ","))
+			}
+		} else {
+			d.Set("customized_routes", "")
+		}
+		if len(gw.FilteredRoutes) != 0 {
+			d.Set("filtered_routes", strings.Join(gw.FilteredRoutes, ","))
+		} else {
+			d.Set("filtered_routes", "")
+		}
+		if len(gw.CustomizedRoutes) != 0 {
+			if customizedRoutesAdvertisement := d.Get("customized_routes_advertisement").(string); customizedRoutesAdvertisement != "" {
+				customizedRoutesAdvertisementArray := strings.Split(customizedRoutesAdvertisement, ",")
+				if len(goaviatrix.Difference(customizedRoutesAdvertisementArray, gw.CustomizedRoutesAdvertisement)) == 0 &&
+					len(goaviatrix.Difference(gw.CustomizedRoutesAdvertisement, customizedRoutesAdvertisementArray)) == 0 {
+					d.Set("customized_routes_advertisement", customizedRoutesAdvertisement)
+				} else {
+					d.Set("customized_routes", strings.Join(gw.CustomizedRoutesAdvertisement, ","))
+				}
+			} else {
+				d.Set("customized_routes", strings.Join(gw.CustomizedRoutesAdvertisement, ","))
+			}
+		} else {
+			d.Set("customized_routes_advertisement", "")
 		}
 
 		gwDetail, err := client.GetGatewayDetail(gw)
@@ -1129,8 +1241,48 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		} else {
 			return fmt.Errorf("can't disable Encrypt Volume for gateway: %s", gateway.GwName)
 		}
+		d.SetPartial("enable_encrypt_volume")
 	} else if d.HasChange("customer_managed_keys") {
 		return fmt.Errorf("updating customer_managed_keys only is not allowed")
+	}
+
+	if d.HasChange("customized_routes") {
+		transitGateway := &goaviatrix.Gateway{
+			GwName:           d.Get("gw_name").(string),
+			CustomizedRoutes: strings.Split(d.Get("customized_routes").(string), ","),
+		}
+		err := client.EditCustomRoutes(transitGateway)
+		log.Printf("[INFO] Editing customized routes of transit gateway: %s ", transitGateway.GwName)
+		if err != nil {
+			return fmt.Errorf("failed to edit customized routes of transit gateway: %s due to: %s", transitGateway.GwName, err)
+		}
+		d.SetPartial("customized_routes")
+	}
+
+	if d.HasChange("filtered_routes") {
+		transitGateway := &goaviatrix.Gateway{
+			GwName:         d.Get("gw_name").(string),
+			FilteredRoutes: strings.Split(d.Get("filtered_routes").(string), ","),
+		}
+		err := client.EditFilterRoutes(transitGateway)
+		log.Printf("[INFO] Editing customized routes of transit gateway: %s ", transitGateway.GwName)
+		if err != nil {
+			return fmt.Errorf("failed to edit customized routes of transit gateway: %s due to: %s", transitGateway.GwName, err)
+		}
+		d.SetPartial("filtered_routes")
+	}
+
+	if d.HasChange("customized_routes_advertisement") {
+		transitGateway := &goaviatrix.Gateway{
+			GwName:                        d.Get("gw_name").(string),
+			CustomizedRoutesAdvertisement: strings.Split(d.Get("customized_routes_advertisement").(string), ","),
+		}
+		err := client.EditCustomizedRoutesAdvertisement(transitGateway)
+		log.Printf("[INFO] Editing customized routes of transit gateway: %s ", transitGateway.GwName)
+		if err != nil {
+			return fmt.Errorf("failed to edit customized routes of transit gateway: %s due to: %s", transitGateway.GwName, err)
+		}
+		d.SetPartial("customized_routes_advertisement")
 	}
 
 	d.Partial(false)
