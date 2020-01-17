@@ -898,17 +898,17 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		} else {
 			d.Set("filtered_routes", "")
 		}
-		if len(gw.CustomizedRoutes) != 0 {
+		if len(gw.CustomizedRoutesAdvertisement) != 0 {
 			if customizedRoutesAdvertisement := d.Get("customized_routes_advertisement").(string); customizedRoutesAdvertisement != "" {
 				customizedRoutesAdvertisementArray := strings.Split(customizedRoutesAdvertisement, ",")
 				if len(goaviatrix.Difference(customizedRoutesAdvertisementArray, gw.CustomizedRoutesAdvertisement)) == 0 &&
 					len(goaviatrix.Difference(gw.CustomizedRoutesAdvertisement, customizedRoutesAdvertisementArray)) == 0 {
 					d.Set("customized_routes_advertisement", customizedRoutesAdvertisement)
 				} else {
-					d.Set("customized_routes", strings.Join(gw.CustomizedRoutesAdvertisement, ","))
+					d.Set("customized_routes_advertisement", strings.Join(gw.CustomizedRoutesAdvertisement, ","))
 				}
 			} else {
-				d.Set("customized_routes", strings.Join(gw.CustomizedRoutesAdvertisement, ","))
+				d.Set("customized_routes_advertisement", strings.Join(gw.CustomizedRoutesAdvertisement, ","))
 			}
 		} else {
 			d.Set("customized_routes_advertisement", "")
