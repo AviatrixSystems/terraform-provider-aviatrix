@@ -38,4 +38,17 @@ In addition to all arguments above, the following attributes are exported:
 * `gw_size` - Instance type.
 * `subnet` - Range of the subnet where the spoke gateway is launched.
 * `public_ip` - Public IP address of the spoke gateway created.
+* `allocate_new_eip` - Description: "Whether the eip is newly allocated or not.
+* `single_az_ha* `Enable/Disable this feature.
+* `transit_gw` - The transit gateway that the spoke gateway is attached to.
+* `tag_list` - Instance tag of cloud provider. Only supported for AWS provider.
+* `insane_mode` - Enable/Disable Insane Mode for Spoke Gateway.
+* `insane_mode_az` - AZ of subnet being created for Insane Mode Spoke Gateway. Required if insane_mode is enabled for aws cloud.
+* `enable_active_mesh` - Enable/Disable Active Mesh Mode for Spoke Gateway.
+* `enable_vpc_dns_server` - Enable/Disalbe vpc_dns_server for Gateway.
+* `enable_encrypt_volume` - Enable encrypt gateway EBS volume. Only supported for AWS provider.
+* `customized_routes` - A list of comma separated CIDRs to be customized for the spoke VPC.
+* `filtered_routes` - A list of comma separated CIDRs to be filtered from the spoke VPC route table.
+* `customized_routes_advertisement` - A list of comma separated CIDRs to be excluded from being advertised to.
+* `cloud_instance_id` - Cloud instance ID
 
