@@ -54,7 +54,7 @@ func dataSourceAviatrixSpokeGateway() *schema.Resource {
 				Description: "Public IP address of the spoke gateway created.",
 			},
 			"allocate_new_eip": {
-				Type:     schema.TypeBool,
+				Type:        schema.TypeBool,
 				Computed:    true,
 				Description: "Whether the eip is newly allocated or not.",
 			},
