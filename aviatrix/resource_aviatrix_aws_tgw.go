@@ -992,7 +992,7 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if manageVpcAttachment {
 		for i := range toDetachVPCs {
-			if len(toDetachVPCs[i]) == 6 {
+			if len(toDetachVPCs[i]) == 9 {
 				if mapOldFireNetVpc[toDetachVPCs[i][0]] {
 					err := client.DisconnectFireNetFromTgw(awsTgw, toDetachVPCs[i][1])
 					if err != nil {
