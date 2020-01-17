@@ -53,5 +53,5 @@ In addition to all arguments above, the following attributes are exported:
 * `enable_encrypt_volume` - Enable/Disable encrypt gateway EBS volume. Only supported for AWS provider.
 * `customized_routes` - A list of comma separated CIDRs to be customized for the transit VPC.
 * `filtered_routes` - A list of comma separated CIDRs to be filtered from the transit VPC route table.
-* `customized_routes_advertisement` - A list of comma separated CIDRs to be excluded from being advertised to.
+* `customized_routes_advertisement` - A list of comma separated CIDRs to be excluded from being advertised to on-prem.
 

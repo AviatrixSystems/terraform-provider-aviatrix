@@ -169,7 +169,7 @@ The following arguments are supported:
 * `customer_managed_keys` - (Optional and Sensitive) Customer managed key ID.
 * `customized_routes` - (Optional) A list of comma separated CIDRs to be customized for the spoke VPC. Example: "10.0.0.0/116,10.2.0.0/16".
 * `filtered_routes` - (Optional) A list of comma separated CIDRs to be filtered from the spoke VPC route table. Example: "10.2.0.0/116,10.3.0.0/16".
-* `customized_routes_advertisement` - (Optional) A list of comma separated CIDRs to be excluded from being advertised to. Example: "10.4.0.0/116,10.5.0.0/16".
+* `customized_routes_advertisement` - (Optional) A list of comma separated CIDRs to be included for being advertised to on-prem. Example: "10.4.0.0/116,10.5.0.0/16".
 
 ## Attribute Reference
 

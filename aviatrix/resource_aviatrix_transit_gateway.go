@@ -197,7 +197,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "A list of comma separated CIDRs to be excluded from being advertised to.",
+				Description: "A list of comma separated CIDRs to be excluded from being advertised to on-prem.",
 			},
 			"customer_managed_keys": {
 				Type:        schema.TypeString,
@@ -694,17 +694,17 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		} else {
 			d.Set("filtered_routes", "")
 		}
-		if len(gw.CustomizedRoutesAdvertisement) != 0 {
+		if len(gw.ExcludeCidrList) != 0 {
 			if customizedRoutesAdvertisement := d.Get("customized_routes_advertisement").(string); customizedRoutesAdvertisement != "" {
 				customizedRoutesAdvertisementArray := strings.Split(customizedRoutesAdvertisement, ",")
-				if len(goaviatrix.Difference(customizedRoutesAdvertisementArray, gw.CustomizedRoutesAdvertisement)) == 0 &&
-					len(goaviatrix.Difference(gw.CustomizedRoutesAdvertisement, customizedRoutesAdvertisementArray)) == 0 {
+				if len(goaviatrix.Difference(customizedRoutesAdvertisementArray, gw.ExcludeCidrList)) == 0 &&
+					len(goaviatrix.Difference(gw.ExcludeCidrList, customizedRoutesAdvertisementArray)) == 0 {
 					d.Set("customized_routes_advertisement", customizedRoutesAdvertisement)
 				} else {
-					d.Set("customized_routes_advertisement", strings.Join(gw.CustomizedRoutesAdvertisement, ","))
+					d.Set("customized_routes_advertisement", strings.Join(gw.ExcludeCidrList, ","))
 				}
 			} else {
-				d.Set("customized_routes_advertisement", strings.Join(gw.CustomizedRoutesAdvertisement, ","))
+				d.Set("customized_routes_advertisement", strings.Join(gw.ExcludeCidrList, ","))
 			}
 		} else {
 			d.Set("customized_routes_advertisement", "")
