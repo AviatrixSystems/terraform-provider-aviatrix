@@ -38,4 +38,20 @@ In addition to all arguments above, the following attributes are exported:
 * `gw_size` - Instance type.
 * `subnet` - Range of the subnet where the transit gateway is launched.
 * `public_ip` - Public IP address of the Gateway created.
+* `allocate_new_eip` - Whether the eip is newly allocated or not.
+* `single_az_ha` - Enable/Disable this feature.
+* `tag_list` - Instance tag of cloud provider. Only supported for AWS provider.
+* `enable_hybrid_connection` - Sign of readiness for TGW connection.
+* `connected_transit` - Connected Transit status.
+* `insane_mode` - Enable/Disable Insane Mode for Spoke Gateway.
+* `insane_mode_az` - AZ of subnet being created for Insane Mode Spoke Gateway. Required if insane_mode is enabled for aws cloud.
+* `enable_firenet` - Whether firenet interfaces is enabled.
+* `enable_active_mesh` - Enable/Disable active mesh mode for Transit Gateway.
+* `enable_vpc_dns_server` - Enable/Disable vpc_dns_server for Gateway. Only supports AWS.
+* `enable_advertise_transit_cidr` - Enable/Disable advertise transit VPC network CIDR.
+* `bgp_manual_spoke_advertise_cidrs` - Intended CIDR list to advertise to VGW.
+* `enable_encrypt_volume` - Enable/Disable encrypt gateway EBS volume. Only supported for AWS provider.
+* `customized_routes` - A list of comma separated CIDRs to be customized for the transit VPC.
+* `filtered_routes` - A list of comma separated CIDRs to be filtered from the transit VPC route table.
+* `customized_routes_advertisement` - A list of comma separated CIDRs to be excluded from being advertised to.
 
