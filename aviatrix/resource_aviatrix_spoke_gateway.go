@@ -308,7 +308,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "A list of comma separated CIDRs to be excluded from being advertised to.",
+				Description: "A list of comma separated CIDRs to be included for being advertised to on-prem",
 			},
 			"customer_managed_keys": {
 				Type:        schema.TypeString,
