@@ -99,20 +99,23 @@ func dataSourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Enable encrypt gateway EBS volume. Only supported for AWS provider.",
 			},
-			"customized_routes": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "A list of comma separated CIDRs to be customized for the spoke VPC.",
+			"customized_spoke_vpc_routes": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Description: "A list of comma separated CIDRs to be customized for the spoke VPC routes. When configured, " +
+					"it will replace all learned routes in VPC routing tables, including RFC1918 and non-RFC1918 CIDRs. " +
+					"It applies to this spoke gateway only​."},
+			"filtered_spoke_vpc_routes": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Description: "A list of comma separated CIDRs to be filtered from the spoke VPC route table. When configured, " +
+					"filtering CIDR(s) or it’s subnet will be deleted from VPC routing tables as well as from spoke gateway’s " +
+					"routing table. It applies to this spoke gateway only.",
 			},
-			"filtered_routes": {
+			"advertised_spoke_routes_include": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "A list of comma separated CIDRs to be filtered from the spoke VPC route table.",
-			},
-			"customized_routes_advertisement": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "A list of comma separated CIDRs to be excluded from being advertised to.",
+				Description: "A list of comma separated CIDRs to be advertised to on-prem as 'Included CIDR List'. When configured, it will replace all advertised routes from this VPC.​",
 			},
 			"cloud_instance_id": {
 				Type:        schema.TypeString,
@@ -201,22 +204,22 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("enable_vpc_dns_server", false)
 		}
 
-		if len(gw.CustomizedRoutes) != 0 {
-			d.Set("customized_routes", strings.Join(gw.CustomizedRoutes, ","))
+		if len(gw.CustomizedSpokeVpcRoutes) != 0 {
+			d.Set("customized_spoke_vpc_routes", strings.Join(gw.CustomizedSpokeVpcRoutes, ","))
 		} else {
-			d.Set("customized_routes", "")
+			d.Set("customized_spoke_vpc_routes", "")
 		}
 
-		if len(gw.FilteredRoutes) != 0 {
-			d.Set("filtered_routes", strings.Join(gw.FilteredRoutes, ","))
+		if len(gw.FilteredSpokeVpcRoutes) != 0 {
+			d.Set("filtered_spoke_vpc_routes", strings.Join(gw.FilteredSpokeVpcRoutes, ","))
 		} else {
-			d.Set("filtered_routes", "")
+			d.Set("filtered_spoke_vpc_routes", "")
 		}
 
-		if len(gw.CustomizedRoutesAdvertisement) != 0 {
-			d.Set("customized_routes_advertisement", strings.Join(gw.CustomizedRoutesAdvertisement, ","))
+		if len(gw.AdvertisedSpokeRoutes) != 0 {
+			d.Set("advertised_spoke_routes_include", strings.Join(gw.AdvertisedSpokeRoutes, ","))
 		} else {
-			d.Set("customized_routes_advertisement", "")
+			d.Set("advertised_spoke_routes_include", "")
 		}
 
 		if gw.CloudType == 1 {
