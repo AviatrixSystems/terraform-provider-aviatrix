@@ -54,6 +54,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_gateway":                 resourceAviatrixGateway(),
 			"aviatrix_geo_vpn":                 resourceAviatrixGeoVPN(),
 			"aviatrix_saml_endpoint":           resourceAviatrixSamlEndpoint(),
+			"aviatrix_source_nat":              resourceAviatrixSourceNat(),
 			"aviatrix_site2cloud":              resourceAviatrixSite2Cloud(),
 			"aviatrix_spoke_gateway":           resourceAviatrixSpokeGateway(),
 			"aviatrix_spoke_vpc":               resourceAviatrixSpokeVpc(),
