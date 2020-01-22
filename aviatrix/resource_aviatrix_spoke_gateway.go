@@ -292,23 +292,27 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable encrypt gateway EBS volume. Only supported for AWS provider. Valid values: true, false. Default value: false.",
 			},
-			"customized_routes": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "A list of comma separated CIDRs to be customized for the spoke VPC.",
+			"customized_spoke_vpc_routes": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				Description: "A list of comma separated CIDRs to be customized for the spoke VPC routes. When configured, " +
+					"it will replace all learned routes in VPC routing tables, including RFC1918 and non-RFC1918 CIDRs. " +
+					"It applies to this spoke gateway only​.",
 			},
-			"filtered_routes": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "A list of comma separated CIDRs to be filtered from the spoke VPC route table.",
+			"filtered_spoke_vpc_routes": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				Description: "A list of comma separated CIDRs to be filtered from the spoke VPC route table. When configured, " +
+					"filtering CIDR(s) or it’s subnet will be deleted from VPC routing tables as well as from spoke gateway’s " +
+					"routing table. It applies to this spoke gateway only.",
 			},
-			"customized_routes_advertisement": {
+			"advertised_spoke_routes_include": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "A list of comma separated CIDRs to be included for being advertised to on-prem",
+				Description: "A list of comma separated CIDRs to be advertised to on-prem as 'Included CIDR List'. When configured, it will replace all advertised routes from this VPC.​",
 			},
 			"customer_managed_keys": {
 				Type:        schema.TypeString,
@@ -656,59 +660,59 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if customizedRoutes := d.Get("customized_routes").(string); customizedRoutes != "" {
-		spokeGateway := &goaviatrix.Gateway{
-			GwName:           d.Get("gw_name").(string),
-			CustomizedRoutes: strings.Split(customizedRoutes, ","),
+	if customizedSpokeVpcRoutes := d.Get("customized_spoke_vpc_routes").(string); customizedSpokeVpcRoutes != "" {
+		transitGateway := &goaviatrix.Gateway{
+			GwName:                   d.Get("gw_name").(string),
+			CustomizedSpokeVpcRoutes: strings.Split(customizedSpokeVpcRoutes, ","),
 		}
 		for i := 0; ; i++ {
-			log.Printf("[INFO] Editing customized routes of spoke gateway: %s ", spokeGateway.GwName)
-			err := client.EditCustomRoutes(spokeGateway)
+			log.Printf("[INFO] Editing customized routes of spoke gateway: %s ", transitGateway.GwName)
+			err := client.EditGatewayCustomRoutes(transitGateway)
 			if err == nil {
 				break
 			}
 			if i <= 10 && strings.Contains(err.Error(), "when it is down") {
 				time.Sleep(10 * time.Second)
 			} else {
-				return fmt.Errorf("failed to edit customized routes of spoke gateway: %s due to: %s", spokeGateway.GwName, err)
+				return fmt.Errorf("failed to customize spoke vpc routes of spoke gateway: %s due to: %s", transitGateway.GwName, err)
 			}
 		}
 	}
 
-	if filteredRoutes := d.Get("filtered_routes").(string); filteredRoutes != "" {
-		spokeGateway := &goaviatrix.Gateway{
-			GwName:         d.Get("gw_name").(string),
-			FilteredRoutes: strings.Split(filteredRoutes, ","),
+	if filteredSpokeVpcRoutes := d.Get("filtered_spoke_vpc_routes").(string); filteredSpokeVpcRoutes != "" {
+		transitGateway := &goaviatrix.Gateway{
+			GwName:                 d.Get("gw_name").(string),
+			FilteredSpokeVpcRoutes: strings.Split(filteredSpokeVpcRoutes, ","),
 		}
 		for i := 0; ; i++ {
-			log.Printf("[INFO] Editing filtered routes of spoke gateway: %s ", spokeGateway.GwName)
-			err := client.EditFilterRoutes(spokeGateway)
+			log.Printf("[INFO] Editing filtered routes of spoke gateway: %s ", transitGateway.GwName)
+			err := client.EditGatewayFilterRoutes(transitGateway)
 			if err == nil {
 				break
 			}
 			if i <= 10 && strings.Contains(err.Error(), "when it is down") {
 				time.Sleep(10 * time.Second)
 			} else {
-				return fmt.Errorf("failed to edit filtered routes of spoke gateway: %s due to: %s", spokeGateway.GwName, err)
+				return fmt.Errorf("failed to edit filtered spoke vpc routes of spoke gateway: %s due to: %s", transitGateway.GwName, err)
 			}
 		}
 	}
 
-	if customizedRoutesAdvertisement := d.Get("customized_routes_advertisement").(string); customizedRoutesAdvertisement != "" {
-		spokeGateway := &goaviatrix.Gateway{
-			GwName:                        d.Get("gw_name").(string),
-			CustomizedRoutesAdvertisement: strings.Split(customizedRoutesAdvertisement, ","),
+	if advertisedSpokeRoutesInclude := d.Get("advertised_spoke_routes_include").(string); advertisedSpokeRoutesInclude != "" {
+		transitGateway := &goaviatrix.Gateway{
+			GwName:                d.Get("gw_name").(string),
+			AdvertisedSpokeRoutes: strings.Split(advertisedSpokeRoutesInclude, ","),
 		}
 		for i := 0; ; i++ {
-			log.Printf("[INFO] Editing customized routes advertisement of spoke gateway: %s ", spokeGateway.GwName)
-			err := client.EditCustomizedRoutesAdvertisement(spokeGateway)
+			log.Printf("[INFO] Editing customized routes advertisement of spoke gateway: %s ", transitGateway.GwName)
+			err := client.EditGatewayAdvertisedCidr(transitGateway)
 			if err == nil {
 				break
 			}
 			if i <= 10 && strings.Contains(err.Error(), "when it is down") {
 				time.Sleep(10 * time.Second)
 			} else {
-				return fmt.Errorf("failed to edit customized routes advertisement of spoke gateway: %s due to: %s", spokeGateway.GwName, err)
+				return fmt.Errorf("failed to edit advertised spoke vpc routes of spoke gateway: %s due to: %s", transitGateway.GwName, err)
 			}
 		}
 	}
@@ -878,42 +882,52 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("snat_policy", nil)
 		}
 
-		if len(gw.CustomizedRoutes) != 0 {
-			if customizedRoutes := d.Get("customized_routes").(string); customizedRoutes != "" {
-				customizedRoutesArray := strings.Split(customizedRoutes, ",")
-				if len(goaviatrix.Difference(customizedRoutesArray, gw.CustomizedRoutes)) == 0 &&
-					len(goaviatrix.Difference(gw.CustomizedRoutes, customizedRoutesArray)) == 0 {
-					d.Set("customized_routes", customizedRoutes)
+		log.Printf("zjin02: nothing wrong here")
+
+		if len(gw.CustomizedSpokeVpcRoutes) != 0 {
+			if customizedSpokeVpcRoutes := d.Get("customized_spoke_vpc_routes").(string); customizedSpokeVpcRoutes != "" {
+				customizedRoutesArray := strings.Split(customizedSpokeVpcRoutes, ",")
+				if len(goaviatrix.Difference(customizedRoutesArray, gw.CustomizedSpokeVpcRoutes)) == 0 &&
+					len(goaviatrix.Difference(gw.CustomizedSpokeVpcRoutes, customizedRoutesArray)) == 0 {
+					d.Set("customized_spoke_vpc_routes", customizedSpokeVpcRoutes)
 				} else {
-					d.Set("customized_routes", strings.Join(gw.CustomizedRoutes, ","))
+					d.Set("customized_spoke_vpc_routes", strings.Join(gw.CustomizedSpokeVpcRoutes, ","))
 				}
 			} else {
-				d.Set("customized_routes", strings.Join(gw.CustomizedRoutes, ","))
+				d.Set("customized_spoke_vpc_routes", strings.Join(gw.CustomizedSpokeVpcRoutes, ","))
 			}
 		} else {
-			d.Set("customized_routes", "")
+			d.Set("customized_spoke_vpc_routes", "")
 		}
-		if len(gw.FilteredRoutes) != 0 {
-			d.Set("filtered_routes", strings.Join(gw.FilteredRoutes, ","))
+
+		log.Printf("zjin03: nothing wrong here")
+
+		if len(gw.FilteredSpokeVpcRoutes) != 0 {
+			d.Set("filtered_spoke_vpc_routes", strings.Join(gw.FilteredSpokeVpcRoutes, ","))
 		} else {
-			d.Set("filtered_routes", "")
+			d.Set("filtered_spoke_vpc_routes", "")
 		}
-		if len(gw.CustomizedRoutesAdvertisement) != 0 {
-			if customizedRoutesAdvertisement := d.Get("customized_routes_advertisement").(string); customizedRoutesAdvertisement != "" {
-				customizedRoutesAdvertisementArray := strings.Split(customizedRoutesAdvertisement, ",")
-				if len(goaviatrix.Difference(customizedRoutesAdvertisementArray, gw.CustomizedRoutesAdvertisement)) == 0 &&
-					len(goaviatrix.Difference(gw.CustomizedRoutesAdvertisement, customizedRoutesAdvertisementArray)) == 0 {
-					d.Set("customized_routes_advertisement", customizedRoutesAdvertisement)
+
+		log.Printf("zjin04: nothing wrong here")
+
+		if len(gw.AdvertisedSpokeRoutes) != 0 {
+			if advertisedSpokeRoutes := d.Get("advertised_spoke_routes_include").(string); advertisedSpokeRoutes != "" {
+				advertisedSpokeRoutesArray := strings.Split(advertisedSpokeRoutes, ",")
+				if len(goaviatrix.Difference(advertisedSpokeRoutesArray, gw.AdvertisedSpokeRoutes)) == 0 &&
+					len(goaviatrix.Difference(gw.AdvertisedSpokeRoutes, advertisedSpokeRoutesArray)) == 0 {
+					d.Set("advertised_spoke_routes_include", advertisedSpokeRoutes)
 				} else {
-					d.Set("customized_routes_advertisement", strings.Join(gw.CustomizedRoutesAdvertisement, ","))
+					d.Set("advertised_spoke_routes_include", strings.Join(gw.AdvertisedSpokeRoutes, ","))
 				}
 			} else {
-				d.Set("customized_routes_advertisement", strings.Join(gw.CustomizedRoutesAdvertisement, ","))
+				d.Set("advertised_spoke_routes_include", strings.Join(gw.AdvertisedSpokeRoutes, ","))
 			}
 		} else {
-			d.Set("customized_routes_advertisement", "")
+			d.Set("advertised_spoke_routes_include", "")
 		}
 	}
+
+	log.Printf("zjin05: nothing wrong here")
 
 	if gw.SpokeVpc == "yes" {
 		d.Set("transit_gw", gw.TransitGwName)
@@ -1544,43 +1558,43 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if d.HasChange("customized_routes") {
-		spokeGateway := &goaviatrix.Gateway{
-			GwName:           d.Get("gw_name").(string),
-			CustomizedRoutes: strings.Split(d.Get("customized_routes").(string), ","),
+	if d.HasChange("customized_spoke_vpc_routes") {
+		transitGateway := &goaviatrix.Gateway{
+			GwName:                   d.Get("gw_name").(string),
+			CustomizedSpokeVpcRoutes: strings.Split(d.Get("customized_spoke_vpc_routes").(string), ","),
 		}
-		err := client.EditCustomRoutes(spokeGateway)
-		log.Printf("[INFO] Editing customized routes of spoke gateway: %s ", spokeGateway.GwName)
+		err := client.EditGatewayCustomRoutes(transitGateway)
+		log.Printf("[INFO] Customizeing routes of spoke gateway: %s ", transitGateway.GwName)
 		if err != nil {
-			return fmt.Errorf("failed to edit customized routes of spoke gateway: %s due to: %s", spokeGateway.GwName, err)
+			return fmt.Errorf("failed to customize spoke vpc routes of spoke gateway: %s due to: %s", transitGateway.GwName, err)
 		}
-		d.SetPartial("customized_routes")
+		d.SetPartial("customized_spoke_vpc_routes")
 	}
 
-	if d.HasChange("filtered_routes") {
-		spokeGateway := &goaviatrix.Gateway{
-			GwName:         d.Get("gw_name").(string),
-			FilteredRoutes: strings.Split(d.Get("filtered_routes").(string), ","),
+	if d.HasChange("filtered_spoke_vpc_routes") {
+		transitGateway := &goaviatrix.Gateway{
+			GwName:                 d.Get("gw_name").(string),
+			FilteredSpokeVpcRoutes: strings.Split(d.Get("filtered_spoke_vpc_routes").(string), ","),
 		}
-		err := client.EditFilterRoutes(spokeGateway)
-		log.Printf("[INFO] Editing customized routes of spoke gateway: %s ", spokeGateway.GwName)
+		err := client.EditGatewayFilterRoutes(transitGateway)
+		log.Printf("[INFO] Editing filtered spoke vpc routes of spoke gateway: %s ", transitGateway.GwName)
 		if err != nil {
-			return fmt.Errorf("failed to edit customized routes of spoke gateway: %s due to: %s", spokeGateway.GwName, err)
+			return fmt.Errorf("failed to edit filtered spoke vpc routes of spoke gateway: %s due to: %s", transitGateway.GwName, err)
 		}
-		d.SetPartial("filtered_routes")
+		d.SetPartial("filtered_spoke_vpc_routes")
 	}
 
-	if d.HasChange("customized_routes_advertisement") {
-		spokeGateway := &goaviatrix.Gateway{
-			GwName:                        d.Get("gw_name").(string),
-			CustomizedRoutesAdvertisement: strings.Split(d.Get("customized_routes_advertisement").(string), ","),
+	if d.HasChange("advertised_spoke_routes_include") {
+		transitGateway := &goaviatrix.Gateway{
+			GwName:                d.Get("gw_name").(string),
+			AdvertisedSpokeRoutes: strings.Split(d.Get("advertised_spoke_routes_include").(string), ","),
 		}
-		err := client.EditCustomizedRoutesAdvertisement(spokeGateway)
-		log.Printf("[INFO] Editing customized routes of spoke gateway: %s ", spokeGateway.GwName)
+		err := client.EditGatewayAdvertisedCidr(transitGateway)
+		log.Printf("[INFO] Editing customized spoke vpc routes of spoke gateway: %s ", transitGateway.GwName)
 		if err != nil {
-			return fmt.Errorf("failed to edit customized routes of spoke gateway: %s due to: %s", spokeGateway.GwName, err)
+			return fmt.Errorf("failed to edit customized spoke vpc routes of spoke gateway: %s due to: %s", transitGateway.GwName, err)
 		}
-		d.SetPartial("customized_routes_advertisement")
+		d.SetPartial("advertised_spoke_routes_include")
 	}
 
 	d.Partial(false)

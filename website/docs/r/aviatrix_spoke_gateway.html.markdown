@@ -167,9 +167,9 @@ The following arguments are supported:
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS. Valid values: true, false. Default value: false.
 * `enable_encrypt_volume` - (Optional) Enable Encrypt EBS Volume feature for Gateway. Only supports AWS. Valid values: true, false. Default value: false.
 * `customer_managed_keys` - (Optional and Sensitive) Customer managed key ID.
-* `customized_routes` - (Optional) A list of comma separated CIDRs to be customized for the spoke VPC. Example: "10.0.0.0/116,10.2.0.0/16".
-* `filtered_routes` - (Optional) A list of comma separated CIDRs to be filtered from the spoke VPC route table. Example: "10.2.0.0/116,10.3.0.0/16".
-* `customized_routes_advertisement` - (Optional) A list of comma separated CIDRs to be included for being advertised to on-prem. Example: "10.4.0.0/116,10.5.0.0/16".
+* `customized_spoke_vpc_routes` - (Optional) A list of comma separated CIDRs to be customized for the spoke VPC routes. When configured, it will replace all learned routes in VPC routing tables, including RFC1918 and non-RFC1918 CIDRs. It applies to this spoke gateway only​. Example: "10.0.0.0/116,10.2.0.0/16".
+* `filtered_spoke_vpc_routes` - (Optional) A list of comma separated CIDRs to be filtered from the spoke VPC route table. When configured, filtering CIDR(s) or it’s subnet will be deleted from VPC routing tables as well as from spoke gateway’s routing table. It applies to this spoke gateway only. Example: "10.2.0.0/116,10.3.0.0/16".
+* `advertised_spoke_routes_include` - (Optional) A list of comma separated CIDRs to be advertised to on-prem as 'Included CIDR List'. When configured, it will replace all advertised routes from this VPC. Example: "10.4.0.0/116,10.5.0.0/16".
 
 ## Attribute Reference
 
