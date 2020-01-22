@@ -1387,7 +1387,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				}
 				err := client.EnableSNat(gw)
 				if err != nil {
-					return fmt.Errorf("failed to enable SNAT of 'secondary': %s", err)
+					return fmt.Errorf("failed to enable SNAT of 'custom': %s", err)
 				}
 			} else if snatMode == "primary" {
 				if len(d.Get("snat_policy").([]interface{})) != 0 {
