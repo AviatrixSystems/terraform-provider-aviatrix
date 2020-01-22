@@ -23,7 +23,7 @@ func resourceAviatrixSourceNat() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Name of the gateway which is going to be created.",
+				Description: "Name of the gateway.",
 			},
 			"snat_mode": {
 				Type:        schema.TypeString,
@@ -46,7 +46,7 @@ func resourceAviatrixSourceNat() *schema.Resource {
 						"src_port": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "A source port that the policy rule applies.",
+							Description: "A source port where the policy rule applies.",
 						},
 						"dst_cidr": {
 							Type:        schema.TypeString,
