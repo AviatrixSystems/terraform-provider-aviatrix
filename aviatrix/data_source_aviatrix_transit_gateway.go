@@ -119,20 +119,25 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Enable/Disable encrypt gateway EBS volume. Only supported for AWS provider.",
 			},
-			"customized_routes": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "A list of comma separated CIDRs to be customized for the transit VPC.",
+			"customized_spoke_vpc_routes": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Description: "A list of comma separated CIDRs to be customized for the spoke VPC routes. When configured, " +
+					"it will replace all learned routes in VPC routing tables, including RFC1918 and non-RFC1918 CIDRs. " +
+					"It applies to this spoke gateway only​."},
+			"filtered_spoke_vpc_routes": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Description: "A list of comma separated CIDRs to be filtered from the spoke VPC route table. When configured, " +
+					"filtering CIDR(s) or it’s subnet will be deleted from VPC routing tables as well as from spoke gateway’s " +
+					"routing table. It applies to this spoke gateway only.",
 			},
-			"filtered_routes": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "A list of comma separated CIDRs to be filtered from the transit VPC route table.",
-			},
-			"customized_routes_advertisement": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "A list of comma separated CIDRs to be excluded from being advertised to.",
+			"advertised_spoke_routes_exclude": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Description: "A list of comma separated CIDRs to be advertised to on-prem as 'Excluded CIDR List'. " +
+					"When configured, it inspects all the advertised CIDRs from its spoke gateways and " +
+					"remove those included in the 'Excluded CIDR List'.​",
 			},
 		},
 	}
@@ -210,20 +215,20 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 			d.Set("insane_mode_az", "")
 		}
 
-		if len(gw.CustomizedRoutes) != 0 {
-			d.Set("customized_routes", strings.Join(gw.CustomizedRoutes, ","))
+		if len(gw.CustomizedSpokeVpcRoutes) != 0 {
+			d.Set("customized_spoke_vpc_routes", strings.Join(gw.CustomizedSpokeVpcRoutes, ","))
 		} else {
-			d.Set("customized_routes", "")
+			d.Set("customized_spoke_vpc_routes", "")
 		}
-		if len(gw.FilteredRoutes) != 0 {
-			d.Set("filtered_routes", strings.Join(gw.FilteredRoutes, ","))
+		if len(gw.FilteredSpokeVpcRoutes) != 0 {
+			d.Set("filtered_spoke_vpc_routes", strings.Join(gw.FilteredSpokeVpcRoutes, ","))
 		} else {
-			d.Set("filtered_routes", "")
+			d.Set("filtered_spoke_vpc_routes", "")
 		}
 		if len(gw.ExcludeCidrList) != 0 {
-			d.Set("customized_routes_advertisement", strings.Join(gw.ExcludeCidrList, ","))
+			d.Set("advertised_spoke_routes_exclude", strings.Join(gw.ExcludeCidrList, ","))
 		} else {
-			d.Set("customized_routes_advertisement", "")
+			d.Set("advertised_spoke_routes_exclude", "")
 		}
 
 		if gw.EnableActiveMesh == "yes" {
