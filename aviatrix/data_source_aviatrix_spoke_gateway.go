@@ -112,7 +112,7 @@ func dataSourceAviatrixSpokeGateway() *schema.Resource {
 					"filtering CIDR(s) or it’s subnet will be deleted from VPC routing tables as well as from spoke gateway’s " +
 					"routing table. It applies to this spoke gateway only.",
 			},
-			"advertised_spoke_routes_include": {
+			"included_advertised_spoke_routes": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "A list of comma separated CIDRs to be advertised to on-prem as 'Included CIDR List'. When configured, it will replace all advertised routes from this VPC.​",
@@ -217,9 +217,9 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 
 		if len(gw.AdvertisedSpokeRoutes) != 0 {
-			d.Set("advertised_spoke_routes_include", strings.Join(gw.AdvertisedSpokeRoutes, ","))
+			d.Set("included_advertised_spoke_routes", strings.Join(gw.AdvertisedSpokeRoutes, ","))
 		} else {
-			d.Set("advertised_spoke_routes_include", "")
+			d.Set("included_advertised_spoke_routes", "")
 		}
 
 		if gw.CloudType == 1 {
