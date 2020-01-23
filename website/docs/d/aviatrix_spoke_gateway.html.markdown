@@ -49,6 +49,6 @@ In addition to all arguments above, the following attributes are exported:
 * `enable_encrypt_volume` - Enable encrypt gateway EBS volume. Only supported for AWS provider.
 * `customized_spoke_vpc_routes` - A list of comma separated CIDRs to be customized for the spoke VPC routes. When configured, it will replace all learned routes in VPC routing tables, including RFC1918 and non-RFC1918 CIDRs. It applies to this spoke gateway only​.
 * `filtered_spoke_vpc_routes` - A list of comma separated CIDRs to be filtered from the spoke VPC route table. When configured, filtering CIDR(s) or it’s subnet will be deleted from VPC routing tables as well as from spoke gateway’s routing table. It applies to this spoke gateway only.
-* `advertised_spoke_routes_include` - A list of comma separated CIDRs to be advertised to on-prem as 'Included CIDR List'. When configured, it will replace all advertised routes from this VPC.
+* `included_advertised_spoke_routes` - A list of comma separated CIDRs to be advertised to on-prem as 'Included CIDR List'. When configured, it will replace all advertised routes from this VPC.
 * `cloud_instance_id` - Cloud instance ID
 

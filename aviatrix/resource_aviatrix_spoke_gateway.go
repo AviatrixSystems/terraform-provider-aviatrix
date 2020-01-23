@@ -308,7 +308,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 					"filtering CIDR(s) or it’s subnet will be deleted from VPC routing tables as well as from spoke gateway’s " +
 					"routing table. It applies to this spoke gateway only.",
 			},
-			"advertised_spoke_routes_include": {
+			"included_advertised_spoke_routes": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
@@ -698,10 +698,10 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if advertisedSpokeRoutesInclude := d.Get("advertised_spoke_routes_include").(string); advertisedSpokeRoutesInclude != "" {
+	if includedAdvertisedSpokeRoutes := d.Get("included_advertised_spoke_routes").(string); includedAdvertisedSpokeRoutes != "" {
 		transitGateway := &goaviatrix.Gateway{
 			GwName:                d.Get("gw_name").(string),
-			AdvertisedSpokeRoutes: strings.Split(advertisedSpokeRoutesInclude, ","),
+			AdvertisedSpokeRoutes: strings.Split(includedAdvertisedSpokeRoutes, ","),
 		}
 		for i := 0; ; i++ {
 			log.Printf("[INFO] Editing customized routes advertisement of spoke gateway: %s ", transitGateway.GwName)
@@ -882,8 +882,6 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("snat_policy", nil)
 		}
 
-		log.Printf("zjin02: nothing wrong here")
-
 		if len(gw.CustomizedSpokeVpcRoutes) != 0 {
 			if customizedSpokeVpcRoutes := d.Get("customized_spoke_vpc_routes").(string); customizedSpokeVpcRoutes != "" {
 				customizedRoutesArray := strings.Split(customizedSpokeVpcRoutes, ",")
@@ -900,34 +898,28 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("customized_spoke_vpc_routes", "")
 		}
 
-		log.Printf("zjin03: nothing wrong here")
-
 		if len(gw.FilteredSpokeVpcRoutes) != 0 {
 			d.Set("filtered_spoke_vpc_routes", strings.Join(gw.FilteredSpokeVpcRoutes, ","))
 		} else {
 			d.Set("filtered_spoke_vpc_routes", "")
 		}
 
-		log.Printf("zjin04: nothing wrong here")
-
 		if len(gw.AdvertisedSpokeRoutes) != 0 {
-			if advertisedSpokeRoutes := d.Get("advertised_spoke_routes_include").(string); advertisedSpokeRoutes != "" {
+			if advertisedSpokeRoutes := d.Get("included_advertised_spoke_routes").(string); advertisedSpokeRoutes != "" {
 				advertisedSpokeRoutesArray := strings.Split(advertisedSpokeRoutes, ",")
 				if len(goaviatrix.Difference(advertisedSpokeRoutesArray, gw.AdvertisedSpokeRoutes)) == 0 &&
 					len(goaviatrix.Difference(gw.AdvertisedSpokeRoutes, advertisedSpokeRoutesArray)) == 0 {
-					d.Set("advertised_spoke_routes_include", advertisedSpokeRoutes)
+					d.Set("included_advertised_spoke_routes", advertisedSpokeRoutes)
 				} else {
-					d.Set("advertised_spoke_routes_include", strings.Join(gw.AdvertisedSpokeRoutes, ","))
+					d.Set("included_advertised_spoke_routes", strings.Join(gw.AdvertisedSpokeRoutes, ","))
 				}
 			} else {
-				d.Set("advertised_spoke_routes_include", strings.Join(gw.AdvertisedSpokeRoutes, ","))
+				d.Set("included_advertised_spoke_routes", strings.Join(gw.AdvertisedSpokeRoutes, ","))
 			}
 		} else {
-			d.Set("advertised_spoke_routes_include", "")
+			d.Set("included_advertised_spoke_routes", "")
 		}
 	}
-
-	log.Printf("zjin05: nothing wrong here")
 
 	if gw.SpokeVpc == "yes" {
 		d.Set("transit_gw", gw.TransitGwName)
@@ -1584,17 +1576,17 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		d.SetPartial("filtered_spoke_vpc_routes")
 	}
 
-	if d.HasChange("advertised_spoke_routes_include") {
+	if d.HasChange("included_advertised_spoke_routes") {
 		transitGateway := &goaviatrix.Gateway{
 			GwName:                d.Get("gw_name").(string),
-			AdvertisedSpokeRoutes: strings.Split(d.Get("advertised_spoke_routes_include").(string), ","),
+			AdvertisedSpokeRoutes: strings.Split(d.Get("included_advertised_spoke_routes").(string), ","),
 		}
 		err := client.EditGatewayAdvertisedCidr(transitGateway)
 		log.Printf("[INFO] Editing customized spoke vpc routes of spoke gateway: %s ", transitGateway.GwName)
 		if err != nil {
 			return fmt.Errorf("failed to edit customized spoke vpc routes of spoke gateway: %s due to: %s", transitGateway.GwName, err)
 		}
-		d.SetPartial("advertised_spoke_routes_include")
+		d.SetPartial("included_advertised_spoke_routes")
 	}
 
 	d.Partial(false)
