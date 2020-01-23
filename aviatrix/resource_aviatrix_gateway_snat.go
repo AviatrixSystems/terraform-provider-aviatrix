@@ -28,8 +28,8 @@ func resourceAviatrixGatewaySNat() *schema.Resource {
 			"snat_mode": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "primary",
-				Description: "Valid values: 'primary', 'secondary' and 'custom'.",
+				Default:     "single_ip",
+				Description: "Valid values: 'single_ip', and 'customized_snat'.",
 			},
 			"snat_policy": {
 				Type:        schema.TypeList,
@@ -109,20 +109,20 @@ func resourceAviatrixGatewaySNatCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	snatMode := d.Get("snat_mode").(string)
-	if snatMode == "primary" {
+	if snatMode == "single_ip" {
 		gateway.EnableNat = "yes"
 		if len(d.Get("snat_policy").([]interface{})) != 0 {
-			return fmt.Errorf("'snat_policy' should be empty for 'snat_mode' of 'primary'")
+			return fmt.Errorf("'snat_policy' should be empty for 'snat_mode' of 'single_ip'")
 		}
-	} else if snatMode == "secondary" {
+	} else if snatMode == "multiple_ips " {
 		if len(d.Get("snat_policy").([]interface{})) != 0 {
-			return fmt.Errorf("'snat_policy' should be empty for 'snat_mode' of 'secondary'")
+			return fmt.Errorf("'snat_policy' should be empty for 'snat_mode' of 'multiple_ips'")
 		}
 		gateway.EnableNat = "yes"
 		gateway.SnatMode = "secondary"
-	} else if snatMode == "custom" {
+	} else if snatMode == "customized_snat" {
 		if len(d.Get("snat_policy").([]interface{})) == 0 {
-			return fmt.Errorf("please specify 'snat_policy' for 'snat_mode' of 'custom'")
+			return fmt.Errorf("please specify 'snat_policy' for 'snat_mode' of 'customized_snat'")
 		}
 		gateway.EnableNat = "yes"
 		gateway.SnatMode = "custom"
@@ -147,7 +147,7 @@ func resourceAviatrixGatewaySNatCreate(d *schema.ResourceData, meta interface{})
 			}
 		}
 	} else {
-		return fmt.Errorf("please specify valid value for 'snat_mode'('primary', 'secondary' or 'custom')")
+		return fmt.Errorf("please specify valid value for 'snat_mode'('single_ip' or 'customized_snat')")
 	}
 	err := client.EnableSNat(gateway)
 	if err != nil {
@@ -192,7 +192,7 @@ func resourceAviatrixGatewaySNatRead(d *schema.ResourceData, meta interface{}) e
 		}
 		if gw.EnableNat == "yes" {
 			if gw.SnatMode == "customized" {
-				d.Set("snat_mode", "custom")
+				d.Set("snat_mode", "customized_snat")
 				var snatPolicy []map[string]interface{}
 				for _, policy := range gwDetail.SnatPolicy {
 					sP := make(map[string]interface{})
@@ -214,10 +214,10 @@ func resourceAviatrixGatewaySNatRead(d *schema.ResourceData, meta interface{}) e
 					log.Printf("[WARN] Error setting 'snat_policy' for (%s): %s", d.Id(), err)
 				}
 			} else if gw.SnatMode == "secondary" {
-				d.Set("snat_mode", "secondary")
+				d.Set("snat_mode", "multiple_ips")
 				d.Set("snat_policy", nil)
 			} else {
-				d.Set("snat_mode", "primary")
+				d.Set("snat_mode", "single_ip")
 				d.Set("snat_policy", nil)
 			}
 		} else {
@@ -240,14 +240,14 @@ func resourceAviatrixGatewaySNatUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("snat_mode") {
 		snatMode := d.Get("snat_mode").(string)
-		if snatMode == "secondary" {
+		if snatMode == "multiple_ips" {
 			if len(d.Get("snat_policy").([]interface{})) != 0 {
-				return fmt.Errorf("'snat_policy' should be empty for 'snat_mode' of 'secondary'")
+				return fmt.Errorf("'snat_policy' should be empty for 'snat_mode' of 'multiple_ips'")
 			}
 			gateway.SnatMode = "secondary"
-		} else if snatMode == "custom" {
+		} else if snatMode == "customized_snat" {
 			if len(d.Get("snat_policy").([]interface{})) == 0 {
-				return fmt.Errorf("please specify 'snat_policy' for 'snat_mode' of 'custom'")
+				return fmt.Errorf("please specify 'snat_policy' for 'snat_mode' of 'customized_snat'")
 			}
 			gateway.SnatMode = "custom"
 			if _, ok := d.GetOk("snat_policy"); ok {
@@ -270,12 +270,12 @@ func resourceAviatrixGatewaySNatUpdate(d *schema.ResourceData, meta interface{})
 					gateway.SnatPolicy = append(gateway.SnatPolicy, *customPolicy)
 				}
 			}
-		} else if snatMode == "primary" {
+		} else if snatMode == "single_ip" {
 			if len(d.Get("snat_policy").([]interface{})) != 0 {
-				return fmt.Errorf("'snat_policy' should be empty for 'snat_mode' of 'primary'")
+				return fmt.Errorf("'snat_policy' should be empty for 'snat_mode' of 'single_ip'")
 			}
 		} else {
-			return fmt.Errorf("please specify valid value for 'snat_mode'('primary', 'secondary' or 'custom')")
+			return fmt.Errorf("please specify valid value for 'snat_mode'('single_ip', or 'customized_snat')")
 		}
 		err := client.DisableSNat(gateway)
 		if err != nil {
@@ -283,18 +283,18 @@ func resourceAviatrixGatewaySNatUpdate(d *schema.ResourceData, meta interface{})
 		}
 		err = client.EnableSNat(gateway)
 		if err != nil {
-			return fmt.Errorf("failed to enable SNAT of 'primary' for gateway(name: %s) due to: %s", gateway.GatewayName, err)
+			return fmt.Errorf("failed to enable SNAT of 'single_ip' for gateway(name: %s) due to: %s", gateway.GatewayName, err)
 		}
 	}
 
 	if d.HasChange("snat_policy") {
 		if !d.HasChange("snat_mode") {
 			snatMode := d.Get("snat_mode").(string)
-			if snatMode != "custom" {
+			if snatMode != "customized_snat" {
 				return fmt.Errorf("cann't update 'snat_policy' for 'snat_mode': %s", snatMode)
 			}
 			if len(d.Get("snat_policy").([]interface{})) == 0 {
-				return fmt.Errorf("please specify 'snat_policy' for 'snat_mode' of 'custom'")
+				return fmt.Errorf("please specify 'snat_policy' for 'snat_mode' of 'customized_snat'")
 			}
 
 			gateway.SnatMode = "custom"
@@ -321,7 +321,7 @@ func resourceAviatrixGatewaySNatUpdate(d *schema.ResourceData, meta interface{})
 
 			err := client.EnableSNat(gateway)
 			if err != nil {
-				return fmt.Errorf("failed to enable SNAT of 'custom': %s", err)
+				return fmt.Errorf("failed to enable SNAT of 'customized_snat': %s", err)
 			}
 		}
 	}
