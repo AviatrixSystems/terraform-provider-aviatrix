@@ -85,11 +85,8 @@ type EditSite2CloudConnDetail struct {
 	VpcID                   []string      `json:"vpc_id,omitempty"`
 	TunnelName              []string      `json:"name,omitempty"`
 	ConnType                string        `json:"type,omitempty"`
-	TunnelType              []string      `json:"tunnel_type,omitempty"`
-	GwName                  []string      `json:"gw_name,omitempty"`
-	BackupGwName            []string      `json:"backup_gateway_name,omitempty"`
-	RemoteGwIP              []string      `json:"remote_gateway_ip,omitempty"`
-	RemoteGwIP2             []string      `json:"backup_remote_gateway_ip,omitempty"`
+	TunnelType              string        `json:"tunnel_type,omitempty"`
+	GwName                  string        `json:"gw_name,omitempty"`
 	Tunnels                 []TunnelInfo  `json:"tunnels,omitempty"`
 	RemoteSubnet            string        `json:"real_remote_cidr,omitempty"`
 	LocalSubnet             string        `json:"real_local_cidr,omitempty"`
@@ -277,9 +274,9 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 
 	s2cConnDetail := data.Results.Connections
 	if len(s2cConnDetail.TunnelName) != 0 {
-		site2cloud.GwName = s2cConnDetail.GwName[0]
+		site2cloud.GwName = s2cConnDetail.GwName
 		site2cloud.ConnType = s2cConnDetail.ConnType
-		site2cloud.TunnelType = s2cConnDetail.TunnelType[0]
+		site2cloud.TunnelType = s2cConnDetail.TunnelType
 		site2cloud.RemoteGwType = s2cConnDetail.PeerType
 		if site2cloud.ConnType == "mapped" {
 			site2cloud.RemoteSubnet = s2cConnDetail.RemoteSubnet
