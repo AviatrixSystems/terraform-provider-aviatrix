@@ -197,7 +197,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					"filtering CIDR(s) or it’s subnet will be deleted from VPC routing tables as well as from spoke gateway’s " +
 					"routing table. It applies to all spoke gateways attached to this transit gateway.",
 			},
-			"advertised_spoke_routes_exclude": {
+			"excluded_advertised_spoke_routes": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
@@ -559,7 +559,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if advertisedSpokeRoutesExclude := d.Get("advertised_spoke_routes_exclude").(string); advertisedSpokeRoutesExclude != "" {
+	if advertisedSpokeRoutesExclude := d.Get("excluded_advertised_spoke_routes").(string); advertisedSpokeRoutesExclude != "" {
 		transitGateway := &goaviatrix.Gateway{
 			GwName:                d.Get("gw_name").(string),
 			AdvertisedSpokeRoutes: strings.Split(advertisedSpokeRoutesExclude, ","),
@@ -701,19 +701,19 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("filtered_spoke_vpc_routes", "")
 		}
 		if len(gw.ExcludeCidrList) != 0 {
-			if advertisedSpokeRoutes := d.Get("advertised_spoke_routes_exclude").(string); advertisedSpokeRoutes != "" {
+			if advertisedSpokeRoutes := d.Get("excluded_advertised_spoke_routes").(string); advertisedSpokeRoutes != "" {
 				advertisedSpokeRoutesArray := strings.Split(advertisedSpokeRoutes, ",")
 				if len(goaviatrix.Difference(advertisedSpokeRoutesArray, gw.ExcludeCidrList)) == 0 &&
 					len(goaviatrix.Difference(gw.ExcludeCidrList, advertisedSpokeRoutesArray)) == 0 {
-					d.Set("advertised_spoke_routes_exclude", advertisedSpokeRoutes)
+					d.Set("excluded_advertised_spoke_routes", advertisedSpokeRoutes)
 				} else {
-					d.Set("advertised_spoke_routes_exclude", strings.Join(gw.ExcludeCidrList, ","))
+					d.Set("excluded_advertised_spoke_routes", strings.Join(gw.ExcludeCidrList, ","))
 				}
 			} else {
-				d.Set("advertised_spoke_routes_exclude", strings.Join(gw.ExcludeCidrList, ","))
+				d.Set("excluded_advertised_spoke_routes", strings.Join(gw.ExcludeCidrList, ","))
 			}
 		} else {
-			d.Set("advertised_spoke_routes_exclude", "")
+			d.Set("excluded_advertised_spoke_routes", "")
 		}
 
 		gwDetail, err := client.GetGatewayDetail(gw)
@@ -1278,17 +1278,17 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		d.SetPartial("filtered_spoke_vpc_routes")
 	}
 
-	if d.HasChange("advertised_spoke_routes_exclude") {
+	if d.HasChange("excluded_advertised_spoke_routes") {
 		transitGateway := &goaviatrix.Gateway{
 			GwName:                d.Get("gw_name").(string),
-			AdvertisedSpokeRoutes: strings.Split(d.Get("advertised_spoke_routes_exclude").(string), ","),
+			AdvertisedSpokeRoutes: strings.Split(d.Get("excluded_advertised_spoke_routes").(string), ","),
 		}
 		err := client.EditGatewayAdvertisedCidr(transitGateway)
 		log.Printf("[INFO] Editing customized spoke vpc routes of transit gateway: %s ", transitGateway.GwName)
 		if err != nil {
 			return fmt.Errorf("failed to edit customized spoke vpc routes of transit gateway: %s due to: %s", transitGateway.GwName, err)
 		}
-		d.SetPartial("advertised_spoke_routes_include")
+		d.SetPartial("excluded_advertised_spoke_routes")
 	}
 
 	d.Partial(false)
