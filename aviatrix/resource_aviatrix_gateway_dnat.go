@@ -8,12 +8,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceAviatrixDestinationNat() *schema.Resource {
+func resourceAviatrixGatewayDNat() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAviatrixDestinationNatCreate,
-		Read:   resourceAviatrixDestinationNatRead,
-		Update: resourceAviatrixDestinationNatUpdate,
-		Delete: resourceAviatrixDestinationNatDelete,
+		Create: resourceAviatrixGatewayDNatCreate,
+		Read:   resourceAviatrixGatewayDNatRead,
+		Update: resourceAviatrixGatewayDNatUpdate,
+		Delete: resourceAviatrixGatewayDNatDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -95,7 +95,7 @@ func resourceAviatrixDestinationNat() *schema.Resource {
 	}
 }
 
-func resourceAviatrixDestinationNatCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixGatewayDNatCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	gateway := &goaviatrix.Gateway{
@@ -128,10 +128,10 @@ func resourceAviatrixDestinationNatCreate(d *schema.ResourceData, meta interface
 	}
 
 	d.SetId(gateway.GatewayName)
-	return resourceAviatrixDestinationNatRead(d, meta)
+	return resourceAviatrixGatewayDNatRead(d, meta)
 }
 
-func resourceAviatrixDestinationNatRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixGatewayDNatRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	gwName := d.Get("gw_name").(string)
@@ -193,7 +193,7 @@ func resourceAviatrixDestinationNatRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAviatrixDestinationNatUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixGatewayDNatUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	log.Printf("[INFO] Updating Aviatrix gateway: %#v", d.Get("gw_name").(string))
@@ -232,10 +232,10 @@ func resourceAviatrixDestinationNatUpdate(d *schema.ResourceData, meta interface
 
 	d.Partial(false)
 	d.SetId(d.Get("gw_name").(string))
-	return resourceAviatrixDestinationNatRead(d, meta)
+	return resourceAviatrixGatewayDNatRead(d, meta)
 }
 
-func resourceAviatrixDestinationNatDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixGatewayDNatDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	gateway := &goaviatrix.Gateway{
 		GatewayName: d.Get("gw_name").(string),
