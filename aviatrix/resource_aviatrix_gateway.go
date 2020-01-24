@@ -61,7 +61,7 @@ func resourceAviatrixGateway() *schema.Resource {
 				Default:     "",
 				Description: "AZ of subnet being created for Insane Mode Gateway. Required if insane_mode is set.",
 			},
-			"enable_snat": {
+			"single_ip_snat": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
@@ -366,19 +366,23 @@ func resourceAviatrixGateway() *schema.Resource {
 func resourceExampleInstanceResourceV0() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+			"enable_snat": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable Source NAT for this container.",
 			},
 		},
 	}
 }
 
 func resourceExampleInstanceStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
-	rawState["single_ip_snat"] = rawState["enable_snat"]
-	if rawState["dnat_policy"] != nil {
-		delete(rawState, "dnat_policy")
+	if rawState["enable_snat"] == true {
+		rawState["single_ip_snat"] = true
+	} else {
+		rawState["single_ip_snat"] = false
 	}
+	delete(rawState, "dnat_policy")
 	return rawState, nil
 }
 
@@ -424,8 +428,8 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), ARM (8), OCI (16), or AWSGOV (256)")
 	}
 
-	enableNat := d.Get("enable_snat").(bool)
-	if enableNat {
+	singleIpNat := d.Get("single_ip_nat").(bool)
+	if singleIpNat {
 		gateway.EnableNat = "yes"
 	} else {
 		gateway.EnableNat = "no"
@@ -805,9 +809,13 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("subnet", gw.VpcNet)
 
 		if gw.EnableNat == "yes" {
-			d.Set("enable_snat", true)
+			if gw.SnatMode == "primary" {
+				d.Set("single_ip_snat", true)
+			} else {
+				d.Set("single_ip_snat", false)
+			}
 		} else {
-			d.Set("enable_snat", false)
+			d.Set("single_ip_snat", false)
 		}
 
 		if gw.CloudType == 1 || gw.CloudType == 256 {
@@ -1407,13 +1415,13 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 	}
-	if d.HasChange("enable_snat") {
+	if d.HasChange("single_ip_snat") {
 		gw := &goaviatrix.Gateway{
 			CloudType:   d.Get("cloud_type").(int),
 			GatewayName: d.Get("gw_name").(string),
 		}
 
-		enableNat := d.Get("enable_snat").(bool)
+		enableNat := d.Get("single_ip_snat").(bool)
 		if enableNat {
 			gw.EnableNat = "yes"
 		} else {
@@ -1432,7 +1440,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 
-		d.SetPartial("enable_snat")
+		d.SetPartial("single_ip_snat")
 	}
 	if d.HasChange("additional_cidrs_designated_gateway") {
 		if !d.Get("enable_designated_gateway").(bool) {
