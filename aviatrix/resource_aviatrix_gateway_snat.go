@@ -41,38 +41,44 @@ func resourceAviatrixGatewaySNat() *schema.Resource {
 				Type:        schema.TypeList,
 				Optional:    true,
 				Default:     nil,
-				Description: "Policy rule applied for 'snat_mode'' of 'custom'.'",
+				Description: "Policy rules applied for 'snat_mode'' of 'customized_snat'.'",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"src_cidr": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "A source IP address range where the policy rule applies.",
+							Description: "This is a qualifier condition that specifies a source IP address range " +
+								"where the rule applies. When left blank, this field is not used.",
 						},
 						"src_port": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "A source port where the policy rule applies.",
+							Description: "This is a qualifier condition that specifies a source port that the rule applies. " +
+								"When left blank, this field is not used.",
 						},
 						"dst_cidr": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "A destination IP address range where the policy rule applies.",
+							Description: "This is a qualifier condition that specifies a destination IP address range " +
+								"where the rule applies. When left blank, this field is not used.",
 						},
 						"dst_port": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "A destination port where the policy rule applies.",
+							Description: "This is a qualifier condition that specifies a destination port " +
+								"where the rule applies. When left blank, this field is not used.",
 						},
 						"protocol": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "A destination port protocol where the policy rule applies.",
+							Description: "This is a qualifier condition that specifies a destination port protocol " +
+								"where the rule applies. When left blank, this field is not used.",
 						},
 						"interface": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "An output interface where the policy rule applies.",
+							Description: "This is a qualifier condition that specifies output interface " +
+								"where the rule applies. When left blank, this field is not used.",
 						},
 						"connection": {
 							Type:        schema.TypeString,
@@ -83,17 +89,22 @@ func resourceAviatrixGatewaySNat() *schema.Resource {
 						"mark": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "A tag or mark of a TCP session where the policy rule applies.",
+							Description: "This is a qualifier condition that specifies a tag or mark of a TCP session " +
+								"where the rule applies. When left blank, this field is not used.",
 						},
 						"snat_ips": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "The changed source IP address when all specified qualifier conditions meet. One of the rule fields must be specified for this rule to take effect.",
+							Description: "This is a rule field that specifies the changed source IP address " +
+								"when all specified qualifier conditions meet. When left blank, this field is not used. " +
+								"One of the rule fields must be specified for this rule to take effect.",
 						},
 						"snat_port": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "The translated destination port when all specified qualifier conditions meet. One of the rule field must be specified for this rule to take effect.",
+							Description: "This is a rule field that specifies the changed source port " +
+								"when all specified qualifier conditions meet. When left blank, this field is not used. " +
+								"One of the rule fields must be specified for this rule to take effect.",
 						},
 						"exclude_rtb": {
 							Type:        schema.TypeString,
