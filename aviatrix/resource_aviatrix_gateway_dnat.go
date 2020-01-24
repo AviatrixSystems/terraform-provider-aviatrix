@@ -33,38 +33,38 @@ func resourceAviatrixGatewayDNat() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"src_cidr": {
-							Type:        schema.TypeString,
-							Optional:    true,
+							Type:     schema.TypeString,
+							Optional: true,
 							Description: "This is a qualifier condition that specifies a source IP address range " +
 								"where the rule applies. When left blank, this field is not used.",
 						},
 						"src_port": {
-							Type:        schema.TypeString,
-							Optional:    true,
+							Type:     schema.TypeString,
+							Optional: true,
 							Description: "This is a qualifier condition that specifies a source port that the rule applies. " +
 								"When left blank, this field is not used.",
 						},
 						"dst_cidr": {
-							Type:        schema.TypeString,
-							Optional:    true,
+							Type:     schema.TypeString,
+							Optional: true,
 							Description: "This is a qualifier condition that specifies a destination IP address range " +
 								"where the rule applies. When left blank, this field is not used.",
 						},
 						"dst_port": {
-							Type:        schema.TypeString,
-							Optional:    true,
+							Type:     schema.TypeString,
+							Optional: true,
 							Description: "This is a qualifier condition that specifies a destination port " +
 								"where the rule applies. When left blank, this field is not used.",
 						},
 						"protocol": {
-							Type:        schema.TypeString,
-							Optional:    true,
+							Type:     schema.TypeString,
+							Optional: true,
 							Description: "This is a qualifier condition that specifies a destination port protocol " +
 								"where the rule applies. When left blank, this field is not used.",
 						},
 						"interface": {
-							Type:        schema.TypeString,
-							Optional:    true,
+							Type:     schema.TypeString,
+							Optional: true,
 							Description: "This is a qualifier condition that specifies output interface where the rule applies. " +
 								"When left blank, this field is not used.",
 						},
@@ -75,21 +75,21 @@ func resourceAviatrixGatewayDNat() *schema.Resource {
 							Description: "None.",
 						},
 						"mark": {
-							Type:        schema.TypeString,
-							Optional:    true,
+							Type:     schema.TypeString,
+							Optional: true,
 							Description: "This is a rule field that specifies a tag or mark of a TCP session " +
 								"when all qualifier conditions meet. When left blank, this field is not used.",
 						},
 						"dnat_ips": {
-							Type:        schema.TypeString,
-							Optional:    true,
+							Type:     schema.TypeString,
+							Optional: true,
 							Description: "This is a rule field that specifies the translated destination IP address " +
 								"when all specified qualifier conditions meet. When left blank, this field is not used. " +
 								"One of the rule field must be specified for this rule to take effect.",
 						},
 						"dnat_port": {
-							Type:        schema.TypeString,
-							Optional:    true,
+							Type:     schema.TypeString,
+							Optional: true,
 							Description: "This is a rule field that specifies the translated destination port " +
 								"when all specified qualifier conditions meet. When left blank, this field is not used. " +
 								"One of the rule field must be specified for this rule to take effect.",
