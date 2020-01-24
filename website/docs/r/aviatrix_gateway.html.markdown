@@ -271,3 +271,6 @@ If you are using/upgraded to Aviatrix Terraform Provider R1.8+, and a peering-HA
 
 ### enable_snat
 If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a gateway with `enable_snat` set to true was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also change this attribute to `single_ip_snat` and set its value to its corresponding gateway resource in your `.tf` file.
+
+### dnat_policy
+If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a gateway with `dnat_policy` applied was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to remove attribute’s value from the state. In addition, you must its value to its corresponding aviatrix_gateway_dnat resource in your `.tf` file and terraform import its value into the state file.

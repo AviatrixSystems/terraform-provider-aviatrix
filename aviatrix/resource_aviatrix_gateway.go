@@ -351,39 +351,7 @@ func resourceAviatrixGateway() *schema.Resource {
 				Description: "Instance ID of the backup gateway.",
 			},
 		},
-
-		SchemaVersion: 1,
-		StateUpgraders: []schema.StateUpgrader{
-			{
-				Type:    resourceExampleInstanceResourceV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: resourceExampleInstanceStateUpgradeV0,
-				Version: 0,
-			},
-		},
 	}
-}
-
-func resourceExampleInstanceResourceV0() *schema.Resource {
-	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"enable_snat": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Enable Source NAT for this container.",
-			},
-		},
-	}
-}
-
-func resourceExampleInstanceStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
-	if rawState["enable_snat"] == true {
-		rawState["single_ip_snat"] = true
-	} else {
-		rawState["single_ip_snat"] = false
-	}
-	delete(rawState, "dnat_policy")
-	return rawState, nil
 }
 
 func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) error {
