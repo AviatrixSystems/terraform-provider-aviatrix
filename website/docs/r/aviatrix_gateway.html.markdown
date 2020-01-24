@@ -173,19 +173,7 @@ The following arguments are supported:
 * `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Gateway. Required for AWS and AWSGov if insane_mode is set. Example: AWS: "us-west-1a".
 
 ### SNAT/DNAT
-* `enable_snat` - (Optional) Enable Source NAT for this container. Valid values: true, false. Default value: false. **NOTE: If using SNAT for FQDN use-case, please see notes [here](#fqdn).**
-* `dnat_policy` - (Optional) Policy rule applied for enabling Destination NAT (DNAT), which allows you to change the destination to a virtual address range. Currently only supports AWS(1) and ARM(8).
-  * `src_ip` - (Optional) A source IP address range where the policy rule applies.
-  * `src_port` - (Optional) A source port that the policy rule applies.
-  * `dst_ip` - (Optional) A destination IP address range where the policy rule applies.
-  * `dst_port` - (Optional) A destination port where the policy rule applies.
-  * `protocol` - (Optional) A destination port protocol where the policy rule applies.
-  * `interface` - (Optional) An output interface where the policy rule applies.
-  * `connection` - (Optional) Default value: "None".
-  * `mark` - (Optional) A tag or mark of a TCP session where the policy rule applies.
-  * `new_src_ip` - (Optional) The changed source IP address when all specified qualifier conditions meet. One of the rule fields must be specified for this rule to take effect.
-  * `new_src_port` - (Optional) The translated destination port when all specified qualifier conditions meet. One of the rule field must be specified for this rule to take effect.
-  * `exclude_rtb` - (Optional) This field specifies which VPC private route table will not be programmed with the default route entry.
+* `single_ip_snat` - (Optional) Enable Source NAT in "single ip" mode for this container. Valid values: true, false. Default value: false. **NOTE: If using SNAT for FQDN use-case, please see notes [here](#fqdn).**
 
 ### VPN Access
 * `vpn_access` - (Optional) Enable user access through VPN to this container. Valid values: true, false.
@@ -244,6 +232,20 @@ The following arguments are deprecated:
 
 * `dns_server` - Specify the DNS IP, only required while using a custom private DNS for the VPC.
 
+* `enable_snat` - (Optional) Enable Source NAT for this container. Valid values: true, false. Default value: false. **NOTE: If using SNAT for FQDN use-case, please see notes [here](#fqdn).**
+
+* `dnat_policy` - (Optional) Policy rule applied for enabling Destination NAT (DNAT), which allows you to change the destination to a virtual address range. Currently only supports AWS(1) and ARM(8).
+  * `src_ip` - (Optional) A source IP address range where the policy rule applies.
+  * `src_port` - (Optional) A source port that the policy rule applies.
+  * `dst_ip` - (Optional) A destination IP address range where the policy rule applies.
+  * `dst_port` - (Optional) A destination port where the policy rule applies.
+  * `protocol` - (Optional) A destination port protocol where the policy rule applies.
+  * `interface` - (Optional) An output interface where the policy rule applies.
+  * `connection` - (Optional) Default value: "None".
+  * `mark` - (Optional) A tag or mark of a TCP session where the policy rule applies.
+  * `new_src_ip` - (Optional) The changed source IP address when all specified qualifier conditions meet. One of the rule fields must be specified for this rule to take effect.
+  * `new_src_port` - (Optional) The translated destination port when all specified qualifier conditions meet. One of the rule field must be specified for this rule to take effect.
+  * `exclude_rtb` - (Optional) This field specifies which VPC private route table will not be programmed with the default route entry.
 
 ## Import
 
@@ -266,3 +268,9 @@ If you are using/upgraded to Aviatrix Terraform Provider R1.14+, and a gateway w
 
 ### peering_ha_gw_size
 If you are using/upgraded to Aviatrix Terraform Provider R1.8+, and a peering-HA gateway was originally created with a provider version <R1.8, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also input this attribute and its value to its corresponding gateway resource in your `.tf` file.
+
+### enable_snat
+If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a gateway with `enable_snat` set to true was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also change this attribute to `single_ip_snat` and set its value to its corresponding gateway resource in your `.tf` file.
+
+### dnat_policy
+If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a gateway with `dnat_policy` applied was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to remove attribute’s value from the state. In addition, you must its value to its corresponding aviatrix_gateway_dnat resource in your `.tf` file and terraform import its value into the state file.

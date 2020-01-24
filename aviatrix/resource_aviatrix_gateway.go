@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -62,77 +61,11 @@ func resourceAviatrixGateway() *schema.Resource {
 				Default:     "",
 				Description: "AZ of subnet being created for Insane Mode Gateway. Required if insane_mode is set.",
 			},
-			"enable_snat": {
+			"single_ip_snat": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
 				Description: "Enable Source NAT for this container.",
-			},
-			"dnat_policy": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Default:     nil,
-				Description: "Policy rule applied for enabling Destination NAT (DNAT), which allows you to change the destination to a virtual address range.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"src_ip": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "A source IP address range where the policy rule applies.",
-						},
-						"src_port": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "A source port that the policy rule applies.",
-						},
-						"dst_ip": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "A destination IP address range where the policy rule applies.",
-						},
-						"dst_port": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "A destination port where the policy rule applies.",
-						},
-						"protocol": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "A destination port protocol where the policy rule applies.",
-						},
-						"interface": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "An output interface where the policy rule applies.",
-						},
-						"connection": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Default:     "None",
-							Description: "None.",
-						},
-						"mark": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "A tag or mark of a TCP session where the policy rule applies.",
-						},
-						"new_src_ip": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "The changed source IP address when all specified qualifier conditions meet. One of the rule fields must be specified for this rule to take effect.",
-						},
-						"new_src_port": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "The translated destination port when all specified qualifier conditions meet. One of the rule field must be specified for this rule to take effect.",
-						},
-						"exclude_rtb": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "This field specifies which VPC private route table will not be programmed with the default route entry.",
-						},
-					},
-				},
 			},
 			"vpn_access": {
 				Type:        schema.TypeBool,
@@ -463,8 +396,8 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), ARM (8), OCI (16), or AWSGOV (256)")
 	}
 
-	enableNat := d.Get("enable_snat").(bool)
-	if enableNat {
+	singleIpNat := d.Get("single_ip_nat").(bool)
+	if singleIpNat {
 		gateway.EnableNat = "yes"
 	} else {
 		gateway.EnableNat = "no"
@@ -779,38 +712,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	if _, ok := d.GetOk("dnat_policy"); ok {
-		if len(d.Get("dnat_policy").([]interface{})) != 0 {
-			gwToUpdateDNat := &goaviatrix.Gateway{
-				GatewayName: d.Get("gw_name").(string),
-			}
-			policies := d.Get("dnat_policy").([]interface{})
-			for _, policy := range policies {
-				dP := policy.(map[string]interface{})
-				dNatPolicy := &goaviatrix.PolicyRule{
-					SrcIP:      dP["src_ip"].(string),
-					SrcPort:    dP["src_port"].(string),
-					DstIP:      dP["dst_ip"].(string),
-					DstPort:    dP["dst_port"].(string),
-					Protocol:   dP["protocol"].(string),
-					Interface:  dP["interface"].(string),
-					Connection: dP["connection"].(string),
-					Mark:       dP["mark"].(string),
-					NewSrcIP:   dP["new_src_ip"].(string),
-					NewSrcPort: dP["new_src_port"].(string),
-					ExcludeRTB: dP["exclude_rtb"].(string),
-				}
-				gwToUpdateDNat.DnatPolicy = append(gwToUpdateDNat.DnatPolicy, *dNatPolicy)
-			}
-			time.Sleep(60 * time.Second)
-
-			err := client.UpdateDNat(gwToUpdateDNat)
-			if err != nil {
-				return fmt.Errorf("failed to update DNAT: %s", err)
-			}
-		}
-	}
-
 	return resourceAviatrixGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -876,9 +777,13 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("subnet", gw.VpcNet)
 
 		if gw.EnableNat == "yes" {
-			d.Set("enable_snat", true)
+			if gw.SnatMode == "primary" {
+				d.Set("single_ip_snat", true)
+			} else {
+				d.Set("single_ip_snat", false)
+			}
 		} else {
-			d.Set("enable_snat", false)
+			d.Set("single_ip_snat", false)
 		}
 
 		if gw.CloudType == 1 || gw.CloudType == 256 {
@@ -916,30 +821,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		gwDetail, err := client.GetGatewayDetail(gateway)
 		if err != nil {
 			return fmt.Errorf("couldn't get Detail info for VPN gateway: %s due to: %s", gateway.GwName, err)
-		}
-		if len(gwDetail.DnatPolicy) != 0 {
-			var dnatPolicy []map[string]interface{}
-			for _, policy := range gwDetail.DnatPolicy {
-				dP := make(map[string]interface{})
-				dP["src_ip"] = policy.SrcIP
-				dP["src_port"] = policy.SrcPort
-				dP["dst_ip"] = policy.DstIP
-				dP["dst_port"] = policy.DstPort
-				dP["protocol"] = policy.Protocol
-				dP["interface"] = policy.Interface
-				dP["connection"] = policy.Connection
-				dP["mark"] = policy.Mark
-				dP["new_src_ip"] = policy.NewSrcIP
-				dP["new_src_port"] = policy.NewSrcPort
-				dP["exclude_rtb"] = policy.ExcludeRTB
-				dnatPolicy = append(dnatPolicy, dP)
-			}
-
-			if err := d.Set("dnat_policy", dnatPolicy); err != nil {
-				log.Printf("[WARN] Error setting 'dnat_policy' for (%s): %s", d.Id(), err)
-			}
-		} else {
-			d.Set("dnat_policy", nil)
 		}
 		if gw.VpnStatus != "" {
 			if gw.VpnStatus == "disabled" {
@@ -1502,13 +1383,13 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 	}
-	if d.HasChange("enable_snat") {
+	if d.HasChange("single_ip_snat") {
 		gw := &goaviatrix.Gateway{
 			CloudType:   d.Get("cloud_type").(int),
 			GatewayName: d.Get("gw_name").(string),
 		}
 
-		enableNat := d.Get("enable_snat").(bool)
+		enableNat := d.Get("single_ip_snat").(bool)
 		if enableNat {
 			gw.EnableNat = "yes"
 		} else {
@@ -1527,7 +1408,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 
-		d.SetPartial("enable_snat")
+		d.SetPartial("single_ip_snat")
 	}
 	if d.HasChange("additional_cidrs_designated_gateway") {
 		if !d.Get("enable_designated_gateway").(bool) {
@@ -1771,36 +1652,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	} else if d.HasChange("customer_managed_keys") {
 		return fmt.Errorf("updating customer_managed_keys only is not allowed")
-	}
-
-	if d.HasChange("dnat_policy") {
-		gwToUpdateDNat := &goaviatrix.Gateway{
-			GatewayName: d.Get("gw_name").(string),
-		}
-		if len(d.Get("dnat_policy").([]interface{})) != 0 {
-			policies := d.Get("dnat_policy").([]interface{})
-			for _, policy := range policies {
-				dP := policy.(map[string]interface{})
-				dNatPolicy := &goaviatrix.PolicyRule{
-					SrcIP:      dP["src_ip"].(string),
-					SrcPort:    dP["src_port"].(string),
-					DstIP:      dP["dst_ip"].(string),
-					DstPort:    dP["dst_port"].(string),
-					Protocol:   dP["protocol"].(string),
-					Interface:  dP["interface"].(string),
-					Connection: dP["connection"].(string),
-					Mark:       dP["mark"].(string),
-					NewSrcIP:   dP["new_src_ip"].(string),
-					NewSrcPort: dP["new_src_port"].(string),
-					ExcludeRTB: dP["exclude_rtb"].(string),
-				}
-				gwToUpdateDNat.DnatPolicy = append(gwToUpdateDNat.DnatPolicy, *dNatPolicy)
-			}
-		}
-		err := client.UpdateDNat(gwToUpdateDNat)
-		if err != nil {
-			return fmt.Errorf("failed to update DNAT: %s", err)
-		}
 	}
 
 	d.Partial(false)
