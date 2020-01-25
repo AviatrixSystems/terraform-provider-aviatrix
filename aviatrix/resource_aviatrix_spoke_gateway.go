@@ -20,9 +20,6 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		SchemaVersion: 1,
-		MigrateState:  resourceAviatrixSpokeGatewayMigrateState,
-
 		Schema: map[string]*schema.Schema{
 			"cloud_type": {
 				Type:        schema.TypeInt,
