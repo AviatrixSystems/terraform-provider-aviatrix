@@ -100,7 +100,7 @@ The following arguments are supported:
 * `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit Gateway. Required for AWS if insane_mode is enabled. Example: AWS: "us-west-1a".
 
 ### SNAT
-* `enable_snat` - (Optional) Enable Source NAT for this container. Valid values: true, false.
+* `single_ip_snat` - (Optional) Enable "single_ip" mode Source NAT for this container. Valid values: true, false.
 
 ### Misc.
 * `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in controller 4.7 or later release. Valid values: true, false. Default: true. Option not available for GCP, ARM and Oracle gateways, they will automatically allocate new eip's.
@@ -129,6 +129,7 @@ In addition to all arguments above, the following attributes are exported:
 The following arguments are deprecated:
 
 * `enable_firenet_interfaces` - (Optional) Sign of readiness for FireNet connection. Valid values: true, false. Default value: false.
+* `enable_snat` - (Optional) Enable Source NAT for this container. Valid values: true, false.
 
 ## Import
 
@@ -145,5 +146,8 @@ $ terraform import aviatrix_transit_gateway.test gw_name
 ### enable_firenet
 If you are using/upgraded to Aviatrix Terraform Provider R2.5+/UserConnect-5.0+ , and an AWS transit_gateway resource with `enable_firenet_interfaces` enabled was created with a provider version < R2.5/ UserConnect-5.0, you must replace `enable_firenet_interfaces` with `enable_firenet` in your configuration file, and do ‘terraform refresh’ to set its value to `enable_firenet` and apply it into the state file.
 
-## insane_mode
+### insane_mode
 If `insane_mode` is enabled, you must specify a valid /26 CIDR segment of the VPC specified for the `subnet`. This will then create a new subnet to be used for the corresponding gateway. You cannot specify an existing /26 subnet.
+
+### enable_snat
+If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a transit gateway with `enable_snat` set to true was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also change this attribute to `single_ip_snat` and set its value to its corresponding gateway resource in your `.tf` file.

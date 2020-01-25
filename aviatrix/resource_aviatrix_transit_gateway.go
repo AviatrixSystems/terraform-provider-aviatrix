@@ -114,11 +114,11 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Set to 'enabled' if this feature is desired.",
 			},
-			"enable_snat": {
+			"single_ip_snat": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Enable or disable Source NAT for this container.",
+				Description: "Enable or disable Source NAT feature in 'single_ip' mode for this container.",
 			},
 			"tag_list": {
 				Type:        schema.TypeList,
@@ -228,7 +228,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		EnableHybridConnection: d.Get("enable_hybrid_connection").(bool),
 	}
 
-	enableNAT := d.Get("enable_snat").(bool)
+	enableNAT := d.Get("single_ip_snat").(bool)
 	if enableNAT {
 		gateway.EnableNAT = "yes"
 	} else {
@@ -644,10 +644,10 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("eip", gw.PublicIP)
 		d.Set("gw_size", gw.GwSize)
 
-		if gw.EnableNat == "yes" {
-			d.Set("enable_snat", true)
+		if gw.EnableNat == "yes" && gw.SnatMode == "primary" {
+			d.Set("single_ip_snat", true)
 		} else {
-			d.Set("enable_snat", false)
+			d.Set("single_ip_snat", false)
 		}
 
 		if gw.SingleAZ == "yes" {
@@ -1077,26 +1077,26 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		d.SetPartial("ha_gw_size")
 	}
 
-	if d.HasChange("enable_snat") {
+	if d.HasChange("single_ip_snat") {
 		gw := &goaviatrix.Gateway{
 			CloudType:   d.Get("cloud_type").(int),
 			GatewayName: d.Get("gw_name").(string),
 		}
-		enableNat := d.Get("enable_snat").(bool)
+		enableNat := d.Get("single_ip_snat").(bool)
 
 		if enableNat {
 			err := client.EnableSNat(gw)
 			if err != nil {
-				return fmt.Errorf("failed to enable SNAT: %s", err)
+				return fmt.Errorf("failed to enable 'single_ip' mode SNAT feature: %s", err)
 			}
 		} else {
 			err := client.DisableSNat(gw)
 			if err != nil {
-				return fmt.Errorf("failed to disable SNAT: %s", err)
+				return fmt.Errorf("failed to disable 'single_ip' mode SNAT: %s", err)
 			}
 		}
 
-		d.SetPartial("enable_snat")
+		d.SetPartial("single_ip_snat")
 	}
 
 	if d.HasChange("enable_firenet") {
