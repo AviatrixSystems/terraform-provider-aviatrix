@@ -121,6 +121,7 @@ type Gateway struct {
 	CustomizedSpokeVpcRoutes    []string `json:"customized_cidr_list,omitempty"`
 	FilteredSpokeVpcRoutes      []string `json:"filtering_cidr_list,omitempty"`
 	AdvertisedSpokeRoutes       []string `json:"advertise_cidr_list,omitempty"`
+	IncludeCidrList             []string `json:"include_cidr_list,omitempty"`
 	ExcludeCidrList             []string `json:"exclude_cidr_list,omitempty"`
 }
 
