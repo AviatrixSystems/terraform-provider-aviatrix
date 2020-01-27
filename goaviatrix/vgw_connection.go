@@ -45,12 +45,12 @@ type VGWConnDetail struct {
 
 type ConnectionDetail struct {
 	ConnName      []string `json:"name"`
-	GwName        []string `json:"gw_name"`
+	GwName        string   `json:"gw_name"`
 	VPCId         []string `json:"vpc_id"`
-	BgpVGWId      []string `json:"bgp_vgw_id"`
-	BgpVGWAccount []string `json:"bgp_vgw_account"`
-	BgpVGWRegion  []string `json:"bgp_vgw_region"`
-	BgpLocalAsNum []string `json:"bgp_local_asn_number"`
+	BgpVGWId      string   `json:"bgp_vgw_id"`
+	BgpVGWAccount string   `json:"bgp_vgw_account"`
+	BgpVGWRegion  string   `json:"bgp_vgw_region"`
+	BgpLocalAsNum string   `json:"bgp_local_asn_number"`
 }
 
 type VGWConnEnableAdvertiseTransitCidrResp struct {
@@ -198,11 +198,11 @@ func (c *Client) GetVGWConnDetail(vgwConn *VGWConn) (*VGWConn, error) {
 	}
 	if data.Results.Connections.ConnName[0] != "" {
 		vgwConn.VPCId = data.Results.Connections.VPCId[0]
-		vgwConn.GwName = data.Results.Connections.GwName[0]
-		vgwConn.BgpVGWId = data.Results.Connections.BgpVGWId[0]
-		vgwConn.BgpVGWAccount = data.Results.Connections.BgpVGWAccount[0]
-		vgwConn.BgpVGWRegion = data.Results.Connections.BgpVGWRegion[0]
-		vgwConn.BgpLocalAsNum = data.Results.Connections.BgpLocalAsNum[0]
+		vgwConn.GwName = data.Results.Connections.GwName
+		vgwConn.BgpVGWId = data.Results.Connections.BgpVGWId
+		vgwConn.BgpVGWAccount = data.Results.Connections.BgpVGWAccount
+		vgwConn.BgpVGWRegion = data.Results.Connections.BgpVGWRegion
+		vgwConn.BgpLocalAsNum = data.Results.Connections.BgpLocalAsNum
 		return vgwConn, nil
 	}
 	return nil, ErrNotFound
