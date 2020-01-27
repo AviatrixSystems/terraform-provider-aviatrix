@@ -617,14 +617,14 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("filtered_spoke_vpc_routes", "")
 		}
 
-		if len(gw.AdvertisedSpokeRoutes) != 0 {
-			if advertisedSpokeRoutes := d.Get("included_advertised_spoke_routes").(string); advertisedSpokeRoutes != "" {
-				advertisedSpokeRoutesArray := strings.Split(advertisedSpokeRoutes, ",")
-				if len(goaviatrix.Difference(advertisedSpokeRoutesArray, gw.AdvertisedSpokeRoutes)) == 0 &&
-					len(goaviatrix.Difference(gw.AdvertisedSpokeRoutes, advertisedSpokeRoutesArray)) == 0 {
-					d.Set("included_advertised_spoke_routes", advertisedSpokeRoutes)
+		if len(gw.IncludeCidrList) != 0 {
+			if includedAdvertisedSpokeRoutes := d.Get("included_advertised_spoke_routes").(string); includedAdvertisedSpokeRoutes != "" {
+				advertisedSpokeRoutesArray := strings.Split(includedAdvertisedSpokeRoutes, ",")
+				if len(goaviatrix.Difference(advertisedSpokeRoutesArray, gw.IncludeCidrList)) == 0 &&
+					len(goaviatrix.Difference(gw.IncludeCidrList, advertisedSpokeRoutesArray)) == 0 {
+					d.Set("included_advertised_spoke_routes", includedAdvertisedSpokeRoutes)
 				} else {
-					d.Set("included_advertised_spoke_routes", strings.Join(gw.AdvertisedSpokeRoutes, ","))
+					d.Set("included_advertised_spoke_routes", strings.Join(gw.IncludeCidrList, ","))
 				}
 			} else {
 				d.Set("included_advertised_spoke_routes", strings.Join(gw.AdvertisedSpokeRoutes, ","))
