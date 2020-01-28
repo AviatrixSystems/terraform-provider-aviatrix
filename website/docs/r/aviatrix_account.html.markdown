@@ -79,24 +79,35 @@ resource "aviatrix_account" "tempacc_awsgov" {
 
 The following arguments are supported:
 
+### Required
 * `account_name` - (Required) Account name. This can be used for logging in to CloudN console or UserConnect controller.
 * `cloud_type` - (Required) Type of cloud service provider. Only AWS, GCP, ARM, OCI, and AWS Gov are supported currently. Enter 1 for AWS, 4 for GCP, 8 for ARM, 16 for OCI, 256 for AWS Gov.
-* `aws_account_number` - (Optional) AWS Account number to associate with Aviatrix account. Required when creating an account for AWS. Should be 12 digits. Example: "123456789012".
+
+### AWS
+* `aws_account_number` - (Optional) AWS Account number to associate with Aviatrix account. Required when creating an account for AWS.
 * `aws_iam` - (Optional) AWS IAM-role based flag, this option is for UserConnect.
 * `aws_access_key` - (Optional) AWS Access Key. Required when aws_iam is "false" and when creating an account for AWS.
 * `aws_secret_key` - (Optional) AWS Secret Key. Required when aws_iam is "false" and when creating an account for AWS.
 * `aws_role_app` - (Optional) AWS App role ARN, this option is for UserConnect. Required when aws_iam is "true" and when creating an account for AWS.
 * `aws_role_ec2` - (Optional) AWS EC2 role ARN, this option is for UserConnect. Required when aws_iam is "true" and when creating an account for AWS.
-* `gcloud_project_id` - (Optional) GCloud Project ID.
-* `gcloud_project_credentials_filepath` - (Optional) GCloud Project Credentials [local filepath].json. Required when creating an account for GCP.
+
+### Azure
 * `arm_subscription_id` - (Optional) Azure ARM Subscription ID. Required when creating an account for ARM.
 * `arm_directory_id` - (Optional) Azure ARM Directory ID. Required when creating an account for ARM.
 * `arm_application_id` - (Optional) Azure ARM Application ID. Required when creating an account for ARM.
 * `arm_application_key` - (Optional) Azure ARM Application key. Required when creating an account for ARM.
+
+### Google Cloud
+* `gcloud_project_id` - (Optional) GCloud Project ID.
+* `gcloud_project_credentials_filepath` - (Optional) GCloud Project Credentials [local filepath].json. Required when creating an account for GCP.
+
+### Oracle Cloud
 * `oci_tenancy_id` - (Optional)Oracle OCI Tenancy ID. Required when creating an account for OCI.
 * `oci_user_id` - (Optional) Oracle OCI User ID. Required when creating an account for OCI.
 * `oci_compartment_id` - (Optional) Oracle OCI Compartment ID. Required when creating an account for OCI.
 * `oci_api_private_key_filepath` - (Optional) Oracle OCI API Private Key local file path. Required when creating an account for OCI.
+
+### AWS GovCloud
 * `awsgov_account_number` - (Optional) AWS Gov Account number to associate with Aviatrix account. Required when creating an account for AWS Gov.
 * `awsgov_access_key` - (Optional) AWS Access Key. Required when creating an account for AWS Gov.
 * `awsgov_secret_key` - (Optional) AWS Secret Key. Required when creating an account for AWS Gov.
