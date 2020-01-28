@@ -33,7 +33,7 @@ func TestAccAviatrixGatewaySNat_basic(t *testing.T) {
 			"are all set, even though SKIP_GATEWAY_SNAT isn't set")
 	}
 
-	//Setting default values for AWS_GW_SIZE and GCP_GW_SIZE
+	//Setting default values for AWS_GW_SIZE
 	awsGwSize := os.Getenv("AWS_GW_SIZE")
 	if awsGwSize == "" {
 		awsGwSize = "t2.micro"
