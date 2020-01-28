@@ -396,7 +396,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), ARM (8), OCI (16), or AWSGOV (256)")
 	}
 
-	singleIpNat := d.Get("single_ip_nat").(bool)
+	singleIpNat := d.Get("single_ip_snat").(bool)
 	if singleIpNat {
 		gateway.EnableNat = "yes"
 	} else {
