@@ -4,7 +4,7 @@
 - Supported Terraform version: **v0.12.x**
 
 ### Bug Fixes:
-1. Fixed the issue where Json Decode ``get_site2cloud_conn_detail`` failed for **aviatrix_site2cloud** and **aviatrix_vgw_conn**
+1. Fixed issue where JSON Decode ``get_site2cloud_conn_detail`` fails for **aviatrix_site2cloud** and **aviatrix_vgw_conn**
 
 
 ## 2.9.0 (December 20, 2019)
