@@ -1,4 +1,12 @@
 ## 2.9.1 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-5.2.2122** 
+- Supported Terraform version: **v0.12.x**
+
+### Bug Fixes:
+1. Fixed issue where JSON Decode ``get_site2cloud_conn_detail`` fails for **aviatrix_site2cloud** and **aviatrix_vgw_conn**
+
+
 ## 2.9.0 (December 20, 2019)
 ### Notes:
 - Supported Controller version: **UserConnect-5.2.2048** 
