@@ -924,8 +924,8 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 		domainConnPolicy1 := goaviatrix.DifferenceSlice(domainConnRemoveOld, domainConnRemoveNew)
 		domainConnRemove1 := goaviatrix.DifferenceSlice(domainConnRemoveNew, domainConnRemoveOld)
 
-		toAttachVPCs = goaviatrix.DifferenceSlice(attachedVPCNew, attachedVPCOld)
-		toDetachVPCs = goaviatrix.DifferenceSlice(attachedVPCOld, attachedVPCNew)
+		toAttachVPCs = goaviatrix.DifferenceSliceAttachedVPC(attachedVPCNew, attachedVPCOld)
+		toDetachVPCs = goaviatrix.DifferenceSliceAttachedVPC(attachedVPCOld, attachedVPCNew)
 
 		if domainConnPolicy1 != nil || len(domainConnPolicy1) != 0 {
 			for i := range domainConnPolicy1 {
