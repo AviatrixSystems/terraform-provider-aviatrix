@@ -57,12 +57,7 @@ func TestAccAviatrixGatewaySNat_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-aws-%s", rName)),
 						resource.TestCheckResourceAttr(resourceName, "snat_mode", "customized_snat"),
 						resource.TestCheckResourceAttr(resourceName, "snat_policy.#", "1"),
-						resource.TestCheckResourceAttr(resourceName, "snat_policy.0.src_cidr", "13.0.0.0/16"),
-						resource.TestCheckResourceAttr(resourceName, "snat_policy.0.src_port", "22"),
-						resource.TestCheckResourceAttr(resourceName, "snat_policy.0.dst_cidr", "14.0.0.0/16"),
-						resource.TestCheckResourceAttr(resourceName, "snat_policy.0.dst_port", "222"),
 						resource.TestCheckResourceAttr(resourceName, "snat_policy.0.protocol", "tcp"),
-						resource.TestCheckResourceAttr(resourceName, "snat_policy.0.snat_ips", "175.32.12.12"),
 						resource.TestCheckResourceAttr(resourceName, "snat_policy.0.snat_port", "12"),
 					),
 				},
@@ -96,12 +91,7 @@ func TestAccAviatrixGatewaySNat_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-arm-%s", rName)),
 						resource.TestCheckResourceAttr(resourceName, "snat_mode", "customized_snat"),
 						resource.TestCheckResourceAttr(resourceName, "snat_policy.#", "1"),
-						resource.TestCheckResourceAttr(resourceName, "snat_policy.0.src_cidr", "13.0.0.0/16"),
-						resource.TestCheckResourceAttr(resourceName, "snat_policy.0.src_port", "22"),
-						resource.TestCheckResourceAttr(resourceName, "snat_policy.0.dst_cidr", "14.0.0.0/16"),
-						resource.TestCheckResourceAttr(resourceName, "snat_policy.0.dst_port", "222"),
 						resource.TestCheckResourceAttr(resourceName, "snat_policy.0.protocol", "tcp"),
-						resource.TestCheckResourceAttr(resourceName, "snat_policy.0.snat_ips", "175.32.12.12"),
 						resource.TestCheckResourceAttr(resourceName, "snat_policy.0.snat_port", "12"),
 					),
 				},
@@ -143,15 +133,15 @@ resource "aviatrix_gateway_snat" "test" {
 	gw_name   = aviatrix_spoke_gateway.test_spoke_gateway.gw_name
 	snat_mode = "customized_snat"
 	snat_policy {
-		src_cidr    = "13.0.0.0/16"
-		src_port    = "22"
-		dst_cidr    = "14.0.0.0/16"
-		dst_port    = "222"
+		src_cidr    = ""
+		src_port    = ""
+		dst_cidr    = ""
+		dst_port    = ""
 		protocol    = "tcp"
 		interface   = "eth0"
 		connection  = "None"
-		mark        = "22"
-		snat_ips    = "175.32.12.12"
+		mark        = ""
+		snat_ips    = ""
 		snat_port   = "12"
 		exclude_rtb = ""
 	}
@@ -183,15 +173,15 @@ resource "aviatrix_gateway_snat" "test" {
 	gw_name   = aviatrix_spoke_gateway.test_spoke_gateway.gw_name
 	snat_mode = "customized_snat"
 	snat_policy {
-		src_cidr    = "13.0.0.0/16"
-		src_port    = "22"
-		dst_cidr    = "14.0.0.0/16"
-		dst_port    = "222"
+		src_cidr    = ""
+		src_port    = ""
+		dst_cidr    = ""
+		dst_port    = ""
 		protocol    = "tcp"
 		interface   = "eth0"
 		connection  = "None"
-		mark        = "22"
-		snat_ips    = "175.32.12.12"
+		mark        = ""
+		snat_ips    = ""
 		snat_port   = "12"
 		exclude_rtb = ""
 	}
@@ -243,7 +233,9 @@ func testAccCheckGatewaySNatDestroy(s *terraform.State) error {
 		}
 
 		gw, err := client.GetGateway(foundGateway)
-		if err == nil && gw.SnatMode == "customized" {
+		if err != nil && err != goaviatrix.ErrNotFound {
+			return err
+		} else if err == nil && gw.SnatMode == "customized" {
 			return fmt.Errorf("resource 'aviatrix_gateway_snat' still exists")
 		}
 	}
