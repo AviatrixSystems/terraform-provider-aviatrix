@@ -133,9 +133,9 @@ The following arguments are supported:
 ### SNAT/DNAT
 * `single_ip_snat` - (Optional) Specify whether to enable Source NAT feature in "single_ip" mode on the gateway or not. Please disable AWS NAT instance before enabling this feature. Currently only supports AWS(1) and ARM(8). Valid values: true, false.
 
--> **NOTE:** `enable_snat` has been renamed to `single_ip_snat`. Please see notes [here](#enable_snat) for more information.
+-> **NOTE:** `enable_snat` has been renamed to `single_ip_snat` in provider version R2.10. Please see notes [here](#enable_snat) for more information.
 
--> **NOTE:** Custom SNAT and DNAT support have been deprecated and functionality has been moved to **aviatrix_gateway_snat** and **aviatrix_gateway_dnat** respectively. Please see notes for `snat_mode`, `snat_policy` and `dnat_policy` in the Notes section below.
+-> **NOTE:** Custom SNAT and DNAT support have been deprecated and functionality has been moved to **aviatrix_gateway_snat** and **aviatrix_gateway_dnat** respectively, in provider version R2.10. Please see notes for `snat_mode`, `snat_policy` and `dnat_policy` in the Notes section below.
 
 ### Misc.
 * `transit_gw` - (Optional) Specify the transit Gateway.

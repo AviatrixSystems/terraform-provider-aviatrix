@@ -175,9 +175,9 @@ The following arguments are supported:
 ### SNAT/DNAT
 * `single_ip_snat` - (Optional) Enable Source NAT in "single ip" mode for this container. Valid values: true, false. Default value: false. **NOTE: If using SNAT for FQDN use-case, please see notes [here](#fqdn).**
 
--> **NOTE:** `enable_snat` has been renamed to `single_ip_snat`. Please see notes [here](#enable_snat) for more information.
+-> **NOTE:** `enable_snat` has been renamed to `single_ip_snat` in provider version R2.10. Please see notes [here](#enable_snat) for more information.
 
--> **NOTE:** Custom DNAT support has been deprecated and functionality has been moved to **aviatrix_gateway_dnat**. Please see notes [here](#dnat_policy).
+-> **NOTE:** Custom DNAT support has been deprecated and functionality has been moved to **aviatrix_gateway_dnat** in provider version R2.10. Please see notes [here](#dnat_policy).
 
 ### VPN Access
 * `vpn_access` - (Optional) Enable user access through VPN to this container. Valid values: true, false.
