@@ -57,30 +57,6 @@ resource "aviatrix_gateway" "test_gateway_aws" {
 }
 ```
 ```hcl
-# Create an Aviatrix AWS Gateway with DNAT enabled
-resource "aviatrix_gateway" "test_gateway_aws" {
-  cloud_type   = 1
-  account_name = "devops"
-  gw_name      = "avtxgw1"
-  vpc_id       = "vpc-abcdef"
-  vpc_reg      = "us-west-1"
-  gw_size      = "t2.micro"
-  subnet       = "10.0.0.0/24"
-  dnat_policy {
-    src_ip       = "21.0.0.0/24"
-    src_port     = 53
-    dst_ip       = "22.0.0.0/24"
-    dst_port     = 54
-    protocol     = "tcp"
-    interface    = "eth0"
-    connection   = "None"
-    mark         = 71
-    new_src_ip   = "23.0.0.0"
-    new_src_port = 55
-  }
-}
-```
-```hcl
 # Create an Aviatrix GCP Gateway
 resource "aviatrix_gateway" "test_gateway_gcp" {
   cloud_type   = 4

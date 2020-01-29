@@ -29,44 +29,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
 }
 ```
 ```hcl
-# Create an Aviatrix AWS Spoke Gateway with SNAT and DNAT enabled
-resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
-  cloud_type   = 1
-  account_name = "my-aws"
-  gw_name      = "spoke-gw-aws"
-  vpc_id       = "vpc-abcd123"
-  vpc_reg      = "us-west-1"
-  gw_size      = "t2.micro"
-  subnet       = "10.11.0.0/24"
-  enable_snat  = true
-  snat_mode    = "custom"
-  snat_policy {
-    src_ip       = "21.0.0.0/24"
-    src_port     = 53
-    dst_ip       = "22.0.0.0/24"
-    dst_port     = 54
-    protocol     = "tcp"
-    interface    = "eth0"
-    connection   = "None"
-    mark         = 71
-    new_src_ip   = "23.0.0.0"
-    new_src_port = 55
-  }
-  dnat_policy {
-    src_ip       = "30.0.0.0/24"
-    src_port     = 60
-    dst_ip       = "31.0.0.0/24"
-    dst_port     = 61
-    protocol     = "tcp"
-    interface    = "eth0"
-    connection   = "None"
-    mark         = 80
-    new_src_ip   = "32.0.0.0"
-    new_src_port = 62
-  }
-}
-```
-```hcl
 # Create an Aviatrix GCP Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_gcp" {
   cloud_type   = 4
