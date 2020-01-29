@@ -5,9 +5,9 @@ description: |-
    Configure policies for destination NAT for an Aviatrix gateway
 ---
 
-# aviatrix_gateway_snat
+# aviatrix_gateway_dnat
 
-The aviatrix_gateway_snat resource configures and manages policies for destination NAT function for Aviatrix gateways.
+The aviatrix_gateway_dnat resource configures and manages policies for destination NAT function for Aviatrix gateways.
 
 ## Example Usage
 

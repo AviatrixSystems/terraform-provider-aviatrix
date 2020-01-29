@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_gateway_snat"
 description: |-
-   Configure policies for NAT function mode of "customized_snat" for an Aviatrix gateway
+   Configure customized SNAT policies for an Aviatrix gateway
 ---
 
 # aviatrix_gateway_snat
 
-The aviatrix_gateway_snat resource configures and manages policies for NAT function mode of "customized_snat" for Aviatrix gateways.
+The aviatrix_gateway_snat resource configures and manages policies for customized source NAT for Aviatrix gateways.
 
 ## Example Usage
 
@@ -37,7 +37,7 @@ resource "aviatrix_gateway_snat" "test_snat" {
 The following arguments are supported:
 
 * `gw_name` - (Required) Aviatrix gateway unique name.
-* `snat_mode` - (Optional) NAT mode. Valid values: "customized_snat". Default value: "customized_snat". 
+* `snat_mode` - (Optional) NAT mode. Valid values: "customized_snat". Default value: "customized_snat".
 * `snat_policy` - (Required) Policy rule applied for enabling source NAT (mode: "customized_snat"). Currently only supports AWS(1) and ARM(8).
   * `src_cidr` - (Optional) This is a qualifier condition that specifies a source IP address range where the rule applies. When left blank, this field is not used.
   * `src_port` - (Optional) This is a qualifier condition that specifies a source port that the rule applies. When left blank, this field is not used.
