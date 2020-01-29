@@ -18,11 +18,11 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | ------------------------------------ | ---------------------------- | --------------------------------------------------------------------- |
 | Generic                              | N/A                          | AVIATRIX_USERNAME, AVIATRIX_PASSWORD, AVIATRIX_CONTROLLER_IP          |
 | aviatrix_account                     | SKIP_ACCOUNT                 |                                                                       |
-|		                               | SKIP_ACCOUNT_AWS	          | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY                    |
-|                     		           | SKIP_ACCOUNT_GCP	          | GCP_ID, GCP_CREDENTIALS_FILEPATH	                                  |
-|		                               | SKIP_ACCOUNT_ARM	          | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID, ARM_APPLICATION_KEY |
-|                     		           | SKIP_ACCOUNT_OCI	          | OCI_TENANCY_ID, OCI_USER_ID, OCI_COMPARTMENT_ID, OCI_API_KEY_FILEPATH |
-|		                               | SKIP_ACCOUNT_AWSGOV          | AWSGOV_ACCOUNT_NUMBER, AWSGOV_ACCESS_KEY, AWSGOV_SECRET_KEY           |
+|		                                   | SKIP_ACCOUNT_AWS	            | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY                    |
+|                     		             | SKIP_ACCOUNT_GCP	            | GCP_ID, GCP_CREDENTIALS_FILEPATH	                                    |
+|		                                   | SKIP_ACCOUNT_ARM	            | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID, ARM_APPLICATION_KEY |
+|                     		             | SKIP_ACCOUNT_OCI	            | OCI_TENANCY_ID, OCI_USER_ID, OCI_COMPARTMENT_ID, OCI_API_KEY_FILEPATH |
+|		                                   | SKIP_ACCOUNT_AWSGOV          | AWSGOV_ACCOUNT_NUMBER, AWSGOV_ACCESS_KEY, AWSGOV_SECRET_KEY           |
 | aviatrix_account_user                | SKIP_ACCOUNT_USER            |                                                                       |
 | aviatrix_arm_peer                    | SKIP_ARM_PEER                | aviatrix_account + ARM_VNET_ID, ARM_VNET_ID2, ARM_REGION, ARM_REGION2 |
 | aviatrix_aws_peer                    | SKIP_AWS_PEER                | aviatrix_account + AWS_VPC_ID, AWS_VPC_ID2, AWS_REGION, AWS_REGION2   |
@@ -37,11 +37,17 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_firewall_tag                | SKIP_FIREWALL_TAG            |                                                                       |
 | aviatrix_fqdn                        | SKIP_FQDN                    | aviatrix_gateway                                                      |
 | aviatrix_gateway                     | SKIP_GATEWAY                 | aviatrix_account                                                      |
-|				                       | SKIP_GATEWAY_AWS             |		    + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)  |
+|				                               | SKIP_GATEWAY_AWS             |		      + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)  |
 |                                      | SKIP_GATEWAY_GCP             |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)    |
 |                                      | SKIP_GATEWAY_ARM             |         + ARM_VNET_ID, ARM_REGION, ARM_SUBNET, ARM_GW_SIZE            |
 |                                      | SKIP_GATEWAY_OCI             |         + OCI_VPC_ID, OCI_REGION, OCI_SUBNET, OCI_GW_SIZE(optional)   |
-|                                      | SKIP_GATEWAY_AWSGOV          |         + AWSGOV_VPC_ID, AWSGOV_REGION, AWSGOV_SUBNET, AWSGOV_GW_SIZE(optional)   |
+|                                      | SKIP_GATEWAY_AWSGOV          |         + AWSGOV_VPC_ID, AWSGOV_REGION, AWSGOV_SUBNET, AWSGOV_GW_SIZE(optional)|
+| aviatrix_gateway_dnat                | SKIP_GATEWAY_DNAT            | aviatrix_account                                                      |
+|				                               | SKIP_GATEWAY_DNAT_AWS        |		      + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)  |
+|                                      | SKIP_GATEWAY_DNAT_ARM        |         + ARM_VNET_ID, ARM_REGION, ARM_SUBNET, ARM_GW_SIZE            |
+| aviatrix_gateway_snat                | SKIP_GATEWAY_SNAT            | aviatrix_account                                                      |
+|				                               | SKIP_GATEWAY_SNAT_AWS        |		      + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)  |
+|                                      | SKIP_GATEWAY_SNAT_ARM        |         + ARM_VNET_ID, ARM_REGION, ARM_SUBNET, ARM_GW_SIZE            |
 | aviatrix_geo_vpn                     | SKIP_GEO_VPN                 | aviatrix_account + DOMAIN_NAME + AWS_VPC_ID, AWS_REGION, AWS_SUBNET   |
 |                                      |                              |                                + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2|
 | aviatrix_saml_endpoint               | SKIP_SAML_ENDPOINT           | IDP_METADATA, IDP_METADATA_TYPE                                       |
@@ -71,7 +77,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_vpc                         | SKIP_VPC                     | aviatrix_account                                                      |
 | aviatrix_vpn_profile                 | SKIP_VPN_PROFILE             | aviatrix_vpn_user                                                     |
 | aviatrix_vpn_user                    | SKIP_VPN_USER                | aviatrix_gateway                                                      |
-| aviatrix_vpn_user_accelerator	       | SKIP_VPN_USER_ACCELERATOR    | aviatrix_gateway						                              |
+| aviatrix_vpn_user_accelerator	       | SKIP_VPN_USER_ACCELERATOR    | aviatrix_gateway						                                          |
 | aviatrix_data_source_account         | SKIP_DATA_ACCOUNT            | aviatrix_account                                                      |
 | aviatrix_data_source_caller_identity | SKIP_DATA_CALLER_IDENTITY    |                                                                       |
 | aviatrix_data_source_firenet_vendor_integration | SKIP_DATA_FIRENET_VENDOR_INTEGRATION    | aviatrix_account + AWS_REGION, Palo Alto VM series |
