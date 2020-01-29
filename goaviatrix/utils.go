@@ -74,7 +74,9 @@ func DifferenceSlice(a, b [][]string) [][]string {
 	return ab
 }
 
-// DifferenceSliceAttachedVPC returns the one-dimension elements in two-dimension slice a that aren't in two-dimension b
+// DifferenceSliceAttachedVPC returns the one-dimension elements in two-dimension slice a that aren't in two-dimension b.
+// This function is used to check if there is difference for attached_vpc in aws_tgw resource between source file and
+// state file excluding "subnets" and "route_tables".
 func DifferenceSliceAttachedVPC(a, b [][]string) [][]string {
 	if a == nil || len(a) == 0 || len(a[0]) <= 5 || b == nil || len(b) == 0 || len(b[0]) <= 5 {
 		return a
