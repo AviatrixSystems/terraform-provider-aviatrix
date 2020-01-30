@@ -57,30 +57,6 @@ resource "aviatrix_gateway" "test_gateway_aws" {
 }
 ```
 ```hcl
-# Create an Aviatrix AWS Gateway with DNAT enabled
-resource "aviatrix_gateway" "test_gateway_aws" {
-  cloud_type   = 1
-  account_name = "devops"
-  gw_name      = "avtxgw1"
-  vpc_id       = "vpc-abcdef"
-  vpc_reg      = "us-west-1"
-  gw_size      = "t2.micro"
-  subnet       = "10.0.0.0/24"
-  dnat_policy {
-    src_ip       = "21.0.0.0/24"
-    src_port     = 53
-    dst_ip       = "22.0.0.0/24"
-    dst_port     = 54
-    protocol     = "tcp"
-    interface    = "eth0"
-    connection   = "None"
-    mark         = 71
-    new_src_ip   = "23.0.0.0"
-    new_src_port = 55
-  }
-}
-```
-```hcl
 # Create an Aviatrix GCP Gateway
 resource "aviatrix_gateway" "test_gateway_gcp" {
   cloud_type   = 4
@@ -175,6 +151,10 @@ The following arguments are supported:
 ### SNAT/DNAT
 * `single_ip_snat` - (Optional) Enable Source NAT in "single ip" mode for this container. Valid values: true, false. Default value: false. **NOTE: If using SNAT for FQDN use-case, please see notes [here](#fqdn).**
 
+-> **NOTE:** `enable_snat` has been renamed to `single_ip_snat` in provider version R2.10. Please see notes [here](#enable_snat) for more information.
+
+-> **NOTE:** Custom DNAT support has been deprecated and functionality has been moved to **aviatrix_gateway_dnat** in provider version R2.10. Please see notes [here](#dnat_policy).
+
 ### VPN Access
 * `vpn_access` - (Optional) Enable user access through VPN to this container. Valid values: true, false.
 * `vpn_cidr` - (Optional) VPN CIDR block for the container. Required if "vpn_access" is true. Example: "192.168.43.0/24".
@@ -231,7 +211,6 @@ In addition to all arguments above, the following attributes are exported:
 The following arguments are deprecated:
 
 * `dns_server` - Specify the DNS IP, only required while using a custom private DNS for the VPC.
-
 * `enable_snat` - (Optional) Enable Source NAT for this container. Valid values: true, false. Default value: false. **NOTE: If using SNAT for FQDN use-case, please see notes [here](#fqdn).**
 
 * `dnat_policy` - (Optional) Policy rule applied for enabling Destination NAT (DNAT), which allows you to change the destination to a virtual address range. Currently only supports AWS(1) and ARM(8).
@@ -258,7 +237,7 @@ $ terraform import aviatrix_gateway.test gw_name
 
 ## Notes
 ### FQDN
-In order for the FQDN feature to be enabled for the specified gateway, `enable_snat` must be set to true. If it is not set at gateway creation, creation of FQDN resource will automatically enable SNAT and users must rectify the diff in the Terraform state by setting `enable_snat = true` in their config file.
+In order for the FQDN feature to be enabled for the specified gateway, `single_ip_snat` must be set to true. If it is not set at gateway creation, creation of FQDN resource will automatically enable SNAT and users must rectify the diff in the Terraform state by setting `single_ip_snat = true` in their config file.
 
 ### insane_mode
 If `insane_mode` is enabled, you must specify a valid /26 CIDR segment of the VPC specified for the `subnet`. This will then create a new subnet to be used for the corresponding gateway. You cannot specify an existing /26 subnet.
@@ -270,7 +249,7 @@ If you are using/upgraded to Aviatrix Terraform Provider R1.14+, and a gateway w
 If you are using/upgraded to Aviatrix Terraform Provider R1.8+, and a peering-HA gateway was originally created with a provider version <R1.8, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also input this attribute and its value to its corresponding gateway resource in your `.tf` file.
 
 ### enable_snat
-If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a gateway with `enable_snat` set to true was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also change this attribute to `single_ip_snat` and set its value to its corresponding gateway resource in your `.tf` file.
+If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a gateway with `enable_snat` set to true was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also change this attribute to `single_ip_snat` in your `.tf` file.
 
 ### dnat_policy
-If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a gateway with `dnat_policy` applied was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to remove attribute’s value from the state. In addition, you must its value to its corresponding aviatrix_gateway_dnat resource in your `.tf` file and terraform import its value into the state file.
+If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a gateway with `dnat_policy` was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to remove attribute’s value from the state. In addition, you must transfer its corresponding values to the **aviatrix_gateway_dnat** resource in your `.tf` file and perform a 'terraform import' to rectify the state file.

@@ -29,44 +29,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
 }
 ```
 ```hcl
-# Create an Aviatrix AWS Spoke Gateway with SNAT and DNAT enabled
-resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
-  cloud_type   = 1
-  account_name = "my-aws"
-  gw_name      = "spoke-gw-aws"
-  vpc_id       = "vpc-abcd123"
-  vpc_reg      = "us-west-1"
-  gw_size      = "t2.micro"
-  subnet       = "10.11.0.0/24"
-  enable_snat  = true
-  snat_mode    = "custom"
-  snat_policy {
-    src_ip       = "21.0.0.0/24"
-    src_port     = 53
-    dst_ip       = "22.0.0.0/24"
-    dst_port     = 54
-    protocol     = "tcp"
-    interface    = "eth0"
-    connection   = "None"
-    mark         = 71
-    new_src_ip   = "23.0.0.0"
-    new_src_port = 55
-  }
-  dnat_policy {
-    src_ip       = "30.0.0.0/24"
-    src_port     = 60
-    dst_ip       = "31.0.0.0/24"
-    dst_port     = 61
-    protocol     = "tcp"
-    interface    = "eth0"
-    connection   = "None"
-    mark         = 80
-    new_src_ip   = "32.0.0.0"
-    new_src_port = 62
-  }
-}
-```
-```hcl
 # Create an Aviatrix GCP Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_gcp" {
   cloud_type   = 4
@@ -133,15 +95,25 @@ The following arguments are supported:
 ### SNAT/DNAT
 * `single_ip_snat` - (Optional) Specify whether to enable Source NAT feature in "single_ip" mode on the gateway or not. Please disable AWS NAT instance before enabling this feature. Currently only supports AWS(1) and ARM(8). Valid values: true, false.
 
+-> **NOTE:** `enable_snat` has been renamed to `single_ip_snat` in provider version R2.10. Please see notes [here](#enable_snat) for more information.
+
+-> **NOTE:** Custom SNAT and DNAT support have been deprecated and functionality has been moved to **aviatrix_gateway_snat** and **aviatrix_gateway_dnat** respectively, in provider version R2.10. Please see notes for `snat_mode`, `snat_policy` and `dnat_policy` in the Notes section below.
+
 ### Misc.
 * `transit_gw` - (Optional) Specify the transit Gateway.
 * `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in controller 4.7 or later release. Valid values: true, false. Default: true. Option not available for GCP, ARM and Oracle gateways, they will automatically allocate new eip's.
 * `eip` - (Optional) Required when allocate_new_eip is false. It uses specified EIP for this gateway. Available in controller 4.7 or later release.
 * `tag_list` - (Optional) Instance tag of cloud provider. Only AWS, cloud_type is "1", is supported. Example: ["key1:value1", "key2:value2"].
+
+
 * `enable_active_mesh` - (Optional) Switch to Enable/Disable Active Mesh Mode for Spoke Gateway. Valid values: true, false. Default value: false.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS. Valid values: true, false. Default value: false.
+
+
 * `enable_encrypt_volume` - (Optional) Enable Encrypt EBS Volume feature for Gateway. Only supports AWS. Valid values: true, false. Default value: false.
 * `customer_managed_keys` - (Optional and Sensitive) Customer managed key ID.
+
+
 * `customized_spoke_vpc_routes` - (Optional) A list of comma separated CIDRs to be customized for the spoke VPC routes. When configured, it will replace all learned routes in VPC routing tables, including RFC1918 and non-RFC1918 CIDRs. It applies to this spoke gateway only​. Example: "10.0.0.0/116,10.2.0.0/16".
 * `filtered_spoke_vpc_routes` - (Optional) A list of comma separated CIDRs to be filtered from the spoke VPC route table. When configured, filtering CIDR(s) or it’s subnet will be deleted from VPC routing tables as well as from spoke gateway’s routing table. It applies to this spoke gateway only. Example: "10.2.0.0/116,10.3.0.0/16".
 * `included_advertised_spoke_routes` - (Optional) A list of comma separated CIDRs to be advertised to on-prem as 'Included CIDR List'. When configured, it will replace all advertised routes from this VPC. Example: "10.4.0.0/116,10.5.0.0/16".
@@ -196,10 +168,10 @@ $ terraform import aviatrix_spoke_gateway.test gw_name
 If `insane_mode` is enabled, you must specify a valid /26 CIDR segment of the VPC specified for the `subnet`. This will then create a new subnet to be used for the corresponding gateway. You cannot specify an existing /26 subnet.
 
 ### enable_snat
-If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a spoke gateway with `enable_snat` set to true was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also change this attribute to `single_ip_snat` and set its value to its corresponding gateway resource in your `.tf` file.
+If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a spoke gateway with `enable_snat` set to true was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also change this attribute to `single_ip_snat` in your `.tf` file.
 
 ### snat_mode & snat_policy
-If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a spoke gateway with `snat_mode` and `snat_policy` applied was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to remove attribute’s value from the state. In addition, you must their values to corresponding aviatrix_gateway_snat resource in your `.tf` file and terraform import their values into the state file.
+If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a spoke gateway with `snat_mode` and `snat_policy` was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to remove attribute’s value from the state. In addition, you must transfer its corresponding values to the **aviatrix_gateway_snat** resource in your `.tf` file and perform a 'terraform import' to rectify the state file.
 
 ### dnat_policy
-If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a spoke gateway with `dnat_policy` applied was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to remove attribute’s value from the state. In addition, you must its value to its corresponding aviatrix_gateway_dnat resource in your `.tf` file and terraform import its value into the state file.
+If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a spoke gateway with `dnat_policy` was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to remove attribute’s value from the state. In addition, you must its value to its corresponding **aviatrix_gateway_dnat** resource in your `.tf` file and perform a 'terraform import' to rectify the state file.

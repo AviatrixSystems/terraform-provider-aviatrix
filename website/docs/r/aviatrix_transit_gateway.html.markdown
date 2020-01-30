@@ -100,7 +100,7 @@ The following arguments are supported:
 * `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit Gateway. Required for AWS if insane_mode is enabled. Example: AWS: "us-west-1a".
 
 ### SNAT
-* `single_ip_snat` - (Optional) Enable "single_ip" mode Source NAT for this container. Valid values: true, false.
+* `single_ip_snat` - (Optional) Enable "single_ip" mode Source NAT for this container. Valid values: true, false. **NOTE: Please see notes [here](#enable_snat) in regards to changes to this argument in R2.10.**
 
 ### Misc.
 * `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in controller 4.7 or later release. Valid values: true, false. Default: true. Option not available for GCP, ARM and Oracle gateways, they will automatically allocate new eip's.
@@ -109,15 +109,23 @@ The following arguments are supported:
 * `connected_transit` - (Optional) Specify Connected Transit status. If enabled, it allows spokes to run traffics to other spokes via transit gateway. Valid values: true, false. Default value: false.
 * `enable_hybrid_connection` - (Optional) Sign of readiness for TGW connection. Only supported for AWS. Example: false.
 * `enable_firenet` - (Optional) Sign of readiness for FireNet connection. Valid values: true, false. Default value: false. **NOTE: If previously using an older provider version R2.5 where attribute name was `enable_firenet_interfaces`, please see notes [here](#enable_firenet).**
+
+
 * `enable_advertise_transit_cidr` - (Optional) Switch to Enable/Disable advertise transit VPC network CIDR for a vgw connection. Available as of R2.6. **NOTE: If previously enabled through vgw_conn resource prior to provider version R2.6, please see notes [here](#cidr-advertising).**
 * `bgp_manual_spoke_advertise_cidrs` - (Optional) Intended CIDR list to advertise to VGW. Example: "10.2.0.0/16,10.4.0.0/16". Available as of R2.6. **NOTE: If previously enabled through vgw_conn resource prior to provider version R2.6, please see notes [here](#cidr-advertising).**
+
+
 * `enable_active_mesh` - (Optional) Switch to Enable/Disable Active Mesh Mode for Transit Gateway. Valid values: true, false. Default value: false.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS. Valid values: true, false. Default value: false.
+
+
 * `enable_encrypt_volume` - (Optional) Enable Encrypt EBS Volume feature for Gateway. Only supports AWS. Valid values: true, false. Default value: false.
+* `customer_managed_keys` - (Optional and Sensitive) Customer managed key ID.
+
+
 * `customized_spoke_vpc_routes` - (Optional) A list of comma separated CIDRs to be customized for the spoke VPC routes. When configured, it will replace all learned routes in VPC routing tables, including RFC1918 and non-RFC1918 CIDRs. It applies to all spoke gateways attached to this transit gateway. Example: "10.0.0.0/116,10.2.0.0/16".
 * `filtered_spoke_vpc_routes` - (Optional) A list of comma separated CIDRs to be filtered from the spoke VPC route table. When configured, filtering CIDR(s) or it’s subnet will be deleted from VPC routing tables as well as from spoke gateway’s routing table. It applies to all spoke gateways attached to this transit gateway. Example: "10.2.0.0/116,10.3.0.0/16".
 * `excluded_advertised_spoke_routes` - (Optional) A list of comma separated CIDRs to be advertised to on-prem as 'Excluded CIDR List'. When configured, it inspects all the advertised CIDRs from its spoke gateways and remove those included in the 'Excluded CIDR List'. Example: "10.4.0.0/116,10.5.0.0/16".
-* `customer_managed_keys` - (Optional and Sensitive) Customer managed key ID.
 
 ## Attribute Reference
 
@@ -150,4 +158,4 @@ If you are using/upgraded to Aviatrix Terraform Provider R2.5+/UserConnect-5.0+ 
 If `insane_mode` is enabled, you must specify a valid /26 CIDR segment of the VPC specified for the `subnet`. This will then create a new subnet to be used for the corresponding gateway. You cannot specify an existing /26 subnet.
 
 ### enable_snat
-If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a transit gateway with `enable_snat` set to true was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also change this attribute to `single_ip_snat` and set its value to its corresponding gateway resource in your `.tf` file.
+If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a transit gateway with `enable_snat` set to true was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also change this attribute to `single_ip_snat` in your `.tf` file.

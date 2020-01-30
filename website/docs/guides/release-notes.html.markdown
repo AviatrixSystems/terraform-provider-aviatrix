@@ -12,10 +12,20 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.9 (UserConnect-5.2)``
+``Last updated: R2.9.1 (UserConnect-5.2.2122)``
 
 
 ---
+
+## 2.9.1
+### Notes:
+- Release date: **(28 Jan 2020)**
+- Supported Controller version: **UserConnect-5.2.2122**
+- Supported Terraform version: **v0.12.x**
+
+### Bug Fixes:
+1. Fixed issue where JSON Decode ``get_site2cloud_conn_detail`` fails for **aviatrix_site2cloud** and **aviatrix_vgw_conn**
+
 
 ## 2.9.0
 ### Notes:
