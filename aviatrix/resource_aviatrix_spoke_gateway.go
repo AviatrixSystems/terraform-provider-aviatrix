@@ -612,7 +612,17 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if len(gw.FilteredSpokeVpcRoutes) != 0 {
-			d.Set("filtered_spoke_vpc_routes", strings.Join(gw.FilteredSpokeVpcRoutes, ","))
+			if filteredSpokeVpcRoutes := d.Get("filtered_spoke_vpc_routes").(string); filteredSpokeVpcRoutes != "" {
+				filteredSpokeVpcRoutesArray := strings.Split(filteredSpokeVpcRoutes, ",")
+				if len(goaviatrix.Difference(filteredSpokeVpcRoutesArray, gw.FilteredSpokeVpcRoutes)) == 0 &&
+					len(goaviatrix.Difference(gw.FilteredSpokeVpcRoutes, filteredSpokeVpcRoutesArray)) == 0 {
+					d.Set("filtered_spoke_vpc_routes", filteredSpokeVpcRoutes)
+				} else {
+					d.Set("filtered_spoke_vpc_routes", strings.Join(gw.FilteredSpokeVpcRoutes, ","))
+				}
+			} else {
+				d.Set("filtered_spoke_vpc_routes", strings.Join(gw.FilteredSpokeVpcRoutes, ","))
+			}
 		} else {
 			d.Set("filtered_spoke_vpc_routes", "")
 		}
@@ -1070,40 +1080,79 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	}
 
 	if d.HasChange("customized_spoke_vpc_routes") {
-		transitGateway := &goaviatrix.Gateway{
-			GwName:                   d.Get("gw_name").(string),
-			CustomizedSpokeVpcRoutes: strings.Split(d.Get("customized_spoke_vpc_routes").(string), ","),
+		o, n := d.GetChange("customized_spoke_vpc_routes")
+		if o == nil {
+			o = new(interface{})
 		}
-		err := client.EditGatewayCustomRoutes(transitGateway)
-		log.Printf("[INFO] Customizeing routes of spoke gateway: %s ", transitGateway.GwName)
-		if err != nil {
-			return fmt.Errorf("failed to customize spoke vpc routes of spoke gateway: %s due to: %s", transitGateway.GwName, err)
+		if n == nil {
+			n = new(interface{})
+		}
+		os := o.(interface{})
+		ns := n.(interface{})
+		oldRouteList := strings.Split(os.(string), ",")
+		newRouteList := strings.Split(ns.(string), ",")
+		if len(goaviatrix.Difference(oldRouteList, newRouteList)) != 0 || len(goaviatrix.Difference(newRouteList, oldRouteList)) != 0 {
+			transitGateway := &goaviatrix.Gateway{
+				GwName:                   d.Get("gw_name").(string),
+				CustomizedSpokeVpcRoutes: newRouteList,
+			}
+			err := client.EditGatewayCustomRoutes(transitGateway)
+			log.Printf("[INFO] Customizeing routes of spoke gateway: %s ", transitGateway.GwName)
+			if err != nil {
+				return fmt.Errorf("failed to customize spoke vpc routes of spoke gateway: %s due to: %s", transitGateway.GwName, err)
+			}
 		}
 		d.SetPartial("customized_spoke_vpc_routes")
 	}
 
 	if d.HasChange("filtered_spoke_vpc_routes") {
-		transitGateway := &goaviatrix.Gateway{
-			GwName:                 d.Get("gw_name").(string),
-			FilteredSpokeVpcRoutes: strings.Split(d.Get("filtered_spoke_vpc_routes").(string), ","),
+		o, n := d.GetChange("filtered_spoke_vpc_routes")
+		if o == nil {
+			o = new(interface{})
 		}
-		err := client.EditGatewayFilterRoutes(transitGateway)
-		log.Printf("[INFO] Editing filtered spoke vpc routes of spoke gateway: %s ", transitGateway.GwName)
-		if err != nil {
-			return fmt.Errorf("failed to edit filtered spoke vpc routes of spoke gateway: %s due to: %s", transitGateway.GwName, err)
+		if n == nil {
+			n = new(interface{})
+		}
+		os := o.(interface{})
+		ns := n.(interface{})
+		oldRouteList := strings.Split(os.(string), ",")
+		newRouteList := strings.Split(ns.(string), ",")
+		if len(goaviatrix.Difference(oldRouteList, newRouteList)) != 0 || len(goaviatrix.Difference(newRouteList, oldRouteList)) != 0 {
+			transitGateway := &goaviatrix.Gateway{
+				GwName:                 d.Get("gw_name").(string),
+				FilteredSpokeVpcRoutes: newRouteList,
+			}
+			err := client.EditGatewayFilterRoutes(transitGateway)
+			log.Printf("[INFO] Editing filtered spoke vpc routes of spoke gateway: %s ", transitGateway.GwName)
+			if err != nil {
+				return fmt.Errorf("failed to edit filtered spoke vpc routes of spoke gateway: %s due to: %s", transitGateway.GwName, err)
+			}
 		}
 		d.SetPartial("filtered_spoke_vpc_routes")
 	}
 
 	if d.HasChange("included_advertised_spoke_routes") {
-		transitGateway := &goaviatrix.Gateway{
-			GwName:                d.Get("gw_name").(string),
-			AdvertisedSpokeRoutes: strings.Split(d.Get("included_advertised_spoke_routes").(string), ","),
+		o, n := d.GetChange("included_advertised_spoke_routes")
+		if o == nil {
+			o = new(interface{})
 		}
-		err := client.EditGatewayAdvertisedCidr(transitGateway)
-		log.Printf("[INFO] Editing customized spoke vpc routes of spoke gateway: %s ", transitGateway.GwName)
-		if err != nil {
-			return fmt.Errorf("failed to edit customized spoke vpc routes of spoke gateway: %s due to: %s", transitGateway.GwName, err)
+		if n == nil {
+			n = new(interface{})
+		}
+		os := o.(interface{})
+		ns := n.(interface{})
+		oldRouteList := strings.Split(os.(string), ",")
+		newRouteList := strings.Split(ns.(string), ",")
+		if len(goaviatrix.Difference(oldRouteList, newRouteList)) != 0 || len(goaviatrix.Difference(newRouteList, oldRouteList)) != 0 {
+			transitGateway := &goaviatrix.Gateway{
+				GwName:                d.Get("gw_name").(string),
+				AdvertisedSpokeRoutes: newRouteList,
+			}
+			err := client.EditGatewayAdvertisedCidr(transitGateway)
+			log.Printf("[INFO] Editing included advertised spoke vpc routes of spoke gateway: %s ", transitGateway.GwName)
+			if err != nil {
+				return fmt.Errorf("failed to edit included advertised spoke vpc routes of spoke gateway: %s due to: %s", transitGateway.GwName, err)
+			}
 		}
 		d.SetPartial("included_advertised_spoke_routes")
 	}
