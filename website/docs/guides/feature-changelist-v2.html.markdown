@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.9 (UserConnect-5.2)``
+``Last updated: R2.10 (UserConnect-5.2.2122+)``
 
 
 ---
@@ -142,3 +142,10 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |(new) | --             | enable_encrypt_volume | **Yes**; Terraform now supports encrypting EBS volumes. If an existing gateway in Terraform state has had their EBS volume encrypted through the GUI, this attribute must be set to **true**, and a ``terraform refresh`` must be performed to rectify the state |
 |(new) | --             | dnat_policy       | **Yes**; Terraform now supports DNAT. If an existing gateway in Terraform state has had DNAT policies set through the GUI, corresponding ``dnat_policy`` blocks must be added and a ``terraform refresh`` must be performed to rectify the state |
 |(new) | spoke_gateway  | snat_policy       | **Yes**; Terraform now supports custom SNAT or multi-IP SNAT. If an existing spoke gateway in Terraform state has had SNAT policies set through the GUI, corresponding ``snat_policy`` blocks must be added and a ``terraform refresh`` must be performed to rectify the state |
+
+
+## R2.10 (UserConnect-5.2.2122+) (Terraform v0.12)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(changed) | gateway, spoke_gateway, transit_gateway | enable_snat | **Yes**; renamed to ``single_ip_snat``. Update the attribute in .tf files and perform a ``terraform refresh`` |
+|(deprecated) | --      | snat_mode, snat_policy {}, dnat_policy {} | **Yes**; customized SNAT and DNAT support has been deprecated from R2.9 and functionality has been moved to **aviatrix_gateway_snat** and **aviatrix_gateway_dnat** respectively, to improve policy management. If customized SNAT/DNAT policies were created in R2.9, copy the existing policy block and paste into the new corresponding resource. Specify the corresponding gateway name value for ``gw_name`` and change the attributes that were renamed as necessary (ex. ``src_ip`` to ``src_cidr``). You may see the full documentation for the resources under the "Gateway" tab
