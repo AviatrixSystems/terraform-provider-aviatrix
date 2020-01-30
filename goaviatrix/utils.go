@@ -74,6 +74,45 @@ func DifferenceSlice(a, b [][]string) [][]string {
 	return ab
 }
 
+// DifferenceSliceAttachedVPC returns the one-dimension elements in two-dimension slice a that aren't in two-dimension b.
+// This function is used to check if there is difference for attached_vpc in aws_tgw resource between source file and
+// state file excluding "subnets" and "route_tables".
+func DifferenceSliceAttachedVPC(a, b [][]string) [][]string {
+	if a == nil || len(a) == 0 || len(a[0]) <= 5 || b == nil || len(b) == 0 || len(b[0]) <= 5 {
+		return a
+	}
+
+	aa := make([]string, 0)
+	for i := range a {
+		temp := ""
+		for j := 0; j < 5; j++ {
+			temp += a[i][j]
+		}
+		aa = append(aa, temp)
+	}
+
+	bb := make([]string, 0)
+	for t := range b {
+		temp := ""
+		for m := 0; m < 5; m++ {
+			temp += b[t][m]
+		}
+		bb = append(bb, temp)
+	}
+
+	mb := map[string]bool{}
+	for x := range bb {
+		mb[bb[x]] = true
+	}
+	ab := make([][]string, 0)
+	for x := range aa {
+		if _, ok := mb[aa[x]]; !ok {
+			ab = append(ab, a[x])
+		}
+	}
+	return ab
+}
+
 func ReadFile(local_filepath string) (string, string, error) {
 	// File being read must be .json
 	// Returns filename, contents of json file, error string
