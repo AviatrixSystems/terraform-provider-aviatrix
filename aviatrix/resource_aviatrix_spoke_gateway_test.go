@@ -73,7 +73,7 @@ func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
 						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("AWS_SUBNET")),
 						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AWS_REGION")),
-						resource.TestCheckResourceAttr(resourceName, "enable_snat", "false"),
+						resource.TestCheckResourceAttr(resourceName, "single_ip_snat", "false"),
 					),
 				},
 				{
@@ -108,7 +108,7 @@ func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("GCP_VPC_ID")),
 						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("GCP_SUBNET")),
 						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("GCP_ZONE")),
-						resource.TestCheckResourceAttr(resourceName, "enable_snat", "false"),
+						resource.TestCheckResourceAttr(resourceName, "single_ip_snat", "false"),
 					),
 				},
 				{
@@ -144,7 +144,7 @@ func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("ARM_VNET_ID")),
 						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("ARM_SUBNET")),
 						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("ARM_REGION")),
-						resource.TestCheckResourceAttr(resourceName, "enable_snat", "false"),
+						resource.TestCheckResourceAttr(resourceName, "single_ip_snat", "false"),
 					),
 				},
 				{
@@ -179,7 +179,7 @@ func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("OCI_VPC_ID")),
 						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("OCI_SUBNET")),
 						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("OCI_REGION")),
-						resource.TestCheckResourceAttr(resourceName, "enable_snat", "false"),
+						resource.TestCheckResourceAttr(resourceName, "single_ip_snat", "false"),
 					),
 				},
 				{
@@ -208,14 +208,14 @@ resource "aviatrix_account" "test_acc_aws" {
 	aws_secret_key     = "%s"
 }
 resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
-	cloud_type   = 1
-	account_name = aviatrix_account.test_acc_aws.account_name
-	gw_name      = "tfg-aws-%[1]s"
-	vpc_id       = "%[5]s"
-	vpc_reg      = "%[6]s"
-	gw_size      = "%[7]s"
-	subnet       = "%[8]s"
-	enable_snat  = false
+	cloud_type     = 1
+	account_name   = aviatrix_account.test_acc_aws.account_name
+	gw_name        = "tfg-aws-%[1]s"
+	vpc_id         = "%[5]s"
+	vpc_reg        = "%[6]s"
+	gw_size        = "%[7]s"
+	subnet         = "%[8]s"
+	single_ip_snat = false
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_SUBNET"))
@@ -234,14 +234,14 @@ resource "aviatrix_account" "test_acc_gcp" {
 	gcloud_project_credentials_filepath = "%s"
 }
 resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
-	cloud_type   = 4
-	account_name = aviatrix_account.test_acc_gcp.account_name
-	gw_name      = "tfg-gcp-%[1]s"
-	vpc_id       = "%[4]s"
-	vpc_reg      = "%[5]s"
-	gw_size      = "%[6]s"
-	subnet       = "%[7]s"
-	enable_snat  = false
+	cloud_type     = 4
+	account_name   = aviatrix_account.test_acc_gcp.account_name
+	gw_name        = "tfg-gcp-%[1]s"
+	vpc_id         = "%[4]s"
+	vpc_reg        = "%[5]s"
+	gw_size        = "%[6]s"
+	subnet         = "%[7]s"
+	single_ip_snat = false
 }
 	`, rName, os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"),
 		os.Getenv("GCP_VPC_ID"), os.Getenv("GCP_ZONE"), gcpGwSize, os.Getenv("GCP_SUBNET"))
@@ -258,14 +258,14 @@ resource "aviatrix_account" "test_acc_arm" {
 	arm_application_key = "%s"
 }
 resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
-	cloud_type   = 8
-	account_name = aviatrix_account.test_acc_arm.account_name
-	gw_name      = "tfg-arm-%[1]s"
-	vpc_id       = "%[6]s"
-	vpc_reg      = "%[7]s"
-	gw_size      = "%[8]s"
-	subnet       = "%[9]s"
-	enable_snat  = false
+	cloud_type     = 8
+	account_name   = aviatrix_account.test_acc_arm.account_name
+	gw_name        = "tfg-arm-%[1]s"
+	vpc_id         = "%[6]s"
+	vpc_reg        = "%[7]s"
+	gw_size        = "%[8]s"
+	subnet         = "%[9]s"
+	single_ip_snat = false
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
 		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),
@@ -289,14 +289,14 @@ resource "aviatrix_account" "test_acc_oci" {
 }
 
 resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
-	cloud_type   = 16
-	account_name = aviatrix_account.test_acc_oci.account_name
-	gw_name      = "tfg-oci-%[1]s"
-	vpc_id       = "%[6]s"
-	vpc_reg      = "%[7]s"
-	gw_size      = "%[8]s"
-	subnet       = "%[9]s"
-	enable_snat  = false
+	cloud_type     = 16
+	account_name   = aviatrix_account.test_acc_oci.account_name
+	gw_name        = "tfg-oci-%[1]s"
+	vpc_id         = "%[6]s"
+	vpc_reg        = "%[7]s"
+	gw_size        = "%[8]s"
+	subnet         = "%[9]s"
+	single_ip_snat = false
 }
 	`, rName, os.Getenv("OCI_TENANCY_ID"), os.Getenv("OCI_USER_ID"), os.Getenv("OCI_COMPARTMENT_ID"),
 		os.Getenv("OCI_API_KEY_FILEPATH"), os.Getenv("OCI_VPC_ID"), os.Getenv("OCI_REGION"),

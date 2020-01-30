@@ -128,7 +128,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
 	vpc_reg      = "%[6]s"
 	gw_size      = "t2.micro"
 	subnet       = "%[7]s"
-	enable_snat  = false
 }
 data "aviatrix_spoke_gateway" "foo" {
 	account_name = aviatrix_spoke_gateway.test_spoke_gateway.account_name
@@ -156,7 +155,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
 	vpc_reg      = "%[7]s"
 	gw_size      = "%[8]s"
 	subnet       = "%[9]s"
-	enable_snat  = false
 }
 data "aviatrix_spoke_gateway" "foo" {
 	account_name = aviatrix_spoke_gateway.test_spoke_gateway.account_name
@@ -188,7 +186,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
 	vpc_reg      = "%[5]s"
 	gw_size      = "%[6]s"
 	subnet       = "%[7]s"
-	enable_snat  = false
 }
 data "aviatrix_spoke_gateway" "foo" {
 	account_name = aviatrix_spoke_gateway.test_spoke_gateway.account_name

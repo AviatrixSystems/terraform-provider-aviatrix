@@ -66,14 +66,14 @@ resource "aviatrix_account" "test" {
 	aws_secret_key     = "%s"
 }
 resource "aviatrix_gateway" "test" {
-	cloud_type   = 1
-	account_name = aviatrix_account.test.account_name
-	gw_name      = "tfg-%[1]s"
-	vpc_id       = "%[5]s"
-	vpc_reg      = "%[6]s"
-	gw_size      = "t2.micro"
-	subnet       = "%[7]s"
-	enable_snat  = true
+	cloud_type     = 1
+	account_name   = aviatrix_account.test.account_name
+	gw_name        = "tfg-%[1]s"
+	vpc_id         = "%[5]s"
+	vpc_reg        = "%[6]s"
+	gw_size        = "t2.micro"
+	subnet         = "%[7]s"
+	single_ip_snat = true
 }
 resource "aviatrix_fqdn" "foo" {
 	fqdn_tag     = "tff-%[1]s"
