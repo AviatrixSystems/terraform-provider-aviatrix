@@ -48,7 +48,7 @@ resource "aviatrix_vpc" "test-vpc" {
 
 The following arguments are supported:
 
-* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1) is supported.
+* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1) and GCP(4) is supported.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `name` - (Required) Name of the vpc to be created.
 * `region` - (Optional) Region of cloud provider. Required to be empty for GCP provider, and non-empty for other providers. Example: AWS: "us-east-1", ARM: "East US 2".
