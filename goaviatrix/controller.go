@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -27,6 +28,22 @@ type SecurityGroupInfo struct {
 	State       string `json:"state"`
 	AccountName string `json:"account_name"`
 	Response    string `json:"response"`
+}
+
+type CloudnBackupConfig struct {
+	CID                 string `form:"CID,omitempty"`
+	Action              string `form:"action,omitempty"`
+	BackupConfigEnabled string `json:"enabled,omitempty"`
+	AccountName         string `json:"acct_name,omitempty"`
+	CloudType           int    `json:"cloud_type,omitempty"`
+	BucketName          string `json:"bucket_name,omitempty"`
+	Multiple            string `json:"multiple_bkup,omitempty"`
+}
+
+type GetCloudnBackupConfigResp struct {
+	Return  bool               `json:"return"`
+	Results CloudnBackupConfig `json:"results"`
+	Reason  string             `json:"reason"`
 }
 
 func (c *Client) EnableHttpAccess() error {
@@ -269,6 +286,95 @@ func (c *Client) GetSecurityGroupManagementStatus() (*SecurityGroupInfo, error) 
 	}
 	if !data.Return {
 		return nil, errors.New("Rest API get_controller_security_group_management_status Get failed: " + data.Reason)
+	}
+	return &data.Results, nil
+}
+
+func (c *Client) EnableCloudnBackupConfig(cloudnBackupConfig *CloudnBackupConfig) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for 'enable_cloudn_backup_config': %s") + err.Error())
+	}
+	enableCloudnBackupConfig := url.Values{}
+	enableCloudnBackupConfig.Add("CID", c.CID)
+	enableCloudnBackupConfig.Add("action", "enable_cloudn_backup_config")
+	enableCloudnBackupConfig.Add("cloud_type", strconv.Itoa(cloudnBackupConfig.CloudType))
+	enableCloudnBackupConfig.Add("account_name", cloudnBackupConfig.AccountName)
+	enableCloudnBackupConfig.Add("bucket_name", cloudnBackupConfig.BucketName)
+	if cloudnBackupConfig.Multiple == "true" {
+		enableCloudnBackupConfig.Add("multiple", "true")
+	}
+	Url.RawQuery = enableCloudnBackupConfig.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	log.Printf("[INFO] Enabling cloudn backup config: %#v", cloudnBackupConfig)
+	if err != nil {
+		return errors.New("HTTP Get 'enable_cloudn_backup_config' failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode 'enable_cloudn_backup_config' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API 'enable_cloudn_backup_config' Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) DisableCloudnBackupConfig() error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for 'disable_cloudn_backup_config': %s") + err.Error())
+	}
+	enableCloudnBackupConfig := url.Values{}
+	enableCloudnBackupConfig.Add("CID", c.CID)
+	enableCloudnBackupConfig.Add("action", "disable_cloudn_backup_config")
+	Url.RawQuery = enableCloudnBackupConfig.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	log.Printf("[INFO] Disabling cloudn backup config")
+	if err != nil {
+		return errors.New("HTTP Get 'disable_cloudn_backup_config' failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode 'disable_cloudn_backup_config' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API 'disable_cloudn_backup_config' Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) GetCloudnBackupConfig() (*CloudnBackupConfig, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return nil, errors.New(("url Parsing failed for 'get_cloudn_backup_config': %s") + err.Error())
+	}
+	enableCloudnBackupConfig := url.Values{}
+	enableCloudnBackupConfig.Add("CID", c.CID)
+	enableCloudnBackupConfig.Add("action", "get_cloudn_backup_config")
+	Url.RawQuery = enableCloudnBackupConfig.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return nil, errors.New("HTTP Get 'get_cloudn_backup_config' failed: " + err.Error())
+	}
+	var data GetCloudnBackupConfigResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode 'get_cloudn_backup_config' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return nil, errors.New("Rest API 'get_cloudn_backup_config' Get failed: " + data.Reason)
 	}
 	return &data.Results, nil
 }

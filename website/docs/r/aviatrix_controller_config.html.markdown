@@ -40,6 +40,11 @@ The following arguments are supported:
 * `fqdn_exception_rule` - (Optional) A system-wide mode. Valida values: true, false. Defaultvalue: true.
 * `security_group_management` - (Optional) Used to manage the Controller instance’s inbound rules from gateways. Valid values: true, false. Default value: false.
 * `target_version` - (Optional) The release version number to which the controller will be upgraded to. If not specified, controller will not be upgraded. If set to "latest", controller will be upgraded to the latest release. Please look at https://docs.aviatrix.com/HowTos/inline_upgrade.html for more information.
+* `backup_config_enabled` - (Optional) Switch to enable/disable controller cloudn backup config. Valid values: true, false. Default value: false.
+* `cloud_type` - (Optional) Type of cloud service provider, requires an integer value. Use 1 for AWS.
+* `account_name` - (Optional) This parameter represents the name of a Cloud-Account in Aviatrix controller.
+* `bucket_name` - (Optional) S3 Bucket Name for AWS.
+* `multiple` - (Optional) Switch to enable the controller to backup up to a maximum of 3 rotating backups.
 
 ## Attribute Reference
 
