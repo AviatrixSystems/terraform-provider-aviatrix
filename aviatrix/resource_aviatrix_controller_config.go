@@ -471,7 +471,7 @@ func resourceAviatrixControllerConfigDelete(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	d.Set("backup_config_enabled", false)
+	d.Set("backup_configuration", false)
 	cloudnBackupConfig, _ := client.GetCloudnBackupConfig()
 	if cloudnBackupConfig.BackupConfiguration == "yes" {
 		err := client.DisableCloudnBackupConfig()
