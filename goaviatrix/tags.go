@@ -66,7 +66,6 @@ func (c *Client) GetTags(tags *Tags) ([]string, error) {
 	if !data.Return {
 		return nil, errors.New("Rest API list_resource_tags Post failed: " + data.Reason)
 	}
-
 	var tagList []string
 	keys := reflect.ValueOf(data.Results).MapKeys()
 	strKeys := make([]string, len(keys))
@@ -74,14 +73,14 @@ func (c *Client) GetTags(tags *Tags) ([]string, error) {
 		strKeys[i] = keys[i].String()
 	}
 	for i := 0; i < len(keys); i++ {
-		if strKeys[i] == "tags" {
-			allKeys := reflect.ValueOf(data.Results["tags"]).MapKeys()
+		if strKeys[i] == "usr_tags" {
+			allKeys := reflect.ValueOf(data.Results["usr_tags"]).MapKeys()
 			for i := 0; i < len(allKeys); i++ {
-				if allKeys[i].String() == "Aviatrix-Created-Resource" &&
-					data.Results["tags"][allKeys[i].String()] == "Do-Not-Delete-Aviatrix-Created-Resource" {
+				if (allKeys[i].String() == "Key" && data.Results["usr_tags"][allKeys[i].String()] == "Aviatrix-Created-Resource") ||
+					(allKeys[i].String() == "Value" && data.Results["usr_tags"][allKeys[i].String()] == "Do-Not-Delete-Aviatrix-Created-Resource") {
 					continue
 				}
-				str := allKeys[i].String() + ":" + data.Results["tags"][allKeys[i].String()]
+				str := allKeys[i].String() + ":" + data.Results["usr_tags"][allKeys[i].String()]
 				tagList = append(tagList, str)
 			}
 			return tagList, nil
@@ -93,7 +92,7 @@ func (c *Client) GetTags(tags *Tags) ([]string, error) {
 
 func (c *Client) DeleteTags(tags *Tags) error {
 	tags.CID = c.CID
-	tags.Action = "delete_resource_tags"
+	tags.Action = "delete_resource_tag"
 	verb := "POST"
 	body := fmt.Sprintf("CID=%s&action=%s&cloud_type=%d&resource_type=%s&resource_name=%s&del_tag_list=%s",
 		c.CID, tags.Action, tags.CloudType, tags.ResourceType, tags.ResourceName, tags.TagList)
