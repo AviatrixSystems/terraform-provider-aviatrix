@@ -269,21 +269,22 @@ func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface
 	if err != nil {
 		return fmt.Errorf("unable to read current controller cloudn backup config: %s", err)
 	}
-	if cloudnBackupConfig != nil {
-		if cloudnBackupConfig.BackupConfiguration == "yes" {
-			d.Set("backup_configuration", true)
-			d.Set("backup_cloud_type", cloudnBackupConfig.BackupCloudType)
-			d.Set("backup_account_name", cloudnBackupConfig.BackupAccountName)
-			d.Set("backup_bucket_name", cloudnBackupConfig.BackupBucketName)
-			if cloudnBackupConfig.MultipleBackups == "yes" {
-				d.Set("multiple_backups", true)
-			} else {
-				d.Set("multiple_backups", false)
-			}
+	if cloudnBackupConfig != nil && cloudnBackupConfig.BackupConfiguration == "yes" {
+		d.Set("backup_configuration", true)
+		d.Set("backup_cloud_type", cloudnBackupConfig.BackupCloudType)
+		d.Set("backup_account_name", cloudnBackupConfig.BackupAccountName)
+		d.Set("backup_bucket_name", cloudnBackupConfig.BackupBucketName)
+		if cloudnBackupConfig.MultipleBackups == "yes" {
+			d.Set("multiple_backups", true)
 		} else {
-			d.Set("backup_configuration", false)
 			d.Set("multiple_backups", false)
 		}
+	} else {
+		d.Set("backup_configuration", false)
+		d.Set("multiple_backups", false)
+		d.Set("backup_cloud_type", 0)
+		d.Set("backup_account_name", "")
+		d.Set("backup_bucket_name", "")
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
