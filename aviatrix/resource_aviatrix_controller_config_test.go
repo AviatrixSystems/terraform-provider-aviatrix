@@ -60,9 +60,9 @@ resource "aviatrix_account" "test_account" {
 	aws_secret_key     = "%s"
 }
 resource "aviatrix_controller_config" "test_controller_config" {
-	fqdn_exception_rule 	   = false
-	http_access         	   = true
-	security_group_management  = false
+	fqdn_exception_rule 	  = false
+	http_access         	  = true
+	security_group_management = false
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"))
 }
