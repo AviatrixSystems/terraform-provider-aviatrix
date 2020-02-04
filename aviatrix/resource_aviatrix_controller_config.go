@@ -179,7 +179,7 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 	multipleBackups := d.Get("multiple_backups").(bool)
 	if backupConfiguration {
 		if backupCloudType == 0 || backupAccountName == "" || backupBucketName == "" {
-			return fmt.Errorf("please specifdy 'backup_cloud_type', 'backup_account_name' and 'backup_bucket_name'" +
+			return fmt.Errorf("please specify 'backup_cloud_type', 'backup_account_name' and 'backup_bucket_name'" +
 				" to enable backup configuration")
 		}
 		cloudnBackupConfiguration := &goaviatrix.CloudnBackupConfiguration{
