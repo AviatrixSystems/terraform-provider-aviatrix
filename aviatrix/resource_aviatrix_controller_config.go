@@ -393,23 +393,23 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 		multipleBackups := d.Get("multiple_backups").(bool)
 		if backupConfiguration {
 			if backupCloudType == 0 || backupAccountName == "" || backupBucketName == "" {
-				return fmt.Errorf("please specifdy 'backup_cloud_type', 'backup_account_name' and 'backup_bucket_name' to enable backup configuration")
+				return fmt.Errorf("please specify 'backup_cloud_type', 'backup_account_name' and 'backup_bucket_name' to enable backup configuration")
 			}
-			cloudnBackupConfig := &goaviatrix.CloudnBackupConfiguration{
+			cloudnBackupConfiguration := &goaviatrix.CloudnBackupConfiguration{
 				BackupCloudType:   backupCloudType,
 				BackupAccountName: backupAccountName,
 				BackupBucketName:  backupBucketName,
 			}
-			err := client.EnableCloudnBackupConfig(cloudnBackupConfig)
+			err := client.EnableCloudnBackupConfig(cloudnBackupConfiguration)
 			if err != nil {
 				return fmt.Errorf("failed to enable backup configuration: %s", err)
 			}
 		} else {
 			if backupCloudType != 0 || backupAccountName != "" || backupBucketName != "" {
-				return fmt.Errorf("'backup_cloud_type', 'backup_account_name' and 'backup_bucket_name' should all be empty for not enabling backup configuration")
+				return fmt.Errorf("'backup_cloud_type', 'backup_account_name' and 'backup_bucket_name' should all be empty for disabling backup configuration")
 			}
 			if multipleBackups {
-				return fmt.Errorf("'multiple_backups' should be empty or set false for not enabling backup configuration")
+				return fmt.Errorf("'multiple_backups' should be empty or set false for disabling backup configuration")
 			}
 			err := client.DisableCloudnBackupConfig()
 			if err != nil {
@@ -417,22 +417,49 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 			}
 		}
 		d.SetPartial("backup_configuration")
-	}
+	} else {
+		if d.HasChange("backup_cloud_type") || d.HasChange("backup_account_name") ||
+			d.HasChange("backup_bucket_name") || d.HasChange("multiple_backups") {
+			backupConfiguration := d.Get("backup_configuration").(bool)
+			backupCloudType := d.Get("backup_cloud_type").(int)
+			backupAccountName := d.Get("backup_account_name").(string)
+			backupBucketName := d.Get("backup_bucket_name").(string)
+			multipleBackups := d.Get("multiple_backups").(bool)
+			if backupConfiguration {
+				err := client.DisableCloudnBackupConfig()
+				if err != nil {
+					return fmt.Errorf("failed to disable backup configuration: %s", err)
+				}
+				cloudnBackupConfiguration := &goaviatrix.CloudnBackupConfiguration{
+					BackupCloudType:   backupCloudType,
+					BackupAccountName: backupAccountName,
+					BackupBucketName:  backupBucketName,
+				}
+				if multipleBackups {
+					cloudnBackupConfiguration.MultipleBackups = "true"
+				}
+				err = client.EnableCloudnBackupConfig(cloudnBackupConfiguration)
+				if err != nil {
+					return fmt.Errorf("failed to enable backup configuration: %s", err)
+				}
+			} else {
+				if d.HasChange("backup_cloud_type") {
+					return fmt.Errorf("can't update 'backup_cloud_type' since 'backup_configuration' is disabled")
+				}
 
-	if d.HasChange("backup_cloud_type") && !d.HasChange("backup_configuration") {
-		return fmt.Errorf("updating 'backup_cloud_type' without updating 'backup_configuration' is not allowed")
-	}
+				if d.HasChange("backup_account_name") {
+					return fmt.Errorf("can't update 'backup_account_name' since 'backup_configuration' is disabled")
+				}
 
-	if d.HasChange("backup_account_name") && !d.HasChange("backup_configuration") {
-		return fmt.Errorf("updating 'backup_account_name' without updating 'backup_configuration' is not allowed")
-	}
+				if d.HasChange("backup_bucket_name") {
+					return fmt.Errorf("can't update 'backup_bucket_name' since 'backup_configuration' is disabled")
+				}
 
-	if d.HasChange("backup_bucket_name") && !d.HasChange("backup_configuration") {
-		return fmt.Errorf("updating 'backup_bucket_name' without updating 'backup_configuration' is not allowed")
-	}
-
-	if d.HasChange("multiple_backups") && !d.HasChange("backup_configuration") {
-		return fmt.Errorf("updating 'multiple_backups' without updating 'backup_configuration' is not allowed")
+				if d.HasChange("multiple_backups") {
+					return fmt.Errorf("can't update 'multiple_backups' since 'backup_configuration' is disabled")
+				}
+			}
+		}
 	}
 
 	d.Partial(false)
