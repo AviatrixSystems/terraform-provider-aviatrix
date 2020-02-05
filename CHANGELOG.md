@@ -4,11 +4,11 @@
 - Supported Terraform version: **v0.12.x**
 
 ### Features:
-1. Implemented advanced VPC attachment feature in both **aviatrix_aws_tgw** and **aviatrix_aws_tgw_vpc_attachment**
-2. Implemented updating ``customized_routes`` in **aviatrix_aws_tgw_vpc_attachment**
-3. Implemented a check that ``aws_account_number`` needs to be exactly 12 digits in **aviatrix_account**
-4. Implemented multiple missing parameters in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
-5. Implemented functionality of enabling/disabling cloudn backup configuration for controller in **aviatrix_controller_config**
+1. Implemented advanced VPC attachment options for both **aviatrix_aws_tgw** and **aviatrix_aws_tgw_vpc_attachment**
+2. Implemented support for updating ``customized_routes`` in **aviatrix_aws_tgw_vpc_attachment**
+3. Implemented string length verification for ``aws_account_number`` in **aviatrix_account**
+4. Implemented support for ``customized_spoke_vpc_routes``, ``filtered_spoke_vpc_routes`` and ``include/exclude_advertised_spoke_routes`` options in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+5. Implemented support for configuring CloudN backup for controller in **aviatrix_controller_config**
 6. New resources:
   - **aviatrix_gateway_dnat**
   - **aviatrix_gateway_snat**
@@ -25,7 +25,8 @@
 5. Replaced ``enable_snat`` with ``single_ip_snat`` in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
 
 ### Bug Fixes:
-1. Fixed issue where exporting TGW and importing leave deltas not rectified through apply in **aviatrix_aws_tgw**
+1. Fixed issue where importing the **aviatrix_aws_tgw** resource results in deltas that could not be rectified through apply
+
 
 ## 2.9.1 (January 28, 2020)
 ### Notes:
