@@ -12,10 +12,41 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.9.1 (UserConnect-5.2.2122)``
+``Last updated: R2.10 (UserConnect-5.2.2122)``
 
 
 ---
+
+## 2.10.0
+### Notes:
+- Release date: **(5 Feb 2020)**
+- Supported Controller version: **UserConnect-5.2.2122**
+- Supported Terraform version: **v0.12.x**
+
+### Features:
+1. Implemented advanced VPC attachment options for both **aviatrix_aws_tgw** and **aviatrix_aws_tgw_vpc_attachment**
+2. Implemented support for updating ``customized_routes`` in **aviatrix_aws_tgw_vpc_attachment**
+3. Implemented string length verification for ``aws_account_number`` in **aviatrix_account**
+4. Implemented support for ``customized_spoke_vpc_routes``, ``filtered_spoke_vpc_routes`` and ``include/exclude_advertised_spoke_routes`` options in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+5. Implemented support for configuring CloudN backup for controller in **aviatrix_controller_config**
+6. New resources:
+  - **aviatrix_gateway_dnat**
+  - **aviatrix_gateway_snat**
+7. New data sources:
+  - **aviatrix_spoke_gateway**
+  - **aviatrix_transit_gateway**
+  - **aviatrix_firenet**
+
+### Enhancements:
+1. Added coverage for **aviatrix_gateway_dnat** and **aviatrix_gateway_snat** in test-infra
+2. Added coverage for **data_source_aviatrix_spoke_gateway**, **data_source_aviatrix_transit_gateway** and **data_source_aviatrix_firenet** in test-infra
+3. Deprecated ``dnat_policy`` in **aviatrix_gateway**
+4. Deprecated ``dnat_policy``, ``snat_policy`` and ``snat_mode`` in **aviatrix_spoke_gateway**
+5. Replaced ``enable_snat`` with ``single_ip_snat`` in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+
+### Bug Fixes:
+1. Fixed issue where importing the **aviatrix_aws_tgw** resource results in deltas that could not be rectified through apply
+
 
 ## 2.9.1
 ### Notes:

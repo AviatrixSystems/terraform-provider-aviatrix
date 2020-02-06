@@ -328,7 +328,7 @@ resource "aviatrix_gateway" "aws_vpn_gw" {
 }
 ```
 
-We will now need to update our Terraform file(s). In this case, note that due to the attribute re-naming, we will have to rename attributes such as ``vpc_size`` and ``vpc_net`` to ``gw_size`` and ``subnet``, respectively, as it is much more clear as to what these attributes refer to. ``enable_nat`` must also be changed to ``enable_snat`` here. In addition, due to boolean standardization, ``enable_snat``'s accepted value is changed from 'yes'/'no' to true/ false. ``vpn_access`` here did not get renamed, but the accepted value has also changed to boolean.
+We will now need to update our Terraform file(s). In this case, note that due to the attribute re-naming, we will have to rename attributes such as ``vpc_size`` and ``vpc_net`` to ``gw_size`` and ``subnet``, respectively, as it is much more clear as to what these attributes refer to. ``enable_nat`` must also be changed to ``enable_snat`` here. In addition, due to boolean standardization, ``enable_snat``'s accepted value is changed from 'yes'/'no' to true/ false. ``vpn_access`` and ``enable_elb`` here did not get renamed, but the accepted value has also changed to boolean.
 
 The updated file should now look something like:
 
@@ -349,7 +349,7 @@ resource "aviatrix_gateway" "aws_vpn_gw" {
   vpn_access    = true # "yes" -> true
   vpn_cidr      = "192.168.43.0/24"
   max_vpn_conn  = 100 # newly added
-  enable_elb    = "yes"
+  enable_elb    = true # "yes" -> true
   elb_name      = "example-elb-name"
 
   enable_snat   = true # enable_nat = "yes" -> enable_snat = true

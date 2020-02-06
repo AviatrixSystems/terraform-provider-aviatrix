@@ -25,7 +25,7 @@ resource "aviatrix_vpn_user" "test_vpn_user" {
 
 The following arguments are supported:
 
-* `vpc_id` - (Required) VPC Id of Aviatrix VPN gateway. Example: "vpc-abcd1234".
+* `vpc_id` - (Required) VPC ID of Aviatrix VPN gateway. Example: "vpc-abcd1234".
 * `gw_name` - (Required) If ELB is enabled, this will be the name of the ELB, else it will be the name of the Aviatrix VPN gateway. Example: "gw1".
 * `user_name` - (Required) VPN user name. Example: "user".
 * `user_email` - (Optional) VPN User's email. Example: "abc@xyz.com".
