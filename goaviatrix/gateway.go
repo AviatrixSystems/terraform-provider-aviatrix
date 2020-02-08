@@ -40,6 +40,7 @@ type Gateway struct {
 	ElbDNSName                  string `form:"elb_dns_name,omitempty" json:"elb_dns_name,omitempty"`
 	ElbName                     string `form:"elb_name,omitempty" json:"lb_name,omitempty"`
 	ElbState                    string `form:"elb_state,omitempty" json:"elb_state,omitempty"`
+	VpnProtocol                 string `form:"elb_protocol,omitempty"`
 	EnableClientCertSharing     string `form:"enable_client_cert_sharing,omitempty"`
 	EnableElb                   string `form:"enable_elb,omitempty"`
 	EnableLdap                  string `form:"enable_ldap,omitempty"`
@@ -149,6 +150,11 @@ type GatewayDetail struct {
 	VpnNat                       bool         `json:"vpn_nat,omitempty"`
 	SnatPolicy                   []PolicyRule `json:"snat_ip_port_list,omitempty"`
 	DnatPolicy                   []PolicyRule `json:"dnat_ip_port_list,omitempty"`
+	Elb                          ElbDetail    `json:"elb,omitempty"`
+}
+
+type ElbDetail struct {
+	VpnProtocol string `json:"elb_protocol,omitempty"`
 }
 
 type VpnGatewayAuth struct { // Used for set_vpn_gateway_authentication rest api call
