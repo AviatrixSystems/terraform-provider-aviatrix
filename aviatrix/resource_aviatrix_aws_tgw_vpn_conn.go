@@ -48,13 +48,13 @@ func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "AWS side as a number. Integer between 1-65535. Example: '12'. Set for connection type of 'dynamic BGP'.",
+				Description: "AWS side as a number. Integer between 1-65535. Example: '12'. Set for creating a BGP VPN connection from TGW in selected security domain.",
 			},
 			"remote_cidr": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Remote CIDRs joined as a string with ','. Set for connection type of 'static'.",
+				Description: "Remote CIDRs joined as a string with ','. Set for creating a static VPN connection from TGW in selected security domain.",
 			},
 			"inside_ip_cidr_tun_1": {
 				Type:        schema.TypeString,
