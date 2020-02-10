@@ -481,8 +481,8 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 
 		if enableElb && (gateway.CloudType == 1 || gateway.CloudType == 256) {
 			gateway.VpnProtocol = vpnProtocol
-		} else if vpnProtocol == "UDP" {
-			return fmt.Errorf("'vpn_protocol' can only be set to 'TCP' for vpn gateway of AWS provider with elb disabled")
+		} else if vpnProtocol == "TCP" {
+			return fmt.Errorf("'vpn_protocol' should be left empty or set to 'UDP' for vpn gateway of AWS provider without elb enabled")
 		}
 
 		if gateway.SamlEnabled == "yes" {
@@ -542,8 +542,8 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		if gateway.EnableElb == "yes" {
 			return fmt.Errorf("can not enable elb without VPN access enabled")
 		}
-		if vpnProtocol == "TCP" {
-			return fmt.Errorf("'vpn_protocol' should be left empty or set to 'UDP' for non-vpn gateway")
+		if vpnProtocol != "" {
+			return fmt.Errorf("'vpn_protocol' should be left empty for non-vpn gateway")
 		}
 	}
 
