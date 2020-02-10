@@ -111,7 +111,7 @@ func resourceAviatrixAwsTgwVpnConnCreate(d *schema.ResourceData, meta interface{
 	remoteCIDR := d.Get("remote_cidr").(string)
 
 	if remoteAsn != "" && remoteCIDR != "" {
-		return fmt.Errorf("remote_asn(type: dynamic BGP) and remote_cidr(type: static) cannot be set at the same time")
+		return fmt.Errorf("remote_asn(set for BGP connection) and remote_cidr(set for static connection) cannot be set at the same time")
 	}
 
 	if remoteAsn != "" {
