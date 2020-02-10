@@ -161,7 +161,7 @@ The following arguments are supported:
 * `max_vpn_conn` - (Optional) Maximum number of active VPN users allowed to be connected to this gateway. Required if vpn_access is true. Make sure the number is smaller than the VPN CIDR block. Example: 100. **NOTE: Please see notes [here](#max_vpn_conn) in regards to any deltas found in your state with the addition of this argument in R1.14.**
 * `enable_elb` - (Optional) Specify whether to enable ELB or not. Not supported for Oracle gateways. Valid values: true, false.
 * `elb_name` - (Optional) A name for the ELB that is created. If it is not specified, a name is generated automatically.
-* `vpn_protocol` - (Optional) Elb protocol for VPN gateway with elb enabled. Only supports AWS provider. Valid values: 'tcp', 'udp'. Default value: 'tcp'.
+* `vpn_protocol` - (Optional) Elb protocol for VPN gateway with elb enabled. Only supports AWS provider. Valid values: "TCP", "UDP". If not specified, "TCP" will be used..
 * `split_tunnel` - (Optional) Specify split tunnel mode. Valid values: true, false.
 * `name_servers` - (Optional) A list of DNS servers used to resolve domain names by a connected VPN user when Split Tunnel Mode is enabled.
 * `search_domains` - (Optional) A list of domain names that will use the NameServer when a specific name is not in the destination when Split Tunnel Mode is enabled.
