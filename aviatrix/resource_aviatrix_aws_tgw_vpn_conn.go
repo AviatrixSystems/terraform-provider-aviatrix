@@ -48,13 +48,13 @@ func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "AWS side as a number. Integer between 1-65535. Example: '12'.",
+				Description: "AWS side as a number. Integer between 1-65535. Example: '12'. Set for connection type of 'dynamic BGP'.",
 			},
 			"remote_cidr": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Remote CIDRs joined as a string with ','.",
+				Description: "Remote CIDRs joined as a string with ','. Set for connection type of 'static'.",
 			},
 			"inside_ip_cidr_tun_1": {
 				Type:        schema.TypeString,
@@ -107,16 +107,11 @@ func resourceAviatrixAwsTgwVpnConnCreate(d *schema.ResourceData, meta interface{
 		PreSharedKeyTun2: d.Get("pre_shared_key_tun_2").(string),
 	}
 
-	if awsTgwVpnConn.RouteDomainName != "Default_Domain" {
-		return fmt.Errorf("invalid 'route_domain_name'. Only 'Default_Domain' is supported")
-	}
-
 	remoteAsn := d.Get("remote_as_number").(string)
 	remoteCIDR := d.Get("remote_cidr").(string)
 
 	if remoteAsn != "" && remoteCIDR != "" {
-		return fmt.Errorf("remote_asn and remote_cidr cannot be set at the same time. Please choose to set: " +
-			"remote_asw or remote_cidr")
+		return fmt.Errorf("remote_asn(type: dynamic BGP) and remote_cidr(type: static) cannot be set at the same time")
 	}
 
 	if remoteAsn != "" {
