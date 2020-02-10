@@ -91,6 +91,19 @@ func resourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "A name for the ELB that is created.",
 			},
+			"vpn_protocol": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Elb protocol for VPN gateway with elb enabled. Only supports AWS provider. Valid values: 'TCP', 'UDP'. If not specified, 'TCP'' will be used.",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if v != "" && v != "TCP" && v != "UDP" {
+						errs = append(errs, fmt.Errorf("%q must be 'TCP' or 'UDP', got: %s", key, val))
+					}
+					return
+				},
+			},
 			"split_tunnel": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -462,8 +475,15 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	vpnStatus := d.Get("vpn_access").(bool)
+	vpnProtocol := d.Get("vpn_protocol").(string)
 	if vpnStatus {
 		gateway.VpnStatus = "yes"
+
+		if enableElb && (gateway.CloudType == 1 || gateway.CloudType == 256) {
+			gateway.VpnProtocol = vpnProtocol
+		} else if vpnProtocol == "TCP" {
+			return fmt.Errorf("'vpn_protocol' should be left empty or set to 'UDP' for vpn gateway of AWS provider without elb enabled")
+		}
 
 		if gateway.SamlEnabled == "yes" {
 			if gateway.EnableLdap == "yes" || gateway.OtpMode != "" {
@@ -520,7 +540,10 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	} else {
 		gateway.VpnStatus = "no"
 		if gateway.EnableElb == "yes" {
-			return fmt.Errorf("can not enable elb without VPN access set to yes")
+			return fmt.Errorf("can not enable elb without VPN access enabled")
+		}
+		if vpnProtocol != "" {
+			return fmt.Errorf("'vpn_protocol' should be left empty for non-vpn gateway")
 		}
 	}
 
@@ -826,6 +849,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			if gw.VpnStatus == "disabled" {
 				d.Set("vpn_access", false)
 				d.Set("enable_vpn_nat", true)
+				d.Set("vpn_protocol", "")
 			} else if gw.VpnStatus == "enabled" {
 				d.Set("vpn_access", true)
 				gateway.VpcID = d.Get("vpc_id").(string)
@@ -833,6 +857,16 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 					d.Set("enable_vpn_nat", true)
 				} else {
 					d.Set("enable_vpn_nat", false)
+				}
+
+				if gw.ElbState == "enabled" {
+					if gwDetail.Elb.VpnProtocol == "udp" || gwDetail.Elb.VpnProtocol == "UDP" {
+						d.Set("vpn_protocol", "UDP")
+					} else {
+						d.Set("vpn_protocol", "TCP")
+					}
+				} else {
+					d.Set("vpn_protocol", "")
 				}
 			}
 		}
@@ -1075,6 +1109,9 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 	if d.HasChange("elb_name") {
 		return fmt.Errorf("updating elb_name is not allowed")
+	}
+	if d.HasChange("vpn_protocol") {
+		return fmt.Errorf("updating vpn_protocol is not allowed")
 	}
 	if d.HasChange("allocate_new_eip") {
 		return fmt.Errorf("updating allocate_new_eip is not allowed")
