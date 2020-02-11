@@ -37,11 +37,12 @@ resource "aviatrix_aws_tgw_vpn_conn" "test_aws_tgw_vpn_conn" {
 The following arguments are supported:
 
 * `tgw_name` - (Required) This parameter represents the name of an AWS TGW.
-* `route_domain_name` - (Required) The name of a route domain, to which the vpn will be attached. Only "Default_Domain" is supported now.
+* `route_domain_name` - (Required) The name of a route domain, to which the vpn will be attached.
 * `connection_name` - (Required) Unique name of the connection.
 * `public_ip` - (Required) Public IP address. Example: "40.0.0.0".
-* `remote_as_number` - (Optional) AWS side as a number. Integer between 1-65535. Example: "12".
-* `remote_cidr` - (Optional) Remote CIDRs separated by ",". Example: AWS: "16.0.0.0/16,16.1.0.0/16".
+* `connection_type` - (Optional) Connection type. Valid values: 'dynamic', 'static'. 'dynamic' stands for a BGP VPN connection; 'static' stands for a static VPN connection. Default value: 'dynamic'.
+* `remote_as_number` - (Optional) AWS side as a number. Integer between 1-65535. Example: "12". Required for a dynamic VPN connection.
+* `remote_cidr` - (Optional) Remote CIDRs separated by ",". Example: AWS: "16.0.0.0/16,16.1.0.0/16". Required for a static VPN connection.
 * `inside_ip_cidr_tun_1` - (Optional) Inside IP CIDR for Tunnel 1. A /30 CIDR in 169.254.0.0/16.
 * `pre_shared_key_tun_1` - (Optional) Pre-Shared Key for Tunnel 1. A 8-64 character string with alphanumeric underscore(_) and dot(.). It cannot start with 0.
 * `inside_ip_cidr_tun_2` - (Optional) Inside IP CIDR for Tunnel 2. A /30 CIDR in 169.254.0.0/16.
@@ -60,3 +61,5 @@ Instance aws_tgw_vpn_conn can be imported using the tgw_name and vpn_id, e.g.
 ```
 $ terraform import aviatrix_aws_tgw_vpn_conn.test tgw_name~vpn_id
 ```
+
+-> **NOTE:** `connection_type` - If you are using/upgraded to Aviatrix Terraform Provider R2.11.0+, and an aws_tgw_vpn_conn resource (static vpn connection ) was originally created with a provider version <R2.11.0, you must add "connection_type = static" into your configuration file and do ‘terraform refresh’ to update and apply the attribute’s value (static) into the state file.
