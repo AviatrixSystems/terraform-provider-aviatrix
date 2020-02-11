@@ -44,17 +44,31 @@ func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "Public IP address. Example: '40.0.0.0'.",
 			},
+			"connection_type": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "dynamic",
+				ForceNew:    true,
+				Description: "Connection type. Valid values: 'dynamic', 'static'. 'dynamic' stands for a BGP VPN connection; 'static' stands for a static VPN connection. Default value: 'dynamic'.",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if v != "dynamic" && v != "static" {
+						errs = append(errs, fmt.Errorf("%q must be either 'dynamic' or 'static', got: %s", key, val))
+					}
+					return
+				},
+			},
 			"remote_as_number": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "AWS side as a number. Integer between 1-65535. Example: '12'. Set for creating a BGP VPN connection from TGW in selected security domain.",
+				Description: "AWS side as a number. Integer between 1-65535. Example: '12'. Required for a dynamic VPN connection.",
 			},
 			"remote_cidr": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Remote CIDRs joined as a string with ','. Set for creating a static VPN connection from TGW in selected security domain.",
+				Description: "Remote CIDRs joined as a string with ','. Required for a static VPN connection.",
 			},
 			"inside_ip_cidr_tun_1": {
 				Type:        schema.TypeString,
@@ -107,11 +121,17 @@ func resourceAviatrixAwsTgwVpnConnCreate(d *schema.ResourceData, meta interface{
 		PreSharedKeyTun2: d.Get("pre_shared_key_tun_2").(string),
 	}
 
+	connectionType := d.Get("connection_type").(string)
 	remoteAsn := d.Get("remote_as_number").(string)
 	remoteCIDR := d.Get("remote_cidr").(string)
-
-	if remoteAsn != "" && remoteCIDR != "" {
-		return fmt.Errorf("remote_asn(set for BGP connection) and remote_cidr(set for static connection) cannot be set at the same time")
+	if connectionType == "dynamic" && remoteAsn == "" {
+		return fmt.Errorf("please specify 'remote_as_number' to create a BGP VPN connection")
+	} else if connectionType == "dynamic" && remoteCIDR != "" {
+		return fmt.Errorf("please set 'remote_cidr' as empty since it is only requried for a static VPN connection")
+	} else if connectionType == "static" && remoteCIDR == "" {
+		return fmt.Errorf("please specify 'remote_cidr' to create a static VPN connection")
+	} else if connectionType == "static" && remoteAsn != "" {
+		return fmt.Errorf("please set 'remote_as_number' as empty since it is only requried for a BGP VPN connection")
 	}
 
 	if remoteAsn != "" {
@@ -174,6 +194,11 @@ func resourceAviatrixAwsTgwVpnConnRead(d *schema.ResourceData, meta interface{})
 	d.Set("public_ip", vpnConn.PublicIP)
 	d.Set("remote_as_number", vpnConn.OnpremASN)
 	d.Set("remote_cidr", vpnConn.RemoteCIDR)
+	if vpnConn.OnpremASN != "" && vpnConn.RemoteCIDR == "" {
+		d.Set("connection_type", "dynamic")
+	} else if vpnConn.OnpremASN == "" && vpnConn.RemoteCIDR != "" {
+		d.Set("connection_type", "static")
+	}
 	d.Set("vpn_id", vpnConn.VpnID)
 	d.Set("inside_ip_cidr_tun_1", vpnConn.InsideIpCIDRTun1)
 	d.Set("inside_ip_cidr_tun_2", vpnConn.InsideIpCIDRTun2)
