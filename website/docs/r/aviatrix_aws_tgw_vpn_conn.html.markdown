@@ -62,4 +62,4 @@ Instance aws_tgw_vpn_conn can be imported using the tgw_name and vpn_id, e.g.
 $ terraform import aviatrix_aws_tgw_vpn_conn.test tgw_name~vpn_id
 ```
 
--> **NOTE:** `connection_type` - If you are using/upgraded to Aviatrix Terraform Provider R2.11.0+, and an aws_tgw_vpn_conn resource (static vpn connection ) was originally created with a provider version <R2.11.0, you must do ‘terraform refresh’ to update and apply the attribute’s value (static) into the state file.
+-> **NOTE:** `connection_type` - If you are using/upgraded to Aviatrix Terraform Provider R2.11.0+, and an aws_tgw_vpn_conn resource (static vpn connection ) was originally created with a provider version <R2.11.0, you must add "connection_type = static" into your configuration file and do ‘terraform refresh’ to update and apply the attribute’s value (static) into the state file.
