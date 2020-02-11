@@ -161,7 +161,7 @@ The following arguments are supported:
 * `max_vpn_conn` - (Optional) Maximum number of active VPN users allowed to be connected to this gateway. Required if vpn_access is true. Make sure the number is smaller than the VPN CIDR block. Example: 100. **NOTE: Please see notes [here](#max_vpn_conn-1) in regards to any deltas found in your state with the addition of this argument in R1.14.**
 * `enable_elb` - (Optional) Specify whether to enable ELB or not. Not supported for Oracle gateways. Valid values: true, false.
 * `elb_name` - (Optional) A name for the ELB that is created. If it is not specified, a name is generated automatically.
-* `vpn_protocol` - (Optional) ELB protocol for ELB-enabled VPN gateway. Only supports AWS(1) provider. Valid values: "TCP", "UDP". If not specified, "TCP" will be used.
+* `vpn_protocol` - (Optional) Transport mode for VPN connection. Only supports AWS(1) provider. Valid values: "TCP", "UDP". If not specified, "TCP" will be used.
 * `split_tunnel` - (Optional) Specify split tunnel mode. Valid values: true, false.
 * `name_servers` - (Optional) A list of DNS servers used to resolve domain names by a connected VPN user when Split Tunnel Mode is enabled.
 * `search_domains` - (Optional) A list of domain names that will use the NameServer when a specific name is not in the destination when Split Tunnel Mode is enabled.
@@ -184,8 +184,8 @@ The following arguments are supported:
 * `ldap_username_attribute` - (Optional) LDAP user attribute. Required if enable_ldap is true.
 
 ### Misc.
-* `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in controller 2.7 or later release. Valid values: true, false. Default: true. Option not available for GCP, ARM and Oracle gateways, they will automatically allocate new eip's.
-* `eip` - (Optional) Required when `allocate_new_eip` is false. It uses specified EIP for this gateway. Available in controller 3.5 or later release. Only available for AWS.
+* `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in Controller 2.7+. Valid values: true, false. Default: true. Option not available for GCP, ARM and OCI gateways, they will automatically allocate new EIPs.
+* `eip` - (Optional) Required when `allocate_new_eip` is false. It uses the specified EIP for this gateway. Available in Controller version 3.5+. Only available for AWS.
 * `tag_list` - (Optional) Instance tag of cloud provider. Only available for AWS and AWSGov. Example: ["key1:value1", "key2:value2"].
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS and AWSGov. Valid values: true, false. Default value: false.
 
