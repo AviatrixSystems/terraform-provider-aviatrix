@@ -138,11 +138,11 @@ The following arguments are supported:
 
 ### HA
 * `single_az_ha` (Optional) When value is true, Controller monitors the health of the gateway and restarts the gateway if it becomes unreachable. Valid values: true, false.
-* `peering_ha_subnet` - (Optional) Public subnet CIDR to create Peering HA Gateway in. Required for AWS/ARM if enabling Peering HA. Example: AWS: "10.0.0.0/16".
-* `peering_ha_zone` - (Optional) Zone information for creating Peering HA Gateway, only zone is accepted. Required for GCP if enabling Peering HA. Example: GCP: "us-west1-c".
-* `peering_ha_insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Peering HA Gateway. Required for AWS if insane_mode is set and peering_ha_subnet is set. Example: AWS: "us-west-1a".
+* `peering_ha_subnet` - (Optional) Public subnet CIDR to create Peering HA Gateway in. Required only for AWS/ARM if enabling Peering HA. Example: AWS: "10.0.0.0/16".
+* `peering_ha_zone` - (Optional) Zone information for creating Peering HA Gateway, only zone is accepted. Required only for GCP if enabling Peering HA. Example: GCP: "us-west1-c".
+* `peering_ha_insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Peering HA Gateway. Required for AWS only if `insane_mode` is set and `peering_ha_subnet` is set. Example: AWS: "us-west-1a".
 * `peering_ha_eip` - (Optional) Public IP address that you want assigned to the HA peering instance. Only available for AWS.
-* `peering_ha_gw_size` - (Optional) Size of the Peering HA Gateway to be created. **NOTE: Please see notes [here](#peering_ha_gw_size-1) in regards to any deltas found in your state with the addition of this argument in R1.8.**
+* `peering_ha_gw_size` - (Optional) Size of the Peering HA Gateway to be created. Required if enabling Peering HA. **NOTE: Please see notes [here](#peering_ha_gw_size-1) in regards to any deltas found in your state with the addition of this argument in R1.8.**
 
 ### Insane Mode
 * `insane_mode` - (Optional) Enable Insane Mode for Gateway. Insane Mode Gateway size must be at least c5 (AWS) or Standard_D3_v2 (ARM). If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet. Only supported for AWS, AWSGov or ARM. Valid values: true, false.
@@ -157,11 +157,11 @@ The following arguments are supported:
 
 ### VPN Access
 * `vpn_access` - (Optional) Enable user access through VPN to this container. Valid values: true, false.
-* `vpn_cidr` - (Optional) VPN CIDR block for the container. Required if "vpn_access" is true. Example: "192.168.43.0/24".
+* `vpn_cidr` - (Optional) VPN CIDR block for the container. Required if `vpn_access` is true. Example: "192.168.43.0/24".
 * `max_vpn_conn` - (Optional) Maximum number of active VPN users allowed to be connected to this gateway. Required if vpn_access is true. Make sure the number is smaller than the VPN CIDR block. Example: 100. **NOTE: Please see notes [here](#max_vpn_conn-1) in regards to any deltas found in your state with the addition of this argument in R1.14.**
 * `enable_elb` - (Optional) Specify whether to enable ELB or not. Not supported for Oracle gateways. Valid values: true, false.
 * `elb_name` - (Optional) A name for the ELB that is created. If it is not specified, a name is generated automatically.
-* `vpn_protocol` - (Optional) Transport mode for VPN connection. Only supports AWS(1) provider. Valid values: "TCP", "UDP". If not specified, "TCP" will be used.
+* `vpn_protocol` - (Optional) Transport mode for VPN connection. All `cloud_types` support TCP with ELB, and UDP without ELB. AWS(1) additionally supports UDP with ELB. Valid values: "TCP", "UDP". If not specified, "TCP" will be used.
 * `split_tunnel` - (Optional) Specify split tunnel mode. Valid values: true, false.
 * `name_servers` - (Optional) A list of DNS servers used to resolve domain names by a connected VPN user when Split Tunnel Mode is enabled.
 * `search_domains` - (Optional) A list of domain names that will use the NameServer when a specific name is not in the destination when Split Tunnel Mode is enabled.
