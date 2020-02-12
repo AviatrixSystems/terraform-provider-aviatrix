@@ -61,7 +61,7 @@ The following arguments are supported:
 * `backup_remote_gateway_longitude` - (Optional) Longitude of backup remote gateway. Does not support refresh.	 
 * `ssl_server_pool` - (Optional) Specify ssl_server_pool for tunnel_type "tcp". Default value: "192.168.44.0/24". **NOTE: Only supported for 'tcp' tunnel type. Please see notes [here](#ssl_server_pool-1) for more information.**
 * `enable_dead_peer_detection` - (Optional) Switch to Enable/Disable Deed Peer Detection for an existing site2cloud connection. Default value: true. **NOTE: Please see notes [here](#enable_dead_peer_detection-1) in regards to any deltas found in your state with the addition of this argument in R1.9**
-
+* `enable_active_active_ha` - (Optional) Switch to Enable/Disable active active ha for an existing site2cloud connection. Valid values: true, false. Default value: false.
 
 ## Attribute Reference
 
