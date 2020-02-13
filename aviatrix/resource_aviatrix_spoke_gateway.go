@@ -249,14 +249,17 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	insaneMode := d.Get("insane_mode").(bool)
 	insaneModeAz := d.Get("insane_mode_az").(string)
 	haSubnet := d.Get("ha_subnet").(string)
-	if haSubnet != "" && gateway.CloudType != 1 && gateway.CloudType != 8 && gateway.CloudType != 256 {
-		return fmt.Errorf("'ha_subnet' is required for AWS/ARM providers if enabling HA")
+	if haSubnet != "" && gateway.CloudType != 1 && gateway.CloudType != 8 && gateway.CloudType != 16 && gateway.CloudType != 256 {
+		return fmt.Errorf("'ha_subnet' is only required for AWS/ARM/OCI providers if enabling HA")
 	}
 	haZone := d.Get("ha_zone").(string)
 	if haZone != "" && gateway.CloudType != 4 {
-		return fmt.Errorf("'ha_zone' is required for GCP provider if enabling HA")
+		return fmt.Errorf("'ha_zone' is only required for GCP provider if enabling HA")
 	}
 	haGwSize := d.Get("ha_gw_size").(string)
+	if haSubnet == "" && haZone == "" && haGwSize != "" {
+		return fmt.Errorf("'ha_gw_size' is only required if enabling HA")
+	}
 	haInsaneModeAz := d.Get("ha_insane_mode_az").(string)
 	if insaneMode {
 		if gateway.CloudType != 1 && gateway.CloudType != 8 {
@@ -738,14 +741,14 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	d.Partial(true)
 	if d.HasChange("ha_subnet") {
 		haSubnet := d.Get("ha_subnet").(string)
-		if haSubnet != "" && gateway.CloudType != 1 && gateway.CloudType != 8 && gateway.CloudType != 256 {
-			return fmt.Errorf("'ha_subnet' is required for AWS/ARM providers if enabling HA")
+		if haSubnet != "" && gateway.CloudType != 1 && gateway.CloudType != 8 && gateway.CloudType != 16 && gateway.CloudType != 256 {
+			return fmt.Errorf("'ha_subnet' is only required for AWS/ARM/OCI providers if enabling HA")
 		}
 	}
 	if d.HasChange("ha_zone") {
 		haZone := d.Get("ha_zone").(string)
 		if haZone != "" && gateway.CloudType != 4 {
-			return fmt.Errorf("'ha_zone' is required for GCP provider if enabling HA")
+			return fmt.Errorf("'ha_zone' is only required for GCP provider if enabling HA")
 		}
 	}
 	if d.HasChange("cloud_type") {
