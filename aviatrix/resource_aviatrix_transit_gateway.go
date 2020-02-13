@@ -304,11 +304,11 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 	haSubnet := d.Get("ha_subnet").(string)
 	if haSubnet != "" && gateway.CloudType != 1 && gateway.CloudType != 8 && gateway.CloudType != 256 {
-		return fmt.Errorf("'ha_subnet' is required only for AWS/ARM providers if enabling HA")
+		return fmt.Errorf("'ha_subnet' is required for AWS/ARM providers if enabling HA")
 	}
 	haZone := d.Get("ha_zone").(string)
-	if haZone != "" && gateway.CloudType != 8 {
-		return fmt.Errorf("'ha_zone' is required only for GCP provider if enabling HA")
+	if haZone != "" && gateway.CloudType != 4 {
+		return fmt.Errorf("'ha_zone' is required for GCP provider if enabling HA")
 	}
 	haGwSize := d.Get("ha_gw_size").(string)
 	if haGwSize == "" && haSubnet != "" {
@@ -859,13 +859,13 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	if d.HasChange("ha_subnet") {
 		haSubnet := d.Get("ha_subnet").(string)
 		if haSubnet != "" && gateway.CloudType != 1 && gateway.CloudType != 8 && gateway.CloudType != 256 {
-			return fmt.Errorf("'ha_subnet' is required only for AWS/ARM providers if enabling HA")
+			return fmt.Errorf("'ha_subnet' is required for AWS/ARM providers if enabling HA")
 		}
 	}
 	if d.HasChange("ha_zone") {
 		haZone := d.Get("ha_zone").(string)
-		if haZone != "" && gateway.CloudType != 8 {
-			return fmt.Errorf("'ha_zone' is required only for GCP provider if enabling HA")
+		if haZone != "" && gateway.CloudType != 4 {
+			return fmt.Errorf("'ha_zone' is required for GCP provider if enabling HA")
 		}
 	}
 	if d.HasChange("cloud_type") {
