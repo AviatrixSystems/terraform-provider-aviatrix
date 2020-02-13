@@ -311,7 +311,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("'ha_zone' is only required for GCP provider if enabling HA")
 	}
 	haGwSize := d.Get("ha_gw_size").(string)
-	if (haSubnet == "" || haZone == "") && haGwSize != "" {
+	if haSubnet == "" && haZone == "" && haGwSize != "" {
 		return fmt.Errorf("'ha_gw_size' is only required if enabling HA")
 	}
 	if haGwSize == "" && haSubnet != "" {
