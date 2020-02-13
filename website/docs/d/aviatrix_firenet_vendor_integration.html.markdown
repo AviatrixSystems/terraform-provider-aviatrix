@@ -20,7 +20,7 @@ Use this data source to do 'save' or 'sync' for vendor integration purpose for A
 data "aviatrix_firenet_vendor_integration" "foo" {
   vpc_id        = "vpc-abcd123"
   instance_id   = "i-09ade2592661316f8"
-  vendor_type   = "Palo Alto VM Series"
+  vendor_type   = "Palo Alto Networks VM-Series"
   public_ip     = "10.11.12.13"
   username      = "admin"
   password      = "Avx123456#"
@@ -35,7 +35,7 @@ The following arguments are supported:
 
 * `vpc_id` - (Required) VPC ID.
 * `instance_id` - (Required) ID of Firewall instance.
-* `vendor_type` - (Required) Select PAN. Valid values: "Generic", "Palo Alto VM Series", "Aviatrix FQDN Gateway".
+* `vendor_type` - (Required) Select PAN. Valid values: "Generic", "Palo Alto Networks VM-Series", "Aviatrix FQDN Gateway".
 * `public_ip` - (Required) The public IP address of the firewall management interface for API calls from the Aviatrix Controller.
 * `username` - (Required) Firewall login name for API calls from the Controller.
 * `password` - (Required) Firewall login password for API calls.

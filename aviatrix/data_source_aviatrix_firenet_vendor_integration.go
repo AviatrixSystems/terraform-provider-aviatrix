@@ -26,7 +26,7 @@ func dataSourceAviatrixFireNetVendorIntegration() *schema.Resource {
 			"vendor_type": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Select PAN.",
+				Description: "Select PAN. Valid values: 'Generic', 'Palo Alto Networks VM-Series' and 'Aviatrix FQDN Gateway'.",
 			},
 			"public_ip": {
 				Type:        schema.TypeString,
