@@ -549,7 +549,13 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 
 	peeringHaGwSize := d.Get("peering_ha_gw_size").(string)
 	peeringHaSubnet := d.Get("peering_ha_subnet").(string)
+	if peeringHaSubnet != "" && gateway.CloudType != 1 && gateway.CloudType != 8 && gateway.CloudType != 256 {
+		return fmt.Errorf("'peering_ha_subnet' is required for AWS/ARM providers if enabling Peering HA")
+	}
 	peeringHaZone := d.Get("peering_ha_zone").(string)
+	if peeringHaZone != "" && gateway.CloudType != 4 {
+		return fmt.Errorf("'peering_ha_zone' is required for GCP provider if enabling Peering HA")
+	}
 	enableDesignatedGw := d.Get("enable_designated_gateway").(bool)
 	if enableDesignatedGw {
 		if gateway.CloudType != 1 {
@@ -1139,6 +1145,18 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string),
 		GwSize:    d.Get("gw_size").(string),
+	}
+	if d.HasChange("peering_ha_subnet") {
+		peeringHaSubnet := d.Get("peering_ha_subnet").(string)
+		if peeringHaSubnet != "" && gateway.CloudType != 1 && gateway.CloudType != 8 && gateway.CloudType != 256 {
+			return fmt.Errorf("'peering_ha_subnet' is required for AWS/ARM providers if enabling Peering HA")
+		}
+	}
+	if d.HasChange("peering_ha_zone") {
+		peeringHaZone := d.Get("peering_ha_zone").(string)
+		if peeringHaZone != "" && gateway.CloudType != 4 {
+			return fmt.Errorf("'peering_ha_zone' is required for GCP provider if enabling Peering HA")
+		}
 	}
 
 	singleAZ := d.Get("single_az_ha").(bool)
