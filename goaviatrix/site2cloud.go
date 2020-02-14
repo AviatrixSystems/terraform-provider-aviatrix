@@ -59,7 +59,7 @@ type Site2Cloud struct {
 	RouteTableList          []string `form:"route_table_list,omitempty"`
 	CustomAlgorithms        bool
 	DeadPeerDetection       bool
-	EnableActiveActiveHA    bool
+	EnableActiveActive      bool
 }
 
 type EditSite2Cloud struct {
@@ -101,7 +101,7 @@ type EditSite2CloudConnDetail struct {
 	RouteTableList          []string      `json:"rtbls,omitempty"`
 	SslServerPool           []string      `json:"ssl_server_pool,omitempty"`
 	DeadPeerDetectionConfig string        `json:"dpd_config,omitempty"`
-	EnableActiveActiveHA    string        `json:"active_active_ha,omitempty"`
+	EnableActiveActive      string        `json:"active_active_ha,omitempty"`
 }
 
 type Site2CloudConnDetailResp struct {
@@ -334,10 +334,10 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 		} else if s2cConnDetail.DeadPeerDetectionConfig == "disable" {
 			site2cloud.DeadPeerDetection = false
 		}
-		if s2cConnDetail.EnableActiveActiveHA == "enable" || s2cConnDetail.EnableActiveActiveHA == "Enable" {
-			site2cloud.EnableActiveActiveHA = true
+		if s2cConnDetail.EnableActiveActive == "enable" || s2cConnDetail.EnableActiveActive == "Enable" {
+			site2cloud.EnableActiveActive = true
 		} else {
-			site2cloud.EnableActiveActiveHA = false
+			site2cloud.EnableActiveActive = false
 		}
 
 		return site2cloud, nil
@@ -490,7 +490,7 @@ func (c *Client) DisableDeadPeerDetection(site2cloud *Site2Cloud) error {
 	return nil
 }
 
-func (c *Client) EnableSite2cloudActiveActiveHA(site2cloud *Site2Cloud) error {
+func (c *Client) EnableSite2cloudActiveActive(site2cloud *Site2Cloud) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
 		return errors.New(("url Parsing failed for EnableSite2cloudActiveActiveHA: ") + err.Error())
@@ -521,7 +521,7 @@ func (c *Client) EnableSite2cloudActiveActiveHA(site2cloud *Site2Cloud) error {
 	return nil
 }
 
-func (c *Client) DisableSite2cloudActiveActiveHA(site2cloud *Site2Cloud) error {
+func (c *Client) DisableSite2cloudActiveActive(site2cloud *Site2Cloud) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
 		return errors.New(("url Parsing failed for DisableSite2cloudActiveActiveHA: ") + err.Error())

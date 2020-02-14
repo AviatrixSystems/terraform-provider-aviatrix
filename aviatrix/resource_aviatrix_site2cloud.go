@@ -213,11 +213,11 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Default:     true,
 				Description: "Switch to Enable/Disable Deed Peer Detection for an existing site2cloud connection.",
 			},
-			"enable_active_active_ha": {
+			"enable_active_active": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Switch to Enable/Disable active active ha for an existing site2cloud connection.",
+				Description: "Switch to Enable/Disable active_active_ha for an existing site2cloud connection.",
 			},
 		},
 	}
@@ -251,9 +251,9 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		s2c.HAEnabled = "no"
 	}
 
-	activeActiveHA := d.Get("enable_active_active_ha").(bool)
-	if activeActiveHA && !haEnabled {
-		return fmt.Errorf("active active HA can't be enabled if HA isn't enabled for site2cloud connection")
+	activeActive := d.Get("enable_active_active").(bool)
+	if activeActive && !haEnabled {
+		return fmt.Errorf("active_active_ha can't be enabled if HA isn't enabled for site2cloud connection")
 	}
 
 	if s2c.ConnType != "mapped" && s2c.ConnType != "unmapped" {
@@ -388,8 +388,8 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	if activeActiveHA {
-		err := client.EnableSite2cloudActiveActiveHA(s2c)
+	if activeActive {
+		err := client.EnableSite2cloudActiveActive(s2c)
 		if err != nil {
 			return fmt.Errorf("failed to enable active active HA for site2cloud: %s: %s", s2c.TunnelName, err)
 		}
@@ -487,7 +487,7 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 		}
 
 		d.Set("enable_dead_peer_detection", s2c.DeadPeerDetection)
-		d.Set("enable_active_active_ha", s2c.EnableActiveActiveHA)
+		d.Set("enable_active_active", s2c.EnableActiveActive)
 	}
 
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", d.Get("connection_name").(string), site2cloud)
@@ -549,27 +549,27 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		d.SetPartial("enable_dead_peer_detection")
 	}
 
-	if d.HasChange("enable_active_active_ha") {
+	if d.HasChange("enable_active_active") {
 		s2c := &goaviatrix.Site2Cloud{
 			VpcID:      d.Get("vpc_id").(string),
 			TunnelName: d.Get("connection_name").(string),
 		}
-		activeActiveHA := d.Get("enable_active_active_ha").(bool)
-		if activeActiveHA {
+		activeActive := d.Get("enable_active_active").(bool)
+		if activeActive {
 			if haEnabled := d.Get("ha_enabled").(bool); !haEnabled {
-				return fmt.Errorf("active active HA can't be enabled if HA isn't enabled for site2cloud connection")
+				return fmt.Errorf("active_active_ha can't be enabled if HA isn't enabled for site2cloud connection")
 			}
-			err := client.EnableSite2cloudActiveActiveHA(s2c)
+			err := client.EnableSite2cloudActiveActive(s2c)
 			if err != nil {
 				return fmt.Errorf("failed to enable active active HA for site2cloud: %s: %s", s2c.TunnelName, err)
 			}
 		} else {
-			err := client.DisableSite2cloudActiveActiveHA(s2c)
+			err := client.DisableSite2cloudActiveActive(s2c)
 			if err != nil {
 				return fmt.Errorf("failed to disable active active HA for site2cloud: %s: %s", s2c.TunnelName, err)
 			}
 		}
-		d.SetPartial("enable_active_active_ha")
+		d.SetPartial("enable_active_active")
 	}
 
 	d.Partial(false)
