@@ -482,8 +482,8 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		if enableElb && (gateway.CloudType == 1 || gateway.CloudType == 256) {
 			gateway.VpnProtocol = vpnProtocol
 		} else if enableElb && vpnProtocol == "UDP" && gateway.CloudType != 1 && gateway.CloudType != 256 {
-			return fmt.Errorf("'UDP' is only supported by AWS provider for VPN gateway with ELB")
-		} else if vpnProtocol == "TCP" {
+			return fmt.Errorf("'UDP' for VPN gateway with ELB is only supported by AWS provider")
+		} else if !enableElb && vpnProtocol == "TCP" {
 			return fmt.Errorf("'vpn_protocol' should be left empty or set to 'UDP' for vpn gateway of AWS provider without elb enabled")
 		}
 
