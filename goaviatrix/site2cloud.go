@@ -59,6 +59,7 @@ type Site2Cloud struct {
 	RouteTableList          []string `form:"route_table_list,omitempty"`
 	CustomAlgorithms        bool
 	DeadPeerDetection       bool
+	EnableActiveActive      bool
 }
 
 type EditSite2Cloud struct {
@@ -100,6 +101,7 @@ type EditSite2CloudConnDetail struct {
 	RouteTableList          []string      `json:"rtbls,omitempty"`
 	SslServerPool           []string      `json:"ssl_server_pool,omitempty"`
 	DeadPeerDetectionConfig string        `json:"dpd_config,omitempty"`
+	EnableActiveActive      string        `json:"active_active_ha,omitempty"`
 }
 
 type Site2CloudConnDetailResp struct {
@@ -332,6 +334,11 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 		} else if s2cConnDetail.DeadPeerDetectionConfig == "disable" {
 			site2cloud.DeadPeerDetection = false
 		}
+		if s2cConnDetail.EnableActiveActive == "enable" || s2cConnDetail.EnableActiveActive == "Enable" {
+			site2cloud.EnableActiveActive = true
+		} else {
+			site2cloud.EnableActiveActive = false
+		}
 
 		return site2cloud, nil
 	}
@@ -426,7 +433,7 @@ func (c *Client) Site2CloudAlgorithmCheck(site2cloud *Site2Cloud) error {
 func (c *Client) EnableDeadPeerDetection(site2cloud *Site2Cloud) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return errors.New(("url Parsing failed for enable_dpd_config") + err.Error())
+		return errors.New(("url Parsing failed for enable_dpd_config: ") + err.Error())
 	}
 	enableDPDConfig := url.Values{}
 	enableDPDConfig.Add("CID", c.CID)
@@ -457,7 +464,7 @@ func (c *Client) EnableDeadPeerDetection(site2cloud *Site2Cloud) error {
 func (c *Client) DisableDeadPeerDetection(site2cloud *Site2Cloud) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return errors.New(("url Parsing failed for disable_dpd_config") + err.Error())
+		return errors.New(("url Parsing failed for disable_dpd_config: ") + err.Error())
 	}
 	disableDPDConfig := url.Values{}
 	disableDPDConfig.Add("CID", c.CID)
@@ -479,6 +486,68 @@ func (c *Client) DisableDeadPeerDetection(site2cloud *Site2Cloud) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API disable_dpd_config Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) EnableSite2cloudActiveActive(site2cloud *Site2Cloud) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for EnableSite2cloudActiveActiveHA: ") + err.Error())
+	}
+	enableActiveActiveHA := url.Values{}
+	enableActiveActiveHA.Add("CID", c.CID)
+	enableActiveActiveHA.Add("action", "enable_site2cloud_active_active_ha")
+	enableActiveActiveHA.Add("vpc_id", site2cloud.VpcID)
+	enableActiveActiveHA.Add("connection_name", site2cloud.TunnelName)
+
+	Url.RawQuery = enableActiveActiveHA.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get 'enable_site2cloud_active_active_ha' failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode 'enable_site2cloud_active_active_ha' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API 'enable_site2cloud_active_active_ha' Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) DisableSite2cloudActiveActive(site2cloud *Site2Cloud) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for DisableSite2cloudActiveActiveHA: ") + err.Error())
+	}
+	disableActiveActiveHA := url.Values{}
+	disableActiveActiveHA.Add("CID", c.CID)
+	disableActiveActiveHA.Add("action", "disable_site2cloud_active_active_ha")
+	disableActiveActiveHA.Add("vpc_id", site2cloud.VpcID)
+	disableActiveActiveHA.Add("connection_name", site2cloud.TunnelName)
+
+	Url.RawQuery = disableActiveActiveHA.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get 'disable_site2cloud_active_active_ha' failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode 'disable_site2cloud_active_active_ha' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API 'disable_site2cloud_active_active_ha' Get failed: " + data.Reason)
 	}
 	return nil
 }
