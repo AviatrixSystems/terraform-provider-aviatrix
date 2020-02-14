@@ -558,7 +558,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	if peeringHaZone != "" && gateway.CloudType != 4 {
 		return fmt.Errorf("'peering_ha_zone' is only required for GCP provider if enabling Peering HA")
 	}
-	if peeringHaSubnet == "" && peeringHaSubnet == "" && peeringHaGwSize != "" {
+	if peeringHaSubnet == "" && peeringHaZone == "" && peeringHaGwSize != "" {
 		return fmt.Errorf("'peering_ha_gw_size' is only required if enabling Peering HA")
 	}
 	enableDesignatedGw := d.Get("enable_designated_gateway").(bool)
