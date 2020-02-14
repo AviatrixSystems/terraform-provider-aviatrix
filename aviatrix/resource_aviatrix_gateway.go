@@ -481,6 +481,8 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 
 		if enableElb && (gateway.CloudType == 1 || gateway.CloudType == 256) {
 			gateway.VpnProtocol = vpnProtocol
+		} else if enableElb && vpnProtocol == "UDP" && gateway.CloudType != 1 && gateway.CloudType != 256 {
+			return fmt.Errorf("'UDP' is only supported by AWS provider for VPN gateway with ELB")
 		} else if vpnProtocol == "TCP" {
 			return fmt.Errorf("'vpn_protocol' should be left empty or set to 'UDP' for vpn gateway of AWS provider without elb enabled")
 		}
@@ -1152,7 +1154,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("peering_ha_subnet") {
 		peeringHaSubnet := d.Get("peering_ha_subnet").(string)
 		if peeringHaSubnet != "" && gateway.CloudType != 1 && gateway.CloudType != 8 && gateway.CloudType != 16 && gateway.CloudType != 256 {
-			return fmt.Errorf("'peering_ha_subnet' is only required for AWS/ARM providers if enabling Peering HA")
+			return fmt.Errorf("'peering_ha_subnet' is only required for AWS/ARM/OCI providers if enabling Peering HA")
 		}
 	}
 	if d.HasChange("peering_ha_zone") {
