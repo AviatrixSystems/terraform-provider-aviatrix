@@ -30,6 +30,7 @@ resource "aviatrix_site2cloud" "test_s2c" {
 
 The following arguments are supported:
 
+### Required
 * `vpc_id` - (Required) VPC Id of the cloud gateway.
 * `connection_name` - (Required) Site2Cloud Connection Name.
 * `remote_gateway_type` - (Required) Remote Gateway Type. Valid Values: "generic", "avx", "aws", "azure", "sonicwall", "oracle".
@@ -38,14 +39,17 @@ The following arguments are supported:
 * `primary_cloud_gateway_name` - (Required) Primary Cloud Gateway Name.
 * `remote_gateway_ip` - (Required) Remote Gateway IP.
 * `remote_subnet_cidr` - (Required) Remote Subnet CIDR.
-* `backup_gateway_name` - (Optional) Backup gateway name. **NOTE: Please see notes [here](#ha-enabled) regarding HA requirements.**
-* `pre_shared_key` - (Optional) Pre-Shared Key.
+* `remote_subnet_virtual` - Remote Subnet CIDR (Virtual). Required for connection type "mapped" only.
 * `local_subnet_cidr` - (Optional) Local Subnet CIDR. Required for connection type "mapped".
+* `local_subnet_virtual` - Local Subnet CIDR (Virtual). Required for connection type "mapped" only.
+
+## HA
 * `ha_enabled` - (Optional) Specify whether or not to enable HA. Valid Values: true, false. **NOTE: Please see notes [here](#ha-enabled) regarding HA requirements.**
+* `backup_gateway_name` - (Optional) Backup gateway name. **NOTE: Please see notes [here](#ha-enabled) regarding HA requirements.**
 * `backup_remote_gateway_ip` - (Optional) Backup Remote Gateway IP. **NOTE: Please see notes [here](#ha-enabled) regarding HA requirements.**
 * `backup_pre_shared_key` - (Optional) Backup Pre-Shared Key.
-* `remote_subnet_virtual` - Remote Subnet CIDR (Virtual). Required for connection type "mapped" only.
-* `local_subnet_virtual` - Local Subnet CIDR (Virtual). Required for connection type "mapped" only.
+
+### Custom Algorithms
 * `custom_algorithms` - (Optional) Switch to enable custom/non-default algorithms for IPSec Authentication/Encryption. Valid values: true, false. **NOTE: Only supported for 'udp' tunnel type. Please see notes [here](#custom_algorithms-1) for more information.**
 * `phase_1_authentication` - (Optional) Phase one Authentication. Valid values: 'SHA-1', 'SHA-256', 'SHA-384' and 'SHA-512'. Default value: 'SHA-1'.
 * `phase_2_authentication` - (Optional) Phase two Authentication. Valid values: 'NO-AUTH', 'HMAC-SHA-1', 'HMAC-SHA-256', 'HMAC-SHA-384' and 'HMAC-SHA-512'. Default value: 'HMAC-SHA-1'.
@@ -53,15 +57,20 @@ The following arguments are supported:
 * `phase_2_dh_groups` - (Optional) Phase two DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'. Default value: '2'.
 * `phase_1_encryption` - (Optional) Phase one Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC' and 'AES-256-CBC'. Default value: 'AES-256-CBC'.
 * `phase_2_encryption` - (Optional) Phase two Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC', 'AES-256-CBC', 'AES-128-GCM-64', 'AES-128-GCM-96' and 'AES-128-GCM-128'. Default value: 'AES-256-CBC'.
+
+### Encryption over ExpressRoute/DirectConnect
 * `private_route_encryption` - (Optional) Private route encryption switch. Valid values: true, false.
 * `route_table_list` - (Optional) Route tables to modify.
 * `remote_gateway_latitude` - (Optional) Latitude of remote gateway. Does not support refresh.
 * `remote_gateway_longitude` - (Optional) Longitude of remote gateway. Does not support refresh.
 * `backup_remote_gateway_latitude` - (Optional) Latitude of backup remote gateway. Does not support refresh.
-* `backup_remote_gateway_longitude` - (Optional) Longitude of backup remote gateway. Does not support refresh.	 
+* `backup_remote_gateway_longitude` - (Optional) Longitude of backup remote gateway. Does not support refresh.
+
+### Misc.
+* `pre_shared_key` - (Optional) Pre-Shared Key. Only available for "udp" tunnel_type.
 * `ssl_server_pool` - (Optional) Specify ssl_server_pool for tunnel_type "tcp". Default value: "192.168.44.0/24". **NOTE: Only supported for 'tcp' tunnel type. Please see notes [here](#ssl_server_pool-1) for more information.**
-* `enable_dead_peer_detection` - (Optional) Switch to Enable/Disable Deed Peer Detection for an existing site2cloud connection. Default value: true. **NOTE: Please see notes [here](#enable_dead_peer_detection-1) in regards to any deltas found in your state with the addition of this argument in R1.9**
-* `enable_active_active_ha` - (Optional) Switch to Enable/Disable active active ha for an existing site2cloud connection. Valid values: true, false. Default value: false.
+* `enable_dead_peer_detection` - (Optional) Enable/disable Deed Peer Detection for an existing site2cloud connection. Default value: true. **NOTE: Please see notes [here](#enable_dead_peer_detection-1) in regards to any deltas found in your state with the addition of this argument in R1.9**
+* `enable_active_active` - (Optional) Enable/disable active active HA for an existing site2cloud connection. Valid values: true, false. Default value: false.
 
 ## Attribute Reference
 
