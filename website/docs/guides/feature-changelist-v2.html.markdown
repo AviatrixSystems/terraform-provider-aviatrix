@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.11 (UserConnect-5.3.xyz)``
+``Last updated: R2.11 (UserConnect-5.3.1391)``
 
 
 ---
@@ -151,7 +151,7 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |(deprecated) | --      | snat_mode, snat_policy {}, dnat_policy {} | **Yes**; customized SNAT and DNAT support has been deprecated from R2.9 and functionality has been moved to **aviatrix_gateway_snat** and **aviatrix_gateway_dnat** respectively, to improve policy management. If customized SNAT/DNAT policies were created in R2.9, copy the existing policy block and paste into the new corresponding resource. Specify the corresponding gateway name value for ``gw_name`` and change the attributes that were renamed as necessary (ex. ``src_ip`` to ``src_cidr``). Full documentation for the resources may be viewed under the "Gateway" tab
 
 
-## R2.11 (UserConnect-5.3.xyz) (Terraform v0.12)
+## R2.11 (UserConnect-5.3.1391) (Terraform v0.12)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
 |(new) | aws_tgw_vpn_conn | connection_type | **Yes**; New attribute added for distinction between two possible TGW VPN connections. If an existing aws_tgw_vpn_conn (static VPN connection) has been created prior to this release, customers must add ``connection_type = static`` into their configuration file and perform a ``terraform refresh`` to update and apply the attribute's value (static) into the state file.
