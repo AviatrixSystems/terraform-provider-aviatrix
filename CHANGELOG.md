@@ -4,18 +4,18 @@
 - Supported Terraform version: **v0.12.x**
 
 ### Features:
-1. Implemented support of ``firewall_image_version`` parameter into **aviatrix_firewall_instance**
-2. Implemented support of ``vpn_protocol`` for vpn gateway of aws provider with elb enabled in **aviatrix_gateway**
-3. Implemented support of ``enable_active_active`` parameter in **aviatrix_site2cloud**
+1. Implemented support for ``firewall_image_version`` in **aviatrix_firewall_instance**
+2. Implemented support for "UDP" ``vpn_protocol`` for AWS ELB-enabled VPN gateways
+3. Implemented support for Active-Active HA (``enable_active_active``) in **aviatrix_site2cloud**
 
 ### Enhancements:
 1. Implemented coverage for ``tag_list`` formatting change due to Boto3
-2. Implemented support of multiple security domains in **aviatrix_aws_tgw_vpn_conn**
-3. Implemented check for cloud_type when incorrectly using ha_subnet in **aviatrix_gateway** **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
-4. Implemented check for ``ha_gw_size`` which is only needed for enabling HA in **aviatrix_gateway** **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+2. Implemented support for attaching TGW VPN connections to different security domains besides the default domain in **aviatrix_aws_tgw_vpn_conn**
+3. Implemented cloud_type check to catch incorrect ha_subnet usage for **aviatrix_gateway** **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+4. Implemented ha_gw_size check to catch incorrect usage when enabling HA for **aviatrix_gateway** **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
 
 ### Bug Fixes:
-1. Fixed issue where ``filtered_spoke_vpc_routes`` causes reordering issue in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** 
+1. Fixed issue where ``filtered_spoke_vpc_routes`` caused reordering issues for **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** 
 
 
 ## 2.10.0 (February 06, 2020)
