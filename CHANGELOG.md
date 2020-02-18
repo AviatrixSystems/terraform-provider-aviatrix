@@ -1,3 +1,23 @@
+## 2.11.0 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-5.3.1391** 
+- Supported Terraform version: **v0.12.x**
+
+### Features:
+1. Implemented support for ``firewall_image_version`` in **aviatrix_firewall_instance**
+2. Implemented support for "UDP" ``vpn_protocol`` for AWS ELB-enabled VPN gateways
+3. Implemented support for Active-Active HA (``enable_active_active``) in **aviatrix_site2cloud**
+
+### Enhancements:
+1. Implemented coverage for ``tag_list`` formatting change due to Boto3
+2. Implemented support for attaching TGW VPN connections to different security domains besides the default domain in **aviatrix_aws_tgw_vpn_conn**
+3. Implemented cloud_type check to catch incorrect ha_subnet usage for **aviatrix_gateway** **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+4. Implemented ha_gw_size check to catch incorrect usage when enabling HA for **aviatrix_gateway** **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+
+### Bug Fixes:
+1. Fixed issue where ``filtered_spoke_vpc_routes`` caused reordering issues for **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** 
+
+
 ## 2.10.0 (February 06, 2020)
 ### Notes:
 - Supported Controller version: **UserConnect-5.2.2122** 
