@@ -20,17 +20,6 @@ resource "azurerm_route_table" "aviatrix" {
   name                          = "acceptanceTestSecurityGroup1"
   location                      = azurerm_resource_group.aviatrix.location
   resource_group_name           = azurerm_resource_group.aviatrix.name
-  disable_bgp_route_propagation = false
-
-  route {
-    name           = "route1"
-    address_prefix = var.azure_address_prefix
-    next_hop_type  = "vnetlocal"
-  }
-
-  tags = {
-    environment = "Production"
-  }
 }
 
 resource "azurerm_subnet" "aviatrix-private" {
@@ -43,5 +32,4 @@ resource "azurerm_subnet" "aviatrix-private" {
 resource "azurerm_subnet_route_table_association" "aviatrix" {
   subnet_id      = azurerm_subnet.aviatrix-private.id
   route_table_id = azurerm_route_table.aviatrix.id
-  depends_on     = [azurerm_route_table.aviatrix, azurerm_subnet.aviatrix-private]
 }
