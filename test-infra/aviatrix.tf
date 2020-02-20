@@ -49,18 +49,20 @@ module "aviatrix_gcp_vpc1" {
   gcp_vpc_cidr   = var.gcp_vpc_cidr1
 }
 module "aviatrix_arm_vpc1" {
-  source           = "./arm"
-  name             = "vpc1"
-  azure_region     = var.azure_region1
-  azure_vpc_cidr   = var.azure_vpc_cidr1
-  azure_vpc_subnet = var.azure_vpc_subnet1
+  source               = "./arm"
+  name                 = "vpc1"
+  azure_region         = var.azure_region1
+  azure_vpc_cidr       = var.azure_vpc_cidr1
+  azure_vpc_subnet     = var.azure_vpc_subnet1
+  azure_address_prefix = var.azure_vpc_subnet3
 }
 module "aviatrix_arm_vpc2" {
-  source           = "./arm"
-  name             = "vpc2"
-  azure_region     = var.azure_region2
-  azure_vpc_cidr   = var.azure_vpc_cidr2
-  azure_vpc_subnet = var.azure_vpc_subnet2
+  source               = "./arm"
+  name                 = "vpc2"
+  azure_region         = var.azure_region2
+  azure_vpc_cidr       = var.azure_vpc_cidr2
+  azure_vpc_subnet     = var.azure_vpc_subnet2
+  azure_address_prefix = var.azure_vpc_subnet4
 }
 module "aviatrix_aws_vpc1" {
   source         = "./aws"
