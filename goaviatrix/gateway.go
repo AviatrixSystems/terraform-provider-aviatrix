@@ -124,6 +124,7 @@ type Gateway struct {
 	AdvertisedSpokeRoutes       []string `json:"advertise_cidr_list,omitempty"`
 	IncludeCidrList             []string `json:"include_cidr_list,omitempty"`
 	ExcludeCidrList             []string `json:"exclude_cidr_list,omitempty"`
+	EnableTransitFireNet        string   `json:"firenet_enabled,omitempty"`
 }
 
 type PolicyRule struct {
@@ -886,6 +887,62 @@ func (c *Client) EditGatewayAdvertisedCidr(gateway *Gateway) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API 'edit_gateway_advertised_cidr' Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) EnableTransitFireNet(gateway *Gateway) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for 'EnableTransitFireNet': ") + err.Error())
+	}
+	enableTransitFireNet := url.Values{}
+	enableTransitFireNet.Add("CID", c.CID)
+	enableTransitFireNet.Add("action", "enable_gateway_for_transit_firenet")
+	enableTransitFireNet.Add("gateway_name", gateway.GwName)
+	Url.RawQuery = enableTransitFireNet.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return errors.New("HTTP Get 'enable_gateway_for_transit_firenet' failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode 'enable_gateway_for_transit_firenet' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API 'enable_gateway_for_transit_firenet' Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) DisableTransitFireNet(gateway *Gateway) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for 'DisableTransitFireNet': ") + err.Error())
+	}
+	enableTransitFireNet := url.Values{}
+	enableTransitFireNet.Add("CID", c.CID)
+	enableTransitFireNet.Add("action", "disable_gateway_for_transit_firenet")
+	enableTransitFireNet.Add("gateway_name", gateway.GwName)
+	Url.RawQuery = enableTransitFireNet.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return errors.New("HTTP Get 'disable_gateway_for_transit_firenet' failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode 'disable_gateway_for_transit_firenet' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API 'disable_gateway_for_transit_firenet' Get failed: " + data.Reason)
 	}
 	return nil
 }
