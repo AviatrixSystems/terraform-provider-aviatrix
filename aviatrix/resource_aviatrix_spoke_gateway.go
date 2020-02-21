@@ -994,7 +994,51 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if d.HasChange("enable_active_mesh") {
+	if d.HasChange("enable_active_mesh") && d.HasChange("transit_gw") {
+		spokeVPC := &goaviatrix.SpokeVpc{
+			CloudType:      d.Get("cloud_type").(int),
+			GwName:         d.Get("gw_name").(string),
+			HASubnet:       d.Get("ha_subnet").(string),
+			TransitGateway: d.Get("transit_gw").(string),
+		}
+
+		o, n := d.GetChange("transit_gw")
+		if o != "" {
+			//New configuration to join to transit GW
+			err := client.SpokeLeaveTransit(spokeVPC)
+			if err != nil {
+				return fmt.Errorf("failed to leave Transit Gateway: %s", err)
+			}
+		}
+
+		gw := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+		enableActiveMesh := d.Get("enable_active_mesh").(bool)
+		if enableActiveMesh {
+			gw.EnableActiveMesh = "yes"
+			err := client.EnableActiveMesh(gw)
+			if err != nil {
+				return fmt.Errorf("failed to enable Active Mesh Mode: %s", err)
+			}
+		} else {
+			gw.EnableActiveMesh = "no"
+			err := client.DisableActiveMesh(gw)
+			if err != nil {
+				return fmt.Errorf("failed to disable Active Mesh Mode: %s", err)
+			}
+		}
+
+		if n != "" {
+			err := client.SpokeJoinTransit(spokeVPC)
+			if err != nil {
+				return fmt.Errorf("failed to join Transit Gateway: %s", err)
+			}
+		}
+
+		d.SetPartial("transit_gw")
+		d.SetPartial("enable_active_mesh")
+	} else if d.HasChange("enable_active_mesh") {
 		gw := &goaviatrix.Gateway{
 			GwName: d.Get("gw_name").(string),
 		}
@@ -1013,9 +1057,9 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("failed to disable Active Mesh Mode: %s", err)
 			}
 		}
-	}
 
-	if d.HasChange("transit_gw") {
+		d.SetPartial("enable_active_mesh")
+	} else if d.HasChange("transit_gw") {
 		spokeVPC := &goaviatrix.SpokeVpc{
 			CloudType:      d.Get("cloud_type").(int),
 			GwName:         d.Get("gw_name").(string),
