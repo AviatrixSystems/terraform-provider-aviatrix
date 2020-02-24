@@ -9,11 +9,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceAviatrixTransitFireNetInspection() *schema.Resource {
+func resourceAviatrixTransitFireNetPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAviatrixTransitFireNetInspectionCreate,
-		Read:   resourceAviatrixTransitFireNetInspectionRead,
-		Delete: resourceAviatrixTransitFireNetInspectionDelete,
+		Create: resourceAviatrixTransitFireNetPolicyCreate,
+		Read:   resourceAviatrixTransitFireNetPolicyRead,
+		Delete: resourceAviatrixTransitFireNetPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -35,7 +35,7 @@ func resourceAviatrixTransitFireNetInspection() *schema.Resource {
 	}
 }
 
-func resourceAviatrixTransitFireNetInspectionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitFireNetPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	transitFireNetInspection := &goaviatrix.TransitFireNetInspection{
@@ -51,10 +51,10 @@ func resourceAviatrixTransitFireNetInspectionCreate(d *schema.ResourceData, meta
 	}
 
 	d.SetId(transitFireNetInspection.TransitFireNetGatewayName + "~" + transitFireNetInspection.InspectedResourceName)
-	return resourceAviatrixTransitFireNetInspectionRead(d, meta)
+	return resourceAviatrixTransitFireNetPolicyRead(d, meta)
 }
 
-func resourceAviatrixTransitFireNetInspectionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitFireNetPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	transitFireNetGatewayName := d.Get("transit_firenet_gateway_name").(string)
@@ -86,7 +86,7 @@ func resourceAviatrixTransitFireNetInspectionRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAviatrixTransitFireNetInspectionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitFireNetPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	transitFireNetInspection := &goaviatrix.TransitFireNetInspection{
