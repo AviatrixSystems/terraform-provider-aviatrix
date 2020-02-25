@@ -117,7 +117,7 @@ The following arguments are supported:
     * `customized_routes` - (Optional) Advanced option. Customized Spoke VPC Routes. It allows the admin to enter non-RFC1918 routes in the VPC route table targeting the TGW. Example: "10.8.0.0/16,10.9.0.0/16,10.10.0.0/16".
     * `customized_route_advertisement` - (Optional) Advanced option. Customized route(s) to advertise. Example: "10.8.0.0/16,10.9.0.0/16,10.10.0.0/16".    
     * `disable_local_route_propagation` - (Optional) Advanced option. Switch to allow admin not to propagate the VPC CIDR to the security domain/TGW route table that it is being attached to. Valid values: true, false. Default value: false.
-* `attached_aviatrix_transit_gateway` - (Optional) A list of Names of Aviatrix Transit Gateway to attach to one of the three default domains: Aviatrix_Edge_Domain.
+* `attached_aviatrix_transit_gateway` - (Optional) A list of names of Aviatrix Transit Gateway(s) (transit VPCs) to attach to the Aviatrix_Edge_Domain.
 * `manage_vpc_attachment` - (Optional) This parameter is a switch used to allow attaching VPCs to tgw using the aviatrix_aws_tgw resource. If it is set to false, attachment of VPC must be done using the aviatrix_aws_tgw_vpc_attachment resource. Valid values: true or false. Default value is true.
 
 -> **NOTE:** `manage_vpc_attachment` - If you are using/upgraded to Aviatrix Terraform Provider R1.5+, and an aws_tgw resource was originally created with a provider version <R1.5, you must do ‘terraform refresh’ to update and apply the attribute’s default value (true) into the state file.
