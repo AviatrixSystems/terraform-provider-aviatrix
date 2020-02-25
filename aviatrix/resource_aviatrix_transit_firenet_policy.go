@@ -29,7 +29,7 @@ func resourceAviatrixTransitFireNetPolicy() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Name of the resource to be added to transit firenet inspection.",
+				Description: "Name of the resource to be added to transit firenet policy.",
 			},
 		},
 	}
@@ -38,19 +38,19 @@ func resourceAviatrixTransitFireNetPolicy() *schema.Resource {
 func resourceAviatrixTransitFireNetPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	transitFireNetInspection := &goaviatrix.TransitFireNetInspection{
+	transitFireNetPolicy := &goaviatrix.TransitFireNetPolicy{
 		TransitFireNetGatewayName: d.Get("transit_firenet_gateway_name").(string),
 		InspectedResourceName:     d.Get("inspected_resource_name").(string),
 	}
 
-	log.Printf("[INFO] Creating Aviatrix transit firenet inspection: %#v", transitFireNetInspection)
+	log.Printf("[INFO] Creating Aviatrix transit firenet policy: %#v", transitFireNetPolicy)
 
-	err := client.CreateTransitFireNetInspection(transitFireNetInspection)
+	err := client.CreateTransitFireNetPolicy(transitFireNetPolicy)
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix transit firenet inspection: %s", err)
+		return fmt.Errorf("failed to create Aviatrix transit firenet Policy: %s", err)
 	}
 
-	d.SetId(transitFireNetInspection.TransitFireNetGatewayName + "~" + transitFireNetInspection.InspectedResourceName)
+	d.SetId(transitFireNetPolicy.TransitFireNetGatewayName + "~" + transitFireNetPolicy.InspectedResourceName)
 	return resourceAviatrixTransitFireNetPolicyRead(d, meta)
 }
 
@@ -68,37 +68,37 @@ func resourceAviatrixTransitFireNetPolicyRead(d *schema.ResourceData, meta inter
 		d.SetId(id)
 	}
 
-	transitFireNetInspection := &goaviatrix.TransitFireNetInspection{
+	transitFireNetPolicy := &goaviatrix.TransitFireNetPolicy{
 		TransitFireNetGatewayName: d.Get("transit_firenet_gateway_name").(string),
 		InspectedResourceName:     d.Get("inspected_resource_name").(string),
 	}
 
-	err := client.GetTransitFireNetInspection(transitFireNetInspection)
+	err := client.GetTransitFireNetPolicy(transitFireNetPolicy)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix transit gateway inspection: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix transit gateway policy: %s", err)
 	}
 
-	d.SetId(transitFireNetInspection.TransitFireNetGatewayName + "~" + transitFireNetInspection.InspectedResourceName)
+	d.SetId(transitFireNetPolicy.TransitFireNetGatewayName + "~" + transitFireNetPolicy.InspectedResourceName)
 	return nil
 }
 
 func resourceAviatrixTransitFireNetPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	transitFireNetInspection := &goaviatrix.TransitFireNetInspection{
+	transitFireNetPolicy := &goaviatrix.TransitFireNetPolicy{
 		TransitFireNetGatewayName: d.Get("transit_firenet_gateway_name").(string),
 		InspectedResourceName:     d.Get("inspected_resource_name").(string),
 	}
 
-	log.Printf("[INFO] Deleting Aviatrix transit firenet inspection %#v", transitFireNetInspection)
+	log.Printf("[INFO] Deleting Aviatrix transit firenet policy %#v", transitFireNetPolicy)
 
-	err := client.DeleteTransitFireNetInspection(transitFireNetInspection)
+	err := client.DeleteTransitFireNetPolicy(transitFireNetPolicy)
 	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix transit firenet inspection: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix transit firenet policy: %s", err)
 	}
 
 	return nil
