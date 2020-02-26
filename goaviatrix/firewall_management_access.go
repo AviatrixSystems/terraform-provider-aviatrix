@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/url"
 	"strings"
 )
@@ -77,8 +76,6 @@ func (c *Client) GetFirewallManagementAccess(firewallManagementAccess *FirewallM
 		return nil, errors.New("Rest API list_transit_firenet_spoke_policies Get failed: " + data.Reason)
 	}
 	if len(data.Results) == 0 {
-		log.Printf("Transit gateway peering with transit firenet gateway: %s and inspected resource name: %s not found",
-			firewallManagementAccess.TransitFireNetGatewayName, firewallManagementAccess.ManagementAccessResourceName)
 		return nil, ErrNotFound
 	}
 	firewallManagementAccessList := data.Results

@@ -21,8 +21,9 @@ type TransitFireNetPolicyAPIResp struct {
 }
 
 type TransitFireNetPolicyEdit struct {
-	TransitFireNetGwName      string   `json:"gw_name,omitempty"`
-	InspectedResourceNameList []string `json:"inspected,omitempty"`
+	TransitFireNetGwName         string   `json:"gw_name,omitempty"`
+	InspectedResourceNameList    []string `json:"inspected,omitempty"`
+	ManagementAccessResourceName string   `json:"management_access,omitempty"`
 }
 
 func (c *Client) CreateTransitFireNetPolicy(transitFireNetPolicy *TransitFireNetPolicy) error {
@@ -80,7 +81,7 @@ func (c *Client) GetTransitFireNetPolicy(transitFireNetPolicy *TransitFireNetPol
 		return errors.New("Rest API list_transit_firenet_spoke_policies Get failed: " + data.Reason)
 	}
 	if len(data.Results) == 0 {
-		log.Printf("Transit gateway peering with transit firenet gateway: %s and inspected resource name: %s not found",
+		log.Printf("transit firenet policy between transit firenet gateway: %s and inspected resource name: %s not found",
 			transitFireNetPolicy.TransitFireNetGatewayName, transitFireNetPolicy.InspectedResourceName)
 		return ErrNotFound
 	}
