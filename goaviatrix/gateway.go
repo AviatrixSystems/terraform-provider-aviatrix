@@ -152,10 +152,18 @@ type GatewayDetail struct {
 	SnatPolicy                   []PolicyRule `json:"snat_ip_port_list,omitempty"`
 	DnatPolicy                   []PolicyRule `json:"dnat_ip_port_list,omitempty"`
 	Elb                          ElbDetail    `json:"elb,omitempty"`
+	EnableFireNet                bool         `json:"firenet_enabled,omitempty"`
+	EnableTransitFireNet         bool         `json:"transit_firenet_enabled,omitempty"`
 }
 
 type ElbDetail struct {
 	VpnProtocol string `json:"elb_protocol,omitempty"`
+}
+
+type ListTransitFireNetPolicyResp struct {
+	Return  bool                       `json:"return"`
+	Results []TransitFireNetPolicyEdit `json:"results"`
+	Reason  string                     `json:"reason"`
 }
 
 type VpnGatewayAuth struct { // Used for set_vpn_gateway_authentication rest api call
@@ -920,6 +928,11 @@ func (c *Client) EnableTransitFireNet(gateway *Gateway) error {
 }
 
 func (c *Client) DisableTransitFireNet(gateway *Gateway) error {
+	err := c.IsTransitFireNetReadyToBeDisabled(gateway)
+	if err != nil {
+		return err
+	}
+
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
 		return errors.New(("url Parsing failed for 'DisableTransitFireNet': ") + err.Error())
@@ -943,6 +956,50 @@ func (c *Client) DisableTransitFireNet(gateway *Gateway) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API 'disable_gateway_for_transit_firenet' Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) IsTransitFireNetReadyToBeDisabled(gateway *Gateway) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for IsTransitFireNetReadyToBeDisabled: ") + err.Error())
+	}
+	listTransitFireNetSpokePolicies := url.Values{}
+	listTransitFireNetSpokePolicies.Add("CID", c.CID)
+	listTransitFireNetSpokePolicies.Add("action", "list_transit_firenet_spoke_policies")
+	Url.RawQuery = listTransitFireNetSpokePolicies.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get list_transit_firenet_spoke_policies failed: " + err.Error())
+	}
+	var data ListTransitFireNetPolicyResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode list_transit_firenet_spoke_policies failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API list_transit_firenet_spoke_policies Get failed: " + data.Reason)
+	}
+	if len(data.Results) == 0 {
+		return nil
+	}
+	policyList := data.Results
+	for i := range policyList {
+		if policyList[i].TransitFireNetGwName != gateway.GwName {
+			continue
+		}
+		if policyList[i].ManagementAccessResourceName != "no" && len(policyList[i].InspectedResourceNameList) != 0 {
+			return fmt.Errorf("%s is still firewall management access enabled and has transit firenet policy/policies", gateway.GwName)
+		} else if policyList[i].ManagementAccessResourceName != "no" {
+			return fmt.Errorf("%s is still firewall management access enabled", gateway.GwName)
+		} else if len(policyList[i].InspectedResourceNameList) != 0 {
+			return fmt.Errorf("%s still has transit firenet policy/policies", gateway.GwName)
+		}
 	}
 	return nil
 }
