@@ -202,12 +202,13 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `elb_dns_name` - ELB DNS name.
-* `public_ip` - Public IP address of the Gateway created.
-* `backup_public_ip` - Private IP address of the Gateway created.
+* `public_ip` - Public IP address of the gateway created.
+* `backup_public_ip` - Public IP address of the peering HA Gateway created.
 * `public_dns_server` - DNS server used by the gateway. Default is "8.8.8.8", can be overridden with the VPC's setting.
 * `security_group_id` - Security group used for the gateway.
-* `cloud_instance_id` - Instance ID of the gateway.
+* `cloud_instance_id` - Cloud instance ID of the gateway.
 * `cloudn_bkup_gateway_inst_id` - Instance ID of the backup gateway.
+* `private_ip` - Private IP address of the gateway created.
 
 The following arguments are deprecated:
 
