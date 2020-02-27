@@ -217,6 +217,21 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Specify whether to enable transit firenet interfaces or not.",
 			},
+			"security_group_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Security group used for the transit gateway.",
+			},
+			"cloud_instance_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Instance ID of the transit gateway.",
+			},
+			"private_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Private IP address of the transit gateway created.",
+			},
 		},
 	}
 }
@@ -673,6 +688,9 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
 		d.Set("eip", gw.PublicIP)
 		d.Set("gw_size", gw.GwSize)
+		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
+		d.Set("security_group_id", gw.GwSecurityGroupID)
+		d.Set("private_ip", gw.PrivateIP)
 
 		if gw.EnableNat == "yes" && gw.SnatMode == "primary" {
 			d.Set("single_ip_snat", true)

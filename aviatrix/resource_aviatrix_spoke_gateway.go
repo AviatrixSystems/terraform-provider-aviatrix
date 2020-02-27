@@ -182,10 +182,20 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Sensitive:   true,
 				Description: "Customer managed key ID.",
 			},
+			"security_group_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Security group used for the spoke gateway.",
+			},
 			"cloud_instance_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Cloud instance ID.",
+			},
+			"private_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Private IP address of the spoke gateway created.",
 			},
 		},
 	}
@@ -567,6 +577,8 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("subnet", gw.VpcNet)
 		d.Set("gw_size", gw.GwSize)
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
+		d.Set("security_group_id", gw.GwSecurityGroupID)
+		d.Set("private_ip", gw.PrivateIP)
 
 		if gw.SingleAZ == "yes" {
 			d.Set("single_az_ha", true)

@@ -363,6 +363,11 @@ func resourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Instance ID of the backup gateway.",
 			},
+			"private_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Private IP address of the Gateway created.",
+			},
 		},
 	}
 }
@@ -960,6 +965,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 		d.Set("public_dns_server", gw.PublicDnsServer)
 		d.Set("security_group_id", gw.GwSecurityGroupID)
+		d.Set("private_ip", gw.PrivateIP)
 
 		if gw.InsaneMode == "yes" {
 			d.Set("insane_mode", true)
