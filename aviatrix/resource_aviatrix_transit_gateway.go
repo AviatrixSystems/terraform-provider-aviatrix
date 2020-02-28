@@ -357,6 +357,11 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	if enableFireNet && enableTransitFireNet {
 		return fmt.Errorf("can't enable firenet function and transit firenet function at the same time")
 	}
+	if enableTransitFireNet && gateway.CloudType != 1 && gateway.CloudType != 8 {
+		return fmt.Errorf("'enable_transit_firenet' is only supported in AWS and AZURE providers")
+	} else if enableTransitFireNet && gateway.CloudType == 8 {
+		gateway.EnableTransitFireNet = "on"
+	}
 
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
 
@@ -609,7 +614,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if enableTransitFireNet {
+	if enableTransitFireNet && gateway.CloudType == 1 {
 		enableActiveMesh := d.Get("enable_active_mesh").(bool)
 		if !connectedTransit || !enableActiveMesh {
 			return fmt.Errorf("both active_mesh and connected_transit need to be enabled to enable transit firenet")
@@ -934,6 +939,9 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("insane_mode_az") {
 		return fmt.Errorf("updating insane_mode_az is not allowed")
+	}
+	if d.HasChange("enable_transit_firenet") && d.Get("cloud_type").(int) == 8 {
+		return fmt.Errorf("editing 'enable_transit_firenet' in AZURE is not supported")
 	}
 	if d.HasChange("single_az_ha") {
 		singleAZGateway := &goaviatrix.Gateway{
@@ -1503,8 +1511,13 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 	}
 
 	enableTransitFireNet := d.Get("enable_transit_firenet").(bool)
-	if enableTransitFireNet {
+	if enableTransitFireNet && gateway.CloudType == 1 {
 		err := client.DisableTransitFireNet(gateway)
+		if err != nil {
+			return fmt.Errorf("failed to disable transit firenet for %s due to %s", gateway.GwName, err)
+		}
+	} else if enableTransitFireNet && gateway.CloudType == 8 {
+		err := client.IsTransitFireNetReadyToBeDisabled(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to disable transit firenet for %s due to %s", gateway.GwName, err)
 		}

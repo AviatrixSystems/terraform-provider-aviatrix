@@ -40,6 +40,7 @@ type TransitVpc struct {
 	Zone                         string `form:"zone,omitempty" json:"zone,omitempty"`
 	EnableAdvertiseTransitCidr   bool
 	BgpManualSpokeAdvertiseCidrs string `form:"bgp_manual_spoke,omitempty"`
+	EnableTransitFireNet         string `form:"enable_transit_firenet,omitempty"`
 }
 
 type TransitGwFireNetInterfaces struct {
