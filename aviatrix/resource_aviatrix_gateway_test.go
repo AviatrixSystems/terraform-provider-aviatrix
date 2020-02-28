@@ -66,6 +66,27 @@ func preGatewayCheckARM(t *testing.T, msgCommon string) {
 	}
 }
 
+func preGateway2CheckARM(t *testing.T, msgCommon string) {
+	preAccountCheck(t, msgCommon)
+
+	armVnetId := os.Getenv("ARM_VNET_ID2")
+	if armVnetId == "" {
+		t.Fatal("Environment variable ARM_VNET_ID is not set" + msgCommon)
+	}
+	armRegion := os.Getenv("ARM_REGION2")
+	if armRegion == "" {
+		t.Fatal("Environment variable ARM_REGION is not set" + msgCommon)
+	}
+	armSubnet := os.Getenv("ARM_SUBNET2")
+	if armSubnet == "" {
+		t.Fatal("Environment variable ARM_SUBNET is not set" + msgCommon)
+	}
+	armGwSize := os.Getenv("ARM_GW_SIZE")
+	if armGwSize == "" {
+		t.Fatal("Environment variable ARM_GW_SIZE is not set" + msgCommon)
+	}
+}
+
 func preGatewayCheckOCI(t *testing.T, msgCommon string) {
 	preAccountCheck(t, msgCommon)
 
