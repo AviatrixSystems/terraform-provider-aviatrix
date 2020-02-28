@@ -11,25 +11,25 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func TestAccAviatrixTransitFireNetPolicy_basic(t *testing.T) {
-	var transitFireNetPolicy goaviatrix.TransitFireNetPolicy
+func TestAccAviatrixFirewallManagementAccess_basic(t *testing.T) {
+	var firewallManagementAccess goaviatrix.FirewallManagementAccess
 
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
 
-	skipAcc := os.Getenv("SKIP_TRANSIT_FIRENET_POLICY")
+	skipAcc := os.Getenv("SKIP_FIREWALL_MANAGEMENT_ACCESS")
 	if skipAcc == "yes" {
-		t.Skip("Skipping transit firenet policy tests as 'SKIP_TRANSIT_FIRENET_POLICY' is set")
+		t.Skip("Skipping firewall management access tests as 'SKIP_FIREWALL_MANAGEMENT_ACCESS' is set")
 	}
 
-	skipAccAWS := os.Getenv("SKIP_TRANSIT_FIRENET_POLICY_AWS")
-	skipAccARM := os.Getenv("SKIP_TRANSIT_FIRENET_POLICY_ARM")
+	skipAccAWS := os.Getenv("SKIP_FIREWALL_MANAGEMENT_ACCESS_AWS")
+	skipAccARM := os.Getenv("SKIP_FIREWALL_MANAGEMENT_ACCESS_ARM")
 	if skipAcc == "yes" && skipAccAWS == "yes" && skipAccARM == "yes" {
-		t.Skip("Skipping transit firenet policy tests as 'SKIP_TRANSIT_FIRENET_POLICY_AWS' and 'SKIP_TRANSIT_FIRENET_POLICY_ARM' are all set")
+		t.Skip("Skipping firewall management access tests as 'SKIP_FIREWALL_MANAGEMENT_ACCESS_AWS' and 'SKIP_FIREWALL_MANAGEMENT_ACCESS_ARM' are all set")
 	}
 
 	if skipAccAWS != "yes" {
-		resourceName := "aviatrix_transit_firenet_policy.test"
-		msgCommonAws := ". Set 'SKIP_TRANSIT_FIRENET_POLICY_AWS' to 'yes' to skip transit firenet policy tests in AWS"
+		resourceName := "aviatrix_firewall_management_access.test"
+		msgCommonAws := ". Set 'SKIP_FIREWALL_MANAGEMENT_ACCESS_AWS' to 'yes' to skip firewall management access tests in AWS"
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
@@ -37,14 +37,14 @@ func TestAccAviatrixTransitFireNetPolicy_basic(t *testing.T) {
 				preGateway2Check(t, msgCommonAws)
 			},
 			Providers:    testAccProviders,
-			CheckDestroy: testAccCheckTransitFireNetPolicyDestroy,
+			CheckDestroy: testAccCheckFirewallManagementAccessDestroy,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccTransitFireNetPolicyConfigBasicAWS(rName),
+					Config: testAccFirewallManagementAccessConfigBasicAWS(rName),
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckTransitFireNetPolicyExists(resourceName, &transitFireNetPolicy),
+						testAccCheckFirewallManagementAccessExists(resourceName, &firewallManagementAccess),
 						resource.TestCheckResourceAttr(resourceName, "transit_firenet_gateway_name", fmt.Sprintf("tfg-%s", rName)),
-						resource.TestCheckResourceAttr(resourceName, "inspected_resource_name", fmt.Sprintf("SPOKE:tfg-aws-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "management_access_resource_name", fmt.Sprintf("SPOKE:tfg-aws-%s", rName)),
 					),
 				},
 				{
@@ -59,8 +59,8 @@ func TestAccAviatrixTransitFireNetPolicy_basic(t *testing.T) {
 	}
 
 	if skipAccARM != "yes" {
-		resourceName := "aviatrix_transit_firenet_policy.test"
-		msgCommonARM := ". Set 'SKIP_TRANSIT_FIRENET_POLICY_ARM' to 'yes' to skip transit firenet policy tests in AZURE"
+		resourceName := "aviatrix_firewall_management_access.test"
+		msgCommonARM := ". Set 'SKIP_FIREWALL_MANAGEMENT_ACCESS_ARM' to 'yes' to skip firewall management access tests in AZURE"
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
@@ -68,14 +68,14 @@ func TestAccAviatrixTransitFireNetPolicy_basic(t *testing.T) {
 				preGateway2CheckARM(t, msgCommonARM)
 			},
 			Providers:    testAccProviders,
-			CheckDestroy: testAccCheckTransitFireNetPolicyDestroy,
+			CheckDestroy: testAccCheckFirewallManagementAccessDestroy,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccTransitFireNetPolicyConfigBasicARM(rName),
+					Config: testAccFirewallManagementAccessConfigBasicARM(rName),
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckTransitFireNetPolicyExists(resourceName, &transitFireNetPolicy),
+						testAccCheckFirewallManagementAccessExists(resourceName, &firewallManagementAccess),
 						resource.TestCheckResourceAttr(resourceName, "transit_firenet_gateway_name", fmt.Sprintf("tfg-arm-%s", rName)),
-						resource.TestCheckResourceAttr(resourceName, "inspected_resource_name", fmt.Sprintf("SPOKE:tfg-arm-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "management_access_resource_name", fmt.Sprintf("SPOKE:tfg-arm-%s", rName)),
 					),
 				},
 				{
@@ -90,7 +90,7 @@ func TestAccAviatrixTransitFireNetPolicy_basic(t *testing.T) {
 	}
 }
 
-func testAccTransitFireNetPolicyConfigBasicAWS(rName string) string {
+func testAccFirewallManagementAccessConfigBasicAWS(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account" {
 	account_name       = "tfa-%s"
@@ -123,19 +123,19 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
 	enable_active_mesh = true
 	transit_gw         = aviatrix_transit_gateway.test_transit_gw.gw_name
 }
-resource "aviatrix_transit_firenet_policy" "test" {
-	transit_firenet_gateway_name = aviatrix_transit_gateway.test_transit_gw.gw_name
-	inspected_resource_name      = join(":", ["SPOKE", aviatrix_spoke_gateway.test_spoke_gateway.gw_name])
+resource "aviatrix_firewall_management_access" "test" {
+	transit_firenet_gateway_name    = aviatrix_transit_gateway.test_transit_gw.gw_name
+	management_access_resource_name = join(":", ["SPOKE", aviatrix_spoke_gateway.test_spoke_gateway.gw_name])
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName,
 		os.Getenv("AWS_VPC_ID2"), os.Getenv("AWS_REGION2"), os.Getenv("AWS_SUBNET2"))
 }
 
-func testAccTransitFireNetPolicyConfigBasicARM(rName string) string {
+func testAccFirewallManagementAccessConfigBasicARM(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_acc_arm" {
-	account_name        = "tfa-arm-%s"
+	account_name        = "tfa-%s"
 	cloud_type          = 8
 	arm_subscription_id = "%s"
 	arm_directory_id    = "%s"
@@ -163,11 +163,11 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
 	gw_size            = "%s"
 	subnet             = "%s"
 	enable_active_mesh = true
-	transit_gw         = aviatrix_transit_gateway.test_arm.gw_name
+	transit_gw         = aviatrix_transit_gateway.test_transit_gw.gw_name
 }
-resource "aviatrix_transit_firenet_policy" "test" {
-	transit_firenet_gateway_name = aviatrix_transit_gateway.test_arm.gw_name
-	inspected_resource_name      = join(":", ["SPOKE", aviatrix_spoke_gateway.test_spoke_gateway.gw_name])
+resource "aviatrix_firewall_management_access" "test" {
+	transit_firenet_gateway_name    = aviatrix_transit_gateway.test_arm.gw_name
+	management_access_resource_name = join(":", ["SPOKE", aviatrix_spoke_gateway.test_spoke_gateway.gw_name])
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"), os.Getenv("ARM_APPLICATION_ID"),
 		os.Getenv("ARM_APPLICATION_KEY"), rName, os.Getenv("ARM_VNET_ID"), os.Getenv("ARM_REGION"),
@@ -176,49 +176,47 @@ resource "aviatrix_transit_firenet_policy" "test" {
 		os.Getenv("ARM_GW_SIZE"), os.Getenv("ARM_SUBNET2"))
 }
 
-func testAccCheckTransitFireNetPolicyExists(n string, transitFireNetPolicy *goaviatrix.TransitFireNetPolicy) resource.TestCheckFunc {
+func testAccCheckFirewallManagementAccessExists(n string, firewallManagementAccess *goaviatrix.FirewallManagementAccess) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("transit firenet policy Not found: %s", n)
+			return fmt.Errorf("firewall management access Not found: %s", n)
 		}
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no transit firenet policy ID is set")
+			return fmt.Errorf("no firewall management access ID is set")
 		}
 
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
-		foundTransitFireNetPolicy := &goaviatrix.TransitFireNetPolicy{
+		foundFirewallManagementAccess := &goaviatrix.FirewallManagementAccess{
 			TransitFireNetGatewayName: rs.Primary.Attributes["transit_firenet_gateway_name"],
-			InspectedResourceName:     rs.Primary.Attributes["inspected_resource_name"],
 		}
 
-		err := client.GetTransitFireNetPolicy(foundTransitFireNetPolicy)
+		foundFirewallManagementAccess2, err := client.GetFirewallManagementAccess(foundFirewallManagementAccess)
 		if err != nil {
-			return fmt.Errorf("transit firenet policy not found")
+			return fmt.Errorf("firewall management access not found")
 		}
 
-		*transitFireNetPolicy = *foundTransitFireNetPolicy
+		*firewallManagementAccess = *foundFirewallManagementAccess2
 		return nil
 	}
 }
 
-func testAccCheckTransitFireNetPolicyDestroy(s *terraform.State) error {
+func testAccCheckFirewallManagementAccessDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*goaviatrix.Client)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aviatrix_transit_firenet_policy" {
+		if rs.Type != "aviatrix_firewall_management_access" {
 			continue
 		}
 
-		foundTransitFireNetPolicy := &goaviatrix.TransitFireNetPolicy{
+		foundFirewallManagementAccess := &goaviatrix.FirewallManagementAccess{
 			TransitFireNetGatewayName: rs.Primary.Attributes["transit_firenet_gateway_name"],
-			InspectedResourceName:     rs.Primary.Attributes["inspected_resource_name"],
 		}
 
-		err := client.GetTransitFireNetPolicy(foundTransitFireNetPolicy)
+		_, err := client.GetFirewallManagementAccess(foundFirewallManagementAccess)
 		if err != goaviatrix.ErrNotFound {
-			return fmt.Errorf("transit firenet policy still exists")
+			return fmt.Errorf("firewall management access still exists")
 		}
 	}
 
