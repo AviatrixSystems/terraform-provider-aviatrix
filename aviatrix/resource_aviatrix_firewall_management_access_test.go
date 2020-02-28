@@ -74,7 +74,7 @@ func TestAccAviatrixFirewallManagementAccess_basic(t *testing.T) {
 					Config: testAccFirewallManagementAccessConfigBasicARM(rName),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckFirewallManagementAccessExists(resourceName, &firewallManagementAccess),
-						resource.TestCheckResourceAttr(resourceName, "transit_firenet_gateway_name", fmt.Sprintf("tfg-arm-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "transit_firenet_gateway_name", fmt.Sprintf("tfg-%s", rName)),
 						resource.TestCheckResourceAttr(resourceName, "management_access_resource_name", fmt.Sprintf("SPOKE:tfg-arm-%s", rName)),
 					),
 				},
