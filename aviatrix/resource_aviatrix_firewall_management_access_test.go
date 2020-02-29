@@ -100,7 +100,7 @@ resource "aviatrix_account" "test_account" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-resource "aviatrix_transit_gateway" "test_transit_gw" {
+resource "aviatrix_transit_gateway" "test_transit_aws" {
 	cloud_type             = 1
 	account_name           = aviatrix_account.test_account.account_name
 	gw_name                = "tfg-%s"
@@ -112,7 +112,7 @@ resource "aviatrix_transit_gateway" "test_transit_gw" {
 	connected_transit      = true 
 	enable_transit_firenet = true
 }
-resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
+resource "aviatrix_spoke_gateway" "test_spoke_aws" {
 	cloud_type         = 1
 	account_name       = aviatrix_account.test_account.account_name
 	gw_name            = "tfg-aws-%s"
@@ -121,11 +121,11 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
 	gw_size            = "t2.micro"
 	subnet             = "%s"
 	enable_active_mesh = true
-	transit_gw         = aviatrix_transit_gateway.test_transit_gw.gw_name
+	transit_gw         = aviatrix_transit_gateway.test_transit_aws.gw_name
 }
 resource "aviatrix_firewall_management_access" "test" {
-	transit_firenet_gateway_name    = aviatrix_transit_gateway.test_transit_gw.gw_name
-	management_access_resource_name = join(":", ["SPOKE", aviatrix_spoke_gateway.test_spoke_gateway.gw_name])
+	transit_firenet_gateway_name    = aviatrix_transit_gateway.test_transit_aws.gw_name
+	management_access_resource_name = join(":", ["SPOKE", aviatrix_spoke_gateway.test_spoke_aws.gw_name])
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName,
@@ -142,7 +142,7 @@ resource "aviatrix_account" "test_acc_arm" {
 	arm_application_id  = "%s"
 	arm_application_key = "%s"
 }
-resource "aviatrix_transit_gateway" "test_arm" {
+resource "aviatrix_transit_gateway" "test_transit_arm" {
 	cloud_type             = 8
 	account_name           = aviatrix_account.test_acc_arm.account_name
 	gw_name                = "tfg-%s"
@@ -154,7 +154,7 @@ resource "aviatrix_transit_gateway" "test_arm" {
 	connected_transit      = true 
 	enable_transit_firenet = true
 }
-resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
+resource "aviatrix_spoke_gateway" "test_spoke_arm" {
 	cloud_type         = 8
 	account_name       = aviatrix_account.test_acc_arm.account_name
 	gw_name            = "tfg-arm-%s"
@@ -163,11 +163,11 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
 	gw_size            = "%s"
 	subnet             = "%s"
 	enable_active_mesh = true
-	transit_gw         = aviatrix_transit_gateway.test_transit_gw.gw_name
+	transit_gw         = aviatrix_transit_gateway.test_transit_arm.gw_name
 }
 resource "aviatrix_firewall_management_access" "test" {
-	transit_firenet_gateway_name    = aviatrix_transit_gateway.test_arm.gw_name
-	management_access_resource_name = join(":", ["SPOKE", aviatrix_spoke_gateway.test_spoke_gateway.gw_name])
+	transit_firenet_gateway_name    = aviatrix_transit_gateway.test_transit_arm.gw_name
+	management_access_resource_name = join(":", ["SPOKE", aviatrix_spoke_gateway.test_spoke_arm.gw_name])
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"), os.Getenv("ARM_APPLICATION_ID"),
 		os.Getenv("ARM_APPLICATION_KEY"), rName, os.Getenv("ARM_VNET_ID"), os.Getenv("ARM_REGION"),
