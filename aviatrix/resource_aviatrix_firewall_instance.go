@@ -63,6 +63,7 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 			"firewall_image_version": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    true,
 				Description: "Version of firewall image.",
 			},
