@@ -200,7 +200,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 			"ha_cloud_instance_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Cloud instance ID of ha spoke gateway.",
+				Description: "Cloud instance ID of HA spoke gateway.",
 			},
 		},
 	}

@@ -235,7 +235,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"ha_cloud_instance_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Cloud instance ID of ha transit gateway.",
+				Description: "Cloud instance ID of HA transit gateway.",
 			},
 		},
 	}

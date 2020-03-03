@@ -137,7 +137,7 @@ In addition to all arguments above, the following attributes are exported:
 * `security_group_id` - Security group used for the transit gateway.
 * `cloud_instance_id` - Cloud instance ID of the transit gateway.
 * `private_ip` - Private IP address of the transit gateway created.
-* `ha_cloud_instance_id` - Cloud instance ID of the ha transit gateway.
+* `ha_cloud_instance_id` - Cloud instance ID of the HA transit gateway.
 
 The following arguments are deprecated:
 
