@@ -358,15 +358,15 @@ func resourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Instance ID of the gateway.",
 			},
-			"cloudn_bkup_gateway_inst_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Instance ID of the backup gateway.",
-			},
 			"private_ip": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Private IP address of the Gateway created.",
+			},
+			"peering_ha_cloud_instance_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Instance ID of the peering HA gateway.",
 			},
 		},
 	}
@@ -992,7 +992,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				AccountName: d.Get("account_name").(string),
 				GwName:      d.Get("gw_name").(string) + "-hagw",
 			}
-			d.Set("cloudn_bkup_gateway_inst_id", "")
+			d.Set("peering_ha_cloud_instance_id", "")
 			d.Set("backup_public_ip", "")
 			d.Set("peering_ha_subnet", "")
 			d.Set("peering_ha_zone", "")
@@ -1001,7 +1001,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("peering_ha_insane_mode_az", "")
 			gwHaGw, err := client.GetGateway(peeringHaGateway)
 			if err == nil {
-				d.Set("cloudn_bkup_gateway_inst_id", gwHaGw.CloudnGatewayInstID)
+				d.Set("peering_ha_cloud_instance_id", gwHaGw.CloudnGatewayInstID)
 				d.Set("backup_public_ip", gwHaGw.PublicIP)
 				d.Set("peering_ha_eip", gwHaGw.PublicIP)
 				d.Set("peering_ha_gw_size", gwHaGw.GwSize)
@@ -1027,7 +1027,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			}
 			log.Printf("[TRACE] reading peering HA gateway %s: %#v", d.Get("gw_name").(string), gwHaGw)
 		} else {
-			d.Set("cloudn_bkup_gateway_inst_id", "")
+			d.Set("peering_ha_cloud_instance_id", "")
 			d.Set("backup_public_ip", "")
 			d.Set("peering_ha_subnet", "")
 			d.Set("peering_ha_zone", "")

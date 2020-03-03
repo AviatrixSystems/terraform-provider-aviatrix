@@ -207,8 +207,8 @@ In addition to all arguments above, the following attributes are exported:
 * `public_dns_server` - DNS server used by the gateway. Default is "8.8.8.8", can be overridden with the VPC's setting.
 * `security_group_id` - Security group used for the gateway.
 * `cloud_instance_id` - Cloud instance ID of the gateway.
-* `cloudn_bkup_gateway_inst_id` - Instance ID of the backup gateway.
 * `private_ip` - Private IP address of the gateway created.
+* `peering_ha_cloud_instance_id` - Cloud instance ID of the HA gateway.
 
 The following arguments are deprecated:
 
@@ -227,6 +227,7 @@ The following arguments are deprecated:
   * `new_src_ip` - (Optional) The changed source IP address when all specified qualifier conditions meet. One of the rule fields must be specified for this rule to take effect.
   * `new_src_port` - (Optional) The translated destination port when all specified qualifier conditions meet. One of the rule field must be specified for this rule to take effect.
   * `exclude_rtb` - (Optional) This field specifies which VPC private route table will not be programmed with the default route entry.
+* `cloudn_bkup_gateway_inst_id` - Instance ID of the backup gateway.
 
 ## Import
 
