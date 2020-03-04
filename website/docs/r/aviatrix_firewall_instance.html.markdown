@@ -42,6 +42,8 @@ The following arguments are supported:
 * `key_name`- (Optional) The **.pem** filename for SSH access to the firewall instance.
 * `iam_role` - (Optional) In advanced mode, create an IAM Role on the AWS account that launched the FireNet gateway. Create a policy to attach to the role. The policy is to allow access to “Bootstrap Bucket”.
 * `bootstrap_bucket_name`- (Optional) In advanced mode, specify a bootstrap bucket name where the initial configuration and policy file is stored.
+* `username`- (Optional) Applicable to Azure deployment only. "admin" as a username is not accepted.
+* `key_name`- (Optional) Applicable to Azure deployment only.
 
 ## Attribute Reference
 

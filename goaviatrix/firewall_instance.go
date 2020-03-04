@@ -30,6 +30,8 @@ type FirewallInstance struct {
 	EgressInterface      string `form:"egress_interface,omitempty" json:"egress_interface_id,omitempty"`
 	ManagementPublicIP   string `json:"management_public_ip,omitempty"`
 	VendorType           string
+	Username             string `form:"username,omitempty"`
+	Password             string `form:"password,omitempty"`
 }
 
 type FirewallInstanceResp struct {
@@ -45,8 +47,8 @@ type FirewallInstanceCreateResp struct {
 }
 
 type FirewallInstanceCreateResult struct {
-	Text       string `json:"text"`
-	FirewallID string `json:"firewall_id"`
+	Text       string `json:"text,omitempty"`
+	FirewallID string `json:"firewall_id,omitempty"`
 }
 
 func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (string, error) {
@@ -60,9 +62,7 @@ func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (str
 	addFirewallInstance.Add("gw_name", firewallInstance.GwName)
 	addFirewallInstance.Add("firewall_name", firewallInstance.FirewallName)
 	addFirewallInstance.Add("firewall_image", firewallInstance.FirewallImage)
-	if firewallInstance.FirewallImageVersion != "" {
-		addFirewallInstance.Add("firewall_image_version", firewallInstance.FirewallImageVersion)
-	}
+	addFirewallInstance.Add("firewall_image_version", firewallInstance.FirewallImageVersion)
 	addFirewallInstance.Add("firewall_size", firewallInstance.FirewallSize)
 	addFirewallInstance.Add("egress_subnet", firewallInstance.EgressSubnet)
 	addFirewallInstance.Add("management_subnet", firewallInstance.ManagementSubnet)
@@ -70,6 +70,8 @@ func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (str
 	addFirewallInstance.Add("iam_role", firewallInstance.IamRole)
 	addFirewallInstance.Add("bootstrap_bucket_name", firewallInstance.BootstrapBucketName)
 	addFirewallInstance.Add("no_associate", strconv.FormatBool(true))
+	addFirewallInstance.Add("username", firewallInstance.Username)
+	addFirewallInstance.Add("password", firewallInstance.Password)
 	Url.RawQuery = addFirewallInstance.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {

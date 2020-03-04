@@ -85,6 +85,20 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				ForceNew:    true,
 				Description: "Bootstrap bucket name.",
 			},
+			"username": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				ForceNew:    true,
+				Description: "Applicable to Azure deployment only. 'admin' as a username is not accepted.",
+			},
+			"password": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				ForceNew:    true,
+				Description: "Applicable to Azure deployment only.",
+			},
 			"instance_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -129,6 +143,8 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		KeyName:              d.Get("key_name").(string),
 		IamRole:              d.Get("iam_role").(string),
 		BootstrapBucketName:  d.Get("bootstrap_bucket_name").(string),
+		Username:             d.Get("username").(string),
+		Password:             d.Get("password").(string),
 	}
 
 	instanceID, err := client.CreateFirewallInstance(firewallInstance)
