@@ -9,11 +9,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceAviatrixARMSpokeNativePeering() *schema.Resource {
+func resourceAviatrixAzureSpokeNativePeering() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAviatrixARMSpokeNativePeeringCreate,
-		Read:   resourceAviatrixARMSpokeNativePeeringRead,
-		Delete: resourceAviatrixARMSpokeNativePeeringDelete,
+		Create: resourceAviatrixAzureSpokeNativePeeringCreate,
+		Read:   resourceAviatrixAzureSpokeNativePeeringRead,
+		Delete: resourceAviatrixAzureSpokeNativePeeringDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -47,28 +47,28 @@ func resourceAviatrixARMSpokeNativePeering() *schema.Resource {
 	}
 }
 
-func resourceAviatrixARMSpokeNativePeeringCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAzureSpokeNativePeeringCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	armSpokeNativePeering := &goaviatrix.ArmSpokeNativePeering{
+	azureSpokeNativePeering := &goaviatrix.AzureSpokeNativePeering{
 		TransitGatewayName: d.Get("transit_gateway_name").(string),
 		SpokeAccountName:   d.Get("spoke_account_name").(string),
 		SpokeRegion:        d.Get("spoke_region").(string),
 		SpokeVpcID:         d.Get("spoke_vpc_id").(string),
 	}
 
-	log.Printf("[INFO] Creating Aviatrix arm spoke native peering: %#v", armSpokeNativePeering)
+	log.Printf("[INFO] Creating Aviatrix Azure spoke native peering: %#v", azureSpokeNativePeering)
 
-	err := client.CreateArmSpokeNativePeering(armSpokeNativePeering)
+	err := client.CreateAzureSpokeNativePeering(azureSpokeNativePeering)
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix arm spoke native peering: %s", err)
+		return fmt.Errorf("failed to create Aviatrix Azure spoke native peering: %s", err)
 	}
 
-	d.SetId(armSpokeNativePeering.TransitGatewayName + "~" + armSpokeNativePeering.SpokeAccountName + "~" + armSpokeNativePeering.SpokeVpcID)
-	return resourceAviatrixARMSpokeNativePeeringRead(d, meta)
+	d.SetId(azureSpokeNativePeering.TransitGatewayName + "~" + azureSpokeNativePeering.SpokeAccountName + "~" + azureSpokeNativePeering.SpokeVpcID)
+	return resourceAviatrixAzureSpokeNativePeeringRead(d, meta)
 }
 
-func resourceAviatrixARMSpokeNativePeeringRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAzureSpokeNativePeeringRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	transitGatewayName := d.Get("transit_gateway_name").(string)
@@ -84,13 +84,13 @@ func resourceAviatrixARMSpokeNativePeeringRead(d *schema.ResourceData, meta inte
 		d.SetId(id)
 	}
 
-	armSpokeNativePeering := &goaviatrix.ArmSpokeNativePeering{
+	azureSpokeNativePeering := &goaviatrix.AzureSpokeNativePeering{
 		TransitGatewayName: d.Get("transit_gateway_name").(string),
 		SpokeAccountName:   d.Get("spoke_account_name").(string),
 		SpokeVpcID:         d.Get("spoke_vpc_id").(string),
 	}
 
-	armSpokeNativePeering, err := client.GetArmSpokeNativePeering(armSpokeNativePeering)
+	azureSpokeNativePeering, err := client.GetAzureSpokeNativePeering(azureSpokeNativePeering)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
@@ -99,29 +99,29 @@ func resourceAviatrixARMSpokeNativePeeringRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("couldn't find Aviatrix arm spoke native peering: %s", err)
 	}
 
-	d.Set("transit_gateway_name", armSpokeNativePeering.TransitGatewayName)
-	d.Set("spoke_account_name", armSpokeNativePeering.SpokeAccountName)
-	d.Set("spoke_region", armSpokeNativePeering.SpokeRegion)
-	d.Set("spoke_vpc_id", armSpokeNativePeering.SpokeVpcID)
+	d.Set("transit_gateway_name", azureSpokeNativePeering.TransitGatewayName)
+	d.Set("spoke_account_name", azureSpokeNativePeering.SpokeAccountName)
+	d.Set("spoke_region", azureSpokeNativePeering.SpokeRegion)
+	d.Set("spoke_vpc_id", azureSpokeNativePeering.SpokeVpcID)
 
-	d.SetId(armSpokeNativePeering.TransitGatewayName + "~" + armSpokeNativePeering.SpokeAccountName + "~" + armSpokeNativePeering.SpokeVpcID)
+	d.SetId(azureSpokeNativePeering.TransitGatewayName + "~" + azureSpokeNativePeering.SpokeAccountName + "~" + azureSpokeNativePeering.SpokeVpcID)
 	return nil
 }
 
-func resourceAviatrixARMSpokeNativePeeringDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAzureSpokeNativePeeringDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	armSpokeNativePeering := &goaviatrix.ArmSpokeNativePeering{
+	azureSpokeNativePeering := &goaviatrix.AzureSpokeNativePeering{
 		TransitGatewayName: d.Get("transit_gateway_name").(string),
 		SpokeAccountName:   d.Get("spoke_account_name").(string),
 		SpokeVpcID:         d.Get("spoke_vpc_id").(string),
 	}
 
-	log.Printf("[INFO] Deleting Aviatrix arm spoke native peering: %#v", armSpokeNativePeering)
+	log.Printf("[INFO] Deleting Aviatrix Azure spoke native peering: %#v", azureSpokeNativePeering)
 
-	err := client.DeleteArmSpokeNativePeering(armSpokeNativePeering)
+	err := client.DeleteAzureSpokeNativePeering(azureSpokeNativePeering)
 	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix arm spoke native peering: %s", err)
+		return fmt.Errorf("failed to delete Aviatrix Azure spoke native peering: %s", err)
 	}
 
 	return nil

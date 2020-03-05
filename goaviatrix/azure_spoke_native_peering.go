@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-type ArmSpokeNativePeering struct {
+type AzureSpokeNativePeering struct {
 	CID                string `form:"CID,omitempty"`
 	Action             string `form:"action,omitempty"`
 	TransitGatewayName string `form:"transit_gateway_name,omitempty"`
@@ -17,21 +17,21 @@ type ArmSpokeNativePeering struct {
 	SpokeVpcID         string `form:"vpc_id,omitempty"`
 }
 
-type ArmSpokeNativePeeringAPIResp struct {
-	Return  bool                        `json:"return"`
-	Results []ArmSpokeNativePeeringEdit `json:"results"`
-	Reason  string                      `json:"reason"`
+type AzureSpokeNativePeeringAPIResp struct {
+	Return  bool                          `json:"return"`
+	Results []AzureSpokeNativePeeringEdit `json:"results"`
+	Reason  string                        `json:"reason"`
 }
 
-type ArmSpokeNativePeeringEdit struct {
+type AzureSpokeNativePeeringEdit struct {
 	Region string `json:"region"`
 	Name   string `json:"name"`
 }
 
-func (c *Client) CreateArmSpokeNativePeering(armSpokeNativePeering *ArmSpokeNativePeering) error {
-	armSpokeNativePeering.CID = c.CID
-	armSpokeNativePeering.Action = "attach_arm_native_spoke_to_transit"
-	resp, err := c.Post(c.baseURL, armSpokeNativePeering)
+func (c *Client) CreateAzureSpokeNativePeering(azureSpokeNativePeering *AzureSpokeNativePeering) error {
+	azureSpokeNativePeering.CID = c.CID
+	azureSpokeNativePeering.Action = "attach_arm_native_spoke_to_transit"
+	resp, err := c.Post(c.baseURL, azureSpokeNativePeering)
 	if err != nil {
 		return errors.New("HTTP Post 'attach_arm_native_spoke_to_transit' failed: " + err.Error())
 	}
@@ -49,22 +49,22 @@ func (c *Client) CreateArmSpokeNativePeering(armSpokeNativePeering *ArmSpokeNati
 	return nil
 }
 
-func (c *Client) GetArmSpokeNativePeering(armSpokeNativePeering *ArmSpokeNativePeering) (*ArmSpokeNativePeering, error) {
+func (c *Client) GetAzureSpokeNativePeering(azureSpokeNativePeering *AzureSpokeNativePeering) (*AzureSpokeNativePeering, error) {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return nil, errors.New(("url Parsing failed for 'GetArmSpokeNativePeering': ") + err.Error())
+		return nil, errors.New(("url Parsing failed for 'GetAzureSpokeNativePeering': ") + err.Error())
 	}
 	listArmNativeSpokes := url.Values{}
 	listArmNativeSpokes.Add("CID", c.CID)
 	listArmNativeSpokes.Add("action", "list_arm_native_spokes")
-	listArmNativeSpokes.Add("transit_gateway_name", armSpokeNativePeering.TransitGatewayName)
+	listArmNativeSpokes.Add("transit_gateway_name", azureSpokeNativePeering.TransitGatewayName)
 	listArmNativeSpokes.Add("details", "true")
 	Url.RawQuery = listArmNativeSpokes.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
 		return nil, errors.New("HTTP Get 'list_arm_native_spokes' failed: " + err.Error())
 	}
-	var data ArmSpokeNativePeeringAPIResp
+	var data AzureSpokeNativePeeringAPIResp
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
 	bodyString := buf.String()
@@ -86,25 +86,25 @@ func (c *Client) GetArmSpokeNativePeering(armSpokeNativePeering *ArmSpokeNativeP
 		spokeArray := strings.Split(peeringList[i].Name, ":")
 		spokeAccountName := spokeArray[0]
 		spokeVpcID := "" + spokeArray[1] + ":" + spokeArray[2]
-		if armSpokeNativePeering.SpokeAccountName != spokeAccountName || armSpokeNativePeering.SpokeVpcID != spokeVpcID {
+		if azureSpokeNativePeering.SpokeAccountName != spokeAccountName || azureSpokeNativePeering.SpokeVpcID != spokeVpcID {
 			continue
 		}
-		armSpokeNativePeering.SpokeRegion = peeringList[i].Region
-		return armSpokeNativePeering, nil
+		azureSpokeNativePeering.SpokeRegion = peeringList[i].Region
+		return azureSpokeNativePeering, nil
 	}
 	return nil, ErrNotFound
 }
 
-func (c *Client) DeleteArmSpokeNativePeering(armSpokeNativePeering *ArmSpokeNativePeering) error {
+func (c *Client) DeleteAzureSpokeNativePeering(azureSpokeNativePeering *AzureSpokeNativePeering) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return errors.New(("url Parsing failed for 'DeleteArmSpokeNativePeering': ") + err.Error())
+		return errors.New(("url Parsing failed for 'DeleteAzureSpokeNativePeering': ") + err.Error())
 	}
 	detachArmNativeSpokeToTransit := url.Values{}
 	detachArmNativeSpokeToTransit.Add("CID", c.CID)
 	detachArmNativeSpokeToTransit.Add("action", "detach_arm_native_spoke_to_transit")
-	detachArmNativeSpokeToTransit.Add("transit_gateway_name", armSpokeNativePeering.TransitGatewayName)
-	detachArmNativeSpokeToTransit.Add("spoke_name", ""+armSpokeNativePeering.SpokeAccountName+":"+armSpokeNativePeering.SpokeVpcID)
+	detachArmNativeSpokeToTransit.Add("transit_gateway_name", azureSpokeNativePeering.TransitGatewayName)
+	detachArmNativeSpokeToTransit.Add("spoke_name", ""+azureSpokeNativePeering.SpokeAccountName+":"+azureSpokeNativePeering.SpokeVpcID)
 	Url.RawQuery = detachArmNativeSpokeToTransit.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
