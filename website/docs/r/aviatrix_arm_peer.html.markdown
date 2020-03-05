@@ -9,6 +9,8 @@ description: |-
 
 The aviatrix_arm_peer resource allows the creation and management of Aviatrix ARM peerings.
 
+!> **WARNING:** The aviatrix_arm_peer resource is deprecated. It is kept for backward compatibility and will be removed in the future. Please use aviatrix_azure_peer instead. Need to remove it from state file and import as aviatrix_azure_peer if it is already in state.
+
 ## Example Usage
 
 ```hcl
