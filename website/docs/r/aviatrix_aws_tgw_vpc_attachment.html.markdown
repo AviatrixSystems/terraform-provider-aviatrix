@@ -27,7 +27,7 @@ resource "aviatrix_aws_tgw_vpc_attachment" "test_aws_tgw_vpc_attachment" {
 The following arguments are supported:
 
 * `tgw_name` - (Required) Name of the AWS TGW.
-* `region` - (Required) Region of cloud provider(AWS).
+* `region` - (Required) Region of cloud provider (AWS).
 * `security_domain_name` - (Required & ForceNew) The name of the security domain, to which the VPC will be attached. If changed, the VPC will be detached from the old domain, and attached to the new domain.
 * `vpc_account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller, which is associated with the VPC.
 * `vpc_id` - (Required) This parameter represents the ID of the VPC which is going to be attached to the security domain (name: `security_domain_name`).
@@ -37,7 +37,7 @@ The following arguments are supported:
 * `customized_route_advertisement` - (Optional and ForeNew) Advanced option. Customized route(s) to advertise. Example: "10.8.0.0/16,10.9.0.0/16,10.10.0.0/16".
 * `disable_local_route_propagation` - (Optional and ForceNew) Switch to allow admin not to propagate the VPC CIDR to the security domain/TGW route table that it is being attached to. Valid values: true, false. Default value: false.
 
--> **NOTE:** If used to attach/detach FireNet Gateway to/from TGW Firewall Domain, "vpc_id" is the ID of the Security VPC, and "security_domain_name" is the domain name of the Aviatrix Firewall Domain in TGW.
+-> **NOTE:** If used to attach/detach FireNet Transit Gateway to/from TGW Firewall Domain, `vpc_id` is the ID of the Security VPC, and `security_domain_name` is the domain name of the Aviatrix Firewall Domain in TGW.
 
 ## Import
 
