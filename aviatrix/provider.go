@@ -45,6 +45,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_aws_tgw_directconnect":      resourceAviatrixAWSTgwDirectConnect(),
 			"aviatrix_aws_tgw_vpc_attachment":     resourceAviatrixAwsTgwVpcAttachment(),
 			"aviatrix_aws_tgw_vpn_conn":           resourceAviatrixAwsTgwVpnConn(),
+			"aviatrix_azure_peer":                 resourceAviatrixAzurePeer(),
 			"aviatrix_azure_spoke_native_peering": resourceAviatrixAzureSpokeNativePeering(),
 			"aviatrix_controller_config":          resourceAviatrixControllerConfig(),
 			"aviatrix_firenet":                    resourceAviatrixFireNet(),
