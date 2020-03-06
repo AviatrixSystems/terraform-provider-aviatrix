@@ -16,10 +16,10 @@ The aviatrix_azure_peer resource allows the creation and management of Aviatrix 
 resource "aviatrix_azure_peer" "test_azurepeer" {
   account_name1             = "test1-account"
   account_name2             = "test2-account"
-  vnet_name_resource_group1 = "vpc-abcd1234"
-  vnet_name_resource_group2 = "vpc-rdef3333"
-  vnet_reg1                 = "us-east-1"
-  vnet_reg2                 = "us-west-1"
+  vnet_name_resource_group1 = "Foo_VNet1:Bar_RG1"
+  vnet_name_resource_group2 = "Foo_VNet2:Bar_RG2"
+  vnet_reg1                 = "Central US"
+  vnet_reg2                 = "East US"
 }
 ```
 

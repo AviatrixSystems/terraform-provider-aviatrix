@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_firewall_management_access"
 description: |-
-  Creates and manages Aviatrix firewall management accesses
+  Creates and manages Aviatrix Firewall Management Access
 ---
 
 # aviatrix_firewall_management_access
 
-The aviatrix_firewall_management_access resource allows the creation and management of Aviatrix firewall management accesses.
+The aviatrix_firewall_management_access resource allows the management of which resource to permit visibility into the Transit (FireNet) VPC.
 
 ## Example Usage
 
@@ -23,8 +23,8 @@ resource "aviatrix_firewall_management_access" "test_firewall_management_access"
 
 The following arguments are supported:
 
-* `transit_firenet_gateway_name` - (Required) Name of the transit gateway with transit firenet enabled. Currently supports AWS and AZURE providers.
-* `management_access_resource_name` - (Required) Name of the resource to be enabled firewall management access.
+* `transit_firenet_gateway_name` - (Required) Name of the Transit FireNet-enabled transit gateway. Currently supports AWS and Azure providers.
+* `management_access_resource_name` - (Required) Name of the resource to enable Firewall Management Access.
 
 ## Import
 

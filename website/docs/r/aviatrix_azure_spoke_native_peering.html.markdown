@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_azure_spoke_native_peering
 
-The aviatrix_azure_spoke_native_peering resource allows the creation and management of Aviatrix Azure spoke native peerings.
+The aviatrix_azure_spoke_native_peering resource allows the creation and management of Aviatrix Azure Spoke VNet attachments via Native Peering
 
 ## Example Usage
 
@@ -17,7 +17,7 @@ resource "aviatrix_azure_spoke_native_peering" "test" {
   transit_gateway_name = "transit-gw-azure"
   spoke_account_name   = "devops-azure"
   spoke_region         = "West US"
-  spoke_vpc_id         = "vnet:hello"
+  spoke_vpc_id         = "Foo_VNet:Bar_RG"
 }
 ```
 
@@ -25,10 +25,10 @@ resource "aviatrix_azure_spoke_native_peering" "test" {
 
 The following arguments are supported:
 
-* `transit_gateway_name` - (Required) Name of an azure transit gateway with transit firenet enabled.
+* `transit_gateway_name` - (Required) Name of an Transit FireNet-enabled Azure transit gateway.
 * `spoke_account_name` - (Required) An Aviatrix account that corresponds to a subscription in Azure.
 * `spoke_region` - (Required) Spoke VNet region. Example: "West US".
-* `spoke_vpc_id` - (Required) Combination of the Spoke VNet name and resource group. Example: "vnet:hello".
+* `spoke_vpc_id` - (Required) Combination of the Spoke's VNet name and resource group. Example: "Foo_VNet:Bar_RG".
 
 ## Import
 
