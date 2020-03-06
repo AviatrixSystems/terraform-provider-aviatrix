@@ -22,9 +22,9 @@ func TestAccAviatrixFirewallManagementAccess_basic(t *testing.T) {
 	}
 
 	skipAccAWS := os.Getenv("SKIP_FIREWALL_MANAGEMENT_ACCESS_AWS")
-	skipAccARM := os.Getenv("SKIP_FIREWALL_MANAGEMENT_ACCESS_ARM")
-	if skipAcc == "yes" && skipAccAWS == "yes" && skipAccARM == "yes" {
-		t.Skip("Skipping firewall management access tests as 'SKIP_FIREWALL_MANAGEMENT_ACCESS_AWS' and 'SKIP_FIREWALL_MANAGEMENT_ACCESS_ARM' are all set")
+	skipAccAZURE := os.Getenv("SKIP_FIREWALL_MANAGEMENT_ACCESS_AZURE")
+	if skipAcc == "yes" && skipAccAWS == "yes" && skipAccAZURE == "yes" {
+		t.Skip("Skipping firewall management access tests as 'SKIP_FIREWALL_MANAGEMENT_ACCESS_AWS' and 'SKIP_FIREWALL_MANAGEMENT_ACCESS_AZURE' are all set")
 	}
 
 	if skipAccAWS != "yes" {
@@ -58,24 +58,24 @@ func TestAccAviatrixFirewallManagementAccess_basic(t *testing.T) {
 		t.Log("Skipping transit firenet policy tests in AWS as 'SKIP_TRANSIT_FIRENET_POLICY_AWS' is set")
 	}
 
-	if skipAccARM != "yes" {
+	if skipAccAZURE != "yes" {
 		resourceName := "aviatrix_firewall_management_access.test"
-		msgCommonARM := ". Set 'SKIP_FIREWALL_MANAGEMENT_ACCESS_ARM' to 'yes' to skip firewall management access tests in AZURE"
+		msgCommonAZURE := ". Set 'SKIP_FIREWALL_MANAGEMENT_ACCESS_AZURE' to 'yes' to skip firewall management access tests in AZURE"
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
-				preGatewayCheckARM(t, msgCommonARM)
-				preGateway2CheckARM(t, msgCommonARM)
+				preGatewayCheckAZURE(t, msgCommonAZURE)
+				preGateway2CheckAZURE(t, msgCommonAZURE)
 			},
 			Providers:    testAccProviders,
 			CheckDestroy: testAccCheckFirewallManagementAccessDestroy,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccFirewallManagementAccessConfigBasicARM(rName),
+					Config: testAccFirewallManagementAccessConfigBasicAZURE(rName),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckFirewallManagementAccessExists(resourceName, &firewallManagementAccess),
 						resource.TestCheckResourceAttr(resourceName, "transit_firenet_gateway_name", fmt.Sprintf("tfg-%s", rName)),
-						resource.TestCheckResourceAttr(resourceName, "management_access_resource_name", fmt.Sprintf("SPOKE:tfg-arm-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "management_access_resource_name", fmt.Sprintf("SPOKE:tfg-azure-%s", rName)),
 					),
 				},
 				{
@@ -86,7 +86,7 @@ func TestAccAviatrixFirewallManagementAccess_basic(t *testing.T) {
 			},
 		})
 	} else {
-		t.Log("Skipping transit firenet policy tests in AZURE as 'SKIP_TRANSIT_FIRENET_POLICY_ARM' is set")
+		t.Log("Skipping transit firenet policy tests in AZURE as 'SKIP_TRANSIT_FIRENET_POLICY_AZURE' is set")
 	}
 }
 
@@ -132,9 +132,9 @@ resource "aviatrix_firewall_management_access" "test" {
 		os.Getenv("AWS_VPC_ID2"), os.Getenv("AWS_REGION2"), os.Getenv("AWS_SUBNET2"))
 }
 
-func testAccFirewallManagementAccessConfigBasicARM(rName string) string {
+func testAccFirewallManagementAccessConfigBasicAZURE(rName string) string {
 	return fmt.Sprintf(`
-resource "aviatrix_account" "test_acc_arm" {
+resource "aviatrix_account" "test_acc_azure" {
 	account_name        = "tfa-%s"
 	cloud_type          = 8
 	arm_subscription_id = "%s"
@@ -142,9 +142,9 @@ resource "aviatrix_account" "test_acc_arm" {
 	arm_application_id  = "%s"
 	arm_application_key = "%s"
 }
-resource "aviatrix_transit_gateway" "test_transit_arm" {
+resource "aviatrix_transit_gateway" "test_transit_azure" {
 	cloud_type             = 8
-	account_name           = aviatrix_account.test_acc_arm.account_name
+	account_name           = aviatrix_account.test_acc_azure.account_name
 	gw_name                = "tfg-%s"
 	vpc_id                 = "%s"
 	vpc_reg                = "%s"
@@ -154,26 +154,26 @@ resource "aviatrix_transit_gateway" "test_transit_arm" {
 	connected_transit      = true 
 	enable_transit_firenet = true
 }
-resource "aviatrix_spoke_gateway" "test_spoke_arm" {
+resource "aviatrix_spoke_gateway" "test_spoke_azure" {
 	cloud_type         = 8
-	account_name       = aviatrix_account.test_acc_arm.account_name
-	gw_name            = "tfg-arm-%s"
+	account_name       = aviatrix_account.test_acc_azure.account_name
+	gw_name            = "tfg-azure-%s"
 	vpc_id             = "%s"
 	vpc_reg            = "%s"
 	gw_size            = "%s"
 	subnet             = "%s"
 	enable_active_mesh = true
-	transit_gw         = aviatrix_transit_gateway.test_transit_arm.gw_name
+	transit_gw         = aviatrix_transit_gateway.test_transit_azure.gw_name
 }
 resource "aviatrix_firewall_management_access" "test" {
-	transit_firenet_gateway_name    = aviatrix_transit_gateway.test_transit_arm.gw_name
-	management_access_resource_name = join(":", ["SPOKE", aviatrix_spoke_gateway.test_spoke_arm.gw_name])
+	transit_firenet_gateway_name    = aviatrix_transit_gateway.test_transit_azure.gw_name
+	management_access_resource_name = join(":", ["SPOKE", aviatrix_spoke_gateway.test_spoke_azure.gw_name])
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"), os.Getenv("ARM_APPLICATION_ID"),
-		os.Getenv("ARM_APPLICATION_KEY"), rName, os.Getenv("ARM_VNET_ID"), os.Getenv("ARM_REGION"),
-		os.Getenv("ARM_GW_SIZE"), os.Getenv("ARM_SUBNET"), rName,
-		os.Getenv("ARM_VNET_ID2"), os.Getenv("ARM_REGION2"),
-		os.Getenv("ARM_GW_SIZE"), os.Getenv("ARM_SUBNET2"))
+		os.Getenv("ARM_APPLICATION_KEY"), rName, os.Getenv("AZURE_VNET_ID"), os.Getenv("AZURE_REGION"),
+		os.Getenv("AZURE_GW_SIZE"), os.Getenv("AZURE_SUBNET"), rName,
+		os.Getenv("AZURE_VNET_ID2"), os.Getenv("AZURE_REGION2"),
+		os.Getenv("AZURE_GW_SIZE"), os.Getenv("AZURE_SUBNET2"))
 }
 
 func testAccCheckFirewallManagementAccessExists(n string, firewallManagementAccess *goaviatrix.FirewallManagementAccess) resource.TestCheckFunc {

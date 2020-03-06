@@ -14,11 +14,11 @@ import (
 func preSpokeGatewayCheck(t *testing.T, msgCommon string) string {
 	preAccountCheck(t, msgCommon)
 
-	armGwSize := os.Getenv("ARM_GW_SIZE")
-	if armGwSize == "" {
-		t.Fatal("Environment variable ARM_GW_SIZE is not set" + msgCommon)
+	azureGwSize := os.Getenv("AZURE_GW_SIZE")
+	if azureGwSize == "" {
+		t.Fatal("Environment variable AZURE_GW_SIZE is not set" + msgCommon)
 	}
-	return armGwSize
+	return azureGwSize
 }
 
 func TestAccAviatrixSpokeGw_basic(t *testing.T) {
@@ -34,14 +34,14 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 	skipGw := os.Getenv("SKIP_SPOKE")
 	skipAWS := os.Getenv("SKIP_SPOKE_AWS")
 	skipGCP := os.Getenv("SKIP_SPOKE_GCP")
-	skipARM := os.Getenv("SKIP_SPOKE_ARM")
+	skipAZURE := os.Getenv("SKIP_SPOKE_AZURE")
 
 	if skipGw == "yes" {
 		t.Skip("Skipping Spoke Gateway test as SKIP_SPOKE is set")
 	}
 
-	if skipAWS == "yes" && skipGCP == "yes" && skipARM == "yes" {
-		t.Skip("Skipping Spoke Gateway test as SKIP_SPOKE_AWS, SKIP_SPOKE_GCP, and SKIP_SPOKE_ARM are all set, " +
+	if skipAWS == "yes" && skipGCP == "yes" && skipAZURE == "yes" {
+		t.Skip("Skipping Spoke Gateway test as SKIP_SPOKE_AWS, SKIP_SPOKE_GCP, and SKIP_SPOKE_AZURE are all set, " +
 			"even though SKIP_SPOKE isn't set")
 	}
 
@@ -123,8 +123,8 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 			},
 		})
 	}
-	if skipARM == "yes" {
-		t.Log("Skipping ARM Spoke Gateway test as SKIP_SPOKE_ARM is set")
+	if skipAZURE == "yes" {
+		t.Log("Skipping AZURE Spoke Gateway test as SKIP_SPOKE_AZURE is set")
 	} else {
 		importStateVerifyIgnore = append(importStateVerifyIgnore, "vpc_id")
 		resource.Test(t, resource.TestCase{
@@ -137,15 +137,15 @@ func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 			CheckDestroy: testAccCheckSpokeGwDestroy,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccSpokeGwConfigARM(rName),
+					Config: testAccSpokeGwConfigAZURE(rName),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckSpokeGwExists(resourceName, &gateway),
-						resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-arm-%s", rName)),
-						resource.TestCheckResourceAttr(resourceName, "vpc_size", os.Getenv("ARM_GW_SIZE")),
-						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-arm-%s", rName)),
-						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("ARM_VNET_ID")),
-						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("ARM_SUBNET")),
-						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("ARM_REGION")),
+						resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-azure-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "vpc_size", os.Getenv("AZURE_GW_SIZE")),
+						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-azure-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AZURE_VNET_ID")),
+						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("AZURE_SUBNET")),
+						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AZURE_REGION")),
 						resource.TestCheckResourceAttr(resourceName, "enable_nat", "no"),
 					),
 				},
@@ -214,10 +214,10 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
 		os.Getenv("GCP_VPC_ID"), os.Getenv("GCP_ZONE"), gcpGwSize, os.Getenv("GCP_SUBNET"))
 }
 
-func testAccSpokeGwConfigARM(rName string) string {
+func testAccSpokeGwConfigAZURE(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
-	account_name        = "tfa-arm-%s"
+	account_name        = "tfa-azure-%s"
 	cloud_type          = 8
 	arm_subscription_id = "%s"
 	arm_directory_id    = "%s"
@@ -227,7 +227,7 @@ resource "aviatrix_account" "test" {
 resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
 	cloud_type   = 8
 	account_name = aviatrix_account.test.account_name
-	gw_name      = "tfg-arm-%[1]s"
+	gw_name      = "tfg-azure-%[1]s"
 	vpc_id       = "%[6]s"
 	vpc_reg      = "%[7]s"
 	vpc_size     = "%[8]s"
@@ -237,8 +237,8 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
 		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),
-		os.Getenv("ARM_VNET_ID"), os.Getenv("ARM_REGION"),
-		os.Getenv("ARM_GW_SIZE"), os.Getenv("ARM_SUBNET"))
+		os.Getenv("AZURE_VNET_ID"), os.Getenv("AZURE_REGION"),
+		os.Getenv("AZURE_GW_SIZE"), os.Getenv("AZURE_SUBNET"))
 }
 
 func testAccCheckSpokeGwExists(n string, gateway *goaviatrix.Gateway) resource.TestCheckFunc {

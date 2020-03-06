@@ -31,18 +31,18 @@ func preAccountCheck(t *testing.T, msgEnd string) {
 			t.Fatal("GCP_CREDENTIALS_FILEPATH must be set for gcp acceptance tests. " + msgEnd)
 		}
 	}
-	if os.Getenv("SKIP_ACCOUNT_ARM") == "no" {
+	if os.Getenv("SKIP_ACCOUNT_AZURE") == "no" {
 		if os.Getenv("ARM_SUBSCRIPTION_ID") == "" {
-			t.Fatal("ARM_SUBSCRIPTION_ID must be set for arm acceptance tests. " + msgEnd)
+			t.Fatal("ARM_SUBSCRIPTION_ID must be set for azure acceptance tests. " + msgEnd)
 		}
 		if os.Getenv("ARM_DIRECTORY_ID") == "" {
-			t.Fatal("ARM_DIRECTORY_ID must be set for arm acceptance tests. " + msgEnd)
+			t.Fatal("ARM_DIRECTORY_ID must be set for azure acceptance tests. " + msgEnd)
 		}
 		if os.Getenv("ARM_APPLICATION_ID") == "" {
-			t.Fatal("ARM_APPLICATION_ID must be set for arm acceptance tests. " + msgEnd)
+			t.Fatal("ARM_APPLICATION_ID must be set for azure acceptance tests. " + msgEnd)
 		}
 		if os.Getenv("ARM_APPLICATION_KEY") == "" {
-			t.Fatal("ARM_APPLICATION_KEY must be set for arm acceptance tests. " + msgEnd)
+			t.Fatal("ARM_APPLICATION_KEY must be set for azure acceptance tests. " + msgEnd)
 		}
 	}
 	if os.Getenv("SKIP_ACCOUNT_OCI") == "no" {
@@ -81,15 +81,15 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 	skipAcc := os.Getenv("SKIP_ACCOUNT")
 	skipAWS := os.Getenv("SKIP_ACCOUNT_AWS")
 	skipGCP := os.Getenv("SKIP_ACCOUNT_GCP")
-	skipARM := os.Getenv("SKIP_ACCOUNT_ARM")
+	skipAZURE := os.Getenv("SKIP_ACCOUNT_AZURE")
 	skipOCI := os.Getenv("SKIP_ACCOUNT_OCI")
 	skipAWSGOV := os.Getenv("SKIP_ACCOUNT_AWSGOV")
 
 	if skipAcc == "yes" {
 		t.Skip("Skipping Access Account test as SKIP_ACCOUNT is set")
 	}
-	if skipAWS == "yes" && skipGCP == "yes" && skipARM == "yes" && skipOCI == "yes" && skipAWSGOV == "yes" {
-		t.Skip("Skipping Access Account test as SKIP_ACCOUNT_AWS, SKIP_ACCOUNT_GCP, SKIP_ACCOUNT_ARM, " +
+	if skipAWS == "yes" && skipGCP == "yes" && skipAZURE == "yes" && skipOCI == "yes" && skipAWSGOV == "yes" {
+		t.Skip("Skipping Access Account test as SKIP_ACCOUNT_AWS, SKIP_ACCOUNT_GCP, SKIP_ACCOUNT_AZURE, " +
 			"SKIP_ACCOUNT_OCI, and SKIP_ACCOUNT_AWSGOV are all set, even though SKIP_ACCOUNT isn't set")
 	}
 
@@ -154,10 +154,10 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 		})
 	}
 
-	if skipARM == "yes" {
-		t.Log("Skipping ARN Access Account test as SKIP_ACCOUNT_ARM is set")
+	if skipAZURE == "yes" {
+		t.Log("Skipping ARN Access Account test as SKIP_ACCOUNT_AZURE is set")
 	} else {
-		resourceName := "aviatrix_account.arm"
+		resourceName := "aviatrix_account.azure"
 		importStateVerifyIgnore = append(importStateVerifyIgnore, "arm_directory_id")
 		importStateVerifyIgnore = append(importStateVerifyIgnore, "arm_application_id")
 		importStateVerifyIgnore = append(importStateVerifyIgnore, "arm_application_key")
@@ -167,10 +167,10 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 			CheckDestroy: testAccCheckAccountDestroy,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccAccountConfigARM(rInt),
+					Config: testAccAccountConfigAZURE(rInt),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckAccountExists(resourceName, &account),
-						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-arm-%d", rInt)),
+						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-azure-%d", rInt)),
 						resource.TestCheckResourceAttr(resourceName, "arm_subscription_id", os.Getenv("ARM_SUBSCRIPTION_ID")),
 						resource.TestCheckResourceAttr(resourceName, "arm_directory_id", os.Getenv("ARM_DIRECTORY_ID")),
 						resource.TestCheckResourceAttr(resourceName, "arm_application_id", os.Getenv("ARM_APPLICATION_ID")),
@@ -278,10 +278,10 @@ resource "aviatrix_account" "gcp" {
 	`, rInt, os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"))
 }
 
-func testAccAccountConfigARM(rInt int) string {
+func testAccAccountConfigAZURE(rInt int) string {
 	return fmt.Sprintf(`
-resource "aviatrix_account" "arm" {
-	account_name        = "tfa-arm-%d"
+resource "aviatrix_account" "azure" {
+	account_name        = "tfa-azure-%d"
 	cloud_type          = 8
 	arm_subscription_id = "%s"
 	arm_directory_id    = "%s"

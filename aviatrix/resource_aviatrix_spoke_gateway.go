@@ -85,7 +85,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "HA Subnet. Required if enabling HA for AWS/ARM.",
+				Description: "HA Subnet. Required if enabling HA for AWS/AZURE.",
 			},
 			"ha_zone": {
 				Type:        schema.TypeString,
@@ -249,7 +249,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a spoke gw")
 		}
 	} else {
-		return fmt.Errorf("invalid cloud type, it can only be aws (1), gcp (4), arm (8)")
+		return fmt.Errorf("invalid cloud type, it can only be aws (1), gcp (4), azure (8)")
 	}
 
 	if gateway.CloudType == 1 || gateway.CloudType == 8 || gateway.CloudType == 16 {
@@ -258,14 +258,14 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		// for gcp, rest api asks for "zone" rather than vpc region
 		gateway.Zone = d.Get("vpc_reg").(string)
 	} else {
-		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), or ARM (8)")
+		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), or AZURE (8)")
 	}
 
 	insaneMode := d.Get("insane_mode").(bool)
 	insaneModeAz := d.Get("insane_mode_az").(string)
 	haSubnet := d.Get("ha_subnet").(string)
 	if haSubnet != "" && gateway.CloudType != 1 && gateway.CloudType != 8 && gateway.CloudType != 16 && gateway.CloudType != 256 {
-		return fmt.Errorf("'ha_subnet' is only required for AWS/ARM/OCI providers if enabling HA")
+		return fmt.Errorf("'ha_subnet' is only required for AWS/AZURE/OCI providers if enabling HA")
 	}
 	haZone := d.Get("ha_zone").(string)
 	if haZone != "" && gateway.CloudType != 4 {
@@ -278,7 +278,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	haInsaneModeAz := d.Get("ha_insane_mode_az").(string)
 	if insaneMode {
 		if gateway.CloudType != 1 && gateway.CloudType != 8 {
-			return fmt.Errorf("insane_mode is only supported for aws and arm (cloud_type = 1 or 8)")
+			return fmt.Errorf("insane_mode is only supported for aws and azure (cloud_type = 1 or 8)")
 		}
 		if gateway.CloudType == 1 {
 			if insaneModeAz == "" {
@@ -760,7 +760,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	if d.HasChange("ha_subnet") {
 		haSubnet := d.Get("ha_subnet").(string)
 		if haSubnet != "" && gateway.CloudType != 1 && gateway.CloudType != 8 && gateway.CloudType != 16 && gateway.CloudType != 256 {
-			return fmt.Errorf("'ha_subnet' is only required for AWS/ARM/OCI providers if enabling HA")
+			return fmt.Errorf("'ha_subnet' is only required for AWS/AZURE/OCI providers if enabling HA")
 		}
 	}
 	if d.HasChange("ha_zone") {

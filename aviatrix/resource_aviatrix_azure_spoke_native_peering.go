@@ -96,7 +96,7 @@ func resourceAviatrixAzureSpokeNativePeeringRead(d *schema.ResourceData, meta in
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix arm spoke native peering: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix azure spoke native peering: %s", err)
 	}
 
 	d.Set("transit_gateway_name", azureSpokeNativePeering.TransitGatewayName)
