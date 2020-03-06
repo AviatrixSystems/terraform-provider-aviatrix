@@ -20,10 +20,10 @@ func TestAccDataSourceAviatrixSpokeGateway_basic(t *testing.T) {
 	}
 
 	skipAccAWS := os.Getenv("SKIP_DATA_SPOKE_GATEWAY_AWS")
-	skipAccARM := os.Getenv("SKIP_DATA_SPOKE_GATEWAY_ARM")
+	skipAccAZURE := os.Getenv("SKIP_DATA_SPOKE_GATEWAY_AZURE")
 	skipAccGCP := os.Getenv("SKIP_DATA_SPOKE_GATEWAY_GCP")
-	if skipAccAWS == "yes" && skipAccARM == "yes" && skipAccGCP == "yes" {
-		t.Skip("Skipping Data Source Spoke gateway tests as SKIP_DATA_SPOKE_GATEWAY_AWS, SKIP_DATA_SPOKE_GATEWAY_ARM and " +
+	if skipAccAWS == "yes" && skipAccAZURE == "yes" && skipAccGCP == "yes" {
+		t.Skip("Skipping Data Source Spoke gateway tests as SKIP_DATA_SPOKE_GATEWAY_AWS, SKIP_DATA_SPOKE_GATEWAY_AZURE and " +
 			"SKIP_DATA_SPOKE_GATEWAY_GCP are all set")
 	}
 
@@ -53,30 +53,30 @@ func TestAccDataSourceAviatrixSpokeGateway_basic(t *testing.T) {
 		t.Log("Skipping Data Source Spoke gateway tests in AWS as SKIP_DATA_Spoke_GATEWAY_AWS is set")
 	}
 
-	if skipAccARM != "yes" {
+	if skipAccAZURE != "yes" {
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
-				preGatewayCheckARM(t, ". Set SKIP_DATA_SPOKE_GATEWAY_ARM to yes to skip Data Source Spoke Gateway tests in ARM")
+				preGatewayCheckAZURE(t, ". Set SKIP_DATA_SPOKE_GATEWAY_AZURE to yes to skip Data Source Spoke Gateway tests in AZURE")
 			},
 			Providers: testAccProviders,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccDataSourceAviatrixSpokeGatewayConfigBasicARM(rName),
+					Config: testAccDataSourceAviatrixSpokeGatewayConfigBasicAZURE(rName),
 					Check: resource.ComposeTestCheckFunc(
 						testAccDataSourceAviatrixSpokeGateway(resourceName),
-						resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-arm-%s", rName)),
-						resource.TestCheckResourceAttr(resourceName, "gw_size", os.Getenv("ARM_GW_SIZE")),
-						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-arm-%s", rName)),
-						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("ARM_VNET_ID")),
-						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("ARM_SUBNET")),
-						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("ARM_REGION")),
+						resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-azure-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "gw_size", os.Getenv("AZURE_GW_SIZE")),
+						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-azure-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AZURE_VNET_ID")),
+						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("AZURE_SUBNET")),
+						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AZURE_REGION")),
 					),
 				},
 			},
 		})
 	} else {
-		t.Log("Skipping Data Source Spoke gateway tests in ARM as SKIP_DATA_SPOKE_GATEWAY_ARM is set")
+		t.Log("Skipping Data Source Spoke gateway tests in Azure as SKIP_DATA_SPOKE_GATEWAY_AZURE is set")
 	}
 
 	if skipAccGCP != "yes" {
@@ -137,10 +137,10 @@ data "aviatrix_spoke_gateway" "foo" {
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"))
 }
 
-func testAccDataSourceAviatrixSpokeGatewayConfigBasicARM(rName string) string {
+func testAccDataSourceAviatrixSpokeGatewayConfigBasicAZURE(rName string) string {
 	return fmt.Sprintf(`
-resource "aviatrix_account" "test_acc_arm" {
-	account_name        = "tfa-arm-%s"
+resource "aviatrix_account" "test_acc_azure" {
+	account_name        = "tfa-azure-%s"
 	cloud_type          = 8
 	arm_subscription_id = "%s"
 	arm_directory_id    = "%s"
@@ -149,8 +149,8 @@ resource "aviatrix_account" "test_acc_arm" {
 }
 resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
 	cloud_type   = 8
-	account_name = aviatrix_account.test_acc_arm.account_name
-	gw_name      = "tfg-arm-%[1]s"
+	account_name = aviatrix_account.test_acc_azure.account_name
+	gw_name      = "tfg-azure-%[1]s"
 	vpc_id       = "%[6]s"
 	vpc_reg      = "%[7]s"
 	gw_size      = "%[8]s"
@@ -162,8 +162,8 @@ data "aviatrix_spoke_gateway" "foo" {
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
 		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),
-		os.Getenv("ARM_VNET_ID"), os.Getenv("ARM_REGION"),
-		os.Getenv("ARM_GW_SIZE"), os.Getenv("ARM_SUBNET"))
+		os.Getenv("AZURE_VNET_ID"), os.Getenv("AZURE_REGION"),
+		os.Getenv("AZURE_GW_SIZE"), os.Getenv("AZURE_SUBNET"))
 }
 
 func testAccDataSourceAviatrixSpokeGatewayConfigBasicGCP(rName string) string {

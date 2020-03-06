@@ -22,9 +22,9 @@ func TestAccAviatrixTransitFireNetPolicy_basic(t *testing.T) {
 	}
 
 	skipAccAWS := os.Getenv("SKIP_TRANSIT_FIRENET_POLICY_AWS")
-	skipAccARM := os.Getenv("SKIP_TRANSIT_FIRENET_POLICY_ARM")
-	if skipAcc == "yes" && skipAccAWS == "yes" && skipAccARM == "yes" {
-		t.Skip("Skipping transit firenet policy tests as 'SKIP_TRANSIT_FIRENET_POLICY_AWS' and 'SKIP_TRANSIT_FIRENET_POLICY_ARM' are all set")
+	skipAccAZURE := os.Getenv("SKIP_TRANSIT_FIRENET_POLICY_AZURE")
+	if skipAcc == "yes" && skipAccAWS == "yes" && skipAccAZURE == "yes" {
+		t.Skip("Skipping transit firenet policy tests as 'SKIP_TRANSIT_FIRENET_POLICY_AWS' and 'SKIP_TRANSIT_FIRENET_POLICY_AZURE' are all set")
 	}
 
 	if skipAccAWS != "yes" {
@@ -58,24 +58,24 @@ func TestAccAviatrixTransitFireNetPolicy_basic(t *testing.T) {
 		t.Log("Skipping transit firenet policy tests in AWS as 'SKIP_TRANSIT_FIRENET_POLICY_AWS' is set")
 	}
 
-	if skipAccARM != "yes" {
+	if skipAccAZURE != "yes" {
 		resourceName := "aviatrix_transit_firenet_policy.test"
-		msgCommonARM := ". Set 'SKIP_TRANSIT_FIRENET_POLICY_ARM' to 'yes' to skip transit firenet policy tests in AZURE"
+		msgCommonAZURE := ". Set 'SKIP_TRANSIT_FIRENET_POLICY_AZURE' to 'yes' to skip transit firenet policy tests in AZURE"
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
-				preGatewayCheckARM(t, msgCommonARM)
-				preGateway2CheckARM(t, msgCommonARM)
+				preGatewayCheckAZURE(t, msgCommonAZURE)
+				preGateway2CheckAZURE(t, msgCommonAZURE)
 			},
 			Providers:    testAccProviders,
 			CheckDestroy: testAccCheckTransitFireNetPolicyDestroy,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccTransitFireNetPolicyConfigBasicARM(rName),
+					Config: testAccTransitFireNetPolicyConfigBasicAZURE(rName),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckTransitFireNetPolicyExists(resourceName, &transitFireNetPolicy),
 						resource.TestCheckResourceAttr(resourceName, "transit_firenet_gateway_name", fmt.Sprintf("tfg-%s", rName)),
-						resource.TestCheckResourceAttr(resourceName, "inspected_resource_name", fmt.Sprintf("SPOKE:tfg-arm-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "inspected_resource_name", fmt.Sprintf("SPOKE:tfg-azure-%s", rName)),
 					),
 				},
 				{
@@ -86,7 +86,7 @@ func TestAccAviatrixTransitFireNetPolicy_basic(t *testing.T) {
 			},
 		})
 	} else {
-		t.Log("Skipping transit firenet policy tests in AZURE as 'SKIP_TRANSIT_FIRENET_POLICY_ARM' is set")
+		t.Log("Skipping transit firenet policy tests in AZURE as 'SKIP_TRANSIT_FIRENET_POLICY_AZURE' is set")
 	}
 }
 
@@ -132,19 +132,19 @@ resource "aviatrix_transit_firenet_policy" "test" {
 		os.Getenv("AWS_VPC_ID2"), os.Getenv("AWS_REGION2"), os.Getenv("AWS_SUBNET2"))
 }
 
-func testAccTransitFireNetPolicyConfigBasicARM(rName string) string {
+func testAccTransitFireNetPolicyConfigBasicAZURE(rName string) string {
 	return fmt.Sprintf(`
-resource "aviatrix_account" "test_acc_arm" {
-	account_name        = "tfa-arm-%s"
+resource "aviatrix_account" "test_acc_azure" {
+	account_name        = "tfa-azure-%s"
 	cloud_type          = 8
 	arm_subscription_id = "%s"
 	arm_directory_id    = "%s"
 	arm_application_id  = "%s"
 	arm_application_key = "%s"
 }
-resource "aviatrix_transit_gateway" "test_transit_arm" {
+resource "aviatrix_transit_gateway" "test_transit_azure" {
 	cloud_type             = 8
-	account_name           = aviatrix_account.test_acc_arm.account_name
+	account_name           = aviatrix_account.test_acc_azure.account_name
 	gw_name                = "tfg-%s"
 	vpc_id                 = "%s"
 	vpc_reg                = "%s"
@@ -154,26 +154,26 @@ resource "aviatrix_transit_gateway" "test_transit_arm" {
 	connected_transit      = true 
 	enable_transit_firenet = true
 }
-resource "aviatrix_spoke_gateway" "test_spoke_arm" {
+resource "aviatrix_spoke_gateway" "test_spoke_auzre" {
 	cloud_type         = 8
-	account_name       = aviatrix_account.test_acc_arm.account_name
-	gw_name            = "tfg-arm-%s"
+	account_name       = aviatrix_account.test_acc_azure.account_name
+	gw_name            = "tfg-azure-%s"
 	vpc_id             = "%s"
 	vpc_reg            = "%s"
 	gw_size            = "%s"
 	subnet             = "%s"
 	enable_active_mesh = true
-	transit_gw         = aviatrix_transit_gateway.test_transit_arm.gw_name
+	transit_gw         = aviatrix_transit_gateway.test_transit_azure.gw_name
 }
 resource "aviatrix_transit_firenet_policy" "test" {
-	transit_firenet_gateway_name = aviatrix_transit_gateway.test_transit_arm.gw_name
-	inspected_resource_name      = join(":", ["SPOKE", aviatrix_spoke_gateway.test_spoke_arm.gw_name])
+	transit_firenet_gateway_name = aviatrix_transit_gateway.test_transit_azure.gw_name
+	inspected_resource_name      = join(":", ["SPOKE", aviatrix_spoke_gateway.test_spoke_azure.gw_name])
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"), os.Getenv("ARM_APPLICATION_ID"),
-		os.Getenv("ARM_APPLICATION_KEY"), rName, os.Getenv("ARM_VNET_ID"), os.Getenv("ARM_REGION"),
-		os.Getenv("ARM_GW_SIZE"), os.Getenv("ARM_SUBNET"), rName,
-		os.Getenv("ARM_VNET_ID2"), os.Getenv("ARM_REGION2"),
-		os.Getenv("ARM_GW_SIZE"), os.Getenv("ARM_SUBNET2"))
+		os.Getenv("ARM_APPLICATION_KEY"), rName, os.Getenv("AZURE_VNET_ID"), os.Getenv("AZURE_REGION"),
+		os.Getenv("AZURE_GW_SIZE"), os.Getenv("AZURE_SUBNET"), rName,
+		os.Getenv("AZURE_VNET_ID2"), os.Getenv("AZURE_REGION2"),
+		os.Getenv("AZURE_GW_SIZE"), os.Getenv("AZURE_SUBNET2"))
 }
 
 func testAccCheckTransitFireNetPolicyExists(n string, transitFireNetPolicy *goaviatrix.TransitFireNetPolicy) resource.TestCheckFunc {

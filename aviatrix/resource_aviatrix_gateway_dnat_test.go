@@ -19,13 +19,13 @@ func TestAccAviatrixGatewayDNat_basic(t *testing.T) {
 
 	skipDNat := os.Getenv("SKIP_GATEWAY_DNAT")
 	skipDNatAWS := os.Getenv("SKIP_GATEWAY_DNAT_AWS")
-	skipDNatARM := os.Getenv("SKIP_GATEWAY_DNAT_ARM")
+	skipDNatAZURE := os.Getenv("SKIP_GATEWAY_DNAT_AZURE")
 
 	if skipDNat == "yes" {
 		t.Skip("Skipping gateway destination NAT tests as SKIP_GATEWAY_DNAT is set")
 	}
-	if skipDNatAWS == "yes" && skipDNatARM == "yes" {
-		t.Skip("Skipping gateway destination NAT tests as SKIP_GATEWAY_DNAT_AWS and SKIP_GATEWAY_DNAT_ARM " +
+	if skipDNatAWS == "yes" && skipDNatAZURE == "yes" {
+		t.Skip("Skipping gateway destination NAT tests as SKIP_GATEWAY_DNAT_AWS and SKIP_GATEWAY_DNAT_AZURE " +
 			"are all set, even though SKIP_GATEWAY_DNAT isn't set")
 	}
 
@@ -64,27 +64,27 @@ func TestAccAviatrixGatewayDNat_basic(t *testing.T) {
 		})
 	}
 
-	if skipDNatARM == "yes" {
-		t.Log("Skipping AWS gateway destination NAT tests as SKIP_GATEWAY_DNAT_ARM is set")
+	if skipDNatAZURE == "yes" {
+		t.Log("Skipping AWS gateway destination NAT tests as SKIP_GATEWAY_DNAT_AZURE is set")
 	} else {
 		resourceName := "aviatrix_gateway_dnat.test"
-		msgCommonArm := ". Set SKIP_GATEWAY_DNAT_ARM to yes to skip gateway destination NAT tests"
+		msgCommonAZURE := ". Set SKIP_GATEWAY_DNAT_AZURE to yes to skip gateway destination NAT tests"
 
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
 				//Checking resources have needed environment variables set
 				preAccountCheck(t, msgCommon)
-				preGatewayCheckARM(t, msgCommonArm)
+				preGatewayCheckAZURE(t, msgCommonAZURE)
 			},
 			Providers:    testAccProviders,
 			CheckDestroy: testAccCheckGatewayDNatDestroy,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccGatewayDNatConfigBasicARM(rName),
+					Config: testAccGatewayDNatConfigBasicAZURE(rName),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckGatewayExists(resourceName, &gateway),
-						resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-arm-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-azure-%s", rName)),
 						resource.TestCheckResourceAttr(resourceName, "dnat_policy.#", "1"),
 						resource.TestCheckResourceAttr(resourceName, "dnat_policy.0.protocol", "tcp"),
 						resource.TestCheckResourceAttr(resourceName, "dnat_policy.0.dnat_port", "12"),
@@ -143,27 +143,27 @@ resource "aviatrix_gateway_dnat" "test" {
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_SUBNET"))
 }
 
-func testAccGatewayDNatConfigBasicARM(rName string) string {
+func testAccGatewayDNatConfigBasicAZURE(rName string) string {
 	return fmt.Sprintf(`
-resource "aviatrix_account" "test_acc_arm" {
-	account_name        = "tfa-arm-%s"
+resource "aviatrix_account" "test_acc_azure" {
+	account_name        = "tfa-azure-%s"
 	cloud_type          = 8
 	arm_subscription_id = "%s"
 	arm_directory_id    = "%s"
 	arm_application_id  = "%s"
 	arm_application_key = "%s"
 }
-resource "aviatrix_gateway" "test_gw_arm" {
+resource "aviatrix_gateway" "test_gw_azure" {
 	cloud_type   = 8
-	account_name = aviatrix_account.test_acc_arm.account_name
-	gw_name      = "tfg-arm-%[1]s"
+	account_name = aviatrix_account.test_acc_azure.account_name
+	gw_name      = "tfg-azure-%[1]s"
 	vpc_id       = "%[6]s"
 	vpc_reg      = "%[7]s"
 	gw_size      = "%[8]s"
 	subnet       = "%[9]s"
 }
 resource "aviatrix_gateway_dnat" "test" {
-	gw_name = aviatrix_gateway.test_gw_arm.gw_name
+	gw_name = aviatrix_gateway.test_gw_azure.gw_name
 	dnat_policy {
 		src_cidr    = ""
 		src_port    = ""
@@ -180,8 +180,8 @@ resource "aviatrix_gateway_dnat" "test" {
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
 		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),
-		os.Getenv("ARM_VNET_ID"), os.Getenv("ARM_REGION"),
-		os.Getenv("ARM_GW_SIZE"), os.Getenv("ARM_SUBNET"))
+		os.Getenv("AZURE_VNET_ID"), os.Getenv("AZURE_REGION"),
+		os.Getenv("AZURE_GW_SIZE"), os.Getenv("AZURE_SUBNET"))
 }
 
 func testAccCheckGatewayDNatExists(n string, gateway *goaviatrix.Gateway) resource.TestCheckFunc {

@@ -240,7 +240,7 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "Public Subnet Information while creating Peering HA Gateway, only subnet is accepted. Required to create peering ha gateway if cloud_type = 1 or 8 (AWS or ARM)",
+				Description: "Public Subnet Information while creating Peering HA Gateway, only subnet is accepted. Required to create peering ha gateway if cloud_type = 1 or 8 (AWS or AZURE)",
 			},
 			"peering_ha_zone": {
 				Type:        schema.TypeString,
@@ -411,7 +411,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		// for gcp, rest api asks for "zone" rather than vpc region
 		gateway.Zone = d.Get("vpc_reg").(string)
 	} else {
-		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), ARM (8), OCI (16), or AWSGOV (256)")
+		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), AZURE (8), OCI (16), or AWSGOV (256)")
 	}
 
 	singleIpNat := d.Get("single_ip_snat").(bool)
@@ -431,7 +431,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	insaneMode := d.Get("insane_mode").(bool)
 	if insaneMode {
 		if gateway.CloudType != 1 && gateway.CloudType != 8 && gateway.CloudType != 256 {
-			return fmt.Errorf("insane_mode is only supported for AWS, ARM, and AWSGOV (cloud_type = 1 or 8 or 256)")
+			return fmt.Errorf("insane_mode is only supported for AWS, AZURE, and AWSGOV (cloud_type = 1 or 8 or 256)")
 		}
 		if gateway.CloudType == 1 || gateway.CloudType == 256 {
 			if d.Get("insane_mode_az").(string) == "" {
@@ -557,7 +557,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	peeringHaGwSize := d.Get("peering_ha_gw_size").(string)
 	peeringHaSubnet := d.Get("peering_ha_subnet").(string)
 	if peeringHaSubnet != "" && gateway.CloudType != 1 && gateway.CloudType != 8 && gateway.CloudType != 16 && gateway.CloudType != 256 {
-		return fmt.Errorf("'peering_ha_subnet' is only required for AWS/ARM/OCI providers if enabling Peering HA")
+		return fmt.Errorf("'peering_ha_subnet' is only required for AWS/AZURE/OCI providers if enabling Peering HA")
 	}
 	peeringHaZone := d.Get("peering_ha_zone").(string)
 	if peeringHaZone != "" && gateway.CloudType != 4 {
@@ -832,7 +832,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				d.Set("allocate_new_eip", false)
 			}
 		} else if gw.CloudType == 4 || gw.CloudType == 8 || gw.CloudType == 16 {
-			// GCP and ARM gateways don't have the option to allocate new eip's
+			// GCP and AZURE gateways don't have the option to allocate new eip's
 			// default for allocate_new_eip is on
 			d.Set("allocate_new_eip", true)
 		}
@@ -1160,7 +1160,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("peering_ha_subnet") {
 		peeringHaSubnet := d.Get("peering_ha_subnet").(string)
 		if peeringHaSubnet != "" && gateway.CloudType != 1 && gateway.CloudType != 8 && gateway.CloudType != 16 && gateway.CloudType != 256 {
-			return fmt.Errorf("'peering_ha_subnet' is only required for AWS/ARM/OCI providers if enabling Peering HA")
+			return fmt.Errorf("'peering_ha_subnet' is only required for AWS/AZURE/OCI providers if enabling Peering HA")
 		}
 	}
 	if d.HasChange("peering_ha_zone") {

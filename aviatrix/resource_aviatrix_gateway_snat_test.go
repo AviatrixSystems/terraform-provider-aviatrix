@@ -23,13 +23,13 @@ func TestAccAviatrixGatewaySNat_basic(t *testing.T) {
 
 	skipSNat := os.Getenv("SKIP_GATEWAY_SNAT")
 	skipSNatAWS := os.Getenv("SKIP_GATEWAY_SNAT_AWS")
-	skipSNatARM := os.Getenv("SKIP_GATEWAY_SNAT_ARM")
+	skipSNatAZURE := os.Getenv("SKIP_GATEWAY_SNAT_AZURE")
 
 	if skipSNat == "yes" {
 		t.Skip("Skipping gateway source NAT tests as SKIP_GATEWAY_SNAT is set")
 	}
-	if skipSNatAWS == "yes" && skipSNatARM == "yes" {
-		t.Skip("Skipping gateway source NAT tests as SKIP_GATEWAY_SNAT_AWS and SKIP_GATEWAY_SNAT_ARM " +
+	if skipSNatAWS == "yes" && skipSNatAZURE == "yes" {
+		t.Skip("Skipping gateway source NAT tests as SKIP_GATEWAY_SNAT_AWS and SKIP_GATEWAY_SNAT_AZURE " +
 			"are all set, even though SKIP_GATEWAY_SNAT isn't set")
 	}
 
@@ -71,8 +71,8 @@ func TestAccAviatrixGatewaySNat_basic(t *testing.T) {
 		})
 	}
 
-	if skipSNatARM == "yes" {
-		t.Log("Skipping ARM gateway source NAT tests as SKIP_GATEWAY_SNAT_ARM is set")
+	if skipSNatAZURE == "yes" {
+		t.Log("Skipping Azure gateway source NAT tests as SKIP_GATEWAY_SNAT_AZURE is set")
 	} else {
 		importStateVerifyIgnore = append(importStateVerifyIgnore, "vpc_id")
 		resource.Test(t, resource.TestCase{
@@ -85,10 +85,10 @@ func TestAccAviatrixGatewaySNat_basic(t *testing.T) {
 			CheckDestroy: testAccCheckGatewaySNatDestroy,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccGatewaySNatConfigARM(rName),
+					Config: testAccGatewaySNatConfigAZURE(rName),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckGatewaySNatExists(resourceName, &gateway),
-						resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-arm-%s", rName)),
+						resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-azure-%s", rName)),
 						resource.TestCheckResourceAttr(resourceName, "snat_mode", "customized_snat"),
 						resource.TestCheckResourceAttr(resourceName, "snat_policy.#", "1"),
 						resource.TestCheckResourceAttr(resourceName, "snat_policy.0.protocol", "tcp"),
@@ -150,10 +150,10 @@ resource "aviatrix_gateway_snat" "test" {
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_SUBNET"))
 }
 
-func testAccGatewaySNatConfigARM(rName string) string {
+func testAccGatewaySNatConfigAZURE(rName string) string {
 	return fmt.Sprintf(`
-resource "aviatrix_account" "test_acc_arm" {
-	account_name        = "tfa-arm-%s"
+resource "aviatrix_account" "test_acc_azure" {
+	account_name        = "tfa-azure-%s"
 	cloud_type          = 8
 	arm_subscription_id = "%s"
 	arm_directory_id    = "%s"
@@ -162,8 +162,8 @@ resource "aviatrix_account" "test_acc_arm" {
 }
 resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
 	cloud_type   = 8
-	account_name = aviatrix_account.test_acc_arm.account_name
-	gw_name      = "tfg-arm-%[1]s"
+	account_name = aviatrix_account.test_acc_azure.account_name
+	gw_name      = "tfg-azure-%[1]s"
 	vpc_id       = "%[6]s"
 	vpc_reg      = "%[7]s"
 	gw_size      = "%[8]s"
@@ -188,8 +188,8 @@ resource "aviatrix_gateway_snat" "test" {
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
 		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),
-		os.Getenv("ARM_VNET_ID"), os.Getenv("ARM_REGION"),
-		os.Getenv("ARM_GW_SIZE"), os.Getenv("ARM_SUBNET"))
+		os.Getenv("AZURE_VNET_ID"), os.Getenv("AZURE_REGION"),
+		os.Getenv("AZURE_GW_SIZE"), os.Getenv("AZURE_SUBNET"))
 }
 
 func testAccCheckGatewaySNatExists(n string, gateway *goaviatrix.Gateway) resource.TestCheckFunc {

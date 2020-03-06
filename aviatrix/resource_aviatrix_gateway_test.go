@@ -45,45 +45,45 @@ func preGatewayCheckGCP(t *testing.T, msgCommon string) {
 	}
 }
 
-func preGatewayCheckARM(t *testing.T, msgCommon string) {
+func preGatewayCheckAZURE(t *testing.T, msgCommon string) {
 	preAccountCheck(t, msgCommon)
 
-	armVnetId := os.Getenv("ARM_VNET_ID")
-	if armVnetId == "" {
-		t.Fatal("Environment variable ARM_VNET_ID is not set" + msgCommon)
+	azureVnetId := os.Getenv("AZURE_VNET_ID")
+	if azureVnetId == "" {
+		t.Fatal("Environment variable AZURE_VNET_ID is not set" + msgCommon)
 	}
-	armRegion := os.Getenv("ARM_REGION")
-	if armRegion == "" {
-		t.Fatal("Environment variable ARM_REGION is not set" + msgCommon)
+	azureRegion := os.Getenv("AZURE_REGION")
+	if azureRegion == "" {
+		t.Fatal("Environment variable AZURE_REGION is not set" + msgCommon)
 	}
-	armSubnet := os.Getenv("ARM_SUBNET")
-	if armSubnet == "" {
-		t.Fatal("Environment variable ARM_SUBNET is not set" + msgCommon)
+	azureSubnet := os.Getenv("AZURE_SUBNET")
+	if azureSubnet == "" {
+		t.Fatal("Environment variable AZURE_SUBNET is not set" + msgCommon)
 	}
-	armGwSize := os.Getenv("ARM_GW_SIZE")
-	if armGwSize == "" {
-		t.Fatal("Environment variable ARM_GW_SIZE is not set" + msgCommon)
+	azureGwSize := os.Getenv("AZURE_GW_SIZE")
+	if azureGwSize == "" {
+		t.Fatal("Environment variable AZURE_GW_SIZE is not set" + msgCommon)
 	}
 }
 
-func preGateway2CheckARM(t *testing.T, msgCommon string) {
+func preGateway2CheckAZURE(t *testing.T, msgCommon string) {
 	preAccountCheck(t, msgCommon)
 
-	armVnetId := os.Getenv("ARM_VNET_ID2")
-	if armVnetId == "" {
-		t.Fatal("Environment variable ARM_VNET_ID is not set" + msgCommon)
+	azureVnetId := os.Getenv("AZURE_VNET_ID2")
+	if azureVnetId == "" {
+		t.Fatal("Environment variable AZURE_VNET_ID is not set" + msgCommon)
 	}
-	armRegion := os.Getenv("ARM_REGION2")
-	if armRegion == "" {
-		t.Fatal("Environment variable ARM_REGION is not set" + msgCommon)
+	azureRegion := os.Getenv("AZURE_REGION2")
+	if azureRegion == "" {
+		t.Fatal("Environment variable AZURE_REGION is not set" + msgCommon)
 	}
-	armSubnet := os.Getenv("ARM_SUBNET2")
-	if armSubnet == "" {
-		t.Fatal("Environment variable ARM_SUBNET is not set" + msgCommon)
+	azureSubnet := os.Getenv("AZURE_SUBNET2")
+	if azureSubnet == "" {
+		t.Fatal("Environment variable AZURE_SUBNET is not set" + msgCommon)
 	}
-	armGwSize := os.Getenv("ARM_GW_SIZE")
-	if armGwSize == "" {
-		t.Fatal("Environment variable ARM_GW_SIZE is not set" + msgCommon)
+	azureGwSize := os.Getenv("AZURE_GW_SIZE")
+	if azureGwSize == "" {
+		t.Fatal("Environment variable AZURE_GW_SIZE is not set" + msgCommon)
 	}
 }
 
@@ -130,15 +130,15 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 	skipGw := os.Getenv("SKIP_GATEWAY")
 	skipAWS := os.Getenv("SKIP_GATEWAY_AWS")
 	skipGCP := os.Getenv("SKIP_GATEWAY_GCP")
-	skipARM := os.Getenv("SKIP_GATEWAY_ARM")
+	skipAZURE := os.Getenv("SKIP_GATEWAY_AZURE")
 	skipOCI := os.Getenv("SKIP_GATEWAY_OCI")
 	skipAWSGOV := os.Getenv("SKIP_GATEWAY_AWSGOV")
 
 	if skipGw == "yes" {
 		t.Skip("Skipping Gateway test as SKIP_GATEWAY is set")
 	}
-	if skipAWS == "yes" && skipGCP == "yes" && skipARM == "yes" && skipOCI == "yes" && skipAWSGOV == "yes" {
-		t.Skip("Skipping Gateway test as SKIP_GATEWAY_AWS, SKIP_GATEWAY_GCP, SKIP_GATEWAY_ARM " +
+	if skipAWS == "yes" && skipGCP == "yes" && skipAZURE == "yes" && skipOCI == "yes" && skipAWSGOV == "yes" {
+		t.Skip("Skipping Gateway test as SKIP_GATEWAY_AWS, SKIP_GATEWAY_GCP, SKIP_GATEWAY_AZURE " +
 			",SKIP_GATEWAY_OCI, and SKIP_GATEWAY_AWSGOV are all set, even though SKIP_GATEWAY isn't set")
 	}
 
@@ -238,39 +238,39 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 		})
 	}
 
-	if skipARM == "yes" {
-		t.Log("Skipping ARM Gateway test as SKIP_GATEWAY_ARM is set")
+	if skipAZURE == "yes" {
+		t.Log("Skipping Azure Gateway test as SKIP_GATEWAY_AZURE is set")
 	} else {
-		armVnetId := os.Getenv("ARM_VNET_ID")
-		armRegion := os.Getenv("ARM_REGION")
-		armSubnet := os.Getenv("ARM_SUBNET")
-		armGwSize := os.Getenv("ARM_GW_SIZE")
-		resourceNameArm := "aviatrix_gateway.test_gw_arm"
-		msgCommonArm := ". Set SKIP_GATEWAY_ARM to yes to skip ARM Gateway tests"
+		azureVnetId := os.Getenv("AZURE_VNET_ID")
+		azureRegion := os.Getenv("AZURE_REGION")
+		azureSubnet := os.Getenv("AZURE_SUBNET")
+		azureGwSize := os.Getenv("AZURE_GW_SIZE")
+		resourceNameAzure := "aviatrix_gateway.test_gw_azure"
+		msgCommonAzure := ". Set SKIP_GATEWAY_AZURE to yes to skip AZURE Gateway tests"
 
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
 				//Checking resources have needed environment variables set
 				preAccountCheck(t, msgCommon)
-				preGatewayCheckARM(t, msgCommonArm)
+				preGatewayCheckAZURE(t, msgCommonAzure)
 			},
 			Providers:    testAccProviders,
 			CheckDestroy: testAccCheckGatewayDestroy,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccGatewayConfigBasicARM(rName, armGwSize, armVnetId, armRegion, armSubnet),
+					Config: testAccGatewayConfigBasicAZURE(rName, azureGwSize, azureVnetId, azureRegion, azureSubnet),
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckGatewayExists(resourceNameArm, &gateway),
-						resource.TestCheckResourceAttr(resourceNameArm, "gw_name", fmt.Sprintf("tfg-arm-%s", rName)),
-						resource.TestCheckResourceAttr(resourceNameArm, "gw_size", armGwSize),
-						resource.TestCheckResourceAttr(resourceNameArm, "vpc_id", armVnetId),
-						resource.TestCheckResourceAttr(resourceNameArm, "subnet", armSubnet),
-						resource.TestCheckResourceAttr(resourceNameArm, "vpc_reg", armRegion),
+						testAccCheckGatewayExists(resourceNameAzure, &gateway),
+						resource.TestCheckResourceAttr(resourceNameAzure, "gw_name", fmt.Sprintf("tfg-azure-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameAzure, "gw_size", azureGwSize),
+						resource.TestCheckResourceAttr(resourceNameAzure, "vpc_id", azureVnetId),
+						resource.TestCheckResourceAttr(resourceNameAzure, "subnet", azureSubnet),
+						resource.TestCheckResourceAttr(resourceNameAzure, "vpc_reg", azureRegion),
 					),
 				},
 				{
-					ResourceName:      resourceNameArm,
+					ResourceName:      resourceNameAzure,
 					ImportState:       true,
 					ImportStateVerify: true,
 				},
@@ -401,20 +401,20 @@ resource "aviatrix_gateway" "test_gw_gcp" {
 		gcpVpcId, gcpZone, gcpGwSize, gcpSubnet)
 }
 
-func testAccGatewayConfigBasicARM(rName string, armGwSize string, armVnetId string, armRegion string, armSubnet string) string {
+func testAccGatewayConfigBasicAZURE(rName string, azureGwSize string, azureVnetId string, azureRegion string, azureSubnet string) string {
 	return fmt.Sprintf(`
-resource "aviatrix_account" "test_acc_arm" {
-	account_name        = "tfa-arm-%s"
+resource "aviatrix_account" "test_acc_azure" {
+	account_name        = "tfa-azure-%s"
 	cloud_type          = 8
 	arm_subscription_id = "%s"
 	arm_directory_id    = "%s"
 	arm_application_id  = "%s"
 	arm_application_key = "%s"
 }
-resource "aviatrix_gateway" "test_gw_arm" {
+resource "aviatrix_gateway" "test_gw_azure" {
 	cloud_type   = 8
-	account_name = aviatrix_account.test_acc_arm.account_name
-	gw_name      = "tfg-arm-%[1]s"
+	account_name = aviatrix_account.test_acc_azure.account_name
+	gw_name      = "tfg-azure-%[1]s"
 	vpc_id       = "%[6]s"
 	vpc_reg      = "%[7]s"
 	gw_size      = "%[8]s"
@@ -422,7 +422,7 @@ resource "aviatrix_gateway" "test_gw_arm" {
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
 		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),
-		armVnetId, armRegion, armGwSize, armSubnet)
+		azureVnetId, azureRegion, azureGwSize, azureSubnet)
 }
 
 func testAccGatewayConfigBasicOCI(rName string, ociGwSize string, ociVpcId string, ociRegion string, ociSubnet string) string {
