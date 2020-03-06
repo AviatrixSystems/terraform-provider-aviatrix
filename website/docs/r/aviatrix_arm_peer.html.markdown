@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_arm_peer
 
-The aviatrix_arm_peer resource allows the creation and management of Aviatrix ARM peerings.
+The **aviatrix_arm_peer** resource allows the creation and management of Aviatrix ARM peerings.
 
 !> **WARNING:** The `aviatrix_arm_peer` resource is deprecated as of **Release 2.12**. It is currently kept for backwards-compatibility and will be removed in the future. Please use the Azure peer resource instead. If this is already in the state, please remove it from the state file and import as `aviatrix_azure_peer`.
 
@@ -29,6 +29,7 @@ resource "aviatrix_arm_peer" "test_armpeer" {
 
 The following arguments are supported:
 
+### Required
 * `account_name1` - (Required) This parameter represents the name of an Azure Cloud-Account in Aviatrix controller.
 * `account_name2` - (Required) This parameter represents the name of an Azure Cloud-Account in Aviatrix controller.
 * `vnet_name_resource_group1` - (Required) VNet-Name of Azure cloud. Example: "VNet_Name:Resource_Group_Name".
@@ -45,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Instance arm_peer can be imported using the vnet_name_resource_group1 and vnet_name_resource_group2, e.g.
+**arm_peer** can be imported using the `vnet_name_resource_group1` and `vnet_name_resource_group2`, e.g.
 
 ```
 $ terraform import aviatrix_aws_peer.test vnet_name_resource_group1~vnet_name_resource_group2
