@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_azure_spoke_native_peering
 
-The **aviatrix_azure_spoke_native_peering** resource allows the creation and management of Aviatrix Azure Spoke VNet attachments via Native Peering
+The **aviatrix_azure_spoke_native_peering** resource allows the creation and management of Aviatrix Azure Spoke VNet attachments via Native Peering.
 
 ## Example Usage
 

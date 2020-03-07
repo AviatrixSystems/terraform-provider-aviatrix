@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_firewall_tag"
 description: |-
-  Creates and manages Aviatrix Firewall Tags
+  Creates and manages Aviatrix Stateful Firewall Tags
 ---
 
 # aviatrix_firewall_tag
 
-The aviatrix_firewall_tag resource allows the creation and management of Aviatrix Firewall tags.
+The **aviatrix_firewall_tag** resource allows the creation and management of Aviatrix Stateful Firewall tags for tag-based security for gateways.
 
 ## Example Usage
 
@@ -32,14 +32,17 @@ resource "aviatrix_firewall_tag" "test_firewall_tag" {
 
 The following arguments are supported:
 
-* `firewall_tag` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
-* `cidr_list` - (Optional) A JSON file with the following:
-  * `cidr_tag_name` - (Required) The name attribute of a policy. Example: "policy1".
-  * `cidr` - (Required) The CIDR attribute of a policy. Example: "10.88.88.88/32".
+### Required
+* `firewall_tag` - (Required) Name of the stateful firewall tag to be created.
+
+### Tag Rules
+* `cidr_list` - (Optional) Dynamic block representing a CIDR to filter, and a name to identify it:
+  * `cidr_tag_name` - (Required) A name to identify the CIDR. Example: "policy1".
+  * `cidr` - (Required) CIDR address to filter. Example: "10.88.88.88/32".
 
 ## Import
 
-Instance firewall_tag can be imported using the firewall_tag, e.g.
+**firewall_tag** can be imported using the `firewall_tag`, e.g.
 
 ```
 $ terraform import aviatrix_firewall_tag.test firewall_tag
