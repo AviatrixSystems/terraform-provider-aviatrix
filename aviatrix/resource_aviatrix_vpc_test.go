@@ -23,10 +23,10 @@ func TestAccAviatrixVpc_basic(t *testing.T) {
 	}
 
 	skipAccAWS := os.Getenv("SKIP_VPC_AWS")
-	skipAccARM := os.Getenv("SKIP_VPC_ARM")
+	skipAccAZURE := os.Getenv("SKIP_VPC_AZURE")
 	skipAccGCP := os.Getenv("SKIP_VPC_GCP")
-	if skipAccAWS == "yes" && skipAccARM == "yes" && skipAccGCP == "yes" {
-		t.Skip("Skipping VPC tests as 'SKIP_VPC_AWS', 'SKIP_VPC_ARM' and 'SKIP_VPC_GCP' are all set")
+	if skipAccAWS == "yes" && skipAccAZURE == "yes" && skipAccGCP == "yes" {
+		t.Skip("Skipping VPC tests as 'SKIP_VPC_AWS', 'SKIP_VPC_AZURE' and 'SKIP_VPC_GCP' are all set")
 	}
 
 	if skipAccAWS != "yes" {
@@ -96,8 +96,8 @@ func TestAccAviatrixVpc_basic(t *testing.T) {
 		t.Log("Skipping VPC tests in GCP as 'SKIP_VPC_GCP' is set")
 	}
 
-	if skipAccARM != "yes" {
-		msgCommon := ". Set 'SKIP_VPC_ARM' to 'yes' to skip VPC tests in AZURE/ARM"
+	if skipAccAZURE != "yes" {
+		msgCommon := ". Set 'SKIP_VPC_AZURE' to 'yes' to skip VPC tests in AZURE"
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
@@ -107,13 +107,13 @@ func TestAccAviatrixVpc_basic(t *testing.T) {
 			CheckDestroy: testAccCheckVpcDestroy,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccVpcConfigBasicARM(rName),
+					Config: testAccVpcConfigBasicAZURE(rName),
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckVpcExists(resourceName, &vpc),
 						resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tfg-%s", rName)),
 						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-%s", rName)),
 						resource.TestCheckResourceAttr(resourceName, "cloud_type", "8"),
-						resource.TestCheckResourceAttr(resourceName, "region", os.Getenv("ARM_REGION")),
+						resource.TestCheckResourceAttr(resourceName, "region", os.Getenv("AZURE_REGION")),
 						resource.TestCheckResourceAttr(resourceName, "cidr", "10.0.0.0/16"),
 					),
 				},
@@ -125,7 +125,7 @@ func TestAccAviatrixVpc_basic(t *testing.T) {
 			},
 		})
 	} else {
-		t.Log("Skipping VPC tests in AZURE/ARM as 'SKIP_VPC_ARM' is set")
+		t.Log("Skipping VPC tests in AZURE as 'SKIP_VPC_AZURE' is set")
 	}
 }
 
@@ -172,7 +172,7 @@ resource "aviatrix_vpc" "test_vpc" {
 `, rName, os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"), rName)
 }
 
-func testAccVpcConfigBasicARM(rName string) string {
+func testAccVpcConfigBasicAZURE(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_acc" {
 	account_name        = "tfa-%s"
@@ -191,7 +191,7 @@ resource "aviatrix_vpc" "test_vpc" {
 }
 `, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
 		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),
-		rName, os.Getenv("ARM_REGION"))
+		rName, os.Getenv("AZURE_REGION"))
 }
 
 func testAccCheckVpcExists(n string, vpc *goaviatrix.Vpc) resource.TestCheckFunc {

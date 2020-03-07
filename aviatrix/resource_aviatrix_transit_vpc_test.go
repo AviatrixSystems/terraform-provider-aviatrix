@@ -11,26 +11,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func preGatewayCheckArm(t *testing.T, msgCommon string) (string, string, string) {
-	preAccountCheck(t, msgCommon)
-
-	armVnetID := os.Getenv("ARM_VNET_ID")
-	if armVnetID == "" {
-		t.Fatal("Environment variable ARM_VNET_ID is not set" + msgCommon)
-	}
-
-	region := os.Getenv("ARM_REGION")
-	if region == "" {
-		t.Fatal("Environment variable ARM_REGION is not set" + msgCommon)
-	}
-
-	vpcNet := os.Getenv("ARM_SUBNET")
-	if vpcNet == "" {
-		t.Fatal("Environment variable ARM_SUBNET is not set" + msgCommon)
-	}
-	return armVnetID, region, vpcNet
-}
-
 func TestAccAviatrixTransitGw_basic(t *testing.T) {
 	var gateway goaviatrix.Gateway
 
@@ -42,9 +22,9 @@ func TestAccAviatrixTransitGw_basic(t *testing.T) {
 	}
 
 	skipGwAws := os.Getenv("SKIP_TRANSIT_AWS")
-	skipGwArm := os.Getenv("SKIP_TRANSIT_ARM")
-	if skipGwAws == "yes" && skipGwArm == "yes" {
-		t.Skip("Skipping Transit gateway test in aws as SKIP_TRANSIT_AWS and SKIP_TRANSIT_ARM are both set")
+	skipGwAzure := os.Getenv("SKIP_TRANSIT_AZURE")
+	if skipGwAws == "yes" && skipGwAzure == "yes" {
+		t.Skip("Skipping Transit gateway test in aws as SKIP_TRANSIT_AWS and SKIP_TRANSIT_AZURE are both set")
 	}
 
 	if skipGwAws != "yes" {
@@ -82,11 +62,11 @@ func TestAccAviatrixTransitGw_basic(t *testing.T) {
 		t.Log("Skipping Transit gateway test in aws as SKIP_TRANSIT_AWS is set")
 	}
 
-	if skipGwArm != "yes" {
-		resourceNameArm := "aviatrix_transit_vpc.test_transit_vpc_arm"
+	if skipGwAzure != "yes" {
+		resourceNameAzure := "aviatrix_transit_vpc.test_transit_vpc_azure"
 
-		msgCommonArm := ". Set SKIP_TRANSIT_ARM to yes to skip Transit Gateway tests in ARM"
-		preGatewayCheckArm(t, msgCommonArm)
+		msgCommonAzure := ". Set SKIP_TRANSIT_AZURE to yes to skip Transit Gateway tests in AZURE"
+		preGatewayCheckAZURE(t, msgCommonAzure)
 
 		resource.Test(t, resource.TestCase{
 			PreCheck:     func() { testAccPreCheck(t) },
@@ -94,26 +74,26 @@ func TestAccAviatrixTransitGw_basic(t *testing.T) {
 			CheckDestroy: testAccCheckTransitGwDestroy,
 			Steps: []resource.TestStep{
 				{
-					Config: testAccTransitGwConfigBasicArm(rName),
+					Config: testAccTransitGwConfigBasicAzure(rName),
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckTransitGwExists(resourceNameArm, &gateway),
-						resource.TestCheckResourceAttr(resourceNameArm, "gw_name", fmt.Sprintf("tfg-%s", rName)),
-						resource.TestCheckResourceAttr(resourceNameArm, "vpc_size", os.Getenv("ARM_GW_SIZE")),
-						resource.TestCheckResourceAttr(resourceNameArm, "account_name", fmt.Sprintf("tfaz-%s", rName)),
-						resource.TestCheckResourceAttr(resourceNameArm, "vpc_id", os.Getenv("ARM_VNET_ID")),
-						resource.TestCheckResourceAttr(resourceNameArm, "subnet", os.Getenv("ARM_SUBNET")),
-						resource.TestCheckResourceAttr(resourceNameArm, "vpc_reg", os.Getenv("ARM_REGION")),
+						testAccCheckTransitGwExists(resourceNameAzure, &gateway),
+						resource.TestCheckResourceAttr(resourceNameAzure, "gw_name", fmt.Sprintf("tfg-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameAzure, "vpc_size", os.Getenv("AZURE_GW_SIZE")),
+						resource.TestCheckResourceAttr(resourceNameAzure, "account_name", fmt.Sprintf("tfaz-%s", rName)),
+						resource.TestCheckResourceAttr(resourceNameAzure, "vpc_id", os.Getenv("AZURE_VNET_ID")),
+						resource.TestCheckResourceAttr(resourceNameAzure, "subnet", os.Getenv("AZURE_SUBNET")),
+						resource.TestCheckResourceAttr(resourceNameAzure, "vpc_reg", os.Getenv("AZURE_REGION")),
 					),
 				},
 				{
-					ResourceName:      resourceNameArm,
+					ResourceName:      resourceNameAzure,
 					ImportState:       true,
 					ImportStateVerify: true,
 				},
 			},
 		})
 	} else {
-		t.Log("Skipping Transit gateway test in aws as SKIP_TRANSIT_ARM is set")
+		t.Log("Skipping Transit gateway test in aws as SKIP_TRANSIT_AZURE is set")
 	}
 }
 
@@ -140,9 +120,9 @@ resource "aviatrix_transit_vpc" "test_transit_vpc_aws" {
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"))
 }
 
-func testAccTransitGwConfigBasicArm(rName string) string {
+func testAccTransitGwConfigBasicAzure(rName string) string {
 	return fmt.Sprintf(`
-resource "aviatrix_account" "test_arm" {
+resource "aviatrix_account" "test_azure" {
 	account_name        = "tfaz-%s"
 	cloud_type          = 8
 	arm_subscription_id = "%s"
@@ -150,9 +130,9 @@ resource "aviatrix_account" "test_arm" {
 	arm_application_id  = "%s"
 	arm_application_key = "%s"
 }
-resource "aviatrix_transit_vpc" "test_transit_vpc_arm" {
+resource "aviatrix_transit_vpc" "test_transit_vpc_azure" {
 	cloud_type   = 8
-	account_name = aviatrix_account.test_arm.account_name
+	account_name = aviatrix_account.test_azure.account_name
 	gw_name      = "tfg-%[1]s"
 	vpc_id       = "%[6]s"
 	vpc_reg      = "%[7]s"
@@ -160,8 +140,8 @@ resource "aviatrix_transit_vpc" "test_transit_vpc_arm" {
 	subnet       = "%[9]s"
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"), os.Getenv("ARM_APPLICATION_ID"),
-		os.Getenv("ARM_APPLICATION_KEY"), os.Getenv("ARM_VNET_ID"), os.Getenv("ARM_REGION"),
-		os.Getenv("ARM_GW_SIZE"), os.Getenv("ARM_SUBNET"))
+		os.Getenv("ARM_APPLICATION_KEY"), os.Getenv("AZURE_VNET_ID"), os.Getenv("AZURE_REGION"),
+		os.Getenv("AZURE_GW_SIZE"), os.Getenv("AZURE_SUBNET"))
 }
 
 func testAccCheckTransitGwExists(n string, gateway *goaviatrix.Gateway) resource.TestCheckFunc {

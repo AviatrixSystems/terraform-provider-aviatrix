@@ -68,7 +68,7 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "HA Subnet. Required if enabling HA for AWS/ARM.",
+				Description: "HA Subnet. Required if enabling HA for AWS/AZURE.",
 			},
 			"ha_zone": {
 				Type:        schema.TypeString,
@@ -139,7 +139,7 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a spoke gw")
 		}
 	} else {
-		return fmt.Errorf("invalid cloud type, it can only be aws (1), gcp (4), arm (8)")
+		return fmt.Errorf("invalid cloud type, it can only be aws (1), gcp (4), azure (8)")
 	}
 
 	if gateway.CloudType == 1 || gateway.CloudType == 8 {
@@ -148,7 +148,7 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		// for gcp, rest api asks for "zone" rather than vpc region
 		gateway.Zone = d.Get("vpc_reg").(string)
 	} else {
-		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), or ARM (8)")
+		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), or AZURE (8)")
 	}
 
 	haZone := d.Get("ha_zone").(string)

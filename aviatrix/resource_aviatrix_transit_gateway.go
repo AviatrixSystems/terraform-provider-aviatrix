@@ -82,7 +82,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "HA Subnet. Required for enabling HA for AWS/ARM gateway.",
+				Description: "HA Subnet. Required for enabling HA for AWS/AZURE gateway.",
 			},
 			"ha_zone": {
 				Type:        schema.TypeString,
@@ -302,13 +302,13 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		// for gcp, rest api asks for "zone" rather than vpc region
 		gateway.Zone = d.Get("vpc_reg").(string)
 	} else {
-		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), or ARM (8)")
+		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), or AZURE (8)")
 	}
 
 	insaneMode := d.Get("insane_mode").(bool)
 	if insaneMode {
 		if cloudType != 1 && cloudType != 8 {
-			return fmt.Errorf("insane_mode is only supported for aws and arm (cloud_type = 1 or 8)")
+			return fmt.Errorf("insane_mode is only supported for aws and azure (cloud_type = 1 or 8)")
 		}
 		if cloudType == 1 {
 			if d.Get("insane_mode_az").(string) == "" {
@@ -330,7 +330,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 	haSubnet := d.Get("ha_subnet").(string)
 	if haSubnet != "" && gateway.CloudType != 1 && gateway.CloudType != 8 && gateway.CloudType != 16 && gateway.CloudType != 256 {
-		return fmt.Errorf("'ha_subnet' is only required for AWS/ARM/OCI providers if enabling HA")
+		return fmt.Errorf("'ha_subnet' is only required for AWS/AZURE/OCI providers if enabling HA")
 	}
 	haZone := d.Get("ha_zone").(string)
 	if haZone != "" && gateway.CloudType != 4 {
@@ -913,7 +913,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	if d.HasChange("ha_subnet") {
 		haSubnet := d.Get("ha_subnet").(string)
 		if haSubnet != "" && gateway.CloudType != 1 && gateway.CloudType != 8 && gateway.CloudType != 16 && gateway.CloudType != 256 {
-			return fmt.Errorf("'ha_subnet' is only required for AWS/ARM/OCI providers if enabling HA")
+			return fmt.Errorf("'ha_subnet' is only required for AWS/AZURE/OCI providers if enabling HA")
 		}
 	}
 	if d.HasChange("ha_zone") {

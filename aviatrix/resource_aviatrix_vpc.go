@@ -134,7 +134,7 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("currently 'aviatrix_transit_vpc' is only supported for AWS provider")
 	}
 	if aviatrixFireNetVpc && vpc.CloudType != 1 && vpc.CloudType != 8 {
-		return fmt.Errorf("currently'aviatrix_firenet_vpc' is only supported for AWS and AZURE(ARM) provider")
+		return fmt.Errorf("currently'aviatrix_firenet_vpc' is only supported for AWS and AZURE provider")
 	}
 	if aviatrixTransitVpc && aviatrixFireNetVpc {
 		return fmt.Errorf("vpc cannot be aviatrix transit vpc and aviatrix firenet vpc at the same time")

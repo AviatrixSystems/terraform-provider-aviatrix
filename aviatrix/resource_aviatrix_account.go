@@ -240,16 +240,16 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		account.GcloudProjectCredentialsFilepathController = controller_filepath
 	} else if account.CloudType == 8 {
 		if account.ArmSubscriptionId == "" {
-			return fmt.Errorf("arm subscription id needed for azure arm cloud")
+			return fmt.Errorf("arm subscription id needed for azure cloud")
 		}
 		if account.ArmApplicationEndpoint == "" {
-			return fmt.Errorf("arm directory id needed for azure arm cloud")
+			return fmt.Errorf("arm directory id needed for azure cloud")
 		}
 		if account.ArmApplicationClientId == "" {
-			return fmt.Errorf("arm application id needed for azure arm cloud")
+			return fmt.Errorf("arm application id needed for azure cloud")
 		}
 		if account.ArmApplicationClientSecret == "" {
-			return fmt.Errorf("arm application key needed for azure arm cloud")
+			return fmt.Errorf("arm application key needed for azure cloud")
 		}
 	} else if account.CloudType == 16 {
 		if account.OciTenancyID == "" {
@@ -294,7 +294,7 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("aws gov secret key needed for aws gov cloud")
 		}
 	} else {
-		return fmt.Errorf("cloud type can only be either aws (1), gcp (4), arm (8), oci(16), or aws gov (256)")
+		return fmt.Errorf("cloud type can only be either aws (1), gcp (4), azure (8), oci(16), or aws gov (256)")
 	}
 
 	err := client.CreateAccount(account)

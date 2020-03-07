@@ -20,7 +20,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_account                     | SKIP_ACCOUNT                       |                                                                                |
 |		                               | SKIP_ACCOUNT_AWS	                | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY                             |
 |                     		           | SKIP_ACCOUNT_GCP	                | GCP_ID, GCP_CREDENTIALS_FILEPATH	                                             |
-|		                               | SKIP_ACCOUNT_ARM	                | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID, ARM_APPLICATION_KEY |
+|		                               | SKIP_ACCOUNT_AZURE	                | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID, ARM_APPLICATION_KEY |
 |                     		           | SKIP_ACCOUNT_OCI	                | OCI_TENANCY_ID, OCI_USER_ID, OCI_COMPARTMENT_ID, OCI_API_KEY_FILEPATH          |
 |		                               | SKIP_ACCOUNT_AWSGOV                | AWSGOV_ACCOUNT_NUMBER, AWSGOV_ACCESS_KEY, AWSGOV_SECRET_KEY                    |
 | aviatrix_account_user                | SKIP_ACCOUNT_USER                  |                                                                                |
@@ -38,21 +38,21 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_firewall_instance           | SKIP_FIREWALL_INSTANCE             | aviatrix_account + AWS_REGION, Palo Alto VM series                             |
 | aviatrix_firewall_management_access  | SKIP_FIREWALL_MANAGEMENT_ACCESS    | aviatrix_account                                                               |
 |                                      | SKIP_FIREWALL_MANAGEMENT_ACCESS_AWS|       + aviatrix_transit_gateway + aviatrix_spoke_gateway in AWS               |
-|                                      | SKIP_FIREWALL_MANAGEMENT_ACCESS_ARM|       + aviatrix_transit_gateway + aviatrix_spoke_gateway in ARM               |   
+|                                      | SKIP_FIREWALL_MANAGEMENT_ACCESS_AZURE|     + aviatrix_transit_gateway + aviatrix_spoke_gateway in AZURE             |   
 | aviatrix_firewall_tag                | SKIP_FIREWALL_TAG                  |                                                                                |
 | aviatrix_fqdn                        | SKIP_FQDN                          | aviatrix_gateway                                                               |
 | aviatrix_gateway                     | SKIP_GATEWAY                       | aviatrix_account                                                               |  
 |				                       | SKIP_GATEWAY_AWS                   |		    + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)         |
 |                                      | SKIP_GATEWAY_GCP                   |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)             |
-|                                      | SKIP_GATEWAY_ARM                   |         + ARM_VNET_ID, ARM_REGION, ARM_SUBNET, ARM_GW_SIZE                     |
+|                                      | SKIP_GATEWAY_AZURE                 |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
 |                                      | SKIP_GATEWAY_OCI                   |         + OCI_VPC_ID, OCI_REGION, OCI_SUBNET, OCI_GW_SIZE(optional)            |
 |                                      | SKIP_GATEWAY_AWSGOV                |         + AWSGOV_VPC_ID, AWSGOV_REGION, AWSGOV_SUBNET, AWSGOV_GW_SIZE(optional)|
 | aviatrix_gateway_dnat                | SKIP_GATEWAY_DNAT                  | aviatrix_account                                                               |
 |				                       | SKIP_GATEWAY_DNAT_AWS              |		    + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)         |
-|                                      | SKIP_GATEWAY_DNAT_ARM              |         + ARM_VNET_ID, ARM_REGION, ARM_SUBNET, ARM_GW_SIZE                     |
+|                                      | SKIP_GATEWAY_DNAT_AZURE            |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
 | aviatrix_gateway_snat                | SKIP_GATEWAY_SNAT                  | aviatrix_account                                                               |
 |				                       | SKIP_GATEWAY_SNAT_AWS              |		    + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)         |
-|                                      | SKIP_GATEWAY_SNAT_ARM              |         + ARM_VNET_ID, ARM_REGION, ARM_SUBNET, ARM_GW_SIZE                     |
+|                                      | SKIP_GATEWAY_SNAT_AZURE            |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
 | aviatrix_geo_vpn                     | SKIP_GEO_VPN                       | aviatrix_account + DOMAIN_NAME + AWS_VPC_ID, AWS_REGION, AWS_SUBNET            |
 |                                      |                                    |                                + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2         |
 | aviatrix_saml_endpoint               | SKIP_SAML_ENDPOINT                 | IDP_METADATA, IDP_METADATA_TYPE                                                |
@@ -60,24 +60,24 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_spoke_gateway               | SKIP_SPOKE_GATEWAY                 | aviatrix_gateway                                                               |
 |                                      | SKIP_SPOKE_GATEWAY_AWS             |         + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)           |
 |                                      | SKIP_SPOKE_GATEWAY_GCP             |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)             |
-|                                      | SKIP_SPOKE_GATEWAY_ARM             |         + ARM_VNET_ID, ARM_REGION, ARM_SUBNET, ARM_GW_SIZE                     |
+|                                      | SKIP_SPOKE_GATEWAY_AZURE           |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
 |                                      | SKIP_SPOKE_GATEWAY_OCI             |         + OCI_VPC_ID, OCI_REGION, OCI_SUBNET, OCI_GW_SIZE(optional)            |
 | aviatrix_spoke_vpc                   | SKIP_SPOKE                         | aviatrix_gateway                                                               |
 |                                      | SKIP_SPOKE_AWS                     |         + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)           | 
 |                                      | SKIP_SPOKE_GCP                     |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)             |
-|                                      | SKIP_SPOKE_ARM                     |         + ARM_VNET_ID, ARM_REGION, ARM_SUBNET, ARM_GW_SIZE                     |
+|                                      | SKIP_SPOKE_AZURE                   |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
 | aviatrix_trans_peer                  | SKIP_TRANS_PEER                    | aviatrix_tunnel                                                                |
 | aviatrix_transit_firenet_policy      | SKIP_TRANSIT_FIRENET_POLICY        | aviatrix_account                                                               |
 |                                      | SKIP_TRANSIT_FIRENET_POLICY_AWS    |       + aviatrix_transit_gateway + aviatrix_spoke_gateway in AWS               |
-|                                      | SKIP_TRANSIT_FIRENET_POLICY_ARM    |       + aviatrix_transit_gateway + aviatrix_spoke_gateway in ARM               |
+|                                      | SKIP_TRANSIT_FIRENET_POLICY_AZURE  |       + aviatrix_transit_gateway + aviatrix_spoke_gateway in AZURE             |
 | aviatrix_transit_gateway             | SKIP_TRANSIT_GATEWAY               | aviatrix_gateway                                                               |
 |                                      | SKIP_TRANSIT_GATEWAY_AWS           | aviatrix_gateway in AWS                                                        |
-|                                      | SKIP_TRANSIT_GATEWAY_ARM           | aviatrix_gateway in ARM                                                        |
+|                                      | SKIP_TRANSIT_GATEWAY_AZURE         | aviatrix_gateway in AZURE                                                      |
 |                                      | SKIP_GATEWAY_GCP                   | aviatrix_gateway in GCP                                                        |
 |                                      | SKIP_GATEWAY_OCI                   | aviatrix_gateway in OCI                                                        |
 | aviatrix_transit_vpc                 | SKIP_TRANSIT                       | aviatrix_gateway                                                               |
 |                                      | SKIP_TRANSIT_AWS                   | aviatrix_gateway in AWS                                                        |
-|                                      | SKIP_TRANSIT_ARM                   | aviatrix_gateway in ARM                                                        |  
+|                                      | SKIP_TRANSIT_AZURE                 | aviatrix_gateway in AZURE                                                      |  
 | aviatrix_transit_gateway_peering     | SKIP_TRANSIT_GATEWAY_PEERING       | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2                       |
 | aviatrix_tunnel                      | SKIP_TUNNEL                        | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2                       |
 | aviatrix_version                     | SKIP_VERSION                       |                                                                                |
