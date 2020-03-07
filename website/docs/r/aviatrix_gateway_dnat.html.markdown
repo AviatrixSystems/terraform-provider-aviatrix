@@ -7,14 +7,14 @@ description: |-
 
 # aviatrix_gateway_dnat
 
-The aviatrix_gateway_dnat resource configures and manages policies for destination NAT function for Aviatrix gateways.
+The **aviatrix_gateway_dnat** resource configures and manages policies for destination NAT function for Aviatrix gateways.
 
 ## Example Usage
 
 ```hcl
 # Add policy for destination NAT function for an Aviatrix AWS Spoke Gateway
 resource "aviatrix_gateway_dnat" "test_dnat" {
-  gw_name   = "avtxgw1"
+  gw_name   = "avtx-gw-1"
   dnat_policy {
     src_cidr    = "13.0.0.0/16"
     src_port    = "22"
@@ -35,7 +35,7 @@ resource "aviatrix_gateway_dnat" "test_dnat" {
 
 The following arguments are supported:
 
-* `gw_name` - (Required) Aviatrix gateway unique name.
+* `gw_name` - (Required) Name of the Aviatrix gateway the custom DNAT will be configured for.
 * `dnat_policy` - (Required) Policy rule applied for enabling Destination NAT (DNAT), which allows you to change the destination to a virtual address range. Currently only supports AWS(1) and ARM(8).
   * `src_cidr` - (Optional) This is a qualifier condition that specifies a source IP address range where the rule applies. When left blank, this field is not used.
   * `src_port` - (Optional) This is a qualifier condition that specifies a source port that the rule applies. When left blank, this field is not used.
@@ -51,7 +51,7 @@ The following arguments are supported:
 
 ## Import
 
-Instance gateway_dnat can be imported using the gw_name, e.g.
+**gateway_dnat** can be imported using the `gw_name`, e.g.
 
 ```
 $ terraform import aviatrix_gateway_dnat.test gw_name

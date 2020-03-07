@@ -7,14 +7,14 @@ description: |-
 
 # aviatrix_gateway_snat
 
-The aviatrix_gateway_snat resource configures and manages policies for customized source NAT for Aviatrix gateways.
+The **aviatrix_gateway_snat** resource configures and manages policies for customized source NAT for Aviatrix gateways.
 
 ## Example Usage
 
 ```hcl
 # Enable NAT function of mode "customized_snat" for an Aviatrix AWS Spoke Gateway
 resource "aviatrix_gateway_snat" "test_snat" {
-  gw_name   = "avtxgw1"
+  gw_name   = "avtx-gw-1"
   snat_mode = "customized_snat"
   snat_policy {
     src_cidr    = "13.0.0.0/16"
@@ -36,9 +36,9 @@ resource "aviatrix_gateway_snat" "test_snat" {
 
 The following arguments are supported:
 
-* `gw_name` - (Required) Aviatrix gateway unique name.
+* `gw_name` - (Required) Name of the Aviatrix gateway the custom SNAT will be configured for.
 * `snat_mode` - (Optional) NAT mode. Valid values: "customized_snat". Default value: "customized_snat".
-* `snat_policy` - (Required) Policy rule applied for enabling source NAT (mode: "customized_snat"). Currently only supports AWS(1) and ARM(8).
+* `snat_policy` - (Required) Policy rule applied for enabling source NAT (mode: "customized_snat"). Currently only supports AWS(1) and Azure(8).
   * `src_cidr` - (Optional) This is a qualifier condition that specifies a source IP address range where the rule applies. When left blank, this field is not used.
   * `src_port` - (Optional) This is a qualifier condition that specifies a source port that the rule applies. When left blank, this field is not used.
   * `dst_cidr` - (Optional) This is a qualifier condition that specifies a destination IP address range where the rule applies. When left blank, this field is not used.
@@ -53,7 +53,7 @@ The following arguments are supported:
 
 ## Import
 
-Instance gateway_snat can be imported using the gw_name, e.g.
+**gateway_snat** can be imported using the `gw_name`, e.g.
 
 ```
 $ terraform import aviatrix_gateway_snat.test gw_name

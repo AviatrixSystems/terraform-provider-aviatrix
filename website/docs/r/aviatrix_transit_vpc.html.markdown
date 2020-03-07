@@ -9,7 +9,7 @@ description: |-
 
 The aviatrix_transit_vpc resource creates and manages the Aviatrix Transit Network Gateways.
 
-!> **WARNING:** The aviatrix_transit_vpc resource is deprecated. It is kept for backward compatibility and will be removed in the future. Please use transit_gateway instead. Need to remove it from state file and import as aviatrix_transit_gateway if it is already in state.
+!> **WARNING:** The `aviatrix_transit_vpc` resource is deprecated as of **Release 2.0**. It is currently kept for backward-compatibility and will be removed in the future. Please use the transit gateway resource instead. If this is already in the state, please remove it from state file and import as `aviatrix_transit_gateway`.
 
 ## Example Usage
 

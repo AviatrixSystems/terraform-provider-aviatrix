@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_transit_firenet_policy"
 description: |-
-  Creates and manages Aviatrix transit firenet policies
+  Creates and manages Aviatrix Transit FireNet policies
 ---
 
 # aviatrix_transit_firenet_policy
 
-The aviatrix_transit_firenet_policy resource allows the creation and management of Aviatrix transit firenet policies.
+The aviatrix_transit_firenet_policy resource allows the creation and management of Aviatrix Transit FireNet policies that determine which resources should be inspected in the Transit FireNet solution.
 
 ## Example Usage
 
@@ -23,7 +23,7 @@ resource "aviatrix_transit_firenet_policy" "test_transit_firenet_policy" {
 
 The following arguments are supported:
 
-* `transit_firenet_gateway_name` - (Required) The name of a transit gateway with transit firenet enabled. Currently supports AWS and AZURE providers.
+* `transit_firenet_gateway_name` - (Required) Name of the Transit FireNet-enabled transit gateway. Currently supports AWS and Azure providers.
 * `inspected_resource_name` - (Required) The name of the resource which will be inspected.
 
 ## Import

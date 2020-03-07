@@ -2,18 +2,18 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_firewall"
 description: |-
-  Creates and manages Aviatrix Firewall Policies
+  Creates and manages Aviatrix Stateful Firewall Policies
 ---
 
 # aviatrix_firewall
 
-The aviatrix_firewall resource allows the creation and management of Aviatrix Firewall policies.
+The **aviatrix_firewall** resource allows the creation and management of Aviatrix Firewall policies.
 
 ## Example Usage
 
 ```hcl
 # Create an Aviatrix Firewall
-resource "aviatrix_firewall" "test_firewall" {
+resource "aviatrix_firewall" "stateful_firewall_1" {
   gw_name          = "gateway-1"
   base_policy      = "allow-all"
   base_log_enabled = true
@@ -54,12 +54,12 @@ resource "aviatrix_firewall" "test_firewall" {
 
 The following arguments are supported:
 
-* `gw_name` - (Required) The name of gateway.
-* `base_policy` - (Optional) New base policy. Valid Values: "allow-all", "deny-all".
-* `base_log_enabled` - (Optional) Indicates whether enable logging or not. Valid Values: true, false.
-* `policy` - (Optional) New access policy for the gateway. Type: String (valid JSON). Seven fields are required for each policy item: src_ip, dst_ip, protocol, port, allow_deny, log_enabled and description.
-  * `src_ip` - (Required) CIDRs separated by comma or tag names such "HR" or "marketing" etc. Example: "10.30.0.0/16,10.45.0.0/20". The aviatrix_firewall_tag resource should be created prior to using the tag name.
-  * `dst_ip` - (Required) CIDRs separated by comma or tag names such "HR" or "marketing" etc. Example: "10.30.0.0/16,10.45.0.0/20". The aviatrix_firewall_tag resource should be created prior to using the tag name.
+* `gw_name` - (Required) Gateway name to attach firewall policy to.
+* `base_policy` - (Optional) New base policy. Valid Values: "allow-all", "deny-all". Default value: "deny-all"
+* `base_log_enabled` - (Optional) Indicates whether enable logging or not. Valid Values: true, false. Default value: false.
+* `policy` - (Optional) New access policy for the gateway. Type: String (valid JSON). Seven fields are required for each policy item: `src_ip`, `dst_ip`, `protocol`, `port`, `allow_deny`, `log_enabled` and `description`.
+  * `src_ip` - (Required) CIDRs separated by comma or tag names such "HR" or "marketing" etc. Example: "10.30.0.0/16,10.45.0.0/20". The **aviatrix_firewall_tag** resource should be created prior to using the tag name.
+  * `dst_ip` - (Required) CIDRs separated by comma or tag names such "HR" or "marketing" etc. Example: "10.30.0.0/16,10.45.0.0/20". The **aviatrix_firewall_tag** resource should be created prior to using the tag name.
   * `protocol`- (Optional): "all", "tcp", "udp", "icmp", "sctp", "rdp", "dccp".
   * `port` - (Required) a single port or a range of port numbers. Example: "25", "25:1024".
   * `action`- (Required) Valid values: "allow", "deny" and "force-drop" (in stateful firewall rule to allow immediate packet dropping on established sessions).
@@ -68,7 +68,7 @@ The following arguments are supported:
 
 ## Import
 
-Instance firewall can be imported using the gw_name, e.g.
+**firewall** can be imported using the `gw_name`, e.g.
 
 ```
 $ terraform import aviatrix_firewall.test gw_name

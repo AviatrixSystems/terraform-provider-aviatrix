@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_account_user
 
-The aviatrix_account_user resource allows the creation and management of Aviatrix user accounts.
+The **aviatrix_account_user** resource allows the creation and management of Aviatrix user accounts.
 
 ## Example Usage
 
@@ -25,6 +25,7 @@ resource "aviatrix_account_user" "test_accountuser" {
 
 The following arguments are supported for creating user account:
 
+### Required
 * `username` - (Required) Name of account user to be created.
 * `account_name` - (Required) Cloud account name of user to be created.
 * `email` - (Required) Email of address of account user to be created.
@@ -32,7 +33,7 @@ The following arguments are supported for creating user account:
 
 ## Import
 
-Instance account_user can be imported using the username (when doing import, needs to leave password argument blank), e.g.
+**account_user** can be imported using the `username` (when doing import, need to leave `password` argument blank), e.g.
 
 ```
 $ terraform import aviatrix_account_user.test username

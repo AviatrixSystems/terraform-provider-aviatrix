@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_controller_config
 
-The aviatrix_controller_config resource allows management of an Aviatrix Controller's configurations.
+The **aviatrix_controller_config** resource allows management of an Aviatrix Controller's configurations.
 
 ## Example Usage
 
@@ -44,16 +44,21 @@ resource "aviatrix_controller_config" "test_controller_config" {
 
 The following arguments are supported:
 
-* `sg_management_account_name` - (Optional) Cloud account name of user.
-* `http_access` - (Optional) Switch for http access. Valid values: true, false. Default value: false.
-* `fqdn_exception_rule` - (Optional) A system-wide mode. Valida values: true, false. Defaultvalue: true.
-* `security_group_management` - (Optional) Used to manage the Controller instance’s inbound rules from gateways. Valid values: true, false. Default value: false.
-* `target_version` - (Optional) The release version number to which the controller will be upgraded to. If not specified, controller will not be upgraded. If set to "latest", controller will be upgraded to the latest release. Please look at https://docs.aviatrix.com/HowTos/inline_upgrade.html for more information.
-* `backup_configuration` - (Optional) Switch to enable/disable controller cloudn backup config. Valid values: true, false. Default value: false.
+### Security Options
+* `sg_management_account_name` - (Optional) Select the [primary access account](https://docs.aviatrix.com/HowTos/aviatrix_account.html#setup-primary-access-account-for-aws-cloud).
+* `security_group_management` - (Optional) Enable to allow Controller to automatically manage inbound rules from gateways. Valid values: true, false. Default value: false.
+* `http_access` - (Optional) Switch for HTTP access. Valid values: true, false. Default value: false.
+* `fqdn_exception_rule` - (Optional) Enable/disable packets without an SNI field to pass through gateway(s). Valid values: true, false. Default value: true. For more information on this setting, please see [here](https://docs.aviatrix.com/HowTos/FQDN_Whitelists_Ref_Design.html#exception-rule)
+
+### Backup
+* `backup_configuration` - (Optional) Switch to enable/disable controller CloudN backup config. Valid values: true, false. Default value: false.
 * `backup_cloud_type` - (Optional) Type of cloud service provider, requires an integer value. Use 1 for AWS.
-* `backup_account_name` - (Optional) This parameter represents the name of a Cloud-Account in Aviatrix controller.
+* `backup_account_name` - (Optional) Name of the cloud account in the Aviatrix controller.
 * `backup_bucket_name` - (Optional) S3 Bucket Name for AWS.
-* `multiple_backups` - (Optional) Switch to enable the controller to backup up to a maximum of 3 rotating backups. Valid values: true, false. Default value: false.
+* `multiple_backups` - (Optional) Switch to enable the Controller to backup up to a maximum of 3 rotating backups. Valid values: true, false. Default value: false.
+
+### Misc.
+* `target_version` - (Optional) The release version number to which the controller will be upgraded to. If not specified, controller will not be upgraded. If set to "latest", controller will be upgraded to the latest release. Please see the [Controller upgrade guide](https://docs.aviatrix.com/HowTos/inline_upgrade.html) for more information.
 
 ## Attribute Reference
 
