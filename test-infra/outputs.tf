@@ -74,27 +74,27 @@ output "GCP_ZONE" {
   value = var.gcp_zone1
 }
 
-output "ARM_REGION" {
+output "AZURE_REGION" {
   value = var.azure_region1
 }
 
-output "ARM_VNET_ID" {
-  value = "${module.aviatrix_arm_vpc1.vnet}:${module.aviatrix_arm_vpc1.group}"
+output "AZURE_VNET_ID" {
+  value = "${module.aviatrix_azure_vpc1.vnet}:${module.aviatrix_azure_vpc1.group}"
 }
 
-output "ARM_SUBNET" {
-  value = module.aviatrix_arm_vpc1.subnet
+output "AZURE_SUBNET" {
+  value = module.aviatrix_azure_vpc1.subnet
 }
 
-output "ARM_VNET_ID2" {
-  value = "${module.aviatrix_arm_vpc2.vnet}:${module.aviatrix_arm_vpc2.group}"
+output "AZURE_VNET_ID2" {
+  value = "${module.aviatrix_azure_vpc2.vnet}:${module.aviatrix_azure_vpc2.group}"
 }
 
-output "ARM_REGION2" {
+output "AZURE_REGION2" {
   value = var.azure_region2
 }
 
-output "ARM_GW_SIZE" {
+output "AZURE_GW_SIZE" {
   value = var.azure_gw_size
 }
 
