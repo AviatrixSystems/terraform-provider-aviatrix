@@ -88,7 +88,6 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 			"username": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Sensitive:   true,
 				ForceNew:    true,
 				Description: "Applicable to Azure deployment only. 'admin' as a username is not accepted.",
 			},
@@ -210,6 +209,9 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	}
 	if fI.BootstrapBucketName != "" {
 		d.Set("bootstrap_bucket_name", fI.BootstrapBucketName)
+	}
+	if fI.Username != "" {
+		d.Set("username", fI.Username)
 	}
 
 	return nil
