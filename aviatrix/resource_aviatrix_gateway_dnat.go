@@ -126,8 +126,8 @@ func resourceAviatrixGatewayDNatCreate(d *schema.ResourceData, meta interface{})
 				Interface:  pl["interface"].(string),
 				Connection: pl["connection"].(string),
 				Mark:       pl["mark"].(string),
-				NewSrcIP:   pl["dnat_ips"].(string),
-				NewSrcPort: pl["dnat_port"].(string),
+				NewDstIP:   pl["dnat_ips"].(string),
+				NewDstPort: pl["dnat_port"].(string),
 				ExcludeRTB: pl["exclude_rtb"].(string),
 			}
 			gateway.DnatPolicy = append(gateway.DnatPolicy, *customPolicy)
@@ -186,8 +186,8 @@ func resourceAviatrixGatewayDNatRead(d *schema.ResourceData, meta interface{}) e
 				dP["interface"] = policy.Interface
 				dP["connection"] = policy.Connection
 				dP["mark"] = policy.Mark
-				dP["dnat_ips"] = policy.NewSrcIP
-				dP["dnat_port"] = policy.NewSrcPort
+				dP["dnat_ips"] = policy.NewDstIP
+				dP["dnat_port"] = policy.NewDstPort
 				dP["exclude_rtb"] = policy.ExcludeRTB
 				dnatPolicy = append(dnatPolicy, dP)
 			}
@@ -228,8 +228,8 @@ func resourceAviatrixGatewayDNatUpdate(d *schema.ResourceData, meta interface{})
 					Interface:  pl["interface"].(string),
 					Connection: pl["connection"].(string),
 					Mark:       pl["mark"].(string),
-					NewSrcIP:   pl["dnat_ips"].(string),
-					NewSrcPort: pl["dnat_port"].(string),
+					NewDstIP:   pl["dnat_ips"].(string),
+					NewDstPort: pl["dnat_port"].(string),
 					ExcludeRTB: pl["exclude_rtb"].(string),
 				}
 				gateway.DnatPolicy = append(gateway.DnatPolicy, *customPolicy)
