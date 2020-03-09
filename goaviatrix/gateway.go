@@ -139,6 +139,8 @@ type PolicyRule struct {
 	NewSrcIP   string `form:"new_src_ip,omitempty" json:"new_src_ip,omitempty"`
 	NewSrcPort string `form:"new_src_port,omitempty" json:"new_src_port,omitempty"`
 	ExcludeRTB string `form:"exclude_rtb,omitempty" json:"exclude_rtb,omitempty"`
+	NewDstIP   string `form:"new_dst_ip,omitempty" json:"new_dst_ip,omitempty"`
+	NewDstPort string `form:"new_dst_port,omitempty" json:"new_dst_port,omitempty"`
 }
 
 type GatewayDetail struct {
