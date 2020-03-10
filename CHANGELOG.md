@@ -1,4 +1,30 @@
 ## 2.12.0 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-5.3.1486** 
+- Supported Terraform version: **v0.12.x**
+
+### Features:
+1. Implemented support for ``enable_transit_firenet`` in **aviatrix_transit_gateway**
+2. Implemented support for AZURE provider in **aviatrix_firewall_instance** by adding ``username`` and ``password``
+3. Implemented support for AZURE provider in **aviatrix_vpc**
+4. New resources:
+  - **aviatrix_transit_firenet_policy**
+  - **aviatrix_firewall_management_access**
+  - **aviatrix_azure_spoke_native_peering**
+  - **aviatrix_azure_peer**
+
+### Enhancements:
+1. Implemented support for handling enabling/disabling active-mesh and attaching/detaching to/from transit at the same time in update func in **aviatrix_spoke_gateway**
+2. Added ``private_ip``, ``instance_id`` and ``security_group_id`` as computed attributes in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+3. Added ``ha_cloud_instance_id`` as a computed attribute in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+4. Updated ``cloudn_bkup_gateway_inst_id`` to ``peering_ha_cloud_instance_id`` in **aviatrix_gateway**
+5. Deprecated **aviatrix_arm_peer** resource
+
+### Bug Fixes:
+1. Fixed issue where **aviatrix_firewall_instance** forces replacement if ``firewall_image_version`` is not set
+2. Fixed issue where **aviatrix_gateway_dnat** resource creation fails
+
+
 ## 2.11.0 (February 18, 2020)
 ### Notes:
 - Supported Controller version: **UserConnect-5.3.1391** 
