@@ -78,7 +78,7 @@ func resourceAviatrixAwsTgwVpcAttachment() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Default:     false,
-				Description: "Advanced option. If set to true, it disables automatic route propagation of this VPC to other VPCs within same security domain.",
+				Description: "Advanced option. If set to true, it disables automatic route propagation of this VPC to other VPCs within the same security domain.",
 			},
 		},
 	}
