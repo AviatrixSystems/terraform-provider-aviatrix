@@ -71,14 +71,14 @@ func resourceAviatrixAwsTgwVpcAttachment() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Default:     "",
-				Description: "Advanced option. Customized route(s) to advertise.",
+				Description: "Advanced option. Customized route(s) to be advertised to other VPCs that are connected to the same TGW.",
 			},
 			"disable_local_route_propagation": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				ForceNew:    true,
 				Default:     false,
-				Description: "Advanced option. Switch to allow admin not to propagate the VPC CIDR to the security domain/TGW route table that it is being attached to.",
+				Description: "Advanced option. If set to true, it disables automatic route propagation of this VPC to other VPCs within same security domain.",
 			},
 		},
 	}

@@ -39,8 +39,8 @@ The following arguments are supported:
 * `subnets` - (Optional and ForceNew) Advanced option. VPC subnets separated by ',' to attach to the VPC. If left blank, the Aviatrix Controller automatically selects a subnet representing each AZ for the VPC attachment. Example: "subnet-214f5646,subnet-085e8c81a89d70846".
 * `route_tables` - (Optional and ForceNew) Advanced option. Route tables separated by ',' to participate in TGW Orchestrator, i.e., learned routes will be propagated to these route tables. Example: "rtb-212ff547,rtb-045397874c170c745".
 * `customized_routes` - (Optional) Advanced option. Customized Spoke VPC Routes. It allows the admin to enter non-RFC1918 routes in the VPC route table targeting the TGW. Example: "10.8.0.0/16,10.9.0.0/16,10.10.0.0/16".
-* `customized_route_advertisement` - (Optional and ForeNew) Advanced option. Customized route(s) to advertise. Example: "10.8.0.0/16,10.9.0.0/16,10.10.0.0/16".
-* `disable_local_route_propagation` - (Optional and ForceNew) Switch to disable Spoke VPC CIDR propagation to the security domain/TGW route table that it is being attached to. Valid values: true, false. Default value: false.
+* `customized_route_advertisement` - (Optional and ForeNew) Advanced option. Customized route(s) to be advertised to other VPCs that are connected to the same TGW. Example: "10.8.0.0/16,10.9.0.0/16,10.10.0.0/16".
+* `disable_local_route_propagation` - (Optional and ForceNew) Advanced option. If set to true, it disables automatic route propagation of this VPC to other VPCs within same security domain. Valid values: true, false. Default value: false.
 
 
 ## Import
