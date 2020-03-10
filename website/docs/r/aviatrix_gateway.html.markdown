@@ -83,11 +83,11 @@ resource "aviatrix_gateway" "test_gateway_gcp" {
 }
 ```
 ```hcl
-# Create an Aviatrix ARM Gateway
-resource "aviatrix_gateway" "test_gateway_arm" {
+# Create an Aviatrix AZURE Gateway
+resource "aviatrix_gateway" "test_gateway_azure" {
   cloud_type   = 8
-  account_name = "devops-arm"
-  gw_name      = "avtx-gw-arm"
+  account_name = "devops-azure"
+  gw_name      = "avtx-gw-azure"
   vpc_id       = "gateway:test-gw-123"
   vpc_reg      = "West US"
   gw_size      = "Standard_D2"
@@ -128,24 +128,24 @@ resource "aviatrix_gateway" "test_gateway_awsgov" {
 The following arguments are supported:
 
 ### Required
-* `cloud_type` - (Required) Cloud service provider to use to launch the gateway. Requires an integer value. Currently only AWS(1), GCP(4), ARM(8), OCI(16), and AWSGov(256) are supported.
+* `cloud_type` - (Required) Cloud service provider to use to launch the gateway. Requires an integer value. Currently only AWS(1), GCP(4), AZURE(8), OCI(16), and AWSGov(256) are supported.
 * `account_name` - (Required) Account name. This account will be used to launch Aviatrix gateway.
 * `gw_name` - (Required) Name of the Aviatrix gateway to be created.
-* `vpc_id` - (Required) VPC ID/VNet name of cloud provider. Example: AWS: "vpc-abcd1234", GCP: "vpc-gcp-test", ARM: "vnet1:hello", OCI: "vpc-oracle-test1".
-* `vpc_reg` - (Required) VPC region the gateway will be created in. Example: AWS: "us-east-1", GCP: "us-west2-a", ARM: "East US 2", OCI: "us-ashburn-1".
-* `gw_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", GCP: "n1-standard-1", ARM: "Standard_B1s", OCI: "VM.Standard2.2".
+* `vpc_id` - (Required) VPC ID/VNet name of cloud provider. Example: AWS: "vpc-abcd1234", GCP: "vpc-gcp-test", AZURE: "vnet1:hello", OCI: "vpc-oracle-test1".
+* `vpc_reg` - (Required) VPC region the gateway will be created in. Example: AWS: "us-east-1", GCP: "us-west2-a", AZURE: "East US 2", OCI: "us-ashburn-1".
+* `gw_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", GCP: "n1-standard-1", AZURE: "Standard_B1s", OCI: "VM.Standard2.2".
 * `subnet` - (Required) A VPC network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode-1).**
 
 ### HA
 * `single_az_ha` (Optional) If enabled, Controller monitors the health of the gateway and restarts the gateway if it becomes unreachable. Valid values: true, false. Default value: false.
-* `peering_ha_subnet` - (Optional) Public subnet CIDR to create Peering HA Gateway in. Required only if enabling Peering HA for AWS/ARM. Example: AWS: "10.0.0.0/16".
+* `peering_ha_subnet` - (Optional) Public subnet CIDR to create Peering HA Gateway in. Required only if enabling Peering HA for AWS/AZURE. Example: AWS: "10.0.0.0/16".
 * `peering_ha_zone` - (Optional) Zone to create Peering HA Gateway in. Required only if enabling Peering HA for GCP. Example: GCP: "us-west1-c".
 * `peering_ha_insane_mode_az` - (Optional) Region + Availability Zone of subnet being created for Insane Mode-enabled Peering HA Gateway. Required for AWS only if `insane_mode` is set and `peering_ha_subnet` is set. Example: AWS: "us-west-1a".
 * `peering_ha_eip` - (Optional) Public IP address to be assigned to the the HA peering instance. Only available for AWS.
 * `peering_ha_gw_size` - (Optional) Size of the Peering HA Gateway to be created. Required if enabling Peering HA. **NOTE: Please see notes [here](#peering_ha_gw_size-1) in regards to any deltas found in your state with the addition of this argument in R1.8.**
 
 ### Insane Mode
-* `insane_mode` - (Optional) Enable Insane Mode for Gateway. Insane Mode gateway size must be at least c5 series (AWS) or Standard_D3_v2 (ARM). If enabled, a valid /26 CIDR segment of the VPC must be specified to create a new subnet. Only supported for AWS, AWSGov or ARM. Valid values: true, false.
+* `insane_mode` - (Optional) Enable Insane Mode for Gateway. Insane Mode gateway size must be at least c5 series (AWS) or Standard_D3_v2 (AZURE). If enabled, a valid /26 CIDR segment of the VPC must be specified to create a new subnet. Only supported for AWS, AWSGov or AZURE. Valid values: true, false.
 * `insane_mode_az` - (Optional) Region + Availability Zone of subnet being created for Insane Mode gateway. Required for AWS and AWSGov if `insane_mode` is set. Example: AWS: "us-west-1a".
 
 ### SNAT/DNAT
@@ -196,7 +196,7 @@ The following arguments are supported:
 * `customer_managed_keys` - (Optional and Sensitive) Customer-managed key ID.
 
 ### Misc.
-* `allocate_new_eip` - (Optional) If set to false, use an available address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in Controller 2.7+. Valid values: true, false. Default: true. Option not available for GCP, ARM and OCI gateways, they will automatically allocate new EIPs.
+* `allocate_new_eip` - (Optional) If set to false, use an available address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in Controller 2.7+. Valid values: true, false. Default: true. Option not available for GCP, AZURE and OCI gateways, they will automatically allocate new EIPs.
 * `eip` - (Optional) Specified EIP to use for gateway creation. Required when `allocate_new_eip` is false.  Available in Controller version 3.5+. Only supported for AWS gateways.
 * `tag_list` - (Optional) Tag list of the gateway instance. Only available for AWS and AWSGov gateways. Example: ["key1:value1", "key2:value2"].
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for gateway. Currently only supported for AWS and AWSGov gateways. Valid values: true, false. Default value: false.
@@ -221,7 +221,7 @@ The following arguments are deprecated:
 * `dns_server` - Specify the DNS IP, only required while using a custom private DNS for the VPC.
 * `enable_snat` - (Optional) Enable Source NAT for this gateway. Valid values: true, false. Default value: false. **NOTE: If using SNAT for FQDN use-case, please see notes [here](#fqdn).**
 
-* `dnat_policy` - (Optional) Policy rule applied for enabling Destination NAT (DNAT), which allows you to change the destination to a virtual address range. Currently only supports AWS(1) and ARM(8).
+* `dnat_policy` - (Optional) Policy rule applied for enabling Destination NAT (DNAT), which allows you to change the destination to a virtual address range. Currently only supports AWS(1) and AZURE(8).
   * `src_ip` - (Optional) A source IP address range where the policy rule applies.
   * `src_port` - (Optional) A source port that the policy rule applies.
   * `dst_ip` - (Optional) A destination IP address range where the policy rule applies.
