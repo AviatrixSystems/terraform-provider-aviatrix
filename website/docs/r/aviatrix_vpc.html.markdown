@@ -44,7 +44,7 @@ resource "aviatrix_vpc" "test-vpc" {
 }
 ```
 ```hcl
-# Create an ARM VPC
+# Create an AZURE VPC
 resource "aviatrix_vpc" "test_vpc" {
   cloud_type           = 8
   account_name         = "devops"
@@ -59,17 +59,17 @@ resource "aviatrix_vpc" "test_vpc" {
 
 The following arguments are supported:
 
-* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4) and ARM(8) are supported.
+* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4) and AZURE(8) are supported.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `name` - (Required) Name of the vpc to be created.
-* `region` - (Optional) Region of cloud provider. Required to be empty for GCP provider, and non-empty for other providers. Example: AWS: "us-east-1", ARM: "East US 2".
+* `region` - (Optional) Region of cloud provider. Required to be empty for GCP provider, and non-empty for other providers. Example: AWS: "us-east-1", AZURE: "East US 2".
 * `cidr` - (Optional) VPC cidr. Required to be empty for GCP provider, and non-empty for other providers. Example: "10.11.0.0/24".
 * `subnets` - (Optional) List of subnets to be specify for GCP provider. Required to be non-empty for GCP provider, and empty for other providers.
   * `region` - Region of this subnet.
   * `cidr` - CIDR block.
   * `name` - Name of this subnet.
 * `aviatrix_transit_vpc` - (Optional) Specify whether it is an Aviatrix Transit VPC. Only supported for AWS provider, required to be false for other providers. Valid values: true, false. Default: false.
-* `aviatrix_firenet_vpc` - (Optional) Specify whether it is an Aviatrix FireNet VPC. Only supported for AWS and ARM providers, required to be false for other providers. Valid values: true, false. Default: false.
+* `aviatrix_firenet_vpc` - (Optional) Specify whether it is an Aviatrix FireNet VPC. Only supported for AWS and AZURE providers, required to be false for other providers. Valid values: true, false. Default: false.
 
 ## Attribute Reference
 

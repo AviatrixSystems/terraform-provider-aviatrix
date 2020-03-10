@@ -36,7 +36,7 @@ resource "aviatrix_gateway_dnat" "test_dnat" {
 The following arguments are supported:
 
 * `gw_name` - (Required) Name of the Aviatrix gateway the custom DNAT will be configured for.
-* `dnat_policy` - (Required) Policy rule applied for enabling Destination NAT (DNAT), which allows you to change the destination to a virtual address range. Currently only supports AWS(1) and ARM(8).
+* `dnat_policy` - (Required) Policy rule applied for enabling Destination NAT (DNAT), which allows you to change the destination to a virtual address range. Currently only supports AWS(1) and AZURE(8).
   * `src_cidr` - (Optional) This is a qualifier condition that specifies a source IP address range where the rule applies. When left blank, this field is not used.
   * `src_port` - (Optional) This is a qualifier condition that specifies a source port that the rule applies. When left blank, this field is not used.
   * `dst_cidr` - (Optional) This is a qualifier condition that specifies a destination IP address range where the rule applies. When left blank, this field is not used.

@@ -43,8 +43,8 @@ resource "aviatrix_account" "temp_acc_gcp" {
 }
 ```
 ```hcl
-# Create an Aviatrix Azure ARM Account
-resource "aviatrix_account" "temp_acc_arm" {
+# Create an Aviatrix AZURE Account
+resource "aviatrix_account" "temp_acc_azure" {
   account_name        = "username"
   cloud_type          = 8
   arm_subscription_id = "12345678-abcd-efgh-ijkl-123456789abc"
@@ -81,7 +81,7 @@ The following arguments are supported:
 
 ### Required
 * `account_name` - (Required) Account name. This can be used for logging in to CloudN console or UserConnect controller.
-* `cloud_type` - (Required) Type of cloud service provider. Only AWS, GCP, ARM, OCI, and AWS Gov are supported currently. Enter 1 for AWS, 4 for GCP, 8 for Azure, 16 for OCI, 256 for AWS Gov.
+* `cloud_type` - (Required) Type of cloud service provider. Only AWS, GCP, AZURE, OCI, and AWS Gov are supported currently. Enter 1 for AWS, 4 for GCP, 8 for AZURE, 16 for OCI, 256 for AWS Gov.
 
 ### AWS
 * `aws_account_number` - (Optional) AWS Account number to associate with Aviatrix account. Required when creating an account for AWS.
@@ -91,11 +91,11 @@ The following arguments are supported:
 * `aws_role_app` - (Optional) AWS App role ARN, this option is for UserConnect. Required when `aws_iam` is "true" and when creating an account for AWS.
 * `aws_role_ec2` - (Optional) AWS EC2 role ARN, this option is for UserConnect. Required when `aws_iam` is "true" and when creating an account for AWS.
 
-### Azure
-* `arm_subscription_id` - (Optional) Azure ARM Subscription ID. Required when creating an account for ARM.
-* `arm_directory_id` - (Optional) Azure ARM Directory ID. Required when creating an account for ARM.
-* `arm_application_id` - (Optional) Azure ARM Application ID. Required when creating an account for ARM.
-* `arm_application_key` - (Optional) Azure ARM Application key. Required when creating an account for ARM.
+### AZURE
+* `arm_subscription_id` - (Optional) AZURE ARM Subscription ID. Required when creating an account for AZURE.
+* `arm_directory_id` - (Optional) AZURE ARM Directory ID. Required when creating an account for AZURE.
+* `arm_application_id` - (Optional) AZURE ARM Application ID. Required when creating an account for AZURE.
+* `arm_application_key` - (Optional) AZURE ARM Application key. Required when creating an account for AZURE.
 
 ### Google Cloud
 * `gcloud_project_id` - (Optional) GCloud Project ID.
