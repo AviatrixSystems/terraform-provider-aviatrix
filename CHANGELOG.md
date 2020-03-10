@@ -4,21 +4,26 @@
 - Supported Terraform version: **v0.12.x**
 
 ### Features:
-1. Implemented support for ``enable_transit_firenet`` in **aviatrix_transit_gateway**
-2. Implemented support for AZURE provider in **aviatrix_firewall_instance** by adding ``username`` and ``password``
-3. Implemented support for AZURE provider in **aviatrix_vpc**
-4. New resources:
+1. Implemented support for Transit FireNet
+  - ``enable_transit_firenet`` in **aviatrix_transit_gateway**
+  - ``username`` and ``password`` in **aviatrix_firewall_instance** for Azure (Transit) FireNet
+2. New resources for Transit FireNet:
   - **aviatrix_transit_firenet_policy**
   - **aviatrix_firewall_management_access**
+3. New resources
   - **aviatrix_azure_spoke_native_peering**
-  - **aviatrix_azure_peer**
+4. New resource **aviatrix_azure_peer** to replace **aviatrix_arm_peer** 
+5. Implemented support for Azure VNet in **aviatrix_vpc** resource
 
 ### Enhancements:
-1. Implemented support for handling enabling/disabling active-mesh and attaching/detaching to/from transit at the same time in update func in **aviatrix_spoke_gateway**
-2. Added ``private_ip``, ``instance_id`` and ``security_group_id`` as computed attributes in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
-3. Added ``ha_cloud_instance_id`` as a computed attribute in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
-4. Updated ``cloudn_bkup_gateway_inst_id`` to ``peering_ha_cloud_instance_id`` in **aviatrix_gateway**
-5. Deprecated **aviatrix_arm_peer** resource
+1. Enhanced handling enabling/disabling active-mesh and attaching/detaching to/from transit actions during updates in **aviatrix_spoke_gateway**
+2. The following computed attributes are now available in in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+  - ``private_ip`` 
+  - ``instance_id`` 
+  - ``security_group_id`` 
+3. ``ha_cloud_instance_id`` is now a computed attribute available in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+4. Replaced ``cloudn_bkup_gateway_inst_id`` with ``peering_ha_cloud_instance_id`` in **aviatrix_gateway**
+5. Deprecated **aviatrix_arm_peer** resource and replaced it with **aviatrix_azure_peer**
 
 ### Bug Fixes:
 1. Fixed issue where **aviatrix_firewall_instance** forces replacement if ``firewall_image_version`` is not set
