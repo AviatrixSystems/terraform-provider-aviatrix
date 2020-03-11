@@ -448,6 +448,13 @@ func resourceAviatrixFireNetDelete(d *schema.ResourceData, meta interface{}) err
 	fireNet := &goaviatrix.FireNet{
 		VpcID: d.Get("vpc_id").(string),
 	}
+	if egressEnabled := d.Get("egress_enabled").(bool); egressEnabled {
+		fireNet.FirewallEgress = false
+		err := client.EditFireNetEgress(fireNet)
+		if err != nil {
+			return fmt.Errorf("failed to disable firewall egress on fireNet: %v", err)
+		}
+	}
 
 	firewallInstanceList := d.Get("firewall_instance_association").([]interface{})
 	if firewallInstanceList != nil {
