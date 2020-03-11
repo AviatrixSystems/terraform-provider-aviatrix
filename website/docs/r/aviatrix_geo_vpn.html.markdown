@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_geo_vpn
 
-The aviatrix_geo_vpn resource enables and manages the Aviatrix Geo VPN.
+The **aviatrix_geo_vpn** resource enables and manages the Aviatrix Geo VPN.
 
 ## Example Usage
 
@@ -29,6 +29,7 @@ resource "aviatrix_geo_vpn" "test_geo_vpn" {
 
 The following arguments are supported:
 
+### Required
 * `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1) is supported.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `domain_name` - (Required) The hosted domain name. It must be hosted by AWS Route53 or Azure DNS in the selected account.
@@ -37,7 +38,7 @@ The following arguments are supported:
 
 ## Import
 
-Instance geo_vpn can be imported using the service name and domain name, e.g.
+**geo_vpn** can be imported using the `service_name` and `domain_name`, e.g.
 
 ```
 $ terraform import aviatrix_geo_vpn.test service_name~domain_name

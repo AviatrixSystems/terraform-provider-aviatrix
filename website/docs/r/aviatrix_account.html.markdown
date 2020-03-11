@@ -43,7 +43,7 @@ resource "aviatrix_account" "temp_acc_gcp" {
 }
 ```
 ```hcl
-# Create an Aviatrix AZURE Account
+# Create an Aviatrix Azure Account
 resource "aviatrix_account" "temp_acc_azure" {
   account_name        = "username"
   cloud_type          = 8
@@ -91,11 +91,11 @@ The following arguments are supported:
 * `aws_role_app` - (Optional) AWS App role ARN, this option is for UserConnect. Required when `aws_iam` is "true" and when creating an account for AWS.
 * `aws_role_ec2` - (Optional) AWS EC2 role ARN, this option is for UserConnect. Required when `aws_iam` is "true" and when creating an account for AWS.
 
-### AZURE
-* `arm_subscription_id` - (Optional) AZURE ARM Subscription ID. Required when creating an account for AZURE.
-* `arm_directory_id` - (Optional) AZURE ARM Directory ID. Required when creating an account for AZURE.
-* `arm_application_id` - (Optional) AZURE ARM Application ID. Required when creating an account for AZURE.
-* `arm_application_key` - (Optional) AZURE ARM Application key. Required when creating an account for AZURE.
+### Azure
+* `arm_subscription_id` - (Optional) Azure ARM Subscription ID. Required when creating an account for Azure.
+* `arm_directory_id` - (Optional) Azure ARM Directory ID. Required when creating an account for Azure.
+* `arm_application_id` - (Optional) Azure ARM Application ID. Required when creating an account for Azure.
+* `arm_application_key` - (Optional) Azure ARM Application key. Required when creating an account for Azure.
 
 ### Google Cloud
 * `gcloud_project_id` - (Optional) GCloud Project ID.

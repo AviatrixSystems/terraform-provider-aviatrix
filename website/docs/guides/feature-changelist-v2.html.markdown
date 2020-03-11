@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.11 (UserConnect-5.3.1391)``
+``Last updated: R2.12 (UserConnect-5.3.1491)``
 
 
 ---
@@ -99,60 +99,67 @@ For most changes, unless stated otherwise in the tables below, after editing the
 ## R2.4 (UserConnect-5.0) (Terraform v0.12)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
-|(new) | firewall       | description       | **Yes**; Terraform support added to feature already available for stateful firewall policies. This attribute is optional by default. If customer already has a description set through the Controller, they must add the description attribute and its corresponding value to their Terraform file and perform a ``terraform refresh`` to rectify the diff  |
+|(new) | firewall       | description       | **Yes**; Terraform support added to feature already available for stateful firewall policies. This attribute is optional by default. <br><br> If customer already has a description set through the Controller, they must add the description attribute and its corresponding value to their Terraform file and perform a ``terraform refresh`` to rectify the diff  |
 |(new) | account        | oci_tenancy_id, oci_user_id, oci_compartment_id, oci_api_private_key_filepath | **No**; Terraform now supports Oracle Cloud, hence the new attributes needed to create an Oracle access account |
 
 
 ## R2.5 (UserConnect-5.1) (Terraform v0.12)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
-|(new) | gateway, spoke_gateway, transit_gateway | enable_vpc_dns_server | **No**; Terraform added support for enabling/ disabling VPC DNS server. This attribute is optional, and set 'false' by default. This feature is only available on AWS |
+|(new) | gateway, spoke_gateway, transit_gateway | enable_vpc_dns_server | **No**; Terraform added support for enabling/ disabling VPC DNS server. <br><br> This attribute is optional, and set 'false' by default. This feature is only available on AWS |
 
 
 ## R2.6 (UserConnect-5.1) (Terraform v0.12)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
-|(deprecated) | vgw_conn | enable_advertise_transit_cidr, bgp_manual_spoke_advertise_cidrs | **Yes**; functionality migrated over to **transit_gateway** resource. In order to maintain same functionality, customer must cut-paste the these two attributes and their respective values into the corresponding **transit_gateway** and perform a ```terraform refresh``` |
-|(new) | transit_gateway | enable_advertise_transit_cidr, bgp_manual_spoke_advertise_cidrs | **No**; action required depends on above stated for **vgw_conn**. If customer does not have **vgw_conn** that originally advertised any sort of CIDR before this release, no action is required
+|(deprecated) | vgw_conn | enable_advertise_transit_cidr, bgp_manual_spoke_advertise_cidrs | **Yes**; functionality migrated over to **transit_gateway** resource. <br><br> In order to maintain same functionality, customer must cut-paste the these two attributes and their respective values into the corresponding **transit_gateway** and perform a ```terraform refresh``` |
+|(new) | transit_gateway | enable_advertise_transit_cidr, bgp_manual_spoke_advertise_cidrs | **No**; action required depends on above stated for **vgw_conn**. <br><br> If customer does not have **vgw_conn** that originally advertised any sort of CIDR before this release, no action is required
 |(changed) | -- | enable_firenet_interfaces | **Yes**; if customer is using **transit_gateway** and has set ``enable_firenet_interfaces``, attribute must be renamed to ``enable_firenet`` and a ``terraform refresh`` must be performed |
-|(new) | -- | single_az_ha | **Yes**; Terraform support added for enabling/ disabling ``single_az_ha`` for **transit_gateway**. If customer has originally enabled ``single_az_ha`` through Controller prior to this release, then this attribute must be set to **true**, and a ``terraform refresh`` must be performed to rectify the state |
+|(new) | -- | single_az_ha | **Yes**; Terraform support added for enabling/ disabling ``single_az_ha`` for **transit_gateway**. <br><br> If customer has originally enabled ``single_az_ha`` through Controller prior to this release, then this attribute must be set to **true**, and a ``terraform refresh`` must be performed to rectify the state |
 
 
 ## R2.7 (UserConnect-5.1) (Terraform v0.12)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
-|(new) | vpc            | subnets           | **No**; Terraform support added for creating a GCP VPC. If customer wants to manage their existing GCP VPC through Terraform, they must write a matching configuration for the existing GCP VPC and perform a ``terraform import`` to bring it into the state |
-|(deprecated) | --      | public_subnets, private_subnets | **Yes**; if customers have referenced these 2 attributes that were added in the previous release R2.6, they must change reference back to whichever ``subnets`` it corresponds to and perform a ``terraform refresh`` |
+|(new) | vpc            | subnets           | **No**; Terraform support added for creating a GCP VPC. <br><br> If customer wants to manage their existing GCP VPC through Terraform, they must write a matching configuration for the existing GCP VPC and perform a ``terraform import`` to bring it into the state |
+|(deprecated) | --      | public_subnets, private_subnets | **Yes**; if customers have referenced these 2 attributes that were added in the previous release **R2.6**, they must change reference back to whichever ``subnets`` it corresponds to and perform a ``terraform refresh`` |
 |(new) | saml_endpoint  | custom_saml_request_template | **No**; Terraform support added for using custom SAML templates for the endpoint |
-|(new) | aws_tgw        | customized_routes, disable_local_route_propagation | **No**; Terraform support added for Controller 5.0 feature. Customers may now use customized routes and disable local route propagation when attaching a VPC to their TGW |
-|(new) | gateway        | enable_vpn_nat    | **Yes**; Terraform support added for Controller 5.0 feature. If customers have enabled/ disabled VPN NAT feature through the Controller for their VPN gateway, they must specify this attribute and its corresponding value in Terraform and perform a ``terraform refresh`` |
+|(new) | aws_tgw        | customized_routes, disable_local_route_propagation | **No**; Terraform support added for Controller 5.0 feature. <br><br> Customers may now use customized routes and disable local route propagation when attaching a VPC to their TGW |
+|(new) | gateway        | enable_vpn_nat    | **Yes**; Terraform support added for Controller 5.0 feature. <br><br> If customers have enabled/ disabled VPN NAT feature through the Controller for their VPN gateway, they must specify this attribute and its corresponding value in Terraform and perform a ``terraform refresh`` |
 
 
 ## R2.8 (UserConnect-5.1, 5.2) (Terraform v0.12)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
 |(new) | account        | awsgov_account_number, awsgov_access_key, awsgov_secret_key | **No**; Terraform now supports AWS GovCloud accounts, hence the new attributes |
-|(new) | aws_tgw_vpc_attachment | customized_routes, disable_local_route_propagation | **No**; Terraform support added for Controller 5.0 feature. Customers may now use customized routes and disable local route propagation when attaching a VPC to their TGW, managing them separately outside the TGW resource |
+|(new) | aws_tgw_vpc_attachment | customized_routes, disable_local_route_propagation | **No**; Terraform support added for Controller 5.0 feature. <br><br> Customers may now use customized routes and disable local route propagation when attaching a VPC to their TGW, managing them separately outside the TGW resource |
 
 
 ## R2.9 (UserConnect-5.2) (Terraform v0.12)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
-|(new) | gateway        | enable_designated_gateway, additional_cidrs_designated_gateway | **No**; Terraform now supports the "designated gateway" feature. If customer wants to manage their existing gateway with this feature enabled, they must write a matching configuration for the existing gateway and perform a ``terraform import`` to bring it into the state |
-|(new) | --             | enable_encrypt_volume | **Yes**; Terraform now supports encrypting EBS volumes. If an existing gateway in Terraform state has had their EBS volume encrypted through the GUI, this attribute must be set to **true**, and a ``terraform refresh`` must be performed to rectify the state |
-|(new) | --             | dnat_policy       | **Yes**; Terraform now supports DNAT. If an existing gateway in Terraform state has had DNAT policies set through the GUI, corresponding ``dnat_policy`` blocks must be added and a ``terraform refresh`` must be performed to rectify the state |
-|(new) | spoke_gateway  | snat_policy       | **Yes**; Terraform now supports custom SNAT or multi-IP SNAT. If an existing spoke gateway in Terraform state has had SNAT policies set through the GUI, corresponding ``snat_policy`` blocks must be added and a ``terraform refresh`` must be performed to rectify the state |
+|(new) | gateway        | enable_designated_gateway, additional_cidrs_designated_gateway | **No**; Terraform now supports the "designated gateway" feature. <br><br> If customer wants to manage their existing gateway with this feature enabled, they must write a matching configuration for the existing gateway and perform a ``terraform import`` to bring it into the state |
+|(new) | --             | enable_encrypt_volume | **Yes**; Terraform now supports encrypting EBS volumes. <br><br> If an existing gateway in Terraform state has had their EBS volume encrypted through the GUI, this attribute must be set to **true**, and a ``terraform refresh`` must be performed to rectify the state |
+|(new) | --             | dnat_policy       | **Yes**; Terraform now supports DNAT. <br><br> If an existing gateway in Terraform state has had DNAT policies set through the GUI, corresponding ``dnat_policy`` blocks must be added and a ``terraform refresh`` must be performed to rectify the state |
+|(new) | spoke_gateway  | snat_policy       | **Yes**; Terraform now supports custom SNAT or multi-IP SNAT. <br><br> If an existing spoke gateway in Terraform state has had SNAT policies set through the GUI, corresponding ``snat_policy`` blocks must be added and a ``terraform refresh`` must be performed to rectify the state |
 
 
 ## R2.10 (UserConnect-5.2.2122+) (Terraform v0.12)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
-|(changed) | gateway, spoke_gateway, transit_gateway | enable_snat | **Yes**; renamed to ``single_ip_snat``. Update the attribute in .tf files and perform a ``terraform refresh`` |
-|(deprecated) | --      | snat_mode, snat_policy {}, dnat_policy {} | **Yes**; customized SNAT and DNAT support has been deprecated from R2.9 and functionality has been moved to **aviatrix_gateway_snat** and **aviatrix_gateway_dnat** respectively, to improve policy management. If customized SNAT/DNAT policies were created in R2.9, copy the existing policy block and paste into the new corresponding resource. Specify the corresponding gateway name value for ``gw_name`` and change the attributes that were renamed as necessary (ex. ``src_ip`` to ``src_cidr``). Full documentation for the resources may be viewed under the "Gateway" tab
+|(changed) | gateway, spoke_gateway, transit_gateway | enable_snat | **Yes**; renamed to ``single_ip_snat``. <br><br> Update the attribute in .tf files and perform a ``terraform refresh`` |
+|(deprecated) | --      | snat_mode, snat_policy {}, dnat_policy {} | **Yes**; customized SNAT and DNAT support has been deprecated from **R2.9** and functionality has been moved to **aviatrix_gateway_snat** and **aviatrix_gateway_dnat** respectively, to improve policy management. <br><br> If customized SNAT/DNAT policies were created in **R2.9**, copy the existing policy block and paste into the new corresponding resource. Specify the corresponding gateway name value for ``gw_name`` and change the attributes that were renamed as necessary (ex. ``src_ip`` to ``src_cidr``). Full documentation for the resources may be viewed under the "Gateway" tab
 
 
 ## R2.11 (UserConnect-5.3.1391) (Terraform v0.12)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
-|(new) | aws_tgw_vpn_conn | connection_type | **Yes**; New attribute added for distinction between two possible TGW VPN connections. If an existing aws_tgw_vpn_conn (static VPN connection) has been created prior to this release, customers must add ``connection_type = static`` into their configuration file and perform a ``terraform refresh`` to update and apply the attribute's value (static) into the state file.
-|(new) | gateway        | vpn_protocol      | **No**; Terraform now supports specifying the VPN protocol to use for the VPN gateway/ELB. Customers managing existing gateways and ELBs do not need to change their configurations, but are recommended for future-created infrastructure to specify a protocol for full control as well as clarity |
+|(new) | aws_tgw_vpn_conn | connection_type | **Yes**; New attribute added for distinction between two possible TGW VPN connections. <br><br> If an existing aws_tgw_vpn_conn (static VPN connection) has been created prior to this release, customers must add ``connection_type = static`` into their configuration file and perform a ``terraform refresh`` to update and apply the attribute's value (static) into the state file.
+|(new) | gateway        | vpn_protocol      | **No**; Terraform now supports specifying the VPN protocol to use for the VPN gateway/ELB. <br><br> Customers managing existing gateways and ELBs do not need to change their configurations, but are recommended for future-created infrastructure to specify a protocol for full control as well as clarity |
+
+
+## R2.12 (UserConnect-5.3.1491) (Terraform v0.12)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(deprecated) | arm_peer | --               | **Yes**; **arm_peer** will be deprecated and replaced with **azure_peer**. It will be kept for now for backward-compatibility and will be removed in the future. Please use **azure_peer** instead <br><br> You will need to remove any pre-existing **arm_peer** resources from the statefile, update your .tf files to **azure_peer**, and perform a ``terraform import`` |
+|(changed) | gateway    | cloudn_bkup_gateway_inst_id | **No**; the following computed attribute will changed to ``peering_ha_cloud_instance_id``. The next ``terraform refresh`` will automatically rectify the state with the new name |

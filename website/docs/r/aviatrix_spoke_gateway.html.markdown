@@ -42,7 +42,7 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_gcp" {
 }
 ```
 ```hcl
-# Create an Aviatrix AZURE Spoke Gateway
+# Create an Aviatrix Azure Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
   cloud_type   = 8
   account_name = "my-azure"
@@ -82,14 +82,14 @@ The following arguments are supported:
 
 ### HA
 * `single_az_ha` (Optional) Set to true if this feature is desired. Valid values: true, false.
-* `ha_subnet` - (Optional) HA Subnet. Required only if enabling HA for AWS/AZURE gateway. Setting to empty/unsetting will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24"
+* `ha_subnet` - (Optional) HA Subnet. Required only if enabling HA for AWS/Azure gateway. Setting to empty/unsetting will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24"
 * `ha_zone` - (Optional) HA Zone. Required only if enabling HA for GCP gateway. Setting to empty/unsetting will disable HA. Setting to a valid zone will create an HA gateway in the zone. Example: "us-west1-c".
 * `ha_insane_mode_az` (Optional) AZ of subnet being created for Insane Mode Spoke HA Gateway. Required for AWS if `insane_mode` is enabled and `ha_subnet` is set. Example: AWS: "us-west-1a".
 * `ha_eip` - (Optional) Public IP address that you want to assign to the HA peering instance. If no value is given, a new EIP will automatically be allocated. Only available for AWS.
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if enabling HA. Example: "t2.micro".
 
 ### Insane Mode
-* `insane_mode` - (Optional) Enable Insane Mode for Spoke Gateway. Insane Mode gateway size has to be at least c5 (AWS) or Standard_D3_v2 (AZURE). If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet. Only supported for AWS and AZURE. Valid values: true, false.
+* `insane_mode` - (Optional) Enable Insane Mode for Spoke Gateway. Insane Mode gateway size has to be at least c5 (AWS) or Standard_D3_v2 (AZURE). If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet. Only supported for AWS and Azure. Valid values: true, false.
 * `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Spoke Gateway. Required for AWS if `insane_mode` is enabled. Example: AWS: "us-west-1a".
 
 ### SNAT/DNAT

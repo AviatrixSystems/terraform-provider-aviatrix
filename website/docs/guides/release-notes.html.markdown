@@ -12,10 +12,43 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.11 (UserConnect-5.3.1391)``
+``Last updated: R2.12 (UserConnect-5.3.1491)``
 
 
 ---
+
+## 2.12.0
+### Notes:
+- Release date: **(11 Mar 2020)**
+- Supported Controller version: **UserConnect-5.3.1491**
+- Supported Terraform version: **v0.12.x**
+
+### Features:
+1. Implemented support for Transit FireNet
+  - ``enable_transit_firenet`` in **aviatrix_transit_gateway**
+  - ``username`` and ``password`` in **aviatrix_firewall_instance** for Azure (Transit) FireNet
+2. New resources for Transit FireNet:
+  - **aviatrix_transit_firenet_policy**
+  - **aviatrix_firewall_management_access**
+3. New resources
+  - **aviatrix_azure_spoke_native_peering**
+4. New resource **aviatrix_azure_peer** to replace **aviatrix_arm_peer**
+5. Implemented support for Azure VNet in **aviatrix_vpc** resource
+
+### Enhancements:
+1. Enhanced handling enabling/disabling active-mesh and attaching/detaching to/from transit actions during updates in **aviatrix_spoke_gateway**
+2. The following computed attributes are now available in in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+  - ``private_ip``
+  - ``instance_id``
+  - ``security_group_id``
+3. ``ha_cloud_instance_id`` is now a computed attribute available in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+4. Replaced ``cloudn_bkup_gateway_inst_id`` with ``peering_ha_cloud_instance_id`` in **aviatrix_gateway**
+5. Deprecated **aviatrix_arm_peer** resource and replaced it with **aviatrix_azure_peer**
+
+### Bug Fixes:
+1. Fixed issue where **aviatrix_firewall_instance** forces replacement if ``firewall_image_version`` is not set
+2. Fixed issue where **aviatrix_gateway_dnat** resource creation fails
+
 
 ## 2.11.0
 ### Notes:

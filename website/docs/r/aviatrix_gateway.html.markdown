@@ -83,7 +83,7 @@ resource "aviatrix_gateway" "test_gateway_gcp" {
 }
 ```
 ```hcl
-# Create an Aviatrix AZURE Gateway
+# Create an Aviatrix Azure Gateway
 resource "aviatrix_gateway" "test_gateway_azure" {
   cloud_type   = 8
   account_name = "devops-azure"
@@ -128,7 +128,7 @@ resource "aviatrix_gateway" "test_gateway_awsgov" {
 The following arguments are supported:
 
 ### Required
-* `cloud_type` - (Required) Cloud service provider to use to launch the gateway. Requires an integer value. Currently only AWS(1), GCP(4), AZURE(8), OCI(16), and AWSGov(256) are supported.
+* `cloud_type` - (Required) Cloud service provider to use to launch the gateway. Requires an integer value. Currently supports AWS(1), GCP(4), AZURE(8), OCI(16), and AWSGov(256).
 * `account_name` - (Required) Account name. This account will be used to launch Aviatrix gateway.
 * `gw_name` - (Required) Name of the Aviatrix gateway to be created.
 * `vpc_id` - (Required) VPC ID/VNet name of cloud provider. Example: AWS: "vpc-abcd1234", GCP: "vpc-gcp-test", AZURE: "vnet1:hello", OCI: "vpc-oracle-test1".
@@ -145,7 +145,7 @@ The following arguments are supported:
 * `peering_ha_gw_size` - (Optional) Size of the Peering HA Gateway to be created. Required if enabling Peering HA. **NOTE: Please see notes [here](#peering_ha_gw_size-1) in regards to any deltas found in your state with the addition of this argument in R1.8.**
 
 ### Insane Mode
-* `insane_mode` - (Optional) Enable Insane Mode for Gateway. Insane Mode gateway size must be at least c5 series (AWS) or Standard_D3_v2 (AZURE). If enabled, a valid /26 CIDR segment of the VPC must be specified to create a new subnet. Only supported for AWS, AWSGov or AZURE. Valid values: true, false.
+* `insane_mode` - (Optional) Enable Insane Mode for Gateway. Insane Mode gateway size must be at least c5 series (AWS) or Standard_D3_v2 (AZURE). If enabled, a valid /26 CIDR segment of the VPC must be specified to create a new subnet. Only supported for AWS, AWSGov or Azure. Valid values: true, false.
 * `insane_mode_az` - (Optional) Region + Availability Zone of subnet being created for Insane Mode gateway. Required for AWS and AWSGov if `insane_mode` is set. Example: AWS: "us-west-1a".
 
 ### SNAT/DNAT
@@ -196,7 +196,7 @@ The following arguments are supported:
 * `customer_managed_keys` - (Optional and Sensitive) Customer-managed key ID.
 
 ### Misc.
-* `allocate_new_eip` - (Optional) If set to false, use an available address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in Controller 2.7+. Valid values: true, false. Default: true. Option not available for GCP, AZURE and OCI gateways, they will automatically allocate new EIPs.
+* `allocate_new_eip` - (Optional) If set to false, use an available address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in Controller 2.7+. Valid values: true, false. Default: true. Option not available for GCP, Azure and OCI gateways, they will automatically allocate new EIPs.
 * `eip` - (Optional) Specified EIP to use for gateway creation. Required when `allocate_new_eip` is false.  Available in Controller version 3.5+. Only supported for AWS gateways.
 * `tag_list` - (Optional) Tag list of the gateway instance. Only available for AWS and AWSGov gateways. Example: ["key1:value1", "key2:value2"].
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for gateway. Currently only supported for AWS and AWSGov gateways. Valid values: true, false. Default value: false.

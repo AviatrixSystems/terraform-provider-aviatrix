@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_vpn_user_accelerator
 
-The aviatrix_vpn_user_accelerator resource manages the Aviatrix VPN User Accelerator.
+The **aviatrix_vpn_user_accelerator** resource manages the Aviatrix VPN User Accelerator.
 
 ## Example Usage
 
@@ -22,9 +22,12 @@ resource "aviatrix_vpn_user_accelerator" "test_vpc_accelerator" {
 
 The following arguments are supported:
 
+### Required
 * `elb_name` - (Required) Name of ELB to be added to VPN User Accelerator. Example: "Aviatrix-vpc-abcd2134".
 
 ## Import
+
+**vpn_user_accelerator** can be imported using the `elb_name`, e.g.
 
 ```
 $ terraform import aviatrix_vpn_user_acclerator.test Aviatrix-vpc-abcd1234

@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_vpn_user
 
-The aviatrix_vpn_user resource creates and manages VPN Users.
+The **aviatrix_vpn_user** resource creates and manages Aviatrix VPN users.
 
 ## Example Usage
 
@@ -25,15 +25,18 @@ resource "aviatrix_vpn_user" "test_vpn_user" {
 
 The following arguments are supported:
 
+### Required
 * `vpc_id` - (Required) VPC ID of Aviatrix VPN gateway. Example: "vpc-abcd1234".
 * `gw_name` - (Required) If ELB is enabled, this will be the name of the ELB, else it will be the name of the Aviatrix VPN gateway. Example: "gw1".
 * `user_name` - (Required) VPN user name. Example: "user".
-* `user_email` - (Optional) VPN User's email. Example: "abc@xyz.com".
+* `user_email` - (Optional) VPN user's email. Example: "abc@xyz.com".
+
+### SAML
 * `saml_endpoint` - (Optional) This is the name of the SAML endpoint to which the user is to be associated. This is required if adding user to a SAML gateway/LB.
 
 ## Import
 
-Instance vpn_user can be imported using the user_name, e.g.
+**vpn_user** can be imported using the `user_name`, e.g.
 
 ```
 $ terraform import aviatrix_vpn_user.test user_name
