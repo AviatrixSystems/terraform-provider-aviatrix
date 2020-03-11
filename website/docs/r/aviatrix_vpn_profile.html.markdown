@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_vpn_profile
 
-The aviatrix_vpn_profile resource allows the creation and management of Aviatrix VPN user profiles.
+The **aviatrix_vpn_profile** resource allows the creation and management of Aviatrix VPN user profiles.
 
 ## Example Usage
 
@@ -41,8 +41,11 @@ resource "aviatrix_vpn_profile" "test_vpn_profile" {
 
 The following arguments are supported:
 
+### Required
 * `name` - (Required) Enter any name for the VPN profile.
-* `base_rule` - (Optional) Base policy rule of  the profile to be added. Enter "allow_all" or "deny_all", based on whether you want a white list or black list.
+* `base_rule` - (Optional) Base policy rule of the profile to be added. Enter "allow_all" or "deny_all", based on whether you want a whitelist or blacklist.
+
+### Policy Options
 * `users` - (Optional) List of VPN users to attach to this profile.
 * `policy` - (Optional) New security policy for the profile. Each policy has the following attributes:
   * `action` - (Required) Should be the opposite of the base rule for correct behaviour. Valid values for action: "allow", "deny".
@@ -52,7 +55,7 @@ The following arguments are supported:
 
 ## Import
 
-Instance vpn_profile can be imported using the name, e.g.
+**vpn_profile** can be imported using the VPN profile's `name`, e.g.
 
 ```
 $ terraform import aviatrix_vpn_profile.test name

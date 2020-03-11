@@ -7,15 +7,15 @@ description: |-
 
 # aviatrix_trans_peer
 
-The aviatrix_trans_peer resource allows the creation and management of Aviatrix transitive peerings.
+The **aviatrix_trans_peer** resource allows the creation and management of Aviatrix [Encrypted Transitive Peering](https://docs.aviatrix.com/HowTos/TransPeering.html).
 
 ## Example Usage
 
 ```hcl
 # Create an Aviatrix AWS Transitive Peering
 resource "aviatrix_trans_peer" "test_trans_peer" {
-  source         = "avtxuseastgw1"
-  nexthop        = "avtxuseastgw2"
+  source         = "avtx-us-east-gw1"
+  nexthop        = "avtx-us-east-gw2"
   reachable_cidr = "10.152.0.0/16"
 }
 ```
@@ -24,13 +24,14 @@ resource "aviatrix_trans_peer" "test_trans_peer" {
 
 The following arguments are supported:
 
+### Required
 * `source` - (Required) Name of Source gateway.
 * `nexthop` - (Required) Name of nexthop gateway.
 * `reachable_cidr` - (Required) Destination CIDR.
 
 ## Import
 
-Instance trans_peer can be imported using the source, nexthop and reachable_cidr, e.g.
+**trans_peer** can be imported using the `source`, `nexthop` and `reachable_cidr`, e.g.
 
 ```
 $ terraform import aviatrix_trans_peer.test source~nexthop~reachable_cidr

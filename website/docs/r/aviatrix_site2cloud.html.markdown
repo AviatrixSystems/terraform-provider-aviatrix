@@ -7,12 +7,12 @@ description: |-
 
 # aviatrix_site2cloud
 
-The aviatrix_site2cloud resource creates and manages Aviatrix Site2Cloud connections.
+The **aviatrix_site2cloud** resource creates and manages Aviatrix Site2Cloud connections.
 
 ## Example Usage
 
 ```hcl
-# Create an Aviatrix Site2cloud
+# Create an Aviatrix Site2cloud Connection
 resource "aviatrix_site2cloud" "test_s2c" {
   vpc_id                     = "vpc-abcd1234"
   connection_name            = "my_conn"
@@ -39,9 +39,9 @@ The following arguments are supported:
 * `primary_cloud_gateway_name` - (Required) Primary Cloud Gateway Name.
 * `remote_gateway_ip` - (Required) Remote Gateway IP.
 * `remote_subnet_cidr` - (Required) Remote Subnet CIDR.
-* `remote_subnet_virtual` - Remote Subnet CIDR (Virtual). Required for connection type "mapped" only.
-* `local_subnet_cidr` - (Optional) Local Subnet CIDR. Required for connection type "mapped".
-* `local_subnet_virtual` - Local Subnet CIDR (Virtual). Required for connection type "mapped" only.
+* `remote_subnet_virtual` - Remote Subnet CIDR (Virtual). **Required for connection type "mapped" only.**
+* `local_subnet_cidr` - (Optional) Local Subnet CIDR. **Required for connection type "mapped".**
+* `local_subnet_virtual` - Local Subnet CIDR (Virtual). **Required for connection type "mapped" only.**
 
 ## HA
 * `ha_enabled` - (Optional) Specify whether or not to enable HA. Valid Values: true, false. **NOTE: Please see notes [here](#ha-enabled) regarding HA requirements.**
@@ -81,7 +81,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Instance site2cloud can be imported using the connection_name and vpc_id, e.g.
+**site2cloud** can be imported using the `connection_name` and `vpc_id`, e.g.
 
 ```
 $ terraform import aviatrix_site2cloud.test connection_name~vpc_id
@@ -96,11 +96,11 @@ Only supported for 'udp' tunnel type. If set to true, the six algorithm argument
 If you are using/upgraded to Aviatrix Terraform Provider R1.9+, and a site2cloud resource was originally created with a provider version <R1.9, you must do ‘terraform refresh’ to update and apply the attribute’s default value (true) into the state file.
 
 ### HA Enabled
-The following arguments are only supported if the backup gateway is set up by enabling peering HA through the primary gateway resource by specifying a "peering_ha_subnet" and "peering_ha_gw_size". For more information on site2cloud, please see the doc site [here](https://docs.aviatrix.com/HowTos/site2cloud.html):
+The following arguments are only supported if the backup gateway is set up by enabling peering HA through the primary gateway resource by specifying a `peering_ha_subnet` and `peering_ha_gw_size`. For more information on site2cloud, please see the doc site [here](https://docs.aviatrix.com/HowTos/site2cloud.html):
 
 * `backup_gateway_name`
 * `backup_remote_gateway_ip`
 * `ha_enabled`
 
 ### ssl_server_pool
-Only supported for 'tcp' tunnel type. If not set, default value will be used. If set, needs to be set to a different value than default value.
+Only supported for 'tcp' tunnel type. If not set, default value will be used. If set, needs to be set to a different value than the default value.
