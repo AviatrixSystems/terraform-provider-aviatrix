@@ -86,12 +86,16 @@ output "AZURE_SUBNET" {
   value = module.aviatrix_azure_vpc1.subnet
 }
 
+output "AZURE_REGION2" {
+  value = var.azure_region2
+}
+
 output "AZURE_VNET_ID2" {
   value = "${module.aviatrix_azure_vpc2.vnet}:${module.aviatrix_azure_vpc2.group}"
 }
 
-output "AZURE_REGION2" {
-  value = var.azure_region2
+output "AZURE_SUBNET2" {
+  value = module.aviatrix_azure_vpc2.subnet
 }
 
 output "AZURE_GW_SIZE" {
