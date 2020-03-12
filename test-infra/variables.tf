@@ -16,7 +16,7 @@ variable "azure_vpc_subnet1" {default="10.30.0.0/24"}
 variable "azure_vpc_subnet2" {default="10.40.0.0/24"}
 variable "azure_vpc_subnet3" {default="10.30.1.0/24"}
 variable "azure_vpc_subnet4" {default="10.40.1.0/24"}
-variable "azure_gw_size" {default="Standard_B1s"}
+variable "azure_gw_size" {default="Standard_B2ms"}
 variable "azure_subscription_id" {}
 variable "azure_tenant_id" {}
 variable "azure_client_id" {}

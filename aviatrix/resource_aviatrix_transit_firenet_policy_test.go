@@ -154,7 +154,7 @@ resource "aviatrix_transit_gateway" "test_transit_azure" {
 	connected_transit      = true 
 	enable_transit_firenet = true
 }
-resource "aviatrix_spoke_gateway" "test_spoke_auzre" {
+resource "aviatrix_spoke_gateway" "test_spoke_azure" {
 	cloud_type         = 8
 	account_name       = aviatrix_account.test_acc_azure.account_name
 	gw_name            = "tfg-azure-%s"
