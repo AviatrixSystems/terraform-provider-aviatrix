@@ -1,4 +1,4 @@
-## 2.12.0 (Unreleased)
+## 2.12.0 (March 12, 2020)
 ### Notes:
 - Supported Controller version: **UserConnect-5.3.1491** 
 - Supported Terraform version: **v0.12.x**
