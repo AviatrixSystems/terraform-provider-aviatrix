@@ -48,9 +48,9 @@ Static credentials can be provided by specifying the `controller_ip`, `username`
 
 ```hcl
 provider "aviatrix" {
-  controller_ip           = "1.2.3.4"
-  username                = "admin"
-  password                = "password"
+  controller_ip = "1.2.3.4"
+  username      = "admin"
+  password      = "password"
 }
 ```
 
@@ -64,12 +64,11 @@ provider "aviatrix" {}
 **Usage:**
 
 ```sh
-$ export AVIATRIX_CONTROLLER_IP="1.2.3.4"
-$ export AVIATRIX_USERNAME="admin"
-$ export AVIATRIX_PASSWORD="password"
+$ export AVIATRIX_CONTROLLER_IP = "1.2.3.4"
+$ export AVIATRIX_USERNAME = "admin"
+$ export AVIATRIX_PASSWORD = "password"
 $ terraform plan
 ```
-
 
 ## Argument Reference
 
@@ -81,5 +80,5 @@ The following arguments are supported:
 * `password` - (Required) Aviatrix account password corresponding to above username.
 
 ### Optional
-* `skip_version_validation` - (Optional) Default: false. If set to true, it skips checking whether current Terraform provider supports current Controller version.
-* `version` - (Optional) - Specify Aviatrix provider release version number. If not specified, Terraform will automatically pull and source the latest release.
+* `skip_version_validation` - (Optional) Valida values: true, false. Default: false. If set to true, it skips checking whether current Terraform provider supports current Controller version.
+* `version` - (Optional) Specify Aviatrix provider release version number. If not specified, Terraform will automatically pull and source the latest release.
