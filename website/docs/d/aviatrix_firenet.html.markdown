@@ -14,7 +14,7 @@ Use this data source to get the Aviatrix firenet for use in other resources.
 ```hcl
 # Aviatrix FireNet Data Source
 data "aviatrix_firenet" "foo" {
-	vpc_id = "vpc-abcdef"
+  vpc_id = "vpc-abcdef"
 }
 ```
 
