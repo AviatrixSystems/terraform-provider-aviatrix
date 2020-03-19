@@ -3,7 +3,6 @@ package aviatrix
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -286,94 +285,94 @@ func resourceAviatrixExternalDeviceConnCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAviatrixExternalDeviceConnRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
+	//client := meta.(*goaviatrix.Client)
+	//
+	//connName := d.Get("conn_name").(string)
+	//vpcID := d.Get("vpc_id").(string)
+	//if connName == "" || vpcID == "" {
+	//	id := d.Id()
+	//	log.Printf("[DEBUG] Looks like an import, no 'conn_name' or 'vpc_id' received. Import Id is %s", id)
+	//	d.Set("conn_name", strings.Split(id, "~")[0])
+	//	d.Set("vpc_id", strings.Split(id, "~")[1])
+	//	d.SetId(id)
+	//}
 
-	connName := d.Get("conn_name").(string)
-	vpcID := d.Get("vpc_id").(string)
-	if connName == "" || vpcID == "" {
-		id := d.Id()
-		log.Printf("[DEBUG] Looks like an import, no 'conn_name' or 'vpc_id' received. Import Id is %s", id)
-		d.Set("conn_name", strings.Split(id, "~")[0])
-		d.Set("vpc_id", strings.Split(id, "~")[1])
-		d.SetId(id)
-	}
-
-	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-		VpcID:    d.Get("vpc_id").(string),
-		ConnName: d.Get("conn_name").(string),
-	}
-	conn, err := client.GetSite2CloudConnDetail(externalDeviceConn)
-	if err != nil {
-		if err == goaviatrix.ErrNotFound {
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("couldn't find Aviatrix Site2Cloud: %s, %#v", err, s2c)
-	}
-
-	if s2c != nil {
-		d.Set("vpc_id", s2c.VpcID)
-		d.Set("remote_gateway_type", s2c.RemoteGwType)
-		d.Set("tunnel_type", s2c.TunnelType)
-		d.Set("local_subnet_cidr", s2c.LocalSubnet)
-		d.Set("remote_subnet_cidr", s2c.RemoteSubnet)
-		if s2c.HAEnabled == "enabled" {
-			d.Set("ha_enabled", true)
-		} else {
-			d.Set("ha_enabled", false)
-		}
-
-		if s2c.HAEnabled == "enabled" {
-			d.Set("remote_gateway_ip", s2c.RemoteGwIP)
-			d.Set("backup_remote_gateway_ip", s2c.RemoteGwIP2)
-			d.Set("primary_cloud_gateway_name", s2c.GwName)
-			d.Set("backup_gateway_name", s2c.BackupGwName)
-		} else {
-			d.Set("remote_gateway_ip", s2c.RemoteGwIP)
-			d.Set("primary_cloud_gateway_name", s2c.GwName)
-		}
-
-		d.Set("connection_type", s2c.ConnType)
-		if s2c.ConnType == "mapped" {
-			d.Set("remote_subnet_virtual", s2c.RemoteSubnetVirtual)
-			d.Set("local_subnet_virtual", s2c.LocalSubnetVirtual)
-		}
-
-		if s2c.CustomAlgorithms {
-			d.Set("custom_algorithms", true)
-			d.Set("phase_1_authentication", s2c.Phase1Auth)
-			d.Set("phase_2_authentication", s2c.Phase2Auth)
-			d.Set("phase_1_dh_groups", s2c.Phase1DhGroups)
-			d.Set("phase_2_dh_groups", s2c.Phase2DhGroups)
-			d.Set("phase_1_encryption", s2c.Phase1Encryption)
-			d.Set("phase_2_encryption", s2c.Phase2Encryption)
-		} else {
-			d.Set("custom_algorithms", false)
-		}
-
-		if s2c.PrivateRouteEncryption == "true" {
-			d.Set("private_route_encryption", true)
-
-			if err := d.Set("route_table_list", s2c.RouteTableList); err != nil {
-				log.Printf("[WARN] Error setting route_table_list for (%s): %s", d.Id(), err)
-			}
-		} else {
-			d.Set("private_route_encryption", false)
-		}
-
-		if s2c.SslServerPool != "" {
-			d.Set("ssl_server_pool", s2c.SslServerPool)
-		}
-
-		d.Set("enable_dead_peer_detection", s2c.DeadPeerDetection)
-		d.Set("enable_active_active", s2c.EnableActiveActive)
-	}
-
-	log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", d.Get("connection_name").(string), site2cloud)
-	log.Printf("[TRACE] Reading Aviatrix Site2Cloud connection_type: [%s]", d.Get("connection_type").(string))
-
-	d.SetId(site2cloud.TunnelName + "~" + site2cloud.VpcID)
-	return nil
+	//externalDeviceConn := &goaviatrix.ExternalDeviceConn{
+	//	VpcID:    d.Get("vpc_id").(string),
+	//	ConnName: d.Get("conn_name").(string),
+	//}
+	//conn, err := client.GetSite2CloudConnDetail(externalDeviceConn)
+	//if err != nil {
+	//	if err == goaviatrix.ErrNotFound {
+	//		d.SetId("")
+	//		return nil
+	//	}
+	//	return fmt.Errorf("couldn't find Aviatrix Site2Cloud: %s, %#v", err, s2c)
+	//}
+	//
+	//if s2c != nil {
+	//	d.Set("vpc_id", s2c.VpcID)
+	//	d.Set("remote_gateway_type", s2c.RemoteGwType)
+	//	d.Set("tunnel_type", s2c.TunnelType)
+	//	d.Set("local_subnet_cidr", s2c.LocalSubnet)
+	//	d.Set("remote_subnet_cidr", s2c.RemoteSubnet)
+	//	if s2c.HAEnabled == "enabled" {
+	//		d.Set("ha_enabled", true)
+	//	} else {
+	//		d.Set("ha_enabled", false)
+	//	}
+	//
+	//	if s2c.HAEnabled == "enabled" {
+	//		d.Set("remote_gateway_ip", s2c.RemoteGwIP)
+	//		d.Set("backup_remote_gateway_ip", s2c.RemoteGwIP2)
+	//		d.Set("primary_cloud_gateway_name", s2c.GwName)
+	//		d.Set("backup_gateway_name", s2c.BackupGwName)
+	//	} else {
+	//		d.Set("remote_gateway_ip", s2c.RemoteGwIP)
+	//		d.Set("primary_cloud_gateway_name", s2c.GwName)
+	//	}
+	//
+	//	d.Set("connection_type", s2c.ConnType)
+	//	if s2c.ConnType == "mapped" {
+	//		d.Set("remote_subnet_virtual", s2c.RemoteSubnetVirtual)
+	//		d.Set("local_subnet_virtual", s2c.LocalSubnetVirtual)
+	//	}
+	//
+	//	if s2c.CustomAlgorithms {
+	//		d.Set("custom_algorithms", true)
+	//		d.Set("phase_1_authentication", s2c.Phase1Auth)
+	//		d.Set("phase_2_authentication", s2c.Phase2Auth)
+	//		d.Set("phase_1_dh_groups", s2c.Phase1DhGroups)
+	//		d.Set("phase_2_dh_groups", s2c.Phase2DhGroups)
+	//		d.Set("phase_1_encryption", s2c.Phase1Encryption)
+	//		d.Set("phase_2_encryption", s2c.Phase2Encryption)
+	//	} else {
+	//		d.Set("custom_algorithms", false)
+	//	}
+	//
+	//	if s2c.PrivateRouteEncryption == "true" {
+	//		d.Set("private_route_encryption", true)
+	//
+	//		if err := d.Set("route_table_list", s2c.RouteTableList); err != nil {
+	//			log.Printf("[WARN] Error setting route_table_list for (%s): %s", d.Id(), err)
+	//		}
+	//	} else {
+	//		d.Set("private_route_encryption", false)
+	//	}
+	//
+	//	if s2c.SslServerPool != "" {
+	//		d.Set("ssl_server_pool", s2c.SslServerPool)
+	//	}
+	//
+	//	d.Set("enable_dead_peer_detection", s2c.DeadPeerDetection)
+	//	d.Set("enable_active_active", s2c.EnableActiveActive)
+	//}
+	//
+	//log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", d.Get("connection_name").(string), site2cloud)
+	//log.Printf("[TRACE] Reading Aviatrix Site2Cloud connection_type: [%s]", d.Get("connection_type").(string))
+	//
+	//d.SetId(site2cloud.TunnelName + "~" + site2cloud.VpcID)
+	//return nil
 	return nil
 }
 

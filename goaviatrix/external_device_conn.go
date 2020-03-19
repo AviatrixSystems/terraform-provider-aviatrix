@@ -129,24 +129,24 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 	if len(externalDeviceConnDetail.ConnName) != 0 {
 		externalDeviceConn.GwName = externalDeviceConnDetail.GwName
 		externalDeviceConn.ConnType = externalDeviceConnDetail.ConnType
-		if externalDeviceConn.ConnType == "mapped" {
-			externalDeviceConn.RemoteSubnet = externalDeviceConnDetail.RemoteSubnet
-			externalDeviceConn.LocalSubnet = externalDeviceConnDetail.LocalSubnet
-			externalDeviceConn.RemoteSubnetVirtual = externalDeviceConnDetail.RemoteSubnetVirtual
-			externalDeviceConn.LocalSubnetVirtual = externalDeviceConnDetail.LocalSubnetVirtual
-		} else {
-			externalDeviceConn.RemoteSubnet = externalDeviceConnDetail.RemoteCidr
-			externalDeviceConn.LocalSubnet = externalDeviceConnDetail.LocalCidr
-		}
-		externalDeviceConn.HAEnabled = externalDeviceConnDetail.HAEnabled
-		for i := range s2cConnDetail.Tunnels {
-			if externalDeviceConnDetail.Tunnels[i].GwName == externalDeviceConn.GwName {
-				externalDeviceConn.RemoteGwIP = externalDeviceConnDetail.Tunnels[i].PeerIP
-			} else {
-				externalDeviceConn.BackupGwName = externalDeviceConnDetail.Tunnels[i].GwName
-				externalDeviceConn.RemoteGwIP2 = externalDeviceConnDetail.Tunnels[i].PeerIP
-			}
-		}
+		//if externalDeviceConn.ConnType == "mapped" {
+		//	externalDeviceConn.RemoteSubnet = externalDeviceConnDetail.RemoteSubnet
+		//	externalDeviceConn.LocalSubnet = externalDeviceConnDetail.LocalSubnet
+		//	externalDeviceConn.RemoteSubnetVirtual = externalDeviceConnDetail.RemoteSubnetVirtual
+		//	externalDeviceConn.LocalSubnetVirtual = externalDeviceConnDetail.LocalSubnetVirtual
+		//} else {
+		//	externalDeviceConn.RemoteSubnet = externalDeviceConnDetail.RemoteCidr
+		//	externalDeviceConn.LocalSubnet = externalDeviceConnDetail.LocalCidr
+		//}
+		//externalDeviceConn.HAEnabled = externalDeviceConnDetail.HAEnabled
+		//for i := range s2cConnDetail.Tunnels {
+		//	if externalDeviceConnDetail.Tunnels[i].GwName == externalDeviceConn.GwName {
+		//		externalDeviceConn.RemoteGwIP = externalDeviceConnDetail.Tunnels[i].PeerIP
+		//	} else {
+		//		externalDeviceConn.BackupGwName = externalDeviceConnDetail.Tunnels[i].GwName
+		//		externalDeviceConn.RemoteGwIP2 = externalDeviceConnDetail.Tunnels[i].PeerIP
+		//	}
+		//}
 		if externalDeviceConnDetail.Algorithm.Phase1Auth[0] == Phase1AuthDefault &&
 			externalDeviceConnDetail.Algorithm.Phase2Auth[0] == Phase2AuthDefault &&
 			externalDeviceConnDetail.Algorithm.Phase1DhGroups[0] == Phase1DhGroupDefault &&
