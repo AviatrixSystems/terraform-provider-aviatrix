@@ -15,7 +15,6 @@ The **aviatrix_account_user** resource allows the creation and management of Avi
 # Create an Aviatrix User Account
 resource "aviatrix_account_user" "test_accountuser" {
   username     = "username1"
-  account_name = "test-accountname"
   email        = "username1@testdomain.com"
   password     = "passwordforuser1-1234"
 }
@@ -27,7 +26,6 @@ The following arguments are supported for creating user account:
 
 ### Required
 * `username` - (Required) Name of account user to be created.
-* `account_name` - (Required) Cloud account name of user to be created.
 * `email` - (Required) Email of address of account user to be created.
 * `password` - (Required) Login password for the account user to be created. If password is changed, current account will be destroyed and a new account will be created.
 
