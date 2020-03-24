@@ -19,11 +19,6 @@ func resourceAviatrixAccountUser() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Cloud account name of user to be created.",
-			},
 			"password": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -49,10 +44,9 @@ func resourceAviatrixAccountUserCreate(d *schema.ResourceData, meta interface{})
 	client := meta.(*goaviatrix.Client)
 
 	user := &goaviatrix.AccountUser{
-		AccountName: d.Get("account_name").(string),
-		Password:    d.Get("password").(string),
-		Email:       d.Get("email").(string),
-		UserName:    d.Get("username").(string),
+		Password: d.Get("password").(string),
+		Email:    d.Get("email").(string),
+		UserName: d.Get("username").(string),
 	}
 
 	log.Printf("[INFO] Creating Aviatrix account user: %#v", user)
@@ -72,9 +66,7 @@ func resourceAviatrixAccountUserRead(d *schema.ResourceData, meta interface{}) e
 	client := meta.(*goaviatrix.Client)
 
 	userName := d.Get("username").(string)
-	accountName := d.Get("account_name").(string)
-
-	if userName == "" || accountName == "" {
+	if userName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
 		d.Set("username", id)
@@ -82,8 +74,7 @@ func resourceAviatrixAccountUserRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	user := &goaviatrix.AccountUser{
-		AccountName: d.Get("account_name").(string),
-		UserName:    d.Get("username").(string),
+		UserName: d.Get("username").(string),
 	}
 
 	log.Printf("[INFO] Looking for Aviatrix account user: %#v", user)
@@ -97,7 +88,6 @@ func resourceAviatrixAccountUserRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("aviatrix Account User: %s", err)
 	}
 	if acc != nil {
-		d.Set("account_name", acc.AccountName)
 		d.Set("email", acc.Email)
 		d.Set("username", acc.UserName)
 		d.SetId(acc.UserName)
@@ -110,9 +100,8 @@ func resourceAviatrixAccountUserUpdate(d *schema.ResourceData, meta interface{})
 	client := meta.(*goaviatrix.Client)
 
 	user := &goaviatrix.AccountUserEdit{
-		AccountName: d.Get("account_name").(string),
-		Email:       d.Get("email").(string),
-		UserName:    d.Get("username").(string),
+		Email:    d.Get("email").(string),
+		UserName: d.Get("username").(string),
 	}
 
 	d.Partial(true)
@@ -121,10 +110,6 @@ func resourceAviatrixAccountUserUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("username") {
 		return fmt.Errorf("update username is not allowed")
-	}
-
-	if d.HasChange("account_name") {
-		return fmt.Errorf("change account name for an existing user is not allowed")
 	}
 
 	if d.HasChange("email") {
@@ -148,8 +133,7 @@ func resourceAviatrixAccountUserDelete(d *schema.ResourceData, meta interface{})
 	client := meta.(*goaviatrix.Client)
 
 	user := &goaviatrix.AccountUser{
-		AccountName: d.Get("account_name").(string),
-		UserName:    d.Get("username").(string),
+		UserName: d.Get("username").(string),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix account user: %#v", user)
