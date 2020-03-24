@@ -42,7 +42,7 @@ func resourceAviatrixRbacGroupCreate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("failed to create Aviatrix RBAC permission group: %s", err)
 	}
 
-	log.Printf("[DEBUG] Aviatrix aRBAC permission group %s created", group.GroupName)
+	log.Printf("[DEBUG] Aviatrix RBAC permission group %s created", group.GroupName)
 
 	d.SetId(group.GroupName)
 	return resourceAviatrixRbacGroupRead(d, meta)
