@@ -60,6 +60,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_geo_vpn":                              resourceAviatrixGeoVPN(),
 			"aviatrix_rbac_group":                           resourceAviatrixRbacGroup(),
 			"aviatrix_rbac_group_access_account_attachment": resourceAviatrixRbacGroupAccessAccountAttachment(),
+			"aviatrix_rbac_group_permission_attachment":     resourceAviatrixRbacGroupPermissionAttachment(),
 			"aviatrix_rbac_group_user_attachment":           resourceAviatrixRbacGroupUserAttachment(),
 			"aviatrix_saml_endpoint":                        resourceAviatrixSamlEndpoint(),
 			"aviatrix_site2cloud":                           resourceAviatrixSite2Cloud(),
