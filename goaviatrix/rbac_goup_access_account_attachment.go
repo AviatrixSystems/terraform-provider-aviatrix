@@ -9,23 +9,23 @@ import (
 	"strings"
 )
 
-type RbacGroupAccountAttachment struct {
-	CID         string `form:"CID,omitempty"`
-	Action      string `form:"action,omitempty"`
-	GroupName   string `form:"group_name,omitempty" json:"group_name,omitempty"`
-	AccountName string `form:"accounts,omitempty" json:"accounts,omitempty"`
+type RbacGroupAccessAccountAttachment struct {
+	CID               string `form:"CID,omitempty"`
+	Action            string `form:"action,omitempty"`
+	GroupName         string `form:"group_name,omitempty" json:"group_name,omitempty"`
+	AccessAccountName string `form:"accounts,omitempty" json:"accounts,omitempty"`
 }
 
-type RbacGroupAccountAttachmentListResp struct {
-	Return                         bool     `json:"return"`
-	RbacGroupAccountAttachmentList []string `json:"results"`
-	Reason                         string   `json:"reason"`
+type RbacGroupAccessAccountAttachmentListResp struct {
+	Return                               bool     `json:"return"`
+	RbacGroupAccessAccountAttachmentList []string `json:"results"`
+	Reason                               string   `json:"reason"`
 }
 
-func (c *Client) CreateRbacGroupAccountAttachment(rbacGroupAccountAttachment *RbacGroupAccountAttachment) error {
-	rbacGroupAccountAttachment.CID = c.CID
-	rbacGroupAccountAttachment.Action = "add_access_accounts_to_rbac_group"
-	resp, err := c.Post(c.baseURL, rbacGroupAccountAttachment)
+func (c *Client) CreateRbacGroupAccessAccountAttachment(rbacGroupAccessAccountAttachment *RbacGroupAccessAccountAttachment) error {
+	rbacGroupAccessAccountAttachment.CID = c.CID
+	rbacGroupAccessAccountAttachment.Action = "add_access_accounts_to_rbac_group"
+	resp, err := c.Post(c.baseURL, rbacGroupAccessAccountAttachment)
 	if err != nil {
 		return errors.New("HTTP Post 'add_access_accounts_to_rbac_group' failed: " + err.Error())
 	}
@@ -43,7 +43,7 @@ func (c *Client) CreateRbacGroupAccountAttachment(rbacGroupAccountAttachment *Rb
 	return nil
 }
 
-func (c *Client) GetRbacGroupAccountAttachment(rbacGroupAccountAttachment *RbacGroupAccountAttachment) (*RbacGroupAccountAttachment, error) {
+func (c *Client) GetRbacGroupAccessAccountAttachment(rbacGroupAccessAccountAttachment *RbacGroupAccessAccountAttachment) (*RbacGroupAccessAccountAttachment, error) {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
 		return nil, errors.New(("url Parsing failed for 'list_access_accounts_in_rbac_group': ") + err.Error())
@@ -51,13 +51,13 @@ func (c *Client) GetRbacGroupAccountAttachment(rbacGroupAccountAttachment *RbacG
 	listAccessAccountsInRbacGroup := url.Values{}
 	listAccessAccountsInRbacGroup.Add("CID", c.CID)
 	listAccessAccountsInRbacGroup.Add("action", "list_access_accounts_in_rbac_group")
-	listAccessAccountsInRbacGroup.Add("group_name", rbacGroupAccountAttachment.GroupName)
+	listAccessAccountsInRbacGroup.Add("group_name", rbacGroupAccessAccountAttachment.GroupName)
 	Url.RawQuery = listAccessAccountsInRbacGroup.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
 		return nil, errors.New("HTTP Get 'list_access_accounts_in_rbac_group' failed: " + err.Error())
 	}
-	var data RbacGroupAccountAttachmentListResp
+	var data RbacGroupAccessAccountAttachmentListResp
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
 	bodyString := buf.String()
@@ -68,21 +68,21 @@ func (c *Client) GetRbacGroupAccountAttachment(rbacGroupAccountAttachment *RbacG
 	if !data.Return {
 		return nil, errors.New("Rest API 'list_access_accounts_in_rbac_group' Get failed: " + data.Reason)
 	}
-	attachments := data.RbacGroupAccountAttachmentList
+	attachments := data.RbacGroupAccessAccountAttachmentList
 	for i := range attachments {
-		if attachments[i] == rbacGroupAccountAttachment.AccountName {
-			log.Printf("[INFO] Found Aviatrix RBAC group account attachment: %s",
-				rbacGroupAccountAttachment.GroupName+"~"+rbacGroupAccountAttachment.AccountName)
-			return rbacGroupAccountAttachment, nil
+		if attachments[i] == rbacGroupAccessAccountAttachment.AccessAccountName {
+			log.Printf("[INFO] Found Aviatrix RBAC group access account attachment: %s",
+				rbacGroupAccessAccountAttachment.GroupName+"~"+rbacGroupAccessAccountAttachment.AccessAccountName)
+			return rbacGroupAccessAccountAttachment, nil
 		}
 	}
 
-	log.Printf("Couldn't find Aviatrix RBAC group account attachment: %s",
-		rbacGroupAccountAttachment.GroupName+"~"+rbacGroupAccountAttachment.AccountName)
+	log.Printf("Couldn't find Aviatrix RBAC group access account attachment: %s",
+		rbacGroupAccessAccountAttachment.GroupName+"~"+rbacGroupAccessAccountAttachment.AccessAccountName)
 	return nil, ErrNotFound
 }
 
-func (c *Client) DeleteRbacGroupAccountAttachment(rbacGroupAccountAttachment *RbacGroupAccountAttachment) error {
+func (c *Client) DeleteRbacGroupAccessAccountAttachment(rbacGroupAccessAccountAttachment *RbacGroupAccessAccountAttachment) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
 		return errors.New(("url Parsing failed for 'delete_access_accounts_from_rbac_group': ") + err.Error())
@@ -90,8 +90,8 @@ func (c *Client) DeleteRbacGroupAccountAttachment(rbacGroupAccountAttachment *Rb
 	deleteAccessAccountsFromRbacGroups := url.Values{}
 	deleteAccessAccountsFromRbacGroups.Add("CID", c.CID)
 	deleteAccessAccountsFromRbacGroups.Add("action", "delete_access_accounts_from_rbac_group")
-	deleteAccessAccountsFromRbacGroups.Add("group_name", rbacGroupAccountAttachment.GroupName)
-	deleteAccessAccountsFromRbacGroups.Add("accounts", rbacGroupAccountAttachment.AccountName)
+	deleteAccessAccountsFromRbacGroups.Add("group_name", rbacGroupAccessAccountAttachment.GroupName)
+	deleteAccessAccountsFromRbacGroups.Add("accounts", rbacGroupAccessAccountAttachment.AccessAccountName)
 	Url.RawQuery = deleteAccessAccountsFromRbacGroups.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
