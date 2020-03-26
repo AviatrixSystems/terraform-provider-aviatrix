@@ -55,6 +55,7 @@ The following arguments are supported:
 * `pre_shared_key_tun_1` - (Optional) Pre-Shared Key for Tunnel 1. A 8-64 character string with alphanumeric underscore(_) and dot(.). It cannot start with 0.
 * `inside_ip_cidr_tun_2` - (Optional) Inside IP CIDR for Tunnel 2. A /30 CIDR in 169.254.0.0/16.
 * `pre_shared_key_tun_2` - (Optional) Pre-Shared Key for Tunnel 2. A 8-64 character string with alphanumeric underscore(_) and dot(.). It cannot start with 0.
+* `enable_learned_cidrs_approval` - (Optional) Switch to enable/disable encrypted transit approval for aws tgw vpn connection. Valid values: true, false. Default value: false.
 
 ## Attribute Reference
 
