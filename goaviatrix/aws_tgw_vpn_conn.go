@@ -11,33 +11,35 @@ import (
 
 // VGWConn simple struct to hold VGW Connection details
 type AwsTgwVpnConn struct {
-	Action           string `form:"action,omitempty"`
-	TgwName          string `form:"tgw_name,omitempty"`
-	RouteDomainName  string `form:"route_domain_name,omitempty"`
-	CID              string `form:"CID,omitempty"`
-	ConnName         string `form:"connection_name,omitempty"`
-	PublicIP         string `form:"public_ip,omitempty"`
-	OnpremASN        string `form:"onprem_asn,omitempty"`
-	RemoteCIDR       string `form:"remote_cidr,omitempty"`
-	VpnID            string `form:"vpn_id,omitempty"`
-	InsideIpCIDRTun1 string `form:"inside_ip_cidr_tun_1,omitempty"`
-	InsideIpCIDRTun2 string `form:"inside_ip_cidr_tun_2,omitempty"`
-	PreSharedKeyTun1 string `form:"pre_shared_key_tun_1,omitempty"`
-	PreSharedKeyTun2 string `form:"pre_shared_key_tun_2,omitempty"`
+	Action               string `form:"action,omitempty"`
+	TgwName              string `form:"tgw_name,omitempty"`
+	RouteDomainName      string `form:"route_domain_name,omitempty"`
+	CID                  string `form:"CID,omitempty"`
+	ConnName             string `form:"connection_name,omitempty"`
+	PublicIP             string `form:"public_ip,omitempty"`
+	OnpremASN            string `form:"onprem_asn,omitempty"`
+	RemoteCIDR           string `form:"remote_cidr,omitempty"`
+	VpnID                string `form:"vpn_id,omitempty"`
+	InsideIpCIDRTun1     string `form:"inside_ip_cidr_tun_1,omitempty"`
+	InsideIpCIDRTun2     string `form:"inside_ip_cidr_tun_2,omitempty"`
+	PreSharedKeyTun1     string `form:"pre_shared_key_tun_1,omitempty"`
+	PreSharedKeyTun2     string `form:"pre_shared_key_tun_2,omitempty"`
+	LearnedCidrsApproval string `form:"learned_cidrs_approval,omitempty""`
 }
 
 type AwsTgwVpnConnEdit struct {
-	TgwName          string   `json:"tgw_name,omitempty"`
-	RouteDomainName  string   `json:"associated_route_domain_name,omitempty"`
-	ConnName         string   `json:"vpc_name,omitempty"`
-	PublicIP         string   `json:"public_ip,omitempty"`
-	OnpremASN        string   `json:"aws_side_asn,omitempty"`
-	RemoteCIDR       []string `json:"remote_cidrs,omitempty"`
-	VpnID            string   `json:"vpc_id,omitempty"`
-	InsideIpCIDRTun1 string   `json:"inside_ip_cidr_tun_1,omitempty"`
-	InsideIpCIDRTun2 string   `json:"inside_ip_cidr_tun_2,omitempty"`
-	PreSharedKeyTun1 string   `json:"pre_shared_key_tun_1,omitempty"`
-	PreSharedKeyTun2 string   `json:"pre_shared_key_tun_2,omitempty"`
+	TgwName              string   `json:"tgw_name,omitempty"`
+	RouteDomainName      string   `json:"associated_route_domain_name,omitempty"`
+	ConnName             string   `json:"vpc_name,omitempty"`
+	PublicIP             string   `json:"public_ip,omitempty"`
+	OnpremASN            string   `json:"aws_side_asn,omitempty"`
+	RemoteCIDR           []string `json:"remote_cidrs,omitempty"`
+	VpnID                string   `json:"vpc_id,omitempty"`
+	InsideIpCIDRTun1     string   `json:"inside_ip_cidr_tun_1,omitempty"`
+	InsideIpCIDRTun2     string   `json:"inside_ip_cidr_tun_2,omitempty"`
+	PreSharedKeyTun1     string   `json:"pre_shared_key_tun_1,omitempty"`
+	PreSharedKeyTun2     string   `json:"pre_shared_key_tun_2,omitempty"`
+	LearnedCidrsApproval string   `json:"learned_cidrs_approval,omitempty"`
 }
 
 type AwsTgwVpnConnCreateResp struct {
@@ -89,6 +91,7 @@ func (c *Client) CreateAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (string, erro
 	if awsTgwVpnConn.PreSharedKeyTun2 != "" {
 		attachEdgeVpnToTgw.Add("pre_shared_key_tun_2", awsTgwVpnConn.PreSharedKeyTun2)
 	}
+	attachEdgeVpnToTgw.Add("learned_cidrs_approval", awsTgwVpnConn.LearnedCidrsApproval)
 
 	Url.RawQuery = attachEdgeVpnToTgw.Encode()
 	resp, err := c.Get(Url.String(), nil)
@@ -161,6 +164,7 @@ func (c *Client) GetAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (*AwsTgwVpnConn,
 			if allAwsTgwVpnConn[i].PreSharedKeyTun2 != "" {
 				awsTgwVpnConn.PreSharedKeyTun2 = allAwsTgwVpnConn[i].PreSharedKeyTun2
 			}
+			awsTgwVpnConn.LearnedCidrsApproval = allAwsTgwVpnConn[i].LearnedCidrsApproval
 
 			log.Printf("[DEBUG] Found AwsTgwVpnConn: %#v", awsTgwVpnConn)
 
@@ -189,6 +193,68 @@ func (c *Client) DeleteAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API detach_vpn_from_tgw Post failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) EnableVpnConnectionLearnedCidrsApproval(awsTgwVpnConn *AwsTgwVpnConn) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for 'enable_learned_cidrs_approval': ") + err.Error())
+	}
+	enableLearnedCidrsApproval := url.Values{}
+	enableLearnedCidrsApproval.Add("CID", c.CID)
+	enableLearnedCidrsApproval.Add("action", "enable_learned_cidrs_approval")
+	enableLearnedCidrsApproval.Add("tgw_name", awsTgwVpnConn.TgwName)
+	enableLearnedCidrsApproval.Add("attachment_name", awsTgwVpnConn.VpnID)
+	enableLearnedCidrsApproval.Add("learned_cidrs_approval", awsTgwVpnConn.LearnedCidrsApproval)
+	Url.RawQuery = enableLearnedCidrsApproval.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get 'enable_learned_cidrs_approval' failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode 'enable_learned_cidrs_approval' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API 'enable_learned_cidrs_approval' Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) DisableVpnConnectionLearnedCidrsApproval(awsTgwVpnConn *AwsTgwVpnConn) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for 'disable_learned_cidrs_approval': ") + err.Error())
+	}
+	enableLearnedCidrsApproval := url.Values{}
+	enableLearnedCidrsApproval.Add("CID", c.CID)
+	enableLearnedCidrsApproval.Add("action", "disable_learned_cidrs_approval")
+	enableLearnedCidrsApproval.Add("tgw_name", awsTgwVpnConn.TgwName)
+	enableLearnedCidrsApproval.Add("attachment_name", awsTgwVpnConn.VpnID)
+	enableLearnedCidrsApproval.Add("learned_cidrs_approval", awsTgwVpnConn.LearnedCidrsApproval)
+	Url.RawQuery = enableLearnedCidrsApproval.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get 'disable_learned_cidrs_approval' failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode 'disable_learned_cidrs_approval' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API 'disable_learned_cidrs_approval' Get failed: " + data.Reason)
 	}
 	return nil
 }

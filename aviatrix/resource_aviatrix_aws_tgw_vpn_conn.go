@@ -14,6 +14,7 @@ func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixAwsTgwVpnConnCreate,
 		Read:   resourceAviatrixAwsTgwVpnConnRead,
+		Update: resourceAviatrixAwsTgwVpnConnUpdate,
 		Delete: resourceAviatrixAwsTgwVpnConnDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -98,6 +99,12 @@ func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
 				Description: "Pre-Shared Key for Tunnel 2. A 8-64 character string with alphanumeric, " +
 					"underscore(_) and dot(.). It cannot start with 0",
 			},
+			"enable_learned_cidrs_approval": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Switch to enable/disable encrypted transit approval for vpn connection. Valid values: true, false.",
+			},
 			"vpn_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -139,6 +146,16 @@ func resourceAviatrixAwsTgwVpnConnCreate(d *schema.ResourceData, meta interface{
 	}
 	if remoteCIDR != "" {
 		awsTgwVpnConn.RemoteCIDR = remoteCIDR
+	}
+
+	learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
+	if learnedCidrsApproval {
+		if connectionType == "static" {
+			return fmt.Errorf("learned cidrs approval is supported for a BGP VPN connection, not for a static connection")
+		}
+		awsTgwVpnConn.LearnedCidrsApproval = "yes"
+	} else {
+		awsTgwVpnConn.LearnedCidrsApproval = "no"
 	}
 
 	log.Printf("[INFO] Creating Aviatrix AWS TGW VPN Connection: %#v", awsTgwVpnConn)
@@ -203,8 +220,50 @@ func resourceAviatrixAwsTgwVpnConnRead(d *schema.ResourceData, meta interface{})
 	d.Set("inside_ip_cidr_tun_1", vpnConn.InsideIpCIDRTun1)
 	d.Set("inside_ip_cidr_tun_2", vpnConn.InsideIpCIDRTun2)
 
+	if vpnConn.LearnedCidrsApproval == "yes" {
+		d.Set("enable_learned_cidrs_approval", true)
+	} else {
+		d.Set("enable_learned_cidrs_approval", false)
+	}
+
 	d.SetId(vpnConn.TgwName + "~" + vpnConn.VpnID)
 	return nil
+}
+
+func resourceAviatrixAwsTgwVpnConnUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*goaviatrix.Client)
+
+	awsTgwVpnConn := &goaviatrix.AwsTgwVpnConn{
+		TgwName: d.Get("tgw_name").(string),
+		VpnID:   d.Get("vpn_id").(string),
+	}
+
+	d.Partial(true)
+	log.Printf("[INFO] Updating Aviatrix aws tgw vpn connection: %#v", awsTgwVpnConn)
+
+	if d.HasChange("enable_learned_cidrs_approval") {
+		if d.Get("connection_type").(string) == "static" {
+			return fmt.Errorf("learned cidrs approval is supported for a BGP VPN connection, not for a static connection")
+		}
+		learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
+		if learnedCidrsApproval {
+			awsTgwVpnConn.LearnedCidrsApproval = "yes"
+			err := client.EnableVpnConnectionLearnedCidrsApproval(awsTgwVpnConn)
+			if err != nil {
+				return fmt.Errorf("failed to enable learned cidrs approval: %s", err)
+			}
+		} else {
+			awsTgwVpnConn.LearnedCidrsApproval = "no"
+			err := client.DisableVpnConnectionLearnedCidrsApproval(awsTgwVpnConn)
+			if err != nil {
+				return fmt.Errorf("failed to disable learned cidrs approval: %s", err)
+			}
+		}
+		d.SetPartial("enable_learned_cidrs_approval")
+	}
+
+	d.SetId(awsTgwVpnConn.TgwName + "~" + awsTgwVpnConn.VpnID)
+	return resourceAviatrixAwsTgwVpnConnRead(d, meta)
 }
 
 func resourceAviatrixAwsTgwVpnConnDelete(d *schema.ResourceData, meta interface{}) error {
