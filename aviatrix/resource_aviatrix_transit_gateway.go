@@ -217,6 +217,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Specify whether to enable transit firenet interfaces or not.",
 			},
+			"enable_learned_cidrs_approval": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Switch to enable/disable encrypted transit approval for transit Gateway. Valid values: true, false.",
+			},
 			"security_group_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -366,6 +372,11 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("'enable_transit_firenet' is only supported in AWS and AZURE providers")
 	} else if enableTransitFireNet && gateway.CloudType == 8 {
 		gateway.EnableTransitFireNet = "on"
+	}
+
+	learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
+	if learnedCidrsApproval {
+		gateway.LearnedCidrsApproval = "on"
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
@@ -812,6 +823,12 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("enable_advertise_transit_cidr", false)
 		}
 
+		if gwDetail.LearnedCidrsApproval == "yes" {
+			d.Set("enable_learned_cidrs_approval", true)
+		} else {
+			d.Set("enable_learned_cidrs_approval", false)
+		}
+
 		var bgpManualSpokeAdvertiseCidrs []string
 		if _, ok := d.GetOk("bgp_manual_spoke_advertise_cidrs"); ok {
 			bgpManualSpokeAdvertiseCidrs = strings.Split(d.Get("bgp_manual_spoke_advertise_cidrs").(string), ",")
@@ -1230,6 +1247,27 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			err := client.DisableActiveMesh(gw)
 			if err != nil {
 				return fmt.Errorf("failed to disable Active Mesh Mode: %s", err)
+			}
+		}
+	}
+
+	if d.HasChange("enable_learned_cidrs_approval") {
+		gw := &goaviatrix.TransitVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+
+		learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
+		if learnedCidrsApproval {
+			gw.LearnedCidrsApproval = "on"
+			err := client.EnableTransitLearnedCidrsApproval(gw)
+			if err != nil {
+				return fmt.Errorf("failed to enable learned cidrs approval: %s", err)
+			}
+		} else {
+			gw.LearnedCidrsApproval = "off"
+			err := client.DisableTransitLearnedCidrsApproval(gw)
+			if err != nil {
+				return fmt.Errorf("failed to disable learned cidrs approval: %s", err)
 			}
 		}
 	}

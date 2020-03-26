@@ -128,6 +128,7 @@ The following arguments are supported:
 * `tag_list` - (Optional) Instance tag of cloud provider. Only supported for AWS. Example: ["key1:value1","key2:value2"].
 * `enable_active_mesh` - (Optional) Switch to enable/disable Active Mesh Mode for Transit Gateway. Valid values: true, false. Default value: false.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS. Valid values: true, false. Default value: false.
+* `enable_learned_cidrs_approval` - (Optional) Switch to enable/disable encrypted transit approval for transit Gateway. Valid values: true, false. Default value: false.
 
 
 ## Attribute Reference
