@@ -125,6 +125,7 @@ type Gateway struct {
 	IncludeCidrList             []string `json:"include_cidr_list,omitempty"`
 	ExcludeCidrList             []string `json:"exclude_cidr_list,omitempty"`
 	EnableTransitFireNet        string   `json:"firenet_enabled,omitempty"`
+	LearnedCidrsApproval        string   `json:"learned_cidrs_approval,omitempty"`
 }
 
 type PolicyRule struct {
@@ -156,6 +157,7 @@ type GatewayDetail struct {
 	Elb                          ElbDetail    `json:"elb,omitempty"`
 	EnableFireNet                bool         `json:"firenet_enabled,omitempty"`
 	EnableTransitFireNet         bool         `json:"transit_firenet_enabled,omitempty"`
+	LearnedCidrsApproval         string       `json:"learned_cidrs_approval,omitempty"`
 }
 
 type ElbDetail struct {

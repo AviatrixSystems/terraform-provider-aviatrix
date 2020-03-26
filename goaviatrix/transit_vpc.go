@@ -41,6 +41,7 @@ type TransitVpc struct {
 	EnableAdvertiseTransitCidr   bool
 	BgpManualSpokeAdvertiseCidrs string `form:"bgp_manual_spoke,omitempty"`
 	EnableTransitFireNet         string `form:"enable_transit_firenet,omitempty"`
+	LearnedCidrsApproval         string `form:"learned_cidrs_approval,omitempty"`
 }
 
 type TransitGwFireNetInterfaces struct {
@@ -386,6 +387,64 @@ func (c *Client) SetBgpManualSpokeAdvertisedNetworks(transitGw *TransitVpc) erro
 	}
 	if !data.Return {
 		return errors.New("Rest API edit_aviatrix_transit_advanced_config Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) EnableTransitLearnedCidrsApproval(gateway *TransitVpc) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for 'enable_transit_learned_cidrs_approval': ") + err.Error())
+	}
+	enableTransitLearnedCidrsApproval := url.Values{}
+	enableTransitLearnedCidrsApproval.Add("CID", c.CID)
+	enableTransitLearnedCidrsApproval.Add("action", "enable_transit_learned_cidrs_approval")
+	enableTransitLearnedCidrsApproval.Add("gateway_name", gateway.GwName)
+	Url.RawQuery = enableTransitLearnedCidrsApproval.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get 'enable_transit_learned_cidrs_approval' failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode 'enable_transit_learned_cidrs_approval' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API 'enable_transit_learned_cidrs_approval' Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) DisableTransitLearnedCidrsApproval(gateway *TransitVpc) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for 'disable_transit_learned_cidrs_approval': ") + err.Error())
+	}
+	disableTransitLearnedCidrsApproval := url.Values{}
+	disableTransitLearnedCidrsApproval.Add("CID", c.CID)
+	disableTransitLearnedCidrsApproval.Add("action", "disable_transit_learned_cidrs_approval")
+	disableTransitLearnedCidrsApproval.Add("gateway_name", gateway.GwName)
+	Url.RawQuery = disableTransitLearnedCidrsApproval.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get 'disable_transit_learned_cidrs_approval' failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode 'disable_transit_learned_cidrs_approval' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API 'disable_transit_learned_cidrs_approval' Get failed: " + data.Reason)
 	}
 	return nil
 }
