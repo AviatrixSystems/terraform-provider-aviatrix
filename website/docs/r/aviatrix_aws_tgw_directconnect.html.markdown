@@ -32,6 +32,7 @@ The following arguments are supported:
 * `dx_gateway_id` - (Required) This parameter represents the name of a Direct Connect Gateway ID.
 * `security_domain_name` - (Required) The name of a security domain, to which the direct connect gateway will be attached.
 * `allowed_prefix` - (Required) A list of comma separated CIDRs for DXGW to advertise to remote(on-prem).
+* `enable_learned_cidrs_approval` - (Optional) Switch to enable/disable encrypted transit approval for aws tgw direct connect. Valid values: true, false. Default value: false.
 
 ## Import
 

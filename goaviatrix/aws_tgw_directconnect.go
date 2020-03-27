@@ -19,6 +19,7 @@ type AwsTgwDirectConnect struct {
 	SecurityDomainName       string `form:"route_domain_name,omitempty"`
 	AllowedPrefix            string `form:"allowed_prefix,omitempty"`
 	DirectConnectID          string `form:"directconnect_id, omitempty"`
+	LearnedCidrsApproval     string `form:"learned_cidrs_approval,omitempty""`
 }
 
 type AwsTgwDirectConnEdit struct {
@@ -27,6 +28,7 @@ type AwsTgwDirectConnEdit struct {
 	DxGatewayID              string   `json:"name,omitempty"`
 	SecurityDomainName       string   `json:"associated_route_domain_name,omitempty"`
 	AllowedPrefix            []string `json:"allowed_prefix,omitempty"`
+	LearnedCidrsApproval     string   `json:"learned_cidrs_approval,omitempty""`
 }
 
 type AwsTgwDirectConnResp struct {
@@ -89,6 +91,7 @@ func (c *Client) GetAwsTgwDirectConnect(awsTgwDirectConnect *AwsTgwDirectConnect
 			awsTgwDirectConnect.DirectConnectAccountName = allAwsTgwDirectConn[i].DirectConnectAccountName
 			awsTgwDirectConnect.SecurityDomainName = allAwsTgwDirectConn[i].SecurityDomainName
 			awsTgwDirectConnect.AllowedPrefix = strings.Join(allAwsTgwDirectConn[i].AllowedPrefix, ",")
+			awsTgwDirectConnect.LearnedCidrsApproval = allAwsTgwDirectConn[i].LearnedCidrsApproval
 			log.Printf("[DEBUG] Found Aws Tgw Direct Conn: %#v", awsTgwDirectConnect)
 			return awsTgwDirectConnect, nil
 		}
@@ -136,6 +139,68 @@ func (c *Client) DeleteAwsTgwDirectConnect(awsTgwDirectConnect *AwsTgwDirectConn
 	}
 	if !data.Return {
 		return errors.New("Rest API detach_directconnect_from_tgw Post failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) EnableDirectConnectLearnedCidrsApproval(awsTgwDirectConnect *AwsTgwDirectConnect) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for 'enable_learned_cidrs_approval': ") + err.Error())
+	}
+	enableLearnedCidrsApproval := url.Values{}
+	enableLearnedCidrsApproval.Add("CID", c.CID)
+	enableLearnedCidrsApproval.Add("action", "enable_learned_cidrs_approval")
+	enableLearnedCidrsApproval.Add("tgw_name", awsTgwDirectConnect.TgwName)
+	enableLearnedCidrsApproval.Add("attachment_name", awsTgwDirectConnect.DxGatewayName)
+	enableLearnedCidrsApproval.Add("learned_cidrs_approval", awsTgwDirectConnect.LearnedCidrsApproval)
+	Url.RawQuery = enableLearnedCidrsApproval.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get 'enable_learned_cidrs_approval' failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode 'enable_learned_cidrs_approval' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API 'enable_learned_cidrs_approval' Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) DisableDirectConnectLearnedCidrsApproval(awsTgwDirectConnect *AwsTgwDirectConnect) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for 'disable_learned_cidrs_approval': ") + err.Error())
+	}
+	enableLearnedCidrsApproval := url.Values{}
+	enableLearnedCidrsApproval.Add("CID", c.CID)
+	enableLearnedCidrsApproval.Add("action", "disable_learned_cidrs_approval")
+	enableLearnedCidrsApproval.Add("tgw_name", awsTgwDirectConnect.TgwName)
+	enableLearnedCidrsApproval.Add("attachment_name", awsTgwDirectConnect.DxGatewayName)
+	enableLearnedCidrsApproval.Add("learned_cidrs_approval", awsTgwDirectConnect.LearnedCidrsApproval)
+	Url.RawQuery = enableLearnedCidrsApproval.Encode()
+	resp, err := c.Get(Url.String(), nil)
+
+	if err != nil {
+		return errors.New("HTTP Get 'disable_learned_cidrs_approval' failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode 'disable_learned_cidrs_approval' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API 'disable_learned_cidrs_approval' Get failed: " + data.Reason)
 	}
 	return nil
 }
