@@ -49,6 +49,12 @@ func resourceAviatrixAWSTgwDirectConnect() *schema.Resource {
 				Required:    true,
 				Description: "Public IP address. Example: '40.0.0.0'.",
 			},
+			"enable_learned_cidrs_approval": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Switch to enable/disable encrypted transit approval for direct connection. Valid values: true, false.",
+			},
 		},
 	}
 }
@@ -62,6 +68,13 @@ func resourceAviatrixAWSTgwDirectConnectCreate(d *schema.ResourceData, meta inte
 		DxGatewayID:              d.Get("dx_gateway_id").(string),
 		SecurityDomainName:       d.Get("security_domain_name").(string),
 		AllowedPrefix:            d.Get("allowed_prefix").(string),
+	}
+
+	learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
+	if learnedCidrsApproval {
+		awsTgwDirectConnect.LearnedCidrsApproval = "yes"
+	} else {
+		awsTgwDirectConnect.LearnedCidrsApproval = "no"
 	}
 
 	err := client.CreateAwsTgwDirectConnect(awsTgwDirectConnect)
@@ -110,8 +123,13 @@ func resourceAviatrixAWSTgwDirectConnectRead(d *schema.ResourceData, meta interf
 	d.Set("dx_gateway_id", directConnect.DxGatewayID)
 	d.Set("security_domain_name", directConnect.SecurityDomainName)
 	d.Set("allowed_prefix", directConnect.AllowedPrefix)
-	d.SetId(directConnect.TgwName + "~" + directConnect.DxGatewayID)
+	if directConnect.LearnedCidrsApproval == "yes" {
+		d.Set("enable_learned_cidrs_approval", true)
+	} else {
+		d.Set("enable_learned_cidrs_approval", false)
+	}
 
+	d.SetId(directConnect.TgwName + "~" + directConnect.DxGatewayID)
 	return nil
 }
 
@@ -133,6 +151,24 @@ func resourceAviatrixAWSTgwDirectConnectUpdate(d *schema.ResourceData, meta inte
 			return fmt.Errorf("failed to update Aws Tgw Direct Connect Allowed Prefix: %s", err)
 		}
 		d.SetPartial("allowed_prefix")
+	}
+
+	if d.HasChange("enable_learned_cidrs_approval") {
+		learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
+		if learnedCidrsApproval {
+			awsTgwDirectConnect.LearnedCidrsApproval = "yes"
+			err := client.EnableDirectConnectLearnedCidrsApproval(awsTgwDirectConnect)
+			if err != nil {
+				return fmt.Errorf("failed to enable learned cidrs approval: %s", err)
+			}
+		} else {
+			awsTgwDirectConnect.LearnedCidrsApproval = "no"
+			err := client.DisableDirectConnectLearnedCidrsApproval(awsTgwDirectConnect)
+			if err != nil {
+				return fmt.Errorf("failed to disable learned cidrs approval: %s", err)
+			}
+		}
+		d.SetPartial("enable_learned_cidrs_approval")
 	}
 
 	return resourceAviatrixAWSTgwDirectConnectRead(d, meta)
