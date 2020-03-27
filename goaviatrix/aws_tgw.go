@@ -132,6 +132,18 @@ type AttachmentRouteTableDetails struct {
 	DisableLocalRoutePropagation bool     `json:"disable_local_propagation"`
 }
 
+type ListAwsTgwAttachmentAPIResp struct {
+	Return  bool               `json:"return"`
+	Results []AttachmentDetail `json:"results"`
+	Reason  string             `json:"reason"`
+}
+
+type AttachmentDetail struct {
+	VpcID   string `json:"vpc_id"`
+	TgwName string `json:"tgw_name"`
+	GwName  string `json:"avx_gw_name"`
+}
+
 func (c *Client) CreateAWSTgw(awsTgw *AWSTgw) error {
 	awsTgw.CID = c.CID
 	awsTgw.Action = "add_aws_tgw"
@@ -291,7 +303,7 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 				gateway := &Gateway{
 					VpcID: attachedVPCs[i].VPCId,
 				}
-				gateway, err = c.GetTransitGwFromVpcID(gateway)
+				gateway, err = c.GetTransitGwFromVpcID(awsTgw, gateway)
 				if err != nil {
 					return nil, err
 				}
@@ -631,49 +643,35 @@ func (c *Client) DetachVpcFromAWSTgw(awsTgw *AWSTgw, vpcID string) error {
 	return nil
 }
 
-func (c *Client) GetTransitGwFromVpcID(gateway *Gateway) (*Gateway, error) {
+func (c *Client) GetTransitGwFromVpcID(awsTgw *AWSTgw, gateway *Gateway) (*Gateway, error) {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return nil, errors.New(("url Parsing failed for list_vpcs_summary") + err.Error())
+		return nil, errors.New(("url Parsing failed for 'list_all_tgw_attachments': ") + err.Error())
 	}
-	listVPCsSummary := url.Values{}
-	listVPCsSummary.Add("CID", c.CID)
-	listVPCsSummary.Add("action", "list_vpcs_summary")
-	Url.RawQuery = listVPCsSummary.Encode()
+	listTgwDetails := url.Values{}
+	listTgwDetails.Add("CID", c.CID)
+	listTgwDetails.Add("action", "list_all_tgw_attachments")
+	Url.RawQuery = listTgwDetails.Encode()
 	resp, err := c.Get(Url.String(), nil)
-
 	if err != nil {
-		return nil, errors.New("HTTP Get list_vpcs_summary failed: " + err.Error())
+		return nil, errors.New("HTTP Get 'list_all_tgw_attachments' failed: " + err.Error())
 	}
 
-	data := VPCList{
-		Return:  false,
-		Results: make([]VPCInfo, 0),
-		Reason:  "",
-	}
+	var data ListAwsTgwAttachmentAPIResp
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
 	bodyString := buf.String()
 	bodyIoCopy := strings.NewReader(bodyString)
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_vpcs_summary failed: " + err.Error() + "\n Body: " + bodyString)
+		return nil, errors.New("Json Decode 'list_all_tgw_attachments' failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
-		return nil, errors.New("Rest API list_vpcs_summary Get failed: " + data.Reason)
+		return nil, errors.New("Rest API 'list_all_tgw_attachments' Get failed: " + data.Reason)
 	}
-
-	vpcLists := data.Results
-	for i := range vpcLists {
-		vpcId := vpcLists[i].VPCId
-		if vpcLists[i].TransitVpc == "yes" && vpcId != "" {
-			index := strings.Index(vpcId, "~~")
-			if index > 0 {
-				vpcId = vpcId[:index]
-			}
-			if vpcId == gateway.VpcID {
-				gateway.GwName = vpcLists[i].Name
-				return gateway, nil
-			}
+	for i := range data.Results {
+		if data.Results[i].TgwName == awsTgw.Name && data.Results[i].VpcID == gateway.VpcID && data.Results[i].GwName != "" {
+			gateway.GwName = data.Results[i].GwName
+			return gateway, nil
 		}
 	}
 	log.Printf("Couldn't find transit gateway attached to vpc %s", gateway.VpcID)
