@@ -150,6 +150,11 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"manage_transit_gateway_attachment": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 		},
 	}
 }
@@ -167,6 +172,7 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	manageVpcAttachment := d.Get("manage_vpc_attachment").(bool)
+	manageTransitGwAttachment := d.Get("manage_transit_gateway_attachment").(bool)
 
 	if awsTgw.Name == "" {
 		return fmt.Errorf("tgw name can't be empty string")
@@ -306,18 +312,23 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	attachedGWs := d.Get("attached_aviatrix_transit_gateway").([]interface{})
-	for _, attachedGW := range attachedGWs {
-		attachedGWAll = append(attachedGWAll, attachedGW.(string))
-		awsTgw.AttachedAviatrixTransitGW = append(awsTgw.AttachedAviatrixTransitGW, attachedGW.(string))
-	}
-
-	mAttachedGW := make(map[string]int)
-	for i := 1; i <= len(attachedGWAll); i++ {
-		if mAttachedGW[attachedGWAll[i-1]] != 0 {
-			return fmt.Errorf("validation of source file failed: duplicate transit gateways (ID: %v) to attach",
-				attachedGWAll[i-1])
+	if manageTransitGwAttachment {
+		for _, attachedGW := range attachedGWs {
+			attachedGWAll = append(attachedGWAll, attachedGW.(string))
+			awsTgw.AttachedAviatrixTransitGW = append(awsTgw.AttachedAviatrixTransitGW, attachedGW.(string))
 		}
-		mAttachedGW[attachedGWAll[i-1]] = i
+
+		mAttachedGW := make(map[string]int)
+		for i := 1; i <= len(attachedGWAll); i++ {
+			if mAttachedGW[attachedGWAll[i-1]] != 0 {
+				return fmt.Errorf("validation of source file failed: duplicate transit gateways (ID: %v) to attach",
+					attachedGWAll[i-1])
+			}
+			mAttachedGW[attachedGWAll[i-1]] = i
+		}
+	} else if len(attachedGWs) != 0 {
+		return fmt.Errorf("'manage_transit_gateway_attachment' is set to false. Please set it to true, or use " +
+			"'aviatrix_aws_tgw_transit_gateway_attachment' to manage transit gateway attachments")
 	}
 
 	domainsToCreate, domainConnPolicy, domainConnRemove, err := client.ValidateAWSTgwDomains(domainsAll, domainConnAll,
@@ -369,13 +380,15 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	for i := range attachedGWAll {
-		gateway := &goaviatrix.Gateway{
-			GwName: attachedGWAll[i],
-		}
-		err := client.AttachAviatrixTransitGWToAWSTgw(awsTgw, gateway, "Aviatrix_Edge_Domain")
-		if err != nil {
-			return fmt.Errorf("failed to attach transit GW: %s", err)
+	if manageTransitGwAttachment {
+		for i := range attachedGWAll {
+			gateway := &goaviatrix.Gateway{
+				GwName: attachedGWAll[i],
+			}
+			err := client.AttachAviatrixTransitGWToAWSTgw(awsTgw, gateway, "Aviatrix_Edge_Domain")
+			if err != nil {
+				return fmt.Errorf("failed to attach transit GW: %s", err)
+			}
 		}
 	}
 
@@ -430,6 +443,7 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 		log.Printf("[DEBUG] Looks like an import, no aws tgw name received. Import Id is %s", id)
 		d.Set("tgw_name", id)
 		d.Set("manage_vpc_attachment", true)
+		d.Set("manage_transit_gateway_attachment", true)
 		d.SetId(id)
 	}
 
@@ -457,8 +471,11 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 
 	d.Set("aws_side_as_number", awsTgw.AwsSideAsNumber)
 
-	if err := d.Set("attached_aviatrix_transit_gateway", awsTgw.AttachedAviatrixTransitGW); err != nil {
-		log.Printf("[WARN] Error setting attached_aviatrix_transit_gateway for (%s): %s", d.Id(), err)
+	manageTransitGwAttachment := d.Get("manage_transit_gateway_attachment").(bool)
+	if manageTransitGwAttachment {
+		if err := d.Set("attached_aviatrix_transit_gateway", awsTgw.AttachedAviatrixTransitGW); err != nil {
+			log.Printf("[WARN] Error setting 'attached_aviatrix_transit_gateway' for (%s): %s", d.Id(), err)
+		}
 	}
 
 	manageVpcAttachment := d.Get("manage_vpc_attachment").(bool)
@@ -645,7 +662,6 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	manageVpcAttachment := d.Get("manage_vpc_attachment").(bool)
-
 	if d.HasChange("manage_vpc_attachment") {
 		_, nMVA := d.GetChange("manage_vpc_attachment")
 		newManageVpcAttachment := nMVA.(bool)
@@ -654,6 +670,21 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 		} else {
 			d.Set("manage_vpc_attachment", false)
 		}
+	}
+
+	manageTransitGwAttachment := d.Get("manage_transit_gateway_attachment").(bool)
+	if d.HasChange("manage_transit_gateway_attachment") {
+		_, nMTGA := d.GetChange("manage_transit_gateway_attachment")
+		newManageTransitGwAttachment := nMTGA.(bool)
+		if newManageTransitGwAttachment {
+			d.Set("manage_transit_gateway_attachment", true)
+		} else {
+			d.Set("manage_transit_gateway_attachment", false)
+		}
+	}
+	if !manageTransitGwAttachment && len(d.Get("attached_aviatrix_transit_gateway").([]interface{})) != 0 {
+		return fmt.Errorf("'manage_transit_gateway_attachment' is set to false. Please set it to true, or use " +
+			"'aviatrix_aws_tgw_transit_gateway_attachment' to manage transit gateway attachments")
 	}
 
 	mAttachedGWNew := make(map[string]int)
@@ -940,15 +971,17 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	for i := range toDetachGWs {
-		gateway := &goaviatrix.Gateway{
-			GwName: toDetachGWs[i],
-		}
+	if manageTransitGwAttachment {
+		for i := range toDetachGWs {
+			gateway := &goaviatrix.Gateway{
+				GwName: toDetachGWs[i],
+			}
 
-		err := client.DetachAviatrixTransitGWFromAWSTgw(awsTgw, gateway, "Aviatrix_Edge_Domain")
-		if err != nil {
-			resourceAviatrixAWSTgwRead(d, meta)
-			return fmt.Errorf("failed to detach transit GW: %s", err)
+			err := client.DetachAviatrixTransitGWFromAWSTgw(awsTgw, gateway, "Aviatrix_Edge_Domain")
+			if err != nil {
+				resourceAviatrixAWSTgwRead(d, meta)
+				return fmt.Errorf("failed to detach transit GW: %s", err)
+			}
 		}
 	}
 
@@ -1009,15 +1042,17 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	for i := range toAttachGWs {
-		gateway := &goaviatrix.Gateway{
-			GwName: toAttachGWs[i],
-		}
+	if manageTransitGwAttachment {
+		for i := range toAttachGWs {
+			gateway := &goaviatrix.Gateway{
+				GwName: toAttachGWs[i],
+			}
 
-		err := client.AttachAviatrixTransitGWToAWSTgw(awsTgw, gateway, "Aviatrix_Edge_Domain")
-		if err != nil {
-			resourceAviatrixAWSTgwRead(d, meta)
-			return fmt.Errorf("failed to attach transit GW: %s", err)
+			err := client.AttachAviatrixTransitGWToAWSTgw(awsTgw, gateway, "Aviatrix_Edge_Domain")
+			if err != nil {
+				resourceAviatrixAWSTgwRead(d, meta)
+				return fmt.Errorf("failed to attach transit GW: %s", err)
+			}
 		}
 	}
 
@@ -1129,20 +1164,23 @@ func resourceAviatrixAWSTgwDelete(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	var attachedGWs []string
-	transitGWs := d.Get("attached_aviatrix_transit_gateway").([]interface{})
-	for _, transitGW := range transitGWs {
-		attachedGWs = append(attachedGWs, transitGW.(string))
-	}
-	for i := range attachedGWs {
-		gateway := &goaviatrix.Gateway{
-			GwName: attachedGWs[i],
+	manageTransitGwAttachment := d.Get("manage_transit_gateway_attachment").(bool)
+	if manageTransitGwAttachment {
+		var attachedGWs []string
+		transitGWs := d.Get("attached_aviatrix_transit_gateway").([]interface{})
+		for _, transitGW := range transitGWs {
+			attachedGWs = append(attachedGWs, transitGW.(string))
 		}
+		for i := range attachedGWs {
+			gateway := &goaviatrix.Gateway{
+				GwName: attachedGWs[i],
+			}
 
-		err := client.DetachAviatrixTransitGWFromAWSTgw(awsTgw, gateway, "Aviatrix_Edge_Domain")
-		if err != nil {
-			resourceAviatrixAWSTgwRead(d, meta)
-			return fmt.Errorf("failed to detach transit GW: %s", err)
+			err := client.DetachAviatrixTransitGWFromAWSTgw(awsTgw, gateway, "Aviatrix_Edge_Domain")
+			if err != nil {
+				resourceAviatrixAWSTgwRead(d, meta)
+				return fmt.Errorf("failed to detach transit GW: %s", err)
+			}
 		}
 	}
 
