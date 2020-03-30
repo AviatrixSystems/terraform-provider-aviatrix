@@ -559,6 +559,9 @@ func (c *Client) DetachAviatrixTransitGWFromAWSTgw(awsTgw *AWSTgw, gateway *Gate
 		return errors.New("Json Decode detach_vpc_from_tgw failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
+		if strings.Contains(data.Reason, "is not attached to") {
+			return nil
+		}
 		return errors.New("Rest API detach_vpc_from_tgw Get failed: " + data.Reason)
 	}
 	return nil
