@@ -12,7 +12,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func TestAccAviatrixRbacGroupUserAttachment_basic(t *testing.T) {
+func TestAccAviatrixRbacGroupPermissionAttachment_basic(t *testing.T) {
 	var rbacGroupPermissionAttachment goaviatrix.RbacGroupPermissionAttachment
 
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
