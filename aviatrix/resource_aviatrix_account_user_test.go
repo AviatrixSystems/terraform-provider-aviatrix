@@ -34,7 +34,6 @@ func TestAccAviatrixAccountUser_basic(t *testing.T) {
 					testAccCheckAccountUserExists("aviatrix_account_user.foo", &account),
 					resource.TestCheckResourceAttr(resourceName, "username", fmt.Sprintf("tf-testing-%d", rInt)),
 					resource.TestCheckResourceAttr(resourceName, "email", "abc@xyz.com"),
-					resource.TestCheckResourceAttr(resourceName, "account_name", "admin"),
 					resource.TestCheckResourceAttr(resourceName, "password", "Password-1234^"),
 				),
 			},
@@ -51,10 +50,9 @@ func TestAccAviatrixAccountUser_basic(t *testing.T) {
 func testAccAccountUserConfigBasic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account_user" "foo" {
-	username     = "tf-testing-%d"
-	account_name = "admin"
-	email        = "abc@xyz.com"
-	password     = "Password-1234^"
+	username = "tf-testing-%d"
+	email    = "abc@xyz.com"
+	password = "Password-1234^"
 }
 	`, rInt)
 }
@@ -72,8 +70,7 @@ func testAccCheckAccountUserExists(n string, account *goaviatrix.AccountUser) re
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
 		foundAccount := &goaviatrix.AccountUser{
-			AccountName: rs.Primary.Attributes["account_name"],
-			UserName:    rs.Primary.Attributes["username"],
+			UserName: rs.Primary.Attributes["username"],
 		}
 
 		_, err := client.GetAccountUser(foundAccount)
@@ -98,8 +95,7 @@ func testAccCheckAccountUserDestroy(s *terraform.State) error {
 		}
 
 		foundAccount := &goaviatrix.AccountUser{
-			AccountName: rs.Primary.Attributes["account_name"],
-			UserName:    rs.Primary.Attributes["username"],
+			UserName: rs.Primary.Attributes["username"],
 		}
 
 		_, err := client.GetAccountUser(foundAccount)
