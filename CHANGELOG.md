@@ -1,4 +1,27 @@
 ## 2.13.0 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-5.4.1060** 
+- Supported Terraform version: **v0.12.x**
+
+### Features:
+1. Implemented support for ``enable_learned_cidrs_approval`` in **aviatrix_transit_gateway**, **aws_tgw_vpn_conn** and **aws_tgw_directconnect**
+2. Implemented a new parameter ``manage_transit_gateway_attachment`` to provide the option of attaching/detaching transit gateway to/from AWS TGW outside of **aviatrix_aws_tgw** resource
+3. New resources to support Role-Based Access Control (RBAC) feature in Controller 5.4 release:
+  - **aviatrix_rbac_group**
+  - **aviatrix_rbac_group_access_account_attachment**
+  - **aviatrix_rbac_group_permission_attachment**
+  - **aviatrix_rbac_group_user_attachment**
+4. New resources
+  - **aviatrix_aws_tgw_transit_gateway_attachment**
+
+### Enhancements:
+1. Enhanced read-back of ``attached_aviatrix_transit_gateway`` to cover cases where multiple transit gateways are launched on the same VPC as the one already attached to the AWS TGW
+2. Removed ``account_name`` from **aviatrix_account_user** for RBAC implementation
+
+### Bug Fixes:
+1. Fixed issue where changes in ``vpc_name`` in **aviatrix_aws_tgw** results in ``subnets`` being mismatched in the Terraform state
+
+
 ## 2.12.0 (March 12, 2020)
 ### Notes:
 - Supported Controller version: **UserConnect-5.3.1491** 
