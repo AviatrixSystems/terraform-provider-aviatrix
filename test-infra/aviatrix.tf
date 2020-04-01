@@ -33,6 +33,8 @@ module "aviatrix-controller-initialize" {
   access_account_name = var.access_account_name
   aws_account_id      = data.aws_caller_identity.current.account_id
   customer_license_id = var.customer_id
+  vpc_id              = module.aviatrix-controller-build.vpc_id
+  subnet_id           = module.aviatrix-controller-build.subnet_id
 }
 
 output "result" {
