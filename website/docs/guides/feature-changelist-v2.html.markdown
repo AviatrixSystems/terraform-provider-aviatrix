@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.12 (UserConnect-5.3.1491)``
+``Last updated: R2.13 (UserConnect-5.4.1060)``
 
 
 ---
@@ -163,3 +163,10 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |:----:|----------------|:-----------------:|----------------------------|
 |(deprecated) | arm_peer | --               | **Yes**; **arm_peer** will be deprecated and replaced with **azure_peer**. It will be kept for now for backward-compatibility and will be removed in the future. Please use **azure_peer** instead <br><br> You will need to remove any pre-existing **arm_peer** resources from the statefile, update your .tf files to **azure_peer**, and perform a ``terraform import`` |
 |(changed) | gateway    | cloudn_bkup_gateway_inst_id | **No**; the following computed attribute will changed to ``peering_ha_cloud_instance_id``. The next ``terraform refresh`` will automatically rectify the state with the new name |
+
+
+## R2.13 (UserConnect-5.4.1060) (Terraform v0.12)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(deprecated) | account_user | account_name | **Yes**; ``account_name`` has been deprecated due to the new Role-based Access Control feature (RBAC) implementation in 5.4. This attribute must be removed from the .tf files and a ``terraform refresh`` will rectify the state file. |
+|(new) | aws_tgw        | manage_transit_gateway_attachment | **No**; New attribute flag added to support managing transit gateway attachments to the AWS TGW outside of the resource, using the **aviatrix_aws_tgw_transit_gateway_attachment**. A simple ``terraform refresh`` will apply this attribute's default value (true) and rectify the state |

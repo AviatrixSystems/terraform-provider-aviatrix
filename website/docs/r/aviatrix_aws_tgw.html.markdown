@@ -126,11 +126,12 @@ The following arguments are supported:
 
 ### Misc.
 * `attached_aviatrix_transit_gateway` - (Optional) A list of names of Aviatrix Transit Gateway(s) (transit VPCs) to attach to the Aviatrix_Edge_Domain.
-* `manage_transit_gateway_attachment` - (Optional) This parameter is a switch used to determine whether or not to manage transit gateway attachments to the TGW using the **aviatrix_aws_tgw** resource. If this is set to false, attachment of transit gateways must be done using the **aviatrix_aws_tgw_transit_gateway_attachment** resource. Valid values: true or false. Default value is true.
-* `manage_vpc_attachment` - (Optional) This parameter is a switch used to determine whether or not to manage VPC attachments to the TGW using the **aviatrix_aws_tgw** resource. If this is set to false, attachment of VPCs must be done using the **aviatrix_aws_tgw_vpc_attachment** resource. Valid values: true or false. Default value is true.
+* `manage_transit_gateway_attachment` - (Optional) This parameter is a switch used to determine whether or not to manage transit gateway attachments to the TGW using the **aviatrix_aws_tgw** resource. If this is set to false, attachment of transit gateways must be done using the **aviatrix_aws_tgw_transit_gateway_attachment** resource. Valid values: true, false. Default value: true.
+* `manage_vpc_attachment` - (Optional) This parameter is a switch used to determine whether or not to manage VPC attachments to the TGW using the **aviatrix_aws_tgw** resource. If this is set to false, attachment of VPCs must be done using the **aviatrix_aws_tgw_vpc_attachment** resource. Valid values: true, false. Default value: true.
 
 -> **NOTE:** `manage_vpc_attachment` - If you are using/upgraded to Aviatrix Terraform Provider R1.5+, and an **aviatrix_aws_tgw** resource was originally created with a provider version <R1.5, you must do 'terraform refresh' to update and apply the attribute's default value (true) into the state file.
--> **NOTE:** `manage_transit_gateway_attachment` - If you are using/upgraded to Aviatrix Terraform Provider R2.12+, and an **aviatrix_aws_tgw** resource was originally created with a provider version <R2.12, you must do 'terraform refresh' to update and apply the attribute's default value (true) into the state file.
+
+-> **NOTE:** `manage_transit_gateway_attachment` - If you are using/upgraded to Aviatrix Terraform Provider R2.13+, and an **aviatrix_aws_tgw** resource was originally created with a provider version <R2.13, you must do 'terraform refresh' to update and apply the attribute's default value (true) into the state file.
 
 ## Import
 

@@ -9,6 +9,8 @@ description: |-
 
 The **aviatrix_account** resource allows the creation and management of Aviatrix cloud accounts.
 
+~> **NOTE:** With the release of Controller 5.4 (compatible with Aviatrix provider R2.13), Role-Based Access Control (RBAC) is now integrated into the Accounts workflow. Any **aviatrix_account** created in 5.3 by default will have admin privileges (attached to the 'admin' RBAC permission group). In 5.4, any new accounts created will not be attached to any RBAC group unless otherwise specified through the **aviatrix_rbac_group_access_account_attachment** resource.
+
 ## Example Usage
 
 ```hcl

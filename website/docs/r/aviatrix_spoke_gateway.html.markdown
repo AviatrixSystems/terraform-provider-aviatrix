@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_spoke_gateway
 
-The aviatrix_spoke_gateway resource allows the creation and management of Aviatrix spoke gateways.
+The **aviatrix_spoke_gateway** resource allows the creation and management of Aviatrix spoke gateways.
 
 ## Example Usage
 
@@ -159,7 +159,7 @@ The following arguments are deprecated:
 
 ## Import
 
-Instance spoke_gateway can be imported using the gw_name, e.g.
+**spoke_gateway** can be imported using the `gw_name`, e.g.
 
 ```
 $ terraform import aviatrix_spoke_gateway.test gw_name

@@ -43,7 +43,7 @@ The following arguments are supported:
 * `local_subnet_cidr` - (Optional) Local Subnet CIDR. **Required for connection type "mapped".**
 * `local_subnet_virtual` - Local Subnet CIDR (Virtual). **Required for connection type "mapped" only.**
 
-## HA
+### HA
 * `ha_enabled` - (Optional) Specify whether or not to enable HA. Valid Values: true, false. **NOTE: Please see notes [here](#ha-enabled) regarding HA requirements.**
 * `backup_gateway_name` - (Optional) Backup gateway name. **NOTE: Please see notes [here](#ha-enabled) regarding HA requirements.**
 * `backup_remote_gateway_ip` - (Optional) Backup Remote Gateway IP. **NOTE: Please see notes [here](#ha-enabled) regarding HA requirements.**
