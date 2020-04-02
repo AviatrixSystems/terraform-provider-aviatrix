@@ -28,6 +28,7 @@ The following arguments are supported:
 * `permission_name` - (Required) This parameter represents the permission to attach to the RBAC group.
 
 Valid `permission_name` values:
+
 * "all_dashboard_write"
 * "all_accounts_write"
 * "all_gateway_write"
