@@ -80,5 +80,5 @@ The following arguments are supported:
 * `password` - (Required) Aviatrix account password corresponding to above username.
 
 ### Optional
-* `skip_version_validation` - (Optional) Valida values: true, false. Default: false. If set to true, it skips checking whether current Terraform provider supports current Controller version.
+* `skip_version_validation` - (Optional) Valid values: true, false. Default: false. If set to true, it skips checking whether current Terraform provider supports current Controller version.
 * `version` - (Optional) Specify Aviatrix provider release version number. If not specified, Terraform will automatically pull and source the latest release.
