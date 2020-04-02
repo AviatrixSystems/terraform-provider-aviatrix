@@ -76,6 +76,8 @@ The following arguments are supported:
 * `aviatrix_transit_vpc` - (Optional) Specify whether it is an Aviatrix Transit VPC to be used for Transit Network or TGW solutions. **Only AWS is supported. Required to be false for other providers.** Valid values: true, false. Default: false.
 * `aviatrix_firenet_vpc` - (Optional) Specify whether it is an Aviatrix FireNet VPC to be used for Aviatrix FireNet and Transit FireNet solutions. **Only AWS and Azure are supported. Required to be false for other providers.** Valid values: true, false. Default: false.
 
+-> **NOTE:** `aviatrix_firenet_vpc` - If you are using/ upgraded to Aviatrix Terraform Provider R1.8+, and a VPC resource was originally created with a provider version <R1.8, you must do 'terraform refresh' to update and apply the attribute’s default value (false) into the state file.
+
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -85,8 +87,6 @@ In addition to all arguments above, the following attributes are exported:
   * `cidr` - CIDR block.
   * `name` - Name of this subnet.
   * `subnet_id` - ID of this subnet.
-
--> **NOTE:** `aviatrix_firenet_vpc` - If you are using/ upgraded to Aviatrix Terraform Provider R1.8+, and an vpc resource was originally created with a provider version < R1.8, you must do ‘terraform refresh’ to update and apply the attribute’s default value (false) into the state file.
 
 -> **NOTE:** `subnets` - If created as a FireNet VPC, four public subnets will be created in the following order: subnet for firewall-mgmt in the first zone, subnet for ingress-egress in the first zone, subnet for firewall-mgmt in the second zone, and subnet for ingress-egress in the second zone.
 
