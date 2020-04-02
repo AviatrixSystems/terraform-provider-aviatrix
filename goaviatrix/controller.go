@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/url"
 	"strconv"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Controller Http Access enabled get result struct
@@ -62,7 +63,7 @@ func (c *Client) EnableHttpAccess() error {
 		return err
 	}
 	if !data.Return {
-		log.Printf("[ERROR] Error invoking controller %s", data.Reason)
+		log.Errorf("Error invoking controller %s", data.Reason)
 		return errors.New(data.Reason)
 	}
 	return nil
@@ -84,7 +85,7 @@ func (c *Client) DisableHttpAccess() error {
 		return err
 	}
 	if !data.Return {
-		log.Printf("[ERROR] Error invoking controller %s", data.Reason)
+		log.Errorf("Error invoking controller %s", data.Reason)
 		return errors.New(data.Reason)
 	}
 	return nil
@@ -106,7 +107,7 @@ func (c *Client) GetHttpAccessEnabled() (string, error) {
 		return "", err
 	}
 	if !data.Return {
-		log.Printf("[ERROR] Error invoking controller %s", data.Reason)
+		log.Errorf("Error invoking controller %s", data.Reason)
 		return "", errors.New(data.Reason)
 	}
 	result := data.Result
@@ -306,7 +307,7 @@ func (c *Client) EnableCloudnBackupConfig(cloudnBackupConfiguration *CloudnBacku
 	}
 	Url.RawQuery = enableCloudnBackupConfig.Encode()
 	resp, err := c.Get(Url.String(), nil)
-	log.Printf("[INFO] Enabling cloudn backup config: %#v", cloudnBackupConfiguration)
+	log.Infof("Enabling cloudn backup config: %#v", cloudnBackupConfiguration)
 	if err != nil {
 		return errors.New("HTTP Get 'enable_cloudn_backup_config' failed: " + err.Error())
 	}
@@ -334,7 +335,7 @@ func (c *Client) DisableCloudnBackupConfig() error {
 	enableCloudnBackupConfig.Add("action", "disable_cloudn_backup_config")
 	Url.RawQuery = enableCloudnBackupConfig.Encode()
 	resp, err := c.Get(Url.String(), nil)
-	log.Printf("[INFO] Disabling cloudn backup config")
+	log.Infof("Disabling cloudn backup config")
 	if err != nil {
 		return errors.New("HTTP Get 'disable_cloudn_backup_config' failed: " + err.Error())
 	}

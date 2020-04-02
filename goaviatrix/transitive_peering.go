@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"log"
 	"strings"
 	//"github.com/davecgh/go-spew/spew"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // TransPeer simple struct to hold transitive peering details
@@ -70,7 +71,7 @@ func (c *Client) GetTransPeer(transPeer *TransPeer) (*TransPeer, error) {
 			return &transPeerList[i], nil
 		}
 	}
-	log.Printf("Transitive peering with gateways %s and %s with subnet %s not found",
+	log.Errorf("Transitive peering with gateways %s and %s with subnet %s not found",
 		transPeer.Source, transPeer.Nexthop, transPeer.ReachableCidr)
 	return nil, ErrNotFound
 }

@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/url"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type AwsTgwDirectConnect struct {
@@ -92,7 +93,7 @@ func (c *Client) GetAwsTgwDirectConnect(awsTgwDirectConnect *AwsTgwDirectConnect
 			awsTgwDirectConnect.SecurityDomainName = allAwsTgwDirectConn[i].SecurityDomainName
 			awsTgwDirectConnect.AllowedPrefix = strings.Join(allAwsTgwDirectConn[i].AllowedPrefix, ",")
 			awsTgwDirectConnect.LearnedCidrsApproval = allAwsTgwDirectConn[i].LearnedCidrsApproval
-			log.Printf("[DEBUG] Found Aws Tgw Direct Conn: %#v", awsTgwDirectConnect)
+			log.Debugf("Found Aws Tgw Direct Conn: %#v", awsTgwDirectConnect)
 			return awsTgwDirectConnect, nil
 		}
 	}

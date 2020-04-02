@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/url"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Policy struct {
@@ -50,7 +51,7 @@ func (c *Client) SetBasePolicy(firewall *Firewall) error {
 	setVpcBasePolicy.Add("base_policy_log_enable", firewall.BaseLogEnabled)
 	Url.RawQuery = setVpcBasePolicy.Encode()
 	resp, err := c.Get(Url.String(), nil)
-	log.Printf("[INFO] Setting Base Policy: %#v", firewall)
+	log.Infof("Setting Base Policy: %#v", firewall)
 	if err != nil {
 		return errors.New("HTTP Get set_vpc_base_policy failed: " + err.Error())
 	}
@@ -117,8 +118,7 @@ func (c *Client) GetPolicy(firewall *Firewall) (*Firewall, error) {
 		return nil, errors.New("Json Decode vpc_access_policy failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
-		log.Printf("[INFO] Couldn't find Aviatrix Firewall policies for gateway %s: %s", firewall.GwName,
-			data.Reason)
+		log.Errorf("Couldn't find Aviatrix Firewall policies for gateway %s: %s", firewall.GwName, data.Reason)
 		return nil, ErrNotFound
 	}
 

@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/url"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type AccountUser struct {
@@ -84,11 +85,11 @@ func (c *Client) GetAccountUser(user *AccountUser) (*AccountUser, error) {
 	users := data.AccountUserList
 	for i := range users {
 		if users[i].UserName == user.UserName {
-			log.Printf("[INFO] Found Aviatrix user account %s", user.UserName)
+			log.Infof("Found Aviatrix user account %s", user.UserName)
 			return &users[i], nil
 		}
 	}
-	log.Printf("Couldn't find Aviatrix user account %s", user.UserName)
+	log.Errorf("Couldn't find Aviatrix user account %s", user.UserName)
 	return nil, ErrNotFound
 
 }

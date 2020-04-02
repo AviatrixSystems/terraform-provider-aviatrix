@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/url"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Spoke gateway simple struct to hold spoke details
@@ -112,7 +113,7 @@ func (c *Client) SpokeLeaveTransit(spoke *SpokeVpc) error {
 	}
 	if !data.Return {
 		if strings.Contains(data.Reason, "has not joined to any transit") {
-			log.Printf("[INFO] spoke VPC is already left from transit VPC %s", data.Reason)
+			log.Errorf("spoke VPC is already left from transit VPC %s", data.Reason)
 			return nil
 		}
 		return errors.New("Rest API detach_spoke_from_transit_gw Get failed: " + data.Reason)
@@ -154,10 +155,10 @@ func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 	}
 	if !data.Return {
 		if strings.Contains(data.Reason, "HA GW already exists") {
-			log.Printf("[INFO] HA is already enabled %s", data.Reason)
+			log.Infof("HA is already enabled %s", data.Reason)
 			return nil
 		}
-		log.Printf("[ERROR] Enabling HA failed with error %s", data.Reason)
+		log.Errorf("Enabling HA failed with error %s", data.Reason)
 		return errors.New("Rest API enable_spoke_ha Get failed: " + data.Reason)
 	}
 	return nil

@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/url"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // ARMPeer simple struct to hold arm_peer details
@@ -74,7 +75,7 @@ func (c *Client) GetARMPeer(armPeer *ARMPeer) (*ARMPeer, error) {
 		return nil, errors.New("Json Decode list_arm_peer_vnet_pairs failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if _, ok := data["reason"]; ok {
-		log.Printf("[INFO] Couldn't find ARM peering between VPCs %s and %s: %s", armPeer.VNet1, armPeer.VNet2, data["reason"])
+		log.Infof("Couldn't find ARM peering between VPCs %s and %s: %s", armPeer.VNet1, armPeer.VNet2, data["reason"])
 		return nil, ErrNotFound
 	}
 	if val, ok := data["results"]; ok {

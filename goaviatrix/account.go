@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/url"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Account struct {
@@ -108,11 +109,11 @@ func (c *Client) GetAccount(account *Account) (*Account, error) {
 	accList := data.Results.AccountList
 	for i := range accList {
 		if accList[i].AccountName == account.AccountName {
-			log.Printf("[INFO] Found Aviatrix Account %s", account.AccountName)
+			log.Infof("Found Aviatrix Account %s", account.AccountName)
 			return &accList[i], nil
 		}
 	}
-	log.Printf("Couldn't find Aviatrix account %s", account.AccountName)
+	log.Errorf("Couldn't find Aviatrix account %s", account.AccountName)
 	return nil, ErrNotFound
 }
 

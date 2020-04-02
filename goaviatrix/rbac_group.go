@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/url"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type RbacGroup struct {
@@ -69,12 +70,12 @@ func (c *Client) GetPermissionGroup(rbacGroup *RbacGroup) (*RbacGroup, error) {
 	groups := data.RbacGroupList
 	for i := range groups {
 		if groups[i] == rbacGroup.GroupName {
-			log.Printf("[INFO] Found Aviatrix RBAC group: %s", rbacGroup.GroupName)
+			log.Infof("Found Aviatrix RBAC group: %s", rbacGroup.GroupName)
 			return rbacGroup, nil
 		}
 	}
 
-	log.Printf("Couldn't find Aviatrix RBAC group: %s", rbacGroup.GroupName)
+	log.Errorf("Couldn't find Aviatrix RBAC group: %s", rbacGroup.GroupName)
 	return nil, ErrNotFound
 }
 

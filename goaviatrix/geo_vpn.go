@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/url"
 	"strconv"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type GeoVPN struct {
@@ -103,7 +104,7 @@ func (c *Client) GetGeoVPNInfo(geoVPN *GeoVPN) (*GeoVPN, error) {
 		return geoVPN, nil
 	}
 
-	log.Printf("Couldn't find Aviatrix Geo VPN: %v", geoVPN)
+	log.Errorf("Couldn't find Aviatrix Geo VPN: %v", geoVPN)
 	return nil, ErrNotFound
 }
 

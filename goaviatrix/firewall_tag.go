@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type CIDRMember struct {
@@ -32,7 +33,7 @@ type FirewallTagResp struct {
 func (c *Client) CreateFirewallTag(firewall_tag *FirewallTag) error {
 	firewall_tag.CID = c.CID
 	firewall_tag.Action = "add_policy_tag"
-	log.Printf("[INFO] Setting Firewall Tag: %#v", firewall_tag)
+	log.Infof("Setting Firewall Tag: %#v", firewall_tag)
 	resp, err := c.Post(c.baseURL, firewall_tag)
 	if err != nil {
 		return err
@@ -59,7 +60,7 @@ func (c *Client) UpdateFirewallTag(firewall_tag *FirewallTag) error {
 	for i, cidr := range firewall_tag.CIDRList {
 		body = body + fmt.Sprintf("&new_policies[%d][name]=%s&new_policies[%d][cidr]=%s", i, cidr.CIDRTag, i, cidr.CIDR)
 	}
-	log.Printf("[TRACE] %s %s Body: %s", verb, c.baseURL, body)
+	log.Tracef("%s %s Body: %s", verb, c.baseURL, body)
 	req, err := http.NewRequest(verb, c.baseURL, strings.NewReader(body))
 	if err == nil {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -89,7 +90,7 @@ func (c *Client) GetFirewallTag(firewall_tag *FirewallTag) (*FirewallTag, error)
 	firewall_tag.CID = c.CID
 	firewall_tag.Action = "list_policy_members"
 
-	log.Printf("[INFO] Getting Firewall Tag: %#v", firewall_tag)
+	log.Infof("Getting Firewall Tag: %#v", firewall_tag)
 	resp, err := c.Post(c.baseURL, firewall_tag)
 	if err != nil {
 		return nil, errors.New("HTTP Post list_policy_members failed: " + err.Error())
@@ -103,7 +104,7 @@ func (c *Client) GetFirewallTag(firewall_tag *FirewallTag) (*FirewallTag, error)
 		return nil, errors.New("Json Decode list_policy_members failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
-		log.Printf("[INFO] Couldn't find Aviatrix Firewall tag %s: %s", firewall_tag.Name, data.Reason)
+		log.Errorf("Couldn't find Aviatrix Firewall tag %s: %s", firewall_tag.Name, data.Reason)
 		return nil, ErrNotFound
 	}
 	return &data.Results, nil
@@ -112,7 +113,7 @@ func (c *Client) GetFirewallTag(firewall_tag *FirewallTag) (*FirewallTag, error)
 func (c *Client) DeleteFirewallTag(firewall_tag *FirewallTag) error {
 	firewall_tag.CID = c.CID
 	firewall_tag.Action = "del_policy_tag"
-	log.Printf("[INFO] Deleting Firewall Tag: %#v", firewall_tag)
+	log.Infof("Deleting Firewall Tag: %#v", firewall_tag)
 	resp, err := c.Post(c.baseURL, firewall_tag)
 	if err != nil {
 		return errors.New("HTTP Post del_policy_tag failed: " + err.Error())

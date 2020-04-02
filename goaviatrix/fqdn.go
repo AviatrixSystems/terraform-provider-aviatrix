@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Filters struct {
@@ -176,7 +177,7 @@ func (c *Client) UpdateFQDNMode(fqdn *FQDN) error {
 func (c *Client) UpdateDomains(fqdn *FQDN) error {
 	fqdn.CID = c.CID
 	fqdn.Action = "set_fqdn_filter_tag_domain_names"
-	log.Printf("[INFO] Update domains: %#v", fqdn)
+	log.Infof("Update domains: %#v", fqdn)
 
 	verb := "POST"
 	body := fmt.Sprintf("CID=%s&action=%s&tag_name=%s", c.CID, fqdn.Action, fqdn.FQDNTag)
@@ -184,7 +185,7 @@ func (c *Client) UpdateDomains(fqdn *FQDN) error {
 		body = body + fmt.Sprintf("&domain_names[%d][fqdn]=%s&domain_names[%d]"+
 			"[proto]=%s&domain_names[%d][port]=%s", i, dn.FQDN, i, dn.Protocol, i, dn.Port)
 	}
-	log.Printf("[TRACE] %s %s Body: %s", verb, c.baseURL, body)
+	log.Tracef("%s %s Body: %s", verb, c.baseURL, body)
 	req, err := http.NewRequest(verb, c.baseURL, strings.NewReader(body))
 	if err == nil {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -267,7 +268,7 @@ func (c *Client) ListFQDNTags() ([]*FQDN, error) {
 		return nil, errors.New("Json Decode list_fqdn_filter_tags failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if _, ok := data["reason"]; ok {
-		log.Printf("[INFO] Couldn't find Aviatrix FQDN tags: %s", data["reason"])
+		log.Errorf("Couldn't find Aviatrix FQDN tags: %s", data["reason"])
 		return nil, ErrNotFound
 	}
 	tags := make([]*FQDN, 0)
@@ -298,7 +299,7 @@ func (c *Client) GetFQDNTag(fqdn *FQDN) (*FQDN, error) {
 			return fqdn, nil
 		}
 	}
-	log.Printf("[INFO] Couldn't find Aviatrix FQDN tag %s", fqdn.FQDNTag)
+	log.Errorf("Couldn't find Aviatrix FQDN tag %s", fqdn.FQDNTag)
 	return nil, ErrNotFound
 }
 
@@ -362,8 +363,7 @@ func (c *Client) ListGws(fqdn *FQDN) ([]string, error) {
 		return nil, errors.New("Json Decode list_fqdn_filter_tag_attached_gws failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
-		log.Printf("[INFO] Couldn't find Aviatrix FQDN tag names: %s , Reason: %s", fqdn.FQDNTag,
-			data.Reason)
+		log.Errorf("Couldn't find Aviatrix FQDN tag names: %s , Reason: %s", fqdn.FQDNTag, data.Reason)
 		return nil, errors.New("Rest API list_fqdn_filter_tag_attached_gws Get failed: " + data.Reason)
 	}
 
