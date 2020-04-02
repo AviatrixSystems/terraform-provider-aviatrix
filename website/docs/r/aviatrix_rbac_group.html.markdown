@@ -2,17 +2,17 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_rbac_group"
 description: |-
-  Creates and manages Aviatrix rbac groups
+  Creates and manages Aviatrix RBAC groups
 ---
 
 # aviatrix_rbac_group
 
-The **aviatrix_rbac_group** resource allows the creation and management of Aviatrix rbac groups.
+The **aviatrix_rbac_group** resource allows the creation and management of Aviatrix (Role-Based Access Control) RBAC groups.
 
 ## Example Usage
 
 ```hcl
-# Create an Aviatrix Rbac Group
+# Create an Aviatrix RBAC Group
 resource "aviatrix_rbac_group" "test_group" {
   group_name = "write_only"
 }
@@ -23,7 +23,7 @@ resource "aviatrix_rbac_group" "test_group" {
 The following arguments are supported:
 
 ### Required
-* `group_name` - (Required) This parameter represents the name of a rbac group to be created.
+* `group_name` - (Required) This parameter represents the name of a RBAC group to be created.
 
 ## Import
 
