@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_aws_tgw_transit_gateway_attachment"
 description: |-
-  Manages attaching/detaching transit gateway to/from an AWS TGW
+  Manages attachment of transit gateways to the AWS TGW
 ---
 
 # aviatrix_aws_tgw_transit_gateway_attachment
 
-The **aviatrix_aws_tgw_transit_gateway_attachment** resource manages the attaching & detaching of transit gateway to & from an AWS TGW.
+The **aviatrix_aws_tgw_transit_gateway_attachment** resource manages the attachment of the transit gateway to the AWS TGW.
 
 ## Example Usage
 
@@ -31,7 +31,7 @@ The following arguments are supported:
 * `region` - (Required) AWS Region of the TGW.
 * `vpc_account_name` - (Required) The name of the cloud account in the Aviatrix controller, which is associated with the VPC.
 * `vpc_id` - (Required) VPC ID of the VPC, where transit gateway is launched.
-* `transit_gateway_name` - (Required) Name of the transit gateway to be attached to the AWS tgw.
+* `transit_gateway_name` - (Required) Name of the transit gateway to be attached to the AWS TGW.
 
 ## Import
 
