@@ -4,7 +4,7 @@
 - Supported Terraform version: **v0.12.x**
 
 ### Features:
-1. Implemented support for ``enable_learned_cidrs_approval`` in **aviatrix_transit_gateway**, **aws_tgw_vpn_conn** and **aws_tgw_directconnect**
+1. Implemented support for ``enable_learned_cidrs_approval`` in **aviatrix_transit_gateway**, **aviatrix_aws_tgw_vpn_conn** and **aviatrix_aws_tgw_directconnect**
 2. Implemented a new parameter ``manage_transit_gateway_attachment`` to provide the option of attaching/detaching transit gateway to/from AWS TGW outside of **aviatrix_aws_tgw** resource
 3. New resources to support Role-Based Access Control (RBAC) feature in Controller 5.4 release:
   - **aviatrix_rbac_group**
