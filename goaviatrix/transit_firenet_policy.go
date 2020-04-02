@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/url"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type TransitFireNetPolicy struct {
@@ -81,7 +82,7 @@ func (c *Client) GetTransitFireNetPolicy(transitFireNetPolicy *TransitFireNetPol
 		return errors.New("Rest API list_transit_firenet_spoke_policies Get failed: " + data.Reason)
 	}
 	if len(data.Results) == 0 {
-		log.Printf("transit firenet policy between transit firenet gateway: %s and inspected resource name: %s not found",
+		log.Errorf("transit firenet policy between transit firenet gateway: %s and inspected resource name: %s not found",
 			transitFireNetPolicy.TransitFireNetGatewayName, transitFireNetPolicy.InspectedResourceName)
 		return ErrNotFound
 	}

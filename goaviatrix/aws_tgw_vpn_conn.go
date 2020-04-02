@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/url"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // VGWConn simple struct to hold VGW Connection details
@@ -166,7 +167,7 @@ func (c *Client) GetAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (*AwsTgwVpnConn,
 			}
 			awsTgwVpnConn.LearnedCidrsApproval = allAwsTgwVpnConn[i].LearnedCidrsApproval
 
-			log.Printf("[DEBUG] Found AwsTgwVpnConn: %#v", awsTgwVpnConn)
+			log.Debugf("Found AwsTgwVpnConn: %#v", awsTgwVpnConn)
 
 			return awsTgwVpnConn, nil
 		}

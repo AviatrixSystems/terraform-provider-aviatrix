@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/url"
 	"sort"
 	"strconv"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // AwsTGW simple struct to hold aws_tgw details
@@ -677,7 +678,7 @@ func (c *Client) GetTransitGwFromVpcID(awsTgw *AWSTgw, gateway *Gateway) (*Gatew
 			return gateway, nil
 		}
 	}
-	log.Printf("Couldn't find transit gateway attached to vpc %s", gateway.VpcID)
+	log.Errorf("Couldn't find transit gateway attached to vpc %s", gateway.VpcID)
 	return nil, ErrNotFound
 }
 

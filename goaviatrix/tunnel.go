@@ -6,9 +6,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/url"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Tunnel struct {
@@ -88,11 +89,11 @@ func (c *Client) GetTunnel(tunnel *Tunnel) (*Tunnel, error) {
 	tunList := data.Results.PairList
 	for i := range tunList {
 		if tunList[i].VpcName1 == tunnel.VpcName1 && tunList[i].VpcName2 == tunnel.VpcName2 {
-			log.Printf("[DEBUG] Found %s~%s tunnel: %#v", tunnel.VpcName1, tunnel.VpcName2, tunList[i])
+			log.Debugf("Found %s~%s tunnel: %#v", tunnel.VpcName1, tunnel.VpcName2, tunList[i])
 			return &tunList[i], nil
 		}
 	}
-	log.Printf("Tunnel with gateways %s and %s not found", tunnel.VpcName1, tunnel.VpcName2)
+	log.Errorf("Tunnel with gateways %s and %s not found", tunnel.VpcName1, tunnel.VpcName2)
 	return nil, ErrNotFound
 }
 

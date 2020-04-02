@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"reflect"
 	"strings"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/ajg/form"
 	"github.com/google/go-querystring/query"
+	log "github.com/sirupsen/logrus"
 )
 
 // LoginResp represents the response object from the `login` action
@@ -59,7 +59,7 @@ func (c *Client) Login() error {
 	account["username"] = c.Username
 	account["password"] = c.Password
 
-	log.Printf("[INFO] Parsed Aviatrix login: %#v", account["username"])
+	log.Infof("Parsed Aviatrix login: %s", account["username"])
 	resp, err := c.Post(c.baseURL, account)
 	if err != nil {
 		return err
@@ -71,7 +71,7 @@ func (c *Client) Login() error {
 	if !data.Return {
 		return errors.New(data.Reason)
 	}
-	log.Printf("[TRACE] CID is '%s'.", data.CID)
+	log.Tracef("CID is '%s'.", data.CID)
 	c.CID = data.CID
 	return nil
 }
@@ -178,7 +178,7 @@ func (c *Client) Do(verb string, req interface{}) (*http.Response, []byte, error
 			}
 		}
 
-		log.Printf("[TRACE] %s %s: %d", verb, url, resp.StatusCode)
+		log.Tracef("%s %s: %d", verb, url, resp.StatusCode)
 		// decode the json response and look for errors to retry
 		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusOK {
@@ -188,7 +188,7 @@ func (c *Client) Do(verb string, req interface{}) (*http.Response, []byte, error
 			}
 			// Check if the CID has expired; if so re-login
 			if respdata.Reason == "CID is invalid or expired." && loop < 2 {
-				log.Printf("[TRACE] re-login (expired CID)")
+				log.Tracef("re-login (expired CID)")
 				time.Sleep(500 * time.Millisecond)
 				if err = c.Login(); err != nil {
 					return resp, body, err
@@ -216,7 +216,7 @@ func (c *Client) Do(verb string, req interface{}) (*http.Response, []byte, error
 // Request makes an HTTP request with the given interface being encoded as
 // form data.
 func (c *Client) Request(verb string, path string, i interface{}) (*http.Response, error) {
-	log.Printf("[TRACE] %s %s", verb, path)
+	log.Tracef("%s %s", verb, path)
 	var req *http.Request
 	var err error
 	if i != nil {
@@ -225,7 +225,7 @@ func (c *Client) Request(verb string, path string, i interface{}) (*http.Respons
 			return nil, err
 		}
 		body := buf.String()
-		log.Printf("[TRACE] %s %s Body: %s", verb, path, body)
+		log.Tracef("%s %s Body: %s", verb, path, body)
 		reader := strings.NewReader(body)
 		req, err = http.NewRequest(verb, path, reader)
 		if err == nil {

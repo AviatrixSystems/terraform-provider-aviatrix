@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/url"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type RbacGroupPermissionAttachment struct {
@@ -78,13 +79,13 @@ func (c *Client) GetRbacGroupPermissionAttachment(rbacGroupPermissionAttachment 
 	attachments := data.RbacGroupPermissionAttachmentList
 	for i := range attachments {
 		if attachments[i].Name == rbacGroupPermissionAttachment.PermissionName {
-			log.Printf("[INFO] Found Aviatrix RBAC group permission attachment: %s",
+			log.Infof("Found Aviatrix RBAC group permission attachment: %s",
 				rbacGroupPermissionAttachment.GroupName+"~"+rbacGroupPermissionAttachment.PermissionName)
 			return rbacGroupPermissionAttachment, nil
 		}
 	}
 
-	log.Printf("Couldn't find Aviatrix RBAC group permission attachment: %s",
+	log.Errorf("Couldn't find Aviatrix RBAC group permission attachment: %s",
 		rbacGroupPermissionAttachment.GroupName+"~"+rbacGroupPermissionAttachment.PermissionName)
 	return nil, ErrNotFound
 }

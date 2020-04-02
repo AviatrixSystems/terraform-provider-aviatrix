@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/url"
 	"regexp"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // AWSPeer simple struct to hold aws_peer details
@@ -79,7 +80,7 @@ func (c *Client) GetAWSPeer(awsPeer *AWSPeer) (*AWSPeer, error) {
 		return nil, errors.New("Json Decode list_aws_peerings failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if _, ok := data["reason"]; ok {
-		log.Printf("[INFO] Couldn't find AWS peering between VPCs %s and %s: %s", awsPeer.VpcID1, awsPeer.VpcID2, data["reason"])
+		log.Errorf("Couldn't find AWS peering between VPCs %s and %s: %s", awsPeer.VpcID1, awsPeer.VpcID2, data["reason"])
 		return nil, ErrNotFound
 	}
 	if val, ok := data["results"]; ok {
@@ -100,7 +101,7 @@ func (c *Client) GetAWSPeer(awsPeer *AWSPeer) (*AWSPeer, error) {
 			}
 		}
 	}
-	log.Printf("[INFO] No AWS peering between VPC %s and %s is present.", awsPeer.VpcID1, awsPeer.VpcID2)
+	log.Errorf("No AWS peering between VPC %s and %s is present.", awsPeer.VpcID1, awsPeer.VpcID2)
 	return nil, ErrNotFound
 }
 

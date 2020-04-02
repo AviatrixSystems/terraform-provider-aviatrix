@@ -6,12 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Version struct {
@@ -74,7 +75,7 @@ func (c *Client) Upgrade(version *Version) error {
 		}
 		if !data.Return {
 			if strings.Contains(data.Reason, "Active upgrade in progress.") && i < 3 {
-				log.Printf("[INFO] Active upgrade is in progress. Retry after 60 secs...")
+				log.Infof("Active upgrade is in progress. Retry after 60 secs...")
 				time.Sleep(60 * time.Second)
 				continue
 			}
@@ -134,9 +135,9 @@ func (c *Client) Pre32Upgrade() error {
 		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusOK {
 			body, _ := ioutil.ReadAll(resp.Body)
-			log.Printf("[TRACE] response %s", body)
+			log.Tracef("response %s", body)
 			if strings.Contains(string(body), "in progress") && i < 3 {
-				log.Printf("[INFO] Active upgrade is in progress. Retry after 60 secs...")
+				log.Infof("Active upgrade is in progress. Retry after 60 secs...")
 				time.Sleep(60 * time.Second)
 			} else {
 				break

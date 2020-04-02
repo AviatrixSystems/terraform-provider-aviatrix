@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const Phase1AuthDefault = "SHA-1"
@@ -375,7 +376,7 @@ func (c *Client) DeleteSite2Cloud(site2cloud *Site2Cloud) error {
 	body := fmt.Sprintf("CID=%s&action=%s&vpc_id=%s&connection_name=%s", c.CID, site2cloud.Action,
 		site2cloud.VpcID, site2cloud.TunnelName)
 
-	log.Printf("[TRACE] %s %s Body: %s", verb, c.baseURL, body)
+	log.Tracef("%s %s Body: %s", verb, c.baseURL, body)
 	req, err := http.NewRequest(verb, c.baseURL, strings.NewReader(body))
 	if err == nil {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")

@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/url"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type TransitGatewayPeering struct {
@@ -75,7 +76,7 @@ func (c *Client) GetTransitGatewayPeering(transitGatewayPeering *TransitGatewayP
 		return errors.New("Rest API list_inter_transit_gateway_peering Get failed: " + data.Reason)
 	}
 	if len(data.Results) == 0 {
-		log.Printf("Transit gateway peering with gateways %s and %s not found",
+		log.Errorf("Transit gateway peering with gateways %s and %s not found",
 			transitGatewayPeering.TransitGatewayName1, transitGatewayPeering.TransitGatewayName2)
 		return ErrNotFound
 	}
@@ -86,7 +87,7 @@ func (c *Client) GetTransitGatewayPeering(transitGatewayPeering *TransitGatewayP
 				peeringList[i][j].TransitGatewayName2 == transitGatewayPeering.TransitGatewayName2 ||
 				peeringList[i][j].TransitGatewayName1 == transitGatewayPeering.TransitGatewayName2 &&
 					peeringList[i][j].TransitGatewayName2 == transitGatewayPeering.TransitGatewayName1 {
-				log.Printf("[DEBUG] Found %s<->%s transit gateway peering: %#v",
+				log.Debugf("Found %s<->%s transit gateway peering: %#v",
 					transitGatewayPeering.TransitGatewayName1,
 					transitGatewayPeering.TransitGatewayName2, peeringList[i][j])
 				return nil

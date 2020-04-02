@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/url"
 	"strconv"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Vpc struct {
@@ -127,7 +128,7 @@ func (c *Client) GetVpc(vpc *Vpc) (*Vpc, error) {
 	allVpcPoolVpcListResp := data.Results.AllVpcPoolVpcList
 	for i := range allVpcPoolVpcListResp {
 		if allVpcPoolVpcListResp[i].Name == vpc.Name {
-			log.Printf("[DEBUG] Found VPC: %#v", allVpcPoolVpcListResp[i])
+			log.Debugf("Found VPC: %#v", allVpcPoolVpcListResp[i])
 
 			vpc.CloudType = allVpcPoolVpcListResp[i].CloudType
 			vpc.AccountName = allVpcPoolVpcListResp[i].AccountName
@@ -149,7 +150,7 @@ func (c *Client) GetVpc(vpc *Vpc) (*Vpc, error) {
 			return vpc, nil
 		}
 	}
-	log.Printf("VPC not found")
+	log.Error("VPC not found")
 	return nil, ErrNotFound
 }
 

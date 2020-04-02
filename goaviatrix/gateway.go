@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/url"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Gateway simple struct to hold gateway details
@@ -343,7 +344,7 @@ func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
 			return &gwList[i], nil
 		}
 	}
-	log.Printf("Couldn't find Aviatrix gateway %s", gateway.GwName)
+	log.Errorf("Couldn't find Aviatrix gateway %s", gateway.GwName)
 	return nil, ErrNotFound
 }
 
@@ -376,7 +377,7 @@ func (c *Client) GetGatewayDetail(gateway *Gateway) (*GatewayDetail, error) {
 		return &data.Results, nil
 	}
 
-	log.Printf("Couldn't find Aviatrix gateway %s", gateway.GwName)
+	log.Errorf("Couldn't find Aviatrix gateway %s", gateway.GwName)
 	return nil, ErrNotFound
 }
 

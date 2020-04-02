@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/url"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type ProfileRule struct {
@@ -85,7 +86,7 @@ func (c *Client) CreateProfile(profile *Profile) error {
 	updateProfilePolicy.Add("profile_name", profile.Name)
 	updateProfilePolicy.Add("policy", string(policyStr))
 	Url.RawQuery = updateProfilePolicy.Encode()
-	log.Printf("[INFO] Creating Aviatrix Profile with Policy: %v", Url.String())
+	log.Infof("Creating Aviatrix Profile with Policy: %v", Url.String())
 	resp, err = c.Get(Url.String(), nil)
 	if err != nil {
 		return errors.New("HTTP Get update_profile_policy failed: " + err.Error())
@@ -152,14 +153,14 @@ func (c *Client) GetProfile(profile *Profile) (*Profile, error) {
 		return nil, errors.New("Json Decode list_profile_policies failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
-		log.Printf("Couldn't find Aviatrix profile %s", profile.Name)
+		log.Errorf("Couldn't find Aviatrix profile %s", profile.Name)
 		if strings.Contains(data.Reason, "does not exist") {
 			return nil, ErrNotFound
 		}
 		return nil, errors.New("API Get list_profile_policies failed: " + data.Reason)
 	}
 	profile.Policy = data.Results
-	log.Printf("[TRACE] Profile policy %s", profile.Policy)
+	log.Tracef("Profile policy %s", profile.Policy)
 
 	listUserProfileNames := url.Values{}
 	listUserProfileNames.Add("CID", c.CID)
@@ -180,12 +181,12 @@ func (c *Client) GetProfile(profile *Profile) (*Profile, error) {
 	}
 	//profile.BaseRule = data2.Results[profile.Name]
 	profile.UserList = data2.Results[profile.Name]
-	log.Printf("[TRACE] Profile list of users %s", profile.UserList)
+	log.Tracef("Profile list of users %s", profile.UserList)
 	return profile, nil
 }
 
 func (c *Client) UpdateProfilePolicy(profile *Profile) error {
-	log.Printf("[TRACE] Updating Profile Policy %#v", profile)
+	log.Tracef("Updating Profile Policy %#v", profile)
 
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
@@ -218,7 +219,7 @@ func (c *Client) UpdateProfilePolicy(profile *Profile) error {
 }
 
 func (c *Client) AttachUsers(profile *Profile) error {
-	log.Printf("[TRACE] Attaching users %s", profile.UserList)
+	log.Tracef("Attaching users %s", profile.UserList)
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
 		panic("boom")
@@ -251,7 +252,7 @@ func (c *Client) AttachUsers(profile *Profile) error {
 }
 
 func (c *Client) DetachUsers(profile *Profile) error {
-	log.Printf("[TRACE] Detaching users %s", profile.UserList)
+	log.Tracef("Detaching users %s", profile.UserList)
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
 		return errors.New(("url Parsing failed for del_profile_member") + err.Error())
