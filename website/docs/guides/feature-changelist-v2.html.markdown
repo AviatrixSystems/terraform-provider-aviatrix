@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.13 (UserConnect-5.4.1066)``
+``Last updated: R2.13 (UserConnect-5.4.1074)``
 
 
 ---
