@@ -69,7 +69,6 @@ func resourceAviatrixAwsTgwVpcAttachment() *schema.Resource {
 			"customized_route_advertisement": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew:    true,
 				Default:     "",
 				Description: "Advanced option. Customized route(s) to be advertised to other VPCs that are connected to the same TGW.",
 			},
@@ -231,6 +230,17 @@ func resourceAviatrixAwsTgwVpcAttachmentUpdate(d *schema.ResourceData, meta inte
 		err := client.EditTgwSpokeVpcCustomizedRoutes(awsTgwVpcAttachment)
 		if err != nil {
 			return fmt.Errorf("failed to update spoke vpc customized routes: %s", err)
+		}
+	}
+	if d.HasChange("customized_route_advertisement") {
+		awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
+			TgwName:                      d.Get("tgw_name").(string),
+			VpcID:                        d.Get("vpc_id").(string),
+			CustomizedRouteAdvertisement: d.Get("customized_route_advertisement").(string),
+		}
+		err := client.EditTgwSpokeVpcCustomizedRouteAdvertisement(awsTgwVpcAttachment)
+		if err != nil {
+			return fmt.Errorf("failed to update spoke vpc customized routes advertisement: %s", err)
 		}
 	}
 

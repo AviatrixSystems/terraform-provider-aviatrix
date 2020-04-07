@@ -351,3 +351,33 @@ func (c *Client) EditTgwSpokeVpcCustomizedRoutes(awsTgwVpcAttachment *AwsTgwVpcA
 	}
 	return nil
 }
+
+func (c *Client) EditTgwSpokeVpcCustomizedRouteAdvertisement(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for 'update_customized_route_advertisement': ") + err.Error())
+	}
+	updateCustomizedRouteAdvertisement := url.Values{}
+	updateCustomizedRouteAdvertisement.Add("CID", c.CID)
+	updateCustomizedRouteAdvertisement.Add("action", "update_customized_route_advertisement")
+	updateCustomizedRouteAdvertisement.Add("tgw_name", awsTgwVpcAttachment.TgwName)
+	updateCustomizedRouteAdvertisement.Add("attachment_name", awsTgwVpcAttachment.VpcID)
+	updateCustomizedRouteAdvertisement.Add("cidr_list", awsTgwVpcAttachment.CustomizedRouteAdvertisement)
+	Url.RawQuery = updateCustomizedRouteAdvertisement.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return errors.New("HTTP Get 'update_customized_route_advertisement' failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode 'update_customized_route_advertisement' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API 'update_customized_route_advertisement' Get failed: " + data.Reason)
+	}
+	return nil
+}
