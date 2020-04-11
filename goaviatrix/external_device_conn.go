@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -45,23 +45,25 @@ type ExternalDeviceConn struct {
 type EditExternalDeviceConnDetail struct {
 	VpcID                   []string      `json:"vpc_id,omitempty"`
 	ConnName                []string      `json:"name,omitempty"`
-	ConnType                string        `json:"type,omitempty"`
-	TunnelType              string        `json:"tunnel_type,omitempty"`
 	GwName                  string        `json:"gw_name,omitempty"`
-	Tunnels                 []TunnelInfo  `json:"tunnels,omitempty"`
-	RemoteSubnet            string        `json:"real_remote_cidr,omitempty"`
-	LocalSubnet             string        `json:"real_local_cidr,omitempty"`
-	RemoteCidr              string        `json:"remote_cidr,omitempty"`
-	LocalCidr               string        `json:"local_cidr,omitempty"`
-	HAEnabled               string        `json:"ha_status,omitempty"`
-	PeerType                string        `json:"peer_type,omitempty"`
-	RemoteSubnetVirtual     string        `json:"virt_remote_cidr,omitempty"`
-	LocalSubnetVirtual      string        `json:"virt_local_cidr,omitempty"`
+	BgpLocalAsNumber        string        `json:"bgp_local_asn_number,omitempty"`
+	BgpRemoteAsNumber       string        `json:"bgp_remote_asn_number,omitempty"`
+	RemoteGatewayIP         string        `json:"peer_ip,omitempty"`
+	RemoteSubnet            string        `json:"remote_cidr,omitempty"`
+	DirectConnect           bool          `json:"direct_connect_primary,omitempty"`
+	LocalTunnelIP           string        `json:"bgp_local_ip,omitempty"`
+	RemoteTunnelIP          string        `json:"bgp_remote_ip,omitempty"`
 	Algorithm               AlgorithmInfo `json:"algorithm,omitempty"`
-	RouteTableList          []string      `json:"rtbls,omitempty"`
-	SslServerPool           []string      `json:"ssl_server_pool,omitempty"`
-	DeadPeerDetectionConfig string        `json:"dpd_config,omitempty"`
-	EnableActiveActive      string        `json:"active_active_ha,omitempty"`
+	HAEnabled               string        `json:"ha_status,omitempty"`
+	BackupBgpRemoteAsNumber int           `json:"backup_external_device_as_number,omitempty"`
+	BackupLocalTunnelIP     string        `json:"bgp_backup_local_ip,omitempty"`
+	BackupRemoteTunnelIP    string        `json:"bgp_backup_remote_ip,omitempty"`
+	BackupDirectConnect     bool          `json:"direct_connect_backup,omitempty"`
+	EnableEdgeSegmentation  bool          `json:"enable_edge_segmentation,omitempty"`
+	Tunnels                 []TunnelInfo  `json:"tunnels,omitempty"`
+	BackupRemoteGatewayIP   string
+	PreSharedKey            string
+	BackupPreSharedKey      string
 }
 
 type ExternalDeviceConnDetailResp struct {
@@ -100,6 +102,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 	if err != nil {
 		return nil, errors.New(("url Parsing failed for 'GetExternalDeviceConnDetail': ") + err.Error())
 	}
+
 	getExternalDeviceConnDetail := url.Values{}
 	getExternalDeviceConnDetail.Add("CID", c.CID)
 	getExternalDeviceConnDetail.Add("action", "get_site2cloud_conn_detail")
@@ -127,32 +130,30 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 
 	externalDeviceConnDetail := data.Results.Connections
 	if len(externalDeviceConnDetail.ConnName) != 0 {
+		if len(externalDeviceConnDetail.VpcID) != 0 {
+			externalDeviceConn.VpcID = externalDeviceConnDetail.VpcID[0]
+		}
+
+		externalDeviceConn.ConnName = externalDeviceConnDetail.ConnName[0]
 		externalDeviceConn.GwName = externalDeviceConnDetail.GwName
-		externalDeviceConn.ConnType = externalDeviceConnDetail.ConnType
-		//if externalDeviceConn.ConnType == "mapped" {
-		//	externalDeviceConn.RemoteSubnet = externalDeviceConnDetail.RemoteSubnet
-		//	externalDeviceConn.LocalSubnet = externalDeviceConnDetail.LocalSubnet
-		//	externalDeviceConn.RemoteSubnetVirtual = externalDeviceConnDetail.RemoteSubnetVirtual
-		//	externalDeviceConn.LocalSubnetVirtual = externalDeviceConnDetail.LocalSubnetVirtual
-		//} else {
-		//	externalDeviceConn.RemoteSubnet = externalDeviceConnDetail.RemoteCidr
-		//	externalDeviceConn.LocalSubnet = externalDeviceConnDetail.LocalCidr
-		//}
-		//externalDeviceConn.HAEnabled = externalDeviceConnDetail.HAEnabled
-		//for i := range s2cConnDetail.Tunnels {
-		//	if externalDeviceConnDetail.Tunnels[i].GwName == externalDeviceConn.GwName {
-		//		externalDeviceConn.RemoteGwIP = externalDeviceConnDetail.Tunnels[i].PeerIP
-		//	} else {
-		//		externalDeviceConn.BackupGwName = externalDeviceConnDetail.Tunnels[i].GwName
-		//		externalDeviceConn.RemoteGwIP2 = externalDeviceConnDetail.Tunnels[i].PeerIP
-		//	}
-		//}
-		if externalDeviceConnDetail.Algorithm.Phase1Auth[0] == Phase1AuthDefault &&
-			externalDeviceConnDetail.Algorithm.Phase2Auth[0] == Phase2AuthDefault &&
-			externalDeviceConnDetail.Algorithm.Phase1DhGroups[0] == Phase1DhGroupDefault &&
-			externalDeviceConnDetail.Algorithm.Phase2DhGroups[0] == Phase2DhGroupDefault &&
-			externalDeviceConnDetail.Algorithm.Phase1Encrption[0] == Phase1EncryptionDefault &&
-			externalDeviceConnDetail.Algorithm.Phase2Encrption[0] == Phase2EncryptionDefault {
+
+		if externalDeviceConnDetail.RemoteSubnet != "" {
+			externalDeviceConn.RemoteSubnet = externalDeviceConnDetail.RemoteSubnet
+			externalDeviceConn.ConnType = "static"
+		} else {
+			bgpLocalAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BgpLocalAsNumber)
+			externalDeviceConn.BgpLocalAsNumber = bgpLocalAsNumber
+			bgpRemoteAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BgpRemoteAsNumber)
+			externalDeviceConn.BgpRemoteAsNumber = bgpRemoteAsNumber
+			externalDeviceConn.ConnType = "bgp"
+		}
+		externalDeviceConn.RemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[0]
+		if externalDeviceConnDetail.Algorithm.Phase1Auth[0] == "SHA-256" &&
+			externalDeviceConnDetail.Algorithm.Phase2Auth[0] == "HMAC-SHA-256" &&
+			externalDeviceConnDetail.Algorithm.Phase1DhGroups[0] == "14" &&
+			externalDeviceConnDetail.Algorithm.Phase2DhGroups[0] == "14" &&
+			externalDeviceConnDetail.Algorithm.Phase1Encrption[0] == "AES-256-CBC" &&
+			externalDeviceConnDetail.Algorithm.Phase2Encrption[0] == "AES-256-CBC" {
 			externalDeviceConn.CustomAlgorithms = false
 			externalDeviceConn.Phase1Auth = ""
 			externalDeviceConn.Phase2Auth = ""
@@ -169,6 +170,45 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 			externalDeviceConn.Phase1Encryption = externalDeviceConnDetail.Algorithm.Phase1Encrption[0]
 			externalDeviceConn.Phase2Encryption = externalDeviceConnDetail.Algorithm.Phase2Encrption[0]
 		}
+		if externalDeviceConnDetail.DirectConnect {
+			externalDeviceConn.DirectConnect = "enabled"
+		} else {
+			externalDeviceConn.DirectConnect = "disabled"
+		}
+		if externalDeviceConnDetail.HAEnabled == "enabled" && len(externalDeviceConnDetail.Tunnels) == 2 {
+			externalDeviceConn.LocalTunnelIP = externalDeviceConnDetail.LocalTunnelIP + "," + externalDeviceConnDetail.BackupLocalTunnelIP
+			externalDeviceConn.RemoteTunnelIP = externalDeviceConnDetail.RemoteTunnelIP + "," + externalDeviceConnDetail.BackupRemoteTunnelIP
+			externalDeviceConn.HAEnabled = "disabled"
+		} else if externalDeviceConnDetail.HAEnabled == "enabled" && len(externalDeviceConnDetail.Tunnels) == 4 {
+			externalDeviceConn.LocalTunnelIP = externalDeviceConnDetail.LocalTunnelIP
+			externalDeviceConn.BackupLocalTunnelIP = externalDeviceConnDetail.BackupLocalTunnelIP
+			externalDeviceConn.RemoteTunnelIP = externalDeviceConnDetail.RemoteTunnelIP
+			externalDeviceConn.BackupRemoteTunnelIP = externalDeviceConnDetail.BackupRemoteTunnelIP
+			externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
+			externalDeviceConn.HAEnabled = "enabled"
+		} else {
+			externalDeviceConn.LocalTunnelIP = externalDeviceConnDetail.LocalTunnelIP
+			externalDeviceConn.BackupLocalTunnelIP = externalDeviceConnDetail.BackupLocalTunnelIP
+			externalDeviceConn.RemoteTunnelIP = externalDeviceConnDetail.RemoteTunnelIP
+			externalDeviceConn.BackupRemoteTunnelIP = externalDeviceConnDetail.BackupRemoteTunnelIP
+			if len(externalDeviceConnDetail.Tunnels) == 2 {
+				externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
+				externalDeviceConn.HAEnabled = "enabled"
+			} else {
+				externalDeviceConn.HAEnabled = "disabled"
+			}
+		}
+
+		if externalDeviceConnDetail.BackupDirectConnect {
+			externalDeviceConn.BackupDirectConnect = "enabled"
+		} else {
+			externalDeviceConn.BackupDirectConnect = "disabled"
+		}
+		if externalDeviceConnDetail.EnableEdgeSegmentation {
+			externalDeviceConn.EnableEdgeSegmentation = "enabled"
+		} else {
+			externalDeviceConn.EnableEdgeSegmentation = "disabled"
+		}
 
 		return externalDeviceConn, nil
 	}
@@ -183,7 +223,6 @@ func (c *Client) DeleteExternalDeviceConn(externalDeviceConn *ExternalDeviceConn
 	if err != nil {
 		return errors.New("HTTP Post 'disconnect_transit_gw' failed: " + err.Error())
 	}
-	log.Printf("zjin030 nothing is wrong here")
 
 	var data APIResp
 	buf := new(bytes.Buffer)

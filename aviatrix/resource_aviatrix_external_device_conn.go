@@ -3,6 +3,8 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"strconv"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -57,13 +59,13 @@ func resourceAviatrixExternalDeviceConn() *schema.Resource {
 				},
 			},
 			"bgp_local_as_number": {
-				Type:        schema.TypeInt,
+				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
 				Description: "AWS side as a number. Integer between 1-65535. Example: '12'. Required for a dynamic VPN connection.",
 			},
 			"bgp_remote_as_number": {
-				Type:        schema.TypeInt,
+				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
 				Description: "Remote CIDRs joined as a string with ','. Required for a static VPN connection.",
@@ -77,12 +79,14 @@ func resourceAviatrixExternalDeviceConn() *schema.Resource {
 			"direct_connect": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     false,
 				ForceNew:    true,
 				Description: "Remote CIDRs joined as a string with ','. Required for a static VPN connection.",
 			},
 			"pre_shared_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				ForceNew:    true,
 				Description: "Remote CIDRs joined as a string with ','. Required for a static VPN connection.",
 			},
@@ -146,42 +150,59 @@ func resourceAviatrixExternalDeviceConn() *schema.Resource {
 			},
 			"enable_ha": {
 				Type:        schema.TypeBool,
-				Computed:    true,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
 				Description: "ID of the vpn connection.",
 			},
 			"backup_remote_gateway_ip": {
 				Type:        schema.TypeString,
-				Computed:    true,
+				Optional:    true,
+				Default:     "",
+				ForceNew:    true,
 				Description: "ID of the vpn connection.",
 			},
 			"backup_bgp_remote_as_number": {
 				Type:        schema.TypeInt,
-				Computed:    true,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
 				Description: "ID of the vpn connection.",
 			},
 			"backup_pre_shared_key": {
 				Type:        schema.TypeString,
-				Computed:    true,
+				Optional:    true,
+				Default:     "",
+				Sensitive:   true,
+				ForceNew:    true,
 				Description: "ID of the vpn connection.",
 			},
 			"backup_local_tunnel_ip": {
 				Type:        schema.TypeString,
-				Computed:    true,
+				Optional:    true,
+				Default:     "",
+				ForceNew:    true,
 				Description: "ID of the vpn connection.",
 			},
 			"backup_remote_tunnel_ip": {
 				Type:        schema.TypeString,
-				Computed:    true,
+				Optional:    true,
+				Default:     "",
+				ForceNew:    true,
 				Description: "ID of the vpn connection.",
 			},
 			"backup_direct_connect": {
 				Type:        schema.TypeBool,
-				Computed:    true,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
 				Description: "ID of the vpn connection.",
 			},
 			"enable_edge_segmentation": {
 				Type:        schema.TypeBool,
-				Computed:    true,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
 				Description: "ID of the vpn connection.",
 			},
 		},
@@ -191,15 +212,11 @@ func resourceAviatrixExternalDeviceConn() *schema.Resource {
 func resourceAviatrixExternalDeviceConnCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	log.Printf("zjin00 nothing is wrong here")
-
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 		VpcID:                   d.Get("vpc_id").(string),
 		ConnName:                d.Get("conn_name").(string),
 		GwName:                  d.Get("gw_name").(string),
 		ConnType:                d.Get("connection_type").(string),
-		BgpLocalAsNumber:        d.Get("bgp_local_as_number").(int),
-		BgpRemoteAsNumber:       d.Get("bgp_remote_as_number").(int),
 		RemoteGatewayIP:         d.Get("remote_gateway_ip").(string),
 		RemoteSubnet:            d.Get("remote_subnet").(string),
 		PreSharedKey:            d.Get("pre_shared_key").(string),
@@ -218,38 +235,40 @@ func resourceAviatrixExternalDeviceConnCreate(d *schema.ResourceData, meta inter
 		BackupRemoteTunnelIP:    d.Get("backup_remote_tunnel_ip").(string),
 	}
 
-	log.Printf("zjin01 nothing is wrong here")
+	bgpLocalAsNumber, err := strconv.Atoi(d.Get("bgp_local_as_number").(string))
+	if err == nil {
+		externalDeviceConn.BgpLocalAsNumber = bgpLocalAsNumber
+	}
+	bgpRemoteAsNumber, err := strconv.Atoi(d.Get("bgp_remote_as_number").(string))
+	if err == nil {
+		externalDeviceConn.BgpRemoteAsNumber = bgpRemoteAsNumber
+	}
 
 	directConnect := d.Get("direct_connect").(bool)
 	if directConnect {
 		externalDeviceConn.DirectConnect = "true"
 	}
-	log.Printf("zjin020 nothing is wrong here")
 
 	haEnabled := d.Get("enable_ha").(bool)
 	if haEnabled {
 		externalDeviceConn.HAEnabled = "true"
 	}
-	log.Printf("zjin021 nothing is wrong here")
 
 	backupDirectConnect := d.Get("backup_direct_connect").(bool)
 	if backupDirectConnect {
 		externalDeviceConn.BackupDirectConnect = "true"
 	}
-	log.Printf("zjin022 nothing is wrong here")
 
 	enableEdgeSegmentation := d.Get("enable_edge_segmentation").(bool)
 	if enableEdgeSegmentation {
 		externalDeviceConn.EnableEdgeSegmentation = "true"
 	}
-	log.Printf("zjin023 nothing is wrong here")
 
 	if externalDeviceConn.ConnType == "bgp" && externalDeviceConn.RemoteSubnet != "" {
 		return fmt.Errorf("'remote_subnet' is needed for connection type of 'static' not 'bpg'")
 	} else if externalDeviceConn.ConnType == "static" && (externalDeviceConn.BgpLocalAsNumber != 0 || externalDeviceConn.BgpRemoteAsNumber != 0) {
 		return fmt.Errorf("'bgp_local_as_number' and 'bgp_remote_as_number' are needed for connection type of 'bgp' not 'static'")
 	}
-	log.Printf("zjin024 nothing is wrong here")
 
 	customAlgorithms := d.Get("custom_algorithms").(bool)
 	if !customAlgorithms && (externalDeviceConn.Phase1Auth != "" || externalDeviceConn.Phase1DhGroups != "" ||
@@ -258,11 +277,12 @@ func resourceAviatrixExternalDeviceConnCreate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("'custom_algorithms' is not enabled, all algorithms fields should be left empty")
 	}
 
-	log.Printf("zjin025 nothing is wrong here")
-
 	if haEnabled {
-		if externalDeviceConn.BackupRemoteGatewayIP == "" || externalDeviceConn.BackupBgpRemoteAsNumber == 0 {
-			return fmt.Errorf("ha is enabled, please specify 'backup_remote_gateway_ip' and 'backup_bgp_remote_as_number'")
+		if externalDeviceConn.BackupRemoteGatewayIP == "" {
+			return fmt.Errorf("ha is enabled, please specify 'backup_remote_gateway_ip'")
+		}
+		if externalDeviceConn.BackupBgpRemoteAsNumber == 0 && externalDeviceConn.ConnType == "bgp" {
+			return fmt.Errorf("ha is enabled, and 'conn_type' is 'bgp', please specify  'backup_bgp_remote_as_number'")
 		}
 	} else {
 		if backupDirectConnect {
@@ -273,9 +293,7 @@ func resourceAviatrixExternalDeviceConnCreate(d *schema.ResourceData, meta inter
 		}
 	}
 
-	log.Printf("zjin03 nothing is wrong here")
-
-	err := client.CreateExternalDeviceConn(externalDeviceConn)
+	err = client.CreateExternalDeviceConn(externalDeviceConn)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix external device connection: %s", err)
 	}
@@ -285,94 +303,90 @@ func resourceAviatrixExternalDeviceConnCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAviatrixExternalDeviceConnRead(d *schema.ResourceData, meta interface{}) error {
-	//client := meta.(*goaviatrix.Client)
-	//
-	//connName := d.Get("conn_name").(string)
-	//vpcID := d.Get("vpc_id").(string)
-	//if connName == "" || vpcID == "" {
-	//	id := d.Id()
-	//	log.Printf("[DEBUG] Looks like an import, no 'conn_name' or 'vpc_id' received. Import Id is %s", id)
-	//	d.Set("conn_name", strings.Split(id, "~")[0])
-	//	d.Set("vpc_id", strings.Split(id, "~")[1])
-	//	d.SetId(id)
-	//}
+	client := meta.(*goaviatrix.Client)
 
-	//externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-	//	VpcID:    d.Get("vpc_id").(string),
-	//	ConnName: d.Get("conn_name").(string),
-	//}
-	//conn, err := client.GetSite2CloudConnDetail(externalDeviceConn)
-	//if err != nil {
-	//	if err == goaviatrix.ErrNotFound {
-	//		d.SetId("")
-	//		return nil
-	//	}
-	//	return fmt.Errorf("couldn't find Aviatrix Site2Cloud: %s, %#v", err, s2c)
-	//}
-	//
-	//if s2c != nil {
-	//	d.Set("vpc_id", s2c.VpcID)
-	//	d.Set("remote_gateway_type", s2c.RemoteGwType)
-	//	d.Set("tunnel_type", s2c.TunnelType)
-	//	d.Set("local_subnet_cidr", s2c.LocalSubnet)
-	//	d.Set("remote_subnet_cidr", s2c.RemoteSubnet)
-	//	if s2c.HAEnabled == "enabled" {
-	//		d.Set("ha_enabled", true)
-	//	} else {
-	//		d.Set("ha_enabled", false)
-	//	}
-	//
-	//	if s2c.HAEnabled == "enabled" {
-	//		d.Set("remote_gateway_ip", s2c.RemoteGwIP)
-	//		d.Set("backup_remote_gateway_ip", s2c.RemoteGwIP2)
-	//		d.Set("primary_cloud_gateway_name", s2c.GwName)
-	//		d.Set("backup_gateway_name", s2c.BackupGwName)
-	//	} else {
-	//		d.Set("remote_gateway_ip", s2c.RemoteGwIP)
-	//		d.Set("primary_cloud_gateway_name", s2c.GwName)
-	//	}
-	//
-	//	d.Set("connection_type", s2c.ConnType)
-	//	if s2c.ConnType == "mapped" {
-	//		d.Set("remote_subnet_virtual", s2c.RemoteSubnetVirtual)
-	//		d.Set("local_subnet_virtual", s2c.LocalSubnetVirtual)
-	//	}
-	//
-	//	if s2c.CustomAlgorithms {
-	//		d.Set("custom_algorithms", true)
-	//		d.Set("phase_1_authentication", s2c.Phase1Auth)
-	//		d.Set("phase_2_authentication", s2c.Phase2Auth)
-	//		d.Set("phase_1_dh_groups", s2c.Phase1DhGroups)
-	//		d.Set("phase_2_dh_groups", s2c.Phase2DhGroups)
-	//		d.Set("phase_1_encryption", s2c.Phase1Encryption)
-	//		d.Set("phase_2_encryption", s2c.Phase2Encryption)
-	//	} else {
-	//		d.Set("custom_algorithms", false)
-	//	}
-	//
-	//	if s2c.PrivateRouteEncryption == "true" {
-	//		d.Set("private_route_encryption", true)
-	//
-	//		if err := d.Set("route_table_list", s2c.RouteTableList); err != nil {
-	//			log.Printf("[WARN] Error setting route_table_list for (%s): %s", d.Id(), err)
-	//		}
-	//	} else {
-	//		d.Set("private_route_encryption", false)
-	//	}
-	//
-	//	if s2c.SslServerPool != "" {
-	//		d.Set("ssl_server_pool", s2c.SslServerPool)
-	//	}
-	//
-	//	d.Set("enable_dead_peer_detection", s2c.DeadPeerDetection)
-	//	d.Set("enable_active_active", s2c.EnableActiveActive)
-	//}
-	//
-	//log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", d.Get("connection_name").(string), site2cloud)
-	//log.Printf("[TRACE] Reading Aviatrix Site2Cloud connection_type: [%s]", d.Get("connection_type").(string))
-	//
-	//d.SetId(site2cloud.TunnelName + "~" + site2cloud.VpcID)
-	//return nil
+	connName := d.Get("conn_name").(string)
+	vpcID := d.Get("vpc_id").(string)
+	if connName == "" || vpcID == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import, no 'conn_name' or 'vpc_id' received. Import Id is %s", id)
+		d.Set("conn_name", strings.Split(id, "~")[0])
+		d.Set("vpc_id", strings.Split(id, "~")[1])
+		d.SetId(id)
+	}
+
+	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
+		VpcID:    d.Get("vpc_id").(string),
+		ConnName: d.Get("conn_name").(string),
+	}
+
+	conn, err := client.GetExternalDeviceConnDetail(externalDeviceConn)
+	log.Printf("[TRACE] Reading Aviatrix external device conn: %s : %#v", d.Get("conn_name").(string), externalDeviceConn)
+
+	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("couldn't find Aviatrix external device conn: %s, %#v", err, externalDeviceConn)
+	}
+
+	if conn != nil {
+		d.Set("vpc_id", conn.VpcID)
+		d.Set("conn_name", conn.ConnName)
+		d.Set("gw_name", conn.GwName)
+		d.Set("remote_gateway_ip", conn.RemoteGatewayIP)
+		d.Set("connection_type", conn.ConnType)
+		if conn.BgpLocalAsNumber != 0 {
+			d.Set("bgp_local_as_number", strconv.Itoa(conn.BgpLocalAsNumber))
+		}
+		if conn.BgpLocalAsNumber != 0 {
+			d.Set("bgp_remote_as_number", strconv.Itoa(conn.BgpRemoteAsNumber))
+		}
+		d.Set("remote_subnet", conn.RemoteSubnet)
+		if conn.DirectConnect == "enabled" {
+			d.Set("direct_connect", true)
+		} else {
+			d.Set("direct_connect", false)
+		}
+
+		d.Set("local_tunnel_ip", conn.LocalTunnelIP)
+		d.Set("remote_tunnel_ip", conn.RemoteTunnelIP)
+		if conn.CustomAlgorithms {
+			d.Set("custom_algorithms", true)
+			d.Set("phase_1_authentication", conn.Phase1Auth)
+			d.Set("phase_2_authentication", conn.Phase2Auth)
+			d.Set("phase_1_dh_groups", conn.Phase1DhGroups)
+			d.Set("phase_2_dh_groups", conn.Phase2DhGroups)
+			d.Set("phase_1_encryption", conn.Phase1Encryption)
+			d.Set("phase_2_encryption", conn.Phase2Encryption)
+		} else {
+			d.Set("custom_algorithms", false)
+		}
+
+		d.Set("backup_remote_gateway_ip", conn.BackupRemoteGatewayIP)
+		d.Set("backup_bgp_remote_as_number", conn.BackupBgpRemoteAsNumber)
+		d.Set("backup_local_tunnel_ip", conn.BackupLocalTunnelIP)
+		d.Set("backup_remote_tunnel_ip", conn.BackupRemoteTunnelIP)
+		if conn.BackupDirectConnect == "enabled" {
+			d.Set("backup_direct_connect", true)
+		} else {
+			d.Set("backup_direct_connect", false)
+		}
+
+		if conn.EnableEdgeSegmentation == "enabled" {
+			d.Set("enable_edge_segmentation", true)
+		} else {
+			d.Set("enable_edge_segmentation", false)
+		}
+		if conn.HAEnabled == "enabled" {
+			d.Set("enable_ha", true)
+		} else {
+			d.Set("enable_ha", false)
+		}
+	}
+
+	d.SetId(conn.ConnName + "~" + conn.VpcID)
 	return nil
 }
 
