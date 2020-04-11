@@ -163,9 +163,9 @@ func resourceAviatrixExternalDeviceConn() *schema.Resource {
 				Description: "ID of the vpn connection.",
 			},
 			"backup_bgp_remote_as_number": {
-				Type:        schema.TypeInt,
+				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     false,
+				Default:     "",
 				ForceNew:    true,
 				Description: "ID of the vpn connection.",
 			},
@@ -213,26 +213,25 @@ func resourceAviatrixExternalDeviceConnCreate(d *schema.ResourceData, meta inter
 	client := meta.(*goaviatrix.Client)
 
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-		VpcID:                   d.Get("vpc_id").(string),
-		ConnName:                d.Get("conn_name").(string),
-		GwName:                  d.Get("gw_name").(string),
-		ConnType:                d.Get("connection_type").(string),
-		RemoteGatewayIP:         d.Get("remote_gateway_ip").(string),
-		RemoteSubnet:            d.Get("remote_subnet").(string),
-		PreSharedKey:            d.Get("pre_shared_key").(string),
-		LocalTunnelIP:           d.Get("local_tunnel_ip").(string),
-		RemoteTunnelIP:          d.Get("remote_tunnel_ip").(string),
-		Phase1Auth:              d.Get("phase_1_authentication").(string),
-		Phase1DhGroups:          d.Get("phase_1_dh_groups").(string),
-		Phase1Encryption:        d.Get("phase_1_encryption").(string),
-		Phase2Auth:              d.Get("phase_2_authentication").(string),
-		Phase2DhGroups:          d.Get("phase_2_dh_groups").(string),
-		Phase2Encryption:        d.Get("phase_2_encryption").(string),
-		BackupRemoteGatewayIP:   d.Get("backup_remote_gateway_ip").(string),
-		BackupBgpRemoteAsNumber: d.Get("backup_bgp_remote_as_number").(int),
-		BackupPreSharedKey:      d.Get("backup_pre_shared_key").(string),
-		BackupLocalTunnelIP:     d.Get("backup_local_tunnel_ip").(string),
-		BackupRemoteTunnelIP:    d.Get("backup_remote_tunnel_ip").(string),
+		VpcID:                 d.Get("vpc_id").(string),
+		ConnName:              d.Get("conn_name").(string),
+		GwName:                d.Get("gw_name").(string),
+		ConnType:              d.Get("connection_type").(string),
+		RemoteGatewayIP:       d.Get("remote_gateway_ip").(string),
+		RemoteSubnet:          d.Get("remote_subnet").(string),
+		PreSharedKey:          d.Get("pre_shared_key").(string),
+		LocalTunnelIP:         d.Get("local_tunnel_ip").(string),
+		RemoteTunnelIP:        d.Get("remote_tunnel_ip").(string),
+		Phase1Auth:            d.Get("phase_1_authentication").(string),
+		Phase1DhGroups:        d.Get("phase_1_dh_groups").(string),
+		Phase1Encryption:      d.Get("phase_1_encryption").(string),
+		Phase2Auth:            d.Get("phase_2_authentication").(string),
+		Phase2DhGroups:        d.Get("phase_2_dh_groups").(string),
+		Phase2Encryption:      d.Get("phase_2_encryption").(string),
+		BackupRemoteGatewayIP: d.Get("backup_remote_gateway_ip").(string),
+		BackupPreSharedKey:    d.Get("backup_pre_shared_key").(string),
+		BackupLocalTunnelIP:   d.Get("backup_local_tunnel_ip").(string),
+		BackupRemoteTunnelIP:  d.Get("backup_remote_tunnel_ip").(string),
 	}
 
 	bgpLocalAsNumber, err := strconv.Atoi(d.Get("bgp_local_as_number").(string))
@@ -242,6 +241,10 @@ func resourceAviatrixExternalDeviceConnCreate(d *schema.ResourceData, meta inter
 	bgpRemoteAsNumber, err := strconv.Atoi(d.Get("bgp_remote_as_number").(string))
 	if err == nil {
 		externalDeviceConn.BgpRemoteAsNumber = bgpRemoteAsNumber
+	}
+	backupBgpLocalAsNumber, err := strconv.Atoi(d.Get("backup_bgp_remote_as_number").(string))
+	if err == nil {
+		externalDeviceConn.BackupBgpRemoteAsNumber = backupBgpLocalAsNumber
 	}
 
 	directConnect := d.Get("direct_connect").(bool)
@@ -282,7 +285,7 @@ func resourceAviatrixExternalDeviceConnCreate(d *schema.ResourceData, meta inter
 			return fmt.Errorf("ha is enabled, please specify 'backup_remote_gateway_ip'")
 		}
 		if externalDeviceConn.BackupBgpRemoteAsNumber == 0 && externalDeviceConn.ConnType == "bgp" {
-			return fmt.Errorf("ha is enabled, and 'conn_type' is 'bgp', please specify  'backup_bgp_remote_as_number'")
+			return fmt.Errorf("ha is enabled, and 'conn_type' is 'bgp', please specify 'backup_bgp_remote_as_number'")
 		}
 	} else {
 		if backupDirectConnect {
@@ -290,6 +293,9 @@ func resourceAviatrixExternalDeviceConnCreate(d *schema.ResourceData, meta inter
 		}
 		if externalDeviceConn.BackupPreSharedKey != "" || externalDeviceConn.BackupLocalTunnelIP != "" || externalDeviceConn.BackupRemoteTunnelIP != "" {
 			return fmt.Errorf("ha is not enabled, please set 'backup_pre_shared_key', 'backup_local_tunnel_ip' and 'backup_remote_tunnel_ip' to empty")
+		}
+		if externalDeviceConn.BackupBgpRemoteAsNumber != 0 && externalDeviceConn.ConnType == "bgp" {
+			return fmt.Errorf("ha is not enabled, and 'conn_type' is 'bgp', please specify 'backup_bgp_remote_as_number' to empty")
 		}
 	}
 
@@ -365,7 +371,9 @@ func resourceAviatrixExternalDeviceConnRead(d *schema.ResourceData, meta interfa
 		}
 
 		d.Set("backup_remote_gateway_ip", conn.BackupRemoteGatewayIP)
-		d.Set("backup_bgp_remote_as_number", conn.BackupBgpRemoteAsNumber)
+		if conn.BackupBgpRemoteAsNumber != 0 {
+			d.Set("backup_bgp_remote_as_number", strconv.Itoa(conn.BackupBgpRemoteAsNumber))
+		}
 		d.Set("backup_local_tunnel_ip", conn.BackupLocalTunnelIP)
 		d.Set("backup_remote_tunnel_ip", conn.BackupRemoteTunnelIP)
 		if conn.BackupDirectConnect == "enabled" {

@@ -55,7 +55,7 @@ type EditExternalDeviceConnDetail struct {
 	RemoteTunnelIP          string        `json:"bgp_remote_ip,omitempty"`
 	Algorithm               AlgorithmInfo `json:"algorithm,omitempty"`
 	HAEnabled               string        `json:"ha_status,omitempty"`
-	BackupBgpRemoteAsNumber int           `json:"backup_external_device_as_number,omitempty"`
+	BackupBgpRemoteAsNumber string        `json:"bgp_remote_backup_asn_number,omitempty"`
 	BackupLocalTunnelIP     string        `json:"bgp_backup_local_ip,omitempty"`
 	BackupRemoteTunnelIP    string        `json:"bgp_backup_remote_ip,omitempty"`
 	BackupDirectConnect     bool          `json:"direct_connect_backup,omitempty"`
@@ -145,6 +145,10 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 			externalDeviceConn.BgpLocalAsNumber = bgpLocalAsNumber
 			bgpRemoteAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BgpRemoteAsNumber)
 			externalDeviceConn.BgpRemoteAsNumber = bgpRemoteAsNumber
+			if externalDeviceConnDetail.BackupBgpRemoteAsNumber != "" {
+				backupBgpRemoteAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BackupBgpRemoteAsNumber)
+				externalDeviceConn.BackupBgpRemoteAsNumber = backupBgpRemoteAsNumber
+			}
 			externalDeviceConn.ConnType = "bgp"
 		}
 		externalDeviceConn.RemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[0]
