@@ -23,8 +23,8 @@ type ExternalDeviceConn struct {
 	RemoteSubnet            string `form:"remote_subnet,omitempty"`
 	DirectConnect           string `form:"direct_connect,omitempty"`
 	PreSharedKey            string `form:"pre_shared_key,omitempty"`
-	LocalTunnelIP           string `form:"local_tunnel_ip,omitempty"`
-	RemoteTunnelIP          string `form:"remote_tunnel_ip,omitempty"`
+	LocalTunnelCidr         string `form:"local_tunnel_ip,omitempty"`
+	RemoteTunnelCidr        string `form:"remote_tunnel_ip,omitempty"`
 	CustomAlgorithms        bool
 	Phase1Auth              string `form:"phase1_auth,omitempty"`
 	Phase1DhGroups          string `form:"phase1_dh_group,omitempty"`
@@ -36,8 +36,8 @@ type ExternalDeviceConn struct {
 	BackupRemoteGatewayIP   string `form:"backup_external_device_ip_address"`
 	BackupBgpRemoteAsNumber int    `form:"backup_external_device_as_number,omitempty"`
 	BackupPreSharedKey      string `form:"backup_pre_shared_key,omitempty"`
-	BackupLocalTunnelIP     string `form:"backup_local_tunnel_ip,omitempty"`
-	BackupRemoteTunnelIP    string `form:"backup_remote_tunnel_ip,omitempty"`
+	BackupLocalTunnelCidr   string `form:"backup_local_tunnel_ip,omitempty"`
+	BackupRemoteTunnelCidr  string `form:"backup_remote_tunnel_ip,omitempty"`
 	BackupDirectConnect     string `form:"backup_direct_connect,omitempty"`
 	EnableEdgeSegmentation  string `form:"connection_policy,omitempty"`
 }
@@ -51,13 +51,13 @@ type EditExternalDeviceConnDetail struct {
 	RemoteGatewayIP         string        `json:"peer_ip,omitempty"`
 	RemoteSubnet            string        `json:"remote_cidr,omitempty"`
 	DirectConnect           bool          `json:"direct_connect_primary,omitempty"`
-	LocalTunnelIP           string        `json:"bgp_local_ip,omitempty"`
-	RemoteTunnelIP          string        `json:"bgp_remote_ip,omitempty"`
+	LocalTunnelCidr         string        `json:"bgp_local_ip,omitempty"`
+	RemoteTunnelCidr        string        `json:"bgp_remote_ip,omitempty"`
 	Algorithm               AlgorithmInfo `json:"algorithm,omitempty"`
 	HAEnabled               string        `json:"ha_status,omitempty"`
 	BackupBgpRemoteAsNumber string        `json:"bgp_remote_backup_asn_number,omitempty"`
-	BackupLocalTunnelIP     string        `json:"bgp_backup_local_ip,omitempty"`
-	BackupRemoteTunnelIP    string        `json:"bgp_backup_remote_ip,omitempty"`
+	BackupLocalTunnelCidr   string        `json:"bgp_backup_local_ip,omitempty"`
+	BackupRemoteTunnelCidr  string        `json:"bgp_backup_remote_ip,omitempty"`
 	BackupDirectConnect     bool          `json:"direct_connect_backup,omitempty"`
 	EnableEdgeSegmentation  bool          `json:"enable_edge_segmentation,omitempty"`
 	Tunnels                 []TunnelInfo  `json:"tunnels,omitempty"`
@@ -180,21 +180,21 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 			externalDeviceConn.DirectConnect = "disabled"
 		}
 		if externalDeviceConnDetail.HAEnabled == "enabled" && len(externalDeviceConnDetail.Tunnels) == 2 {
-			externalDeviceConn.LocalTunnelIP = externalDeviceConnDetail.LocalTunnelIP + "," + externalDeviceConnDetail.BackupLocalTunnelIP
-			externalDeviceConn.RemoteTunnelIP = externalDeviceConnDetail.RemoteTunnelIP + "," + externalDeviceConnDetail.BackupRemoteTunnelIP
+			externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
+			externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
 			externalDeviceConn.HAEnabled = "disabled"
 		} else if externalDeviceConnDetail.HAEnabled == "enabled" && len(externalDeviceConnDetail.Tunnels) == 4 {
-			externalDeviceConn.LocalTunnelIP = externalDeviceConnDetail.LocalTunnelIP
-			externalDeviceConn.BackupLocalTunnelIP = externalDeviceConnDetail.BackupLocalTunnelIP
-			externalDeviceConn.RemoteTunnelIP = externalDeviceConnDetail.RemoteTunnelIP
-			externalDeviceConn.BackupRemoteTunnelIP = externalDeviceConnDetail.BackupRemoteTunnelIP
+			externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
+			externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
+			externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
+			externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
 			externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
 			externalDeviceConn.HAEnabled = "enabled"
 		} else {
-			externalDeviceConn.LocalTunnelIP = externalDeviceConnDetail.LocalTunnelIP
-			externalDeviceConn.BackupLocalTunnelIP = externalDeviceConnDetail.BackupLocalTunnelIP
-			externalDeviceConn.RemoteTunnelIP = externalDeviceConnDetail.RemoteTunnelIP
-			externalDeviceConn.BackupRemoteTunnelIP = externalDeviceConnDetail.BackupRemoteTunnelIP
+			externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
+			externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
+			externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
+			externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
 			if len(externalDeviceConnDetail.Tunnels) == 2 {
 				externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
 				externalDeviceConn.HAEnabled = "enabled"
