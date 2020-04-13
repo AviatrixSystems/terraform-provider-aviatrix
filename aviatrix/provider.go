@@ -50,6 +50,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_azure_peer":                           resourceAviatrixAzurePeer(),
 			"aviatrix_azure_spoke_native_peering":           resourceAviatrixAzureSpokeNativePeering(),
 			"aviatrix_controller_config":                    resourceAviatrixControllerConfig(),
+			"aviatrix_external_device_conn":                 resourceAviatrixExternalDeviceConn(),
 			"aviatrix_firenet":                              resourceAviatrixFireNet(),
 			"aviatrix_firewall":                             resourceAviatrixFirewall(),
 			"aviatrix_firewall_instance":                    resourceAviatrixFirewallInstance(),
