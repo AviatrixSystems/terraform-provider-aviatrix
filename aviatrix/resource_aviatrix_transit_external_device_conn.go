@@ -10,11 +10,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceAviatrixExternalDeviceConn() *schema.Resource {
+func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAviatrixExternalDeviceConnCreate,
-		Read:   resourceAviatrixExternalDeviceConnRead,
-		Delete: resourceAviatrixExternalDeviceConnDelete,
+		Create: resourceAviatrixTransitExternalDeviceConnCreate,
+		Read:   resourceAviatrixTransitExternalDeviceConnRead,
+		Delete: resourceAviatrixTransitExternalDeviceConnDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -209,7 +209,7 @@ func resourceAviatrixExternalDeviceConn() *schema.Resource {
 	}
 }
 
-func resourceAviatrixExternalDeviceConnCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
@@ -305,10 +305,10 @@ func resourceAviatrixExternalDeviceConnCreate(d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(externalDeviceConn.ConnName + "~" + externalDeviceConn.VpcID)
-	return resourceAviatrixExternalDeviceConnRead(d, meta)
+	return resourceAviatrixTransitExternalDeviceConnRead(d, meta)
 }
 
-func resourceAviatrixExternalDeviceConnRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	connName := d.Get("conn_name").(string)
@@ -398,7 +398,7 @@ func resourceAviatrixExternalDeviceConnRead(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAviatrixExternalDeviceConnDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixTransitExternalDeviceConnDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
