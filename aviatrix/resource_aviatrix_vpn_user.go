@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -12,6 +13,7 @@ func resourceAviatrixVPNUser() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixVPNUserCreate,
 		Read:   resourceAviatrixVPNUserRead,
+		Update: resourceAviatrixVPNUserUpdate,
 		Delete: resourceAviatrixVPNUserDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -50,6 +52,17 @@ func resourceAviatrixVPNUser() *schema.Resource {
 				ForceNew:    true,
 				Description: "This is the name of the SAML endpoint to which the user is to be associated.",
 			},
+			"profiles": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "List of profiles for user to attach to.",
+			},
+			"manage_user_attachment": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -71,15 +84,45 @@ func resourceAviatrixVPNUserCreate(d *schema.ResourceData, meta interface{}) err
 	if vpnUser.GwName == "" {
 		return fmt.Errorf("invalid choice: gw_name can't be empty")
 	}
+
+	manageUserAttachment := d.Get("manage_user_attachment").(bool)
+	if !manageUserAttachment && len(d.Get("profiles").([]interface{})) != 0 {
+		return fmt.Errorf("'manage_user_attachment' is set false. Please empty 'profiles' and manage user attachment in other resource")
+	}
+
 	log.Printf("[INFO] Creating Aviatrix VPN User: %#v", vpnUser)
 
 	err := client.CreateVPNUser(vpnUser)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix VPNUser: %s", err)
 	}
-
 	d.SetId(vpnUser.UserName)
-	return resourceAviatrixVPNUserRead(d, meta)
+
+	flag := false
+	defer resourceAviatrixVPNUserReadIfRequired(d, meta, &flag)
+
+	if manageUserAttachment && len(d.Get("profiles").([]interface{})) != 0 {
+		for _, profileName := range d.Get("profiles").([]interface{}) {
+			profile := &goaviatrix.Profile{
+				Name: profileName.(string),
+			}
+			profile.UserList = append(profile.UserList, vpnUser.UserName)
+			err := client.AttachUsers(profile)
+			if err != nil {
+				return fmt.Errorf("failed to attach User(%s) to Profile(%s) due to: %s", vpnUser.UserName, profile.Name, err)
+			}
+		}
+	}
+
+	return resourceAviatrixVPNUserReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixVPNUserReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixVPNUserRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta interface{}) error {
@@ -89,11 +132,13 @@ func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta interface{}) error
 	if userName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, user_name is empty. Id is %s", id)
-		userName = id
+		d.Set("user_name", id)
+		d.Set("manage_user_attachment", true)
+		d.SetId(id)
 	}
 
 	vpnUser := &goaviatrix.VPNUser{
-		UserName: userName,
+		UserName: d.Get("user_name").(string),
 	}
 	vu, err := client.GetVPNUser(vpnUser)
 	if err != nil {
@@ -116,7 +161,101 @@ func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("saml_endpoint", vu.SamlEndpoint)
 	}
 
+	manageUserAttachment := d.Get("manage_user_attachment").(bool)
+	if manageUserAttachment {
+		var profiles []string
+		for _, profile := range d.Get("profiles").([]interface{}) {
+			profiles = append(profiles, profile.(string))
+		}
+		profileListRead, err := client.GetProfileForUser(vpnUser)
+		if err != nil {
+			return fmt.Errorf("couldn't get profile information for vpn user: %s due to: %s", vpnUser.UserName, err)
+		}
+		profileList := strings.Split(profileListRead, ",")
+		if len(profileList) != 0 {
+			for i := range profileList {
+				profileList[i] = strings.TrimSpace(profileList[i])
+			}
+		}
+		if len(goaviatrix.Difference(profiles, profileList)) == 0 && len(goaviatrix.Difference(profileList, profiles)) == 0 {
+			err := d.Set("profiles", profiles)
+			if err != nil {
+				return fmt.Errorf("couldn't set 'profiles' for vpn user: %s", vpnUser.UserName)
+			}
+		} else {
+			err := d.Set("profiles", profileList)
+			if err != nil {
+				return fmt.Errorf("couldn't set 'profiles' for vpn user: %s", vpnUser.UserName)
+			}
+		}
+	}
+
 	return nil
+}
+
+func resourceAviatrixVPNUserUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*goaviatrix.Client)
+
+	vpnUser := &goaviatrix.VPNUser{
+		UserName: d.Get("user_name").(string),
+	}
+	d.Partial(true)
+
+	manageUserAttachment := d.Get("manage_user_attachment").(bool)
+	if d.HasChange("manage_user_attachment") {
+		_, nMUA := d.GetChange("manage_user_attachment")
+		newManageUserAttachment := nMUA.(bool)
+		if newManageUserAttachment {
+			d.Set("manage_user_attachment", true)
+		} else {
+			d.Set("manage_user_attachment", false)
+		}
+	}
+	if manageUserAttachment {
+		if d.HasChange("profiles") {
+			oldU, newU := d.GetChange("profiles")
+			if oldU == nil {
+				oldU = new([]interface{})
+			}
+			if newU == nil {
+				newU = new([]interface{})
+			}
+			oldString := oldU.([]interface{})
+			newString := newU.([]interface{})
+			oldProfileList := goaviatrix.ExpandStringList(oldString)
+			newProfileList := goaviatrix.ExpandStringList(newString)
+			toAddProfiles := goaviatrix.Difference(newProfileList, oldProfileList)
+			for _, profileName := range toAddProfiles {
+				profile := &goaviatrix.Profile{
+					Name: profileName,
+				}
+				profile.UserList = []string{vpnUser.UserName}
+				err := client.AttachUsers(profile)
+				if err != nil {
+					return fmt.Errorf("failed to attach User: %s", err)
+				}
+			}
+			toDelProfiles := goaviatrix.Difference(oldProfileList, newProfileList)
+			for _, profileName := range toDelProfiles {
+				profile := &goaviatrix.Profile{
+					Name: profileName,
+				}
+				profile.UserList = []string{vpnUser.UserName}
+				err := client.DetachUsers(profile)
+				if err != nil {
+					return fmt.Errorf("failed to detach User: %s", err)
+				}
+			}
+			d.SetPartial("profiles")
+		}
+	} else {
+		if len(d.Get("profiles").([]interface{})) != 0 {
+			return fmt.Errorf("'manage_user_attachment' is set false. Please empty 'profiles' and manage user attachment in other resource")
+		}
+	}
+
+	d.Partial(false)
+	return resourceAviatrixVPNUserRead(d, meta)
 }
 
 func resourceAviatrixVPNUserDelete(d *schema.ResourceData, meta interface{}) error {
@@ -128,6 +267,20 @@ func resourceAviatrixVPNUserDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix VPNUser: %#v", vpnUser)
+
+	if _, ok := d.GetOk("profiles"); ok {
+		log.Printf("[INFO] Found profiles: %#v", d.Get("profiles"))
+		for _, profileName := range d.Get("profiles").([]interface{}) {
+			profile := &goaviatrix.Profile{
+				Name: profileName.(string),
+			}
+			profile.UserList = append(profile.UserList, vpnUser.UserName)
+			err := client.DetachUsers(profile)
+			if err != nil {
+				return fmt.Errorf("failed to attach User(%s) to Profile(%s) due to: %s", vpnUser.UserName, profile.Name, err)
+			}
+		}
+	}
 
 	err := client.DeleteVPNUser(vpnUser)
 	if err != nil {

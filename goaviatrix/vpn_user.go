@@ -36,6 +36,17 @@ type VPNUserInfo struct {
 	VpnUser VPNUser `json:"vpn_user"`
 }
 
+type ListVpnUsersResp struct {
+	Return  bool          `json:"return"`
+	Results []EditVPNUser `json:"results"`
+	Reason  string        `json:"reason"`
+}
+
+type EditVPNUser struct {
+	UserName string `json:"_id"`
+	Profile  string `json:"profile"`
+}
+
 func (c *Client) CreateVPNUser(vpnUser *VPNUser) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
@@ -133,4 +144,37 @@ func (c *Client) DeleteVPNUser(vpnUser *VPNUser) error {
 		return errors.New("Rest API delete_vpn_user Get failed: " + data.Reason)
 	}
 	return nil
+}
+
+func (c *Client) GetProfileForUser(vpnUser *VPNUser) (string, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return "", errors.New(("url Parsing failed for 'list_vpn_users': ") + err.Error())
+	}
+	listVpnUsers := url.Values{}
+	listVpnUsers.Add("CID", c.CID)
+	listVpnUsers.Add("action", "list_vpn_users")
+	Url.RawQuery = listVpnUsers.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return "", errors.New("HTTP Get 'list_vpn_users' failed: " + err.Error())
+	}
+	var data ListVpnUsersResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return "", errors.New("Json Decode 'list_vpn_users' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return "", errors.New("Rest API 'list_vpn_users' Get failed: " + data.Reason)
+	}
+	vpnUserList := data.Results
+	for i := range vpnUserList {
+		if vpnUserList[i].UserName == vpnUser.UserName {
+			return vpnUserList[i].Profile, nil
+		}
+	}
+	return "", nil
 }
