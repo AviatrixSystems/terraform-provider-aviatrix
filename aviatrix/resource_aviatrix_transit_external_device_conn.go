@@ -26,7 +26,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "VPC-ID where the Transit Gateway is located.",
 			},
-			"conn_name": {
+			"connection_name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
@@ -148,7 +148,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Description: "Phase two Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC', " +
 					"'AES-256-CBC', 'AES-128-GCM-64', 'AES-128-GCM-96' and 'AES-128-GCM-128'.",
 			},
-			"enable_ha": {
+			"ha_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
@@ -214,9 +214,9 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 		VpcID:                  d.Get("vpc_id").(string),
-		ConnName:               d.Get("conn_name").(string),
+		ConnectionName:         d.Get("connection_name").(string),
 		GwName:                 d.Get("gw_name").(string),
-		ConnType:               d.Get("connection_type").(string),
+		ConnectionType:         d.Get("connection_type").(string),
 		RemoteGatewayIP:        d.Get("remote_gateway_ip").(string),
 		RemoteSubnet:           d.Get("remote_subnet").(string),
 		PreSharedKey:           d.Get("pre_shared_key").(string),
@@ -252,7 +252,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		externalDeviceConn.DirectConnect = "true"
 	}
 
-	haEnabled := d.Get("enable_ha").(bool)
+	haEnabled := d.Get("ha_enabled").(bool)
 	if haEnabled {
 		externalDeviceConn.HAEnabled = "true"
 	}
@@ -267,9 +267,9 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		externalDeviceConn.EnableEdgeSegmentation = "true"
 	}
 
-	if externalDeviceConn.ConnType == "bgp" && externalDeviceConn.RemoteSubnet != "" {
+	if externalDeviceConn.ConnectionType == "bgp" && externalDeviceConn.RemoteSubnet != "" {
 		return fmt.Errorf("'remote_subnet' is needed for connection type of 'static' not 'bpg'")
-	} else if externalDeviceConn.ConnType == "static" && (externalDeviceConn.BgpLocalAsNumber != 0 || externalDeviceConn.BgpRemoteAsNumber != 0) {
+	} else if externalDeviceConn.ConnectionType == "static" && (externalDeviceConn.BgpLocalAsNumber != 0 || externalDeviceConn.BgpRemoteAsNumber != 0) {
 		return fmt.Errorf("'bgp_local_as_number' and 'bgp_remote_as_number' are needed for connection type of 'bgp' not 'static'")
 	}
 
@@ -284,8 +284,8 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		if externalDeviceConn.BackupRemoteGatewayIP == "" {
 			return fmt.Errorf("ha is enabled, please specify 'backup_remote_gateway_ip'")
 		}
-		if externalDeviceConn.BackupBgpRemoteAsNumber == 0 && externalDeviceConn.ConnType == "bgp" {
-			return fmt.Errorf("ha is enabled, and 'conn_type' is 'bgp', please specify 'backup_bgp_remote_as_number'")
+		if externalDeviceConn.BackupBgpRemoteAsNumber == 0 && externalDeviceConn.ConnectionType == "bgp" {
+			return fmt.Errorf("ha is enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_number'")
 		}
 	} else {
 		if backupDirectConnect {
@@ -294,8 +294,8 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		if externalDeviceConn.BackupPreSharedKey != "" || externalDeviceConn.BackupLocalTunnelCidr != "" || externalDeviceConn.BackupRemoteTunnelCidr != "" {
 			return fmt.Errorf("ha is not enabled, please set 'backup_pre_shared_key', 'backup_local_tunnel_cidr' and 'backup_remote_tunnel_cidr' to empty")
 		}
-		if externalDeviceConn.BackupBgpRemoteAsNumber != 0 && externalDeviceConn.ConnType == "bgp" {
-			return fmt.Errorf("ha is not enabled, and 'conn_type' is 'bgp', please specify 'backup_bgp_remote_as_number' to empty")
+		if externalDeviceConn.BackupBgpRemoteAsNumber != 0 && externalDeviceConn.ConnectionType == "bgp" {
+			return fmt.Errorf("ha is not enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_number' to empty")
 		}
 	}
 
@@ -304,30 +304,30 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		return fmt.Errorf("failed to create Aviatrix external device connection: %s", err)
 	}
 
-	d.SetId(externalDeviceConn.ConnName + "~" + externalDeviceConn.VpcID)
+	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID)
 	return resourceAviatrixTransitExternalDeviceConnRead(d, meta)
 }
 
 func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	connName := d.Get("conn_name").(string)
+	connectionName := d.Get("connection_name").(string)
 	vpcID := d.Get("vpc_id").(string)
-	if connName == "" || vpcID == "" {
+	if connectionName == "" || vpcID == "" {
 		id := d.Id()
-		log.Printf("[DEBUG] Looks like an import, no 'conn_name' or 'vpc_id' received. Import Id is %s", id)
-		d.Set("conn_name", strings.Split(id, "~")[0])
+		log.Printf("[DEBUG] Looks like an import, no 'connection_name' or 'vpc_id' received. Import Id is %s", id)
+		d.Set("connection_name", strings.Split(id, "~")[0])
 		d.Set("vpc_id", strings.Split(id, "~")[1])
 		d.SetId(id)
 	}
 
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-		VpcID:    d.Get("vpc_id").(string),
-		ConnName: d.Get("conn_name").(string),
+		VpcID:          d.Get("vpc_id").(string),
+		ConnectionName: d.Get("connection_name").(string),
 	}
 
 	conn, err := client.GetExternalDeviceConnDetail(externalDeviceConn)
-	log.Printf("[TRACE] Reading Aviatrix external device conn: %s : %#v", d.Get("conn_name").(string), externalDeviceConn)
+	log.Printf("[TRACE] Reading Aviatrix external device conn: %s : %#v", d.Get("connection_name").(string), externalDeviceConn)
 
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
@@ -339,10 +339,10 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 
 	if conn != nil {
 		d.Set("vpc_id", conn.VpcID)
-		d.Set("conn_name", conn.ConnName)
+		d.Set("connection_name", conn.ConnectionName)
 		d.Set("gw_name", conn.GwName)
 		d.Set("remote_gateway_ip", conn.RemoteGatewayIP)
-		d.Set("connection_type", conn.ConnType)
+		d.Set("connection_type", conn.ConnectionType)
 		if conn.BgpLocalAsNumber != 0 {
 			d.Set("bgp_local_as_number", strconv.Itoa(conn.BgpLocalAsNumber))
 		}
@@ -388,13 +388,13 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 			d.Set("enable_edge_segmentation", false)
 		}
 		if conn.HAEnabled == "enabled" {
-			d.Set("enable_ha", true)
+			d.Set("ha_enabled", true)
 		} else {
-			d.Set("enable_ha", false)
+			d.Set("ha_enabled", false)
 		}
 	}
 
-	d.SetId(conn.ConnName + "~" + conn.VpcID)
+	d.SetId(conn.ConnectionName + "~" + conn.VpcID)
 	return nil
 }
 
@@ -402,8 +402,8 @@ func resourceAviatrixTransitExternalDeviceConnDelete(d *schema.ResourceData, met
 	client := meta.(*goaviatrix.Client)
 
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-		VpcID:    d.Get("vpc_id").(string),
-		ConnName: d.Get("conn_name").(string),
+		VpcID:          d.Get("vpc_id").(string),
+		ConnectionName: d.Get("connection_name").(string),
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix external device connection: %#v", externalDeviceConn)

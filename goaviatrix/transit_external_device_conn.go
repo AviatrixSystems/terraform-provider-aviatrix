@@ -14,9 +14,9 @@ type ExternalDeviceConn struct {
 	Action                  string `form:"action,omitempty"`
 	CID                     string `form:"CID,omitempty"`
 	VpcID                   string `form:"vpc_id,omitempty"`
-	ConnName                string `form:"connection_name,omitempty"`
+	ConnectionName          string `form:"connection_name,omitempty"`
 	GwName                  string `form:"transit_gw,omitempty"`
-	ConnType                string `form:"routing_protocol,omitempty"`
+	ConnectionType          string `form:"routing_protocol,omitempty"`
 	BgpLocalAsNumber        int    `form:"bgp_local_as_number,omitempty"`
 	BgpRemoteAsNumber       int    `form:"external_device_as_number,omitempty"`
 	RemoteGatewayIP         string `form:"external_device_ip_address"`
@@ -44,7 +44,7 @@ type ExternalDeviceConn struct {
 
 type EditExternalDeviceConnDetail struct {
 	VpcID                   []string      `json:"vpc_id,omitempty"`
-	ConnName                []string      `json:"name,omitempty"`
+	ConnectionName          []string      `json:"name,omitempty"`
 	GwName                  string        `json:"gw_name,omitempty"`
 	BgpLocalAsNumber        string        `json:"bgp_local_asn_number,omitempty"`
 	BgpRemoteAsNumber       string        `json:"bgp_remote_asn_number,omitempty"`
@@ -106,7 +106,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 	getExternalDeviceConnDetail := url.Values{}
 	getExternalDeviceConnDetail.Add("CID", c.CID)
 	getExternalDeviceConnDetail.Add("action", "get_site2cloud_conn_detail")
-	getExternalDeviceConnDetail.Add("conn_name", externalDeviceConn.ConnName)
+	getExternalDeviceConnDetail.Add("conn_name", externalDeviceConn.ConnectionName)
 	getExternalDeviceConnDetail.Add("vpc_id", externalDeviceConn.VpcID)
 	Url.RawQuery = getExternalDeviceConnDetail.Encode()
 	resp, err := c.Get(Url.String(), nil)
@@ -129,17 +129,17 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 	}
 
 	externalDeviceConnDetail := data.Results.Connections
-	if len(externalDeviceConnDetail.ConnName) != 0 {
+	if len(externalDeviceConnDetail.ConnectionName) != 0 {
 		if len(externalDeviceConnDetail.VpcID) != 0 {
 			externalDeviceConn.VpcID = externalDeviceConnDetail.VpcID[0]
 		}
 
-		externalDeviceConn.ConnName = externalDeviceConnDetail.ConnName[0]
+		externalDeviceConn.ConnectionName = externalDeviceConnDetail.ConnectionName[0]
 		externalDeviceConn.GwName = externalDeviceConnDetail.GwName
 
 		if externalDeviceConnDetail.RemoteSubnet != "" {
 			externalDeviceConn.RemoteSubnet = externalDeviceConnDetail.RemoteSubnet
-			externalDeviceConn.ConnType = "static"
+			externalDeviceConn.ConnectionType = "static"
 		} else {
 			bgpLocalAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BgpLocalAsNumber)
 			externalDeviceConn.BgpLocalAsNumber = bgpLocalAsNumber
@@ -149,7 +149,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 				backupBgpRemoteAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BackupBgpRemoteAsNumber)
 				externalDeviceConn.BackupBgpRemoteAsNumber = backupBgpRemoteAsNumber
 			}
-			externalDeviceConn.ConnType = "bgp"
+			externalDeviceConn.ConnectionType = "bgp"
 		}
 		externalDeviceConn.RemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[0]
 		if externalDeviceConnDetail.Algorithm.Phase1Auth[0] == "SHA-256" &&
