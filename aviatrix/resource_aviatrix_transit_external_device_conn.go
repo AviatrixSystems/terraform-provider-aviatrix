@@ -24,13 +24,13 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "VPC-ID where the Transit Gateway is located.",
+				Description: "ID of the VPC where the Transit Gateway is located.",
 			},
 			"connection_name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The name of for Transit GW to VGW connection connection which is going to be created.",
+				Description: "The name of the transit external device connection which is going to be created.",
 			},
 			"gw_name": {
 				Type:        schema.TypeString,
@@ -42,7 +42,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "This parameter represents the name of an AWS TGW.",
+				Description: "Remote Gateway IP.",
 			},
 			"connection_type": {
 				Type:        schema.TypeString,
@@ -58,49 +58,49 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 					return
 				},
 			},
-			"bgp_local_as_number": {
+			"bgp_local_as_num": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "AWS side as a number. Integer between 1-65535. Example: '12'. Required for a dynamic VPN connection.",
+				Description: "BGP local ASN (Autonomous System Number). Integer between 1-65535.",
 			},
-			"bgp_remote_as_number": {
+			"bgp_remote_as_num": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Remote CIDRs joined as a string with ','. Required for a static VPN connection.",
+				Description: "BGP remote ASN (Autonomous System Number). Integer between 1-65535.",
 			},
 			"remote_subnet": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Remote CIDRs joined as a string with ','. Required for a static VPN connection.",
+				Description: "Remote CIDRs joined as a string with ','. Required for a 'static' type connection.",
 			},
 			"direct_connect": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
 				ForceNew:    true,
-				Description: "Remote CIDRs joined as a string with ','. Required for a static VPN connection.",
+				Description: "Set true for private network infrastructure.",
 			},
 			"pre_shared_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				ForceNew:    true,
-				Description: "Remote CIDRs joined as a string with ','. Required for a static VPN connection.",
+				Description: "If left blank, the pre-shared key will be auto generated.",
 			},
 			"local_tunnel_cidr": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Remote CIDRs joined as a string with ','. Required for a static VPN connection.",
+				Description: "",
 			},
 			"remote_tunnel_cidr": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Remote CIDRs joined as a string with ','. Required for a static VPN connection.",
+				Description: "",
 			},
 			"custom_algorithms": {
 				Type:        schema.TypeBool,
@@ -153,21 +153,21 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional:    true,
 				Default:     false,
 				ForceNew:    true,
-				Description: "ID of the vpn connection.",
+				Description: "Set as true if there are two external devices.",
 			},
 			"backup_remote_gateway_ip": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
 				ForceNew:    true,
-				Description: "ID of the vpn connection.",
+				Description: "Backup remote gateway IP.",
 			},
-			"backup_bgp_remote_as_number": {
+			"backup_bgp_remote_as_num": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
 				ForceNew:    true,
-				Description: "ID of the vpn connection.",
+				Description: "Backup BGP remote ASN (Autonomous System Number). Integer between 1-65535.",
 			},
 			"backup_pre_shared_key": {
 				Type:        schema.TypeString,
@@ -175,35 +175,35 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Default:     "",
 				Sensitive:   true,
 				ForceNew:    true,
-				Description: "ID of the vpn connection.",
+				Description: "Backup pre shared key.",
 			},
 			"backup_local_tunnel_cidr": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
 				ForceNew:    true,
-				Description: "ID of the vpn connection.",
+				Description: "",
 			},
 			"backup_remote_tunnel_cidr": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
 				ForceNew:    true,
-				Description: "ID of the vpn connection.",
+				Description: "",
 			},
 			"backup_direct_connect": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
 				ForceNew:    true,
-				Description: "ID of the vpn connection.",
+				Description: "Backup direct connect for backup external device.",
 			},
 			"enable_edge_segmentation": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
 				ForceNew:    true,
-				Description: "ID of the vpn connection.",
+				Description: "Switch to allow this connection to communicate with a Security Domain via Connection Policy.",
 			},
 		},
 	}
@@ -234,17 +234,17 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		BackupRemoteTunnelCidr: d.Get("backup_remote_tunnel_cidr").(string),
 	}
 
-	bgpLocalAsNumber, err := strconv.Atoi(d.Get("bgp_local_as_number").(string))
+	bgpLocalAsNum, err := strconv.Atoi(d.Get("bgp_local_as_num").(string))
 	if err == nil {
-		externalDeviceConn.BgpLocalAsNumber = bgpLocalAsNumber
+		externalDeviceConn.BgpLocalAsNum = bgpLocalAsNum
 	}
-	bgpRemoteAsNumber, err := strconv.Atoi(d.Get("bgp_remote_as_number").(string))
+	bgpRemoteAsNum, err := strconv.Atoi(d.Get("bgp_remote_as_num").(string))
 	if err == nil {
-		externalDeviceConn.BgpRemoteAsNumber = bgpRemoteAsNumber
+		externalDeviceConn.BgpRemoteAsNum = bgpRemoteAsNum
 	}
-	backupBgpLocalAsNumber, err := strconv.Atoi(d.Get("backup_bgp_remote_as_number").(string))
+	backupBgpLocalAsNum, err := strconv.Atoi(d.Get("backup_bgp_remote_as_num").(string))
 	if err == nil {
-		externalDeviceConn.BackupBgpRemoteAsNumber = backupBgpLocalAsNumber
+		externalDeviceConn.BackupBgpRemoteAsNum = backupBgpLocalAsNum
 	}
 
 	directConnect := d.Get("direct_connect").(bool)
@@ -269,8 +269,8 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 
 	if externalDeviceConn.ConnectionType == "bgp" && externalDeviceConn.RemoteSubnet != "" {
 		return fmt.Errorf("'remote_subnet' is needed for connection type of 'static' not 'bpg'")
-	} else if externalDeviceConn.ConnectionType == "static" && (externalDeviceConn.BgpLocalAsNumber != 0 || externalDeviceConn.BgpRemoteAsNumber != 0) {
-		return fmt.Errorf("'bgp_local_as_number' and 'bgp_remote_as_number' are needed for connection type of 'bgp' not 'static'")
+	} else if externalDeviceConn.ConnectionType == "static" && (externalDeviceConn.BgpLocalAsNum != 0 || externalDeviceConn.BgpRemoteAsNum != 0) {
+		return fmt.Errorf("'bgp_local_as_num' and 'bgp_remote_as_num' are needed for connection type of 'bgp' not 'static'")
 	}
 
 	customAlgorithms := d.Get("custom_algorithms").(bool)
@@ -284,8 +284,8 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		if externalDeviceConn.BackupRemoteGatewayIP == "" {
 			return fmt.Errorf("ha is enabled, please specify 'backup_remote_gateway_ip'")
 		}
-		if externalDeviceConn.BackupBgpRemoteAsNumber == 0 && externalDeviceConn.ConnectionType == "bgp" {
-			return fmt.Errorf("ha is enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_number'")
+		if externalDeviceConn.BackupBgpRemoteAsNum == 0 && externalDeviceConn.ConnectionType == "bgp" {
+			return fmt.Errorf("ha is enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_num'")
 		}
 	} else {
 		if backupDirectConnect {
@@ -294,8 +294,8 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		if externalDeviceConn.BackupPreSharedKey != "" || externalDeviceConn.BackupLocalTunnelCidr != "" || externalDeviceConn.BackupRemoteTunnelCidr != "" {
 			return fmt.Errorf("ha is not enabled, please set 'backup_pre_shared_key', 'backup_local_tunnel_cidr' and 'backup_remote_tunnel_cidr' to empty")
 		}
-		if externalDeviceConn.BackupBgpRemoteAsNumber != 0 && externalDeviceConn.ConnectionType == "bgp" {
-			return fmt.Errorf("ha is not enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_number' to empty")
+		if externalDeviceConn.BackupBgpRemoteAsNum != 0 && externalDeviceConn.ConnectionType == "bgp" {
+			return fmt.Errorf("ha is not enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_num' to empty")
 		}
 	}
 
@@ -343,11 +343,11 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		d.Set("gw_name", conn.GwName)
 		d.Set("remote_gateway_ip", conn.RemoteGatewayIP)
 		d.Set("connection_type", conn.ConnectionType)
-		if conn.BgpLocalAsNumber != 0 {
-			d.Set("bgp_local_as_number", strconv.Itoa(conn.BgpLocalAsNumber))
+		if conn.BgpLocalAsNum != 0 {
+			d.Set("bgp_local_as_num", strconv.Itoa(conn.BgpLocalAsNum))
 		}
-		if conn.BgpLocalAsNumber != 0 {
-			d.Set("bgp_remote_as_number", strconv.Itoa(conn.BgpRemoteAsNumber))
+		if conn.BgpLocalAsNum != 0 {
+			d.Set("bgp_remote_as_num", strconv.Itoa(conn.BgpRemoteAsNum))
 		}
 		d.Set("remote_subnet", conn.RemoteSubnet)
 		if conn.DirectConnect == "enabled" {
@@ -371,8 +371,8 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		}
 
 		d.Set("backup_remote_gateway_ip", conn.BackupRemoteGatewayIP)
-		if conn.BackupBgpRemoteAsNumber != 0 {
-			d.Set("backup_bgp_remote_as_number", strconv.Itoa(conn.BackupBgpRemoteAsNumber))
+		if conn.BackupBgpRemoteAsNum != 0 {
+			d.Set("backup_bgp_remote_as_num", strconv.Itoa(conn.BackupBgpRemoteAsNum))
 		}
 		d.Set("backup_local_tunnel_cidr", conn.BackupLocalTunnelCidr)
 		d.Set("backup_remote_tunnel_cidr", conn.BackupRemoteTunnelCidr)
