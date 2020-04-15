@@ -11,59 +11,59 @@ import (
 
 //ExternalDeviceConn: a simple struct to hold external device connection details
 type ExternalDeviceConn struct {
-	Action                  string `form:"action,omitempty"`
-	CID                     string `form:"CID,omitempty"`
-	VpcID                   string `form:"vpc_id,omitempty"`
-	ConnectionName          string `form:"connection_name,omitempty"`
-	GwName                  string `form:"transit_gw,omitempty"`
-	ConnectionType          string `form:"routing_protocol,omitempty"`
-	BgpLocalAsNumber        int    `form:"bgp_local_as_number,omitempty"`
-	BgpRemoteAsNumber       int    `form:"external_device_as_number,omitempty"`
-	RemoteGatewayIP         string `form:"external_device_ip_address"`
-	RemoteSubnet            string `form:"remote_subnet,omitempty"`
-	DirectConnect           string `form:"direct_connect,omitempty"`
-	PreSharedKey            string `form:"pre_shared_key,omitempty"`
-	LocalTunnelCidr         string `form:"local_tunnel_ip,omitempty"`
-	RemoteTunnelCidr        string `form:"remote_tunnel_ip,omitempty"`
-	CustomAlgorithms        bool
-	Phase1Auth              string `form:"phase1_auth,omitempty"`
-	Phase1DhGroups          string `form:"phase1_dh_group,omitempty"`
-	Phase1Encryption        string `form:"phase1_encryption,omitempty"`
-	Phase2Auth              string `form:"phase2_auth,omitempty"`
-	Phase2DhGroups          string `form:"phase2_dh_group,omitempty"`
-	Phase2Encryption        string `form:"phase2_encryption,omitempty"`
-	HAEnabled               string `form:"enable_ha,omitempty" json:"enable_ha,omitempty"`
-	BackupRemoteGatewayIP   string `form:"backup_external_device_ip_address"`
-	BackupBgpRemoteAsNumber int    `form:"backup_external_device_as_number,omitempty"`
-	BackupPreSharedKey      string `form:"backup_pre_shared_key,omitempty"`
-	BackupLocalTunnelCidr   string `form:"backup_local_tunnel_ip,omitempty"`
-	BackupRemoteTunnelCidr  string `form:"backup_remote_tunnel_ip,omitempty"`
-	BackupDirectConnect     string `form:"backup_direct_connect,omitempty"`
-	EnableEdgeSegmentation  string `form:"connection_policy,omitempty"`
+	Action                 string `form:"action,omitempty"`
+	CID                    string `form:"CID,omitempty"`
+	VpcID                  string `form:"vpc_id,omitempty"`
+	ConnectionName         string `form:"connection_name,omitempty"`
+	GwName                 string `form:"transit_gw,omitempty"`
+	ConnectionType         string `form:"routing_protocol,omitempty"`
+	BgpLocalAsNum          int    `form:"bgp_local_as_number,omitempty"`
+	BgpRemoteAsNum         int    `form:"external_device_as_number,omitempty"`
+	RemoteGatewayIP        string `form:"external_device_ip_address"`
+	RemoteSubnet           string `form:"remote_subnet,omitempty"`
+	DirectConnect          string `form:"direct_connect,omitempty"`
+	PreSharedKey           string `form:"pre_shared_key,omitempty"`
+	LocalTunnelCidr        string `form:"local_tunnel_ip,omitempty"`
+	RemoteTunnelCidr       string `form:"remote_tunnel_ip,omitempty"`
+	CustomAlgorithms       bool
+	Phase1Auth             string `form:"phase1_auth,omitempty"`
+	Phase1DhGroups         string `form:"phase1_dh_group,omitempty"`
+	Phase1Encryption       string `form:"phase1_encryption,omitempty"`
+	Phase2Auth             string `form:"phase2_auth,omitempty"`
+	Phase2DhGroups         string `form:"phase2_dh_group,omitempty"`
+	Phase2Encryption       string `form:"phase2_encryption,omitempty"`
+	HAEnabled              string `form:"enable_ha,omitempty" json:"enable_ha,omitempty"`
+	BackupRemoteGatewayIP  string `form:"backup_external_device_ip_address"`
+	BackupBgpRemoteAsNum   int    `form:"backup_external_device_as_number,omitempty"`
+	BackupPreSharedKey     string `form:"backup_pre_shared_key,omitempty"`
+	BackupLocalTunnelCidr  string `form:"backup_local_tunnel_ip,omitempty"`
+	BackupRemoteTunnelCidr string `form:"backup_remote_tunnel_ip,omitempty"`
+	BackupDirectConnect    string `form:"backup_direct_connect,omitempty"`
+	EnableEdgeSegmentation string `form:"connection_policy,omitempty"`
 }
 
 type EditExternalDeviceConnDetail struct {
-	VpcID                   []string      `json:"vpc_id,omitempty"`
-	ConnectionName          []string      `json:"name,omitempty"`
-	GwName                  string        `json:"gw_name,omitempty"`
-	BgpLocalAsNumber        string        `json:"bgp_local_asn_number,omitempty"`
-	BgpRemoteAsNumber       string        `json:"bgp_remote_asn_number,omitempty"`
-	RemoteGatewayIP         string        `json:"peer_ip,omitempty"`
-	RemoteSubnet            string        `json:"remote_cidr,omitempty"`
-	DirectConnect           bool          `json:"direct_connect_primary,omitempty"`
-	LocalTunnelCidr         string        `json:"bgp_local_ip,omitempty"`
-	RemoteTunnelCidr        string        `json:"bgp_remote_ip,omitempty"`
-	Algorithm               AlgorithmInfo `json:"algorithm,omitempty"`
-	HAEnabled               string        `json:"ha_status,omitempty"`
-	BackupBgpRemoteAsNumber string        `json:"bgp_remote_backup_asn_number,omitempty"`
-	BackupLocalTunnelCidr   string        `json:"bgp_backup_local_ip,omitempty"`
-	BackupRemoteTunnelCidr  string        `json:"bgp_backup_remote_ip,omitempty"`
-	BackupDirectConnect     bool          `json:"direct_connect_backup,omitempty"`
-	EnableEdgeSegmentation  bool          `json:"enable_edge_segmentation,omitempty"`
-	Tunnels                 []TunnelInfo  `json:"tunnels,omitempty"`
-	BackupRemoteGatewayIP   string
-	PreSharedKey            string
-	BackupPreSharedKey      string
+	VpcID                  []string      `json:"vpc_id,omitempty"`
+	ConnectionName         []string      `json:"name,omitempty"`
+	GwName                 string        `json:"gw_name,omitempty"`
+	BgpLocalAsNum          string        `json:"bgp_local_asn_number,omitempty"`
+	BgpRemoteAsNum         string        `json:"bgp_remote_asn_number,omitempty"`
+	RemoteGatewayIP        string        `json:"peer_ip,omitempty"`
+	RemoteSubnet           string        `json:"remote_cidr,omitempty"`
+	DirectConnect          bool          `json:"direct_connect_primary,omitempty"`
+	LocalTunnelCidr        string        `json:"bgp_local_ip,omitempty"`
+	RemoteTunnelCidr       string        `json:"bgp_remote_ip,omitempty"`
+	Algorithm              AlgorithmInfo `json:"algorithm,omitempty"`
+	HAEnabled              string        `json:"ha_status,omitempty"`
+	BackupBgpRemoteAsNum   string        `json:"bgp_remote_backup_asn_number,omitempty"`
+	BackupLocalTunnelCidr  string        `json:"bgp_backup_local_ip,omitempty"`
+	BackupRemoteTunnelCidr string        `json:"bgp_backup_remote_ip,omitempty"`
+	BackupDirectConnect    bool          `json:"direct_connect_backup,omitempty"`
+	EnableEdgeSegmentation bool          `json:"enable_edge_segmentation,omitempty"`
+	Tunnels                []TunnelInfo  `json:"tunnels,omitempty"`
+	BackupRemoteGatewayIP  string
+	PreSharedKey           string
+	BackupPreSharedKey     string
 }
 
 type ExternalDeviceConnDetailResp struct {
@@ -141,13 +141,13 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 			externalDeviceConn.RemoteSubnet = externalDeviceConnDetail.RemoteSubnet
 			externalDeviceConn.ConnectionType = "static"
 		} else {
-			bgpLocalAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BgpLocalAsNumber)
-			externalDeviceConn.BgpLocalAsNumber = bgpLocalAsNumber
-			bgpRemoteAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BgpRemoteAsNumber)
-			externalDeviceConn.BgpRemoteAsNumber = bgpRemoteAsNumber
-			if externalDeviceConnDetail.BackupBgpRemoteAsNumber != "" {
-				backupBgpRemoteAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BackupBgpRemoteAsNumber)
-				externalDeviceConn.BackupBgpRemoteAsNumber = backupBgpRemoteAsNumber
+			bgpLocalAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BgpLocalAsNum)
+			externalDeviceConn.BgpLocalAsNum = bgpLocalAsNumber
+			bgpRemoteAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BgpRemoteAsNum)
+			externalDeviceConn.BgpRemoteAsNum = bgpRemoteAsNumber
+			if externalDeviceConnDetail.BackupBgpRemoteAsNum != "" {
+				backupBgpRemoteAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BackupBgpRemoteAsNum)
+				externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
 			}
 			externalDeviceConn.ConnectionType = "bgp"
 		}
