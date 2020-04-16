@@ -9,12 +9,16 @@ import (
 )
 
 type SamlEndpoint struct {
-	EndPointName    string `form:"name,omitempty" json:"name,omitempty"`
-	IdpMetadataType string `form:"metadata_type,omitempty" json:"metadata_type,omitempty"`
-	IdpMetadata     string `form:"idp_metadata,omitempty" json:"idp_metadata,omitempty"`
-	EntityIdType    string `form:"entity_id,omitempty" json:"entity_id,omitempty"`
-	CustomEntityId  string `form:"custom_entityID,omitempty" json:"custom_entityID,omitempty"`
-	MsgTemplate     string `form:"msgtemplate,omitempty" json:"msgtemplate,omitempty"`
+	EndPointName    string   `form:"name,omitempty" json:"name,omitempty"`
+	IdpMetadataType string   `form:"metadata_type,omitempty" json:"metadata_type,omitempty"`
+	IdpMetadata     string   `form:"idp_metadata,omitempty" json:"idp_metadata,omitempty"`
+	EntityIdType    string   `form:"entity_id,omitempty" json:"entity_id,omitempty"`
+	CustomEntityId  string   `form:"custom_entityID,omitempty" json:"custom_entityID,omitempty"`
+	MsgTemplate     string   `form:"msgtemplate,omitempty" json:"msgtemplate,omitempty"`
+	AccessSetBy     string   `form:"access_ctrl,omitempty" json:"access_ctrl,omitempty"`
+	RbacGroups      string   `form:"groups,omitempty"`
+	RbacGroupsRead  []string `json:"cl_rbac_groups,omitempty"`
+	ControllerLogin bool     `json:"controller_login,omitempty"`
 }
 
 type SamlResp struct {
@@ -26,7 +30,7 @@ type SamlResp struct {
 func (c *Client) CreateSamlEndpoint(samlEndpoint *SamlEndpoint) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return errors.New(("url Parsing failed for create_saml_endpoint ") + err.Error())
+		return errors.New(("url Parsing failed for 'create_saml_endpoint': ") + err.Error())
 	}
 	createSamlEndpoint := url.Values{}
 	createSamlEndpoint.Add("CID", c.CID)
@@ -36,10 +40,17 @@ func (c *Client) CreateSamlEndpoint(samlEndpoint *SamlEndpoint) error {
 	createSamlEndpoint.Add("idp_metadata", samlEndpoint.IdpMetadata)
 	createSamlEndpoint.Add("entity_id", samlEndpoint.CustomEntityId)
 	createSamlEndpoint.Add("msgtemplate", samlEndpoint.MsgTemplate)
+	if samlEndpoint.AccessSetBy != "" {
+		createSamlEndpoint.Add("controller_login", "yes")
+		createSamlEndpoint.Add("access_ctrl", samlEndpoint.AccessSetBy)
+		if samlEndpoint.AccessSetBy == "controller" && samlEndpoint.RbacGroups != "" {
+			createSamlEndpoint.Add("groups", samlEndpoint.RbacGroups)
+		}
+	}
 	Url.RawQuery = createSamlEndpoint.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
-		return errors.New("HTTP Get create_saml_endpoint failed: " + err.Error())
+		return errors.New("HTTP Get 'create_saml_endpoint' failed: " + err.Error())
 	}
 	var data APIResp
 	buf := new(bytes.Buffer)
@@ -47,10 +58,10 @@ func (c *Client) CreateSamlEndpoint(samlEndpoint *SamlEndpoint) error {
 	bodyString := buf.String()
 	bodyIoCopy := strings.NewReader(bodyString)
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode create_saml_endpoint failed: " + err.Error() + "\n Body: " + bodyString)
+		return errors.New("Json Decode 'create_saml_endpoint' failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
-		return errors.New("Rest API create_saml_endpoint Get failed: " + data.Reason)
+		return errors.New("Rest API 'create_saml_endpoint' Get failed: " + data.Reason)
 	}
 	return nil
 }
@@ -58,7 +69,7 @@ func (c *Client) CreateSamlEndpoint(samlEndpoint *SamlEndpoint) error {
 func (c *Client) GetSamlEndpoint(samlEndpoint *SamlEndpoint) (*SamlEndpoint, error) {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return nil, errors.New(("url Parsing failed for get_saml_endpoint_information ") + err.Error())
+		return nil, errors.New(("url Parsing failed for 'get_saml_endpoint_information': ") + err.Error())
 	}
 	getSamlEndpointInformation := url.Values{}
 	getSamlEndpointInformation.Add("CID", c.CID)
@@ -67,7 +78,7 @@ func (c *Client) GetSamlEndpoint(samlEndpoint *SamlEndpoint) (*SamlEndpoint, err
 	Url.RawQuery = getSamlEndpointInformation.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
-		return nil, errors.New("HTTP Get get_saml_endpoint_information failed: " + err.Error())
+		return nil, errors.New("HTTP Get 'get_saml_endpoint_information' failed: " + err.Error())
 	}
 	var data SamlResp
 	buf := new(bytes.Buffer)
@@ -75,18 +86,24 @@ func (c *Client) GetSamlEndpoint(samlEndpoint *SamlEndpoint) (*SamlEndpoint, err
 	bodyString := buf.String()
 	bodyIoCopy := strings.NewReader(bodyString)
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode get_saml_endpoint_information failed: " + err.Error() + "\n Body: " + bodyString)
+		return nil, errors.New("Json Decode 'get_saml_endpoint_information' failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		if strings.Contains(data.Reason, "Invalid SAML endpoint name") {
 			return nil, ErrNotFound
 		}
-		return nil, errors.New("Rest API get_saml_endpoint_information Get failed: " + data.Reason)
+		return nil, errors.New("Rest API 'get_saml_endpoint_information' Get failed: " + data.Reason)
 	}
 	samlEndpoint.CustomEntityId = data.Results.CustomEntityId
 	samlEndpoint.IdpMetadataType = data.Results.IdpMetadataType
 	samlEndpoint.IdpMetadata = data.Results.IdpMetadata
 	samlEndpoint.MsgTemplate = data.Results.MsgTemplate
+	if data.Results.ControllerLogin {
+		samlEndpoint.AccessSetBy = data.Results.AccessSetBy
+		if data.Results.AccessSetBy == "controller" {
+			samlEndpoint.RbacGroups = strings.Join(data.Results.RbacGroupsRead, ",")
+		}
+	}
 	return samlEndpoint, nil
 }
 
