@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -41,6 +42,28 @@ func resourceAviatrixSamlEndpoint() *schema.Resource {
 				Default:     "",
 				Description: "Custom Entity ID. Required to be non-empty for 'Custom' Entity ID type, empty for 'Hostname'.",
 			},
+			"access_set_by": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "controller",
+				Description: "Access type.",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if v != "controller" && v != "profile_attribute" {
+						errs = append(errs, fmt.Errorf("%q must be either 'controller' or 'profile_attribute', got: %s", key, val))
+					}
+					return
+				},
+			},
+			"rbac_groups": {
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional:    true,
+				Default:     nil,
+				Description: "List of RBAC groups.",
+			},
 			"custom_saml_request_template": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -59,6 +82,7 @@ func resourceAviatrixSamlEndpointCreate(d *schema.ResourceData, meta interface{}
 		IdpMetadataType: d.Get("idp_metadata_type").(string),
 		IdpMetadata:     d.Get("idp_metadata").(string),
 		MsgTemplate:     d.Get("custom_saml_request_template").(string),
+		AccessSetBy:     d.Get("access_set_by").(string),
 	}
 
 	customEntityID := d.Get("custom_entity_id").(string)
@@ -67,6 +91,15 @@ func resourceAviatrixSamlEndpointCreate(d *schema.ResourceData, meta interface{}
 	} else {
 		samlEndpoint.EntityIdType = "Custom"
 		samlEndpoint.CustomEntityId = customEntityID
+	}
+
+	var rbacGroups []string
+	for _, rbacGroup := range d.Get("rbac_groups").([]interface{}) {
+		rbacGroups = append(rbacGroups, rbacGroup.(string))
+	}
+	samlEndpoint.RbacGroups = strings.Join(rbacGroups, ",")
+	if samlEndpoint.AccessSetBy != "controller" && samlEndpoint.RbacGroups != "" {
+		return fmt.Errorf("'rbac_groups' is only supported for 'access_set_by' of 'controller'")
 	}
 
 	err := client.CreateSamlEndpoint(samlEndpoint)
@@ -115,8 +148,26 @@ func resourceAviatrixSamlEndpointRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("custom_saml_request_template", saml.MsgTemplate)
 	}
 
+	d.Set("access_set_by", saml.AccessSetBy)
+
+	if saml.RbacGroups != "" {
+		var rbacGroups []string
+		for _, rbacGroup := range d.Get("rbac_groups").([]interface{}) {
+			rbacGroups = append(rbacGroups, rbacGroup.(string))
+		}
+		rbacGroupsRead := strings.Split(saml.RbacGroups, ",")
+		if len(goaviatrix.Difference(rbacGroups, rbacGroupsRead)) == 0 && len(goaviatrix.Difference(rbacGroupsRead, rbacGroups)) == 0 {
+			if err := d.Set("rbac_groups", rbacGroups); err != nil {
+				log.Printf("[WARN] Error setting 'rbac_groups' for (%s): %s", d.Id(), err)
+			}
+		} else {
+			if err := d.Set("rbac_groups", rbacGroupsRead); err != nil {
+				log.Printf("[WARN] Error setting 'rbac_groups' for (%s): %s", d.Id(), err)
+			}
+		}
+	}
+
 	d.SetId(saml.EndPointName)
-	log.Printf("[INFO] Found SAML Endpoint: %#v", d)
 	return nil
 }
 
