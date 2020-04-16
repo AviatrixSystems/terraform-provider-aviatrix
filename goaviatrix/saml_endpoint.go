@@ -100,7 +100,7 @@ func (c *Client) GetSamlEndpoint(samlEndpoint *SamlEndpoint) (*SamlEndpoint, err
 	samlEndpoint.MsgTemplate = data.Results.MsgTemplate
 	if data.Results.ControllerLogin {
 		samlEndpoint.AccessSetBy = data.Results.AccessSetBy
-		if data.Results.AccessSetBy == "controller" {
+		if data.Results.AccessSetBy == "controller" && len(data.Results.RbacGroupsRead) != 0 {
 			samlEndpoint.RbacGroups = strings.Join(data.Results.RbacGroupsRead, ",")
 		}
 	}

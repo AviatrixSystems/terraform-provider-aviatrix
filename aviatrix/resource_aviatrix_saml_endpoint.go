@@ -45,7 +45,7 @@ func resourceAviatrixSamlEndpoint() *schema.Resource {
 			"access_set_by": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "",
+				Default:     "controller",
 				Description: "Access type.",
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 					v := val.(string)
@@ -56,10 +56,13 @@ func resourceAviatrixSamlEndpoint() *schema.Resource {
 				},
 			},
 			"rbac_groups": {
-				Type:        schema.TypeString,
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 				Optional:    true,
-				Default:     "",
-				Description: "RBAC groups separated by ','.",
+				Default:     nil,
+				Description: "List of RBAC groups.",
 			},
 			"custom_saml_request_template": {
 				Type:        schema.TypeString,
@@ -80,7 +83,6 @@ func resourceAviatrixSamlEndpointCreate(d *schema.ResourceData, meta interface{}
 		IdpMetadata:     d.Get("idp_metadata").(string),
 		MsgTemplate:     d.Get("custom_saml_request_template").(string),
 		AccessSetBy:     d.Get("access_set_by").(string),
-		RbacGroups:      d.Get("rbac_groups").(string),
 	}
 
 	customEntityID := d.Get("custom_entity_id").(string)
@@ -91,6 +93,11 @@ func resourceAviatrixSamlEndpointCreate(d *schema.ResourceData, meta interface{}
 		samlEndpoint.CustomEntityId = customEntityID
 	}
 
+	var rbacGroups []string
+	for _, rbacGroup := range d.Get("rbac_groups").([]interface{}) {
+		rbacGroups = append(rbacGroups, rbacGroup.(string))
+	}
+	samlEndpoint.RbacGroups = strings.Join(rbacGroups, ",")
 	if samlEndpoint.AccessSetBy != "controller" && samlEndpoint.RbacGroups != "" {
 		return fmt.Errorf("'rbac_groups' is only supported for 'access_set_by' of 'controller'")
 	}
@@ -141,21 +148,23 @@ func resourceAviatrixSamlEndpointRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("custom_saml_request_template", saml.MsgTemplate)
 	}
 
-	if saml.AccessSetBy != "" {
-		d.Set("access_set_by", saml.AccessSetBy)
-	}
-	rbacGroups := strings.Split(d.Get("rbac_groups").(string), ",")
-	for i := range rbacGroups {
-		rbacGroups[i] = strings.TrimSpace(rbacGroups[i])
-	}
-	rbacGroupsRead := strings.Split(saml.RbacGroups, ",")
-	for i := range rbacGroupsRead {
-		rbacGroupsRead[i] = strings.TrimSpace(rbacGroupsRead[i])
-	}
-	if len(goaviatrix.Difference(rbacGroups, rbacGroupsRead)) == 0 && len(goaviatrix.Difference(rbacGroupsRead, rbacGroups)) == 0 {
-		d.Set("rbac_groups", d.Get("rbac_groups").(string))
-	} else {
-		d.Set("rbac_groups", saml.RbacGroups)
+	d.Set("access_set_by", saml.AccessSetBy)
+
+	if saml.RbacGroups != "" {
+		var rbacGroups []string
+		for _, rbacGroup := range d.Get("rbac_groups").([]interface{}) {
+			rbacGroups = append(rbacGroups, rbacGroup.(string))
+		}
+		rbacGroupsRead := strings.Split(saml.RbacGroups, ",")
+		if len(goaviatrix.Difference(rbacGroups, rbacGroupsRead)) == 0 && len(goaviatrix.Difference(rbacGroupsRead, rbacGroups)) == 0 {
+			if err := d.Set("rbac_groups", rbacGroups); err != nil {
+				log.Printf("[WARN] Error setting 'rbac_groups' for (%s): %s", d.Id(), err)
+			}
+		} else {
+			if err := d.Set("rbac_groups", rbacGroupsRead); err != nil {
+				log.Printf("[WARN] Error setting 'rbac_groups' for (%s): %s", d.Id(), err)
+			}
+		}
 	}
 
 	d.SetId(saml.EndPointName)
