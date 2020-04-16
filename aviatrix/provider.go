@@ -65,6 +65,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_rbac_group_permission_attachment":     resourceAviatrixRbacGroupPermissionAttachment(),
 			"aviatrix_rbac_group_user_attachment":           resourceAviatrixRbacGroupUserAttachment(),
 			"aviatrix_saml_endpoint":                        resourceAviatrixSamlEndpoint(),
+			"aviatrix_saml_login":                           resourceAviatrixSamlLogin(),
 			"aviatrix_site2cloud":                           resourceAviatrixSite2Cloud(),
 			"aviatrix_spoke_gateway":                        resourceAviatrixSpokeGateway(),
 			"aviatrix_spoke_vpc":                            resourceAviatrixSpokeVpc(),
