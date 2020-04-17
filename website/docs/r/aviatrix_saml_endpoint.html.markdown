@@ -12,11 +12,25 @@ The **aviatrix_saml_endpoint** resource allows the creation and management of an
 ## Example Usage
 
 ```hcl
-# Create Aviatrix AWS SAML Endpoint
+# Create an Aviatrix AWS SAML Endpoint
 resource "aviatrix_saml_endpoint" "test_saml_endpoint" {
   endpoint_name     = "saml-test"
   idp_metadata_type = "Text"
   idp_metadata      = "${var.idp_metadata}"
+}
+```
+```hcl
+# Create an Aviatrix AWS SAML Endpoint for Controller Login
+resource "aviatrix_saml_endpoint" "test_saml_endpoint" {
+  endpoint_name     = "saml-test"
+  idp_metadata_type = "Text"
+  idp_metadata      = "${var.idp_metadata}"
+  controller_login  = true
+  access_set_by     = "controller"
+  rbac_groups       = [
+    "admin",
+    "read_only",
+  ]
 }
 ```
 
@@ -32,6 +46,11 @@ The following arguments are supported:
 ### Custom
 * `custom_entity_id` - (Optional) Custom Entity ID. Required to be non-empty for 'Custom' Entity ID type, empty for 'Hostname' Entity ID type.
 * `custom_saml_request_template` - (Optional) Custom SAML Request Template in string.
+
+### Controller Login
+* `controller_login` - (Optional) Valid values: true, false. Default value: false. Set true for creating a saml endpoint for controller login.
+* `access_set_by` - (Optional) Access type. Valid values: "controller", "profile_attribute". Default value: "controller". 
+* `rbac_groups` - (Optional) List of rbac groups. Required for controller login and "access_set_by" of "controller".
 
 ## Import
 
