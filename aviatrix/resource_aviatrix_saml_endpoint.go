@@ -14,7 +14,6 @@ func resourceAviatrixSamlEndpoint() *schema.Resource {
 		Create: resourceAviatrixSamlEndpointCreate,
 		Read:   resourceAviatrixSamlEndpointRead,
 		Delete: resourceAviatrixSamlEndpointDelete,
-		Update: resourceAviatrixSamlEndpointCreate,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -29,29 +28,34 @@ func resourceAviatrixSamlEndpoint() *schema.Resource {
 			"idp_metadata_type": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Type of IDP Metadata.",
 			},
 			"idp_metadata": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "IDP Metadata.",
 			},
 			"custom_entity_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
+				ForceNew:    true,
 				Description: "Custom Entity ID. Required to be non-empty for 'Custom' Entity ID type, empty for 'Hostname'.",
 			},
 			"controller_login": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
+				ForceNew:    true,
 				Description: "Switch to differentiate if it is for controller login.",
 			},
 			"access_set_by": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "controller",
+				ForceNew:    true,
 				Description: "Access type.",
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 					v := val.(string)
@@ -68,12 +72,14 @@ func resourceAviatrixSamlEndpoint() *schema.Resource {
 				},
 				Optional:    true,
 				Default:     nil,
+				ForceNew:    true,
 				Description: "List of RBAC groups.",
 			},
 			"custom_saml_request_template": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
+				ForceNew:    true,
 				Description: "Custom SAML Request Template.",
 			},
 		},
