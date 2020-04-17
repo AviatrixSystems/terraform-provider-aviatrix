@@ -42,6 +42,12 @@ func resourceAviatrixSamlEndpoint() *schema.Resource {
 				Default:     "",
 				Description: "Custom Entity ID. Required to be non-empty for 'Custom' Entity ID type, empty for 'Hostname'.",
 			},
+			"controller_login": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Switch to differentiate if it is for controller login.",
+			},
 			"access_set_by": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -83,6 +89,7 @@ func resourceAviatrixSamlEndpointCreate(d *schema.ResourceData, meta interface{}
 		IdpMetadata:     d.Get("idp_metadata").(string),
 		MsgTemplate:     d.Get("custom_saml_request_template").(string),
 		AccessSetBy:     d.Get("access_set_by").(string),
+		ControllerLogin: d.Get("controller_login").(bool),
 	}
 
 	customEntityID := d.Get("custom_entity_id").(string)
@@ -98,10 +105,11 @@ func resourceAviatrixSamlEndpointCreate(d *schema.ResourceData, meta interface{}
 		rbacGroups = append(rbacGroups, rbacGroup.(string))
 	}
 	samlEndpoint.RbacGroups = strings.Join(rbacGroups, ",")
-	if samlEndpoint.AccessSetBy != "controller" && samlEndpoint.RbacGroups != "" {
+	if !samlEndpoint.ControllerLogin && (samlEndpoint.AccessSetBy != "controller" || samlEndpoint.RbacGroups != "") {
+		return fmt.Errorf("'rbac_groups' and 'access_set_by' are only supported for controller login")
+	} else if samlEndpoint.ControllerLogin && samlEndpoint.AccessSetBy != "controller" && samlEndpoint.RbacGroups != "" {
 		return fmt.Errorf("'rbac_groups' is only supported for 'access_set_by' of 'controller'")
 	}
-
 	err := client.CreateSamlEndpoint(samlEndpoint)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix SAML endpoint: %s", err)
@@ -148,6 +156,7 @@ func resourceAviatrixSamlEndpointRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("custom_saml_request_template", saml.MsgTemplate)
 	}
 
+	d.Set("controller_login", saml.ControllerLogin)
 	d.Set("access_set_by", saml.AccessSetBy)
 
 	if saml.RbacGroups != "" {
