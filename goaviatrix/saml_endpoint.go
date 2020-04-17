@@ -15,10 +15,10 @@ type SamlEndpoint struct {
 	EntityIdType    string   `form:"entity_id,omitempty" json:"entity_id,omitempty"`
 	CustomEntityId  string   `form:"custom_entityID,omitempty" json:"custom_entityID,omitempty"`
 	MsgTemplate     string   `form:"msgtemplate,omitempty" json:"msgtemplate,omitempty"`
+	ControllerLogin bool     `json:"controller_login,omitempty"`
 	AccessSetBy     string   `form:"access_ctrl,omitempty" json:"access_ctrl,omitempty"`
 	RbacGroups      string   `form:"groups,omitempty"`
 	RbacGroupsRead  []string `json:"cl_rbac_groups,omitempty"`
-	ControllerLogin bool     `json:"controller_login,omitempty"`
 }
 
 type SamlResp struct {
@@ -40,12 +40,12 @@ func (c *Client) CreateSamlEndpoint(samlEndpoint *SamlEndpoint) error {
 	createSamlEndpoint.Add("idp_metadata", samlEndpoint.IdpMetadata)
 	createSamlEndpoint.Add("entity_id", samlEndpoint.CustomEntityId)
 	createSamlEndpoint.Add("msgtemplate", samlEndpoint.MsgTemplate)
-	if samlEndpoint.AccessSetBy != "" {
+	if samlEndpoint.ControllerLogin {
 		createSamlEndpoint.Add("controller_login", "yes")
-		createSamlEndpoint.Add("access_ctrl", samlEndpoint.AccessSetBy)
-		if samlEndpoint.AccessSetBy == "controller" && samlEndpoint.RbacGroups != "" {
-			createSamlEndpoint.Add("groups", samlEndpoint.RbacGroups)
-		}
+	}
+	createSamlEndpoint.Add("access_ctrl", samlEndpoint.AccessSetBy)
+	if samlEndpoint.AccessSetBy == "controller" && samlEndpoint.RbacGroups != "" {
+		createSamlEndpoint.Add("groups", samlEndpoint.RbacGroups)
 	}
 	Url.RawQuery = createSamlEndpoint.Encode()
 	resp, err := c.Get(Url.String(), nil)
@@ -98,8 +98,9 @@ func (c *Client) GetSamlEndpoint(samlEndpoint *SamlEndpoint) (*SamlEndpoint, err
 	samlEndpoint.IdpMetadataType = data.Results.IdpMetadataType
 	samlEndpoint.IdpMetadata = data.Results.IdpMetadata
 	samlEndpoint.MsgTemplate = data.Results.MsgTemplate
+	samlEndpoint.AccessSetBy = data.Results.AccessSetBy
 	if data.Results.ControllerLogin {
-		samlEndpoint.AccessSetBy = data.Results.AccessSetBy
+		samlEndpoint.ControllerLogin = true
 		if data.Results.AccessSetBy == "controller" && len(data.Results.RbacGroupsRead) != 0 {
 			samlEndpoint.RbacGroups = strings.Join(data.Results.RbacGroupsRead, ",")
 		}
