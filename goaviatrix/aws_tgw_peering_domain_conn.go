@@ -83,6 +83,9 @@ func (c *Client) GetDomainConn(domainConn *DomainConn) error {
 		return errors.New("Json Decode 'list_connected_route_domains' failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
+		if strings.Contains(data.Reason, "does not exist") {
+			return ErrNotFound
+		}
 		return errors.New("Rest API 'list_connected_route_domains' Get failed: " + data.Reason)
 	}
 	connectedDomains := data.Results.ConnectedDomainNames
