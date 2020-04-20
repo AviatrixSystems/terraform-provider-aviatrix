@@ -26,11 +26,11 @@ type ExternalDeviceConn struct {
 	LocalTunnelCidr        string `form:"local_tunnel_ip,omitempty"`
 	RemoteTunnelCidr       string `form:"remote_tunnel_ip,omitempty"`
 	CustomAlgorithms       bool
-	Phase1Auth             string `form:"phase1_auth,omitempty"`
-	Phase1DhGroups         string `form:"phase1_dh_group,omitempty"`
+	Phase1Auth             string `form:"phase1_authentication,omitempty"`
+	Phase1DhGroups         string `form:"phase1_dh_groups,omitempty"`
 	Phase1Encryption       string `form:"phase1_encryption,omitempty"`
-	Phase2Auth             string `form:"phase2_auth,omitempty"`
-	Phase2DhGroups         string `form:"phase2_dh_group,omitempty"`
+	Phase2Auth             string `form:"phase2_authentication,omitempty"`
+	Phase2DhGroups         string `form:"phase2_dh_groups,omitempty"`
 	Phase2Encryption       string `form:"phase2_encryption,omitempty"`
 	HAEnabled              string `form:"enable_ha,omitempty" json:"enable_ha,omitempty"`
 	BackupRemoteGatewayIP  string `form:"backup_external_device_ip_address"`
@@ -145,10 +145,6 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 			externalDeviceConn.BgpLocalAsNum = bgpLocalAsNumber
 			bgpRemoteAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BgpRemoteAsNum)
 			externalDeviceConn.BgpRemoteAsNum = bgpRemoteAsNumber
-			if externalDeviceConnDetail.BackupBgpRemoteAsNum != "" {
-				backupBgpRemoteAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BackupBgpRemoteAsNum)
-				externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
-			}
 			externalDeviceConn.ConnectionType = "bgp"
 		}
 		externalDeviceConn.RemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[0]
@@ -179,6 +175,12 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 		} else {
 			externalDeviceConn.DirectConnect = "disabled"
 		}
+
+		backupBgpRemoteAsNumber := 0
+		if externalDeviceConnDetail.BackupBgpRemoteAsNum != "" {
+			backupBgpRemoteAsNumberRead, _ := strconv.Atoi(externalDeviceConnDetail.BackupBgpRemoteAsNum)
+			backupBgpRemoteAsNumber = backupBgpRemoteAsNumberRead
+		}
 		if externalDeviceConnDetail.HAEnabled == "enabled" && len(externalDeviceConnDetail.Tunnels) == 2 {
 			externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
 			externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
@@ -190,6 +192,8 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 			externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
 			externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
 			externalDeviceConn.HAEnabled = "enabled"
+			externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
+
 		} else {
 			externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
 			externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
@@ -198,6 +202,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 			if len(externalDeviceConnDetail.Tunnels) == 2 {
 				externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
 				externalDeviceConn.HAEnabled = "enabled"
+				externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
 			} else {
 				externalDeviceConn.HAEnabled = "disabled"
 			}
