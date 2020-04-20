@@ -63,12 +63,52 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Description: "BGP local ASN (Autonomous System Number). Integer between 1-65535.",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if len(v) > 5 {
+						errs = append(errs, fmt.Errorf("%q must be an integer in 1-65535, got: %s", key, val))
+					} else {
+						sum := 0
+						for _, r := range v {
+							num := int(r - '0')
+							if num < 0 || num > 9 {
+								errs = append(errs, fmt.Errorf("%q must be an integer in 1-65535, got: %s", key, val))
+								break
+							}
+							sum = sum*10 + num
+						}
+						if sum == 0 || sum > 65535 {
+							errs = append(errs, fmt.Errorf("%q must be an integer in 1-65535, got: %s", key, val))
+						}
+					}
+					return
+				},
 			},
 			"bgp_remote_as_num": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
 				Description: "BGP remote ASN (Autonomous System Number). Integer between 1-65535.",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if len(v) > 5 {
+						errs = append(errs, fmt.Errorf("%q must be an integer in 1-65535, got: %s", key, val))
+					} else {
+						sum := 0
+						for _, r := range v {
+							num := int(r - '0')
+							if num < 0 || num > 9 {
+								errs = append(errs, fmt.Errorf("%q must be an integer in 1-65535, got: %s", key, val))
+								break
+							}
+							sum = sum*10 + num
+						}
+						if sum == 0 || sum > 65535 {
+							errs = append(errs, fmt.Errorf("%q must be an integer in 1-65535, got: %s", key, val))
+						}
+					}
+					return
+				},
 			},
 			"remote_subnet": {
 				Type:        schema.TypeString,
@@ -94,12 +134,14 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
+				Default:     "",
 				Description: "",
 			},
 			"remote_tunnel_cidr": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
+				Default:     "",
 				Description: "",
 			},
 			"custom_algorithms": {
@@ -168,6 +210,26 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Default:     "",
 				ForceNew:    true,
 				Description: "Backup BGP remote ASN (Autonomous System Number). Integer between 1-65535.",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if len(v) > 5 {
+						errs = append(errs, fmt.Errorf("%q must be an integer in 1-65535, got: %s", key, val))
+					} else {
+						sum := 0
+						for _, r := range v {
+							num := int(r - '0')
+							if num < 0 || num > 9 {
+								errs = append(errs, fmt.Errorf("%q must be an integer in 1-65535, got: %s", key, val))
+								break
+							}
+							sum = sum*10 + num
+						}
+						if sum == 0 || sum > 65535 {
+							errs = append(errs, fmt.Errorf("%q must be an integer in 1-65535, got: %s", key, val))
+						}
+					}
+					return
+				},
 			},
 			"backup_pre_shared_key": {
 				Type:        schema.TypeString,
@@ -356,8 +418,12 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 			d.Set("direct_connect", false)
 		}
 
-		d.Set("local_tunnel_cidr", conn.LocalTunnelCidr)
-		d.Set("remote_tunnel_cidr", conn.RemoteTunnelCidr)
+		if d.Get("local_tunnel_cidr").(string) != "" {
+			d.Set("local_tunnel_cidr", conn.LocalTunnelCidr)
+		}
+		if d.Get("remote_tunnel_cidr").(string) != "" {
+			d.Set("remote_tunnel_cidr", conn.RemoteTunnelCidr)
+		}
 		if conn.CustomAlgorithms {
 			d.Set("custom_algorithms", true)
 			d.Set("phase_1_authentication", conn.Phase1Auth)
@@ -374,8 +440,12 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		if conn.BackupBgpRemoteAsNum != 0 {
 			d.Set("backup_bgp_remote_as_num", strconv.Itoa(conn.BackupBgpRemoteAsNum))
 		}
-		d.Set("backup_local_tunnel_cidr", conn.BackupLocalTunnelCidr)
-		d.Set("backup_remote_tunnel_cidr", conn.BackupRemoteTunnelCidr)
+		if d.Get("backup_local_tunnel_cidr").(string) != "" {
+			d.Set("backup_local_tunnel_cidr", conn.BackupLocalTunnelCidr)
+		}
+		if d.Get("backup_remote_tunnel_cidr").(string) != "" {
+			d.Set("backup_remote_tunnel_cidr", conn.BackupRemoteTunnelCidr)
+		}
 		if conn.BackupDirectConnect == "enabled" {
 			d.Set("backup_direct_connect", true)
 		} else {
