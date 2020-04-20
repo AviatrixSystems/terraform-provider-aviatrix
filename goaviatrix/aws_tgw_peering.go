@@ -67,6 +67,9 @@ func (c *Client) GetAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
 		return errors.New("Json Decode 'list_peered_tgw_names' failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
+		if strings.Contains(data.Reason, "does not exist") {
+			return ErrNotFound
+		}
 		return errors.New("Rest API 'list_peered_tgw_names' Get failed: " + data.Reason)
 	}
 	if len(data.Results) == 0 {

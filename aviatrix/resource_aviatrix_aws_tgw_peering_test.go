@@ -3,7 +3,6 @@ package aviatrix
 import (
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -165,9 +164,6 @@ func testAccCheckAWSTgwPeeringDestroy(s *terraform.State) error {
 
 		err := client.GetAwsTgwPeering(foundAwsTgwPeering)
 		if err != goaviatrix.ErrNotFound {
-			if strings.Contains(err.Error(), "does not exist") {
-				return nil
-			}
 			return fmt.Errorf("aviatrix AWS tgw peering still exists")
 		}
 	}
