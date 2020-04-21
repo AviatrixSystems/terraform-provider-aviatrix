@@ -135,14 +135,14 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Default:     "",
-				Description: "This field is for the tunnel inside IP address of the Transit gateway.",
+				Description: "Source CIDR for the tunnel from the Aviatrix transit gateway.",
 			},
 			"remote_tunnel_cidr": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
 				Default:     "",
-				Description: "This field is for the tunnel inside IP address of the External device.",
+				Description: "Destination CIDR for the tunnel to the external device.",
 			},
 			"custom_algorithms": {
 				Type:        schema.TypeBool,
@@ -244,14 +244,14 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional:    true,
 				Default:     "",
 				ForceNew:    true,
-				Description: "This field is for the tunnel inside IP address of the Transit gateway.",
+				Description: "Source CIDR for the tunnel from the backup Aviatrix transit gateway.",
 			},
 			"backup_remote_tunnel_cidr": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
 				ForceNew:    true,
-				Description: "This field is for the tunnel inside IP address of the External device.",
+				Description: "Destination CIDR for the tunnel to the backup external device.",
 			},
 			"backup_direct_connect": {
 				Type:        schema.TypeBool,

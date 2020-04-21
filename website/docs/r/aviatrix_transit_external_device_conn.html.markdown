@@ -43,8 +43,8 @@ The following arguments are supported:
 * `backup_remote_gateway_ip ` - (Optional) Backup remote gateway IP. Required if HA enabled.
 * `backup_bgp_remote_as_num` - (Optional) Backup BGP remote ASN (Autonomous System Number). Integer between 1-65535. Required if HA enabled for 'bgp' connection.
 * `backup_pre_shared_key` - (Optional) Backup Pre-Shared Key.
-* `backup_local_tunnel_cidr` - (Optional) This field is for the tunnel inside IP address of the Transit gateway.
-* `backup_remote_tunnel_cidr` - (Optional) This field is for the tunnel inside IP address of the External device.
+* `backup_local_tunnel_cidr` - (Optional) Source CIDR for the tunnel from the backup Aviatrix transit gateway.
+* `backup_remote_tunnel_cidr` - (Optional) Destination CIDR for the tunnel to the backup external device.
 * `backup_direct_connect` - (Optional) Backup direct connect for backup external device.
 
 ### Custom Algorithms
@@ -59,8 +59,8 @@ The following arguments are supported:
 ### Misc.
 * `direct_connect` - (Optional) Set true for private network infrastructure.
 * `pre_shared_key` - (Optional) Pre-Shared Key.
-* `local_tunnel_cidr` - (Optional) This field is for the tunnel inside IP address of the Transit gateway.
-* `remote_tunnel_cidr` - (Optional) This field is for the tunnel inside IP address of the External device.
+* `local_tunnel_cidr` - (Optional) Source CIDR for the tunnel from the Aviatrix transit gateway.
+* `remote_tunnel_cidr` - (Optional) Destination CIDR for the tunnel to the external device.
 * `enable_edge_segmentation` - (Optional) Switch to allow this connection to communicate with a Security Domain via Connection Policy.
 
 ## Import
