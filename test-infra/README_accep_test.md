@@ -74,6 +74,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |                                      | SKIP_SPOKE_GCP                     |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)             |
 |                                      | SKIP_SPOKE_AZURE                   |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
 | aviatrix_trans_peer                  | SKIP_TRANS_PEER                    | aviatrix_tunnel                                                                |
+| aviatrix_transit_external_device_conn| SKIP_TRANSIT_EXTERNAL_DEVICE_CONN  | aviatrix_account + aviatrix_transit_gateway                                    |
 | aviatrix_transit_firenet_policy      | SKIP_TRANSIT_FIRENET_POLICY        | aviatrix_account                                                               |
 |                                      | SKIP_TRANSIT_FIRENET_POLICY_AWS    |       + aviatrix_transit_gateway + aviatrix_spoke_gateway in AWS               |
 |                                      | SKIP_TRANSIT_FIRENET_POLICY_AZURE  |       + aviatrix_transit_gateway + aviatrix_spoke_gateway in AZURE             |
