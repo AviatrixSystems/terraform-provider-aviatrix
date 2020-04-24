@@ -1157,6 +1157,19 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		GwName:    d.Get("gw_name").(string),
 		GwSize:    d.Get("gw_size").(string),
 	}
+	vpnAccess := d.Get("vpn_access").(bool)
+	enableElb := false
+	geoVpnDnsName := ""
+	if vpnAccess {
+		enableElb = d.Get("enable_elb").(bool)
+		if enableElb {
+			gateway.ElbDNSName = d.Get("elb_dns_name").(string)
+			geoVpn, err := client.GetGeoVPNName(gateway)
+			if err == nil {
+				geoVpnDnsName = geoVpn.ServiceName
+			}
+		}
+	}
 	if d.HasChange("peering_ha_subnet") {
 		peeringHaSubnet := d.Get("peering_ha_subnet").(string)
 		if peeringHaSubnet != "" && gateway.CloudType != 1 && gateway.CloudType != 8 && gateway.CloudType != 16 && gateway.CloudType != 256 {
@@ -1200,7 +1213,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		d.HasChange("duo_push_mode") || d.HasChange("ldap_server") || d.HasChange("ldap_bind_dn") ||
 		d.HasChange("ldap_password") || d.HasChange("ldap_base_dn") || d.HasChange("ldap_username_attribute") {
 
-		if vpnAccess := d.Get("vpn_access").(bool); !vpnAccess {
+		if !vpnAccess {
 			return fmt.Errorf("vpn_access must be set to yes to modify vpn authentication")
 		}
 
@@ -1404,6 +1417,10 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				sTunnel.VpcID = gw1.VpcID
 			}
 
+			if vpnAccess && enableElb && geoVpnDnsName != "" {
+				sTunnel.ElbName = geoVpnDnsName
+				sTunnel.Dns = "true"
+			}
 			err := client.ModifySplitTunnel(sTunnel)
 			if err != nil {
 				return fmt.Errorf("failed to modify split tunnel: %s", err)
@@ -1413,6 +1430,10 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				"'additional_cidrs', 'name_servers', and 'search_domains'")
 		} else if !splitTunnel {
 			sTunnel.SplitTunnel = "no"
+			if vpnAccess && enableElb && geoVpnDnsName != "" {
+				sTunnel.ElbName = geoVpnDnsName
+				sTunnel.Dns = "true"
+			}
 			err := client.ModifySplitTunnel(sTunnel)
 			if err != nil {
 				return fmt.Errorf("failed to disable split tunnel: %s", err)
@@ -1512,7 +1533,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		d.SetPartial("vpn_cidr")
 	}
 	if d.HasChange("max_vpn_conn") {
-		if d.Get("vpn_access").(bool) {
+		if vpnAccess {
 			gw := &goaviatrix.Gateway{
 				CloudType: d.Get("cloud_type").(int),
 				GwName:    d.Get("gw_name").(string),
@@ -1526,7 +1547,10 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 
 			_, n := d.GetChange("max_vpn_conn")
 			gw.MaxConn = n.(string)
-
+			if enableElb && geoVpnDnsName != "" {
+				gw.ElbName = geoVpnDnsName
+				gw.Dns = "true"
+			}
 			err := client.UpdateMaxVpnConn(gw)
 			if err != nil {
 				return fmt.Errorf("failed to update max vpn connections: %s", err)
@@ -1670,7 +1694,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if d.HasChange("enable_vpn_nat") {
-		if !d.Get("vpn_access").(bool) {
+		if !vpnAccess {
 			return fmt.Errorf("'enable_vpc_nat' is only supported for vpn gateway. Can't updated it for Non VPN Gateway")
 		} else {
 			gw := &goaviatrix.Gateway{
@@ -1679,6 +1703,10 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				VpcID:        d.Get("vpc_id").(string),
 				ElbName:      d.Get("elb_name").(string),
 				EnableVpnNat: true,
+			}
+			if enableElb && geoVpnDnsName != "" {
+				gw.ElbName = geoVpnDnsName
+				gw.Dns = "true"
 			}
 
 			if d.Get("enable_vpn_nat").(bool) {
