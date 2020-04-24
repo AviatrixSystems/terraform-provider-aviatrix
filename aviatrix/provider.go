@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-var supportedVersions = []string{"5.4"}
+var supportedVersions = []string{"5.4", "6.0"}
 
 // Provider returns a schema.Provider for Aviatrix.
 func Provider() terraform.ResourceProvider {
@@ -44,6 +44,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_aws_tgw":                              resourceAviatrixAWSTgw(),
 			"aviatrix_aws_tgw_directconnect":                resourceAviatrixAWSTgwDirectConnect(),
 			"aviatrix_aws_tgw_peering":                      resourceAviatrixAWSTgwPeering(),
+			"aviatrix_aws_tgw_peering_domain_conn":          resourceAviatrixAWSTgwPeeringDomainConn(),
 			"aviatrix_aws_tgw_transit_gateway_attachment":   resourceAviatrixAwsTgwTransitGatewayAttachment(),
 			"aviatrix_aws_tgw_vpc_attachment":               resourceAviatrixAwsTgwVpcAttachment(),
 			"aviatrix_aws_tgw_vpn_conn":                     resourceAviatrixAwsTgwVpnConn(),
@@ -68,6 +69,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_site2cloud":                           resourceAviatrixSite2Cloud(),
 			"aviatrix_spoke_gateway":                        resourceAviatrixSpokeGateway(),
 			"aviatrix_spoke_vpc":                            resourceAviatrixSpokeVpc(),
+			"aviatrix_transit_external_device_conn":         resourceAviatrixTransitExternalDeviceConn(),
 			"aviatrix_trans_peer":                           resourceAviatrixTransPeer(),
 			"aviatrix_transit_firenet_policy":               resourceAviatrixTransitFireNetPolicy(),
 			"aviatrix_transit_gateway":                      resourceAviatrixTransitGateway(),
@@ -88,6 +90,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_gateway":                    dataSourceAviatrixGateway(),
 			"aviatrix_spoke_gateway":              dataSourceAviatrixSpokeGateway(),
 			"aviatrix_transit_gateway":            dataSourceAviatrixTransitGateway(),
+			"aviatrix_vpc":                        dataSourceAviatrixVpc(),
 		},
 		ConfigureFunc: aviatrixConfigure,
 	}

@@ -28,6 +28,7 @@ type GeoVPNEdit struct {
 	ServiceName string         `json:"cname,omitempty"`
 	DomainName  string         `json:"domain_name,omitempty"`
 	ElbDNSNames []GeoVPNPolicy `json:"geo_vpn_policy,omitempty"`
+	DnsName     string         `json:"service_name,omitempty"`
 }
 
 type GeoVPNPolicy struct {
@@ -169,4 +170,50 @@ func (c *Client) DisableGeoVPN(geoVPN *GeoVPN) error {
 		return errors.New("Rest API 'disable_geo_vpn' Post failed: " + data.Reason)
 	}
 	return nil
+}
+
+func (c *Client) GetGeoVPNName(gateway *Gateway) (*GeoVPN, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return nil, errors.New(("url Parsing failed for 'get_geo_vpn_info': ") + err.Error())
+	}
+	getGeoVPNInfo := url.Values{}
+	getGeoVPNInfo.Add("CID", c.CID)
+	getGeoVPNInfo.Add("action", "get_geo_vpn_info")
+	getGeoVPNInfo.Add("cloud_type", strconv.Itoa(gateway.CloudType))
+	Url.RawQuery = getGeoVPNInfo.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return nil, errors.New("HTTP Get 'get_geo_vpn_info' failed: " + err.Error())
+	}
+	var data GetGeoVPNInfoResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json 'Decode get_geo_vpn_info' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		if strings.Contains(data.Reason, "Geo VPN is not enbled") || strings.Contains(data.Reason, "Geo VPN is not enabled") {
+			return nil, ErrNotFound
+		}
+		return nil, errors.New("Rest API 'get_geo_vpn_info Get' failed: " + data.Reason)
+	}
+
+	policyList := data.Results.ElbDNSNames
+	for i := range policyList {
+		if policyList[i].ElbDNSName == gateway.ElbDNSName {
+			geoVpn := &GeoVPN{
+				CloudType:   data.Results.CloudType,
+				AccountName: data.Results.AccountName,
+				ServiceName: data.Results.DnsName,
+				DomainName:  data.Results.DomainName,
+			}
+			return geoVpn, nil
+		}
+	}
+
+	log.Errorf("Couldn't find Aviatrix Geo VPN")
+	return nil, ErrNotFound
 }

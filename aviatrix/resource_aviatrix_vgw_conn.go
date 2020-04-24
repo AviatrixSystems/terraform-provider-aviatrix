@@ -26,7 +26,7 @@ func resourceAviatrixVGWConn() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The name of for Transit GW to VGW connection connection which is going to be created.",
+				Description: "The name of the VGW connection which is going to be created.",
 			},
 			"gw_name": {
 				Type:        schema.TypeString,
@@ -62,7 +62,7 @@ func resourceAviatrixVGWConn() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "BGP Local ASN (Autonomous System Number). Integer between 1-65535.",
+				Description: "BGP local ASN (Autonomous System Number). Integer between 1-65535.",
 			},
 		},
 	}

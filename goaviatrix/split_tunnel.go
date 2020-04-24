@@ -19,6 +19,7 @@ type SplitTunnel struct {
 	NameServers     string `form:"nameservers,omitempty"`
 	SearchDomains   string `form:"search_domains,omitempty"`
 	SaveTemplate    string `form:"save_template,omitempty"`
+	Dns             string `form:"dns,omitempty"`
 }
 
 type SplitTunnelResp struct {
@@ -80,6 +81,9 @@ func (c *Client) ModifySplitTunnel(splitTunnel *SplitTunnel) error {
 	modifySplitTunnel.Add("additional_cidrs", splitTunnel.AdditionalCidrs)
 	modifySplitTunnel.Add("nameservers", splitTunnel.NameServers)
 	modifySplitTunnel.Add("search_domains", splitTunnel.SearchDomains)
+	if splitTunnel.Dns == "true" {
+		modifySplitTunnel.Add("dns", "true")
+	}
 	Url.RawQuery = modifySplitTunnel.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {

@@ -110,7 +110,7 @@ type Gateway struct {
 	VpcSize                     string `form:"vpc_size,omitempty" ` //Only use for gateway create
 	DMZEnabled                  string `json:"dmz_enabled,omitempty"`
 	EnableActiveMesh            string `form:"enable_activemesh,omitempty" json:"enable_activemesh,omitempty"`
-	EnableVpnNat                bool   `form:"dns,omitempty" `
+	EnableVpnNat                bool   `form:"vpn_nat,omitempty" `
 	EnableDesignatedGateway     string `form:"designated_gateway,omitempty" json:"designated_gateway,omitempty"`
 	AdditionalCidrsDesignatedGw string `form:"additional_cidr_list,omitempty" json:"summarized_cidrs,omitempty"`
 	EnableEncryptVolume         bool   `json:"gw_enc,omitempty"`
@@ -127,6 +127,7 @@ type Gateway struct {
 	ExcludeCidrList             []string `json:"exclude_cidr_list,omitempty"`
 	EnableTransitFireNet        string   `json:"firenet_enabled,omitempty"`
 	LearnedCidrsApproval        string   `json:"learned_cidrs_approval,omitempty"`
+	Dns                         string   `json:"dns,omitempty"`
 }
 
 type PolicyRule struct {
@@ -536,6 +537,9 @@ func (c *Client) UpdateMaxVpnConn(gateway *Gateway) error {
 	setMaxVpnConn.Add("max_connections", gateway.MaxConn)
 	setMaxVpnConn.Add("vpc_id", gateway.VpcID)
 	setMaxVpnConn.Add("lb_or_gateway_name", gateway.ElbName)
+	if gateway.Dns == "true" {
+		setMaxVpnConn.Add("dns", "true")
+	}
 	Url.RawQuery = setMaxVpnConn.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
@@ -703,7 +707,9 @@ func (c *Client) EnableVpnNat(gateway *Gateway) error {
 	} else {
 		enableVpnNat.Add("lb_or_gateway_name", gateway.GwName)
 	}
-	enableVpnNat.Add("dns", "yes")
+	if gateway.Dns == "true" {
+		enableVpnNat.Add("dns", "true")
+	}
 	Url.RawQuery = enableVpnNat.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
@@ -737,7 +743,9 @@ func (c *Client) DisableVpnNat(gateway *Gateway) error {
 	} else {
 		disableVpnNat.Add("lb_or_gateway_name", gateway.GwName)
 	}
-	disableVpnNat.Add("dns", "no")
+	if gateway.Dns == "true" {
+		disableVpnNat.Add("dns", "true")
+	}
 	Url.RawQuery = disableVpnNat.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {

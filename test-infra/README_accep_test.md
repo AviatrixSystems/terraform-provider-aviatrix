@@ -28,6 +28,8 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_aws_peer                    | SKIP_AWS_PEER                      | aviatrix_account + AWS_VPC_ID, AWS_VPC_ID2, AWS_REGION, AWS_REGION2            |
 | aviatrix_aws_tgw                     | SKIP_AWS_TGW                       | aviatrix_account + AWS_VPC_ID, AWS_REGION, AWS_VPC_TGW_ID                      |
 | aviatrix_aws_tgw_directconnect       | SKIP_AWS_TGW_DIRECTCONNECT         | aviatrix_aws_tgw + AWS_DX_GATEWAY                                              |
+| aviatrix_aws_tgw_peering             | SKIP_AWS_TGW_PEERING               | aviatrix_account                                                               |
+| aviatrix_aws_tgw_peering_domain_conn | SKIP_AWS_TGW_PEERING_DOMAIN_CONN   | aviatrix_account                                                               |
 | aviatrix_aws_tgw_vpc_attachment      | SKIP_AWS_TGW_VPC_ATTACHMENT        | aviatrix_aws_tgw                                                               |
 | aviatrix_aws_tgw_vpc_attachment      | SKIP_AWS_TGW_TRANSIT_GATEWAY_ATTACHMENT | aviatrix_aws_tgw + aviatrix_transit_gateway                               |
 | aviatrix_azure_peer                  | SKIP_AZURE_PEER                    | aviatrix_account + AZURE_VNET_ID, AZURE_VNET_ID2, AZURE_REGION, AZURE_REGION2  |
@@ -72,6 +74,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |                                      | SKIP_SPOKE_GCP                     |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)             |
 |                                      | SKIP_SPOKE_AZURE                   |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
 | aviatrix_trans_peer                  | SKIP_TRANS_PEER                    | aviatrix_tunnel                                                                |
+| aviatrix_transit_external_device_conn| SKIP_TRANSIT_EXTERNAL_DEVICE_CONN  | aviatrix_account + aviatrix_transit_gateway                                    |
 | aviatrix_transit_firenet_policy      | SKIP_TRANSIT_FIRENET_POLICY        | aviatrix_account                                                               |
 |                                      | SKIP_TRANSIT_FIRENET_POLICY_AWS    |       + aviatrix_transit_gateway + aviatrix_spoke_gateway in AWS               |
 |                                      | SKIP_TRANSIT_FIRENET_POLICY_AZURE  |       + aviatrix_transit_gateway + aviatrix_spoke_gateway in AZURE             |
