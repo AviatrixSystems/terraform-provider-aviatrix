@@ -26,7 +26,6 @@ func TestAccAviatrixTransitExternalDeviceConn_basic(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 			preGatewayCheck(t, ". Set 'SKIP_TRANSIT_EXTERNAL_DEVICE_CONN' to 'yes' to skip Site2Cloud transit external device connection tests")
-
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckTransitExternalDeviceConnDestroy,
