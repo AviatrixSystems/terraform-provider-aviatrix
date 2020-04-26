@@ -202,6 +202,11 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Cloud instance ID of HA spoke gateway.",
 			},
+			"ha_gw_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Aviatrix spoke gateway unique name of HA spoke gateway.",
+			},
 		},
 	}
 }
@@ -731,6 +736,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("ha_eip", haGw.PublicIP)
 		d.Set("ha_gw_size", haGw.GwSize)
 		d.Set("ha_cloud_instance_id", haGw.CloudnGatewayInstID)
+		d.Set("ha_gw_name", haGw.GwName)
 		if haGw.InsaneMode == "yes" && haGw.CloudType == 1 {
 			d.Set("ha_insane_mode_az", haGw.GatewayZone)
 		} else {

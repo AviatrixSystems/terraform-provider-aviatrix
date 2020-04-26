@@ -127,6 +127,7 @@ In addition to all arguments above, the following attributes are exported:
 * `cloud_instance_id` - Cloud instance ID of the spoke gateway.
 * `private_ip` - Private IP address of the spoke gateway created.
 * `ha_cloud_instance_id` - Cloud instance ID of the HA spoke gateway.
+* `ha_gw_name` - Aviatrix spoke gateway unique name of HA spoke gateway.
 
 The following arguments are deprecated:
 
