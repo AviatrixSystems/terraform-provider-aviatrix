@@ -96,5 +96,9 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_vpn_user_accelerator	       | SKIP_VPN_USER_ACCELERATOR          | aviatrix_gateway						                                         |
 | aviatrix_data_source_account         | SKIP_DATA_ACCOUNT                  | aviatrix_account                                                               |
 | aviatrix_data_source_caller_identity | SKIP_DATA_CALLER_IDENTITY          |                                                                                |
+| aviatrix_data_source_firenet         | SKIP_DATA_FIRENET                  | aviatrix_firenet                                                               |
 | aviatrix_data_source_firenet_vendor_integration | SKIP_DATA_FIRENET_VENDOR_INTEGRATION    | aviatrix_account + AWS_REGION, Palo Alto VM series             |
 | aviatrix_data_source_gateway         | SKIP_DATA_GATEWAY                  | aviatrix_gateway                                                               |
+| aviatrix_data_source_spoke_gateway   | SKIP_DATA_SPOKE_GATEWAY            | aviatrix_spoke_gateway                                                         |
+| aviatrix_data_source_transit_gateway | SKIP_DATA_TRANSIT_GATEWAY          | aviatrix_transit_gateway                                                       |
+| aviatrix_data_source_vpc             | SKIP_DATA_VPC                      | aviatrix_vpc                                                                   |
