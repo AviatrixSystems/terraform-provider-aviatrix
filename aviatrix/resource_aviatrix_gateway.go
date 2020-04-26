@@ -368,6 +368,11 @@ func resourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Instance ID of the peering HA gateway.",
 			},
+			"peering_ha_gw_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Aviatrix gateway unique name of HA gateway.",
+			},
 		},
 	}
 }
@@ -1002,6 +1007,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			gwHaGw, err := client.GetGateway(peeringHaGateway)
 			if err == nil {
 				d.Set("peering_ha_cloud_instance_id", gwHaGw.CloudnGatewayInstID)
+				d.Set("peering_ha_gw_name", gwHaGw.GwName)
 				d.Set("backup_public_ip", gwHaGw.PublicIP)
 				d.Set("peering_ha_eip", gwHaGw.PublicIP)
 				d.Set("peering_ha_gw_size", gwHaGw.GwSize)

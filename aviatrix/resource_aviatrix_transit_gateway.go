@@ -243,6 +243,11 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Cloud instance ID of HA transit gateway.",
 			},
+			"ha_gw_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Aviatrix transit gateway unique name of HA transit gateway.",
+			},
 		},
 	}
 }
@@ -903,6 +908,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("ha_eip", haGw.PublicIP)
 		d.Set("ha_gw_size", haGw.GwSize)
 		d.Set("ha_cloud_instance_id", haGw.CloudnGatewayInstID)
+		d.Set("ha_gw_name", haGw.GwName)
 	}
 
 	if haGw.InsaneMode == "yes" && haGw.CloudType == 1 {
