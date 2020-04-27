@@ -24,31 +24,39 @@ data "aviatrix_spoke_gateway" "foo" {
 The following arguments are supported:
 
 * `gw_name` - (Required) Spoke gateway name. This can be used for getting spoke gateway.
-* `account_name` - (Optional) Account name. This can be used for logging in to CloudN console or UserConnect controller.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `gw_name` - Aviatrix spoke gateway name.
-* `account_name` - Aviatrix account name.
 * `cloud_type` - Type of cloud service provider.
-* `vpc_id` - VPC ID.
-* `vpc_reg` - VPC Region.
-* `gw_size` - Instance type.
-* `subnet` - Range of the subnet where the spoke gateway is launched.
-* `public_ip` - Public IP address of the spoke gateway created.
-* `allocate_new_eip` - Description: "Whether the eip is newly allocated or not.
-* `single_az_ha* `Enable/Disable this feature.
-* `transit_gw` - The transit gateway that the spoke gateway is attached to.
-* `tag_list` - Instance tag of cloud provider. Only supported for AWS provider.
-* `insane_mode` - Enable/Disable Insane Mode for Spoke Gateway.
-* `insane_mode_az` - AZ of subnet being created for Insane Mode Spoke Gateway. Required if insane_mode is enabled for aws cloud.
-* `enable_active_mesh` - Enable/Disable Active Mesh Mode for Spoke Gateway.
-* `enable_vpc_dns_server` - Enable/Disalbe vpc_dns_server for Gateway.
-* `enable_encrypt_volume` - Enable encrypt gateway EBS volume. Only supported for AWS provider.
-* `customized_spoke_vpc_routes` - A list of comma separated CIDRs to be customized for the spoke VPC routes. When configured, it will replace all learned routes in VPC routing tables, including RFC1918 and non-RFC1918 CIDRs. It applies to this spoke gateway only​.
-* `filtered_spoke_vpc_routes` - A list of comma separated CIDRs to be filtered from the spoke VPC route table. When configured, filtering CIDR(s) or it’s subnet will be deleted from VPC routing tables as well as from spoke gateway’s routing table. It applies to this spoke gateway only.
-* `included_advertised_spoke_routes` - A list of comma separated CIDRs to be advertised to on-prem as 'Included CIDR List'. When configured, it will replace all advertised routes from this VPC.
-* `cloud_instance_id` - Cloud instance ID
-
+* `account_name` - The name of a Cloud-Account in Aviatrix controller.
+* `vpc_id` - VPC-ID/VNet-Name of cloud provider.
+* `vpc_reg` - Region of cloud provider.
+* `gw_size` - Size of the gateway instance.
+* `subnet` - Public Subnet Info.
+* `insane_mode_az` - AZ of subnet being created for Insane Mode Spoke Gateway.
+* `single_ip_snat` - If Source NAT feature in 'single_ip' mode is on the gateway.
+* `allocate_new_eip` - If allocating a new ip for this gateway.
+* `public_ip` - Public IP of spoke gateway.
+* `ha_subnet` - HA Subnet. Required if enabling HA for AWS/AZURE.
+* `ha_zone` - HA Zone. Required if enabling HA for GCP.
+* `ha_insane_mode_az` - AZ of subnet being created for Insane Mode Spoke HA Gateway. Required if insane_mode is true and ha_subnet is set.
+* `ha_gw_size` - HA Gateway Size.
+* `ha_public_ip` - Public IP address of the HA Spoke Gateway.
+* `single_az_ha` - If this feature is desired.
+* `transit_gw` - The transit gateway to attach this spoke gateway to.
+* `tag_list` - Instance tag of cloud provider.
+* `insane_mode` - If Insane Mode is enabled for Spoke Gateway. If is enabled, gateway size has to at least be c5 size.
+* `enable_active_mesh` - If Active Mesh Mode for spoke gateway.
+* `enable_vpc_dns_server` - If vpc_dns_server is enabled for spoke gateway. Only supports AWS.
+* `enable_encrypt_volume` - If encrypt gateway EBS volume is enabled for spoke gateway. Only supported for AWS provider. 
+* `customized_spoke_vpc_routes` - A list of comma separated CIDRs to be customized for the spoke VPC routes. 
+* `filtered_spoke_vpc_routes` - A list of comma separated CIDRs to be filtered from the spoke VPC route table. 
+* `included_advertised_spoke_routes` - A list of comma separated CIDRs to be advertised to on-prem as "Included CIDR List".​
+* `security_group_id` - Security group used for the spoke gateway.
+* `cloud_instance_id` - Cloud instance ID.
+* `private_ip` - Private IP address of the spoke gateway.
+* `ha_cloud_instance_id` - Cloud instance ID of HA spoke gateway.
+* `ha_gw_name` - Aviatrix spoke gateway unique name of HA spoke gateway.
