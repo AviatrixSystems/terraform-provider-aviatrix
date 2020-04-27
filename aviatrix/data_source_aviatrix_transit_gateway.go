@@ -20,7 +20,7 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 			},
 			"account_name": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Computed:    true,
 				Description: "Name of a Cloud-Account in Aviatrix controller.",
 			},
 			"cloud_type": {
@@ -48,20 +48,55 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Range of the subnet where the transit gateway is launched.",
 			},
-			"public_ip": {
+			"insane_mode_az": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Public IP address of the Transit Gateway created.",
+				Description: "AZ of subnet being created for Insane Mode Spoke Gateway. Required if insane_mode is enabled for aws cloud.",
 			},
 			"allocate_new_eip": {
 				Type:        schema.TypeBool,
 				Computed:    true,
 				Description: "Whether the eip is newly allocated or not.",
 			},
+			"eip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Public IP address of the Transit Gateway created.",
+			},
+			"ha_subnet": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "HA Subnet. Required for enabling HA for AWS/AZURE transit gateway.",
+			},
+			"ha_zone": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "HA Zone. Required if enabling HA for GCP.",
+			},
+			"ha_insane_mode_az": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AZ of subnet being created for Insane Mode Transit HA Gateway. Required if insane_mode is enabled and ha_subnet is set.",
+			},
+			"ha_gw_size": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set).",
+			},
+			"ha_eip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Public IP address that you want assigned to the HA Transit Gateway.",
+			},
 			"single_az_ha": {
 				Type:        schema.TypeBool,
 				Computed:    true,
 				Description: "Enable/Disable this feature.",
+			},
+			"single_ip_snat": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Enable or disable Source NAT feature in 'single_ip' mode for this container.",
 			},
 			"tag_list": {
 				Type:        schema.TypeList,
@@ -83,11 +118,6 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Computed:    true,
 				Description: "Enable/Disable Insane Mode for Spoke Gateway.",
-			},
-			"insane_mode_az": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "AZ of subnet being created for Insane Mode Spoke Gateway. Required if insane_mode is enabled for aws cloud.",
 			},
 			"enable_firenet": {
 				Type:        schema.TypeBool,
@@ -139,6 +169,41 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 					"When configured, it inspects all the advertised CIDRs from its spoke gateways and " +
 					"remove those included in the 'Excluded CIDR List'.​",
 			},
+			"enable_transit_firenet": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Switch to enable/disable transit firenet interfaces for transit gateway.",
+			},
+			"enable_learned_cidrs_approval": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Switch to enable/disable encrypted transit approval for transit gateway.",
+			},
+			"security_group_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Security group used for the transit gateway.",
+			},
+			"cloud_instance_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Instance ID of the transit gateway.",
+			},
+			"private_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Private IP address of the transit gateway created.",
+			},
+			"ha_cloud_instance_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Cloud instance ID of HA transit gateway.",
+			},
+			"ha_gw_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Aviatrix transit gateway unique name of HA transit gateway.",
+			},
 		},
 	}
 }
@@ -150,16 +215,17 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 		GwName: d.Get("gw_name").(string),
 	}
 
-	if d.Get("account_name").(string) != "" {
-		gateway.AccountName = d.Get("account_name").(string)
-	}
-
 	gw, err := client.GetGateway(gateway)
 	if err != nil {
 		return fmt.Errorf("couldn't find Aviatrix Transit Gateway: %s", err)
 	}
 	if gw != nil {
-		if gw.CloudType == 1 || gw.CloudType == 16 || gw.CloudType == 256 {
+		d.Set("cloud_type", gw.CloudType)
+		d.Set("account_name", gw.AccountName)
+		d.Set("gw_name", gw.GwName)
+		d.Set("subnet", gw.VpcNet)
+
+		if gw.CloudType == 1 {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 			d.Set("vpc_reg", gw.VpcRegion)
 			if gw.AllocateNewEipRead {
@@ -171,19 +237,24 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0])
 			d.Set("vpc_reg", gw.GatewayZone)
 			d.Set("allocate_new_eip", true)
-		} else if gw.CloudType == 8 {
+		} else if gw.CloudType == 8 || gw.CloudType == 16 {
 			d.Set("vpc_id", gw.VpcID)
 			d.Set("vpc_reg", gw.VpcRegion)
 			d.Set("allocate_new_eip", true)
 		}
-		d.Set("cloud_type", gw.CloudType)
-		d.Set("account_name", gw.AccountName)
-		d.Set("gw_name", gw.GwName)
-		d.Set("gw_size", gw.GwSize)
-		d.Set("subnet", gw.VpcNet)
-		d.Set("public_ip", gw.PublicIP)
 
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
+		d.Set("eip", gw.PublicIP)
+		d.Set("gw_size", gw.GwSize)
+		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
+		d.Set("security_group_id", gw.GwSecurityGroupID)
+		d.Set("private_ip", gw.PrivateIP)
+
+		if gw.EnableNat == "yes" && gw.SnatMode == "primary" {
+			d.Set("single_ip_snat", true)
+		} else {
+			d.Set("single_ip_snat", false)
+		}
 
 		if gw.SingleAZ == "yes" {
 			d.Set("single_az_ha", true)
@@ -231,6 +302,14 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 			d.Set("excluded_advertised_spoke_routes", "")
 		}
 
+		gwDetail, err := client.GetGatewayDetail(gw)
+		if err != nil {
+			return fmt.Errorf("couldn't get Aviatrix Transit Gateway: %s", err)
+		}
+
+		d.Set("enable_firenet", gwDetail.EnableFireNet)
+		d.Set("enable_transit_firenet", gwDetail.EnableTransitFireNet)
+
 		if gw.EnableActiveMesh == "yes" {
 			d.Set("enable_active_mesh", true)
 		} else {
@@ -243,41 +322,63 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 			d.Set("enable_vpc_dns_server", false)
 		}
 
-		gwDetail, err := client.GetGatewayDetail(gw)
-		if err != nil {
-			return fmt.Errorf("couldn't get Aviatrix Transit Gateway: %s", err)
-		}
-
-		d.Set("enable_firenet", gwDetail.DMZEnabled)
-
 		if gwDetail.EnableAdvertiseTransitCidr == "yes" {
 			d.Set("enable_advertise_transit_cidr", true)
 		} else {
 			d.Set("enable_advertise_transit_cidr", false)
 		}
 
-		if len(gwDetail.BgpManualSpokeAdvertiseCidrs) != 0 {
-			bgpMSAN := ""
-			for i := range gwDetail.BgpManualSpokeAdvertiseCidrs {
-				if i == 0 {
-					bgpMSAN = bgpMSAN + gwDetail.BgpManualSpokeAdvertiseCidrs[i]
-				} else {
-					bgpMSAN = bgpMSAN + "," + gwDetail.BgpManualSpokeAdvertiseCidrs[i]
-				}
-			}
-			d.Set("bgp_manual_spoke_advertise_cidrs", bgpMSAN)
+		if gwDetail.LearnedCidrsApproval == "yes" {
+			d.Set("enable_learned_cidrs_approval", true)
 		} else {
-			d.Set("bgp_manual_spoke_advertise_cidrs", "")
+			d.Set("enable_learned_cidrs_approval", false)
 		}
 
-		if gw.CloudType == 1 {
-			tags := &goaviatrix.Tags{
-				CloudType:    1,
-				ResourceType: "gw",
-				ResourceName: d.Get("gw_name").(string),
+		bgpMSAN := ""
+		for i := range gwDetail.BgpManualSpokeAdvertiseCidrs {
+			if i == 0 {
+				bgpMSAN = bgpMSAN + gwDetail.BgpManualSpokeAdvertiseCidrs[i]
+			} else {
+				bgpMSAN = bgpMSAN + "," + gwDetail.BgpManualSpokeAdvertiseCidrs[i]
 			}
-			tagList, _ := client.GetTags(tags)
+		}
+		d.Set("bgp_manual_spoke_advertise_cidrs", bgpMSAN)
+	}
+
+	if gw.CloudType == 1 {
+		tags := &goaviatrix.Tags{
+			CloudType:    1,
+			ResourceType: "gw",
+			ResourceName: d.Get("gw_name").(string),
+		}
+		tagList, _ := client.GetTags(tags)
+		if tagList != nil && len(tagList) != 0 {
 			d.Set("tag_list", tagList)
+		}
+	}
+
+	haGateway := &goaviatrix.Gateway{
+		AccountName: d.Get("account_name").(string),
+		GwName:      d.Get("gw_name").(string) + "-hagw",
+	}
+	haGw, err := client.GetGateway(haGateway)
+	if haGw != nil {
+		if haGw.CloudType == 1 || haGw.CloudType == 8 || haGw.CloudType == 16 {
+			d.Set("ha_subnet", haGw.VpcNet)
+			d.Set("ha_zone", "")
+		} else if haGw.CloudType == 4 {
+			d.Set("ha_zone", haGw.GatewayZone)
+			d.Set("ha_subnet", "")
+		}
+		d.Set("ha_eip", haGw.PublicIP)
+		d.Set("ha_gw_size", haGw.GwSize)
+		d.Set("ha_cloud_instance_id", haGw.CloudnGatewayInstID)
+		d.Set("ha_gw_name", haGw.GwName)
+
+		if haGw.InsaneMode == "yes" && haGw.CloudType == 1 {
+			d.Set("ha_insane_mode_az", haGw.GatewayZone)
+		} else {
+			d.Set("ha_insane_mode_az", "")
 		}
 	}
 
