@@ -43,7 +43,7 @@ In addition to all arguments above, the following attributes are exported:
 * `ha_zone` - HA Zone. Required if enabling HA for GCP.
 * `ha_insane_mode_az` - AZ of subnet being created for Insane Mode Transit HA Gateway. Required if insane_mode is enabled and ha_subnet is set.
 * `ha_gw_size"` - HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set).
-* `ha_eip` - Public IP address that you want assigned to the HA Transit Gateway.
+* `ha_public_ip` - Public IP address that you want assigned to the HA Transit Gateway.
 * `single_az_ha` - Enable/Disable this feature.
 * `single_ip_snat` - Enable or disable Source NAT feature in 'single_ip' mode for this container.
 * `tag_list` - Instance tag of cloud provider. Only supported for AWS provider.
