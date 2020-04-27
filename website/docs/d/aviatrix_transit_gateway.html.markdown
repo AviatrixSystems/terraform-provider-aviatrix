@@ -38,7 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 * `subnet` - Range of the subnet where the transit gateway is launched.
 * `insane_mode_az` - AZ of subnet being created for Insane Mode Spoke Gateway. Required if insane_mode is enabled for aws cloud.
 * `allocate_new_eip` - Whether the eip is newly allocated or not.
-* `eip` - Public IP address of the Transit Gateway created.
+* `public_ip` - Public IP address of the Transit Gateway created.
 * `ha_subnet` - HA Subnet. Required for enabling HA for AWS/AZURE transit gateway.
 * `ha_zone` - HA Zone. Required if enabling HA for GCP.
 * `ha_insane_mode_az` - AZ of subnet being created for Insane Mode Transit HA Gateway. Required if insane_mode is enabled and ha_subnet is set.

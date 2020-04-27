@@ -58,7 +58,7 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Whether the eip is newly allocated or not.",
 			},
-			"eip": {
+			"public_ip": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Public IP address of the Transit Gateway created.",
@@ -83,7 +83,7 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set).",
 			},
-			"ha_eip": {
+			"ha_public_ip": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Public IP address that you want assigned to the HA Transit Gateway.",
@@ -244,7 +244,7 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 		}
 
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
-		d.Set("eip", gw.PublicIP)
+		d.Set("public_ip", gw.PublicIP)
 		d.Set("gw_size", gw.GwSize)
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 		d.Set("security_group_id", gw.GwSecurityGroupID)
@@ -370,7 +370,7 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 			d.Set("ha_zone", haGw.GatewayZone)
 			d.Set("ha_subnet", "")
 		}
-		d.Set("ha_eip", haGw.PublicIP)
+		d.Set("ha_public_ip", haGw.PublicIP)
 		d.Set("ha_gw_size", haGw.GwSize)
 		d.Set("ha_cloud_instance_id", haGw.CloudnGatewayInstID)
 		d.Set("ha_gw_name", haGw.GwName)
