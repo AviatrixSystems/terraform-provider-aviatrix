@@ -87,7 +87,6 @@ The following arguments are supported:
 * `ha_insane_mode_az` (Optional) AZ of subnet being created for Insane Mode Spoke HA Gateway. Required for AWS if `insane_mode` is enabled and `ha_subnet` is set. Example: AWS: "us-west-1a".
 * `ha_eip` - (Optional) Public IP address that you want to assign to the HA peering instance. If no value is given, a new EIP will automatically be allocated. Only available for AWS.
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if enabling HA. Example: "t2.micro".
-* `ha_private_ip` - (Optional) Private IP address of HA spoke gateway.
 
 ### Insane Mode
 * `insane_mode` - (Optional) Enable Insane Mode for Spoke Gateway. Insane Mode gateway size has to be at least c5 (AWS) or Standard_D3_v2 (AZURE). If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet. Only supported for AWS and Azure. Valid values: true, false.
@@ -129,6 +128,7 @@ In addition to all arguments above, the following attributes are exported:
 * `private_ip` - Private IP address of the spoke gateway created.
 * `ha_cloud_instance_id` - Cloud instance ID of the HA spoke gateway.
 * `ha_gw_name` - Aviatrix spoke gateway unique name of HA spoke gateway.
+* `ha_private_ip` - Private IP address of HA spoke gateway.
 
 The following arguments are deprecated:
 
