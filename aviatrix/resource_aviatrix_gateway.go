@@ -333,11 +333,6 @@ func resourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "ELB DNS Name.",
 			},
-			"public_ip": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Public IP address of the Gateway created.",
-			},
 			"security_group_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -367,11 +362,6 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Aviatrix gateway unique name of HA gateway.",
-			},
-			"peering_ha_public_ip": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Private IP address of the Gateway created.",
 			},
 			"peering_ha_private_ip": {
 				Type:        schema.TypeString,
@@ -971,7 +961,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			}
 		}
 
-		d.Set("public_ip", gw.PublicIP)
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 		d.Set("public_dns_server", gw.PublicDnsServer)
 		d.Set("security_group_id", gw.GwSecurityGroupID)
@@ -1003,7 +992,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				GwName:      d.Get("gw_name").(string) + "-hagw",
 			}
 			d.Set("peering_ha_cloud_instance_id", "")
-			d.Set("peering_ha_public_ip", "")
 			d.Set("peering_ha_subnet", "")
 			d.Set("peering_ha_zone", "")
 			d.Set("peering_ha_eip", "")
@@ -1013,7 +1001,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			if err == nil {
 				d.Set("peering_ha_cloud_instance_id", gwHaGw.CloudnGatewayInstID)
 				d.Set("peering_ha_gw_name", gwHaGw.GwName)
-				d.Set("peering_ha_public_ip", gwHaGw.PublicIP)
 				d.Set("peering_ha_eip", gwHaGw.PublicIP)
 				d.Set("peering_ha_gw_size", gwHaGw.GwSize)
 				d.Set("peering_ha_private_ip", gwHaGw.PrivateIP)
@@ -1040,7 +1027,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			log.Printf("[TRACE] reading peering HA gateway %s: %#v", d.Get("gw_name").(string), gwHaGw)
 		} else {
 			d.Set("peering_ha_cloud_instance_id", "")
-			d.Set("peering_ha_public_ip", "")
 			d.Set("peering_ha_subnet", "")
 			d.Set("peering_ha_zone", "")
 			d.Set("peering_ha_eip", "")

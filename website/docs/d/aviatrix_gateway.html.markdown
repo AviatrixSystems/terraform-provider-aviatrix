@@ -28,7 +28,6 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `gw_name` - Aviatrix gateway name.
 * `account_name` - Account name.
 * `additional_cidrs` - A list of destination CIDR ranges that will also go through the VPN tunnel when Split Tunnel Mode is enabled.
 * `additional_cidrs_designated_gateway` - A list of CIDR ranges separated by comma to configure when 'designated_gateway' feature is enabled.
@@ -47,6 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 * `enable_vpc_dns_server` - Status of Vpc Dns Server for Gateway.
 * `enable_vpn_nat` - Status of VPN NAT.
 * `gw_size` - Size of gateway Instance.
+* `gw_name` - Aviatrix gateway name.
 * `insane_mode` - Status of Insane Mode for Gateway.
 * `insane_mode_az` - AZ of subnet being created for Insane Mode gateway.
 * `ldap_bind_dn` - LDAP bind DN.
