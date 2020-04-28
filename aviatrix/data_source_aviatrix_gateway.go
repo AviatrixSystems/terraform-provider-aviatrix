@@ -283,6 +283,11 @@ func dataSourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Aviatrix gateway unique name of HA gateway.",
 			},
+			"peering_ha_private_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Private IP address of HA gateway.",
+			},
 		},
 	}
 }
@@ -489,6 +494,7 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 			d.Set("peering_ha_gw_name", gwHaGw.GwName)
 			d.Set("peering_ha_public_ip", gwHaGw.PublicIP)
 			d.Set("peering_ha_gw_size", gwHaGw.GwSize)
+			d.Set("peering_ha_private_ip", gwHaGw.PrivateIP)
 			if gwHaGw.CloudType == 1 || gwHaGw.CloudType == 256 {
 				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
 				if gwHaGw.InsaneMode == "yes" {
