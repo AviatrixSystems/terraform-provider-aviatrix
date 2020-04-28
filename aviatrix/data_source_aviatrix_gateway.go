@@ -450,7 +450,6 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
-		d.Set("public_ip", gw.PublicIP)
 
 		if gw.GwSize != "" {
 			d.Set("gw_size", gw.GwSize)
