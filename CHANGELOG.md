@@ -4,22 +4,22 @@
 - Supported Terraform version: **v0.12.x**
 
 ### Features:
-1. Implemented support for dynamically updating ``customized_route_advertise`` in **aviatrix_aws_tgw_vpc_attachment**
-2. Implemented support for controller login SAML Endpoint in **aviatrix_saml_endpoint**
-3. Implemented **data_source_aviatrix_vpc**
-4. New resources to support AWS TGW inter region peering
+1. Implemented support for dynamically updating ``customized_route_advertisement`` in **aviatrix_aws_tgw_vpc_attachment**
+2. Implemented support for SAML authentication for Controller login in **aviatrix_saml_endpoint**
+3. New data source to support referencing specific private/public subnets
+  - **data_source_aviatrix_vpc**
+4. New resources to support AWS TGW inter-region peering
   - **aviatrix_aws_tgw_peering**
   - **aviatrix_aws_tgw_peering_domain_conn**
-5. New resources
+5. Implemented new resource to support connection to External Devices for Transit Network:
   - **aviatrix_transit_external_device_conn**
 
 ### Enhancements:
-1. Added ``peering_ha_gw_name`` in **aviatrix_gateway**, and ``ha_gw_name`` in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** as computed value to output HA gateway name
-2. Added ``peering_ha_private_ip`` in **data_source_aviatrix_gateway**, and ``ha_private_ip`` in **data_source_aviatrix_spoke_gateway** and **data_source_aviatrix_transit_gateway** as computed value to output private IP of HA gateway
-3. Updated **data_source_aviatrix_gateway**, **data_source_aviatrix_spoke_gateway** and **data_source_aviatrix_transit_gateway** to be latest
+1. Added ``peering_ha_gw_name`` in **aviatrix_gateway**, and ``ha_gw_name`` in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** as computed values
+2. Added ``peering_ha_private_ip`` in **data_source_aviatrix_gateway**, and ``ha_private_ip`` in **data_source_aviatrix_spoke_gateway** and **data_source_aviatrix_transit_gateway** as computed values
 
 ### Bug Fixes:
-1. Fixed issue where OpenVPN is not able to be modified when attached to GeoVPN
+1. Fixed issue where OpenVPN configurations are unable to be modified when attached to a GeoVPN
 
 
 ## 2.13.0 (April 02, 2020)
