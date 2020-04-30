@@ -34,7 +34,7 @@ func TestAccDataSourceAviatrixGateway_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
 					resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AWS_REGION")),
-					resource.TestCheckResourceAttr(resourceName, "vpc_size", "t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, "gw_size", "t2.micro"),
 				),
 			},
 		},
@@ -43,7 +43,7 @@ func TestAccDataSourceAviatrixGateway_basic(t *testing.T) {
 
 func testAccDataSourceAviatrixGatewayConfigBasic(rName string) string {
 	return fmt.Sprintf(`
-resource "aviatrix_account" "test_account" {
+resource "aviatrix_account" "test" {
 	account_name 	   = "tfa-%s"
 	cloud_type         = 1
 	aws_account_number = "%s"
@@ -51,9 +51,9 @@ resource "aviatrix_account" "test_account" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-resource "aviatrix_gateway" "test_gw" {
+resource "aviatrix_gateway" "test" {
 	cloud_type   = 1
-	account_name = aviatrix_account.test_account.id
+	account_name = aviatrix_account.test.account_name
 	gw_name      = "tfg-%s"
 	vpc_id       = "%s"
 	vpc_reg      = "%s"
@@ -61,8 +61,7 @@ resource "aviatrix_gateway" "test_gw" {
 	subnet       = "%s"
 }
 data "aviatrix_gateway" "foo" {
-	account_name = aviatrix_gateway.test_gw.account_name
-	gw_name      = aviatrix_gateway.test_gw.gw_name
+	gw_name = aviatrix_gateway.test.gw_name
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"))

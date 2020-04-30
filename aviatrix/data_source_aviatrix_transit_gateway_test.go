@@ -119,7 +119,7 @@ resource "aviatrix_account" "test_account" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
+resource "aviatrix_transit_gateway" "test" {
 	cloud_type   = 1
 	account_name = aviatrix_account.test_account.account_name
 	gw_name      = "tfg-aws-%[1]s"
@@ -129,8 +129,7 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
 	subnet       = "%[7]s"
 }
 data "aviatrix_transit_gateway" "foo" {
-	account_name = aviatrix_transit_gateway.test_transit_gateway_aws.account_name
-	gw_name      = aviatrix_transit_gateway.test_transit_gateway_aws.gw_name
+	gw_name = aviatrix_transit_gateway.test.gw_name
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"))
@@ -146,7 +145,7 @@ resource "aviatrix_account" "test_acc_azure" {
 	arm_application_id  = "%s"
 	arm_application_key = "%s"
 }
-resource "aviatrix_transit_gateway" "test_transit_gateway_azure" {
+resource "aviatrix_transit_gateway" "test" {
 	cloud_type   = 8
 	account_name = aviatrix_account.test_acc_azure.account_name
 	gw_name      = "tfg-azure-%[1]s"
@@ -156,8 +155,7 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_azure" {
 	subnet       = "%[9]s"
 }
 data "aviatrix_transit_gateway" "foo" {
-	account_name = aviatrix_transit_gateway.test_transit_gateway_azure.account_name
-	gw_name      = aviatrix_transit_gateway.test_transit_gateway_azure.gw_name
+	gw_name = aviatrix_transit_gateway.test.gw_name
 }
 	`, rName, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"), os.Getenv("ARM_APPLICATION_ID"),
 		os.Getenv("ARM_APPLICATION_KEY"), os.Getenv("AZURE_VNET_ID"), os.Getenv("AZURE_REGION"),
@@ -176,7 +174,7 @@ resource "aviatrix_account" "test_acc_gcp" {
 	gcloud_project_id                   = "%s"
 	gcloud_project_credentials_filepath = "%s"
 }
-resource "aviatrix_transit_gateway" "test_transit_gateway_gcp" {				
+resource "aviatrix_transit_gateway" "test" {				
 	cloud_type   = 4
 	account_name = aviatrix_account.test_acc_gcp.account_name
 	gw_name      = "tfg-gcp-%[1]s"
@@ -186,8 +184,7 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_gcp" {
 	subnet       = "%[7]s"
 }
 data "aviatrix_transit_gateway" "foo" {
-	account_name = aviatrix_transit_gateway.test_transit_gateway_gcp.account_name
-	gw_name      = aviatrix_transit_gateway.test_transit_gateway_gcp.gw_name
+	gw_name = aviatrix_transit_gateway.test.gw_name
 }
 	`, rName, os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"),
 		os.Getenv("GCP_VPC_ID"), os.Getenv("GCP_ZONE"), gcpGwSize, os.Getenv("GCP_SUBNET"))
