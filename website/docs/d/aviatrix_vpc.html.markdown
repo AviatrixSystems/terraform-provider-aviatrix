@@ -2,17 +2,19 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_vpc"
 description: |-
-  Gets the Aviatrix Vpc.
+  Gets an Aviatrix VPC's details.
 ---
 
 # aviatrix_vpc
 
-Use this data source to get the Aviatrix vpc for use in other resources.
+The **aviatrix_vpc** data source provides details about a specific VPC created by the Aviatrix Controller.
+
+This resource can prove useful when a module accepts any form of VPC detail as an input variable. For example, requiring a subnet CIDR specification when creating a gateway.
 
 ## Example Usage
 
 ```hcl
-# Aviatrix Vpc Data Source
+# Aviatrix VPC Data Source
 data "aviatrix_vpc" "test" {
   name = "vpc-test"
 }
@@ -37,14 +39,14 @@ In addition to all arguments above, the following attributes are exported:
 * `aviatrix_firenet_vpc` - Switch if the VPC created is an Aviatrix FireNet VPC or not.
 * `vpc_id` - ID of the VPC created.
 * `subnets` - List of subnet of the VPC created.
-  * `cidr` - Subnet cidr.
+  * `cidr` - Subnet CIDR.
   * `name` - Subnet name.
   * `subnet_id` - Subnet ID.
 * `public_subnets` - List of public subnet of the VPC created.
-  * `cidr` - Public subnet cidr.
+  * `cidr` - Public subnet CIDR.
   * `name` - Public subnet name.
   * `subnet_id` - Public subnet ID.
 * `private_subnets` - List of private subnet of the VPC created.
-  * `cidr` - Private subnet cidr.
+  * `cidr` - Private subnet CIDR.
   * `name` - Private subnet name.
   * `subnet_id` - Private subnet ID.

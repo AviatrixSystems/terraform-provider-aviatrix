@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_firenet_vendor_integration"
 description: |-
-  Does 'save' or 'sync' for vendor integration purpose for Aviatrix FireNet.
+  Performs 'save' or 'sync' for vendor integration purposes for Aviatrix FireNet.
 ---
 
 # aviatrix_firenet_vendor_integration
 
-Use this data source to do 'save' or 'sync' for vendor integration purpose for Aviatrix FireNet.
+Use this data source to do 'save' or 'sync' for vendor integration purposes for Aviatrix FireNet.
 
 -> **NOTE:** FireNet with Panorama should be set up using the **aviatrix_firenet_firewall_manager** data source. Do not use `save` or `sync` options listed below.
 
