@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_transit_external_device_conn"
 description: |-
-  Creates and Manages Aviatrix transit external device connections
+  Creates and manages Aviatrix transit external device connections
 ---
 
 # aviatrix_transit_external_device_conn
 
-The **aviatrix_transit_external_device_conn** resource creates and manages Aviatrix transit external device connections.
+The **aviatrix_transit_external_device_conn** resource creates and manages the connection between the Aviatrix transit gateway and an External Device for purposes of Transit Network.
 
 ## Example Usage
 
@@ -29,10 +29,10 @@ resource "aviatrix_transit_external_device_conn" "test" {
 The following arguments are supported:
 
 ### Required
-* `vpc_id` - (Required) VPC Id of the cloud gateway.
+* `vpc_id` - (Required) VPC ID of the cloud gateway.
 * `connection_name` - (Required) Site2Cloud Connection Name.
 * `gw_name` - (Required) Site2Cloud Connection Name.
-* `remote_gateway_ip` - (Required) Remote Gateway Type. Valid Values: "generic", "avx", "aws", "azure", "sonicwall", "oracle".
+* `remote_gateway_ip` - (Required) Remote Gateway IP.
 * `connection_type` - (Required) Connection type. Valid values: 'bpg', 'static'. Default value: 'bgp'.
 * `bgp_local_as_num` - (Optional) BGP local ASN (Autonomous System Number). Integer between 1-65535. Required for 'bgp' connection.
 * `bgp_remote_as_num` - (Optional) BGP remote ASN (Autonomous System Number). Integer between 1-65535. Required for 'bgp' connection.
@@ -48,7 +48,7 @@ The following arguments are supported:
 * `backup_direct_connect` - (Optional) Backup direct connect for backup external device.
 
 ### Custom Algorithms
-* `custom_algorithms` - (Optional) Switch to enable custom/non-default algorithms for IPSec Authentication/Encryption. Valid values: true, false. **NOTE: Only supported for 'udp' tunnel type. Please see notes [here](#custom_algorithms-1) for more information.**
+* `custom_algorithms` - (Optional) Switch to enable custom/non-default algorithms for IPSec Authentication/Encryption. Valid values: true, false. **NOTE: Please see notes [here](#custom_algorithms-1) for more information.**
 * `phase_1_authentication` - (Optional) Phase one Authentication. Valid values: 'SHA-1', 'SHA-256', 'SHA-384' and 'SHA-512'. Default value: 'SHA-256'.
 * `phase_2_authentication` - (Optional) Phase two Authentication. Valid values: 'NO-AUTH', 'HMAC-SHA-1', 'HMAC-SHA-256', 'HMAC-SHA-384' and 'HMAC-SHA-512'. Default value: 'HMAC-SHA-256'.
 * `phase_1_dh_groups` - (Optional) Phase one DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'. Default value: '14'.
@@ -74,4 +74,3 @@ $ terraform import aviatrix_transit_external_device_conn.test connection_name~vp
 ## Notes
 ### custom_algorithms
 If set to true, the six algorithm arguments cannot all be default value. If set to false, default values will be used for all six algorithm arguments.
-
