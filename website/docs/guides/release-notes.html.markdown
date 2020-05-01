@@ -12,10 +12,34 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.13 (UserConnect-5.4.1074)``
+``Last updated: R2.14 (UserConnect-5.4.1166)``
 
 
 ---
+
+## 2.14.0 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-5.4.1166**
+- Supported Terraform version: **v0.12.x**
+
+### Features:
+1. Implemented support for dynamically updating ``customized_route_advertisement`` in **aviatrix_aws_tgw_vpc_attachment**
+2. Implemented support for SAML authentication for Controller login in **aviatrix_saml_endpoint**
+3. New data source to support referencing specific private/public subnets:
+  - **data_source_aviatrix_vpc**
+4. New resources to support AWS TGW inter-region peering:
+  - **aviatrix_aws_tgw_peering**
+  - **aviatrix_aws_tgw_peering_domain_conn**
+5. Implemented new resource to support connection to External Devices for Transit Network:
+  - **aviatrix_transit_external_device_conn**
+
+### Enhancements:
+1. Added ``peering_ha_gw_name`` in **aviatrix_gateway**, and ``ha_gw_name`` in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** as computed values
+2. Added ``peering_ha_private_ip`` in **data_source_aviatrix_gateway**, and ``ha_private_ip`` in **data_source_aviatrix_spoke_gateway** and **data_source_aviatrix_transit_gateway** as computed values
+
+### Bug Fixes:
+1. Fixed issue where OpenVPN configurations are unable to be modified when attached to a GeoVPN
+
 
 ## 2.13.0
 ### Notes:

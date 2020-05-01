@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.13 (UserConnect-5.4.1074)``
+``Last updated: R2.14 (UserConnect-5.4.1166)``
 
 
 ---
@@ -170,3 +170,11 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |:----:|----------------|:-----------------:|----------------------------|
 |(deprecated) | account_user | account_name | **Yes**; ``account_name`` has been deprecated due to the new Role-based Access Control feature (RBAC) implementation in 5.4. This attribute must be removed from the .tf files and a ``terraform refresh`` will rectify the state file. |
 |(new) | aws_tgw        | manage_transit_gateway_attachment | **No**; New attribute flag added to support managing transit gateway attachments to the AWS TGW outside of the resource, using the **aviatrix_aws_tgw_transit_gateway_attachment**. A simple ``terraform refresh`` will apply this attribute's default value (true) and rectify the state |
+
+
+## R2.14 (UserConnect-5.4.1166) (Terraform v0.12)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(deprecated) | gateway | public_ip, peering_ha_public_ip | **Yes**; these attributes have been deprecated in favor of `eip` and `peering_ha_eip` to maintain consistency between gateway types. If any Terraform configuration of other resources reference this attribute, replace them with the aforementioned attributes respectively. |
+|(new) | --             | peering_ha_gw_name, peering_ha_private_ip| **No**; these are two new attributes that will be exported as output values in the resource, and can be referenced as necessary in other resources or modules. |
+|(new) | spoke_gateway, transit_gateway | ha_gw_name, ha_private_ip | **No**; see above for details |

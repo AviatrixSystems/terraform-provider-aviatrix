@@ -234,6 +234,8 @@ The following arguments are deprecated:
   * `new_src_port` - (Optional) The translated destination port when all specified qualifier conditions meet. One of the rule field must be specified for this rule to take effect.
   * `exclude_rtb` - (Optional) This field specifies which VPC private route table will not be programmed with the default route entry.
 * `cloudn_bkup_gateway_inst_id` - Instance ID of the backup gateway.
+* `public_ip` - Public IP address of the gateway created.
+* `peering_ha_public_ip` - Public IP address of the peering HA Gateway created.
 
 ## Import
 
