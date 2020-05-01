@@ -17,8 +17,9 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-## 2.14.0 (Unreleased)
+## 2.14.0
 ### Notes:
+- Release date: **??**
 - Supported Controller version: **UserConnect-5.4.1166**
 - Supported Terraform version: **v0.12.x**
 
@@ -48,14 +49,14 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 - Supported Terraform version: **v0.12.x**
 
 ### Features:
-1. Implemented support for ``enable_learned_cidrs_approval`` in **aviatrix_transit_gateway**, **aws_tgw_vpn_conn** and **aws_tgw_directconnect**
+1. Implemented support for ``enable_learned_cidrs_approval`` in **aviatrix_transit_gateway**, **aviatrix_aws_tgw_vpn_conn** and **aviatrix_aws_tgw_directconnect**
 2. Implemented a new parameter ``manage_transit_gateway_attachment`` to provide the option of attaching/detaching transit gateway to/from AWS TGW outside of **aviatrix_aws_tgw** resource
 3. New resources to support Role-Based Access Control (RBAC) feature in Controller 5.4 release:
   - **aviatrix_rbac_group**
   - **aviatrix_rbac_group_access_account_attachment**
   - **aviatrix_rbac_group_permission_attachment**
   - **aviatrix_rbac_group_user_attachment**
-4. New resources
+4. New resources:
   - **aviatrix_aws_tgw_transit_gateway_attachment**
 
 ### Enhancements:
@@ -73,20 +74,20 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 - Supported Terraform version: **v0.12.x**
 
 ### Features:
-1. Implemented support for Transit FireNet
+1. Implemented support for Transit FireNet:
   - ``enable_transit_firenet`` in **aviatrix_transit_gateway**
   - ``username`` and ``password`` in **aviatrix_firewall_instance** for Azure (Transit) FireNet
 2. New resources for Transit FireNet:
   - **aviatrix_transit_firenet_policy**
   - **aviatrix_firewall_management_access**
-3. New resources
+3. New resources:
   - **aviatrix_azure_spoke_native_peering**
 4. New resource **aviatrix_azure_peer** to replace **aviatrix_arm_peer**
 5. Implemented support for Azure VNet in **aviatrix_vpc** resource
 
 ### Enhancements:
 1. Enhanced handling enabling/disabling active-mesh and attaching/detaching to/from transit actions during updates in **aviatrix_spoke_gateway**
-2. The following computed attributes are now available in in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+2. The following computed attributes are now available in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**:
   - ``private_ip``
   - ``instance_id``
   - ``security_group_id``
