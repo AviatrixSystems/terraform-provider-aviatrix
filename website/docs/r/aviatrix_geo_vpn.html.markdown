@@ -9,6 +9,8 @@ description: |-
 
 The **aviatrix_geo_vpn** resource enables and manages the Aviatrix Geo VPN.
 
+~> **NOTE:** If ELBs/gateways are being managed by the Geo VPN, in order to update VPN configurations of the Geo VPN, all the VPN configurations of the ELBs/gateways must be updated simultaneously and share the same values. This can be achieved by managing the VPN configurations through variables and updating their values accordingly.
+
 ## Example Usage
 
 ```hcl

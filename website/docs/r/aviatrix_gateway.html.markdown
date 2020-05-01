@@ -156,6 +156,8 @@ The following arguments are supported:
 ~> **NOTE:** Custom DNAT support has been deprecated and functionality has been moved to **aviatrix_gateway_dnat** in provider version R2.10. Please see notes [here](#dnat_policy-1).
 
 ### VPN Access
+~> **NOTE:** If the ELB/gateway is being managed by a Geo VPN, in order to update VPN configurations of the Geo VPN, all the VPN configurations of the ELBs/gateways must be updated simultaneously and share the same values. This can be achieved by managing the VPN configurations through variables and updating their values accordingly.
+
 * `vpn_access` - (Optional) Enable user access through VPN to this gateway. Valid values: true, false.
 * `vpn_cidr` - (Optional) VPN CIDR block for the gateway. Required if `vpn_access` is true. Example: "192.168.43.0/24".
 * `max_vpn_conn` - (Optional) Maximum number of active VPN users allowed to be connected to this gateway. Required if `vpn_access` is true. Make sure the number is smaller than the VPN CIDR block. Example: 100. **NOTE: Please see notes [here](#max_vpn_conn-1) in regards to any deltas found in your state with the addition of this argument in R1.14.**
