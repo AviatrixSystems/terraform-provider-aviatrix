@@ -60,27 +60,26 @@ This phase involves first upgrading the Controller to 4.7. Afterwards, customers
   - [Aviatrix Terraform Provider Release Notes](https://www.terraform.io/docs/providers/aviatrix/guides/release-notes.html)
 3. Update Aviatrix Terraform provider:
   - Navigate to Aviatrix Terraform provider directory:
-    - Mac:
-      - ``cd $GOPATH/src/github.com/terraform-providers``
-    - Windows:
-      - ``cd %GOPATH%\src\github.com\terraform-providers\terraform-provider-aviatrix``
+      - Mac:
+          - ``cd $GOPATH/src/github.com/terraform-providers``
+      - Windows:
+          - ``cd %GOPATH%\src\github.com\terraform-providers\terraform-provider-aviatrix``
   - Update repository by pulling changes:
-    - ``git pull``
+      - ``git pull``
   - Change branch to **UserConnect-4.7-TF.11**:
-    - ``git checkout UserConnect-4.7-TF.11``
+      - ``git checkout UserConnect-4.7-TF.11``
   - Build the provider:
-    - Mac:
-      - ``make fmt``
-      - ``make build``
-    - Windows:
-      - ``go fmt``
-      - ``go install``
+      - Mac:
+          - ``make fmt``
+          - ``make build``
+      - Windows:
+          - ``go fmt``
+          - ``go install``
 4. Navigate to your Terraform directory/ directories and refresh Terraform state to update:
   - ``terraform init`` - to reinitialise a working Terraform environment for the current directory
   - ``terraform refresh``
-  - Please perform a plan command to note any deltas:
-    - ``terraform plan``
-    - If there are any deltas still, you may fix and run refresh/ plan again accordingly
+  - ``terraform plan`` - please perform a plan command to note any deltas:
+      - If there are any deltas still, you may fix and run refresh/ plan again accordingly
 
 ### Example Walk-through
 Say you are upgrading from Controller 4.1, Terraform v0.11, Aviatrix Terraform provider R1.1. And for example, you are using Terraform to manage your topology consisting of single AWS VPN gateway that you use to connect VPN users. Your Terraform file(s) might look something like this:
@@ -168,27 +167,26 @@ This phase involves upgrading Hashicorp's Terraform from v0.11 to v0.12. As far 
 
 3. Update Aviatrix Terraform provider:
   - Navigate to Aviatrix Terraform provider directory:
-    - Mac:
-      - ``cd $GOPATH/src/github.com/terraform-providers``
-    - Windows:
-      - ``cd %GOPATH%\src\github.com\terraform-providers\terraform-provider-aviatrix``
+      - Mac:
+          - ``cd $GOPATH/src/github.com/terraform-providers``
+      - Windows:
+          - ``cd %GOPATH%\src\github.com\terraform-providers\terraform-provider-aviatrix``
   - Update repository by pulling changes:
-    - ``git pull``
+      - ``git pull``
   - Change branch to **UserConnect-4.7-TF.12-v1**:
-    - ``git checkout UserConnect-4.7-TF.12-v1``
+      - ``git checkout UserConnect-4.7-TF.12-v1``
   - Build the provider:
-    - Mac:
-      - ``make fmt``
-      - ``make build``
-    - Windows:
-      - ``go fmt``
-      - ``go install``
+      - Mac:
+          - ``make fmt``
+          - ``make build``
+      - Windows:
+          - ``go fmt``
+          - ``go install``
 4. Navigate to your Terraform directory/ directories and refresh Terraform state to update:
   - ``terraform init`` - to reinitialise a working Terraform environment for the current directory
   - ``terraform refresh``
-  - Please perform a plan command to note any deltas:
-    - ``terraform plan``
-    - If there are any deltas still, you may fix and run refresh/ plan again accordingly
+  - ``terraform plan`` - please perform a plan command to note any deltas
+      - If there are any deltas still, you may fix and run refresh/ plan again accordingly
 
 ### Example Walk-through
 As stated previously, as far as the Aviatrix Terraform provider is concerned, Hashicorp's Terraform's v0.12 only involves syntactical changes in regards to certain resources. You will need to first follow Hashicorp's [upgrade instructions](https://www.terraform.io/upgrade-guides/0-12.html) as seen in Step 1 of this phase; please see the [Hashicorp Terraform v0.12 release notes](https://www.hashicorp.com/blog/announcing-terraform-0-12) as well. Upon doing so, you will need to update your Terraform file(s) to accommodate for the new syntactical changes.
@@ -271,37 +269,37 @@ Navigate to your local Aviatrix Terraform provider repository, which by default,
   - [Aviatrix Provider R2.x Feature Changelist](https://www.terraform.io/docs/providers/aviatrix/guides/feature-changelist-v2.html)
 2. Update Aviatrix Terraform provider:
   - Navigate to Aviatrix Terraform provider directory:
-    - Mac:
-      - ``cd $GOPATH/src/github.com/terraform-providers``
-    - Windows:
-      - ``cd %GOPATH%\src\github.com\terraform-providers\terraform-provider-aviatrix``
+      - Mac:
+          - ``cd $GOPATH/src/github.com/terraform-providers``
+      - Windows:
+          - ``cd %GOPATH%\src\github.com\terraform-providers\terraform-provider-aviatrix``
   - Update repository by pulling changes:
-    - ``git pull``
+      - ``git pull``
   - Change branch to **UserConnect-4.7-TF.12-v2**:
-    - ``git checkout UserConnect-4.7-TF.12-v2``
+      - ``git checkout UserConnect-4.7-TF.12-v2``
   - Build the provider:
-    - Mac:
-      - ``make fmt``
-      - ``make build``
-    - Windows:
-      - ``go fmt``
-      - ``go install``
+      - Mac:
+          - ``make fmt``
+          - ``make build``
+      - Windows:
+          - ``go fmt``
+          - ``go install``
 3. Navigate to your Terraform directory/ directories and refresh/ import to update:
   - ``terraform init`` - to reinitialise a working Terraform environment for the current directory
   - **Rules to determine whether to refresh or import:**
-  - **NOTE:** Rules are listed in terms of priority. Import takes precedence over refresh; meaning if your resource has one of the below import rules apply, that resource will require an import no matter how many of the refresh rules apply to it
-    - If you are using **transit_vpc** or **spoke_vpc** resources, note they are deprecated and support will eventually be removed. **transit_gateway** and **spoke_gateway** will replace them respectively. ``terraform import`` for these resources must be done to rectify the state
-      - **Please refer to the documentation in step 1 for more detailed instructions**
-    - If your resource uses an attribute whose accepted values changed, ``terraform import`` must be done to rectify the state
-    - If your resource uses an attribute that has been renamed, ``terraform refresh`` is sufficient to rectify the state
-    - If your resource uses an attribute that has been renamed **AND** had its accepted values changed, ``terraform refresh`` is sufficient to rectify the state
+      - **NOTE:** Rules are listed in terms of priority. Import takes precedence over refresh; meaning if your resource has one of the below import rules apply, that resource will require an import no matter how many of the refresh rules apply to it
+          - If you are using **transit_vpc** or **spoke_vpc** resources, note they are deprecated and support will eventually be removed. **transit_gateway** and **spoke_gateway** will replace them respectively. ``terraform import`` for these resources must be done to rectify the state
+              - **Please refer to the documentation in step 1 for more detailed instructions**
+      - If your resource uses an attribute whose accepted values changed, ``terraform import`` must be done to rectify the state
+      - If your resource uses an attribute that has been renamed, ``terraform refresh`` is sufficient to rectify the state
+      - If your resource uses an attribute that has been renamed **AND** had its accepted values changed, ``terraform refresh`` is sufficient to rectify the state
 
 ### Example Walk-through
 Phase 3 will definitely be a larger task, but is still nothing too different from what has been done in the previous 2 phases. Here we will use an example to demonstrate the refresh/ import rules more clearly.
 
--> **NOTE:** Please note that when a ``terraform import`` command is being referred to in the context of this upgrade process, the resource in question must be removed from the Terraform state first. An import requires the resource to be removed from the state because normally, importing is used for bringing existing infrastructure created from other means, under Terraform management, which assumes the resource does not exist in the state. For details on how to safely remove a resource(s) from the state, please refer to the [**state rm**](https://www.terraform.io/docs/commands/state/rm.html) command.
+-> **NOTE:** Please note that when a ``terraform import`` command is being referred to in the context of this upgrade process, the resource in question must be removed from the Terraform state first. An import requires the resource to be removed from the state because normally, importing is used for bringing existing infrastructure created from other means, under Terraform management. This assumes the resource in question does not exist in the state. For details on how to safely remove a resource(s) from the state, please refer to the [**state rm**](https://www.terraform.io/docs/commands/state/rm.html) command.
 
-Let's say you have finished Phase 2, and are currently on Controller 4.7, Terraform v0.12 and now you need to upgrade your Aviatrix Terraform provider to R2.0. Let's take the completed vpn-configuration example from Phase 1:
+Let's say you have finished Phase 2, and are currently on Controller 4.7, Terraform v0.12 and now you need to upgrade your Aviatrix Terraform provider to R2.0. Let's take the completed VPN configuration example from Phase 1:
 
 ```hcl
 # VPN_setup.tf
@@ -332,6 +330,8 @@ resource "aviatrix_gateway" "aws_vpn_gw" {
 
 We will now need to update our Terraform file(s). In this case, note that due to the attribute re-naming, we will have to rename attributes such as ``vpc_size`` and ``vpc_net`` to ``gw_size`` and ``subnet``, respectively, as it is much more clear as to what these attributes refer to. ``enable_nat`` must also be changed to ``enable_snat`` here. In addition, due to boolean standardization, ``enable_snat``'s accepted value is changed from 'yes'/'no' to true/ false. ``vpn_access`` and ``enable_elb`` here did not get renamed, but the accepted value has also changed to boolean.
 
+**EDIT:** As of Aviatrix provider release R2.10, ``enable_snat`` has been renamed to ``single_ip_snat``. Please refer to the [R2.10 table](https://www.terraform.io/docs/providers/aviatrix/guides/feature-changelist-v2.html#r2-10-userconnect-5-2-2122-terraform-v0-12-) in the Features Changelist for more details. More on the Feature Changelist documentation is noted below in the following [section](#beyond-phase-3-to-infinity-and-beyond).
+
 The updated file should now look something like:
 
 ```hcl
@@ -354,7 +354,9 @@ resource "aviatrix_gateway" "aws_vpn_gw" {
   enable_elb    = true # "yes" -> true
   elb_name      = "example-elb-name"
 
-  enable_snat   = true # enable_nat = "yes" -> enable_snat = true
+  # enable_snat   = true # enable_nat = "yes" -> enable_snat = true
+  single_ip_snat = true # as of R2.10, enable_snat has been renamed to single_ip_snat
+
   # ...
 
 }
@@ -364,14 +366,14 @@ Once again, as in the previous two phases, you will have to update your Aviatrix
 
 Navigate to your local Aviatrix Terraform provider repository, which by default, if setup according to our initial setup doc [here](https://github.com/terraform-providers/terraform-provider-aviatrix/blob/master/README.md), is ``$GOPATH/src/github.com/terraform-providers``. We will then use Git to pull latest changes from our remote repository (``git pull``), and switch to the branch that corresponds with our Controller version (``git checkout UserConnect-4.7-TF.12-v2``). Build the provider as according to Step 3 depending on your OS. Finally, navigate back to where your Terraform files reside, and perform a ``terraform init`` to reinitialise the Terraform environment for the current directory based on the new provider.
 
--> **NOTE:** Please note that when a ``terraform import`` command is being referred to in the context of this upgrade process, the resource in question must be removed from the Terraform state first. An import requires the resource to be removed from the state because normally, importing is used for bringing existing infrastructure created from other means, under Terraform management, which assumes the resource does not exist in the state. For details on how to safely remove a resource(s) from the state, please refer to the [**state rm**](https://www.terraform.io/docs/commands/state/rm.html) command.
+-> **NOTE:** Please note that when a ``terraform import`` command is being referred to in the context of this upgrade process, the resource in question must be removed from the Terraform state first. An import requires the resource to be removed from the state because normally, importing is used for bringing existing infrastructure created from other means, under Terraform management. This assumes the resource in question does not exist in the state. For details on how to safely remove a resource(s) from the state, please refer to the [**state rm**](https://www.terraform.io/docs/commands/state/rm.html) command.
 
 Now, to determine whether or not to do a ``terraform refresh`` or ``terraform import``, refer to the rules in Step 3 of this phase. In this example, according to the stated rules, because attributes ``vpc_size`` and ``vpc_net`` got renamed, and ``enable_nat`` got renamed and changed to accept boolean, it would seem this gateway resource would only need a ``terraform refresh``. However, because this vpn-gateway uses the attribute ``vpn_access``, whose only change is that the accepted value got changed to boolean, this resource would need to a ``terraform import`` instead, because the import rule would take precedence over refresh. After performing the necessary ``terraform refresh`` / ``terraform import`` (per resource), a ``terraform plan`` may be performed to catch any deltas. If there are still any deltas, you may fix and repeat again.
 
 ---
-## Beyond Phase 3: to infinity and beyond ~
+## Beyond Phase 3: to infinity and beyond
 - Any updates/ future releases for the Aviatrix Terraform provider will continue to be documented here:
   - [Aviatrix Terraform Provider Release Notes](https://www.terraform.io/docs/providers/aviatrix/guides/release-notes.html)
 - Any updates/ future releases for R2.0+ that might impact customers will continue to be documented here:
   - [Aviatrix Terraform Provider R2.x Feature Changelist](https://www.terraform.io/docs/providers/aviatrix/guides/feature-changelist-v2.html)
-  - Any future necessary changes will only be simple and only require small tweaks and a ``terraform refresh``
+  - Any future necessary changes will only be simple and only require small tweaks and a ``terraform refresh`` unless stated otherwise
