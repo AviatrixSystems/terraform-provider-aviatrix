@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_site2cloud
 
-The **aviatrix_site2cloud** resource creates and manages Aviatrix Site2Cloud connections.
+The **aviatrix_site2cloud** resource creates and manages Aviatrix-created Site2Cloud connections.
 
 ## Example Usage
 

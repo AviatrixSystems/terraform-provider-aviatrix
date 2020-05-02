@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_transit_gateway"
 description: |-
-  Creates and manages the Aviatrix transit network gateways
+  Creates and manages the Aviatrix Transit Network gateways
 ---
 
 # aviatrix_transit_gateway
 
-The **aviatrix_transit_gateway** resource allows the creation and management of Aviatrix transit network gateways.
+The **aviatrix_transit_gateway** resource allows the creation and management of [Aviatrix Transit Network](https://docs.aviatrix.com/HowTos/transitvpc_faq.html#) gateways.
 
 ## Example Usage
 
@@ -88,7 +88,7 @@ The following arguments are supported:
 * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode-1).**
 
 ### HA
-* `single_az_ha` (Optional) Set to true if this feature is desired. Valid values: true, false.
+* `single_az_ha` (Optional) Set to true if this [feature](https://docs.aviatrix.com/Solutions/gateway_ha.html#single-az-gateway) is desired. Valid values: true, false.
 * `ha_subnet` - (Optional) HA Subnet CIDR. Required only if enabling HA for AWS/Azure gateway. Setting to empty/unsetting will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24".
 * `ha_zone` - (Optional) HA Zone. Required only if enabling HA for GCP gateway. Setting to empty/unsetting will disable HA. Setting to a valid zone will create an HA gateway in the zone. Example: "us-west1-c".
 * `ha_insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit HA Gateway. Required for AWS if `insane_mode` is enabled and `ha_subnet` is set. Example: AWS: "us-west-1a".
@@ -96,7 +96,7 @@ The following arguments are supported:
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if enabling HA. Example: "t2.micro".
 
 ### Insane Mode
-* `insane_mode` - (Optional) Specify Insane Mode high performance gateway. Insane Mode gateway size must be at least c5 size (AWS) or Standard_D3_v2 (AZURE). If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet. Only available for AWS and Azure. Valid values: true, false.
+* `insane_mode` - (Optional) Specify true for [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) high performance gateway. Insane Mode gateway size must be at least c5 size (AWS) or Standard_D3_v2 (AZURE). If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet. Only available for AWS and Azure. Valid values: true, false.
 * `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit Gateway. Required for AWS if `insane_mode` is enabled. Example: AWS: "us-west-1a".
 
 ### SNAT
@@ -111,7 +111,7 @@ The following arguments are supported:
 
 -> **NOTE:** Enabling FireNet will automatically enable hybrid connection. If `enable_firenet` is set to true, please set `enable_hybrid_connection` to true in the respective **aviatrix_transit_gateway** as well.
 
-* `enable_transit_firenet` - (Optional) Sign of readiness for transit FireNet connection. Valid values: true, false. Default value: false.
+* `enable_transit_firenet` - (Optional) Sign of readiness for [Transit FireNet](https://docs.aviatrix.com/HowTos/transit_firenet_faq.html) connection. Valid values: true, false. Default value: false.
 
 ### Encryption
 * `enable_encrypt_volume` - (Optional) Enable EBS volume encryption for Gateway. Only supports AWS. Valid values: true, false. Default value: false.
@@ -126,9 +126,9 @@ The following arguments are supported:
 * `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in Controller 4.7+. Valid values: true, false. Default: true. Option not available for GCP, Azure and OCI gateways, they will automatically allocate new EIPs.
 * `eip` - (Optional) Required when `allocate_new_eip` is false. It uses the specified EIP for this gateway. Available in Controller version 4.7+. Only available for AWS.
 * `tag_list` - (Optional) Instance tag of cloud provider. Only supported for AWS. Example: ["key1:value1","key2:value2"].
-* `enable_active_mesh` - (Optional) Switch to enable/disable Active Mesh Mode for Transit Gateway. Valid values: true, false. Default value: false.
+* `enable_active_mesh` - (Optional) Switch to enable/disable [Active Mesh Mode](https://docs.aviatrix.com/HowTos/activemesh_faq.html) for Transit Gateway. Valid values: true, false. Default value: false.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS. Valid values: true, false. Default value: false.
-* `enable_learned_cidrs_approval` - (Optional) Switch to enable/disable encrypted transit approval for transit Gateway. Valid values: true, false. Default value: false.
+* `enable_learned_cidrs_approval` - (Optional) Switch to enable/disable [encrypted transit approval](https://docs.aviatrix.com/HowTos/transit_approval.html) for transit Gateway. Valid values: true, false. Default value: false.
 
 
 ## Attribute Reference

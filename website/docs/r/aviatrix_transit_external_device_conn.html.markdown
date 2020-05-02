@@ -9,6 +9,8 @@ description: |-
 
 The **aviatrix_transit_external_device_conn** resource creates and manages the connection between the Aviatrix transit gateway and an External Device for purposes of Transit Network.
 
+For more information on this feature, please see documentation [here](https://docs.aviatrix.com/HowTos/transitgw_external.html).
+
 ## Example Usage
 
 ```hcl

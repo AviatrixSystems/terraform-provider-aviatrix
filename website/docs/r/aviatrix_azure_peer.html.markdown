@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_azure_peer
 
-The **aviatrix_azure_peer** resource allows the creation and management of the Aviatrix peerings between Azure VNets.
+The **aviatrix_azure_peer** resource allows the creation and management of the Aviatrix-created peerings between Azure VNets.
 
 ## Example Usage
 

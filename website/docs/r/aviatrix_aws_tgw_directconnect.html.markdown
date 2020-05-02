@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_aws_tgw_directconnect
 
-The **aviatrix_aws_tgw_directconnect** resource allows the creation and management of Aviatrix AWS TGW DirectConnect connections.
+The **aviatrix_aws_tgw_directconnect** resource allows the creation and management of Aviatrix-created AWS TGW DirectConnect connections.
 
 ## Example Usage
 
@@ -32,7 +32,7 @@ The following arguments are supported:
 * `dx_gateway_id` - (Required) This parameter represents the name of a Direct Connect Gateway ID.
 * `security_domain_name` - (Required) The name of a security domain, to which the direct connect gateway will be attached.
 * `allowed_prefix` - (Required) A list of comma separated CIDRs for DXGW to advertise to remote(on-prem).
-* `enable_learned_cidrs_approval` - (Optional) Switch to enable/disable encrypted transit approval for aws tgw direct connect. Valid values: true, false. Default value: false.
+* `enable_learned_cidrs_approval` - (Optional) Switch to enable/disable [encrypted transit approval](https://docs.aviatrix.com/HowTos/tgw_approval.html) for AWS TGW DirectConnect. Valid values: true, false. Default value: false.
 
 ## Import
 

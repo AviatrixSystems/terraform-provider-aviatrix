@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_aws_tgw_peering
 
-The **aviatrix_aws_tgw_peering** resource allows the creation and management of inter-region peerings between AWS TGWs.
+The **aviatrix_aws_tgw_peering** resource allows the creation and management of Aviatrix-created inter-region peerings between AWS TGWs.
 
 ## Example Usage
 

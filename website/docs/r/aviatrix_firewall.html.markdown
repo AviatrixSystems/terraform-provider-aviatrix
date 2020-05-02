@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_firewall
 
-The **aviatrix_firewall** resource allows the creation and management of Aviatrix Firewall policies.
+The **aviatrix_firewall** resource allows the creation and management of [Aviatrix Stateful Firewall](https://docs.aviatrix.com/HowTos/stateful_firewall_faq.html) policies.
 
 ## Example Usage
 

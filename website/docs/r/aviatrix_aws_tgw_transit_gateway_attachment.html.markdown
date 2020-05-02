@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_aws_tgw_transit_gateway_attachment
 
-The **aviatrix_aws_tgw_transit_gateway_attachment** resource manages the attachment of the transit gateway to the AWS TGW.
+The **aviatrix_aws_tgw_transit_gateway_attachment** resource manages the attachment of the Aviatrix transit gateway to the AWS TGW.
 
 ## Example Usage
 
