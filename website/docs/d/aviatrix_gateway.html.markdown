@@ -9,7 +9,7 @@ description: |-
 
 The **aviatrix_gateway** data source provides details about a specific gateway created by the Aviatrix Controller.
 
-This resource can prove useful when a module accepts a gateway's detail as an input variable. For example, requiring the gateway's name configuring a site2cloud connection.
+This data source can prove useful when a module accepts a gateway's detail as an input variable. For example, requiring the gateway's name configuring a site2cloud connection.
 
 ## Example Usage
 

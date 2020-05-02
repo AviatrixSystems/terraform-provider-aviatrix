@@ -9,7 +9,7 @@ description: |-
 
 The **aviatrix_spoke_gateway** data source provides details about a specific spoke gateway created by the Aviatrix Controller.
 
-This resource can prove useful when a module accepts a spoke gateway's detail as an input variable.
+This data source can prove useful when a module accepts a spoke gateway's detail as an input variable.
 
 ## Example Usage
 

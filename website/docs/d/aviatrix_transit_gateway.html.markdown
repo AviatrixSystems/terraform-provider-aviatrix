@@ -9,7 +9,7 @@ description: |-
 
 The **aviatrix_transit_gateway** data source provides details about a specific transit gateway created by the Aviatrix Controller.
 
-This resource can prove useful when a module accepts a transit gateway's detail as an input variable. For example, requiring the transit gateway's name for a spoke gateway's attachment.
+This data source can prove useful when a module accepts a transit gateway's detail as an input variable. For example, requiring the transit gateway's name for a spoke gateway's attachment.
 
 ## Example Usage
 

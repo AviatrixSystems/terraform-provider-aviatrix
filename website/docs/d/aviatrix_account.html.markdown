@@ -9,7 +9,7 @@ description: |-
 
 The **aviatrix_account** data source provides details about a specific cloud account created by the Aviatrix Controller.
 
-This resource can prove useful when a module accepts an account's detail as an input variable.
+This data source can prove useful when a module accepts an account's detail as an input variable.
 
 ## Example Usage
 

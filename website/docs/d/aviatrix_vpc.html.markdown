@@ -9,7 +9,7 @@ description: |-
 
 The **aviatrix_vpc** data source provides details about a specific VPC created by the Aviatrix Controller.
 
-This resource can prove useful when a module accepts any form of VPC detail as an input variable. For example, requiring a subnet CIDR specification when creating a gateway.
+This data source can prove useful when a module accepts any form of VPC detail as an input variable. For example, requiring a subnet CIDR specification when creating a gateway.
 
 ## Example Usage
 

@@ -9,7 +9,7 @@ description: |-
 
 The **aviatrix_firenet** data source provides details about a specific FireNet created by the Aviatrix Controller.
 
-This resource can prove useful when a module accepts a FireNet's detail as an input variable.
+This data source can prove useful when a module accepts a FireNet's detail as an input variable.
 
 ## Example Usage
 
