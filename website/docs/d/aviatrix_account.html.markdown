@@ -2,12 +2,14 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_account"
 description: |-
-  Gets the an Aviatrix cloud account.
+  Gets an Aviatrix cloud account's details.
 ---
 
 # aviatrix_account
 
-Use this data source to get the Aviatrix cloud account for use in other resources.
+The **aviatrix_account** data source provides details about a specific cloud account created by the Aviatrix Controller.
+
+This data source can prove useful when a module accepts an account's detail as an input variable.
 
 ## Example Usage
 

@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_fqdn
 
-The **aviatrix_fqdn** resource manages FQDN filtering for Aviatrix gateways.
+The **aviatrix_fqdn** resource manages [FQDN filtering](https://docs.aviatrix.com/HowTos/fqdn_faq.html) for Aviatrix gateways.
 
 ## Example Usage
 

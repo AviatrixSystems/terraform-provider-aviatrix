@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_caller_identity"
 description: |-
-  Gets the an Aviatrix caller identity.
+  Gets the Aviatrix caller identity.
 ---
 
 # aviatrix_caller_identity
 
-Use this data source to get the Aviatrix caller identity for use in other resources.
+The **aviatrix_caller_identity** data source provides the Aviatrix CID for use in other resources.
 
 ## Example Usage
 

@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_aws_tgw_peering_domain_conn"
 description: |-
-  Creates and manages Aviatrix domain connections between peered AWS tgws
+  Creates and manages Aviatrix domain connections between peered AWS TGWs
 ---
 
 # aviatrix_aws_tgw_peering_domain_conn
 
-The **aviatrix_aws_tgw_peering_domain_conn** resource allows the creation and management of Aviatrix domain connections between peered AWS tgws.
+The **aviatrix_aws_tgw_peering_domain_conn** resource allows the creation and management of Aviatrix domain connections between peered AWS TGWs.
 
 ## Example Usage
 
@@ -26,9 +26,9 @@ resource "aviatrix_aws_tgw_peering_domain_conn" "test" {
 The following arguments are supported:
 
 ### Required
-* `tgw_name1` - (Required) The AWS tgw name of the source domain to make a connection.
+* `tgw_name1` - (Required) The AWS TGW name of the source domain to make a connection.
 * `domain_name1` - (Required) The name of the source domain to make a connection.
-* `tgw_name2` - (Required) The AWS tgw name of the destination domain to make a connection.
+* `tgw_name2` - (Required) The AWS TGW name of the destination domain to make a connection.
 * `domain_name2` - (Required) The name of the destination domain to make a connection.
 
 ## Import

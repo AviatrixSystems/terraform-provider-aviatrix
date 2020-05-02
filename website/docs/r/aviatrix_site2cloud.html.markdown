@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_site2cloud
 
-The **aviatrix_site2cloud** resource creates and manages Aviatrix Site2Cloud connections.
+The **aviatrix_site2cloud** resource creates and manages Aviatrix-created Site2Cloud connections.
 
 ## Example Usage
 
@@ -31,7 +31,7 @@ resource "aviatrix_site2cloud" "test_s2c" {
 The following arguments are supported:
 
 ### Required
-* `vpc_id` - (Required) VPC Id of the cloud gateway.
+* `vpc_id` - (Required) VPC ID of the cloud gateway.
 * `connection_name` - (Required) Site2Cloud Connection Name.
 * `remote_gateway_type` - (Required) Remote Gateway Type. Valid Values: "generic", "avx", "aws", "azure", "sonicwall", "oracle".
 * `connection_type` - (Required) Connection Type. Valid Values: "mapped", "unmapped".

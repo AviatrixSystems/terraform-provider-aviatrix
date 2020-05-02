@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_vgw_conn
 
-The **aviatrix_vgw_conn** resource manages the connection between the Aviatrix transit gateway and AWS VGW.
+The **aviatrix_vgw_conn** resource manages the connection between the Aviatrix transit gateway and AWS VGW for purposes of Transit Network.
 
 ## Example Usage
 

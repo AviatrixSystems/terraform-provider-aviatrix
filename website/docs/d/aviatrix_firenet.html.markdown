@@ -2,12 +2,14 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_firenet"
 description: |-
-  Gets the Aviatrix FireNet.
+  Gets an Aviatrix FireNet's details.
 ---
 
 # aviatrix_firenet
 
-Use this data source to get the Aviatrix firenet for use in other resources.
+The **aviatrix_firenet** data source provides details about a specific FireNet created by the Aviatrix Controller.
+
+This data source can prove useful when a module accepts a FireNet's detail as an input variable.
 
 ## Example Usage
 
@@ -40,4 +42,3 @@ In addition to all arguments above, the following attributes are exported:
   * `management_interface` - Management interface ID.
   * `egress_interface`- Egress interface ID.
   * `attached`- Switch to attach/detach firewall instance to/from fireNet.
-

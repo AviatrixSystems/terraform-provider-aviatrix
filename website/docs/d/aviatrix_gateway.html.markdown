@@ -2,12 +2,14 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_gateway"
 description: |-
-  Gets the Aviatrix gateway.
+  Gets an Aviatrix gateway's details.
 ---
 
 # aviatrix_gateway
 
-Use this data source to get the Aviatrix gateway for use in other resources.
+The **aviatrix_gateway** data source provides details about a specific gateway created by the Aviatrix Controller.
+
+This data source can prove useful when a module accepts a gateway's detail as an input variable. For example, requiring the gateway's name configuring a site2cloud connection.
 
 ## Example Usage
 
@@ -22,16 +24,16 @@ data "aviatrix_gateway" "foo" {
 
 The following arguments are supported:
 
-* `gw_name` - (Required) Gateway name. It can be used for getting gateway.
+* `gw_name` - (Required) Gateway name.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `account_name` - Account name.
+* `account_name` - Aviatrix account name.
 * `additional_cidrs` - A list of destination CIDR ranges that will also go through the VPN tunnel when Split Tunnel Mode is enabled.
 * `additional_cidrs_designated_gateway` - A list of CIDR ranges separated by comma to configure when 'designated_gateway' feature is enabled.
-* `allocate_new_eip` - When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway.
+* `allocate_new_eip` - When value is false, an idle address in Elastic IP pool is reused for this gateway. Otherwise, a new Elastic IP is allocated and used for this gateway.
 * `cloud_instance_id` - Instance ID of the gateway.
 * `cloud_type` - Type of cloud service provider.
 * `duo_api_hostname` - API hostname for DUO auth mode.
@@ -43,7 +45,7 @@ In addition to all arguments above, the following attributes are exported:
 * `enable_elb` - Status of ELB for the gateway.
 * `enable_encrypt_volume` - Enable encrypt gateway EBS volume. Only supported for AWS provider.
 * `enable_ldap` - Status LDAP or not.
-* `enable_vpc_dns_server` - Status of Vpc Dns Server for Gateway.
+* `enable_vpc_dns_server` - Status of VPC Dns Server for Gateway.
 * `enable_vpn_nat` - Status of VPN NAT.
 * `gw_size` - Size of gateway Instance.
 * `gw_name` - Aviatrix gateway name.
@@ -65,7 +67,7 @@ In addition to all arguments above, the following attributes are exported:
 * `peering_ha_private_ip` - Private IP address of HA gateway.
 * `peering_ha_public_ip` - Public IP address that you want assigned to the HA peering instance.
 * `peering_ha_subnet` - Public Subnet Information while creating Peering HA Gateway, only subnet is accepted. Required to create peering ha gateway if cloud_type = 1 or 8 (AWS or AZURE).
-* `peering_ha_zone` - Zone information for creating Peering HA Gateway. Required to create peering ha gateway if cloud_type = 4 (gcp).
+* `peering_ha_zone` - Zone information for creating Peering HA Gateway. Required to create peering ha gateway if cloud_type = 4 (GCP).
 * `private_ip` - Private IP address of the Gateway created.
 * `public_dns_server` - NS server used by the gateway.
 * `public_ip` - Public IP address of the Gateway created.
@@ -81,5 +83,4 @@ In addition to all arguments above, the following attributes are exported:
 * `vpc_reg` - Region of cloud provider.
 * `vpn_access` - Status of user access through VPN to the container.
 * `vpn_cidr` - VPN CIDR block for the container.
-* `vpn_protocol` - Elb protocol for VPN gateway with elb enabled.
-
+* `vpn_protocol` - ELB protocol for VPN gateway with ELB enabled.

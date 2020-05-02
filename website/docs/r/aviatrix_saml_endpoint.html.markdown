@@ -7,7 +7,9 @@ description: |-
 
 # aviatrix_saml_endpoint
 
-The **aviatrix_saml_endpoint** resource allows the creation and management of an Aviatrix SAML endpoint.
+The **aviatrix_saml_endpoint** resource allows the creation and management of [Aviatrix SAML endpoints](https://docs.aviatrix.com/HowTos/VPN_SAML.html).
+
+For details on Aviatrix Controller Login with SAML authentication, please see documentation [here](https://docs.aviatrix.com/HowTos/Controller_Login_SAML_Config.html). This feature is now supported as of Aviatrix Terraform provider release R2.14.
 
 ## Example Usage
 
@@ -49,7 +51,7 @@ The following arguments are supported:
 
 ### Controller Login
 * `controller_login` - (Optional) Valid values: true, false. Default value: false. Set true for creating a saml endpoint for controller login.
-* `access_set_by` - (Optional) Access type. Valid values: "controller", "profile_attribute". Default value: "controller". 
+* `access_set_by` - (Optional) Access type. Valid values: "controller", "profile_attribute". Default value: "controller".
 * `rbac_groups` - (Optional) List of rbac groups. Required for controller login and "access_set_by" of "controller".
 
 ## Import

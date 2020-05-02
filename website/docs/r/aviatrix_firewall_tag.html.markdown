@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_firewall_tag
 
-The **aviatrix_firewall_tag** resource allows the creation and management of Aviatrix Stateful Firewall tags for tag-based security for gateways.
+The **aviatrix_firewall_tag** resource allows the creation and management of [Aviatrix Stateful Firewall tags](https://docs.aviatrix.com/HowTos/tag_firewall.html) for tag-based security for gateways.
 
 ## Example Usage
 

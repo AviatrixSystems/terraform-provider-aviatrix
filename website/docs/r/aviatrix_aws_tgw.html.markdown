@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_aws_tgw
 
-The **aviatrix_aws_tgw** resource allows the creation and management of AWS TGWs.
+The **aviatrix_aws_tgw** resource allows the creation and management of Aviatrix-created AWS TGWs.
 
 ~> **NOTE:** If you are planning to attach VPCs to the **aviatrix_aws_tgw** resource and anticipate updating it often and/or using advanced options such as customized route advertisement, we highly recommend managing those VPCs outside this resource by setting `manage_vpc_attachment` to false and using the **aviatrix_aws_tgw_vpc_attachment** resource instead of the in-line `attached_vpc {}` block.
 
@@ -143,6 +143,6 @@ The following arguments are supported:
 $ terraform import aviatrix_aws_tgw.test tgw_name
 ```
 
--> **NOTE:** If `manage_vpc_attachment` is set to "false", import action will also import the information of the VPCs attached to TGW into the state file. Will need to do `terraform apply` to sync `manage_vpc_attachment` to "false".
+-> **NOTE:** If `manage_vpc_attachment` is set to "false", import action will also import the information of the VPCs attached to TGW into the state file. Will need to do *terraform apply* to sync `manage_vpc_attachment` to "false".
 
--> **NOTE:** If `manage_transit_gateway_attachment` is set to "false", import action will also import the information of the transit gateway attached to TGW into the state file. Will need to do `terraform apply` to sync `manage_transit_gateway_attachment` to "false".
+-> **NOTE:** If `manage_transit_gateway_attachment` is set to "false", import action will also import the information of the transit gateway attached to TGW into the state file. Will need to do *terraform apply* to sync `manage_transit_gateway_attachment` to "false".

@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_rbac_group
 
-The **aviatrix_rbac_group** resource allows the creation and management of Aviatrix (Role-Based Access Control) RBAC groups.
+The **aviatrix_rbac_group** resource allows the creation and management of [Aviatrix (Role-Based Access Control) RBAC groups](https://docs.aviatrix.com/HowTos/rbac_faq.html).
 
 ## Example Usage
 

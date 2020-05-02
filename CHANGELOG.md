@@ -1,14 +1,14 @@
 ## 2.14.0 (Unreleased)
 ### Notes:
-- Supported Controller version: **UserConnect-5.4.1166** 
+- Supported Controller version: **UserConnect-5.4.1166**
 - Supported Terraform version: **v0.12.x**
 
 ### Features:
 1. Implemented support for dynamically updating ``customized_route_advertisement`` in **aviatrix_aws_tgw_vpc_attachment**
 2. Implemented support for SAML authentication for Controller login in **aviatrix_saml_endpoint**
-3. New data source to support referencing specific private/public subnets
+3. New data source to support referencing specific private/public subnets:
   - **data_source_aviatrix_vpc**
-4. New resources to support AWS TGW inter-region peering
+4. New resources to support AWS TGW inter-region peering:
   - **aviatrix_aws_tgw_peering**
   - **aviatrix_aws_tgw_peering_domain_conn**
 5. Implemented new resource to support connection to External Devices for Transit Network:
@@ -24,7 +24,7 @@
 
 ## 2.13.0 (April 02, 2020)
 ### Notes:
-- Supported Controller version: **UserConnect-5.4.1074** 
+- Supported Controller version: **UserConnect-5.4.1074**
 - Supported Terraform version: **v0.12.x**
 
 ### Features:
@@ -35,7 +35,7 @@
   - **aviatrix_rbac_group_access_account_attachment**
   - **aviatrix_rbac_group_permission_attachment**
   - **aviatrix_rbac_group_user_attachment**
-4. New resources
+4. New resources:
   - **aviatrix_aws_tgw_transit_gateway_attachment**
 
 ### Enhancements:
@@ -48,27 +48,27 @@
 
 ## 2.12.0 (March 12, 2020)
 ### Notes:
-- Supported Controller version: **UserConnect-5.3.1491** 
+- Supported Controller version: **UserConnect-5.3.1491**
 - Supported Terraform version: **v0.12.x**
 
 ### Features:
-1. Implemented support for Transit FireNet
+1. Implemented support for Transit FireNet:
   - ``enable_transit_firenet`` in **aviatrix_transit_gateway**
   - ``username`` and ``password`` in **aviatrix_firewall_instance** for Azure (Transit) FireNet
 2. New resources for Transit FireNet:
   - **aviatrix_transit_firenet_policy**
   - **aviatrix_firewall_management_access**
-3. New resources
+3. New resources:
   - **aviatrix_azure_spoke_native_peering**
-4. New resource **aviatrix_azure_peer** to replace **aviatrix_arm_peer** 
+4. New resource **aviatrix_azure_peer** to replace **aviatrix_arm_peer**
 5. Implemented support for Azure VNet in **aviatrix_vpc** resource
 
 ### Enhancements:
 1. Enhanced handling enabling/disabling active-mesh and attaching/detaching to/from transit actions during updates in **aviatrix_spoke_gateway**
-2. The following computed attributes are now available in in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
-  - ``private_ip`` 
-  - ``instance_id`` 
-  - ``security_group_id`` 
+2. The following computed attributes are now available in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**:
+  - ``private_ip``
+  - ``instance_id``
+  - ``security_group_id``
 3. ``ha_cloud_instance_id`` is now a computed attribute available in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
 4. Replaced ``cloudn_bkup_gateway_inst_id`` with ``peering_ha_cloud_instance_id`` in **aviatrix_gateway**
 5. Deprecated **aviatrix_arm_peer** resource and replaced it with **aviatrix_azure_peer**
@@ -80,7 +80,7 @@
 
 ## 2.11.0 (February 18, 2020)
 ### Notes:
-- Supported Controller version: **UserConnect-5.3.1391** 
+- Supported Controller version: **UserConnect-5.3.1391**
 - Supported Terraform version: **v0.12.x**
 
 ### Features:
@@ -95,12 +95,12 @@
 4. Implemented ha_gw_size check to catch incorrect usage when enabling HA for **aviatrix_gateway** **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
 
 ### Bug Fixes:
-1. Fixed issue where ``filtered_spoke_vpc_routes`` caused reordering issues for **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** 
+1. Fixed issue where ``filtered_spoke_vpc_routes`` caused reordering issues for **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
 
 
 ## 2.10.0 (February 06, 2020)
 ### Notes:
-- Supported Controller version: **UserConnect-5.2.2122** 
+- Supported Controller version: **UserConnect-5.2.2122**
 - Supported Terraform version: **v0.12.x**
 
 ### Features:
@@ -118,10 +118,10 @@
   - **aviatrix_firenet**
 
 ### Enhancements:
-1. Added coverage for **aviatrix_gateway_dnat** and **aviatrix_gateway_snat** in test-infra 
-2. Added coverage for **data_source_aviatrix_spoke_gateway**, **data_source_aviatrix_transit_gateway** and **data_source_aviatrix_firenet** in test-infra 
+1. Added coverage for **aviatrix_gateway_dnat** and **aviatrix_gateway_snat** in test-infra
+2. Added coverage for **data_source_aviatrix_spoke_gateway**, **data_source_aviatrix_transit_gateway** and **data_source_aviatrix_firenet** in test-infra
 3. Deprecated ``dnat_policy`` in **aviatrix_gateway**
-4. Deprecated ``dnat_policy``, ``snat_policy`` and ``snat_mode`` in **aviatrix_spoke_gateway** 
+4. Deprecated ``dnat_policy``, ``snat_policy`` and ``snat_mode`` in **aviatrix_spoke_gateway**
 5. Replaced ``enable_snat`` with ``single_ip_snat`` in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
 
 ### Bug Fixes:
@@ -130,7 +130,7 @@
 
 ## 2.9.1 (January 28, 2020)
 ### Notes:
-- Supported Controller version: **UserConnect-5.2.2122** 
+- Supported Controller version: **UserConnect-5.2.2122**
 - Supported Terraform version: **v0.12.x**
 
 ### Bug Fixes:
@@ -139,7 +139,7 @@
 
 ## 2.9.0 (December 20, 2019)
 ### Notes:
-- Supported Controller version: **UserConnect-5.2.2048** 
+- Supported Controller version: **UserConnect-5.2.2048**
 - Supported Terraform version: **v0.12.x**
 
 ### Features:
@@ -156,12 +156,12 @@
 3. Added coverage for **aviatrix_geo_vpn** in test-infra
 
 ### Bug Fixes:
-1. Fixed issue where read-back for **aviatrix_gateway**'s ``additional_cidrs_designated_gateway`` incorrectly displayed deltas 
+1. Fixed issue where read-back for **aviatrix_gateway**'s ``additional_cidrs_designated_gateway`` incorrectly displayed deltas
 
 
 ## 2.8.0 (December 05, 2019)
 ### Notes:
-- Supported Controller versions: **UserConnect-5.1.1179** and **UserConnect-5.2.1987** 
+- Supported Controller versions: **UserConnect-5.1.1179** and **UserConnect-5.2.1987**
 - Supported Terraform version: **v0.12.x**
 
 ### Features:
@@ -175,7 +175,7 @@
 1. Added support for updating in **aviatrix_site2cloud** by ForceNew
 
 ### Bug Fixes:
-1. Fixed an issue that caused an inability to manage a VPN gateway's ``split_tunnel`` attributes after creating the **aviatrix_gateway** 
+1. Fixed an issue that caused an inability to manage a VPN gateway's ``split_tunnel`` attributes after creating the **aviatrix_gateway**
 
 
 ## 2.7.0 (November 07, 2019)

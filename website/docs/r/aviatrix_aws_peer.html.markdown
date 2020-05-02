@@ -2,12 +2,12 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_aws_peer"
 description: |-
-  Creates and manages Aviatrix AWS peerings
+  Creates and manages native AWS VPC peerings
 ---
 
 # aviatrix_aws_peer
 
-The **aviatrix_aws_peer** resource allows the creation and management of Aviatrix AWS peerings.
+The **aviatrix_aws_peer** resource allows the creation and management of Aviatrix-created native AWS intra and inter-region VPC peerings.
 
 ## Example Usage
 
