@@ -172,7 +172,7 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |(new) | aws_tgw        | manage_transit_gateway_attachment | **No**; New attribute flag added to support managing transit gateway attachments to the AWS TGW outside of the resource, using the **aviatrix_aws_tgw_transit_gateway_attachment**. A simple ``terraform refresh`` will apply this attribute's default value (true) and rectify the state |
 
 
-## R2.14 (UserConnect-5.4.5.4.1201) (Terraform v0.12)
+## R2.14 (UserConnect-5.4.1201) (Terraform v0.12)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
 |(deprecated) | gateway | public_ip, peering_ha_public_ip | **Yes**; these attributes have been deprecated in favor of `eip` and `peering_ha_eip` to maintain consistency between gateway types. If any Terraform configuration of other resources reference this attribute, replace them with the aforementioned attributes respectively. |
