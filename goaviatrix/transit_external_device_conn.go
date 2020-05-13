@@ -48,6 +48,7 @@ type EditExternalDeviceConnDetail struct {
 	GwName                 string        `json:"gw_name,omitempty"`
 	BgpLocalAsNum          string        `json:"bgp_local_asn_number,omitempty"`
 	BgpRemoteAsNum         string        `json:"bgp_remote_asn_number,omitempty"`
+	BgpStatus              string        `json:"bgp_status,omitempty"`
 	RemoteGatewayIP        string        `json:"peer_ip,omitempty"`
 	RemoteSubnet           string        `json:"remote_cidr,omitempty"`
 	DirectConnect          bool          `json:"direct_connect_primary,omitempty"`
@@ -137,15 +138,15 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 		externalDeviceConn.ConnectionName = externalDeviceConnDetail.ConnectionName[0]
 		externalDeviceConn.GwName = externalDeviceConnDetail.GwName
 
-		if externalDeviceConnDetail.RemoteSubnet != "" {
-			externalDeviceConn.RemoteSubnet = externalDeviceConnDetail.RemoteSubnet
-			externalDeviceConn.ConnectionType = "static"
-		} else {
+		if externalDeviceConnDetail.BgpStatus == "enabled" || externalDeviceConnDetail.BgpStatus == "Enabled" {
 			bgpLocalAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BgpLocalAsNum)
 			externalDeviceConn.BgpLocalAsNum = bgpLocalAsNumber
 			bgpRemoteAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BgpRemoteAsNum)
 			externalDeviceConn.BgpRemoteAsNum = bgpRemoteAsNumber
 			externalDeviceConn.ConnectionType = "bgp"
+		} else {
+			externalDeviceConn.RemoteSubnet = externalDeviceConnDetail.RemoteSubnet
+			externalDeviceConn.ConnectionType = "static"
 		}
 		externalDeviceConn.RemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[0]
 		if externalDeviceConnDetail.Algorithm.Phase1Auth[0] == "SHA-256" &&
