@@ -133,15 +133,15 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 			"local_tunnel_cidr": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    true,
-				Default:     "",
 				Description: "Source CIDR for the tunnel from the Aviatrix transit gateway.",
 			},
 			"remote_tunnel_cidr": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    true,
-				Default:     "",
 				Description: "Destination CIDR for the tunnel to the external device.",
 			},
 			"custom_algorithms": {
@@ -242,14 +242,14 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 			"backup_local_tunnel_cidr": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "",
+				Computed:    true,
 				ForceNew:    true,
 				Description: "Source CIDR for the tunnel from the backup Aviatrix transit gateway.",
 			},
 			"backup_remote_tunnel_cidr": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "",
+				Computed:    true,
 				ForceNew:    true,
 				Description: "Destination CIDR for the tunnel to the backup external device.",
 			},
@@ -405,25 +405,27 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		d.Set("gw_name", conn.GwName)
 		d.Set("remote_gateway_ip", conn.RemoteGatewayIP)
 		d.Set("connection_type", conn.ConnectionType)
-		if conn.BgpLocalAsNum != 0 {
-			d.Set("bgp_local_as_num", strconv.Itoa(conn.BgpLocalAsNum))
+		if conn.ConnectionType == "bgp" {
+			if conn.BgpLocalAsNum != 0 {
+				d.Set("bgp_local_as_num", strconv.Itoa(conn.BgpLocalAsNum))
+			}
+			if conn.BgpRemoteAsNum != 0 {
+				d.Set("bgp_remote_as_num", strconv.Itoa(conn.BgpRemoteAsNum))
+			}
+			if conn.BackupBgpRemoteAsNum != 0 {
+				d.Set("backup_bgp_remote_as_num", strconv.Itoa(conn.BackupBgpRemoteAsNum))
+			}
+		} else {
+			d.Set("remote_subnet", conn.RemoteSubnet)
 		}
-		if conn.BgpLocalAsNum != 0 {
-			d.Set("bgp_remote_as_num", strconv.Itoa(conn.BgpRemoteAsNum))
-		}
-		d.Set("remote_subnet", conn.RemoteSubnet)
 		if conn.DirectConnect == "enabled" {
 			d.Set("direct_connect", true)
 		} else {
 			d.Set("direct_connect", false)
 		}
 
-		if d.Get("local_tunnel_cidr").(string) != "" {
-			d.Set("local_tunnel_cidr", conn.LocalTunnelCidr)
-		}
-		if d.Get("remote_tunnel_cidr").(string) != "" {
-			d.Set("remote_tunnel_cidr", conn.RemoteTunnelCidr)
-		}
+		d.Set("local_tunnel_cidr", conn.LocalTunnelCidr)
+		d.Set("remote_tunnel_cidr", conn.RemoteTunnelCidr)
 		if conn.CustomAlgorithms {
 			d.Set("custom_algorithms", true)
 			d.Set("phase_1_authentication", conn.Phase1Auth)
@@ -436,20 +438,18 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 			d.Set("custom_algorithms", false)
 		}
 
-		d.Set("backup_remote_gateway_ip", conn.BackupRemoteGatewayIP)
-		if conn.BackupBgpRemoteAsNum != 0 {
-			d.Set("backup_bgp_remote_as_num", strconv.Itoa(conn.BackupBgpRemoteAsNum))
-		}
-		if d.Get("backup_local_tunnel_cidr").(string) != "" {
+		if conn.HAEnabled == "enabled" {
+			d.Set("ha_enabled", true)
+			d.Set("backup_remote_gateway_ip", conn.BackupRemoteGatewayIP)
 			d.Set("backup_local_tunnel_cidr", conn.BackupLocalTunnelCidr)
-		}
-		if d.Get("backup_remote_tunnel_cidr").(string) != "" {
 			d.Set("backup_remote_tunnel_cidr", conn.BackupRemoteTunnelCidr)
-		}
-		if conn.BackupDirectConnect == "enabled" {
-			d.Set("backup_direct_connect", true)
+			if conn.BackupDirectConnect == "enabled" {
+				d.Set("backup_direct_connect", true)
+			} else {
+				d.Set("backup_direct_connect", false)
+			}
 		} else {
-			d.Set("backup_direct_connect", false)
+			d.Set("ha_enabled", false)
 		}
 
 		if conn.EnableEdgeSegmentation == "enabled" {
@@ -457,11 +457,7 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		} else {
 			d.Set("enable_edge_segmentation", false)
 		}
-		if conn.HAEnabled == "enabled" {
-			d.Set("ha_enabled", true)
-		} else {
-			d.Set("ha_enabled", false)
-		}
+
 	}
 
 	d.SetId(conn.ConnectionName + "~" + conn.VpcID)
