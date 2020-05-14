@@ -90,7 +90,7 @@ func dataSourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) er
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error fetching policy for gateway %s: %s", firewall.GwName, err)
+		return fmt.Errorf("error fetching firewall policy for gateway %s: %s", firewall.GwName, err)
 	}
 
 	d.Set("gw_name", gwName)
@@ -109,7 +109,9 @@ func dataSourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) er
 	for _, p := range fw.PolicyList {
 		policies = append(policies, goaviatrix.PolicyToMap(p))
 	}
-	d.Set("policies", policies)
+	if err = d.Set("policies", policies); err != nil {
+		return fmt.Errorf("error setting firewall policies for gateway %s: %s", firewall.GwName, err)
+	}
 
 	d.SetId(gwName)
 
