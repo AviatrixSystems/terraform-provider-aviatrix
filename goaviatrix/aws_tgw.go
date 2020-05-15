@@ -68,11 +68,11 @@ type AttachedVPCDetail struct {
 }
 
 type RoutesInRouteTable struct {
-	VPCId           string `json:"vpc_id"`
-	CidrBlock       string `json:"cidr_block"`
-	Type            string `json:"type"`
-	State           string `json:"state"`
-	TgwAttachmentId string `json:"tgw_attachment_id"`
+	VPCId           []string `json:"vpc_id"`
+	CidrBlock       string   `json:"cidr_block"`
+	Type            string   `json:"type"`
+	State           string   `json:"state"`
+	TgwAttachmentId []string `json:"tgw_attachment_id"`
 }
 
 type VPCList struct {
