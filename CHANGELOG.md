@@ -1,4 +1,12 @@
-## 2.15.0 (Unreleased)
+## 2.14.1 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-5.4.1232**
+- Supported Terraform version: **v0.12.x**
+
+### Bug Fixes:
+1. Fixed issue where **aviatrix_transit_external_device_conn** is forced to recreate due to ``connection_type`` not being set correctly
+
+
 ## 2.14.0 (May 08, 2020)
 ### Notes:
 - Supported Controller version: **UserConnect-5.4.1201**
