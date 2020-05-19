@@ -4,7 +4,7 @@
 - Supported Terraform version: **v0.12.x**
 
 ### Bug Fixes:
-1. Fixed issue where **aviatrix_transit_external_device_conn** is forced to recreate caused by connection_type not set correctly
+1. Fixed issue where **aviatrix_transit_external_device_conn** is forced to recreate due to ``connection_type`` not being set correctly
 
 
 ## 2.14.0 (May 08, 2020)
