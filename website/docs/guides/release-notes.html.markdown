@@ -12,10 +12,20 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.14 (UserConnect-5.4.1201)``
+``Last updated: R2.14.1 (UserConnect-5.4.1232)``
 
 
 ---
+
+## 2.14.1
+### Notes:
+- Release date: **(19 May 2020)**
+- Supported Controller version: **UserConnect-5.4.1232**
+- Supported Terraform version: **v0.12.x**
+
+### Bug Fixes:
+1. Fixed issue where **aviatrix_transit_external_device_conn** is forced to recreate due to ``connection_type`` not being set correctly
+
 
 ## 2.14.0
 ### Notes:
