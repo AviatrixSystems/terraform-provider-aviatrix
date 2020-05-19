@@ -7,7 +7,7 @@ description: |-
 
 # aviatrix_tunnel
 
-The **aviatrix_tunnel** resource allows the creation and management of Aviatrix Encrypted Peering tunnels).
+The **aviatrix_tunnel** resource allows the creation and management of Aviatrix Encrypted Peering tunnels.
 
 ## Example Usage
 
