@@ -11,13 +11,14 @@ import (
 
 // VPNUser simple struct to hold vpn_user details
 type VPNUser struct {
-	Action       string `form:"action,omitempty" json:"action,omitempty"`
-	CID          string `form:"CID,omitempty" json:"CID,omitempty"`
-	SamlEndpoint string `form:"saml_endpoint,omitempty" json:"saml_endpoint,omitempty"`
-	VpcID        string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	GwName       string `form:"lb_name,omitempty" json:"lb_name,omitempty"`
-	UserName     string `form:"username" json:"_id,omitempty"`
-	UserEmail    string `form:"user_email,omitempty" json:"email,omitempty"`
+	Action       string   `form:"action,omitempty" json:"action,omitempty"`
+	CID          string   `form:"CID,omitempty" json:"CID,omitempty"`
+	SamlEndpoint string   `form:"saml_endpoint,omitempty" json:"saml_endpoint,omitempty"`
+	VpcID        string   `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	GwName       string   `form:"lb_name,omitempty" json:"lb_name,omitempty"`
+	UserName     string   `form:"username" json:"_id,omitempty"`
+	UserEmail    string   `form:"user_email,omitempty" json:"email,omitempty"`
+	Profiles     []string `json:"profiles,omitempty"`
 }
 
 type VPNUserListResp struct {
@@ -36,10 +37,10 @@ type VPNUserInfo struct {
 	VpnUser VPNUser `json:"vpn_user"`
 }
 
-type ListVpnUsersResp struct {
-	Return  bool          `json:"return"`
-	Results []EditVPNUser `json:"results"`
-	Reason  string        `json:"reason"`
+type GetVpnUsersResp struct {
+	Return  bool    `json:"return"`
+	Results VPNUser `json:"results"`
+	Reason  string  `json:"reason"`
 }
 
 type EditVPNUser struct {
@@ -50,7 +51,7 @@ type EditVPNUser struct {
 func (c *Client) CreateVPNUser(vpnUser *VPNUser) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return errors.New(("url Parsing failed for add_vpn_user") + err.Error())
+		return errors.New(("url Parsing failed for 'add_vpn_user': ") + err.Error())
 	}
 	addVpnUser := url.Values{}
 	addVpnUser.Add("CID", c.CID)
@@ -63,7 +64,7 @@ func (c *Client) CreateVPNUser(vpnUser *VPNUser) error {
 	Url.RawQuery = addVpnUser.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
-		return errors.New("HTTP Get add_vpn_user failed: " + err.Error())
+		return errors.New("HTTP Get 'add_vpn_user' failed: " + err.Error())
 	}
 	var data APIResp
 	buf := new(bytes.Buffer)
@@ -71,13 +72,13 @@ func (c *Client) CreateVPNUser(vpnUser *VPNUser) error {
 	bodyString := buf.String()
 	bodyIoCopy := strings.NewReader(bodyString)
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode add_vpn_user failed: " + err.Error() + "\n Body: " + bodyString)
+		return errors.New("Json Decode 'add_vpn_user' failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		if strings.Contains(data.Reason, "Sending VPN certificates to email") {
 			return nil
 		}
-		return errors.New("Rest API add_vpn_user Get failed: " + data.Reason)
+		return errors.New("Rest API 'add_vpn_user' Get failed: " + data.Reason)
 	}
 	return nil
 }
@@ -85,7 +86,7 @@ func (c *Client) CreateVPNUser(vpnUser *VPNUser) error {
 func (c *Client) GetVPNUser(vpnUser *VPNUser) (*VPNUser, error) {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return nil, errors.New(("url Parsing failed for get_vpn_user_by_name") + err.Error())
+		return nil, errors.New(("url Parsing failed for 'get_vpn_user_by_name': ") + err.Error())
 	}
 	getVpnUserByName := url.Values{}
 	getVpnUserByName.Add("CID", c.CID)
@@ -96,7 +97,7 @@ func (c *Client) GetVPNUser(vpnUser *VPNUser) (*VPNUser, error) {
 	resp, err := c.Get(Url.String(), nil)
 
 	if err != nil {
-		return nil, errors.New("HTTP Get get_vpn_user_by_name failed: " + err.Error())
+		return nil, errors.New("HTTP Get 'get_vpn_user_by_name' failed: " + err.Error())
 	}
 	var data VPNUserResp
 	buf := new(bytes.Buffer)
@@ -104,13 +105,13 @@ func (c *Client) GetVPNUser(vpnUser *VPNUser) (*VPNUser, error) {
 	bodyString := buf.String()
 	bodyIoCopy := strings.NewReader(bodyString)
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode get_vpn_user_by_name failed: " + err.Error() + "\n Body: " + bodyString)
+		return nil, errors.New("Json Decode 'get_vpn_user_by_name' failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
 		if strings.Contains(data.Reason, "Invalid VPN username") {
 			return nil, ErrNotFound
 		}
-		return nil, errors.New("Rest API get_vpn_user_by_name Get failed: " + data.Reason)
+		return nil, errors.New("Rest API 'get_vpn_user_by_name' Get failed: " + data.Reason)
 	}
 
 	if data.Results.VpnUser.UserName != "" {
@@ -130,7 +131,7 @@ func (c *Client) DeleteVPNUser(vpnUser *VPNUser) error {
 		vpnUser.VpcID, vpnUser.UserName)
 	resp, err := c.Delete(path, nil)
 	if err != nil {
-		return errors.New("HTTP Get delete_vpn_user failed: " + err.Error())
+		return errors.New("HTTP Get 'delete_vpn_user' failed: " + err.Error())
 	}
 	var data APIResp
 	buf := new(bytes.Buffer)
@@ -138,43 +139,10 @@ func (c *Client) DeleteVPNUser(vpnUser *VPNUser) error {
 	bodyString := buf.String()
 	bodyIoCopy := strings.NewReader(bodyString)
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_vpn_user failed: " + err.Error() + "\n Body: " + bodyString)
+		return errors.New("Json Decode 'delete_vpn_user' failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
-		return errors.New("Rest API delete_vpn_user Get failed: " + data.Reason)
+		return errors.New("Rest API 'delete_vpn_user' Get failed: " + data.Reason)
 	}
 	return nil
-}
-
-func (c *Client) GetProfileForUser(vpnUser *VPNUser) (string, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return "", errors.New(("url Parsing failed for 'list_vpn_users': ") + err.Error())
-	}
-	listVpnUsers := url.Values{}
-	listVpnUsers.Add("CID", c.CID)
-	listVpnUsers.Add("action", "list_vpn_users")
-	Url.RawQuery = listVpnUsers.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return "", errors.New("HTTP Get 'list_vpn_users' failed: " + err.Error())
-	}
-	var data ListVpnUsersResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return "", errors.New("Json Decode 'list_vpn_users' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return "", errors.New("Rest API 'list_vpn_users' Get failed: " + data.Reason)
-	}
-	vpnUserList := data.Results
-	for i := range vpnUserList {
-		if vpnUserList[i].UserName == vpnUser.UserName {
-			return vpnUserList[i].Profile, nil
-		}
-	}
-	return "", nil
 }

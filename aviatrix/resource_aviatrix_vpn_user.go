@@ -3,7 +3,6 @@ package aviatrix
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -50,7 +49,7 @@ func resourceAviatrixVPNUser() *schema.Resource {
 				Optional:    true,
 				Default:     "",
 				ForceNew:    true,
-				Description: "This is the name of the SAML endpoint to which the user is to be associated.",
+				Description: "This is the name of the SAML endpoint to which the user will be associated.",
 			},
 			"profiles": {
 				Type:        schema.TypeList,
@@ -154,38 +153,29 @@ func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta interface{}) error
 	if vu != nil {
 		d.Set("vpc_id", vu.VpcID)
 		d.Set("gw_name", vu.GwName)
-		d.Set("user_name", userName)
+		d.Set("user_name", vu.UserName)
 		if vu.UserEmail != "" {
 			d.Set("user_email", vu.UserEmail)
 		}
 		d.Set("saml_endpoint", vu.SamlEndpoint)
-	}
 
-	manageUserAttachment := d.Get("manage_user_attachment").(bool)
-	if manageUserAttachment {
-		var profiles []string
-		for _, profile := range d.Get("profiles").([]interface{}) {
-			profiles = append(profiles, profile.(string))
-		}
-		profileListRead, err := client.GetProfileForUser(vpnUser)
-		if err != nil {
-			return fmt.Errorf("couldn't get profile information for vpn user: %s due to: %s", vpnUser.UserName, err)
-		}
-		profileList := strings.Split(profileListRead, ",")
-		if len(profileList) != 0 {
-			for i := range profileList {
-				profileList[i] = strings.TrimSpace(profileList[i])
+		manageUserAttachment := d.Get("manage_user_attachment").(bool)
+		if manageUserAttachment {
+			var profiles []string
+			for _, profile := range d.Get("profiles").([]interface{}) {
+				profiles = append(profiles, profile.(string))
 			}
-		}
-		if len(goaviatrix.Difference(profiles, profileList)) == 0 && len(goaviatrix.Difference(profileList, profiles)) == 0 {
-			err := d.Set("profiles", profiles)
-			if err != nil {
-				return fmt.Errorf("couldn't set 'profiles' for vpn user: %s", vpnUser.UserName)
-			}
-		} else {
-			err := d.Set("profiles", profileList)
-			if err != nil {
-				return fmt.Errorf("couldn't set 'profiles' for vpn user: %s", vpnUser.UserName)
+			profileFromRead := vu.Profiles
+			if len(goaviatrix.Difference(profiles, profileFromRead)) == 0 && len(goaviatrix.Difference(profileFromRead, profiles)) == 0 {
+				err := d.Set("profiles", profiles)
+				if err != nil {
+					return fmt.Errorf("couldn't set 'profiles' for vpn user: %s", vpnUser.UserName)
+				}
+			} else {
+				err := d.Set("profiles", profileFromRead)
+				if err != nil {
+					return fmt.Errorf("couldn't set 'profiles' for vpn user: %s", vpnUser.UserName)
+				}
 			}
 		}
 	}
