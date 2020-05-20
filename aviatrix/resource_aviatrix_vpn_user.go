@@ -258,20 +258,6 @@ func resourceAviatrixVPNUserDelete(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Deleting Aviatrix VPNUser: %#v", vpnUser)
 
-	if _, ok := d.GetOk("profiles"); ok {
-		log.Printf("[INFO] Found profiles: %#v", d.Get("profiles"))
-		for _, profileName := range d.Get("profiles").([]interface{}) {
-			profile := &goaviatrix.Profile{
-				Name: profileName.(string),
-			}
-			profile.UserList = append(profile.UserList, vpnUser.UserName)
-			err := client.DetachUsers(profile)
-			if err != nil {
-				return fmt.Errorf("failed to attach User(%s) to Profile(%s) due to: %s", vpnUser.UserName, profile.Name, err)
-			}
-		}
-	}
-
 	err := client.DeleteVPNUser(vpnUser)
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix VPNUser: %s", err)
