@@ -27,7 +27,7 @@ func resourceAviatrixProfile() *schema.Resource {
 			"base_rule": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Base policy rule of  the profile to be added. Enter 'allow_all' or 'deny_all'.",
+				Description: "Base policy rule of the profile to be added. Enter 'allow_all' or 'deny_all'.",
 			},
 			"users": {
 				Type:        schema.TypeList,
@@ -64,6 +64,11 @@ func resourceAviatrixProfile() *schema.Resource {
 					},
 				},
 			},
+			"manage_user_attachment": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 		},
 	}
 }
@@ -81,8 +86,16 @@ func resourceAviatrixProfileCreate(d *schema.ResourceData, meta interface{}) err
 	if profile.Name == "" {
 		return fmt.Errorf("profile name can't be empty string")
 	}
-	for _, user := range d.Get("users").([]interface{}) {
-		profile.UserList = append(profile.UserList, user.(string))
+
+	manageUserAttachment := d.Get("manage_user_attachment").(bool)
+	if manageUserAttachment {
+		for _, user := range d.Get("users").([]interface{}) {
+			profile.UserList = append(profile.UserList, user.(string))
+		}
+	} else {
+		if len(d.Get("users").([]interface{})) != 0 {
+			return fmt.Errorf("'manage_user_attachment' is set false. Please empty 'users' and manage user attachment in other resource")
+		}
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Profile with users: %v", profile.UserList)
@@ -124,6 +137,7 @@ func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no profile name received. Import Id is %s", id)
 		d.Set("name", id)
+		d.Set("manage_user_attachment", true)
 		d.SetId(id)
 	}
 
@@ -150,18 +164,20 @@ func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error
 	}
 	d.Set("name", profile.Name)
 	log.Printf("[TRACE] Profile policy %v", profile.Policy)
-	log.Printf("[TRACE] Profile users %v", d.Get("users"))
 
-	var users []string
-	for _, user := range d.Get("users").([]interface{}) {
-		users = append(users, user.(string))
-	}
-	if len(goaviatrix.Difference(users, profile.UserList)) == 0 &&
-		len(goaviatrix.Difference(profile.UserList, users)) == 0 {
-		d.Set("users", users)
-	} else {
-		d.Set("users", profile.UserList)
-		log.Printf("[TRACE] Profile userlistnew %v", profile.UserList)
+	manageUserAttachment := d.Get("manage_user_attachment").(bool)
+	if manageUserAttachment {
+		var users []string
+		for _, user := range d.Get("users").([]interface{}) {
+			users = append(users, user.(string))
+		}
+		if len(goaviatrix.Difference(users, profile.UserList)) == 0 &&
+			len(goaviatrix.Difference(profile.UserList, users)) == 0 {
+			d.Set("users", users)
+		} else {
+			d.Set("users", profile.UserList)
+			log.Printf("[TRACE] Profile userlistnew %v", profile.UserList)
+		}
 	}
 	log.Printf("[TRACE] Profile policy %v", profile.Policy)
 
@@ -194,10 +210,22 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 	d.Partial(true)
 
-	for _, user := range d.Get("users").([]interface{}) {
-		profile.UserList = append(profile.UserList, user.(string))
+	manageUserAttachment := d.Get("manage_user_attachment").(bool)
+	if d.HasChange("manage_user_attachment") {
+		_, nMUA := d.GetChange("manage_user_attachment")
+		newManageUserAttachment := nMUA.(bool)
+		if newManageUserAttachment {
+			d.Set("manage_user_attachment", true)
+		} else {
+			d.Set("manage_user_attachment", false)
+		}
 	}
-	log.Printf("[INFO] Creating Aviatrix Profile with users: %v", profile.UserList)
+	if manageUserAttachment {
+		for _, user := range d.Get("users").([]interface{}) {
+			profile.UserList = append(profile.UserList, user.(string))
+		}
+		log.Printf("[INFO] Creating Aviatrix Profile with users: %v", profile.UserList)
+	}
 	names := d.Get("policy").([]interface{})
 	for _, domain := range names {
 		dn := domain.(map[string]interface{})
@@ -222,50 +250,52 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("base_rule") {
 		return fmt.Errorf("cannot change base rule of a profile")
 	}
-	if d.HasChange("users") {
+	if manageUserAttachment {
+		if d.HasChange("users") {
+			oldU, newU := d.GetChange("users")
+			log.Printf("[INFO] Users to be attached : %#v %#v ", oldU, newU)
 
-		oldU, newU := d.GetChange("users")
-		log.Printf("[INFO] Users to be attached : %#v %#v ", oldU, newU)
-
-		if oldU == nil {
-			oldU = new([]interface{})
+			if oldU == nil {
+				oldU = new([]interface{})
+			}
+			if newU == nil {
+				newU = new([]interface{})
+			}
+			oldString := oldU.([]interface{})
+			newString := newU.([]interface{})
+			oldUserList := goaviatrix.ExpandStringList(oldString)
+			newUserList := goaviatrix.ExpandStringList(newString)
+			//Attach all the newly added Users
+			toAddUsers := goaviatrix.Difference(newUserList, oldUserList)
+			log.Printf("[INFO] Users to be attached : %#v", toAddUsers)
+			profile.UserList = toAddUsers
+			err := client.AttachUsers(profile)
+			if err != nil {
+				return fmt.Errorf("failed to attach User : %s", err)
+			}
+			//Detach all the removed Users
+			toDelGws := goaviatrix.Difference(oldUserList, newUserList)
+			log.Printf("[INFO] Users to be detached : %#v", toDelGws)
+			profile.UserList = toDelGws
+			err = client.DetachUsers(profile)
+			if err != nil {
+				return fmt.Errorf("failed to detach user : %s", err)
+			}
+			d.SetPartial("users")
 		}
-		if newU == nil {
-			newU = new([]interface{})
+	} else {
+		if len(d.Get("users").([]interface{})) != 0 {
+			return fmt.Errorf("'manage_user_attachment' is set false. Please empty 'users' and manage user attachment in other resource")
 		}
-		oldString := oldU.([]interface{})
-		newString := newU.([]interface{})
-		oldUserList := goaviatrix.ExpandStringList(oldString)
-		newUserList := goaviatrix.ExpandStringList(newString)
-		//Attach all the newly added Users
-		toAddUsers := goaviatrix.Difference(newUserList, oldUserList)
-		log.Printf("[INFO] Users to be attached : %#v", toAddUsers)
-		profile.UserList = toAddUsers
-		err := client.AttachUsers(profile)
-		if err != nil {
-			return fmt.Errorf("failed to attach User : %s", err)
-		}
-		//Detach all the removed Users
-		toDelGws := goaviatrix.Difference(oldUserList, newUserList)
-		log.Printf("[INFO] Users to be detached : %#v", toDelGws)
-		profile.UserList = toDelGws
-		err = client.DetachUsers(profile)
-		if err != nil {
-			return fmt.Errorf("failed to detach user : %s", err)
-		}
-		d.SetPartial("users")
-
 	}
+
 	log.Printf("[INFO] Checking for policy changes")
-
 	if d.HasChange("policy") {
-
 		err := client.UpdateProfilePolicy(profile)
 		if err != nil {
 			return fmt.Errorf("failed to create Aviatrix Profile: %s", err)
 		}
 		d.SetPartial("policy")
-
 	}
 
 	d.Partial(false)
@@ -283,7 +313,6 @@ func resourceAviatrixProfileDelete(d *schema.ResourceData, meta interface{}) err
 		log.Printf("[INFO] Found users: %#v", d.Get("users"))
 
 		profile.UserList = goaviatrix.ExpandStringList(d.Get("users").([]interface{}))
-
 		err := client.DetachUsers(profile)
 		if err != nil {
 			return fmt.Errorf("failed to detach Users: %s", err)
