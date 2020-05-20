@@ -21,12 +21,6 @@ type VPNUser struct {
 	Profiles     []string `json:"profiles,omitempty"`
 }
 
-type VPNUserListResp struct {
-	Return  bool      `json:"return"`
-	Results []VPNUser `json:"results"`
-	Reason  string    `json:"reason"`
-}
-
 type VPNUserResp struct {
 	Return  bool        `json:"return"`
 	Results VPNUserInfo `json:"results"`
@@ -35,17 +29,6 @@ type VPNUserResp struct {
 
 type VPNUserInfo struct {
 	VpnUser VPNUser `json:"vpn_user"`
-}
-
-type GetVpnUsersResp struct {
-	Return  bool    `json:"return"`
-	Results VPNUser `json:"results"`
-	Reason  string  `json:"reason"`
-}
-
-type EditVPNUser struct {
-	UserName string `json:"_id"`
-	Profile  string `json:"profile"`
 }
 
 func (c *Client) CreateVPNUser(vpnUser *VPNUser) error {
