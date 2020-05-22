@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aviatrix/cloud"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -185,7 +186,7 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		account.AwsIam = "false"
 	}
 
-	if account.CloudType == 1 {
+	if account.CloudType == cloud.AWS {
 		if account.AwsAccountNumber == "" {
 			return fmt.Errorf("aws account number is needed for aws cloud")
 		}
@@ -212,7 +213,7 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 			log.Printf("[TRACE] Reading Aviatrix account aws_role_app: [%s]", d.Get("aws_role_app").(string))
 			log.Printf("[TRACE] Reading Aviatrix account aws_role_ec2: [%s]", d.Get("aws_role_ec2").(string))
 		}
-	} else if account.CloudType == 4 {
+	} else if account.CloudType == cloud.GCP {
 		if account.GcloudProjectCredentialsFilepathLocal == "" {
 			return fmt.Errorf("gcloud project credentials local filepath needed to upload file to controller")
 		}
@@ -238,7 +239,7 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		}
 		controller_filepath = "/var/www/php/tmp/" + filename
 		account.GcloudProjectCredentialsFilepathController = controller_filepath
-	} else if account.CloudType == 8 {
+	} else if account.CloudType == cloud.AZURE {
 		if account.ArmSubscriptionId == "" {
 			return fmt.Errorf("arm subscription id needed for azure cloud")
 		}
@@ -251,7 +252,7 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		if account.ArmApplicationClientSecret == "" {
 			return fmt.Errorf("arm application key needed for azure cloud")
 		}
-	} else if account.CloudType == 16 {
+	} else if account.CloudType == cloud.OCI {
 		if account.OciTenancyID == "" {
 			return fmt.Errorf("oci tenancy ocid needed for oracle cloud")
 		}
@@ -283,7 +284,7 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		}
 		ociApiPrivateKey = "/var/www/php/tmp/" + filename
 		account.OciApiPrivateKeyFilePath = ociApiPrivateKey
-	} else if account.CloudType == 256 {
+	} else if account.CloudType == cloud.AWSGOV {
 		if account.AwsgovAccountNumber == "" {
 			return fmt.Errorf("aws gov account number needed for aws gov cloud")
 		}
@@ -335,7 +336,7 @@ func resourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) error
 	if acc != nil {
 		d.Set("account_name", acc.AccountName)
 		d.Set("cloud_type", acc.CloudType)
-		if acc.CloudType == 1 {
+		if acc.CloudType == cloud.AWS {
 			d.Set("aws_account_number", acc.AwsAccountNumber)
 			if acc.AwsRoleEc2 != "" {
 				//force default setting and save to .tfstate file
@@ -346,11 +347,11 @@ func resourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) error
 				d.Set("aws_access_key", acc.AwsAccessKey)
 				d.Set("aws_iam", false)
 			}
-		} else if acc.CloudType == 4 {
+		} else if acc.CloudType == cloud.GCP {
 			d.Set("gcloud_project_id", acc.GcloudProjectName)
-		} else if acc.CloudType == 8 {
+		} else if acc.CloudType == cloud.AZURE {
 			d.Set("arm_subscription_id", acc.ArmSubscriptionId)
-		} else if acc.CloudType == 256 {
+		} else if acc.CloudType == cloud.AWSGOV {
 			d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
 			d.Set("awsgov_access_key", acc.AwsgovAccessKey)
 		}
@@ -405,7 +406,7 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("update account name is not allowed")
 	}
 
-	if account.CloudType == 1 {
+	if account.CloudType == cloud.AWS {
 		if d.HasChange("aws_account_number") || d.HasChange("aws_access_key") ||
 			d.HasChange("aws_secret_key") || d.HasChange("aws_iam") ||
 			d.HasChange("aws_role_app") || d.HasChange("aws_role_ec2") {
@@ -429,7 +430,7 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 				d.SetPartial("aws_iam")
 			}
 		}
-	} else if account.CloudType == 4 {
+	} else if account.CloudType == cloud.GCP {
 		if d.HasChange("gcloud_project_id") || d.HasChange("gcloud_project_credentials_filepath") {
 			// if user changed credential filepath or wants to upload a new file (local) then will have to reupload to controller before updating account
 			// to edit gcp account, must upload another credential file
@@ -466,7 +467,7 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 				d.SetPartial("gcloud_project_credentials_filepath")
 			}
 		}
-	} else if account.CloudType == 8 {
+	} else if account.CloudType == cloud.AZURE {
 		if d.HasChange("arm_subscription_id") || d.HasChange("arm_directory_id") || d.HasChange("arm_application_id") || d.HasChange("arm_application_key") {
 			err := client.UpdateAccount(account)
 			if err != nil {
@@ -485,11 +486,11 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 				d.SetPartial("arm_application_key")
 			}
 		}
-	} else if account.CloudType == 16 {
+	} else if account.CloudType == cloud.OCI {
 		if d.HasChange("oci_tenancy_id") || d.HasChange("oci_user_id") || d.HasChange("oci_compartment_id") || d.HasChange("oci_api_private_key_filepath") {
 			return fmt.Errorf("updating OCI account is not supported")
 		}
-	} else if account.CloudType == 256 {
+	} else if account.CloudType == cloud.AWSGOV {
 		if d.HasChange("awsgov_account_number") || d.HasChange("awsgov_access_key") || d.HasChange("awsgov_secret_key") {
 			err := client.UpdateAccount(account)
 			if err != nil {

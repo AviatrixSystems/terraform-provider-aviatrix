@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aviatrix/cloud"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -203,7 +204,7 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("cloud_type", gw.CloudType)
 		d.Set("account_name", gw.AccountName)
 
-		if gw.CloudType == 1 {
+		if gw.CloudType == cloud.AWS {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 			d.Set("vpc_reg", gw.VpcRegion)
 
@@ -212,12 +213,12 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 			} else {
 				d.Set("allocate_new_eip", false)
 			}
-		} else if gw.CloudType == 4 {
+		} else if gw.CloudType == cloud.GCP {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0])
 			d.Set("vpc_reg", gw.GatewayZone)
 
 			d.Set("allocate_new_eip", true)
-		} else if gw.CloudType == 8 || gw.CloudType == 16 {
+		} else if gw.CloudType == cloud.AZURE || gw.CloudType == cloud.OCI {
 			d.Set("vpc_id", gw.VpcID)
 			d.Set("vpc_reg", gw.VpcRegion)
 
@@ -240,7 +241,7 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 
 		if gw.InsaneMode == "yes" {
 			d.Set("insane_mode", true)
-			if gw.CloudType == 1 {
+			if gw.CloudType == cloud.AWS {
 				d.Set("insane_mode_az", gw.GatewayZone)
 			} else {
 				d.Set("insane_mode_az", "")
@@ -256,7 +257,7 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("enable_active_mesh", false)
 		}
 
-		if gw.CloudType == 1 && gw.EnableVpcDnsServer == "Enabled" {
+		if gw.CloudType == cloud.AWS && gw.EnableVpcDnsServer == "Enabled" {
 			d.Set("enable_vpc_dns_server", true)
 		} else {
 			d.Set("enable_vpc_dns_server", false)
@@ -298,10 +299,10 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 		haGw, _ := client.GetGateway(haGateway)
 		if haGw != nil {
-			if haGw.CloudType == 1 || haGw.CloudType == 8 || haGw.CloudType == 16 {
+			if haGw.CloudType == cloud.AWS || haGw.CloudType == cloud.AZURE || haGw.CloudType == cloud.OCI {
 				d.Set("ha_subnet", haGw.VpcNet)
 				d.Set("ha_zone", "")
-			} else if haGw.CloudType == 4 {
+			} else if haGw.CloudType == cloud.GCP {
 				d.Set("ha_zone", haGw.GatewayZone)
 				d.Set("ha_subnet", "")
 			}
@@ -311,16 +312,16 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("ha_cloud_instance_id", haGw.CloudnGatewayInstID)
 			d.Set("ha_gw_name", haGw.GwName)
 			d.Set("ha_private_ip", haGw.PrivateIP)
-			if haGw.InsaneMode == "yes" && haGw.CloudType == 1 {
+			if haGw.InsaneMode == "yes" && haGw.CloudType == cloud.AWS {
 				d.Set("ha_insane_mode_az", haGw.GatewayZone)
 			} else {
 				d.Set("ha_insane_mode_az", "")
 			}
 		}
 
-		if gw.CloudType == 1 {
+		if gw.CloudType == cloud.AWS {
 			tags := &goaviatrix.Tags{
-				CloudType:    1,
+				CloudType:    cloud.AWS,
 				ResourceType: "gw",
 				ResourceName: d.Get("gw_name").(string),
 			}

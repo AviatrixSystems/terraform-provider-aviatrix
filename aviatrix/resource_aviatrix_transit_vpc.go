@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aviatrix/cloud"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -139,12 +140,12 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	cloudType := d.Get("cloud_type").(int)
-	if cloudType == 1 {
+	if cloudType == cloud.AWS {
 		gateway.VpcID = d.Get("vpc_id").(string)
 		if gateway.VpcID == "" {
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a transit gw for aws vpc")
 		}
-	} else if cloudType == 8 {
+	} else if cloudType == cloud.AZURE {
 		gateway.VNetNameResourceGroup = d.Get("vpc_id").(string)
 		if gateway.VNetNameResourceGroup == "" {
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a transit gw for azure vnet")
@@ -158,7 +159,7 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 
 	insaneMode := d.Get("insane_mode").(bool)
 	if insaneMode == true {
-		if cloudType != 1 {
+		if cloudType != cloud.AWS {
 			return fmt.Errorf("insane_mode is only support for aws (cloud_type = 1)")
 		}
 		if d.Get("insane_mode_az").(string) == "" {
@@ -241,14 +242,14 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if _, ok := d.GetOk("tag_list"); ok {
-		if cloudType != 1 {
+		if cloudType != cloud.AWS {
 			return fmt.Errorf("'tag_list' is only supported for AWS cloud type 1")
 		}
 		tagList := d.Get("tag_list").([]interface{})
 		tagListStr := goaviatrix.ExpandStringList(tagList)
 		gateway.TagList = strings.Join(tagListStr, ",")
 		tags := &goaviatrix.Tags{
-			CloudType:    1,
+			CloudType:    cloud.AWS,
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
 			TagList:      gateway.TagList,
@@ -260,11 +261,11 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	enableHybridConnection := d.Get("enable_hybrid_connection").(bool)
-	if enableHybridConnection && cloudType != 1 {
+	if enableHybridConnection && cloudType != cloud.AWS {
 		return fmt.Errorf("'enable_hybrid_connection' is only supported for AWS cloud type 1")
 	}
 	if enableHybridConnection == true {
-		if cloudType != 1 {
+		if cloudType != cloud.AWS {
 			return fmt.Errorf("'enable_hybrid_connection' is only supported for AWS cloud type 1")
 		}
 		err := client.AttachTransitGWForHybrid(gateway)
@@ -342,15 +343,15 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("account_name", gw.AccountName)
 		d.Set("gw_name", gw.GwName)
 		d.Set("subnet", gw.VpcNet)
-		if gw.CloudType == 1 {
+		if gw.CloudType == cloud.AWS {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
-		} else if gw.CloudType == 8 {
+		} else if gw.CloudType == cloud.AZURE {
 			d.Set("vpc_id", gw.VpcID)
 		}
 		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("vpc_size", gw.GwSize)
 		d.Set("enable_nat", gw.EnableNat)
-		if gw.CloudType == 1 {
+		if gw.CloudType == cloud.AWS {
 			d.Set("enable_hybrid_connection", gw.EnableHybridConnection)
 		} else {
 			d.Set("enable_hybrid_connection", false)
@@ -371,9 +372,9 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("enable_firenet_interfaces", gwDetail.DMZEnabled)
 	}
 
-	if gw.CloudType == 1 {
+	if gw.CloudType == cloud.AWS {
 		tags := &goaviatrix.Tags{
-			CloudType:    1,
+			CloudType:    cloud.AWS,
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
 		}
@@ -514,10 +515,10 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		d.SetPartial("ha_subnet")
 	}
 
-	if gateway.CloudType == 1 {
+	if gateway.CloudType == cloud.AWS {
 		if d.HasChange("tag_list") {
 			tags := &goaviatrix.Tags{
-				CloudType:    1,
+				CloudType:    cloud.AWS,
 				ResourceType: "gw",
 				ResourceName: d.Get("gw_name").(string),
 			}
@@ -558,7 +559,7 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	if gateway.CloudType == 1 {
+	if gateway.CloudType == cloud.AWS {
 		if d.HasChange("enable_hybrid_connection") {
 			transitGateway := &goaviatrix.TransitVpc{
 				CloudType:   d.Get("cloud_type").(int),

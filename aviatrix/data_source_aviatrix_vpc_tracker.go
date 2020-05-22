@@ -3,6 +3,8 @@ package aviatrix
 import (
 	"fmt"
 
+	"github.com/terraform-providers/terraform-provider-aviatrix/cloud"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -17,7 +19,7 @@ func dataSourceAviatrixVpcTracker() *schema.Resource {
 				Optional: true,
 				Description: "Get VPCs from a single cloud provider. " +
 					"For example, if cloud_type = 4, only GCP VPCs will be returned.",
-				ValidateFunc: validation.IntInSlice([]int{1, 4, 8, 16, 256}),
+				ValidateFunc: validation.IntInSlice(cloud.GetSupportedClouds()),
 			},
 			"cidr": {
 				Type:         schema.TypeString,

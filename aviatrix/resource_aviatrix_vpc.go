@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aviatrix/cloud"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -115,25 +116,25 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		Name:        d.Get("name").(string),
 		Cidr:        d.Get("cidr").(string),
 	}
-	if vpc.Region == "" && vpc.CloudType != 4 {
+	if vpc.Region == "" && vpc.CloudType != cloud.GCP {
 		return fmt.Errorf("please specifiy 'region'")
-	} else if vpc.Region != "" && vpc.CloudType == 4 {
+	} else if vpc.Region != "" && vpc.CloudType == cloud.GCP {
 		return fmt.Errorf("please specify 'region' in 'subnets' for GCP provider")
 	}
 
-	if vpc.Cidr == "" && vpc.CloudType != 4 {
+	if vpc.Cidr == "" && vpc.CloudType != cloud.GCP {
 		return fmt.Errorf("please specify 'cidr'")
-	} else if vpc.Cidr != "" && vpc.CloudType == 4 {
+	} else if vpc.Cidr != "" && vpc.CloudType == cloud.GCP {
 		return fmt.Errorf("please specify 'cidr' in 'subnets' for GCP provider")
 	}
 
 	aviatrixTransitVpc := d.Get("aviatrix_transit_vpc").(bool)
 	aviatrixFireNetVpc := d.Get("aviatrix_firenet_vpc").(bool)
 
-	if aviatrixTransitVpc && vpc.CloudType != 1 {
+	if aviatrixTransitVpc && vpc.CloudType != cloud.AWS {
 		return fmt.Errorf("currently 'aviatrix_transit_vpc' is only supported for AWS provider")
 	}
-	if aviatrixFireNetVpc && vpc.CloudType != 1 && vpc.CloudType != 8 {
+	if aviatrixFireNetVpc && vpc.CloudType != cloud.AWS && vpc.CloudType != cloud.AZURE {
 		return fmt.Errorf("currently'aviatrix_firenet_vpc' is only supported for AWS and AZURE provider")
 	}
 	if aviatrixTransitVpc && aviatrixFireNetVpc {
@@ -151,7 +152,7 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[INFO] Creating a new VPC: %#v", vpc)
 	}
 
-	if vpc.CloudType == 4 {
+	if vpc.CloudType == cloud.GCP {
 		if _, ok := d.GetOk("subnets"); ok {
 			subnets := d.Get("subnets").([]interface{})
 			for _, subnet := range subnets {
@@ -212,7 +213,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cloud_type", vC.CloudType)
 	d.Set("account_name", vC.AccountName)
 	d.Set("name", vC.Name)
-	if vC.CloudType != 4 {
+	if vC.CloudType != cloud.GCP {
 		d.Set("region", vC.Region)
 		d.Set("cidr", vC.Cidr)
 	}
@@ -233,17 +234,17 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	var subnetsKeyArray []string
 	for _, subnet := range vC.Subnets {
 		subnetInfo := make(map[string]interface{})
-		if vC.CloudType == 4 {
+		if vC.CloudType == cloud.GCP {
 			subnetInfo["region"] = subnet.Region
 		}
 		subnetInfo["cidr"] = subnet.Cidr
 		subnetInfo["name"] = subnet.Name
-		if vC.CloudType != 4 {
+		if vC.CloudType != cloud.GCP {
 			subnetInfo["subnet_id"] = subnet.SubnetID
 		}
 
 		var key string
-		if vC.CloudType == 4 {
+		if vC.CloudType == cloud.GCP {
 			key = subnet.Region + "~" + subnet.Cidr + "~" + subnet.Name
 		} else {
 			key = subnet.Cidr + "~" + subnet.Name + "~" + subnet.SubnetID
@@ -253,7 +254,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var subnetsFromFile []map[string]interface{}
-	if vC.CloudType == 4 {
+	if vC.CloudType == cloud.GCP {
 		subnets := d.Get("subnets").([]interface{})
 		for _, subnet := range subnets {
 			sub := subnet.(map[string]interface{})

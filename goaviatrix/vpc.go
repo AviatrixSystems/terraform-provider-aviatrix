@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/terraform-providers/terraform-provider-aviatrix/cloud"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -65,7 +67,7 @@ func (c *Client) CreateVpc(vpc *Vpc) error {
 	createCustomVpc.Add("cloud_type", strconv.Itoa(vpc.CloudType))
 	createCustomVpc.Add("account_name", vpc.AccountName)
 	createCustomVpc.Add("pool_name", vpc.Name)
-	if vpc.CloudType != 4 {
+	if vpc.CloudType != cloud.GCP {
 		createCustomVpc.Add("region", vpc.Region)
 		createCustomVpc.Add("vpc_cidr", vpc.Cidr)
 		createCustomVpc.Add("aviatrix_transit_vpc", vpc.AviatrixTransitVpc)

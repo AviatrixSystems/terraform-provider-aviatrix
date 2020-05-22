@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aviatrix/cloud"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -100,7 +101,7 @@ func testAccCheckGeoVPNExists(n string, geoVPN *goaviatrix.GeoVPN) resource.Test
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
 		foundGeoVPN := &goaviatrix.GeoVPN{
-			CloudType:   1,
+			CloudType:   cloud.AWS,
 			ServiceName: rs.Primary.Attributes["service_name"],
 			DomainName:  rs.Primary.Attributes["domain_name"],
 		}
@@ -126,7 +127,7 @@ func testAccCheckGeoVPNDestroy(s *terraform.State) error {
 			continue
 		}
 		foundGeoVPN := &goaviatrix.GeoVPN{
-			CloudType:   1,
+			CloudType:   cloud.AWS,
 			ServiceName: rs.Primary.Attributes["service_name"],
 			DomainName:  rs.Primary.Attributes["domain_name"],
 		}
