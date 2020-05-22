@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"net/url"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type VpcTracker struct {
