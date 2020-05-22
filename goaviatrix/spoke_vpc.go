@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/terraform-providers/terraform-provider-aviatrix/cloud"
+	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix/cloud"
 
 	log "github.com/sirupsen/logrus"
 )

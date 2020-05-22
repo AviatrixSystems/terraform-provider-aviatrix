@@ -1,4 +1,4 @@
-// cloud package is used to hold cloud provider information that is needed
+// cloud is used to hold cloud provider information that is needed
 // in both the aviatrix and goaviatrix packages.
 
 package cloud

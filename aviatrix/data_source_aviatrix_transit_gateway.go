@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aviatrix/cloud"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
+	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix/cloud"
 )
 
 func dataSourceAviatrixTransitGateway() *schema.Resource {
