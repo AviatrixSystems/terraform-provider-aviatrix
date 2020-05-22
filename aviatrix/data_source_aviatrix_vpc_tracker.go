@@ -137,8 +137,12 @@ func dataSourceAviatrixVpcTrackerRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("could not set vpc list: %s", err)
 	}
 
-	// vpc_tracker takes no inputs so always has the same id
-	d.SetId("vpc_tracker")
+	ct := d.Get("cloud_type").(int)
+	cidr := d.Get("cidr").(string)
+	reg := d.Get("region").(string)
+	an := d.Get("account_name").(string)
+	// Generate a unique id based on the user inputs
+	d.SetId(fmt.Sprintf("vpc_tracker~%d~%s~%s~%s", ct, cidr, reg, an))
 
 	return nil
 }
