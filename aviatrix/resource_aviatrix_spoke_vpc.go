@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
-	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix/cloud"
 )
 
 func resourceAviatrixSpokeVpc() *schema.Resource {
@@ -129,12 +128,12 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		gateway.EnableNat = "no"
 	}
 
-	if gateway.CloudType == cloud.AWS || gateway.CloudType == cloud.GCP {
+	if gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.GCP {
 		gateway.VpcID = d.Get("vpc_id").(string)
 		if gateway.VpcID == "" {
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a spoke gw")
 		}
-	} else if gateway.CloudType == cloud.AZURE {
+	} else if gateway.CloudType == goaviatrix.AZURE {
 		gateway.VNetNameResourceGroup = d.Get("vpc_id").(string)
 		if gateway.VNetNameResourceGroup == "" {
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a spoke gw")
@@ -143,9 +142,9 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("invalid cloud type, it can only be aws (1), gcp (4), azure (8)")
 	}
 
-	if gateway.CloudType == cloud.AWS || gateway.CloudType == cloud.AZURE {
+	if gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AZURE {
 		gateway.VpcRegion = d.Get("vpc_reg").(string)
-	} else if gateway.CloudType == cloud.GCP {
+	} else if gateway.CloudType == goaviatrix.GCP {
 		// for gcp, rest api asks for "zone" rather than vpc region
 		gateway.Zone = d.Get("vpc_reg").(string)
 	} else {
@@ -224,12 +223,12 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if _, ok := d.GetOk("tag_list"); ok && gateway.CloudType == cloud.AWS {
+	if _, ok := d.GetOk("tag_list"); ok && gateway.CloudType == goaviatrix.AWS {
 		tagList := d.Get("tag_list").([]interface{})
 		tagListStr := goaviatrix.ExpandStringList(tagList)
 		gateway.TagList = strings.Join(tagListStr, ",")
 		tags := &goaviatrix.Tags{
-			CloudType:    cloud.AWS,
+			CloudType:    goaviatrix.AWS,
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
 			TagList:      gateway.TagList,
@@ -238,7 +237,7 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		if err != nil {
 			return fmt.Errorf("failed to add tags: %s", err)
 		}
-	} else if ok && gateway.CloudType != cloud.AWS {
+	} else if ok && gateway.CloudType != goaviatrix.AWS {
 		return fmt.Errorf("adding tags only supported for aws, cloud_type must be 1")
 	}
 
@@ -290,13 +289,13 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 	if gw != nil {
 		d.Set("cloud_type", gw.CloudType)
 		d.Set("account_name", gw.AccountName)
-		if gw.CloudType == cloud.AWS {
+		if gw.CloudType == goaviatrix.AWS {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0]) //aws vpc_id returns as <vpc_id>~~<other vpc info> in rest api
 			d.Set("vpc_reg", gw.VpcRegion)                    //aws vpc_reg returns as vpc_region in rest api
-		} else if gw.CloudType == cloud.GCP {
+		} else if gw.CloudType == goaviatrix.GCP {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0]) //gcp vpc_id returns as <vpc_id>~-~<other vpc info> in rest api
 			d.Set("vpc_reg", gw.GatewayZone)                   //gcp vpc_reg returns as gateway_zone in json
-		} else if gw.CloudType == cloud.AZURE {
+		} else if gw.CloudType == goaviatrix.AZURE {
 			d.Set("vpc_id", gw.VpcID)
 			d.Set("vpc_reg", gw.VpcRegion)
 		}
@@ -319,9 +318,9 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 		d.Set("transit_gw", "")
 	}
 
-	if gw.CloudType == cloud.AWS {
+	if gw.CloudType == goaviatrix.AWS {
 		tags := &goaviatrix.Tags{
-			CloudType:    cloud.AWS,
+			CloudType:    goaviatrix.AWS,
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
 		}
@@ -360,10 +359,10 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 		}
 	} else {
 		log.Printf("[INFO] Spoke HA Gateway size: %s", haGw.GwSize)
-		if haGw.CloudType == cloud.AWS || haGw.CloudType == cloud.AZURE {
+		if haGw.CloudType == goaviatrix.AWS || haGw.CloudType == goaviatrix.AZURE {
 			d.Set("ha_subnet", haGw.VpcNet)
 			d.Set("ha_zone", "")
-		} else if haGw.CloudType == cloud.GCP {
+		} else if haGw.CloudType == goaviatrix.GCP {
 			d.Set("ha_zone", haGw.GatewayZone)
 			d.Set("ha_subnet", "")
 		}
@@ -428,9 +427,9 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if d.HasChange("tag_list") && gateway.CloudType == cloud.AWS {
+	if d.HasChange("tag_list") && gateway.CloudType == goaviatrix.AWS {
 		tags := &goaviatrix.Tags{
-			CloudType:    cloud.AWS,
+			CloudType:    goaviatrix.AWS,
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
 		}
@@ -464,7 +463,7 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 			}
 		}
 		d.SetPartial("tag_list")
-	} else if d.HasChange("tag_list") && gateway.CloudType != cloud.AWS {
+	} else if d.HasChange("tag_list") && gateway.CloudType != goaviatrix.AWS {
 		return fmt.Errorf("adding tags is only supported for aws, cloud_type must be set to 1")
 	}
 
@@ -492,7 +491,7 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 		oldZone, newZone := d.GetChange("ha_zone")
 		deleteHaGw := false
 		changeHaGw := false
-		if spokeGw.CloudType == cloud.AWS || spokeGw.CloudType == cloud.AZURE {
+		if spokeGw.CloudType == goaviatrix.AWS || spokeGw.CloudType == goaviatrix.AZURE {
 			spokeGw.HASubnet = d.Get("ha_subnet").(string)
 			if oldSubnet == "" && newSubnet != "" {
 				newHaGwEnabled = true
@@ -501,7 +500,7 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 			} else if oldSubnet != "" && newSubnet != "" {
 				changeHaGw = true
 			}
-		} else if spokeGw.CloudType == cloud.GCP {
+		} else if spokeGw.CloudType == goaviatrix.GCP {
 			spokeGw.HAZone = d.Get("ha_zone").(string)
 			if oldZone == "" && newZone != "" {
 				newHaGwEnabled = true

@@ -7,8 +7,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix/cloud"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -134,9 +132,9 @@ func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 	enableSpokeHa.Add("gw_name", spoke.GwName)
 	enableSpokeHa.Add("eip", spoke.Eip)
 
-	if spoke.CloudType == cloud.AWS || spoke.CloudType == cloud.AZURE || spoke.CloudType == cloud.OCI {
+	if spoke.CloudType == AWS || spoke.CloudType == AZURE || spoke.CloudType == OCI {
 		enableSpokeHa.Add("public_subnet", spoke.HASubnet)
-	} else if spoke.CloudType == cloud.GCP {
+	} else if spoke.CloudType == GCP {
 		enableSpokeHa.Add("new_zone", spoke.HAZone)
 	} else {
 		return errors.New("invalid cloud type")

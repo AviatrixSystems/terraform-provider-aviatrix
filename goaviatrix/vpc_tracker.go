@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix/cloud"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -97,11 +95,11 @@ func (c *Client) GetVpcTracker() ([]*VpcTracker, error) {
 
 func vendorNameToCloudType(v string) int {
 	vendorToCloud := map[string]int{
-		"CLOUD_AWS":     cloud.AWS,
-		"CLOUD_GOOGLE":  cloud.GCP,
-		"CLOUD_AZURE":   cloud.AZURE,
-		"CLOUD_ORACLE":  cloud.OCI,
-		"CLOUD_AWS_GOV": cloud.AWSGOV,
+		"CLOUD_AWS":     AWS,
+		"CLOUD_GOOGLE":  GCP,
+		"CLOUD_AZURE":   AZURE,
+		"CLOUD_ORACLE":  OCI,
+		"CLOUD_AWS_GOV": AWSGOV,
 	}
 	ct, ok := vendorToCloud[v]
 	if !ok {

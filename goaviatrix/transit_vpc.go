@@ -7,8 +7,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix/cloud"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -93,7 +91,7 @@ func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) error {
 	enableTransitHa.Add("gw_name", gateway.GwName)
 	enableTransitHa.Add("eip", gateway.Eip)
 
-	if gateway.CloudType == cloud.GCP {
+	if gateway.CloudType == GCP {
 		enableTransitHa.Add("new_zone", gateway.HAZone)
 	} else {
 		enableTransitHa.Add("public_subnet", gateway.HASubnet)

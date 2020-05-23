@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
-	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix/cloud"
 )
 
 func resourceAviatrixGeoVPN() *schema.Resource {
@@ -116,7 +115,7 @@ func resourceAviatrixGeoVPNRead(d *schema.ResourceData, meta interface{}) error 
 	if domainName == "" || serviceName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no domain name or service name received. Import id is %s", id)
-		d.Set("cloud_type", cloud.AWS)
+		d.Set("cloud_type", goaviatrix.AWS)
 		d.Set("service_name", strings.Split(id, "~")[0])
 		d.Set("domain_name", strings.Split(id, "~")[1])
 		d.SetId(id)
