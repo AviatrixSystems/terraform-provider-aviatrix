@@ -91,7 +91,7 @@ func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) error {
 	enableTransitHa.Add("gw_name", gateway.GwName)
 	enableTransitHa.Add("eip", gateway.Eip)
 
-	if gateway.CloudType == 4 {
+	if gateway.CloudType == GCP {
 		enableTransitHa.Add("new_zone", gateway.HAZone)
 	} else {
 		enableTransitHa.Add("public_subnet", gateway.HASubnet)
