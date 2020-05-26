@@ -37,6 +37,7 @@ resource "aviatrix_fqdn" "test_fqdn" {
     fqdn  = "facebook.com"
     proto = "tcp"
     port  = "443"
+    action = "Allow" // Optional
   }
 
   domain_names {
@@ -61,6 +62,7 @@ The following arguments are supported:
   * `fqdn` - (Required) FQDN. Example: "facebook.com".
   * `proto` - (Required) Protocol. Valid values: "all", "tcp", "udp", "icmp".
   * `port` - (Required) Port. Example "25".
+  * `action` - (Optional) What action should happen to matching requests. Possible values are: 'Base Policy', 'Allow' or 'Deny'. Defaults to 'Base Policy' if no value provided.
     * For protocol "all", port must be set to "all".
     * For protocol “icmp”, port must be set to “ping”.
 
