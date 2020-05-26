@@ -424,6 +424,54 @@ func (c *Client) DeleteGateway(gateway *Gateway) error {
 	return nil
 }
 
+func (c *Client) EnableCustomSNat(gateway *Gateway) error {
+	gateway.CID = c.CID
+	gateway.Action = "edit_gw_customized_snat_config"
+	args, err := json.Marshal(gateway.SnatPolicy)
+	if err != nil {
+		return err
+	}
+	gateway.PolicyList = string(args)
+	resp, err := c.Post(c.baseURL, gateway)
+	if err != nil {
+		return errors.New("HTTP POST edit_gw_customized_snat_config failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode edit_gw_customized_snat_config failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API edit_gw_customized_snat_config POST failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) DisableCustomSNat(gateway *Gateway) error {
+	gateway.CID = c.CID
+	gateway.Action = "edit_gw_customized_snat_config"
+	gateway.PolicyList = ""
+	resp, err := c.Post(c.baseURL, gateway)
+	if err != nil {
+		return errors.New("HTTP POST edit_gw_customized_snat_config failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode edit_gw_customized_snat_config failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API edit_gw_customized_snat_config POST failed: " + data.Reason)
+	}
+	return nil
+}
+
 func (c *Client) EnableSNat(gateway *Gateway) error {
 	gateway.CID = c.CID
 	gateway.Action = "enable_snat"
