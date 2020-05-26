@@ -17,6 +17,7 @@ type Filters struct {
 	FQDN     string `form:"fqdn,omitempty" json:"fqdn,omitempty"`
 	Protocol string `form:"proto,omitempty" json:"proto,omitempty"`
 	Port     string `form:"port,omitempty" json:"port,omitempty"`
+	Verdict  string `form:"verdict,omitempty" json:"verdict,omitempty"`
 }
 
 // Gateway simple struct to hold fqdn details
@@ -183,7 +184,7 @@ func (c *Client) UpdateDomains(fqdn *FQDN) error {
 	body := fmt.Sprintf("CID=%s&action=%s&tag_name=%s", c.CID, fqdn.Action, fqdn.FQDNTag)
 	for i, dn := range fqdn.DomainList {
 		body = body + fmt.Sprintf("&domain_names[%d][fqdn]=%s&domain_names[%d]"+
-			"[proto]=%s&domain_names[%d][port]=%s", i, dn.FQDN, i, dn.Protocol, i, dn.Port)
+			"[proto]=%s&domain_names[%d][port]=%s&domain_names[%d][verdict]=%s", i, dn.FQDN, i, dn.Protocol, i, dn.Port, i, dn.Verdict)
 	}
 	log.Tracef("%s %s Body: %s", verb, c.baseURL, body)
 	req, err := http.NewRequest(verb, c.baseURL, strings.NewReader(body))
@@ -333,6 +334,7 @@ func (c *Client) ListDomains(fqdn *FQDN) (*FQDN, error) {
 			FQDN:     dn["fqdn"].(string),
 			Protocol: dn["proto"].(string),
 			Port:     dn["port"].(string),
+			Verdict:  dn["verdict"].(string),
 		}
 		fqdn.DomainList = append(fqdn.DomainList, &fqdnFilter)
 	}
