@@ -79,6 +79,7 @@ resource "aviatrix_gateway" "test_gateway_gcp" {
   gw_size            = "n1-standard-1"
   subnet             = "10.12.0.0/24"
   peering_ha_zone    = "us-west1-c"
+  peering_ha_subnet  = "10.12.0.0/24" // Optional
   peering_ha_gw_size = "n1-standard-1"
 }
 ```
@@ -138,7 +139,7 @@ The following arguments are supported:
 
 ### HA
 * `single_az_ha` (Optional) If enabled, Controller monitors the health of the gateway and restarts the gateway if it becomes unreachable. Valid values: true, false. Default value: false.
-* `peering_ha_subnet` - (Optional) Public subnet CIDR to create Peering HA Gateway in. Required only if enabling Peering HA for AWS/AZURE. Example: AWS: "10.0.0.0/16".
+* `peering_ha_subnet` - (Optional) Public subnet CIDR to create Peering HA Gateway in. Required if enabling Peering HA for AWS/AZURE. Optional if enabling Peering HA for GCP. Example: AWS: "10.0.0.0/16".
 * `peering_ha_zone` - (Optional) Zone to create Peering HA Gateway in. Required only if enabling Peering HA for GCP. Example: GCP: "us-west1-c".
 * `peering_ha_insane_mode_az` - (Optional) Region + Availability Zone of subnet being created for Insane Mode-enabled Peering HA Gateway. Required for AWS only if `insane_mode` is set and `peering_ha_subnet` is set. Example: AWS: "us-west-1a".
 * `peering_ha_eip` - (Optional) Public IP address to be assigned to the the HA peering instance. Only available for AWS.
