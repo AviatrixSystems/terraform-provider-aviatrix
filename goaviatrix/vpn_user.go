@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/url"
 	"strings"
 )
@@ -16,6 +15,8 @@ type VPNUser struct {
 	SamlEndpoint string   `form:"saml_endpoint,omitempty" json:"saml_endpoint,omitempty"`
 	VpcID        string   `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
 	GwName       string   `form:"lb_name,omitempty" json:"lb_name,omitempty"`
+	DnsName      string   `json:"dns,omitempty"`
+	DnsEnabled   bool     `json:"dns_enabled,omitempty"`
 	UserName     string   `form:"username" json:"_id,omitempty"`
 	UserEmail    string   `form:"user_email,omitempty" json:"email,omitempty"`
 	Profiles     []string `json:"profiles,omitempty"`
@@ -39,10 +40,15 @@ func (c *Client) CreateVPNUser(vpnUser *VPNUser) error {
 	addVpnUser := url.Values{}
 	addVpnUser.Add("CID", c.CID)
 	addVpnUser.Add("action", "add_vpn_user")
-	addVpnUser.Add("vpc_id", vpnUser.VpcID)
+	if vpnUser.DnsEnabled {
+		addVpnUser.Add("dns", "true")
+		addVpnUser.Add("lb_name", vpnUser.DnsName)
+	} else {
+		addVpnUser.Add("vpc_id", vpnUser.VpcID)
+		addVpnUser.Add("lb_name", vpnUser.GwName)
+	}
 	addVpnUser.Add("username", vpnUser.UserName)
 	addVpnUser.Add("user_email", vpnUser.UserEmail)
-	addVpnUser.Add("lb_name", vpnUser.GwName)
 	addVpnUser.Add("saml_endpoint", vpnUser.SamlEndpoint)
 	Url.RawQuery = addVpnUser.Encode()
 	resp, err := c.Get(Url.String(), nil)
@@ -109,10 +115,22 @@ func (c *Client) GetVPNUser(vpnUser *VPNUser) (*VPNUser, error) {
 }
 
 func (c *Client) DeleteVPNUser(vpnUser *VPNUser) error {
-	vpnUser.Action = "delete_vpn_user"
-	path := c.baseURL + fmt.Sprintf("?CID=%s&action=%s&vpc_id=%s&username=%s", c.CID, vpnUser.Action,
-		vpnUser.VpcID, vpnUser.UserName)
-	resp, err := c.Delete(path, nil)
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for 'delete_vpn_user': ") + err.Error())
+	}
+	deleteVpnUser := url.Values{}
+	deleteVpnUser.Add("CID", c.CID)
+	deleteVpnUser.Add("action", "delete_vpn_user")
+	if vpnUser.DnsEnabled {
+		deleteVpnUser.Add("dns", "true")
+		deleteVpnUser.Add("vpc_id", vpnUser.DnsName)
+	} else {
+		deleteVpnUser.Add("vpc_id", vpnUser.VpcID)
+	}
+	deleteVpnUser.Add("username", vpnUser.UserName)
+	Url.RawQuery = deleteVpnUser.Encode()
+	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
 		return errors.New("HTTP Get 'delete_vpn_user' failed: " + err.Error())
 	}
