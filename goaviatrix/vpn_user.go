@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/url"
 	"strings"
 )
@@ -146,17 +145,5 @@ func (c *Client) DeleteVPNUser(vpnUser *VPNUser) error {
 	if !data.Return {
 		return errors.New("Rest API 'delete_vpn_user' Get failed: " + data.Reason)
 	}
-	return nil
-}
-
-func CheckVpnUserSettings(vpnUser *VPNUser) error {
-	if vpnUser.DnsName == "" && vpnUser.VpcID == "" && vpnUser.GwName == "" {
-		return fmt.Errorf("please set 'vpc_id' and 'gw_name', or 'dns_name' alone")
-	} else if vpnUser.DnsName == "" && (vpnUser.VpcID == "" || vpnUser.GwName == "") {
-		return fmt.Errorf("please set both 'vpc_id' and 'gw_name'")
-	} else if vpnUser.DnsName != "" && (vpnUser.VpcID != "" || vpnUser.GwName != "") {
-		return fmt.Errorf("DNS is enabled. Please set 'vpc_id' and 'gw_name' to be empty")
-	}
-
 	return nil
 }

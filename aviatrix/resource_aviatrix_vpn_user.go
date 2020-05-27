@@ -84,11 +84,16 @@ func resourceAviatrixVPNUserCreate(d *schema.ResourceData, meta interface{}) err
 		SamlEndpoint: d.Get("saml_endpoint").(string),
 	}
 
-	err := goaviatrix.CheckVpnUserSettings(vpnUser)
-	if err != nil {
-		return err
-	}
-	if vpnUser.DnsName != "" {
+	if vpnUser.DnsName == "" {
+		if vpnUser.VpcID == "" && vpnUser.GwName == "" {
+			return fmt.Errorf("please set 'vpc_id' and 'gw_name', or 'dns_name' alone")
+		} else if vpnUser.VpcID == "" || vpnUser.GwName == "" {
+			return fmt.Errorf("please set both 'vpc_id' and 'gw_name'")
+		}
+	} else {
+		if vpnUser.VpcID != "" || vpnUser.GwName != "" {
+			return fmt.Errorf("DNS is enabled. Please set 'vpc_id' and 'gw_name' to be empty")
+		}
 		vpnUser.DnsEnabled = true
 	}
 
@@ -99,7 +104,7 @@ func resourceAviatrixVPNUserCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Creating Aviatrix VPN User: %#v", vpnUser)
 
-	err = client.CreateVPNUser(vpnUser)
+	err := client.CreateVPNUser(vpnUser)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix VPNUser: %s", err)
 	}
