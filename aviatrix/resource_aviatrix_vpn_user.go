@@ -36,7 +36,7 @@ func resourceAviatrixVPNUser() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "DNS name if dns is enabled.",
+				Description: "FQDN of a DNS based VPN service such as GeoVPN or UDP load balancer.",
 			},
 			"user_name": {
 				Type:        schema.TypeString,
@@ -83,11 +83,12 @@ func resourceAviatrixVPNUserCreate(d *schema.ResourceData, meta interface{}) err
 		UserEmail:    d.Get("user_email").(string),
 		SamlEndpoint: d.Get("saml_endpoint").(string),
 	}
-	if vpnUser.DnsName != "" && (vpnUser.VpcID != "" || vpnUser.GwName != "") {
-		return fmt.Errorf("DNS is enabled. Please set 'vpc_id' and 'gw_name' to be empty")
-	} else if vpnUser.DnsName == "" && (vpnUser.VpcID == "" || vpnUser.GwName == "") {
-		return fmt.Errorf("please set both 'vpc_id' and 'gw_name'")
-	} else if vpnUser.DnsName != "" {
+
+	err := goaviatrix.CheckVpnUserSettings(vpnUser)
+	if err != nil {
+		return err
+	}
+	if vpnUser.DnsName != "" {
 		vpnUser.DnsEnabled = true
 	}
 
@@ -98,7 +99,7 @@ func resourceAviatrixVPNUserCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Creating Aviatrix VPN User: %#v", vpnUser)
 
-	err := client.CreateVPNUser(vpnUser)
+	err = client.CreateVPNUser(vpnUser)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix VPNUser: %s", err)
 	}

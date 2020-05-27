@@ -20,6 +20,14 @@ resource "aviatrix_vpn_user" "test_vpn_user" {
   user_email = "user@aviatrix.com"
 }
 ```
+```hcl
+# Create an Aviatrix VPN User under Geo VPN
+resource "aviatrix_vpn_user" "test_vpn_user" {
+  dns_name   = "vpn.testuser.com"
+  user_name  = "username1"
+  user_email = "user@aviatrix.com"
+}
+```
 
 ## Argument Reference
 
@@ -28,7 +36,7 @@ The following arguments are supported:
 ### Required
 * `vpc_id` - (Optional) VPC ID of Aviatrix VPN gateway. Used together with `gw_name`. Example: "vpc-abcd1234".
 * `gw_name` - (Optional) If ELB is enabled, this will be the name of the ELB, else it will be the name of the Aviatrix VPN gateway. Used together with `vpc_id`. Example: "gw1".
-* `dna_name` - (Optional) If DNS is enabled, this will be the name of the DNS. Example: "vpn.testuser.com".
+* `dns_name` - (Optional) FQDN of a DNS based VPN service such as GeoVPN or UDP load balancer. Example: "vpn.testuser.com".
 * `user_name` - (Required) VPN user name. Example: "user".
 * `user_email` - (Optional) VPN user's email. Example: "abc@xyz.com".
 
