@@ -44,6 +44,7 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_gcp" {
   gw_size            = "n1-standard-1"
   subnet             = "10.8.0.0/16"
   ha_zone            = "us-west2-b"
+  ha_subnet          = "10.8.0.0/16" // Optional
   ha_gw_size         = "n1-standard-1"
   enable_active_mesh = true
 }
@@ -93,7 +94,7 @@ The following arguments are supported:
 
 ### HA
 * `single_az_ha` (Optional) Set to true if this [feature](https://docs.aviatrix.com/Solutions/gateway_ha.html#single-az-gateway) is desired. Valid values: true, false.
-* `ha_subnet` - (Optional) HA Subnet CIDR. Required only if enabling HA for AWS/Azure gateway. Setting to empty/unsetting will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24".
+* `ha_subnet` - (Optional) HA Subnet CIDR. Required only if enabling HA for AWS/Azure gateway. Optional for GCP. Setting to empty/unsetting will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24".
 * `ha_zone` - (Optional) HA Zone. Required only if enabling HA for GCP gateway. Setting to empty/unsetting will disable HA. Setting to a valid zone will create an HA gateway in the zone. Example: "us-west1-c".
 * `ha_insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit HA Gateway. Required for AWS if `insane_mode` is enabled and `ha_subnet` is set. Example: AWS: "us-west-1a".
 * `ha_eip` - (Optional) Public IP address that you want to assign to the HA peering instance. If no value is given, a new EIP will automatically be allocated. Only available for AWS.
