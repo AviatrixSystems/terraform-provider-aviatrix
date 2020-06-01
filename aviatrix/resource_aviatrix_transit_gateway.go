@@ -79,10 +79,11 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "Required when allocate_new_eip is false. It uses specified EIP for this gateway.",
 			},
 			"ha_subnet": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "HA Subnet. Required for enabling HA for AWS/AZURE gateway.",
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				Description: "HA Subnet. Required for enabling HA for AWS/AZURE gateway. " +
+					"Optional for enabling HA for GCP gateway.",
 			},
 			"ha_zone": {
 				Type:        schema.TypeString,
@@ -345,12 +346,12 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	}
 
 	haSubnet := d.Get("ha_subnet").(string)
-	if haSubnet != "" && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AZURE && gateway.CloudType != goaviatrix.OCI && gateway.CloudType != goaviatrix.AWSGOV {
-		return fmt.Errorf("'ha_subnet' is only required for AWS/AZURE/OCI providers if enabling HA")
-	}
 	haZone := d.Get("ha_zone").(string)
 	if haZone != "" && gateway.CloudType != goaviatrix.GCP {
 		return fmt.Errorf("'ha_zone' is only required for GCP provider if enabling HA")
+	}
+	if gateway.CloudType == goaviatrix.GCP && haSubnet != "" && haZone == "" {
+		return fmt.Errorf("'ha_zone' must be set to enable HA on GCP, cannot enable HA with only 'ha_subnet' enabled")
 	}
 	haGwSize := d.Get("ha_gw_size").(string)
 	if haSubnet == "" && haZone == "" && haGwSize != "" {
@@ -448,11 +449,12 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("no ha_zone is provided for enabling Transit HA gateway: %s", transitGateway.GwName)
 		} else if transitGateway.CloudType == goaviatrix.GCP {
 			transitGateway.HAZone = haZone
+			transitGateway.HASubnetGCP = haSubnet
 		}
 
 		log.Printf("[INFO] Enabling HA on Transit Gateway: %#v", haSubnet)
 
-		err = client.EnableHaTransitVpc(transitGateway)
+		err = client.EnableHaTransitGateway(transitGateway)
 		if err != nil {
 			return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
 		}
@@ -908,7 +910,9 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("ha_zone", "")
 		} else if haGw.CloudType == goaviatrix.GCP {
 			d.Set("ha_zone", haGw.GatewayZone)
-			d.Set("ha_subnet", "")
+			if d.Get("ha_subnet") != "" {
+				d.Set("ha_subnet", haGw.VpcNet)
+			}
 		}
 		d.Set("ha_eip", haGw.PublicIP)
 		d.Set("ha_gw_size", haGw.GwSize)
@@ -939,16 +943,17 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	log.Printf("[INFO] Updating Aviatrix Transit Gateway: %#v", gateway)
 
 	d.Partial(true)
-	if d.HasChange("ha_subnet") {
-		haSubnet := d.Get("ha_subnet").(string)
-		if haSubnet != "" && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AZURE && gateway.CloudType != goaviatrix.OCI && gateway.CloudType != goaviatrix.AWSGOV {
-			return fmt.Errorf("'ha_subnet' is only required for AWS/AZURE/OCI providers if enabling HA")
-		}
-	}
 	if d.HasChange("ha_zone") {
 		haZone := d.Get("ha_zone").(string)
 		if haZone != "" && gateway.CloudType != goaviatrix.GCP {
 			return fmt.Errorf("'ha_zone' is only required for GCP provider if enabling HA")
+		}
+	}
+	if d.HasChange("ha_zone") || d.HasChange("ha_subnet") {
+		haZone := d.Get("ha_zone").(string)
+		haSubnet := d.Get("ha_subnet").(string)
+		if gateway.CloudType == goaviatrix.GCP && haSubnet != "" && haZone == "" {
+			return fmt.Errorf("'ha_zone' must be set to enable HA on GCP, cannot enable HA with only 'ha_subnet' enabled")
 		}
 	}
 	if d.HasChange("cloud_type") {
@@ -1059,6 +1064,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		} else if transitGw.CloudType == goaviatrix.GCP {
 			transitGw.HAZone = d.Get("ha_zone").(string)
+			transitGw.HASubnetGCP = d.Get("ha_subnet").(string)
 			if oldZone == "" && newZone != "" {
 				newHaGwEnabled = true
 			} else if oldZone != "" && newZone == "" {
@@ -1068,7 +1074,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 		if newHaGwEnabled {
-			err := client.EnableHaTransitVpc(transitGw)
+			err := client.EnableHaTransitGateway(transitGw)
 			if err != nil {
 				return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
 			}
@@ -1084,7 +1090,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("failed to delete Aviatrix Transit HA gateway: %s", err)
 			}
 
-			haErr := client.EnableHaTransitVpc(transitGw)
+			haErr := client.EnableHaTransitGateway(transitGw)
 			if haErr != nil {
 				return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
 			}
