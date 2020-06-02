@@ -51,7 +51,7 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Site2Cloud Tunnel Type. Valid values: 'udp' and 'tcp'",
+				Description: "Site2Cloud Tunnel Type. Valid values: 'policy' and 'route'.",
 			},
 			"primary_cloud_gateway_name": {
 				Type:        schema.TypeString,
