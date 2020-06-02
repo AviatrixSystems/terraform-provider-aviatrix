@@ -5,6 +5,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
@@ -126,6 +128,21 @@ func dataSourceAviatrixVpc() *schema.Resource {
 					},
 				},
 			},
+			"route_tables": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "List of AWS route table ids associated with this VPC. Only populated for AWS vpc.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"route_tables_filter": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"private", "public"}, false),
+				Description: "Filters the route_tables list to contain only public or private route tables. " +
+					"Valid values are 'private' or 'public'. If not set then route_tables are not filtered.",
+			},
 		},
 	}
 }
@@ -189,6 +206,55 @@ func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] Error setting private subnets for (%s): %s", d.Id(), err)
 	}
 
+	if vC.CloudType == goaviatrix.AWS {
+		vpc.PublicRoutesOnly = true
+		publicRtbs, err := client.GetVpcRouteTableIDs(vpc)
+		if err != nil {
+			return fmt.Errorf("could not get public vpc route table ids: %v", err)
+		}
+
+		vpc.PublicRoutesOnly = false
+		allRtbs, err := client.GetVpcRouteTableIDs(vpc)
+		if err != nil {
+			return fmt.Errorf("could not get all vpc route table ids: %v", err)
+		}
+
+		var rtbs []string
+		routeTableFilter := d.Get("route_tables_filter")
+		if routeTableFilter == "private" {
+			rtbs = getPrivateRouteTables(allRtbs, publicRtbs)
+		} else if routeTableFilter == "public" {
+			rtbs = publicRtbs
+		} else {
+			rtbs = allRtbs
+		}
+
+		if err := d.Set("route_tables", rtbs); err != nil {
+			log.Printf("[WARN] Error setting route tables for (%s): %s", d.Id(), err)
+		}
+	}
+
 	d.SetId(vC.Name)
 	return nil
+}
+
+// To find all the private route tables we will remove the public route tables
+// from the list of all route tables.
+func getPrivateRouteTables(all, public []string) []string {
+	var rtbs []string
+	for _, rtb := range all {
+		if !sliceContains(public, rtb) {
+			rtbs = append(rtbs, rtb)
+		}
+	}
+	return rtbs
+}
+
+func sliceContains(sl []string, s string) bool {
+	for _, v := range sl {
+		if v == s {
+			return true
+		}
+	}
+	return false
 }
