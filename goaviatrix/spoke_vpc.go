@@ -28,6 +28,7 @@ type SpokeVpc struct {
 	EnableVpcDnsServer    string `json:"use_vpc_dns,omitempty"`
 	HASubnet              string `form:"ha_subnet,omitempty"`
 	HAZone                string `form:"new_zone,omitempty"`
+	HASubnetGCP           string `form:"new_subnet,omitempty"`
 	SingleAzHa            string `form:"single_az_ha,omitempty"`
 	TransitGateway        string `form:"transit_gw,omitempty"`
 	TagList               string `form:"tags,omitempty"`
@@ -160,6 +161,27 @@ func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 		}
 		log.Errorf("Enabling HA failed with error %s", data.Reason)
 		return errors.New("Rest API enable_spoke_ha Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) EnableHaSpokeGateway(gateway *SpokeVpc) error {
+	gateway.CID = c.CID
+	gateway.Action = "create_peering_ha_gateway"
+	resp, err := c.Post(c.baseURL, gateway)
+	if err != nil {
+		return errors.New("HTTP Post create_peering_ha_gateway failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode create_peering_ha_gateway failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API create_peering_ha_gateway Post failed: " + data.Reason)
 	}
 	return nil
 }
