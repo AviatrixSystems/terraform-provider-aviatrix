@@ -13,11 +13,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const Phase1AuthDefault = "SHA-1"
-const Phase1DhGroupDefault = "2"
+const Phase1AuthDefault = "SHA-256"
+const Phase1DhGroupDefault = "14"
 const Phase1EncryptionDefault = "AES-256-CBC"
-const Phase2AuthDefault = "HMAC-SHA-1"
-const Phase2DhGroupDefault = "2"
+const Phase2AuthDefault = "HMAC-SHA-256"
+const Phase2DhGroupDefault = "14"
 const Phase2EncryptionDefault = "AES-256-CBC"
 const SslServerPoolDefault = "192.168.44.0/24"
 
