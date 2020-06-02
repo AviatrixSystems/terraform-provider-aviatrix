@@ -52,6 +52,13 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "Site2Cloud Tunnel Type. Valid values: 'policy' and 'route'.",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if v != "policy" && v != "route" {
+						errs = append(errs, fmt.Errorf("%q must be 'policy' or 'route', got: %s", key, val))
+					}
+					return
+				},
 			},
 			"primary_cloud_gateway_name": {
 				Type:        schema.TypeString,
@@ -275,9 +282,6 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	s2c.Phase2Encryption = d.Get("phase_2_encryption").(string)
 
 	customAlgorithms := d.Get("custom_algorithms").(bool)
-	if s2c.TunnelType == "tcp" && customAlgorithms {
-		return fmt.Errorf("custom_algorithms is not supported for tunnel type 'tcp'")
-	}
 	if customAlgorithms {
 		if s2c.Phase1Auth == goaviatrix.Phase1AuthDefault &&
 			s2c.Phase2Auth == goaviatrix.Phase2AuthDefault &&
