@@ -5,6 +5,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
@@ -92,17 +94,12 @@ func resourceAviatrixGateway() *schema.Resource {
 				Description: "A name for the ELB that is created.",
 			},
 			"vpn_protocol": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Elb protocol for VPN gateway with elb enabled. Only supports AWS provider. Valid values: 'TCP', 'UDP'. If not specified, 'TCP'' will be used.",
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-					v := val.(string)
-					if v != "" && v != "TCP" && v != "UDP" {
-						errs = append(errs, fmt.Errorf("%q must be 'TCP' or 'UDP', got: %s", key, val))
-					}
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP"}, false),
+				Description: "Elb protocol for VPN gateway with elb enabled. Only supports AWS provider. " +
+					"Valid values: 'TCP', 'UDP'. If not specified, 'TCP'' will be used.",
 			},
 			"split_tunnel": {
 				Type:        schema.TypeBool,
