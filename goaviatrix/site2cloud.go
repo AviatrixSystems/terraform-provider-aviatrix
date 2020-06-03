@@ -52,6 +52,7 @@ type Site2Cloud struct {
 	Phase2Auth              string   `form:"phase2_auth,omitempty"`
 	Phase2DhGroups          string   `form:"phase2_dh_group,omitempty"`
 	Phase2Encryption        string   `form:"phase2_encryption,omitempty"`
+	EnableIKEv2             string   `form:"enable_ikev2,omitempty"`
 	PrivateRouteEncryption  string   `form:"private_route_encryption,omitempty"`
 	RemoteGwLatitude        float64  `form:"remote_gateway_latitude,omitempty"`
 	RemoteGwLongitude       float64  `form:"remote_gateway_longitude,omitempty"`
@@ -103,6 +104,7 @@ type EditSite2CloudConnDetail struct {
 	SslServerPool           []string      `json:"ssl_server_pool,omitempty"`
 	DeadPeerDetectionConfig string        `json:"dpd_config,omitempty"`
 	EnableActiveActive      string        `json:"active_active_ha,omitempty"`
+	EnableIKEv2             string        `json:"ike_ver,omitempty"`
 }
 
 type Site2CloudConnDetailResp struct {
@@ -160,6 +162,10 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 
 	if site2cloud.TunnelType == "tcp" {
 		addSite2cloud.Add("ssl_server_pool", site2cloud.SslServerPool)
+	}
+
+	if site2cloud.EnableIKEv2 == "true" {
+		addSite2cloud.Add("enable_ikev2", "true")
 	}
 
 	if site2cloud.PrivateRouteEncryption == "true" {
@@ -341,6 +347,9 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 			site2cloud.EnableActiveActive = false
 		}
 
+		if s2cConnDetail.EnableIKEv2 == "2" {
+			site2cloud.EnableIKEv2 = "true"
+		}
 		return site2cloud, nil
 	}
 
