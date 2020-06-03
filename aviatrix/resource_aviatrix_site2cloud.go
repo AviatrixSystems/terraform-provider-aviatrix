@@ -5,6 +5,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
@@ -48,17 +50,11 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Description: "Connection Type. Valid values: 'mapped' and 'unmapped'.",
 			},
 			"tunnel_type": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "Site2Cloud Tunnel Type. Valid values: 'policy' and 'route'.",
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-					v := val.(string)
-					if v != "policy" && v != "route" {
-						errs = append(errs, fmt.Errorf("%q must be 'policy' or 'route', got: %s", key, val))
-					}
-					return
-				},
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice([]string{"policy", "route"}, false),
+				Description:  "Site2Cloud Tunnel Type. Valid values: 'policy' and 'route'.",
 			},
 			"primary_cloud_gateway_name": {
 				Type:        schema.TypeString,
