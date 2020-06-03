@@ -207,26 +207,18 @@ func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if vC.CloudType == goaviatrix.AWS {
-		vpc.PublicRoutesOnly = true
-		publicRtbs, err := client.GetVpcRouteTableIDs(vpc)
-		if err != nil {
-			return fmt.Errorf("could not get public vpc route table ids: %v", err)
-		}
-
-		vpc.PublicRoutesOnly = false
-		allRtbs, err := client.GetVpcRouteTableIDs(vpc)
-		if err != nil {
-			return fmt.Errorf("could not get all vpc route table ids: %v", err)
-		}
-
 		var rtbs []string
 		routeTableFilter := d.Get("route_tables_filter")
 		if routeTableFilter == "private" {
-			rtbs = getPrivateRouteTables(allRtbs, publicRtbs)
+			rtbs, err = getPrivateRouteTables(vpc, client)
 		} else if routeTableFilter == "public" {
-			rtbs = publicRtbs
+			rtbs, err = getPublicRouteTables(vpc, client)
 		} else {
-			rtbs = allRtbs
+			rtbs, err = getAllRouteTables(vpc, client)
+		}
+
+		if err != nil {
+			return fmt.Errorf("could not get vpc route table ids: %v", err)
 		}
 
 		if err := d.Set("route_tables", rtbs); err != nil {
@@ -240,14 +232,42 @@ func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 
 // To find all the private route tables we will remove the public route tables
 // from the list of all route tables.
-func getPrivateRouteTables(all, public []string) []string {
+func getPrivateRouteTables(vpc *goaviatrix.Vpc, client *goaviatrix.Client) ([]string, error) {
+	all, err := getAllRouteTables(vpc, client)
+	if err != nil {
+		return nil, err
+	}
+
+	public, err := getPublicRouteTables(vpc, client)
+	if err != nil {
+		return nil, err
+	}
+
 	var rtbs []string
 	for _, rtb := range all {
 		if !sliceContains(public, rtb) {
 			rtbs = append(rtbs, rtb)
 		}
 	}
-	return rtbs
+	return rtbs, nil
+}
+
+func getPublicRouteTables(vpc *goaviatrix.Vpc, client *goaviatrix.Client) ([]string, error) {
+	vpc.PublicRoutesOnly = true
+	rtbs, err := client.GetVpcRouteTableIDs(vpc)
+	if err != nil {
+		return nil, err
+	}
+	return rtbs, nil
+}
+
+func getAllRouteTables(vpc *goaviatrix.Vpc, client *goaviatrix.Client) ([]string, error) {
+	vpc.PublicRoutesOnly = false
+	rtbs, err := client.GetVpcRouteTableIDs(vpc)
+	if err != nil {
+		return nil, err
+	}
+	return rtbs, nil
 }
 
 func sliceContains(sl []string, s string) bool {
