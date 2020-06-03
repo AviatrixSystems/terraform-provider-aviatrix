@@ -71,6 +71,7 @@ The following arguments are supported:
 * `ssl_server_pool` - (Optional) Specify ssl_server_pool for tunnel_type "tcp". Default value: "192.168.44.0/24". **NOTE: Only supported for 'tcp' tunnel type. Please see notes [here](#ssl_server_pool-1) for more information.**
 * `enable_dead_peer_detection` - (Optional) Enable/disable Deed Peer Detection for an existing site2cloud connection. Default value: true. **NOTE: Please see notes [here](#enable_dead_peer_detection-1) in regards to any deltas found in your state with the addition of this argument in R1.9**
 * `enable_active_active` - (Optional) Enable/disable active active HA for an existing site2cloud connection. Valid values: true, false. Default value: false.
+* `enable_ikev2` - (Optional) Switch to enable IKEv2 for policy based site2cloud.
 
 ## Attribute Reference
 
