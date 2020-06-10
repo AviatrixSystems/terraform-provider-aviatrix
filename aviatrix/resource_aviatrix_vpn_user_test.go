@@ -16,6 +16,7 @@ func TestAccAviatrixVPNUser_basic(t *testing.T) {
 
 	rName := fmt.Sprintf("%s", acctest.RandString(5))
 	resourceName := "aviatrix_vpn_user.test_vpn_user"
+	importStateVerifyIgnore := []string{"manage_user_attachment"}
 
 	skipAcc := os.Getenv("SKIP_VPN_USER")
 	if skipAcc == "yes" {
@@ -42,9 +43,10 @@ func TestAccAviatrixVPNUser_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: importStateVerifyIgnore,
 			},
 		},
 	})
