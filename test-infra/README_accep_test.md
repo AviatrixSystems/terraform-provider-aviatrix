@@ -36,6 +36,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_azure_spoke_native_peering  | SKIP_AZURE_SPOKE_NATIVE_PEERING    | aviatrix_account + AZURE_VNET_ID, AZURE_VNET_ID2, AZURE_REGION, AZURE_REGION2  |
 | aviatrix_aws_tgw_vpn_conn            | SKIP_AWS_TGW_VPN_CONN              | aviatrix_aws_tgw                                                               |
 | aviatrix_branch_router               | SKIP_BRANCH_ROUTER                 | aviatrix_account                                                               |
+| aviatrix_branch_router_tag           | SKIP_BRANCH_ROUTER_TAG             | aviatrix_account                                                               |
 | aviatrix_controller_config           | SKIP_CONTROLLER_CONFIG             | aviatrix_account                                                               |
 | aviatrix_firenet                     | SKIP_FIRENET                       | aviatrix_account + AWS_REGION, Palo Alto VM series                             |
 | aviatrix_firewall                    | SKIP_FIREWALL                      | aviatrix_gateway                                                               |
