@@ -245,7 +245,7 @@ func getPrivateRouteTables(vpc *goaviatrix.Vpc, client *goaviatrix.Client) ([]st
 
 	var rtbs []string
 	for _, rtb := range all {
-		if !sliceContains(public, rtb) {
+		if !goaviatrix.Contains(public, rtb) {
 			rtbs = append(rtbs, rtb)
 		}
 	}
@@ -268,13 +268,4 @@ func getAllRouteTables(vpc *goaviatrix.Vpc, client *goaviatrix.Client) ([]string
 		return nil, err
 	}
 	return rtbs, nil
-}
-
-func sliceContains(sl []string, s string) bool {
-	for _, v := range sl {
-		if v == s {
-			return true
-		}
-	}
-	return false
 }
