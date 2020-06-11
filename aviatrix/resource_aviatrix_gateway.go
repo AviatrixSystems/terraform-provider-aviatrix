@@ -236,7 +236,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"peering_ha_subnet": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
+				Computed: true,
 				Description: "Public Subnet Information while creating Peering HA Gateway, only subnet is accepted. " +
 					"Required to create peering ha gateway if cloud_type = 1 or 8 (AWS or AZURE). Optional if cloud_type = 4 (GCP)",
 			},
@@ -767,8 +767,10 @@ func resourceAviatrixGatewayReadIfRequired(d *schema.ResourceData, meta interfac
 func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
+	var isImport bool
 	gwName := d.Get("gw_name").(string)
 	if gwName == "" {
+		isImport = true
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
 		d.Set("gw_name", id)
@@ -1016,7 +1018,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				} else if gwHaGw.CloudType == goaviatrix.GCP {
 					d.Set("peering_ha_zone", gwHaGw.GatewayZone)
 					// only set peering_ha_subnet if the user has explicitly set it.
-					if peeringHaSubnet != "" {
+					if peeringHaSubnet != "" || isImport {
 						d.Set("peering_ha_subnet", gwHaGw.VpcNet)
 					}
 				}
