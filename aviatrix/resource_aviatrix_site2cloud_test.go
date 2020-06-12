@@ -37,7 +37,7 @@ func TestAccAviatrixS2C_basic(t *testing.T) {
 					testAccCheckS2CExists("aviatrix_site2cloud.foo", &s2c),
 					resource.TestCheckResourceAttr(resourceName, "connection_name", fmt.Sprintf("tfs-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
-					resource.TestCheckResourceAttr(resourceName, "tunnel_type", "udp"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel_type", "policy"),
 					resource.TestCheckResourceAttr(resourceName, "primary_cloud_gateway_name", fmt.Sprintf("tfg-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "remote_gateway_ip", "8.8.8.8"),
 					resource.TestCheckResourceAttr(resourceName, "remote_subnet_cidr", "10.23.0.0/24"),
@@ -78,7 +78,7 @@ resource "aviatrix_site2cloud" "foo" {
 	connection_name            = "tfs-%[1]s"
 	connection_type            = "unmapped"
 	remote_gateway_type        = "generic"
-	tunnel_type                = "udp"
+	tunnel_type                = "policy"
 	primary_cloud_gateway_name = aviatrix_gateway.test.gw_name
 	remote_gateway_ip          = "8.8.8.8"
 	remote_subnet_cidr         = "10.23.0.0/24"
