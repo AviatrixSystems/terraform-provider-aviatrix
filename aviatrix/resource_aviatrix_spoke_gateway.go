@@ -84,7 +84,6 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 			"ha_subnet": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true,
 				Description: "HA Subnet. Required if enabling HA for AWS/AZURE. Optional if enabling HA for GCP.",
 			},
 			"ha_zone": {
