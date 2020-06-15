@@ -38,6 +38,7 @@ type SpokeVpc struct {
 	InsaneMode            string `form:"insane_mode,omitempty"`
 	EnableActiveMesh      string `form:"enable_activemesh,omitempty" json:"enable_activemesh,omitempty"`
 	Zone                  string `form:"zone,omitempty" json:"zone,omitempty"`
+	EncVolume             string `form:"enc_volume,omitempty"`
 }
 
 func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) error {
