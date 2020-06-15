@@ -323,6 +323,9 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	if enableEncryptVolume && d.Get("single_az_ha").(bool) {
 		return fmt.Errorf("'single_az_ha' needs to be disabled to encrypt gateway EBS volume")
 	}
+	if !enableEncryptVolume && gateway.CloudType == goaviatrix.AWS {
+		gateway.EncVolume = "no"
+	}
 
 	log.Printf("[INFO] Creating Aviatrix Spoke Gateway: %#v", gateway)
 
@@ -460,17 +463,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	} else if enableVpcDnsServer {
 		return fmt.Errorf("'enable_vpc_dns_server' only supports AWS(1)")
-	}
-
-	if enableEncryptVolume {
-		gwEncVolume := &goaviatrix.Gateway{
-			GwName:              d.Get("gw_name").(string),
-			CustomerManagedKeys: customerManagedKeys,
-		}
-		err := client.EnableEncryptVolume(gwEncVolume)
-		if err != nil {
-			return fmt.Errorf("failed to enable encrypt gateway volume for %s due to %s", gwEncVolume.GwName, err)
-		}
 	}
 
 	if customizedSpokeVpcRoutes := d.Get("customized_spoke_vpc_routes").(string); customizedSpokeVpcRoutes != "" {
