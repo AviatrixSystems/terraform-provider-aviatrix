@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"net/url"
 
 	log "github.com/sirupsen/logrus"
@@ -33,7 +34,7 @@ type VPCTrackerItemResp struct {
 	AccountName   string             `json:"vpc_account_name,omitempty"`
 	VpcName       string             `json:"vpc_name,omitempty"`
 	Region        string             `json:"region,omitempty"`
-	InstanceCount int                `json:"inst_num,omitempty"`
+	InstanceCount interface{}        `json:"inst_num,omitempty"`
 	CIDRs         []string           `json:"vpc_cidrs,omitempty"`
 	Subnets       []VPCTrackerSubnet `json:"subnets,omitempty"`
 }
@@ -78,13 +79,21 @@ func (c *Client) GetVpcTracker() ([]*VpcTracker, error) {
 		if len(vpc.CIDRs) > 0 {
 			cidr = vpc.CIDRs[0]
 		}
+
+		actualInstCount := 0
+		instCount, ok := vpc.InstanceCount.(float64)
+		if ok {
+			instCount = math.Round(instCount)
+			actualInstCount = int(instCount)
+		}
+
 		vpcList = append(vpcList, &VpcTracker{
 			CloudType:     vendorNameToCloudType(vpc.VendorName),
 			VpcID:         vpc.VpcID,
 			AccountName:   vpc.AccountName,
 			Region:        vpc.Region,
 			Name:          vpc.VpcName,
-			InstanceCount: vpc.InstanceCount,
+			InstanceCount: actualInstCount,
 			Subnets:       vpc.Subnets,
 			Cidr:          cidr,
 		})
