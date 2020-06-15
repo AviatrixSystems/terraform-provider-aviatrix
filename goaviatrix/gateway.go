@@ -129,6 +129,7 @@ type Gateway struct {
 	EnableTransitFireNet        string   `json:"firenet_enabled,omitempty"`
 	LearnedCidrsApproval        string   `json:"learned_cidrs_approval,omitempty"`
 	Dns                         string   `json:"dns,omitempty"`
+	EncVolume                   string   `form:"enc_volume,omitempty"`
 }
 
 type PolicyRule struct {
