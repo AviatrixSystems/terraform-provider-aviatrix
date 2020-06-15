@@ -28,6 +28,7 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
     "name1:value1",
     "name2:value2",
   ]
+  enable_active_mesh       = true
   enable_hybrid_connection = true
   connected_transit        = true
 }
@@ -35,42 +36,45 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
 ```hcl
 # Create an Aviatrix GCP Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_gcp" {
-  cloud_type   = 4
-  account_name = "devops-gcp"
-  gw_name      = "avtxgw-gcp"
-  vpc_id       = "vpc-gcp-test"
-  vpc_reg      = "us-west2-a"
-  gw_size      = "n1-standard-1"
-  subnet       = "10.8.0.0/16"
-  ha_zone      = "us-west2-b"
-  ha_gw_size   = "n1-standard-1"
+  cloud_type         = 4
+  account_name       = "devops-gcp"
+  gw_name            = "avtxgw-gcp"
+  vpc_id             = "vpc-gcp-test"
+  vpc_reg            = "us-west2-a"
+  gw_size            = "n1-standard-1"
+  subnet             = "10.8.0.0/16"
+  ha_zone            = "us-west2-b"
+  ha_gw_size         = "n1-standard-1"
+  enable_active_mesh = true
 }
 ```
 ```hcl
 # Create an Aviatrix Azure Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_azure" {
-  cloud_type        = 8
-  account_name      = "devops_azure"
-  gw_name           = "transit"
-  vpc_id            = "vnet1:hello"
-  vpc_reg           = "West US"
-  gw_size           = "Standard_B1s"
-  subnet            = "10.30.0.0/24"
-  ha_subnet         = "10.30.0.0/24"
-  ha_gw_size        = "Standard_B1s"
-  connected_transit = true
+  cloud_type         = 8
+  account_name       = "devops_azure"
+  gw_name            = "transit"
+  vpc_id             = "vnet1:hello"
+  vpc_reg            = "West US"
+  gw_size            = "Standard_B1s"
+  subnet             = "10.30.0.0/24"
+  ha_subnet          = "10.30.0.0/24"
+  ha_gw_size         = "Standard_B1s"
+  connected_transit  = true
+  enable_active_mesh = true
 }
 ```
 ```hcl
 # Create an Aviatrix Oracle Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_oracle" {
-  cloud_type   = 16
-  account_name = "devops-oracle"
-  gw_name      = "avtxgw-oracle"
-  vpc_id       = "vpc-oracle-test"
-  vpc_reg      = "us-ashburn-1"
-  gw_size      = "VM.Standard2.2"
-  subnet       = "10.7.0.0/16"
+  cloud_type         = 16
+  account_name       = "devops-oracle"
+  gw_name            = "avtxgw-oracle"
+  vpc_id             = "vpc-oracle-test"
+  vpc_reg            = "us-ashburn-1"
+  gw_size            = "VM.Standard2.2"
+  subnet             = "10.7.0.0/16"
+  enable_active_mesh = true
 }
 ```
 
