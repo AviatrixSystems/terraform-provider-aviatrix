@@ -14,15 +14,16 @@ The **aviatrix_spoke_gateway** resource allows the creation and management of Av
 ```hcl
 # Create an Aviatrix AWS Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
-  cloud_type   = 1
-  account_name = "my-aws"
-  gw_name      = "spoke-gw-aws"
-  vpc_id       = "vpc-abcd123"
-  vpc_reg      = "us-west-1"
-  gw_size      = "t2.micro"
-  subnet       = "10.11.0.0/24"
-  enable_snat  = false
-  tag_list     = [
+  cloud_type         = 1
+  account_name       = "my-aws"
+  gw_name            = "spoke-gw-aws"
+  vpc_id             = "vpc-abcd123"
+  vpc_reg            = "us-west-1"
+  gw_size            = "t2.micro"
+  subnet             = "10.11.0.0/24"
+  enable_snat        = false
+  enable_active_mesh = true
+  tag_list           = [
     "k1:v1",
     "k2:v2",
   ]
@@ -31,39 +32,42 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
 ```hcl
 # Create an Aviatrix GCP Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_gcp" {
-  cloud_type   = 4
-  account_name = "my-gcp"
-  gw_name      = "spoke-gw-gcp"
-  vpc_id       = "gcp-spoke-vpc"
-  vpc_reg      = "us-west1-b"
-  gw_size      = "n1-standard-1"
-  subnet       = "10.12.0.0/24"
-  enable_snat  = false
+  cloud_type         = 4
+  account_name       = "my-gcp"
+  gw_name            = "spoke-gw-gcp"
+  vpc_id             = "gcp-spoke-vpc"
+  vpc_reg            = "us-west1-b"
+  gw_size            = "n1-standard-1"
+  subnet             = "10.12.0.0/24"
+  enable_snat        = false
+  enable_active_mesh = true
 }
 ```
 ```hcl
 # Create an Aviatrix Azure Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
-  cloud_type   = 8
-  account_name = "my-azure"
-  gw_name      = "spoke-gw-01"
-  vpc_id       = "spoke:test-spoke-gw-123"
-  vpc_reg      = "West US"
-  gw_size      = "Standard_B1s"
-  subnet       = "10.13.0.0/24"
-  enable_snat  = false
+  cloud_type         = 8
+  account_name       = "my-azure"
+  gw_name            = "spoke-gw-01"
+  vpc_id             = "spoke:test-spoke-gw-123"
+  vpc_reg            = "West US"
+  gw_size            = "Standard_B1s"
+  subnet             = "10.13.0.0/24"
+  enable_snat        = false
+  enable_active_mesh = true
 }
 ```
 ```hcl
 # Create an Aviatrix Oracle Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_oracle" {
-  cloud_type   = 16
-  account_name = "devops-oracle"
-  gw_name      = "avtxgw-oracle"
-  vpc_id       = "vpc-oracle-test"
-  vpc_reg      = "us-ashburn-1"
-  gw_size      = "VM.Standard2.2"
-  subnet       = "10.7.0.0/16"
+  cloud_type         = 16
+  account_name       = "devops-oracle"
+  gw_name            = "avtxgw-oracle"
+  vpc_id             = "vpc-oracle-test"
+  vpc_reg            = "us-ashburn-1"
+  gw_size            = "VM.Standard2.2"
+  subnet             = "10.7.0.0/16"
+  enable_active_mesh = true
 }
 ```
 
