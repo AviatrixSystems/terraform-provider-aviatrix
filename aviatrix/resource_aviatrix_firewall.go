@@ -198,7 +198,22 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		for _, policy := range fw.PolicyList {
-			pl := goaviatrix.PolicyToMap(policy)
+			pl := make(map[string]interface{})
+			pl["src_ip"] = policy.SrcIP
+			pl["dst_ip"] = policy.DstIP
+			pl["protocol"] = policy.Protocol
+			if policy.Protocol == "all" && policy.Port == "" {
+				pl["port"] = "0:65535"
+			} else {
+				pl["port"] = policy.Port
+			}
+			pl["action"] = policy.Action
+			pl["description"] = policy.Description
+			if policy.LogEnabled == "on" {
+				pl["log_enabled"] = true
+			} else {
+				pl["log_enabled"] = false
+			}
 			key := policy.SrcIP + "~" + policy.DstIP + "~" + policy.Protocol + "~" + policy.Port
 			policyMap[key] = pl
 			policyKeyArray = append(policyKeyArray, key)

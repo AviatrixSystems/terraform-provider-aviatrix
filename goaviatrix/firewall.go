@@ -142,25 +142,3 @@ func (c *Client) ValidatePolicy(policy *Policy) error {
 	}
 	return nil
 }
-
-func PolicyToMap(p *Policy) map[string]interface{} {
-	port := p.Port
-	if p.Protocol == "all" && p.Port == "" {
-		port = "0:65535"
-	}
-
-	logEnabled := false
-	if p.LogEnabled == "on" {
-		logEnabled = true
-	}
-
-	return map[string]interface{}{
-		"src_ip":      p.SrcIP,
-		"dst_ip":      p.DstIP,
-		"protocol":    p.Protocol,
-		"port":        port,
-		"action":      p.Action,
-		"log_enabled": logEnabled,
-		"description": p.Description,
-	}
-}
