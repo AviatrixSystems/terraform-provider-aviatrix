@@ -3,7 +3,6 @@ package aviatrix
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -228,11 +227,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("aviatrix_firenet_vpc", false)
 	}
 
-	if vC.CloudType == goaviatrix.GCP {
-		d.Set("vpc_id", strings.Split(vC.VpcID, "~-~")[0])
-	} else {
-		d.Set("vpc_id", vC.VpcID)
-	}
+	d.Set("vpc_id", vC.VpcID)
 
 	subnetsMap := make(map[string]map[string]interface{})
 	var subnetsKeyArray []string
