@@ -44,7 +44,6 @@ type TransitVpc struct {
 	BgpManualSpokeAdvertiseCidrs string `form:"bgp_manual_spoke,omitempty"`
 	EnableTransitFireNet         string `form:"enable_transit_firenet,omitempty"`
 	LearnedCidrsApproval         string `form:"learned_cidrs_approval,omitempty"`
-	EncVolume                    string `form:"enc_volume,omitempty"`
 }
 
 type TransitGwFireNetInterfaces struct {

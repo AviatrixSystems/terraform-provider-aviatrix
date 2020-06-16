@@ -372,9 +372,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	if enableEncryptVolume && d.Get("single_az_ha").(bool) {
 		return fmt.Errorf("'single_az_ha' needs to be disabled to encrypt gateway EBS volume")
 	}
-	if !enableEncryptVolume && gateway.CloudType == goaviatrix.AWS {
-		gateway.EncVolume = "no"
-	}
 
 	enableFireNet := d.Get("enable_firenet").(bool)
 	enableTransitFireNet := d.Get("enable_transit_firenet").(bool)
@@ -577,6 +574,17 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		err := client.SetBgpManualSpokeAdvertisedNetworks(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to set BGP Manual Spoke Advertise Cidrs: %s", err)
+		}
+	}
+
+	if enableEncryptVolume {
+		gwEncVolume := &goaviatrix.Gateway{
+			GwName:              d.Get("gw_name").(string),
+			CustomerManagedKeys: customerManagedKeys,
+		}
+		err := client.EnableEncryptVolume(gwEncVolume)
+		if err != nil {
+			return fmt.Errorf("failed to enable encrypt gateway volume for %s due to %s", gwEncVolume.GwName, err)
 		}
 	}
 
