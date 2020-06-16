@@ -450,7 +450,6 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 			}
 		} else {
 			d.Set("ha_enabled", false)
-			d.Set("backup_direct_connect", false)
 		}
 
 		if conn.EnableEdgeSegmentation == "enabled" {
