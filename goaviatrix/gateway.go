@@ -821,9 +821,6 @@ func (c *Client) EnableEncryptVolume(gateway *Gateway) error {
 		return errors.New("Json Decode 'encrypt_gateway_volume' failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
-		if strings.Contains(data.Reason, "already encrypted") {
-			return nil
-		}
 		return errors.New("Rest API 'encrypt_gateway_volume' Get failed: " + data.Reason)
 	}
 	return nil
