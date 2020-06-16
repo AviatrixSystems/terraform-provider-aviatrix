@@ -384,11 +384,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			haGateway.HASubnet = haSubnet
 		}
 
-		if haGateway.CloudType == goaviatrix.GCP {
-			err = client.EnableHaSpokeGateway(haGateway)
-		} else {
-			err = client.EnableHaSpokeVpc(haGateway)
-		}
+		err = client.EnableHaSpokeGateway(haGateway)
 		if err != nil {
 			return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
 		}
@@ -954,16 +950,9 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 		if newHaGwEnabled {
 			//New configuration to enable HA
-			if haGateway.CloudType == goaviatrix.GCP {
-				err := client.EnableHaSpokeGateway(spokeGw)
-				if err != nil {
-					return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
-				}
-			} else {
-				err := client.EnableHaSpokeVpc(spokeGw)
-				if err != nil {
-					return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
-				}
+			err := client.EnableHaSpokeGateway(spokeGw)
+			if err != nil {
+				return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
 			}
 			newHaGwEnabled = true
 		} else if deleteHaGw {
@@ -981,16 +970,9 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			}
 
 			//New configuration to enable HA
-			if haGateway.CloudType == goaviatrix.GCP {
-				err := client.EnableHaSpokeGateway(spokeGw)
-				if err != nil {
-					return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
-				}
-			} else {
-				err := client.EnableHaSpokeVpc(spokeGw)
-				if err != nil {
-					return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
-				}
+			haErr := client.EnableHaSpokeGateway(spokeGw)
+			if haErr != nil {
+				return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
 			}
 		}
 		d.SetPartial("ha_subnet")

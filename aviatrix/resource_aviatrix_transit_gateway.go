@@ -454,11 +454,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 		log.Printf("[INFO] Enabling HA on Transit Gateway: %#v", haSubnet)
 
-		if transitGateway.CloudType == goaviatrix.GCP {
-			err = client.EnableHaTransitGateway(transitGateway)
-		} else {
-			err = client.EnableHaTransitVpc(transitGateway)
-		}
+		err = client.EnableHaTransitGateway(transitGateway)
 		if err != nil {
 			return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
 		}
@@ -1078,16 +1074,9 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 		if newHaGwEnabled {
-			if transitGw.CloudType == goaviatrix.GCP {
-				err := client.EnableHaTransitGateway(transitGw)
-				if err != nil {
-					return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
-				}
-			} else {
-				err := client.EnableHaTransitVpc(transitGw)
-				if err != nil {
-					return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
-				}
+			err := client.EnableHaTransitGateway(transitGw)
+			if err != nil {
+				return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
 			}
 			newHaGwEnabled = true
 		} else if deleteHaGw {
@@ -1101,16 +1090,9 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("failed to delete Aviatrix Transit HA gateway: %s", err)
 			}
 
-			if transitGw.CloudType == goaviatrix.GCP {
-				err := client.EnableHaTransitGateway(transitGw)
-				if err != nil {
-					return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
-				}
-			} else {
-				err := client.EnableHaTransitVpc(transitGw)
-				if err != nil {
-					return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
-				}
+			haErr := client.EnableHaTransitGateway(transitGw)
+			if haErr != nil {
+				return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
 			}
 		}
 		d.SetPartial("ha_subnet")
