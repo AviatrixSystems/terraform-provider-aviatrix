@@ -15,7 +15,6 @@ type SamlEndpoint struct {
 	EntityIdType    string   `form:"entity_id,omitempty" json:"entity_id,omitempty"`
 	CustomEntityId  string   `form:"custom_entityID,omitempty" json:"custom_entityID,omitempty"`
 	MsgTemplate     string   `form:"msgtemplate,omitempty" json:"msgtemplate,omitempty"`
-	MsgTemplateType string   `json:"msgtemplate_type,omitempty"`
 	ControllerLogin bool     `json:"controller_login,omitempty"`
 	AccessSetBy     string   `form:"access_ctrl,omitempty" json:"access_ctrl,omitempty"`
 	RbacGroups      string   `form:"groups,omitempty"`
@@ -98,7 +97,6 @@ func (c *Client) GetSamlEndpoint(samlEndpoint *SamlEndpoint) (*SamlEndpoint, err
 	samlEndpoint.CustomEntityId = data.Results.CustomEntityId
 	samlEndpoint.IdpMetadataType = data.Results.IdpMetadataType
 	samlEndpoint.IdpMetadata = data.Results.IdpMetadata
-	samlEndpoint.MsgTemplateType = data.Results.MsgTemplateType
 	samlEndpoint.MsgTemplate = data.Results.MsgTemplate
 	samlEndpoint.AccessSetBy = data.Results.AccessSetBy
 	if data.Results.ControllerLogin {
