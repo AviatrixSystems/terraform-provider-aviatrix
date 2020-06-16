@@ -24,7 +24,6 @@ type TransitVpc struct {
 	Subnet                       string `form:"public_subnet,omitempty" json:"vpc_net,omitempty"`
 	HASubnet                     string `form:"ha_subnet,omitempty"`
 	HAZone                       string `form:"new_zone,omitempty"`
-	HASubnetGCP                  string `form:"new_subnet,omitempty"`
 	PeeringHASubnet              string `json:"public_subnet,omitempty"`
 	VpcRegion                    string `form:"region,omitempty" json:"vpc_region,omitempty"`
 	VpcSize                      string `form:"gw_size,omitempty" json:"gw_size,omitempty"`
@@ -77,27 +76,6 @@ func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API create_transit_gw Post failed: " + data.Reason)
-	}
-	return nil
-}
-
-func (c *Client) EnableHaTransitGateway(gateway *TransitVpc) error {
-	gateway.CID = c.CID
-	gateway.Action = "create_peering_ha_gateway"
-	resp, err := c.Post(c.baseURL, gateway)
-	if err != nil {
-		return errors.New("HTTP Post create_peering_ha_gateway failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode create_peering_ha_gateway failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API create_peering_ha_gateway Post failed: " + data.Reason)
 	}
 	return nil
 }
