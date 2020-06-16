@@ -150,7 +150,7 @@ func resourceAviatrixGatewaySNatCreate(d *schema.ResourceData, meta interface{})
 			gateway.SnatPolicy = append(gateway.SnatPolicy, *customPolicy)
 		}
 	}
-	err := client.EnableCustomSNat(gateway)
+	err := client.EnableSNat(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to configure policies for 'customized_snat' mode due to: %s", err)
 	}
@@ -259,7 +259,7 @@ func resourceAviatrixGatewaySNatUpdate(d *schema.ResourceData, meta interface{})
 			}
 		}
 
-		err := client.EnableCustomSNat(gateway)
+		err := client.EnableSNat(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to enable SNAT of 'customized_snat': %s", err)
 		}
@@ -276,7 +276,7 @@ func resourceAviatrixGatewaySNatDelete(d *schema.ResourceData, meta interface{})
 		GatewayName: d.Get("gw_name").(string),
 	}
 
-	err := client.DisableCustomSNat(gateway)
+	err := client.DisableSNat(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to disable SNAT for Aviatrix gateway(name: %s) due to: %s", gateway.GatewayName, err)
 	}
