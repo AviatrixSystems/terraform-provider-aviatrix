@@ -267,6 +267,3 @@ If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a gateway w
 
 ### dnat_policy
 If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a gateway with `dnat_policy` was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to remove attribute’s value from the state. In addition, you must transfer its corresponding values to the **aviatrix_gateway_dnat** resource in your `.tf` file and perform a 'terraform import' to rectify the state file.
-
-### peering_ha_subnet
-If you are using Aviatrix Terraform Provider R2.15+, and import a Google Cloud gateway with HA enabled then you must set a value for `peering_ha_subnet` in your Terraform config.

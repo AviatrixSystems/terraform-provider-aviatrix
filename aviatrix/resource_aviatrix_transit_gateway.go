@@ -81,6 +81,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"ha_subnet": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				Description: "HA Subnet. Required for enabling HA for AWS/AZURE gateway. " +
 					"Optional for enabling HA for GCP gateway.",
 			},

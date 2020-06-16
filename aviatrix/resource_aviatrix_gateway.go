@@ -236,6 +236,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"peering_ha_subnet": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				Description: "Public Subnet Information while creating Peering HA Gateway, only subnet is accepted. " +
 					"Required to create peering ha gateway if cloud_type = 1 or 8 (AWS or AZURE). Optional if cloud_type = 4 (GCP)",
 			},

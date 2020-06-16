@@ -185,6 +185,3 @@ If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a spoke gat
 
 ### dnat_policy
 If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a spoke gateway with `dnat_policy` was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to remove attribute’s value from the state. In addition, you must its value to its corresponding **aviatrix_gateway_dnat** resource in your `.tf` file and perform a 'terraform import' to rectify the state file.
-
-### ha_subnet
-If you are using Aviatrix Terraform Provider R2.15+, and import a Google Cloud spoke gateway with HA enabled then you must set a value for `ha_subnet` in your Terraform config.

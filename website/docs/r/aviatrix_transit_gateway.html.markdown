@@ -174,6 +174,3 @@ If `insane_mode` is enabled, you must specify a valid /26 CIDR segment of the VP
 
 ### enable_snat
 If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a transit gateway with `enable_snat` set to true was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also change this attribute to `single_ip_snat` in your `.tf` file.
-
-### ha_subnet
-If you are using Aviatrix Terraform Provider R2.15+, and import a Google Cloud transit gateway with HA enabled then you must set a value for `ha_subnet` in your Terraform config.
