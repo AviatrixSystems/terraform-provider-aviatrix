@@ -437,7 +437,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			Eip:       d.Get("ha_eip").(string),
 		}
 
-		if insaneMode && transitGateway.CloudType == goaviatrix.AWS {
+		if insaneMode {
 			var haStrs []string
 			insaneModeHaAz := d.Get("ha_insane_mode_az").(string)
 			haStrs = append(haStrs, haSubnet, insaneModeHaAz)
