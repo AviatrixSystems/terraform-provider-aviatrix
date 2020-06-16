@@ -32,7 +32,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
 ```hcl
 # Create an Aviatrix GCP Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_gcp" {
-<<<<<<< HEAD
   cloud_type         = 4
   account_name       = "my-gcp"
   gw_name            = "spoke-gw-gcp"
@@ -47,7 +46,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_gcp" {
 ```hcl
 # Create an Aviatrix Azure Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
-<<<<<<< HEAD
   cloud_type         = 8
   account_name       = "my-azure"
   gw_name            = "spoke-gw-01"
@@ -88,7 +86,7 @@ The following arguments are supported:
 
 ### HA
 * `single_az_ha` (Optional) Set to true if this [feature](https://docs.aviatrix.com/Solutions/gateway_ha.html#single-az-gateway) is desired. Valid values: true, false.
-* `ha_subnet` - (Optional) HA Subnet. Required if enabling HA for AWS/Azure gateway. Optional for GCP. Setting to empty/unsetting will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24"
+* `ha_subnet` - (Optional) HA Subnet. Required only if enabling HA for AWS/Azure gateway. Setting to empty/unsetting will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24"
 * `ha_zone` - (Optional) HA Zone. Required only if enabling HA for GCP gateway. Setting to empty/unsetting will disable HA. Setting to a valid zone will create an HA gateway in the zone. Example: "us-west1-c".
 * `ha_insane_mode_az` (Optional) AZ of subnet being created for Insane Mode Spoke HA Gateway. Required for AWS if `insane_mode` is enabled and `ha_subnet` is set. Example: AWS: "us-west-1a".
 * `ha_eip` - (Optional) Public IP address that you want to assign to the HA peering instance. If no value is given, a new EIP will automatically be allocated. Only available for AWS.

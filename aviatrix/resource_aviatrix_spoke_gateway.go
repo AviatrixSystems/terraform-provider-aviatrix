@@ -85,7 +85,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "HA Subnet. Required if enabling HA for AWS/AZURE. Optional if enabling HA for GCP.",
+				Description: "HA Subnet. Required if enabling HA for AWS/AZURE.",
 			},
 			"ha_zone": {
 				Type:        schema.TypeString,
@@ -274,12 +274,12 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	insaneMode := d.Get("insane_mode").(bool)
 	insaneModeAz := d.Get("insane_mode_az").(string)
 	haSubnet := d.Get("ha_subnet").(string)
+	if haSubnet != "" && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AZURE && gateway.CloudType != goaviatrix.OCI && gateway.CloudType != goaviatrix.AWSGOV {
+		return fmt.Errorf("'ha_subnet' is only required for AWS/AZURE/OCI providers if enabling HA")
+	}
 	haZone := d.Get("ha_zone").(string)
 	if haZone != "" && gateway.CloudType != goaviatrix.GCP {
 		return fmt.Errorf("'ha_zone' is only required for GCP provider if enabling HA")
-	}
-	if gateway.CloudType == goaviatrix.GCP && haSubnet != "" && haZone == "" {
-		return fmt.Errorf("'ha_zone' must be set to enable HA on GCP, cannot enable HA with only 'ha_subnet' enabled")
 	}
 	haGwSize := d.Get("ha_gw_size").(string)
 	if haSubnet == "" && haZone == "" && haGwSize != "" {
@@ -370,12 +370,9 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			CloudType: d.Get("cloud_type").(int),
 			HASubnet:  haSubnet,
 			HAZone:    haZone,
-			Eip:       d.Get("ha_eip").(string),
 		}
 
-		if d.Get("cloud_type").(int) == goaviatrix.GCP {
-			haGateway.HASubnetGCP = haSubnet
-		}
+		haGateway.Eip = d.Get("ha_eip").(string)
 
 		if insaneMode == true && haGateway.CloudType == goaviatrix.AWS {
 			var haStrs []string
@@ -384,7 +381,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			haGateway.HASubnet = haSubnet
 		}
 
-		err = client.EnableHaSpokeGateway(haGateway)
+		err = client.EnableHaSpokeVpc(haGateway)
 		if err != nil {
 			return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
 		}
@@ -738,11 +735,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("ha_zone", "")
 		} else if haGw.CloudType == goaviatrix.GCP {
 			d.Set("ha_zone", haGw.GatewayZone)
-			if d.Get("ha_subnet") != "" {
-				d.Set("ha_subnet", haGw.VpcNet)
-			} else {
-				d.Set("ha_subnet", "")
-			}
+			d.Set("ha_subnet", "")
 		}
 
 		d.Set("ha_eip", haGw.PublicIP)
@@ -776,17 +769,16 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	log.Printf("[INFO] Updating Aviatrix gateway: %#v", gateway)
 
 	d.Partial(true)
+	if d.HasChange("ha_subnet") {
+		haSubnet := d.Get("ha_subnet").(string)
+		if haSubnet != "" && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AZURE && gateway.CloudType != goaviatrix.OCI && gateway.CloudType != goaviatrix.AWSGOV {
+			return fmt.Errorf("'ha_subnet' is only required for AWS/AZURE/OCI providers if enabling HA")
+		}
+	}
 	if d.HasChange("ha_zone") {
 		haZone := d.Get("ha_zone").(string)
 		if haZone != "" && gateway.CloudType != goaviatrix.GCP {
 			return fmt.Errorf("'ha_zone' is only required for GCP provider if enabling HA")
-		}
-	}
-	if d.HasChange("ha_zone") || d.HasChange("ha_subnet") {
-		haZone := d.Get("ha_zone").(string)
-		haSubnet := d.Get("ha_subnet").(string)
-		if gateway.CloudType == goaviatrix.GCP && haSubnet != "" && haZone == "" {
-			return fmt.Errorf("'ha_zone' must be set to enable HA on GCP, cannot enable HA with only 'ha_subnet' enabled")
 		}
 	}
 	if d.HasChange("cloud_type") {
@@ -939,7 +931,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			}
 		} else if spokeGw.CloudType == goaviatrix.GCP {
 			spokeGw.HAZone = d.Get("ha_zone").(string)
-			spokeGw.HASubnetGCP = d.Get("ha_subnet").(string)
 			if oldZone == "" && newZone != "" {
 				newHaGwEnabled = true
 			} else if oldZone != "" && newZone == "" {
@@ -950,7 +941,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 		if newHaGwEnabled {
 			//New configuration to enable HA
-			err := client.EnableHaSpokeGateway(spokeGw)
+			err := client.EnableHaSpokeVpc(spokeGw)
 			if err != nil {
 				return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
 			}
@@ -969,8 +960,9 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("failed to delete Aviatrix Spoke HA gateway: %s", err)
 			}
 
+			gateway.GwName = d.Get("spokeGw_name").(string)
 			//New configuration to enable HA
-			haErr := client.EnableHaSpokeGateway(spokeGw)
+			haErr := client.EnableHaSpokeVpc(spokeGw)
 			if haErr != nil {
 				return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
 			}
