@@ -285,11 +285,7 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 	if len(s2cConnDetail.TunnelName) != 0 {
 		site2cloud.GwName = s2cConnDetail.GwName
 		site2cloud.ConnType = s2cConnDetail.ConnType
-		if s2cConnDetail.TunnelType == "policy" || s2cConnDetail.TunnelType == "Policy" || s2cConnDetail.TunnelType == "Site2Cloud_Policy" {
-			site2cloud.TunnelType = "policy"
-		} else if s2cConnDetail.TunnelType == "route" || s2cConnDetail.TunnelType == "Route" || s2cConnDetail.TunnelType == "Site2Cloud_Routed" {
-			site2cloud.TunnelType = "route"
-		}
+		site2cloud.TunnelType = s2cConnDetail.TunnelType
 		site2cloud.RemoteGwType = s2cConnDetail.PeerType
 		if site2cloud.ConnType == "mapped" {
 			site2cloud.RemoteSubnet = s2cConnDetail.RemoteSubnet
