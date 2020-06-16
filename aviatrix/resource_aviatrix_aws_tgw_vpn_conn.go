@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
@@ -48,13 +46,18 @@ func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
 				Description: "Public IP address. Example: '40.0.0.0'.",
 			},
 			"connection_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "dynamic",
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"dynamic", "static"}, false),
-				Description: "Connection type. Valid values: 'dynamic', 'static'. 'dynamic' stands for a BGP VPN " +
-					"connection; 'static' stands for a static VPN connection. Default value: 'dynamic'.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "dynamic",
+				ForceNew:    true,
+				Description: "Connection type. Valid values: 'dynamic', 'static'. 'dynamic' stands for a BGP VPN connection; 'static' stands for a static VPN connection. Default value: 'dynamic'.",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if v != "dynamic" && v != "static" {
+						errs = append(errs, fmt.Errorf("%q must be either 'dynamic' or 'static', got: %s", key, val))
+					}
+					return
+				},
 			},
 			"remote_as_number": {
 				Type:        schema.TypeString,

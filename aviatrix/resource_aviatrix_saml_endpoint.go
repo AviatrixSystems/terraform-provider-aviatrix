@@ -5,8 +5,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
@@ -51,11 +49,17 @@ func resourceAviatrixSamlEndpoint() *schema.Resource {
 				Description: "Switch to differentiate if it is for controller login.",
 			},
 			"access_set_by": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "controller",
-				ValidateFunc: validation.StringInSlice([]string{"controller", "profile_attribute"}, false),
-				Description:  "Access type.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "controller",
+				Description: "Access type.",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if v != "controller" && v != "profile_attribute" {
+						errs = append(errs, fmt.Errorf("%q must be either 'controller' or 'profile_attribute', got: %s", key, val))
+					}
+					return
+				},
 			},
 			"rbac_groups": {
 				Type: schema.TypeList,

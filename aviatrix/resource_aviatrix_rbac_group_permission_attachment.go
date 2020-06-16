@@ -5,8 +5,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
@@ -28,26 +26,33 @@ func resourceAviatrixRbacGroupPermissionAttachment() *schema.Resource {
 				Description: "RBAC permission group name.",
 			},
 			"permission_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"all_dashboard_write",
-					"all_accounts_write",
-					"all_gateway_write",
-					"all_tgw_orchestrator_write",
-					"all_transit_network_write",
-					"all_firewall_network_write",
-					"all_cloud_wan_write",
-					"all_peering_write",
-					"all_site2cloud_write",
-					"all_openvpn_write",
-					"all_security_write",
-					"all_useful_tools_write",
-					"all_troubleshoot_write",
-					"all_write",
-				}, false),
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
 				Description: "Permission name.",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					mapPermissionName := map[string]bool{
+						"all_dashboard_write":        true,
+						"all_accounts_write":         true,
+						"all_gateway_write":          true,
+						"all_tgw_orchestrator_write": true,
+						"all_transit_network_write":  true,
+						"all_firewall_network_write": true,
+						"all_cloud_wan_write":        true,
+						"all_peering_write":          true,
+						"all_site2cloud_write":       true,
+						"all_openvpn_write":          true,
+						"all_security_write":         true,
+						"all_useful_tools_write":     true,
+						"all_troubleshoot_write":     true,
+						"all_write":                  true,
+					}
+					v := val.(string)
+					if _, ok := mapPermissionName[v]; !ok {
+						errs = append(errs, fmt.Errorf("permission_name: '%s' is not supported", val))
+					}
+					return
+				},
 			},
 		},
 	}

@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
@@ -28,11 +26,16 @@ func resourceAviatrixGatewaySNat() *schema.Resource {
 				Description: "Name of the gateway.",
 			},
 			"snat_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "customized_snat",
-				ValidateFunc: validation.StringInSlice([]string{"customized_snat"}, false),
-				Description:  "Nat mode. Currently only supports 'customized_snat'.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "customized_snat",
+				Description: "Nat mode. Currently only supports 'customized_snat'.",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					if val.(string) != "customized_snat" {
+						errs = append(errs, fmt.Errorf("%q must be 'customized_snat', got: %s", key, val))
+					}
+					return
+				},
 			},
 			"snat_policy": {
 				Type:        schema.TypeList,
