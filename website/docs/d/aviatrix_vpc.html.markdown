@@ -25,7 +25,6 @@ data "aviatrix_vpc" "test" {
 The following arguments are supported:
 
 * `name` - (Required) Name of the Aviatrix VPC.
-* `route_tables_filter` - (Optional) Filters the `route_tables` list to contain only public or private route tables. Valid values are 'private' or 'public'. If not set `route_tables` is not filtered.
 
 ## Attribute Reference
 
@@ -39,7 +38,6 @@ In addition to all arguments above, the following attributes are exported:
 * `aviatrix_transit_vpc` - Switch if the VPC created is an Aviatrix Transit VPC or not.
 * `aviatrix_firenet_vpc` - Switch if the VPC created is an Aviatrix FireNet VPC or not.
 * `vpc_id` - ID of the VPC created.
-* `route_tables` - List of AWS route table ids associated with this VPC. Only populated for AWS vpc.
 * `subnets` - List of subnet of the VPC created.
   * `cidr` - Subnet CIDR.
   * `name` - Subnet name.

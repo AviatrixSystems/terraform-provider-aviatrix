@@ -23,7 +23,6 @@ type Vpc struct {
 	Subnets            []SubnetInfo `form:"subnet_list,omitempty" json:"subnets,omitempty"`
 	PublicSubnets      []SubnetInfo
 	PrivateSubnets     []SubnetInfo
-	PublicRoutesOnly   bool
 }
 
 type VpcEdit struct {
@@ -153,57 +152,6 @@ func (c *Client) GetVpc(vpc *Vpc) (*Vpc, error) {
 	}
 	log.Error("VPC not found")
 	return nil, ErrNotFound
-}
-
-func (c *Client) GetVpcRouteTableIDs(vpc *Vpc) ([]string, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for list_vpc_route_tables ") + err.Error())
-	}
-	listRouteTables := url.Values{}
-	listRouteTables.Add("CID", c.CID)
-	listRouteTables.Add("action", "list_vpc_route_tables")
-	listRouteTables.Add("vpc_id", vpc.VpcID)
-	listRouteTables.Add("account_name", vpc.AccountName)
-	listRouteTables.Add("vpc_region", vpc.Region)
-	if vpc.PublicRoutesOnly {
-		listRouteTables.Add("public_only", "yes")
-	}
-
-	Url.RawQuery = listRouteTables.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return nil, errors.New("HTTP Get list_vpc_route_tables failed: " + err.Error())
-	}
-
-	type RespResults struct {
-		RouteTables []string `json:"vpc_rtbs_list"`
-	}
-	type Resp struct {
-		Return  bool        `json:"return"`
-		Results RespResults `json:"results"`
-		Reason  string      `json:"reason"`
-	}
-	var data Resp
-
-	buf := new(bytes.Buffer)
-	_, _ = buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_vpc_route_tables failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return nil, errors.New("Rest API list_vpc_route_tables Get failed: " + data.Reason)
-	}
-
-	var rtbs []string
-	for _, id := range data.Results.RouteTables {
-		rtbs = append(rtbs, strings.Split(id, "~~")[0])
-	}
-
-	return rtbs, nil
 }
 
 func (c *Client) UpdateVpc(vpc *Vpc) error {
