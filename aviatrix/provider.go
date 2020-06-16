@@ -91,7 +91,6 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_spoke_gateway":              dataSourceAviatrixSpokeGateway(),
 			"aviatrix_transit_gateway":            dataSourceAviatrixTransitGateway(),
 			"aviatrix_vpc":                        dataSourceAviatrixVpc(),
-			"aviatrix_vpc_tracker":                dataSourceAviatrixVpcTracker(),
 			"aviatrix_firewall":                   dataSourceAviatrixFirewall(),
 		},
 		ConfigureFunc: aviatrixConfigure,
