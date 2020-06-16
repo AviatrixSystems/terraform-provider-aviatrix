@@ -81,7 +81,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"ha_subnet": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "",
 				Description: "HA Subnet. Required for enabling HA for AWS/AZURE gateway. " +
 					"Optional for enabling HA for GCP gateway.",
 			},
@@ -674,10 +674,8 @@ func resourceAviatrixTransitGatewayReadIfRequired(d *schema.ResourceData, meta i
 func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	var isImport bool
 	gwName := d.Get("gw_name").(string)
 	if gwName == "" {
-		isImport = true
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
 		d.Set("gw_name", id)
@@ -916,7 +914,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("ha_zone", "")
 		} else if haGw.CloudType == goaviatrix.GCP {
 			d.Set("ha_zone", haGw.GatewayZone)
-			if d.Get("ha_subnet") != "" || isImport {
+			if d.Get("ha_subnet") != "" {
 				d.Set("ha_subnet", haGw.VpcNet)
 			}
 		}
