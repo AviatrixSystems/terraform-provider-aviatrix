@@ -37,7 +37,7 @@ func resourceAviatrixBranchRouterTag() *schema.Resource {
 				},
 				Description: "Config to apply to branches that are attached to the tag.",
 			},
-			"branches": {
+			"branch_router_names": {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Schema{
@@ -62,7 +62,7 @@ func marshalBranchRouterTagInput(d *schema.ResourceData) *goaviatrix.BranchRoute
 	}
 
 	var brs []string
-	for _, s := range d.Get("branches").([]interface{}) {
+	for _, s := range d.Get("branch_router_names").([]interface{}) {
 		brs = append(brs, s.(string))
 	}
 	brt.Branches = brs
@@ -109,7 +109,7 @@ func resourceAviatrixBranchRouterTagRead(d *schema.ResourceData, meta interface{
 
 	d.Set("name", brt.Name)
 	d.Set("config", brt.Config)
-	if err := d.Set("branches", brt.Branches); err != nil {
+	if err := d.Set("branch_router_names", brt.Branches); err != nil {
 		return err
 	}
 
@@ -128,7 +128,7 @@ func resourceAviatrixBranchRouterTagUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	if d.HasChange("branches") {
+	if d.HasChange("branch_router_names") {
 		if err := client.UpdateBranchRouterTagBranches(brt); err != nil {
 			return err
 		}
