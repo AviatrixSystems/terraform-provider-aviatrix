@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
@@ -80,14 +78,6 @@ func resourceAviatrixFQDN() *schema.Resource {
 							Required:    true,
 							Description: "Port.",
 						},
-						"action": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "Base Policy",
-							ValidateFunc: validation.StringInSlice([]string{"Base Policy", "Allow", "Deny"}, false),
-							Description: "What action should happen to matching requests. " +
-								"Possible values are: 'Base Policy', 'Allow' or 'Deny'. Defaults to 'Base Policy' if no value is provided.",
-						},
 					},
 				},
 			},
@@ -131,7 +121,6 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 					FQDN:     dn["fqdn"].(string),
 					Protocol: dn["proto"].(string),
 					Port:     dn["port"].(string),
-					Verdict:  dn["action"].(string),
 				}
 
 				fqdn.DomainList = append(fqdn.DomainList, fqdnFilter)
@@ -267,7 +256,6 @@ func resourceAviatrixFQDNRead(d *schema.ResourceData, meta interface{}) error {
 			dn["fqdn"] = fqdnDomain.FQDN
 			dn["proto"] = fqdnDomain.Protocol
 			dn["port"] = fqdnDomain.Port
-			dn["action"] = fqdnDomain.Verdict
 			filter = append(filter, dn)
 		}
 
@@ -390,7 +378,6 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 					FQDN:     dn["fqdn"].(string),
 					Protocol: dn["proto"].(string),
 					Port:     dn["port"].(string),
-					Verdict:  dn["action"].(string),
 				}
 				fqdn.DomainList = append(fqdn.DomainList, fqdnDomain)
 			}
