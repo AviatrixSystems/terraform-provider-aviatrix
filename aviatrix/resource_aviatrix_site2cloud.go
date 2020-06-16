@@ -174,13 +174,6 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Description: "Phase two Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC', " +
 					"'AES-256-CBC', 'AES-128-GCM-64', 'AES-128-GCM-96' and 'AES-128-GCM-128'.",
 			},
-			"enable_ikev2": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				ForceNew:    true,
-				Description: "Switch to enable IKEv2 for policy based site2cloud.",
-			},
 			"private_route_encryption": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -334,14 +327,6 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		} else {
 			s2c.Phase2Encryption = goaviatrix.Phase2EncryptionDefault
 		}
-	}
-
-	enableIKEv2 := d.Get("enable_ikev2").(bool)
-	if enableIKEv2 {
-		if s2c.TunnelType == "route" {
-			return fmt.Errorf("'enable_ikev2' is only supported for policy based site2cloud creation")
-		}
-		s2c.EnableIKEv2 = "true"
 	}
 
 	privateRouteEncryption := d.Get("private_route_encryption").(bool)
@@ -507,10 +492,6 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 
 		d.Set("enable_dead_peer_detection", s2c.DeadPeerDetection)
 		d.Set("enable_active_active", s2c.EnableActiveActive)
-
-		if s2c.EnableIKEv2 == "true" {
-			d.Set("enable_ikev2", true)
-		}
 	}
 
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", d.Get("connection_name").(string), site2cloud)
