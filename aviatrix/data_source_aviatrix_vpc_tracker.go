@@ -17,7 +17,7 @@ func dataSourceAviatrixVpcTracker() *schema.Resource {
 				Optional: true,
 				Description: "Get VPCs from a single cloud provider. " +
 					"For example, if cloud_type = 4, only GCP VPCs will be returned.",
-				ValidateFunc: validation.IntInSlice(goaviatrix.GetSupportedClouds()),
+				ValidateFunc: validation.IntInSlice([]int{1, 4, 8, 16, 256}),
 			},
 			"cidr": {
 				Type:         schema.TypeString,

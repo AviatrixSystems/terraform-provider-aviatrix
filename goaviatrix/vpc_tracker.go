@@ -95,11 +95,11 @@ func (c *Client) GetVpcTracker() ([]*VpcTracker, error) {
 
 func vendorNameToCloudType(v string) int {
 	vendorToCloud := map[string]int{
-		"CLOUD_AWS":     AWS,
-		"CLOUD_GOOGLE":  GCP,
-		"CLOUD_AZURE":   AZURE,
-		"CLOUD_ORACLE":  OCI,
-		"CLOUD_AWS_GOV": AWSGOV,
+		"CLOUD_AWS":     1,
+		"CLOUD_GOOGLE":  4,
+		"CLOUD_AZURE":   8,
+		"CLOUD_ORACLE":  16,
+		"CLOUD_AWS_GOV": 256,
 	}
 	ct, ok := vendorToCloud[v]
 	if !ok {

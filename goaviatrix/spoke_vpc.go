@@ -132,9 +132,9 @@ func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 	enableSpokeHa.Add("gw_name", spoke.GwName)
 	enableSpokeHa.Add("eip", spoke.Eip)
 
-	if spoke.CloudType == AWS || spoke.CloudType == AZURE || spoke.CloudType == OCI {
+	if spoke.CloudType == 1 || spoke.CloudType == 8 || spoke.CloudType == 16 {
 		enableSpokeHa.Add("public_subnet", spoke.HASubnet)
-	} else if spoke.CloudType == GCP {
+	} else if spoke.CloudType == 4 {
 		enableSpokeHa.Add("new_zone", spoke.HAZone)
 	} else {
 		return errors.New("invalid cloud type")
