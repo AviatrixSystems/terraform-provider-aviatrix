@@ -228,7 +228,6 @@ func resourceAviatrixBranchRouterUpdate(d *schema.ResourceData, meta interface{}
 	if err := client.ConfigureBranchRouterInterfaces(br); err != nil {
 		return err
 	}
-
 	d.SetId(br.Name)
 	return nil
 }
