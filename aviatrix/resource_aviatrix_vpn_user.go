@@ -21,22 +21,16 @@ func resourceAviatrixVPNUser() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				ForceNew:    true,
 				Description: "VPC Id of Aviatrix VPN gateway.",
 			},
 			"gw_name": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 				Description: "If ELB is enabled, this will be the name of the ELB, " +
 					"else it will be the name of the Aviatrix VPN gateway.",
-			},
-			"dns_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "FQDN of a DNS based VPN service such as GeoVPN or UDP load balancer.",
 			},
 			"user_name": {
 				Type:        schema.TypeString,
@@ -78,23 +72,16 @@ func resourceAviatrixVPNUserCreate(d *schema.ResourceData, meta interface{}) err
 	vpnUser := &goaviatrix.VPNUser{
 		VpcID:        d.Get("vpc_id").(string),
 		GwName:       d.Get("gw_name").(string),
-		DnsName:      d.Get("dns_name").(string),
 		UserName:     d.Get("user_name").(string),
 		UserEmail:    d.Get("user_email").(string),
 		SamlEndpoint: d.Get("saml_endpoint").(string),
 	}
 
-	if vpnUser.DnsName == "" {
-		if vpnUser.VpcID == "" && vpnUser.GwName == "" {
-			return fmt.Errorf("please set 'vpc_id' and 'gw_name', or 'dns_name' alone")
-		} else if vpnUser.VpcID == "" || vpnUser.GwName == "" {
-			return fmt.Errorf("please set both 'vpc_id' and 'gw_name'")
-		}
-	} else {
-		if vpnUser.VpcID != "" || vpnUser.GwName != "" {
-			return fmt.Errorf("DNS is enabled. Please set 'vpc_id' and 'gw_name' to be empty")
-		}
-		vpnUser.DnsEnabled = true
+	if vpnUser.VpcID == "" {
+		return fmt.Errorf("invalid choice: vpc_id can't be empty")
+	}
+	if vpnUser.GwName == "" {
+		return fmt.Errorf("invalid choice: gw_name can't be empty")
 	}
 
 	manageUserAttachment := d.Get("manage_user_attachment").(bool)
@@ -164,12 +151,8 @@ func resourceAviatrixVPNUserRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[TRACE] Reading vpn_user %s: %#v", userName, vu)
 
 	if vu != nil {
-		if vu.DnsEnabled {
-			d.Set("dns_name", vu.DnsName)
-		} else {
-			d.Set("vpc_id", vu.VpcID)
-			d.Set("gw_name", vu.GwName)
-		}
+		d.Set("vpc_id", vu.VpcID)
+		d.Set("gw_name", vu.GwName)
 		d.Set("user_name", vu.UserName)
 		if vu.UserEmail != "" {
 			d.Set("user_email", vu.UserEmail)
@@ -271,10 +254,6 @@ func resourceAviatrixVPNUserDelete(d *schema.ResourceData, meta interface{}) err
 	vpnUser := &goaviatrix.VPNUser{
 		UserName: d.Get("user_name").(string),
 		VpcID:    d.Get("vpc_id").(string),
-		DnsName:  d.Get("dns_name").(string),
-	}
-	if vpnUser.DnsName != "" {
-		vpnUser.DnsEnabled = true
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix VPNUser: %#v", vpnUser)
