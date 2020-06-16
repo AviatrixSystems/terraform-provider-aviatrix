@@ -6,12 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"mime/multipart"
 	"net/http"
-	"net/textproto"
-	"os"
 	"reflect"
 	"strings"
 	"time"
@@ -142,75 +138,6 @@ func (c *Client) Put(path string, i interface{}) (*http.Response, error) {
 // Delete issues an HTTP DELETE request.
 func (c *Client) Delete(path string, i interface{}) (*http.Response, error) {
 	return c.Request("GET", path, i)
-}
-
-type File struct {
-	Path      string
-	ParamName string
-}
-
-// PostFile will encode the files and parameters with multipart form encoding.
-func (c *Client) PostFile(path string, params map[string]string, files []File) (*http.Response, error) {
-	body := new(bytes.Buffer)
-	writer := multipart.NewWriter(body)
-
-	// Encode the files
-	for _, f := range files {
-		if f.Path == "" {
-			continue
-		}
-		file, err := os.Open(f.Path)
-		if err != nil {
-			return nil, err
-		}
-		fileContents, err := ioutil.ReadAll(file)
-		if err != nil {
-			return nil, err
-		}
-		fi, err := file.Stat()
-		if err != nil {
-			return nil, err
-		}
-		_ = file.Close()
-		part, err := createFormFile(f.ParamName, fi.Name(), http.DetectContentType(fileContents), writer)
-		if err != nil {
-			return nil, err
-		}
-		_, _ = part.Write(fileContents)
-	}
-
-	// Encode the other params
-	for key, val := range params {
-		_ = writer.WriteField(key, val)
-	}
-	err := writer.Close()
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", path, body)
-
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-
-	return c.HTTPClient.Do(req)
-}
-
-func createFormFile(fieldname, filename, fileContentType string, w *multipart.Writer) (io.Writer, error) {
-	h := make(textproto.MIMEHeader)
-	h.Set("Content-Disposition",
-		fmt.Sprintf(`form-data; name="%s"; filename="%s"`,
-			escapeQuotes(fieldname), escapeQuotes(filename)))
-	h.Set("Content-Type", fileContentType)
-	return w.CreatePart(h)
-}
-
-var quoteEscaper = strings.NewReplacer("\\", "\\\\", `"`, "\\\"")
-
-func escapeQuotes(s string) string {
-	return quoteEscaper.Replace(s)
 }
 
 // Do performs the HTTP request.
