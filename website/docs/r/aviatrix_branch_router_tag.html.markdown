@@ -14,12 +14,12 @@ The **aviatrix_branch_router_tag** resource allows the creation and management o
 ```hcl
 # Create an Aviatrix Branch Router Tag and commit it
 resource "aviatrix_branch_router_tag" "test_branch_router_tag" {
-  name     = "tag_hostname"
-  config   = <<EOT
+  name                = "tag_hostname"
+  config              = <<EOT
 hostname myrouter
 EOT
-  branches = [aviatrix_branch_router.test_branch_router.name]
-  commit   = true
+  branch_router_names = [aviatrix_branch_router.test_branch_router.name]
+  commit              = true
 }
 ```
 
@@ -30,7 +30,7 @@ The following arguments are supported:
 ### Required
 * `name` - (Required) Name of the tag.
 * `config` - (Required) Config to apply to branches that are attached to the tag.
-* `branches` - (Required) List of branch names to attach to this tag.
+* `branch_router_names` - (Required) List of branch names to attach to this tag.
 * `commit` - (Required) Whether to commit the config to the attached branches. Valid values are `true` or `false`.
 
 ## Import
