@@ -51,7 +51,7 @@ resource "aviatrix_branch_router" "test_branch_router" {
 	password                        = "testing"
 	host_os                         = "ios"
 	wan_primary_interface           = "GigabitEthernet1"
-    wan_primary_interface_public_ip = "18.144.102.14"
+  wan_primary_interface_public_ip = "18.144.102.14"
 	ssh_port                        = 22
 	address_1                       = "2901 Tasman Dr"
 	address_2                       = "Suite #104"
