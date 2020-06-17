@@ -506,6 +506,8 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 
 		if s2c.EnableIKEv2 == "true" {
 			d.Set("enable_ikev2", true)
+		} else {
+			d.Set("enable_ikev2", false)
 		}
 	}
 

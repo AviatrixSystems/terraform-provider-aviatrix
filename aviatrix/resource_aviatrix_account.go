@@ -216,28 +216,7 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		if account.GcloudProjectCredentialsFilepathLocal == "" {
 			return fmt.Errorf("gcloud project credentials local filepath needed to upload file to controller")
 		}
-		// read gcp credential json file into filename and contents
-		// upload the credential file into controller
-		// filepath of credential file inside the controller is hardcoded bc it won't change
 		log.Printf("[INFO] Creating Aviatrix account: %#v", account)
-		var filename, contents, controller_filepath string
-		filename, contents, err := goaviatrix.ReadFile(account.GcloudProjectCredentialsFilepathLocal)
-		if err != nil {
-			return fmt.Errorf("failed to read gcp credential file: %s", err)
-		}
-		if filename == "" {
-			return fmt.Errorf("filename is empty")
-		}
-		if contents == "" {
-			return fmt.Errorf("contents are empty")
-		}
-		account.ProjectCredentialsFilename = filename
-		account.ProjectCredentialsContents = contents
-		if err = client.UploadGcloudProjectCredentialsFile(account); err != nil {
-			return fmt.Errorf("failed to upload gcp credential file: %s", err)
-		}
-		controller_filepath = "/var/www/php/tmp/" + filename
-		account.GcloudProjectCredentialsFilepathController = controller_filepath
 	} else if account.CloudType == goaviatrix.AZURE {
 		if account.ArmSubscriptionId == "" {
 			return fmt.Errorf("arm subscription id needed for azure cloud")
@@ -297,7 +276,12 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("cloud type can only be either aws (1), gcp (4), azure (8), oci(16), or aws gov (256)")
 	}
 
-	err := client.CreateAccount(account)
+	var err error
+	if account.CloudType == goaviatrix.GCP {
+		err = client.CreateGCPAccount(account)
+	} else {
+		err = client.CreateAccount(account)
+	}
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Account: %s", err)
 	}
@@ -431,31 +415,7 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	} else if account.CloudType == goaviatrix.GCP {
 		if d.HasChange("gcloud_project_id") || d.HasChange("gcloud_project_credentials_filepath") {
-			// if user changed credential filepath or wants to upload a new file (local) then will have to reupload to controller before updating account
-			// to edit gcp account, must upload another credential file
-			old_filename := account.ProjectCredentialsFilename
-			old_contents := account.ProjectCredentialsContents
-
-			filename, contents, err := goaviatrix.ReadFile(account.GcloudProjectCredentialsFilepathLocal)
-			if err != nil {
-				return fmt.Errorf("failed to read gcp credential file: %s", err)
-			}
-			if filename == "" {
-				return fmt.Errorf("filename is empty")
-			}
-			if contents == "" {
-				return fmt.Errorf("contents are empty")
-			}
-			if old_filename != filename || old_contents != contents {
-				account.ProjectCredentialsFilename = filename
-				account.ProjectCredentialsContents = contents
-				if err = client.UploadGcloudProjectCredentialsFile(account); err != nil {
-					return fmt.Errorf("failed to upload gcp credential file: %s", err)
-				}
-				controller_filepath := "/var/www/php/tmp/" + filename
-				account.GcloudProjectCredentialsFilepathController = controller_filepath
-			}
-			err = client.UpdateAccount(account)
+			err := client.UpdateGCPAccount(account)
 			if err != nil {
 				return fmt.Errorf("failed to update Aviatrix Account: %s", err)
 			}

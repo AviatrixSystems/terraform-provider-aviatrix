@@ -84,7 +84,6 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 			"ha_subnet": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "",
 				Description: "HA Subnet. Required if enabling HA for AWS/AZURE. Optional if enabling HA for GCP.",
 			},
 			"ha_zone": {
@@ -324,6 +323,9 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	if enableEncryptVolume && d.Get("single_az_ha").(bool) {
 		return fmt.Errorf("'single_az_ha' needs to be disabled to encrypt gateway EBS volume")
 	}
+	if !enableEncryptVolume && gateway.CloudType == goaviatrix.AWS {
+		gateway.EncVolume = "no"
+	}
 
 	log.Printf("[INFO] Creating Aviatrix Spoke Gateway: %#v", gateway)
 
@@ -463,17 +465,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("'enable_vpc_dns_server' only supports AWS(1)")
 	}
 
-	if enableEncryptVolume {
-		gwEncVolume := &goaviatrix.Gateway{
-			GwName:              d.Get("gw_name").(string),
-			CustomerManagedKeys: customerManagedKeys,
-		}
-		err := client.EnableEncryptVolume(gwEncVolume)
-		if err != nil {
-			return fmt.Errorf("failed to enable encrypt gateway volume for %s due to %s", gwEncVolume.GwName, err)
-		}
-	}
-
 	if customizedSpokeVpcRoutes := d.Get("customized_spoke_vpc_routes").(string); customizedSpokeVpcRoutes != "" {
 		transitGateway := &goaviatrix.Gateway{
 			GwName:                   d.Get("gw_name").(string),
@@ -545,8 +536,10 @@ func resourceAviatrixSpokeGatewayReadIfRequired(d *schema.ResourceData, meta int
 func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
+	var isImport bool
 	gwName := d.Get("gw_name").(string)
 	if gwName == "" {
+		isImport = true
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
 		d.Set("gw_name", id)
@@ -742,7 +735,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("ha_zone", "")
 		} else if haGw.CloudType == goaviatrix.GCP {
 			d.Set("ha_zone", haGw.GatewayZone)
-			if d.Get("ha_subnet") != "" {
+			if d.Get("ha_subnet") != "" || isImport {
 				d.Set("ha_subnet", haGw.VpcNet)
 			} else {
 				d.Set("ha_subnet", "")

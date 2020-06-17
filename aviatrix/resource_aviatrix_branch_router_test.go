@@ -45,18 +45,20 @@ func TestAccAviatrixBranchRouter_basic(t *testing.T) {
 func testAccBranchRouterBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_branch_router" "test_branch_router" {
-	name        = "branchrouter-%s"
-	public_ip   = "18.144.102.14"
-	username    = "ec2-user"
-	password    = "testing"
-	host_os     = "ios"
-	ssh_port    = 22
-	address_1   = "2901 Tasman Dr"
-	address_2   = "Suite #104"
-	city        = "Santa Clara"
-	state       = "CA"
-	zip_code    = "12323"
-	description = "Test branch router."
+	name                            = "branchrouter-%s"
+	public_ip                       = "18.144.102.14"
+	username                        = "ec2-user"
+	password                        = "testing"
+	host_os                         = "ios"
+	wan_primary_interface           = "GigabitEthernet1"
+  wan_primary_interface_public_ip = "18.144.102.14"
+	ssh_port                        = 22
+	address_1                       = "2901 Tasman Dr"
+	address_2                       = "Suite #104"
+	city                            = "Santa Clara"
+	state                           = "CA"
+	zip_code                        = "12323"
+	description                     = "Test branch router."
 }
 `, rName)
 }
