@@ -32,7 +32,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
 ```hcl
 # Create an Aviatrix GCP Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_gcp" {
-<<<<<<< HEAD
   cloud_type         = 4
   account_name       = "my-gcp"
   gw_name            = "spoke-gw-gcp"
@@ -47,7 +46,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_gcp" {
 ```hcl
 # Create an Aviatrix Azure Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
-<<<<<<< HEAD
   cloud_type         = 8
   account_name       = "my-azure"
   gw_name            = "spoke-gw-01"
