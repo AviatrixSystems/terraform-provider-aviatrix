@@ -8,20 +8,20 @@ description: |-
 # Aviatrix Provider: Release Compatibility Chart
 
 ## USAGE:
-Quick at-a-glance access to Aviatrix Terraform provider's release compatibility with the Controller release versions. New resources and features may be tracked in the Release Notes.
+Quick at-a-glance access to Aviatrix Terraform provider's release compatibility with the most up-to-date Controller release versions. New resources and features may be tracked in the Release Notes.
 
 -> **NOTE:** This only provides a quick glance at version compatibility between platforms. Please check the release notes for full details on new features, changes and deprecations [here](https://www.terraform.io/docs/providers/aviatrix/guides/release-notes.html).
 
 
 ---
 
-``Last updated: R2.14.1 (UserConnect-5.4.1232)``
+``Last updated: R2.15 (UserConnect-6.0)``
 
 
 ---
 
 
-| Terraform Version (v) | Aviatrix Provider Version (R) | Supported Controller Version |
+| Terraform Version (v) | Aviatrix Provider Version (R) | Minimum Supported Controller Version |
 |:-----------------:|:-------------------------:|:----------------------------:|
 | 0.11              | 1.0                      | UserConnect-4.0              |
 | 0.11              | 1.1                      | UserConnect-4.1              |
@@ -57,10 +57,13 @@ Quick at-a-glance access to Aviatrix Terraform provider's release compatibility 
 | 0.12              | 2.13                     | UserConnect-5.4.1074         |
 | 0.12              | 2.14                     | UserConnect-5.4.1201         |
 | 0.12              | 2.14.1                   | UserConnect-5.4.1232         |
+| 0.12              | 2.15                     | **UserConnect-6.0 <sup>3</sup>** |
 
 **<sup>1</sup>** : Note that Terraform v0.12 is not backwards-compatible with previous Terraform versions. For R1.16, there will be a need to change some syntax in the Terraform configuration files. Please see Hashicorp's [announcement](https://www.hashicorp.com/blog/announcing-terraform-0-12) for more information
 
 **<sup>2</sup>** : With R2.0, there is major code restructuring that includes attribute/resource renaming and changes to attribute values. We *highly* recommend customers reference the [R2.0 upgrade guide](https://www.terraform.io/docs/providers/aviatrix/guides/v2-upgrade-guide.html) for detailed instructions before upgrading to R2.0
+
+**<sup>3</sup>** : Terraform R2.15 will only support Controller 6.0+ and will not be backwards-compatible with any older Controller versions due to major changes and improvements on the Controller backend.
 
 ## Example:
 If your Aviatrix Controller is on UserConnect-5.0.x, you should be using Hashicorp Terraform v0.12.x and our Aviatrix provider R2.4.

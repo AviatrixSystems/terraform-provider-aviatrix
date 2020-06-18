@@ -1,12 +1,12 @@
 ## 2.15.0 (Unreleased)
 ### Notes:
-- Supported Controller version: **UserConnect-6.0.2210**
+- Supported Controller version: **UserConnect-6.0**
 - Supported Terraform version: **v0.12.x**
 
 ### Features:
 1. New data sources:
-  - **data_source_aviatrix_firewall**
-  - **data_source_vpc_tracker**
+  - **aviatrix_firewall**
+  - **aviatrix_vpc_tracker**
 2. Implemented support for the option to manage attachment on either **aviatrix_vpn_profile** or **aviatrix_vpn_user** using ``manage_user_attachment`` (and ``profiles`` for the user)
 3. Implemented support for ``action`` under domain_names filters for **aviatrix_fqdn**
 4. Implemented support for adding VPN users under GeoVPN workflow
@@ -16,10 +16,10 @@
 
 ### Enhancements:
 1. Updated **aviatrix_site2cloud**'s``tunnel_type`` to support "policy" and "route"-based options in Controller 6.0
-2. Added ``route_tables`` and ``route_tables_filter`` in **data_source_vpc**
+2. Added ``route_tables`` and ``route_tables_filter`` in **aviatrix_vpc** data source
 3. Updated **aviatrix_vpc** to return parsed vpc_id for GCP VPC Networks
-4. Updated terraform provider to support unencrypted gateway volumes as an option for backward compatibility between existing and new **aviatrix_gateway**s created in Controller version 6.0. New gateway volumes are encrypted by default by the Controller in 6.0, but will not be, if created by Terraform unless otherwise specified by ``enable_encrypt_volume``
-5. Enhanced GCP access account creation by supporting uploading credential files directly from local 
+4. Updated terraform provider to support unencrypted gateway volumes as an option for backward compatibility between existing and new **aviatrix_gateways** created in Controller version 6.0. New gateway volumes are encrypted by default by the Controller in 6.0, but will not be, if created by Terraform unless otherwise specified by ``enable_encrypt_volume``
+5. Enhanced GCP access account creation by supporting uploading credential files directly from local
 
 ### Bug Fixes:
 1. Fix issue where **aviatrix_aws_tgw** could not be found in terraform state after creation due to backend change
@@ -45,7 +45,7 @@
 1. Implemented support for dynamically updating ``customized_route_advertisement`` in **aviatrix_aws_tgw_vpc_attachment**
 2. Implemented support for SAML authentication for Controller login in **aviatrix_saml_endpoint**
 3. New data source to support referencing specific private/public subnets:
-  - **data_source_aviatrix_vpc**
+  - **aviatrix_vpc**
 4. New resources to support AWS TGW inter-region peering:
   - **aviatrix_aws_tgw_peering**
   - **aviatrix_aws_tgw_peering_domain_conn**
@@ -54,7 +54,7 @@
 
 ### Enhancements:
 1. Added ``peering_ha_gw_name`` in **aviatrix_gateway**, and ``ha_gw_name`` in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** as computed values
-2. Added ``peering_ha_private_ip`` in **data_source_aviatrix_gateway**, and ``ha_private_ip`` in **data_source_aviatrix_spoke_gateway** and **data_source_aviatrix_transit_gateway** as computed values
+2. Added ``peering_ha_private_ip`` in **aviatrix_gateway** data source, and ``ha_private_ip`` in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** data sources as computed values
 
 ### Bug Fixes:
 1. Fixed issue where OpenVPN configurations are unable to be modified when attached to a GeoVPN
@@ -156,8 +156,8 @@
   - **aviatrix_firenet**
 
 ### Enhancements:
-1. Added coverage for **aviatrix_gateway_dnat** and **aviatrix_gateway_snat** in test-infra
-2. Added coverage for **data_source_aviatrix_spoke_gateway**, **data_source_aviatrix_transit_gateway** and **data_source_aviatrix_firenet** in test-infra
+1. Added coverage for the new resources **aviatrix_gateway_dnat** and **aviatrix_gateway_snat** in test-infra
+2. Added coverage for the new data sources **aviatrix_spoke_gateway**, **aviatrix_transit_gateway** and **aviatrix_firenet** in test-infra
 3. Deprecated ``dnat_policy`` in **aviatrix_gateway**
 4. Deprecated ``dnat_policy``, ``snat_policy`` and ``snat_mode`` in **aviatrix_spoke_gateway**
 5. Replaced ``enable_snat`` with ``single_ip_snat`` in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
@@ -226,7 +226,7 @@
 2. Added support for creating GCP VPC with GCP provider in **aviatrix_vpc**
 3. Added support for ``custom_saml_request_template`` in **aviatrix_saml_endpoint**
 4. Added support for ``customized_routes`` and ``disable_local_route_propagation`` in **aviatrix_aws_tgw**
-5. Added option of retries for ``save`` or ``synchronize`` in **data_source_aviatrix_firenet_vendor_integration**
+5. Added option of retries for ``save`` or ``synchronize`` in **aviatrix_firenet_vendor_integration** data source
 6. Added support for VPN NAT for VPN **aviatrix_gateway**
 7. Added support for “force-drop” option for policy actions in **aviatrix_firewall**
 

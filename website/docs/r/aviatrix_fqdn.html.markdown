@@ -9,6 +9,8 @@ description: |-
 
 The **aviatrix_fqdn** resource manages [FQDN filtering](https://docs.aviatrix.com/HowTos/fqdn_faq.html) for Aviatrix gateways.
 
+~> **NOTE:** Please see the [Notes](#notes) section below for troubleshooting known issues/deltas that may occur when enabling this feature
+
 ## Example Usage
 
 ```hcl
@@ -66,11 +68,8 @@ The following arguments are supported:
     * For protocol "all", port must be set to "all".
     * For protocol “icmp”, port must be set to “ping”.
 
--> **NOTE:** If you are using/upgraded to Aviatrix Terraform Provider R1.5+, and an fqdn resource was originally created with a provider version <R1.5, you must modify your configuration file to match current format, and do ‘terraform refresh’ to update the state file to current format.
+-> **NOTE:** If you are using/upgraded to Aviatrix Terraform Provider R1.5+, and an FQDN resource was originally created with a provider version <R1.5, you must modify your configuration file to match current format, and do ‘terraform refresh’ to update the state file to current format.
 
--> **NOTE:** In order for the FQDN feature to be enabled, `single_ip_snat` must be set to true in the specified gateway. If it is not set at gateway creation, creation of FQDN resource will automatically enable SNAT and users must rectify the diff in the Terraform state by setting `single_ip_snat = true` in their gateway resource.
-
--> **NOTE:** In order for the FQDN feature to be enabled, the corresponding gateway's `enable_vpc_dns_server` must be set to `false` at creation. FQDN will automatically enable that feature, which will cause a diff in the state. Please add `lifecycle { ignore_changes = [enable_vpc_dns_server] }` within that gateway's resource block in order to workaround this known issue. See [here](https://www.terraform.io/docs/configuration/resources.html#lifecycle-lifecycle-customizations) for more information about the `lifecycle` attribute in Terraform.
 
 ## Import
 
@@ -79,3 +78,13 @@ The following arguments are supported:
 ```
 $ terraform import aviatrix_fqdn.test fqdn_tag
 ```
+
+## Notes
+### FireNet
+If FQDN is enabled on a gateway for the purposes of the Aviatrix FireNet Solution, you may run into an error requiring SNAT to be disabled when associating the gateway with the firewall (for reasons as described in the [note](#single_ip_snat) below). Please add an explicit dependency (`depends_on`) on the **aviatrix_firenet** resource to ensure the FireNet attachment completes first, before FQDN is enabled for that gateway.
+
+### enable_vpc_dns_server
+In order for the FQDN feature to be enabled, the corresponding gateway's `enable_vpc_dns_server` must be set to `false` at creation. FQDN will automatically enable that feature, which will cause a diff in the state. Please add `lifecycle { ignore_changes = [enable_vpc_dns_server] }` within that gateway's resource block in order to workaround this known issue. See [here](https://www.terraform.io/docs/configuration/resources.html#lifecycle-lifecycle-customizations) for more information about the `lifecycle` attribute in Terraform.
+
+### single_ip_snat
+In order for the FQDN feature to be enabled, `single_ip_snat` must be set to true in the corresponding gateway. If it is not set at gateway creation, creation of FQDN resource will automatically enable SNAT and users must rectify the diff in the Terraform state by setting `single_ip_snat = true` in their gateway resource. An alternative is to add the utilise the `lifecycle` options in that gateway to ignore any changes, as described in the above bullet point.
