@@ -57,7 +57,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-**firewall_instance** can be imported using the `instance_id`, e.g.
+**firewall_instance** can be imported using the `instance_id`. For Azure FireNet instances, the value will be the `firewall_name` concatenated with a ":" and the Resource Group of the `vpc_id` set for that instance. e.g.
 
 ```
 $ terraform import aviatrix_firewall_instance.test instance_id
