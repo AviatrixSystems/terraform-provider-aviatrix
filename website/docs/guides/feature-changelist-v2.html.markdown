@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.15 (UserConnect-6.0.x)``
+``Last updated: R2.15 (UserConnect-6.0)``
 
 
 ---
@@ -180,7 +180,7 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |(new) | spoke_gateway, transit_gateway | ha_gw_name, ha_private_ip | **No**; see above for details |
 
 
-## R2.15 (UserConnect-6.0.x) (Terraform v0.12)
+## R2.15 (UserConnect-6.0) (Terraform v0.12)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
 |(changed) | site2cloud | tunnel_type       | **Yes**; with the release of Controller 6.0, **site2cloud** has been changed to now be policy-based or route-based. With that change, the new accepted values are "policy" and "route". These values must be updated in their respective .tf files and a ``terraform refresh`` will rectify the state file. |

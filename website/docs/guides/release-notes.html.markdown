@@ -12,10 +12,39 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.15 (UserConnect-6.0.x)``
+``Last updated: R2.15 (UserConnect-6.0)``
 
 
 ---
+
+## 2.15.0
+### Notes:
+- Supported Controller version: **UserConnect-6.0**
+- Supported Terraform version: **v0.12.x**
+
+### Features:
+1. New data sources:
+  - **data_source_aviatrix_firewall**
+  - **data_source_vpc_tracker**
+2. Implemented support for the option to manage attachment on either **aviatrix_vpn_profile** or **aviatrix_vpn_user** using ``manage_user_attachment`` (and ``profiles`` for the user)
+3. Implemented support for ``action`` under domain_names filters for **aviatrix_fqdn**
+4. Implemented support for adding VPN users under GeoVPN workflow
+5. Implemented support for specifying ``ha_peering_subnet`` for GCP **aviatrix_gateway**
+6. Implemented support for specifying ``ha_subnet`` for GCP **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+7. Implemented support for ``enable_ikev2`` for **aviatrix_site2cloud**
+
+### Enhancements:
+1. Updated **aviatrix_site2cloud**'s``tunnel_type`` to support "policy" and "route"-based options in Controller 6.0
+2. Added ``route_tables`` and ``route_tables_filter`` in **data_source_vpc**
+3. Updated **aviatrix_vpc** to return parsed vpc_id for GCP VPC Networks
+4. Updated terraform provider to support unencrypted gateway volumes as an option for backward compatibility between existing and new **aviatrix_gateways** created in Controller version 6.0. New gateway volumes are encrypted by default by the Controller in 6.0, but will not be, if created by Terraform unless otherwise specified by ``enable_encrypt_volume``
+5. Enhanced GCP access account creation by supporting uploading credential files directly from local
+
+### Bug Fixes:
+1. Fix issue where **aviatrix_aws_tgw** could not be found in terraform state after creation due to backend change
+2. Fix issue where HA gateways could not be created in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+3. Fix issue where **aviatrix_saml_endpoint**'s ``custom_saml_request_template`` return output was null after creation
+
 
 ## 2.14.1
 ### Notes:

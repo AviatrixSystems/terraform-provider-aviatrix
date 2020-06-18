@@ -1,6 +1,6 @@
 ## 2.15.0 (Unreleased)
 ### Notes:
-- Supported Controller version: **UserConnect-6.0.2210**
+- Supported Controller version: **UserConnect-6.0**
 - Supported Terraform version: **v0.12.x**
 
 ### Features:
@@ -18,8 +18,8 @@
 1. Updated **aviatrix_site2cloud**'s``tunnel_type`` to support "policy" and "route"-based options in Controller 6.0
 2. Added ``route_tables`` and ``route_tables_filter`` in **data_source_vpc**
 3. Updated **aviatrix_vpc** to return parsed vpc_id for GCP VPC Networks
-4. Updated terraform provider to support unencrypted gateway volumes as an option for backward compatibility between existing and new **aviatrix_gateway**s created in Controller version 6.0. New gateway volumes are encrypted by default by the Controller in 6.0, but will not be, if created by Terraform unless otherwise specified by ``enable_encrypt_volume``
-5. Enhanced GCP access account creation by supporting uploading credential files directly from local 
+4. Updated terraform provider to support unencrypted gateway volumes as an option for backward compatibility between existing and new **aviatrix_gateways** created in Controller version 6.0. New gateway volumes are encrypted by default by the Controller in 6.0, but will not be, if created by Terraform unless otherwise specified by ``enable_encrypt_volume``
+5. Enhanced GCP access account creation by supporting uploading credential files directly from local
 
 ### Bug Fixes:
 1. Fix issue where **aviatrix_aws_tgw** could not be found in terraform state after creation due to backend change
