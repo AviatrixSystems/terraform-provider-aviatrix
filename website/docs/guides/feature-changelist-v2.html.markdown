@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.14 (UserConnect-5.4.1201)``
+``Last updated: R2.15 (UserConnect-6.0.x)``
 
 
 ---
@@ -178,3 +178,10 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |(deprecated) | gateway | public_ip, peering_ha_public_ip | **Yes**; these attributes have been deprecated in favor of `eip` and `peering_ha_eip` to maintain consistency between gateway types. If any Terraform configuration of other resources reference this attribute, replace them with the aforementioned attributes respectively. |
 |(new) | --             | peering_ha_gw_name, peering_ha_private_ip| **No**; these are two new attributes that will be exported as output values in the resource, and can be referenced as necessary in other resources or modules. |
 |(new) | spoke_gateway, transit_gateway | ha_gw_name, ha_private_ip | **No**; see above for details |
+
+
+## R2.15 (UserConnect-6.0.x) (Terraform v0.12)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(changed) | site2cloud | tunnel_type       | **Yes**; with the release of Controller 6.0, **site2cloud** has been changed to now be policy-based or route-based. With that change, the new accepted values are "policy" and "route". These values must be updated in their respective .tf files and a ``terraform refresh`` will rectify the state file. |
+|(changed) | gateway    | enable_encrypt_volume | **No**; nothing needs to be changed. This is just a note to bring to attention that with gateways created by Terraform, volumes will NOT be encrypted, unless otherwise specified. Please see Release Notes for details |
