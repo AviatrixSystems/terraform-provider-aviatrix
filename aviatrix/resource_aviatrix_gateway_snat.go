@@ -74,7 +74,7 @@ func resourceAviatrixGatewaySNat() *schema.Resource {
 						"interface": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Computed: true,
+							Default:  "eth0",
 							Description: "This is a qualifier condition that specifies output interface " +
 								"where the rule applies. When left blank, this field is not used.",
 						},
@@ -199,7 +199,7 @@ func resourceAviatrixGatewaySNatRead(d *schema.ResourceData, meta interface{}) e
 				sP["dst_cidr"] = policy.DstIP
 				sP["dst_port"] = policy.DstPort
 				sP["protocol"] = policy.Protocol
-				sP["interface"] = policy.Interface
+				sP["interface"] = "eth0"
 				sP["connection"] = policy.Connection
 				sP["mark"] = policy.Mark
 				sP["snat_ips"] = policy.NewSrcIP
