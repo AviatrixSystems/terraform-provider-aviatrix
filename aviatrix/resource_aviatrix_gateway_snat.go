@@ -74,6 +74,7 @@ func resourceAviatrixGatewaySNat() *schema.Resource {
 						"interface": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 							Description: "This is a qualifier condition that specifies output interface " +
 								"where the rule applies. When left blank, this field is not used.",
 						},
@@ -271,6 +272,7 @@ func resourceAviatrixGatewaySNatDelete(d *schema.ResourceData, meta interface{})
 	client := meta.(*goaviatrix.Client)
 	gateway := &goaviatrix.Gateway{
 		GatewayName: d.Get("gw_name").(string),
+		SnatMode:    "custom",
 	}
 
 	err := client.DisableSNat(gateway)
