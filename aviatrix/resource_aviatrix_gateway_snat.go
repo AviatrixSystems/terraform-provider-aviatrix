@@ -76,8 +76,8 @@ func resourceAviatrixGatewaySNat() *schema.Resource {
 							Optional: true,
 							Default:  "eth0",
 							Description: "This is a qualifier condition that specifies output interface " +
-								"where the rule applies. When left blank, this field is not used. Default and only " +
-								"supported value: 'eth0'. Empty string is not a valid value.",
+								"where the rule applies. When left blank, this field is not used. Default value: 'eth0'. " +
+								"Empty string is not a valid value.",
 						},
 						"connection": {
 							Type:        schema.TypeString,
