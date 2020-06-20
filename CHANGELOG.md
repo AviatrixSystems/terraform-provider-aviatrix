@@ -20,6 +20,7 @@
 3. Updated **aviatrix_vpc** to return parsed vpc_id for GCP VPC Networks
 4. Updated terraform provider to support unencrypted gateway volumes as an option for backward compatibility between existing and new **aviatrix_gateways** created in Controller version 6.0. New gateway volumes are encrypted by default by the Controller in 6.0, but will not be, if created by Terraform unless otherwise specified by ``enable_encrypt_volume``
 5. Enhanced GCP access account creation by supporting uploading credential files directly from local
+6. Updated **aviatrix_gateway_snat** to support custom SNAT in cases of spoke to transit peering using ``connection``
 
 ### Bug Fixes:
 1. Fix issue where **aviatrix_aws_tgw** could not be found in terraform state after creation due to backend change
