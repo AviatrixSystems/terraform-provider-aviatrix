@@ -1,6 +1,6 @@
 ## 2.15.0 (Unreleased)
 ### Notes:
-- Supported Controller version: **UserConnect-6.0**
+- Supported Controller version: **UserConnect-6.0** (tested on **UserConnect-6.0.2269**)
 - Supported Terraform version: **v0.12.x**
 
 ### Features:
