@@ -276,7 +276,7 @@ func resourceAviatrixGatewaySNatDelete(d *schema.ResourceData, meta interface{})
 		SnatMode:    "custom",
 	}
 
-	err := client.DisableSNat(gateway)
+	err := client.DisableCustomSNat(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to disable SNAT for Aviatrix gateway(name: %s) due to: %s", gateway.GatewayName, err)
 	}

@@ -454,6 +454,27 @@ func (c *Client) EnableSNat(gateway *Gateway) error {
 
 func (c *Client) DisableSNat(gateway *Gateway) error {
 	gateway.CID = c.CID
+	gateway.Action = "disable_snat"
+	resp, err := c.Post(c.baseURL, gateway)
+	if err != nil {
+		return errors.New("HTTP Get 'disable_snat' failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode 'disable_snat' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API 'disable_snat' Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) DisableCustomSNat(gateway *Gateway) error {
+	gateway.CID = c.CID
 	gateway.Action = "enable_snat"
 	resp, err := c.Post(c.baseURL, gateway)
 	if err != nil {
