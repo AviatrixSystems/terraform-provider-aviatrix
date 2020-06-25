@@ -11,8 +11,18 @@ import (
 )
 
 type TransitGatewayPeering struct {
-	TransitGatewayName1 string `form:"gateway_1,omitempty" json:"gateway_1,omitempty"`
-	TransitGatewayName2 string `form:"gateway_2,omitempty" json:"gateway_2,omitempty"`
+	TransitGatewayName1                 string `form:"gateway1,omitempty" json:"gateway_1,omitempty"`
+	TransitGatewayName2                 string `form:"gateway2,omitempty" json:"gateway_2,omitempty"`
+	Gateway1ExcludedCIDRs               string `form:"source_filter_cidrs,omitempty"`
+	Gateway2ExcludedCIDRs               string `form:"destination_filter_cidrs,omitempty"`
+	Gateway1ExcludedTGWConnections      string `form:"source_exclude_connections,omitempty"`
+	Gateway2ExcludedTGWConnections      string `form:"destination_exclude_connections,omitempty"`
+	Gateway1ExcludedCIDRsSlice          []string
+	Gateway2ExcludedCIDRsSlice          []string
+	Gateway1ExcludedTGWConnectionsSlice []string
+	Gateway2ExcludedTGWConnectionsSlice []string
+	CID                                 string `form:"CID,omitempty"`
+	Action                              string `form:"action,omitempty"`
 }
 
 type TransitGatewayPeeringAPIResp struct {
@@ -21,20 +31,28 @@ type TransitGatewayPeeringAPIResp struct {
 	Reason  string                    `json:"reason"`
 }
 
+type TransitGatewayPeeringDetailsAPIResp struct {
+	Return  bool                                `json:"return"`
+	Results TransitGatewayPeeringDetailsResults `json:"results"`
+	Reason  string                              `json:"reason"`
+}
+
+type TransitGatewayPeeringDetailsResults struct {
+	Site1 TransitGatewayPeeringDetail `json:"site_1"`
+	Site2 TransitGatewayPeeringDetail `json:"site_2"`
+}
+
+type TransitGatewayPeeringDetail struct {
+	ExcludedCIDRs          []string `json:"exclude_filter_list"`
+	ExcludedTGWConnections []string `json:"exclude_connections"`
+}
+
 func (c *Client) CreateTransitGatewayPeering(transitGatewayPeering *TransitGatewayPeering) error {
-	Url, err := url.Parse(c.baseURL)
+	transitGatewayPeering.CID = c.CID
+	transitGatewayPeering.Action = "create_inter_transit_gateway_peering"
+	resp, err := c.Post(c.baseURL, transitGatewayPeering)
 	if err != nil {
-		return errors.New(("url Parsing failed for create_inter_transit_gateway_peering ") + err.Error())
-	}
-	createInterTransitGwPeering := url.Values{}
-	createInterTransitGwPeering.Add("CID", c.CID)
-	createInterTransitGwPeering.Add("action", "create_inter_transit_gateway_peering")
-	createInterTransitGwPeering.Add("gateway1", transitGatewayPeering.TransitGatewayName1)
-	createInterTransitGwPeering.Add("gateway2", transitGatewayPeering.TransitGatewayName2)
-	Url.RawQuery = createInterTransitGwPeering.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get create_inter_transit_gateway_peering failed: " + err.Error())
+		return errors.New("HTTP POST create_inter_transit_gateway_peering failed: " + err.Error())
 	}
 	var data APIResp
 	buf := new(bytes.Buffer)
@@ -97,7 +115,52 @@ func (c *Client) GetTransitGatewayPeering(transitGatewayPeering *TransitGatewayP
 	return ErrNotFound
 }
 
+func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitGatewayPeering) (*TransitGatewayPeering, error) {
+	transitGatewayPeering.CID = c.CID
+	transitGatewayPeering.Action = "get_inter_transit_gateway_peering_details"
+	resp, err := c.Post(c.baseURL, transitGatewayPeering)
+	if err != nil {
+		return nil, errors.New("HTTP POST get_inter_transit_gateway_peering_details failed: " + err.Error())
+	}
+	var data TransitGatewayPeeringDetailsAPIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode get_inter_transit_gateway_peering_details failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return nil, errors.New("Rest API get_inter_transit_gateway_peering_details Get failed: " + data.Reason)
+	}
+
+	transitGatewayPeering.Gateway1ExcludedCIDRsSlice = data.Results.Site1.ExcludedCIDRs
+	transitGatewayPeering.Gateway1ExcludedTGWConnectionsSlice = data.Results.Site1.ExcludedTGWConnections
+	transitGatewayPeering.Gateway2ExcludedCIDRsSlice = data.Results.Site2.ExcludedCIDRs
+	transitGatewayPeering.Gateway2ExcludedTGWConnectionsSlice = data.Results.Site2.ExcludedTGWConnections
+
+	return transitGatewayPeering, nil
+}
+
 func (c *Client) UpdateTransitGatewayPeering(transitGatewayPeering *TransitGatewayPeering) error {
+	transitGatewayPeering.CID = c.CID
+	transitGatewayPeering.Action = "edit_inter_transit_gateway_peering"
+	resp, err := c.Post(c.baseURL, transitGatewayPeering)
+	if err != nil {
+		return errors.New("HTTP POST edit_inter_transit_gateway_peering failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode edit_inter_transit_gateway_peering failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API edit_inter_transit_gateway_peering Get failed: " + data.Reason)
+	}
+
 	return nil
 }
 
