@@ -320,9 +320,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	if !enableEncryptVolume && customerManagedKeys != "" {
 		return fmt.Errorf("'customer_managed_keys' should be empty since Encrypt Volume is not enabled")
 	}
-	if enableEncryptVolume && d.Get("single_az_ha").(bool) {
-		return fmt.Errorf("'single_az_ha' needs to be disabled to encrypt gateway EBS volume")
-	}
 	if !enableEncryptVolume && gateway.CloudType == goaviatrix.AWS {
 		gateway.EncVolume = "no"
 	}
@@ -1173,9 +1170,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		if d.Get("enable_encrypt_volume").(bool) {
 			if d.Get("cloud_type").(int) != goaviatrix.AWS {
 				return fmt.Errorf("'enable_encrypt_volume' is only supported for AWS provider (cloud_type: 1)")
-			}
-			if d.Get("single_az_ha").(bool) {
-				return fmt.Errorf("'single_az_ha' needs to be disabled to encrypt gateway EBS volume")
 			}
 			gwEncVolume := &goaviatrix.Gateway{
 				GwName:              d.Get("gw_name").(string),
