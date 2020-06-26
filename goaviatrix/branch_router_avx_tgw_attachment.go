@@ -64,12 +64,12 @@ func (c *Client) CreateBranchRouterAvxTgwAttachment(brata *BranchRouterAvxTgwAtt
 }
 
 func (c *Client) GetBranchRouterAvxTgwAttachment(brata *BranchRouterAvxTgwAttachment) (*BranchRouterAvxTgwAttachment, error) {
-	branchName, err := c.GetBranchRouterNameFromConn(brata.ConnectionName)
+	branchName, err := c.GetBranchRouterName(brata.ConnectionName)
 	if err != nil {
 		return nil, fmt.Errorf("could not get branch name: %v", err)
 	}
 
-	vpcID, err := c.GetBranchRouterAvxTgwAttachmentVpcID(brata)
+	vpcID, err := c.GetBranchRouterAttachmentVpcID(brata.ConnectionName)
 	if err != nil {
 		return nil, fmt.Errorf("could not get branch router attachment VPC id: %v", err)
 	}
@@ -129,7 +129,7 @@ func (c *Client) GetBranchRouterAvxTgwAttachment(brata *BranchRouterAvxTgwAttach
 	}, nil
 }
 
-func (c *Client) GetBranchRouterAvxTgwAttachmentVpcID(brata *BranchRouterAvxTgwAttachment) (string, error) {
+func (c *Client) GetBranchRouterAttachmentVpcID(connectionName string) (string, error) {
 	resp, err := c.Post(c.baseURL, struct {
 		CID    string `form:"CID"`
 		Action string `form:"action"`
@@ -167,7 +167,7 @@ func (c *Client) GetBranchRouterAvxTgwAttachmentVpcID(brata *BranchRouterAvxTgwA
 	}
 
 	for _, attachment := range data.Results {
-		if attachment.Name == brata.ConnectionName {
+		if attachment.Name == connectionName {
 			return attachment.VpcID, nil
 		}
 	}
@@ -175,8 +175,8 @@ func (c *Client) GetBranchRouterAvxTgwAttachmentVpcID(brata *BranchRouterAvxTgwA
 	return "", ErrNotFound
 }
 
-func (c *Client) DeleteBranchRouterAvxTgwAttachment(brata *BranchRouterAvxTgwAttachment) error {
-	vpcID, err := c.GetBranchRouterAvxTgwAttachmentVpcID(brata)
+func (c *Client) DeleteBranchRouterAttachment(connectionName string) error {
+	vpcID, err := c.GetBranchRouterAttachmentVpcID(connectionName)
 	if err != nil {
 		return fmt.Errorf("could not get branch router attachment VPC id: %v", err)
 	}
@@ -190,7 +190,7 @@ func (c *Client) DeleteBranchRouterAvxTgwAttachment(brata *BranchRouterAvxTgwAtt
 		CID:            c.CID,
 		Action:         "detach_cloudwan_branch",
 		VpcID:          vpcID,
-		ConnectionName: brata.ConnectionName,
+		ConnectionName: connectionName,
 	})
 	if err != nil {
 		return errors.New("HTTP POST detach_cloudwan_branch failed: " + err.Error())
