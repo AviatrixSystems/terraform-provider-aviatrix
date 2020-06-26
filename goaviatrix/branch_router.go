@@ -37,6 +37,7 @@ type BranchRouter struct {
 	PrimaryInterfaceIP string                     `form:"-" map:"-" json:"wan_if_primary_public_ip"`
 	BackupInterface    string                     `form:"-" map:"-" json:"wan_if_backup"`
 	BackupInterfaceIP  string                     `form:"-" map:"-" json:"wan_if_backup_public_ip"`
+	ConnectionName     string                     `form:"-" map:"-" json:"conn_name"`
 }
 
 type GetBranchRouterRespAddress struct {
@@ -150,6 +151,47 @@ func (c *Client) GetBranchRouter(br *BranchRouter) (*BranchRouter, error) {
 	foundBr.ZipCode = foundBr.Address.ZipCode
 
 	return foundBr, nil
+}
+
+func (c *Client) GetBranchRouterNameFromConn(connName string) (string, error) {
+	resp, err := c.Post(c.baseURL, struct {
+		CID    string `form:"CID"`
+		Action string `form:"action"`
+	}{
+		CID:    c.CID,
+		Action: "list_cloudwan_branches_summary",
+	})
+	if err != nil {
+		return "", errors.New("HTTP POST list_cloudwan_branches_summary failed: " + err.Error())
+	}
+
+	type Resp struct {
+		Return  bool           `json:"return"`
+		Results []BranchRouter `json:"results"`
+		Reason  string         `json:"reason"`
+	}
+	var data Resp
+	var b bytes.Buffer
+	_, err = b.ReadFrom(resp.Body)
+	if err != nil {
+		return "", errors.New("Reading response body list_cloudwan_branches_summary failed: " + err.Error())
+	}
+
+	if err = json.NewDecoder(&b).Decode(&data); err != nil {
+		return "", errors.New("Json Decode list_cloudwan_branches_summary failed: " + err.Error() +
+			"\n Body: " + b.String())
+	}
+	if !data.Return {
+		return "", errors.New("Rest API list_cloudwan_branches_summary Post failed: " + data.Reason)
+	}
+
+	for _, branch := range data.Results {
+		if branch.ConnectionName == connName {
+			return branch.Name, nil
+		}
+	}
+
+	return "", ErrNotFound
 }
 
 func (c *Client) UpdateBranchRouter(br *BranchRouter) error {
