@@ -105,6 +105,13 @@ type EditSite2CloudConnDetail struct {
 	DeadPeerDetectionConfig string        `json:"dpd_config,omitempty"`
 	EnableActiveActive      string        `json:"active_active_ha,omitempty"`
 	EnableIKEv2             string        `json:"ike_ver,omitempty"`
+	BgpLocalASN             string        `json:"bgp_local_asn_number,omitempty"`
+	BgpLocalIP              string        `json:"bgp_local_ip,omitempty"`
+	BgpBackupLocalIP        string        `json:"bgp_backup_local_ip,omitempty"`
+	BgpRemoteASN            string        `json:"bgp_remote_asn_number,omitempty"`
+	BgpRemoteIP             string        `json:"bgp_remote_ip,omitempty"`
+	BgpBackupRemoteIP       string        `json:"bgp_backup_remote_ip,omitempty"`
+	EnableGlobalAccelerator bool          `json:"globalaccel,omitempty"`
 }
 
 type Site2CloudConnDetailResp struct {
