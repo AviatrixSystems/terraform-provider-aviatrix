@@ -60,7 +60,27 @@ func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "AWS side as a number. Integer between 1-65535. Example: '12'. Required for a dynamic VPN connection.",
+				Description: "AWS side as a number. Integer between 1-4294967294. Example: '12'. Required for a dynamic VPN connection.",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if len(v) > 10 {
+						errs = append(errs, fmt.Errorf("%q must be an integer in 1-4294967294, got: %s", key, val))
+					} else {
+						sum := 0
+						for _, r := range v {
+							num := int(r - '0')
+							if num < 0 || num > 9 {
+								errs = append(errs, fmt.Errorf("%q must be an integer in 1-4294967294, got: %s", key, val))
+								break
+							}
+							sum = sum*10 + num
+						}
+						if sum == 0 || sum > 4294967294 {
+							errs = append(errs, fmt.Errorf("%q must be an integer in 1-4294967294, got: %s", key, val))
+						}
+					}
+					return
+				},
 			},
 			"remote_cidr": {
 				Type:        schema.TypeString,

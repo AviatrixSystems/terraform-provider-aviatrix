@@ -47,7 +47,7 @@ The following arguments are supported:
 
 -> **NOTE:** `connection_type` - If you are using/upgraded to Aviatrix Terraform Provider R2.11.0+, and an **aviatrix_aws_tgw_vpn_conn** resource (static VPN connection) was originally created with a provider version <R2.11.0, you must add `connection_type = static` into your configuration file and do ‘terraform refresh’ to update and apply the attribute’s value (static) into the state file.
 
-* `remote_as_number` - (Optional) AWS side as a number. Integer between 1-65535. Example: "12". **Required for a dynamic VPN connection.**
+* `remote_as_number` - (Optional) AWS side as a number. Integer between 1-4294967294. Example: "12". **Required for a dynamic VPN connection.**
 * `remote_cidr` - (Optional) Remote CIDRs separated by ",". Example: AWS: "16.0.0.0/16,16.1.0.0/16". **Required for a static VPN connection.**
 
 ### Optional

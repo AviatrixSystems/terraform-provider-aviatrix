@@ -35,7 +35,7 @@ The following arguments are supported:
 * `bgp_vgw_id` - (Required) ID of AWS VGW that will be used for this connection. Example: "vgw-abcd1234".
 * `bgp_vgw_account` - (Required) Cloud Account used to create the AWS VGW that will be used for this connection. Example: "dev-account-1".
 * `bgp_vgw_region` - (Required) Region of AWS VGW that will be used for this connection. Example: "us-east-1".
-* `bgp_local_as_num` - (Required) BGP Local ASN (Autonomous System Number). Integer between 1-65535. Example: "65001".
+* `bgp_local_as_num` - (Required) BGP Local ASN (Autonomous System Number). Integer between 1-4294967294. Example: "65001".
 
 The following arguments are deprecated:
 
