@@ -36,14 +36,14 @@ The following arguments are supported:
 * `gw_name` - (Required) Site2Cloud Connection Name.
 * `remote_gateway_ip` - (Required) Remote Gateway IP.
 * `connection_type` - (Required) Connection type. Valid values: 'bpg', 'static'. Default value: 'bgp'.
-* `bgp_local_as_num` - (Optional) BGP local ASN (Autonomous System Number). Integer between 1-65535. Required for 'bgp' connection.
-* `bgp_remote_as_num` - (Optional) BGP remote ASN (Autonomous System Number). Integer between 1-65535. Required for 'bgp' connection.
+* `bgp_local_as_num` - (Optional) BGP local ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
+* `bgp_remote_as_num` - (Optional) BGP remote ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
 * `remote_subnet` - (Optional) Remote CIDRs joined as a string with ','. Required for a 'static' type connection.
 
 ### HA
 * `ha_enabled` - (Optional) Set as true if there are two external devices.
 * `backup_remote_gateway_ip ` - (Optional) Backup remote gateway IP. Required if HA enabled.
-* `backup_bgp_remote_as_num` - (Optional) Backup BGP remote ASN (Autonomous System Number). Integer between 1-65535. Required if HA enabled for 'bgp' connection.
+* `backup_bgp_remote_as_num` - (Optional) Backup BGP remote ASN (Autonomous System Number). Integer between 1-4294967294. Required if HA enabled for 'bgp' connection.
 * `backup_pre_shared_key` - (Optional) Backup Pre-Shared Key.
 * `backup_local_tunnel_cidr` - (Optional) Source CIDR for the tunnel from the backup Aviatrix transit gateway.
 * `backup_remote_tunnel_cidr` - (Optional) Destination CIDR for the tunnel to the backup external device.
