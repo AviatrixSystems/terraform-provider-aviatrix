@@ -65,6 +65,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_gateway_dnat":                         resourceAviatrixGatewayDNat(),
 			"aviatrix_gateway_snat":                         resourceAviatrixGatewaySNat(),
 			"aviatrix_geo_vpn":                              resourceAviatrixGeoVPN(),
+			"aviatrix_periodic_ping":                        resourceAviatrixPeriodicPing(),
 			"aviatrix_rbac_group":                           resourceAviatrixRbacGroup(),
 			"aviatrix_rbac_group_access_account_attachment": resourceAviatrixRbacGroupAccessAccountAttachment(),
 			"aviatrix_rbac_group_permission_attachment":     resourceAviatrixRbacGroupPermissionAttachment(),
