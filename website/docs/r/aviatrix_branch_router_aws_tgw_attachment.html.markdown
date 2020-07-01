@@ -15,7 +15,7 @@ The **aviatrix_branch_router_aws_tgw_attachment** resource allows the creation a
 # Create an Aviatrix Branch Router and AWS TGW attachment
 resource "aviatrix_branch_router_aws_tgw_attachment" "test_branch_router_aws_tgw_attachment" {
 	connection_name           = "test-conn"
-	branch_name               = "branch-router-test"
+	branch_name               = "branch-router"
 	aws_tgw_name              = "tgw-test"
 	branch_router_bgp_asn     = 65001
 	security_domain_name      = "Default_Domain"
