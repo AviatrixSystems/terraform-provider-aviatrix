@@ -22,6 +22,7 @@ func TestAccAviatrixBranchRouterTag_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			testAccAviatrixBranchRouterTagtPreCheck(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBranchRouterTagDestroy,
@@ -33,10 +34,9 @@ func TestAccAviatrixBranchRouterTag_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"commit"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -44,35 +44,14 @@ func TestAccAviatrixBranchRouterTag_basic(t *testing.T) {
 
 func testAccBranchRouterTagBasic(rName string) string {
 	return fmt.Sprintf(`
-resource "aviatrix_branch_router" "test_branch_router_a" {
-	name                            = "branchrouter-A%[1]s"
-	public_ip                       = "18.144.102.14"
-	username                        = "ec2-user"
-	password                        = "testing"
-	wan_primary_interface           = "GigabitEthernet1"
-    wan_primary_interface_public_ip = "18.144.102.14"
-	zip_code                        = "19232"
-}
-
-resource "aviatrix_branch_router" "test_branch_router_b" {
-	name                            = "branchrouter-B%[1]s"
-	public_ip                       = "18.144.102.14"
-	username                        = "ec2-user"
-	password                        = "testing"
-	wan_primary_interface           = "GigabitEthernet1"
-    wan_primary_interface_public_ip = "18.144.102.14"
-	zip_code                        = "19232"
-}
-
 resource "aviatrix_branch_router_tag" "test_branch_router_tag" {
-	name                = "branchroutertag-%[1]s"
+	name                = "branchroutertag-%s"
 	config              = <<EOD
 hostname myrouter
 EOD
-	branch_router_names = [aviatrix_branch_router.test_branch_router_a.name, aviatrix_branch_router.test_branch_router_b.name]
-	commit              = false
+	branch_router_names = ["%s"]
 }
-`, rName)
+`, rName, os.Getenv("BRANCH_ROUTER_NAME"))
 }
 
 func testAccCheckBranchRouterTagExists(n string) resource.TestCheckFunc {
@@ -120,4 +99,10 @@ func testAccCheckBranchRouterTagDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccAviatrixBranchRouterTagtPreCheck(t *testing.T) {
+	if os.Getenv("BRANCH_ROUTER_NAME") == "" {
+		t.Fatal("BRANCH_ROUTER_NAME must be set for aviatrix_branch_router_tag acceptance test.")
+	}
 }
