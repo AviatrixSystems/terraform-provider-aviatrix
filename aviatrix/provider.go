@@ -54,6 +54,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_branch_router_aws_tgw_attachment":     resourceAviatrixBranchRouterAwsTgwAttachment(),
 			"aviatrix_branch_router_avx_tgw_attachment":     resourceAviatrixBranchRouterAvxTgwAttachment(),
 			"aviatrix_branch_router_tag":                    resourceAviatrixBranchRouterTag(),
+			"aviatrix_branch_router_virtual_wan_attachment": resourceAviatrixBranchRouterVirtualWanAttachment(),
 			"aviatrix_controller_config":                    resourceAviatrixControllerConfig(),
 			"aviatrix_firenet":                              resourceAviatrixFireNet(),
 			"aviatrix_firewall":                             resourceAviatrixFirewall(),
