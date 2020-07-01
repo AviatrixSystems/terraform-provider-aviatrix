@@ -5,6 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -20,13 +22,13 @@ func TestAccAviatrixPeriodicPing_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			periodicPingPreCheck(t)
+			preGatewayCheck(t, ". Set SKIP_PERIODIC_PING to yes to skip Periodic Ping testing.")
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckPeriodicPingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPeriodicPingBasic(),
+				Config: testAccPeriodicPingBasic(acctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPeriodicPingExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "interval", "5"),
@@ -42,14 +44,34 @@ func TestAccAviatrixPeriodicPing_basic(t *testing.T) {
 	})
 }
 
-func testAccPeriodicPingBasic() string {
+func testAccPeriodicPingBasic(rName string) string {
 	return fmt.Sprintf(`
+resource "aviatrix_account" "test" {
+	account_name       = "tfa-%[1]s"
+	cloud_type         = 1
+	aws_account_number = "%[2]s"
+	aws_iam            = false
+	aws_access_key     = "%[3]s"
+	aws_secret_key     = "%[4]s"
+}
+
+resource "aviatrix_gateway" "test_gw" {
+	cloud_type   = 1
+	account_name = aviatrix_account.test.account_name
+	gw_name      = "tfg-%[1]s"
+	vpc_id       = "%[5]s"
+	vpc_reg      = "%[6]s"
+	gw_size      = "t2.micro"
+	subnet       = "%[7]s"
+}
+
 resource "aviatrix_periodic_ping" "test_periodic_ping" {
-	gw_name    = "%s"
+	gw_name    = aviatrix_gateway.test_gw.gw_name
 	interval   = 5
 	ip_address = "127.0.0.1"
 }
-`, os.Getenv("GATEWAY_NAME"))
+`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"))
 }
 
 func testAccCheckPeriodicPingExists(n string) resource.TestCheckFunc {
@@ -97,10 +119,4 @@ func testAccCheckPeriodicPingDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func periodicPingPreCheck(t *testing.T) {
-	if os.Getenv("GATEWAY_NAME") == "" {
-		t.Fatal("GATEWAY_NAME must be set for aviatrix_periodic_ping acceptance test.")
-	}
 }
