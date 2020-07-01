@@ -153,7 +153,7 @@ func (c *Client) GetBranchRouter(br *BranchRouter) (*BranchRouter, error) {
 	return foundBr, nil
 }
 
-func (c *Client) GetBranchRouterNameFromConn(connName string) (string, error) {
+func (c *Client) GetBranchRouterName(connName string) (string, error) {
 	resp, err := c.Post(c.baseURL, struct {
 		CID    string `form:"CID"`
 		Action string `form:"action"`
