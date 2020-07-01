@@ -45,11 +45,6 @@ func resourceAviatrixBranchRouterTag() *schema.Resource {
 				},
 				Description: "List of branch names to attach to this tag.",
 			},
-			"commit": {
-				Type:        schema.TypeBool,
-				Required:    true,
-				Description: "Whether to commit the config to the branches.",
-			},
 		},
 	}
 }
@@ -58,7 +53,6 @@ func marshalBranchRouterTagInput(d *schema.ResourceData) *goaviatrix.BranchRoute
 	brt := &goaviatrix.BranchRouterTag{
 		Name:   d.Get("name").(string),
 		Config: d.Get("config").(string),
-		Commit: d.Get("commit").(bool),
 	}
 
 	var brs []string
@@ -134,11 +128,9 @@ func resourceAviatrixBranchRouterTagUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	// User had changed 'commit' to true, commit the tag
-	if d.HasChange("commit") && d.Get("commit").(bool) {
-		if err := client.CommitBranchRouterTag(brt); err != nil {
-			return err
-		}
+	// Commit any changes
+	if err := client.CommitBranchRouterTag(brt); err != nil {
+		return err
 	}
 
 	return nil
