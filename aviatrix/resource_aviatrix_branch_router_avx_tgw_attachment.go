@@ -280,9 +280,9 @@ func resourceAviatrixBranchRouterAvxTgwAttachmentRead(d *schema.ResourceData, me
 func resourceAviatrixBranchRouterAvxTgwAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	brata := marshalBranchRouterAvxTgwAttachmentInput(d)
+	cn := d.Get("connection_name").(string)
 
-	if err := client.DeleteBranchRouterAvxTgwAttachment(brata); err != nil {
+	if err := client.DeleteBranchRouterAttachment(cn); err != nil {
 		return err
 	}
 
