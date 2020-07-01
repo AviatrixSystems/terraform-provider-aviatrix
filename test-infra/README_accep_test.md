@@ -37,6 +37,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_aws_tgw_vpn_conn            | SKIP_AWS_TGW_VPN_CONN              | aviatrix_aws_tgw                                                               |
 | aviatrix_branch_router               | SKIP_BRANCH_ROUTER                 | aviatrix_account                                                               |
 | aviatrix_branch_router_avx_tgw_attachment | SKIP_BRANCH_ROUTER_AVX_TGW_ATTACHMENT | BRANCH_ROUTER_NAME, TRANSIT_GATEWAY_NAME                               |
+| aviatrix_branch_router_aws_tgw_attachment | SKIP_BRANCH_ROUTER_AWS_TGW_ATTACHMENT | BRANCH_ROUTER_NAME, AWS_TGW_NAME                                       |
 | aviatrix_branch_router_tag           | SKIP_BRANCH_ROUTER_TAG             | aviatrix_account                                                               |
 | aviatrix_controller_config           | SKIP_CONTROLLER_CONFIG             | aviatrix_account                                                               |
 | aviatrix_firenet                     | SKIP_FIRENET                       | aviatrix_account + AWS_REGION, Palo Alto VM series                             |
