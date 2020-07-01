@@ -12,7 +12,6 @@ type BranchRouterTag struct {
 	Config         string `form:"custom_cfg,omitempty"`
 	Branches       []string
 	BranchesString string `form:"include_branch_list,omitempty"`
-	Commit         bool
 	CID            string `form:"CID"`
 	Action         string `form:"action"`
 }
@@ -56,10 +55,7 @@ func (c *Client) CreateBranchRouterTag(brt *BranchRouterTag) error {
 		return err
 	}
 
-	// Commit the tag config to the branches if 'commit' == true
-	if !brt.Commit {
-		return nil
-	}
+	// Commit the tag config to the branches
 	if err := c.CommitBranchRouterTag(brt); err != nil {
 		return err
 	}
