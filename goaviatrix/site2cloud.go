@@ -112,6 +112,9 @@ type EditSite2CloudConnDetail struct {
 	BgpRemoteIP             string        `json:"bgp_remote_ip,omitempty"`
 	BgpBackupRemoteIP       string        `json:"bgp_backup_remote_ip,omitempty"`
 	EnableGlobalAccelerator bool          `json:"globalaccel,omitempty"`
+	AzureAccountName        string        `json:"arm_account_name,omitempty"`
+	AzureResourceGroup      string        `json:"arm_resource_group,omitempty"`
+	AzureVhubName           string        `json:"arm_vhub_name,omitempty"`
 }
 
 type Site2CloudConnDetailResp struct {
