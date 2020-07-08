@@ -225,8 +225,12 @@ func resourceAviatrixBranchRouterUpdate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	if err := client.ConfigureBranchRouterInterfaces(br); err != nil {
-		return err
+	primaryInterfaceChanged := d.HasChange("wan_primary_interface") || d.HasChange("wan_primary_interface_public_ip")
+	backupInterfaceChanged := d.HasChange("wan_backup_interface") || d.HasChange("wan_backup_interface_public_ip")
+	if primaryInterfaceChanged || backupInterfaceChanged {
+		if err := client.ConfigureBranchRouterInterfaces(br); err != nil {
+			return err
+		}
 	}
 
 	d.SetId(br.Name)
