@@ -1,4 +1,12 @@
-## 2.16.0 (Unreleased)
+## 2.15.1 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.0** (tested on **UserConnect-6.0.2383**)
+- Supported Terraform version: **v0.12.x**
+
+### Enhancements:
+1. Implemented support for 4-Byte ASN (Autonomous System Number) in **aviatrix_aws_tgw**, **aviatrix_aws_tgw_vpn_conn**, **aviatrix_transit_external_device_conn** and **aviatrix_vgw_conn**
+
+
 ## 2.15.0 (June 22, 2020)
 ### Notes:
 - Supported Controller version: **UserConnect-6.0** (tested on **UserConnect-6.0.2269**)
