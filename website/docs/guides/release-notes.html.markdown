@@ -12,10 +12,19 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.15 (UserConnect-6.0)``
+``Last updated: R2.15.1 (UserConnect-6.0)``
 
 
 ---
+
+## 2.15.1
+### Notes:
+- Supported Controller version: **UserConnect-6.0**
+- Supported Terraform version: **v0.12.x**
+
+### Enhancements:
+1. Implemented support for 4-Byte ASN (Autonomous System Number) in **aviatrix_aws_tgw**, **aviatrix_aws_tgw_vpn_conn**, **aviatrix_transit_external_device_conn** and **aviatrix_vgw_conn**
+
 
 ## 2.15.0
 ### Notes:
