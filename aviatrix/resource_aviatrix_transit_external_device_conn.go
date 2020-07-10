@@ -73,11 +73,11 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 							num := int(r - '0')
 							if num < 0 || num > 9 {
 								errs = append(errs, fmt.Errorf("%q must be an integer in 1-4294967294, got: %s", key, val))
-								break
+								return
 							}
 							sum = sum*10 + num
 						}
-						if sum == 0 || sum > 4294967294 {
+						if sum == 0 || sum/2 > 2147483647 {
 							errs = append(errs, fmt.Errorf("%q must be an integer in 1-4294967294, got: %s", key, val))
 						}
 					}
@@ -99,11 +99,11 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 							num := int(r - '0')
 							if num < 0 || num > 9 {
 								errs = append(errs, fmt.Errorf("%q must be an integer in 1-4294967294, got: %s", key, val))
-								break
+								return
 							}
 							sum = sum*10 + num
 						}
-						if sum == 0 || sum > 4294967294 {
+						if sum == 0 || sum/2 > 2147483647 {
 							errs = append(errs, fmt.Errorf("%q must be an integer in 1-4294967294, got: %s", key, val))
 						}
 					}
@@ -220,11 +220,11 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 							num := int(r - '0')
 							if num < 0 || num > 9 {
 								errs = append(errs, fmt.Errorf("%q must be an integer in 1-4294967294, got: %s", key, val))
-								break
+								return
 							}
 							sum = sum*10 + num
 						}
-						if sum == 0 || sum > 4294967294 {
+						if sum == 0 || sum/2 > 2147483647 {
 							errs = append(errs, fmt.Errorf("%q must be an integer in 1-4294967294, got: %s", key, val))
 						}
 					}
