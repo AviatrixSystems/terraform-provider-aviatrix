@@ -66,16 +66,16 @@ func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
 					if len(v) > 10 {
 						errs = append(errs, fmt.Errorf("%q must be an integer in 1-4294967294, got: %s", key, val))
 					} else {
-						sum := 0
+						sum := int64(0)
 						for _, r := range v {
-							num := int(r - '0')
+							num := int64(r - '0')
 							if num < 0 || num > 9 {
 								errs = append(errs, fmt.Errorf("%q must be an integer in 1-4294967294, got: %s", key, val))
 								return
 							}
 							sum = sum*10 + num
 						}
-						if sum == 0 || sum/2 > 2147483647 {
+						if sum == 0 || sum > 4294967294 {
 							errs = append(errs, fmt.Errorf("%q must be an integer in 1-4294967294, got: %s", key, val))
 						}
 					}
