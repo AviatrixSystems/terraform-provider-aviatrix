@@ -50,7 +50,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_aws_tgw_vpn_conn":                     resourceAviatrixAwsTgwVpnConn(),
 			"aviatrix_azure_peer":                           resourceAviatrixAzurePeer(),
 			"aviatrix_azure_spoke_native_peering":           resourceAviatrixAzureSpokeNativePeering(),
-			"aviatrix_branch_router":                        resourceAviatrixBranchRouter(),
+			"aviatrix_branch_router_registration":           resourceAviatrixBranchRouterRegistration(),
 			"aviatrix_branch_router_aws_tgw_attachment":     resourceAviatrixBranchRouterAwsTgwAttachment(),
 			"aviatrix_branch_router_avx_tgw_attachment":     resourceAviatrixBranchRouterAvxTgwAttachment(),
 			"aviatrix_branch_router_interface_config":       resourceAviatrixBranchRouterInterfaceConfig(),

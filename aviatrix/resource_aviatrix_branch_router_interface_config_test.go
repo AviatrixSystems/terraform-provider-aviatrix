@@ -22,7 +22,7 @@ func TestAccAviatrixBranchRouterInterfaceConfig_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			branchRouterPreCheck(t)
+			branchRouterRegistrationPreCheck(t)
 			branchRouterInterfaceConfigPreCheck(t)
 		},
 		Providers: testAccProviders,
