@@ -9,16 +9,20 @@ description: |-
 
 The **aviatrix_branch_router_avx_tgw_attachment** resource allows the creation and management of a branch router and Aviatrix Transit Gateway attachment
 
+~> **NOTE:** Before creating this attachment the branch router must have its WAN interface and IP configured via the `aviatrix_branch_router_interface_config` resource. To avoid attempting to create the attachment before the interface and IP are configured use a `depends_on` meta-argument so that the `aviatrix_branch_router_interface_config` resource is created before the attachment.  
+
 ## Example Usage
 
 ```hcl
 # Create an Aviatrix Branch Router and Transit Gateway attachment
 resource "aviatrix_branch_router_avx_tgw_attachment" "test_branch_router_avx_tgw_attachment" {
-	branch_name               = "branch-router"
-	transit_gateway_name      = "transit-gw"
-	connection_name           = "test-conn"
-	transit_gateway_bgp_asn   = 65000
-	branch_router_bgp_asn     = 65001
+  branch_name             = "branch-router"
+  transit_gateway_name    = "transit-gw"
+  connection_name         = "test-conn"
+  transit_gateway_bgp_asn = 65000
+  branch_router_bgp_asn   = 65001
+
+  depends_on = [aviatrix_branch_router_interface_config.test_branch_router_interface_config]
 }
 ```
 

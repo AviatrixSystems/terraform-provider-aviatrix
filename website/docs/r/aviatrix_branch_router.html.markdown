@@ -9,29 +9,27 @@ description: |-
 
 The **aviatrix_branch_router** resource allows the creation and management of branch router entries for CloudWAN.
 
+~> **NOTE:** Before this branch router can be attached to any Aviatrix Transit Gateway, AWS TGW or Azure Virtual WAN you must configure its WAN interface and IP via the `aviatrix_branch_router_interface_config` resource.
+
 ## Example Usage
 
 ```hcl
 # Create an Aviatrix Branch Router entry with private key authentication
 resource "aviatrix_branch_router" "test_branch_router" {
-  name                            = "test-branch-router"
-  public_ip                       = "58.151.114.231"
-  username                        = "ec2-user"
-  key_file                        = "/path/to/key_file.pem"
-  wan_primary_interface           = "GigabitEthernet1"
-  wan_primary_interface_public_ip = "58.151.114.231"
+  name      = "test-branch-router"
+  public_ip = "58.151.114.231"
+  username  = "ec2-user"
+  key_file  = "/path/to/key_file.pem"
 }
 ```
 
 ```hcl
 # Create an Aviatrix Branch Router entry with password authentication
 resource "aviatrix_branch_router" "test_branch_router" {
-  name                            = "test-branch-router"
-  public_ip                       = "58.151.114.231"
-  username                        = "ec2-user"
-  password                        = "secret"
-  wan_primary_interface           = "GigabitEthernet1"
-  wan_primary_interface_public_ip = "58.151.114.231"
+  name      = "test-branch-router"
+  public_ip = "58.151.114.231"
+  username  = "ec2-user"
+  password  = "secret"
 }
 ```
 
@@ -45,12 +43,8 @@ The following arguments are supported:
 * `username` - (Required) Username for SSH into the router.
 * `key_file` - (Optional) Path to private key file for SSH into the router. Either `key_file` or `password` must be set to create a branch router successfully.
 * `password` - (Optional) Password for SSH into the router. Either `key_file` or `password` must be set to create a branch router successfully. This attribute can also be set via environment variable 'AVIATRIX_BRANCH_ROUTER_PASSWORD'. If both are set, the value in the config file will be used.
-* `wan_primary_interface` - (Required) Primary WAN interface of the branch router. For example, 'GigabitEthernet1'.
-* `wan_primary_interface_public_ip` - (Required) Primary WAN interface public IP address.
 
 ### Optional
-* `wan_backup_interface` - (Optional) Backup WAN interface of the branch router. For example, 'GigabitEthernet2'.
-* `wan_backup_interface_public_ip` - (Optional) Backup WAN interface public IP address.
 * `host_os` - (Optional) Router host OS.  Default value is 'ios'. Only valid value is 'ios'.
 * `ssh_port` - (Optional) SSH port for connecting to the router. Default value is 22.
 * `address_1` - (Optional) Address line 1.
