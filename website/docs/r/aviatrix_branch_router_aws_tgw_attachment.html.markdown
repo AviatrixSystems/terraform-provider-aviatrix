@@ -9,16 +9,20 @@ description: |-
 
 The **aviatrix_branch_router_aws_tgw_attachment** resource allows the creation and management of a branch router and AWS TGW attachment
 
+~> **NOTE:** Before creating this attachment the branch router must have its WAN interface and IP configured via the `aviatrix_branch_router_interface_config` resource. To avoid attempting to create the attachment before the interface and IP are configured use a `depends_on` meta-argument so that the `aviatrix_branch_router_interface_config` resource is created before the attachment.
+
 ## Example Usage
 
 ```hcl
 # Create an Aviatrix Branch Router and AWS TGW attachment
 resource "aviatrix_branch_router_aws_tgw_attachment" "test_branch_router_aws_tgw_attachment" {
-	connection_name           = "test-conn"
-	branch_name               = "branch-router"
-	aws_tgw_name              = "tgw-test"
-	branch_router_bgp_asn     = 65001
-	security_domain_name      = "Default_Domain"
+  connection_name       = "test-conn"
+  branch_name           = "branch-router"
+  aws_tgw_name          = "tgw-test"
+  branch_router_bgp_asn = 65001
+  security_domain_name  = "Default_Domain"
+
+  depends_on = [aviatrix_branch_router_interface_config.test_branch_router_interface_config]
 }
 ```
 
