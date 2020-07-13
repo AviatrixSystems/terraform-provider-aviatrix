@@ -22,6 +22,7 @@ func TestAccAviatrixBranchRouter_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			branchRouterPreCheck(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBranchRouterDestroy,
@@ -45,22 +46,20 @@ func TestAccAviatrixBranchRouter_basic(t *testing.T) {
 func testAccBranchRouterBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_branch_router" "test_branch_router" {
-	name                            = "branchrouter-%s"
-	public_ip                       = "18.144.102.14"
-	username                        = "ec2-user"
-	password                        = "testing"
-	host_os                         = "ios"
-	wan_primary_interface           = "GigabitEthernet1"
-    wan_primary_interface_public_ip = "18.144.102.14"
-	ssh_port                        = 22
-	address_1                       = "2901 Tasman Dr"
-	address_2                       = "Suite #104"
-	city                            = "Santa Clara"
-	state                           = "CA"
-	zip_code                        = "12323"
-	description                     = "Test branch router."
+	name        = "branchrouter-%s"
+	public_ip   = "%s"
+	username    = "ec2-user"
+	key_file    = "%s"
+	host_os     = "ios"
+	ssh_port    = 22
+	address_1   = "2901 Tasman Dr"
+	address_2   = "Suite #104"
+	city        = "Santa Clara"
+	state       = "CA"
+	zip_code    = "12323"
+	description = "Test branch router."
 }
-`, rName)
+`, rName, os.Getenv("BRANCH_ROUTER_PUBLIC_IP"), os.Getenv("BRANCH_ROUTER_KEY_FILE_PATH"))
 }
 
 func testAccCheckBranchRouterExists(n string) resource.TestCheckFunc {
@@ -108,4 +107,15 @@ func testAccCheckBranchRouterDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func branchRouterPreCheck(t *testing.T) {
+	if os.Getenv("BRANCH_ROUTER_PUBLIC_IP") == "" {
+		t.Fatal("environment variable BRANCH_ROUTER_PUBLIC_IP must be set for branch_router acceptance test")
+	}
+
+	if os.Getenv("BRANCH_ROUTER_KEY_FILE_PATH") == "" {
+		t.Fatal("environment variable BRANCH_ROUTER_KEY_FILE_PATH must be set for " +
+			"branch_router_interface_config acceptance test")
+	}
 }
