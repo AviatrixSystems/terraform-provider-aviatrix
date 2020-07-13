@@ -9,6 +9,8 @@ description: |-
 
 The **aviatrix_branch_router_virtual_wan_attachment** resource allows the creation and management of a branch router and Azure Virtual WAN attachment
 
+~> **NOTE:** Before creating this attachment the branch router must have its WAN interface and IP configured via the `aviatrix_branch_router_interface_config` resource. To avoid attempting to create the attachment before the interface and IP are configured use a `depends_on` meta-argument so that the `aviatrix_branch_router_interface_config` resource is created before the attachment.
+
 ## Example Usage
 
 ```hcl
@@ -20,6 +22,8 @@ resource "aviatrix_branch_router_virtual_wan_attachment" "test_branch_router_vir
   resource_group        = "aviatrix-rg"
   hub_name              = "aviatrix-hub"
   branch_router_bgp_asn = 65001
+
+  depends_on = [aviatrix_branch_router_interface_config.test_branch_router_interface_config]
 }
 ```
 

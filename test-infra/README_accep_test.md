@@ -35,7 +35,8 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_azure_peer                  | SKIP_AZURE_PEER                    | aviatrix_account + AZURE_VNET_ID, AZURE_VNET_ID2, AZURE_REGION, AZURE_REGION2  |
 | aviatrix_azure_spoke_native_peering  | SKIP_AZURE_SPOKE_NATIVE_PEERING    | aviatrix_account + AZURE_VNET_ID, AZURE_VNET_ID2, AZURE_REGION, AZURE_REGION2  |
 | aviatrix_aws_tgw_vpn_conn            | SKIP_AWS_TGW_VPN_CONN              | aviatrix_aws_tgw                                                               |
-| aviatrix_branch_router               | SKIP_BRANCH_ROUTER                 | aviatrix_account                                                               |
+| aviatrix_branch_router               | SKIP_BRANCH_ROUTER                 | BRANCH_ROUTER_PUBLIC_IP, BRANCH_ROUTER_KEY_FILE_PATH                           |
+| aviatrix_branch_router_interface_config | SKIP_BRANCH_ROUTER_INTERFACE_CONFIG | aviatrix_branch_router, BRANCH_ROUTER_PRIMARY_INTERFACE                    |
 | aviatrix_branch_router_avx_tgw_attachment | SKIP_BRANCH_ROUTER_AVX_TGW_ATTACHMENT | BRANCH_ROUTER_NAME, TRANSIT_GATEWAY_NAME                               |
 | aviatrix_branch_router_aws_tgw_attachment | SKIP_BRANCH_ROUTER_AWS_TGW_ATTACHMENT | BRANCH_ROUTER_NAME, AWS_TGW_NAME                                       |
 | aviatrix_branch_router_tag           | SKIP_BRANCH_ROUTER_TAG             | aviatrix_account                                                               |
