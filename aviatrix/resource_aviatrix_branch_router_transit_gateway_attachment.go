@@ -9,11 +9,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceAviatrixBranchRouterAvxTgwAttachment() *schema.Resource {
+func resourceAviatrixBranchRouterTransitGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAviatrixBranchRouterAvxTgwAttachmentCreate,
-		Read:   resourceAviatrixBranchRouterAvxTgwAttachmentRead,
-		Delete: resourceAviatrixBranchRouterAvxTgwAttachmentDelete,
+		Create: resourceAviatrixBranchRouterTransitGatewayAttachmentCreate,
+		Read:   resourceAviatrixBranchRouterTransitGatewayAttachmentRead,
+		Delete: resourceAviatrixBranchRouterTransitGatewayAttachmentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -147,8 +147,8 @@ func resourceAviatrixBranchRouterAvxTgwAttachment() *schema.Resource {
 	}
 }
 
-func marshalBranchRouterAvxTgwAttachmentInput(d *schema.ResourceData) *goaviatrix.BranchRouterAvxTgwAttachment {
-	brata := &goaviatrix.BranchRouterAvxTgwAttachment{
+func marshalBranchRouterTransitGatewayAttachmentInput(d *schema.ResourceData) *goaviatrix.BranchRouterTransitGatewayAttachment {
+	brata := &goaviatrix.BranchRouterTransitGatewayAttachment{
 		BranchName:              d.Get("branch_name").(string),
 		TransitGatewayName:      d.Get("transit_gateway_name").(string),
 		ConnectionName:          d.Get("connection_name").(string),
@@ -174,12 +174,12 @@ func marshalBranchRouterAvxTgwAttachmentInput(d *schema.ResourceData) *goaviatri
 	return brata
 }
 
-func resourceAviatrixBranchRouterAvxTgwAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixBranchRouterTransitGatewayAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	brata := marshalBranchRouterAvxTgwAttachmentInput(d)
+	brata := marshalBranchRouterTransitGatewayAttachmentInput(d)
 
-	if err := client.CreateBranchRouterAvxTgwAttachment(brata); err != nil {
+	if err := client.CreateBranchRouterTransitGatewayAttachment(brata); err != nil {
 		return err
 	}
 
@@ -187,7 +187,7 @@ func resourceAviatrixBranchRouterAvxTgwAttachmentCreate(d *schema.ResourceData, 
 	return nil
 }
 
-func resourceAviatrixBranchRouterAvxTgwAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixBranchRouterTransitGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	connectionName := d.Get("connection_name").(string)
@@ -197,20 +197,20 @@ func resourceAviatrixBranchRouterAvxTgwAttachmentRead(d *schema.ResourceData, me
 		id := d.Id()
 		d.SetId(id)
 		connectionName = id
-		log.Printf("[DEBUG] Looks like an import, no branch_router_avx_tgw_attachment connection_name received. Import Id is %s", id)
+		log.Printf("[DEBUG] Looks like an import, no branch_router_transit_gateway_attachment connection_name received. Import Id is %s", id)
 	}
 
-	brata := &goaviatrix.BranchRouterAvxTgwAttachment{
+	brata := &goaviatrix.BranchRouterTransitGatewayAttachment{
 		ConnectionName: connectionName,
 	}
 
-	brata, err := client.GetBranchRouterAvxTgwAttachment(brata)
+	brata, err := client.GetBranchRouterTransitGatewayAttachment(brata)
 	if err == goaviatrix.ErrNotFound {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("could not find branch_router_avx_tgw_attachment %s: %v", connectionName, err)
+		return fmt.Errorf("could not find branch_router_transit_gateway_attachment %s: %v", connectionName, err)
 	}
 
 	d.Set("branch_name", brata.BranchName)
@@ -277,7 +277,7 @@ func resourceAviatrixBranchRouterAvxTgwAttachmentRead(d *schema.ResourceData, me
 	return nil
 }
 
-func resourceAviatrixBranchRouterAvxTgwAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixBranchRouterTransitGatewayAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	cn := d.Get("connection_name").(string)
