@@ -1,13 +1,13 @@
 ---
 layout: "aviatrix"
-page_title: "Aviatrix: aviatrix_branch_router_avx_tgw_attachment"
+page_title: "Aviatrix: aviatrix_branch_router_transit_gateway_attachment"
 description: |-
   Creates and manages a branch router and Aviatrix Transit Gateway attachment
 ---
 
-# aviatrix_branch_router_avx_tgw_attachment
+# aviatrix_branch_router_transit_gateway_attachment
 
-The **aviatrix_branch_router_avx_tgw_attachment** resource allows the creation and management of a branch router and Aviatrix Transit Gateway attachment
+The **aviatrix_branch_router_transit_gateway_attachment** resource allows the creation and management of a branch router and Aviatrix Transit Gateway attachment
 
 ~> **NOTE:** Before creating this attachment the branch router must have its WAN interface and IP configured via the `aviatrix_branch_router_interface_config` resource. To avoid attempting to create the attachment before the interface and IP are configured use a `depends_on` meta-argument so that the `aviatrix_branch_router_interface_config` resource is created before the attachment.  
 
@@ -15,7 +15,7 @@ The **aviatrix_branch_router_avx_tgw_attachment** resource allows the creation a
 
 ```hcl
 # Create an Aviatrix Branch Router and Transit Gateway attachment
-resource "aviatrix_branch_router_avx_tgw_attachment" "test_branch_router_avx_tgw_attachment" {
+resource "aviatrix_branch_router_transit_gateway_attachment" "test_branch_router_transit_gateway_attachment" {
   branch_name             = "branch-router"
   transit_gateway_name    = "transit-gw"
   connection_name         = "test-conn"
@@ -55,8 +55,8 @@ The following arguments are supported:
 
 ## Import
 
-**branch_router_avx_tgw_attachment** can be imported using the `connection_name`, e.g.
+**branch_router_transit_gateway_attachment** can be imported using the `connection_name`, e.g.
 
 ```
-$ terraform import aviatrix_branch_router_avx_tgw_attachment.test connection-name
+$ terraform import aviatrix_branch_router_transit_gateway_attachment.test connection-name
 ```

@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-type BranchRouterAvxTgwAttachment struct {
+type BranchRouterTransitGatewayAttachment struct {
 	BranchName              string `form:"branch_name,omitempty"`
 	TransitGatewayName      string `form:"transit_gw,omitempty"`
 	ConnectionName          string `form:"connection_name,omitempty"`
@@ -34,7 +34,7 @@ type BranchRouterAvxTgwAttachment struct {
 	CID                     string `form:"CID"`
 }
 
-func (c *Client) CreateBranchRouterAvxTgwAttachment(brata *BranchRouterAvxTgwAttachment) error {
+func (c *Client) CreateBranchRouterTransitGatewayAttachment(brata *BranchRouterTransitGatewayAttachment) error {
 	brata.Action = "attach_cloudwan_branch_to_transit_gateway"
 	brata.CID = c.CID
 	resp, err := c.Post(c.baseURL, brata)
@@ -63,7 +63,7 @@ func (c *Client) CreateBranchRouterAvxTgwAttachment(brata *BranchRouterAvxTgwAtt
 	return nil
 }
 
-func (c *Client) GetBranchRouterAvxTgwAttachment(brata *BranchRouterAvxTgwAttachment) (*BranchRouterAvxTgwAttachment, error) {
+func (c *Client) GetBranchRouterTransitGatewayAttachment(brata *BranchRouterTransitGatewayAttachment) (*BranchRouterTransitGatewayAttachment, error) {
 	branchName, err := c.GetBranchRouterName(brata.ConnectionName)
 	if err != nil {
 		return nil, fmt.Errorf("could not get branch name: %v", err)
@@ -108,7 +108,7 @@ func (c *Client) GetBranchRouterAvxTgwAttachment(brata *BranchRouterAvxTgwAttach
 		return nil, errors.New("Rest API get_site2cloud_conn_detail Post failed: " + data.Reason)
 	}
 
-	return &BranchRouterAvxTgwAttachment{
+	return &BranchRouterTransitGatewayAttachment{
 		BranchName:              branchName,
 		TransitGatewayName:      data.Results.Connections.GwName,
 		ConnectionName:          brata.ConnectionName,
