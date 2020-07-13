@@ -11,26 +11,26 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func TestAccAviatrixBranchRouterAvxTgwAttachment_basic(t *testing.T) {
-	if os.Getenv("SKIP_BRANCH_ROUTER_AVX_TGW_ATTACHMENT") == "yes" {
-		t.Skip("Skipping Branch Router test as SKIP_BRANCH_ROUTER_AVX_TGW_ATTACHMENT is set")
+func TestAccAviatrixBranchRouterTransitGatewayAttachment_basic(t *testing.T) {
+	if os.Getenv("SKIP_BRANCH_ROUTER_TRANSIT_GATEWAY_ATTACHMENT") == "yes" {
+		t.Skip("Skipping Branch Router test as SKIP_BRANCH_ROUTER_TRANSIT_GATEWAY_ATTACHMENT is set")
 	}
 
 	rName := acctest.RandString(5)
-	resourceName := "aviatrix_branch_router_avx_tgw_attachment.test_branch_router_avx_tgw_attachment"
+	resourceName := "aviatrix_branch_router_transit_gateway_attachment.test_branch_router_transit_gateway_attachment"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccAviatrixBranchRouterAvxTgwAttachmentPreCheck(t)
+			testAccAviatrixBranchRouterTransitGatewayAttachmentPreCheck(t)
 		},
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckBranchRouterAvxTgwAttachmentDestroy,
+		CheckDestroy: testAccCheckBranchRouterTransitGatewayAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBranchRouterAvxTgwAttachmentNoOptions(rName),
+				Config: testAccBranchRouterTransitGatewayAttachmentNoOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBranchRouterAvxTgwAttachmentExists(resourceName),
+					testAccCheckBranchRouterTransitGatewayAttachmentExists(resourceName),
 				),
 			},
 			{
@@ -52,15 +52,15 @@ func TestAccAviatrixBranchRouterAvxTgwAttachment_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccAviatrixBranchRouterAvxTgwAttachmentPreCheck(t)
+			testAccAviatrixBranchRouterTransitGatewayAttachmentPreCheck(t)
 		},
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckBranchRouterAvxTgwAttachmentDestroy,
+		CheckDestroy: testAccCheckBranchRouterTransitGatewayAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBranchRouterAvxTgwAttachmentBasic(rName),
+				Config: testAccBranchRouterTransitGatewayAttachmentBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBranchRouterAvxTgwAttachmentExists(resourceName),
+					testAccCheckBranchRouterTransitGatewayAttachmentExists(resourceName),
 				),
 			},
 			{
@@ -78,9 +78,9 @@ func TestAccAviatrixBranchRouterAvxTgwAttachment_basic(t *testing.T) {
 	})
 }
 
-func testAccBranchRouterAvxTgwAttachmentBasic(rName string) string {
+func testAccBranchRouterTransitGatewayAttachmentBasic(rName string) string {
 	return fmt.Sprintf(`
-resource "aviatrix_branch_router_avx_tgw_attachment" "test_branch_router_avx_tgw_attachment" {
+resource "aviatrix_branch_router_transit_gateway_attachment" "test_branch_router_transit_gateway_attachment" {
 	branch_name               = "%s"
 	transit_gateway_name      = "%s"
 	connection_name           = "connection-%s"
@@ -101,9 +101,9 @@ resource "aviatrix_branch_router_avx_tgw_attachment" "test_branch_router_avx_tgw
 `, os.Getenv("BRANCH_ROUTER_NAME"), os.Getenv("TRANSIT_GATEWAY_NAME"), rName)
 }
 
-func testAccBranchRouterAvxTgwAttachmentNoOptions(rName string) string {
+func testAccBranchRouterTransitGatewayAttachmentNoOptions(rName string) string {
 	return fmt.Sprintf(`
-resource "aviatrix_branch_router_avx_tgw_attachment" "test_branch_router_avx_tgw_attachment" {
+resource "aviatrix_branch_router_transit_gateway_attachment" "test_branch_router_transit_gateway_attachment" {
 	branch_name               = "%s"
 	transit_gateway_name      = "%s"
 	connection_name           = "connection-noopts-%s"
@@ -114,58 +114,58 @@ resource "aviatrix_branch_router_avx_tgw_attachment" "test_branch_router_avx_tgw
 `, os.Getenv("BRANCH_ROUTER_NAME"), os.Getenv("TRANSIT_GATEWAY_NAME"), rName)
 }
 
-func testAccCheckBranchRouterAvxTgwAttachmentExists(n string) resource.TestCheckFunc {
+func testAccCheckBranchRouterTransitGatewayAttachmentExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("branch_router_avx_tgw_attachment Not found: %s", n)
+			return fmt.Errorf("branch_router_transit_gateway_attachment Not found: %s", n)
 		}
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no branch_router_avx_tgw_attachment ID is set")
+			return fmt.Errorf("no branch_router_transit_gateway_attachment ID is set")
 		}
 
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
-		brata := &goaviatrix.BranchRouterAvxTgwAttachment{
+		brata := &goaviatrix.BranchRouterTransitGatewayAttachment{
 			ConnectionName: rs.Primary.Attributes["connection_name"],
 		}
 
-		_, err := client.GetBranchRouterAvxTgwAttachment(brata)
+		_, err := client.GetBranchRouterTransitGatewayAttachment(brata)
 		if err != nil {
 			return err
 		}
 		if brata.ConnectionName != rs.Primary.ID {
-			return fmt.Errorf("branch_router_avx_tgw_attachment not found")
+			return fmt.Errorf("branch_router_transit_gateway_attachment not found")
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckBranchRouterAvxTgwAttachmentDestroy(s *terraform.State) error {
+func testAccCheckBranchRouterTransitGatewayAttachmentDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*goaviatrix.Client)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aviatrix_branch_router_avx_tgw_attachment" {
+		if rs.Type != "aviatrix_branch_router_transit_gateway_attachment" {
 			continue
 		}
-		foundBranchRouterAvxTgwAttachment := &goaviatrix.BranchRouterAvxTgwAttachment{
+		foundBranchRouterTransitGatewayAttachment := &goaviatrix.BranchRouterTransitGatewayAttachment{
 			ConnectionName: rs.Primary.Attributes["connection_name"],
 		}
-		_, err := client.GetBranchRouterAvxTgwAttachment(foundBranchRouterAvxTgwAttachment)
+		_, err := client.GetBranchRouterTransitGatewayAttachment(foundBranchRouterTransitGatewayAttachment)
 		if err == nil {
-			return fmt.Errorf("branch_router_avx_tgw_attachment still exists")
+			return fmt.Errorf("branch_router_transit_gateway_attachment still exists")
 		}
 	}
 
 	return nil
 }
 
-func testAccAviatrixBranchRouterAvxTgwAttachmentPreCheck(t *testing.T) {
+func testAccAviatrixBranchRouterTransitGatewayAttachmentPreCheck(t *testing.T) {
 	if os.Getenv("BRANCH_ROUTER_NAME") == "" {
-		t.Fatal("BRANCH_ROUTER_NAME must be set for aviatrix_branch_router_avx_tgw_attachment acceptance test.")
+		t.Fatal("BRANCH_ROUTER_NAME must be set for aviatrix_branch_router_transit_gateway_attachment acceptance test.")
 	}
 	if os.Getenv("TRANSIT_GATEWAY_NAME") == "" {
-		t.Fatal("TRANSIT_GATEWAY_NAME must be set for aviatrix_branch_router_avx_tgw_attachment acceptance test.")
+		t.Fatal("TRANSIT_GATEWAY_NAME must be set for aviatrix_branch_router_transit_gateway_attachment acceptance test.")
 	}
 }
