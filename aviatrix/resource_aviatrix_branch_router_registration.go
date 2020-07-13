@@ -10,12 +10,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceAviatrixBranchRouter() *schema.Resource {
+func resourceAviatrixBranchRouterRegistration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAviatrixBranchRouterCreate,
-		Read:   resourceAviatrixBranchRouterRead,
-		Update: resourceAviatrixBranchRouterUpdate,
-		Delete: resourceAviatrixBranchRouterDelete,
+		Create: resourceAviatrixBranchRouterRegistrationCreate,
+		Read:   resourceAviatrixBranchRouterRegistrationRead,
+		Update: resourceAviatrixBranchRouterRegistrationUpdate,
+		Delete: resourceAviatrixBranchRouterRegistrationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -107,8 +107,8 @@ func resourceAviatrixBranchRouter() *schema.Resource {
 	}
 }
 
-// marshalBranchRouterInput marshals the ResourceData into a BranchRouter struct.
-func marshalBranchRouterInput(d *schema.ResourceData) *goaviatrix.BranchRouter {
+// marshalBranchRouterRegistrationInput marshals the ResourceData into a BranchRouter struct.
+func marshalBranchRouterRegistrationInput(d *schema.ResourceData) *goaviatrix.BranchRouter {
 	return &goaviatrix.BranchRouter{
 		Name:        d.Get("name").(string),
 		PublicIP:    d.Get("public_ip").(string),
@@ -128,10 +128,10 @@ func marshalBranchRouterInput(d *schema.ResourceData) *goaviatrix.BranchRouter {
 	}
 }
 
-func resourceAviatrixBranchRouterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixBranchRouterRegistrationCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	br := marshalBranchRouterInput(d)
+	br := marshalBranchRouterRegistrationInput(d)
 
 	if err := client.CreateBranchRouter(br); err != nil {
 		return err
@@ -141,7 +141,7 @@ func resourceAviatrixBranchRouterCreate(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAviatrixBranchRouterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixBranchRouterRegistrationRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	name := d.Get("name").(string)
@@ -182,10 +182,10 @@ func resourceAviatrixBranchRouterRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAviatrixBranchRouterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixBranchRouterRegistrationUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	br := marshalBranchRouterInput(d)
+	br := marshalBranchRouterRegistrationInput(d)
 
 	if err := client.UpdateBranchRouter(br); err != nil {
 		return err
@@ -195,10 +195,10 @@ func resourceAviatrixBranchRouterUpdate(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAviatrixBranchRouterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixBranchRouterRegistrationDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	br := marshalBranchRouterInput(d)
+	br := marshalBranchRouterRegistrationInput(d)
 
 	if err := client.DeleteBranchRouter(br); err != nil {
 		return err
