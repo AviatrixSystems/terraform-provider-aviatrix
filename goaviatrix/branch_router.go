@@ -35,9 +35,13 @@ type BranchRouter struct {
 	BranchState        string                     `form:"-" map:"-" json:"registered"`
 	PrimaryInterface   string                     `form:"-" map:"-" json:"wan_if_primary"`
 	PrimaryInterfaceIP string                     `form:"-" map:"-" json:"wan_if_primary_public_ip"`
-	BackupInterface    string                     `form:"-" map:"-" json:"wan_if_backup"`
-	BackupInterfaceIP  string                     `form:"-" map:"-" json:"wan_if_backup_public_ip"`
 	ConnectionName     string                     `form:"-" map:"-" json:"conn_name"`
+}
+
+type BranchRouterInterfaceConfig struct {
+	BranchName         string
+	PrimaryInterface   string
+	PrimaryInterfaceIP string
 }
 
 type GetBranchRouterRespAddress struct {
@@ -266,20 +270,15 @@ func (c *Client) DeleteBranchRouter(br *BranchRouter) error {
 	return nil
 }
 
-func (c *Client) ConfigureBranchRouterInterfaces(br *BranchRouter) error {
-	availableInterfaces, err := c.GetBranchRouterInterfaces(br)
+func (c *Client) ConfigureBranchRouterInterfaces(config *BranchRouterInterfaceConfig) error {
+	availableInterfaces, err := c.GetBranchRouterInterfaces(&BranchRouter{Name: config.BranchName})
 	if err != nil {
 		return err
 	}
 
-	if !Contains(availableInterfaces, br.PrimaryInterface) {
+	if !Contains(availableInterfaces, config.PrimaryInterface) {
 		return fmt.Errorf("branch router does not have the given primary interface '%s'. "+
-			"Possible interfaces are [%s]", br.PrimaryInterface, strings.Join(availableInterfaces, ", "))
-	}
-
-	if br.BackupInterface != "" && !Contains(availableInterfaces, br.BackupInterface) {
-		return fmt.Errorf("branch router does not have the given backup interface '%s'. "+
-			"Possible interfaces are [%s]", br.BackupInterface, strings.Join(availableInterfaces, ", "))
+			"Possible interfaces are [%s]", config.PrimaryInterface, strings.Join(availableInterfaces, ", "))
 	}
 
 	resp, err := c.Post(c.baseURL, struct {
@@ -288,16 +287,12 @@ func (c *Client) ConfigureBranchRouterInterfaces(br *BranchRouter) error {
 		Name               string `form:"branch_name"`
 		PrimaryInterface   string `form:"wan_primary_if"`
 		PrimaryInterfaceIP string `form:"wan_primary_ip"`
-		BackupInterface    string `form:"wan_backup_if"`
-		BackupInterfaceIP  string `form:"wan_backup_ip"`
 	}{
 		CID:                c.CID,
 		Action:             "config_cloudwan_branch_wan_interfaces",
-		Name:               br.Name,
-		PrimaryInterface:   br.PrimaryInterface,
-		PrimaryInterfaceIP: br.PrimaryInterfaceIP,
-		BackupInterface:    br.BackupInterface,
-		BackupInterfaceIP:  br.BackupInterfaceIP,
+		Name:               config.BranchName,
+		PrimaryInterface:   config.PrimaryInterface,
+		PrimaryInterfaceIP: config.PrimaryInterfaceIP,
 	})
 	if err != nil {
 		return errors.New("HTTP POST config_cloudwan_branch_wan_interfaces failed: " + err.Error())
