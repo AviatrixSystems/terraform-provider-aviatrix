@@ -134,6 +134,39 @@ func (c *Client) Post(path string, i interface{}) (*http.Response, error) {
 	return c.Request("POST", path, i)
 }
 
+// CheckAPIResponseFunc looks at the Reason and Return fields from an API response
+// and returns an error
+type CheckAPIResponseFunc func(action, reason string, ret bool) error
+
+// BasicCheck will only verify that the Return field was set the true
+var BasicCheck CheckAPIResponseFunc = func(action, reason string, ret bool) error {
+	if !ret {
+		return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+	}
+	return nil
+}
+
+// PostAPI makes a post request to the Aviatrix API, decodes the response and checks for any errors
+func (c *Client) PostAPI(action string, d interface{}, checkFunc CheckAPIResponseFunc) error {
+	resp, err := c.Post(c.baseURL, d)
+	if err != nil {
+		return fmt.Errorf("HTTP POST %s failed: %v", action, err)
+	}
+
+	var data APIResp
+	var b bytes.Buffer
+	_, err = b.ReadFrom(resp.Body)
+	if err != nil {
+		return fmt.Errorf("reading response body %s failed: %v", action, err)
+	}
+
+	if err = json.NewDecoder(&b).Decode(&data); err != nil {
+		return fmt.Errorf("json Decode %s failed: %v\n Body: %s", action, err, b.String())
+	}
+
+	return checkFunc(action, data.Reason, data.Return)
+}
+
 // Put issues an HTTP PUT request with the given interface form-encoded.
 func (c *Client) Put(path string, i interface{}) (*http.Response, error) {
 	return c.Request("PUT", path, i)
