@@ -45,13 +45,9 @@ The following arguments are supported:
 * `phase2_dh_groups` - Number of phase 2 Diffie-Hellman groups. Default "14".
 * `phase2_encryption` - Phase 2 encryption algorithm. Default "AES-256-CBC".
 * `enable_global_accelerator` - Boolean enable AWS Global Accelerator. Default "false".
-* `enable_branch_router_ha` - Boolean enable Branch Router HA. Default "false".
 * `pre_shared_key` - Pre-shared Key.
 * `local_tunnel_ip` - Local tunnel IP.
 * `remote_tunnel_ip` - Remote tunnel IP.
-* `backup_pre_shared_key` - Pre-shared Key (Backup).
-* `backup_local_tunnel_ip` - Local tunnel IP (Backup).
-* `backup_remote_tunnel_ip` - Remote tunnel IP (Backup).
 
 ## Import
 
