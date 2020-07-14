@@ -98,13 +98,6 @@ func resourceAviatrixBranchRouterTransitGatewayAttachment() *schema.Resource {
 				Default:     false,
 				Description: "Enable AWS Global Accelerator",
 			},
-			"enable_branch_router_ha": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				ForceNew:    true,
-				Default:     false,
-				Description: "Enable Branch Router HA",
-			},
 			"pre_shared_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -124,25 +117,6 @@ func resourceAviatrixBranchRouterTransitGatewayAttachment() *schema.Resource {
 				ForceNew:    true,
 				Description: "Remote tunnel IP",
 			},
-			"backup_pre_shared_key": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Sensitive:   true,
-				ForceNew:    true,
-				Description: "Backup pre-shared Key.",
-			},
-			"backup_local_tunnel_ip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Backup local tunnel IP",
-			},
-			"backup_remote_tunnel_ip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Backup remote tunnel IP",
-			},
 		},
 	}
 }
@@ -161,14 +135,10 @@ func marshalBranchRouterTransitGatewayAttachmentInput(d *schema.ResourceData) *g
 		Phase2Authentication:    d.Get("phase2_authentication").(string),
 		Phase2DHGroups:          strconv.Itoa(d.Get("phase2_dh_groups").(int)),
 		Phase2Encryption:        d.Get("phase2_encryption").(string),
-		EnableBranchRouterHA:    strconv.FormatBool(d.Get("enable_branch_router_ha").(bool)),
 		EnableGlobalAccelerator: strconv.FormatBool(d.Get("enable_global_accelerator").(bool)),
 		PreSharedKey:            d.Get("pre_shared_key").(string),
 		LocalTunnelIP:           d.Get("local_tunnel_ip").(string),
 		RemoteTunnelIP:          d.Get("remote_tunnel_ip").(string),
-		BackupPreSharedKey:      d.Get("backup_pre_shared_key").(string),
-		BackupLocalTunnelIP:     d.Get("backup_local_tunnel_ip").(string),
-		BackupRemoteTunnelIP:    d.Get("backup_remote_tunnel_ip").(string),
 	}
 
 	return brata
@@ -254,23 +224,11 @@ func resourceAviatrixBranchRouterTransitGatewayAttachmentRead(d *schema.Resource
 	}
 	d.Set("enable_global_accelerator", enableGlobalAccelerator)
 
-	enableBranchRouterHA := false
-	if brata.EnableBranchRouterHA == "enabled" {
-		enableBranchRouterHA = true
-	}
-	d.Set("enable_branch_router_ha", enableBranchRouterHA)
-
 	if isImport || d.Get("local_tunnel_ip") != "" {
 		d.Set("local_tunnel_ip", brata.LocalTunnelIP)
 	}
 	if isImport || d.Get("remote_tunnel_ip") != "" {
 		d.Set("remote_tunnel_ip", brata.RemoteTunnelIP)
-	}
-	if isImport || d.Get("backup_local_tunnel_ip") != "" {
-		d.Set("backup_local_tunnel_ip", brata.BackupLocalTunnelIP)
-	}
-	if isImport || d.Get("backup_remote_tunnel_ip") != "" {
-		d.Set("backup_remote_tunnel_ip", brata.BackupRemoteTunnelIP)
 	}
 
 	d.SetId(brata.ConnectionName)

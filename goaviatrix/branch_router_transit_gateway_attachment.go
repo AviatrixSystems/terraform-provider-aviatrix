@@ -23,13 +23,9 @@ type BranchRouterTransitGatewayAttachment struct {
 	Phase2DHGroups          string `form:"phase2_dh_groups,omitempty"`
 	Phase2Encryption        string `form:"phase2_encryption,omitempty"`
 	EnableGlobalAccelerator string `form:"enable_global_accelerator,omitempty"`
-	EnableBranchRouterHA    string `form:"enable_ha,omitempty"`
 	PreSharedKey            string `form:"pre_shared_key,omitempty"`
 	LocalTunnelIP           string `form:"local_tunnel_ip,omitempty"`
 	RemoteTunnelIP          string `form:"remote_tunnel_ip,omitempty"`
-	BackupPreSharedKey      string `form:"backup_pre_shared_key,omitempty"`
-	BackupLocalTunnelIP     string `form:"backup_local_tunnel_ip,omitempty"`
-	BackupRemoteTunnelIP    string `form:"backup_remote_tunnel_ip,omitempty"`
 	Action                  string `form:"action"`
 	CID                     string `form:"CID"`
 }
@@ -121,11 +117,8 @@ func (c *Client) GetBranchRouterTransitGatewayAttachment(brata *BranchRouterTran
 		Phase2DHGroups:          data.Results.Connections.Algorithm.Phase2DhGroups[0],
 		Phase2Encryption:        data.Results.Connections.Algorithm.Phase2Encrption[0],
 		EnableGlobalAccelerator: strconv.FormatBool(data.Results.Connections.EnableGlobalAccelerator),
-		EnableBranchRouterHA:    data.Results.Connections.HAEnabled,
 		LocalTunnelIP:           data.Results.Connections.BgpLocalIP,
 		RemoteTunnelIP:          data.Results.Connections.BgpRemoteIP,
-		BackupLocalTunnelIP:     data.Results.Connections.BgpBackupLocalIP,
-		BackupRemoteTunnelIP:    data.Results.Connections.BgpBackupRemoteIP,
 	}, nil
 }
 
