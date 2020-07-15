@@ -379,3 +379,46 @@ func (c *Client) GetCloudnBackupConfig() (*CloudnBackupConfiguration, error) {
 	}
 	return &data.Results, nil
 }
+
+func (c *Client) GetControllerVpcDnsServerStatus() (bool, error) {
+	action := "get_controller_vpc_dns_server_status"
+	resp, err := c.Post(c.baseURL, &APIRequest{
+		CID:    c.CID,
+		Action: action,
+	})
+	if err != nil {
+		return false, fmt.Errorf("HTTP POST %q failed: %v", action, err)
+	}
+
+	type Resp struct {
+		Return  bool   `json:"return"`
+		Results string `json:"results"`
+		Reason  string `json:"reason"`
+	}
+	var data Resp
+	var b bytes.Buffer
+	_, err = b.ReadFrom(resp.Body)
+	if err != nil {
+		return false, fmt.Errorf("reading response body %q failed: %v", action, err)
+	}
+
+	if err = json.NewDecoder(&b).Decode(&data); err != nil {
+		return false, fmt.Errorf("json decode %q failed: %v\n Body: %s", action, err, b.String())
+	}
+	if !data.Return {
+		return false, fmt.Errorf("rest api %q post failed: %s", action, data.Reason)
+	}
+
+	return data.Results == "Enabled", nil
+}
+
+func (c *Client) SetControllerVpcDnsServer(enabled bool) error {
+	action := "enable_controller_vpc_dns_server"
+	if !enabled {
+		action = "disable_controller_vpc_dns_server"
+	}
+	return c.PostAPI(action, &APIRequest{
+		CID:    c.CID,
+		Action: action,
+	}, BasicCheck)
+}

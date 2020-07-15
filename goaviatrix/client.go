@@ -150,18 +150,18 @@ var BasicCheck CheckAPIResponseFunc = func(action, reason string, ret bool) erro
 func (c *Client) PostAPI(action string, d interface{}, checkFunc CheckAPIResponseFunc) error {
 	resp, err := c.Post(c.baseURL, d)
 	if err != nil {
-		return fmt.Errorf("HTTP POST %s failed: %v", action, err)
+		return fmt.Errorf("HTTP POST %q failed: %v", action, err)
 	}
 
 	var data APIResp
 	var b bytes.Buffer
 	_, err = b.ReadFrom(resp.Body)
 	if err != nil {
-		return fmt.Errorf("reading response body %s failed: %v", action, err)
+		return fmt.Errorf("reading response body %q failed: %v", action, err)
 	}
 
 	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return fmt.Errorf("json Decode %s failed: %v\n Body: %s", action, err, b.String())
+		return fmt.Errorf("json Decode %q failed: %v\n Body: %s", action, err, b.String())
 	}
 
 	return checkFunc(action, data.Reason, data.Return)
