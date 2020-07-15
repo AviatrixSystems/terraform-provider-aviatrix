@@ -59,30 +59,11 @@ func resourceAviatrixVGWConn() *schema.Resource {
 				Description: "Region of AWS's VGW that is used for this connection.",
 			},
 			"bgp_local_as_num": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "BGP local ASN (Autonomous System Number). Integer between 1-4294967294.",
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-					v := val.(string)
-					if len(v) > 10 {
-						errs = append(errs, fmt.Errorf("%q must be an integer in 1-4294967294, got: %s", key, val))
-					} else {
-						sum := int64(0)
-						for _, r := range v {
-							num := int64(r - '0')
-							if num < 0 || num > 9 {
-								errs = append(errs, fmt.Errorf("%q must be an integer in 1-4294967294, got: %s", key, val))
-								return
-							}
-							sum = sum*10 + num
-						}
-						if sum == 0 || sum > 4294967294 {
-							errs = append(errs, fmt.Errorf("%q must be an integer in 1-4294967294, got: %s", key, val))
-						}
-					}
-					return
-				},
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				Description:  "BGP local ASN (Autonomous System Number). Integer between 1-4294967294.",
+				ValidateFunc: goaviatrix.ValidateASN,
 			},
 		},
 	}

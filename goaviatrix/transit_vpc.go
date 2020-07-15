@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -45,6 +47,26 @@ type TransitVpc struct {
 	EnableTransitFireNet         string `form:"enable_transit_firenet,omitempty"`
 	LearnedCidrsApproval         string `form:"learned_cidrs_approval,omitempty"`
 	EncVolume                    string `form:"enc_volume,omitempty"`
+}
+
+type TransitGatewayAdvancedConfig struct {
+	BgpPollingTime string
+	PrependASPath  []string
+	LocalASNumber  string
+	BgpEcmpEnabled bool
+}
+
+type TransitGatewayAdvancedConfigRespResult struct {
+	BgpPollingTime int    `json:"bgp_polling_time"`
+	PrependASPath  string `json:"bgp_prepend_as_path"`
+	LocalASNumber  string `json:"local_asn_num"`
+	BgpEcmpEnabled string `json:"bgp_ecmp"`
+}
+
+type TransitGatewayAdvancedConfigResp struct {
+	Return  bool                                   `json:"return"`
+	Results TransitGatewayAdvancedConfigRespResult `json:"results"`
+	Reason  string                                 `json:"reason"`
 }
 
 type TransitGwFireNetInterfaces struct {
@@ -471,4 +493,122 @@ func (c *Client) DisableTransitLearnedCidrsApproval(gateway *TransitVpc) error {
 		return errors.New("Rest API 'disable_transit_learned_cidrs_approval' Get failed: " + data.Reason)
 	}
 	return nil
+}
+
+func (c *Client) SetBgpPollingTime(transitGateway *TransitVpc, newPollingTime string) error {
+	action := "change_bgp_polling_time"
+	return c.PostAPI(action, struct {
+		CID         string `form:"CID"`
+		Action      string `form:"action"`
+		GatewayName string `form:"gateway_name"`
+		PollingTime string `form:"bgp_polling_time"`
+	}{
+		CID:         c.CID,
+		Action:      action,
+		GatewayName: transitGateway.GwName,
+		PollingTime: newPollingTime,
+	}, BasicCheck)
+}
+
+func (c *Client) SetPrependASPath(transitGateway *TransitVpc, prependASPath []string) error {
+	action, subaction := "edit_aviatrix_transit_advanced_config", "prepend_as_path"
+	return c.PostAPI(action+"/"+subaction, struct {
+		CID           string `form:"CID"`
+		Action        string `form:"action"`
+		Subaction     string `form:"subaction"`
+		GatewayName   string `form:"gateway_name"`
+		PrependASPath string `form:"bgp_prepend_as_path"`
+	}{
+		CID:           c.CID,
+		Action:        action,
+		Subaction:     subaction,
+		GatewayName:   transitGateway.GwName,
+		PrependASPath: strings.Join(prependASPath, " "),
+	}, BasicCheck)
+}
+
+func (c *Client) SetLocalASNumber(transitGateway *TransitVpc, localASNumber string) error {
+	action := "edit_transit_local_as_number"
+	return c.PostAPI(action, struct {
+		CID           string `form:"CID"`
+		Action        string `form:"action"`
+		GatewayName   string `form:"gateway_name"`
+		LocalASNumber string `form:"local_as_num"`
+	}{
+		CID:           c.CID,
+		Action:        action,
+		GatewayName:   transitGateway.GwName,
+		LocalASNumber: localASNumber,
+	}, func(action, reason string, ret bool) error {
+		if !ret {
+			// Tried to set ASN to the same value, don't fail
+			if strings.Contains(reason, "No change on transit gateway") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+		}
+		return nil
+	})
+}
+
+func (c *Client) SetBgpEcmp(transitGateway *TransitVpc, enabled bool) error {
+	action := "enable_bgp_ecmp"
+	if !enabled {
+		action = "disable_bgp_ecmp"
+	}
+	return c.PostAPI(action, struct {
+		CID         string `form:"CID"`
+		Action      string `form:"action"`
+		GatewayName string `form:"gateway_name"`
+	}{
+		CID:         c.CID,
+		Action:      action,
+		GatewayName: transitGateway.GwName,
+	}, BasicCheck)
+}
+
+func (c *Client) GetTransitGatewayAdvancedConfig(transitGateway *TransitVpc) (*TransitGatewayAdvancedConfig, error) {
+	action := "list_aviatrix_transit_advanced_config"
+	resp, err := c.Post(c.baseURL, struct {
+		CID         string `form:"CID"`
+		Action      string `form:"action"`
+		GatewayName string `form:"transit_gateway_name"`
+	}{
+		CID:         c.CID,
+		Action:      action,
+		GatewayName: transitGateway.GwName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("HTTP POST %s failed: %v", action, err)
+	}
+
+	var data TransitGatewayAdvancedConfigResp
+	var b bytes.Buffer
+	_, err = b.ReadFrom(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading response body %s failed: %v", action, err)
+	}
+
+	if err = json.NewDecoder(&b).Decode(&data); err != nil {
+		return nil, fmt.Errorf("json Decode %s failed: %v\n Body: %s", action, err, b.String())
+	}
+
+	if !data.Return {
+		return nil, fmt.Errorf("rest API %s Post failed: %s", action, data.Reason)
+	}
+
+	prependASPathStrings := strings.Split(data.Results.PrependASPath, " ")
+	var filteredStrings []string
+	for _, v := range prependASPathStrings {
+		if v != "" {
+			filteredStrings = append(filteredStrings, v)
+		}
+	}
+
+	return &TransitGatewayAdvancedConfig{
+		BgpPollingTime: strconv.Itoa(data.Results.BgpPollingTime),
+		PrependASPath:  filteredStrings,
+		LocalASNumber:  data.Results.LocalASNumber,
+		BgpEcmpEnabled: data.Results.BgpEcmpEnabled == "yes",
+	}, nil
 }
