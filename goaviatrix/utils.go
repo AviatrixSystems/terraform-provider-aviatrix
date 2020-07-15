@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -191,4 +192,21 @@ func CompareMapOfInterface(map1 map[string]interface{}, map2 map[string]interfac
 		return false
 	}
 	return true
+}
+
+func ValidateASN(val interface{}, key string) (warns []string, errs []error) {
+	v, ok := val.(string)
+	if !ok {
+		errs = append(errs, fmt.Errorf("%q must be of type string", key))
+		return
+	}
+
+	asNum, err := strconv.ParseInt(v, 10, 64)
+
+	if err != nil || asNum < int64(1) || asNum > int64(4294967294) {
+		errs = append(errs, fmt.Errorf("%q must be an integer in 1-4294967294, got: %s", key, val))
+		return
+	}
+
+	return warns, errs
 }

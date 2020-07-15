@@ -253,6 +253,33 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Private IP address of HA transit gateway.",
 			},
+			"bgp_polling_time": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "50",
+				Description: "BGP route polling time. Unit is in seconds. Valid values are between 10 and 50.",
+			},
+			"prepend_as_path": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "List of AS numbers to populate BGP AP_PATH field when it advertises to VGW or peer devices.",
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: goaviatrix.ValidateASN,
+				},
+			},
+			"local_as_number": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Changes the Aviatrix Transit Gateway ASN number before you setup Aviatrix Transit Gateway connection configurations.",
+				ValidateFunc: goaviatrix.ValidateASN,
+			},
+			"bgp_ecmp": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable Equal Cost Multi Path (ECMP) routing for the next hop.",
+			},
 		},
 	}
 }
@@ -648,6 +675,39 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if val, ok := d.GetOk("bgp_polling_time"); ok {
+		err := client.SetBgpPollingTime(gateway, val.(string))
+		if err != nil {
+			return fmt.Errorf("could not set bgp polling time: %v", err)
+		}
+	}
+
+	if val, ok := d.GetOk("prepend_as_path"); ok {
+		var prependASPath []string
+		slice := val.([]interface{})
+		for _, v := range slice {
+			prependASPath = append(prependASPath, v.(string))
+		}
+		err := client.SetPrependASPath(gateway, prependASPath)
+		if err != nil {
+			return fmt.Errorf("could not set prepend_as_path: %v", err)
+		}
+	}
+
+	if val, ok := d.GetOk("local_as_number"); ok {
+		err := client.SetLocalASNumber(gateway, val.(string))
+		if err != nil {
+			return fmt.Errorf("could not set local_as_number: %v", err)
+		}
+	}
+
+	if val, ok := d.GetOk("bgp_ecmp"); ok {
+		err := client.SetBgpEcmp(gateway, val.(bool))
+		if err != nil {
+			return fmt.Errorf("could not set bgp_ecmp: %v", err)
+		}
+	}
+
 	return resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -669,6 +729,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
 		d.Set("gw_name", id)
+		gwName = id
 		d.SetId(id)
 	}
 
@@ -882,6 +943,22 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			}
 		}
 	}
+
+	transitGateway := &goaviatrix.TransitVpc{GwName: gwName}
+	advancedConfig, err := client.GetTransitGatewayAdvancedConfig(transitGateway)
+	if err != nil {
+		return fmt.Errorf("could not get advanced config: %v", err)
+	}
+
+	d.Set("bgp_polling_time", advancedConfig.BgpPollingTime)
+	err = d.Set("prepend_as_path", advancedConfig.PrependASPath)
+	if err != nil {
+		return fmt.Errorf("could not set prepend_as_path: %v", err)
+	}
+	if _, ok := d.GetOk("local_as_number"); ok || isImport {
+		d.Set("local_as_number", advancedConfig.LocalASNumber)
+	}
+	d.Set("bgp_ecmp", advancedConfig.BgpEcmpEnabled)
 
 	haGateway := &goaviatrix.Gateway{
 		AccountName: d.Get("account_name").(string),
@@ -1548,6 +1625,54 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 		d.SetPartial("excluded_advertised_spoke_routes")
+	}
+
+	if d.HasChange("bgp_polling_time") {
+		bgpPollingTime := d.Get("bgp_polling_time").(string)
+		gateway := &goaviatrix.TransitVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		err := client.SetBgpPollingTime(gateway, bgpPollingTime)
+		if err != nil {
+			return fmt.Errorf("could not update bgp polling time: %v", err)
+		}
+	}
+
+	if d.HasChange("prepend_as_path") {
+		var prependASPath []string
+		slice := d.Get("prepend_as_path").([]interface{})
+		for _, v := range slice {
+			prependASPath = append(prependASPath, v.(string))
+		}
+		gateway := &goaviatrix.TransitVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		err := client.SetPrependASPath(gateway, prependASPath)
+		if err != nil {
+			return fmt.Errorf("could not set prepend_as_path: %v", err)
+		}
+	}
+
+	if d.HasChange("local_as_number") && d.Get("local_as_number").(string) != "" {
+		localAsNumber := d.Get("local_as_number").(string)
+		gateway := &goaviatrix.TransitVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		err := client.SetLocalASNumber(gateway, localAsNumber)
+		if err != nil {
+			return fmt.Errorf("could not set local_as_number: %v", err)
+		}
+	}
+
+	if d.HasChange("bgp_ecmp") {
+		enabled := d.Get("bgp_ecmp").(bool)
+		gateway := &goaviatrix.TransitVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		err := client.SetBgpEcmp(gateway, enabled)
+		if err != nil {
+			return fmt.Errorf("could not set bgp_ecmp: %v", err)
+		}
 	}
 
 	d.Partial(false)
