@@ -84,6 +84,12 @@ func resourceAviatrixControllerConfig() *schema.Resource {
 				Computed:    true,
 				Description: "Current version of the controller.",
 			},
+			"enable_vpc_dns_server": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable VPC/VNET DNS Server.",
+			},
 		},
 	}
 }
@@ -203,6 +209,12 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 		}
 	}
 
+	enableVpcDnsServer := d.Get("enable_vpc_dns_server").(bool)
+	err = client.SetControllerVpcDnsServer(enableVpcDnsServer)
+	if err != nil {
+		return fmt.Errorf("could not toggle controller vpc dns server: %v", err)
+	}
+
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return resourceAviatrixControllerConfigRead(d, meta)
 }
@@ -286,6 +298,13 @@ func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface
 		d.Set("backup_account_name", "")
 		d.Set("backup_bucket_name", "")
 	}
+
+	vpcDnsServerEnabled, err := client.GetControllerVpcDnsServerStatus()
+	if err != nil {
+		return fmt.Errorf("could not get controller vpc dns server status: %v", err)
+	}
+
+	d.Set("enable_vpc_dns_server", vpcDnsServerEnabled)
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
@@ -462,6 +481,14 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 		}
 	}
 
+	if d.HasChange("enable_vpc_dns_server") {
+		enableVpcDnsServer := d.Get("enable_vpc_dns_server").(bool)
+		err := client.SetControllerVpcDnsServer(enableVpcDnsServer)
+		if err != nil {
+			return fmt.Errorf("could not toggle controller vpc dns server: %v", err)
+		}
+	}
+
 	d.Partial(false)
 	return resourceAviatrixControllerConfigRead(d, meta)
 }
@@ -507,6 +534,11 @@ func resourceAviatrixControllerConfigDelete(d *schema.ResourceData, meta interfa
 			log.Printf("[ERROR] Failed to disable cloudn backup config on controller %s", d.Id())
 			return err
 		}
+	}
+
+	err := client.SetControllerVpcDnsServer(false)
+	if err != nil {
+		return fmt.Errorf("could not disable controller vpc dns server: %v", err)
 	}
 
 	return nil
