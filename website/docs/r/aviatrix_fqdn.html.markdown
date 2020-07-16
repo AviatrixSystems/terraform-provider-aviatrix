@@ -39,7 +39,7 @@ resource "aviatrix_fqdn" "test_fqdn" {
     fqdn  = "facebook.com"
     proto = "tcp"
     port  = "443"
-    action = "Allow" // Optional
+    action = "Allow"
   }
 
   domain_names {

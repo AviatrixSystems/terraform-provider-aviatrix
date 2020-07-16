@@ -14,10 +14,10 @@ Use this data source to get the list of VPC's for use in other resources.
 ```hcl
 # Aviatrix VPC Tracker Data Source
 data "aviatrix_vpc_tracker" "foo" {
-  cloud_type   = 1             // Optional
-  cidr         = "10.0.0.1/24" // Optional
-  region       = "us-west-1"   // Optional
-  account_name = "bar"         // Optional
+  cloud_type   = 1
+  cidr         = "10.0.0.1/24"
+  region       = "us-west-1"
+  account_name = "bar"
 }
 ```
 

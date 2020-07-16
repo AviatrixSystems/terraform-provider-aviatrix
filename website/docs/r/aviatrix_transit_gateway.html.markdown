@@ -44,7 +44,7 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_gcp" {
   gw_size            = "n1-standard-1"
   subnet             = "10.8.0.0/16"
   ha_zone            = "us-west2-b"
-  ha_subnet          = "10.8.0.0/16" // Optional
+  ha_subnet          = "10.8.0.0/16"
   ha_gw_size         = "n1-standard-1"
   enable_active_mesh = true
 }
