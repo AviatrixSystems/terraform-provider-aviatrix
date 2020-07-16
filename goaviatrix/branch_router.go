@@ -355,7 +355,7 @@ func (c *Client) GetBranchRouterInterfaces(br *BranchRouter) ([]string, error) {
 	}
 	var interfaces []string
 
-	for k, _ := range data.Results {
+	for k := range data.Results {
 		interfaces = append(interfaces, k)
 	}
 

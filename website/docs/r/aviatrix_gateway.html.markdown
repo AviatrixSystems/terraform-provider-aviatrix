@@ -79,7 +79,7 @@ resource "aviatrix_gateway" "test_gateway_gcp" {
   gw_size            = "n1-standard-1"
   subnet             = "10.12.0.0/24"
   peering_ha_zone    = "us-west1-c"
-  peering_ha_subnet  = "10.12.0.0/24" // Optional
+  peering_ha_subnet  = "10.12.0.0/24"
   peering_ha_gw_size = "n1-standard-1"
 }
 ```
