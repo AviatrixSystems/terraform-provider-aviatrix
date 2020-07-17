@@ -32,8 +32,8 @@ type FQDN struct {
 }
 
 type GwFilterTag struct {
-	Name         string   `json:"gw_name, omitempty"`
-	SourceIPList []string `json:"source_ip_list, omitempty"`
+	Name         string   `json:"gw_name,omitempty"`
+	SourceIPList []string `json:"source_ip_list,omitempty"`
 }
 
 type ResultListResp struct {
@@ -336,8 +336,13 @@ func (c *Client) ListDomains(fqdn *FQDN) (*FQDN, error) {
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
 		return nil, errors.New("Json Decode list_fqdn_filter_tag_domain_names failed: " + err.Error() + "\n Body: " + bodyString)
 	}
-	dn := data
-	names := dn["results"].([]interface{})
+
+	if ret := data["return"].(bool); !ret {
+		reason := data["reason"].(string)
+		return nil, fmt.Errorf("rest API list_fqdn_filter_tag_domain_names Get failed: %v", reason)
+	}
+
+	names := data["results"].([]interface{})
 	for _, domain := range names {
 		dn := domain.(map[string]interface{})
 		fqdnFilter := Filters{
@@ -556,4 +561,75 @@ func (c *Client) DisableFQDNPassThrough(gw *Gateway) error {
 	data["gateway_name"] = gw.GwName
 
 	return c.PostAPI(action, data, BasicCheck)
+}
+
+func (c *Client) AddFQDNTagRule(fqdn *FQDN) error {
+	action := "add_fqdn_policies_to_tag"
+
+	policies, err := json.Marshal(fqdn.DomainList)
+	if err != nil {
+		return fmt.Errorf("could not marshal fqdn domain: %v", err)
+	}
+
+	return c.PostAPI(action, struct {
+		Action   string `form:"action"`
+		CID      string `form:"CID"`
+		TagName  string `form:"tag_name"`
+		Policies string `form:"policies"`
+	}{
+		Action:   action,
+		CID:      c.CID,
+		TagName:  fqdn.FQDNTag,
+		Policies: string(policies),
+	}, BasicCheck)
+}
+
+func (c *Client) GetFQDNTagRule(fqdn *FQDN) (*FQDN, error) {
+	foundFQDN, err := c.ListDomains(&FQDN{FQDNTag: fqdn.FQDNTag})
+	if err != nil {
+		return nil, fmt.Errorf("could not list fqdn domains: %v", err)
+	}
+	domain := fqdn.DomainList[0]
+	found := false
+	for _, d := range foundFQDN.DomainList {
+		if d.FQDN == domain.FQDN && d.Protocol == domain.Protocol && d.Port == domain.Port && d.Verdict == domain.Verdict {
+			found = true
+		}
+	}
+	if !found {
+		return nil, ErrNotFound
+	}
+
+	return fqdn, nil
+}
+
+func (c *Client) DeleteFQDNTagRule(fqdn *FQDN) error {
+	action := "delete_fqdn_policies_to_tag"
+
+	policies, err := json.Marshal(fqdn.DomainList)
+	if err != nil {
+		return fmt.Errorf("could not marshal fqdn domain: %v", err)
+	}
+
+	return c.PostAPI(action, struct {
+		Action   string `form:"action"`
+		CID      string `form:"CID"`
+		TagName  string `form:"tag_name"`
+		Policies string `form:"policies"`
+	}{
+		Action:   action,
+		CID:      c.CID,
+		TagName:  fqdn.FQDNTag,
+		Policies: string(policies),
+	}, func(action string, reason string, ret bool) error {
+		if !ret {
+			// Tried to delete a rule that did not exist, we don't need to fail the apply.
+			if strings.Contains(reason, "the following rules were not found") {
+				return nil
+			}
+
+			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+		}
+		return nil
+	})
 }
