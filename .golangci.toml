@@ -7,4 +7,12 @@
   enable = [
     "gofmt",
     "goimports",
+    "deadcode",
+    "gosimple",
+    "govet",
+    "ineffassign",
+    "structcheck",
+    "unconvert",
+    "unused",
+    "varcheck",
   ]
