@@ -48,6 +48,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_firewall_management_access  | SKIP_FIREWALL_MANAGEMENT_ACCESS    | aviatrix_account                                                               |
 |                                      | SKIP_FIREWALL_MANAGEMENT_ACCESS_AWS|       + aviatrix_transit_gateway + aviatrix_spoke_gateway in AWS               |
 |                                      | SKIP_FIREWALL_MANAGEMENT_ACCESS_AZURE|     + aviatrix_transit_gateway + aviatrix_spoke_gateway in AZURE             |   
+| aviatrix_firewall_policy             | SKIP_FIREWALL_POLICY               | aviatrix_gateway                                                               |
 | aviatrix_firewall_tag                | SKIP_FIREWALL_TAG                  |                                                                                |
 | aviatrix_fqdn                        | SKIP_FQDN                          | aviatrix_gateway                                                               |
 | aviatrix_fqdn_pass_through           | SKIP_FQDN_PASS_THROUGH             | aviatrix_gateway                                                               |

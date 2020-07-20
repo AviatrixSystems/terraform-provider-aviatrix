@@ -9,6 +9,8 @@ description: |-
 
 The **aviatrix_firewall** resource allows the creation and management of [Aviatrix Stateful Firewall](https://docs.aviatrix.com/HowTos/stateful_firewall_faq.html) policies.
 
+~> **NOTE on Firewall and Firewall Policy resources:** Terraform currently provides both a standalone Firewall Policy resource and a Firewall resource with policies defined in-line. At this time you cannot use a Firewall resource with in-line rules in conjuction with any Firewall Policy resources. Doing so will cause a conflict of policy settings and will overwrite policies.
+
 ## Example Usage
 
 ```hcl
@@ -57,6 +59,7 @@ The following arguments are supported:
 * `gw_name` - (Required) Gateway name to attach firewall policy to.
 * `base_policy` - (Optional) New base policy. Valid Values: "allow-all", "deny-all". Default value: "deny-all"
 * `base_log_enabled` - (Optional) Indicates whether enable logging or not. Valid Values: true, false. Default value: false.
+* `manage_firewall_policies` - (Optional) Enable to manage firewall policies via in-line rules. If false, policies must be managed using `aviatrix_firewall_policy` resources. Default: true. Valid values: true, false.
 * `policy` - (Optional) New access policy for the gateway. Type: String (valid JSON). Seven fields are required for each policy item: `src_ip`, `dst_ip`, `protocol`, `port`, `allow_deny`, `log_enabled` and `description`.
   * `src_ip` - (Required) CIDRs separated by comma or tag names such "HR" or "marketing" etc. Example: "10.30.0.0/16,10.45.0.0/20". The **aviatrix_firewall_tag** resource should be created prior to using the tag name.
   * `dst_ip` - (Required) CIDRs separated by comma or tag names such "HR" or "marketing" etc. Example: "10.30.0.0/16,10.45.0.0/20". The **aviatrix_firewall_tag** resource should be created prior to using the tag name.

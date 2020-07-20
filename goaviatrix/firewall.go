@@ -72,6 +72,11 @@ func (c *Client) SetBasePolicy(firewall *Firewall) error {
 func (c *Client) UpdatePolicy(firewall *Firewall) error {
 	firewall.CID = c.CID
 	firewall.Action = "update_access_policy"
+	// If the PolicyList is nil it will be encoded as 'null'.
+	// Instead, we want to set PolicyList to an empty slice so that it is encoded as '[]'.
+	if firewall.PolicyList == nil {
+		firewall.PolicyList = []*Policy{}
+	}
 	args, err := json.Marshal(firewall.PolicyList)
 	if err != nil {
 		return err
@@ -163,4 +168,82 @@ func PolicyToMap(p *Policy) map[string]interface{} {
 		"log_enabled": logEnabled,
 		"description": p.Description,
 	}
+}
+
+func (c *Client) AddFirewallPolicy(fw *Firewall) error {
+	action := "append_stateful_firewall_rules"
+
+	rules, err := json.Marshal(fw.PolicyList)
+	if err != nil {
+		return fmt.Errorf("could not marshal firewall policies: %v", err)
+	}
+
+	return c.PostAPI(action, struct {
+		Action string `form:"action"`
+		CID    string `form:"CID"`
+		GwName string `form:"gateway_name"`
+		Rules  string `form:"rules"`
+	}{
+		Action: action,
+		CID:    c.CID,
+		GwName: fw.GwName,
+		Rules:  string(rules),
+	}, BasicCheck)
+}
+
+func (c *Client) DeleteFirewallPolicy(fw *Firewall) error {
+	action := "delete_stateful_firewall_rules"
+
+	rules, err := json.Marshal(fw.PolicyList)
+	if err != nil {
+		return fmt.Errorf("could not marshal firewall policies: %v", err)
+	}
+
+	return c.PostAPI(action, struct {
+		Action string `form:"action"`
+		CID    string `form:"CID"`
+		GwName string `form:"gateway_name"`
+		Rules  string `form:"rules"`
+	}{
+		Action: action,
+		CID:    c.CID,
+		GwName: fw.GwName,
+		Rules:  string(rules),
+	}, func(action string, reason string, ret bool) error {
+		if !ret {
+			// Tried to delete a rule that did not exist, we don't need to fail the apply.
+			if strings.Contains(reason, "Empty rules in Stateful Firewall to delete") {
+				return nil
+			}
+
+			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+		}
+		return nil
+	})
+}
+
+func (c *Client) GetFirewallPolicy(fw *Firewall) (*Firewall, error) {
+	foundFirewall, err := c.GetPolicy(fw)
+	if err != nil {
+		return nil, fmt.Errorf("could not list firewall rules: %v", err)
+	}
+	rule := fw.PolicyList[0]
+	found := false
+
+	for _, p := range foundFirewall.PolicyList {
+		if p.SrcIP == rule.SrcIP &&
+			p.DstIP == rule.DstIP &&
+			p.Protocol == rule.Protocol &&
+			p.Port == rule.Port &&
+			p.Action == rule.Action {
+			found = true
+			fw.PolicyList = []*Policy{p}
+			break
+		}
+	}
+	if !found {
+		return nil, ErrNotFound
+	}
+
+	return fw, nil
 }
