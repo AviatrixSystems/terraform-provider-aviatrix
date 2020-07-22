@@ -1414,8 +1414,23 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 
 			if vpnAccess && enableElb && geoVpnDnsName != "" {
-				sTunnel.ElbName = geoVpnDnsName
-				sTunnel.Dns = "true"
+				//GeoVPN is Enabled
+				if d.HasChange("additional_cidrs") {
+					if d.HasChange("name_servers") || d.HasChange("search_domains") {
+						// Special case where two API calls are needed
+						sTunnel2 := sTunnel
+						oldCIDR, _ := d.GetChange("additional_cidrs")
+						sTunnel2.AdditionalCidrs = oldCIDR.(string)
+						// Only change name_servers and search domain first
+						err := client.ModifySplitTunnel(sTunnel2)
+						if err != nil {
+							return fmt.Errorf("failed to modify split tunnel: %s", err)
+						}
+					}
+					//Change additional CIDR with GeoVPN name
+					sTunnel.ElbName = geoVpnDnsName
+					sTunnel.Dns = "true"
+				}
 			}
 			err := client.ModifySplitTunnel(sTunnel)
 			if err != nil {
