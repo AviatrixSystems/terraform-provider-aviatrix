@@ -817,14 +817,14 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("single_ip_snat", false)
 		}
 
-		if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV {
+		if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV || gw.CloudType == goaviatrix.GCP {
 			if gw.AllocateNewEipRead {
 				d.Set("allocate_new_eip", true)
 			} else {
 				d.Set("allocate_new_eip", false)
 			}
-		} else if gw.CloudType == goaviatrix.GCP || gw.CloudType == goaviatrix.AZURE || gw.CloudType == goaviatrix.OCI {
-			// GCP and AZURE gateways don't have the option to allocate new eip's
+		} else if gw.CloudType == goaviatrix.AZURE || gw.CloudType == goaviatrix.OCI {
+			// AZURE gateways don't have the option to allocate new eip's
 			// default for allocate_new_eip is on
 			d.Set("allocate_new_eip", true)
 		}
