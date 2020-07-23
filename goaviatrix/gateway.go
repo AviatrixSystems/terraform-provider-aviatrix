@@ -130,6 +130,8 @@ type Gateway struct {
 	LearnedCidrsApproval        string   `json:"learned_cidrs_approval,omitempty"`
 	Dns                         string   `json:"dns,omitempty"`
 	EncVolume                   string   `form:"enc_volume,omitempty"`
+	SyncSNATToHA                string   `form:"sync_snat_to_ha,omitempty"`
+	SyncDNATToHA                string   `form:"sync_dnat_to_ha,omitempty"`
 }
 
 type PolicyRule struct {
@@ -162,6 +164,8 @@ type GatewayDetail struct {
 	EnableFireNet                bool         `json:"firenet_enabled,omitempty"`
 	EnableTransitFireNet         bool         `json:"transit_firenet_enabled,omitempty"`
 	LearnedCidrsApproval         string       `json:"learned_cidrs_approval,omitempty"`
+	SyncSNATToHA                 bool         `json:"sync_snat_to_ha,omitempty"`
+	SyncDNATToHA                 bool         `json:"sync_dnat_to_ha,omitempty"`
 }
 
 type ElbDetail struct {

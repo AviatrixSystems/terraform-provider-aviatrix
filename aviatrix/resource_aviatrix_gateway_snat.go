@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
@@ -113,6 +114,12 @@ func resourceAviatrixGatewaySNat() *schema.Resource {
 					},
 				},
 			},
+			"sync_to_ha": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Whether to sync the policies to the HA gateway.",
+			},
 		},
 	}
 }
@@ -129,6 +136,7 @@ func resourceAviatrixGatewaySNatCreate(d *schema.ResourceData, meta interface{})
 	}
 	gateway.EnableNat = "yes"
 	gateway.SnatMode = "custom"
+	gateway.SyncSNATToHA = strconv.FormatBool(d.Get("sync_to_ha").(bool))
 	if _, ok := d.GetOk("snat_policy"); ok {
 		policies := d.Get("snat_policy").([]interface{})
 		for _, policy := range policies {
@@ -212,6 +220,8 @@ func resourceAviatrixGatewaySNatRead(d *schema.ResourceData, meta interface{}) e
 			if err := d.Set("snat_policy", snatPolicy); err != nil {
 				log.Printf("[WARN] Error setting 'snat_policy' for (%s): %s", d.Id(), err)
 			}
+
+			d.Set("sync_to_ha", gwDetail.SyncSNATToHA)
 		} else {
 			d.SetId("")
 			return nil
@@ -231,7 +241,9 @@ func resourceAviatrixGatewaySNatUpdate(d *schema.ResourceData, meta interface{})
 		GatewayName: d.Get("gw_name").(string),
 	}
 
-	if d.HasChange("snat_policy") {
+	gateway.SyncSNATToHA = strconv.FormatBool(d.Get("sync_to_ha").(bool))
+
+	if d.HasChange("snat_policy") || d.HasChange("sync_to_ha") {
 		if len(d.Get("snat_policy").([]interface{})) == 0 {
 			return fmt.Errorf("please specify 'snat_policy' for 'snat_mode' of 'customized_snat'")
 		}
