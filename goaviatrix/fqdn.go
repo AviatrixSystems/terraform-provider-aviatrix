@@ -59,6 +59,16 @@ type GwSourceIP struct {
 	VpcSubnets    []string `json:"vpc_subnets"`
 }
 
+type FQDNPassThroughResp struct {
+	Return  bool            `json:"return"`
+	Results FQDNPassThrough `json:"results"`
+	Reason  string          `json:"reason"`
+}
+
+type FQDNPassThrough struct {
+	ConfiguredIPs []string `json:"configured_ips"`
+}
+
 func (c *Client) CreateFQDN(fqdn *FQDN) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
@@ -482,4 +492,68 @@ func (c *Client) GetGwFilterTagList(fqdn *FQDN) (*FQDN, error) {
 
 	fqdn.GwFilterTagList = gwFilterTagList
 	return fqdn, nil
+}
+
+func (c *Client) GetFQDNPassThroughCIDRs(gw *Gateway) ([]string, error) {
+	action := "list_fqdn_pass_through"
+
+	resp, err := c.Post(c.baseURL, struct {
+		Action string `form:"action"`
+		CID    string `form:"CID"`
+		GwName string `form:"gateway_name"`
+	}{
+		Action: action,
+		CID:    c.CID,
+		GwName: gw.GwName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("HTTP POST %s failed: %v", action, err)
+	}
+
+	var data FQDNPassThroughResp
+	var b bytes.Buffer
+	_, err = b.ReadFrom(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading response body %s failed: %v", action, err)
+	}
+
+	if err = json.NewDecoder(&b).Decode(&data); err != nil {
+		return nil, fmt.Errorf("Json Decode %s failed: %v\n Body: %s", action, err, b.String())
+	}
+
+	if !data.Return {
+		return nil, fmt.Errorf("rest API %s Post failed: %s", action, data.Reason)
+	}
+
+	if len(data.Results.ConfiguredIPs) < 1 {
+		return nil, ErrNotFound
+	}
+
+	return data.Results.ConfiguredIPs, nil
+}
+
+func (c *Client) ConfigureFQDNPassThroughCIDRs(gw *Gateway, IPs []string) error {
+	action := "update_fqdn_pass_through"
+
+	data := make(map[string]string)
+	data["action"] = action
+	data["CID"] = c.CID
+	data["gateway_name"] = gw.GwName
+	for i, ip := range IPs {
+		key := fmt.Sprintf("source_ips[%d]", i)
+		data[key] = ip
+	}
+
+	return c.PostAPI(action, data, BasicCheck)
+}
+
+func (c *Client) DisableFQDNPassThrough(gw *Gateway) error {
+	action := "update_fqdn_pass_through"
+
+	data := make(map[string]string)
+	data["action"] = action
+	data["CID"] = c.CID
+	data["gateway_name"] = gw.GwName
+
+	return c.PostAPI(action, data, BasicCheck)
 }

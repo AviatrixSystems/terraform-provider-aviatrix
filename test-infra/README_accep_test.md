@@ -50,6 +50,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |                                      | SKIP_FIREWALL_MANAGEMENT_ACCESS_AZURE|     + aviatrix_transit_gateway + aviatrix_spoke_gateway in AZURE             |   
 | aviatrix_firewall_tag                | SKIP_FIREWALL_TAG                  |                                                                                |
 | aviatrix_fqdn                        | SKIP_FQDN                          | aviatrix_gateway                                                               |
+| aviatrix_fqdn_pass_through           | SKIP_FQDN_PASS_THROUGH             | aviatrix_gateway                                                               |
 | aviatrix_gateway                     | SKIP_GATEWAY                       | aviatrix_account                                                               |  
 |				                       | SKIP_GATEWAY_AWS                   |		    + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)         |
 |                                      | SKIP_GATEWAY_GCP                   |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)             |
