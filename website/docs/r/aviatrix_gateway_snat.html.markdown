@@ -38,6 +38,7 @@ The following arguments are supported:
 
 * `gw_name` - (Required) Name of the Aviatrix gateway the custom SNAT will be configured for.
 * `snat_mode` - (Optional) NAT mode. Valid values: "customized_snat". Default value: "customized_snat".
+* `sync_to_ha` - (Optional) Sync the policies to the HA gateway. Valid values: true, false. Default: false.
 * `snat_policy` - (Required) Policy rule applied for enabling source NAT (mode: "customized_snat"). Currently only supports AWS(1) and Azure(8).
   * `src_cidr` - (Optional) This is a qualifier condition that specifies a source IP address range where the rule applies. When left blank, this field is not used.
   * `src_port` - (Optional) This is a qualifier condition that specifies a source port that the rule applies. When left blank, this field is not used.
