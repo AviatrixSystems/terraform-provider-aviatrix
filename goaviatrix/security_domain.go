@@ -69,6 +69,9 @@ func (c *Client) CreateSecurityDomain(securityDomain *SecurityDomain) error {
 		return errors.New("Json Decode add_route_domain failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
+		if strings.Contains(data.Reason, "already exist") {
+			return nil
+		}
 		return errors.New("Rest API add_route_domain Post failed: " + data.Reason)
 	}
 	return nil
