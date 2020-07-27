@@ -106,7 +106,7 @@ func resourceAviatrixGatewayDNat() *schema.Resource {
 			"sync_to_ha": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
+				Default:     true,
 				Description: "Whether to sync the policies to the HA gateway.",
 			},
 		},
