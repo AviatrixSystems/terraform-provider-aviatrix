@@ -959,7 +959,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return fmt.Errorf("could not set prepend_as_path: %v", err)
 	}
-	if _, ok := d.GetOk("local_as_number"); ok || isImport {
+	if advancedConfig.LocalASNumber != "" {
 		d.Set("local_as_number", advancedConfig.LocalASNumber)
 	}
 	d.Set("bgp_ecmp", advancedConfig.BgpEcmpEnabled)
