@@ -241,7 +241,11 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 		} else if gw.CloudType == goaviatrix.GCP {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0])
 			d.Set("vpc_reg", gw.GatewayZone)
-			d.Set("allocate_new_eip", true)
+			if gw.AllocateNewEipRead {
+				d.Set("allocate_new_eip", true)
+			} else {
+				d.Set("allocate_new_eip", false)
+			}
 		} else if gw.CloudType == goaviatrix.AZURE || gw.CloudType == goaviatrix.OCI {
 			d.Set("vpc_id", gw.VpcID)
 			d.Set("vpc_reg", gw.VpcRegion)
