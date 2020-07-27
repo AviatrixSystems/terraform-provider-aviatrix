@@ -335,13 +335,13 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 			d.Set("single_ip_snat", false)
 		}
 
-		if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV {
+		if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV || gw.CloudType == goaviatrix.GCP {
 			if gw.AllocateNewEipRead {
 				d.Set("allocate_new_eip", true)
 			} else {
 				d.Set("allocate_new_eip", false)
 			}
-		} else if gw.CloudType == goaviatrix.GCP || gw.CloudType == goaviatrix.AZURE || gw.CloudType == goaviatrix.OCI {
+		} else if gw.CloudType == goaviatrix.AZURE || gw.CloudType == goaviatrix.OCI {
 			d.Set("allocate_new_eip", true)
 		}
 
