@@ -284,8 +284,9 @@ func resourceAviatrixGatewaySNatUpdate(d *schema.ResourceData, meta interface{})
 func resourceAviatrixGatewaySNatDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	gateway := &goaviatrix.Gateway{
-		GatewayName: d.Get("gw_name").(string),
-		SnatMode:    "custom",
+		GatewayName:  d.Get("gw_name").(string),
+		SnatMode:     "custom",
+		SyncSNATToHA: strconv.FormatBool(d.Get("sync_to_ha").(bool)),
 	}
 
 	err := client.DisableCustomSNat(gateway)
