@@ -261,8 +261,9 @@ func resourceAviatrixGatewayDNatUpdate(d *schema.ResourceData, meta interface{})
 func resourceAviatrixGatewayDNatDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	gateway := &goaviatrix.Gateway{
-		GatewayName: d.Get("gw_name").(string),
-		DnatPolicy:  make([]goaviatrix.PolicyRule, 0),
+		GatewayName:  d.Get("gw_name").(string),
+		DnatPolicy:   make([]goaviatrix.PolicyRule, 0),
+		SyncDNATToHA: strconv.FormatBool(d.Get("sync_to_ha").(bool)),
 	}
 
 	err := client.UpdateDNat(gateway)
