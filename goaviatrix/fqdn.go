@@ -495,7 +495,7 @@ func (c *Client) GetGwFilterTagList(fqdn *FQDN) (*FQDN, error) {
 }
 
 func (c *Client) GetFQDNPassThroughCIDRs(gw *Gateway) ([]string, error) {
-	action := "list_fqdn_pass_through"
+	action := "list_fqdn_pass_through_cidrs"
 
 	resp, err := c.Post(c.baseURL, struct {
 		Action string `form:"action"`
@@ -533,14 +533,14 @@ func (c *Client) GetFQDNPassThroughCIDRs(gw *Gateway) ([]string, error) {
 }
 
 func (c *Client) ConfigureFQDNPassThroughCIDRs(gw *Gateway, IPs []string) error {
-	action := "update_fqdn_pass_through"
+	action := "update_fqdn_pass_through_cidrs"
 
 	data := make(map[string]string)
 	data["action"] = action
 	data["CID"] = c.CID
 	data["gateway_name"] = gw.GwName
 	for i, ip := range IPs {
-		key := fmt.Sprintf("source_ips[%d]", i)
+		key := fmt.Sprintf("source_cidrs[%d]", i)
 		data[key] = ip
 	}
 
@@ -548,7 +548,7 @@ func (c *Client) ConfigureFQDNPassThroughCIDRs(gw *Gateway, IPs []string) error 
 }
 
 func (c *Client) DisableFQDNPassThrough(gw *Gateway) error {
-	action := "update_fqdn_pass_through"
+	action := "update_fqdn_pass_through_cidrs"
 
 	data := make(map[string]string)
 	data["action"] = action

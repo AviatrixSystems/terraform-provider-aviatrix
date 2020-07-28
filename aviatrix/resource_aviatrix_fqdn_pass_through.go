@@ -28,7 +28,7 @@ func resourceAviatrixFQDNPassThrough() *schema.Resource {
 				Description: "Gateway to apply FQDN pass-through rules to.",
 			},
 			"pass_through_cidrs": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Required:    true,
 				Description: "CIDRs to allow originating requests to ignore FQDN filtering rules.",
 				MinItems:    1,
@@ -46,7 +46,7 @@ func resourceAviatrixFQDNPassThroughCreate(d *schema.ResourceData, meta interfac
 
 	gw := &goaviatrix.Gateway{GwName: d.Get("gw_name").(string)}
 	var cidrs []string
-	for _, v := range d.Get("pass_through_cidrs").([]interface{}) {
+	for _, v := range d.Get("pass_through_cidrs").(*schema.Set).List() {
 		cidrs = append(cidrs, v.(string))
 	}
 	if err := client.ConfigureFQDNPassThroughCIDRs(gw, cidrs); err != nil {
@@ -100,7 +100,7 @@ func resourceAviatrixFQDNPassThroughUpdate(d *schema.ResourceData, meta interfac
 	if d.HasChange("pass_through_cidrs") {
 		gw := &goaviatrix.Gateway{GwName: d.Get("gw_name").(string)}
 		var cidrs []string
-		for _, v := range d.Get("pass_through_cidrs").([]interface{}) {
+		for _, v := range d.Get("pass_through_cidrs").(*schema.Set).List() {
 			cidrs = append(cidrs, v.(string))
 		}
 		if err := client.ConfigureFQDNPassThroughCIDRs(gw, cidrs); err != nil {
