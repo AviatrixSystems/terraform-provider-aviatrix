@@ -1109,7 +1109,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			CloudType: d.Get("cloud_type").(int),
 		}
 
-		if transitGw.CloudType == goaviatrix.AWS {
+		if transitGw.CloudType == goaviatrix.AWS || transitGw.CloudType == goaviatrix.GCP {
 			transitGw.Eip = d.Get("ha_eip").(string)
 		}
 

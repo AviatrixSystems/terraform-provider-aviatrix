@@ -905,7 +905,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			CloudType: d.Get("cloud_type").(int),
 		}
 
-		if spokeGw.CloudType == goaviatrix.AWS {
+		if spokeGw.CloudType == goaviatrix.AWS || spokeGw.CloudType == goaviatrix.GCP {
 			spokeGw.Eip = d.Get("ha_eip").(string)
 		}
 
