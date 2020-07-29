@@ -1,4 +1,28 @@
 ## 2.16.0 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.0** (tested on **UserConnect-6.1.1078**)
+- Supported Terraform version: **v0.12.x**
+
+### Features:
+1. Implemented new resource to support periodic ping:
+  - **aviatrix_periodic_ping**
+2. Implemented new resource to support fqdn pass through:
+  - **aviatrix_fqdn_pass_through**
+3. Implemented support for specifying and updating ``gateway1_excluded_network_cidrs``, ``gateway1_excluded_tgw_connections``, ``gateway2_excluded_network_cidrs``, and ``gateway2_excluded_tgw_connections`` for **aviatrix_transit_gateway_peering**
+4. Implemented support for configuring ``bgp_polling_time``, ``prepend_as_path``, ``local_as_number``, and ``bgp_ecmp`` for **aviatrix_transit_gateway**
+5. Implemented support for ``enable_vpc_dns_server`` in **aviatrix_controller_config**
+6. Implemented support for changing name servers individually on **aviatrix_geo_vpn**
+7. Implemented support for setting ``allocate_new_eip`` false for GCP provider for **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+8. Implemented support for ``sync_to_ha`` for **aviatrix_gateway_dnat** and **aviatrix_gateway_snat** 
+
+### Enhancements:
+1. Removed condition that ``single_az_ha`` has to be disabled to enable ``enable_encrypt_volume`` for **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+2. Enhanced reading ``allocate_new_eip`` for GCP **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** data sources
+   
+### Bug Fixes:
+1. Fix issue where peered TGW showing in domain connection list causes TGW Peering being read deltas due to backend change
+
+
 ## 2.15.1 (July 10, 2020)
 ### Notes:
 - Supported Controller version: **UserConnect-6.0** (tested on **UserConnect-6.0.2383**)
