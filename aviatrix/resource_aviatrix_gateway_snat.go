@@ -36,7 +36,7 @@ func resourceAviatrixGatewaySNat() *schema.Resource {
 				Description:  "Nat mode. Currently only supports 'customized_snat'.",
 			},
 			"snat_policy": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Default:     nil,
 				Description: "Policy rules applied for 'snat_mode'' of 'customized_snat'.'",
@@ -131,14 +131,14 @@ func resourceAviatrixGatewaySNatCreate(d *schema.ResourceData, meta interface{})
 		GatewayName: d.Get("gw_name").(string),
 	}
 
-	if len(d.Get("snat_policy").([]interface{})) == 0 {
+	if len(d.Get("snat_policy").(*schema.Set).List()) == 0 {
 		return fmt.Errorf("please specify 'snat_policy' for 'snat_mode' of 'customized_snat'")
 	}
 	gateway.EnableNat = "yes"
 	gateway.SnatMode = "custom"
 	gateway.SyncSNATToHA = strconv.FormatBool(d.Get("sync_to_ha").(bool))
 	if _, ok := d.GetOk("snat_policy"); ok {
-		policies := d.Get("snat_policy").([]interface{})
+		policies := d.Get("snat_policy").(*schema.Set).List()
 		for _, policy := range policies {
 			pl := policy.(map[string]interface{})
 			customPolicy := &goaviatrix.PolicyRule{
@@ -244,13 +244,13 @@ func resourceAviatrixGatewaySNatUpdate(d *schema.ResourceData, meta interface{})
 	gateway.SyncSNATToHA = strconv.FormatBool(d.Get("sync_to_ha").(bool))
 
 	if d.HasChange("snat_policy") || d.HasChange("sync_to_ha") {
-		if len(d.Get("snat_policy").([]interface{})) == 0 {
+		if len(d.Get("snat_policy").(*schema.Set).List()) == 0 {
 			return fmt.Errorf("please specify 'snat_policy' for 'snat_mode' of 'customized_snat'")
 		}
 
 		gateway.SnatMode = "custom"
 		if _, ok := d.GetOk("snat_policy"); ok {
-			policies := d.Get("snat_policy").([]interface{})
+			policies := d.Get("snat_policy").(*schema.Set).List()
 			for _, policy := range policies {
 				pl := policy.(map[string]interface{})
 				customPolicy := &goaviatrix.PolicyRule{
