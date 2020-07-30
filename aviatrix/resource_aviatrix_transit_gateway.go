@@ -1057,6 +1057,18 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	if d.HasChange("insane_mode_az") {
 		return fmt.Errorf("updating insane_mode_az is not allowed")
 	}
+	if d.HasChange("allocate_new_eip") {
+		return fmt.Errorf("updating allocate_new_eip is not allowed")
+	}
+	if d.HasChange("eip") {
+		return fmt.Errorf("updating eip is not allowed")
+	}
+	if d.HasChange("ha_eip") {
+		o, n := d.GetChange("ha_eip")
+		if o.(string) != "" && n.(string) != "" {
+			return fmt.Errorf("updating ha_eip is not allowed")
+		}
+	}
 	if d.HasChange("enable_transit_firenet") && d.Get("cloud_type").(int) == goaviatrix.AZURE {
 		return fmt.Errorf("editing 'enable_transit_firenet' in AZURE is not supported")
 	}
