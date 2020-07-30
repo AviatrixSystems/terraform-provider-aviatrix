@@ -1262,7 +1262,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	}
 
 	if d.HasChange("ha_gw_size") {
-		_, err := client.GetGateway(haGateway)
+		gw, err := client.GetGateway(haGateway)
 		if err != nil {
 			if err == goaviatrix.ErrNotFound {
 				d.Set("ha_gw_size", "")
@@ -1280,10 +1280,13 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				"ha_subnet is set. Example: t2.micro")
 		}
 
-		err = client.UpdateGateway(haGateway)
-		log.Printf("[INFO] Updating Transit HA GAteway size to: %s ", haGateway.GwSize)
-		if err != nil {
-			return fmt.Errorf("failed to update Aviatrix Transit HA Gw size: %s", err)
+		// Only try to update the gw size if the current size != desired size
+		if haGateway.GwSize != gw.GwSize {
+			err = client.UpdateGateway(haGateway)
+			log.Printf("[INFO] Updating Transit HA GAteway size to: %s ", haGateway.GwSize)
+			if err != nil {
+				return fmt.Errorf("failed to update Aviatrix Transit HA Gw size: %s", err)
+			}
 		}
 
 		d.SetPartial("ha_gw_size")
