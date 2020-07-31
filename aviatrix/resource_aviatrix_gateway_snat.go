@@ -36,7 +36,7 @@ func resourceAviatrixGatewaySNat() *schema.Resource {
 				Description:  "Nat mode. Currently only supports 'customized_snat'.",
 			},
 			"snat_policy": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Optional:    true,
 				Default:     nil,
 				Description: "Policy rules applied for 'snat_mode'' of 'customized_snat'.'",
@@ -131,14 +131,14 @@ func resourceAviatrixGatewaySNatCreate(d *schema.ResourceData, meta interface{})
 		GatewayName: d.Get("gw_name").(string),
 	}
 
-	if len(d.Get("snat_policy").(*schema.Set).List()) == 0 {
+	if len(d.Get("snat_policy").([]interface{})) == 0 {
 		return fmt.Errorf("please specify 'snat_policy' for 'snat_mode' of 'customized_snat'")
 	}
 	gateway.EnableNat = "yes"
 	gateway.SnatMode = "custom"
 	gateway.SyncSNATToHA = strconv.FormatBool(d.Get("sync_to_ha").(bool))
 	if _, ok := d.GetOk("snat_policy"); ok {
-		policies := d.Get("snat_policy").(*schema.Set).List()
+		policies := d.Get("snat_policy").([]interface{})
 		for _, policy := range policies {
 			pl := policy.(map[string]interface{})
 			customPolicy := &goaviatrix.PolicyRule{
@@ -201,6 +201,10 @@ func resourceAviatrixGatewaySNatRead(d *schema.ResourceData, meta interface{}) e
 		if gw.EnableNat == "yes" && gw.SnatMode == "customized" {
 			d.Set("snat_mode", "customized_snat")
 			var snatPolicy []map[string]interface{}
+
+			// Duplicate SNAT policies can be returned from the API.
+			// Before we save the policies to state we need to deduplicate.
+			dedupMap := make(map[string]struct{})
 			for _, policy := range gwDetail.SnatPolicy {
 				sP := make(map[string]interface{})
 				sP["src_cidr"] = policy.SrcIP
@@ -214,6 +218,17 @@ func resourceAviatrixGatewaySNatRead(d *schema.ResourceData, meta interface{}) e
 				sP["snat_ips"] = policy.NewSrcIP
 				sP["snat_port"] = policy.NewSrcPort
 				sP["exclude_rtb"] = policy.ExcludeRTB
+
+				// To deduplicate we will generate a unique key for each policy.
+				key := fmt.Sprintf("%s~%s~%s~%s~%s~%s~%s~%s~%s~%s~%s", policy.SrcIP, policy.SrcPort, policy.DstIP,
+					policy.DstPort, policy.Protocol, "eth0", policy.Connection, policy.Mark, policy.NewSrcIP, policy.NewSrcPort, policy.ExcludeRTB)
+				// If the map already contains the unique key then we know this policy is a duplicate.
+				if _, ok := dedupMap[key]; ok {
+					continue
+				}
+
+				// Otherwise, its a unique policy so we write it to state and the dedupMap.
+				dedupMap[key] = struct{}{}
 				snatPolicy = append(snatPolicy, sP)
 			}
 
@@ -244,13 +259,13 @@ func resourceAviatrixGatewaySNatUpdate(d *schema.ResourceData, meta interface{})
 	gateway.SyncSNATToHA = strconv.FormatBool(d.Get("sync_to_ha").(bool))
 
 	if d.HasChange("snat_policy") || d.HasChange("sync_to_ha") {
-		if len(d.Get("snat_policy").(*schema.Set).List()) == 0 {
+		if len(d.Get("snat_policy").([]interface{})) == 0 {
 			return fmt.Errorf("please specify 'snat_policy' for 'snat_mode' of 'customized_snat'")
 		}
 
 		gateway.SnatMode = "custom"
 		if _, ok := d.GetOk("snat_policy"); ok {
-			policies := d.Get("snat_policy").(*schema.Set).List()
+			policies := d.Get("snat_policy").([]interface{})
 			for _, policy := range policies {
 				pl := policy.(map[string]interface{})
 				customPolicy := &goaviatrix.PolicyRule{
