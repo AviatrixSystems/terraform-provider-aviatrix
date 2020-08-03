@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.15 (UserConnect-6.0)``
+``Last updated: R2.16 (UserConnect-6.1)``
 
 
 ---
@@ -186,3 +186,12 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |(changed) | site2cloud | tunnel_type       | **Yes**; with the release of Controller 6.0, **site2cloud** has been changed to now be policy-based or route-based. With that change, the new accepted values are "policy" and "route". These values must be updated in their respective .tf files and a ``terraform refresh`` will rectify the state file. |
 |(changed) | gateway    | enable_encrypt_volume | **No**; nothing needs to be changed. This is just a note to bring to attention that with gateways created by Terraform, volumes will NOT be encrypted, unless otherwise specified. Please see Release Notes for details |
 |(changed) | gateway_snat | connection      | **Yes**; any **gateway_snat** configurations where the `connection` value is specified as an empty string must be changed to either null or "eth0" due to new default values. |
+
+
+## R2.16 (UserConnect-6.1) (Terraform v0.12)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(new) | transit_gateway_peering | gateway1_excluded_network_cidrs, gateway1_excluded_tgw_connections, gateway2_excluded_network_cidrs, gateway2_excluded_tgw_connections | **No**; these are new attributes to support additional configurations for transit gateway peerings. A simple ``terraform refresh`` will apply this attributes' default values into the state |
+|(new) | aviatrix_transit_gateway | bgp_polling_time, prepend_as_path, local_as_number, bgp_ecmp | **No**; see reason above |
+|(new) | controller_config | enable_vpc_dns_server | **No**; see reason above |
+|(new) | gateway_dnat, gateway_snat | sync_to_ha | **No**; see reason above |
