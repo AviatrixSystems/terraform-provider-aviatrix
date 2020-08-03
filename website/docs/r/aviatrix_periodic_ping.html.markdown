@@ -2,17 +2,17 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_periodic_ping"
 description: |-
-  Manages Aviatrix Periodic Ping on Gateways
+  Manages periodic pings on Aviatrix gateways
 ---
 
 # aviatrix_periodic_ping
 
-The **aviatrix_periodic_ping** resource manages a periodic ping for aviatrix gateways.
+The **aviatrix_periodic_ping** resource manages the periodic ping feature for Aviatrix gateways.
 
 ## Example Usage
 
 ```hcl
-# Create a Periodic Ping on a Gateway
+# Enable Periodic Ping for a Gateway
 resource "aviatrix_periodic_ping" "test_ping" {
 	gw_name    = "test-gw"
 	interval   = 600
