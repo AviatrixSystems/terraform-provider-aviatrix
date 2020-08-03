@@ -1,4 +1,28 @@
 ## 2.16.0 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.1** (tested on **UserConnect-6.1.1162**)
+- Supported Terraform version: **v0.12.x**
+
+### Features:
+1. Implemented new resource to support periodic ping from gateways:
+  - **aviatrix_periodic_ping**
+2. Implemented new resource to support FQDN pass-through:
+  - **aviatrix_fqdn_pass_through**
+3. Implemented support for specifying and updating ``gateway1_excluded_network_cidrs``, ``gateway1_excluded_tgw_connections``, ``gateway2_excluded_network_cidrs``, and ``gateway2_excluded_tgw_connections`` for **aviatrix_transit_gateway_peering**
+4. Implemented support for configuring ``bgp_polling_time``, ``prepend_as_path``, ``local_as_number``, and ``bgp_ecmp`` for **aviatrix_transit_gateway**
+5. Implemented support for ``enable_vpc_dns_server`` in **aviatrix_controller_config**
+6. Implemented support for updating name servers individually on ELBs under the **aviatrix_geo_vpn**
+7. Implemented support for specifying EIPs to use for launching GCP **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** by setting ``allocate_new_eip`` to false and their respective ``eip`` and/or ``peering_ha_eip/ha_eip`` attributes
+8. Implemented support for syncing **aviatrix_gateway_dnat** and **aviatrix_gateway_snat** policies to HA gateways through the ``sync_to_ha`` argument 
+
+### Enhancements:
+1. Removed condition requiring ``single_az_ha`` to be disabled to in order to set ``enable_encrypt_volume`` for **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+2. Enhanced reading ``allocate_new_eip`` for GCP **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** data sources
+   
+### Bug Fixes:
+1. Fixed issue where peered TGWs showing in domain connection list causes **aviatrix_aws_tgw_peering** to read deltas due to backend change
+
+
 ## 2.15.1 (July 10, 2020)
 ### Notes:
 - Supported Controller version: **UserConnect-6.0** (tested on **UserConnect-6.0.2383**)
