@@ -1,4 +1,4 @@
-## 2.16.0 (Unreleased)
+## 2.16.0 (August 04, 2020)
 ### Notes:
 - Supported Controller version: **UserConnect-6.1** (tested on **UserConnect-6.1.1162**)
 - Supported Terraform version: **v0.12.x**
