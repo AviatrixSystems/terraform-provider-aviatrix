@@ -150,7 +150,11 @@ func resourceAviatrixFQDNTagRuleDelete(d *schema.ResourceData, meta interface{})
 
 	fqdn := marshalFQDNTagRuleInput(d)
 
-	if err := client.DeleteFQDNTagRule(fqdn); err != nil {
+	err := client.DeleteFQDNTagRule(fqdn)
+	if err == goaviatrix.ErrNotFound {
+		return nil
+	}
+	if err != nil {
 		return err
 	}
 

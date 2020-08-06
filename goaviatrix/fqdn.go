@@ -623,9 +623,9 @@ func (c *Client) DeleteFQDNTagRule(fqdn *FQDN) error {
 		Policies: string(policies),
 	}, func(action string, reason string, ret bool) error {
 		if !ret {
-			// Tried to delete a rule that did not exist, we don't need to fail the apply.
+			// Tried to delete a rule that did not exist.
 			if strings.Contains(reason, "the following rules were not found") {
-				return nil
+				return ErrNotFound
 			}
 
 			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
