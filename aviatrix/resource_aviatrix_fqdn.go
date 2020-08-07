@@ -91,12 +91,25 @@ func resourceAviatrixFQDN() *schema.Resource {
 					},
 				},
 			},
+			"manage_domain_names": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+				Description: "Enable to manage domain name rules in-line. If false, domain name rules must be managed " +
+					"using `aviatrix_fqdn_tag_rule` resources.",
+			},
 		},
 	}
 }
 
 func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	_, hasSetDomainNames := d.GetOk("domain_names")
+	enabledInlineDomainNames := d.Get("manage_domain_names").(bool)
+	if hasSetDomainNames && !enabledInlineDomainNames {
+		return fmt.Errorf("manage_domain_names must be set to true to set in-line domain names")
+	}
 
 	fqdn := &goaviatrix.FQDN{
 		FQDNTag:  d.Get("fqdn_tag").(string),
@@ -122,7 +135,7 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 	flag := false
 	defer resourceAviatrixFQDNReadIfRequired(d, meta, &flag)
 
-	if _, ok := d.GetOk("domain_names"); ok {
+	if hasSetDomainNames && enabledInlineDomainNames {
 		names := d.Get("domain_names").([]interface{})
 		for _, domain := range names {
 			if domain != nil {
@@ -207,6 +220,7 @@ func resourceAviatrixFQDNRead(d *schema.ResourceData, meta interface{}) error {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no fqdn tag received. Import Id is %s", id)
 		d.Set("fqdn_tag", id)
+		d.Set("manage_domain_names", true)
 		d.SetId(id)
 	}
 
@@ -273,8 +287,11 @@ func resourceAviatrixFQDNRead(d *schema.ResourceData, meta interface{}) error {
 
 		log.Printf("[INOF] 3Enable FQDN tag status: %#v", fqdn)
 
-		if d.Set("domain_names", filter); err != nil {
-			log.Printf("[WARN] Error setting domain_names for (%s): %s", d.Id(), err)
+		// Only write domain names to state if the user has enabled in-line domain names.
+		if d.Get("manage_domain_names").(bool) {
+			if err = d.Set("domain_names", filter); err != nil {
+				log.Printf("[WARN] Error setting domain_names for (%s): %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -331,9 +348,7 @@ func resourceAviatrixFQDNRead(d *schema.ResourceData, meta interface{}) error {
 			gwFilterTagList = append(gwFilterTagList, mGwFilterTags[gFT["gw_name"].(string)])
 		}
 	}
-	if err != nil {
-		return fmt.Errorf("couldn't list attached gateways: %s", err)
-	}
+
 	for _, gwFilterTag := range newfqdn.GwFilterTagList {
 		if !mGwFilterTagsOld[gwFilterTag.Name] {
 			gwFilterTagList = append(gwFilterTagList, mGwFilterTags[gwFilterTag.Name])
@@ -349,6 +364,12 @@ func resourceAviatrixFQDNRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	_, hasSetDomainNames := d.GetOk("domain_names")
+	enabledInlineDomainNames := d.Get("manage_domain_names").(bool)
+	if hasSetDomainNames && !enabledInlineDomainNames {
+		return fmt.Errorf("manage_domain_names must be set to true to set in-line domain names")
+	}
 
 	fqdn := &goaviatrix.FQDN{
 		FQDNTag:  d.Get("fqdn_tag").(string),
@@ -380,9 +401,9 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 		d.SetPartial("fqdn_mode")
 	}
-	//Update Domain list
+	// Update Domain list
 	if d.HasChange("domain_names") {
-		if _, ok := d.GetOk("domain_names"); ok {
+		if hasSetDomainNames {
 			names := d.Get("domain_names").([]interface{})
 			for _, domain := range names {
 				dn := domain.(map[string]interface{})
