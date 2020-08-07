@@ -37,6 +37,9 @@ checksum:
   algorithm: sha256
 release:
   # Visit your project's GitHub Releases page to publish this release.
+  github:
+    owner: zhiqiangjin
+    name: https://github.com/AviatrixSystems/terraform-provider-aviatrix
   draft: true
 changelog:
   skip: true
