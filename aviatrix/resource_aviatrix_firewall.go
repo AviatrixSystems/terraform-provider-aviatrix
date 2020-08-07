@@ -36,6 +36,13 @@ func resourceAviatrixFirewall() *schema.Resource {
 				Default:     false,
 				Description: "Indicates whether enable logging or not. Valid values: true or false.",
 			},
+			"manage_firewall_policies": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+				Description: "Enable to manage firewall policies via in-line rules. If false, policies must be managed " +
+					"using `aviatrix_firewall_policy` resources.",
+			},
 			"policy": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -95,6 +102,12 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 		BasePolicy: d.Get("base_policy").(string),
 	}
 
+	_, hasSetPolicies := d.GetOk("policy")
+	enabledInlinePolicies := d.Get("manage_firewall_policies").(bool)
+	if hasSetPolicies && !enabledInlinePolicies {
+		return fmt.Errorf("manage_firewall_policies must be set to true to set in-line policies")
+	}
+
 	if firewall.BasePolicy != "allow-all" && firewall.BasePolicy != "deny-all" {
 		return fmt.Errorf("base_policy can only be 'allow-all', or 'deny-all'")
 	}
@@ -115,8 +128,9 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("failed to set base firewall policies for GW %s: %s", firewall.GwName, err)
 		}
 	}
-	//If policy list is present, update policy list
-	if _, ok := d.GetOk("policy"); ok {
+
+	// If policies are present and manage_firewall_policies is set to true, update policies
+	if hasSetPolicies && enabledInlinePolicies {
 		policies := d.Get("policy").([]interface{})
 		for _, policy := range policies {
 			pl := policy.(map[string]interface{})
@@ -165,6 +179,7 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
 		d.Set("gw_name", id)
+		d.Set("manage_firewall_policies", true)
 		d.SetId(id)
 	}
 
@@ -240,8 +255,11 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	if err := d.Set("policy", policiesFromFile); err != nil {
-		log.Printf("[WARN] Error setting policy for (%s): %s", d.Id(), err)
+	// Only write policies to state if the user has enabled in-line policies.
+	if d.Get("manage_firewall_policies").(bool) {
+		if err := d.Set("policy", policiesFromFile); err != nil {
+			log.Printf("[WARN] Error setting policy for (%s): %s", d.Id(), err)
+		}
 	}
 	return nil
 }
@@ -256,6 +274,12 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 	d.Partial(true)
 
 	log.Printf("[INFO] Creating Aviatrix firewall: %#v", firewall)
+
+	_, hasSetPolicies := d.GetOk("policy")
+	enabledInlinePolicies := d.Get("manage_firewall_policies").(bool)
+	if hasSetPolicies && !enabledInlinePolicies {
+		return fmt.Errorf("manage_firewall_policies must be set to true to set in-line policies")
+	}
 
 	if ok := d.HasChange("base_policy"); ok {
 		firewall.BasePolicy = d.Get("base_policy").(string)
