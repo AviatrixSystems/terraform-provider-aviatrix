@@ -45,11 +45,11 @@ In addition to all arguments above, the following attributes are exported:
   * `cidr` - Subnet CIDR.
   * `name` - Subnet name.
   * `subnet_id` - Subnet ID.
-* `public_subnets` - List of public subnet of the VPC created.
+* `public_subnets` - List of public subnet of the VPC(AWS, Azure) created.
   * `cidr` - Public subnet CIDR.
   * `name` - Public subnet name.
   * `subnet_id` - Public subnet ID.
-* `private_subnets` - List of private subnet of the VPC created.
+* `private_subnets` - List of private subnet of the VPC(AWS, Azure) created.
   * `cidr` - Private subnet CIDR.
   * `name` - Private subnet name.
   * `subnet_id` - Private subnet ID.
