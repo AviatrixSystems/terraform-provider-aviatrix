@@ -343,9 +343,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 			subnetInfo := make(map[string]interface{})
 			subnetInfo["cidr"] = subnet.Cidr
 			subnetInfo["name"] = subnet.Name
-			if vC.CloudType != goaviatrix.GCP {
-				subnetInfo["subnet_id"] = subnet.SubnetID
-			}
+			subnetInfo["subnet_id"] = subnet.SubnetID
 
 			privateSubnets = append(privateSubnets, subnetInfo)
 		}
@@ -358,9 +356,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 			subnetInfo := make(map[string]interface{})
 			subnetInfo["cidr"] = subnet.Cidr
 			subnetInfo["name"] = subnet.Name
-			if vC.CloudType != goaviatrix.GCP {
-				subnetInfo["subnet_id"] = subnet.SubnetID
-			}
+			subnetInfo["subnet_id"] = subnet.SubnetID
 
 			publicSubnets = append(publicSubnets, subnetInfo)
 		}
