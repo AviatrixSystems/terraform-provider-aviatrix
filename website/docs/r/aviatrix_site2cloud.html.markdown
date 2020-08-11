@@ -1,4 +1,5 @@
 ---
+subcategory: "Site2Cloud"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_site2cloud"
 description: |-

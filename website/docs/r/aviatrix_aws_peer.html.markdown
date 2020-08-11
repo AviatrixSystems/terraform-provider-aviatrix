@@ -1,4 +1,5 @@
 ---
+subcategory: "Peering"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_aws_peer"
 description: |-

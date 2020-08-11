@@ -1,4 +1,5 @@
 ---
+subcategory: "TGW Orchestrator"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_aws_tgw_peering_domain_conn"
 description: |-
