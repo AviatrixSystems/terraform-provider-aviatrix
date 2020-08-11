@@ -1,4 +1,5 @@
 ---
+subcategory: "Firewall Network"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_firenet_vendor_integration"
 description: |-

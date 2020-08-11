@@ -1,4 +1,5 @@
 ---
+subcategory: "Firewall Network"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_firewall_instance"
 description: |-
