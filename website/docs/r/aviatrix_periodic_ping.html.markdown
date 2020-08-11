@@ -1,4 +1,5 @@
 ---
+subcategory: "Gateway"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_periodic_ping"
 description: |-

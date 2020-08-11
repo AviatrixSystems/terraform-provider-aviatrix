@@ -1,4 +1,5 @@
 ---
+subcategory: "Multi-Cloud Transit"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_transit_gateway_peering"
 description: |-

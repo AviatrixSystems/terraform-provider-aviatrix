@@ -1,4 +1,5 @@
 ---
+subcategory: "Useful Tools"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_vpc_tracker"
 description: |-
@@ -47,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
     * `name` - Subnet name.
     * `cidr` - Subnet CIDR.
     * `gw_ip` - Subnet gateway ip.
-  
+
 ## Notes
 
 * Please be aware this data source could take up to 20 minutes to refresh depending on the number of VPCs and cloud accounts.

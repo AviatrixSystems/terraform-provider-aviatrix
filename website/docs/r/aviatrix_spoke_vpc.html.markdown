@@ -1,4 +1,5 @@
 ---
+subcategory: "Deprecated"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_spoke_vpc"
 description: |-
