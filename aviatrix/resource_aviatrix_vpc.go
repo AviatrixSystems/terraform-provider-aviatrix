@@ -71,7 +71,7 @@ func resourceAviatrixVpc() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Computed:    true,
-				Description: "List of subnets of the VPC to be created. Required to be non-empty for GCP provider, and empty for other providers.",
+				Description: "List of subnet of the VPC to be created. Required to be non-empty for GCP provider, and empty for other providers.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"region": {
@@ -100,14 +100,9 @@ func resourceAviatrixVpc() *schema.Resource {
 			"private_subnets": {
 				Type:        schema.TypeList,
 				Computed:    true,
-				Description: "List of subnets of the VPC to be created.",
+				Description: "List of private subnet of the VPC to be created.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"region": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Subnet region.",
-						},
 						"cidr": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -129,14 +124,9 @@ func resourceAviatrixVpc() *schema.Resource {
 			"public_subnets": {
 				Type:        schema.TypeList,
 				Computed:    true,
-				Description: "List of public subnets of the VPC to be created.",
+				Description: "List of public subnet of the VPC to be created.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"region": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Subnet region.",
-						},
 						"cidr": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -347,40 +337,36 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] Error setting 'subnets' for (%s): %s", d.Id(), err)
 	}
 
-	var privateSubnets []map[string]interface{}
-	for _, subnet := range vC.PrivateSubnets {
-		subnetInfo := make(map[string]interface{})
-		if vC.CloudType == goaviatrix.GCP {
-			subnetInfo["region"] = subnet.Region
+	if vC.CloudType != goaviatrix.GCP {
+		var privateSubnets []map[string]interface{}
+		for _, subnet := range vC.PrivateSubnets {
+			subnetInfo := make(map[string]interface{})
+			subnetInfo["cidr"] = subnet.Cidr
+			subnetInfo["name"] = subnet.Name
+			if vC.CloudType != goaviatrix.GCP {
+				subnetInfo["subnet_id"] = subnet.SubnetID
+			}
+
+			privateSubnets = append(privateSubnets, subnetInfo)
 		}
-		subnetInfo["cidr"] = subnet.Cidr
-		subnetInfo["name"] = subnet.Name
-		if vC.CloudType != goaviatrix.GCP {
-			subnetInfo["subnet_id"] = subnet.SubnetID
+		if err := d.Set("private_subnets", privateSubnets); err != nil {
+			log.Printf("[WARN] Error setting 'private_subnets' for (%s): %s", d.Id(), err)
 		}
 
-		privateSubnets = append(privateSubnets, subnetInfo)
-	}
-	if err := d.Set("private_subnets", privateSubnets); err != nil {
-		log.Printf("[WARN] Error setting 'private_subnets' for (%s): %s", d.Id(), err)
-	}
+		var publicSubnets []map[string]interface{}
+		for _, subnet := range vC.PublicSubnets {
+			subnetInfo := make(map[string]interface{})
+			subnetInfo["cidr"] = subnet.Cidr
+			subnetInfo["name"] = subnet.Name
+			if vC.CloudType != goaviatrix.GCP {
+				subnetInfo["subnet_id"] = subnet.SubnetID
+			}
 
-	var publicSubnets []map[string]interface{}
-	for _, subnet := range vC.PublicSubnets {
-		subnetInfo := make(map[string]interface{})
-		if vC.CloudType == goaviatrix.GCP {
-			subnetInfo["region"] = subnet.Region
+			publicSubnets = append(publicSubnets, subnetInfo)
 		}
-		subnetInfo["cidr"] = subnet.Cidr
-		subnetInfo["name"] = subnet.Name
-		if vC.CloudType != goaviatrix.GCP {
-			subnetInfo["subnet_id"] = subnet.SubnetID
+		if err := d.Set("public_subnets", publicSubnets); err != nil {
+			log.Printf("[WARN] Error setting 'public_subnets' for (%s): %s", d.Id(), err)
 		}
-
-		publicSubnets = append(publicSubnets, subnetInfo)
-	}
-	if err := d.Set("public_subnets", publicSubnets); err != nil {
-		log.Printf("[WARN] Error setting 'public_subnets' for (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(vpcName)
