@@ -36,6 +36,8 @@ type VpcEdit struct {
 	AviatrixFireNetVpc bool         `json:"avx_firenet_vpc,omitempty"`
 	VpcID              []string     `json:"vpc_list,omitempty"`
 	Subnets            []SubnetInfo `json:"subnets,omitempty"`
+	PublicSubnets      []SubnetInfo `json:"public_subnets,omitempty"`
+	PrivateSubnets     []SubnetInfo `json:"private_subnets,omitempty"`
 }
 
 type VpcResp struct {
@@ -147,6 +149,8 @@ func (c *Client) GetVpc(vpc *Vpc) (*Vpc, error) {
 			}
 			vpc.VpcID = allVpcPoolVpcListResp[i].VpcID[0]
 			vpc.Subnets = allVpcPoolVpcListResp[i].Subnets
+			vpc.PrivateSubnets = allVpcPoolVpcListResp[i].PrivateSubnets
+			vpc.PublicSubnets = allVpcPoolVpcListResp[i].PublicSubnets
 
 			return vpc, nil
 		}
