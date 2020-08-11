@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-var supportedVersions = []string{"6.1"}
+var supportedVersions = []string{"6.2"}
 
 // Provider returns a schema.Provider for Aviatrix.
 func Provider() terraform.ResourceProvider {
