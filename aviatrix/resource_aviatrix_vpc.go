@@ -71,7 +71,7 @@ func resourceAviatrixVpc() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Computed:    true,
-				Description: "List of subnets of the VPC to be created. Required to be non-empty for GCP provider, and empty for other providers.",
+				Description: "List of subnet of the VPC to be created. Required to be non-empty for GCP provider, and empty for other providers.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"region": {
@@ -87,6 +87,54 @@ func resourceAviatrixVpc() *schema.Resource {
 						"name": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Description: "Subnet name.",
+						},
+						"subnet_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Subnet ID.",
+						},
+					},
+				},
+			},
+			"private_subnets": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "List of private subnet of the VPC to be created.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cidr": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Subnet cidr.",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Subnet name.",
+						},
+						"subnet_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Subnet ID.",
+						},
+					},
+				},
+			},
+			"public_subnets": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "List of public subnet of the VPC to be created.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cidr": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Subnet cidr.",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
 							Description: "Subnet name.",
 						},
 						"subnet_id": {
@@ -286,7 +334,35 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("subnets", subnetsFromFile); err != nil {
-		log.Printf("[WARN] Error setting subnets for (%s): %s", d.Id(), err)
+		log.Printf("[WARN] Error setting 'subnets' for (%s): %s", d.Id(), err)
+	}
+
+	if vC.CloudType != goaviatrix.GCP {
+		var privateSubnets []map[string]interface{}
+		for _, subnet := range vC.PrivateSubnets {
+			subnetInfo := make(map[string]interface{})
+			subnetInfo["cidr"] = subnet.Cidr
+			subnetInfo["name"] = subnet.Name
+			subnetInfo["subnet_id"] = subnet.SubnetID
+
+			privateSubnets = append(privateSubnets, subnetInfo)
+		}
+		if err := d.Set("private_subnets", privateSubnets); err != nil {
+			log.Printf("[WARN] Error setting 'private_subnets' for (%s): %s", d.Id(), err)
+		}
+
+		var publicSubnets []map[string]interface{}
+		for _, subnet := range vC.PublicSubnets {
+			subnetInfo := make(map[string]interface{})
+			subnetInfo["cidr"] = subnet.Cidr
+			subnetInfo["name"] = subnet.Name
+			subnetInfo["subnet_id"] = subnet.SubnetID
+
+			publicSubnets = append(publicSubnets, subnetInfo)
+		}
+		if err := d.Set("public_subnets", publicSubnets); err != nil {
+			log.Printf("[WARN] Error setting 'public_subnets' for (%s): %s", d.Id(), err)
+		}
 	}
 
 	d.SetId(vpcName)
