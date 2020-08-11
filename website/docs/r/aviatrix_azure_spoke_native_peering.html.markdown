@@ -1,4 +1,5 @@
 ---
+subcategory: "Multi-Cloud Transit"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_azure_spoke_native_peering"
 description: |-
