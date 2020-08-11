@@ -1,4 +1,5 @@
 ---
+subcategory: "OpenVPN"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_vpn_user"
 description: |-
