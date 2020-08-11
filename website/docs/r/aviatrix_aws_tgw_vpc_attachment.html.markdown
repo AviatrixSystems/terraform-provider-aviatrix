@@ -1,4 +1,5 @@
 ---
+subcategory: "TGW Orchestrator"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_aws_tgw_vpc_attachment"
 description: |-
