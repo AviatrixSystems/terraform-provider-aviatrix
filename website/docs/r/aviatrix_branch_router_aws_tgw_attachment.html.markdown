@@ -1,4 +1,5 @@
 ---
+subcategory: "CloudWAN"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_branch_router_aws_tgw_attachment"
 description: |-
