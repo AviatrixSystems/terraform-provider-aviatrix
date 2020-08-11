@@ -1,4 +1,5 @@
 ---
+subcategory: "Security"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_firewall"
 description: |-
@@ -9,7 +10,7 @@ description: |-
 
 The **aviatrix_firewall** resource allows the creation and management of [Aviatrix Stateful Firewall](https://docs.aviatrix.com/HowTos/stateful_firewall_faq.html) policies.
 
-~> **NOTE on Firewall and Firewall Policy resources:** Terraform currently provides both a standalone Firewall Policy resource and a Firewall resource with policies defined in-line. At this time you cannot use a Firewall resource with in-line rules in conjuction with any Firewall Policy resources. Doing so will cause a conflict of policy settings and will overwrite policies.
+~> **NOTE on Firewall and Firewall Policy resources:** Terraform currently provides both a standalone Firewall Policy resource and a Firewall resource with policies defined in-line. At this time you cannot use a Firewall resource with in-line rules in conjunction with any Firewall Policy resources. Doing so will cause a conflict of policy settings and will overwrite policies.
 
 ## Example Usage
 
