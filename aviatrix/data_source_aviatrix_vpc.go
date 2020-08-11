@@ -3,7 +3,6 @@ package aviatrix
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
@@ -179,8 +178,6 @@ func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vpc_id", vC.VpcID)
 
 	var subnetList []map[string]string
-	var publicSubnetList []map[string]string
-	var privateSubnetList []map[string]string
 	for _, subnet := range vC.Subnets {
 		sub := make(map[string]string)
 		sub["cidr"] = subnet.Cidr
@@ -188,22 +185,36 @@ func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		sub["subnet_id"] = subnet.SubnetID
 
 		subnetList = append(subnetList, sub)
-		if strings.Contains(subnet.Name, "-Public") || strings.Contains(subnet.Name, "-public") {
-			publicSubnetList = append(publicSubnetList, sub)
-		}
-		if strings.Contains(subnet.Name, "-Private") || strings.Contains(subnet.Name, "-private") {
-			privateSubnetList = append(privateSubnetList, sub)
-		}
 	}
-
 	if err := d.Set("subnets", subnetList); err != nil {
 		log.Printf("[WARN] Error setting subnets for (%s): %s", d.Id(), err)
 	}
-	if err := d.Set("public_subnets", publicSubnetList); err != nil {
-		log.Printf("[WARN] Error setting public subnets for (%s): %s", d.Id(), err)
-	}
-	if err := d.Set("private_subnets", privateSubnetList); err != nil {
-		log.Printf("[WARN] Error setting private subnets for (%s): %s", d.Id(), err)
+
+	if vC.CloudType != goaviatrix.GCP {
+		var privateSubnetList []map[string]string
+		var publicSubnetList []map[string]string
+		for _, subnet := range vC.PrivateSubnets {
+			sub := make(map[string]string)
+			sub["cidr"] = subnet.Cidr
+			sub["name"] = subnet.Name
+			sub["subnet_id"] = subnet.SubnetID
+
+			privateSubnetList = append(privateSubnetList, sub)
+		}
+		for _, subnet := range vC.PublicSubnets {
+			sub := make(map[string]string)
+			sub["cidr"] = subnet.Cidr
+			sub["name"] = subnet.Name
+			sub["subnet_id"] = subnet.SubnetID
+
+			publicSubnetList = append(publicSubnetList, sub)
+		}
+		if err := d.Set("private_subnets", privateSubnetList); err != nil {
+			log.Printf("[WARN] Error setting 'private_subnets' for (%s): %s", d.Id(), err)
+		}
+		if err := d.Set("public_subnets", publicSubnetList); err != nil {
+			log.Printf("[WARN] Error setting 'public_subnets' for (%s): %s", d.Id(), err)
+		}
 	}
 
 	if vC.CloudType == goaviatrix.AWS {
