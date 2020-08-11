@@ -100,7 +100,15 @@ In addition to all arguments above, the following attributes are exported:
   * `cidr` - CIDR block.
   * `name` - Name of this subnet.
   * `subnet_id` - ID of this subnet.
-
+* `private_subnets` - List of private subnet of the VPC(AWS, Azure) to be created.
+  * `cidr` - CIDR block.
+  * `name` - Name of this subnet.
+  * `subnet_id` - ID of this subnet.
+* `public_subnets` - List of public subnet of the VPC(AWS, Azure) to be created.
+  * `cidr` - CIDR block.
+  * `name` - Name of this subnet.
+  * `subnet_id` - ID of this subnet.  
+  
 -> **NOTE:** `subnets` - If created as a FireNet VPC, four public subnets will be created in the following order: subnet for firewall-mgmt in the first zone, subnet for ingress-egress in the first zone, subnet for firewall-mgmt in the second zone, and subnet for ingress-egress in the second zone.
 
 ## Import
