@@ -97,6 +97,64 @@ func resourceAviatrixVpc() *schema.Resource {
 					},
 				},
 			},
+			"private_subnets": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "List of subnets of the VPC to be created.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"region": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Subnet region.",
+						},
+						"cidr": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Subnet cidr.",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Subnet name.",
+						},
+						"subnet_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Subnet ID.",
+						},
+					},
+				},
+			},
+			"public_subnets": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "List of public subnets of the VPC to be created.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"region": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Subnet region.",
+						},
+						"cidr": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Subnet cidr.",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Subnet name.",
+						},
+						"subnet_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Subnet ID.",
+						},
+					},
+				},
+			},
 			"vpc_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -286,7 +344,43 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("subnets", subnetsFromFile); err != nil {
-		log.Printf("[WARN] Error setting subnets for (%s): %s", d.Id(), err)
+		log.Printf("[WARN] Error setting 'subnets' for (%s): %s", d.Id(), err)
+	}
+
+	var privateSubnets []map[string]interface{}
+	for _, subnet := range vC.PrivateSubnets {
+		subnetInfo := make(map[string]interface{})
+		if vC.CloudType == goaviatrix.GCP {
+			subnetInfo["region"] = subnet.Region
+		}
+		subnetInfo["cidr"] = subnet.Cidr
+		subnetInfo["name"] = subnet.Name
+		if vC.CloudType != goaviatrix.GCP {
+			subnetInfo["subnet_id"] = subnet.SubnetID
+		}
+
+		privateSubnets = append(privateSubnets, subnetInfo)
+	}
+	if err := d.Set("private_subnets", privateSubnets); err != nil {
+		log.Printf("[WARN] Error setting 'private_subnets' for (%s): %s", d.Id(), err)
+	}
+
+	var publicSubnets []map[string]interface{}
+	for _, subnet := range vC.PublicSubnets {
+		subnetInfo := make(map[string]interface{})
+		if vC.CloudType == goaviatrix.GCP {
+			subnetInfo["region"] = subnet.Region
+		}
+		subnetInfo["cidr"] = subnet.Cidr
+		subnetInfo["name"] = subnet.Name
+		if vC.CloudType != goaviatrix.GCP {
+			subnetInfo["subnet_id"] = subnet.SubnetID
+		}
+
+		publicSubnets = append(publicSubnets, subnetInfo)
+	}
+	if err := d.Set("public_subnets", publicSubnets); err != nil {
+		log.Printf("[WARN] Error setting 'public_subnets' for (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(vpcName)
