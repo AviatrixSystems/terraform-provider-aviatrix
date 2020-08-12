@@ -73,7 +73,7 @@ func resourceAviatrixBranchRouterInterfaceConfigRead(d *schema.ResourceData, met
 		name = id
 	}
 
-	br, err := client.GetBranchRouter(&goaviatrix.BranchRouter{Name: name})
+	br, err := client.GetDevice(&goaviatrix.Device{Name: name})
 	if err == goaviatrix.ErrNotFound {
 		d.SetId("")
 		return nil
