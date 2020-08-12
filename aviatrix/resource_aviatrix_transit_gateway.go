@@ -295,6 +295,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable Equal Cost Multi Path (ECMP) routing for the next hop.",
 			},
+			"enable_segmentation": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable segmentation to allow association of transit gateway to security domains.",
+			},
 		},
 	}
 }
@@ -727,6 +733,12 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if d.Get("enable_segmentation").(bool) {
+		if err := client.EnableSegmentation(gateway); err != nil {
+			return fmt.Errorf("could not enable segmentation: %v", err)
+		}
+	}
+
 	enableEgressTransitFireNet := d.Get("enable_egress_transit_firenet").(bool)
 	if enableEgressTransitFireNet && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AZURE && gateway.CloudType != goaviatrix.AWSGOV {
 		return fmt.Errorf("'enable_egress_transit_firenet' is only supported in AWS, AZURE and AWSGOV cloud providers")
@@ -1000,6 +1012,12 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 	}
 	d.Set("bgp_ecmp", advancedConfig.BgpEcmpEnabled)
+
+	isSegmentationEnabled, err := client.IsSegmentationEnabled(transitGateway)
+	if err != nil {
+		return fmt.Errorf("could not read if segmentation is enabled: %v", err)
+	}
+	d.Set("enable_segmentation", isSegmentationEnabled)
 
 	haGateway := &goaviatrix.Gateway{
 		AccountName: d.Get("account_name").(string),
@@ -1751,6 +1769,22 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		err := client.SetBgpEcmp(gateway, enabled)
 		if err != nil {
 			return fmt.Errorf("could not set bgp_ecmp: %v", err)
+		}
+	}
+
+	if d.HasChange("enable_segmentation") {
+		enabled := d.Get("enable_segmentation").(bool)
+		gateway := &goaviatrix.TransitVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		if enabled {
+			if err := client.EnableSegmentation(gateway); err != nil {
+				return fmt.Errorf("could not enable segmentation: %v", err)
+			}
+		} else {
+			if err := client.DisableSegmentation(gateway); err != nil {
+				return fmt.Errorf("could not disable segmentation: %v", err)
+			}
 		}
 	}
 

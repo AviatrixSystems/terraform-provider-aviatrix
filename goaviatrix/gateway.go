@@ -1049,6 +1049,64 @@ func (c *Client) IsTransitFireNetReadyToBeDisabled(gateway *Gateway) error {
 	return nil
 }
 
+func (c *Client) EnableSegmentation(transitGateway *TransitVpc) error {
+	action := "enable_transit_gateway_for_multi_cloud_security_domain"
+	form := map[string]interface{}{
+		"CID":                  c.CID,
+		"action":               action,
+		"transit_gateway_name": transitGateway.GwName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) DisableSegmentation(transitGateway *TransitVpc) error {
+	action := "disable_transit_gateway_for_multi_cloud_security_domain"
+	form := map[string]interface{}{
+		"CID":                  c.CID,
+		"action":               action,
+		"transit_gateway_name": transitGateway.GwName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) IsSegmentationEnabled(transitGateway *TransitVpc) (bool, error) {
+	action := "list_transit_gateways_for_multi_cloud_domains"
+	resp, err := c.Post(c.baseURL, &APIRequest{
+		CID:    c.CID,
+		Action: action,
+	})
+	if err != nil {
+		return false, fmt.Errorf("HTTP POST %q failed: %v", action, err)
+	}
+
+	type Result struct {
+		EnabledDomains  []string `json:"domain_enabled_list"`
+		DisabledDomains []string `json:"domain_disabled_list"`
+	}
+
+	type Resp struct {
+		Return  bool   `json:"return"`
+		Results Result `json:"results"`
+		Reason  string `json:"reason"`
+	}
+
+	var data Resp
+	var b bytes.Buffer
+	_, err = b.ReadFrom(resp.Body)
+	if err != nil {
+		return false, fmt.Errorf("reading response body %q failed: %v", action, err)
+	}
+
+	if err = json.NewDecoder(&b).Decode(&data); err != nil {
+		return false, fmt.Errorf("json decode %q failed: %v\nBody: %s", action, err, b.String())
+	}
+	if !data.Return {
+		return false, fmt.Errorf("rest API %q Post failed: %s", action, data.Reason)
+	}
+
+	return Contains(data.Results.EnabledDomains, transitGateway.GwName), nil
+}
+
 func (c *Client) EnableEgressTransitFirenet(transitGateway *TransitVpc) error {
 	action := "enable_transit_firenet_on_egress_transit_gateway"
 	data := map[string]interface{}{
@@ -1068,3 +1126,4 @@ func (c *Client) DisableEgressTransitFirenet(transitGateway *TransitVpc) error {
 	}
 	return c.PostAPI(action, data, BasicCheck)
 }
+
