@@ -150,6 +150,11 @@ func resourceAviatrixVpc() *schema.Resource {
 				Computed:    true,
 				Description: "ID of the VPC created.",
 			},
+			"resource_group": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Resource group of the Azure VPC created.",
+			},
 		},
 	}
 }
@@ -280,6 +285,9 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("vpc_id", strings.Split(vC.VpcID, "~-~")[0])
 	} else {
 		d.Set("vpc_id", vC.VpcID)
+		if vC.CloudType == goaviatrix.AZURE {
+			d.Set("resource_group", strings.Split(vC.VpcID, ":")[1])
+		}
 	}
 
 	subnetsMap := make(map[string]map[string]interface{})
