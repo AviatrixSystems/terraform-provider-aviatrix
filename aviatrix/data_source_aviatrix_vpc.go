@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
@@ -54,6 +55,11 @@ func dataSourceAviatrixVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "ID of the VPC created.",
+			},
+			"resource_group": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Resource group of the Azure VPC created.",
 			},
 			"subnets": {
 				Type:        schema.TypeList,
@@ -176,6 +182,9 @@ func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("vpc_id", vC.VpcID)
+	if vC.CloudType == goaviatrix.AZURE {
+		d.Set("resource_group", strings.Split(vC.VpcID, ":")[1])
+	}
 
 	var subnetList []map[string]string
 	for _, subnet := range vC.Subnets {
