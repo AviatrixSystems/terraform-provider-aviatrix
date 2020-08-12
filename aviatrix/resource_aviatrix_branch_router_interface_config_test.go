@@ -22,7 +22,7 @@ func TestAccAviatrixBranchRouterInterfaceConfig_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			branchRouterRegistrationPreCheck(t)
+			deviceRegistrationPreCheck(t)
 			branchRouterInterfaceConfigPreCheck(t)
 		},
 		Providers: testAccProviders,
@@ -64,7 +64,7 @@ resource "aviatrix_branch_router_interface_config" "test_branch_router_interface
 	wan_primary_interface           = "%[4]s"
 	wan_primary_interface_public_ip = "%[2]s"
 }
-`, rName, os.Getenv("BRANCH_ROUTER_PUBLIC_IP"), os.Getenv("BRANCH_ROUTER_KEY_FILE_PATH"), os.Getenv("BRANCH_ROUTER_PRIMARY_INTERFACE"))
+`, rName, os.Getenv("DEVICE_PUBLIC_IP"), os.Getenv("DEVICE_KEY_FILE_PATH"), os.Getenv("BRANCH_ROUTER_PRIMARY_INTERFACE"))
 }
 
 func testAccCheckBranchRouterInterfaceConfigExists(n string) resource.TestCheckFunc {
@@ -79,9 +79,9 @@ func testAccCheckBranchRouterInterfaceConfigExists(n string) resource.TestCheckF
 
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
-		br := &goaviatrix.BranchRouter{Name: rs.Primary.Attributes["branch_router_name"]}
+		br := &goaviatrix.Device{Name: rs.Primary.Attributes["branch_router_name"]}
 
-		br, err := client.GetBranchRouter(br)
+		br, err := client.GetDevice(br)
 		if err != nil {
 			return err
 		}
