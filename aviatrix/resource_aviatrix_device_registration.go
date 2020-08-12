@@ -10,12 +10,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceAviatrixBranchRouterRegistration() *schema.Resource {
+func resourceAviatrixDeviceRegistration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAviatrixBranchRouterRegistrationCreate,
-		Read:   resourceAviatrixBranchRouterRegistrationRead,
-		Update: resourceAviatrixBranchRouterRegistrationUpdate,
-		Delete: resourceAviatrixBranchRouterRegistrationDelete,
+		Create: resourceAviatrixDeviceRegistrationCreate,
+		Read:   resourceAviatrixDeviceRegistrationRead,
+		Update: resourceAviatrixDeviceRegistrationUpdate,
+		Delete: resourceAviatrixDeviceRegistrationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -25,19 +25,19 @@ func resourceAviatrixBranchRouterRegistration() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Name of the router.",
+				Description: "Name of the device.",
 			},
 			"public_ip": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.IsIPAddress,
-				Description:  "Public IP address of the router.",
+				Description:  "Public IP address of the device.",
 			},
 			"username": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Username to use to connect to the router.",
+				Description: "Username to use to connect to the device.",
 			},
 			"key_file": {
 				Type:         schema.TypeString,
@@ -49,9 +49,9 @@ func resourceAviatrixBranchRouterRegistration() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				DefaultFunc: envDefaultFunc("AVIATRIX_BRANCH_ROUTER_PASSWORD"),
-				Description: "Password to connect to the router. " +
-					"This attribute can also be set via environment variable 'AVIATRIX_BRANCH_ROUTER_PASSWORD'. " +
+				DefaultFunc: envDefaultFunc("AVIATRIX_DEVICE_PASSWORD"),
+				Description: "Password to connect to the device. " +
+					"This attribute can also be set via environment variable 'AVIATRIX_DEVICE_PASSWORD'. " +
 					"If both are set the value in the config file will be used.",
 			},
 			"host_os": {
@@ -60,13 +60,13 @@ func resourceAviatrixBranchRouterRegistration() *schema.Resource {
 				Default:      "ios",
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{"ios"}, false),
-				Description:  "Router host OS. Default value is 'ios'. Only valid value is 'ios'.",
+				Description:  "Device host OS. Default value is 'ios'. Only valid value is 'ios'.",
 			},
 			"ssh_port": {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Default:     22,
-				Description: "SSH port to use to connect to the router. Defaults to 22 if not set.",
+				Description: "SSH port to use to connect to the device. Defaults to 22 if not set.",
 			},
 			"address_1": {
 				Type:        schema.TypeString,
@@ -107,9 +107,9 @@ func resourceAviatrixBranchRouterRegistration() *schema.Resource {
 	}
 }
 
-// marshalBranchRouterRegistrationInput marshals the ResourceData into a BranchRouter struct.
-func marshalBranchRouterRegistrationInput(d *schema.ResourceData) *goaviatrix.BranchRouter {
-	return &goaviatrix.BranchRouter{
+// marshalDeviceRegistrationInput marshals the ResourceData into a Device struct.
+func marshalDeviceRegistrationInput(d *schema.ResourceData) *goaviatrix.Device {
+	return &goaviatrix.Device{
 		Name:        d.Get("name").(string),
 		PublicIP:    d.Get("public_ip").(string),
 		Username:    d.Get("username").(string),
@@ -128,80 +128,80 @@ func marshalBranchRouterRegistrationInput(d *schema.ResourceData) *goaviatrix.Br
 	}
 }
 
-func resourceAviatrixBranchRouterRegistrationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixDeviceRegistrationCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	br := marshalBranchRouterRegistrationInput(d)
+	device := marshalDeviceRegistrationInput(d)
 
-	if err := client.CreateBranchRouter(br); err != nil {
-		return err
+	if err := client.RegisterDevice(device); err != nil {
+		return fmt.Errorf("could not register device: %v", err)
 	}
 
-	d.SetId(br.Name)
+	d.SetId(device.Name)
 	return nil
 }
 
-func resourceAviatrixBranchRouterRegistrationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixDeviceRegistrationRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	name := d.Get("name").(string)
 	if name == "" {
 		id := d.Id()
-		log.Printf("[DEBUG] Looks like an import, no branch router name received. Import Id is %s", id)
+		log.Printf("[DEBUG] Looks like an import, no device name received. Import Id is %s", id)
 		d.SetId(id)
 		name = id
 	}
 
-	br := &goaviatrix.BranchRouter{
+	device := &goaviatrix.Device{
 		Name: name,
 	}
 
-	br, err := client.GetBranchRouter(br)
+	device, err := client.GetDevice(device)
 	if err == goaviatrix.ErrNotFound {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("could not find branch router %s: %v", name, err)
+		return fmt.Errorf("could not find device %s: %v", name, err)
 	}
 
-	d.Set("name", br.Name)
-	d.Set("public_ip", br.PublicIP)
-	d.Set("username", br.Username)
-	d.Set("host_os", br.HostOS)
-	d.Set("ssh_port", br.SshPort)
-	d.Set("address_1", br.Address1)
-	d.Set("address_2", br.Address2)
-	d.Set("city", br.City)
-	d.Set("state", br.State)
-	d.Set("country", br.Country)
-	d.Set("zip_code", br.ZipCode)
-	d.Set("description", br.Description)
+	d.Set("name", device.Name)
+	d.Set("public_ip", device.PublicIP)
+	d.Set("username", device.Username)
+	d.Set("host_os", device.HostOS)
+	d.Set("ssh_port", device.SshPort)
+	d.Set("address_1", device.Address1)
+	d.Set("address_2", device.Address2)
+	d.Set("city", device.City)
+	d.Set("state", device.State)
+	d.Set("country", device.Country)
+	d.Set("zip_code", device.ZipCode)
+	d.Set("description", device.Description)
 
-	d.SetId(br.Name)
+	d.SetId(device.Name)
 	return nil
 }
 
-func resourceAviatrixBranchRouterRegistrationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixDeviceRegistrationUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	br := marshalBranchRouterRegistrationInput(d)
+	device := marshalDeviceRegistrationInput(d)
 
-	if err := client.UpdateBranchRouter(br); err != nil {
-		return err
+	if err := client.UpdateDevice(device); err != nil {
+		return fmt.Errorf("could not update device registration information: %v", err)
 	}
 
-	d.SetId(br.Name)
+	d.SetId(device.Name)
 	return nil
 }
 
-func resourceAviatrixBranchRouterRegistrationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixDeviceRegistrationDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	br := marshalBranchRouterRegistrationInput(d)
+	br := marshalDeviceRegistrationInput(d)
 
-	if err := client.DeleteBranchRouter(br); err != nil {
-		return err
+	if err := client.DeregisterDevice(br); err != nil {
+		return fmt.Errorf("could not deregister device: %v", err)
 	}
 
 	d.SetId(br.Name)
