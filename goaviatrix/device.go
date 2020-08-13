@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Device represents a branch router used in CloudWAN
+// Device represents a device used in CloudWAN
 type Device struct {
 	Action             string               `form:"action,omitempty" map:"action" json:"-"`
 	CID                string               `form:"CID,omitempty" map:"CID" json:"-"`
@@ -32,7 +32,7 @@ type Device struct {
 	Description        string               `form:"description,omitempty" map:"description" json:"description"`
 	Address            GetDeviceRespAddress `form:"-" map:"-" json:"address"`
 	CheckReason        string               `form:"-" map:"-" json:"check_reason"`
-	BranchState        string               `form:"-" map:"-" json:"registered"`
+	DeviceState        string               `form:"-" map:"-" json:"registered"`
 	PrimaryInterface   string               `form:"-" map:"-" json:"wan_if_primary"`
 	PrimaryInterfaceIP string               `form:"-" map:"-" json:"wan_if_primary_public_ip"`
 	ConnectionName     string               `form:"-" map:"-" json:"conn_name"`
@@ -271,13 +271,13 @@ func (c *Client) DeregisterDevice(d *Device) error {
 }
 
 func (c *Client) ConfigureDeviceInterfaces(config *DeviceInterfaceConfig) error {
-	availableInterfaces, err := c.GetBranchRouterInterfaces(&Device{Name: config.DeviceName})
+	availableInterfaces, err := c.GetDeviceInterfaces(&Device{Name: config.DeviceName})
 	if err != nil {
 		return err
 	}
 
 	if !Contains(availableInterfaces, config.PrimaryInterface) {
-		return fmt.Errorf("branch router does not have the given primary interface '%s'. "+
+		return fmt.Errorf("device does not have the given primary interface '%s'. "+
 			"Possible interfaces are [%s]", config.PrimaryInterface, strings.Join(availableInterfaces, ", "))
 	}
 
@@ -320,7 +320,7 @@ func (c *Client) ConfigureDeviceInterfaces(config *DeviceInterfaceConfig) error 
 	return nil
 }
 
-func (c *Client) GetBranchRouterInterfaces(device *Device) ([]string, error) {
+func (c *Client) GetDeviceInterfaces(device *Device) ([]string, error) {
 	resp, err := c.Post(c.baseURL, struct {
 		CID    string `form:"CID"`
 		Action string `form:"action"`
