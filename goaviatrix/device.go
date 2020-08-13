@@ -13,38 +13,38 @@ import (
 
 // Device represents a branch router used in CloudWAN
 type Device struct {
-	Action             string                     `form:"action,omitempty" map:"action" json:"-"`
-	CID                string                     `form:"CID,omitempty" map:"CID" json:"-"`
-	Name               string                     `form:"device_name,omitempty" map:"device_name" json:"rgw_name"`
-	PublicIP           string                     `form:"public_ip,omitempty" map:"public_ip" json:"hostname"`
-	Username           string                     `form:"username,omitempty" map:"username" json:"username"`
-	KeyFile            string                     `form:"-" map:"-" json:"-"`
-	Password           string                     `form:"password,omitempty" map:"password" json:"-"`
-	HostOS             string                     `form:"host_os,omitempty" map:"host_os" json:"host_os"`
-	SshPort            int                        `form:"-" map:"-" json:"ssh_port"`
-	SshPortStr         string                     `form:"port,omitempty" map:"port" json:"-"`
-	Address1           string                     `form:"addr_1,omitempty" map:"addr_1" json:"-"`
-	Address2           string                     `form:"addr_2,omitempty" map:"addr_2" json:"-"`
-	City               string                     `form:"city,omitempty" map:"city" json:"-"`
-	State              string                     `form:"state,omitempty" map:"state" json:"-"`
-	Country            string                     `form:"country,omitempty" map:"country" json:"-"`
-	ZipCode            string                     `form:"zipcode,omitempty" map:"zipcode" json:"-"`
-	Description        string                     `form:"description,omitempty" map:"description" json:"description"`
-	Address            GetBranchRouterRespAddress `form:"-" map:"-" json:"address"`
-	CheckReason        string                     `form:"-" map:"-" json:"check_reason"`
-	BranchState        string                     `form:"-" map:"-" json:"registered"`
-	PrimaryInterface   string                     `form:"-" map:"-" json:"wan_if_primary"`
-	PrimaryInterfaceIP string                     `form:"-" map:"-" json:"wan_if_primary_public_ip"`
-	ConnectionName     string                     `form:"-" map:"-" json:"conn_name"`
+	Action             string               `form:"action,omitempty" map:"action" json:"-"`
+	CID                string               `form:"CID,omitempty" map:"CID" json:"-"`
+	Name               string               `form:"device_name,omitempty" map:"device_name" json:"rgw_name"`
+	PublicIP           string               `form:"public_ip,omitempty" map:"public_ip" json:"hostname"`
+	Username           string               `form:"username,omitempty" map:"username" json:"username"`
+	KeyFile            string               `form:"-" map:"-" json:"-"`
+	Password           string               `form:"password,omitempty" map:"password" json:"-"`
+	HostOS             string               `form:"host_os,omitempty" map:"host_os" json:"host_os"`
+	SshPort            int                  `form:"-" map:"-" json:"ssh_port"`
+	SshPortStr         string               `form:"port,omitempty" map:"port" json:"-"`
+	Address1           string               `form:"addr_1,omitempty" map:"addr_1" json:"-"`
+	Address2           string               `form:"addr_2,omitempty" map:"addr_2" json:"-"`
+	City               string               `form:"city,omitempty" map:"city" json:"-"`
+	State              string               `form:"state,omitempty" map:"state" json:"-"`
+	Country            string               `form:"country,omitempty" map:"country" json:"-"`
+	ZipCode            string               `form:"zipcode,omitempty" map:"zipcode" json:"-"`
+	Description        string               `form:"description,omitempty" map:"description" json:"description"`
+	Address            GetDeviceRespAddress `form:"-" map:"-" json:"address"`
+	CheckReason        string               `form:"-" map:"-" json:"check_reason"`
+	BranchState        string               `form:"-" map:"-" json:"registered"`
+	PrimaryInterface   string               `form:"-" map:"-" json:"wan_if_primary"`
+	PrimaryInterfaceIP string               `form:"-" map:"-" json:"wan_if_primary_public_ip"`
+	ConnectionName     string               `form:"-" map:"-" json:"conn_name"`
 }
 
-type BranchRouterInterfaceConfig struct {
-	BranchName         string
+type DeviceInterfaceConfig struct {
+	DeviceName         string
 	PrimaryInterface   string
 	PrimaryInterfaceIP string
 }
 
-type GetBranchRouterRespAddress struct {
+type GetDeviceRespAddress struct {
 	Address1 string `json:"addr_1"`
 	Address2 string `json:"addr_2"`
 	City     string `json:"city"`
@@ -270,8 +270,8 @@ func (c *Client) DeregisterDevice(d *Device) error {
 	return nil
 }
 
-func (c *Client) ConfigureBranchRouterInterfaces(config *BranchRouterInterfaceConfig) error {
-	availableInterfaces, err := c.GetBranchRouterInterfaces(&Device{Name: config.BranchName})
+func (c *Client) ConfigureDeviceInterfaces(config *DeviceInterfaceConfig) error {
+	availableInterfaces, err := c.GetBranchRouterInterfaces(&Device{Name: config.DeviceName})
 	if err != nil {
 		return err
 	}
@@ -284,18 +284,18 @@ func (c *Client) ConfigureBranchRouterInterfaces(config *BranchRouterInterfaceCo
 	resp, err := c.Post(c.baseURL, struct {
 		CID                string `form:"CID"`
 		Action             string `form:"action"`
-		Name               string `form:"branch_name"`
+		Name               string `form:"device_name"`
 		PrimaryInterface   string `form:"wan_primary_if"`
 		PrimaryInterfaceIP string `form:"wan_primary_ip"`
 	}{
 		CID:                c.CID,
-		Action:             "config_cloudwan_branch_wan_interfaces",
-		Name:               config.BranchName,
+		Action:             "config_cloudwan_device_wan_interfaces",
+		Name:               config.DeviceName,
 		PrimaryInterface:   config.PrimaryInterface,
 		PrimaryInterfaceIP: config.PrimaryInterfaceIP,
 	})
 	if err != nil {
-		return errors.New("HTTP POST config_cloudwan_branch_wan_interfaces failed: " + err.Error())
+		return errors.New("HTTP POST config_cloudwan_device_wan_interfaces failed: " + err.Error())
 	}
 
 	type Resp struct {
@@ -307,56 +307,61 @@ func (c *Client) ConfigureBranchRouterInterfaces(config *BranchRouterInterfaceCo
 	var b bytes.Buffer
 	_, err = b.ReadFrom(resp.Body)
 	if err != nil {
-		return errors.New("Reading response body config_cloudwan_branch_wan_interfaces failed: " + err.Error())
+		return errors.New("Reading response body config_cloudwan_device_wan_interfaces failed: " + err.Error())
 	}
 
 	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return errors.New("Json Decode config_cloudwan_branch_wan_interfaces failed: " + err.Error() +
+		return errors.New("Json Decode config_cloudwan_device_wan_interfaces failed: " + err.Error() +
 			"\n Body: " + b.String())
 	}
 	if !data.Return {
-		return errors.New("Rest API config_cloudwan_branch_wan_interfaces Post failed: " + data.Reason)
+		return errors.New("Rest API config_cloudwan_device_wan_interfaces Post failed: " + data.Reason)
 	}
 	return nil
 }
 
-func (c *Client) GetBranchRouterInterfaces(br *Device) ([]string, error) {
+func (c *Client) GetBranchRouterInterfaces(device *Device) ([]string, error) {
 	resp, err := c.Post(c.baseURL, struct {
 		CID    string `form:"CID"`
 		Action string `form:"action"`
-		Name   string `form:"branch_name"`
+		Name   string `form:"device_name"`
 	}{
 		CID:    c.CID,
-		Action: "get_cloudwan_branch_wan_interfaces",
-		Name:   br.Name,
+		Action: "get_cloudwan_device_wan_interfaces",
+		Name:   device.Name,
 	})
 	if err != nil {
-		return nil, errors.New("HTTP POST get_cloudwan_branch_wan_interfaces failed: " + err.Error())
+		return nil, errors.New("HTTP POST get_cloudwan_device_wan_interfaces failed: " + err.Error())
+	}
+
+	type Result struct {
+		Interface string `json:"interface"`
+		IP        string `json:"ip"`
 	}
 
 	type Resp struct {
-		Return  bool                   `json:"return"`
-		Results map[string]interface{} `json:"results"`
-		Reason  string                 `json:"reason"`
+		Return  bool     `json:"return"`
+		Results []Result `json:"results"`
+		Reason  string   `json:"reason"`
 	}
 	var data Resp
 	var b bytes.Buffer
 	_, err = b.ReadFrom(resp.Body)
 	if err != nil {
-		return nil, errors.New("Reading response body get_cloudwan_branch_wan_interfaces failed: " + err.Error())
+		return nil, errors.New("Reading response body get_cloudwan_device_wan_interfaces failed: " + err.Error())
 	}
 
 	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode get_cloudwan_branch_wan_interfaces failed: " + err.Error() +
+		return nil, errors.New("Json Decode get_cloudwan_device_wan_interfaces failed: " + err.Error() +
 			"\n Body: " + b.String())
 	}
 	if !data.Return {
-		return nil, errors.New("Rest API get_cloudwan_branch_wan_interfaces Post failed: " + data.Reason)
+		return nil, errors.New("Rest API get_cloudwan_device_wan_interfaces Post failed: " + data.Reason)
 	}
 	var interfaces []string
 
-	for k := range data.Results {
-		interfaces = append(interfaces, k)
+	for _, v := range data.Results {
+		interfaces = append(interfaces, v.Interface)
 	}
 
 	return interfaces, nil
