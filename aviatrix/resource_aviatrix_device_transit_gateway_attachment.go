@@ -9,21 +9,21 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
-func resourceAviatrixBranchRouterTransitGatewayAttachment() *schema.Resource {
+func resourceAviatrixDeviceTransitGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAviatrixBranchRouterTransitGatewayAttachmentCreate,
-		Read:   resourceAviatrixBranchRouterTransitGatewayAttachmentRead,
-		Delete: resourceAviatrixBranchRouterTransitGatewayAttachmentDelete,
+		Create: resourceAviatrixDeviceTransitGatewayAttachmentCreate,
+		Read:   resourceAviatrixDeviceTransitGatewayAttachmentRead,
+		Delete: resourceAviatrixDeviceTransitGatewayAttachmentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"branch_name": {
+			"device_name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Branch router name.",
+				Description: "Device name.",
 			},
 			"transit_gateway_name": {
 				Type:        schema.TypeString,
@@ -43,11 +43,11 @@ func resourceAviatrixBranchRouterTransitGatewayAttachment() *schema.Resource {
 				ForceNew:    true,
 				Description: "BGP AS Number for transit gateway.",
 			},
-			"branch_router_bgp_asn": {
+			"device_bgp_asn": {
 				Type:        schema.TypeInt,
 				Required:    true,
 				ForceNew:    true,
-				Description: "BGP AS Number for branch router.",
+				Description: "BGP AS Number for the device.",
 			},
 			"phase1_authentication": {
 				Type:        schema.TypeString,
@@ -121,14 +121,14 @@ func resourceAviatrixBranchRouterTransitGatewayAttachment() *schema.Resource {
 	}
 }
 
-func marshalBranchRouterTransitGatewayAttachmentInput(d *schema.ResourceData) *goaviatrix.BranchRouterTransitGatewayAttachment {
-	brata := &goaviatrix.BranchRouterTransitGatewayAttachment{
-		BranchName:              d.Get("branch_name").(string),
+func marshalDeviceTransitGatewayAttachmentInput(d *schema.ResourceData) *goaviatrix.DeviceTransitGatewayAttachment {
+	return &goaviatrix.DeviceTransitGatewayAttachment{
+		DeviceName:              d.Get("device_name").(string),
 		TransitGatewayName:      d.Get("transit_gateway_name").(string),
 		ConnectionName:          d.Get("connection_name").(string),
 		RoutingProtocol:         "bgp",
 		TransitGatewayBgpAsn:    strconv.Itoa(d.Get("transit_gateway_bgp_asn").(int)),
-		BranchRouterBgpAsn:      strconv.Itoa(d.Get("branch_router_bgp_asn").(int)),
+		DeviceBgpAsn:            strconv.Itoa(d.Get("device_bgp_asn").(int)),
 		Phase1Authentication:    d.Get("phase1_authentication").(string),
 		Phase1DHGroups:          strconv.Itoa(d.Get("phase1_dh_groups").(int)),
 		Phase1Encryption:        d.Get("phase1_encryption").(string),
@@ -140,24 +140,22 @@ func marshalBranchRouterTransitGatewayAttachmentInput(d *schema.ResourceData) *g
 		LocalTunnelIP:           d.Get("local_tunnel_ip").(string),
 		RemoteTunnelIP:          d.Get("remote_tunnel_ip").(string),
 	}
-
-	return brata
 }
 
-func resourceAviatrixBranchRouterTransitGatewayAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixDeviceTransitGatewayAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	brata := marshalBranchRouterTransitGatewayAttachmentInput(d)
+	attachment := marshalDeviceTransitGatewayAttachmentInput(d)
 
-	if err := client.CreateBranchRouterTransitGatewayAttachment(brata); err != nil {
-		return err
+	if err := client.CreateDeviceTransitGatewayAttachment(attachment); err != nil {
+		return fmt.Errorf("could not create transit gateway and device attachment: %v", err)
 	}
 
-	d.SetId(brata.ConnectionName)
+	d.SetId(attachment.ConnectionName)
 	return nil
 }
 
-func resourceAviatrixBranchRouterTransitGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixDeviceTransitGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	connectionName := d.Get("connection_name").(string)
@@ -167,81 +165,81 @@ func resourceAviatrixBranchRouterTransitGatewayAttachmentRead(d *schema.Resource
 		id := d.Id()
 		d.SetId(id)
 		connectionName = id
-		log.Printf("[DEBUG] Looks like an import, no branch_router_transit_gateway_attachment connection_name received. Import Id is %s", id)
+		log.Printf("[DEBUG] Looks like an import, no device_transit_gateway_attachment connection_name received. Import Id is %s", id)
 	}
 
-	brata := &goaviatrix.BranchRouterTransitGatewayAttachment{
+	attachment := &goaviatrix.DeviceTransitGatewayAttachment{
 		ConnectionName: connectionName,
 	}
 
-	brata, err := client.GetBranchRouterTransitGatewayAttachment(brata)
+	attachment, err := client.GetDeviceTransitGatewayAttachment(attachment)
 	if err == goaviatrix.ErrNotFound {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("could not find branch_router_transit_gateway_attachment %s: %v", connectionName, err)
+		return fmt.Errorf("could not find device_transit_gateway_attachment %s: %v", connectionName, err)
 	}
 
-	d.Set("branch_name", brata.BranchName)
-	d.Set("transit_gateway_name", brata.TransitGatewayName)
-	d.Set("connection_name", brata.ConnectionName)
+	d.Set("device_name", attachment.DeviceName)
+	d.Set("transit_gateway_name", attachment.TransitGatewayName)
+	d.Set("connection_name", attachment.ConnectionName)
 
-	transitGatewayBgpAsn, err := strconv.Atoi(brata.TransitGatewayBgpAsn)
+	transitGatewayBgpAsn, err := strconv.Atoi(attachment.TransitGatewayBgpAsn)
 	if err != nil {
 		return fmt.Errorf("could not convert transitGatewayBgpAsn to int: %v", err)
 	}
 	d.Set("transit_gateway_bgp_asn", transitGatewayBgpAsn)
 
-	branchRouterBgpAsn, err := strconv.Atoi(brata.BranchRouterBgpAsn)
+	deviceBgpAsn, err := strconv.Atoi(attachment.DeviceBgpAsn)
 	if err != nil {
-		return fmt.Errorf("could not convert branchRouterBgpAsn to int: %v", err)
+		return fmt.Errorf("could not convert deviceBgpAsn to int: %v", err)
 	}
-	d.Set("branch_router_bgp_asn", branchRouterBgpAsn)
+	d.Set("device_bgp_asn", deviceBgpAsn)
 
-	d.Set("phase1_authentication", brata.Phase1Authentication)
+	d.Set("phase1_authentication", attachment.Phase1Authentication)
 
-	phase1DhGroups, err := strconv.Atoi(brata.Phase1DHGroups)
+	phase1DhGroups, err := strconv.Atoi(attachment.Phase1DHGroups)
 	if err != nil {
 		return fmt.Errorf("could not convert phase1DhGroups to int: %v", err)
 	}
 	d.Set("phase1_dh_groups", phase1DhGroups)
 
-	d.Set("phase1_encryption", brata.Phase1Encryption)
-	d.Set("phase2_authentication", brata.Phase2Authentication)
+	d.Set("phase1_encryption", attachment.Phase1Encryption)
+	d.Set("phase2_authentication", attachment.Phase2Authentication)
 
-	phase2DhGroups, err := strconv.Atoi(brata.Phase2DHGroups)
+	phase2DhGroups, err := strconv.Atoi(attachment.Phase2DHGroups)
 	if err != nil {
 		return fmt.Errorf("could not convert phase2DhGroups to int: %v", err)
 	}
 	d.Set("phase2_dh_groups", phase2DhGroups)
 
-	d.Set("phase2_encryption", brata.Phase2Encryption)
+	d.Set("phase2_encryption", attachment.Phase2Encryption)
 
-	enableGlobalAccelerator, err := strconv.ParseBool(brata.EnableGlobalAccelerator)
+	enableGlobalAccelerator, err := strconv.ParseBool(attachment.EnableGlobalAccelerator)
 	if err != nil {
 		return fmt.Errorf("could not convert enableGlobalAccelerator to bool: %v", err)
 	}
 	d.Set("enable_global_accelerator", enableGlobalAccelerator)
 
 	if isImport || d.Get("local_tunnel_ip") != "" {
-		d.Set("local_tunnel_ip", brata.LocalTunnelIP)
+		d.Set("local_tunnel_ip", attachment.LocalTunnelIP)
 	}
 	if isImport || d.Get("remote_tunnel_ip") != "" {
-		d.Set("remote_tunnel_ip", brata.RemoteTunnelIP)
+		d.Set("remote_tunnel_ip", attachment.RemoteTunnelIP)
 	}
 
-	d.SetId(brata.ConnectionName)
+	d.SetId(attachment.ConnectionName)
 	return nil
 }
 
-func resourceAviatrixBranchRouterTransitGatewayAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixDeviceTransitGatewayAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	cn := d.Get("connection_name").(string)
 
-	if err := client.DeleteBranchRouterAttachment(cn); err != nil {
-		return err
+	if err := client.DeleteDeviceAttachment(cn); err != nil {
+		return fmt.Errorf("could not delete transit gateway and device attachment: %v", err)
 	}
 
 	return nil

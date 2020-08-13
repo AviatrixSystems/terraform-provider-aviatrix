@@ -157,7 +157,7 @@ func (c *Client) GetDevice(d *Device) (*Device, error) {
 	return foundDevice, nil
 }
 
-func (c *Client) GetBranchRouterName(connName string) (string, error) {
+func (c *Client) GetDeviceName(connName string) (string, error) {
 	resp, err := c.Post(c.baseURL, struct {
 		CID    string `form:"CID"`
 		Action string `form:"action"`
@@ -189,9 +189,9 @@ func (c *Client) GetBranchRouterName(connName string) (string, error) {
 		return "", errors.New("Rest API list_cloudwan_devices_summary Post failed: " + data.Reason)
 	}
 
-	for _, branch := range data.Results {
-		if branch.ConnectionName == connName {
-			return branch.Name, nil
+	for _, device := range data.Results {
+		if device.ConnectionName == connName {
+			return device.Name, nil
 		}
 	}
 
