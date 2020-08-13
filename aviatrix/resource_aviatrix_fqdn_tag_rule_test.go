@@ -13,7 +13,7 @@ import (
 
 func TestAccAviatrixFQDNTagRule_basic(t *testing.T) {
 	if os.Getenv("SKIP_FQDN_TAG_RULE") == "yes" {
-		t.Skip("Skipping Branch Router test as SKIP_FQDN_TAG_RULE is set")
+		t.Skip("Skipping fqdn tag rule test as SKIP_FQDN_TAG_RULE is set")
 	}
 
 	rName := acctest.RandString(5)

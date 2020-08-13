@@ -13,7 +13,7 @@ import (
 
 func TestAccAviatrixSegmentationSecurityDomainAssociation_basic(t *testing.T) {
 	if os.Getenv("SKIP_SEGMENTATION_SECURITY_DOMAIN_ASSOCIATION") == "yes" {
-		t.Skip("Skipping Branch Router test as SKIP_SEGMENTATION_SECURITY_DOMAIN_ASSOCIATION is set")
+		t.Skip("Skipping segmentation security domain association test as SKIP_SEGMENTATION_SECURITY_DOMAIN_ASSOCIATION is set")
 	}
 
 	rName := acctest.RandString(5)
