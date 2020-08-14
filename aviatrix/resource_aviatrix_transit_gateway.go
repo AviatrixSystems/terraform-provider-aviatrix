@@ -1057,9 +1057,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	if d.HasChange("account_name") {
 		return fmt.Errorf("updating account_name is not allowed")
 	}
-	if d.HasChange("gw_name") {
-		return fmt.Errorf("updating gw_name is not allowed")
-	}
 	if d.HasChange("vpc_id") {
 		return fmt.Errorf("updating vpc_id is not allowed")
 	}
@@ -1727,6 +1724,18 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			if err := client.DisableSegmentation(gateway); err != nil {
 				return fmt.Errorf("could not disable segmentation: %v", err)
 			}
+		}
+	}
+
+	if d.HasChange("gw_name") {
+		gwOriginalName, gwName := d.GetChange("gw_name")
+		gateway := &goaviatrix.Gateway{
+			GwOriginalName: gwOriginalName.(string),
+			GwName:         gwName.(string),
+		}
+		err := client.UpdateGatewayAlias(gateway)
+		if err != nil {
+			return err
 		}
 	}
 
