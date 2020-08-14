@@ -1737,6 +1737,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if err != nil {
 			return err
 		}
+		d.SetId(gateway.GwName)
 	}
 
 	d.Partial(false)
