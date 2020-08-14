@@ -110,6 +110,45 @@ func (c *Client) GetSamlEndpoint(samlEndpoint *SamlEndpoint) (*SamlEndpoint, err
 	return samlEndpoint, nil
 }
 
+func (c *Client) EditSamlEndpoint(samlEndpoint *SamlEndpoint) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for 'edit_saml_endpoint': ") + err.Error())
+	}
+	editSamlEndpoint := url.Values{}
+	editSamlEndpoint.Add("CID", c.CID)
+	editSamlEndpoint.Add("action", "edit_saml_endpoint")
+	editSamlEndpoint.Add("endpoint_name", samlEndpoint.EndPointName)
+	editSamlEndpoint.Add("idp_metadata_type", samlEndpoint.IdpMetadataType)
+	editSamlEndpoint.Add("idp_metadata", samlEndpoint.IdpMetadata)
+	editSamlEndpoint.Add("entity_id", samlEndpoint.CustomEntityId)
+	editSamlEndpoint.Add("msgtemplate", samlEndpoint.MsgTemplate)
+	if samlEndpoint.ControllerLogin {
+		editSamlEndpoint.Add("controller_login", "yes")
+	}
+	editSamlEndpoint.Add("access_ctrl", samlEndpoint.AccessSetBy)
+	if samlEndpoint.AccessSetBy == "controller" && samlEndpoint.RbacGroups != "" {
+		editSamlEndpoint.Add("groups", samlEndpoint.RbacGroups)
+	}
+	Url.RawQuery = editSamlEndpoint.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return errors.New("HTTP Get 'edit_saml_endpoint' failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode 'edit_saml_endpoint' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API 'edit_saml_endpoint' Get failed: " + data.Reason)
+	}
+	return nil
+}
+
 func (c *Client) DeleteSamlEndpoint(samlEndpoint *SamlEndpoint) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
