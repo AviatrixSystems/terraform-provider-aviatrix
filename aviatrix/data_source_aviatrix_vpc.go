@@ -199,31 +199,29 @@ func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] Error setting subnets for (%s): %s", d.Id(), err)
 	}
 
-	if vC.CloudType != goaviatrix.GCP {
-		var privateSubnetList []map[string]string
-		var publicSubnetList []map[string]string
-		for _, subnet := range vC.PrivateSubnets {
-			sub := make(map[string]string)
-			sub["cidr"] = subnet.Cidr
-			sub["name"] = subnet.Name
-			sub["subnet_id"] = subnet.SubnetID
+	var privateSubnetList []map[string]string
+	var publicSubnetList []map[string]string
+	for _, subnet := range vC.PrivateSubnets {
+		sub := make(map[string]string)
+		sub["cidr"] = subnet.Cidr
+		sub["name"] = subnet.Name
+		sub["subnet_id"] = subnet.SubnetID
 
-			privateSubnetList = append(privateSubnetList, sub)
-		}
-		for _, subnet := range vC.PublicSubnets {
-			sub := make(map[string]string)
-			sub["cidr"] = subnet.Cidr
-			sub["name"] = subnet.Name
-			sub["subnet_id"] = subnet.SubnetID
+		privateSubnetList = append(privateSubnetList, sub)
+	}
+	for _, subnet := range vC.PublicSubnets {
+		sub := make(map[string]string)
+		sub["cidr"] = subnet.Cidr
+		sub["name"] = subnet.Name
+		sub["subnet_id"] = subnet.SubnetID
 
-			publicSubnetList = append(publicSubnetList, sub)
-		}
-		if err := d.Set("private_subnets", privateSubnetList); err != nil {
-			log.Printf("[WARN] Error setting 'private_subnets' for (%s): %s", d.Id(), err)
-		}
-		if err := d.Set("public_subnets", publicSubnetList); err != nil {
-			log.Printf("[WARN] Error setting 'public_subnets' for (%s): %s", d.Id(), err)
-		}
+		publicSubnetList = append(publicSubnetList, sub)
+	}
+	if err := d.Set("private_subnets", privateSubnetList); err != nil {
+		log.Printf("[WARN] Error setting 'private_subnets' for (%s): %s", d.Id(), err)
+	}
+	if err := d.Set("public_subnets", publicSubnetList); err != nil {
+		log.Printf("[WARN] Error setting 'public_subnets' for (%s): %s", d.Id(), err)
 	}
 
 	if vC.CloudType == goaviatrix.AWS {

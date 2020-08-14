@@ -345,32 +345,30 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] Error setting 'subnets' for (%s): %s", d.Id(), err)
 	}
 
-	if vC.CloudType != goaviatrix.GCP {
-		var privateSubnets []map[string]interface{}
-		for _, subnet := range vC.PrivateSubnets {
-			subnetInfo := make(map[string]interface{})
-			subnetInfo["cidr"] = subnet.Cidr
-			subnetInfo["name"] = subnet.Name
-			subnetInfo["subnet_id"] = subnet.SubnetID
+	var privateSubnets []map[string]interface{}
+	for _, subnet := range vC.PrivateSubnets {
+		subnetInfo := make(map[string]interface{})
+		subnetInfo["cidr"] = subnet.Cidr
+		subnetInfo["name"] = subnet.Name
+		subnetInfo["subnet_id"] = subnet.SubnetID
 
-			privateSubnets = append(privateSubnets, subnetInfo)
-		}
-		if err := d.Set("private_subnets", privateSubnets); err != nil {
-			log.Printf("[WARN] Error setting 'private_subnets' for (%s): %s", d.Id(), err)
-		}
+		privateSubnets = append(privateSubnets, subnetInfo)
+	}
+	if err := d.Set("private_subnets", privateSubnets); err != nil {
+		log.Printf("[WARN] Error setting 'private_subnets' for (%s): %s", d.Id(), err)
+	}
 
-		var publicSubnets []map[string]interface{}
-		for _, subnet := range vC.PublicSubnets {
-			subnetInfo := make(map[string]interface{})
-			subnetInfo["cidr"] = subnet.Cidr
-			subnetInfo["name"] = subnet.Name
-			subnetInfo["subnet_id"] = subnet.SubnetID
+	var publicSubnets []map[string]interface{}
+	for _, subnet := range vC.PublicSubnets {
+		subnetInfo := make(map[string]interface{})
+		subnetInfo["cidr"] = subnet.Cidr
+		subnetInfo["name"] = subnet.Name
+		subnetInfo["subnet_id"] = subnet.SubnetID
 
-			publicSubnets = append(publicSubnets, subnetInfo)
-		}
-		if err := d.Set("public_subnets", publicSubnets); err != nil {
-			log.Printf("[WARN] Error setting 'public_subnets' for (%s): %s", d.Id(), err)
-		}
+		publicSubnets = append(publicSubnets, subnetInfo)
+	}
+	if err := d.Set("public_subnets", publicSubnets); err != nil {
+		log.Printf("[WARN] Error setting 'public_subnets' for (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(vpcName)
