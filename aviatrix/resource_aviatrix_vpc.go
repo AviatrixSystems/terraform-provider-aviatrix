@@ -52,6 +52,18 @@ func resourceAviatrixVpc() *schema.Resource {
 				ForceNew:    true,
 				Description: "Subnet of the VPC to be created. Required to be empty for GCP provider, and non-empty for other providers.",
 			},
+			"subnet_size": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Subnet size.",
+			},
+			"num_of_subnet_pairs": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Number of public subnet and private subnet pair to be created.",
+			},
 			"aviatrix_transit_vpc": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -163,11 +175,13 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	vpc := &goaviatrix.Vpc{
-		CloudType:   d.Get("cloud_type").(int),
-		AccountName: d.Get("account_name").(string),
-		Region:      d.Get("region").(string),
-		Name:        d.Get("name").(string),
-		Cidr:        d.Get("cidr").(string),
+		CloudType:        d.Get("cloud_type").(int),
+		AccountName:      d.Get("account_name").(string),
+		Region:           d.Get("region").(string),
+		Name:             d.Get("name").(string),
+		Cidr:             d.Get("cidr").(string),
+		SubnetSize:       d.Get("subnet_size").(int),
+		NumOfSubnetPairs: d.Get("num_of_subnet_pairs").(int),
 	}
 	if vpc.Region == "" && vpc.CloudType != goaviatrix.GCP {
 		return fmt.Errorf("please specifiy 'region'")
@@ -179,6 +193,18 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("please specify 'cidr'")
 	} else if vpc.Cidr != "" && vpc.CloudType == goaviatrix.GCP {
 		return fmt.Errorf("please specify 'cidr' in 'subnets' for GCP provider")
+	}
+
+	if vpc.SubnetSize != 0 && vpc.NumOfSubnetPairs != 0 {
+		if vpc.CloudType != goaviatrix.AWS && vpc.CloudType != goaviatrix.AZURE {
+			return fmt.Errorf("advanced option('subnet_size' and 'num_of_subnet_pairs') is only supported for AWS and Azure provider")
+		}
+	} else if vpc.SubnetSize != 0 || vpc.NumOfSubnetPairs != 0 {
+		if vpc.CloudType == goaviatrix.AWS || vpc.CloudType == goaviatrix.AZURE {
+			return fmt.Errorf("please specify both 'subnet_size' and 'num_of_subnet_pairs' to enable advanced options")
+		} else {
+			return fmt.Errorf("advanced option('subnet_size' and 'num_of_subnet_pairs') is only supported for AWS and Azure provider")
+		}
 	}
 
 	aviatrixTransitVpc := d.Get("aviatrix_transit_vpc").(bool)
