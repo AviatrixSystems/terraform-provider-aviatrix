@@ -44,12 +44,12 @@ func (c *Client) CreateBranchRouterVirtualWanAttachment(attachment *BranchRouter
 }
 
 func (c *Client) GetBranchRouterVirtualWanAttachment(attachment *BranchRouterVirtualWanAttachment) (*BranchRouterVirtualWanAttachment, error) {
-	branchName, err := c.GetBranchRouterName(attachment.ConnectionName)
+	branchName, err := c.GetDeviceName(attachment.ConnectionName)
 	if err != nil {
 		return nil, fmt.Errorf("could not get branch name: %v", err)
 	}
 
-	vpcID, err := c.GetBranchRouterAttachmentVpcID(attachment.ConnectionName)
+	vpcID, err := c.GetDeviceAttachmentVpcID(attachment.ConnectionName)
 	if err != nil {
 		return nil, fmt.Errorf("could not get branch router attachment VPC id: %v", err)
 	}

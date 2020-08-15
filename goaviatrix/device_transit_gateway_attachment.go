@@ -9,13 +9,13 @@ import (
 	"strings"
 )
 
-type BranchRouterTransitGatewayAttachment struct {
-	BranchName              string `form:"branch_name,omitempty"`
+type DeviceTransitGatewayAttachment struct {
+	DeviceName              string `form:"device_name,omitempty"`
 	TransitGatewayName      string `form:"transit_gw,omitempty"`
 	ConnectionName          string `form:"connection_name,omitempty"`
 	RoutingProtocol         string `form:"routing_protocol,omitempty"`
 	TransitGatewayBgpAsn    string `form:"bgp_local_as_number,omitempty"`
-	BranchRouterBgpAsn      string `form:"external_device_as_number,omitempty"`
+	DeviceBgpAsn            string `form:"external_device_as_number,omitempty"`
 	Phase1Authentication    string `form:"phase1_authentication,omitempty"`
 	Phase1DHGroups          string `form:"phase1_dh_groups,omitempty"`
 	Phase1Encryption        string `form:"phase1_encryption,omitempty"`
@@ -30,12 +30,12 @@ type BranchRouterTransitGatewayAttachment struct {
 	CID                     string `form:"CID"`
 }
 
-func (c *Client) CreateBranchRouterTransitGatewayAttachment(brata *BranchRouterTransitGatewayAttachment) error {
-	brata.Action = "attach_cloudwan_branch_to_transit_gateway"
-	brata.CID = c.CID
-	resp, err := c.Post(c.baseURL, brata)
+func (c *Client) CreateDeviceTransitGatewayAttachment(attachment *DeviceTransitGatewayAttachment) error {
+	attachment.Action = "attach_cloudwan_device_to_transit_gateway"
+	attachment.CID = c.CID
+	resp, err := c.Post(c.baseURL, attachment)
 	if err != nil {
-		return errors.New("HTTP Post attach_cloudwan_branch_to_transit_gateway failed: " + err.Error())
+		return errors.New("HTTP Post attach_cloudwan_device_to_transit_gateway failed: " + err.Error())
 	}
 
 	type Resp struct {
@@ -47,27 +47,27 @@ func (c *Client) CreateBranchRouterTransitGatewayAttachment(brata *BranchRouterT
 	var b bytes.Buffer
 	_, err = b.ReadFrom(resp.Body)
 	if err != nil {
-		return errors.New("Reading response body attach_cloudwan_branch_to_transit_gateway failed: " + err.Error())
+		return errors.New("Reading response body attach_cloudwan_device_to_transit_gateway failed: " + err.Error())
 	}
 
 	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return errors.New("Json Decode attach_cloudwan_branch_to_transit_gateway failed: " + err.Error() + "\n Body: " + b.String())
+		return errors.New("Json Decode attach_cloudwan_device_to_transit_gateway failed: " + err.Error() + "\n Body: " + b.String())
 	}
 	if !data.Return {
-		return errors.New("Rest API attach_cloudwan_branch_to_transit_gateway Post failed: " + data.Reason)
+		return errors.New("Rest API attach_cloudwan_device_to_transit_gateway Post failed: " + data.Reason)
 	}
 	return nil
 }
 
-func (c *Client) GetBranchRouterTransitGatewayAttachment(brata *BranchRouterTransitGatewayAttachment) (*BranchRouterTransitGatewayAttachment, error) {
-	branchName, err := c.GetBranchRouterName(brata.ConnectionName)
+func (c *Client) GetDeviceTransitGatewayAttachment(attachment *DeviceTransitGatewayAttachment) (*DeviceTransitGatewayAttachment, error) {
+	deviceName, err := c.GetDeviceName(attachment.ConnectionName)
 	if err != nil {
-		return nil, fmt.Errorf("could not get branch name: %v", err)
+		return nil, fmt.Errorf("could not get device name: %v", err)
 	}
 
-	vpcID, err := c.GetBranchRouterAttachmentVpcID(brata.ConnectionName)
+	vpcID, err := c.GetDeviceAttachmentVpcID(attachment.ConnectionName)
 	if err != nil {
-		return nil, fmt.Errorf("could not get branch router attachment VPC id: %v", err)
+		return nil, fmt.Errorf("could not get device attachment VPC id: %v", err)
 	}
 
 	resp, err := c.Post(c.baseURL, struct {
@@ -78,7 +78,7 @@ func (c *Client) GetBranchRouterTransitGatewayAttachment(brata *BranchRouterTran
 	}{
 		CID:            c.CID,
 		Action:         "get_site2cloud_conn_detail",
-		ConnectionName: brata.ConnectionName,
+		ConnectionName: attachment.ConnectionName,
 		VpcID:          vpcID,
 	})
 	if err != nil {
@@ -104,12 +104,12 @@ func (c *Client) GetBranchRouterTransitGatewayAttachment(brata *BranchRouterTran
 		return nil, errors.New("Rest API get_site2cloud_conn_detail Post failed: " + data.Reason)
 	}
 
-	return &BranchRouterTransitGatewayAttachment{
-		BranchName:              branchName,
+	return &DeviceTransitGatewayAttachment{
+		DeviceName:              deviceName,
 		TransitGatewayName:      data.Results.Connections.GwName,
-		ConnectionName:          brata.ConnectionName,
+		ConnectionName:          attachment.ConnectionName,
 		TransitGatewayBgpAsn:    data.Results.Connections.BgpLocalASN,
-		BranchRouterBgpAsn:      data.Results.Connections.BgpRemoteASN,
+		DeviceBgpAsn:            data.Results.Connections.BgpRemoteASN,
 		Phase1Authentication:    data.Results.Connections.Algorithm.Phase1Auth[0],
 		Phase1DHGroups:          data.Results.Connections.Algorithm.Phase1DhGroups[0],
 		Phase1Encryption:        data.Results.Connections.Algorithm.Phase1Encrption[0],
@@ -122,7 +122,7 @@ func (c *Client) GetBranchRouterTransitGatewayAttachment(brata *BranchRouterTran
 	}, nil
 }
 
-func (c *Client) GetBranchRouterAttachmentVpcID(connectionName string) (string, error) {
+func (c *Client) GetDeviceAttachmentVpcID(connectionName string) (string, error) {
 	resp, err := c.Post(c.baseURL, struct {
 		CID    string `form:"CID"`
 		Action string `form:"action"`
@@ -168,10 +168,10 @@ func (c *Client) GetBranchRouterAttachmentVpcID(connectionName string) (string, 
 	return "", ErrNotFound
 }
 
-func (c *Client) DeleteBranchRouterAttachment(connectionName string) error {
-	vpcID, err := c.GetBranchRouterAttachmentVpcID(connectionName)
+func (c *Client) DeleteDeviceAttachment(connectionName string) error {
+	vpcID, err := c.GetDeviceAttachmentVpcID(connectionName)
 	if err != nil {
-		return fmt.Errorf("could not get branch router attachment VPC id: %v", err)
+		return fmt.Errorf("could not get device attachment VPC id: %v", err)
 	}
 
 	resp, err := c.Post(c.baseURL, struct {
@@ -181,12 +181,12 @@ func (c *Client) DeleteBranchRouterAttachment(connectionName string) error {
 		ConnectionName string `form:"connection_name"`
 	}{
 		CID:            c.CID,
-		Action:         "detach_cloudwan_branch",
+		Action:         "detach_cloudwan_device",
 		VpcID:          vpcID,
 		ConnectionName: connectionName,
 	})
 	if err != nil {
-		return errors.New("HTTP POST detach_cloudwan_branch failed: " + err.Error())
+		return errors.New("HTTP POST detach_cloudwan_device failed: " + err.Error())
 	}
 
 	type Resp struct {
@@ -198,15 +198,15 @@ func (c *Client) DeleteBranchRouterAttachment(connectionName string) error {
 	var b bytes.Buffer
 	_, err = b.ReadFrom(resp.Body)
 	if err != nil {
-		return errors.New("Reading response body detach_cloudwan_branch failed: " + err.Error())
+		return errors.New("Reading response body detach_cloudwan_device failed: " + err.Error())
 	}
 
 	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return errors.New("Json Decode detach_cloudwan_branch failed: " + err.Error() +
+		return errors.New("Json Decode detach_cloudwan_device failed: " + err.Error() +
 			"\n Body: " + b.String())
 	}
 	if !data.Return {
-		return errors.New("Rest API detach_cloudwan_branch Post failed: " + data.Reason)
+		return errors.New("Rest API detach_cloudwan_device Post failed: " + data.Reason)
 	}
 
 	return nil
