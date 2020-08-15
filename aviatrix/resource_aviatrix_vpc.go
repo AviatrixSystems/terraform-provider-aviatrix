@@ -194,7 +194,6 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	} else if vpc.Cidr != "" && vpc.CloudType == goaviatrix.GCP {
 		return fmt.Errorf("please specify 'cidr' in 'subnets' for GCP provider")
 	}
-
 	if vpc.SubnetSize != 0 && vpc.NumOfSubnetPairs != 0 {
 		if vpc.CloudType != goaviatrix.AWS && vpc.CloudType != goaviatrix.AZURE {
 			return fmt.Errorf("advanced option('subnet_size' and 'num_of_subnet_pairs') is only supported for AWS and Azure provider")
