@@ -81,6 +81,9 @@ func (c *Client) GetTags(tags *Tags) ([]string, error) {
 					(allKeys[i].String() == "Value" && data.Results["usr_tags"][allKeys[i].String()] == "Do-Not-Delete-Aviatrix-Created-Resource") {
 					continue
 				}
+				if allKeys[i].String() == "Original-Name" {
+					continue
+				}
 				str := allKeys[i].String() + ":" + data.Results["usr_tags"][allKeys[i].String()]
 				tagList = append(tagList, str)
 			}
