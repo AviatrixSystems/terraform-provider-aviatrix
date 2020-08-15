@@ -206,18 +206,6 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if vpc.SubnetSize != 0 && vpc.NumOfSubnetPairs != 0 {
-		if vpc.CloudType != goaviatrix.AWS && vpc.CloudType != goaviatrix.AZURE {
-			return fmt.Errorf("advanced option('subnet_size' and 'num_of_subnet_pairs') is only supported for AWS and Azure provider")
-		}
-	} else if vpc.SubnetSize != 0 || vpc.NumOfSubnetPairs != 0 {
-		if vpc.CloudType == goaviatrix.AWS || vpc.CloudType == goaviatrix.AZURE {
-			return fmt.Errorf("please specify both 'subnet_size' and 'num_of_subnet_pairs' to enable advanced options")
-		} else {
-			return fmt.Errorf("advanced option('subnet_size' and 'num_of_subnet_pairs') is only supported for AWS and Azure provider")
-		}
-	}
-
 	aviatrixTransitVpc := d.Get("aviatrix_transit_vpc").(bool)
 	aviatrixFireNetVpc := d.Get("aviatrix_firenet_vpc").(bool)
 
