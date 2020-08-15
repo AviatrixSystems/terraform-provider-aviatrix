@@ -34,6 +34,8 @@ type VpcEdit struct {
 	Region             string       `form:"region,omitempty" json:"vpc_region,omitempty"`
 	Name               string       `form:"pool_name,omitempty" json:"pool_name,omitempty"`
 	Cidr               string       `form:"vpc_cidr,omitempty" json:"vpc_cidr,omitempty"`
+	SubnetSize         int          `json:"subnet_size,omitempty"`
+	NumOfSubnetPairs   int          `json:"num_of_subnet_pairs,omitempty"`
 	AviatrixTransitVpc bool         `json:"avx_transit_vpc,omitempty"`
 	AviatrixFireNetVpc bool         `json:"avx_firenet_vpc,omitempty"`
 	VpcID              []string     `json:"vpc_list,omitempty"`
@@ -163,6 +165,8 @@ func (c *Client) GetVpc(vpc *Vpc) (*Vpc, error) {
 			vpc.Subnets = allVpcPoolVpcListResp[i].Subnets
 			vpc.PrivateSubnets = allVpcPoolVpcListResp[i].PrivateSubnets
 			vpc.PublicSubnets = allVpcPoolVpcListResp[i].PublicSubnets
+			vpc.SubnetSize = allVpcPoolVpcListResp[i].SubnetSize
+			vpc.NumOfSubnetPairs = allVpcPoolVpcListResp[i].NumOfSubnetPairs
 
 			return vpc, nil
 		}

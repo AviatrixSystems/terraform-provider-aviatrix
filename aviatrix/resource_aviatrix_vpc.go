@@ -296,6 +296,12 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("region", vC.Region)
 		d.Set("cidr", vC.Cidr)
 	}
+	if vC.SubnetSize != 0 {
+		d.Set("subnet_size", vC.SubnetSize)
+	}
+	if vC.NumOfSubnetPairs != 0 {
+		d.Set("num_of_subnet_pairs", vC.NumOfSubnetPairs)
+	}
 	if vC.AviatrixTransitVpc == "yes" {
 		d.Set("aviatrix_transit_vpc", true)
 	} else {
