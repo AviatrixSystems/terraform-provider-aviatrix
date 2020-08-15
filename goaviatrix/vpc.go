@@ -17,6 +17,8 @@ type Vpc struct {
 	Region             string       `form:"region,omitempty" json:"vpc_region,omitempty"`
 	Name               string       `form:"pool_name,omitempty" json:"pool_name,omitempty"`
 	Cidr               string       `form:"vpc_cidr,omitempty" json:"vpc_cidr,omitempty"`
+	SubnetSize         int          `form:"num_of_subnets,omitempty"`
+	NumOfSubnetPairs   int          `form:"num_of_zone,omitempty"`
 	AviatrixTransitVpc string       `form:"aviatrix_transit_vpc,omitempty"`
 	AviatrixFireNetVpc string       `form:"aviatrix_firenet_vpc,omitempty"`
 	VpcID              string       `json:"vpc_list,omitempty"`
@@ -32,6 +34,8 @@ type VpcEdit struct {
 	Region             string       `form:"region,omitempty" json:"vpc_region,omitempty"`
 	Name               string       `form:"pool_name,omitempty" json:"pool_name,omitempty"`
 	Cidr               string       `form:"vpc_cidr,omitempty" json:"vpc_cidr,omitempty"`
+	SubnetSize         int          `json:"subnet_size,omitempty"`
+	NumOfSubnetPairs   int          `json:"num_of_subnet_pairs,omitempty"`
 	AviatrixTransitVpc bool         `json:"avx_transit_vpc,omitempty"`
 	AviatrixFireNetVpc bool         `json:"avx_firenet_vpc,omitempty"`
 	VpcID              []string     `json:"vpc_list,omitempty"`
@@ -82,6 +86,16 @@ func (c *Client) CreateVpc(vpc *Vpc) error {
 				createCustomVpc.Add("subnet_list["+strconv.Itoa(i)+"][cidr]", subnetInfo.Cidr)
 				i++
 			}
+		}
+	}
+	if vpc.SubnetSize != 0 {
+		createCustomVpc.Add("subnet_size", strconv.Itoa(vpc.SubnetSize))
+	}
+	if vpc.NumOfSubnetPairs != 0 {
+		if vpc.CloudType == AWS {
+			createCustomVpc.Add("num_of_zones", strconv.Itoa(vpc.NumOfSubnetPairs))
+		} else if vpc.CloudType == AZURE {
+			createCustomVpc.Add("num_of_subnets", strconv.Itoa(vpc.NumOfSubnetPairs))
 		}
 	}
 	Url.RawQuery = createCustomVpc.Encode()
@@ -151,6 +165,8 @@ func (c *Client) GetVpc(vpc *Vpc) (*Vpc, error) {
 			vpc.Subnets = allVpcPoolVpcListResp[i].Subnets
 			vpc.PrivateSubnets = allVpcPoolVpcListResp[i].PrivateSubnets
 			vpc.PublicSubnets = allVpcPoolVpcListResp[i].PublicSubnets
+			vpc.SubnetSize = allVpcPoolVpcListResp[i].SubnetSize
+			vpc.NumOfSubnetPairs = allVpcPoolVpcListResp[i].NumOfSubnetPairs
 
 			return vpc, nil
 		}
