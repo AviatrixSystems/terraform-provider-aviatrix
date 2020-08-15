@@ -36,6 +36,8 @@ In addition to all arguments above, the following attributes are exported:
 * `account_name` - Account name of the VPC created.
 * `region` - Region of the VPC created.
 * `cidr` - Subnet of the VPC created.
+* `subnet_size` - Subnet size. Only supported for AWS, Azure provider.
+* `num_of_subnet_pairs` - Number of public subnet and private subnet pair created. Only supported for AWS, Azure provider.
 * `region` - Region of the VPC created.
 * `aviatrix_transit_vpc` - Switch if the VPC created is an Aviatrix Transit VPC or not.
 * `aviatrix_firenet_vpc` - Switch if the VPC created is an Aviatrix FireNet VPC or not.

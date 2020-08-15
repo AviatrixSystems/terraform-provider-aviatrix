@@ -41,6 +41,16 @@ func dataSourceAviatrixVpc() *schema.Resource {
 				Computed:    true,
 				Description: "Subnet of the VPC created.",
 			},
+			"subnet_size": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "Subnet size.",
+			},
+			"num_of_subnet_pairs": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "Number of public subnet and private subnet pair created.",
+			},
 			"aviatrix_transit_vpc": {
 				Type:        schema.TypeBool,
 				Computed:    true,
@@ -169,6 +179,12 @@ func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("region", vC.Region)
 	d.Set("name", vC.Name)
 	d.Set("cidr", vC.Cidr)
+	if vC.SubnetSize != 0 {
+		d.Set("subnet_size", vC.SubnetSize)
+	}
+	if vC.NumOfSubnetPairs != 0 {
+		d.Set("num_of_subnet_pairs", vC.NumOfSubnetPairs)
+	}
 	if vC.AviatrixTransitVpc == "yes" {
 		d.Set("aviatrix_transit_vpc", true)
 	} else {
