@@ -131,7 +131,7 @@ func resourceAviatrixBranchRouterAwsTgwAttachmentDelete(d *schema.ResourceData, 
 
 	cn := d.Get("connection_name").(string)
 
-	if err := client.DeleteBranchRouterAttachment(cn); err != nil {
+	if err := client.DeleteDeviceAttachment(cn); err != nil {
 		return err
 	}
 
