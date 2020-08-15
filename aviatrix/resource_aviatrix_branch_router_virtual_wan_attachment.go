@@ -128,7 +128,7 @@ func resourceAviatrixBranchRouterVirtualWanAttachmentDelete(d *schema.ResourceDa
 
 	attachment := marshalBranchRouterVirtualWanAttachmentInput(d)
 
-	if err := client.DeleteBranchRouterAttachment(attachment.ConnectionName); err != nil {
+	if err := client.DeleteDeviceAttachment(attachment.ConnectionName); err != nil {
 		return err
 	}
 
