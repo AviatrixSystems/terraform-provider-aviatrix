@@ -292,6 +292,11 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable segmentation to allow association of transit gateway to security domains.",
 			},
+			"gw_original_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Name of the transit gateway when it was created.",
+			},
 		},
 	}
 }
@@ -752,7 +757,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	client := meta.(*goaviatrix.Client)
 
 	var isImport bool
-	gwName := d.Get("gw_name").(string)
+	gwName := d.Get("gw_original_name").(string)
 	if gwName == "" {
 		isImport = true
 		id := d.Id()
@@ -764,7 +769,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 	gateway := &goaviatrix.Gateway{
 		AccountName: d.Get("account_name").(string),
-		GwName:      d.Get("gw_name").(string),
+		GwName:      gwName,
 	}
 
 	gw, err := client.GetGateway(gateway)
@@ -782,6 +787,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("cloud_type", gw.CloudType)
 		d.Set("account_name", gw.AccountName)
 		d.Set("gw_name", gw.GwName)
+		d.Set("gw_original_name", gw.GwOriginalName)
 		d.Set("subnet", gw.VpcNet)
 
 		if gw.CloudType == goaviatrix.AWS {
@@ -1074,9 +1080,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("account_name") {
 		return fmt.Errorf("updating account_name is not allowed")
-	}
-	if d.HasChange("gw_name") {
-		return fmt.Errorf("updating gw_name is not allowed")
 	}
 	if d.HasChange("vpc_id") {
 		return fmt.Errorf("updating vpc_id is not allowed")
@@ -1764,6 +1767,19 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("could not disable segmentation: %v", err)
 			}
 		}
+	}
+
+	if d.HasChange("gw_name") {
+		gwOriginalName, gwName := d.GetChange("gw_name")
+		gateway := &goaviatrix.Gateway{
+			GwOriginalName: gwOriginalName.(string),
+			GwName:         gwName.(string),
+		}
+		err := client.UpdateGatewayAlias(gateway)
+		if err != nil {
+			return err
+		}
+		d.SetId(gateway.GwName)
 	}
 
 	d.Partial(false)
