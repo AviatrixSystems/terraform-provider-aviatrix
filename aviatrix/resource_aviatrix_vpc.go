@@ -410,7 +410,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] Error setting 'public_subnets' for (%s): %s", d.Id(), err)
 	}
 
-	d.SetId(vpcName)
+	d.SetId(vC.Name)
 	return nil
 }
 

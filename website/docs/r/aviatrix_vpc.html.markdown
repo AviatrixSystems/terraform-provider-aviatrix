@@ -78,7 +78,9 @@ The following arguments are supported:
 * `name` - (Required) Name of the VPC to be created.
 * `region` - (Optional) Region of cloud provider. **Required to be empty for GCP provider, and non-empty for other providers.** Example: AWS: "us-east-1", AZURE: "East US 2", AWSGov: "us-gov-east-1".
 * `cidr` - (Optional) VPC CIDR. **Required to be empty for GCP provider, and non-empty for other providers.** Example: "10.11.0.0/24".
-
+* `subnet_size` - (Optional) Subnet size. Only supported for AWS, Azure provider. Example: 24.
+* `num_of_subnet_pairs` - (Optional) Number of public subnet and private subnet pair created. Only supported for AWS, Azure provider. Example: 1.
+			},
 ### Google Cloud
 * `subnets` - (Optional) List of subnets to be specify for GCP provider. Required to be non-empty for GCP provider, and empty for other providers.
   * `region` - Region of this subnet.
