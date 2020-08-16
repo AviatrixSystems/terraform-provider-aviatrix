@@ -5,6 +5,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
@@ -51,9 +53,10 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"security_domain_name": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "Name of the security domain created.",
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Name of the security domain created.",
+							ValidateFunc: validation.StringDoesNotContainAny(":"),
 						},
 						"connected_domains": {
 							Type: schema.TypeList,
