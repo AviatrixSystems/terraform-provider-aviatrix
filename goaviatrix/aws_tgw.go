@@ -203,7 +203,7 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 
 	for i := range connectedDomainList {
 		dm := connectedDomainList[i]
-		if strings.HasPrefix(dm, "peering_") {
+		if strings.HasPrefix(dm, "peering_") || strings.Contains(dm, ":") {
 			continue
 		}
 		viewRouteDomainDetails := url.Values{}
@@ -238,7 +238,7 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 			NativeFirewallDomain:   routeDomainDetail[0].NativeFirewallDomain,
 		}
 		for i := range routeDomainDetail[0].ConnectedRouteDomain {
-			if strings.HasPrefix(routeDomainDetail[0].ConnectedRouteDomain[i], "peering_") {
+			if strings.HasPrefix(routeDomainDetail[0].ConnectedRouteDomain[i], "peering_") || strings.Contains(routeDomainDetail[0].ConnectedRouteDomain[i], ":") {
 				continue
 			}
 			sdr.ConnectedDomain = append(sdr.ConnectedDomain, routeDomainDetail[0].ConnectedRouteDomain[i])
