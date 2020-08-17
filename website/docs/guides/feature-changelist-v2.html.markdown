@@ -1,6 +1,6 @@
 ---
 layout: "aviatrix"
-page_title: "Guides: Aviatrix R2.x Feature Changelist"
+page_title: "Aviatrix R2.x Feature Changelist"
 description: |-
   The Aviatrix provider R2.x Feature Changelist
 ---
@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.16 (UserConnect-6.1)``
+``Last updated: R2.16.2 (UserConnect-6.1.1276)``
 
 
 ---
@@ -195,3 +195,9 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |(new) | aviatrix_transit_gateway | bgp_polling_time, prepend_as_path, local_as_number, bgp_ecmp | **No**; see reason above |
 |(new) | controller_config | enable_vpc_dns_server | **No**; see reason above |
 |(new) | gateway_dnat, gateway_snat | sync_to_ha | **No**; see reason above |
+
+
+## R2.16.2 (UserConnect-6.1.1276) (Terraform v0.12)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(changed) | aws_tgw    | connected_domains | **No**; nothing needs to be changed. This is a note to bring to attention that in Controller 6.1.1276+, if there are peered TGWs and **aws_tgw_peering_domain_conn**s in one's Terraform topology, users must upgrade to R2.16.2. Please see Release Notes for details |
