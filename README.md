@@ -1,6 +1,6 @@
 Terraform Provider
 ==================
-A basic [Terraform](http://terraform.io) provider for Aviatrix. Read this [tutorial](https://docs.aviatrix.com/HowTos/tf_aviatrix_howto.html) as an alternative to the README, only if the instructions are unclear. 
+A basic [Terraform](http://terraform.io) provider for Aviatrix. Read this [tutorial](https://docs.aviatrix.com/HowTos/tf_aviatrix_howto.html) as an alternative to the README, only if the instructions are unclear.
 
 -> **NOTE:** This release has a big structure change from release v1.*, please read this [changelist-v2](https://www.terraform.io/docs/providers/aviatrix/guides/feature-changelist-v2.html) first, and change your cloud infrastructures accordingly.
 
@@ -19,14 +19,14 @@ Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provi
 ```sh
 $ mkdir -p $GOPATH/src/github.com/terraform-providers
 $ cd $GOPATH/src/github.com/terraform-providers
-$ git clone https://github.com/terraform-providers/terraform-provider-aviatrix
+$ git clone https://github.com/AviatrixSystems/terraform-provider-aviatrix.git
 ```
 
 To clone on windows
 ```sh
 mkdir %GOPATH%\src\github.com\terraform-providers
 cd %GOPATH%\src\github.com\terraform-providers
-git clone https://github.com/terraform-providers/terraform-provider-aviatrix
+git clone https://github.com/AviatrixSystems/terraform-provider-aviatrix.git
 ```
 
 Enter the provider directory and build the provider
@@ -53,7 +53,7 @@ providers {
   "aviatrix" = "$GOPATH/bin/terraform-provider-aviatrix"
 }
 ```
-For Windows, the file should be at '%APPDATA%\terraform.rc'. Do not change $GOPATH to %GOPATH%. 
+For Windows, the file should be at '%APPDATA%\terraform.rc'. Do not change $GOPATH to %GOPATH%.
 
 In Windows, for terraform 0.11.8 and lower use the above text.
 
@@ -69,7 +69,7 @@ If the rc file is not present, it should be created
 Examples
 --------
 
-Check examples and documentation [here](https://www.terraform.io/docs/providers/aviatrix/) 
+Check examples and documentation [here](https://www.terraform.io/docs/providers/aviatrix/)
 
 Visit [here](https://github.com/terraform-providers/terraform-provider-aviatrix/tree/master/website/docs/) for the complete documentation for all resources on github
 

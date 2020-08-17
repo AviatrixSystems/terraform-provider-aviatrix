@@ -1,6 +1,6 @@
 ---
 layout: "aviatrix"
-page_title: "Guides: Aviatrix R1.x Feature Changelist"
+page_title: "Aviatrix R1.x Feature Changelist"
 description: |-
   The Aviatrix provider R1.x Feature Changelist
 ---

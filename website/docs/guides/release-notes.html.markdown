@@ -1,6 +1,6 @@
 ---
 layout: "aviatrix"
-page_title: "Guides: Release Notes"
+page_title: "Release Notes"
 description: |-
   The Aviatrix provider Release Notes
 ---
@@ -12,10 +12,28 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.16 (UserConnect-6.1)``
+``Last updated: R2.16.2 (UserConnect-6.1.1276)``
 
 
 ---
+
+## 2.16.2
+### Notes:
+- Release date: **(17 Aug 2020)**
+- Supported Controller version: **UserConnect-6.1.1276**
+- Supported Terraform version: **v0.12.x**
+
+### Bug Fixes:
+1. Fixed issue where peered TGWs with connected domain policies caused the **aviatrix_aws_tgw** to read deltas due to backend change
+
+
+## 2.16.1
+### Notes:
+- Release date: **(7 Aug 2020)**
+- Supported Controller version: **UserConnect-6.1**
+- Supported Terraform version: **v0.12.x**
+- Moved provider to HashiCorp Terraform Registry
+
 
 ## 2.16.0
 ### Notes:

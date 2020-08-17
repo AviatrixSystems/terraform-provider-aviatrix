@@ -1,6 +1,6 @@
 ---
 layout: "aviatrix"
-page_title: "Aviatrix: R2.x Upgrade Guide"
+page_title: "Guides: R2.x Upgrade Guide"
 description: |-
   The Aviatrix provider Upgrade Guide
 ---
