@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.16.2 (UserConnect-6.1.1276)``
+``Last updated: R2.16.2 (UserConnect-6.1.1279)``
 
 
 ---
@@ -197,7 +197,7 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |(new) | gateway_dnat, gateway_snat | sync_to_ha | **No**; see reason above |
 
 
-## R2.16.2 (UserConnect-6.1.1276) (Terraform v0.12)
+## R2.16.2 (UserConnect-6.1.1279) (Terraform v0.12)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
 |(changed) | aws_tgw    | connected_domains | **No**; nothing needs to be changed. This is a note to bring to attention that in Controller 6.1.1276+, if there are peered TGWs and **aws_tgw_peering_domain_conn**s in one's Terraform topology, users must upgrade to R2.16.2. Please see Release Notes for details |
