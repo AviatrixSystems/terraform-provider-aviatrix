@@ -2,7 +2,7 @@
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_site2cloud"
 description: |-
-  Creates and Manages Aviatrix Site2Cloud connections
+  Create and manage Aviatrix Site2Cloud connections
 ---
 
 # aviatrix_site2cloud
@@ -18,7 +18,7 @@ resource "aviatrix_site2cloud" "test_s2c" {
   connection_name            = "my_conn"
   connection_type            = "unmapped"
   remote_gateway_type        = "generic"
-  tunnel_type                = "udp"
+  tunnel_type                = "policy"
   primary_cloud_gateway_name = "gw1"
   remote_gateway_ip          = "5.5.5.5"
   remote_subnet_cidr         = "10.23.0.0/24"
@@ -50,7 +50,7 @@ The following arguments are supported:
 * `backup_pre_shared_key` - (Optional) Backup Pre-Shared Key.
 
 ### Custom Algorithms
-* `custom_algorithms` - (Optional) Switch to enable custom/non-default algorithms for IPSec Authentication/Encryption. Valid values: true, false. **NOTE: Only supported for 'udp' tunnel type. Please see notes [here](#custom_algorithms-1) for more information.**
+* `custom_algorithms` - (Optional) Switch to enable custom/non-default algorithms for IPSec Authentication/Encryption. Valid values: true, false. **NOTE: Please see notes [here](#custom_algorithms-1) for more information.**
 * `phase_1_authentication` - (Optional) Phase one Authentication. Valid values: 'SHA-1', 'SHA-256', 'SHA-384' and 'SHA-512'. Default value: 'SHA-256'.
 * `phase_2_authentication` - (Optional) Phase two Authentication. Valid values: 'NO-AUTH', 'HMAC-SHA-1', 'HMAC-SHA-256', 'HMAC-SHA-384' and 'HMAC-SHA-512'. Default value: 'HMAC-SHA-256'.
 * `phase_1_dh_groups` - (Optional) Phase one DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'. Default value: '14'.
@@ -67,8 +67,8 @@ The following arguments are supported:
 * `backup_remote_gateway_longitude` - (Optional) Longitude of backup remote gateway. Does not support refresh.
 
 ### Misc.
-* `pre_shared_key` - (Optional) Pre-Shared Key. Only available for "udp" tunnel_type.
-* `ssl_server_pool` - (Optional) Specify ssl_server_pool for tunnel_type "tcp". Default value: "192.168.44.0/24". **NOTE: Only supported for 'tcp' tunnel type. Please see notes [here](#ssl_server_pool-1) for more information.**
+* `pre_shared_key` - (Optional) Pre-Shared Key.
+* `ssl_server_pool` - (Optional) Specify ssl_server_pool. Default value: "192.168.44.0/24". **NOTE: Please see notes [here](#ssl_server_pool-1) for more information.**
 * `enable_dead_peer_detection` - (Optional) Enable/disable Deed Peer Detection for an existing site2cloud connection. Default value: true. **NOTE: Please see notes [here](#enable_dead_peer_detection-1) in regards to any deltas found in your state with the addition of this argument in R1.9**
 * `enable_active_active` - (Optional) Enable/disable active active HA for an existing site2cloud connection. Valid values: true, false. Default value: false.
 * `enable_ikev2` - (Optional) Switch to enable IKEv2 for policy-based site2cloud. Valid values: true, false. Default value: false.
@@ -91,7 +91,7 @@ $ terraform import aviatrix_site2cloud.test connection_name~vpc_id
 
 ## Notes
 ### custom_algorithms
-Only supported for 'udp' tunnel type. If set to true, the six algorithm arguments cannot all be default value. If set to false, default values will be used for all six algorithm arguments.
+If set to true, the six algorithm arguments cannot all be default value. If set to false, default values will be used for all six algorithm arguments.
 
 ### enable_dead_peer_detection
 If you are using/upgraded to Aviatrix Terraform Provider R1.9+, and a site2cloud resource was originally created with a provider version <R1.9, you must do ‘terraform refresh’ to update and apply the attribute’s default value (true) into the state file.
@@ -104,4 +104,4 @@ The following arguments are only supported if the backup gateway is set up by en
 * `ha_enabled`
 
 ### ssl_server_pool
-Only supported for 'tcp' tunnel type. If not set, default value will be used. If set, needs to be set to a different value than the default value.
+If not set, default value will be used. If set, needs to be set to a different value than the default value.
