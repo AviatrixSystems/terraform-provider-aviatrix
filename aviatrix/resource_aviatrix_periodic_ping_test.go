@@ -14,7 +14,7 @@ import (
 
 func TestAccAviatrixPeriodicPing_basic(t *testing.T) {
 	if os.Getenv("SKIP_PERIODIC_PING") == "yes" {
-		t.Skip("Skipping Branch Router test as SKIP_PERIODIC_PING is set")
+		t.Skip("Skipping periodic ping test as SKIP_PERIODIC_PING is set")
 	}
 
 	resourceName := "aviatrix_periodic_ping.test_periodic_ping"
