@@ -13,7 +13,7 @@ import (
 
 func TestAccAviatrixFirewallPolicy_basic(t *testing.T) {
 	if os.Getenv("SKIP_FIREWALL_POLICY") == "yes" {
-		t.Skip("Skipping Branch Router test as SKIP_FIREWALL_POLICY is set")
+		t.Skip("Skipping firewall policy test as SKIP_FIREWALL_POLICY is set")
 	}
 
 	rName := acctest.RandString(5)
