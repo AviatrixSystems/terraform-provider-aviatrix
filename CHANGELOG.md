@@ -1,4 +1,13 @@
-## 2.16.1 (Unreleased)
+## 2.16.2 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.1.1280**
+- Supported Terraform version: **v0.12.x**
+
+### Bug Fixes:
+1. Fixed issue where peered TGWs with connected domain policies caused the **aviatrix_aws_tgw** to read deltas due to backend change
+
+
+## 2.16.1 (August 07, 2020)
 ### Notes:
 - Moved provider to HashiCorp Terraform Registry
 - Supported Controller version: **UserConnect-6.1** (tested on **UserConnect-6.1.1162**)
