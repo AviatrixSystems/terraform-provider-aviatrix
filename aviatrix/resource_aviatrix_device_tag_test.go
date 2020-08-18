@@ -13,7 +13,7 @@ import (
 
 func TestAccAviatrixDeviceTag_basic(t *testing.T) {
 	if os.Getenv("SKIP_DEVICE_TAG") == "yes" {
-		t.Skip("Skipping Branch Router test as SKIP_DEVICE_TAG is set")
+		t.Skip("Skipping Device tag test as SKIP_DEVICE_TAG is set")
 	}
 
 	rName := acctest.RandString(5)
@@ -56,7 +56,7 @@ resource "aviatrix_device_registration" "test_device_registration" {
 	city        = "Santa Clara"
 	state       = "CA"
 	zip_code    = "12323"
-	description = "Test branch router."
+	description = "Test device."
 }
 
 resource "aviatrix_device_interface_config" "test_device_interface_config" {
