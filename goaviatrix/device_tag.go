@@ -105,9 +105,9 @@ func (c *Client) GetDeviceTag(brt *DeviceTag) (*DeviceTag, error) {
 	}
 
 	type DetailsResults struct {
-		TagName          string   `json:"gtag_name"`
-		AttachedBranches []string `json:"rgw_name"`
-		Config           string   `json:"custom_cfg"`
+		TagName         string   `json:"gtag_name"`
+		AttachedDevices []string `json:"rgw_name"`
+		Config          string   `json:"custom_cfg"`
 	}
 	type DetailsResp struct {
 		Return  bool           `json:"return,omitempty"`
@@ -128,7 +128,7 @@ func (c *Client) GetDeviceTag(brt *DeviceTag) (*DeviceTag, error) {
 		return nil, errors.New("Rest API get_cloudwan_configtag_details Post failed: " + detailsData.Reason)
 	}
 
-	brt.Devices = detailsData.Results.AttachedBranches
+	brt.Devices = detailsData.Results.AttachedDevices
 	brt.Config = detailsData.Results.Config
 	return brt, nil
 }
