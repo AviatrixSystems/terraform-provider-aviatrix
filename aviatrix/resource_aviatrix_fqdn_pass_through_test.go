@@ -13,7 +13,7 @@ import (
 
 func TestAccAviatrixFQDNPassThrough_basic(t *testing.T) {
 	if os.Getenv("SKIP_FQDN_PASS_THROUGH") == "yes" {
-		t.Skip("Skipping Branch Router test as SKIP_FQDN_PASS_THROUGH is set")
+		t.Skip("Skipping FQDN pass through test as SKIP_FQDN_PASS_THROUGH is set")
 	}
 
 	rName := acctest.RandString(5)
