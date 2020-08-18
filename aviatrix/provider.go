@@ -64,6 +64,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_firewall_policy":                                resourceAviatrixFirewallPolicy(),
 			"aviatrix_firewall_tag":                                   resourceAviatrixFirewallTag(),
 			"aviatrix_fqdn":                                           resourceAviatrixFQDN(),
+			"aviatrix_fqdn_pass_through":                              resourceAviatrixFQDNPassThrough(),
 			"aviatrix_fqdn_tag_rule":                                  resourceAviatrixFQDNTagRule(),
 			"aviatrix_gateway":                                        resourceAviatrixGateway(),
 			"aviatrix_gateway_dnat":                                   resourceAviatrixGatewayDNat(),
