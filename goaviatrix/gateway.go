@@ -56,7 +56,6 @@ type Gateway struct {
 	Expiration                  string `form:"expiration,omitempty" json:"expiration,omitempty"`
 	GatewayZone                 string `form:"gateway_zone,omitempty" json:"gateway_zone,omitempty"`
 	GwName                      string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
-	GwOriginalName              string `form:"gw_original_name,omitempty" json:"gw_original_name,omitempty"`
 	GwSecurityGroupID           string `form:"gw_security_group_id,omitempty" json:"gw_security_group_id,omitempty"`
 	GwSize                      string `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
 	GwSubnetID                  string `form:"gw_subnet_id,omitempty" json:"gw_subnet_id,omitempty"`
@@ -156,7 +155,6 @@ type GatewayDetail struct {
 	AccountName                  string       `form:"account_name,omitempty" json:"account_name,omitempty"`
 	Action                       string       `form:"action,omitempty"`
 	GwName                       string       `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
-	AliasName                    string       `json:"alias_name,omitempty"`
 	DMZEnabled                   bool         `json:"dmz_enabled,omitempty"`
 	EnableAdvertiseTransitCidr   string       `json:"advertise_transit_cidr,omitempty"`
 	BgpManualSpokeAdvertiseCidrs []string     `json:"bgp_manual_spoke_advertise_cidrs,omitempty"`
@@ -351,7 +349,7 @@ func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
 
 	gwList := data.Results
 	for i := range gwList {
-		if gwList[i].GwName == gateway.GwName || gwList[i].GwOriginalName == gateway.GwName {
+		if gwList[i].GwName == gateway.GwName {
 			return &gwList[i], nil
 		}
 	}
@@ -384,7 +382,7 @@ func (c *Client) GetGatewayDetail(gateway *Gateway) (*GatewayDetail, error) {
 	if !data.Return {
 		return nil, errors.New("Rest API list_vpc_by_name Get failed: " + data.Reason)
 	}
-	if data.Results.GwName == gateway.GwName || data.Results.AliasName == gateway.GwName {
+	if data.Results.GwName == gateway.GwName {
 		return &data.Results, nil
 	}
 
@@ -1127,69 +1125,5 @@ func (c *Client) DisableEgressTransitFirenet(transitGateway *TransitVpc) error {
 		"gateway_name": transitGateway.GwName,
 	}
 	return c.PostAPI(action, data, BasicCheck)
-}
-
-func (c *Client) UpdateGatewayAlias(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'update_gateway_alias': ") + err.Error())
-	}
-	enableTransitFireNet := url.Values{}
-	enableTransitFireNet.Add("CID", c.CID)
-	enableTransitFireNet.Add("action", "update_gateway_alias")
-	enableTransitFireNet.Add("gateway_name", gateway.GwOriginalName)
-	enableTransitFireNet.Add("alias", gateway.GwName)
-	Url.RawQuery = enableTransitFireNet.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'edit_gateway_alias' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'update_gateway_alias' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "has already been taken") {
-			err = c.DeleteGatewayAlias(gateway)
-			if err != nil {
-				return err
-			}
-			return nil
-		}
-		return errors.New("Rest API 'update_gateway_alias' Get failed: " + data.Reason)
-	}
-	return nil
-}
-
-func (c *Client) DeleteGatewayAlias(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'delete_gateway_alias': ") + err.Error())
-	}
-	enableTransitFireNet := url.Values{}
-	enableTransitFireNet.Add("CID", c.CID)
-	enableTransitFireNet.Add("action", "delete_gateway_alias")
-	enableTransitFireNet.Add("gateway_name", gateway.GwOriginalName)
-	Url.RawQuery = enableTransitFireNet.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'enable_gateway_for_transit_firenet' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'delete_gateway_alias' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'delete_gateway_alias' Get failed: " + data.Reason)
-	}
-	return nil
 }
 
