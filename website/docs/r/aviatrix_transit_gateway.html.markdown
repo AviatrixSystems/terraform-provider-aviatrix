@@ -156,7 +156,6 @@ In addition to all arguments above, the following attributes are exported:
 * `ha_cloud_instance_id` - Cloud instance ID of the HA transit gateway.
 * `ha_gw_name` - Aviatrix transit gateway unique name of HA transit gateway.
 * `ha_private_ip` - Private IP address of the HA transit gateway created.
-* `gw_original_name` - Name of the Aviatrix transit gateway when it was created..
 
 The following arguments are deprecated:
 
