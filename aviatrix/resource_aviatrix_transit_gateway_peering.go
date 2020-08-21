@@ -23,13 +23,11 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 			"transit_gateway_name1": {
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew:    true,
 				Description: "The first transit gateway name to make a peer pair.",
 			},
 			"transit_gateway_name2": {
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew:    true,
 				Description: "The second transit gateway name to make a peer pair.",
 			},
 			"gateway1_excluded_network_cidrs": {
@@ -63,6 +61,16 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+			},
+			"transit_gateway_original_name1": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Name of transit gateway 1 when it was created.",
+			},
+			"transit_gateway_original_name2": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Name of transit gateway 2 when it was created.",
 			},
 		},
 	}
@@ -124,11 +132,13 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 	}
 
 	transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
-		TransitGatewayName1: d.Get("transit_gateway_name1").(string),
-		TransitGatewayName2: d.Get("transit_gateway_name2").(string),
+		TransitGatewayName1:         d.Get("transit_gateway_name1").(string),
+		TransitGatewayName2:         d.Get("transit_gateway_name2").(string),
+		TransitGatewayOriginalName1: d.Get("transit_gateway_original_name1").(string),
+		TransitGatewayOriginalName2: d.Get("transit_gateway_original_name2").(string),
 	}
 
-	err := client.GetTransitGatewayPeering(transitGatewayPeering)
+	tranGwPeering, err := client.GetTransitGatewayPeering(transitGatewayPeering)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
@@ -136,6 +146,10 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 		}
 		return fmt.Errorf("couldn't find Aviatrix Transit Gateway peering: %s", err)
 	}
+	d.Set("transit_gateway_name1", tranGwPeering.TransitGatewayName1)
+	d.Set("transit_gateway_name2", tranGwPeering.TransitGatewayName2)
+	d.Set("transit_gateway_original_name1", tranGwPeering.TransitGatewayOriginalName1)
+	d.Set("transit_gateway_original_name2", tranGwPeering.TransitGatewayOriginalName2)
 
 	transitGatewayPeering, err = client.GetTransitGatewayPeeringDetails(transitGatewayPeering)
 	if err != nil {
@@ -161,6 +175,30 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 
 func resourceAviatrixTransitGatewayPeeringUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	if d.HasChange("transit_gateway_name1") {
+		_, gwNameNew := d.GetChange("transit_gateway_name1")
+		gateway := &goaviatrix.Gateway{
+			GwName:         gwNameNew.(string),
+			GwOriginalName: d.Get("transit_gateway_original_name1").(string),
+		}
+		err := client.IsGatewayNameUpdatable(gateway)
+		if err != nil {
+			return nil
+		}
+	}
+
+	if d.HasChange("transit_gateway_name2") {
+		_, gwNameNew := d.GetChange("transit_gateway_name2")
+		gateway := &goaviatrix.Gateway{
+			GwName:         gwNameNew.(string),
+			GwOriginalName: d.Get("transit_gateway_original_name2").(string),
+		}
+		err := client.IsGatewayNameUpdatable(gateway)
+		if err != nil {
+			return err
+		}
+	}
 
 	var gw1Cidrs []string
 	for _, cidr := range d.Get("gateway1_excluded_network_cidrs").([]interface{}) {

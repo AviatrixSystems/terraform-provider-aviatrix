@@ -11,6 +11,8 @@ import (
 )
 
 type TransitGatewayPeering struct {
+	CID                                 string `form:"CID,omitempty"`
+	Action                              string `form:"action,omitempty"`
 	TransitGatewayName1                 string `form:"gateway1,omitempty" json:"gateway_1,omitempty"`
 	TransitGatewayName2                 string `form:"gateway2,omitempty" json:"gateway_2,omitempty"`
 	Gateway1ExcludedCIDRs               string `form:"source_filter_cidrs,omitempty"`
@@ -21,8 +23,8 @@ type TransitGatewayPeering struct {
 	Gateway2ExcludedCIDRsSlice          []string
 	Gateway1ExcludedTGWConnectionsSlice []string
 	Gateway2ExcludedTGWConnectionsSlice []string
-	CID                                 string `form:"CID,omitempty"`
-	Action                              string `form:"action,omitempty"`
+	TransitGatewayOriginalName1         string `json:"gateway_1_original,omitempty"`
+	TransitGatewayOriginalName2         string `json:"gateway_2_original,omitempty"`
 }
 
 type TransitGatewayPeeringAPIResp struct {
@@ -68,10 +70,10 @@ func (c *Client) CreateTransitGatewayPeering(transitGatewayPeering *TransitGatew
 	return nil
 }
 
-func (c *Client) GetTransitGatewayPeering(transitGatewayPeering *TransitGatewayPeering) error {
+func (c *Client) GetTransitGatewayPeering(transitGatewayPeering *TransitGatewayPeering) (*TransitGatewayPeering, error) {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return errors.New(("url Parsing failed for list_inter_transit_gateway_peering ") + err.Error())
+		return nil, errors.New(("url Parsing failed for list_inter_transit_gateway_peering ") + err.Error())
 	}
 	listInterTransitGwPeering := url.Values{}
 	listInterTransitGwPeering.Add("CID", c.CID)
@@ -80,7 +82,7 @@ func (c *Client) GetTransitGatewayPeering(transitGatewayPeering *TransitGatewayP
 	resp, err := c.Get(Url.String(), nil)
 
 	if err != nil {
-		return errors.New("HTTP Get list_inter_transit_gateway_peering failed: " + err.Error())
+		return nil, errors.New("HTTP Get list_inter_transit_gateway_peering failed: " + err.Error())
 	}
 	var data TransitGatewayPeeringAPIResp
 	buf := new(bytes.Buffer)
@@ -88,15 +90,15 @@ func (c *Client) GetTransitGatewayPeering(transitGatewayPeering *TransitGatewayP
 	bodyString := buf.String()
 	bodyIoCopy := strings.NewReader(bodyString)
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode list_inter_transit_gateway_peering failed: " + err.Error() + "\n Body: " + bodyString)
+		return nil, errors.New("Json Decode list_inter_transit_gateway_peering failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
-		return errors.New("Rest API list_inter_transit_gateway_peering Get failed: " + data.Reason)
+		return nil, errors.New("Rest API list_inter_transit_gateway_peering Get failed: " + data.Reason)
 	}
 	if len(data.Results) == 0 {
 		log.Errorf("Transit gateway peering with gateways %s and %s not found",
 			transitGatewayPeering.TransitGatewayName1, transitGatewayPeering.TransitGatewayName2)
-		return ErrNotFound
+		return nil, ErrNotFound
 	}
 	peeringList := data.Results
 	for i := range peeringList {
@@ -104,15 +106,23 @@ func (c *Client) GetTransitGatewayPeering(transitGatewayPeering *TransitGatewayP
 			if peeringList[i][j].TransitGatewayName1 == transitGatewayPeering.TransitGatewayName1 &&
 				peeringList[i][j].TransitGatewayName2 == transitGatewayPeering.TransitGatewayName2 ||
 				peeringList[i][j].TransitGatewayName1 == transitGatewayPeering.TransitGatewayName2 &&
-					peeringList[i][j].TransitGatewayName2 == transitGatewayPeering.TransitGatewayName1 {
+					peeringList[i][j].TransitGatewayName2 == transitGatewayPeering.TransitGatewayName1 ||
+				peeringList[i][j].TransitGatewayOriginalName1 == transitGatewayPeering.TransitGatewayOriginalName1 &&
+					peeringList[i][j].TransitGatewayOriginalName2 == transitGatewayPeering.TransitGatewayOriginalName2 ||
+				peeringList[i][j].TransitGatewayOriginalName1 == transitGatewayPeering.TransitGatewayOriginalName2 &&
+					peeringList[i][j].TransitGatewayOriginalName2 == transitGatewayPeering.TransitGatewayOriginalName1 {
 				log.Debugf("Found %s<->%s transit gateway peering: %#v",
 					transitGatewayPeering.TransitGatewayName1,
 					transitGatewayPeering.TransitGatewayName2, peeringList[i][j])
-				return nil
+				transitGatewayPeering.TransitGatewayName1 = peeringList[i][j].TransitGatewayName1
+				transitGatewayPeering.TransitGatewayName2 = peeringList[i][j].TransitGatewayName2
+				transitGatewayPeering.TransitGatewayOriginalName1 = peeringList[i][j].TransitGatewayOriginalName1
+				transitGatewayPeering.TransitGatewayOriginalName2 = peeringList[i][j].TransitGatewayOriginalName2
+				return transitGatewayPeering, nil
 			}
 		}
 	}
-	return ErrNotFound
+	return nil, ErrNotFound
 }
 
 func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitGatewayPeering) (*TransitGatewayPeering, error) {

@@ -1151,13 +1151,6 @@ func (c *Client) UpdateGatewayAlias(gateway *Gateway) error {
 		return errors.New("Json Decode 'update_gateway_alias' failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
-		if strings.Contains(data.Reason, "has already been taken") {
-			err = c.DeleteGatewayAlias(gateway)
-			if err != nil {
-				return err
-			}
-			return nil
-		}
 		return errors.New("Rest API 'update_gateway_alias' Get failed: " + data.Reason)
 	}
 	return nil
@@ -1188,5 +1181,25 @@ func (c *Client) DeleteGatewayAlias(gateway *Gateway) error {
 	if !data.Return {
 		return errors.New("Rest API 'delete_gateway_alias' Get failed: " + data.Reason)
 	}
+	return nil
+}
+
+func (c *Client) IsGatewayNameUpdatable(gateway *Gateway) error {
+	gw, err := c.GetGateway(gateway)
+	if err != nil {
+		if err == ErrNotFound {
+			return errors.New("couldn't find gateway: " + gateway.GwName)
+		}
+		return err
+	}
+
+	if gw.GwOriginalName != gateway.GwOriginalName {
+		return errors.New("updating gateway to another different gateway is not allowed")
+	}
+
+	if gw.GwName != gateway.GwName {
+		return errors.New("couldn't update to gateway's original name, since " + gw.GwName + " is currently used")
+	}
+
 	return nil
 }
