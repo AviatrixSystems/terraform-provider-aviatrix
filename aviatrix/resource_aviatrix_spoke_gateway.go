@@ -1331,9 +1331,13 @@ func resourceAviatrixSpokeGatewayDelete(d *schema.ResourceData, meta interface{}
 			GwName: d.Get("gw_name").(string),
 		}
 
-		err := client.SpokeLeaveAllTransit(spokeVPC)
-		if err != nil {
-			return fmt.Errorf("failed to leave Transit Gateway: %s", err)
+		gws := strings.Split(transitGw, ",")
+		for _, gw := range gws {
+			spokeVPC.TransitGateway = gw
+			err := client.SpokeLeaveTransit(spokeVPC)
+			if err != nil {
+				return fmt.Errorf("failed to leave transit gateway %q: %v", gw, err)
+			}
 		}
 	}
 
