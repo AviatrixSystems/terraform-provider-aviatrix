@@ -96,6 +96,7 @@ type Gateway struct {
 	SpokeVpc                    string `json:"spoke_vpc,omitempty"`
 	TagList                     string `form:"tags,omitempty"`
 	TransitGwName               string `form:"transit_gw_name,omitempty" json:"transit_gw_name,omitempty"`
+	EgressTransitGwName         string `form:"egress_transit_gw_name,omitempty" json:"egress_transit_gw_name,omitempty"`
 	TunnelName                  string `form:"tunnel_name,omitempty" json:"tunnel_name,omitempty"`
 	TunnelType                  string `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
 	VendorName                  string `form:"vendor_name,omitempty" json:"vendor_name,omitempty"`
@@ -161,6 +162,7 @@ type GatewayDetail struct {
 	SnatPolicy                   []PolicyRule `json:"snat_ip_port_list,omitempty"`
 	DnatPolicy                   []PolicyRule `json:"dnat_ip_port_list,omitempty"`
 	Elb                          ElbDetail    `json:"elb,omitempty"`
+	EnableEgressTransitFireNet   bool         `json:"egress_transit,omitempty"`
 	EnableFireNet                bool         `json:"firenet_enabled,omitempty"`
 	EnableTransitFireNet         bool         `json:"transit_firenet_enabled,omitempty"`
 	LearnedCidrsApproval         string       `json:"learned_cidrs_approval,omitempty"`
@@ -1103,4 +1105,24 @@ func (c *Client) IsSegmentationEnabled(transitGateway *TransitVpc) (bool, error)
 	}
 
 	return Contains(data.Results.EnabledDomains, transitGateway.GwName), nil
+}
+
+func (c *Client) EnableEgressTransitFirenet(transitGateway *TransitVpc) error {
+	action := "enable_transit_firenet_on_egress_transit_gateway"
+	data := map[string]interface{}{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": transitGateway.GwName,
+	}
+	return c.PostAPI(action, data, BasicCheck)
+}
+
+func (c *Client) DisableEgressTransitFirenet(transitGateway *TransitVpc) error {
+	action := "disable_transit_firenet_on_egress_transit_gateway"
+	data := map[string]interface{}{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": transitGateway.GwName,
+	}
+	return c.PostAPI(action, data, BasicCheck)
 }

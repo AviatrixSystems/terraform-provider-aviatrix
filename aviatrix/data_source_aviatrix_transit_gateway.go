@@ -174,6 +174,11 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Switch to enable/disable transit firenet interfaces for transit gateway.",
 			},
+			"enable_egress_transit_firenet": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Specify whether to enable egress transit firenet interfaces or not.",
+			},
 			"enable_learned_cidrs_approval": {
 				Type:        schema.TypeBool,
 				Computed:    true,
@@ -318,6 +323,7 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 
 		d.Set("enable_firenet", gwDetail.EnableFireNet)
 		d.Set("enable_transit_firenet", gwDetail.EnableTransitFireNet)
+		d.Set("enable_egress_transit_firenet", gwDetail.EnableEgressTransitFireNet)
 
 		if gw.EnableActiveMesh == "yes" {
 			d.Set("enable_active_mesh", true)

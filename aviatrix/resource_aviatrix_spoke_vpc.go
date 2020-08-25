@@ -613,13 +613,13 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 			}
 		} else if n == "" {
 			//Transit GW has been deleted, leave transit GW.
-			err := client.SpokeLeaveTransit(spokeVPC)
+			err := client.SpokeLeaveAllTransit(spokeVPC)
 			if err != nil {
 				return fmt.Errorf("failed to leave transit VPC: %s", err)
 			}
 		} else {
 			//Change transit GW
-			err := client.SpokeLeaveTransit(spokeVPC)
+			err := client.SpokeLeaveAllTransit(spokeVPC)
 			if err != nil {
 				return fmt.Errorf("failed to leave transit VPC: %s", err)
 			}
@@ -652,7 +652,7 @@ func resourceAviatrixSpokeVpcDelete(d *schema.ResourceData, meta interface{}) er
 			GwName: d.Get("gw_name").(string),
 		}
 
-		err := client.SpokeLeaveTransit(spokeVPC)
+		err := client.SpokeLeaveAllTransit(spokeVPC)
 		if err != nil {
 			return fmt.Errorf("failed to leave transit VPC: %s", err)
 		}

@@ -91,7 +91,7 @@ func (c *Client) SpokeJoinTransit(spoke *SpokeVpc) error {
 	return nil
 }
 
-func (c *Client) SpokeLeaveTransit(spoke *SpokeVpc) error {
+func (c *Client) SpokeLeaveAllTransit(spoke *SpokeVpc) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
 		return errors.New(("url Parsing failed for detach_spoke_from_transit_gw") + err.Error())
@@ -121,6 +121,17 @@ func (c *Client) SpokeLeaveTransit(spoke *SpokeVpc) error {
 		return errors.New("Rest API detach_spoke_from_transit_gw Get failed: " + data.Reason)
 	}
 	return nil
+}
+
+func (c *Client) SpokeLeaveTransit(spoke *SpokeVpc) error {
+	action := "detach_spoke_from_transit_gw"
+	data := map[string]interface{}{
+		"CID":        c.CID,
+		"action":     action,
+		"spoke_gw":   spoke.GwName,
+		"transit_gw": spoke.TransitGateway,
+	}
+	return c.PostAPI(action, data, BasicCheck)
 }
 
 func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
