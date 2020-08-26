@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
+	"time"
 )
 
 type DeviceTag struct {
@@ -198,6 +200,31 @@ func (c *Client) AttachDeviceTag(brt *DeviceTag) error {
 }
 
 func (c *Client) CommitDeviceTag(brt *DeviceTag) error {
+	tries, maxTries := 0, 5
+	backoff := 15 * time.Second
+	var err error
+
+	for tries < maxTries {
+		err = c.commitDeviceTagOnce(brt)
+		if err != nil {
+			tries++
+			if tries < maxTries {
+				time.Sleep(backoff)
+				backoff *= 2
+			}
+			continue
+		}
+		break
+	}
+
+	if err != nil {
+		return fmt.Errorf("tried to commit device tag %d times but could not succeed: %v", maxTries, err)
+	}
+
+	return nil
+}
+
+func (c *Client) commitDeviceTagOnce(brt *DeviceTag) error {
 	brt.CID = c.CID
 	brt.Action = "commit_cloudwan_configtag_to_devices"
 	resp, err := c.Post(c.baseURL, brt)
