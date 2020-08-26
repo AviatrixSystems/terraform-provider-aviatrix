@@ -60,6 +60,6 @@ In addition to all arguments above, the following attributes are exported:
 * `single_ip_snat` - Status of Single IP Source NAT mode of the spoke gateway.
 * `subnet` - A VPC Network address range selected from one of the available network ranges.
 * `tag_list` - Instance tag of cloud provider.
-* `transit_gw` - transit gateway to attach this spoke gateway to.
+* `transit_gw` - Transit gateways attached to this spoke gateway.
 * `vpc_id` - VPC-ID/VNet-Name of cloud provider.
 * `vpc_reg` - Region of cloud provider.

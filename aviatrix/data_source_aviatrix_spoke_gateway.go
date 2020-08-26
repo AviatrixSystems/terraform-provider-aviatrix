@@ -102,7 +102,7 @@ func dataSourceAviatrixSpokeGateway() *schema.Resource {
 			"transit_gw": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Specify the transit Gateway.",
+				Description: "Transit Gateways this spoke has joined.",
 			},
 			"tag_list": {
 				Type:        schema.TypeList,
@@ -291,7 +291,14 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 
 		if gw.SpokeVpc == "yes" {
-			d.Set("transit_gw", gw.TransitGwName)
+			var transitGws []string
+			if gw.TransitGwName != "" {
+				transitGws = append(transitGws, gw.TransitGwName)
+			}
+			if gw.EgressTransitGwName != "" {
+				transitGws = append(transitGws, gw.EgressTransitGwName)
+			}
+			d.Set("transit_gw", strings.Join(transitGws, ","))
 		} else {
 			d.Set("transit_gw", "")
 		}
