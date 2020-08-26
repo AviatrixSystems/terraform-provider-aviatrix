@@ -219,6 +219,7 @@ In addition to all arguments above, the following attributes are exported:
 * `peering_ha_cloud_instance_id` - Cloud instance ID of the HA gateway.
 * `peering_ha_gw_name` - Aviatrix gateway unique name of HA gateway.
 * `peering_ha_private_ip` - Private IP address of HA gateway.
+* `gw_original_name` - Name of the Aviatrix gateway when it was created.
 
 The following arguments are deprecated:
 
