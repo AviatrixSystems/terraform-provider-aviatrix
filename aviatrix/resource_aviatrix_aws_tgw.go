@@ -159,6 +159,12 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"enable_multicast": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -173,6 +179,7 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 		AwsSideAsNumber:           d.Get("aws_side_as_number").(string),
 		AttachedAviatrixTransitGW: make([]string, 0),
 		SecurityDomains:           make([]goaviatrix.SecurityDomainRule, 0),
+		EnableMulticast:           d.Get("enable_multicast").(bool),
 	}
 
 	manageVpcAttachment := d.Get("manage_vpc_attachment").(bool)
@@ -465,6 +472,7 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("account_name", awsTgw.AccountName)
 	d.Set("tgw_name", awsTgw.Name)
 	d.Set("region", awsTgw.Region)
+	d.Set("enable_multicast", awsTgw.EnableMulticast)
 
 	log.Printf("[INFO] Reading AWS TGW")
 

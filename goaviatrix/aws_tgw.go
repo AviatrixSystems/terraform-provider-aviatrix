@@ -24,6 +24,7 @@ type AWSTgw struct {
 	AttachedAviatrixTransitGW []string             `form:"attached_aviatrix_transit_gateway,omitempty"`
 	SecurityDomains           []SecurityDomainRule `form:"security_domains,omitempty"`
 	ManageVpcAttachment       string
+	EnableMulticast           bool `form:"multicast_enable"`
 }
 
 type AWSTgwAPIResp struct {
@@ -106,6 +107,7 @@ type TgwInfoDetail struct {
 	AccountName     string `json:"acct_name"`
 	Region          string `json:"region"`
 	AwsSideAsNumber int    `json:"tgw_aws_asn"`
+	EnableMulticast bool   `json:"multicast_enable"`
 }
 
 type listAttachedVpcNamesResp struct {
@@ -722,6 +724,7 @@ func (c *Client) ListTgwDetails(awsTgw *AWSTgw) (*AWSTgw, error) {
 		awsTgw.AccountName = tgwInfoDetail.AccountName
 		awsTgw.Region = tgwInfoDetail.Region
 		awsTgw.AwsSideAsNumber = strconv.Itoa(tgwInfoDetail.AwsSideAsNumber)
+		awsTgw.EnableMulticast = tgwInfoDetail.EnableMulticast
 		return awsTgw, nil
 	}
 	return nil, ErrNotFound
