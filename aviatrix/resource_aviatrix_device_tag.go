@@ -67,6 +67,8 @@ func resourceAviatrixDeviceTagCreate(d *schema.ResourceData, meta interface{}) e
 	deviceTag := marshalDeviceTagInput(d)
 
 	if err := client.CreateDeviceTag(deviceTag); err != nil {
+		// delete after failing to create to clean up for next creation attempt
+		_ = client.DeleteDeviceTag(deviceTag)
 		return fmt.Errorf("could not create device tag: %v", err)
 	}
 
