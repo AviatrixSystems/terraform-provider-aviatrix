@@ -135,6 +135,7 @@ The following arguments are supported:
 
 -> **NOTE:** `manage_vpc_attachment` - If you are using/upgraded to Aviatrix Terraform Provider R1.5+, and an **aviatrix_aws_tgw** resource was originally created with a provider version <R1.5, you must do 'terraform refresh' to update and apply the attribute's default value (true) into the state file.
 
+* `enable_multicast` - (Optional) Enable multicast. Default value: false. Valid values: true, false.
 
 ## Import
 
