@@ -120,7 +120,12 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "Specify the transit Gateway.",
+				Description: "Specify the transit Gateways to attach to this spoke. Format is a comma-separated list of transit gateway names. For example, 'transit-gw1,transit-gw2'.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					oldGws := strings.Split(old, ",")
+					newGws := strings.Split(new, ",")
+					return goaviatrix.Equivalent(oldGws, newGws)
+				},
 			},
 			"tag_list": {
 				Type:        schema.TypeList,
@@ -219,13 +224,12 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	client := meta.(*goaviatrix.Client)
 
 	gateway := &goaviatrix.SpokeVpc{
-		CloudType:      d.Get("cloud_type").(int),
-		AccountName:    d.Get("account_name").(string),
-		GwName:         d.Get("gw_name").(string),
-		VpcSize:        d.Get("gw_size").(string),
-		Subnet:         d.Get("subnet").(string),
-		HASubnet:       d.Get("ha_subnet").(string),
-		TransitGateway: d.Get("transit_gw").(string),
+		CloudType:   d.Get("cloud_type").(int),
+		AccountName: d.Get("account_name").(string),
+		GwName:      d.Get("gw_name").(string),
+		VpcSize:     d.Get("gw_size").(string),
+		Subnet:      d.Get("subnet").(string),
+		HASubnet:    d.Get("ha_subnet").(string),
 	}
 	enableSNat := d.Get("single_ip_snat").(bool)
 	if enableSNat {
@@ -439,10 +443,13 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if transitGwName := d.Get("transit_gw").(string); transitGwName != "" {
-		//No HA config, just return
-		err := client.SpokeJoinTransit(gateway)
-		if err != nil {
-			return fmt.Errorf("failed to join Transit Gateway: %s", err)
+		gws := strings.Split(d.Get("transit_gw").(string), ",")
+		for _, gw := range gws {
+			gateway.TransitGateway = gw
+			err := client.SpokeJoinTransit(gateway)
+			if err != nil {
+				return fmt.Errorf("failed to join Transit Gateway %q: %v", gw, err)
+			}
 		}
 	}
 
@@ -682,7 +689,14 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if gw.SpokeVpc == "yes" {
-		d.Set("transit_gw", gw.TransitGwName)
+		var transitGws []string
+		if gw.TransitGwName != "" {
+			transitGws = append(transitGws, gw.TransitGwName)
+		}
+		if gw.EgressTransitGwName != "" {
+			transitGws = append(transitGws, gw.EgressTransitGwName)
+		}
+		d.Set("transit_gw", strings.Join(transitGws, ","))
 	} else {
 		d.Set("transit_gw", "")
 	}
@@ -1058,18 +1072,25 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 
 	if d.HasChange("enable_active_mesh") && d.HasChange("transit_gw") {
 		spokeVPC := &goaviatrix.SpokeVpc{
-			CloudType:      d.Get("cloud_type").(int),
-			GwName:         d.Get("gw_name").(string),
-			HASubnet:       d.Get("ha_subnet").(string),
-			TransitGateway: d.Get("transit_gw").(string),
+			CloudType: d.Get("cloud_type").(int),
+			GwName:    d.Get("gw_name").(string),
+			HASubnet:  d.Get("ha_subnet").(string),
 		}
 
 		o, n := d.GetChange("transit_gw")
-		if o != "" {
-			//New configuration to join to transit GW
-			err := client.SpokeLeaveTransit(spokeVPC)
-			if err != nil {
-				return fmt.Errorf("failed to leave Transit Gateway: %s", err)
+		oldTransitGws := strings.Split(o.(string), ",")
+		newTransitGws := strings.Split(n.(string), ",")
+		if len(oldTransitGws) > 0 && oldTransitGws[0] != "" {
+			for _, gw := range oldTransitGws {
+				// Leave any transit gateways that are in the old list but not in the new.
+				if goaviatrix.Contains(newTransitGws, gw) {
+					continue
+				}
+				spokeVPC.TransitGateway = gw
+				err := client.SpokeLeaveTransit(spokeVPC)
+				if err != nil {
+					return fmt.Errorf("failed to leave Transit Gateway: %s", err)
+				}
 			}
 		}
 
@@ -1091,10 +1112,17 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			}
 		}
 
-		if n != "" {
-			err := client.SpokeJoinTransit(spokeVPC)
-			if err != nil {
-				return fmt.Errorf("failed to join Transit Gateway: %s", err)
+		if len(newTransitGws) > 0 && newTransitGws[0] != "" {
+			for _, gw := range newTransitGws {
+				// Join any transit gateways that are in the new list but not in the old.
+				if goaviatrix.Contains(oldTransitGws, gw) {
+					continue
+				}
+				spokeVPC.TransitGateway = gw
+				err := client.SpokeJoinTransit(spokeVPC)
+				if err != nil {
+					return fmt.Errorf("failed to join Transit Gateway %q: %v", gw, err)
+				}
 			}
 		}
 
@@ -1123,35 +1151,38 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		d.SetPartial("enable_active_mesh")
 	} else if d.HasChange("transit_gw") {
 		spokeVPC := &goaviatrix.SpokeVpc{
-			CloudType:      d.Get("cloud_type").(int),
-			GwName:         d.Get("gw_name").(string),
-			HASubnet:       d.Get("ha_subnet").(string),
-			TransitGateway: d.Get("transit_gw").(string),
+			CloudType: d.Get("cloud_type").(int),
+			GwName:    d.Get("gw_name").(string),
+			HASubnet:  d.Get("ha_subnet").(string),
 		}
 
 		o, n := d.GetChange("transit_gw")
-		if o == "" {
-			//New configuration to join to transit GW
-			err := client.SpokeJoinTransit(spokeVPC)
-			if err != nil {
-				return fmt.Errorf("failed to join Transit Gateway: %s", err)
+		oldTransitGws := strings.Split(o.(string), ",")
+		newTransitGws := strings.Split(n.(string), ",")
+		if len(oldTransitGws) > 0 && oldTransitGws[0] != "" {
+			for _, gw := range oldTransitGws {
+				// Leave any transit gateways that are in the old list but not in the new.
+				if goaviatrix.Contains(newTransitGws, gw) {
+					continue
+				}
+				spokeVPC.TransitGateway = gw
+				err := client.SpokeLeaveTransit(spokeVPC)
+				if err != nil {
+					return fmt.Errorf("failed to leave Transit Gateway %q: %v", gw, err)
+				}
 			}
-		} else if n == "" {
-			//Transit GW has been deleted, leave transit GW.
-			err := client.SpokeLeaveTransit(spokeVPC)
-			if err != nil {
-				return fmt.Errorf("failed to leave Transit Gateway: %s", err)
-			}
-		} else {
-			//Change transit GW
-			err := client.SpokeLeaveTransit(spokeVPC)
-			if err != nil {
-				return fmt.Errorf("failed to leave Transit Gateway: %s", err)
-			}
-
-			err = client.SpokeJoinTransit(spokeVPC)
-			if err != nil {
-				return fmt.Errorf("failed to join Transit Gateway: %s", err)
+		}
+		if len(newTransitGws) > 0 && newTransitGws[0] != "" {
+			for _, gw := range newTransitGws {
+				// Join any transit gateways that are in the new list but not in the old.
+				if goaviatrix.Contains(oldTransitGws, gw) {
+					continue
+				}
+				spokeVPC.TransitGateway = gw
+				err := client.SpokeJoinTransit(spokeVPC)
+				if err != nil {
+					return fmt.Errorf("failed to join Transit Gateway %q: %v", gw, err)
+				}
 			}
 		}
 
@@ -1300,9 +1331,13 @@ func resourceAviatrixSpokeGatewayDelete(d *schema.ResourceData, meta interface{}
 			GwName: d.Get("gw_name").(string),
 		}
 
-		err := client.SpokeLeaveTransit(spokeVPC)
-		if err != nil {
-			return fmt.Errorf("failed to leave Transit Gateway: %s", err)
+		gws := strings.Split(transitGw, ",")
+		for _, gw := range gws {
+			spokeVPC.TransitGateway = gw
+			err := client.SpokeLeaveTransit(spokeVPC)
+			if err != nil {
+				return fmt.Errorf("failed to leave transit gateway %q: %v", gw, err)
+			}
 		}
 	}
 

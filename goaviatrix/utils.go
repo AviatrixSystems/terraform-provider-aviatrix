@@ -38,6 +38,13 @@ func Difference(a, b []string) []string {
 	return ab
 }
 
+// Equivalent checks if a is equivalent to b.
+// a is equivalent to b if a contains exactly the same elements as b. Order of the element is not important.
+// Example: {"a", "b", "c"} is equivalent to {"c", "a", "b"}
+func Equivalent(a, b []string) bool {
+	return len(Difference(a, b)) == 0 && len(Difference(b, a)) == 0
+}
+
 // DifferenceSlice returns the one-dimension elements in two-dimension slice a that aren't in two-dimension b
 func DifferenceSlice(a, b [][]string) [][]string {
 	if a == nil || len(a) == 0 || b == nil || len(b) == 0 {
