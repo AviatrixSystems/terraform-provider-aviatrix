@@ -173,6 +173,12 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 					"transit gateways must be done using the aviatrix_aws_tgw_transit_gateway_attachment resource. " +
 					"Valid values: true, false. Default value: true.",
 			},
+			"enable_multicast": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -188,6 +194,7 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 		CloudType:                 d.Get("cloud_type").(int),
 		AttachedAviatrixTransitGW: make([]string, 0),
 		SecurityDomains:           make([]goaviatrix.SecurityDomainRule, 0),
+		EnableMulticast:           d.Get("enable_multicast").(bool),
 	}
 
 	manageVpcAttachment := d.Get("manage_vpc_attachment").(bool)
@@ -481,6 +488,7 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("tgw_name", awsTgw.Name)
 	d.Set("region", awsTgw.Region)
 	d.Set("cloud_type", awsTgw.CloudType)
+	d.Set("enable_multicast", awsTgw.EnableMulticast)
 
 	log.Printf("[INFO] Reading AWS TGW")
 
