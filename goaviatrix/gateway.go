@@ -1127,6 +1127,8 @@ func (c *Client) DisableEgressTransitFirenet(transitGateway *TransitVpc) error {
 		"gateway_name": transitGateway.GwName,
 	}
 	return c.PostAPI(action, data, BasicCheck)
+}
+
 func (c *Client) UpdateGatewayAlias(gateway *Gateway) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
