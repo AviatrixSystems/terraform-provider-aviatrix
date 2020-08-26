@@ -365,6 +365,11 @@ func resourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Private IP address of HA gateway.",
 			},
+			"gw_original_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Name of the gateway when it was created.",
+			},
 		},
 	}
 }
@@ -756,18 +761,19 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	client := meta.(*goaviatrix.Client)
 
 	var isImport bool
-	gwName := d.Get("gw_name").(string)
+	gwName := d.Get("gw_original_name").(string)
 	if gwName == "" {
 		isImport = true
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
 		d.Set("gw_name", id)
+		gwName = id
 		d.SetId(id)
 	}
 
 	gateway := &goaviatrix.Gateway{
 		AccountName: d.Get("account_name").(string),
-		GwName:      d.Get("gw_name").(string),
+		GwName:      gwName,
 	}
 
 	if d.Get("single_az_ha").(bool) {
@@ -791,6 +797,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("cloud_type", gw.CloudType)
 		d.Set("account_name", gw.AccountName)
 		d.Set("gw_name", gw.GwName)
+		d.Set("gw_original_name", gw.GwOriginalName)
 
 		if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.OCI || gw.CloudType == goaviatrix.AWSGOV {
 			// AWS vpc_id returns as <vpc_id>~~<other vpc info>
@@ -1099,9 +1106,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 	if d.HasChange("account_name") {
 		return fmt.Errorf("updating account_name is not allowed")
-	}
-	if d.HasChange("gw_name") {
-		return fmt.Errorf("updating gw_name is not allowed")
 	}
 	if d.HasChange("vpc_id") {
 		return fmt.Errorf("updating vpc_id is not allowed")
@@ -1738,7 +1742,28 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("updating customer_managed_keys only is not allowed")
 	}
 
-	d.Partial(false)
+	if d.HasChange("gw_name") {
+		gwOriginalName := d.Get("gw_original_name").(string)
+		_, gwNameNew := d.GetChange("gw_name")
+		gateway := &goaviatrix.Gateway{
+			GwOriginalName: gwOriginalName,
+			GwName:         gwNameNew.(string),
+		}
+		if gwOriginalName != gwNameNew.(string) {
+			err := client.UpdateGatewayAlias(gateway)
+			if err != nil {
+				return err
+			}
+		} else {
+			err := client.DeleteGatewayAlias(gateway)
+			if err != nil {
+				return err
+			}
+		}
+
+		d.SetId(gateway.GwName)
+	}
+
 	d.SetId(gateway.GwName)
 	return resourceAviatrixGatewayRead(d, meta)
 }
