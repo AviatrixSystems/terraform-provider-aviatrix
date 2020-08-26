@@ -49,6 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 * `enable_learned_cidrs_approval` - Status of Encrypted Transit Approval for transit gateway.
 * `enable_vpc_dns_server` - Status of Vpc Dns Server of the transit Gateway.
 * `enable_transit_firenet` - Status of Transit FireNet Interfaces of the transit gateway.
+* `enable_egress_transit_firenet` - Status of Egress Transit FireNet being enabled on the gateway.
 * `excluded_advertised_spoke_routes` - A list of comma separated CIDRs to be advertised to on-prem as "Excluded CIDR List".
 * `filtered_spoke_vpc_routes` - A list of comma separated CIDRs to be filtered from the spoke VPC route table.
 * `ha_insane_mode_az` - AZ of subnet being created for Insane Mode Transit HA Gateway.

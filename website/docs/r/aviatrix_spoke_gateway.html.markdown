@@ -132,7 +132,7 @@ The following arguments are supported:
 * `included_advertised_spoke_routes` - (Optional) A list of comma separated CIDRs to be advertised to on-prem as 'Included CIDR List'. When configured, it will replace all advertised routes from this VPC. Example: "10.4.0.0/116,10.5.0.0/16".
 
 ### Misc.
-* `transit_gw` - (Optional) Specify the Aviatrix transit gateway to attach this spoke gateway to.
+* `transit_gw` - (Optional) Specify the Aviatrix transit gateways to attach this spoke gateway to. Format is a comma separated list of transit gateway names. For example: "transit-gw1,transit-gw2".
 * `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in Controller 4.7+. Valid values: true, false. Default: true. Option not available for AZURE and OCI gateways, they will automatically allocate new EIPs.
 * `eip` - (Optional) Required when `allocate_new_eip` is false. It uses the specified EIP for this gateway. Available in Controller 4.7+. Only available for AWS, GCP and AWSGOV.
 * `tag_list` - (Optional) Instance tag of cloud provider. Only supports AWS and AWSGOV provider, cloud_type is "1", is supported. Example: ["key1:value1", "key2:value2"].
