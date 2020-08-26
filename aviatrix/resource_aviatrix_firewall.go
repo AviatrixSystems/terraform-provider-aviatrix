@@ -324,7 +324,7 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	//If policy list is present, update policy list
-	if ok := d.HasChange("policy"); ok {
+	if ok := d.HasChange("policy"); ok && enabledInlinePolicies {
 		policies := d.Get("policy").([]interface{})
 		for _, policy := range policies {
 			pl := policy.(map[string]interface{})
@@ -338,9 +338,9 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 			}
 
 			if pl["log_enabled"].(interface{}).(bool) {
-				firewallPolicy.LogEnabled = string("on")
+				firewallPolicy.LogEnabled = "on"
 			} else {
-				firewallPolicy.LogEnabled = string("off")
+				firewallPolicy.LogEnabled = "off"
 			}
 
 			err := client.ValidatePolicy(firewallPolicy)
