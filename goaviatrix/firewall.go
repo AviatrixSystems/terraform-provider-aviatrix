@@ -25,11 +25,12 @@ type Policy struct {
 type Firewall struct {
 	CID            string    `form:"CID,omitempty"`
 	Action         string    `form:"action,omitempty"`
-	GwName         string    `form:"vpc_name,omitempty" json:"vpc_name,omitempty"`
+	GwName         string    `form:"vpc_name,omitempty" json:"gw_name,omitempty"`
 	BasePolicy     string    `form:"base_policy,omitempty" json:"base_policy,omitempty"`
 	BaseLogEnabled string    `form:"base_policy_log_enable,omitempty" json:"base_policy_log_enable,omitempty"`
 	PolicyList     []*Policy `json:"security_rules,omitempty"`
 	NewPolicy      string    `form:"new_policy,omitempty"`
+	GwOriginalName string    `json:"gw_original_name,omitempty"`
 }
 
 type FirewallResp struct {

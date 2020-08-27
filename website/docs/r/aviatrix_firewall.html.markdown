@@ -70,6 +70,12 @@ The following arguments are supported:
   * `log_enabled`- (Optional) Valid values: true, false. Default value: false.
   * `description`- (Optional) Description of the policy. Example: "This is policy no.1".
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `gw_original_name` - Name of the gateway to attach firewall policy to when it was created.
+
 ## Import
 
 **firewall** can be imported using the `gw_name`, e.g.

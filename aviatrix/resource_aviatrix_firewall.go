@@ -90,6 +90,11 @@ func resourceAviatrixFirewall() *schema.Resource {
 					},
 				},
 			},
+			"gw_original_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Name of the gateway when it was created.",
+			},
 		},
 	}
 }
@@ -174,17 +179,18 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	gwName := d.Get("gw_name").(string)
+	gwName := d.Get("gw_original_name").(string)
 	if gwName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
 		d.Set("gw_name", id)
 		d.Set("manage_firewall_policies", true)
+		gwName = id
 		d.SetId(id)
 	}
 
 	firewall := &goaviatrix.Firewall{
-		GwName: d.Get("gw_name").(string),
+		GwName: gwName,
 	}
 
 	fw, err := client.GetPolicy(firewall)
@@ -201,6 +207,9 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 	policyMap := make(map[string]map[string]interface{})
 	var policyKeyArray []string
 	if fw != nil {
+		d.Set("gw_name", fw.GwName)
+		d.Set("gw_original_name", fw.GwOriginalName)
+
 		if fw.BasePolicy == "allow-all" {
 			d.Set("base_policy", "allow-all")
 		} else {
@@ -273,7 +282,17 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 
 	d.Partial(true)
 
-	log.Printf("[INFO] Creating Aviatrix firewall: %#v", firewall)
+	if d.HasChange("gw_name") {
+		_, gwNameNew := d.GetChange("gw_name")
+		gateway := &goaviatrix.Gateway{
+			GwName:         gwNameNew.(string),
+			GwOriginalName: d.Get("gw_original_name").(string),
+		}
+		err := client.IsGatewayNameUpdatable(gateway)
+		if err != nil {
+			return nil
+		}
+	}
 
 	_, hasSetPolicies := d.GetOk("policy")
 	enabledInlinePolicies := d.Get("manage_firewall_policies").(bool)
