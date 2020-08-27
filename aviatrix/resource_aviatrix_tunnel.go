@@ -96,7 +96,6 @@ func resourceAviatrixTunnelCreate(d *schema.ResourceData, meta interface{}) erro
 
 func resourceAviatrixTunnelRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	log.Print("zjin: nothing is wrong")
 	vpcName1 := d.Get("gw_name1").(string)
 	vpcName2 := d.Get("gw_name2").(string)
 
