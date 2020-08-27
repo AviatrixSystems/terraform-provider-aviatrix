@@ -148,6 +148,11 @@ func resourceAviatrixAccount() *schema.Resource {
 				Sensitive:   true,
 				Description: "OCI API Private Key local file path.",
 			},
+			"account_original_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Name of the account when it was created.",
+			},
 		},
 	}
 }
@@ -293,16 +298,17 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 func resourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	accountName := d.Get("account_name").(string)
+	accountName := d.Get("account_original_name").(string)
 	if accountName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no account name received. Import Id is %s", id)
 		d.Set("account_name", id)
+		accountName = id
 		d.SetId(id)
 	}
 
 	account := &goaviatrix.Account{
-		AccountName: d.Get("account_name").(string),
+		AccountName: accountName,
 	}
 
 	log.Printf("[INFO] Looking for Aviatrix account: %#v", account)
@@ -318,6 +324,7 @@ func resourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) error
 
 	if acc != nil {
 		d.Set("account_name", acc.AccountName)
+		d.Set("account_original_name", acc.AccountOriginalName)
 		d.Set("cloud_type", acc.CloudType)
 		if acc.CloudType == goaviatrix.AWS {
 			d.Set("aws_account_number", acc.AwsAccountNumber)
@@ -379,14 +386,8 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Updating Aviatrix account: %#v", account)
 
-	d.Partial(true)
-
 	if d.HasChange("cloud_type") {
 		return fmt.Errorf("update cloud_type is not allowed")
-	}
-
-	if d.HasChange("account_name") {
-		return fmt.Errorf("update account name is not allowed")
 	}
 
 	if account.CloudType == goaviatrix.AWS {
@@ -467,7 +468,21 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	d.Partial(false)
+	if d.HasChange("account_name") {
+		accountOriginalName := d.Get("account_original_name").(string)
+		_, accountNameNew := d.GetChange("account_name")
+		account := &goaviatrix.Account{
+			AccountOriginalName: accountOriginalName,
+			AccountName:         accountNameNew.(string),
+		}
+		err := client.EditAccountAlias(account)
+		if err != nil {
+			return err
+		}
+
+		d.SetId(account.AccountName)
+	}
+
 	return resourceAviatrixAccountRead(d, meta)
 }
 

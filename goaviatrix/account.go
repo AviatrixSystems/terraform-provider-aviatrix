@@ -15,7 +15,7 @@ import (
 type Account struct {
 	CID                                   string `form:"CID,omitempty"`
 	Action                                string `form:"action,omitempty"`
-	AccountName                           string `form:"account_name,omitempty" json:"account_name,omitempty"`
+	AccountName                           string `form:"account_name,omitempty" json:"alias,omitempty"`
 	CloudType                             int    `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
 	AwsAccountNumber                      string `form:"aws_account_number,omitempty" json:"account_number,omitempty"`
 	AwsIam                                string `form:"aws_iam,omitempty" json:"aws_iam,omitempty"`
@@ -48,6 +48,7 @@ type Account struct {
 	OciUserID                             string `form:"oci_user_id" json:"oci_user_id,omitempty"`
 	OciCompartmentID                      string `form:"oci_compartment_id" json:"oci_compartment_id,omitempty"`
 	OciApiPrivateKeyFilePath              string `form:"oci_api_key_path" json:"oci_api_private_key_filepath,omitempty"`
+	AccountOriginalName                   string `json:"account_name,omitempty"`
 }
 
 type AccountResult struct {
@@ -142,7 +143,7 @@ func (c *Client) GetAccount(account *Account) (*Account, error) {
 	}
 	accList := data.Results.AccountList
 	for i := range accList {
-		if accList[i].AccountName == account.AccountName {
+		if accList[i].AccountName == account.AccountName || accList[i].AccountOriginalName == account.AccountName {
 			log.Infof("Found Aviatrix Account %s", account.AccountName)
 			return &accList[i], nil
 		}
@@ -244,6 +245,35 @@ func (c *Client) UploadOciApiPrivateKeyFile(account *Account) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API upload_file Post failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) EditAccountAlias(account *Account) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for 'edit_account_alias': ") + err.Error())
+	}
+	editAccountAlias := url.Values{}
+	editAccountAlias.Add("CID", c.CID)
+	editAccountAlias.Add("action", "edit_account_alias")
+	editAccountAlias.Add("account_name", account.AccountOriginalName)
+	editAccountAlias.Add("alias", account.AccountName)
+	Url.RawQuery = editAccountAlias.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return errors.New("HTTP Get 'edit_account_alias' failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode 'edit_account_alias' failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API 'edit_account_alias' Get failed: " + data.Reason)
 	}
 	return nil
 }
