@@ -13,12 +13,14 @@ import (
 )
 
 type Tunnel struct {
-	VpcName1        string `json:"vpc_name1"`
-	VpcName2        string `json:"vpc_name2"`
-	PeeringState    string `json:"peering_state"`
-	PeeringHaStatus string `json:"peering_ha_status"`
-	PeeringLink     string `json:"peering_link"`
-	EnableHA        string `json:"enable_ha"`
+	VpcName1         string `json:"vpc_name1"`
+	VpcName2         string `json:"vpc_name2"`
+	PeeringState     string `json:"peering_state"`
+	PeeringHaStatus  string `json:"peering_ha_status"`
+	PeeringLink      string `json:"peering_link"`
+	EnableHA         string `json:"enable_ha"`
+	VpcOriginalName1 string `json:"vpc_name1_original"`
+	VpcOriginalName2 string `json:"vpc_name2_original"`
 }
 
 type TunnelResult struct {
@@ -88,9 +90,17 @@ func (c *Client) GetTunnel(tunnel *Tunnel) (*Tunnel, error) {
 	}
 	tunList := data.Results.PairList
 	for i := range tunList {
-		if tunList[i].VpcName1 == tunnel.VpcName1 && tunList[i].VpcName2 == tunnel.VpcName2 {
+		if tunList[i].VpcName1 == tunnel.VpcName1 && tunList[i].VpcName2 == tunnel.VpcName2 ||
+			tunList[i].VpcOriginalName1 == tunnel.VpcOriginalName1 && tunList[i].VpcOriginalName2 == tunnel.VpcOriginalName2 {
 			log.Debugf("Found %s~%s tunnel: %#v", tunnel.VpcName1, tunnel.VpcName2, tunList[i])
-			return &tunList[i], nil
+			tunnel.VpcName1 = tunList[i].VpcName1
+			tunnel.VpcName2 = tunList[i].VpcName2
+			tunnel.VpcOriginalName1 = tunList[i].VpcOriginalName1
+			tunnel.VpcOriginalName2 = tunList[i].VpcOriginalName2
+			tunnel.PeeringState = tunList[i].PeeringState
+			tunnel.PeeringHaStatus = tunList[i].PeeringHaStatus
+			tunnel.PeeringLink = tunList[i].PeeringLink
+			return tunnel, nil
 		}
 	}
 	log.Errorf("Tunnel with gateways %s and %s not found", tunnel.VpcName1, tunnel.VpcName2)

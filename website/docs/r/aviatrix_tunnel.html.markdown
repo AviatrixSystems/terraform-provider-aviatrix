@@ -38,6 +38,8 @@ In addition to all arguments above, the following attributes are exported:
 * `peering_state` - (Computed) Status of the tunnel.
 * `peering_hastatus` - (Computed) Status of the HA tunnel.
 * `peering_link` - (Computed) Name of the peering link.
+* `gw_original_name1` - Name of the first VPC Container when it was created.
+* `gw_original_name2` - Name of the second VPC Container when it was created.
 
 ## Import
 
