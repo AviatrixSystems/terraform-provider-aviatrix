@@ -1745,26 +1745,26 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("gw_name") {
 		gwOriginalName := d.Get("gw_original_name").(string)
 		_, gwNameNew := d.GetChange("gw_name")
-		gateway := &goaviatrix.Gateway{
+		gatewayAlias := &goaviatrix.Gateway{
 			GwOriginalName: gwOriginalName,
 			GwName:         gwNameNew.(string),
 		}
 		if gwOriginalName != gwNameNew.(string) {
-			err := client.UpdateGatewayAlias(gateway)
+			err := client.UpdateGatewayAlias(gatewayAlias)
 			if err != nil {
 				return err
 			}
 		} else {
-			err := client.DeleteGatewayAlias(gateway)
+			err := client.DeleteGatewayAlias(gatewayAlias)
 			if err != nil {
 				return err
 			}
 		}
 
-		d.SetId(gateway.GwName)
+		d.SetId(gatewayAlias.GwName)
 	}
 
-	d.SetId(gateway.GwName)
+	d.Partial(false)
 	return resourceAviatrixGatewayRead(d, meta)
 }
 
