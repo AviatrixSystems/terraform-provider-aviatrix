@@ -115,6 +115,14 @@ The following arguments are supported:
 * `awsgov_access_key` - (Optional) AWS Access Key. Required when creating an account for AWS Gov.
 * `awsgov_secret_key` - (Optional) AWS Secret Key. Required when creating an account for AWS Gov.
 
+
+
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `account_original_name` - Name of the account when it was created.
+
 -> **NOTE:** Please make sure that the IAM roles/profiles have already been created before running this, if `aws_iam = true`. More information on the IAM roles is at https://docs.aviatrix.com/HowTos/iam_policies.html and https://docs.aviatrix.com/HowTos/HowTo_IAM_role.html
 
 ## Import

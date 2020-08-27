@@ -1134,12 +1134,12 @@ func (c *Client) UpdateGatewayAlias(gateway *Gateway) error {
 	if err != nil {
 		return errors.New(("url Parsing failed for 'update_gateway_alias': ") + err.Error())
 	}
-	enableTransitFireNet := url.Values{}
-	enableTransitFireNet.Add("CID", c.CID)
-	enableTransitFireNet.Add("action", "update_gateway_alias")
-	enableTransitFireNet.Add("gateway_name", gateway.GwOriginalName)
-	enableTransitFireNet.Add("alias", gateway.GwName)
-	Url.RawQuery = enableTransitFireNet.Encode()
+	updateGatewayAlias := url.Values{}
+	updateGatewayAlias.Add("CID", c.CID)
+	updateGatewayAlias.Add("action", "update_gateway_alias")
+	updateGatewayAlias.Add("gateway_name", gateway.GwOriginalName)
+	updateGatewayAlias.Add("alias", gateway.GwName)
+	Url.RawQuery = updateGatewayAlias.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
 		return errors.New("HTTP Get 'edit_gateway_alias' failed: " + err.Error())
@@ -1163,11 +1163,11 @@ func (c *Client) DeleteGatewayAlias(gateway *Gateway) error {
 	if err != nil {
 		return errors.New(("url Parsing failed for 'delete_gateway_alias': ") + err.Error())
 	}
-	enableTransitFireNet := url.Values{}
-	enableTransitFireNet.Add("CID", c.CID)
-	enableTransitFireNet.Add("action", "delete_gateway_alias")
-	enableTransitFireNet.Add("gateway_name", gateway.GwOriginalName)
-	Url.RawQuery = enableTransitFireNet.Encode()
+	deleteGatewayAlias := url.Values{}
+	deleteGatewayAlias.Add("CID", c.CID)
+	deleteGatewayAlias.Add("action", "delete_gateway_alias")
+	deleteGatewayAlias.Add("gateway_name", gateway.GwOriginalName)
+	Url.RawQuery = deleteGatewayAlias.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
 		return errors.New("HTTP Get 'enable_gateway_for_transit_firenet' failed: " + err.Error())
