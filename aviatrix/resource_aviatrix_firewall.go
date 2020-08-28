@@ -292,6 +292,7 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 		if err != nil {
 			return nil
 		}
+		d.SetId(gateway.GwName)
 	}
 
 	_, hasSetPolicies := d.GetOk("policy")
@@ -382,7 +383,7 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.Partial(false)
-	return nil
+	return resourceAviatrixFirewallRead(d, meta)
 }
 
 func resourceAviatrixFirewallDelete(d *schema.ResourceData, meta interface{}) error {
