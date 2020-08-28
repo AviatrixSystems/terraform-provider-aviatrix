@@ -120,7 +120,7 @@ func tesAccCheckTransitGatewayPeeringExists(n string) resource.TestCheckFunc {
 			TransitGatewayName2: rs.Primary.Attributes["transit_gateway_name2"],
 		}
 
-		err := client.GetTransitGatewayPeering(foundTransitGatewayPeering)
+		_, err := client.GetTransitGatewayPeering(foundTransitGatewayPeering)
 		if err != nil {
 			return err
 		}
@@ -142,7 +142,7 @@ func testAccCheckTransitGatewayPeeringDestroy(s *terraform.State) error {
 			TransitGatewayName2: rs.Primary.Attributes["transit_gateway_name2"],
 		}
 
-		err := client.GetTransitGatewayPeering(foundTransitGatewayPeering)
+		_, err := client.GetTransitGatewayPeering(foundTransitGatewayPeering)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("aviatrix transit gateway peering still exists")
 		}
