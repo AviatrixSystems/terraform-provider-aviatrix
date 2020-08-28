@@ -276,10 +276,6 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	firewall := &goaviatrix.Firewall{
-		GwName: d.Get("gw_name").(string),
-	}
-
 	d.Partial(true)
 
 	if d.HasChange("gw_name") {
@@ -292,7 +288,10 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 		if err != nil {
 			return nil
 		}
-		d.SetId(gateway.GwName)
+	}
+
+	firewall := &goaviatrix.Firewall{
+		GwName: d.Get("gw_name").(string),
 	}
 
 	_, hasSetPolicies := d.GetOk("policy")
@@ -383,6 +382,7 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.Partial(false)
+	d.SetId(firewall.GwName)
 	return resourceAviatrixFirewallRead(d, meta)
 }
 
