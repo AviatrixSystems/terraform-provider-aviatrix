@@ -14,11 +14,13 @@ import (
 // TransPeer simple struct to hold transitive peering details
 
 type TransPeer struct {
-	CID           string `form:"CID,omitempty"`
-	Action        string `form:"action,omitempty"`
-	Source        string `form:"source" json:"source"`
-	Nexthop       string `form:"nexthop" json:"nexthop"`
-	ReachableCidr string `form:"reachable_cidr" json:"reachable_cidr"`
+	CID                 string `form:"CID,omitempty"`
+	Action              string `form:"action,omitempty"`
+	Source              string `form:"source" json:"source"`
+	Nexthop             string `form:"nexthop" json:"nexthop"`
+	ReachableCidr       string `form:"reachable_cidr" json:"reachable_cidr"`
+	SourceOriginalName  string `json:"source_original_name,omitempty"`
+	NexthopOriginalName string `json:"nexthop_original_name,omitempty"`
 }
 
 type TransPeerListResp struct {
@@ -68,7 +70,9 @@ func (c *Client) GetTransPeer(transPeer *TransPeer) (*TransPeer, error) {
 	}
 	transPeerList := data.Results
 	for i := range transPeerList {
-		if transPeerList[i].Source == transPeer.Source && transPeerList[i].Nexthop == transPeer.Nexthop {
+		if transPeerList[i].Source == transPeer.Source && transPeerList[i].Nexthop == transPeer.Nexthop ||
+			transPeerList[i].SourceOriginalName == transPeer.SourceOriginalName &&
+				transPeerList[i].NexthopOriginalName == transPeer.NexthopOriginalName {
 			return &transPeerList[i], nil
 		}
 	}

@@ -30,6 +30,13 @@ The following arguments are supported:
 * `nexthop` - (Required) Name of nexthop gateway.
 * `reachable_cidr` - (Required) Destination CIDR.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `source_original_name` - Name of the source gateway when it was created.
+* `nexthop_original_name` - Name of the nexthop gateway when it was created.
+
 ## Import
 
 **trans_peer** can be imported using the `source`, `nexthop` and `reachable_cidr`, e.g.
