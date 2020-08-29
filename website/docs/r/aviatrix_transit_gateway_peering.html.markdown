@@ -38,6 +38,13 @@ The following arguments are supported:
 * `gateway1_excluded_tgw_connections` - (Optional) List of excluded TGW connections for the first transit gateway.
 * `gateway2_excluded_tgw_connections` - (Optional) List of excluded TGW connections for the second transit gateway.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `transit_gateway_original_name1` - Name of transit gateway 1 when it was created.
+* `transit_gateway_original_name2` - Name of transit gateway 2 when it was created.
+
 ## Import
 
 **transit_gateway_peering** can be imported using the `transit_gateway_name1` and `transit_gateway_name2`, e.g.
