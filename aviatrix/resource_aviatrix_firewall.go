@@ -181,12 +181,16 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 
 	gwName := d.Get("gw_original_name").(string)
 	if gwName == "" {
-		id := d.Id()
-		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
-		d.Set("gw_name", id)
-		d.Set("manage_firewall_policies", true)
-		gwName = id
-		d.SetId(id)
+		if d.Get("gw_name").(string) != "" {
+			gwName = d.Get("gw_name").(string)
+		} else {
+			id := d.Id()
+			log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
+			d.Set("gw_name", id)
+			d.Set("manage_firewall_policies", true)
+			gwName = id
+			d.SetId(id)
+		}
 	}
 
 	firewall := &goaviatrix.Firewall{
