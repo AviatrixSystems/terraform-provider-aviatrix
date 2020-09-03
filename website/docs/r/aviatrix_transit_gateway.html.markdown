@@ -99,10 +99,10 @@ The following arguments are supported:
 * `ha_zone` - (Optional) HA Zone. Required only if enabling HA for GCP gateway. Setting to empty/unsetting will disable HA. Setting to a valid zone will create an HA gateway in the zone. Example: "us-west1-c".
 * `ha_insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit HA Gateway. Required for AWS if `insane_mode` is enabled and `ha_subnet` is set. Example: AWS: "us-west-1a".
 * `ha_eip` - (Optional) Public IP address that you want to assign to the HA peering instance. If no value is given, a new EIP will automatically be allocated. Only available for AWS and GCP.
-* `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if enabling HA. Example: "t2.micro".
+* `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if enabling HA.
 
 ### Insane Mode
-* `insane_mode` - (Optional) Specify true for [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) high performance gateway. Insane Mode gateway size must be at least c5 size (AWS) or Standard_D3_v2 (AZURE). If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet. Only available for AWS and Azure. Valid values: true, false.
+* `insane_mode` - (Optional) Specify true for [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) high performance gateway. Insane Mode gateway size must be at least c5 size (AWS) or Standard_D3_v2 (AZURE). If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet for AWS and Azure. Only available for AWS, Azure and GCP. Valid values: true, false.
 * `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit Gateway. Required for AWS if `insane_mode` is enabled. Example: AWS: "us-west-1a".
 
 ### SNAT
