@@ -124,7 +124,7 @@ The following arguments are supported:
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if enabling HA. Example: "t2.micro".
 
 ### Insane Mode
-* `insane_mode` - (Optional) Specify true for [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) high performance gateway. Insane Mode gateway size must be at least c5 size (AWS and AWSGOV) or Standard_D3_v2 (AZURE). If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet. Only available for AWS, Azure and AWSGOV. Valid values: true, false.
+* `insane_mode` - (Optional) Specify true for [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) high performance gateway. Insane Mode gateway size must be at least c5 size (AWS and AWSGOV) or Standard_D3_v2 (AZURE). If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet. Only available for AWS, GCP, Azure and AWSGOV. Valid values: true, false.
 * `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit Gateway. Required for AWS and AWSGOV if `insane_mode` is enabled. Example: AWS: "us-west-1a".
 
 ### SNAT
@@ -207,4 +207,4 @@ If `insane_mode` is enabled, you must specify a valid /26 CIDR segment of the VP
 If you are using/upgraded to Aviatrix Terraform Provider R2.10+, and a transit gateway with `enable_snat` set to true was originally created with a provider version <R2.10, you must do a ‘terraform refresh’ to update and apply the attribute’s value into the state. In addition, you must also change this attribute to `single_ip_snat` in your `.tf` file.
 
 ### ha_subnet
-If you are using Aviatrix Terraform Provider R2.15+, and import a Google Cloud transit gateway with HA enabled then you must set a value for `ha_subnet` in your Terraform config.
+

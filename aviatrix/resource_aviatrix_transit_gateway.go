@@ -72,7 +72,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "AZ of subnet being created for Insane Mode Transit Gateway. Required if insane_mode is enabled.",
+				Description: "AZ of subnet being created for Insane Mode Transit Gateway. Required for AWS if insane_mode is enabled.",
 			},
 			"allocate_new_eip": {
 				Type:     schema.TypeBool,
@@ -103,7 +103,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "AZ of subnet being created for Insane Mode Transit HA Gateway. Required if insane_mode is enabled and ha_subnet is set.",
+				Description: "AZ of subnet being created for Insane Mode Transit HA Gateway. Required for AWS if insane_mode is enabled and ha_subnet is set.",
 			},
 			"ha_gw_size": {
 				Type:        schema.TypeString,
@@ -152,7 +152,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Enable Insane Mode for Transit. Valid values: true, false. If insane mode is enabled, gateway size has to at least be c5 size.",
+				Description: "Enable Insane Mode for Transit. Valid values: true, false. If insane mode is enabled, gateway size has to at least be c5 size for AWS and Standard_D3_v2 size for AZURE.",
 			},
 			"enable_firenet": {
 				Type:        schema.TypeBool,
@@ -371,8 +371,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 	insaneMode := d.Get("insane_mode").(bool)
 	if insaneMode {
-		if cloudType != goaviatrix.AWS && cloudType != goaviatrix.AZURE && cloudType != goaviatrix.AWSGOV {
-			return fmt.Errorf("insane_mode is only supported for AWS, AZURE, and AWSGOV (cloud_type = 1 or 8 or 256)")
+		if cloudType != goaviatrix.AWS && cloudType != goaviatrix.GCP && cloudType != goaviatrix.AZURE && cloudType != goaviatrix.AWSGOV {
+			return fmt.Errorf("insane_mode is only supported for AWS, GCP, AZURE, and AWSGOV (cloud_type = 1, 4, 8 or 256)")
 		}
 		if cloudType == goaviatrix.AWS || cloudType == goaviatrix.AWSGOV {
 			if d.Get("insane_mode_az").(string) == "" {
@@ -406,7 +406,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	}
 	if haGwSize == "" && haSubnet != "" {
 		return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
-			"ha_subnet is set. Example: t2.micro")
+			"ha_subnet is set")
 	}
 
 	enableEncryptVolume := d.Get("enable_encrypt_volume").(bool)
@@ -516,7 +516,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if haGwSize != gateway.VpcSize {
 			if haGwSize == "" {
 				return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
-					"ha_subnet is set. Example: t2.micro")
+					"ha_subnet is set")
 			}
 
 			haGateway := &goaviatrix.Gateway{
@@ -1347,7 +1347,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		haGateway.GwSize = d.Get("ha_gw_size").(string)
 		if haGateway.GwSize == "" {
 			return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
-				"ha_subnet is set. Example: t2.micro")
+				"ha_subnet is set")
 		}
 
 		// Only try to update the gw size if the current size != desired size
