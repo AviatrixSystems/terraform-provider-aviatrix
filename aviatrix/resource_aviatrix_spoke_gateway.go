@@ -105,7 +105,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "AZ of subnet being created for Insane Mode Spoke HA Gateway. Required if insane_mode is true and ha_subnet is set.",
+				Description: "AZ of subnet being created for Insane Mode Spoke HA Gateway. Required for AWS if insane_mode is true and ha_subnet is set.",
 			},
 			"ha_gw_size": {
 				Type:        schema.TypeString,
@@ -147,7 +147,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Enable Insane Mode for Spoke Gateway. Valid values: true, false. If insane mode is enabled, gateway size has to at least be c5 size.",
+				Description: "Enable Insane Mode for Spoke Gateway. Valid values: true, false. If insane mode is enabled, gateway size has to at least be c5 size for AWS and Standard_D3_v2 size for AZURE.",
 			},
 			"enable_active_mesh": {
 				Type:        schema.TypeBool,
@@ -299,8 +299,8 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	}
 	haInsaneModeAz := d.Get("ha_insane_mode_az").(string)
 	if insaneMode {
-		if gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AZURE && gateway.CloudType != goaviatrix.AWSGOV {
-			return fmt.Errorf("insane_mode is only supported for AWS, AZURE, and AWSGOV (cloud_type = 1 or 8 or 256)")
+		if gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AZURE && gateway.CloudType != goaviatrix.GCP && gateway.CloudType != goaviatrix.AWSGOV {
+			return fmt.Errorf("insane_mode is only supported for AWS, GCP, AZURE, and AWSGOV (cloud_type = 1, 4, 8 or 256)")
 		}
 		if gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV {
 			if insaneModeAz == "" {
@@ -321,7 +321,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	if haZone != "" || haSubnet != "" {
 		if haGwSize == "" {
 			return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
-				"ha_subnet or ha_zone is set. Example: t2.micro")
+				"ha_subnet or ha_zone is set")
 		}
 	}
 
@@ -410,7 +410,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		if haGwSize != gateway.VpcSize {
 			if haGwSize == "" {
 				return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
-					"ha_subnet or ha_zone is set. Example: t2.micro us-west1-b")
+					"ha_subnet or ha_zone is set")
 			}
 
 			haGateway := &goaviatrix.Gateway{
@@ -1064,7 +1064,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			haGateway.GwSize = d.Get("ha_gw_size").(string)
 			if haGateway.GwSize == "" {
 				return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
-					"ha_subnet or ha_zone is set. Example: t2.micro or us-west1-b")
+					"ha_subnet or ha_zone is set")
 			}
 			err = client.UpdateGateway(haGateway)
 			log.Printf("[INFO] Updating HA Gateway size to: %s ", haGateway.GwSize)
