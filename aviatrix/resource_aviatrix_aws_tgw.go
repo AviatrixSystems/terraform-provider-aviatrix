@@ -680,6 +680,9 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("aws_side_as_number") {
 		return fmt.Errorf("updating aws_side_as_number is not allowed")
 	}
+	if d.HasChange("cloud_type") {
+		return fmt.Errorf("updating cloud_type is not allowed")
+	}
 
 	manageVpcAttachment := d.Get("manage_vpc_attachment").(bool)
 	if d.HasChange("manage_vpc_attachment") {
