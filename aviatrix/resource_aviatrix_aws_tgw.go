@@ -146,7 +146,7 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 				Optional:     true,
 				Default:      1,
 				Description:  "Type of cloud service provider, requires an integer value. Supported for AWS (1) and AWS GOV (256). Default value: 1.",
-				ValidateFunc: validation.IntInSlice([]int{1, 256}),
+				ValidateFunc: validation.IntInSlice([]int{goaviatrix.AWS, goaviatrix.AWSGOV}),
 			},
 			"attached_aviatrix_transit_gateway": {
 				Type: schema.TypeList,
