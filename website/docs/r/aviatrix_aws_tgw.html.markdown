@@ -23,6 +23,7 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
   ]
   aws_side_as_number                = "64512"
   manage_vpc_attachment             = true
+  manage_transit_gateway_attachment = true
   region                            = "us-east-1"
   tgw_name                          = "test-AWS-TGW"
 
@@ -94,6 +95,88 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
   }
 }
 ```
+```hcl
+# Create an Aviatrix AWS GOV TGW
+resource "aviatrix_aws_tgw" "test_aws_gov_tgw" {
+  account_name                      = "devops"
+  cloud_type                        = 256
+  attached_aviatrix_transit_gateway = [
+     "avx-transit-gw"
+  ]
+  aws_side_as_number                = "64512"
+  manage_vpc_attachment             = true
+  manage_transit_gateway_attachment = true
+  region                            = "us-gov-east-1"
+  tgw_name                          = "test-AWS-GOV-TGW"
+
+  security_domains {
+    connected_domains    = [
+      "Default_Domain",
+      "Shared_Service_Domain",
+      "mysdn1"
+    ]
+    security_domain_name = "Aviatrix_Edge_Domain"
+  }
+
+  security_domains {
+    connected_domains    = [
+      "Aviatrix_Edge_Domain",
+      "Shared_Service_Domain"
+    ]    
+    security_domain_name = "Default_Domain"
+  }
+
+  security_domains {
+    connected_domains    = [
+      "Aviatrix_Edge_Domain",
+      "Default_Domain"
+    ]
+    security_domain_name = "Shared_Service_Domain"
+  }
+
+  security_domains {
+    connected_domains    = [
+      "Aviatrix_Edge_Domain"
+    ]
+    security_domain_name = "SDN1"
+
+    attached_vpc {
+      vpc_account_name = "devops2"
+      vpc_id           = "vpc-0e2fac2b91"
+      vpc_region       = "us-gov-east-1"
+    }
+
+    attached_vpc {
+      vpc_account_name = "devops2"
+      vpc_id           = "vpc-0c63660a16"
+      vpc_region       = "us-gov-east-1"
+    }
+
+    attached_vpc {
+      vpc_account_name = "devops"
+      vpc_id           = "vpc-032005cc444"
+      vpc_region       = "us-gov-east-1"
+    }
+  }
+
+  security_domains {
+    security_domain_name = "mysdn2"
+
+    attached_vpc {
+      vpc_region                      = "us-gov-east-1"
+      vpc_account_name                = "devops"
+      vpc_id                          = "vpc-03200566666"
+      customized_routes               = "10.8.0.0/16,10.9.0.0/16"
+      disable_local_route_propagation = true
+    }
+  }
+
+  security_domains {
+    security_domain_name = "firewall-domain"
+    aviatrix_firewall    = true
+  }
+}
+```
 
 ## Argument Reference
 
@@ -127,6 +210,7 @@ The following arguments are supported:
 
 ### Misc.
 * `attached_aviatrix_transit_gateway` - (Optional) A list of names of Aviatrix Transit Gateway(s) (transit VPCs) to attach to the Aviatrix_Edge_Domain.
+* `cloud_type` - (Optional) Type of cloud service provider, requires an integer value. Supported for AWS (1) and AWS GOV (256). Default value: 1.
 * `manage_transit_gateway_attachment` - (Optional) This parameter is a switch used to determine whether or not to manage transit gateway attachments to the TGW using the **aviatrix_aws_tgw** resource. If this is set to false, attachment of transit gateways must be done using the **aviatrix_aws_tgw_transit_gateway_attachment** resource. Valid values: true, false. Default value: true.
 
 -> **NOTE:** `manage_transit_gateway_attachment` - If you are using/upgraded to Aviatrix Terraform Provider R2.13+, and an **aviatrix_aws_tgw** resource was originally created with a provider version <R2.13, you must do 'terraform refresh' to update and apply the attribute's default value (true) into the state file.

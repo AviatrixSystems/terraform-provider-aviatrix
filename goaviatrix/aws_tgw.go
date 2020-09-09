@@ -18,6 +18,7 @@ type AWSTgw struct {
 	Action                    string               `form:"action,omitempty"`
 	CID                       string               `form:"CID,omitempty"`
 	Name                      string               `form:"tgw_name,omitempty"`
+	CloudType                 int                  `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
 	AccountName               string               `form:"account_name,omitempty"`
 	Region                    string               `form:"region,omitempty"`
 	AwsSideAsNumber           string               `form:"aws_side_asn,omitempty"`
@@ -106,6 +107,7 @@ type TgwInfoDetail struct {
 	AccountName     string `json:"acct_name"`
 	Region          string `json:"region"`
 	AwsSideAsNumber int    `json:"tgw_aws_asn"`
+	CloudType       int    `json:"cloud_type"`
 }
 
 type listAttachedVpcNamesResp struct {
@@ -722,6 +724,7 @@ func (c *Client) ListTgwDetails(awsTgw *AWSTgw) (*AWSTgw, error) {
 		awsTgw.AccountName = tgwInfoDetail.AccountName
 		awsTgw.Region = tgwInfoDetail.Region
 		awsTgw.AwsSideAsNumber = strconv.Itoa(tgwInfoDetail.AwsSideAsNumber)
+		awsTgw.CloudType = tgwInfoDetail.CloudType
 		return awsTgw, nil
 	}
 	return nil, ErrNotFound

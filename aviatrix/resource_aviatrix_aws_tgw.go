@@ -141,6 +141,13 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 					},
 				},
 			},
+			"cloud_type": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      1,
+				Description:  "Type of cloud service provider, requires an integer value. Supported for AWS (1) and AWS GOV (256). Default value: 1.",
+				ValidateFunc: validation.IntInSlice([]int{goaviatrix.AWS, goaviatrix.AWSGOV}),
+			},
 			"attached_aviatrix_transit_gateway": {
 				Type: schema.TypeList,
 				Elem: &schema.Schema{
@@ -153,11 +160,18 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
+				Description: "This parameter is a switch used to determine whether or not to manage VPC attachments to " +
+					"the TGW using the aviatrix_aws_tgw resource. If this is set to false, attachment of VPCs must be done " +
+					"using the aviatrix_aws_tgw_vpc_attachment resource. Valid values: true, false. Default value: true.",
 			},
 			"manage_transit_gateway_attachment": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
+				Description: "This parameter is a switch used to determine whether or not to manage transit gateway " +
+					"attachments to the TGW using the aviatrix_aws_tgw resource. If this is set to false, attachment of " +
+					"transit gateways must be done using the aviatrix_aws_tgw_transit_gateway_attachment resource. " +
+					"Valid values: true, false. Default value: true.",
 			},
 		},
 	}
@@ -171,6 +185,7 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 		AccountName:               d.Get("account_name").(string),
 		Region:                    d.Get("region").(string),
 		AwsSideAsNumber:           d.Get("aws_side_as_number").(string),
+		CloudType:                 d.Get("cloud_type").(int),
 		AttachedAviatrixTransitGW: make([]string, 0),
 		SecurityDomains:           make([]goaviatrix.SecurityDomainRule, 0),
 	}
@@ -465,6 +480,7 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("account_name", awsTgw.AccountName)
 	d.Set("tgw_name", awsTgw.Name)
 	d.Set("region", awsTgw.Region)
+	d.Set("cloud_type", awsTgw.CloudType)
 
 	log.Printf("[INFO] Reading AWS TGW")
 
@@ -663,6 +679,9 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 	if d.HasChange("aws_side_as_number") {
 		return fmt.Errorf("updating aws_side_as_number is not allowed")
+	}
+	if d.HasChange("cloud_type") {
+		return fmt.Errorf("updating cloud_type is not allowed")
 	}
 
 	manageVpcAttachment := d.Get("manage_vpc_attachment").(bool)
