@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -156,7 +157,11 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 		fireNet.Inspection = false
 		err := client.EditFireNetInspection(fireNet)
 		if err != nil {
-			return fmt.Errorf("couldn't disable inspection due to %v", err)
+			if strings.Contains(err.Error(), "[AVXERR-FIRENET-0011] Unsupported for Egress Transit.") {
+				log.Printf("[INFO] Ignoring error from disabling traffic inspection: %v\n", err)
+			} else {
+				return fmt.Errorf("couldn't disable inspection due to %v", err)
+			}
 		}
 	}
 
@@ -164,7 +169,11 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 		fireNet.FirewallEgress = true
 		err := client.EditFireNetEgress(fireNet)
 		if err != nil {
-			return fmt.Errorf("couldn't enable egress due to %v", err)
+			if strings.Contains(err.Error(), "[AVXERR-FIRENET-0011] Unsupported for Egress Transit.") {
+				log.Printf("[INFO] Ignoring error from enabling egress: %v\n", err)
+			} else {
+				return fmt.Errorf("couldn't enable egress due to %v", err)
+			}
 		}
 	}
 
@@ -452,7 +461,11 @@ func resourceAviatrixFireNetDelete(d *schema.ResourceData, meta interface{}) err
 		fireNet.FirewallEgress = false
 		err := client.EditFireNetEgress(fireNet)
 		if err != nil {
-			return fmt.Errorf("failed to disable firewall egress on fireNet: %v", err)
+			if strings.Contains(err.Error(), "[AVXERR-FIRENET-0011] Unsupported for Egress Transit.") {
+				log.Printf("[INFO] Ignoring error from disabling egress: %v\n", err)
+			} else {
+				return fmt.Errorf("failed to disable firewall egress on fireNet: %v", err)
+			}
 		}
 	}
 
