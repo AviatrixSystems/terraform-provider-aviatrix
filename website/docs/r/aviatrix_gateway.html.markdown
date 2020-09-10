@@ -192,11 +192,11 @@ The following arguments are supported:
 * `ldap_username_attribute` - (Optional) LDAP user attribute. Required if `enable_ldap` is true.
 
 ### Designated Gateway
-* `enable_designated_gateway` - (Optional) Enable Designated Gateway feature for Gateway. Only supported for AWS gateways. Valid values: true, false. Default value: false. Please view documentation [here](https://docs.aviatrix.com/HowTos/gateway.html#designated-gateway) for more information on this feature.
+* `enable_designated_gateway` - (Optional) Enable Designated Gateway feature for Gateway. Only supported for AWS and AWSGov gateways. Valid values: true, false. Default value: false. Please view documentation [here](https://docs.aviatrix.com/HowTos/gateway.html#designated-gateway) for more information on this feature.
 * `additional_cidrs_designated_gateway` - (Optional) A list of CIDR ranges separated by comma to configure when "Designated Gateway" feature is enabled. Example: "10.8.0.0/16,10.9.0.0/16,10.10.0.0/16".
 
 ### Encryption
-* `enable_encrypt_volume` - (Optional) Enable EBS volume encryption for the gateway. Only supported for AWS gateways. Valid values: true, false. Default value: false.
+* `enable_encrypt_volume` - (Optional) Enable EBS volume encryption for the gateway. Only supported for AWS and AWSGov gateways. Valid values: true, false. Default value: false.
 * `customer_managed_keys` - (Optional and Sensitive) Customer-managed key ID.
 
 ### Misc.
