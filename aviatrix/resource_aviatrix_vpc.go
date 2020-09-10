@@ -5,6 +5,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
@@ -27,6 +29,12 @@ func resourceAviatrixVpc() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "Type of cloud service provider.",
+				ValidateFunc: validation.IntInSlice([]int{
+					goaviatrix.AWS,
+					goaviatrix.GCP,
+					goaviatrix.AZURE,
+					goaviatrix.AWSGOV,
+				}),
 			},
 			"account_name": {
 				Type:        schema.TypeString,
@@ -131,11 +139,11 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	aviatrixTransitVpc := d.Get("aviatrix_transit_vpc").(bool)
 	aviatrixFireNetVpc := d.Get("aviatrix_firenet_vpc").(bool)
 
-	if aviatrixTransitVpc && vpc.CloudType != goaviatrix.AWS {
-		return fmt.Errorf("currently 'aviatrix_transit_vpc' is only supported for AWS provider")
+	if aviatrixTransitVpc && vpc.CloudType != goaviatrix.AWS && vpc.CloudType != goaviatrix.AWSGOV {
+		return fmt.Errorf("currently 'aviatrix_transit_vpc' is only supported for AWS and AWSGov provider")
 	}
-	if aviatrixFireNetVpc && vpc.CloudType != goaviatrix.AWS && vpc.CloudType != goaviatrix.AZURE {
-		return fmt.Errorf("currently'aviatrix_firenet_vpc' is only supported for AWS and AZURE provider")
+	if aviatrixFireNetVpc && vpc.CloudType != goaviatrix.AWS && vpc.CloudType != goaviatrix.AWSGOV && vpc.CloudType != goaviatrix.AZURE {
+		return fmt.Errorf("currently'aviatrix_firenet_vpc' is only supported for AWS, AWSGov and AZURE provider")
 	}
 	if aviatrixTransitVpc && aviatrixFireNetVpc {
 		return fmt.Errorf("vpc cannot be aviatrix transit vpc and aviatrix firenet vpc at the same time")
