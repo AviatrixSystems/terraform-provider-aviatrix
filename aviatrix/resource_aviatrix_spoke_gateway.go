@@ -385,7 +385,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			haGateway.HASubnetGCP = haSubnet
 		}
 
-		if insaneMode == true && (haGateway.CloudType == goaviatrix.AWS || haGateway.CloudType == goaviatrix.AWSGOV) {
+		if insaneMode && (haGateway.CloudType == goaviatrix.AWS || haGateway.CloudType == goaviatrix.AWSGOV) {
 			var haStrs []string
 			haStrs = append(haStrs, haSubnet, haInsaneModeAz)
 			haSubnet = strings.Join(haStrs, "~~")
@@ -936,7 +936,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		if !d.HasChange("ha_subnet") && d.HasChange("ha_insane_mode_az") {
 			return fmt.Errorf("ha_subnet must change if ha_insane_mode_az changes")
 		}
-		if d.Get("insane_mode").(bool) == true && (spokeGw.CloudType == goaviatrix.AWS || spokeGw.CloudType == goaviatrix.AWSGOV) {
+		if d.Get("insane_mode").(bool) && (spokeGw.CloudType == goaviatrix.AWS || spokeGw.CloudType == goaviatrix.AWSGOV) {
 			var haStrs []string
 			insaneModeHaAz := d.Get("ha_insane_mode_az").(string)
 			if insaneModeHaAz == "" {
