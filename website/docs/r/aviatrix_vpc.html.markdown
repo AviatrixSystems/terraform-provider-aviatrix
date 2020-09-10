@@ -55,16 +55,28 @@ resource "aviatrix_vpc" "azure_vnet" {
   aviatrix_firenet_vpc = false
 }
 ```
+```hcl
+# Create an AWSGov VPC
+resource "aviatrix_vpc" "awsgov_vnet" {
+  cloud_type           = 256
+  account_name         = "devops"
+  region               = "us-gov-west-1"
+  name                 = "awsgov-vpc"
+  cidr                 = "12.0.0.0/20"
+  aviatrix_transit_vpc = false
+  aviatrix_firenet_vpc = false
+}
+```
 
 ## Argument Reference
 
 The following arguments are supported:
 
 ### Required
-* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4) and AZURE(8) are supported.
+* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), AZURE(8) and AWSGov(256) are supported.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `name` - (Required) Name of the VPC to be created.
-* `region` - (Optional) Region of cloud provider. **Required to be empty for GCP provider, and non-empty for other providers.** Example: AWS: "us-east-1", AZURE: "East US 2".
+* `region` - (Optional) Region of cloud provider. **Required to be empty for GCP provider, and non-empty for other providers.** Example: AWS: "us-east-1", AZURE: "East US 2", AWSGov: "us-gov-east-1".
 * `cidr` - (Optional) VPC CIDR. **Required to be empty for GCP provider, and non-empty for other providers.** Example: "10.11.0.0/24".
 
 ### Google Cloud
@@ -74,8 +86,8 @@ The following arguments are supported:
   * `name` - Name of this subnet.
 
 ### Misc.
-* `aviatrix_transit_vpc` - (Optional) Specify whether it is an [Aviatrix Transit VPC](https://docs.aviatrix.com/HowTos/create_vpc.html#aviatrix-transit-vpc) to be used for [Transit Network](https://docs.aviatrix.com/HowTos/transitvpc_faq.html) or [TGW](https://docs.aviatrix.com/HowTos/tgw_faq.html) solutions. **Only AWS is supported. Required to be false for other providers.** Valid values: true, false. Default: false.
-* `aviatrix_firenet_vpc` - (Optional) Specify whether it is an Aviatrix FireNet VPC to be used for [Aviatrix FireNet](https://docs.aviatrix.com/HowTos/firewall_network_faq.html) and [Transit FireNet](https://docs.aviatrix.com/HowTos/transit_firenet_faq.html) solutions. **Only AWS and Azure are supported. Required to be false for other providers.** Valid values: true, false. Default: false.
+* `aviatrix_transit_vpc` - (Optional) Specify whether it is an [Aviatrix Transit VPC](https://docs.aviatrix.com/HowTos/create_vpc.html#aviatrix-transit-vpc) to be used for [Transit Network](https://docs.aviatrix.com/HowTos/transitvpc_faq.html) or [TGW](https://docs.aviatrix.com/HowTos/tgw_faq.html) solutions. **Only AWS and AWSGov are supported. Required to be false for other providers.** Valid values: true, false. Default: false.
+* `aviatrix_firenet_vpc` - (Optional) Specify whether it is an Aviatrix FireNet VPC to be used for [Aviatrix FireNet](https://docs.aviatrix.com/HowTos/firewall_network_faq.html) and [Transit FireNet](https://docs.aviatrix.com/HowTos/transit_firenet_faq.html) solutions. **Only AWS, AWSGov and Azure are supported. Required to be false for other providers.** Valid values: true, false. Default: false.
 
 -> **NOTE:** `aviatrix_firenet_vpc` - If you are using/ upgraded to Aviatrix Terraform Provider R1.8+, and a VPC resource was originally created with a provider version <R1.8, you must do 'terraform refresh' to update and apply the attribute’s default value (false) into the state file.
 

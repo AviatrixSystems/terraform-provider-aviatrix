@@ -206,7 +206,7 @@ func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] Error setting private subnets for (%s): %s", d.Id(), err)
 	}
 
-	if vC.CloudType == goaviatrix.AWS {
+	if vC.CloudType == goaviatrix.AWS || vC.CloudType == goaviatrix.AWSGOV {
 		var rtbs []string
 		routeTableFilter := d.Get("route_tables_filter")
 		if routeTableFilter == "private" {
