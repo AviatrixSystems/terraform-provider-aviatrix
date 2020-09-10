@@ -312,7 +312,7 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Enable 'designated_gateway' feature for Gateway. Only supports AWS and AWSGov. Valid values: true, false.",
+				Description: "Enable 'designated_gateway' feature for Gateway. Only supports AWS and AWSGOV. Valid values: true, false.",
 			},
 			"additional_cidrs_designated_gateway": {
 				Type:        schema.TypeString,
@@ -574,7 +574,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	enableDesignatedGw := d.Get("enable_designated_gateway").(bool)
 	if enableDesignatedGw {
 		if gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV {
-			return fmt.Errorf("'designated_gateway' feature is only supported for AWS and AWSGov provider")
+			return fmt.Errorf("'designated_gateway' feature is only supported for AWS and AWSGOV provider")
 		}
 		if peeringHaSubnet != "" || peeringHaZone != "" {
 			return fmt.Errorf("can't enable HA for gateway with 'designated_gateway' enabled")
@@ -585,7 +585,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	enableEncryptVolume := d.Get("enable_encrypt_volume").(bool)
 	customerManagedKeys := d.Get("customer_managed_keys").(string)
 	if enableEncryptVolume && d.Get("cloud_type").(int) != goaviatrix.AWS && d.Get("cloud_type").(int) != goaviatrix.AWSGOV {
-		return fmt.Errorf("'enable_encrypt_volume' is only supported for AWS and AWSGov provider")
+		return fmt.Errorf("'enable_encrypt_volume' is only supported for AWS and AWSGOV provider")
 	}
 	if !enableEncryptVolume && customerManagedKeys != "" {
 		return fmt.Errorf("'customer_managed_keys' should be empty since Encrypt Volume is not enabled")
@@ -1501,7 +1501,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("failed to edit additional cidrs for 'designated_gateway' since it is not enabled")
 		}
 		if d.Get("cloud_type").(int) != goaviatrix.AWS && d.Get("cloud_type").(int) != goaviatrix.AWSGOV {
-			return fmt.Errorf("'designated_gateway' is only supported for AWS and AWSGov")
+			return fmt.Errorf("'designated_gateway' is only supported for AWS and AWSGOV")
 		}
 		designatedGw := &goaviatrix.Gateway{
 			GwName:                      d.Get("gw_name").(string),
@@ -1728,7 +1728,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("enable_encrypt_volume") {
 		if d.Get("enable_encrypt_volume").(bool) {
 			if d.Get("cloud_type").(int) != goaviatrix.AWS && d.Get("cloud_type").(int) != goaviatrix.AWSGOV {
-				return fmt.Errorf("'enable_encrypt_volume' is only supported for AWS and AWSGov provider")
+				return fmt.Errorf("'enable_encrypt_volume' is only supported for AWS and AWSGOV provider")
 			}
 			gwEncVolume := &goaviatrix.Gateway{
 				GwName:              d.Get("gw_name").(string),
