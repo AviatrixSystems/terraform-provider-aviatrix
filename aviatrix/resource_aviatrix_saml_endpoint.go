@@ -129,7 +129,11 @@ func resourceAviatrixSamlEndpointRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("custom_saml_request_template", saml.MsgTemplate)
 	}
 
-	d.Set("controller_login", saml.ControllerLogin)
+	if saml.ControllerLogin == "yes" {
+		d.Set("controller_login", true)
+	} else {
+		d.Set("controller_login", false)
+	}
 	d.Set("access_set_by", saml.AccessSetBy)
 
 	if saml.RbacGroups != "" {
@@ -195,9 +199,12 @@ func GetAviatrixSamlEndpointInput(d *schema.ResourceData) (*goaviatrix.SamlEndpo
 		IdpMetadata:     d.Get("idp_metadata").(string),
 		MsgTemplate:     d.Get("custom_saml_request_template").(string),
 		AccessSetBy:     d.Get("access_set_by").(string),
-		ControllerLogin: d.Get("controller_login").(bool),
 	}
-
+	if d.Get("controller_login").(bool) {
+		samlEndpoint.ControllerLogin = "yes"
+	} else {
+		samlEndpoint.ControllerLogin = "no"
+	}
 	customEntityID := d.Get("custom_entity_id").(string)
 	if customEntityID == "" {
 		samlEndpoint.EntityIdType = "Hostname"
@@ -211,9 +218,9 @@ func GetAviatrixSamlEndpointInput(d *schema.ResourceData) (*goaviatrix.SamlEndpo
 		rbacGroups = append(rbacGroups, rbacGroup.(string))
 	}
 	samlEndpoint.RbacGroups = strings.Join(rbacGroups, ",")
-	if !samlEndpoint.ControllerLogin && (samlEndpoint.AccessSetBy != "controller" || samlEndpoint.RbacGroups != "") {
+	if samlEndpoint.ControllerLogin != "yes" && (samlEndpoint.AccessSetBy != "controller" || samlEndpoint.RbacGroups != "") {
 		return nil, fmt.Errorf("'rbac_groups' and 'access_set_by' are only supported for controller login")
-	} else if samlEndpoint.ControllerLogin && samlEndpoint.AccessSetBy != "controller" && samlEndpoint.RbacGroups != "" {
+	} else if samlEndpoint.ControllerLogin == "yes" && samlEndpoint.AccessSetBy != "controller" && samlEndpoint.RbacGroups != "" {
 		return nil, fmt.Errorf("'rbac_groups' is only supported for 'access_set_by' of 'controller'")
 	}
 	return samlEndpoint, nil
