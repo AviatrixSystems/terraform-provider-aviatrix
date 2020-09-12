@@ -9,49 +9,46 @@ import (
 )
 
 type SamlEndpoint struct {
-	EndPointName    string   `form:"name,omitempty" json:"name,omitempty"`
-	IdpMetadataType string   `form:"metadata_type,omitempty" json:"metadata_type,omitempty"`
+	Action          string   `form:"action,omitempty"`
+	CID             string   `form:"CID,omitempty"`
+	EndPointName    string   `form:"endpoint_name,omitempty" json:"name,omitempty"`
+	IdpMetadataType string   `form:"idp_metadata_type,omitempty" json:"metadata_type,omitempty"`
 	IdpMetadata     string   `form:"idp_metadata,omitempty" json:"idp_metadata,omitempty"`
-	EntityIdType    string   `form:"entity_id,omitempty" json:"entity_id,omitempty"`
-	CustomEntityId  string   `form:"custom_entityID,omitempty" json:"custom_entityID,omitempty"`
+	EntityIdType    string   `json:"entity_id,omitempty"`
+	CustomEntityId  string   `form:"entity_id,omitempty" json:"custom_entityID,omitempty"`
 	MsgTemplate     string   `form:"msgtemplate,omitempty" json:"msgtemplate,omitempty"`
 	MsgTemplateType string   `json:"msgtemplate_type,omitempty"`
-	ControllerLogin bool     `json:"controller_login,omitempty"`
+	ControllerLogin string   `form:"controller_login,omitempty" json:"controller_login,omitempty"`
 	AccessSetBy     string   `form:"access_ctrl,omitempty" json:"access_ctrl,omitempty"`
 	RbacGroups      string   `form:"groups,omitempty"`
 	RbacGroupsRead  []string `json:"cl_rbac_groups,omitempty"`
 }
 
+type SamlEndpointEdit struct {
+	EndPointName    string   `json:"name,omitempty"`
+	IdpMetadataType string   `json:"metadata_type,omitempty"`
+	IdpMetadata     string   `json:"idp_metadata,omitempty"`
+	EntityIdType    string   `json:"entity_id,omitempty"`
+	CustomEntityId  string   `json:"custom_entityID,omitempty"`
+	MsgTemplate     string   `json:"msgtemplate,omitempty"`
+	MsgTemplateType string   `json:"msgtemplate_type,omitempty"`
+	ControllerLogin bool     `json:"controller_login,omitempty"`
+	AccessSetBy     string   `json:"access_ctrl,omitempty"`
+	RbacGroupsRead  []string `json:"cl_rbac_groups,omitempty"`
+}
+
 type SamlResp struct {
-	Return  bool         `json:"return"`
-	Results SamlEndpoint `json:"results"`
-	Reason  string       `json:"reason"`
+	Return  bool             `json:"return"`
+	Results SamlEndpointEdit `json:"results"`
+	Reason  string           `json:"reason"`
 }
 
 func (c *Client) CreateSamlEndpoint(samlEndpoint *SamlEndpoint) error {
-	Url, err := url.Parse(c.baseURL)
+	samlEndpoint.CID = c.CID
+	samlEndpoint.Action = "create_saml_endpoint"
+	resp, err := c.Post(c.baseURL, samlEndpoint)
 	if err != nil {
-		return errors.New(("url Parsing failed for 'create_saml_endpoint': ") + err.Error())
-	}
-	createSamlEndpoint := url.Values{}
-	createSamlEndpoint.Add("CID", c.CID)
-	createSamlEndpoint.Add("action", "create_saml_endpoint")
-	createSamlEndpoint.Add("endpoint_name", samlEndpoint.EndPointName)
-	createSamlEndpoint.Add("idp_metadata_type", samlEndpoint.IdpMetadataType)
-	createSamlEndpoint.Add("idp_metadata", samlEndpoint.IdpMetadata)
-	createSamlEndpoint.Add("entity_id", samlEndpoint.CustomEntityId)
-	createSamlEndpoint.Add("msgtemplate", samlEndpoint.MsgTemplate)
-	if samlEndpoint.ControllerLogin {
-		createSamlEndpoint.Add("controller_login", "yes")
-	}
-	createSamlEndpoint.Add("access_ctrl", samlEndpoint.AccessSetBy)
-	if samlEndpoint.AccessSetBy == "controller" && samlEndpoint.RbacGroups != "" {
-		createSamlEndpoint.Add("groups", samlEndpoint.RbacGroups)
-	}
-	Url.RawQuery = createSamlEndpoint.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'create_saml_endpoint' failed: " + err.Error())
+		return errors.New("HTTP Post 'create_saml_endpoint' failed: " + err.Error())
 	}
 	var data APIResp
 	buf := new(bytes.Buffer)
@@ -102,7 +99,7 @@ func (c *Client) GetSamlEndpoint(samlEndpoint *SamlEndpoint) (*SamlEndpoint, err
 	samlEndpoint.MsgTemplate = data.Results.MsgTemplate
 	samlEndpoint.AccessSetBy = data.Results.AccessSetBy
 	if data.Results.ControllerLogin {
-		samlEndpoint.ControllerLogin = true
+		samlEndpoint.ControllerLogin = "yes"
 		if data.Results.AccessSetBy == "controller" && len(data.Results.RbacGroupsRead) != 0 {
 			samlEndpoint.RbacGroups = strings.Join(data.Results.RbacGroupsRead, ",")
 		}
@@ -123,9 +120,7 @@ func (c *Client) EditSamlEndpoint(samlEndpoint *SamlEndpoint) error {
 	editSamlEndpoint.Add("idp_metadata", samlEndpoint.IdpMetadata)
 	editSamlEndpoint.Add("entity_id", samlEndpoint.CustomEntityId)
 	editSamlEndpoint.Add("msgtemplate", samlEndpoint.MsgTemplate)
-	if samlEndpoint.ControllerLogin {
-		editSamlEndpoint.Add("controller_login", "yes")
-	}
+	editSamlEndpoint.Add("controller_login", samlEndpoint.ControllerLogin)
 	editSamlEndpoint.Add("access_ctrl", samlEndpoint.AccessSetBy)
 	if samlEndpoint.AccessSetBy == "controller" && samlEndpoint.RbacGroups != "" {
 		editSamlEndpoint.Add("groups", samlEndpoint.RbacGroups)
