@@ -1068,4 +1068,3 @@ func (c *Client) DisableEgressTransitFirenet(transitGateway *TransitVpc) error {
 	}
 	return c.PostAPI(action, data, BasicCheck)
 }
-

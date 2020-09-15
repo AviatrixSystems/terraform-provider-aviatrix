@@ -1,4 +1,20 @@
-## 2.16.2 (Unreleased)
+## 2.16.3 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.1.1309**
+- Supported Terraform version: **v0.12.x**
+
+### Features:
+1. Implemented support for allowing multiple **aviatrix_transit_gateway** attachments to **aviatrix_spoke_gateway**
+2. Implemented support for ``enable_egress_transit_firenet`` in **aviatrix_transit_gateway**
+3. Implemented support for AWSGOV cloud in following resources
+  - **aviatrix_vpc**
+  - **aviatrix_gateway**
+  - **aviatrix_spoke_gateway**
+  - **aviatrix_transit_gateway**
+  - **aviatrix_aws_tgw**
+
+
+## 2.16.2 (August 18, 2020)
 ### Notes:
 - Supported Controller version: **UserConnect-6.1.1280**
 - Supported Terraform version: **v0.12.x**
