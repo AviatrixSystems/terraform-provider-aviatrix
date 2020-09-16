@@ -671,6 +671,8 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 	var domainConnRemove [][]string
 	var toAttachVPCs [][]string
 	var toDetachVPCs [][]string
+	var toUpdateCustomizedRoutesOnly [][]string
+	var toUpdateCustomizedRoutesAdOnly [][]string
 	mapOldFireNetVpc := make(map[string]bool)
 	mapNewFireNetVpc := make(map[string]bool)
 
@@ -989,6 +991,8 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 		toAttachVPCs = goaviatrix.DifferenceSliceAttachedVPC(attachedVPCNew, attachedVPCOld)
 		toDetachVPCs = goaviatrix.DifferenceSliceAttachedVPC(attachedVPCOld, attachedVPCNew)
 
+		toUpdateCustomizedRoutesOnly, toUpdateCustomizedRoutesAdOnly = goaviatrix.ValidateAttachedVPCsForCustomizedRoutes(attachedVPCOld, attachedVPCNew)
+
 		if domainConnPolicy1 != nil || len(domainConnPolicy1) != 0 {
 			for i := range domainConnPolicy1 {
 				domainConnPolicy = append(domainConnPolicy, domainConnPolicy1[i])
@@ -1117,6 +1121,38 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 							return fmt.Errorf("failed to attach VPC: %s", err)
 						}
 					}
+				}
+			}
+		}
+	}
+
+	if manageVpcAttachment {
+		for i := range toUpdateCustomizedRoutesOnly {
+			if len(toUpdateCustomizedRoutesOnly[i]) == 9 {
+				awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
+					TgwName:          d.Get("tgw_name").(string),
+					VpcID:            toUpdateCustomizedRoutesOnly[i][1],
+					CustomizedRoutes: toUpdateCustomizedRoutesOnly[i][5],
+				}
+				err := client.EditTgwSpokeVpcCustomizedRoutes(awsTgwVpcAttachment)
+				if err != nil {
+					return fmt.Errorf("failed to update spoke vpc customized routes: %s", err)
+				}
+			}
+		}
+	}
+
+	if manageVpcAttachment {
+		for i := range toUpdateCustomizedRoutesAdOnly {
+			if len(toUpdateCustomizedRoutesAdOnly[i]) == 9 {
+				awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
+					TgwName:                      d.Get("tgw_name").(string),
+					VpcID:                        toUpdateCustomizedRoutesAdOnly[i][1],
+					CustomizedRouteAdvertisement: toUpdateCustomizedRoutesAdOnly[i][6],
+				}
+				err := client.EditTgwSpokeVpcCustomizedRouteAdvertisement(awsTgwVpcAttachment)
+				if err != nil {
+					return fmt.Errorf("failed to update spoke vpc customized routes advertisement: %s", err)
 				}
 			}
 		}
