@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"unicode"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -34,7 +35,17 @@ func resourceAviatrixAccountUser() *schema.Resource {
 			"username": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Name of account user to be created.",
+				Description: "Name of account user to be created. It can only include alphanumeric characters(lower case only), hyphens, dots or underscores. 1 to 80 in length. No spaces are allowed.",
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(string)
+					for _, r := range v {
+						if unicode.IsUpper(r) == true {
+							errs = append(errs, fmt.Errorf("expected %s to not include upper letters, got: %s", key, val))
+							return warns, errs
+						}
+					}
+					return
+				},
 			},
 		},
 	}
