@@ -86,7 +86,7 @@ func DifferenceSlice(a, b [][]string) [][]string {
 // This function is used to check if there is difference for attached_vpc in aws_tgw resource between source file and
 // state file excluding "subnets" and "route_tables".
 func DifferenceSliceAttachedVPC(a, b [][]string) [][]string {
-	if a == nil || len(a) == 0 || len(a[0]) < 9 || b == nil || len(b) == 0 || len(b[0]) < 9 {
+	if len(a) == 0 || len(a[0]) < 9 || len(b) == 0 || len(b[0]) < 9 {
 		return a
 	}
 
@@ -227,7 +227,7 @@ func ValidateASN(val interface{}, key string) (warns []string, errs []error) {
 func ValidateAttachedVPCsForCustomizedRoutes(a, b [][]string) ([][]string, [][]string) {
 	aa := make([][]string, 0)
 	bb := make([][]string, 0)
-	if a == nil || len(a) == 0 || len(a[0]) < 9 || b == nil || len(b) == 0 || len(b[0]) < 9 {
+	if len(a) == 0 || len(a[0]) < 9 || len(b) == 0 || len(b[0]) < 9 {
 		return aa, bb
 	}
 
