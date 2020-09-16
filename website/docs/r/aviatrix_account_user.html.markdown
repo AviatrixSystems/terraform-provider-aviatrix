@@ -28,7 +28,7 @@ resource "aviatrix_account_user" "test_accountuser" {
 The following arguments are supported for creating user account:
 
 ### Required
-* `username` - (Required) Name of account user to be created.
+* `username` - (Required) Name of account user to be created. It can only include alphanumeric characters(lower case only), hyphens, dots or underscores. 1 to 80 in length. No spaces are allowed.
 * `email` - (Required) Email of address of account user to be created.
 * `password` - (Required) Login password for the account user to be created. If password is changed, current account will be destroyed and a new account will be created.
 
