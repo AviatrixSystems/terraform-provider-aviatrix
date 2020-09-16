@@ -39,7 +39,7 @@ func resourceAviatrixAccountUser() *schema.Resource {
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 					v := val.(string)
 					for _, r := range v {
-						if unicode.IsUpper(r) == true {
+						if unicode.IsUpper(r) {
 							errs = append(errs, fmt.Errorf("expected %s to not include upper letters, got: %s", key, val))
 							return warns, errs
 						}
