@@ -12,10 +12,29 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.16.2 (UserConnect-6.1.1280)``
+``Last updated: R2.16.3 (UserConnect-6.1.1309)``
 
 
 ---
+
+## 2.16.3
+### Notes:
+- Supported Controller version: **UserConnect-6.1.1309**
+- Supported Terraform version: **v0.12.x**
+
+### Features:
+1. Implemented support for allowing multiple **aviatrix_transit_gateway** attachments to **aviatrix_spoke_gateway**
+2. Implemented support for Dual Transit FireNet through new attribute ``enable_egress_transit_firenet`` in **aviatrix_transit_gateway**
+3. Implemented support for AWSGOV cloud in the following resources:
+  - **aviatrix_vpc**
+  - **aviatrix_gateway**
+  - **aviatrix_spoke_gateway**
+  - **aviatrix_transit_gateway**
+  - **aviatrix_aws_tgw**
+
+### Enhancements
+1. Added validation function for ``username`` in **aviatrix_account_user** to block using upper letters in ``username`` since it is case insensitive in Controller
+
 
 ## 2.16.2
 ### Notes:

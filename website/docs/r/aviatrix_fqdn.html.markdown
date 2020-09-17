@@ -12,6 +12,8 @@ The **aviatrix_fqdn** resource manages [FQDN filtering](https://docs.aviatrix.co
 
 ~> **NOTE:** Please see the [Notes](#notes) section below for troubleshooting known issues/deltas that may occur when enabling this feature
 
+~> **NOTE:** Please note that there is no need to attach FQDN resource/enable this feature for the HA gateway. Enabling FQDN for the primary gateway will automatically handle this for the HA
+
 ## Example Usage
 
 ```hcl
