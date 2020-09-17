@@ -5,13 +5,16 @@
 
 ### Features:
 1. Implemented support for allowing multiple **aviatrix_transit_gateway** attachments to **aviatrix_spoke_gateway**
-2. Implemented support for ``enable_egress_transit_firenet`` in **aviatrix_transit_gateway**
-3. Implemented support for AWSGOV cloud in following resources
+2. Implemented support for Dual Transit FireNet through new attribute ``enable_egress_transit_firenet`` in **aviatrix_transit_gateway**
+3. Implemented support for AWSGOV cloud in the following resources:
   - **aviatrix_vpc**
   - **aviatrix_gateway**
   - **aviatrix_spoke_gateway**
   - **aviatrix_transit_gateway**
   - **aviatrix_aws_tgw**
+
+### Enhancements
+1. Added validation function for ``username`` in **aviatrix_account_user** to block using upper letters in ``username`` since it is case insensitive in controller
 
 
 ## 2.16.2 (August 18, 2020)
@@ -45,12 +48,12 @@
 5. Implemented support for ``enable_vpc_dns_server`` in **aviatrix_controller_config**
 6. Implemented support for updating name servers individually on ELBs under the **aviatrix_geo_vpn**
 7. Implemented support for specifying EIPs to use for launching GCP **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** by setting ``allocate_new_eip`` to false and their respective ``eip`` and/or ``peering_ha_eip/ha_eip`` attributes
-8. Implemented support for syncing **aviatrix_gateway_dnat** and **aviatrix_gateway_snat** policies to HA gateways through the ``sync_to_ha`` argument 
+8. Implemented support for syncing **aviatrix_gateway_dnat** and **aviatrix_gateway_snat** policies to HA gateways through the ``sync_to_ha`` argument
 
 ### Enhancements:
 1. Removed condition requiring ``single_az_ha`` to be disabled to in order to set ``enable_encrypt_volume`` for **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
 2. Enhanced reading ``allocate_new_eip`` for GCP **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** data sources
-   
+
 ### Bug Fixes:
 1. Fixed issue where peered TGWs showing in domain connection list causes **aviatrix_aws_tgw_peering** to read deltas due to backend change
 
