@@ -13,7 +13,7 @@
   - **aviatrix_transit_gateway**
   - **aviatrix_aws_tgw**
 
-### Enhancements
+### Enhancements:
 1. Added validation function for ``username`` in **aviatrix_account_user** to block using upper letters in ``username`` since it is case insensitive in controller
 
 
