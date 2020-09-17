@@ -177,7 +177,6 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-				ForceNew: true,
 			},
 		},
 	}
@@ -692,6 +691,9 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 	if d.HasChange("cloud_type") {
 		return fmt.Errorf("updating cloud_type is not allowed")
+	}
+	if d.HasChange("enable_multicast") {
+		return fmt.Errorf("updating enable_multicast is not allowed")
 	}
 
 	manageVpcAttachment := d.Get("manage_vpc_attachment").(bool)
