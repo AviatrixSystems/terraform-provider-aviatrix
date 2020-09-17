@@ -13,6 +13,9 @@
   - **aviatrix_transit_gateway**
   - **aviatrix_aws_tgw**
 
+### Enhancements:
+1. Added validation function for ``username`` in **aviatrix_account_user** to block using upper letters in ``username`` since it is case insensitive in controller
+
 
 ## 2.16.2 (August 18, 2020)
 ### Notes:
