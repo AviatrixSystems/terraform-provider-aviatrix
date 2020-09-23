@@ -314,6 +314,9 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			strs = append(strs, gateway.Subnet, insaneModeAz)
 			gateway.Subnet = strings.Join(strs, "~~")
 		}
+		if gateway.CloudType == goaviatrix.GCP && !d.Get("enable_active_mesh").(bool) {
+			return fmt.Errorf("insane_mode is supported for GCP provder only if active mesh 2.0 is enabled")
+		}
 		gateway.InsaneMode = "on"
 	} else {
 		gateway.InsaneMode = "off"
