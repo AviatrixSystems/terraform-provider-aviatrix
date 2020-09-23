@@ -102,3 +102,8 @@ resource "aws_dx_gateway" "dx-gateway" {
   name            = "aws-dx-gateway"
   amazon_side_asn = "64512"
 }
+
+module "cisco-csr" {
+  source = "./cisco-csr"
+  aws_region = var.aws_region1
+}

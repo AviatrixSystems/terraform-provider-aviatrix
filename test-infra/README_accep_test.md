@@ -37,9 +37,9 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_aws_tgw_vpn_conn            | SKIP_AWS_TGW_VPN_CONN              | aviatrix_aws_tgw                                                               |
 | aviatrix_controller_config           | SKIP_CONTROLLER_CONFIG             | aviatrix_account                                                               |
 | aviatrix_device_aws_tgw_attachment   | SKIP_DEVICE_AWS_TGW_ATTACHMENT     | DEVICE_NAME, AWS_TGW_NAME                                                      |
-| aviatrix_device_interface_config     | SKIP_DEVICE_INTERFACE_CONFIG       | aviatrix_device_registration, DEVICE_PRIMARY_INTERFACE                         |
+| aviatrix_device_interface_config     | SKIP_DEVICE_INTERFACE_CONFIG       | aviatrix_device_registration                                                   |
 | aviatrix_device_registration         | SKIP_DEVICE_REGISTRATION           | DEVICE_PUBLIC_IP, DEVICE_KEY_FILE_PATH                                         |
-| aviatrix_device_tag                  | SKIP_DEVICE_TAG                    | aviatrix_device_interface_config                                               |
+| aviatrix_device_tag                  | SKIP_DEVICE_TAG                    | aviatrix_device_registration                                                   |
 | aviatrix_device_transit_gateway_attachment | SKIP_DEVICE_TRANSIT_GATEWAY_ATTACHMENT | DEVICE_NAME, TRANSIT_GATEWAY_NAME                                    |
 | aviatrix_device_virtual_wan_attachment | SKIP_DEVICE_VIRTUAL_WAN_ATTACHMENT | DEVICE_NAME, DEVICE_ASN, AZURE_ACCOUNT_NAME, AZURE_RESOURCE_GROUP, AZURE_HUB_NAME |
 | aviatrix_firenet                     | SKIP_FIRENET                       | aviatrix_account + AWS_REGION, Palo Alto VM series                             |
