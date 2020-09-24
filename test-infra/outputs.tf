@@ -189,3 +189,7 @@ output "DEVICE_PUBLIC_IP" {
 output "DEVICE_KEY_FILE_PATH" {
   value = module.cisco-csr.DEVICE_KEY_FILE_PATH
 }
+
+output "TRANSIT_GATEWAY_NAME" {
+  value = aviatrix_transit_gateway.cwan-transitgw.gw_name
+}

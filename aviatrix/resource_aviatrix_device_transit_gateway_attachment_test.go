@@ -22,6 +22,7 @@ func TestAccAviatrixDeviceTransitGatewayAttachment_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			deviceRegistrationPreCheck(t)
 			testAccAviatrixDeviceTransitGatewayAttachmentPreCheck(t)
 		},
 		Providers:    testAccProviders,
@@ -49,6 +50,7 @@ func TestAccAviatrixDeviceTransitGatewayAttachment_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			deviceRegistrationPreCheck(t)
 			testAccAviatrixDeviceTransitGatewayAttachmentPreCheck(t)
 		},
 		Providers:    testAccProviders,
@@ -74,10 +76,29 @@ func TestAccAviatrixDeviceTransitGatewayAttachment_basic(t *testing.T) {
 
 func testAccDeviceTransitGatewayAttachmentBasic(rName string) string {
 	return fmt.Sprintf(`
+resource "aviatrix_device_registration" "test_device_registration" {
+	name        = "device-registration-%[1]s"
+	public_ip   = "%[2]s"
+	username    = "ec2-user"
+	key_file    = "%[3]s"
+	host_os     = "ios"
+	ssh_port    = 22
+	address_1   = "2901 Tasman Dr"
+	address_2   = "Suite #104"
+	city        = "Santa Clara"
+	state       = "CA"
+	zip_code    = "12323"
+	description = "Test device."
+}
+resource "aviatrix_device_interface_config" "test_device_interface_config" {
+	device_name                     = aviatrix_device_registration.test_device_registration.name
+	wan_primary_interface           = "GigabitEthernet1"
+	wan_primary_interface_public_ip = "%[2]s"
+}
 resource "aviatrix_device_transit_gateway_attachment" "test_device_transit_gateway_attachment" {
-	device_name               = "%s"
-	transit_gateway_name      = "%s"
-	connection_name           = "connection-%s"
+	device_name               = aviatrix_device_interface_config.test_device_interface_config.device_name 
+	transit_gateway_name      = "%[4]s"
+	connection_name           = "connection-%[1]s"
 	transit_gateway_bgp_asn   = 65000
 	device_bgp_asn            = 65001
 	phase1_authentication     = "SHA-256"
@@ -91,20 +112,41 @@ resource "aviatrix_device_transit_gateway_attachment" "test_device_transit_gatew
 	local_tunnel_ip           = "10.0.0.1/30"
 	remote_tunnel_ip          = "10.0.0.2/30"
 }
-`, os.Getenv("DEVICE_NAME"), os.Getenv("TRANSIT_GATEWAY_NAME"), rName)
+`, rName, os.Getenv("DEVICE_PUBLIC_IP"), os.Getenv("DEVICE_KEY_FILE_PATH"),
+		os.Getenv("TRANSIT_GATEWAY_NAME"))
 }
 
 func testAccDeviceTransitGatewayAttachmentNoOptions(rName string) string {
 	return fmt.Sprintf(`
+resource "aviatrix_device_registration" "test_device_registration" {
+	name        = "device-registration-noopts-%[1]s"
+	public_ip   = "%[2]s"
+	username    = "ec2-user"
+	key_file    = "%[3]s"
+	host_os     = "ios"
+	ssh_port    = 22
+	address_1   = "2901 Tasman Dr"
+	address_2   = "Suite #104"
+	city        = "Santa Clara"
+	state       = "CA"
+	zip_code    = "12323"
+	description = "Test device."
+}
+resource "aviatrix_device_interface_config" "test_device_interface_config" {
+	device_name                     = aviatrix_device_registration.test_device_registration.name
+	wan_primary_interface           = "GigabitEthernet1"
+	wan_primary_interface_public_ip = "%[2]s"
+}
 resource "aviatrix_device_transit_gateway_attachment" "test_device_transit_gateway_attachment" {
-	device_name               = "%s"
-	transit_gateway_name      = "%s"
-	connection_name           = "connection-noopts-%s"
+	device_name               = aviatrix_device_interface_config.test_device_interface_config.device_name 
+	transit_gateway_name      = "%[4]s"
+	connection_name           = "connection-noopts-%[1]s"
 	transit_gateway_bgp_asn   = 65000
 	device_bgp_asn            = 65001
 
 }
-`, os.Getenv("DEVICE_NAME"), os.Getenv("TRANSIT_GATEWAY_NAME"), rName)
+`, rName, os.Getenv("DEVICE_PUBLIC_IP"), os.Getenv("DEVICE_KEY_FILE_PATH"),
+		os.Getenv("TRANSIT_GATEWAY_NAME"))
 }
 
 func testAccCheckDeviceTransitGatewayAttachmentExists(n string) resource.TestCheckFunc {
@@ -155,9 +197,6 @@ func testAccCheckDeviceTransitGatewayAttachmentDestroy(s *terraform.State) error
 }
 
 func testAccAviatrixDeviceTransitGatewayAttachmentPreCheck(t *testing.T) {
-	if os.Getenv("DEVICE_NAME") == "" {
-		t.Fatal("DEVICE_NAME must be set for aviatrix_device_transit_gateway_attachment acceptance test.")
-	}
 	if os.Getenv("TRANSIT_GATEWAY_NAME") == "" {
 		t.Fatal("TRANSIT_GATEWAY_NAME must be set for aviatrix_device_transit_gateway_attachment acceptance test.")
 	}
