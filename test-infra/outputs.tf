@@ -181,3 +181,11 @@ output "IDP_METADATA" {
 output "IDP_METADATA_TYPE" {
   value = var.IDP_METADATA_TYPE
 }
+
+output "DEVICE_PUBLIC_IP" {
+  value = module.cisco-csr.DEVICE_PUBLIC_IP
+}
+
+output "DEVICE_KEY_FILE_PATH" {
+  value = module.cisco-csr.DEVICE_KEY_FILE_PATH
+}

@@ -22,7 +22,7 @@ func TestAccAviatrixDeviceTag_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccAviatrixDeviceTagPreCheck(t)
+			deviceRegistrationPreCheck(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDeviceTagDestroy,
@@ -61,7 +61,7 @@ resource "aviatrix_device_registration" "test_device_registration" {
 
 resource "aviatrix_device_interface_config" "test_device_interface_config" {
 	device_name                     = aviatrix_device_registration.test_device_registration.name
-	wan_primary_interface           = "%[4]s"
+	wan_primary_interface           = "GigabitEthernet1"
 	wan_primary_interface_public_ip = "%[2]s"
 }
 
@@ -73,7 +73,7 @@ EOD
 	device_names        = [aviatrix_device_registration.test_device_registration.name]
 	depends_on          = [aviatrix_device_interface_config.test_device_interface_config]
 }
-`, rName, os.Getenv("DEVICE_PUBLIC_IP"), os.Getenv("DEVICE_KEY_FILE_PATH"), os.Getenv("DEVICE_PRIMARY_INTERFACE"))
+`, rName, os.Getenv("DEVICE_PUBLIC_IP"), os.Getenv("DEVICE_KEY_FILE_PATH"))
 }
 
 func testAccCheckDeviceTagExists(n string) resource.TestCheckFunc {
@@ -121,10 +121,4 @@ func testAccCheckDeviceTagDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccAviatrixDeviceTagPreCheck(t *testing.T) {
-	if os.Getenv("DEVICE_NAME") == "" {
-		t.Fatal("DEVICE_NAME must be set for aviatrix_device_tag acceptance test.")
-	}
 }

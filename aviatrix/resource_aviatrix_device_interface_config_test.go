@@ -23,7 +23,6 @@ func TestAccAviatrixDeviceInterfaceConfig_basic(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 			deviceRegistrationPreCheck(t)
-			deviceInterfaceConfigPreCheck(t)
 		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -61,10 +60,10 @@ resource "aviatrix_device_registration" "test_device_registration" {
 
 resource "aviatrix_device_interface_config" "test_device_interface_config" {
 	device_name                     = aviatrix_device_registration.test_device_registration.name
-	wan_primary_interface           = "%[4]s"
+	wan_primary_interface           = "GigabitEthernet1"
 	wan_primary_interface_public_ip = "%[2]s"
 }
-`, rName, os.Getenv("DEVICE_PUBLIC_IP"), os.Getenv("DEVICE_KEY_FILE_PATH"), os.Getenv("DEVICE_PRIMARY_INTERFACE"))
+`, rName, os.Getenv("DEVICE_PUBLIC_IP"), os.Getenv("DEVICE_KEY_FILE_PATH"))
 }
 
 func testAccCheckDeviceInterfaceConfigExists(n string) resource.TestCheckFunc {
@@ -93,12 +92,5 @@ func testAccCheckDeviceInterfaceConfigExists(n string) resource.TestCheckFunc {
 		}
 
 		return nil
-	}
-}
-
-func deviceInterfaceConfigPreCheck(t *testing.T) {
-	if os.Getenv("DEVICE_PRIMARY_INTERFACE") == "" {
-		t.Fatal("environment variable DEVICE_PRIMARY_INTERFACE must be set for " +
-			"device_interface_config acceptance test")
 	}
 }
