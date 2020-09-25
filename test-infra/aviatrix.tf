@@ -148,6 +148,11 @@ resource "aviatrix_aws_tgw" "cwan-awstgw" {
   }
 }
 
+module "azure-vwan" {
+  source       = "./azure-vwan"
+  azure_region = var.azure_region1
+}
+
 module "cisco-csr" {
   source     = "./cisco-csr"
   aws_region = var.aws_region1

@@ -22,6 +22,7 @@ func TestAccAviatrixDeviceVirtualWanAttachment_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			deviceRegistrationPreCheck(t)
 			deviceVirtualWanAttachmentPreCheck(t)
 		},
 		Providers:    testAccProviders,
@@ -44,16 +45,45 @@ func TestAccAviatrixDeviceVirtualWanAttachment_basic(t *testing.T) {
 
 func testAccDeviceVirtualWanAttachmentBasic(rName string) string {
 	return fmt.Sprintf(`
-resource "aviatrix_device_virtual_wan_attachment" "test_device_virtual_wan_attachment" {
-	connection_name = "conn-%s"
-	device_name     = "%s"
-	account_name    = "%s"
-	resource_group  = "%s"
-	hub_name        = "%s"
-	device_bgp_asn  = %s
+resource "aviatrix_account" "temp_acc_azure" {
+  account_name        = "azureacc-%[1]s"
+  cloud_type          = 8
+  arm_subscription_id = "%[4]s" 
+  arm_directory_id    = "%[5]s"
+  arm_application_id  = "%[6]s"
+  arm_application_key = "%[7]s"
 }
-`, rName, os.Getenv("DEVICE_NAME"), os.Getenv("AZURE_ACCOUNT_NAME"),
-		os.Getenv("AZURE_RESOURCE_GROUP"), os.Getenv("AZURE_HUB_NAME"), os.Getenv("DEVICE_ASN"))
+resource "aviatrix_device_registration" "test_device_registration" {
+	name        = "device-registration-%[1]s"
+	public_ip   = "%[2]s"
+	username    = "ec2-user"
+	key_file    = "%[3]s"
+	host_os     = "ios"
+	ssh_port    = 22
+	address_1   = "2901 Tasman Dr"
+	address_2   = "Suite #104"
+	city        = "Santa Clara"
+	state       = "CA"
+	zip_code    = "12323"
+	description = "Test device."
+}
+resource "aviatrix_device_interface_config" "test_device_interface_config" {
+	device_name                     = aviatrix_device_registration.test_device_registration.name
+	wan_primary_interface           = "GigabitEthernet1"
+	wan_primary_interface_public_ip = "%[2]s"
+}
+resource "aviatrix_device_virtual_wan_attachment" "test_device_virtual_wan_attachment" {
+	connection_name = "conn-%[1]s"
+	device_name     = aviatrix_device_interface_config.test_device_interface_config.device_name
+	account_name    = aviatrix_account.temp_acc_azure.account_name
+	resource_group  = "%[8]s"
+	hub_name        = "%[9]s"
+	device_bgp_asn  = 65001
+}
+`, rName, os.Getenv("DEVICE_PUBLIC_IP"), os.Getenv("DEVICE_KEY_FILE_PATH"),
+		os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"),
+		os.Getenv("ARM_APPLICATION_ID"), os.Getenv("ARM_APPLICATION_KEY"),
+		os.Getenv("ARM_RESOURCE_GROUP"), os.Getenv("ARM_HUB_NAME"))
 }
 
 func testAccCheckDeviceVirtualWanAttachmentExists(n string) resource.TestCheckFunc {
@@ -104,19 +134,18 @@ func testAccCheckDeviceVirtualWanAttachmentDestroy(s *terraform.State) error {
 }
 
 func deviceVirtualWanAttachmentPreCheck(t *testing.T) {
-	if os.Getenv("DEVICE_NAME") == "" {
-		t.Fatal("environment variable DEVICE_NAME must be set for aviatrix_device_virtual_wan_attachment acceptance test")
+	errStr := "environment variable %s must be set for aviatrix_device_virtual_wan_attachment acceptance tests"
+	requiredEnvVars := []string{
+		"ARM_SUBSCRIPTION_ID",
+		"ARM_DIRECTORY_ID",
+		"ARM_APPLICATION_ID",
+		"ARM_APPLICATION_KEY",
+		"ARM_RESOURCE_GROUP",
+		"ARM_HUB_NAME",
 	}
-	if os.Getenv("AZURE_ACCOUNT_NAME") == "" {
-		t.Fatal("environment variable AZURE_ACCOUNT_NAME must be set for aviatrix_device_virtual_wan_attachment acceptance test")
-	}
-	if os.Getenv("AZURE_RESOURCE_GROUP") == "" {
-		t.Fatal("environment variable AZURE_RESOURCE_GROUP must be set for aviatrix_device_virtual_wan_attachment acceptance test")
-	}
-	if os.Getenv("AZURE_HUB_NAME") == "" {
-		t.Fatal("environment variable AZURE_HUB_NAME must be set for aviatrix_device_virtual_wan_attachment acceptance test")
-	}
-	if os.Getenv("DEVICE_ASN") == "" {
-		t.Fatal("environment variable DEVICE_ASN must be set for aviatrix_device_virtual_wan_attachment acceptance test")
+	for _, envVar := range requiredEnvVars {
+		if os.Getenv(envVar) == "" {
+			t.Fatalf(errStr, envVar)
+		}
 	}
 }
