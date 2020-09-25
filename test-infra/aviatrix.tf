@@ -117,6 +117,37 @@ resource "aviatrix_transit_gateway" "cwan-transitgw" {
   subnet       = module.aviatrix_aws_vpc1.subnet
 }
 
+resource "aviatrix_aws_tgw" "cwan-awstgw" {
+  account_name                      = var.access_account_name
+  aws_side_as_number                = "65011"
+  region                            = data.aws_region.current.name
+  tgw_name                          = "cwan-awstgw"
+
+  security_domains {
+    connected_domains    = [
+      "Default_Domain",
+      "Shared_Service_Domain",
+    ]
+    security_domain_name = "Aviatrix_Edge_Domain"
+  }
+
+  security_domains {
+    connected_domains    = [
+      "Aviatrix_Edge_Domain",
+      "Shared_Service_Domain"
+    ]
+    security_domain_name = "Default_Domain"
+  }
+
+  security_domains {
+    connected_domains    = [
+      "Aviatrix_Edge_Domain",
+      "Default_Domain"
+    ]
+    security_domain_name = "Shared_Service_Domain"
+  }
+}
+
 module "cisco-csr" {
   source     = "./cisco-csr"
   aws_region = var.aws_region1
