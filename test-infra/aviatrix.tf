@@ -1,7 +1,11 @@
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
-data "aws_caller_identity" "current_awsgov" {provider = aws.gov}
-data "aws_region" "current_awsgov" {provider = aws.gov}
+data "aws_caller_identity" "current_awsgov" {
+  provider = aws.gov
+}
+data "aws_region" "current_awsgov" {
+  provider = aws.gov
+}
 # This is not part of this role should not be destroyed
 # module "aviatrix-iam-roles" {
 #   source            = "github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-iam-roles?ref=terraform_0.12"
@@ -79,7 +83,7 @@ module "aviatrix_aws_vpc2" {
   aws_region     = var.aws_region2
 }
 module "aviatrix_awsgov_vpc" {
-  providers = {
+  providers      = {
     aws = aws.gov
   }
   source         = "./aws"
@@ -88,13 +92,13 @@ module "aviatrix_awsgov_vpc" {
   aws_region     = var.awsgov_region1
 }
 module "aviatrix_oci_vpc1" {
-  source         = "./oci"
+  source             = "./oci"
   oci_compartment_id = var.oci_compartment_id
-  oci_vpc_cidr1 = var.oci_vpc_cidr1
+  oci_vpc_cidr1      = var.oci_vpc_cidr1
 }
 resource "aws_vpn_gateway" "vgw" {
   vpc_id = module.aviatrix_aws_vpc2.vpc
-  tags = {
+  tags   = {
     Name = "aviatrix-vgw"
   }
 }
@@ -103,7 +107,17 @@ resource "aws_dx_gateway" "dx-gateway" {
   amazon_side_asn = "64512"
 }
 
+resource "aviatrix_transit_gateway" "cwan-transitgw" {
+  cloud_type   = 1
+  account_name = var.access_account_name
+  gw_name      = "cwan-transitgw"
+  vpc_id       = module.aviatrix_aws_vpc1.vpc
+  vpc_reg      = data.aws_region.current.name
+  gw_size      = "t2.micro"
+  subnet       = module.aviatrix_aws_vpc1.subnet
+}
+
 module "cisco-csr" {
-  source = "./cisco-csr"
+  source     = "./cisco-csr"
   aws_region = var.aws_region1
 }
