@@ -91,7 +91,7 @@ resource "aviatrix_firewall_policy" "test_firewall_policy" {
 	description = "This is policy no.1"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"),
-	os.Getenv("AWS_SECRET_KEY"), os.Getenv("AWS_REGION"))
+		os.Getenv("AWS_SECRET_KEY"), os.Getenv("AWS_REGION"))
 }
 
 func testAccCheckFirewallPolicyExists(n string) resource.TestCheckFunc {
