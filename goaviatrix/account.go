@@ -115,6 +115,42 @@ func (c *Client) CreateGCPAccount(account *Account) error {
 	return nil
 }
 
+func (c *Client) CreateOCIAccount(account *Account) error {
+	params := map[string]string{
+		"CID":                c.CID,
+		"action":             "setup_account_profile",
+		"account_name":       account.AccountName,
+		"cloud_type":         strconv.Itoa(account.CloudType),
+		"oci_tenancy_id":     account.OciTenancyID,
+		"oci_user_id":        account.OciUserID,
+		"oci_compartment_id": account.OciCompartmentID,
+	}
+
+	files := []File{
+		{
+			Path:      account.OciApiPrivateKeyFilePath,
+			ParamName: "oci_api_key",
+		},
+	}
+
+	resp, err := c.PostFile(c.baseURL, params, files)
+	if err != nil {
+		return errors.New("HTTP Post setup_account_profile failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode setup_account_profile failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API setup_account_profile Post failed: " + data.Reason)
+	}
+	return nil
+}
+
 func (c *Client) GetAccount(account *Account) (*Account, error) {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {

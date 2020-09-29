@@ -68,7 +68,7 @@ resource "aviatrix_account" "temp_acc_oci" {
 }
 ```
 ```hcl
-# Create an Aviatrix AWS Gov Account
+# Create an Aviatrix AWSGov Account
 resource "aviatrix_account" "temp_acc_awsgov" {
   account_name          = "username"
   cloud_type            = 256
@@ -119,7 +119,7 @@ The following arguments are supported:
 
 ## Import
 
-**account** can be imported using the `account_name` (when doing import, need to leave `aws_secret_key` blank), e.g.
+**account** can be imported using the `account_name` (when doing import, need to leave sensitive attributes blank), e.g.
 
 ```
 $ terraform import aviatrix_account.test account_name

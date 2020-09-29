@@ -243,25 +243,6 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		if account.OciApiPrivateKeyFilePath == "" {
 			return fmt.Errorf("oci api private key filepath needed to upload file to controller")
 		}
-
-		var filename, contents, ociApiPrivateKey string
-		filename, contents, err := goaviatrix.ReadPemFile(account.OciApiPrivateKeyFilePath)
-		if err != nil {
-			return fmt.Errorf("failed to read oci private key file: %s", err)
-		}
-		if filename == "" {
-			return fmt.Errorf("filename is empty")
-		}
-		if contents == "" {
-			return fmt.Errorf("contents are empty")
-		}
-		account.ProjectCredentialsFilename = filename
-		account.ProjectCredentialsContents = contents
-		if err = client.UploadOciApiPrivateKeyFile(account); err != nil {
-			return fmt.Errorf("failed to upload oci api private key file: %s", err)
-		}
-		ociApiPrivateKey = "/var/www/php/tmp/" + filename
-		account.OciApiPrivateKeyFilePath = ociApiPrivateKey
 	} else if account.CloudType == goaviatrix.AWSGOV {
 		if account.AwsgovAccountNumber == "" {
 			return fmt.Errorf("aws gov account number needed for aws gov cloud")
@@ -279,6 +260,8 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 	var err error
 	if account.CloudType == goaviatrix.GCP {
 		err = client.CreateGCPAccount(account)
+	} else if account.CloudType == goaviatrix.OCI {
+		err = client.CreateOCIAccount(account)
 	} else {
 		err = client.CreateAccount(account)
 	}
