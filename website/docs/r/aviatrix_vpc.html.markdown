@@ -56,6 +56,16 @@ resource "aviatrix_vpc" "azure_vnet" {
 }
 ```
 ```hcl
+# Create an OCI VPC
+resource "aviatrix_vpc" "oci_vpc" {
+  cloud_type   = 16
+  account_name = "devops"
+  region       = "us-ashburn-1"
+  name         = "oci-vpc"
+  cidr         = "10.0.0.0/24"
+}
+```
+```hcl
 # Create an AWSGov VPC
 resource "aviatrix_vpc" "awsgov_vnet" {
   cloud_type           = 256
@@ -73,10 +83,10 @@ resource "aviatrix_vpc" "awsgov_vnet" {
 The following arguments are supported:
 
 ### Required
-* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), AZURE(8) and AWSGov(256) are supported.
+* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), AZURE(8), OCI(16) and AWSGov(256) are supported.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `name` - (Required) Name of the VPC to be created.
-* `region` - (Optional) Region of cloud provider. **Required to be empty for GCP provider, and non-empty for other providers.** Example: AWS: "us-east-1", AZURE: "East US 2", AWSGov: "us-gov-east-1".
+* `region` - (Optional) Region of cloud provider. **Required to be empty for GCP provider, and non-empty for other providers.** Example: AWS: "us-east-1", AZURE: "East US 2", OCI: "us-ashburn-1", AWSGov: "us-gov-east-1".
 * `cidr` - (Optional) VPC CIDR. **Required to be empty for GCP provider, and non-empty for other providers.** Example: "10.11.0.0/24".
 * `subnet_size` - (Optional) Subnet size. Only supported for AWS, Azure provider. Example: 24.
 * `num_of_subnet_pairs` - (Optional) Number of public subnet and private subnet pair created. Only supported for AWS, Azure provider. Example: 1.

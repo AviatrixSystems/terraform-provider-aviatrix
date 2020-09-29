@@ -33,6 +33,7 @@ func resourceAviatrixVpc() *schema.Resource {
 					goaviatrix.AWS,
 					goaviatrix.GCP,
 					goaviatrix.AZURE,
+					goaviatrix.OCI,
 					goaviatrix.AWSGOV,
 				}),
 			},
