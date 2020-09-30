@@ -194,6 +194,14 @@ output "TRANSIT_GATEWAY_NAME" {
   value = aviatrix_transit_gateway.cwan-transitgw.gw_name
 }
 
+output "ARM_RESOURCE_GROUP" {
+  value = module.azure-vwan.azure_resource_group
+}
+
+output "ARM_HUB_NAME" {
+  value = module.azure-vwan.azure_hub_name
+}
+
 output "AWS_TGW_NAME" {
   value = aviatrix_aws_tgw.cwan-awstgw.tgw_name
 }
