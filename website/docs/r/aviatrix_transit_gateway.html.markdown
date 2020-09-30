@@ -58,10 +58,12 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_azure" {
   gw_name            = "transit"
   vpc_id             = "vnet1:hello"
   vpc_reg            = "West US"
-  gw_size            = "Standard_B1s"
+  gw_size            = "Standard_B1ms"
   subnet             = "10.30.0.0/24"
+  zone               = "az-1"
   ha_subnet          = "10.30.0.0/24"
-  ha_gw_size         = "Standard_B1s"
+  ha_zone            = "az-2"
+  ha_gw_size         = "Standard_B1ms"
   connected_transit  = true
   enable_active_mesh = true
 }
@@ -118,7 +120,7 @@ The following arguments are supported:
 ### HA
 * `single_az_ha` (Optional) Set to true if this [feature](https://docs.aviatrix.com/Solutions/gateway_ha.html#single-az-gateway) is desired. Valid values: true, false.
 * `ha_subnet` - (Optional) HA Subnet CIDR. Required only if enabling HA for AWS/Azure/AWSGOV gateway. Optional for GCP. Setting to empty/unsetting will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24".
-* `ha_zone` - (Optional) HA Zone. Required only if enabling HA for GCP gateway. Setting to empty/unsetting will disable HA. Setting to a valid zone will create an HA gateway in the zone. Example: "us-west1-c".
+* `ha_zone` - (Optional) HA Zone. Required if enabling HA for GCP gateway. Optional if enabling HA for AZURE gateway. For GCP, setting to empty/unsetting will disable HA and setting to a valid zone will create an HA gateway in the zone. Example: "us-west1-c". For AZURE, this is an optional parameter to place the HA gateway in a specific availability zone. Valid values for AZURE gateways are in the form "az-n". Example: "az-2".
 * `ha_insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit HA Gateway. Required for AWS/AWSGOV if `insane_mode` is enabled and `ha_subnet` is set. Example: AWS: "us-west-1a".
 * `ha_eip` - (Optional) Public IP address that you want to assign to the HA peering instance. If no value is given, a new EIP will automatically be allocated. Only available for AWS, GCP and AWSGOV.
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if enabling HA. Example: "t2.micro".
@@ -165,6 +167,7 @@ The following arguments are supported:
 * `enable_active_mesh` - (Optional) Switch to enable/disable [Active Mesh Mode](https://docs.aviatrix.com/HowTos/activemesh_faq.html) for Transit Gateway. Valid values: true, false. Default value: false.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS and AWSGOV. Valid values: true, false. Default value: false.
 * `enable_learned_cidrs_approval` - (Optional) Switch to enable/disable [encrypted transit approval](https://docs.aviatrix.com/HowTos/transit_approval.html) for transit Gateway. Valid values: true, false. Default value: false.
+* `zone` - (Optional) Availability Zone. Only available for cloud_type = 8 (AZURE). Must be in the form 'az-n', for example, 'az-2'.
 
 
 ## Attribute Reference
