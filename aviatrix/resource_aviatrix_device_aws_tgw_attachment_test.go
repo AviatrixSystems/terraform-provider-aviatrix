@@ -22,6 +22,7 @@ func TestAccAviatrixDeviceAwsTgwAttachment_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			deviceRegistrationPreCheck(t)
 			testAccAviatrixDeviceAwsTgwAttachmentPreCheck(t)
 		},
 		Providers:    testAccProviders,
@@ -44,14 +45,34 @@ func TestAccAviatrixDeviceAwsTgwAttachment_basic(t *testing.T) {
 
 func testAccDeviceAwsTgwAttachmentBasic(rName string) string {
 	return fmt.Sprintf(`
+resource "aviatrix_device_registration" "test_device_registration" {
+	name        = "device-registration-%[1]s"
+	public_ip   = "%[2]s"
+	username    = "ec2-user"
+	key_file    = "%[3]s"
+	host_os     = "ios"
+	ssh_port    = 22
+	address_1   = "2901 Tasman Dr"
+	address_2   = "Suite #104"
+	city        = "Santa Clara"
+	state       = "CA"
+	zip_code    = "12323"
+	description = "Test device."
+}
+resource "aviatrix_device_interface_config" "test_device_interface_config" {
+	device_name                     = aviatrix_device_registration.test_device_registration.name
+	wan_primary_interface           = "GigabitEthernet1"
+	wan_primary_interface_public_ip = "%[2]s"
+}
 resource "aviatrix_device_aws_tgw_attachment" "test_device_aws_tgw_attachment" {
-	connection_name      = "conn-%s"
-	device_name          = "%s"
-	aws_tgw_name         = "%s"
+	connection_name      = "conn-%[1]s"
+	device_name          = aviatrix_device_interface_config.test_device_interface_config.device_name
+	aws_tgw_name         = "%[4]s"
 	device_bgp_asn       = 65001
 	security_domain_name = "Default_Domain"
 }
-`, rName, os.Getenv("DEVICE_NAME"), os.Getenv("AWS_TGW_NAME"))
+`, rName, os.Getenv("DEVICE_PUBLIC_IP"), os.Getenv("DEVICE_KEY_FILE_PATH"),
+		os.Getenv("AWS_TGW_NAME"))
 }
 
 func testAccCheckDeviceAwsTgwAttachmentExists(n string) resource.TestCheckFunc {
@@ -106,9 +127,6 @@ func testAccCheckDeviceAwsTgwAttachmentDestroy(s *terraform.State) error {
 }
 
 func testAccAviatrixDeviceAwsTgwAttachmentPreCheck(t *testing.T) {
-	if os.Getenv("DEVICE_NAME") == "" {
-		t.Fatal("DEVICE_NAME must be set for aviatrix_device_aws_tgw_attachment acceptance test.")
-	}
 	if os.Getenv("AWS_TGW_NAME") == "" {
 		t.Fatal("AWS_TGW_NAME must be set for aviatrix_device_aws_tgw_attachment acceptance test.")
 	}

@@ -193,3 +193,7 @@ output "DEVICE_KEY_FILE_PATH" {
 output "TRANSIT_GATEWAY_NAME" {
   value = aviatrix_transit_gateway.cwan-transitgw.gw_name
 }
+
+output "AWS_TGW_NAME" {
+  value = aviatrix_aws_tgw.cwan-awstgw.tgw_name
+}
