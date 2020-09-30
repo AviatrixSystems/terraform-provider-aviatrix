@@ -168,6 +168,7 @@ type GatewayDetail struct {
 	LearnedCidrsApproval         string       `json:"learned_cidrs_approval,omitempty"`
 	SyncSNATToHA                 bool         `json:"sync_snat_to_ha,omitempty"`
 	SyncDNATToHA                 bool         `json:"sync_dnat_to_ha,omitempty"`
+	GwZone                       string       `json:"gw_zone,omitempty"`
 }
 
 type ElbDetail struct {
