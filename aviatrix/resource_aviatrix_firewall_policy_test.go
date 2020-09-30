@@ -47,18 +47,18 @@ func TestAccAviatrixFirewallPolicy_basic(t *testing.T) {
 func testAccFirewallPolicyBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
-	account_name       = "tfa-%s"
+	account_name       = "tfa-%[1]s"
 	cloud_type         = 1
-	aws_account_number = "%s"
+	aws_account_number = "%[2]s"
 	aws_iam            = false
-	aws_access_key     = "%s"
-	aws_secret_key     = "%s"
+	aws_access_key     = "%[3]s"
+	aws_secret_key     = "%[4]s"
 }
 resource "aviatrix_vpc" "test" {
 	cloud_type   = 1
 	account_name = aviatrix_account.test.account_name
-	name         = "tfv-%s"
-	region       = "%s"
+	name         = "tfv-%[1]s"
+	region       = "%[5]s"
 	cidr         = "10.0.0.0/16"
 }
 data "aviatrix_vpc" "test" {
@@ -67,9 +67,9 @@ data "aviatrix_vpc" "test" {
 resource "aviatrix_gateway" "test" {
 	cloud_type   = 1
 	account_name = aviatrix_account.test.account_name
-	gw_name      = "test-gw-%s"
+	gw_name      = "test-gw-%[1]s"
 	vpc_id       = aviatrix_vpc.test.vpc_id
-	vpc_reg      = "%s"
+	vpc_reg      = "%[5]s"
 	gw_size      = "t2.micro"
 	subnet       = data.aviatrix_vpc.test.public_subnets[0].cidr
 }
@@ -90,8 +90,8 @@ resource "aviatrix_firewall_policy" "test_firewall_policy" {
 	port        = "0:65535"
 	description = "This is policy no.1"
 }
-	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		rName, os.Getenv("AWS_REGION"), rName, os.Getenv("AWS_REGION"))
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"),
+		os.Getenv("AWS_SECRET_KEY"), os.Getenv("AWS_REGION"))
 }
 
 func testAccCheckFirewallPolicyExists(n string) resource.TestCheckFunc {
