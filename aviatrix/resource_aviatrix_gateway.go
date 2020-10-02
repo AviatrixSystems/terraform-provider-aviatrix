@@ -26,13 +26,7 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:        schema.TypeInt,
 				Required:    true,
 				Description: "Type of cloud service provider.",
-				ValidateFunc: validation.IntInSlice([]int{
-					goaviatrix.AWS,
-					goaviatrix.GCP,
-					goaviatrix.AZURE,
-					goaviatrix.OCI,
-					goaviatrix.AWSGOV,
-				}),
+				ValidateFunc: validateCloudType,
 			},
 			"account_name": {
 				Type:        schema.TypeString,

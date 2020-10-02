@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -24,6 +25,7 @@ func resourceAviatrixGeoVPN() *schema.Resource {
 				Type:        schema.TypeInt,
 				Required:    true,
 				ForceNew:    true,
+				ValidateFunc: validation.IntInSlice([]int{goaviatrix.AWS}),
 				Description: "Type of cloud service provider, requires an integer value. Currently only AWS(1) is supported.",
 			},
 			"account_name": {

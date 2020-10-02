@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
@@ -27,13 +25,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeInt,
 				Required:    true,
 				Description: "Type of cloud service provider.",
-				ValidateFunc: validation.IntInSlice([]int{
-					goaviatrix.AWS,
-					goaviatrix.GCP,
-					goaviatrix.AZURE,
-					goaviatrix.OCI,
-					goaviatrix.AWSGOV,
-				}),
+				ValidateFunc: validateCloudType,
 			},
 			"account_name": {
 				Type:        schema.TypeString,
