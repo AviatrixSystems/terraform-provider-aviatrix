@@ -69,23 +69,10 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "Public Subnet Name.",
 			},
 			"zone": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: func(i interface{}, k string) (warnings []string, errors []error) {
-					v, ok := i.(string)
-					if !ok {
-						errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
-						return warnings, errors
-					}
-
-					// Azure AZ always start with 'az-'
-					if len(v) < 4 || v[:3] != "az-" {
-						errors = append(errors, fmt.Errorf("expected zone to be of the form 'az-n', got '%s'", v))
-					}
-
-					return warnings, errors
-				},
-				Description: "Availability Zone. Only available for cloud_type = 8 (AZURE). Must be in the form 'az-n', for example, 'az-2'.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateAzureAZ,
+				Description:  "Availability Zone. Only available for cloud_type = 8 (AZURE). Must be in the form 'az-n', for example, 'az-2'.",
 			},
 			"insane_mode_az": {
 				Type:        schema.TypeString,

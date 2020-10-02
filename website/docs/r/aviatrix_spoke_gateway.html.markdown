@@ -52,8 +52,9 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
   gw_name            = "spoke-gw-01"
   vpc_id             = "spoke:test-spoke-gw-123"
   vpc_reg            = "West US"
-  gw_size            = "Standard_B1s"
+  gw_size            = "Standard_B1ms"
   subnet             = "10.13.0.0/24"
+  zone               = "az-1"
   enable_snat        = false
   enable_active_mesh = true
 }
@@ -106,7 +107,7 @@ The following arguments are supported:
 ### HA
 * `single_az_ha` (Optional) Set to true if this [feature](https://docs.aviatrix.com/Solutions/gateway_ha.html#single-az-gateway) is desired. Valid values: true, false.
 * `ha_subnet` - (Optional) HA Subnet. Required if enabling HA for AWS/Azure/AWSGOV gateway. Optional for GCP. Setting to empty/unsetting will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24"
-* `ha_zone` - (Optional) HA Zone. Required only if enabling HA for GCP gateway. Setting to empty/unsetting will disable HA. Setting to a valid zone will create an HA gateway in the zone. Example: "us-west1-c".
+* `ha_zone` - (Optional) HA Zone. Required if enabling HA for GCP gateway. Optional for AZURE. For GCP, setting to empty/unsetting will disable HA and setting to a valid zone will create an HA gateway in the zone. Example: "us-west1-c". For AZURE, this is an optional parameter to place the HA gateway in a specific availability zone. Valid values for AZURE gateways are in the form "az-n". Example: "az-2". Available for AZURE as of provider version R2.17+.
 * `ha_insane_mode_az` (Optional) AZ of subnet being created for Insane Mode Spoke HA Gateway. Required for AWS/AWSGOV provider if `insane_mode` is enabled and `ha_subnet` is set. Example: AWS: "us-west-1a".
 * `ha_eip` - (Optional) Public IP address that you want to assign to the HA peering instance. If no value is given, a new EIP will automatically be allocated. Only available for AWS and GCP.
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if enabling HA.
@@ -138,7 +139,7 @@ The following arguments are supported:
 * `tag_list` - (Optional) Instance tag of cloud provider. Only supports AWS and AWSGOV provider, cloud_type is "1", is supported. Example: ["key1:value1", "key2:value2"].
 * `enable_active_mesh` - (Optional) Switch to enable/disable [Active Mesh Mode](https://docs.aviatrix.com/HowTos/activemesh_faq.html) for Spoke Gateway. Valid values: true, false. Default value: false.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS and AWSGOV provider. Valid values: true, false. Default value: false.
-
+* `zone` - (Optional) Availability Zone. Only available for cloud_type = 8 (AZURE). Must be in the form 'az-n', for example, 'az-2'. Available as of provider version R2.17+.
 
 ## Attribute Reference
 
