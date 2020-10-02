@@ -169,6 +169,9 @@ type GatewayDetail struct {
 	SyncSNATToHA                 bool         `json:"sync_snat_to_ha,omitempty"`
 	SyncDNATToHA                 bool         `json:"sync_dnat_to_ha,omitempty"`
 	GwZone                       string       `json:"gw_zone,omitempty"`
+	TransitGwName                string       `json:"transit_gw_name,omitempty"`
+	EgressTransitGwName          string       `json:"egress_transit_gw_name,omitempty"`
+	RouteTables                  []string     `json:"spoke_rtb_list,omitempty"`
 }
 
 type ElbDetail struct {
