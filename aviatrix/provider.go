@@ -81,6 +81,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_segmentation_security_domain_connection_policy": resourceAviatrixSegmentationSecurityDomainConnectionPolicy(),
 			"aviatrix_site2cloud":                                     resourceAviatrixSite2Cloud(),
 			"aviatrix_spoke_gateway":                                  resourceAviatrixSpokeGateway(),
+			"aviatrix_spoke_transit_attachment":                       resourceAviatrixSpokeTransitAttachment(),
 			"aviatrix_spoke_vpc":                                      resourceAviatrixSpokeVpc(),
 			"aviatrix_transit_external_device_conn":                   resourceAviatrixTransitExternalDeviceConn(),
 			"aviatrix_trans_peer":                                     resourceAviatrixTransPeer(),
