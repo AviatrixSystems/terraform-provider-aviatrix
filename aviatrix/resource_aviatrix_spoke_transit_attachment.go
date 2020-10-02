@@ -38,7 +38,7 @@ func resourceAviatrixSpokeTransitAttachment() *schema.Resource {
 				},
 				Optional:    true,
 				ForceNew:    true,
-				Description: "",
+				Description: "Learned routes will be propagated to these route tables.",
 			},
 		},
 	}
