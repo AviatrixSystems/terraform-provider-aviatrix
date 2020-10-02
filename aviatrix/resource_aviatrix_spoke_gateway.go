@@ -65,6 +65,12 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Required:    true,
 				Description: "Public Subnet Info.",
 			},
+			"zone": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateAzureAZ,
+				Description:  "Availability Zone. Only available for cloud_type = 8 (AZURE). Must be in the form 'az-n', for example, 'az-2'.",
+			},
 			"insane_mode_az": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -99,7 +105,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "HA Zone. Required if enabling HA for GCP.",
+				Description: "HA Zone. Required if enabling HA for GCP. Optional for Azure.",
 			},
 			"ha_insane_mode_az": {
 				Type:        schema.TypeString,
@@ -240,6 +246,15 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		Subnet:      d.Get("subnet").(string),
 		HASubnet:    d.Get("ha_subnet").(string),
 	}
+
+	if _, hasSetZone := d.GetOk("zone"); gateway.CloudType != goaviatrix.AZURE && hasSetZone {
+		return fmt.Errorf("attribute 'zone' is only valid for cloud_type = 8 (AZURE)")
+	}
+
+	if _, hasSetZone := d.GetOk("zone"); gateway.CloudType == goaviatrix.AZURE && hasSetZone {
+		gateway.Subnet = fmt.Sprintf("%s~~%s~~", d.Get("subnet").(string), d.Get("zone").(string))
+	}
+
 	enableSNat := d.Get("single_ip_snat").(bool)
 	if enableSNat {
 		gateway.EnableNat = "yes"
@@ -287,11 +302,14 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	insaneModeAz := d.Get("insane_mode_az").(string)
 	haSubnet := d.Get("ha_subnet").(string)
 	haZone := d.Get("ha_zone").(string)
-	if haZone != "" && gateway.CloudType != goaviatrix.GCP {
-		return fmt.Errorf("'ha_zone' is only required for GCP provider if enabling HA")
+	if haZone != "" && gateway.CloudType != goaviatrix.GCP && gateway.CloudType != goaviatrix.AZURE {
+		return fmt.Errorf("'ha_zone' is only valid for GCP and Azure providers if enabling HA")
 	}
 	if gateway.CloudType == goaviatrix.GCP && haSubnet != "" && haZone == "" {
-		return fmt.Errorf("'ha_zone' must be set to enable HA on GCP, cannot enable HA with only 'ha_subnet' enabled")
+		return fmt.Errorf("'ha_zone' must be set to enable HA on GCP, cannot enable HA with only 'ha_subnet'")
+	}
+	if gateway.CloudType == goaviatrix.AZURE && haSubnet == "" && haZone != "" {
+		return fmt.Errorf("'ha_subnet' must be provided to enable HA on AZURE, cannot enable HA with only 'ha_zone'")
 	}
 	haGwSize := d.Get("ha_gw_size").(string)
 	if haSubnet == "" && haZone == "" && haGwSize != "" {
@@ -397,6 +415,10 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			haStrs = append(haStrs, haSubnet, haInsaneModeAz)
 			haSubnet = strings.Join(haStrs, "~~")
 			haGateway.HASubnet = haSubnet
+		}
+
+		if haGateway.CloudType == goaviatrix.AZURE && haZone != "" {
+			haGateway.HASubnet = fmt.Sprintf("%s~~%s~~", haSubnet, haZone)
 		}
 
 		if haGateway.CloudType == goaviatrix.GCP {
@@ -749,6 +771,18 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	if gw.CloudType == goaviatrix.AZURE {
+		gwDetail, err := client.GetGatewayDetail(gw)
+		if err != nil {
+			return fmt.Errorf("could not get gateway details: %v", err)
+		}
+
+		_, zoneIsSet := d.GetOk("zone")
+		if (isImport || zoneIsSet) && gwDetail.GwZone != "AvailabilitySet" {
+			d.Set("zone", "az-"+gwDetail.GwZone)
+		}
+	}
+
 	haGateway := &goaviatrix.Gateway{
 		AccountName: d.Get("account_name").(string),
 		GwName:      d.Get("gw_name").(string) + "-hagw",
@@ -769,7 +803,19 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		log.Printf("[INFO] Spoke HA Gateway size: %s", haGw.GwSize)
 		if haGw.CloudType == goaviatrix.AWS || haGw.CloudType == goaviatrix.AZURE || haGw.CloudType == goaviatrix.OCI || haGw.CloudType == goaviatrix.AWSGOV {
 			d.Set("ha_subnet", haGw.VpcNet)
-			d.Set("ha_zone", "")
+			if zone := d.Get("ha_zone"); haGw.CloudType == goaviatrix.AZURE && (isImport || zone.(string) != "") {
+				haGwDetail, err := client.GetGatewayDetail(haGateway)
+				if err != nil {
+					return fmt.Errorf("could not get HA spoke gateway details: %v", err)
+				}
+				if haGwDetail.GwZone != "AvailabilitySet" {
+					d.Set("ha_zone", "az-"+haGwDetail.GwZone)
+				} else {
+					d.Set("ha_zone", "")
+				}
+			} else {
+				d.Set("ha_zone", "")
+			}
 		} else if haGw.CloudType == goaviatrix.GCP {
 			d.Set("ha_zone", haGw.GatewayZone)
 			if d.Get("ha_subnet") != "" || isImport {
@@ -812,15 +858,18 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	d.Partial(true)
 	if d.HasChange("ha_zone") {
 		haZone := d.Get("ha_zone").(string)
-		if haZone != "" && gateway.CloudType != goaviatrix.GCP {
-			return fmt.Errorf("'ha_zone' is only required for GCP provider if enabling HA")
+		if haZone != "" && gateway.CloudType != goaviatrix.GCP && gateway.CloudType != goaviatrix.AZURE {
+			return fmt.Errorf("'ha_zone' is only valid for GCP and AZURE providers if enabling HA")
 		}
 	}
 	if d.HasChange("ha_zone") || d.HasChange("ha_subnet") {
 		haZone := d.Get("ha_zone").(string)
 		haSubnet := d.Get("ha_subnet").(string)
 		if gateway.CloudType == goaviatrix.GCP && haSubnet != "" && haZone == "" {
-			return fmt.Errorf("'ha_zone' must be set to enable HA on GCP, cannot enable HA with only 'ha_subnet' enabled")
+			return fmt.Errorf("'ha_zone' must be set to enable HA on GCP, cannot enable HA with only 'ha_subnet'")
+		}
+		if gateway.CloudType == goaviatrix.AZURE && haSubnet == "" && haZone != "" {
+			return fmt.Errorf("'ha_subnet' must be provided to enable HA on AZURE, cannot enable HA with only 'ha_zone'")
 		}
 	}
 	if d.HasChange("cloud_type") {
@@ -840,6 +889,9 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	}
 	if d.HasChange("subnet") {
 		return fmt.Errorf("updating subnet is not allowed")
+	}
+	if d.HasChange("zone") {
+		return fmt.Errorf("updating zone is not allowed")
 	}
 	if d.HasChange("insane_mode") {
 		return fmt.Errorf("updating insane_mode is not allowed")
@@ -981,11 +1033,16 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		changeHaGw := false
 		if spokeGw.CloudType == goaviatrix.AWS || spokeGw.CloudType == goaviatrix.AZURE || spokeGw.CloudType == goaviatrix.OCI || spokeGw.CloudType == goaviatrix.AWSGOV {
 			spokeGw.HASubnet = d.Get("ha_subnet").(string)
+			if spokeGw.CloudType == goaviatrix.AZURE && d.Get("ha_zone").(string) != "" {
+				spokeGw.HASubnet = fmt.Sprintf("%s~~%s~~", d.Get("ha_subnet").(string), d.Get("ha_zone").(string))
+			}
 			if oldSubnet == "" && newSubnet != "" {
 				newHaGwEnabled = true
 			} else if oldSubnet != "" && newSubnet == "" {
 				deleteHaGw = true
 			} else if oldSubnet != "" && newSubnet != "" {
+				changeHaGw = true
+			} else if d.HasChange("ha_zone") {
 				changeHaGw = true
 			}
 		} else if spokeGw.CloudType == goaviatrix.GCP {
