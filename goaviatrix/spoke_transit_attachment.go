@@ -19,24 +19,10 @@ type SpokeTransitAttachment struct {
 }
 
 func (c *Client) CreateSpokeTransitAttachment(spokeTransitAttachment *SpokeTransitAttachment) error {
+	action := "attach_spoke_to_transit_gw"
 	spokeTransitAttachment.CID = c.CID
-	spokeTransitAttachment.Action = "attach_spoke_to_transit_gw"
-	resp, err := c.Post(c.baseURL, spokeTransitAttachment)
-	if err != nil {
-		return errors.New("HTTP Post attach_spoke_to_transit_gw failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode attach_spoke_to_transit_gw failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API attach_spoke_to_transit_gw Post failed: " + data.Reason)
-	}
-	return nil
+	spokeTransitAttachment.Action = action
+	return c.PostAPI(action, spokeTransitAttachment, BasicCheck)
 }
 
 func (c *Client) GetSpokeTransitAttachment(spokeTransitAttachment *SpokeTransitAttachment) (*SpokeTransitAttachment, error) {
@@ -76,22 +62,8 @@ func (c *Client) GetSpokeTransitAttachment(spokeTransitAttachment *SpokeTransitA
 }
 
 func (c *Client) DeleteSpokeTransitAttachment(spokeTransitAttachment *SpokeTransitAttachment) error {
+	action := "detach_spoke_from_transit_gw"
 	spokeTransitAttachment.CID = c.CID
-	spokeTransitAttachment.Action = "detach_spoke_from_transit_gw"
-	resp, err := c.Post(c.baseURL, spokeTransitAttachment)
-	if err != nil {
-		return errors.New("HTTP Post detach_spoke_from_transit_gw failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode detach_spoke_from_transit_gw failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API detach_spoke_from_transit_gw Post failed: " + data.Reason)
-	}
-	return nil
+	spokeTransitAttachment.Action = action
+	return c.PostAPI(action, spokeTransitAttachment, BasicCheck)
 }
