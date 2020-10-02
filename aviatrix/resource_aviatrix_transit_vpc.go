@@ -24,10 +24,10 @@ func resourceAviatrixTransitVpc() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"cloud_type": {
-				Type:        schema.TypeInt,
-				Required:    true,
+				Type:         schema.TypeInt,
+				Required:     true,
 				ValidateFunc: validateCloudType,
-				Description: "Type of cloud service provider, requires an integer value. Use 1 for AWS.",
+				Description:  "Type of cloud service provider, requires an integer value. Use 1 for AWS.",
 			},
 			"account_name": {
 				Type:        schema.TypeString,

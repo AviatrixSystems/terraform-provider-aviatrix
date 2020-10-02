@@ -23,9 +23,9 @@ func resourceAviatrixGateway() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"cloud_type": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "Type of cloud service provider.",
+				Type:         schema.TypeInt,
+				Required:     true,
+				Description:  "Type of cloud service provider.",
 				ValidateFunc: validateCloudType,
 			},
 			"account_name": {
