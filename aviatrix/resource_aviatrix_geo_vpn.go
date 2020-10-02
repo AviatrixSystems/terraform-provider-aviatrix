@@ -22,11 +22,11 @@ func resourceAviatrixGeoVPN() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"cloud_type": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				ForceNew:    true,
+				Type:         schema.TypeInt,
+				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.IntInSlice([]int{goaviatrix.AWS}),
-				Description: "Type of cloud service provider, requires an integer value. Currently only AWS(1) is supported.",
+				Description:  "Type of cloud service provider, requires an integer value. Currently only AWS(1) is supported.",
 			},
 			"account_name": {
 				Type:        schema.TypeString,

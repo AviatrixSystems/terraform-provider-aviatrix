@@ -26,10 +26,10 @@ func resourceAviatrixAccount() *schema.Resource {
 				Description: "Account name. This can be used for logging in to CloudN console or UserConnect controller.",
 			},
 			"cloud_type": {
-				Type:        schema.TypeInt,
-				Required:    true,
+				Type:         schema.TypeInt,
+				Required:     true,
 				ValidateFunc: validateCloudType,
-				Description: "Type of cloud service provider.",
+				Description:  "Type of cloud service provider.",
 			},
 			"aws_account_number": {
 				Type:        schema.TypeString,
