@@ -28,6 +28,7 @@ func resourceAviatrixAccount() *schema.Resource {
 			"cloud_type": {
 				Type:        schema.TypeInt,
 				Required:    true,
+				ValidateFunc: validateCloudType,
 				Description: "Type of cloud service provider.",
 			},
 			"aws_account_number": {

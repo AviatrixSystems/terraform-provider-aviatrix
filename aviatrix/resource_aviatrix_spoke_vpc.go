@@ -26,6 +26,7 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 			"cloud_type": {
 				Type:        schema.TypeInt,
 				Required:    true,
+				ValidateFunc: validateCloudType,
 				Description: "Type of cloud service provider.",
 			},
 			"account_name": {
