@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -115,6 +116,41 @@ func (c *Client) CreateVpc(vpc *Vpc) error {
 		return errors.New("Rest API create_custom_vpc Get failed: " + data.Reason)
 	}
 	return nil
+}
+
+// GetVpcCloudTypeById returns the cloud_type of the vpc with the given ID.
+// If the vpc does not exist, ErrNotFound is returned.
+func (c *Client) GetVpcCloudTypeById(ID string) (int, error) {
+	action := "list_custom_vpcs"
+	d := map[string]string{
+		"CID":    c.CID,
+		"action": action,
+	}
+	resp, err := c.Get(c.baseURL, d)
+
+	if err != nil {
+		return 0, fmt.Errorf("HTTP Get %s failed: %v", action, err)
+	}
+	var data VpcResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return 0, fmt.Errorf("Json Decode %s failed: %v\n Body: %s", action, err, bodyString)
+	}
+	if !data.Return {
+		return 0, fmt.Errorf("rest API %s Get failed: %s", action, data.Reason)
+	}
+	allVpcPoolVpcListResp := data.Results.AllVpcPoolVpcList
+	for _, vpcPool := range allVpcPoolVpcListResp {
+		for _, vpcID := range vpcPool.VpcID {
+			if vpcID == ID {
+				return vpcPool.CloudType, nil
+			}
+		}
+	}
+	return 0, ErrNotFound
 }
 
 func (c *Client) GetVpc(vpc *Vpc) (*Vpc, error) {

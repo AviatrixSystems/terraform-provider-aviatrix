@@ -98,6 +98,13 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				ForceNew:    true,
 				Description: "Applicable to Azure deployment only.",
 			},
+			"zone": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateAzureAZ,
+				Description:  "Availability Zone. Only available for AZURE. Must be in the form 'az-n', for example, 'az-2'.",
+			},
 			"instance_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -146,6 +153,19 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		Password:             d.Get("password").(string),
 	}
 
+	cloudType, err := client.GetVpcCloudTypeById(firewallInstance.VpcID)
+	if err != nil {
+		return fmt.Errorf("could not get cloud type from vpc_id: %v", err)
+	}
+	zone := d.Get("zone").(string)
+	if zone != "" && cloudType != goaviatrix.AZURE {
+		return fmt.Errorf("'zone' attribute is only valid for AZURE")
+	}
+	if zone != "" {
+		firewallInstance.EgressSubnet = fmt.Sprintf("%s~~%s~~", firewallInstance.EgressSubnet, zone)
+		firewallInstance.ManagementSubnet = fmt.Sprintf("%s~~%s~~", firewallInstance.ManagementSubnet, zone)
+	}
+
 	instanceID, err := client.CreateFirewallInstance(firewallInstance)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
@@ -162,11 +182,13 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	client := meta.(*goaviatrix.Client)
 
 	instanceID := d.Get("instance_id").(string)
+	var isImport bool
 	if instanceID == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no firewall names received. Import Id is %s", id)
 		d.Set("instance_id", id)
 		d.SetId(id)
+		isImport = true
 	}
 
 	firewallInstance := &goaviatrix.FirewallInstance{
@@ -192,6 +214,11 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	d.Set("instance_id", fI.InstanceID)
 	d.Set("egress_subnet", fI.EgressSubnet)
 	d.Set("management_subnet", fI.ManagementSubnet)
+
+	if (d.Get("zone").(string) != "" || isImport) && fI.AvailabilityZone != "AvailabilitySet" &&
+		fI.AvailabilityZone != "" && fI.CloudVendor == "Azure ARM" {
+		d.Set("zone", "az-"+fI.AvailabilityZone)
+	}
 
 	d.Set("lan_interface", fI.LanInterface)
 	d.Set("management_interface", fI.ManagementInterface)
