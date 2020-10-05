@@ -1856,6 +1856,14 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 
 	log.Printf("[INFO] Deleting Aviatrix Transit Gateway: %#v", gateway)
 
+	enableEgressTransitFirenet := d.Get("enable_egress_transit_firenet").(bool)
+	if enableEgressTransitFirenet {
+		err := client.DisableEgressTransitFirenet(&goaviatrix.TransitVpc{GwName: gateway.GwName})
+		if err != nil {
+			return fmt.Errorf("could not disable egress transit firenet: %v", err)
+		}
+	}
+
 	enableFireNet := d.Get("enable_firenet").(bool)
 	if enableFireNet {
 		gw := &goaviatrix.TransitVpc{
