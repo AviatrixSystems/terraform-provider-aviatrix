@@ -740,11 +740,11 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	if manageTransitGwAttachment {
 		if gw.SpokeVpc == "yes" {
 			var transitGws []string
-			if gw.TransitGwName != "" {
-				transitGws = append(transitGws, gw.TransitGwName)
-			}
 			if gw.EgressTransitGwName != "" {
 				transitGws = append(transitGws, gw.EgressTransitGwName)
+			}
+			if gw.TransitGwName != "" {
+				transitGws = append(transitGws, gw.TransitGwName)
 			}
 			d.Set("transit_gw", strings.Join(transitGws, ","))
 		} else {
