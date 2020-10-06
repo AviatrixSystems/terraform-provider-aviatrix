@@ -44,7 +44,8 @@ The following arguments are supported:
 * `iam_role` - (Optional) In advanced mode, create an IAM Role on the AWS account that launched the FireNet gateway. Create a policy to attach to the role. The policy is to allow access to “Bootstrap Bucket”.
 * `bootstrap_bucket_name`- (Optional) In advanced mode, specify a bootstrap bucket name where the initial configuration and policy file is stored.
 * `username`- (Optional) Applicable to Azure deployment only. "admin" as a username is not accepted.
-* `key_name`- (Optional) Applicable to Azure deployment only.
+* `password`- (Optional) Applicable to Azure deployment only.
+* `zone` - (Optional) Availability Zone. Applicable to Azure deployment only. Available as of provider version R2.17+.
 
 ## Attribute Reference
 

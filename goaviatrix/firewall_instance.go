@@ -32,6 +32,8 @@ type FirewallInstance struct {
 	VendorType           string
 	Username             string `form:"username,omitempty"`
 	Password             string `form:"password,omitempty"`
+	AvailabilityZone     string `json:"availability_zone,omitempty"`
+	CloudVendor          string `json:"cloud_vendor,omitempty"`
 }
 
 type FirewallInstanceResp struct {
