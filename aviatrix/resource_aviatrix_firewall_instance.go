@@ -155,7 +155,10 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 
 	cloudType, err := client.GetVpcCloudTypeById(firewallInstance.VpcID)
 	if err != nil {
-		return fmt.Errorf("could not get cloud type from vpc_id: %v", err)
+		if err == goaviatrix.ErrNotFound {
+			return fmt.Errorf("could not find the vpc with vpc_id=%s: %v", firewallInstance.VpcID, err)
+		}
+		return fmt.Errorf("could get the cloud type from the vpc_id=%s: %v", firewallInstance.VpcID, err)
 	}
 	zone := d.Get("zone").(string)
 	if zone != "" && cloudType != goaviatrix.AZURE {
