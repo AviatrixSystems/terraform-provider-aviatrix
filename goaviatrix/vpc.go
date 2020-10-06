@@ -126,7 +126,7 @@ func (c *Client) GetVpcCloudTypeById(ID string) (int, error) {
 		"CID":    c.CID,
 		"action": action,
 	}
-	resp, err := c.Get(c.baseURL, d)
+	resp, err := c.Post(c.baseURL, d)
 
 	if err != nil {
 		return 0, fmt.Errorf("HTTP Get %s failed: %v", action, err)
