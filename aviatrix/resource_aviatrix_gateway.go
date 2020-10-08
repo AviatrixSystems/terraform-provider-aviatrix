@@ -379,10 +379,13 @@ func resourceAviatrixGateway() *schema.Resource {
 				Description: "Enable monitor gateway subnets. Valid values: true, false. Default value: false.",
 			},
 			"monitor_exclude_list": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "A list of monitored instance ids separated by comma to configure when 'monitor gateway subnets' feature is enabled.",
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return goaviatrix.TypeStringDiffSuppressFuncHelper(old, new)
+				},
+				Description: "A list of monitored instance ids separated by comma when 'monitor gateway subnets' feature is enabled.",
 			},
 		},
 	}
@@ -1150,16 +1153,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 
 		if gw.EnableMonitorGWSubnets {
 			d.Set("enable_monitor_gateway_subnets", true)
-			instanceIdsTF := strings.Split(d.Get("monitor_exclude_list").(string), ",")
-			instanceIdsRESTAPI := strings.Split(gw.MonitorExcludeList, ",")
-			flag1 := len(goaviatrix.Difference(instanceIdsTF, instanceIdsRESTAPI)) == 0
-			flag2 := len(goaviatrix.Difference(instanceIdsRESTAPI, instanceIdsTF)) == 0
-
-			if flag1 && flag2 {
-				d.Set("monitor_exclude_list", d.Get("monitor_exclude_list").(string))
-			} else {
-				d.Set("monitor_exclude_list", gw.MonitorExcludeList)
-			}
+			d.Set("monitor_exclude_list", gw.MonitorExcludeList)
 		} else {
 			d.Set("enable_monitor_gateway_subnets", false)
 			d.Set("monitor_exclude_list", "")

@@ -133,8 +133,8 @@ type Gateway struct {
 	EncVolume                   string   `form:"enc_volume,omitempty"`
 	SyncSNATToHA                string   `form:"sync_snat_to_ha,omitempty"`
 	SyncDNATToHA                string   `form:"sync_dnat_to_ha,omitempty"`
-	EnableMonitorGWSubnets      bool     `from:"enable_monitor_gateway_subnets",omitempty"`
-	MonitorExcludeList          string   `from:"enable_monitor_gateway_subnets",omitempty"`
+	EnableMonitorGWSubnets      bool     `form:"enable_monitor_gw_subnets,omitempty" json:"enable_monitor_gw_subnets,omitempty"`
+	MonitorExcludeList          string   `form:"monitor_exclude_list,omitempty"`
 }
 
 type PolicyRule struct {
@@ -1136,10 +1136,11 @@ func (c *Client) DisableEgressTransitFirenet(transitGateway *TransitVpc) error {
 func (c *Client) EnableMonitorGatewaySubnets(gateway *Gateway) error {
 	action := "enable_monitor_gateway_subnets"
 	MonitorInstanceList := gateway.MonitorExcludeList
-	form := make(map[string]interface{})
-	form["CID"] = c.CID
-	form["action"] = action
-	form["gateway_name"] = gateway.GwName
+	form := map[string]interface{}{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": gateway.GwName,
+	}
 	if len(MonitorInstanceList) != 0 {
 		form["monitor_exclude_gateway_list"] = MonitorInstanceList
 	}
