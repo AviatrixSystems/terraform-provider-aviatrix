@@ -1135,14 +1135,13 @@ func (c *Client) DisableEgressTransitFirenet(transitGateway *TransitVpc) error {
 
 func (c *Client) EnableMonitorGatewaySubnets(gateway *Gateway) error {
 	action := "enable_monitor_gateway_subnets"
-	MonitorInstanceList := gateway.MonitorExcludeList
 	form := map[string]interface{}{
 		"CID":          c.CID,
 		"action":       action,
 		"gateway_name": gateway.GwName,
 	}
-	if len(MonitorInstanceList) != 0 {
-		form["monitor_exclude_gateway_list"] = MonitorInstanceList
+	if len(gateway.MonitorExcludeList) != 0 {
+		form["monitor_exclude_gateway_list"] = gateway.MonitorExcludeList
 	}
 	return c.PostAPI(action, form, BasicCheck)
 }
