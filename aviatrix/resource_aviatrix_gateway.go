@@ -379,11 +379,11 @@ func resourceAviatrixGateway() *schema.Resource {
 				Description: "Enable monitor gateway subnets. Valid values: true, false. Default value: false.",
 			},
 			"monitor_exclude_list": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "",
 				DiffSuppressFunc: DiffSuppressFuncString,
-				Description: "A list of monitored instance ids separated by comma when 'monitor gateway subnets' feature is enabled.",
+				Description:      "A list of monitored instance ids separated by comma when 'monitor gateway subnets' feature is enabled.",
 			},
 		},
 	}
