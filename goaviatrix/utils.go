@@ -255,9 +255,3 @@ func ValidateAttachedVPCsForCustomizedRoutes(a, b [][]string) ([][]string, [][]s
 
 	return aa, bb
 }
-
-func TypeStringDiffSuppressFuncHelper(old, new string) bool {
-	oldValue := strings.Split(old, ",")
-	newValue := strings.Split(new, ",")
-	return Equivalent(oldValue, newValue)
-}

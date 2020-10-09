@@ -2,9 +2,10 @@ package aviatrix
 
 import (
 	"fmt"
-
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
+	"strings"
 )
 
 // validateAzureAZ is a SchemaValidateFunc for Azure Availability Zone
@@ -27,4 +28,10 @@ func validateAzureAZ(i interface{}, k string) (warnings []string, errors []error
 // validateCloudType is a SchemaValidateFunc for Cloud Type parameters.
 func validateCloudType(i interface{}, k string) (warnings []string, errors []error) {
 	return validation.IntInSlice(goaviatrix.GetSupportedClouds())(i, k)
+}
+
+func DiffSuppressFuncString(k, old, new string, d *schema.ResourceData) bool {
+	oldValue := strings.Split(old, ",")
+	newValue := strings.Split(new, ",")
+	return goaviatrix.Equivalent(oldValue, newValue)
 }

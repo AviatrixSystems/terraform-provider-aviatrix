@@ -382,9 +382,7 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return goaviatrix.TypeStringDiffSuppressFuncHelper(old, new)
-				},
+				DiffSuppressFunc: DiffSuppressFuncString,
 				Description: "A list of monitored instance ids separated by comma when 'monitor gateway subnets' feature is enabled.",
 			},
 		},
