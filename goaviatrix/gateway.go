@@ -133,8 +133,8 @@ type Gateway struct {
 	EncVolume                   string   `form:"enc_volume,omitempty"`
 	SyncSNATToHA                string   `form:"sync_snat_to_ha,omitempty"`
 	SyncDNATToHA                string   `form:"sync_dnat_to_ha,omitempty"`
-	EnableMonitorGWSubnets      bool     `form:"enable_monitor_gw_subnets,omitempty" json:"enable_monitor_gw_subnets,omitempty"`
-	MonitorExcludeList          string   `form:"monitor_exclude_list,omitempty"`
+	MonitorSubnetsAction        string   `form:"monitor_subnets_action,omitempty" json:"monitor_subnets_action,omitempty"`
+	MonitorExcludeGWList        []string `form:"monitor_exclude_gw_list,omitempty"`
 }
 
 type PolicyRule struct {
@@ -1140,8 +1140,8 @@ func (c *Client) EnableMonitorGatewaySubnets(gateway *Gateway) error {
 		"action":       action,
 		"gateway_name": gateway.GwName,
 	}
-	if len(gateway.MonitorExcludeList) != 0 {
-		form["monitor_exclude_gateway_list"] = gateway.MonitorExcludeList
+	if len(gateway.MonitorExcludeGWList) != 0 {
+		form["monitor_exclude_gateway_list"] = strings.Join(gateway.MonitorExcludeGWList, ",")
 	}
 	return c.PostAPI(action, form, BasicCheck)
 }

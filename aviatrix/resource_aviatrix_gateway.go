@@ -777,8 +777,8 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	enableMonitorGatewaySubnets := d.Get("enable_monitor_gateway_subnets").(bool)
 	if enableMonitorGatewaySubnets {
 		gwMonitorSubnetsServer := &goaviatrix.Gateway{
-			GwName:             d.Get("gw_name").(string),
-			MonitorExcludeList: d.Get("monitor_exclude_list").(string),
+			GwName:               d.Get("gw_name").(string),
+			MonitorExcludeGWList: strings.Split(d.Get("monitor_exclude_list").(string), ","),
 		}
 
 		log.Printf("[INFO] Enable Monitor Gatway Subnets: %#v", gwMonitorSubnetsServer)
@@ -1149,9 +1149,9 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("additional_cidrs", "")
 		}
 
-		if gw.EnableMonitorGWSubnets {
+		if gw.MonitorSubnetsAction == "enable" {
 			d.Set("enable_monitor_gateway_subnets", true)
-			d.Set("monitor_exclude_list", gw.MonitorExcludeList)
+			d.Set("monitor_exclude_list", strings.Join(gw.MonitorExcludeGWList, ","))
 		} else {
 			d.Set("enable_monitor_gateway_subnets", false)
 			d.Set("monitor_exclude_list", "")
@@ -1829,8 +1829,8 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("enable_monitor_gateway_subnets") {
 		if d.Get("enable_monitor_gateway_subnets").(bool) {
 			gwMonitorSubnetsServer := &goaviatrix.Gateway{
-				GwName:             d.Get("gw_name").(string),
-				MonitorExcludeList: d.Get("monitor_exclude_list").(string),
+				GwName:               d.Get("gw_name").(string),
+				MonitorExcludeGWList: strings.Split(d.Get("monitor_exclude_list").(string), ""),
 			}
 			log.Printf("[INFO] Enable Monitor Gatway Subnets: %#v", gwMonitorSubnetsServer)
 			err := client.EnableMonitorGatewaySubnets(gwMonitorSubnetsServer)
