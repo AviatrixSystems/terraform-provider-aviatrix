@@ -1830,7 +1830,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		if d.Get("enable_monitor_gateway_subnets").(bool) {
 			gwMonitorSubnetsServer := &goaviatrix.Gateway{
 				GwName:               d.Get("gw_name").(string),
-				MonitorExcludeGWList: strings.Split(d.Get("monitor_exclude_list").(string), ""),
+				MonitorExcludeGWList: strings.Split(d.Get("monitor_exclude_list").(string), ","),
 			}
 			log.Printf("[INFO] Enable Monitor Gatway Subnets: %#v", gwMonitorSubnetsServer)
 			err := client.EnableMonitorGatewaySubnets(gwMonitorSubnetsServer)
@@ -1850,10 +1850,11 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if d.HasChange("monitor_exclude_list") {
-		if d.Get("enable_monitor_gateway_subnets").(bool) {
+		if d.Get("enable_monitor_gateway_subnets").(bool) && !d.HasChange("enable_monitor_gateway_subnets") {
 			return fmt.Errorf("exclude monitor list cannot be updated once " +
 				"enable monitor gateway subnets has already been enabled")
-		} else {
+		}
+		if !d.Get("enable_monitor_gateway_subnets").(bool) && !d.HasChange("enable_monitor_gateway_subnets") {
 			return fmt.Errorf("updating exclude monitor list is not needed if " +
 				"enable monitor gateway subnets is disabled")
 		}
