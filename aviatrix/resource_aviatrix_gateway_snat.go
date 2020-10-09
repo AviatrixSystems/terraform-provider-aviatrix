@@ -198,7 +198,7 @@ func resourceAviatrixGatewaySNatRead(d *schema.ResourceData, meta interface{}) e
 		if err != nil {
 			return fmt.Errorf("couldn't get detail information of Aviatrix gateway(name: %s) due to: %s", gw.GwName, err)
 		}
-		if gw.EnableNat == "yes" && gw.SnatMode == "customized" {
+		if gw.NatEnabled && gw.SnatMode == "customized" {
 			d.Set("snat_mode", "customized_snat")
 			var snatPolicy []map[string]interface{}
 
