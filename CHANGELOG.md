@@ -1,4 +1,48 @@
-## 2.16.3 (Unreleased)
+## 2.17.0 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.2** (tested on **UserConnect-6.2.1700**)
+- Supported Terraform version: **v0.12.x**
+
+### Features:
+1. Implemented new resources to support CloudWAN:
+  - **aviatrix_device_aws_tgw_attachment**
+  - **aviatrix_device_interface_config**
+  - **aviatrix_device_registration**
+  - **aviatrix_device_tag**
+  - **aviatrix_device_transit_gateway_attachment**
+  - **aviatrix_device_virtual_wan_attachment**
+2. Implemented new resource to decouple ``domain_names`` out of ``aviatrix_fqdn``:
+  - **aviatrix_fqdn_tag_rule**        
+3. Implemented new resource to decouple ``policy`` out of ``aviatrix_firewall``:
+  - **aviatrix_firewall_policy**        
+4. Implemented new resources to support Multi-Cloud Segmentation:
+  - **aviatrix_segmentation_security_domain**        
+  - **aviatrix_segmentation_security_domain_connection_policy**        
+  - **aviatrix_segmentation_security_domain_association**        
+5. Implemented support for updating **aviatrix_saml_endpoint**
+6. Implemented support for advanced options to specify of ``subnet_size`` and ``num_of_subnet_pairs`` for AWS, AWSGov, and Azure VPCs/VNets in **aviatrix_vpc** resource and data source
+7. Implemented support for launching AWS TGWs with Multicast capability through the ``enable_multicast`` attribute for **aviatrix_aws_tgw** resource
+8. Implemented Insane Mode support for GCP **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+9. Implemented support of updating ``customized_routes`` and ``customized_route_advertisement`` for **aviatrix_aws_tgw**
+10. Implemented support of ``zone`` and ``ha_zone`` for **aviatrix_transit_gateway**
+11. Implemented support of ``zone`` and ``peering_ha_zone`` for **aviatrix_gateway**
+12. Implemented support of ``zone`` for **aviatrix_firewall_instance**
+13. Implemented new resource to decouple attaching **aviatrix_spoke_gateway** to **aviatrix_transit_gateway** out of **aviatrix_spoke_gateway**
+  - **aviatrix_spoke_transit_attachment**        
+14. Implemented support for Dual Transit FireNet workflow through the ``enable_egress_transit_firenet`` attribute for **aviatrix_transit_gateway**
+
+### Enhancements:
+1. Blocked updating ``allocate_new_eip``, ``eip`` and ``ha_eip`` for **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+2. Added ``private_subnets`` and ``public_subnets`` as output for **aviatrix_vpc** resource and data source
+3. Added support of ``resource_group`` for Azure provider in **aviatrix_vpc** data source
+
+### Bug Fixes:
+1. Fixed issue where there was a delta in state after creating a GCP **aviatrix_vpc**
+2. Fixed import issue for **aviatrix_firewall**
+3. Fixed issue where long metadata text was unable to be handled in **aviatrix_saml_endpoint** by updating operations from GET to POST method
+
+
+## 2.16.3 (September 17, 2020)
 ### Notes:
 - Supported Controller version: **UserConnect-6.1.1309**
 - Supported Terraform version: **v0.12.x**
