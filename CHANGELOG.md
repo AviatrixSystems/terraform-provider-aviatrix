@@ -19,26 +19,27 @@
   - **aviatrix_segmentation_security_domain**        
   - **aviatrix_segmentation_security_domain_connection_policy**        
   - **aviatrix_segmentation_security_domain_association**        
-5. Implemented support of Editing for **aviatrix_saml_endpoint**
-6. Implemented support of ``subnet_size`` and ``num_of_subnet_pairs`` for advanced option for **aviatrix_vpc** and **aviatrix_vpc** data source
-7. Implemented support of ``enable_multicast`` as switch to enable/disable multi-cast for **aviatrix_aws_tgw**
-8. Implemented support of insane mode for GCP provider for **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+5. Implemented support for updating **aviatrix_saml_endpoint**
+6. Implemented support for advanced options to specify of ``subnet_size`` and ``num_of_subnet_pairs`` for AWS, AWSGov, and Azure VPCs/VNets in **aviatrix_vpc** resource and data source
+7. Implemented support for launching AWS TGWs with Multicast capability through the ``enable_multicast`` attribute for **aviatrix_aws_tgw** resource
+8. Implemented Insane Mode support for GCP **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
 9. Implemented support of updating ``customized_routes`` and ``customized_route_advertisement`` for **aviatrix_aws_tgw**
-10. Implemented support of ``zone`` and ``ha_zone`` for Azure provider for **aviatrix_transit_gateway**
-11. Implemented support of ``zone`` and ``peering_ha_zone`` for Azure provider for **aviatrix_gateway**
-12. Implemented support of ``zone`` for Azure provider for **aviatrix_firewall_instance**
+10. Implemented support of ``zone`` and ``ha_zone`` for **aviatrix_transit_gateway**
+11. Implemented support of ``zone`` and ``peering_ha_zone`` for **aviatrix_gateway**
+12. Implemented support of ``zone`` for **aviatrix_firewall_instance**
 13. Implemented new resource to decouple attaching **aviatrix_spoke_gateway** to **aviatrix_transit_gateway** out of **aviatrix_spoke_gateway**
   - **aviatrix_spoke_transit_attachment**        
-14. Implemented support of ``enable_egress_transit_firenet`` for **aviatrix_transit_gateway**
+14. Implemented support for Dual Transit FireNet workflow through the ``enable_egress_transit_firenet`` attribute for **aviatrix_transit_gateway**
 
 ### Enhancements:
 1. Blocked updating ``allocate_new_eip``, ``eip`` and ``ha_eip`` for **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
-2. Added ``private_subnets`` and ``public_subnets`` for **aviatrix_vpc** and **aviatrix_vpc** data source
+2. Added ``private_subnets`` and ``public_subnets`` as output for **aviatrix_vpc** resource and data source
+3. Added support of ``resource_group`` for Azure provider in **aviatrix_vpc** data source
 
 ### Bug Fixes:
-1. Fixed issue where there is a diff after creating a GCP **aviatrix_vpc**
+1. Fixed issue where there was a delta in state after creating a GCP **aviatrix_vpc**
 2. Fixed import issue for **aviatrix_firewall**
-3. Fixed issue where the metadata as text is too long by updating from "get" to "post" method
+3. Fixed issue where long metadata text was unable to be handled in **aviatrix_saml_endpoint** by updating operations from GET to POST method
 
 
 ## 2.16.3 (September 17, 2020)
