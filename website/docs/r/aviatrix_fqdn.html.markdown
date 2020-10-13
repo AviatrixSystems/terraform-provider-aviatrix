@@ -62,7 +62,7 @@ The following arguments are supported:
 * `fqdn_tag` - (Required) FQDN Filter tag name.
 * `fqdn_enabled` - (Optional) FQDN Filter tag status. Valid values: true, false.
 * `fqdn_mode` - (Optional) Specify FQDN mode: whitelist or blacklist. Valid values: "white", "black".
-* `manage_domain_names` - (Optional) Enable to manage domain name rules in-line. If false, domain name rules must be managed using `aviatrix_fqdn_tag_rule` resources. Default: true. Valid values: true, false. Available in R2.17+
+* `manage_domain_names` - (Optional) Enable to manage domain name rules in-line. If false, domain name rules must be managed using `aviatrix_fqdn_tag_rule` resources. Default: true. Valid values: true, false. Available in provider version R2.17+.
 * `gw_filter_tag_list` - (Optional) A list of gateways to attach to the specific tag.
   * `gw_name` - (Required) Name of the gateway to attach to the specific tag.
   * `source_ip_list` - (Optional) List of source IPs in the VPC qualified for a specific tag.

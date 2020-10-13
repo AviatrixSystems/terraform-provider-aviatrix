@@ -88,9 +88,9 @@ The following arguments are supported:
 * `name` - (Required) Name of the VPC to be created.
 * `region` - (Optional) Region of cloud provider. **Required to be empty for GCP provider, and non-empty for other providers.** Example: AWS: "us-east-1", AZURE: "East US 2", OCI: "us-ashburn-1", AWSGov: "us-gov-east-1".
 * `cidr` - (Optional) VPC CIDR. **Required to be empty for GCP provider, and non-empty for other providers.** Example: "10.11.0.0/24".
-* `subnet_size` - (Optional) Subnet size. Only supported for AWS, Azure provider. Example: 24.
-* `num_of_subnet_pairs` - (Optional) Number of public subnet and private subnet pair created. Only supported for AWS, Azure provider. Example: 1.
-			},
+* `subnet_size` - (Optional) Subnet size. Only supported for AWS, Azure provider. Example: 24. Available in provider version R2.17+.
+* `num_of_subnet_pairs` - (Optional) Number of public subnet and private subnet pair created. Only supported for AWS, Azure provider. Example: 1. Available in provider version R2.17+.
+
 ### Google Cloud
 * `subnets` - (Optional) List of subnets to be specify for GCP provider. Required to be non-empty for GCP provider, and empty for other providers.
   * `region` - Region of this subnet.
@@ -121,7 +121,7 @@ In addition to all arguments above, the following attributes are exported:
   * `cidr` - CIDR block.
   * `name` - Name of this subnet.
   * `subnet_id` - ID of this subnet.  
-  
+
 -> **NOTE:** `subnets` - If created as a FireNet VPC, four public subnets will be created in the following order: subnet for firewall-mgmt in the first zone, subnet for ingress-egress in the first zone, subnet for firewall-mgmt in the second zone, and subnet for ingress-egress in the second zone.
 
 ## Import
