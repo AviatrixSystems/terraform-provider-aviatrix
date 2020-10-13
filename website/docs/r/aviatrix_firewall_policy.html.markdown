@@ -10,7 +10,7 @@ description: |-
 
 The **aviatrix_firewall_policy** resource manages a single Stateful Firewall policy resource.
 
-~> **NOTE on Firewall and Firewall Policy resources:** Terraform currently provides both a standalone Firewall Policy resource and a Firewall resource with policies defined in-line. At this time you cannot use a Firewall resource with in-line rules in conjunction with any Firewall Policy resources. Doing so will cause a conflict of policy settings and will overwrite policies.
+~> **NOTE on Firewall and Firewall Policy resources:** Terraform currently provides both a standalone Firewall Policy resource and a Firewall resource with policies defined in-line. At this time, you cannot use a Firewall resource with in-line rules in conjunction with any Firewall Policy resources. Doing so will cause a conflict of policy settings and will overwrite policies. In order to use this resource, please set `manage_firewall_policies` in the **aviatrix_firewall** resource to false.
 
 ## Example Usage
 
