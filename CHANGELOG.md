@@ -29,8 +29,7 @@
   - ``zone`` and ``ha_zone`` for **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
   - ``zone`` for **aviatrix_firewall_instance**
 13. Implemented new resource to decouple attaching **aviatrix_spoke_gateway** to **aviatrix_transit_gateway** out of **aviatrix_spoke_gateway**
-  - **aviatrix_spoke_transit_attachment**        
-14. Implemented support for Dual Transit FireNet workflow through the ``enable_egress_transit_firenet`` attribute for **aviatrix_transit_gateway**
+  - **aviatrix_spoke_transit_attachment**
 
 ### Enhancements:
 1. Blocked updating ``allocate_new_eip``, ``eip`` and ``ha_eip`` for **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
