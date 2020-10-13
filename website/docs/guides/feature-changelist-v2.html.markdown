@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.16.3 (UserConnect-6.1.1309)``
+``Last updated: R2.17 (UserConnect-6.2)``
 
 
 ---
@@ -206,4 +206,12 @@ For most changes, unless stated otherwise in the tables below, after editing the
 ## R2.16.3 (UserConnect-6.1.1309)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
-|(changed) | spoke_gateway | transit_gw     | **No**; nothing needs to be changed. This is a note to bring to attention new support for allowing multiple transit gateway attachments, in the same format of a comma-separated string. |
+|(changed) | spoke_gateway | transit_gw     | **No**; nothing needs to be changed. This is a note to bring to attention new support for allowing multiple transit gateway attachments, in the same format of a comma-separated string |
+
+
+## R2.17 (UserConnect-6.2)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(new) | fqdn           | manage_domain_names | **No**; nothing needs to be changed. This is a new attribute introduced that allows decoupling of FQDN rules management out of the resource. A simple refresh will set this attribute into the state as default true |
+|(new) | firewall       | manage_firewall_policies | **No**; nothing needs to be changed. This is a new attribute introduced that allows decoupling of Stateful firewall rules management out of the resource. A simple refresh will set this attribute into the state as default true |
+|(new) | spoke_gateway  | manage_transit_gateway_attachment | **No**; nothing needs to be changed. This is a new attribute introduced that allows decoupling of spoke to transit attachments out of the resource. A simple refresh will set this attribute into the state as default true |
