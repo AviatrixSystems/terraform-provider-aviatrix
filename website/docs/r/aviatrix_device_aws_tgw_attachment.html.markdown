@@ -38,6 +38,7 @@ The following arguments are supported:
 * `device_bgp_asn` - BGP AS Number for the device.
 * `security_domain_name` - Security Domain Name for the attachment.
 
+
 ## Import
 
 **device_aws_tgw_attachment** can be imported using the `connection_name`, `device_name` and `aws_tgw_name`, e.g.

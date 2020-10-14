@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_device_interface_config
 
-The **aviatrix_device_interface_config** resource allows the configuration of the primary WAN interface and IP for a device.
+The **aviatrix_device_interface_config** resource allows the configuration of the primary WAN interface and IP for a device, for use in CloudWAN.
 
 ## Example Usage
 
@@ -25,6 +25,7 @@ resource "aviatrix_device_interface_config" "test_device_interface_config" {
 
 The following arguments are supported:
 
+### Required
 * `device_name` - (Required) Name of the device.
 * `wan_primary_interface` - (Required) Name of the WAN Primary Interface.
 * `wan_primary_interface_public_ip` - (Required) IP of the WAN Primary IP.

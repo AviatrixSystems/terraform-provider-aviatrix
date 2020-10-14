@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_device_tag
 
-The **aviatrix_device_tag** resource allows the creation and management of device config tags.
+The **aviatrix_device_tag** resource allows the creation and management of device config tags for use in CloudWAN.
 
 ~> **NOTE:** Creating this resource will automatically commit the config to the specified devices.
 
@@ -33,6 +33,7 @@ The following arguments are supported:
 * `name` - (Required) Name of the tag.
 * `config` - (Required) Config to apply to devices that are attached to the tag.
 * `device_names` - (Required) List of device names to attach to this tag.
+
 
 ## Import
 
