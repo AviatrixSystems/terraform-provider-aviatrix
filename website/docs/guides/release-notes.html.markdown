@@ -19,6 +19,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ## 2.17.0
 ### Notes:
+- Release date: **(14 Oct 2020)**
 - Supported Controller version: **UserConnect-6.2**
 - Supported Terraform version: **v0.12.x**
 
