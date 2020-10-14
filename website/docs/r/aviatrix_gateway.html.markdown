@@ -207,7 +207,9 @@ The following arguments are supported:
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for gateway. Currently only supported for AWS and AWSGov gateways. Valid values: true, false. Default value: false.
 * `zone` - (Optional) Availability Zone. Only available for cloud_type = 8 (AZURE). Must be in the form 'az-n', for example, 'az-2'. Available as of provider version R2.17+.
 
-
+### Monitor Gateway Subnets
+* `enable_monitor_gateway_subnets` - (Optional) If set to true, the [Monitor Gateway Subnets](https://docs.aviatrix.com/HowTos/gateway.html#monitor-gateway-subnet) feature is enabled. Default value is false. Available as of provider version R2.18+.
+* `monitor_exclude_list` - (Optional) A list of monitored instance IDs separated by comma when Monitor Gateway Subnets feature is enabled. Default value is "". Available as of provider version R2.18+.
 
 ## Attribute Reference
 

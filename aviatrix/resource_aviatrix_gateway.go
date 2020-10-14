@@ -372,6 +372,19 @@ func resourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Private IP address of HA gateway.",
 			},
+			"enable_monitor_gateway_subnets": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable monitor gateway subnets. Valid values: true, false. Default value: false.",
+			},
+			"monitor_exclude_list": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "",
+				DiffSuppressFunc: DiffSuppressFuncString,
+				Description:      "A list of monitored instance ids separated by comma when 'monitor gateway subnets' feature is enabled.",
+			},
 		},
 	}
 }
@@ -761,6 +774,19 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("'enable_vpc_dns_server' only supports AWS(1) and AWSGOV(256)")
 	}
 
+	enableMonitorGatewaySubnets := d.Get("enable_monitor_gateway_subnets").(bool)
+	if enableMonitorGatewaySubnets {
+		gwMonitorSubnetsServer := &goaviatrix.Gateway{
+			GwName:               d.Get("gw_name").(string),
+			MonitorExcludeGWList: strings.Split(d.Get("monitor_exclude_list").(string), ","),
+		}
+
+		log.Printf("[INFO] Enable Monitor Gatway Subnets: %#v", gwMonitorSubnetsServer)
+		err := client.EnableMonitorGatewaySubnets(gwMonitorSubnetsServer)
+		if err != nil {
+			return fmt.Errorf("fail to enable monitor gateway subnets: %s", err)
+		}
+	}
 	return resourceAviatrixGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -1122,8 +1148,15 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("search_domains", "")
 			d.Set("additional_cidrs", "")
 		}
-	}
 
+		if gw.MonitorSubnetsAction == "enable" {
+			d.Set("enable_monitor_gateway_subnets", true)
+			d.Set("monitor_exclude_list", strings.Join(gw.MonitorExcludeGWList, ","))
+		} else {
+			d.Set("enable_monitor_gateway_subnets", false)
+			d.Set("monitor_exclude_list", "")
+		}
+	}
 	return nil
 }
 
@@ -1791,6 +1824,40 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	} else if d.HasChange("customer_managed_keys") {
 		return fmt.Errorf("updating customer_managed_keys only is not allowed")
+	}
+
+	if d.HasChange("enable_monitor_gateway_subnets") {
+		if d.Get("enable_monitor_gateway_subnets").(bool) {
+			gwMonitorSubnetsServer := &goaviatrix.Gateway{
+				GwName:               d.Get("gw_name").(string),
+				MonitorExcludeGWList: strings.Split(d.Get("monitor_exclude_list").(string), ","),
+			}
+			log.Printf("[INFO] Enable Monitor Gatway Subnets: %#v", gwMonitorSubnetsServer)
+			err := client.EnableMonitorGatewaySubnets(gwMonitorSubnetsServer)
+			if err != nil {
+				return fmt.Errorf("fail to enable monitor gateway subnets: %s", err)
+			}
+		} else {
+			gwMonitorSubnetsServer := &goaviatrix.Gateway{
+				GwName: d.Get("gw_name").(string),
+			}
+			log.Printf("[INFO] Disable Monitor Gatway Subnets: %#v", gwMonitorSubnetsServer)
+			err := client.DisableMonitorGatewaySubnets(gwMonitorSubnetsServer)
+			if err != nil {
+				return fmt.Errorf("fail to enable monitor gateway subnets: %s", err)
+			}
+		}
+	}
+
+	if d.HasChange("monitor_exclude_list") {
+		if d.Get("enable_monitor_gateway_subnets").(bool) && !d.HasChange("enable_monitor_gateway_subnets") {
+			return fmt.Errorf("exclude monitor list cannot be updated once " +
+				"enable monitor gateway subnets has already been enabled")
+		}
+		if !d.Get("enable_monitor_gateway_subnets").(bool) && !d.HasChange("enable_monitor_gateway_subnets") {
+			return fmt.Errorf("updating exclude monitor list is not needed if " +
+				"enable monitor gateway subnets is disabled")
+		}
 	}
 
 	d.Partial(false)
