@@ -2,11 +2,17 @@ TEST?=$$(go list ./... |grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep "aviatrix/")
 WEBSITE_REPO=github.com/hashicorp/terraform-website
 PKG_NAME=aviatrix
+TF_PLUGIN_DIR=~/.terraform.d/plugins
+AVIATRIX_PROVIDER_NAMESPACE=aviatrix.com/aviatrix/aviatrix
 
 default: build
 
 build: fmtcheck
 	go install
+
+build13: fmtcheck
+	mkdir -p $(TF_PLUGIN_DIR)/$(AVIATRIX_PROVIDER_NAMESPACE)/99.0.0/darwin_amd64
+	go build -o $(TF_PLUGIN_DIR)/$(AVIATRIX_PROVIDER_NAMESPACE)/99.0.0/darwin_amd64/terraform-provider-aviatrix_v99.0.0
 
 test: fmtcheck
 	go test -i $(TEST) || exit 1

@@ -7,11 +7,11 @@ A basic [Terraform](http://terraform.io) provider for Aviatrix. Read this [tutor
 Requirements
 ------------
 
--	Install [Terraform](https://www.terraform.io/downloads.html) 0.12.x (0.11.x or lower is incompatible)
+-	Install [Terraform](https://www.terraform.io/downloads.html) 0.12.x/0.13.x (0.11.x or lower is incompatible)
 -	Install [Go](https://golang.org/doc/install) 1.12+ (This will be used to build the provider plugin.)
 -	Create a directory, go, follow this [doc](https://github.com/golang/go/wiki/SettingGOPATH) to edit ~/.bash_profile to setup the GOPATH environment variable)
 
-Building The Provider
+Building The Provider (Terraform v0.12+)
 ---------------------
 
 Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provider-aviatrix`
@@ -44,7 +44,16 @@ go fmt
 go install
 ```
 
-Using Aviatrix Provider
+Building The Provider (Terraform v0.13+)
+-----------------------
+
+### MacOS / Linux
+Run the following command:
+```sh
+$ make build13
+```
+
+Using Aviatrix Provider (Terraform v0.12+)
 -----------------------
 
 Activate the provider by adding the following to `~/.terraformrc` on Linux/Unix.
@@ -65,6 +74,23 @@ providers {
 ```
 
 If the rc file is not present, it should be created
+
+Using Aviatrix Provider (Terraform v0.13+)
+-----------------------
+
+For Terraform v0.13+, to use a locally built version of a provider you must add the following snippet to every module
+that you want to use the provider in.
+
+```hcl
+terraform {
+  required_providers {
+    aviatrix = {
+      source  = "aviatrix.com/aviatrix/aviatrix"
+      version = "99.0.0"
+    }
+  }
+}
+```
 
 Examples
 --------
