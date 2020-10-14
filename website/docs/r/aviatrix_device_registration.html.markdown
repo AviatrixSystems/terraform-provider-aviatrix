@@ -56,6 +56,7 @@ The following arguments are supported:
 * `zip_code` - (Optional) Zip code.
 * `description` - (Optional) Description.
 
+
 ## Import
 
 **device_registration** can be imported using the `name`, e.g.

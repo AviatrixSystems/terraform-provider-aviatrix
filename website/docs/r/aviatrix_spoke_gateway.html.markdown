@@ -139,8 +139,8 @@ The following arguments are supported:
 * `tag_list` - (Optional) Instance tag of cloud provider. Only supports AWS and AWSGOV provider, cloud_type is "1", is supported. Example: ["key1:value1", "key2:value2"].
 * `enable_active_mesh` - (Optional) Switch to enable/disable [Active Mesh Mode](https://docs.aviatrix.com/HowTos/activemesh_faq.html) for Spoke Gateway. Valid values: true, false. Default value: false.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS and AWSGOV provider. Valid values: true, false. Default value: false.
-* `zone` - (Optional) Availability Zone. Only available for cloud_type = 8 (AZURE). Must be in the form 'az-n', for example, 'az-2'. Available as of provider version R2.17+.
-* `manage_transit_gateway_attachment` - (Optional) This parameter is a switch used to determine whether or not to attach this spoke to transit gateways using the **aviatrix_spoke_gateway** resource. If this is set to false, attaching this spoke to transit gateways must be done using the **aviatrix_spoke_transit_attachment** resource. Valid values: true, false. Default value: true.
+* `zone` - (Optional) Availability Zone. Only available for cloud_type = 8 (AZURE). Must be in the form 'az-n', for example, 'az-2'. Available in provider version R2.17+.
+* `manage_transit_gateway_attachment` - (Optional) This parameter is a switch used to determine whether or not to attach this spoke to transit gateways using the **aviatrix_spoke_gateway** resource. If this is set to false, attaching this spoke to transit gateways must be done using the **aviatrix_spoke_transit_attachment** resource. Valid values: true, false. Default value: true. Available in provider R2.17+.
 
 -> **NOTE:** `manage_transit_gateway_attachment` - If you are using/upgraded to Aviatrix Terraform Provider R2.17+, and an **aviatrix_spoke_gateway** resource was originally created with a provider version <R2.17, you must do 'terraform refresh' to update and apply the attribute's default value (true) into the state file.
 

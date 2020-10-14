@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_device_transit_gateway_attachment
 
-The **aviatrix_device_transit_gateway_attachment** resource allows the creation and management of a device and Aviatrix Transit Gateway attachment
+The **aviatrix_device_transit_gateway_attachment** resource allows the creation and management of a device and Aviatrix Transit Gateway attachment for use in CloudWAN.
 
 ~> **NOTE:** Before creating this attachment the device must have its WAN interface and IP configured via the `aviatrix_device_interface_config` resource. To avoid attempting to create the attachment before the interface and IP are configured use a `depends_on` meta-argument so that the `aviatrix_device_interface_config` resource is created before the attachment.  
 
@@ -49,6 +49,7 @@ The following arguments are supported:
 * `pre_shared_key` - Pre-shared Key.
 * `local_tunnel_ip` - Local tunnel IP.
 * `remote_tunnel_ip` - Remote tunnel IP.
+
 
 ## Import
 
