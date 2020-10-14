@@ -139,6 +139,8 @@ type Gateway struct {
 	EncVolume                   string   `form:"enc_volume,omitempty"`
 	SyncSNATToHA                string   `form:"sync_snat_to_ha,omitempty"`
 	SyncDNATToHA                string   `form:"sync_dnat_to_ha,omitempty"`
+	MonitorSubnetsAction        string   `form:"monitor_subnets_action,omitempty" json:"monitor_subnets_action,omitempty"`
+	MonitorExcludeGWList        []string `form:"monitor_exclude_gw_list,omitempty"`
 }
 
 type PolicyRule struct {
@@ -1135,4 +1137,27 @@ func (c *Client) DisableEgressTransitFirenet(transitGateway *TransitVpc) error {
 		"gateway_name": transitGateway.GwName,
 	}
 	return c.PostAPI(action, data, BasicCheck)
+}
+
+func (c *Client) EnableMonitorGatewaySubnets(gateway *Gateway) error {
+	action := "enable_monitor_gateway_subnets"
+	form := map[string]interface{}{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": gateway.GwName,
+	}
+	if len(gateway.MonitorExcludeGWList) != 0 {
+		form["monitor_exclude_gateway_list"] = strings.Join(gateway.MonitorExcludeGWList, ",")
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) DisableMonitorGatewaySubnets(gateway *Gateway) error {
+	action := "disable_monitor_gateway_subnets"
+	form := map[string]interface{}{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": gateway.GwName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
 }
