@@ -1,4 +1,4 @@
-## 2.17.0 (Unreleased)
+## 2.17.0 (October 15, 2020)
 ### Notes:
 - Supported Controller version: **UserConnect-6.2** (tested on **UserConnect-6.2.1700**)
 - Supported Terraform version: **v0.12.x**
@@ -28,7 +28,7 @@
   - ``zone`` and ``peering_ha_zone`` for **aviatrix_gateway**
   - ``zone`` and ``ha_zone`` for **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
   - ``zone`` for **aviatrix_firewall_instance**
-13. Implemented new resource to decouple attaching **aviatrix_spoke_gateway** to **aviatrix_transit_gateway** out of **aviatrix_spoke_gateway**
+11. Implemented new resource to decouple attaching **aviatrix_spoke_gateway** to **aviatrix_transit_gateway** out of **aviatrix_spoke_gateway**
   - **aviatrix_spoke_transit_attachment**
 
 ### Enhancements:
