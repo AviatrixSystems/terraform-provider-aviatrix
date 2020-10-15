@@ -1,4 +1,4 @@
-## 2.17.0 (October 14, 2020)
+## 2.17.0 (Unreleased)
 ### Notes:
 - Supported Controller version: **UserConnect-6.2** (tested on **UserConnect-6.2.1700**)
 - Supported Terraform version: **v0.12.x**
