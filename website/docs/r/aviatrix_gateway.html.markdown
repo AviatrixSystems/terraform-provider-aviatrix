@@ -207,7 +207,11 @@ The following arguments are supported:
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for gateway. Currently only supported for AWS and AWSGov gateways. Valid values: true, false. Default value: false.
 * `zone` - (Optional) Availability Zone. Only available for cloud_type = 8 (AZURE). Must be in the form 'az-n', for example, 'az-2'. Available as of provider version R2.17+.
 
-
+### Modify VPN Configuration
+* `idle_timeout` - (Optional) If set to true, the VPN [idle timout](https://docs.aviatrix.com/HowTos/openvpn_faq.html#how-do-i-fix-the-aviatrix-vpn-timing-out-too-quickly) is enabled. Valid values: true, false. Default value: false. Available as of provider version R2.18+.
+* `idle_timeout_time` - (Optional) Required if `idle_timeout` is set to true. It sets the value (seconds) of the idle timeout. The value needs to be greater than 300. Available as of provider version R2.18+.
+* `renegotiation_interval` - (Optional) If set to true, the VPN [renegotiation interval](https://docs.aviatrix.com/HowTos/openvpn_faq.html#how-do-i-fix-the-aviatrix-vpn-timing-out-too-quickly) is enabled. Valid values: true, false. Default value: false. Available as of provider version R2.18+.
+* `renegotiation_interval_value` - (Optional) Required if `renegotiation_interval` is set to true. It sets the value (seconds) of the renegotiation interval. The value needs to be greater than 300. Available as of provider version R2.18+.
 
 ## Attribute Reference
 

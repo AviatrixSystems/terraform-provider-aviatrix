@@ -229,6 +229,18 @@ type GatewayDetailApiResp struct {
 	Reason  string        `json:"reason"`
 }
 
+type VPNConfigListResp struct {
+	Return  bool        `json:"return"`
+	Results []VPNConfig `json:"results"`
+	Reason  string      `json:"reason"`
+}
+
+type VPNConfig struct {
+	Name   string `form:"name,omitempty" json:"name,omitempty"`
+	Value  string `form:"value,omitempty" json:"value,omitempty"`
+	Status string `form:"status,omitempty" json:"status,omitempty"`
+}
+
 func (c *Client) CreateGateway(gateway *Gateway) error {
 	gateway.CID = c.CID
 	gateway.Action = "connect_container"
@@ -1135,4 +1147,72 @@ func (c *Client) DisableEgressTransitFirenet(transitGateway *TransitVpc) error {
 		"gateway_name": transitGateway.GwName,
 	}
 	return c.PostAPI(action, data, BasicCheck)
+}
+
+func (c *Client) EnableVPNConfig(gateway *Gateway, vpnConfig *VPNConfig) error {
+	action := "edit_vpn_config"
+	form := map[string]interface{}{
+		"CID":     c.CID,
+		"action":  action,
+		"command": "enable",
+		"vpc_id":  gateway.VpcID,
+		"lb_name": gateway.GwName,
+		"key":     vpnConfig.Name,
+		"value":   vpnConfig.Value,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) DisableVPNConfig(gateway *Gateway, vpnConfig *VPNConfig) error {
+	action := "edit_vpn_config"
+	form := map[string]interface{}{
+		"CID":     c.CID,
+		"action":  action,
+		"command": "disable",
+		"vpc_id":  gateway.VpcID,
+		"lb_name": gateway.GwName,
+		"key":     vpnConfig.Name,
+		"value":   vpnConfig.Value,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) GetVPNConfigList(gateway *Gateway) ([]VPNConfig, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return nil, errors.New(("url Parsing failed for list_vpcs_summary") + err.Error())
+	}
+	showVPNConfig := url.Values{}
+	showVPNConfig.Add("CID", c.CID)
+	showVPNConfig.Add("action", "edit_vpn_config")
+	showVPNConfig.Add("command", "show")
+	showVPNConfig.Add("vpc_id", gateway.VpcID)
+	showVPNConfig.Add("lb_name", gateway.GwName)
+	Url.RawQuery = showVPNConfig.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return nil, errors.New("HTTP Get edit_vpn_config(show) failed: " + err.Error())
+	}
+	var data VPNConfigListResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode edit_vpn_config(show) failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return nil, errors.New("Rest API edit_vpn_config(show) Get failed: " + data.Reason)
+	}
+	return data.Results, ErrNotFound
+}
+
+func (c *Client) GetVPNConfig(vpnConfigName string, vpnConfigList []VPNConfig) *VPNConfig {
+	for i := range vpnConfigList {
+		if vpnConfigList[i].Name == vpnConfigName {
+			return &vpnConfigList[i]
+		}
+	}
+	log.Errorf("Couldn't find VPN configure name %s", vpnConfigName)
+	return nil
 }
