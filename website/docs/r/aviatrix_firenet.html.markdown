@@ -62,6 +62,8 @@ The following arguments are supported:
 
 -> **NOTE:** `egress_enabled` - Default value is false for associating firewall instance to FireNet. Only true is supported for associating FQDN gateway to FireNet.
 
+* `manage_firewall_instance_association` - (Optional) Enable this attribute to manage firewall associations in-line. If set to true, in-line `firewall_instance_association` blocks can be used. If set to false, all firewall associations must be managed via standalone `aviatrix_firewall_instance_association` resources. Default value: true. Valid values: true or false. Available as of provider version R2.18+.
+
 ### Firewall Association
 
 -> **NOTE:** `firewall_instance_association` - If associating FQDN gateway to FireNet, `single_az_ha` needs to be enabled for the FQDN gateway.
