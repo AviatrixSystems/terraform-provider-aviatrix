@@ -1205,7 +1205,7 @@ func (c *Client) DisableVPNConfig(gateway *Gateway, vpnConfig *VPNConfig) error 
 func (c *Client) GetVPNConfigList(gateway *Gateway) ([]VPNConfig, error) {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return nil, errors.New(("url Parsing failed for list_vpcs_summary") + err.Error())
+		return nil, errors.New(("url Parsing failed for edit_vpn_config(show)") + err.Error())
 	}
 	showVPNConfig := url.Values{}
 	showVPNConfig.Add("CID", c.CID)
