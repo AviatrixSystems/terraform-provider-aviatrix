@@ -192,6 +192,10 @@ The following arguments are supported:
 * `ldap_base_dn` - (Optional) LDAP base DN. Required if `enable_ldap` is true.
 * `ldap_username_attribute` - (Optional) LDAP user attribute. Required if `enable_ldap` is true.
 
+#### Modify VPN Configuration
+* `idle_timeout` - (Optional) It sets the value (seconds) of the [idle timeout](https://docs.aviatrix.com/HowTos/openvpn_faq.html#how-do-i-fix-the-aviatrix-vpn-timing-out-too-quickly). This idle timeout feature is enable only if this attribute is set, otherwise it is disabled. The entered value must be an integer number greater than 300.  Available as of provider version R2.18+.
+* `renegotiation_interval` - (Optional) It sets the value (seconds) of the [renegotiation interval](https://docs.aviatrix.com/HowTos/openvpn_faq.html#how-do-i-fix-the-aviatrix-vpn-timing-out-too-quickly). This renegotiation interval feature is enable only if this attribute is set, otherwise it is disabled. The entered value must be an integer number greater than 300. Available as of provider version R2.18+.
+
 ### Designated Gateway
 * `enable_designated_gateway` - (Optional) Enable Designated Gateway feature for Gateway. Only supported for AWS and AWSGov gateways. Valid values: true, false. Default value: false. Please view documentation [here](https://docs.aviatrix.com/HowTos/gateway.html#designated-gateway) for more information on this feature.
 * `additional_cidrs_designated_gateway` - (Optional) A list of CIDR ranges separated by comma to configure when "Designated Gateway" feature is enabled. Example: "10.8.0.0/16,10.9.0.0/16,10.10.0.0/16".

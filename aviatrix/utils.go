@@ -36,3 +36,12 @@ func DiffSuppressFuncString(k, old, new string, d *schema.ResourceData) bool {
 	newValue := strings.Split(new, ",")
 	return goaviatrix.Equivalent(oldValue, newValue)
 }
+
+func getVPNConfig(vpnConfigName string, vpnConfigList []goaviatrix.VPNConfig) *goaviatrix.VPNConfig {
+	for i := range vpnConfigList {
+		if vpnConfigList[i].Name == vpnConfigName {
+			return &vpnConfigList[i]
+		}
+	}
+	return nil
+}
