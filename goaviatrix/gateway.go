@@ -1197,7 +1197,7 @@ func (c *Client) DisableVPNConfig(gateway *Gateway, vpnConfig *VPNConfig) error 
 		"vpc_id":  gateway.VpcID,
 		"lb_name": gateway.GwName,
 		"key":     vpnConfig.Name,
-		"value":   "600",
+		"value":   "-1",
 	}
 	return c.PostAPI(action, form, BasicCheck)
 }
@@ -1230,14 +1230,4 @@ func (c *Client) GetVPNConfigList(gateway *Gateway) ([]VPNConfig, error) {
 		return nil, errors.New("Rest API edit_vpn_config(show) Get failed: " + data.Reason)
 	}
 	return data.Results, ErrNotFound
-}
-
-func (c *Client) GetVPNConfig(vpnConfigName string, vpnConfigList []VPNConfig) *VPNConfig {
-	for i := range vpnConfigList {
-		if vpnConfigList[i].Name == vpnConfigName {
-			return &vpnConfigList[i]
-		}
-	}
-	log.Errorf("Couldn't find VPN configure name %s", vpnConfigName)
-	return nil
 }
