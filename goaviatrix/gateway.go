@@ -1197,7 +1197,7 @@ func (c *Client) DisableVPNConfig(gateway *Gateway, vpnConfig *VPNConfig) error 
 		"vpc_id":  gateway.VpcID,
 		"lb_name": gateway.GwName,
 		"key":     vpnConfig.Name,
-		"value":   vpnConfig.Value,
+		"value":   "600",
 	}
 	return c.PostAPI(action, form, BasicCheck)
 }

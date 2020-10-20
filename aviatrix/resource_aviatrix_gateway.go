@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
@@ -385,29 +386,19 @@ func resourceAviatrixGateway() *schema.Resource {
 				DiffSuppressFunc: DiffSuppressFuncString,
 				Description:      "A list of monitored instance ids separated by comma when 'monitor gateway subnets' feature is enabled.",
 			},
-			"idle_timeout": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Modify VPN Idle time out. Valid value: true, false. Default value: false",
-			},
-			"renegotiation_interval": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Modify renegotiation interval. Valid value: true, false. Default value: false",
-			},
 			"idle_timeout_value": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "Typed value when modifying idle_timeout",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      -1,
+				ValidateFunc: validation.IntAtLeast(301),
+				Description:  "Typed value when modifying idle_timeout. If it's -1, this feature is disabled.",
 			},
 			"renegotiation_interval_value": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "Typed value when modifying renegotiation_interval",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      -1,
+				ValidateFunc: validation.IntAtLeast(301),
+				Description:  "Typed value when modifying renegotiation_interval. If it's -1, this feature is disabled.",
 			},
 		},
 	}
@@ -817,11 +808,11 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		VpcID:  d.Get("vpc_id").(string),
 	}
 
-	enableIdleTimeout := d.Get("idle_timeout").(bool)
-	if enableIdleTimeout {
+	idleTimeoutValue := d.Get("idle_timeout_value").(int)
+	if idleTimeoutValue != -1 {
 		enableVPNServer := &goaviatrix.VPNConfig{
 			Name:  "Idle timeout",
-			Value: d.Get("idle_timeout_value").(string),
+			Value: strconv.Itoa(idleTimeoutValue),
 		}
 		log.Printf("[INFO] Enable Modify VPN Config (Idle Timeout)")
 		err := client.EnableVPNConfig(gatewayServer, enableVPNServer)
@@ -830,11 +821,11 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	enableRenegoInterval := d.Get("renegotiation_interval").(bool)
-	if enableRenegoInterval {
+	renegoIntervalValue := d.Get("renegotiation_interval_value").(int)
+	if renegoIntervalValue != -1 {
 		enableVPNServer := &goaviatrix.VPNConfig{
 			Name:  "Renegotiation interval",
-			Value: d.Get("renegotiation_interval_value").(string),
+			Value: strconv.Itoa(renegoIntervalValue),
 		}
 		log.Printf("[INFO] Enable Modify VPN Config (Renegotiation Interval)")
 		err := client.EnableVPNConfig(gatewayServer, enableVPNServer)
@@ -1226,23 +1217,31 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		vpnConfigIdle := client.GetVPNConfig("Idle timeout", vpnConfigList)
 		if vpnConfigIdle != nil {
 			if vpnConfigIdle.Status == "enabled" {
-				d.Set("idle_timeout", true)
-				d.Set("idle_timeout_value", vpnConfigIdle.Value)
+				idleTimeoutValue, err := strconv.Atoi(vpnConfigIdle.Value)
+				if err != nil {
+					return fmt.Errorf("couldn't convert vpn config value (idle timeout)")
+				}
+				d.Set("idle_timeout_value", idleTimeoutValue)
 			} else {
-				d.Set("idle_timeout", false)
-				d.Set("idle_timeout_value", "")
+				d.Set("idle_timeout_value", -1)
 			}
+		} else {
+			return fmt.Errorf("couldn't find vpn config (idle timeout) for gateway: %s", gw.GwName)
 		}
 
 		vpnConfigRenego := client.GetVPNConfig("Renegotiation interval", vpnConfigList)
 		if vpnConfigRenego != nil {
 			if vpnConfigRenego.Status == "enabled" {
-				d.Set("renegotiation_interval", true)
-				d.Set("renegotiation_interval_value", vpnConfigRenego.Value)
+				renegoIntervalValue, err := strconv.Atoi(vpnConfigRenego.Value)
+				if err != nil {
+					return fmt.Errorf("couldn't convert vpn config value (renegotiation interval)")
+				}
+				d.Set("renegotiation_interval_value", renegoIntervalValue)
 			} else {
-				d.Set("renegotiation_interval", false)
-				d.Set("renegotiation_interval_value", "")
+				d.Set("renegotiation_interval_value", -1)
 			}
+		} else {
+			return fmt.Errorf("couldn't find vpn config (renegotiation interval) for gateway: %s", gw.GwName)
 		}
 	}
 	return nil
@@ -1952,16 +1951,18 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		GwName: d.Get("gw_name").(string),
 		VpcID:  d.Get("vpc_id").(string),
 	}
-	if d.HasChange("idle_timeout") {
+
+	if d.HasChange("idle_timeout_value") {
+		idleTimeoutValue := d.Get("idle_timeout_value").(int)
 		VPNServer := &goaviatrix.VPNConfig{
-			Name:  "Idle timeout",
-			Value: d.Get("idle_timeout_value").(string),
+			Name: "Idle timeout",
 		}
-		if d.Get("idle_timeout").(bool) {
-			log.Printf("[INFO] Modify VPN Config (enable idle timeout)")
+		if idleTimeoutValue != -1 {
+			VPNServer.Value = strconv.Itoa(idleTimeoutValue)
+			log.Printf("[INFO] Modify VPN Config (update idle timeout value)")
 			err := client.EnableVPNConfig(gatewayServer, VPNServer)
 			if err != nil {
-				return fmt.Errorf("fail to enable idle timeout due to : %s", err)
+				return fmt.Errorf("fail to update idle timeout value due to : %s", err)
 			}
 		} else {
 			log.Printf("[INFO] Modify VPN Config (disable idle timeout)")
@@ -1972,30 +1973,14 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	if d.HasChange("idle_timeout_value") {
-		if d.Get("idle_timeout").(bool) && !d.HasChange("idle_timeout") {
-			enableVPNServer := &goaviatrix.VPNConfig{
-				Name:  "Idle timeout",
-				Value: d.Get("idle_timeout_value").(string),
-			}
-			log.Printf("[INFO] Modify VPN Config (update idle timeout value)")
-			err := client.EnableVPNConfig(gatewayServer, enableVPNServer)
-			if err != nil {
-				return fmt.Errorf("fail to update idle timeout value due to : %s", err)
-			}
-		}
-		if !d.Get("idle_timeout").(bool) && !d.HasChange("idle_timeout") {
-			return fmt.Errorf("no need to update idle timout value since the idle timout is disabled")
-		}
-	}
-
-	if d.HasChange("renegotiation_interval") {
+	if d.HasChange("renegotiation_interval_value") {
+		renegoIntervalValue := d.Get("renegotiation_interval_value").(int)
 		VPNServer := &goaviatrix.VPNConfig{
-			Name:  "Renegotiation interval",
-			Value: d.Get("renegotiation_interval_value").(string),
+			Name: "Renegotiation interval",
 		}
-		if d.Get("renegotiation_interval").(bool) {
-			log.Printf("[INFO] Modify VPN Config (enable renegotiation interval)")
+		if renegoIntervalValue != -1 {
+			VPNServer.Value = strconv.Itoa(renegoIntervalValue)
+			log.Printf("[INFO] Modify VPN Config (update renegotiation interval value)")
 			err := client.EnableVPNConfig(gatewayServer, VPNServer)
 			if err != nil {
 				return fmt.Errorf("fail to enable renegotiation interval due to : %s", err)
@@ -2006,24 +1991,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			if err != nil {
 				return fmt.Errorf("fail to disable renegotiation interval duu to: %s", err)
 			}
-		}
-	}
-
-	if d.HasChange("renegotiation_interval_value") {
-		if d.Get("renegotiation_interval").(bool) && !d.HasChange("renegotiation_interval") {
-			enableVPNServer := &goaviatrix.VPNConfig{
-				Name:  "Renegotiation interval",
-				Value: d.Get("renegotiation_interval_value").(string),
-			}
-			log.Printf("[INFO] Modify VPN Config (update renegotiation interval value)")
-			err := client.EnableVPNConfig(gatewayServer, enableVPNServer)
-			if err != nil {
-				return fmt.Errorf("fail to update renegotiation interval value due to : %s", err)
-			}
-		}
-		if !d.Get("renegotiation_interval").(bool) && !d.HasChange("renegotiation_interval") {
-			return fmt.Errorf("no need to update renegotiation interval value " +
-				"since the renegotiation interval is disabled")
 		}
 	}
 
