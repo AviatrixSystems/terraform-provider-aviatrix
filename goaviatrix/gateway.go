@@ -1251,3 +1251,14 @@ func (c *Client) DisableActiveStandby(transitGateway *TransitVpc) error {
 	}
 	return c.PostAPI(action, form, BasicCheck)
 }
+
+func (c *Client) SwitchActiveTransitGateway(gwName, connName string) error {
+	action := "active_standby_connection_switchover"
+	form := map[string]string{
+		"CID":             c.CID,
+		"action":          action,
+		"gateway_name":    gwName,
+		"connection_name": connName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
