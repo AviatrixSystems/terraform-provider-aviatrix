@@ -1231,3 +1231,23 @@ func (c *Client) GetVPNConfigList(gateway *Gateway) ([]VPNConfig, error) {
 	}
 	return data.Results, ErrNotFound
 }
+
+func (c *Client) EnableActiveStandby(transitGateway *TransitVpc) error {
+	action := "enable_active_standby"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": transitGateway.GwName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) DisableActiveStandby(transitGateway *TransitVpc) error {
+	action := "disable_active_standby"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": transitGateway.GwName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
