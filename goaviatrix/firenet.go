@@ -14,8 +14,9 @@ type FireNet struct {
 	VpcID            string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
 	GwName           string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
 	FirewallInstance []FirewallInstance
-	FirewallEgress   bool `form:"firewall_egress,omitempty" json:"firewall_egress,omitempty"`
-	Inspection       bool `form:"inspection,omitempty" json:"inspection,omitempty"`
+	FirewallEgress   bool   `form:"firewall_egress,omitempty" json:"firewall_egress,omitempty"`
+	Inspection       bool   `form:"inspection,omitempty" json:"inspection,omitempty"`
+	HashingAlgorithm string `json:"firewall_hashing,omitempty"`
 }
 
 type FireNetDetail struct {
@@ -25,6 +26,7 @@ type FireNetDetail struct {
 	Gateway          []GatewayInfo          `json:"gateway,omitempty"`
 	FirewallEgress   string                 `json:"firewall_egress,omitempty"`
 	Inspection       string                 `json:"inspection,omitempty"`
+	HashingAlgorithm string                 `json:"firewall_hashing,omitempty"`
 }
 
 type GetFireNetResp struct {
@@ -344,6 +346,39 @@ func (c *Client) EditFireNetEgress(fireNet *FireNet) error {
 	} else {
 		editFireNet.Add("firewall_egress", "false")
 	}
+	Url.RawQuery = editFireNet.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return errors.New("HTTP Get edit_firenet failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode edit_firenet failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		if strings.Contains(data.Reason, "configuration not changed") {
+			return nil
+		}
+		return errors.New("Rest API edit_firenet Get failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) EditFireNetHashingAlgorithm(fireNet *FireNet) error {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return errors.New(("url Parsing failed for edit_firenet") + err.Error())
+	}
+	editFireNet := url.Values{}
+	editFireNet.Add("CID", c.CID)
+	editFireNet.Add("action", "edit_firenet")
+	editFireNet.Add("vpc_id", fireNet.VpcID)
+	editFireNet.Add("firewall_hashing", fireNet.HashingAlgorithm)
+
 	Url.RawQuery = editFireNet.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {

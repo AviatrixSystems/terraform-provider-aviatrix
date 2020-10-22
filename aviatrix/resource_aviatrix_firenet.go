@@ -5,6 +5,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
@@ -92,6 +94,13 @@ func resourceAviatrixFireNet() *schema.Resource {
 				Default:     false,
 				Description: "Enable/Disable egress through firewall.",
 			},
+			"hashing_algorithm": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "5-Tuple",
+				Description:  "Hashing algorithm to load balance traffic across the firewall.",
+				ValidateFunc: validation.StringInSlice([]string{"5-Tuple", "2-Tuple"}, false),
+			},
 		},
 	}
 }
@@ -116,6 +125,13 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 	flag := false
 	defer resourceAviatrixFireNetReadIfRequired(d, meta, &flag)
 
+	if d.Get("hashing_algorithm").(string) == "2-Tuple" {
+		fireNet.HashingAlgorithm = d.Get("hashing_algorithm").(string)
+		err := client.EditFireNetHashingAlgorithm(fireNet)
+		if err != nil {
+			return fmt.Errorf("failed to edit hashing algorithm: %s", err)
+		}
+	}
 	firewallInstanceList := d.Get("firewall_instance_association").([]interface{})
 	for _, firewallInstance := range firewallInstanceList {
 		if firewallInstance != nil {
@@ -214,7 +230,7 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[INFO] Found FireNet: %#v", fireNetDetail.VpcID)
 
 	d.Set("vpc_id", fireNetDetail.VpcID)
-
+	d.Set("hashing_algorithm", fireNetDetail.HashingAlgorithm)
 	if fireNetDetail.Inspection == "yes" {
 		d.Set("inspection_enabled", true)
 	} else {
@@ -265,6 +281,17 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 	d.Partial(true)
 	if d.HasChange("vpc_id") {
 		return fmt.Errorf("updating vpc_id is not allowed")
+	}
+
+	if d.HasChange("hashing_algorithm") {
+		fn := &goaviatrix.FireNet{
+			VpcID:            d.Get("vpc_id").(string),
+			HashingAlgorithm: d.Get("hashing_algorithm").(string),
+		}
+		err := client.EditFireNetHashingAlgorithm(fn)
+		if err != nil {
+			return fmt.Errorf("failed to enable inspection on fireNet: %v", err)
+		}
 	}
 
 	if d.HasChange("firewall_instance_association") {
