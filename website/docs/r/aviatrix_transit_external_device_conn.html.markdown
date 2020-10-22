@@ -65,6 +65,7 @@ The following arguments are supported:
 * `local_tunnel_cidr` - (Optional) Source CIDR for the tunnel from the Aviatrix transit gateway.
 * `remote_tunnel_cidr` - (Optional) Destination CIDR for the tunnel to the external device.
 * `enable_edge_segmentation` - (Optional) Switch to allow this connection to communicate with a Security Domain via Connection Policy.
+* `active_transit_gateway_type` - (Optional) Set the transit gateway type to connect to. Only valid with Transit Gateway that has [Active-Standby Mode](https://docs.aviatrix.com/HowTos/transit_advanced.html#active-standby) enabled and for non-HA external device. Valid values: "HA", "Primary". Default: "Primary". Available as of provider version R2.17.1+.
 
 ## Import
 
