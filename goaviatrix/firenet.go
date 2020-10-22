@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 )
@@ -14,8 +15,9 @@ type FireNet struct {
 	VpcID            string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
 	GwName           string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
 	FirewallInstance []FirewallInstance
-	FirewallEgress   bool `form:"firewall_egress,omitempty" json:"firewall_egress,omitempty"`
-	Inspection       bool `form:"inspection,omitempty" json:"inspection,omitempty"`
+	FirewallEgress   bool   `form:"firewall_egress,omitempty" json:"firewall_egress,omitempty"`
+	Inspection       bool   `form:"inspection,omitempty" json:"inspection,omitempty"`
+	HashingAlgorithm string `json:"firewall_hashing,omitempty"`
 }
 
 type FireNetDetail struct {
@@ -25,6 +27,7 @@ type FireNetDetail struct {
 	Gateway          []GatewayInfo          `json:"gateway,omitempty"`
 	FirewallEgress   string                 `json:"firewall_egress,omitempty"`
 	Inspection       string                 `json:"inspection,omitempty"`
+	HashingAlgorithm string                 `json:"firewall_hashing,omitempty"`
 }
 
 type GetFireNetResp struct {
@@ -364,4 +367,24 @@ func (c *Client) EditFireNetEgress(fireNet *FireNet) error {
 		return errors.New("Rest API edit_firenet Get failed: " + data.Reason)
 	}
 	return nil
+}
+
+func (c *Client) EditFireNetHashingAlgorithm(fireNet *FireNet) error {
+	data := map[string]string{
+		"action":           "edit_firenet",
+		"CID":              c.CID,
+		"vpc_id":           fireNet.VpcID,
+		"firewall_hashing": fireNet.HashingAlgorithm,
+	}
+	checkFunc := func(act, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "configuration not changed") {
+				return nil
+			}
+			return fmt.Errorf("rest API edit_firenet Post failed: %s", reason)
+		}
+		return nil
+	}
+
+	return c.PostAPI("edit_firenet", data, checkFunc)
 }

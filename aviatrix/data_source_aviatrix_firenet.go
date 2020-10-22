@@ -77,6 +77,11 @@ func dataSourceAviatrixFireNet() *schema.Resource {
 				Computed:    true,
 				Description: "Enable/Disable egress through firewall.",
 			},
+			"hashing_algorithm": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Hashing algorithm to load balance traffic across the firewall.",
+			},
 		},
 	}
 }
@@ -94,6 +99,7 @@ func dataSourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.Set("vpc_id", fireNetDetail.VpcID)
+	d.Set("hashing_algorithm", fireNetDetail.HashingAlgorithm)
 
 	if fireNetDetail.Inspection == "yes" {
 		d.Set("inspection_enabled", true)
