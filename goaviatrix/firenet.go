@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 )
@@ -369,34 +370,21 @@ func (c *Client) EditFireNetEgress(fireNet *FireNet) error {
 }
 
 func (c *Client) EditFireNetHashingAlgorithm(fireNet *FireNet) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for edit_firenet") + err.Error())
+	data := map[string]string{
+		"action":           "edit_firenet",
+		"CID":              c.CID,
+		"vpc_id":           fireNet.VpcID,
+		"firewall_hashing": fireNet.HashingAlgorithm,
 	}
-	editFireNet := url.Values{}
-	editFireNet.Add("CID", c.CID)
-	editFireNet.Add("action", "edit_firenet")
-	editFireNet.Add("vpc_id", fireNet.VpcID)
-	editFireNet.Add("firewall_hashing", fireNet.HashingAlgorithm)
-
-	Url.RawQuery = editFireNet.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get edit_firenet failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_firenet failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "configuration not changed") {
-			return nil
+	checkFunc := func(act, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "configuration not changed") {
+				return nil
+			}
+			return fmt.Errorf("rest API edit_firenet Post failed: %s", reason)
 		}
-		return errors.New("Rest API edit_firenet Get failed: " + data.Reason)
+		return nil
 	}
-	return nil
+
+	return c.PostAPI("edit_firenet", data, checkFunc)
 }

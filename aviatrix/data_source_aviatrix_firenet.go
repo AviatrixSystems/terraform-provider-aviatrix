@@ -78,9 +78,9 @@ func dataSourceAviatrixFireNet() *schema.Resource {
 				Description: "Enable/Disable egress through firewall.",
 			},
 			"hashing_algorithm": {
-				Type:         schema.TypeString,
-				Computed: true,
-				Description:  "Hashing algorithm to load balance traffic across the firewall.",
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Hashing algorithm to load balance traffic across the firewall.",
 			},
 		},
 	}
