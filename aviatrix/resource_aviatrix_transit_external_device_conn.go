@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -14,6 +15,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixTransitExternalDeviceConnCreate,
 		Read:   resourceAviatrixTransitExternalDeviceConnRead,
+		Update: resourceAviatrixTransitExternalDeviceConnUpdate,
 		Delete: resourceAviatrixTransitExternalDeviceConnDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -215,6 +217,13 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "Switch to allow this connection to communicate with a Security Domain via Connection Policy.",
 			},
+			"active_transit_gateway_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "Primary",
+				ValidateFunc: validation.StringInSlice([]string{"HA", "Primary"}, false),
+				Description:  "Only valid for Transit Gateway's with Active-Standby Mode enabled. Valid values: 'HA', 'Primary'. Default: 'Primary'.",
+			},
 		},
 	}
 }
@@ -315,6 +324,23 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	}
 
 	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID)
+
+	transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: externalDeviceConn.GwName})
+	if err != nil {
+		return fmt.Errorf("could not get advanced config for transit gateway: %v", err)
+	}
+	if d.Get("active_transit_gateway_type").(string) != "Primary" && !transitAdvancedConfig.ActiveStandbyEnabled {
+		return fmt.Errorf("can not set 'active_transit_gateway_type' unless Active-Standby Mode is enabled on " +
+			"the transit gateway. Please enable Active-Standby Mode on the transit gateway and try again")
+	}
+
+	// By default active transit gateway type is 'Primary' so we only need to switch if client requests HA
+	if d.Get("active_transit_gateway_type").(string) == "HA" {
+		if err := client.SwitchActiveTransitGateway(externalDeviceConn.GwName, externalDeviceConn.ConnectionName); err != nil {
+			return fmt.Errorf("could not switch active transit gateway to HA: %v", err)
+		}
+	}
+
 	return resourceAviatrixTransitExternalDeviceConnRead(d, meta)
 }
 
@@ -407,9 +433,43 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 			d.Set("enable_edge_segmentation", false)
 		}
 
+		transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: externalDeviceConn.GwName})
+		if err != nil {
+			return fmt.Errorf("could not get advanced config for transit gateway: %v", err)
+		}
+
+		activeGatewayType := "Primary"
+		for _, v := range transitAdvancedConfig.ActiveStandbyConnections {
+			if v.ConnectionName != externalDeviceConn.ConnectionName {
+				continue
+			}
+			activeGatewayType = v.ActiveGatewayType
+		}
+		d.Set("active_transit_gateway_type", activeGatewayType)
 	}
 
 	d.SetId(conn.ConnectionName + "~" + conn.VpcID)
+	return nil
+}
+
+func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*goaviatrix.Client)
+
+	transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: d.Get("gw_name").(string)})
+	if err != nil {
+		return fmt.Errorf("could not get advanced config for transit gateway: %v", err)
+	}
+	if d.Get("active_transit_gateway_type").(string) != "Primary" && !transitAdvancedConfig.ActiveStandbyEnabled {
+		return fmt.Errorf("can not set 'active_transit_gateway_type' unless Active-Standby Mode is enabled on " +
+			"the transit gateway. Please enable Active-Standby Mode on the transit gateway and try again")
+	}
+
+	if d.HasChange("active_transit_gateway_type") {
+		if err := client.SwitchActiveTransitGateway(d.Get("gw_name").(string), d.Get("connection_name").(string)); err != nil {
+			return fmt.Errorf("could not switch active transit gateway")
+		}
+	}
+
 	return nil
 }
 
