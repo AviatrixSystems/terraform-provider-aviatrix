@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -55,10 +56,11 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				Description: "Egress Interface Subnet.",
 			},
 			"management_subnet": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "Management Interface Subnet.",
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Description: "Management Interface Subnet. Required for Palo Alto Networks VM-Series, " +
+					"and required to be empty for Check Point or Fortinet series.",
 			},
 			"firewall_image_version": {
 				Type:        schema.TypeString,
@@ -153,6 +155,19 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		Password:             d.Get("password").(string),
 	}
 
+	if strings.HasPrefix(firewallInstance.FirewallImage, "Palo Alto Networks") {
+		if firewallInstance.ManagementSubnet == "" {
+			return fmt.Errorf("'management_subnet' is required unempty for Palo Alto Networks VM-Series")
+		}
+	} else if strings.HasPrefix(firewallInstance.FirewallImage, "Check Point CloudGuard") ||
+		strings.HasPrefix(firewallInstance.FirewallImage, "Fortinet FortiGate") {
+		if firewallInstance.ManagementSubnet != "" {
+			return fmt.Errorf("'management_subnet' is required to be empty for Check Point or Fortinet series")
+		}
+	} else {
+		return fmt.Errorf("firewall image: %s is not supported", firewallInstance.FirewallImage)
+	}
+
 	cloudType, err := client.GetVpcCloudTypeById(firewallInstance.VpcID)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
@@ -216,7 +231,9 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	d.Set("firewall_size", fI.FirewallSize)
 	d.Set("instance_id", fI.InstanceID)
 	d.Set("egress_subnet", fI.EgressSubnet)
-	d.Set("management_subnet", fI.ManagementSubnet)
+	if strings.HasPrefix(fI.FirewallImage, "Palo Alto Networks") {
+		d.Set("management_subnet", fI.ManagementSubnet)
+	}
 
 	if (d.Get("zone").(string) != "" || isImport) && fI.AvailabilityZone != "AvailabilitySet" &&
 		fI.AvailabilityZone != "" && fI.CloudVendor == "Azure ARM" {
