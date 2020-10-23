@@ -60,6 +60,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_firenet":                                        resourceAviatrixFireNet(),
 			"aviatrix_firewall":                                       resourceAviatrixFirewall(),
 			"aviatrix_firewall_instance":                              resourceAviatrixFirewallInstance(),
+			"aviatrix_firewall_instance_association":                  resourceAviatrixFirewallInstanceAssociation(),
 			"aviatrix_firewall_management_access":                     resourceAviatrixFirewallManagementAccess(),
 			"aviatrix_firewall_policy":                                resourceAviatrixFirewallPolicy(),
 			"aviatrix_firewall_tag":                                   resourceAviatrixFirewallTag(),
