@@ -100,6 +100,13 @@ func resourceAviatrixFireNet() *schema.Resource {
 				Default:      "5-Tuple",
 				Description:  "Hashing algorithm to load balance traffic across the firewall.",
 				ValidateFunc: validation.StringInSlice([]string{"5-Tuple", "2-Tuple"}, false),
+			"manage_firewall_instance_association": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+				Description: "Enable this to manage firewall_instance_associations in-line. If this is false, " +
+					"associations must be managed via standalone aviatrix_firewall_instance_association resources. " +
+					"Type: boolean, Default: true, Valid values: true/false.",
 			},
 		},
 	}
@@ -109,6 +116,14 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 	client := meta.(*goaviatrix.Client)
 
 	log.Printf("[INFO] Creating an Aviatrix Firenet on vpc: %s", d.Get("vpc_id"))
+
+	manageAssociations := d.Get("manage_firewall_instance_association").(bool)
+	_, hasSetAssociations := d.GetOk("firewall_instance_association")
+	if !manageAssociations && hasSetAssociations {
+		return fmt.Errorf("invalid config: Can not set 'firewall_instance_association' if " +
+			"'manage_firewall_instance_association' is set to false. Please use the standalone " +
+			"aviatrix_firewall_instance_association resource")
+	}
 
 	fireNet := &goaviatrix.FireNet{
 		VpcID:            d.Get("vpc_id").(string),
@@ -265,8 +280,10 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 		firewallInstance = append(firewallInstance, fI)
 	}
 
-	if err := d.Set("firewall_instance_association", firewallInstance); err != nil {
-		log.Printf("[WARN] Error setting 'firewall_instance' for (%s): %s", d.Id(), err)
+	if d.Get("manage_firewall_instance_association").(bool) {
+		if err := d.Set("firewall_instance_association", firewallInstance); err != nil {
+			log.Printf("[WARN] Error setting 'firewall_instance' for (%s): %s", d.Id(), err)
+		}
 	}
 
 	d.SetId(fireNetDetail.VpcID)
@@ -292,6 +309,12 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 		if err != nil {
 			return fmt.Errorf("failed to enable inspection on fireNet: %v", err)
 		}
+	manageAssociations := d.Get("manage_firewall_instance_association").(bool)
+	_, hasSetAssociations := d.GetOk("firewall_instance_association")
+	if !manageAssociations && hasSetAssociations {
+		return fmt.Errorf("invalid config: Can not set 'firewall_instance_association' if " +
+			"'manage_firewall_instance_association' is set to false. Please use the standalone " +
+			"aviatrix_firewall_instance_association resource")
 	}
 
 	if d.HasChange("firewall_instance_association") {
