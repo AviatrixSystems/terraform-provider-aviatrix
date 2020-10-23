@@ -45,6 +45,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_firenet                     | SKIP_FIRENET                       | aviatrix_account + AWS_REGION, Palo Alto VM series                             |
 | aviatrix_firewall                    | SKIP_FIREWALL                      | aviatrix_gateway                                                               |
 | aviatrix_firewall_instance           | SKIP_FIREWALL_INSTANCE             | aviatrix_account + AWS_REGION, Palo Alto VM series                             |
+| aviatrix_firewall_instance_association | SKIP_FIREWALL_INSTANCE_ASSOCIATION | aviatrix_firenet, transit_gateway                                            |
 | aviatrix_firewall_management_access  | SKIP_FIREWALL_MANAGEMENT_ACCESS    | aviatrix_account                                                               |
 |                                      | SKIP_FIREWALL_MANAGEMENT_ACCESS_AWS|       + aviatrix_transit_gateway + aviatrix_spoke_gateway in AWS               |
 |                                      | SKIP_FIREWALL_MANAGEMENT_ACCESS_AZURE|     + aviatrix_transit_gateway + aviatrix_spoke_gateway in AZURE             |   
