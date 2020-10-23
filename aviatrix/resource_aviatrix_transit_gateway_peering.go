@@ -64,6 +64,13 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"enable_peering_over_private_network": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+				Description: "(Optional) Enable peering over private network. Insane mode is required on both transit gateways. Available as of provider version R2.17.1",
+			},
 		},
 	}
 }
@@ -96,6 +103,7 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 		Gateway2ExcludedCIDRs:          strings.Join(gw2Cidrs, ","),
 		Gateway1ExcludedTGWConnections: strings.Join(gw1Tgws, ","),
 		Gateway2ExcludedTGWConnections: strings.Join(gw2Tgws, ","),
+		PrivateIPPeering:               d.Get("enable_peering_over_private_network").(bool),
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway peering: %#v", transitGatewayPeering)
@@ -154,6 +162,8 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 	if err := d.Set("gateway2_excluded_tgw_connections", transitGatewayPeering.Gateway2ExcludedTGWConnectionsSlice); err != nil {
 		return err
 	}
+
+	d.Set("enable_peering_over_private_network", transitGatewayPeering.PrivateIPPeering)
 
 	d.SetId(transitGatewayPeering.TransitGatewayName1 + "~" + transitGatewayPeering.TransitGatewayName2)
 	return nil

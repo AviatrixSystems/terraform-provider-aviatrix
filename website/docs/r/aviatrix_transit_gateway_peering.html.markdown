@@ -15,12 +15,13 @@ The **aviatrix_transit_gateway_peering** resource allows the creation and manage
 ```hcl
 # Create an Aviatrix Transit Gateway Peering
 resource "aviatrix_transit_gateway_peering" "test_transit_gateway_peering" {
-  transit_gateway_name1             = "transit-Gw1"
-  transit_gateway_name2             = "transit-Gw2"
-  gateway1_excluded_network_cidrs   = ["10.0.0.48/28"]
-  gateway2_excluded_network_cidrs   = ["10.0.0.48/28"]
-  gateway1_excluded_tgw_connections = ["vpn_connection_a"]
-  gateway2_excluded_tgw_connections = ["vpn_connection_b"]
+  transit_gateway_name1               = "transit-Gw1"
+  transit_gateway_name2               = "transit-Gw2"
+  gateway1_excluded_network_cidrs     = ["10.0.0.48/28"]
+  gateway2_excluded_network_cidrs     = ["10.0.0.48/28"]
+  gateway1_excluded_tgw_connections   = ["vpn_connection_a"]
+  gateway2_excluded_tgw_connections   = ["vpn_connection_b"]
+  enable_peering_over_private_network = false
 }
 ```
 
@@ -37,6 +38,7 @@ The following arguments are supported:
 * `gateway2_excluded_network_cidrs` - (Optional) List of excluded network CIDRs for the second transit gateway.
 * `gateway1_excluded_tgw_connections` - (Optional) List of excluded TGW connections for the first transit gateway.
 * `gateway2_excluded_tgw_connections` - (Optional) List of excluded TGW connections for the second transit gateway.
+* `enable_peering_over_private_network` - (Optional) Enable peering over private network. Insane mode is required on both transit gateways. Available as of provider version R2.17.1
 
 ## Import
 
