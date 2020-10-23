@@ -17,6 +17,7 @@ type TransitGatewayPeering struct {
 	Gateway2ExcludedCIDRs               string `form:"destination_filter_cidrs,omitempty"`
 	Gateway1ExcludedTGWConnections      string `form:"source_exclude_connections,omitempty"`
 	Gateway2ExcludedTGWConnections      string `form:"destination_exclude_connections,omitempty"`
+	PrivateIPPeering                    bool   `form:"private_ip_peering,omitempty"`
 	Gateway1ExcludedCIDRsSlice          []string
 	Gateway2ExcludedCIDRsSlice          []string
 	Gateway1ExcludedTGWConnectionsSlice []string
@@ -38,8 +39,9 @@ type TransitGatewayPeeringDetailsAPIResp struct {
 }
 
 type TransitGatewayPeeringDetailsResults struct {
-	Site1 TransitGatewayPeeringDetail `json:"site_1"`
-	Site2 TransitGatewayPeeringDetail `json:"site_2"`
+	Site1                 TransitGatewayPeeringDetail `json:"site_1"`
+	Site2                 TransitGatewayPeeringDetail `json:"site_2"`
+	PrivateNetworkPeering bool                        `json:"private_network_peering"`
 }
 
 type TransitGatewayPeeringDetail struct {
@@ -50,22 +52,7 @@ type TransitGatewayPeeringDetail struct {
 func (c *Client) CreateTransitGatewayPeering(transitGatewayPeering *TransitGatewayPeering) error {
 	transitGatewayPeering.CID = c.CID
 	transitGatewayPeering.Action = "create_inter_transit_gateway_peering"
-	resp, err := c.Post(c.baseURL, transitGatewayPeering)
-	if err != nil {
-		return errors.New("HTTP POST create_inter_transit_gateway_peering failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode create_inter_transit_gateway_peering failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API create_inter_transit_gateway_peering Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(transitGatewayPeering.Action, transitGatewayPeering, BasicCheck)
 }
 
 func (c *Client) GetTransitGatewayPeering(transitGatewayPeering *TransitGatewayPeering) error {
@@ -138,6 +125,7 @@ func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitG
 	transitGatewayPeering.Gateway1ExcludedTGWConnectionsSlice = data.Results.Site1.ExcludedTGWConnections
 	transitGatewayPeering.Gateway2ExcludedCIDRsSlice = data.Results.Site2.ExcludedCIDRs
 	transitGatewayPeering.Gateway2ExcludedTGWConnectionsSlice = data.Results.Site2.ExcludedTGWConnections
+	transitGatewayPeering.PrivateIPPeering = data.Results.PrivateNetworkPeering
 
 	return transitGatewayPeering, nil
 }
