@@ -56,10 +56,11 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				Description: "Egress Interface Subnet.",
 			},
 			"management_subnet": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Management Interface Subnet.",
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Description: "Management Interface Subnet. Required for Palo Alto Networks VM-Series, " +
+					"and required to be empty for Check Point or Fortinet series.",
 			},
 			"firewall_image_version": {
 				Type:        schema.TypeString,
