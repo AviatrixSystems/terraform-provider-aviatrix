@@ -230,7 +230,7 @@ In addition to all arguments above, the following attributes are exported:
 * `peering_ha_cloud_instance_id` - Cloud instance ID of the HA gateway.
 * `peering_ha_gw_name` - Aviatrix gateway unique name of HA gateway.
 * `peering_ha_private_ip` - Private IP address of HA gateway.
-* `fqdn_lan_interface` - Additional LAN interface id of FQDN gateway with additional LAN interface (will be used when enabling FQDN Firenet in Azure)
+* `fqdn_lan_interface` - The lan interface id of the of FQDN gateway with additional LAN interface (will be used when enabling FQDN Firenet in Azure) Available in provider version R2.17+
 
 The following arguments are deprecated:
 
