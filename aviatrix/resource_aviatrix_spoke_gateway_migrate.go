@@ -16,7 +16,9 @@ func resourceAviatrixSpokeGatewayResourceV0() *schema.Resource {
 }
 
 func resourceAviatrixSpokeGatewayStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
-	rawState["manage_transit_gateway_attachment"] = "true"
+	if _, ok := rawState["manage_transit_gateway_attachment"]; !ok {
+		rawState["manage_transit_gateway_attachment"] = "true"
+	}
 
 	return rawState, nil
 }
