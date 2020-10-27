@@ -64,6 +64,7 @@ The following arguments are supported:
 
 * `hashing_algorithm` - (Optional) Hashing algorithm to load balance traffic across the firewall. Valid values: "2-Tuple", "5-Tuple". Default value: "5-Tuple".
 * `manage_firewall_instance_association` - (Optional) Enable this attribute to manage firewall associations in-line. If set to true, in-line `firewall_instance_association` blocks can be used. If set to false, all firewall associations must be managed via standalone `aviatrix_firewall_instance_association` resources. Default value: true. Valid values: true or false. Available as of provider version R2.18+.
+* `manage_firewall_instance_association` - (Optional) Enable this attribute to manage firewall associations in-line. If set to true, in-line `firewall_instance_association` blocks can be used. If set to false, all firewall associations must be managed via standalone `aviatrix_firewall_instance_association` resources. Default value: true. Valid values: true or false. Available as of provider version R2.17.1+.
 
 ### Firewall Association
 
