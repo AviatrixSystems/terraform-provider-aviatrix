@@ -216,7 +216,7 @@ The following arguments are supported:
 * `monitor_exclude_list` - (Optional) A list of monitored instance IDs separated by comma when Monitor Gateway Subnets feature is enabled. Default value is "". Available as of provider version R2.17.1+.
 
 ### FQDN Gateway
-* ` fqdn_lan_cidr` - (Optional) If `fqdn_lan_cidr` is set, the FQDN gateway will be created with an additional LAN interface using the provided cidr. This attribute is required when enabling FQDN gateway firenet in Azure. Available in provider version R2.17+
+* ` fqdn_lan_cidr` - (Optional) If `fqdn_lan_cidr` is set, the FQDN gateway will be created with an additional LAN interface using the provided cidr. This attribute is required when enabling FQDN gateway firenet in Azure. Available in provider version R2.17.1+.
 
 ## Attribute Reference
 
@@ -230,7 +230,7 @@ In addition to all arguments above, the following attributes are exported:
 * `peering_ha_cloud_instance_id` - Cloud instance ID of the HA gateway.
 * `peering_ha_gw_name` - Aviatrix gateway unique name of HA gateway.
 * `peering_ha_private_ip` - Private IP address of HA gateway.
-* `fqdn_lan_interface` - The lan interface id of the of FQDN gateway with additional LAN interface. This attribute will be exported when enabling FQDN gateway firenet in Azure. Available in provider version R2.17+
+* `fqdn_lan_interface` - The lan interface id of the of FQDN gateway with additional LAN interface. This attribute will be exported when enabling FQDN gateway firenet in Azure. Available in provider version R2.17.1+.
 
 The following arguments are deprecated:
 

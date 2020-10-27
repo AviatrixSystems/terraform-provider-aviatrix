@@ -1258,15 +1258,15 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("renegotiation_interval", -1)
 		}
 
-		firenetInstancesInfo, err := client.GetFirenetInstances(gatewayServer)
+		fqdnGatewayInfo, err := client.GetFqdnGatewayInfo(gatewayServer)
 		if err != nil && err != goaviatrix.ErrNotFound {
-			return fmt.Errorf("couldn't find lan cidr for fqdn gateway due to: %s", err)
+			return fmt.Errorf("couldn't info for this fqdn gateway due to: %s", err)
 		}
 
-		fqdnGatewayInterface := getFqdnGatewayLanInterface(firenetInstancesInfo, gw.GwName)
-		if fqdnGatewayInterface != "" {
-			d.Set("fqdn_lan_interface", fqdnGatewayInterface)
-			d.Set("fqdn_lan_cidr", getFqdnGatewayLanCidr(firenetInstancesInfo, gw.GwName))
+		fqdnGatewayLanInterface := getFqdnGatewayLanInterface(fqdnGatewayInfo, gw.GwName)
+		if fqdnGatewayLanInterface != "" {
+			d.Set("fqdn_lan_interface", fqdnGatewayLanInterface)
+			d.Set("fqdn_lan_cidr", getFqdnGatewayLanCidr(fqdnGatewayInfo, gw.GwName))
 		} else {
 			d.Set("fqdn_lan_interface", "")
 			d.Set("fqdn_lan_cidr", "")

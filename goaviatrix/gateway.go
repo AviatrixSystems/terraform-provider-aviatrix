@@ -244,6 +244,18 @@ type VPNConfig struct {
 	Status string `form:"status,omitempty" json:"status,omitempty"`
 }
 
+type FQDNGatewayInfoResp struct {
+	Return  bool           `json:"return"`
+	Results FQDNGatwayInfo `json:"results"`
+	Reason  string         `json:"reason"`
+}
+
+type FQDNGatwayInfo struct {
+	Instances      []string            `json:"instances"`
+	Interface      map[string][]string `json:"interfaces"`
+	ArmFqdnLanCidr map[string]string   `json:"arm_fqdn_lan_cidr"`
+}
+
 func (c *Client) CreateGateway(gateway *Gateway) error {
 	gateway.CID = c.CID
 	gateway.Action = "connect_container"
@@ -1303,7 +1315,7 @@ func (c *Client) GetTransitGatewayLanCidr(gatewayName string) (string, error) {
 	return data.Results.FirewallLanCidr, ErrNotFound
 }
 
-func (c *Client) GetFirenetInstances(gateway *Gateway) (map[string]interface{}, error) {
+func (c *Client) GetFqdnGatewayInfo(gateway *Gateway) (*FQDNGatwayInfo, error) {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
 		return nil, errors.New(("url Parsing failed for list_firenet(show fqdn gateway lan cidr)") + err.Error())
@@ -1318,7 +1330,7 @@ func (c *Client) GetFirenetInstances(gateway *Gateway) (map[string]interface{}, 
 	if err != nil {
 		return nil, errors.New(("HTTP Get failed list_firenet(show fqdn gateway lan cidr)") + err.Error())
 	}
-	var data map[string]interface{}
+	var data FQDNGatewayInfoResp
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
 	bodyString := buf.String()
@@ -1326,8 +1338,8 @@ func (c *Client) GetFirenetInstances(gateway *Gateway) (map[string]interface{}, 
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
 		return nil, errors.New("Json Decode  list_firenet(show fqdn gateway lan cidr) failed: " + err.Error() + "\n Body: " + bodyString)
 	}
-	if !data["return"].(bool) {
-		return nil, errors.New("Rest API get_firewall_lan_cidr Get failed: " + data["reason"].(string))
+	if !data.Return {
+		return nil, errors.New("Rest API get_firewall_lan_cidr Get failed: " + data.Reason)
 	}
-	return data["results"].(map[string]interface{}), ErrNotFound
+	return &data.Results, ErrNotFound
 }
