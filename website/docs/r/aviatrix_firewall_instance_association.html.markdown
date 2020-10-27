@@ -10,7 +10,7 @@ description: |-
 
 The **aviatrix_firewall_instance_association** resource allows for the creation and management of a firewall instance association. To use this resource you must also have an `aviatrix_firenet` resource with it's `manage_firewall_instance_association` attribute set to false.
 
-Available as of provider version R2.18+.
+Available as of provider version R2.17.1+.
 
 ## Example Usage
 

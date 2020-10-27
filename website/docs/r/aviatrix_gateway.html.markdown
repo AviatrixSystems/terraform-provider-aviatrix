@@ -193,8 +193,8 @@ The following arguments are supported:
 * `ldap_username_attribute` - (Optional) LDAP user attribute. Required if `enable_ldap` is true.
 
 #### Modify VPN Configuration
-* `idle_timeout` - (Optional) It sets the value (seconds) of the [idle timeout](https://docs.aviatrix.com/HowTos/openvpn_faq.html#how-do-i-fix-the-aviatrix-vpn-timing-out-too-quickly). This idle timeout feature is enable only if this attribute is set, otherwise it is disabled. The entered value must be an integer number greater than 300.  Available as of provider version R2.18+.
-* `renegotiation_interval` - (Optional) It sets the value (seconds) of the [renegotiation interval](https://docs.aviatrix.com/HowTos/openvpn_faq.html#how-do-i-fix-the-aviatrix-vpn-timing-out-too-quickly). This renegotiation interval feature is enable only if this attribute is set, otherwise it is disabled. The entered value must be an integer number greater than 300. Available as of provider version R2.18+.
+* `idle_timeout` - (Optional) It sets the value (seconds) of the [idle timeout](https://docs.aviatrix.com/HowTos/openvpn_faq.html#how-do-i-fix-the-aviatrix-vpn-timing-out-too-quickly). This idle timeout feature is enable only if this attribute is set, otherwise it is disabled. The entered value must be an integer number greater than 300.  Available as of provider version R2.17.1+.
+* `renegotiation_interval` - (Optional) It sets the value (seconds) of the [renegotiation interval](https://docs.aviatrix.com/HowTos/openvpn_faq.html#how-do-i-fix-the-aviatrix-vpn-timing-out-too-quickly). This renegotiation interval feature is enable only if this attribute is set, otherwise it is disabled. The entered value must be an integer number greater than 300. Available as of provider version R2.17.1+.
 
 ### Designated Gateway
 * `enable_designated_gateway` - (Optional) Enable Designated Gateway feature for Gateway. Only supported for AWS and AWSGov gateways. Valid values: true, false. Default value: false. Please view documentation [here](https://docs.aviatrix.com/HowTos/gateway.html#designated-gateway) for more information on this feature.
@@ -212,8 +212,8 @@ The following arguments are supported:
 * `zone` - (Optional) Availability Zone. Only available for cloud_type = 8 (AZURE). Must be in the form 'az-n', for example, 'az-2'. Available as of provider version R2.17+.
 
 ### Monitor Gateway Subnets
-* `enable_monitor_gateway_subnets` - (Optional) If set to true, the [Monitor Gateway Subnets](https://docs.aviatrix.com/HowTos/gateway.html#monitor-gateway-subnet) feature is enabled. Default value is false. Available as of provider version R2.18+.
-* `monitor_exclude_list` - (Optional) A list of monitored instance IDs separated by comma when Monitor Gateway Subnets feature is enabled. Default value is "". Available as of provider version R2.18+.
+* `enable_monitor_gateway_subnets` - (Optional) If set to true, the [Monitor Gateway Subnets](https://docs.aviatrix.com/HowTos/gateway.html#monitor-gateway-subnet) feature is enabled. Default value is false. Available as of provider version R2.17.1+.
+* `monitor_exclude_list` - (Optional) A list of monitored instance IDs separated by comma when Monitor Gateway Subnets feature is enabled. Default value is "". Available as of provider version R2.17.1+.
 
 ## Attribute Reference
 
