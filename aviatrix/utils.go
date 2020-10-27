@@ -48,6 +48,9 @@ func getVPNConfig(vpnConfigName string, vpnConfigList []goaviatrix.VPNConfig) *g
 
 func getFqdnGatewayLanCidr(firenetInstancesInfo map[string]interface{}, fqdnGatewayName string) string {
 	armFqdnLanCidr := firenetInstancesInfo["arm_fqdn_lan_cidr"].(map[string]interface{})
+	if _, ok := armFqdnLanCidr[fqdnGatewayName]; !ok {
+		return ""
+	}
 	return armFqdnLanCidr[fqdnGatewayName].(string)
 }
 

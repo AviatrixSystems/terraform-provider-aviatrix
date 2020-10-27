@@ -1262,8 +1262,15 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		if err != nil && err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("couldn't find lan cidr for fqdn gateway due to: %s", err)
 		}
-		d.Set("fqdn_lan_interface", getFqdnGatewayLanInterface(firenetInstancesInfo, gw.GwName))
-		d.Set("fqdn_lan_cidr", getFqdnGatewayLanCidr(firenetInstancesInfo, gw.GwName))
+
+		fqdnGatewayInterface := getFqdnGatewayLanInterface(firenetInstancesInfo, gw.GwName)
+		if fqdnGatewayInterface != "" {
+			d.Set("fqdn_lan_interface", fqdnGatewayInterface)
+			d.Set("fqdn_lan_cidr", getFqdnGatewayLanCidr(firenetInstancesInfo, gw.GwName))
+		} else {
+			d.Set("fqdn_lan_interface", "")
+			d.Set("fqdn_lan_cidr", "")
+		}
 	}
 	return nil
 }

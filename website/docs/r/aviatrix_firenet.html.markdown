@@ -92,9 +92,10 @@ The following arguments are supported:
 
   -> **NOTE:** If associating FQDN gateway to FireNet, it is FQDN gateway's `gw_name`. For Azure FireNet, it is the `firewall_name` concatenated with a ":" and the Resource Group of the `vpc_id` set for that instance.
   -> **NOTE:** If associating FQDN gateway to FireNet in Azure, the `lan_interface` is required. The `lan_interface` can be obtained from the exported attribute `fqdn_lan_interface` in aviatrix_gateway resource block.
+  
   * `vendor_type` - (Optional) Type of firewall. Valid values: "Generic", "fqdn_gateway". Default value: "Generic". Value "fqdn_gateway" is required for FQDN gateway.  
   * `firewall_name` - (Optional) Firewall instance name. **Required if it is a firewall instance.**
-  * `lan_interface`- (Optional) Lan interface ID. **Required if it is a firewall instance.** **Required if it is a FQDN gateway in Azure.**
+  * `lan_interface`- (Optional) Lan interface ID. **Required if it is a firewall instance or a FQDN gateway in Azure.**
   * `management_interface` - (Optional) Management interface ID. **Required if it is a firewall instance.**
   * `egress_interface`- (Optional) Egress interface ID. **Required if it is a firewall instance.**
   * `attached`- (Optional) Switch to attach/detach firewall instance to/from FireNet. Valid values: true, false. Default value: false.
