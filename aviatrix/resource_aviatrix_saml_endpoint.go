@@ -166,7 +166,7 @@ func resourceAviatrixSamlEndpointUpdate(d *schema.ResourceData, meta interface{}
 	}
 	err = client.EditSamlEndpoint(samlEndpoint)
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix SAML endpoint: %s", err)
+		return fmt.Errorf("failed to edit Aviatrix SAML endpoint: %s", err)
 	}
 
 	d.SetId(samlEndpoint.EndPointName)
