@@ -134,6 +134,7 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 				firewall.ManagementInterface = fI["management_interface"].(string)
 				firewall.EgressInterface = fI["egress_interface"].(string)
 			} else {
+				firewall.LanInterface = fI["lan_interface"].(string)
 				if d.Get("inspection_enabled").(bool) || !d.Get("egress_enabled").(bool) {
 					return fmt.Errorf("'inspection_enabled' should be false, and 'egress_enabled' should be true for vendor type: fqdn_gateawy")
 				}
@@ -232,16 +233,19 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 		fI["instance_id"] = instance.InstanceID
 		fI["firenet_gw_name"] = instance.GwName
 		fI["attached"] = instance.Enabled == true
+		if instance.LanInterface == "" {
+			fI["lan_interface"] = ""
+		} else {
+			fI["lan_interface"] = instance.LanInterface
+		}
 		if instance.VendorType == "Aviatrix FQDN Gateway" {
 			fI["vendor_type"] = "fqdn_gateway"
 			fI["firewall_name"] = ""
-			fI["lan_interface"] = ""
 			fI["management_interface"] = ""
 			fI["egress_interface"] = ""
 		} else {
 			fI["vendor_type"] = "Generic"
 			fI["firewall_name"] = instance.FirewallName
-			fI["lan_interface"] = instance.LanInterface
 			fI["management_interface"] = instance.ManagementInterface
 			fI["egress_interface"] = instance.EgressInterface
 		}
@@ -382,6 +386,7 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 					firewall.ManagementInterface = fI["management_interface"].(string)
 					firewall.EgressInterface = fI["egress_interface"].(string)
 				} else {
+					firewall.LanInterface = fI["lan_interface"].(string)
 					if d.Get("inspection_enabled").(bool) || !d.Get("egress_enabled").(bool) {
 						return fmt.Errorf("'inspection_enabled' should be false, and 'egress_enabled' should be true for vendor type: fqdn_gateawy")
 					}

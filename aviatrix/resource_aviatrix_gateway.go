@@ -400,6 +400,18 @@ func resourceAviatrixGateway() *schema.Resource {
 				ValidateFunc: validation.IntAtLeast(301),
 				Description:  "Typed value when modifying renegotiation_interval. If it's -1, this feature is disabled.",
 			},
+			"fqdn_lan_cidr": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				ForceNew:    true,
+				Description: "FQDN gateway lan interface cidr.",
+			},
+			"fqdn_lan_interface": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "FQDN gateway lan interface id.",
+			},
 		},
 	}
 }
@@ -632,6 +644,10 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	if !enableEncryptVolume && (gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV) {
 		gateway.EncVolume = "no"
+	}
+
+	if d.Get("fqdn_lan_cidr").(string) != "" {
+		gateway.FqdnLanCidr = d.Get("fqdn_lan_cidr").(string)
 	}
 
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)
@@ -1204,12 +1220,12 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("monitor_exclude_list", "")
 		}
 
-		vpnGateway := &goaviatrix.Gateway{
+		gatewayServer := &goaviatrix.Gateway{
 			GwName: gw.GwName,
 			VpcID:  gw.VpcID,
 		}
 
-		vpnConfigList, err := client.GetVPNConfigList(vpnGateway)
+		vpnConfigList, err := client.GetVPNConfigList(gatewayServer)
 		if err != nil && err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("couldn't find vpn config list for gateway: %s", gw.GwName)
 		}
@@ -1241,6 +1257,13 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		} else {
 			d.Set("renegotiation_interval", -1)
 		}
+
+		firenetInstancesInfo, err := client.GetFirenetInstances(gatewayServer)
+		if err != nil && err != goaviatrix.ErrNotFound {
+			return fmt.Errorf("couldn't find lan cidr for fqdn gateway due to: %s", err)
+		}
+		d.Set("fqdn_lan_interface", getFqdnGatewayLanInterface(firenetInstancesInfo, gw.GwName))
+		d.Set("fqdn_lan_cidr", getFqdnGatewayLanCidr(firenetInstancesInfo, gw.GwName))
 	}
 	return nil
 }
