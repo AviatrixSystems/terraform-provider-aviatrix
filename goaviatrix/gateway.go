@@ -141,6 +141,7 @@ type Gateway struct {
 	SyncDNATToHA                string   `form:"sync_dnat_to_ha,omitempty"`
 	MonitorSubnetsAction        string   `form:"monitor_subnets_action,omitempty" json:"monitor_subnets_action,omitempty"`
 	MonitorExcludeGWList        []string `form:"monitor_exclude_gw_list,omitempty"`
+	FqdnLanCidr                 string   `form:"fqdn_lan_cidr,omitempty"`
 }
 
 type PolicyRule struct {
@@ -1261,4 +1262,72 @@ func (c *Client) SwitchActiveTransitGateway(gwName, connName string) error {
 		"connection_name": connName,
 	}
 	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) GetTransitGatewayLanCidr(gatewayName string) (string, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return "", errors.New(("url Parsing failed for get_firewall_lan_cidr") + err.Error())
+	}
+	showLanCidr := url.Values{}
+	showLanCidr.Add("CID", c.CID)
+	showLanCidr.Add("gateway_name", gatewayName)
+	showLanCidr.Add("action", "get_firewall_lan_cidr")
+	Url.RawQuery = showLanCidr.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return "", errors.New("HTTP Get get_firewall_lan_cidr failed: " + err.Error())
+	}
+
+	type LANCidr struct {
+		FirewallLanCidr string `form:"firewall_lan_cidr,omitempty" json:"firewall_lan_cidr,omitempty"`
+	}
+
+	type LANCidrResp struct {
+		Return  bool    `json:"return"`
+		Results LANCidr `json:"results"`
+		Reason  string  `json:"reason"`
+	}
+
+	var data LANCidrResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return "", errors.New("Json Decode get_firewall_lan_cidr failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return "", errors.New("Rest API get_firewall_lan_cidr Get failed: " + data.Reason)
+	}
+	return data.Results.FirewallLanCidr, ErrNotFound
+}
+
+func (c *Client) GetFirenetInstances(gateway *Gateway) (map[string]interface{}, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return nil, errors.New(("url Parsing failed for list_firenet(show fqdn gateway lan cidr)") + err.Error())
+	}
+	showLanCidr := url.Values{}
+	showLanCidr.Add("action", "list_firenet")
+	showLanCidr.Add("CID", c.CID)
+	showLanCidr.Add("subaction", "instance")
+	showLanCidr.Add("vpc_id", gateway.VpcID)
+	Url.RawQuery = showLanCidr.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return nil, errors.New(("HTTP Get failed list_firenet(show fqdn gateway lan cidr)") + err.Error())
+	}
+	var data map[string]interface{}
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode  list_firenet(show fqdn gateway lan cidr) failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data["return"].(bool) {
+		return nil, errors.New("Rest API get_firewall_lan_cidr Get failed: " + data["reason"].(string))
+	}
+	return data["results"].(map[string]interface{}), ErrNotFound
 }

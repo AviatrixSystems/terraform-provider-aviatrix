@@ -45,3 +45,20 @@ func getVPNConfig(vpnConfigName string, vpnConfigList []goaviatrix.VPNConfig) *g
 	}
 	return nil
 }
+
+func getFqdnGatewayLanCidr(firenetInstancesInfo map[string]interface{}, fqdnGatewayName string) string {
+	armFqdnLanCidr := firenetInstancesInfo["arm_fqdn_lan_cidr"].(map[string]interface{})
+	return armFqdnLanCidr[fqdnGatewayName].(string)
+}
+
+func getFqdnGatewayLanInterface(firenetInstancesInfo map[string]interface{}, fqdnGatewayName string) string {
+	targetInterface := "av-nic-" + fqdnGatewayName + "_eth1"
+	interfaces := firenetInstancesInfo["interfaces"].(map[string]interface{})
+	fqdnGatewayInterfaceList := interfaces[fqdnGatewayName].([]interface{})
+	for i := range fqdnGatewayInterfaceList {
+		if fqdnGatewayInterfaceList[i].(string) == targetInterface {
+			return fqdnGatewayInterfaceList[i].(string)
+		}
+	}
+	return ""
+}

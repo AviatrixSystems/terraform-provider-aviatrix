@@ -305,6 +305,11 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enables Active-Standby Mode, available only with Active Mesh Mode and HA enabled.",
 			},
+			"lan_interface_cidr": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Transit gateway lan interface cidr.",
+			},
 		},
 	}
 }
@@ -1001,6 +1006,12 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		} else {
 			d.Set("bgp_manual_spoke_advertise_cidrs", d.Get("bgp_manual_spoke_advertise_cidrs").(string))
 		}
+
+		lanCidr, err := client.GetTransitGatewayLanCidr(gw.GwName)
+		if err != nil && err != goaviatrix.ErrNotFound {
+			return fmt.Errorf("couldn't find LAN Interface Cidr of Transit Gateway: %s", err)
+		}
+		d.Set("lan_interface_cidr", lanCidr)
 	}
 
 	if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV {
