@@ -156,7 +156,7 @@ func resourceAviatrixSamlEndpointRead(d *schema.ResourceData, meta interface{}) 
 			}
 		}
 	} else {
-		d.Set("access_set_by", []string{})
+		d.Set("rbac_groups", []string{})
 	}
 
 	d.SetId(saml.EndPointName)
