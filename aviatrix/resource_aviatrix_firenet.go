@@ -265,18 +265,19 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 		fI["instance_id"] = instance.InstanceID
 		fI["firenet_gw_name"] = instance.GwName
 		fI["attached"] = instance.Enabled == true
-		if instance.LanInterface == "" {
-			fI["lan_interface"] = ""
-		} else {
-			fI["lan_interface"] = instance.LanInterface
-		}
 		if instance.VendorType == "Aviatrix FQDN Gateway" {
 			fI["vendor_type"] = "fqdn_gateway"
+			if instance.LanInterface[0:4] == "eni-" {
+				fI["lan_interface"] = ""
+			} else {
+				fI["lan_interface"] = instance.LanInterface
+			}
 			fI["firewall_name"] = ""
 			fI["management_interface"] = ""
 			fI["egress_interface"] = ""
 		} else {
 			fI["vendor_type"] = "Generic"
+			fI["lan_interface"] = instance.LanInterface
 			fI["firewall_name"] = instance.FirewallName
 			fI["management_interface"] = instance.ManagementInterface
 			fI["egress_interface"] = instance.EgressInterface
