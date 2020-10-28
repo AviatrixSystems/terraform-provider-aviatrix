@@ -267,7 +267,7 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 		fI["attached"] = instance.Enabled == true
 		if instance.VendorType == "Aviatrix FQDN Gateway" {
 			fI["vendor_type"] = "fqdn_gateway"
-			if instance.LanInterface[0:4] == "eni-" {
+			if strings.HasPrefix(instance.LanInterface, "eni-") {
 				fI["lan_interface"] = ""
 			} else {
 				fI["lan_interface"] = instance.LanInterface
