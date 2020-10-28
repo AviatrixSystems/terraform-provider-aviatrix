@@ -100,6 +100,7 @@ func resourceAviatrixFireNet() *schema.Resource {
 				Default:      "5-Tuple",
 				Description:  "Hashing algorithm to load balance traffic across the firewall.",
 				ValidateFunc: validation.StringInSlice([]string{"5-Tuple", "2-Tuple"}, false),
+			},
 			"manage_firewall_instance_association": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -309,6 +310,8 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 		if err != nil {
 			return fmt.Errorf("failed to enable inspection on fireNet: %v", err)
 		}
+	}
+
 	manageAssociations := d.Get("manage_firewall_instance_association").(bool)
 	_, hasSetAssociations := d.GetOk("firewall_instance_association")
 	if !manageAssociations && hasSetAssociations {
