@@ -49,6 +49,7 @@ func resourceAviatrixSamlEndpoint() *schema.Resource {
 				Optional:    true,
 				Default:     false,
 				Description: "Switch to differentiate if it is for controller login.",
+				ForceNew:    true,
 			},
 			"access_set_by": {
 				Type:         schema.TypeString,
@@ -71,6 +72,12 @@ func resourceAviatrixSamlEndpoint() *schema.Resource {
 				Optional:    true,
 				Default:     "",
 				Description: "Custom SAML Request Template.",
+			},
+			"sign_authn_requests": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Whether to sign SAML AuthnRequests",
 			},
 		},
 	}
@@ -123,25 +130,22 @@ func resourceAviatrixSamlEndpointRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("idp_metadata_type", saml.IdpMetadataType)
 	d.Set("idp_metadata", saml.IdpMetadata)
 	d.Set("custom_entity_id", saml.CustomEntityId)
+	d.Set("sign_authn_requests", saml.SignAuthnRequests)
 	if saml.MsgTemplateType == "Default" {
 		d.Set("custom_saml_request_template", "")
 	} else {
 		d.Set("custom_saml_request_template", saml.MsgTemplate)
 	}
 
-	if saml.ControllerLogin == "yes" {
-		d.Set("controller_login", true)
-	} else {
-		d.Set("controller_login", false)
-	}
+	d.Set("controller_login", saml.ControllerLogin)
 	d.Set("access_set_by", saml.AccessSetBy)
 
-	if saml.RbacGroups != "" {
+	if saml.ControllerLogin {
 		var rbacGroups []string
 		for _, rbacGroup := range d.Get("rbac_groups").([]interface{}) {
 			rbacGroups = append(rbacGroups, rbacGroup.(string))
 		}
-		rbacGroupsRead := strings.Split(saml.RbacGroups, ",")
+		rbacGroupsRead := saml.RbacGroupsRead
 		if len(goaviatrix.Difference(rbacGroups, rbacGroupsRead)) == 0 && len(goaviatrix.Difference(rbacGroupsRead, rbacGroups)) == 0 {
 			if err := d.Set("rbac_groups", rbacGroups); err != nil {
 				log.Printf("[WARN] Error setting 'rbac_groups' for (%s): %s", d.Id(), err)
@@ -151,6 +155,8 @@ func resourceAviatrixSamlEndpointRead(d *schema.ResourceData, meta interface{}) 
 				log.Printf("[WARN] Error setting 'rbac_groups' for (%s): %s", d.Id(), err)
 			}
 		}
+	} else {
+		d.Set("access_set_by", []string{})
 	}
 
 	d.SetId(saml.EndPointName)
@@ -194,11 +200,15 @@ func resourceAviatrixSamlEndpointDelete(d *schema.ResourceData, meta interface{}
 
 func GetAviatrixSamlEndpointInput(d *schema.ResourceData) (*goaviatrix.SamlEndpoint, error) {
 	samlEndpoint := &goaviatrix.SamlEndpoint{
-		EndPointName:    d.Get("endpoint_name").(string),
-		IdpMetadataType: d.Get("idp_metadata_type").(string),
-		IdpMetadata:     d.Get("idp_metadata").(string),
-		MsgTemplate:     d.Get("custom_saml_request_template").(string),
-		AccessSetBy:     d.Get("access_set_by").(string),
+		EndPointName:      d.Get("endpoint_name").(string),
+		IdpMetadataType:   d.Get("idp_metadata_type").(string),
+		IdpMetadata:       d.Get("idp_metadata").(string),
+		MsgTemplate:       d.Get("custom_saml_request_template").(string),
+		AccessSetBy:       d.Get("access_set_by").(string),
+		SignAuthnRequests: "no",
+	}
+	if d.Get("sign_authn_requests").(bool) {
+		samlEndpoint.SignAuthnRequests = "yes"
 	}
 	if d.Get("controller_login").(bool) {
 		samlEndpoint.ControllerLogin = "yes"

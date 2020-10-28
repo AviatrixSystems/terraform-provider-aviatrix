@@ -44,11 +44,14 @@ The following arguments are supported:
 ### Required
 * `endpoint_name` - (Required) The SAML endpoint name.
 * `idp_metadata_type` - (Required) The IDP Metadata type. At the moment only "Text" is supported.
-* `idp_metadata` - (Required) The IDP Metadata from SAML provider. Normally the metadata is in XML format which may contain special characters. Best practice is encode metadata in base64 and set here `${base64decode(var.idp_metadata)}`.
+* `idp_metadata` - (Required) The IDP Metadata from SAML provider. Normally the metadata is in XML format which may contain special characters. Best practice is to use the file function to read from a local Metadata XML file
 
 ### Custom
 * `custom_entity_id` - (Optional) Custom Entity ID. Required to be non-empty for 'Custom' Entity ID type, empty for 'Hostname' Entity ID type.
 * `custom_saml_request_template` - (Optional) Custom SAML Request Template in string.
+
+### Advanced
+* `sign_authn_request` - (Optional) Whether to sign SAML AuthnRequests. Supported values: true, false . Default value: false
 
 ### Controller Login
 * `controller_login` - (Optional) Valid values: true, false. Default value: false. Set true for creating a saml endpoint for controller login.
