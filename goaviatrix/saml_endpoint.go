@@ -36,7 +36,7 @@ type SamlEndpointInfo struct {
 	ControllerLogin   bool     `json:"controller_login,omitempty"`
 	AccessSetBy       string   `json:"access_ctrl,omitempty"`
 	RbacGroupsRead    []string `json:"cl_rbac_groups,omitempty"`
-	SignAuthnRequests bool     `json:"sign_authn_requests,omitempty""`
+	SignAuthnRequests bool     `json:"sign_authn_requests,omitempty"`
 }
 
 type SamlResp struct {
