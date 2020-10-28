@@ -183,6 +183,7 @@ In addition to all arguments above, the following attributes are exported:
 * `ha_cloud_instance_id` - Cloud instance ID of the HA transit gateway.
 * `ha_gw_name` - Aviatrix transit gateway unique name of HA transit gateway.
 * `ha_private_ip` - Private IP address of the HA transit gateway created.
+* `lan_interface_cidr` - Lan interface cidr of the transit gateway created (will be used when enabling FQDN Firenet in Azure). Available in provider version R2.17.1+.
 
 The following arguments are deprecated:
 
