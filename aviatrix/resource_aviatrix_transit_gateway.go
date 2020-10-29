@@ -1007,7 +1007,10 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("bgp_manual_spoke_advertise_cidrs", d.Get("bgp_manual_spoke_advertise_cidrs").(string))
 		}
 
-		lanCidr, _ := client.GetTransitGatewayLanCidr(gw.GwName)
+		lanCidr, err := client.GetTransitGatewayLanCidr(gw.GwName)
+		if err != nil && err != goaviatrix.ErrNotFound {
+			log.Printf("[WARN] Error getting lan cidr for transit gateway %s due to %s", gw.GwName, err)
+		}
 		d.Set("lan_interface_cidr", lanCidr)
 	}
 
