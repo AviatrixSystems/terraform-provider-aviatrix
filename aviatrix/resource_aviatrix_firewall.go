@@ -18,6 +18,15 @@ func resourceAviatrixFirewall() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceAviatrixFirewallResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAviatrixFirewallStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"gw_name": {
 				Type:        schema.TypeString,
