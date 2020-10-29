@@ -43,6 +43,11 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "Remote Gateway IP.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					oldGws := strings.Split(old, ",")
+					newGws := strings.Split(new, ",")
+					return goaviatrix.Equivalent(oldGws, newGws)
+				},
 			},
 			"connection_type": {
 				Type:        schema.TypeString,
