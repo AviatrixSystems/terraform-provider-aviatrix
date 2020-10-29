@@ -148,7 +148,23 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 			externalDeviceConn.RemoteSubnet = externalDeviceConnDetail.RemoteSubnet
 			externalDeviceConn.ConnectionType = "static"
 		}
-		externalDeviceConn.RemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[0]
+		if externalDeviceConnDetail.RemoteGatewayIP != "" {
+			remoteIPList := strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")
+			mapRemoteIP := make(map[string]bool)
+			remoteIP := ""
+			for i := range remoteIPList {
+				if mapRemoteIP[remoteIPList[i]] {
+					continue
+				}
+				mapRemoteIP[remoteIPList[i]] = true
+				if remoteIP != "" {
+					remoteIP = remoteIP + "," + remoteIPList[i]
+				} else {
+					remoteIP = remoteIPList[i]
+				}
+			}
+			externalDeviceConn.RemoteGatewayIP = remoteIP
+		}
 		if externalDeviceConnDetail.Algorithm.Phase1Auth[0] == "SHA-256" &&
 			externalDeviceConnDetail.Algorithm.Phase2Auth[0] == "HMAC-SHA-256" &&
 			externalDeviceConnDetail.Algorithm.Phase1DhGroups[0] == "14" &&
