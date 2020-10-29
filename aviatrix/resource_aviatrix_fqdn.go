@@ -20,8 +20,15 @@ func resourceAviatrixFQDN() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 		MigrateState:  resourceAviatrixFQDNMigrateState,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type: resourceAviatrixFQDNResourceV1().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAviatrixFQDNStateUpgradeV1,
+				Version: 1,
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"fqdn_tag": {
