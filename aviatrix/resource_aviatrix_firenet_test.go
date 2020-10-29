@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -161,4 +162,26 @@ func testAccCheckFireNetDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testResourceFireNetStateDataV0() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+func testResourceFireNetStateDataV1() map[string]interface{} {
+	return map[string]interface{}{
+		"manage_firewall_instance_association": true,
+	}
+}
+
+func TestResourceFireNetStateUpgradeV0(t *testing.T) {
+	expected := testResourceFireNetStateDataV1()
+	actual, err := resourceAviatrixFireNetStateUpgradeV0(testResourceFireNetStateDataV0(), nil)
+	if err != nil {
+		t.Fatalf("error migrating state: %s", err)
+	}
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Fatalf("expected:%#v\ngot:%#v\n", expected, actual)
+	}
 }

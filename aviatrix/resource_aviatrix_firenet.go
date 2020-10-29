@@ -21,6 +21,15 @@ func resourceAviatrixFireNet() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceAviatrixFireNetResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAviatrixFireNetStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {
 				Type:        schema.TypeString,
