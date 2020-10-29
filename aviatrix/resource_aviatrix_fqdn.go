@@ -24,7 +24,7 @@ func resourceAviatrixFQDN() *schema.Resource {
 		MigrateState:  resourceAviatrixFQDNMigrateState,
 		StateUpgraders: []schema.StateUpgrader{
 			{
-				Type: resourceAviatrixFQDNResourceV1().CoreConfigSchema().ImpliedType(),
+				Type:    resourceAviatrixFQDNResourceV1().CoreConfigSchema().ImpliedType(),
 				Upgrade: resourceAviatrixFQDNStateUpgradeV1,
 				Version: 1,
 			},
