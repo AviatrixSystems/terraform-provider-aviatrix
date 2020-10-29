@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -165,4 +166,50 @@ func testAccCheckFirewallDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testResourceFirewallStateDataV0() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+func testResourceFirewallStateDataV1() map[string]interface{} {
+	return map[string]interface{}{
+		"manage_firewall_policies": true,
+	}
+}
+
+func TestResourceFirewallStateUpgradeV0(t *testing.T) {
+	expected := testResourceFirewallStateDataV1()
+	actual, err := resourceAviatrixFirewallStateUpgradeV0(testResourceFirewallStateDataV0(), nil)
+	if err != nil {
+		t.Fatalf("error migrating state: %s", err)
+	}
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Fatalf("\nexpected:%#v\ngot:%#v\n", expected, actual)
+	}
+}
+
+func testResourceFirewallStateDataV0ManageAlreadySet() map[string]interface{} {
+	return map[string]interface{}{
+		"manage_firewall_policies": false,
+	}
+}
+
+func testResourceFirewallStateDataV1ManageAlreadySet() map[string]interface{} {
+	return map[string]interface{}{
+		"manage_firewall_policies": false,
+	}
+}
+
+func TestResourceFirewallStateUpgradeV0ManageAlreadySet(t *testing.T) {
+	expected := testResourceFirewallStateDataV1ManageAlreadySet()
+	actual, err := resourceAviatrixFirewallStateUpgradeV0(testResourceFirewallStateDataV0ManageAlreadySet(), nil)
+	if err != nil {
+		t.Fatalf("error migrating state: %s", err)
+	}
+
+	if !reflect.DeepEqual(expected, actual) {
+		t.Fatalf("\nexpected:%#v\ngot:%#v\n", expected, actual)
+	}
 }
