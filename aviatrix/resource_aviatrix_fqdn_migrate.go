@@ -57,7 +57,7 @@ func resourceAviatrixFQDNResourceV1() *schema.Resource {
 
 func resourceAviatrixFQDNStateUpgradeV1(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	if _, ok := rawState["manage_domain_names"]; !ok {
-		rawState["manage_domain_names"] = "true"
+		rawState["manage_domain_names"] = true
 	}
 	return rawState, nil
 }
