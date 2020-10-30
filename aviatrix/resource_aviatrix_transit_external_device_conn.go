@@ -463,7 +463,7 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 
 	if d.HasChange("switch_to_ha_standby_gateway") {
 		if err := client.SwitchActiveTransitGateway(d.Get("gw_name").(string), d.Get("connection_name").(string)); err != nil {
-			return fmt.Errorf("could not switch active transit gateway")
+			return fmt.Errorf("could not switch active transit gateway: %v", err)
 		}
 	}
 
