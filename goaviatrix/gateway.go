@@ -140,7 +140,7 @@ type Gateway struct {
 	SyncSNATToHA                string   `form:"sync_snat_to_ha,omitempty"`
 	SyncDNATToHA                string   `form:"sync_dnat_to_ha,omitempty"`
 	MonitorSubnetsAction        string   `form:"monitor_subnets_action,omitempty" json:"monitor_subnets_action,omitempty"`
-	MonitorExcludeGWList        []string `form:"monitor_exclude_gw_list,omitempty"`
+	MonitorExcludeGWList        []string `form:"monitor_exclude_gw_list,omitempty" json:"monitor_exclude_gw_list,omitempty"`
 	FqdnLanCidr                 string   `form:"fqdn_lan_cidr,omitempty"`
 }
 
