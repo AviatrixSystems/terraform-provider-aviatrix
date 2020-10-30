@@ -300,6 +300,9 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		if externalDeviceConn.BackupRemoteGatewayIP == "" {
 			return fmt.Errorf("ha is enabled, please specify 'backup_remote_gateway_ip'")
 		}
+		if externalDeviceConn.BackupRemoteGatewayIP == externalDeviceConn.RemoteGatewayIP {
+			return fmt.Errorf("please specify a different IP address for 'backup_remote_gateway_ip'. It should not be the same as 'remote_gateway_ip'")
+		}
 		if externalDeviceConn.BackupBgpRemoteAsNum == 0 && externalDeviceConn.ConnectionType == "bgp" {
 			return fmt.Errorf("ha is enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_num'")
 		}
