@@ -830,8 +830,8 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 				AccountName: d.Get("account_name").(string),
 				GwName:      d.Get("gw_name").(string),
 			})
-			if err != nil && err != goaviatrix.ErrNotFound {
-				return fmt.Errorf("couldn't find Aviatrix Gateway: %s", gw.GwName)
+			if err != nil {
+				return fmt.Errorf("couldn't find Aviatrix Gateway for idle timeout : %s", gw.GwName)
 			}
 			gatewayServer.GwName = gw.ElbName
 		} else {
@@ -855,8 +855,8 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 				AccountName: d.Get("account_name").(string),
 				GwName:      d.Get("gw_name").(string),
 			})
-			if err != nil && err != goaviatrix.ErrNotFound {
-				return fmt.Errorf("couldn't find Aviatrix Gateway: %s", gw.GwName)
+			if err != nil {
+				return fmt.Errorf("couldn't find Aviatrix Gateway renegotiation interval : %s", gw.GwName)
 			}
 			gatewayServer.GwName = gw.ElbName
 		} else {
