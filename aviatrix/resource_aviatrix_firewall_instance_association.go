@@ -161,6 +161,7 @@ func resourceAviatrixFirewallInstanceAssociationRead(d *schema.ResourceData, met
 	for _, v := range fireNetDetail.FirewallInstance {
 		if v.GwName == firenetGwName && v.InstanceID == instanceID {
 			instanceInfo = &v
+			break
 		}
 	}
 	if instanceInfo == nil {
