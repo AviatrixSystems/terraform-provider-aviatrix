@@ -176,7 +176,11 @@ func resourceAviatrixFirewallInstanceAssociationRead(d *schema.ResourceData, met
 	if instanceInfo.VendorType == "Aviatrix FQDN Gateway" {
 		d.Set("vendor_type", "fqdn_gateway")
 		d.Set("firewall_name", "")
-		d.Set("lan_interface", "")
+		if strings.HasPrefix(instanceInfo.LanInterface, "eni-") {
+			d.Set("lan_interface", "")
+		} else {
+			d.Set("lan_interface", instanceInfo.LanInterface)
+		}
 		d.Set("management_interface", "")
 		d.Set("egress_interface", "")
 	} else {
