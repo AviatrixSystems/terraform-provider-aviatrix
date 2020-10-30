@@ -807,8 +807,8 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 
 	enableMonitorGatewaySubnets := d.Get("enable_monitor_gateway_subnets").(bool)
 	if enableMonitorGatewaySubnets {
-		if (d.Get("cloud_type").(int) != goaviatrix.AWS) && (d.Get("cloud_type").(int) != goaviatrix.AWSGOV) {
-			return fmt.Errorf("monitor gateway subnets feature only supports for AWS and AWSGOV")
+		if d.Get("cloud_type").(int) != goaviatrix.AWS && d.Get("cloud_type").(int) != goaviatrix.AWSGOV {
+			return fmt.Errorf("monitor gateway subnets feature only supported for AWS and AWSGOV")
 		}
 		gwMonitorSubnetsServer := &goaviatrix.Gateway{
 			GwName:               d.Get("gw_name").(string),
@@ -1946,8 +1946,8 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 
 	if d.HasChange("enable_monitor_gateway_subnets") {
 		if d.Get("enable_monitor_gateway_subnets").(bool) {
-			if (d.Get("cloud_type").(int) != goaviatrix.AWS) && (d.Get("cloud_type").(int) != goaviatrix.AWSGOV) {
-				return fmt.Errorf("monitor gateway subnet feature only supports for AWS and AWSGOV")
+			if d.Get("cloud_type").(int) != goaviatrix.AWS && d.Get("cloud_type").(int) != goaviatrix.AWSGOV {
+				return fmt.Errorf("monitor gateway subnet feature only supported for AWS and AWSGOV")
 			}
 			gwMonitorSubnetsServer := &goaviatrix.Gateway{
 				GwName:               d.Get("gw_name").(string),
@@ -1968,10 +1968,8 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				return fmt.Errorf("fail to disable monitor gateway subnets due to : %s", err)
 			}
 		}
-	}
-
-	if d.HasChange("monitor_exclude_list") {
-		if d.Get("enable_monitor_gateway_subnets").(bool) && !d.HasChange("enable_monitor_gateway_subnets") {
+	} else if d.HasChange("monitor_exclude_list") {
+		if d.Get("enable_monitor_gateway_subnets").(bool) {
 			gwMonitorSubnetsServer := &goaviatrix.Gateway{
 				GwName: d.Get("gw_name").(string),
 			}
@@ -1988,7 +1986,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				return fmt.Errorf("fail to enable monitor gateway subnets with updated excluded list due to : %s", err)
 			}
 		}
-		if !d.Get("enable_monitor_gateway_subnets").(bool) && !d.HasChange("enable_monitor_gateway_subnets") {
+		if !d.Get("enable_monitor_gateway_subnets").(bool) {
 			return fmt.Errorf("please enable the monitor gateway subnets feature before updating exclude monitor list")
 		}
 	}
