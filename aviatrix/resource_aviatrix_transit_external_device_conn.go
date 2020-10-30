@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
@@ -40,15 +42,11 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Description: "Name of the Transit Gateway.",
 			},
 			"remote_gateway_ip": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "Remote Gateway IP.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					oldGws := strings.Split(old, ",")
-					newGws := strings.Split(new, ",")
-					return goaviatrix.Equivalent(oldGws, newGws)
-				},
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				Description:  "Remote Gateway IP.",
+				ValidateFunc: validation.IsIPv4Address,
 			},
 			"connection_type": {
 				Type:        schema.TypeString,
@@ -166,11 +164,12 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Description: "Set as true if there are two external devices.",
 			},
 			"backup_remote_gateway_ip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				ForceNew:    true,
-				Description: "Backup remote gateway IP.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ForceNew:     true,
+				Description:  "Backup remote gateway IP.",
+				ValidateFunc: validation.IsIPv4Address,
 			},
 			"backup_bgp_remote_as_num": {
 				Type:         schema.TypeString,
@@ -301,6 +300,9 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		if externalDeviceConn.BackupRemoteGatewayIP == "" {
 			return fmt.Errorf("ha is enabled, please specify 'backup_remote_gateway_ip'")
 		}
+		if externalDeviceConn.BackupRemoteGatewayIP == externalDeviceConn.RemoteGatewayIP {
+			return fmt.Errorf("please specify a different IP address for 'backup_remote_gateway_ip'. It should not be the same as 'remote_gateway_ip'")
+		}
 		if externalDeviceConn.BackupBgpRemoteAsNum == 0 && externalDeviceConn.ConnectionType == "bgp" {
 			return fmt.Errorf("ha is enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_num'")
 		}
@@ -308,8 +310,10 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		if backupDirectConnect {
 			return fmt.Errorf("ha is not enabled, please set 'back_direct_connect' to false")
 		}
-		if externalDeviceConn.BackupPreSharedKey != "" || externalDeviceConn.BackupLocalTunnelCidr != "" || externalDeviceConn.BackupRemoteTunnelCidr != "" {
-			return fmt.Errorf("ha is not enabled, please set 'backup_pre_shared_key', 'backup_local_tunnel_cidr' and 'backup_remote_tunnel_cidr' to empty")
+		if externalDeviceConn.BackupPreSharedKey != "" || externalDeviceConn.BackupLocalTunnelCidr != "" ||
+			externalDeviceConn.BackupRemoteTunnelCidr != "" || externalDeviceConn.BackupRemoteGatewayIP != "" {
+			return fmt.Errorf("ha is not enabled, please set 'backup_pre_shared_key', 'backup_local_tunnel_cidr', " +
+				"'backup_remote_gateway_ip' and 'backup_remote_tunnel_cidr' to empty")
 		}
 		if externalDeviceConn.BackupBgpRemoteAsNum != 0 && externalDeviceConn.ConnectionType == "bgp" {
 			return fmt.Errorf("ha is not enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_num' to empty")
