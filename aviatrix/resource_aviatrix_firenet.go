@@ -298,6 +298,7 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if isImport || d.Get("manage_firewall_instance_association").(bool) {
+		d.Set("manage_firewall_instance_association", true)
 		if err := d.Set("firewall_instance_association", firewallInstance); err != nil {
 			log.Printf("[WARN] Error setting 'firewall_instance' for (%s): %s", d.Id(), err)
 		}
