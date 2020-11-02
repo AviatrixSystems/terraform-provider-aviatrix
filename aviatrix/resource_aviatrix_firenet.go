@@ -233,8 +233,10 @@ func resourceAviatrixFireNetReadIfRequired(d *schema.ResourceData, meta interfac
 func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
+	var isImport bool
 	vpcID := d.Get("vpc_id").(string)
 	if vpcID == "" {
+		isImport = true
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no vpc_id received. Import Id is %s", id)
 		d.Set("vpc_id", id)
@@ -295,7 +297,7 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 		firewallInstance = append(firewallInstance, fI)
 	}
 
-	if d.Get("manage_firewall_instance_association").(bool) {
+	if isImport || d.Get("manage_firewall_instance_association").(bool) {
 		if err := d.Set("firewall_instance_association", firewallInstance); err != nil {
 			log.Printf("[WARN] Error setting 'firewall_instance' for (%s): %s", d.Id(), err)
 		}
