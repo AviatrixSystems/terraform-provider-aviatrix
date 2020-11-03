@@ -90,16 +90,19 @@ func resourceAviatrixVpc() *schema.Resource {
 						"region": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							ForceNew:    true,
 							Description: "Subnet region.",
 						},
 						"cidr": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							ForceNew:    true,
 							Description: "Subnet cidr.",
 						},
 						"name": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							ForceNew:    true,
 							Description: "Subnet name.",
 						},
 						"subnet_id": {
