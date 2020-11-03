@@ -41,11 +41,12 @@ func resourceAviatrixSamlEndpoint() *schema.Resource {
 				Description: "IDP Metadata.",
 			},
 			"idp_metadata_url": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "",
-				Description:  "IDP Metadata.",
-				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Default:       "",
+				Description:   "IDP Metadata.",
+				ValidateFunc:  validation.IsURLWithHTTPorHTTPS,
+				ConflictsWith: []string{"idp_metadata"},
 			},
 			"custom_entity_id": {
 				Type:        schema.TypeString,
