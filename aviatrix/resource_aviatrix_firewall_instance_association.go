@@ -101,11 +101,6 @@ func resourceAviatrixFirewallInstanceAssociationCreate(d *schema.ResourceData, m
 	client := meta.(*goaviatrix.Client)
 
 	firewall := marshalFirewallInstanceAssociationInput(d)
-	if firewall.VendorType == "fqdn_gateway" {
-		if d.Get("inspection_enabled").(bool) || !d.Get("egress_enabled").(bool) {
-			return fmt.Errorf("'inspection_enabled' should be false, and 'egress_enabled' should be true for vendor type: fqdn_gateawy")
-		}
-	}
 
 	err := client.AssociateFirewallWithFireNet(firewall)
 	if err != nil {
