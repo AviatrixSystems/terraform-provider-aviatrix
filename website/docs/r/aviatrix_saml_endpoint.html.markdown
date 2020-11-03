@@ -27,7 +27,7 @@ resource "aviatrix_saml_endpoint" "test_saml_endpoint" {
 resource "aviatrix_saml_endpoint" "test_saml_endpoint" {
   endpoint_name     = "saml-test"
   idp_metadata_type = "URL"
-  idp_metadata      = "https://dev-xyzz.okta.com/app/asdfasdfwfwf/sso/saml/metadata"
+  idp_metadata_url  = "https://dev-xyzz.okta.com/app/asdfasdfwfwf/sso/saml/metadata"
 }
 ```
 ```hcl
