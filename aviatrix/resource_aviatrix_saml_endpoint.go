@@ -29,14 +29,23 @@ func resourceAviatrixSamlEndpoint() *schema.Resource {
 				Description: "SAML Endpoint Name.",
 			},
 			"idp_metadata_type": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Type of IDP Metadata.",
+				Type:         schema.TypeString,
+				Required:     true,
+				Description:  "Type of IDP Metadata.",
+				ValidateFunc: validation.StringInSlice([]string{"URL", "Text"}, false),
 			},
 			"idp_metadata": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
+				Default:     "",
 				Description: "IDP Metadata.",
+			},
+			"idp_metadata_url": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				Description:  "IDP Metadata.",
+				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 			},
 			"custom_entity_id": {
 				Type:        schema.TypeString,
@@ -128,7 +137,11 @@ func resourceAviatrixSamlEndpointRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("endpoint_name", saml.EndPointName)
 	d.Set("idp_metadata_type", saml.IdpMetadataType)
-	d.Set("idp_metadata", saml.IdpMetadata)
+	if saml.IdpMetadataType == "URL" {
+		d.Set("idp_metadata_url", saml.IdpMetadataURL)
+	} else {
+		d.Set("idp_metadata", saml.IdpMetadata)
+	}
 	d.Set("custom_entity_id", saml.CustomEntityId)
 	d.Set("sign_authn_requests", saml.SignAuthnRequests)
 	if saml.MsgTemplateType == "Default" {
@@ -207,6 +220,15 @@ func GetAviatrixSamlEndpointInput(d *schema.ResourceData) (*goaviatrix.SamlEndpo
 		AccessSetBy:       d.Get("access_set_by").(string),
 		SignAuthnRequests: "no",
 	}
+	if samlEndpoint.IdpMetadataType == "URL" {
+		if samlEndpoint.IdpMetadata != "" {
+			return nil, fmt.Errorf("'idp_metadata' must be empty for 'idp_metadata_type' 'URL'")
+		}
+		samlEndpoint.IdpMetadata = d.Get("idp_metadata_url").(string)
+	} else if d.Get("idp_metadata_url").(string) != "" {
+		return nil, fmt.Errorf("'idp_metadata_url' must be empty for 'idp_metadata_type' 'Text'")
+	}
+
 	if d.Get("sign_authn_requests").(bool) {
 		samlEndpoint.SignAuthnRequests = "yes"
 	}

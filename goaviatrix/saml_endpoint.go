@@ -29,6 +29,7 @@ type SamlEndpointInfo struct {
 	EndPointName      string   `json:"name,omitempty"`
 	IdpMetadataType   string   `json:"metadata_type,omitempty"`
 	IdpMetadata       string   `json:"idp_metadata,omitempty"`
+	IdpMetadataURL    string   `json:"url,omitempty"`
 	EntityIdType      string   `json:"entity_id,omitempty"`
 	CustomEntityId    string   `json:"custom_entityID,omitempty"`
 	MsgTemplate       string   `json:"msgtemplate,omitempty"`
