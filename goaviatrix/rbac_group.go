@@ -164,7 +164,7 @@ func (c *Client) GetPermissionGroupDetails(GroupName string) (*RbacGroupResponse
 	groups := data.RbacGroupList
 	for i := range groups {
 		if groups[i].GroupName == GroupName {
-			log.Info("Found Aviatrix RBAC group: %s", GroupName)
+			log.Infof("Found Aviatrix RBAC group: %s", GroupName)
 			return &groups[i], nil
 		}
 	}
