@@ -22,6 +22,17 @@ type RbacGroupListResp struct {
 	Reason        string   `json:"reason"`
 }
 
+type RbacGroupResponse struct {
+	LocalLogin bool   `json:"local_login"`
+	GroupName  string `json:"name"`
+}
+
+type RbacGroupListDetailsResp struct {
+	Return        bool                `json:"return"`
+	RbacGroupList []RbacGroupResponse `json:"results"`
+	Reason        string              `json:"reason"`
+}
+
 func (c *Client) CreatePermissionGroup(rbacGroup *RbacGroup) error {
 	rbacGroup.CID = c.CID
 	rbacGroup.Action = "add_permission_group"
@@ -105,4 +116,58 @@ func (c *Client) DeletePermissionGroup(rbacGroup *RbacGroup) error {
 		return errors.New("Rest API 'delete_permission_group' Get failed: " + data.Reason)
 	}
 	return nil
+}
+
+func (c *Client) EnableLocalLoginForRBACGroup(GroupName string) error {
+	data := map[string]string{
+		"action":     "enable_local_login",
+		"CID":        c.CID,
+		"group_name": GroupName,
+	}
+	return c.PostAPI("disable_local_login", data, BasicCheck)
+}
+
+func (c *Client) DisableLocalLoginForRBACGroup(GroupName string) error {
+	data := map[string]string{
+		"action":     "disable_local_login",
+		"CID":        c.CID,
+		"group_name": GroupName,
+	}
+	return c.PostAPI("disable_local_login", data, BasicCheck)
+}
+
+func (c *Client) GetPermissionGroupDetails(GroupName string) (*RbacGroupResponse, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return nil, errors.New(("url Parsing failed for 'list_permission_groups_details': ") + err.Error())
+	}
+	listPermissionGroupDetails := url.Values{}
+	listPermissionGroupDetails.Add("CID", c.CID)
+	listPermissionGroupDetails.Add("action", "list_permission_group_details")
+	Url.RawQuery = listPermissionGroupDetails.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return nil, errors.New("HTTP Get 'list_permission_group_details' failed: " + err.Error())
+	}
+	var data RbacGroupListDetailsResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode 'list_permission_group_details' failed: " + err.Error() + "\n Body: " +
+			bodyString)
+	}
+	if !data.Return {
+		return nil, errors.New("Rest API 'list_permission_group_details' Get failed: " + data.Reason)
+	}
+	groups := data.RbacGroupList
+	for i := range groups {
+		if groups[i].GroupName == GroupName {
+			log.Info("Found Aviatrix RBAC group: %s", GroupName)
+			return &groups[i], nil
+		}
+	}
+	log.Errorf("Couldn't find Aviatrix RBAC group: %s", GroupName)
+	return nil, ErrNotFound
 }
