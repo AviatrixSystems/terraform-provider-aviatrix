@@ -19,7 +19,15 @@ For details on Aviatrix Controller Login with SAML authentication, please see do
 resource "aviatrix_saml_endpoint" "test_saml_endpoint" {
   endpoint_name     = "saml-test"
   idp_metadata_type = "Text"
-  idp_metadata      = "${var.idp_metadata}"
+  idp_metadata      = file("idp_metadata.xml")
+}
+```
+```hcl
+# Create an Aviatrix AWS SAML Endpoint using Metadata UDL
+resource "aviatrix_saml_endpoint" "test_saml_endpoint" {
+  endpoint_name     = "saml-test"
+  idp_metadata_type = "URL"
+  idp_metadata_url  = "https://dev-xyzz.okta.com/app/asdfasdfwfwf/sso/saml/metadata"
 }
 ```
 ```hcl
@@ -43,8 +51,11 @@ The following arguments are supported:
 
 ### Required
 * `endpoint_name` - (Required) The SAML endpoint name.
-* `idp_metadata_type` - (Required) The IDP Metadata type. At the moment only "Text" is supported.
-* `idp_metadata` - (Required) The IDP Metadata from SAML provider. Normally the metadata is in XML format which may contain special characters. Best practice is to use the file function to read from a local Metadata XML file
+* `idp_metadata_type` - (Required) The IDP Metadata type. Can be either "Text" or "URL".
+* `idp_metadata` - (Optional) The IDP Metadata from SAML provider. Required if `idp_metadata_type` is "Text" and should be unset if type is "URL". Normally the metadata is in XML format which may contain special characters. Best practice is to use the file function to read from a local Metadata XML file.
+* `idp_metadata_url` - (Optional) The IDP Metadata URL from SAML provider. Required if `idp_metadata_type` is "URL" and should be unset if type is "Text".
+
+-> **NOTE:** `idp_metadata` and `idp_metadata_url` cannot be used at the same time.
 
 ### Custom
 * `custom_entity_id` - (Optional) Custom Entity ID. Required to be non-empty for 'Custom' Entity ID type, empty for 'Hostname' Entity ID type.
