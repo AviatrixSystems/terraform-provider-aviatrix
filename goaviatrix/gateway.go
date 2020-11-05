@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -142,6 +143,7 @@ type Gateway struct {
 	MonitorSubnetsAction        string   `form:"monitor_subnets_action,omitempty" json:"monitor_subnets_action,omitempty"`
 	MonitorExcludeGWList        []string `form:"monitor_exclude_gw_list,omitempty" json:"monitor_exclude_gw_list,omitempty"`
 	FqdnLanCidr                 string   `form:"fqdn_lan_cidr,omitempty"`
+	RouteTable                  string
 }
 
 type PolicyRule struct {
@@ -275,6 +277,98 @@ func (c *Client) CreateGateway(gateway *Gateway) error {
 		return errors.New("Rest API connect_container Post failed: " + data.Reason)
 	}
 	return nil
+}
+
+func (c *Client) CreatePublicSubnetFilteringGateway(gateway *Gateway) error {
+	data := map[string]string{
+		"action":         "add_public_subnet_filtering_gateway",
+		"CID":            c.CID,
+		"cloud_type":     strconv.Itoa(gateway.CloudType),
+		"account_name":   gateway.AccountName,
+		"region":         gateway.VpcRegion,
+		"vpc_id":         gateway.VpcID,
+		"gateway_name":   gateway.GwName,
+		"gateway_size":   gateway.VpcSize,
+		"gateway_subnet": gateway.VpcNet,
+		"route_table":    gateway.RouteTable,
+		"tag":            "",
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) DeletePublicSubnetFilteringGateway(gateway *Gateway) error {
+	data := map[string]string{
+		"action":       "delete_public_subnet_filtering_gateway",
+		"CID":          c.CID,
+		"gateway_name": gateway.GwName,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) EnablePublicSubnetFilteringHAGateway(gateway *Gateway) error {
+	data := map[string]string{
+		"action":         "enable_ha_for_public_subnet_filtering_gateway",
+		"CID":            c.CID,
+		"gateway_name":   gateway.GwName,
+		"gateway_subnet": gateway.PeeringHASubnet,
+		"route_tables":   gateway.RouteTable,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+type PublicSubnetFilteringGatewayDetails struct {
+	RouteTableList    []string `json:"rtb_list"`
+	GuardDutyEnforced string   `json:"guard_duty_enforced"`
+	GwSubnetCidr      string   `json:"gw_subnet_cidr"`
+	GwSubnetAz        string   `json:"gw_subnet_az"`
+}
+
+type PublicSubnetFilteringGatewayDetailsResp struct {
+	Return  bool                                `json:"return"`
+	Results PublicSubnetFilteringGatewayDetails `json:"results"`
+	Reason  string                              `json:"reason"`
+}
+
+func (c *Client) GetPublicSubnetFilteringGatewayDetails(gateway *Gateway) (*PublicSubnetFilteringGatewayDetails, error) {
+	data := map[string]string{
+		"action":       "get_public_subnet_filtering_gateway_details",
+		"CID":          c.CID,
+		"gateway_name": gateway.GwName,
+	}
+	var resp PublicSubnetFilteringGatewayDetailsResp
+	err := c.GetAPI(&resp, data["action"], data, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+	return &resp.Results, nil
+}
+
+func (c *Client) EditPublicSubnetFilteringRouteTableList(gateway *Gateway, routeTables []string) error {
+	data := map[string]string{
+		"action":       "edit_public_subnet_filtering_enforced_route_table_list",
+		"CID":          c.CID,
+		"gateway_name": gateway.GwName,
+		"route_table":  strings.Join(routeTables, ", "),
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) EnableGuardDutyEnforcement(gateway *Gateway) error {
+	data := map[string]string{
+		"action":       "enable_public_subnet_filtering_guard_duty_enforced_mode",
+		"CID":          c.CID,
+		"gateway_name": gateway.GwName,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) DisableGuardDutyEnforcement(gateway *Gateway) error {
+	data := map[string]string{
+		"action":       "disable_public_subnet_filtering_guard_duty_enforced_mode",
+		"CID":          c.CID,
+		"gateway_name": gateway.GwName,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
 }
 
 func (c *Client) EnableNatGateway(gateway *Gateway) error {
