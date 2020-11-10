@@ -38,14 +38,26 @@ The following arguments are supported:
 * `management_subnet` - (Optional) Management Interface Subnet. Select the subnet whose name contains “gateway and firewall management”. Required for Palo Alto Networks VM-Series, and required to be empty for Check Point or Fortinet series.
 * `egress_subnet` - (Required) Egress Interface Subnet. Select the subnet whose name contains “FW-ingress-egress”.
 * `firewall_image_version` - (Optional) Version of firewall image. If not specified, Controller will automatically select the latest version available.
+* `zone` - (Optional) Availability Zone. Applicable to Azure deployment only. Available as of provider version R2.17+.
 
-### Advanced Options
-* `key_name`- (Optional) The **.pem** filename for SSH access to the firewall instance.
-* `iam_role` - (Optional) In advanced mode, create an IAM Role on the AWS account that launched the FireNet gateway. Create a policy to attach to the role. The policy is to allow access to “Bootstrap Bucket”.
-* `bootstrap_bucket_name`- (Optional) In advanced mode, specify a bootstrap bucket name where the initial configuration and policy file is stored.
+### Authentication method
+* `key_name`- (Optional) Applicable to AWS deployment only. The **.pem** filename for SSH access to the firewall instance.
 * `username`- (Optional) Applicable to Azure deployment only. "admin" as a username is not accepted.
 * `password`- (Optional) Applicable to Azure deployment only.
-* `zone` - (Optional) Availability Zone. Applicable to Azure deployment only. Available as of provider version R2.17+.
+* `ssh_public_key` - (Optional) Applicable to Azure deployment only.
+
+### Advanced Options
+* `iam_role` - (Optional) Only available for AWS. In advanced mode, create an IAM Role on the AWS account that launched the FireNet gateway. Create a policy to attach to the role. The policy is to allow access to “Bootstrap Bucket”.
+* `bootstrap_bucket_name`- (Optional) Only available for AWS. In advanced mode, specify a bootstrap bucket name where the initial configuration and policy file is stored.
+* `bootstrap_storage_name` - (Optional) Advanced option. Bootstrap storage name. Applicable to Azure and Palo Alto Networks VM-Series/Fortinet Series deployment only.
+* `storage_access_key` - (Optional) Advanced option. Storage access key. Applicable to Azure and Palo Alto Networks VM-Series deployment only.
+* `file_share_folder` - (Optional) Advanced option. File share folder. Applicable to Azure and Palo Alto Networks VM-Series deployment only.
+* `share_directory` - (Optional) Advanced option. Share directory. Applicable to Azure and Palo Alto Networks VM-Series deployment only.
+* `sic_key` - (Optional) Advanced option. Bic key. Applicable to Azure and Check Point Series deployment only.
+* `container_folder` - (Optional) Advanced option. Bootstrap storage name. Applicable to Azure and Fortinet Series deployment only.
+* `sas_url_config` - (Optional) Advanced option. Bootstrap storage name. Applicable to Azure and Fortinet Series deployment only.
+* `sas_url_license` - (Optional) Advanced option. Bootstrap storage name. Applicable to Azure and Fortinet Series deployment only.
+* `user_data` - (Optional) Advanced option. Bootstrap storage name. Applicable to Check Point Series and Fortinet Series deployment only.
 
 ## Attribute Reference
 

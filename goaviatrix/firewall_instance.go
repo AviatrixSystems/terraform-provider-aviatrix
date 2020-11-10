@@ -34,6 +34,16 @@ type FirewallInstance struct {
 	Password             string `form:"password,omitempty"`
 	AvailabilityZone     string `json:"availability_zone,omitempty"`
 	CloudVendor          string `json:"cloud_vendor,omitempty"`
+	SshPublicKey         string `form:"ssh_public_key,omitempty" json:"ssh_public_key,omitempty"`
+	BootstrapStorageName string `form:"bootstrap_storage_name,omitempty" json:"bootstrap_storage_name,omitempty"`
+	StorageAccessKey     string `form:"storage_access_key,omitempty" json:"storage_access_key,omitempty"`
+	FileShareFolder      string `form:"file_share_folder,omitempty" json:"file_share_folder,omitempty"`
+	ShareDirectory       string `form:"share_directory,omitempty" json:"share_directory,omitempty"`
+	SicKey               string `form:"sic_key,omitempty" json:"sic_key,omitempty"`
+	ContainerFolder      string `form:"container_folder,omitempty" json:"container_folder,omitempty"`
+	SasUrlConfig         string `form:"sas_url_config,omitempty" json:"sas_url_config,omitempty"`
+	SasUriLicense        string `form:"sas_url_license,omitempty" json:"sas_url_license,omitempty"`
+	UserData             string `form:"user_data,omitempty" json:"user_data,omitempty"`
 }
 
 type FirewallInstanceResp struct {
@@ -74,6 +84,36 @@ func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (str
 	addFirewallInstance.Add("no_associate", strconv.FormatBool(true))
 	addFirewallInstance.Add("username", firewallInstance.Username)
 	addFirewallInstance.Add("password", firewallInstance.Password)
+	if firewallInstance.SshPublicKey != "" {
+		addFirewallInstance.Add("ssh_public_key", firewallInstance.SshPublicKey)
+	}
+	if firewallInstance.BootstrapStorageName != "" {
+		addFirewallInstance.Add("bootstrap_storage_name", firewallInstance.BootstrapStorageName)
+	}
+	if firewallInstance.StorageAccessKey != "" {
+		addFirewallInstance.Add("storage_access_key", firewallInstance.StorageAccessKey)
+	}
+	if firewallInstance.FileShareFolder != "" {
+		addFirewallInstance.Add("file_share_folder", firewallInstance.FileShareFolder)
+	}
+	if firewallInstance.ShareDirectory != "" {
+		addFirewallInstance.Add("share_directory", firewallInstance.ShareDirectory)
+	}
+	if firewallInstance.SicKey != "" {
+		addFirewallInstance.Add("sic_key", firewallInstance.SicKey)
+	}
+	if firewallInstance.ContainerFolder != "" {
+		addFirewallInstance.Add("container_folder", firewallInstance.ContainerFolder)
+	}
+	if firewallInstance.SasUrlConfig != "" {
+		addFirewallInstance.Add("sas_url_config", firewallInstance.SasUrlConfig)
+	}
+	if firewallInstance.SasUriLicense != "" {
+		addFirewallInstance.Add("sas_url_license", firewallInstance.SasUriLicense)
+	}
+	if firewallInstance.UserData != "" {
+		addFirewallInstance.Add("user_data", firewallInstance.UserData)
+	}
 	Url.RawQuery = addFirewallInstance.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
