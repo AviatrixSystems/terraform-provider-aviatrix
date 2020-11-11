@@ -7,8 +7,13 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
+
+const defaultAwsGuardDutyScanningInterval = 60
+
+var validAwsGuardDutyScanningIntervals = []int{5, 10, 15, 30, 60}
 
 func resourceAviatrixControllerConfig() *schema.Resource {
 	return &schema.Resource{
@@ -107,6 +112,13 @@ func resourceAviatrixControllerConfig() *schema.Resource {
 				Optional:     true,
 				Description:  "File path to server private key.",
 				RequiredWith: []string{"server_public_certificate_file_path", "ca_certificate_file_path"},
+			},
+			"aws_guard_duty_scanning_interval": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Description:  "Scanning Interval for AWS Guard Duty.",
+				Default:      defaultAwsGuardDutyScanningInterval,
+				ValidateFunc: validation.IntInSlice(validAwsGuardDutyScanningIntervals),
 			},
 		},
 	}
@@ -249,6 +261,12 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 		}
 	}
 
+	scanningInterval := d.Get("aws_guard_duty_scanning_interval")
+	err = client.UpdateAwsGuardDutyPollInterval(scanningInterval.(int))
+	if err != nil {
+		return fmt.Errorf("could not update scanning interval: %v", err)
+	}
+
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return resourceAviatrixControllerConfigRead(d, meta)
 }
@@ -349,6 +367,12 @@ func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface
 		d.Set("server_public_certificate_file_path", "")
 		d.Set("server_private_key_file_path", "")
 	}
+
+	guardDuty, err := client.GetAwsGuardDuty()
+	if err != nil {
+		return fmt.Errorf("could not get aws guard duty scanning interval: %v", err)
+	}
+	d.Set("aws_guard_duty_scanning_interval", guardDuty.ScanningInterval)
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
@@ -555,6 +579,14 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 		}
 	}
 
+	if d.HasChange("aws_guard_duty_scanning_interval") {
+		scanningInterval := d.Get("aws_guard_duty_scanning_interval").(int)
+		err := client.UpdateAwsGuardDutyPollInterval(scanningInterval)
+		if err != nil {
+			return fmt.Errorf("could not update scanning interval: %v", err)
+		}
+	}
+
 	d.Partial(false)
 	return resourceAviatrixControllerConfigRead(d, meta)
 }
@@ -610,6 +642,11 @@ func resourceAviatrixControllerConfigDelete(d *schema.ResourceData, meta interfa
 	err = client.DisableImportedHTTPSCerts()
 	if err != nil {
 		return fmt.Errorf("could not disable imported certs: %v", err)
+	}
+
+	err = client.UpdateAwsGuardDutyPollInterval(defaultAwsGuardDutyScanningInterval)
+	if err != nil {
+		return fmt.Errorf("could not update scanning interval: %v", err)
 	}
 
 	return nil
