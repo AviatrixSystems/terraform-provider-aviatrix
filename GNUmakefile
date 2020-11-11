@@ -10,9 +10,17 @@ default: build
 build: fmtcheck
 	go install
 
+build13: GOOS=$(shell go env GOOS)
+build13: GOARCH=$(shell go env GOARCH)
+ifeq ($(OS),Windows_NT)  # is Windows_NT on XP, 2000, 7, Vista, 10...
+build13: DESTINATION=$(APPDATA)/terraform.d/plugins/$(AVIATRIX_PROVIDER_NAMESPACE)/99.0.0/$(GOOS)_$(GOARCH)
+else
+build13: DESTINATION=$(HOME)/.terraform.d/plugins/$(AVIATRIX_PROVIDER_NAMESPACE)/99.0.0/$(GOOS)_$(GOARCH)
+endif
 build13: fmtcheck
-	mkdir -p $(TF_PLUGIN_DIR)/$(AVIATRIX_PROVIDER_NAMESPACE)/99.0.0/darwin_amd64
-	go build -o $(TF_PLUGIN_DIR)/$(AVIATRIX_PROVIDER_NAMESPACE)/99.0.0/darwin_amd64/terraform-provider-aviatrix_v99.0.0
+	@echo "==> Installing plugin to $(DESTINATION)"
+	@mkdir -p $(DESTINATION)
+	go build -o $(DESTINATION)/terraform-provider-aviatrix_v99.0.0
 
 test: fmtcheck
 	go test -i $(TEST) || exit 1
