@@ -122,6 +122,9 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Description: "Phase one Authentication. Valid values: 'SHA-1', 'SHA-256', 'SHA-384' and 'SHA-512'.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"SHA-1", "SHA-256", "SHA-384", "SHA-512",
+				}, false),
 			},
 			"phase_2_authentication": {
 				Type:     schema.TypeString,
@@ -129,18 +132,27 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				ForceNew: true,
 				Description: "Phase two Authentication. Valid values: 'NO-AUTH', 'HMAC-SHA-1', 'HMAC-SHA-256', " +
 					"'HMAC-SHA-384' and 'HMAC-SHA-512'.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"NO-AUTH", "HMAC-SHA-1", "HMAC-SHA-256", "HMAC-SHA-384", "HMAC-SHA-512",
+				}, false),
 			},
 			"phase_1_dh_groups": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
 				Description: "Phase one DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"1", "2", "5", "14", "15", "16", "17", "18",
+				}, false),
 			},
 			"phase_2_dh_groups": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
 				Description: "Phase two DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"1", "2", "5", "14", "15", "16", "17", "18",
+				}, false),
 			},
 			"phase_1_encryption": {
 				Type:     schema.TypeString,
@@ -148,6 +160,9 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				ForceNew: true,
 				Description: "Phase one Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC' and " +
 					"'AES-256-CBC'.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"3DES", "AES-128-CBC", "AES-192-CBC", "AES-256-CBC",
+				}, false),
 			},
 			"phase_2_encryption": {
 				Type:     schema.TypeString,
@@ -155,6 +170,9 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				ForceNew: true,
 				Description: "Phase two Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC', " +
 					"'AES-256-CBC', 'AES-128-GCM-64', 'AES-128-GCM-96' and 'AES-128-GCM-128'.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"3DES", "AES-128-CBC", "AES-192-CBC", "AES-256-CBC", "AES-128-GCM-64", "AES-128-GCM-96", "AES-128-GCM-128",
+				}, false),
 			},
 			"ha_enabled": {
 				Type:        schema.TypeBool,
