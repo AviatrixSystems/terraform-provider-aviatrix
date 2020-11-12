@@ -90,6 +90,24 @@ func resourceAviatrixControllerConfig() *schema.Resource {
 				Default:     false,
 				Description: "Enable VPC/VNET DNS Server.",
 			},
+			"ca_certificate_file_path": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "File path to the CA Certificate.",
+				RequiredWith: []string{"server_public_certificate_file_path", "server_private_key_file_path"},
+			},
+			"server_public_certificate_file_path": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "File path to the Server public certificate.",
+				RequiredWith: []string{"ca_certificate_file_path", "server_private_key_file_path"},
+			},
+			"server_private_key_file_path": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "File path to server private key.",
+				RequiredWith: []string{"server_public_certificate_file_path", "ca_certificate_file_path"},
+			},
 		},
 	}
 }
@@ -215,6 +233,22 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("could not toggle controller vpc dns server: %v", err)
 	}
 
+	certConfig := &goaviatrix.HTTPSCertConfig{
+		CACertificateFilePath:     d.Get("ca_certificate_file_path").(string),
+		ServerCertificateFilePath: d.Get("server_public_certificate_file_path").(string),
+		ServerPrivateKeyFilePath:  d.Get("server_private_key_file_path").(string),
+	}
+	if !(certConfig.CACertificateFilePath != "" && certConfig.ServerCertificateFilePath != "" && certConfig.ServerPrivateKeyFilePath != "") &&
+		!(certConfig.CACertificateFilePath == "" && certConfig.ServerCertificateFilePath == "" && certConfig.ServerPrivateKeyFilePath == "") {
+		return fmt.Errorf("ca_certificate_file_path, server_public_certificate_file_path, and server_private_key_file_path must either all be set or all unset. Please update your configuaration")
+	}
+	if certConfig.CACertificateFilePath != "" && certConfig.ServerCertificateFilePath != "" && certConfig.ServerPrivateKeyFilePath != "" {
+		err := client.ImportNewHTTPSCerts(certConfig)
+		if err != nil {
+			return fmt.Errorf("could not import HTTPS certs: %v", err)
+		}
+	}
+
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return resourceAviatrixControllerConfigRead(d, meta)
 }
@@ -305,6 +339,16 @@ func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface
 	}
 
 	d.Set("enable_vpc_dns_server", vpcDnsServerEnabled)
+
+	httpsCertsImported, err := client.GetHTTPSCertsStatus()
+	if err != nil {
+		return fmt.Errorf("could not get HTTPS Certificate status: %v", err)
+	}
+	if !httpsCertsImported {
+		d.Set("ca_certificate_file_path", "")
+		d.Set("server_public_certificate_file_path", "")
+		d.Set("server_private_key_file_path", "")
+	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
@@ -489,6 +533,28 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 		}
 	}
 
+	if d.HasChange("ca_certificate_file_path") || d.HasChange("server_public_certificate_file_path") || d.HasChange("server_private_key_file_path") {
+		certConfig := &goaviatrix.HTTPSCertConfig{
+			CACertificateFilePath:     d.Get("ca_certificate_file_path").(string),
+			ServerCertificateFilePath: d.Get("server_public_certificate_file_path").(string),
+			ServerPrivateKeyFilePath:  d.Get("server_private_key_file_path").(string),
+		}
+		if !(certConfig.CACertificateFilePath != "" && certConfig.ServerCertificateFilePath != "" && certConfig.ServerPrivateKeyFilePath != "") &&
+			!(certConfig.CACertificateFilePath == "" && certConfig.ServerCertificateFilePath == "" && certConfig.ServerPrivateKeyFilePath == "") {
+			return fmt.Errorf("ca_certificate_file_path, server_public_certificate_file_path, and server_private_key_file_path must either all be set or all unset. Please update your configuaration")
+		}
+		err := client.DisableImportedHTTPSCerts()
+		if err != nil {
+			return fmt.Errorf("problem trying to disable imported certs to prepare for importing new certs: %v", err)
+		}
+		if certConfig.CACertificateFilePath != "" && certConfig.ServerCertificateFilePath != "" && certConfig.ServerPrivateKeyFilePath != "" {
+			err = client.ImportNewHTTPSCerts(certConfig)
+			if err != nil {
+				return fmt.Errorf("could not import new HTTPS certs: %v", err)
+			}
+		}
+	}
+
 	d.Partial(false)
 	return resourceAviatrixControllerConfigRead(d, meta)
 }
@@ -539,6 +605,11 @@ func resourceAviatrixControllerConfigDelete(d *schema.ResourceData, meta interfa
 	err := client.SetControllerVpcDnsServer(false)
 	if err != nil {
 		return fmt.Errorf("could not disable controller vpc dns server: %v", err)
+	}
+
+	err = client.DisableImportedHTTPSCerts()
+	if err != nil {
+		return fmt.Errorf("could not disable imported certs: %v", err)
 	}
 
 	return nil
