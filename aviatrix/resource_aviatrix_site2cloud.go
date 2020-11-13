@@ -136,6 +136,9 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Description: "Phase one Authentication. Valid values: 'SHA-1', 'SHA-256', 'SHA-384' and 'SHA-512'.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"SHA-1", "SHA-256", "SHA-384", "SHA-512",
+				}, false),
 			},
 			"phase_2_authentication": {
 				Type:     schema.TypeString,
@@ -143,18 +146,27 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				ForceNew: true,
 				Description: "Phase two Authentication. Valid values: 'NO-AUTH', 'HMAC-SHA-1', 'HMAC-SHA-256', " +
 					"'HMAC-SHA-384' and 'HMAC-SHA-512'.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"NO-AUTH", "HMAC-SHA-1", "HMAC-SHA-256", "HMAC-SHA-384", "HMAC-SHA-512",
+				}, false),
 			},
 			"phase_1_dh_groups": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Phase one DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'.",
+				Description: "Phase one DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17', '18' and '19.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"1", "2", "5", "14", "15", "16", "17", "18", "19",
+				}, false),
 			},
 			"phase_2_dh_groups": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Phase two DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'.",
+				Description: "Phase two DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17', '18' and '19'.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"1", "2", "5", "14", "15", "16", "17", "18", "19",
+				}, false),
 			},
 			"phase_1_encryption": {
 				Type:     schema.TypeString,
@@ -162,13 +174,20 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				ForceNew: true,
 				Description: "Phase one Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC' and " +
 					"'AES-256-CBC'.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"3DES", "AES-128-CBC", "AES-192-CBC", "AES-256-CBC",
+				}, false),
 			},
 			"phase_2_encryption": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Description: "Phase two Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC', " +
-					"'AES-256-CBC', 'AES-128-GCM-64', 'AES-128-GCM-96' and 'AES-128-GCM-128'.",
+					"'AES-256-CBC', 'AES-128-GCM-64', 'AES-128-GCM-96', 'AES-128-GCM-128', and 'NULL-ENCR'.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"3DES", "AES-128-CBC", "AES-192-CBC", "AES-256-CBC", "AES-128-GCM-64", "AES-128-GCM-96",
+					"AES-128-GCM-128", "NULL-ENCR",
+				}, false),
 			},
 			"enable_ikev2": {
 				Type:        schema.TypeBool,
@@ -286,18 +305,21 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 
 	customAlgorithms := d.Get("custom_algorithms").(bool)
 	if customAlgorithms {
-		if s2c.Phase1Auth == goaviatrix.Phase1AuthDefault &&
+		if s2c.Phase1Auth == "" ||
+			s2c.Phase2Auth == "" ||
+			s2c.Phase1DhGroups == "" ||
+			s2c.Phase2DhGroups == "" ||
+			s2c.Phase1Encryption == "" ||
+			s2c.Phase2Encryption == "" {
+			return fmt.Errorf("custom_algorithms is enabled, please set all of the algorithm parameters")
+		} else if s2c.Phase1Auth == goaviatrix.Phase1AuthDefault &&
 			s2c.Phase2Auth == goaviatrix.Phase2AuthDefault &&
 			s2c.Phase1DhGroups == goaviatrix.Phase1DhGroupDefault &&
 			s2c.Phase2DhGroups == goaviatrix.Phase2DhGroupDefault &&
 			s2c.Phase1Encryption == goaviatrix.Phase1EncryptionDefault &&
 			s2c.Phase2Encryption == goaviatrix.Phase2EncryptionDefault {
 			return fmt.Errorf("custom_algorithms is enabled, cannot use default values for " +
-				"all six algorithm parameters")
-		}
-		err := client.Site2CloudAlgorithmCheck(s2c)
-		if err != nil {
-			return fmt.Errorf("algorithm values check failed: %s", err)
+				"all six algorithm parameters. Please change value of one or multiple of the six algorithm parameters")
 		}
 	} else {
 		if s2c.Phase1Auth != "" {

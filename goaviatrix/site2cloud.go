@@ -424,36 +424,6 @@ func (c *Client) DeleteSite2Cloud(site2cloud *Site2Cloud) error {
 	return nil
 }
 
-func (c *Client) Site2CloudAlgorithmCheck(site2cloud *Site2Cloud) error {
-	Phase1AuthList := []string{"SHA-1", "SHA-256", "SHA-384", "SHA-512"}
-	Phase1DhGroupsList := []string{"1", "2", "5", "14", "15", "16", "17", "18"}
-	Phase1EncryptionList := []string{"AES-128-CBC", "AES-192-CBC", "AES-256-CBC", "3DES"}
-	Phase2AuthList := []string{"HMAC-SHA-1", "HMAC-SHA-256", "HMAC-SHA-384", "HMAC-SHA-512", "NO-AUTH"}
-	Phase2DhGroupsList := []string{"1", "2", "5", "14", "15", "16", "17", "18"}
-	Phase2EncryptionList := []string{"AES-128-CBC", "AES-128-GCM-64", "AES-128-GCM-96", "AES-128-GCM-128",
-		"AES-128-CBC", "AES-192-CBC", "AES-256-CBC", "3DES", "NULL-ENCR"}
-
-	if !Contains(Phase1AuthList, site2cloud.Phase1Auth) {
-		return errors.New("invalid value for phase_1_authentication")
-	}
-	if !Contains(Phase1DhGroupsList, site2cloud.Phase1DhGroups) {
-		return errors.New("invalid value for phase_1_dh_groups")
-	}
-	if !Contains(Phase1EncryptionList, site2cloud.Phase1Encryption) {
-		return errors.New("invalid value for phase_1_encryption")
-	}
-	if !Contains(Phase2AuthList, site2cloud.Phase2Auth) {
-		return errors.New("invalid value for phase_2_authentication")
-	}
-	if !Contains(Phase2DhGroupsList, site2cloud.Phase2DhGroups) {
-		return errors.New("invalid value for phase_2_dh_groups")
-	}
-	if !Contains(Phase2EncryptionList, site2cloud.Phase2Encryption) {
-		return errors.New("invalid value for phase_2_encryption")
-	}
-	return nil
-}
-
 func (c *Client) EnableDeadPeerDetection(site2cloud *Site2Cloud) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
