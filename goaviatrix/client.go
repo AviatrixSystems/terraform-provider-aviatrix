@@ -11,6 +11,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
+	"net/url"
 	"os"
 	"reflect"
 	"strings"
@@ -152,10 +153,26 @@ func (c *Client) PostAPI(action string, d interface{}, checkFunc CheckAPIRespons
 	if err != nil {
 		return fmt.Errorf("HTTP POST %q failed: %v", action, err)
 	}
+	return decodeAndCheckAPIResp(resp, action, checkFunc)
+}
 
+// PostFileAPI will encode the files and parameters with multipart form encoding and POST to the API.
+// The API response is decoded and checked with the provided checkFunc
+func (c *Client) PostFileAPI(params map[string]string, files []File, checkFunc CheckAPIResponseFunc) error {
+	if params["action"] == "" {
+		return fmt.Errorf("cannot PostFileAPI without an 'action' in params map")
+	}
+	resp, err := c.PostFile(c.baseURL, params, files)
+	if err != nil {
+		return fmt.Errorf("HTTP POST %q failed: %v", params["action"], err)
+	}
+	return decodeAndCheckAPIResp(resp, params["action"], checkFunc)
+}
+
+func decodeAndCheckAPIResp(resp *http.Response, action string, checkFunc CheckAPIResponseFunc) error {
 	var data APIResp
 	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
+	_, err := b.ReadFrom(resp.Body)
 	if err != nil {
 		return fmt.Errorf("reading response body %q failed: %v", action, err)
 	}
@@ -165,6 +182,44 @@ func (c *Client) PostAPI(action string, d interface{}, checkFunc CheckAPIRespons
 	}
 
 	return checkFunc(action, data.Reason, data.Return)
+}
+
+// GetAPI makes a GET request to the Aviatrix API
+// First, we decode into the generic APIResp struct, then check for errors
+// If no errors, we will decode into the user defined structure that is passed in
+func (c *Client) GetAPI(v interface{}, action string, d map[string]string, checkFunc CheckAPIResponseFunc) error {
+	Url, err := c.urlEncode(d)
+	if err != nil {
+		return fmt.Errorf("could not url encode values for action %q: %v", action, err)
+	}
+	resp, err := c.Get(Url, nil)
+	if err != nil {
+		return fmt.Errorf("HTTP Get %s failed: %v", action, err)
+	}
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	var data APIResp
+	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
+		return fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
+	}
+	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&v); err != nil {
+		return fmt.Errorf("Json Decode failed: %v\n Body: %s", err, bodyString)
+	}
+	return checkFunc(action, data.Reason, data.Return)
+}
+
+func (c *Client) urlEncode(d map[string]string) (string, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return "", fmt.Errorf("parsing url: %v", err)
+	}
+	v := url.Values{}
+	for key, val := range d {
+		v.Add(key, val)
+	}
+	Url.RawQuery = v.Encode()
+	return Url.String(), nil
 }
 
 // Put issues an HTTP PUT request with the given interface form-encoded.
