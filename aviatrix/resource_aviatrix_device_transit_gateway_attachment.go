@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -57,10 +58,13 @@ func resourceAviatrixDeviceTransitGatewayAttachment() *schema.Resource {
 				Description: "Phase 1 authentication algorithm.",
 			},
 			"phase1_dh_groups": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				ForceNew:    true,
-				Default:     14,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  "14",
+				ValidateFunc: validation.StringInSlice([]string{
+					"1", "2", "5", "14", "15", "16", "17", "18", "19",
+				}, false),
 				Description: "Phase 1 Diffie-Hellman groups.",
 			},
 			"phase1_encryption": {
@@ -78,10 +82,13 @@ func resourceAviatrixDeviceTransitGatewayAttachment() *schema.Resource {
 				Description: "Phase 2 authentication algorithm.",
 			},
 			"phase2_dh_groups": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				ForceNew:    true,
-				Default:     14,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  "14",
+				ValidateFunc: validation.StringInSlice([]string{
+					"1", "2", "5", "14", "15", "16", "17", "18", "19",
+				}, false),
 				Description: "Phase 2 Diffie-Hellman groups.",
 			},
 			"phase2_encryption": {
