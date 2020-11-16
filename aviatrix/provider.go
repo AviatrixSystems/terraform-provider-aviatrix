@@ -76,6 +76,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_rbac_group_access_account_attachment":           resourceAviatrixRbacGroupAccessAccountAttachment(),
 			"aviatrix_rbac_group_permission_attachment":               resourceAviatrixRbacGroupPermissionAttachment(),
 			"aviatrix_rbac_group_user_attachment":                     resourceAviatrixRbacGroupUserAttachment(),
+			"aviatrix_remote_syslog":                                  resourceAviatrixRemoteSyslog(),
 			"aviatrix_saml_endpoint":                                  resourceAviatrixSamlEndpoint(),
 			"aviatrix_segmentation_security_domain":                   resourceAviatrixSegmentationSecurityDomain(),
 			"aviatrix_segmentation_security_domain_association":       resourceAviatrixSegmentationSecurityDomainAssociation(),
