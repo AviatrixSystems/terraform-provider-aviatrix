@@ -66,7 +66,8 @@ resource "aviatrix_gateway" "test_psf_gateway_aws" {
   vpc_id                                      = "vpc-abcdef"
   vpc_reg                                     = "us-west-1"
   gw_size                                     = "t2.micro"
-  subnet                                      = "10.0.0.0/24~~us-west-1b"
+  subnet                                      = "10.0.0.0/24"
+  zone                                        = "us-west-1b"
   public_subnet_filtering                     = true
   public_subnet_filtering_route_tables        = [data.aviatrix_vpc.test_vpc.route_tables[0]]
   public_subnet_filtering_guard_duty_enforced = true
@@ -83,10 +84,12 @@ resource "aviatrix_gateway" "test_psf_gateway_aws" {
   vpc_id                                      = "vpc-abcdef"
   vpc_reg                                     = "us-west-1"
   gw_size                                     = "t2.micro"
-  subnet                                      = "10.0.0.0/24~~us-west-1b"
+  subnet                                      = "10.0.0.0/24"
+  zone                                        = "us-west-1b"
   public_subnet_filtering                     = true
   public_subnet_filtering_route_tables        = [data.aviatrix_vpc.test_vpc.route_tables[0]]
-  peering_ha_subnet                           = "10.10.0.64/26~~us-west-1b"
+  peering_ha_subnet                           = "10.10.0.64/26"
+  peering_ha_zone                             = "us-west-1b"
   public_subnet_filtering_ha_route_tables     = [data.aviatrix_vpc.test_vpc.route_tables[1]]
   public_subnet_filtering_guard_duty_enforced = true
   single_az_ha                                = true
@@ -173,18 +176,11 @@ The following arguments are supported:
 * `vpc_id` - (Required) VPC ID/VNet name of cloud provider. Example: AWS: "vpc-abcd1234", GCP: "vpc-gcp-test", AZURE: "vnet1:hello", OCI: "vpc-oracle-test1".
 * `vpc_reg` - (Required) VPC region the gateway will be created in. Example: AWS: "us-east-1", GCP: "us-west2-a", AZURE: "East US 2", OCI: "us-ashburn-1".
 * `gw_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", GCP: "n1-standard-1", AZURE: "Standard_B1s", OCI: "VM.Standard2.2".
-
-~> **NOTE:** For a Public Subnet Filtering Gateway (`public_subnet_filtering` set to true), the `subnet` attribute must be in the form of `subnet~~availabilityZone` for example, `10.10.0.128/26~~us-west-1c`.
-
 * `subnet` - (Required) A VPC network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode-1).**
 
 ### HA
 * `single_az_ha` (Optional) If enabled, Controller monitors the health of the gateway and restarts the gateway if it becomes unreachable. Valid values: true, false. Default value: false.
-
-~> **NOTE:** For a Public Subnet Filtering Gateway (`public_subnet_filtering` set to true), the `peering_ha_subnet` attribute must be in the form of `subnet~~availabilityZone` for example, `10.10.0.64/26~~us-west-1a`.
-
 * `peering_ha_subnet` - (Optional) Public subnet CIDR to create Peering HA Gateway in. Required if enabling Peering HA for AWS/AZURE. Optional if enabling Peering HA for GCP. Example: AWS: "10.0.0.0/16".
-
 * `peering_ha_zone` - (Optional) Zone to create Peering HA Gateway in. Required if enabling Peering HA for GCP. Example: GCP: "us-west1-c". Optional for AZURE. Valid values for AZURE gateways are in the form "az-n". Example: "az-2". Available for AZURE as of provider version R2.17+.
 * `peering_ha_insane_mode_az` - (Optional) Region + Availability Zone of subnet being created for Insane Mode-enabled Peering HA Gateway. Required for AWS only if `insane_mode` is set and `peering_ha_subnet` is set. Example: AWS: "us-west-1a".
 * `peering_ha_eip` - (Optional) Public IP address to be assigned to the HA peering instance. Only available for AWS and GCP.
@@ -256,14 +252,14 @@ The following arguments are supported:
 ### FQDN Gateway
 ~> **NOTE:** This attribute is only to be used in Azure FQDN FireNet workflows.
 
-* ` fqdn_lan_cidr` - (Optional) If `fqdn_lan_cidr` is set, the FQDN gateway will be created with an additional LAN interface using the provided CIDR. This attribute is required when enabling FQDN gateway FireNet in Azure. Available in provider version R2.17.1+.
+* `fqdn_lan_cidr` - (Optional) If `fqdn_lan_cidr` is set, the FQDN gateway will be created with an additional LAN interface using the provided CIDR. This attribute is required when enabling FQDN gateway FireNet in Azure. Available in provider version R2.17.1+.
 
 ### Misc.
 * `allocate_new_eip` - (Optional) If set to false, use an available address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in Controller 2.7+. Valid values: true, false. Default: true. Option not available for Azure and OCI gateways, they will automatically allocate new EIPs.
 * `eip` - (Optional) Specified EIP to use for gateway creation. Required when `allocate_new_eip` is false.  Available in Controller version 3.5+. Only supported for AWS and GCP gateways.
 * `tag_list` - (Optional) Tag list of the gateway instance. Only available for AWS and AWSGov gateways. Example: ["key1:value1", "key2:value2"].
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for gateway. Currently only supported for AWS and AWSGov gateways. Valid values: true, false. Default value: false.
-* `zone` - (Optional) Availability Zone. Only available for cloud_type = 8 (AZURE). Must be in the form 'az-n', for example, 'az-2'. Available in provider version R2.17+.
+* `zone` - (Optional) Availability Zone. Only available for Azure and Public Subnet Filtering gateway. Available for Azure as of provider version R2.17+.
 
 ### Public Subnet Filtering Gateway
 * `public_subnet_filtering` - (Optional) Create a [Public Subnet Filtering gateway](https://docs.aviatrix.com/HowTos/public_subnet_filtering_faq.html). Valid values: true or false. Default value: false. Available as of provider version R2.18+.
