@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"net"
 	"strconv"
 	"strings"
 
@@ -317,8 +318,16 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		if externalDeviceConn.BackupRemoteGatewayIP == "" {
 			return fmt.Errorf("ha is enabled, please specify 'backup_remote_gateway_ip'")
 		}
+		remoteIP := strings.Split(externalDeviceConn.RemoteGatewayIP, ",")
+		if len(remoteIP) > 1 {
+			return fmt.Errorf("expected 'remote_gateway_ip' to contain only one valid IPv4 address, got: %s", externalDeviceConn.RemoteGatewayIP)
+		}
+		ip := net.ParseIP(externalDeviceConn.RemoteGatewayIP)
+		if four := ip.To4(); four == nil {
+			return fmt.Errorf("expected 'remote_gateway_ip' to contain a valid IPv4 address, got: %s", externalDeviceConn.RemoteGatewayIP)
+		}
 		if externalDeviceConn.BackupRemoteGatewayIP == externalDeviceConn.RemoteGatewayIP {
-			return fmt.Errorf("please specify a different IP address for 'backup_remote_gateway_ip'. It should not be the same as 'remote_gateway_ip'")
+			return fmt.Errorf("expected 'backup_remote_gateway_ip' to contain a different valid IPv4 address than 'remote_gateway_ip'")
 		}
 		if externalDeviceConn.BackupBgpRemoteAsNum == 0 && externalDeviceConn.ConnectionType == "bgp" {
 			return fmt.Errorf("ha is enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_num'")
