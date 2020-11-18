@@ -11,6 +11,17 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
+var customMappedAttributeNames = []string{
+	"remote_source_real_cidrs",
+	"remote_source_virtual_cidrs",
+	"remote_destination_real_cidrs",
+	"remote_destination_virtual_cidrs",
+	"local_source_real_cidrs",
+	"local_source_virtual_cidrs",
+	"local_destination_real_cidrs",
+	"local_destination_virtual_cidrs",
+}
+
 func resourceAviatrixSite2Cloud() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixSite2CloudCreate,
@@ -70,7 +81,7 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			},
 			"remote_subnet_cidr": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: "Remote Subnet CIDR.",
 			},
 			"backup_gateway_name": {
@@ -248,29 +259,99 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Default:     false,
 				Description: "Switch to Enable/Disable active_active_ha for an existing site2cloud connection.",
 			},
+			"custom_mapped": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+				Description: "Enable custom mapped.",
+			},
+			"remote_source_real_cidrs": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
+				Description: "Remote Initiated Traffic Source Real CIDRs.",
+			},
+			"remote_source_virtual_cidrs": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
+				Description: "Remote Initiated Traffic Source Virtual CIDRs.",
+			},
+			"remote_destination_real_cidrs": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
+				Description: "Remote Initiated Traffic Destination Real CIDRs.",
+			},
+			"remote_destination_virtual_cidrs": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
+				Description: "Remote Initiated Traffic Destination Virtual CIDRs.",
+			},
+			"local_source_real_cidrs": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
+				Description: "Local Initiated Traffic Source Real CIDRs.",
+			},
+			"local_source_virtual_cidrs": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
+				Description: "Local Initiated Traffic Source Virtual CIDRs.",
+			},
+			"local_destination_real_cidrs": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
+				Description: "Local Initiated Traffic Destination Real CIDRs.",
+			},
+			"local_destination_virtual_cidrs": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
+				Description: "Local Initiated Traffic Destination Virtual CIDRs.",
+			},
 		},
 	}
+}
+
+func getCSVFromStringSet(d *schema.ResourceData, attributeName string) string {
+	set := d.Get(attributeName).(*schema.Set)
+	expandedList := goaviatrix.ExpandStringList(set.List())
+	return strings.Join(expandedList, ",")
 }
 
 func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	s2c := &goaviatrix.Site2Cloud{
-		GwName:              d.Get("primary_cloud_gateway_name").(string),
-		BackupGwName:        d.Get("backup_gateway_name").(string),
-		VpcID:               d.Get("vpc_id").(string),
-		TunnelName:          d.Get("connection_name").(string),
-		ConnType:            d.Get("connection_type").(string),
-		TunnelType:          d.Get("tunnel_type").(string),
-		RemoteGwType:        d.Get("remote_gateway_type").(string),
-		RemoteGwIP:          d.Get("remote_gateway_ip").(string),
-		RemoteGwIP2:         d.Get("backup_remote_gateway_ip").(string),
-		PreSharedKey:        d.Get("pre_shared_key").(string),
-		BackupPreSharedKey:  d.Get("backup_pre_shared_key").(string),
-		RemoteSubnet:        d.Get("remote_subnet_cidr").(string),
-		LocalSubnet:         d.Get("local_subnet_cidr").(string),
-		RemoteSubnetVirtual: d.Get("remote_subnet_virtual").(string),
-		LocalSubnetVirtual:  d.Get("local_subnet_virtual").(string),
+		GwName:                        d.Get("primary_cloud_gateway_name").(string),
+		BackupGwName:                  d.Get("backup_gateway_name").(string),
+		VpcID:                         d.Get("vpc_id").(string),
+		TunnelName:                    d.Get("connection_name").(string),
+		ConnType:                      d.Get("connection_type").(string),
+		TunnelType:                    d.Get("tunnel_type").(string),
+		RemoteGwType:                  d.Get("remote_gateway_type").(string),
+		RemoteGwIP:                    d.Get("remote_gateway_ip").(string),
+		RemoteGwIP2:                   d.Get("backup_remote_gateway_ip").(string),
+		PreSharedKey:                  d.Get("pre_shared_key").(string),
+		BackupPreSharedKey:            d.Get("backup_pre_shared_key").(string),
+		RemoteSubnet:                  d.Get("remote_subnet_cidr").(string),
+		LocalSubnet:                   d.Get("local_subnet_cidr").(string),
+		RemoteSubnetVirtual:           d.Get("remote_subnet_virtual").(string),
+		LocalSubnetVirtual:            d.Get("local_subnet_virtual").(string),
+		CustomMap:                     d.Get("custom_mapped").(bool),
+		RemoteSourceRealCIDRs:         getCSVFromStringSet(d, "remote_source_real_cidrs"),
+		RemoteSourceVirtualCIDRs:      getCSVFromStringSet(d, "remote_source_virtual_cidrs"),
+		RemoteDestinationRealCIDRs:    getCSVFromStringSet(d, "remote_destination_real_cidrs"),
+		RemoteDestinationVirtualCIDRs: getCSVFromStringSet(d, "remote_destination_virtual_cidrs"),
+		LocalSourceRealCIDRs:          getCSVFromStringSet(d, "local_source_real_cidrs"),
+		LocalSourceVirtualCIDRs:       getCSVFromStringSet(d, "local_source_virtual_cidrs"),
+		LocalDestinationRealCIDRs:     getCSVFromStringSet(d, "local_destination_real_cidrs"),
+		LocalDestinationVirtualCIDRs:  getCSVFromStringSet(d, "local_destination_virtual_cidrs"),
 	}
 
 	haEnabled := d.Get("ha_enabled").(bool)
@@ -288,12 +369,44 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	if s2c.ConnType != "mapped" && s2c.ConnType != "unmapped" {
 		return fmt.Errorf("'connection_type' should be 'mapped' or 'unmapped'")
 	}
-	if s2c.ConnType == "mapped" && (s2c.RemoteSubnetVirtual == "" || s2c.LocalSubnetVirtual == "") {
+	if !s2c.CustomMap && s2c.RemoteSubnet == "" {
+		return fmt.Errorf("'remote_subnet_cidr' is required unless you are using 'custom_mapped'")
+	}
+	if s2c.CustomMap {
+		if s2c.RemoteSubnet != "" {
+			return fmt.Errorf("'remote_subnet_cidr' is not valid for 'custom_mapped' connection")
+		}
+		if s2c.RemoteSubnetVirtual != "" {
+			return fmt.Errorf("'remote_subnet_virtual' is not valid for 'custom_mapped' connection")
+		}
+		if s2c.LocalSubnet != "" {
+			return fmt.Errorf("'local_subnet_cidr' is not valid for 'custom_mapped' connection")
+		}
+		if s2c.LocalSubnetVirtual != "" {
+			return fmt.Errorf("'local_subnet_virtual' is not valid for 'custom_mapped' connection")
+		}
+	}
+	if s2c.ConnType == "mapped" && !s2c.CustomMap && (s2c.RemoteSubnetVirtual == "" || s2c.LocalSubnetVirtual == "") {
 		return fmt.Errorf("'remote_subnet_virtual' and 'local_subnet_virtual' are both required for " +
-			"connection type: mapped")
+			"connection type: mapped, unless 'custom_mapped' is enabled")
 	} else if s2c.ConnType == "unmapped" && (s2c.RemoteSubnetVirtual != "" || s2c.LocalSubnetVirtual != "") {
 		return fmt.Errorf("'remote_subnet_virtual' and 'local_subnet_virtual' both should be empty for " +
 			"connection type: ummapped")
+	}
+	hasSetAnyCustomMapAttribute := s2c.RemoteSourceRealCIDRs != "" || s2c.RemoteSourceVirtualCIDRs != "" ||
+		s2c.RemoteDestinationRealCIDRs != "" || s2c.RemoteDestinationVirtualCIDRs != "" ||
+		s2c.LocalSourceRealCIDRs != "" || s2c.LocalSourceVirtualCIDRs != "" ||
+		s2c.LocalDestinationRealCIDRs != "" || s2c.LocalDestinationVirtualCIDRs != ""
+	if !s2c.CustomMap && hasSetAnyCustomMapAttribute {
+		return fmt.Errorf("attributes %v are only valid with 'custom_mapped' enabled", customMappedAttributeNames)
+	}
+	if s2c.CustomMap && (s2c.ConnType != "mapped" || s2c.TunnelType != "route") {
+		return fmt.Errorf("'connection_type' should be 'mapped' and 'tunnel_type' should be 'route' for 'custom_mapped' enabled connection")
+	}
+	hasSetAllCustomRemoteCIDRs := s2c.RemoteSourceRealCIDRs != "" && s2c.RemoteSourceVirtualCIDRs != "" && s2c.RemoteDestinationRealCIDRs != "" && s2c.RemoteDestinationVirtualCIDRs != ""
+	hasSetAllCustomLocalCIDRs := s2c.LocalSourceRealCIDRs != "" && s2c.LocalSourceVirtualCIDRs != "" && s2c.LocalDestinationRealCIDRs != "" && s2c.LocalDestinationVirtualCIDRs != ""
+	if s2c.CustomMap && !hasSetAllCustomLocalCIDRs && !hasSetAllCustomRemoteCIDRs {
+		return fmt.Errorf("'custom_mapped' enabled connection requires either all Remote Initiated CIDRs or all Local Initated CIDRs be provided")
 	}
 
 	s2c.Phase1Auth = d.Get("phase_1_authentication").(string)
@@ -491,6 +604,10 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 			d.Set("primary_cloud_gateway_name", s2c.GwName)
 		}
 
+		// Custom Mapped is a sub-type of Mapped
+		if s2c.ConnType == "custom_mapped" {
+			s2c.ConnType = "mapped"
+		}
 		d.Set("connection_type", s2c.ConnType)
 		if s2c.ConnType == "mapped" {
 			d.Set("remote_subnet_virtual", s2c.RemoteSubnetVirtual)
@@ -531,6 +648,47 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 		} else {
 			d.Set("enable_ikev2", false)
 		}
+
+		if s2c.RemoteSourceRealCIDRs != "" {
+			if err := d.Set("remote_source_real_cidrs", strings.Split(s2c.RemoteSourceRealCIDRs, ",")); err != nil {
+				return fmt.Errorf("could not write 'remote_source_real_cidrs' to state: %v", err)
+			}
+		}
+		if s2c.RemoteSourceVirtualCIDRs != "" {
+			if err := d.Set("remote_source_virtual_cidrs", strings.Split(s2c.RemoteSourceVirtualCIDRs, ",")); err != nil {
+				return fmt.Errorf("could not write 'remote_source_virtual_cidrs' to state: %v", err)
+			}
+		}
+		if s2c.RemoteDestinationRealCIDRs != "" {
+			if err := d.Set("remote_destination_real_cidrs", strings.Split(s2c.RemoteDestinationRealCIDRs, ",")); err != nil {
+				return fmt.Errorf("could not write 'remote_destination_real_cidrs' to state: %v", err)
+			}
+		}
+		if s2c.RemoteDestinationVirtualCIDRs != "" {
+			if err := d.Set("remote_destination_virtual_cidrs", strings.Split(s2c.RemoteDestinationVirtualCIDRs, ",")); err != nil {
+				return fmt.Errorf("could not write 'remote_destination_virtual_cidrs' to state: %v", err)
+			}
+		}
+		if s2c.LocalSourceRealCIDRs != "" {
+			if err := d.Set("local_source_real_cidrs", strings.Split(s2c.LocalSourceRealCIDRs, ",")); err != nil {
+				return fmt.Errorf("could not write 'local_source_real_cidrs' to state: %v", err)
+			}
+		}
+		if s2c.LocalSourceVirtualCIDRs != "" {
+			if err := d.Set("local_source_virtual_cidrs", strings.Split(s2c.LocalSourceVirtualCIDRs, ",")); err != nil {
+				return fmt.Errorf("could not write 'local_source_virtual_cidrs' to state: %v", err)
+			}
+		}
+		if s2c.LocalDestinationRealCIDRs != "" {
+			if err := d.Set("local_destination_real_cidrs", strings.Split(s2c.LocalDestinationRealCIDRs, ",")); err != nil {
+				return fmt.Errorf("could not write 'local_destination_real_cidrs' to state: %v", err)
+			}
+		}
+		if s2c.LocalDestinationVirtualCIDRs != "" {
+			if err := d.Set("local_destination_virtual_cidrs", strings.Split(s2c.LocalDestinationVirtualCIDRs, ",")); err != nil {
+				return fmt.Errorf("could not write 'local_destination_virtual_cidrs' to state: %v", err)
+			}
+		}
 	}
 
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", d.Get("connection_name").(string), site2cloud)
@@ -552,7 +710,10 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 	d.Partial(true)
 	log.Printf("[INFO] Updating Aviatrix Site2Cloud: %#v", editSite2cloud)
 
-	if ok := d.HasChange("local_subnet_cidr"); ok {
+	if d.HasChange("local_subnet_cidr") {
+		if d.Get("custom_mapped").(bool) {
+			return fmt.Errorf("'local_subnet_cidr' is not valid when 'custom_mapped' is enabled")
+		}
 		editSite2cloud.CloudSubnetCidr = d.Get("local_subnet_cidr").(string)
 		editSite2cloud.NetworkType = "1"
 		err := client.UpdateSite2Cloud(editSite2cloud)
@@ -562,7 +723,10 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		d.SetPartial("local_subnet_cidr")
 	}
 
-	if ok := d.HasChange("remote_subnet_cidr"); ok {
+	if d.HasChange("remote_subnet_cidr") {
+		if d.Get("custom_mapped").(bool) {
+			return fmt.Errorf("'remote_subnet_cidr' is not valid when 'custom_mapped' is enabled")
+		}
 		editSite2cloud.CloudSubnetCidr = d.Get("remote_subnet_cidr").(string)
 		editSite2cloud.NetworkType = "2"
 		err := client.UpdateSite2Cloud(editSite2cloud)
@@ -613,6 +777,38 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 			}
 		}
 		d.SetPartial("enable_active_active")
+	}
+
+	if d.HasChanges(customMappedAttributeNames...) {
+		if !d.Get("custom_mapped").(bool) {
+			return fmt.Errorf("attributes %v are not valid when 'custom_mapped' is disabled", customMappedAttributeNames)
+		}
+		s2c := &goaviatrix.EditSite2Cloud{
+			GwName:                        d.Get("primary_cloud_gateway_name").(string),
+			VpcID:                         d.Get("vpc_id").(string),
+			ConnName:                      d.Get("connection_name").(string),
+			NetworkType:                   "3",
+			RemoteSourceRealCIDRs:         getCSVFromStringSet(d, "remote_source_real_cidrs"),
+			RemoteSourceVirtualCIDRs:      getCSVFromStringSet(d, "remote_source_virtual_cidrs"),
+			RemoteDestinationRealCIDRs:    getCSVFromStringSet(d, "remote_destination_real_cidrs"),
+			RemoteDestinationVirtualCIDRs: getCSVFromStringSet(d, "remote_destination_virtual_cidrs"),
+			LocalSourceRealCIDRs:          getCSVFromStringSet(d, "local_source_real_cidrs"),
+			LocalSourceVirtualCIDRs:       getCSVFromStringSet(d, "local_source_virtual_cidrs"),
+			LocalDestinationRealCIDRs:     getCSVFromStringSet(d, "local_destination_real_cidrs"),
+			LocalDestinationVirtualCIDRs:  getCSVFromStringSet(d, "local_destination_virtual_cidrs"),
+		}
+		hasSetAllCustomRemoteCIDRs := s2c.RemoteSourceRealCIDRs != "" && s2c.RemoteSourceVirtualCIDRs != "" && s2c.RemoteDestinationRealCIDRs != "" && s2c.RemoteDestinationVirtualCIDRs != ""
+		hasSetAllCustomLocalCIDRs := s2c.LocalSourceRealCIDRs != "" && s2c.LocalSourceVirtualCIDRs != "" && s2c.LocalDestinationRealCIDRs != "" && s2c.LocalDestinationVirtualCIDRs != ""
+		if !hasSetAllCustomLocalCIDRs && !hasSetAllCustomRemoteCIDRs {
+			return fmt.Errorf("'custom_mapped' enabled connection requires either all Remote Initiated CIDRs or all Local Initated CIDRs be provided")
+		}
+		err := client.UpdateSite2Cloud(s2c)
+		if err != nil {
+			return fmt.Errorf("could not update site2cloud connection Remote or Local CIDRs: %v", err)
+		}
+		for _, v := range customMappedAttributeNames {
+			d.SetPartial(v)
+		}
 	}
 
 	d.Partial(false)
