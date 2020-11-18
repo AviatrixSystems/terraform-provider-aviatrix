@@ -42,11 +42,10 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Description: "Name of the Transit Gateway.",
 			},
 			"remote_gateway_ip": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				Description:  "Remote Gateway IP.",
-				ValidateFunc: validation.IsIPv4Address,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Remote Gateway IP.",
 			},
 			"connection_type": {
 				Type:        schema.TypeString,
