@@ -26,6 +26,27 @@ resource "aviatrix_site2cloud" "test_s2c" {
   local_subnet_cidr          = "10.20.1.0/24"
 }
 ```
+```hcl
+# Create an Aviatrix Site2cloud Route Based Custom Mapped Connection
+resource "aviatrix_site2cloud" "test_s2c" {
+  vpc_id                           = "vpc-abcd1234"
+  connection_name                  = "my_conn"
+  connection_type                  = "mapped"
+  remote_gateway_type              = "generic"
+  tunnel_type                      = "route"
+  primary_cloud_gateway_name       = "gw1"
+  remote_gateway_ip                = "5.5.5.5"
+  custom_mapped                    = true
+  remote_source_real_cidrs         = ["10.10.0.0/24"]
+  remote_source_virtual_cidrs      = ["10.10.1.0/24"]
+  remote_destination_real_cidrs    = ["10.10.2.0/24"]
+  remote_destination_virtual_cidrs = ["10.10.4.0/24"]
+  local_source_real_cidrs          = ["10.11.0.0/24"]
+  local_source_virtual_cidrs       = ["10.11.1.0/24"]
+  local_destination_real_cidrs     = ["10.11.2.0/24"]
+  local_destination_virtual_cidrs  = ["10.11.4.0/24"]
+}
+```
 
 ## Argument Reference
 
@@ -39,7 +60,7 @@ The following arguments are supported:
 * `tunnel_type` - (Required) Site2Cloud Tunnel Type. Valid Values: "policy", "route".
 * `primary_cloud_gateway_name` - (Required) Primary Cloud Gateway Name.
 * `remote_gateway_ip` - (Required) Remote Gateway IP.
-* `remote_subnet_cidr` - (Required) Remote Subnet CIDR.
+* `remote_subnet_cidr` - (Required) Remote Subnet CIDR. **Not required for custom_mapped connection.**
 * `remote_subnet_virtual` - Remote Subnet CIDR (Virtual). **Required for connection type "mapped" only.**
 * `local_subnet_cidr` - (Optional) Local Subnet CIDR. **Required for connection type "mapped".**
 * `local_subnet_virtual` - Local Subnet CIDR (Virtual). **Required for connection type "mapped" only.**
@@ -66,6 +87,20 @@ The following arguments are supported:
 * `remote_gateway_longitude` - (Optional) Longitude of remote gateway. Does not support refresh.
 * `backup_remote_gateway_latitude` - (Optional) Latitude of backup remote gateway. Does not support refresh.
 * `backup_remote_gateway_longitude` - (Optional) Longitude of backup remote gateway. Does not support refresh.
+
+### Custom Mapped
+
+~> **NOTE:** To enable custom mapped connection, 'connection_type' must be 'mapped' and 'tunnel_type' must be 'route'. All remote CIDR attributes or all local CIDR attributes must be set when using custom_mapped. Setting all CIDR attributes is also valid.
+
+* `custom_mapped` - (Optional) Enable custom mapped connection. Default value: false. Valid values: true/false. Available as of provider version R2.17.1+.
+* `remote_source_real_cidrs` - (Optional) Set of Remote Initiated Traffic Source Real CIDRs.
+* `remote_source_virtual_cidrs` - (Optional) Set of Remote Initiated Traffic Source Virtual CIDRs. 
+* `remote_destination_real_cidrs` - (Optional) Set of  Remote Initiated Traffic Destination Real CIDRs.
+* `remote_destination_virtual_cidrs` - (Optional) Set of Remote Initiated Traffic Destination Virtual CIDRs.
+* `local_source_real_cidrs` - (Optional) Set of Local Initiated Traffic Source Real CIDRs.
+* `local_source_virtual_cidrs` - (Optional) Set of Local Initiated Traffic Source Virtual CIDRs.
+* `local_destination_real_cidrs` - (Optional) Set of Local Initiated Traffic Destination Real CIDRs.
+* `local_destination_virtual_cidrs` - (Optional) Set of Local Initiated Traffic Destination Virtual CIDRs.
 
 ### Misc.
 * `pre_shared_key` - (Optional) Pre-Shared Key.
