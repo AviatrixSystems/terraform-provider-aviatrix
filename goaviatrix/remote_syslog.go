@@ -1,26 +1,20 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
 	"strconv"
 )
 
 type RemoteSyslog struct {
-	CID                 string   `form:"CID,omitempty"`
-	Server              string   `form:"server,omitempty" json:"server"`
-	Port                int      `form:"port,omitempty" json:"port"`
-	Protocol            string   `form:"protocol,omitempty" json:"protocol"`
-	Index               int      `form:"index,omitempty" json:"index"`
-	Template            string   `form:"template,omitempty" json:"template"`
-	CaCertificate       string   `form:"ca_certificate,omitempty"`
-	PublicCertificate   string   `form:"public_certificate,omitempty"`
-	PrivateKey          string   `form:"private_key,omitempty"`
-	ExcludeGatewayInput string   `form:"exclude_gateway_list,omitempty"`
-	ExcludedGateway     []string `json:"excluded_gateway"`
-	Status              string   `json:"status"`
-	Notls               bool     `json:"notls"`
+	CID                 string `form:"CID,omitempty"`
+	Server              string `form:"server,omitempty" json:"server"`
+	Port                int    `form:"port,omitempty" json:"port"`
+	Protocol            string `form:"protocol,omitempty" json:"protocol"`
+	Index               int    `form:"index,omitempty" json:"index"`
+	Template            string `form:"template,omitempty" json:"template"`
+	CaCertificate       string `form:"ca_certificate,omitempty"`
+	PublicCertificate   string `form:"public_certificate,omitempty"`
+	PrivateKey          string `form:"private_key,omitempty"`
+	ExcludeGatewayInput string `form:"exclude_gateway_list,omitempty"`
 }
 
 type RemoteSyslogResp struct {
@@ -36,13 +30,14 @@ type RemoteSyslogResp struct {
 
 func (c *Client) EnableRemoteSyslog(r *RemoteSyslog) error {
 	params := map[string]string{
-		"action":   "enable_remote_syslog_logging",
-		"CID":      c.CID,
-		"index":    strconv.Itoa(r.Index),
-		"server":   r.Server,
-		"port":     strconv.Itoa(r.Port),
-		"protocol": r.Protocol,
-		"template": r.Template,
+		"action":               "enable_remote_syslog_logging",
+		"CID":                  c.CID,
+		"index":                strconv.Itoa(r.Index),
+		"server":               r.Server,
+		"port":                 strconv.Itoa(r.Port),
+		"protocol":             r.Protocol,
+		"template":             r.Template,
+		"exclude_gateway_list": r.ExcludeGatewayInput,
 	}
 
 	files := []File{
@@ -60,31 +55,7 @@ func (c *Client) EnableRemoteSyslog(r *RemoteSyslog) error {
 		},
 	}
 
-	resp, err := c.PostFile(c.baseURL, params, files)
-	if err != nil {
-		return errors.New("HTTP Post enable_remote_syslog_logging failed: " + err.Error())
-	}
-
-	type Resp struct {
-		Return  bool   `json:"return,omitempty"`
-		Results string `json:"results,omitempty"`
-		Reason  string `json:"reason,omitempty"`
-	}
-
-	var data Resp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
-	if err != nil {
-		return errors.New("Reading response body enable_remote_syslog_logging failed: " + err.Error())
-	}
-
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_remote_syslog_logging failed: " + err.Error() + "\n Body: " + b.String())
-	}
-	if !data.Return {
-		return errors.New("Rest API enable_remote_syslog_logging Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostFileAPI(params, files, BasicCheck)
 }
 
 func (c *Client) GetRemoteSyslogStatus(idx int) (*RemoteSyslogResp, error) {
@@ -95,9 +66,9 @@ func (c *Client) GetRemoteSyslogStatus(idx int) (*RemoteSyslogResp, error) {
 	}
 
 	type Resp struct {
-		Return  bool             `json:"return,omitempty"`
-		Results RemoteSyslogResp `json:"results,omitempty"`
-		Reason  string           `json:"reason,omitempty"`
+		Return  bool             `json:"return"`
+		Results RemoteSyslogResp `json:"results"`
+		Reason  string           `json:"reason"`
 	}
 
 	var data Resp

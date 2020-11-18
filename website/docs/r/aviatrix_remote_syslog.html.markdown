@@ -46,11 +46,11 @@ The following arguments are supported:
 * `protocol` (Optional) TCP or UDP. TCP by default.
 
 ### Optional
-* `ca_certificate` (Optional) Certificate Authority (CA) certificate. `ca_certificate`, `public_certificate` and `private_key` must be used together.
-* `public_certificate` (Optional) Public certificate of the controller signed by the same CA.
-* `private_key` (Optional) Private key of the controller that pairs with the public certificate.
+* `ca_certificate_file_path` (Optional) The file path of the Certificate Authority (CA) certificate. `ca_certificate`, `public_certificate` and `private_key` must be used together.
+* `public_certificate_file_path` (Optional) The file path of the public certificate of the controller signed by the same CA.
+* `private_key_file_path` (Optional) The file path of the private key of the controller that pairs with the public certificate.
 * `template` (Optional) Optional custom template.
-* `exclude_gateway_list` (Optional) List of gateways to be excluded from logging. e.g.: "gateway01", "gateway01, gateway01-hagw". Use a comma delimited string.
+* `exclude_gateway` (Optional) List of gateways to be excluded from logging. e.g.: ["gateway01", "gateway02", "gateway01-hagw"].
 
 ## Import
 

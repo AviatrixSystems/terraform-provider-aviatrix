@@ -3,8 +3,10 @@ package aviatrix
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -20,10 +22,11 @@ func resourceAviatrixRemoteSyslog() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"index": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     0,
-				Description: "Profile index: a total of 10 profiles from index 0 to 9 are supported for remote syslog, while index 9 is reserved for CoPilot.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      0,
+				ValidateFunc: validation.IntBetween(0, 9),
+				Description:  "Profile index: a total of 10 profiles from index 0 to 9 are supported for remote syslog, while index 9 is reserved for CoPilot.",
 			},
 			"server": {
 				Type:        schema.TypeString,
@@ -35,42 +38,36 @@ func resourceAviatrixRemoteSyslog() *schema.Resource {
 				Required:    true,
 				Description: "Port: Listening port of the remote syslog server (6514 by default)",
 			},
-			"ca_certificate": {
+			"ca_certificate_file_path": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "CA Certificate: Certificate Authority (CA) certificate",
 			},
-			"public_certificate": {
+			"public_certificate_file_path": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Server Public Certificate: Public certificate of the controller signed by the same CA",
 			},
-			"private_key": {
+			"private_key_file_path": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Server Private Key: Private key of the controller that pairs with the public certificate",
 			},
 			"protocol": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "TCP",
-				Description: "Protocol: TCP or UDP (TCP by default)",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "TCP",
+				ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP"}, false),
+				Description:  "Protocol: TCP or UDP (TCP by default)",
 			},
 			"template": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Optional Custom Template: Useful when forwarding to 3rd party servers like Datadog or Sumo",
 			},
-			"exclude_gateway_list": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Description: "List of gateways to be excluded from logging. e.g.: \"gateway01\", \"gateway01, gateway01-hagw\"" +
-					"Use a comma delimited string." +
-					"List all excluded gateways.",
-			},
-			"excluded_gateway": {
-				Type:        schema.TypeList,
-				Computed:    true,
+			"exclude_gateway": {
+				Type:        schema.TypeSet,
+				Optional:    true,
 				Description: "List of excluded gateways.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -94,23 +91,29 @@ func resourceAviatrixRemoteSyslogCreate(d *schema.ResourceData, meta interface{}
 	client := meta.(*goaviatrix.Client)
 
 	remoteSyslog := &goaviatrix.RemoteSyslog{
-		Server:              d.Get("server").(string),
-		Port:                d.Get("port").(int),
-		Protocol:            d.Get("protocol").(string),
-		Index:               d.Get("index").(int),
-		Template:            d.Get("template").(string),
-		CaCertificate:       d.Get("ca_certificate").(string),
-		PublicCertificate:   d.Get("public_certificate").(string),
-		PrivateKey:          d.Get("private_key").(string),
-		ExcludeGatewayInput: d.Get("exclude_gateway_list").(string),
+		Server:            d.Get("server").(string),
+		Port:              d.Get("port").(int),
+		Protocol:          d.Get("protocol").(string),
+		Index:             d.Get("index").(int),
+		Template:          d.Get("template").(string),
+		CaCertificate:     d.Get("ca_certificate_file_path").(string),
+		PublicCertificate: d.Get("public_certificate_file_path").(string),
+		PrivateKey:        d.Get("private_key_file_path").(string),
 	}
-	if remoteSyslog.Index < 0 || remoteSyslog.Index > 9 {
-		return fmt.Errorf("please use an integer from 0 to 9 as the index")
-	}
-	if !((len(remoteSyslog.CaCertificate) > 0 && len(remoteSyslog.PublicCertificate) > 0 && len(remoteSyslog.PrivateKey) > 0) ||
-		(len(remoteSyslog.CaCertificate) == 0 && len(remoteSyslog.PublicCertificate) == 0 && len(remoteSyslog.PrivateKey) == 0)) {
+
+	if !((remoteSyslog.CaCertificate != "" && remoteSyslog.PublicCertificate != "" && remoteSyslog.PrivateKey != "") ||
+		(remoteSyslog.CaCertificate == "" && remoteSyslog.PublicCertificate == "" && remoteSyslog.PrivateKey == "")) {
 		return fmt.Errorf("one or more certificates missing")
 	}
+
+	var excludeGateways []string
+	for _, v := range d.Get("exclude_gateway").(*schema.Set).List() {
+		excludeGateways = append(excludeGateways, v.(string))
+	}
+	if len(excludeGateways) != 0 {
+		remoteSyslog.ExcludeGatewayInput = strings.Join(excludeGateways, ",")
+	}
+
 	if err := client.EnableRemoteSyslog(remoteSyslog); err != nil {
 		return fmt.Errorf("could not enable remote syslog: %v", err)
 	}
@@ -134,7 +137,7 @@ func resourceAviatrixRemoteSyslogRead(d *schema.ResourceData, meta interface{}) 
 	for _, v := range remoteSyslogStatus.ExcludedGateway {
 		excludedGateways = append(excludedGateways, v)
 	}
-	if err := d.Set("excluded_gateway", excludedGateways); err != nil {
+	if err := d.Set("exclude_gateway", excludedGateways); err != nil {
 		return fmt.Errorf("could not set excluded_gateway: %v", err)
 	}
 
