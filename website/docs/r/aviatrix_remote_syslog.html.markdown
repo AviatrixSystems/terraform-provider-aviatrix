@@ -50,7 +50,7 @@ The following arguments are supported:
 * `public_certificate_file_path` (Optional) The file path of the public certificate of the controller signed by the same CA.
 * `private_key_file_path` (Optional) The file path of the private key of the controller that pairs with the public certificate.
 * `template` (Optional) Optional custom template.
-* `exclude_gateway` (Optional) List of gateways to be excluded from logging. e.g.: ["gateway01", "gateway02", "gateway01-hagw"].
+* `excluded_gateways` (Optional) List of gateways to be excluded from logging. e.g.: ["gateway01", "gateway02", "gateway01-hagw"].
 
 ## Import
 
