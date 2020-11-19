@@ -2,7 +2,6 @@ package aviatrix
 
 import (
 	"fmt"
-	"sort"
 	"strconv"
 	"testing"
 
@@ -31,7 +30,7 @@ func TestAccAviatrixRemoteSyslog_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server", "1.2.3.4"),
 					resource.TestCheckResourceAttr(resourceName, "port", "10"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "TCP"),
-					testAccCheckExcludedGatewaysMatch(rIndex, []string{"a", "b"}),
+					testAccCheckRemoteSyslogExcludedGatewaysMatch(rIndex, []string{"a", "b"}),
 				),
 			},
 			{
@@ -73,32 +72,16 @@ func testAccCheckRemoteSyslogExists(resourceName string, index int) resource.Tes
 	}
 }
 
-func testAccCheckExcludedGatewaysMatch(index int, input []string) resource.TestCheckFunc {
+func testAccCheckRemoteSyslogExcludedGatewaysMatch(index int, input []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
 		resp, _ := client.GetRemoteSyslogStatus(index)
-		if !sliceMatch(resp.ExcludedGateways, input) {
+		if !goaviatrix.Equivalent(resp.ExcludedGateways, input) {
 			return fmt.Errorf("excluded gateways don't match with the input")
 		}
 		return nil
 	}
-}
-
-func sliceMatch(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-
-	sort.Strings(a)
-	sort.Strings(b)
-
-	for i, v := range a {
-		if v != b[i] {
-			return false
-		}
-	}
-	return true
 }
 
 func testAccCheckRemoteSyslogDestroy(s *terraform.State) error {
