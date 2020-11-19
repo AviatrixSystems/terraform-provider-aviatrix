@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"log"
 	"strconv"
 )
 
@@ -18,14 +19,14 @@ type RemoteSyslog struct {
 }
 
 type RemoteSyslogResp struct {
-	Server          string   `json:"server"`
-	Port            string   `json:"port"`
-	Protocol        string   `json:"protocol"`
-	Index           string   `json:"index"`
-	Template        string   `json:"template"`
-	ExcludedGateway []string `json:"excluded_gateway"`
-	Status          string   `json:"status"`
-	Notls           bool     `json:"notls"`
+	Server           string   `json:"server"`
+	Port             string   `json:"port"`
+	Protocol         string   `json:"protocol"`
+	Index            string   `json:"index"`
+	Template         string   `json:"template"`
+	ExcludedGateways []string `json:"excluded_gateway"`
+	Status           string   `json:"status"`
+	Notls            bool     `json:"notls"`
 }
 
 func (c *Client) EnableRemoteSyslog(r *RemoteSyslog) error {
@@ -87,6 +88,8 @@ func (c *Client) DisableRemoteSyslog(idx int) error {
 		"CID":    c.CID,
 		"index":  strconv.Itoa(idx),
 	}
+
+	log.Printf("[INFO] Deleting remote syslog index %d", idx)
 
 	return c.PostAPI(params["action"], params, BasicCheck)
 }
