@@ -606,7 +606,10 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 
 		// Custom Mapped is a sub-type of Mapped
 		if s2c.ConnType == "custom_mapped" {
+			d.Set("custom_mapped", true)
 			s2c.ConnType = "mapped"
+		} else {
+			d.Set("custom_mapped", false)
 		}
 		d.Set("connection_type", s2c.ConnType)
 		if s2c.ConnType == "mapped" {
