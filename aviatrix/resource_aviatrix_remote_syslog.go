@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -26,6 +27,7 @@ func resourceAviatrixRemoteSyslog() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      0,
+				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(0, 9),
 				Description:  "Profile index: a total of 10 profiles from index 0 to 9 are supported for remote syslog, while index 9 is reserved for CoPilot.",
 			},
@@ -131,6 +133,12 @@ func resourceAviatrixRemoteSyslogRead(d *schema.ResourceData, meta interface{}) 
 	if server == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import. Import Id is %s", id)
+
+		match, _ := regexp.Match("\\bremote_syslog_[0-9]\\b", []byte(id))
+		if !match {
+			return fmt.Errorf("invalid ID format, expected ID in format \"remote_syslog_{index}\", instead got %s", id)
+		}
+
 		index, _ := strconv.Atoi(id[len(id)-1:])
 		d.Set("index", index)
 		d.SetId(id)
@@ -150,14 +158,7 @@ func resourceAviatrixRemoteSyslogRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("template", remoteSyslogStatus.Template)
 	d.Set("notls", remoteSyslogStatus.Notls)
 	d.Set("status", remoteSyslogStatus.Status)
-
-	var excludedGateways []interface{}
-	for _, v := range remoteSyslogStatus.ExcludedGateways {
-		excludedGateways = append(excludedGateways, v)
-	}
-	if err := d.Set("excluded_gateways", excludedGateways); err != nil {
-		return fmt.Errorf("could not set excluded_gateways: %v", err)
-	}
+	d.Set("excluded_gateways", remoteSyslogStatus.ExcludedGateways)
 
 	d.SetId("remote_syslog_" + remoteSyslogStatus.Index)
 	return nil
