@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
@@ -65,7 +66,7 @@ func resourceAviatrixRemoteSyslog() *schema.Resource {
 				Optional:    true,
 				Description: "Optional Custom Template: Useful when forwarding to 3rd party servers like Datadog or Sumo",
 			},
-			"exclude_gateway": {
+			"excluded_gateways": {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "List of excluded gateways.",
@@ -107,7 +108,7 @@ func resourceAviatrixRemoteSyslogCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	var excludeGateways []string
-	for _, v := range d.Get("exclude_gateway").(*schema.Set).List() {
+	for _, v := range d.Get("excluded_gateways").(*schema.Set).List() {
 		excludeGateways = append(excludeGateways, v.(string))
 	}
 	if len(excludeGateways) != 0 {
@@ -125,20 +126,37 @@ func resourceAviatrixRemoteSyslogCreate(d *schema.ResourceData, meta interface{}
 func resourceAviatrixRemoteSyslogRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
+	server := d.Get("server").(string)
+
+	if server == "" {
+		id := d.Id()
+		log.Printf("[DEBUG] Looks like an import. Import Id is %s", id)
+		index, _ := strconv.Atoi(id[len(id)-1:])
+		d.Set("index", index)
+		d.SetId(id)
+	}
+
 	remoteSyslogStatus, err := client.GetRemoteSyslogStatus(d.Get("index").(int))
 	if err != nil {
 		return fmt.Errorf("could not get remote syslog status: %v", err)
 	}
 
+	idx, _ := strconv.Atoi(remoteSyslogStatus.Index)
+	d.Set("index", idx)
+	d.Set("server", remoteSyslogStatus.Server)
+	port, _ := strconv.Atoi(remoteSyslogStatus.Port)
+	d.Set("port", port)
+	d.Set("protocol", remoteSyslogStatus.Protocol)
+	d.Set("template", remoteSyslogStatus.Template)
 	d.Set("notls", remoteSyslogStatus.Notls)
 	d.Set("status", remoteSyslogStatus.Status)
 
 	var excludedGateways []interface{}
-	for _, v := range remoteSyslogStatus.ExcludedGateway {
+	for _, v := range remoteSyslogStatus.ExcludedGateways {
 		excludedGateways = append(excludedGateways, v)
 	}
-	if err := d.Set("exclude_gateway", excludedGateways); err != nil {
-		return fmt.Errorf("could not set excluded_gateway: %v", err)
+	if err := d.Set("excluded_gateways", excludedGateways); err != nil {
+		return fmt.Errorf("could not set excluded_gateways: %v", err)
 	}
 
 	d.SetId("remote_syslog_" + remoteSyslogStatus.Index)
