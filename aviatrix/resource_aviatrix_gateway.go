@@ -1015,7 +1015,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 						d.Set("vpn_protocol", "TCP")
 					}
 				} else {
-					d.Set("vpn_protocol", "")
+					d.Set("vpn_protocol", "UDP")
 				}
 			}
 		}
