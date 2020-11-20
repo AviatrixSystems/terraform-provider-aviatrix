@@ -137,10 +137,10 @@ func marshalDeviceTransitGatewayAttachmentInput(d *schema.ResourceData) *goaviat
 		TransitGatewayBgpAsn:    strconv.Itoa(d.Get("transit_gateway_bgp_asn").(int)),
 		DeviceBgpAsn:            strconv.Itoa(d.Get("device_bgp_asn").(int)),
 		Phase1Authentication:    d.Get("phase1_authentication").(string),
-		Phase1DHGroups:          strconv.Itoa(d.Get("phase1_dh_groups").(int)),
+		Phase1DHGroups:          d.Get("phase1_dh_groups").(string),
 		Phase1Encryption:        d.Get("phase1_encryption").(string),
 		Phase2Authentication:    d.Get("phase2_authentication").(string),
-		Phase2DHGroups:          strconv.Itoa(d.Get("phase2_dh_groups").(int)),
+		Phase2DHGroups:          d.Get("phase2_dh_groups").(string),
 		Phase2Encryption:        d.Get("phase2_encryption").(string),
 		EnableGlobalAccelerator: strconv.FormatBool(d.Get("enable_global_accelerator").(bool)),
 		PreSharedKey:            d.Get("pre_shared_key").(string),
@@ -205,22 +205,10 @@ func resourceAviatrixDeviceTransitGatewayAttachmentRead(d *schema.ResourceData, 
 	d.Set("device_bgp_asn", deviceBgpAsn)
 
 	d.Set("phase1_authentication", attachment.Phase1Authentication)
-
-	phase1DhGroups, err := strconv.Atoi(attachment.Phase1DHGroups)
-	if err != nil {
-		return fmt.Errorf("could not convert phase1DhGroups to int: %v", err)
-	}
-	d.Set("phase1_dh_groups", phase1DhGroups)
-
+	d.Set("phase1_dh_groups", attachment.Phase1DHGroups)
 	d.Set("phase1_encryption", attachment.Phase1Encryption)
 	d.Set("phase2_authentication", attachment.Phase2Authentication)
-
-	phase2DhGroups, err := strconv.Atoi(attachment.Phase2DHGroups)
-	if err != nil {
-		return fmt.Errorf("could not convert phase2DhGroups to int: %v", err)
-	}
-	d.Set("phase2_dh_groups", phase2DhGroups)
-
+	d.Set("phase2_dh_groups", attachment.Phase2DHGroups)
 	d.Set("phase2_encryption", attachment.Phase2Encryption)
 
 	enableGlobalAccelerator, err := strconv.ParseBool(attachment.EnableGlobalAccelerator)
