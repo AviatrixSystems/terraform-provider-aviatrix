@@ -1,3 +1,41 @@
+## 2.17.1 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.2.1890**
+- Supported Terraform version: **v0.12.x**
+
+### Features:
+1. Implemented support for ``enable_monitor_gateway_subnets`` and ``monitor_exclude_list`` in **aviatrix_gateway**
+2. Implemented support for ``idle_timeout`` and ``renegotiation_interval`` in **aviatrix_gateway**
+3. Implemented support for ``enable_active_standby`` in **aviatrix_transit_gateway**
+4. Implemented support for ``switch_to_ha_standby_gateway`` in **resource_aviatrix_transit_external_device_conn**
+5. Implemented new resource to decouple ``firewall_instance_association`` out of ``aviatrix_firenet``:
+  - **aviatrix_firewall_instance_association**
+6. Implemented support for ``enable_peering_over_private_network`` in **aviatrix_transit_gateway_peering**
+7. Implemented support for FQDN gateway firenet in Azure
+  - Implemented support for ``fqdn_lan_cidr`` and ``fqdn_lan_interface`` in **aviatrix_gateway**
+  - Implemented support for ``lan_interface_cidr`` in **aviatrix_transit_gateway**
+8. Implemented support for ``local_login`` and in **aviatrix_rbac_group**
+9. Implemented Support for IDP Metadata URLs for SAML endpoints
+10. Implemented support for bootstrap in Azure in **aviatrix_firewall_instance**
+11. Implemented support for ``sic_key`` and ``user_data`` in **aviatrix_firewall_instance** 
+12. Implemented support for DH Group 19 in **aviatrix_site2cloud**
+13. Implemented support for Custom Mapped in **aviatrix_site2cloud**
+
+### Enhancements:
+1. Changed ``management_subnet`` to optional to support Check Point and Fortinet instances
+2. Added migration support for following resources due to functionality decoupling:
+  - **aviatrix_aws_tgw**
+  - **aviatrix_firenet**
+  - **aviatrix_fqdn**
+  - **aviatrix_spoke_gateway**
+  - **aviatrix_vpn_profile**
+  - **aviatrix_vpn_user**
+
+### Bug Fixes:
+1. Fixed issue VPN config edit issue when ELB is enabled in **aviatrix_gateway**
+2. Fixed issue where there was a delta in state after creating a GCP VPN gateway with elb disabled and ``vpn_protocol`` set as "UDP"
+
+
 ## 2.17.0 (October 15, 2020)
 ### Notes:
 - Supported Controller version: **UserConnect-6.2** (tested on **UserConnect-6.2.1700**)
