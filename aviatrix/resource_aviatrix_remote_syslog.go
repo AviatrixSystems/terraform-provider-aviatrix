@@ -12,6 +12,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
+var remoteSyslogMatcher = regexp.MustCompile(`\bremote_syslog_[0-9]\b`)
+
 func resourceAviatrixRemoteSyslog() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixRemoteSyslogCreate,
@@ -134,7 +136,7 @@ func resourceAviatrixRemoteSyslogRead(d *schema.ResourceData, meta interface{}) 
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import. Import Id is %s", id)
 
-		match, _ := regexp.Match("\\bremote_syslog_[0-9]\\b", []byte(id))
+		match := remoteSyslogMatcher.Match([]byte(id))
 		if !match {
 			return fmt.Errorf("invalid ID format, expected ID in format \"remote_syslog_{index}\", instead got %s", id)
 		}
