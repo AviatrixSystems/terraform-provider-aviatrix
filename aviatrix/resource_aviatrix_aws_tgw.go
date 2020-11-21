@@ -21,8 +21,15 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 		MigrateState:  resourceAviatrixAWSTgwMigrateState,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceAviatrixAWSTgwResourceV1().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAviatrixAWSTgwStateUpgradeV1,
+				Version: 1,
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"tgw_name": {

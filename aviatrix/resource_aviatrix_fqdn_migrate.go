@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
@@ -41,4 +42,22 @@ func migrateFQDNStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceSta
 
 	log.Printf("[DEBUG] Attributes after migration: %#v", is.Attributes)
 	return is, nil
+}
+
+func resourceAviatrixFQDNResourceV1() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"manage_domain_names": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+		},
+	}
+}
+
+func resourceAviatrixFQDNStateUpgradeV1(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	if _, ok := rawState["manage_domain_names"]; !ok {
+		rawState["manage_domain_names"] = true
+	}
+	return rawState, nil
 }

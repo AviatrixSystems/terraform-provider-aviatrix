@@ -50,17 +50,26 @@ type TransitVpc struct {
 }
 
 type TransitGatewayAdvancedConfig struct {
-	BgpPollingTime string
-	PrependASPath  []string
-	LocalASNumber  string
-	BgpEcmpEnabled bool
+	BgpPollingTime           string
+	PrependASPath            []string
+	LocalASNumber            string
+	BgpEcmpEnabled           bool
+	ActiveStandbyEnabled     bool
+	ActiveStandbyConnections []StandbyConnection
+}
+
+type StandbyConnection struct {
+	ConnectionName    string
+	ActiveGatewayType string
 }
 
 type TransitGatewayAdvancedConfigRespResult struct {
-	BgpPollingTime int    `json:"bgp_polling_time"`
-	PrependASPath  string `json:"bgp_prepend_as_path"`
-	LocalASNumber  string `json:"local_asn_num"`
-	BgpEcmpEnabled string `json:"bgp_ecmp"`
+	BgpPollingTime      int               `json:"bgp_polling_time"`
+	PrependASPath       string            `json:"bgp_prepend_as_path"`
+	LocalASNumber       string            `json:"local_asn_num"`
+	BgpEcmpEnabled      string            `json:"bgp_ecmp"`
+	ActiveStandby       string            `json:"active-standby"`
+	ActiveStandbyStatus map[string]string `json:"active_standby_status"`
 }
 
 type TransitGatewayAdvancedConfigResp struct {
@@ -605,10 +614,25 @@ func (c *Client) GetTransitGatewayAdvancedConfig(transitGateway *TransitVpc) (*T
 		}
 	}
 
+	var standbyConnections []StandbyConnection
+	for k, v := range data.Results.ActiveStandbyStatus {
+		gwType := "Primary"
+		if strings.HasSuffix(v, "-hagw") {
+			gwType = "HA"
+		}
+
+		standbyConnections = append(standbyConnections, StandbyConnection{
+			ConnectionName:    k,
+			ActiveGatewayType: gwType,
+		})
+	}
+
 	return &TransitGatewayAdvancedConfig{
-		BgpPollingTime: strconv.Itoa(data.Results.BgpPollingTime),
-		PrependASPath:  filteredStrings,
-		LocalASNumber:  data.Results.LocalASNumber,
-		BgpEcmpEnabled: data.Results.BgpEcmpEnabled == "yes",
+		BgpPollingTime:           strconv.Itoa(data.Results.BgpPollingTime),
+		PrependASPath:            filteredStrings,
+		LocalASNumber:            data.Results.LocalASNumber,
+		BgpEcmpEnabled:           data.Results.BgpEcmpEnabled == "yes",
+		ActiveStandbyEnabled:     data.Results.ActiveStandby == "yes",
+		ActiveStandbyConnections: standbyConnections,
 	}, nil
 }

@@ -168,6 +168,7 @@ The following arguments are supported:
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS and AWSGOV. Valid values: true, false. Default value: false.
 * `enable_learned_cidrs_approval` - (Optional) Switch to enable/disable [encrypted transit approval](https://docs.aviatrix.com/HowTos/transit_approval.html) for transit Gateway. Valid values: true, false. Default value: false.
 * `zone` - (Optional) Availability Zone. Only available for cloud_type = 8 (AZURE). Must be in the form 'az-n', for example, 'az-2'. Available in provider version R2.17+.
+* `enable_active_standby` - (Optional) Enables [Active-Standby Mode](https://docs.aviatrix.com/HowTos/transit_advanced.html#active-standby). Available only with Active Mesh Mode enabled and HA enabled. Valid values: true, false. Default value: false. Available as of provider version R2.17.1+.
 
 
 ## Attribute Reference
@@ -182,6 +183,7 @@ In addition to all arguments above, the following attributes are exported:
 * `ha_cloud_instance_id` - Cloud instance ID of the HA transit gateway.
 * `ha_gw_name` - Aviatrix transit gateway unique name of HA transit gateway.
 * `ha_private_ip` - Private IP address of the HA transit gateway created.
+* `lan_interface_cidr` - Lan interface cidr of the transit gateway created (will be used when enabling FQDN Firenet in Azure). Available in provider version R2.17.1+.
 
 The following arguments are deprecated:
 

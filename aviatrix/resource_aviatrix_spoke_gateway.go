@@ -20,6 +20,15 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceAviatrixSpokeGatewayResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAviatrixSpokeGatewayStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"cloud_type": {
 				Type:         schema.TypeInt,

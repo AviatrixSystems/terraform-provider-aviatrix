@@ -3,8 +3,11 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"net"
 	"strconv"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -14,6 +17,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixTransitExternalDeviceConnCreate,
 		Read:   resourceAviatrixTransitExternalDeviceConnRead,
+		Update: resourceAviatrixTransitExternalDeviceConnUpdate,
 		Delete: resourceAviatrixTransitExternalDeviceConnDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -43,11 +47,6 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "Remote Gateway IP.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					oldGws := strings.Split(old, ",")
-					newGws := strings.Split(new, ",")
-					return goaviatrix.Equivalent(oldGws, newGws)
-				},
 			},
 			"connection_type": {
 				Type:        schema.TypeString,
@@ -123,6 +122,9 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Description: "Phase one Authentication. Valid values: 'SHA-1', 'SHA-256', 'SHA-384' and 'SHA-512'.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"SHA-1", "SHA-256", "SHA-384", "SHA-512",
+				}, false),
 			},
 			"phase_2_authentication": {
 				Type:     schema.TypeString,
@@ -130,18 +132,27 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				ForceNew: true,
 				Description: "Phase two Authentication. Valid values: 'NO-AUTH', 'HMAC-SHA-1', 'HMAC-SHA-256', " +
 					"'HMAC-SHA-384' and 'HMAC-SHA-512'.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"NO-AUTH", "HMAC-SHA-1", "HMAC-SHA-256", "HMAC-SHA-384", "HMAC-SHA-512",
+				}, false),
 			},
 			"phase_1_dh_groups": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
 				Description: "Phase one DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"1", "2", "5", "14", "15", "16", "17", "18",
+				}, false),
 			},
 			"phase_2_dh_groups": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
 				Description: "Phase two DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"1", "2", "5", "14", "15", "16", "17", "18",
+				}, false),
 			},
 			"phase_1_encryption": {
 				Type:     schema.TypeString,
@@ -149,6 +160,9 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				ForceNew: true,
 				Description: "Phase one Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC' and " +
 					"'AES-256-CBC'.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"3DES", "AES-128-CBC", "AES-192-CBC", "AES-256-CBC",
+				}, false),
 			},
 			"phase_2_encryption": {
 				Type:     schema.TypeString,
@@ -156,6 +170,9 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				ForceNew: true,
 				Description: "Phase two Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC', " +
 					"'AES-256-CBC', 'AES-128-GCM-64', 'AES-128-GCM-96' and 'AES-128-GCM-128'.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"3DES", "AES-128-CBC", "AES-192-CBC", "AES-256-CBC", "AES-128-GCM-64", "AES-128-GCM-96", "AES-128-GCM-128",
+				}, false),
 			},
 			"ha_enabled": {
 				Type:        schema.TypeBool,
@@ -165,11 +182,12 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Description: "Set as true if there are two external devices.",
 			},
 			"backup_remote_gateway_ip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				ForceNew:    true,
-				Description: "Backup remote gateway IP.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ForceNew:     true,
+				Description:  "Backup remote gateway IP.",
+				ValidateFunc: validation.IsIPv4Address,
 			},
 			"backup_bgp_remote_as_num": {
 				Type:         schema.TypeString,
@@ -214,6 +232,12 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Default:     false,
 				ForceNew:    true,
 				Description: "Switch to allow this connection to communicate with a Security Domain via Connection Policy.",
+			},
+			"switch_to_ha_standby_gateway": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Only valid for Transit Gateway's with Active-Standby Mode enabled. Valid values: true, false. Default: false.",
 			},
 		},
 	}
@@ -294,6 +318,17 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		if externalDeviceConn.BackupRemoteGatewayIP == "" {
 			return fmt.Errorf("ha is enabled, please specify 'backup_remote_gateway_ip'")
 		}
+		remoteIP := strings.Split(externalDeviceConn.RemoteGatewayIP, ",")
+		if len(remoteIP) > 1 {
+			return fmt.Errorf("expected 'remote_gateway_ip' to contain only one valid IPv4 address, got: %s", externalDeviceConn.RemoteGatewayIP)
+		}
+		ip := net.ParseIP(externalDeviceConn.RemoteGatewayIP)
+		if four := ip.To4(); four == nil {
+			return fmt.Errorf("expected 'remote_gateway_ip' to contain a valid IPv4 address, got: %s", externalDeviceConn.RemoteGatewayIP)
+		}
+		if externalDeviceConn.BackupRemoteGatewayIP == externalDeviceConn.RemoteGatewayIP {
+			return fmt.Errorf("expected 'backup_remote_gateway_ip' to contain a different valid IPv4 address than 'remote_gateway_ip'")
+		}
 		if externalDeviceConn.BackupBgpRemoteAsNum == 0 && externalDeviceConn.ConnectionType == "bgp" {
 			return fmt.Errorf("ha is enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_num'")
 		}
@@ -301,8 +336,10 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		if backupDirectConnect {
 			return fmt.Errorf("ha is not enabled, please set 'back_direct_connect' to false")
 		}
-		if externalDeviceConn.BackupPreSharedKey != "" || externalDeviceConn.BackupLocalTunnelCidr != "" || externalDeviceConn.BackupRemoteTunnelCidr != "" {
-			return fmt.Errorf("ha is not enabled, please set 'backup_pre_shared_key', 'backup_local_tunnel_cidr' and 'backup_remote_tunnel_cidr' to empty")
+		if externalDeviceConn.BackupPreSharedKey != "" || externalDeviceConn.BackupLocalTunnelCidr != "" ||
+			externalDeviceConn.BackupRemoteTunnelCidr != "" || externalDeviceConn.BackupRemoteGatewayIP != "" {
+			return fmt.Errorf("ha is not enabled, please set 'backup_pre_shared_key', 'backup_local_tunnel_cidr', " +
+				"'backup_remote_gateway_ip' and 'backup_remote_tunnel_cidr' to empty")
 		}
 		if externalDeviceConn.BackupBgpRemoteAsNum != 0 && externalDeviceConn.ConnectionType == "bgp" {
 			return fmt.Errorf("ha is not enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_num' to empty")
@@ -315,6 +352,22 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	}
 
 	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID)
+
+	transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: externalDeviceConn.GwName})
+	if err != nil {
+		return fmt.Errorf("could not get advanced config for transit gateway: %v", err)
+	}
+	if d.Get("switch_to_ha_standby_gateway").(bool) && !transitAdvancedConfig.ActiveStandbyEnabled {
+		return fmt.Errorf("can not set 'switch_to_ha_standby_gateway' unless Active-Standby Mode is enabled on " +
+			"the transit gateway. Please enable Active-Standby Mode on the transit gateway and try again")
+	}
+
+	if d.Get("switch_to_ha_standby_gateway").(bool) {
+		if err := client.SwitchActiveTransitGateway(externalDeviceConn.GwName, externalDeviceConn.ConnectionName); err != nil {
+			return fmt.Errorf("could not switch active transit gateway to HA: %v", err)
+		}
+	}
+
 	return resourceAviatrixTransitExternalDeviceConnRead(d, meta)
 }
 
@@ -407,9 +460,43 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 			d.Set("enable_edge_segmentation", false)
 		}
 
+		transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: externalDeviceConn.GwName})
+		if err != nil {
+			return fmt.Errorf("could not get advanced config for transit gateway: %v", err)
+		}
+
+		activeGatewayType := "Primary"
+		for _, v := range transitAdvancedConfig.ActiveStandbyConnections {
+			if v.ConnectionName != externalDeviceConn.ConnectionName {
+				continue
+			}
+			activeGatewayType = v.ActiveGatewayType
+		}
+		d.Set("switch_to_ha_standby_gateway", activeGatewayType == "HA")
 	}
 
 	d.SetId(conn.ConnectionName + "~" + conn.VpcID)
+	return nil
+}
+
+func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*goaviatrix.Client)
+
+	transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: d.Get("gw_name").(string)})
+	if err != nil {
+		return fmt.Errorf("could not get advanced config for transit gateway: %v", err)
+	}
+	if d.Get("switch_to_ha_standby_gateway").(bool) && !transitAdvancedConfig.ActiveStandbyEnabled {
+		return fmt.Errorf("can not set 'switch_to_ha_standby_gateway' unless Active-Standby Mode is enabled on " +
+			"the transit gateway. Please enable Active-Standby Mode on the transit gateway and try again")
+	}
+
+	if d.HasChange("switch_to_ha_standby_gateway") {
+		if err := client.SwitchActiveTransitGateway(d.Get("gw_name").(string), d.Get("connection_name").(string)); err != nil {
+			return fmt.Errorf("could not switch active transit gateway: %v", err)
+		}
+	}
+
 	return nil
 }
 

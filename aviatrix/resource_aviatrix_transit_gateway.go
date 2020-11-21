@@ -299,6 +299,17 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable segmentation to allow association of transit gateway to security domains.",
 			},
+			"enable_active_standby": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enables Active-Standby Mode, available only with Active Mesh Mode and HA enabled.",
+			},
+			"lan_interface_cidr": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Transit gateway lan interface cidr.",
+			},
 		},
 	}
 }
@@ -772,6 +783,13 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	enableActiveStandby := d.Get("enable_active_standby").(bool)
+	if enableActiveStandby {
+		if err := client.EnableActiveStandby(gateway); err != nil {
+			return fmt.Errorf("could not enable Active Standby Mode: %v", err)
+		}
+	}
+
 	return resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -988,6 +1006,12 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		} else {
 			d.Set("bgp_manual_spoke_advertise_cidrs", d.Get("bgp_manual_spoke_advertise_cidrs").(string))
 		}
+
+		lanCidr, err := client.GetTransitGatewayLanCidr(gw.GwName)
+		if err != nil && err != goaviatrix.ErrNotFound {
+			log.Printf("[WARN] Error getting lan cidr for transit gateway %s due to %s", gw.GwName, err)
+		}
+		d.Set("lan_interface_cidr", lanCidr)
 	}
 
 	if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV {
@@ -1039,6 +1063,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 	}
 	d.Set("bgp_ecmp", advancedConfig.BgpEcmpEnabled)
+	d.Set("enable_active_standby", advancedConfig.ActiveStandbyEnabled)
 
 	isSegmentationEnabled, err := client.IsSegmentationEnabled(transitGateway)
 	if err != nil {
@@ -1838,6 +1863,21 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		} else {
 			if err := client.DisableSegmentation(gateway); err != nil {
 				return fmt.Errorf("could not disable segmentation: %v", err)
+			}
+		}
+	}
+
+	if d.HasChange("enable_active_standby") {
+		gateway := &goaviatrix.TransitVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		if d.Get("enable_active_standby").(bool) {
+			if err := client.EnableActiveStandby(gateway); err != nil {
+				return fmt.Errorf("could not enable active standby mode: %v", err)
+			}
+		} else {
+			if err := client.DisableActiveStandby(gateway); err != nil {
+				return fmt.Errorf("could not disable active standby mode: %v", err)
 			}
 		}
 	}

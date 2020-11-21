@@ -18,6 +18,15 @@ func resourceAviatrixVPNUser() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceAviatrixVPNUserResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAviatrixVPNUserStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {
 				Type:        schema.TypeString,

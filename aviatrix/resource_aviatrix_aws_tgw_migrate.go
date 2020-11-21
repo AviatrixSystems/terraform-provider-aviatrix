@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
@@ -29,4 +31,22 @@ func migrateAWSTgwStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceS
 
 	log.Printf("[DEBUG] Attributes after migration: %#v", is.Attributes)
 	return is, nil
+}
+
+func resourceAviatrixAWSTgwResourceV1() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"manage_transit_gateway_attachment": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+		},
+	}
+}
+
+func resourceAviatrixAWSTgwStateUpgradeV1(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	if _, ok := rawState["manage_transit_gateway_attachment"]; !ok {
+		rawState["manage_transit_gateway_attachment"] = true
+	}
+	return rawState, nil
 }

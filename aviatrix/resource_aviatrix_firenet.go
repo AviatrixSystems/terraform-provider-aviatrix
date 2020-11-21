@@ -21,6 +21,15 @@ func resourceAviatrixFireNet() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceAviatrixFireNetResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAviatrixFireNetStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {
 				Type:        schema.TypeString,
@@ -101,6 +110,14 @@ func resourceAviatrixFireNet() *schema.Resource {
 				Description:  "Hashing algorithm to load balance traffic across the firewall.",
 				ValidateFunc: validation.StringInSlice([]string{"5-Tuple", "2-Tuple"}, false),
 			},
+			"manage_firewall_instance_association": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+				Description: "Enable this to manage firewall_instance_associations in-line. If this is false, " +
+					"associations must be managed via standalone aviatrix_firewall_instance_association resources. " +
+					"Type: boolean, Default: true, Valid values: true/false.",
+			},
 		},
 	}
 }
@@ -109,6 +126,14 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 	client := meta.(*goaviatrix.Client)
 
 	log.Printf("[INFO] Creating an Aviatrix Firenet on vpc: %s", d.Get("vpc_id"))
+
+	manageAssociations := d.Get("manage_firewall_instance_association").(bool)
+	_, hasSetAssociations := d.GetOk("firewall_instance_association")
+	if !manageAssociations && hasSetAssociations {
+		return fmt.Errorf("invalid config: Can not set 'firewall_instance_association' if " +
+			"'manage_firewall_instance_association' is set to false. Please use the standalone " +
+			"aviatrix_firewall_instance_association resource")
+	}
 
 	fireNet := &goaviatrix.FireNet{
 		VpcID:            d.Get("vpc_id").(string),
@@ -150,6 +175,7 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 				firewall.ManagementInterface = fI["management_interface"].(string)
 				firewall.EgressInterface = fI["egress_interface"].(string)
 			} else {
+				firewall.LanInterface = fI["lan_interface"].(string)
 				if d.Get("inspection_enabled").(bool) || !d.Get("egress_enabled").(bool) {
 					return fmt.Errorf("'inspection_enabled' should be false, and 'egress_enabled' should be true for vendor type: fqdn_gateawy")
 				}
@@ -207,8 +233,10 @@ func resourceAviatrixFireNetReadIfRequired(d *schema.ResourceData, meta interfac
 func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
+	var isImport bool
 	vpcID := d.Get("vpc_id").(string)
 	if vpcID == "" {
+		isImport = true
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no vpc_id received. Import Id is %s", id)
 		d.Set("vpc_id", id)
@@ -250,14 +278,18 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 		fI["attached"] = instance.Enabled == true
 		if instance.VendorType == "Aviatrix FQDN Gateway" {
 			fI["vendor_type"] = "fqdn_gateway"
+			if strings.HasPrefix(instance.LanInterface, "eni-") {
+				fI["lan_interface"] = ""
+			} else {
+				fI["lan_interface"] = instance.LanInterface
+			}
 			fI["firewall_name"] = ""
-			fI["lan_interface"] = ""
 			fI["management_interface"] = ""
 			fI["egress_interface"] = ""
 		} else {
 			fI["vendor_type"] = "Generic"
-			fI["firewall_name"] = instance.FirewallName
 			fI["lan_interface"] = instance.LanInterface
+			fI["firewall_name"] = instance.FirewallName
 			fI["management_interface"] = instance.ManagementInterface
 			fI["egress_interface"] = instance.EgressInterface
 		}
@@ -265,8 +297,11 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 		firewallInstance = append(firewallInstance, fI)
 	}
 
-	if err := d.Set("firewall_instance_association", firewallInstance); err != nil {
-		log.Printf("[WARN] Error setting 'firewall_instance' for (%s): %s", d.Id(), err)
+	if isImport || d.Get("manage_firewall_instance_association").(bool) {
+		d.Set("manage_firewall_instance_association", true)
+		if err := d.Set("firewall_instance_association", firewallInstance); err != nil {
+			log.Printf("[WARN] Error setting 'firewall_instance' for (%s): %s", d.Id(), err)
+		}
 	}
 
 	d.SetId(fireNetDetail.VpcID)
@@ -294,7 +329,17 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	if d.HasChange("firewall_instance_association") {
+	manageAssociations := d.Get("manage_firewall_instance_association").(bool)
+	_, hasSetAssociations := d.GetOk("firewall_instance_association")
+	if !manageAssociations && hasSetAssociations {
+		return fmt.Errorf("invalid config: Can not set 'firewall_instance_association' if " +
+			"'manage_firewall_instance_association' is set to false. Please use the standalone " +
+			"aviatrix_firewall_instance_association resource")
+	}
+
+	d.SetPartial("manage_firewall_instance_association")
+
+	if d.HasChange("firewall_instance_association") && manageAssociations {
 		mapOldFirewall := make(map[string]map[string]interface{})
 		mapNewFirewall := make(map[string]map[string]interface{})
 		mapFirewall := make(map[string]map[string]interface{})
@@ -409,6 +454,7 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 					firewall.ManagementInterface = fI["management_interface"].(string)
 					firewall.EgressInterface = fI["egress_interface"].(string)
 				} else {
+					firewall.LanInterface = fI["lan_interface"].(string)
 					if d.Get("inspection_enabled").(bool) || !d.Get("egress_enabled").(bool) {
 						return fmt.Errorf("'inspection_enabled' should be false, and 'egress_enabled' should be true for vendor type: fqdn_gateawy")
 					}
@@ -427,9 +473,8 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 				}
 			}
 		}
-
-		d.SetPartial("firewall_instance_association")
 	}
+	d.SetPartial("firewall_instance_association")
 
 	if d.HasChange("inspection_enabled") {
 		fn := &goaviatrix.FireNet{

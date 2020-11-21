@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
@@ -372,6 +373,45 @@ func resourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Private IP address of HA gateway.",
 			},
+			"enable_monitor_gateway_subnets": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable monitor gateway subnets. Valid values: true, false. Default value: false.",
+			},
+			"monitor_exclude_list": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "",
+				DiffSuppressFunc: DiffSuppressFuncString,
+				Description:      "A list of monitored instance ids separated by comma when 'monitor gateway subnets' feature is enabled.",
+			},
+			"idle_timeout": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      -1,
+				ValidateFunc: validation.IntAtLeast(301),
+				Description:  "Typed value when modifying idle_timeout. If it's -1, this feature is disabled.",
+			},
+			"renegotiation_interval": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      -1,
+				ValidateFunc: validation.IntAtLeast(301),
+				Description:  "Typed value when modifying renegotiation_interval. If it's -1, this feature is disabled.",
+			},
+			"fqdn_lan_cidr": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				ForceNew:    true,
+				Description: "FQDN gateway lan interface cidr.",
+			},
+			"fqdn_lan_interface": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "FQDN gateway lan interface id.",
+			},
 		},
 	}
 }
@@ -606,6 +646,10 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		gateway.EncVolume = "no"
 	}
 
+	if d.Get("fqdn_lan_cidr").(string) != "" {
+		gateway.FqdnLanCidr = d.Get("fqdn_lan_cidr").(string)
+	}
+
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)
 
 	err := client.CreateGateway(gateway)
@@ -761,6 +805,77 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("'enable_vpc_dns_server' only supports AWS(1) and AWSGOV(256)")
 	}
 
+	enableMonitorGatewaySubnets := d.Get("enable_monitor_gateway_subnets").(bool)
+	if enableMonitorGatewaySubnets {
+		if d.Get("cloud_type").(int) != goaviatrix.AWS && d.Get("cloud_type").(int) != goaviatrix.AWSGOV {
+			return fmt.Errorf("monitor gateway subnets feature only supported for AWS and AWSGOV")
+		}
+		gwMonitorSubnetsServer := &goaviatrix.Gateway{
+			GwName:               d.Get("gw_name").(string),
+			MonitorExcludeGWList: strings.Split(d.Get("monitor_exclude_list").(string), ","),
+		}
+
+		log.Printf("[INFO] Enable Monitor Gatway Subnets: %#v", gwMonitorSubnetsServer)
+		err := client.EnableMonitorGatewaySubnets(gwMonitorSubnetsServer)
+		if err != nil {
+			return fmt.Errorf("fail to enable monitor gateway subnets due to : %s", err)
+		}
+	}
+
+	gatewayServer := &goaviatrix.Gateway{
+		VpcID: d.Get("vpc_id").(string),
+	}
+
+	idleTimeoutValue := d.Get("idle_timeout").(int)
+	if idleTimeoutValue != -1 {
+		if d.Get("enable_elb").(bool) {
+			gw, err := client.GetGateway(&goaviatrix.Gateway{
+				AccountName: d.Get("account_name").(string),
+				GwName:      d.Get("gw_name").(string),
+			})
+			if err != nil {
+				return fmt.Errorf("couldn't find Aviatrix Gateway for idle timeout : %s", gw.GwName)
+			}
+			gatewayServer.GwName = gw.ElbName
+		} else {
+			gatewayServer.GwName = d.Get("gw_name").(string)
+		}
+		enableVPNServer := &goaviatrix.VPNConfig{
+			Name:  "Idle timeout",
+			Value: strconv.Itoa(idleTimeoutValue),
+		}
+		log.Printf("[INFO] Enable Modify VPN Config (Idle Timeout)")
+		err := client.EnableVPNConfig(gatewayServer, enableVPNServer)
+		if err != nil {
+			return fmt.Errorf("fail to enable idle timeout: %s", err)
+		}
+	}
+
+	renegoIntervalValue := d.Get("renegotiation_interval").(int)
+	if renegoIntervalValue != -1 {
+		if d.Get("enable_elb").(bool) {
+			gw, err := client.GetGateway(&goaviatrix.Gateway{
+				AccountName: d.Get("account_name").(string),
+				GwName:      d.Get("gw_name").(string),
+			})
+			if err != nil {
+				return fmt.Errorf("couldn't find Aviatrix Gateway renegotiation interval : %s", gw.GwName)
+			}
+			gatewayServer.GwName = gw.ElbName
+		} else {
+			gatewayServer.GwName = d.Get("gw_name").(string)
+		}
+		enableVPNServer := &goaviatrix.VPNConfig{
+			Name:  "Renegotiation interval",
+			Value: strconv.Itoa(renegoIntervalValue),
+		}
+		log.Printf("[INFO] Enable Modify VPN Config (Renegotiation Interval)")
+		err := client.EnableVPNConfig(gatewayServer, enableVPNServer)
+		if err != nil {
+			return fmt.Errorf("fail to enable renegotiation interval: %s", err)
+		}
+	}
+
 	return resourceAviatrixGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -900,7 +1015,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 						d.Set("vpn_protocol", "TCP")
 					}
 				} else {
-					d.Set("vpn_protocol", "")
+					d.Set("vpn_protocol", "UDP")
 				}
 			}
 		}
@@ -1122,8 +1237,79 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("search_domains", "")
 			d.Set("additional_cidrs", "")
 		}
-	}
 
+		if gw.MonitorSubnetsAction == "enable" {
+			d.Set("enable_monitor_gateway_subnets", true)
+			d.Set("monitor_exclude_list", strings.Join(gw.MonitorExcludeGWList, ","))
+		} else {
+			d.Set("enable_monitor_gateway_subnets", false)
+			d.Set("monitor_exclude_list", "")
+		}
+
+		VPNGatewayServer := &goaviatrix.Gateway{
+			VpcID: gw.VpcID,
+		}
+
+		if gw.ElbState == "enabled" {
+			VPNGatewayServer.GwName = gw.ElbName
+		} else {
+			VPNGatewayServer.GwName = gw.GwName
+		}
+
+		vpnConfigList, err := client.GetVPNConfigList(VPNGatewayServer)
+		if err != nil && err != goaviatrix.ErrNotFound {
+			return fmt.Errorf("couldn't find vpn config list for gateway: %s due to %s", VPNGatewayServer.GwName, err)
+		}
+
+		vpnConfigIdle := getVPNConfig("Idle timeout", vpnConfigList)
+		if vpnConfigIdle == nil {
+			return fmt.Errorf("couldn't find vpn config (idle timeout) for the gateway %s", VPNGatewayServer.GwName)
+		}
+
+		if vpnConfigIdle.Status == "enabled" {
+			idleTimeoutValue, err := strconv.Atoi(vpnConfigIdle.Value)
+			if err != nil {
+				return fmt.Errorf("couldn't get vpn config value (idle timeout) for the gateway %s", VPNGatewayServer.GwName)
+			}
+			d.Set("idle_timeout", idleTimeoutValue)
+		} else {
+			d.Set("idle_timeout", -1)
+		}
+
+		vpnConfigRenego := getVPNConfig("Renegotiation interval", vpnConfigList)
+		if vpnConfigRenego == nil {
+			return fmt.Errorf("couldn't get vpn config value (renegotiation interval) for the gateway %s", VPNGatewayServer.GwName)
+		}
+
+		if vpnConfigRenego.Status == "enabled" {
+			renegoIntervalValue, err := strconv.Atoi(vpnConfigRenego.Value)
+			if err != nil {
+				return fmt.Errorf("couldn't get vpn config value (renegotiation interval) for the gateway %s", VPNGatewayServer.GwName)
+			}
+			d.Set("renegotiation_interval", renegoIntervalValue)
+		} else {
+			d.Set("renegotiation_interval", -1)
+		}
+
+		gatewayServer := &goaviatrix.Gateway{
+			GwName: gw.GwName,
+			VpcID:  gw.VpcID,
+		}
+
+		fqdnGatewayInfo, err := client.GetFqdnGatewayInfo(gatewayServer)
+		if err != nil && err != goaviatrix.ErrNotFound {
+			return fmt.Errorf("couldn't info for this fqdn gateway due to: %s", err)
+		}
+
+		fqdnGatewayLanInterface := getFqdnGatewayLanInterface(fqdnGatewayInfo, gw.GwName)
+		if fqdnGatewayLanInterface != "" {
+			d.Set("fqdn_lan_interface", fqdnGatewayLanInterface)
+			d.Set("fqdn_lan_cidr", getFqdnGatewayLanCidr(fqdnGatewayInfo, gw.GwName))
+		} else {
+			d.Set("fqdn_lan_interface", "")
+			d.Set("fqdn_lan_cidr", "")
+		}
+	}
 	return nil
 }
 
@@ -1791,6 +1977,109 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	} else if d.HasChange("customer_managed_keys") {
 		return fmt.Errorf("updating customer_managed_keys only is not allowed")
+	}
+
+	if d.HasChange("enable_monitor_gateway_subnets") {
+		if d.Get("enable_monitor_gateway_subnets").(bool) {
+			if d.Get("cloud_type").(int) != goaviatrix.AWS && d.Get("cloud_type").(int) != goaviatrix.AWSGOV {
+				return fmt.Errorf("monitor gateway subnet feature only supported for AWS and AWSGOV")
+			}
+			gwMonitorSubnetsServer := &goaviatrix.Gateway{
+				GwName:               d.Get("gw_name").(string),
+				MonitorExcludeGWList: strings.Split(d.Get("monitor_exclude_list").(string), ","),
+			}
+			log.Printf("[INFO] Enable Monitor Gatway Subnets: %#v", gwMonitorSubnetsServer)
+			err := client.EnableMonitorGatewaySubnets(gwMonitorSubnetsServer)
+			if err != nil {
+				return fmt.Errorf("fail to enable monitor gateway subnets due to : %s", err)
+			}
+		} else {
+			gwMonitorSubnetsServer := &goaviatrix.Gateway{
+				GwName: d.Get("gw_name").(string),
+			}
+			log.Printf("[INFO] Disable Monitor Gatway Subnets: %#v", gwMonitorSubnetsServer)
+			err := client.DisableMonitorGatewaySubnets(gwMonitorSubnetsServer)
+			if err != nil {
+				return fmt.Errorf("fail to disable monitor gateway subnets due to : %s", err)
+			}
+		}
+	} else if d.HasChange("monitor_exclude_list") {
+		if d.Get("enable_monitor_gateway_subnets").(bool) {
+			gwMonitorSubnetsServer := &goaviatrix.Gateway{
+				GwName: d.Get("gw_name").(string),
+			}
+			log.Printf("[INFO] Disable Monitor Gatway Subnets: %#v", gwMonitorSubnetsServer)
+			err := client.DisableMonitorGatewaySubnets(gwMonitorSubnetsServer)
+			if err != nil {
+				return fmt.Errorf("fail to disable monitor gateway subnets due to : %s", err)
+			}
+
+			gwMonitorSubnetsServer.MonitorExcludeGWList = strings.Split(d.Get("monitor_exclude_list").(string), ",")
+			log.Printf("[INFO] Enable Monitor Gatway Subnets with updated excluded list due to : %#v", gwMonitorSubnetsServer)
+			err = client.EnableMonitorGatewaySubnets(gwMonitorSubnetsServer)
+			if err != nil {
+				return fmt.Errorf("fail to enable monitor gateway subnets with updated excluded list due to : %s", err)
+			}
+		}
+		if !d.Get("enable_monitor_gateway_subnets").(bool) {
+			return fmt.Errorf("please enable the monitor gateway subnets feature before updating exclude monitor list")
+		}
+	}
+
+	gatewayServer := &goaviatrix.Gateway{
+		VpcID: d.Get("vpc_id").(string),
+	}
+
+	if d.HasChange("idle_timeout") {
+		idleTimeoutValue := d.Get("idle_timeout").(int)
+		VPNServer := &goaviatrix.VPNConfig{
+			Name: "Idle timeout",
+		}
+		if d.Get("enable_elb").(bool) {
+			gatewayServer.GwName = d.Get("elb_name").(string)
+		} else {
+			gatewayServer.GwName = d.Get("gw_name").(string)
+		}
+		if idleTimeoutValue != -1 {
+			VPNServer.Value = strconv.Itoa(idleTimeoutValue)
+			log.Printf("[INFO] Modify VPN Config (update idle timeout value)")
+			err := client.EnableVPNConfig(gatewayServer, VPNServer)
+			if err != nil {
+				return fmt.Errorf("fail to update idle timeout value due to : %s", err)
+			}
+		} else {
+			log.Printf("[INFO] Modify VPN Config (disable idle timeout)")
+			err := client.DisableVPNConfig(gatewayServer, VPNServer)
+			if err != nil {
+				return fmt.Errorf("fail to disable idle timeout due to : %s", err)
+			}
+		}
+	}
+
+	if d.HasChange("renegotiation_interval") {
+		renegoIntervalValue := d.Get("renegotiation_interval").(int)
+		VPNServer := &goaviatrix.VPNConfig{
+			Name: "Renegotiation interval",
+		}
+		if d.Get("enable_elb").(bool) {
+			gatewayServer.GwName = d.Get("elb_name").(string)
+		} else {
+			gatewayServer.GwName = d.Get("gw_name").(string)
+		}
+		if renegoIntervalValue != -1 {
+			VPNServer.Value = strconv.Itoa(renegoIntervalValue)
+			log.Printf("[INFO] Modify VPN Config (update renegotiation interval value)")
+			err := client.EnableVPNConfig(gatewayServer, VPNServer)
+			if err != nil {
+				return fmt.Errorf("fail to enable renegotiation interval due to : %s", err)
+			}
+		} else {
+			log.Printf("[INFO] Modify VPN Config (disable renegotiation interval)")
+			err := client.DisableVPNConfig(gatewayServer, VPNServer)
+			if err != nil {
+				return fmt.Errorf("fail to disable renegotiation interval due to: %s", err)
+			}
+		}
 	}
 
 	d.Partial(false)

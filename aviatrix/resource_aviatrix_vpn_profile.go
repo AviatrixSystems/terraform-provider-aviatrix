@@ -18,6 +18,15 @@ func resourceAviatrixProfile() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceAviatrixVPNProfileResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAviatrixVPNProfileStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,

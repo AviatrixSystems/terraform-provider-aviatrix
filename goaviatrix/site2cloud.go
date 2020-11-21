@@ -23,55 +23,72 @@ const SslServerPoolDefault = "192.168.44.0/24"
 
 // Site2Cloud simple struct to hold site2cloud details
 type Site2Cloud struct {
-	Action                  string   `form:"action,omitempty"`
-	CID                     string   `form:"CID,omitempty"`
-	VpcID                   string   `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	TunnelName              string   `form:"connection_name" json:"name,omitempty"`
-	RemoteGwType            string   `form:"remote_gateway_type,omitempty"`
-	ConnType                string   `form:"connection_type,omitempty" json:"type,omitempty"`
-	TunnelType              string   `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
-	GwName                  string   `form:"primary_cloud_gateway_name,omitempty" json:"gw_name,omitempty"`
-	BackupGwName            string   `form:"backup_gateway_name,omitempty"`
-	RemoteGwIP              string   `form:"remote_gateway_ip,omitempty" json:"peer_ip,omitempty"`
-	RemoteGwIP2             string   `form:"backup_remote_gateway_ip,omitempty"`
-	PreSharedKey            string   `form:"pre_shared_key,omitempty"`
-	BackupPreSharedKey      string   `form:"backup_pre_shared_key,omitempty"`
-	RemoteSubnet            string   `form:"remote_subnet_cidr,omitempty" json:"remote_cidr,omitempty"`
-	LocalSubnet             string   `form:"local_subnet_cidr,omitempty" json:"local_cidr,omitempty"`
-	HAEnabled               string   `form:"ha_enabled,omitempty" json:"ha_status,omitempty"`
-	PeerType                string   `form:"peer_type,omitempty"`
-	SslServerPool           string   `form:"ssl_server_pool,omitempty"`
-	NetworkType             string   `form:"network_type,omitempty"`
-	CloudSubnetCidr         string   `form:"cloud_subnet_cidr,omitempty"`
-	RemoteCidr              string   `form:"remote_cidr,omitempty"`
-	RemoteSubnetVirtual     string   `form:"virtual_remote_subnet_cidr,omitempty" json:"virtual_remote_subnet_cidr,omitempty"`
-	LocalSubnetVirtual      string   `form:"virtual_local_subnet_cidr,omitempty" json:"virtual_local_subnet_cidr,omitempty"`
-	Phase1Auth              string   `form:"phase1_auth,omitempty"`
-	Phase1DhGroups          string   `form:"phase1_dh_group,omitempty"`
-	Phase1Encryption        string   `form:"phase1_encryption,omitempty"`
-	Phase2Auth              string   `form:"phase2_auth,omitempty"`
-	Phase2DhGroups          string   `form:"phase2_dh_group,omitempty"`
-	Phase2Encryption        string   `form:"phase2_encryption,omitempty"`
-	EnableIKEv2             string   `form:"enable_ikev2,omitempty"`
-	PrivateRouteEncryption  string   `form:"private_route_encryption,omitempty"`
-	RemoteGwLatitude        float64  `form:"remote_gateway_latitude,omitempty"`
-	RemoteGwLongitude       float64  `form:"remote_gateway_longitude,omitempty"`
-	BackupRemoteGwLatitude  float64  `form:"backup_remote_gateway_latitude,omitempty"`
-	BackupRemoteGwLongitude float64  `form:"backup_remote_gateway_longitude,omitempty"`
-	RouteTableList          []string `form:"route_table_list,omitempty"`
-	CustomAlgorithms        bool
-	DeadPeerDetection       bool
-	EnableActiveActive      bool
+	Action                        string   `form:"action,omitempty"`
+	CID                           string   `form:"CID,omitempty"`
+	VpcID                         string   `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	TunnelName                    string   `form:"connection_name" json:"name,omitempty"`
+	RemoteGwType                  string   `form:"remote_gateway_type,omitempty"`
+	ConnType                      string   `form:"connection_type,omitempty" json:"type,omitempty"`
+	TunnelType                    string   `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
+	GwName                        string   `form:"primary_cloud_gateway_name,omitempty" json:"gw_name,omitempty"`
+	BackupGwName                  string   `form:"backup_gateway_name,omitempty"`
+	RemoteGwIP                    string   `form:"remote_gateway_ip,omitempty" json:"peer_ip,omitempty"`
+	RemoteGwIP2                   string   `form:"backup_remote_gateway_ip,omitempty"`
+	PreSharedKey                  string   `form:"pre_shared_key,omitempty"`
+	BackupPreSharedKey            string   `form:"backup_pre_shared_key,omitempty"`
+	RemoteSubnet                  string   `form:"remote_subnet_cidr,omitempty" json:"remote_cidr,omitempty"`
+	LocalSubnet                   string   `form:"local_subnet_cidr,omitempty" json:"local_cidr,omitempty"`
+	HAEnabled                     string   `form:"ha_enabled,omitempty" json:"ha_status,omitempty"`
+	PeerType                      string   `form:"peer_type,omitempty"`
+	SslServerPool                 string   `form:"ssl_server_pool,omitempty"`
+	NetworkType                   string   `form:"network_type,omitempty"`
+	CloudSubnetCidr               string   `form:"cloud_subnet_cidr,omitempty"`
+	RemoteCidr                    string   `form:"remote_cidr,omitempty"`
+	RemoteSubnetVirtual           string   `form:"virtual_remote_subnet_cidr,omitempty" json:"virtual_remote_subnet_cidr,omitempty"`
+	LocalSubnetVirtual            string   `form:"virtual_local_subnet_cidr,omitempty" json:"virtual_local_subnet_cidr,omitempty"`
+	Phase1Auth                    string   `form:"phase1_auth,omitempty"`
+	Phase1DhGroups                string   `form:"phase1_dh_group,omitempty"`
+	Phase1Encryption              string   `form:"phase1_encryption,omitempty"`
+	Phase2Auth                    string   `form:"phase2_auth,omitempty"`
+	Phase2DhGroups                string   `form:"phase2_dh_group,omitempty"`
+	Phase2Encryption              string   `form:"phase2_encryption,omitempty"`
+	EnableIKEv2                   string   `form:"enable_ikev2,omitempty"`
+	PrivateRouteEncryption        string   `form:"private_route_encryption,omitempty"`
+	RemoteGwLatitude              float64  `form:"remote_gateway_latitude,omitempty"`
+	RemoteGwLongitude             float64  `form:"remote_gateway_longitude,omitempty"`
+	BackupRemoteGwLatitude        float64  `form:"backup_remote_gateway_latitude,omitempty"`
+	BackupRemoteGwLongitude       float64  `form:"backup_remote_gateway_longitude,omitempty"`
+	RouteTableList                []string `form:"route_table_list,omitempty"`
+	CustomAlgorithms              bool
+	DeadPeerDetection             bool
+	EnableActiveActive            bool
+	CustomMap                     bool   `form:"custom_map,omitempty"`
+	RemoteSourceRealCIDRs         string `form:"remote_src_real_cidrs,omitempty"`
+	RemoteSourceVirtualCIDRs      string `form:"remote_src_virt_cidrs,omitempty"`
+	RemoteDestinationRealCIDRs    string `form:"remote_dst_real_cidrs,omitempty"`
+	RemoteDestinationVirtualCIDRs string `form:"remote_dst_virt_cidrs,omitempty"`
+	LocalSourceRealCIDRs          string `form:"local_src_real_cidrs,omitempty"`
+	LocalSourceVirtualCIDRs       string `form:"local_src_virt_cidrs,omitempty"`
+	LocalDestinationRealCIDRs     string `form:"local_dst_real_cidrs,omitempty"`
+	LocalDestinationVirtualCIDRs  string `form:"local_dst_virt_cidrs,omitempty"`
 }
 
 type EditSite2Cloud struct {
-	Action          string `form:"action,omitempty"`
-	CID             string `form:"CID,omitempty"`
-	VpcID           string `form:"vpc_id,omitempty"`
-	ConnName        string `form:"conn_name"`
-	GwName          string `form:"primary_cloud_gateway_name,omitempty"`
-	NetworkType     string `form:"network_type,omitempty"`
-	CloudSubnetCidr string `form:"cloud_subnet_cidr,omitempty"`
+	Action                        string `form:"action,omitempty"`
+	CID                           string `form:"CID,omitempty"`
+	VpcID                         string `form:"vpc_id,omitempty"`
+	ConnName                      string `form:"conn_name"`
+	GwName                        string `form:"primary_cloud_gateway_name,omitempty"`
+	NetworkType                   string `form:"network_type,omitempty"`
+	CloudSubnetCidr               string `form:"cloud_subnet_cidr,omitempty"`
+	RemoteSourceRealCIDRs         string `form:"remote_src_real_cidrs,omitempty"`
+	RemoteSourceVirtualCIDRs      string `form:"remote_src_virt_cidrs,omitempty"`
+	RemoteDestinationRealCIDRs    string `form:"remote_dst_real_cidrs,omitempty"`
+	RemoteDestinationVirtualCIDRs string `form:"remote_dst_virt_cidrs,omitempty"`
+	LocalSourceRealCIDRs          string `form:"local_src_real_cidrs,omitempty"`
+	LocalSourceVirtualCIDRs       string `form:"local_src_virt_cidrs,omitempty"`
+	LocalDestinationRealCIDRs     string `form:"local_dst_real_cidrs,omitempty"`
+	LocalDestinationVirtualCIDRs  string `form:"local_dst_virt_cidrs,omitempty"`
 }
 
 type Site2CloudResp struct {
@@ -85,36 +102,44 @@ type Site2CloudConnList struct {
 }
 
 type EditSite2CloudConnDetail struct {
-	VpcID                   []string      `json:"vpc_id,omitempty"`
-	TunnelName              []string      `json:"name,omitempty"`
-	ConnType                string        `json:"type,omitempty"`
-	TunnelType              string        `json:"tunnel_type,omitempty"`
-	GwName                  string        `json:"gw_name,omitempty"`
-	Tunnels                 []TunnelInfo  `json:"tunnels,omitempty"`
-	RemoteSubnet            string        `json:"real_remote_cidr,omitempty"`
-	LocalSubnet             string        `json:"real_local_cidr,omitempty"`
-	RemoteCidr              string        `json:"remote_cidr,omitempty"`
-	LocalCidr               string        `json:"local_cidr,omitempty"`
-	HAEnabled               string        `json:"ha_status,omitempty"`
-	PeerType                string        `json:"peer_type,omitempty"`
-	RemoteSubnetVirtual     string        `json:"virt_remote_cidr,omitempty"`
-	LocalSubnetVirtual      string        `json:"virt_local_cidr,omitempty"`
-	Algorithm               AlgorithmInfo `json:"algorithm,omitempty"`
-	RouteTableList          []string      `json:"rtbls,omitempty"`
-	SslServerPool           []string      `json:"ssl_server_pool,omitempty"`
-	DeadPeerDetectionConfig string        `json:"dpd_config,omitempty"`
-	EnableActiveActive      string        `json:"active_active_ha,omitempty"`
-	EnableIKEv2             string        `json:"ike_ver,omitempty"`
-	BgpLocalASN             string        `json:"bgp_local_asn_number,omitempty"`
-	BgpLocalIP              string        `json:"bgp_local_ip,omitempty"`
-	BgpBackupLocalIP        string        `json:"bgp_backup_local_ip,omitempty"`
-	BgpRemoteASN            string        `json:"bgp_remote_asn_number,omitempty"`
-	BgpRemoteIP             string        `json:"bgp_remote_ip,omitempty"`
-	BgpBackupRemoteIP       string        `json:"bgp_backup_remote_ip,omitempty"`
-	EnableGlobalAccelerator bool          `json:"globalaccel,omitempty"`
-	AzureAccountName        string        `json:"arm_account_name,omitempty"`
-	AzureResourceGroup      string        `json:"arm_resource_group,omitempty"`
-	AzureVhubName           string        `json:"arm_vhub_name,omitempty"`
+	VpcID                         []string      `json:"vpc_id,omitempty"`
+	TunnelName                    []string      `json:"name,omitempty"`
+	ConnType                      string        `json:"type,omitempty"`
+	TunnelType                    string        `json:"tunnel_type,omitempty"`
+	GwName                        string        `json:"gw_name,omitempty"`
+	Tunnels                       []TunnelInfo  `json:"tunnels,omitempty"`
+	RemoteSubnet                  string        `json:"real_remote_cidr,omitempty"`
+	LocalSubnet                   string        `json:"real_local_cidr,omitempty"`
+	RemoteCidr                    string        `json:"remote_cidr,omitempty"`
+	LocalCidr                     string        `json:"local_cidr,omitempty"`
+	HAEnabled                     string        `json:"ha_status,omitempty"`
+	PeerType                      string        `json:"peer_type,omitempty"`
+	RemoteSubnetVirtual           string        `json:"virt_remote_cidr,omitempty"`
+	LocalSubnetVirtual            string        `json:"virt_local_cidr,omitempty"`
+	Algorithm                     AlgorithmInfo `json:"algorithm,omitempty"`
+	RouteTableList                []string      `json:"rtbls,omitempty"`
+	SslServerPool                 []string      `json:"ssl_server_pool,omitempty"`
+	DeadPeerDetectionConfig       string        `json:"dpd_config,omitempty"`
+	EnableActiveActive            string        `json:"active_active_ha,omitempty"`
+	EnableIKEv2                   string        `json:"ike_ver,omitempty"`
+	BgpLocalASN                   string        `json:"bgp_local_asn_number,omitempty"`
+	BgpLocalIP                    string        `json:"bgp_local_ip,omitempty"`
+	BgpBackupLocalIP              string        `json:"bgp_backup_local_ip,omitempty"`
+	BgpRemoteASN                  string        `json:"bgp_remote_asn_number,omitempty"`
+	BgpRemoteIP                   string        `json:"bgp_remote_ip,omitempty"`
+	BgpBackupRemoteIP             string        `json:"bgp_backup_remote_ip,omitempty"`
+	EnableGlobalAccelerator       bool          `json:"globalaccel,omitempty"`
+	AzureAccountName              string        `json:"arm_account_name,omitempty"`
+	AzureResourceGroup            string        `json:"arm_resource_group,omitempty"`
+	AzureVhubName                 string        `json:"arm_vhub_name,omitempty"`
+	RemoteSourceRealCIDRs         string        `json:"remote_src_real_cidrs"`
+	RemoteSourceVirtualCIDRs      string        `json:"remote_src_virt_cidrs"`
+	RemoteDestinationRealCIDRs    string        `json:"remote_dst_real_cidrs"`
+	RemoteDestinationVirtualCIDRs string        `json:"remote_dst_virt_cidrs"`
+	LocalSourceRealCIDRs          string        `json:"local_src_real_cidrs"`
+	LocalSourceVirtualCIDRs       string        `json:"local_src_virt_cidrs"`
+	LocalDestinationRealCIDRs     string        `json:"local_dst_real_cidrs"`
+	LocalDestinationVirtualCIDRs  string        `json:"local_dst_virt_cidrs"`
 }
 
 type Site2CloudConnDetailResp struct {
@@ -206,6 +231,18 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 
 	addSite2cloud.Add("pre_shared_key", site2cloud.PreSharedKey)
 	addSite2cloud.Add("backup_pre_shared_key", site2cloud.BackupPreSharedKey)
+
+	if site2cloud.CustomMap {
+		addSite2cloud.Add("custom_map", strconv.FormatBool(site2cloud.CustomMap))
+		addSite2cloud.Add("remote_src_real_cidrs", site2cloud.RemoteSourceRealCIDRs)
+		addSite2cloud.Add("remote_src_virt_cidrs", site2cloud.RemoteSourceVirtualCIDRs)
+		addSite2cloud.Add("remote_dst_real_cidrs", site2cloud.RemoteDestinationRealCIDRs)
+		addSite2cloud.Add("remote_dst_virt_cidrs", site2cloud.RemoteDestinationVirtualCIDRs)
+		addSite2cloud.Add("local_src_real_cidrs", site2cloud.LocalSourceRealCIDRs)
+		addSite2cloud.Add("local_src_virt_cidrs", site2cloud.LocalSourceVirtualCIDRs)
+		addSite2cloud.Add("local_dst_real_cidrs", site2cloud.LocalDestinationRealCIDRs)
+		addSite2cloud.Add("local_dst_virt_cidrs", site2cloud.LocalDestinationVirtualCIDRs)
+	}
 
 	Url.RawQuery = addSite2cloud.Encode()
 	resp, err := c.Get(Url.String(), nil)
@@ -360,10 +397,17 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 		} else {
 			site2cloud.EnableActiveActive = false
 		}
-
 		if s2cConnDetail.EnableIKEv2 == "2" {
 			site2cloud.EnableIKEv2 = "true"
 		}
+		site2cloud.RemoteSourceRealCIDRs = s2cConnDetail.RemoteSourceRealCIDRs
+		site2cloud.RemoteSourceVirtualCIDRs = s2cConnDetail.RemoteSourceVirtualCIDRs
+		site2cloud.RemoteDestinationRealCIDRs = s2cConnDetail.RemoteDestinationRealCIDRs
+		site2cloud.RemoteDestinationVirtualCIDRs = s2cConnDetail.RemoteDestinationVirtualCIDRs
+		site2cloud.LocalSourceRealCIDRs = s2cConnDetail.LocalSourceRealCIDRs
+		site2cloud.LocalSourceVirtualCIDRs = s2cConnDetail.LocalSourceVirtualCIDRs
+		site2cloud.LocalDestinationRealCIDRs = s2cConnDetail.LocalDestinationRealCIDRs
+		site2cloud.LocalDestinationVirtualCIDRs = s2cConnDetail.LocalDestinationVirtualCIDRs
 		return site2cloud, nil
 	}
 
@@ -420,36 +464,6 @@ func (c *Client) DeleteSite2Cloud(site2cloud *Site2Cloud) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API delete_site2cloud_connection Post failed: " + data.Reason)
-	}
-	return nil
-}
-
-func (c *Client) Site2CloudAlgorithmCheck(site2cloud *Site2Cloud) error {
-	Phase1AuthList := []string{"SHA-1", "SHA-256", "SHA-384", "SHA-512"}
-	Phase1DhGroupsList := []string{"1", "2", "5", "14", "15", "16", "17", "18"}
-	Phase1EncryptionList := []string{"AES-128-CBC", "AES-192-CBC", "AES-256-CBC", "3DES"}
-	Phase2AuthList := []string{"HMAC-SHA-1", "HMAC-SHA-256", "HMAC-SHA-384", "HMAC-SHA-512", "NO-AUTH"}
-	Phase2DhGroupsList := []string{"1", "2", "5", "14", "15", "16", "17", "18"}
-	Phase2EncryptionList := []string{"AES-128-CBC", "AES-128-GCM-64", "AES-128-GCM-96", "AES-128-GCM-128",
-		"AES-128-CBC", "AES-192-CBC", "AES-256-CBC", "3DES", "NULL-ENCR"}
-
-	if !Contains(Phase1AuthList, site2cloud.Phase1Auth) {
-		return errors.New("invalid value for phase_1_authentication")
-	}
-	if !Contains(Phase1DhGroupsList, site2cloud.Phase1DhGroups) {
-		return errors.New("invalid value for phase_1_dh_groups")
-	}
-	if !Contains(Phase1EncryptionList, site2cloud.Phase1Encryption) {
-		return errors.New("invalid value for phase_1_encryption")
-	}
-	if !Contains(Phase2AuthList, site2cloud.Phase2Auth) {
-		return errors.New("invalid value for phase_2_authentication")
-	}
-	if !Contains(Phase2DhGroupsList, site2cloud.Phase2DhGroups) {
-		return errors.New("invalid value for phase_2_dh_groups")
-	}
-	if !Contains(Phase2EncryptionList, site2cloud.Phase2Encryption) {
-		return errors.New("invalid value for phase_2_encryption")
 	}
 	return nil
 }

@@ -139,6 +139,9 @@ type Gateway struct {
 	EncVolume                   string   `form:"enc_volume,omitempty"`
 	SyncSNATToHA                string   `form:"sync_snat_to_ha,omitempty"`
 	SyncDNATToHA                string   `form:"sync_dnat_to_ha,omitempty"`
+	MonitorSubnetsAction        string   `form:"monitor_subnets_action,omitempty" json:"monitor_subnets_action,omitempty"`
+	MonitorExcludeGWList        []string `form:"monitor_exclude_gw_list,omitempty" json:"monitor_exclude_gw_list,omitempty"`
+	FqdnLanCidr                 string   `form:"fqdn_lan_cidr,omitempty"`
 }
 
 type PolicyRule struct {
@@ -227,6 +230,30 @@ type GatewayDetailApiResp struct {
 	Return  bool          `json:"return"`
 	Results GatewayDetail `json:"results"`
 	Reason  string        `json:"reason"`
+}
+
+type VPNConfigListResp struct {
+	Return  bool        `json:"return"`
+	Results []VPNConfig `json:"results"`
+	Reason  string      `json:"reason"`
+}
+
+type VPNConfig struct {
+	Name   string `form:"name,omitempty" json:"name,omitempty"`
+	Value  string `form:"value,omitempty" json:"value,omitempty"`
+	Status string `form:"status,omitempty" json:"status,omitempty"`
+}
+
+type FQDNGatewayInfoResp struct {
+	Return  bool           `json:"return"`
+	Results FQDNGatwayInfo `json:"results"`
+	Reason  string         `json:"reason"`
+}
+
+type FQDNGatwayInfo struct {
+	Instances      []string            `json:"instances"`
+	Interface      map[string][]string `json:"interfaces"`
+	ArmFqdnLanCidr map[string]string   `json:"arm_fqdn_lan_cidr"`
 }
 
 func (c *Client) CreateGateway(gateway *Gateway) error {
@@ -1135,4 +1162,184 @@ func (c *Client) DisableEgressTransitFirenet(transitGateway *TransitVpc) error {
 		"gateway_name": transitGateway.GwName,
 	}
 	return c.PostAPI(action, data, BasicCheck)
+}
+
+func (c *Client) EnableMonitorGatewaySubnets(gateway *Gateway) error {
+	action := "enable_monitor_gateway_subnets"
+	form := map[string]interface{}{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": gateway.GwName,
+	}
+	if len(gateway.MonitorExcludeGWList) != 0 {
+		form["monitor_exclude_gateway_list"] = strings.Join(gateway.MonitorExcludeGWList, ",")
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) DisableMonitorGatewaySubnets(gateway *Gateway) error {
+	action := "disable_monitor_gateway_subnets"
+	form := map[string]interface{}{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": gateway.GwName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) EnableVPNConfig(gateway *Gateway, vpnConfig *VPNConfig) error {
+	action := "edit_vpn_config"
+	form := map[string]interface{}{
+		"CID":     c.CID,
+		"action":  action,
+		"command": "enable",
+		"vpc_id":  gateway.VpcID,
+		"lb_name": gateway.GwName,
+		"key":     vpnConfig.Name,
+		"value":   vpnConfig.Value,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) DisableVPNConfig(gateway *Gateway, vpnConfig *VPNConfig) error {
+	action := "edit_vpn_config"
+	form := map[string]interface{}{
+		"CID":     c.CID,
+		"action":  action,
+		"command": "disable",
+		"vpc_id":  gateway.VpcID,
+		"lb_name": gateway.GwName,
+		"key":     vpnConfig.Name,
+		"value":   "-1",
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) GetVPNConfigList(gateway *Gateway) ([]VPNConfig, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return nil, errors.New(("url Parsing failed for edit_vpn_config(show)") + err.Error())
+	}
+	showVPNConfig := url.Values{}
+	showVPNConfig.Add("CID", c.CID)
+	showVPNConfig.Add("action", "edit_vpn_config")
+	showVPNConfig.Add("command", "show")
+	showVPNConfig.Add("vpc_id", gateway.VpcID)
+	showVPNConfig.Add("lb_name", gateway.GwName)
+	Url.RawQuery = showVPNConfig.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return nil, errors.New("HTTP Get edit_vpn_config(show) failed: " + err.Error())
+	}
+	var data VPNConfigListResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode edit_vpn_config(show) failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return nil, errors.New("Rest API edit_vpn_config(show) Get failed: " + data.Reason)
+	}
+	return data.Results, ErrNotFound
+}
+
+func (c *Client) EnableActiveStandby(transitGateway *TransitVpc) error {
+	action := "enable_active_standby"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": transitGateway.GwName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) DisableActiveStandby(transitGateway *TransitVpc) error {
+	action := "disable_active_standby"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": transitGateway.GwName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) SwitchActiveTransitGateway(gwName, connName string) error {
+	action := "active_standby_connection_switchover"
+	form := map[string]string{
+		"CID":             c.CID,
+		"action":          action,
+		"gateway_name":    gwName,
+		"connection_name": connName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) GetTransitGatewayLanCidr(gatewayName string) (string, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return "", errors.New(("url Parsing failed for get_firewall_lan_cidr") + err.Error())
+	}
+	showLanCidr := url.Values{}
+	showLanCidr.Add("CID", c.CID)
+	showLanCidr.Add("gateway_name", gatewayName)
+	showLanCidr.Add("action", "get_firewall_lan_cidr")
+	Url.RawQuery = showLanCidr.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return "", errors.New("HTTP Get get_firewall_lan_cidr failed: " + err.Error())
+	}
+
+	type LANCidr struct {
+		FirewallLanCidr string `form:"firewall_lan_cidr,omitempty" json:"firewall_lan_cidr,omitempty"`
+	}
+
+	type LANCidrResp struct {
+		Return  bool    `json:"return"`
+		Results LANCidr `json:"results"`
+		Reason  string  `json:"reason"`
+	}
+
+	var data LANCidrResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return "", errors.New("Json Decode get_firewall_lan_cidr failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return "", errors.New("Rest API get_firewall_lan_cidr Get failed: " + data.Reason)
+	}
+	return data.Results.FirewallLanCidr, ErrNotFound
+}
+
+func (c *Client) GetFqdnGatewayInfo(gateway *Gateway) (*FQDNGatwayInfo, error) {
+	Url, err := url.Parse(c.baseURL)
+	if err != nil {
+		return nil, errors.New(("url Parsing failed for list_firenet(show fqdn gateway lan cidr)") + err.Error())
+	}
+	showLanCidr := url.Values{}
+	showLanCidr.Add("action", "list_firenet")
+	showLanCidr.Add("CID", c.CID)
+	showLanCidr.Add("subaction", "instance")
+	showLanCidr.Add("vpc_id", gateway.VpcID)
+	Url.RawQuery = showLanCidr.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return nil, errors.New(("HTTP Get failed list_firenet(show fqdn gateway lan cidr)") + err.Error())
+	}
+	var data FQDNGatewayInfoResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return nil, errors.New("Json Decode  list_firenet(show fqdn gateway lan cidr) failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return nil, errors.New("Rest API get_firewall_lan_cidr Get failed: " + data.Reason)
+	}
+	return &data.Results, ErrNotFound
 }
