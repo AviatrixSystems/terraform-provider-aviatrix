@@ -34,7 +34,7 @@
 
 ### Enhancements:
 1. Changed ``management_subnet`` to optional to support Check Point and Fortinet instances in **aviatrix_firewall_instance**
-2. Added migration support for following resources due to functionality decoupling:
+2. Added support for Terraform state migration due to resource-decoupling implementation for the following resources:
   - **aviatrix_aws_tgw**
   - **aviatrix_firenet**
   - **aviatrix_fqdn**
@@ -44,8 +44,7 @@
 3. Official support for Terraform 0.13
 
 ### Bug Fixes:
-1. Fixed issue VPN config edit issue when ELB is enabled in **aviatrix_gateway**
-2. Fixed issue with deltas in the state after creating non-AWS VPN gateways with ELB disabled and ``vpn_protocol`` set as "UDP"
+1. Fixed issue with deltas in the state after creating non-AWS VPN gateways with ELB disabled and ``vpn_protocol`` set as "UDP"
 
 
 ## 2.17.0 (October 15, 2020)
