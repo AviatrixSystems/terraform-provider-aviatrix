@@ -3,7 +3,7 @@ subcategory: "Multi-Cloud Transit"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_spoke_transit_attachment"
 description: |-
-  Creates and manages Aviatrix Spoke Transit attachments
+  Creates and manages Aviatrix Spoke-to-Transit attachments
 ---
 
 # aviatrix_spoke_transit_attachment
@@ -11,6 +11,8 @@ description: |-
 The **aviatrix_spoke_transit_attachment** resource allows the creation and management of Aviatrix Spoke-to-Transit gateway attachments.
 
 ~> **NOTE:** Terraform currently provides both a standalone spoke-to-transit attachment resource and a spoke gateway with `transit_gw` attachment(s) defined in-line. At this time, you cannot use a spoke gateway resource with transit attachments defined in conjunction with the spoke-to-transit attachment resources. Doing so will cause a conflict of settings. In order to use this resource, please set `manage_transit_gateway_attachment` in the **aviatrix_spoke_gateway** to false.
+
+~> **NOTE:** This resource should only be used to manage the primary gateway attachments. The HA gateway attachments will be handled automatically by the backend.
 
 ## Example Usage
 

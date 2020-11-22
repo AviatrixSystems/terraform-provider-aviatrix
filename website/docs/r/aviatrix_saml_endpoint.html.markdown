@@ -62,7 +62,7 @@ The following arguments are supported:
 * `custom_saml_request_template` - (Optional) Custom SAML Request Template in string.
 
 ### Advanced
-* `sign_authn_request` - (Optional) Whether to sign SAML AuthnRequests. Supported values: true, false . Default value: false
+* `sign_authn_request` - (Optional) Whether to sign SAML AuthnRequests. Supported values: true, false . Default value: false. Available in provider version R2.17.1+.
 
 ### Controller Login
 * `controller_login` - (Optional) Valid values: true, false. Default value: false. Set true for creating a saml endpoint for controller login.

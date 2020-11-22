@@ -34,7 +34,7 @@ Valid `permission_name` values:
 * "all_accounts_write"
 * "all_gateway_write"
 * "all_tgw_orchestrator_write"
-* "all_transit_network_write":
+* "all_transit_network_write"
 * "all_firewall_network_write"
 * "all_cloud_wan_write"
 * "all_peering_write"

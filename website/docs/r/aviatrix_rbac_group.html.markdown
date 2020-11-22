@@ -27,7 +27,7 @@ The following arguments are supported:
 * `group_name` - (Required) This parameter represents the name of a RBAC group to be created.
 
 ### Optional
-* `local_login` - (Optional) Whether to allow members of an RBAC group to bypass LDAP/MFA for Duo login . Supported values: true, false. Default value: false
+* `local_login` - (Optional) Whether to allow members of an RBAC group to bypass LDAP/MFA for Duo login . Supported values: true, false. Default value: false. Available in provider version R2.17.1+.
 
 
 ## Import

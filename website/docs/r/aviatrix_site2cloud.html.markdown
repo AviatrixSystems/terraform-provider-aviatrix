@@ -92,9 +92,9 @@ The following arguments are supported:
 
 ~> **NOTE:** To enable custom mapped connection, 'connection_type' must be 'mapped' and 'tunnel_type' must be 'route'. All remote CIDR attributes or all local CIDR attributes must be set when using custom_mapped. Setting all CIDR attributes is also valid.
 
-* `custom_mapped` - (Optional) Enable custom mapped connection. Default value: false. Valid values: true/false. Available as of provider version R2.17.1+.
+* `custom_mapped` - (Optional) Enable custom mapped connection. Default value: false. Valid values: true/false. Available in provider version R2.17.1+.
 * `remote_source_real_cidrs` - (Optional) Set of Remote Initiated Traffic Source Real CIDRs.
-* `remote_source_virtual_cidrs` - (Optional) Set of Remote Initiated Traffic Source Virtual CIDRs. 
+* `remote_source_virtual_cidrs` - (Optional) Set of Remote Initiated Traffic Source Virtual CIDRs.
 * `remote_destination_real_cidrs` - (Optional) Set of  Remote Initiated Traffic Destination Real CIDRs.
 * `remote_destination_virtual_cidrs` - (Optional) Set of Remote Initiated Traffic Destination Virtual CIDRs.
 * `local_source_real_cidrs` - (Optional) Set of Local Initiated Traffic Source Real CIDRs.
