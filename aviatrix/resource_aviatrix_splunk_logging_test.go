@@ -41,7 +41,7 @@ func testAccSplunkLoggingBasic() string {
 	return `
 resource "aviatrix_splunk_logging" "test_splunk_logging" {
 	server            = "1.2.3.4"
-	port              = 10
+    port              = 10
 	excluded_gateways = ["a", "b"]
 }
 `

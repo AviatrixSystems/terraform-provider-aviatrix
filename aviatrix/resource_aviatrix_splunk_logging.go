@@ -28,13 +28,12 @@ func resourceAviatrixSplunkLogging() *schema.Resource {
 			"port": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     -1,
 				Description: "Port number",
 			},
-			"cu_output_cfg_file_path": {
+			"cu_output_cfg": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Configuration file path",
+				Description: "Configuration file",
 			},
 			"custom_input_cfg": {
 				Type:        schema.TypeString,
@@ -61,9 +60,9 @@ func resourceAviatrixSplunkLogging() *schema.Resource {
 func marshalSplunkLoggingInput(d *schema.ResourceData, useCustomConfig bool) *goaviatrix.SplunkLogging {
 	if useCustomConfig {
 		return &goaviatrix.SplunkLogging{
-			UseConfigFile:  true,
-			ConfigFilePath: d.Get("cu_output_cfg_file_path").(string),
-			CustomConfig:   d.Get("custom_input_cfg").(string),
+			UseConfigFile: true,
+			ConfigFile:    d.Get("cu_output_cfg").(string),
+			CustomConfig:  d.Get("custom_input_cfg").(string),
 		}
 	} else {
 		return &goaviatrix.SplunkLogging{
@@ -80,12 +79,13 @@ func resourceAviatrixSplunkLoggingCreate(d *schema.ResourceData, meta interface{
 
 	var splunkLogging *goaviatrix.SplunkLogging
 
-	if d.Get("server").(string) == "" && d.Get("port").(int) == -1 && d.Get("cu_output_cfg_file_path").(string) == "" {
+	// port number cannot be 0
+	if d.Get("server").(string) == "" && d.Get("port").(int) == 0 && d.Get("cu_output_cfg").(string) == "" {
 		return fmt.Errorf("please provide either server/port or configuration file path")
-	} else if d.Get("cu_output_cfg_file_path").(string) != "" {
+	} else if d.Get("cu_output_cfg").(string) != "" {
 		splunkLogging = marshalSplunkLoggingInput(d, true)
 	} else {
-		if d.Get("port").(int) == -1 || d.Get("server").(string) == "" {
+		if d.Get("port").(int) == 0 || d.Get("server").(string) == "" {
 			return fmt.Errorf("please provide both server and port")
 		}
 

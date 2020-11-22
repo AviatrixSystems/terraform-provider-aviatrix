@@ -8,7 +8,7 @@ type SplunkLogging struct {
 	CID                   string
 	Server                string
 	Port                  int
-	ConfigFilePath        string
+	ConfigFile            string
 	CustomConfig          string
 	ExcludedGatewaysInput string
 	UseConfigFile         bool
@@ -34,8 +34,10 @@ func (c *Client) EnableSplunkLogging(r *SplunkLogging) error {
 
 		files := []File{
 			{
-				Path:      r.ConfigFilePath,
-				ParamName: "cu_output_cfg",
+				ParamName:   "cu_output_cfg",
+				RealFile:    true,
+				FileName:    "configuration.txt", // fake name for configuration file
+				FileContent: r.ConfigFile,
 			},
 		}
 
