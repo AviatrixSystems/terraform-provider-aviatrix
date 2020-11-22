@@ -12,10 +12,60 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.17.0 (UserConnect-6.2)``
+``Last updated: R2.17.1 (UserConnect-6.2.1891)``
 
 
 ---
+
+## 2.17.1
+### Notes:
+- Release date: **(22 Nov 2020)**
+- Supported Controller version: **UserConnect-6.2.1891**
+- Supported Terraform version: **v0.12.x** and **v0.13.x**
+
+### Features:
+1. Implemented support for monitoring gateway subnets in **aviatrix_gateway** through ``enable_monitor_gateway_subnets`` and ``monitor_exclude_list``
+2. Implemented support for managing Aviatrix VPN timeout configurations through ``idle_timeout`` and ``renegotiation_interval`` in **aviatrix_gateway**
+3. Implemented support for ``enable_active_standby`` in **aviatrix_transit_gateway**
+4. Implemented Active-Standby support for Transit Network workflows:   
+  - ``enable_active_standby`` in **aviatrix_transit_gateway**
+  - ``switch_to_ha_standby_gateway`` in **aviatrix_transit_external_device_conn**
+5. Implemented new resource to decouple ``firewall_instance_association`` out of ``aviatrix_firenet``:
+  - **aviatrix_firewall_instance_association**
+6. Implemented support for transit gateway peering over private networks through the ``enable_peering_over_private_network`` attribute in **aviatrix_transit_gateway_peering**
+7. Implemented support for FQDN gateway in Azure FireNet:
+  - ``fqdn_lan_cidr`` as an attribute, and ``fqdn_lan_interface`` as a computed output in **aviatrix_gateway**
+  - ``lan_interface_cidr`` as an attribute in **aviatrix_transit_gateway**
+8. Implemented support for ``local_login`` in **aviatrix_rbac_group**
+9. Implemented Support for IDP Metadata URLs for SAML endpoints
+10. Implemented support for ``sign_authn_requests`` in **aviatrix_saml_endpoint**
+11. Implemented Bootstrap support for AWS and Azure FireNet solutions in aviatrix_firewall_instance:
+  - ``bootstrap_storage_name``
+  - ``storage_access_key``  
+  - ``file_share_folder``
+  - ``share_directory``
+  - ``sic_key``
+  - ``user_data``
+  - ``container_folder``
+  - ``sas_url_config``
+  - ``sas_url_license``
+12. Implemented support for DH Group 19 in **aviatrix_site2cloud**
+13. Implemented support for Custom Mapped in **aviatrix_site2cloud**
+
+### Enhancements:
+1. Changed ``management_subnet`` to optional to support Check Point and Fortinet instances in **aviatrix_firewall_instance**
+2. Added support for Terraform state migration due to resource-decoupling implementation for the following resources:
+  - **aviatrix_aws_tgw**
+  - **aviatrix_firenet**
+  - **aviatrix_fqdn**
+  - **aviatrix_spoke_gateway**
+  - **aviatrix_vpn_profile**
+  - **aviatrix_vpn_user**
+3. Official support for Terraform 0.13
+
+### Bug Fixes:
+1. Fixed issue with deltas in the state after creating non-AWS VPN gateways with ELB disabled and ``vpn_protocol`` set as "UDP"
+
 
 ## 2.17.0
 ### Notes:

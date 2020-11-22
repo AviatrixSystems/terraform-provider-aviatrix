@@ -10,12 +10,12 @@ description: |-
 
 The **aviatrix_firewall_instance_association** resource allows for the creation and management of a firewall instance association. To use this resource you must also have an `aviatrix_firenet` resource with it's `manage_firewall_instance_association` attribute set to false.
 
-Available as of provider version R2.17.1+.
+Available in provider version R2.17.1+.
 
 ## Example Usage
 
 ```hcl
-# Associate an Aviatrix FireNet Gateway with a Firewall Instance 
+# Associate an Aviatrix FireNet Gateway with a Firewall Instance
 resource "aviatrix_firewall_instance_association" "firewall_instance_association_1" {
   vpc_id               = aviatrix_firenet.firenet_1.vpc_id
   firenet_gw_name      = aviatrix_transit_gateway.transit_gateway_1.gw_name

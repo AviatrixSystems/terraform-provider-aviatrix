@@ -79,7 +79,7 @@ The following arguments are supported:
 -> **NOTE:** `egress_enabled` - Default value is false for associating firewall instance to FireNet. Only true is supported for associating FQDN gateway to FireNet.
 
 * `hashing_algorithm` - (Optional) Hashing algorithm to load balance traffic across the firewall. Valid values: "2-Tuple", "5-Tuple". Default value: "5-Tuple".
-* `manage_firewall_instance_association` - (Optional) Enable this attribute to manage firewall associations in-line. If set to true, in-line `firewall_instance_association` blocks can be used. If set to false, all firewall associations must be managed via standalone `aviatrix_firewall_instance_association` resources. Default value: true. Valid values: true or false. Available as of provider version R2.17.1+.
+* `manage_firewall_instance_association` - (Optional) Enable this attribute to manage firewall associations in-line. If set to true, in-line `firewall_instance_association` blocks can be used. If set to false, all firewall associations must be managed via standalone `aviatrix_firewall_instance_association` resources. Default value: true. Valid values: true or false. Available in provider version R2.17.1+.
 
 ### Firewall Association
 
@@ -90,9 +90,9 @@ The following arguments are supported:
   * `instance_id` - (Required) ID of Firewall instance.
 
   -> **NOTE:** If associating FQDN gateway to FireNet, it is FQDN gateway's `gw_name`. For Azure FireNet, it is the `firewall_name` concatenated with a ":" and the Resource Group of the `vpc_id` set for that instance.
-  
+
   -> **NOTE:** If associating FQDN gateway to FireNet in Azure, the `lan_interface` is required. The `lan_interface` can be obtained from the exported attribute `fqdn_lan_interface` in aviatrix_gateway resource block (Available in provider version R2.17.1+).
-  
+
   * `vendor_type` - (Optional) Type of firewall. Valid values: "Generic", "fqdn_gateway". Default value: "Generic". Value "fqdn_gateway" is required for FQDN gateway.  
   * `firewall_name` - (Optional) Firewall instance name. **Required if it is a firewall instance.**
   * `lan_interface`- (Optional) Lan interface ID. **Required if it is a firewall instance or FQDN gateway in Azure.**
