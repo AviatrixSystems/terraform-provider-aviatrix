@@ -108,6 +108,7 @@ The following arguments are supported:
 * `enable_dead_peer_detection` - (Optional) Enable/disable Deed Peer Detection for an existing site2cloud connection. Default value: true. **NOTE: Please see notes [here](#enable_dead_peer_detection-1) in regards to any deltas found in your state with the addition of this argument in R1.9**
 * `enable_active_active` - (Optional) Enable/disable active active HA for an existing site2cloud connection. Valid values: true, false. Default value: false.
 * `enable_ikev2` - (Optional) Switch to enable IKEv2 for policy-based site2cloud. Valid values: true, false. Default value: false.
+* `forward_traffic_to_transit` - (Optional) Enable spoke gateway with mapped site2cloud configurations to forward traffic from site2cloud connection to Aviatrix Transit Gateway. Default value: false. Valid values: true or false. Available as of provider version 2.17.2.
 
 ## Attribute Reference
 

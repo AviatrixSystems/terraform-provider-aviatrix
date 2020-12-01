@@ -259,6 +259,12 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Default:     false,
 				Description: "Switch to Enable/Disable active_active_ha for an existing site2cloud connection.",
 			},
+			"forward_traffic_to_transit": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable spoke gateway with mapped site2cloud configurations to forward traffic from site2cloud connection to Aviatrix Transit Gateway.",
+			},
 			"custom_mapped": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -545,6 +551,14 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	forwardToTransit := d.Get("forward_traffic_to_transit").(bool)
+	if forwardToTransit {
+		err := client.EnableSpokeMappedSite2CloudForwarding(s2c)
+		if err != nil {
+			return fmt.Errorf("failed to enable traffic forwarding to transit: %v", err)
+		}
+	}
+
 	return resourceAviatrixSite2CloudReadIfRequired(d, meta, &flag)
 }
 
@@ -645,6 +659,7 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 
 		d.Set("enable_dead_peer_detection", s2c.DeadPeerDetection)
 		d.Set("enable_active_active", s2c.EnableActiveActive)
+		d.Set("forward_traffic_to_transit", s2c.ForwardToTransit)
 
 		if s2c.EnableIKEv2 == "true" {
 			d.Set("enable_ikev2", true)
@@ -782,6 +797,26 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		d.SetPartial("enable_active_active")
 	}
 
+	if d.HasChange("forward_traffic_to_transit") {
+		s2c := &goaviatrix.Site2Cloud{
+			VpcID:      d.Get("vpc_id").(string),
+			TunnelName: d.Get("connection_name").(string),
+		}
+		forwardToTransit := d.Get("forward_traffic_to_transit").(bool)
+		if forwardToTransit {
+			err := client.EnableSpokeMappedSite2CloudForwarding(s2c)
+			if err != nil {
+				return fmt.Errorf("failed to enable traffic forwarding to transit for site2cloud: %s: %s", s2c.TunnelName, err)
+			}
+		} else {
+			err := client.DisableSpokeMappedSite2CloudForwarding(s2c)
+			if err != nil {
+				return fmt.Errorf("failed to disable traffic forwarding to transit for site2cloud: %s: %s", s2c.TunnelName, err)
+			}
+		}
+		d.SetPartial("forward_traffic_to_transit")
+	}
+
 	if d.HasChanges(customMappedAttributeNames...) {
 		if !d.Get("custom_mapped").(bool) {
 			return fmt.Errorf("attributes %v are not valid when 'custom_mapped' is disabled", customMappedAttributeNames)
@@ -828,6 +863,14 @@ func resourceAviatrixSite2CloudDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix s2c: %#v", s2c)
+
+	forwardToTransit := d.Get("forward_traffic_to_transit").(bool)
+	if forwardToTransit {
+		err := client.DisableSpokeMappedSite2CloudForwarding(s2c)
+		if err != nil {
+			log.Println("[WARN] Failed to disable forwarding to transit:", err)
+		}
+	}
 
 	err := client.DeleteSite2Cloud(s2c)
 	if err != nil {

@@ -62,6 +62,7 @@ type Site2Cloud struct {
 	CustomAlgorithms              bool
 	DeadPeerDetection             bool
 	EnableActiveActive            bool
+	ForwardToTransit              bool
 	CustomMap                     bool   `form:"custom_map,omitempty"`
 	RemoteSourceRealCIDRs         string `form:"remote_src_real_cidrs,omitempty"`
 	RemoteSourceVirtualCIDRs      string `form:"remote_src_virt_cidrs,omitempty"`
@@ -132,6 +133,7 @@ type EditSite2CloudConnDetail struct {
 	AzureAccountName              string        `json:"arm_account_name,omitempty"`
 	AzureResourceGroup            string        `json:"arm_resource_group,omitempty"`
 	AzureVhubName                 string        `json:"arm_vhub_name,omitempty"`
+	ForwardToTransit              string        `json:"forward_to_transit"`
 	RemoteSourceRealCIDRs         string        `json:"remote_src_real_cidrs"`
 	RemoteSourceVirtualCIDRs      string        `json:"remote_src_virt_cidrs"`
 	RemoteDestinationRealCIDRs    string        `json:"remote_dst_real_cidrs"`
@@ -397,6 +399,11 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 		} else {
 			site2cloud.EnableActiveActive = false
 		}
+		if s2cConnDetail.ForwardToTransit == "enable" {
+			site2cloud.ForwardToTransit = true
+		} else {
+			site2cloud.ForwardToTransit = false
+		}
 		if s2cConnDetail.EnableIKEv2 == "2" {
 			site2cloud.EnableIKEv2 = "true"
 		}
@@ -588,4 +595,24 @@ func (c *Client) DisableSite2cloudActiveActive(site2cloud *Site2Cloud) error {
 		return errors.New("Rest API 'disable_site2cloud_active_active_ha' Get failed: " + data.Reason)
 	}
 	return nil
+}
+
+func (c *Client) EnableSpokeMappedSite2CloudForwarding(site2cloud *Site2Cloud) error {
+	data := map[string]string{
+		"CID":             c.CID,
+		"action":          "enable_spoke_mapped_site2cloud_forwarding",
+		"vpc_id":          site2cloud.VpcID,
+		"connection_name": site2cloud.TunnelName,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) DisableSpokeMappedSite2CloudForwarding(site2cloud *Site2Cloud) error {
+	data := map[string]string{
+		"CID":             c.CID,
+		"action":          "disable_spoke_mapped_site2cloud_forwarding",
+		"vpc_id":          site2cloud.VpcID,
+		"connection_name": site2cloud.TunnelName,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
 }
