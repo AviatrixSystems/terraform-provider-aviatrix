@@ -68,7 +68,7 @@ resource "aviatrix_gateway" "test_psf_gateway_aws" {
   gw_size                                     = "t2.micro"
   subnet                                      = "10.0.0.0/24"
   zone                                        = "us-west-1b"
-  public_subnet_filtering                     = true
+  enable_public_subnet_filtering              = true
   public_subnet_filtering_route_tables        = [data.aviatrix_vpc.test_vpc.route_tables[0]]
   public_subnet_filtering_guard_duty_enforced = true
   single_az_ha                                = true
@@ -86,7 +86,7 @@ resource "aviatrix_gateway" "test_psf_gateway_aws" {
   gw_size                                     = "t2.micro"
   subnet                                      = "10.0.0.0/24"
   zone                                        = "us-west-1b"
-  public_subnet_filtering                     = true
+  enable_public_subnet_filtering              = true
   public_subnet_filtering_route_tables        = [data.aviatrix_vpc.test_vpc.route_tables[0]]
   peering_ha_subnet                           = "10.10.0.64/26"
   peering_ha_zone                             = "us-west-1b"
@@ -262,10 +262,13 @@ The following arguments are supported:
 * `zone` - (Optional) Availability Zone. Only available for Azure and Public Subnet Filtering gateway. Available for Azure as of provider version R2.17+.
 
 ### Public Subnet Filtering Gateway
-* `public_subnet_filtering` - (Optional) Create a [Public Subnet Filtering gateway](https://docs.aviatrix.com/HowTos/public_subnet_filtering_faq.html). Valid values: true or false. Default value: false. Available as of provider version R2.18+.
-* `public_subnet_filtering_route_tables` - (Optional) Route tables whose associated public subnets are protected. Only valid when `public_subnet_filtering` attribute is true. Available as of provider version R2.18+.
-* `public_subnet_filtering_ha_route_tables` - (Optional) Route tables whose associated public subnets are protected for the HA PSF gateway. Required when `public_subnet_filtering` and `peering_ha_subnet` are set. Available as of provider version R2.18+.
-* `public_subnet_filtering_guard_duty_enforced` - (Optional) Whether to enforce Guard Duty IP blocking.  Only valid when `public_subnet_filtering` attribute is true. Available as of provider version R2.18+.
+
+~> **NOTE:** When `enable_public_subnet_filtering` is set to true the following attributes cannot be used and doing so will result in a plan time error: "additional_cidrs", "additional_cidrs_designated_gateway", "allocate_new_eip", "customer_managed_keys", "duo_api_hostname", "duo_integration_key", "duo_push_mode", "duo_secret_key", "eip", "elb_name", "enable_designated_gateway", "enable_elb", "enable_ldap", "enable_monitor_gateway_subnets", "enable_vpc_dns_server", "enable_vpn_nat", "fqdn_lan_cidr", "idle_timeout", "insane_mode", "insane_mode_az", "ldap_base_dn", "ldap_bind_dn", "ldap_password", "ldap_server", "ldap_username_attribute", "max_vpn_conn", "monitor_exclude_list", "name_servers", "okta_token", "okta_url", "okta_username_suffix", "otp_mode", "peering_ha_eip", "peering_ha_insane_mode_az", "renegotiation_interval", "saml_enabled", "search_domains", "single_ip_snat", "split_tunnel", "vpn_access", "vpn_cidr", "vpn_protocol".
+
+* `enable_public_subnet_filtering` - (Optional) Create a [Public Subnet Filtering gateway](https://docs.aviatrix.com/HowTos/public_subnet_filtering_faq.html). Valid values: true or false. Default value: false. Available as of provider version R2.18+.
+* `public_subnet_filtering_route_tables` - (Optional) Route tables whose associated public subnets are protected. Only valid when `enable_public_subnet_filtering` attribute is true. Available as of provider version R2.18+.
+* `public_subnet_filtering_ha_route_tables` - (Optional) Route tables whose associated public subnets are protected for the HA PSF gateway. Required when `enable_public_subnet_filtering` and `peering_ha_subnet` are set. Available as of provider version R2.18+.
+* `public_subnet_filtering_guard_duty_enforced` - (Optional) Whether to enforce Guard Duty IP blocking.  Only valid when `enable_public_subnet_filtering` attribute is true. Available as of provider version R2.18+.
 
 ## Attribute Reference
 
