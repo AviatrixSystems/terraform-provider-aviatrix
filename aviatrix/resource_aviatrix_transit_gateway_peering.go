@@ -150,18 +150,17 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("could not get transit peering details: %v", err)
 	}
 
-	if err := d.Set("gateway1_excluded_network_cidrs", transitGatewayPeering.Gateway1ExcludedCIDRsSlice); err != nil {
-		return err
-	}
-	if err := d.Set("gateway2_excluded_network_cidrs", transitGatewayPeering.Gateway2ExcludedCIDRsSlice); err != nil {
-		return err
-	}
-	if err := d.Set("gateway1_excluded_tgw_connections", transitGatewayPeering.Gateway1ExcludedTGWConnectionsSlice); err != nil {
-		return err
-	}
-	if err := d.Set("gateway2_excluded_tgw_connections", transitGatewayPeering.Gateway2ExcludedTGWConnectionsSlice); err != nil {
-		return err
-	}
+	gw1CidrsFromConfig := getStringList(d, "gateway1_excluded_network_cidrs")
+	setConfigValueIfEquivalent(d, "gateway1_excluded_network_cidrs", gw1CidrsFromConfig, transitGatewayPeering.Gateway1ExcludedCIDRsSlice)
+
+	gw2CidrsFromConfig := getStringList(d, "gateway2_excluded_network_cidrs")
+	setConfigValueIfEquivalent(d, "gateway2_excluded_network_cidrs", gw2CidrsFromConfig, transitGatewayPeering.Gateway2ExcludedCIDRsSlice)
+
+	gw1TgwsFromConfig := getStringList(d, "gateway1_excluded_tgw_connections")
+	setConfigValueIfEquivalent(d, "gateway1_excluded_tgw_connections", gw1TgwsFromConfig, transitGatewayPeering.Gateway1ExcludedTGWConnectionsSlice)
+
+	gw2TgwsFromConfig := getStringList(d, "gateway2_excluded_tgw_connections")
+	setConfigValueIfEquivalent(d, "gateway2_excluded_tgw_connections", gw2TgwsFromConfig, transitGatewayPeering.Gateway2ExcludedTGWConnectionsSlice)
 
 	d.Set("enable_peering_over_private_network", transitGatewayPeering.PrivateIPPeering)
 
@@ -226,4 +225,20 @@ func resourceAviatrixTransitGatewayPeeringDelete(d *schema.ResourceData, meta in
 	}
 
 	return nil
+}
+
+func setConfigValueIfEquivalent(d *schema.ResourceData, k string, fromConfig, fromAPI []string) {
+	if goaviatrix.Equivalent(fromConfig, fromAPI) {
+		d.Set(k, fromConfig)
+	} else {
+		d.Set(k, fromAPI)
+	}
+}
+
+func getStringList(d *schema.ResourceData, k string) []string {
+	var sl []string
+	for _, v := range d.Get(k).([]interface{}) {
+		sl = append(sl, v.(string))
+	}
+	return sl
 }
