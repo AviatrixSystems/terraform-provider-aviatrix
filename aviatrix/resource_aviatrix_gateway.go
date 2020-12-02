@@ -60,10 +60,9 @@ func resourceAviatrixGateway() *schema.Resource {
 				Description: "A VPC Network address range selected from one of the available network ranges.",
 			},
 			"zone": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateAzureAZ,
-				Description:  "Availability Zone. Only available for cloud_type = 8 (AZURE). Must be in the form 'az-n', for example, 'az-2'.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Availability Zone. Only available for Azure and Public Subnet Filtering gateway",
 			},
 			"insane_mode_az": {
 				Type:        schema.TypeString,
@@ -412,6 +411,34 @@ func resourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "FQDN gateway lan interface id.",
 			},
+			"enable_public_subnet_filtering": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				RequiredWith: []string{
+					"public_subnet_filtering_route_tables",
+					"public_subnet_filtering_guard_duty_enforced",
+				},
+				ConflictsWith: conflictingPublicSubnetFilteringGatewayConfigKeys,
+				Description:   "Create a [Public Subnet Filtering gateway](https://docs.aviatrix.com/HowTos/public_subnet_filtering_faq.html).",
+			},
+			"public_subnet_filtering_route_tables": {
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "Route tables whose associated public subnets are protected. Required when `enable_public_subnet_filtering` attribute is true.",
+			},
+			"public_subnet_filtering_ha_route_tables": {
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "Route tables whose associated public subnets are protected for the HA PSF gateway. Required when enable_public_subnet_filtering and peering_ha_subnet are set.",
+			},
+			"public_subnet_filtering_guard_duty_enforced": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Whether to enforce Guard Duty IP blocking. Required when `enable_public_subnet_filtering` attribute is true.",
+			},
 		},
 	}
 }
@@ -449,8 +476,21 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		SaveTemplate:       "no",
 	}
 
-	if gateway.CloudType != goaviatrix.AZURE && d.Get("zone").(string) != "" {
-		return fmt.Errorf("attribute 'zone' is only valid for cloud_type = 8 (AZURE)")
+	err := checkPublicSubnetFilteringConfig(d)
+	if err != nil {
+		return err
+	}
+	if d.Get("enable_public_subnet_filtering").(bool) {
+		var routeTables []string
+		for _, v := range d.Get("public_subnet_filtering_route_tables").(*schema.Set).List() {
+			routeTables = append(routeTables, v.(string))
+		}
+		gateway.RouteTable = strings.Join(routeTables, ",")
+		gateway.VpcNet = fmt.Sprintf("%s~~%s", d.Get("subnet").(string), d.Get("zone").(string))
+	}
+
+	if gateway.CloudType != goaviatrix.AZURE && !d.Get("enable_public_subnet_filtering").(bool) && d.Get("zone").(string) != "" {
+		return fmt.Errorf("attribute 'zone' is only valid for AZURE and Public Subnet Filtering Gateways")
 	}
 
 	if gateway.CloudType == goaviatrix.AZURE && d.Get("zone").(string) != "" {
@@ -609,8 +649,8 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	peeringHaGwSize := d.Get("peering_ha_gw_size").(string)
 	peeringHaSubnet := d.Get("peering_ha_subnet").(string)
 	peeringHaZone := d.Get("peering_ha_zone").(string)
-	if peeringHaZone != "" && gateway.CloudType != goaviatrix.GCP && gateway.CloudType != goaviatrix.AZURE {
-		return fmt.Errorf("'peering_ha_zone' is only valid for GCP and AZURE providers if enabling Peering HA")
+	if peeringHaZone != "" && gateway.CloudType != goaviatrix.GCP && gateway.CloudType != goaviatrix.AZURE && !d.Get("enable_public_subnet_filtering").(bool) {
+		return fmt.Errorf("'peering_ha_zone' is only valid for GCP, AZURE and Public Subnet Filtering Gateway if enabling Peering HA")
 	}
 	if gateway.CloudType == goaviatrix.GCP && peeringHaZone == "" && peeringHaSubnet != "" {
 		return fmt.Errorf("'peering_ha_zone' must be set to enable Peering HA on GCP, " +
@@ -652,11 +692,26 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)
 
-	err := client.CreateGateway(gateway)
-	if err != nil {
-		log.Printf("[INFO] failed to create Aviatrix gateway: %#v", gateway)
-		return fmt.Errorf("failed to create Aviatrix gateway: %s", err)
+	if d.Get("enable_public_subnet_filtering").(bool) {
+		err := client.CreatePublicSubnetFilteringGateway(gateway)
+		if err != nil {
+			log.Printf("[INFO] failed to create public subnet filtering gateway: %#v", gateway)
+			return fmt.Errorf("could not create public subnet filtering gateway: %v", err)
+		}
+		if !d.Get("public_subnet_filtering_guard_duty_enforced").(bool) {
+			err = client.DisableGuardDutyEnforcement(gateway)
+			if err != nil {
+				return fmt.Errorf("could not disable guard duty enforcement for public subnet filtering gateway: %v", err)
+			}
+		}
+	} else {
+		err := client.CreateGateway(gateway)
+		if err != nil {
+			log.Printf("[INFO] failed to create Aviatrix gateway: %#v", gateway)
+			return fmt.Errorf("failed to create Aviatrix gateway: %s", err)
+		}
 	}
+
 	d.SetId(gateway.GwName)
 
 	flag := false
@@ -675,7 +730,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	singleAZ := d.Get("single_az_ha").(bool)
-	if singleAZ {
+	if singleAZ && !d.Get("enable_public_subnet_filtering").(bool) {
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName:   d.Get("gw_name").(string),
 			SingleAZ: "enabled",
@@ -686,6 +741,13 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		err := client.EnableSingleAZGateway(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to create single AZ GW HA: %s", err)
+		}
+	} else if !singleAZ && d.Get("enable_public_subnet_filtering").(bool) {
+		// Public Subnet Filtering Gateways are created with single_az_ha=true by default.
+		// Thus, if user set single_az_ha=false, we need to disable.
+		err := client.DisableSingleAZGateway(gateway)
+		if err != nil {
+			return fmt.Errorf("failed to disable single AZ : %v", err)
 		}
 	}
 
@@ -705,7 +767,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 
 	// peering_ha_subnet is for Peering HA Gateway. https://docs.aviatrix.com/HowTos/gateway.html#high-availability
 	if peeringHaSubnet != "" || peeringHaZone != "" {
-		if peeringHaGwSize == "" {
+		if peeringHaGwSize == "" && !d.Get("enable_public_subnet_filtering").(bool) {
 			return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for " +
 				"this resource if peering_ha_subnet or peering_ha_zone is set. Example: t2.micro")
 		}
@@ -738,11 +800,24 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 
-		log.Printf("[INFO] Enable peering HA: %#v", peeringHaGateway)
-
-		err := client.EnablePeeringHaGateway(peeringHaGateway)
-		if err != nil {
-			return fmt.Errorf("failed to create peering HA: %s", err)
+		if d.Get("enable_public_subnet_filtering").(bool) {
+			log.Printf("[INFO] Enable public subnet filtering HA: %#v", peeringHaGateway)
+			var haRouteTables []string
+			for _, v := range d.Get("public_subnet_filtering_ha_route_tables").(*schema.Set).List() {
+				haRouteTables = append(haRouteTables, v.(string))
+			}
+			peeringHaGateway.RouteTable = strings.Join(haRouteTables, ",")
+			peeringHaGateway.PeeringHASubnet = fmt.Sprintf("%s~~%s", peeringHaSubnet, peeringHaZone)
+			err := client.EnablePublicSubnetFilteringHAGateway(peeringHaGateway)
+			if err != nil {
+				return fmt.Errorf("could not create public subnet filtering gateway HA: %v", err)
+			}
+		} else {
+			log.Printf("[INFO] Enable peering HA: %#v", peeringHaGateway)
+			err := client.EnablePeeringHaGateway(peeringHaGateway)
+			if err != nil {
+				return fmt.Errorf("failed to create peering HA: %s", err)
+			}
 		}
 
 		log.Printf("[INFO] Resizing Peering HA Gateway: %#v", peeringHaGwSize)
@@ -781,7 +856,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			tags.CloudType = goaviatrix.AWSGOV
 		}
 
-		err = client.AddTags(tags)
+		err := client.AddTags(tags)
 		if err != nil {
 			return fmt.Errorf("failed to add tags: %s", err)
 		}
@@ -1309,6 +1384,44 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("fqdn_lan_interface", "")
 			d.Set("fqdn_lan_cidr", "")
 		}
+
+		publicSubnetFilteringDetails, err := client.GetPublicSubnetFilteringGatewayDetails(gatewayServer)
+		if err != nil {
+			d.Set("enable_public_subnet_filtering", false)
+			d.Set("public_subnet_filtering_route_tables", []string{})
+			d.Set("public_subnet_filtering_ha_route_tables", []string{})
+			d.Set("public_subnet_filtering_guard_duty_enforced", nil)
+			log.Printf("[INFO] Could not find public subnet filtering details for gateway %q with error: %v\n", gw.GwName, err)
+		} else {
+			d.Set("enable_public_subnet_filtering", true)
+			if err := d.Set("public_subnet_filtering_route_tables", publicSubnetFilteringDetails.RouteTableList); err != nil {
+				return fmt.Errorf("could not set public_subnet_filtering_route_tables into state: %v", err)
+			}
+			haGateway := &goaviatrix.Gateway{
+				GwName: gw.GwName + "-hagw",
+				VpcID:  gw.VpcID,
+			}
+			haPublicSubnetFilteringDetails, err := client.GetPublicSubnetFilteringGatewayDetails(haGateway)
+			if err != nil {
+				log.Println("[INFO] HA public subnet filtering gateway was not found: ", err)
+				err := d.Set("public_subnet_filtering_ha_route_tables", []string{})
+				if err != nil {
+					return fmt.Errorf("could not set public_subnet_filtering_ha_route_tables into state: %v", err)
+				}
+			} else {
+				if err := d.Set("public_subnet_filtering_ha_route_tables", haPublicSubnetFilteringDetails.RouteTableList); err != nil {
+					return fmt.Errorf("could not set public_subnet_filtering_ha_route_tables into state: %v", err)
+				}
+			}
+
+			d.Set("public_subnet_filtering_guard_duty_enforced", publicSubnetFilteringDetails.GuardDutyEnforced == "yes")
+			d.Set("subnet", publicSubnetFilteringDetails.GwSubnetCidr)
+			d.Set("zone", publicSubnetFilteringDetails.GwSubnetAz)
+			if haPublicSubnetFilteringDetails != nil {
+				d.Set("peering_ha_subnet", haPublicSubnetFilteringDetails.GwSubnetCidr)
+				d.Set("peering_ha_zone", haPublicSubnetFilteringDetails.GwSubnetAz)
+			}
+		}
 	}
 	return nil
 }
@@ -1373,6 +1486,13 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("enable_designated_gateway") {
 		return fmt.Errorf("updating enable_designated_gateway is not allowed")
 	}
+	if d.HasChange("enable_public_subnet_filtering") {
+		return fmt.Errorf("updating enable_public_subnet_filtering is not allowed")
+	}
+	err := checkPublicSubnetFilteringConfig(d)
+	if err != nil {
+		return err
+	}
 
 	gateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
@@ -1394,8 +1514,8 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 	if d.HasChange("peering_ha_zone") {
 		peeringHaZone := d.Get("peering_ha_zone").(string)
-		if peeringHaZone != "" && gateway.CloudType != goaviatrix.GCP && gateway.CloudType != goaviatrix.AZURE {
-			return fmt.Errorf("'peering_ha_zone' is only valid for GCP and AZURE providers if enabling Peering HA")
+		if peeringHaZone != "" && gateway.CloudType != goaviatrix.GCP && gateway.CloudType != goaviatrix.AZURE && !d.Get("enable_public_subnet_filtering").(bool) {
+			return fmt.Errorf("'peering_ha_zone' is only valid for GCP, AZURE and Public Subnet Filtering Gateway if enabling Peering HA")
 		}
 	}
 	if gateway.CloudType == goaviatrix.GCP {
@@ -1840,26 +1960,57 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				changeHaGw = true
 			}
 		}
-		if newHaGwEnabled {
-			err := client.EnablePeeringHaGateway(gw)
-			if err != nil {
-				return fmt.Errorf("failed to enable Aviatrix peering HA gateway: %s", err)
+		if d.Get("enable_public_subnet_filtering").(bool) {
+			var haRouteTables []string
+			for _, v := range d.Get("public_subnet_filtering_ha_route_tables").(*schema.Set).List() {
+				haRouteTables = append(haRouteTables, v.(string))
 			}
-		} else if deleteHaGw {
-			err := client.DeleteGateway(peeringHaGateway)
-			if err != nil {
-				return fmt.Errorf("failed to delete Aviatrix peering HA gateway: %s", err)
-			}
-		} else if changeHaGw {
-			err := client.DeleteGateway(peeringHaGateway)
-			if err != nil {
-				return fmt.Errorf("failed to delete Aviatrix peering HA gateway: %s", err)
-			}
+			gw.RouteTable = strings.Join(haRouteTables, ",")
+			gw.PeeringHASubnet = fmt.Sprintf("%s~~%s", d.Get("peering_ha_subnet"), d.Get("peering_ha_zone"))
+			if newHaGwEnabled {
+				err := client.EnablePublicSubnetFilteringHAGateway(gw)
+				if err != nil {
+					return fmt.Errorf("failed to enable Aviatrix public subnet filtering HA gateway: %s", err)
+				}
+			} else if deleteHaGw {
+				err := client.DeletePublicSubnetFilteringGateway(peeringHaGateway)
+				if err != nil {
+					return fmt.Errorf("failed to delete Aviatrix public subnet filtering HA gateway: %s", err)
+				}
+			} else if changeHaGw {
+				err := client.DeletePublicSubnetFilteringGateway(peeringHaGateway)
+				if err != nil {
+					return fmt.Errorf("failed to delete Aviatrix public subnet filtering HA gateway: %s", err)
+				}
 
-			gateway.GwName = d.Get("gw_name").(string)
-			haErr := client.EnablePeeringHaGateway(gw)
-			if haErr != nil {
-				return fmt.Errorf("failed to enable Aviatrix peering HA gateway: %s", err)
+				gateway.GwName = d.Get("gw_name").(string)
+				err = client.EnablePublicSubnetFilteringHAGateway(gw)
+				if err != nil {
+					return fmt.Errorf("failed to enable Aviatrix public subnet filtering HA gateway: %s", err)
+				}
+			}
+		} else {
+			if newHaGwEnabled {
+				err := client.EnablePeeringHaGateway(gw)
+				if err != nil {
+					return fmt.Errorf("failed to enable Aviatrix peering HA gateway: %s", err)
+				}
+			} else if deleteHaGw {
+				err := client.DeleteGateway(peeringHaGateway)
+				if err != nil {
+					return fmt.Errorf("failed to delete Aviatrix peering HA gateway: %s", err)
+				}
+			} else if changeHaGw {
+				err := client.DeleteGateway(peeringHaGateway)
+				if err != nil {
+					return fmt.Errorf("failed to delete Aviatrix peering HA gateway: %s", err)
+				}
+
+				gateway.GwName = d.Get("gw_name").(string)
+				haErr := client.EnablePeeringHaGateway(gw)
+				if haErr != nil {
+					return fmt.Errorf("failed to enable Aviatrix peering HA gateway: %s", err)
+				}
 			}
 		}
 
@@ -2082,6 +2233,51 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	gatewayServer = &goaviatrix.Gateway{
+		GwName: d.Get("gw_name").(string),
+	}
+
+	if d.HasChange("public_subnet_filtering_route_tables") {
+		var routeTables []string
+		for _, v := range d.Get("public_subnet_filtering_route_tables").(*schema.Set).List() {
+			routeTables = append(routeTables, v.(string))
+		}
+		if len(routeTables) == 0 {
+			return fmt.Errorf("attribute 'public_subnet_filtering_route_tables' must not be empty if 'enable_public_subnet_filtering' is set to true")
+		}
+		err := client.EditPublicSubnetFilteringRouteTableList(gatewayServer, routeTables)
+		if err != nil {
+			return fmt.Errorf("could not edit public subnet filtering route table rules")
+		}
+		d.SetPartial("public_subnet_filtering_route_tables")
+	}
+	if d.HasChange("public_subnet_filtering_ha_route_tables") && !d.HasChange("peering_ha_subnet") && d.Get("peering_ha_subnet").(string) != "" {
+		var haRouteTables []string
+		for _, v := range d.Get("public_subnet_filtering_ha_route_tables").(*schema.Set).List() {
+			haRouteTables = append(haRouteTables, v.(string))
+		}
+		peeringHaGateway.RouteTable = strings.Join(haRouteTables, ",")
+		err := client.EditPublicSubnetFilteringRouteTableList(peeringHaGateway, haRouteTables)
+		if err != nil {
+			return fmt.Errorf("could not edit HA public subnet filtering route table rules")
+		}
+		d.SetPartial("public_subnet_filtering_ha_route_tables")
+	}
+	if d.HasChange("public_subnet_filtering_guard_duty_enforced") {
+		if d.Get("public_subnet_filtering_guard_duty_enforced").(bool) {
+			err := client.EnableGuardDutyEnforcement(gatewayServer)
+			if err != nil {
+				return fmt.Errorf("could not enable public subnet filtering guard duty enforcement: %v", err)
+			}
+		} else {
+			err := client.DisableGuardDutyEnforcement(gatewayServer)
+			if err != nil {
+				return fmt.Errorf("could not disable public subnet filtering guard duty enforcement: %v", err)
+			}
+		}
+		d.SetPartial("public_subnet_filtering_guard_duty_enforced")
+	}
+
 	d.Partial(false)
 	d.SetId(gateway.GwName)
 	return resourceAviatrixGatewayRead(d, meta)
@@ -2093,7 +2289,8 @@ func resourceAviatrixGatewayDelete(d *schema.ResourceData, meta interface{}) err
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string),
 	}
-
+	var err error
+	isPublicSubnetFilteringGateway := d.Get("enable_public_subnet_filtering").(bool)
 	// peering_ha_subnet is for Peering HA
 	peeringHaSubnet := d.Get("peering_ha_subnet").(string)
 	peeringHaZone := d.Get("peering_ha_zone").(string)
@@ -2101,7 +2298,13 @@ func resourceAviatrixGatewayDelete(d *schema.ResourceData, meta interface{}) err
 		//Delete backup gateway first
 		gateway.GwName += "-hagw"
 		log.Printf("[INFO] Deleting Aviatrix Backup Gateway [-hagw]: %#v", gateway)
-		err := client.DeleteGateway(gateway)
+
+		if isPublicSubnetFilteringGateway {
+			err = client.DeletePublicSubnetFilteringGateway(gateway)
+		} else {
+			err = client.DeleteGateway(gateway)
+		}
+
 		if err != nil {
 			return fmt.Errorf("failed to delete backup [-hgw] gateway: %s", err)
 		}
@@ -2111,10 +2314,95 @@ func resourceAviatrixGatewayDelete(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Deleting Aviatrix gateway: %#v", gateway)
 
-	err := client.DeleteGateway(gateway)
+	if isPublicSubnetFilteringGateway {
+		err = client.DeletePublicSubnetFilteringGateway(gateway)
+	} else {
+		err = client.DeleteGateway(gateway)
+	}
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix Gateway: %s", err)
 	}
 
 	return nil
+}
+
+func checkPublicSubnetFilteringConfig(d *schema.ResourceData) error {
+	var routeTables, haRouteTables []string
+	for _, v := range d.Get("public_subnet_filtering_route_tables").(*schema.Set).List() {
+		routeTables = append(routeTables, v.(string))
+	}
+	for _, v := range d.Get("public_subnet_filtering_ha_route_tables").(*schema.Set).List() {
+		haRouteTables = append(haRouteTables, v.(string))
+	}
+	isPublicSubnetFilteringGw := d.Get("enable_public_subnet_filtering").(bool)
+	if isPublicSubnetFilteringGw && d.Get("cloud_type").(int) != goaviatrix.AWS && d.Get("cloud_type").(int) != goaviatrix.AWSGOV {
+		return fmt.Errorf("enable_public_subnet_filtering is only valid for cloud_type = 1 or 256 (AWS or AWSGOV)")
+	}
+	if isPublicSubnetFilteringGw && len(routeTables) == 0 {
+		return fmt.Errorf("public_subnet_filtering_route_tables can not be empty when 'enable_public_subnet_filtering' is enabled. Please supply at least one route table ID")
+	}
+	if !isPublicSubnetFilteringGw && len(routeTables) != 0 {
+		return fmt.Errorf("use of public_subnet_filtering_route_tables is not valid if enable_public_subnet_filtering is false")
+	}
+	if !isPublicSubnetFilteringGw && len(haRouteTables) != 0 {
+		return fmt.Errorf("use of public_subnet_filtering_ha_route_tables is not valid if enable_public_subnet_filtering is false")
+	}
+	if _, ok := d.GetOkExists("public_subnet_filtering_guard_duty_enforced"); isPublicSubnetFilteringGw && !ok {
+		return fmt.Errorf("public_subnet_filtering_guard_duty_enforced must be set when 'enable_public_subnet_filtering' is enabled")
+	}
+	if _, ok := d.GetOkExists("public_subnet_filtering_guard_duty_enforced"); !isPublicSubnetFilteringGw && ok {
+		return fmt.Errorf("public_subnet_filtering_guard_duty_enforced is not valid 'enable_public_subnet_filtering' is disabled")
+	}
+	if d.IsNewResource() {
+		if d.Get("enable_public_subnet_filtering").(bool) && !d.Get("enable_encrypt_volume").(bool) {
+			return fmt.Errorf("enable_encrypt_volume must be set to true when 'enable_public_subnet_filtering' is enabled")
+		}
+	}
+	return nil
+}
+
+// Attributes that cannot be set when enabling public subnet filtering.
+var conflictingPublicSubnetFilteringGatewayConfigKeys = []string{
+	"additional_cidrs",
+	"additional_cidrs_designated_gateway",
+	"allocate_new_eip",
+	"customer_managed_keys",
+	"duo_api_hostname",
+	"duo_integration_key",
+	"duo_push_mode",
+	"duo_secret_key",
+	"eip",
+	"elb_name",
+	"enable_designated_gateway",
+	"enable_elb",
+	"enable_ldap",
+	"enable_monitor_gateway_subnets",
+	"enable_vpc_dns_server",
+	"enable_vpn_nat",
+	"fqdn_lan_cidr",
+	"idle_timeout",
+	"insane_mode",
+	"insane_mode_az",
+	"ldap_base_dn",
+	"ldap_bind_dn",
+	"ldap_password",
+	"ldap_server",
+	"ldap_username_attribute",
+	"max_vpn_conn",
+	"monitor_exclude_list",
+	"name_servers",
+	"okta_token",
+	"okta_url",
+	"okta_username_suffix",
+	"otp_mode",
+	"peering_ha_eip",
+	"peering_ha_insane_mode_az",
+	"renegotiation_interval",
+	"saml_enabled",
+	"search_domains",
+	"single_ip_snat",
+	"split_tunnel",
+	"vpn_access",
+	"vpn_cidr",
+	"vpn_protocol",
 }
