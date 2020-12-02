@@ -150,17 +150,25 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("could not get transit peering details: %v", err)
 	}
 
-	if err := d.Set("gateway1_excluded_network_cidrs", transitGatewayPeering.Gateway1ExcludedCIDRsSlice); err != nil {
-		return err
+	gw1CidrsFromConfig := getStringList(d, "gateway1_excluded_network_cidrs")
+	err = setConfigValueIfEquivalent(d, "gateway1_excluded_network_cidrs", gw1CidrsFromConfig, transitGatewayPeering.Gateway1ExcludedCIDRsSlice)
+	if err != nil {
+		return fmt.Errorf("could not write gateway1_excluded_network_cidrs to state: %v", err)
 	}
-	if err := d.Set("gateway2_excluded_network_cidrs", transitGatewayPeering.Gateway2ExcludedCIDRsSlice); err != nil {
-		return err
+	gw2CidrsFromConfig := getStringList(d, "gateway2_excluded_network_cidrs")
+	err = setConfigValueIfEquivalent(d, "gateway2_excluded_network_cidrs", gw2CidrsFromConfig, transitGatewayPeering.Gateway2ExcludedCIDRsSlice)
+	if err != nil {
+		return fmt.Errorf("could not write gateway2_excluded_network_cidrs to state: %v", err)
 	}
-	if err := d.Set("gateway1_excluded_tgw_connections", transitGatewayPeering.Gateway1ExcludedTGWConnectionsSlice); err != nil {
-		return err
+	gw1TgwsFromConfig := getStringList(d, "gateway1_excluded_tgw_connections")
+	err = setConfigValueIfEquivalent(d, "gateway1_excluded_tgw_connections", gw1TgwsFromConfig, transitGatewayPeering.Gateway1ExcludedTGWConnectionsSlice)
+	if err != nil {
+		return fmt.Errorf("could not write gateway1_excluded_tgw_connections to state: %v", err)
 	}
-	if err := d.Set("gateway2_excluded_tgw_connections", transitGatewayPeering.Gateway2ExcludedTGWConnectionsSlice); err != nil {
-		return err
+	gw2TgwsFromConfig := getStringList(d, "gateway2_excluded_tgw_connections")
+	err = setConfigValueIfEquivalent(d, "gateway2_excluded_tgw_connections", gw2TgwsFromConfig, transitGatewayPeering.Gateway2ExcludedTGWConnectionsSlice)
+	if err != nil {
+		return fmt.Errorf("could not write gateway2_excluded_tgw_connections to state: %v", err)
 	}
 
 	d.Set("enable_peering_over_private_network", transitGatewayPeering.PrivateIPPeering)
@@ -226,4 +234,19 @@ func resourceAviatrixTransitGatewayPeeringDelete(d *schema.ResourceData, meta in
 	}
 
 	return nil
+}
+
+func setConfigValueIfEquivalent(d *schema.ResourceData, k string, fromConfig, fromAPI []string) error {
+	if goaviatrix.Equivalent(fromConfig, fromAPI) {
+		return d.Set(k, fromConfig)
+	}
+	return d.Set(k, fromAPI)
+}
+
+func getStringList(d *schema.ResourceData, k string) []string {
+	var sl []string
+	for _, v := range d.Get(k).([]interface{}) {
+		sl = append(sl, v.(string))
+	}
+	return sl
 }
