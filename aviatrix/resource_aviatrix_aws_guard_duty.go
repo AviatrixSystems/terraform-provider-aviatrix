@@ -63,28 +63,8 @@ func resourceAviatrixAwsGuardDuty() *schema.Resource {
 	}
 }
 
-func marshalAwsGuardDutyInput(d *schema.ResourceData) *goaviatrix.AwsGuardDuty {
-	var accounts []*goaviatrix.AwsGuardDutyAccount
-	for _, a := range d.Get("enabled_accounts").(*schema.Set).List() {
-		aMap := a.(map[string]interface{})
-		gdAccount := &goaviatrix.AwsGuardDutyAccount{
-			AccountName: aMap["account_name"].(string),
-			Region:      aMap["region"].(string),
-		}
-		var excludedIPs []string
-		for _, ip := range aMap["excluded_ips"].(*schema.Set).List() {
-			excludedIPs = append(excludedIPs, ip.(string))
-		}
-		gdAccount.ExcludedIPs = excludedIPs
-		accounts = append(accounts, gdAccount)
-	}
-	return &goaviatrix.AwsGuardDuty{
-		ScanningInterval: d.Get("scanning_interval").(int),
-		EnabledAccounts:  accounts,
-	}
-}
-
 func resourceAviatrixAwsGuardDutyCreate(d *schema.ResourceData, meta interface{}) error {
+	defer resourceAviatrixAwsGuardDutyRead(d, meta)
 	client := meta.(*goaviatrix.Client)
 	guardDuty := marshalAwsGuardDutyInput(d)
 	err := client.UpdateAwsGuardDutyPollInterval(guardDuty)
@@ -130,6 +110,7 @@ func resourceAviatrixAwsGuardDutyRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAviatrixAwsGuardDutyUpdate(d *schema.ResourceData, meta interface{}) error {
+	defer resourceAviatrixAwsGuardDutyRead(d, meta)
 	client := meta.(*goaviatrix.Client)
 	guardDuty := marshalAwsGuardDutyInput(d)
 	if d.HasChange("scanning_interval") {
@@ -192,4 +173,25 @@ func resourceAviatrixAwsGuardDutyDelete(d *schema.ResourceData, meta interface{}
 		}
 	}
 	return nil
+}
+
+func marshalAwsGuardDutyInput(d *schema.ResourceData) *goaviatrix.AwsGuardDuty {
+	var accounts []*goaviatrix.AwsGuardDutyAccount
+	for _, a := range d.Get("enabled_accounts").(*schema.Set).List() {
+		aMap := a.(map[string]interface{})
+		gdAccount := &goaviatrix.AwsGuardDutyAccount{
+			AccountName: aMap["account_name"].(string),
+			Region:      aMap["region"].(string),
+		}
+		var excludedIPs []string
+		for _, ip := range aMap["excluded_ips"].(*schema.Set).List() {
+			excludedIPs = append(excludedIPs, ip.(string))
+		}
+		gdAccount.ExcludedIPs = excludedIPs
+		accounts = append(accounts, gdAccount)
+	}
+	return &goaviatrix.AwsGuardDuty{
+		ScanningInterval: d.Get("scanning_interval").(int),
+		EnabledAccounts:  accounts,
+	}
 }
