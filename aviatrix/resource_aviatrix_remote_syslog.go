@@ -18,7 +18,6 @@ func resourceAviatrixRemoteSyslog() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixRemoteSyslogCreate,
 		Read:   resourceAviatrixRemoteSyslogRead,
-		Update: resourceAviatrixRemoteSyslogUpdate,
 		Delete: resourceAviatrixRemoteSyslogDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -36,43 +35,51 @@ func resourceAviatrixRemoteSyslog() *schema.Resource {
 			"server": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Server: FQDN or IP address of the remote syslog server",
 			},
 			"port": {
 				Type:        schema.TypeInt,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Port: Listening port of the remote syslog server (6514 by default)",
 			},
 			"ca_certificate_file_path": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "CA Certificate: Certificate Authority (CA) certificate",
 			},
 			"public_certificate_file_path": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "Server Public Certificate: Public certificate of the controller signed by the same CA",
 			},
 			"private_key_file_path": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "Server Private Key: Private key of the controller that pairs with the public certificate",
 			},
 			"protocol": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "TCP",
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP"}, false),
 				Description:  "Protocol: TCP or UDP (TCP by default)",
 			},
 			"template": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "Optional Custom Template: Useful when forwarding to 3rd party servers like Datadog or Sumo",
 			},
 			"excluded_gateways": {
 				Type:        schema.TypeSet,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "List of excluded gateways.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -92,9 +99,7 @@ func resourceAviatrixRemoteSyslog() *schema.Resource {
 	}
 }
 
-func resourceAviatrixRemoteSyslogCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
-
+func marshalRemoteSyslogInput(d *schema.ResourceData) *goaviatrix.RemoteSyslog {
 	remoteSyslog := &goaviatrix.RemoteSyslog{
 		Server:            d.Get("server").(string),
 		Port:              d.Get("port").(int),
@@ -106,11 +111,6 @@ func resourceAviatrixRemoteSyslogCreate(d *schema.ResourceData, meta interface{}
 		PrivateKey:        d.Get("private_key_file_path").(string),
 	}
 
-	if !((remoteSyslog.CaCertificate != "" && remoteSyslog.PublicCertificate != "" && remoteSyslog.PrivateKey != "") ||
-		(remoteSyslog.CaCertificate == "" && remoteSyslog.PublicCertificate == "" && remoteSyslog.PrivateKey == "")) {
-		return fmt.Errorf("one or more certificates missing")
-	}
-
 	var excludeGateways []string
 	for _, v := range d.Get("excluded_gateways").(*schema.Set).List() {
 		excludeGateways = append(excludeGateways, v.(string))
@@ -119,12 +119,25 @@ func resourceAviatrixRemoteSyslogCreate(d *schema.ResourceData, meta interface{}
 		remoteSyslog.ExcludeGatewayInput = strings.Join(excludeGateways, ",")
 	}
 
+	return remoteSyslog
+}
+
+func resourceAviatrixRemoteSyslogCreate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*goaviatrix.Client)
+
+	remoteSyslog := marshalRemoteSyslogInput(d)
+
+	if !((remoteSyslog.CaCertificate != "" && remoteSyslog.PublicCertificate != "" && remoteSyslog.PrivateKey != "") ||
+		(remoteSyslog.CaCertificate == "" && remoteSyslog.PublicCertificate == "" && remoteSyslog.PrivateKey == "")) {
+		return fmt.Errorf("one or more certificates missing")
+	}
+
 	if err := client.EnableRemoteSyslog(remoteSyslog); err != nil {
 		return fmt.Errorf("could not enable remote syslog: %v", err)
 	}
 
 	d.SetId("remote_syslog_" + strconv.Itoa(remoteSyslog.Index))
-	return nil
+	return resourceAviatrixRemoteSyslogRead(d, meta)
 }
 
 func resourceAviatrixRemoteSyslogRead(d *schema.ResourceData, meta interface{}) error {
@@ -166,10 +179,6 @@ func resourceAviatrixRemoteSyslogRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAviatrixRemoteSyslogUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceAviatrixRemoteSyslogCreate(d, meta)
-}
-
 func resourceAviatrixRemoteSyslogDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
@@ -177,6 +186,5 @@ func resourceAviatrixRemoteSyslogDelete(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("could not disable remote syslog: %v", err)
 	}
 
-	d.SetId("")
 	return nil
 }
