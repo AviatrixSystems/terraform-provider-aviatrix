@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"testing"
 
@@ -12,6 +13,10 @@ import (
 )
 
 func TestAccAviatrixRemoteSyslog_basic(t *testing.T) {
+	if os.Getenv("SKIP_REMOTE_SYSLOG") == "yes" {
+		t.Skip("Skipping remote syslog test as SKIP_REMOTE_SYSLOG is set")
+	}
+
 	rIndex := acctest.RandIntRange(0, 9)
 	resourceName := "aviatrix_remote_syslog.test_remote_syslog"
 

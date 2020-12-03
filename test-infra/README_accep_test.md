@@ -73,6 +73,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_rbac_group_access_account_attachment | SKIP_RBAC_GROUP_ACCESS_ACCOUNT_ATTACHMENT | aviatrix_account                                               |
 | aviatrix_rbac_group_permission_attachment | SKIP_RBAC_GROUP_PERMISSION_ATTACHMENT | N/A                                                                    |
 | aviatrix_rbac_group_user_attachment  | SKIP_RBAC_GROUP_USER_ATTACHMENT    | aviatrix_account_user                                                          |
+| aviatrix_remote_syslog               | SKIP_REMOTE_SYSLOG                 | N/A
 | aviatrix_saml_endpoint               | SKIP_SAML_ENDPOINT                 | IDP_METADATA, IDP_METADATA_TYPE                                                |
 | aviatrix_segmentation_security_domain | SKIP_SEGMENTATION_SECURITY_DOMAIN | N/A                                                                            |
 | aviatrix_segmentation_security_domain_association | SKIP_SEGMENTATION_SECURITY_DOMAIN_ASSOCIATION | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2 |
