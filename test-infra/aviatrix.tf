@@ -157,3 +157,11 @@ module "cisco-csr" {
   source     = "./cisco-csr"
   aws_region = var.aws_region1
 }
+
+module "azure-vng" {
+  source            = "./azure-vng"
+  azure_region      = var.azure_region1
+  azure_vpc_cidr    = var.azure_vpc_cidr1
+  azure_vpc_subnet1 = var.azure_vpc_subnet1
+  azure_vpc_subnet2 = var.azure_vpc_subnet3
+}
