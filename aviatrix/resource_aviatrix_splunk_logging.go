@@ -13,7 +13,6 @@ func resourceAviatrixSplunkLogging() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixSplunkLoggingCreate,
 		Read:   resourceAviatrixSplunkLoggingRead,
-		Update: resourceAviatrixSplunkLoggingUpdate,
 		Delete: resourceAviatrixSplunkLoggingDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -23,26 +22,31 @@ func resourceAviatrixSplunkLogging() *schema.Resource {
 			"server": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "Server IP",
 			},
 			"port": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "Port number",
 			},
-			"cu_output_cfg": {
+			"custom_output_configuration": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "Configuration file",
 			},
-			"custom_input_cfg": {
+			"custom_input_configuration": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "Custom configuration",
 			},
 			"excluded_gateways": {
 				Type:        schema.TypeSet,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "List of excluded gateways.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -58,20 +62,28 @@ func resourceAviatrixSplunkLogging() *schema.Resource {
 }
 
 func marshalSplunkLoggingInput(d *schema.ResourceData, useCustomConfig bool) *goaviatrix.SplunkLogging {
+	var splunkLogging = new(goaviatrix.SplunkLogging)
+
 	if useCustomConfig {
-		return &goaviatrix.SplunkLogging{
-			UseConfigFile: true,
-			ConfigFile:    d.Get("cu_output_cfg").(string),
-			CustomConfig:  d.Get("custom_input_cfg").(string),
-		}
+		splunkLogging.UseConfigFile = true
+		splunkLogging.ConfigFile = d.Get("custom_output_configuration").(string)
 	} else {
-		return &goaviatrix.SplunkLogging{
-			UseConfigFile: false,
-			Server:        d.Get("server").(string),
-			Port:          d.Get("port").(int),
-			CustomConfig:  d.Get("custom_input_cfg").(string),
-		}
+		splunkLogging.UseConfigFile = false
+		splunkLogging.Server = d.Get("server").(string)
+		splunkLogging.Port = d.Get("port").(int)
 	}
+
+	splunkLogging.CustomConfig = d.Get("custom_input_configuration").(string)
+
+	var excludedGateways []string
+	for _, v := range d.Get("excluded_gateways").(*schema.Set).List() {
+		excludedGateways = append(excludedGateways, v.(string))
+	}
+	if len(excludedGateways) != 0 {
+		splunkLogging.ExcludedGatewaysInput = strings.Join(excludedGateways, ",")
+	}
+
+	return splunkLogging
 }
 
 func resourceAviatrixSplunkLoggingCreate(d *schema.ResourceData, meta interface{}) error {
@@ -80,9 +92,9 @@ func resourceAviatrixSplunkLoggingCreate(d *schema.ResourceData, meta interface{
 	var splunkLogging *goaviatrix.SplunkLogging
 
 	// port number cannot be 0
-	if d.Get("server").(string) == "" && d.Get("port").(int) == 0 && d.Get("cu_output_cfg").(string) == "" {
+	if d.Get("server").(string) == "" && d.Get("port").(int) == 0 && d.Get("custom_output_configuration").(string) == "" {
 		return fmt.Errorf("please provide either server/port or configuration file path")
-	} else if d.Get("cu_output_cfg").(string) != "" {
+	} else if d.Get("custom_output_configuration").(string) != "" {
 		splunkLogging = marshalSplunkLoggingInput(d, true)
 	} else {
 		if d.Get("port").(int) == 0 || d.Get("server").(string) == "" {
@@ -90,14 +102,6 @@ func resourceAviatrixSplunkLoggingCreate(d *schema.ResourceData, meta interface{
 		}
 
 		splunkLogging = marshalSplunkLoggingInput(d, false)
-	}
-
-	var excludedGateways []string
-	for _, v := range d.Get("excluded_gateways").(*schema.Set).List() {
-		excludedGateways = append(excludedGateways, v.(string))
-	}
-	if len(excludedGateways) != 0 {
-		splunkLogging.ExcludedGatewaysInput = strings.Join(excludedGateways, ",")
 	}
 
 	if err := client.EnableSplunkLogging(splunkLogging); err != nil {
@@ -122,16 +126,12 @@ func resourceAviatrixSplunkLoggingRead(d *schema.ResourceData, meta interface{})
 	d.Set("server", splunkLoggingStatus.Server)
 	port, _ := strconv.Atoi(splunkLoggingStatus.Port)
 	d.Set("port", port)
-	d.Set("custom_input_cfg", splunkLoggingStatus.CustomConfig)
+	d.Set("custom_input_configuration", splunkLoggingStatus.CustomConfig)
 	d.Set("status", splunkLoggingStatus.Status)
 	d.Set("excluded_gateways", splunkLoggingStatus.ExcludedGateways)
 
 	d.SetId("splunk_logging")
 	return nil
-}
-
-func resourceAviatrixSplunkLoggingUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceAviatrixSplunkLoggingCreate(d, meta)
 }
 
 func resourceAviatrixSplunkLoggingDelete(d *schema.ResourceData, meta interface{}) error {
@@ -141,6 +141,5 @@ func resourceAviatrixSplunkLoggingDelete(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("could not disable remote syslog: %v", err)
 	}
 
-	d.SetId("")
 	return nil
 }

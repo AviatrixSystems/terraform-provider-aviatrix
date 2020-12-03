@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -10,6 +11,10 @@ import (
 )
 
 func TestAccAviatrixSplunkLogging_basic(t *testing.T) {
+	if os.Getenv("SKIP_SPLUNK_LOGGING") == "yes" {
+		t.Skip("Skipping splunk logging test as SKIP_SPLUNK_LOGGING is set")
+	}
+
 	resourceName := "aviatrix_splunk_logging.test_splunk_logging"
 
 	resource.Test(t, resource.TestCase{
@@ -41,7 +46,7 @@ func testAccSplunkLoggingBasic() string {
 	return `
 resource "aviatrix_splunk_logging" "test_splunk_logging" {
 	server            = "1.2.3.4"
-    port              = 10
+	port              = 10
 	excluded_gateways = ["a", "b"]
 }
 `
