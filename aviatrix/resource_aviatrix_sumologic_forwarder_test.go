@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -10,6 +11,10 @@ import (
 )
 
 func TestAccAviatrixSumologicForwarder_basic(t *testing.T) {
+	if os.Getenv("SKIP_SUMOLOGIC_FORWARDER") == "yes" {
+		t.Skip("Skipping sumologic forwarder test as SKIP_SUMOLOGIC_FORWARDER is set")
+	}
+
 	resourceName := "aviatrix_sumologic_forwarder.test_sumologic_forwarder"
 
 	resource.Test(t, resource.TestCase{
@@ -26,7 +31,7 @@ func TestAccAviatrixSumologicForwarder_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "access_id", "test_id"),
 					resource.TestCheckResourceAttr(resourceName, "access_key", "test_key"),
 					resource.TestCheckResourceAttr(resourceName, "source_category", "test_category"),
-					resource.TestCheckResourceAttr(resourceName, "custom_cfg", "key=value"),
+					resource.TestCheckResourceAttr(resourceName, "custom_configuration", "key=value"),
 					testAccCheckSumologicForwarderExcludedGatewaysMatch([]string{"a", "b"}),
 				),
 			},
@@ -42,11 +47,11 @@ func TestAccAviatrixSumologicForwarder_basic(t *testing.T) {
 func testAccSumologicForwarderBasic() string {
 	return `
 resource "aviatrix_sumologic_forwarder" "test_sumologic_forwarder" {
-	access_id         = "test_id"
-	access_key        = "test_key"
-	source_category   = "test_category"
-	custom_cfg        = "key=value"
-	excluded_gateways = ["a", "b"]
+	access_id            = "test_id"
+	access_key           = "test_key"
+	source_category      = "test_category"
+	custom_configuration = "key=value"
+	excluded_gateways    = ["a", "b"]
 }
 `
 }
