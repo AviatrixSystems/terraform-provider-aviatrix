@@ -22,6 +22,8 @@ type TransitGatewayPeering struct {
 	Gateway2ExcludedCIDRsSlice          []string
 	Gateway1ExcludedTGWConnectionsSlice []string
 	Gateway2ExcludedTGWConnectionsSlice []string
+	PrependAsPath1                      string
+	PrependAsPath2                      string
 	CID                                 string `form:"CID,omitempty"`
 	Action                              string `form:"action,omitempty"`
 }
@@ -47,6 +49,7 @@ type TransitGatewayPeeringDetailsResults struct {
 type TransitGatewayPeeringDetail struct {
 	ExcludedCIDRs          []string `json:"exclude_filter_list"`
 	ExcludedTGWConnections []string `json:"exclude_connections"`
+	ConnBGPPrependAsPath   string   `json:"conn_bgp_prepend_as_path"`
 }
 
 func (c *Client) CreateTransitGatewayPeering(transitGatewayPeering *TransitGatewayPeering) error {
@@ -126,6 +129,8 @@ func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitG
 	transitGatewayPeering.Gateway2ExcludedCIDRsSlice = data.Results.Site2.ExcludedCIDRs
 	transitGatewayPeering.Gateway2ExcludedTGWConnectionsSlice = data.Results.Site2.ExcludedTGWConnections
 	transitGatewayPeering.PrivateIPPeering = data.Results.PrivateNetworkPeering
+	transitGatewayPeering.PrependAsPath1 = data.Results.Site1.ConnBGPPrependAsPath
+	transitGatewayPeering.PrependAsPath2 = data.Results.Site2.ConnBGPPrependAsPath
 
 	return transitGatewayPeering, nil
 }
@@ -179,4 +184,21 @@ func (c *Client) DeleteTransitGatewayPeering(transitGatewayPeering *TransitGatew
 		return errors.New("Rest API delete_inter_transit_gateway_peering Get failed: " + data.Reason)
 	}
 	return nil
+}
+
+func (c *Client) EditTransitConnectionASPathPrepend(transitGatewayPeering *TransitGatewayPeering, prependASPath []string) error {
+	action := "edit_transit_connnection_as_path_prepend"
+	return c.PostAPI(action, struct {
+		CID            string `form:"CID"`
+		Action         string `form:"action"`
+		GatewayName    string `form:"gateway_name"`
+		ConnectionName string `form:"connection_name"`
+		PrependASPath  string `form:"connnection_as_path_prepend"`
+	}{
+		CID:            c.CID,
+		Action:         action,
+		GatewayName:    transitGatewayPeering.TransitGatewayName1,
+		ConnectionName: transitGatewayPeering.TransitGatewayName2 + "-peering",
+		PrependASPath:  strings.Join(prependASPath, ","),
+	}, BasicCheck)
 }
