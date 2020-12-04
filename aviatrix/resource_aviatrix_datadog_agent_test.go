@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -10,6 +11,10 @@ import (
 )
 
 func TestAccAviatrixDatadogAgent_basic(t *testing.T) {
+	if os.Getenv("SKIP_DATADOG_AGENT") == "yes" {
+		t.Skip("Skipping datadog agent test as SKIP_DATADOG_AGENT is set")
+	}
+
 	resourceName := "aviatrix_datadog_agent.test_datadog_agent"
 
 	resource.Test(t, resource.TestCase{
@@ -23,7 +28,7 @@ func TestAccAviatrixDatadogAgent_basic(t *testing.T) {
 				Config: testAccDatadogAgentBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatadogAgentExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "api_key", "your_api_key"),
+					resource.TestCheckResourceAttr(resourceName, "api_key", os.Getenv("DATADOG_API_KEY")),
 					resource.TestCheckResourceAttr(resourceName, "site", "datadoghq.com"),
 					testAccCheckDatadogAgentExcludedGatewaysMatch([]string{"a", "b"}),
 				),
@@ -38,13 +43,13 @@ func TestAccAviatrixDatadogAgent_basic(t *testing.T) {
 }
 
 func testAccDatadogAgentBasic() string {
-	return `
+	return fmt.Sprintf(`
 resource "aviatrix_datadog_agent" "test_datadog_agent" {
-	api_key           = "your_api_key"
+	api_key           = "%s"
 	site              = "datadoghq.com"
 	excluded_gateways = ["a", "b"]
 }
-`
+`, os.Getenv("DATADOG_API_KEY"))
 }
 
 func testAccCheckDatadogAgentExists(resourceName string) resource.TestCheckFunc {

@@ -36,6 +36,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_azure_spoke_native_peering  | SKIP_AZURE_SPOKE_NATIVE_PEERING    | aviatrix_account + AZURE_VNET_ID, AZURE_VNET_ID2, AZURE_REGION, AZURE_REGION2  |
 | aviatrix_aws_tgw_vpn_conn            | SKIP_AWS_TGW_VPN_CONN              | aviatrix_aws_tgw                                                               |
 | aviatrix_controller_config           | SKIP_CONTROLLER_CONFIG             | aviatrix_account                                                               |
+| aviatrix_datadog_agent               | SKIP_DATADOG_AGENT                 | datadog_api_key
 | aviatrix_device_aws_tgw_attachment   | SKIP_DEVICE_AWS_TGW_ATTACHMENT     | DEVICE_NAME, AWS_TGW_NAME                                                      |
 | aviatrix_device_interface_config     | SKIP_DEVICE_INTERFACE_CONFIG       | aviatrix_device_registration                                                   |
 | aviatrix_device_registration         | SKIP_DEVICE_REGISTRATION           | DEVICE_PUBLIC_IP, DEVICE_KEY_FILE_PATH                                         |

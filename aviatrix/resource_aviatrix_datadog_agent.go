@@ -14,7 +14,6 @@ func resourceAviatrixDatadogAgent() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixDatadogAgentCreate,
 		Read:   resourceAviatrixDatadogAgentRead,
-		Update: resourceAviatrixDatadogAgentUpdate,
 		Delete: resourceAviatrixDatadogAgentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -24,11 +23,13 @@ func resourceAviatrixDatadogAgent() *schema.Resource {
 			"api_key": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "API key",
 			},
 			"site": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				Default:      "datadoghq.com",
 				ValidateFunc: validation.StringInSlice([]string{"datadoghq.com", "datadoghq.eu"}, false),
 				Description:  "Site preference",
@@ -36,6 +37,7 @@ func resourceAviatrixDatadogAgent() *schema.Resource {
 			"excluded_gateways": {
 				Type:        schema.TypeSet,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "List of excluded gateways.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -51,16 +53,10 @@ func resourceAviatrixDatadogAgent() *schema.Resource {
 }
 
 func marshalDatadogAgentInput(d *schema.ResourceData) *goaviatrix.DatadogAgent {
-	return &goaviatrix.DatadogAgent{
+	datadogAgent := &goaviatrix.DatadogAgent{
 		ApiKey: d.Get("api_key").(string),
 		Site:   d.Get("site").(string),
 	}
-}
-
-func resourceAviatrixDatadogAgentCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
-
-	datadogAgent := marshalDatadogAgentInput(d)
 
 	var excludedGateways []string
 	for _, v := range d.Get("excluded_gateways").(*schema.Set).List() {
@@ -70,12 +66,20 @@ func resourceAviatrixDatadogAgentCreate(d *schema.ResourceData, meta interface{}
 		datadogAgent.ExcludedGatewaysInput = strings.Join(excludedGateways, ",")
 	}
 
+	return datadogAgent
+}
+
+func resourceAviatrixDatadogAgentCreate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*goaviatrix.Client)
+
+	datadogAgent := marshalDatadogAgentInput(d)
+
 	if err := client.EnableDatadogAgent(datadogAgent); err != nil {
-		return fmt.Errorf("could not enable datadog agent: %v", err)
+		return fmt.Errorf("could not enable datadog agent: %v KEY IS %s", err, d.Get("api_key"))
 	}
 
 	d.SetId("datadog_agent")
-	return nil
+	return resourceAviatrixDatadogAgentRead(d, meta)
 }
 func resourceAviatrixDatadogAgentRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
@@ -98,10 +102,6 @@ func resourceAviatrixDatadogAgentRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAviatrixDatadogAgentUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceAviatrixDatadogAgentCreate(d, meta)
-}
-
 func resourceAviatrixDatadogAgentDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
@@ -109,6 +109,5 @@ func resourceAviatrixDatadogAgentDelete(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("could not disable datadog agent: %v", err)
 	}
 
-	d.SetId("")
 	return nil
 }
