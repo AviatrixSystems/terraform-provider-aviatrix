@@ -244,7 +244,7 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 			return fmt.Errorf("could not set prepend_as_path1: %v", err)
 		}
 	}
-	if transitGatewayPeering.PrependAsPath1 != "" {
+	if transitGatewayPeering.PrependAsPath2 != "" {
 		var prependAsPath []string
 		for _, str := range strings.Split(transitGatewayPeering.PrependAsPath2, " ") {
 			prependAsPath = append(prependAsPath, strings.TrimSpace(str))
