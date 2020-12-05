@@ -187,13 +187,13 @@ func (c *Client) DeleteTransitGatewayPeering(transitGatewayPeering *TransitGatew
 }
 
 func (c *Client) EditTransitConnectionASPathPrepend(transitGatewayPeering *TransitGatewayPeering, prependASPath []string) error {
-	action := "edit_transit_connnection_as_path_prepend"
+	action := "edit_transit_connection_as_path_prepend"
 	return c.PostAPI(action, struct {
 		CID            string `form:"CID"`
 		Action         string `form:"action"`
 		GatewayName    string `form:"gateway_name"`
 		ConnectionName string `form:"connection_name"`
-		PrependASPath  string `form:"connnection_as_path_prepend"`
+		PrependASPath  string `form:"connection_as_path_prepend"`
 	}{
 		CID:            c.CID,
 		Action:         action,
