@@ -33,6 +33,12 @@ The following arguments are supported:
 * `custom_configuration` (Optional) Custom configuration. The format should be key=value pairs.
 * `excluded_gateways` (Optional) List of gateways to be excluded from logging. e.g.: ["gateway01", "gateway02", "gateway01-hagw"].
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `status` - The status of sumologic forwarder.
+
 ## Import
 
 **sumologic_forwarder** can be imported using "sumologic_forwarder", e.g.
