@@ -4,8 +4,10 @@
 - Supported Terraform version: **v0.12.x** and **v0.13.x**
 
 ### Features:
-1. Implemented support for ``forward_traffic_to_transit`` in **aviatrix_site2cloud**
-2. Implemented Connection based BGP Prepending AS-PATH support through ``prepend_as_path1`` and ``prepend_as_path2`` for **aviatrix_transit_gateway_peering**:   
+1. Implemented further support for Custom Mapped and overlapping CIDR scenarios for **aviatrix_site2cloud** with attribute ``forward_traffic_to_transit``
+2. Implemented Connection-based BGP Prepending AS-PATH support with the following attributes for aviatrix_transit_gateway_peering:
+  - ``prepend_as_path1``
+  - ``prepend_as_path2``   
 
 ### Bug Fixes:
 1. Fixed issue where following parameters caused reordering issues for **aviatrix_transit_gateway_peering**
