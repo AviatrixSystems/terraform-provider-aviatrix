@@ -15,7 +15,6 @@ func resourceAviatrixNetflowAgent() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixNetflowAgentCreate,
 		Read:   resourceAviatrixNetflowAgentRead,
-		Update: resourceAviatrixNetflowAgentUpdate,
 		Delete: resourceAviatrixNetflowAgentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -25,23 +24,27 @@ func resourceAviatrixNetflowAgent() *schema.Resource {
 			"server_ip": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Netflow server IP address",
 			},
 			"port": {
 				Type:        schema.TypeInt,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Netflow server port",
 			},
 			"version": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      5,
+				ForceNew:     true,
 				ValidateFunc: validation.IntInSlice([]int{5, 9}),
 				Description:  "Netflow version",
 			},
 			"excluded_gateways": {
 				Type:        schema.TypeSet,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "List of excluded gateways.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -57,17 +60,11 @@ func resourceAviatrixNetflowAgent() *schema.Resource {
 }
 
 func marshalNetflowAgentInput(d *schema.ResourceData) *goaviatrix.NetflowAgent {
-	return &goaviatrix.NetflowAgent{
+	netflowAgent := &goaviatrix.NetflowAgent{
 		ServerIp: d.Get("server_ip").(string),
 		Port:     d.Get("port").(int),
 		Version:  d.Get("version").(int),
 	}
-}
-
-func resourceAviatrixNetflowAgentCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*goaviatrix.Client)
-
-	netflowAgent := marshalNetflowAgentInput(d)
 
 	var excludedGateways []string
 	for _, v := range d.Get("excluded_gateways").(*schema.Set).List() {
@@ -77,12 +74,20 @@ func resourceAviatrixNetflowAgentCreate(d *schema.ResourceData, meta interface{}
 		netflowAgent.ExcludedGatewaysInput = strings.Join(excludedGateways, ",")
 	}
 
+	return netflowAgent
+}
+
+func resourceAviatrixNetflowAgentCreate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*goaviatrix.Client)
+
+	netflowAgent := marshalNetflowAgentInput(d)
+
 	if err := client.EnableNetflowAgent(netflowAgent); err != nil {
 		return fmt.Errorf("could not enable datadog agent: %v", err)
 	}
 
 	d.SetId("netflow_agent")
-	return nil
+	return resourceAviatrixNetflowAgentRead(d, meta)
 }
 func resourceAviatrixNetflowAgentRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
@@ -108,10 +113,6 @@ func resourceAviatrixNetflowAgentRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceAviatrixNetflowAgentUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceAviatrixNetflowAgentCreate(d, meta)
-}
-
 func resourceAviatrixNetflowAgentDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
@@ -119,6 +120,5 @@ func resourceAviatrixNetflowAgentDelete(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("could not disable netflow agent: %v", err)
 	}
 
-	d.SetId("")
 	return nil
 }

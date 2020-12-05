@@ -34,6 +34,12 @@ The following arguments are supported:
 * `version` (Optional) Netflow version (5 or 9). 5 by default. 
 * `excluded_gateways` (Optional) List of gateways to be excluded from logging. e.g.: ["gateway01", "gateway02", "gateway01-hagw"].
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `status` - The status of netflow agent.
+
 ## Import
 
 **netflow_agent** can be imported using "netflow_agent", e.g.

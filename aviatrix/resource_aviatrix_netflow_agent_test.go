@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -10,6 +11,10 @@ import (
 )
 
 func TestAccAviatrixNetflowAgent_basic(t *testing.T) {
+	if os.Getenv("SKIP_NETFLOW_AGENT") == "yes" {
+		t.Skip("Skipping netflow agent test as SKIP_NETFLOW_AGENT is set")
+	}
+
 	resourceName := "aviatrix_netflow_agent.test_netflow_agent"
 
 	resource.Test(t, resource.TestCase{
