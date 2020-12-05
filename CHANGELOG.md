@@ -1,4 +1,21 @@
-## 2.17.1 (Unreleased)
+## 2.17.2 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.2.1913**
+- Supported Terraform version: **v0.12.x** and **v0.13.x**
+
+### Features:
+1. Implemented support for ``forward_traffic_to_transit`` in **aviatrix_site2cloud**
+2. Implemented Connection based BGP Prepending AS-PATH support through ``prepend_as_path1`` and ``prepend_as_path2`` for **aviatrix_transit_gateway_peering**:   
+
+### Bug Fixes:
+1. Fixed issue where following parameters caused reordering issues for **aviatrix_transit_gateway_peering**
+  - ``gateway1_excluded_network_cidrs``
+  - ``gateway2_excluded_network_cidrs``
+  - ``gateway1_excluded_tgw_connections``
+  - ``gateway2_excluded_tgw_connections``
+  
+
+## 2.17.1 (November 22, 2020)
 ### Notes:
 - Supported Controller version: **UserConnect-6.2.1891**
 - Supported Terraform version: **v0.12.x** and **v0.13.x**
