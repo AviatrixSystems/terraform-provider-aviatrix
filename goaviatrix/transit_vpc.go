@@ -649,3 +649,23 @@ func (c *Client) SetTransitLearnedCIDRsApprovalMode(gw *TransitVpc, mode string)
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
 }
+
+func (c *Client) EnableTransitConnectionLearnedCIDRApproval(gwName, connName string) error {
+	data := map[string]string{
+		"action":          "enable_transit_connection_learned_cidr_approval",
+		"CID":             c.CID,
+		"gateway_name":    gwName,
+		"connection_name": connName,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) DisableTransitConnectionLearnedCIDRApproval(gwName, connName string) error {
+	data := map[string]string{
+		"action":          "disable_transit_connection_learned_cidr_approval",
+		"CID":             c.CID,
+		"gateway_name":    gwName,
+		"connection_name": connName,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
