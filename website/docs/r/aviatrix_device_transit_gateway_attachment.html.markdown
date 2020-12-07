@@ -49,6 +49,7 @@ The following arguments are supported:
 * `pre_shared_key` - Pre-shared Key.
 * `local_tunnel_ip` - Local tunnel IP.
 * `remote_tunnel_ip` - Remote tunnel IP.
+* `enable_learned_cidrs_approval` - (Optional) Enable learned CIDRs approval for the connection. Requires the transit_gateway's 'learned_cidrs_approval_mode' attribute be set to 'connection'. Valid values: true, false. Default value: false. Available as of provider version R2.18+.
 
 
 ## Import
