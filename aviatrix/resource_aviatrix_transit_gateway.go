@@ -1545,7 +1545,50 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if d.HasChange("learned_cidrs_approval_mode") {
+	if d.HasChange("learned_cidrs_approval_mode") && d.HasChange("enable_learned_cidrs_approval") {
+		gw := &goaviatrix.TransitVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		currentMode, _ := d.GetChange("learned_cidrs_approval_mode")
+		// API calls need to be in a specific order depending on the current mode
+		if currentMode.(string) == "gateway" {
+			learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
+			if learnedCidrsApproval {
+				err := client.EnableTransitLearnedCidrsApproval(gw)
+				if err != nil {
+					return fmt.Errorf("failed to enable learned cidrs approval: %s", err)
+				}
+			} else {
+				err := client.DisableTransitLearnedCidrsApproval(gw)
+				if err != nil {
+					return fmt.Errorf("failed to disable learned cidrs approval: %s", err)
+				}
+			}
+			mode := d.Get("learned_cidrs_approval_mode").(string)
+			err := client.SetTransitLearnedCIDRsApprovalMode(gw, mode)
+			if err != nil {
+				return fmt.Errorf("could not set learned CIDRs approval mode to %q: %v", mode, err)
+			}
+		} else {
+			mode := d.Get("learned_cidrs_approval_mode").(string)
+			err := client.SetTransitLearnedCIDRsApprovalMode(gw, mode)
+			if err != nil {
+				return fmt.Errorf("could not set learned CIDRs approval mode to %q: %v", mode, err)
+			}
+			learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
+			if learnedCidrsApproval {
+				err = client.EnableTransitLearnedCidrsApproval(gw)
+				if err != nil {
+					return fmt.Errorf("failed to enable learned cidrs approval: %s", err)
+				}
+			} else {
+				err = client.DisableTransitLearnedCidrsApproval(gw)
+				if err != nil {
+					return fmt.Errorf("failed to disable learned cidrs approval: %s", err)
+				}
+			}
+		}
+	} else if d.HasChange("learned_cidrs_approval_mode") {
 		gw := &goaviatrix.TransitVpc{
 			GwName: d.Get("gw_name").(string),
 		}
@@ -1554,13 +1597,10 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if err != nil {
 			return fmt.Errorf("could not set learned CIDRs approval mode to %q: %v", mode, err)
 		}
-	}
-
-	if d.HasChange("enable_learned_cidrs_approval") {
+	} else if d.HasChange("enable_learned_cidrs_approval") {
 		gw := &goaviatrix.TransitVpc{
 			GwName: d.Get("gw_name").(string),
 		}
-
 		learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
 		if learnedCidrsApproval {
 			gw.LearnedCidrsApproval = "on"
