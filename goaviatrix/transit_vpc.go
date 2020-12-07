@@ -50,13 +50,14 @@ type TransitVpc struct {
 }
 
 type TransitGatewayAdvancedConfig struct {
-	BgpPollingTime           string
-	PrependASPath            []string
-	LocalASNumber            string
-	BgpEcmpEnabled           bool
-	ActiveStandbyEnabled     bool
-	ActiveStandbyConnections []StandbyConnection
-	LearnedCIDRsApprovalMode string
+	BgpPollingTime                    string
+	PrependASPath                     []string
+	LocalASNumber                     string
+	BgpEcmpEnabled                    bool
+	ActiveStandbyEnabled              bool
+	ActiveStandbyConnections          []StandbyConnection
+	LearnedCIDRsApprovalMode          string
+	ConnectionLearnedCIDRApprovalInfo []LearnedCIDRApprovalInfo
 }
 
 type StandbyConnection struct {
@@ -65,13 +66,19 @@ type StandbyConnection struct {
 }
 
 type TransitGatewayAdvancedConfigRespResult struct {
-	BgpPollingTime           int               `json:"bgp_polling_time"`
-	PrependASPath            string            `json:"bgp_prepend_as_path"`
-	LocalASNumber            string            `json:"local_asn_num"`
-	BgpEcmpEnabled           string            `json:"bgp_ecmp"`
-	ActiveStandby            string            `json:"active-standby"`
-	ActiveStandbyStatus      map[string]string `json:"active_standby_status"`
-	LearnedCIDRsApprovalMode string            `json:"learned_cidrs_approval_mode"`
+	BgpPollingTime                    int                       `json:"bgp_polling_time"`
+	PrependASPath                     string                    `json:"bgp_prepend_as_path"`
+	LocalASNumber                     string                    `json:"local_asn_num"`
+	BgpEcmpEnabled                    string                    `json:"bgp_ecmp"`
+	ActiveStandby                     string                    `json:"active-standby"`
+	ActiveStandbyStatus               map[string]string         `json:"active_standby_status"`
+	LearnedCIDRsApprovalMode          string                    `json:"learned_cidrs_approval_mode"`
+	ConnectionLearnedCIDRApprovalInfo []LearnedCIDRApprovalInfo `json:"connection_learned_cidrs_approval_info"`
+}
+
+type LearnedCIDRApprovalInfo struct {
+	ConnName        string `json:"conn_name"`
+	EnabledApproval string `json:"conn_learned_cidrs_approval"`
 }
 
 type TransitGatewayAdvancedConfigResp struct {
@@ -630,13 +637,14 @@ func (c *Client) GetTransitGatewayAdvancedConfig(transitGateway *TransitVpc) (*T
 	}
 
 	return &TransitGatewayAdvancedConfig{
-		BgpPollingTime:           strconv.Itoa(data.Results.BgpPollingTime),
-		PrependASPath:            filteredStrings,
-		LocalASNumber:            data.Results.LocalASNumber,
-		BgpEcmpEnabled:           data.Results.BgpEcmpEnabled == "yes",
-		ActiveStandbyEnabled:     data.Results.ActiveStandby == "yes",
-		ActiveStandbyConnections: standbyConnections,
-		LearnedCIDRsApprovalMode: data.Results.LearnedCIDRsApprovalMode,
+		BgpPollingTime:                    strconv.Itoa(data.Results.BgpPollingTime),
+		PrependASPath:                     filteredStrings,
+		LocalASNumber:                     data.Results.LocalASNumber,
+		BgpEcmpEnabled:                    data.Results.BgpEcmpEnabled == "yes",
+		ActiveStandbyEnabled:              data.Results.ActiveStandby == "yes",
+		ActiveStandbyConnections:          standbyConnections,
+		LearnedCIDRsApprovalMode:          data.Results.LearnedCIDRsApprovalMode,
+		ConnectionLearnedCIDRApprovalInfo: data.Results.ConnectionLearnedCIDRApprovalInfo,
 	}, nil
 }
 
@@ -652,7 +660,7 @@ func (c *Client) SetTransitLearnedCIDRsApprovalMode(gw *TransitVpc, mode string)
 
 func (c *Client) EnableTransitConnectionLearnedCIDRApproval(gwName, connName string) error {
 	data := map[string]string{
-		"action":          "enable_transit_connection_learned_cidr_approval",
+		"action":          "enable_transit_connection_learned_cidrs_approval",
 		"CID":             c.CID,
 		"gateway_name":    gwName,
 		"connection_name": connName,
@@ -662,7 +670,7 @@ func (c *Client) EnableTransitConnectionLearnedCIDRApproval(gwName, connName str
 
 func (c *Client) DisableTransitConnectionLearnedCIDRApproval(gwName, connName string) error {
 	data := map[string]string{
-		"action":          "disable_transit_connection_learned_cidr_approval",
+		"action":          "disable_transit_connection_learned_cidrs_approval",
 		"CID":             c.CID,
 		"gateway_name":    gwName,
 		"connection_name": connName,
