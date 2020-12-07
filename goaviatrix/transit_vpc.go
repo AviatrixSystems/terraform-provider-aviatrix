@@ -56,6 +56,7 @@ type TransitGatewayAdvancedConfig struct {
 	BgpEcmpEnabled           bool
 	ActiveStandbyEnabled     bool
 	ActiveStandbyConnections []StandbyConnection
+	LearnedCIDRsApprovalMode string
 }
 
 type StandbyConnection struct {
@@ -64,12 +65,13 @@ type StandbyConnection struct {
 }
 
 type TransitGatewayAdvancedConfigRespResult struct {
-	BgpPollingTime      int               `json:"bgp_polling_time"`
-	PrependASPath       string            `json:"bgp_prepend_as_path"`
-	LocalASNumber       string            `json:"local_asn_num"`
-	BgpEcmpEnabled      string            `json:"bgp_ecmp"`
-	ActiveStandby       string            `json:"active-standby"`
-	ActiveStandbyStatus map[string]string `json:"active_standby_status"`
+	BgpPollingTime           int               `json:"bgp_polling_time"`
+	PrependASPath            string            `json:"bgp_prepend_as_path"`
+	LocalASNumber            string            `json:"local_asn_num"`
+	BgpEcmpEnabled           string            `json:"bgp_ecmp"`
+	ActiveStandby            string            `json:"active-standby"`
+	ActiveStandbyStatus      map[string]string `json:"active_standby_status"`
+	LearnedCIDRsApprovalMode string            `json:"learned_cidrs_approval_mode"`
 }
 
 type TransitGatewayAdvancedConfigResp struct {
@@ -634,5 +636,16 @@ func (c *Client) GetTransitGatewayAdvancedConfig(transitGateway *TransitVpc) (*T
 		BgpEcmpEnabled:           data.Results.BgpEcmpEnabled == "yes",
 		ActiveStandbyEnabled:     data.Results.ActiveStandby == "yes",
 		ActiveStandbyConnections: standbyConnections,
+		LearnedCIDRsApprovalMode: data.Results.LearnedCIDRsApprovalMode,
 	}, nil
+}
+
+func (c *Client) SetTransitLearnedCIDRsApprovalMode(gw *TransitVpc, mode string) error {
+	data := map[string]string{
+		"action":       "set_transit_learned_cidrs_approval_mode",
+		"CID":          c.CID,
+		"gateway_name": gw.GwName,
+		"mode":         mode,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
 }
