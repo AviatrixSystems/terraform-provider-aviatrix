@@ -66,6 +66,7 @@ The following arguments are supported:
 * `remote_tunnel_cidr` - (Optional) Destination CIDR for the tunnel to the external device.
 * `enable_edge_segmentation` - (Optional) Switch to allow this connection to communicate with a Security Domain via Connection Policy.
 * `switch_to_ha_standby_gateway` - (Optional) Switch to HA Standby Transit Gateway connection. Only valid with Transit Gateway that has [Active-Standby Mode](https://docs.aviatrix.com/HowTos/transit_advanced.html#active-standby) enabled and for non-HA external device. Valid values: true, false. Default: false. Available in provider version R2.17.1+.
+* `enable_learned_cidrs_approval` - (Optional) Enable learned CIDRs approval for the connection. Only valid with 'connection_type' = 'bgp'. Requires the transit_gateway's 'learned_cidrs_approval_mode' attribute be set to 'connection'. Valid values: true, false. Default value: false. Available as of provider version R2.18+.
 
 ## Import
 
