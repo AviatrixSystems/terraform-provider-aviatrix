@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -235,6 +236,17 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Optional:    true,
 				Default:     false,
 				Description: "Switch to enable/disable encrypted transit approval for transit Gateway. Valid values: true, false.",
+			},
+			"learned_cidrs_approval_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "gateway",
+				ValidateFunc: validation.StringInSlice([]string{"gateway", "connection"}, false),
+				Description: "Set the learned CIDRs approval mode. Only valid when 'enable_learned_cidrs_approval' is " +
+					"set to true. If set to 'gateway', learned CIDR approval applies to ALL connections. If set to " +
+					"'connection', learned CIDR approval is configured on a per connection basis. When configuring per " +
+					"connection, use the enable_learned_cidrs_approval attribute within the connection resource to " +
+					"toggle learned CIDR approval. Valid values: 'gateway' or 'connection'. Default value: 'gateway'.",
 			},
 			"security_group_id": {
 				Type:        schema.TypeString,
@@ -468,6 +480,10 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
 	if learnedCidrsApproval {
 		gateway.LearnedCidrsApproval = "on"
+	}
+
+	if learnedCidrsApproval && d.Get("learned_cidrs_approval_mode").(string) == "connection" {
+		return fmt.Errorf("'enable_learned_cidrs_approval' must be false if 'learned_cidrs_approval_mode' is set to 'connection'")
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
@@ -790,6 +806,13 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if mode, ok := d.GetOk("learned_cidrs_approval_mode"); ok {
+		err := client.SetTransitLearnedCIDRsApprovalMode(gateway, mode.(string))
+		if err != nil {
+			return fmt.Errorf("could not set learned CIDRs approval mode to %q: %v", mode, err)
+		}
+	}
+
 	return resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -1071,6 +1094,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	}
 	d.Set("enable_segmentation", isSegmentationEnabled)
 
+	d.Set("learned_cidrs_approval_mode", advancedConfig.LearnedCIDRsApprovalMode)
+
 	haGateway := &goaviatrix.Gateway{
 		AccountName: d.Get("account_name").(string),
 		GwName:      d.Get("gw_name").(string) + "-hagw",
@@ -1192,16 +1217,21 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("updating ha_eip is not allowed")
 		}
 	}
+
 	if d.HasChange("enable_transit_firenet") && d.Get("cloud_type").(int) == goaviatrix.AZURE {
 		return fmt.Errorf("editing 'enable_transit_firenet' in AZURE is not supported")
 	}
 	if d.Get("enable_egress_transit_firenet").(bool) && !d.Get("enable_transit_firenet").(bool) {
 		return fmt.Errorf("'enable_egress_transit_firenet' requires 'enable_transit_firenet' to be set to true")
 	}
-
 	if d.Get("enable_egress_transit_firenet").(bool) && gateway.CloudType != goaviatrix.AZURE && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV {
 		return fmt.Errorf("'enable_egress_transit_firenet' is currently only supported on AWS, AZURE and AWSGOV cloud providers")
 	}
+
+	if d.Get("enable_learned_cidrs_approval").(bool) && d.Get("learned_cidrs_approval_mode").(string) == "connection" {
+		return fmt.Errorf("'enable_learned_cidrs_approval' must be false if 'learned_cidrs_approval_mode' is set to 'connection'")
+	}
+
 	if d.HasChange("single_az_ha") {
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName: d.Get("gw_name").(string),
@@ -1515,11 +1545,62 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if d.HasChange("enable_learned_cidrs_approval") {
+	if d.HasChange("learned_cidrs_approval_mode") && d.HasChange("enable_learned_cidrs_approval") {
 		gw := &goaviatrix.TransitVpc{
 			GwName: d.Get("gw_name").(string),
 		}
-
+		currentMode, _ := d.GetChange("learned_cidrs_approval_mode")
+		// API calls need to be in a specific order depending on the current mode
+		if currentMode.(string) == "gateway" {
+			learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
+			if learnedCidrsApproval {
+				err := client.EnableTransitLearnedCidrsApproval(gw)
+				if err != nil {
+					return fmt.Errorf("failed to enable learned cidrs approval: %s", err)
+				}
+			} else {
+				err := client.DisableTransitLearnedCidrsApproval(gw)
+				if err != nil {
+					return fmt.Errorf("failed to disable learned cidrs approval: %s", err)
+				}
+			}
+			mode := d.Get("learned_cidrs_approval_mode").(string)
+			err := client.SetTransitLearnedCIDRsApprovalMode(gw, mode)
+			if err != nil {
+				return fmt.Errorf("could not set learned CIDRs approval mode to %q: %v", mode, err)
+			}
+		} else {
+			mode := d.Get("learned_cidrs_approval_mode").(string)
+			err := client.SetTransitLearnedCIDRsApprovalMode(gw, mode)
+			if err != nil {
+				return fmt.Errorf("could not set learned CIDRs approval mode to %q: %v", mode, err)
+			}
+			learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
+			if learnedCidrsApproval {
+				err = client.EnableTransitLearnedCidrsApproval(gw)
+				if err != nil {
+					return fmt.Errorf("failed to enable learned cidrs approval: %s", err)
+				}
+			} else {
+				err = client.DisableTransitLearnedCidrsApproval(gw)
+				if err != nil {
+					return fmt.Errorf("failed to disable learned cidrs approval: %s", err)
+				}
+			}
+		}
+	} else if d.HasChange("learned_cidrs_approval_mode") {
+		gw := &goaviatrix.TransitVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		mode := d.Get("learned_cidrs_approval_mode").(string)
+		err := client.SetTransitLearnedCIDRsApprovalMode(gw, mode)
+		if err != nil {
+			return fmt.Errorf("could not set learned CIDRs approval mode to %q: %v", mode, err)
+		}
+	} else if d.HasChange("enable_learned_cidrs_approval") {
+		gw := &goaviatrix.TransitVpc{
+			GwName: d.Get("gw_name").(string),
+		}
 		learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
 		if learnedCidrsApproval {
 			gw.LearnedCidrsApproval = "on"
