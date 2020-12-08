@@ -14,6 +14,7 @@ func resourceAviatrixDeviceTransitGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixDeviceTransitGatewayAttachmentCreate,
 		Read:   resourceAviatrixDeviceTransitGatewayAttachmentRead,
+		Update: resourceAviatrixDeviceTransitGatewayAttachmentUpdate,
 		Delete: resourceAviatrixDeviceTransitGatewayAttachmentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -124,6 +125,13 @@ func resourceAviatrixDeviceTransitGatewayAttachment() *schema.Resource {
 				ForceNew:    true,
 				Description: "Remote tunnel IP",
 			},
+			"enable_learned_cidrs_approval": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Description: "Enable learned CIDR approval for the connection. Requires the transit_gateway's 'learned_cidrs_approval_mode' attribute be set to 'connection'. " +
+					"Valid values: true, false. Default value: false. Available as of provider version R2.18+.",
+			},
 		},
 	}
 }
@@ -159,6 +167,15 @@ func resourceAviatrixDeviceTransitGatewayAttachmentCreate(d *schema.ResourceData
 	}
 
 	d.SetId(attachment.ConnectionName)
+
+	enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
+	if enableLearnedCIDRApproval {
+		err := client.EnableTransitConnectionLearnedCIDRApproval(attachment.TransitGatewayName, attachment.ConnectionName)
+		if err != nil {
+			return fmt.Errorf("could not enable learned cidr approval: %v", err)
+		}
+	}
+
 	return nil
 }
 
@@ -225,6 +242,39 @@ func resourceAviatrixDeviceTransitGatewayAttachmentRead(d *schema.ResourceData, 
 	}
 
 	d.SetId(attachment.ConnectionName)
+
+	transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: attachment.TransitGatewayName})
+	if err != nil {
+		return fmt.Errorf("could not get advanced config for transit gateway when trying to read learned CIDR approval status: %v", err)
+	}
+	for _, v := range transitAdvancedConfig.ConnectionLearnedCIDRApprovalInfo {
+		if v.ConnName == attachment.ConnectionName {
+			d.Set("enable_learned_cidrs_approval", v.EnabledApproval == "yes")
+			break
+		}
+	}
+
+	return nil
+}
+func resourceAviatrixDeviceTransitGatewayAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*goaviatrix.Client)
+
+	if d.HasChange("enable_learned_cidrs_approval") {
+		enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
+		gwName := d.Get("transit_gateway_name").(string)
+		connName := d.Get("connection_name").(string)
+		if enableLearnedCIDRApproval {
+			err := client.EnableTransitConnectionLearnedCIDRApproval(gwName, connName)
+			if err != nil {
+				return fmt.Errorf("could not enable learned cidr approval: %v", err)
+			}
+		} else {
+			err := client.DisableTransitConnectionLearnedCIDRApproval(gwName, connName)
+			if err != nil {
+				return fmt.Errorf("could not disable learned cidr approval: %v", err)
+			}
+		}
+	}
 	return nil
 }
 

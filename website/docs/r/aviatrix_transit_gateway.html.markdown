@@ -160,13 +160,19 @@ The following arguments are supported:
 * `filtered_spoke_vpc_routes` - (Optional) A list of comma separated CIDRs to be filtered from the spoke VPC route table. When configured, filtering CIDR(s) or it’s subnet will be deleted from VPC routing tables as well as from spoke gateway’s routing table. It applies to all spoke gateways attached to this transit gateway. Example: "10.2.0.0/116,10.3.0.0/16".
 * `excluded_advertised_spoke_routes` - (Optional) A list of comma separated CIDRs to be advertised to on-prem as 'Excluded CIDR List'. When configured, it inspects all the advertised CIDRs from its spoke gateways and remove those included in the 'Excluded CIDR List'. Example: "10.4.0.0/116,10.5.0.0/16".
 
+### [Learned CIDRs Approval](https://docs.aviatrix.com/HowTos/transit_approval.html)
+
+-> **NOTE:** `enable_learned_cidrs_approval` can be set to true only if `learned_cidrs_approval_mode` is set to 'gateway'. If `learned_cidrs_approval_mode` is set to 'connection' then enabling learned CIDRs approval is handled within each individual connection resource.
+
+* `enable_learned_cidrs_approval` - (Optional) Switch to enable/disable encrypted transit approval for transit gateway. Valid values: true, false. Default value: false.
+* `learned_cidrs_approval_mode` - (Optional) Learned CIDRs approval mode. Either "gateway" (approval on a per gateway basis) or "connection" (approval on a per connection basis). Default value: "gateway". Available as of provider version R2.18+.
+
 ### Misc.
 * `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in Controller 4.7+. Valid values: true, false. Default: true. Option not available for Azure and OCI gateways, they will automatically allocate new EIPs.
 * `eip` - (Optional) Required when `allocate_new_eip` is false. It uses the specified EIP for this gateway. Available in Controller version 4.7+. Only available for AWS and GCP.
 * `tag_list` - (Optional) Instance tag of cloud provider. Only supported for AWS and AWSGOV. Example: ["key1:value1","key2:value2"].
 * `enable_active_mesh` - (Optional) Switch to enable/disable [Active Mesh Mode](https://docs.aviatrix.com/HowTos/activemesh_faq.html) for Transit Gateway. Valid values: true, false. Default value: false.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS and AWSGOV. Valid values: true, false. Default value: false.
-* `enable_learned_cidrs_approval` - (Optional) Switch to enable/disable [encrypted transit approval](https://docs.aviatrix.com/HowTos/transit_approval.html) for transit Gateway. Valid values: true, false. Default value: false.
 * `zone` - (Optional) Availability Zone. Only available for cloud_type = 8 (AZURE). Must be in the form 'az-n', for example, 'az-2'. Available in provider version R2.17+.
 * `enable_active_standby` - (Optional) Enables [Active-Standby Mode](https://docs.aviatrix.com/HowTos/transit_advanced.html#active-standby). Available only with Active Mesh Mode enabled and HA enabled. Valid values: true, false. Default value: false. Available in provider version R2.17.1+.
 

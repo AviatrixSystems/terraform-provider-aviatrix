@@ -205,3 +205,7 @@ output "ARM_HUB_NAME" {
 output "AWS_TGW_NAME" {
   value = aviatrix_aws_tgw.cwan-awstgw.tgw_name
 }
+
+output "DATADOG_API_KEY" {
+  value = var.datadog_api_key
+}
