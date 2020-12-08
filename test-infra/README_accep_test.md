@@ -25,6 +25,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |		                               | SKIP_ACCOUNT_AWSGOV                | AWSGOV_ACCOUNT_NUMBER, AWSGOV_ACCESS_KEY, AWSGOV_SECRET_KEY                    |
 | aviatrix_account_user                | SKIP_ACCOUNT_USER                  |                                                                                |
 | aviatrix_arm_peer                    | SKIP_ARM_PEER                      | aviatrix_account + ARM_VNET_ID, ARM_VNET_ID2, ARM_REGION, ARM_REGION2          |
+| aviatrix_aws_guard_duty              | SKIP_AWS_GUARD_DUTY                | aviatrix_account                                                               |
 | aviatrix_aws_peer                    | SKIP_AWS_PEER                      | aviatrix_account + AWS_VPC_ID, AWS_VPC_ID2, AWS_REGION, AWS_REGION2            |
 | aviatrix_aws_tgw                     | SKIP_AWS_TGW                       | aviatrix_account + AWS_VPC_ID, AWS_REGION, AWS_VPC_TGW_ID                      |
 | aviatrix_aws_tgw_directconnect       | SKIP_AWS_TGW_DIRECTCONNECT         | aviatrix_aws_tgw + AWS_DX_GATEWAY                                              |
@@ -36,6 +37,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_azure_spoke_native_peering  | SKIP_AZURE_SPOKE_NATIVE_PEERING    | aviatrix_account + AZURE_VNET_ID, AZURE_VNET_ID2, AZURE_REGION, AZURE_REGION2  |
 | aviatrix_aws_tgw_vpn_conn            | SKIP_AWS_TGW_VPN_CONN              | aviatrix_aws_tgw                                                               |
 | aviatrix_controller_config           | SKIP_CONTROLLER_CONFIG             | aviatrix_account                                                               |
+| aviatrix_datadog_agent               | SKIP_DATADOG_AGENT                 | datadog_api_key
 | aviatrix_device_aws_tgw_attachment   | SKIP_DEVICE_AWS_TGW_ATTACHMENT     | DEVICE_NAME, AWS_TGW_NAME                                                      |
 | aviatrix_device_interface_config     | SKIP_DEVICE_INTERFACE_CONFIG       | aviatrix_device_registration                                                   |
 | aviatrix_device_registration         | SKIP_DEVICE_REGISTRATION           | DEVICE_PUBLIC_IP, DEVICE_KEY_FILE_PATH                                         |
@@ -79,6 +81,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_segmentation_security_domain_association | SKIP_SEGMENTATION_SECURITY_DOMAIN_ASSOCIATION | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2 |
 | aviatrix_segmentation_security_domain_connection_policy | SKIP_SEGMENTATION_SECURITY_DOMAIN_CONNECTION_POLICY | N/A                                        |
 | aviatrix_site2cloud                  | SKIP_S2C                           | aviatrix_gateway                                                               |
+| aviatrix_splunk_logging              | SKIP_SPLUNK_LOGGING                | N/A
 | aviatrix_spoke_gateway               | SKIP_SPOKE_GATEWAY                 | aviatrix_gateway                                                               |
 |                                      | SKIP_SPOKE_GATEWAY_AWS             |         + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)           |
 |                                      | SKIP_SPOKE_GATEWAY_GCP             |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)             |

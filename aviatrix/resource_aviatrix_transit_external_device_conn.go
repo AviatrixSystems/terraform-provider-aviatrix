@@ -239,6 +239,14 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Default:     false,
 				Description: "Only valid for Transit Gateway's with Active-Standby Mode enabled. Valid values: true, false. Default: false.",
 			},
+			"enable_learned_cidrs_approval": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Description: "Enable learned CIDR approval for the connection. Only valid with 'connection_type' = 'bgp'." +
+					" Requires the transit_gateway's 'learned_cidrs_approval_mode' attribute be set to 'connection'. " +
+					"Valid values: true, false. Default value: false. Available as of provider version R2.18+.",
+			},
 		},
 	}
 }
@@ -346,6 +354,11 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		}
 	}
 
+	enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
+	if externalDeviceConn.ConnectionType != "bgp" && enableLearnedCIDRApproval {
+		return fmt.Errorf("'connection_type' must be 'bgp' if 'enable_learned_cidrs_approval' is set to true")
+	}
+
 	err = client.CreateExternalDeviceConn(externalDeviceConn)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix external device connection: %s", err)
@@ -365,6 +378,13 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	if d.Get("switch_to_ha_standby_gateway").(bool) {
 		if err := client.SwitchActiveTransitGateway(externalDeviceConn.GwName, externalDeviceConn.ConnectionName); err != nil {
 			return fmt.Errorf("could not switch active transit gateway to HA: %v", err)
+		}
+	}
+
+	if enableLearnedCIDRApproval {
+		err = client.EnableTransitConnectionLearnedCIDRApproval(externalDeviceConn.GwName, externalDeviceConn.ConnectionName)
+		if err != nil {
+			return fmt.Errorf("could not enable learned cidr approval: %v", err)
 		}
 	}
 
@@ -473,6 +493,13 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 			activeGatewayType = v.ActiveGatewayType
 		}
 		d.Set("switch_to_ha_standby_gateway", activeGatewayType == "HA")
+
+		for _, v := range transitAdvancedConfig.ConnectionLearnedCIDRApprovalInfo {
+			if v.ConnName == externalDeviceConn.ConnectionName {
+				d.Set("enable_learned_cidrs_approval", v.EnabledApproval == "yes")
+				break
+			}
+		}
 	}
 
 	d.SetId(conn.ConnectionName + "~" + conn.VpcID)
@@ -494,6 +521,23 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 	if d.HasChange("switch_to_ha_standby_gateway") {
 		if err := client.SwitchActiveTransitGateway(d.Get("gw_name").(string), d.Get("connection_name").(string)); err != nil {
 			return fmt.Errorf("could not switch active transit gateway: %v", err)
+		}
+	}
+
+	if d.HasChange("enable_learned_cidrs_approval") {
+		enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
+		gwName := d.Get("gw_name").(string)
+		connName := d.Get("connection_name").(string)
+		if enableLearnedCIDRApproval {
+			err = client.EnableTransitConnectionLearnedCIDRApproval(gwName, connName)
+			if err != nil {
+				return fmt.Errorf("could not enable learned cidr approval: %v", err)
+			}
+		} else {
+			err = client.DisableTransitConnectionLearnedCIDRApproval(gwName, connName)
+			if err != nil {
+				return fmt.Errorf("could not disable learned cidr approval: %v", err)
+			}
 		}
 	}
 
