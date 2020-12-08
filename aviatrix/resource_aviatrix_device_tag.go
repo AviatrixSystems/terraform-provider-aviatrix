@@ -111,6 +111,7 @@ func resourceAviatrixDeviceTagRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAviatrixDeviceTagUpdate(d *schema.ResourceData, meta interface{}) error {
+	defer resourceAviatrixDeviceTagRead(d, meta)
 	client := meta.(*goaviatrix.Client)
 
 	deviceTag := marshalDeviceTagInput(d)
