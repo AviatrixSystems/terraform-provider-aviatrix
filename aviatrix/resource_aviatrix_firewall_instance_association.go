@@ -98,6 +98,7 @@ func marshalFirewallInstanceAssociationInput(d *schema.ResourceData) *goaviatrix
 }
 
 func resourceAviatrixFirewallInstanceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+	defer resourceAviatrixFirewallInstanceAssociationRead(d, meta)
 	client := meta.(*goaviatrix.Client)
 
 	firewall := marshalFirewallInstanceAssociationInput(d)

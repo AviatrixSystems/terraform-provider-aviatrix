@@ -158,6 +158,7 @@ func marshalDeviceTransitGatewayAttachmentInput(d *schema.ResourceData) *goaviat
 }
 
 func resourceAviatrixDeviceTransitGatewayAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
+	defer resourceAviatrixDeviceTransitGatewayAttachmentRead(d, meta)
 	client := meta.(*goaviatrix.Client)
 
 	attachment := marshalDeviceTransitGatewayAttachmentInput(d)
