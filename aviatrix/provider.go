@@ -52,6 +52,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_azure_peer":                                     resourceAviatrixAzurePeer(),
 			"aviatrix_azure_spoke_native_peering":                     resourceAviatrixAzureSpokeNativePeering(),
 			"aviatrix_controller_config":                              resourceAviatrixControllerConfig(),
+			"aviatrix_datadog_agent":                                  resourceAviatrixDatadogAgent(),
 			"aviatrix_device_aws_tgw_attachment":                      resourceAviatrixDeviceAwsTgwAttachment(),
 			"aviatrix_device_interface_config":                        resourceAviatrixDeviceInterfaceConfig(),
 			"aviatrix_device_registration":                            resourceAviatrixDeviceRegistration(),
