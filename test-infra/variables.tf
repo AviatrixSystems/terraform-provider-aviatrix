@@ -62,3 +62,5 @@ variable "access_account_name" {default="aws_init_acc"}
 variable "keypair" {default="aviatrix-key"}
 variable "type" {default="metered"}
 variable "customer_id" {default = ""}
+
+variable "datadog_api_key" {}
