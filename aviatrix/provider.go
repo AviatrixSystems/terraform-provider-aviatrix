@@ -88,6 +88,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_spoke_gateway":                                  resourceAviatrixSpokeGateway(),
 			"aviatrix_spoke_transit_attachment":                       resourceAviatrixSpokeTransitAttachment(),
 			"aviatrix_spoke_vpc":                                      resourceAviatrixSpokeVpc(),
+			"aviatrix_sumologic_forwarder":                            resourceAviatrixSumologicForwarder(),
 			"aviatrix_transit_external_device_conn":                   resourceAviatrixTransitExternalDeviceConn(),
 			"aviatrix_trans_peer":                                     resourceAviatrixTransPeer(),
 			"aviatrix_transit_firenet_policy":                         resourceAviatrixTransitFireNetPolicy(),
