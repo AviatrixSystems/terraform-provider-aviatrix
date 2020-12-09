@@ -39,16 +39,16 @@ The following arguments are supported:
 * `gw_name` - (Required) Name of the Aviatrix gateway the custom DNAT will be configured for.
 * `sync_to_ha` - (Optional) Sync the policies to the HA gateway. Valid values: true, false. Default: true.
 * `dnat_policy` - (Required) Policy rule applied for enabling Destination NAT (DNAT), which allows you to change the destination to a virtual address range. Currently only supports AWS(1) and AZURE(8).
-  * `src_cidr` - (Optional) This is a qualifier condition that specifies a source IP address range where the rule applies. When left blank, this field is not used.
-  * `src_port` - (Optional) This is a qualifier condition that specifies a source port that the rule applies. When left blank, this field is not used.
-  * `dst_cidr` - (Optional) This is a qualifier condition that specifies a destination IP address range where the rule applies. When left blank, this field is not used.
-  * `dst_port` - (Optional) This is a qualifier condition that specifies a destination port where the rule applies. When left blank, this field is not used.
-  * `protocol` - (Optional) This is a qualifier condition that specifies a destination port protocol where the rule applies. When left blank, this field is not used.
-  * `interface` - (Optional) This is a qualifier condition that specifies output interface where the rule applies. When left blank, this field is not used.
+  * `src_cidr` - (Optional) This is a qualifier condition that specifies a source IP address range where the rule applies. When not specified, this field is not used.
+  * `src_port` - (Optional) This is a qualifier condition that specifies a source port that the rule applies. When not specified, this field is not used.
+  * `dst_cidr` - (Optional) This is a qualifier condition that specifies a destination IP address range where the rule applies. When not specified, this field is not used.
+  * `dst_port` - (Optional) This is a qualifier condition that specifies a destination port where the rule applies. When not specified, this field is not used.
+  * `protocol` - (Optional) This is a qualifier condition that specifies a destination port protocol where the rule applies. When not specified, this field is not used.
+  * `interface` - (Optional) This is a qualifier condition that specifies output interface where the rule applies. When not specified, this field is not used.
   * `connection` - (Optional) Default value: "None".
-  * `mark` - (Optional) This is a rule field that specifies a tag or mark of a TCP session when all qualifier conditions meet. When left blank, this field is not used.
-  * `dnat_ips` - (Optional) This is a rule field that specifies the translated destination IP address when all specified qualifier conditions meet. When left blank, this field is not used. One of the rule field must be specified for this rule to take effect.
-  * `dnat_port` - (Optional) This is a rule field that specifies the translated destination port when all specified qualifier conditions meet. When left blank, this field is not used. One of the rule field must be specified for this rule to take effect.
+  * `mark` - (Optional) This is a rule field that specifies a tag or mark of a TCP session when all qualifier conditions meet. When not specified, this field is not used.
+  * `dnat_ips` - (Optional) This is a rule field that specifies the translated destination IP address when all specified qualifier conditions meet. When not specified, this field is not used. One of the rule field must be specified for this rule to take effect.
+  * `dnat_port` - (Optional) This is a rule field that specifies the translated destination port when all specified qualifier conditions meet. When not specified, this field is not used. One of the rule field must be specified for this rule to take effect.
   * `exclude_rtb` - (Optional) This field specifies which VPC private route table will not be programmed with the default route entry.
 
 ## Import
@@ -58,3 +58,7 @@ The following arguments are supported:
 ```
 $ terraform import aviatrix_gateway_dnat.test gw_name
 ```
+
+## Notes
+### dnat_policy
+When an attribute is referred to as 'left blank', or if an attribute is intended to not be specified in the configuration, it should not be written in the .tf configuration. For example, if `interface` was intended to not be specified, the attribute should not be present in the .tf config. Setting `interface = ""` (an empty string), is not the same as not specifying the interface value, and will result in deltas in the terraform state.
