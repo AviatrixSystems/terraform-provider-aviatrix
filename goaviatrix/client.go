@@ -233,11 +233,8 @@ func (c *Client) Delete(path string, i interface{}) (*http.Response, error) {
 }
 
 type File struct {
-	Path        string
-	ParamName   string
-	RealFile    bool   // when using the file content instead of file path, set this to true
-	FileName    string // use when RealFile is true
-	FileContent string // use when RealFile is true
+	Path      string
+	ParamName string
 }
 
 // PostFile will encode the files and parameters with multipart form encoding.
@@ -247,39 +244,27 @@ func (c *Client) PostFile(path string, params map[string]string, files []File) (
 
 	// Encode the files
 	for _, f := range files {
-		if !f.RealFile {
-			if f.Path == "" {
-				continue
-			}
-
-			file, err := os.Open(f.Path)
-			if err != nil {
-				return nil, err
-			}
-			fileContents, err := ioutil.ReadAll(file)
-			if err != nil {
-				return nil, err
-			}
-			fi, err := file.Stat()
-			if err != nil {
-				return nil, err
-			}
-			_ = file.Close()
-			part, err := createFormFile(f.ParamName, fi.Name(), http.DetectContentType(fileContents), writer)
-			if err != nil {
-				return nil, err
-			}
-			_, _ = part.Write(fileContents)
-		} else {
-			fileContents := []byte(f.FileContent)
-
-			part, err := createFormFile(f.ParamName, f.FileName, http.DetectContentType(fileContents), writer)
-			if err != nil {
-				return nil, err
-			}
-			_, _ = part.Write(fileContents)
+		if f.Path == "" {
+			continue
 		}
-
+		file, err := os.Open(f.Path)
+		if err != nil {
+			return nil, err
+		}
+		fileContents, err := ioutil.ReadAll(file)
+		if err != nil {
+			return nil, err
+		}
+		fi, err := file.Stat()
+		if err != nil {
+			return nil, err
+		}
+		_ = file.Close()
+		part, err := createFormFile(f.ParamName, fi.Name(), http.DetectContentType(fileContents), writer)
+		if err != nil {
+			return nil, err
+		}
+		_, _ = part.Write(fileContents)
 	}
 
 	// Encode the other params

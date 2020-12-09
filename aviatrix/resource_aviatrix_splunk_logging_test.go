@@ -34,9 +34,10 @@ func TestAccAviatrixSplunkLogging_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"custom_output_config_file_path"},
 			},
 		},
 	})
@@ -61,9 +62,9 @@ func testAccCheckSplunkLoggingExists(resourceName string) resource.TestCheckFunc
 
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
-		resp, _ := client.GetSplunkLoggingStatus()
-		if resp.Status != "enabled" {
-			return fmt.Errorf("splunk logging not found")
+		_, err := client.GetSplunkLoggingStatus()
+		if err == goaviatrix.ErrNotFound {
+			return fmt.Errorf("splunk logging not found: %s", resourceName)
 		}
 
 		return nil
@@ -90,8 +91,8 @@ func testAccCheckSplunkLoggingDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, _ := client.GetSplunkLoggingStatus()
-		if resp.Status == "enabled" {
+		_, err := client.GetSplunkLoggingStatus()
+		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("splunk_logging still exists")
 		}
 	}

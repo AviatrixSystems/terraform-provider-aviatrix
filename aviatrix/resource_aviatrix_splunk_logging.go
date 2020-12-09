@@ -31,13 +31,13 @@ func resourceAviatrixSplunkLogging() *schema.Resource {
 				ForceNew:    true,
 				Description: "Port number",
 			},
-			"custom_output_configuration": {
+			"custom_output_config_file_path": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Configuration file",
+				Description: "Configuration file path",
 			},
-			"custom_input_configuration": {
+			"custom_input_config": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
@@ -66,14 +66,14 @@ func marshalSplunkLoggingInput(d *schema.ResourceData, useCustomConfig bool) *go
 
 	if useCustomConfig {
 		splunkLogging.UseConfigFile = true
-		splunkLogging.ConfigFile = d.Get("custom_output_configuration").(string)
+		splunkLogging.ConfigFilePath = d.Get("custom_output_config_file_path").(string)
 	} else {
 		splunkLogging.UseConfigFile = false
 		splunkLogging.Server = d.Get("server").(string)
 		splunkLogging.Port = d.Get("port").(int)
 	}
 
-	splunkLogging.CustomConfig = d.Get("custom_input_configuration").(string)
+	splunkLogging.CustomConfig = d.Get("custom_input_config").(string)
 
 	var excludedGateways []string
 	for _, v := range d.Get("excluded_gateways").(*schema.Set).List() {
@@ -92,9 +92,9 @@ func resourceAviatrixSplunkLoggingCreate(d *schema.ResourceData, meta interface{
 	var splunkLogging *goaviatrix.SplunkLogging
 
 	// port number cannot be 0
-	if d.Get("server").(string) == "" && d.Get("port").(int) == 0 && d.Get("custom_output_configuration").(string) == "" {
+	if d.Get("server").(string) == "" && d.Get("port").(int) == 0 && d.Get("custom_output_config_file_path").(string) == "" {
 		return fmt.Errorf("please provide either server/port or configuration file path")
-	} else if d.Get("custom_output_configuration").(string) != "" {
+	} else if d.Get("custom_output_config_file_path").(string) != "" {
 		splunkLogging = marshalSplunkLoggingInput(d, true)
 	} else {
 		if d.Get("port").(int) == 0 || d.Get("server").(string) == "" {
@@ -109,7 +109,7 @@ func resourceAviatrixSplunkLoggingCreate(d *schema.ResourceData, meta interface{
 	}
 
 	d.SetId("splunk_logging")
-	return nil
+	return resourceAviatrixSplunkLoggingRead(d, meta)
 }
 func resourceAviatrixSplunkLoggingRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
@@ -119,6 +119,10 @@ func resourceAviatrixSplunkLoggingRead(d *schema.ResourceData, meta interface{})
 	}
 
 	splunkLoggingStatus, err := client.GetSplunkLoggingStatus()
+	if err == goaviatrix.ErrNotFound {
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("could not get remote syslog status: %v", err)
 	}
@@ -126,7 +130,7 @@ func resourceAviatrixSplunkLoggingRead(d *schema.ResourceData, meta interface{})
 	d.Set("server", splunkLoggingStatus.Server)
 	port, _ := strconv.Atoi(splunkLoggingStatus.Port)
 	d.Set("port", port)
-	d.Set("custom_input_configuration", splunkLoggingStatus.CustomConfig)
+	d.Set("custom_input_config", splunkLoggingStatus.CustomConfig)
 	d.Set("status", splunkLoggingStatus.Status)
 	d.Set("excluded_gateways", splunkLoggingStatus.ExcludedGateways)
 
