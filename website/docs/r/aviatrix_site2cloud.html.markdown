@@ -54,16 +54,16 @@ The following arguments are supported:
 
 ### Required
 * `vpc_id` - (Required) VPC ID of the cloud gateway.
-* `connection_name` - (Required) Site2Cloud Connection Name.
-* `remote_gateway_type` - (Required) Remote Gateway Type. Valid Values: "generic", "avx", "aws", "azure", "sonicwall", "oracle".
-* `connection_type` - (Required) Connection Type. Valid Values: "mapped", "unmapped".
-* `tunnel_type` - (Required) Site2Cloud Tunnel Type. Valid Values: "policy", "route".
-* `primary_cloud_gateway_name` - (Required) Primary Cloud Gateway Name.
-* `remote_gateway_ip` - (Required) Remote Gateway IP.
-* `remote_subnet_cidr` - (Required) Remote Subnet CIDR. **Not required for custom_mapped connection.**
-* `remote_subnet_virtual` - Remote Subnet CIDR (Virtual). **Required for connection type "mapped" only.**
-* `local_subnet_cidr` - (Optional) Local Subnet CIDR. **Required for connection type "mapped".**
-* `local_subnet_virtual` - Local Subnet CIDR (Virtual). **Required for connection type "mapped" only.**
+* `connection_name` - (Required) Site2Cloud connection name.
+* `remote_gateway_type` - (Required) Remote gateway type. Valid Values: "generic", "avx", "aws", "azure", "sonicwall", "oracle".
+* `connection_type` - (Required) Connection type. Valid Values: "mapped", "unmapped".
+* `tunnel_type` - (Required) Site2Cloud tunnel type. Valid Values: "policy", "route".
+* `primary_cloud_gateway_name` - (Required) Primary cloud gateway name.
+* `remote_gateway_ip` - (Required) Remote gateway IP.
+* `remote_subnet_cidr` - (Required) Remote subnet CIDR. **Not required for custom_mapped connection.**
+* `remote_subnet_virtual` - Remote subnet CIDR (Virtual). **Required for connection type "mapped" only.**
+* `local_subnet_cidr` - (Optional) Local subnet CIDR. **Required for connection type "mapped".**
+* `local_subnet_virtual` - Local subnet CIDR (Virtual). **Required for connection type "mapped" only.**
 
 ### HA
 * `ha_enabled` - (Optional) Specify whether or not to enable HA. Valid Values: true, false. **NOTE: Please see notes [here](#ha-enabled) regarding HA requirements.**
@@ -90,7 +90,7 @@ The following arguments are supported:
 
 ### Custom Mapped
 
-~> **NOTE:** To enable custom mapped connection, 'connection_type' must be 'mapped' and 'tunnel_type' must be 'route'. All remote CIDR attributes or all local CIDR attributes must be set when using custom_mapped. Setting all CIDR attributes is also valid.
+~> **NOTE:** To enable custom mapped connection, 'connection_type' must be 'mapped' and 'tunnel_type' must be 'route'. All remote CIDR attributes or all local CIDR attributes must be set when using `custom_mapped`. Setting all CIDR attributes is also valid.
 
 * `custom_mapped` - (Optional) Enable custom mapped connection. Default value: false. Valid values: true/false. Available in provider version R2.17.1+.
 * `remote_source_real_cidrs` - (Optional) Set of Remote Initiated Traffic Source Real CIDRs.
@@ -108,7 +108,7 @@ The following arguments are supported:
 * `enable_dead_peer_detection` - (Optional) Enable/disable Deed Peer Detection for an existing site2cloud connection. Default value: true. **NOTE: Please see notes [here](#enable_dead_peer_detection-1) in regards to any deltas found in your state with the addition of this argument in R1.9**
 * `enable_active_active` - (Optional) Enable/disable active active HA for an existing site2cloud connection. Valid values: true, false. Default value: false.
 * `enable_ikev2` - (Optional) Switch to enable IKEv2 for policy-based site2cloud. Valid values: true, false. Default value: false.
-* `forward_traffic_to_transit` - (Optional) Enable spoke gateway with mapped site2cloud configurations to forward traffic from site2cloud connection to Aviatrix Transit Gateway. Default value: false. Valid values: true or false. Available as of provider version 2.17.2.
+* `forward_traffic_to_transit` - (Optional) Enable spoke gateway with mapped site2cloud configurations to forward traffic from site2cloud connection to Aviatrix Transit Gateway. Default value: false. Valid values: true or false. Available in provider version 2.17.2+.
 
 ## Attribute Reference
 

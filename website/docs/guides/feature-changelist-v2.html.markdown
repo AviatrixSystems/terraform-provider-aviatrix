@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.17.1 (UserConnect-6.2.1891)``
+``Last updated: R2.17.2 (UserConnect-6.2.1914)``
 
 
 ---
@@ -215,3 +215,9 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |(new) | fqdn           | manage_domain_names | **No**; nothing needs to be changed. This is a new attribute introduced that allows decoupling of FQDN rules management out of the resource. A simple refresh will set this attribute into the state as default true |
 |(new) | firewall       | manage_firewall_policies | **No**; nothing needs to be changed. This is a new attribute introduced that allows decoupling of Stateful firewall rules management out of the resource. A simple refresh will set this attribute into the state as default true |
 |(new) | spoke_gateway  | manage_transit_gateway_attachment | **No**; nothing needs to be changed. This is a new attribute introduced that allows decoupling of spoke to transit attachments out of the resource. A simple refresh will set this attribute into the state as default true |
+
+
+## R2.17.2 (UserConnect-6.2.1914)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(changed) | transit_gateway_peering | gateway1_excluded_network_cidrs, gateway1_excluded_tgw_connections, gateway2_excluded_network_cidrs, gateway2_excluded_tgw_connections | **Yes**; if customers are experiencing deltas in their state in any of the aforementioned attributes due to Terraform re-ordering prior to R2.17.2, the workaround is to reorder the list in the config to match what the returned 'expected' output is and run a `terraform apply`. The fix in R2.17.2 will correct this behavior for any **new** future peering resources created. Note that if manual re-ordering is not a viable option, one may also destroy and re-create the resource as necessary |

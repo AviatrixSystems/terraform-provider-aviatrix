@@ -15,7 +15,7 @@ Quick at-a-glance access to Aviatrix Terraform provider's release compatibility 
 
 ---
 
-``Last updated: R2.17.1 (UserConnect-6.2.1891)``
+``Last updated: R2.17.2 (UserConnect-6.2.1914)``
 
 
 ---
@@ -64,7 +64,8 @@ Quick at-a-glance access to Aviatrix Terraform provider's release compatibility 
 | 0.12              | 2.16.2                   | UserConnect-6.1.1280         |
 | 0.12              | 2.16.3                   | UserConnect-6.1.1309         |
 | 0.12              | 2.17                     | UserConnect-6.2              |
-| 0.12              | 2.17.1                   | UserConnect-6.2.1891         |
+| 0.12, 0.13        | 2.17.1                   | UserConnect-6.2.1891         |
+| 0.12, 0.13        | 2.17.2                   | UserConnect-6.2.1914         |
 
 **<sup>1</sup>** : Note that Terraform v0.12 is not backwards-compatible with previous Terraform versions. For R1.16, there will be a need to change some syntax in the Terraform configuration files. Please see Hashicorp's [announcement](https://www.hashicorp.com/blog/announcing-terraform-0-12) for more information
 

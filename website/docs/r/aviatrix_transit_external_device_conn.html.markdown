@@ -32,10 +32,10 @@ resource "aviatrix_transit_external_device_conn" "test" {
 The following arguments are supported:
 
 ### Required
-* `vpc_id` - (Required) VPC ID of the cloud gateway.
-* `connection_name` - (Required) Site2Cloud Connection Name.
-* `gw_name` - (Required) Site2Cloud Connection Name.
-* `remote_gateway_ip` - (Required) Remote Gateway IP.
+* `vpc_id` - (Required) VPC ID of the Aviatrix transit gateway.
+* `connection_name` - (Required) Transit external device connection name.
+* `gw_name` - (Required) Aviatrix transit gateway name.
+* `remote_gateway_ip` - (Required) Remote gateway IP.
 * `connection_type` - (Required) Connection type. Valid values: 'bpg', 'static'. Default value: 'bgp'.
 * `bgp_local_as_num` - (Optional) BGP local ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
 * `bgp_remote_as_num` - (Optional) BGP remote ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
