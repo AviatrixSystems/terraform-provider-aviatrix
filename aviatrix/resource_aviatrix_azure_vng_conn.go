@@ -83,6 +83,10 @@ func resourceAviatrixAzureVngConnRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	azureVngConnStatus, err := client.GetAzureVngConnStatus(connectionName)
+	if err == goaviatrix.ErrNotFound {
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("could not get azure vng conn status: %v", err)
 	}

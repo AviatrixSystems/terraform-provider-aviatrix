@@ -1,7 +1,5 @@
 package goaviatrix
 
-import "fmt"
-
 type AzureVngConn struct {
 	CID                string
 	PrimaryGatewayName string
@@ -52,7 +50,7 @@ func (c *Client) GetAzureVngConnStatus(connectionName string) (*AzureVngConnResp
 		}
 	}
 
-	return nil, fmt.Errorf("could not find the vng connection: %s", connectionName)
+	return nil, ErrNotFound
 }
 
 func (c *Client) DisconnectAzureVng(vpcId string, connectionName string) error {

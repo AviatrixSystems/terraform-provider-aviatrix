@@ -109,8 +109,8 @@ func testAccCheckAzureVngConnDestroy(s *terraform.State) error {
 
 		connectionName := rs.Primary.Attributes["connection_name"]
 
-		status, _ := client.GetAzureVngConnStatus(connectionName)
-		if status != nil {
+		_, err := client.GetAzureVngConnStatus(connectionName)
+		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("azure_vpn_conn still exists")
 		}
 	}
