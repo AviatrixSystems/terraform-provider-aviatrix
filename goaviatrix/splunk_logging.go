@@ -8,7 +8,7 @@ type SplunkLogging struct {
 	CID                   string
 	Server                string
 	Port                  int
-	ConfigFile            string
+	ConfigFilePath        string
 	CustomConfig          string
 	ExcludedGatewaysInput string
 	UseConfigFile         bool
@@ -17,7 +17,6 @@ type SplunkLogging struct {
 type SplunkLoggingResp struct {
 	Server           string   `json:"server_ip"`
 	Port             string   `json:"server_port"`
-	ConfigFile       string   `json:"custom_input_file"`
 	CustomConfig     string   `json:"custom_input_cfg"`
 	ExcludedGateways []string `json:"excluded_gateway"`
 	Status           string   `json:"status"`
@@ -34,10 +33,8 @@ func (c *Client) EnableSplunkLogging(r *SplunkLogging) error {
 
 		files := []File{
 			{
-				ParamName:   "cu_output_cfg",
-				RealFile:    true,
-				FileName:    "configuration.txt", // fake name for configuration file
-				FileContent: r.ConfigFile,
+				Path:      r.ConfigFilePath,
+				ParamName: "cu_output_cfg",
 			},
 		}
 
@@ -73,6 +70,10 @@ func (c *Client) GetSplunkLoggingStatus() (*SplunkLoggingResp, error) {
 	err := c.GetAPI(&data, params["action"], params, BasicCheck)
 	if err != nil {
 		return nil, err
+	}
+
+	if data.Results.Status == "disabled" {
+		return nil, ErrNotFound
 	}
 
 	return &data.Results, nil
