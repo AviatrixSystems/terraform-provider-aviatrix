@@ -17,3 +17,16 @@ code change.
 	- Delete: Verified deletion with different configurations?
 	- Version upgrade: If modifying/adding an attribute, can an existing user still use their resource after upgrading?
 	- Import: If you remove a resource from state, are you able to import it completely back into state?
+- Other considerations
+	- In the Read function, if the resource does not exist do not return error, instead do the following (documented here https://learn.hashicorp.com/tutorials/terraform/provider-setup):
+	```
+	if err == goaviatrix.ErrNotFound {
+		d.SetId("")
+		return nil
+	}
+	```
+	- If the Create or Update function performs more than one API call, the Read function needs to be called before returning. For example, `resourceAviatrixDeviceTagUpdate` can call up to 3 different APIs: `UpdateDeviceTagConfig`, `AttachDeviceTag` and `CommitDeviceTag`. The easiest way to ensure the Read is called is to use `defer`, in `resourceAviatrixDeviceTagUpdate` this is the first line of the function.
+	```
+	func resourceAviatrixDeviceTagUpdate(d *schema.ResourceData, meta interface{}) error {
+		defer resourceAviatrixDeviceTagRead(d, meta)
+	```
