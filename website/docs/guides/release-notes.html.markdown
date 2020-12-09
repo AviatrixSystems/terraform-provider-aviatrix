@@ -30,7 +30,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
   - ``prepend_as_path2``   
 
 ### Bug Fixes:
-1. Fixed issue where the following parameters caused reordering issues for **aviatrix_transit_gateway_peering**:
+1. Fixed [issue](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/feature-changelist-v2#r2172-userconnect-621914) where the following parameters caused reordering issues for **aviatrix_transit_gateway_peering**:
   - ``gateway1_excluded_network_cidrs``
   - ``gateway2_excluded_network_cidrs``
   - ``gateway1_excluded_tgw_connections``
