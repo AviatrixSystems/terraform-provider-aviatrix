@@ -45,6 +45,10 @@ func (c *Client) GetDatadogAgentStatus() (*DatadogAgentResp, error) {
 		return nil, err
 	}
 
+	if data.Results.Status == "disabled" {
+		return nil, ErrNotFound
+	}
+
 	return &data.Results, nil
 }
 

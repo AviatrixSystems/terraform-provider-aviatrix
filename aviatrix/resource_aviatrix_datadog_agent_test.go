@@ -61,8 +61,8 @@ func testAccCheckDatadogAgentExists(resourceName string) resource.TestCheckFunc 
 
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
-		resp, _ := client.GetDatadogAgentStatus()
-		if resp.Status != "enabled" {
+		_, err := client.GetDatadogAgentStatus()
+		if err == goaviatrix.ErrNotFound {
 			return fmt.Errorf("datadog agent not found")
 		}
 
@@ -90,8 +90,8 @@ func testAccCheckDatadogAgentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, _ := client.GetDatadogAgentStatus()
-		if resp.Status == "enabled" {
+		_, err := client.GetDatadogAgentStatus()
+		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("datadog_agent still exists")
 		}
 	}

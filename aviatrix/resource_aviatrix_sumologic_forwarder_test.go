@@ -65,8 +65,8 @@ func testAccCheckSumologicForwarderExists(resourceName string) resource.TestChec
 
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
-		resp, _ := client.GetSumologicForwarderStatus()
-		if resp.Status != "enabled" {
+		_, err := client.GetSumologicForwarderStatus()
+		if err == goaviatrix.ErrNotFound {
 			return fmt.Errorf("sumologic forwarder not found")
 		}
 
@@ -94,8 +94,8 @@ func testAccCheckSumologicForwarderDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, _ := client.GetSumologicForwarderStatus()
-		if resp.Status == "enabled" {
+		_, err := client.GetSumologicForwarderStatus()
+		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("sumologic_forwarder still exists")
 		}
 	}

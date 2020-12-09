@@ -50,6 +50,10 @@ func (c *Client) GetNetflowAgentStatus() (*NetflowAgentResp, error) {
 		return nil, err
 	}
 
+	if data.Results.Status == "disabled" {
+		return nil, ErrNotFound
+	}
+
 	return &data.Results, nil
 }
 

@@ -97,6 +97,10 @@ func resourceAviatrixNetflowAgentRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	netflowAgentStatus, err := client.GetNetflowAgentStatus()
+	if err == goaviatrix.ErrNotFound {
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("could not get netflow agent status: %v", err)
 	}

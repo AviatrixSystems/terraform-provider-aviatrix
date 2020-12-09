@@ -99,6 +99,10 @@ func resourceAviatrixSumologicForwarderRead(d *schema.ResourceData, meta interfa
 	}
 
 	sumologicForwarderStatus, err := client.GetSumologicForwarderStatus()
+	if err == goaviatrix.ErrNotFound {
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("could not get remote syslog status: %v", err)
 	}
