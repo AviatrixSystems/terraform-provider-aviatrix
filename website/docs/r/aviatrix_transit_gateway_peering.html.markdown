@@ -46,8 +46,8 @@ The following arguments are supported:
 * `gateway2_excluded_network_cidrs` - (Optional) List of excluded network CIDRs for the second transit gateway.
 * `gateway1_excluded_tgw_connections` - (Optional) List of excluded TGW connections for the first transit gateway.
 * `gateway2_excluded_tgw_connections` - (Optional) List of excluded TGW connections for the second transit gateway.
-* `prepend_as_path1` - (Optional) AS Path Prepend customized by specifying AS PATH for a BGP connection. Applies on transit_gateway_name1. Available as of provider version R2.17.2.
-* `prepend_as_path2` - (Optional) AS Path Prepend customized by specifying AS PATH for a BGP connection. Applies on transit_gateway_name2. Available as of provider version R2.17.2.
+* `prepend_as_path1` - (Optional) AS Path Prepend customized by specifying AS PATH for a BGP connection. Applies on transit_gateway_name1. Available in provider version R2.17.2+.
+* `prepend_as_path2` - (Optional) AS Path Prepend customized by specifying AS PATH for a BGP connection. Applies on transit_gateway_name2. Available in provider version R2.17.2+.
 * `enable_peering_over_private_network` - (Optional) Enable peering over private network. ActiveMesh and Insane Mode is required on both transit gateways. Available in provider version R2.17.1+.
 
 ## Import

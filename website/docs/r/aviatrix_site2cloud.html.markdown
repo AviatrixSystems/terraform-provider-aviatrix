@@ -90,7 +90,7 @@ The following arguments are supported:
 
 ### Custom Mapped
 
-~> **NOTE:** To enable custom mapped connection, 'connection_type' must be 'mapped' and 'tunnel_type' must be 'route'. All remote CIDR attributes or all local CIDR attributes must be set when using custom_mapped. Setting all CIDR attributes is also valid.
+~> **NOTE:** To enable custom mapped connection, 'connection_type' must be 'mapped' and 'tunnel_type' must be 'route'. All remote CIDR attributes or all local CIDR attributes must be set when using `custom_mapped`. Setting all CIDR attributes is also valid.
 
 * `custom_mapped` - (Optional) Enable custom mapped connection. Default value: false. Valid values: true/false. Available in provider version R2.17.1+.
 * `remote_source_real_cidrs` - (Optional) Set of Remote Initiated Traffic Source Real CIDRs.
@@ -108,7 +108,7 @@ The following arguments are supported:
 * `enable_dead_peer_detection` - (Optional) Enable/disable Deed Peer Detection for an existing site2cloud connection. Default value: true. **NOTE: Please see notes [here](#enable_dead_peer_detection-1) in regards to any deltas found in your state with the addition of this argument in R1.9**
 * `enable_active_active` - (Optional) Enable/disable active active HA for an existing site2cloud connection. Valid values: true, false. Default value: false.
 * `enable_ikev2` - (Optional) Switch to enable IKEv2 for policy-based site2cloud. Valid values: true, false. Default value: false.
-* `forward_traffic_to_transit` - (Optional) Enable spoke gateway with mapped site2cloud configurations to forward traffic from site2cloud connection to Aviatrix Transit Gateway. Default value: false. Valid values: true or false. Available as of provider version 2.17.2.
+* `forward_traffic_to_transit` - (Optional) Enable spoke gateway with mapped site2cloud configurations to forward traffic from site2cloud connection to Aviatrix Transit Gateway. Default value: false. Valid values: true or false. Available in provider version 2.17.2+.
 
 ## Attribute Reference
 
