@@ -1,6 +1,6 @@
 ## 2.17.2 (Unreleased)
 ### Notes:
-- Supported Controller version: **UserConnect-6.2.1913**
+- Supported Controller version: **UserConnect-6.2.1914**
 - Supported Terraform version: **v0.12.x** and **v0.13.x**
 
 ### Features:
@@ -10,12 +10,12 @@
   - ``prepend_as_path2``   
 
 ### Bug Fixes:
-1. Fixed issue where following parameters caused reordering issues for **aviatrix_transit_gateway_peering**
+1. Fixed issue where the following parameters caused reordering issues for **aviatrix_transit_gateway_peering**:
   - ``gateway1_excluded_network_cidrs``
   - ``gateway2_excluded_network_cidrs``
   - ``gateway1_excluded_tgw_connections``
   - ``gateway2_excluded_tgw_connections``
-  
+
 
 ## 2.17.1 (November 22, 2020)
 ### Notes:
