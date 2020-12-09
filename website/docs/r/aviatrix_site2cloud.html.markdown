@@ -54,16 +54,16 @@ The following arguments are supported:
 
 ### Required
 * `vpc_id` - (Required) VPC ID of the cloud gateway.
-* `connection_name` - (Required) Site2Cloud Connection Name.
-* `remote_gateway_type` - (Required) Remote Gateway Type. Valid Values: "generic", "avx", "aws", "azure", "sonicwall", "oracle".
-* `connection_type` - (Required) Connection Type. Valid Values: "mapped", "unmapped".
-* `tunnel_type` - (Required) Site2Cloud Tunnel Type. Valid Values: "policy", "route".
-* `primary_cloud_gateway_name` - (Required) Primary Cloud Gateway Name.
-* `remote_gateway_ip` - (Required) Remote Gateway IP.
-* `remote_subnet_cidr` - (Required) Remote Subnet CIDR. **Not required for custom_mapped connection.**
-* `remote_subnet_virtual` - Remote Subnet CIDR (Virtual). **Required for connection type "mapped" only.**
-* `local_subnet_cidr` - (Optional) Local Subnet CIDR. **Required for connection type "mapped".**
-* `local_subnet_virtual` - Local Subnet CIDR (Virtual). **Required for connection type "mapped" only.**
+* `connection_name` - (Required) Site2Cloud connection name.
+* `remote_gateway_type` - (Required) Remote gateway type. Valid Values: "generic", "avx", "aws", "azure", "sonicwall", "oracle".
+* `connection_type` - (Required) Connection type. Valid Values: "mapped", "unmapped".
+* `tunnel_type` - (Required) Site2Cloud tunnel type. Valid Values: "policy", "route".
+* `primary_cloud_gateway_name` - (Required) Primary cloud gateway name.
+* `remote_gateway_ip` - (Required) Remote gateway IP.
+* `remote_subnet_cidr` - (Required) Remote subnet CIDR. **Not required for custom_mapped connection.**
+* `remote_subnet_virtual` - Remote subnet CIDR (Virtual). **Required for connection type "mapped" only.**
+* `local_subnet_cidr` - (Optional) Local subnet CIDR. **Required for connection type "mapped".**
+* `local_subnet_virtual` - Local subnet CIDR (Virtual). **Required for connection type "mapped" only.**
 
 ### HA
 * `ha_enabled` - (Optional) Specify whether or not to enable HA. Valid Values: true, false. **NOTE: Please see notes [here](#ha-enabled) regarding HA requirements.**
