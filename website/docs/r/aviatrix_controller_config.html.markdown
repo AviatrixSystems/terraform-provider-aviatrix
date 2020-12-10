@@ -48,6 +48,12 @@ resource "aviatrix_controller_config" "test_controller_config" {
   server_public_certificate_file_path = "/path/to/server.crt"
 }
 ```
+```hcl
+# Create an Aviatrix Controller Config and configure the AWS Guard Duty Scanning Interval
+resource "aviatrix_controller_config" "test_controller_config" {
+  aws_guard_duty_scanning_interval = 10
+}
+```
 
 
 ## Argument Reference
@@ -59,6 +65,7 @@ The following arguments are supported:
 * `security_group_management` - (Optional) Enable to allow Controller to automatically manage inbound rules from gateways. Valid values: true, false. Default value: false.
 * `http_access` - (Optional) Switch for HTTP access. Valid values: true, false. Default value: false.
 * `fqdn_exception_rule` - (Optional) Enable/disable packets without an SNI field to pass through gateway(s). Valid values: true, false. Default value: true. For more information on this setting, please see [here](https://docs.aviatrix.com/HowTos/FQDN_Whitelists_Ref_Design.html#exception-rule)
+* `aws_guard_duty_scanning_interval` - (Optional) Configure the AWS Guard Duty scanning interval. Valid values: 5, 10, 15, 30 or 60. Default value: 60. Available as of provider version R2.18+.
 
 ### Backup
 * `backup_configuration` - (Optional) Switch to enable/disable controller CloudN backup config. Valid values: true, false. Default value: false.

@@ -2406,3 +2406,32 @@ var conflictingPublicSubnetFilteringGatewayConfigKeys = []string{
 	"vpn_cidr",
 	"vpn_protocol",
 }
+
+func getFqdnGatewayLanCidr(fqdnGatewayInfo *goaviatrix.FQDNGatwayInfo, fqdnGatewayName string) string {
+	armFqdnLanCidr := fqdnGatewayInfo.ArmFqdnLanCidr
+	if _, ok := armFqdnLanCidr[fqdnGatewayName]; !ok {
+		return ""
+	}
+	return armFqdnLanCidr[fqdnGatewayName]
+}
+
+func getFqdnGatewayLanInterface(fqdnGatewayInfo *goaviatrix.FQDNGatwayInfo, fqdnGatewayName string) string {
+	targetInterface := "av-nic-" + fqdnGatewayName + "_eth1"
+	interfaces := fqdnGatewayInfo.Interface
+	fqdnGatewayInterfaces := interfaces[fqdnGatewayName]
+	for i := range fqdnGatewayInterfaces {
+		if fqdnGatewayInterfaces[i] == targetInterface {
+			return fqdnGatewayInterfaces[i]
+		}
+	}
+	return ""
+}
+
+func getVPNConfig(vpnConfigName string, vpnConfigList []goaviatrix.VPNConfig) *goaviatrix.VPNConfig {
+	for i := range vpnConfigList {
+		if vpnConfigList[i].Name == vpnConfigName {
+			return &vpnConfigList[i]
+		}
+	}
+	return nil
+}
