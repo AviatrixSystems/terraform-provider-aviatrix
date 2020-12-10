@@ -209,3 +209,15 @@ output "AWS_TGW_NAME" {
 output "DATADOG_API_KEY" {
   value = var.datadog_api_key
 }
+
+output "AZURE_VNG_VNET_ID" {
+  value = "${module.azure-vng.vnet}:${module.azure-vng.resource_group}"
+}
+
+output "AZURE_VNG_SUBNET" {
+  value = module.azure-vng.subnet
+}
+
+output "AZURE_VNG" {
+  value = module.azure-vng.vng
+}
