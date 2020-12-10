@@ -45,21 +45,20 @@ func resourceAviatrixAwsGuardDuty() *schema.Resource {
 	}
 }
 
-func resourceAviatrixAwsGuardDutyCreate(d *schema.ResourceData, meta interface{}) error {
-	var err error
-	defer captureErr(resourceAviatrixAwsGuardDutyRead, d, meta, &err)
+func resourceAviatrixAwsGuardDutyCreate(d *schema.ResourceData, meta interface{}) (err error) {
 	client := meta.(*goaviatrix.Client)
-
 	guardDuty := marshalAwsGuardDutyInput(d)
+
 	err = client.EnableAwsGuardDuty(guardDuty)
 	if err != nil {
 		return fmt.Errorf("could not enable AWS GuardDuty: %v", err)
 	}
+	d.SetId(guardDuty.ID())
+	defer captureErr(resourceAviatrixAwsGuardDutyRead, d, meta, &err)
 	err = client.UpdateAwsGuardDutyExcludedIPs(guardDuty)
 	if err != nil {
 		return fmt.Errorf("could not set excluded IPs: %v", err)
 	}
-	d.SetId(guardDuty.ID())
 	return err
 }
 
