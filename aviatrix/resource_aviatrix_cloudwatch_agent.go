@@ -84,7 +84,7 @@ func resourceAviatrixCloudwatchAgentCreate(d *schema.ResourceData, meta interfac
 	}
 
 	d.SetId("cloudwatch_agent")
-	return resourceAviatrixCloudwatchAgentRead(d, meta)
+	return nil
 }
 
 func resourceAviatrixCloudwatchAgentRead(d *schema.ResourceData, meta interface{}) error {
@@ -120,6 +120,5 @@ func resourceAviatrixCloudwatchAgentDelete(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("could not disable cloudwatch agent: %v", err)
 	}
 
-	d.SetId("")
 	return nil
 }
