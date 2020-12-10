@@ -51,13 +51,11 @@ TRANSIT_GATEWAY_NAME=$(terraform output TRANSIT_GATEWAY_NAME)
 ARM_RESOURCE_GROUP=$(terraform output ARM_RESOURCE_GROUP)
 ARM_HUB_NAME=$(terraform output ARM_HUB_NAME)
 AWS_TGW_NAME=$(terraform output AWS_TGW_NAME)
-<<<<<<< HEAD
 DATADOG_API_KEY=$(terraform output DATADOG_API_KEY)
-=======
 AZURE_VNG_VNET_ID=$(terraform output AZURE_VNG_VNET_ID)
 AZURE_VNG_SUBNET=$(terraform output AZURE_VNG_SUBNET)
 AZURE_VNG=$(terraform output AZURE_VNG)
->>>>>>> 20d23c27 (18797: implemented connection between azure vng and aviatrix tgw)
+
 
 SKIP_DATA_ACCOUNT="no"
 SKIP_DATA_CALLER_IDENTITY="no"

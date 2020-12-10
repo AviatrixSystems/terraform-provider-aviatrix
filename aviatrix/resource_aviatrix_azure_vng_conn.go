@@ -66,7 +66,7 @@ func resourceAviatrixAzureVngConnCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	d.SetId(azureVngConn.ConnectionName)
-	return resourceAviatrixAzureVngConnRead(d, meta)
+	return nil
 }
 
 func resourceAviatrixAzureVngConnRead(d *schema.ResourceData, meta interface{}) error {
