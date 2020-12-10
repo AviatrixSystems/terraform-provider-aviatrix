@@ -178,10 +178,11 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "Switch to Enable/Disable advertise transit VPC network CIDR.",
 			},
 			"bgp_manual_spoke_advertise_cidrs": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Description: "Intended CIDR list to advertise to VGW.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "",
+				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceInString,
+				Description:      "Intended CIDR list to advertise to VGW.",
 			},
 			"enable_encrypt_volume": {
 				Type:        schema.TypeBool,

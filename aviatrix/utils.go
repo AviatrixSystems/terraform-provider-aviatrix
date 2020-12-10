@@ -65,3 +65,20 @@ func getFqdnGatewayLanInterface(fqdnGatewayInfo *goaviatrix.FQDNGatwayInfo, fqdn
 	}
 	return ""
 }
+
+func DiffSuppressFuncIgnoreSpaceInString(k, old, new string, d *schema.ResourceData) bool {
+	var oldValue []string
+	var newValue []string
+
+	oldValueList := strings.Split(old, ",")
+	for i := range oldValueList {
+		oldValue = append(oldValue, strings.TrimSpace(oldValueList[i]))
+	}
+
+	newValueList := strings.Split(new, ",")
+	for i := range newValueList {
+		newValue = append(newValue, strings.TrimSpace(newValueList[i]))
+	}
+
+	return goaviatrix.Equivalent(oldValue, newValue)
+}
