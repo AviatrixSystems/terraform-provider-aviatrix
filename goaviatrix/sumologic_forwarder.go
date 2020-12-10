@@ -51,6 +51,10 @@ func (c *Client) GetSumologicForwarderStatus() (*SumologicForwarderResp, error) 
 		return nil, err
 	}
 
+	if data.Results.Status == "disabled" {
+		return nil, ErrNotFound
+	}
+
 	return &data.Results, nil
 }
 

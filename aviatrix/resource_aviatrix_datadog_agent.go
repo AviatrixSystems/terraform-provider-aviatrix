@@ -79,7 +79,7 @@ func resourceAviatrixDatadogAgentCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	d.SetId("datadog_agent")
-	return resourceAviatrixDatadogAgentRead(d, meta)
+	return nil
 }
 func resourceAviatrixDatadogAgentRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
@@ -89,6 +89,10 @@ func resourceAviatrixDatadogAgentRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	datadogAgentStatus, err := client.GetDatadogAgentStatus()
+	if err == goaviatrix.ErrNotFound {
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("could not get remote syslog status: %v", err)
 	}

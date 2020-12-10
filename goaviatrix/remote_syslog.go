@@ -79,6 +79,10 @@ func (c *Client) GetRemoteSyslogStatus(idx int) (*RemoteSyslogResp, error) {
 		return nil, err
 	}
 
+	if data.Results.Status == "disabled" {
+		return nil, ErrNotFound
+	}
+
 	return &data.Results, nil
 }
 

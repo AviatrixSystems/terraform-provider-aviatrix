@@ -62,8 +62,8 @@ func testAccCheckNetflowAgentExists(resourceName string) resource.TestCheckFunc 
 
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
-		resp, _ := client.GetNetflowAgentStatus()
-		if resp.Status != "enabled" {
+		_, err := client.GetNetflowAgentStatus()
+		if err == goaviatrix.ErrNotFound {
 			return fmt.Errorf("netflow agent not found")
 		}
 
@@ -91,8 +91,8 @@ func testAccCheckNetflowAgentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, _ := client.GetNetflowAgentStatus()
-		if resp.Status == "enabled" {
+		_, err := client.GetNetflowAgentStatus()
+		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("netflow_agent still exists")
 		}
 	}

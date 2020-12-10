@@ -52,6 +52,13 @@ The following arguments are supported:
 * `template` (Optional) Optional custom template.
 * `excluded_gateways` (Optional) List of gateways to be excluded from logging. e.g.: ["gateway01", "gateway02", "gateway01-hagw"].
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `status` - The status of remote syslog.
+* `notls` - This attribute is true if the remote syslog is not protected by TLS.
+
 ## Import
 
 **remote_syslog** can be imported using "remote_syslog_" + `index`, e.g.

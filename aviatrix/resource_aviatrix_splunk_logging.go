@@ -109,7 +109,7 @@ func resourceAviatrixSplunkLoggingCreate(d *schema.ResourceData, meta interface{
 	}
 
 	d.SetId("splunk_logging")
-	return resourceAviatrixSplunkLoggingRead(d, meta)
+	return nil
 }
 func resourceAviatrixSplunkLoggingRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)

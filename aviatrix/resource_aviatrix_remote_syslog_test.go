@@ -39,9 +39,10 @@ func TestAccAviatrixRemoteSyslog_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ca_certificate_file_path", "public_certificate_file_path", "private_key_file_path"},
 			},
 		},
 	})
@@ -68,8 +69,8 @@ func testAccCheckRemoteSyslogExists(resourceName string, index int) resource.Tes
 
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
-		resp, _ := client.GetRemoteSyslogStatus(index)
-		if resp.Status != "enabled" {
+		_, err := client.GetRemoteSyslogStatus(index)
+		if err == goaviatrix.ErrNotFound {
 			return fmt.Errorf("remote syslog %d not found", index)
 		}
 
@@ -98,8 +99,8 @@ func testAccCheckRemoteSyslogDestroy(s *terraform.State) error {
 		}
 		idx, _ := strconv.Atoi(rs.Primary.Attributes["index"])
 
-		resp, _ := client.GetRemoteSyslogStatus(idx)
-		if resp.Status == "enabled" {
+		_, err := client.GetRemoteSyslogStatus(idx)
+		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("remote_syslog still exists")
 		}
 	}

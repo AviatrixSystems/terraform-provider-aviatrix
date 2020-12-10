@@ -137,7 +137,7 @@ func resourceAviatrixRemoteSyslogCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	d.SetId("remote_syslog_" + strconv.Itoa(remoteSyslog.Index))
-	return resourceAviatrixRemoteSyslogRead(d, meta)
+	return nil
 }
 
 func resourceAviatrixRemoteSyslogRead(d *schema.ResourceData, meta interface{}) error {
@@ -160,6 +160,10 @@ func resourceAviatrixRemoteSyslogRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	remoteSyslogStatus, err := client.GetRemoteSyslogStatus(d.Get("index").(int))
+	if err == goaviatrix.ErrNotFound {
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("could not get remote syslog status: %v", err)
 	}
