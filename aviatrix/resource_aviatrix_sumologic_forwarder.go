@@ -89,7 +89,7 @@ func resourceAviatrixSumologicForwarderCreate(d *schema.ResourceData, meta inter
 	}
 
 	d.SetId("sumologic_forwarder")
-	return resourceAviatrixSumologicForwarderRead(d, meta)
+	return nil
 }
 func resourceAviatrixSumologicForwarderRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)

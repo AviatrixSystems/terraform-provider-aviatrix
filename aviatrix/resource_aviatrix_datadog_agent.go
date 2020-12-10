@@ -79,7 +79,7 @@ func resourceAviatrixDatadogAgentCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	d.SetId("datadog_agent")
-	return resourceAviatrixDatadogAgentRead(d, meta)
+	return nil
 }
 func resourceAviatrixDatadogAgentRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)

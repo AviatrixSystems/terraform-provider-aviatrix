@@ -137,7 +137,7 @@ func resourceAviatrixRemoteSyslogCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	d.SetId("remote_syslog_" + strconv.Itoa(remoteSyslog.Index))
-	return resourceAviatrixRemoteSyslogRead(d, meta)
+	return nil
 }
 
 func resourceAviatrixRemoteSyslogRead(d *schema.ResourceData, meta interface{}) error {
