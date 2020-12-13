@@ -247,6 +247,13 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 					" Requires the transit_gateway's 'learned_cidrs_approval_mode' attribute be set to 'connection'. " +
 					"Valid values: true, false. Default value: false. Available as of provider version R2.18+.",
 			},
+			"enable_ikev2": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+				Description: "Set as true if use IKEv2.",
+			},
 		},
 	}
 }
@@ -357,6 +364,11 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
 	if externalDeviceConn.ConnectionType != "bgp" && enableLearnedCIDRApproval {
 		return fmt.Errorf("'connection_type' must be 'bgp' if 'enable_learned_cidrs_approval' is set to true")
+	}
+
+	enableIkev2 := d.Get("enable_ikev2").(bool)
+	if enableIkev2 {
+		externalDeviceConn.EnableIkev2 = "true"
 	}
 
 	err = client.CreateExternalDeviceConn(externalDeviceConn)
@@ -499,6 +511,12 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 				d.Set("enable_learned_cidrs_approval", v.EnabledApproval == "yes")
 				break
 			}
+		}
+
+		if conn.EnableIkev2 == "enabled" {
+			d.Set("enable_ikev2", true)
+		} else {
+			d.Set("enable_ikev2", false)
 		}
 	}
 

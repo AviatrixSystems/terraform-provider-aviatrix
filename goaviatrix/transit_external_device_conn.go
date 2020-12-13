@@ -40,6 +40,7 @@ type ExternalDeviceConn struct {
 	BackupRemoteTunnelCidr string `form:"backup_remote_tunnel_ip,omitempty"`
 	BackupDirectConnect    string `form:"backup_direct_connect,omitempty"`
 	EnableEdgeSegmentation string `form:"connection_policy,omitempty"`
+	EnableIkev2            string `form:"enable_ikev2, omitempty"`
 }
 
 type EditExternalDeviceConnDetail struct {
@@ -66,6 +67,7 @@ type EditExternalDeviceConnDetail struct {
 	BackupRemoteGatewayIP  string
 	PreSharedKey           string
 	BackupPreSharedKey     string
+	IkeVer                 string `json:"ike_ver"`
 }
 
 type ExternalDeviceConnDetailResp struct {
@@ -240,6 +242,12 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 			externalDeviceConn.EnableEdgeSegmentation = "enabled"
 		} else {
 			externalDeviceConn.EnableEdgeSegmentation = "disabled"
+		}
+
+		if externalDeviceConnDetail.IkeVer == "2" {
+			externalDeviceConn.EnableIkev2 = "enabled"
+		} else {
+			externalDeviceConn.EnableIkev2 = "disabled"
 		}
 
 		return externalDeviceConn, nil
