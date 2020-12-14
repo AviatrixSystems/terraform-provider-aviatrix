@@ -355,18 +355,3 @@ func resourceAviatrixTransitGatewayPeeringDelete(d *schema.ResourceData, meta in
 
 	return nil
 }
-
-func setConfigValueIfEquivalent(d *schema.ResourceData, k string, fromConfig, fromAPI []string) error {
-	if goaviatrix.Equivalent(fromConfig, fromAPI) {
-		return d.Set(k, fromConfig)
-	}
-	return d.Set(k, fromAPI)
-}
-
-func getStringList(d *schema.ResourceData, k string) []string {
-	var sl []string
-	for _, v := range d.Get(k).([]interface{}) {
-		sl = append(sl, v.(string))
-	}
-	return sl
-}

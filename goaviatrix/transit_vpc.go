@@ -677,3 +677,14 @@ func (c *Client) DisableTransitConnectionLearnedCIDRApproval(gwName, connName st
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
 }
+
+func (c *Client) EditTransitConnectionBGPManualAdvertiseCIDRs(gwName, connName string, cidrs []string) error {
+	data := map[string]string{
+		"action":                                "edit_transit_connection_bgp_manual_advertise_cidrs",
+		"CID":                                   c.CID,
+		"gateway_name":                          gwName,
+		"connection_name":                       connName,
+		"connection_bgp_manual_advertise_cidrs": strings.Join(cidrs, ","),
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}

@@ -247,6 +247,16 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 					" Requires the transit_gateway's 'learned_cidrs_approval_mode' attribute be set to 'connection'. " +
 					"Valid values: true, false. Default value: false. Available as of provider version R2.18+.",
 			},
+			"manual_bgp_advertised_cidrs": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsCIDR,
+				},
+				Optional: true,
+				Description: "Configure manual BGP advertised CIDRs for this connection. Only valid with 'connection_type'" +
+					" = 'bgp'. Available as of provider version R2.18+.",
+			},
 		},
 	}
 }
@@ -358,6 +368,10 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	if externalDeviceConn.ConnectionType != "bgp" && enableLearnedCIDRApproval {
 		return fmt.Errorf("'connection_type' must be 'bgp' if 'enable_learned_cidrs_approval' is set to true")
 	}
+	manualBGPCidrs := getStringSet(d, "manual_bgp_advertised_cidrs")
+	if externalDeviceConn.ConnectionType != "bgp" && len(manualBGPCidrs) != 0 {
+		return fmt.Errorf("'connection_type' must be 'bgp' if 'manual_bgp_advertised_cidrs' is not empty")
+	}
 
 	err = client.CreateExternalDeviceConn(externalDeviceConn)
 	if err != nil {
@@ -385,6 +399,13 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		err = client.EnableTransitConnectionLearnedCIDRApproval(externalDeviceConn.GwName, externalDeviceConn.ConnectionName)
 		if err != nil {
 			return fmt.Errorf("could not enable learned cidr approval: %v", err)
+		}
+	}
+
+	if len(manualBGPCidrs) > 0 {
+		err = client.EditTransitConnectionBGPManualAdvertiseCIDRs(externalDeviceConn.GwName, externalDeviceConn.ConnectionName, manualBGPCidrs)
+		if err != nil {
+			return fmt.Errorf("could not edit manual advertised BGP cidrs: %v", err)
 		}
 	}
 
@@ -500,6 +521,10 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 				break
 			}
 		}
+
+		if err := d.Set("manual_bgp_advertised_cidrs", conn.ManualBGPCidrs); err != nil {
+			return fmt.Errorf("setting 'manual_bgp_advertised_cidrs' into state: %v", err)
+		}
 	}
 
 	d.SetId(conn.ConnectionName + "~" + conn.VpcID)
@@ -508,8 +533,10 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 
 func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+	gwName := d.Get("gw_name").(string)
+	connName := d.Get("connection_name").(string)
 
-	transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: d.Get("gw_name").(string)})
+	transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: gwName})
 	if err != nil {
 		return fmt.Errorf("could not get advanced config for transit gateway: %v", err)
 	}
@@ -519,15 +546,13 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 	}
 
 	if d.HasChange("switch_to_ha_standby_gateway") {
-		if err := client.SwitchActiveTransitGateway(d.Get("gw_name").(string), d.Get("connection_name").(string)); err != nil {
+		if err := client.SwitchActiveTransitGateway(gwName, connName); err != nil {
 			return fmt.Errorf("could not switch active transit gateway: %v", err)
 		}
 	}
 
 	if d.HasChange("enable_learned_cidrs_approval") {
 		enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
-		gwName := d.Get("gw_name").(string)
-		connName := d.Get("connection_name").(string)
 		if enableLearnedCIDRApproval {
 			err = client.EnableTransitConnectionLearnedCIDRApproval(gwName, connName)
 			if err != nil {
@@ -538,6 +563,14 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 			if err != nil {
 				return fmt.Errorf("could not disable learned cidr approval: %v", err)
 			}
+		}
+	}
+
+	if d.HasChange("manual_bgp_advertised_cidrs") {
+		manualBGPCidrs := getStringSet(d, "manual_bgp_advertised_cidrs")
+		err := client.EditTransitConnectionBGPManualAdvertiseCIDRs(gwName, connName, manualBGPCidrs)
+		if err != nil {
+			return fmt.Errorf("could not edit manual advertise manual cidrs: %v", err)
 		}
 	}
 
