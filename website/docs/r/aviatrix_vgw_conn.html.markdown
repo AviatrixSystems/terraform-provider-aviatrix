@@ -38,6 +38,9 @@ The following arguments are supported:
 * `bgp_vgw_region` - (Required) Region of AWS VGW that will be used for this connection. Example: "us-east-1".
 * `bgp_local_as_num` - (Required) BGP Local ASN (Autonomous System Number). Integer between 1-4294967294. Example: "65001".
 
+### Optional
+* `enable_learned_cidrs_approval` - (Optional) Enable learned CIDRs approval for the connection. Requires the transit_gateway's 'learned_cidrs_approval_mode' attribute be set to 'connection'. Valid values: true, false. Default value: false. Available as of provider version R2.18+.
+
 The following arguments are deprecated:
 
 * `enable_advertise_transit_cidr` - (Optional) Switch to enable/disable advertise transit VPC network CIDR for a vgw connection.

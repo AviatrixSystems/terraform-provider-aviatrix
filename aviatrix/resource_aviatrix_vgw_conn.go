@@ -13,6 +13,7 @@ func resourceAviatrixVGWConn() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixVGWConnCreate,
 		Read:   resourceAviatrixVGWConnRead,
+		Update: resourceAviatrixVGWConnUpdate,
 		Delete: resourceAviatrixVGWConnDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -65,11 +66,18 @@ func resourceAviatrixVGWConn() *schema.Resource {
 				Description:  "BGP local ASN (Autonomous System Number). Integer between 1-4294967294.",
 				ValidateFunc: goaviatrix.ValidateASN,
 			},
+			"enable_learned_cidrs_approval": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Description: "Enable learned CIDR approval for the connection. Requires the transit_gateway's 'learned_cidrs_approval_mode' attribute be set to 'connection'. " +
+					"Valid values: true, false. Default value: false. Available as of provider version R2.18+.",
+			},
 		},
 	}
 }
 
-func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) (err error) {
 	client := meta.(*goaviatrix.Client)
 
 	vgwConn := &goaviatrix.VGWConn{
@@ -84,13 +92,23 @@ func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Creating Aviatrix VGW Connection: %#v", vgwConn)
 
-	err := client.CreateVGWConn(vgwConn)
+	err = client.CreateVGWConn(vgwConn)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix VGWConn: %s", err)
 	}
 
 	d.SetId(vgwConn.ConnName + "~" + vgwConn.VPCId)
-	return resourceAviatrixVGWConnRead(d, meta)
+	defer captureErr(resourceAviatrixVGWConnRead, d, meta, &err)
+
+	enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
+	if enableLearnedCIDRApproval {
+		err := client.EnableTransitConnectionLearnedCIDRApproval(vgwConn.GwName, vgwConn.ConnName)
+		if err != nil {
+			return fmt.Errorf("could not enable learned cidr approval: %v", err)
+		}
+	}
+
+	return err
 }
 
 func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error {
@@ -129,6 +147,40 @@ func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("bgp_local_as_num", vConn.BgpLocalAsNum)
 
 	d.SetId(vConn.ConnName + "~" + vConn.VPCId)
+
+	transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: vConn.GwName})
+	if err != nil {
+		return fmt.Errorf("could not get advanced config for transit gateway when trying to read learned CIDR approval status: %v", err)
+	}
+	for _, v := range transitAdvancedConfig.ConnectionLearnedCIDRApprovalInfo {
+		if v.ConnName == vConn.ConnName {
+			d.Set("enable_learned_cidrs_approval", v.EnabledApproval == "yes")
+			break
+		}
+	}
+
+	return nil
+}
+
+func resourceAviatrixVGWConnUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*goaviatrix.Client)
+
+	if d.HasChange("enable_learned_cidrs_approval") {
+		enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
+		gwName := d.Get("gw_name").(string)
+		connName := d.Get("conn_name").(string)
+		if enableLearnedCIDRApproval {
+			err := client.EnableTransitConnectionLearnedCIDRApproval(gwName, connName)
+			if err != nil {
+				return fmt.Errorf("could not enable learned cidr approval: %v", err)
+			}
+		} else {
+			err := client.DisableTransitConnectionLearnedCIDRApproval(gwName, connName)
+			if err != nil {
+				return fmt.Errorf("could not disable learned cidr approval: %v", err)
+			}
+		}
+	}
 	return nil
 }
 
