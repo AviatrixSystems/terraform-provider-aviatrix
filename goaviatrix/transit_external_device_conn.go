@@ -40,7 +40,7 @@ type ExternalDeviceConn struct {
 	BackupRemoteTunnelCidr string `form:"backup_remote_tunnel_ip,omitempty"`
 	BackupDirectConnect    string `form:"backup_direct_connect,omitempty"`
 	EnableEdgeSegmentation string `form:"connection_policy,omitempty"`
-	EnableIkev2            string `form:"enable_ikev2, omitempty"`
+	EnableIkev2            string `form:"enable_ikev2,omitempty"`
 }
 
 type EditExternalDeviceConnDetail struct {
