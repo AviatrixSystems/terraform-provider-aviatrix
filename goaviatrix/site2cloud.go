@@ -142,6 +142,7 @@ type EditSite2CloudConnDetail struct {
 	LocalSourceVirtualCIDRs       string        `json:"local_src_virt_cidrs"`
 	LocalDestinationRealCIDRs     string        `json:"local_dst_real_cidrs"`
 	LocalDestinationVirtualCIDRs  string        `json:"local_dst_virt_cidrs"`
+	ManualBGPCidrs                []string      `json:"conn_bgp_manual_advertise_cidrs"`
 }
 
 type Site2CloudConnDetailResp struct {

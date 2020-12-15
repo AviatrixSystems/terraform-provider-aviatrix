@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"net/url"
 	"strconv"
 	"strings"
 )
@@ -40,6 +39,7 @@ type ExternalDeviceConn struct {
 	BackupRemoteTunnelCidr string `form:"backup_remote_tunnel_ip,omitempty"`
 	BackupDirectConnect    string `form:"backup_direct_connect,omitempty"`
 	EnableEdgeSegmentation string `form:"connection_policy,omitempty"`
+	ManualBGPCidrs         []string
 }
 
 type EditExternalDeviceConnDetail struct {
@@ -63,6 +63,7 @@ type EditExternalDeviceConnDetail struct {
 	EnableEdgeSegmentation bool          `json:"enable_edge_segmentation,omitempty"`
 	Tunnels                []TunnelInfo  `json:"tunnels,omitempty"`
 	ActiveActiveHA         string        `json:"active_active_ha,omitempty"`
+	ManualBGPCidrs         []string      `json:"conn_bgp_manual_advertise_cidrs"`
 	BackupRemoteGatewayIP  string
 	PreSharedKey           string
 	BackupPreSharedKey     string
@@ -100,34 +101,25 @@ func (c *Client) CreateExternalDeviceConn(externalDeviceConn *ExternalDeviceConn
 }
 
 func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceConn) (*ExternalDeviceConn, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for 'GetExternalDeviceConnDetail': ") + err.Error())
+	params := map[string]string{
+		"CID":       c.CID,
+		"action":    "get_site2cloud_conn_detail",
+		"conn_name": externalDeviceConn.ConnectionName,
+		"vpc_id":    externalDeviceConn.VpcID,
 	}
-
-	getExternalDeviceConnDetail := url.Values{}
-	getExternalDeviceConnDetail.Add("CID", c.CID)
-	getExternalDeviceConnDetail.Add("action", "get_site2cloud_conn_detail")
-	getExternalDeviceConnDetail.Add("conn_name", externalDeviceConn.ConnectionName)
-	getExternalDeviceConnDetail.Add("vpc_id", externalDeviceConn.VpcID)
-	Url.RawQuery = getExternalDeviceConnDetail.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get 'get_site2cloud_conn_detail' failed: " + err.Error())
+	checkFunc := func(action, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "does not exist") {
+				return ErrNotFound
+			}
+			return errors.New("Rest API 'get_site2cloud_conn_detail' Get failed: " + reason)
+		}
+		return nil
 	}
 	var data ExternalDeviceConnDetailResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode 'get_site2cloud_conn_detail' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "does not exist") {
-			return nil, ErrNotFound
-		}
-		return nil, errors.New("Rest API 'get_site2cloud_conn_detail' Get failed: " + data.Reason)
+	err := c.GetAPI(&data, params["action"], params, checkFunc)
+	if err != nil {
+		return nil, err
 	}
 
 	externalDeviceConnDetail := data.Results.Connections
@@ -241,6 +233,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 		} else {
 			externalDeviceConn.EnableEdgeSegmentation = "disabled"
 		}
+		externalDeviceConn.ManualBGPCidrs = externalDeviceConnDetail.ManualBGPCidrs
 
 		return externalDeviceConn, nil
 	}

@@ -132,6 +132,15 @@ func resourceAviatrixDeviceTransitGatewayAttachment() *schema.Resource {
 				Description: "Enable learned CIDR approval for the connection. Requires the transit_gateway's 'learned_cidrs_approval_mode' attribute be set to 'connection'. " +
 					"Valid values: true, false. Default value: false. Available as of provider version R2.18+.",
 			},
+			"manual_bgp_advertised_cidrs": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsCIDR,
+				},
+				Optional:    true,
+				Description: "Configure manual BGP advertised CIDRs for this connection. Available as of provider version R2.18+.",
+			},
 		},
 	}
 }
@@ -157,10 +166,8 @@ func marshalDeviceTransitGatewayAttachmentInput(d *schema.ResourceData) *goaviat
 	}
 }
 
-func resourceAviatrixDeviceTransitGatewayAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	defer resourceAviatrixDeviceTransitGatewayAttachmentRead(d, meta)
+func resourceAviatrixDeviceTransitGatewayAttachmentCreate(d *schema.ResourceData, meta interface{}) (err error) {
 	client := meta.(*goaviatrix.Client)
-
 	attachment := marshalDeviceTransitGatewayAttachmentInput(d)
 
 	if err := client.CreateDeviceTransitGatewayAttachment(attachment); err != nil {
@@ -168,6 +175,7 @@ func resourceAviatrixDeviceTransitGatewayAttachmentCreate(d *schema.ResourceData
 	}
 
 	d.SetId(attachment.ConnectionName)
+	defer captureErr(resourceAviatrixDeviceTransitGatewayAttachmentRead, d, meta, &err)
 
 	enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
 	if enableLearnedCIDRApproval {
@@ -177,7 +185,15 @@ func resourceAviatrixDeviceTransitGatewayAttachmentCreate(d *schema.ResourceData
 		}
 	}
 
-	return nil
+	manualBGPCidrs := getStringSet(d, "manual_bgp_advertised_cidrs")
+	if len(manualBGPCidrs) > 0 {
+		err = client.EditTransitConnectionBGPManualAdvertiseCIDRs(attachment.TransitGatewayName, attachment.ConnectionName, manualBGPCidrs)
+		if err != nil {
+			return fmt.Errorf("could not edit manual advertised cidrs: %v", err)
+		}
+	}
+
+	return err
 }
 
 func resourceAviatrixDeviceTransitGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) error {
@@ -255,15 +271,19 @@ func resourceAviatrixDeviceTransitGatewayAttachmentRead(d *schema.ResourceData, 
 		}
 	}
 
+	if err := d.Set("manual_bgp_advertised_cidrs", attachment.ManualBGPCidrs); err != nil {
+		return fmt.Errorf("setting 'manual_bgp_advertised_cidrs' into state: %v", err)
+	}
+
 	return nil
 }
 func resourceAviatrixDeviceTransitGatewayAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+	gwName := d.Get("transit_gateway_name").(string)
+	connName := d.Get("connection_name").(string)
 
 	if d.HasChange("enable_learned_cidrs_approval") {
 		enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
-		gwName := d.Get("transit_gateway_name").(string)
-		connName := d.Get("connection_name").(string)
 		if enableLearnedCIDRApproval {
 			err := client.EnableTransitConnectionLearnedCIDRApproval(gwName, connName)
 			if err != nil {
@@ -276,6 +296,15 @@ func resourceAviatrixDeviceTransitGatewayAttachmentUpdate(d *schema.ResourceData
 			}
 		}
 	}
+
+	if d.HasChange("manual_bgp_advertised_cidrs") {
+		manualBGPCidrs := getStringSet(d, "manual_bgp_advertised_cidrs")
+		err := client.EditTransitConnectionBGPManualAdvertiseCIDRs(gwName, connName, manualBGPCidrs)
+		if err != nil {
+			return fmt.Errorf("could not edit manual bgp cidrs: %v", err)
+		}
+	}
+
 	return nil
 }
 

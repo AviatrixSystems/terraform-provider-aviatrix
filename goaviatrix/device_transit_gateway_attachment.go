@@ -26,6 +26,7 @@ type DeviceTransitGatewayAttachment struct {
 	PreSharedKey            string `form:"pre_shared_key,omitempty"`
 	LocalTunnelIP           string `form:"local_tunnel_ip,omitempty"`
 	RemoteTunnelIP          string `form:"remote_tunnel_ip,omitempty"`
+	ManualBGPCidrs          []string
 	Action                  string `form:"action"`
 	CID                     string `form:"CID"`
 }
@@ -119,6 +120,7 @@ func (c *Client) GetDeviceTransitGatewayAttachment(attachment *DeviceTransitGate
 		EnableGlobalAccelerator: strconv.FormatBool(data.Results.Connections.EnableGlobalAccelerator),
 		LocalTunnelIP:           data.Results.Connections.BgpLocalIP,
 		RemoteTunnelIP:          data.Results.Connections.BgpRemoteIP,
+		ManualBGPCidrs:          data.Results.Connections.ManualBGPCidrs,
 	}, nil
 }
 

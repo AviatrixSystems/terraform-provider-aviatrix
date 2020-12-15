@@ -40,6 +40,7 @@ The following arguments are supported:
 
 ### Optional
 * `enable_learned_cidrs_approval` - (Optional) Enable learned CIDRs approval for the connection. Requires the transit_gateway's 'learned_cidrs_approval_mode' attribute be set to 'connection'. Valid values: true, false. Default value: false. Available as of provider version R2.18+.
+* `manual_bgp_advertised_cidrs` - (Optional) Configure manual BGP advertised CIDRs for this connection. Available as of provider version R2.18+.
 
 The following arguments are deprecated:
 
