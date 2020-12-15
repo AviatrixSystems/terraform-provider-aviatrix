@@ -253,7 +253,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Default:     false,
 				ForceNew:    true,
 				Description: "Set as true if use IKEv2.",
-      },
+			},
 			"manual_bgp_advertised_cidrs": {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{
@@ -538,8 +538,8 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 			d.Set("enable_ikev2", true)
 		} else {
 			d.Set("enable_ikev2", false)
-    }
-    
+		}
+
 		if err := d.Set("manual_bgp_advertised_cidrs", conn.ManualBGPCidrs); err != nil {
 			return fmt.Errorf("setting 'manual_bgp_advertised_cidrs' into state: %v", err)
 		}
