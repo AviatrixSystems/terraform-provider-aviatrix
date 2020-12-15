@@ -11,6 +11,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
+const defaultLearnedCidrApprovalMode = "gateway"
+
 func resourceAviatrixTransitGateway() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixTransitGatewayCreate,
@@ -241,7 +243,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"learned_cidrs_approval_mode": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "gateway",
+				Default:      defaultLearnedCidrApprovalMode,
 				ValidateFunc: validation.StringInSlice([]string{"gateway", "connection"}, false),
 				Description: "Set the learned CIDRs approval mode. Only valid when 'enable_learned_cidrs_approval' is " +
 					"set to true. If set to 'gateway', learned CIDR approval applies to ALL connections. If set to " +
@@ -807,10 +809,11 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if mode, ok := d.GetOk("learned_cidrs_approval_mode"); ok {
-		err := client.SetTransitLearnedCIDRsApprovalMode(gateway, mode.(string))
+	approvalMode := d.Get("learned_cidrs_approval_mode").(string)
+	if approvalMode != defaultLearnedCidrApprovalMode {
+		err := client.SetTransitLearnedCIDRsApprovalMode(gateway, approvalMode)
 		if err != nil {
-			return fmt.Errorf("could not set learned CIDRs approval mode to %q: %v", mode, err)
+			return fmt.Errorf("could not set learned CIDRs approval mode to %q: %v", approvalMode, err)
 		}
 	}
 
