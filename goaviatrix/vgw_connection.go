@@ -10,15 +10,16 @@ import (
 
 // VGWConn simple struct to hold VGW Connection details
 type VGWConn struct {
-	Action        string `form:"action,omitempty"`
-	BgpLocalAsNum string `form:"bgp_local_asn_num,omitempty" json:"bgp_local_asn_num,omitempty"`
-	BgpVGWId      string `form:"vgw_id,omitempty" json:"bgp_vgw_id,omitempty"`
-	BgpVGWAccount string `form:"bgp_vgw_account_name,omitempty" json:"bgp_vgw_account,omitempty"`
-	BgpVGWRegion  string `form:"bgp_vgw_region,omitempty" json:"bgp_vgw_region,omitempty"`
-	CID           string `form:"CID,omitempty"`
-	ConnName      string `form:"connection_name,omitempty" json:"name,omitempty"`
-	GwName        string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
-	VPCId         string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	Action         string `form:"action,omitempty"`
+	BgpLocalAsNum  string `form:"bgp_local_asn_num,omitempty" json:"bgp_local_asn_num,omitempty"`
+	BgpVGWId       string `form:"vgw_id,omitempty" json:"bgp_vgw_id,omitempty"`
+	BgpVGWAccount  string `form:"bgp_vgw_account_name,omitempty" json:"bgp_vgw_account,omitempty"`
+	BgpVGWRegion   string `form:"bgp_vgw_region,omitempty" json:"bgp_vgw_region,omitempty"`
+	CID            string `form:"CID,omitempty"`
+	ConnName       string `form:"connection_name,omitempty" json:"name,omitempty"`
+	GwName         string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
+	VPCId          string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	ManualBGPCidrs []string
 }
 
 type VGWConnListResp struct {
@@ -44,13 +45,14 @@ type VGWConnDetail struct {
 }
 
 type ConnectionDetail struct {
-	ConnName      []string `json:"name"`
-	GwName        string   `json:"gw_name"`
-	VPCId         []string `json:"vpc_id"`
-	BgpVGWId      string   `json:"bgp_vgw_id"`
-	BgpVGWAccount string   `json:"bgp_vgw_account"`
-	BgpVGWRegion  string   `json:"bgp_vgw_region"`
-	BgpLocalAsNum string   `json:"bgp_local_asn_number"`
+	ConnName       []string `json:"name"`
+	GwName         string   `json:"gw_name"`
+	VPCId          []string `json:"vpc_id"`
+	BgpVGWId       string   `json:"bgp_vgw_id"`
+	BgpVGWAccount  string   `json:"bgp_vgw_account"`
+	BgpVGWRegion   string   `json:"bgp_vgw_region"`
+	BgpLocalAsNum  string   `json:"bgp_local_asn_number"`
+	ManualBGPCidrs []string `json:"conn_bgp_manual_advertise_cidrs"`
 }
 
 type VGWConnEnableAdvertiseTransitCidrResp struct {
@@ -171,30 +173,16 @@ func (c *Client) DeleteVGWConn(vgwConn *VGWConn) error {
 }
 
 func (c *Client) GetVGWConnDetail(vgwConn *VGWConn) (*VGWConn, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for get_site2cloud_conn_detail") + err.Error())
-	}
-	listVgwConnections := url.Values{}
-	listVgwConnections.Add("CID", c.CID)
-	listVgwConnections.Add("action", "get_site2cloud_conn_detail")
-	listVgwConnections.Add("vpc_id", vgwConn.VPCId)
-	listVgwConnections.Add("conn_name", vgwConn.ConnName)
-	Url.RawQuery = listVgwConnections.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get get_site2cloud_conn_detail failed: " + err.Error())
+	params := map[string]string{
+		"CID":       c.CID,
+		"action":    "get_site2cloud_conn_detail",
+		"vpc_id":    vgwConn.VPCId,
+		"conn_name": vgwConn.ConnName,
 	}
 	var data VGWConnDetailResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode get_site2cloud_conn_detail failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return nil, errors.New("Rest API get_site2cloud_conn_detail Get failed: " + data.Reason)
+	err := c.GetAPI(&data, params["action"], params, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
 	if data.Results.Connections.ConnName[0] != "" {
 		vgwConn.VPCId = data.Results.Connections.VPCId[0]
@@ -203,6 +191,7 @@ func (c *Client) GetVGWConnDetail(vgwConn *VGWConn) (*VGWConn, error) {
 		vgwConn.BgpVGWAccount = data.Results.Connections.BgpVGWAccount
 		vgwConn.BgpVGWRegion = data.Results.Connections.BgpVGWRegion
 		vgwConn.BgpLocalAsNum = data.Results.Connections.BgpLocalAsNum
+		vgwConn.ManualBGPCidrs = data.Results.Connections.ManualBGPCidrs
 		return vgwConn, nil
 	}
 	return nil, ErrNotFound

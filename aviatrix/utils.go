@@ -58,3 +58,28 @@ func DiffSuppressFuncIgnoreSpaceInString(k, old, new string, d *schema.ResourceD
 
 	return goaviatrix.Equivalent(oldValue, newValue)
 }
+
+func setConfigValueIfEquivalent(d *schema.ResourceData, k string, fromConfig, fromAPI []string) error {
+	if goaviatrix.Equivalent(fromConfig, fromAPI) {
+		return d.Set(k, fromConfig)
+	}
+	return d.Set(k, fromAPI)
+}
+
+// getStringList will convert a TypeList attribute to a slice of string
+func getStringList(d *schema.ResourceData, k string) []string {
+	var sl []string
+	for _, v := range d.Get(k).([]interface{}) {
+		sl = append(sl, v.(string))
+	}
+	return sl
+}
+
+// getStringSet will convert a TypeSet attribute to a slice of string
+func getStringSet(d *schema.ResourceData, k string) []string {
+	var sl []string
+	for _, v := range d.Get(k).(*schema.Set).List() {
+		sl = append(sl, v.(string))
+	}
+	return sl
+}
