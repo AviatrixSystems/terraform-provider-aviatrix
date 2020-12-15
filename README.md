@@ -109,6 +109,6 @@ For example:
  * UserConnect-3.3 for 3.3.x controller version
  * UserConnect-3.4 for 3.4.x controller version
 
-master branch supports latest controller version but please use the branch specific to your controller version. This is so that you do not go out of sync with the controller. (For instance, the master branch code may get updated to be only 4.2 compatible but your controller may still be running 4.1)
+`master` branch is a development branch, thus it is unverified for all use cases and supports features that may not be available in the latest released version of the controller. For production use cases, please only use a released version from the Terraform Registry.
 
 We also recommend you to update to the latest controller version to stay on top of fixes/features.
