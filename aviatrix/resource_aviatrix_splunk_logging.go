@@ -66,7 +66,7 @@ func marshalSplunkLoggingInput(d *schema.ResourceData, useCustomConfig bool) *go
 
 	if useCustomConfig {
 		splunkLogging.UseConfigFile = true
-		splunkLogging.ConfigFilePath = d.Get("custom_output_config_file").(string)
+		splunkLogging.ConfigFile = d.Get("custom_output_config_file").(string)
 	} else {
 		splunkLogging.UseConfigFile = false
 		splunkLogging.Server = d.Get("server").(string)
@@ -93,7 +93,7 @@ func resourceAviatrixSplunkLoggingCreate(d *schema.ResourceData, meta interface{
 
 	// port number cannot be 0
 	if d.Get("server").(string) == "" && d.Get("port").(int) == 0 && d.Get("custom_output_config_file").(string) == "" {
-		return fmt.Errorf("please provide either server/port or configuration file path")
+		return fmt.Errorf("please provide either server/port or configuration file")
 	} else if d.Get("custom_output_config_file").(string) != "" {
 		splunkLogging = marshalSplunkLoggingInput(d, true)
 	} else {
