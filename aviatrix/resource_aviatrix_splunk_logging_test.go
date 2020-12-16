@@ -37,7 +37,7 @@ func TestAccAviatrixSplunkLogging_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"custom_output_config_file_path"},
+				ImportStateVerifyIgnore: []string{"custom_output_config_file"},
 			},
 		},
 	})
