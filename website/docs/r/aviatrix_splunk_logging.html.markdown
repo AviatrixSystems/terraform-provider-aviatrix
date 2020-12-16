@@ -23,7 +23,7 @@ resource "aviatrix_splunk_logging" "test_splunk_logging" {
 ```hcl
 # Enable splunk logging using configuration file
 resource "aviatrix_splunk_logging" "test_splunk_logging" {
-  custom_output_config_file_path = "/path/to/configuration.file"
+  custom_output_config_file = filebase64("/path/to/configuration.spl")
 }
 ```
 
@@ -32,9 +32,11 @@ resource "aviatrix_splunk_logging" "test_splunk_logging" {
 The following arguments are supported:
 
 ### Required
-* `server` (Optional) Server IP. Either `server` and `port` combination or `cu_output_configuration` is required.
+~> **NOTE:** Either `server` and `port` combination or `custom_output_config_file` is required. If `custom_output_config_file` is provided, `server` and `port` will be ignored.
+
+* `server` (Optional) Server IP. 
 * `port` (Optional) Port number.
-* `custom_output_config_file_path` (Optional) Configuration file path.
+* `custom_output_config_file` (Optional) Configuration file. Use the `filebase64` function to read from a file.
 
 ### Optional
 * `custom_input_config` (Optional) Custom configuration.

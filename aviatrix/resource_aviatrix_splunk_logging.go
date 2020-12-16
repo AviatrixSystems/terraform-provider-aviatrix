@@ -23,25 +23,25 @@ func resourceAviatrixSplunkLogging() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Server IP",
+				Description: "Server IP.",
 			},
 			"port": {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Port number",
+				Description: "Port number.",
 			},
-			"custom_output_config_file_path": {
+			"custom_output_config_file": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Configuration file path",
+				Description: "Configuration file. Use the filebase64 function to read from a file.",
 			},
 			"custom_input_config": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Custom configuration",
+				Description: "Custom configuration.",
 			},
 			"excluded_gateways": {
 				Type:        schema.TypeSet,
@@ -66,7 +66,7 @@ func marshalSplunkLoggingInput(d *schema.ResourceData, useCustomConfig bool) *go
 
 	if useCustomConfig {
 		splunkLogging.UseConfigFile = true
-		splunkLogging.ConfigFilePath = d.Get("custom_output_config_file_path").(string)
+		splunkLogging.ConfigFilePath = d.Get("custom_output_config_file").(string)
 	} else {
 		splunkLogging.UseConfigFile = false
 		splunkLogging.Server = d.Get("server").(string)
@@ -92,9 +92,9 @@ func resourceAviatrixSplunkLoggingCreate(d *schema.ResourceData, meta interface{
 	var splunkLogging *goaviatrix.SplunkLogging
 
 	// port number cannot be 0
-	if d.Get("server").(string) == "" && d.Get("port").(int) == 0 && d.Get("custom_output_config_file_path").(string) == "" {
+	if d.Get("server").(string) == "" && d.Get("port").(int) == 0 && d.Get("custom_output_config_file").(string) == "" {
 		return fmt.Errorf("please provide either server/port or configuration file path")
-	} else if d.Get("custom_output_config_file_path").(string) != "" {
+	} else if d.Get("custom_output_config_file").(string) != "" {
 		splunkLogging = marshalSplunkLoggingInput(d, true)
 	} else {
 		if d.Get("port").(int) == 0 || d.Get("server").(string) == "" {
@@ -124,7 +124,7 @@ func resourceAviatrixSplunkLoggingRead(d *schema.ResourceData, meta interface{})
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("could not get remote syslog status: %v", err)
+		return fmt.Errorf("could not get splunk logging status: %v", err)
 	}
 
 	d.Set("server", splunkLoggingStatus.Server)
@@ -142,7 +142,7 @@ func resourceAviatrixSplunkLoggingDelete(d *schema.ResourceData, meta interface{
 	client := meta.(*goaviatrix.Client)
 
 	if err := client.DisableSplunkLogging(); err != nil {
-		return fmt.Errorf("could not disable remote syslog: %v", err)
+		return fmt.Errorf("could not disable splunk logging: %v", err)
 	}
 
 	return nil
