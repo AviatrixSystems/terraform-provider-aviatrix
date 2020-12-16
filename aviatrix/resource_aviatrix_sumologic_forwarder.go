@@ -22,25 +22,26 @@ func resourceAviatrixSumologicForwarder() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Access ID",
+				Description: "Access ID.",
 			},
 			"access_key": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Access key",
+				Description: "Access key.",
 			},
 			"source_category": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Source category",
+				Default:     "Aviatrix_syslog",
+				Description: "Source category.",
 			},
 			"custom_configuration": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Custom configuration",
+				Description: "Custom configuration.",
 			},
 			"excluded_gateways": {
 				Type:        schema.TypeSet,
@@ -104,7 +105,7 @@ func resourceAviatrixSumologicForwarderRead(d *schema.ResourceData, meta interfa
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("could not get remote syslog status: %v", err)
+		return fmt.Errorf("could not get sumologic forwarder status: %v", err)
 	}
 
 	d.Set("access_id", sumologicForwarderStatus.AccessID)

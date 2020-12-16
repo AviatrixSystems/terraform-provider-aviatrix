@@ -29,7 +29,7 @@ The following arguments are supported:
 * `access_key` (Required) Access Key.
 
 ### Optional
-* `source_category` (Optional) Source category.
+* `source_category` (Optional) Source category. "Aviatrix_syslog" by default.
 * `custom_configuration` (Optional) Custom configuration. The format should be key=value pairs.
 * `excluded_gateways` (Optional) List of gateways to be excluded from logging. e.g.: ["gateway01", "gateway02", "gateway01-hagw"].
 
