@@ -50,7 +50,7 @@ In addition to all arguments above, the following attributes are exported:
 * `ha_zone` - HA Zone.
 * `gw_name` - Aviatrix spoke gateway name.
 * `gw_size` - Size of spoke gateway instance.
-* `included_advertised_spoke_routes` - A list of comma separated CIDRs to be advertised to on-prem as "Included CIDR List".​
+* `included_advertised_spoke_routes` - A list of comma separated CIDRs to be advertised to on-prem as "Included CIDR List".
 * `insane_mode` - Status of Insane Mode for Spoke Gateway.
 * `insane_mode_az` - AZ of subnet being created for Insane Mode spoke gateway.
 * `private_ip` - Private IP address of the spoke gateway.
