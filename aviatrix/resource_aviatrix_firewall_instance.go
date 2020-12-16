@@ -245,7 +245,17 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("firewall image: %s is not supported", firewallInstance.FirewallImage)
 	}
 
-	cloudType, err := client.GetVpcCloudTypeById(firewallInstance.VpcID)
+	// For additional config validation we try to get the cloud_type from the given
+	// gateway name. If there is an issue, we will just continue on without the additional
+	// validation.
+	var cloudType int
+	gw, err := client.GetGateway(&goaviatrix.Gateway{GwName: firewallInstance.GwName})
+	if err != nil {
+		log.Printf("[WARN] Could not get cloud_type from firenet_gw_name: %v", err)
+	} else {
+		cloudType = gw.CloudType
+	}
+
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			return fmt.Errorf("could not find the vpc with vpc_id=%s: %v", firewallInstance.VpcID, err)
@@ -262,7 +272,7 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 	}
 
 	if firewallInstance.Username != "" || firewallInstance.Password != "" || firewallInstance.SshPublicKey != "" {
-		if cloudType != goaviatrix.AZURE {
+		if cloudType != 0 && cloudType != goaviatrix.AZURE {
 			return fmt.Errorf("'username' and 'password' or 'ssh_public_key' are only supported for Azure")
 		}
 	}
@@ -270,7 +280,7 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("anthentication method can be either a password or an SSH public key. Please specify one of them and set the other one to empty")
 	}
 	if firewallInstance.IamRole != "" || firewallInstance.BootstrapBucketName != "" {
-		if cloudType != goaviatrix.AWS {
+		if cloudType != 0 && cloudType != goaviatrix.AWS {
 			return fmt.Errorf("advanced options of 'iam_role' and 'bootstrap_bucket_name' are only supported for AWS provider, please set them to empty")
 		}
 	}
@@ -278,22 +288,22 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("advanced option of 'user_data' is only supported for Check Point Series and Fortinet FortiGate Series, not for %s", firewallInstance.FirewallImage)
 	}
 	if firewallInstance.StorageAccessKey != "" || firewallInstance.FileShareFolder != "" || firewallInstance.ShareDirectory != "" {
-		if !strings.HasPrefix(firewallInstance.FirewallImage, "Palo Alto Networks") || cloudType != goaviatrix.AZURE {
+		if !strings.HasPrefix(firewallInstance.FirewallImage, "Palo Alto Networks") || (cloudType != 0 && cloudType != goaviatrix.AZURE) {
 			return fmt.Errorf("advanced options of 'storage_access_key', 'file_share_folder' and 'share_directory' are only supported for Azure and Palo Alto Networks VM-Series")
 		}
 	}
 	if firewallInstance.ContainerFolder != "" || firewallInstance.SasUrlConfig != "" || firewallInstance.SasUriLicense != "" {
-		if !strings.HasPrefix(firewallInstance.FirewallImage, "Fortinet FortiGate") || cloudType != goaviatrix.AZURE {
+		if !strings.HasPrefix(firewallInstance.FirewallImage, "Fortinet FortiGate") || (cloudType != 0 && cloudType != goaviatrix.AZURE) {
 			return fmt.Errorf("advanced options of 'container_folder', 'sas_url_config' and 'sas_url_license' are only supported for Azure and Fortinet FortiGate series")
 		}
 	}
 	if firewallInstance.BootstrapStorageName != "" {
-		if strings.HasPrefix(firewallInstance.FirewallImage, "Check Point CloudGuard") || cloudType != goaviatrix.AZURE {
+		if strings.HasPrefix(firewallInstance.FirewallImage, "Check Point CloudGuard") || (cloudType != 0 && cloudType != goaviatrix.AZURE) {
 			return fmt.Errorf("advanced option of 'bootstrap_storage_name' is only supported for Azure and Palo Alto Networks VM-Series/Fortinet FortiGate series")
 		}
 	}
 	if firewallInstance.SicKey != "" {
-		if !strings.HasPrefix(firewallInstance.FirewallImage, "Check Point CloudGuard") || cloudType != goaviatrix.AZURE {
+		if !strings.HasPrefix(firewallInstance.FirewallImage, "Check Point CloudGuard") || (cloudType != 0 && cloudType != goaviatrix.AZURE) {
 			return fmt.Errorf("advanced option of 'bootstrap_storage_name' is only supported for Azure and Check Point Series")
 		}
 	}
