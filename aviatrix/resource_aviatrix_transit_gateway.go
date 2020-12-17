@@ -325,6 +325,11 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Transit gateway lan interface cidr.",
 			},
+			"ha_lan_interface_cidr": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Transit gateway lan interface cidr for the HA gateway.",
+			},
 		},
 	}
 }
@@ -1142,6 +1147,11 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("ha_cloud_instance_id", haGw.CloudnGatewayInstID)
 		d.Set("ha_gw_name", haGw.GwName)
 		d.Set("ha_private_ip", haGw.PrivateIP)
+		lanCidr, err := client.GetTransitGatewayLanCidr(haGw.GwName)
+		if err != nil && err != goaviatrix.ErrNotFound {
+			log.Printf("[WARN] Error getting lan cidr for HA transit gateway %s due to %s", haGw.GwName, err)
+		}
+		d.Set("ha_lan_interface_cidr", lanCidr)
 	}
 
 	if haGw.InsaneMode == "yes" && (haGw.CloudType == goaviatrix.AWS || haGw.CloudType == goaviatrix.AWSGOV) {
