@@ -61,6 +61,7 @@ func Provider() terraform.ResourceProvider {
 			"aviatrix_device_tag":                                     resourceAviatrixDeviceTag(),
 			"aviatrix_device_transit_gateway_attachment":              resourceAviatrixDeviceTransitGatewayAttachment(),
 			"aviatrix_device_virtual_wan_attachment":                  resourceAviatrixDeviceVirtualWanAttachment(),
+			"aviatrix_filebeat_forwarder":                             resourceAviatrixFilebeatForwarder(),
 			"aviatrix_firenet":                                        resourceAviatrixFireNet(),
 			"aviatrix_firewall":                                       resourceAviatrixFirewall(),
 			"aviatrix_firewall_instance":                              resourceAviatrixFirewallInstance(),
