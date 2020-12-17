@@ -23,25 +23,25 @@ func resourceAviatrixFilebeatForwarder() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Server IP",
+				Description: "Server IP.",
 			},
 			"port": {
 				Type:        schema.TypeInt,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Port number",
+				Description: "Port number.",
 			},
-			"trusted_ca_file_path": {
+			"trusted_ca_file": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Trusted CA file path",
+				Description: "Trusted CA file.",
 			},
-			"config_file_path": {
+			"config_file": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Configuration file path",
+				Description: "Configuration file.",
 			},
 			"excluded_gateways": {
 				Type:        schema.TypeSet,
@@ -63,10 +63,10 @@ func resourceAviatrixFilebeatForwarder() *schema.Resource {
 
 func marshalFilebeatForwarderInput(d *schema.ResourceData) *goaviatrix.FilebeatForwarder {
 	filebeatForwarder := &goaviatrix.FilebeatForwarder{
-		Server:            d.Get("server").(string),
-		Port:              d.Get("port").(int),
-		TrustedCAFilePath: d.Get("trusted_ca_file_path").(string),
-		ConfigFilePath:    d.Get("config_file_path").(string),
+		Server:        d.Get("server").(string),
+		Port:          d.Get("port").(int),
+		TrustedCAFile: d.Get("trusted_ca_file").(string),
+		ConfigFile:    d.Get("config_file").(string),
 	}
 
 	var excludedGateways []string

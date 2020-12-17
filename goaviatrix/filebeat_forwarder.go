@@ -8,8 +8,8 @@ type FilebeatForwarder struct {
 	CID                   string
 	Server                string
 	Port                  int
-	TrustedCAFilePath     string
-	ConfigFilePath        string
+	TrustedCAFile         string
+	ConfigFile            string
 	ExcludedGatewaysInput string
 }
 
@@ -26,18 +26,31 @@ func (c *Client) EnableFilebeatForwarder(r *FilebeatForwarder) error {
 		"CID":                  c.CID,
 		"server_ip":            r.Server,
 		"port":                 strconv.Itoa(r.Port),
-		"trusted_ca":           r.TrustedCAFilePath,
-		"config_file":          r.ConfigFilePath,
 		"exclude_gateway_list": r.ExcludedGatewaysInput,
 		"server_type":          "other",
 		"forwarder_type":       "filebeat",
 	}
 
-	files := []File{
-		{
-			Path:      r.ConfigFilePath,
-			ParamName: "cu_output_cfg",
-		},
+	var files []File
+
+	if r.TrustedCAFile != "" {
+		ca := File{
+			ParamName:      "trusted_ca",
+			UseFileContent: true,
+			FileName:       "ca.pem", // fake name for ca
+			FileContent:    r.TrustedCAFile,
+		}
+		files = append(files, ca)
+	}
+
+	if r.ConfigFile != "" {
+		config := File{
+			ParamName:      "config_file",
+			UseFileContent: true,
+			FileName:       "config.txt", // fake name for config file
+			FileContent:    r.ConfigFile,
+		}
+		files = append(files, config)
 	}
 
 	return c.PostFileAPI(params, files, BasicCheck)

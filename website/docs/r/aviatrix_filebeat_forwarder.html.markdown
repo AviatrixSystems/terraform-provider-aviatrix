@@ -15,9 +15,11 @@ The **aviatrix_filebeat_forwarder** resource allows the enabling and disabling o
 ```hcl
 # Enable filebeat forwarder
 resource "aviatrix_filebeat_forwarder" "test_filebeat_forwarder" {
-  server   = "1.2.3.4"
-  port     = 10
-  excluded_gateways   = ["a", "b"]
+  server            = "1.2.3.4"
+  port              = 10
+  trusted_ca_file   = file("/path/to/ca.pem")
+  config_file       = file("/path/to/config.txt")
+  excluded_gateways = ["a", "b"]
 }
 ```
 
@@ -30,8 +32,8 @@ The following arguments are supported:
 * `port` (Required) Port number.
 
 ### Optional
-* `trusted_ca_file_path` (Optional) The file path of the trusted CA. 
-* `config_file_path` (Optional) The config file path.
+* `trusted_ca_file` (Optional) The trusted CA file. Use the `file` function to read from a file.
+* `config_file` (Optional) The config file. Use the `file` function to read from a file.
 * `excluded_gateways` (Optional) List of gateways to be excluded from logging. e.g.: ["gateway01", "gateway02", "gateway01-hagw"].
 
 ## Attribute Reference
