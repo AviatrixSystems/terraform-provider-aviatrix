@@ -41,19 +41,36 @@ func (c *Client) EnableRemoteSyslog(r *RemoteSyslog) error {
 		"exclude_gateway_list": r.ExcludeGatewayInput,
 	}
 
-	files := []File{
-		{
-			Path:      r.CaCertificate,
-			ParamName: "ca_certificate",
-		},
-		{
-			Path:      r.PublicCertificate,
-			ParamName: "public_certificate",
-		},
-		{
-			Path:      r.PrivateKey,
-			ParamName: "private_key",
-		},
+	var files []File
+
+	if r.CaCertificate != "" {
+		ca := File{
+			ParamName:      "ca_certificate",
+			UseFileContent: true,
+			FileName:       "ca.pem", // fake name for ca
+			FileContent:    r.CaCertificate,
+		}
+		files = append(files, ca)
+	}
+
+	if r.PublicCertificate != "" {
+		ca := File{
+			ParamName:      "public_certificate",
+			UseFileContent: true,
+			FileName:       "public.pem", // fake name for public certificate
+			FileContent:    r.PublicCertificate,
+		}
+		files = append(files, ca)
+	}
+
+	if r.PrivateKey != "" {
+		ca := File{
+			ParamName:      "private_key",
+			UseFileContent: true,
+			FileName:       "private.pem", // fake name for private key
+			FileContent:    r.PrivateKey,
+		}
+		files = append(files, ca)
 	}
 
 	return c.PostFileAPI(params, files, BasicCheck)

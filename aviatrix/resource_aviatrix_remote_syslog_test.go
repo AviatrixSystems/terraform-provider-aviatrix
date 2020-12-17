@@ -42,7 +42,7 @@ func TestAccAviatrixRemoteSyslog_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"ca_certificate_file_path", "public_certificate_file_path", "private_key_file_path"},
+				ImportStateVerifyIgnore: []string{"ca_certificate_file", "public_certificate_file", "private_key_file"},
 			},
 		},
 	})
