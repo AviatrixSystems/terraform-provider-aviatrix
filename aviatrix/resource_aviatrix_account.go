@@ -381,21 +381,6 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 			if err != nil {
 				return fmt.Errorf("failed to update Aviatrix Account: %s", err)
 			}
-
-			if d.HasChange("aws_account_number") {
-				d.SetPartial("aws_account_number")
-			}
-			if awsIam := d.Get("aws_iam").(bool); !awsIam {
-				if d.HasChange("aws_access_key") {
-					d.SetPartial("aws_access_key")
-				}
-				if d.HasChange("aws_secret_key") {
-					d.SetPartial("aws_secret_key")
-				}
-			}
-			if d.HasChange("aws_iam") {
-				d.SetPartial("aws_iam")
-			}
 		}
 	} else if account.CloudType == goaviatrix.GCP {
 		if d.HasChange("gcloud_project_id") || d.HasChange("gcloud_project_credentials_filepath") {
@@ -403,30 +388,12 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 			if err != nil {
 				return fmt.Errorf("failed to update Aviatrix Account: %s", err)
 			}
-			if d.HasChange("gcloud_project_id") {
-				d.SetPartial("gcloud_project_id")
-			}
-			if d.HasChange("gcloud_project_credentials_filepath") {
-				d.SetPartial("gcloud_project_credentials_filepath")
-			}
 		}
 	} else if account.CloudType == goaviatrix.AZURE {
 		if d.HasChange("arm_subscription_id") || d.HasChange("arm_directory_id") || d.HasChange("arm_application_id") || d.HasChange("arm_application_key") {
 			err := client.UpdateAccount(account)
 			if err != nil {
 				return fmt.Errorf("failed to update Aviatrix Account: %s", err)
-			}
-			if d.HasChange("arm_subscription_id") {
-				d.SetPartial("arm_subscription_id")
-			}
-			if d.HasChange("arm_directory_id") {
-				d.SetPartial("arm_directory_id")
-			}
-			if d.HasChange("arm_application_id") {
-				d.SetPartial("arm_application_id")
-			}
-			if d.HasChange("arm_application_key") {
-				d.SetPartial("arm_application_key")
 			}
 		}
 	} else if account.CloudType == goaviatrix.OCI {
@@ -438,15 +405,6 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 			err := client.UpdateAccount(account)
 			if err != nil {
 				return fmt.Errorf("failed to update Aviatrix Account: %s", err)
-			}
-			if d.HasChange("awsgov_account_number") {
-				d.SetPartial("awsgov_account_number")
-			}
-			if d.HasChange("awsgov_access_key") {
-				d.SetPartial("awsgov_access_key")
-			}
-			if d.HasChange("awsgov_secret_key") {
-				d.SetPartial("awsgov_secret_key")
 			}
 		}
 	}

@@ -194,7 +194,6 @@ func resourceAviatrixGeoVPNUpdate(d *schema.ResourceData, meta interface{}) erro
 				return fmt.Errorf("failed to add ELB: %s to Aviatrix Geo VPN due to: %s", toAddElbs[i], err)
 			}
 		}
-		d.SetPartial("elb_dns_names")
 	}
 
 	return resourceAviatrixGeoVPNRead(d, meta)

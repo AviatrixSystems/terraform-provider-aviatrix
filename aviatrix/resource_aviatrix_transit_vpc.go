@@ -467,7 +467,6 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		if err != nil {
 			return fmt.Errorf("failed to update Aviatrix TransitVpc: %s", err)
 		}
-		d.SetPartial("vpc_size")
 	}
 	if d.HasChange("ha_subnet") || d.HasChange("ha_insane_mode_az") {
 		transitGateway := &goaviatrix.TransitVpc{
@@ -512,7 +511,6 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 				return fmt.Errorf("failed to enable HA Aviatrix TransitVpc: %s", err)
 			}
 		}
-		d.SetPartial("ha_subnet")
 	}
 
 	if gateway.CloudType == goaviatrix.AWS {
@@ -551,7 +549,6 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 					}
 				}
 			}
-			d.SetPartial("tag_list")
 		}
 	} else {
 		if d.HasChange("tag_list") {
@@ -636,7 +633,6 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 		if err != nil {
 			return fmt.Errorf("failed to update Aviatrix Transit HA Gw size: %s", err)
 		}
-		d.SetPartial("ha_gw_size")
 	}
 
 	if d.HasChange("enable_nat") {
@@ -657,7 +653,6 @@ func resourceAviatrixTransitVpcUpdate(d *schema.ResourceData, meta interface{}) 
 				return fmt.Errorf("failed to enable SNAT: %s", err)
 			}
 		}
-		d.SetPartial("vpc_size")
 	}
 
 	if d.HasChange("enable_firenet_interfaces") {

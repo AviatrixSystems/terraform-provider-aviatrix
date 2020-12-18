@@ -1,6 +1,8 @@
 package aviatrix
 
 import (
+	"context"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -15,7 +17,7 @@ func resourceAviatrixFireNetResourceV0() *schema.Resource {
 	}
 }
 
-func resourceAviatrixFireNetStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceAviatrixFireNetStateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	if _, ok := rawState["manage_firewall_instance_association"]; !ok {
 		rawState["manage_firewall_instance_association"] = true
 	}

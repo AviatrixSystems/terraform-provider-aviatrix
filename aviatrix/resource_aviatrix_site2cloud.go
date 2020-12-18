@@ -738,7 +738,6 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		if err != nil {
 			return fmt.Errorf("failed to update Site2Cloud local_subnet_cidr: %s", err)
 		}
-		d.SetPartial("local_subnet_cidr")
 	}
 
 	if d.HasChange("remote_subnet_cidr") {
@@ -751,7 +750,6 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		if err != nil {
 			return fmt.Errorf("failed to update Site2Cloud remote_subnet_cidr: %s", err)
 		}
-		d.SetPartial("remote_subnet_cidr")
 	}
 
 	if d.HasChange("enable_dead_peer_detection") {
@@ -771,7 +769,6 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 				return fmt.Errorf("failed to disable deed peer detection: %s", err)
 			}
 		}
-		d.SetPartial("enable_dead_peer_detection")
 	}
 
 	if d.HasChange("enable_active_active") {
@@ -794,7 +791,6 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 				return fmt.Errorf("failed to disable active active HA for site2cloud: %s: %s", s2c.TunnelName, err)
 			}
 		}
-		d.SetPartial("enable_active_active")
 	}
 
 	if d.HasChange("forward_traffic_to_transit") {
@@ -814,7 +810,6 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 				return fmt.Errorf("failed to disable traffic forwarding to transit for site2cloud: %s: %s", s2c.TunnelName, err)
 			}
 		}
-		d.SetPartial("forward_traffic_to_transit")
 	}
 
 	if d.HasChanges(customMappedAttributeNames...) {
@@ -843,9 +838,6 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		err := client.UpdateSite2Cloud(s2c)
 		if err != nil {
 			return fmt.Errorf("could not update site2cloud connection Remote or Local CIDRs: %v", err)
-		}
-		for _, v := range customMappedAttributeNames {
-			d.SetPartial(v)
 		}
 	}
 

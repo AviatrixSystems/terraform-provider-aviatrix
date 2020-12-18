@@ -150,7 +150,6 @@ func resourceAviatrixAWSTgwDirectConnectUpdate(d *schema.ResourceData, meta inte
 		if err != nil {
 			return fmt.Errorf("failed to update Aws Tgw Direct Connect Allowed Prefix: %s", err)
 		}
-		d.SetPartial("allowed_prefix")
 	}
 
 	if d.HasChange("enable_learned_cidrs_approval") {
@@ -168,7 +167,6 @@ func resourceAviatrixAWSTgwDirectConnectUpdate(d *schema.ResourceData, meta inte
 				return fmt.Errorf("failed to disable learned cidrs approval: %s", err)
 			}
 		}
-		d.SetPartial("enable_learned_cidrs_approval")
 	}
 
 	return resourceAviatrixAWSTgwDirectConnectRead(d, meta)

@@ -257,7 +257,6 @@ func resourceAviatrixAwsTgwVpnConnUpdate(d *schema.ResourceData, meta interface{
 				return fmt.Errorf("failed to disable learned cidrs approval: %s", err)
 			}
 		}
-		d.SetPartial("enable_learned_cidrs_approval")
 	}
 
 	d.SetId(awsTgwVpnConn.TgwName + "~" + awsTgwVpnConn.VpnID)

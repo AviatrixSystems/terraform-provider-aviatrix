@@ -975,7 +975,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			}
 		}
 
-		d.SetPartial("single_az_ha")
 	}
 
 	if d.HasChange("tag_list") && (gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV) {
@@ -1021,7 +1020,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			}
 		}
 
-		d.SetPartial("tag_list")
 	} else if d.HasChange("tag_list") && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV {
 		return fmt.Errorf("adding tags is only supported for AWS and AWSGOV provider")
 	}
@@ -1036,7 +1034,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		if err != nil {
 			return fmt.Errorf("failed to update Aviatrix Spoke Gateway: %s", err)
 		}
-		d.SetPartial("gw_size")
 	}
 
 	newHaGwEnabled := false
@@ -1133,9 +1130,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				}
 			}
 		}
-		d.SetPartial("ha_subnet")
-		d.SetPartial("ha_zone")
-		d.SetPartial("ha_insane_mode_az")
 	}
 
 	if d.HasChange("ha_gw_size") || newHaGwEnabled {
@@ -1168,7 +1162,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("failed to update Aviatrix Spoke HA Gateway size: %s", err)
 			}
 		}
-		d.SetPartial("ha_gw_size")
 	}
 
 	if d.HasChange("single_ip_snat") {
@@ -1246,8 +1239,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			}
 		}
 
-		d.SetPartial("transit_gw")
-		d.SetPartial("enable_active_mesh")
 	} else if d.HasChange("enable_active_mesh") {
 		gw := &goaviatrix.Gateway{
 			GwName: d.Get("gw_name").(string),
@@ -1268,7 +1259,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			}
 		}
 
-		d.SetPartial("enable_active_mesh")
 	} else if d.HasChange("transit_gw") && manageTransitGwAttachment {
 		spokeVPC := &goaviatrix.SpokeVpc{
 			CloudType: d.Get("cloud_type").(int),
@@ -1306,7 +1296,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			}
 		}
 
-		d.SetPartial("transit_gw")
 	}
 
 	if d.HasChange("enable_vpc_dns_server") && (d.Get("cloud_type").(int) == goaviatrix.AWS || d.Get("cloud_type").(int) == goaviatrix.AWSGOV) {
@@ -1328,7 +1317,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			}
 		}
 
-		d.SetPartial("enable_vpc_dns_server")
 	} else if d.HasChange("enable_vpc_dns_server") {
 		return fmt.Errorf("'enable_vpc_dns_server' only supports AWS(1)")
 	}
@@ -1376,7 +1364,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("failed to customize spoke vpc routes of spoke gateway: %s due to: %s", transitGateway.GwName, err)
 			}
 		}
-		d.SetPartial("customized_spoke_vpc_routes")
 	}
 
 	if d.HasChange("filtered_spoke_vpc_routes") {
@@ -1402,7 +1389,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("failed to edit filtered spoke vpc routes of spoke gateway: %s due to: %s", transitGateway.GwName, err)
 			}
 		}
-		d.SetPartial("filtered_spoke_vpc_routes")
 	}
 
 	if d.HasChange("included_advertised_spoke_routes") {
@@ -1428,7 +1414,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("failed to edit included advertised spoke vpc routes of spoke gateway: %s due to: %s", transitGateway.GwName, err)
 			}
 		}
-		d.SetPartial("included_advertised_spoke_routes")
 	}
 
 	d.Partial(false)

@@ -162,10 +162,6 @@ func resourceAviatrixFirewallTagUpdate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("failed to update Aviatrix FirewallTag: %s", err)
 	}
 
-	if _, ok := d.GetOk("cidr_list"); ok {
-		d.SetPartial("cidr_list")
-	}
-
 	d.Partial(false)
 	return nil
 }

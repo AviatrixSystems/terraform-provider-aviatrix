@@ -262,7 +262,6 @@ func resourceAviatrixVPNUserUpdate(d *schema.ResourceData, meta interface{}) err
 					return fmt.Errorf("failed to detach User: %s", err)
 				}
 			}
-			d.SetPartial("profiles")
 		}
 	} else {
 		if len(d.Get("profiles").([]interface{})) != 0 {

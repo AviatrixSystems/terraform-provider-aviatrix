@@ -1556,7 +1556,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		if err != nil {
 			return fmt.Errorf("failed to update Aviatrix Gateway: %s", err)
 		}
-		d.SetPartial("gw_size")
 	}
 
 	if d.HasChange("otp_mode") || d.HasChange("enable_ldap") || d.HasChange("saml_enabled") ||
@@ -1727,7 +1726,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				}
 			}
 		}
-		d.SetPartial("tag_list")
 	} else if d.HasChange("tag_list") && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV {
 		return fmt.Errorf("adding tags is only supported for AWS and AWSGOV, cloud_type must be set to 1 or 256")
 	}
@@ -1843,7 +1841,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 
-		d.SetPartial("single_ip_snat")
 	}
 	if d.HasChange("additional_cidrs_designated_gateway") {
 		if !d.Get("enable_designated_gateway").(bool) {
@@ -1860,7 +1857,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		if err != nil {
 			return fmt.Errorf("failed to edit additional cidrs for 'designated_gateway' feature due to %s", err)
 		}
-		d.SetPartial("additional_cidrs_designated_gateway")
 	}
 	if d.HasChange("vpn_cidr") {
 		if d.Get("vpn_access").(bool) {
@@ -1878,7 +1874,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			log.Printf("[INFO] can't update vpn cidr because vpn_access is disabled for gateway: %#v", gateway.GwName)
 		}
 
-		d.SetPartial("vpn_cidr")
 	}
 	if d.HasChange("max_vpn_conn") {
 		if vpnAccess {
@@ -1907,7 +1902,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			log.Printf("[INFO] can't update max vpn connections because vpn is disabled for gateway: %#v", gateway.GwName)
 		}
 
-		d.SetPartial("max_vpn_conn")
 	}
 	newHaGwEnabled := false
 	if d.HasChange("peering_ha_subnet") || d.HasChange("peering_ha_zone") || d.HasChange("peering_ha_insane_mode_az") {
@@ -2013,10 +2007,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				}
 			}
 		}
-
-		d.SetPartial("peering_ha_subnet")
-		d.SetPartial("peering_ha_zone")
-		d.SetPartial("peering_ha_insane_mode_az")
 	}
 
 	if d.HasChange("peering_ha_gw_size") || newHaGwEnabled {
@@ -2051,7 +2041,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 
-		d.SetPartial("peering_ha_gw_size")
 	}
 
 	if d.HasChange("enable_vpc_dns_server") && (d.Get("cloud_type").(int) == goaviatrix.AWS || d.Get("cloud_type").(int) == goaviatrix.AWSGOV) {
@@ -2073,7 +2062,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 
-		d.SetPartial("enable_vpc_dns_server")
 	} else if d.HasChange("enable_vpc_dns_server") {
 		return fmt.Errorf("'enable_vpc_dns_server' only supports AWS(1) and AWSGOV(256)")
 	}
@@ -2106,8 +2094,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				}
 			}
 		}
-
-		d.SetPartial("enable_vpn_nat")
 	}
 
 	if d.HasChange("enable_encrypt_volume") {
@@ -2249,7 +2235,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		if err != nil {
 			return fmt.Errorf("could not edit public subnet filtering route table rules")
 		}
-		d.SetPartial("public_subnet_filtering_route_tables")
 	}
 	if d.HasChange("public_subnet_filtering_ha_route_tables") && !d.HasChange("peering_ha_subnet") && d.Get("peering_ha_subnet").(string) != "" {
 		var haRouteTables []string
@@ -2261,7 +2246,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		if err != nil {
 			return fmt.Errorf("could not edit HA public subnet filtering route table rules")
 		}
-		d.SetPartial("public_subnet_filtering_ha_route_tables")
 	}
 	if d.HasChange("public_subnet_filtering_guard_duty_enforced") {
 		if d.Get("public_subnet_filtering_guard_duty_enforced").(bool) {
@@ -2275,7 +2259,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				return fmt.Errorf("could not disable public subnet filtering guard duty enforcement: %v", err)
 			}
 		}
-		d.SetPartial("public_subnet_filtering_guard_duty_enforced")
 	}
 
 	d.Partial(false)

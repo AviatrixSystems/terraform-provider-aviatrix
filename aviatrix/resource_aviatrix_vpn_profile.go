@@ -290,7 +290,6 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 			if err != nil {
 				return fmt.Errorf("failed to detach user : %s", err)
 			}
-			d.SetPartial("users")
 		}
 	} else {
 		if len(d.Get("users").([]interface{})) != 0 {
@@ -304,7 +303,6 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 		if err != nil {
 			return fmt.Errorf("failed to create Aviatrix Profile: %s", err)
 		}
-		d.SetPartial("policy")
 	}
 
 	d.Partial(false)

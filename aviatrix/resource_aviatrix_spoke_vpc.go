@@ -463,7 +463,6 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 				}
 			}
 		}
-		d.SetPartial("tag_list")
 	} else if d.HasChange("tag_list") && gateway.CloudType != goaviatrix.AWS {
 		return fmt.Errorf("adding tags is only supported for aws, cloud_type must be set to 1")
 	}
@@ -478,7 +477,6 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 		if err != nil {
 			return fmt.Errorf("failed to update Aviatrix SpokeVpc: %s", err)
 		}
-		d.SetPartial("vpc_size")
 	}
 
 	newHaGwEnabled := false
@@ -539,8 +537,6 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 				return fmt.Errorf("failed to enable HA Aviatrix SpokeVpc: %s", err)
 			}
 		}
-		d.SetPartial("ha_subnet")
-		d.SetPartial("ha_zone")
 	}
 
 	if d.HasChange("ha_gw_size") || newHaGwEnabled {
@@ -573,7 +569,6 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 				return fmt.Errorf("failed to update Aviatrix Spoke HA Gw size: %s", err)
 			}
 		}
-		d.SetPartial("ha_gw_size")
 	}
 
 	if d.HasChange("enable_nat") {
@@ -594,7 +589,6 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 				return fmt.Errorf("failed to enable SNAT: %s", err)
 			}
 		}
-		d.SetPartial("vpc_size")
 	}
 
 	if d.HasChange("transit_gw") {
@@ -630,7 +624,6 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 				return fmt.Errorf("failed to join transit VPC: %s", err)
 			}
 		}
-		d.SetPartial("transit_gw")
 	}
 
 	d.Partial(false)

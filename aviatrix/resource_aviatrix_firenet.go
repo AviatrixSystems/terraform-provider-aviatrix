@@ -337,8 +337,6 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 			"aviatrix_firewall_instance_association resource")
 	}
 
-	d.SetPartial("manage_firewall_instance_association")
-
 	if d.HasChange("firewall_instance_association") && manageAssociations {
 		mapOldFirewall := make(map[string]map[string]interface{})
 		mapNewFirewall := make(map[string]map[string]interface{})
@@ -474,7 +472,6 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 	}
-	d.SetPartial("firewall_instance_association")
 
 	if d.HasChange("inspection_enabled") {
 		fn := &goaviatrix.FireNet{
@@ -495,7 +492,6 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 
-		d.SetPartial("inspection_enabled")
 	}
 
 	if d.HasChange("egress_enabled") {
@@ -517,7 +513,6 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 
-		d.SetPartial("egress_enabled")
 	}
 
 	return resourceAviatrixFireNetRead(d, meta)

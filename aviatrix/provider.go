@@ -5,13 +5,12 @@ import (
 	"os"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 var supportedVersions = []string{"6.3"}
 
 // Provider returns a schema.Provider for Aviatrix.
-func Provider() terraform.ResourceProvider {
+func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"controller_ip": {
