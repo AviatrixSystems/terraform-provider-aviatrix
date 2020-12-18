@@ -83,6 +83,11 @@ func marshalFilebeatForwarderInput(d *schema.ResourceData) *goaviatrix.FilebeatF
 func resourceAviatrixFilebeatForwarderCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
+	_, err := client.GetFilebeatForwarderStatus()
+	if err != goaviatrix.ErrNotFound {
+		return fmt.Errorf("the filebeat_forwarder is already enabled, please import to manage with Terraform")
+	}
+
 	filebeatForwarder := marshalFilebeatForwarderInput(d)
 
 	if err := client.EnableFilebeatForwarder(filebeatForwarder); err != nil {

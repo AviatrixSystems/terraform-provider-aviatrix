@@ -125,6 +125,11 @@ func marshalRemoteSyslogInput(d *schema.ResourceData) *goaviatrix.RemoteSyslog {
 func resourceAviatrixRemoteSyslogCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
+	_, err := client.GetRemoteSyslogStatus(d.Get("index").(int))
+	if err != goaviatrix.ErrNotFound {
+		return fmt.Errorf("the remote_syslog with index %d is already enabled, please import to manage with Terraform", d.Get("index").(int))
+	}
+
 	remoteSyslog := marshalRemoteSyslogInput(d)
 
 	if !((remoteSyslog.CaCertificate != "" && remoteSyslog.PublicCertificate != "" && remoteSyslog.PrivateKey != "") ||

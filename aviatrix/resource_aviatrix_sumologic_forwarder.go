@@ -83,6 +83,11 @@ func marshalSumologicForwarderInput(d *schema.ResourceData) *goaviatrix.Sumologi
 func resourceAviatrixSumologicForwarderCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
+	_, err := client.GetSumologicForwarderStatus()
+	if err != goaviatrix.ErrNotFound {
+		return fmt.Errorf("the sumologic_forwarder is already enabled, please import to manage with Terraform")
+	}
+
 	sumologicForwarder := marshalSumologicForwarderInput(d)
 
 	if err := client.EnableSumologicForwarder(sumologicForwarder); err != nil {
