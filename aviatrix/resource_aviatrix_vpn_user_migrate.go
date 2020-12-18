@@ -1,7 +1,7 @@
 package aviatrix
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAviatrixVPNUserResourceV0() *schema.Resource {
