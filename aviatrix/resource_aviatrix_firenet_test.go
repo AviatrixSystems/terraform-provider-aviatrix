@@ -1,6 +1,7 @@
 package aviatrix
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"reflect"
@@ -176,7 +177,7 @@ func testResourceFireNetStateDataV1() map[string]interface{} {
 
 func TestResourceFireNetStateUpgradeV0(t *testing.T) {
 	expected := testResourceFireNetStateDataV1()
-	actual, err := resourceAviatrixFireNetStateUpgradeV0(testResourceFireNetStateDataV0(), nil)
+	actual, err := resourceAviatrixFireNetStateUpgradeV0(context.Background(), testResourceFireNetStateDataV0(), nil)
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)
 	}
