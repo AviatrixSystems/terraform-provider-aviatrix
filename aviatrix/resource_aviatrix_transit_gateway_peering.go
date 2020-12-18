@@ -89,6 +89,16 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				ForceNew:    true,
 				Description: "(Optional) Enable peering over private network. Insane mode is required on both transit gateways. Available as of provider version R2.17.1",
 			},
+			"enable_single_tunnel_mode": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return !d.Get("enable_peering_over_private_network").(bool)
+				},
+				Description: "Enable peering with Single-Tunnel mode.",
+			},
 		},
 	}
 }
@@ -122,6 +132,10 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 		Gateway1ExcludedTGWConnections: strings.Join(gw1Tgws, ","),
 		Gateway2ExcludedTGWConnections: strings.Join(gw2Tgws, ","),
 		PrivateIPPeering:               d.Get("enable_peering_over_private_network").(bool),
+	}
+
+	if transitGatewayPeering.PrivateIPPeering {
+		transitGatewayPeering.SingleTunnel = d.Get("enable_single_tunnel_mode").(bool)
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway peering: %#v", transitGatewayPeering)
@@ -257,6 +271,7 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 	}
 
 	d.Set("enable_peering_over_private_network", transitGatewayPeering.PrivateIPPeering)
+	d.Set("enable_single_tunnel_mode", transitGatewayPeering.SingleTunnel)
 
 	d.SetId(transitGatewayPeering.TransitGatewayName1 + "~" + transitGatewayPeering.TransitGatewayName2)
 	return nil

@@ -49,6 +49,9 @@ The following arguments are supported:
 * `prepend_as_path1` - (Optional) AS Path Prepend customized by specifying AS PATH for a BGP connection. Applies on transit_gateway_name1. Available in provider version R2.17.2+.
 * `prepend_as_path2` - (Optional) AS Path Prepend customized by specifying AS PATH for a BGP connection. Applies on transit_gateway_name2. Available in provider version R2.17.2+.
 * `enable_peering_over_private_network` - (Optional) Enable peering over private network. ActiveMesh and Insane Mode is required on both transit gateways. Available in provider version R2.17.1+.
+* `enable_single_tunnel_mode` - (Optional) Enable peering with Single Tunnel mode. False by default.
+  
+~> **NOTE:** Basically the peering is **not** in "Single Tunnel" mode only when `enable_peering_over_private_network` is `true` and `enable_single_tunnel_mode` is `false`. When `enable_peering_over_private_network` is `false`, the "Single Tunnel" peering is public.
 
 ## Import
 
