@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -324,12 +324,6 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 		if err != nil {
 			return fmt.Errorf("failed to set base firewall policies for GW %s: %s", firewall.GwName, err)
 		}
-		if d.HasChange("base_policy") {
-			d.SetPartial("base_policy")
-		}
-		if d.HasChange("base_log_enabled") {
-			d.SetPartial("base_log_enabled")
-		}
 	}
 
 	//If policy list is present, update policy list
@@ -367,8 +361,6 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 		if err != nil {
 			return fmt.Errorf("failed to create Aviatrix Firewall: %s", err)
 		}
-
-		d.SetPartial("policy")
 	}
 
 	d.Partial(false)

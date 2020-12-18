@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -290,7 +290,6 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 			if err != nil {
 				return fmt.Errorf("failed to detach user : %s", err)
 			}
-			d.SetPartial("users")
 		}
 	} else {
 		if len(d.Get("users").([]interface{})) != 0 {
@@ -304,7 +303,6 @@ func resourceAviatrixProfileUpdate(d *schema.ResourceData, meta interface{}) err
 		if err != nil {
 			return fmt.Errorf("failed to create Aviatrix Profile: %s", err)
 		}
-		d.SetPartial("policy")
 	}
 
 	d.Partial(false)

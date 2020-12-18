@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -1274,7 +1274,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 
-		d.SetPartial("single_az_ha")
 	}
 
 	if d.HasChange("gw_size") {
@@ -1285,7 +1284,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("failed to update Aviatrix Transit Gateway: %s", err)
 		}
 
-		d.SetPartial("gw_size")
 	}
 
 	newHaGwEnabled := false
@@ -1377,9 +1375,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				}
 			}
 		}
-		d.SetPartial("ha_subnet")
-		d.SetPartial("ha_zone")
-		d.SetPartial("ha_insane_mode_az")
 	}
 
 	if gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV {
@@ -1425,7 +1420,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 					}
 				}
 			}
-			d.SetPartial("tag_list")
 		}
 	} else {
 		if d.HasChange("tag_list") {
@@ -1454,7 +1448,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 
-		d.SetPartial("connected_transit")
 	}
 
 	if d.HasChange("ha_gw_size") {
@@ -1485,7 +1478,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 
-		d.SetPartial("ha_gw_size")
 	}
 
 	if d.HasChange("single_ip_snat") {
@@ -1507,7 +1499,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 
-		d.SetPartial("single_ip_snat")
 	}
 
 	if gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV {
@@ -1677,8 +1668,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 
-		d.SetPartial("enable_firenet")
-		d.SetPartial("enable_transit_firenet")
 	} else if d.HasChange("enable_firenet") {
 		transitGW := &goaviatrix.TransitVpc{
 			GwName: gateway.GwName,
@@ -1697,7 +1686,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 
-		d.SetPartial("enable_firenet")
 	} else if d.HasChange("enable_transit_firenet") {
 		enableTransitFireNet := d.Get("enable_transit_firenet").(bool)
 		if enableTransitFireNet {
@@ -1722,7 +1710,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("failed to disable transit firenet for %s due to %s", gwTransitFireNet.GwName, err)
 			}
 		}
-		d.SetPartial("enable_transit_firenet")
 	}
 
 	if d.HasChange("enable_egress_transit_firenet") {
@@ -1759,7 +1746,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 
-		d.SetPartial("enable_vpc_dns_server")
 	} else if d.HasChange("enable_vpc_dns_server") {
 		return fmt.Errorf("'enable_vpc_dns_server' only supports AWS/AWSGOV providers")
 	}
@@ -1782,7 +1768,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("failed to disable advertise transit CIDR: %s", err)
 			}
 		}
-		d.SetPartial("enable_advertise_transit_cidr")
 	}
 
 	if d.HasChange("bgp_manual_spoke_advertise_cidrs") {
@@ -1796,7 +1781,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("failed to set bgp manual spoke advertise CIDRs: %s", err)
 		}
 
-		d.SetPartial("bgp_manual_spoke_advertise_cidrs")
 	}
 
 	if d.HasChange("enable_encrypt_volume") {
@@ -1815,7 +1799,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		} else {
 			return fmt.Errorf("can't disable Encrypt Volume for gateway: %s", gateway.GwName)
 		}
-		d.SetPartial("enable_encrypt_volume")
 	} else if d.HasChange("customer_managed_keys") {
 		return fmt.Errorf("updating customer_managed_keys only is not allowed")
 	}
@@ -1843,7 +1826,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("failed to customize spoke vpc routes of transit gateway: %s due to: %s", transitGateway.GwName, err)
 			}
 		}
-		d.SetPartial("customized_spoke_vpc_routes")
 	}
 
 	if d.HasChange("filtered_spoke_vpc_routes") {
@@ -1869,7 +1851,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("failed to edit filtered spoke vpc routes of transit gateway: %s due to: %s", transitGateway.GwName, err)
 			}
 		}
-		d.SetPartial("filtered_spoke_vpc_routes")
 	}
 
 	if d.HasChange("excluded_advertised_spoke_routes") {
@@ -1895,7 +1876,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("failed to edit excluded advertised spoke vpc routes of transit gateway: %s due to: %s", transitGateway.GwName, err)
 			}
 		}
-		d.SetPartial("excluded_advertised_spoke_routes")
 	}
 
 	if d.HasChange("bgp_polling_time") {

@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -313,7 +313,6 @@ func resourceAviatrixTransitGatewayPeeringUpdate(d *schema.ResourceData, meta in
 			return fmt.Errorf("could not update prepend_as_path1: %v", err)
 		}
 
-		d.SetPartial("prepend_as_path1")
 	}
 
 	if d.HasChange("prepend_as_path2") {
@@ -330,7 +329,6 @@ func resourceAviatrixTransitGatewayPeeringUpdate(d *schema.ResourceData, meta in
 			return fmt.Errorf("could not update prepend_as_path2: %v", err)
 		}
 
-		d.SetPartial("prepend_as_path2")
 	}
 
 	d.Partial(false)

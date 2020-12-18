@@ -1,12 +1,13 @@
 package aviatrix
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func resourceAviatrixAWSTgwMigrateState(
@@ -44,7 +45,7 @@ func resourceAviatrixAWSTgwResourceV1() *schema.Resource {
 	}
 }
 
-func resourceAviatrixAWSTgwStateUpgradeV1(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceAviatrixAWSTgwStateUpgradeV1(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	if _, ok := rawState["manage_transit_gateway_attachment"]; !ok {
 		rawState["manage_transit_gateway_attachment"] = true
 	}

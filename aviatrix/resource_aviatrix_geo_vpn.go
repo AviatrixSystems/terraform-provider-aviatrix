@@ -5,8 +5,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -194,9 +194,9 @@ func resourceAviatrixGeoVPNUpdate(d *schema.ResourceData, meta interface{}) erro
 				return fmt.Errorf("failed to add ELB: %s to Aviatrix Geo VPN due to: %s", toAddElbs[i], err)
 			}
 		}
-		d.SetPartial("elb_dns_names")
 	}
 
+	d.Partial(false)
 	return resourceAviatrixGeoVPNRead(d, meta)
 }
 

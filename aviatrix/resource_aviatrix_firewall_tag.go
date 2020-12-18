@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -160,10 +160,6 @@ func resourceAviatrixFirewallTagUpdate(d *schema.ResourceData, meta interface{})
 	err := client.UpdateFirewallTag(firewallTag)
 	if err != nil {
 		return fmt.Errorf("failed to update Aviatrix FirewallTag: %s", err)
-	}
-
-	if _, ok := d.GetOk("cidr_list"); ok {
-		d.SetPartial("cidr_list")
 	}
 
 	d.Partial(false)

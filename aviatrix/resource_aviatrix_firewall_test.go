@@ -1,14 +1,15 @@
 package aviatrix
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -180,7 +181,7 @@ func testResourceFirewallStateDataV1() map[string]interface{} {
 
 func TestResourceFirewallStateUpgradeV0(t *testing.T) {
 	expected := testResourceFirewallStateDataV1()
-	actual, err := resourceAviatrixFirewallStateUpgradeV0(testResourceFirewallStateDataV0(), nil)
+	actual, err := resourceAviatrixFirewallStateUpgradeV0(context.Background(), testResourceFirewallStateDataV0(), nil)
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)
 	}
@@ -204,7 +205,7 @@ func testResourceFirewallStateDataV1ManageAlreadySet() map[string]interface{} {
 
 func TestResourceFirewallStateUpgradeV0ManageAlreadySet(t *testing.T) {
 	expected := testResourceFirewallStateDataV1ManageAlreadySet()
-	actual, err := resourceAviatrixFirewallStateUpgradeV0(testResourceFirewallStateDataV0ManageAlreadySet(), nil)
+	actual, err := resourceAviatrixFirewallStateUpgradeV0(context.Background(), testResourceFirewallStateDataV0ManageAlreadySet(), nil)
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)
 	}

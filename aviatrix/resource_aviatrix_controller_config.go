@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -402,7 +402,6 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 				return err
 			}
 		}
-		d.SetPartial("http_access")
 	}
 
 	if d.HasChange("fqdn_exception_rule") {
@@ -420,7 +419,6 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 				return err
 			}
 		}
-		d.SetPartial("fqdn_exception_rule")
 	}
 
 	if d.HasChange("security_group_management") {
@@ -438,7 +436,6 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 				return err
 			}
 		}
-		d.SetPartial("security_group_management")
 	}
 
 	if d.HasChange("target_version") {
@@ -469,7 +466,6 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 				return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
 			}
 		}
-		d.SetPartial("target_version")
 	}
 
 	if d.HasChange("backup_configuration") {
@@ -503,7 +499,6 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 				return fmt.Errorf("failed to disable backup configuration: %s", err)
 			}
 		}
-		d.SetPartial("backup_configuration")
 	} else {
 		if d.HasChange("backup_cloud_type") || d.HasChange("backup_account_name") ||
 			d.HasChange("backup_bucket_name") || d.HasChange("multiple_backups") {

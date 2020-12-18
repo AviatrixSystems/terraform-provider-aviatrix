@@ -1,14 +1,15 @@
 package aviatrix
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -176,7 +177,7 @@ func testResourceFireNetStateDataV1() map[string]interface{} {
 
 func TestResourceFireNetStateUpgradeV0(t *testing.T) {
 	expected := testResourceFireNetStateDataV1()
-	actual, err := resourceAviatrixFireNetStateUpgradeV0(testResourceFireNetStateDataV0(), nil)
+	actual, err := resourceAviatrixFireNetStateUpgradeV0(context.Background(), testResourceFireNetStateDataV0(), nil)
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)
 	}

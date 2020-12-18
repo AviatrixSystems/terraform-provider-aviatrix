@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -150,7 +150,6 @@ func resourceAviatrixAWSTgwDirectConnectUpdate(d *schema.ResourceData, meta inte
 		if err != nil {
 			return fmt.Errorf("failed to update Aws Tgw Direct Connect Allowed Prefix: %s", err)
 		}
-		d.SetPartial("allowed_prefix")
 	}
 
 	if d.HasChange("enable_learned_cidrs_approval") {
@@ -168,9 +167,9 @@ func resourceAviatrixAWSTgwDirectConnectUpdate(d *schema.ResourceData, meta inte
 				return fmt.Errorf("failed to disable learned cidrs approval: %s", err)
 			}
 		}
-		d.SetPartial("enable_learned_cidrs_approval")
 	}
 
+	d.Partial(false)
 	return resourceAviatrixAWSTgwDirectConnectRead(d, meta)
 }
 

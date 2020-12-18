@@ -1,7 +1,9 @@
 package aviatrix
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAviatrixVPNUserResourceV0() *schema.Resource {
@@ -15,7 +17,7 @@ func resourceAviatrixVPNUserResourceV0() *schema.Resource {
 	}
 }
 
-func resourceAviatrixVPNUserStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceAviatrixVPNUserStateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	if _, ok := rawState["manage_user_attachment"]; !ok {
 		rawState["manage_user_attachment"] = "false"
 	}

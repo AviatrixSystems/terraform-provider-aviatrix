@@ -1,7 +1,9 @@
 package aviatrix
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAviatrixSpokeGatewayResourceV0() *schema.Resource {
@@ -15,7 +17,7 @@ func resourceAviatrixSpokeGatewayResourceV0() *schema.Resource {
 	}
 }
 
-func resourceAviatrixSpokeGatewayStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceAviatrixSpokeGatewayStateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	if _, ok := rawState["manage_transit_gateway_attachment"]; !ok {
 		rawState["manage_transit_gateway_attachment"] = "true"
 	}

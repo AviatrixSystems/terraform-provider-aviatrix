@@ -6,7 +6,7 @@ import (
 
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAviatrixCloudwatchAgent() *schema.Resource {

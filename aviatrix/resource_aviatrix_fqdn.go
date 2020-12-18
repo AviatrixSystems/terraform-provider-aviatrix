@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
@@ -399,14 +399,12 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 		if err != nil {
 			return fmt.Errorf("failed to update FQDN status : %s", err)
 		}
-		d.SetPartial("fqdn_enabled")
 	}
 	if d.HasChange("fqdn_mode") {
 		err := client.UpdateFQDNMode(fqdn)
 		if err != nil {
 			return fmt.Errorf("failed to update FQDN mode : %s", err)
 		}
-		d.SetPartial("fqdn_mode")
 	}
 	// Update Domain list
 	if d.HasChange("domain_names") {
@@ -427,7 +425,6 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 		if err != nil {
 			return fmt.Errorf("failed to add domain : %s", err)
 		}
-		d.SetPartial("domain_names")
 	}
 	if d.HasChange("gw_filter_tag_list") {
 		o, n := d.GetChange("gw_filter_tag_list")
@@ -491,7 +488,6 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 			}
 		}
 
-		d.SetPartial("gw_filter_tag_list")
 	}
 
 	d.Partial(false)
