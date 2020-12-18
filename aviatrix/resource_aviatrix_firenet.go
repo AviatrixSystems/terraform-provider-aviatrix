@@ -515,6 +515,7 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 
 	}
 
+	d.Partial(false)
 	return resourceAviatrixFireNetRead(d, meta)
 }
 

@@ -169,6 +169,7 @@ func resourceAviatrixAWSTgwDirectConnectUpdate(d *schema.ResourceData, meta inte
 		}
 	}
 
+	d.Partial(false)
 	return resourceAviatrixAWSTgwDirectConnectRead(d, meta)
 }
 

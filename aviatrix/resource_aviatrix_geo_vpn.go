@@ -196,6 +196,7 @@ func resourceAviatrixGeoVPNUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
+	d.Partial(false)
 	return resourceAviatrixGeoVPNRead(d, meta)
 }
 

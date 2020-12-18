@@ -259,6 +259,7 @@ func resourceAviatrixAwsTgwVpnConnUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
+	d.Partial(false)
 	d.SetId(awsTgwVpnConn.TgwName + "~" + awsTgwVpnConn.VpnID)
 	return resourceAviatrixAwsTgwVpnConnRead(d, meta)
 }
