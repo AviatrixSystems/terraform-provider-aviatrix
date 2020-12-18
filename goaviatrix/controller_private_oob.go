@@ -43,7 +43,7 @@ func (c *Client) EnablePrivateOob() error {
 }
 
 func (c *Client) GetPrivateOobState() (bool, error) {
-	resp, err := c.Post(c.baseURL, struct {
+	resp, err := c.Get(c.baseURL, struct {
 		CID    string `form:"CID"`
 		Action string `form:"action"`
 	}{
