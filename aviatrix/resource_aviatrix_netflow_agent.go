@@ -25,13 +25,13 @@ func resourceAviatrixNetflowAgent() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Netflow server IP address",
+				Description: "Netflow server IP address.",
 			},
 			"port": {
 				Type:        schema.TypeInt,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Netflow server port",
+				Description: "Netflow server port.",
 			},
 			"version": {
 				Type:         schema.TypeInt,
@@ -39,7 +39,7 @@ func resourceAviatrixNetflowAgent() *schema.Resource {
 				Default:      5,
 				ForceNew:     true,
 				ValidateFunc: validation.IntInSlice([]int{5, 9}),
-				Description:  "Netflow version",
+				Description:  "Netflow version.",
 			},
 			"excluded_gateways": {
 				Type:        schema.TypeSet,
@@ -79,6 +79,11 @@ func marshalNetflowAgentInput(d *schema.ResourceData) *goaviatrix.NetflowAgent {
 
 func resourceAviatrixNetflowAgentCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	_, err := client.GetNetflowAgentStatus()
+	if err != goaviatrix.ErrNotFound {
+		return fmt.Errorf("the netflow_agent is already enabled, please import to manage with Terraform")
+	}
 
 	netflowAgent := marshalNetflowAgentInput(d)
 

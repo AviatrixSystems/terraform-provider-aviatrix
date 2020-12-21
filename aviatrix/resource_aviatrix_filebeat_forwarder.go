@@ -35,12 +35,18 @@ func resourceAviatrixFilebeatForwarder() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.TrimSpace(old) == strings.TrimSpace(new)
+				},
 				Description: "Trusted CA file.",
 			},
 			"config_file": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.TrimSpace(old) == strings.TrimSpace(new)
+				},
 				Description: "Configuration file.",
 			},
 			"excluded_gateways": {
@@ -82,6 +88,11 @@ func marshalFilebeatForwarderInput(d *schema.ResourceData) *goaviatrix.FilebeatF
 
 func resourceAviatrixFilebeatForwarderCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	_, err := client.GetFilebeatForwarderStatus()
+	if err != goaviatrix.ErrNotFound {
+		return fmt.Errorf("the filebeat_forwarder is already enabled, please import to manage with Terraform")
+	}
 
 	filebeatForwarder := marshalFilebeatForwarderInput(d)
 

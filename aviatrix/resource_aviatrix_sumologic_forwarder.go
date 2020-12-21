@@ -41,6 +41,9 @@ func resourceAviatrixSumologicForwarder() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.TrimSpace(old) == strings.TrimSpace(new)
+				},
 				Description: "Custom configuration.",
 			},
 			"excluded_gateways": {
@@ -82,6 +85,11 @@ func marshalSumologicForwarderInput(d *schema.ResourceData) *goaviatrix.Sumologi
 
 func resourceAviatrixSumologicForwarderCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	_, err := client.GetSumologicForwarderStatus()
+	if err != goaviatrix.ErrNotFound {
+		return fmt.Errorf("the sumologic_forwarder is already enabled, please import to manage with Terraform")
+	}
 
 	sumologicForwarder := marshalSumologicForwarderInput(d)
 

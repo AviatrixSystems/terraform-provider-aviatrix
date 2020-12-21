@@ -45,21 +45,30 @@ func resourceAviatrixRemoteSyslog() *schema.Resource {
 				Description: "Listening port of the remote syslog server.",
 			},
 			"ca_certificate_file": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.TrimSpace(old) == strings.TrimSpace(new)
+				},
 				Description: "CA certificate file.",
 			},
 			"public_certificate_file": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.TrimSpace(old) == strings.TrimSpace(new)
+				},
 				Description: "Public certificate of the controller signed by the same CA.",
 			},
 			"private_key_file": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.TrimSpace(old) == strings.TrimSpace(new)
+				},
 				Description: "Private key of the controller that pairs with the public certificate.",
 			},
 			"protocol": {
@@ -71,9 +80,12 @@ func resourceAviatrixRemoteSyslog() *schema.Resource {
 				Description:  "TCP or UDP (TCP by default).",
 			},
 			"template": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.TrimSpace(old) == strings.TrimSpace(new)
+				},
 				Description: "Useful when forwarding to 3rd party servers like Datadog or Sumo",
 			},
 			"excluded_gateways": {
@@ -124,6 +136,11 @@ func marshalRemoteSyslogInput(d *schema.ResourceData) *goaviatrix.RemoteSyslog {
 
 func resourceAviatrixRemoteSyslogCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	_, err := client.GetRemoteSyslogStatus(d.Get("index").(int))
+	if err != goaviatrix.ErrNotFound {
+		return fmt.Errorf("the remote_syslog with index %d is already enabled, please import to manage with Terraform", d.Get("index").(int))
+	}
 
 	remoteSyslog := marshalRemoteSyslogInput(d)
 

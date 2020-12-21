@@ -35,12 +35,18 @@ func resourceAviatrixSplunkLogging() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.TrimSpace(old) == strings.TrimSpace(new)
+				},
 				Description: "Configuration file. Use the filebase64 function to read from a file.",
 			},
 			"custom_input_config": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.TrimSpace(old) == strings.TrimSpace(new)
+				},
 				Description: "Custom configuration.",
 			},
 			"excluded_gateways": {
@@ -88,6 +94,11 @@ func marshalSplunkLoggingInput(d *schema.ResourceData, useCustomConfig bool) *go
 
 func resourceAviatrixSplunkLoggingCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	_, err := client.GetSplunkLoggingStatus()
+	if err != goaviatrix.ErrNotFound {
+		return fmt.Errorf("the splunk_logging is already enabled, please import to manage with Terraform")
+	}
 
 	var splunkLogging *goaviatrix.SplunkLogging
 

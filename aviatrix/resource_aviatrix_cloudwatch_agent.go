@@ -23,20 +23,20 @@ func resourceAviatrixCloudwatchAgent() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "CloudWatch role ARN",
+				Description: "CloudWatch role ARN.",
 			},
 			"region": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Name of AWS region",
+				Description: "Name of AWS region.",
 			},
 			"log_group_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
 				Default:     "AVIATRIX-CLOUDWATCH-LOG",
-				Description: "Log group name",
+				Description: "Log group name.",
 			},
 			"excluded_gateways": {
 				Type:        schema.TypeSet,
@@ -76,6 +76,11 @@ func marshalCloudwatchAgentInput(d *schema.ResourceData) *goaviatrix.CloudwatchA
 
 func resourceAviatrixCloudwatchAgentCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	_, err := client.GetCloudwatchAgentStatus()
+	if err != goaviatrix.ErrNotFound {
+		return fmt.Errorf("the cloudwatch_agent is already enabled, please import to manage with Terraform")
+	}
 
 	cloudwatchAgent := marshalCloudwatchAgentInput(d)
 

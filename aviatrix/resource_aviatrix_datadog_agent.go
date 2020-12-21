@@ -24,7 +24,7 @@ func resourceAviatrixDatadogAgent() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "API key",
+				Description: "API key.",
 			},
 			"site": {
 				Type:         schema.TypeString,
@@ -32,7 +32,7 @@ func resourceAviatrixDatadogAgent() *schema.Resource {
 				ForceNew:     true,
 				Default:      "datadoghq.com",
 				ValidateFunc: validation.StringInSlice([]string{"datadoghq.com", "datadoghq.eu"}, false),
-				Description:  "Site preference",
+				Description:  "Site preference.",
 			},
 			"excluded_gateways": {
 				Type:        schema.TypeSet,
@@ -71,6 +71,11 @@ func marshalDatadogAgentInput(d *schema.ResourceData) *goaviatrix.DatadogAgent {
 
 func resourceAviatrixDatadogAgentCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	_, err := client.GetDatadogAgentStatus()
+	if err != goaviatrix.ErrNotFound {
+		return fmt.Errorf("the datadog_agent is already enabled, please import to manage with Terraform")
+	}
 
 	datadogAgent := marshalDatadogAgentInput(d)
 
