@@ -32,18 +32,18 @@ func resourceAviatrixSplunkLogging() *schema.Resource {
 				Description: "Port number.",
 			},
 			"custom_output_config_file": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return strings.TrimSpace(old) == strings.TrimSpace(new)
 				},
 				Description: "Configuration file. Use the filebase64 function to read from a file.",
 			},
 			"custom_input_config": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return strings.TrimSpace(old) == strings.TrimSpace(new)
 				},

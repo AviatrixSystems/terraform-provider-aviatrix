@@ -136,6 +136,8 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 
 	if transitGatewayPeering.PrivateIPPeering {
 		transitGatewayPeering.SingleTunnel = d.Get("enable_single_tunnel_mode").(bool)
+	} else {
+		return fmt.Errorf("enable_single_tunnel_mode is only valid when enable_peering_over_private_network is set to true")
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway peering: %#v", transitGatewayPeering)
