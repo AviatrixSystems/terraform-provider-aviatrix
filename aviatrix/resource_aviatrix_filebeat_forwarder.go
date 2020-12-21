@@ -35,12 +35,18 @@ func resourceAviatrixFilebeatForwarder() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.TrimSpace(old) == strings.TrimSpace(new)
+				},
 				Description: "Trusted CA file.",
 			},
 			"config_file": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.TrimSpace(old) == strings.TrimSpace(new)
+				},
 				Description: "Configuration file.",
 			},
 			"excluded_gateways": {

@@ -41,6 +41,9 @@ func resourceAviatrixSumologicForwarder() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.TrimSpace(old) == strings.TrimSpace(new)
+				},
 				Description: "Custom configuration.",
 			},
 			"excluded_gateways": {
