@@ -26,6 +26,7 @@ type TransitGatewayPeering struct {
 	PrependAsPath2                      string
 	CID                                 string `form:"CID,omitempty"`
 	Action                              string `form:"action,omitempty"`
+	SingleTunnel                        bool   `form:"single_tunnel"`
 }
 
 type TransitGatewayPeeringAPIResp struct {
@@ -44,12 +45,17 @@ type TransitGatewayPeeringDetailsResults struct {
 	Site1                 TransitGatewayPeeringDetail `json:"site_1"`
 	Site2                 TransitGatewayPeeringDetail `json:"site_2"`
 	PrivateNetworkPeering bool                        `json:"private_network_peering"`
+	Tunnels               []TunnelsDetail             `json:"tunnels"`
 }
 
 type TransitGatewayPeeringDetail struct {
 	ExcludedCIDRs          []string `json:"exclude_filter_list"`
 	ExcludedTGWConnections []string `json:"exclude_connections"`
 	ConnBGPPrependAsPath   string   `json:"conn_bgp_prepend_as_path"`
+}
+
+type TunnelsDetail struct {
+	LicenseId [][]string `json:"license_id"`
 }
 
 func (c *Client) CreateTransitGatewayPeering(transitGatewayPeering *TransitGatewayPeering) error {
@@ -131,6 +137,10 @@ func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitG
 	transitGatewayPeering.PrivateIPPeering = data.Results.PrivateNetworkPeering
 	transitGatewayPeering.PrependAsPath1 = data.Results.Site1.ConnBGPPrependAsPath
 	transitGatewayPeering.PrependAsPath2 = data.Results.Site2.ConnBGPPrependAsPath
+
+	if len(data.Results.Tunnels[0].LicenseId) == 1 {
+		transitGatewayPeering.SingleTunnel = true
+	}
 
 	return transitGatewayPeering, nil
 }
