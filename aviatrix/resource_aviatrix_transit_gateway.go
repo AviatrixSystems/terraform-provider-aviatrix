@@ -161,6 +161,14 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Specify whether to enable firenet interfaces or not.",
 			},
+			"enable_gateway_load_balancer": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Description: "Enable firenet interfaces with AWS Gateway Load Balancer. Only valid when `enable_firenet` or `enable_transit_firenet`" +
+					" are set to true and `cloud_type` = 1 (AWS). Currently AWS Gateway Load Balancer is only supported " +
+					"in AWS regions us-west-2 and us-east-1. Valid values: true or false. Default value: false.",
+			},
 			"enable_active_mesh": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -467,6 +475,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	}
 
 	enableFireNet := d.Get("enable_firenet").(bool)
+	enableGatewayLoadBalancer := d.Get("enable_gateway_load_balancer").(bool)
 	enableTransitFireNet := d.Get("enable_transit_firenet").(bool)
 	if enableFireNet && enableTransitFireNet {
 		return fmt.Errorf("can't enable firenet function and transit firenet function at the same time")
@@ -475,6 +484,12 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("'enable_transit_firenet' is only supported in AWS, AZURE and AWSGOV providers")
 	} else if enableTransitFireNet && gateway.CloudType == goaviatrix.AZURE {
 		gateway.EnableTransitFireNet = "on"
+	}
+	if enableGatewayLoadBalancer && !enableFireNet && !enableTransitFireNet {
+		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'enable_firenet' or 'enable_transit_firenet' is set to true")
+	}
+	if enableGatewayLoadBalancer && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV {
+		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'cloud_type' = 1 (AWS) or 256 (AWSGOV)")
 	}
 
 	enableEgressTransitFireNet := d.Get("enable_egress_transit_firenet").(bool)
@@ -651,9 +666,16 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	}
 
 	if enableFireNet {
-		err := client.EnableGatewayFireNetInterfaces(gateway)
-		if err != nil {
-			return fmt.Errorf("failed to enable transit GW for FireNet Interfaces: %s", err)
+		if enableGatewayLoadBalancer {
+			err := client.EnableGatewayFireNetInterfacesWithGWLB(gateway)
+			if err != nil {
+				return fmt.Errorf("failed to enable transit GW for FireNet Interfaces with Gateway Load Balancer enabled: %s", err)
+			}
+		} else {
+			err := client.EnableGatewayFireNetInterfaces(gateway)
+			if err != nil {
+				return fmt.Errorf("failed to enable transit GW for FireNet Interfaces: %s", err)
+			}
 		}
 	}
 
@@ -755,9 +777,16 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		gwTransitFireNet := &goaviatrix.Gateway{
 			GwName: d.Get("gw_name").(string),
 		}
-		err := client.EnableTransitFireNet(gwTransitFireNet)
-		if err != nil {
-			return fmt.Errorf("failed to enable transit firenet for %s due to %s", gwTransitFireNet.GwName, err)
+		if enableGatewayLoadBalancer {
+			err := client.EnableTransitFireNetWithGWLB(gwTransitFireNet)
+			if err != nil {
+				return fmt.Errorf("failed to enable transit firenet with Gateway Load Balancer enabled: %v", err)
+			}
+		} else {
+			err := client.EnableTransitFireNet(gwTransitFireNet)
+			if err != nil {
+				return fmt.Errorf("failed to enable transit firenet for %s due to %s", gwTransitFireNet.GwName, err)
+			}
 		}
 	}
 
@@ -988,6 +1017,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 
 		d.Set("enable_firenet", gwDetail.EnableFireNet)
+		d.Set("enable_gateway_load_balancer", gwDetail.EnabledGatewayLoadBalancer)
 		d.Set("enable_transit_firenet", gwDetail.EnableTransitFireNet)
 		d.Set("enable_egress_transit_firenet", gwDetail.EnableEgressTransitFireNet)
 
@@ -1622,15 +1652,22 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	enableFireNet := d.Get("enable_firenet").(bool)
+	enableGatewayLoadBalancer := d.Get("enable_gateway_load_balancer").(bool)
+	enableTransitFireNet := d.Get("enable_transit_firenet").(bool)
+	if enableGatewayLoadBalancer && !enableFireNet && !enableTransitFireNet {
+		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'enable_firenet' or 'enable_transit_firenet' is set to true")
+	}
+	if enableGatewayLoadBalancer && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV {
+		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'cloud_type' = 1 (AWS) or 256 (AWSGOV)")
+	}
+	if enableFireNet && enableTransitFireNet {
+		return fmt.Errorf("can't enable firenet function and transit firenet function at the same time")
+	}
 	if d.HasChange("enable_firenet") && d.HasChange("enable_transit_firenet") {
 		transitGW := &goaviatrix.TransitVpc{
 			GwName: gateway.GwName,
 			VpcID:  d.Get("vpc_id").(string),
-		}
-		enableFireNet := d.Get("enable_firenet").(bool)
-		enableTransitFireNet := d.Get("enable_transit_firenet").(bool)
-		if enableFireNet && enableTransitFireNet {
-			return fmt.Errorf("can't enable firenet function and transit firenet function at the same time")
 		}
 		if !enableFireNet {
 			err := client.DisableGatewayFireNetInterfaces(transitGW)
@@ -1648,9 +1685,16 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 		if enableFireNet {
-			err := client.EnableGatewayFireNetInterfaces(transitGW)
-			if err != nil {
-				return fmt.Errorf("failed to enable transit GW for FireNet Interfaces: %s", err)
+			if enableGatewayLoadBalancer {
+				err := client.EnableGatewayFireNetInterfacesWithGWLB(transitGW)
+				if err != nil {
+					return fmt.Errorf("failed to enable transit GW for FireNet Interfaces with Gateway Load Balancer enabled: %s", err)
+				}
+			} else {
+				err := client.EnableGatewayFireNetInterfaces(transitGW)
+				if err != nil {
+					return fmt.Errorf("failed to enable transit GW for FireNet Interfaces: %s", err)
+				}
 			}
 		}
 		if enableTransitFireNet {
@@ -1662,9 +1706,16 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			gwTransitFireNet := &goaviatrix.Gateway{
 				GwName: d.Get("gw_name").(string),
 			}
-			err := client.EnableTransitFireNet(gwTransitFireNet)
-			if err != nil {
-				return fmt.Errorf("failed to enable transit firenet for %s due to %s", gwTransitFireNet.GwName, err)
+			if enableGatewayLoadBalancer {
+				err := client.EnableTransitFireNetWithGWLB(gwTransitFireNet)
+				if err != nil {
+					return fmt.Errorf("failed to enable transit firenet with Gateway Load Balancer for %s due to %s", gwTransitFireNet.GwName, err)
+				}
+			} else {
+				err := client.EnableTransitFireNet(gwTransitFireNet)
+				if err != nil {
+					return fmt.Errorf("failed to enable transit firenet for %s due to %s", gwTransitFireNet.GwName, err)
+				}
 			}
 		}
 
@@ -1673,11 +1724,17 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			GwName: gateway.GwName,
 			VpcID:  d.Get("vpc_id").(string),
 		}
-		enableFireNet := d.Get("enable_firenet").(bool)
 		if enableFireNet {
-			err := client.EnableGatewayFireNetInterfaces(transitGW)
-			if err != nil {
-				return fmt.Errorf("failed to enable transit GW for FireNet Interfaces: %s", err)
+			if enableGatewayLoadBalancer {
+				err := client.EnableGatewayFireNetInterfacesWithGWLB(transitGW)
+				if err != nil {
+					return fmt.Errorf("failed to enable transit GW for FireNet Interfaces with Gateway Load Balancer enabled: %s", err)
+				}
+			} else {
+				err := client.EnableGatewayFireNetInterfaces(transitGW)
+				if err != nil {
+					return fmt.Errorf("failed to enable transit GW for FireNet Interfaces: %s", err)
+				}
 			}
 		} else {
 			err := client.DisableGatewayFireNetInterfaces(transitGW)
@@ -1687,7 +1744,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 
 	} else if d.HasChange("enable_transit_firenet") {
-		enableTransitFireNet := d.Get("enable_transit_firenet").(bool)
 		if enableTransitFireNet {
 			enableActiveMesh := d.Get("enable_active_mesh").(bool)
 			connectedTransit := d.Get("connected_transit").(bool)
@@ -1697,9 +1753,16 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			gwTransitFireNet := &goaviatrix.Gateway{
 				GwName: d.Get("gw_name").(string),
 			}
-			err := client.EnableTransitFireNet(gwTransitFireNet)
-			if err != nil {
-				return fmt.Errorf("failed to enable transit firenet for %s due to %s", gwTransitFireNet.GwName, err)
+			if enableGatewayLoadBalancer {
+				err := client.EnableTransitFireNetWithGWLB(gwTransitFireNet)
+				if err != nil {
+					return fmt.Errorf("failed to enable transit firenet with Gateway Load Balancer for %s due to %s", gwTransitFireNet.GwName, err)
+				}
+			} else {
+				err := client.EnableTransitFireNet(gwTransitFireNet)
+				if err != nil {
+					return fmt.Errorf("failed to enable transit firenet for %s due to %s", gwTransitFireNet.GwName, err)
+				}
 			}
 		} else {
 			gwTransitFireNet := &goaviatrix.Gateway{
@@ -1709,6 +1772,19 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			if err != nil {
 				return fmt.Errorf("failed to disable transit firenet for %s due to %s", gwTransitFireNet.GwName, err)
 			}
+		}
+	} else if d.HasChange("enable_gateway_load_balancer") {
+		// In this branch we know that neither 'enable_transit_firenet' or 'enable_firenet' HasChange.
+		// Due to the backend design it is not possible to disable or enable 'enable_gateway_load_balancer' without
+		// also disabling or enabling FireNet, so we force the user to disable or enable both at the same time.
+		if enableGatewayLoadBalancer {
+			return fmt.Errorf("can not enable 'enable_gateway_load_balancer' when 'enable_firenet' or 'enable_transit_firenet' is " +
+				"already enabled. Changing from non-GWLB FireNet to GWLB FireNet requires 2 separate " +
+				"`terraform apply` steps, once to disable non-GWLB FireNet, then again to enable GWLB FireNet")
+		} else {
+			return fmt.Errorf("can not disable 'enable_gateway_load_balancer' when 'enable_firenet' or 'enable_transit_firenet' is " +
+				"still enabled. Changing from GWLB FireNet to non-GWLB FireNet requires 2 separate " +
+				"`terraform apply` steps, once to disable GWLB FireNet, then again to enable non-GWLB FireNet")
 		}
 	}
 

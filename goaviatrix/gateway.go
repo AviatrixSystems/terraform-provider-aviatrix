@@ -175,6 +175,7 @@ type GatewayDetail struct {
 	Elb                          ElbDetail    `json:"elb,omitempty"`
 	EnableEgressTransitFireNet   bool         `json:"egress_transit,omitempty"`
 	EnableFireNet                bool         `json:"firenet_enabled,omitempty"`
+	EnabledGatewayLoadBalancer   bool         `json:"gwlb_enabled,omitempty"`
 	EnableTransitFireNet         bool         `json:"transit_firenet_enabled,omitempty"`
 	LearnedCidrsApproval         string       `json:"learned_cidrs_approval,omitempty"`
 	SyncSNATToHA                 bool         `json:"sync_snat_to_ha,omitempty"`
@@ -1101,6 +1102,16 @@ func (c *Client) EnableTransitFireNet(gateway *Gateway) error {
 		return errors.New("Rest API 'enable_gateway_for_transit_firenet' Get failed: " + data.Reason)
 	}
 	return nil
+}
+
+func (c *Client) EnableTransitFireNetWithGWLB(gateway *Gateway) error {
+	data := map[string]string{
+		"CID":          c.CID,
+		"action":       "enable_gateway_for_transit_firenet",
+		"gateway_name": gateway.GwName,
+		"mode":         "gwlb",
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
 }
 
 func (c *Client) DisableTransitFireNet(gateway *Gateway) error {
