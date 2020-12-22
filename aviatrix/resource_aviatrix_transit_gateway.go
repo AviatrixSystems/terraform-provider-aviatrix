@@ -488,8 +488,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	if enableGatewayLoadBalancer && !enableFireNet && !enableTransitFireNet {
 		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'enable_firenet' or 'enable_transit_firenet' is set to true")
 	}
-	if enableGatewayLoadBalancer && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV {
-		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'cloud_type' = 1 (AWS) or 256 (AWSGOV)")
+	if enableGatewayLoadBalancer && gateway.CloudType != goaviatrix.AWS {
+		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'cloud_type' = 1 (AWS)")
 	}
 
 	enableEgressTransitFireNet := d.Get("enable_egress_transit_firenet").(bool)
@@ -1658,8 +1658,8 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	if enableGatewayLoadBalancer && !enableFireNet && !enableTransitFireNet {
 		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'enable_firenet' or 'enable_transit_firenet' is set to true")
 	}
-	if enableGatewayLoadBalancer && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV {
-		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'cloud_type' = 1 (AWS) or 256 (AWSGOV)")
+	if enableGatewayLoadBalancer && gateway.CloudType != goaviatrix.AWS {
+		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'cloud_type' = 1 (AWS)")
 	}
 	if enableFireNet && enableTransitFireNet {
 		return fmt.Errorf("can't enable firenet function and transit firenet function at the same time")
