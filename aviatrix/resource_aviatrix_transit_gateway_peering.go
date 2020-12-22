@@ -134,10 +134,12 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 		PrivateIPPeering:               d.Get("enable_peering_over_private_network").(bool),
 	}
 
-	if transitGatewayPeering.PrivateIPPeering {
-		transitGatewayPeering.SingleTunnel = d.Get("enable_single_tunnel_mode").(bool)
-	} else {
-		return fmt.Errorf("enable_single_tunnel_mode is only valid when enable_peering_over_private_network is set to true")
+	if d.Get("enable_single_tunnel_mode").(bool) {
+		if transitGatewayPeering.PrivateIPPeering {
+			transitGatewayPeering.SingleTunnel = true
+		} else {
+			return fmt.Errorf("enable_single_tunnel_mode is only valid when enable_peering_over_private_network is set to true")
+		}
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway peering: %#v", transitGatewayPeering)
