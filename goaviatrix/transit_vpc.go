@@ -360,6 +360,16 @@ func (c *Client) DisableGatewayFireNetInterfaces(gateway *TransitVpc) error {
 	return nil
 }
 
+func (c *Client) EnableGatewayFireNetInterfacesWithGWLB(gateway *TransitVpc) error {
+	data := map[string]string{
+		"action":       "enable_gateway_firenet_interfaces",
+		"CID":          c.CID,
+		"gateway_name": gateway.GwName,
+		"mode":         "gwlb",
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
 func (c *Client) EnableAdvertiseTransitCidr(transitGw *TransitVpc) error {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
