@@ -436,8 +436,9 @@ func resourceAviatrixGateway() *schema.Resource {
 			},
 			"public_subnet_filtering_guard_duty_enforced": {
 				Type:        schema.TypeBool,
+				Default:     true,
 				Optional:    true,
-				Description: "Whether to enforce Guard Duty IP blocking. Required when `enable_public_subnet_filtering` attribute is true.",
+				Description: "Whether to enforce Guard Duty IP blocking. Required when `enable_public_subnet_filtering` attribute is true. Valid values: true or false. Default value: true.",
 			},
 		},
 	}
@@ -1390,7 +1391,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("enable_public_subnet_filtering", false)
 			d.Set("public_subnet_filtering_route_tables", []string{})
 			d.Set("public_subnet_filtering_ha_route_tables", []string{})
-			d.Set("public_subnet_filtering_guard_duty_enforced", nil)
+			d.Set("public_subnet_filtering_guard_duty_enforced", true)
 			log.Printf("[INFO] Could not find public subnet filtering details for gateway %q with error: %v\n", gw.GwName, err)
 		} else {
 			d.Set("enable_public_subnet_filtering", true)
@@ -2233,7 +2234,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 		err := client.EditPublicSubnetFilteringRouteTableList(gatewayServer, routeTables)
 		if err != nil {
-			return fmt.Errorf("could not edit public subnet filtering route table rules")
+			return fmt.Errorf("could not edit public subnet filtering route table rules: %v", err)
 		}
 	}
 	if d.HasChange("public_subnet_filtering_ha_route_tables") && !d.HasChange("peering_ha_subnet") && d.Get("peering_ha_subnet").(string) != "" {
@@ -2244,7 +2245,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		peeringHaGateway.RouteTable = strings.Join(haRouteTables, ",")
 		err := client.EditPublicSubnetFilteringRouteTableList(peeringHaGateway, haRouteTables)
 		if err != nil {
-			return fmt.Errorf("could not edit HA public subnet filtering route table rules")
+			return fmt.Errorf("could not edit HA public subnet filtering route table rules: %v", err)
 		}
 	}
 	if d.HasChange("public_subnet_filtering_guard_duty_enforced") {
@@ -2329,12 +2330,6 @@ func checkPublicSubnetFilteringConfig(d *schema.ResourceData) error {
 	}
 	if !isPublicSubnetFilteringGw && len(haRouteTables) != 0 {
 		return fmt.Errorf("use of public_subnet_filtering_ha_route_tables is not valid if enable_public_subnet_filtering is false")
-	}
-	if _, ok := d.GetOkExists("public_subnet_filtering_guard_duty_enforced"); isPublicSubnetFilteringGw && !ok {
-		return fmt.Errorf("public_subnet_filtering_guard_duty_enforced must be set when 'enable_public_subnet_filtering' is enabled")
-	}
-	if _, ok := d.GetOkExists("public_subnet_filtering_guard_duty_enforced"); !isPublicSubnetFilteringGw && ok {
-		return fmt.Errorf("public_subnet_filtering_guard_duty_enforced is not valid 'enable_public_subnet_filtering' is disabled")
 	}
 	if d.IsNewResource() {
 		if d.Get("enable_public_subnet_filtering").(bool) && !d.Get("enable_encrypt_volume").(bool) {

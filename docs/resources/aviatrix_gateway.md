@@ -268,7 +268,7 @@ The following arguments are supported:
 * `enable_public_subnet_filtering` - (Optional) Create a [Public Subnet Filtering gateway](https://docs.aviatrix.com/HowTos/public_subnet_filtering_faq.html). Valid values: true or false. Default value: false. Available as of provider version R2.18+.
 * `public_subnet_filtering_route_tables` - (Optional) Route tables whose associated public subnets are protected. Only valid when `enable_public_subnet_filtering` attribute is true. Available as of provider version R2.18+.
 * `public_subnet_filtering_ha_route_tables` - (Optional) Route tables whose associated public subnets are protected for the HA PSF gateway. Required when `enable_public_subnet_filtering` and `peering_ha_subnet` are set. Available as of provider version R2.18+.
-* `public_subnet_filtering_guard_duty_enforced` - (Optional) Whether to enforce Guard Duty IP blocking.  Only valid when `enable_public_subnet_filtering` attribute is true. Available as of provider version R2.18+.
+* `public_subnet_filtering_guard_duty_enforced` - (Optional) Whether to enforce Guard Duty IP blocking.  Only valid when `enable_public_subnet_filtering` attribute is true. Valid values: true or false. Default value: true. Available as of provider version R2.18+.
 
 ## Attribute Reference
 
