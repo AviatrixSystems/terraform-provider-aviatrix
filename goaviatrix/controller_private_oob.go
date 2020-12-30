@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"net/url"
 	"strings"
 )
 
@@ -14,46 +16,32 @@ type PrivateOobResp struct {
 }
 
 func (c *Client) EnablePrivateOob() error {
-	resp, err := c.Post(c.baseURL, struct {
-		CID    string `form:"CID"`
-		Action string `form:"action"`
-	}{
-		CID:    c.CID,
-		Action: "enable_private_oob",
-	})
-	if err != nil {
-		return errors.New("HTTP POST enable_private_oob failed: " + err.Error())
+	data := map[string]string{
+		"action": "enable_private_oob",
+		"CID":    c.CID,
 	}
-
-	var data PrivateOobResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_private_oob failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Results, "enable already") {
-			return nil
+	checkFunc := func(action, reason string, ret bool) error {
+		if !ret && !strings.HasPrefix(reason, "enable already") {
+			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
 		}
-		return errors.New("Rest API enable_private_oob Post failed: " + data.Reason)
+		return nil
 	}
-	return nil
+	return c.PostAPI(data["action"], data, checkFunc)
 }
 
 func (c *Client) GetPrivateOobState() (bool, error) {
-	resp, err := c.Get(c.baseURL, struct {
-		CID    string `form:"CID"`
-		Action string `form:"action"`
-	}{
-		CID:    c.CID,
-		Action: "get_private_oob_state",
-	})
+	Url, err := url.Parse(c.baseURL)
 	if err != nil {
-		return false, errors.New("HTTP POST get_private_oob_state failed: " + err.Error())
+		return false, errors.New(("url Parsing failed for get_private_oob_state") + err.Error())
 	}
-
+	getPrivateOobState := url.Values{}
+	getPrivateOobState.Add("CID", c.CID)
+	getPrivateOobState.Add("action", "get_private_oob_state")
+	Url.RawQuery = getPrivateOobState.Encode()
+	resp, err := c.Get(Url.String(), nil)
+	if err != nil {
+		return false, errors.New("HTTP Get get_private_oob_state failed: " + err.Error())
+	}
 	var data PrivateOobResp
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
@@ -63,7 +51,7 @@ func (c *Client) GetPrivateOobState() (bool, error) {
 		return false, errors.New("Json Decode get_private_oob_state failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
-		return false, errors.New("Rest API get_private_oob_state Post failed: " + data.Reason)
+		return false, errors.New("Rest API get_private_oob_state Get failed: " + data.Reason)
 	}
 	if data.Results == "Enabled" || data.Results == "enabled" {
 		return true, nil
@@ -74,30 +62,15 @@ func (c *Client) GetPrivateOobState() (bool, error) {
 }
 
 func (c *Client) DisablePrivateOob() error {
-	resp, err := c.Post(c.baseURL, struct {
-		CID    string `form:"CID"`
-		Action string `form:"action"`
-	}{
-		CID:    c.CID,
-		Action: "disable_private_oob",
-	})
-	if err != nil {
-		return errors.New("HTTP POST disable_private_oob failed: " + err.Error())
+	data := map[string]string{
+		"action": "disable_private_oob",
+		"CID":    c.CID,
 	}
-
-	var data PrivateOobResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_private_oob failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Results, "disable already") {
-			return nil
+	checkFunc := func(action, reason string, ret bool) error {
+		if !ret && !strings.HasPrefix(reason, "disable already") {
+			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
 		}
-		return errors.New("Rest API disable_private_oob Post failed: " + data.Reason)
+		return nil
 	}
-	return nil
+	return c.PostAPI(data["action"], data, checkFunc)
 }
