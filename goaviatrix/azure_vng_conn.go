@@ -27,7 +27,7 @@ func (c *Client) ConnectAzureVng(r *AzureVngConn) error {
 
 func (c *Client) GetAzureVngConnStatus(connectionName string) (*AzureVngConnResp, error) {
 	params := map[string]string{
-		"action": "list_vng_gateways",
+		"action": "list_vnets_with_vng",
 		"CID":    c.CID,
 	}
 
