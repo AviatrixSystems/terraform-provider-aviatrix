@@ -16,7 +16,7 @@ type AzureVngConnResp struct {
 
 func (c *Client) ConnectAzureVng(r *AzureVngConn) error {
 	params := map[string]string{
-		"action":               "attach_vng_to_gateway",
+		"action":               "attach_vng_to_transit_gateway",
 		"CID":                  c.CID,
 		"primary_gateway_name": r.PrimaryGatewayName,
 		"connection_name":      r.ConnectionName,
