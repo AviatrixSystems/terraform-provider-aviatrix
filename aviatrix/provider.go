@@ -53,6 +53,7 @@ func Provider() *schema.Provider {
 			"aviatrix_azure_vng_conn":                                 resourceAviatrixAzureVngConn(),
 			"aviatrix_cloudwatch_agent":                               resourceAviatrixCloudwatchAgent(),
 			"aviatrix_controller_config":                              resourceAviatrixControllerConfig(),
+			"aviatrix_controller_private_oob":                         resourceAviatrixControllerPrivateOob(),
 			"aviatrix_datadog_agent":                                  resourceAviatrixDatadogAgent(),
 			"aviatrix_device_aws_tgw_attachment":                      resourceAviatrixDeviceAwsTgwAttachment(),
 			"aviatrix_device_interface_config":                        resourceAviatrixDeviceInterfaceConfig(),
