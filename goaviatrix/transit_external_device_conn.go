@@ -41,6 +41,7 @@ type ExternalDeviceConn struct {
 	EnableEdgeSegmentation string `form:"connection_policy,omitempty"`
 	EnableIkev2            string `form:"enable_ikev2,omitempty"`
 	ManualBGPCidrs         []string
+	TunnelProtocol         string `form:"tunnel_protocol,omitempty"`
 }
 
 type EditExternalDeviceConnDetail struct {
@@ -139,33 +140,47 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 			bgpRemoteAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BgpRemoteAsNum)
 			externalDeviceConn.BgpRemoteAsNum = bgpRemoteAsNumber
 			externalDeviceConn.ConnectionType = "bgp"
+			if len(externalDeviceConnDetail.Tunnels) >= 1 {
+				tunnelProtocol := externalDeviceConnDetail.Tunnels[0].TunnelProtocol
+				// LAN tunnel protocol is defined in the backend as "N/A(LAN)".
+				// Here we clean that up to be just "LAN" for Terraform users.
+				if strings.Contains(tunnelProtocol, "LAN") {
+					tunnelProtocol = "LAN"
+				}
+				externalDeviceConn.TunnelProtocol = tunnelProtocol
+			}
 		} else {
 			externalDeviceConn.RemoteSubnet = externalDeviceConnDetail.RemoteSubnet
 			externalDeviceConn.ConnectionType = "static"
 		}
 		externalDeviceConn.RemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[0]
-		if externalDeviceConnDetail.Algorithm.Phase1Auth[0] == "SHA-256" &&
-			externalDeviceConnDetail.Algorithm.Phase2Auth[0] == "HMAC-SHA-256" &&
-			externalDeviceConnDetail.Algorithm.Phase1DhGroups[0] == "14" &&
-			externalDeviceConnDetail.Algorithm.Phase2DhGroups[0] == "14" &&
-			externalDeviceConnDetail.Algorithm.Phase1Encrption[0] == "AES-256-CBC" &&
-			externalDeviceConnDetail.Algorithm.Phase2Encrption[0] == "AES-256-CBC" {
-			externalDeviceConn.CustomAlgorithms = false
-			externalDeviceConn.Phase1Auth = ""
-			externalDeviceConn.Phase2Auth = ""
-			externalDeviceConn.Phase1DhGroups = ""
-			externalDeviceConn.Phase2DhGroups = ""
-			externalDeviceConn.Phase1Encryption = ""
-			externalDeviceConn.Phase2Encryption = ""
-		} else {
-			externalDeviceConn.CustomAlgorithms = true
-			externalDeviceConn.Phase1Auth = externalDeviceConnDetail.Algorithm.Phase1Auth[0]
-			externalDeviceConn.Phase2Auth = externalDeviceConnDetail.Algorithm.Phase2Auth[0]
-			externalDeviceConn.Phase1DhGroups = externalDeviceConnDetail.Algorithm.Phase1DhGroups[0]
-			externalDeviceConn.Phase2DhGroups = externalDeviceConnDetail.Algorithm.Phase2DhGroups[0]
-			externalDeviceConn.Phase1Encryption = externalDeviceConnDetail.Algorithm.Phase1Encrption[0]
-			externalDeviceConn.Phase2Encryption = externalDeviceConnDetail.Algorithm.Phase2Encrption[0]
+
+		// GRE and LAN tunnels cannot set Algorithms
+		if externalDeviceConn.TunnelProtocol != "GRE" && externalDeviceConn.TunnelProtocol != "LAN" {
+			if externalDeviceConnDetail.Algorithm.Phase1Auth[0] == "SHA-256" &&
+				externalDeviceConnDetail.Algorithm.Phase2Auth[0] == "HMAC-SHA-256" &&
+				externalDeviceConnDetail.Algorithm.Phase1DhGroups[0] == "14" &&
+				externalDeviceConnDetail.Algorithm.Phase2DhGroups[0] == "14" &&
+				externalDeviceConnDetail.Algorithm.Phase1Encrption[0] == "AES-256-CBC" &&
+				externalDeviceConnDetail.Algorithm.Phase2Encrption[0] == "AES-256-CBC" {
+				externalDeviceConn.CustomAlgorithms = false
+				externalDeviceConn.Phase1Auth = ""
+				externalDeviceConn.Phase2Auth = ""
+				externalDeviceConn.Phase1DhGroups = ""
+				externalDeviceConn.Phase2DhGroups = ""
+				externalDeviceConn.Phase1Encryption = ""
+				externalDeviceConn.Phase2Encryption = ""
+			} else {
+				externalDeviceConn.CustomAlgorithms = true
+				externalDeviceConn.Phase1Auth = externalDeviceConnDetail.Algorithm.Phase1Auth[0]
+				externalDeviceConn.Phase2Auth = externalDeviceConnDetail.Algorithm.Phase2Auth[0]
+				externalDeviceConn.Phase1DhGroups = externalDeviceConnDetail.Algorithm.Phase1DhGroups[0]
+				externalDeviceConn.Phase2DhGroups = externalDeviceConnDetail.Algorithm.Phase2DhGroups[0]
+				externalDeviceConn.Phase1Encryption = externalDeviceConnDetail.Algorithm.Phase1Encrption[0]
+				externalDeviceConn.Phase2Encryption = externalDeviceConnDetail.Algorithm.Phase2Encrption[0]
+			}
 		}
+
 		if externalDeviceConnDetail.DirectConnect {
 			externalDeviceConn.DirectConnect = "enabled"
 		} else {

@@ -62,6 +62,14 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 					return
 				},
 			},
+			"tunnel_protocol": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "IPsec",
+				ForceNew:     true,
+				Description:  "Tunnel Protocol. Valid values: 'IPsec', 'GRE' or 'LAN'. Default value: 'IPsec'.",
+				ValidateFunc: validation.StringInSlice([]string{"IPsec", "GRE", "LAN"}, false),
+			},
 			"bgp_local_as_num": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -291,6 +299,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		BackupPreSharedKey:     d.Get("backup_pre_shared_key").(string),
 		BackupLocalTunnelCidr:  d.Get("backup_local_tunnel_cidr").(string),
 		BackupRemoteTunnelCidr: d.Get("backup_remote_tunnel_cidr").(string),
+		TunnelProtocol:         d.Get("tunnel_protocol").(string),
 	}
 
 	bgpLocalAsNum, err := strconv.Atoi(d.Get("bgp_local_as_num").(string))
@@ -385,6 +394,21 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		externalDeviceConn.EnableIkev2 = "true"
 	}
 
+	if externalDeviceConn.ConnectionType != "bgp" && externalDeviceConn.TunnelProtocol != "IPsec" {
+		return fmt.Errorf("'tunnel_protocol' can not be set unless 'connection_type' is 'bgp'")
+	}
+	greOrLan := externalDeviceConn.TunnelProtocol == "GRE" || externalDeviceConn.TunnelProtocol == "LAN"
+	if greOrLan && customAlgorithms {
+		return fmt.Errorf("custom algorithm paramters are not valid with 'tunnel_protocol' = GRE or LAN")
+	}
+	if greOrLan && enableIkev2 {
+		return fmt.Errorf("enable_ikev2 is not supported with 'tunnel_protocol' = GRE or LAN")
+	}
+	if greOrLan && externalDeviceConn.PreSharedKey != "" {
+		return fmt.Errorf("'pre_shared_key' is not valid with 'tunnel_protocol' = GRE or LAN")
+	}
+	// TODO(CyrusJavan): Add check for "over private network" when the feature is added
+
 	err = client.CreateExternalDeviceConn(externalDeviceConn)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix external device connection: %s", err)
@@ -432,8 +456,12 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 	if connectionName == "" || vpcID == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no 'connection_name' or 'vpc_id' received. Import Id is %s", id)
-		d.Set("connection_name", strings.Split(id, "~")[0])
-		d.Set("vpc_id", strings.Split(id, "~")[1])
+		parts := strings.Split(id, "~")
+		if len(parts) != 2 {
+			return fmt.Errorf("expected import ID in the form 'connection_name~vpc_id' instead got %q", id)
+		}
+		d.Set("connection_name", parts[0])
+		d.Set("vpc_id", parts[1])
 		d.SetId(id)
 	}
 
@@ -542,6 +570,11 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 
 		if err := d.Set("manual_bgp_advertised_cidrs", conn.ManualBGPCidrs); err != nil {
 			return fmt.Errorf("setting 'manual_bgp_advertised_cidrs' into state: %v", err)
+		}
+		if conn.TunnelProtocol == "" {
+			d.Set("tunnel_protocol", "IPsec")
+		} else {
+			d.Set("tunnel_protocol", conn.TunnelProtocol)
 		}
 	}
 

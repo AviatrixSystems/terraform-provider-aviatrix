@@ -156,12 +156,13 @@ type Site2CloudConnDetailList struct {
 }
 
 type TunnelInfo struct {
-	Status       string `json:"status"`
-	IPAddr       string `json:"ip_addr"`
-	Name         string `json:"name"`
-	PeerIP       string `json:"peer_ip"`
-	GwName       string `json:"gw_name"`
-	TunnelStatus string `json:"tunnel_status"`
+	Status         string `json:"status"`
+	IPAddr         string `json:"ip_addr"`
+	Name           string `json:"name"`
+	PeerIP         string `json:"peer_ip"`
+	GwName         string `json:"gw_name"`
+	TunnelStatus   string `json:"tunnel_status"`
+	TunnelProtocol string `json:"tunnel_protocol"`
 }
 
 type AlgorithmInfo struct {
