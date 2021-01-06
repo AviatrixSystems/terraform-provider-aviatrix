@@ -294,3 +294,23 @@ func (c *Client) DeleteVpc(vpc *Vpc) error {
 	}
 	return nil
 }
+
+func (c *Client) EnableNativeAwsGwlbFirenet(vpc *Vpc) error {
+	data := map[string]string{
+		"action":       "enable_native_aws_gwlb_firenet",
+		"CID":          c.CID,
+		"account_name": vpc.AccountName,
+		"region":       vpc.Region,
+		"vpc_id":       vpc.VpcID,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) DisableNativeAwsGwlbFirenet(vpc *Vpc) error {
+	data := map[string]string{
+		"action": "disable_native_aws_gwlb_firenet",
+		"CID":    c.CID,
+		"vpc_id": vpc.VpcID,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}

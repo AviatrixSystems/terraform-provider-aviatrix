@@ -13,6 +13,7 @@ func resourceAviatrixVpc() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixVpcCreate,
 		Read:   resourceAviatrixVpcRead,
+		Update: resourceAviatrixVpcUpdate,
 		Delete: resourceAviatrixVpcDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -78,6 +79,13 @@ func resourceAviatrixVpc() *schema.Resource {
 				ForceNew:    true,
 				Default:     false,
 				Description: "Specify the VPC as Aviatrix FireNet VPC or not. Required to be false for GCP provider.",
+			},
+			"enable_native_gwlb": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Description: "Enable Native AWS GWLB for FireNet Function. Only valid with cloud_type = 1 (AWS). " +
+					"Valid values: true or false. Default value: false. Available as of provider version R2.18+.",
 			},
 			"subnets": {
 				Type:        schema.TypeList,
@@ -222,6 +230,12 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	if aviatrixTransitVpc && aviatrixFireNetVpc {
 		return fmt.Errorf("vpc cannot be aviatrix transit vpc and aviatrix firenet vpc at the same time")
 	}
+
+	nativeGwlb := d.Get("enable_native_gwlb").(bool)
+	if nativeGwlb && vpc.CloudType != goaviatrix.AWS {
+		return fmt.Errorf("'enable_native_gwlb' is only valid with cloud_type = 1 (AWS)")
+	}
+
 	if aviatrixTransitVpc {
 		vpc.AviatrixTransitVpc = "yes"
 		log.Printf("[INFO] Creating a new Aviatrix Transit VPC: %#v", vpc)
@@ -262,7 +276,22 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(vpc.Name)
-	return resourceAviatrixVpcRead(d, meta)
+
+	// We intentionally call the Read function early here to load 'vpc_id' for later use
+	err = resourceAviatrixVpcRead(d, meta)
+	if err != nil {
+		return err
+	}
+	vpc.VpcID = d.Get("vpc_id").(string)
+
+	if nativeGwlb {
+		err = client.EnableNativeAwsGwlbFirenet(vpc)
+		if err != nil {
+			return fmt.Errorf("could not enable native AWS Gwlb: %v", err)
+		}
+	}
+
+	return nil
 }
 
 func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
@@ -407,6 +436,43 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(vC.Name)
+
+	firenetDetail, err := client.GetFireNet(&goaviatrix.FireNet{VpcID: vC.VpcID})
+	if err == goaviatrix.ErrNotFound {
+		d.Set("enable_native_gwlb", false)
+	} else if err != nil {
+		return fmt.Errorf("could not get FireNet details to read enable_native_gwlb: %v", err)
+	} else {
+		d.Set("enable_native_gwlb", firenetDetail.NativeGwlb)
+	}
+
+	return nil
+}
+
+func resourceAviatrixVpcUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*goaviatrix.Client)
+
+	vpc := &goaviatrix.Vpc{
+		AccountName: d.Get("account_name").(string),
+		VpcID:       d.Get("vpc_id").(string),
+		Region:      d.Get("region").(string),
+	}
+
+	if d.HasChange("enable_native_gwlb") {
+		nativeGwlb := d.Get("enable_native_gwlb").(bool)
+		if nativeGwlb {
+			err := client.EnableNativeAwsGwlbFirenet(vpc)
+			if err != nil {
+				return fmt.Errorf("could not enable native AWS gwlb firenet: %v", err)
+			}
+		} else {
+			err := client.DisableNativeAwsGwlbFirenet(vpc)
+			if err != nil {
+				return fmt.Errorf("could not disable native AWS gwlb firenet: %v", err)
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -416,9 +482,17 @@ func resourceAviatrixVpcDelete(d *schema.ResourceData, meta interface{}) error {
 	vpc := &goaviatrix.Vpc{
 		AccountName: d.Get("account_name").(string),
 		Name:        d.Get("name").(string),
+		VpcID:       d.Get("vpc_id").(string),
 	}
 
 	log.Printf("[INFO] Deleting VPC: %#v", vpc)
+
+	if d.Get("enable_native_gwlb").(bool) {
+		err := client.DisableNativeAwsGwlbFirenet(vpc)
+		if err != nil {
+			return fmt.Errorf("could not disable native AWS gwlb: %v", err)
+		}
+	}
 
 	err := client.DeleteVpc(vpc)
 	if err != nil {
