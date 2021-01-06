@@ -29,6 +29,9 @@ type TagAPIResp struct {
 }
 
 func (c *Client) AddTags(tags *Tags) error {
+	if tags.CloudType == AZURE {
+		return c.AzureUpdateTags(tags)
+	}
 	tags.CID = c.CID
 	tags.Action = "add_resource_tags"
 	resp, err := c.Post(c.baseURL, tags)
@@ -92,6 +95,10 @@ func (c *Client) GetTags(tags *Tags) ([]string, error) {
 }
 
 func (c *Client) DeleteTags(tags *Tags) error {
+	if tags.CloudType == AZURE {
+		tags.TagList = ""
+		return c.AzureUpdateTags(tags)
+	}
 	tags.CID = c.CID
 	tags.Action = "delete_resource_tag"
 	verb := "POST"
@@ -120,4 +127,11 @@ func (c *Client) DeleteTags(tags *Tags) error {
 		return errors.New("Rest API delete_resource_tags Post failed: " + data.Reason)
 	}
 	return nil
+}
+
+func (c *Client) AzureUpdateTags(tags *Tags) error {
+	tags.CID = c.CID
+	tags.Action = "update_resource_tags"
+
+	return c.PostAPI(tags.Action, tags, BasicCheck)
 }
