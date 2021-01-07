@@ -850,13 +850,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
 			TagList:      gateway.TagList,
-		}
-		if gateway.CloudType == goaviatrix.AWS {
-			tags.CloudType = goaviatrix.AWS
-		} else if gateway.CloudType == goaviatrix.AWSGOV {
-			tags.CloudType = goaviatrix.AWSGOV
-		} else {
-			tags.CloudType = goaviatrix.AZURE
+			CloudType:    gateway.CloudType,
 		}
 
 		err := client.AddTags(tags)
@@ -1266,13 +1260,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			tags := &goaviatrix.Tags{
 				ResourceType: "gw",
 				ResourceName: d.Get("gw_name").(string),
-			}
-			if gw.CloudType == goaviatrix.AWS {
-				tags.CloudType = goaviatrix.AWS
-			} else if gw.CloudType == goaviatrix.AWSGOV {
-				tags.CloudType = goaviatrix.AWSGOV
-			} else {
-				tags.CloudType = goaviatrix.AZURE
+				CloudType:    gw.CloudType,
 			}
 
 			tagList, err := client.GetTags(tags)
@@ -1694,13 +1682,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		tags := &goaviatrix.Tags{
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
-		}
-		if gateway.CloudType == goaviatrix.AWS {
-			tags.CloudType = goaviatrix.AWS
-		} else if gateway.CloudType == goaviatrix.AWSGOV {
-			tags.CloudType = goaviatrix.AWSGOV
-		} else {
-			tags.CloudType = goaviatrix.AZURE
+			CloudType:    gateway.CloudType,
 		}
 
 		o, n := d.GetChange("tag_list")
