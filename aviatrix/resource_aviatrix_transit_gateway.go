@@ -338,6 +338,14 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Transit gateway lan interface cidr for the HA gateway.",
 			},
+			"customize_transit_vpc_route": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "List of customize transit vpc route.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -851,6 +859,17 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	var customizeTransitVpcRoute []string
+	for _, v := range d.Get("customize_transit_vpc_route").(*schema.Set).List() {
+		customizeTransitVpcRoute = append(customizeTransitVpcRoute, v.(string))
+	}
+	if len(customizeTransitVpcRoute) != 0 {
+		err := client.UpdateTransitGatewayCustomizedVpcRoute(d.Get("gw_name").(string), customizeTransitVpcRoute)
+		if err != nil {
+			return fmt.Errorf("couldn't update transit gateway customized vpc route: %s", err)
+		}
+	}
+
 	return resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -1020,6 +1039,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("enable_gateway_load_balancer", gwDetail.EnabledGatewayLoadBalancer)
 		d.Set("enable_transit_firenet", gwDetail.EnableTransitFireNet)
 		d.Set("enable_egress_transit_firenet", gwDetail.EnableEgressTransitFireNet)
+		d.Set("customize_transit_vpc_route", gwDetail.CustomizeTransitVpcRoute)
 
 		if _, zoneIsSet := d.GetOk("zone"); gw.CloudType == goaviatrix.AZURE && (isImport || zoneIsSet) &&
 			gwDetail.GwZone != "AvailabilitySet" {
@@ -2030,6 +2050,18 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			if err := client.DisableActiveStandby(gateway); err != nil {
 				return fmt.Errorf("could not disable active standby mode: %v", err)
 			}
+		}
+	}
+
+	if d.HasChange("customize_transit_vpc_route") {
+		var customizeTransitVpcRoute []string
+		for _, v := range d.Get("customize_transit_vpc_route").(*schema.Set).List() {
+			customizeTransitVpcRoute = append(customizeTransitVpcRoute, v.(string))
+		}
+
+		err := client.UpdateTransitGatewayCustomizedVpcRoute(d.Get("gw_name").(string), customizeTransitVpcRoute)
+		if err != nil {
+			return fmt.Errorf("couldn't update transit gateway customized vpc route: %s", err)
 		}
 	}
 
