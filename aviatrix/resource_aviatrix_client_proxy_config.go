@@ -34,7 +34,7 @@ func resourceAviatrixClientProxyConfig() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Server CA Certificate local file path.",
+				Description: "Server CA Certificate file.",
 			},
 		},
 	}

@@ -4,20 +4,19 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"net/url"
 	"strings"
 )
 
 type ClientProxyConfig struct {
 	HttpProxy          string `form:"http_proxy,omitempty" json:"http_proxy,omitempty"`
 	HttpsProxy         string `form:"https_proxy,omitempty" json:"https_proxy,omitempty"`
-	ProxyCaCertificate string `form:"server_ca_cert,omitempty" json:"server_ca_cert,omitempty"`
+	ProxyCaCertificate string
 }
 
 type ClientProxyConfigResp struct {
-	Return  bool              `json:"return"`
-	Results ClientProxyConfig `json:"results"`
-	Reason  string            `json:"reason"`
+	Return  bool
+	Results ClientProxyConfig
+	Reason  string
 }
 
 func (c *Client) CreateClientProxyConfig(clientProxyConfig *ClientProxyConfig) error {
@@ -64,28 +63,14 @@ func (c *Client) CreateClientProxyConfig(clientProxyConfig *ClientProxyConfig) e
 }
 
 func (c *Client) GetClientProxyConfig() (*ClientProxyConfig, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for show_proxy_config") + err.Error())
-	}
-	showProxyConfig := url.Values{}
-	showProxyConfig.Add("CID", c.CID)
-	showProxyConfig.Add("action", "show_proxy_config")
-	Url.RawQuery = showProxyConfig.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get show_proxy_config failed: " + err.Error())
+	formData := map[string]string{
+		"action": "show_proxy_config",
+		"CID":    c.CID,
 	}
 	var data ClientProxyConfigResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode show_proxy_config failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return nil, errors.New("Rest API show_proxy_config Get failed: " + data.Reason)
+	err := c.GetAPI(&data, formData["action"], formData, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
 	if data.Results.HttpProxy != "" && data.Results.HttpsProxy != "" {
 		return &ClientProxyConfig{
