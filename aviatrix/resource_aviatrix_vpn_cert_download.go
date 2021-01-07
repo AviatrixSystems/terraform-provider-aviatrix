@@ -22,7 +22,7 @@ func resourceAviatrixVPNCertDownload() *schema.Resource {
 				Type:        schema.TypeBool,
 				Default:     false,
 				Optional:    true,
-				Description: "Whether the VPN Certificate download is enabled `gw_name`. Supported Values: \"true\", \"false\"",
+				Description: "Whether the VPN Certificate download is enabled. Supported Values: \"true\", \"false\"",
 			},
 			"saml_endpoints": {
 				Type:     schema.TypeSet,
