@@ -13,36 +13,38 @@ import (
 )
 
 type Vpc struct {
-	CloudType          int          `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
-	AccountName        string       `form:"account_name,omitempty" json:"account_name,omitempty"`
-	Region             string       `form:"region,omitempty" json:"vpc_region,omitempty"`
-	Name               string       `form:"pool_name,omitempty" json:"pool_name,omitempty"`
-	Cidr               string       `form:"vpc_cidr,omitempty" json:"vpc_cidr,omitempty"`
-	SubnetSize         int          `form:"num_of_subnets,omitempty"`
-	NumOfSubnetPairs   int          `form:"num_of_zone,omitempty"`
-	AviatrixTransitVpc string       `form:"aviatrix_transit_vpc,omitempty"`
-	AviatrixFireNetVpc string       `form:"aviatrix_firenet_vpc,omitempty"`
-	VpcID              string       `json:"vpc_list,omitempty"`
-	Subnets            []SubnetInfo `form:"subnet_list,omitempty" json:"subnets,omitempty"`
-	PublicSubnets      []SubnetInfo
-	PrivateSubnets     []SubnetInfo
-	PublicRoutesOnly   bool
+	CloudType              int          `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
+	AccountName            string       `form:"account_name,omitempty" json:"account_name,omitempty"`
+	Region                 string       `form:"region,omitempty" json:"vpc_region,omitempty"`
+	Name                   string       `form:"pool_name,omitempty" json:"pool_name,omitempty"`
+	Cidr                   string       `form:"vpc_cidr,omitempty" json:"vpc_cidr,omitempty"`
+	SubnetSize             int          `form:"num_of_subnets,omitempty"`
+	NumOfSubnetPairs       int          `form:"num_of_zone,omitempty"`
+	EnablePrivateOobSubnet bool         `form:"private_oob_subnet,omitempty"`
+	AviatrixTransitVpc     string       `form:"aviatrix_transit_vpc,omitempty"`
+	AviatrixFireNetVpc     string       `form:"aviatrix_firenet_vpc,omitempty"`
+	VpcID                  string       `json:"vpc_list,omitempty"`
+	Subnets                []SubnetInfo `form:"subnet_list,omitempty" json:"subnets,omitempty"`
+	PublicSubnets          []SubnetInfo
+	PrivateSubnets         []SubnetInfo
+	PublicRoutesOnly       bool
 }
 
 type VpcEdit struct {
-	CloudType          int          `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
-	AccountName        string       `form:"account_name,omitempty" json:"account_name,omitempty"`
-	Region             string       `form:"region,omitempty" json:"vpc_region,omitempty"`
-	Name               string       `form:"pool_name,omitempty" json:"pool_name,omitempty"`
-	Cidr               string       `form:"vpc_cidr,omitempty" json:"vpc_cidr,omitempty"`
-	SubnetSize         int          `json:"subnet_size,omitempty"`
-	NumOfSubnetPairs   int          `json:"num_of_subnet_pairs,omitempty"`
-	AviatrixTransitVpc bool         `json:"avx_transit_vpc,omitempty"`
-	AviatrixFireNetVpc bool         `json:"avx_firenet_vpc,omitempty"`
-	VpcID              []string     `json:"vpc_list,omitempty"`
-	Subnets            []SubnetInfo `json:"subnets,omitempty"`
-	PublicSubnets      []SubnetInfo `json:"public_subnets,omitempty"`
-	PrivateSubnets     []SubnetInfo `json:"private_subnets,omitempty"`
+	CloudType              int          `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
+	AccountName            string       `form:"account_name,omitempty" json:"account_name,omitempty"`
+	Region                 string       `form:"region,omitempty" json:"vpc_region,omitempty"`
+	Name                   string       `form:"pool_name,omitempty" json:"pool_name,omitempty"`
+	Cidr                   string       `form:"vpc_cidr,omitempty" json:"vpc_cidr,omitempty"`
+	SubnetSize             int          `json:"subnet_size,omitempty"`
+	NumOfSubnetPairs       int          `json:"num_of_subnet_pairs,omitempty"`
+	EnablePrivateOobSubnet bool         `json:"private_oob_subnet,omitempty"`
+	AviatrixTransitVpc     bool         `json:"avx_transit_vpc,omitempty"`
+	AviatrixFireNetVpc     bool         `json:"avx_firenet_vpc,omitempty"`
+	VpcID                  []string     `json:"vpc_list,omitempty"`
+	Subnets                []SubnetInfo `json:"subnets,omitempty"`
+	PublicSubnets          []SubnetInfo `json:"public_subnets,omitempty"`
+	PrivateSubnets         []SubnetInfo `json:"private_subnets,omitempty"`
 }
 
 type VpcResp struct {
@@ -98,6 +100,9 @@ func (c *Client) CreateVpc(vpc *Vpc) error {
 		} else if vpc.CloudType == AZURE {
 			createCustomVpc.Add("num_of_subnets", strconv.Itoa(vpc.NumOfSubnetPairs))
 		}
+	}
+	if vpc.EnablePrivateOobSubnet {
+		createCustomVpc.Add("private_oob_subnet", "true")
 	}
 	Url.RawQuery = createCustomVpc.Encode()
 	resp, err := c.Get(Url.String(), nil)
@@ -203,7 +208,7 @@ func (c *Client) GetVpc(vpc *Vpc) (*Vpc, error) {
 			vpc.PublicSubnets = allVpcPoolVpcListResp[i].PublicSubnets
 			vpc.SubnetSize = allVpcPoolVpcListResp[i].SubnetSize
 			vpc.NumOfSubnetPairs = allVpcPoolVpcListResp[i].NumOfSubnetPairs
-
+			vpc.EnablePrivateOobSubnet = allVpcPoolVpcListResp[i].EnablePrivateOobSubnet
 			return vpc, nil
 		}
 	}

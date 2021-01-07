@@ -54,6 +54,13 @@ func resourceAviatrixVpc() *schema.Resource {
 				ForceNew:    true,
 				Description: "Subnet of the VPC to be created. Required to be empty for GCP provider, and non-empty for other providers.",
 			},
+			"enable_private_oob_subnet": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				ForceNew:    true,
+				Default:     false,
+				Description: "Switch to enable private oob subnet. Only supported for AWS/AWSGOV provider. Valid values: true, false. Default value: false.",
+			},
 			"subnet_size": {
 				Type:        schema.TypeInt,
 				Optional:    true,
@@ -187,13 +194,14 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	vpc := &goaviatrix.Vpc{
-		CloudType:        d.Get("cloud_type").(int),
-		AccountName:      d.Get("account_name").(string),
-		Region:           d.Get("region").(string),
-		Name:             d.Get("name").(string),
-		Cidr:             d.Get("cidr").(string),
-		SubnetSize:       d.Get("subnet_size").(int),
-		NumOfSubnetPairs: d.Get("num_of_subnet_pairs").(int),
+		CloudType:              d.Get("cloud_type").(int),
+		AccountName:            d.Get("account_name").(string),
+		Region:                 d.Get("region").(string),
+		Name:                   d.Get("name").(string),
+		Cidr:                   d.Get("cidr").(string),
+		SubnetSize:             d.Get("subnet_size").(int),
+		NumOfSubnetPairs:       d.Get("num_of_subnet_pairs").(int),
+		EnablePrivateOobSubnet: d.Get("enable_private_oob_subnet").(bool),
 	}
 	if vpc.Region == "" && vpc.CloudType != goaviatrix.GCP {
 		return fmt.Errorf("please specifiy 'region'")
@@ -215,6 +223,11 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("please specify both 'subnet_size' and 'num_of_subnet_pairs' to enable advanced options")
 		} else {
 			return fmt.Errorf("advanced option('subnet_size' and 'num_of_subnet_pairs') is only supported for AWS and Azure provider")
+		}
+	}
+	if vpc.EnablePrivateOobSubnet {
+		if vpc.CloudType != goaviatrix.AWS && vpc.CloudType != goaviatrix.AWSGOV {
+			return fmt.Errorf("advanced option('enable_private_oob_subnet') is only supported for AWS and AWSGOV provider")
 		}
 	}
 
@@ -334,6 +347,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	if vC.NumOfSubnetPairs != 0 {
 		d.Set("num_of_subnet_pairs", vC.NumOfSubnetPairs)
 	}
+	d.Set("enable_private_oob_subnet", vC.EnablePrivateOobSubnet)
 	if vC.AviatrixTransitVpc == "yes" {
 		d.Set("aviatrix_transit_vpc", true)
 	} else {
