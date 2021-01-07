@@ -88,17 +88,9 @@ func (c *Client) GetClientProxyConfig() (*ClientProxyConfig, error) {
 		return nil, errors.New("Rest API show_proxy_config Get failed: " + data.Reason)
 	}
 	if data.Results.HttpProxy != "" && data.Results.HttpsProxy != "" {
-		httpProxy := data.Results.HttpProxy
-		if strings.HasPrefix(httpProxy, "http://") {
-			httpProxy = httpProxy[7:]
-		}
-		httpsProxy := data.Results.HttpsProxy
-		if strings.HasPrefix(httpsProxy, "http://") {
-			httpsProxy = httpsProxy[7:]
-		}
 		return &ClientProxyConfig{
-			HttpProxy:  httpProxy,
-			HttpsProxy: httpsProxy,
+			HttpProxy:  strings.TrimPrefix(data.Results.HttpProxy, "http://"),
+			HttpsProxy: strings.TrimPrefix(data.Results.HttpsProxy, "http://"),
 		}, nil
 	}
 
