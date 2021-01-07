@@ -7,8 +7,8 @@ type VPNCertDownload struct {
 }
 
 type VPNCertDownloadStatus struct {
-	SAMLEndpointList []string `json:"saml_endpoint, omitempty"`
-	Status           bool     `json:"status, omitempty"`
+	SAMLEndpointList []string `json:"saml_endpoint,omitempty"`
+	Status           bool     `json:"status,omitempty"`
 }
 
 type GetVPNCertDownloadStatusResp struct {

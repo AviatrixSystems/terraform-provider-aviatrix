@@ -39,7 +39,7 @@ func TestAccAviatrixVPNCertDownload_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					tesAccCheckVPNCertDownloadExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "download_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "saml_endpoints.0", fmt.Sprintf("%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "saml_endpoints.0", rName),
 				),
 			},
 			{
@@ -56,7 +56,7 @@ func testAccVPNCertDownloadConfigBasic(rName string) string {
 	idpMetadataType := os.Getenv("IDP_METADATA_TYPE")
 	vpnUserConfig := testAccVPNUserConfigBasic(rName, "true", rName)
 	samlConfig := testAccSamlEndpointConfigBasic(rName, idpMetadata, idpMetadataType)
-	return vpnUserConfig + samlConfig + fmt.Sprintf(`
+	return vpnUserConfig + samlConfig + `
 resource "aviatrix_vpn_cert_download" "test_vpn_cert_download" {
     download_enabled = true
     saml_endpoints = [aviatrix_saml_endpoint.foo.endpoint_name]
@@ -65,7 +65,7 @@ resource "aviatrix_vpn_cert_download" "test_vpn_cert_download" {
     aviatrix_saml_endpoint.foo
   ]
 }
-`)
+`
 }
 
 func tesAccCheckVPNCertDownloadExists(n string) resource.TestCheckFunc {

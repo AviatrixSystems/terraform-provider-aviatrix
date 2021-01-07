@@ -25,7 +25,7 @@ The following arguments are supported:
 
 ### Optional
 
-* `download_enabled` - (Optional) Whether the VPN Certificate download is enabled `gw_name`. Supported Values: "true", "false".
+* `download_enabled` - (Optional) Whether the VPN Certificate download is enabled. Supported Values: "true", "false".
 * `saml_endpoints` - (Optional) List of SAML endpoint names for which the downloading should be enabled . Currently, only a single endpoint is supported. Example: ["saml_endpoint_1"].
 
 ## Import
