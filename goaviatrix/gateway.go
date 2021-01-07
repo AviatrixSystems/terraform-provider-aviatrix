@@ -184,6 +184,7 @@ type GatewayDetail struct {
 	TransitGwName                string       `json:"transit_gw_name,omitempty"`
 	EgressTransitGwName          string       `json:"egress_transit_gw_name,omitempty"`
 	RouteTables                  []string     `json:"spoke_rtb_list,omitempty"`
+	CustomizeTransitVpcRoute     []string     `json:"customized_transit_vpc_cidrs"`
 }
 
 type ElbDetail struct {
@@ -1447,4 +1448,15 @@ func (c *Client) GetFqdnGatewayInfo(gateway *Gateway) (*FQDNGatwayInfo, error) {
 		return nil, errors.New("Rest API get_firewall_lan_cidr Get failed: " + data.Reason)
 	}
 	return &data.Results, ErrNotFound
+}
+
+func (c *Client) UpdateTransitGatewayCustomizedVpcRoute(gateway string, customizeTransitVpcRoute []string) error {
+	params := map[string]string{
+		"action":            "edit_transit_gateway_customized_vpc_route",
+		"CID":               c.CID,
+		"gateway_name":      gateway,
+		"customized_routes": strings.Join(customizeTransitVpcRoute, ","),
+	}
+
+	return c.PostAPI(params["action"], params, BasicCheck)
 }
