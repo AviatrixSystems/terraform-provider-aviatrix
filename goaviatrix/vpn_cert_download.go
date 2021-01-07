@@ -8,13 +8,13 @@ type VPNCertDownload struct {
 
 type VPNCertDownloadStatus struct {
 	SAMLEndpointList []string `json:"saml_endpoint,omitempty"`
-	Status           bool     `json:"status,omitempty"`
+	Status           bool     `json:",omitempty"`
 }
 
 type GetVPNCertDownloadStatusResp struct {
-	Return  bool                  `json:"return"`
-	Results VPNCertDownloadStatus `json:"results"`
-	Reason  string                `json:"reason"`
+	Return  bool
+	Results VPNCertDownloadStatus
+	Reason  string
 }
 
 func (c *Client) EnableVPNCertDownload(vpnCertDownload *VPNCertDownload) error {
