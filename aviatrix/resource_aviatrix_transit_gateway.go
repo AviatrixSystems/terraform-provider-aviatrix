@@ -864,7 +864,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		customizeTransitVpcRoute = append(customizeTransitVpcRoute, v.(string))
 	}
 	if len(customizeTransitVpcRoute) != 0 {
-		err := client.UpdateTransitGatewayCustomizedVpcRoute(d.Get("gw_name").(string), customizeTransitVpcRoute)
+		err := client.UpdateTransitGatewayCustomizedVpcRoute(gateway.GwName, customizeTransitVpcRoute)
 		if err != nil {
 			return fmt.Errorf("couldn't update transit gateway customized vpc route: %s", err)
 		}
@@ -2059,7 +2059,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			customizeTransitVpcRoute = append(customizeTransitVpcRoute, v.(string))
 		}
 
-		err := client.UpdateTransitGatewayCustomizedVpcRoute(d.Get("gw_name").(string), customizeTransitVpcRoute)
+		err := client.UpdateTransitGatewayCustomizedVpcRoute(gateway.GwName, customizeTransitVpcRoute)
 		if err != nil {
 			return fmt.Errorf("couldn't update transit gateway customized vpc route: %s", err)
 		}
