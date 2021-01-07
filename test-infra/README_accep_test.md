@@ -8,6 +8,7 @@
 - If you are running aviatrix_aws_peer or aviatrix_peer, two VPC's with non overlapping CIDR's must be created before hand
 - If you are running the tests on a BYOL controller, the customer ID must be set prior to the tests, otherwise run the tests on a PayG metered controller
 - aviatrix_aws_tgw test only allows Transit GWs and VPCs to be attached to the TGW in the same region
+- to run aviatrix_vpn_cert_download tests no other VPN gateways must be present in your controller
 - AWS_ACCOUNT_NUMBER should be the same one used for controller launch
 
 #### Skip parameters and variables
@@ -114,6 +115,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_version                     | SKIP_VERSION                       |                                                                                |
 | aviatrix_vgw_conn                    | SKIP_VGW_CONN                      | aviatrix_gateway + AWS_BGP_VGW_ID                                              |
 | aviatrix_vpc                         | SKIP_VPC                           | aviatrix_account                                                               |
+| aviatrix_vpn_cert_download           | SKIP_VPN_CERT_DOWNLOAD             | aviatrix_vpn_user + aviatrix_saml_endpoint                                     |
 | aviatrix_vpn_profile                 | SKIP_VPN_PROFILE                   | aviatrix_vpn_user                                                              |
 | aviatrix_vpn_user                    | SKIP_VPN_USER                      | aviatrix_gateway                                                               |
 | aviatrix_vpn_user_accelerator	       | SKIP_VPN_USER_ACCELERATOR          | aviatrix_gateway						                                         |
