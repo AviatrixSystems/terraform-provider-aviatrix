@@ -25,7 +25,7 @@ func resourceAviatrixVPNCertDownload() *schema.Resource {
 				Description: "Whether the VPN Certificate download is enabled `gw_name`. Supported Values: \"true\", \"false\"",
 			},
 			"saml_endpoints": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -41,7 +41,7 @@ func resourceAviatrixVPNCertDownloadCreate(d *schema.ResourceData, meta interfac
 
 	downloadEnabled := d.Get("download_enabled").(bool)
 	var endpoints []string
-	for _, endpoint := range d.Get("saml_endpoints").([]interface{}) {
+	for _, endpoint := range d.Get("saml_endpoints").(*schema.Set).List() {
 		endpoints = append(endpoints, endpoint.(string))
 	}
 	if downloadEnabled {
@@ -79,13 +79,8 @@ func resourceAviatrixVPNCertDownloadRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("retrieving VPN Certificate Download status failed due to : %v", err)
 	}
 	d.SetId("vpn_cert_download")
-	if vpnCertDownloadStatus.Results.Status {
-		d.Set("download_enabled", true)
-		d.Set("saml_endpoints", vpnCertDownloadStatus.Results.SAMLEndpointList)
-	} else {
-		d.Set("download_enabled", false)
-		d.Set("saml_endpoints", []string{})
-	}
+	d.Set("download_enabled", vpnCertDownloadStatus.Results.Status)
+	d.Set("saml_endpoints", vpnCertDownloadStatus.Results.SAMLEndpointList)
 	return nil
 }
 
