@@ -27,16 +27,13 @@ func (c *Client) CreateClientProxyConfig(clientProxyConfig *ClientProxyConfig) e
 		}
 
 		var files []File
-
-		if clientProxyConfig.ProxyCaCertificate != "" {
-			ca := File{
-				ParamName:      "server_ca_cert",
-				UseFileContent: true,
-				FileName:       "ca.pem", // fake name for ca
-				FileContent:    clientProxyConfig.ProxyCaCertificate,
-			}
-			files = append(files, ca)
+		ca := File{
+			ParamName:      "server_ca_cert",
+			UseFileContent: true,
+			FileName:       "ca.pem", // fake name for ca
+			FileContent:    clientProxyConfig.ProxyCaCertificate,
 		}
+		files = append(files, ca)
 		return c.PostFileAPI(params, files, BasicCheck)
 	} else {
 		data := map[string]interface{}{
