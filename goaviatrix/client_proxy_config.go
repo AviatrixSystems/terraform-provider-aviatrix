@@ -1,15 +1,12 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
 	"strings"
 )
 
 type ClientProxyConfig struct {
-	HttpProxy          string `form:"http_proxy,omitempty" json:"http_proxy,omitempty"`
-	HttpsProxy         string `form:"https_proxy,omitempty" json:"https_proxy,omitempty"`
+	HttpProxy          string `json:"http_proxy,omitempty"`
+	HttpsProxy         string `json:"https_proxy,omitempty"`
 	ProxyCaCertificate string
 }
 
@@ -29,28 +26,18 @@ func (c *Client) CreateClientProxyConfig(clientProxyConfig *ClientProxyConfig) e
 			"https_proxy": clientProxyConfig.HttpsProxy,
 		}
 
-		files := []File{
-			{
-				Path:      clientProxyConfig.ProxyCaCertificate,
-				ParamName: "server_ca_cert",
-			},
+		var files []File
+
+		if clientProxyConfig.ProxyCaCertificate != "" {
+			ca := File{
+				ParamName:      "server_ca_cert",
+				UseFileContent: true,
+				FileName:       "ca.pem", // fake name for ca
+				FileContent:    clientProxyConfig.ProxyCaCertificate,
+			}
+			files = append(files, ca)
 		}
-		resp, err := c.PostFile(c.baseURL, params, files)
-		if err != nil {
-			return errors.New("HTTP Post apply_proxy_config failed: " + err.Error())
-		}
-		var data APIResp
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(resp.Body)
-		bodyString := buf.String()
-		bodyIoCopy := strings.NewReader(bodyString)
-		if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-			return errors.New("Json Decode apply_proxy_config failed: " + err.Error() + "\n Body: " + bodyString)
-		}
-		if !data.Return {
-			return errors.New("Rest API apply_proxy_config Post failed: " + data.Reason)
-		}
-		return nil
+		return c.PostFileAPI(params, files, BasicCheck)
 	} else {
 		data := map[string]interface{}{
 			"CID":         c.CID,

@@ -17,7 +17,7 @@ The **aviatrix_client_proxy_config** resource allows management of an Aviatrix C
 resource "aviatrix_client_proxy_config" "test_proxy_config" {
   http_proxy           = "172.31.52.145:3127"
   https_proxy          = "172.31.52.145:3129"
-  proxy_ca_certificate = "/Documents/myCA.pem"
+  proxy_ca_certificate = file("/path/to/ca.pem")
 }
 ```
 
@@ -27,7 +27,7 @@ The following arguments are supported:
 
 * `http_proxy` - (Required) Http proxy URL.
 * `https_proxy` - (Required) Https proxy URL.
-* `proxy_ca_certificate` - (Optional) Server CA Certificate file.
+* `proxy_ca_certificate` - (Optional) Server CA Certificate file. Use the `file` function to read from a file.
 
 ## Import
 
