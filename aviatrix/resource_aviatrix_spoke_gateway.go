@@ -211,6 +211,21 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Sensitive:   true,
 				Description: "Customer managed key ID.",
 			},
+			"enable_monitor_gateway_subnets": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				Description: "Enable [monitor gateway subnets](https://docs.aviatrix.com/HowTos/gateway.html#monitor-gateway-subnet). " +
+					"Only valid for cloud_type = 1 (AWS) or 256 (AWSGOV). Valid values: true, false. Default value: false.",
+			},
+			"monitor_exclude_list": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Description: "A set of monitored instance ids. Only valid when 'enable_monitor_gateway_subnets' = true.",
+			},
 			"security_group_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -368,6 +383,18 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	}
 	if !enableEncryptVolume && (gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV) {
 		gateway.EncVolume = "no"
+	}
+
+	enableMonitorSubnets := d.Get("enable_monitor_gateway_subnets").(bool)
+	var excludedInstances []string
+	for _, v := range d.Get("monitor_exclude_list").(*schema.Set).List() {
+		excludedInstances = append(excludedInstances, v.(string))
+	}
+	if enableMonitorSubnets && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV {
+		return fmt.Errorf("'enable_monitor_gateway_subnets' is only valid for cloud_type = 1 (AWS) or 256 (AWSGOV)")
+	}
+	if !enableMonitorSubnets && len(excludedInstances) != 0 {
+		return fmt.Errorf("'monitor_exclude_list' must be empty if 'enable_monitor_gateway_subnets' is false")
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Spoke Gateway: %#v", gateway)
@@ -582,6 +609,13 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	if enableMonitorSubnets {
+		err := client.EnableMonitorGatewaySubnets(gateway.GwName, excludedInstances)
+		if err != nil {
+			return fmt.Errorf("could not enable monitor gateway subnets: %v", err)
+		}
+	}
+
 	return resourceAviatrixSpokeGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -742,6 +776,11 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			}
 		} else {
 			d.Set("included_advertised_spoke_routes", "")
+		}
+
+		d.Set("enable_monitor_gateway_subnets", gw.MonitorSubnetsAction == "enable")
+		if err := d.Set("monitor_exclude_list", gw.MonitorExcludeGWList); err != nil {
+			return fmt.Errorf("setting 'monitor_exclude_list' to state: %v", err)
 		}
 	}
 
@@ -1413,6 +1452,37 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			if err != nil {
 				return fmt.Errorf("failed to edit included advertised spoke vpc routes of spoke gateway: %s due to: %s", transitGateway.GwName, err)
 			}
+		}
+	}
+
+	monitorGatewaySubnets := d.Get("enable_monitor_gateway_subnets").(bool)
+	var excludedInstances []string
+	for _, v := range d.Get("monitor_exclude_list").(*schema.Set).List() {
+		excludedInstances = append(excludedInstances, v.(string))
+	}
+	if !monitorGatewaySubnets && len(excludedInstances) != 0 {
+		return fmt.Errorf("'monitor_exclude_list' must be empty if 'enable_monitor_gateway_subnets' is false")
+	}
+	if d.HasChange("enable_monitor_gateway_subnets") {
+		if monitorGatewaySubnets {
+			err := client.EnableMonitorGatewaySubnets(gateway.GwName, excludedInstances)
+			if err != nil {
+				return fmt.Errorf("could not enable monitor gateway subnets: %v", err)
+			}
+		} else {
+			err := client.DisableMonitorGatewaySubnets(gateway.GwName)
+			if err != nil {
+				return fmt.Errorf("could not disable monitor gateway subnets: %v", err)
+			}
+		}
+	} else if d.HasChange("monitor_exclude_list") {
+		err := client.DisableMonitorGatewaySubnets(gateway.GwName)
+		if err != nil {
+			return fmt.Errorf("could not disable monitor gateway subnets: %v", err)
+		}
+		err = client.EnableMonitorGatewaySubnets(gateway.GwName, excludedInstances)
+		if err != nil {
+			return fmt.Errorf("could not enable monitor gateway subnets: %v", err)
 		}
 	}
 

@@ -1270,25 +1270,25 @@ func (c *Client) DisableEgressTransitFirenet(transitGateway *TransitVpc) error {
 	return c.PostAPI(action, data, BasicCheck)
 }
 
-func (c *Client) EnableMonitorGatewaySubnets(gateway *Gateway) error {
+func (c *Client) EnableMonitorGatewaySubnets(gwName string, excludedInstances []string) error {
 	action := "enable_monitor_gateway_subnets"
-	form := map[string]interface{}{
+	form := map[string]string{
 		"CID":          c.CID,
 		"action":       action,
-		"gateway_name": gateway.GwName,
+		"gateway_name": gwName,
 	}
-	if len(gateway.MonitorExcludeGWList) != 0 {
-		form["monitor_exclude_gateway_list"] = strings.Join(gateway.MonitorExcludeGWList, ",")
+	if len(excludedInstances) != 0 {
+		form["monitor_exclude_gateway_list"] = strings.Join(excludedInstances, ",")
 	}
 	return c.PostAPI(action, form, BasicCheck)
 }
 
-func (c *Client) DisableMonitorGatewaySubnets(gateway *Gateway) error {
+func (c *Client) DisableMonitorGatewaySubnets(gwName string) error {
 	action := "disable_monitor_gateway_subnets"
-	form := map[string]interface{}{
+	form := map[string]string{
 		"CID":          c.CID,
 		"action":       action,
-		"gateway_name": gateway.GwName,
+		"gateway_name": gwName,
 	}
 	return c.PostAPI(action, form, BasicCheck)
 }
