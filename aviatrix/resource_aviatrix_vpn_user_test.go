@@ -33,7 +33,7 @@ func TestAccAviatrixVPNUser_basic(t *testing.T) {
 		CheckDestroy: testAccCheckVPNUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPNUserConfigBasic(rName),
+				Config: testAccVPNUserConfigBasic(rName, "false", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNUserExists("aviatrix_vpn_user.test_vpn_user", &vpnUser),
 					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfl-%s", rName)),
@@ -52,7 +52,7 @@ func TestAccAviatrixVPNUser_basic(t *testing.T) {
 	})
 }
 
-func testAccVPNUserConfigBasic(rName string) string {
+func testAccVPNUserConfigBasic(rName string, samlEnabled string, endpointName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account" {
 	account_name       = "tfa-%s"
@@ -75,15 +75,18 @@ resource "aviatrix_gateway" "test_gw" {
 	max_vpn_conn = "100" 
 	enable_elb   = true
 	elb_name     = "tfl-%s"
+	saml_enabled = "%s"
 }
 resource "aviatrix_vpn_user" "test_vpn_user" {
 	vpc_id     = aviatrix_gateway.test_gw.vpc_id
 	gw_name    = aviatrix_gateway.test_gw.elb_name
 	user_name  = "tfu-%s"
 	user_email = "user@xyz.com"
+	saml_endpoint = "%s"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName, rName)
+		rName, os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), rName,
+		samlEnabled, rName, endpointName)
 }
 
 func testAccCheckVPNUserExists(n string, vpnUser *goaviatrix.VPNUser) resource.TestCheckFunc {
