@@ -179,6 +179,11 @@ func resourceAviatrixVpc() *schema.Resource {
 				Computed:    true,
 				Description: "Resource group of the Azure VPC created.",
 			},
+			"azure_vnet_resource_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Azure vnet resource ID.",
+			},
 		},
 	}
 }
@@ -350,7 +355,26 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("vpc_id", vC.VpcID)
 		if vC.CloudType == goaviatrix.AZURE {
-			d.Set("resource_group", strings.Split(vC.VpcID, ":")[1])
+			account := &goaviatrix.Account{
+				AccountName: d.Get("account_name").(string),
+			}
+
+			acc, err := client.GetAccount(account)
+			if err != nil {
+				if err != goaviatrix.ErrNotFound {
+					return fmt.Errorf("aviatrix Account: %s", err)
+				}
+			}
+
+			var subscriptionId string
+			if acc != nil {
+				subscriptionId = acc.ArmSubscriptionId
+			}
+
+			resourceGroup := strings.Split(vC.VpcID, ":")[1]
+			azureVnetResourceId := "/subscriptions/" + subscriptionId + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/" + vC.Name
+			d.Set("resource_group", resourceGroup)
+			d.Set("azure_vnet_resource_id", azureVnetResourceId)
 		}
 	}
 
