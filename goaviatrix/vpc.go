@@ -38,7 +38,7 @@ type VpcEdit struct {
 	Cidr                   string       `form:"vpc_cidr,omitempty" json:"vpc_cidr,omitempty"`
 	SubnetSize             int          `json:"subnet_size,omitempty"`
 	NumOfSubnetPairs       int          `json:"num_of_subnet_pairs,omitempty"`
-	EnablePrivateOobSubnet bool         `json:"private_oob_subnet,omitempty"`
+	EnablePrivateOobSubnet bool         `json:"private_oob_subnets,omitempty"`
 	AviatrixTransitVpc     bool         `json:"avx_transit_vpc,omitempty"`
 	AviatrixFireNetVpc     bool         `json:"avx_firenet_vpc,omitempty"`
 	VpcID                  []string     `json:"vpc_list,omitempty"`
