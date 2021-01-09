@@ -78,6 +78,7 @@ func Provider() *schema.Provider {
 			"aviatrix_geo_vpn":                                        resourceAviatrixGeoVPN(),
 			"aviatrix_netflow_agent":                                  resourceAviatrixNetflowAgent(),
 			"aviatrix_periodic_ping":                                  resourceAviatrixPeriodicPing(),
+			"aviatrix_proxy_config":                                   resourceAviatrixProxyConfig(),
 			"aviatrix_rbac_group":                                     resourceAviatrixRbacGroup(),
 			"aviatrix_rbac_group_access_account_attachment":           resourceAviatrixRbacGroupAccessAccountAttachment(),
 			"aviatrix_rbac_group_permission_attachment":               resourceAviatrixRbacGroupPermissionAttachment(),
