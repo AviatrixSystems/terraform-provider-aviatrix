@@ -98,7 +98,7 @@ The following arguments are supported:
 ### Advanced Options
 * `subnet_size` - (Optional) Subnet size. Only supported for AWS, Azure provider. Example: 24. Available in provider version R2.17+.
 * `num_of_subnet_pairs` - (Optional) Number of public subnet and private subnet pair created. Only supported for AWS, Azure provider. Example: 1. Available in provider version R2.17+.
-* `enable_private_oob_subnet` - (Optional) Switch to enable private oob subnet. Only supported for AWS/AWSGOV provider. Valid values: true, false. Default value: false.
+* `enable_private_oob_subnet` - (Optional) Switch to enable private oob subnet. Only supported for AWS/AWSGOV provider. Valid values: true, false. Default value: false. Available as of provider version R2.18+.
 
 ### Misc.
 * `aviatrix_transit_vpc` - (Optional) Specify whether it is an [Aviatrix Transit VPC](https://docs.aviatrix.com/HowTos/create_vpc.html#aviatrix-transit-vpc) to be used for [Transit Network](https://docs.aviatrix.com/HowTos/transitvpc_faq.html) or [TGW](https://docs.aviatrix.com/HowTos/tgw_faq.html) solutions. **Only AWS and AWSGov are supported. Required to be false for other providers.** Valid values: true, false. Default: false.
