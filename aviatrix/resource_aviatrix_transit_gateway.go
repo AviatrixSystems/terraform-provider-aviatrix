@@ -224,6 +224,16 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					"When configured, it inspects all the advertised CIDRs from its spoke gateways and " +
 					"remove those included in the 'Excluded CIDR List'.",
 			},
+			"customized_transit_vpc_routes": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Description: "A list of CIDRs to be customized for the transit VPC routes. " +
+					"When configured, it will replace all learned routes in VPC routing tables, including RFC1918 and non-RFC1918 CIDRs." +
+					"To be effective, `enable_advertise_transit_cidr` or firewall management access for a transit firenet gateway must be enabled.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"customer_managed_keys": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -352,14 +362,6 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Transit gateway lan interface cidr for the HA gateway.",
-			},
-			"customize_transit_vpc_route": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Description: "List of customize transit vpc route.",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
 			},
 		},
 	}
@@ -886,12 +888,12 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	var customizeTransitVpcRoute []string
-	for _, v := range d.Get("customize_transit_vpc_route").(*schema.Set).List() {
-		customizeTransitVpcRoute = append(customizeTransitVpcRoute, v.(string))
+	var customizedTransitVpcRoutes []string
+	for _, v := range d.Get("customized_transit_vpc_routes").(*schema.Set).List() {
+		customizedTransitVpcRoutes = append(customizedTransitVpcRoutes, v.(string))
 	}
-	if len(customizeTransitVpcRoute) != 0 {
-		err := client.UpdateTransitGatewayCustomizedVpcRoute(gateway.GwName, customizeTransitVpcRoute)
+	if len(customizedTransitVpcRoutes) != 0 {
+		err := client.UpdateTransitGatewayCustomizedVpcRoute(gateway.GwName, customizedTransitVpcRoutes)
 		if err != nil {
 			return fmt.Errorf("couldn't update transit gateway customized vpc route: %s", err)
 		}
@@ -1073,7 +1075,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("enable_gateway_load_balancer", gwDetail.EnabledGatewayLoadBalancer)
 		d.Set("enable_transit_firenet", gwDetail.EnableTransitFireNet)
 		d.Set("enable_egress_transit_firenet", gwDetail.EnableEgressTransitFireNet)
-		d.Set("customize_transit_vpc_route", gwDetail.CustomizeTransitVpcRoute)
+		d.Set("customized_transit_vpc_routes", gwDetail.CustomizedTransitVpcRoutes)
 
 		if _, zoneIsSet := d.GetOk("zone"); gw.CloudType == goaviatrix.AZURE && (isImport || zoneIsSet) &&
 			gwDetail.GwZone != "AvailabilitySet" {
@@ -2092,13 +2094,13 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if d.HasChange("customize_transit_vpc_route") {
-		var customizeTransitVpcRoute []string
-		for _, v := range d.Get("customize_transit_vpc_route").(*schema.Set).List() {
-			customizeTransitVpcRoute = append(customizeTransitVpcRoute, v.(string))
+	if d.HasChange("customized_transit_vpc_routes") {
+		var customizedTransitVpcRoutes []string
+		for _, v := range d.Get("customized_transit_vpc_routes").(*schema.Set).List() {
+			customizedTransitVpcRoutes = append(customizedTransitVpcRoutes, v.(string))
 		}
 
-		err := client.UpdateTransitGatewayCustomizedVpcRoute(gateway.GwName, customizeTransitVpcRoute)
+		err := client.UpdateTransitGatewayCustomizedVpcRoute(gateway.GwName, customizedTransitVpcRoutes)
 		if err != nil {
 			return fmt.Errorf("couldn't update transit gateway customized vpc route: %s", err)
 		}

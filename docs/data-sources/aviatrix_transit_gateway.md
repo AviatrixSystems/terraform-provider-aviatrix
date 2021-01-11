@@ -38,6 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 * `cloud_type` - Type of cloud service provider.
 * `connected_transit"` -  Status of Connected Transit of transit gateway.
 * `customized_spoke_vpc_routes` - A list of comma separated CIDRs to be customized for the spoke VPC routes.
+* `customized_transit_vpc_routes` - A list of CIDRs to be customized for the transit VPC routes.
 * `gw_size` - Size of transit gateway instance.
 * `gw_name` - Aviatrix transit gateway name.
 * `insane_mode_az` - AZ of subnet being created for Insane Mode transit gateway.
