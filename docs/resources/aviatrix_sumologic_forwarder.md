@@ -26,7 +26,7 @@ The following arguments are supported:
 
 ### Required
 * `access_id` (Required) Access ID.
-* `access_key` (Required) Access Key.
+* `access_key` (Required and Sensitive) Access Key.
 
 ### Optional
 * `source_category` (Optional) Source category. "Aviatrix_syslog" by default.

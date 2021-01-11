@@ -27,6 +27,7 @@ func resourceAviatrixSumologicForwarder() *schema.Resource {
 			"access_key": {
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
 				ForceNew:    true,
 				Description: "Access key.",
 			},
