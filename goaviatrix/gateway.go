@@ -184,7 +184,7 @@ type GatewayDetail struct {
 	TransitGwName                string       `json:"transit_gw_name,omitempty"`
 	EgressTransitGwName          string       `json:"egress_transit_gw_name,omitempty"`
 	RouteTables                  []string     `json:"spoke_rtb_list,omitempty"`
-	CustomizeTransitVpcRoute     []string     `json:"customized_transit_vpc_cidrs"`
+	CustomizedTransitVpcRoutes   []string     `json:"customized_transit_vpc_cidrs"`
 }
 
 type ElbDetail struct {
@@ -1450,12 +1450,12 @@ func (c *Client) GetFqdnGatewayInfo(gateway *Gateway) (*FQDNGatwayInfo, error) {
 	return &data.Results, ErrNotFound
 }
 
-func (c *Client) UpdateTransitGatewayCustomizedVpcRoute(gateway string, customizeTransitVpcRoute []string) error {
+func (c *Client) UpdateTransitGatewayCustomizedVpcRoute(gateway string, customizedTransitVpcRoutes []string) error {
 	params := map[string]string{
 		"action":            "edit_transit_gateway_customized_vpc_route",
 		"CID":               c.CID,
 		"gateway_name":      gateway,
-		"customized_routes": strings.Join(customizeTransitVpcRoute, ","),
+		"customized_routes": strings.Join(customizedTransitVpcRoutes, ","),
 	}
 
 	return c.PostAPI(params["action"], params, BasicCheck)

@@ -169,6 +169,16 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 					"When configured, it inspects all the advertised CIDRs from its spoke gateways and " +
 					"remove those included in the 'Excluded CIDR List'.",
 			},
+			"customized_transit_vpc_routes": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Description: "A list of CIDRs to be customized for the transit VPC routes. " +
+					"When configured, it will replace all learned routes in VPC routing tables, including RFC1918 and non-RFC1918 CIDRs." +
+					"To be effective, `enable_advertise_transit_cidr` or firewall management access for a transit firenet gateway must be enabled.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"enable_transit_firenet": {
 				Type:        schema.TypeBool,
 				Computed:    true,
@@ -324,6 +334,7 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 		d.Set("enable_firenet", gwDetail.EnableFireNet)
 		d.Set("enable_transit_firenet", gwDetail.EnableTransitFireNet)
 		d.Set("enable_egress_transit_firenet", gwDetail.EnableEgressTransitFireNet)
+		d.Set("customized_transit_vpc_routes", gwDetail.CustomizedTransitVpcRoutes)
 
 		if gw.EnableActiveMesh == "yes" {
 			d.Set("enable_active_mesh", true)
