@@ -47,6 +47,7 @@ type TransitVpc struct {
 	EnableTransitFireNet         string `form:"enable_transit_firenet,omitempty"`
 	LearnedCidrsApproval         string `form:"learned_cidrs_approval,omitempty"`
 	EncVolume                    string `form:"enc_volume,omitempty"`
+	BgpOverLan                   string `form:"bgp_over_lan,omitempty"`
 }
 
 type TransitGatewayAdvancedConfig struct {
@@ -58,6 +59,9 @@ type TransitGatewayAdvancedConfig struct {
 	ActiveStandbyConnections          []StandbyConnection
 	LearnedCIDRsApprovalMode          string
 	ConnectionLearnedCIDRApprovalInfo []LearnedCIDRApprovalInfo
+	TunnelAddrLocal                   string
+	TunnelAddrLocalBackup             string
+	PeerVnetId                        []string
 }
 
 type StandbyConnection struct {
@@ -74,6 +78,9 @@ type TransitGatewayAdvancedConfigRespResult struct {
 	ActiveStandbyStatus               map[string]string         `json:"active_standby_status"`
 	LearnedCIDRsApprovalMode          string                    `json:"learned_cidrs_approval_mode"`
 	ConnectionLearnedCIDRApprovalInfo []LearnedCIDRApprovalInfo `json:"connection_learned_cidrs_approval_info"`
+	TunnelAddrLocal                   string                    `json:"tunnel_addr_local"`
+	TunnelAddrLocalBackup             string                    `json:"tunnel_addr_local_backup"`
+	PeerVnetId                        []string                  `json:"peer_vnet_id"`
 }
 
 type LearnedCIDRApprovalInfo struct {
@@ -655,6 +662,9 @@ func (c *Client) GetTransitGatewayAdvancedConfig(transitGateway *TransitVpc) (*T
 		ActiveStandbyConnections:          standbyConnections,
 		LearnedCIDRsApprovalMode:          data.Results.LearnedCIDRsApprovalMode,
 		ConnectionLearnedCIDRApprovalInfo: data.Results.ConnectionLearnedCIDRApprovalInfo,
+		TunnelAddrLocal:                   data.Results.TunnelAddrLocal,
+		TunnelAddrLocalBackup:             data.Results.TunnelAddrLocalBackup,
+		PeerVnetId:                        data.Results.PeerVnetId,
 	}, nil
 }
 

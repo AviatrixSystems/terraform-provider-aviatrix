@@ -272,6 +272,12 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Description: "Configure manual BGP advertised CIDRs for this connection. Only valid with 'connection_type'" +
 					" = 'bgp'. Available as of provider version R2.18+.",
 			},
+			"remote_vpc_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Name of the remote VPC for a LAN BGP connection. Only valid when 'connection_type' = 'bgp' and tunnel_protocol' = 'LAN' with an Azure transit gateway. Must be in the form \"<VNET-name>:<resource-group-name>\". Available as of provider version R2.18+.",
+			},
 		},
 	}
 }
@@ -300,6 +306,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		BackupLocalTunnelCidr:  d.Get("backup_local_tunnel_cidr").(string),
 		BackupRemoteTunnelCidr: d.Get("backup_remote_tunnel_cidr").(string),
 		TunnelProtocol:         d.Get("tunnel_protocol").(string),
+		PeerVnetId:             d.Get("remote_vpc_name").(string),
 	}
 
 	bgpLocalAsNum, err := strconv.Atoi(d.Get("bgp_local_as_num").(string))
@@ -406,6 +413,9 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	}
 	if greOrLan && externalDeviceConn.PreSharedKey != "" {
 		return fmt.Errorf("'pre_shared_key' is not valid with 'tunnel_protocol' = GRE or LAN")
+	}
+	if externalDeviceConn.PeerVnetId != "" && (externalDeviceConn.ConnectionType != "bgp" || externalDeviceConn.TunnelProtocol != "LAN") {
+		return fmt.Errorf("'remote_vpc_name' is only valid for 'connection_type' = 'bgp' and 'tunnel_protocol' = 'LAN'")
 	}
 	// TODO(CyrusJavan): Add check for "over private network" when the feature is added
 
@@ -575,6 +585,9 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 			d.Set("tunnel_protocol", "IPsec")
 		} else {
 			d.Set("tunnel_protocol", conn.TunnelProtocol)
+		}
+		if conn.TunnelProtocol == "LAN" {
+			d.Set("remote_vpc_name", conn.PeerVnetId)
 		}
 	}
 

@@ -363,6 +363,13 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Transit gateway lan interface cidr for the HA gateway.",
 			},
+			"enable_bgp_over_lan": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+				Description: "Pre-allocate a network interface(eth4) for \"BGP over LAN\" functionality. Only valid for cloud_type = 8 (AZURE). Valid values: true or false. Default value: false. Available as of provider version R2.18+",
+			},
 		},
 	}
 }
@@ -544,6 +551,14 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	}
 	if !enableMonitorSubnets && len(excludedInstances) != 0 {
 		return fmt.Errorf("'monitor_exclude_list' must be empty if 'enable_monitor_gateway_subnets' is false")
+	}
+
+	bgpOverLan := d.Get("enable_bgp_over_lan").(bool)
+	if bgpOverLan && cloudType != goaviatrix.AZURE {
+		return fmt.Errorf("'enable_bgp_over_lan' is only valid for cloud_type = 8 (AZURE)")
+	}
+	if bgpOverLan {
+		gateway.BgpOverLan = "on"
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
@@ -1187,6 +1202,9 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	}
 	d.Set("bgp_ecmp", advancedConfig.BgpEcmpEnabled)
 	d.Set("enable_active_standby", advancedConfig.ActiveStandbyEnabled)
+	if gw.CloudType == goaviatrix.AZURE {
+		d.Set("enable_bgp_over_lan", advancedConfig.TunnelAddrLocal != "")
+	}
 
 	isSegmentationEnabled, err := client.IsSegmentationEnabled(transitGateway)
 	if err != nil {
