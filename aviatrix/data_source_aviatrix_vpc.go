@@ -206,28 +206,29 @@ func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("vpc_id", strings.Split(vC.VpcID, "~-~")[0])
 	} else {
 		d.Set("vpc_id", vC.VpcID)
-		if vC.CloudType == goaviatrix.AZURE {
-			account := &goaviatrix.Account{
-				AccountName: d.Get("account_name").(string),
-			}
+	}
 
-			acc, err := client.GetAccount(account)
-			if err != nil {
-				if err != goaviatrix.ErrNotFound {
-					return fmt.Errorf("aviatrix Account: %s", err)
-				}
-			}
-
-			var subscriptionId string
-			if acc != nil {
-				subscriptionId = acc.ArmSubscriptionId
-			}
-
-			resourceGroup := strings.Split(vC.VpcID, ":")[1]
-			azureVnetResourceId := "/subscriptions/" + subscriptionId + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/" + vC.Name
-			d.Set("resource_group", resourceGroup)
-			d.Set("azure_vnet_resource_id", azureVnetResourceId)
+	if vC.CloudType == goaviatrix.AZURE {
+		account := &goaviatrix.Account{
+			AccountName: d.Get("account_name").(string),
 		}
+
+		acc, err := client.GetAccount(account)
+		if err != nil {
+			if err != goaviatrix.ErrNotFound {
+				return fmt.Errorf("aviatrix Account: %s", err)
+			}
+		}
+
+		var subscriptionId string
+		if acc != nil {
+			subscriptionId = acc.ArmSubscriptionId
+		}
+
+		resourceGroup := strings.Split(vC.VpcID, ":")[1]
+		azureVnetResourceId := "/subscriptions/" + subscriptionId + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/" + vC.Name
+		d.Set("resource_group", resourceGroup)
+		d.Set("azure_vnet_resource_id", azureVnetResourceId)
 	}
 
 	var subnetList []map[string]string
