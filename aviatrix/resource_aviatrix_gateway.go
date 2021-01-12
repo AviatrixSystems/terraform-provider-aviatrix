@@ -22,6 +22,15 @@ func resourceAviatrixGateway() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceAviatrixGatewayResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAviatrixGatewayStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"cloud_type": {
 				Type:         schema.TypeInt,
@@ -379,11 +388,12 @@ func resourceAviatrixGateway() *schema.Resource {
 				Description: "Enable monitor gateway subnets. Valid values: true, false. Default value: false.",
 			},
 			"monitor_exclude_list": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          "",
-				DiffSuppressFunc: DiffSuppressFuncString,
-				Description:      "A list of monitored instance ids separated by comma when 'monitor gateway subnets' feature is enabled.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Description: "A set of monitored instance ids. Only valid when 'enable_monitor_gateway_subnets' = true.",
 			},
 			"idle_timeout": {
 				Type:         schema.TypeInt,
@@ -691,6 +701,18 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		gateway.FqdnLanCidr = d.Get("fqdn_lan_cidr").(string)
 	}
 
+	enableMonitorSubnets := d.Get("enable_monitor_gateway_subnets").(bool)
+	var excludedInstances []string
+	for _, v := range d.Get("monitor_exclude_list").(*schema.Set).List() {
+		excludedInstances = append(excludedInstances, v.(string))
+	}
+	if enableMonitorSubnets && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV {
+		return fmt.Errorf("'enable_monitor_gateway_subnets' is only valid for cloud_type = 1 (AWS) or 256 (AWSGOV)")
+	}
+	if !enableMonitorSubnets && len(excludedInstances) != 0 {
+		return fmt.Errorf("'monitor_exclude_list' must be empty if 'enable_monitor_gateway_subnets' is false")
+	}
+
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)
 
 	if d.Get("enable_public_subnet_filtering").(bool) {
@@ -877,16 +899,11 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("'enable_vpc_dns_server' only supports AWS(1) and AWSGOV(256)")
 	}
 
-	enableMonitorGatewaySubnets := d.Get("enable_monitor_gateway_subnets").(bool)
-	if enableMonitorGatewaySubnets {
-		if d.Get("cloud_type").(int) != goaviatrix.AWS && d.Get("cloud_type").(int) != goaviatrix.AWSGOV {
-			return fmt.Errorf("monitor gateway subnets feature only supported for AWS and AWSGOV")
-		}
+	if enableMonitorSubnets {
 		log.Printf("[INFO] Enable Monitor Gateway Subnets")
-		excludedInstances := strings.Split(d.Get("monitor_exclude_list").(string), ",")
 		err := client.EnableMonitorGatewaySubnets(gateway.GwName, excludedInstances)
 		if err != nil {
-			return fmt.Errorf("fail to enable monitor gateway subnets: %v", err)
+			return fmt.Errorf("could not enable monitor gateway subnets: %v", err)
 		}
 	}
 
@@ -1302,12 +1319,9 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("additional_cidrs", "")
 		}
 
-		if gw.MonitorSubnetsAction == "enable" {
-			d.Set("enable_monitor_gateway_subnets", true)
-			d.Set("monitor_exclude_list", strings.Join(gw.MonitorExcludeGWList, ","))
-		} else {
-			d.Set("enable_monitor_gateway_subnets", false)
-			d.Set("monitor_exclude_list", "")
+		d.Set("enable_monitor_gateway_subnets", gw.MonitorSubnetsAction == "enable")
+		if err := d.Set("monitor_exclude_list", gw.MonitorExcludeGWList); err != nil {
+			return fmt.Errorf("setting 'monitor_exclude_list' to state: %v", err)
 		}
 
 		VPNGatewayServer := &goaviatrix.Gateway{
@@ -2102,38 +2116,34 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("updating customer_managed_keys only is not allowed")
 	}
 
+	monitorGatewaySubnets := d.Get("enable_monitor_gateway_subnets").(bool)
+	var excludedInstances []string
+	for _, v := range d.Get("monitor_exclude_list").(*schema.Set).List() {
+		excludedInstances = append(excludedInstances, v.(string))
+	}
+	if !monitorGatewaySubnets && len(excludedInstances) != 0 {
+		return fmt.Errorf("'monitor_exclude_list' must be empty if 'enable_monitor_gateway_subnets' is false")
+	}
 	if d.HasChange("enable_monitor_gateway_subnets") {
-		if d.Get("enable_monitor_gateway_subnets").(bool) {
-			if d.Get("cloud_type").(int) != goaviatrix.AWS && d.Get("cloud_type").(int) != goaviatrix.AWSGOV {
-				return fmt.Errorf("monitor gateway subnet feature only supported for AWS and AWSGOV")
-			}
-			log.Printf("[INFO] Enable Monitor Gatway Subnets")
-			excludedInstances := strings.Split(d.Get("monitor_exclude_list").(string), ",")
+		if monitorGatewaySubnets {
 			err := client.EnableMonitorGatewaySubnets(gateway.GwName, excludedInstances)
 			if err != nil {
-				return fmt.Errorf("fail to enable monitor gateway subnets: %v", err)
+				return fmt.Errorf("could not enable monitor gateway subnets: %v", err)
 			}
 		} else {
-			log.Printf("[INFO] Disable Monitor Gatway Subnets")
 			err := client.DisableMonitorGatewaySubnets(gateway.GwName)
 			if err != nil {
-				return fmt.Errorf("fail to disable monitor gateway subnets: %v", err)
+				return fmt.Errorf("could not disable monitor gateway subnets: %v", err)
 			}
 		}
 	} else if d.HasChange("monitor_exclude_list") {
-		if !d.Get("enable_monitor_gateway_subnets").(bool) {
-			return fmt.Errorf("please enable the monitor gateway subnets feature before updating exclude monitor list")
-		}
-		log.Printf("[INFO] Disable Monitor Gatway Subnets")
 		err := client.DisableMonitorGatewaySubnets(gateway.GwName)
 		if err != nil {
-			return fmt.Errorf("fail to disable monitor gateway subnets due to : %s", err)
+			return fmt.Errorf("could not disable monitor gateway subnets: %v", err)
 		}
-		excludedInstances := strings.Split(d.Get("monitor_exclude_list").(string), ",")
-		log.Printf("[INFO] Enable Monitor Gatway Subnets with updated excluded list")
 		err = client.EnableMonitorGatewaySubnets(gateway.GwName, excludedInstances)
 		if err != nil {
-			return fmt.Errorf("fail to enable monitor gateway subnets with updated excluded list: %v", err)
+			return fmt.Errorf("could not enable monitor gateway subnets: %v", err)
 		}
 	}
 
