@@ -247,7 +247,10 @@ The following arguments are supported:
 ~> **NOTE:** This feature is only available for AWS gateways.
 
 * `enable_monitor_gateway_subnets` - (Optional) If set to true, the [Monitor Gateway Subnets](https://docs.aviatrix.com/HowTos/gateway.html#monitor-gateway-subnet) feature is enabled. Default value is false. Available in provider version R2.17.1+.
-* `monitor_exclude_list` - (Optional) A list of monitored instance IDs separated by comma when monitoring feature is enabled. Default value is "". Available in provider version R2.17.1+.
+
+~> **NOTE:** In provider version R2.18 release, the attribute `monitor_exclude_list` changed type from a string of comma separated values to a set of strings. For example, if your `monitor_exclude_list` was "instance-1,instance-2,instance-3", now it would be ["instance-1", "instance-2", "instance-3"]. Please update your Terraform config files as necessary.
+
+* `monitor_exclude_list` - (Optional) Set of monitored instance ids. Only valid when 'enable_monitor_gateway_subnets' = true. Available in provider version R2.17.1+.
 
 ### FQDN Gateway
 ~> **NOTE:** This attribute is only to be used in Azure FQDN FireNet workflows.
