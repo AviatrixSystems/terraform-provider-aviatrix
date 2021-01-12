@@ -853,9 +853,16 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			CloudType:    gateway.CloudType,
 		}
 
-		err := client.AddTags(tags)
-		if err != nil {
-			return fmt.Errorf("failed to add tags: %s", err)
+		if tags.CloudType == goaviatrix.AZURE {
+			err := client.AzureUpdateTags(tags)
+			if err != nil {
+				return fmt.Errorf("failed to add tags : %s", err)
+			}
+		} else {
+			err := client.AddTags(tags)
+			if err != nil {
+				return fmt.Errorf("failed to add tags: %s", err)
+			}
 		}
 	} else if ok && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV && gateway.CloudType != goaviatrix.AZURE {
 		return fmt.Errorf("adding tags only supported for AWS, AWSGOV and AZURE, cloud_type must be 1, 256 or 8")
