@@ -43,6 +43,7 @@ In addition to all arguments above, the following attributes are exported:
 * `aviatrix_firenet_vpc` - Switch if the VPC created is an Aviatrix FireNet VPC or not.
 * `vpc_id` - ID of the VPC created.
 * `resource_group` - Resource group of the Azure VPC created.
+* `azure_vnet_resource_id` - Azure vnet resource ID.
 * `route_tables` - List of AWS route table ids associated with this VPC. Only populated for AWS vpc.
 * `subnets` - List of subnet of the VPC created.
   * `cidr` - Subnet CIDR.
