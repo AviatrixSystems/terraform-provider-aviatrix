@@ -1681,34 +1681,44 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			CloudType:    gateway.CloudType,
 		}
 
-		o, n := d.GetChange("tag_list")
-		if o == nil {
-			o = new([]interface{})
-		}
-		if n == nil {
-			n = new([]interface{})
-		}
-		os := o.([]interface{})
-		ns := n.([]interface{})
-		oldList := goaviatrix.ExpandStringList(os)
-		newList := goaviatrix.ExpandStringList(ns)
-		oldTagList := goaviatrix.Difference(oldList, newList)
-		newTagList := goaviatrix.Difference(newList, oldList)
-		if len(oldTagList) != 0 || len(newTagList) != 0 {
-			if len(oldTagList) != 0 {
-				oldTagList = goaviatrix.TagListStrColon(oldTagList)
-				tags.TagList = strings.Join(oldTagList, ",")
-				err := client.DeleteTags(tags)
-				if err != nil {
-					return fmt.Errorf("failed to delete tags : %s", err)
-				}
+		if gateway.CloudType == goaviatrix.AZURE {
+			tagList := goaviatrix.ExpandStringList(d.Get("tag_list").([]interface{}))
+			tagList = goaviatrix.TagListStrColon(tagList)
+			tags.TagList = strings.Join(tagList, ",")
+			err := client.AzureUpdateTags(tags)
+			if err != nil {
+				return fmt.Errorf("failed to update tags : %s", err)
 			}
-			if len(newTagList) != 0 {
-				newTagList = goaviatrix.TagListStrColon(newTagList)
-				tags.TagList = strings.Join(newTagList, ",")
-				err := client.AddTags(tags)
-				if err != nil {
-					return fmt.Errorf("failed to add tags : %s", err)
+		} else {
+			o, n := d.GetChange("tag_list")
+			if o == nil {
+				o = new([]interface{})
+			}
+			if n == nil {
+				n = new([]interface{})
+			}
+			os := o.([]interface{})
+			ns := n.([]interface{})
+			oldList := goaviatrix.ExpandStringList(os)
+			newList := goaviatrix.ExpandStringList(ns)
+			oldTagList := goaviatrix.Difference(oldList, newList)
+			newTagList := goaviatrix.Difference(newList, oldList)
+			if len(oldTagList) != 0 || len(newTagList) != 0 {
+				if len(oldTagList) != 0 {
+					oldTagList = goaviatrix.TagListStrColon(oldTagList)
+					tags.TagList = strings.Join(oldTagList, ",")
+					err := client.DeleteTags(tags)
+					if err != nil {
+						return fmt.Errorf("failed to delete tags : %s", err)
+					}
+				}
+				if len(newTagList) != 0 {
+					newTagList = goaviatrix.TagListStrColon(newTagList)
+					tags.TagList = strings.Join(newTagList, ",")
+					err := client.AddTags(tags)
+					if err != nil {
+						return fmt.Errorf("failed to add tags : %s", err)
+					}
 				}
 			}
 		}
