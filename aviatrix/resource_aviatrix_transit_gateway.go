@@ -524,6 +524,9 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	if enableEgressTransitFireNet && !enableTransitFireNet {
 		return fmt.Errorf("'enable_egress_transit_firenet' requires 'enable_transit_firenet' to be set to true")
 	}
+	if enableEgressTransitFireNet && connectedTransit {
+		return fmt.Errorf("'enable_egress_transit_firenet' requires 'connected_transit' to be set to false")
+	}
 
 	learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
 	if learnedCidrsApproval {
@@ -808,8 +811,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 	if enableTransitFireNet && (gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV) {
 		enableActiveMesh := d.Get("enable_active_mesh").(bool)
-		if !connectedTransit || !enableActiveMesh {
-			return fmt.Errorf("both active_mesh and connected_transit need to be enabled to enable transit firenet")
+		if !enableActiveMesh {
+			return fmt.Errorf("active_mesh needs to be enabled to enable transit firenet")
 		}
 		gwTransitFireNet := &goaviatrix.Gateway{
 			GwName: d.Get("gw_name").(string),
@@ -1329,6 +1332,9 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	if d.Get("enable_egress_transit_firenet").(bool) && !d.Get("enable_transit_firenet").(bool) {
 		return fmt.Errorf("'enable_egress_transit_firenet' requires 'enable_transit_firenet' to be set to true")
 	}
+	if d.Get("enable_egress_transit_firenet").(bool) && d.Get("connected_transit").(bool) {
+		return fmt.Errorf("'enable_egress_transit_firenet' requires 'connected_transit' to be set to false")
+	}
 	if d.Get("enable_egress_transit_firenet").(bool) && gateway.CloudType != goaviatrix.AZURE && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV {
 		return fmt.Errorf("'enable_egress_transit_firenet' is currently only supported on AWS, AZURE and AWSGOV cloud providers")
 	}
@@ -1760,9 +1766,8 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 		if enableTransitFireNet {
 			enableActiveMesh := d.Get("enable_active_mesh").(bool)
-			connectedTransit := d.Get("connected_transit").(bool)
-			if !connectedTransit || !enableActiveMesh {
-				return fmt.Errorf("both active_mesh and connected_transit need to be enabled to enable transit firenet")
+			if !enableActiveMesh {
+				return fmt.Errorf("active_mesh needs to be enabled to enable transit firenet")
 			}
 			gwTransitFireNet := &goaviatrix.Gateway{
 				GwName: d.Get("gw_name").(string),
@@ -1807,9 +1812,8 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	} else if d.HasChange("enable_transit_firenet") {
 		if enableTransitFireNet {
 			enableActiveMesh := d.Get("enable_active_mesh").(bool)
-			connectedTransit := d.Get("connected_transit").(bool)
-			if !connectedTransit || !enableActiveMesh {
-				return fmt.Errorf("both active_mesh and connected_transit need to be enabled to enable transit firenet")
+			if !enableActiveMesh {
+				return fmt.Errorf("active_mesh needs to be enabled to enable transit firenet")
 			}
 			gwTransitFireNet := &goaviatrix.Gateway{
 				GwName: d.Get("gw_name").(string),
