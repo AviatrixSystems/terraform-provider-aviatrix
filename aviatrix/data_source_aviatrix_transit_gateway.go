@@ -371,9 +371,9 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 		d.Set("bgp_manual_spoke_advertise_cidrs", bgpMSAN)
 	}
 
-	if gw.CloudType == goaviatrix.AWS {
+	if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV || gw.CloudType == goaviatrix.AZURE {
 		tags := &goaviatrix.Tags{
-			CloudType:    goaviatrix.AWS,
+			CloudType:    gw.CloudType,
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
 		}

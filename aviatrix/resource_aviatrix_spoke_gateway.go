@@ -496,7 +496,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if _, ok := d.GetOk("tag_list"); ok && (gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV) {
+	if _, ok := d.GetOk("tag_list"); ok && (gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV || gateway.CloudType == goaviatrix.AZURE) {
 		tagList := d.Get("tag_list").([]interface{})
 		tagListStr := goaviatrix.ExpandStringList(tagList)
 		tagListStr = goaviatrix.TagListStrColon(tagListStr)
@@ -505,19 +505,23 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
 			TagList:      gateway.TagList,
-		}
-		if gateway.CloudType == goaviatrix.AWS {
-			tags.CloudType = goaviatrix.AWS
-		} else {
-			tags.CloudType = goaviatrix.AWSGOV
+			CloudType:    gateway.CloudType,
 		}
 
-		err = client.AddTags(tags)
-		if err != nil {
-			return fmt.Errorf("failed to add tags: %s", err)
+		if tags.CloudType == goaviatrix.AZURE {
+			err := client.AzureUpdateTags(tags)
+			if err != nil {
+				return fmt.Errorf("failed to add tags : %s", err)
+			}
+		} else {
+			err = client.AddTags(tags)
+			if err != nil {
+				return fmt.Errorf("failed to add tags: %s", err)
+			}
 		}
-	} else if ok && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV {
-		return fmt.Errorf("adding tags only supported for AWS and AWSGOV provider")
+
+	} else if ok && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV && gateway.CloudType != goaviatrix.AZURE {
+		return fmt.Errorf("adding tags only supported for AWS, AWSGOV and AZURE provider")
 	}
 
 	if transitGwName := d.Get("transit_gw").(string); transitGwName != "" {
@@ -803,11 +807,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		tags := &goaviatrix.Tags{
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
-		}
-		if gw.CloudType == goaviatrix.AWS {
-			tags.CloudType = goaviatrix.AWS
-		} else {
-			tags.CloudType = goaviatrix.AWSGOV
+			CloudType:    gw.CloudType,
 		}
 
 		tagList, err := client.GetTags(tags)
@@ -1016,51 +1016,56 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 
 	}
 
-	if d.HasChange("tag_list") && (gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV) {
+	if d.HasChange("tag_list") && (gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV || gateway.CloudType == goaviatrix.AZURE) {
 		tags := &goaviatrix.Tags{
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
+			CloudType:    gateway.CloudType,
 		}
-		if gateway.CloudType == goaviatrix.AWS {
-			tags.CloudType = goaviatrix.AWS
+
+		if tags.CloudType == goaviatrix.AZURE {
+			tagList := goaviatrix.ExpandStringList(d.Get("tag_list").([]interface{}))
+			tagList = goaviatrix.TagListStrColon(tagList)
+			tags.TagList = strings.Join(tagList, ",")
+			err := client.AzureUpdateTags(tags)
+			if err != nil {
+				return fmt.Errorf("failed to update tags : %s", err)
+			}
 		} else {
-			tags.CloudType = goaviatrix.AWSGOV
-		}
-
-		o, n := d.GetChange("tag_list")
-		if o == nil {
-			o = new([]interface{})
-		}
-		if n == nil {
-			n = new([]interface{})
-		}
-		os := o.([]interface{})
-		ns := n.([]interface{})
-		oldList := goaviatrix.ExpandStringList(os)
-		newList := goaviatrix.ExpandStringList(ns)
-		oldTagList := goaviatrix.Difference(oldList, newList)
-		newTagList := goaviatrix.Difference(newList, oldList)
-		if len(oldTagList) != 0 || len(newTagList) != 0 {
-			if len(oldTagList) != 0 {
-				oldTagList = goaviatrix.TagListStrColon(oldTagList)
-				tags.TagList = strings.Join(oldTagList, ",")
-				err := client.DeleteTags(tags)
-				if err != nil {
-					return fmt.Errorf("failed to delete tags : %s", err)
+			o, n := d.GetChange("tag_list")
+			if o == nil {
+				o = new([]interface{})
+			}
+			if n == nil {
+				n = new([]interface{})
+			}
+			os := o.([]interface{})
+			ns := n.([]interface{})
+			oldList := goaviatrix.ExpandStringList(os)
+			newList := goaviatrix.ExpandStringList(ns)
+			oldTagList := goaviatrix.Difference(oldList, newList)
+			newTagList := goaviatrix.Difference(newList, oldList)
+			if len(oldTagList) != 0 || len(newTagList) != 0 {
+				if len(oldTagList) != 0 {
+					oldTagList = goaviatrix.TagListStrColon(oldTagList)
+					tags.TagList = strings.Join(oldTagList, ",")
+					err := client.DeleteTags(tags)
+					if err != nil {
+						return fmt.Errorf("failed to delete tags : %s", err)
+					}
+				}
+				if len(newTagList) != 0 {
+					newTagList = goaviatrix.TagListStrColon(newTagList)
+					tags.TagList = strings.Join(newTagList, ",")
+					err := client.AddTags(tags)
+					if err != nil {
+						return fmt.Errorf("failed to add tags : %s", err)
+					}
 				}
 			}
-			if len(newTagList) != 0 {
-				newTagList = goaviatrix.TagListStrColon(newTagList)
-				tags.TagList = strings.Join(newTagList, ",")
-				err := client.AddTags(tags)
-				if err != nil {
-					return fmt.Errorf("failed to add tags : %s", err)
-				}
-			}
 		}
-
-	} else if d.HasChange("tag_list") && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV {
-		return fmt.Errorf("adding tags is only supported for AWS and AWSGOV provider")
+	} else if d.HasChange("tag_list") && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV && gateway.CloudType != goaviatrix.AZURE {
+		return fmt.Errorf("adding tags is only supported for AWS, AWSGOV and AZURE provider")
 	}
 
 	//Get primary gw size if gw_size changed, to be used later on for ha gateway size update
