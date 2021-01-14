@@ -1207,6 +1207,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("enable_active_standby", advancedConfig.ActiveStandbyEnabled)
 	if gw.CloudType == goaviatrix.AZURE {
 		d.Set("enable_bgp_over_lan", advancedConfig.TunnelAddrLocal != "")
+	} else {
+		d.Set("enable_bgp_over_lan", false)
 	}
 
 	isSegmentationEnabled, err := client.IsSegmentationEnabled(transitGateway)
