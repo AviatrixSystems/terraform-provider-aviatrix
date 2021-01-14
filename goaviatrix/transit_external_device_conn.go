@@ -42,6 +42,7 @@ type ExternalDeviceConn struct {
 	EnableIkev2            string `form:"enable_ikev2,omitempty"`
 	ManualBGPCidrs         []string
 	TunnelProtocol         string `form:"tunnel_protocol,omitempty"`
+	PeerVnetId             string `form:"peer_vnet_id,omitempty"`
 }
 
 type EditExternalDeviceConnDetail struct {
@@ -70,6 +71,7 @@ type EditExternalDeviceConnDetail struct {
 	PreSharedKey           string
 	BackupPreSharedKey     string
 	IkeVer                 string `json:"ike_ver"`
+	PeerVnetId             string `json:"peer_vnet_id"`
 }
 
 type ExternalDeviceConnDetailResp struct {
@@ -257,6 +259,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 		} else {
 			externalDeviceConn.EnableIkev2 = "disabled"
 		}
+		externalDeviceConn.PeerVnetId = externalDeviceConnDetail.PeerVnetId
 
 		return externalDeviceConn, nil
 	}
