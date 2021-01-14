@@ -563,9 +563,6 @@ func (c *Client) EnableSite2cloudActiveActive(site2cloud *Site2Cloud) error {
 		return errors.New("Json Decode 'enable_site2cloud_active_active_ha' failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
-		if strings.Contains(data.Reason, "already enabled") {
-			return nil
-		}
 		return errors.New("Rest API 'enable_site2cloud_active_active_ha' Get failed: " + data.Reason)
 	}
 	return nil
