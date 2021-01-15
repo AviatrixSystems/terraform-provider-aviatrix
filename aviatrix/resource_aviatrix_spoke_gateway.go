@@ -524,22 +524,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("adding tags only supported for AWS, AWSGOV and AZURE provider")
 	}
 
-	if transitGwName := d.Get("transit_gw").(string); transitGwName != "" {
-		if manageTransitGwAttachment {
-			gws := strings.Split(d.Get("transit_gw").(string), ",")
-			for _, gw := range gws {
-				gateway.TransitGateway = gw
-				err := client.SpokeJoinTransit(gateway)
-				if err != nil {
-					return fmt.Errorf("failed to join Transit Gateway %q: %v", gw, err)
-				}
-			}
-		} else {
-			return fmt.Errorf("'manage_transit_gateway_attachment' is set to false. Please set it to true, or use " +
-				"'aviatrix_spoke_transit_attachment' to attach this spoke to transit gateways")
-		}
-	}
-
 	enableVpcDnsServer := d.Get("enable_vpc_dns_server").(bool)
 	if (d.Get("cloud_type").(int) == goaviatrix.AWS || d.Get("cloud_type").(int) == goaviatrix.AWSGOV) && enableVpcDnsServer {
 		gwVpcDnsServer := &goaviatrix.Gateway{
@@ -587,7 +571,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			if err == nil {
 				break
 			}
-			if i <= 18 && (strings.Contains(err.Error(), "when it is down") || strings.Contains(err.Error(), "hagw is down")) {
+			if i <= 18 && (strings.Contains(err.Error(), "is down")) {
 				time.Sleep(10 * time.Second)
 			} else {
 				return fmt.Errorf("failed to edit filtered spoke vpc routes of spoke gateway: %s due to: %s", transitGateway.GwName, err)
@@ -606,7 +590,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			if err == nil {
 				break
 			}
-			if i <= 30 && (strings.Contains(err.Error(), "when it is down") || strings.Contains(err.Error(), "hagw is down")) {
+			if i <= 30 && (strings.Contains(err.Error(), "is down")) {
 				time.Sleep(10 * time.Second)
 			} else {
 				return fmt.Errorf("failed to edit advertised spoke vpc routes of spoke gateway: %s due to: %s", transitGateway.GwName, err)
@@ -618,6 +602,22 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		err := client.EnableMonitorGatewaySubnets(gateway.GwName, excludedInstances)
 		if err != nil {
 			return fmt.Errorf("could not enable monitor gateway subnets: %v", err)
+		}
+	}
+
+	if transitGwName := d.Get("transit_gw").(string); transitGwName != "" {
+		if manageTransitGwAttachment {
+			gws := strings.Split(d.Get("transit_gw").(string), ",")
+			for _, gw := range gws {
+				gateway.TransitGateway = gw
+				err := client.SpokeJoinTransit(gateway)
+				if err != nil {
+					return fmt.Errorf("failed to join Transit Gateway %q: %v", gw, err)
+				}
+			}
+		} else {
+			return fmt.Errorf("'manage_transit_gateway_attachment' is set to false. Please set it to true, or use " +
+				"'aviatrix_spoke_transit_attachment' to attach this spoke to transit gateways")
 		}
 	}
 
@@ -1228,121 +1228,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if d.HasChange("enable_active_mesh") && d.HasChange("transit_gw") {
-		spokeVPC := &goaviatrix.SpokeVpc{
-			CloudType: d.Get("cloud_type").(int),
-			GwName:    d.Get("gw_name").(string),
-			HASubnet:  d.Get("ha_subnet").(string),
-		}
-
-		o, n := d.GetChange("transit_gw")
-		oldTransitGws := strings.Split(o.(string), ",")
-		newTransitGws := strings.Split(n.(string), ",")
-		if len(oldTransitGws) > 0 && oldTransitGws[0] != "" && manageTransitGwAttachment {
-			for _, gw := range oldTransitGws {
-				// Leave any transit gateways that are in the old list but not in the new.
-				if goaviatrix.Contains(newTransitGws, gw) {
-					continue
-				}
-				spokeVPC.TransitGateway = gw
-				err := client.SpokeLeaveTransit(spokeVPC)
-				if err != nil {
-					return fmt.Errorf("failed to leave Transit Gateway: %s", err)
-				}
-			}
-		}
-
-		gw := &goaviatrix.Gateway{
-			GwName: d.Get("gw_name").(string),
-		}
-		enableActiveMesh := d.Get("enable_active_mesh").(bool)
-		if enableActiveMesh {
-			gw.EnableActiveMesh = "yes"
-			err := client.EnableActiveMesh(gw)
-			if err != nil {
-				return fmt.Errorf("failed to enable Active Mesh Mode: %s", err)
-			}
-		} else {
-			gw.EnableActiveMesh = "no"
-			err := client.DisableActiveMesh(gw)
-			if err != nil {
-				return fmt.Errorf("failed to disable Active Mesh Mode: %s", err)
-			}
-		}
-
-		if len(newTransitGws) > 0 && newTransitGws[0] != "" && manageTransitGwAttachment {
-			for _, gw := range newTransitGws {
-				// Join any transit gateways that are in the new list but not in the old.
-				if goaviatrix.Contains(oldTransitGws, gw) {
-					continue
-				}
-				spokeVPC.TransitGateway = gw
-				err := client.SpokeJoinTransit(spokeVPC)
-				if err != nil {
-					return fmt.Errorf("failed to join Transit Gateway %q: %v", gw, err)
-				}
-			}
-		}
-
-	} else if d.HasChange("enable_active_mesh") {
-		gw := &goaviatrix.Gateway{
-			GwName: d.Get("gw_name").(string),
-		}
-
-		enableActiveMesh := d.Get("enable_active_mesh").(bool)
-		if enableActiveMesh {
-			gw.EnableActiveMesh = "yes"
-			err := client.EnableActiveMesh(gw)
-			if err != nil {
-				return fmt.Errorf("failed to enable Active Mesh Mode: %s", err)
-			}
-		} else {
-			gw.EnableActiveMesh = "no"
-			err := client.DisableActiveMesh(gw)
-			if err != nil {
-				return fmt.Errorf("failed to disable Active Mesh Mode: %s", err)
-			}
-		}
-
-	} else if d.HasChange("transit_gw") && manageTransitGwAttachment {
-		spokeVPC := &goaviatrix.SpokeVpc{
-			CloudType: d.Get("cloud_type").(int),
-			GwName:    d.Get("gw_name").(string),
-			HASubnet:  d.Get("ha_subnet").(string),
-		}
-
-		o, n := d.GetChange("transit_gw")
-		oldTransitGws := strings.Split(o.(string), ",")
-		newTransitGws := strings.Split(n.(string), ",")
-		if len(oldTransitGws) > 0 && oldTransitGws[0] != "" {
-			for _, gw := range oldTransitGws {
-				// Leave any transit gateways that are in the old list but not in the new.
-				if goaviatrix.Contains(newTransitGws, gw) {
-					continue
-				}
-				spokeVPC.TransitGateway = gw
-				err := client.SpokeLeaveTransit(spokeVPC)
-				if err != nil {
-					return fmt.Errorf("failed to leave Transit Gateway %q: %v", gw, err)
-				}
-			}
-		}
-		if len(newTransitGws) > 0 && newTransitGws[0] != "" {
-			for _, gw := range newTransitGws {
-				// Join any transit gateways that are in the new list but not in the old.
-				if goaviatrix.Contains(oldTransitGws, gw) {
-					continue
-				}
-				spokeVPC.TransitGateway = gw
-				err := client.SpokeJoinTransit(spokeVPC)
-				if err != nil {
-					return fmt.Errorf("failed to join Transit Gateway %q: %v", gw, err)
-				}
-			}
-		}
-
-	}
-
 	if d.HasChange("enable_vpc_dns_server") && (d.Get("cloud_type").(int) == goaviatrix.AWS || d.Get("cloud_type").(int) == goaviatrix.AWSGOV) {
 		gw := &goaviatrix.Gateway{
 			CloudType: d.Get("cloud_type").(int),
@@ -1489,6 +1374,118 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		err = client.EnableMonitorGatewaySubnets(gateway.GwName, excludedInstances)
 		if err != nil {
 			return fmt.Errorf("could not enable monitor gateway subnets: %v", err)
+		}
+	}
+
+	if d.HasChange("enable_active_mesh") && d.HasChange("transit_gw") {
+		spokeVPC := &goaviatrix.SpokeVpc{
+			CloudType: d.Get("cloud_type").(int),
+			GwName:    d.Get("gw_name").(string),
+			HASubnet:  d.Get("ha_subnet").(string),
+		}
+
+		o, n := d.GetChange("transit_gw")
+		oldTransitGws := strings.Split(o.(string), ",")
+		newTransitGws := strings.Split(n.(string), ",")
+		if len(oldTransitGws) > 0 && oldTransitGws[0] != "" && manageTransitGwAttachment {
+			for _, gw := range oldTransitGws {
+				// Leave any transit gateways that are in the old list but not in the new.
+				if goaviatrix.Contains(newTransitGws, gw) {
+					continue
+				}
+				spokeVPC.TransitGateway = gw
+				err := client.SpokeLeaveTransit(spokeVPC)
+				if err != nil {
+					return fmt.Errorf("failed to leave Transit Gateway: %s", err)
+				}
+			}
+		}
+
+		gw := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+		enableActiveMesh := d.Get("enable_active_mesh").(bool)
+		if enableActiveMesh {
+			gw.EnableActiveMesh = "yes"
+			err := client.EnableActiveMesh(gw)
+			if err != nil {
+				return fmt.Errorf("failed to enable Active Mesh Mode: %s", err)
+			}
+		} else {
+			gw.EnableActiveMesh = "no"
+			err := client.DisableActiveMesh(gw)
+			if err != nil {
+				return fmt.Errorf("failed to disable Active Mesh Mode: %s", err)
+			}
+		}
+
+		if len(newTransitGws) > 0 && newTransitGws[0] != "" && manageTransitGwAttachment {
+			for _, gw := range newTransitGws {
+				// Join any transit gateways that are in the new list but not in the old.
+				if goaviatrix.Contains(oldTransitGws, gw) {
+					continue
+				}
+				spokeVPC.TransitGateway = gw
+				err := client.SpokeJoinTransit(spokeVPC)
+				if err != nil {
+					return fmt.Errorf("failed to join Transit Gateway %q: %v", gw, err)
+				}
+			}
+		}
+	} else if d.HasChange("enable_active_mesh") {
+		gw := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+
+		enableActiveMesh := d.Get("enable_active_mesh").(bool)
+		if enableActiveMesh {
+			gw.EnableActiveMesh = "yes"
+			err := client.EnableActiveMesh(gw)
+			if err != nil {
+				return fmt.Errorf("failed to enable Active Mesh Mode: %s", err)
+			}
+		} else {
+			gw.EnableActiveMesh = "no"
+			err := client.DisableActiveMesh(gw)
+			if err != nil {
+				return fmt.Errorf("failed to disable Active Mesh Mode: %s", err)
+			}
+		}
+	} else if d.HasChange("transit_gw") && manageTransitGwAttachment {
+		spokeVPC := &goaviatrix.SpokeVpc{
+			CloudType: d.Get("cloud_type").(int),
+			GwName:    d.Get("gw_name").(string),
+			HASubnet:  d.Get("ha_subnet").(string),
+		}
+
+		o, n := d.GetChange("transit_gw")
+		oldTransitGws := strings.Split(o.(string), ",")
+		newTransitGws := strings.Split(n.(string), ",")
+		if len(oldTransitGws) > 0 && oldTransitGws[0] != "" {
+			for _, gw := range oldTransitGws {
+				// Leave any transit gateways that are in the old list but not in the new.
+				if goaviatrix.Contains(newTransitGws, gw) {
+					continue
+				}
+				spokeVPC.TransitGateway = gw
+				err := client.SpokeLeaveTransit(spokeVPC)
+				if err != nil {
+					return fmt.Errorf("failed to leave Transit Gateway %q: %v", gw, err)
+				}
+			}
+		}
+		if len(newTransitGws) > 0 && newTransitGws[0] != "" {
+			for _, gw := range newTransitGws {
+				// Join any transit gateways that are in the new list but not in the old.
+				if goaviatrix.Contains(oldTransitGws, gw) {
+					continue
+				}
+				spokeVPC.TransitGateway = gw
+				err := client.SpokeJoinTransit(spokeVPC)
+				if err != nil {
+					return fmt.Errorf("failed to join Transit Gateway %q: %v", gw, err)
+				}
+			}
 		}
 	}
 
