@@ -1030,6 +1030,18 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	if d.HasChange("enable_private_oob") {
+		return fmt.Errorf("updating enable_private_oob is not allowed")
+	}
+
+	if d.HasChange("oob_management_subnet") {
+		return fmt.Errorf("updating oob_manage_subnet is not allowed")
+	}
+
+	if d.HasChange("oob_availability_zone") {
+		return fmt.Errorf("updating oob_availability_zone is not allowed")
+	}
+
 	manageTransitGwAttachment := d.Get("manage_transit_gateway_attachment").(bool)
 	if d.HasChange("manage_transit_gateway_attachment") {
 		_, nMTGA := d.GetChange("manage_transit_gateway_attachment")
@@ -1551,18 +1563,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				}
 			}
 		}
-	}
-
-	if d.HasChange("enable_private_oob") {
-		return fmt.Errorf("updating enable_private_oob is not allowed")
-	}
-
-	if d.HasChange("oob_management_subnet") {
-		return fmt.Errorf("updating oob_manage_subnet is not allowed")
-	}
-
-	if d.HasChange("oob_availability_zone") {
-		return fmt.Errorf("updating oob_availability_zone is not allowed")
 	}
 
 	d.Partial(false)

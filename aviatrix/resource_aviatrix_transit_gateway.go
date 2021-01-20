@@ -1418,6 +1418,18 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("'enable_learned_cidrs_approval' must be false if 'learned_cidrs_approval_mode' is set to 'connection'")
 	}
 
+	if d.HasChange("enable_private_oob") {
+		return fmt.Errorf("updating enable_private_oob is not allowed")
+	}
+
+	if d.HasChange("oob_management_subnet") {
+		return fmt.Errorf("updating oob_manage_subnet is not allowed")
+	}
+
+	if d.HasChange("oob_availability_zone") {
+		return fmt.Errorf("updating oob_availability_zone is not allowed")
+	}
+
 	if d.HasChange("single_az_ha") {
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName: d.Get("gw_name").(string),
@@ -2226,18 +2238,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if err != nil {
 			return fmt.Errorf("could not enable monitor gateway subnets: %v", err)
 		}
-	}
-
-	if d.HasChange("enable_private_oob") {
-		return fmt.Errorf("updating enable_private_oob is not allowed")
-	}
-
-	if d.HasChange("oob_management_subnet") {
-		return fmt.Errorf("updating oob_manage_subnet is not allowed")
-	}
-
-	if d.HasChange("oob_availability_zone") {
-		return fmt.Errorf("updating oob_availability_zone is not allowed")
 	}
 
 	d.Partial(false)
