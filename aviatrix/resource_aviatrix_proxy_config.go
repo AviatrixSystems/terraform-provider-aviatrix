@@ -33,6 +33,7 @@ func resourceAviatrixProxyConfig() *schema.Resource {
 			"proxy_ca_certificate": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				ForceNew:    true,
 				Description: "Server CA Certificate file.",
 			},
