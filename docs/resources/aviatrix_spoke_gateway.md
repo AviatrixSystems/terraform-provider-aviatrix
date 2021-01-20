@@ -147,6 +147,9 @@ The following arguments are supported:
 * `zone` - (Optional) Availability Zone. Only available for cloud_type = 8 (AZURE). Must be in the form 'az-n', for example, 'az-2'. Available in provider version R2.17+.
 * `manage_transit_gateway_attachment` - (Optional) Enable to manage spoke-to-Aviatrix transit gateway attachments using the **aviatrix_spoke_gateway** resource with the below `transit_gw` attribute. If this is set to false, attaching this spoke to transit gateways must be done using the **aviatrix_spoke_transit_attachment** resource. Valid values: true, false. Default value: true. Available in provider R2.17+.
 * `transit_gw` - (Optional) Specify the Aviatrix transit gateways to attach this spoke gateway to. Format is a comma separated list of transit gateway names. For example: "transit-gw1,transit-gw2".
+* `enable_private_oob` - (Optional) Enable private OOB.
+* `oob_management_subnet` - (Optional) OOB management subnet. Required if `enable_private_oob` is true.
+* `oob_availability_zone` - (Optional) OOB availability zone. Required if `enable_private_oob` is true.
 
 -> **NOTE:** `manage_transit_gateway_attachment` - If you are using/upgraded to Aviatrix Terraform Provider R2.17+, and an **aviatrix_spoke_gateway** resource was originally created with a provider version <R2.17, you must do 'terraform refresh' to update and apply the attribute's default value (true) into the state file.
 

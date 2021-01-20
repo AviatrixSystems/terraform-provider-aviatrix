@@ -224,6 +224,22 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Private IP address of HA transit gateway.",
 			},
+			"enable_private_oob": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable private OOB.",
+			},
+			"oob_management_subnet": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "OOB management subnet.",
+			},
+			"oob_availability_zone": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "OOB subnet availability zone.",
+			},
 		},
 	}
 }
@@ -273,6 +289,10 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 		d.Set("security_group_id", gw.GwSecurityGroupID)
 		d.Set("private_ip", gw.PrivateIP)
+
+		d.Set("enable_private_oob", gw.EnablePrivateOob)
+		d.Set("oob_management_subnet", gw.OobManagementSubnet)
+		d.Set("oob_availability_zone", gw.GatewayZone)
 
 		if gw.EnableNat == "yes" && gw.SnatMode == "primary" {
 			d.Set("single_ip_snat", true)

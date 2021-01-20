@@ -83,9 +83,14 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					"Otherwise, allocate a new Elastic IP and use it for this gateway.",
 			},
 			"eip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
+				Type:     schema.TypeString,
+				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old != "" {
+						return new != old
+					}
+					return false
+				},
 				Description: "Required when allocate_new_eip is false. It uses specified EIP for this gateway.",
 			},
 			"ha_subnet": {
@@ -370,6 +375,22 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				ForceNew:    true,
 				Description: "Pre-allocate a network interface(eth4) for \"BGP over LAN\" functionality. Only valid for cloud_type = 8 (AZURE). Valid values: true or false. Default value: false. Available as of provider version R2.18+",
 			},
+			"enable_private_oob": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable private OOB.",
+			},
+			"oob_management_subnet": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "OOB management subnet.",
+			},
+			"oob_availability_zone": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "OOB subnet availability zone.",
+			},
 		},
 	}
 }
@@ -564,6 +585,32 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		gateway.BgpOverLan = "on"
 	}
 
+	if d.Get("enable_private_oob").(bool) {
+		if cloudType != goaviatrix.AWS && cloudType != goaviatrix.AWSGOV {
+			return fmt.Errorf("'enable_private_oob' is only valid for cloud_type = 1 (AWS) or 256 (AWSGOV)")
+		}
+
+		if d.Get("oob_availability_zone").(string) == "" {
+			return fmt.Errorf("\"oob_availability_zone\" is required if \"enable_private_oob\" is true")
+		}
+
+		if d.Get("oob_management_subnet").(string) == "" {
+			return fmt.Errorf("\"oob_management_subnet\" is required if \"enable_private_oob\" is true")
+		}
+
+		gateway.EnablePrivateOob = "on"
+		gateway.Subnet = gateway.Subnet + "~~" + d.Get("oob_availability_zone").(string)
+		gateway.OobManagementSubnet = d.Get("oob_management_subnet").(string)
+	} else {
+		if d.Get("oob_availability_zone").(string) != "" {
+			return fmt.Errorf("\"oob_availability_zone\" must be empty if \"enable_private_oob\" is false")
+		}
+
+		if d.Get("oob_management_subnet").(string) != "" {
+			return fmt.Errorf("\"oob_mangeemnt_sbunet\" must be empty if \"enable_private_oob\" is false")
+		}
+	}
+
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
 
 	err := client.LaunchTransitVpc(gateway)
@@ -628,6 +675,11 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 		if transitGateway.CloudType == goaviatrix.AZURE && haZone != "" {
 			transitGateway.HASubnet = fmt.Sprintf("%s~~%s~~", haSubnet, haZone)
+		}
+
+		if d.Get("enable_private_oob").(bool) {
+			transitGateway.HASubnet = transitGateway.HASubnet + "~~" + d.Get("oob_availability_zone").(string)
+			transitGateway.OobManagementSubnet = d.Get("oob_management_subnet").(string)
 		}
 
 		log.Printf("[INFO] Enabling HA on Transit Gateway: %#v", haSubnet)
@@ -1087,6 +1139,10 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("excluded_advertised_spoke_routes", "")
 		}
 
+		d.Set("enable_private_oob", gw.EnablePrivateOob)
+		d.Set("oob_management_subnet", gw.OobManagementSubnet)
+		d.Set("oob_availability_zone", gw.GatewayZone)
+
 		gwDetail, err := client.GetGatewayDetail(gw)
 		if err != nil {
 			return fmt.Errorf("couldn't get Aviatrix Transit Gateway: %s", err)
@@ -1455,6 +1511,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				changeHaGw = true
 			}
 		}
+
+		if d.Get("enable_private_oob").(bool) {
+			transitGw.HASubnet = transitGw.HASubnet + "~~" + d.Get("oob_availability_zone").(string)
+			transitGw.OobManagementSubnet = d.Get("oob_management_subnet").(string)
+		}
+
 		if newHaGwEnabled {
 			if transitGw.CloudType == goaviatrix.GCP {
 				err := client.EnableHaTransitGateway(transitGw)
@@ -2164,6 +2226,18 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if err != nil {
 			return fmt.Errorf("could not enable monitor gateway subnets: %v", err)
 		}
+	}
+
+	if d.HasChange("enable_private_oob") {
+		return fmt.Errorf("updating enable_private_oob is not allowed")
+	}
+
+	if d.HasChange("oob_management_subnet") {
+		return fmt.Errorf("updating oob_manage_subnet is not allowed")
+	}
+
+	if d.HasChange("oob_availability_zone") {
+		return fmt.Errorf("updating oob_availability_zone is not allowed")
 	}
 
 	d.Partial(false)

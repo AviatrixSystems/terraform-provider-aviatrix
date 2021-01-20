@@ -63,3 +63,6 @@ In addition to all arguments above, the following attributes are exported:
 * `transit_gw` - Transit gateways attached to this spoke gateway.
 * `vpc_id` - VPC-ID/VNet-Name of cloud provider.
 * `vpc_reg` - Region of cloud provider.
+* `enable_private_oob` - Status of private OOB for the spoke gateway.
+* `oob_management_subnet` - OOB management subnet.
+* `oob_availability_zone` - OOB availability zone.

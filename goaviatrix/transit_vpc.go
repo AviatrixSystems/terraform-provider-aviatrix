@@ -48,6 +48,8 @@ type TransitVpc struct {
 	LearnedCidrsApproval         string `form:"learned_cidrs_approval,omitempty"`
 	EncVolume                    string `form:"enc_volume,omitempty"`
 	BgpOverLan                   string `form:"bgp_over_lan,omitempty"`
+	EnablePrivateOob             string `form:"private_oob,omitempty"`
+	OobManagementSubnet          string `form:"oob_mgmt_subnet,omitempty"`
 }
 
 type TransitGatewayAdvancedConfig struct {
@@ -165,6 +167,7 @@ func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) error {
 		enableTransitHa.Add("new_zone", gateway.HAZone)
 	} else {
 		enableTransitHa.Add("public_subnet", gateway.HASubnet)
+		enableTransitHa.Add("oob_mgmt_subnet", gateway.OobManagementSubnet)
 	}
 
 	Url.RawQuery = enableTransitHa.Encode()
