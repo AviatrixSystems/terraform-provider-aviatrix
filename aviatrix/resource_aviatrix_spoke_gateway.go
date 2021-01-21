@@ -806,7 +806,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("transit_gw", "")
 		}
 	}
-	if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV {
+	if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV || gw.CloudType == goaviatrix.AZURE {
 		tags := &goaviatrix.Tags{
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
