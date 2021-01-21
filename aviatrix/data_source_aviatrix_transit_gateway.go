@@ -226,18 +226,17 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 			},
 			"enable_private_oob": {
 				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
+				Computed:    true,
 				Description: "Enable private OOB.",
 			},
 			"oob_management_subnet": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Computed:    true,
 				Description: "OOB management subnet.",
 			},
 			"oob_availability_zone": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Computed:    true,
 				Description: "OOB subnet availability zone.",
 			},
 		},

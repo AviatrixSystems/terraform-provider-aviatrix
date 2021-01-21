@@ -88,18 +88,16 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return d.Get("enable_private_oob").(bool)
+				},
 				Description: "If false, reuse an idle address in Elastic IP pool for this gateway. " +
 					"Otherwise, allocate a new Elastic IP and use it for this gateway.",
 			},
 			"eip": {
-				Type:     schema.TypeString,
-				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old != "" {
-						return new != old
-					}
-					return false
-				},
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
 				Description: "Required when allocate_new_eip is false. It uses specified EIP for this gateway.",
 			},
 			"ha_subnet": {
@@ -315,12 +313,14 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		gateway.SingleAzHa = "disabled"
 	}
 
-	allocateNewEip := d.Get("allocate_new_eip").(bool)
-	if allocateNewEip {
-		gateway.ReuseEip = "off"
-	} else {
-		gateway.ReuseEip = "on"
-		gateway.Eip = d.Get("eip").(string)
+	if !(d.Get("enable_private_oob").(bool)) {
+		allocateNewEip := d.Get("allocate_new_eip").(bool)
+		if allocateNewEip {
+			gateway.ReuseEip = "off"
+		} else {
+			gateway.ReuseEip = "on"
+			gateway.Eip = d.Get("eip").(string)
+		}
 	}
 
 	if gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.GCP || gateway.CloudType == goaviatrix.OCI || gateway.CloudType == goaviatrix.AWSGOV {
@@ -724,7 +724,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0]) //AWS vpc_id returns as <vpc_id>~~<other vpc info> in rest api
 			d.Set("vpc_reg", gw.VpcRegion)                    //AWS vpc_reg returns as vpc_region in rest api
 
-			if gw.AllocateNewEipRead {
+			if gw.AllocateNewEipRead && !gw.EnablePrivateOob {
 				d.Set("allocate_new_eip", true)
 			} else {
 				d.Set("allocate_new_eip", false)
