@@ -176,6 +176,10 @@ func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 
 	vC, err := client.GetVpc(vpc)
 	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("couldn't find VPC: %s", err)
 	}
 

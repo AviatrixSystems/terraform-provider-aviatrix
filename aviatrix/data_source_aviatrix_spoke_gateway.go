@@ -212,6 +212,10 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 
 	gw, err := client.GetGateway(gateway)
 	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("couldn't find Aviatrix spoke gateway: %s", err)
 	}
 	if gw != nil {

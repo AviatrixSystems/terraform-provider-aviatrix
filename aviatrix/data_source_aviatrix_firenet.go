@@ -95,6 +95,10 @@ func dataSourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) err
 
 	fireNetDetail, err := client.GetFireNet(fireNet)
 	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("couldn't find FireNet: %s", err)
 	}
 
