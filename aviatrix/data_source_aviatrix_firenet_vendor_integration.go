@@ -90,6 +90,10 @@ func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta
 
 	fI, err := client.GetFirewallInstance(firewallInstance)
 	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("couldn't find Firewall Instance: %s", err)
 	}
 	if fI != nil {

@@ -58,6 +58,10 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 
 	acc, err := client.GetAccount(account)
 	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("aviatrix Account: %s", err)
 	}
 	if acc != nil {
