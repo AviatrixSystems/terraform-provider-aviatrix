@@ -886,8 +886,10 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Set("enable_private_oob", gw.EnablePrivateOob)
-	d.Set("oob_management_subnet", gw.OobManagementSubnet)
-	d.Set("oob_availability_zone", gw.GatewayZone)
+	if gw.EnablePrivateOob {
+		d.Set("oob_management_subnet", gw.OobManagementSubnet)
+		d.Set("oob_availability_zone", gw.GatewayZone)
+	}
 
 	if gw.CloudType == goaviatrix.AZURE {
 		gwDetail, err := client.GetGatewayDetail(gw)

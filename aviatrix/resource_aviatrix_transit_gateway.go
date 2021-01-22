@@ -1140,8 +1140,10 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 
 		d.Set("enable_private_oob", gw.EnablePrivateOob)
-		d.Set("oob_management_subnet", gw.OobManagementSubnet)
-		d.Set("oob_availability_zone", gw.GatewayZone)
+		if gw.EnablePrivateOob {
+			d.Set("oob_management_subnet", gw.OobManagementSubnet)
+			d.Set("oob_availability_zone", gw.GatewayZone)
+		}
 
 		gwDetail, err := client.GetGatewayDetail(gw)
 		if err != nil {
