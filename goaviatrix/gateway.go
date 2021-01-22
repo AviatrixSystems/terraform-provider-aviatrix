@@ -144,6 +144,8 @@ type Gateway struct {
 	MonitorExcludeGWList        []string `form:"monitor_exclude_gw_list,omitempty" json:"monitor_exclude_gw_list,omitempty"`
 	FqdnLanCidr                 string   `form:"fqdn_lan_cidr,omitempty"`
 	RouteTable                  string
+	EnablePrivateOob            bool   `json:"private_oob"`
+	OobManagementSubnet         string `json:"oob_mgmt_subnet"`
 }
 
 type PolicyRule struct {

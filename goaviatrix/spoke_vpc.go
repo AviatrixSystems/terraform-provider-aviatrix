@@ -39,6 +39,8 @@ type SpokeVpc struct {
 	EnableActiveMesh      string `form:"enable_activemesh,omitempty" json:"enable_activemesh,omitempty"`
 	Zone                  string `form:"zone,omitempty" json:"zone,omitempty"`
 	EncVolume             string `form:"enc_volume,omitempty"`
+	EnablePrivateOob      string `form:"private_oob,omitempty"`
+	OobManagementSubnet   string `form:"oob_mgmt_subnet,omitempty"`
 }
 
 func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) error {
@@ -147,6 +149,7 @@ func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 
 	if spoke.CloudType == AWS || spoke.CloudType == AZURE || spoke.CloudType == OCI || spoke.CloudType == AWSGOV {
 		enableSpokeHa.Add("public_subnet", spoke.HASubnet)
+		enableSpokeHa.Add("oob_mgmt_subnet", spoke.OobManagementSubnet)
 	} else if spoke.CloudType == GCP {
 		enableSpokeHa.Add("new_zone", spoke.HAZone)
 	} else {

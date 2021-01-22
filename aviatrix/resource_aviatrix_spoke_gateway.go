@@ -88,6 +88,9 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return d.Get("enable_private_oob").(bool)
+				},
 				Description: "If false, reuse an idle address in Elastic IP pool for this gateway. " +
 					"Otherwise, allocate a new Elastic IP and use it for this gateway.",
 			},
@@ -256,6 +259,22 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Private IP address of the spoke gateway created.",
 			},
+			"enable_private_oob": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable private OOB.",
+			},
+			"oob_management_subnet": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "OOB management subnet.",
+			},
+			"oob_availability_zone": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "OOB subnet availability zone.",
+			},
 		},
 	}
 }
@@ -294,12 +313,14 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		gateway.SingleAzHa = "disabled"
 	}
 
-	allocateNewEip := d.Get("allocate_new_eip").(bool)
-	if allocateNewEip {
-		gateway.ReuseEip = "off"
-	} else {
-		gateway.ReuseEip = "on"
-		gateway.Eip = d.Get("eip").(string)
+	if !(d.Get("enable_private_oob").(bool)) {
+		allocateNewEip := d.Get("allocate_new_eip").(bool)
+		if allocateNewEip {
+			gateway.ReuseEip = "off"
+		} else {
+			gateway.ReuseEip = "on"
+			gateway.Eip = d.Get("eip").(string)
+		}
 	}
 
 	if gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.GCP || gateway.CloudType == goaviatrix.OCI || gateway.CloudType == goaviatrix.AWSGOV {
@@ -397,6 +418,32 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("'monitor_exclude_list' must be empty if 'enable_monitor_gateway_subnets' is false")
 	}
 
+	if d.Get("enable_private_oob").(bool) {
+		if gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV {
+			return fmt.Errorf("'enable_private_oob' is only valid for cloud_type = 1 (AWS) or 256 (AWSGOV)")
+		}
+
+		if d.Get("oob_availability_zone").(string) == "" {
+			return fmt.Errorf("\"oob_availability_zone\" is required if \"enable_private_oob\" is true")
+		}
+
+		if d.Get("oob_management_subnet").(string) == "" {
+			return fmt.Errorf("\"oob_management_subnet\" is required if \"enable_private_oob\" is true")
+		}
+
+		gateway.EnablePrivateOob = "on"
+		gateway.Subnet = gateway.Subnet + "~~" + d.Get("oob_availability_zone").(string)
+		gateway.OobManagementSubnet = d.Get("oob_management_subnet").(string)
+	} else {
+		if d.Get("oob_availability_zone").(string) != "" {
+			return fmt.Errorf("\"oob_availability_zone\" must be empty if \"enable_private_oob\" is false")
+		}
+
+		if d.Get("oob_management_subnet").(string) != "" {
+			return fmt.Errorf("\"oob_mangeemnt_sbunet\" must be empty if \"enable_private_oob\" is false")
+		}
+	}
+
 	log.Printf("[INFO] Creating Aviatrix Spoke Gateway: %#v", gateway)
 
 	err := client.LaunchSpokeVpc(gateway)
@@ -458,6 +505,11 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 
 		if haGateway.CloudType == goaviatrix.AZURE && haZone != "" {
 			haGateway.HASubnet = fmt.Sprintf("%s~~%s~~", haSubnet, haZone)
+		}
+
+		if d.Get("enable_private_oob").(bool) {
+			haGateway.HASubnet = haGateway.HASubnet + "~~" + d.Get("oob_availability_zone").(string)
+			haGateway.OobManagementSubnet = d.Get("oob_management_subnet").(string)
 		}
 
 		if haGateway.CloudType == goaviatrix.GCP {
@@ -672,7 +724,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0]) //AWS vpc_id returns as <vpc_id>~~<other vpc info> in rest api
 			d.Set("vpc_reg", gw.VpcRegion)                    //AWS vpc_reg returns as vpc_region in rest api
 
-			if gw.AllocateNewEipRead {
+			if gw.AllocateNewEipRead && !gw.EnablePrivateOob {
 				d.Set("allocate_new_eip", true)
 			} else {
 				d.Set("allocate_new_eip", false)
@@ -833,6 +885,10 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	d.Set("enable_private_oob", gw.EnablePrivateOob)
+	d.Set("oob_management_subnet", gw.OobManagementSubnet)
+	d.Set("oob_availability_zone", gw.GatewayZone)
+
 	if gw.CloudType == goaviatrix.AZURE {
 		gwDetail, err := client.GetGatewayDetail(gw)
 		if err != nil {
@@ -972,6 +1028,18 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		if o.(string) != "" && n.(string) != "" {
 			return fmt.Errorf("updating ha_eip is not allowed")
 		}
+	}
+
+	if d.HasChange("enable_private_oob") {
+		return fmt.Errorf("updating enable_private_oob is not allowed")
+	}
+
+	if d.HasChange("oob_management_subnet") {
+		return fmt.Errorf("updating oob_manage_subnet is not allowed")
+	}
+
+	if d.HasChange("oob_availability_zone") {
+		return fmt.Errorf("updating oob_availability_zone is not allowed")
 	}
 
 	manageTransitGwAttachment := d.Get("manage_transit_gateway_attachment").(bool)
@@ -1136,6 +1204,12 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				changeHaGw = true
 			}
 		}
+
+		if d.Get("enable_private_oob").(bool) {
+			spokeGw.HASubnet = spokeGw.HASubnet + "~~" + d.Get("oob_availability_zone").(string)
+			spokeGw.OobManagementSubnet = d.Get("oob_management_subnet").(string)
+		}
+
 		if newHaGwEnabled {
 			//New configuration to enable HA
 			if haGateway.CloudType == goaviatrix.GCP {

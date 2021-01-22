@@ -180,6 +180,21 @@ func dataSourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Private IP address of HA spoke gateway.",
 			},
+			"enable_private_oob": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Enable private OOB.",
+			},
+			"oob_management_subnet": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "OOB management subnet.",
+			},
+			"oob_availability_zone": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "OOB subnet availability zone.",
+			},
 		},
 	}
 }
@@ -235,6 +250,10 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 		d.Set("security_group_id", gw.GwSecurityGroupID)
 		d.Set("private_ip", gw.PrivateIP)
+
+		d.Set("enable_private_oob", gw.EnablePrivateOob)
+		d.Set("oob_management_subnet", gw.OobManagementSubnet)
+		d.Set("oob_availability_zone", gw.GatewayZone)
 
 		if gw.SingleAZ == "yes" {
 			d.Set("single_az_ha", true)
