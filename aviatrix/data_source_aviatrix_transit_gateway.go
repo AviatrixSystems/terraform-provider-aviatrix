@@ -294,8 +294,10 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 		d.Set("private_ip", gw.PrivateIP)
 
 		d.Set("enable_private_oob", gw.EnablePrivateOob)
-		d.Set("oob_management_subnet", gw.OobManagementSubnet)
-		d.Set("oob_availability_zone", gw.GatewayZone)
+		if gw.EnablePrivateOob {
+			d.Set("oob_management_subnet", gw.OobManagementSubnet)
+			d.Set("oob_availability_zone", gw.GatewayZone)
+		}
 
 		if gw.EnableNat == "yes" && gw.SnatMode == "primary" {
 			d.Set("single_ip_snat", true)
