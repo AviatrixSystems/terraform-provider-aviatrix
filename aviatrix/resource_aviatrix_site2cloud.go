@@ -277,49 +277,49 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Description: "Enable custom mapped.",
 			},
 			"remote_source_real_cidrs": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
 				Description: "Remote Initiated Traffic Source Real CIDRs.",
 			},
 			"remote_source_virtual_cidrs": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
 				Description: "Remote Initiated Traffic Source Virtual CIDRs.",
 			},
 			"remote_destination_real_cidrs": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
 				Description: "Remote Initiated Traffic Destination Real CIDRs.",
 			},
 			"remote_destination_virtual_cidrs": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
 				Description: "Remote Initiated Traffic Destination Virtual CIDRs.",
 			},
 			"local_source_real_cidrs": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
 				Description: "Local Initiated Traffic Source Real CIDRs.",
 			},
 			"local_source_virtual_cidrs": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
 				Description: "Local Initiated Traffic Source Virtual CIDRs.",
 			},
 			"local_destination_real_cidrs": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
 				Description: "Local Initiated Traffic Destination Real CIDRs.",
 			},
 			"local_destination_virtual_cidrs": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
 				Description: "Local Initiated Traffic Destination Virtual CIDRs.",
@@ -328,9 +328,9 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 	}
 }
 
-func getCSVFromStringSet(d *schema.ResourceData, attributeName string) string {
-	set := d.Get(attributeName).(*schema.Set)
-	expandedList := goaviatrix.ExpandStringList(set.List())
+func getCSVFromStringList(d *schema.ResourceData, attributeName string) string {
+	s := d.Get(attributeName).([]interface{})
+	expandedList := goaviatrix.ExpandStringList(s)
 	return strings.Join(expandedList, ",")
 }
 
@@ -354,14 +354,14 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		RemoteSubnetVirtual:           d.Get("remote_subnet_virtual").(string),
 		LocalSubnetVirtual:            d.Get("local_subnet_virtual").(string),
 		CustomMap:                     d.Get("custom_mapped").(bool),
-		RemoteSourceRealCIDRs:         getCSVFromStringSet(d, "remote_source_real_cidrs"),
-		RemoteSourceVirtualCIDRs:      getCSVFromStringSet(d, "remote_source_virtual_cidrs"),
-		RemoteDestinationRealCIDRs:    getCSVFromStringSet(d, "remote_destination_real_cidrs"),
-		RemoteDestinationVirtualCIDRs: getCSVFromStringSet(d, "remote_destination_virtual_cidrs"),
-		LocalSourceRealCIDRs:          getCSVFromStringSet(d, "local_source_real_cidrs"),
-		LocalSourceVirtualCIDRs:       getCSVFromStringSet(d, "local_source_virtual_cidrs"),
-		LocalDestinationRealCIDRs:     getCSVFromStringSet(d, "local_destination_real_cidrs"),
-		LocalDestinationVirtualCIDRs:  getCSVFromStringSet(d, "local_destination_virtual_cidrs"),
+		RemoteSourceRealCIDRs:         getCSVFromStringList(d, "remote_source_real_cidrs"),
+		RemoteSourceVirtualCIDRs:      getCSVFromStringList(d, "remote_source_virtual_cidrs"),
+		RemoteDestinationRealCIDRs:    getCSVFromStringList(d, "remote_destination_real_cidrs"),
+		RemoteDestinationVirtualCIDRs: getCSVFromStringList(d, "remote_destination_virtual_cidrs"),
+		LocalSourceRealCIDRs:          getCSVFromStringList(d, "local_source_real_cidrs"),
+		LocalSourceVirtualCIDRs:       getCSVFromStringList(d, "local_source_virtual_cidrs"),
+		LocalDestinationRealCIDRs:     getCSVFromStringList(d, "local_destination_real_cidrs"),
+		LocalDestinationVirtualCIDRs:  getCSVFromStringList(d, "local_destination_virtual_cidrs"),
 	}
 
 	haEnabled := d.Get("ha_enabled").(bool)
@@ -825,14 +825,14 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 			VpcID:                         d.Get("vpc_id").(string),
 			ConnName:                      d.Get("connection_name").(string),
 			NetworkType:                   "3",
-			RemoteSourceRealCIDRs:         getCSVFromStringSet(d, "remote_source_real_cidrs"),
-			RemoteSourceVirtualCIDRs:      getCSVFromStringSet(d, "remote_source_virtual_cidrs"),
-			RemoteDestinationRealCIDRs:    getCSVFromStringSet(d, "remote_destination_real_cidrs"),
-			RemoteDestinationVirtualCIDRs: getCSVFromStringSet(d, "remote_destination_virtual_cidrs"),
-			LocalSourceRealCIDRs:          getCSVFromStringSet(d, "local_source_real_cidrs"),
-			LocalSourceVirtualCIDRs:       getCSVFromStringSet(d, "local_source_virtual_cidrs"),
-			LocalDestinationRealCIDRs:     getCSVFromStringSet(d, "local_destination_real_cidrs"),
-			LocalDestinationVirtualCIDRs:  getCSVFromStringSet(d, "local_destination_virtual_cidrs"),
+			RemoteSourceRealCIDRs:         getCSVFromStringList(d, "remote_source_real_cidrs"),
+			RemoteSourceVirtualCIDRs:      getCSVFromStringList(d, "remote_source_virtual_cidrs"),
+			RemoteDestinationRealCIDRs:    getCSVFromStringList(d, "remote_destination_real_cidrs"),
+			RemoteDestinationVirtualCIDRs: getCSVFromStringList(d, "remote_destination_virtual_cidrs"),
+			LocalSourceRealCIDRs:          getCSVFromStringList(d, "local_source_real_cidrs"),
+			LocalSourceVirtualCIDRs:       getCSVFromStringList(d, "local_source_virtual_cidrs"),
+			LocalDestinationRealCIDRs:     getCSVFromStringList(d, "local_destination_real_cidrs"),
+			LocalDestinationVirtualCIDRs:  getCSVFromStringList(d, "local_destination_virtual_cidrs"),
 		}
 		hasSetAllCustomRemoteCIDRs := s2c.RemoteSourceRealCIDRs != "" && s2c.RemoteSourceVirtualCIDRs != "" && s2c.RemoteDestinationRealCIDRs != "" && s2c.RemoteDestinationVirtualCIDRs != ""
 		hasSetAllCustomLocalCIDRs := s2c.LocalSourceRealCIDRs != "" && s2c.LocalSourceVirtualCIDRs != "" && s2c.LocalDestinationRealCIDRs != "" && s2c.LocalDestinationVirtualCIDRs != ""
