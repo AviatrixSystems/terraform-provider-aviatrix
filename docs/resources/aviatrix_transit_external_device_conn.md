@@ -36,8 +36,8 @@ resource "aviatrix_transit_external_device_conn" "ex-conn" {
   tunnel_protocol   = "LAN"
   bgp_local_as_num  = "123"
   bgp_remote_as_num = "345"
-  remote_gateway_ip = "172.12.13.14"
-  local_tunnel_cidr = "10.0.1.0/24"
+  remote_lan_ip     = "172.12.13.14"
+  local_lan_ip      = "172.12.13.15"
   remote_vpc_name   = "vnet-name:resource-group-name"
 }
 ```
@@ -51,14 +51,14 @@ resource "aviatrix_transit_external_device_conn" "ex-conn" {
   tunnel_protocol   = "LAN"
   bgp_local_as_num  = "123"
   bgp_remote_as_num = "345"
-  remote_gateway_ip = "172.12.13.14"
-  local_tunnel_cidr = "10.0.1.0/24"
+  remote_lan_ip     = "172.12.13.14"
+  local_lan_ip      = "172.12.13.15"
   remote_vpc_name   = "vnet-name:resource-group-name"
   
   ha_enabled               = true
   backup_bgp_remote_as_num = "678"
-  backup_remote_gateway_ip = "172.12.13.15"
-  backup_local_tunnel_cidr = "10.0.1.0/24"
+  backup_remote_lan_ip     = "172.12.13.16"
+  backup_local_lan_ip      = "172.12.13.17"
 }
 ```
 
@@ -70,7 +70,7 @@ The following arguments are supported:
 * `vpc_id` - (Required) VPC ID of the Aviatrix transit gateway.
 * `connection_name` - (Required) Transit external device connection name.
 * `gw_name` - (Required) Aviatrix transit gateway name.
-* `remote_gateway_ip` - (Required) Remote gateway IP. With tunnel_protocol = 'LAN', 'remote_gateway_ip' represents the Remote LAN IP.
+* `remote_gateway_ip` - (Optional) Remote gateway IP. Required when 'tunnel_protocol' != 'LAN'.
 * `connection_type` - (Required) Connection type. Valid values: 'bgp', 'static'. Default value: 'bgp'.
 * `tunnel_protocol` - (Optional) Tunnel protocol, only valid with `connection_type` = 'bgp'. Valid values: 'IPsec', 'GRE' or 'LAN'. Default value: 'IPsec'. Available as of provider version R2.18+.
 * `bgp_local_as_num` - (Optional) BGP local ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
@@ -83,10 +83,10 @@ The following arguments are supported:
 
 ### HA
 * `ha_enabled` - (Optional) Set as true if there are two external devices.
-* `backup_remote_gateway_ip ` - (Optional) Backup remote gateway IP. Required if HA enabled. With tunnel_protocol = 'LAN', 'backup_remote_gateway_ip' represents the Backup Remote LAN IP.
+* `backup_remote_gateway_ip ` - (Optional) Backup remote gateway IP. Required if HA enabled.
 * `backup_bgp_remote_as_num` - (Optional) Backup BGP remote ASN (Autonomous System Number). Integer between 1-4294967294. Required if HA enabled for 'bgp' connection.
 * `backup_pre_shared_key` - (Optional) Backup Pre-Shared Key.
-* `backup_local_tunnel_cidr` - (Optional) Source CIDR for the tunnel from the backup Aviatrix transit gateway. With tunnel_protocol = 'LAN', 'backup_local_tunnel_cidr' represents the Backup Local LAN CIDR.
+* `backup_local_tunnel_cidr` - (Optional) Source CIDR for the tunnel from the backup Aviatrix transit gateway.
 * `backup_remote_tunnel_cidr` - (Optional) Destination CIDR for the tunnel to the backup external device.
 * `backup_direct_connect` - (Optional) Backup direct connect for backup external device.
 
@@ -99,10 +99,19 @@ The following arguments are supported:
 * `phase_1_encryption` - (Optional) Phase one Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC' and 'AES-256-CBC'. Default value: 'AES-256-CBC'.
 * `phase_2_encryption` - (Optional) Phase two Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC', 'AES-256-CBC', 'AES-128-GCM-64', 'AES-128-GCM-96' and 'AES-128-GCM-128'. Default value: 'AES-256-CBC'.
 
+### BGP over LAN (Available as of provider version R2.18+)
+
+~> **NOTE:** BGP over LAN attributes are only valid with 'tunnel_protocol' = 'LAN'.
+
+* `remote_lan_ip` - (Optional) Remote LAN IP. Required for BGP over LAN connection.
+* `local_lan_ip` - (Optional) Local LAN IP.
+* `backup_remote_lan_ip` - (Optional) Backup Remote LAN IP. Required for HA BGP over LAN connection.
+* `backup_local_lan_ip` - (Optional) Backup Local LAN IP.
+
 ### Misc.
 * `direct_connect` - (Optional) Set true for private network infrastructure.
 * `pre_shared_key` - (Optional) Pre-Shared Key.
-* `local_tunnel_cidr` - (Optional) Source CIDR for the tunnel from the Aviatrix transit gateway. With tunnel_protocol = 'LAN', 'local_tunnel_cidr' represents the Local LAN CIDR.
+* `local_tunnel_cidr` - (Optional) Source CIDR for the tunnel from the Aviatrix transit gateway.
 * `remote_tunnel_cidr` - (Optional) Destination CIDR for the tunnel to the external device.
 * `enable_edge_segmentation` - (Optional) Switch to allow this connection to communicate with a Security Domain via Connection Policy.
 * `switch_to_ha_standby_gateway` - (Optional) Switch to HA Standby Transit Gateway connection. Only valid with Transit Gateway that has [Active-Standby Mode](https://docs.aviatrix.com/HowTos/transit_advanced.html#active-standby) enabled and for non-HA external device. Valid values: true, false. Default: false. Available in provider version R2.17.1+.

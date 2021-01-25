@@ -43,6 +43,10 @@ type ExternalDeviceConn struct {
 	ManualBGPCidrs         []string
 	TunnelProtocol         string `form:"tunnel_protocol,omitempty"`
 	PeerVnetId             string `form:"peer_vnet_id,omitempty"`
+	RemoteLanIP            string `form:"remote_lan_ip,omitempty"`
+	LocalLanIP             string `form:"local_lan_ip,omitempty"`
+	BackupRemoteLanIP      string `form:"backup_remote_lan_ip,omitempty"`
+	BackupLocalLanIP       string `form:"backup_local_lan_ip,omitempty"`
 }
 
 type EditExternalDeviceConnDetail struct {
@@ -72,6 +76,10 @@ type EditExternalDeviceConnDetail struct {
 	BackupPreSharedKey     string
 	IkeVer                 string `json:"ike_ver"`
 	PeerVnetId             string `json:"peer_vnet_id"`
+	RemoteLanIP            string `json:"remote_lan_ip"`
+	LocalLanIP             string `json:"local_lan_ip"`
+	BackupRemoteLanIP      string `json:"backup_remote_lan_ip"`
+	BackupLocalLanIP       string `json:"backup_local_lan_ip"`
 }
 
 type ExternalDeviceConnDetailResp struct {
@@ -260,6 +268,10 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 			externalDeviceConn.EnableIkev2 = "disabled"
 		}
 		externalDeviceConn.PeerVnetId = externalDeviceConnDetail.PeerVnetId
+		externalDeviceConn.RemoteLanIP = externalDeviceConnDetail.RemoteLanIP
+		externalDeviceConn.LocalLanIP = externalDeviceConnDetail.LocalLanIP
+		externalDeviceConn.BackupRemoteLanIP = externalDeviceConnDetail.BackupRemoteLanIP
+		externalDeviceConn.BackupLocalLanIP = externalDeviceConnDetail.BackupLocalLanIP
 
 		return externalDeviceConn, nil
 	}
