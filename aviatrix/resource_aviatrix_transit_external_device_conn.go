@@ -44,7 +44,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 			},
 			"remote_gateway_ip": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				ForceNew:    true,
 				Description: "Remote Gateway IP.",
 			},
@@ -53,7 +53,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional:    true,
 				Default:     "bgp",
 				ForceNew:    true,
-				Description: "Connection type. Valid values: 'bpg', 'static'. Default value: 'bgp'.",
+				Description: "Connection type. Valid values: 'bgp', 'static'. Default value: 'bgp'.",
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 					v := val.(string)
 					if v != "bgp" && v != "static" {
@@ -278,6 +278,32 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "Name of the remote VPC for a LAN BGP connection. Only valid when 'connection_type' = 'bgp' and tunnel_protocol' = 'LAN' with an Azure transit gateway. Must be in the form \"<VNET-name>:<resource-group-name>\". Available as of provider version R2.18+.",
 			},
+			"remote_lan_ip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Remote LAN IP.",
+			},
+			"local_lan_ip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ForceNew:    true,
+				Description: "Local LAN IP.",
+			},
+			"backup_remote_lan_ip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Backup Remote LAN IP.",
+			},
+			"backup_local_lan_ip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ForceNew:    true,
+				Description: "Backup Local LAN IP.",
+			},
 		},
 	}
 }
@@ -307,6 +333,31 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		BackupRemoteTunnelCidr: d.Get("backup_remote_tunnel_cidr").(string),
 		TunnelProtocol:         d.Get("tunnel_protocol").(string),
 		PeerVnetId:             d.Get("remote_vpc_name").(string),
+		RemoteLanIP:            d.Get("remote_lan_ip").(string),
+		LocalLanIP:             d.Get("local_lan_ip").(string),
+		BackupRemoteLanIP:      d.Get("backup_remote_lan_ip").(string),
+		BackupLocalLanIP:       d.Get("backup_local_lan_ip").(string),
+	}
+
+	if (externalDeviceConn.RemoteGatewayIP != "" ||
+		externalDeviceConn.LocalTunnelCidr != "" ||
+		externalDeviceConn.BackupRemoteGatewayIP != "" ||
+		externalDeviceConn.BackupLocalTunnelCidr != "") && externalDeviceConn.TunnelProtocol == "LAN" {
+		return fmt.Errorf("'remote_gateway_ip', 'local_tunnel_cidr', 'backup_remote_gateway_ip' and 'backup_local_tunnel_cidr' " +
+			"cannot be set with 'tunnel_protocol' = 'LAN'. Please use the appropriate LAN attributes instead")
+	}
+	if (externalDeviceConn.RemoteLanIP != "" ||
+		externalDeviceConn.LocalLanIP != "" ||
+		externalDeviceConn.BackupRemoteLanIP != "" ||
+		externalDeviceConn.BackupLocalLanIP != "") && externalDeviceConn.TunnelProtocol != "LAN" {
+		return fmt.Errorf("'remote_lan_ip', 'local_lan_ip', 'backup_remote_lan_ip' and 'backup_local_lan_ip' " +
+			"can only be set with 'tunnel_protocol' = 'LAN'")
+	}
+	if externalDeviceConn.RemoteLanIP == "" && externalDeviceConn.TunnelProtocol == "LAN" {
+		return fmt.Errorf("'remote_lan_ip' is required when 'tunnel_protocol' = 'LAN'")
+	}
+	if externalDeviceConn.RemoteGatewayIP == "" && externalDeviceConn.TunnelProtocol != "LAN" {
+		return fmt.Errorf("'remote_gateway_ip' is required when 'tunnel_protocol' != 'LAN'")
 	}
 
 	bgpLocalAsNum, err := strconv.Atoi(d.Get("bgp_local_as_num").(string))
@@ -343,7 +394,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	}
 
 	if externalDeviceConn.ConnectionType == "bgp" && externalDeviceConn.RemoteSubnet != "" {
-		return fmt.Errorf("'remote_subnet' is needed for connection type of 'static' not 'bpg'")
+		return fmt.Errorf("'remote_subnet' is needed for connection type of 'static' not 'bgp'")
 	} else if externalDeviceConn.ConnectionType == "static" && (externalDeviceConn.BgpLocalAsNum != 0 || externalDeviceConn.BgpRemoteAsNum != 0) {
 		return fmt.Errorf("'bgp_local_as_num' and 'bgp_remote_as_num' are needed for connection type of 'bgp' not 'static'")
 	}
@@ -356,31 +407,38 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	}
 
 	if haEnabled {
-		if externalDeviceConn.BackupRemoteGatewayIP == "" {
-			return fmt.Errorf("ha is enabled, please specify 'backup_remote_gateway_ip'")
-		}
-		remoteIP := strings.Split(externalDeviceConn.RemoteGatewayIP, ",")
-		if len(remoteIP) > 1 {
-			return fmt.Errorf("expected 'remote_gateway_ip' to contain only one valid IPv4 address, got: %s", externalDeviceConn.RemoteGatewayIP)
-		}
-		ip := net.ParseIP(externalDeviceConn.RemoteGatewayIP)
-		if four := ip.To4(); four == nil {
-			return fmt.Errorf("expected 'remote_gateway_ip' to contain a valid IPv4 address, got: %s", externalDeviceConn.RemoteGatewayIP)
-		}
-		if externalDeviceConn.BackupRemoteGatewayIP == externalDeviceConn.RemoteGatewayIP {
-			return fmt.Errorf("expected 'backup_remote_gateway_ip' to contain a different valid IPv4 address than 'remote_gateway_ip'")
+		if externalDeviceConn.TunnelProtocol == "LAN" {
+			if externalDeviceConn.BackupRemoteLanIP == "" {
+				return fmt.Errorf("ha is enabled and 'tunnel_protocol' = 'LAN', please specify 'backup_remote_lan_ip'")
+			}
+		} else {
+			if externalDeviceConn.BackupRemoteGatewayIP == "" {
+				return fmt.Errorf("ha is enabled, please specify 'backup_remote_gateway_ip'")
+			}
+			remoteIP := strings.Split(externalDeviceConn.RemoteGatewayIP, ",")
+			if len(remoteIP) > 1 {
+				return fmt.Errorf("expected 'remote_gateway_ip' to contain only one valid IPv4 address, got: %s", externalDeviceConn.RemoteGatewayIP)
+			}
+			ip := net.ParseIP(externalDeviceConn.RemoteGatewayIP)
+			if four := ip.To4(); four == nil {
+				return fmt.Errorf("expected 'remote_gateway_ip' to contain a valid IPv4 address, got: %s", externalDeviceConn.RemoteGatewayIP)
+			}
+			if externalDeviceConn.BackupRemoteGatewayIP == externalDeviceConn.RemoteGatewayIP {
+				return fmt.Errorf("expected 'backup_remote_gateway_ip' to contain a different valid IPv4 address than 'remote_gateway_ip'")
+			}
 		}
 		if externalDeviceConn.BackupBgpRemoteAsNum == 0 && externalDeviceConn.ConnectionType == "bgp" {
 			return fmt.Errorf("ha is enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_num'")
 		}
 	} else {
 		if backupDirectConnect {
-			return fmt.Errorf("ha is not enabled, please set 'back_direct_connect' to false")
+			return fmt.Errorf("ha is not enabled, please set 'backup_direct_connect' to false")
 		}
 		if externalDeviceConn.BackupPreSharedKey != "" || externalDeviceConn.BackupLocalTunnelCidr != "" ||
-			externalDeviceConn.BackupRemoteTunnelCidr != "" || externalDeviceConn.BackupRemoteGatewayIP != "" {
+			externalDeviceConn.BackupRemoteTunnelCidr != "" || externalDeviceConn.BackupRemoteGatewayIP != "" ||
+			externalDeviceConn.BackupRemoteLanIP != "" || externalDeviceConn.BackupLocalLanIP != "" {
 			return fmt.Errorf("ha is not enabled, please set 'backup_pre_shared_key', 'backup_local_tunnel_cidr', " +
-				"'backup_remote_gateway_ip' and 'backup_remote_tunnel_cidr' to empty")
+				"'backup_remote_gateway_ip', 'backup_remote_tunnel_cidr', 'backup_remote_lan_ip' and 'backup_local_lan_ip' to empty")
 		}
 		if externalDeviceConn.BackupBgpRemoteAsNum != 0 && externalDeviceConn.ConnectionType == "bgp" {
 			return fmt.Errorf("ha is not enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_num' to empty")
@@ -495,8 +553,15 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		d.Set("vpc_id", conn.VpcID)
 		d.Set("connection_name", conn.ConnectionName)
 		d.Set("gw_name", conn.GwName)
-		d.Set("remote_gateway_ip", conn.RemoteGatewayIP)
 		d.Set("connection_type", conn.ConnectionType)
+		d.Set("remote_tunnel_cidr", conn.RemoteTunnelCidr)
+		if conn.TunnelProtocol == "LAN" {
+			d.Set("remote_lan_ip", conn.RemoteLanIP)
+			d.Set("local_lan_ip", conn.LocalLanIP)
+		} else {
+			d.Set("remote_gateway_ip", conn.RemoteGatewayIP)
+			d.Set("local_tunnel_cidr", conn.LocalTunnelCidr)
+		}
 		if conn.ConnectionType == "bgp" {
 			if conn.BgpLocalAsNum != 0 {
 				d.Set("bgp_local_as_num", strconv.Itoa(conn.BgpLocalAsNum))
@@ -516,8 +581,6 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 			d.Set("direct_connect", false)
 		}
 
-		d.Set("local_tunnel_cidr", conn.LocalTunnelCidr)
-		d.Set("remote_tunnel_cidr", conn.RemoteTunnelCidr)
 		if conn.CustomAlgorithms {
 			d.Set("custom_algorithms", true)
 			d.Set("phase_1_authentication", conn.Phase1Auth)
@@ -532,9 +595,15 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 
 		if conn.HAEnabled == "enabled" {
 			d.Set("ha_enabled", true)
-			d.Set("backup_remote_gateway_ip", conn.BackupRemoteGatewayIP)
-			d.Set("backup_local_tunnel_cidr", conn.BackupLocalTunnelCidr)
+
 			d.Set("backup_remote_tunnel_cidr", conn.BackupRemoteTunnelCidr)
+			if conn.TunnelProtocol == "LAN" {
+				d.Set("backup_remote_lan_ip", conn.BackupRemoteLanIP)
+				d.Set("backup_local_lan_ip", conn.BackupLocalLanIP)
+			} else {
+				d.Set("backup_remote_gateway_ip", conn.BackupRemoteGatewayIP)
+				d.Set("backup_local_tunnel_cidr", conn.BackupLocalTunnelCidr)
+			}
 			if conn.BackupDirectConnect == "enabled" {
 				d.Set("backup_direct_connect", true)
 			} else {
