@@ -27,7 +27,7 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 			},
 			"firenet_gw_name": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				ForceNew:    true,
 				Description: "Name of the primary FireNet gateway.",
 			},
@@ -96,11 +96,11 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				Description: "Authentication method. Applicable to Azure deployment only.",
 			},
 			"zone": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateAzureAZ,
-				Description:  "Availability Zone. Only available for AZURE. Must be in the form 'az-n', for example, 'az-2'.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ForceNew:    true,
+				Description: "Availability Zone. Only available for AWS and AZURE.",
 			},
 			"iam_role": {
 				Type:        schema.TypeString,
@@ -249,22 +249,21 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 	// gateway name. If there is an issue, we will just continue on without the additional
 	// validation.
 	var cloudType int
-	gw, err := client.GetGateway(&goaviatrix.Gateway{GwName: firewallInstance.GwName})
-	if err != nil {
-		log.Printf("[WARN] Could not get cloud_type from firenet_gw_name: %v", err)
+	if firewallInstance.GwName == "" {
+		// No firewall_gw_name provided, must be AWS GWLB FireNet
+		cloudType = goaviatrix.AWS
 	} else {
-		cloudType = gw.CloudType
+		gw, err := client.GetGateway(&goaviatrix.Gateway{GwName: firewallInstance.GwName})
+		if err != nil {
+			log.Printf("[WARN] Could not get cloud_type from firenet_gw_name: %v", err)
+		} else {
+			cloudType = gw.CloudType
+		}
 	}
 
-	if err != nil {
-		if err == goaviatrix.ErrNotFound {
-			return fmt.Errorf("could not find the vpc with vpc_id=%s: %v", firewallInstance.VpcID, err)
-		}
-		return fmt.Errorf("could get the cloud type from the vpc_id=%s: %v", firewallInstance.VpcID, err)
-	}
 	zone := d.Get("zone").(string)
-	if zone != "" && cloudType != goaviatrix.AZURE {
-		return fmt.Errorf("'zone' attribute is only valid for AZURE")
+	if zone != "" && cloudType != goaviatrix.AZURE && cloudType != goaviatrix.AWS {
+		return fmt.Errorf("'zone' attribute is only valid for AWS or AZURE")
 	}
 	if zone != "" {
 		firewallInstance.EgressSubnet = fmt.Sprintf("%s~~%s~~", firewallInstance.EgressSubnet, zone)
@@ -359,9 +358,10 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 		d.Set("management_subnet", fI.ManagementSubnet)
 	}
 
-	if (d.Get("zone").(string) != "" || isImport) && fI.AvailabilityZone != "AvailabilitySet" &&
-		fI.AvailabilityZone != "" && fI.CloudVendor == "Azure ARM" {
+	if (d.Get("zone").(string) != "" || isImport) && fI.AvailabilityZone != "AvailabilitySet" && fI.AvailabilityZone != "" && fI.CloudVendor == "Azure ARM" {
 		d.Set("zone", "az-"+fI.AvailabilityZone)
+	} else if fI.AvailabilityZone != "" && fI.CloudVendor == "AWS" && fI.GwName == "" {
+		d.Set("zone", fI.AvailabilityZone)
 	}
 
 	d.Set("lan_interface", fI.LanInterface)

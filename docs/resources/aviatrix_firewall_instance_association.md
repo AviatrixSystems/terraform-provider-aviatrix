@@ -37,7 +37,7 @@ The following arguments are supported:
 
 -> **NOTE:** If associating FQDN gateway to FireNet, `single_az_ha` needs to be enabled for the FQDN gateway.
 
-* `firenet_gw_name` - (Required) Name of the primary FireNet gateway.
+* `firenet_gw_name` - (Optional) Name of the primary FireNet gateway. Required for FireNet without Native GWLB VPC.
 * `instance_id` - (Required) ID of Firewall instance.
 
 -> **NOTE:** If associating FQDN gateway to FireNet, it is FQDN gateway's `gw_name`. For Azure FireNet, it is the `firewall_name` concatenated with a ":" and the Resource Group of the `vpc_id` set for that instance.
@@ -56,4 +56,10 @@ The following arguments are supported:
 
 ```
 $ terraform import aviatrix_firewall_instance_association.test vpc_id~~firenet_gw_name~~instance_id
+```
+
+When using a Native GWLB VPC where there is no `firenet_gw_name` but the ID is in the same form e.g.
+
+```
+$ terraform import aviatrix_firewall_instance_association.test vpc_id~~~~instance_id
 ```
