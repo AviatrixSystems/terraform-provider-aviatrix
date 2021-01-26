@@ -49,10 +49,10 @@ The following arguments are supported:
 ### Advanced Options
 * `iam_role` - (Optional) Only available for AWS. In advanced mode, create an IAM Role on the AWS account that launched the FireNet gateway. Create a policy to attach to the role. The policy is to allow access to “Bootstrap Bucket”.
 * `bootstrap_bucket_name`- (Optional) Only available for AWS. In advanced mode, specify a bootstrap bucket name where the initial configuration and policy file is stored.
-* `bootstrap_storage_name` - (Optional) Advanced option. Bootstrap storage name. Applicable to Azure and Palo Alto Networks VM-Series/Fortinet Series deployment only.
-* `storage_access_key` - (Optional) Advanced option. Storage access key. Applicable to Azure and Palo Alto Networks VM-Series deployment only.
-* `file_share_folder` - (Optional) Advanced option. File share folder. Applicable to Azure and Palo Alto Networks VM-Series deployment only.
-* `share_directory` - (Optional) Advanced option. Share directory. Applicable to Azure and Palo Alto Networks VM-Series deployment only.
+* `bootstrap_storage_name` - (Optional) Advanced option. Bootstrap storage name. Applicable to Azure and Palo Alto Networks VM-Series/Fortinet Series deployment only. Available as of provider version R2.17.1+.
+* `storage_access_key` - (Optional) Advanced option. Storage access key. Applicable to Azure and Palo Alto Networks VM-Series deployment only. Available as of provider version R2.17.1+.
+* `file_share_folder` - (Optional) Advanced option. File share folder. Applicable to Azure and Palo Alto Networks VM-Series deployment only. Available as of provider version R2.17.1+.
+* `share_directory` - (Optional) Advanced option. Share directory. Applicable to Azure and Palo Alto Networks VM-Series deployment only. Available as of provider version R2.17.1+.
 * `sic_key` - (Optional) Advanced option. Bic key. Applicable to Azure and Check Point Series deployment only.
 * `container_folder` - (Optional) Advanced option. Bootstrap storage name. Applicable to Azure and Fortinet Series deployment only.
 * `sas_url_config` - (Optional) Advanced option. Bootstrap storage name. Applicable to Azure and Fortinet Series deployment only.
