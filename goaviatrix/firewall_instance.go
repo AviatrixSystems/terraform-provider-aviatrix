@@ -71,7 +71,11 @@ func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (str
 	addFirewallInstance := url.Values{}
 	addFirewallInstance.Add("CID", c.CID)
 	addFirewallInstance.Add("action", "add_firewall_instance")
-	addFirewallInstance.Add("gw_name", firewallInstance.GwName)
+	if firewallInstance.GwName != "" {
+		addFirewallInstance.Add("gw_name", firewallInstance.GwName)
+	} else {
+		addFirewallInstance.Add("vpc_id", firewallInstance.VpcID)
+	}
 	addFirewallInstance.Add("firewall_name", firewallInstance.FirewallName)
 	addFirewallInstance.Add("firewall_image", firewallInstance.FirewallImage)
 	addFirewallInstance.Add("firewall_image_version", firewallInstance.FirewallImageVersion)

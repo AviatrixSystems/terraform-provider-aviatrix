@@ -27,7 +27,7 @@ func resourceAviatrixFirewallInstanceAssociation() *schema.Resource {
 			},
 			"firenet_gw_name": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				ForceNew:    true,
 				Description: "Name of the gateway to launch the firewall instance.",
 			},

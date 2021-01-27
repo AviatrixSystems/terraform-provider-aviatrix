@@ -27,7 +27,7 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 			},
 			"firenet_gw_name": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				ForceNew:    true,
 				Description: "Name of the primary FireNet gateway.",
 			},
@@ -96,11 +96,11 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				Description: "Authentication method. Applicable to Azure deployment only.",
 			},
 			"zone": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateAzureAZ,
-				Description:  "Availability Zone. Only available for AZURE. Must be in the form 'az-n', for example, 'az-2'.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ForceNew:    true,
+				Description: "Availability Zone. Only available for AWS and AZURE.",
 			},
 			"iam_role": {
 				Type:        schema.TypeString,
@@ -245,26 +245,52 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("firewall image: %s is not supported", firewallInstance.FirewallImage)
 	}
 
-	// For additional config validation we try to get the cloud_type from the given
-	// gateway name. If there is an issue, we will just continue on without the additional
-	// validation.
-	var cloudType int
-	gw, err := client.GetGateway(&goaviatrix.Gateway{GwName: firewallInstance.GwName})
+	firenetDetail, err := client.GetFireNet(&goaviatrix.FireNet{VpcID: firewallInstance.VpcID})
+	var isNativeGWLBVpc bool
 	if err != nil {
-		log.Printf("[WARN] Could not get cloud_type from firenet_gw_name: %v", err)
+		log.Printf("[INFO] Could not get FireNet detail for vpc_id(%s) because of (%v),"+
+			" assuming this is a non-GWLB vpc", firewallInstance.VpcID, err)
 	} else {
-		cloudType = gw.CloudType
+		isNativeGWLBVpc = firenetDetail.NativeGwlb
+	}
+	if isNativeGWLBVpc {
+		if firewallInstance.GwName != "" {
+			return fmt.Errorf("VPC %s has Native GWLB enabled but a 'firenet_gw_name' was provided. "+
+				"Please remove 'firenet_gw_name' when using a Native GWLB enabled VPC", firewallInstance.VpcID)
+		}
+		if d.Get("zone") == "" {
+			return fmt.Errorf("VPC %s has Native GWLB enabled but a 'zone' was not provided. "+
+				"Please provide a 'zone' in your terraform config", firewallInstance.VpcID)
+		}
+	} else {
+		if firewallInstance.GwName == "" {
+			return fmt.Errorf("'firenet_gw_name' is required when using a non Native GWLB VPC. " +
+				"Please provide a 'firenet_gw_name' in your terraform config")
+		}
 	}
 
-	if err != nil {
-		if err == goaviatrix.ErrNotFound {
-			return fmt.Errorf("could not find the vpc with vpc_id=%s: %v", firewallInstance.VpcID, err)
+	// For additional config validation we try to get the cloud_type from the given
+	// gateway name or vpc_id. If there is an issue, we will just continue on without
+	// the additional validation.
+	var cloudType int
+	if firewallInstance.GwName == "" {
+		var err error
+		cloudType, err = client.GetCloudTypeFromVpcID(firewallInstance.VpcID)
+		if err != nil {
+			log.Printf("[WARN] Could not get cloud_type from vpc_id: %v", err)
 		}
-		return fmt.Errorf("could get the cloud type from the vpc_id=%s: %v", firewallInstance.VpcID, err)
+	} else {
+		gw, err := client.GetGateway(&goaviatrix.Gateway{GwName: firewallInstance.GwName})
+		if err != nil {
+			log.Printf("[WARN] Could not get cloud_type from firenet_gw_name: %v", err)
+		} else {
+			cloudType = gw.CloudType
+		}
 	}
+
 	zone := d.Get("zone").(string)
-	if zone != "" && cloudType != goaviatrix.AZURE {
-		return fmt.Errorf("'zone' attribute is only valid for AZURE")
+	if zone != "" && cloudType != 0 && cloudType != goaviatrix.AZURE && cloudType != goaviatrix.AWS {
+		return fmt.Errorf("'zone' attribute is only valid for AWS or AZURE")
 	}
 	if zone != "" {
 		firewallInstance.EgressSubnet = fmt.Sprintf("%s~~%s~~", firewallInstance.EgressSubnet, zone)
@@ -359,9 +385,10 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 		d.Set("management_subnet", fI.ManagementSubnet)
 	}
 
-	if (d.Get("zone").(string) != "" || isImport) && fI.AvailabilityZone != "AvailabilitySet" &&
-		fI.AvailabilityZone != "" && fI.CloudVendor == "Azure ARM" {
+	if (d.Get("zone").(string) != "" || isImport) && fI.AvailabilityZone != "AvailabilitySet" && fI.AvailabilityZone != "" && fI.CloudVendor == "Azure ARM" {
 		d.Set("zone", "az-"+fI.AvailabilityZone)
+	} else if fI.AvailabilityZone != "" && fI.CloudVendor == "AWS" && fI.GwName == "" {
+		d.Set("zone", fI.AvailabilityZone)
 	}
 
 	d.Set("lan_interface", fI.LanInterface)

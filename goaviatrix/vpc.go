@@ -158,6 +158,26 @@ func (c *Client) GetVpcCloudTypeById(ID string) (int, error) {
 	return 0, ErrNotFound
 }
 
+func (c *Client) GetCloudTypeFromVpcID(vpcID string) (int, error) {
+	data := map[string]string{
+		"action": "list_custom_vpcs",
+		"CID":    c.CID,
+	}
+	var respData VpcResp
+	err := c.GetAPI(&respData, data["action"], data, BasicCheck)
+	if err != nil {
+		return 0, err
+	}
+	for _, vpcPool := range respData.Results.AllVpcPoolVpcList {
+		for _, id := range vpcPool.VpcID {
+			if id == vpcID {
+				return vpcPool.CloudType, nil
+			}
+		}
+	}
+	return 0, ErrNotFound
+}
+
 func (c *Client) GetVpc(vpc *Vpc) (*Vpc, error) {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
