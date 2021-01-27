@@ -7,7 +7,7 @@ import (
 type ProxyConfig struct {
 	HttpProxy          string `json:"http_proxy,omitempty"`
 	HttpsProxy         string `json:"https_proxy,omitempty"`
-	ProxyCaCertificate string
+	ProxyCaCertificate string `json:"server_ca_cert_content"`
 }
 
 type ProxyConfigResp struct {
@@ -52,8 +52,9 @@ func (c *Client) GetProxyConfig() (*ProxyConfig, error) {
 	}
 	if data.Results.HttpProxy != "" && data.Results.HttpsProxy != "" {
 		return &ProxyConfig{
-			HttpProxy:  strings.TrimPrefix(data.Results.HttpProxy, "http://"),
-			HttpsProxy: strings.TrimPrefix(data.Results.HttpsProxy, "http://"),
+			HttpProxy:          strings.TrimPrefix(data.Results.HttpProxy, "http://"),
+			HttpsProxy:         strings.TrimPrefix(data.Results.HttpsProxy, "http://"),
+			ProxyCaCertificate: data.Results.ProxyCaCertificate,
 		}, nil
 	}
 
