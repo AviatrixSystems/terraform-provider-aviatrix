@@ -50,7 +50,7 @@ The following arguments are supported:
 * `management_subnet` - (Optional) Management Interface Subnet. Select the subnet whose name contains “gateway and firewall management”. Required for Palo Alto Networks VM-Series, and required to be empty for Check Point or Fortinet series.
 * `egress_subnet` - (Required) Egress Interface Subnet. Select the subnet whose name contains “FW-ingress-egress”.
 * `firewall_image_version` - (Optional) Version of firewall image. If not specified, Controller will automatically select the latest version available.
-* `zone` - (Optional) Availability Zone. Applicable to Azure and AWS only. Available as of provider version R2.17+.
+* `zone` - (Optional) Availability Zone. Required if creating a Firewall Instance with a Native AWS GWLB enabled VPC. Applicable to Azure and AWS only. Available as of provider version R2.17+.
 
 ### Authentication method
 * `key_name`- (Optional) Applicable to AWS deployment only. The **.pem** filename for SSH access to the firewall instance.

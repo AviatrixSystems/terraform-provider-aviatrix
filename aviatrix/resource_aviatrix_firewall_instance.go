@@ -245,13 +245,40 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("firewall image: %s is not supported", firewallInstance.FirewallImage)
 	}
 
+	firenetDetail, err := client.GetFireNet(&goaviatrix.FireNet{VpcID: firewallInstance.VpcID})
+	var isNativeGWLBVpc bool
+	if err != nil {
+		log.Printf("[INFO] Could not get FireNet detail for vpc_id(%s) because of (%v),"+
+			" assuming this is a non-GWLB vpc", firewallInstance.VpcID, err)
+	} else {
+		isNativeGWLBVpc = firenetDetail.NativeGwlb
+	}
+	if isNativeGWLBVpc {
+		if firewallInstance.GwName != "" {
+			return fmt.Errorf("VPC %s has Native GWLB enabled but a 'firenet_gw_name' was provided. "+
+				"Please remove 'firenet_gw_name' when using a Native GWLB enabled VPC", firewallInstance.VpcID)
+		}
+		if d.Get("zone") == "" {
+			return fmt.Errorf("VPC %s has Native GWLB enabled but a 'zone' was not provided. "+
+				"Please provide a 'zone' in your terraform config", firewallInstance.VpcID)
+		}
+	} else {
+		if firewallInstance.GwName == "" {
+			return fmt.Errorf("'firenet_gw_name' is required when using a non Native GWLB VPC. " +
+				"Please provide a 'firenet_gw_name' in your terraform config")
+		}
+	}
+
 	// For additional config validation we try to get the cloud_type from the given
-	// gateway name. If there is an issue, we will just continue on without the additional
-	// validation.
+	// gateway name or vpc_id. If there is an issue, we will just continue on without
+	// the additional validation.
 	var cloudType int
 	if firewallInstance.GwName == "" {
-		// No firewall_gw_name provided, must be AWS GWLB FireNet
-		cloudType = goaviatrix.AWS
+		var err error
+		cloudType, err = client.GetCloudTypeFromVpcID(firewallInstance.VpcID)
+		if err != nil {
+			log.Printf("[WARN] Could not get cloud_type from vpc_id: %v", err)
+		}
 	} else {
 		gw, err := client.GetGateway(&goaviatrix.Gateway{GwName: firewallInstance.GwName})
 		if err != nil {
@@ -262,7 +289,7 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 	}
 
 	zone := d.Get("zone").(string)
-	if zone != "" && cloudType != goaviatrix.AZURE && cloudType != goaviatrix.AWS {
+	if zone != "" && cloudType != 0 && cloudType != goaviatrix.AZURE && cloudType != goaviatrix.AWS {
 		return fmt.Errorf("'zone' attribute is only valid for AWS or AZURE")
 	}
 	if zone != "" {
