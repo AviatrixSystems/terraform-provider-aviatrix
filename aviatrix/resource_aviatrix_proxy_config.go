@@ -70,6 +70,9 @@ func resourceAviatrixProxyConfigRead(d *schema.ResourceData, meta interface{}) e
 
 	d.Set("http_proxy", proxy.HttpProxy)
 	d.Set("https_proxy", proxy.HttpsProxy)
+	if proxy.ProxyCaCertificate != "" {
+		d.Set("proxy_ca_certificate", proxy.ProxyCaCertificate)
+	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
