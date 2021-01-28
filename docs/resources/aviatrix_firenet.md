@@ -15,16 +15,7 @@ The **aviatrix_firenet** resource allows the creation and management of [Aviatri
 ## Example Usage
 
 ```hcl
-# Create an Aviatrix FireNet associated to a Firewall Instance
-resource "aviatrix_firenet" "test_firenet" {
-  vpc_id                               = "vpc-032005cc371"
-  inspection_enabled                   = true
-  egress_enabled                       = false
-  manage_firewall_instance_association = false
-}
-```
-```hcl
-# Create an Aviatrix FireNet associated to an FQDN Gateway (AWS)
+# Create an Aviatrix FireNet
 resource "aviatrix_firenet" "test_firenet" {
   vpc_id                               = "vpc-032005cc371"
   inspection_enabled                   = true
@@ -33,15 +24,6 @@ resource "aviatrix_firenet" "test_firenet" {
 }
 ```
 
-```hcl
-# Create an Aviatrix FireNet associated to an FQDN Gateway (Azure)
-resource "aviatrix_firenet" "test_firenet" {
-  vpc_id                               = "vpc-032005cc371"
-  inspection_enabled                   = true
-  egress_enabled                       = false
-  manage_firewall_instance_association = true
-}
-```
 ## Argument Reference
 
 The following arguments are supported:
