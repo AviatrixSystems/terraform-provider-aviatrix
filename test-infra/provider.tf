@@ -42,8 +42,17 @@ data "oci_identity_availability_domains" "ads" {
   compartment_id = var.oci_compartment_id
 }
 
+terraform {
+  required_providers {
+    aviatrix = {
+      source = "aviatrixsystems/aviatrix"
+    }
+  }
+}
+
 provider "aviatrix" {
-  username      = "admin"
-  password      = module.aviatrix-controller-build.private_ip
-  controller_ip = module.aviatrix-controller-build.public_ip
+  username                = "admin"
+  password                = module.aviatrix-controller-build.private_ip
+  controller_ip           = module.aviatrix-controller-build.public_ip
+  skip_version_validation = true
 }

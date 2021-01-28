@@ -1,6 +1,8 @@
 # Acceptance Tests
 
-#### Pre-requisites
+## Pre-requisites
+
+> :warning: Due to a change in Terraform `output` command, Terraform version v0.14.3 or higher is required to run the acceptance test scripts.
 
 - The controller must be launched before hand and must be up and running the latest controller version
 - IAM roles (aviatrix-role-ec2 and aviatrix-role-app) also must be created and attached if any IAM role related tests are to be run. Currently all tests are based on Access key, Secret key
@@ -11,7 +13,32 @@
 - to run aviatrix_vpn_cert_download tests no other VPN gateways must be present in your controller
 - AWS_ACCOUNT_NUMBER should be the same one used for controller launch
 
-#### Skip parameters and variables
+## Running the tests
+
+### Run all tests
+From the test-infra directory run the following commands:
+```shell
+terraform init
+terraform apply
+source ./cmdExportOutput.sh
+./runAccTest.sh ALL
+```
+
+### Run a specific subset of tests
+To run acceptance tests for a subset of resources, pass the resource test identifier to
+the runAccTest.sh script. For example, to run Transit Gateway and Spoke Gateway tests you would
+run the following commands:
+```shell
+terraform init
+terraform apply
+source ./cmdExportOutput.sh
+./runAccTest.sh TransitGateway SpokeGateway
+```
+The resource test identifier is the same as the resource name without the
+'aviatrix_' prefix and in PascalCase. For example, the resource test identifier for the resource 
+'aviatrix_firewall_tag' is 'FirewallTag'.
+
+## Skip parameters and variables
 
 Passing an environment value of "yes" to the skip parameter allows you to skip the particular resource. If it is not skipped, it checks for the existence of other required variables. Generic variables are required for any acceptance test
 
