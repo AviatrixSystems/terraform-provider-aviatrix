@@ -39,6 +39,7 @@ func resourceAviatrixFireNet() *schema.Resource {
 			"firewall_instance_association": {
 				Type:        schema.TypeList,
 				Optional:    true,
+				Deprecated:  "Please use the standalone aviatrix_firewall_instance_association resource instead.",
 				Description: "List of firewall instances to be associated with fireNet.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
