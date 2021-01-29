@@ -15,55 +15,15 @@ The **aviatrix_firenet** resource allows the creation and management of [Aviatri
 ## Example Usage
 
 ```hcl
-# Create an Aviatrix FireNet associated to a Firewall Instance
+# Create an Aviatrix FireNet
 resource "aviatrix_firenet" "test_firenet" {
-  vpc_id             = "vpc-032005cc371"
-  inspection_enabled = true
-  egress_enabled     = false
-
-  firewall_instance_association {
-    firenet_gw_name      = "avx-firenet-gw"
-    instance_id          = "i-09dc118db6a1eb901"
-    firewall_name        = "avx-firewall-instance"
-    attached             = true
-    lan_interface        = "eni-0a34b1827bf222353"
-    management_interface = "eni-030e53176c7f7d34a"
-    egress_interface     = "eni-03b8dd53a1a731481"
-  }
-}
-```
-```hcl
-# Create an Aviatrix FireNet associated to an FQDN Gateway (AWS)
-resource "aviatrix_firenet" "test_firenet" {
-  vpc_id             = "vpc-032005cc371"
-  inspection_enabled = true
-  egress_enabled     = false
-
-  firewall_instance_association {
-    firenet_gw_name = "avx-firenet-gw"
-    instance_id     = "avx-fqdn-gateway"
-    vendor_type     = "fqdn_gateway"
-    attached        = true
-  }
+  vpc_id                               = "vpc-032005cc371"
+  inspection_enabled                   = true
+  egress_enabled                       = false
+  manage_firewall_instance_association = false
 }
 ```
 
-```hcl
-# Create an Aviatrix FireNet associated to an FQDN Gateway (Azure)
-resource "aviatrix_firenet" "test_firenet" {
-  vpc_id             = "vpc-032005cc371"
-  inspection_enabled = true
-  egress_enabled     = false
-
-  firewall_instance_association {
-    firenet_gw_name = "avx-firenet-gw"
-    instance_id     = "avx-fqdn-gateway"
-    vendor_type     = "fqdn_gateway"
-    attached        = true
-    lan_interface   = "<< LAN interface id of the FQDN gateway created with additional LAN interface >>"
-  }
-}
-```
 ## Argument Reference
 
 The following arguments are supported:
@@ -82,6 +42,10 @@ The following arguments are supported:
 * `manage_firewall_instance_association` - (Optional) Enable this attribute to manage firewall associations in-line. If set to true, in-line `firewall_instance_association` blocks can be used. If set to false, all firewall associations must be managed via standalone `aviatrix_firewall_instance_association` resources. Default value: true. Valid values: true or false. Available in provider version R2.17.1+.
 
 ### Firewall Association
+
+!> **WARNING:** Attribute `firewall_instance_association` has been deprecated as of provider version R2.18+ and will not receive further updates. Please use the standalone `aviatrix_firewall_instance_association` resource instead.
+
+-> **NOTE:** `firewall_instance_association` - Associating a firewall instance with a Native GWLB enabled VPC is not supported in the in-line `firewall_instance_association` attribute. Please use the standalone `aviatrix_firewall_instance_association` resource instead.
 
 -> **NOTE:** `firewall_instance_association` - If associating FQDN gateway to FireNet, `single_az_ha` needs to be enabled for the FQDN gateway.
 
