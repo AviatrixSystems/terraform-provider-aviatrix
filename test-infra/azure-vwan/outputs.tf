@@ -7,5 +7,5 @@ output "azure_hub_name" {
 }
 
 output "azure_vpn_gateway_asn" {
-   value = azurerm_vpn_gateway.test.bgp_settings.asn
+   value = azurerm_vpn_gateway.test.bgp_settings[0].asn
 }
