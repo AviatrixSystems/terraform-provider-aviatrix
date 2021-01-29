@@ -53,11 +53,12 @@ func resourceAviatrixAwsTgwVpcAttachment() *schema.Resource {
 				Description: "Advanced option. Customized Spoke VPC Routes. It allows the admin to enter non-RFC1918 routes in the VPC route table targeting the TGW.",
 			},
 			"subnets": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Computed:    true,
-				Description: "Advanced option. VPC subnets separated by ',' to attach to the VPC. If left blank, Aviatrix Controller automatically selects a subnet representing each AZ for the VPC attachment.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Computed:         true,
+				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceInString,
+				Description:      "Advanced option. VPC subnets separated by ',' to attach to the VPC. If left blank, Aviatrix Controller automatically selects a subnet representing each AZ for the VPC attachment.",
 			},
 			"route_tables": {
 				Type:        schema.TypeString,
