@@ -598,9 +598,17 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("\"oob_management_subnet\" is required if \"enable_private_oob\" is true")
 		}
 
+		if _, err := validation.IsCIDR(d.Get("oob_management_subnet").(string), "oob_management_subnet"); err != nil {
+			return fmt.Errorf("\"oob_management_subnet\" must be a CIDR if \"enable_private_oob\" is true")
+		}
+
+		if _, err := validation.IsCIDR(d.Get("subnet").(string), "subnet"); err != nil {
+			return fmt.Errorf("\"subnet\" must be a CIDR if \"enable_private_oob\" is true")
+		}
+
 		gateway.EnablePrivateOob = "on"
 		gateway.Subnet = gateway.Subnet + "~~" + d.Get("oob_availability_zone").(string)
-		gateway.OobManagementSubnet = d.Get("oob_management_subnet").(string)
+		gateway.OobManagementSubnet = d.Get("oob_management_subnet").(string) + "~~" + d.Get("oob_availability_zone").(string)
 	} else {
 		if d.Get("oob_availability_zone").(string) != "" {
 			return fmt.Errorf("\"oob_availability_zone\" must be empty if \"enable_private_oob\" is false")
@@ -678,8 +686,12 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 
 		if d.Get("enable_private_oob").(bool) {
+			if _, err := validation.IsCIDR(d.Get("ha_subnet").(string), "ha_subnet"); err != nil {
+				return fmt.Errorf("\"ha_subnet\" must be a CIDR if \"enable_private_oob\" is true")
+			}
+
 			transitGateway.HASubnet = transitGateway.HASubnet + "~~" + d.Get("oob_availability_zone").(string)
-			transitGateway.OobManagementSubnet = d.Get("oob_management_subnet").(string)
+			transitGateway.OobManagementSubnet = d.Get("oob_management_subnet").(string) + "~~" + d.Get("oob_availability_zone").(string)
 		}
 
 		log.Printf("[INFO] Enabling HA on Transit Gateway: %#v", haSubnet)
@@ -1141,7 +1153,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 		d.Set("enable_private_oob", gw.EnablePrivateOob)
 		if gw.EnablePrivateOob {
-			d.Set("oob_management_subnet", gw.OobManagementSubnet)
+			d.Set("oob_management_subnet", strings.Split(gw.OobManagementSubnet, "~~")[0])
 			d.Set("oob_availability_zone", gw.GatewayZone)
 		}
 
@@ -1526,9 +1538,13 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 
-		if d.Get("enable_private_oob").(bool) {
+		if (newHaGwEnabled || changeHaGw) && d.Get("enable_private_oob").(bool) {
+			if _, err := validation.IsCIDR(d.Get("ha_subnet").(string), "ha_subnet"); err != nil {
+				return fmt.Errorf("\"ha_subnet\" must be a CIDR if \"enable_private_oob\" is true")
+			}
+
 			transitGw.HASubnet = transitGw.HASubnet + "~~" + d.Get("oob_availability_zone").(string)
-			transitGw.OobManagementSubnet = d.Get("oob_management_subnet").(string)
+			transitGw.OobManagementSubnet = d.Get("oob_management_subnet").(string) + "~~" + d.Get("oob_availability_zone").(string)
 		}
 
 		if newHaGwEnabled {
