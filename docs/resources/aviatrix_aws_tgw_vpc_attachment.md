@@ -37,7 +37,7 @@ The following arguments are supported:
 -> **NOTE:** If used to attach/detach FireNet Transit Gateway to/from TGW Firewall Domain, `vpc_id` is the ID of the Security VPC, and `security_domain_name` is the domain name of the Aviatrix Firewall Domain in TGW.
 
 ### Advanced Options
-* `subnets` - (Optional and ForceNew) Advanced option. VPC subnets separated by ',' to attach to the VPC. If left blank, the Aviatrix Controller automatically selects a subnet representing each AZ for the VPC attachment. Example: "subnet-214f5646,subnet-085e8c81a89d70846".
+* `subnets` - (Optional and ForceNew) Advanced option. VPC subnets separated by ',' to attach to the VPC. If omitted, the Aviatrix Controller automatically computes a subnet representing each AZ for the VPC attachment and Terraform will not manage this attribute. Example: "subnet-214f5646,subnet-085e8c81a89d70846".
 * `route_tables` - (Optional and ForceNew) Advanced option. Route tables separated by ',' to participate in TGW Orchestrator, i.e., learned routes will be propagated to these route tables. Example: "rtb-212ff547,rtb-045397874c170c745".
 * `customized_routes` - (Optional) Advanced option. Customized Spoke VPC Routes. It allows the admin to enter non-RFC1918 routes in the VPC route table targeting the TGW. Example: "10.8.0.0/16,10.9.0.0/16,10.10.0.0/16".
 * `customized_route_advertisement` - (Optional and ForeNew) Advanced option. Customized route(s) to be advertised to other VPCs that are connected to the same TGW. Example: "10.8.0.0/16,10.9.0.0/16,10.10.0.0/16".

@@ -44,7 +44,7 @@ The following arguments are supported:
   * `dst_cidr` - (Optional) This is a qualifier condition that specifies a destination IP address range where the rule applies. When not specified, this field is not used.
   * `dst_port` - (Optional) This is a qualifier condition that specifies a destination port where the rule applies. When not specified, this field is not used.
   * `protocol` - (Optional) This is a qualifier condition that specifies a destination port protocol where the rule applies. When not specified, this field is not used.
-  * `interface` - (Optional) This is a qualifier condition that specifies output interface where the rule applies. When not specified, this field is not used.
+  * `interface` - (Optional) This is a qualifier condition that specifies output interface where the rule applies. When not specified, this field is not used. Empty string is not a valid value.
   * `connection` - (Optional) Default value: "None".
   * `mark` - (Optional) This is a rule field that specifies a tag or mark of a TCP session when all qualifier conditions meet. When not specified, this field is not used.
   * `dnat_ips` - (Optional) This is a rule field that specifies the translated destination IP address when all specified qualifier conditions meet. When not specified, this field is not used. One of the rule field must be specified for this rule to take effect.
