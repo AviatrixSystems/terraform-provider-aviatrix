@@ -475,7 +475,21 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	if externalDeviceConn.PeerVnetId != "" && (externalDeviceConn.ConnectionType != "bgp" || externalDeviceConn.TunnelProtocol != "LAN") {
 		return fmt.Errorf("'remote_vpc_name' is only valid for 'connection_type' = 'bgp' and 'tunnel_protocol' = 'LAN'")
 	}
-	// TODO(CyrusJavan): Add check for "over private network" when the feature is added
+	if externalDeviceConn.TunnelProtocol == "LAN" {
+		if externalDeviceConn.DirectConnect == "true" || externalDeviceConn.BackupDirectConnect == "true" {
+			return fmt.Errorf("enabling 'direct_connect' or 'backup_direct_connect' is not allowed for BGP over LAN connections")
+		}
+		gw, err := client.GetGateway(&goaviatrix.Gateway{GwName: externalDeviceConn.GwName})
+		if err != nil {
+			log.Printf("[INFO] Could not get cloud_type for transit_external_device_conn validation "+
+				"from gw_name(%s) due to error(%v)", externalDeviceConn.GwName, err)
+		} else {
+			if gw.CloudType == goaviatrix.AZURE &&
+				(externalDeviceConn.LocalLanIP != "" || externalDeviceConn.BackupLocalLanIP != "") {
+				return fmt.Errorf("'local_lan_ip' and 'backup_local_lan_ip' are not valid for Azure transit gateways")
+			}
+		}
+	}
 
 	err = client.CreateExternalDeviceConn(externalDeviceConn)
 	if err != nil {
