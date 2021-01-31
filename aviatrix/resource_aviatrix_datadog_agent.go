@@ -23,6 +23,7 @@ func resourceAviatrixDatadogAgent() *schema.Resource {
 			"api_key": {
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
 				ForceNew:    true,
 				Description: "API key.",
 			},
@@ -102,7 +103,6 @@ func resourceAviatrixDatadogAgentRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("could not get remote syslog status: %v", err)
 	}
 
-	d.Set("api_key", datadogAgentStatus.ApiKey)
 	d.Set("site", datadogAgentStatus.Site)
 	d.Set("excluded_gateways", datadogAgentStatus.ExcludedGateways)
 	d.Set("status", datadogAgentStatus.Status)
