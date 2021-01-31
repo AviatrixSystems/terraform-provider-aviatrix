@@ -12,7 +12,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.17.2 (UserConnect-6.2.1914)``
+``Last updated: R2.18 (UserConnect-6.3)``
 
 
 ---
