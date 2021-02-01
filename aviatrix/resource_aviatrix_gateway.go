@@ -1382,8 +1382,8 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		}
 
 		fqdnGatewayInfo, err := client.GetFqdnGatewayInfo(gatewayServer)
-		if err != nil && err != goaviatrix.ErrNotFound {
-			return fmt.Errorf("couldn't info for this fqdn gateway due to: %s", err)
+		if err != nil {
+			return fmt.Errorf("could not get fqdn gateway info: %v", err)
 		}
 
 		fqdnGatewayLanInterface := getFqdnGatewayLanInterface(fqdnGatewayInfo, gw.GwName)
