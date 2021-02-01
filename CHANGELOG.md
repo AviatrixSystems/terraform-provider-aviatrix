@@ -4,7 +4,7 @@
 - Supported Terraform version: **v0.12.x** and **v0.13.x**
 
 ### Features:
-1. Implemented support for BGP over GRE and BGP over LAN through ``enable_bgp_over_lan`` in **aviatrix_transit_gateway**, and following attributes in **aviatrix_transit_external_device_conn**:
+1. Implemented support for BGP over GRE and BGP over LAN through ``enable_bgp_over_lan`` in **aviatrix_transit_gateway**, and the following attributes in **aviatrix_transit_external_device_conn**:
   - ``tunnel_protocol``
   - ``remote_lan_ip``
   - ``backup_remote_lan_ip``
@@ -32,23 +32,23 @@
   - New attribute ``enable_gateway_load_balancer`` in **aviatrix_transit_gateway**
   - New attribute ``enable_native_gwlb`` in **aviatrix_vpc**
   - Make ``firenet_gw_name`` Optional in **aviatrix_firewall_instance** and **aviatrix_firewall_instance_association**
-8. Implemented support for Monitor Gateway Subnets in **aviatrix_transit_gateway** and **aviatrix_spoke_gateway** with the following attributes:
+8. Implemented support for Monitor Gateway Subnets feature in **aviatrix_transit_gateway** and **aviatrix_spoke_gateway** using the following attributes:
   - ``enable_monitor_gateway_subnets``
   - ``monitor_exclude_list``
-9. Implemented support for private transit gateway peering with single-tunnel mode
-10. Implemented support for transit to external device using IKEv2
-11. Implemented new resource to support transit in azure with express route:
+9. Implemented support for private transit gateway peering with single-tunnel mode in **aviatrix_transit_gateway_peering** using attribute ``enable_single_tunnel_mode``
+10. Implemented support for IKEv2 protocol in transit to external device connections in **aviatrix_transit_external_device_conn** using attribute ``enable_ikev2``
+11. Implemented new resource to support transit in Azure with ExpressRoute:
   - **resource_aviatrix_azure_vng_conn**
-12. Implemented support for private OOB:
-  - New resource **aviatrix_controller_private_oob**
+12. Implemented support for Private OOB feature:
+  - New resource **aviatrix_controller_private_oob** to enable Controller-wide setting
   - New attributes ``enable_private_oob``, ``oob_management_subnet``, and ``oob_availability_zone`` in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
   - New attributes ``enable_private_oob_subnet`` in **aviatrix_vpc**
 13. Implemented support for proxy configuration:
   - New resource: **aviatrix_proxy_config**
-14. Implemented support for OCI provider in **aviatrix_vpc**
+14. Implemented support for OCI in **aviatrix_vpc**
 15. Implemented support for Aviatrix client/ovpn file download from the controller when SAML authentication is used:
   - New resource: **aviatrix_vpn_cert_download**
-16. Implemented new resources to support logging:
+16. Implemented new resources to support Controller logging configurations:
   - **resource_aviatrix_remote_syslog**
   - **resource_aviatrix_splunk_logging**
   - **resource_aviatrix_filebeat_forwarder**
@@ -70,8 +70,8 @@
 3. Fixed race condition when deploying spoke gateway (HA disabled) using ``customized_spoke_vpc_routes`` and ``transit_gw``
 4. Fixed issue where creating **aviatrix_site2cloud** for ActiveActive-enabled gateway causes deltas in state
 5. Fixed issue where attribute ``bgp_manual_spoke_advertise_cidrs`` in **aviatrix_transit_gateway** causes delta in every apply
-6. Fixed issue where Egress Transit Gateway can't be created due to provider block
-7. Fixed issue where an **aviatrix_spoke_gateway** with advertised spoke vpc cidr's can't connect to an **aviatrix_transit_gateway**
+6. Fixed issue where Egress Transit Gateway can't be created due to blocking on the provider end
+7. Fixed issue where an **aviatrix_spoke_gateway** with advertised spoke VPC CIDRs can't connect to an **aviatrix_transit_gateway**
 
 ### Deprecations:
 1. Deprecated the in-line ``firewall_instance_association`` attribute in **aviatrix_firenet**. Please use the standalone **aviatrix_firewall_instance_association** resource instead
