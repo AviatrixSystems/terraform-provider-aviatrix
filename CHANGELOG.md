@@ -4,51 +4,51 @@
 - Supported Terraform version: **v0.12.x** and **v0.13.x**
 
 ### Features:
-1. Implement support for BGP over GRE and BGP over LAN through ``enable_bgp_over_lan`` in **aviatrix_transit_gateway**, and following attributes in **aviatrix_transit_external_device_conn**:
+1. Implemented support for BGP over GRE and BGP over LAN through ``enable_bgp_over_lan`` in **aviatrix_transit_gateway**, and following attributes in **aviatrix_transit_external_device_conn**:
   - ``tunnel_protocol``
   - ``remote_lan_ip``
   - ``backup_remote_lan_ip``
   - ``local_lan_ip``
   - ``backup_local_lan_ip``
   - ``remote_vpc_name``
-2. Implement support for controller HTTPS certificate import with the following attributes in **aviatrix_controller_config**:
+2. Implemented support for controller HTTPS certificate import with the following attributes in **aviatrix_controller_config**:
   - ``ca_certificate_file_path``
   - ``server_public_certificate_file_path``
   - ``server_private_key_file_path``
-3. Implement support for creating a Public Subnet Filtering gateway with the following attributes in **aviatrix_gateway**:
+3. Implemented support for creating a Public Subnet Filtering gateway with the following attributes in **aviatrix_gateway**:
   - ``enable_public_subnet_filtering``
   - ``public_subnet_filtering_route_tables``
   - ``public_subnet_filtering_ha_route_tables``
   - ``public_subnet_filtering_guard_duty_enforced``
-4. Implement support for configuring AWS Guard Duty:
+4. Implemented support for configuring AWS Guard Duty:
   - New resource **aviatrix_aws_guard_duty**
   - New attribute ``aws_guard_duty_scanning_interval`` in **aviatrix_controller_config**
-5. Implement support for configuring Learned CIDR Approval per connection:
+5. Implemented support for configuring Learned CIDR Approval per connection:
   - New attribute ``learned_cidrs_approval_mode`` in **aviatrix_transit_gateway**
   - New attribute ``enable_learned_cidrs_approval`` in **aviatrix_device_transit_gateway_attachment**, **aviatrix_transit_external_device_conn** and **aviatrix_vgw_conn**
-6. Implement support for configuring Manual Advertised CIDRs per connection:
+6. Implemented support for configuring Manual Advertised CIDRs per connection:
   - New attribute ``manual_bgp_advertised_cidrs`` in **aviatrix_device_transit_gateway_attachment**, **aviatrix_transit_external_device_conn** and **aviatrix_vgw_conn**
-7. Implement support for FireNet with AWS Gateway Load Balancer (GWLB):
+7. Implemented support for FireNet with AWS Gateway Load Balancer (GWLB):
   - New attribute ``enable_gateway_load_balancer`` in **aviatrix_transit_gateway**
   - New attribute ``enable_native_gwlb`` in **aviatrix_vpc**
   - Make ``firenet_gw_name`` Optional in **aviatrix_firewall_instance** and **aviatrix_firewall_instance_association**
-8. Implement support for Monitor Gateway Subnets in **aviatrix_transit_gateway** and **aviatrix_spoke_gateway** with the following attributes:
+8. Implemented support for Monitor Gateway Subnets in **aviatrix_transit_gateway** and **aviatrix_spoke_gateway** with the following attributes:
   - ``enable_monitor_gateway_subnets``
   - ``monitor_exclude_list``
-9. Implement support for private transit gateway peering with single-tunnel mode
-10. Implement support for transit to external device using IKEv2
-11. Implement new resource to support transit in azure with express route:
+9. Implemented support for private transit gateway peering with single-tunnel mode
+10. Implemented support for transit to external device using IKEv2
+11. Implemented new resource to support transit in azure with express route:
   - **resource_aviatrix_azure_vng_conn**
-12. Implement support for private OOB:
+12. Implemented support for private OOB:
   - New resource **aviatrix_controller_private_oob**
   - New attributes ``enable_private_oob``, ``oob_management_subnet``, and ``oob_availability_zone`` in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
   - New attributes ``enable_private_oob_subnet`` in **aviatrix_vpc**
-13. Implement support for proxy configuration:
+13. Implemented support for proxy configuration:
   - New resource: **aviatrix_proxy_config**
-14. Implement support for OCI provider in **aviatrix_vpc**
-15. Implement support for Aviatrix client/ovpn file download from the controller when SAML authentication is used:
+14. Implemented support for OCI provider in **aviatrix_vpc**
+15. Implemented support for Aviatrix client/ovpn file download from the controller when SAML authentication is used:
   - New resource: **aviatrix_vpn_cert_download**
-16. Implement new resources to support logging:
+16. Implemented new resources to support logging:
   - **resource_aviatrix_remote_syslog**
   - **resource_aviatrix_splunk_logging**
   - **resource_aviatrix_filebeat_forwarder**
@@ -58,20 +58,20 @@
   - **resource_aviatrix_cloudwatch_agent**
 
 ### Enhancements:
-1. Add Computed value ``ha_lan_interface_cidr`` in **aviatrix_transit_gateway**
-2. Change **aviatrix_gateway** attribute ``monitor_exclude_list`` type from String to Set of Strings
-3. Add support of ``tag_list`` for Azure provider in **aviatrix_gateway**, **aviatrix_transit_gateway**, and **aviatrix_spoke_gateway** resources and data sources
+1. Added Computed value ``ha_lan_interface_cidr`` in **aviatrix_transit_gateway**
+2. Changed **aviatrix_gateway** attribute ``monitor_exclude_list`` type from String to Set of Strings
+3. Added support of ``tag_list`` for Azure provider in **aviatrix_gateway**, **aviatrix_transit_gateway**, and **aviatrix_spoke_gateway** resources and data sources
 4. Added ``customized_transit_vpc_routes`` in **aviatrix_transit_gateway** resource and data source
 5. Added ``azure_vnet_resource_id`` as output for **aviatrix_vpc** resource and data source
 
 ### Bug Fixes:
-1. Fix issue where users could not create an **aviatrix_firewall_instance** if the VPC/VNET was not managed by the Aviatrix controller
-2. Fix an argument ordering issue in **aviatrix_site2cloud** Custom Mapped attributes by changing from type Set to List
-3. Fix race condition when deploying spoke gateway (HA disabled) using ``customized_spoke_vpc_routes`` and ``transit_gw``
-4. Fix issue where creating **aviatrix_site2cloud** for ActiveActive-enabled gateway causes deltas in state
-5. Fix issue where attribute ``bgp_manual_spoke_advertise_cidrs`` in **aviatrix_transit_gateway** causes delta in every apply
-6. Fix issue where Egress Transit Gateway can't be created due to provider block
-7. Fix issue where an **aviatrix_spoke_gateway** with advertised spoke vpc cidr's can't connect to an **aviatrix_transit_gateway**
+1. Fixed issue where users could not create an **aviatrix_firewall_instance** if the VPC/VNET was not managed by the Aviatrix controller
+2. Fixed an argument ordering issue in **aviatrix_site2cloud** Custom Mapped attributes by changing from type Set to List
+3. Fixed race condition when deploying spoke gateway (HA disabled) using ``customized_spoke_vpc_routes`` and ``transit_gw``
+4. Fixed issue where creating **aviatrix_site2cloud** for ActiveActive-enabled gateway causes deltas in state
+5. Fixed issue where attribute ``bgp_manual_spoke_advertise_cidrs`` in **aviatrix_transit_gateway** causes delta in every apply
+6. Fixed issue where Egress Transit Gateway can't be created due to provider block
+7. Fixed issue where an **aviatrix_spoke_gateway** with advertised spoke vpc cidr's can't connect to an **aviatrix_transit_gateway**
 
 ### Deprecations:
 1. Deprecated the in-line ``firewall_instance_association`` attribute in **aviatrix_firenet**. Please use the standalone **aviatrix_firewall_instance_association** resource instead
