@@ -75,9 +75,9 @@ The following arguments are supported:
 * `multiple_backups` - (Optional) Switch to enable the Controller to backup up to a maximum of 3 rotating backups. Valid values: true, false. Default value: false.
 
 ### [TLS Certificate Import](https://docs.aviatrix.com/HowTos/controller_certificate.html)
-* `ca_certificate_file_path` - (Optional) File path to CA certificate.
-* `server_public_certificate_file_path` - (Optional) File path to the server public certificate.
-* `server_private_key_file_path` - (Optional) File path to server private key.
+* `ca_certificate_file_path` - (Optional) File path to CA certificate. Available as of provider version R2.18+.
+* `server_public_certificate_file_path` - (Optional) File path to the server public certificate. Available as of provider version R2.18+.
+* `server_private_key_file_path` - (Optional) File path to server private key. Available as of provider version R2.18+.
 
 ### Misc.
 * `target_version` - (Optional) The release version number to which the controller will be upgraded to. If not specified, controller will not be upgraded. If set to "latest", controller will be upgraded to the latest release. Please see the [Controller upgrade guide](https://docs.aviatrix.com/HowTos/inline_upgrade.html) for more information.

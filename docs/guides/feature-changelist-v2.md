@@ -227,4 +227,3 @@ For most changes, unless stated otherwise in the tables below, after editing the
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
 |(changed) | gateway    | monitor_exclude_list | **Yes**; attribute has changed from string-type to a list. If this attribute is already being used in a comma-separated string, please convert values to a list of strings. Eg. ``"foo,bar"`` to ``["foo", "bar"]`` |
-|(changed) | transit_gateway | customized_transit_vpc_routes | **Yes**; attribute has changed from string-type to a list. Please see above box for explanation and example |
