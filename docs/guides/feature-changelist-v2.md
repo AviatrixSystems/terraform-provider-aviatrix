@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.17.2 (UserConnect-6.2.1914)``
+``Last updated: R2.18 (UserConnect-6.3)``
 
 
 ---
@@ -221,3 +221,9 @@ For most changes, unless stated otherwise in the tables below, after editing the
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
 |(changed) | transit_gateway_peering | gateway1_excluded_network_cidrs, gateway1_excluded_tgw_connections, gateway2_excluded_network_cidrs, gateway2_excluded_tgw_connections | **Yes**; if customers are experiencing deltas in their state in any of the aforementioned attributes due to Terraform re-ordering prior to R2.17.2, the workaround is to reorder the list in the config to match what the returned 'expected' output is and run a `terraform apply`. The fix in R2.17.2 will correct this behavior for any **new** future peering resources created. Note that if manual re-ordering is not a viable option, one may also destroy and re-create the resource as necessary |
+
+
+## R2.18 (UserConnect-6.3)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(changed) | gateway    | monitor_exclude_list | **Yes**; attribute has changed from string-type to a list. If this attribute is already being used in a comma-separated string, please convert values to a list of strings. Eg. ``"foo,bar"`` to ``["foo", "bar"]`` |

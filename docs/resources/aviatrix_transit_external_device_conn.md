@@ -54,7 +54,7 @@ resource "aviatrix_transit_external_device_conn" "ex-conn" {
   remote_lan_ip     = "172.12.13.14"
   local_lan_ip      = "172.12.13.15"
   remote_vpc_name   = "vnet-name:resource-group-name"
-  
+
   ha_enabled               = true
   backup_bgp_remote_as_num = "678"
   backup_remote_lan_ip     = "172.12.13.16"
@@ -116,7 +116,7 @@ The following arguments are supported:
 * `enable_edge_segmentation` - (Optional) Switch to allow this connection to communicate with a Security Domain via Connection Policy.
 * `switch_to_ha_standby_gateway` - (Optional) Switch to HA Standby Transit Gateway connection. Only valid with Transit Gateway that has [Active-Standby Mode](https://docs.aviatrix.com/HowTos/transit_advanced.html#active-standby) enabled and for non-HA external device. Valid values: true, false. Default: false. Available in provider version R2.17.1+.
 * `enable_learned_cidrs_approval` - (Optional) Enable learned CIDRs approval for the connection. Only valid with 'connection_type' = 'bgp'. Requires the transit_gateway's 'learned_cidrs_approval_mode' attribute be set to 'connection'. Valid values: true, false. Default value: false. Available as of provider version R2.18+.
-* `enable_ikev2` - (Optional) Set as true if use IKEv2.
+* `enable_ikev2` - (Optional) Set as true to enable IKEv2 protocol.
 * `manual_bgp_advertised_cidrs` - (Optional) Configure manual BGP advertised CIDRs for this connection. Only valid with 'connection_type'= 'bgp'. Available as of provider version R2.18+.
 
 ## Import

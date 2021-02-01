@@ -129,7 +129,7 @@ resource "aviatrix_gateway" "test_gateway_azure" {
   cloud_type   = 8
   account_name = "devops-azure"
   gw_name      = "avtx-gw-azure"
-  vpc_id       = "gateway:test-gw-123"
+  vpc_id       = "vnet1:resourcegroup1"
   vpc_reg      = "West US"
   gw_size      = "Standard_D2"
   subnet       = "10.13.0.0/24"
