@@ -3,7 +3,7 @@ subcategory: "Multi-Cloud Transit"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_azure_vng_conn"
 description: |-
-Creates and manages the connection between Aviatrix Transit Gateway and Azure VNG
+  Creates and manages the connection between Aviatrix Transit Gateway and Azure VNG
 ---
 
 # aviatrix_azure_vng_conn

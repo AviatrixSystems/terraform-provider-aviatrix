@@ -3,7 +3,7 @@ subcategory: "Settings"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_filebeat_forwarder"
 description: |-
-Enables and disables filebeat forwarder
+  Enables and disables filebeat forwarder
 ---
 
 # aviatrix_filebeat_forwarder

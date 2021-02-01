@@ -2,7 +2,8 @@
 subcategory: "Security"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_aws_guard_duty"
-description: |- Manage AWS GuardDuty configuration
+description: |-
+  Manage AWS GuardDuty configuration
 ---
 
 # aviatrix_aws_guard_duty
