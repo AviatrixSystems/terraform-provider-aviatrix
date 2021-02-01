@@ -42,7 +42,7 @@
 12. Implemented support for Private OOB feature:
   - New resource **aviatrix_controller_private_oob** to enable Controller-wide setting
   - New attributes ``enable_private_oob``, ``oob_management_subnet``, and ``oob_availability_zone`` in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
-  - New attributes ``enable_private_oob_subnet`` in **aviatrix_vpc**
+  - New attribute ``enable_private_oob_subnet`` in **aviatrix_vpc**
 13. Implemented support for proxy configuration:
   - New resource: **aviatrix_proxy_config**
 14. Implemented support for OCI in **aviatrix_vpc**
