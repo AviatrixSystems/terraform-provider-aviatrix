@@ -1424,32 +1424,18 @@ func (c *Client) GetTransitGatewayLanCidr(gatewayName string) (string, error) {
 }
 
 func (c *Client) GetFqdnGatewayInfo(gateway *Gateway) (*FQDNGatwayInfo, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for list_firenet(show fqdn gateway lan cidr)") + err.Error())
-	}
-	showLanCidr := url.Values{}
-	showLanCidr.Add("action", "list_firenet")
-	showLanCidr.Add("CID", c.CID)
-	showLanCidr.Add("subaction", "instance")
-	showLanCidr.Add("vpc_id", gateway.VpcID)
-	Url.RawQuery = showLanCidr.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New(("HTTP Get failed list_firenet(show fqdn gateway lan cidr)") + err.Error())
+	params := map[string]string{
+		"action":    "list_firenet",
+		"subaction": "instance",
+		"vpc_id":    gateway.VpcID,
+		"CID":       c.CID,
 	}
 	var data FQDNGatewayInfoResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode  list_firenet(show fqdn gateway lan cidr) failed: " + err.Error() + "\n Body: " + bodyString)
+	err := c.GetAPI(&data, params["action"], params, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
-	if !data.Return {
-		return nil, errors.New("Rest API get_firewall_lan_cidr Get failed: " + data.Reason)
-	}
-	return &data.Results, ErrNotFound
+	return &data.Results, nil
 }
 
 func (c *Client) UpdateTransitGatewayCustomizedVpcRoute(gateway string, customizedTransitVpcRoutes []string) error {
