@@ -42,7 +42,7 @@ func TestAccAviatrixGatewayCertificateConfig_basic(t *testing.T) {
 }
 
 func testAccGatewayCertificateConfigBasic() string {
-	return fmt.Sprintf(`
+	return `
 resource "aviatrix_gateway_certificate_config" "test_gateway_certificate_config" {
 	ca_private_key = <<EOT
 -----BEGIN RSA PRIVATE KEY-----
@@ -99,7 +99,7 @@ JSbEHyZUdM+2F2xWRk1oBHmatyKdzi6vtOC0Yix+oa2iDUJfNGdsI3xKaF+oKA==
 EOT
 
 }
-`)
+`
 }
 
 func testAccCheckGatewayCertificateConfigExists(n string) resource.TestCheckFunc {
