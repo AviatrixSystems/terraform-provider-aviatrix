@@ -3,7 +3,7 @@ subcategory: "Settings"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_gateway_certificate_config"
 description: |-
-    Manages Aviatrix gateway certificate configuration
+  Manages Aviatrix gateway certificate configuration
 ---
 
 # aviatrix_gateway_certificate_config
@@ -31,7 +31,7 @@ The following arguments are supported:
 
 ## Import
 
-!> **WARNING:** Due to security reasons the Aviatrix controller does not ever output your CA private key or CA certificate, thus when importing the provider cannot read your private key or certificate into the state file. After importing if you wish to not change the values of the CA private key or certificate you must set the attributes `ca_certificate` and `ca_private_key` to the empty string (""). If you do provide non-empty values for `ca_certificate` and `ca_private_key` after importing, then Terraform will see a diff between the given values and the values in the state file and force replacement of the resource.
+!> **WARNING:** When importing, the provider cannot read your private key or certificate into the state file. After importing, if you do not want to change the values of the CA private key or certificate you must set the attributes `ca_certificate` and `ca_private_key` to the empty string (""). Otherwise, Terraform will see a diff and force replacement.
 
 `aviatrix_gateway_certificate_config` can be imported using controller IP with the dots(.) replaces with dashes(-), e.g. controller IP is : 10.11.12.13
 
