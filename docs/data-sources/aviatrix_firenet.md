@@ -35,6 +35,7 @@ In addition to all arguments above, the following attributes are exported:
 * `inspection_enabled` - Enable/Disable traffic inspection.
 * `egress_enabled` - Enable/Disable egress through firewall.
 * `hashing_algorithm` - (Optional) Hashing algorithm to load balance traffic across the firewall.
+* `keep_alive_via_lan_interface_enabled` - (Optional) Enable Keep Alive via Firewall LAN Interface.
 * `firewall_instance_association` - List of firewall instances associated with fireNet.
   * `firenet_gw_name` - Name of the primary FireNet gateway.
   * `instance_id` - ID of Firewall instance.

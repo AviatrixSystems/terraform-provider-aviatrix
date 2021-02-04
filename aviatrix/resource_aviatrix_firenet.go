@@ -111,6 +111,12 @@ func resourceAviatrixFireNet() *schema.Resource {
 				Description:  "Hashing algorithm to load balance traffic across the firewall.",
 				ValidateFunc: validation.StringInSlice([]string{"5-Tuple", "2-Tuple"}, false),
 			},
+			"keep_alive_via_lan_interface_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable Keep Alive via Firewall LAN Interface.",
+			},
 			"manage_firewall_instance_association": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -220,6 +226,13 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	if d.Get("keep_alive_via_lan_interface_enabled").(bool) {
+		err := client.EnableFireNetLanKeepAlive(fireNet)
+		if err != nil {
+			return fmt.Errorf("could not enable keep alive via lan interface after creating firenet: %v", err)
+		}
+	}
+
 	return resourceAviatrixFireNetReadIfRequired(d, meta, &flag)
 }
 
@@ -260,6 +273,7 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 
 	d.Set("vpc_id", fireNetDetail.VpcID)
 	d.Set("hashing_algorithm", fireNetDetail.HashingAlgorithm)
+	d.Set("keep_alive_via_lan_interface_enabled", fireNetDetail.LanPing == "yes")
 	if fireNetDetail.Inspection == "yes" {
 		d.Set("inspection_enabled", true)
 	} else {
@@ -513,7 +527,23 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 				return fmt.Errorf("failed to enable firewall egress on fireNet: %v", err)
 			}
 		}
+	}
 
+	if d.HasChange("keep_alive_via_lan_interface_enabled") {
+		fn := &goaviatrix.FireNet{
+			VpcID: d.Get("vpc_id").(string),
+		}
+		if d.Get("keep_alive_via_lan_interface_enabled").(bool) {
+			err := client.EnableFireNetLanKeepAlive(fn)
+			if err != nil {
+				return fmt.Errorf("could not enable keep alive via lan interface while updating firenet: %v", err)
+			}
+		} else {
+			err := client.DisableFireNetLanKeepAlive(fn)
+			if err != nil {
+				return fmt.Errorf("could not disable keep alive via lan interface while updating firenet: %v", err)
+			}
+		}
 	}
 
 	d.Partial(false)

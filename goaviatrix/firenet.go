@@ -29,6 +29,7 @@ type FireNetDetail struct {
 	NativeGwlb       bool                   `json:"native_gwlb"`
 	Inspection       string                 `json:"inspection,omitempty"`
 	HashingAlgorithm string                 `json:"firewall_hashing,omitempty"`
+	LanPing          string                 `json:"lan_ping"`
 }
 
 type GetFireNetResp struct {
@@ -390,4 +391,36 @@ func (c *Client) EditFireNetHashingAlgorithm(fireNet *FireNet) error {
 	}
 
 	return c.PostAPI("edit_firenet", data, checkFunc)
+}
+
+func (c *Client) EnableFireNetLanKeepAlive(net *FireNet) error {
+	data := map[string]string{
+		"action":   "edit_firenet",
+		"CID":      c.CID,
+		"vpc_id":   net.VpcID,
+		"lan_ping": "true",
+	}
+
+	customCheck := func(action, reason string, ret bool) error {
+		if !ret {
+			// [AVXERR-FIRENET-0029] No change in firenet attribute
+			if strings.Contains(reason, "AVXERR-FIRENET-0029") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+		}
+		return nil
+	}
+
+	return c.PostAPI("edit_firenet(lan_ping=true)", data, customCheck)
+}
+
+func (c *Client) DisableFireNetLanKeepAlive(net *FireNet) error {
+	data := map[string]string{
+		"action":   "edit_firenet",
+		"CID":      c.CID,
+		"vpc_id":   net.VpcID,
+		"lan_ping": "false",
+	}
+	return c.PostAPI("edit_firenet(lan_ping=false)", data, BasicCheck)
 }

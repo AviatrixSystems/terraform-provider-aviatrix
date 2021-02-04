@@ -20,6 +20,7 @@ resource "aviatrix_firenet" "test_firenet" {
   vpc_id                               = "vpc-032005cc371"
   inspection_enabled                   = true
   egress_enabled                       = false
+  keep_alive_via_lan_interface_enabled = false
   manage_firewall_instance_association = false
 }
 ```
@@ -39,6 +40,7 @@ The following arguments are supported:
 -> **NOTE:** `egress_enabled` - Default value is false for associating firewall instance to FireNet. Only true is supported for associating FQDN gateway to FireNet.
 
 * `hashing_algorithm` - (Optional) Hashing algorithm to load balance traffic across the firewall. Valid values: "2-Tuple", "5-Tuple". Default value: "5-Tuple".
+* `keep_alive_via_lan_interface_enabled` - (Optional) Enable Keep Alive via Firewall LAN Interface. Valid values: true or false. Default value: false. Available as of provider version R2.18.1+.
 * `manage_firewall_instance_association` - (Optional) Enable this attribute to manage firewall associations in-line. If set to true, in-line `firewall_instance_association` blocks can be used. If set to false, all firewall associations must be managed via standalone `aviatrix_firewall_instance_association` resources. Default value: true. Valid values: true or false. Available in provider version R2.17.1+.
 
 ### Firewall Association
