@@ -2,6 +2,7 @@ package goaviatrix
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
@@ -135,6 +136,15 @@ func (c *Client) Post(path string, i interface{}) (*http.Response, error) {
 	return c.Request("POST", path, i)
 }
 
+func (c *Client) GetContext(ctx context.Context, path string, i interface{}) (*http.Response, error) {
+	return c.RequestContext(ctx, "GET", path, i)
+}
+
+// PostContext issues an HTTP POST request with the given interface form-encoded.
+func (c *Client) PostContext(ctx context.Context, path string, i interface{}) (*http.Response, error) {
+	return c.RequestContext(ctx, "POST", path, i)
+}
+
 // CheckAPIResponseFunc looks at the Reason and Return fields from an API response
 // and returns an error
 type CheckAPIResponseFunc func(action, reason string, ret bool) error
@@ -156,6 +166,15 @@ func (c *Client) PostAPI(action string, d interface{}, checkFunc CheckAPIRespons
 	return decodeAndCheckAPIResp(resp, action, checkFunc)
 }
 
+// PostAPIContext makes a post request to the Aviatrix API, decodes the response and checks for any errors
+func (c *Client) PostAPIContext(ctx context.Context, action string, d interface{}, checkFunc CheckAPIResponseFunc) error {
+	resp, err := c.PostContext(ctx, c.baseURL, d)
+	if err != nil {
+		return fmt.Errorf("HTTP POST %q failed: %v", action, err)
+	}
+	return decodeAndCheckAPIResp(resp, action, checkFunc)
+}
+
 // PostFileAPI will encode the files and parameters with multipart form encoding and POST to the API.
 // The API response is decoded and checked with the provided checkFunc
 func (c *Client) PostFileAPI(params map[string]string, files []File, checkFunc CheckAPIResponseFunc) error {
@@ -163,6 +182,19 @@ func (c *Client) PostFileAPI(params map[string]string, files []File, checkFunc C
 		return fmt.Errorf("cannot PostFileAPI without an 'action' in params map")
 	}
 	resp, err := c.PostFile(c.baseURL, params, files)
+	if err != nil {
+		return fmt.Errorf("HTTP POST %q failed: %v", params["action"], err)
+	}
+	return decodeAndCheckAPIResp(resp, params["action"], checkFunc)
+}
+
+// PostFileAPIContext will encode the files and parameters with multipart form encoding and POST to the API.
+// The API response is decoded and checked with the provided checkFunc
+func (c *Client) PostFileAPIContext(ctx context.Context, params map[string]string, files []File, checkFunc CheckAPIResponseFunc) error {
+	if params["action"] == "" {
+		return fmt.Errorf("cannot PostFileAPIContext without an 'action' in params map")
+	}
+	resp, err := c.PostFileContext(ctx, c.baseURL, params, files)
 	if err != nil {
 		return fmt.Errorf("HTTP POST %q failed: %v", params["action"], err)
 	}
@@ -193,6 +225,31 @@ func (c *Client) GetAPI(v interface{}, action string, d map[string]string, check
 		return fmt.Errorf("could not url encode values for action %q: %v", action, err)
 	}
 	resp, err := c.Get(Url, nil)
+	if err != nil {
+		return fmt.Errorf("HTTP Get %s failed: %v", action, err)
+	}
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	var data APIResp
+	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
+		return fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
+	}
+	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&v); err != nil {
+		return fmt.Errorf("Json Decode failed: %v\n Body: %s", err, bodyString)
+	}
+	return checkFunc(action, data.Reason, data.Return)
+}
+
+// GetAPIContext makes a GET request to the Aviatrix API
+// First, we decode into the generic APIResp struct, then check for errors
+// If no errors, we will decode into the user defined structure that is passed in
+func (c *Client) GetAPIContext(ctx context.Context, v interface{}, action string, d map[string]string, checkFunc CheckAPIResponseFunc) error {
+	Url, err := c.urlEncode(d)
+	if err != nil {
+		return fmt.Errorf("could not url encode values for action %q: %v", action, err)
+	}
+	resp, err := c.GetContext(ctx, Url, nil)
 	if err != nil {
 		return fmt.Errorf("HTTP Get %s failed: %v", action, err)
 	}
@@ -242,6 +299,37 @@ type File struct {
 
 // PostFile will encode the files and parameters with multipart form encoding.
 func (c *Client) PostFile(path string, params map[string]string, files []File) (*http.Response, error) {
+	body, contentType, err := encodeMultipartFormData(params, files)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", path, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", contentType)
+
+	return c.HTTPClient.Do(req)
+}
+
+// PostFileContext will encode the files and parameters with multipart form encoding.
+func (c *Client) PostFileContext(ctx context.Context, path string, params map[string]string, files []File) (*http.Response, error) {
+	body, contentType, err := encodeMultipartFormData(params, files)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", path, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", contentType)
+
+	return c.HTTPClient.Do(req)
+}
+
+func encodeMultipartFormData(params map[string]string, files []File) (*bytes.Buffer, string, error) {
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
 
@@ -254,20 +342,20 @@ func (c *Client) PostFile(path string, params map[string]string, files []File) (
 
 			file, err := os.Open(f.Path)
 			if err != nil {
-				return nil, err
+				return nil, "", err
 			}
 			fileContents, err := ioutil.ReadAll(file)
 			if err != nil {
-				return nil, err
+				return nil, "", err
 			}
 			fi, err := file.Stat()
 			if err != nil {
-				return nil, err
+				return nil, "", err
 			}
 			_ = file.Close()
 			part, err := createFormFile(f.ParamName, fi.Name(), http.DetectContentType(fileContents), writer)
 			if err != nil {
-				return nil, err
+				return nil, "", err
 			}
 			_, _ = part.Write(fileContents)
 		} else {
@@ -275,7 +363,7 @@ func (c *Client) PostFile(path string, params map[string]string, files []File) (
 
 			part, err := createFormFile(f.ParamName, f.FileName, http.DetectContentType(fileContents), writer)
 			if err != nil {
-				return nil, err
+				return nil, "", err
 			}
 			_, _ = part.Write(fileContents)
 		}
@@ -287,17 +375,10 @@ func (c *Client) PostFile(path string, params map[string]string, files []File) (
 	}
 	err := writer.Close()
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	req, err := http.NewRequest("POST", path, body)
-
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-
-	return c.HTTPClient.Do(req)
+	return body, writer.FormDataContentType(), nil
 }
 
 func createFormFile(fieldname, filename, fileContentType string, w *multipart.Writer) (io.Writer, error) {
@@ -408,6 +489,34 @@ func (c *Client) Request(verb string, path string, i interface{}) (*http.Respons
 		}
 	} else {
 		req, err = http.NewRequest(verb, path, nil)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	return c.HTTPClient.Do(req)
+}
+
+// RequestContext makes an HTTP request with the given interface being encoded as
+// form data.
+func (c *Client) RequestContext(ctx context.Context, verb string, path string, i interface{}) (*http.Response, error) {
+	log.Tracef("%s %s", verb, path)
+	var req *http.Request
+	var err error
+	if i != nil {
+		buf := new(bytes.Buffer)
+		if err = form.NewEncoder(buf).Encode(i); err != nil {
+			return nil, err
+		}
+		body := buf.String()
+		log.Tracef("%s %s Body: %s", verb, path, body)
+		reader := strings.NewReader(body)
+		req, err = http.NewRequestWithContext(ctx, verb, path, reader)
+		if err == nil {
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		}
+	} else {
+		req, err = http.NewRequestWithContext(ctx, verb, path, nil)
 	}
 
 	if err != nil {

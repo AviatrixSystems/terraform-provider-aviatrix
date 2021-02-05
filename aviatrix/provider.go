@@ -73,6 +73,7 @@ func Provider() *schema.Provider {
 			"aviatrix_fqdn_pass_through":                              resourceAviatrixFQDNPassThrough(),
 			"aviatrix_fqdn_tag_rule":                                  resourceAviatrixFQDNTagRule(),
 			"aviatrix_gateway":                                        resourceAviatrixGateway(),
+			"aviatrix_gateway_certificate_config":                     resourceAviatrixGatewayCertificateConfig(),
 			"aviatrix_gateway_dnat":                                   resourceAviatrixGatewayDNat(),
 			"aviatrix_gateway_snat":                                   resourceAviatrixGatewaySNat(),
 			"aviatrix_geo_vpn":                                        resourceAviatrixGeoVPN(),
