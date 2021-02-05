@@ -385,9 +385,9 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 		d.Set("management_subnet", fI.ManagementSubnet)
 	}
 
-	if (d.Get("zone").(string) != "" || isImport) && fI.AvailabilityZone != "AvailabilitySet" && fI.AvailabilityZone != "" && fI.CloudVendor == "Azure ARM" {
+	if (d.Get("zone").(string) != "" || isImport) && fI.AvailabilityZone != "AvailabilitySet" && fI.AvailabilityZone != "" && stringInSlice(fI.CloudVendor, goaviatrix.AzureArmRelatedVendorNames) {
 		d.Set("zone", "az-"+fI.AvailabilityZone)
-	} else if fI.AvailabilityZone != "" && fI.CloudVendor == "AWS" && fI.GwName == "" {
+	} else if fI.AvailabilityZone != "" && stringInSlice(fI.CloudVendor, goaviatrix.AWSRelatedVendorNames) && fI.GwName == "" {
 		d.Set("zone", fI.AvailabilityZone)
 	}
 
@@ -399,7 +399,7 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	if fI.FirewallImageVersion != "" {
 		d.Set("firewall_image_version", fI.FirewallImageVersion)
 	}
-	if d.Get("key_name") != "" {
+	if fI.KeyFile == "" && stringInSlice(fI.CloudVendor, goaviatrix.AWSRelatedVendorNames) {
 		d.Set("key_name", fI.KeyName)
 	}
 	if fI.IamRole != "" {
