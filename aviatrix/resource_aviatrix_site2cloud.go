@@ -479,9 +479,6 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 
 	enableIKEv2 := d.Get("enable_ikev2").(bool)
 	if enableIKEv2 {
-		if s2c.TunnelType == "route" {
-			return fmt.Errorf("'enable_ikev2' is only supported for policy based site2cloud creation")
-		}
 		s2c.EnableIKEv2 = "true"
 	}
 
