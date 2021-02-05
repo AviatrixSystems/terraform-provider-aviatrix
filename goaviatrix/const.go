@@ -14,7 +14,7 @@ const (
 
 // Cloud vendor names
 var (
-	AWSRelatedVendorNames = []string{"AWS", "AWS GOV", "AWS CHINA"}
+	AWSRelatedVendorNames      = []string{"AWS", "AWS GOV", "AWS CHINA"}
 	AzureArmRelatedVendorNames = []string{"Azure ARM", "ARM CHINA", "ARM GOV"}
 )
 
