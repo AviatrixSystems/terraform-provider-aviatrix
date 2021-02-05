@@ -53,7 +53,7 @@ The following arguments are supported:
 * `zone` - (Optional) Availability Zone. Required if creating a Firewall Instance with a Native AWS GWLB enabled VPC. Applicable to Azure and AWS only. Available as of provider version R2.17+.
 
 ### Authentication method
-* `key_name`- (Optional) Applicable to AWS deployment only. The **.pem** filename for SSH access to the firewall instance.
+* `key_name`- (Optional) Applicable to AWS deployment only. AWS Key Pair name. If not provided a Key Pair will be generated.
 * `username`- (Optional) Applicable to Azure deployment only. "admin" as a username is not accepted.
 * `password`- (Optional) Applicable to Azure deployment only.
 * `ssh_public_key` - (Optional) Applicable to Azure deployment only.

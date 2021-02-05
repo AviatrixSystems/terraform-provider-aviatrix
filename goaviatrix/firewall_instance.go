@@ -21,6 +21,7 @@ type FirewallInstance struct {
 	EgressSubnet         string `form:"egress_subnet,omitempty" json:"egress_subnet,omitempty"`
 	ManagementSubnet     string `form:"management_subnet,omitempty" json:"management_subnet,omitempty"`
 	KeyName              string `form:"key_name,omitempty" json:"key_name,omitempty"`
+	KeyFile              string `json:"key_file"`
 	IamRole              string `form:"iam_role,omitempty" json:"iam_role,omitempty"`
 	BootstrapBucketName  string `form:"bootstrap_bucket_name,omitempty" json:"bootstrap_bucket_name,omitempty"`
 	InstanceID           string `form:"firewall_id,omitempty" json:"instance_id,omitempty"`

@@ -399,7 +399,7 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	if fI.FirewallImageVersion != "" {
 		d.Set("firewall_image_version", fI.FirewallImageVersion)
 	}
-	if d.Get("key_name") != "" {
+	if fI.KeyFile == "" {
 		d.Set("key_name", fI.KeyName)
 	}
 	if fI.IamRole != "" {
