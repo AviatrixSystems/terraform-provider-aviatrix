@@ -12,6 +12,12 @@ const (
 	AWSGOV = 256
 )
 
+// Cloud vendor names
+var (
+	AWSRelatedVendorNames = []string{"AWS", "AWS GOV", "AWS CHINA"}
+	AzureArmRelatedVendorNames = []string{"Azure ARM", "ARM CHINA", "ARM GOV"}
+)
+
 // GetSupportedClouds returns the list of currently supported cloud IDs
 // Example usage to validate a cloud_type attribute in a schema:
 // "cloud_type": {
