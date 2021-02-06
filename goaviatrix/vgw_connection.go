@@ -182,6 +182,9 @@ func (c *Client) GetVGWConnDetail(vgwConn *VGWConn) (*VGWConn, error) {
 	var data VGWConnDetailResp
 	err := c.GetAPI(&data, params["action"], params, BasicCheck)
 	if err != nil {
+		if strings.Contains(data.Reason, "does not exist") {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 	if data.Results.Connections.ConnName[0] != "" {
