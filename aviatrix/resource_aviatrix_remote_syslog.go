@@ -195,7 +195,9 @@ func resourceAviatrixRemoteSyslogRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("template", remoteSyslogStatus.Template)
 	d.Set("notls", remoteSyslogStatus.Notls)
 	d.Set("status", remoteSyslogStatus.Status)
-	d.Set("excluded_gateways", remoteSyslogStatus.ExcludedGateways)
+	if len(remoteSyslogStatus.ExcludedGateways) != 0 {
+		d.Set("excluded_gateways", remoteSyslogStatus.ExcludedGateways)
+	}
 
 	d.SetId("remote_syslog_" + remoteSyslogStatus.Index)
 	return nil

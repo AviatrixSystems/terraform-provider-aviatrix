@@ -44,6 +44,13 @@ func resourceAviatrixDatadogAgent() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"metrics_only": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				ForceNew:    true,
+				Default:     false,
+				Description: "Only export metrics without exporting logs.",
+			},
 			"status": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -55,8 +62,9 @@ func resourceAviatrixDatadogAgent() *schema.Resource {
 
 func marshalDatadogAgentInput(d *schema.ResourceData) *goaviatrix.DatadogAgent {
 	datadogAgent := &goaviatrix.DatadogAgent{
-		ApiKey: d.Get("api_key").(string),
-		Site:   d.Get("site").(string),
+		ApiKey:      d.Get("api_key").(string),
+		Site:        d.Get("site").(string),
+		MetricsOnly: d.Get("metrics_only").(bool),
 	}
 
 	var excludedGateways []string
@@ -104,7 +112,10 @@ func resourceAviatrixDatadogAgentRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Set("site", datadogAgentStatus.Site)
-	d.Set("excluded_gateways", datadogAgentStatus.ExcludedGateways)
+	if len(datadogAgentStatus.ExcludedGateways) != 0 {
+		d.Set("excluded_gateways", datadogAgentStatus.ExcludedGateways)
+	}
+	d.Set("metrics_only", datadogAgentStatus.MetricsOnly)
 	d.Set("status", datadogAgentStatus.Status)
 
 	d.SetId("datadog_agent")

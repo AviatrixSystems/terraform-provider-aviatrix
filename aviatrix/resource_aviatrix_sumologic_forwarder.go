@@ -120,7 +120,9 @@ func resourceAviatrixSumologicForwarderRead(d *schema.ResourceData, meta interfa
 	d.Set("access_id", sumologicForwarderStatus.AccessID)
 	d.Set("source_category", sumologicForwarderStatus.SourceCategory)
 	d.Set("custom_configuration", sumologicForwarderStatus.CustomConfig)
-	d.Set("excluded_gateways", sumologicForwarderStatus.ExcludedGateways)
+	if len(sumologicForwarderStatus.ExcludedGateways) != 0 {
+		d.Set("excluded_gateways", sumologicForwarderStatus.ExcludedGateways)
+	}
 	d.Set("status", sumologicForwarderStatus.Status)
 
 	d.SetId("sumologic_forwarder")
