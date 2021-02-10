@@ -181,9 +181,19 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 					"Valid values: true, false. Default value: true.",
 			},
 			"enable_multicast": {
-				Type:     schema.TypeBool,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable Multicast.",
+			},
+			"cidrs": {
+				Type:     schema.TypeSet,
 				Optional: true,
-				Default:  false,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsCIDR,
+				},
+				Description: "TGW CIDRs.",
 			},
 		},
 	}
@@ -455,6 +465,13 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
+	if cidrs := getStringSet(d, "cidrs"); len(cidrs) != 0 {
+		err := client.UpdateTGWCidrs(awsTgw.Name, cidrs)
+		if err != nil {
+			return fmt.Errorf("could not update TGW CIDRs after creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixAWSTgwReadIfRequired(d, meta, &flag)
 }
 
@@ -495,6 +512,9 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("region", awsTgw.Region)
 	d.Set("cloud_type", awsTgw.CloudType)
 	d.Set("enable_multicast", awsTgw.EnableMulticast)
+	if err := d.Set("cidrs", awsTgw.CidrList); err != nil {
+		return fmt.Errorf("could not set aws_tgw.cidrs into state: %v", err)
+	}
 
 	log.Printf("[INFO] Reading AWS TGW")
 
@@ -1179,6 +1199,14 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 		if err != nil {
 			resourceAviatrixAWSTgwRead(d, meta)
 			return fmt.Errorf("failed to delete Security Domain: %s", err)
+		}
+	}
+
+	if d.HasChange("cidrs") {
+		cidrs := getStringSet(d, "cidrs")
+		err := client.UpdateTGWCidrs(awsTgw.Name, cidrs)
+		if err != nil {
+			return fmt.Errorf("could not update TGW CIDRs during update: %v", err)
 		}
 	}
 

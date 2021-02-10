@@ -26,6 +26,7 @@ type AWSTgw struct {
 	SecurityDomains           []SecurityDomainRule `form:"security_domains,omitempty"`
 	ManageVpcAttachment       string
 	EnableMulticast           bool `form:"multicast_enable"`
+	CidrList                  []string
 }
 
 type AWSTgwAPIResp struct {
@@ -105,11 +106,12 @@ type TGWInfoList struct {
 }
 
 type TgwInfoDetail struct {
-	AccountName     string `json:"acct_name"`
-	Region          string `json:"region"`
-	AwsSideAsNumber int    `json:"tgw_aws_asn"`
-	CloudType       int    `json:"cloud_type"`
-	EnableMulticast bool   `json:"multicast_enable"`
+	AccountName     string   `json:"acct_name"`
+	Region          string   `json:"region"`
+	AwsSideAsNumber int      `json:"tgw_aws_asn"`
+	CloudType       int      `json:"cloud_type"`
+	EnableMulticast bool     `json:"multicast_enable"`
+	CidrList        []string `json:"tgw_cidr_list"`
 }
 
 type listAttachedVpcNamesResp struct {
@@ -728,6 +730,7 @@ func (c *Client) ListTgwDetails(awsTgw *AWSTgw) (*AWSTgw, error) {
 		awsTgw.AwsSideAsNumber = strconv.Itoa(tgwInfoDetail.AwsSideAsNumber)
 		awsTgw.CloudType = tgwInfoDetail.CloudType
 		awsTgw.EnableMulticast = tgwInfoDetail.EnableMulticast
+		awsTgw.CidrList = tgwInfoDetail.CidrList
 		return awsTgw, nil
 	}
 	return nil, ErrNotFound
@@ -802,4 +805,14 @@ func (c *Client) GetAttachmentRouteTableDetails(tgwName string, attachmentName s
 	}
 
 	return &data.Results, nil
+}
+
+func (c *Client) UpdateTGWCidrs(tgwName string, cidrs []string) error {
+	data := map[string]string{
+		"action":    "update_tgw_cidrs",
+		"CID":       c.CID,
+		"tgw_name":  tgwName,
+		"cidr_list": strings.Join(cidrs, ","),
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
 }
