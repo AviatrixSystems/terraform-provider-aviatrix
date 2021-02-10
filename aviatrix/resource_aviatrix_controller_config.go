@@ -76,7 +76,25 @@ func resourceAviatrixControllerConfig() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "S3 Bucket Name for AWS.",
+				Description: "Bucket name. Required for AWS, AWSGOV, GCP and OCI.",
+			},
+			"backup_storage_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "Storage name. Required for Azure.",
+			},
+			"backup_container_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "Container name. Required for Azure.",
+			},
+			"backup_region": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "Name of region. Required for Azure and OCI.",
 			},
 			"multiple_backups": {
 				Type:        schema.TypeBool,
@@ -212,30 +230,39 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 	backupCloudType := d.Get("backup_cloud_type").(int)
 	backupAccountName := d.Get("backup_account_name").(string)
 	backupBucketName := d.Get("backup_bucket_name").(string)
+	backupStorageName := d.Get("backup_storage_name").(string)
+	backupContainerName := d.Get("backup_container_name").(string)
+	backupRegion := d.Get("backup_region").(string)
 	multipleBackups := d.Get("multiple_backups").(bool)
+
 	if backupConfiguration {
-		if backupCloudType == 0 || backupAccountName == "" || backupBucketName == "" {
-			return fmt.Errorf("please specify 'backup_cloud_type', 'backup_account_name' and 'backup_bucket_name'" +
-				" to enable backup configuration")
+		backupConfigErr := goaviatrix.ValidateBackupConfig(d)
+		if backupConfigErr != nil {
+			return backupConfigErr
 		}
+
 		cloudnBackupConfiguration := &goaviatrix.CloudnBackupConfiguration{
-			BackupCloudType:   backupCloudType,
-			BackupAccountName: backupAccountName,
-			BackupBucketName:  backupBucketName,
+			BackupCloudType:     backupCloudType,
+			BackupAccountName:   backupAccountName,
+			BackupBucketName:    backupBucketName,
+			BackupStorageName:   backupStorageName,
+			BackupContainerName: backupContainerName,
+			BackupRegion:        backupRegion,
 		}
 		if multipleBackups {
 			cloudnBackupConfiguration.MultipleBackups = "true"
 		}
+
 		err := client.EnableCloudnBackupConfig(cloudnBackupConfiguration)
 		if err != nil {
 			return fmt.Errorf("failed to enable backup configuration: %s", err)
 		}
 	} else {
-		if backupCloudType != 0 || backupAccountName != "" || backupBucketName != "" {
-			return fmt.Errorf("'backup_cloud_type', 'backup_account_name' and 'backup_bucket_name' should all be empty for not enabling backup configuration")
-		}
-		if multipleBackups {
-			return fmt.Errorf("'multiple_backups' should be empty or set false for not enabling backup configuration")
+		if backupCloudType != 0 || backupAccountName != "" || backupBucketName != "" || backupStorageName != "" ||
+			backupContainerName != "" || backupRegion != "" || multipleBackups {
+			return fmt.Errorf("'backup_cloud_type', 'backup_account_name', 'backup_bucket_name'," +
+				" 'backup_storage_name', 'backup_container_name' and 'backup_region' should all be empty," +
+				" 'multiple_backups' should be empty or false for not enabling backup configuration")
 		}
 	}
 
@@ -338,17 +365,14 @@ func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface
 		d.Set("backup_cloud_type", cloudnBackupConfig.BackupCloudType)
 		d.Set("backup_account_name", cloudnBackupConfig.BackupAccountName)
 		d.Set("backup_bucket_name", cloudnBackupConfig.BackupBucketName)
+		d.Set("backup_storage_name", cloudnBackupConfig.BackupStorageName)
+		d.Set("backup_container_name", cloudnBackupConfig.BackupContainerName)
+		d.Set("backup_region", cloudnBackupConfig.BackupRegion)
 		if cloudnBackupConfig.MultipleBackups == "yes" {
 			d.Set("multiple_backups", true)
 		} else {
 			d.Set("multiple_backups", false)
 		}
-	} else {
-		d.Set("backup_configuration", false)
-		d.Set("multiple_backups", false)
-		d.Set("backup_cloud_type", 0)
-		d.Set("backup_account_name", "")
-		d.Set("backup_bucket_name", "")
 	}
 
 	vpcDnsServerEnabled, err := client.GetControllerVpcDnsServerStatus()
@@ -468,32 +492,46 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 		}
 	}
 
+	backupConfiguration := d.Get("backup_configuration").(bool)
+	backupCloudType := d.Get("backup_cloud_type").(int)
+	backupAccountName := d.Get("backup_account_name").(string)
+	backupBucketName := d.Get("backup_bucket_name").(string)
+	backupStorageName := d.Get("backup_storage_name").(string)
+	backupContainerName := d.Get("backup_container_name").(string)
+	backupRegion := d.Get("backup_region").(string)
+	multipleBackups := d.Get("multiple_backups").(bool)
+
 	if d.HasChange("backup_configuration") {
-		backupConfiguration := d.Get("backup_configuration").(bool)
-		backupCloudType := d.Get("backup_cloud_type").(int)
-		backupAccountName := d.Get("backup_account_name").(string)
-		backupBucketName := d.Get("backup_bucket_name").(string)
-		multipleBackups := d.Get("multiple_backups").(bool)
 		if backupConfiguration {
-			if backupCloudType == 0 || backupAccountName == "" || backupBucketName == "" {
-				return fmt.Errorf("please specify 'backup_cloud_type', 'backup_account_name' and 'backup_bucket_name' to enable backup configuration")
+			backupConfigErr := goaviatrix.ValidateBackupConfig(d)
+			if backupConfigErr != nil {
+				return backupConfigErr
 			}
+
 			cloudnBackupConfiguration := &goaviatrix.CloudnBackupConfiguration{
-				BackupCloudType:   backupCloudType,
-				BackupAccountName: backupAccountName,
-				BackupBucketName:  backupBucketName,
+				BackupCloudType:     backupCloudType,
+				BackupAccountName:   backupAccountName,
+				BackupBucketName:    backupBucketName,
+				BackupStorageName:   backupStorageName,
+				BackupContainerName: backupContainerName,
+				BackupRegion:        backupRegion,
 			}
+			if multipleBackups {
+				cloudnBackupConfiguration.MultipleBackups = "true"
+			}
+
 			err := client.EnableCloudnBackupConfig(cloudnBackupConfiguration)
 			if err != nil {
 				return fmt.Errorf("failed to enable backup configuration: %s", err)
 			}
 		} else {
-			if backupCloudType != 0 || backupAccountName != "" || backupBucketName != "" {
-				return fmt.Errorf("'backup_cloud_type', 'backup_account_name' and 'backup_bucket_name' should all be empty for disabling backup configuration")
+			if backupCloudType != 0 || backupAccountName != "" || backupBucketName != "" || backupStorageName != "" ||
+				backupContainerName != "" || backupRegion != "" || multipleBackups {
+				return fmt.Errorf("'backup_cloud_type', 'backup_account_name', 'backup_bucket_name'," +
+					" 'backup_storage_name', 'backup_container_name' and 'backup_region' should all be empty," +
+					" 'multiple_backups' should be empty or false for not enabling backup configuration")
 			}
-			if multipleBackups {
-				return fmt.Errorf("'multiple_backups' should be empty or set false for disabling backup configuration")
-			}
+
 			err := client.DisableCloudnBackupConfig()
 			if err != nil {
 				return fmt.Errorf("failed to disable backup configuration: %s", err)
@@ -501,44 +539,43 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 		}
 	} else {
 		if d.HasChange("backup_cloud_type") || d.HasChange("backup_account_name") ||
-			d.HasChange("backup_bucket_name") || d.HasChange("multiple_backups") {
-			backupConfiguration := d.Get("backup_configuration").(bool)
-			backupCloudType := d.Get("backup_cloud_type").(int)
-			backupAccountName := d.Get("backup_account_name").(string)
-			backupBucketName := d.Get("backup_bucket_name").(string)
-			multipleBackups := d.Get("multiple_backups").(bool)
+			d.HasChange("backup_bucket_name") || d.HasChange("backup_storage_name") ||
+			d.HasChange("backup_container_name") || d.HasChange("backup_region") ||
+			d.HasChange("multiple_backups") {
+
 			if backupConfiguration {
+				backupConfigErr := goaviatrix.ValidateBackupConfig(d)
+				if backupConfigErr != nil {
+					return backupConfigErr
+				}
+
 				err := client.DisableCloudnBackupConfig()
 				if err != nil {
 					return fmt.Errorf("failed to disable backup configuration: %s", err)
 				}
+
 				cloudnBackupConfiguration := &goaviatrix.CloudnBackupConfiguration{
-					BackupCloudType:   backupCloudType,
-					BackupAccountName: backupAccountName,
-					BackupBucketName:  backupBucketName,
+					BackupCloudType:     backupCloudType,
+					BackupAccountName:   backupAccountName,
+					BackupBucketName:    backupBucketName,
+					BackupStorageName:   backupStorageName,
+					BackupContainerName: backupContainerName,
+					BackupRegion:        backupRegion,
 				}
 				if multipleBackups {
 					cloudnBackupConfiguration.MultipleBackups = "true"
 				}
+
 				err = client.EnableCloudnBackupConfig(cloudnBackupConfiguration)
 				if err != nil {
 					return fmt.Errorf("failed to enable backup configuration: %s", err)
 				}
 			} else {
-				if d.HasChange("backup_cloud_type") {
-					return fmt.Errorf("can't update 'backup_cloud_type' since 'backup_configuration' is disabled")
-				}
-
-				if d.HasChange("backup_account_name") {
-					return fmt.Errorf("can't update 'backup_account_name' since 'backup_configuration' is disabled")
-				}
-
-				if d.HasChange("backup_bucket_name") {
-					return fmt.Errorf("can't update 'backup_bucket_name' since 'backup_configuration' is disabled")
-				}
-
-				if d.HasChange("multiple_backups") {
-					return fmt.Errorf("can't update 'multiple_backups' since 'backup_configuration' is disabled")
+				if backupCloudType != 0 || backupAccountName != "" || backupBucketName != "" || backupStorageName != "" ||
+					backupContainerName != "" || backupRegion != "" || multipleBackups {
+					return fmt.Errorf("'backup_cloud_type', 'backup_account_name', 'backup_bucket_name'," +
+						" 'backup_storage_name', 'backup_container_name' and 'backup_region' should all be empty," +
+						" 'multiple_backups' should be empty or false for not enabling backup configuration")
 				}
 			}
 		}
