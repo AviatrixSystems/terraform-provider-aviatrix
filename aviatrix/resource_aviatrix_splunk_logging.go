@@ -143,7 +143,9 @@ func resourceAviatrixSplunkLoggingRead(d *schema.ResourceData, meta interface{})
 	d.Set("port", port)
 	d.Set("custom_input_config", splunkLoggingStatus.CustomConfig)
 	d.Set("status", splunkLoggingStatus.Status)
-	d.Set("excluded_gateways", splunkLoggingStatus.ExcludedGateways)
+	if len(splunkLoggingStatus.ExcludedGateways) != 0 {
+		d.Set("excluded_gateways", splunkLoggingStatus.ExcludedGateways)
+	}
 
 	d.SetId("splunk_logging")
 	return nil

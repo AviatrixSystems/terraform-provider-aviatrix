@@ -115,7 +115,9 @@ func resourceAviatrixNetflowAgentRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("port", port)
 	version, _ := strconv.Atoi(netflowAgentStatus.Version)
 	d.Set("version", version)
-	d.Set("excluded_gateways", netflowAgentStatus.ExcludedGateways)
+	if len(netflowAgentStatus.ExcludedGateways) != 0 {
+		d.Set("excluded_gateways", netflowAgentStatus.ExcludedGateways)
+	}
 	d.Set("status", netflowAgentStatus.Status)
 
 	d.SetId("netflow_agent")

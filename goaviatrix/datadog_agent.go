@@ -1,16 +1,20 @@
 package goaviatrix
 
+import "strconv"
+
 type DatadogAgent struct {
 	CID                   string
 	ApiKey                string
 	Site                  string
 	ExcludedGatewaysInput string
+	MetricsOnly           bool
 }
 
 type DatadogAgentResp struct {
 	ApiKey           string   `json:"api_key"`
 	Site             string   `json:"site"`
 	ExcludedGateways []string `json:"excluded_gateway"`
+	MetricsOnly      bool     `json:"metrics_only"`
 	Status           string   `json:"status"`
 }
 
@@ -21,6 +25,7 @@ func (c *Client) EnableDatadogAgent(r *DatadogAgent) error {
 		"api_key":              r.ApiKey,
 		"site":                 r.Site,
 		"exclude_gateway_list": r.ExcludedGatewaysInput,
+		"metrics_only":         strconv.FormatBool(r.MetricsOnly),
 	}
 
 	return c.PostAPI(params["action"], params, BasicCheck)

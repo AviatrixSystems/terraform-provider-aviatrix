@@ -111,7 +111,9 @@ func resourceAviatrixCloudwatchAgentRead(d *schema.ResourceData, meta interface{
 	d.Set("cloudwatch_role_arn", cloudwatchAgentStatus.RoleArn)
 	d.Set("region", cloudwatchAgentStatus.Region)
 	d.Set("log_group_name", cloudwatchAgentStatus.LogGroupName)
-	d.Set("excluded_gateways", cloudwatchAgentStatus.ExcludedGateways)
+	if len(cloudwatchAgentStatus.ExcludedGateways) != 0 {
+		d.Set("excluded_gateways", cloudwatchAgentStatus.ExcludedGateways)
+	}
 	d.Set("status", cloudwatchAgentStatus.Status)
 
 	d.SetId("cloudwatch_agent")

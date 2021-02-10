@@ -123,13 +123,8 @@ func resourceAviatrixFilebeatForwarderRead(d *schema.ResourceData, meta interfac
 	port, _ := strconv.Atoi(filebeatForwarderStatus.Port)
 	d.Set("port", port)
 	d.Set("status", filebeatForwarderStatus.Status)
-
-	var excludedGateways []interface{}
-	for _, v := range filebeatForwarderStatus.ExcludedGateways {
-		excludedGateways = append(excludedGateways, v)
-	}
-	if err := d.Set("excluded_gateways", excludedGateways); err != nil {
-		return fmt.Errorf("could not set excluded_gateway: %v", err)
+	if len(filebeatForwarderStatus.ExcludedGateways) != 0 {
+		d.Set("excluded_gateways", filebeatForwarderStatus.ExcludedGateways)
 	}
 
 	d.SetId("filebeat_forwarder")

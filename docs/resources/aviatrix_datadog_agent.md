@@ -30,6 +30,7 @@ The following arguments are supported:
 * `site` (Optional) Site preference ("datadoghq.com" or" datadoghq.eu"). "datadoghq.com" by default.
 
 ### Optional
+* `metrics_only` (Optional) Only export metrics without exporting logs. False by default.
 * `excluded_gateways` (Optional) List of gateways to be excluded from logging. e.g.: ["gateway01", "gateway02", "gateway01-hagw"].
 
 ## Attribute Reference
