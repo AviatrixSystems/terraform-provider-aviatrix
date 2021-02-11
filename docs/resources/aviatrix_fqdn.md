@@ -39,23 +39,12 @@ resource "aviatrix_fqdn" "test_fqdn" {
       "30.0.0.0/16"
     ]
   }
-
-  domain_names {
-    fqdn  = "facebook.com"
-    proto = "tcp"
-    port  = "443"
-    action = "Allow"
-  }
-
-  domain_names {
-    fqdn  = "reddit.com"
-    proto = "tcp"
-    port  = "443"
-  }
 }
 ```
 
 ## Argument Reference
+
+!> **WARNING:** Attribute `domain_names` has been deprecated as of provider version R2.18.1+ and will not receive further updates. Please use the standalone `aviatrix_fqdn_tag_rule` resource instead, and set `manage_domain_names` to false.
 
 The following arguments are supported:
 
