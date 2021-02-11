@@ -253,7 +253,7 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 			cloudnBackupConfiguration.MultipleBackups = "true"
 		}
 
-		err := client.EnableCloudnBackupConfig(cloudnBackupConfiguration)
+		err = client.EnableCloudnBackupConfig(cloudnBackupConfiguration)
 		if err != nil {
 			return fmt.Errorf("failed to enable backup configuration: %s", err)
 		}
@@ -282,7 +282,7 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("ca_certificate_file_path, server_public_certificate_file_path, and server_private_key_file_path must either all be set or all unset. Please update your configuaration")
 	}
 	if certConfig.CACertificateFilePath != "" && certConfig.ServerCertificateFilePath != "" && certConfig.ServerPrivateKeyFilePath != "" {
-		err := client.ImportNewHTTPSCerts(certConfig)
+		err = client.ImportNewHTTPSCerts(certConfig)
 		if err != nil {
 			return fmt.Errorf("could not import HTTPS certs: %v", err)
 		}
