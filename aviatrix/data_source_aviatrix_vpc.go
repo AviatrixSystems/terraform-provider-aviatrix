@@ -146,7 +146,7 @@ func dataSourceAviatrixVpc() *schema.Resource {
 			"route_tables": {
 				Type:        schema.TypeList,
 				Computed:    true,
-				Description: "List of AWS route table ids associated with this VPC. Only populated for AWS vpc.",
+				Description: "List of AWS route table ids associated with this VPC. Only populated for AWS, AWSGOV and Azure vpc.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
