@@ -217,7 +217,7 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 		Version: d.Get("target_version").(string),
 	}
 	if version.Version != "" {
-		err := client.Upgrade(version)
+		err = client.Upgrade(version)
 		if err != nil {
 			return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
 		}
@@ -236,9 +236,9 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 	multipleBackups := d.Get("multiple_backups").(bool)
 
 	if backupConfiguration {
-		backupConfigErr := goaviatrix.ValidateBackupConfig(d)
-		if backupConfigErr != nil {
-			return backupConfigErr
+		err = validateBackupConfig(d)
+		if err != nil {
+			return err
 		}
 
 		cloudnBackupConfiguration := &goaviatrix.CloudnBackupConfiguration{
@@ -503,9 +503,9 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 
 	if d.HasChange("backup_configuration") {
 		if backupConfiguration {
-			backupConfigErr := goaviatrix.ValidateBackupConfig(d)
-			if backupConfigErr != nil {
-				return backupConfigErr
+			err := validateBackupConfig(d)
+			if err != nil {
+				return err
 			}
 
 			cloudnBackupConfiguration := &goaviatrix.CloudnBackupConfiguration{
@@ -520,7 +520,7 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 				cloudnBackupConfiguration.MultipleBackups = "true"
 			}
 
-			err := client.EnableCloudnBackupConfig(cloudnBackupConfiguration)
+			err = client.EnableCloudnBackupConfig(cloudnBackupConfiguration)
 			if err != nil {
 				return fmt.Errorf("failed to enable backup configuration: %s", err)
 			}
@@ -544,12 +544,12 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 			d.HasChange("multiple_backups") {
 
 			if backupConfiguration {
-				backupConfigErr := goaviatrix.ValidateBackupConfig(d)
-				if backupConfigErr != nil {
-					return backupConfigErr
+				err := validateBackupConfig(d)
+				if err != nil {
+					return err
 				}
 
-				err := client.DisableCloudnBackupConfig()
+				err = client.DisableCloudnBackupConfig()
 				if err != nil {
 					return fmt.Errorf("failed to disable backup configuration: %s", err)
 				}
@@ -679,6 +679,51 @@ func resourceAviatrixControllerConfigDelete(d *schema.ResourceData, meta interfa
 	err = client.UpdateAwsGuardDutyPollInterval(defaultAwsGuardDutyScanningInterval)
 	if err != nil {
 		return fmt.Errorf("could not update scanning interval: %v", err)
+	}
+
+	return nil
+}
+
+func validateBackupConfig(d *schema.ResourceData) error {
+	backupCloudType := d.Get("backup_cloud_type").(int)
+	backupAccountName := d.Get("backup_account_name").(string)
+	backupBucketName := d.Get("backup_bucket_name").(string)
+	backupStorageName := d.Get("backup_storage_name").(string)
+	backupContainerName := d.Get("backup_container_name").(string)
+	backupRegion := d.Get("backup_region").(string)
+
+	if backupCloudType == 0 || backupAccountName == "" {
+		return fmt.Errorf("please specify 'backup_cloud_type' and 'backup_account_name'" +
+			" to enable backup configuration")
+	}
+
+	switch backupCloudType {
+	case goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.GCP:
+		if backupBucketName == "" {
+			return fmt.Errorf("please specify 'backup_bucket_name' to enable backup configuration for AWS, AWSGOV and GCP")
+		}
+		if backupStorageName != "" || backupContainerName != "" || backupRegion != "" {
+			return fmt.Errorf("'backup_storage_name', 'backup_container_name' and 'backup_region'" +
+				" should be empty for AWS, AWSGOV and GCP")
+		}
+	case goaviatrix.AZURE:
+		if backupStorageName == "" || backupContainerName == "" || backupRegion == "" {
+			return fmt.Errorf("please specify 'backup_storage_name', 'backup_container_name' and" +
+				" 'backup_region' to enable backup configuration for Azure")
+		}
+		if backupBucketName != "" {
+			return fmt.Errorf("'backup_bucket_name' should be empty for Azure")
+
+		}
+	case goaviatrix.OCI:
+		if backupBucketName == "" || backupRegion == "" {
+			return fmt.Errorf("please specify 'backup_bucket_name' and 'backup_region'" +
+				" to enable backup configuration for OCI")
+		}
+		if backupStorageName != "" || backupContainerName != "" {
+			return fmt.Errorf("'backup_storage_name' and 'backup_container_name'" +
+				" should be empty for OCI")
+		}
 	}
 
 	return nil

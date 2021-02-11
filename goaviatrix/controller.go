@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -429,55 +427,4 @@ func (c *Client) SetControllerVpcDnsServer(enabled bool) error {
 		CID:    c.CID,
 		Action: action,
 	}, BasicCheck)
-}
-
-func ValidateBackupConfig(d *schema.ResourceData) error {
-	backupCloudType := d.Get("backup_cloud_type").(int)
-	backupAccountName := d.Get("backup_account_name").(string)
-	backupBucketName := d.Get("backup_bucket_name").(string)
-	backupStorageName := d.Get("backup_storage_name").(string)
-	backupContainerName := d.Get("backup_container_name").(string)
-	backupRegion := d.Get("backup_region").(string)
-
-	if backupCloudType == 0 || backupAccountName == "" {
-		err := fmt.Errorf("please specify 'backup_cloud_type' and 'backup_account_name'" +
-			" to enable backup configuration")
-		return err
-	}
-
-	switch backupCloudType {
-	case AWS, AWSGOV, GCP:
-		if backupBucketName == "" {
-			err := fmt.Errorf("please specify 'backup_bucket_name' to enable backup configuration for AWS, AWSGOV and GCP")
-			return err
-		}
-		if backupStorageName != "" || backupContainerName != "" || backupRegion != "" {
-			err := fmt.Errorf("'backup_storage_name', 'backup_container_name' and 'backup_region'" +
-				" should be empty for AWS, AWSGOV and GCP")
-			return err
-		}
-	case AZURE:
-		if backupStorageName == "" || backupContainerName == "" || backupRegion == "" {
-			err := fmt.Errorf("please specify 'backup_storage_name', 'backup_container_name' and" +
-				" 'backup_region' to enable backup configuration for Azure")
-			return err
-		}
-		if backupBucketName != "" {
-			err := fmt.Errorf("'backup_bucket_name' should be empty for Azure")
-			return err
-		}
-	case OCI:
-		if backupBucketName == "" || backupRegion == "" {
-			err := fmt.Errorf("please specify 'backup_bucket_name' and 'backup_region'" +
-				" to enable backup configuration for OCI")
-			return err
-		}
-		if backupStorageName != "" || backupContainerName != "" {
-			err := fmt.Errorf("'backup_storage_name' and 'backup_container_name'" +
-				" should be empty for OCI")
-			return err
-		}
-	}
-
-	return nil
 }

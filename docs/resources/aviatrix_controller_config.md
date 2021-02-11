@@ -71,10 +71,10 @@ The following arguments are supported:
 * `backup_configuration` - (Optional) Switch to enable/disable controller CloudN backup config. Valid values: true, false. Default value: false.
 * `backup_cloud_type` - (Optional) Type of cloud service provider, requires an integer value. Use 1 for AWS, 4 for GCP, 8 for Azure, 16 for OCI, and 256 for AWSGOV.
 * `backup_account_name` - (Optional) Name of the cloud account in the Aviatrix controller.
-* `backup_bucket_name` - (Optional) Bucket Name. Required for AWS, AWSGOV, GCP and OCI. 
-* `backup_storage_name` - (Optional) Storage name. Required for Azure.
-* `backup_container_name` - (Optional) Container name. Required for Azure.
-* `backup_region` - (Optional) Name of region. Required for Azure and OCI.
+* `backup_bucket_name` - (Optional) Bucket Name. Required to enable configuration backup for AWS, AWSGOV, GCP and OCI. 
+* `backup_storage_name` - (Optional) Storage name. Required to enable configuration backup for Azure.
+* `backup_container_name` - (Optional) Container name. Required to enable configuration backup for Azure.
+* `backup_region` - (Optional) Name of region. Required to enable configuration backup for Azure and OCI.
 * `multiple_backups` - (Optional) Switch to enable the Controller to backup up to a maximum of 3 rotating backups. Valid values: true, false. Default value: false.
 
 -> **NOTE:** `backup_bucket_name` is required for AWS, AWSGOV and GCP. `backup_storage_name`, `backup_container_name` and `backup_region` are required for Azure. `backup_bucket_name` and `backup_region` are required for OCI.
