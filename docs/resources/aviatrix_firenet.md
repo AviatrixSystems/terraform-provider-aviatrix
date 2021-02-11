@@ -45,7 +45,7 @@ The following arguments are supported:
 
 ### Firewall Association
 
-!> **WARNING:** Attribute `firewall_instance_association` has been deprecated as of provider version R2.18+ and will not receive further updates. Please use the standalone `aviatrix_firewall_instance_association` resource instead.
+!> **WARNING:** Attribute `firewall_instance_association` has been deprecated as of provider version R2.18+ and will not receive further updates. Please use the standalone `aviatrix_firewall_instance_association` resource instead, and set `manage_firewall_instance_association` to false.
 
 -> **NOTE:** `firewall_instance_association` - Associating a firewall instance with a Native GWLB enabled VPC is not supported in the in-line `firewall_instance_association` attribute. Please use the standalone `aviatrix_firewall_instance_association` resource instead.
 

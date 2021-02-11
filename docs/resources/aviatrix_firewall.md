@@ -17,43 +17,16 @@ The **aviatrix_firewall** resource allows the creation and management of [Aviatr
 ```hcl
 # Create an Aviatrix Firewall
 resource "aviatrix_firewall" "stateful_firewall_1" {
-  gw_name          = "gateway-1"
-  base_policy      = "allow-all"
-  base_log_enabled = true
-
-  policy {
-    protocol    = "tcp"
-    src_ip      = "10.15.0.224/32"
-    log_enabled = false
-    dst_ip      = "10.12.0.172/32"
-    action      = "allow"
-    port        = "0:65535"
-    description = "This is policy no.1"
-  }
-
-  policy {
-    protocol    = "tcp"
-    src_ip      = "10.15.1.224/32"
-    log_enabled = false
-    dst_ip      = "10.12.1.172/32"
-    action      = "deny"
-    port        = "0:65535"
-    description = "This is policy no.2"
-  }
-
-  policy {
-    protocol    = "tcp"
-    src_ip      = "10.15.2.224/32"
-    log_enabled = false
-    dst_ip      = "10.12.3.172/32"
-    action      = "force-drop"
-    port        = "0:65535"
-    description = "This is policy no.3"
-  }
+  gw_name                  = "gateway-1"
+  base_policy              = "allow-all"
+  base_log_enabled         = true
+  manage_firewall_policies = false
 }
 ```
 
 ## Argument Reference
+
+!> **WARNING:** Attribute `policy` has been deprecated as of provider version R2.18.1+ and will not receive further updates. Please use the standalone `aviatrix_firewall_policy` resource instead, and set `manage_firewall_policies` to false.
 
 The following arguments are supported:
 
