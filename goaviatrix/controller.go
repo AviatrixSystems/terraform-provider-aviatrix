@@ -38,6 +38,9 @@ type CloudnBackupConfiguration struct {
 	BackupAccountName   string `json:"acct_name,omitempty"`
 	BackupCloudType     int    `json:"cloud_type,omitempty"`
 	BackupBucketName    string `json:"bucket_name,omitempty"`
+	BackupStorageName   string `json:"storage_name"`
+	BackupContainerName string `json:"container_name"`
+	BackupRegion        string `json:"region"`
 	MultipleBackups     string `json:"multiple_bkup,omitempty"`
 }
 
@@ -302,6 +305,9 @@ func (c *Client) EnableCloudnBackupConfig(cloudnBackupConfiguration *CloudnBacku
 	enableCloudnBackupConfig.Add("cloud_type", strconv.Itoa(cloudnBackupConfiguration.BackupCloudType))
 	enableCloudnBackupConfig.Add("account_name", cloudnBackupConfiguration.BackupAccountName)
 	enableCloudnBackupConfig.Add("bucket_name", cloudnBackupConfiguration.BackupBucketName)
+	enableCloudnBackupConfig.Add("storage_name", cloudnBackupConfiguration.BackupStorageName)
+	enableCloudnBackupConfig.Add("container_name", cloudnBackupConfiguration.BackupContainerName)
+	enableCloudnBackupConfig.Add("region", cloudnBackupConfiguration.BackupRegion)
 	if cloudnBackupConfiguration.MultipleBackups == "true" {
 		enableCloudnBackupConfig.Add("multiple", "true")
 	}
