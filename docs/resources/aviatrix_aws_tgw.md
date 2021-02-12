@@ -18,12 +18,9 @@ The **aviatrix_aws_tgw** resource allows the creation and management of Aviatrix
 # Create an Aviatrix AWS TGW
 resource "aviatrix_aws_tgw" "test_aws_tgw" {
   account_name                      = "devops"
-  attached_aviatrix_transit_gateway = [
-     "avx-transit-gw"
-  ]
   aws_side_as_number                = "64512"
-  manage_vpc_attachment             = true
-  manage_transit_gateway_attachment = true
+  manage_vpc_attachment             = false
+  manage_transit_gateway_attachment = false
   region                            = "us-east-1"
   tgw_name                          = "test-AWS-TGW"
 
@@ -57,36 +54,10 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
       "Aviatrix_Edge_Domain"
     ]
     security_domain_name = "SDN1"
-
-    attached_vpc {
-      vpc_account_name = "devops2"
-      vpc_id           = "vpc-0e2fac2b91"
-      vpc_region       = "us-east-1"
-    }
-
-    attached_vpc {
-      vpc_account_name = "devops2"
-      vpc_id           = "vpc-0c63660a16"
-      vpc_region       = "us-east-1"
-    }
-
-    attached_vpc {
-      vpc_account_name = "devops"
-      vpc_id           = "vpc-032005cc444"
-      vpc_region       = "us-east-1"
-    }
   }
 
   security_domains {
     security_domain_name = "mysdn2"
-
-    attached_vpc {
-      vpc_region                      = "us-east-1"
-      vpc_account_name                = "devops"
-      vpc_id                          = "vpc-03200566666"
-      customized_routes               = "10.8.0.0/16,10.9.0.0/16"
-      disable_local_route_propagation = true
-    }
   }
 
   security_domains {
@@ -100,12 +71,9 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
 resource "aviatrix_aws_tgw" "test_aws_gov_tgw" {
   account_name                      = "devops"
   cloud_type                        = 256
-  attached_aviatrix_transit_gateway = [
-     "avx-transit-gw"
-  ]
   aws_side_as_number                = "64512"
-  manage_vpc_attachment             = true
-  manage_transit_gateway_attachment = true
+  manage_vpc_attachment             = false
+  manage_transit_gateway_attachment = false
   region                            = "us-gov-east-1"
   tgw_name                          = "test-AWS-GOV-TGW"
 
@@ -139,36 +107,10 @@ resource "aviatrix_aws_tgw" "test_aws_gov_tgw" {
       "Aviatrix_Edge_Domain"
     ]
     security_domain_name = "SDN1"
-
-    attached_vpc {
-      vpc_account_name = "devops2"
-      vpc_id           = "vpc-0e2fac2b91"
-      vpc_region       = "us-gov-east-1"
-    }
-
-    attached_vpc {
-      vpc_account_name = "devops2"
-      vpc_id           = "vpc-0c63660a16"
-      vpc_region       = "us-gov-east-1"
-    }
-
-    attached_vpc {
-      vpc_account_name = "devops"
-      vpc_id           = "vpc-032005cc444"
-      vpc_region       = "us-gov-east-1"
-    }
   }
 
   security_domains {
     security_domain_name = "mysdn2"
-
-    attached_vpc {
-      vpc_region                      = "us-gov-east-1"
-      vpc_account_name                = "devops"
-      vpc_id                          = "vpc-03200566666"
-      customized_routes               = "10.8.0.0/16,10.9.0.0/16"
-      disable_local_route_propagation = true
-    }
   }
 
   security_domains {
@@ -196,6 +138,8 @@ The following arguments are supported:
 
 ### VPC Attachments
 
+!> **WARNING:** Attribute `attached_vpc` has been deprecated as of provider version R2.18.1+ and will not receive further updates. Please set `manage_vpc_attachment` to false, and use the standalone `aviatrix_aws_tgw_vpc_attachment` resource instead. 
+
 -> **NOTE:** The `attached_vpc` code block is to be nested under the `security_domains` block. Please see the code examples above for more information.
 
 * `attached_vpc` - (Optional) A list of VPCs attached to the domain (name: `security_domain_name`) together with its creation. This list needs to be null for "Aviatrix_Edge_Domain".
@@ -209,6 +153,9 @@ The following arguments are supported:
   * `disable_local_route_propagation` - (Optional) Advanced option. If set to true, it disables automatic route propagation of this VPC to other VPCs within the same security domain. Valid values: true, false. Default value: false.
 
 ### Misc.
+
+!> **WARNING:** Attribute `attached_aviatrix_transit_gateway` has been deprecated as of provider version R2.18.1+ and will not receive further updates. Please set `manage_transit_gateway_attachment` to false, and use the standalone `aviatrix_aws_tgw_transit_gateway_attachment` resource instead.
+
 * `attached_aviatrix_transit_gateway` - (Optional) A list of names of Aviatrix Transit Gateway(s) (transit VPCs) to attach to the Aviatrix_Edge_Domain.
 * `cloud_type` - (Optional) Type of cloud service provider, requires an integer value. Supported for AWS (1) and AWS GOV (256). Default value: 1.
 * `manage_transit_gateway_attachment` - (Optional) This parameter is a switch used to determine whether or not to manage transit gateway attachments to the TGW using the **aviatrix_aws_tgw** resource. If this is set to false, attachment of transit gateways must be done using the **aviatrix_aws_tgw_transit_gateway_attachment** resource. Valid values: true, false. Default value: true.

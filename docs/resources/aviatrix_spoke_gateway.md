@@ -15,16 +15,17 @@ The **aviatrix_spoke_gateway** resource allows the creation and management of Av
 ```hcl
 # Create an Aviatrix AWS Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
-  cloud_type         = 1
-  account_name       = "my-aws"
-  gw_name            = "spoke-gw-aws"
-  vpc_id             = "vpc-abcd123"
-  vpc_reg            = "us-west-1"
-  gw_size            = "t2.micro"
-  subnet             = "10.11.0.0/24"
-  enable_snat        = false
-  enable_active_mesh = true
-  tag_list           = [
+  cloud_type                        = 1
+  account_name                      = "my-aws"
+  gw_name                           = "spoke-gw-aws"
+  vpc_id                            = "vpc-abcd123"
+  vpc_reg                           = "us-west-1"
+  gw_size                           = "t2.micro"
+  subnet                            = "10.11.0.0/24"
+  enable_snat                       = false
+  enable_active_mesh                = true
+  manage_transit_gateway_attachment = false
+  tag_list                          = [
     "k1:v1",
     "k2:v2",
   ]
@@ -33,58 +34,62 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
 ```hcl
 # Create an Aviatrix GCP Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_gcp" {
-  cloud_type         = 4
-  account_name       = "my-gcp"
-  gw_name            = "spoke-gw-gcp"
-  vpc_id             = "gcp-spoke-vpc"
-  vpc_reg            = "us-west1-b"
-  gw_size            = "n1-standard-1"
-  subnet             = "10.12.0.0/24"
-  enable_snat        = false
-  enable_active_mesh = true
+  cloud_type                        = 4
+  account_name                      = "my-gcp"
+  gw_name                           = "spoke-gw-gcp"
+  vpc_id                            = "gcp-spoke-vpc"
+  vpc_reg                           = "us-west1-b"
+  gw_size                           = "n1-standard-1"
+  subnet                            = "10.12.0.0/24"
+  enable_snat                       = false
+  enable_active_mesh                = true
+  manage_transit_gateway_attachment = false
 }
 ```
 ```hcl
 # Create an Aviatrix Azure Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
-  cloud_type         = 8
-  account_name       = "my-azure"
-  gw_name            = "spoke-gw-01"
-  vpc_id             = "spoke:test-spoke-gw-123"
-  vpc_reg            = "West US"
-  gw_size            = "Standard_B1ms"
-  subnet             = "10.13.0.0/24"
-  zone               = "az-1"
-  enable_snat        = false
-  enable_active_mesh = true
+  cloud_type                        = 8
+  account_name                      = "my-azure"
+  gw_name                           = "spoke-gw-01"
+  vpc_id                            = "spoke:test-spoke-gw-123"
+  vpc_reg                           = "West US"
+  gw_size                           = "Standard_B1ms"
+  subnet                            = "10.13.0.0/24"
+  zone                              = "az-1"
+  enable_snat                       = false
+  enable_active_mesh                = true
+  manage_transit_gateway_attachment = false
 }
 ```
 ```hcl
 # Create an Aviatrix OCI Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_oracle" {
-  cloud_type         = 16
-  account_name       = "my-oracle"
-  gw_name            = "avtxgw-oracle"
-  vpc_id             = "vpc-oracle-test"
-  vpc_reg            = "us-ashburn-1"
-  gw_size            = "VM.Standard2.2"
-  subnet             = "10.7.0.0/16"
-  enable_active_mesh = true
+  cloud_type                        = 16
+  account_name                      = "my-oracle"
+  gw_name                           = "avtxgw-oracle"
+  vpc_id                            = "vpc-oracle-test"
+  vpc_reg                           = "us-ashburn-1"
+  gw_size                           = "VM.Standard2.2"
+  subnet                            = "10.7.0.0/16"
+  enable_active_mesh                = true
+  manage_transit_gateway_attachment = false
 }
 ```
 ```hcl
 # Create an Aviatrix AWSGOV Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_awsgov" {
-  cloud_type         = 256
-  account_name       = "my-awsgov"
-  gw_name            = "spoke-gw-awsgov"
-  vpc_id             = "vpc-abcd123"
-  vpc_reg            = "us-gov-west-1"
-  gw_size            = "t2.micro"
-  subnet             = "10.11.0.0/24"
-  enable_snat        = false
-  enable_active_mesh = true
-  tag_list           = [
+  cloud_type                        = 256
+  account_name                      = "my-awsgov"
+  gw_name                           = "spoke-gw-awsgov"
+  vpc_id                            = "vpc-abcd123"
+  vpc_reg                           = "us-gov-west-1"
+  gw_size                           = "t2.micro"
+  subnet                            = "10.11.0.0/24"
+  enable_snat                       = false
+  enable_active_mesh                = true
+  manage_transit_gateway_attachment = false
+  tag_list                          = [
     "k1:v1",
     "k2:v2",
   ]
@@ -139,6 +144,9 @@ The following arguments are supported:
 * `monitor_exclude_list` - (Optional) Set of monitored instance ids. Only valid when 'enable_monitor_gateway_subnets' = true. Available in provider version R2.18+.
 
 ### Misc.
+
+!> **WARNING:** Attribute `transit_gw` has been deprecated as of provider version R2.18.1+ and will not receive further updates. Please set `manage_transit_gateway_attachment` to false, and use the standalone `aviatrix_spoke_transit_attachment` resource instead.
+
 * `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in Controller 4.7+. Valid values: true, false. Default: true. Option not available for AZURE and OCI gateways, they will automatically allocate new EIPs.
 * `eip` - (Optional) Required when `allocate_new_eip` is false. It uses the specified EIP for this gateway. Available in Controller 4.7+. Only available for AWS, GCP and AWSGOV.
 * `tag_list` - (Optional) Instance tag of cloud provider. Only supported for AWS, AWSGOV and Azure. Example: ["key1:value1", "key2:value2"].
