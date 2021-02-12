@@ -141,7 +141,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Deprecated:  "Please use the standalone aviatrix_spoke_transit_attachment resource instead, and set `manage_transit_gateway_attachment` to false.",
+				Deprecated:  "Please set `manage_transit_gateway_attachment` to false, and use the standalone aviatrix_spoke_transit_attachment resource instead.",
 				Description: "Specify the transit Gateways to attach to this spoke. Format is a comma-separated list of transit gateway names. For example, 'transit-gw1,transit-gw2'.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					oldGws := strings.Split(old, ",")

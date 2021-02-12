@@ -69,7 +69,7 @@ func resourceAviatrixFQDN() *schema.Resource {
 			"domain_names": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Deprecated:  "Please use the standalone aviatrix_fqdn_tag_rule resource instead, and set `manage_domain_names` to false.",
+				Deprecated:  "Please set `manage_domain_names` to false, and use the standalone aviatrix_fqdn_tag_rule resource instead.",
 				Description: "A list of one or more domain names.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{

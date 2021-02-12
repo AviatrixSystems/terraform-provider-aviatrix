@@ -138,7 +138,7 @@ The following arguments are supported:
 
 ### VPC Attachments
 
-!> **WARNING:** Attribute `attached_vpc` has been deprecated as of provider version R2.18.1+ and will not receive further updates. Please use the standalone `aviatrix_aws_tgw_vpc_attachment` resource instead, and set `manage_vpc_attachment` to false.
+!> **WARNING:** Attribute `attached_vpc` has been deprecated as of provider version R2.18.1+ and will not receive further updates. Please set `manage_vpc_attachment` to false, and use the standalone `aviatrix_aws_tgw_vpc_attachment` resource instead. 
 
 -> **NOTE:** The `attached_vpc` code block is to be nested under the `security_domains` block. Please see the code examples above for more information.
 
@@ -154,7 +154,7 @@ The following arguments are supported:
 
 ### Misc.
 
-!> **WARNING:** Attribute `attached_aviatrix_transit_gateway` has been deprecated as of provider version R2.18.1+ and will not receive further updates. Please use the standalone `aviatrix_aws_tgw_transit_gateway_attachment` resource instead, and set `manage_transit_gateway_attachment` to false.
+!> **WARNING:** Attribute `attached_aviatrix_transit_gateway` has been deprecated as of provider version R2.18.1+ and will not receive further updates. Please set `manage_transit_gateway_attachment` to false, and use the standalone `aviatrix_aws_tgw_transit_gateway_attachment` resource instead.
 
 * `attached_aviatrix_transit_gateway` - (Optional) A list of names of Aviatrix Transit Gateway(s) (transit VPCs) to attach to the Aviatrix_Edge_Domain.
 * `cloud_type` - (Optional) Type of cloud service provider, requires an integer value. Supported for AWS (1) and AWS GOV (256). Default value: 1.

@@ -76,7 +76,7 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 						"attached_vpc": {
 							Type:        schema.TypeList,
 							Optional:    true,
-							Deprecated:  "Please use the standalone aviatrix_aws_tgw_vpc_attachment resource instead, and set `manage_vpc_attachment` to false.",
+							Deprecated:  "Please set `manage_vpc_attachment` to false, and use the standalone aviatrix_aws_tgw_vpc_attachment resource instead.",
 							Description: "A list of VPCs attached to the domain.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -162,7 +162,7 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 					Type: schema.TypeString,
 				},
 				Optional:    true,
-				Deprecated:  "Please use the standalone aviatrix_aws_tgw_transit_gateway_attachment resource instead, and set `manage_transit_gateway_attachment` to false.",
+				Deprecated:  "Please set `manage_transit_gateway_attachment` to false, and use the standalone aviatrix_aws_tgw_transit_gateway_attachment resource instead.",
 				Description: "A list of Names of Aviatrix Transit Gateway to attach to one of the three default domains.",
 			},
 			"manage_vpc_attachment": {
