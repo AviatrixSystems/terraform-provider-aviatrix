@@ -191,6 +191,14 @@ func resourceAviatrixVpc() *schema.Resource {
 				Computed:    true,
 				Description: "Azure vnet resource ID.",
 			},
+			"route_tables": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "List of route table ids associated with this VPC.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -483,6 +491,19 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("could not get FireNet details to read enable_native_gwlb: %v", err)
 	} else {
 		d.Set("enable_native_gwlb", firenetDetail.NativeGwlb)
+	}
+
+	if vC.CloudType == goaviatrix.AWS || vC.CloudType == goaviatrix.AWSGOV || vC.CloudType == goaviatrix.AZURE {
+		var rtbs []string
+		rtbs, err = getAllRouteTables(vpc, client)
+
+		if err != nil {
+			return fmt.Errorf("could not get vpc route table ids: %v", err)
+		}
+
+		if err := d.Set("route_tables", rtbs); err != nil {
+			log.Printf("[WARN] Error setting route tables for (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

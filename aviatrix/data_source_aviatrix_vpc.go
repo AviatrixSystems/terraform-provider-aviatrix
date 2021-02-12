@@ -146,7 +146,7 @@ func dataSourceAviatrixVpc() *schema.Resource {
 			"route_tables": {
 				Type:        schema.TypeList,
 				Computed:    true,
-				Description: "List of AWS route table ids associated with this VPC. Only populated for AWS vpc.",
+				Description: "List of AWS route table ids associated with this VPC. Only populated for AWS, AWSGOV and Azure vpc.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -273,7 +273,7 @@ func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] Error setting 'public_subnets' for (%s): %s", d.Id(), err)
 	}
 
-	if vC.CloudType == goaviatrix.AWS || vC.CloudType == goaviatrix.AWSGOV {
+	if vC.CloudType == goaviatrix.AWS || vC.CloudType == goaviatrix.AWSGOV || vC.CloudType == goaviatrix.AZURE {
 		var rtbs []string
 		routeTableFilter := d.Get("route_tables_filter")
 		if routeTableFilter == "private" {
