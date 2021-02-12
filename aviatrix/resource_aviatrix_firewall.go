@@ -55,7 +55,7 @@ func resourceAviatrixFirewall() *schema.Resource {
 			"policy": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Deprecated:  "Please use the standalone aviatrix_firewall_policy resource instead, and set `manage_firewall_policies` to false.",
+				Deprecated:  "Please set `manage_firewall_policies` to false, and use the standalone aviatrix_firewall_policy resource instead.",
 				Description: "New access policy for the gateway.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{

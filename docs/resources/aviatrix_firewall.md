@@ -26,7 +26,7 @@ resource "aviatrix_firewall" "stateful_firewall_1" {
 
 ## Argument Reference
 
-!> **WARNING:** Attribute `policy` has been deprecated as of provider version R2.18.1+ and will not receive further updates. Please use the standalone `aviatrix_firewall_policy` resource instead, and set `manage_firewall_policies` to false.
+!> **WARNING:** Attribute `policy` has been deprecated as of provider version R2.18.1+ and will not receive further updates. Please set `manage_firewall_policies` to false, and use the standalone `aviatrix_firewall_policy` resource instead.
 
 The following arguments are supported:
 
