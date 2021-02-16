@@ -1458,3 +1458,45 @@ func (c *Client) UpdateTransitGatewayCustomizedVpcRoute(gateway string, customiz
 
 	return c.PostAPI(params["action"], params, BasicCheck)
 }
+
+func (c *Client) EnableJumboFrame(gateway *Gateway) error {
+	action := "enable_jumbo_frame"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": gateway.GwName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) DisableJumboFrame(gateway *Gateway) error {
+	action := "disable_jumbo_frame"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": gateway.GwName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) GetJumboFrameStatus(gateway *Gateway) (bool, error) {
+	action := "get_jumbo_frame_status"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": gateway.GwName,
+	}
+
+	type JumboFrameResult struct {
+		Return  bool   `json:"return"`
+		Results string `json:"results"`
+		Reason  string `json:"reason"`
+	}
+
+	var resp JumboFrameResult
+	err := c.GetAPI(&resp, form["action"], form, BasicCheck)
+	if err != nil {
+		return false, err
+	}
+	return strings.Contains(resp.Results, "Jumbo frame is enabled"), nil
+}

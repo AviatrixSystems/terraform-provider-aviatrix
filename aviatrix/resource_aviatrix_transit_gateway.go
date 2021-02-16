@@ -399,6 +399,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Optional:    true,
 				Description: "OOB subnet availability zone.",
 			},
+			"enable_jumbo_frame": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Enable jumbo frame support for spoke gateway. Valid values: true of false. Default value: true.",
+			},
 		},
 	}
 }
@@ -1016,6 +1022,17 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if !d.Get("enable_jumbo_frame").(bool) {
+		gw := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+
+		err := client.DisableJumboFrame(gw)
+		if err != nil {
+			return fmt.Errorf("could not disable jumbo frame for gateway: %v", err)
+		}
+	}
+
 	return resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -1372,6 +1389,12 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	} else {
 		d.Set("ha_insane_mode_az", "")
 	}
+
+	jumboFrameStatus, err := client.GetJumboFrameStatus(gateway)
+	if err != nil {
+		return fmt.Errorf("could not get jumbo frame status for gateway: %v", err)
+	}
+	d.Set("enable_jumbo_frame", jumboFrameStatus)
 
 	return nil
 }
@@ -2288,6 +2311,20 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		err = client.EnableMonitorGatewaySubnets(gateway.GwName, excludedInstances)
 		if err != nil {
 			return fmt.Errorf("could not enable monitor gateway subnets: %v", err)
+		}
+	}
+
+	if d.HasChange("enable_jumbo_frame") {
+		if d.Get("enable_jumbo_frame").(bool) {
+			err := client.EnableJumboFrame(gateway)
+			if err != nil {
+				return fmt.Errorf("could not enable jumbo frame for gateway: %v", err)
+			}
+		} else {
+			err := client.DisableJumboFrame(gateway)
+			if err != nil {
+				return fmt.Errorf("could not disable jumbo frame for gateway: %v", err)
+			}
 		}
 	}
 
