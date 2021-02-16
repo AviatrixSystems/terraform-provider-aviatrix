@@ -199,6 +199,14 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				Computed:    true,
 				Description: "Management Public IP.",
 			},
+			"tags": {
+				Type:        schema.TypeMap,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Default:     nil,
+				ForceNew:    true,
+				Description: "A map of tags to assign to the firewall instance.",
+			},
 		},
 	}
 }
@@ -334,6 +342,12 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		}
 	}
 
+	if tags, ok := d.GetOk("tags"); ok && (cloudType == goaviatrix.AWS || cloudType == goaviatrix.AWSGOV || cloudType == goaviatrix.AZURE) {
+		firewallInstance.Tags = tags.(map[string]interface{})
+	} else if ok && cloudType != goaviatrix.AWS && cloudType != goaviatrix.AWSGOV && cloudType != goaviatrix.AZURE {
+		return fmt.Errorf("adding tags to firewall_instance is only supported for AWS, AWSGOV and AZURE, cloud_type must be 1, 256 or 8")
+	}
+
 	instanceID, err := client.CreateFirewallInstance(firewallInstance)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
@@ -431,6 +445,12 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	}
 	if fI.UserData != "" {
 		d.Set("user_data", fI.UserData)
+	}
+	if len(fI.Tags) > 0 {
+		err := d.Set("tags", fI.Tags)
+		if err != nil {
+			return fmt.Errorf("failed to set tags for firewall_instance on read: %v", err)
+		}
 	}
 
 	return nil
