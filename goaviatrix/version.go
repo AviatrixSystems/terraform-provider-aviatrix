@@ -81,6 +81,7 @@ func (c *Client) Upgrade(version *Version) error {
 			}
 			return errors.New("Rest API upgrade Get failed: " + data.Reason)
 		}
+		c.Login()
 		break
 	}
 	return nil
