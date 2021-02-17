@@ -221,7 +221,6 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 		if err != nil {
 			return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
 		}
-
 		newCurrent, _, _ := client.GetCurrentVersion()
 		log.Printf("Upgrade complete (now %s)", newCurrent)
 	}
