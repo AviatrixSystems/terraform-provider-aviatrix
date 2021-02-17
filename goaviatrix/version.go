@@ -50,17 +50,17 @@ func (c *Client) Upgrade(version *Version) error {
 	if err != nil {
 		return errors.New(("url Parsing failed for upgrade") + err.Error())
 	}
-	attachSpokeToTransitGw := url.Values{}
-	attachSpokeToTransitGw.Add("CID", c.CID)
-	attachSpokeToTransitGw.Add("action", "upgrade")
+	upgradeController := url.Values{}
+	upgradeController.Add("CID", c.CID)
+	upgradeController.Add("action", "upgrade")
 
 	if version.Version == "" {
 		return errors.New("no target version is set")
 	} else if version.Version != "latest" {
-		attachSpokeToTransitGw.Add("version", version.Version)
+		upgradeController.Add("version", version.Version)
 	}
 	for i := 0; ; i++ {
-		Url.RawQuery = attachSpokeToTransitGw.Encode()
+		Url.RawQuery = upgradeController.Encode()
 		resp, err := c.Get(Url.String(), nil)
 		if err != nil {
 			return errors.New("HTTP Get upgrade failed: " + err.Error())
