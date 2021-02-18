@@ -45,6 +45,8 @@ type TransitVpc struct {
 	EnableAdvertiseTransitCidr   bool
 	BgpManualSpokeAdvertiseCidrs string `form:"bgp_manual_spoke,omitempty"`
 	EnableTransitFireNet         string `form:"enable_transit_firenet,omitempty"`
+	LanVpcID                     string `form:"lan_vpc_id,omitempty"`
+	LanPrivateSubnet             string `form:"lan_private_subnet,omitempty"`
 	LearnedCidrsApproval         string `form:"learned_cidrs_approval,omitempty"`
 	EncVolume                    string `form:"enc_volume,omitempty"`
 	BgpOverLan                   string `form:"bgp_over_lan,omitempty"`

@@ -145,6 +145,8 @@ The following arguments are supported:
 -> **NOTE:** Enabling FireNet will automatically enable hybrid connection. If `enable_firenet` is set to true, please set `enable_hybrid_connection` to true in the respective **aviatrix_transit_gateway** as well.
 
 * `enable_transit_firenet` - (Optional) Sign of readiness for [Transit FireNet](https://docs.aviatrix.com/HowTos/transit_firenet_faq.html) connection. Valid values: true, false. Default value: false. Available in provider version R2.12+.
+* `lan_vpc_id` - (Optional) LAN VPC ID. Only valid when enabling Transit FireNet on GCP. Available as of provider version R2.18.1+.
+* `lan_private_subnet` - (Optional) LAN Private Subnet. Only valid when enabling Transit FireNet on GCP. Available as of provider version R2.18.1+.
 * `enable_egress_transit_firenet` - (Optional) Enable [Egress Transit FireNet](https://docs.aviatrix.com/HowTos/transit_firenet_workflow.html#b-enable-transit-firenet-on-aviatrix-egress-transit-gateway). Valid values: true, false. Default value: false. Available in provider version R2.16.3+.
 
 -> **NOTE:** Enabling or disabling `enable_gateway_load_balancer` requires that the FireNet interfaces also be disabled or enabled. For example, if the transit gateway currently has `enable_firenet` = true and `enable_gateway_load_balancer` = false, to enable `enable_gateway_load_balancer` you would first set `enable_firenet` = false and apply to disable the FireNet interfaces. Then you would set `enable_firenet` = true and `enable_gateway_load_balancer` = true and apply to reach the desired configuration.
