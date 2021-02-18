@@ -148,18 +148,18 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Phase one DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'.",
+				Description: "Phase one DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17', '18', '19', '20' and '21'.",
 				ValidateFunc: validation.StringInSlice([]string{
-					"1", "2", "5", "14", "15", "16", "17", "18",
+					"1", "2", "5", "14", "15", "16", "17", "18", "19", "20", "21",
 				}, false),
 			},
 			"phase_2_dh_groups": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Phase two DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17' and '18'.",
+				Description: "Phase two DH Groups. Valid values: '1', '2', '5', '14', '15', '16', '17', '18', '19', '20' and '21'.",
 				ValidateFunc: validation.StringInSlice([]string{
-					"1", "2", "5", "14", "15", "16", "17", "18",
+					"1", "2", "5", "14", "15", "16", "17", "18", "19", "20", "21",
 				}, false),
 			},
 			"phase_1_encryption": {
