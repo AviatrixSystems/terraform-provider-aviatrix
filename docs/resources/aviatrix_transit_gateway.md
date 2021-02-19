@@ -192,6 +192,7 @@ The following arguments are supported:
 * `enable_private_oob` - (Optional) Enable private OOB.
 * `oob_management_subnet` - (Optional) OOB management subnet. Required if `enable_private_oob` is true.
 * `oob_availability_zone` - (Optional) OOB availability zone. Required if `enable_private_oob` is true.
+* `enable_jumbo_frame` - (Optional) Enable jumbo frames for this transit gateway. Default value is true.
 
 ## Attribute Reference
 

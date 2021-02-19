@@ -263,7 +263,7 @@ The following arguments are supported:
 * `tag_list` - (Optional) Tag list of the gateway instance. Only available for AWS, AWSGov and Azure gateways. Example: ["key1:value1", "key2:value2"].
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for gateway. Currently only supported for AWS and AWSGov gateways. Valid values: true, false. Default value: false.
 * `zone` - (Optional) Availability Zone. Only available for Azure and Public Subnet Filtering gateway. Available for Azure as of provider version R2.17+.
-* `enable_jumbo_frame` - (Optional) Enable jumbo frames for the gateway. Default value is true.
+* `enable_jumbo_frame` - (Optional) Enable jumbo frames for this gateway. Default value is true.
 
 ### Public Subnet Filtering Gateway
 

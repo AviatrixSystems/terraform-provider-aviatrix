@@ -403,7 +403,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     true,
-				Description: "Enable jumbo frame support for spoke gateway. Valid values: true of false. Default value: true.",
+				Description: "Enable jumbo frame support for transit gateway. Valid values: true or false. Default value: true.",
 			},
 		},
 	}
@@ -1029,7 +1029,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 		err := client.DisableJumboFrame(gw)
 		if err != nil {
-			return fmt.Errorf("could not disable jumbo frame for gateway: %v", err)
+			return fmt.Errorf("could not disable jumbo frame for transit gateway: %v", err)
 		}
 	}
 
@@ -1392,7 +1392,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 	jumboFrameStatus, err := client.GetJumboFrameStatus(gateway)
 	if err != nil {
-		return fmt.Errorf("could not get jumbo frame status for gateway: %v", err)
+		return fmt.Errorf("could not get jumbo frame status for transit gateway: %v", err)
 	}
 	d.Set("enable_jumbo_frame", jumboFrameStatus)
 
@@ -2318,12 +2318,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if d.Get("enable_jumbo_frame").(bool) {
 			err := client.EnableJumboFrame(gateway)
 			if err != nil {
-				return fmt.Errorf("could not enable jumbo frame for gateway: %v", err)
+				return fmt.Errorf("could not enable jumbo frame for transit gateway when updating: %v", err)
 			}
 		} else {
 			err := client.DisableJumboFrame(gateway)
 			if err != nil {
-				return fmt.Errorf("could not disable jumbo frame for gateway: %v", err)
+				return fmt.Errorf("could not disable jumbo frame for transit gateway when updating: %v", err)
 			}
 		}
 	}
