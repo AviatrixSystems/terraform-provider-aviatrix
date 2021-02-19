@@ -18,6 +18,11 @@ code change.
 	- Version upgrade: If modifying/adding an attribute, can an existing user still use their resource after upgrading?
 	- Import: If you remove a resource from state, are you able to import it completely back into state?
 - Other considerations
+	- Attributes should be ordered in the schema definition like so:
+		- Required
+		- Optional
+		- Optional and Computed
+		- Computed 
 	- In the Read function, if the resource does not exist do not return error, instead do the following (documented here https://learn.hashicorp.com/tutorials/terraform/provider-setup):
 	```
 	if err == goaviatrix.ErrNotFound {
