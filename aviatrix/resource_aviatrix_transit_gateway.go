@@ -255,6 +255,16 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Specify whether to enable transit firenet interfaces or not.",
 			},
+			"lan_vpc_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "LAN VPC ID. Only used for GCP Transit FireNet.",
+			},
+			"lan_private_subnet": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "LAN Private Subnet. Only used for GCP Transit FireNet.",
+			},
 			"enable_learned_cidrs_approval": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -533,10 +543,25 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	if enableFireNet && enableTransitFireNet {
 		return fmt.Errorf("can't enable firenet function and transit firenet function at the same time")
 	}
-	if enableTransitFireNet && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AZURE && gateway.CloudType != goaviatrix.AWSGOV {
-		return fmt.Errorf("'enable_transit_firenet' is only supported in AWS, AZURE and AWSGOV providers")
-	} else if enableTransitFireNet && gateway.CloudType == goaviatrix.AZURE {
-		gateway.EnableTransitFireNet = "on"
+	lanVpcID := d.Get("lan_vpc_id").(string)
+	lanPrivateSubnet := d.Get("lan_private_subnet").(string)
+	if enableTransitFireNet {
+		if !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.GCP, goaviatrix.AZURE}) {
+			return fmt.Errorf("'enable_transit_firenet' is only supported in AWS, AWSGOV, GCP and AZURE providers")
+		}
+		if intInSlice(gateway.CloudType, []int{goaviatrix.AZURE, goaviatrix.GCP}) {
+			gateway.EnableTransitFireNet = "on"
+		}
+		if gateway.CloudType == goaviatrix.GCP {
+			if lanVpcID == "" || lanPrivateSubnet == "" {
+				return fmt.Errorf("'lan_vpc_id' and 'lan_private_subnet' are required when 'cloud_type' = 4 (GCP) and 'enable_transit_firenet' = true")
+			}
+			gateway.LanVpcID = lanVpcID
+			gateway.LanPrivateSubnet = lanPrivateSubnet
+		}
+	}
+	if (!enableTransitFireNet || gateway.CloudType != goaviatrix.GCP) && (lanVpcID != "" || lanPrivateSubnet != "") {
+		return fmt.Errorf("'lan_vpc_id' and 'lan_private_subnet' are only valid when 'cloud_type' = 4 (GCP) and 'enable_transit_firenet' = true")
 	}
 	if enableGatewayLoadBalancer && !enableFireNet && !enableTransitFireNet {
 		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'enable_firenet' or 'enable_transit_firenet' is set to true")
@@ -1164,9 +1189,14 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 		d.Set("enable_firenet", gwDetail.EnableFireNet)
 		d.Set("enable_gateway_load_balancer", gwDetail.EnabledGatewayLoadBalancer)
-		d.Set("enable_transit_firenet", gwDetail.EnableTransitFireNet)
 		d.Set("enable_egress_transit_firenet", gwDetail.EnableEgressTransitFireNet)
 		d.Set("customized_transit_vpc_routes", gwDetail.CustomizedTransitVpcRoutes)
+
+		d.Set("enable_transit_firenet", gwDetail.EnableTransitFireNet)
+		if gwDetail.EnableTransitFireNet && gw.CloudType == goaviatrix.GCP {
+			d.Set("lan_vpc_id", gwDetail.BundleVpcInfo.LAN.VpcID)
+			d.Set("lan_private_subnet", strings.Split(gwDetail.BundleVpcInfo.LAN.Subnet, "~~")[0])
+		}
 
 		if _, zoneIsSet := d.GetOk("zone"); gw.CloudType == goaviatrix.AZURE && (isImport || zoneIsSet) &&
 			gwDetail.GwZone != "AvailabilitySet" {
@@ -1414,9 +1444,15 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("updating ha_eip is not allowed")
 		}
 	}
+	if d.HasChange("lan_vpc_id") {
+		return fmt.Errorf("updating lan_vpc_id is not allowed")
+	}
+	if d.HasChange("lan_private_subnet") {
+		return fmt.Errorf("updating lan_private_subnet is not allowed")
+	}
 
-	if d.HasChange("enable_transit_firenet") && d.Get("cloud_type").(int) == goaviatrix.AZURE {
-		return fmt.Errorf("editing 'enable_transit_firenet' in AZURE is not supported")
+	if d.HasChange("enable_transit_firenet") && intInSlice(d.Get("cloud_type").(int), []int{goaviatrix.AZURE, goaviatrix.GCP}) {
+		return fmt.Errorf("editing 'enable_transit_firenet' in GCP and AZURE is not supported")
 	}
 	if d.Get("enable_egress_transit_firenet").(bool) && !d.Get("enable_transit_firenet").(bool) {
 		return fmt.Errorf("'enable_egress_transit_firenet' requires 'enable_transit_firenet' to be set to true")

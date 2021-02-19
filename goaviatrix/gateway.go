@@ -165,28 +165,38 @@ type PolicyRule struct {
 }
 
 type GatewayDetail struct {
-	AccountName                  string       `form:"account_name,omitempty" json:"account_name,omitempty"`
-	Action                       string       `form:"action,omitempty"`
-	GwName                       string       `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
-	DMZEnabled                   bool         `json:"dmz_enabled,omitempty"`
-	EnableAdvertiseTransitCidr   string       `json:"advertise_transit_cidr,omitempty"`
-	BgpManualSpokeAdvertiseCidrs []string     `json:"bgp_manual_spoke_advertise_cidrs,omitempty"`
-	VpnNat                       bool         `json:"vpn_nat,omitempty"`
-	SnatPolicy                   []PolicyRule `json:"snat_ip_port_list,omitempty"`
-	DnatPolicy                   []PolicyRule `json:"dnat_ip_port_list,omitempty"`
-	Elb                          ElbDetail    `json:"elb,omitempty"`
-	EnableEgressTransitFireNet   bool         `json:"egress_transit,omitempty"`
-	EnableFireNet                bool         `json:"firenet_enabled,omitempty"`
-	EnabledGatewayLoadBalancer   bool         `json:"gwlb_enabled,omitempty"`
-	EnableTransitFireNet         bool         `json:"transit_firenet_enabled,omitempty"`
-	LearnedCidrsApproval         string       `json:"learned_cidrs_approval,omitempty"`
-	SyncSNATToHA                 bool         `json:"sync_snat_to_ha,omitempty"`
-	SyncDNATToHA                 bool         `json:"sync_dnat_to_ha,omitempty"`
-	GwZone                       string       `json:"gw_zone,omitempty"`
-	TransitGwName                string       `json:"transit_gw_name,omitempty"`
-	EgressTransitGwName          string       `json:"egress_transit_gw_name,omitempty"`
-	RouteTables                  []string     `json:"spoke_rtb_list,omitempty"`
-	CustomizedTransitVpcRoutes   []string     `json:"customized_transit_vpc_cidrs"`
+	AccountName                  string        `form:"account_name,omitempty" json:"account_name,omitempty"`
+	Action                       string        `form:"action,omitempty"`
+	GwName                       string        `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
+	DMZEnabled                   bool          `json:"dmz_enabled,omitempty"`
+	EnableAdvertiseTransitCidr   string        `json:"advertise_transit_cidr,omitempty"`
+	BgpManualSpokeAdvertiseCidrs []string      `json:"bgp_manual_spoke_advertise_cidrs,omitempty"`
+	VpnNat                       bool          `json:"vpn_nat,omitempty"`
+	SnatPolicy                   []PolicyRule  `json:"snat_ip_port_list,omitempty"`
+	DnatPolicy                   []PolicyRule  `json:"dnat_ip_port_list,omitempty"`
+	Elb                          ElbDetail     `json:"elb,omitempty"`
+	EnableEgressTransitFireNet   bool          `json:"egress_transit,omitempty"`
+	EnableFireNet                bool          `json:"firenet_enabled,omitempty"`
+	EnabledGatewayLoadBalancer   bool          `json:"gwlb_enabled,omitempty"`
+	EnableTransitFireNet         bool          `json:"transit_firenet_enabled,omitempty"`
+	LearnedCidrsApproval         string        `json:"learned_cidrs_approval,omitempty"`
+	SyncSNATToHA                 bool          `json:"sync_snat_to_ha,omitempty"`
+	SyncDNATToHA                 bool          `json:"sync_dnat_to_ha,omitempty"`
+	GwZone                       string        `json:"gw_zone,omitempty"`
+	TransitGwName                string        `json:"transit_gw_name,omitempty"`
+	EgressTransitGwName          string        `json:"egress_transit_gw_name,omitempty"`
+	RouteTables                  []string      `json:"spoke_rtb_list,omitempty"`
+	CustomizedTransitVpcRoutes   []string      `json:"customized_transit_vpc_cidrs"`
+	BundleVpcInfo                BundleVpcInfo `json:"bundle_vpc_info"`
+}
+
+type BundleVpcInfo struct {
+	LAN BundleVpcLanInfo
+}
+
+type BundleVpcLanInfo struct {
+	VpcID  string `json:"vpc_id"`
+	Subnet string
 }
 
 type ElbDetail struct {

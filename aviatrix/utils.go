@@ -93,3 +93,13 @@ func stringInSlice(needle string, haystack []string) bool {
 	}
 	return false
 }
+
+// intInSlice checks if the needle is in the haystack
+func intInSlice(needle int, haystack []int) bool {
+	for _, element := range haystack {
+		if element == needle {
+			return true
+		}
+	}
+	return false
+}
