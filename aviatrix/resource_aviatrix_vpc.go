@@ -504,6 +504,8 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		if err := d.Set("route_tables", rtbs); err != nil {
 			log.Printf("[WARN] Error setting route tables for (%s): %s", d.Id(), err)
 		}
+	} else {
+		d.Set("route_tables", []string{})
 	}
 
 	return nil
