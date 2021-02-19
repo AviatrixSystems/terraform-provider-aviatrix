@@ -450,6 +450,12 @@ func resourceAviatrixGateway() *schema.Resource {
 				Optional:    true,
 				Description: "Whether to enforce Guard Duty IP blocking. Required when `enable_public_subnet_filtering` attribute is true. Valid values: true or false. Default value: true.",
 			},
+			"enable_jumbo_frame": {
+				Type:        schema.TypeBool,
+				Default:     true,
+				Optional:    true,
+				Description: "Enable jumbo frame support for Gateway. Valid values: true or false. Default value: true.",
+			},
 		},
 	}
 }
@@ -968,6 +974,13 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	if !d.Get("enable_jumbo_frame").(bool) {
+		err := client.DisableJumboFrame(gateway)
+		if err != nil {
+			return fmt.Errorf("couldn't disable jumbo frames for Gateway: %s", err)
+		}
+	}
+
 	return resourceAviatrixGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -1432,6 +1445,12 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				d.Set("peering_ha_zone", haPublicSubnetFilteringDetails.GwSubnetAz)
 			}
 		}
+
+		jumboFrameStatus, err := client.GetJumboFrameStatus(gw)
+		if err != nil {
+			return fmt.Errorf("could not get jumbo frame status for gateway: %v", err)
+		}
+		d.Set("enable_jumbo_frame", jumboFrameStatus)
 	}
 	return nil
 }
@@ -2258,6 +2277,20 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			err := client.DisableGuardDutyEnforcement(gatewayServer)
 			if err != nil {
 				return fmt.Errorf("could not disable public subnet filtering guard duty enforcement: %v", err)
+			}
+		}
+	}
+
+	if d.HasChange("enable_jumbo_frame") {
+		if d.Get("enable_jumbo_frame").(bool) {
+			err := client.EnableJumboFrame(gateway)
+			if err != nil {
+				return fmt.Errorf("couldn't enable jumbo frames for Gateway when updating: %s", err)
+			}
+		} else {
+			err := client.DisableJumboFrame(gateway)
+			if err != nil {
+				return fmt.Errorf("couldn't disable jumbo frames for Gateway when updating: %s", err)
 			}
 		}
 	}
