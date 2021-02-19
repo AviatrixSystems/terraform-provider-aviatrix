@@ -42,6 +42,8 @@ func Provider() *schema.Provider {
 			"aviatrix_aws_peer":                                       resourceAviatrixAWSPeer(),
 			"aviatrix_aws_guard_duty":                                 resourceAviatrixAwsGuardDuty(),
 			"aviatrix_aws_tgw":                                        resourceAviatrixAWSTgw(),
+			"aviatrix_aws_tgw_connect":                                resourceAviatrixAwsTgwConnect(),
+			"aviatrix_aws_tgw_connect_peer":                           resourceAviatrixAwsTgwConnectPeer(),
 			"aviatrix_aws_tgw_directconnect":                          resourceAviatrixAWSTgwDirectConnect(),
 			"aviatrix_aws_tgw_peering":                                resourceAviatrixAWSTgwPeering(),
 			"aviatrix_aws_tgw_peering_domain_conn":                    resourceAviatrixAWSTgwPeeringDomainConn(),
