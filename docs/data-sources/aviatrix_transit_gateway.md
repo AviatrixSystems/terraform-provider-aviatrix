@@ -74,3 +74,5 @@ In addition to all arguments above, the following attributes are exported:
 * `enable_private_oob` - Status of private OOB for the transit gateway.
 * `oob_management_subnet` - OOB management subnet.
 * `oob_availability_zone` - OOB availability zone.
+* `ha_oob_management_subnet` - HA OOB management subnet.
+* `ha_oob_availability_zone` - HA OOB availability zone.

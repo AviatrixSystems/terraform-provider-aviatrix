@@ -181,6 +181,13 @@ The following arguments are supported:
 * `enable_monitor_gateway_subnets` - (Optional) If set to true, the [Monitor Gateway Subnets](https://docs.aviatrix.com/HowTos/gateway.html#monitor-gateway-subnet) feature is enabled. Default value is false. Available in provider version R2.18+.
 * `monitor_exclude_list` - (Optional) Set of monitored instance ids. Only valid when 'enable_monitor_gateway_subnets' = true. Available in provider version R2.18+.
 
+### OOB
+* `enable_private_oob` - (Optional) Enable private OOB. Only available for AWS and AWSGOV. Valid values: true, false. Default value: false.
+* `oob_management_subnet` - (Optional) OOB management subnet. Required if enabling private OOB. Example: "11.0.2.0/24".
+* `oob_availability_zone` - (Optional) OOB availability zone. Required if enabling private OOB. Example: "us-west-1a".
+* `ha_oob_management_subnet` - (Optional) HA OOB management subnet. Required if enabling private OOB and HA. Example: "11.0.0.48/28".
+* `ha_oob_availability_zone` - (Optional) HA OOB availability zone. Required if enabling private OOB and HA. Example: "us-west-1b".
+
 ### Misc.
 * `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in Controller 4.7+. Valid values: true, false. Default: true. Option not available for Azure and OCI gateways, they will automatically allocate new EIPs.
 * `eip` - (Optional) Required when `allocate_new_eip` is false. It uses the specified EIP for this gateway. Available in Controller version 4.7+. Only available for AWS and GCP.
@@ -189,9 +196,6 @@ The following arguments are supported:
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS and AWSGOV. Valid values: true, false. Default value: false.
 * `zone` - (Optional) Availability Zone. Only available for cloud_type = 8 (AZURE). Must be in the form 'az-n', for example, 'az-2'. Available in provider version R2.17+.
 * `enable_active_standby` - (Optional) Enables [Active-Standby Mode](https://docs.aviatrix.com/HowTos/transit_advanced.html#active-standby). Available only with Active Mesh Mode enabled and HA enabled. Valid values: true, false. Default value: false. Available in provider version R2.17.1+.
-* `enable_private_oob` - (Optional) Enable private OOB.
-* `oob_management_subnet` - (Optional) OOB management subnet. Required if `enable_private_oob` is true.
-* `oob_availability_zone` - (Optional) OOB availability zone. Required if `enable_private_oob` is true.
 * `enable_jumbo_frame` - (Optional) Enable jumbo frames for this transit gateway. Default value is true.
 
 ## Attribute Reference

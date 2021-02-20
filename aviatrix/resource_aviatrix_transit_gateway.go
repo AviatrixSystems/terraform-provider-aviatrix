@@ -85,12 +85,6 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "If false, reuse an idle address in Elastic IP pool for this gateway. " +
 					"Otherwise, allocate a new Elastic IP and use it for this gateway.",
 			},
-			"eip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Required when allocate_new_eip is false. It uses specified EIP for this gateway.",
-			},
 			"ha_subnet": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -114,12 +108,6 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Optional:    true,
 				Default:     "",
 				Description: "HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set).",
-			},
-			"ha_eip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Public IP address that you want assigned to the HA Transit Gateway.",
 			},
 			"single_az_ha": {
 				Type:        schema.TypeBool,
@@ -282,36 +270,6 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					"connection, use the enable_learned_cidrs_approval attribute within the connection resource to " +
 					"toggle learned CIDR approval. Valid values: 'gateway' or 'connection'. Default value: 'gateway'.",
 			},
-			"security_group_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Security group used for the transit gateway.",
-			},
-			"cloud_instance_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Instance ID of the transit gateway.",
-			},
-			"private_ip": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Private IP address of the transit gateway created.",
-			},
-			"ha_cloud_instance_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Cloud instance ID of HA transit gateway.",
-			},
-			"ha_gw_name": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Aviatrix transit gateway unique name of HA transit gateway.",
-			},
-			"ha_private_ip": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Private IP address of HA transit gateway.",
-			},
 			"bgp_polling_time": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -366,16 +324,6 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				},
 				Description: "A set of monitored instance ids. Only valid when 'enable_monitor_gateway_subnets' = true.",
 			},
-			"lan_interface_cidr": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Transit gateway lan interface cidr.",
-			},
-			"ha_lan_interface_cidr": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Transit gateway lan interface cidr for the HA gateway.",
-			},
 			"enable_bgp_over_lan": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -399,11 +347,73 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Optional:    true,
 				Description: "OOB subnet availability zone.",
 			},
+			"ha_oob_management_subnet": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "OOB HA management subnet.",
+			},
+			"ha_oob_availability_zone": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "OOB HA availability zone.",
+			},
 			"enable_jumbo_frame": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     true,
 				Description: "Enable jumbo frame support for transit gateway. Valid values: true or false. Default value: true.",
+			},
+			"eip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Required when allocate_new_eip is false. It uses specified EIP for this gateway.",
+			},
+			"ha_eip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Public IP address that you want assigned to the HA Transit Gateway.",
+			},
+			"security_group_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Security group used for the transit gateway.",
+			},
+			"cloud_instance_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Instance ID of the transit gateway.",
+			},
+			"private_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Private IP address of the transit gateway created.",
+			},
+			"ha_cloud_instance_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Cloud instance ID of HA transit gateway.",
+			},
+			"ha_gw_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Aviatrix transit gateway unique name of HA transit gateway.",
+			},
+			"ha_private_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Private IP address of HA transit gateway.",
+			},
+			"lan_interface_cidr": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Transit gateway lan interface cidr.",
+			},
+			"ha_lan_interface_cidr": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Transit gateway lan interface cidr for the HA gateway.",
 			},
 		},
 	}
@@ -443,7 +453,9 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		gateway.ConnectedTransit = "no"
 	}
 
-	if !(d.Get("enable_private_oob").(bool)) {
+	enablePrivateOob := d.Get("enable_private_oob").(bool)
+
+	if !enablePrivateOob {
 		allocateNewEip := d.Get("allocate_new_eip").(bool)
 		if allocateNewEip {
 			gateway.ReuseEip = "off"
@@ -616,37 +628,68 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		gateway.BgpOverLan = "on"
 	}
 
-	if d.Get("enable_private_oob").(bool) {
+	oobManagementSubnet := d.Get("oob_management_subnet").(string)
+	oobAvailabilityZone := d.Get("oob_availability_zone").(string)
+	haOobManagementSubnet := d.Get("ha_oob_management_subnet").(string)
+	haOobAvailabilityZone := d.Get("ha_oob_availability_zone").(string)
+
+	if enablePrivateOob {
 		if cloudType != goaviatrix.AWS && cloudType != goaviatrix.AWSGOV {
 			return fmt.Errorf("'enable_private_oob' is only valid for cloud_type = 1 (AWS) or 256 (AWSGOV)")
 		}
 
-		if d.Get("oob_availability_zone").(string) == "" {
+		if oobAvailabilityZone == "" {
 			return fmt.Errorf("\"oob_availability_zone\" is required if \"enable_private_oob\" is true")
 		}
 
-		if d.Get("oob_management_subnet").(string) == "" {
+		if oobManagementSubnet == "" {
 			return fmt.Errorf("\"oob_management_subnet\" is required if \"enable_private_oob\" is true")
 		}
 
-		if _, err := validation.IsCIDR(d.Get("oob_management_subnet").(string), "oob_management_subnet"); err != nil {
+		if _, err := validation.IsCIDR(oobManagementSubnet, "oob_management_subnet"); err != nil {
 			return fmt.Errorf("\"oob_management_subnet\" must be a CIDR if \"enable_private_oob\" is true")
 		}
 
-		if _, err := validation.IsCIDR(d.Get("subnet").(string), "subnet"); err != nil {
+		if _, err := validation.IsCIDR(gateway.Subnet, "subnet"); err != nil {
 			return fmt.Errorf("\"subnet\" must be a CIDR if \"enable_private_oob\" is true")
 		}
 
+		if haSubnet != "" {
+			if haOobAvailabilityZone == "" {
+				return fmt.Errorf("\"ha_oob_availability_zone\" is required if \"enable_private_oob\" is true and \"ha_subnet\" is provided")
+			}
+
+			if haOobManagementSubnet == "" {
+				return fmt.Errorf("\"ha_oob_management_subnet\" is required if \"enable_private_oob\" is true and \"ha_subnet\" is provided")
+			}
+
+			if _, err := validation.IsCIDR(haSubnet, "ha_subnet"); err != nil {
+				return fmt.Errorf("\"ha_subnet\" must be a CIDR if \"enable_private_oob\" is true")
+			}
+
+			if _, err := validation.IsCIDR(haOobManagementSubnet, "ha_oob_management_subnet"); err != nil {
+				return fmt.Errorf("\"ha_oob_management_subnet\" must be a CIDR if \"enable_private_oob\" is true and \"ha_subnet\" is provided")
+			}
+		}
+
 		gateway.EnablePrivateOob = "on"
-		gateway.Subnet = gateway.Subnet + "~~" + d.Get("oob_availability_zone").(string)
-		gateway.OobManagementSubnet = d.Get("oob_management_subnet").(string) + "~~" + d.Get("oob_availability_zone").(string)
+		gateway.Subnet = gateway.Subnet + "~~" + oobAvailabilityZone
+		gateway.OobManagementSubnet = oobManagementSubnet + "~~" + oobAvailabilityZone
 	} else {
-		if d.Get("oob_availability_zone").(string) != "" {
+		if oobAvailabilityZone != "" {
 			return fmt.Errorf("\"oob_availability_zone\" must be empty if \"enable_private_oob\" is false")
 		}
 
-		if d.Get("oob_management_subnet").(string) != "" {
+		if oobManagementSubnet != "" {
 			return fmt.Errorf("\"oob_mangeemnt_sbunet\" must be empty if \"enable_private_oob\" is false")
+		}
+
+		if haOobAvailabilityZone != "" {
+			return fmt.Errorf("\"ha_oob_availability_zone\" must be empty if \"enable_private_oob\" is false")
+		}
+
+		if haOobManagementSubnet != "" {
+			return fmt.Errorf("\"ha_oob_mangeemnt_sbunet\" must be empty if \"enable_private_oob\" is false")
 		}
 	}
 
@@ -716,13 +759,9 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			transitGateway.HASubnet = fmt.Sprintf("%s~~%s~~", haSubnet, haZone)
 		}
 
-		if d.Get("enable_private_oob").(bool) {
-			if _, err := validation.IsCIDR(d.Get("ha_subnet").(string), "ha_subnet"); err != nil {
-				return fmt.Errorf("\"ha_subnet\" must be a CIDR if \"enable_private_oob\" is true")
-			}
-
-			transitGateway.HASubnet = transitGateway.HASubnet + "~~" + d.Get("oob_availability_zone").(string)
-			transitGateway.OobManagementSubnet = d.Get("oob_management_subnet").(string) + "~~" + d.Get("oob_availability_zone").(string)
+		if enablePrivateOob {
+			transitGateway.HASubnet = transitGateway.HASubnet + "~~" + haOobAvailabilityZone
+			transitGateway.HAOobManagementSubnet = haOobManagementSubnet + "~~" + haOobAvailabilityZone
 		}
 
 		log.Printf("[INFO] Enabling HA on Transit Gateway: %#v", haSubnet)
@@ -1347,6 +1386,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("ha_zone", "")
 			d.Set("ha_insane_mode_az", "")
 			d.Set("ha_eip", "")
+			d.Set("ha_oob_management_subnet", "")
+			d.Set("ha_oob_availability_zone", "")
 			return nil
 		}
 		return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway: %s", err)
@@ -1382,6 +1423,11 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			log.Printf("[WARN] Error getting lan cidr for HA transit gateway %s due to %s", haGw.GwName, err)
 		}
 		d.Set("ha_lan_interface_cidr", lanCidr)
+
+		if haGw.EnablePrivateOob {
+			d.Set("ha_oob_management_subnet", strings.Split(haGw.OobManagementSubnet, "~~")[0])
+			d.Set("ha_oob_availability_zone", haGw.GatewayZone)
+		}
 	}
 
 	if haGw.InsaneMode == "yes" && (haGw.CloudType == goaviatrix.AWS || haGw.CloudType == goaviatrix.AWSGOV) {
@@ -1594,13 +1640,28 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 
+		haOobManagementSubnet := d.Get("ha_oob_management_subnet").(string)
+		haOobAvailabilityZone := d.Get("ha_oob_availability_zone").(string)
+
 		if (newHaGwEnabled || changeHaGw) && d.Get("enable_private_oob").(bool) {
-			if _, err := validation.IsCIDR(d.Get("ha_subnet").(string), "ha_subnet"); err != nil {
+			if haOobAvailabilityZone == "" {
+				return fmt.Errorf("\"ha_oob_availability_zone\" is required if \"enable_private_oob\" is true and \"ha_subnet\" is provided")
+			}
+
+			if haOobManagementSubnet == "" {
+				return fmt.Errorf("\"ha_oob_management_subnet\" is required if \"enable_private_oob\" is true and \"ha_subnet\" is provided")
+			}
+
+			if _, err := validation.IsCIDR(transitGw.HASubnet, "ha_subnet"); err != nil {
 				return fmt.Errorf("\"ha_subnet\" must be a CIDR if \"enable_private_oob\" is true")
 			}
 
-			transitGw.HASubnet = transitGw.HASubnet + "~~" + d.Get("oob_availability_zone").(string)
-			transitGw.OobManagementSubnet = d.Get("oob_management_subnet").(string) + "~~" + d.Get("oob_availability_zone").(string)
+			if _, err := validation.IsCIDR(haOobManagementSubnet, "ha_oob_management_subnet"); err != nil {
+				return fmt.Errorf("\"ha_oob_management_subnet\" must be a CIDR if \"enable_private_oob\" is true")
+			}
+
+			transitGw.HASubnet = transitGw.HASubnet + "~~" + haOobAvailabilityZone
+			transitGw.HAOobManagementSubnet = haOobManagementSubnet + "~~" + haOobAvailabilityZone
 		}
 
 		if newHaGwEnabled {

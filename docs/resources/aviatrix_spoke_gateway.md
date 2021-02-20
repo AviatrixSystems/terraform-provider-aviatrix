@@ -143,6 +143,13 @@ The following arguments are supported:
 * `enable_monitor_gateway_subnets` - (Optional) If set to true, the [Monitor Gateway Subnets](https://docs.aviatrix.com/HowTos/gateway.html#monitor-gateway-subnet) feature is enabled. Default value is false. Available in provider version R2.18+.
 * `monitor_exclude_list` - (Optional) Set of monitored instance ids. Only valid when 'enable_monitor_gateway_subnets' = true. Available in provider version R2.18+.
 
+### OOB
+* `enable_private_oob` - (Optional) Enable private OOB. Only available for AWS and AWSGOV. Valid values: true, false. Default value: false.
+* `oob_management_subnet` - (Optional) OOB management subnet. Required if enabling private OOB. Example: "11.0.2.0/24".
+* `oob_availability_zone` - (Optional) OOB availability zone. Required if enabling private OOB. Example: "us-west-1a".
+* `ha_oob_management_subnet` - (Optional) HA OOB management subnet. Required if enabling private OOB and HA. Example: "11.0.0.48/28".
+* `ha_oob_availability_zone` - (Optional) HA OOB availability zone. Required if enabling private OOB and HA. Example: "us-west-1b".
+
 ### Misc.
 
 !> **WARNING:** Attribute `transit_gw` has been deprecated as of provider version R2.18.1+ and will not receive further updates. Please set `manage_transit_gateway_attachment` to false, and use the standalone `aviatrix_spoke_transit_attachment` resource instead.
@@ -155,9 +162,6 @@ The following arguments are supported:
 * `zone` - (Optional) Availability Zone. Only available for cloud_type = 8 (AZURE). Must be in the form 'az-n', for example, 'az-2'. Available in provider version R2.17+.
 * `manage_transit_gateway_attachment` - (Optional) Enable to manage spoke-to-Aviatrix transit gateway attachments using the **aviatrix_spoke_gateway** resource with the below `transit_gw` attribute. If this is set to false, attaching this spoke to transit gateways must be done using the **aviatrix_spoke_transit_attachment** resource. Valid values: true, false. Default value: true. Available in provider R2.17+.
 * `transit_gw` - (Optional) Specify the Aviatrix transit gateways to attach this spoke gateway to. Format is a comma separated list of transit gateway names. For example: "transit-gw1,transit-gw2".
-* `enable_private_oob` - (Optional) Enable private OOB.
-* `oob_management_subnet` - (Optional) OOB management subnet. Required if `enable_private_oob` is true.
-* `oob_availability_zone` - (Optional) OOB availability zone. Required if `enable_private_oob` is true.
 * `enable_jumbo_frame` - (Optional) Enable jumbo frames for this spoke gateway. Default value is true.
 
 -> **NOTE:** `manage_transit_gateway_attachment` - If you are using/upgraded to Aviatrix Terraform Provider R2.17+, and an **aviatrix_spoke_gateway** resource was originally created with a provider version <R2.17, you must do 'terraform refresh' to update and apply the attribute's default value (true) into the state file.
