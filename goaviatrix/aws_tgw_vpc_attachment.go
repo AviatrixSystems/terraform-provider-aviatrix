@@ -114,7 +114,7 @@ func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment
 	}
 	awsTgw, err := c.ListTgwDetails(awsTgw)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't find AWS TGW: %s", awsTgwVpcAttachment.TgwName)
+		return nil, fmt.Errorf("couldn't find AWS TGW %s: %v", awsTgwVpcAttachment.TgwName, err)
 	}
 	awsTgwVpcAttachment.Region = awsTgw.Region
 
@@ -240,7 +240,7 @@ func (c *Client) DeleteAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment *AwsTgw
 func (c *Client) GetAwsTgwDetail(awsTgw *AWSTgw) (*AWSTgw, error) {
 	awsTgw, err := c.ListTgwDetails(awsTgw)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't find AWS TGW: %s", awsTgw.Name)
+		return nil, fmt.Errorf("couldn't find AWS TGW %s: %v", awsTgw.Name, err)
 	}
 
 	return awsTgw, nil

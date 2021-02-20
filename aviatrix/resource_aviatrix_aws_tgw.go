@@ -507,7 +507,7 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find AWS TGW: %s", awsTgw.Name)
+		return fmt.Errorf("couldn't find AWS TGW %s: %v", awsTgw.Name, err)
 	}
 	d.Set("account_name", awsTgw.AccountName)
 	d.Set("tgw_name", awsTgw.Name)
@@ -522,7 +522,7 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 
 	awsTgw, err2 := client.GetAWSTgw(awsTgw)
 	if err2 != nil {
-		return fmt.Errorf("couldn't find AWS TGW: %s", tgwName)
+		return fmt.Errorf("couldn't find AWS TGW %s: %v", tgwName, err2)
 	}
 
 	d.Set("aws_side_as_number", awsTgw.AwsSideAsNumber)
@@ -1296,7 +1296,7 @@ func resourceAviatrixAWSTgwDelete(d *schema.ResourceData, meta interface{}) erro
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find AWS TGW: %s", err)
+		return fmt.Errorf("couldn't destroy AWS TGW %s: %v", awsTgw.Name, err)
 	}
 
 	return nil
