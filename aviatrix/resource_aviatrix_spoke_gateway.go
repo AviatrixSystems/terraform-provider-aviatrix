@@ -64,9 +64,10 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description: "Size of the gateway instance.",
 			},
 			"subnet": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Public Subnet Info.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.IsCIDR,
+				Description:  "Public Subnet Info.",
 			},
 			"zone": {
 				Type:         schema.TypeString,
@@ -97,9 +98,10 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 					"Otherwise, allocate a new Elastic IP and use it for this gateway.",
 			},
 			"ha_subnet": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "HA Subnet. Required if enabling HA for AWS/AZURE. Optional if enabling HA for GCP.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsCIDR,
+				Description:  "HA Subnet. Required if enabling HA for AWS/AZURE. Optional if enabling HA for GCP.",
 			},
 			"ha_zone": {
 				Type:        schema.TypeString,
@@ -227,9 +229,10 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description: "Enable private OOB.",
 			},
 			"oob_management_subnet": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "OOB management subnet.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsCIDR,
+				Description:  "OOB management subnet.",
 			},
 			"oob_availability_zone": {
 				Type:        schema.TypeString,
@@ -237,9 +240,10 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description: "OOB subnet availability zone.",
 			},
 			"ha_oob_management_subnet": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "OOB HA management subnet.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsCIDR,
+				Description:  "OOB HA management subnet.",
 			},
 			"ha_oob_availability_zone": {
 				Type:        schema.TypeString,
@@ -457,14 +461,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("\"oob_management_subnet\" is required if \"enable_private_oob\" is true")
 		}
 
-		if _, err := validation.IsCIDR(oobManagementSubnet, "oob_management_subnet"); err != nil {
-			return fmt.Errorf("\"oob_management_subnet\" must be a CIDR if \"enable_private_oob\" is true")
-		}
-
-		if _, err := validation.IsCIDR(gateway.Subnet, "subnet"); err != nil {
-			return fmt.Errorf("\"subnet\" must be a CIDR if \"enable_private_oob\" is true")
-		}
-
 		if haSubnet != "" {
 			if haOobAvailabilityZone == "" {
 				return fmt.Errorf("\"ha_oob_availability_zone\" is required if \"enable_private_oob\" is true and \"ha_subnet\" is provided")
@@ -472,14 +468,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 
 			if haOobManagementSubnet == "" {
 				return fmt.Errorf("\"ha_oob_management_subnet\" is required if \"enable_private_oob\" is true and \"ha_subnet\" is provided")
-			}
-
-			if _, err := validation.IsCIDR(haSubnet, "ha_subnet"); err != nil {
-				return fmt.Errorf("\"ha_subnet\" must be a CIDR if \"enable_private_oob\" is true")
-			}
-
-			if _, err := validation.IsCIDR(haOobManagementSubnet, "ha_oob_management_subnet"); err != nil {
-				return fmt.Errorf("\"ha_oob_management_subnet\" must be a CIDR if \"enable_private_oob\" is true and \"ha_subnet\" is provided")
 			}
 		} else {
 			if haOobAvailabilityZone != "" {
@@ -1333,14 +1321,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 
 				if haOobManagementSubnet == "" {
 					return fmt.Errorf("\"ha_oob_management_subnet\" is required if \"enable_private_oob\" is true and \"ha_subnet\" is provided")
-				}
-
-				if _, err := validation.IsCIDR(spokeGw.HASubnet, "ha_subnet"); err != nil {
-					return fmt.Errorf("\"ha_subnet\" must be a CIDR if \"enable_private_oob\" is true")
-				}
-
-				if _, err := validation.IsCIDR(haOobManagementSubnet, "ha_oob_management_subnet"); err != nil {
-					return fmt.Errorf("\"ha_oob_management_subnet\" must be a CIDR if \"enable_private_oob\" is true and \"ha_subnet\" is provided")
 				}
 
 				spokeGw.HASubnet = spokeGw.HASubnet + "~~" + haOobAvailabilityZone

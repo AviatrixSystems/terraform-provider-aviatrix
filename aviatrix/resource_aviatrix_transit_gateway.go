@@ -59,9 +59,10 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "Size of the gateway instance.",
 			},
 			"subnet": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Public Subnet Name.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.IsCIDR,
+				Description:  "Public Subnet Name.",
 			},
 			"zone": {
 				Type:         schema.TypeString,
@@ -86,8 +87,9 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					"Otherwise, allocate a new Elastic IP and use it for this gateway.",
 			},
 			"ha_subnet": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsCIDR,
 				Description: "HA Subnet. Required for enabling HA for AWS/AZURE/AWSGOV gateway. " +
 					"Optional for enabling HA for GCP gateway.",
 			},
@@ -338,9 +340,10 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "Enable private OOB.",
 			},
 			"oob_management_subnet": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "OOB management subnet.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsCIDR,
+				Description:  "OOB management subnet.",
 			},
 			"oob_availability_zone": {
 				Type:        schema.TypeString,
@@ -348,9 +351,10 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "OOB subnet availability zone.",
 			},
 			"ha_oob_management_subnet": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "OOB HA management subnet.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsCIDR,
+				Description:  "OOB HA management subnet.",
 			},
 			"ha_oob_availability_zone": {
 				Type:        schema.TypeString,
@@ -646,14 +650,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("\"oob_management_subnet\" is required if \"enable_private_oob\" is true")
 		}
 
-		if _, err := validation.IsCIDR(oobManagementSubnet, "oob_management_subnet"); err != nil {
-			return fmt.Errorf("\"oob_management_subnet\" must be a CIDR if \"enable_private_oob\" is true")
-		}
-
-		if _, err := validation.IsCIDR(gateway.Subnet, "subnet"); err != nil {
-			return fmt.Errorf("\"subnet\" must be a CIDR if \"enable_private_oob\" is true")
-		}
-
 		if haSubnet != "" {
 			if haOobAvailabilityZone == "" {
 				return fmt.Errorf("\"ha_oob_availability_zone\" is required if \"enable_private_oob\" is true and \"ha_subnet\" is provided")
@@ -661,14 +657,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 			if haOobManagementSubnet == "" {
 				return fmt.Errorf("\"ha_oob_management_subnet\" is required if \"enable_private_oob\" is true and \"ha_subnet\" is provided")
-			}
-
-			if _, err := validation.IsCIDR(haSubnet, "ha_subnet"); err != nil {
-				return fmt.Errorf("\"ha_subnet\" must be a CIDR if \"enable_private_oob\" is true")
-			}
-
-			if _, err := validation.IsCIDR(haOobManagementSubnet, "ha_oob_management_subnet"); err != nil {
-				return fmt.Errorf("\"ha_oob_management_subnet\" must be a CIDR if \"enable_private_oob\" is true and \"ha_subnet\" is provided")
 			}
 		} else {
 			if haOobAvailabilityZone != "" {
@@ -1684,14 +1672,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 					return fmt.Errorf("\"ha_oob_management_subnet\" is required if \"enable_private_oob\" is true and \"ha_subnet\" is provided")
 				}
 
-				if _, err := validation.IsCIDR(transitGw.HASubnet, "ha_subnet"); err != nil {
-					return fmt.Errorf("\"ha_subnet\" must be a CIDR if \"enable_private_oob\" is true")
-				}
-
-				if _, err := validation.IsCIDR(haOobManagementSubnet, "ha_oob_management_subnet"); err != nil {
-					return fmt.Errorf("\"ha_oob_management_subnet\" must be a CIDR if \"enable_private_oob\" is true and \"ha_subnet\" is provided")
-				}
-
 				transitGw.HASubnet = transitGw.HASubnet + "~~" + haOobAvailabilityZone
 				transitGw.HAOobManagementSubnet = haOobManagementSubnet + "~~" + haOobAvailabilityZone
 			} else if deleteHaGw {
@@ -1720,7 +1700,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			newHaGwEnabled = true
 		} else if deleteHaGw {
 			if d.Get("ha_gw_size").(string) != "" {
-				return fmt.Errorf("\"ha_gw_size\" must be empty if spoke HA gateway is deleted")
+				return fmt.Errorf("\"ha_gw_size\" must be empty if transit HA gateway is deleted")
 			}
 
 			err := client.DeleteGateway(haGateway)
