@@ -2,7 +2,8 @@
 subcategory: "TGW Orchestrator"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_aws_tgw_connect"
-description: |- Creates and manages Aviatrix AWS TGW Connect connections
+description: |- 
+  Creates and manages Aviatrix AWS TGW Connect connections
 ---
 
 # aviatrix_aws_tgw_connect
