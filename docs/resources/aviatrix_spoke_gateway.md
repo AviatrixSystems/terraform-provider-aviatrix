@@ -95,6 +95,28 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_awsgov" {
   ]
 }
 ```
+```hcl
+# Create an OOB Aviatrix AWS Spoke Gateway
+resource "aviatrix_spoke_gateway" "test_oob_spoke" {
+  cloud_type   = 1
+  account_name = "devops-aws"
+  gw_name      = "oob-spoke"
+  vpc_id       = "vpc-abcd1234"
+  vpc_reg      = "us-west-1"
+  gw_size      = "c5.xlarge"
+  enable_active_mesh = true
+
+  enable_private_oob = true
+  subnet = "11.0.0.128/26"
+  oob_management_subnet = "11.0.2.0/24"
+  oob_availability_zone = "us-west-1a"
+
+  ha_subnet = "11.0.3.64/26"
+  ha_gw_size = "c5.xlarge"
+  ha_oob_management_subnet = "11.0.0.48/28"
+  ha_oob_availability_zone = "us-west-1b"
+}
+```
 
 ## Argument Reference
 
