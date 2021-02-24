@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -110,11 +111,17 @@ func extractTags(d *schema.ResourceData, cloudType int) (map[string]string, erro
 		tagsStrMap := make(map[string]string, len(tagsMap))
 
 		for key, val := range tagsMap {
+			valStr := fmt.Sprint(val)
 			if strings.Contains(key, ",") {
 				return nil, fmt.Errorf("illegal character in tags: \",\"")
 			}
+			matched, err := regexp.MatchString("^[a-zA-Z0-9+\\-=._ :/@ ]*$", key+valStr)
+			if err != nil || !matched {
+				return nil, fmt.Errorf("illegal characters in tags")
+			}
+
 			escapedKey := strings.ReplaceAll(key, ":", "\\:")
-			escapedVal := strings.ReplaceAll(fmt.Sprint(val), ":", "\\:")
+			escapedVal := strings.ReplaceAll(valStr, ":", "\\:")
 			tagsStrMap[escapedKey] = escapedVal
 		}
 		return tagsStrMap, nil
