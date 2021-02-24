@@ -123,9 +123,7 @@ func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (str
 	if len(firewallInstance.Tags) > 0 {
 		tagList := make([]string, 0, len(firewallInstance.Tags))
 		for key, val := range firewallInstance.Tags {
-			escapedKey := strings.ReplaceAll(key, ":", "\\:")
-			escapedVal := strings.ReplaceAll(val, ":", "\\:")
-			tagList = append(tagList, escapedKey+":"+escapedVal)
+			tagList = append(tagList, key+":"+val)
 		}
 		tagListStr := strings.Join(tagList, ",")
 		addFirewallInstance.Add("tag_string", tagListStr)
