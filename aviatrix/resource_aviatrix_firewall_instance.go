@@ -203,7 +203,6 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				Type:        schema.TypeMap,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
-				Default:     nil,
 				ForceNew:    true,
 				Description: "A map of tags to assign to the firewall instance.",
 			},

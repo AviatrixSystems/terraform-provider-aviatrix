@@ -46,7 +46,7 @@ type FirewallInstance struct {
 	SasUrlConfig         string                 `form:"sas_url_config,omitempty" json:"sas_url_config,omitempty"`
 	SasUriLicense        string                 `form:"sas_url_license,omitempty" json:"sas_url_license,omitempty"`
 	UserData             string                 `form:"user_data,omitempty" json:"user_data,omitempty"`
-	Tags                 map[string]interface{} `json:"usr_tags,omitempty"`
+	Tags                 map[string]interface{} `json:"usr_tags"`
 }
 
 type FirewallInstanceResp struct {
