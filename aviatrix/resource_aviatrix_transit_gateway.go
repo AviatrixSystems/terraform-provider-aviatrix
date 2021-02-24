@@ -368,16 +368,18 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "Enable jumbo frame support for transit gateway. Valid values: true or false. Default value: true.",
 			},
 			"eip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Required when allocate_new_eip is false. It uses specified EIP for this gateway.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IsIPAddress,
+				Description:  "Required when allocate_new_eip is false. It uses specified EIP for this gateway.",
 			},
 			"ha_eip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Public IP address that you want assigned to the HA Transit Gateway.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IsIPAddress,
+				Description:  "Public IP address that you want assigned to the HA Transit Gateway.",
 			},
 			"security_group_id": {
 				Type:        schema.TypeString,
@@ -664,7 +666,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			}
 
 			if haOobManagementSubnet != "" {
-				return fmt.Errorf("\"ha_oob_mangeemnt_sbunet\" must be empty if \"ha_subnet\" is empty")
+				return fmt.Errorf("\"ha_oob_management_sbunet\" must be empty if \"ha_subnet\" is empty")
 			}
 		}
 
@@ -685,7 +687,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 
 		if haOobManagementSubnet != "" {
-			return fmt.Errorf("\"ha_oob_mangeemnt_sbunet\" must be empty if \"enable_private_oob\" is false")
+			return fmt.Errorf("\"ha_oob_management_sbunet\" must be empty if \"enable_private_oob\" is false")
 		}
 	}
 

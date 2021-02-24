@@ -257,16 +257,18 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description: "Enable jumbo frame support for spoke gateway. Valid values: true or false. Default value: true.",
 			},
 			"eip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Required when allocate_new_eip is false. It uses specified EIP for this gateway.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IsIPAddress,
+				Description:  "Required when allocate_new_eip is false. It uses specified EIP for this gateway.",
 			},
 			"ha_eip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Public IP address that you want assigned to the HA Spoke Gateway.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IsIPAddress,
+				Description:  "Public IP address that you want assigned to the HA Spoke Gateway.",
 			},
 			"security_group_id": {
 				Type:        schema.TypeString,
@@ -1128,7 +1130,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 
 	if !enablePrivateOob {
 		if d.HasChange("ha_oob_management_subnet") {
-			return fmt.Errorf("updating ha_oob_manage_subnet is not allowed if private oob is disabled")
+			return fmt.Errorf("updating ha_oob_management_subnet is not allowed if private oob is disabled")
 		}
 
 		if d.HasChange("ha_oob_availability_zone") {
