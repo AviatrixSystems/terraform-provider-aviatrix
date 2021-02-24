@@ -103,3 +103,23 @@ func intInSlice(needle int, haystack []int) bool {
 	}
 	return false
 }
+
+func extractTags(d *schema.ResourceData, cloudType int) (map[string]string, error) {
+	if tags, ok := d.GetOk("tags"); ok && (cloudType == goaviatrix.AWS || cloudType == goaviatrix.AWSGOV || cloudType == goaviatrix.AZURE) {
+		tagsMap := tags.(map[string]interface{})
+		tagsStrMap := make(map[string]string, len(tagsMap))
+
+		for key, val := range tagsMap {
+			if strings.Contains(key, ",") {
+				return nil, fmt.Errorf("illegal character in tags: \",\"")
+			}
+			escapedKey := strings.ReplaceAll(key, ":", "\\:")
+			escapedVal := strings.ReplaceAll(fmt.Sprint(val), ":", "\\:")
+			tagsStrMap[escapedKey] = escapedVal
+		}
+		return tagsStrMap, nil
+	} else if ok && cloudType != goaviatrix.AWS && cloudType != goaviatrix.AWSGOV && cloudType != goaviatrix.AZURE {
+		return nil, fmt.Errorf("adding tags is only supported for AWS, AWSGOV and AZURE, cloud_type must be 1, 256 or 8")
+	}
+	return nil, nil
+}

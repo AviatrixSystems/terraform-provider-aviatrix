@@ -341,10 +341,11 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	if tags, ok := d.GetOk("tags"); ok && (cloudType == goaviatrix.AWS || cloudType == goaviatrix.AWSGOV || cloudType == goaviatrix.AZURE) {
-		firewallInstance.Tags = tags.(map[string]interface{})
-	} else if ok && cloudType != goaviatrix.AWS && cloudType != goaviatrix.AWSGOV && cloudType != goaviatrix.AZURE {
-		return fmt.Errorf("adding tags to firewall_instance is only supported for AWS, AWSGOV and AZURE, cloud_type must be 1, 256 or 8")
+	tags, err := extractTags(d, cloudType)
+	if err != nil {
+		return fmt.Errorf("error creating tags for firewall instance: %v", err)
+	} else if tags != nil {
+		firewallInstance.Tags = tags
 	}
 
 	instanceID, err := client.CreateFirewallInstance(firewallInstance)
