@@ -1,80 +1,63 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"go/types"
-	"strings"
+	"strconv"
 )
 
-type ControllerBgpMaxAsLimitConfig struct {
-	Action string `form:"action,omitempty"`
-	CID string `form:"CID,omitempty"`
-	MaxAsLimit string `json:"max_as_limit"`
-}
-
-type SetBgpMaxAsLimitResult struct {
-	Result string `json:"result"`
+type GetBgpMaxAsLimitResult struct {
+	MaxAsLimit string `json:"bgp_max_hop"`
 }
 
 type SetBgpMaxAsLimitResponse struct {
-	Return bool   `json:"return"`
-	Reason string `json:"reason"`
-	Results SetBgpMaxAsLimitResult `json:"results"`
-	ErrorCode int `json:"errorcode"`
+	Return    bool                   `json:"return"`
+	Reason    string                 `json:"reason"`
+	Results   GetBgpMaxAsLimitResult `json:"results"`
+	ErrorCode int                    `json:"errorcode"`
 }
 
-func (c *Client) CreateControllerBgpMaxAsLimitConfig(controllerBgpMaxAsLimitConfig *ControllerBgpMaxAsLimitConfig) error {
-	controllerBgpMaxAsLimitConfig.CID = c.CID
-	controllerBgpMaxAsLimitConfig.Action = "set_bgp_max_as_limit"
-
-	resp, err := c.Post(c.baseURL, controllerBgpMaxAsLimitConfig)
-	if err != nil {
-		return errors.New("HTTP Post set_bgp_max_as_limit failed: " + err.Error())
+func (c *Client) SetControllerBgpMaxAsLimit(maxAsLimit string) error {
+	if maxAsLimit != "" {
+		maxAsLimitInt, err := strconv.Atoi(maxAsLimit)
+		if err != nil {
+			return fmt.Errorf("error converting max_as_limit to int: %v", err)
+		} else if maxAsLimitInt < 1 || maxAsLimitInt > 254 {
+			return fmt.Errorf("max_as_limit must be between 1 and 254")
+		}
 	}
 
-	var data SetBgpMaxAsLimitResponse
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode set_bgp_max_as_limit failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if data.ErrorCode != 0 {
-		return fmt.Errorf("rest API set_bgp_max_as_limit failed with error code %d: %s", data.ErrorCode, data.Reason)
-	} else if !data.Return {
-		return errors.New("Rest API connect_container Post failed: " + data.Reason)
-	}
-
-	return nil
-}
-
-func (c *Client) GetControllerBgpMaxAsLimitConfig() (*ControllerBgpMaxAsLimitConfig, error) {
 	data := map[string]string{
-		"action":       "show_bgp_max_as_limit",
+		"action":       "set_bgp_max_as_limit",
 		"CID":          c.CID,
+		"max_as_limit": maxAsLimit,
+	}
+
+	checkFunc := func(action, reason string, ret bool) error {
+		if !ret {
+			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+		}
+		return nil
+	}
+	return c.PostAPI(data["action"], data, checkFunc)
+}
+
+func (c *Client) GetControllerBgpMaxAsLimit() (string, error) {
+	data := map[string]string{
+		"action": "show_bgp_max_as_limit",
+		"CID":    c.CID,
 	}
 
 	var resp SetBgpMaxAsLimitResponse
 	err := c.GetAPI(&resp, data["action"], data, BasicCheck)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	if resp.ErrorCode != 0 {
-		return nil, fmt.Errorf("rest API set_bgp_max_as_limit failed with error code %d: %s", resp.ErrorCode, resp.Reason)
+		return "", fmt.Errorf("rest API set_bgp_max_as_limit failed with error code %d: %s", resp.ErrorCode, resp.Reason)
 	} else if !resp.Return {
-		return nil, errors.New("Rest API connect_container Post failed: " + resp.Reason)
+		return "", errors.New("Rest API set_bgp_max_as_limit Post failed: " + resp.Reason)
 	}
 
-	return nil, nil //TODO
-}
-
-func (c *Client) UpdateControllerBgpMaxAsLimitConfig(controllerBgpMaxAsLimitConfig *ControllerBgpMaxAsLimitConfig) error {
-	controllerBgpMaxAsLimitConfig.CID = c.CID
-	controllerBgpMaxAsLimitConfig.Action = "set_bgp_max_as_limit"
-
-
+	return resp.Results.MaxAsLimit, nil
 }
