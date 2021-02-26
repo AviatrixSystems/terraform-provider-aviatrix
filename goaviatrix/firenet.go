@@ -21,6 +21,7 @@ type FireNet struct {
 }
 
 type FireNetDetail struct {
+	CloudType        string                 `json:"cloud_type"`
 	Region           string                 `json:"region,omitempty"`
 	VpcID            string                 `json:"vpc_id,omitempty"`
 	FirewallInstance []FirewallInstanceInfo `json:"firewall,omitempty"`
