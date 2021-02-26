@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 	"strings"
 )
@@ -19,9 +20,10 @@ func resourceAviatrixControllerBgpMaxAsLimitConfig() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"max_as_limit": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The maximum AS path limit allowed by transit gateways when handling BGP/Peering route propagation.",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntBetween(1, 254),
+				Description:  "The maximum AS path limit allowed by transit gateways when handling BGP/Peering route propagation.",
 			},
 		},
 	}
@@ -30,12 +32,10 @@ func resourceAviatrixControllerBgpMaxAsLimitConfig() *schema.Resource {
 func resourceAviatrixControllerBgpMaxAsLimitConfigCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	maxAsLimit := d.Get("max_as_limit").(string)
-	if maxAsLimit != "" {
-		err := client.SetControllerBgpMaxAsLimit(maxAsLimit)
-		if err != nil {
-			return fmt.Errorf("failed to create controller BGP max AS limit config: %v", err)
-		}
+	maxAsLimit := d.Get("max_as_limit").(int)
+	err := client.SetControllerBgpMaxAsLimit(maxAsLimit)
+	if err != nil {
+		return fmt.Errorf("failed to create controller BGP max AS limit config: %v", err)
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
@@ -59,7 +59,6 @@ func resourceAviatrixControllerBgpMaxAsLimitConfigRead(d *schema.ResourceData, m
 	}
 
 	d.Set("max_as_limit", maxAsLimit)
-	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
 
@@ -67,7 +66,7 @@ func resourceAviatrixControllerBgpMaxAsLimitConfigUpdate(d *schema.ResourceData,
 	client := meta.(*goaviatrix.Client)
 
 	if d.HasChange("max_as_limit") {
-		maxAsLimit := d.Get("max_as_limit").(string)
+		maxAsLimit := d.Get("max_as_limit").(int)
 		err := client.SetControllerBgpMaxAsLimit(maxAsLimit)
 		if err != nil {
 			return fmt.Errorf("failed to create controller BGP max AS limit config: %v", err)
@@ -80,7 +79,7 @@ func resourceAviatrixControllerBgpMaxAsLimitConfigUpdate(d *schema.ResourceData,
 func resourceAviatrixControllerBgpMaxAsLimitConfigDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	err := client.SetControllerBgpMaxAsLimit("")
+	err := client.DisableControllerBgpMaxAsLimit()
 	if err != nil {
 		return fmt.Errorf("failed to delete controller BGP max AS limit config: %v", err)
 	}
