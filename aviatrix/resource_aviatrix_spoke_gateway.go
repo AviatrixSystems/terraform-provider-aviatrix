@@ -64,9 +64,10 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description: "Size of the gateway instance.",
 			},
 			"subnet": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Public Subnet Info.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.IsCIDR,
+				Description:  "Public Subnet Info.",
 			},
 			"zone": {
 				Type:         schema.TypeString,
@@ -96,16 +97,11 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description: "If false, reuse an idle address in Elastic IP pool for this gateway. " +
 					"Otherwise, allocate a new Elastic IP and use it for this gateway.",
 			},
-			"eip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Required when allocate_new_eip is false. It uses specified EIP for this gateway.",
-			},
 			"ha_subnet": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "HA Subnet. Required if enabling HA for AWS/AZURE. Optional if enabling HA for GCP.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsCIDR,
+				Description:  "HA Subnet. Required if enabling HA for AWS/AZURE. Optional if enabling HA for GCP.",
 			},
 			"ha_zone": {
 				Type:        schema.TypeString,
@@ -124,12 +120,6 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Optional:    true,
 				Default:     "",
 				Description: "HA Gateway Size.",
-			},
-			"ha_eip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Public IP address that you want assigned to the HA Spoke Gateway.",
 			},
 			"single_az_ha": {
 				Type:        schema.TypeBool,
@@ -232,6 +222,54 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				},
 				Description: "A set of monitored instance ids. Only valid when 'enable_monitor_gateway_subnets' = true.",
 			},
+			"enable_private_oob": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable private OOB.",
+			},
+			"oob_management_subnet": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsCIDR,
+				Description:  "OOB management subnet.",
+			},
+			"oob_availability_zone": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "OOB subnet availability zone.",
+			},
+			"ha_oob_management_subnet": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsCIDR,
+				Description:  "OOB HA management subnet.",
+			},
+			"ha_oob_availability_zone": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "OOB HA availability zone.",
+			},
+			"enable_jumbo_frame": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Enable jumbo frame support for spoke gateway. Valid values: true or false. Default value: true.",
+			},
+			"eip": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IsIPAddress,
+				Description:  "Required when allocate_new_eip is false. It uses specified EIP for this gateway.",
+			},
+			"ha_eip": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IsIPAddress,
+				Description:  "Public IP address that you want assigned to the HA Spoke Gateway.",
+			},
 			"security_group_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -261,28 +299,6 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Private IP address of the spoke gateway created.",
-			},
-			"enable_private_oob": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Enable private OOB.",
-			},
-			"oob_management_subnet": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "OOB management subnet.",
-			},
-			"oob_availability_zone": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "OOB subnet availability zone.",
-			},
-			"enable_jumbo_frame": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: "Enable jumbo frame support for spoke gateway. Valid values: true or false. Default value: true.",
 			},
 		},
 	}
@@ -322,7 +338,9 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		gateway.SingleAzHa = "disabled"
 	}
 
-	if !(d.Get("enable_private_oob").(bool)) {
+	enablePrivateOob := d.Get("enable_private_oob").(bool)
+
+	if !enablePrivateOob {
 		allocateNewEip := d.Get("allocate_new_eip").(bool)
 		if allocateNewEip {
 			gateway.ReuseEip = "off"
@@ -427,37 +445,60 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("'monitor_exclude_list' must be empty if 'enable_monitor_gateway_subnets' is false")
 	}
 
-	if d.Get("enable_private_oob").(bool) {
+	oobManagementSubnet := d.Get("oob_management_subnet").(string)
+	oobAvailabilityZone := d.Get("oob_availability_zone").(string)
+	haOobManagementSubnet := d.Get("ha_oob_management_subnet").(string)
+	haOobAvailabilityZone := d.Get("ha_oob_availability_zone").(string)
+
+	if enablePrivateOob {
 		if gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV {
 			return fmt.Errorf("'enable_private_oob' is only valid for cloud_type = 1 (AWS) or 256 (AWSGOV)")
 		}
 
-		if d.Get("oob_availability_zone").(string) == "" {
+		if oobAvailabilityZone == "" {
 			return fmt.Errorf("\"oob_availability_zone\" is required if \"enable_private_oob\" is true")
 		}
 
-		if d.Get("oob_management_subnet").(string) == "" {
+		if oobManagementSubnet == "" {
 			return fmt.Errorf("\"oob_management_subnet\" is required if \"enable_private_oob\" is true")
 		}
 
-		if _, err := validation.IsCIDR(d.Get("oob_management_subnet").(string), "oob_management_subnet"); err != nil {
-			return fmt.Errorf("\"oob_management_subnet\" must be a CIDR if \"enable_private_oob\" is true")
-		}
+		if haSubnet != "" {
+			if haOobAvailabilityZone == "" {
+				return fmt.Errorf("\"ha_oob_availability_zone\" is required if \"enable_private_oob\" is true and \"ha_subnet\" is provided")
+			}
 
-		if _, err := validation.IsCIDR(d.Get("subnet").(string), "subnet"); err != nil {
-			return fmt.Errorf("\"subnet\" must be a CIDR if \"enable_private_oob\" is true")
+			if haOobManagementSubnet == "" {
+				return fmt.Errorf("\"ha_oob_management_subnet\" is required if \"enable_private_oob\" is true and \"ha_subnet\" is provided")
+			}
+		} else {
+			if haOobAvailabilityZone != "" {
+				return fmt.Errorf("\"ha_oob_availability_zone\" must be empty if \"ha_subnet\" is empty")
+			}
+
+			if haOobManagementSubnet != "" {
+				return fmt.Errorf("\"ha_oob_mangeemnt_sbunet\" must be empty if \"ha_subnet\" is empty")
+			}
 		}
 
 		gateway.EnablePrivateOob = "on"
-		gateway.Subnet = gateway.Subnet + "~~" + d.Get("oob_availability_zone").(string)
-		gateway.OobManagementSubnet = d.Get("oob_management_subnet").(string) + "~~" + d.Get("oob_availability_zone").(string)
+		gateway.Subnet = gateway.Subnet + "~~" + oobAvailabilityZone
+		gateway.OobManagementSubnet = oobManagementSubnet + "~~" + oobAvailabilityZone
 	} else {
-		if d.Get("oob_availability_zone").(string) != "" {
+		if oobAvailabilityZone != "" {
 			return fmt.Errorf("\"oob_availability_zone\" must be empty if \"enable_private_oob\" is false")
 		}
 
-		if d.Get("oob_management_subnet").(string) != "" {
+		if oobManagementSubnet != "" {
 			return fmt.Errorf("\"oob_mangeemnt_sbunet\" must be empty if \"enable_private_oob\" is false")
+		}
+
+		if haOobAvailabilityZone != "" {
+			return fmt.Errorf("\"ha_oob_availability_zone\" must be empty if \"enable_private_oob\" is false")
+		}
+
+		if haOobManagementSubnet != "" {
+			return fmt.Errorf("\"ha_oob_mangeemnt_sbunet\" must be empty if \"enable_private_oob\" is false")
 		}
 	}
 
@@ -524,13 +565,9 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			haGateway.HASubnet = fmt.Sprintf("%s~~%s~~", haSubnet, haZone)
 		}
 
-		if d.Get("enable_private_oob").(bool) {
-			if _, err := validation.IsCIDR(d.Get("ha_subnet").(string), "ha_subnet"); err != nil {
-				return fmt.Errorf("\"ha_subnet\" must be a CIDR if \"enable_private_oob\" is true")
-			}
-
-			haGateway.HASubnet = haGateway.HASubnet + "~~" + d.Get("oob_availability_zone").(string)
-			haGateway.OobManagementSubnet = d.Get("oob_management_subnet").(string) + "~~" + d.Get("oob_availability_zone").(string)
+		if enablePrivateOob {
+			haGateway.HASubnet = haGateway.HASubnet + "~~" + haOobAvailabilityZone
+			haGateway.HAOobManagementSubnet = haOobManagementSubnet + "~~" + haOobAvailabilityZone
 		}
 
 		if haGateway.CloudType == goaviatrix.GCP {
@@ -948,6 +985,8 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("ha_zone", "")
 			d.Set("ha_eip", "")
 			d.Set("ha_insane_mode_az", "")
+			d.Set("ha_oob_management_subnet", "")
+			d.Set("ha_oob_availability_zone", "")
 		} else {
 			return fmt.Errorf("couldn't find Aviatrix Spoke HA Gateway: %s", err)
 		}
@@ -986,6 +1025,11 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("ha_insane_mode_az", haGw.GatewayZone)
 		} else {
 			d.Set("ha_insane_mode_az", "")
+		}
+
+		if haGw.EnablePrivateOob {
+			d.Set("ha_oob_management_subnet", strings.Split(haGw.OobManagementSubnet, "~~")[0])
+			d.Set("ha_oob_availability_zone", haGw.GatewayZone)
 		}
 	}
 
@@ -1080,6 +1124,18 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 
 	if d.HasChange("oob_availability_zone") {
 		return fmt.Errorf("updating oob_availability_zone is not allowed")
+	}
+
+	enablePrivateOob := d.Get("enable_private_oob").(bool)
+
+	if !enablePrivateOob {
+		if d.HasChange("ha_oob_management_subnet") {
+			return fmt.Errorf("updating ha_oob_management_subnet is not allowed if private oob is disabled")
+		}
+
+		if d.HasChange("ha_oob_availability_zone") {
+			return fmt.Errorf("updating ha_oob_availability_zone is not allowed if private oob is disabled")
+		}
 	}
 
 	manageTransitGwAttachment := d.Get("manage_transit_gateway_attachment").(bool)
@@ -1192,7 +1248,8 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	}
 
 	newHaGwEnabled := false
-	if d.HasChange("ha_subnet") || d.HasChange("ha_zone") || d.HasChange("ha_insane_mode_az") {
+	if d.HasChange("ha_subnet") || d.HasChange("ha_zone") || d.HasChange("ha_insane_mode_az") ||
+		(enablePrivateOob && (d.HasChange("ha_oob_management_subnet") || d.HasChange("ha_oob_availability_zone"))) {
 		spokeGw := &goaviatrix.SpokeVpc{
 			GwName:    d.Get("gw_name").(string),
 			CloudType: d.Get("cloud_type").(int),
@@ -1224,14 +1281,24 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			if spokeGw.CloudType == goaviatrix.AZURE && d.Get("ha_zone").(string) != "" {
 				spokeGw.HASubnet = fmt.Sprintf("%s~~%s~~", d.Get("ha_subnet").(string), d.Get("ha_zone").(string))
 			}
-			if oldSubnet == "" && newSubnet != "" {
-				newHaGwEnabled = true
-			} else if oldSubnet != "" && newSubnet == "" {
-				deleteHaGw = true
-			} else if oldSubnet != "" && newSubnet != "" {
-				changeHaGw = true
-			} else if d.HasChange("ha_zone") {
-				changeHaGw = true
+			if !enablePrivateOob {
+				if oldSubnet == "" && newSubnet != "" {
+					newHaGwEnabled = true
+				} else if oldSubnet != "" && newSubnet == "" {
+					deleteHaGw = true
+				} else if oldSubnet != "" && newSubnet != "" {
+					changeHaGw = true
+				} else if d.HasChange("ha_zone") {
+					changeHaGw = true
+				}
+			} else {
+				if oldSubnet == "" && newSubnet != "" {
+					newHaGwEnabled = true
+				} else if newSubnet == "" {
+					deleteHaGw = true
+				} else if oldSubnet != newSubnet || (oldSubnet == newSubnet && (d.HasChange("ha_oob_management_subnet") || d.HasChange("ha_oob_availability_zone"))) {
+					changeHaGw = true
+				}
 			}
 		} else if spokeGw.CloudType == goaviatrix.GCP {
 			spokeGw.HAZone = d.Get("ha_zone").(string)
@@ -1245,13 +1312,30 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			}
 		}
 
-		if (newHaGwEnabled || changeHaGw) && d.Get("enable_private_oob").(bool) {
-			if _, err := validation.IsCIDR(d.Get("ha_subnet").(string), "ha_subnet"); err != nil {
-				return fmt.Errorf("\"ha_subnet\" must be a CIDR if \"enable_private_oob\" is true")
-			}
+		haOobManagementSubnet := d.Get("ha_oob_management_subnet").(string)
+		haOobAvailabilityZone := d.Get("ha_oob_availability_zone").(string)
 
-			spokeGw.HASubnet = spokeGw.HASubnet + "~~" + d.Get("oob_availability_zone").(string)
-			spokeGw.OobManagementSubnet = d.Get("oob_management_subnet").(string) + "~~" + d.Get("oob_availability_zone").(string)
+		if enablePrivateOob {
+			if newHaGwEnabled || changeHaGw {
+				if haOobAvailabilityZone == "" {
+					return fmt.Errorf("\"ha_oob_availability_zone\" is required if \"enable_private_oob\" is true and \"ha_subnet\" is provided")
+				}
+
+				if haOobManagementSubnet == "" {
+					return fmt.Errorf("\"ha_oob_management_subnet\" is required if \"enable_private_oob\" is true and \"ha_subnet\" is provided")
+				}
+
+				spokeGw.HASubnet = spokeGw.HASubnet + "~~" + haOobAvailabilityZone
+				spokeGw.HAOobManagementSubnet = haOobManagementSubnet + "~~" + haOobAvailabilityZone
+			} else if deleteHaGw {
+				if haOobAvailabilityZone != "" {
+					return fmt.Errorf("\"ha_oob_availability_zone\" must be empty if \"ha_subnet\" is empty")
+				}
+
+				if haOobManagementSubnet != "" {
+					return fmt.Errorf("\"ha_oob_mangeemnt_sbunet\" must be empty if \"ha_subnet\" is empty")
+				}
+			}
 		}
 
 		if newHaGwEnabled {
@@ -1270,6 +1354,10 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			newHaGwEnabled = true
 		} else if deleteHaGw {
 			//Ha configuration has been deleted
+			if d.Get("ha_gw_size").(string) != "" {
+				return fmt.Errorf("\"ha_gw_size\" must be empty if spoke HA gateway is deleted")
+			}
+
 			err := client.DeleteGateway(haGateway)
 			if err != nil {
 				return fmt.Errorf("failed to delete Aviatrix Spoke HA gateway: %s", err)

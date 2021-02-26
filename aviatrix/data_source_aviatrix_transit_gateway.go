@@ -239,6 +239,16 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "OOB subnet availability zone.",
 			},
+			"ha_oob_management_subnet": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "OOB HA management subnet.",
+			},
+			"ha_oob_availability_zone": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "OOB HA availability zone.",
+			},
 		},
 	}
 }
@@ -295,7 +305,7 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 
 		d.Set("enable_private_oob", gw.EnablePrivateOob)
 		if gw.EnablePrivateOob {
-			d.Set("oob_management_subnet", gw.OobManagementSubnet)
+			d.Set("oob_management_subnet", strings.Split(gw.OobManagementSubnet, "~~")[0])
 			d.Set("oob_availability_zone", gw.GatewayZone)
 		}
 
@@ -431,6 +441,11 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 			d.Set("ha_insane_mode_az", haGw.GatewayZone)
 		} else {
 			d.Set("ha_insane_mode_az", "")
+		}
+
+		if haGw.EnablePrivateOob {
+			d.Set("ha_oob_management_subnet", strings.Split(haGw.OobManagementSubnet, "~~")[0])
+			d.Set("ha_oob_availability_zone", haGw.GatewayZone)
 		}
 	}
 
