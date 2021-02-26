@@ -36,21 +36,39 @@ resource "aviatrix_firewall_instance" "test_firewall_instance" {
   zone              = "us-east-1a"
 }
 ```
+```hcl
+# Create an Aviatrix Firewall Instance on GCP
+resource "aviatrix_firewall_instance" "test_firewall_instance" {
+  vpc_id                 = format("%s~-~%s", aviatrix_transit_gateway.test_transit_gateway.vpc_id, aviatrix_account.gcp.gcloud_project_id)
+  firenet_gw_name        = aviatrix_transit_gateway.test_transit_gateway.gw_name
+  firewall_name          = "gcp-firewall-instance"
+  firewall_image         = "Palo Alto Networks VM-Series Next-Generation Firewall Bundle 1"
+  firewall_image_version = "9.0.9"
+  firewall_size          = "n1-standard-4"
+  management_vpc_id      = aviatrix_vpc.management_vpc.vpc_id
+  management_subnet      = format("%s~~%s~~%s", aviatrix_vpc.management_vpc.subnets[0].cidr, aviatrix_vpc.fmanagement_vpc.subnets[0].region, aviatrix_vpc.management_vpc.subnets[0].name)
+  egress_vpc_id          = aviatrix_vpc.egress_vpc.vpc_id
+  egress_subnet          = format("%s~~%s~~%s", aviatrix_vpc.egress_vpc.subnets[0].cidr, aviatrix_vpc.egress_vpc.subnets[0].region, aviatrix_vpc.egress_vpc.subnets[0].name)
+  zone                   = aviatrix_transit_gateway.test_transit_gateway.vpc_reg
+}
+```
 
 ## Argument Reference
 
 The following arguments are supported:
 
 ### Required
-* `vpc_id` - (Required) VPC ID of the Security VPC.
+* `vpc_id` - (Required) VPC ID of the Security VPC. For GCP, `vpc_id` must be in the form vpc_id~-~gcloud_project_id.
 * `firenet_gw_name` - (Optional) Name of the primary FireNet gateway. Required for FireNet without Native GWLB VPC.
 * `firewall_name` - (Required) Name of the firewall instance to be created.
 * `firewall_image` - (Required) One of the AWS/Azure AMIs from Palo Alto Networks.
 * `firewall_size` - (Required) Instance size of the firewall. Example: "m5.xlarge".  
-* `management_subnet` - (Optional) Management Interface Subnet. Select the subnet whose name contains “gateway and firewall management”. Required for Palo Alto Networks VM-Series, and required to be empty for Check Point or Fortinet series.
-* `egress_subnet` - (Required) Egress Interface Subnet. Select the subnet whose name contains “FW-ingress-egress”.
+* `management_subnet` - (Optional) Management Interface Subnet. Select the subnet whose name contains “gateway and firewall management”. For GCP, `management_subnet` must be in the form `cidr~~region~~name`. Required for Palo Alto Networks VM-Series, and required to be empty for Check Point or Fortinet series.
+* `egress_subnet` - (Required) Egress Interface Subnet. Select the subnet whose name contains “FW-ingress-egress”. For GCP, `egress_subnet` must be in the form `cidr~~region~~name`.
 * `firewall_image_version` - (Optional) Version of firewall image. If not specified, Controller will automatically select the latest version available.
-* `zone` - (Optional) Availability Zone. Required if creating a Firewall Instance with a Native AWS GWLB enabled VPC. Applicable to Azure and AWS only. Available as of provider version R2.17+.
+* `zone` - (Optional) Availability Zone. Required if creating a Firewall Instance with a Native AWS GWLB enabled VPC. Applicable to Azure, GCP and AWS only. Available as of provider version R2.17+.
+* `management_vpc_id` - (Optional) Management VPC ID. Required for GCP. Available as of provider version R2.18.1+.
+* `egress_vpc_id` - (Optional) Egress VPC ID. Required for GCP. Available as of provider version R2.18.1+.
 
 ### Authentication method
 * `key_name`- (Optional) Applicable to AWS deployment only. AWS Key Pair name. If not provided a Key Pair will be generated.
@@ -83,6 +101,8 @@ In addition to all arguments above, the following attributes are exported:
 * `management_interface`- ID of Management Interface created.
 * `egress_interface`- ID of Egress Interface created.
 * `public_ip`- Management Public IP.
+* `cloud_type` - Cloud Type.
+* `gcp_vpc_id` - GCP Only. The current VPC ID.
 
 ## Import
 

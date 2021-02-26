@@ -4,15 +4,18 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
 )
 
 type FirewallInstance struct {
-	CID                  string `form:"CID,omitempty"`
-	Action               string `form:"action,omitempty"`
+	CID    string `form:"CID,omitempty"`
+	Action string `form:"action,omitempty"`
+
 	VpcID                string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	FirenetVpc           string `json:"firenet_vpc"`
 	GwName               string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
 	FirewallName         string `form:"firewall_name,omitempty" json:"instance_name,omitempty"`
 	FirewallImage        string `form:"firewall_image,omitempty" json:"firewall_image,omitempty"`
@@ -28,24 +31,29 @@ type FirewallInstance struct {
 	Attached             bool
 	LanInterface         string `form:"lan_interface,omitempty" json:"lan_interface_id,omitempty"`
 	ManagementInterface  string `form:"management_interface,omitempty" json:"management_interface_id,omitempty"`
+	ManagementVpc        string `form:"management_vpc,omitempty" json:"management_vpc"`
+	ManagementSubnetID   string `json:"management_subnet_id"`
 	EgressInterface      string `form:"egress_interface,omitempty" json:"egress_interface_id,omitempty"`
+	EgressVpc            string `form:"egress_vpc,omitempty" json:"egress_vpc"`
+	EgressSubnetID       string `json:"egress_subnet_id"`
 	ManagementPublicIP   string `json:"management_public_ip,omitempty"`
 	VendorType           string
-	Username             string            `form:"username,omitempty"`
-	Password             string            `form:"password,omitempty"`
-	AvailabilityZone     string            `json:"availability_zone,omitempty"`
-	CloudVendor          string            `json:"cloud_vendor,omitempty"`
-	SshPublicKey         string            `form:"ssh_public_key,omitempty" json:"ssh_public_key,omitempty"`
-	BootstrapStorageName string            `form:"bootstrap_storage_name,omitempty" json:"bootstrap_storage_name,omitempty"`
-	StorageAccessKey     string            `form:"storage_access_key,omitempty" json:"storage_access_key,omitempty"`
-	FileShareFolder      string            `form:"file_share_folder,omitempty" json:"file_share_folder,omitempty"`
-	ShareDirectory       string            `form:"share_directory,omitempty" json:"share_directory,omitempty"`
-	SicKey               string            `form:"sic_key,omitempty" json:"sic_key,omitempty"`
-	ContainerFolder      string            `form:"container_folder,omitempty" json:"container_folder,omitempty"`
-	SasUrlConfig         string            `form:"sas_url_config,omitempty" json:"sas_url_config,omitempty"`
-	SasUriLicense        string            `form:"sas_url_license,omitempty" json:"sas_url_license,omitempty"`
-	UserData             string            `form:"user_data,omitempty" json:"user_data,omitempty"`
-	Tags                 map[string]string `json:"usr_tags"`
+	Username             string          `form:"username,omitempty"`
+	Password             string          `form:"password,omitempty"`
+	AvailabilityZone     string          `form:"zone,omitempty" json:"availability_zone,omitempty"`
+	CloudVendor          string          `json:"cloud_vendor,omitempty"`
+	SshPublicKey         string          `form:"ssh_public_key,omitempty" json:"ssh_public_key,omitempty"`
+	BootstrapStorageName string          `form:"bootstrap_storage_name,omitempty" json:"bootstrap_storage_name,omitempty"`
+	StorageAccessKey     string          `form:"storage_access_key,omitempty" json:"storage_access_key,omitempty"`
+	FileShareFolder      string          `form:"file_share_folder,omitempty" json:"file_share_folder,omitempty"`
+	ShareDirectory       string          `form:"share_directory,omitempty" json:"share_directory,omitempty"`
+	SicKey               string          `form:"sic_key,omitempty" json:"sic_key,omitempty"`
+	ContainerFolder      string          `form:"container_folder,omitempty" json:"container_folder,omitempty"`
+	SasUrlConfig         string          `form:"sas_url_config,omitempty" json:"sas_url_config,omitempty"`
+	SasUriLicense        string          `form:"sas_url_license,omitempty" json:"sas_url_license,omitempty"`
+	UserData             string          `form:"user_data,omitempty" json:"user_data,omitempty"`
+	TagsMessage          json.RawMessage `json:"usr_tags"`
+	Tags                 map[string]string
 }
 
 type FirewallInstanceResp struct {
@@ -82,14 +90,23 @@ func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (str
 	addFirewallInstance.Add("firewall_image", firewallInstance.FirewallImage)
 	addFirewallInstance.Add("firewall_image_version", firewallInstance.FirewallImageVersion)
 	addFirewallInstance.Add("firewall_size", firewallInstance.FirewallSize)
-	addFirewallInstance.Add("egress_subnet", firewallInstance.EgressSubnet)
-	addFirewallInstance.Add("management_subnet", firewallInstance.ManagementSubnet)
 	addFirewallInstance.Add("key_name", firewallInstance.KeyName)
 	addFirewallInstance.Add("iam_role", firewallInstance.IamRole)
 	addFirewallInstance.Add("bootstrap_bucket_name", firewallInstance.BootstrapBucketName)
 	addFirewallInstance.Add("no_associate", strconv.FormatBool(true))
 	addFirewallInstance.Add("username", firewallInstance.Username)
 	addFirewallInstance.Add("password", firewallInstance.Password)
+	if firewallInstance.EgressVpc != "" {
+		addFirewallInstance.Add("cloud_type", strconv.Itoa(GCP))
+		addFirewallInstance.Add("egress", firewallInstance.EgressSubnet)
+		addFirewallInstance.Add("egress_vpc", firewallInstance.EgressVpc)
+		addFirewallInstance.Add("management", firewallInstance.ManagementSubnet)
+		addFirewallInstance.Add("management_vpc", firewallInstance.ManagementVpc)
+		addFirewallInstance.Add("zone", firewallInstance.AvailabilityZone)
+	} else {
+		addFirewallInstance.Add("egress_subnet", firewallInstance.EgressSubnet)
+		addFirewallInstance.Add("management_subnet", firewallInstance.ManagementSubnet)
+	}
 	if firewallInstance.SshPublicKey != "" {
 		addFirewallInstance.Add("ssh_public_key", firewallInstance.SshPublicKey)
 	}
@@ -180,6 +197,13 @@ func (c *Client) GetFirewallInstance(firewallInstance *FirewallInstance) (*Firew
 		return nil, errors.New("Rest API get_instance_by_id Get failed: " + data.Reason)
 	}
 	if data.Results.InstanceID == firewallInstance.InstanceID {
+		// Only try to decode if tags are not empty string
+		if string(data.Results.TagsMessage) != `""` {
+			err = json.Unmarshal(data.Results.TagsMessage, &data.Results.Tags)
+			if err != nil {
+				return nil, fmt.Errorf("json Decode get_instance_by_id failed: %v", err)
+			}
+		}
 		return &data.Results, nil
 	}
 	return nil, ErrNotFound
