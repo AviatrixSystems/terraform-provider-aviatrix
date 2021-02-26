@@ -51,11 +51,13 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 			"vpc_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "VPC-ID/VNet-Name of cloud provider.",
 			},
 			"vpc_reg": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Region of cloud provider.",
 			},
 			"gw_size": {
@@ -66,12 +68,14 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 			"subnet": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.IsCIDR,
 				Description:  "Public Subnet Info.",
 			},
 			"zone": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validateAzureAZ,
 				Description:  "Availability Zone. Only available for cloud_type = 8 (AZURE). Must be in the form 'az-n', for example, 'az-2'.",
 			},
@@ -231,12 +235,14 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 			"oob_management_subnet": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.IsCIDR,
 				Description:  "OOB management subnet.",
 			},
 			"oob_availability_zone": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "OOB subnet availability zone.",
 			},
 			"ha_oob_management_subnet": {
@@ -1083,18 +1089,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	if d.HasChange("gw_name") {
 		return fmt.Errorf("updating gw_name is not allowed")
 	}
-	if d.HasChange("vpc_id") {
-		return fmt.Errorf("updating vpc_id is not allowed")
-	}
-	if d.HasChange("vpc_reg") {
-		return fmt.Errorf("updating vpc_reg is not allowed")
-	}
-	if d.HasChange("subnet") {
-		return fmt.Errorf("updating subnet is not allowed")
-	}
-	if d.HasChange("zone") {
-		return fmt.Errorf("updating zone is not allowed")
-	}
 	if d.HasChange("insane_mode") {
 		return fmt.Errorf("updating insane_mode is not allowed")
 	}
@@ -1116,14 +1110,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 
 	if d.HasChange("enable_private_oob") {
 		return fmt.Errorf("updating enable_private_oob is not allowed")
-	}
-
-	if d.HasChange("oob_management_subnet") {
-		return fmt.Errorf("updating oob_manage_subnet is not allowed")
-	}
-
-	if d.HasChange("oob_availability_zone") {
-		return fmt.Errorf("updating oob_availability_zone is not allowed")
 	}
 
 	enablePrivateOob := d.Get("enable_private_oob").(bool)

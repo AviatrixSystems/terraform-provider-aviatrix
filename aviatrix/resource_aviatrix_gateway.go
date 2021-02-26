@@ -51,11 +51,13 @@ func resourceAviatrixGateway() *schema.Resource {
 			"vpc_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "ID of legacy VPC/Vnet to be connected.",
 			},
 			"vpc_reg": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Region where this gateway will be launched.",
 			},
 			"gw_size": {
@@ -66,11 +68,13 @@ func resourceAviatrixGateway() *schema.Resource {
 			"subnet": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "A VPC Network address range selected from one of the available network ranges.",
 			},
 			"zone": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "Availability Zone. Only available for Azure and Public Subnet Filtering gateway",
 			},
 			"insane_mode_az": {
@@ -1469,18 +1473,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 	if d.HasChange("gw_name") {
 		return fmt.Errorf("updating gw_name is not allowed")
-	}
-	if d.HasChange("vpc_id") {
-		return fmt.Errorf("updating vpc_id is not allowed")
-	}
-	if d.HasChange("vpc_reg") {
-		return fmt.Errorf("updating vpc_reg is not allowed")
-	}
-	if d.HasChange("subnet") {
-		return fmt.Errorf("updating subnet is not allowed")
-	}
-	if d.HasChange("zone") {
-		return fmt.Errorf("updating zone is not allowed")
 	}
 	if d.HasChange("vpn_access") {
 		return fmt.Errorf("updating vpn_access is not allowed")
