@@ -54,11 +54,11 @@ func testAccAwsTgwConnectPeerBasic(rName string) string {
 %s
 
 resource "aviatrix_aws_tgw" "test_aws_tgw" {
-  account_name          = aviatrix_account.aws.account_name
-  aws_side_as_number    = "64512"
-  region                = "%[3]s"
-  tgw_name              = "aws-tgw-%[2]s"
-  manage_vpc_attachment = false
+  account_name                      = aviatrix_account.aws.account_name
+  aws_side_as_number                = "64512"
+  region                            = "%[3]s"
+  tgw_name                          = "aws-tgw-%[2]s"
+  manage_vpc_attachment             = false
   manage_transit_gateway_attachment = false
 
   cidrs = ["10.0.0.0/24", "10.1.0.0/24", "8.0.0.0/24", "5.0.0.0/24"]
@@ -106,9 +106,9 @@ resource "aviatrix_aws_tgw_vpc_attachment" "aws_tgw_vpc_attachment" {
   vpc_id               = aviatrix_vpc.tgw_attach_vpc.vpc_id
 }
 resource "aviatrix_aws_tgw_connect" "test_aws_tgw_connect" {
-  tgw_name = aviatrix_aws_tgw.test_aws_tgw.tgw_name
-  connection_name = "aws-tgw-connect-%[2]s"
-  attachment_name = aviatrix_aws_tgw_vpc_attachment.aws_tgw_vpc_attachment.vpc_id
+  tgw_name             = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+  connection_name      = "aws-tgw-connect-%[2]s"
+  attachment_name      = aviatrix_aws_tgw_vpc_attachment.aws_tgw_vpc_attachment.vpc_id
   security_domain_name = aviatrix_aws_tgw_vpc_attachment.aws_tgw_vpc_attachment.security_domain_name
 }
 

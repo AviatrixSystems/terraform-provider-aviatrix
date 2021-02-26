@@ -68,7 +68,6 @@ func resourceAviatrixAwsTgwConnectPeer() *schema.Resource {
 				ForceNew:    true,
 				Description: "Set of BGP Inside CIDR Blocks.",
 			},
-
 			"tgw_gre_address": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -76,7 +75,6 @@ func resourceAviatrixAwsTgwConnectPeer() *schema.Resource {
 				Description:  "AWS TGW GRE IP Address.",
 				ValidateFunc: validation.IsIPAddress,
 			},
-
 			"connect_peer_id": {
 				Type:        schema.TypeString,
 				Computed:    true,

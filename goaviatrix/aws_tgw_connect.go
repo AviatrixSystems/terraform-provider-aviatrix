@@ -7,9 +7,8 @@ import (
 )
 
 type AwsTgwConnect struct {
-	Action string `form:"action"`
-	CID    string `form:"CID"`
-
+	Action                  string `form:"action"`
+	CID                     string `form:"CID"`
 	TgwName                 string `form:"tgw_name" json:"tgw_name"`
 	ConnectionName          string `form:"connection_name" json:"connection_name"`
 	TransportAttachmentID   string `form:"transport_attachment_id" json:"transport_attachment_id"`
@@ -24,9 +23,8 @@ func (a *AwsTgwConnect) ID() string {
 }
 
 type AwsTgwConnectPeer struct {
-	Action string `form:"action"`
-	CID    string `form:"CID"`
-
+	Action              string   `form:"action"`
+	CID                 string   `form:"CID"`
 	TgwName             string   `form:"tgw_name" json:"tgw_name"`
 	ConnectAttachmentID string   `form:"connect_attachment_id" json:"connect_attachment_id"`
 	ConnectPeerName     string   `form:"connect_peer_name" json:"connect_peer_name"`

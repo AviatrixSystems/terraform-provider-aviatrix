@@ -44,7 +44,6 @@ func resourceAviatrixAwsTgwConnect() *schema.Resource {
 				ForceNew:    true,
 				Description: "Security Domain Name.",
 			},
-
 			"connect_attachment_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
