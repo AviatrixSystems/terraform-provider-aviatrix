@@ -117,7 +117,7 @@ func extractTags(d *schema.ResourceData, cloudType int) (map[string]string, erro
 	tagsMap := tags.(map[string]interface{})
 	tagsStrMap := make(map[string]string, len(tagsMap))
 
-	tagMatcher, err := regexp.Compile("^[a-zA-Z0-9+\\-=._ :/@ ]*$")
+	tagMatcher, err := regexp.Compile(`^[a-zA-Z0-9+\-=._ :/@ ]*$`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile regular expression for tags")
 	}
