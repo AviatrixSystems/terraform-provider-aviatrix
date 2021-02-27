@@ -1,12 +1,13 @@
 package goaviatrix
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
 )
 
-func (c *Client) SetControllerBgpMaxAsLimit(maxAsLimit int) error {
+func (c *Client) SetControllerBgpMaxAsLimit(ctx context.Context, maxAsLimit int) error {
 	data := map[string]string{
 		"action":       "set_bgp_max_as_limit",
 		"CID":          c.CID,
@@ -19,10 +20,10 @@ func (c *Client) SetControllerBgpMaxAsLimit(maxAsLimit int) error {
 		}
 		return nil
 	}
-	return c.PostAPI(data["action"], data, checkFunc)
+	return c.PostAPIContext(ctx, data["action"], data, checkFunc)
 }
 
-func (c *Client) DisableControllerBgpMaxAsLimit() error {
+func (c *Client) DisableControllerBgpMaxAsLimit(ctx context.Context) error {
 	data := map[string]string{
 		"action":       "set_bgp_max_as_limit",
 		"CID":          c.CID,
@@ -35,10 +36,10 @@ func (c *Client) DisableControllerBgpMaxAsLimit() error {
 		}
 		return nil
 	}
-	return c.PostAPI(data["action"], data, checkFunc)
+	return c.PostAPIContext(ctx, data["action"], data, checkFunc)
 }
 
-func (c *Client) GetControllerBgpMaxAsLimit() (int, error) {
+func (c *Client) GetControllerBgpMaxAsLimit(ctx context.Context) (int, error) {
 	data := map[string]string{
 		"action": "show_bgp_max_as_limit",
 		"CID":    c.CID,
@@ -51,7 +52,7 @@ func (c *Client) GetControllerBgpMaxAsLimit() (int, error) {
 	}
 
 	var resp BgpMaxAsLimitResponse
-	err := c.GetAPI(&resp, data["action"], data, BasicCheck)
+	err := c.GetAPIContext(ctx, &resp, data["action"], data, BasicCheck)
 	if err != nil {
 		return -1, err
 	}

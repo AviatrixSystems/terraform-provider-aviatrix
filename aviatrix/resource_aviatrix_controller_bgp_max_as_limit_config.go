@@ -1,7 +1,8 @@
 package aviatrix
 
 import (
-	"fmt"
+	"context"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
@@ -10,12 +11,12 @@ import (
 
 func resourceAviatrixControllerBgpMaxAsLimitConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAviatrixControllerBgpMaxAsLimitConfigCreate,
-		Read:   resourceAviatrixControllerBgpMaxAsLimitConfigRead,
-		Update: resourceAviatrixControllerBgpMaxAsLimitConfigUpdate,
-		Delete: resourceAviatrixControllerBgpMaxAsLimitConfigDelete,
+		CreateContext: resourceAviatrixControllerBgpMaxAsLimitConfigCreate,
+		ReadContext:   resourceAviatrixControllerBgpMaxAsLimitConfigRead,
+		UpdateContext: resourceAviatrixControllerBgpMaxAsLimitConfigUpdate,
+		DeleteContext: resourceAviatrixControllerBgpMaxAsLimitConfigDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -29,59 +30,59 @@ func resourceAviatrixControllerBgpMaxAsLimitConfig() *schema.Resource {
 	}
 }
 
-func resourceAviatrixControllerBgpMaxAsLimitConfigCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixControllerBgpMaxAsLimitConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	maxAsLimit := d.Get("max_as_limit").(int)
-	err := client.SetControllerBgpMaxAsLimit(maxAsLimit)
+	err := client.SetControllerBgpMaxAsLimit(ctx, maxAsLimit)
 	if err != nil {
-		return fmt.Errorf("failed to create controller BGP max AS limit config: %v", err)
+		return diag.Errorf("failed to create controller BGP max AS limit config: %v", err)
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
-	return resourceAviatrixControllerBgpMaxAsLimitConfigRead(d, meta)
+	return resourceAviatrixControllerBgpMaxAsLimitConfigRead(ctx, d, meta)
 }
 
-func resourceAviatrixControllerBgpMaxAsLimitConfigRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixControllerBgpMaxAsLimitConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
-		return fmt.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
+		return diag.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
 	}
 
-	maxAsLimit, err := client.GetControllerBgpMaxAsLimit()
+	maxAsLimit, err := client.GetControllerBgpMaxAsLimit(ctx)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("failed to get controller BGP max AS limit config: %v", err)
+		return diag.Errorf("failed to get controller BGP max AS limit config: %v", err)
 	}
 
 	d.Set("max_as_limit", maxAsLimit)
 	return nil
 }
 
-func resourceAviatrixControllerBgpMaxAsLimitConfigUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixControllerBgpMaxAsLimitConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	if d.HasChange("max_as_limit") {
 		maxAsLimit := d.Get("max_as_limit").(int)
-		err := client.SetControllerBgpMaxAsLimit(maxAsLimit)
+		err := client.SetControllerBgpMaxAsLimit(ctx, maxAsLimit)
 		if err != nil {
-			return fmt.Errorf("failed to create controller BGP max AS limit config: %v", err)
+			return diag.Errorf("failed to create controller BGP max AS limit config: %v", err)
 		}
 	}
 
 	return nil
 }
 
-func resourceAviatrixControllerBgpMaxAsLimitConfigDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixControllerBgpMaxAsLimitConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	err := client.DisableControllerBgpMaxAsLimit()
+	err := client.DisableControllerBgpMaxAsLimit(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to delete controller BGP max AS limit config: %v", err)
+		return diag.Errorf("failed to delete controller BGP max AS limit config: %v", err)
 	}
 
 	return nil
