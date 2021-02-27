@@ -71,7 +71,7 @@ func resourceAviatrixControllerBgpMaxAsLimitConfigUpdate(ctx context.Context, d 
 		maxAsLimit := d.Get("max_as_limit").(int)
 		err := client.SetControllerBgpMaxAsLimit(ctx, maxAsLimit)
 		if err != nil {
-			return diag.Errorf("failed to create controller BGP max AS limit config: %v", err)
+			return diag.Errorf("failed to update controller BGP max AS limit config: %v", err)
 		}
 	}
 
