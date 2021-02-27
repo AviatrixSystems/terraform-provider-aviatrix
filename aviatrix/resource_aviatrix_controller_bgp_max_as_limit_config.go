@@ -60,6 +60,7 @@ func resourceAviatrixControllerBgpMaxAsLimitConfigRead(ctx context.Context, d *s
 	}
 
 	d.Set("max_as_limit", maxAsLimit)
+	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
 
