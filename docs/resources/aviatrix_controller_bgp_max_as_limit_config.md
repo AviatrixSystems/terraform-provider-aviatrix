@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_controller_bgp_max_as_limit_config
 
-The **aviatrix_controller_bgp_max_as_limit_config** resource allows management of an Aviatrix Controller's BGP max AS limit for transit gateways.
+The **aviatrix_controller_bgp_max_as_limit_config** resource allows management of an Aviatrix Controller's BGP max AS limit for transit gateways. This resource is available as of provider version R2.18.1+.
 
 ## Example Usage
 

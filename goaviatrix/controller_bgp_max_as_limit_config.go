@@ -46,29 +46,25 @@ func (c *Client) GetControllerBgpMaxAsLimit(ctx context.Context) (int, error) {
 	}
 
 	type BgpMaxAsLimitResponse struct {
-		Return bool   `json:"return"`
-		Reason string `json:"reason"`
-		Result string `json:"results"`
+		Results string
 	}
 
 	var resp BgpMaxAsLimitResponse
 	err := c.GetAPIContext(ctx, &resp, data["action"], data, BasicCheck)
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 
-	if !resp.Return {
-		return -1, fmt.Errorf("rest API show_bgp_max_as_limit GET failed: %s", resp.Reason)
-	} else if resp.Result == "" {
+	if resp.Results == "" {
 		return -1, nil
 	}
 
-	maxAsLimit, err := strconv.Atoi(resp.Result)
+	maxAsLimit, err := strconv.Atoi(resp.Results)
 	if err != nil {
-		return -1, fmt.Errorf("error converting max_as_limit to int: %v", err)
+		return 0, fmt.Errorf("error converting max_as_limit to int: %v", err)
 	}
 	if maxAsLimit < 1 || maxAsLimit > 254 {
-		return -1, fmt.Errorf("rest API show_bgp_max_as_limit returned invalid value for max_as_limit: %d. It must be an integer in the range of [1-254]", maxAsLimit)
+		return 0, fmt.Errorf("rest API show_bgp_max_as_limit returned invalid value for max_as_limit: %d. It must be an integer in the range of [1-254]", maxAsLimit)
 	}
 	return maxAsLimit, nil
 }
