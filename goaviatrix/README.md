@@ -22,7 +22,7 @@ import (
     "log"
     "crypto/tls"
     "net/http"
-    "github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
+    "github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 )
 
 func main() {
