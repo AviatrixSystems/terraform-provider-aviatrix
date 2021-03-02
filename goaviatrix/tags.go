@@ -20,12 +20,22 @@ type Tags struct {
 	ResourceType string `form:"resource_type,omitempty"`
 	ResourceName string `form:"resource_name,omitempty"`
 	TagList      string `form:"new_tag_list,omitempty"`
+	Tags         map[string]string
 }
 
 type TagAPIResp struct {
 	Return  bool                         `json:"return"`
 	Results map[string]map[string]string `json:"results"`
 	Reason  string                       `json:"reason"`
+}
+
+func (tags *Tags) ComputeTagList() {
+	tagList := make([]string, 0, len(tags.Tags))
+	for key, val := range tags.Tags {
+		tagList = append(tagList, key+":"+val)
+	}
+	tagListStr := strings.Join(tagList, ",")
+	tags.TagList = tagListStr
 }
 
 func (c *Client) AddTags(tags *Tags) error {
@@ -67,6 +77,9 @@ func (c *Client) GetTags(tags *Tags) ([]string, error) {
 	if !data.Return {
 		return nil, errors.New("Rest API list_resource_tags Post failed: " + data.Reason)
 	}
+	if tagsMap, ok := data.Results["usr_tags"]; ok {
+		tags.Tags = tagsMap
+	}
 	var tagList []string
 	keys := reflect.ValueOf(data.Results).MapKeys()
 	strKeys := make([]string, len(keys))
@@ -89,6 +102,32 @@ func (c *Client) GetTags(tags *Tags) ([]string, error) {
 	}
 
 	return nil, nil
+}
+
+func (c *Client) GetTagsMap(tags *Tags) error {
+	tags.CID = c.CID
+	tags.Action = "list_resource_tags"
+
+	resp, err := c.Post(c.baseURL, tags)
+	if err != nil {
+		return fmt.Errorf("HTTP Post list_resource_tags failed: %v", err)
+	}
+	var data TagAPIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return fmt.Errorf("Json Decode list_resource_tags failed: %v\nBody: %s", err, bodyString)
+	}
+	if !data.Return {
+		return fmt.Errorf("rest API list_resource_tags Post failed: %s", data.Reason)
+	}
+
+	if tagsMap, ok := data.Results["usr_tags"]; ok {
+		tags.Tags = tagsMap
+	}
+	return nil
 }
 
 func (c *Client) DeleteTags(tags *Tags) error {
@@ -122,7 +161,7 @@ func (c *Client) DeleteTags(tags *Tags) error {
 	return nil
 }
 
-func (c *Client) AzureUpdateTags(tags *Tags) error {
+func (c *Client) UpdateTags(tags *Tags) error {
 	tags.CID = c.CID
 	tags.Action = "update_resource_tags"
 

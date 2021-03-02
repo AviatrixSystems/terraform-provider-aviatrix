@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
@@ -288,6 +289,12 @@ func dataSourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Private IP address of HA gateway.",
 			},
+			"tags": {
+				Type:        schema.TypeMap,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Computed:    true,
+				Description: "A map of tags assigned to the gateway.",
+			},
 		},
 	}
 }
@@ -510,15 +517,23 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 
-		if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV || gw.CloudType == goaviatrix.AZURE {
+		if intInSlice(gw.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.AZURE}) {
 			tags := &goaviatrix.Tags{
 				ResourceType: "gw",
 				ResourceName: d.Get("gw_name").(string),
 				CloudType:    gw.CloudType,
 			}
 
-			tagList, _ := client.GetTags(tags)
-			if len(tagList) != 0 {
+			tagList, err := client.GetTags(tags)
+			if err != nil {
+				log.Printf("[WARN] Failed to get tags for gateway %s: %v", tags.ResourceName, err)
+			}
+			if len(tags.Tags) > 0 {
+				if err := d.Set("tags", tags.Tags); err != nil {
+					log.Printf("[WARN] Error setting tags for gateway %s: %v", tags.ResourceName, err)
+				}
+			}
+			if len(tagList) > 0 {
 				d.Set("tag_list", tagList)
 			}
 		}
