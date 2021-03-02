@@ -35,6 +35,7 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 			"tgw_name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Name of the AWS TGW which is going to be created.",
 			},
 			"account_name": {
@@ -706,9 +707,6 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	d.Partial(true)
 
-	if d.HasChange("tgw_name") {
-		return fmt.Errorf("updating tgw_name is not allowed")
-	}
 	if d.HasChange("account_name") {
 		return fmt.Errorf("updating account_name is not allowed")
 	}
