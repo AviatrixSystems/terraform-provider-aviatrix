@@ -105,7 +105,7 @@ func (c *Client) DeleteAzureSpokeNativePeering(azureSpokeNativePeering *AzureSpo
 	detachArmNativeSpokeToTransit.Add("CID", c.CID)
 	detachArmNativeSpokeToTransit.Add("action", "detach_arm_native_spoke_to_transit")
 	detachArmNativeSpokeToTransit.Add("transit_gateway_name", azureSpokeNativePeering.TransitGatewayName)
-	detachArmNativeSpokeToTransit.Add("spoke_name", ""+azureSpokeNativePeering.SpokeAccountName+":"+
+	detachArmNativeSpokeToTransit.Add("spoke_name", azureSpokeNativePeering.SpokeAccountName+":"+
 		strings.Replace(azureSpokeNativePeering.SpokeVpcID, ".", "-", -1))
 	Url.RawQuery = detachArmNativeSpokeToTransit.Encode()
 	resp, err := c.Get(Url.String(), nil)
