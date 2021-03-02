@@ -14,32 +14,32 @@ Requirements
 Building The Provider (Terraform v0.12+)
 ---------------------
 
-Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provider-aviatrix`
+Clone repository to: `$GOPATH/src/github.com/AviatrixSystems/terraform-provider-aviatrix`
 
 ```sh
-$ mkdir -p $GOPATH/src/github.com/terraform-providers
-$ cd $GOPATH/src/github.com/terraform-providers
+$ mkdir -p $GOPATH/src/github.com/AviatrixSystems
+$ cd $GOPATH/src/github.com/AviatrixSystems
 $ git clone https://github.com/AviatrixSystems/terraform-provider-aviatrix.git
 ```
 
 To clone on windows
 ```sh
-mkdir %GOPATH%\src\github.com\terraform-providers
-cd %GOPATH%\src\github.com\terraform-providers
+mkdir %GOPATH%\src\github.com\AviatrixSystems
+cd %GOPATH%\src\github.com\AviatrixSystems
 git clone https://github.com/AviatrixSystems/terraform-provider-aviatrix.git
 ```
 
 Enter the provider directory and build the provider
 
 ```sh
-$ cd $GOPATH/src/github.com/terraform-providers/terraform-provider-aviatrix
+$ cd $GOPATH/src/github.com/AviatrixSystems/terraform-provider-aviatrix
 $ make fmt
 $ make build
 ```
 
 To build on Windows
 ```sh
-cd %GOPATH%\src\github.com\terraform-providers\terraform-provider-aviatrix
+cd %GOPATH%\src\github.com\AviatrixSystems\terraform-provider-aviatrix
 go fmt
 go install
 ```

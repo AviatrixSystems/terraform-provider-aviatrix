@@ -5,9 +5,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
 // validateAzureAZ is a SchemaValidateFunc for Azure Availability Zone

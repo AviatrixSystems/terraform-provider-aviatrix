@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
 )
 
 var remoteSyslogMatcher = regexp.MustCompile(`\bremote_syslog_[0-9]\b`)

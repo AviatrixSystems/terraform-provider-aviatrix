@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/terraform-providers/terraform-provider-aviatrix/goaviatrix"
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
