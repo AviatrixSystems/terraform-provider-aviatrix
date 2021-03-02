@@ -22,7 +22,7 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
   vpc_reg                           = "us-west-1"
   gw_size                           = "t2.micro"
   subnet                            = "10.11.0.0/24"
-  enable_snat                       = false
+  single_ip_snat                    = false
   enable_active_mesh                = true
   manage_transit_gateway_attachment = false
   tag_list                          = [
@@ -41,7 +41,7 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_gcp" {
   vpc_reg                           = "us-west1-b"
   gw_size                           = "n1-standard-1"
   subnet                            = "10.12.0.0/24"
-  enable_snat                       = false
+  single_ip_snat                    = false
   enable_active_mesh                = true
   manage_transit_gateway_attachment = false
 }
@@ -57,7 +57,7 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
   gw_size                           = "Standard_B1ms"
   subnet                            = "10.13.0.0/24"
   zone                              = "az-1"
-  enable_snat                       = false
+  single_ip_snat                    = false
   enable_active_mesh                = true
   manage_transit_gateway_attachment = false
 }
@@ -86,7 +86,7 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_awsgov" {
   vpc_reg                           = "us-gov-west-1"
   gw_size                           = "t2.micro"
   subnet                            = "10.11.0.0/24"
-  enable_snat                       = false
+  single_ip_snat                    = false
   enable_active_mesh                = true
   manage_transit_gateway_attachment = false
   tag_list                          = [
