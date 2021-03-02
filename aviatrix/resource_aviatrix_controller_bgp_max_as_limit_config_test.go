@@ -46,11 +46,11 @@ func TestAccAviatrixControllerBgpMaxAsLimitConfig_basic(t *testing.T) {
 }
 
 func testAccControllerBgpMaxAsLimitConfigBasic() string {
-	return fmt.Sprint(`
+	return `
 resource "aviatrix_controller_bgp_max_as_limit_config" "test_bgp_max_as_limit" {
 	max_as_limit = 1
 }
-`)
+`
 }
 
 func testAccCheckControllerBgpMaxAsLimitConfigExists(n string) resource.TestCheckFunc {
