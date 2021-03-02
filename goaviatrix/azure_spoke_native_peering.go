@@ -24,8 +24,10 @@ type AzureSpokeNativePeeringAPIResp struct {
 }
 
 type AzureSpokeNativePeeringEdit struct {
-	Region string `json:"region"`
-	Name   string `json:"name"`
+	AccountName string `json:"account_original_name"`
+	Name        string `json:"name"`
+	Region      string `json:"region"`
+	VpcID       string `json:"vpc_id"`
 }
 
 func (c *Client) CreateAzureSpokeNativePeering(azureSpokeNativePeering *AzureSpokeNativePeering) error {
@@ -83,9 +85,8 @@ func (c *Client) GetAzureSpokeNativePeering(azureSpokeNativePeering *AzureSpokeN
 		if peeringList[i].Name == "" || len(strings.Split(peeringList[i].Name, ":")) != 3 {
 			continue
 		}
-		spokeArray := strings.Split(peeringList[i].Name, ":")
-		spokeAccountName := spokeArray[0]
-		spokeVpcID := "" + spokeArray[1] + ":" + spokeArray[2]
+		spokeAccountName := peeringList[i].AccountName
+		spokeVpcID := peeringList[i].VpcID
 		if azureSpokeNativePeering.SpokeAccountName != spokeAccountName || azureSpokeNativePeering.SpokeVpcID != spokeVpcID {
 			continue
 		}
@@ -104,7 +105,8 @@ func (c *Client) DeleteAzureSpokeNativePeering(azureSpokeNativePeering *AzureSpo
 	detachArmNativeSpokeToTransit.Add("CID", c.CID)
 	detachArmNativeSpokeToTransit.Add("action", "detach_arm_native_spoke_to_transit")
 	detachArmNativeSpokeToTransit.Add("transit_gateway_name", azureSpokeNativePeering.TransitGatewayName)
-	detachArmNativeSpokeToTransit.Add("spoke_name", ""+azureSpokeNativePeering.SpokeAccountName+":"+azureSpokeNativePeering.SpokeVpcID)
+	detachArmNativeSpokeToTransit.Add("spoke_name", azureSpokeNativePeering.SpokeAccountName+":"+
+		strings.Replace(azureSpokeNativePeering.SpokeVpcID, ".", "-", -1))
 	Url.RawQuery = detachArmNativeSpokeToTransit.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
