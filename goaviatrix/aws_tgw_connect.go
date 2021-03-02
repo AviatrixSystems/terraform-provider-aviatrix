@@ -11,10 +11,10 @@ type AwsTgwConnect struct {
 	CID                     string `form:"CID"`
 	TgwName                 string `form:"tgw_name" json:"tgw_name"`
 	ConnectionName          string `form:"connection_name" json:"connection_name"`
-	TransportAttachmentID   string `form:"transport_attachment_id" json:"transport_attachment_id"`
+	TransportAttachmentID   string `form:"transport_vpc_id" json:"transport_attachment_id"`
 	TransportAttachmentName string `json:"transport_attachment_name"`
 	TransportVpcName        string `json:"transport_vpc_name"`
-	RouteDomainName         string `form:"route_domain_name" json:"route_domain_name"`
+	SecurityDomainName      string `form:"security_domain_name" json:"route_domain_name"`
 	ConnectAttachmentID     string `form:"connect_attachment_id" json:"connect_attachment_id"`
 }
 

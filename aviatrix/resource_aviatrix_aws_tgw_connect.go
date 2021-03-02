@@ -32,7 +32,7 @@ func resourceAviatrixAwsTgwConnect() *schema.Resource {
 				ForceNew:    true,
 				Description: "Connection Name.",
 			},
-			"attachment_name": {
+			"transport_vpc_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
@@ -62,8 +62,8 @@ func marshalAwsTgwConnectInput(d *schema.ResourceData) *goaviatrix.AwsTgwConnect
 	return &goaviatrix.AwsTgwConnect{
 		TgwName:               d.Get("tgw_name").(string),
 		ConnectionName:        d.Get("connection_name").(string),
-		TransportAttachmentID: d.Get("attachment_name").(string),
-		RouteDomainName:       d.Get("security_domain_name").(string),
+		TransportAttachmentID: d.Get("transport_vpc_id").(string),
+		SecurityDomainName:    d.Get("security_domain_name").(string),
 	}
 }
 
@@ -111,8 +111,8 @@ func resourceAviatrixAwsTgwConnectRead(ctx context.Context, d *schema.ResourceDa
 
 	d.Set("tgw_name", connect.TgwName)
 	d.Set("connection_name", connect.ConnectionName)
-	d.Set("attachment_name", connect.TransportAttachmentName)
-	d.Set("security_domain_name", connect.RouteDomainName)
+	d.Set("transport_vpc_id", connect.TransportAttachmentName)
+	d.Set("security_domain_name", connect.SecurityDomainName)
 	d.Set("connect_attachment_id", connect.ConnectAttachmentID)
 	d.Set("transport_attachment_id", connect.TransportAttachmentID)
 	d.SetId(connect.ID())
