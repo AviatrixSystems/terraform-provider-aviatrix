@@ -71,6 +71,9 @@ The following arguments are supported:
 * `sas_url_license` - (Optional) Advanced option. Bootstrap storage name. Applicable to Azure and Fortinet Series deployment only.
 * `user_data` - (Optional) Advanced option. Bootstrap storage name. Applicable to Check Point Series and Fortinet Series deployment only.
 
+### Misc.
+* `tags` - (Optional) Mapping of key value pairs of tags for a firewall instance. Only available for AWS, AWSGov and Azure firewall instances. Allowed characters are: letters, spaces, and numbers plus the following special characters: + - = . _ : @. Example: {"key1" = "value1", "key2" = "value2"}.
+
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:

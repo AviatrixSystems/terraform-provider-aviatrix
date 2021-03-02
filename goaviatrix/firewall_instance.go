@@ -31,20 +31,21 @@ type FirewallInstance struct {
 	EgressInterface      string `form:"egress_interface,omitempty" json:"egress_interface_id,omitempty"`
 	ManagementPublicIP   string `json:"management_public_ip,omitempty"`
 	VendorType           string
-	Username             string `form:"username,omitempty"`
-	Password             string `form:"password,omitempty"`
-	AvailabilityZone     string `json:"availability_zone,omitempty"`
-	CloudVendor          string `json:"cloud_vendor,omitempty"`
-	SshPublicKey         string `form:"ssh_public_key,omitempty" json:"ssh_public_key,omitempty"`
-	BootstrapStorageName string `form:"bootstrap_storage_name,omitempty" json:"bootstrap_storage_name,omitempty"`
-	StorageAccessKey     string `form:"storage_access_key,omitempty" json:"storage_access_key,omitempty"`
-	FileShareFolder      string `form:"file_share_folder,omitempty" json:"file_share_folder,omitempty"`
-	ShareDirectory       string `form:"share_directory,omitempty" json:"share_directory,omitempty"`
-	SicKey               string `form:"sic_key,omitempty" json:"sic_key,omitempty"`
-	ContainerFolder      string `form:"container_folder,omitempty" json:"container_folder,omitempty"`
-	SasUrlConfig         string `form:"sas_url_config,omitempty" json:"sas_url_config,omitempty"`
-	SasUriLicense        string `form:"sas_url_license,omitempty" json:"sas_url_license,omitempty"`
-	UserData             string `form:"user_data,omitempty" json:"user_data,omitempty"`
+	Username             string            `form:"username,omitempty"`
+	Password             string            `form:"password,omitempty"`
+	AvailabilityZone     string            `json:"availability_zone,omitempty"`
+	CloudVendor          string            `json:"cloud_vendor,omitempty"`
+	SshPublicKey         string            `form:"ssh_public_key,omitempty" json:"ssh_public_key,omitempty"`
+	BootstrapStorageName string            `form:"bootstrap_storage_name,omitempty" json:"bootstrap_storage_name,omitempty"`
+	StorageAccessKey     string            `form:"storage_access_key,omitempty" json:"storage_access_key,omitempty"`
+	FileShareFolder      string            `form:"file_share_folder,omitempty" json:"file_share_folder,omitempty"`
+	ShareDirectory       string            `form:"share_directory,omitempty" json:"share_directory,omitempty"`
+	SicKey               string            `form:"sic_key,omitempty" json:"sic_key,omitempty"`
+	ContainerFolder      string            `form:"container_folder,omitempty" json:"container_folder,omitempty"`
+	SasUrlConfig         string            `form:"sas_url_config,omitempty" json:"sas_url_config,omitempty"`
+	SasUriLicense        string            `form:"sas_url_license,omitempty" json:"sas_url_license,omitempty"`
+	UserData             string            `form:"user_data,omitempty" json:"user_data,omitempty"`
+	Tags                 map[string]string `json:"usr_tags"`
 }
 
 type FirewallInstanceResp struct {
@@ -118,6 +119,14 @@ func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (str
 	}
 	if firewallInstance.UserData != "" {
 		addFirewallInstance.Add("user_data", firewallInstance.UserData)
+	}
+	if len(firewallInstance.Tags) > 0 {
+		tagList := make([]string, 0, len(firewallInstance.Tags))
+		for key, val := range firewallInstance.Tags {
+			tagList = append(tagList, key+":"+val)
+		}
+		tagListStr := strings.Join(tagList, ",")
+		addFirewallInstance.Add("tag_string", tagListStr)
 	}
 	Url.RawQuery = addFirewallInstance.Encode()
 	resp, err := c.Get(Url.String(), nil)
