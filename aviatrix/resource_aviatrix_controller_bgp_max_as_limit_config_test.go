@@ -2,7 +2,6 @@ package aviatrix
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -18,13 +17,11 @@ func TestAccAviatrixControllerBgpMaxAsLimitConfig_basic(t *testing.T) {
 	if skipAcc == "yes" {
 		t.Skip("Skipping Controller BGP Max AS Limit Config test as SKIP_CONTROLLER_BGP_MAX_AS_LIMIT_CONFIG is set")
 	}
-	msgCommon := ". Set SKIP_CONTROLLER_BGP_MAX_AS_LIMIT_CONFIG to yes to skip Controller BGP Max AS Limit Config tests"
 	resourceName := "aviatrix_controller_bgp_max_as_limit_config.test_bgp_max_as_limit"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			preAccountCheck(t, msgCommon)
 		},
 		Providers:    testAccProvidersVersionValidation,
 		CheckDestroy: testAccCheckControllerBgpMaxAsLimitConfigDestroy,
@@ -65,6 +62,13 @@ func testAccCheckControllerBgpMaxAsLimitConfigExists(n string) resource.TestChec
 
 		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
 
+		maxAsLimit, err := client.GetControllerBgpMaxAsLimit(context.Background())
+		if err != nil {
+			return fmt.Errorf("failed to get controller bgp max as limit config status: %v", err)
+		} else if maxAsLimit != 1 {
+			return fmt.Errorf("API returned the wrong value for controller bgp max as limit: expected %d but got %d", 1, maxAsLimit)
+		}
+
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
 			return fmt.Errorf("controller bgp max as limit config ID not found")
 		}
@@ -81,12 +85,9 @@ func testAccCheckControllerBgpMaxAsLimitConfigDestroy(s *terraform.State) error 
 			continue
 		}
 
-		maxAsLimit, err := client.GetControllerBgpMaxAsLimit(context.Background())
+		_, err := client.GetControllerBgpMaxAsLimit(context.Background())
 		if err != nil {
 			return fmt.Errorf("could not retrieve controller bgp max as limit config status: %v", err)
-		}
-		if maxAsLimit != -1 {
-			return errors.New("controller bgp max as limit is still enabled")
 		}
 	}
 

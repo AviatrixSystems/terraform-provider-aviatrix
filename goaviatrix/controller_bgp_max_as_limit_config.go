@@ -54,9 +54,8 @@ func (c *Client) GetControllerBgpMaxAsLimit(ctx context.Context) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-
 	if resp.Results == "" {
-		return -1, nil
+		return 0, ErrNotFound
 	}
 
 	maxAsLimit, err := strconv.Atoi(resp.Results)
