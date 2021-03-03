@@ -62,11 +62,9 @@ func testAccCheckControllerBgpMaxAsLimitConfigExists(n string) resource.TestChec
 
 		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
 
-		maxAsLimit, err := client.GetControllerBgpMaxAsLimit(context.Background())
+		_, err := client.GetControllerBgpMaxAsLimit(context.Background())
 		if err != nil {
 			return fmt.Errorf("failed to get controller bgp max as limit config status: %v", err)
-		} else if maxAsLimit != 1 {
-			return fmt.Errorf("API returned the wrong value for controller bgp max as limit: expected %d but got %d", 1, maxAsLimit)
 		}
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
@@ -87,7 +85,7 @@ func testAccCheckControllerBgpMaxAsLimitConfigDestroy(s *terraform.State) error 
 
 		_, err := client.GetControllerBgpMaxAsLimit(context.Background())
 		if err == nil || err != goaviatrix.ErrNotFound {
-			return fmt.Errorf("could not retrieve controller bgp max as limit config status: %v", err)
+			return fmt.Errorf("controller bgp max as limit configured when it should be destroyed")
 		}
 	}
 
