@@ -86,7 +86,7 @@ func testAccCheckControllerBgpMaxAsLimitConfigDestroy(s *terraform.State) error 
 		}
 
 		_, err := client.GetControllerBgpMaxAsLimit(context.Background())
-		if err != nil {
+		if err != nil && err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("could not retrieve controller bgp max as limit config status: %v", err)
 		}
 	}
