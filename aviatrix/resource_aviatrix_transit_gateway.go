@@ -11,7 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-const defaultLearnedCidrApprovalMode = "gateway"
+const (
+	defaultLearnedCidrApprovalMode = "gateway"
+	defaultBgpHoldTime             = 180
+)
 
 func resourceAviatrixTransitGateway() *schema.Resource {
 	return &schema.Resource{
@@ -372,6 +375,13 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Optional:    true,
 				Default:     true,
 				Description: "Enable jumbo frame support for transit gateway. Valid values: true or false. Default value: true.",
+			},
+			"bgp_hold_time": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      defaultBgpHoldTime,
+				ValidateFunc: validation.IntBetween(12, 360),
+				Description:  "BGP Hold Time.",
 			},
 			"eip": {
 				Type:         schema.TypeString,
@@ -1076,6 +1086,13 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if holdTime := d.Get("bgp_hold_time").(int); holdTime != defaultBgpHoldTime {
+		err := client.ChangeBgpHoldTime(gateway.GwName, holdTime)
+		if err != nil {
+			return fmt.Errorf("could not change BGP Hold Time after Transit Gateway creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -1352,6 +1369,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("could not get advanced config: %v", err)
 	}
 
+	d.Set("bgp_hold_time", advancedConfig.BgpHoldTime)
 	d.Set("bgp_polling_time", advancedConfig.BgpPollingTime)
 	err = d.Set("prepend_as_path", advancedConfig.PrependASPath)
 	if err != nil {
@@ -2399,6 +2417,13 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			if err != nil {
 				return fmt.Errorf("could not disable jumbo frame for transit gateway when updating: %v", err)
 			}
+		}
+	}
+
+	if d.HasChange("bgp_hold_time") {
+		err := client.ChangeBgpHoldTime(gateway.GwName, d.Get("bgp_hold_time").(int))
+		if err != nil {
+			return fmt.Errorf("could not change BGP Hold Time during Transit Gateway update: %v", err)
 		}
 	}
 
