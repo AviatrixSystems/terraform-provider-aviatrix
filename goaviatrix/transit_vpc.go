@@ -67,6 +67,7 @@ type TransitGatewayAdvancedConfig struct {
 	TunnelAddrLocal                   string
 	TunnelAddrLocalBackup             string
 	PeerVnetId                        []string
+	BgpHoldTime                       int
 }
 
 type StandbyConnection struct {
@@ -86,6 +87,7 @@ type TransitGatewayAdvancedConfigRespResult struct {
 	TunnelAddrLocal                   string                    `json:"tunnel_addr_local"`
 	TunnelAddrLocalBackup             string                    `json:"tunnel_addr_local_backup"`
 	PeerVnetId                        []string                  `json:"peer_vnet_id"`
+	BgpHoldTime                       int                       `json:"bgp_hold_time"`
 }
 
 type LearnedCIDRApprovalInfo struct {
@@ -671,6 +673,7 @@ func (c *Client) GetTransitGatewayAdvancedConfig(transitGateway *TransitVpc) (*T
 		TunnelAddrLocal:                   data.Results.TunnelAddrLocal,
 		TunnelAddrLocalBackup:             data.Results.TunnelAddrLocalBackup,
 		PeerVnetId:                        data.Results.PeerVnetId,
+		BgpHoldTime:                       data.Results.BgpHoldTime,
 	}, nil
 }
 
@@ -711,6 +714,16 @@ func (c *Client) EditTransitConnectionBGPManualAdvertiseCIDRs(gwName, connName s
 		"gateway_name":                          gwName,
 		"connection_name":                       connName,
 		"connection_bgp_manual_advertise_cidrs": strings.Join(cidrs, ","),
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) ChangeBgpHoldTime(gwName string, holdTime int) error {
+	data := map[string]string{
+		"action":        "change_bgp_hold_time",
+		"gateway_name":  gwName,
+		"bgp_hold_time": strconv.Itoa(holdTime),
+		"CID":           c.CID,
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
 }
