@@ -108,7 +108,7 @@ resource "aviatrix_aws_tgw_vpc_attachment" "aws_tgw_vpc_attachment" {
 resource "aviatrix_aws_tgw_connect" "test_aws_tgw_connect" {
 	tgw_name             = aviatrix_aws_tgw.test_aws_tgw.tgw_name
 	connection_name      = "aws-tgw-connect-%[2]s"
-	attachment_name      = aviatrix_aws_tgw_vpc_attachment.aws_tgw_vpc_attachment.vpc_id
+	transport_vpc_id     = aviatrix_aws_tgw_vpc_attachment.aws_tgw_vpc_attachment.vpc_id
 	security_domain_name = aviatrix_aws_tgw_vpc_attachment.aws_tgw_vpc_attachment.security_domain_name
 }
 `, testAccAccountConfigAWS(acctest.RandInt()), rName, os.Getenv("AWS_REGION"))
