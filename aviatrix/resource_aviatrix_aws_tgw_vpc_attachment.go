@@ -80,6 +80,14 @@ func resourceAviatrixAwsTgwVpcAttachment() *schema.Resource {
 				Default:     false,
 				Description: "Advanced option. If set to true, it disables automatic route propagation of this VPC to other VPCs within the same security domain.",
 			},
+			"edge_attachment": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+				Description: "Edge attachment ID. To allow access to the private IP of the MGMT interface of the " +
+					"Firewalls, set this attribute to enable Management Access From Onprem. This feature advertises " +
+					"the Firewalls private MGMT subnet to your Edge domain.",
+			},
 		},
 	}
 }
@@ -98,6 +106,7 @@ func resourceAviatrixAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta inte
 		RouteTables:                  d.Get("route_tables").(string),
 		CustomizedRouteAdvertisement: d.Get("customized_route_advertisement").(string),
 		DisableLocalRoutePropagation: d.Get("disable_local_route_propagation").(bool),
+		EdgeAttachment:               d.Get("edge_attachment").(string),
 	}
 
 	isFirewallSecurityDomain, err := client.IsFirewallSecurityDomain(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.SecurityDomainName)
@@ -111,12 +120,23 @@ func resourceAviatrixAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta inte
 	log.Printf("[INFO] Attaching vpc: %s to tgw %s", awsTgwVpcAttachment.VpcID, awsTgwVpcAttachment.TgwName)
 
 	if isFirewallSecurityDomain {
-		err := client.CreateAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment)
+		err = client.CreateAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment)
 		if err != nil {
 			return fmt.Errorf("failed to create Aviatrix Aws Tgw Vpc Attach for FireNet: %s", err)
 		}
+
+		if awsTgwVpcAttachment.EdgeAttachment != "" {
+			err = client.UpdateFirewallAttachmentAccessFromOnprem(awsTgwVpcAttachment)
+			if err != nil {
+				return fmt.Errorf("failed to enable firewall attachment access from onprem: %s", err)
+			}
+		}
 	} else {
-		err := client.CreateAwsTgwVpcAttachment(awsTgwVpcAttachment)
+		if awsTgwVpcAttachment.EdgeAttachment != "" {
+			return fmt.Errorf("management access from onprem only works for FireNet")
+		}
+
+		err = client.CreateAwsTgwVpcAttachment(awsTgwVpcAttachment)
 		if err != nil {
 			return fmt.Errorf("failed to create Aviatrix Aws Tgw Vpc Attach: %s", err)
 		}
@@ -197,6 +217,7 @@ func resourceAviatrixAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta interf
 
 		d.Set("customized_routes", aTVA.CustomizedRoutes)
 		d.Set("customized_route_advertisement", aTVA.CustomizedRouteAdvertisement)
+		d.Set("edge_attachment", aTVA.EdgeAttachment)
 		d.SetId(awsTgwVpcAttachment.TgwName + "~" + awsTgwVpcAttachment.SecurityDomainName + "~" + awsTgwVpcAttachment.VpcID)
 		return nil
 	}
@@ -240,6 +261,38 @@ func resourceAviatrixAwsTgwVpcAttachmentUpdate(d *schema.ResourceData, meta inte
 		err := client.EditTgwSpokeVpcCustomizedRouteAdvertisement(awsTgwVpcAttachment)
 		if err != nil {
 			return fmt.Errorf("failed to update spoke vpc customized routes advertisement: %s", err)
+		}
+	}
+
+	if d.HasChange("edge_attachment") {
+		awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
+			TgwName:            d.Get("tgw_name").(string),
+			VpcID:              d.Get("vpc_id").(string),
+			SecurityDomainName: d.Get("security_domain_name").(string),
+			EdgeAttachment:     d.Get("edge_attachment").(string),
+		}
+
+		oldEA, newEA := d.GetChange("edge_attachment")
+
+		if oldEA != "" && newEA != "" {
+			awsTgwVpcAttachment.EdgeAttachment = ""
+
+			err := client.UpdateFirewallAttachmentAccessFromOnprem(awsTgwVpcAttachment)
+			if err != nil {
+				return fmt.Errorf("failed to disable firewall attachment access from onprem while updating: %s", err)
+			}
+
+			awsTgwVpcAttachment.EdgeAttachment = d.Get("edge_attachment").(string)
+
+			err = client.UpdateFirewallAttachmentAccessFromOnprem(awsTgwVpcAttachment)
+			if err != nil {
+				return fmt.Errorf("failed to enable firewall attachment access from onprem while updating: %s", err)
+			}
+		} else {
+			err := client.UpdateFirewallAttachmentAccessFromOnprem(awsTgwVpcAttachment)
+			if err != nil {
+				return fmt.Errorf("failed to update firewall attachment access from onprem: %s", err)
+			}
 		}
 	}
 
