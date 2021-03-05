@@ -24,7 +24,7 @@ func preSpokeGatewayCheck(t *testing.T, msgCommon string) string {
 func TestAccAviatrixSpokeGw_basic(t *testing.T) {
 	var gateway goaviatrix.Gateway
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 	importStateVerifyIgnore := []string{"gcloud_project_credentials_filepath", "vnet_and_resource_group_names"}
 
 	resourceName := "aviatrix_spoke_vpc.test_spoke_vpc"

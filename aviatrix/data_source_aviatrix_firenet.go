@@ -127,7 +127,7 @@ func dataSourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) err
 		fI := make(map[string]interface{})
 		fI["instance_id"] = instance.InstanceID
 		fI["firenet_gw_name"] = instance.GwName
-		fI["attached"] = instance.Enabled == true
+		fI["attached"] = instance.Enabled
 		if instance.VendorType == "Aviatrix FQDN Gateway" {
 			fI["vendor_type"] = "fqdn_gateway"
 			fI["firewall_name"] = ""

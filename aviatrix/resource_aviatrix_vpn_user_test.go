@@ -14,7 +14,7 @@ import (
 func TestAccAviatrixVPNUser_basic(t *testing.T) {
 	var vpnUser goaviatrix.VPNUser
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 	resourceName := "aviatrix_vpn_user.test_vpn_user"
 	importStateVerifyIgnore := []string{"manage_user_attachment"}
 

@@ -14,7 +14,7 @@ import (
 func TestAccAviatrixGatewaySNat_basic(t *testing.T) {
 	var gateway goaviatrix.Gateway
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 	importStateVerifyIgnore := []string{"vnet_and_resource_group_names"}
 
 	resourceName := "aviatrix_gateway_snat.test"
@@ -33,11 +33,6 @@ func TestAccAviatrixGatewaySNat_basic(t *testing.T) {
 			"are all set, even though SKIP_GATEWAY_SNAT isn't set")
 	}
 
-	//Setting default values for AWS_GW_SIZE
-	awsGwSize := os.Getenv("AWS_GW_SIZE")
-	if awsGwSize == "" {
-		awsGwSize = "t2.micro"
-	}
 	if skipSNatAWS == "yes" {
 		t.Log("Skipping AWS gateway source NAT tests as SKIP_GATEWAY_SNAT_AWS is set")
 	} else {

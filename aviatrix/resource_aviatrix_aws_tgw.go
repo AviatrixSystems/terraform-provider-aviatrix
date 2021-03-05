@@ -617,8 +617,7 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 								attachedVPC["vpc_account_name"] = attachedVPCFromRefresh["vpc_account_name"]
 								if attachedVPC["subnets"].(string) != "" {
 									subnetsFromConfigList := strings.Split(attachedVPC["subnets"].(string), ",")
-									var subnetsFromReadList []string
-									subnetsFromReadList = strings.Split(attachedVPCFromRefresh["subnets"].(string), ",")
+									subnetsFromReadList := strings.Split(attachedVPCFromRefresh["subnets"].(string), ",")
 									if len(goaviatrix.Difference(subnetsFromConfigList, subnetsFromReadList)) != 0 ||
 										len(goaviatrix.Difference(subnetsFromReadList, subnetsFromConfigList)) != 0 {
 										attachedVPC["subnets"] = attachedVPCFromRefresh["subnets"]
@@ -631,8 +630,7 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 									for i := 0; i < len(routeTablesFromConfigList); i++ {
 										routeTablesFromConfigList[i] = strings.TrimSpace(routeTablesFromConfigList[i])
 									}
-									var routeTablesFromReadList []string
-									routeTablesFromReadList = strings.Split(attachedVPCFromRefresh["route_tables"].(string), ",")
+									routeTablesFromReadList := strings.Split(attachedVPCFromRefresh["route_tables"].(string), ",")
 									for i := 0; i < len(routeTablesFromReadList); i++ {
 										routeTablesFromReadList[i] = strings.TrimSpace(routeTablesFromReadList[i])
 									}

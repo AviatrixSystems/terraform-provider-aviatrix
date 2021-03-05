@@ -124,7 +124,7 @@ func preGatewayCheckAWSGOV(t *testing.T, msgCommon string) {
 func TestAccAviatrixGateway_basic(t *testing.T) {
 	var gateway goaviatrix.Gateway
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 	msgCommon := ". Set SKIP_GATEWAY to yes to skip Gateway tests"
 
 	skipGw := os.Getenv("SKIP_GATEWAY")

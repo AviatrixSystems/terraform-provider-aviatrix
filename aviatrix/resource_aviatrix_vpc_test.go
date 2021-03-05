@@ -14,7 +14,7 @@ import (
 func TestAccAviatrixVpc_basic(t *testing.T) {
 	var vpc goaviatrix.Vpc
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 	resourceName := "aviatrix_vpc.test_vpc"
 
 	skipAcc := os.Getenv("SKIP_VPC")

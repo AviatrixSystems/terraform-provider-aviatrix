@@ -15,7 +15,7 @@ import (
 func TestAccAviatrixAWSTgw_basic(t *testing.T) {
 	var awsTgw goaviatrix.AWSTgw
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 	resourceName := "aviatrix_aws_tgw.aws_tgw_test"
 
 	skipAcc := os.Getenv("SKIP_AWS_TGW")

@@ -12,9 +12,9 @@ type DomainConn struct {
 	Action      string `form:"action,omitempty"`
 	CID         string `form:"CID,omitempty"`
 	TgwName1    string `form:"tgw_name1,omitempty" json:"tgw_name1,omitempty"`
-	DomainName1 string `form:"tgw_name2,omitempty" json:"tgw_name2,omitempty"`
-	TgwName2    string `form:"tgw_name1,omitempty" json:"tgw_name1,omitempty"`
-	DomainName2 string `form:"tgw_name2,omitempty" json:"tgw_name2,omitempty"`
+	DomainName1 string
+	TgwName2    string `form:"tgw_name2,omitempty" json:"tgw_name2,omitempty"`
+	DomainName2 string
 }
 
 type ListConnectedRouteDomainsResp struct {

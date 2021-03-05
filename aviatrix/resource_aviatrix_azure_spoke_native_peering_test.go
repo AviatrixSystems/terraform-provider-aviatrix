@@ -42,7 +42,7 @@ func preAzureSpokeNativePeeringCheck(t *testing.T, msgCommon string) {
 func TestAccAviatrixAzureSpokeNativePeering_basic(t *testing.T) {
 	var azureSpokeNativePeering goaviatrix.AzureSpokeNativePeering
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 	resourceName := "aviatrix_azure_spoke_native_peering.test"
 
 	skipAcc := os.Getenv("SKIP_AZURE_SPOKE_NATIVE_PEERING")

@@ -15,7 +15,7 @@ import (
 func TestAccAviatrixRbacGroupUserAttachment_basic(t *testing.T) {
 	var rbacGroupUserAttachment goaviatrix.RbacGroupUserAttachment
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 
 	skipAcc := os.Getenv("SKIP_RBAC_GROUP_USER_ATTACHMENT")
 	if skipAcc == "yes" {

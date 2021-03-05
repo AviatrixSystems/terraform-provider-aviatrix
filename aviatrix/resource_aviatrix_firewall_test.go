@@ -16,7 +16,7 @@ import (
 func TestAccAviatrixFirewall_basic(t *testing.T) {
 	var firewall goaviatrix.Firewall
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 	resourceName := "aviatrix_firewall.test_firewall"
 
 	skipAcc := os.Getenv("SKIP_FIREWALL")

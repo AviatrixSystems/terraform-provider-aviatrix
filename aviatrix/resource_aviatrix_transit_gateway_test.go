@@ -14,7 +14,7 @@ import (
 func TestAccAviatrixTransitGateway_basic(t *testing.T) {
 	var gateway goaviatrix.Gateway
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 
 	skipGw := os.Getenv("SKIP_TRANSIT_GATEWAY")
 	if skipGw == "yes" {

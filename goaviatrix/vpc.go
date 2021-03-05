@@ -54,14 +54,14 @@ type VpcResp struct {
 }
 
 type AllVpcPoolVpcListResp struct {
-	AllVpcPoolVpcList []VpcEdit `json:"all_vpc_pool_vpc_list, omitempty"`
+	AllVpcPoolVpcList []VpcEdit `json:"all_vpc_pool_vpc_list,omitempty"`
 }
 
 type SubnetInfo struct {
-	Region   string `json:"region, omitempty"`
-	Cidr     string `json:"cidr, omitempty"`
-	Name     string `json:"name, omitempty"`
-	SubnetID string `json:"id, omitempty"`
+	Region   string `json:"region,omitempty"`
+	Cidr     string `json:"cidr,omitempty"`
+	Name     string `json:"name,omitempty"`
+	SubnetID string `json:"id,omitempty"`
 }
 
 func (c *Client) CreateVpc(vpc *Vpc) error {

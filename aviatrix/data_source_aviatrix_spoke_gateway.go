@@ -376,7 +376,7 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 				ResourceName: d.Get("gw_name").(string),
 			}
 			tagList, _ := client.GetTags(tags)
-			if tagList != nil && len(tagList) != 0 {
+			if len(tagList) != 0 {
 				d.Set("tag_list", tagList)
 			}
 		}

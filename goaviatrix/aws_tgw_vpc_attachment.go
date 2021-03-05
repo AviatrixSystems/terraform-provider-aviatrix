@@ -17,11 +17,11 @@ type AwsTgwVpcAttachment struct {
 	SecurityDomainName           string `form:"security_domain_name"`
 	VpcAccountName               string `form:"vpc_account_name"`
 	VpcID                        string `form:"vpc_id"`
-	CustomizedRoutes             string `form:"customized_routes, omitempty" json:"customized_routes, omitempty"`
+	CustomizedRoutes             string `form:"customized_routes,omitempty" json:"customized_routes,omitempty"`
 	Subnets                      string
 	RouteTables                  string
 	CustomizedRouteAdvertisement string
-	DisableLocalRoutePropagation bool `form:"disable_local_route_propagation, omitempty" json:"disable_local_route_propagation, omitempty"`
+	DisableLocalRoutePropagation bool `form:"disable_local_route_propagation,omitempty" json:"disable_local_route_propagation,omitempty"`
 }
 
 type DomainListResp struct {

@@ -465,8 +465,6 @@ func (c *Client) Do(verb string, req interface{}) (*http.Response, []byte, error
 			return resp, body, errors.New("Status code")
 		}
 	}
-
-	return resp, body, err
 }
 
 // Request makes an HTTP request with the given interface being encoded as

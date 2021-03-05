@@ -1703,7 +1703,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 					return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
 				}
 			}
-			newHaGwEnabled = true
 		} else if deleteHaGw {
 			if d.Get("ha_gw_size").(string) != "" {
 				return fmt.Errorf("\"ha_gw_size\" must be empty if transit HA gateway is deleted")
