@@ -173,7 +173,7 @@ func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment
 
 	firenetManagementDetails, err := c.GetFirenetManagementDetails(awsTgwVpcAttachment)
 	if err != nil {
-		return nil, errors.New("could not get firenet management details: " + err.Error())
+		return nil, fmt.Errorf("could not get firenet management details: %s", err)
 	}
 	if len(firenetManagementDetails) != 0 {
 		aTVA.EdgeAttachment = firenetManagementDetails[1]
@@ -420,9 +420,7 @@ func (c *Client) GetFirenetManagementDetails(awsTgwVpcAttachment *AwsTgwVpcAttac
 	}
 
 	type Resp struct {
-		Return  bool             `json:"return"`
-		Results []AccessFromEdge `json:"results"`
-		Reason  string           `json:"reason"`
+		Results []AccessFromEdge
 	}
 
 	var data Resp
