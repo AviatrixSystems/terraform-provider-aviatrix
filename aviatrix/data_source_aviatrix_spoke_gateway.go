@@ -385,11 +385,11 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 
 			tagList, err := client.GetTags(tags)
 			if err != nil {
-				log.Printf("[WARN] Failed to get tags for gateway %s: %v", tags.ResourceName, err)
+				log.Printf("[WARN] Failed to get tags for spoke gateway %s: %v", tags.ResourceName, err)
 			}
 			if len(tags.Tags) > 0 {
 				if err := d.Set("tags", tags.Tags); err != nil {
-					log.Printf("[WARN] Error setting tags for gateway %s: %v", tags.ResourceName, err)
+					log.Printf("[WARN] Error setting tags for spoke gateway %s: %v", tags.ResourceName, err)
 				}
 			}
 			if len(tagList) > 0 {
