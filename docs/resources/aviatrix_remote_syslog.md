@@ -16,6 +16,7 @@ The **aviatrix_remote_syslog** resource allows the enabling and disabling of rem
 # Enable remote syslog without TLS
 resource "aviatrix_remote_syslog" "test_remote_syslog" {
   index    = 0
+  name     = "test"
   server   = "1.2.3.4"
   port     = 10
   protocol = "TCP"
@@ -26,6 +27,7 @@ resource "aviatrix_remote_syslog" "test_remote_syslog" {
 # Enable remote syslog with TLS
 resource "aviatrix_remote_syslog" "test_remote_syslog" {
   index                   = 0
+  name                    = "test"
   server                  = "1.2.3.4"
   port                    = 10
   protocol                = "TCP"
@@ -41,6 +43,7 @@ The following arguments are supported:
 
 ### Required
 * `index` (Optional) Profile index. An index from 0 to 9 is supported. 0 by default.
+* `name` (Required) Profile name.  
 * `server` (Required) Server IP.
 * `port` (Required) Port number.
 * `protocol` (Optional) TCP or UDP. TCP by default.
