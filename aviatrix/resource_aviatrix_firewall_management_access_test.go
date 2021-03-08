@@ -14,7 +14,7 @@ import (
 func TestAccAviatrixFirewallManagementAccess_basic(t *testing.T) {
 	var firewallManagementAccess goaviatrix.FirewallManagementAccess
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 
 	skipAcc := os.Getenv("SKIP_FIREWALL_MANAGEMENT_ACCESS")
 	if skipAcc == "yes" {

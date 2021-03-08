@@ -413,7 +413,7 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 			ResourceName: d.Get("gw_name").(string),
 		}
 		tagList, _ := client.GetTags(tags)
-		if tagList != nil && len(tagList) != 0 {
+		if len(tagList) != 0 {
 			d.Set("tag_list", tagList)
 		}
 	}
@@ -422,7 +422,7 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 		AccountName: d.Get("account_name").(string),
 		GwName:      d.Get("gw_name").(string) + "-hagw",
 	}
-	haGw, err := client.GetGateway(haGateway)
+	haGw, _ := client.GetGateway(haGateway)
 	if haGw != nil {
 		if haGw.CloudType == goaviatrix.AWS || haGw.CloudType == goaviatrix.AZURE || haGw.CloudType == goaviatrix.OCI {
 			d.Set("ha_subnet", haGw.VpcNet)

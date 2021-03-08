@@ -14,7 +14,7 @@ import (
 func TestAccAviatrixGatewayDNat_basic(t *testing.T) {
 	var gateway goaviatrix.Gateway
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 	msgCommon := ". Set SKIP_GATEWAY_DNAT to yes to skip gateway DNAT tests"
 
 	skipDNat := os.Getenv("SKIP_GATEWAY_DNAT")

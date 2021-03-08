@@ -14,7 +14,7 @@ import (
 func TestAccAviatrixAwsTgwVpnConn_basic(t *testing.T) {
 	var awsTgwVpnConn goaviatrix.AwsTgwVpnConn
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 	resourceName := "aviatrix_aws_tgw_vpn_conn.test"
 
 	skipAcc := os.Getenv("SKIP_AWS_TGW_VPN_CONN")

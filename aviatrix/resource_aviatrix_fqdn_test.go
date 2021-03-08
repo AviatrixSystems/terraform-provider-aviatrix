@@ -14,7 +14,7 @@ import (
 func TestAccAviatrixFQDN_basic(t *testing.T) {
 	var fqdn goaviatrix.FQDN
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 
 	skipAcc := os.Getenv("SKIP_FQDN")
 	if skipAcc == "yes" {

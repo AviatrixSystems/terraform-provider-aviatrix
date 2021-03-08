@@ -6,7 +6,7 @@ import (
 )
 
 func (c *Client) ControllerVersionValidation(supportedVersions []string) error {
-	if supportedVersions == nil || len(supportedVersions) == 0 {
+	if len(supportedVersions) == 0 {
 		return errors.New("supportedVersions is not provided")
 	}
 

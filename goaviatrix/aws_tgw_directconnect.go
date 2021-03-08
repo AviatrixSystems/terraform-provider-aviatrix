@@ -20,7 +20,7 @@ type AwsTgwDirectConnect struct {
 	SecurityDomainName       string `form:"route_domain_name,omitempty"`
 	AllowedPrefix            string `form:"allowed_prefix,omitempty"`
 	DirectConnectID          string `form:"directconnect_id, omitempty"`
-	LearnedCidrsApproval     string `form:"learned_cidrs_approval,omitempty""`
+	LearnedCidrsApproval     string `form:"learned_cidrs_approval,omitempty"`
 }
 
 type AwsTgwDirectConnEdit struct {
@@ -29,7 +29,7 @@ type AwsTgwDirectConnEdit struct {
 	DxGatewayID              string   `json:"name,omitempty"`
 	SecurityDomainName       string   `json:"associated_route_domain_name,omitempty"`
 	AllowedPrefix            []string `json:"allowed_prefix,omitempty"`
-	LearnedCidrsApproval     string   `json:"learned_cidrs_approval,omitempty""`
+	LearnedCidrsApproval     string   `json:"learned_cidrs_approval,omitempty"`
 }
 
 type AwsTgwDirectConnResp struct {

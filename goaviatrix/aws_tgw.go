@@ -355,7 +355,7 @@ func (c *Client) IsFirewallSecurityDomain(tgwName string, domainName string) (bo
 		return false, errors.New("Rest API view_route_domain_details Get failed: " + data.Reason)
 	}
 	routeDomainDetail := data.Results
-	if routeDomainDetail != nil && len(routeDomainDetail) != 0 {
+	if len(routeDomainDetail) != 0 {
 		if routeDomainDetail[0].AviatrixFirewallDomain {
 			return true, nil
 		}

@@ -16,7 +16,7 @@ import (
 func TestAccAviatrixFireNet_basic(t *testing.T) {
 	var fireNet goaviatrix.FireNet
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 	resourceName := "aviatrix_firenet.test_firenet"
 
 	skipAcc := os.Getenv("SKIP_FIRENET")

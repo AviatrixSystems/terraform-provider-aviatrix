@@ -25,7 +25,7 @@ type AwsTgwVpnConn struct {
 	InsideIpCIDRTun2     string `form:"inside_ip_cidr_tun_2,omitempty"`
 	PreSharedKeyTun1     string `form:"pre_shared_key_tun_1,omitempty"`
 	PreSharedKeyTun2     string `form:"pre_shared_key_tun_2,omitempty"`
-	LearnedCidrsApproval string `form:"learned_cidrs_approval,omitempty""`
+	LearnedCidrsApproval string `form:"learned_cidrs_approval,omitempty"`
 }
 
 type AwsTgwVpnConnEdit struct {

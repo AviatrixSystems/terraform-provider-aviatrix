@@ -66,7 +66,7 @@ func (c *Client) GetVpcTracker() ([]*VpcTracker, error) {
 	var data VpcTrackerResp
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Json Decode cloud_network_info failed: %s \n Body: %s", err.Error(), resp.Body))
+		return nil, fmt.Errorf("Json Decode cloud_network_info failed: %s \n Body: %s", err.Error(), resp.Body)
 	}
 	if !data.Return {
 		return nil, errors.New("Rest API cloud_network_info Get failed: " + data.Reason)

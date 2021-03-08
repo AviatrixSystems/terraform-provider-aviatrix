@@ -12,7 +12,7 @@ import (
 )
 
 func TestAccAviatrixVPNUserAccelerator_basic(t *testing.T) {
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 	resourceName := "aviatrix_vpn_user_accelerator.test_elb"
 
 	skipXlr := os.Getenv("SKIP_VPN_USER_ACCELERATOR")

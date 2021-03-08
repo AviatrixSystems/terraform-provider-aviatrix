@@ -14,7 +14,7 @@ import (
 func TestAccAviatrixVPNProfile_basic(t *testing.T) {
 	var vpnProfile goaviatrix.Profile
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 	resourceName := "aviatrix_vpn_profile.test_vpn_profile"
 
 	skipAcc := os.Getenv("SKIP_VPN_PROFILE")

@@ -43,9 +43,7 @@ func (c *Client) GetVpnUserAccelerator() ([]string, error) {
 		return nil, errors.New("Rest API list_vpn_user_xlr Get failed: " + data.Reason)
 	}
 
-	elbList := make([]string, 0)
-	elbList = data.Results["inuse"]
-	return elbList, nil
+	return data.Results["inuse"], nil
 }
 
 func (c *Client) UpdateVpnUserAccelerator(xlr *VpnUserXlr) error {

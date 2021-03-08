@@ -22,7 +22,7 @@ type TransitVpc struct {
 	GwName                       string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
 	GwSize                       string `form:"gw_size,omitempty"`
 	VpcID                        string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	VNetNameResourceGroup        string `form:"vnet_and_resource_group_names,omitempty" json:"vpc_id,omitempty"`
+	VNetNameResourceGroup        string `form:"vnet_and_resource_group_names,omitempty"`
 	Subnet                       string `form:"public_subnet,omitempty" json:"vpc_net,omitempty"`
 	HASubnet                     string `form:"ha_subnet,omitempty"`
 	HAZone                       string `form:"new_zone,omitempty"`

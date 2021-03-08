@@ -14,7 +14,7 @@ import (
 func TestAccAviatrixTransitFireNetPolicy_basic(t *testing.T) {
 	var transitFireNetPolicy goaviatrix.TransitFireNetPolicy
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 
 	skipAcc := os.Getenv("SKIP_TRANSIT_FIRENET_POLICY")
 	if skipAcc == "yes" {

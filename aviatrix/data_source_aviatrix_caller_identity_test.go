@@ -40,10 +40,10 @@ func TestAccDataSourceAviatrixCallerIdentity_basic(t *testing.T) {
 }
 
 func testAccDataSourceAviatrixCallerIdentityConfigBasic(rName string) string {
-	return fmt.Sprintf(`
+	return `
 data "aviatrix_caller_identity" "foo" {
 }
-	`)
+	`
 }
 
 func testAccDataSourceAviatrixCallerIdentity(name string) resource.TestCheckFunc {

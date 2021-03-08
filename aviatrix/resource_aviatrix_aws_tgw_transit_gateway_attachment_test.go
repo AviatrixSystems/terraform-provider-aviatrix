@@ -14,7 +14,7 @@ import (
 func TestAccAviatrixAwsTgwTransitGatewayAttachment_basic(t *testing.T) {
 	var awsTgwTransitGwAttachment goaviatrix.AwsTgwTransitGwAttachment
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 	resourceName := "aviatrix_aws_tgw_transit_gateway_attachment.test"
 
 	skipAcc := os.Getenv("SKIP_AWS_TGW_TRANSIT_GATEWAY_ATTACHMENT")

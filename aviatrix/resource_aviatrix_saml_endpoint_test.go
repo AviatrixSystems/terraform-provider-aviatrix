@@ -49,9 +49,9 @@ func TestAccAviatrixSamlEndpoint_basic(t *testing.T) {
 				Config: testAccSamlEndpointConfigBasic(rName, idpMetadata, idpMetadataType),
 				Check: resource.ComposeTestCheckFunc(
 					tesAccCheckSamlEndpointExists("aviatrix_saml_endpoint.foo", &samlEndpoint),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_name", fmt.Sprintf("%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "idp_metadata", fmt.Sprintf("%s", idpMetadata)),
-					resource.TestCheckResourceAttr(resourceName, "idp_metadata_type", fmt.Sprintf("%s", idpMetadataType)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "idp_metadata", idpMetadata),
+					resource.TestCheckResourceAttr(resourceName, "idp_metadata_type", idpMetadataType),
 				),
 			},
 			{

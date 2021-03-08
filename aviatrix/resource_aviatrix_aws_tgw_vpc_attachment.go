@@ -164,8 +164,7 @@ func resourceAviatrixAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta interf
 
 		if d.Get("subnets").(string) != "" {
 			subnetsFromConfigList := strings.Split(d.Get("subnets").(string), ",")
-			var subnetsFromReadList []string
-			subnetsFromReadList = strings.Split(aTVA.Subnets, ",")
+			subnetsFromReadList := strings.Split(aTVA.Subnets, ",")
 			if len(goaviatrix.Difference(subnetsFromConfigList, subnetsFromReadList)) == 0 ||
 				len(goaviatrix.Difference(subnetsFromReadList, subnetsFromConfigList)) == 0 {
 				d.Set("subnets", d.Get("subnets").(string))
@@ -180,8 +179,7 @@ func resourceAviatrixAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta interf
 			for i := 0; i < len(routeTablesFromConfigList); i++ {
 				routeTablesFromConfigList[i] = strings.TrimSpace(routeTablesFromConfigList[i])
 			}
-			var routeTablesFromReadList []string
-			routeTablesFromReadList = strings.Split(aTVA.RouteTables, ",")
+			routeTablesFromReadList := strings.Split(aTVA.RouteTables, ",")
 			for i := 0; i < len(routeTablesFromReadList); i++ {
 				routeTablesFromReadList[i] = strings.TrimSpace(routeTablesFromReadList[i])
 			}

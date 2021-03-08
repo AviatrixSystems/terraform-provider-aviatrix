@@ -14,7 +14,7 @@ import (
 func TestAccAviatrixTransitExternalDeviceConn_basic(t *testing.T) {
 	var externalDeviceConn goaviatrix.ExternalDeviceConn
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 	resourceName := "aviatrix_transit_external_device_conn.test"
 
 	skipAcc := os.Getenv("SKIP_TRANSIT_EXTERNAL_DEVICE_CONN")
@@ -35,7 +35,7 @@ func TestAccAviatrixTransitExternalDeviceConn_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitExternalDeviceConnExists(resourceName, &externalDeviceConn),
 					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
-					resource.TestCheckResourceAttr(resourceName, "connection_name", fmt.Sprintf("%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "bgp"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_local_as_num", "123"),

@@ -14,7 +14,7 @@ import (
 func TestAccAviatrixS2C_basic(t *testing.T) {
 	var s2c goaviatrix.Site2Cloud
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 	resourceName := "aviatrix_site2cloud.foo"
 
 	skipAcc := os.Getenv("SKIP_S2C")

@@ -34,23 +34,23 @@ type SecurityDomainList struct {
 }
 
 type SecurityDomainRule struct {
-	Name                   string    `json:"security_domain_name, omitempty"`
-	ConnectedDomain        []string  `json:"connected_domains, omitempty"`
-	AttachedVPCs           []VPCSolo `json:"attached_vpc, omitempty"`
-	AviatrixFirewallDomain bool      `json:"firewall_domain, omitempty"`
-	NativeEgressDomain     bool      `json:"egress_domain, omitempty"`
-	NativeFirewallDomain   bool      `json:"native_firewall_domain, omitempty"`
+	Name                   string    `json:"security_domain_name,omitempty"`
+	ConnectedDomain        []string  `json:"connected_domains,omitempty"`
+	AttachedVPCs           []VPCSolo `json:"attached_vpc,omitempty"`
+	AviatrixFirewallDomain bool      `json:"firewall_domain,omitempty"`
+	NativeEgressDomain     bool      `json:"egress_domain,omitempty"`
+	NativeFirewallDomain   bool      `json:"native_firewall_domain,omitempty"`
 }
 
 type VPCSolo struct {
-	Region                       string `json:"vpc_region, omitempty"`
-	AccountName                  string `json:"vpc_account_name, omitempty"`
-	VpcID                        string `json:"vpc_id, omitempty"`
+	Region                       string `json:"vpc_region,omitempty"`
+	AccountName                  string `json:"vpc_account_name,omitempty"`
+	VpcID                        string `json:"vpc_id,omitempty"`
 	Subnets                      string
 	RouteTables                  string
-	CustomizedRoutes             string `json:", omitempty"`
+	CustomizedRoutes             string `json:",omitempty"`
 	CustomizedRouteAdvertisement string
-	DisableLocalRoutePropagation bool `json:", omitempty"`
+	DisableLocalRoutePropagation bool `json:",omitempty"`
 }
 
 func (c *Client) CreateSecurityDomain(securityDomain *SecurityDomain) error {

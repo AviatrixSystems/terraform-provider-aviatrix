@@ -15,7 +15,7 @@ import (
 func TestAccAviatrixRbacGroupPermissionAttachment_basic(t *testing.T) {
 	var rbacGroupPermissionAttachment goaviatrix.RbacGroupPermissionAttachment
 
-	rName := fmt.Sprintf("%s", acctest.RandString(5))
+	rName := acctest.RandString(5)
 
 	skipAcc := os.Getenv("SKIP_RBAC_GROUP_PERMISSION_ATTACHMENT")
 	if skipAcc == "yes" {
@@ -36,7 +36,7 @@ func TestAccAviatrixRbacGroupPermissionAttachment_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRbacGroupPermissionAttachmentExists(resourceName, &rbacGroupPermissionAttachment),
 					resource.TestCheckResourceAttr(resourceName, "group_name", fmt.Sprintf("tf-%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "permission_name", fmt.Sprintf("all_write")),
+					resource.TestCheckResourceAttr(resourceName, "permission_name", "all_write"),
 				),
 			},
 			{

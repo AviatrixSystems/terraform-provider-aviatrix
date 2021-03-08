@@ -47,7 +47,7 @@ func Equivalent(a, b []string) bool {
 
 // DifferenceSlice returns the one-dimension elements in two-dimension slice a that aren't in two-dimension b
 func DifferenceSlice(a, b [][]string) [][]string {
-	if a == nil || len(a) == 0 || b == nil || len(b) == 0 {
+	if len(a) == 0 || len(b) == 0 {
 		return a
 	}
 
