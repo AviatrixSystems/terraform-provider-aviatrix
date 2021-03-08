@@ -46,6 +46,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"gw_name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Aviatrix gateway unique name.",
 			},
 			"vpc_id": {
@@ -1498,9 +1499,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 	if d.HasChange("account_name") {
 		return fmt.Errorf("updating account_name is not allowed")
-	}
-	if d.HasChange("gw_name") {
-		return fmt.Errorf("updating gw_name is not allowed")
 	}
 	if d.HasChange("vpn_access") {
 		return fmt.Errorf("updating vpn_access is not allowed")
