@@ -310,10 +310,11 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description: "Private IP address of the spoke gateway created.",
 			},
 			"tags": {
-				Type:        schema.TypeMap,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Optional:    true,
-				Description: "A map of tags to assign to the spoke gateway.",
+				Type:          schema.TypeMap,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				Optional:      true,
+				Description:   "A map of tags to assign to the spoke gateway.",
+				ConflictsWith: []string{"tag_list"},
 			},
 		},
 	}
@@ -516,13 +517,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("\"ha_oob_mangeemnt_sbunet\" must be empty if \"enable_private_oob\" is false")
 		}
 	}
-
-	_, tagListOk := d.GetOk("tag_list")
-	_, tagsOk := d.GetOk("tags")
-	if tagListOk && tagsOk {
-		return errors.New("failed to create spoke gateway: only one of tag_list and tags is allowed at the same time")
-	}
-
 	log.Printf("[INFO] Creating Aviatrix Spoke Gateway: %#v", gateway)
 
 	err := client.LaunchSpokeVpc(gateway)
@@ -627,6 +621,8 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	_, tagListOk := d.GetOk("tag_list")
+	_, tagsOk := d.GetOk("tags")
 	if tagListOk || tagsOk {
 		if !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.AZURE}) {
 			return errors.New("failed to create spoke gateway: adding tags is only supported for AWS, AWSGOV and AZURE, cloud_type must be 1, 256 or 8")

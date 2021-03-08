@@ -448,10 +448,11 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "Transit gateway lan interface cidr for the HA gateway.",
 			},
 			"tags": {
-				Type:        schema.TypeMap,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Optional:    true,
-				Description: "A map of tags to assign to the transit gateway.",
+				Type:          schema.TypeMap,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				Optional:      true,
+				Description:   "A map of tags to assign to the transit gateway.",
+				ConflictsWith: []string{"tag_list"},
 			},
 		},
 	}
@@ -723,13 +724,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("\"ha_oob_management_sbunet\" must be empty if \"enable_private_oob\" is false")
 		}
 	}
-
-	_, tagListOk := d.GetOk("tag_list")
-	_, tagsOk := d.GetOk("tags")
-	if tagListOk && tagsOk {
-		return errors.New("error creating transit gateway: only one of tag_list and tags is allowed at the same time")
-	}
-
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
 
 	err := client.LaunchTransitVpc(gateway)
@@ -836,6 +830,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	_, tagListOk := d.GetOk("tag_list")
+	_, tagsOk := d.GetOk("tags")
 	if tagListOk || tagsOk {
 		if !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.AZURE}) {
 			return errors.New("error creating transit gateway: adding tags is only supported for AWS, AWSGOV and AZURE, cloud_type must be 1, 256 or 8")

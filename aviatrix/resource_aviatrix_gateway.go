@@ -464,10 +464,11 @@ func resourceAviatrixGateway() *schema.Resource {
 				Description: "Enable jumbo frame support for Gateway. Valid values: true or false. Default value: true.",
 			},
 			"tags": {
-				Type:        schema.TypeMap,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Optional:    true,
-				Description: "A map of tags to assign to the gateway.",
+				Type:          schema.TypeMap,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				Optional:      true,
+				Description:   "A map of tags to assign to the gateway.",
+				ConflictsWith: []string{"tag_list"},
 			},
 		},
 	}
@@ -731,13 +732,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	if !enableMonitorSubnets && len(excludedInstances) != 0 {
 		return fmt.Errorf("'monitor_exclude_list' must be empty if 'enable_monitor_gateway_subnets' is false")
 	}
-
-	_, tagListOk := d.GetOk("tag_list")
-	_, tagsOk := d.GetOk("tags")
-	if tagListOk && tagsOk {
-		return errors.New("failed to create gateway: only one of tag_list and tags is allowed at the same time")
-	}
-
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)
 
 	if d.Get("enable_public_subnet_filtering").(bool) {
@@ -888,6 +882,8 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	_, tagListOk := d.GetOk("tag_list")
+	_, tagsOk := d.GetOk("tags")
 	if tagListOk || tagsOk {
 		if !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.AZURE}) {
 			return errors.New("failed to create gateway: adding tags is only supported for AWS, AWSGOV and AZURE, cloud_type must be 1, 256 or 8")
