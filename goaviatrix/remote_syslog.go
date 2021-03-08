@@ -11,6 +11,7 @@ type RemoteSyslog struct {
 	Port                int    `form:"port,omitempty" json:"port"`
 	Protocol            string `form:"protocol,omitempty" json:"protocol"`
 	Index               int    `form:"index,omitempty" json:"index"`
+	Name                string `form:"name,omitempty"`
 	Template            string `form:"template,omitempty" json:"template"`
 	CaCertificate       string `form:"ca_certificate,omitempty"`
 	PublicCertificate   string `form:"public_certificate,omitempty"`
@@ -23,6 +24,7 @@ type RemoteSyslogResp struct {
 	Port             string   `json:"port"`
 	Protocol         string   `json:"protocol"`
 	Index            string   `json:"index"`
+	Name             string   `json:"name"`
 	Template         string   `json:"template"`
 	ExcludedGateways []string `json:"excluded_gateway"`
 	Status           string   `json:"status"`
@@ -34,6 +36,7 @@ func (c *Client) EnableRemoteSyslog(r *RemoteSyslog) error {
 		"action":               "enable_remote_syslog_logging",
 		"CID":                  c.CID,
 		"index":                strconv.Itoa(r.Index),
+		"name":                 r.Name,
 		"server":               r.Server,
 		"port":                 strconv.Itoa(r.Port),
 		"protocol":             r.Protocol,

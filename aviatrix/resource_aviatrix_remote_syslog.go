@@ -32,6 +32,12 @@ func resourceAviatrixRemoteSyslog() *schema.Resource {
 				ValidateFunc: validation.IntBetween(0, 9),
 				Description:  "A total of 10 profiles from index 0 to 9 are supported for remote syslog, while index 9 is reserved for CoPilot.",
 			},
+			"name": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Profile name.",
+			},
 			"server": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -117,6 +123,7 @@ func marshalRemoteSyslogInput(d *schema.ResourceData) *goaviatrix.RemoteSyslog {
 		Port:              d.Get("port").(int),
 		Protocol:          d.Get("protocol").(string),
 		Index:             d.Get("index").(int),
+		Name:              d.Get("name").(string),
 		Template:          d.Get("template").(string),
 		CaCertificate:     d.Get("ca_certificate_file").(string),
 		PublicCertificate: d.Get("public_certificate_file").(string),
@@ -188,6 +195,7 @@ func resourceAviatrixRemoteSyslogRead(d *schema.ResourceData, meta interface{}) 
 
 	idx, _ := strconv.Atoi(remoteSyslogStatus.Index)
 	d.Set("index", idx)
+	d.Set("name", remoteSyslogStatus.Name)
 	d.Set("server", remoteSyslogStatus.Server)
 	port, _ := strconv.Atoi(remoteSyslogStatus.Port)
 	d.Set("port", port)
