@@ -18,6 +18,7 @@ func TestAccAviatrixRemoteSyslog_basic(t *testing.T) {
 	}
 
 	rIndex := acctest.RandIntRange(0, 9)
+	rName := acctest.RandString(5)
 	resourceName := "aviatrix_remote_syslog.test_remote_syslog"
 
 	resource.Test(t, resource.TestCase{
@@ -28,10 +29,11 @@ func TestAccAviatrixRemoteSyslog_basic(t *testing.T) {
 		CheckDestroy: testAccCheckRemoteSyslogDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRemoteSyslogBasic(rIndex),
+				Config: testAccRemoteSyslogBasic(rIndex, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemoteSyslogExists(resourceName, rIndex),
 					resource.TestCheckResourceAttr(resourceName, "index", strconv.Itoa(rIndex)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "server", "1.2.3.4"),
 					resource.TestCheckResourceAttr(resourceName, "port", "10"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "TCP"),
@@ -48,16 +50,17 @@ func TestAccAviatrixRemoteSyslog_basic(t *testing.T) {
 	})
 }
 
-func testAccRemoteSyslogBasic(rName int) string {
+func testAccRemoteSyslogBasic(rIndex int, rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_remote_syslog" "test_remote_syslog" {
 	index             = %d
+	name              = "%s"
 	server            = "1.2.3.4"
 	port              = 10
 	protocol          = "TCP"
 	excluded_gateways = ["a", "b"]
 }
-`, rName)
+`, rIndex, rName)
 }
 
 func testAccCheckRemoteSyslogExists(resourceName string, index int) resource.TestCheckFunc {
