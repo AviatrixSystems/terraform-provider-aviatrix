@@ -294,6 +294,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"local_as_number": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				Description:  "Changes the Aviatrix Transit Gateway ASN number before you setup Aviatrix Transit Gateway connection configurations.",
 				ValidateFunc: goaviatrix.ValidateASN,
 			},
@@ -1357,11 +1358,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return fmt.Errorf("could not set prepend_as_path: %v", err)
 	}
-	if _, ok := d.GetOk("local_as_number"); ok || isImport {
-		if advancedConfig.LocalASNumber != "" {
-			d.Set("local_as_number", advancedConfig.LocalASNumber)
-		}
-	}
+	d.Set("local_as_number", advancedConfig.LocalASNumber)
 	d.Set("bgp_ecmp", advancedConfig.BgpEcmpEnabled)
 	d.Set("enable_active_standby", advancedConfig.ActiveStandbyEnabled)
 	if gw.CloudType == goaviatrix.AZURE {
@@ -2292,7 +2289,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if d.HasChange("local_as_number") && d.Get("local_as_number").(string) != "" {
+	if d.HasChange("local_as_number") {
 		localAsNumber := d.Get("local_as_number").(string)
 		gateway := &goaviatrix.TransitVpc{
 			GwName: d.Get("gw_name").(string),
