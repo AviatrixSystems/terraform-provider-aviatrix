@@ -44,6 +44,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"gw_name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Name of the gateway which is going to be created.",
 			},
 			"vpc_id": {
@@ -1498,9 +1499,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	}
 	if d.HasChange("account_name") {
 		return fmt.Errorf("updating account_name is not allowed")
-	}
-	if d.HasChange("gw_name") {
-		return fmt.Errorf("updating gw_name is not allowed")
 	}
 	if d.HasChange("insane_mode") {
 		return fmt.Errorf("updating insane_mode is not allowed")
