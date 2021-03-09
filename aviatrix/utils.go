@@ -85,16 +85,6 @@ func getStringSet(d *schema.ResourceData, k string) []string {
 	return sl
 }
 
-// stringInSlice checks if the needle is in the haystack
-func stringInSlice(needle string, haystack []string) bool {
-	for _, element := range haystack {
-		if element == needle {
-			return true
-		}
-	}
-	return false
-}
-
 // intInSlice checks if the needle is in the haystack
 func intInSlice(needle int, haystack []int) bool {
 	for _, element := range haystack {
