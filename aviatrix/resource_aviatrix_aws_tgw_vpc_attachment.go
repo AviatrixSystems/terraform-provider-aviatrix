@@ -113,7 +113,7 @@ func resourceAviatrixAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta inte
 		if err == goaviatrix.ErrNotFound {
 			return fmt.Errorf("could not find Security Domain: " + awsTgwVpcAttachment.SecurityDomainName)
 		}
-		return fmt.Errorf(("could not find Security Domain due to: ") + err.Error())
+		return fmt.Errorf("could not find Security Domain due to: %v", err)
 	}
 
 	log.Printf("[INFO] Attaching vpc: %s to tgw %s", awsTgwVpcAttachment.VpcID, awsTgwVpcAttachment.TgwName)
@@ -294,7 +294,7 @@ func resourceAviatrixAwsTgwVpcAttachmentUpdate(d *schema.ResourceData, meta inte
 			if err == goaviatrix.ErrNotFound {
 				return fmt.Errorf("could not find Security Domain: " + awsTgwVpcAttachment.SecurityDomainName)
 			}
-			return fmt.Errorf(("could not find Security Domain due to: ") + err.Error())
+			return fmt.Errorf("could not find Security Domain due to: %v", err)
 		}
 
 		oldEA, newEA := d.GetChange("edge_attachment")
