@@ -90,10 +90,10 @@ func marshalAwsTgwConnectPeerInput(d *schema.ResourceData) *goaviatrix.AwsTgwCon
 		ConnectAttachmentID: d.Get("connect_attachment_id").(string),
 		ConnectionName:      d.Get("connection_name").(string),
 		ConnectPeerName:     d.Get("connect_peer_name").(string),
-		PeerIPAddress:       d.Get("peer_gre_address").(string),
+		PeerGreAddress:      d.Get("peer_gre_address").(string),
 		PeerASNumber:        d.Get("peer_as_number").(string),
 		InsideIPCidrs:       getStringSet(d, "bgp_inside_cidrs"),
-		TgwIPAddress:        d.Get("tgw_gre_address").(string),
+		TgwGreAddress:       d.Get("tgw_gre_address").(string),
 	}
 }
 
@@ -147,11 +147,11 @@ func resourceAviatrixAwsTgwConnectPeerRead(ctx context.Context, d *schema.Resour
 	d.Set("connect_peer_name", peer.ConnectPeerName)
 	d.Set("connect_attachment_id", peer.ConnectAttachmentID)
 	d.Set("peer_as_number", peer.PeerASNumber)
-	d.Set("peer_gre_address", peer.PeerIPAddress)
+	d.Set("peer_gre_address", peer.PeerGreAddress)
 	if err := d.Set("bgp_inside_cidrs", peer.InsideIPCidrs); err != nil {
 		return diag.Errorf("could not set 'bgp_inside_cidrs' into state: %v", err)
 	}
-	d.Set("tgw_gre_address", peer.TgwIPAddress)
+	d.Set("tgw_gre_address", peer.TgwGreAddress)
 	d.Set("connect_peer_id", peer.ConnectPeerID)
 	d.SetId(peer.ID())
 	return nil
