@@ -146,6 +146,9 @@ type Gateway struct {
 	RouteTable                  string
 	EnablePrivateOob            bool   `json:"private_oob"`
 	OobManagementSubnet         string `json:"oob_mgmt_subnet"`
+	LanVpcID                    string `form:"lan_vpc_id"`
+	LanPrivateSubnet            string `form:"lan_private_subnet"`
+	CreateFQDNGateway           bool   `form:"create_firewall_gw"`
 }
 
 type PolicyRule struct {

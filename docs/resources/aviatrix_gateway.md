@@ -164,6 +164,21 @@ resource "aviatrix_gateway" "test_gateway_awsgov" {
   ]
 }
 ```
+```hcl
+# Create an Aviatrix FQDN GCP Gateway
+resource "aviatrix_gateway" "test_gateway_gcp" {
+  cloud_type      = 4
+  account_name    = "devops-awsgov"
+  gw_name         = "avtx-fqdn-gw-gcp"
+  vpc_id          = "fqdn-gw-vpc-gcp"
+  vpc_reg         = "us-west1-a"
+  gw_size         = "n1-standard-1"
+  subnet          = "10.0.0.0/24"
+  fqdn_lan_vpc_id = "fqdn-LAN-gw-vpc-gcp"
+  fqdn_lan_cidr   = "10.1.0.0/24"
+  single_az_ha    = true
+}
+```
 
 ## Argument Reference
 
@@ -253,9 +268,9 @@ The following arguments are supported:
 * `monitor_exclude_list` - (Optional) Set of monitored instance ids. Only valid when 'enable_monitor_gateway_subnets' = true. Available in provider version R2.17.1+.
 
 ### FQDN Gateway
-~> **NOTE:** This attribute is only to be used in Azure FQDN FireNet workflows.
 
-* `fqdn_lan_cidr` - (Optional) If `fqdn_lan_cidr` is set, the FQDN gateway will be created with an additional LAN interface using the provided CIDR. This attribute is required when enabling FQDN gateway FireNet in Azure. Available in provider version R2.17.1+.
+* `fqdn_lan_cidr` - (Optional) If `fqdn_lan_cidr` is set, the FQDN gateway will be created with an additional LAN interface using the provided CIDR. This attribute is required when enabling FQDN gateway FireNet in Azure or GCP. Available in provider version R2.17.1+.
+* `fqdn_lan_vpc_id` - (Optional) FQDN LAN VPC ID. This attribute is required when enabling FQDN gateway FireNet in GCP. Available as of provider version R2.18.1+.
 
 ### Misc.
 * `allocate_new_eip` - (Optional) If set to false, use an available address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in Controller 2.7+. Valid values: true, false. Default: true. Option not available for Azure and OCI gateways, they will automatically allocate new EIPs.
