@@ -111,7 +111,7 @@ func extractTags(d *schema.ResourceData, cloudType int) (map[string]string, erro
 		return nil, nil
 	}
 	if !intInSlice(cloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.GCP, goaviatrix.AZURE}) {
-		return nil, fmt.Errorf("adding tags is only supported for AWS, AWSGOV and AZURE, cloud_type must be 1, 256, 4 or 8")
+		return nil, fmt.Errorf("adding tags is only supported for AWS, AWSGOV, GCP and AZURE, cloud_type must be 1, 256, 4 or 8")
 	}
 
 	tagsMap := tags.(map[string]interface{})
