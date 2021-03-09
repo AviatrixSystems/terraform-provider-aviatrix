@@ -29,11 +29,11 @@ type AwsTgwConnectPeer struct {
 	ConnectAttachmentID string   `form:"connect_attachment_id" json:"connect_attachment_id"`
 	ConnectPeerName     string   `form:"connect_peer_name" json:"connect_peer_name"`
 	ConnectPeerID       string   `form:"connect_peer_id" json:"connect_peer_id"`
-	PeerIPAddress       string   `form:"peer_ip_address" json:"peer_gre_address"`
+	PeerGreAddress      string   `form:"peer_gre_address" json:"peer_gre_address"`
 	InsideIPCidrs       []string `json:"inside_ip_cidr"`
-	InsideIPCidrsString string   `form:"inside_ip_cidr"`
-	PeerASNumber        string   `form:"peer_asn" json:"peer_asn"`
-	TgwIPAddress        string   `form:"tgw_ip_address" json:"tgw_gre_address"`
+	InsideIPCidrsString string   `form:"bgp_inside_cidrs"`
+	PeerASNumber        string   `form:"peer_as_number" json:"peer_asn"`
+	TgwGreAddress       string   `form:"tgw_gre_address" json:"tgw_gre_address"`
 	ConnectionName      string   `form:"connection_name" json:"connection_name"`
 }
 
