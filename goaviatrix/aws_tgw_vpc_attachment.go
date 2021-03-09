@@ -287,7 +287,7 @@ func (c *Client) GetAwsTgwDomain(awsTgw *AWSTgw, sDM string) error {
 }
 
 func (c *Client) GetVPCAttachmentRouteTableDetails(awsTgwVpcAttachment *AwsTgwVpcAttachment) (*AwsTgwVpcAttachment, error) {
-	Url, err := url.Parse(c.baseURL)
+	Url, _ := url.Parse(c.baseURL)
 	viewRouteDomainDetails := url.Values{}
 	viewRouteDomainDetails.Add("CID", c.CID)
 	viewRouteDomainDetails.Add("action", "view_route_domain_details")

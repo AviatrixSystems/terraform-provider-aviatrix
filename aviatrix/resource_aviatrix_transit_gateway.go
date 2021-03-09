@@ -385,6 +385,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				ValidateFunc: validation.IntBetween(12, 360),
 				Description:  "BGP Hold Time.",
 			},
+			"enable_transit_summarize_cidr_to_tgw": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable summarize CIDR to TGW.",
+			},
 			"eip": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -447,13 +453,14 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	client := meta.(*goaviatrix.Client)
 
 	gateway := &goaviatrix.TransitVpc{
-		CloudType:              d.Get("cloud_type").(int),
-		AccountName:            d.Get("account_name").(string),
-		GwName:                 d.Get("gw_name").(string),
-		VpcID:                  d.Get("vpc_id").(string),
-		VpcSize:                d.Get("gw_size").(string),
-		Subnet:                 d.Get("subnet").(string),
-		EnableHybridConnection: d.Get("enable_hybrid_connection").(bool),
+		CloudType:                d.Get("cloud_type").(int),
+		AccountName:              d.Get("account_name").(string),
+		GwName:                   d.Get("gw_name").(string),
+		VpcID:                    d.Get("vpc_id").(string),
+		VpcSize:                  d.Get("gw_size").(string),
+		Subnet:                   d.Get("subnet").(string),
+		EnableHybridConnection:   d.Get("enable_hybrid_connection").(bool),
+		EnableSummarizeCidrToTgw: d.Get("enable_transit_summarize_cidr_to_tgw").(bool),
 	}
 
 	enableNAT := d.Get("single_ip_snat").(bool)
@@ -1095,6 +1102,13 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if gateway.EnableSummarizeCidrToTgw {
+		err = client.EnableSummarizeCidrToTgw(gateway.GwName)
+		if err != nil {
+			return fmt.Errorf("could not enable summarize cidr to tgw: %v", err)
+		}
+	}
+
 	return resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -1385,6 +1399,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	} else {
 		d.Set("enable_bgp_over_lan", false)
 	}
+	d.Set("enable_transit_summarize_cidr_to_tgw", advancedConfig.EnableSummarizeCidrToTgw)
 
 	isSegmentationEnabled, err := client.IsSegmentationEnabled(transitGateway)
 	if err != nil {
@@ -2418,6 +2433,20 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		err := client.ChangeBgpHoldTime(gateway.GwName, d.Get("bgp_hold_time").(int))
 		if err != nil {
 			return fmt.Errorf("could not change BGP Hold Time during Transit Gateway update: %v", err)
+		}
+	}
+
+	if d.HasChange("enable_transit_summarize_cidr_to_tgw") {
+		if d.Get("enable_transit_summarize_cidr_to_tgw").(bool) {
+			err := client.EnableSummarizeCidrToTgw(gateway.GwName)
+			if err != nil {
+				return fmt.Errorf("could not enable summarize cidr to tgw when updating: %v", err)
+			}
+		} else {
+			err := client.DisableSummarizeCidrToTgw(gateway.GwName)
+			if err != nil {
+				return fmt.Errorf("could not disable summarize cidr to tgw when updating: %v", err)
+			}
 		}
 	}
 
