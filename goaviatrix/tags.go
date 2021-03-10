@@ -5,11 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
-	"reflect"
+	"strconv"
 	"strings"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // Tags simple struct to hold tag details
@@ -27,15 +24,6 @@ type TagAPIResp struct {
 	Return  bool                         `json:"return"`
 	Results map[string]map[string]string `json:"results"`
 	Reason  string                       `json:"reason"`
-}
-
-func (tags *Tags) ComputeTagList() {
-	tagList := make([]string, 0, len(tags.Tags))
-	for key, val := range tags.Tags {
-		tagList = append(tagList, key+":"+val)
-	}
-	tagListStr := strings.Join(tagList, ",")
-	tags.TagList = tagListStr
 }
 
 func (c *Client) AddTags(tags *Tags) error {
@@ -60,105 +48,67 @@ func (c *Client) AddTags(tags *Tags) error {
 }
 
 func (c *Client) GetTags(tags *Tags) ([]string, error) {
-	tags.CID = c.CID
-	tags.Action = "list_resource_tags"
-	resp, err := c.Post(c.baseURL, tags)
+	data := map[string]string{
+		"action":        "list_resource_tags",
+		"CID":           c.CID,
+		"cloud_type":    strconv.Itoa(tags.CloudType),
+		"resource_type": tags.ResourceType,
+		"resource_name": tags.ResourceName,
+	}
+	var resp TagAPIResp
+	err := c.GetAPI(&resp, data["Action"], data, BasicCheck)
 	if err != nil {
-		return nil, errors.New("HTTP Post list_resource_tags failed: " + err.Error())
+		return nil, fmt.Errorf("HTTP Get list_resource_tags failed: %v", err)
 	}
-	var data TagAPIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_resource_tags failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return nil, errors.New("Rest API list_resource_tags Post failed: " + data.Reason)
-	}
-	if tagsMap, ok := data.Results["usr_tags"]; ok {
-		tags.Tags = tagsMap
-	}
+
 	var tagList []string
-	keys := reflect.ValueOf(data.Results).MapKeys()
-	strKeys := make([]string, len(keys))
-	for i := 0; i < len(keys); i++ {
-		strKeys[i] = keys[i].String()
-	}
-	for i := 0; i < len(keys); i++ {
-		if strKeys[i] == "usr_tags" {
-			allKeys := reflect.ValueOf(data.Results["usr_tags"]).MapKeys()
-			for i := 0; i < len(allKeys); i++ {
-				if (allKeys[i].String() == "Key" && data.Results["usr_tags"][allKeys[i].String()] == "Aviatrix-Created-Resource") ||
-					(allKeys[i].String() == "Value" && data.Results["usr_tags"][allKeys[i].String()] == "Do-Not-Delete-Aviatrix-Created-Resource") {
-					continue
-				}
-				str := allKeys[i].String() + ":" + data.Results["usr_tags"][allKeys[i].String()]
-				tagList = append(tagList, str)
-			}
-			return tagList, nil
+	if tagsMap, ok := resp.Results["usr_tags"]; ok {
+		tags.Tags = tagsMap
+		for key, val := range tagsMap {
+			tagStr := key + ":" + val
+			tagList = append(tagList, tagStr)
 		}
 	}
 
+	return tagList, nil
+}
+
+func (c *Client) GetTagsMap(tags *Tags) (map[string]string, error) {
+	data := map[string]string{
+		"action":        "list_resource_tags",
+		"CID":           c.CID,
+		"cloud_type":    strconv.Itoa(tags.CloudType),
+		"resource_type": tags.ResourceType,
+		"resource_name": tags.ResourceName,
+	}
+
+	var resp TagAPIResp
+	err := c.GetAPI(&resp, data["Action"], data, BasicCheck)
+	if err != nil {
+		return nil, fmt.Errorf("HTTP Get list_resource_tags failed: %v", err)
+	}
+
+	if !resp.Return {
+		return nil, fmt.Errorf("rest API list_resource_tags Post failed: %s", resp.Reason)
+	}
+
+	if tagsMap, ok := resp.Results["usr_tags"]; ok {
+		return tagsMap, nil
+	}
 	return nil, nil
 }
 
-func (c *Client) GetTagsMap(tags *Tags) error {
-	tags.CID = c.CID
-	tags.Action = "list_resource_tags"
-
-	resp, err := c.Post(c.baseURL, tags)
-	if err != nil {
-		return fmt.Errorf("HTTP Post list_resource_tags failed: %v", err)
-	}
-	var data TagAPIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return fmt.Errorf("Json Decode list_resource_tags failed: %v\nBody: %s", err, bodyString)
-	}
-	if !data.Return {
-		return fmt.Errorf("rest API list_resource_tags Post failed: %s", data.Reason)
-	}
-
-	if tagsMap, ok := data.Results["usr_tags"]; ok {
-		tags.Tags = tagsMap
-	}
-	return nil
-}
-
 func (c *Client) DeleteTags(tags *Tags) error {
-	tags.CID = c.CID
-	tags.Action = "delete_resource_tag"
-	verb := "POST"
-	body := fmt.Sprintf("CID=%s&action=%s&cloud_type=%d&resource_type=%s&resource_name=%s&del_tag_list=%s",
-		c.CID, tags.Action, tags.CloudType, tags.ResourceType, tags.ResourceName, tags.TagList)
-	log.Tracef("%s %s Body: %s", verb, c.baseURL, body)
-	req, err := http.NewRequest(verb, c.baseURL, strings.NewReader(body))
-	if err == nil {
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	} else {
-		return errors.New("HTTP New Request Post delete_resource_tags failed: " + err.Error())
+	params := map[string]string{
+		"action":        "delete_resource_tag",
+		"CID":           c.CID,
+		"cloud_type":    strconv.Itoa(tags.CloudType),
+		"del_tag_list":  tags.TagList,
+		"resource_name": tags.ResourceName,
+		"resource_type": tags.ResourceType,
 	}
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return errors.New("HTTP Post delete_resource_tags failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_resource_tags failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API delete_resource_tags Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(params["action"], params, BasicCheck)
 }
 
 func (c *Client) UpdateTags(tags *Tags) error {
@@ -166,4 +116,13 @@ func (c *Client) UpdateTags(tags *Tags) error {
 	tags.Action = "update_resource_tags"
 
 	return c.PostAPI(tags.Action, tags, BasicCheck)
+}
+
+func TagsMapToString(tagsMap map[string]string) string {
+	tagList := make([]string, 0, len(tagsMap))
+	for key, val := range tagsMap {
+		tagList = append(tagList, key+":"+val)
+	}
+	tagListStr := strings.Join(tagList, ",")
+	return tagListStr
 }
