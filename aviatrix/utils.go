@@ -95,6 +95,11 @@ func intInSlice(needle int, haystack []int) bool {
 	return false
 }
 
+var (
+	tagMatcher    = regexp.MustCompile(`^[a-zA-Z0-9+\-=._ :/@ ]*$`)
+	gcpTagMatcher = regexp.MustCompile(`^[\p{Ll}\p{Lo}\p{N}_-]*$`)
+)
+
 func extractTags(d *schema.ResourceData, cloudType int) (map[string]string, error) {
 	tags, ok := d.GetOk("tags")
 	if !ok {
@@ -106,15 +111,16 @@ func extractTags(d *schema.ResourceData, cloudType int) (map[string]string, erro
 
 	tagsMap := tags.(map[string]interface{})
 	tagsStrMap := make(map[string]string, len(tagsMap))
-
-	tagMatcher, err := regexp.Compile(`^[a-zA-Z0-9+\-=._ :/@ ]*$`)
-	if err != nil {
-		return nil, fmt.Errorf("failed to compile regular expression for tags")
+	var matcher *regexp.Regexp
+	if cloudType == goaviatrix.GCP {
+		matcher = gcpTagMatcher
+	} else {
+		matcher = tagMatcher
 	}
 
 	for key, val := range tagsMap {
 		valStr := fmt.Sprint(val)
-		matched := tagMatcher.MatchString(key + valStr)
+		matched := matcher.MatchString(key + valStr)
 		if !matched {
 			return nil, fmt.Errorf("illegal characters in tags")
 		}
