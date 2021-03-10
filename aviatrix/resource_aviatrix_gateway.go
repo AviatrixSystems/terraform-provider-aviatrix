@@ -2003,11 +2003,15 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 					return fmt.Errorf("failed to delete Aviatrix public subnet filtering HA gateway: %s", err)
 				}
 
+				gw.Eip = ""
+
 				gateway.GwName = d.Get("gw_name").(string)
 				err = client.EnablePublicSubnetFilteringHAGateway(gw)
 				if err != nil {
 					return fmt.Errorf("failed to enable Aviatrix public subnet filtering HA gateway: %s", err)
 				}
+
+				newHaGwEnabled = true
 			}
 		} else {
 			if newHaGwEnabled {
@@ -2026,11 +2030,15 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 					return fmt.Errorf("failed to delete Aviatrix peering HA gateway: %s", err)
 				}
 
+				gw.Eip = ""
+
 				gateway.GwName = d.Get("gw_name").(string)
 				haErr := client.EnablePeeringHaGateway(gw)
 				if haErr != nil {
-					return fmt.Errorf("failed to enable Aviatrix peering HA gateway: %s", err)
+					return fmt.Errorf("failed to enable Aviatrix peering HA gateway: %s", haErr)
 				}
+
+				newHaGwEnabled = true
 			}
 		}
 	}
