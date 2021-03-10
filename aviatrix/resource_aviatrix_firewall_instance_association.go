@@ -98,7 +98,6 @@ func marshalFirewallInstanceAssociationInput(d *schema.ResourceData) *goaviatrix
 }
 
 func resourceAviatrixFirewallInstanceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	defer resourceAviatrixFirewallInstanceAssociationRead(d, meta)
 	client := meta.(*goaviatrix.Client)
 
 	firewall := marshalFirewallInstanceAssociationInput(d)
@@ -107,17 +106,17 @@ func resourceAviatrixFirewallInstanceAssociationCreate(d *schema.ResourceData, m
 	if err != nil {
 		return fmt.Errorf("failed to associate gateway and firewall/fqdn_gateway: %v", err)
 	}
+	id := fmt.Sprintf("%s~~%s~~%s", firewall.VpcID, firewall.GwName, firewall.InstanceID)
+	d.SetId(id)
+	defer resourceAviatrixFirewallInstanceAssociationRead(d, meta)
 
 	if d.Get("attached").(bool) {
-		err := client.AttachFirewallToFireNet(firewall)
+		err = client.AttachFirewallToFireNet(firewall)
 		if err != nil {
 			return fmt.Errorf("failed to attach gateway and firewall/fqdn_gateway: %v", err)
 		}
 	}
 
-	id := fmt.Sprintf("%s~~%s~~%s", firewall.VpcID, firewall.GwName, firewall.InstanceID)
-
-	d.SetId(id)
 	return nil
 }
 
@@ -172,7 +171,7 @@ func resourceAviatrixFirewallInstanceAssociationRead(d *schema.ResourceData, met
 	if instanceInfo.VendorType == "Aviatrix FQDN Gateway" {
 		d.Set("vendor_type", "fqdn_gateway")
 		d.Set("firewall_name", "")
-		if strings.HasPrefix(instanceInfo.LanInterface, "eni-") {
+		if strings.HasPrefix(instanceInfo.LanInterface, "eni-") || fireNetDetail.CloudType == strconv.Itoa(goaviatrix.GCP) {
 			d.Set("lan_interface", "")
 		} else {
 			d.Set("lan_interface", instanceInfo.LanInterface)
