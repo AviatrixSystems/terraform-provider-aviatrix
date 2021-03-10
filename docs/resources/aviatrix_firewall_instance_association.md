@@ -17,10 +17,22 @@ Available in provider version R2.17.1+.
 ```hcl
 # Associate an Aviatrix FireNet Gateway with a Firewall Instance
 resource "aviatrix_firewall_instance_association" "firewall_instance_association_1" {
-  vpc_id               = aviatrix_firenet.firenet_1.vpc_id
+  vpc_id               = aviatrix_firewall_instance.firewall_instance_1.vpc_id
   firenet_gw_name      = aviatrix_transit_gateway.transit_gateway_1.gw_name
   instance_id          = aviatrix_firewall_instance.firewall_instance_1.instance_id
   firewall_name        = aviatrix_firewall_instance.firewall_instance_1.firewall_name
+  lan_interface        = aviatrix_firewall_instance.firewall_instance_1.lan_interface
+  management_interface = aviatrix_firewall_instance.firewall_instance_1.management_interface
+  egress_interface     = aviatrix_firewall_instance.firewall_instance_1.egress_interface
+  attached             = true
+}
+```
+```hcl
+# Associate an GCP Aviatrix FireNet Gateway with a Firewall Instance
+resource "aviatrix_firewall_instance_association" "firewall_instance_association_1" {
+  vpc_id               = aviatrix_firewall_instance.firewall_instance_1.vpc_id
+  firenet_gw_name      = aviatrix_transit_gateway.transit_gateway_1.gw_name
+  instance_id          = aviatrix_firewall_instance.firewall_instance_1.instance_id
   lan_interface        = aviatrix_firewall_instance.firewall_instance_1.lan_interface
   management_interface = aviatrix_firewall_instance.firewall_instance_1.management_interface
   egress_interface     = aviatrix_firewall_instance.firewall_instance_1.egress_interface
@@ -43,7 +55,7 @@ The following arguments are supported:
 -> **NOTE:** If associating FQDN gateway to FireNet, it is FQDN gateway's `gw_name`. For Azure FireNet, it is the `firewall_name` concatenated with a ":" and the Resource Group of the `vpc_id` set for that instance.
 
 * `vendor_type` - (Optional) Type of firewall. Valid values: "Generic", "fqdn_gateway". Default value: "Generic". Value "fqdn_gateway" is required for FQDN gateway.  
-* `firewall_name` - (Optional) Firewall instance name. **Required if it is a firewall instance.**
+* `firewall_name` - (Optional) Firewall instance name. **Required for non-GCP firewall instance. For GCP, this field should not be set.**
 * `lan_interface`- (Optional) Lan interface ID. **Required if it is a firewall instance.**
 * `management_interface` - (Optional) Management interface ID. **Required if it is a firewall instance.**
 * `egress_interface`- (Optional) Egress interface ID. **Required if it is a firewall instance.**

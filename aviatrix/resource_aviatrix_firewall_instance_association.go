@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
@@ -50,7 +51,7 @@ func resourceAviatrixFirewallInstanceAssociation() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Default:     "",
-				Description: "Firewall instance name, or FQDN Gateway's gw_name, required if it is a firewall instance.",
+				Description: "Firewall instance name, or FQDN Gateway's gw_name, required if it is a AWS or AZURE firewall instance. Not allowed for GCP",
 			},
 			"lan_interface": {
 				Type:        schema.TypeString,
@@ -103,7 +104,23 @@ func resourceAviatrixFirewallInstanceAssociationCreate(d *schema.ResourceData, m
 
 	firewall := marshalFirewallInstanceAssociationInput(d)
 
-	err := client.AssociateFirewallWithFireNet(firewall)
+	fwInfo, err := client.GetFirewallInstance(firewall)
+	if err != nil {
+		return fmt.Errorf("could not find firewall before creating association: %v", err)
+	}
+	cloudType := goaviatrix.VendorToCloudType(fwInfo.CloudVendor)
+	if cloudType == goaviatrix.GCP {
+		if firewall.FirewallName != "" {
+			return fmt.Errorf("attribute 'firewall_name' is not valid for GCP firewall association")
+		}
+		vpcParts := strings.Split(firewall.VpcID, "~-~")
+		if len(vpcParts) != 2 {
+			return fmt.Errorf("GCP firewall instance association requires 'vpc_id' in the "+
+				"form 'vpc_name~-~project_name' instead got %q", firewall.VpcID)
+		}
+	}
+
+	err = client.AssociateFirewallWithFireNet(firewall)
 	if err != nil {
 		return fmt.Errorf("failed to associate gateway and firewall/fqdn_gateway: %v", err)
 	}
@@ -181,10 +198,14 @@ func resourceAviatrixFirewallInstanceAssociationRead(d *schema.ResourceData, met
 		d.Set("egress_interface", "")
 	} else {
 		d.Set("vendor_type", "Generic")
-		d.Set("firewall_name", instanceInfo.FirewallName)
 		d.Set("lan_interface", instanceInfo.LanInterface)
 		d.Set("management_interface", instanceInfo.ManagementInterface)
 		d.Set("egress_interface", instanceInfo.EgressInterface)
+		if fireNetDetail.CloudType != strconv.Itoa(goaviatrix.GCP) {
+			d.Set("firewall_name", instanceInfo.FirewallName)
+		} else {
+			d.Set("firewall_name", "")
+		}
 	}
 
 	id := fmt.Sprintf("%s~~%s~~%s", vpcID, instanceInfo.GwName, instanceInfo.InstanceID)
