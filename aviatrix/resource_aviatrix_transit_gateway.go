@@ -1429,9 +1429,9 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("ha_eip", "")
 			d.Set("ha_oob_management_subnet", "")
 			d.Set("ha_oob_availability_zone", "")
-			return nil
+		} else {
+			return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway: %s", err)
 		}
-		return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway: %s", err)
 	} else {
 		if haGw.CloudType == goaviatrix.AWS || haGw.CloudType == goaviatrix.AZURE || haGw.CloudType == goaviatrix.OCI || haGw.CloudType == goaviatrix.AWSGOV {
 			d.Set("ha_subnet", haGw.VpcNet)
@@ -1469,12 +1469,12 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("ha_oob_management_subnet", strings.Split(haGw.OobManagementSubnet, "~~")[0])
 			d.Set("ha_oob_availability_zone", haGw.GatewayZone)
 		}
-	}
 
-	if haGw.InsaneMode == "yes" && (haGw.CloudType == goaviatrix.AWS || haGw.CloudType == goaviatrix.AWSGOV) {
-		d.Set("ha_insane_mode_az", haGw.GatewayZone)
-	} else {
-		d.Set("ha_insane_mode_az", "")
+		if haGw.InsaneMode == "yes" && (haGw.CloudType == goaviatrix.AWS || haGw.CloudType == goaviatrix.AWSGOV) {
+			d.Set("ha_insane_mode_az", haGw.GatewayZone)
+		} else {
+			d.Set("ha_insane_mode_az", "")
+		}
 	}
 
 	return nil
