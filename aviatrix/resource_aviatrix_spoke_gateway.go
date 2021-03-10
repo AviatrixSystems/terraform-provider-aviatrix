@@ -978,6 +978,12 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	jumboFrameStatus, err := client.GetJumboFrameStatus(gateway)
+	if err != nil {
+		return fmt.Errorf("could not get jumbo frame status for spoke gateway: %v", err)
+	}
+	d.Set("enable_jumbo_frame", jumboFrameStatus)
+
 	haGateway := &goaviatrix.Gateway{
 		AccountName: d.Get("account_name").(string),
 		GwName:      d.Get("gw_name").(string) + "-hagw",
@@ -1038,12 +1044,6 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("ha_oob_availability_zone", haGw.GatewayZone)
 		}
 	}
-
-	jumboFrameStatus, err := client.GetJumboFrameStatus(gateway)
-	if err != nil {
-		return fmt.Errorf("could not get jumbo frame status for spoke gateway: %v", err)
-	}
-	d.Set("enable_jumbo_frame", jumboFrameStatus)
 
 	return nil
 }
