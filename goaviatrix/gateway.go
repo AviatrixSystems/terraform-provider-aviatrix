@@ -478,6 +478,7 @@ func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
 	listVpcSummary := url.Values{}
 	listVpcSummary.Add("CID", c.CID)
 	listVpcSummary.Add("action", "list_vpcs_summary")
+	listVpcSummary.Add("gateway_name", gateway.GwName)
 	Url.RawQuery = listVpcSummary.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
