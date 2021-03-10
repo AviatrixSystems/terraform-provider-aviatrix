@@ -421,6 +421,12 @@ func resourceAviatrixGateway() *schema.Resource {
 				ForceNew:    true,
 				Description: "FQDN gateway lan interface cidr.",
 			},
+			"fqdn_lan_vpc_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "LAN VPC ID. Only used for GCP FQDN Gateway.",
+			},
 			"fqdn_lan_interface": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -509,6 +515,29 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 		gateway.RouteTable = strings.Join(routeTables, ",")
 		gateway.VpcNet = fmt.Sprintf("%s~~%s", d.Get("subnet").(string), d.Get("zone").(string))
+	}
+
+	fqdnLanCidr := d.Get("fqdn_lan_cidr").(string)
+	fqdnLanVpcID := d.Get("fqdn_lan_vpc_id").(string)
+	if gateway.CloudType != goaviatrix.GCP && fqdnLanVpcID != "" {
+		return fmt.Errorf("attribute 'fqdn_lan_vpc_id' is only valid for GCP FQDN Gateways")
+	}
+	if !intInSlice(gateway.CloudType, []int{goaviatrix.GCP, goaviatrix.AZURE}) && fqdnLanCidr != "" {
+		return fmt.Errorf("attribute 'fqdn_lan_cidr' is only valid for GCP and Azure FQDN Gateways")
+	}
+	if gateway.CloudType == goaviatrix.GCP {
+		if (fqdnLanCidr != "" && fqdnLanVpcID == "") || (fqdnLanCidr == "" && fqdnLanVpcID != "") {
+			return fmt.Errorf("to create a GCP FQDN gateway, both 'fqdn_lan_cidr' and 'fqdn_lan_vpc_id' must be set")
+		}
+		if fqdnLanCidr != "" && fqdnLanVpcID != "" {
+			gateway.LanVpcID = fqdnLanVpcID
+			gateway.LanPrivateSubnet = fqdnLanCidr
+			gateway.CreateFQDNGateway = true
+		}
+	} else if gateway.CloudType == goaviatrix.AZURE {
+		if fqdnLanCidr != "" {
+			gateway.FqdnLanCidr = fqdnLanCidr
+		}
 	}
 
 	if gateway.CloudType != goaviatrix.AZURE && !d.Get("enable_public_subnet_filtering").(bool) && d.Get("zone").(string) != "" {
@@ -706,10 +735,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	if !enableEncryptVolume && (gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV) {
 		gateway.EncVolume = "no"
-	}
-
-	if d.Get("fqdn_lan_cidr").(string) != "" {
-		gateway.FqdnLanCidr = d.Get("fqdn_lan_cidr").(string)
 	}
 
 	enableMonitorSubnets := d.Get("enable_monitor_gateway_subnets").(bool)
@@ -1405,9 +1430,12 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		}
 
 		fqdnGatewayLanInterface := getFqdnGatewayLanInterface(fqdnGatewayInfo, gw.GwName)
-		if fqdnGatewayLanInterface != "" {
+		if fqdnGatewayLanInterface != "" && gw.CloudType == goaviatrix.AZURE {
 			d.Set("fqdn_lan_interface", fqdnGatewayLanInterface)
 			d.Set("fqdn_lan_cidr", getFqdnGatewayLanCidr(fqdnGatewayInfo, gw.GwName))
+		} else if gw.CloudType == goaviatrix.GCP {
+			d.Set("fqdn_lan_vpc_id", gwDetail.BundleVpcInfo.LAN.VpcID)
+			d.Set("fqdn_lan_cidr", strings.Split(gwDetail.BundleVpcInfo.LAN.Subnet, "~~")[0])
 		} else {
 			d.Set("fqdn_lan_interface", "")
 			d.Set("fqdn_lan_cidr", "")
@@ -2389,6 +2417,7 @@ var conflictingPublicSubnetFilteringGatewayConfigKeys = []string{
 	"enable_vpc_dns_server",
 	"enable_vpn_nat",
 	"fqdn_lan_cidr",
+	"fqdn_lan_vpc_id",
 	"idle_timeout",
 	"insane_mode",
 	"insane_mode_az",
