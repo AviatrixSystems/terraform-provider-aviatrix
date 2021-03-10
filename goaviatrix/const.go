@@ -15,6 +15,7 @@ const (
 // Cloud vendor names
 var (
 	AWSRelatedVendorNames      = []string{"AWS", "AWS GOV", "AWS CHINA"}
+	GCPRelatedVendorNames      = []string{"Gcloud"}
 	AzureArmRelatedVendorNames = []string{"Azure ARM", "ARM CHINA", "ARM GOV"}
 )
 
@@ -33,5 +34,23 @@ func GetSupportedClouds() []int {
 		AZURE,
 		OCI,
 		AWSGOV,
+	}
+}
+
+// Convert vendor name to cloud_type
+func VendorToCloudType(vendor string) int {
+	switch vendor {
+	case "AWS", "AWS CHINA":
+		return AWS
+	case "AWS GOV":
+		return AWSGOV
+	case "Gcloud":
+		return GCP
+	case "Azure ARM", "ARM CHINA", "ARM GOV":
+		return AZURE
+	case "Oracle Cloud Infrastructure":
+		return OCI
+	default:
+		return 0
 	}
 }
