@@ -21,7 +21,8 @@ type AwsTgwVpcAttachment struct {
 	Subnets                      string
 	RouteTables                  string
 	CustomizedRouteAdvertisement string
-	DisableLocalRoutePropagation bool `form:"disable_local_route_propagation, omitempty" json:"disable_local_route_propagation, omitempty"`
+	DisableLocalRoutePropagation bool `form:"disable_local_route_propagation,omitempty" json:"disable_local_route_propagation,omitempty"`
+	EdgeAttachment               string
 }
 
 type DomainListResp struct {
@@ -168,6 +169,14 @@ func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment
 		aTVA.Subnets = ""
 		aTVA.RouteTables = ""
 		aTVA.CustomizedRouteAdvertisement = ""
+	}
+
+	firenetManagementDetails, err := c.GetFirenetManagementDetails(awsTgwVpcAttachment)
+	if err != nil {
+		return nil, fmt.Errorf("could not get firenet management details: %s", err)
+	}
+	if len(firenetManagementDetails) != 0 {
+		aTVA.EdgeAttachment = firenetManagementDetails[1]
 	}
 
 	return aTVA, nil
@@ -380,4 +389,46 @@ func (c *Client) EditTgwSpokeVpcCustomizedRouteAdvertisement(awsTgwVpcAttachment
 		return errors.New("Rest API 'update_customized_route_advertisement' Get failed: " + data.Reason)
 	}
 	return nil
+}
+
+func (c *Client) UpdateFirewallAttachmentAccessFromOnprem(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {
+	params := map[string]string{
+		"action":          "update_firewall_attachment_access_from_onprem",
+		"CID":             c.CID,
+		"tgw_name":        awsTgwVpcAttachment.TgwName,
+		"attachment_name": awsTgwVpcAttachment.VpcID,
+		"edge_attachment": awsTgwVpcAttachment.EdgeAttachment,
+	}
+
+	if awsTgwVpcAttachment.EdgeAttachment == "" {
+		params["edge_attachment"] = "no"
+	}
+
+	return c.PostAPI(params["action"], params, BasicCheck)
+}
+
+func (c *Client) GetFirenetManagementDetails(awsTgwVpcAttachment *AwsTgwVpcAttachment) ([]string, error) {
+	params := map[string]string{
+		"action":          "get_tgw_attachment_details",
+		"CID":             c.CID,
+		"tgw_name":        awsTgwVpcAttachment.TgwName,
+		"attachment_name": awsTgwVpcAttachment.VpcID,
+	}
+
+	type AccessFromEdge struct {
+		AccessFromEdge []string `json:"access_from_edge"`
+	}
+
+	type Resp struct {
+		Results []AccessFromEdge
+	}
+
+	var data Resp
+
+	err := c.GetAPI(&data, params["action"], params, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+
+	return data.Results[0].AccessFromEdge, nil
 }
