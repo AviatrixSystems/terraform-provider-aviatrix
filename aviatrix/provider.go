@@ -105,6 +105,7 @@ func Provider() *schema.Provider {
 			"aviatrix_transit_gateway_peering":                        resourceAviatrixTransitGatewayPeering(),
 			"aviatrix_transit_vpc":                                    resourceAviatrixTransitVpc(),
 			"aviatrix_tunnel":                                         resourceAviatrixTunnel(),
+			"aviatrix_tunnel_detection_time":                          resourceAviatrixTunnelDetectionTime(),
 			"aviatrix_vgw_conn":                                       resourceAviatrixVGWConn(),
 			"aviatrix_vpc":                                            resourceAviatrixVpc(),
 			"aviatrix_vpn_cert_download":                              resourceAviatrixVPNCertDownload(),
