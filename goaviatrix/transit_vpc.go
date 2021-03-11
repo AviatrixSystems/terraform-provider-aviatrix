@@ -53,6 +53,7 @@ type TransitVpc struct {
 	EnablePrivateOob             string `form:"private_oob,omitempty"`
 	OobManagementSubnet          string `form:"oob_mgmt_subnet,omitempty"`
 	HAOobManagementSubnet        string
+	EnableSummarizeCidrToTgw     bool
 }
 
 type TransitGatewayAdvancedConfig struct {
@@ -67,6 +68,7 @@ type TransitGatewayAdvancedConfig struct {
 	TunnelAddrLocal                   string
 	TunnelAddrLocalBackup             string
 	PeerVnetId                        []string
+	EnableSummarizeCidrToTgw          bool
 }
 
 type StandbyConnection struct {
@@ -86,6 +88,7 @@ type TransitGatewayAdvancedConfigRespResult struct {
 	TunnelAddrLocal                   string                    `json:"tunnel_addr_local"`
 	TunnelAddrLocalBackup             string                    `json:"tunnel_addr_local_backup"`
 	PeerVnetId                        []string                  `json:"peer_vnet_id"`
+	EnableSummarizeCidrToTgw          string                    `json:"summarize_cidr_to_tgw"`
 }
 
 type LearnedCIDRApprovalInfo struct {
@@ -671,6 +674,7 @@ func (c *Client) GetTransitGatewayAdvancedConfig(transitGateway *TransitVpc) (*T
 		TunnelAddrLocal:                   data.Results.TunnelAddrLocal,
 		TunnelAddrLocalBackup:             data.Results.TunnelAddrLocalBackup,
 		PeerVnetId:                        data.Results.PeerVnetId,
+		EnableSummarizeCidrToTgw:          data.Results.EnableSummarizeCidrToTgw == "yes",
 	}, nil
 }
 
@@ -711,6 +715,24 @@ func (c *Client) EditTransitConnectionBGPManualAdvertiseCIDRs(gwName, connName s
 		"gateway_name":                          gwName,
 		"connection_name":                       connName,
 		"connection_bgp_manual_advertise_cidrs": strings.Join(cidrs, ","),
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) EnableSummarizeCidrToTgw(gwName string) error {
+	data := map[string]string{
+		"action":       "enable_transit_summarize_cidr_to_tgw",
+		"gateway_name": gwName,
+		"CID":          c.CID,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) DisableSummarizeCidrToTgw(gwName string) error {
+	data := map[string]string{
+		"action":       "disable_transit_summarize_cidr_to_tgw",
+		"gateway_name": gwName,
+		"CID":          c.CID,
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
 }
