@@ -23,6 +23,7 @@ func resourceAviatrixAwsTgwVpcAttachment() *schema.Resource {
 			"tgw_name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Name of the AWS TGW.",
 			},
 			"region": {
@@ -44,6 +45,7 @@ func resourceAviatrixAwsTgwVpcAttachment() *schema.Resource {
 			"vpc_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "This parameter represents the ID of the VPC.",
 			},
 			"customized_routes": {
@@ -246,17 +248,11 @@ func resourceAviatrixAwsTgwVpcAttachmentUpdate(d *schema.ResourceData, meta inte
 	client := meta.(*goaviatrix.Client)
 
 	d.Partial(true)
-	if d.HasChange("tgw_name") {
-		return fmt.Errorf("updating tgw_name is not allowed")
-	}
 	if d.HasChange("region") {
 		return fmt.Errorf("updating region is not allowed")
 	}
 	if d.HasChange("vpc_account_name") {
 		return fmt.Errorf("updating vpc_account_name is not allowed")
-	}
-	if d.HasChange("vpc_id") {
-		return fmt.Errorf("updating vpc_id is not allowed")
 	}
 	if d.HasChange("customized_routes") {
 		awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
