@@ -1438,6 +1438,12 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 	d.Set("learned_cidrs_approval_mode", advancedConfig.LearnedCIDRsApprovalMode)
 
+	jumboFrameStatus, err := client.GetJumboFrameStatus(gateway)
+	if err != nil {
+		return fmt.Errorf("could not get jumbo frame status for transit gateway: %v", err)
+	}
+	d.Set("enable_jumbo_frame", jumboFrameStatus)
+
 	haGateway := &goaviatrix.Gateway{
 		AccountName: d.Get("account_name").(string),
 		GwName:      d.Get("gw_name").(string) + "-hagw",
@@ -1453,7 +1459,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("ha_oob_management_subnet", "")
 			d.Set("ha_oob_availability_zone", "")
 		} else {
-			return fmt.Errorf("error getting Aviatrix Transit HA Gateway: %v", err)
+			return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway: %s", err)
 		}
 	} else {
 		if haGw.CloudType == goaviatrix.AWS || haGw.CloudType == goaviatrix.AZURE || haGw.CloudType == goaviatrix.OCI || haGw.CloudType == goaviatrix.AWSGOV {
@@ -1499,12 +1505,6 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("ha_insane_mode_az", "")
 		}
 	}
-
-	jumboFrameStatus, err := client.GetJumboFrameStatus(gateway)
-	if err != nil {
-		return fmt.Errorf("could not get jumbo frame status for transit gateway: %v", err)
-	}
-	d.Set("enable_jumbo_frame", jumboFrameStatus)
 
 	return nil
 }

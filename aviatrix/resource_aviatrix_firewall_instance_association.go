@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+const FQDNVendorType = "fqdn_gateway"
+
 func resourceAviatrixFirewallInstanceAssociation() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixFirewallInstanceAssociationCreate,
@@ -43,7 +45,7 @@ func resourceAviatrixFirewallInstanceAssociation() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      "Generic",
-				ValidateFunc: validation.StringInSlice([]string{"Generic", "fqdn_gateway"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"Generic", FQDNVendorType}, false),
 				Description:  "Indication it is a firewall instance or FQDN gateway to be associated to fireNet. Valid values: 'Generic', 'fqdn_gateway'. Value 'fqdn_gateway' is required for FQDN gateway.",
 			},
 			"firewall_name": {
@@ -99,16 +101,24 @@ func marshalFirewallInstanceAssociationInput(d *schema.ResourceData) *goaviatrix
 }
 
 func resourceAviatrixFirewallInstanceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	defer resourceAviatrixFirewallInstanceAssociationRead(d, meta)
 	client := meta.(*goaviatrix.Client)
 
 	firewall := marshalFirewallInstanceAssociationInput(d)
 
-	fwInfo, err := client.GetFirewallInstance(firewall)
-	if err != nil {
-		return fmt.Errorf("could not find firewall before creating association: %v", err)
+	var cloudType int
+	if firewall.VendorType == FQDNVendorType {
+		gw, err := client.GetGateway(&goaviatrix.Gateway{GwName: firewall.InstanceID})
+		if err != nil {
+			return fmt.Errorf("could not find FQDN gateway before creating association: %v", err)
+		}
+		cloudType = gw.CloudType
+	} else {
+		fwInfo, err := client.GetFirewallInstance(firewall)
+		if err != nil {
+			return fmt.Errorf("could not find firewall before creating association: %v", err)
+		}
+		cloudType = goaviatrix.VendorToCloudType(fwInfo.CloudVendor)
 	}
-	cloudType := goaviatrix.VendorToCloudType(fwInfo.CloudVendor)
 	if cloudType == goaviatrix.GCP {
 		if firewall.FirewallName != "" {
 			return fmt.Errorf("attribute 'firewall_name' is not valid for GCP firewall association")
@@ -120,21 +130,21 @@ func resourceAviatrixFirewallInstanceAssociationCreate(d *schema.ResourceData, m
 		}
 	}
 
-	err = client.AssociateFirewallWithFireNet(firewall)
+	err := client.AssociateFirewallWithFireNet(firewall)
 	if err != nil {
 		return fmt.Errorf("failed to associate gateway and firewall/fqdn_gateway: %v", err)
 	}
+	id := fmt.Sprintf("%s~~%s~~%s", firewall.VpcID, firewall.GwName, firewall.InstanceID)
+	d.SetId(id)
+	defer resourceAviatrixFirewallInstanceAssociationRead(d, meta)
 
 	if d.Get("attached").(bool) {
-		err := client.AttachFirewallToFireNet(firewall)
+		err = client.AttachFirewallToFireNet(firewall)
 		if err != nil {
 			return fmt.Errorf("failed to attach gateway and firewall/fqdn_gateway: %v", err)
 		}
 	}
 
-	id := fmt.Sprintf("%s~~%s~~%s", firewall.VpcID, firewall.GwName, firewall.InstanceID)
-
-	d.SetId(id)
 	return nil
 }
 
@@ -189,7 +199,7 @@ func resourceAviatrixFirewallInstanceAssociationRead(d *schema.ResourceData, met
 	if instanceInfo.VendorType == "Aviatrix FQDN Gateway" {
 		d.Set("vendor_type", "fqdn_gateway")
 		d.Set("firewall_name", "")
-		if strings.HasPrefix(instanceInfo.LanInterface, "eni-") {
+		if strings.HasPrefix(instanceInfo.LanInterface, "eni-") || fireNetDetail.CloudType == strconv.Itoa(goaviatrix.GCP) {
 			d.Set("lan_interface", "")
 		} else {
 			d.Set("lan_interface", instanceInfo.LanInterface)
