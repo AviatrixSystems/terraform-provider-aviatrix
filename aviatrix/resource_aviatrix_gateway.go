@@ -729,8 +729,11 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	if enableEncryptVolume && d.Get("cloud_type").(int) != goaviatrix.AWS && d.Get("cloud_type").(int) != goaviatrix.AWSGOV {
 		return fmt.Errorf("'enable_encrypt_volume' is only supported for AWS and AWSGOV provider")
 	}
-	if !enableEncryptVolume && customerManagedKeys != "" {
-		return fmt.Errorf("'customer_managed_keys' should be empty since Encrypt Volume is not enabled")
+	if customerManagedKeys != "" {
+		if !enableEncryptVolume {
+			return fmt.Errorf("'customer_managed_keys' should be empty since Encrypt Volume is not enabled")
+		}
+		gateway.EncVolume = "no"
 	}
 	if !enableEncryptVolume && (gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV) {
 		gateway.EncVolume = "no"
@@ -774,6 +777,17 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 
 	flag := false
 	defer resourceAviatrixGatewayReadIfRequired(d, meta, &flag)
+
+	if customerManagedKeys != "" && enableEncryptVolume {
+		gwEncVolume := &goaviatrix.Gateway{
+			GwName:              d.Get("gw_name").(string),
+			CustomerManagedKeys: d.Get("customer_managed_keys").(string),
+		}
+		err := client.EnableEncryptVolume(gwEncVolume)
+		if err != nil {
+			return fmt.Errorf("failed to enable encrypt gateway volume when creating gateway: %s due to %s", gwEncVolume.GwName, err)
+		}
+	}
 
 	enableVpnNat := d.Get("enable_vpn_nat").(bool)
 	if vpnStatus {

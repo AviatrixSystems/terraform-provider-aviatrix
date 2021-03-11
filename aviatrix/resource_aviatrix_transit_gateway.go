@@ -567,8 +567,11 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	if enableEncryptVolume && d.Get("cloud_type").(int) != goaviatrix.AWS && d.Get("cloud_type").(int) != goaviatrix.AWSGOV {
 		return fmt.Errorf("'enable_encrypt_volume' is only supported for AWS and AWSGOV providers")
 	}
-	if !enableEncryptVolume && customerManagedKeys != "" {
-		return fmt.Errorf("'customer_managed_keys' should be empty since Encrypt Volume is not enabled")
+	if customerManagedKeys != "" {
+		if !enableEncryptVolume {
+			return fmt.Errorf("'customer_managed_keys' should be empty since Encrypt Volume is not enabled")
+		}
+		gateway.EncVolume = "no"
 	}
 	if !enableEncryptVolume && (gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV) {
 		gateway.EncVolume = "no"
@@ -715,6 +718,17 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 	flag := false
 	defer resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
+
+	if customerManagedKeys != "" && enableEncryptVolume {
+		gwEncVolume := &goaviatrix.Gateway{
+			GwName:              d.Get("gw_name").(string),
+			CustomerManagedKeys: d.Get("customer_managed_keys").(string),
+		}
+		err := client.EnableEncryptVolume(gwEncVolume)
+		if err != nil {
+			return fmt.Errorf("failed to enable encrypt gateway volume when creating transit gateway: %s due to %s", gwEncVolume.GwName, err)
+		}
+	}
 
 	if enableActiveMesh := d.Get("enable_active_mesh").(bool); !enableActiveMesh {
 		gw := &goaviatrix.Gateway{
