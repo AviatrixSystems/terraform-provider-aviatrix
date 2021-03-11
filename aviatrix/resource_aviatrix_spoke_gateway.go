@@ -1335,7 +1335,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 					return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
 				}
 			}
-			newHaGwEnabled = true
 		} else if deleteHaGw {
 			//Ha configuration has been deleted
 			if d.Get("ha_gw_size").(string) != "" {
@@ -1354,6 +1353,8 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("failed to delete Aviatrix Spoke HA gateway: %s", err)
 			}
 
+			spokeGw.Eip = ""
+
 			//New configuration to enable HA
 			if haGateway.CloudType == goaviatrix.GCP {
 				err := client.EnableHaSpokeGateway(spokeGw)
@@ -1366,6 +1367,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 					return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
 				}
 			}
+			newHaGwEnabled = true
 		}
 	}
 
