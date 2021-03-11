@@ -906,7 +906,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 				return fmt.Errorf("error creating tags for gateway: %v", err)
 			}
 			tags.Tags = tagsMap
-			tags.TagList = goaviatrix.TagsMapToString(tagsMap)
+			tags.TagList = TagsMapToString(tagsMap)
 		}
 
 		if tags.CloudType == goaviatrix.AZURE {
@@ -1740,11 +1740,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("failed to update gateway: adding tags is only supported for AWS, AWSGOV and AZURE, cloud_type must be set to 1, 256 or 8")
 		}
 
-		_, tagListOk := d.GetOk("tag_list")
-		_, tagsOk := d.GetOk("tags")
-		if tagsOk && tagListOk {
-			return fmt.Errorf("failed to update gateway: only one of tag_list and tags is allowed at the same time")
-		}
 		tags := &goaviatrix.Tags{
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
@@ -1766,7 +1761,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				return fmt.Errorf("failed to update tags for gateway: %v", err)
 			}
 			tags.Tags = tagsMap
-			tags.TagList = goaviatrix.TagsMapToString(tagsMap)
+			tags.TagList = TagsMapToString(tagsMap)
 			err = client.UpdateTags(tags)
 			if err != nil {
 				return fmt.Errorf("failed to update tags for gateway: %v", err)

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -58,7 +57,7 @@ func (c *Client) GetTags(tags *Tags) ([]string, error) {
 	var resp TagAPIResp
 	err := c.GetAPI(&resp, data["Action"], data, BasicCheck)
 	if err != nil {
-		return nil, fmt.Errorf("HTTP Get list_resource_tags failed: %v", err)
+		return nil, err
 	}
 
 	var tagList []string
@@ -85,13 +84,8 @@ func (c *Client) GetTagsMap(tags *Tags) (map[string]string, error) {
 	var resp TagAPIResp
 	err := c.GetAPI(&resp, data["Action"], data, BasicCheck)
 	if err != nil {
-		return nil, fmt.Errorf("HTTP Get list_resource_tags failed: %v", err)
+		return nil, err
 	}
-
-	if !resp.Return {
-		return nil, fmt.Errorf("rest API list_resource_tags Post failed: %s", resp.Reason)
-	}
-
 	if tagsMap, ok := resp.Results["usr_tags"]; ok {
 		return tagsMap, nil
 	}
@@ -116,13 +110,4 @@ func (c *Client) UpdateTags(tags *Tags) error {
 	tags.Action = "update_resource_tags"
 
 	return c.PostAPI(tags.Action, tags, BasicCheck)
-}
-
-func TagsMapToString(tagsMap map[string]string) string {
-	tagList := make([]string, 0, len(tagsMap))
-	for key, val := range tagsMap {
-		tagList = append(tagList, key+":"+val)
-	}
-	tagListStr := strings.Join(tagList, ",")
-	return tagListStr
 }

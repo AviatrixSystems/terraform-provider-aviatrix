@@ -184,7 +184,7 @@ The following arguments are supported:
 * `manage_transit_gateway_attachment` - (Optional) Enable to manage spoke-to-Aviatrix transit gateway attachments using the **aviatrix_spoke_gateway** resource with the below `transit_gw` attribute. If this is set to false, attaching this spoke to transit gateways must be done using the **aviatrix_spoke_transit_attachment** resource. Valid values: true, false. Default value: true. Available in provider R2.17+.
 * `transit_gw` - (Optional) Specify the Aviatrix transit gateways to attach this spoke gateway to. Format is a comma separated list of transit gateway names. For example: "transit-gw1,transit-gw2".
 * `enable_jumbo_frame` - (Optional) Enable jumbo frames for this spoke gateway. Default value is true.
-* `tags` - (Optional) Map of tags to assign to the gateway. Only available for AWS, AWSGov and Azure gateway. Allowed characters are: letters, spaces, and numbers plus the following special characters: + - = . _ : @. Example: {"key1" = "value1", "key2" = "value2"}.
+* `tags` - (Optional) Map of tags to assign to the gateway. Only available for AWS, AWSGOV and Azure gateway. Allowed characters vary by cloud type but always include: letters, spaces, and numbers. AWS and AWSGOV allow the following special characters: + - = . _ : / @.  Azure allows the following special characters: + - = . _ : @. Example: {"key1" = "value1", "key2" = "value2"}.
 
 -> **NOTE:** `manage_transit_gateway_attachment` - If you are using/upgraded to Aviatrix Terraform Provider R2.17+, and an **aviatrix_spoke_gateway** resource was originally created with a provider version <R2.17, you must do 'terraform refresh' to update and apply the attribute's default value (true) into the state file.
 
