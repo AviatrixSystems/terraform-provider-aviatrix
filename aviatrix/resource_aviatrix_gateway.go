@@ -109,20 +109,6 @@ func resourceAviatrixGateway() *schema.Resource {
 				Default:     false,
 				Description: "Specify whether to enable ELB or not.",
 			},
-			"elb_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "A name for the ELB that is created.",
-			},
-			"vpn_protocol": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP"}, false),
-				Description: "Elb protocol for VPN gateway with elb enabled. Only supports AWS provider. " +
-					"Valid values: 'TCP', 'UDP'. If not specified, 'TCP'' will be used.",
-			},
 			"split_tunnel": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -273,12 +259,6 @@ func resourceAviatrixGateway() *schema.Resource {
 				Default:     "",
 				Description: "AZ of subnet being created for Insane Mode Peering HA Gateway. Required if insane_mode is set.",
 			},
-			"peering_ha_eip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Public IP address that you want assigned to the HA peering instance.",
-			},
 			"peering_ha_gw_size": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -297,12 +277,6 @@ func resourceAviatrixGateway() *schema.Resource {
 				Default:  true,
 				Description: "When value is false, reuse an idle address in Elastic IP pool for this gateway. " +
 					"Otherwise, allocate a new Elastic IP and use it for this gateway.",
-			},
-			"eip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Required when allocate_new_eip is false. It uses specified EIP for this gateway.",
 			},
 			"tag_list": {
 				Type:        schema.TypeList,
@@ -349,46 +323,6 @@ func resourceAviatrixGateway() *schema.Resource {
 				ValidateFunc: validation.StringIsNotEmpty,
 				Description:  "Customer managed key ID.",
 			},
-			"elb_dns_name": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "ELB DNS Name.",
-			},
-			"security_group_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Security group used for the gateway.",
-			},
-			"public_dns_server": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "NS server used by the gateway.",
-			},
-			"cloud_instance_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Instance ID of the gateway.",
-			},
-			"private_ip": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Private IP address of the Gateway created.",
-			},
-			"peering_ha_cloud_instance_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Instance ID of the peering HA gateway.",
-			},
-			"peering_ha_gw_name": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Aviatrix gateway unique name of HA gateway.",
-			},
-			"peering_ha_private_ip": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Private IP address of HA gateway.",
-			},
 			"enable_monitor_gateway_subnets": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -429,11 +363,6 @@ func resourceAviatrixGateway() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Description: "LAN VPC ID. Only used for GCP FQDN Gateway.",
-			},
-			"fqdn_lan_interface": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "FQDN gateway lan interface id.",
 			},
 			"enable_public_subnet_filtering": {
 				Type:     schema.TypeBool,
@@ -476,6 +405,77 @@ func resourceAviatrixGateway() *schema.Resource {
 				Optional:      true,
 				Description:   "A map of tags to assign to the gateway.",
 				ConflictsWith: []string{"tag_list"},
+			},
+			"eip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Required when allocate_new_eip is false. It uses specified EIP for this gateway.",
+			},
+			"peering_ha_eip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Public IP address that you want assigned to the HA peering instance.",
+			},
+			"elb_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "A name for the ELB that is created.",
+			},
+			"vpn_protocol": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP"}, false),
+				Description: "Elb protocol for VPN gateway with elb enabled. Only supports AWS provider. " +
+					"Valid values: 'TCP', 'UDP'. If not specified, 'TCP'' will be used.",
+			},
+			"elb_dns_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "ELB DNS Name.",
+			},
+			"security_group_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Security group used for the gateway.",
+			},
+			"public_dns_server": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "NS server used by the gateway.",
+			},
+			"cloud_instance_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Instance ID of the gateway.",
+			},
+			"private_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Private IP address of the Gateway created.",
+			},
+			"peering_ha_cloud_instance_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Instance ID of the peering HA gateway.",
+			},
+			"peering_ha_gw_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Aviatrix gateway unique name of HA gateway.",
+			},
+			"peering_ha_private_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Private IP address of HA gateway.",
+			},
+			"fqdn_lan_interface": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "FQDN gateway lan interface id.",
 			},
 		},
 	}

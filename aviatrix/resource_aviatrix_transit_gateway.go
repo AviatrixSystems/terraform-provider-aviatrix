@@ -298,13 +298,6 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					ValidateFunc: goaviatrix.ValidateASN,
 				},
 			},
-			"local_as_number": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				Description:  "Changes the Aviatrix Transit Gateway ASN number before you setup Aviatrix Transit Gateway connection configurations.",
-				ValidateFunc: goaviatrix.ValidateASN,
-			},
 			"bgp_ecmp": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -407,6 +400,13 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IsIPAddress,
 				Description:  "Public IP address that you want assigned to the HA Transit Gateway.",
+			},
+			"local_as_number": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "Changes the Aviatrix Transit Gateway ASN number before you setup Aviatrix Transit Gateway connection configurations.",
+				ValidateFunc: goaviatrix.ValidateASN,
 			},
 			"security_group_id": {
 				Type:        schema.TypeString,
