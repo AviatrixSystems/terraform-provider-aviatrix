@@ -407,7 +407,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Computed:     true,
 				Description:  "Changes the Aviatrix Transit Gateway ASN number before you setup Aviatrix Transit Gateway connection configurations.",
 				ValidateFunc: goaviatrix.ValidateASN,
-			},:
+			},
 			"security_group_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
