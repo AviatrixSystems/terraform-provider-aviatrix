@@ -275,10 +275,10 @@ The following arguments are supported:
 ### Misc.
 * `allocate_new_eip` - (Optional) If set to false, use an available address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in Controller 2.7+. Valid values: true, false. Default: true. Option not available for Azure and OCI gateways, they will automatically allocate new EIPs.
 * `eip` - (Optional) Specified EIP to use for gateway creation. Required when `allocate_new_eip` is false.  Available in Controller version 3.5+. Only supported for AWS and GCP gateways.
-* `tag_list` - (Optional) Tag list of the gateway instance. Only available for AWS, AWSGov and Azure gateways. Example: ["key1:value1", "key2:value2"].
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for gateway. Currently only supported for AWS and AWSGov gateways. Valid values: true, false. Default value: false.
 * `zone` - (Optional) Availability Zone. Only available for Azure and Public Subnet Filtering gateway. Available for Azure as of provider version R2.17+.
 * `enable_jumbo_frame` - (Optional) Enable jumbo frames for this gateway. Default value is true.
+* `tags` - (Optional) Map of tags to assign to the gateway. Only available for AWS, AWSGOV and Azure gateway. Allowed characters vary by cloud type but always include: letters, spaces, and numbers. AWS and AWSGOV allow the following special characters: + - = . _ : / @.  Azure allows the following special characters: + - = . _ : @. Example: {"key1" = "value1", "key2" = "value2"}.
 
 ### Public Subnet Filtering Gateway
 
@@ -323,6 +323,7 @@ The following arguments are deprecated:
 * `cloudn_bkup_gateway_inst_id` - Instance ID of the backup gateway.
 * `public_ip` - Public IP address of the gateway created.
 * `peering_ha_public_ip` - Public IP address of the peering HA Gateway created.
+* `tag_list` - (Optional) Tag list of the gateway instance. Only available for AWS, AWSGov and Azure gateways. Example: ["key1:value1", "key2:value2"].
 
 ## Import
 

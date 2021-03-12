@@ -96,8 +96,9 @@ func intInSlice(needle int, haystack []int) bool {
 }
 
 var (
-	tagMatcher    = regexp.MustCompile(`^[a-zA-Z0-9+\-=._ :/@ ]*$`)
-	gcpTagMatcher = regexp.MustCompile(`^[\p{Ll}\p{Lo}\p{N}_-]*$`)
+	awsTagMatcher   = regexp.MustCompile(`^[a-zA-Z0-9+\-=._ :/@ ]*$`)
+	azureTagMatcher = regexp.MustCompile(`^[a-zA-Z0-9+\-=._ :@ ]*$`)
+	gcpTagMatcher   = regexp.MustCompile(`^[\p{Ll}\p{Lo}\p{N}_-]*$`)
 )
 
 func extractTags(d *schema.ResourceData, cloudType int) (map[string]string, error) {
@@ -108,14 +109,15 @@ func extractTags(d *schema.ResourceData, cloudType int) (map[string]string, erro
 	if !intInSlice(cloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.GCP, goaviatrix.AZURE}) {
 		return nil, fmt.Errorf("adding tags is only supported for AWS, AWSGOV, GCP and AZURE, cloud_type must be 1, 256, 4 or 8")
 	}
-
 	tagsMap := tags.(map[string]interface{})
 	tagsStrMap := make(map[string]string, len(tagsMap))
 	var matcher *regexp.Regexp
 	if cloudType == goaviatrix.GCP {
 		matcher = gcpTagMatcher
+	} else if cloudType == goaviatrix.AZURE {
+		matcher = azureTagMatcher
 	} else {
-		matcher = tagMatcher
+		matcher = awsTagMatcher
 	}
 
 	for key, val := range tagsMap {
@@ -129,4 +131,13 @@ func extractTags(d *schema.ResourceData, cloudType int) (map[string]string, erro
 		tagsStrMap[escapedKey] = escapedVal
 	}
 	return tagsStrMap, nil
+}
+
+func TagsMapToString(tagsMap map[string]string) string {
+	tagList := make([]string, 0, len(tagsMap))
+	for key, val := range tagsMap {
+		tagList = append(tagList, key+":"+val)
+	}
+	tagListStr := strings.Join(tagList, ",")
+	return tagListStr
 }

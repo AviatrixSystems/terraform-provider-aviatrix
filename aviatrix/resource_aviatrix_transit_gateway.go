@@ -1,6 +1,7 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -136,6 +137,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Default:     nil,
+				Deprecated:  "Use tags instead.",
 				Description: "Instance tag of cloud provider.",
 			},
 			"enable_hybrid_connection": {
@@ -446,6 +448,13 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Transit gateway lan interface cidr for the HA gateway.",
 			},
+			"tags": {
+				Type:          schema.TypeMap,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				Optional:      true,
+				Description:   "A map of tags to assign to the transit gateway.",
+				ConflictsWith: []string{"tag_list"},
+			},
 		},
 	}
 }
@@ -719,7 +728,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("\"ha_oob_management_sbunet\" must be empty if \"enable_private_oob\" is false")
 		}
 	}
-
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
 
 	err := client.LaunchTransitVpc(gateway)
@@ -837,30 +845,42 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if _, ok := d.GetOk("tag_list"); ok {
-		if cloudType != goaviatrix.AWS && cloudType != goaviatrix.AWSGOV && cloudType != goaviatrix.AZURE {
-			return fmt.Errorf("'tag_list' is only supported for AWS/AWSGOV/AZURE providers")
+	_, tagListOk := d.GetOk("tag_list")
+	_, tagsOk := d.GetOk("tags")
+	if tagListOk || tagsOk {
+		if !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.AZURE}) {
+			return errors.New("error creating transit gateway: adding tags is only supported for AWS, AWSGOV and AZURE, cloud_type must be 1, 256 or 8")
 		}
-		tagList := d.Get("tag_list").([]interface{})
-		tagListStr := goaviatrix.ExpandStringList(tagList)
-		tagListStr = goaviatrix.TagListStrColon(tagListStr)
-		gateway.TagList = strings.Join(tagListStr, ",")
 		tags := &goaviatrix.Tags{
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
-			TagList:      gateway.TagList,
 			CloudType:    gateway.CloudType,
 		}
 
-		if tags.CloudType == goaviatrix.AZURE {
-			err := client.AzureUpdateTags(tags)
+		if tagListOk {
+			tagList := d.Get("tag_list").([]interface{})
+			tagListStr := goaviatrix.ExpandStringList(tagList)
+			tagListStr = goaviatrix.TagListStrColon(tagListStr)
+			gateway.TagList = strings.Join(tagListStr, ",")
+			tags.TagList = gateway.TagList
+		} else {
+			tagsMap, err := extractTags(d, gateway.CloudType)
 			if err != nil {
-				return fmt.Errorf("failed to add tags : %s", err)
+				return fmt.Errorf("error creating tags for transit gateway: %v", err)
+			}
+			tags.Tags = tagsMap
+			tags.TagList = TagsMapToString(tagsMap)
+		}
+
+		if tags.CloudType == goaviatrix.AZURE {
+			err := client.UpdateTags(tags)
+			if err != nil {
+				return fmt.Errorf("failed to add tags to transit gateway: %s", err)
 			}
 		} else {
 			err := client.AddTags(tags)
 			if err != nil {
-				return fmt.Errorf("failed to add tags: %s", err)
+				return fmt.Errorf("failed to add tags to transit gateway: %s", err)
 			}
 		}
 	}
@@ -1372,24 +1392,33 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			ResourceName: d.Get("gw_name").(string),
 			CloudType:    gw.CloudType,
 		}
-
-		tagList, err := client.GetTags(tags)
+		tagsMap, err := client.GetTagsMap(tags)
 		if err != nil {
-			return fmt.Errorf("unable to read tag_list for gateway: %v due to %v", gateway.GwName, err)
+			return fmt.Errorf("unable to read tags for transit gateway: %v due to %v", gateway.GwName, err)
 		}
 
-		var tagListStr []string
 		if _, ok := d.GetOk("tag_list"); ok {
-			tagList1 := d.Get("tag_list").([]interface{})
-			tagListStr = goaviatrix.ExpandStringList(tagList1)
-		}
-		if len(goaviatrix.Difference(tagListStr, tagList)) != 0 || len(goaviatrix.Difference(tagList, tagListStr)) != 0 {
-			if err := d.Set("tag_list", tagList); err != nil {
-				log.Printf("[WARN] Error setting tag_list for (%s): %s", d.Id(), err)
+			tagList := make([]string, 0, len(tagsMap))
+			for key, val := range tagsMap {
+				str := key + ":" + val
+				tagList = append(tagList, str)
+			}
+
+			tagListFromUserConfig := d.Get("tag_list").([]interface{})
+			tagListStr := goaviatrix.ExpandStringList(tagListFromUserConfig)
+
+			if len(goaviatrix.Difference(tagListStr, tagList)) != 0 || len(goaviatrix.Difference(tagList, tagListStr)) != 0 {
+				if err := d.Set("tag_list", tagList); err != nil {
+					log.Printf("[WARN] Error setting tag_list for (%s): %s", d.Id(), err)
+				}
+			} else {
+				if err := d.Set("tag_list", tagListStr); err != nil {
+					log.Printf("[WARN] Error setting tag_list for (%s): %s", d.Id(), err)
+				}
 			}
 		} else {
-			if err := d.Set("tag_list", tagListStr); err != nil {
-				log.Printf("[WARN] Error setting tag_list for (%s): %s", d.Id(), err)
+			if err := d.Set("tags", tagsMap); err != nil {
+				log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
 			}
 		}
 	}
@@ -1762,59 +1791,36 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV || gateway.CloudType == goaviatrix.AZURE {
-		if d.HasChange("tag_list") {
-			tags := &goaviatrix.Tags{
-				ResourceType: "gw",
-				ResourceName: d.Get("gw_name").(string),
-				CloudType:    gateway.CloudType,
-			}
+	if d.HasChange("tag_list") || d.HasChange("tags") {
+		if !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.AZURE}) {
+			return fmt.Errorf("failed to update transit gateway: adding tags is only supported for AWS, AWSGOV and AZURE, cloud_type must be set to 1, 256 or 8")
+		}
+		tags := &goaviatrix.Tags{
+			ResourceType: "gw",
+			ResourceName: d.Get("gw_name").(string),
+			CloudType:    gateway.CloudType,
+		}
+		tagList := goaviatrix.ExpandStringList(d.Get("tag_list").([]interface{}))
 
-			if tags.CloudType == goaviatrix.AZURE {
-				tagList := goaviatrix.ExpandStringList(d.Get("tag_list").([]interface{}))
-				tagList = goaviatrix.TagListStrColon(tagList)
-				tags.TagList = strings.Join(tagList, ",")
-				err := client.AzureUpdateTags(tags)
-				if err != nil {
-					return fmt.Errorf("failed to update tags : %s", err)
-				}
-			} else {
-				o, n := d.GetChange("tag_list")
-				if o == nil {
-					o = new([]interface{})
-				}
-				if n == nil {
-					n = new([]interface{})
-				}
-				os := o.([]interface{})
-				ns := n.([]interface{})
-				oldList := goaviatrix.ExpandStringList(os)
-				newList := goaviatrix.ExpandStringList(ns)
-				oldTagList := goaviatrix.Difference(oldList, newList)
-				newTagList := goaviatrix.Difference(newList, oldList)
-				if len(oldTagList) != 0 || len(newTagList) != 0 {
-					if len(oldTagList) != 0 {
-						oldTagList = goaviatrix.TagListStrColon(oldTagList)
-						tags.TagList = strings.Join(oldTagList, ",")
-						err := client.DeleteTags(tags)
-						if err != nil {
-							return fmt.Errorf("failed to delete tags : %s", err)
-						}
-					}
-					if len(newTagList) != 0 {
-						newTagList = goaviatrix.TagListStrColon(newTagList)
-						tags.TagList = strings.Join(newTagList, ",")
-						err := client.AddTags(tags)
-						if err != nil {
-							return fmt.Errorf("failed to add tags : %s", err)
-						}
-					}
-				}
+		if d.HasChange("tag_list") {
+			tagList = goaviatrix.TagListStrColon(tagList)
+			tags.TagList = strings.Join(tagList, ",")
+			err := client.UpdateTags(tags)
+			if err != nil {
+				return fmt.Errorf("failed to update tags for transit gateway: %s", err)
 			}
 		}
-	} else {
-		if d.HasChange("tag_list") {
-			return fmt.Errorf("'tag_list' is only supported for AWS/AWSGOV/AZURE providers")
+		if d.HasChange("tags") && len(tagList) == 0 {
+			tagsMap, err := extractTags(d, gateway.CloudType)
+			if err != nil {
+				return fmt.Errorf("failed to update tags for transit gateway: %v", err)
+			}
+			tags.Tags = tagsMap
+			tags.TagList = TagsMapToString(tagsMap)
+			err = client.UpdateTags(tags)
+			if err != nil {
+				return fmt.Errorf("failed to update tags for transit gateway: %v", err)
+			}
 		}
 	}
 

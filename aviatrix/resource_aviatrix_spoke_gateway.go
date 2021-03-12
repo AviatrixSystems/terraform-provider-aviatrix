@@ -1,6 +1,7 @@
 package aviatrix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -158,6 +159,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Default:     nil,
+				Deprecated:  "Use tags instead.",
 				Description: "Instance tag of cloud provider.",
 			},
 			"insane_mode": {
@@ -307,6 +309,13 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Private IP address of the spoke gateway created.",
+			},
+			"tags": {
+				Type:          schema.TypeMap,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				Optional:      true,
+				Description:   "A map of tags to assign to the spoke gateway.",
+				ConflictsWith: []string{"tag_list"},
 			},
 		},
 	}
@@ -512,7 +521,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("\"ha_oob_mangeemnt_sbunet\" must be empty if \"enable_private_oob\" is false")
 		}
 	}
-
 	log.Printf("[INFO] Creating Aviatrix Spoke Gateway: %#v", gateway)
 
 	err := client.LaunchSpokeVpc(gateway)
@@ -628,32 +636,44 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if _, ok := d.GetOk("tag_list"); ok && (gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV || gateway.CloudType == goaviatrix.AZURE) {
-		tagList := d.Get("tag_list").([]interface{})
-		tagListStr := goaviatrix.ExpandStringList(tagList)
-		tagListStr = goaviatrix.TagListStrColon(tagListStr)
-		gateway.TagList = strings.Join(tagListStr, ",")
+	_, tagListOk := d.GetOk("tag_list")
+	_, tagsOk := d.GetOk("tags")
+	if tagListOk || tagsOk {
+		if !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.AZURE}) {
+			return errors.New("failed to create spoke gateway: adding tags is only supported for AWS, AWSGOV and AZURE, cloud_type must be 1, 256 or 8")
+		}
 		tags := &goaviatrix.Tags{
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
-			TagList:      gateway.TagList,
 			CloudType:    gateway.CloudType,
 		}
 
-		if tags.CloudType == goaviatrix.AZURE {
-			err := client.AzureUpdateTags(tags)
-			if err != nil {
-				return fmt.Errorf("failed to add tags : %s", err)
-			}
+		if tagListOk {
+			tagList := d.Get("tag_list").([]interface{})
+			tagListStr := goaviatrix.ExpandStringList(tagList)
+			tagListStr = goaviatrix.TagListStrColon(tagListStr)
+			gateway.TagList = strings.Join(tagListStr, ",")
+			tags.TagList = gateway.TagList
 		} else {
-			err = client.AddTags(tags)
+			tagsMap, err := extractTags(d, gateway.CloudType)
 			if err != nil {
-				return fmt.Errorf("failed to add tags: %s", err)
+				return fmt.Errorf("error creating tags for spoke gateway: %v", err)
 			}
+			tags.Tags = tagsMap
+			tags.TagList = TagsMapToString(tagsMap)
 		}
 
-	} else if ok && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV && gateway.CloudType != goaviatrix.AZURE {
-		return fmt.Errorf("adding tags only supported for AWS, AWSGOV and AZURE provider")
+		if tags.CloudType == goaviatrix.AZURE {
+			err := client.UpdateTags(tags)
+			if err != nil {
+				return fmt.Errorf("failed to add tags to spoke gateway: %s", err)
+			}
+		} else {
+			err := client.AddTags(tags)
+			if err != nil {
+				return fmt.Errorf("failed to add tags to spoke gateway: %s", err)
+			}
+		}
 	}
 
 	enableVpcDnsServer := d.Get("enable_vpc_dns_server").(bool)
@@ -949,29 +969,40 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("transit_gw", "")
 		}
 	}
+
 	if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV || gw.CloudType == goaviatrix.AZURE {
 		tags := &goaviatrix.Tags{
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
 			CloudType:    gw.CloudType,
 		}
-
-		tagList, err := client.GetTags(tags)
+		tagsMap, err := client.GetTagsMap(tags)
 		if err != nil {
-			return fmt.Errorf("unable to read tag_list for gateway: %v due to %v", gateway.GwName, err)
+			return fmt.Errorf("unable to read tags for spoke gateway: %v due to %v", gateway.GwName, err)
 		}
-		var tagListStr []string
+
 		if _, ok := d.GetOk("tag_list"); ok {
-			tagList1 := d.Get("tag_list").([]interface{})
-			tagListStr = goaviatrix.ExpandStringList(tagList1)
-		}
-		if len(goaviatrix.Difference(tagListStr, tagList)) != 0 || len(goaviatrix.Difference(tagList, tagListStr)) != 0 {
-			if err := d.Set("tag_list", tagList); err != nil {
-				log.Printf("[WARN] Error setting tag_list for (%s): %s", d.Id(), err)
+			tagList := make([]string, 0, len(tagsMap))
+			for key, val := range tagsMap {
+				str := key + ":" + val
+				tagList = append(tagList, str)
+			}
+
+			tagListFromUserConfig := d.Get("tag_list").([]interface{})
+			tagListStr := goaviatrix.ExpandStringList(tagListFromUserConfig)
+
+			if len(goaviatrix.Difference(tagListStr, tagList)) != 0 || len(goaviatrix.Difference(tagList, tagListStr)) != 0 {
+				if err := d.Set("tag_list", tagList); err != nil {
+					log.Printf("[WARN] Error setting tag_list for (%s): %s", d.Id(), err)
+				}
+			} else {
+				if err := d.Set("tag_list", tagListStr); err != nil {
+					log.Printf("[WARN] Error setting tag_list for (%s): %s", d.Id(), err)
+				}
 			}
 		} else {
-			if err := d.Set("tag_list", tagListStr); err != nil {
-				log.Printf("[WARN] Error setting tag_list for (%s): %s", d.Id(), err)
+			if err := d.Set("tags", tagsMap); err != nil {
+				log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
 			}
 		}
 	}
@@ -1182,56 +1213,37 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 
 	}
 
-	if d.HasChange("tag_list") && (gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV || gateway.CloudType == goaviatrix.AZURE) {
+	if d.HasChange("tag_list") || d.HasChange("tags") {
+		if !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.AZURE}) {
+			return fmt.Errorf("error updating spoke gateway: adding tags is only supported for AWS, AWSGOV and AZURE, cloud_type must be set to 1, 256 or 8")
+		}
 		tags := &goaviatrix.Tags{
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
 			CloudType:    gateway.CloudType,
 		}
+		tagList := goaviatrix.ExpandStringList(d.Get("tag_list").([]interface{}))
 
-		if tags.CloudType == goaviatrix.AZURE {
-			tagList := goaviatrix.ExpandStringList(d.Get("tag_list").([]interface{}))
+		if d.HasChange("tag_list") {
 			tagList = goaviatrix.TagListStrColon(tagList)
 			tags.TagList = strings.Join(tagList, ",")
-			err := client.AzureUpdateTags(tags)
+			err := client.UpdateTags(tags)
 			if err != nil {
-				return fmt.Errorf("failed to update tags : %s", err)
-			}
-		} else {
-			o, n := d.GetChange("tag_list")
-			if o == nil {
-				o = new([]interface{})
-			}
-			if n == nil {
-				n = new([]interface{})
-			}
-			os := o.([]interface{})
-			ns := n.([]interface{})
-			oldList := goaviatrix.ExpandStringList(os)
-			newList := goaviatrix.ExpandStringList(ns)
-			oldTagList := goaviatrix.Difference(oldList, newList)
-			newTagList := goaviatrix.Difference(newList, oldList)
-			if len(oldTagList) != 0 || len(newTagList) != 0 {
-				if len(oldTagList) != 0 {
-					oldTagList = goaviatrix.TagListStrColon(oldTagList)
-					tags.TagList = strings.Join(oldTagList, ",")
-					err := client.DeleteTags(tags)
-					if err != nil {
-						return fmt.Errorf("failed to delete tags : %s", err)
-					}
-				}
-				if len(newTagList) != 0 {
-					newTagList = goaviatrix.TagListStrColon(newTagList)
-					tags.TagList = strings.Join(newTagList, ",")
-					err := client.AddTags(tags)
-					if err != nil {
-						return fmt.Errorf("failed to add tags : %s", err)
-					}
-				}
+				return fmt.Errorf("failed to update tags for spoke gateway: %s", err)
 			}
 		}
-	} else if d.HasChange("tag_list") && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV && gateway.CloudType != goaviatrix.AZURE {
-		return fmt.Errorf("adding tags is only supported for AWS, AWSGOV and AZURE provider")
+		if d.HasChange("tags") && len(tagList) == 0 {
+			tagsMap, err := extractTags(d, gateway.CloudType)
+			if err != nil {
+				return fmt.Errorf("failed to update tags for spoke gateway: %v", err)
+			}
+			tags.Tags = tagsMap
+			tags.TagList = TagsMapToString(tagsMap)
+			err = client.UpdateTags(tags)
+			if err != nil {
+				return fmt.Errorf("failed to update tags for spoke gateway: %v", err)
+			}
+		}
 	}
 
 	//Get primary gw size if gw_size changed, to be used later on for ha gateway size update
