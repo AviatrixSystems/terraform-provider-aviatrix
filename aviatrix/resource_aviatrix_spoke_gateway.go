@@ -207,10 +207,11 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description: "A list of comma separated CIDRs to be advertised to on-prem as 'Included CIDR List'. When configured, it will replace all advertised routes from this VPC.",
 			},
 			"customer_managed_keys": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Sensitive:   true,
-				Description: "Customer managed key ID.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringIsNotEmpty,
+				Description:  "Customer managed key ID.",
 			},
 			"enable_monitor_gateway_subnets": {
 				Type:     schema.TypeBool,
