@@ -65,17 +65,17 @@ func DiffSuppressFuncIgnoreSpaceOnlyInString(k, old, new string, d *schema.Resou
 	var newValue []string
 
 	oldValueList := strings.Split(old, ",")
-	for i := range oldValueList {
-		oldValue = append(oldValue, strings.TrimSpace(oldValueList[i]))
-	}
-
 	newValueList := strings.Split(new, ",")
-	for i := range newValueList {
-		newValue = append(newValue, strings.TrimSpace(newValueList[i]))
-	}
 
 	if len(oldValue) != len(newValue) {
 		return false
+	}
+
+	for i := range oldValueList {
+		oldValue = append(oldValue, strings.TrimSpace(oldValueList[i]))
+	}
+	for i := range newValueList {
+		newValue = append(newValue, strings.TrimSpace(newValueList[i]))
 	}
 
 	for i := range oldValueList {
