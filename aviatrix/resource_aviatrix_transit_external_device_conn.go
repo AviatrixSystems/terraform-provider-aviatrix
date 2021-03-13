@@ -109,7 +109,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional:         true,
 				Computed:         true,
 				ForceNew:         true,
-				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceInString,
+				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceOnlyInString,
 				Description:      "Source CIDR for the tunnel from the Aviatrix transit gateway.",
 			},
 			"remote_tunnel_cidr": {
@@ -117,7 +117,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional:         true,
 				Computed:         true,
 				ForceNew:         true,
-				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceInString,
+				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceOnlyInString,
 				Description:      "Destination CIDR for the tunnel to the external device.",
 			},
 			"custom_algorithms": {
@@ -220,7 +220,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional:         true,
 				Computed:         true,
 				ForceNew:         true,
-				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceInString,
+				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceOnlyInString,
 				Description:      "Source CIDR for the tunnel from the backup Aviatrix transit gateway.",
 			},
 			"backup_remote_tunnel_cidr": {
@@ -228,7 +228,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional:         true,
 				Computed:         true,
 				ForceNew:         true,
-				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceInString,
+				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceOnlyInString,
 				Description:      "Destination CIDR for the tunnel to the backup external device.",
 			},
 			"backup_direct_connect": {
