@@ -23,6 +23,22 @@ func (c *Client) SetControllerBgpMaxAsLimit(ctx context.Context, maxAsLimit int)
 	return c.PostAPIContext(ctx, data["action"], data, checkFunc)
 }
 
+func (c *Client) SetControllerBgpMaxAsLimitNonRfc1918(ctx context.Context, maxAsLimitNonRfc1918 int) error {
+	data := map[string]string{
+		"action":       "set_bgp_max_as_limit_non_rfc1918",
+		"CID":          c.CID,
+		"max_as_limit": fmt.Sprint(maxAsLimitNonRfc1918),
+	}
+
+	checkFunc := func(action, reason string, ret bool) error {
+		if !ret && !strings.Contains(reason, "Configured BGP maximum AS limit is not changed") {
+			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+		}
+		return nil
+	}
+	return c.PostAPIContext(ctx, data["action"], data, checkFunc)
+}
+
 func (c *Client) DisableControllerBgpMaxAsLimit(ctx context.Context) error {
 	data := map[string]string{
 		"action":       "set_bgp_max_as_limit",
@@ -39,31 +55,65 @@ func (c *Client) DisableControllerBgpMaxAsLimit(ctx context.Context) error {
 	return c.PostAPIContext(ctx, data["action"], data, checkFunc)
 }
 
-func (c *Client) GetControllerBgpMaxAsLimit(ctx context.Context) (int, error) {
+func (c *Client) DisableControllerBgpMaxAsLimitNonRfc1918(ctx context.Context) error {
+	data := map[string]string{
+		"action":       "set_bgp_max_as_limit_non_rfc1918",
+		"CID":          c.CID,
+		"max_as_limit": "",
+	}
+
+	checkFunc := func(action, reason string, ret bool) error {
+		if !ret && !strings.Contains(reason, "Configured BGP maximum AS limit is not changed") {
+			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+		}
+		return nil
+	}
+	return c.PostAPIContext(ctx, data["action"], data, checkFunc)
+}
+
+func (c *Client) GetControllerBgpMaxAsLimit(ctx context.Context) (int, int, error) {
 	data := map[string]string{
 		"action": "show_bgp_max_as_limit",
 		"CID":    c.CID,
 	}
 
+	type BgpMaxAsLimitResults struct {
+		MaxAsLimit           string `json:"bgp_max_hop"`
+		MaxAsLimitNonRfc1918 string `json:"bgp_max_hop_non_rfc1918"`
+	}
+
 	type BgpMaxAsLimitResponse struct {
-		Results string
+		Results BgpMaxAsLimitResults
 	}
 
 	var resp BgpMaxAsLimitResponse
 	err := c.GetAPIContext(ctx, &resp, data["action"], data, BasicCheck)
 	if err != nil {
-		return 0, err
-	}
-	if resp.Results == "" {
-		return 0, ErrNotFound
+		return 0, 0, err
 	}
 
-	maxAsLimit, err := strconv.Atoi(resp.Results)
-	if err != nil {
-		return 0, fmt.Errorf("error converting max_as_limit to int: %v", err)
+	if resp.Results.MaxAsLimit == "" && resp.Results.MaxAsLimitNonRfc1918 == "" {
+		return 0, 0, ErrNotFound
 	}
-	if maxAsLimit < 1 || maxAsLimit > 254 {
-		return 0, fmt.Errorf("rest API show_bgp_max_as_limit returned invalid value for max_as_limit: %d. It must be an integer in the range of [1-254]", maxAsLimit)
+
+	var maxAsLimit, maxAsLimitNonRfc1918 int
+	if resp.Results.MaxAsLimit == "" {
+		maxAsLimit = 0
+	} else {
+		maxAsLimit, err = strconv.Atoi(resp.Results.MaxAsLimit)
+		if err != nil {
+			return 0, 0, fmt.Errorf("error converting max_as_limit to int: %v", err)
+		}
 	}
-	return maxAsLimit, nil
+
+	if resp.Results.MaxAsLimitNonRfc1918 == "" {
+		maxAsLimitNonRfc1918 = 0
+	} else {
+		maxAsLimitNonRfc1918, err = strconv.Atoi(resp.Results.MaxAsLimitNonRfc1918)
+		if err != nil {
+			return 0, 0, fmt.Errorf("error converting max_as_limit_non_rfc1918 to int: %v", err)
+		}
+	}
+
+	return maxAsLimit, maxAsLimitNonRfc1918, nil
 }
