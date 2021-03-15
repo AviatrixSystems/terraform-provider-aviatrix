@@ -60,6 +60,21 @@ func DiffSuppressFuncIgnoreSpaceInString(k, old, new string, d *schema.ResourceD
 	return goaviatrix.Equivalent(oldValue, newValue)
 }
 
+func DiffSuppressFuncIgnoreSpaceOnlyInString(k, old, new string, d *schema.ResourceData) bool {
+	oldValueList := strings.Split(old, ",")
+	newValueList := strings.Split(new, ",")
+	if len(oldValueList) != len(newValueList) {
+		return false
+	}
+
+	for i := range oldValueList {
+		if strings.TrimSpace(oldValueList[i]) != strings.TrimSpace(newValueList[i]) {
+			return false
+		}
+	}
+	return true
+}
+
 func setConfigValueIfEquivalent(d *schema.ResourceData, k string, fromConfig, fromAPI []string) error {
 	if goaviatrix.Equivalent(fromConfig, fromAPI) {
 		return d.Set(k, fromConfig)
