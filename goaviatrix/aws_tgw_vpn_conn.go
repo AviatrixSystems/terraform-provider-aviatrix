@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -29,11 +31,12 @@ type AwsTgwVpnConn struct {
 }
 
 type AwsTgwVpnConnEdit struct {
-	TgwName              string   `json:"tgw_name,omitempty"`
-	RouteDomainName      string   `json:"associated_route_domain_name,omitempty"`
-	ConnName             string   `json:"vpc_name,omitempty"`
-	PublicIP             string   `json:"public_ip,omitempty"`
-	OnpremASN            string   `json:"aws_side_asn,omitempty"`
+	TgwName              string          `json:"tgw_name,omitempty"`
+	RouteDomainName      string          `json:"associated_route_domain_name,omitempty"`
+	ConnName             string          `json:"vpc_name,omitempty"`
+	PublicIP             string          `json:"public_ip,omitempty"`
+	OnpremASNRaw         json.RawMessage `json:"aws_side_asn,omitempty"`
+	OnpremASN            string
 	RemoteCIDR           []string `json:"remote_cidrs,omitempty"`
 	VpnID                string   `json:"vpc_id,omitempty"`
 	InsideIpCIDRTun1     string   `json:"inside_ip_cidr_tun_1,omitempty"`
@@ -151,7 +154,6 @@ func (c *Client) GetAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (*AwsTgwVpnConn,
 			awsTgwVpnConn.RouteDomainName = allAwsTgwVpnConn[i].RouteDomainName
 			awsTgwVpnConn.ConnName = allAwsTgwVpnConn[i].ConnName
 			awsTgwVpnConn.PublicIP = allAwsTgwVpnConn[i].PublicIP
-			awsTgwVpnConn.OnpremASN = allAwsTgwVpnConn[i].OnpremASN
 			awsTgwVpnConn.RemoteCIDR = strings.Join(allAwsTgwVpnConn[i].RemoteCIDR, ",")
 			if allAwsTgwVpnConn[i].InsideIpCIDRTun1 != "" {
 				awsTgwVpnConn.InsideIpCIDRTun1 = allAwsTgwVpnConn[i].InsideIpCIDRTun1
@@ -166,6 +168,23 @@ func (c *Client) GetAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (*AwsTgwVpnConn,
 				awsTgwVpnConn.PreSharedKeyTun2 = allAwsTgwVpnConn[i].PreSharedKeyTun2
 			}
 			awsTgwVpnConn.LearnedCidrsApproval = allAwsTgwVpnConn[i].LearnedCidrsApproval
+
+			// aws_side_asn can return as either string or int from API
+			var asnString string
+			if len(allAwsTgwVpnConn[i].OnpremASNRaw) != 0 {
+				// First try as string
+				err = json.Unmarshal(allAwsTgwVpnConn[i].OnpremASNRaw, &asnString)
+				if err != nil {
+					// String failed, must be int
+					var asnInt int
+					err = json.Unmarshal(allAwsTgwVpnConn[i].OnpremASNRaw, &asnInt)
+					if err != nil {
+						return nil, fmt.Errorf("json decode list_all_tgw_attachments aws_side_asn field failed: aws_side_asn = %s: %v \n Body: %s", string(allAwsTgwVpnConn[i].OnpremASNRaw), err, bodyString)
+					}
+					asnString = strconv.Itoa(asnInt)
+				}
+			}
+			awsTgwVpnConn.OnpremASN = asnString
 
 			log.Debugf("Found AwsTgwVpnConn: %#v", awsTgwVpnConn)
 
