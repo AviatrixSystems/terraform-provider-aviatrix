@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 )
 
@@ -79,6 +80,23 @@ func (c *Client) GetDeviceAwsTgwAttachment(tgwAttachment *DeviceAwsTgwAttachment
 	}
 	if !found {
 		return nil, ErrNotFound
+	}
+
+	// aws_side_asn can return as either string or int from API
+	if len(deviceAttachment.AwsSideAsnRaw) != 0 {
+		// First try as string
+		var asnString string
+		var asnInt int
+		err = json.Unmarshal(deviceAttachment.AwsSideAsnRaw, &asnString)
+		if err != nil {
+			// String failed, must be int
+			err = json.Unmarshal(deviceAttachment.AwsSideAsnRaw, &asnInt)
+			if err != nil {
+				return nil, fmt.Errorf("json decode list_tgw_details aws_side_asn field failed: aws_side_asn = %s: %v \n Body: %s", string(deviceAttachment.AwsSideAsnRaw), err, b.String())
+			}
+			asnString = strconv.Itoa(asnInt)
+		}
+		deviceAttachment.AwsSideAsn = asnString
 	}
 
 	return &DeviceAwsTgwAttachment{
