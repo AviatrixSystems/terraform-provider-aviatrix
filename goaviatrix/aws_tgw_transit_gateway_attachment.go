@@ -36,8 +36,9 @@ type AttachmentInfo struct {
 	Region                  string `json:"region"`
 	SecurityDomainName      string `json:"associated_route_domain_name"`
 	VpcName                 string `json:"vpc_name"`
-	AwsSideAsn              string `json:"aws_side_asn"`
-	EnableGlobalAccelerator bool   `json:"enable_acceleration"`
+	AwsSideAsn              string
+	AwsSideAsnRaw           json.RawMessage `json:"aws_side_asn"`
+	EnableGlobalAccelerator bool            `json:"enable_acceleration"`
 }
 
 func (c *Client) CreateAwsTgwTransitGwAttachment(awsTgwTransitGwAttachment *AwsTgwTransitGwAttachment) error {
