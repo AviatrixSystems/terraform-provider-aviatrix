@@ -394,11 +394,10 @@ func resourceAviatrixGateway() *schema.Resource {
 				Description: "Whether to enforce Guard Duty IP blocking. Required when `enable_public_subnet_filtering` attribute is true. Valid values: true or false. Default value: true.",
 			},
 			"enable_jumbo_frame": {
-				Type:          schema.TypeBool,
-				Default:       true,
-				Optional:      true,
-				Description:   "Enable jumbo frame support for Gateway. Valid values: true or false. Default value: true.",
-				ConflictsWith: []string{"enable_public_subnet_filtering"},
+				Type:        schema.TypeBool,
+				Default:     true,
+				Optional:    true,
+				Description: "Enable jumbo frame support for Gateway. Valid values: true or false. Default value: true.",
 			},
 			"tags": {
 				Type:          schema.TypeMap,
@@ -1041,7 +1040,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	if !d.Get("enable_jumbo_frame").(bool) && !d.Get("enable_public_subnet_filtering").(bool) {
+	if !d.Get("enable_jumbo_frame").(bool) {
 		err := client.DisableJumboFrame(gateway)
 		if err != nil {
 			return fmt.Errorf("couldn't disable jumbo frames for Gateway: %s", err)
@@ -2338,7 +2337,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	if d.HasChange("enable_jumbo_frame") && !d.Get("enable_public_subnet_filtering").(bool) {
+	if d.HasChange("enable_jumbo_frame") {
 		if d.Get("enable_jumbo_frame").(bool) {
 			err := client.EnableJumboFrame(gateway)
 			if err != nil {
@@ -2474,6 +2473,7 @@ var conflictingPublicSubnetFilteringGatewayConfigKeys = []string{
 	"vpn_access",
 	"vpn_cidr",
 	"vpn_protocol",
+	"enable_jumbo_frame",
 }
 
 func getFqdnGatewayLanCidr(fqdnGatewayInfo *goaviatrix.FQDNGatwayInfo, fqdnGatewayName string) string {
