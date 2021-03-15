@@ -51,6 +51,7 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 			"aws_side_as_number": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				Description:  "BGP Local ASN (Autonomous System Number), Integer between 1-4294967294.",
 				ValidateFunc: goaviatrix.ValidateASN,
 			},
@@ -710,9 +711,6 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 	if d.HasChange("region") {
 		return fmt.Errorf("updating region is not allowed")
-	}
-	if d.HasChange("aws_side_as_number") {
-		return fmt.Errorf("updating aws_side_as_number is not allowed")
 	}
 	if d.HasChange("cloud_type") {
 		return fmt.Errorf("updating cloud_type is not allowed")
