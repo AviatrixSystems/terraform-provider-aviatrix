@@ -633,8 +633,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	}
 
 	enableEgressTransitFireNet := d.Get("enable_egress_transit_firenet").(bool)
-	if enableEgressTransitFireNet && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AZURE && gateway.CloudType != goaviatrix.AWSGOV {
-		return fmt.Errorf("'enable_egress_transit_firenet' is only supported in AWS, AZURE and AWSGOV cloud providers")
+	if enableEgressTransitFireNet && !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AZURE, goaviatrix.AWSGOV, goaviatrix.GCP}) {
+		return fmt.Errorf("'enable_egress_transit_firenet' is only supported in AWS, AZURE, GCP and AWSGOV cloud providers")
 	}
 	if enableEgressTransitFireNet && !enableTransitFireNet {
 		return fmt.Errorf("'enable_egress_transit_firenet' requires 'enable_transit_firenet' to be set to true")
@@ -1590,8 +1590,8 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	if d.Get("enable_egress_transit_firenet").(bool) && !d.Get("enable_transit_firenet").(bool) {
 		return fmt.Errorf("'enable_egress_transit_firenet' requires 'enable_transit_firenet' to be set to true")
 	}
-	if d.Get("enable_egress_transit_firenet").(bool) && gateway.CloudType != goaviatrix.AZURE && gateway.CloudType != goaviatrix.AWS && gateway.CloudType != goaviatrix.AWSGOV {
-		return fmt.Errorf("'enable_egress_transit_firenet' is currently only supported on AWS, AZURE and AWSGOV cloud providers")
+	if d.Get("enable_egress_transit_firenet").(bool) && !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AZURE, goaviatrix.AWSGOV, goaviatrix.GCP}) {
+		return fmt.Errorf("'enable_egress_transit_firenet' is currently only supported on AWS, AZURE, GCP and AWSGOV cloud providers")
 	}
 
 	if d.Get("enable_learned_cidrs_approval").(bool) && d.Get("learned_cidrs_approval_mode").(string) == "connection" {
