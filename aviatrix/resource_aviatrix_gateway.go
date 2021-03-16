@@ -1524,11 +1524,13 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			}
 		}
 
-		jumboFrameStatus, err := client.GetJumboFrameStatus(gw)
-		if err != nil {
-			return fmt.Errorf("could not get jumbo frame status for gateway: %v", err)
+		if !d.Get("enable_public_subnet_filtering").(bool) {
+			jumboFrameStatus, err := client.GetJumboFrameStatus(gw)
+			if err != nil {
+				return fmt.Errorf("could not get jumbo frame status for gateway: %v", err)
+			}
+			d.Set("enable_jumbo_frame", jumboFrameStatus)
 		}
-		d.Set("enable_jumbo_frame", jumboFrameStatus)
 	}
 	return nil
 }
@@ -2471,6 +2473,7 @@ var conflictingPublicSubnetFilteringGatewayConfigKeys = []string{
 	"vpn_access",
 	"vpn_cidr",
 	"vpn_protocol",
+	"enable_jumbo_frame",
 }
 
 func getFqdnGatewayLanCidr(fqdnGatewayInfo *goaviatrix.FQDNGatwayInfo, fqdnGatewayName string) string {
