@@ -90,7 +90,7 @@ The following arguments are supported:
 * `user_data` - (Optional) Advanced option. Bootstrap storage name. Applicable to Check Point Series and Fortinet Series deployment only.
 
 ### Misc.
-* `tags` - (Optional) Mapping of key value pairs of tags for a firewall instance. Only available for AWS, AWSGov and Azure firewall instances. Allowed characters are: letters, spaces, and numbers plus the following special characters: + - = . _ : @. Example: {"key1" = "value1", "key2" = "value2"}.
+* `tags` - (Optional) Mapping of key value pairs of tags for a firewall instance. Only available for AWS, AWSGov, GCP and Azure firewall instances. For AWS, AWSGOV and Azure allowed characters are: letters, spaces, and numbers plus the following special characters: + - = . _ : @. For GCP allowed characters are: lowercase letters, numbers, "-" and "_". Example: {"key1" = "value1", "key2" = "value2"}.
 
 ## Attribute Reference
 
