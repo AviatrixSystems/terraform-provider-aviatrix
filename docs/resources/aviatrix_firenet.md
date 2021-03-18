@@ -22,8 +22,21 @@ resource "aviatrix_firenet" "test_firenet" {
   egress_enabled                       = false
   keep_alive_via_lan_interface_enabled = false
   manage_firewall_instance_association = false
-  
+
   depends_on = [aviatrix_firewall_instance_association.association_1]
+}
+```
+
+```hcl
+# Create an Aviatrix GCP FireNet
+resource "aviatrix_firenet" "gcp_firenet" {
+  vpc_id              = format("%s~-~%s", aviatrix_transit_gateway.test_transit_gateway.vpc_id, aviatrix_account.gcp.gcloud_project_id)
+  inspection_enabled  = true
+  egress_enabled      = true
+  keep_alive_via_lan_interface_enabled = false
+  manage_firewall_instance_association = false
+
+  depends_on = [aviatrix_firewall_instance_association.association2]
 }
 ```
 
