@@ -5,8 +5,8 @@
 
 ### Features:
 1. Implemented new resources to support TGW connect and connect peers:
-  - **resource_aviatrix_aws_tgw_connect**
-  - **resource_aviatrix_aws_tgw_connect_peer**
+  - **aviatrix_aws_tgw_connect**
+  - **aviatrix_aws_tgw_connect_peer**
 2. Implemented support for GCP FireNet:
   - New attributes ``lan_vpc_id`` and ``lan_private_subnet`` in **aviatrix_transit_gateway**
   - New attribute ``fqdn_lan_vpc_id`` in **aviatrix_gateway**
@@ -19,9 +19,9 @@
 6. Implemented support for IKEv2 for route-based Site2Cloud connections in **aviatrix_site2cloud**
 7. Implemented support for ``metrics_only`` option in **aviatrix_datadog_agent**
 8. Implemented support for building OOB Transit/Spoke gateway and HA in different AZs/Subnets
-9. Implemented support for controller backend for AWSGOV, Azure, GCP and OCI providers
+9. Implemented support for controller backup for AWSGOV, Azure, GCP and OCI providers
 10. Implemented support for attribute ``route_tables`` in **aviatrix_vpc** resource and data source
-11. Implemented support for Management Access form on-prem in **aviatrix_site2cloud**
+11. Implemented support for Management Access from on-prem in **aviatrix_site2cloud**
 12. Implemented support for Enable Transit Summarize CIDR to TGW in **aviatrix_transit_gateway** using ``enable_transit_summarize_cidr_to_tgw``
 13. Implemented support for Jumbo Frames in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** using ``enable_jumbo_frame``
 14. Implemented support for Tags in **aviatrix_firewall_instance** using ``tags``
@@ -48,7 +48,7 @@
 6. Updated following attributes to ForceNew in **aviatrix_aws_tgw_vpc_attachment**:
   - ``tgw_name``
   - ``vpc_id``
-7. Updated attribute ``local_as_number`` to ForceNew in **aviatrix_transit_gateway**:
+7. Updated attribute ``local_as_number`` to Optional and Computed in **aviatrix_transit_gateway**:
 8. Optimized API list_vpcs_summary to reduce terraform refresh time for **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
 
 ### Bug Fixes:
@@ -106,7 +106,7 @@
 9. Implemented support for private transit gateway peering with single-tunnel mode in **aviatrix_transit_gateway_peering** using attribute ``enable_single_tunnel_mode``
 10. Implemented support for IKEv2 protocol in transit to external device connections in **aviatrix_transit_external_device_conn** using attribute ``enable_ikev2``
 11. Implemented new resource to support transit in Azure with ExpressRoute:
-  - **resource_aviatrix_azure_vng_conn**
+  - **aviatrix_azure_vng_conn**
 12. Implemented support for Private OOB feature:
   - New resource **aviatrix_controller_private_oob** to enable Controller-wide setting
   - New attributes ``enable_private_oob``, ``oob_management_subnet``, and ``oob_availability_zone`` in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
@@ -117,13 +117,13 @@
 15. Implemented support for Aviatrix client/ovpn file download from the controller when SAML authentication is used:
   - New resource: **aviatrix_vpn_cert_download**
 16. Implemented new resources to support Controller logging configurations:
-  - **resource_aviatrix_remote_syslog**
-  - **resource_aviatrix_splunk_logging**
-  - **resource_aviatrix_filebeat_forwarder**
-  - **resource_aviatrix_sumologic_forwarder**
-  - **resource_aviatrix_datadog_agent**
-  - **resource_aviatrix_netflow_agent**
-  - **resource_aviatrix_cloudwatch_agent**
+  - **aviatrix_remote_syslog**
+  - **aviatrix_splunk_logging**
+  - **aviatrix_filebeat_forwarder**
+  - **aviatrix_sumologic_forwarder**
+  - **aviatrix_datadog_agent**
+  - **aviatrix_netflow_agent**
+  - **aviatrix_cloudwatch_agent**
 
 ### Enhancements:
 1. Added Computed value ``ha_lan_interface_cidr`` in **aviatrix_transit_gateway**
