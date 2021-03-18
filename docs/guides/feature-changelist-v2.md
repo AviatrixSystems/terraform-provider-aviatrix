@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.18 (UserConnect-6.3)``
+``Last updated: R2.18.1 (UserConnect-6.3.2355)``
 
 
 ---
@@ -228,7 +228,7 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |:----:|----------------|:-----------------:|----------------------------|
 |(changed) | gateway    | monitor_exclude_list | **Yes**; attribute has changed from string-type to a list. If this attribute is already being used in a comma-separated string, please convert values to a list of strings. Eg. ``"foo,bar"`` to ``["foo", "bar"]`` |
 
-## R2.18.1 (UserConnect-6.3.2352)
+## R2.18.1 (UserConnect-6.3.2355)
 **NOTICE:** Starting in R2.18.1, as part of the initiative to improve future support, development and performance of the provider, certain attributes will be deprecated in order to avoid cross-resource behavior dependencies and improve scalability. In **R3.0**, we will fully remove these attributes.
 
 Note there are standalone resources already in place to be used and one only needs to set the specified `manage_x` attribute to false and import the specific resource(s) into the state. For more information on import, please see the Hashicorp import docs [here](https://www.terraform.io/docs/cli/commands/import.html)
