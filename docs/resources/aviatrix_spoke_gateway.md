@@ -165,12 +165,12 @@ The following arguments are supported:
 * `enable_monitor_gateway_subnets` - (Optional) If set to true, the [Monitor Gateway Subnets](https://docs.aviatrix.com/HowTos/gateway.html#monitor-gateway-subnet) feature is enabled. Default value is false. Available in provider version R2.18+.
 * `monitor_exclude_list` - (Optional) Set of monitored instance ids. Only valid when 'enable_monitor_gateway_subnets' = true. Available in provider version R2.18+.
 
-### OOB
-* `enable_private_oob` - (Optional) Enable private OOB. Only available for AWS and AWSGOV. Valid values: true, false. Default value: false.
-* `oob_management_subnet` - (Optional) OOB management subnet. Required if enabling private OOB. Example: "11.0.2.0/24".
-* `oob_availability_zone` - (Optional) OOB availability zone. Required if enabling private OOB. Example: "us-west-1a".
-* `ha_oob_management_subnet` - (Optional) HA OOB management subnet. Required if enabling private OOB and HA. Example: "11.0.0.48/28".
-* `ha_oob_availability_zone` - (Optional) HA OOB availability zone. Required if enabling private OOB and HA. Example: "us-west-1b".
+### [Private OOB](https://docs.aviatrix.com/HowTos/private_oob.html)
+* `enable_private_oob` - (Optional) Enable Private OOB feature. Only available for AWS and AWSGOV. Valid values: true, false. Default value: false.
+* `oob_management_subnet` - (Optional) OOB management subnet. Required if enabling Private OOB. Example: "11.0.2.0/24".
+* `oob_availability_zone` - (Optional) OOB availability zone. Required if enabling Private OOB. Example: "us-west-1a".
+* `ha_oob_management_subnet` - (Optional) HA OOB management subnet. Required if enabling Private OOB and HA. Example: "11.0.0.48/28".
+* `ha_oob_availability_zone` - (Optional) HA OOB availability zone. Required if enabling Private OOB and HA. Example: "us-west-1b".
 
 ### Misc.
 
