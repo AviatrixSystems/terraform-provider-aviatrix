@@ -97,7 +97,11 @@ func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta
 		return fmt.Errorf("couldn't find Firewall Instance: %s", err)
 	}
 	if fI != nil {
-		d.Set("vpc_id", fI.VpcID)
+		if goaviatrix.VendorToCloudType(fI.CloudVendor) == goaviatrix.GCP {
+			d.Set("vpc_id", fI.FirenetVpc)
+		} else {
+			d.Set("vpc_id", fI.VpcID)
+		}
 		d.Set("instance_id", fI.InstanceID)
 		d.Set("public_ip", fI.ManagementPublicIP)
 	}
