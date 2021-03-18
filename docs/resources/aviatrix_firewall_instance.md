@@ -46,7 +46,7 @@ resource "aviatrix_firewall_instance" "test_firewall_instance" {
   firewall_image_version = "9.0.9"
   firewall_size          = "n1-standard-4"
   management_vpc_id      = aviatrix_vpc.management_vpc.vpc_id
-  management_subnet      = format("%s~~%s~~%s", aviatrix_vpc.management_vpc.subnets[0].cidr, aviatrix_vpc.fmanagement_vpc.subnets[0].region, aviatrix_vpc.management_vpc.subnets[0].name)
+  management_subnet      = format("%s~~%s~~%s", aviatrix_vpc.management_vpc.subnets[0].cidr, aviatrix_vpc.management_vpc.subnets[0].region, aviatrix_vpc.management_vpc.subnets[0].name)
   egress_vpc_id          = aviatrix_vpc.egress_vpc.vpc_id
   egress_subnet          = format("%s~~%s~~%s", aviatrix_vpc.egress_vpc.subnets[0].cidr, aviatrix_vpc.egress_vpc.subnets[0].region, aviatrix_vpc.egress_vpc.subnets[0].name)
   zone                   = aviatrix_transit_gateway.test_transit_gateway.vpc_reg
@@ -61,14 +61,200 @@ The following arguments are supported:
 * `vpc_id` - (Required) VPC ID of the Security VPC. For GCP, `vpc_id` must be in the form vpc_id~-~gcloud_project_id.
 * `firenet_gw_name` - (Optional) Name of the primary FireNet gateway. Required for FireNet without Native GWLB VPC.
 * `firewall_name` - (Required) Name of the firewall instance to be created.
-* `firewall_image` - (Required) One of the AWS/Azure AMIs from Palo Alto Networks.
+* `firewall_image` - (Required) One of the AWS/Azure/GCP AMIs from various vendors such as Palo Alto Networks.
 * `firewall_size` - (Required) Instance size of the firewall. Example: "m5.xlarge".  
 * `management_subnet` - (Optional) Management Interface Subnet. Select the subnet whose name contains “gateway and firewall management”. For GCP, `management_subnet` must be in the form `cidr~~region~~name`. Required for Palo Alto Networks VM-Series, and required to be empty for Check Point or Fortinet series.
 * `egress_subnet` - (Required) Egress Interface Subnet. Select the subnet whose name contains “FW-ingress-egress”. For GCP, `egress_subnet` must be in the form `cidr~~region~~name`.
 * `firewall_image_version` - (Optional) Version of firewall image. If not specified, Controller will automatically select the latest version available.
-* `zone` - (Optional) Availability Zone. Required if creating a Firewall Instance with a Native AWS GWLB enabled VPC. Applicable to Azure, GCP and AWS only. Available as of provider version R2.17+.
+* `zone` - (Optional) Availability Zone. Required if creating a Firewall Instance with a Native AWS GWLB-enabled VPC. Applicable to AWS, Azure, and GCP only. Available as of provider version R2.17+.
 * `management_vpc_id` - (Optional) Management VPC ID. Required for GCP. Available as of provider version R2.18.1+.
 * `egress_vpc_id` - (Optional) Egress VPC ID. Required for GCP. Available as of provider version R2.18.1+.
+
+Valid `firewall_image` values:
+
+**AWS**
+1. Palo Alto Networks VM-Series Next-Generation Firewall Bundle 1
+  - 10.0.4
+  - 10.0.3
+  - 10.0.2
+  - 10.0.1
+  - 10.0.0
+  - 9.1.6
+  - 9.1.3
+  - 9.1.2
+2. Palo Alto Networks VM-Series Next-Generation Firewall Bundle 1 [VM-300]
+  - 9.1.2
+  - 9.1.0-h3
+  - 9.0.9.xfr
+  - 9.0.9-h1.xfr
+  - 9.0.6
+  - 9.0.5.xfr
+  - 9.0.3.xfr
+  - 9.0.1
+  - 8.1.15
+  - 8.1.9
+3. Palo Alto Networks VM-Series Next-Generation Firewall Bundle 2
+  - 10.0.4
+  - 10.0.3
+  - 10.0.2
+  - 10.0.1
+  - 10.0.0
+  - 9.1.6
+  - 9.1.3
+  - 9.1.2
+4. Palo Alto Networks VM-Series Next-Generation Firewall Bundle 2 [VM-300]
+  - 9.0.9.xfr
+  - 9.0.9-h1.xfr
+  - 8.1.15
+5. Palo Alto Networks VM-Series Next-Generation Firewall (BYOL)
+  - 10.0.4
+  - 10.0.3
+  - 10.0.2
+  - 10.0.0
+  - 9.1.6
+  - 9.1.3
+  - 9.0.9.xfr
+  - 9.0.9-h1.xfr
+  - 8.1.17
+  - 8.1.15
+6. Check Point CloudGuard IaaS Next-Gen Firewall w. Threat Prevention & SandBlast BYOL
+  - R81-392.788
+  - R81-392.753
+  - R81-392.718
+  - R80.40-294.788
+  - R80.40-294.743
+  - R80.40-294.726
+  - R80.30-273.788
+  - R80.30-273.641
+7. Check Point CloudGuard IaaS Next-Gen Firewall with Threat Prevention
+  - R81-392.788
+  - R81-392.753
+  - R81-392.718
+  - R80.40-294.788
+  - R80.40-294.743
+  - R80.40-294.726
+  - R80.30-273.788
+  - R80.30-273.629
+8. Check Point CloudGuard IaaS All-In-One
+  - R81-392.715
+  - R80.40-294.774
+  - R80.40-294.581
+  - R80.40-294.086
+9. Fortinet FortiGate Next-Generation Firewall
+  - (6.4.5)
+  - (6.4.4)
+  - (6.2.5)
+  - (6.2.3)
+10. Fortinet FortiGate (BYOL) Next-Generation Firewall
+  - (6.4.5)
+  - (6.4.4)
+  - (6.2.5)
+  - (6.2.3)
+
+**Azure**
+1. Palo Alto Networks VM-Series Next-Generation Firewall Bundle 1
+  - 9.1.0
+  - 9.0.9
+  - 9.0.6
+  - 9.0.4
+  - 9.0.1
+2. Palo Alto Networks VM-Series Next-Generation Firewall Bundle 2
+  - 9.1.0
+  - 9.0.9
+  - 9.0.6
+  - 9.0.4
+  - 9.0.1
+3. Palo Alto Networks VM-Series Next-Generation Firewall (BYOL)
+  - 9.1.0
+  - 9.0.9
+  - 9.0.6
+  - 9.0.4
+  - 9.0.1
+4. Check Point CloudGuard IaaS Single Gateway R80.30 - Bring Your Own License
+  - 8030.900273.0819
+  - 8030.900273.0801
+  - 8030.900273.0753
+  - 8030.900273.645
+  - 8030.900273.0634
+5. Check Point CloudGuard IaaS Single Gateway R80.30 - Pay As You Go (NGTP)
+  - 8030.900273.0590
+  - 8030.900273.0562
+6. Check Point CloudGuard IaaS Single Gateway R80.30 - Pay As You Go (NGTX)
+  - 8030.900273.0590
+  - 8030.900273.0562
+7. Check Point CloudGuard IaaS Single Gateway R80.40 - Bring Your Own License
+  - 8040.900294.0801
+  - 8040.900294.0728
+  - 8040.900294.0682
+  - 8040.900294.0640
+  - 8040.900294.0593
+8. Check Point CloudGuard IaaS Single Gateway R80.40 - Pay As You Go (NGTP)
+  - 8040.900294.0801
+  - 8040.900294.0728
+  - 8040.900294.0682
+  - 8040.900294.0640
+  - 8040.900294.0593
+9. Check Point CloudGuard IaaS Single Gateway R80.40 - Pay As You Go (NGTX)
+  - 8040.900294.0801
+  - 8040.900294.0728
+  - 8040.900294.0682
+  - 8040.900294.0640
+  - 8040.900294.0593
+10. Check Point CloudGuard IaaS Standalone (gateway + management) R80.40 - Bring Your Own License
+  - 8040.900294.0752
+  - 8040.900294.0586
+11. Fortinet FortiGate (BYOL) Next-Generation Firewall
+  - 6.4.5
+  - 6.4.3
+  - 6.4.2
+  - 6.4.0
+  - 6.2.5
+12. Fortinet FortiGate (PAYG) Next-Generation Firewall
+  - 6.0.4
+  - 6.0.3
+  - 6.0.02
+  - 5.6.6
+  - 5.6.5
+13. Fortinet FortiGate (PAYG_20190624) Next-Generation Firewall Latest Release
+  - 6.4.5
+  - 6.4.3
+  - 6.4.2
+  - 6.4.0
+  - 6.2.5
+
+**GCP**
+1. Palo Alto Networks VM-Series Next-Generation Firewall BUNDLE1
+  - 9.0.9
+  - 8.1.15
+  - 9.1.2
+2. Palo Alto Networks VM-Series Next-Generation Firewall BUNDLE2
+  - 9.0.9
+  - 8.1.15
+  - 9.1.2
+3. Palo Alto Networks VM-Series Next-Generation Firewall BYOL
+  - 9.1.3
+  - 9.0.9
+  - 8.1.15
+4. Fortinet FortiGate Next-Generation Firewall
+  - 6.2.5
+  - 6.4.3
+  - 6.4.4
+  - 6.4.5
+5. Fortinet FortiGate Next-Generation Firewall (BYOL)
+  - 6.2.5
+  - 6.4.3
+  - 6.4.4
+  - 6.4.5
+6. Check Point CloudGuard IaaS Firewall & Threat Prevention
+  - R80.30-273.755
+  - R80.40-294.735
+  - R80.40-294.759
+  - R81-392.758
+  - R81-392.787
+7. Check Point CloudGuard IaaS Firewall & Threat Prevention (BYOL)
+  - R80.30-273.755
+  - R80.40-294.759
+  - R81-392.787
 
 ### Authentication method
 * `key_name`- (Optional) Applicable to AWS deployment only. AWS Key Pair name. If not provided a Key Pair will be generated.
@@ -77,7 +263,7 @@ The following arguments are supported:
 * `ssh_public_key` - (Optional) Applicable to Azure deployment only.
 
 ### Advanced Options
-* `iam_role` - (Optional) Only available for AWS. In advanced mode, create an IAM Role on the AWS account that launched the FireNet gateway. Create a policy to attach to the role. The policy is to allow access to “Bootstrap Bucket”.
+* `iam_role` - (Optional) Only available for AWS. In advanced mode, create an IAM Role on the AWS account that launched the FireNet gateway. Create a policy to attach to the role. The policy is to allow access to "Bootstrap Bucket".
 * `bootstrap_bucket_name`- (Optional) Only available for AWS. In advanced mode, specify a bootstrap bucket name where the initial configuration and policy file is stored.
 * `bootstrap_storage_name` - (Optional) Advanced option. Bootstrap storage name. Applicable to Azure and Palo Alto Networks VM-Series/Fortinet Series deployment only. Available as of provider version R2.17.1+.
 * `storage_access_key` - (Optional) Advanced option. Storage access key. Applicable to Azure and Palo Alto Networks VM-Series deployment only. Available as of provider version R2.17.1+.

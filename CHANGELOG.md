@@ -4,7 +4,7 @@
 - Supported Terraform version: **v0.12.x** and **v0.13.x**
 
 ### Features:
-1. Implemented new resources to support TGW connect and connect peers:
+1. Implemented new resources to support TGW Connect and Connect peers:
   - **aviatrix_aws_tgw_connect**
   - **aviatrix_aws_tgw_connect_peer**
 2. Implemented support for GCP FireNet:
@@ -64,6 +64,7 @@
 2. Deprecated the in-line ``transit_gw`` attribute in **aviatrix_spoke_gateway**. Please use the standalone **aviatrix_spoke_transit_attachment** resource instead
 3. Deprecated the in-line ``policy`` attribute in **aviatrix_firewall**. Please use the standalone **aviatrix_firewall_policy** resource instead
 4. Deprecated the in-line ``domain_names`` attribute in **aviatrix_fqdn**. Please use the standalone **aviatrix_fqdn_tag_rule** resource instead
+5. Deprecated the in-line ``firewall_instance_association`` attribute in **aviatrix_firenet**. Please use the standalone **aviatrix_firewall_instance_association** resource instead
 
 
 ## 2.18.0 (January 31, 2021)
