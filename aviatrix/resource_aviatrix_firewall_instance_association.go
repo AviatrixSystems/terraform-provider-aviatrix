@@ -115,9 +115,11 @@ func resourceAviatrixFirewallInstanceAssociationCreate(d *schema.ResourceData, m
 	} else {
 		fwInfo, err := client.GetFirewallInstance(firewall)
 		if err != nil {
-			return fmt.Errorf("could not find firewall before creating association: %v", err)
+			// Cannot find the firewall instance, likely created outside of Aviatrix controller
+			log.Printf("[INFO] Failed to get firewall details before creating association: %v\n", err)
+		} else {
+			cloudType = goaviatrix.VendorToCloudType(fwInfo.CloudVendor)
 		}
-		cloudType = goaviatrix.VendorToCloudType(fwInfo.CloudVendor)
 	}
 	if cloudType == goaviatrix.GCP {
 		if firewall.FirewallName != "" {
