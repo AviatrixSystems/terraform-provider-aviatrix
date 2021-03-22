@@ -31,18 +31,12 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `cloud_type` - Type of cloud service provider. (Only AWS is supported currently. Value of 1 for AWS.)
-* `aws_account_number` - AWS Account number to associate with Aviatrix account.
+* `cloud_type` - Type of cloud service provider.
+* `aws_account_number` - AWS Account number.
 * `aws_access_key` - AWS Access Key.
-* `aws_role_app` - AWS App role ARN.
+* `aws_role_arn` - AWS App role ARN.
 * `aws_role_ec2` - AWS EC2 role ARN.
+* `awsgov_account_number` - AWS Gov Account number.
+* `awsgov_access_key` - AWS Gov Access Key.
 * `gcloud_project_id` - GCloud Project ID.
-* `gcloud_project_credentials_filepath` - GCloud Project Credentials.
 * `arm_subscription_id` - Azure ARM Subscription ID.
-* `arm_directory_id` - Azure ARM Directory ID.
-* `arm_application_id` - Azure ARM Application ID.
-* `arm_application_key` - Azure ARM Application key.
-* `oci_tenancy_id` - Oracle OCI Tenancy ID.
-* `oci_user_id` - Oracle OCI User ID.
-* `oci_compartment_id` - Oracle OCI Compartment ID.
-* `oci_api_private_key_filepath` - Oracle OCI API Private Key local file path.
