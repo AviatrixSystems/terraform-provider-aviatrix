@@ -19,6 +19,7 @@ type SecurityDomain struct {
 	AviatrixFirewallDomain bool   `form:"firewall_domain, omitempty"`
 	NativeEgressDomain     bool   `form:"native_egress_domain, omitempty"`
 	NativeFirewallDomain   bool   `form:"native_firewall_domain, omitempty"`
+	ForceDelete            bool   `form:"force,omitempty"`
 }
 
 type SecurityDomainAPIResp struct {
@@ -173,8 +174,6 @@ func (c *Client) DeleteDomainConnection(awsTgw *AWSTgw, sourceDomain string, des
 	deleteConnectionBetweenRouteDomains := url.Values{}
 	deleteConnectionBetweenRouteDomains.Add("CID", c.CID)
 	deleteConnectionBetweenRouteDomains.Add("action", "delete_connection_between_route_domains")
-	deleteConnectionBetweenRouteDomains.Add("account_name", awsTgw.AccountName)
-	deleteConnectionBetweenRouteDomains.Add("region", awsTgw.Region)
 	deleteConnectionBetweenRouteDomains.Add("tgw_name", awsTgw.Name)
 	deleteConnectionBetweenRouteDomains.Add("source_route_domain_name", sourceDomain)
 	deleteConnectionBetweenRouteDomains.Add("destination_route_domain_name", destinationDomain)

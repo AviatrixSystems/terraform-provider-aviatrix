@@ -129,7 +129,10 @@ The following arguments are supported:
 * `account_name` - (Required) Name of the cloud account in the Aviatrix controller.
 * `region` - (Required) AWS region of AWS TGW to be created in
 * `aws_side_as_number` - (Required) BGP Local ASN (Autonomous System Number). Integer between 1-4294967294. Example: "65001".
-* `security_domains` - (Required) Security Domains to create together with AWS TGW's creation. Three default domains, along with the connections between them, are created automatically. These three domains can't be deleted, but the connection between any two of them can be.
+
+!> **WARNING:** Attribute `security_domain` has been deprecated as of provider version R2.19+ and will not receive further updates. Please set `manage_security_domain` to false, and use the standalone `aviatrix_aws_tgw_vpc_attachment` resource instead.
+
+* `security_domains` - (Required if `manage_security_domain` is true) Security Domains to create together with AWS TGW's creation. Three default domains, along with the connections between them, are created automatically. These three domains can't be deleted, but the connection between any two of them can be.
   * `security_domain_name` - (Required) Three default domains ("Aviatrix_Edge_Domain", "Default_Domain" and "Shared_Service_Domain") are required with AWS TGW's creation.
   * `aviatrix_firewall` - (Optional) Set to true if the security domain is to be used as an Aviatrix Firewall Domain for the Aviatrix Firewall Network. Valid values: true, false. Default value: false.
   * `native_egress` - (Optional) Set to true if the security domain is to be used as a native egress domain (for non-Aviatrix Firewall Network-based central Internet bound traffic). Valid values: true, false. Default value: false.
@@ -158,6 +161,10 @@ The following arguments are supported:
 
 * `attached_aviatrix_transit_gateway` - (Optional) A list of names of Aviatrix Transit Gateway(s) (transit VPCs) to attach to the Aviatrix_Edge_Domain.
 * `cloud_type` - (Optional) Type of cloud service provider, requires an integer value. Supported for AWS (1) and AWS GOV (256). Default value: 1.
+* `manage_security_domain` - (Optional) This parameter is a switch used to determine whether or not to manage security domains using the **aviatrix_aws_tgw** resource. If this is set to false, creation and management of security domains must be done using the **aviatrix_aws_tgw_security_domain** resource. Valid values: true, false. Default value: true.
+
+-> **NOTE:** `manage_security_domain` - If you are using/upgraded to Aviatrix Terraform Provider R2.19+, and an **aviatrix_aws_tgw** resource was originally created with a provider version <R2.19, you must do 'terraform refresh' to update and apply the attribute's default value (true) into the state file.
+
 * `manage_transit_gateway_attachment` - (Optional) This parameter is a switch used to determine whether or not to manage transit gateway attachments to the TGW using the **aviatrix_aws_tgw** resource. If this is set to false, attachment of transit gateways must be done using the **aviatrix_aws_tgw_transit_gateway_attachment** resource. Valid values: true, false. Default value: true.
 
 -> **NOTE:** `manage_transit_gateway_attachment` - If you are using/upgraded to Aviatrix Terraform Provider R2.13+, and an **aviatrix_aws_tgw** resource was originally created with a provider version <R2.13, you must do 'terraform refresh' to update and apply the attribute's default value (true) into the state file.
@@ -176,6 +183,8 @@ The following arguments are supported:
 ```
 $ terraform import aviatrix_aws_tgw.test tgw_name
 ```
+
+-> **NOTE:** If `manage_security_domain` is set to "false", import action will also import the information of the security domains into the state file. Will need to do *terraform apply* to sync `manage_security_domain` to "false".
 
 -> **NOTE:** If `manage_vpc_attachment` is set to "false", import action will also import the information of the VPCs attached to TGW into the state file. Will need to do *terraform apply* to sync `manage_vpc_attachment` to "false".
 
