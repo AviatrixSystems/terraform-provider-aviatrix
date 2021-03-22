@@ -78,8 +78,8 @@ func (c *Client) GetControllerBgpMaxAsLimit(ctx context.Context) (int, int, erro
 	}
 
 	type BgpMaxAsLimitResults struct {
-		MaxAsLimit           string `json:"bgp_max_hop"`
-		MaxAsLimitNonRfc1918 string `json:"bgp_max_hop_non_rfc1918"`
+		MaxAsLimit           string `json:"bgp_max_as_limit_rfc1918"`
+		MaxAsLimitNonRfc1918 string `json:"bgp_max_as_limit_non_rfc1918"`
 	}
 
 	type BgpMaxAsLimitResponse struct {
