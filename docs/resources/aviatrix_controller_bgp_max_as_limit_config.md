@@ -15,8 +15,8 @@ The **aviatrix_controller_bgp_max_as_limit_config** resource allows management o
 ```hcl
 # Create an Aviatrix Controller BGP max AS limit config
 resource "aviatrix_controller_bgp_max_as_limit_config" "test_max_as_limit" {
-  max_as_limit = 1
-  max_as_limit_non_rfc1918 = 2
+  max_as_limit                = 1
+  max_as_limit_non_rfc1918    = 2
 }
 ```
 

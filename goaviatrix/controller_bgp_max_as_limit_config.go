@@ -97,18 +97,14 @@ func (c *Client) GetControllerBgpMaxAsLimit(ctx context.Context) (int, int, erro
 	}
 
 	var maxAsLimit, maxAsLimitNonRfc1918 int
-	if resp.Results.MaxAsLimit == "" {
-		maxAsLimit = 0
-	} else {
+	if resp.Results.MaxAsLimit != "" {
 		maxAsLimit, err = strconv.Atoi(resp.Results.MaxAsLimit)
 		if err != nil {
 			return 0, 0, fmt.Errorf("error converting max_as_limit to int: %v", err)
 		}
 	}
 
-	if resp.Results.MaxAsLimitNonRfc1918 == "" {
-		maxAsLimitNonRfc1918 = 0
-	} else {
+	if resp.Results.MaxAsLimitNonRfc1918 != "" {
 		maxAsLimitNonRfc1918, err = strconv.Atoi(resp.Results.MaxAsLimitNonRfc1918)
 		if err != nil {
 			return 0, 0, fmt.Errorf("error converting max_as_limit_non_rfc1918 to int: %v", err)
