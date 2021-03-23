@@ -124,7 +124,7 @@ func resourceAviatrixAwsTgwSecurityDomainRead(ctx context.Context, d *schema.Res
 		AwsTgwName: tgwName,
 	}
 
-	securityDomainRule, err := client.GetSecurityDomainDetails(ctx, securityDomain)
+	securityDomainDetails, err := client.GetSecurityDomainDetails(ctx, securityDomain)
 	if err == goaviatrix.ErrNotFound {
 		d.SetId("")
 		return nil
@@ -133,9 +133,9 @@ func resourceAviatrixAwsTgwSecurityDomainRead(ctx context.Context, d *schema.Res
 		return diag.Errorf("couldn't get the details of the security domain %s due to %v", name, err)
 	}
 
-	d.Set("aviatrix_firewall", securityDomainRule.AviatrixFirewallDomain)
-	d.Set("native_egress", securityDomainRule.NativeEgressDomain)
-	d.Set("native_firewall", securityDomainRule.NativeFirewallDomain)
+	d.Set("aviatrix_firewall", securityDomainDetails.AviatrixFirewallDomain)
+	d.Set("native_egress", securityDomainDetails.NativeEgressDomain)
+	d.Set("native_firewall", securityDomainDetails.NativeFirewallDomain)
 
 	d.SetId(tgwName + "~" + name)
 	return nil

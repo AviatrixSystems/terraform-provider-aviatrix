@@ -44,6 +44,15 @@ type SecurityDomainRule struct {
 	NativeFirewallDomain   bool      `json:"native_firewall_domain,omitempty"`
 }
 
+type SecurityDomainDetails struct {
+	Name                   string    `json:"name"`
+	ConnectedDomain        []string  `json:"connected_route_domain,omitempty"`
+	AttachedVPCs           []VPCSolo `json:"attached_vpc,omitempty"`
+	AviatrixFirewallDomain bool      `json:"firewall_domain,omitempty"`
+	NativeEgressDomain     bool      `json:"egress_domain,omitempty"`
+	NativeFirewallDomain   bool      `json:"native_firewall_domain,omitempty"`
+}
+
 type VPCSolo struct {
 	Region                       string `json:"vpc_region,omitempty"`
 	AccountName                  string `json:"vpc_account_name,omitempty"`
@@ -216,7 +225,7 @@ func (c *Client) SecurityDomainRuleValidation(securityDomainRule *SecurityDomain
 	return true
 }
 
-func (c *Client) GetSecurityDomainDetails(ctx context.Context, domain *SecurityDomain) (*SecurityDomainRule, error) {
+func (c *Client) GetSecurityDomainDetails(ctx context.Context, domain *SecurityDomain) (*SecurityDomainDetails, error) {
 	params := map[string]string{
 		"action":            "list_tgw_security_domain_details",
 		"CID":               c.CID,
@@ -225,9 +234,9 @@ func (c *Client) GetSecurityDomainDetails(ctx context.Context, domain *SecurityD
 	}
 
 	type Resp struct {
-		Return  bool                 `json:"return"`
-		Results []SecurityDomainRule `json:"results"`
-		Reason  string               `json:"reason"`
+		Return  bool                    `json:"return"`
+		Results []SecurityDomainDetails `json:"results"`
+		Reason  string                  `json:"reason"`
 	}
 
 	var data Resp
