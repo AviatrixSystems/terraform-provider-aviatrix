@@ -12,10 +12,20 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.18.1 (UserConnect-6.3.2355)``
+``Last updated: R2.18.2 (UserConnect-6.3.2364)``
 
 
 ---
+
+## 2.18.2
+### Notes:
+- Release date: **(22 Mar 2021)**
+- Supported Controller version: **UserConnect-6.3.2364**
+- Supported Terraform version: **v0.12.x** and **v0.13.x**
+
+### Bug Fixes:
+1. Fixed an issue where associating an out-of-band firewall instance, not created by the specified controller, was not supported in **aviatrix_firewall_instance_association**
+
 
 ## 2.18.1
 ### Notes:
