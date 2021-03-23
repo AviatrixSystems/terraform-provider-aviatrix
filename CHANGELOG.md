@@ -1,4 +1,13 @@
-## 2.18.1 (Unreleased)
+## 2.18.2 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.3.2364**
+- Supported Terraform version: **v0.12.x** and **v0.13.x**
+
+### Bug Fixes:
+1. Fixed an issue where associating an out-of-band firewall instance, not created by the specified controller, was not supported in **aviatrix_firewall_instance_association**
+
+
+## 2.18.1 (March 18, 2021)
 ### Notes:
 - Supported Controller version: **UserConnect-6.3.2364**
 - Supported Terraform version: **v0.12.x** and **v0.13.x**
