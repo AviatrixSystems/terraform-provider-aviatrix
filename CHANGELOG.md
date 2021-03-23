@@ -1,4 +1,4 @@
-# 2.18.2 (Unreleased)
+## 2.18.2 (Unreleased)
 ### Notes:
 - Supported Controller version: **UserConnect-6.3.2364**
 - Supported Terraform version: **v0.12.x** and **v0.13.x**
