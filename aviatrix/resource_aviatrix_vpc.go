@@ -183,6 +183,7 @@ func resourceAviatrixVpc() *schema.Resource {
 			},
 			"resource_group": {
 				Type:        schema.TypeString,
+				Optional:    true,
 				Computed:    true,
 				Description: "Resource group of the Azure VPC created.",
 			},
@@ -293,6 +294,13 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("subnets is required to be empty for providers other than GCP")
 	}
 
+	if resourceGroup, ok := d.GetOk("resource_group"); ok {
+		if vpc.CloudType != goaviatrix.AZURE {
+			return fmt.Errorf("error creating vpc: resource_group is required to be empty for providers other than Azure")
+		}
+		vpc.ResourceGroup = resourceGroup.(string)
+	}
+
 	err := client.CreateVpc(vpc)
 	if err != nil {
 		if vpc.AviatrixTransitVpc == "yes" {
@@ -395,7 +403,13 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 			subscriptionId = acc.ArmSubscriptionId
 		}
 
-		resourceGroup := strings.Split(vC.VpcID, ":")[1]
+		var resourceGroup string
+		if vC.ResourceGroup != "" {
+			resourceGroup = vC.ResourceGroup
+		} else {
+			resourceGroup = strings.Split(vC.VpcID, ":")[1]
+		}
+
 		azureVnetResourceId := "/subscriptions/" + subscriptionId + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/" + vC.Name
 		d.Set("resource_group", resourceGroup)
 		d.Set("azure_vnet_resource_id", azureVnetResourceId)
@@ -518,6 +532,10 @@ func resourceAviatrixVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 		AccountName: d.Get("account_name").(string),
 		VpcID:       d.Get("vpc_id").(string),
 		Region:      d.Get("region").(string),
+	}
+
+	if d.HasChange("resource_group") {
+		return fmt.Errorf("error updating vpc: changing resource_group is not allowed")
 	}
 
 	if d.HasChange("enable_native_gwlb") {
