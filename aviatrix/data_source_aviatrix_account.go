@@ -43,6 +43,26 @@ func dataSourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS Access Key.",
 			},
+			"gcloud_project_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "GCloud Project ID.",
+			},
+			"arm_subscription_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Azure Subscription ID.",
+			},
+			"awsgov_account_number": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS Gov Account number to associate with Aviatrix account.",
+			},
+			"awsgov_access_key": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS Gov Access Key.",
+			},
 		},
 	}
 }
@@ -64,18 +84,19 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 		}
 		return fmt.Errorf("aviatrix Account: %s", err)
 	}
-	if acc != nil {
-		d.Set("account_name", acc.AccountName)
-		d.Set("cloud_type", acc.CloudType)
-		d.Set("aws_account_number", acc.AwsAccountNumber)
-		d.Set("aws_access_key", acc.AwsAccessKey)
-		d.Set("aws_secret_key", acc.AwsSecretKey)
-		d.Set("aws_role_arn", acc.AwsRoleApp)
-		d.Set("aws_role_ec2", acc.AwsRoleEc2)
-		d.SetId(acc.AccountName)
-	} else {
-		d.SetId("")
-	}
+
+	d.Set("account_name", acc.AccountName)
+	d.Set("cloud_type", acc.CloudType)
+	d.Set("aws_account_number", acc.AwsAccountNumber)
+	d.Set("aws_access_key", acc.AwsAccessKey)
+	d.Set("aws_secret_key", acc.AwsSecretKey)
+	d.Set("aws_role_arn", acc.AwsRoleApp)
+	d.Set("aws_role_ec2", acc.AwsRoleEc2)
+	d.Set("gcloud_project_id", acc.GcloudProjectName)
+	d.Set("arm_subscription_id", acc.ArmSubscriptionId)
+	d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
+	d.Set("awsgov_access_key", acc.AwsgovAccessKey)
+	d.SetId(acc.AccountName)
 
 	return nil
 }
