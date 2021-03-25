@@ -9,6 +9,7 @@ const (
 	GCP    = 4
 	AZURE  = 8
 	OCI    = 16
+	ARMGOV = 32
 	AWSGOV = 256
 )
 
@@ -33,6 +34,7 @@ func GetSupportedClouds() []int {
 		GCP,
 		AZURE,
 		OCI,
+		ARMGOV,
 		AWSGOV,
 	}
 }
@@ -46,8 +48,10 @@ func VendorToCloudType(vendor string) int {
 		return AWSGOV
 	case "Gcloud":
 		return GCP
-	case "Azure ARM", "ARM CHINA", "ARM GOV":
+	case "Azure ARM", "ARM CHINA":
 		return AZURE
+	case "ARM GOV":
+		return ARMGOV
 	case "Oracle Cloud Infrastructure":
 		return OCI
 	default:

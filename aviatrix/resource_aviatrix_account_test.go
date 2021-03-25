@@ -70,6 +70,20 @@ func preAccountCheck(t *testing.T, msgEnd string) {
 			t.Fatal("AWSGOV_SECRET_KEY must be set for aws gov acceptance tests. " + msgEnd)
 		}
 	}
+	if os.Getenv("SKIP_ACCOUNT_ARMGOV") == "no" {
+		if os.Getenv("ARMGOV_SUBSCRIPTION_ID") == "" {
+			t.Fatal("ARMGOV_SUBSCRIPTION_ID must be set for azure gov acceptance tests. " + msgEnd)
+		}
+		if os.Getenv("ARMGOV_DIRECTORY_ID") == "" {
+			t.Fatal("ARMGOV_DIRECTORY_ID must be set for azure gov acceptance tests. " + msgEnd)
+		}
+		if os.Getenv("ARMGOV_APPLICATION_ID") == "" {
+			t.Fatal("ARMGOV_APPLICATION_ID must be set for azure gov acceptance tests. " + msgEnd)
+		}
+		if os.Getenv("ARMGOV_APPLICATION_KEY") == "" {
+			t.Fatal("ARMGOV_APPLICATION_KEY must be set for azure gov acceptance tests. " + msgEnd)
+		}
+	}
 }
 
 func TestAccAviatrixAccount_basic(t *testing.T) {
@@ -84,13 +98,14 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 	skipAZURE := os.Getenv("SKIP_ACCOUNT_AZURE")
 	skipOCI := os.Getenv("SKIP_ACCOUNT_OCI")
 	skipAWSGOV := os.Getenv("SKIP_ACCOUNT_AWSGOV")
+	skipARMGOV := os.Getenv("SKIP_ACCOUNT_ARMGOV")
 
 	if skipAcc == "yes" {
 		t.Skip("Skipping Access Account test as SKIP_ACCOUNT is set")
 	}
-	if skipAWS == "yes" && skipGCP == "yes" && skipAZURE == "yes" && skipOCI == "yes" && skipAWSGOV == "yes" {
+	if skipAWS == "yes" && skipGCP == "yes" && skipAZURE == "yes" && skipOCI == "yes" && skipARMGOV == "yes" && skipAWSGOV == "yes" {
 		t.Skip("Skipping Access Account test as SKIP_ACCOUNT_AWS, SKIP_ACCOUNT_GCP, SKIP_ACCOUNT_AZURE, " +
-			"SKIP_ACCOUNT_OCI, and SKIP_ACCOUNT_AWSGOV are all set, even though SKIP_ACCOUNT isn't set")
+			"SKIP_ACCOUNT_OCI, SKIP_ACCOUNT_ARMGOV, and SKIP_ACCOUNT_AWSGOV are all set, even though SKIP_ACCOUNT isn't set")
 	}
 
 	if skipAWS == "yes" {
@@ -220,6 +235,40 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 			},
 		})
 	}
+
+	if skipARMGOV == "yes" {
+		t.Log("Skipping ARMGOV Access Account test as SKIP_ACCOUNT_ARMGOV is set")
+	} else {
+		resourceName := "aviatrix_account.armgov"
+		importStateVerifyIgnore = append(importStateVerifyIgnore, "armgov_directory_id")
+		importStateVerifyIgnore = append(importStateVerifyIgnore, "armgov_application_id")
+		importStateVerifyIgnore = append(importStateVerifyIgnore, "armgov_application_key")
+		resource.Test(t, resource.TestCase{
+			PreCheck:     func() { testAccPreCheck(t) },
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckAccountDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccAccountConfigARMGOV(rInt),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckAccountExists(resourceName, &account),
+						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-armgov-%d", rInt)),
+						resource.TestCheckResourceAttr(resourceName, "armgov_subscription_id", os.Getenv("ARMGOV_SUBSCRIPTION_ID")),
+						resource.TestCheckResourceAttr(resourceName, "armgov_directory_id", os.Getenv("ARMGOV_DIRECTORY_ID")),
+						resource.TestCheckResourceAttr(resourceName, "armgov_application_id", os.Getenv("ARMGOV_APPLICATION_ID")),
+						resource.TestCheckResourceAttr(resourceName, "armgov_application_key", os.Getenv("ARMGOV_APPLICATION_KEY")),
+					),
+				},
+				{
+					ResourceName:            resourceName,
+					ImportState:             true,
+					ImportStateVerify:       true,
+					ImportStateVerifyIgnore: importStateVerifyIgnore,
+				},
+			},
+		})
+	}
+
 	if skipAWSGOV == "yes" {
 		t.Log("Skipping AWSGOV Access Account test as SKIP_ACCOUNT_AWSGOV is set")
 	} else {
@@ -304,6 +353,20 @@ resource "aviatrix_account" "oci" {
 }
 	`, rInt, os.Getenv("OCI_TENANCY_ID"), os.Getenv("OCI_USER_ID"),
 		os.Getenv("OCI_COMPARTMENT_ID"), os.Getenv("OCI_API_KEY_FILEPATH"))
+}
+
+func testAccAccountConfigARMGOV(rInt int) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "armgov" {
+	account_name        = "tfa-armgov-%d"
+	cloud_type          = 32
+	armgov_subscription_id = "%s"
+	armgov_directory_id    = "%s"
+	armgov_application_id  = "%s"
+	armgov_application_key = "%s"
+}
+	`, rInt, os.Getenv("ARMGOV_SUBSCRIPTION_ID"), os.Getenv("ARMGOV_DIRECTORY_ID"),
+		os.Getenv("ARMGOV_APPLICATION_ID"), os.Getenv("ARMGOV_APPLICATION_KEY"))
 }
 
 func testAccAccountConfigAWSGOV(rInt int) string {

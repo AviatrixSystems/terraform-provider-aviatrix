@@ -53,6 +53,11 @@ func dataSourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "Azure Subscription ID.",
 			},
+			"armgov_subscription_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Azure Gov Subscription ID.",
+			},
 			"awsgov_account_number": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -94,6 +99,7 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("aws_role_ec2", acc.AwsRoleEc2)
 	d.Set("gcloud_project_id", acc.GcloudProjectName)
 	d.Set("arm_subscription_id", acc.ArmSubscriptionId)
+	d.Set("armgov_subscription_id", acc.ArmgovSubscriptionId)
 	d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
 	d.Set("awsgov_access_key", acc.AwsgovAccessKey)
 	d.SetId(acc.AccountName)

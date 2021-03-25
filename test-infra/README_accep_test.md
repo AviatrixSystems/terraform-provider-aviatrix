@@ -35,7 +35,7 @@ source ./cmdExportOutput.sh
 ./runAccTest.sh TransitGateway SpokeGateway
 ```
 The resource test identifier is the same as the resource name without the
-'aviatrix_' prefix and in PascalCase. For example, the resource test identifier for the resource 
+'aviatrix_' prefix and in PascalCase. For example, the resource test identifier for the resource
 'aviatrix_firewall_tag' is 'FirewallTag'.
 
 ## Skip parameters and variables
@@ -49,6 +49,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |		                               | SKIP_ACCOUNT_AWS	                | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY                             |
 |                     		           | SKIP_ACCOUNT_GCP	                | GCP_ID, GCP_CREDENTIALS_FILEPATH	                                             |
 |		                               | SKIP_ACCOUNT_AZURE	                | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID, ARM_APPLICATION_KEY |
+|                     		           | SKIP_ACCOUNT_ARMGOV	                | ARMGOV_SUBSCRIPTION_ID, ARMGOV_DIRECTORY_ID, ARMGOV_APPLICATION_ID, ARMGOV_APPLICATION_KEY        |
 |                     		           | SKIP_ACCOUNT_OCI	                | OCI_TENANCY_ID, OCI_USER_ID, OCI_COMPARTMENT_ID, OCI_API_KEY_FILEPATH          |
 |		                               | SKIP_ACCOUNT_AWSGOV                | AWSGOV_ACCOUNT_NUMBER, AWSGOV_ACCESS_KEY, AWSGOV_SECRET_KEY                    |
 | aviatrix_account_user                | SKIP_ACCOUNT_USER                  |                                                                                |
@@ -122,7 +123,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |                                      | SKIP_SPOKE_GATEWAY_AZURE           |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
 |                                      | SKIP_SPOKE_GATEWAY_OCI             |         + OCI_VPC_ID, OCI_REGION, OCI_SUBNET, OCI_GW_SIZE(optional)            |
 | aviatrix_spoke_vpc                   | SKIP_SPOKE                         | aviatrix_gateway                                                               |
-|                                      | SKIP_SPOKE_AWS                     |         + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)           | 
+|                                      | SKIP_SPOKE_AWS                     |         + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)           |
 |                                      | SKIP_SPOKE_GCP                     |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)             |
 |                                      | SKIP_SPOKE_AZURE                   |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
 | aviatrix_sumologic_forwarder         | SKIP_SUMOLOGIC_FORWARDER           | N/A                                                                            |
