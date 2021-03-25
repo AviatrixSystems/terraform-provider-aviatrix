@@ -317,6 +317,18 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description:   "A map of tags to assign to the spoke gateway.",
 				ConflictsWith: []string{"tag_list"},
 			},
+			"enable_private_vpc_default_route": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Config Private VPC Default Route.",
+			},
+			"enable_skip_public_route_update": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Skip Public Route Table Update.",
+			},
 		},
 	}
 }
@@ -334,6 +346,13 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	manageTransitGwAttachment := d.Get("manage_transit_gateway_attachment").(bool)
+
+	if d.Get("enable_private_vpc_default_route").(bool) && !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV}) {
+		return fmt.Errorf("enable_private_vpc_default_route is only valid for AWS and AWSGOV")
+	}
+	if d.Get("enable_skip_public_route_update").(bool) && !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV}) {
+		return fmt.Errorf("enable_skip_public_route_update is only valid for AWS and AWSGOV")
+	}
 
 	if _, hasSetZone := d.GetOk("zone"); gateway.CloudType != goaviatrix.AZURE && hasSetZone {
 		return fmt.Errorf("attribute 'zone' is only valid for cloud_type = 8 (AZURE)")
@@ -786,6 +805,26 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	if d.Get("enable_private_vpc_default_route").(bool) {
+		gw := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+		err := client.EnablePrivateVpcDefaultRoute(gw)
+		if err != nil {
+			return fmt.Errorf("could not enable private vpc default route after spoke gateway creation: %v", err)
+		}
+	}
+
+	if d.Get("enable_skip_public_route_update").(bool) {
+		gw := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+		err := client.EnableSkipPublicRouteUpdate(gw)
+		if err != nil {
+			return fmt.Errorf("could not enable skip public route update after spoke gateway creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixSpokeGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -856,6 +895,8 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("allocate_new_eip", true)
 		}
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
+		d.Set("enable_private_vpc_default_route", gw.PrivateVpcDefaultEnabled)
+		d.Set("enable_skip_public_route_update", gw.SkipPublicVpcUpdateEnabled)
 		d.Set("eip", gw.PublicIP)
 
 		d.Set("subnet", gw.VpcNet)
@@ -1111,6 +1152,13 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	log.Printf("[INFO] Updating Aviatrix gateway: %#v", gateway)
 
 	d.Partial(true)
+	if d.Get("enable_private_vpc_default_route").(bool) && !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV}) {
+		return fmt.Errorf("enable_private_vpc_default_route is only valid for AWS and AWSGOV")
+	}
+	if d.Get("enable_skip_public_route_update").(bool) && !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV}) {
+		return fmt.Errorf("enable_skip_public_route_update is only valid for AWS and AWSGOV")
+	}
+
 	if d.HasChange("ha_zone") {
 		haZone := d.Get("ha_zone").(string)
 		if haZone != "" && gateway.CloudType != goaviatrix.GCP && gateway.CloudType != goaviatrix.AZURE {
@@ -1720,6 +1768,34 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			err := client.DisableJumboFrame(gateway)
 			if err != nil {
 				return fmt.Errorf("could not disable jumbo frame for spoke gateway when updating: %v", err)
+			}
+		}
+	}
+
+	if d.HasChange("enable_private_vpc_default_route") {
+		if d.Get("enable_private_vpc_default_route").(bool) {
+			err := client.EnablePrivateVpcDefaultRoute(gateway)
+			if err != nil {
+				return fmt.Errorf("could not enable private vpc default route during spoke gateway update: %v", err)
+			}
+		} else {
+			err := client.DisablePrivateVpcDefaultRoute(gateway)
+			if err != nil {
+				return fmt.Errorf("could not disable private vpc default route during spoke gateway update: %v", err)
+			}
+		}
+	}
+
+	if d.HasChange("enable_skip_public_route_update") {
+		if d.Get("enable_skip_public_route_update").(bool) {
+			err := client.EnableSkipPublicRouteUpdate(gateway)
+			if err != nil {
+				return fmt.Errorf("could not enable skip public route update during spoke gateway update: %v", err)
+			}
+		} else {
+			err := client.DisableSkipPublicRouteUpdate(gateway)
+			if err != nil {
+				return fmt.Errorf("could not disable skip public route update during spoke gateway update: %v", err)
 			}
 		}
 	}

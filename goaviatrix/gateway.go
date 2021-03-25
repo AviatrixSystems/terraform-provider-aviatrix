@@ -149,6 +149,8 @@ type Gateway struct {
 	LanVpcID                    string `form:"lan_vpc_id"`
 	LanPrivateSubnet            string `form:"lan_private_subnet"`
 	CreateFQDNGateway           bool   `form:"create_firewall_gw"`
+	PrivateVpcDefaultEnabled    bool   `json:"private_vpc_default_enabled"`
+	SkipPublicVpcUpdateEnabled  bool   `json:"skip_public_vpc_update_enabled"`
 }
 
 type PolicyRule struct {
@@ -1503,4 +1505,40 @@ func (c *Client) GetJumboFrameStatus(gateway *Gateway) (bool, error) {
 		return false, err
 	}
 	return strings.Contains(resp.Results, "Jumbo frame is enabled"), nil
+}
+
+func (c *Client) EnablePrivateVpcDefaultRoute(gw *Gateway) error {
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "enable_private_vpc_default_route",
+		"gateway_name": gw.GwName,
+	}
+	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
+func (c *Client) DisablePrivateVpcDefaultRoute(gw *Gateway) error {
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "disable_private_vpc_default_route",
+		"gateway_name": gw.GwName,
+	}
+	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
+func (c *Client) EnableSkipPublicRouteUpdate(gw *Gateway) error {
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "enable_skip_public_route_update",
+		"gateway_name": gw.GwName,
+	}
+	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
+func (c *Client) DisableSkipPublicRouteUpdate(gw *Gateway) error {
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "disable_skip_public_route_update",
+		"gateway_name": gw.GwName,
+	}
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
