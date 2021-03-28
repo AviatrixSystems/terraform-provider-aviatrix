@@ -29,7 +29,7 @@ func TestAccAviatrixCopilotAssociation_basic(t *testing.T) {
 				Config: testAccCopilotAssociationBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCopilotAssociationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "server_address", "aviatrix.com"),
+					resource.TestCheckResourceAttr(resourceName, "copilot_address", "aviatrix.com"),
 				),
 			},
 			{
@@ -44,7 +44,7 @@ func TestAccAviatrixCopilotAssociation_basic(t *testing.T) {
 func testAccCopilotAssociationBasic() string {
 	return `
 resource "aviatrix_copilot_association" "test" {
-  server_address = "aviatrix.com"
+  copilot_address = "aviatrix.com"
 }
 `
 }

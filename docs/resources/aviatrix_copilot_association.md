@@ -15,7 +15,7 @@ The **aviatrix_copilot_association** resource allows management of controller Co
 ```hcl
 # Create a CoPilot Association
 resource "aviatrix_copilot_association" "test_copilot_association" {
-  server_address = "copilot.aviatrix.com"
+  copilot_address = "copilot.aviatrix.com"
 }
 ```
 
@@ -24,7 +24,7 @@ resource "aviatrix_copilot_association" "test_copilot_association" {
 
 The following arguments are supported:
 
-* `server_address` - (Optional) CoPilot instance IP Address or Hostname.
+* `copilot_address` - (Optional) CoPilot instance IP Address or Hostname.
 
 ## Import
 

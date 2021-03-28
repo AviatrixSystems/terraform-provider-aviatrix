@@ -20,7 +20,7 @@ func resourceAviatrixCopilotAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"server_address": {
+			"copilot_address": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -34,7 +34,7 @@ func resourceAviatrixCopilotAssociation() *schema.Resource {
 func resourceAviatrixCopilotAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	addr := d.Get("server_address").(string)
+	addr := d.Get("copilot_address").(string)
 	err := client.EnableCopilotAssociation(ctx, addr)
 	if err != nil {
 		return diag.Errorf("could not associate copilot: %v", err)
@@ -56,7 +56,7 @@ func resourceAviatrixCopilotAssociationRead(ctx context.Context, d *schema.Resou
 		return diag.Errorf("could not get copilot association status: %v", err)
 	}
 
-	d.Set("server_address", copilot.IP)
+	d.Set("copilot_address", copilot.IP)
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
