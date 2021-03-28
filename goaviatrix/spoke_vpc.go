@@ -201,3 +201,21 @@ func (c *Client) EnableHaSpokeGateway(gateway *SpokeVpc) error {
 	}
 	return nil
 }
+
+func (c *Client) EnableAutoAdvertiseS2CCidrs(gateway *Gateway) error {
+	form := map[string]string{
+		"action":       "enable_auto_advertise_s2c_cidrs",
+		"CID":          c.CID,
+		"gateway_name": gateway.GwName,
+	}
+	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
+func (c *Client) DisableAutoAdvertiseS2CCidrs(gateway *Gateway) error {
+	form := map[string]string{
+		"action":       "disable_auto_advertise_s2c_cidrs",
+		"CID":          c.CID,
+		"gateway_name": gateway.GwName,
+	}
+	return c.PostAPI(form["action"], form, BasicCheck)
+}
