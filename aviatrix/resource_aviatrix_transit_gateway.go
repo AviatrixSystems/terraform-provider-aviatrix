@@ -387,6 +387,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable summarize CIDR to TGW.",
 			},
+			"enable_multitier_transit": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable Multi-tier Transit mode on transit gateway.",
+			},
 			"eip": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -728,6 +734,14 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("\"ha_oob_management_sbunet\" must be empty if \"enable_private_oob\" is false")
 		}
 	}
+
+	enableMultitierTransit := d.Get("enable_multitier_transit").(bool)
+	if enableMultitierTransit {
+		if d.Get("local_as_number") == "" {
+			return fmt.Errorf("local_as_number required to enalbe multi tier transit")
+		}
+	}
+
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
 
 	err := client.LaunchTransitVpc(gateway)
@@ -1144,6 +1158,13 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if enableMultitierTransit {
+		err = client.EnableMultitierTransit(gateway.GwName)
+		if err != nil {
+			return fmt.Errorf("could not enable multi tier transit: %v", err)
+		}
+	}
+
 	return resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -1444,6 +1465,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("enable_bgp_over_lan", false)
 	}
 	d.Set("enable_transit_summarize_cidr_to_tgw", advancedConfig.EnableSummarizeCidrToTgw)
+	d.Set("enable_multitier_transit", advancedConfig.EnableMultitierTransit)
 
 	isSegmentationEnabled, err := client.IsSegmentationEnabled(transitGateway)
 	if err != nil {
@@ -2474,6 +2496,23 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			err := client.DisableSummarizeCidrToTgw(gateway.GwName)
 			if err != nil {
 				return fmt.Errorf("could not disable summarize cidr to tgw when updating: %v", err)
+			}
+		}
+	}
+
+	if d.HasChange("enable_multitier_transit") {
+		if d.Get("enable_multitier_transit").(bool) {
+			if d.Get("local_as_number") == "" {
+				return fmt.Errorf("local_as_number required to enalbe multi tier transit")
+			}
+			err := client.EnableMultitierTransit(gateway.GwName)
+			if err != nil {
+				return fmt.Errorf("could not enable multi tier transit when updating: %v", err)
+			}
+		} else {
+			err := client.DisableMultitierTransit(gateway.GwName)
+			if err != nil {
+				return fmt.Errorf("could not disable multi tier transit when updating: %v", err)
 			}
 		}
 	}

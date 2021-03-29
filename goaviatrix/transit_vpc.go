@@ -70,6 +70,7 @@ type TransitGatewayAdvancedConfig struct {
 	PeerVnetId                        []string
 	BgpHoldTime                       int
 	EnableSummarizeCidrToTgw          bool
+	EnableMultitierTransit            bool
 }
 
 type StandbyConnection struct {
@@ -91,6 +92,7 @@ type TransitGatewayAdvancedConfigRespResult struct {
 	PeerVnetId                        []string                  `json:"peer_vnet_id"`
 	BgpHoldTime                       int                       `json:"bgp_hold_time"`
 	EnableSummarizeCidrToTgw          string                    `json:"summarize_cidr_to_tgw"`
+	EnableMultitierTransit            string                    `json:"multitier_transit"`
 }
 
 type LearnedCIDRApprovalInfo struct {
@@ -678,6 +680,7 @@ func (c *Client) GetTransitGatewayAdvancedConfig(transitGateway *TransitVpc) (*T
 		PeerVnetId:                        data.Results.PeerVnetId,
 		BgpHoldTime:                       data.Results.BgpHoldTime,
 		EnableSummarizeCidrToTgw:          data.Results.EnableSummarizeCidrToTgw == "yes",
+		EnableMultitierTransit:            data.Results.EnableMultitierTransit == "yes",
 	}, nil
 }
 
@@ -744,6 +747,24 @@ func (c *Client) EnableSummarizeCidrToTgw(gwName string) error {
 func (c *Client) DisableSummarizeCidrToTgw(gwName string) error {
 	data := map[string]string{
 		"action":       "disable_transit_summarize_cidr_to_tgw",
+		"gateway_name": gwName,
+		"CID":          c.CID,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) EnableMultitierTransit(gwName string) error {
+	data := map[string]string{
+		"action":       "enable_multitier_transit",
+		"gateway_name": gwName,
+		"CID":          c.CID,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) DisableMultitierTransit(gwName string) error {
+	data := map[string]string{
+		"action":       "disable_multitier_transit",
 		"gateway_name": gwName,
 		"CID":          c.CID,
 	}
