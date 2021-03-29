@@ -428,3 +428,40 @@ func (c *Client) SetControllerVpcDnsServer(enabled bool) error {
 		Action: action,
 	}, BasicCheck)
 }
+
+func (c *Client) SetExceptionEmailNotification(enabled bool) error {
+	action := "enable_exception_email_notification"
+	if !enabled {
+		action = "disable_exception_email_notification"
+	}
+	return c.PostAPI(action, &APIRequest{
+		CID:    c.CID,
+		Action: action,
+	}, BasicCheck)
+}
+
+func (c *Client) GetExceptionEmailNotificationStatus() (bool, error) {
+	params := map[string]string{
+		"action": "get_exception_email_notification_status",
+		"CID":    c.CID,
+	}
+
+	type Resp struct {
+		Return  bool            `json:"return"`
+		Results map[string]bool `json:"results"`
+		Reason  string          `json:"reason"`
+	}
+
+	var data Resp
+
+	err := c.GetAPI(&data, params["action"], params, BasicCheck)
+	if err != nil {
+		return false, err
+	}
+
+	if ans, ok := data.Results["enabled"]; ok {
+		return ans, nil
+	} else {
+		return false, fmt.Errorf("response doesn't contain the key \"enabled\"")
+	}
+}

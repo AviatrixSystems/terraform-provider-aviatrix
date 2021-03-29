@@ -138,6 +138,12 @@ func resourceAviatrixControllerConfig() *schema.Resource {
 				Default:      defaultAwsGuardDutyScanningInterval,
 				ValidateFunc: validation.IntInSlice(validAwsGuardDutyScanningIntervals),
 			},
+			"enable_exception_email_notification": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Enable exception email notification.",
+			},
 		},
 	}
 }
@@ -293,6 +299,14 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("could not update scanning interval: %v", err)
 	}
 
+	enableExceptionEmailNotification := d.Get("enable_exception_email_notification").(bool)
+	if !enableExceptionEmailNotification {
+		err = client.SetExceptionEmailNotification(false)
+		if err != nil {
+			return fmt.Errorf("could not disable exception email notification: %v", err)
+		}
+	}
+
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return resourceAviatrixControllerConfigRead(d, meta)
 }
@@ -396,6 +410,12 @@ func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("could not get aws guard duty scanning interval: %v", err)
 	}
 	d.Set("aws_guard_duty_scanning_interval", guardDuty.ScanningInterval)
+
+	enableExceptionEmailNotification, err := client.GetExceptionEmailNotificationStatus()
+	if err != nil {
+		return fmt.Errorf("could not get exception email notification status: %v", err)
+	}
+	d.Set("enable_exception_email_notification", enableExceptionEmailNotification)
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
@@ -615,6 +635,13 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 		err := client.UpdateAwsGuardDutyPollInterval(scanningInterval)
 		if err != nil {
 			return fmt.Errorf("could not update scanning interval: %v", err)
+		}
+	}
+
+	if d.HasChange("enable_exception_email_notification") {
+		err := client.SetExceptionEmailNotification(d.Get("enable_exception_email_notification").(bool))
+		if err != nil {
+			return fmt.Errorf("could not update exception email notification: %v", err)
 		}
 	}
 
