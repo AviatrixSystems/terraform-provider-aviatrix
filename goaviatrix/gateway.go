@@ -151,6 +151,7 @@ type Gateway struct {
 	CreateFQDNGateway           bool   `form:"create_firewall_gw"`
 	PrivateVpcDefaultEnabled    bool   `json:"private_vpc_default_enabled"`
 	SkipPublicVpcUpdateEnabled  bool   `json:"skip_public_vpc_update_enabled"`
+	EnableMultitierTransit      bool   `json:"multitier_transit"`
 }
 
 type PolicyRule struct {

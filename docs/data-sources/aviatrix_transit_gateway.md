@@ -76,3 +76,4 @@ In addition to all arguments above, the following attributes are exported:
 * `oob_availability_zone` - OOB availability zone.
 * `ha_oob_management_subnet` - HA OOB management subnet.
 * `ha_oob_availability_zone` - HA OOB availability zone.
+* `enable_multitier_transit` - Status of multi-tier transit mode on transit gateway.
