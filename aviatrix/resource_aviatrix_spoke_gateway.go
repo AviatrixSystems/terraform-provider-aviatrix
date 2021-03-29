@@ -1821,12 +1821,12 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		if d.Get("enable_auto_advertise_s2c_cidrs").(bool) {
 			err := client.EnableAutoAdvertiseS2CCidrs(gateway)
 			if err != nil {
-				return fmt.Errorf("could not enable auto advertise s2c cidrs during spoke gateway update")
+				return fmt.Errorf("could not enable auto advertise s2c cidrs during spoke gateway update: %v", err)
 			}
 		} else {
 			err := client.DisableAutoAdvertiseS2CCidrs(gateway)
 			if err != nil {
-				return fmt.Errorf("could not disable auto advertise s2c cidrs during spoke gateway update")
+				return fmt.Errorf("could not disable auto advertise s2c cidrs during spoke gateway update: %v", err)
 			}
 		}
 	}
