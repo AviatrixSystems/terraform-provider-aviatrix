@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccAviatrixAwsTgwSecurityDomain_basic(t *testing.T) {
+	rName := acctest.RandString(5)
 	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	tgwName := acctest.RandStringFromCharSet(5, charset) + acctest.RandString(5)
 	awsSideAsNumber := "64512"
@@ -31,7 +32,7 @@ func TestAccAviatrixAwsTgwSecurityDomain_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsTgwSecurityDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsTgwSecurityDomainBasic(tgwName, awsSideAsNumber, sdName),
+				Config: testAccAwsTgwSecurityDomainBasic(rName, tgwName, awsSideAsNumber, sdName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsTgwSecurityDomainExists(resourceName, tgwName, sdName),
 					resource.TestCheckResourceAttr(resourceName, "tgw_name", tgwName),
@@ -42,39 +43,48 @@ func TestAccAviatrixAwsTgwSecurityDomain_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsTgwSecurityDomainBasic(tgwName string, awsSideAsNumber string, sdName string) string {
+func testAccAwsTgwSecurityDomainBasic(rName string, tgwName string, awsSideAsNumber string, sdName string) string {
 	return fmt.Sprintf(`
+resource "aviatrix_account" "test" {
+	account_name       = "tfa-%s"
+	cloud_type         = 1
+	aws_account_number = "%s"
+	aws_iam            = false
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
+}
 resource "aviatrix_aws_tgw" "test" {
-	account_name       = "sliu-aws"
-	aws_side_as_number = "%s"
-	region             = "us-west-1"
-	tgw_name           = "%s"
-	manage_security_domain = false
-	manage_vpc_attachment = false
+	account_name                      = aviatrix_account.test.account_name
+	aws_side_as_number                = "%s"
+	region                            = "us-west-1"
+	tgw_name                          = "%s"
+	manage_security_domain            = false
+	manage_vpc_attachment             = false
 	manage_transit_gateway_attachment = false
 }
 resource "aviatrix_aws_tgw_security_domain" "Default_Domain" {
-	name = "Default_Domain"
+	name     = "Default_Domain"
 	tgw_name = aviatrix_aws_tgw.test.tgw_name
 }
 resource "aviatrix_aws_tgw_security_domain" "Shared_Service_Domain" {
-	name = "Shared_Service_Domain"
+	name     = "Shared_Service_Domain"
 	tgw_name = aviatrix_aws_tgw.test.tgw_name
 }
 resource "aviatrix_aws_tgw_security_domain" "Aviatrix_Edge_Domain" {
-	name = "Aviatrix_Edge_Domain"
+	name     = "Aviatrix_Edge_Domain"
 	tgw_name = aviatrix_aws_tgw.test.tgw_name
 }
 resource "aviatrix_aws_tgw_security_domain" "test" {
-	name = "%s"
-	tgw_name = aviatrix_aws_tgw.test.tgw_name
+	name       = "%s"
+	tgw_name   = aviatrix_aws_tgw.test.tgw_name
 	depends_on = [
     	aviatrix_aws_tgw_security_domain.Default_Domain,
     	aviatrix_aws_tgw_security_domain.Shared_Service_Domain,
     	aviatrix_aws_tgw_security_domain.Aviatrix_Edge_Domain
   ]
 }
-	`, awsSideAsNumber, tgwName, sdName)
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		awsSideAsNumber, tgwName, sdName)
 }
 
 func testAccCheckAwsTgwSecurityDomainExists(resourceName string, tgwName string, sdName string) resource.TestCheckFunc {

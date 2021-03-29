@@ -214,3 +214,31 @@ func (c *Client) SecurityDomainRuleValidation(securityDomainRule *SecurityDomain
 	}
 	return true
 }
+
+func (c *Client) GetSecurityDomainDetails(domain *SecurityDomain) (*SecurityDomainRule, error) {
+	params := map[string]string{
+		"action":            "list_tgw_security_domain_details",
+		"CID":               c.CID,
+		"tgw_name":          domain.AwsTgwName,
+		"route_domain_name": domain.Name,
+	}
+
+	type Resp struct {
+		Return  bool                 `json:"return"`
+		Results []SecurityDomainRule `json:"results"`
+		Reason  string               `json:"reason"`
+	}
+
+	var data Resp
+
+	err := c.GetAPI(&data, params["action"], params, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(data.Results) == 0 {
+		return nil, ErrNotFound
+	}
+
+	return &data.Results[0], nil
+}

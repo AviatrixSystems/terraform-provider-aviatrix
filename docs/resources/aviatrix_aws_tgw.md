@@ -130,7 +130,7 @@ The following arguments are supported:
 * `region` - (Required) AWS region of AWS TGW to be created in
 * `aws_side_as_number` - (Required) BGP Local ASN (Autonomous System Number). Integer between 1-4294967294. Example: "65001".
 
-!> **WARNING:** Attribute `security_domain` has been deprecated as of provider version R2.19+ and will not receive further updates. Please set `manage_security_domain` to false, and use the standalone `aviatrix_aws_tgw_vpc_attachment` resource instead.
+!> **WARNING:** Attribute `security_domain` has been deprecated as of provider version R2.19+ and will not receive further updates. Please set `manage_security_domain` to false, and use the standalone `aviatrix_aws_tgw_security_domain` resource instead.
 
 * `security_domains` - (Required if `manage_security_domain` is true) Security Domains to create together with AWS TGW's creation. Three default domains, along with the connections between them, are created automatically. These three domains can't be deleted, but the connection between any two of them can be.
   * `security_domain_name` - (Required) Three default domains ("Aviatrix_Edge_Domain", "Default_Domain" and "Shared_Service_Domain") are required with AWS TGW's creation.
