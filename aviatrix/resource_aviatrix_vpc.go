@@ -128,6 +128,13 @@ func resourceAviatrixVpc() *schema.Resource {
 					},
 				},
 			},
+			"resource_group": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Computed:    true,
+				Description: "Resource group of the Azure VPC created.",
+			},
 			"private_subnets": {
 				Type:        schema.TypeList,
 				Computed:    true,
@@ -180,12 +187,6 @@ func resourceAviatrixVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "ID of the VPC created.",
-			},
-			"resource_group": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Resource group of the Azure VPC created.",
 			},
 			"azure_vnet_resource_id": {
 				Type:        schema.TypeString,
@@ -532,10 +533,6 @@ func resourceAviatrixVpcUpdate(d *schema.ResourceData, meta interface{}) error {
 		AccountName: d.Get("account_name").(string),
 		VpcID:       d.Get("vpc_id").(string),
 		Region:      d.Get("region").(string),
-	}
-
-	if d.HasChange("resource_group") {
-		return fmt.Errorf("error updating vpc: changing resource_group is not allowed")
 	}
 
 	if d.HasChange("enable_native_gwlb") {
