@@ -65,6 +65,16 @@ func resourceAviatrixAccount() *schema.Resource {
 				Optional:    true,
 				Description: "AWS EC2 role ARN.",
 			},
+			"aws_gateway_role_app": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "AWS App role ARN for gateways.",
+			},
+			"aws_gateway_role_ec2": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "AWS App role ARN for gateways.",
+			},
 			"aws_access_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -162,6 +172,8 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		AwsAccountNumber:                      d.Get("aws_account_number").(string),
 		AwsRoleApp:                            d.Get("aws_role_app").(string),
 		AwsRoleEc2:                            d.Get("aws_role_ec2").(string),
+		AwsGatewayRoleApp:                     d.Get("aws_gateway_role_app").(string),
+		AwsGatewayRoleEc2:                     d.Get("aws_gateway_role_ec2").(string),
 		AwsAccessKey:                          d.Get("aws_access_key").(string),
 		AwsSecretKey:                          d.Get("aws_secret_key").(string),
 		AwsgovAccountNumber:                   d.Get("awsgov_account_number").(string),
@@ -195,21 +207,28 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		log.Printf("[INFO] Creating Aviatrix account: %#v", account)
-		if aws_iam := d.Get("aws_iam").(bool); aws_iam {
-			var role_app bytes.Buffer
-			var role_ec2 bytes.Buffer
-			role_app.WriteString("arn:aws:iam::")
-			role_app.WriteString(account.AwsAccountNumber)
-			role_app.WriteString(":role/aviatrix-role-app")
-			role_ec2.WriteString("arn:aws:iam::")
-			role_ec2.WriteString(account.AwsAccountNumber)
-			role_ec2.WriteString(":role/aviatrix-role-ec2")
-			if aws_role_app := d.Get("aws_role_app").(string); aws_role_app == "" {
-				account.AwsRoleApp += role_app.String()
+		if awsIam {
+			if _, ok := d.GetOk("aws_role_app"); ok {
+				var role_app bytes.Buffer
+				role_app.WriteString("arn:aws:iam::")
+				role_app.WriteString(account.AwsAccountNumber)
+				role_app.WriteString(":role/aviatrix-role-app")
+				account.AwsRoleApp = role_app.String()
 			}
-			if aws_role_ec2 := d.Get("aws_role_ec2").(string); aws_role_ec2 == "" {
-				account.AwsRoleEc2 += role_ec2.String()
+			if _, ok := d.GetOk("aws_role_ec2"); ok {
+				var role_ec2 bytes.Buffer
+				role_ec2.WriteString("arn:aws:iam::")
+				role_ec2.WriteString(account.AwsAccountNumber)
+				role_ec2.WriteString(":role/aviatrix-role-ec2")
+				account.AwsRoleEc2 = role_ec2.String()
 			}
+
+			//if aws_role_app := d.Get("aws_role_app").(string); aws_role_app == "" {
+			//	account.AwsRoleApp += role_app.String()
+			//}
+			//if aws_role_ec2 := d.Get("aws_role_ec2").(string); aws_role_ec2 == "" {
+			//	account.AwsRoleEc2 += role_ec2.String()
+			//}
 			log.Printf("[TRACE] Reading Aviatrix account aws_role_app: [%s]", d.Get("aws_role_app").(string))
 			log.Printf("[TRACE] Reading Aviatrix account aws_role_ec2: [%s]", d.Get("aws_role_ec2").(string))
 		}
@@ -337,6 +356,8 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 		AwsAccountNumber:                      d.Get("aws_account_number").(string),
 		AwsRoleApp:                            d.Get("aws_role_app").(string),
 		AwsRoleEc2:                            d.Get("aws_role_ec2").(string),
+		AwsGatewayRoleApp:                     d.Get("aws_gateway_role_app").(string),
+		AwsGatewayRoleEc2:                     d.Get("aws_gateway_role_ec2").(string),
 		AwsAccessKey:                          d.Get("aws_access_key").(string),
 		AwsSecretKey:                          d.Get("aws_secret_key").(string),
 		AwsgovAccountNumber:                   d.Get("awsgov_account_number").(string),
@@ -374,9 +395,7 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if account.CloudType == goaviatrix.AWS {
-		if d.HasChange("aws_account_number") || d.HasChange("aws_access_key") ||
-			d.HasChange("aws_secret_key") || d.HasChange("aws_iam") ||
-			d.HasChange("aws_role_app") || d.HasChange("aws_role_ec2") {
+		if d.HasChanges("aws_account_number", "aws_access_key", "aws_secret_key", "aws_iam", "aws_role_app", "aws_role_ec2", "aws_gateway_role_app", "aws_gateway_role_ec2") {
 			err := client.UpdateAccount(account)
 			if err != nil {
 				return fmt.Errorf("failed to update Aviatrix Account: %s", err)
