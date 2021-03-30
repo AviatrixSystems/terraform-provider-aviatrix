@@ -51,6 +51,11 @@ type GetCloudnBackupConfigResp struct {
 	Reason  string                    `json:"reason"`
 }
 
+type CertDomainConfig struct {
+	CertDomain string `json:"cert_domain"`
+	IsDefault  bool   `json:"is_default"`
+}
+
 func (c *Client) EnableHttpAccess() error {
 	url := "?CID=%s&action=config_http_access&operation=enable"
 	path := c.baseURL + fmt.Sprintf(url, c.CID)
@@ -465,4 +470,35 @@ func (c *Client) GetEmailExceptionNotificationStatus(ctx context.Context) (bool,
 	} else {
 		return true, fmt.Errorf("response doesn't contain the key \"enabled\"")
 	}
+}
+
+func (c *Client) SetCertDomain(ctx context.Context, certDomain string) error {
+	params := map[string]string{
+		"action":      "set_cert_domain",
+		"CID":         c.CID,
+		"cert_domain": certDomain,
+	}
+	return c.PostAPIContext(ctx, params["action"], params, BasicCheck)
+}
+
+func (c *Client) GetCertDomain(ctx context.Context) (*CertDomainConfig, error) {
+	params := map[string]string{
+		"action": "list_cert_domain",
+		"CID":    c.CID,
+	}
+
+	type Resp struct {
+		Return  bool             `json:"return"`
+		Results CertDomainConfig `json:"results"`
+		Reason  string           `json:"reason"`
+	}
+
+	var data Resp
+
+	err := c.GetAPIContext(ctx, &data, params["action"], params, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data.Results, nil
 }
