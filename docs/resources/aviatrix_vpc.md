@@ -77,16 +77,37 @@ resource "aviatrix_vpc" "awsgov_vnet" {
   aviatrix_firenet_vpc = false
 }
 ```
+```hcl
+# Create an AWS China VPC
+resource "aviatrix_vpc" "aws_china_vnet" {
+  cloud_type           = 1024
+  account_name         = "devops"
+  region               = "cn-north-1"
+  name                 = "aws-china-vpc"
+  cidr                 = "12.0.0.0/20"
+  aviatrix_transit_vpc = false
+}
+```
+```hcl
+# Create an Azure China VNet
+resource "aviatrix_vpc" "azure_china_vnet" {
+  cloud_type           = 2048
+  account_name         = "devops"
+  region               = "China North"
+  name                 = "azure-china-vnet"
+  cidr                 = "12.0.0.0/16"
+}
+```
 
 ## Argument Reference
 
 The following arguments are supported:
 
 ### Required
-* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), AZURE(8), OCI(16) and AWSGov(256) are supported.
+* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), AZURE(8), OCI(16), AWSGov(256), AWSChina(1024) and AzureChina(2048) are supported.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `name` - (Required) Name of the VPC to be created.
-* `region` - (Optional) Region of cloud provider. **Required to be empty for GCP provider, and non-empty for other providers.** Example: AWS: "us-east-1", AZURE: "East US 2", OCI: "us-ashburn-1", AWSGov: "us-gov-east-1".
+* `region` - (Optional) Region of cloud provider. **Required to be empty for GCP provider, and non-empty for other providers.** Example: AWS: "us-east-1", AZURE: "East US 2", OCI: "us-ashburn-1", AWSGov: "us-gov-east-1", AWSChina: "cn-north-1", AzureChina: "China North".
 * `cidr` - (Optional) VPC CIDR. **Required to be empty for GCP provider, and non-empty for other providers.** Example: "10.11.0.0/24".
 
 ### Google Cloud
@@ -98,11 +119,11 @@ The following arguments are supported:
 ### Advanced Options
 * `subnet_size` - (Optional) Subnet size. Only supported for AWS, Azure provider. Example: 24. Available in provider version R2.17+.
 * `num_of_subnet_pairs` - (Optional) Number of public subnet and private subnet pair created. Only supported for AWS, Azure provider. Example: 1. Available in provider version R2.17+.
-* `enable_private_oob_subnet` - (Optional) Switch to enable private oob subnet. Only supported for AWS/AWSGOV provider. Valid values: true, false. Default value: false. Available as of provider version R2.18+.
+* `enable_private_oob_subnet` - (Optional) Switch to enable private oob subnet. Only supported for AWS, AWSGov and AWSChina providers. Valid values: true, false. Default value: false. Available as of provider version R2.18+.
 
 ### Misc.
-* `aviatrix_transit_vpc` - (Optional) Specify whether it is an [Aviatrix Transit VPC](https://docs.aviatrix.com/HowTos/create_vpc.html#aviatrix-transit-vpc) to be used for [Transit Network](https://docs.aviatrix.com/HowTos/transitvpc_faq.html) or [TGW](https://docs.aviatrix.com/HowTos/tgw_faq.html) solutions. **Only AWS and AWSGov are supported. Required to be false for other providers.** Valid values: true, false. Default: false.
-* `aviatrix_firenet_vpc` - (Optional) Specify whether it is an Aviatrix FireNet VPC to be used for [Aviatrix FireNet](https://docs.aviatrix.com/HowTos/firewall_network_faq.html) and [Transit FireNet](https://docs.aviatrix.com/HowTos/transit_firenet_faq.html) solutions. **Only AWS, AWSGov, Azure and OCI are supported. Required to be false for other providers.** Valid values: true, false. Default: false.
+* `aviatrix_transit_vpc` - (Optional) Specify whether it is an [Aviatrix Transit VPC](https://docs.aviatrix.com/HowTos/create_vpc.html#aviatrix-transit-vpc) to be used for [Transit Network](https://docs.aviatrix.com/HowTos/transitvpc_faq.html) or [TGW](https://docs.aviatrix.com/HowTos/tgw_faq.html) solutions. **Only AWS, AWSGov and AWSChina are supported. Required to be false for other providers.** Valid values: true, false. Default: false.
+* `aviatrix_firenet_vpc` - (Optional) Specify whether it is an Aviatrix FireNet VPC to be used for [Aviatrix FireNet](https://docs.aviatrix.com/HowTos/firewall_network_faq.html) and [Transit FireNet](https://docs.aviatrix.com/HowTos/transit_firenet_faq.html) solutions. **Only AWS, Azure, AWSGov, AWSChina and AzureChina are supported. Required to be false for other providers.** Valid values: true, false. Default: false.
 * `enable_native_gwlb` - (Optional) Enable Native AWS Gateway Load Balancer for FireNet Function. Only valid with cloud_type = 1 (AWS). Currently, AWS Gateway Load Balancer is only supported in AWS regions: us-west-2, us-east-1, eu-west-1, ap-southeast-2 and sa-east-1. Valid values: true or false. Default value: false. Available as of provider version R2.18+.
 * `resource_group` - (Optional) The name of an existing resource group or a new resource group to be created for the Azure VPC.  A new resource group will be created if left blank. Only available for Azure provider. Available as of provider version R2.19+.
 

@@ -54,6 +54,7 @@ type TransitVpc struct {
 	OobManagementSubnet          string `form:"oob_mgmt_subnet,omitempty"`
 	HAOobManagementSubnet        string
 	EnableSummarizeCidrToTgw     bool
+	StorageName                  string `form:"storage_name,omitempty"`
 }
 
 type TransitGatewayAdvancedConfig struct {

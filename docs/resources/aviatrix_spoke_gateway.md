@@ -96,6 +96,40 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_awsgov" {
 }
 ```
 ```hcl
+# Create an Aviatrix AWS China Spoke Gateway
+resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws_china" {
+  cloud_type                        = 1024
+  account_name                      = "my-aws-china"
+  gw_name                           = "spoke-gw-aws-china"
+  vpc_id                            = "vpc-abcd123"
+  vpc_reg                           = "cn-north-1"
+  gw_size                           = "t2.micro"
+  subnet                            = "10.11.0.0/24"
+  single_ip_snat                    = false
+  enable_active_mesh                = true
+  manage_transit_gateway_attachment = false
+  tags                              = {
+    k1 = "v1",
+    k2 = "v2",
+  }
+}
+```
+```hcl
+# Create an Aviatrix Azure China Spoke Gateway
+resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
+  cloud_type                        = 2048
+  account_name                      = "my-azure-china"
+  gw_name                           = "spoke-gw-01"
+  vpc_id                            = "spoke:test-spoke-gw-123"
+  vpc_reg                           = "China North"
+  gw_size                           = "Standard_A0"
+  subnet                            = "10.13.0.0/24"
+  single_ip_snat                    = false
+  enable_active_mesh                = true
+  manage_transit_gateway_attachment = false
+}
+```
+```hcl
 # Create an OOB Aviatrix AWS Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_oob_spoke" {
   cloud_type   = 1
@@ -138,25 +172,25 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_alibaba" {
 The following arguments are supported:
 
 ### Required
-* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), AZURE(8), OCI(16), AWSGOV(256) and Alibaba Cloud(8192) are supported.
+* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), AZURE(8), OCI(16), AWSGOV(256), AWSCHINA(1024), AZURECHINA(2048) and Alibaba Cloud(8192) are supported.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `gw_name` - (Required) Name of the gateway which is going to be created.
-* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Example: AWS: "vpc-abcd1234", GCP: "vpc-gcp-test", AZURE: "vnet1:hello", OCI: "vpc-oracle-test1", AWSGOV: "vpc-abcd12347890".
-* `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", GCP: "us-west2-a", AZURE: "East US 2", OCI: "us-ashburn-1", AWSGOV: "us-gov-west-1.
-* `gw_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", AZURE: "Standard_B1s", OCI: "VM.Standard2.2", GCP: "n1-standard-1", AWSGOV: "t2.large".
+* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Example: AWS/AWSGov/AWSChina: "vpc-abcd1234", GCP: "vpc-gcp-test", AZURE: "vnet1:hello", OCI: "vpc-oracle-test1".
+* `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", GCP: "us-west2-a", AZURE: "East US 2", OCI: "us-ashburn-1", AWSGOV: "us-gov-west-1, AWSChina: "cn-north-1", AzureChina: "China North".
+* `gw_size` - (Required) Size of the gateway instance. Example: AWS/AWSGov/AWSChina: "t2.large", AZURE/AzureChina: "Standard_B1s", OCI: "VM.Standard2.2", GCP: "n1-standard-1".
 * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode-1).**
 
 ### HA
 * `single_az_ha` (Optional) Set to true if this [feature](https://docs.aviatrix.com/Solutions/gateway_ha.html#single-az-gateway) is desired. Valid values: true, false.
-* `ha_subnet` - (Optional) HA Subnet. Required if enabling HA for AWS/AWSGOV/Azure/Alibaba Cloud gateway. Optional for GCP. Setting to empty/unsetting will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24"
+* `ha_subnet` - (Optional) HA Subnet. Required if enabling HA for AWS, Azure, AWSGov, AWSChina, AzureChina and Alibaba Cloud gateways. Optional for GCP. Setting to empty/unsetting will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24"
 * `ha_zone` - (Optional) HA Zone. Required if enabling HA for GCP gateway. Optional for AZURE. For GCP, setting to empty/unsetting will disable HA and setting to a valid zone will create an HA gateway in the zone. Example: "us-west1-c". For AZURE, this is an optional parameter to place the HA gateway in a specific availability zone. Valid values for AZURE gateways are in the form "az-n". Example: "az-2". Available for AZURE as of provider version R2.17+.
-* `ha_insane_mode_az` (Optional) AZ of subnet being created for Insane Mode Spoke HA Gateway. Required for AWS/AWSGOV provider if `insane_mode` is enabled and `ha_subnet` is set. Example: AWS: "us-west-1a".
+* `ha_insane_mode_az` (Optional) AZ of subnet being created for Insane Mode Spoke HA Gateway. Required for AWS, AWSGov, AWSChina and AzureChina if `insane_mode` is enabled and `ha_subnet` is set. Example: AWS: "us-west-1a".
 * `ha_eip` - (Optional) Public IP address that you want to assign to the HA peering instance. If no value is given, a new EIP will automatically be allocated. Only available for AWS and GCP.
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if enabling HA.
 
 ### Insane Mode
-* `insane_mode` - (Optional) Enable [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) for Spoke Gateway. Insane Mode gateway size must be at least c5 size (AWS and AWSGOV) or Standard_D3_v2 (AZURE); for GCP only four size are supported: "n1-highcpu-4", "n1-highcpu-8", "n1-highcpu-16" and "n1-highcpu-32". If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet for AWS, AWSGOV and Azure. Only available for AWS, GCP(with active mesh 2.0 enabled), Azure and AWSGOV. Valid values: true, false.
-* `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Spoke Gateway. Required for AWS/AWSGOV provider if `insane_mode` is enabled. Example: AWS: "us-west-1a".
+* `insane_mode` - (Optional) Enable [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) for Spoke Gateway. Insane Mode gateway size must be at least c5 size (AWS, AWSGov, and AWSChina) or Standard_D3_v2 (Azure and AzureChina); for GCP only four size are supported: "n1-highcpu-4", "n1-highcpu-8", "n1-highcpu-16" and "n1-highcpu-32". If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet for AWS, Azure, AWSGov, AWSChina and AzureChina. Only available for AWS, GCP(with active mesh 2.0 enabled), Azure, AWSGov, AWSChina and AzureChina. Valid values: true, false.
+* `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Spoke Gateway. Required for AWS, AWSGov and AWSChina if `insane_mode` is enabled. Example: AWS: "us-west-1a".
 
 ### SNAT/DNAT
 * `single_ip_snat` - (Optional) Specify whether to enable Source NAT feature in "single_ip" mode on the gateway or not. Please disable AWS NAT instance before enabling this feature. Currently only supports AWS(1) and AZURE(8). Valid values: true, false.
@@ -166,7 +200,7 @@ The following arguments are supported:
 ~> **NOTE:** Custom SNAT and DNAT support have been deprecated and functionality has been moved to **aviatrix_gateway_snat** and **aviatrix_gateway_dnat** respectively, in provider version R2.10. Please see notes for `snat_mode`, `snat_policy` and `dnat_policy` in the Notes section below.
 
 ### Encryption
-* `enable_encrypt_volume` - (Optional) Enable EBS volume encryption for Gateway. Only supports AWS and AWSGOV provider. Valid values: true, false. Default value: false.
+* `enable_encrypt_volume` - (Optional) Enable EBS volume encryption for Gateway. Only supports AWS, AWSGov and AWSChina providers. Valid values: true, false. Default value: false.
 * `customer_managed_keys` - (Optional and Sensitive) Customer managed key ID.
 
 ### Route Customization
@@ -184,7 +218,7 @@ The following arguments are supported:
 * `monitor_exclude_list` - (Optional) Set of monitored instance ids. Only valid when 'enable_monitor_gateway_subnets' = true. Available in provider version R2.18+.
 
 ### [Private OOB](https://docs.aviatrix.com/HowTos/private_oob.html)
-* `enable_private_oob` - (Optional) Enable Private OOB feature. Only available for AWS and AWSGOV. Valid values: true, false. Default value: false.
+* `enable_private_oob` - (Optional) Enable Private OOB feature. Only available for AWS, AWSGov and AWSChina. Valid values: true, false. Default value: false.
 * `oob_management_subnet` - (Optional) OOB management subnet. Required if enabling Private OOB. Example: "11.0.2.0/24".
 * `oob_availability_zone` - (Optional) OOB availability zone. Required if enabling Private OOB. Example: "us-west-1a".
 * `ha_oob_management_subnet` - (Optional) HA OOB management subnet. Required if enabling Private OOB and HA. Example: "11.0.0.48/28".
@@ -197,12 +231,12 @@ The following arguments are supported:
 * `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in Controller 4.7+. Valid values: true, false. Default: true. Option not available for AZURE and OCI gateways, they will automatically allocate new EIPs.
 * `eip` - (Optional) Required when `allocate_new_eip` is false. It uses the specified EIP for this gateway. Available in Controller 4.7+. Only available for AWS, GCP and AWSGOV.
 * `enable_active_mesh` - (Optional) Switch to enable/disable [Active Mesh Mode](https://docs.aviatrix.com/HowTos/activemesh_faq.html) for Spoke Gateway. Valid values: true, false. Default value: false.
-* `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS and AWSGOV provider. Valid values: true, false. Default value: false.
+* `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supports AWS, AWSGov and AWSChina providers. Valid values: true, false. Default value: false.
 * `zone` - (Optional) Availability Zone. Only available for cloud_type = 8 (AZURE). Must be in the form 'az-n', for example, 'az-2'. Available in provider version R2.17+.
 * `manage_transit_gateway_attachment` - (Optional) Enable to manage spoke-to-Aviatrix transit gateway attachments using the **aviatrix_spoke_gateway** resource with the below `transit_gw` attribute. If this is set to false, attaching this spoke to transit gateways must be done using the **aviatrix_spoke_transit_attachment** resource. Valid values: true, false. Default value: true. Available in provider R2.17+.
 * `transit_gw` - (Optional) Specify the Aviatrix transit gateways to attach this spoke gateway to. Format is a comma separated list of transit gateway names. For example: "transit-gw1,transit-gw2".
 * `enable_jumbo_frame` - (Optional) Enable jumbo frames for this spoke gateway. Default value is true.
-* `tags` - (Optional) Map of tags to assign to the gateway. Only available for AWS, AWSGOV and Azure gateway. Allowed characters vary by cloud type but always include: letters, spaces, and numbers. AWS and AWSGOV allow the following special characters: + - = . _ : / @.  Azure allows the following special characters: + - = . _ : @. Example: {"key1" = "value1", "key2" = "value2"}.
+* `tags` - (Optional) Map of tags to assign to the gateway. Only available for AWS, Azure, AWSGov, AWSChina and AzureChina gateways. Allowed characters vary by cloud type but always include: letters, spaces, and numbers. AWS, AWSGov and AWSChina allow the following special characters: + - = . _ : / @.  Azure and AzureChina allows the following special characters: + - = . _ : @. Example: {"key1" = "value1", "key2" = "value2"}.
 * `tunnel_detection_time` - (Optional) The IPsec tunnel down detection time for the Spoke Gateway in seconds. Must be a number in the range [20-600]. The default value is set by the controller (60 seconds if nothing has been changed). **NOTE: The controller UI has an option to set the tunnel detection time for all gateways. To achieve the same functionality in Terraform, use the same TF_VAR to manage the tunnel detection time for all gateways.** Available in provider R2.19+.
 
 -> **NOTE:** `manage_transit_gateway_attachment` - If you are using/upgraded to Aviatrix Terraform Provider R2.17+, and an **aviatrix_spoke_gateway** resource was originally created with a provider version <R2.17, you must do 'terraform refresh' to update and apply the attribute's default value (true) into the state file.
@@ -249,7 +283,7 @@ The following arguments are deprecated:
   * `new_src_ip` - (Optional) The changed source IP address when all specified qualifier conditions meet. One of the rule fields must be specified for this rule to take effect.
   * `new_src_port` - (Optional) The translated destination port when all specified qualifier conditions meet. One of the rule field must be specified for this rule to take effect.
   * `exclude_rtb` - (Optional) This field specifies which VPC private route table will not be programmed with the default route entry.
-* `tag_list` - (Optional) Instance tag of cloud provider. Only supported for AWS, AWSGOV and Azure. Example: ["key1:value1", "key2:value2"].
+* `tag_list` - (Optional) Instance tag of cloud provider. Only supported for AWS, Azure, AWSGov, AWSChina and AzureChina. Example: ["key1:value1", "key2:value2"].
 
 ## Import
 

@@ -291,7 +291,7 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 		d.Set("gw_name", gw.GwName)
 		d.Set("subnet", gw.VpcNet)
 
-		if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV {
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 			d.Set("vpc_reg", gw.VpcRegion)
 			if gw.AllocateNewEipRead {
@@ -299,7 +299,7 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 			} else {
 				d.Set("allocate_new_eip", false)
 			}
-		} else if gw.CloudType == goaviatrix.GCP {
+		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0])
 			d.Set("vpc_reg", gw.GatewayZone)
 			if gw.AllocateNewEipRead {
@@ -307,7 +307,7 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 			} else {
 				d.Set("allocate_new_eip", false)
 			}
-		} else if gw.CloudType == goaviatrix.AZURE || gw.CloudType == goaviatrix.OCI {
+		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
 			d.Set("vpc_id", gw.VpcID)
 			d.Set("vpc_reg", gw.VpcRegion)
 			d.Set("allocate_new_eip", true)
@@ -343,7 +343,7 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 			d.Set("single_az_ha", false)
 		}
 
-		if gw.CloudType == goaviatrix.AWS {
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			d.Set("enable_hybrid_connection", gw.EnableHybridConnection)
 		} else {
 			d.Set("enable_hybrid_connection", false)
@@ -357,7 +357,7 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 
 		if gw.InsaneMode == "yes" {
 			d.Set("insane_mode", true)
-			if gw.CloudType == goaviatrix.AWS {
+			if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 				d.Set("insane_mode_az", gw.GatewayZone)
 			} else {
 				d.Set("insane_mode_az", "")
@@ -399,7 +399,7 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 			d.Set("enable_active_mesh", false)
 		}
 
-		if gw.CloudType == goaviatrix.AWS && gw.EnableVpcDnsServer == "Enabled" {
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled" {
 			d.Set("enable_vpc_dns_server", true)
 		} else {
 			d.Set("enable_vpc_dns_server", false)
@@ -428,7 +428,7 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 		d.Set("bgp_manual_spoke_advertise_cidrs", bgpMSAN)
 	}
 
-	if intInSlice(gw.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.AZURE}) {
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 		tags := &goaviatrix.Tags{
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
@@ -455,10 +455,10 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 	}
 	haGw, _ := client.GetGateway(haGateway)
 	if haGw != nil {
-		if intInSlice(haGw.CloudType, []int{goaviatrix.AWS, goaviatrix.AZURE, goaviatrix.OCI, goaviatrix.AWSGOV, goaviatrix.ALIYUN}) {
+		if goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
 			d.Set("ha_subnet", haGw.VpcNet)
 			d.Set("ha_zone", "")
-		} else if haGw.CloudType == goaviatrix.GCP {
+		} else if goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			d.Set("ha_zone", haGw.GatewayZone)
 			d.Set("ha_subnet", "")
 		}
@@ -468,7 +468,7 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 		d.Set("ha_gw_name", haGw.GwName)
 		d.Set("ha_private_ip", haGw.PrivateIP)
 
-		if haGw.InsaneMode == "yes" && haGw.CloudType == goaviatrix.AWS {
+		if haGw.InsaneMode == "yes" && goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			d.Set("ha_insane_mode_az", haGw.GatewayZone)
 		} else {
 			d.Set("ha_insane_mode_az", "")

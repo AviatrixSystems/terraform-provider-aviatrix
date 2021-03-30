@@ -328,13 +328,13 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("account_name", gw.AccountName)
 		d.Set("gw_name", gw.GwName)
 
-		if intInSlice(gw.CloudType, []int{goaviatrix.AWS, goaviatrix.OCI, goaviatrix.AWSGOV, goaviatrix.ALIYUN}) {
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 			d.Set("vpc_reg", gw.VpcRegion)
-		} else if gw.CloudType == goaviatrix.GCP {
+		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0])
 			d.Set("vpc_reg", gw.GatewayZone)
-		} else if gw.CloudType == goaviatrix.AZURE {
+		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 			d.Set("vpc_id", gw.VpcID)
 			d.Set("vpc_reg", gw.VpcRegion)
 		}
@@ -351,13 +351,13 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 			d.Set("single_ip_snat", false)
 		}
 
-		if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV || gw.CloudType == goaviatrix.GCP {
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) {
 			if gw.AllocateNewEipRead {
 				d.Set("allocate_new_eip", true)
 			} else {
 				d.Set("allocate_new_eip", false)
 			}
-		} else if intInSlice(gw.CloudType, []int{goaviatrix.AZURE, goaviatrix.OCI, goaviatrix.ALIYUN}) {
+		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
 			d.Set("allocate_new_eip", true)
 		}
 
@@ -483,7 +483,7 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 
 		if gw.InsaneMode == "yes" {
 			d.Set("insane_mode", true)
-			if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV {
+			if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 				d.Set("insane_mode_az", gw.GatewayZone)
 			} else {
 				d.Set("insane_mode_az", "")
@@ -493,7 +493,7 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 			d.Set("insane_mode_az", "")
 		}
 
-		if (gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV) && gw.EnableVpcDnsServer == "Enabled" {
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled" {
 			d.Set("enable_vpc_dns_server", true)
 		} else {
 			d.Set("enable_vpc_dns_server", false)
@@ -510,21 +510,21 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 			d.Set("peering_ha_public_ip", gwHaGw.PublicIP)
 			d.Set("peering_ha_gw_size", gwHaGw.GwSize)
 			d.Set("peering_ha_private_ip", gwHaGw.PrivateIP)
-			if gwHaGw.CloudType == goaviatrix.AWS || gwHaGw.CloudType == goaviatrix.AWSGOV {
+			if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
 				if gwHaGw.InsaneMode == "yes" {
 					d.Set("peering_ha_insane_mode_az", gwHaGw.GatewayZone)
 				}
-			} else if gwHaGw.CloudType == goaviatrix.AZURE || gwHaGw.CloudType == goaviatrix.OCI {
+			} else if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.AZURECHINA|goaviatrix.OCIRelatedCloudTypes) {
 				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
-			} else if gwHaGw.CloudType == goaviatrix.GCP {
+			} else if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 				d.Set("peering_ha_zone", gwHaGw.GatewayZone)
 			} else if gwHaGw.CloudType == goaviatrix.ALIYUN {
 				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
 			}
 		}
 
-		if intInSlice(gw.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.AZURE}) {
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			tags := &goaviatrix.Tags{
 				ResourceType: "gw",
 				ResourceName: d.Get("gw_name").(string),

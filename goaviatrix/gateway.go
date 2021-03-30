@@ -154,6 +154,7 @@ type Gateway struct {
 	EnableMultitierTransit      bool   `json:"multitier_transit"`
 	AutoAdvertiseCidrsEnabled   bool   `json:"auto_advertise_s2c_cidrs"`
 	TunnelDetectionTime         int    `json:"detection_time"`
+	StorageName                 string `form:"storage_name,omitempty"`
 }
 
 type PolicyRule struct {
