@@ -70,8 +70,8 @@ resource "aviatrix_account" "temp_acc_oci" {
 ```hcl
 # Create an Aviatrix Azure Gov Account
 resource "aviatrix_account" "temp_acc_armgov" {
-  account_name        = "username"
-  cloud_type          = 32
+  account_name           = "username"
+  cloud_type             = 32
   armgov_subscription_id = "12345678-abcd-efgh-ijkl-123456789abc"
   armgov_directory_id    = "abcdefgh-1234-5678-9100-abc123456789"
   armgov_application_id  = "1234abcd-12ab-34cd-56ef-abcdef123456"

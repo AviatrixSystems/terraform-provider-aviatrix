@@ -358,8 +358,8 @@ resource "aviatrix_account" "oci" {
 func testAccAccountConfigARMGOV(rInt int) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "armgov" {
-	account_name        = "tfa-armgov-%d"
-	cloud_type          = 32
+	account_name           = "tfa-armgov-%d"
+	cloud_type             = 32
 	armgov_subscription_id = "%s"
 	armgov_directory_id    = "%s"
 	armgov_application_id  = "%s"
