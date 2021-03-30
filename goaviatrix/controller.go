@@ -2,6 +2,7 @@ package goaviatrix
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -429,18 +430,18 @@ func (c *Client) SetControllerVpcDnsServer(enabled bool) error {
 	}, BasicCheck)
 }
 
-func (c *Client) SetExceptionEmailNotification(enabled bool) error {
+func (c *Client) SetExceptionEmailNotification(ctx context.Context, enabled bool) error {
 	action := "enable_exception_email_notification"
 	if !enabled {
 		action = "disable_exception_email_notification"
 	}
-	return c.PostAPI(action, &APIRequest{
+	return c.PostAPIContext(ctx, action, &APIRequest{
 		CID:    c.CID,
 		Action: action,
 	}, BasicCheck)
 }
 
-func (c *Client) GetExceptionEmailNotificationStatus() (bool, error) {
+func (c *Client) GetExceptionEmailNotificationStatus(ctx context.Context) (bool, error) {
 	params := map[string]string{
 		"action": "get_exception_email_notification_status",
 		"CID":    c.CID,
@@ -454,14 +455,14 @@ func (c *Client) GetExceptionEmailNotificationStatus() (bool, error) {
 
 	var data Resp
 
-	err := c.GetAPI(&data, params["action"], params, BasicCheck)
+	err := c.GetAPIContext(ctx, &data, params["action"], params, BasicCheck)
 	if err != nil {
-		return false, err
+		return true, err
 	}
 
 	if ans, ok := data.Results["enabled"]; ok {
 		return ans, nil
 	} else {
-		return false, fmt.Errorf("response doesn't contain the key \"enabled\"")
+		return true, fmt.Errorf("response doesn't contain the key \"enabled\"")
 	}
 }
