@@ -58,11 +58,13 @@ func resourceAviatrixAccount() *schema.Resource {
 			"aws_role_app": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "AWS App role ARN.",
 			},
 			"aws_role_ec2": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "AWS EC2 role ARN.",
 			},
 			"aws_gateway_role_app": {
@@ -208,27 +210,20 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 
 		log.Printf("[INFO] Creating Aviatrix account: %#v", account)
 		if awsIam {
-			if _, ok := d.GetOk("aws_role_app"); ok {
-				var role_app bytes.Buffer
-				role_app.WriteString("arn:aws:iam::")
-				role_app.WriteString(account.AwsAccountNumber)
-				role_app.WriteString(":role/aviatrix-role-app")
-				account.AwsRoleApp = role_app.String()
+			if _, ok := d.GetOk("aws_role_app"); !ok {
+				var roleApp bytes.Buffer
+				roleApp.WriteString("arn:aws:iam::")
+				roleApp.WriteString(account.AwsAccountNumber)
+				roleApp.WriteString(":role/aviatrix-role-app")
+				account.AwsRoleApp = roleApp.String()
 			}
-			if _, ok := d.GetOk("aws_role_ec2"); ok {
-				var role_ec2 bytes.Buffer
-				role_ec2.WriteString("arn:aws:iam::")
-				role_ec2.WriteString(account.AwsAccountNumber)
-				role_ec2.WriteString(":role/aviatrix-role-ec2")
-				account.AwsRoleEc2 = role_ec2.String()
+			if _, ok := d.GetOk("aws_role_ec2"); !ok {
+				var roleEc2 bytes.Buffer
+				roleEc2.WriteString("arn:aws:iam::")
+				roleEc2.WriteString(account.AwsAccountNumber)
+				roleEc2.WriteString(":role/aviatrix-role-ec2")
+				account.AwsRoleEc2 = roleEc2.String()
 			}
-
-			//if aws_role_app := d.Get("aws_role_app").(string); aws_role_app == "" {
-			//	account.AwsRoleApp += role_app.String()
-			//}
-			//if aws_role_ec2 := d.Get("aws_role_ec2").(string); aws_role_ec2 == "" {
-			//	account.AwsRoleEc2 += role_ec2.String()
-			//}
 			log.Printf("[TRACE] Reading Aviatrix account aws_role_app: [%s]", d.Get("aws_role_app").(string))
 			log.Printf("[TRACE] Reading Aviatrix account aws_role_ec2: [%s]", d.Get("aws_role_ec2").(string))
 		}
@@ -329,6 +324,10 @@ func resourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) error
 				d.Set("aws_access_key", "")
 				d.Set("aws_secret_key", "")
 				d.Set("aws_iam", true)
+				d.Set("aws_role_app", acc.AwsRoleApp)
+				d.Set("aws_role_ec2", acc.AwsRoleEc2)
+				d.Set("aws_gateway_role_app", acc.AwsGatewayRoleApp)
+				d.Set("aws_gateway_role_ec2", acc.AwsGatewayRoleEc2)
 			} else {
 				d.Set("aws_access_key", acc.AwsAccessKey)
 				d.Set("aws_iam", false)

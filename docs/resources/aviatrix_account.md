@@ -93,6 +93,8 @@ The following arguments are supported:
 * `aws_secret_key` - (Optional) AWS Secret Key. Required when `aws_iam` is "false" and when creating an account for AWS.
 * `aws_role_app` - (Optional) AWS App role ARN, this option is for UserConnect. Required when `aws_iam` is "true" and when creating an account for AWS.
 * `aws_role_ec2` - (Optional) AWS EC2 role ARN, this option is for UserConnect. Required when `aws_iam` is "true" and when creating an account for AWS.
+* `aws_gateway_role_app` - (Optional) A separate AWS App role ARN to assign to gateways created by the controller. Only allowed when `aws_iam` is "true" and when creating an account for AWS. Available as of provider version R2.19+.
+* `aws_gateway_role_ec2` - (Optional) A separate AWS EC2 role ARN to assign to gateways created by the controller. Only allowed when `aws_iam` is "true" and when creating an account for AWS. Available as of provider version R2.19+.
 
 ### Azure
 * `arm_subscription_id` - (Optional) Azure ARM Subscription ID. Required when creating an account for Azure.
