@@ -229,7 +229,13 @@ func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 			subscriptionId = acc.ArmSubscriptionId
 		}
 
-		resourceGroup := strings.Split(vC.VpcID, ":")[1]
+		var resourceGroup string
+		if vC.ResourceGroup != "" {
+			resourceGroup = vC.ResourceGroup
+		} else {
+			resourceGroup = strings.Split(vC.VpcID, ":")[1]
+		}
+
 		azureVnetResourceId := "/subscriptions/" + subscriptionId + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/" + vC.Name
 		d.Set("resource_group", resourceGroup)
 		d.Set("azure_vnet_resource_id", azureVnetResourceId)
