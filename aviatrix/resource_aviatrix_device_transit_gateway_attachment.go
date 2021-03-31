@@ -141,6 +141,17 @@ func resourceAviatrixDeviceTransitGatewayAttachment() *schema.Resource {
 				Optional:    true,
 				Description: "Configure manual BGP advertised CIDRs for this connection. Available as of provider version R2.18+.",
 			},
+			"enable_event_triggered_ha": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable Event Triggered HA.",
+			},
+			"vpc_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "VPC ID.",
+			},
 		},
 	}
 }
@@ -166,7 +177,7 @@ func marshalDeviceTransitGatewayAttachmentInput(d *schema.ResourceData) *goaviat
 	}
 }
 
-func resourceAviatrixDeviceTransitGatewayAttachmentCreate(d *schema.ResourceData, meta interface{}) (err error) {
+func resourceAviatrixDeviceTransitGatewayAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	attachment := marshalDeviceTransitGatewayAttachmentInput(d)
 
@@ -175,7 +186,7 @@ func resourceAviatrixDeviceTransitGatewayAttachmentCreate(d *schema.ResourceData
 	}
 
 	d.SetId(attachment.ConnectionName)
-	defer captureErr(resourceAviatrixDeviceTransitGatewayAttachmentRead, d, meta, &err)
+	resourceAviatrixDeviceTransitGatewayAttachmentRead(d, meta)
 
 	enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
 	if enableLearnedCIDRApproval {
@@ -187,13 +198,19 @@ func resourceAviatrixDeviceTransitGatewayAttachmentCreate(d *schema.ResourceData
 
 	manualBGPCidrs := getStringSet(d, "manual_bgp_advertised_cidrs")
 	if len(manualBGPCidrs) > 0 {
-		err = client.EditTransitConnectionBGPManualAdvertiseCIDRs(attachment.TransitGatewayName, attachment.ConnectionName, manualBGPCidrs)
+		err := client.EditTransitConnectionBGPManualAdvertiseCIDRs(attachment.TransitGatewayName, attachment.ConnectionName, manualBGPCidrs)
 		if err != nil {
 			return fmt.Errorf("could not edit manual advertised cidrs: %v", err)
 		}
 	}
 
-	return err
+	if d.Get("enable_event_triggered_ha").(bool) {
+		if err := client.EnableSite2CloudEventTriggeredHA(d.Get("vpc_id").(string), attachment.ConnectionName); err != nil {
+			return fmt.Errorf("could not enable event triggered HA for device transit conn after create: %v", err)
+		}
+	}
+
+	return nil
 }
 
 func resourceAviatrixDeviceTransitGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) error {
@@ -225,6 +242,8 @@ func resourceAviatrixDeviceTransitGatewayAttachmentRead(d *schema.ResourceData, 
 	d.Set("device_name", attachment.DeviceName)
 	d.Set("transit_gateway_name", attachment.TransitGatewayName)
 	d.Set("connection_name", attachment.ConnectionName)
+	d.Set("enable_event_triggered_ha", attachment.EventTriggeredHA)
+	d.Set("vpc_id", attachment.VpcID)
 
 	transitGatewayBgpAsn, err := strconv.Atoi(attachment.TransitGatewayBgpAsn)
 	if err != nil {
@@ -302,6 +321,21 @@ func resourceAviatrixDeviceTransitGatewayAttachmentUpdate(d *schema.ResourceData
 		err := client.EditTransitConnectionBGPManualAdvertiseCIDRs(gwName, connName, manualBGPCidrs)
 		if err != nil {
 			return fmt.Errorf("could not edit manual bgp cidrs: %v", err)
+		}
+	}
+
+	if d.HasChange("enable_event_triggered_ha") {
+		vpcID := d.Get("vpc_id").(string)
+		if d.Get("enable_event_triggered_ha").(bool) {
+			err := client.EnableSite2CloudEventTriggeredHA(vpcID, connName)
+			if err != nil {
+				return fmt.Errorf("could not enable event triggered HA for device transit conn during update: %v", err)
+			}
+		} else {
+			err := client.DisableSite2CloudEventTriggeredHA(vpcID, connName)
+			if err != nil {
+				return fmt.Errorf("could not disable event triggered HA for device transti conn during update: %v", err)
+			}
 		}
 	}
 

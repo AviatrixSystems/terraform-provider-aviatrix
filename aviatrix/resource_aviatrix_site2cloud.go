@@ -324,6 +324,12 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
 				Description: "Local Initiated Traffic Destination Virtual CIDRs.",
 			},
+			"enable_event_triggered_ha": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable Event Triggered HA.",
+			},
 		},
 	}
 }
@@ -560,6 +566,13 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	if d.Get("enable_event_triggered_ha").(bool) {
+		err := client.EnableSite2CloudEventTriggeredHA(s2c.VpcID, s2c.TunnelName)
+		if err != nil {
+			return fmt.Errorf("could not enable event triggered HA for site2cloud after creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixSite2CloudReadIfRequired(d, meta, &flag)
 }
 
@@ -661,6 +674,7 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("enable_dead_peer_detection", s2c.DeadPeerDetection)
 		d.Set("enable_active_active", s2c.EnableActiveActive)
 		d.Set("forward_traffic_to_transit", s2c.ForwardToTransit)
+		d.Set("enable_event_triggered_ha", s2c.EventTriggeredHA)
 
 		if s2c.EnableIKEv2 == "true" {
 			d.Set("enable_ikev2", true)
@@ -809,6 +823,20 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 			err := client.DisableSpokeMappedSite2CloudForwarding(s2c)
 			if err != nil {
 				return fmt.Errorf("failed to disable traffic forwarding to transit for site2cloud: %s: %s", s2c.TunnelName, err)
+			}
+		}
+	}
+
+	if d.HasChange("enable_event_triggered_ha") {
+		if d.Get("enable_event_triggered_ha").(bool) {
+			err := client.EnableSite2CloudEventTriggeredHA(editSite2cloud.VpcID, editSite2cloud.ConnName)
+			if err != nil {
+				return fmt.Errorf("could not enable event triggered HA for site2cloud during update: %v", err)
+			}
+		} else {
+			err := client.DisableSite2CloudEventTriggeredHA(editSite2cloud.VpcID, editSite2cloud.ConnName)
+			if err != nil {
+				return fmt.Errorf("could not disable event triggered HA for site2cloud during update: %v", err)
 			}
 		}
 	}

@@ -51,6 +51,13 @@ The following arguments are supported:
 * `remote_tunnel_ip` - Remote tunnel IP.
 * `enable_learned_cidrs_approval` - (Optional) Enable learned CIDRs approval for the connection. Requires the transit_gateway's 'learned_cidrs_approval_mode' attribute be set to 'connection'. Valid values: true, false. Default value: false. Available as of provider version R2.18+.
 * `manual_bgp_advertised_cidrs` - (Optional) Configure manual BGP advertised CIDRs for this connection. Available as of provider version R2.18+.
+* `enable_event_triggered_ha` - (Optional) Enable Event Triggered HA. Default value: false. Valid values: true or false. Available as of provider version R2.19+.
+
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `vpc_id` - VPC ID.
 
 
 ## Import

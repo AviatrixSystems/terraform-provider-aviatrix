@@ -266,6 +266,12 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "Set as true if use IKEv2.",
 			},
+			"enable_event_triggered_ha": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable Event Triggered HA.",
+			},
 			"manual_bgp_advertised_cidrs": {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{
@@ -517,6 +523,12 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		}
 	}
 
+	if d.Get("enable_event_triggered_ha").(bool) {
+		if err := client.EnableSite2CloudEventTriggeredHA(externalDeviceConn.VpcID, externalDeviceConn.ConnectionName); err != nil {
+			return fmt.Errorf("could not enable event triggered HA for external device conn after create: %v", err)
+		}
+	}
+
 	if enableLearnedCIDRApproval {
 		err = client.EnableTransitConnectionLearnedCIDRApproval(externalDeviceConn.GwName, externalDeviceConn.ConnectionName)
 		if err != nil {
@@ -573,6 +585,7 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		d.Set("gw_name", conn.GwName)
 		d.Set("connection_type", conn.ConnectionType)
 		d.Set("remote_tunnel_cidr", conn.RemoteTunnelCidr)
+		d.Set("enable_event_triggered_ha", conn.EventTriggeredHA)
 		if conn.TunnelProtocol == "LAN" {
 			d.Set("remote_lan_ip", conn.RemoteLanIP)
 			d.Set("local_lan_ip", conn.LocalLanIP)
@@ -722,6 +735,21 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 		err := client.EditTransitConnectionBGPManualAdvertiseCIDRs(gwName, connName, manualBGPCidrs)
 		if err != nil {
 			return fmt.Errorf("could not edit manual advertise manual cidrs: %v", err)
+		}
+	}
+
+	if d.HasChange("enable_event_triggered_ha") {
+		vpcID := d.Get("vpc_id").(string)
+		if d.Get("enable_event_triggered_ha").(bool) {
+			err := client.EnableSite2CloudEventTriggeredHA(vpcID, connName)
+			if err != nil {
+				return fmt.Errorf("could not enable event triggered HA for external device conn during update: %v", err)
+			}
+		} else {
+			err := client.DisableSite2CloudEventTriggeredHA(vpcID, connName)
+			if err != nil {
+				return fmt.Errorf("could not disable event triggered HA for external device conn during update: %v", err)
+			}
 		}
 	}
 

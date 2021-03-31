@@ -63,6 +63,7 @@ type Site2Cloud struct {
 	DeadPeerDetection             bool
 	EnableActiveActive            bool
 	ForwardToTransit              bool
+	EventTriggeredHA              bool
 	CustomMap                     bool   `form:"custom_map,omitempty"`
 	RemoteSourceRealCIDRs         string `form:"remote_src_real_cidrs,omitempty"`
 	RemoteSourceVirtualCIDRs      string `form:"remote_src_virt_cidrs,omitempty"`
@@ -143,6 +144,7 @@ type EditSite2CloudConnDetail struct {
 	LocalDestinationRealCIDRs     string        `json:"local_dst_real_cidrs"`
 	LocalDestinationVirtualCIDRs  string        `json:"local_dst_virt_cidrs"`
 	ManualBGPCidrs                []string      `json:"conn_bgp_manual_advertise_cidrs"`
+	EventTriggeredHA              string        `json:"event_triggered_ha"`
 }
 
 type Site2CloudConnDetailResp struct {
@@ -409,6 +411,7 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 		if s2cConnDetail.EnableIKEv2 == "2" {
 			site2cloud.EnableIKEv2 = "true"
 		}
+		site2cloud.EventTriggeredHA = s2cConnDetail.EventTriggeredHA == "enabled"
 		site2cloud.RemoteSourceRealCIDRs = s2cConnDetail.RemoteSourceRealCIDRs
 		site2cloud.RemoteSourceVirtualCIDRs = s2cConnDetail.RemoteSourceVirtualCIDRs
 		site2cloud.RemoteDestinationRealCIDRs = s2cConnDetail.RemoteDestinationRealCIDRs
@@ -618,6 +621,26 @@ func (c *Client) DisableSpokeMappedSite2CloudForwarding(site2cloud *Site2Cloud) 
 		"action":          "disable_spoke_mapped_site2cloud_forwarding",
 		"vpc_id":          site2cloud.VpcID,
 		"connection_name": site2cloud.TunnelName,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) EnableSite2CloudEventTriggeredHA(vpcID, connectionName string) error {
+	data := map[string]string{
+		"CID":             c.CID,
+		"action":          "enable_site2cloud_event_triggered_ha",
+		"vpc_id":          vpcID,
+		"connection_name": connectionName,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) DisableSite2CloudEventTriggeredHA(vpcID, connectionName string) error {
+	data := map[string]string{
+		"CID":             c.CID,
+		"action":          "disable_site2cloud_event_triggered_ha",
+		"vpc_id":          vpcID,
+		"connection_name": connectionName,
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
 }
