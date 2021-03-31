@@ -49,7 +49,7 @@ func TestAccAviatrixControllerCertDomainConfig_basic(t *testing.T) {
 func testAccControllerCertDomainConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_controller_cert_domain_config" "test" {
-  cert_domain = "%s"
+    cert_domain = "%s"
 }
 `, rName)
 }

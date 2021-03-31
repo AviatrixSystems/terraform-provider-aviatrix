@@ -13,7 +13,7 @@ The **aviatrix_controller_cert_domain_config** resource allows management of an 
 ## Example Usage
 
 ```hcl
-# Create an an Aviatrix controller cert domain config
+# Create an Aviatrix controller cert domain config
 resource "aviatrix_controller_cert_domain_config" "test" {
   cert_domain = "abc.com"
 }
@@ -24,7 +24,7 @@ resource "aviatrix_controller_cert_domain_config" "test" {
 
 The following argument is supported:
 
-* `cert_domain` - (Optional) Domain name that is used in FQDN for generating cert. Default value: "aviatrixnetwork.com".
+* `cert_domain` - (Required) Domain name that is used in FQDN for generating cert. Default value: "aviatrixnetwork.com".
 
 ## Import
 

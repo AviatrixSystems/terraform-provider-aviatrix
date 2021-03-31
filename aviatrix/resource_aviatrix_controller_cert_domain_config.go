@@ -40,7 +40,7 @@ func resourceAviatrixControllerCertDomainConfigCreate(ctx context.Context, d *sc
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
-	return nil
+	return resourceAviatrixControllerCertDomainConfigRead(ctx, d, meta)
 }
 
 func resourceAviatrixControllerCertDomainConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -71,7 +71,7 @@ func resourceAviatrixControllerCertDomainConfigUpdate(ctx context.Context, d *sc
 		}
 	}
 
-	return nil
+	return resourceAviatrixControllerCertDomainConfigRead(ctx, d, meta)
 }
 
 func resourceAviatrixControllerCertDomainConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
