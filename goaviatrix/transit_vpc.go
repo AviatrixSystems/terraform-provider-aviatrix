@@ -70,7 +70,6 @@ type TransitGatewayAdvancedConfig struct {
 	PeerVnetId                        []string
 	BgpHoldTime                       int
 	EnableSummarizeCidrToTgw          bool
-	EnableMultitierTransit            bool
 }
 
 type StandbyConnection struct {
@@ -92,7 +91,6 @@ type TransitGatewayAdvancedConfigRespResult struct {
 	PeerVnetId                        []string                  `json:"peer_vnet_id"`
 	BgpHoldTime                       int                       `json:"bgp_hold_time"`
 	EnableSummarizeCidrToTgw          string                    `json:"summarize_cidr_to_tgw"`
-	EnableMultitierTransit            string                    `json:"multitier_transit"`
 }
 
 type LearnedCIDRApprovalInfo struct {
@@ -680,7 +678,6 @@ func (c *Client) GetTransitGatewayAdvancedConfig(transitGateway *TransitVpc) (*T
 		PeerVnetId:                        data.Results.PeerVnetId,
 		BgpHoldTime:                       data.Results.BgpHoldTime,
 		EnableSummarizeCidrToTgw:          data.Results.EnableSummarizeCidrToTgw == "yes",
-		EnableMultitierTransit:            data.Results.EnableMultitierTransit == "yes",
 	}, nil
 }
 

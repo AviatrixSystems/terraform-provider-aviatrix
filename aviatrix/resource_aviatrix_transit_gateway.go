@@ -387,7 +387,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable summarize CIDR to TGW.",
 			},
-			"enable_multitier_transit": {
+			"enable_multi_tier_transit": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
@@ -735,10 +735,10 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	enableMultitierTransit := d.Get("enable_multitier_transit").(bool)
+	enableMultitierTransit := d.Get("enable_multi_tier_transit").(bool)
 	if enableMultitierTransit {
 		if d.Get("local_as_number") == "" {
-			return fmt.Errorf("local_as_number required to enalbe multi tier transit")
+			return fmt.Errorf("local_as_number required to enable multi tier transit")
 		}
 	}
 
@@ -1405,6 +1405,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		if err := d.Set("monitor_exclude_list", gw.MonitorExcludeGWList); err != nil {
 			return fmt.Errorf("setting 'monitor_exclude_list' to state: %v", err)
 		}
+
+		d.Set("enable_multi_tier_transit", gw.EnableMultitierTransit)
 	}
 
 	if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV || gw.CloudType == goaviatrix.AZURE {
@@ -1465,7 +1467,6 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("enable_bgp_over_lan", false)
 	}
 	d.Set("enable_transit_summarize_cidr_to_tgw", advancedConfig.EnableSummarizeCidrToTgw)
-	d.Set("enable_multitier_transit", advancedConfig.EnableMultitierTransit)
 
 	isSegmentationEnabled, err := client.IsSegmentationEnabled(transitGateway)
 	if err != nil {
@@ -2500,10 +2501,10 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if d.HasChange("enable_multitier_transit") {
-		if d.Get("enable_multitier_transit").(bool) {
+	if d.HasChange("enable_multi_tier_transit") {
+		if d.Get("enable_multi_tier_transit").(bool) {
 			if d.Get("local_as_number") == "" {
-				return fmt.Errorf("local_as_number required to enalbe multi tier transit")
+				return fmt.Errorf("local_as_number required to enable multi tier transit")
 			}
 			err := client.EnableMultitierTransit(gateway.GwName)
 			if err != nil {

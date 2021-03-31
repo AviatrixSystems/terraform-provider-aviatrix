@@ -256,7 +256,7 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "A map of tags assigned to the transit gateway.",
 			},
-			"enable_multitier_transit": {
+			"enable_multi_tier_transit": {
 				Type:        schema.TypeBool,
 				Computed:    true,
 				Description: "Enable Multi-tier Transit mode on transit gateway.",
@@ -314,7 +314,7 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 		d.Set("security_group_id", gw.GwSecurityGroupID)
 		d.Set("private_ip", gw.PrivateIP)
-		d.Set("enable_multitier_transit", gw.EnableMultitierTransit)
+		d.Set("enable_multi_tier_transit", gw.EnableMultitierTransit)
 
 		d.Set("enable_private_oob", gw.EnablePrivateOob)
 		if gw.EnablePrivateOob {
