@@ -24,7 +24,7 @@ resource "aviatrix_controller_cert_domain_config" "test" {
 
 The following argument is supported:
 
-* `cert_domain` - (Required) Domain name that is used in FQDN for generating cert. Default value: "aviatrixnetwork.com".
+* `cert_domain` - (Optional) Domain name that is used in FQDN for generating cert. Default value: "aviatrixnetwork.com".
 
 ## Import
 

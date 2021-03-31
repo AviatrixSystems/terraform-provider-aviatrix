@@ -22,7 +22,8 @@ func resourceAviatrixControllerCertDomainConfig() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"cert_domain": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
+				Default:     "aviatrixnetwork.com",
 				Description: "Domain name that is used in FQDN for generating cert.",
 			},
 		},
