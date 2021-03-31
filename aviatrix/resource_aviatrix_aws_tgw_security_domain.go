@@ -111,8 +111,8 @@ func resourceAviatrixAwsTgwSecurityDomainRead(ctx context.Context, d *schema.Res
 		if len(parts) != 2 {
 			return diag.Errorf("invalid ID, expected ID tgw_name~domain_name, instead got %s", d.Id())
 		}
-		d.Set("tgw_name", strings.Split(id, "~")[0])
-		d.Set("name", strings.Split(id, "~")[1])
+		d.Set("tgw_name", parts[0])
+		d.Set("name", parts[1])
 		d.SetId(id)
 	}
 
@@ -124,7 +124,7 @@ func resourceAviatrixAwsTgwSecurityDomainRead(ctx context.Context, d *schema.Res
 		AwsTgwName: tgwName,
 	}
 
-	securityDomainRule, err := client.GetSecurityDomainDetails(securityDomain)
+	securityDomainRule, err := client.GetSecurityDomainDetails(ctx, securityDomain)
 	if err == goaviatrix.ErrNotFound {
 		d.SetId("")
 		return nil

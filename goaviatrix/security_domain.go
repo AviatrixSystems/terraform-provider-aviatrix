@@ -2,6 +2,7 @@ package goaviatrix
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/url"
@@ -215,7 +216,7 @@ func (c *Client) SecurityDomainRuleValidation(securityDomainRule *SecurityDomain
 	return true
 }
 
-func (c *Client) GetSecurityDomainDetails(domain *SecurityDomain) (*SecurityDomainRule, error) {
+func (c *Client) GetSecurityDomainDetails(ctx context.Context, domain *SecurityDomain) (*SecurityDomainRule, error) {
 	params := map[string]string{
 		"action":            "list_tgw_security_domain_details",
 		"CID":               c.CID,
@@ -231,7 +232,7 @@ func (c *Client) GetSecurityDomainDetails(domain *SecurityDomain) (*SecurityDoma
 
 	var data Resp
 
-	err := c.GetAPI(&data, params["action"], params, BasicCheck)
+	err := c.GetAPIContext(ctx, &data, params["action"], params, BasicCheck)
 	if err != nil {
 		return nil, err
 	}
