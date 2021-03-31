@@ -45,7 +45,7 @@ func TestAccAviatrixControllerExceptionEmailNotificationConfig_basic(t *testing.
 func testAccControllerExceptionEmailNotificationConfigBasic() string {
 	return `
 resource "aviatrix_controller_exception_email_notification_config" "test" {
-  enable_exception_email_notification = false
+    enable_exception_email_notification = false
 }
 `
 }

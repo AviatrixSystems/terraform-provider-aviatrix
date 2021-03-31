@@ -13,7 +13,7 @@ The **aviatrix_controller_exception_email_notification_config** resource allows 
 ## Example Usage
 
 ```hcl
-# Create an an Aviatrix controller exception email notification config
+# Create an Aviatrix controller exception email notification config
 resource "aviatrix_controller_exception_email_notification_config" "test" {
   enable_exception_email_notification = false
 }

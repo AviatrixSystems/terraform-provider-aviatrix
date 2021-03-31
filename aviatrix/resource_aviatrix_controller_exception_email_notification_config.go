@@ -42,7 +42,7 @@ func resourceAviatrixControllerExceptionEmailNotificationConfigCreate(ctx contex
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
-	return nil
+	return resourceAviatrixControllerExceptionEmailNotificationConfigRead(ctx, d, meta)
 }
 
 func resourceAviatrixControllerExceptionEmailNotificationConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -72,7 +72,7 @@ func resourceAviatrixControllerExceptionEmailNotificationConfigUpdate(ctx contex
 		}
 	}
 
-	return nil
+	return resourceAviatrixControllerExceptionEmailNotificationConfigRead(ctx, d, meta)
 }
 
 func resourceAviatrixControllerExceptionEmailNotificationConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
