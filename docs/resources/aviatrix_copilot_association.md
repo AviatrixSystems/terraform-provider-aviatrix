@@ -24,7 +24,7 @@ resource "aviatrix_copilot_association" "test_copilot_association" {
 
 The following arguments are supported:
 
-* `copilot_address` - (Optional) CoPilot instance IP Address or Hostname.
+* `copilot_address` - (Required) CoPilot instance IP Address or Hostname.
 
 ## Import
 
