@@ -26,7 +26,7 @@ resource aws_subnet csr_vpc_subnet_1 {
   map_public_ip_on_launch = true
 
   tags = {
-    Name    = "csr-vpc-subnet-1"
+    Name    = "csr-vpc-subnet-${random_integer.csr_vpc_int[0].result}"
     Purpose = "Terraform Acceptance"
   }
 }
@@ -37,14 +37,14 @@ resource aws_network_interface csr_aws_netw_interface_1 {
     aws_security_group.csr_sec_group.id]
 
   tags = {
-    Name    = "csr-aws-netw-interface-1"
+    Name    = "csr-aws-netw-interface-${random_integer.csr_vpc_int[0].result}"
     Purpose = "Terraform Acceptance"
   }
 }
 
 resource aws_eip csr_eip_1 {
   tags = {
-    Name    = "csr-eip-1"
+    Name    = "csr-eip-${random_integer.csr_vpc_int[0].result}"
     Purpose = "Terraform Acceptance"
   }
 

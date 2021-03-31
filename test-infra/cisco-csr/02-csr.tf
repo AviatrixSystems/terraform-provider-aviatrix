@@ -17,12 +17,12 @@ resource "tls_private_key" "key_pair_material" {
 }
 
 resource "aws_key_pair" "csr_key_pair" {
-  key_name = "csr-kp"
+  key_name = "csr-kp-${random_integer.csr_vpc_int[0].result}"
   public_key = tls_private_key.key_pair_material.public_key_openssh
 }
 
 locals {
-  key_file_path = "/tmp/csr-kp.pem"
+  key_file_path = "/tmp/csr-kp-${random_integer.csr_vpc_int[0].result}.pem"
 }
 
 resource "null_resource" "key_pair_file" {
@@ -43,7 +43,7 @@ resource aws_instance csr_instance_1 {
   }
 
   tags = {
-    Name    = "csr-instance-1"
+    Name    = "csr-instance-1-${random_integer.csr_vpc_int[0].result}"
     Purpose = "Terraform Acceptance"
   }
 }
