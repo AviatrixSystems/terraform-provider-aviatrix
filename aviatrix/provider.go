@@ -56,7 +56,7 @@ func Provider() *schema.Provider {
 			"aviatrix_cloudwatch_agent":                               resourceAviatrixCloudwatchAgent(),
 			"aviatrix_controller_bgp_max_as_limit_config":             resourceAviatrixControllerBgpMaxAsLimitConfig(),
 			"aviatrix_controller_config":                              resourceAviatrixControllerConfig(),
-			"aviatrix_controller_exception_email_notification_config": resourceAviatrixControllerExceptionEmailNotificationConfig(),
+			"aviatrix_controller_email_exception_notification_config": resourceAviatrixControllerEmailExceptionNotificationConfig(),
 			"aviatrix_controller_private_oob":                         resourceAviatrixControllerPrivateOob(),
 			"aviatrix_datadog_agent":                                  resourceAviatrixDatadogAgent(),
 			"aviatrix_device_aws_tgw_attachment":                      resourceAviatrixDeviceAwsTgwAttachment(),

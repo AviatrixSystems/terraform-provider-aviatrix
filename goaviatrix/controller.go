@@ -430,7 +430,7 @@ func (c *Client) SetControllerVpcDnsServer(enabled bool) error {
 	}, BasicCheck)
 }
 
-func (c *Client) SetExceptionEmailNotification(ctx context.Context, enabled bool) error {
+func (c *Client) SetEmailExceptionNotification(ctx context.Context, enabled bool) error {
 	action := "enable_exception_email_notification"
 	if !enabled {
 		action = "disable_exception_email_notification"
@@ -441,7 +441,7 @@ func (c *Client) SetExceptionEmailNotification(ctx context.Context, enabled bool
 	}, BasicCheck)
 }
 
-func (c *Client) GetExceptionEmailNotificationStatus(ctx context.Context) (bool, error) {
+func (c *Client) GetEmailExceptionNotificationStatus(ctx context.Context) (bool, error) {
 	params := map[string]string{
 		"action": "get_exception_email_notification_status",
 		"CID":    c.CID,
