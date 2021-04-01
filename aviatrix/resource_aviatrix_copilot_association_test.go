@@ -44,7 +44,7 @@ func TestAccAviatrixCopilotAssociation_basic(t *testing.T) {
 func testAccCopilotAssociationBasic() string {
 	return `
 resource "aviatrix_copilot_association" "test" {
-  copilot_address = "aviatrix.com"
+    copilot_address = "aviatrix.com"
 }
 `
 }
