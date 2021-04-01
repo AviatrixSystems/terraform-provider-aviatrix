@@ -51,3 +51,21 @@ func resourceAviatrixAWSTgwStateUpgradeV1(ctx context.Context, rawState map[stri
 	}
 	return rawState, nil
 }
+
+func resourceAviatrixAWSTgwResourceV2() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"manage_security_domain": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+		},
+	}
+}
+
+func resourceAviatrixAWSTgwStateUpgradeV2(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	if _, ok := rawState["manage_security_domain"]; !ok {
+		rawState["manage_security_domain"] = true
+	}
+	return rawState, nil
+}

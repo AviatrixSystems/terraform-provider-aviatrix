@@ -27,6 +27,7 @@ type AWSTgw struct {
 	ManageVpcAttachment       string
 	EnableMulticast           bool `form:"multicast_enable"`
 	CidrList                  []string
+	NotCreateDefaultDomains   bool `form:"not_create_default_domains,omitempty"`
 }
 
 type AWSTgwAPIResp struct {
@@ -237,6 +238,9 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 			return nil, errors.New("Rest API view_route_domain_details Get failed: " + data1.Reason)
 		}
 		routeDomainDetail := data1.Results
+		if len(routeDomainDetail) == 0 {
+			continue
+		}
 		sdr := SecurityDomainRule{
 			Name:                   routeDomainDetail[0].Name,
 			AviatrixFirewallDomain: routeDomainDetail[0].AviatrixFirewallDomain,

@@ -2,6 +2,7 @@ package goaviatrix
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/url"
@@ -19,6 +20,7 @@ type SecurityDomain struct {
 	AviatrixFirewallDomain bool   `form:"firewall_domain, omitempty"`
 	NativeEgressDomain     bool   `form:"native_egress_domain, omitempty"`
 	NativeFirewallDomain   bool   `form:"native_firewall_domain, omitempty"`
+	ForceDelete            bool   `form:"force,omitempty"`
 }
 
 type SecurityDomainAPIResp struct {
@@ -173,8 +175,6 @@ func (c *Client) DeleteDomainConnection(awsTgw *AWSTgw, sourceDomain string, des
 	deleteConnectionBetweenRouteDomains := url.Values{}
 	deleteConnectionBetweenRouteDomains.Add("CID", c.CID)
 	deleteConnectionBetweenRouteDomains.Add("action", "delete_connection_between_route_domains")
-	deleteConnectionBetweenRouteDomains.Add("account_name", awsTgw.AccountName)
-	deleteConnectionBetweenRouteDomains.Add("region", awsTgw.Region)
 	deleteConnectionBetweenRouteDomains.Add("tgw_name", awsTgw.Name)
 	deleteConnectionBetweenRouteDomains.Add("source_route_domain_name", sourceDomain)
 	deleteConnectionBetweenRouteDomains.Add("destination_route_domain_name", destinationDomain)
@@ -214,4 +214,32 @@ func (c *Client) SecurityDomainRuleValidation(securityDomainRule *SecurityDomain
 		return false
 	}
 	return true
+}
+
+func (c *Client) GetSecurityDomainDetails(ctx context.Context, domain *SecurityDomain) (*SecurityDomainRule, error) {
+	params := map[string]string{
+		"action":            "list_tgw_security_domain_details",
+		"CID":               c.CID,
+		"tgw_name":          domain.AwsTgwName,
+		"route_domain_name": domain.Name,
+	}
+
+	type Resp struct {
+		Return  bool                 `json:"return"`
+		Results []SecurityDomainRule `json:"results"`
+		Reason  string               `json:"reason"`
+	}
+
+	var data Resp
+
+	err := c.GetAPIContext(ctx, &data, params["action"], params, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(data.Results) == 0 {
+		return nil, ErrNotFound
+	}
+
+	return &data.Results[0], nil
 }
