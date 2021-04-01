@@ -45,3 +45,4 @@ In addition to all arguments above, the following attributes are exported:
   * `management_interface` - Management interface ID.
   * `egress_interface`- Egress interface ID.
   * `attached`- Switch to attach/detach firewall instance to/from fireNet.
+* `tgw_segmentation_for_egress_enabled` - Enable TGW segmentation for egress.
