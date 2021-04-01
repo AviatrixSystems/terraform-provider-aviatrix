@@ -5,12 +5,12 @@ package goaviatrix
 
 // Cloud provider ids
 const (
-	AWS    = 1
-	GCP    = 4
-	AZURE  = 8
-	OCI    = 16
-	ARMGOV = 32
-	AWSGOV = 256
+	AWS      = 1
+	GCP      = 4
+	AZURE    = 8
+	OCI      = 16
+	AZUREGOV = 32
+	AWSGOV   = 256
 )
 
 // Cloud vendor names
@@ -34,7 +34,7 @@ func GetSupportedClouds() []int {
 		GCP,
 		AZURE,
 		OCI,
-		ARMGOV,
+		AZUREGOV,
 		AWSGOV,
 	}
 }
@@ -51,7 +51,7 @@ func VendorToCloudType(vendor string) int {
 	case "Azure ARM", "ARM CHINA":
 		return AZURE
 	case "ARM GOV":
-		return ARMGOV
+		return AZUREGOV
 	case "Oracle Cloud Infrastructure":
 		return OCI
 	default:

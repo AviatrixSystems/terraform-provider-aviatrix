@@ -149,25 +149,24 @@ func resourceAviatrixAccount() *schema.Resource {
 				Sensitive:   true,
 				Description: "OCI API Private Key local file path.",
 			},
-			"armgov_subscription_id": {
+			"azure_gov_subscription_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Sensitive:   true,
 				Description: "Azure Gov Subscription ID.",
 			},
-			"armgov_directory_id": {
+			"azure_gov_directory_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Azure Gov Directory ID.",
 			},
-			"armgov_application_id": {
+			"azure_gov_application_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Azure Gov Application ID.",
 			},
-			"armgov_application_key": {
+			"azure_gov_application_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
@@ -197,10 +196,10 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		ArmApplicationEndpoint:                d.Get("arm_directory_id").(string),
 		ArmApplicationClientId:                d.Get("arm_application_id").(string),
 		ArmApplicationClientSecret:            d.Get("arm_application_key").(string),
-		ArmgovSubscriptionId:                  d.Get("armgov_subscription_id").(string),
-		ArmgovApplicationEndpoint:             d.Get("armgov_directory_id").(string),
-		ArmgovApplicationClientId:             d.Get("armgov_application_id").(string),
-		ArmgovApplicationClientSecret:         d.Get("armgov_application_key").(string),
+		AzureGovSubscriptionId:                d.Get("azure_gov_subscription_id").(string),
+		AzureGovApplicationEndpoint:           d.Get("azure_gov_directory_id").(string),
+		AzureGovApplicationClientId:           d.Get("azure_gov_application_id").(string),
+		AzureGovApplicationClientSecret:       d.Get("azure_gov_application_key").(string),
 		OciTenancyID:                          d.Get("oci_tenancy_id").(string),
 		OciUserID:                             d.Get("oci_user_id").(string),
 		OciCompartmentID:                      d.Get("oci_compartment_id").(string),
@@ -282,21 +281,21 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		if account.AwsgovSecretKey == "" {
 			return fmt.Errorf("aws gov secret key needed for aws gov cloud")
 		}
-	} else if account.CloudType == goaviatrix.ARMGOV {
-		if account.ArmgovSubscriptionId == "" {
-			return fmt.Errorf("arm gov subsription id needed when creating an account for arm gov cloud")
+	} else if account.CloudType == goaviatrix.AZUREGOV {
+		if account.AzureGovSubscriptionId == "" {
+			return fmt.Errorf("azure gov subsription id needed when creating an account for arm gov cloud")
 		}
-		if account.ArmgovApplicationEndpoint == "" {
-			return fmt.Errorf("arm gov directory id needed when creating an account for arm gov cloud")
+		if account.AzureGovApplicationEndpoint == "" {
+			return fmt.Errorf("azure gov directory id needed when creating an account for arm gov cloud")
 		}
-		if account.ArmgovApplicationClientId == "" {
-			return fmt.Errorf("arm gov application id needed when creating an account for arm gov cloud")
+		if account.AzureGovApplicationClientId == "" {
+			return fmt.Errorf("azure gov application id needed when creating an account for arm gov cloud")
 		}
-		if account.ArmgovApplicationClientSecret == "" {
-			return fmt.Errorf("arm gov application key needed when creating an account for arm gov cloud")
+		if account.AzureGovApplicationClientSecret == "" {
+			return fmt.Errorf("azure gov application key needed when creating an account for arm gov cloud")
 		}
 	} else {
-		return fmt.Errorf("cloud type can only be either aws (1), gcp (4), azure (8), oci (16), arm gov (32) or aws gov (256)")
+		return fmt.Errorf("cloud type can only be either aws (1), gcp (4), azure (8), oci (16), azure gov (32) or aws gov (256)")
 	}
 
 	var err error
@@ -362,8 +361,8 @@ func resourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) error
 		} else if acc.CloudType == goaviatrix.AWSGOV {
 			d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
 			d.Set("awsgov_access_key", acc.AwsgovAccessKey)
-		} else if acc.CloudType == goaviatrix.ARMGOV {
-			d.Set("armgov_subscription_id", acc.ArmgovSubscriptionId)
+		} else if acc.CloudType == goaviatrix.AZUREGOV {
+			d.Set("azure_gov_subscription_id", acc.AzureGovSubscriptionId)
 		}
 		d.SetId(acc.AccountName)
 	}
@@ -391,10 +390,10 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 		ArmApplicationEndpoint:                d.Get("arm_directory_id").(string),
 		ArmApplicationClientId:                d.Get("arm_application_id").(string),
 		ArmApplicationClientSecret:            d.Get("arm_application_key").(string),
-		ArmgovSubscriptionId:                  d.Get("armgov_subscription_id").(string),
-		ArmgovApplicationEndpoint:             d.Get("armgov_directory_id").(string),
-		ArmgovApplicationClientId:             d.Get("armgov_application_id").(string),
-		ArmgovApplicationClientSecret:         d.Get("armgov_application_key").(string),
+		AzureGovSubscriptionId:                d.Get("azure_gov_subscription_id").(string),
+		AzureGovApplicationEndpoint:           d.Get("azure_gov_directory_id").(string),
+		AzureGovApplicationClientId:           d.Get("azure_gov_application_id").(string),
+		AzureGovApplicationClientSecret:       d.Get("azure_gov_application_key").(string),
 		OciTenancyID:                          d.Get("oci_tenancy_id").(string),
 		OciUserID:                             d.Get("oci_user_id").(string),
 		OciCompartmentID:                      d.Get("oci_compartment_id").(string),
@@ -454,8 +453,8 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 				return fmt.Errorf("failed to update Aviatrix Account: %s", err)
 			}
 		}
-	} else if account.CloudType == goaviatrix.ARMGOV {
-		if d.HasChanges("armgov_subscription_id", "armgov_directory_id", "armgov_application_id", "armgov_application_key") {
+	} else if account.CloudType == goaviatrix.AZUREGOV {
+		if d.HasChanges("azure_gov_subscription_id", "azure_gov_directory_id", "azure_gov_application_id", "azure_gov_application_key") {
 			err := client.UpdateAccount(account)
 			if err != nil {
 				return fmt.Errorf("failed to update Azure GOV Aviatrix Account: %v", err)

@@ -49,7 +49,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |		                               | SKIP_ACCOUNT_AWS	                | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY                             |
 |                     		           | SKIP_ACCOUNT_GCP	                | GCP_ID, GCP_CREDENTIALS_FILEPATH	                                             |
 |		                               | SKIP_ACCOUNT_AZURE	                | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID, ARM_APPLICATION_KEY |
-|                     		           | SKIP_ACCOUNT_ARMGOV	                | ARMGOV_SUBSCRIPTION_ID, ARMGOV_DIRECTORY_ID, ARMGOV_APPLICATION_ID, ARMGOV_APPLICATION_KEY        |
+|                     		           | SKIP_ACCOUNT_AZURE_GOV	                | AZURE_GOV_SUBSCRIPTION_ID, AZURE_GOV_DIRECTORY_ID, AZURE_GOV_APPLICATION_ID, AZURE_GOV_APPLICATION_KEY        |
 |                     		           | SKIP_ACCOUNT_OCI	                | OCI_TENANCY_ID, OCI_USER_ID, OCI_COMPARTMENT_ID, OCI_API_KEY_FILEPATH          |
 |		                               | SKIP_ACCOUNT_AWSGOV                | AWSGOV_ACCOUNT_NUMBER, AWSGOV_ACCESS_KEY, AWSGOV_SECRET_KEY                    |
 | aviatrix_account_user                | SKIP_ACCOUNT_USER                  |                                                                                |
