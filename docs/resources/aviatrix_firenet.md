@@ -57,6 +57,7 @@ The following arguments are supported:
 * `hashing_algorithm` - (Optional) Hashing algorithm to load balance traffic across the firewall. Valid values: "2-Tuple", "5-Tuple". Default value: "5-Tuple".
 * `keep_alive_via_lan_interface_enabled` - (Optional) Enable Keep Alive via Firewall LAN Interface. Valid values: true or false. Default value: false. Available as of provider version R2.18.1+.
 * `manage_firewall_instance_association` - (Optional) Enable this attribute to manage firewall associations in-line. If set to true, in-line `firewall_instance_association` blocks can be used. If set to false, all firewall associations must be managed via standalone `aviatrix_firewall_instance_association` resources. Default value: true. Valid values: true or false. Available in provider version R2.17.1+.
+* `tgw_segmentation_for_egress_enabled` - (Optional) Enable TGW segmentation for egress. Valid values: true or false. Default value: false. Available as of provider version R2.19+.
 
 ### Firewall Association
 

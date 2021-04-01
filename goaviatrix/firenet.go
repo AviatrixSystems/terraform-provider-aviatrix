@@ -21,16 +21,17 @@ type FireNet struct {
 }
 
 type FireNetDetail struct {
-	CloudType        string                 `json:"cloud_type"`
-	Region           string                 `json:"region,omitempty"`
-	VpcID            string                 `json:"vpc_id,omitempty"`
-	FirewallInstance []FirewallInstanceInfo `json:"firewall,omitempty"`
-	Gateway          []GatewayInfo          `json:"gateway,omitempty"`
-	FirewallEgress   string                 `json:"firewall_egress,omitempty"`
-	NativeGwlb       bool                   `json:"native_gwlb"`
-	Inspection       string                 `json:"inspection,omitempty"`
-	HashingAlgorithm string                 `json:"firewall_hashing,omitempty"`
-	LanPing          string                 `json:"lan_ping"`
+	CloudType                string                 `json:"cloud_type"`
+	Region                   string                 `json:"region,omitempty"`
+	VpcID                    string                 `json:"vpc_id,omitempty"`
+	FirewallInstance         []FirewallInstanceInfo `json:"firewall,omitempty"`
+	Gateway                  []GatewayInfo          `json:"gateway,omitempty"`
+	FirewallEgress           string                 `json:"firewall_egress,omitempty"`
+	NativeGwlb               bool                   `json:"native_gwlb"`
+	Inspection               string                 `json:"inspection,omitempty"`
+	HashingAlgorithm         string                 `json:"firewall_hashing,omitempty"`
+	LanPing                  string                 `json:"lan_ping"`
+	TgwSegmentationForEgress string                 `json:"tgw_segmentation"`
 }
 
 type GetFireNetResp struct {
@@ -424,4 +425,24 @@ func (c *Client) DisableFireNetLanKeepAlive(net *FireNet) error {
 		"lan_ping": "false",
 	}
 	return c.PostAPI("edit_firenet(lan_ping=false)", data, BasicCheck)
+}
+
+func (c *Client) EnableTgwSegmentationForEgress(net *FireNet) error {
+	data := map[string]string{
+		"action": "enable_firenet_tgw_segmentation_for_egress",
+		"CID":    c.CID,
+		"vpc_id": net.VpcID,
+	}
+
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) DisableTgwSegmentationForEgress(net *FireNet) error {
+	data := map[string]string{
+		"action": "disable_firenet_tgw_segmentation_for_egress",
+		"CID":    c.CID,
+		"vpc_id": net.VpcID,
+	}
+
+	return c.PostAPI(data["action"], data, BasicCheck)
 }

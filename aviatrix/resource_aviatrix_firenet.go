@@ -125,6 +125,11 @@ func resourceAviatrixFireNet() *schema.Resource {
 					"associations must be managed via standalone aviatrix_firewall_instance_association resources. " +
 					"Type: boolean, Default: true, Valid values: true/false.",
 			},
+			"tgw_segmentation_for_egress_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable TGW segmentation for egress.",
+			},
 		},
 	}
 }
@@ -233,6 +238,13 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	if d.Get("tgw_segmentation_for_egress_enabled").(bool) {
+		err := client.EnableTgwSegmentationForEgress(fireNet)
+		if err != nil {
+			return fmt.Errorf("could not enable tgw segmentation for egress: %v", err)
+		}
+	}
+
 	return resourceAviatrixFireNetReadIfRequired(d, meta, &flag)
 }
 
@@ -274,6 +286,8 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("vpc_id", fireNetDetail.VpcID)
 	d.Set("hashing_algorithm", fireNetDetail.HashingAlgorithm)
 	d.Set("keep_alive_via_lan_interface_enabled", fireNetDetail.LanPing == "yes")
+	d.Set("tgw_segmentation_for_egress_enabled", fireNetDetail.TgwSegmentationForEgress == "yes")
+
 	if fireNetDetail.Inspection == "yes" {
 		d.Set("inspection_enabled", true)
 	} else {
@@ -531,6 +545,23 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	if d.HasChange("tgw_segmentation_for_egress_enabled") {
+		fn := &goaviatrix.FireNet{
+			VpcID: d.Get("vpc_id").(string),
+		}
+		if d.Get("tgw_segmentation_for_egress_enabled").(bool) {
+			err := client.EnableTgwSegmentationForEgress(fn)
+			if err != nil {
+				return fmt.Errorf("could not enable tgw_segmentation_for_egress: %v", err)
+			}
+		} else {
+			err := client.DisableTgwSegmentationForEgress(fn)
+			if err != nil {
+				return fmt.Errorf("could not disable tgw_segmentation_for_egress: %v", err)
+			}
+		}
+	}
+
 	d.Partial(false)
 	return resourceAviatrixFireNetRead(d, meta)
 }
@@ -553,6 +584,15 @@ func resourceAviatrixFireNetDelete(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	err := client.DisableTgwSegmentationForEgress(fireNet)
+	if err != nil {
+		if strings.Contains(err.Error(), "TGW domain segmentation configuration is not changed") {
+			log.Printf("[INFO] Ignoring error from disabling tgw segmentation for egress: %v\n", err)
+		} else {
+			return fmt.Errorf("failed to disable tgw segmentation for egress: %v", err)
+		}
+	}
+
 	firewallInstanceList := d.Get("firewall_instance_association").([]interface{})
 	for _, firewallInstance := range firewallInstanceList {
 		if firewallInstance != nil {
@@ -561,7 +601,7 @@ func resourceAviatrixFireNetDelete(d *schema.ResourceData, meta interface{}) err
 			firewall.VpcID = fireNet.VpcID
 			firewall.InstanceID = fI["instance_id"].(string)
 
-			err := client.DisassociateFirewallFromFireNet(firewall)
+			err = client.DisassociateFirewallFromFireNet(firewall)
 			if err != nil {
 				return fmt.Errorf("failed to disassociate firewall: %v from FireNet: %s", firewall.InstanceID, err)
 			}
@@ -570,7 +610,7 @@ func resourceAviatrixFireNetDelete(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Deleting FireNet: %#v", fireNet)
 
-	_, err := client.GetFireNet(fireNet)
+	_, err = client.GetFireNet(fireNet)
 	if err != nil {
 		return fmt.Errorf("failed to delete FireNet: %s", err)
 	}
