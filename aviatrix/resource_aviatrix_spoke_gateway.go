@@ -329,6 +329,12 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Skip Public Route Table Update.",
 			},
+			"enable_auto_advertise_s2c_cidrs": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Automatically advertise remote CIDR to Aviatrix Transit Gateway when route based Site2Cloud Tunnel is created.",
+			},
 		},
 	}
 }
@@ -825,6 +831,16 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	if d.Get("enable_auto_advertise_s2c_cidrs").(bool) {
+		gw := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+		err := client.EnableAutoAdvertiseS2CCidrs(gw)
+		if err != nil {
+			return fmt.Errorf("could not enable auto advertise s2c cidrs after spoke gateaway creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixSpokeGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -897,6 +913,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
 		d.Set("enable_private_vpc_default_route", gw.PrivateVpcDefaultEnabled)
 		d.Set("enable_skip_public_route_update", gw.SkipPublicVpcUpdateEnabled)
+		d.Set("enable_auto_advertise_s2c_cidrs", gw.AutoAdvertiseCidrsEnabled)
 		d.Set("eip", gw.PublicIP)
 
 		d.Set("subnet", gw.VpcNet)
@@ -1796,6 +1813,20 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			err := client.DisableSkipPublicRouteUpdate(gateway)
 			if err != nil {
 				return fmt.Errorf("could not disable skip public route update during spoke gateway update: %v", err)
+			}
+		}
+	}
+
+	if d.HasChange("enable_auto_advertise_s2c_cidrs") {
+		if d.Get("enable_auto_advertise_s2c_cidrs").(bool) {
+			err := client.EnableAutoAdvertiseS2CCidrs(gateway)
+			if err != nil {
+				return fmt.Errorf("could not enable auto advertise s2c cidrs during spoke gateway update: %v", err)
+			}
+		} else {
+			err := client.DisableAutoAdvertiseS2CCidrs(gateway)
+			if err != nil {
+				return fmt.Errorf("could not disable auto advertise s2c cidrs during spoke gateway update: %v", err)
 			}
 		}
 	}

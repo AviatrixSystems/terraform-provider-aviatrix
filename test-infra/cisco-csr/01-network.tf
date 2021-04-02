@@ -1,7 +1,7 @@
 resource aws_internet_gateway csr_vpc_igw {
   vpc_id = aws_vpc.csr_vpc.id
   tags   = {
-    Name    = "csr-igw"
+    Name    = "csr-igw-${random_integer.csr_vpc_int[0].result}"
     Purpose = "Terraform Regression"
   }
 }
@@ -14,7 +14,7 @@ resource aws_route_table csr_vpc_rtb {
     gateway_id = aws_internet_gateway.csr_vpc_igw.id
   }
   tags = {
-    Name    = "csr-vpc-rtb"
+    Name    = "csr-vpc-rtb-${random_integer.csr_vpc_int[0].result}"
     Purpose = "Terraform Regression"
   }
 }
@@ -25,12 +25,12 @@ resource aws_route_table_association csr_vpc_subnet_rtb_1 {
 }
 
 resource aws_security_group csr_sec_group {
-  name        = "csr-sec-group"
+  name        = "csr-sec-group-${random_integer.csr_vpc_int[0].result}"
   description = "Aviatrix - Controller Security Group"
   vpc_id      = aws_vpc.csr_vpc.id
 
   tags = {
-    Name    = "csr-aws-sec-group"
+    Name    = "csr-aws-sec-group-${random_integer.csr_vpc_int[0].result}"
     Purpose = "Terraform Acceptance"
   }
 }

@@ -152,6 +152,7 @@ type Gateway struct {
 	PrivateVpcDefaultEnabled    bool   `json:"private_vpc_default_enabled"`
 	SkipPublicVpcUpdateEnabled  bool   `json:"skip_public_vpc_update_enabled"`
 	EnableMultitierTransit      bool   `json:"multitier_transit"`
+	AutoAdvertiseCidrsEnabled   bool   `json:"auto_advertise_s2c_cidrs"`
 }
 
 type PolicyRule struct {

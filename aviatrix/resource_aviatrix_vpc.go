@@ -128,6 +128,13 @@ func resourceAviatrixVpc() *schema.Resource {
 					},
 				},
 			},
+			"resource_group": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Computed:    true,
+				Description: "Resource group of the Azure VPC created.",
+			},
 			"private_subnets": {
 				Type:        schema.TypeList,
 				Computed:    true,
@@ -180,11 +187,6 @@ func resourceAviatrixVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "ID of the VPC created.",
-			},
-			"resource_group": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Resource group of the Azure VPC created.",
 			},
 			"azure_vnet_resource_id": {
 				Type:        schema.TypeString,
@@ -250,8 +252,8 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	if aviatrixTransitVpc && vpc.CloudType != goaviatrix.AWS && vpc.CloudType != goaviatrix.AWSGOV {
 		return fmt.Errorf("currently 'aviatrix_transit_vpc' is only supported for AWS and AWSGOV provider")
 	}
-	if aviatrixFireNetVpc && vpc.CloudType != goaviatrix.AWS && vpc.CloudType != goaviatrix.AWSGOV && vpc.CloudType != goaviatrix.AZURE {
-		return fmt.Errorf("currently'aviatrix_firenet_vpc' is only supported for AWS, AWSGOV and AZURE provider")
+	if aviatrixFireNetVpc && !intInSlice(vpc.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.AZURE, goaviatrix.OCI}) {
+		return fmt.Errorf("currently 'aviatrix_firenet_vpc' is only supported for AWS, AWSGOV, AZURE and OCI provider")
 	}
 	if aviatrixTransitVpc && aviatrixFireNetVpc {
 		return fmt.Errorf("vpc cannot be aviatrix transit vpc and aviatrix firenet vpc at the same time")
@@ -291,6 +293,13 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	} else if _, ok := d.GetOk("subnets"); ok {
 		return fmt.Errorf("subnets is required to be empty for providers other than GCP")
+	}
+
+	if resourceGroup, ok := d.GetOk("resource_group"); ok {
+		if vpc.CloudType != goaviatrix.AZURE {
+			return fmt.Errorf("error creating vpc: resource_group is required to be empty for providers other than Azure")
+		}
+		vpc.ResourceGroup = resourceGroup.(string)
 	}
 
 	err := client.CreateVpc(vpc)
@@ -395,7 +404,13 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 			subscriptionId = acc.ArmSubscriptionId
 		}
 
-		resourceGroup := strings.Split(vC.VpcID, ":")[1]
+		var resourceGroup string
+		if vC.ResourceGroup != "" {
+			resourceGroup = vC.ResourceGroup
+		} else {
+			resourceGroup = strings.Split(vC.VpcID, ":")[1]
+		}
+
 		azureVnetResourceId := "/subscriptions/" + subscriptionId + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/" + vC.Name
 		d.Set("resource_group", resourceGroup)
 		d.Set("azure_vnet_resource_id", azureVnetResourceId)

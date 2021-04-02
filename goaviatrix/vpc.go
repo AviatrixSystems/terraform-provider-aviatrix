@@ -28,6 +28,7 @@ type Vpc struct {
 	PublicSubnets          []SubnetInfo
 	PrivateSubnets         []SubnetInfo
 	PublicRoutesOnly       bool
+	ResourceGroup          string `json:"resource_group,omitempty"`
 }
 
 type VpcEdit struct {
@@ -103,6 +104,9 @@ func (c *Client) CreateVpc(vpc *Vpc) error {
 	}
 	if vpc.EnablePrivateOobSubnet {
 		createCustomVpc.Add("private_oob_subnet", "true")
+	}
+	if vpc.ResourceGroup != "" {
+		createCustomVpc.Add("resource_group", vpc.ResourceGroup)
 	}
 	Url.RawQuery = createCustomVpc.Encode()
 	resp, err := c.Get(Url.String(), nil)
