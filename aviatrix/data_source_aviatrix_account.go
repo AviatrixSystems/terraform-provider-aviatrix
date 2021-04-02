@@ -38,6 +38,16 @@ func dataSourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS EC2 role ARN",
 			},
+			"aws_gateway_role_app": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS App role ARN for gateways.",
+			},
+			"aws_gateway_role_ec2": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS EC2 role ARN for gateways.",
+			},
 			"aws_access_key": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -92,6 +102,8 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("aws_secret_key", acc.AwsSecretKey)
 	d.Set("aws_role_arn", acc.AwsRoleApp)
 	d.Set("aws_role_ec2", acc.AwsRoleEc2)
+	d.Set("aws_gateway_role_app", acc.AwsGatewayRoleApp)
+	d.Set("aws_gateway_role_ec2", acc.AwsGatewayRoleEc2)
 	d.Set("gcloud_project_id", acc.GcloudProjectName)
 	d.Set("arm_subscription_id", acc.ArmSubscriptionId)
 	d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
