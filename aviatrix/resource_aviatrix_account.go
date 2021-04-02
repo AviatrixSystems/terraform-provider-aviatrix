@@ -1,7 +1,6 @@
 package aviatrix
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 
@@ -63,7 +62,7 @@ func resourceAviatrixAccount() *schema.Resource {
 			"aws_gateway_role_ec2": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "AWS App role ARN for gateways.",
+				Description: "AWS EC2 role ARN for gateways.",
 			},
 			"aws_access_key": {
 				Type:        schema.TypeString,
@@ -211,18 +210,10 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		log.Printf("[INFO] Creating Aviatrix account: %#v", account)
 		if awsIam {
 			if _, ok := d.GetOk("aws_role_app"); !ok {
-				var roleApp bytes.Buffer
-				roleApp.WriteString("arn:aws:iam::")
-				roleApp.WriteString(account.AwsAccountNumber)
-				roleApp.WriteString(":role/aviatrix-role-app")
-				account.AwsRoleApp = roleApp.String()
+				account.AwsRoleApp = fmt.Sprintf("arn:aws:iam::%s:role/aviatrix-role-app", account.AwsAccountNumber)
 			}
 			if _, ok := d.GetOk("aws_role_ec2"); !ok {
-				var roleEc2 bytes.Buffer
-				roleEc2.WriteString("arn:aws:iam::")
-				roleEc2.WriteString(account.AwsAccountNumber)
-				roleEc2.WriteString(":role/aviatrix-role-ec2")
-				account.AwsRoleEc2 = roleEc2.String()
+				account.AwsRoleEc2 = fmt.Sprintf("arn:aws:iam::%s:role/aviatrix-role-ec2", account.AwsAccountNumber)
 			}
 			log.Printf("[TRACE] Reading Aviatrix account aws_role_app: [%s]", d.Get("aws_role_app").(string))
 			log.Printf("[TRACE] Reading Aviatrix account aws_role_ec2: [%s]", d.Get("aws_role_ec2").(string))
