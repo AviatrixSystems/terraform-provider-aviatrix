@@ -226,6 +226,12 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 			}
 			log.Printf("[TRACE] Reading Aviatrix account aws_role_app: [%s]", d.Get("aws_role_app").(string))
 			log.Printf("[TRACE] Reading Aviatrix account aws_role_ec2: [%s]", d.Get("aws_role_ec2").(string))
+
+			_, gatewayRoleAppOk := d.GetOk("aws_gateway_role_app")
+			_, gatewayRoleEc2Ok := d.GetOk("aws_gateway_role_ec2")
+			if gatewayRoleAppOk != gatewayRoleEc2Ok {
+				return fmt.Errorf("failed to create Aviatrix account: must provide both gateway app role ARN and gateway ec2 role ARN when using separate IAM role and policy for gateways")
+			}
 		}
 	} else if account.CloudType == goaviatrix.GCP {
 		if account.GcloudProjectCredentialsFilepathLocal == "" {
@@ -395,6 +401,12 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 
 	if account.CloudType == goaviatrix.AWS {
 		if d.HasChanges("aws_account_number", "aws_access_key", "aws_secret_key", "aws_iam", "aws_role_app", "aws_role_ec2", "aws_gateway_role_app", "aws_gateway_role_ec2") {
+			_, gatewayRoleAppOk := d.GetOk("aws_gateway_role_app")
+			_, gatewayRoleEc2Ok := d.GetOk("aws_gateway_role_ec2")
+			if gatewayRoleAppOk != gatewayRoleEc2Ok {
+				return fmt.Errorf("failed to update Aviatrix account: must provide both gateway app role ARN and gateway ec2 role ARN when using separate IAM role and policy for gateways")
+			}
+
 			err := client.UpdateAccount(account)
 			if err != nil {
 				return fmt.Errorf("failed to update Aviatrix Account: %s", err)
