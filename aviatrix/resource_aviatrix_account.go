@@ -55,18 +55,6 @@ func resourceAviatrixAccount() *schema.Resource {
 				Optional:    true,
 				Description: "AWS IAM-role based flag.",
 			},
-			"aws_role_app": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "AWS App role ARN.",
-			},
-			"aws_role_ec2": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "AWS EC2 role ARN.",
-			},
 			"aws_gateway_role_app": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -160,6 +148,18 @@ func resourceAviatrixAccount() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "OCI API Private Key local file path.",
+			},
+			"aws_role_app": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "AWS App role ARN.",
+			},
+			"aws_role_ec2": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "AWS EC2 role ARN.",
 			},
 		},
 	}
