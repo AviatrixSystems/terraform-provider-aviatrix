@@ -26,7 +26,7 @@ func dataSourceAviatrixFireNetVendorIntegration() *schema.Resource {
 			"vendor_type": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Select PAN. Valid values: 'Generic', 'Palo Alto Networks VM-Series' and 'Aviatrix FQDN Gateway'.",
+				Description: "Select PAN. Valid values: 'Generic', 'Palo Alto Networks VM-Series', 'Aviatrix FQDN Gateway', and 'Fortinet FortiGate'.",
 			},
 			"public_ip": {
 				Type:        schema.TypeString,
@@ -35,13 +35,21 @@ func dataSourceAviatrixFireNetVendorIntegration() *schema.Resource {
 			},
 			"username": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
+				Sensitive:   true,
 				Description: "Firewall login name for API calls from the Controller. For example, admin-api, as shown in the screen shot.",
 			},
 			"password": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
+				Sensitive:   true,
 				Description: "Firewall login password for API calls.",
+			},
+			"api_token": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "API token for Fortinet FortiGate.",
 			},
 			"firewall_name": {
 				Type:        schema.TypeString,
@@ -113,6 +121,7 @@ func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta
 		VendorType:   d.Get("vendor_type").(string),
 		Username:     d.Get("username").(string),
 		Password:     d.Get("password").(string),
+		ApiToken:     d.Get("api_token").(string),
 		RouteTable:   d.Get("route_table").(string),
 		PublicIP:     d.Get("public_ip").(string),
 		Save:         d.Get("save").(bool),
@@ -121,6 +130,16 @@ func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta
 
 	if vendorInfo.Save && vendorInfo.Synchronize {
 		return fmt.Errorf("can't do 'save' and 'synchronize' at the same time for vendor integration")
+	}
+
+	if vendorInfo.VendorType == "Fortinet FortiGate" {
+		if vendorInfo.ApiToken == "" {
+			return fmt.Errorf("'api_token' is required for vendor type Fortinet FortiGate")
+		}
+	} else {
+		if vendorInfo.Username == "" || vendorInfo.Password == "" {
+			return fmt.Errorf("'username' and 'password' are required for vendor type 'Generic', 'Palo Alto Networks VM-Series', and 'Aviatrix FQDN Gateway'")
+		}
 	}
 
 	numberOfRetries := d.Get("number_of_retries").(int)
@@ -158,6 +177,9 @@ func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta
 		}
 	}
 
+	d.Set("username", nil)
+	d.Set("password", nil)
+	d.Set("api_token", nil)
 	d.SetId(firewallInstance.InstanceID)
 	return nil
 }

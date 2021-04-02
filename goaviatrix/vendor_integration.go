@@ -17,6 +17,7 @@ type VendorInfo struct {
 	VendorType   string `form:"firewall_vendor,omitempty"`
 	Username     string `form:"user,omitempty"`
 	Password     string `form:"password,omitempty"`
+	ApiToken     string `form:"api_token,omitempty"`
 	RouteTable   string `form:"route_table,omitempty"`
 	PublicIP     string `form:"public_ip,omitempty"`
 	Save         bool
@@ -38,6 +39,7 @@ func (c *Client) EditFireNetFirewallVendorInfo(vendorInfo *VendorInfo) error {
 	editFireNetFirewallVendorInfo.Add("firewall_vendor", vendorInfo.VendorType)
 	editFireNetFirewallVendorInfo.Add("user", vendorInfo.Username)
 	editFireNetFirewallVendorInfo.Add("password", vendorInfo.Password)
+	editFireNetFirewallVendorInfo.Add("api_token", vendorInfo.ApiToken)
 	editFireNetFirewallVendorInfo.Add("route_table", vendorInfo.RouteTable)
 	editFireNetFirewallVendorInfo.Add("public_ip", vendorInfo.PublicIP)
 	Url.RawQuery = editFireNetFirewallVendorInfo.Encode()
