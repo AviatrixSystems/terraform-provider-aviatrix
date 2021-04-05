@@ -10,14 +10,15 @@ import (
 )
 
 type FireNet struct {
-	CID              string `form:"CID,omitempty"`
-	Action           string `form:"action,omitempty"`
-	VpcID            string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	GwName           string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
-	FirewallInstance []FirewallInstance
-	FirewallEgress   bool   `form:"firewall_egress,omitempty" json:"firewall_egress,omitempty"`
-	Inspection       bool   `form:"inspection,omitempty" json:"inspection,omitempty"`
-	HashingAlgorithm string `json:"firewall_hashing,omitempty"`
+	CID               string `form:"CID,omitempty"`
+	Action            string `form:"action,omitempty"`
+	VpcID             string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	GwName            string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
+	FirewallInstance  []FirewallInstance
+	FirewallEgress    bool   `form:"firewall_egress,omitempty" json:"firewall_egress,omitempty"`
+	Inspection        bool   `form:"inspection,omitempty" json:"inspection,omitempty"`
+	HashingAlgorithm  string `json:"firewall_hashing,omitempty"`
+	EgressStaticCidrs string
 }
 
 type FireNetDetail struct {
@@ -32,6 +33,7 @@ type FireNetDetail struct {
 	HashingAlgorithm         string                 `json:"firewall_hashing,omitempty"`
 	LanPing                  string                 `json:"lan_ping"`
 	TgwSegmentationForEgress string                 `json:"tgw_segmentation"`
+	EgressStaticCidrs        []string               `json:"egress_static_cidr"`
 }
 
 type GetFireNetResp struct {
@@ -442,6 +444,17 @@ func (c *Client) DisableTgwSegmentationForEgress(net *FireNet) error {
 		"action": "disable_firenet_tgw_segmentation_for_egress",
 		"CID":    c.CID,
 		"vpc_id": net.VpcID,
+	}
+
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) EditFirenetEgressStaticCidr(net *FireNet) error {
+	data := map[string]string{
+		"action":             "edit_firenet_egress_static_cidr",
+		"CID":                c.CID,
+		"vpc_id":             net.VpcID,
+		"egress_static_cidr": net.EgressStaticCidrs,
 	}
 
 	return c.PostAPI(data["action"], data, BasicCheck)
