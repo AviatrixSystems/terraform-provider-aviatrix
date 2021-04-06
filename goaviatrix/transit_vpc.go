@@ -749,3 +749,21 @@ func (c *Client) DisableSummarizeCidrToTgw(gwName string) error {
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
 }
+
+func (c *Client) EnableMultitierTransit(gwName string) error {
+	data := map[string]string{
+		"action":       "enable_multitier_transit",
+		"gateway_name": gwName,
+		"CID":          c.CID,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) DisableMultitierTransit(gwName string) error {
+	data := map[string]string{
+		"action":       "disable_multitier_transit",
+		"gateway_name": gwName,
+		"CID":          c.CID,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
