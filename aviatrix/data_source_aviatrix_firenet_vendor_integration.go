@@ -36,7 +36,6 @@ func dataSourceAviatrixFireNetVendorIntegration() *schema.Resource {
 			"username": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Sensitive:   true,
 				Description: "Firewall login name for API calls from the Controller. For example, admin-api, as shown in the screen shot.",
 			},
 			"password": {
@@ -177,7 +176,6 @@ func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta
 		}
 	}
 
-	d.Set("username", nil)
 	d.Set("password", nil)
 	d.Set("api_token", nil)
 	d.SetId(firewallInstance.InstanceID)
