@@ -176,8 +176,6 @@ func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta
 		}
 	}
 
-	d.Set("password", nil)
-	d.Set("api_token", nil)
 	d.SetId(firewallInstance.InstanceID)
 	return nil
 }
