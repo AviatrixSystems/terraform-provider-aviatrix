@@ -171,7 +171,7 @@ func resourceAviatrixAccount() *schema.Resource {
 				Sensitive:   true,
 				Description: "Azure Gov Application Key.",
 			},
-      "aws_role_app": {
+			"aws_role_app": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
@@ -182,6 +182,7 @@ func resourceAviatrixAccount() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Description: "AWS EC2 role ARN.",
+			},
 		},
 	}
 }
