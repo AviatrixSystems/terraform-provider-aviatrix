@@ -414,6 +414,13 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description:  "Changes the Aviatrix Transit Gateway ASN number before you setup Aviatrix Transit Gateway connection configurations.",
 				ValidateFunc: goaviatrix.ValidateASN,
 			},
+			"tunnel_detection_time": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(20, 600),
+				Description:  "The IPSec tunnel down detection time for the transit gateway.",
+			},
 			"security_group_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -1165,6 +1172,13 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if detectionTime, ok := d.GetOk("tunnel_detection_time"); ok {
+		err := client.ModifyTunnelDetectionTime(gateway.GwName, detectionTime.(int))
+		if err != nil {
+			return fmt.Errorf("could not set tunnel detection time during Transit Gateway creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -1481,6 +1495,12 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("could not get jumbo frame status for transit gateway: %v", err)
 	}
 	d.Set("enable_jumbo_frame", jumboFrameStatus)
+
+	detectionTime, err := client.GetTunnelDetectionTime(gateway.GwName)
+	if err != nil {
+		return fmt.Errorf("could not get tunnel detection time for the Transit Gateway: %v", err)
+	}
+	d.Set("tunnel_detection_time", detectionTime)
 
 	haGateway := &goaviatrix.Gateway{
 		AccountName: d.Get("account_name").(string),
@@ -2515,6 +2535,24 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			if err != nil {
 				return fmt.Errorf("could not disable multi tier transit when updating: %v", err)
 			}
+		}
+	}
+
+	if d.HasChange("tunnel_detection_time") {
+		detectionTimeInterface, ok := d.GetOk("tunnel_detection_time")
+		var detectionTime int
+		if ok {
+			detectionTime = detectionTimeInterface.(int)
+		} else {
+			var err error
+			detectionTime, err = client.GetTunnelDetectionTime("Controller")
+			if err != nil {
+				return fmt.Errorf("could not get default tunnel detection time during Transit Gateway update: %v", err)
+			}
+		}
+		err := client.ModifyTunnelDetectionTime(gateway.GwName, detectionTime)
+		if err != nil {
+			return fmt.Errorf("could not modify tunnel detection time during Transit Gateway update: %v", err)
 		}
 	}
 
