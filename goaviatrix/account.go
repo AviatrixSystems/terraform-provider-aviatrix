@@ -50,6 +50,10 @@ type Account struct {
 	OciUserID                             string `form:"oci_user_id" json:"oci_user_id,omitempty"`
 	OciCompartmentID                      string `form:"oci_compartment_id" json:"oci_compartment_id,omitempty"`
 	OciApiPrivateKeyFilePath              string `form:"oci_api_key_path" json:"oci_api_private_key_filepath,omitempty"`
+	AzureGovSubscriptionId                string `form:"azure_gov_subscription_id,omitempty" json:"arm_gov_subscription_id,omitempty"`
+	AzureGovApplicationEndpoint           string `form:"azure_gov_application_endpoint,omitempty" json:"arm_gov_ad_tenant_id,omitempty"`
+	AzureGovApplicationClientId           string `form:"azure_gov_application_client_id,omitempty" json:"arm_gov_ad_client_id,omitempty"`
+	AzureGovApplicationClientSecret       string `form:"azure_gov_application_client_secret,omitempty" json:"azure_gov_application_client_secret,omitempty"`
 }
 
 type AccountResult struct {
