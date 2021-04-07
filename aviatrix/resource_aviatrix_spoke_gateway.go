@@ -882,134 +882,112 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 
 	log.Printf("[TRACE] reading spoke gateway %s: %#v", d.Get("gw_name").(string), gw)
 
-	if gw != nil {
-		d.Set("cloud_type", gw.CloudType)
-		d.Set("account_name", gw.AccountName)
+	d.Set("cloud_type", gw.CloudType)
+	d.Set("account_name", gw.AccountName)
+	d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
+	d.Set("enable_private_vpc_default_route", gw.PrivateVpcDefaultEnabled)
+	d.Set("enable_skip_public_route_update", gw.SkipPublicVpcUpdateEnabled)
+	d.Set("enable_auto_advertise_s2c_cidrs", gw.AutoAdvertiseCidrsEnabled)
+	d.Set("eip", gw.PublicIP)
+	d.Set("subnet", gw.VpcNet)
+	d.Set("gw_size", gw.GwSize)
+	d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
+	d.Set("security_group_id", gw.GwSecurityGroupID)
+	d.Set("private_ip", gw.PrivateIP)
+	d.Set("single_az_ha", gw.SingleAZ == "yes")
+	d.Set("enable_active_mesh", gw.EnableActiveMesh == "yes")
+	d.Set("enable_vpc_dns_server", (gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV) && gw.EnableVpcDnsServer == "Enabled")
+	d.Set("single_ip_snat", gw.EnableNat == "yes" && gw.SnatMode == "primary")
+	d.Set("enable_jumbo_frame", gw.JumboFrame)
 
-		if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV {
-			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0]) //AWS vpc_id returns as <vpc_id>~~<other vpc info> in rest api
-			d.Set("vpc_reg", gw.VpcRegion)                    //AWS vpc_reg returns as vpc_region in rest api
+	if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV {
+		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0]) //AWS vpc_id returns as <vpc_id>~~<other vpc info> in rest api
+		d.Set("vpc_reg", gw.VpcRegion)                    //AWS vpc_reg returns as vpc_region in rest api
 
-			if gw.AllocateNewEipRead && !gw.EnablePrivateOob {
-				d.Set("allocate_new_eip", true)
-			} else {
-				d.Set("allocate_new_eip", false)
-			}
-		} else if gw.CloudType == goaviatrix.GCP {
-			d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0]) //gcp vpc_id returns as <vpc_id>~-~<other vpc info> in rest api
-			d.Set("vpc_reg", gw.GatewayZone)                   //gcp vpc_reg returns as gateway_zone in json
-
-			if gw.AllocateNewEipRead {
-				d.Set("allocate_new_eip", true)
-			} else {
-				d.Set("allocate_new_eip", false)
-			}
-		} else if gw.CloudType == goaviatrix.AZURE || gw.CloudType == goaviatrix.OCI {
-			d.Set("vpc_id", gw.VpcID)
-			d.Set("vpc_reg", gw.VpcRegion)
-
+		if gw.AllocateNewEipRead && !gw.EnablePrivateOob {
 			d.Set("allocate_new_eip", true)
-		}
-		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
-		d.Set("enable_private_vpc_default_route", gw.PrivateVpcDefaultEnabled)
-		d.Set("enable_skip_public_route_table_update", gw.SkipPublicVpcUpdateEnabled)
-		d.Set("enable_auto_advertise_s2c_cidrs", gw.AutoAdvertiseCidrsEnabled)
-		d.Set("eip", gw.PublicIP)
-
-		d.Set("subnet", gw.VpcNet)
-		d.Set("gw_size", gw.GwSize)
-		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
-		d.Set("security_group_id", gw.GwSecurityGroupID)
-		d.Set("private_ip", gw.PrivateIP)
-
-		if gw.SingleAZ == "yes" {
-			d.Set("single_az_ha", true)
 		} else {
-			d.Set("single_az_ha", false)
+			d.Set("allocate_new_eip", false)
 		}
+	} else if gw.CloudType == goaviatrix.GCP {
+		d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0]) //gcp vpc_id returns as <vpc_id>~-~<other vpc info> in rest api
+		d.Set("vpc_reg", gw.GatewayZone)                   //gcp vpc_reg returns as gateway_zone in json
 
-		if gw.InsaneMode == "yes" {
-			d.Set("insane_mode", true)
-			if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV {
-				d.Set("insane_mode_az", gw.GatewayZone)
-			} else {
-				d.Set("insane_mode_az", "")
-			}
+		if gw.AllocateNewEipRead {
+			d.Set("allocate_new_eip", true)
 		} else {
-			d.Set("insane_mode", false)
+			d.Set("allocate_new_eip", false)
+		}
+	} else if gw.CloudType == goaviatrix.AZURE || gw.CloudType == goaviatrix.OCI {
+		d.Set("vpc_id", gw.VpcID)
+		d.Set("vpc_reg", gw.VpcRegion)
+
+		d.Set("allocate_new_eip", true)
+	}
+
+	if gw.InsaneMode == "yes" {
+		d.Set("insane_mode", true)
+		if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV {
+			d.Set("insane_mode_az", gw.GatewayZone)
+		} else {
 			d.Set("insane_mode_az", "")
 		}
+	} else {
+		d.Set("insane_mode", false)
+		d.Set("insane_mode_az", "")
+	}
 
-		if gw.EnableActiveMesh == "yes" {
-			d.Set("enable_active_mesh", true)
-		} else {
-			d.Set("enable_active_mesh", false)
-		}
-
-		if (gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV) && gw.EnableVpcDnsServer == "Enabled" {
-			d.Set("enable_vpc_dns_server", true)
-		} else {
-			d.Set("enable_vpc_dns_server", false)
-		}
-
-		if gw.EnableNat == "yes" && gw.SnatMode == "primary" {
-			d.Set("single_ip_snat", true)
-		} else {
-			d.Set("single_ip_snat", false)
-		}
-
-		if len(gw.CustomizedSpokeVpcRoutes) != 0 {
-			if customizedSpokeVpcRoutes := d.Get("customized_spoke_vpc_routes").(string); customizedSpokeVpcRoutes != "" {
-				customizedRoutesArray := strings.Split(customizedSpokeVpcRoutes, ",")
-				if len(goaviatrix.Difference(customizedRoutesArray, gw.CustomizedSpokeVpcRoutes)) == 0 &&
-					len(goaviatrix.Difference(gw.CustomizedSpokeVpcRoutes, customizedRoutesArray)) == 0 {
-					d.Set("customized_spoke_vpc_routes", customizedSpokeVpcRoutes)
-				} else {
-					d.Set("customized_spoke_vpc_routes", strings.Join(gw.CustomizedSpokeVpcRoutes, ","))
-				}
+	if len(gw.CustomizedSpokeVpcRoutes) != 0 {
+		if customizedSpokeVpcRoutes := d.Get("customized_spoke_vpc_routes").(string); customizedSpokeVpcRoutes != "" {
+			customizedRoutesArray := strings.Split(customizedSpokeVpcRoutes, ",")
+			if len(goaviatrix.Difference(customizedRoutesArray, gw.CustomizedSpokeVpcRoutes)) == 0 &&
+				len(goaviatrix.Difference(gw.CustomizedSpokeVpcRoutes, customizedRoutesArray)) == 0 {
+				d.Set("customized_spoke_vpc_routes", customizedSpokeVpcRoutes)
 			} else {
 				d.Set("customized_spoke_vpc_routes", strings.Join(gw.CustomizedSpokeVpcRoutes, ","))
 			}
 		} else {
-			d.Set("customized_spoke_vpc_routes", "")
+			d.Set("customized_spoke_vpc_routes", strings.Join(gw.CustomizedSpokeVpcRoutes, ","))
 		}
+	} else {
+		d.Set("customized_spoke_vpc_routes", "")
+	}
 
-		if len(gw.FilteredSpokeVpcRoutes) != 0 {
-			if filteredSpokeVpcRoutes := d.Get("filtered_spoke_vpc_routes").(string); filteredSpokeVpcRoutes != "" {
-				filteredSpokeVpcRoutesArray := strings.Split(filteredSpokeVpcRoutes, ",")
-				if len(goaviatrix.Difference(filteredSpokeVpcRoutesArray, gw.FilteredSpokeVpcRoutes)) == 0 &&
-					len(goaviatrix.Difference(gw.FilteredSpokeVpcRoutes, filteredSpokeVpcRoutesArray)) == 0 {
-					d.Set("filtered_spoke_vpc_routes", filteredSpokeVpcRoutes)
-				} else {
-					d.Set("filtered_spoke_vpc_routes", strings.Join(gw.FilteredSpokeVpcRoutes, ","))
-				}
+	if len(gw.FilteredSpokeVpcRoutes) != 0 {
+		if filteredSpokeVpcRoutes := d.Get("filtered_spoke_vpc_routes").(string); filteredSpokeVpcRoutes != "" {
+			filteredSpokeVpcRoutesArray := strings.Split(filteredSpokeVpcRoutes, ",")
+			if len(goaviatrix.Difference(filteredSpokeVpcRoutesArray, gw.FilteredSpokeVpcRoutes)) == 0 &&
+				len(goaviatrix.Difference(gw.FilteredSpokeVpcRoutes, filteredSpokeVpcRoutesArray)) == 0 {
+				d.Set("filtered_spoke_vpc_routes", filteredSpokeVpcRoutes)
 			} else {
 				d.Set("filtered_spoke_vpc_routes", strings.Join(gw.FilteredSpokeVpcRoutes, ","))
 			}
 		} else {
-			d.Set("filtered_spoke_vpc_routes", "")
+			d.Set("filtered_spoke_vpc_routes", strings.Join(gw.FilteredSpokeVpcRoutes, ","))
 		}
+	} else {
+		d.Set("filtered_spoke_vpc_routes", "")
+	}
 
-		if len(gw.IncludeCidrList) != 0 {
-			if includedAdvertisedSpokeRoutes := d.Get("included_advertised_spoke_routes").(string); includedAdvertisedSpokeRoutes != "" {
-				advertisedSpokeRoutesArray := strings.Split(includedAdvertisedSpokeRoutes, ",")
-				if len(goaviatrix.Difference(advertisedSpokeRoutesArray, gw.IncludeCidrList)) == 0 &&
-					len(goaviatrix.Difference(gw.IncludeCidrList, advertisedSpokeRoutesArray)) == 0 {
-					d.Set("included_advertised_spoke_routes", includedAdvertisedSpokeRoutes)
-				} else {
-					d.Set("included_advertised_spoke_routes", strings.Join(gw.IncludeCidrList, ","))
-				}
+	if len(gw.IncludeCidrList) != 0 {
+		if includedAdvertisedSpokeRoutes := d.Get("included_advertised_spoke_routes").(string); includedAdvertisedSpokeRoutes != "" {
+			advertisedSpokeRoutesArray := strings.Split(includedAdvertisedSpokeRoutes, ",")
+			if len(goaviatrix.Difference(advertisedSpokeRoutesArray, gw.IncludeCidrList)) == 0 &&
+				len(goaviatrix.Difference(gw.IncludeCidrList, advertisedSpokeRoutesArray)) == 0 {
+				d.Set("included_advertised_spoke_routes", includedAdvertisedSpokeRoutes)
 			} else {
-				d.Set("included_advertised_spoke_routes", strings.Join(gw.AdvertisedSpokeRoutes, ","))
+				d.Set("included_advertised_spoke_routes", strings.Join(gw.IncludeCidrList, ","))
 			}
 		} else {
-			d.Set("included_advertised_spoke_routes", "")
+			d.Set("included_advertised_spoke_routes", strings.Join(gw.AdvertisedSpokeRoutes, ","))
 		}
+	} else {
+		d.Set("included_advertised_spoke_routes", "")
+	}
 
-		d.Set("enable_monitor_gateway_subnets", gw.MonitorSubnetsAction == "enable")
-		if err := d.Set("monitor_exclude_list", gw.MonitorExcludeGWList); err != nil {
-			return fmt.Errorf("setting 'monitor_exclude_list' to state: %v", err)
-		}
+	d.Set("enable_monitor_gateway_subnets", gw.MonitorSubnetsAction == "enable")
+	if err := d.Set("monitor_exclude_list", gw.MonitorExcludeGWList); err != nil {
+		return fmt.Errorf("setting 'monitor_exclude_list' to state: %v", err)
 	}
 
 	manageTransitGwAttachment := d.Get("manage_transit_gateway_attachment").(bool)
@@ -1029,19 +1007,9 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV || gw.CloudType == goaviatrix.AZURE {
-		tags := &goaviatrix.Tags{
-			ResourceType: "gw",
-			ResourceName: d.Get("gw_name").(string),
-			CloudType:    gw.CloudType,
-		}
-		tagsMap, err := client.GetTagsMap(tags)
-		if err != nil {
-			return fmt.Errorf("unable to read tags for spoke gateway: %v due to %v", gateway.GwName, err)
-		}
-
 		if _, ok := d.GetOk("tag_list"); ok {
-			tagList := make([]string, 0, len(tagsMap))
-			for key, val := range tagsMap {
+			tagList := make([]string, 0, len(gw.Tags))
+			for key, val := range gw.Tags {
 				str := key + ":" + val
 				tagList = append(tagList, str)
 			}
@@ -1059,7 +1027,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 				}
 			}
 		} else {
-			if err := d.Set("tags", tagsMap); err != nil {
+			if err := d.Set("tags", gw.Tags); err != nil {
 				log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
 			}
 		}
@@ -1072,82 +1040,57 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if gw.CloudType == goaviatrix.AZURE {
-		gwDetail, err := client.GetGatewayDetail(gw)
-		if err != nil {
-			return fmt.Errorf("could not get gateway details: %v", err)
-		}
-
 		_, zoneIsSet := d.GetOk("zone")
-		if (isImport || zoneIsSet) && gwDetail.GwZone != "AvailabilitySet" {
-			d.Set("zone", "az-"+gwDetail.GwZone)
+		if (isImport || zoneIsSet) && gw.GatewayZone != "AvailabilitySet" {
+			d.Set("zone", "az-"+gw.GatewayZone)
 		}
 	}
 
-	jumboFrameStatus, err := client.GetJumboFrameStatus(gateway)
-	if err != nil {
-		return fmt.Errorf("could not get jumbo frame status for spoke gateway: %v", err)
+	if gw.HaGw.GwSize == "" {
+		d.Set("ha_gw_size", "")
+		d.Set("ha_subnet", "")
+		d.Set("ha_zone", "")
+		d.Set("ha_eip", "")
+		d.Set("ha_insane_mode_az", "")
+		d.Set("ha_oob_management_subnet", "")
+		d.Set("ha_oob_availability_zone", "")
+		return nil
 	}
-	d.Set("enable_jumbo_frame", jumboFrameStatus)
 
-	haGateway := &goaviatrix.Gateway{
-		AccountName: d.Get("account_name").(string),
-		GwName:      d.Get("gw_name").(string) + "-hagw",
-	}
-
-	haGw, err := client.GetGateway(haGateway)
-	if err != nil {
-		if err == goaviatrix.ErrNotFound {
-			d.Set("ha_gw_size", "")
-			d.Set("ha_subnet", "")
-			d.Set("ha_zone", "")
-			d.Set("ha_eip", "")
-			d.Set("ha_insane_mode_az", "")
-			d.Set("ha_oob_management_subnet", "")
-			d.Set("ha_oob_availability_zone", "")
-		} else {
-			return fmt.Errorf("couldn't find Aviatrix Spoke HA Gateway: %s", err)
-		}
-	} else {
-		log.Printf("[INFO] Spoke HA Gateway size: %s", haGw.GwSize)
-		if haGw.CloudType == goaviatrix.AWS || haGw.CloudType == goaviatrix.AZURE || haGw.CloudType == goaviatrix.OCI || haGw.CloudType == goaviatrix.AWSGOV {
-			d.Set("ha_subnet", haGw.VpcNet)
-			if zone := d.Get("ha_zone"); haGw.CloudType == goaviatrix.AZURE && (isImport || zone.(string) != "") {
-				haGwDetail, err := client.GetGatewayDetail(haGateway)
-				if err != nil {
-					return fmt.Errorf("could not get HA spoke gateway details: %v", err)
-				}
-				if haGwDetail.GwZone != "AvailabilitySet" {
-					d.Set("ha_zone", "az-"+haGwDetail.GwZone)
-				} else {
-					d.Set("ha_zone", "")
-				}
+	log.Printf("[INFO] Spoke HA Gateway size: %s", gw.HaGw.GwSize)
+	if gw.HaGw.CloudType == goaviatrix.AWS || gw.HaGw.CloudType == goaviatrix.AZURE || gw.HaGw.CloudType == goaviatrix.OCI || gw.HaGw.CloudType == goaviatrix.AWSGOV {
+		d.Set("ha_subnet", gw.HaGw.VpcNet)
+		if zone := d.Get("ha_zone"); gw.HaGw.CloudType == goaviatrix.AZURE && (isImport || zone.(string) != "") {
+			if gw.HaGw.GatewayZone != "AvailabilitySet" {
+				d.Set("ha_zone", "az-"+gw.HaGw.GatewayZone)
 			} else {
 				d.Set("ha_zone", "")
 			}
-		} else if haGw.CloudType == goaviatrix.GCP {
-			d.Set("ha_zone", haGw.GatewayZone)
-			if d.Get("ha_subnet") != "" || isImport {
-				d.Set("ha_subnet", haGw.VpcNet)
-			} else {
-				d.Set("ha_subnet", "")
-			}
-		}
-
-		d.Set("ha_eip", haGw.PublicIP)
-		d.Set("ha_gw_size", haGw.GwSize)
-		d.Set("ha_cloud_instance_id", haGw.CloudnGatewayInstID)
-		d.Set("ha_gw_name", haGw.GwName)
-		d.Set("ha_private_ip", haGw.PrivateIP)
-		if haGw.InsaneMode == "yes" && (haGw.CloudType == goaviatrix.AWS || haGw.CloudType == goaviatrix.AWSGOV) {
-			d.Set("ha_insane_mode_az", haGw.GatewayZone)
 		} else {
-			d.Set("ha_insane_mode_az", "")
+			d.Set("ha_zone", "")
 		}
+	} else if gw.HaGw.CloudType == goaviatrix.GCP {
+		d.Set("ha_zone", gw.HaGw.GatewayZone)
+		if d.Get("ha_subnet") != "" || isImport {
+			d.Set("ha_subnet", gw.HaGw.VpcNet)
+		} else {
+			d.Set("ha_subnet", "")
+		}
+	}
 
-		if haGw.EnablePrivateOob {
-			d.Set("ha_oob_management_subnet", strings.Split(haGw.OobManagementSubnet, "~~")[0])
-			d.Set("ha_oob_availability_zone", haGw.GatewayZone)
-		}
+	d.Set("ha_eip", gw.HaGw.PublicIP)
+	d.Set("ha_gw_size", gw.HaGw.GwSize)
+	d.Set("ha_cloud_instance_id", gw.HaGw.CloudnGatewayInstID)
+	d.Set("ha_gw_name", gw.HaGw.GwName)
+	d.Set("ha_private_ip", gw.HaGw.PrivateIP)
+	if gw.HaGw.InsaneMode == "yes" && (gw.HaGw.CloudType == goaviatrix.AWS || gw.HaGw.CloudType == goaviatrix.AWSGOV) {
+		d.Set("ha_insane_mode_az", gw.HaGw.GatewayZone)
+	} else {
+		d.Set("ha_insane_mode_az", "")
+	}
+	if gw.HaGw.EnablePrivateOob {
+		d.Set("ha_oob_management_subnet", strings.Split(gw.HaGw.OobManagementSubnet, "~~")[0])
+		d.Set("ha_oob_availability_zone", gw.HaGw.GatewayZone)
 	}
 
 	return nil

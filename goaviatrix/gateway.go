@@ -73,6 +73,7 @@ type Gateway struct {
 	InstState                   string `form:"inst_state,omitempty" json:"inst_state,omitempty"`
 	IntraVMRoute                string `form:"intra_vm_route,omitempty" json:"intra_vm_route,omitempty"`
 	IsHagw                      string `form:"is_hagw,omitempty" json:"is_hagw,omitempty"`
+	JumboFrame                  bool   `json:"jumbo_frame"`
 	LdapAdditionalReq           string `form:"ldap_additional_req,omitempty"`
 	LdapBaseDn                  string `form:"ldap_base_dn,omitempty" json:"ldap_base_dn,omitempty"`
 	LdapBindDn                  string `form:"ldap_bind_dn,omitempty" json:"ldap_bind_dn,omitempty"`
@@ -102,6 +103,7 @@ type Gateway struct {
 	SplitTunnel                 string `form:"split_tunnel,omitempty" json:"split_tunnel,omitempty"`
 	SpokeVpc                    string `json:"spoke_vpc,omitempty"`
 	TagList                     string `form:"tags,omitempty"`
+	Tags                        map[string]string
 	TransitGwName               string `form:"transit_gw_name,omitempty" json:"transit_gw_name,omitempty"`
 	EgressTransitGwName         string `form:"egress_transit_gw_name,omitempty" json:"egress_transit_gw_name,omitempty"`
 	TunnelName                  string `form:"tunnel_name,omitempty" json:"tunnel_name,omitempty"`
@@ -144,15 +146,30 @@ type Gateway struct {
 	MonitorExcludeGWList        []string `form:"monitor_exclude_gw_list,omitempty" json:"monitor_exclude_gw_list,omitempty"`
 	FqdnLanCidr                 string   `form:"fqdn_lan_cidr,omitempty"`
 	RouteTable                  string
-	EnablePrivateOob            bool   `json:"private_oob"`
-	OobManagementSubnet         string `json:"oob_mgmt_subnet"`
-	LanVpcID                    string `form:"lan_vpc_id"`
-	LanPrivateSubnet            string `form:"lan_private_subnet"`
-	CreateFQDNGateway           bool   `form:"create_firewall_gw"`
-	PrivateVpcDefaultEnabled    bool   `json:"private_vpc_default_enabled"`
-	SkipPublicVpcUpdateEnabled  bool   `json:"skip_public_vpc_update_enabled"`
-	EnableMultitierTransit      bool   `json:"multitier_transit"`
-	AutoAdvertiseCidrsEnabled   bool   `json:"auto_advertise_s2c_cidrs"`
+	EnablePrivateOob            bool      `json:"private_oob"`
+	OobManagementSubnet         string    `json:"oob_mgmt_subnet"`
+	LanVpcID                    string    `form:"lan_vpc_id"`
+	LanPrivateSubnet            string    `form:"lan_private_subnet"`
+	CreateFQDNGateway           bool      `form:"create_firewall_gw"`
+	PrivateVpcDefaultEnabled    bool      `json:"private_vpc_default_enabled"`
+	SkipPublicVpcUpdateEnabled  bool      `json:"skip_public_vpc_update_enabled"`
+	EnableMultitierTransit      bool      `json:"multitier_transit"`
+	AutoAdvertiseCidrsEnabled   bool      `json:"auto_advertise_s2c_cidrs"`
+	HaGw                        HaGateway `json:"hagw_details"`
+}
+
+type HaGateway struct {
+	GwName              string `json:"vpc_name"`
+	CloudType           int    `json:"cloud_type"`
+	GwSize              string `json:"vpc_size"`
+	VpcNet              string `json:"public_subnet"`
+	PublicIP            string `json:"public_ip"`
+	PrivateIP           string `json:"private_ip"`
+	CloudnGatewayInstID string `json:"cloudn_gateway_inst_id"`
+	GatewayZone         string `json:"gateway_zone"`
+	InsaneMode          string `json:"high_perf"`
+	EnablePrivateOob    bool   `json:"private_oob"`
+	OobManagementSubnet string `json:"oob_mgmt_subnet"`
 }
 
 type PolicyRule struct {
