@@ -47,6 +47,7 @@ type ExternalDeviceConn struct {
 	LocalLanIP             string `form:"local_lan_ip,omitempty"`
 	BackupRemoteLanIP      string `form:"backup_remote_lan_ip,omitempty"`
 	BackupLocalLanIP       string `form:"backup_local_lan_ip,omitempty"`
+	EventTriggeredHA       bool
 }
 
 type EditExternalDeviceConnDetail struct {
@@ -80,6 +81,7 @@ type EditExternalDeviceConnDetail struct {
 	LocalLanIP             string `json:"local_lan_ip"`
 	BackupRemoteLanIP      string `json:"backup_remote_lan_ip"`
 	BackupLocalLanIP       string `json:"backup_local_lan_ip"`
+	EventTriggeredHA       string `json:"event_triggered_ha"`
 }
 
 type ExternalDeviceConnDetailResp struct {
@@ -267,6 +269,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 		} else {
 			externalDeviceConn.EnableIkev2 = "disabled"
 		}
+		externalDeviceConn.EventTriggeredHA = externalDeviceConnDetail.EventTriggeredHA == "enabled"
 		externalDeviceConn.PeerVnetId = externalDeviceConnDetail.PeerVnetId
 		externalDeviceConn.RemoteLanIP = externalDeviceConnDetail.RemoteLanIP
 		externalDeviceConn.LocalLanIP = externalDeviceConnDetail.LocalLanIP

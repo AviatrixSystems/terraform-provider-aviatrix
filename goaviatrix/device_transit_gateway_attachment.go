@@ -26,6 +26,8 @@ type DeviceTransitGatewayAttachment struct {
 	PreSharedKey            string `form:"pre_shared_key,omitempty"`
 	LocalTunnelIP           string `form:"local_tunnel_ip,omitempty"`
 	RemoteTunnelIP          string `form:"remote_tunnel_ip,omitempty"`
+	VpcID                   string
+	EventTriggeredHA        bool
 	ManualBGPCidrs          []string
 	Action                  string `form:"action"`
 	CID                     string `form:"CID"`
@@ -121,6 +123,8 @@ func (c *Client) GetDeviceTransitGatewayAttachment(attachment *DeviceTransitGate
 		LocalTunnelIP:           data.Results.Connections.BgpLocalIP,
 		RemoteTunnelIP:          data.Results.Connections.BgpRemoteIP,
 		ManualBGPCidrs:          data.Results.Connections.ManualBGPCidrs,
+		EventTriggeredHA:        data.Results.Connections.EventTriggeredHA == "enabled",
+		VpcID:                   vpcID,
 	}, nil
 }
 

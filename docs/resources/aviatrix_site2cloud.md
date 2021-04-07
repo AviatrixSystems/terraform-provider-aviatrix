@@ -109,6 +109,7 @@ The following arguments are supported:
 * `enable_active_active` - (Optional) Enable/disable active active HA for an existing site2cloud connection. Valid values: true, false. Default value: false.
 * `enable_ikev2` - (Optional) Switch to enable IKEv2. Valid values: true, false. Default value: false.
 * `forward_traffic_to_transit` - (Optional) Enable spoke gateway with mapped site2cloud configurations to forward traffic from site2cloud connection to Aviatrix Transit Gateway. Default value: false. Valid values: true or false. Available in provider version 2.17.2+.
+* `enable_event_triggered_ha` - (Optional) Enable Event Triggered HA. Default value: false. Valid values: true or false. Available as of provider version R2.19+.
 
 ## Attribute Reference
 

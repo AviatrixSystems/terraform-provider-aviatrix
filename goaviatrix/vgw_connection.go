@@ -10,16 +10,17 @@ import (
 
 // VGWConn simple struct to hold VGW Connection details
 type VGWConn struct {
-	Action         string `form:"action,omitempty"`
-	BgpLocalAsNum  string `form:"bgp_local_asn_num,omitempty" json:"bgp_local_asn_num,omitempty"`
-	BgpVGWId       string `form:"vgw_id,omitempty" json:"bgp_vgw_id,omitempty"`
-	BgpVGWAccount  string `form:"bgp_vgw_account_name,omitempty" json:"bgp_vgw_account,omitempty"`
-	BgpVGWRegion   string `form:"bgp_vgw_region,omitempty" json:"bgp_vgw_region,omitempty"`
-	CID            string `form:"CID,omitempty"`
-	ConnName       string `form:"connection_name,omitempty" json:"name,omitempty"`
-	GwName         string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
-	VPCId          string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	ManualBGPCidrs []string
+	Action           string `form:"action,omitempty"`
+	BgpLocalAsNum    string `form:"bgp_local_asn_num,omitempty" json:"bgp_local_asn_num,omitempty"`
+	BgpVGWId         string `form:"vgw_id,omitempty" json:"bgp_vgw_id,omitempty"`
+	BgpVGWAccount    string `form:"bgp_vgw_account_name,omitempty" json:"bgp_vgw_account,omitempty"`
+	BgpVGWRegion     string `form:"bgp_vgw_region,omitempty" json:"bgp_vgw_region,omitempty"`
+	CID              string `form:"CID,omitempty"`
+	ConnName         string `form:"connection_name,omitempty" json:"name,omitempty"`
+	GwName           string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
+	VPCId            string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	ManualBGPCidrs   []string
+	EventTriggeredHA bool
 }
 
 type VGWConnListResp struct {
@@ -45,14 +46,15 @@ type VGWConnDetail struct {
 }
 
 type ConnectionDetail struct {
-	ConnName       []string `json:"name"`
-	GwName         string   `json:"gw_name"`
-	VPCId          []string `json:"vpc_id"`
-	BgpVGWId       string   `json:"bgp_vgw_id"`
-	BgpVGWAccount  string   `json:"bgp_vgw_account"`
-	BgpVGWRegion   string   `json:"bgp_vgw_region"`
-	BgpLocalAsNum  string   `json:"bgp_local_asn_number"`
-	ManualBGPCidrs []string `json:"conn_bgp_manual_advertise_cidrs"`
+	ConnName         []string `json:"name"`
+	GwName           string   `json:"gw_name"`
+	VPCId            []string `json:"vpc_id"`
+	BgpVGWId         string   `json:"bgp_vgw_id"`
+	BgpVGWAccount    string   `json:"bgp_vgw_account"`
+	BgpVGWRegion     string   `json:"bgp_vgw_region"`
+	BgpLocalAsNum    string   `json:"bgp_local_asn_number"`
+	ManualBGPCidrs   []string `json:"conn_bgp_manual_advertise_cidrs"`
+	EventTriggeredHA string   `json:"event_triggered_ha"`
 }
 
 type VGWConnEnableAdvertiseTransitCidrResp struct {
@@ -195,6 +197,7 @@ func (c *Client) GetVGWConnDetail(vgwConn *VGWConn) (*VGWConn, error) {
 		vgwConn.BgpVGWRegion = data.Results.Connections.BgpVGWRegion
 		vgwConn.BgpLocalAsNum = data.Results.Connections.BgpLocalAsNum
 		vgwConn.ManualBGPCidrs = data.Results.Connections.ManualBGPCidrs
+		vgwConn.EventTriggeredHA = data.Results.Connections.EventTriggeredHA == "enabled"
 		return vgwConn, nil
 	}
 	return nil, ErrNotFound

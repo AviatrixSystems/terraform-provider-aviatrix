@@ -74,6 +74,12 @@ func resourceAviatrixVGWConn() *schema.Resource {
 				Description: "Enable learned CIDR approval for the connection. Requires the transit_gateway's 'learned_cidrs_approval_mode' attribute be set to 'connection'. " +
 					"Valid values: true, false. Default value: false. Available as of provider version R2.18+.",
 			},
+			"enable_event_triggered_ha": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable Event Triggered HA.",
+			},
 			"manual_bgp_advertised_cidrs": {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{
@@ -126,6 +132,12 @@ func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) (er
 		}
 	}
 
+	if d.Get("enable_event_triggered_ha").(bool) {
+		if err := client.EnableSite2CloudEventTriggeredHA(vgwConn.VPCId, vgwConn.ConnName); err != nil {
+			return fmt.Errorf("could not enable event triggered HA for vgw conn after create: %v", err)
+		}
+	}
+
 	return err
 }
 
@@ -163,6 +175,7 @@ func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("bgp_vgw_account", vConn.BgpVGWAccount)
 	d.Set("bgp_vgw_region", vConn.BgpVGWRegion)
 	d.Set("bgp_local_as_num", vConn.BgpLocalAsNum)
+	d.Set("enable_event_triggered_ha", vConn.EventTriggeredHA)
 	if err := d.Set("manual_bgp_advertised_cidrs", vConn.ManualBGPCidrs); err != nil {
 		return fmt.Errorf("setting 'manual_bgp_advertised_cidrs' into state: %v", err)
 	}
@@ -206,6 +219,20 @@ func resourceAviatrixVGWConnUpdate(d *schema.ResourceData, meta interface{}) err
 		err := client.EditTransitConnectionBGPManualAdvertiseCIDRs(gwName, connName, manualBGPCidrs)
 		if err != nil {
 			return fmt.Errorf("could not edit manual advertise manual cidrs: %v", err)
+		}
+	}
+	if d.HasChange("enable_event_triggered_ha") {
+		vpcID := d.Get("vpc_id").(string)
+		if d.Get("enable_event_triggered_ha").(bool) {
+			err := client.EnableSite2CloudEventTriggeredHA(vpcID, connName)
+			if err != nil {
+				return fmt.Errorf("could not enable event triggered HA for vgw conn during update: %v", err)
+			}
+		} else {
+			err := client.DisableSite2CloudEventTriggeredHA(vpcID, connName)
+			if err != nil {
+				return fmt.Errorf("could not disable event triggered HA for vgw conn during update: %v", err)
+			}
 		}
 	}
 	return nil

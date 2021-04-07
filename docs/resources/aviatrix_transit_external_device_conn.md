@@ -118,6 +118,7 @@ The following arguments are supported:
 * `enable_learned_cidrs_approval` - (Optional) Enable learned CIDRs approval for the connection. Only valid with 'connection_type' = 'bgp'. Requires the transit_gateway's 'learned_cidrs_approval_mode' attribute be set to 'connection'. Valid values: true, false. Default value: false. Available as of provider version R2.18+.
 * `enable_ikev2` - (Optional) Set as true to enable IKEv2 protocol.
 * `manual_bgp_advertised_cidrs` - (Optional) Configure manual BGP advertised CIDRs for this connection. Only valid with 'connection_type'= 'bgp'. Available as of provider version R2.18+.
+* `enable_event_triggered_ha` - (Optional) Enable Event Triggered HA. Default value: false. Valid values: true or false. Available as of provider version R2.19+.
 
 ## Import
 
