@@ -23,15 +23,9 @@ func resourceAviatrixControllerBgpMaxAsLimitConfig() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"max_as_limit": {
 				Type:         schema.TypeInt,
-				Optional:     true,
+				Required:     true,
 				ValidateFunc: validation.IntBetween(1, 254),
-				Description:  "The maximum AS path limit allowed by transit gateways when handling BGP/Peering route propagation for RFC 1918 CIDRs.",
-			},
-			"max_as_limit_non_rfc1918": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, 254),
-				Description:  "The maximum AS path limit allowed by transit gateways when handling BGP/Peering route propagation for non-RFC 1918 CIDRs.",
+				Description:  "The maximum AS path limit allowed by transit gateways when handling BGP/Peering route propagation.",
 			},
 		},
 	}
@@ -40,25 +34,10 @@ func resourceAviatrixControllerBgpMaxAsLimitConfig() *schema.Resource {
 func resourceAviatrixControllerBgpMaxAsLimitConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	maxAsLimit, maxAsLimitOk := d.GetOk("max_as_limit")
-	maxAsLimitNonRfc1918, maxAsLimitNonRfc1918Ok := d.GetOk("max_as_limit_non_rfc1918")
-
-	if !maxAsLimitOk && !maxAsLimitNonRfc1918Ok {
-		return diag.Errorf("error creating controller BGP max AS limit config: at least one of max_as_limit and max_as_limit_non_rfc1918 must be provided")
-	}
-
-	if maxAsLimitOk {
-		err := client.SetControllerBgpMaxAsLimit(ctx, maxAsLimit.(int))
-		if err != nil {
-			return diag.Errorf("failed to create controller BGP max AS limit config for RGC 1918 CIDRs: %v", err)
-		}
-	}
-
-	if maxAsLimitNonRfc1918Ok {
-		err := client.SetControllerBgpMaxAsLimitNonRfc1918(ctx, maxAsLimitNonRfc1918.(int))
-		if err != nil {
-			return diag.Errorf("failed to create controller BGP max AS limit config for non-RFC 1918 CIDRs: %v", err)
-		}
+	maxAsLimit := d.Get("max_as_limit").(int)
+	err := client.SetControllerBgpMaxAsLimit(ctx, maxAsLimit)
+	if err != nil {
+		return diag.Errorf("failed to create controller BGP max AS limit config: %v", err)
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
@@ -72,17 +51,16 @@ func resourceAviatrixControllerBgpMaxAsLimitConfigRead(ctx context.Context, d *s
 		return diag.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
 	}
 
-	maxAsLimit, maxAsLimitNonRfc1918, err := client.GetControllerBgpMaxAsLimit(ctx)
+	maxAsLimit, err := client.GetControllerBgpMaxAsLimit(ctx)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("failed to get controller BGP max AS limit config: %v", err)
+		return diag.Errorf("could not get controller BGP max AS limit config: %v", err)
 	}
 
 	d.Set("max_as_limit", maxAsLimit)
-	d.Set("max_as_limit_non_rfc1918", maxAsLimitNonRfc1918)
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
@@ -90,38 +68,11 @@ func resourceAviatrixControllerBgpMaxAsLimitConfigRead(ctx context.Context, d *s
 func resourceAviatrixControllerBgpMaxAsLimitConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	maxAsLimit, maxAsLimitOk := d.GetOk("max_as_limit")
-	maxAsLimitNonRfc1918, maxAsLimitNonRfc1918Ok := d.GetOk("max_as_limit_non_rfc1918")
-
-	if !maxAsLimitOk && !maxAsLimitNonRfc1918Ok {
-		return diag.Errorf("error updating controller BGP max AS limit config: at least one of max_as_limit and max_as_limit_non_rfc1918 must be provided")
-	}
-
 	if d.HasChange("max_as_limit") {
-		if maxAsLimitOk {
-			err := client.SetControllerBgpMaxAsLimit(ctx, maxAsLimit.(int))
-			if err != nil {
-				return diag.Errorf("failed to update BGP max AS limit for RFC 1918 CIDRs: %v", err)
-			}
-		} else {
-			err := client.DisableControllerBgpMaxAsLimit(ctx)
-			if err != nil {
-				return diag.Errorf("failed to disable BGP max AS limit for RFC 1918 CIDRs: %v", err)
-			}
-		}
-	}
-
-	if d.HasChange("max_as_limit_non_rfc1918") {
-		if maxAsLimitNonRfc1918Ok {
-			err := client.SetControllerBgpMaxAsLimitNonRfc1918(ctx, maxAsLimitNonRfc1918.(int))
-			if err != nil {
-				return diag.Errorf("failed to update BGP max AS limit for non-RFC 1918 CIDRs: %v", err)
-			}
-		} else {
-			err := client.DisableControllerBgpMaxAsLimitNonRfc1918(ctx)
-			if err != nil {
-				return diag.Errorf("failed to disable BGP max AS limit for non-RFC 1918 CDIRs: %v", err)
-			}
+		maxAsLimit := d.Get("max_as_limit").(int)
+		err := client.SetControllerBgpMaxAsLimit(ctx, maxAsLimit)
+		if err != nil {
+			return diag.Errorf("failed to update controller BGP max AS limit config: %v", err)
 		}
 	}
 
@@ -134,11 +85,6 @@ func resourceAviatrixControllerBgpMaxAsLimitConfigDelete(ctx context.Context, d 
 	err := client.DisableControllerBgpMaxAsLimit(ctx)
 	if err != nil {
 		return diag.Errorf("failed to delete controller BGP max AS limit config: %v", err)
-	}
-
-	err = client.DisableControllerBgpMaxAsLimitNonRfc1918(ctx)
-	if err != nil {
-		return diag.Errorf("failed to delete controller BGP max AS limit config for non-RFC 1918 CIDRs: %v", err)
 	}
 
 	return nil
