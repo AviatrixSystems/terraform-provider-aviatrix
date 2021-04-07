@@ -31,7 +31,6 @@ func TestAccAviatrixControllerBgpMaxAsLimitConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControllerBgpMaxAsLimitConfigExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "max_as_limit", "1"),
-					resource.TestCheckResourceAttr(resourceName, "max_as_limit_non_rfc1918", "2"),
 				),
 			},
 			{
@@ -46,8 +45,7 @@ func TestAccAviatrixControllerBgpMaxAsLimitConfig_basic(t *testing.T) {
 func testAccControllerBgpMaxAsLimitConfigBasic() string {
 	return `
 resource "aviatrix_controller_bgp_max_as_limit_config" "test_bgp_max_as_limit" {
-  max_as_limit                = 1
-  max_as_limit_non_rfc1918    = 2
+	max_as_limit = 1
 }
 `
 }
@@ -64,7 +62,7 @@ func testAccCheckControllerBgpMaxAsLimitConfigExists(n string) resource.TestChec
 
 		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
 
-		_, _, err := client.GetControllerBgpMaxAsLimit(context.Background())
+		_, err := client.GetControllerBgpMaxAsLimit(context.Background())
 		if err != nil {
 			return fmt.Errorf("failed to get controller bgp max as limit config status: %v", err)
 		}
@@ -85,7 +83,7 @@ func testAccCheckControllerBgpMaxAsLimitConfigDestroy(s *terraform.State) error 
 			continue
 		}
 
-		_, _, err := client.GetControllerBgpMaxAsLimit(context.Background())
+		_, err := client.GetControllerBgpMaxAsLimit(context.Background())
 		if err == nil || err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("controller bgp max as limit configured when it should be destroyed")
 		}
