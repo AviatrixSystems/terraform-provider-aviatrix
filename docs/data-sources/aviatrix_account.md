@@ -36,6 +36,8 @@ In addition to all arguments above, the following attributes are exported:
 * `aws_access_key` - AWS Access Key.
 * `aws_role_arn` - AWS App role ARN.
 * `aws_role_ec2` - AWS EC2 role ARN.
+* `aws_gateway_role_app` - A separate AWS App role ARN to assign to gateways created by the controller. Available as of provider version R2.19+.
+* `aws_gateway_role_ec2` - A separate AWS EC2 role ARN to assign to gateways created by the controller. Available as of provider version R2.19+.
 * `awsgov_account_number` - AWS Gov Account number.
 * `awsgov_access_key` - AWS Gov Access Key.
 * `gcloud_project_id` - GCloud Project ID.

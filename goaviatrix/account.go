@@ -23,6 +23,8 @@ type Account struct {
 	AwsSecretKey                          string `form:"aws_secret_key,omitempty" json:"account_secret_access_key,omitempty"`
 	AwsRoleApp                            string `form:"aws_role_arn,omitempty" json:"aws_role_arn,omitempty"`
 	AwsRoleEc2                            string `form:"aws_role_ec2,omitempty" json:"aws_role_ec2,omitempty"`
+	AwsGatewayRoleApp                     string `form:"aws_gateway_role_app,omitempty" json:"aws_gateway_role_app,omitempty"`
+	AwsGatewayRoleEc2                     string `form:"aws_gateway_role_ec2,omitempty" json:"aws_gateway_role_ec2,omitempty"`
 	AzureSubscriptionId                   string `form:"azure_subscription_id,omitempty" json:"azure_subscription_id,omitempty"`
 	ArmSubscriptionId                     string `form:"arm_subscription_id,omitempty" json:"arm_subscription_id,omitempty"`
 	ArmApplicationEndpoint                string `form:"arm_application_endpoint,omitempty" json:"arm_ad_tenant_id,omitempty"`
