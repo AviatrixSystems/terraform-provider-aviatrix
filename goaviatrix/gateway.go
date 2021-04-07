@@ -1530,7 +1530,7 @@ func (c *Client) DisablePrivateVpcDefaultRoute(gw *Gateway) error {
 func (c *Client) EnableSkipPublicRouteUpdate(gw *Gateway) error {
 	form := map[string]string{
 		"CID":          c.CID,
-		"action":       "enable_skip_public_route_update",
+		"action":       "enable_skip_public_route_table_update",
 		"gateway_name": gw.GwName,
 	}
 	return c.PostAPI(form["action"], form, BasicCheck)
@@ -1539,7 +1539,7 @@ func (c *Client) EnableSkipPublicRouteUpdate(gw *Gateway) error {
 func (c *Client) DisableSkipPublicRouteUpdate(gw *Gateway) error {
 	form := map[string]string{
 		"CID":          c.CID,
-		"action":       "disable_skip_public_route_update",
+		"action":       "disable_skip_public_route_table_update",
 		"gateway_name": gw.GwName,
 	}
 	return c.PostAPI(form["action"], form, BasicCheck)
