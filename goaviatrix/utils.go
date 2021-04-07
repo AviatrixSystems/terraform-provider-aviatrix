@@ -45,8 +45,8 @@ func Equivalent(a, b []string) bool {
 	return len(Difference(a, b)) == 0 && len(Difference(b, a)) == 0
 }
 
-// DifferenceSlice returns the one-dimension elements in two-dimension slice a that aren't in two-dimension b
-func DifferenceSlice(a, b [][]string) [][]string {
+// DifferencePairs returns all pairs in a that are not in b. If b contains any elements that are non-pairs (len != 2) then a is returned
+func DifferencePairSlice(a, b [][]string) [][]string {
 	if len(a) == 0 || len(b) == 0 {
 		return a
 	}
