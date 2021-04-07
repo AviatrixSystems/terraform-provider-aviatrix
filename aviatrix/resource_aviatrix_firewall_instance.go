@@ -343,6 +343,9 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		if firewallInstance.ManagementVpc == "" && strings.HasPrefix(firewallInstance.FirewallImage, "Palo Alto Networks") {
 			return fmt.Errorf("'management_vpc_id' is required for GCP with Palo Alto Networks Firewall")
 		}
+		if firewallInstance.ManagementVpc != "" && !strings.HasPrefix(firewallInstance.FirewallImage, "Palo Alto Networks") {
+			return fmt.Errorf("'management_vpc_id' is required to be empty for GCP Check Point or FortiGate firewall")
+		}
 		if firewallInstance.EgressVpc == "" {
 			return fmt.Errorf("'egress_vpc_id' is required for GCP")
 		}
