@@ -69,10 +69,11 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 					"and required to be empty for Check Point or Fortinet series.",
 			},
 			"management_vpc_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Management VPC ID. Required for GCP.",
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Description: "Management VPC ID. Required for GCP Palo Alto Networks VM-Series. " +
+					"Required to be empty for GCP Check Point or Fortinet series.",
 			},
 			"firewall_image_version": {
 				Type:        schema.TypeString,
@@ -339,8 +340,11 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 			return fmt.Errorf("'egress_vpc_id' is only valid for GCP")
 		}
 	} else if cloudType == goaviatrix.GCP {
-		if firewallInstance.ManagementVpc == "" {
-			return fmt.Errorf("'management_vpc_id' is required for GCP")
+		if firewallInstance.ManagementVpc == "" && strings.HasPrefix(firewallInstance.FirewallImage, "Palo Alto Networks") {
+			return fmt.Errorf("'management_vpc_id' is required for GCP with Palo Alto Networks Firewall")
+		}
+		if firewallInstance.ManagementVpc != "" && !strings.HasPrefix(firewallInstance.FirewallImage, "Palo Alto Networks") {
+			return fmt.Errorf("'management_vpc_id' is required to be empty for GCP Check Point or FortiGate firewall")
 		}
 		if firewallInstance.EgressVpc == "" {
 			return fmt.Errorf("'egress_vpc_id' is required for GCP")
@@ -444,17 +448,17 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	d.Set("instance_id", fI.InstanceID)
 	if cloudType == goaviatrix.GCP {
 		d.Set("egress_subnet", fI.EgressSubnetID)
+		d.Set("egress_vpc_id", fI.EgressVpc)
 	} else {
 		d.Set("egress_subnet", fI.EgressSubnet)
 	}
-	if strings.HasPrefix(fI.FirewallImage, "Palo Alto Networks") && cloudType != goaviatrix.GCP {
-		d.Set("management_subnet", fI.ManagementSubnet)
-	} else if cloudType == goaviatrix.GCP {
-		d.Set("management_subnet", fI.ManagementSubnetID)
-	}
-	if cloudType == goaviatrix.GCP {
-		d.Set("egress_vpc_id", fI.EgressVpc)
-		d.Set("management_vpc_id", fI.ManagementVpc)
+	if strings.HasPrefix(fI.FirewallImage, "Palo Alto Networks") {
+		if cloudType == goaviatrix.GCP {
+			d.Set("management_subnet", fI.ManagementSubnetID)
+			d.Set("management_vpc_id", fI.ManagementVpc)
+		} else {
+			d.Set("management_subnet", fI.ManagementSubnet)
+		}
 	}
 
 	if fI.AvailabilityZone != "" {

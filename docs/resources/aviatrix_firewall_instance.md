@@ -67,7 +67,7 @@ The following arguments are supported:
 * `egress_subnet` - (Required) Egress Interface Subnet. Select the subnet whose name contains “FW-ingress-egress”. For GCP, `egress_subnet` must be in the form `cidr~~region~~name`.
 * `firewall_image_version` - (Optional) Version of firewall image. If not specified, Controller will automatically select the latest version available.
 * `zone` - (Optional) Availability Zone. Required if creating a Firewall Instance with a Native AWS GWLB-enabled VPC. Applicable to AWS, Azure, and GCP only. Available as of provider version R2.17+.
-* `management_vpc_id` - (Optional) Management VPC ID. Required for GCP. Available as of provider version R2.18.1+.
+* `management_vpc_id` - (Optional) Management VPC ID. Only used for GCP firewall. Required for Palo Alto Networks VM-Series, and required to be empty for Check Point or Fortinet series. Available as of provider version R2.18.1+.
 * `egress_vpc_id` - (Optional) Egress VPC ID. Required for GCP. Available as of provider version R2.18.1+.
 
 Valid `firewall_image` values:
