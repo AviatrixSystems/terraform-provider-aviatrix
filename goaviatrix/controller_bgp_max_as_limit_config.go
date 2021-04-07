@@ -45,8 +45,12 @@ func (c *Client) GetControllerBgpMaxAsLimit(ctx context.Context) (int, error) {
 		"CID":    c.CID,
 	}
 
+	type BgpMaxAsLimitResults struct {
+		BgpMaxAsLimit string `json:"bgp_max_as_limit"`
+	}
+
 	type BgpMaxAsLimitResponse struct {
-		Results string
+		Results BgpMaxAsLimitResults
 	}
 
 	var resp BgpMaxAsLimitResponse
@@ -54,11 +58,11 @@ func (c *Client) GetControllerBgpMaxAsLimit(ctx context.Context) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	if resp.Results == "" {
+	if resp.Results.BgpMaxAsLimit == "" {
 		return 0, ErrNotFound
 	}
 
-	maxAsLimit, err := strconv.Atoi(resp.Results)
+	maxAsLimit, err := strconv.Atoi(resp.Results.BgpMaxAsLimit)
 	if err != nil {
 		return 0, fmt.Errorf("error converting max_as_limit to int: %v", err)
 	}
