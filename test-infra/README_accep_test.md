@@ -55,6 +55,8 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |		                               | SKIP_ACCOUNT_AWSCHINA_IAM         | AWSCHINA_IAM_ACCOUNT_NUMBER                    |
 |		                               | SKIP_ACCOUNT_AWSCHINA             | AWSCHINA_ACCOUNT_NUMBER, AWSCHINA_ACCESS_KEY, AWSCHINA_SECRET_KEY           |
 |		                               | SKIP_ACCOUNT_AZURECHINA             | AZURECHINA_SUBSCRIPTION_ID, AZURECHINA_DIRECTORY_ID, AZURECHINA_APPLICATION_ID, AZURECHINA_APPLICATION_KEY           |
+|		                               | SKIP_ACCOUNT_AWS_C2S               | AWS_C2S_ACCOUNT_NUMBER, AWS_C2S_CAP_URL, AWS_C2S_CAP_AGENCY, AWS_C2S_CAP_MISSION, AWS_C2S_CAP_ROLE_NAME, AWS_C2S_CAP_CERT, AWS_C2S_CAP_CERT_KEY, AWS_C2S_CA_CHAIN_CERT                   |
+|		                               | SKIP_ACCOUNT_AWS_SC2S              | AWS_SC2S_ACCOUNT_NUMBER, AWS_SC2S_CAP_URL, AWS_SC2S_CAP_AGENCY, AWS_SC2S_CAP_ACCOUNT_NAME, AWS_SC2S_CAP_ROLE_NAME, AWS_SC2S_CAP_CERT, AWS_SC2S_CAP_CERT_KEY, AWS_SC2S_CA_CHAIN_CERT                   |
 | aviatrix_account_user                | SKIP_ACCOUNT_USER                  |                                                                                |
 | aviatrix_arm_peer                    | SKIP_ARM_PEER                      | aviatrix_account + ARM_VNET_ID, ARM_VNET_ID2, ARM_REGION, ARM_REGION2          |
 | aviatrix_aws_guard_duty              | SKIP_AWS_GUARD_DUTY                | aviatrix_account                                                               |

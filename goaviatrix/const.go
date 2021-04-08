@@ -14,6 +14,8 @@ const (
 	AWSChina   = 1024
 	AzureChina = 2048
 	AliCloud   = 8192
+	AWSC2S     = 16384 // AWS Top Secret Region
+	AWSSC2S    = 32768 // AWS Secret Region
 )
 
 // Cloud vendor names
@@ -50,6 +52,8 @@ func GetSupportedClouds() []int {
 		AzureChina,
 		AWSChina,
 		AliCloud,
+		AWSC2S,
+		AWSSC2S,
 	}
 }
 
