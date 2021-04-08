@@ -428,7 +428,7 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 		t.Log("Skipping AWS Top Secret Region (C2S) Access Account test as SKIP_ACCOUNT_AWS_C2S is set")
 	} else {
 		resourceName := "aviatrix_account.aws_c2s"
-		importStateVerifyIgnore = append(importStateVerifyIgnore, "") //TODO
+		importStateVerifyIgnore = append(importStateVerifyIgnore, "aws_orange_cap_cert", "aws_orange_cap_cert_key", "aws_orange_ca_chain_cert")
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
@@ -534,7 +534,7 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 		t.Log("Skipping AWS Secret Region (SC2S) Access Account test as SKIP_ACCOUNT_AWS_SC2S is set")
 	} else {
 		resourceName := "aviatrix_account.aws_sc2s"
-		importStateVerifyIgnore = append(importStateVerifyIgnore, "") //TODO
+		importStateVerifyIgnore = append(importStateVerifyIgnore, "aws_red_cap_cert", "aws_red_cap_cert_key", "aws_red_ca_chain_cert")
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
@@ -687,16 +687,16 @@ resource "aviatrix_account" "azurechina" {
 func testAccAccountConfigAWSC2S(rInt int) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "aws_c2s" {
-	account_name 				= "tfa-awsc2s-%d"
-	cloud_type 					= 16384
-	aws_orange_account_number 	= "%s"
-	aws_orange_cap_url 			= "%s"
-	aws_orange_cap_agency 		= "%s"
-	aws_orange_cap_mission 		= "%s"
-	aws_orange_cap_role_name 	= "%s"
-	aws_orange_cap_cert 		= "%s"
-	aws_orange_cap_cert_key 	= "%s"
-	aws_orange_ca_chain_cert 	= "%s"
+	account_name                = "tfa-awsc2s-%d"
+	cloud_type                  = 16384
+	aws_orange_account_number   = "%s"
+	aws_orange_cap_url          = "%s"
+	aws_orange_cap_agency       = "%s"
+	aws_orange_cap_mission      = "%s"
+	aws_orange_cap_role_name    = "%s"
+	aws_orange_cap_cert         = "%s"
+	aws_orange_cap_cert_key     = "%s"
+	aws_orange_ca_chain_cert    = "%s"
 }`, rInt, os.Getenv("AWS_C2S_ACCOUNT_NUMBER"), os.Getenv("AWS_C2S_CAP_URL"),
 		os.Getenv("AWS_C2S_CAP_AGENCY"), os.Getenv("AWS_C2S_CAP_MISSION"),
 		os.Getenv("AWS_C2S_CAP_ROLE_NAME"), os.Getenv("AWS_C2S_CAP_CERT"),
@@ -706,16 +706,16 @@ resource "aviatrix_account" "aws_c2s" {
 func testAccAccountConfigAWSSC2S(rInt int) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "aws_sc2s" {
-	account_name 				= "tfa-awssc2s-%d"
-	cloud_type 					= 32768
-	aws_red_account_number 		= "%s"
-	aws_red_cap_url 			= "%s"
-	aws_red_cap_agency 			= "%s"
-	aws_red_cap_account_name 	= "%s"
-	aws_red_cap_role_name	 	= "%s"
-	aws_red_cap_cert 			= "%s"
-	aws_red_cap_cert_key 		= "%s"
-	aws_red_ca_chain_cert 		= "%s"
+	account_name                = "tfa-awssc2s-%d"
+	cloud_type                  = 32768
+	aws_red_account_number      = "%s"
+	aws_red_cap_url             = "%s"
+	aws_red_cap_agency          = "%s"
+	aws_red_cap_account_name    = "%s"
+	aws_red_cap_role_name       = "%s"
+	aws_red_cap_cert            = "%s"
+	aws_red_cap_cert_key        = "%s"
+	aws_red_ca_chain_cert       = "%s"
 }`, rInt, os.Getenv("AWS_SC2S_ACCOUNT_NUMBER"), os.Getenv("AWS_SC2S_CAP_URL"),
 		os.Getenv("AWS_SC2S_CAP_AGENCY"), os.Getenv("AWS_SC2S_CAP_ACCOUNT_NAME"),
 		os.Getenv("AWS_SC2S_CAP_ROLE_NAME"), os.Getenv("AWS_SC2S_CAP_CERT"),
