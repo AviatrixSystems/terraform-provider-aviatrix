@@ -1071,28 +1071,28 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 			}
 		}
 	} else if account.CloudType == goaviatrix.AWSC2S {
-		// TODO
 		fileChanges := map[string]bool{
-			"aws_orange_cap_cert":      d.HasChange("aws_orange_cap_cert"),
-			"aws_orange_cap_cert_key":  d.HasChange("aws_orange_cap_cert_key"),
-			"aws_orange_ca_chain_cert": d.HasChange("aws_orange_ca_chain_cert"),
+			"aws_orange_cap_cert":      d.HasChange("aws_orange_cap_cert") && account.AwsOrangeCapCert != "",
+			"aws_orange_cap_cert_key":  d.HasChange("aws_orange_cap_cert_key") && account.AwsOrangeCapCertKey != "",
+			"aws_orange_ca_chain_cert": d.HasChange("aws_orange_ca_chain_cert") && account.AwsOrangeCaChainCert != "",
 		}
+		hasFileChanges := fileChanges["aws_orange_cap_cert"] || fileChanges["aws_orange_cap_cert_key"] || fileChanges["aws_orange_ca_chain_cert"]
 
-		if d.HasChanges("aws_orange_account_number", "aws_orange_cap_url", "aws_orange_cap_agency", "aws_orange_cap_mission", "aws_orange_cap_role_name", "aws_orange_cap_cert", "aws_orange_cap_cert_key", "aws_orange_ca_chain_cert") {
+		if d.HasChanges("aws_orange_account_number", "aws_orange_cap_url", "aws_orange_cap_agency", "aws_orange_cap_mission", "aws_orange_cap_role_name") || hasFileChanges {
 			err := client.UpdateAWSC2SAccount(account, fileChanges)
 			if err != nil {
 				return diag.Errorf("failed to update AWS Secret Aviatrix Account: %v", err)
 			}
 		}
 	} else if account.CloudType == goaviatrix.AWSSC2S {
-		// TODO
 		fileChanges := map[string]bool{
-			"aws_red_cap_cert":      d.HasChange("aws_red_cap_cert"),
-			"aws_red_cap_cert_key":  d.HasChange("aws_red_cap_cert_key"),
-			"aws_red_ca_chain_cert": d.HasChange("aws_red_ca_chain_cert"),
+			"aws_red_cap_cert":      d.HasChange("aws_red_cap_cert") && account.AwsRedCapCert != "",
+			"aws_red_cap_cert_key":  d.HasChange("aws_red_cap_cert_key") && account.AwsRedCapCertKey != "",
+			"aws_red_ca_chain_cert": d.HasChange("aws_red_ca_chain_cert") && account.AwsRedCaChainCert != "",
 		}
+		hasFileChanges := fileChanges["aws_red_cap_cert"] || fileChanges["aws_red_cap_cert_key"] || fileChanges["aws_red_ca_chain_cert"]
 
-		if d.HasChanges("aws_red_account_number", "aws_red_cap_url", "aws_red_cap_agency", "aws_red_cap_account_name", "aws_red_cap_role_name", "aws_red_cap_cert", "aws_red_cap_cert_key", "aws_red_ca_chain_cert") {
+		if d.HasChanges("aws_red_account_number", "aws_red_cap_url", "aws_red_cap_agency", "aws_red_cap_account_name", "aws_red_cap_role_name") || hasFileChanges {
 			err := client.UpdateAWSSC2SAccount(account, fileChanges)
 			if err != nil {
 				return diag.Errorf("failed to update AWS Top Secret Aviatrix Account: %v", err)
