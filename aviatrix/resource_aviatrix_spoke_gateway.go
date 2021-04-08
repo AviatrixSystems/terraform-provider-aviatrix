@@ -323,7 +323,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Config Private VPC Default Route.",
 			},
-			"enable_skip_public_route_update": {
+			"enable_skip_public_route_table_update": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
@@ -356,8 +356,8 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	if d.Get("enable_private_vpc_default_route").(bool) && !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV}) {
 		return fmt.Errorf("enable_private_vpc_default_route is only valid for AWS and AWSGOV")
 	}
-	if d.Get("enable_skip_public_route_update").(bool) && !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV}) {
-		return fmt.Errorf("enable_skip_public_route_update is only valid for AWS and AWSGOV")
+	if d.Get("enable_skip_public_route_table_update").(bool) && !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV}) {
+		return fmt.Errorf("enable_skip_public_route_table_update is only valid for AWS and AWSGOV")
 	}
 
 	if _, hasSetZone := d.GetOk("zone"); gateway.CloudType != goaviatrix.AZURE && hasSetZone {
@@ -821,7 +821,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if d.Get("enable_skip_public_route_update").(bool) {
+	if d.Get("enable_skip_public_route_table_update").(bool) {
 		gw := &goaviatrix.Gateway{
 			GwName: d.Get("gw_name").(string),
 		}
@@ -912,7 +912,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		}
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
 		d.Set("enable_private_vpc_default_route", gw.PrivateVpcDefaultEnabled)
-		d.Set("enable_skip_public_route_update", gw.SkipPublicVpcUpdateEnabled)
+		d.Set("enable_skip_public_route_table_update", gw.SkipPublicVpcUpdateEnabled)
 		d.Set("enable_auto_advertise_s2c_cidrs", gw.AutoAdvertiseCidrsEnabled)
 		d.Set("eip", gw.PublicIP)
 
@@ -1172,8 +1172,8 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	if d.Get("enable_private_vpc_default_route").(bool) && !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV}) {
 		return fmt.Errorf("enable_private_vpc_default_route is only valid for AWS and AWSGOV")
 	}
-	if d.Get("enable_skip_public_route_update").(bool) && !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV}) {
-		return fmt.Errorf("enable_skip_public_route_update is only valid for AWS and AWSGOV")
+	if d.Get("enable_skip_public_route_table_update").(bool) && !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV}) {
+		return fmt.Errorf("enable_skip_public_route_table_update is only valid for AWS and AWSGOV")
 	}
 
 	if d.HasChange("ha_zone") {
@@ -1803,8 +1803,8 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if d.HasChange("enable_skip_public_route_update") {
-		if d.Get("enable_skip_public_route_update").(bool) {
+	if d.HasChange("enable_skip_public_route_table_update") {
+		if d.Get("enable_skip_public_route_table_update").(bool) {
 			err := client.EnableSkipPublicRouteUpdate(gateway)
 			if err != nil {
 				return fmt.Errorf("could not enable skip public route update during spoke gateway update: %v", err)
