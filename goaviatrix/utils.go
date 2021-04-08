@@ -45,41 +45,32 @@ func Equivalent(a, b []string) bool {
 	return len(Difference(a, b)) == 0 && len(Difference(b, a)) == 0
 }
 
-// DifferenceSlice returns the one-dimension elements in two-dimension slice a that aren't in two-dimension b
-func DifferenceSlice(a, b [][]string) [][]string {
+// DifferencePairs returns all pairs in a that are not in b. If b contains any elements that are non-pairs (len != 2) then a is returned
+func DifferencePairSlice(a, b [][]string) [][]string {
 	if len(a) == 0 || len(b) == 0 {
 		return a
 	}
 
-	aa := make([]string, 0)
-	for i := range a {
-		temp := ""
-		for j := range a[i] {
-			temp += a[i][j]
-		}
-		aa = append(aa, temp)
-	}
-
-	bb := make([]string, 0)
-	for t := range b {
-		temp := ""
-		for m := range b[t] {
-			temp += b[t][m]
-		}
-		bb = append(bb, temp)
-	}
-
 	mb := map[string]bool{}
-	for x := range bb {
-		mb[bb[x]] = true
+	for i := range b {
+		if len(b[i]) != 2 {
+			return a
+		}
+		mb[b[i][0]+b[i][1]] = true
+		mb[b[i][1]+b[i][0]] = true
 	}
-	ab := make([][]string, 0)
-	for x := range aa {
-		if _, ok := mb[aa[x]]; !ok {
-			ab = append(ab, a[x])
+
+	result := make([][]string, 0)
+	for i := range a {
+		if len(a[i]) != 2 {
+			return a
+		}
+		if _, ok := mb[a[i][0]+a[i][1]]; !ok {
+			result = append(result, a[i])
 		}
 	}
-	return ab
+
+	return result
 }
 
 // DifferenceSliceAttachedVPC returns the one-dimension elements in two-dimension slice a that aren't in two-dimension b.

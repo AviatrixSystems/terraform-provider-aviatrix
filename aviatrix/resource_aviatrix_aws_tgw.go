@@ -1171,11 +1171,11 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 			domainsToCreate = goaviatrix.Difference(domainsToCreateNew, domainsToCreateOld)
 			domainsToRemove = goaviatrix.Difference(domainsToCreateOld, domainsToCreateNew)
 
-			domainConnPolicy = goaviatrix.DifferenceSlice(domainConnPolicyNew, domainConnPolicyOld)
-			domainConnRemove = goaviatrix.DifferenceSlice(domainConnPolicyOld, domainConnPolicyNew)
+			domainConnPolicy = goaviatrix.DifferencePairSlice(domainConnPolicyNew, domainConnPolicyOld)
+			domainConnRemove = goaviatrix.DifferencePairSlice(domainConnPolicyOld, domainConnPolicyNew)
 
-			domainConnPolicy1 := goaviatrix.DifferenceSlice(domainConnRemoveOld, domainConnRemoveNew)
-			domainConnRemove1 := goaviatrix.DifferenceSlice(domainConnRemoveNew, domainConnRemoveOld)
+			domainConnPolicy1 := goaviatrix.DifferencePairSlice(domainConnRemoveOld, domainConnRemoveNew)
+			domainConnRemove1 := goaviatrix.DifferencePairSlice(domainConnRemoveNew, domainConnRemoveOld)
 
 			toAttachVPCs = goaviatrix.DifferenceSliceAttachedVPC(attachedVPCNew, attachedVPCOld)
 			toDetachVPCs = goaviatrix.DifferenceSliceAttachedVPC(attachedVPCOld, attachedVPCNew)
@@ -1625,11 +1625,11 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 				domainsToCreate = goaviatrix.Difference(domainsToCreateNew, domainsToCreateOld)
 				domainsToRemove = goaviatrix.Difference(domainsToCreateOld, domainsToCreateNew)
 
-				domainConnPolicy = goaviatrix.DifferenceSlice(domainConnPolicyNew, domainConnPolicyOld)
-				domainConnRemove = goaviatrix.DifferenceSlice(domainConnPolicyOld, domainConnPolicyNew)
+				domainConnPolicy = goaviatrix.DifferencePairSlice(domainConnPolicyNew, domainConnPolicyOld)
+				domainConnRemove = goaviatrix.DifferencePairSlice(domainConnPolicyOld, domainConnPolicyNew)
 
-				domainConnPolicy1 := goaviatrix.DifferenceSlice(domainConnRemoveOld, domainConnRemoveNew)
-				domainConnRemove1 := goaviatrix.DifferenceSlice(domainConnRemoveNew, domainConnRemoveOld)
+				domainConnPolicy1 := goaviatrix.DifferencePairSlice(domainConnRemoveOld, domainConnRemoveNew)
+				domainConnRemove1 := goaviatrix.DifferencePairSlice(domainConnRemoveNew, domainConnRemoveOld)
 
 				toAttachVPCs = goaviatrix.DifferenceSliceAttachedVPC(attachedVPCNew, attachedVPCOld)
 				toDetachVPCs = goaviatrix.DifferenceSliceAttachedVPC(attachedVPCOld, attachedVPCNew)
