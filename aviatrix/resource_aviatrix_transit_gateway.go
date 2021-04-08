@@ -1667,17 +1667,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 	}
 
-	primaryGwSize := d.Get("gw_size").(string)
-	if d.HasChange("gw_size") {
-		old, _ := d.GetChange("gw_size")
-		primaryGwSize = old.(string)
-		gateway.GwSize = d.Get("gw_size").(string)
-		err := client.UpdateGateway(gateway)
-		if err != nil {
-			return fmt.Errorf("failed to update Aviatrix Transit Gateway: %s", err)
-		}
-	}
-
 	newHaGwEnabled := false
 	if d.HasChange("ha_subnet") || d.HasChange("ha_zone") || d.HasChange("ha_insane_mode_az") ||
 		(enablePrivateOob && (d.HasChange("ha_oob_management_subnet") || d.HasChange("ha_oob_availability_zone"))) {
@@ -1870,34 +1859,47 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 	}
 
-	if d.HasChange("ha_gw_size") || newHaGwEnabled {
-		newHaGwSize := d.Get("ha_gw_size").(string)
-		if !newHaGwEnabled || (newHaGwSize != primaryGwSize) {
-			// MODIFIES HA GW SIZE if
-			// Ha gateway wasn't newly configured
-			// OR
-			// newly configured Ha gateway is set to be different size than primary gateway
-			// (when ha gateway is enabled, it's size is by default the same as primary gateway)
-			_, err := client.GetGateway(haGateway)
+	if d.Get("enable_transit_firenet").(bool) {
+		primaryGwSize := d.Get("gw_size").(string)
+		if d.HasChange("gw_size") {
+			old, _ := d.GetChange("gw_size")
+			primaryGwSize = old.(string)
+			gateway.GwSize = d.Get("gw_size").(string)
+			err := client.UpdateGateway(gateway)
 			if err != nil {
-				if err == goaviatrix.ErrNotFound {
-					d.Set("ha_gw_size", "")
-					d.Set("ha_subnet", "")
-					d.Set("ha_zone", "")
-					d.Set("ha_insane_mode_az", "")
-					return nil
+				return fmt.Errorf("failed to update Aviatrix Transit Gateway: %s", err)
+			}
+		}
+
+		if d.HasChange("ha_gw_size") || newHaGwEnabled {
+			newHaGwSize := d.Get("ha_gw_size").(string)
+			if !newHaGwEnabled || (newHaGwSize != primaryGwSize) {
+				// MODIFIES HA GW SIZE if
+				// Ha gateway wasn't newly configured
+				// OR
+				// newly configured Ha gateway is set to be different size than primary gateway
+				// (when ha gateway is enabled, it's size is by default the same as primary gateway)
+				_, err := client.GetGateway(haGateway)
+				if err != nil {
+					if err == goaviatrix.ErrNotFound {
+						d.Set("ha_gw_size", "")
+						d.Set("ha_subnet", "")
+						d.Set("ha_zone", "")
+						d.Set("ha_insane_mode_az", "")
+						return nil
+					}
+					return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway while trying to update HA Gw size: %s", err)
 				}
-				return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway while trying to update HA Gw size: %s", err)
-			}
-			haGateway.GwSize = d.Get("ha_gw_size").(string)
-			if haGateway.GwSize == "" {
-				return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
-					"ha_subnet or ha_zone is set")
-			}
-			err = client.UpdateGateway(haGateway)
-			log.Printf("[INFO] Updating HA Gateway size to: %s ", haGateway.GwSize)
-			if err != nil {
-				return fmt.Errorf("failed to update Aviatrix Transit HA Gateway size: %s", err)
+				haGateway.GwSize = d.Get("ha_gw_size").(string)
+				if haGateway.GwSize == "" {
+					return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
+						"ha_subnet or ha_zone is set")
+				}
+				err = client.UpdateGateway(haGateway)
+				log.Printf("[INFO] Updating HA Gateway size to: %s ", haGateway.GwSize)
+				if err != nil {
+					return fmt.Errorf("failed to update Aviatrix Transit HA Gateway size: %s", err)
+				}
 			}
 		}
 	}
@@ -2175,6 +2177,46 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("can not disable 'enable_gateway_load_balancer' when 'enable_firenet' or 'enable_transit_firenet' is " +
 				"still enabled. Changing from GWLB FireNet to non-GWLB FireNet requires 2 separate " +
 				"`terraform apply` steps, once to disable GWLB FireNet, then again to enable non-GWLB FireNet")
+		}
+	}
+
+	if !d.Get("enable_transit_firenet").(bool) {
+		primaryGwSize := d.Get("gw_size").(string)
+		if d.HasChange("gw_size") {
+			old, _ := d.GetChange("gw_size")
+			primaryGwSize = old.(string)
+			gateway.GwSize = d.Get("gw_size").(string)
+			err := client.UpdateGateway(gateway)
+			if err != nil {
+				return fmt.Errorf("failed to update Aviatrix Transit Gateway: %s", err)
+			}
+		}
+
+		if d.HasChange("ha_gw_size") || newHaGwEnabled {
+			newHaGwSize := d.Get("ha_gw_size").(string)
+			if !newHaGwEnabled || (newHaGwSize != primaryGwSize) {
+				_, err := client.GetGateway(haGateway)
+				if err != nil {
+					if err == goaviatrix.ErrNotFound {
+						d.Set("ha_gw_size", "")
+						d.Set("ha_subnet", "")
+						d.Set("ha_zone", "")
+						d.Set("ha_insane_mode_az", "")
+						return nil
+					}
+					return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway while trying to update HA Gw size: %s", err)
+				}
+				haGateway.GwSize = d.Get("ha_gw_size").(string)
+				if haGateway.GwSize == "" {
+					return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
+						"ha_subnet or ha_zone is set")
+				}
+				err = client.UpdateGateway(haGateway)
+				log.Printf("[INFO] Updating HA Gateway size to: %s ", haGateway.GwSize)
+				if err != nil {
+					return fmt.Errorf("failed to update Aviatrix Transit HA Gateway size: %s", err)
+				}
+			}
 		}
 	}
 
