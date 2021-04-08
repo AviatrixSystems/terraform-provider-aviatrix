@@ -279,7 +279,7 @@ func resourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS Top Secret Region CAP Certificate Key file path on the controller.",
 			},
-			"aws_ca_cert_path": { //TODO
+			"aws_ca_cert_path": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "AWS Top Secret Region or Secret Region Custom Certificate Authority file path on the controller.",
@@ -488,7 +488,7 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("AWS red custom CA Chain file  is needed when creating an account for AWS red")
 		}
 	} else {
-		return fmt.Errorf("cloud type can only be either AWS (1), GCP (4), AZURE (8), OCI (16), AZURE Gov (32), AWS GOV (256) or AWS Orange (16384)")
+		return fmt.Errorf("cloud type can only be either AWS (1), GCP (4), AZURE (8), OCI (16), AZURE Gov (32), AWS GOV (256), AWS Top Secret (16384) or AWS Secret (32768)")
 	}
 
 	var err error

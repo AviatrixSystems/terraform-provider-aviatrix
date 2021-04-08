@@ -78,6 +78,81 @@ func dataSourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS Gov Access Key.",
 			},
+			"aws_orange_account_number": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS Top Secret Region Account Number.",
+			},
+			"aws_orange_cap_url": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS Top Secret Region CAP Endpoint URL.",
+			},
+			"aws_orange_cap_agency": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS Top Secret Region CAP Agency.",
+			},
+			"aws_orange_cap_mission": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS Top Secret Region CAP Mission.",
+			},
+			"aws_orange_cap_role_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS Top Secret Region CAP Role Name.",
+			},
+			"aws_red_account_number": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS Secret Region Account Number.",
+			},
+			"aws_red_cap_url": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS Secret Region CAP Endpoint URL.",
+			},
+			"aws_red_cap_agency": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS Secret Region CAP Agency.",
+			},
+			"aws_red_cap_account_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS Secret Region CAP Account Name.",
+			},
+			"aws_red_cap_role_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS Secret Region CAP Role Name.",
+			},
+			"aws_orange_cap_cert_path": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS Top Secret Region CAP Certificate file path on the controller.",
+			},
+			"aws_orange_cap_cert_key_path": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS Top Secret Region CAP Certificate Key file path on the controller.",
+			},
+			"aws_ca_cert_path": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS Top Secret Region or Secret Region Custom Certificate Authority file path on the controller.",
+			},
+			"aws_red_cap_cert_path": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS Secret Region CAP Certificate file path on the controller.",
+			},
+			"aws_red_cap_cert_key_path": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS Secret Region CAP Certificate Key file path on the controller.",
+			},
 		},
 	}
 }
@@ -114,6 +189,25 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("azure_gov_subscription_id", acc.AzureGovSubscriptionId)
 	d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
 	d.Set("awsgov_access_key", acc.AwsgovAccessKey)
+
+	d.Set("aws_orange_account_number", acc.AwsOrangeAccountNumber)
+	d.Set("aws_orange_cap_url", acc.AwsOrangeCapUrl)
+	d.Set("aws_orange_cap_agency", acc.AwsOrangeCapAgency)
+	d.Set("aws_orange_cap_mission", acc.AwsOrangeCapMission)
+	d.Set("aws_orange_cap_role_name", acc.AwsOrangeCapRoleName)
+	d.Set("aws_orange_cap_cert_path", acc.AwsOrangeCapCertPath)
+	d.Set("aws_orange_cap_cert_key_path", acc.AwsOrangeCapCertKeyPath)
+	d.Set("aws_ca_cert_path", acc.AwsCaCertPath)
+
+	d.Set("aws_red_account_number", acc.AwsRedAccountNumber)
+	d.Set("aws_red_cap_url", acc.AwsRedCapUrl)
+	d.Set("aws_red_cap_agency", acc.AwsRedCapAgency)
+	d.Set("aws_red_cap_account_name", acc.AwsRedCapAccountName)
+	d.Set("aws_red_cap_role_name", acc.AwsRedCapRoleName)
+	d.Set("aws_red_cap_cert_path", acc.AwsRedCapCertPath)
+	d.Set("aws_red_cap_cert_key_path", acc.AwsRedCapCertKeyPath)
+	d.Set("aws_ca_cert_path", acc.AwsCaCertPath)
+
 	d.SetId(acc.AccountName)
 
 	return nil
