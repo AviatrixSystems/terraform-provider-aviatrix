@@ -49,9 +49,11 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |		                               | SKIP_ACCOUNT_AWS	                | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY                             |
 |                     		           | SKIP_ACCOUNT_GCP	                | GCP_ID, GCP_CREDENTIALS_FILEPATH	                                             |
 |		                               | SKIP_ACCOUNT_AZURE	                | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID, ARM_APPLICATION_KEY |
-|                     		           | SKIP_ACCOUNT_AZURE_GOV	                | AZURE_GOV_SUBSCRIPTION_ID, AZURE_GOV_DIRECTORY_ID, AZURE_GOV_APPLICATION_ID, AZURE_GOV_APPLICATION_KEY        |
+|                     		           | SKIP_ACCOUNT_AZURE_GOV	            | AZURE_GOV_SUBSCRIPTION_ID, AZURE_GOV_DIRECTORY_ID, AZURE_GOV_APPLICATION_ID, AZURE_GOV_APPLICATION_KEY        |
 |                     		           | SKIP_ACCOUNT_OCI	                | OCI_TENANCY_ID, OCI_USER_ID, OCI_COMPARTMENT_ID, OCI_API_KEY_FILEPATH          |
 |		                               | SKIP_ACCOUNT_AWSGOV                | AWSGOV_ACCOUNT_NUMBER, AWSGOV_ACCESS_KEY, AWSGOV_SECRET_KEY                    |
+|		                               | SKIP_ACCOUNT_AWS_C2S               | AWS_C2S_ACCOUNT_NUMBER, AWS_C2S_CAP_URL, AWS_C2S_CAP_AGENCY, AWS_C2S_CAP_MISSION, AWS_C2S_CAP_ROLE_NAME, AWS_C2S_CAP_CERT, AWS_C2S_CAP_CERT_KEY, AWS_C2S_CA_CHAIN_CERT                   |
+|		                               | SKIP_ACCOUNT_AWS_SC2S              | AWS_SC2S_ACCOUNT_NUMBER, AWS_SC2S_CAP_URL, AWS_SC2S_CAP_AGENCY, AWS_SC2S_CAP_ACCOUNT_NAME, AWS_SC2S_CAP_ROLE_NAME, AWS_SC2S_CAP_CERT, AWS_SC2S_CAP_CERT_KEY, AWS_SC2S_CA_CHAIN_CERT                   |
 | aviatrix_account_user                | SKIP_ACCOUNT_USER                  |                                                                                |
 | aviatrix_arm_peer                    | SKIP_ARM_PEER                      | aviatrix_account + ARM_VNET_ID, ARM_VNET_ID2, ARM_REGION, ARM_REGION2          |
 | aviatrix_aws_guard_duty              | SKIP_AWS_GUARD_DUTY                | aviatrix_account                                                               |

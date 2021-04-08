@@ -11,6 +11,8 @@ const (
 	OCI      = 16
 	AZUREGOV = 32
 	AWSGOV   = 256
+	AWSC2S   = 16384 // AWS Top Secret Region
+	AWSSC2S  = 32768 // AWS Secret Region
 )
 
 // Cloud vendor names
@@ -36,6 +38,8 @@ func GetSupportedClouds() []int {
 		OCI,
 		AZUREGOV,
 		AWSGOV,
+		AWSC2S,
+		AWSSC2S,
 	}
 }
 

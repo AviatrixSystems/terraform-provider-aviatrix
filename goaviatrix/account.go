@@ -54,6 +54,27 @@ type Account struct {
 	AzureGovApplicationEndpoint           string `form:"azure_gov_application_endpoint,omitempty" json:"arm_gov_ad_tenant_id,omitempty"`
 	AzureGovApplicationClientId           string `form:"azure_gov_application_client_id,omitempty" json:"arm_gov_ad_client_id,omitempty"`
 	AzureGovApplicationClientSecret       string `form:"azure_gov_application_client_secret,omitempty" json:"azure_gov_application_client_secret,omitempty"`
+	AwsOrangeAccountNumber                string `json:"awsorangecloud_account_number,omitempty"`
+	AwsOrangeCapUrl                       string `json:"aws_orange_cap_url,omitempty"`
+	AwsOrangeCapAgency                    string `json:"aws_orange_cap_agency,omitempty"`
+	AwsOrangeCapMission                   string `json:"aws_orange_cap_mission,omitempty"`
+	AwsOrangeCapRoleName                  string `json:"aws_orange_cap_role_name,omitempty"`
+	AwsOrangeCapCert                      string
+	AwsOrangeCapCertKey                   string
+	AwsOrangeCaChainCert                  string
+	AwsOrangeCapCertPath                  string `json:"aws_orange_cap_cert_path,omitempty"`
+	AwsOrangeCapCertKeyPath               string `json:"aws_orange_cap_key_path,omitempty"`
+	AwsCaCertPath                         string `json:"aws_ca_cert_path,omitempty"`
+	AwsRedAccountNumber                   string `form:"aws_red_account_number,omitempty" json:"awsredcloud_account_number,omitempty"`
+	AwsRedCapUrl                          string `form:"aws_red_cap_url,omitempty" json:"aws_red_cap_url,omitempty"`
+	AwsRedCapAgency                       string `form:"aws_red_cap_agency,omitempty" json:"aws_red_cap_agency,omitempty"`
+	AwsRedCapAccountName                  string `form:"aws_red_cap_account_name,omitempty" json:"aws_red_cap_account_name,omitempty"`
+	AwsRedCapRoleName                     string `json:"aws_red_cap_role_name,omitempty"`
+	AwsRedCapCert                         string
+	AwsRedCapCertKey                      string
+	AwsRedCaChainCert                     string
+	AwsRedCapCertPath                     string `form:"aws_red_cap_cert_path,omitempty" json:"aws_red_cap_cert_path,omitempty"`
+	AwsRedCapCertKeyPath                  string `json:"aws_red_cap_key_path,omitempty"`
 }
 
 type AccountResult struct {
@@ -157,6 +178,98 @@ func (c *Client) CreateOCIAccount(account *Account) error {
 	return nil
 }
 
+func (c *Client) CreateAWSC2SAccount(account *Account) error {
+	params := map[string]string{
+		"CID":                       c.CID,
+		"action":                    "setup_account_profile",
+		"account_name":              account.AccountName,
+		"cloud_type":                strconv.Itoa(account.CloudType),
+		"aws_orange_account_number": account.AwsOrangeAccountNumber,
+		"aws_orange_cap_url":        account.AwsOrangeCapUrl,
+		"aws_orange_cap_agency":     account.AwsOrangeCapAgency,
+		"aws_orange_cap_mission":    account.AwsOrangeCapMission,
+		"aws_orange_cap_role_name":  account.AwsOrangeCapRoleName,
+	}
+
+	files := []File{
+		{
+			Path:      account.AwsOrangeCapCert,
+			ParamName: "aws_orange_cap_cert",
+		},
+		{
+			Path:      account.AwsOrangeCapCertKey,
+			ParamName: "aws_orange_cap_cert_key",
+		},
+		{
+			Path:      account.AwsOrangeCaChainCert,
+			ParamName: "aws_orange_ca_chain_cert",
+		},
+	}
+
+	resp, err := c.PostFile(c.baseURL, params, files)
+	if err != nil {
+		return errors.New("HTTP Post setup_account_profile failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode setup_account_profile failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API setup_account_profile Post failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) CreateAWSSC2SAccount(account *Account) error {
+	params := map[string]string{
+		"CID":                      c.CID,
+		"action":                   "setup_account_profile",
+		"account_name":             account.AccountName,
+		"cloud_type":               strconv.Itoa(account.CloudType),
+		"aws_red_account_number":   account.AwsRedAccountNumber,
+		"aws_red_cap_url":          account.AwsRedCapUrl,
+		"aws_red_cap_agency":       account.AwsRedCapAgency,
+		"aws_red_cap_account_name": account.AwsRedCapAccountName,
+		"aws_red_cap_role_name":    account.AwsRedCapRoleName,
+	}
+
+	files := []File{
+		{
+			Path:      account.AwsRedCapCert,
+			ParamName: "aws_red_cap_cert",
+		},
+		{
+			Path:      account.AwsRedCapCertKey,
+			ParamName: "aws_red_cap_cert_key",
+		},
+		{
+			Path:      account.AwsRedCaChainCert,
+			ParamName: "aws_red_ca_chain_cert",
+		},
+	}
+
+	resp, err := c.PostFile(c.baseURL, params, files)
+	if err != nil {
+		return errors.New("HTTP Post setup_account_profile failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode setup_account_profile failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API setup_account_profile Post failed: " + data.Reason)
+	}
+	return nil
+}
+
 func (c *Client) GetAccount(account *Account) (*Account, error) {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
@@ -228,6 +341,124 @@ func (c *Client) UpdateGCPAccount(account *Account) error {
 			Path:      account.GcloudProjectCredentialsFilepathLocal,
 			ParamName: "gcloud_project_credentials",
 		},
+	}
+
+	resp, err := c.PostFile(c.baseURL, params, files)
+	if err != nil {
+		return errors.New("HTTP Post edit_account_profile failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode edit_account_profile failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API edit_account_profile Post failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) UpdateAWSC2SAccount(account *Account, fileChanges map[string]bool) error {
+	params := map[string]string{
+		"CID":                       c.CID,
+		"action":                    "edit_account_profile",
+		"account_name":              account.AccountName,
+		"cloud_type":                strconv.Itoa(account.CloudType),
+		"aws_orange_account_number": account.AwsOrangeAccountNumber,
+		"aws_orange_cap_url":        account.AwsOrangeCapUrl,
+		"aws_orange_cap_agency":     account.AwsOrangeCapAgency,
+		"aws_orange_cap_mission":    account.AwsOrangeCapMission,
+		"aws_orange_cap_role_name":  account.AwsOrangeCapRoleName,
+	}
+
+	files := make([]File, 0, 3)
+	if fileChanges["aws_orange_cap_cert"] {
+		files = append(files, File{
+			Path:      account.AwsOrangeCapCert,
+			ParamName: "aws_orange_cap_cert",
+		})
+	} else {
+		params["aws_orange_cap_cert_path"] = account.AwsOrangeCapCertPath
+	}
+
+	if fileChanges["aws_orange_cap_cert_key"] {
+		files = append(files, File{
+			Path:      account.AwsOrangeCapCertKey,
+			ParamName: "aws_orange_cap_cert_key",
+		})
+	} else {
+		params["aws_orange_cap_key_path"] = account.AwsOrangeCapCertKeyPath
+	}
+
+	if fileChanges["aws_orange_ca_chain_cert"] {
+		files = append(files, File{
+			Path:      account.AwsOrangeCaChainCert,
+			ParamName: "aws_orange_ca_chain_cert",
+		})
+	} else {
+		params["aws_ca_cert_path"] = account.AwsCaCertPath
+	}
+
+	resp, err := c.PostFile(c.baseURL, params, files)
+	if err != nil {
+		return errors.New("HTTP Post edit_account_profile failed: " + err.Error())
+	}
+	var data APIResp
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode edit_account_profile failed: " + err.Error() + "\n Body: " + bodyString)
+	}
+	if !data.Return {
+		return errors.New("Rest API edit_account_profile Post failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) UpdateAWSSC2SAccount(account *Account, fileChanges map[string]bool) error {
+	params := map[string]string{
+		"CID":                      c.CID,
+		"action":                   "edit_account_profile",
+		"account_name":             account.AccountName,
+		"cloud_type":               strconv.Itoa(account.CloudType),
+		"aws_red_account_number":   account.AwsRedAccountNumber,
+		"aws_red_cap_url":          account.AwsRedCapUrl,
+		"aws_red_cap_agency":       account.AwsRedCapAgency,
+		"aws_red_cap_account_name": account.AwsRedCapAccountName,
+		"aws_red_cap_role_name":    account.AwsRedCapRoleName,
+	}
+
+	files := make([]File, 0, 3)
+	if fileChanges["aws_red_cap_cert"] {
+		files = append(files, File{
+			Path:      account.AwsRedCapCert,
+			ParamName: "aws_red_cap_cert",
+		})
+	} else {
+		params["aws_red_cap_cert_path"] = account.AwsRedCapCertPath
+	}
+
+	if fileChanges["aws_red_cap_cert_key"] {
+		files = append(files, File{
+			Path:      account.AwsRedCapCertKey,
+			ParamName: "aws_red_cap_cert_key",
+		})
+	} else {
+		params["aws_red_cap_key_path"] = account.AwsRedCapCertKeyPath
+	}
+
+	if fileChanges["aws_red_ca_chain_cert"] {
+		files = append(files, File{
+			Path:      account.AwsRedCaChainCert,
+			ParamName: "aws_red_ca_chain_cert",
+		})
+	} else {
+		params["aws_ca_cert_path"] = account.AwsCaCertPath
 	}
 
 	resp, err := c.PostFile(c.baseURL, params, files)
