@@ -67,8 +67,8 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional:     true,
 				Default:      "IPsec",
 				ForceNew:     true,
-				Description:  "Tunnel Protocol. Valid values: 'IPsec', 'GRE' or 'LAN'. Default value: 'IPsec'.",
-				ValidateFunc: validation.StringInSlice([]string{"IPsec", "GRE", "LAN"}, false),
+				Description:  "Tunnel Protocol. Valid values: 'IPsec', 'GRE' or 'LAN'. Default value: 'IPsec'. It is case insensitive.",
+				ValidateFunc: validation.StringInSlice([]string{"IPsec", "GRE", "LAN"}, true),
 			},
 			"bgp_local_as_num": {
 				Type:         schema.TypeString,
@@ -341,12 +341,18 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		BackupPreSharedKey:     d.Get("backup_pre_shared_key").(string),
 		BackupLocalTunnelCidr:  d.Get("backup_local_tunnel_cidr").(string),
 		BackupRemoteTunnelCidr: d.Get("backup_remote_tunnel_cidr").(string),
-		TunnelProtocol:         d.Get("tunnel_protocol").(string),
 		PeerVnetId:             d.Get("remote_vpc_name").(string),
 		RemoteLanIP:            d.Get("remote_lan_ip").(string),
 		LocalLanIP:             d.Get("local_lan_ip").(string),
 		BackupRemoteLanIP:      d.Get("backup_remote_lan_ip").(string),
 		BackupLocalLanIP:       d.Get("backup_local_lan_ip").(string),
+	}
+
+	tunnelProtocol := strings.ToUpper(d.Get("tunnel_protocol").(string))
+	if tunnelProtocol == "IPSEC" {
+		externalDeviceConn.TunnelProtocol = "IPsec"
+	} else {
+		externalDeviceConn.TunnelProtocol = tunnelProtocol
 	}
 
 	if (externalDeviceConn.RemoteGatewayIP != "" ||
