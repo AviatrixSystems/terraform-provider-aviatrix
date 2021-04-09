@@ -69,6 +69,9 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				ForceNew:     true,
 				Description:  "Tunnel Protocol. Valid values: 'IPsec', 'GRE' or 'LAN'. Default value: 'IPsec'. Case insensitive.",
 				ValidateFunc: validation.StringInSlice([]string{"IPsec", "GRE", "LAN"}, true),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.ToUpper(old) == strings.ToUpper(new)
+				},
 			},
 			"bgp_local_as_num": {
 				Type:         schema.TypeString,
