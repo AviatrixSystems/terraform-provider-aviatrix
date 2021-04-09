@@ -1495,12 +1495,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("could not get jumbo frame status for transit gateway: %v", err)
 	}
 	d.Set("enable_jumbo_frame", jumboFrameStatus)
-
-	detectionTime, err := client.GetTunnelDetectionTime(gateway.GwName)
-	if err != nil {
-		return fmt.Errorf("could not get tunnel detection time for the Transit Gateway: %v", err)
-	}
-	d.Set("tunnel_detection_time", detectionTime)
+	d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
 
 	haGateway := &goaviatrix.Gateway{
 		AccountName: d.Get("account_name").(string),

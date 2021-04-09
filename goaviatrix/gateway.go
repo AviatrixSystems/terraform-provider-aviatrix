@@ -153,6 +153,7 @@ type Gateway struct {
 	SkipPublicVpcUpdateEnabled  bool   `json:"skip_public_vpc_update_enabled"`
 	EnableMultitierTransit      bool   `json:"multitier_transit"`
 	AutoAdvertiseCidrsEnabled   bool   `json:"auto_advertise_s2c_cidrs"`
+	TunnelDetectionTime         int    `json:"detection_time"`
 }
 
 type PolicyRule struct {

@@ -1546,11 +1546,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("enable_jumbo_frame", jumboFrameStatus)
 		}
 
-		detectionTime, err := client.GetTunnelDetectionTime(gw.GwName)
-		if err != nil {
-			return fmt.Errorf("could not get tunnel detection time for the Gateway: %v", err)
-		}
-		d.Set("tunnel_detection_time", detectionTime)
+		d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
 	}
 	return nil
 }
