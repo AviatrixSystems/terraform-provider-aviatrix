@@ -212,6 +212,11 @@ func dataSourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "A map of tags assigned to the spoke gateway.",
 			},
+			"tunnel_detection_time": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The IPSec tunnel down detection time for the spoke gateway.",
+			},
 		},
 	}
 }
@@ -396,6 +401,8 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 				d.Set("tag_list", tagList)
 			}
 		}
+
+		d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
 	}
 
 	d.SetId(gateway.GwName)
