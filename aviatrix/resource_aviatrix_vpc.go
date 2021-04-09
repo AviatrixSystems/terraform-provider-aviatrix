@@ -249,8 +249,8 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	aviatrixTransitVpc := d.Get("aviatrix_transit_vpc").(bool)
 	aviatrixFireNetVpc := d.Get("aviatrix_firenet_vpc").(bool)
 
-	if aviatrixTransitVpc && vpc.CloudType != goaviatrix.AWS && vpc.CloudType != goaviatrix.AWSGOV {
-		return fmt.Errorf("currently 'aviatrix_transit_vpc' is only supported for AWS and AWSGOV provider")
+	if aviatrixTransitVpc && !intInSlice(vpc.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.ALIYUN}) {
+		return fmt.Errorf("currently 'aviatrix_transit_vpc' is only supported for AWS, AWSGOV, and Alibaba Cloud provider")
 	}
 	if aviatrixFireNetVpc && !intInSlice(vpc.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.AZURE, goaviatrix.OCI}) {
 		return fmt.Errorf("currently 'aviatrix_firenet_vpc' is only supported for AWS, AWSGOV, AZURE and OCI provider")

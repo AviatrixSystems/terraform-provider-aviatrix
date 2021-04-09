@@ -558,13 +558,13 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		gateway.VpcNet = fmt.Sprintf("%s~~%s~~", d.Get("subnet").(string), d.Get("zone").(string))
 	}
 
-	if gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AZURE || gateway.CloudType == goaviatrix.OCI || gateway.CloudType == goaviatrix.AWSGOV {
+	if intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AZURE, goaviatrix.OCI, goaviatrix.AWSGOV, goaviatrix.ALIYUN}) {
 		gateway.VpcRegion = d.Get("vpc_reg").(string)
 	} else if gateway.CloudType == goaviatrix.GCP {
 		// for gcp, rest api asks for "zone" rather than vpc region
 		gateway.Zone = d.Get("vpc_reg").(string)
 	} else {
-		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), AZURE (8), OCI (16), or AWSGOV (256)")
+		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), AZURE (8), OCI (16), AWSGOV (256) or Alibaba Cloud (8192)")
 	}
 
 	singleIpNat := d.Get("single_ip_snat").(bool)
@@ -880,6 +880,8 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			if peeringHaZone != "" {
 				peeringHaGateway.PeeringHASubnet = fmt.Sprintf("%s~~%s~~", peeringHaSubnet, peeringHaZone)
 			}
+		} else if peeringHaGateway.CloudType == goaviatrix.ALIYUN {
+			peeringHaGateway.PeeringHASubnet = peeringHaSubnet
 		}
 
 		if d.Get("enable_public_subnet_filtering").(bool) {
@@ -1098,7 +1100,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("account_name", gw.AccountName)
 		d.Set("gw_name", gw.GwName)
 
-		if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.OCI || gw.CloudType == goaviatrix.AWSGOV {
+		if intInSlice(gw.CloudType, []int{goaviatrix.AWS, goaviatrix.OCI, goaviatrix.AWSGOV, goaviatrix.ALIYUN}) {
 			// AWS vpc_id returns as <vpc_id>~~<other vpc info>
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 			d.Set("vpc_reg", gw.VpcRegion)
@@ -1123,13 +1125,13 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("single_ip_snat", false)
 		}
 
-		if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV || gw.CloudType == goaviatrix.GCP {
+		if intInSlice(gw.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.GCP}) {
 			if gw.AllocateNewEipRead {
 				d.Set("allocate_new_eip", true)
 			} else {
 				d.Set("allocate_new_eip", false)
 			}
-		} else if gw.CloudType == goaviatrix.AZURE || gw.CloudType == goaviatrix.OCI {
+		} else if intInSlice(gw.CloudType, []int{goaviatrix.AZURE, goaviatrix.OCI, goaviatrix.ALIYUN}) {
 			// AZURE gateways don't have the option to allocate new eip's
 			// default for allocate_new_eip is on
 			d.Set("allocate_new_eip", true)
@@ -1333,6 +1335,9 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 							d.Set("peering_ha_zone", "az-"+gwDetail.GwZone)
 						}
 					}
+				} else if gwHaGw.CloudType == goaviatrix.ALIYUN {
+					d.Set("peering_ha_subnet", gwHaGw.VpcNet)
+					d.Set("peering_ha_zone", "")
 				}
 			} else {
 				d.Set("peering_ha_zone", "")
@@ -1608,7 +1613,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 	if d.HasChange("peering_ha_zone") {
 		peeringHaZone := d.Get("peering_ha_zone").(string)
-		if peeringHaZone != "" && gateway.CloudType != goaviatrix.GCP && gateway.CloudType != goaviatrix.AZURE && !d.Get("enable_public_subnet_filtering").(bool) {
+		if peeringHaZone != "" && !intInSlice(gateway.CloudType, []int{goaviatrix.GCP, goaviatrix.AZURE}) && !d.Get("enable_public_subnet_filtering").(bool) {
 			return fmt.Errorf("'peering_ha_zone' is only valid for GCP, AZURE and Public Subnet Filtering Gateway if enabling Peering HA")
 		}
 	}
@@ -1639,6 +1644,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	peeringHaGateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string) + "-hagw",
+		GwSize:    d.Get("peering_ha_gw_size").(string),
 	}
 
 	// Get primary gw size if gw_size changed, to be used later on for peering ha gw size update
@@ -1996,6 +2002,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			Eip:       d.Get("peering_ha_eip").(string),
 			GwName:    d.Get("gw_name").(string),
 			CloudType: d.Get("cloud_type").(int),
+			GwSize:    d.Get("peering_ha_gw_size").(string),
 		}
 
 		oldSubnet, newSubnet := d.GetChange("peering_ha_subnet")
@@ -2003,7 +2010,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		deleteHaGw := false
 		changeHaGw := false
 
-		if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AZURE || gw.CloudType == goaviatrix.AWSGOV {
+		if intInSlice(gw.CloudType, []int{goaviatrix.AWS, goaviatrix.AZURE, goaviatrix.AWSGOV, goaviatrix.ALIYUN}) {
 			gw.PeeringHASubnet = d.Get("peering_ha_subnet").(string)
 			if gw.CloudType == goaviatrix.AZURE && newZone != "" {
 				gw.PeeringHASubnet = fmt.Sprintf("%s~~%s~~", newSubnet, newZone)
@@ -2037,6 +2044,13 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 			haStrs = append(haStrs, gw.PeeringHASubnet, peeringHaInsaneModeAz)
 			gw.PeeringHASubnet = strings.Join(haStrs, "~~")
+		}
+
+		if (newHaGwEnabled || changeHaGw) && gw.GwSize == "" {
+			return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for this resource if " +
+				"peering_ha_subnet or peering_ha_zone is set")
+		} else if deleteHaGw && gw.GwSize != "" {
+			return fmt.Errorf("peering_ha_gw_size must be empty if transit HA gateway is deleted")
 		}
 
 		if d.Get("enable_public_subnet_filtering").(bool) {
@@ -2122,7 +2136,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				return fmt.Errorf("couldn't find Aviatrix Peering HA Gateway while trying to update HA Gw "+
 					"size: %s", err)
 			}
-			peeringHaGateway.GwSize = d.Get("peering_ha_gw_size").(string)
+
 			if peeringHaGateway.GwSize == "" {
 				return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for this resource if " +
 					"peering_ha_subnet or peering_ha_zone is set. Example: t2.micro or us-west1-b respectively")

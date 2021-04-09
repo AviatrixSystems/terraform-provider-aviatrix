@@ -11,6 +11,7 @@ const (
 	OCI      = 16
 	AZUREGOV = 32
 	AWSGOV   = 256
+	ALIYUN   = 8192
 )
 
 // Cloud vendor names
@@ -36,6 +37,7 @@ func GetSupportedClouds() []int {
 		OCI,
 		AZUREGOV,
 		AWSGOV,
+		ALIYUN,
 	}
 }
 

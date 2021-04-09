@@ -523,7 +523,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		gateway.Subnet = fmt.Sprintf("%s~~%s~~", d.Get("subnet").(string), zone)
 	}
 
-	if cloudType == goaviatrix.AWS || cloudType == goaviatrix.GCP || cloudType == goaviatrix.OCI || cloudType == goaviatrix.AWSGOV {
+	if intInSlice(cloudType, []int{goaviatrix.AWS, goaviatrix.GCP, goaviatrix.OCI, goaviatrix.AWSGOV, goaviatrix.ALIYUN}) {
 		gateway.VpcID = d.Get("vpc_id").(string)
 		if gateway.VpcID == "" {
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a transit gw")
@@ -533,15 +533,17 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if gateway.VNetNameResourceGroup == "" {
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a transit gw")
 		}
+	} else {
+		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), AZURE (8), OCI (16), AWSGOV (256), or Alibaba Cloud (8192)")
 	}
 
-	if gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AZURE || gateway.CloudType == goaviatrix.OCI || gateway.CloudType == goaviatrix.AWSGOV {
+	if intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AZURE, goaviatrix.OCI, goaviatrix.AWSGOV, goaviatrix.ALIYUN}) {
 		gateway.VpcRegion = d.Get("vpc_reg").(string)
 	} else if gateway.CloudType == goaviatrix.GCP {
 		// for gcp, rest api asks for "zone" rather than vpc region
 		gateway.Zone = d.Get("vpc_reg").(string)
 	} else {
-		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), AZURE (8), OCI (16), or AWSGOV (256)")
+		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), AZURE (8), OCI (16), AWSGOV (256), or Alibaba Cloud (8192)")
 	}
 
 	insaneMode := d.Get("insane_mode").(bool)
@@ -1232,6 +1234,10 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("vpc_id", gw.VpcID)
 			d.Set("vpc_reg", gw.VpcRegion)
 			d.Set("allocate_new_eip", true)
+		} else if gw.CloudType == goaviatrix.ALIYUN {
+			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
+			d.Set("vpc_reg", gw.VpcRegion)
+			d.Set("allocate_new_eip", true)
 		}
 
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
@@ -1500,7 +1506,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway: %s", err)
 		}
 	} else {
-		if haGw.CloudType == goaviatrix.AWS || haGw.CloudType == goaviatrix.AZURE || haGw.CloudType == goaviatrix.OCI || haGw.CloudType == goaviatrix.AWSGOV {
+		if intInSlice(haGw.CloudType, []int{goaviatrix.AWS, goaviatrix.AZURE, goaviatrix.OCI, goaviatrix.AWSGOV, goaviatrix.ALIYUN}) {
 			d.Set("ha_subnet", haGw.VpcNet)
 			if zone := d.Get("ha_zone"); haGw.CloudType == goaviatrix.AZURE && (isImport || zone.(string) != "") {
 				haGwDetail, err := client.GetGatewayDetail(haGateway)
@@ -1556,6 +1562,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	haGateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string) + "-hagw",
+		GwSize:    d.Get("ha_gw_size").(string),
 	}
 	log.Printf("[INFO] Updating Aviatrix Transit Gateway: %#v", gateway)
 
@@ -1673,6 +1680,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		transitGw := &goaviatrix.TransitVpc{
 			GwName:    d.Get("gw_name").(string),
 			CloudType: d.Get("cloud_type").(int),
+			GwSize:    d.Get("ha_gw_size").(string),
 		}
 
 		if transitGw.CloudType == goaviatrix.AWS || transitGw.CloudType == goaviatrix.GCP || transitGw.CloudType == goaviatrix.AWSGOV {
@@ -1687,7 +1695,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		oldZone, newZone := d.GetChange("ha_zone")
 		deleteHaGw := false
 		changeHaGw := false
-		if transitGw.CloudType == goaviatrix.AWS || transitGw.CloudType == goaviatrix.AZURE || transitGw.CloudType == goaviatrix.AWSGOV {
+		if intInSlice(transitGw.CloudType, []int{goaviatrix.AWS, goaviatrix.AZURE, goaviatrix.AWSGOV, goaviatrix.ALIYUN, goaviatrix.OCI}) {
 			transitGw.HASubnet = d.Get("ha_subnet").(string)
 			if transitGw.CloudType == goaviatrix.AZURE && d.Get("ha_zone").(string) != "" {
 				transitGw.HASubnet = fmt.Sprintf("%s~~%s~~", d.Get("ha_subnet").(string), d.Get("ha_zone").(string))
@@ -1733,6 +1741,13 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			transitGw.HASubnet = strings.Join(haStrs, "~~")
 		}
 
+		if (newHaGwEnabled || changeHaGw) && transitGw.GwSize == "" {
+			return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
+				"ha_subnet or ha_zone is set")
+		} else if deleteHaGw && transitGw.GwSize != "" {
+			return fmt.Errorf("ha_gw_size must be empty if transit HA gateway is deleted")
+		}
+
 		haOobManagementSubnet := d.Get("ha_oob_management_subnet").(string)
 		haOobAvailabilityZone := d.Get("ha_oob_availability_zone").(string)
 
@@ -1772,10 +1787,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				}
 			}
 		} else if deleteHaGw {
-			if d.Get("ha_gw_size").(string) != "" {
-				return fmt.Errorf("\"ha_gw_size\" must be empty if transit HA gateway is deleted")
-			}
-
 			err := client.DeleteGateway(haGateway)
 			if err != nil {
 				return fmt.Errorf("failed to delete Aviatrix Transit HA gateway: %s", err)
@@ -1891,7 +1902,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 					}
 					return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway while trying to update HA Gw size: %s", err)
 				}
-				haGateway.GwSize = d.Get("ha_gw_size").(string)
+
 				if haGateway.GwSize == "" {
 					return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
 						"ha_subnet or ha_zone is set")
@@ -2207,7 +2218,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 					}
 					return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway while trying to update HA Gw size: %s", err)
 				}
-				haGateway.GwSize = d.Get("ha_gw_size").(string)
+
 				if haGateway.GwSize == "" {
 					return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
 						"ha_subnet or ha_zone is set")

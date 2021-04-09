@@ -239,7 +239,7 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("cloud_type", gw.CloudType)
 		d.Set("account_name", gw.AccountName)
 
-		if gw.CloudType == goaviatrix.AWS {
+		if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 			d.Set("vpc_reg", gw.VpcRegion)
 
@@ -260,9 +260,13 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 		} else if gw.CloudType == goaviatrix.AZURE || gw.CloudType == goaviatrix.OCI {
 			d.Set("vpc_id", gw.VpcID)
 			d.Set("vpc_reg", gw.VpcRegion)
-
+			d.Set("allocate_new_eip", true)
+		} else if gw.CloudType == goaviatrix.ALIYUN {
+			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
+			d.Set("vpc_reg", gw.VpcRegion)
 			d.Set("allocate_new_eip", true)
 		}
+
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
 		d.Set("public_ip", gw.PublicIP)
 
@@ -351,7 +355,7 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 		haGw, _ := client.GetGateway(haGateway)
 		if haGw != nil {
-			if haGw.CloudType == goaviatrix.AWS || haGw.CloudType == goaviatrix.AZURE || haGw.CloudType == goaviatrix.OCI {
+			if intInSlice(haGw.CloudType, []int{goaviatrix.AWS, goaviatrix.AZURE, goaviatrix.OCI, goaviatrix.AWSGOV, goaviatrix.ALIYUN}) {
 				d.Set("ha_subnet", haGw.VpcNet)
 				d.Set("ha_zone", "")
 			} else if haGw.CloudType == goaviatrix.GCP {

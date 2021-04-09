@@ -183,6 +183,23 @@ func resourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS EC2 role ARN.",
 			},
+			"aliyun_account_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Alibaba Cloud Account ID to associate with Aviatrix account.",
+			},
+			"aliyun_access_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Alibaba Cloud Access Key.",
+			},
+			"aliyun_secret_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Alibaba Cloud Secret Key.",
+			},
 		},
 	}
 }
@@ -217,6 +234,9 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		OciUserID:                             d.Get("oci_user_id").(string),
 		OciCompartmentID:                      d.Get("oci_compartment_id").(string),
 		OciApiPrivateKeyFilePath:              d.Get("oci_api_private_key_filepath").(string),
+		AliyunAccountId:                       d.Get("aliyun_account_id").(string),
+		AliyunAccessKey:                       d.Get("aliyun_access_key").(string),
+		AliyunSecretKey:                       d.Get("aliyun_secret_key").(string),
 	}
 
 	awsIam := d.Get("aws_iam").(bool)
@@ -305,8 +325,18 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		if account.AzureGovApplicationClientSecret == "" {
 			return fmt.Errorf("azure gov application key needed when creating an account for arm gov cloud")
 		}
+	} else if account.CloudType == goaviatrix.ALIYUN {
+		if account.AliyunAccountId == "" {
+			return fmt.Errorf("aliyun_account_id is required for alibaba cloud")
+		}
+		if account.AliyunAccessKey == "" {
+			return fmt.Errorf("aliyun_access_key is required for alibaba cloud")
+		}
+		if account.AliyunSecretKey == "" {
+			return fmt.Errorf("aliyun_secret_key is required for alibaba cloud")
+		}
 	} else {
-		return fmt.Errorf("cloud type can only be either aws (1), gcp (4), azure (8), oci (16), azure gov (32) or aws gov (256)")
+		return fmt.Errorf("cloud type can only be either aws (1), gcp (4), azure (8), oci (16), azure gov (32), aws gov (256) or Alibaba Cloud (8192)")
 	}
 
 	var err error
@@ -378,6 +408,8 @@ func resourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("awsgov_access_key", acc.AwsgovAccessKey)
 		} else if acc.CloudType == goaviatrix.AZUREGOV {
 			d.Set("azure_gov_subscription_id", acc.AzureGovSubscriptionId)
+		} else if acc.CloudType == goaviatrix.ALIYUN {
+			d.Set("aliyun_account_id", acc.AwsAccountNumber)
 		}
 		d.SetId(acc.AccountName)
 	}
@@ -415,6 +447,9 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 		OciUserID:                             d.Get("oci_user_id").(string),
 		OciCompartmentID:                      d.Get("oci_compartment_id").(string),
 		OciApiPrivateKeyFilePath:              d.Get("oci_api_private_key_filepath").(string),
+		AliyunAccountId:                       d.Get("aliyun_account_id").(string),
+		AliyunAccessKey:                       d.Get("aliyun_access_key").(string),
+		AliyunSecretKey:                       d.Get("aliyun_secret_key").(string),
 	}
 
 	awsIam := d.Get("aws_iam").(bool)
@@ -479,6 +514,13 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 			err := client.UpdateAccount(account)
 			if err != nil {
 				return fmt.Errorf("failed to update Azure GOV Aviatrix Account: %v", err)
+			}
+		}
+	} else if account.CloudType == goaviatrix.ALIYUN {
+		if d.HasChange("aliyun_account_id") || d.HasChange("aliyun_access_key") || d.HasChange("aliyun_secret_key") {
+			err := client.UpdateAccount(account)
+			if err != nil {
+				return fmt.Errorf("failed to update Aviatrix Account: %s", err)
 			}
 		}
 	}

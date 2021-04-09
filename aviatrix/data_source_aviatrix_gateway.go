@@ -323,7 +323,7 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("account_name", gw.AccountName)
 		d.Set("gw_name", gw.GwName)
 
-		if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.OCI || gw.CloudType == goaviatrix.AWSGOV {
+		if intInSlice(gw.CloudType, []int{goaviatrix.AWS, goaviatrix.OCI, goaviatrix.AWSGOV, goaviatrix.ALIYUN}) {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 			d.Set("vpc_reg", gw.VpcRegion)
 		} else if gw.CloudType == goaviatrix.GCP {
@@ -352,7 +352,7 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 			} else {
 				d.Set("allocate_new_eip", false)
 			}
-		} else if gw.CloudType == goaviatrix.AZURE || gw.CloudType == goaviatrix.OCI {
+		} else if intInSlice(gw.CloudType, []int{goaviatrix.AZURE, goaviatrix.OCI, goaviatrix.ALIYUN}) {
 			d.Set("allocate_new_eip", true)
 		}
 
@@ -514,6 +514,8 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
 			} else if gwHaGw.CloudType == goaviatrix.GCP {
 				d.Set("peering_ha_zone", gwHaGw.GatewayZone)
+			} else if gwHaGw.CloudType == goaviatrix.ALIYUN {
+				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
 			}
 		}
 

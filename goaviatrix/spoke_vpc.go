@@ -148,14 +148,13 @@ func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 	enableSpokeHa.Add("gw_name", spoke.GwName)
 	enableSpokeHa.Add("eip", spoke.Eip)
 
-	if spoke.CloudType == AWS || spoke.CloudType == AZURE || spoke.CloudType == OCI || spoke.CloudType == AWSGOV {
-		enableSpokeHa.Add("public_subnet", spoke.HASubnet)
-		enableSpokeHa.Add("oob_mgmt_subnet", spoke.HAOobManagementSubnet)
-	} else if spoke.CloudType == GCP {
+	if spoke.CloudType == GCP {
 		enableSpokeHa.Add("new_zone", spoke.HAZone)
 	} else {
-		return errors.New("invalid cloud type")
+		enableSpokeHa.Add("public_subnet", spoke.HASubnet)
+		enableSpokeHa.Add("oob_mgmt_subnet", spoke.HAOobManagementSubnet)
 	}
+
 	Url.RawQuery = enableSpokeHa.Encode()
 	resp, err := c.Get(Url.String(), nil)
 
