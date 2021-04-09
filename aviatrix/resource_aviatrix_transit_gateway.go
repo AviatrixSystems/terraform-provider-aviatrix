@@ -1682,15 +1682,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if !d.HasChange("ha_subnet") && d.HasChange("ha_insane_mode_az") {
 			return fmt.Errorf("ha_subnet must change if ha_insane_mode_az changes")
 		}
-		if d.Get("insane_mode").(bool) && (transitGw.CloudType == goaviatrix.AWS || transitGw.CloudType == goaviatrix.AWSGOV) {
-			var haStrs []string
-			insaneModeHaAz := d.Get("ha_insane_mode_az").(string)
-			if insaneModeHaAz == "" {
-				return fmt.Errorf("ha_insane_mode_az needed if insane_mode is enabled and ha_subnet is set")
-			}
-			haStrs = append(haStrs, transitGw.HASubnet, insaneModeHaAz)
-			transitGw.HASubnet = strings.Join(haStrs, "~~")
-		}
 
 		oldSubnet, newSubnet := d.GetChange("ha_subnet")
 		oldZone, newZone := d.GetChange("ha_zone")
@@ -1730,6 +1721,16 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			} else if oldZone != "" && newZone != "" {
 				changeHaGw = true
 			}
+		}
+
+		if d.Get("insane_mode").(bool) && (transitGw.CloudType == goaviatrix.AWS || transitGw.CloudType == goaviatrix.AWSGOV) {
+			var haStrs []string
+			insaneModeHaAz := d.Get("ha_insane_mode_az").(string)
+			if insaneModeHaAz == "" {
+				return fmt.Errorf("ha_insane_mode_az needed if insane_mode is enabled and ha_subnet is set")
+			}
+			haStrs = append(haStrs, transitGw.HASubnet, insaneModeHaAz)
+			transitGw.HASubnet = strings.Join(haStrs, "~~")
 		}
 
 		haOobManagementSubnet := d.Get("ha_oob_management_subnet").(string)

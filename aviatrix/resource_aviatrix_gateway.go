@@ -1998,16 +1998,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			CloudType: d.Get("cloud_type").(int),
 		}
 
-		if d.Get("insane_mode").(bool) && (gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV) {
-			var haStrs []string
-			peeringHaInsaneModeAz := d.Get("peering_ha_insane_mode_az").(string)
-			if peeringHaInsaneModeAz == "" {
-				return fmt.Errorf("peering_ha_insane_mode_az needed if insane_mode is enabled and peering_ha_subnet is set")
-			}
-			haStrs = append(haStrs, gw.PeeringHASubnet, peeringHaInsaneModeAz)
-			gw.PeeringHASubnet = strings.Join(haStrs, "~~")
-		}
-
 		oldSubnet, newSubnet := d.GetChange("peering_ha_subnet")
 		oldZone, newZone := d.GetChange("peering_ha_zone")
 		deleteHaGw := false
@@ -2038,6 +2028,17 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				changeHaGw = true
 			}
 		}
+
+		if d.Get("insane_mode").(bool) && (gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV) {
+			var haStrs []string
+			peeringHaInsaneModeAz := d.Get("peering_ha_insane_mode_az").(string)
+			if peeringHaInsaneModeAz == "" {
+				return fmt.Errorf("peering_ha_insane_mode_az needed if insane_mode is enabled and peering_ha_subnet is set")
+			}
+			haStrs = append(haStrs, gw.PeeringHASubnet, peeringHaInsaneModeAz)
+			gw.PeeringHASubnet = strings.Join(haStrs, "~~")
+		}
+
 		if d.Get("enable_public_subnet_filtering").(bool) {
 			var haRouteTables []string
 			for _, v := range d.Get("public_subnet_filtering_ha_route_tables").(*schema.Set).List() {
