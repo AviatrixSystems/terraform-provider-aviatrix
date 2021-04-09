@@ -660,56 +660,56 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 	} else if account.CloudType == goaviatrix.AWSC2S {
 		if account.AwsOrangeAccountNumber == "" {
-			return diag.Errorf("AWS orange account number is needed when creating an account for AWS orange")
+			return diag.Errorf("AWS orange account number is needed when creating an account for AWS Top Secret cloud")
 		}
 		if account.AwsOrangeCapUrl == "" {
-			return diag.Errorf("AWS orange CAP endpoint url is needed when creating an account for AWS orange")
+			return diag.Errorf("AWS orange CAP endpoint url is needed when creating an account for AWS Top Secret cloud")
 		}
 		if account.AwsOrangeCapAgency == "" {
-			return diag.Errorf("AWS orange CAP agency is needed when creating an account for AWS orange")
+			return diag.Errorf("AWS orange CAP agency is needed when creating an account for AWS Top Secret cloud")
 		}
 		if account.AwsOrangeCapMission == "" {
-			return diag.Errorf("AWS orange CAP mission is needed when creating an account for AWS orange")
+			return diag.Errorf("AWS orange CAP mission is needed when creating an account for AWS Top Secret cloud")
 		}
 		if account.AwsOrangeCapRoleName == "" {
-			return diag.Errorf("AWS orange CAP role name is needed when creating an account for AWS orange")
+			return diag.Errorf("AWS orange CAP role name is needed when creating an account for AWS Top Secret cloud")
 		}
 		if account.AwsOrangeCapCert == "" {
-			return diag.Errorf("AWS orange CAP cert file is needed when creating an account for AWS orange")
+			return diag.Errorf("AWS orange CAP cert file is needed when creating an account for AWS Top Secret cloud")
 		}
 		if account.AwsOrangeCapCertKey == "" {
-			return diag.Errorf("AWS orange CAP cert key file is needed when creating an account for AWS orange")
+			return diag.Errorf("AWS orange CAP cert key file is needed when creating an account for AWS Top Secret cloud")
 		}
 		if account.AwsOrangeCaChainCert == "" {
-			return diag.Errorf("AWS orange custom CA Chain file  is needed when creating an account for AWS orange")
+			return diag.Errorf("AWS orange custom CA Chain file  is needed when creating an account for AWS Top Secret cloud")
 		}
 	} else if account.CloudType == goaviatrix.AWSSC2S {
 		if account.AwsRedAccountNumber == "" {
-			return diag.Errorf("AWS red account number is needed when creating an account for AWS red")
+			return diag.Errorf("AWS red account number is needed when creating an account for AWS Secret cloud")
 		}
 		if account.AwsRedCapUrl == "" {
-			return diag.Errorf("AWS red CAP endpoint url is needed when creating an account for AWS red")
+			return diag.Errorf("AWS red CAP endpoint url is needed when creating an account for AWS Secret cloud")
 		}
 		if account.AwsRedCapAgency == "" {
-			return diag.Errorf("AWS red CAP agency is needed when creating an account for AWS red")
+			return diag.Errorf("AWS red CAP agency is needed when creating an account for AWS Secret cloud")
 		}
 		if account.AwsRedCapAccountName == "" {
-			return diag.Errorf("AWS red CAP Account Name is needed when creating an account for AWS red")
+			return diag.Errorf("AWS red CAP Account Name is needed when creating an account for AWS Secret cloud")
 		}
 		if account.AwsRedCapRoleName == "" {
-			return diag.Errorf("AWS red CAP role name is needed when creating an account for AWS red")
+			return diag.Errorf("AWS red CAP role name is needed when creating an account for AWS Secret cloud")
 		}
 		if account.AwsRedCapCert == "" {
-			return diag.Errorf("AWS red CAP cert file is needed when creating an account for AWS red")
+			return diag.Errorf("AWS red CAP cert file is needed when creating an account for AWS Secret cloud")
 		}
 		if account.AwsRedCapCertKey == "" {
-			return diag.Errorf("AWS red CAP cert key file is needed when creating an account for AWS red")
+			return diag.Errorf("AWS red CAP cert key file is needed when creating an account for AWS Secret cloud")
 		}
 		if account.AwsRedCaChainCert == "" {
-			return diag.Errorf("AWS red custom CA Chain file  is needed when creating an account for AWS red")
+			return diag.Errorf("AWS red custom CA Chain file  is needed when creating an account for AWS Secret cloud")
 		}
 	} else {
-		return diag.Errorf("cloud type can only be either AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192), AWS Orange (16384) or AWS Red (32768)")
+		return diag.Errorf("cloud type can only be either AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192), AWS Top Secret (16384) or AWS Secret (32768)")
 	}
 
 	var err error
