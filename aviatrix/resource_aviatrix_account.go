@@ -439,53 +439,53 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	} else if account.CloudType == goaviatrix.AWSC2S {
 		if account.AwsOrangeAccountNumber == "" {
-			return fmt.Errorf("AWS orange account number is needed when creating an account for AWS orange")
+			return fmt.Errorf("AWS orange account number is needed when creating an account for AWS Top Secret cloud")
 		}
 		if account.AwsOrangeCapUrl == "" {
-			return fmt.Errorf("AWS orange CAP endpoint url is needed when creating an account for AWS orange")
+			return fmt.Errorf("AWS orange CAP endpoint url is needed when creating an account for AWS Top Secret cloud")
 		}
 		if account.AwsOrangeCapAgency == "" {
-			return fmt.Errorf("AWS orange CAP agency is needed when creating an account for AWS orange")
+			return fmt.Errorf("AWS orange CAP agency is needed when creating an account for AWS Top Secret cloud")
 		}
 		if account.AwsOrangeCapMission == "" {
-			return fmt.Errorf("AWS orange CAP mission is needed when creating an account for AWS orange")
+			return fmt.Errorf("AWS orange CAP mission is needed when creating an account for AWS Top Secret cloud")
 		}
 		if account.AwsOrangeCapRoleName == "" {
-			return fmt.Errorf("AWS orange CAP role name is needed when creating an account for AWS orange")
+			return fmt.Errorf("AWS orange CAP role name is needed when creating an account for AWS Top Secret cloud")
 		}
 		if account.AwsOrangeCapCert == "" {
-			return fmt.Errorf("AWS orange CAP cert file is needed when creating an account for AWS orange")
+			return fmt.Errorf("AWS orange CAP cert file is needed when creating an account for AWS Top Secret cloud")
 		}
 		if account.AwsOrangeCapCertKey == "" {
-			return fmt.Errorf("AWS orange CAP cert key file is needed when creating an account for AWS orange")
+			return fmt.Errorf("AWS orange CAP cert key file is needed when creating an account for AWS Top Secret cloud")
 		}
 		if account.AwsOrangeCaChainCert == "" {
-			return fmt.Errorf("AWS orange custom CA Chain file  is needed when creating an account for AWS orange")
+			return fmt.Errorf("AWS orange custom CA Chain file  is needed when creating an account for AWS Top Secret cloud")
 		}
 	} else if account.CloudType == goaviatrix.AWSSC2S {
 		if account.AwsRedAccountNumber == "" {
-			return fmt.Errorf("AWS red account number is needed when creating an account for AWS red")
+			return fmt.Errorf("AWS red account number is needed when creating an account for AWS Secret cloud")
 		}
 		if account.AwsRedCapUrl == "" {
-			return fmt.Errorf("AWS red CAP endpoint url is needed when creating an account for AWS red")
+			return fmt.Errorf("AWS red CAP endpoint url is needed when creating an account for AWS Secret cloud")
 		}
 		if account.AwsRedCapAgency == "" {
-			return fmt.Errorf("AWS red CAP agency is needed when creating an account for AWS red")
+			return fmt.Errorf("AWS red CAP agency is needed when creating an account for AWS Secret cloud")
 		}
 		if account.AwsRedCapAccountName == "" {
-			return fmt.Errorf("AWS red CAP Account Name is needed when creating an account for AWS red")
+			return fmt.Errorf("AWS red CAP Account Name is needed when creating an account for AWS Secret cloud")
 		}
 		if account.AwsRedCapRoleName == "" {
-			return fmt.Errorf("AWS red CAP role name is needed when creating an account for AWS red")
+			return fmt.Errorf("AWS red CAP role name is needed when creating an account for AWS Secret cloud")
 		}
 		if account.AwsRedCapCert == "" {
-			return fmt.Errorf("AWS red CAP cert file is needed when creating an account for AWS red")
+			return fmt.Errorf("AWS red CAP cert file is needed when creating an account for AWS Secret cloud")
 		}
 		if account.AwsRedCapCertKey == "" {
-			return fmt.Errorf("AWS red CAP cert key file is needed when creating an account for AWS red")
+			return fmt.Errorf("AWS red CAP cert key file is needed when creating an account for AWS Secret cloud")
 		}
 		if account.AwsRedCaChainCert == "" {
-			return fmt.Errorf("AWS red custom CA Chain file  is needed when creating an account for AWS red")
+			return fmt.Errorf("AWS red custom CA Chain file  is needed when creating an account for AWS Secret cloud")
 		}
 	} else {
 		return fmt.Errorf("cloud type can only be either AWS (1), GCP (4), AZURE (8), OCI (16), AZURE Gov (32), AWS GOV (256), AWS Top Secret (16384) or AWS Secret (32768)")
