@@ -7,7 +7,10 @@ import (
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
+const defaultTransitPeeringPublicTunnels = 4
 
 func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 	return &schema.Resource{
@@ -99,6 +102,24 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				},
 				Description: "Enable peering with Single-Tunnel mode.",
 			},
+			"enable_insane_mode_encryption_over_internet": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Default:       false,
+				ForceNew:      true,
+				ConflictsWith: []string{"enable_peering_over_private_network", "enable_single_tunnel_mode"},
+				RequiredWith:  []string{"tunnel_count"},
+				Description:   "Enable Insane Mode Encryption over Internet. Type: Boolean. Default: false.",
+			},
+			"tunnel_count": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ForceNew:      true,
+				ValidateFunc:  validation.IntBetween(2, 20),
+				ConflictsWith: []string{"enable_peering_over_private_network", "enable_single_tunnel_mode"},
+				RequiredWith:  []string{"enable_insane_mode_encryption_over_internet"},
+				Description:   "Number of public tunnels. Only valid with 'enable_insane_mode_encryption_over_internet'. Type: Integer. Default: 4. Valid Range: 2-20.",
+			},
 		},
 	}
 }
@@ -132,6 +153,7 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 		Gateway1ExcludedTGWConnections: strings.Join(gw1Tgws, ","),
 		Gateway2ExcludedTGWConnections: strings.Join(gw2Tgws, ","),
 		PrivateIPPeering:               d.Get("enable_peering_over_private_network").(bool),
+		InsaneModeOverInternet:         d.Get("enable_insane_mode_encryption_over_internet").(bool),
 	}
 
 	if d.Get("enable_single_tunnel_mode").(bool) {
@@ -140,6 +162,11 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 		} else {
 			return fmt.Errorf("enable_single_tunnel_mode is only valid when enable_peering_over_private_network is set to true")
 		}
+	}
+
+	tunnelCount := d.Get("tunnel_count").(int)
+	if transitGatewayPeering.InsaneModeOverInternet {
+		transitGatewayPeering.TunnelCount = tunnelCount
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway peering: %#v", transitGatewayPeering)
@@ -276,6 +303,8 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 
 	d.Set("enable_peering_over_private_network", transitGatewayPeering.PrivateIPPeering)
 	d.Set("enable_single_tunnel_mode", transitGatewayPeering.SingleTunnel)
+	d.Set("enable_insane_mode_encryption_over_internet", transitGatewayPeering.InsaneModeOverInternet)
+	d.Set("tunnel_count", transitGatewayPeering.TunnelCount)
 
 	d.SetId(transitGatewayPeering.TransitGatewayName1 + "~" + transitGatewayPeering.TransitGatewayName2)
 	return nil

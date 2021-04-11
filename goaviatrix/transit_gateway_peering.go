@@ -18,6 +18,8 @@ type TransitGatewayPeering struct {
 	Gateway1ExcludedTGWConnections      string `form:"source_exclude_connections,omitempty"`
 	Gateway2ExcludedTGWConnections      string `form:"destination_exclude_connections,omitempty"`
 	PrivateIPPeering                    bool   `form:"private_ip_peering,omitempty"`
+	InsaneModeOverInternet              bool   `form:"insane_mode_over_internet,omitempty"`
+	TunnelCount                         int    `form:"tunnel_count,omitempty"`
 	Gateway1ExcludedCIDRsSlice          []string
 	Gateway2ExcludedCIDRsSlice          []string
 	Gateway1ExcludedTGWConnectionsSlice []string
@@ -42,10 +44,12 @@ type TransitGatewayPeeringDetailsAPIResp struct {
 }
 
 type TransitGatewayPeeringDetailsResults struct {
-	Site1                 TransitGatewayPeeringDetail `json:"site_1"`
-	Site2                 TransitGatewayPeeringDetail `json:"site_2"`
-	PrivateNetworkPeering bool                        `json:"private_network_peering"`
-	Tunnels               []TunnelsDetail             `json:"tunnels"`
+	Site1                  TransitGatewayPeeringDetail `json:"site_1"`
+	Site2                  TransitGatewayPeeringDetail `json:"site_2"`
+	PrivateNetworkPeering  bool                        `json:"private_network_peering"`
+	Tunnels                []TunnelsDetail             `json:"tunnels"`
+	InsaneModeOverInternet bool                        `json:"insane_mode_over_internet"`
+	TunnelCount            int                         `json:"tunnel_count"`
 }
 
 type TransitGatewayPeeringDetail struct {
@@ -135,6 +139,8 @@ func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitG
 	transitGatewayPeering.Gateway2ExcludedCIDRsSlice = data.Results.Site2.ExcludedCIDRs
 	transitGatewayPeering.Gateway2ExcludedTGWConnectionsSlice = data.Results.Site2.ExcludedTGWConnections
 	transitGatewayPeering.PrivateIPPeering = data.Results.PrivateNetworkPeering
+	transitGatewayPeering.InsaneModeOverInternet = data.Results.InsaneModeOverInternet
+	transitGatewayPeering.TunnelCount = data.Results.TunnelCount
 	transitGatewayPeering.PrependAsPath1 = data.Results.Site1.ConnBGPPrependAsPath
 	transitGatewayPeering.PrependAsPath2 = data.Results.Site2.ConnBGPPrependAsPath
 
