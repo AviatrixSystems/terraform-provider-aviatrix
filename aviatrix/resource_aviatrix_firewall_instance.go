@@ -13,6 +13,7 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixFirewallInstanceCreate,
 		Read:   resourceAviatrixFirewallInstanceRead,
+		Update: resourceAviatrixFirewallInstanceUpdate,
 		Delete: resourceAviatrixFirewallInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -190,7 +191,7 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 			"firewall_image_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew:    true,
+				Computed:    true,
 				Description: "Firewall image ID.",
 			},
 			"instance_id": {
@@ -526,6 +527,14 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	}
 
 	return nil
+}
+
+func resourceAviatrixFirewallInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+	if d.HasChange("firewall_image_id") {
+		return fmt.Errorf("can not change firewall_image_id")
+	}
+
+	return resourceAviatrixFirewallInstanceRead(d, meta)
 }
 
 func resourceAviatrixFirewallInstanceDelete(d *schema.ResourceData, meta interface{}) error {
