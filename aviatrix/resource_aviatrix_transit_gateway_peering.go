@@ -10,8 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-const defaultTransitPeeringPublicTunnels = 4
-
 func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixTransitGatewayPeeringCreate,
