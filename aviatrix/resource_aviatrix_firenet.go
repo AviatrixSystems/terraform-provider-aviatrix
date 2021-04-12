@@ -634,12 +634,7 @@ func resourceAviatrixFireNetDelete(d *schema.ResourceData, meta interface{}) err
 		VpcID: d.Get("vpc_id").(string),
 	}
 
-	var egressStaticCidrs []string
-	for _, v := range d.Get("egress_static_cidrs").(*schema.Set).List() {
-		egressStaticCidrs = append(egressStaticCidrs, v.(string))
-	}
-
-	if len(egressStaticCidrs) != 0 {
+	if len(d.Get("egress_static_cidrs").(*schema.Set).List()) != 0 {
 		err := client.EditFirenetEgressStaticCidr(fireNet)
 		if err != nil {
 			return fmt.Errorf("could not disable egress static cidrs: %v", err)
