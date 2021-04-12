@@ -20,6 +20,7 @@ type FirewallInstance struct {
 	FirewallName         string `form:"firewall_name,omitempty" json:"instance_name,omitempty"`
 	FirewallImage        string `form:"firewall_image,omitempty" json:"firewall_image,omitempty"`
 	FirewallImageVersion string `form:"firewall_image_version,omitempty" json:"firewall_image_version,omitempty"`
+	FirewallImageId      string `form:"firewall_image_id,omitempty" json:"firewall_image_id"`
 	FirewallSize         string `form:"firewall_size,omitempty" json:"instance_size,omitempty"`
 	EgressSubnet         string `form:"egress_subnet,omitempty" json:"egress_subnet,omitempty"`
 	ManagementSubnet     string `form:"management_subnet,omitempty" json:"management_subnet,omitempty"`
@@ -89,6 +90,7 @@ func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (str
 	addFirewallInstance.Add("firewall_name", firewallInstance.FirewallName)
 	addFirewallInstance.Add("firewall_image", firewallInstance.FirewallImage)
 	addFirewallInstance.Add("firewall_image_version", firewallInstance.FirewallImageVersion)
+	addFirewallInstance.Add("firewall_image_id", firewallInstance.FirewallImageId)
 	addFirewallInstance.Add("firewall_size", firewallInstance.FirewallSize)
 	addFirewallInstance.Add("key_name", firewallInstance.KeyName)
 	addFirewallInstance.Add("iam_role", firewallInstance.IamRole)

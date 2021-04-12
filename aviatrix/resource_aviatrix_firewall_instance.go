@@ -187,6 +187,12 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				ForceNew:    true,
 				Description: "Advanced option. Bootstrap storage name. Applicable to Check Point Series and Fortinet Series deployment only.",
 			},
+			"firewall_image_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Firewall image ID.",
+			},
 			"instance_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -242,6 +248,7 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		FirewallName:         d.Get("firewall_name").(string),
 		FirewallImage:        d.Get("firewall_image").(string),
 		FirewallImageVersion: d.Get("firewall_image_version").(string),
+		FirewallImageId:      d.Get("firewall_image_id").(string),
 		FirewallSize:         d.Get("firewall_size").(string),
 		EgressSubnet:         d.Get("egress_subnet").(string),
 		EgressVpc:            d.Get("egress_vpc_id").(string),
@@ -444,6 +451,7 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	d.Set("firenet_gw_name", fI.GwName)
 	d.Set("firewall_name", fI.FirewallName)
 	d.Set("firewall_image", fI.FirewallImage)
+	d.Set("firewall_image_id", fI.FirewallImageId)
 	d.Set("firewall_size", fI.FirewallSize)
 	d.Set("instance_id", fI.InstanceID)
 	if cloudType == goaviatrix.GCP {
