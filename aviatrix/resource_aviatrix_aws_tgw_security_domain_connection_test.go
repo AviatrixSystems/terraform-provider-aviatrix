@@ -64,20 +64,20 @@ resource "aviatrix_aws_tgw" "test" {
 	manage_transit_gateway_attachment = false
 }
 resource "aviatrix_aws_tgw_security_domain" "Default_Domain" {
-	name = "Default_Domain"
+	name     = "Default_Domain"
 	tgw_name = aviatrix_aws_tgw.test.tgw_name
 }
 resource "aviatrix_aws_tgw_security_domain" "Shared_Service_Domain" {
-	name = "Shared_Service_Domain"
+	name     = "Shared_Service_Domain"
 	tgw_name = aviatrix_aws_tgw.test.tgw_name
 }
 resource "aviatrix_aws_tgw_security_domain" "Aviatrix_Edge_Domain" {
-	name = "Aviatrix_Edge_Domain"
+	name     = "Aviatrix_Edge_Domain"
 	tgw_name = aviatrix_aws_tgw.test.tgw_name
 }
 resource "aviatrix_aws_tgw_security_domain" "test" {
-	name = "%s"
-	tgw_name = aviatrix_aws_tgw.test.tgw_name
+	name       = "%s"
+	tgw_name   = aviatrix_aws_tgw.test.tgw_name
 	depends_on = [
     	aviatrix_aws_tgw_security_domain.Default_Domain,
     	aviatrix_aws_tgw_security_domain.Shared_Service_Domain,
@@ -85,7 +85,7 @@ resource "aviatrix_aws_tgw_security_domain" "test" {
   ]
 }
 resource "aviatrix_aws_tgw_security_domain_connection" "test" {
-	tgw_name = aviatrix_aws_tgw.test.tgw_name
+	tgw_name     = aviatrix_aws_tgw.test.tgw_name
 	domain_name1 = aviatrix_aws_tgw_security_domain.Default_Domain.name
 	domain_name2 = aviatrix_aws_tgw_security_domain.test.name
 }

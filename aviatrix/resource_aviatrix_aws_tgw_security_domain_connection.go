@@ -85,7 +85,7 @@ func resourceAviatrixAwsTgwSecurityDomainConnectionCreate(ctx context.Context, d
 		return diag.Errorf("could not create the security domain connection: %v", err)
 	}
 
-	if strings.Compare(sourceDomainName, destinationDomainName) == -1 {
+	if sourceDomainName < destinationDomainName {
 		d.SetId(awsTgw.Name + "~" + sourceDomainName + "~" + destinationDomainName)
 	} else {
 		d.SetId(awsTgw.Name + "~" + destinationDomainName + "~" + sourceDomainName)
@@ -122,7 +122,7 @@ func resourceAviatrixAwsTgwSecurityDomainConnectionRead(ctx context.Context, d *
 		d.Set("domain_name1", sourceDomainName)
 		d.Set("domain_name2", destinationDomainName)
 
-		if strings.Compare(sourceDomainName, destinationDomainName) == -1 {
+		if sourceDomainName < destinationDomainName {
 			d.SetId(tgwName + "~" + sourceDomainName + "~" + destinationDomainName)
 		} else {
 			d.SetId(tgwName + "~" + destinationDomainName + "~" + sourceDomainName)
@@ -144,12 +144,12 @@ func resourceAviatrixAwsTgwSecurityDomainConnectionRead(ctx context.Context, d *
 		return nil
 	}
 	if err != nil {
-		return diag.Errorf("couldn't get the details of the security domain %s due to %v", sourceDomainName, err)
+		return diag.Errorf("couldn't get the details of the security domain %s: %v", sourceDomainName, err)
 	}
 
 	for _, sd := range securityDomainDetails.ConnectedDomain {
 		if sd == destinationDomainName {
-			if strings.Compare(sourceDomainName, destinationDomainName) == -1 {
+			if sourceDomainName < destinationDomainName {
 				d.SetId(tgwName + "~" + sourceDomainName + "~" + destinationDomainName)
 			} else {
 				d.SetId(tgwName + "~" + destinationDomainName + "~" + sourceDomainName)
