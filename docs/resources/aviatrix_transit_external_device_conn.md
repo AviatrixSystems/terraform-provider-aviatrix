@@ -72,7 +72,7 @@ The following arguments are supported:
 * `gw_name` - (Required) Aviatrix transit gateway name.
 * `remote_gateway_ip` - (Optional) Remote gateway IP. Required when 'tunnel_protocol' != 'LAN'.
 * `connection_type` - (Required) Connection type. Valid values: 'bgp', 'static'. Default value: 'bgp'.
-* `tunnel_protocol` - (Optional) Tunnel protocol, only valid with `connection_type` = 'bgp'. Valid values: 'IPsec', 'GRE' or 'LAN'. Default value: 'IPsec'. Available as of provider version R2.18+.
+* `tunnel_protocol` - (Optional) Tunnel protocol, only valid with `connection_type` = 'bgp'. Valid values: 'IPsec', 'GRE' or 'LAN'. Default value: 'IPsec'. Case insensitive. Available as of provider version R2.18+.
 * `bgp_local_as_num` - (Optional) BGP local ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
 * `bgp_remote_as_num` - (Optional) BGP remote ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
 * `remote_subnet` - (Optional) Remote CIDRs joined as a string with ','. Required for a 'static' type connection.
