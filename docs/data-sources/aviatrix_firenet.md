@@ -34,6 +34,8 @@ In addition to all arguments above, the following attributes are exported:
 * `vpc_id` - ID of the Security VPC.
 * `inspection_enabled` - Enable/Disable traffic inspection.
 * `egress_enabled` - Enable/Disable egress through firewall.
+* `egress_static_cidrs` - List of egress static CIDRs.  
+* `tgw_segmentation_for_egress_enabled` - Enable TGW segmentation for egress.  
 * `hashing_algorithm` - (Optional) Hashing algorithm to load balance traffic across the firewall.
 * `keep_alive_via_lan_interface_enabled` - (Optional) Enable Keep Alive via Firewall LAN Interface.
 * `firewall_instance_association` - List of firewall instances associated with fireNet.
@@ -45,4 +47,4 @@ In addition to all arguments above, the following attributes are exported:
   * `management_interface` - Management interface ID.
   * `egress_interface`- Egress interface ID.
   * `attached`- Switch to attach/detach firewall instance to/from fireNet.
-* `tgw_segmentation_for_egress_enabled` - Enable TGW segmentation for egress.
+  
