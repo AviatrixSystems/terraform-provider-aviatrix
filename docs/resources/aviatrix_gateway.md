@@ -179,13 +179,39 @@ resource "aviatrix_gateway" "test_gateway_gcp" {
   single_az_ha    = true
 }
 ```
+```hcl
+# Create an Aviatrix Alibaba Cloud Gateway
+resource "aviatrix_gateway" "test_gateway_alibaba" {
+  cloud_type   = 8192
+  account_name = "devops"
+  gw_name      = "avtx-gw-1"
+  vpc_id       = "vpc-abcdef"
+  vpc_reg      = "acs-us-west-1 (Silicon Valley)"
+  gw_size      = "ecs.g5ne.large"
+  subnet       = "10.0.0.0/24"
+}
+```
+```hcl
+# Create an Aviatrix Alibaba Cloud Gateway with Peering HA enabled
+resource "aviatrix_gateway" "test_gateway_alibaba" {
+  cloud_type         = 8192
+  account_name       = "devops"
+  gw_name            = "avtx-gw-1"
+  vpc_id             = "vpc-abcdef"
+  vpc_reg            = "acs-us-west-1 (Silicon Valley)"
+  gw_size            = "ecs.g5ne.large"
+  subnet             = "10.0.0.0/24"
+  peering_ha_subnet  = "10.0.0.0/24"
+  peering_ha_gw_size = "ecs.g5ne.large"
+}
+```
 
 ## Argument Reference
 
 The following arguments are supported:
 
 ### Required
-* `cloud_type` - (Required) Cloud service provider to use to launch the gateway. Requires an integer value. Currently supports AWS(1), GCP(4), AZURE(8), OCI(16), and AWSGov(256).
+* `cloud_type` - (Required) Cloud service provider to use to launch the gateway. Requires an integer value. Currently supports AWS(1), GCP(4), AZURE(8), OCI(16), AWSGov(256) and Alibaba Cloud (8192).
 * `account_name` - (Required) Account name. This account will be used to launch Aviatrix gateway.
 * `gw_name` - (Required) Name of the Aviatrix gateway to be created.
 * `vpc_id` - (Required) VPC ID/VNet name of cloud provider. Example: AWS: "vpc-abcd1234", GCP: "vpc-gcp-test", AZURE: "vnet1:hello", OCI: "vpc-oracle-test1".
@@ -195,7 +221,7 @@ The following arguments are supported:
 
 ### HA
 * `single_az_ha` (Optional) If enabled, Controller monitors the health of the gateway and restarts the gateway if it becomes unreachable. Valid values: true, false. Default value: false.
-* `peering_ha_subnet` - (Optional) Public subnet CIDR to create Peering HA Gateway in. Required if enabling Peering HA for AWS/AZURE. Optional if enabling Peering HA for GCP. Example: AWS: "10.0.0.0/16".
+* `peering_ha_subnet` - (Optional) Public subnet CIDR to create Peering HA Gateway in. Required if enabling Peering HA for AWS/AWSGOV/AZURE/Alibaba Cloud. Optional if enabling Peering HA for GCP. Example: AWS: "10.0.0.0/16".
 * `peering_ha_zone` - (Optional) Zone to create Peering HA Gateway in. Required if enabling Peering HA for GCP. Example: GCP: "us-west1-c". Optional for AZURE. Valid values for AZURE gateways are in the form "az-n". Example: "az-2". Available for AZURE as of provider version R2.17+.
 * `peering_ha_insane_mode_az` - (Optional) Region + Availability Zone of subnet being created for Insane Mode-enabled Peering HA Gateway. Required for AWS only if `insane_mode` is set and `peering_ha_subnet` is set. Example: AWS: "us-west-1a".
 * `peering_ha_eip` - (Optional) Public IP address to be assigned to the HA peering instance. Only available for AWS and GCP.

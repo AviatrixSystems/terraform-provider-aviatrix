@@ -78,6 +78,11 @@ func dataSourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS Gov Access Key.",
 			},
+			"aliyun_account_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Alibaba Cloud Account ID to associate with Aviatrix account.",
+			},
 		},
 	}
 }
@@ -102,9 +107,10 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("account_name", acc.AccountName)
 	d.Set("cloud_type", acc.CloudType)
-	d.Set("aws_account_number", acc.AwsAccountNumber)
+	if acc.CloudType == goaviatrix.AWS {
+		d.Set("aws_account_number", acc.AwsAccountNumber)
+	}
 	d.Set("aws_access_key", acc.AwsAccessKey)
-	d.Set("aws_secret_key", acc.AwsSecretKey)
 	d.Set("aws_role_arn", acc.AwsRoleApp)
 	d.Set("aws_role_ec2", acc.AwsRoleEc2)
 	d.Set("aws_gateway_role_app", acc.AwsGatewayRoleApp)
@@ -114,6 +120,10 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("azure_gov_subscription_id", acc.AzureGovSubscriptionId)
 	d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
 	d.Set("awsgov_access_key", acc.AwsgovAccessKey)
+	if acc.CloudType == goaviatrix.ALIYUN {
+		d.Set("aliyun_account_id", acc.AwsAccountNumber)
+	}
+
 	d.SetId(acc.AccountName)
 
 	return nil

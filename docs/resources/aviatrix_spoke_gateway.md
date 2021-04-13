@@ -117,13 +117,28 @@ resource "aviatrix_spoke_gateway" "test_oob_spoke" {
   ha_oob_availability_zone = "us-west-1b"
 }
 ```
+```hcl
+# Create an Aviatrix Alibaba Cloud Spoke Gateway with HA enabled
+resource "aviatrix_spoke_gateway" "test_spoke_gateway_alibaba" {
+  cloud_type         = 8192
+  account_name       = "devops"
+  gw_name            = "avtx-gw-1"
+  vpc_id             = "vpc-abcdef"
+  vpc_reg            = "acs-us-west-1 (Silicon Valley)"
+  gw_size            = "ecs.g5ne.large"
+  subnet             = "10.0.0.0/24"
+  enable_active_mesh = true
+  ha_subnet          = "10.0.0.0/24"
+  ha_gw_size         = "ecs.g5ne.large"
+}
+```
 
 ## Argument Reference
 
 The following arguments are supported:
 
 ### Required
-* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), AZURE(8), OCI(16) and AWSGOV(256) are supported.
+* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), AZURE(8), OCI(16), AWSGOV(256) and Alibaba Cloud(8192) are supported.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `gw_name` - (Required) Name of the gateway which is going to be created.
 * `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Example: AWS: "vpc-abcd1234", GCP: "vpc-gcp-test", AZURE: "vnet1:hello", OCI: "vpc-oracle-test1", AWSGOV: "vpc-abcd12347890".
@@ -133,7 +148,7 @@ The following arguments are supported:
 
 ### HA
 * `single_az_ha` (Optional) Set to true if this [feature](https://docs.aviatrix.com/Solutions/gateway_ha.html#single-az-gateway) is desired. Valid values: true, false.
-* `ha_subnet` - (Optional) HA Subnet. Required if enabling HA for AWS/Azure/AWSGOV gateway. Optional for GCP. Setting to empty/unsetting will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24"
+* `ha_subnet` - (Optional) HA Subnet. Required if enabling HA for AWS/AWSGOV/Azure/Alibaba Cloud gateway. Optional for GCP. Setting to empty/unsetting will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24"
 * `ha_zone` - (Optional) HA Zone. Required if enabling HA for GCP gateway. Optional for AZURE. For GCP, setting to empty/unsetting will disable HA and setting to a valid zone will create an HA gateway in the zone. Example: "us-west1-c". For AZURE, this is an optional parameter to place the HA gateway in a specific availability zone. Valid values for AZURE gateways are in the form "az-n". Example: "az-2". Available for AZURE as of provider version R2.17+.
 * `ha_insane_mode_az` (Optional) AZ of subnet being created for Insane Mode Spoke HA Gateway. Required for AWS/AWSGOV provider if `insane_mode` is enabled and `ha_subnet` is set. Example: AWS: "us-west-1a".
 * `ha_eip` - (Optional) Public IP address that you want to assign to the HA peering instance. If no value is given, a new EIP will automatically be allocated. Only available for AWS and GCP.

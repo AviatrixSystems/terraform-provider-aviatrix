@@ -42,3 +42,4 @@ In addition to all arguments above, the following attributes are exported:
 * `awsgov_access_key` - AWS Gov Access Key.
 * `gcloud_project_id` - GCloud Project ID.
 * `arm_subscription_id` - Azure ARM Subscription ID.
+* `aliyun_account_id` - Alibaba Cloud Account ID.
