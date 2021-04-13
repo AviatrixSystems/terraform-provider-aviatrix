@@ -153,6 +153,7 @@ type Gateway struct {
 	SkipPublicVpcUpdateEnabled  bool   `json:"skip_public_vpc_update_enabled"`
 	EnableMultitierTransit      bool   `json:"multitier_transit"`
 	AutoAdvertiseCidrsEnabled   bool   `json:"auto_advertise_s2c_cidrs"`
+	TunnelDetectionTime         int    `json:"detection_time"`
 }
 
 type PolicyRule struct {
@@ -1542,5 +1543,42 @@ func (c *Client) DisableSkipPublicRouteUpdate(gw *Gateway) error {
 		"action":       "disable_skip_public_route_table_update",
 		"gateway_name": gw.GwName,
 	}
+	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
+// Entity should be gateway name or "Controller"
+func (c *Client) GetTunnelDetectionTime(entity string) (int, error) {
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "show_tunnel_status_change_detection_time",
+		"entity": entity,
+	}
+
+	type DetectionTimeResults struct {
+		DetectionTime int `json:"detection_time"`
+	}
+
+	type DetectionTimeResp struct {
+		Return  bool                 `json:"return"`
+		Results DetectionTimeResults `json:"results"`
+		Reason  string               `json:"reason"`
+	}
+
+	var resp DetectionTimeResp
+	err := c.GetAPI(&resp, form["action"], form, BasicCheck)
+	if err != nil {
+		return 0, err
+	}
+	return resp.Results.DetectionTime, err
+}
+
+func (c *Client) ModifyTunnelDetectionTime(entity string, detectionTime int) error {
+	form := map[string]string{
+		"CID":            c.CID,
+		"action":         "modify_detection_time",
+		"detection_time": strconv.Itoa(detectionTime),
+		"entity":         entity,
+	}
+
 	return c.PostAPI(form["action"], form, BasicCheck)
 }

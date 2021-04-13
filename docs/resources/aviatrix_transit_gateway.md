@@ -237,6 +237,7 @@ The following arguments are supported:
 * `enable_active_standby` - (Optional) Enables [Active-Standby Mode](https://docs.aviatrix.com/HowTos/transit_advanced.html#active-standby). Available only with Active Mesh Mode enabled and HA enabled. Valid values: true, false. Default value: false. Available in provider version R2.17.1+.
 * `enable_jumbo_frame` - (Optional) Enable jumbo frames for this transit gateway. Default value is true.
 * `tags` - (Optional) Map of tags to assign to the gateway. Only available for AWS, AWSGOV and Azure gateway. Allowed characters vary by cloud type but always include: letters, spaces, and numbers. AWS and AWSGOV allow the following special characters: + - = . _ : / @.  Azure allows the following special characters: + - = . _ : @. Example: {"key1" = "value1", "key2" = "value2"}.
+* `tunnel_detection_time` - (Optional) The IPsec tunnel down detection time for the Transit Gateway in seconds. Must be a number in the range [20-600]. The default value is set by the controller (60 seconds if nothing has been changed). **NOTE: The controller UI has an option to set the tunnel detection time for all gateways. To achieve the same functionality in Terraform, use the same TF_VAR to manage the tunnel detection time for all gateways.** Available in provider R2.19+.
 
 ## Attribute Reference
 

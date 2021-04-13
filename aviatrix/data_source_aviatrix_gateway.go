@@ -295,6 +295,11 @@ func dataSourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "A map of tags assigned to the gateway.",
 			},
+			"tunnel_detection_time": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The IPSec tunnel down detection time for the gateway.",
+			},
 		},
 	}
 }
@@ -560,6 +565,8 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 			d.Set("search_domains", "")
 			d.Set("additional_cidrs", "")
 		}
+
+		d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
 	}
 
 	d.SetId(gateway.GwName)

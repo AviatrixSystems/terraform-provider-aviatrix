@@ -261,6 +261,11 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Enable Multi-tier Transit mode on transit gateway.",
 			},
+			"tunnel_detection_time": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The IPSec tunnel down detection time for the transit gateway.",
+			},
 		},
 	}
 }
@@ -474,6 +479,8 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 			d.Set("ha_oob_availability_zone", haGw.GatewayZone)
 		}
 	}
+
+	d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
 
 	d.SetId(gateway.GwName)
 	return nil

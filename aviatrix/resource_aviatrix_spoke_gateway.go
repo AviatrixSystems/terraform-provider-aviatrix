@@ -280,6 +280,13 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				ValidateFunc: validation.IsIPAddress,
 				Description:  "Public IP address that you want assigned to the HA Spoke Gateway.",
 			},
+			"tunnel_detection_time": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(20, 600),
+				Description:  "The IPSec tunnel down detection time for the Spoke Gateway.",
+			},
 			"security_group_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -841,6 +848,13 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	if detectionTime, ok := d.GetOk("tunnel_detection_time"); ok {
+		err := client.ModifyTunnelDetectionTime(d.Get("gw_name").(string), detectionTime.(int))
+		if err != nil {
+			return fmt.Errorf("could not set tunnel detection time during Spoke Gateway creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixSpokeGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -1092,6 +1106,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("could not get jumbo frame status for spoke gateway: %v", err)
 	}
 	d.Set("enable_jumbo_frame", jumboFrameStatus)
+	d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
 
 	haGateway := &goaviatrix.Gateway{
 		AccountName: d.Get("account_name").(string),
@@ -1839,6 +1854,24 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			if err != nil {
 				return fmt.Errorf("could not disable auto advertise s2c cidrs during spoke gateway update: %v", err)
 			}
+		}
+	}
+
+	if d.HasChange("tunnel_detection_time") {
+		detectionTimeInterface, ok := d.GetOk("tunnel_detection_time")
+		var detectionTime int
+		if ok {
+			detectionTime = detectionTimeInterface.(int)
+		} else {
+			var err error
+			detectionTime, err = client.GetTunnelDetectionTime("Controller")
+			if err != nil {
+				return fmt.Errorf("could not get default tunnel detection time during Spoke Gateway update: %v", err)
+			}
+		}
+		err := client.ModifyTunnelDetectionTime(gateway.GwName, detectionTime)
+		if err != nil {
+			return fmt.Errorf("could not modify tunnel detection time during Spoke Gateway update: %v", err)
 		}
 	}
 

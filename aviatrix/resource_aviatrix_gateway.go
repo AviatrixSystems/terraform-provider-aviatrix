@@ -432,6 +432,13 @@ func resourceAviatrixGateway() *schema.Resource {
 				Description: "Elb protocol for VPN gateway with elb enabled. Only supports AWS provider. " +
 					"Valid values: 'TCP', 'UDP'. If not specified, 'TCP'' will be used.",
 			},
+			"tunnel_detection_time": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(20, 600),
+				Description:  "The IPSec tunnel down detection time for the Gateway.",
+			},
 			"elb_dns_name": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -1049,6 +1056,13 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	if detectionTime, ok := d.GetOk("tunnel_detection_time"); ok {
+		err := client.ModifyTunnelDetectionTime(gateway.GwName, detectionTime.(int))
+		if err != nil {
+			return fmt.Errorf("could not set tunnel detection time during Gateway creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -1536,6 +1550,8 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			}
 			d.Set("enable_jumbo_frame", jumboFrameStatus)
 		}
+
+		d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
 	}
 	return nil
 }
@@ -2363,6 +2379,23 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			if err != nil {
 				return fmt.Errorf("couldn't disable jumbo frames for Gateway when updating: %s", err)
 			}
+		}
+	}
+
+	if d.HasChange("tunnel_detection_time") {
+		detectionTimeInterface, ok := d.GetOk("tunnel_detection_time")
+		var detectionTime int
+		if ok {
+			detectionTime = detectionTimeInterface.(int)
+		} else {
+			detectionTime, err = client.GetTunnelDetectionTime("Controller")
+			if err != nil {
+				return fmt.Errorf("could not get default tunnel detection time during Gateway update: %v", err)
+			}
+		}
+		err := client.ModifyTunnelDetectionTime(gateway.GwName, detectionTime)
+		if err != nil {
+			return fmt.Errorf("could not modify tunnel detection time during Gateway update: %v", err)
 		}
 	}
 

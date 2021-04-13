@@ -305,6 +305,7 @@ The following arguments are supported:
 * `zone` - (Optional) Availability Zone. Only available for Azure and Public Subnet Filtering gateway. Available for Azure as of provider version R2.17+.
 * `enable_jumbo_frame` - (Optional) Enable jumbo frames for this gateway. Default value is true.
 * `tags` - (Optional) Map of tags to assign to the gateway. Only available for AWS, AWSGOV and Azure gateway. Allowed characters vary by cloud type but always include: letters, spaces, and numbers. AWS and AWSGOV allow the following special characters: + - = . _ : / @.  Azure allows the following special characters: + - = . _ : @. Example: {"key1" = "value1", "key2" = "value2"}.
+* `tunnel_detection_time` - (Optional) The IPsec tunnel down detection time for the Gateway in seconds. Must be a number in the range [20-600]. The default value is set by the controller (60 seconds if nothing has been changed). **NOTE: The controller UI has an option to set the tunnel detection time for all gateways. To achieve the same functionality in Terraform, use the same TF_VAR to manage the tunnel detection time for all gateways.** Available in provider R2.19+.
 
 ### Public Subnet Filtering Gateway
 
