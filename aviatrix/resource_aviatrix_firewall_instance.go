@@ -396,6 +396,10 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		}
 	}
 
+	if firewallInstance.FirewallImageId != "" && !intInSlice(cloudType, []int{goaviatrix.AWS, goaviatrix.AZURE}) {
+		return fmt.Errorf("'firewall_image_id' is only supported for AWS and Azure")
+	}
+
 	tags, err := extractTags(d, cloudType)
 	if err != nil {
 		return fmt.Errorf("error creating tags for firewall instance: %v", err)
@@ -452,7 +456,6 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	d.Set("firenet_gw_name", fI.GwName)
 	d.Set("firewall_name", fI.FirewallName)
 	d.Set("firewall_image", fI.FirewallImage)
-	d.Set("firewall_image_id", fI.FirewallImageId)
 	d.Set("firewall_size", fI.FirewallSize)
 	d.Set("instance_id", fI.InstanceID)
 	if cloudType == goaviatrix.GCP {
@@ -524,6 +527,9 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 		if err != nil {
 			return fmt.Errorf("failed to set tags for firewall_instance on read: %v", err)
 		}
+	}
+	if fI.FirewallImageId != "" && intInSlice(cloudType, []int{goaviatrix.AWS, goaviatrix.AZURE}) {
+		d.Set("firewall_image_id", fI.FirewallImageId)
 	}
 
 	return nil
