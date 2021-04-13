@@ -628,6 +628,10 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	}
 	lanVpcID := d.Get("lan_vpc_id").(string)
 	lanPrivateSubnet := d.Get("lan_private_subnet").(string)
+	// Transit FireNet function is not supported for AWS China or Azure China
+	if enableFireNet && goaviatrix.IsCloudType(cloudType, goaviatrix.AWSCHINA|goaviatrix.AZURECHINA) {
+		return fmt.Errorf("'enable_firenet' is not supported in AWSCHINA (1024) or AZURECHINA (2048)")
+	}
 	if enableTransitFireNet {
 		// Transit FireNet function is not supported for AWS China or Azure China
 		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes^goaviatrix.AWSCHINA|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AZURECHINA) {
@@ -1646,6 +1650,10 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("updating lan_private_subnet is not allowed")
 	}
 
+	// Transit FireNet function is not supprted for AWS China and Azure China
+	if d.HasChange("enable_firenet") && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSCHINA|goaviatrix.AZURECHINA) {
+		return fmt.Errorf("editing 'enable_transit_firenet' in AWSCHINA (1024) and AZURECHINA (2048) is not supported")
+	}
 	// Transit FireNet function is not supprted for AWS China and Azure China
 	if d.HasChange("enable_transit_firenet") && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AWSCHINA) {
 		return fmt.Errorf("editing 'enable_transit_firenet' in GCP (4), AZURE (8), AWSCHINA (1024) and AZURECHINA (2048) is not supported")
