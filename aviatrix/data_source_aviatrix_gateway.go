@@ -515,7 +515,7 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 				if gwHaGw.InsaneMode == "yes" {
 					d.Set("peering_ha_insane_mode_az", gwHaGw.GatewayZone)
 				}
-			} else if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.AZURECHINA|goaviatrix.OCIRelatedCloudTypes) {
+			} else if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
 				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
 			} else if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 				d.Set("peering_ha_zone", gwHaGw.GatewayZone)
