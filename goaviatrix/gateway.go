@@ -1311,7 +1311,16 @@ func (c *Client) DisableMonitorGatewaySubnets(gwName string) error {
 		"action":       action,
 		"gateway_name": gwName,
 	}
-	return c.PostAPI(action, form, BasicCheck)
+	check := func(action, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "no change needed") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+		}
+		return nil
+	}
+	return c.PostAPI(action, form, check)
 }
 
 func (c *Client) EnableVPNConfig(gateway *Gateway, vpnConfig *VPNConfig) error {
