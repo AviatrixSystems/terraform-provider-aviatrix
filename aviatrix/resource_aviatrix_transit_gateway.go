@@ -526,7 +526,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 	cloudType := d.Get("cloud_type").(int)
 	zone := d.Get("zone").(string)
-	if goaviatrix.IsCloudType(cloudType, goaviatrix.AZURE) && zone != "" {
+	if !goaviatrix.IsCloudType(cloudType, goaviatrix.AZURE) && zone != "" {
 		return fmt.Errorf("attribute 'zone' is only for use with cloud_type = 8 (AZURE)")
 	}
 	if zone != "" {
@@ -631,7 +631,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			return fmt.Errorf("'enable_transit_firenet' is only supported in AWS (1), GCP (4), AZURE (8), AWSGOV (256), AWSCHINA (1024) and AZURECHINA (2048)")
 		}
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) || goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			gateway.EnableTransitFireNet = "on"
 		}
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
@@ -648,9 +648,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	if enableGatewayLoadBalancer && !enableFireNet && !enableTransitFireNet {
 		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'enable_firenet' or 'enable_transit_firenet' is set to true")
 	}
-	// Enable gateway load balancer is not supported in AWSCHINA for 6.4
-	if enableGatewayLoadBalancer && goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes^goaviatrix.AWSCHINA) {
-		return fmt.Errorf("'enable_gateway_load_balancer' is only supported by AWS (1) and AWSGOV (256)")
+	if enableGatewayLoadBalancer && !goaviatrix.IsCloudType(cloudType, goaviatrix.AWS) {
+		return fmt.Errorf("'enable_gateway_load_balancer' is only supported by AWS (1)")
 	}
 	enableEgressTransitFireNet := d.Get("enable_egress_transit_firenet").(bool)
 	if enableEgressTransitFireNet && !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
@@ -1650,7 +1649,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	if d.Get("enable_egress_transit_firenet").(bool) && !d.Get("enable_transit_firenet").(bool) {
 		return fmt.Errorf("'enable_egress_transit_firenet' requires 'enable_transit_firenet' to be set to true")
 	}
-	if d.Get("enable_egress_transit_firenet").(bool) && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AZURECHINA) {
+	if d.Get("enable_egress_transit_firenet").(bool) && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 		return fmt.Errorf("'enable_egress_transit_firenet' is currently only supported on AWS (1), GCP (4), AZURE (8), AWSGOV (256), AWSCHINA (1024) and AZURECHINA (2048)")
 	}
 
@@ -1725,7 +1724,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		oldZone, newZone := d.GetChange("ha_zone")
 		deleteHaGw := false
 		changeHaGw := false
-		if goaviatrix.IsCloudType(transitGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
+		if goaviatrix.IsCloudType(transitGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
 			transitGw.HASubnet = d.Get("ha_subnet").(string)
 			if goaviatrix.IsCloudType(transitGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && d.Get("ha_zone").(string) != "" {
 				transitGw.HASubnet = fmt.Sprintf("%s~~%s~~", d.Get("ha_subnet").(string), d.Get("ha_zone").(string))

@@ -359,7 +359,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cloud_type", vC.CloudType)
 	d.Set("account_name", vC.AccountName)
 	d.Set("name", vC.Name)
-	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+	if !goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		d.Set("region", vC.Region)
 		d.Set("cidr", vC.Cidr)
 	}

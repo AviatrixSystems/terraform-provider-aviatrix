@@ -137,6 +137,7 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_azure_china" {
   ha_subnet          = "10.30.0.0/24"
   ha_zone            = "az-2"
   ha_gw_size         = "Standard_A0"
+  storage_name       = "dev-storage"
   enable_active_mesh = true
 }
 ```
@@ -275,9 +276,7 @@ The following arguments are supported:
 * `enable_jumbo_frame` - (Optional) Enable jumbo frames for this transit gateway. Default value is true.
 * `tags` - (Optional) Map of tags to assign to the gateway. Only available for AWS, Azure, AWSGov, AWSChina and AzureChina gateways. Allowed characters vary by cloud type but always include: letters, spaces, and numbers. AWS, AWSGov and AWSChina allow the following special characters: + - = . _ : / @.  Azure and AzureChina allows the following special characters: + - = . _ : @. Example: {"key1" = "value1", "key2" = "value2"}.
 * `tunnel_detection_time` - (Optional) The IPsec tunnel down detection time for the Transit Gateway in seconds. Must be a number in the range [20-600]. The default value is set by the controller (60 seconds if nothing has been changed). **NOTE: The controller UI has an option to set the tunnel detection time for all gateways. To achieve the same functionality in Terraform, use the same TF_VAR to manage the tunnel detection time for all gateways.** Available in provider R2.19+.
-* `storage_name` (Optional) Specify a storage account. Require if `cloud_type` is 2048 (AZURECHINA). Available as of Provider version 2.19+.
-
->>>>>>> 20913/20915: Add transit solution for Azure China and AWS China
+* `storage_name` (Optional) Specify a storage account. Required if `cloud_type` is 2048 (AZURECHINA). Available as of Provider version 2.19+.
 
 ## Attribute Reference
 
