@@ -257,8 +257,8 @@ The following arguments are supported:
 * `peering_ha_gw_size` - (Optional) Size of the Peering HA Gateway to be created. Required if enabling Peering HA. **NOTE: Please see notes [here](#peering_ha_gw_size-1) in regards to any deltas found in your state with the addition of this argument in R1.8.**
 
 ### Insane Mode
-* `insane_mode` - (Optional) Enable [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) for Gateway. Insane Mode gateway size must be at least c5 series (AWS) or Standard_D3_v2 (AZURE). If enabled, a valid /26 CIDR segment of the VPC must be specified to create a new subnet. Only supported for AWS, AWSGov, AWSChina, Azure or AzureChina,  Valid values: true, false.
-* `insane_mode_az` - (Optional) Region + Availability Zone of subnet being created for Insane Mode gateway. Required for AWS, AWSGov or AWSChina if `insane_mode` is set. Example: AWS: "us-west-1a".
+* `insane_mode` - (Optional) Enable [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) for Gateway. Insane Mode gateway size must be at least c5 series (AWS) or Standard_D3_v2 (AZURE). If enabled, a valid /26 CIDR segment of the VPC must be specified to create a new subnet. Only supported for AWS, AWSGov or Azure.  Valid values: true, false.
+* `insane_mode_az` - (Optional) Region + Availability Zone of subnet being created for Insane Mode gateway. Required for AWS or AWSGov if `insane_mode` is set. Example: AWS: "us-west-1a".
 
 ### SNAT/DNAT
 * `single_ip_snat` - (Optional) Enable Source NAT in "single ip" mode for this gateway. Valid values: true, false. Default value: false. **NOTE: If using SNAT for FQDN use-case, please see notes [here](#fqdn).**

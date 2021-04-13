@@ -201,8 +201,8 @@ The following arguments are supported:
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if enabling HA. Example: "t2.micro".
 
 ### Insane Mode
-* `insane_mode` - (Optional) Specify true for [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) high performance gateway. Insane Mode gateway size must be at least c5 size (AWS, AWSGov and AWSChina) or Standard_D3_v2 (Azure and AzureChina); for GCP only four size are supported: "n1-highcpu-4", "n1-highcpu-8", "n1-highcpu-16" and "n1-highcpu-32". If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet for AWS, Azure, AWSGov, AWSChina or AzureChina. Only available for AWS, GCP(with active mesh 2.0 enabled), Azure, AWSGov, AWSChina and AzureChina. Valid values: true, false.
-* `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit Gateway. Required for AWS, AWSGov or AWSChina if `insane_mode` is enabled. Example: AWS: "us-west-1a".
+* `insane_mode` - (Optional) Specify true for [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) high performance gateway. Insane Mode gateway size must be at least c5 size (AWS and AWSGov) or Standard_D3_v2 (Azure); for GCP only four size are supported: "n1-highcpu-4", "n1-highcpu-8", "n1-highcpu-16" and "n1-highcpu-32". If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet for AWS, Azure and AWSGov. Only available for AWS, GCP(with active mesh 2.0 enabled), Azure and AWSGov. Valid values: true, false.
+* `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit Gateway. Required for AWS or AWSGov if `insane_mode` is enabled. Example: AWS: "us-west-1a".
 
 ### SNAT
 * `single_ip_snat` - (Optional) Enable "single_ip" mode Source NAT for this container. Valid values: true, false. **NOTE: Please see notes [here](#enable_snat-1) in regards to changes to this argument in R2.10.**
