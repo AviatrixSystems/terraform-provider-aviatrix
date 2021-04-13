@@ -190,8 +190,12 @@ func (c *Client) GetDeviceName(connName string) (string, error) {
 	}
 
 	for _, device := range data.Results {
-		if device.ConnectionName == connName {
-			return device.Name, nil
+		// ConnectionName is actually a CSV list of connection names
+		conns := strings.Split(device.ConnectionName, ",")
+		for _, c := range conns {
+			if c == connName {
+				return device.Name, nil
+			}
 		}
 	}
 
