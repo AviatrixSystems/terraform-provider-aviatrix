@@ -629,7 +629,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	lanVpcID := d.Get("lan_vpc_id").(string)
 	lanPrivateSubnet := d.Get("lan_private_subnet").(string)
 	if enableTransitFireNet {
-		// Transit FireNet function is not supported for AWS CHINA or AZURE CHINA
+		// Transit FireNet function is not supported for AWS China or Azure China
 		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes^goaviatrix.AWSCHINA|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AZURECHINA) {
 			return fmt.Errorf("'enable_transit_firenet' is only supported in AWS (1), GCP (4), AZURE (8) and AWSGOV (256)")
 		}
@@ -654,7 +654,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("'enable_gateway_load_balancer' is only supported by AWS (1)")
 	}
 	enableEgressTransitFireNet := d.Get("enable_egress_transit_firenet").(bool)
-	// Transit FireNet function is not supported for AWS CHINA or AZURE CHINA
+	// Transit FireNet function is not supported for AWS China or Azure China
 	if enableEgressTransitFireNet && !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes^goaviatrix.AWSCHINA|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AZURE) {
 		return fmt.Errorf("'enable_egress_transit_firenet' is only supported by AWS (1), GCP (4), AZURE (8) and AWSGOV (256)")
 	}
@@ -1646,14 +1646,16 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("updating lan_private_subnet is not allowed")
 	}
 
-	if d.HasChange("enable_transit_firenet") && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-		return fmt.Errorf("editing 'enable_transit_firenet' in GCP and AZURE is not supported")
+	// Transit FireNet function is not supprted for AWS China and Azure China
+	if d.HasChange("enable_transit_firenet") && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AWSCHINA) {
+		return fmt.Errorf("editing 'enable_transit_firenet' in GCP (4), AZURE (8), AWSCHINA (1024) and AZURECHINA (2048) is not supported")
 	}
 	if d.Get("enable_egress_transit_firenet").(bool) && !d.Get("enable_transit_firenet").(bool) {
 		return fmt.Errorf("'enable_egress_transit_firenet' requires 'enable_transit_firenet' to be set to true")
 	}
-	if d.Get("enable_egress_transit_firenet").(bool) && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-		return fmt.Errorf("'enable_egress_transit_firenet' is currently only supported on AWS (1), GCP (4), AZURE (8), AWSGOV (256), AWSCHINA (1024) and AZURECHINA (2048)")
+	// Transit FireNet function is not supported for AWS China and Azure China
+	if d.Get("enable_egress_transit_firenet").(bool) && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes^goaviatrix.AWSCHINA|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AZURECHINA) {
+		return fmt.Errorf("'enable_egress_transit_firenet' is currently only supported in AWS (1), GCP (4), AZURE (8) and AWSGOV (256)")
 	}
 
 	if d.Get("enable_learned_cidrs_approval").(bool) && d.Get("learned_cidrs_approval_mode").(string) == "connection" {
