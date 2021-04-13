@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 )
@@ -53,6 +54,13 @@ type VPCSolo struct {
 	CustomizedRoutes             string `json:",omitempty"`
 	CustomizedRouteAdvertisement string
 	DisableLocalRoutePropagation bool `json:",omitempty"`
+}
+
+type IntraDomainInspection struct {
+	TgwName                      string `form:"tgw_name,omitempty" json:"tgw_name"`
+	RouteDomainName              string `form:"route_domain_name,omitempty" json:"name"`
+	FirewallDomainName           string `form:"firewall_domain_name,omitempty" json:"intra_domain_inspection_name"`
+	IntraDomainInspectionEnabled bool   `json:"intra_domain_inspection"`
 }
 
 func (c *Client) CreateSecurityDomain(securityDomain *SecurityDomain) error {
@@ -242,4 +250,66 @@ func (c *Client) GetSecurityDomainDetails(ctx context.Context, domain *SecurityD
 	}
 
 	return &data.Results[0], nil
+}
+
+func (c *Client) EnableIntraDomainInspection(ctx context.Context, intraDomainInspection *IntraDomainInspection) error {
+	params := map[string]string{
+		"action":               "enable_tgw_intra_domain_inspection",
+		"CID":                  c.CID,
+		"tgw_name":             intraDomainInspection.TgwName,
+		"route_domain_name":    intraDomainInspection.RouteDomainName,
+		"firewall_domain_name": intraDomainInspection.FirewallDomainName,
+	}
+
+	return c.PostAPIContext(ctx, params["action"], params, BasicCheck)
+}
+
+func (c *Client) DisableIntraDomainInspection(ctx context.Context, intraDomainInspection *IntraDomainInspection) error {
+	params := map[string]string{
+		"action":            "disable_tgw_intra_domain_inspection",
+		"CID":               c.CID,
+		"tgw_name":          intraDomainInspection.TgwName,
+		"route_domain_name": intraDomainInspection.RouteDomainName,
+	}
+
+	return c.PostAPIContext(ctx, params["action"], params, BasicCheck)
+}
+
+func (c *Client) GetIntraDomainInspectionStatus(ctx context.Context, intraDomainInspection *IntraDomainInspection) error {
+	params := map[string]string{
+		"action": "list_all_tgw_security_domains",
+		"CID":    c.CID,
+	}
+
+	type DomainDetails struct {
+		Domains []IntraDomainInspection `json:"domains"`
+	}
+
+	type Resp struct {
+		Return  bool          `json:"return"`
+		Results DomainDetails `json:"results"`
+		Reason  string        `json:"reason"`
+	}
+
+	var data Resp
+
+	err := c.GetAPIContext(ctx, &data, params["action"], params, BasicCheck)
+	if err != nil {
+		return err
+	}
+
+	for _, domain := range data.Results.Domains {
+		if domain.TgwName == intraDomainInspection.TgwName && domain.RouteDomainName == intraDomainInspection.RouteDomainName {
+			if !domain.IntraDomainInspectionEnabled {
+				return ErrNotFound
+			}
+
+			intraDomainInspection.IntraDomainInspectionEnabled = domain.IntraDomainInspectionEnabled
+			intraDomainInspection.FirewallDomainName = domain.FirewallDomainName
+
+			return nil
+		}
+	}
+
+	return fmt.Errorf("could not find security domain %s in tgw %s", intraDomainInspection.RouteDomainName, intraDomainInspection.TgwName)
 }
