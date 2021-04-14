@@ -1,7 +1,9 @@
 package aviatrix
 
 import (
+	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
@@ -10,10 +12,10 @@ import (
 
 func resourceAviatrixAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAviatrixAccountCreate,
-		Read:   resourceAviatrixAccountRead,
-		Update: resourceAviatrixAccountUpdate,
-		Delete: resourceAviatrixAccountDelete,
+		CreateContext: resourceAviatrixAccountCreate,
+		ReadContext:   resourceAviatrixAccountRead,
+		UpdateContext: resourceAviatrixAccountUpdate,
+		DeleteContext: resourceAviatrixAccountDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -200,11 +202,17 @@ func resourceAviatrixAccount() *schema.Resource {
 				Sensitive:   true,
 				Description: "Alibaba Cloud Secret Key.",
 			},
+			"audit_account": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Enable account audit.",
+			},
 		},
 	}
 }
 
-func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	account := &goaviatrix.Account{
@@ -251,22 +259,22 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 
 	if gatewayRoleAppOk || gatewayRoleEc2Ok {
 		if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWS) {
-			return fmt.Errorf("could not create Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used with AWS (1)")
+			return diag.Errorf("could not create Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used with AWS (1)")
 		}
 		if !awsIam {
-			return fmt.Errorf("could not create Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used when awsIam is enabled")
+			return diag.Errorf("could not create Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used when awsIam is enabled")
 		}
 		if !(gatewayRoleAppOk && gatewayRoleEc2Ok) {
-			return fmt.Errorf("could not create Aviatrix Account: must provide both aws_gateway_role_app and aws_gateway_role_ec2 when using separate IAM role and policy for gateways")
+			return diag.Errorf("could not create Aviatrix Account: must provide both aws_gateway_role_app and aws_gateway_role_ec2 when using separate IAM role and policy for gateways")
 		}
 	}
 
 	if account.CloudType == goaviatrix.AWS {
 		if account.AwsAccountNumber == "" {
-			return fmt.Errorf("aws account number is needed for aws cloud")
+			return diag.Errorf("aws account number is needed for aws cloud")
 		}
 		if account.AwsIam != "true" && account.AwsIam != "false" {
-			return fmt.Errorf("aws iam can only be 'true' or 'false'")
+			return diag.Errorf("aws iam can only be 'true' or 'false'")
 		}
 
 		log.Printf("[INFO] Creating Aviatrix account: %#v", account)
@@ -282,70 +290,70 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	} else if account.CloudType == goaviatrix.GCP {
 		if account.GcloudProjectCredentialsFilepathLocal == "" {
-			return fmt.Errorf("gcloud project credentials local filepath needed to upload file to controller")
+			return diag.Errorf("gcloud project credentials local filepath needed to upload file to controller")
 		}
 		log.Printf("[INFO] Creating Aviatrix account: %#v", account)
 	} else if account.CloudType == goaviatrix.AZURE {
 		if account.ArmSubscriptionId == "" {
-			return fmt.Errorf("arm subscription id needed for azure cloud")
+			return diag.Errorf("arm subscription id needed for azure cloud")
 		}
 		if account.ArmApplicationEndpoint == "" {
-			return fmt.Errorf("arm directory id needed for azure cloud")
+			return diag.Errorf("arm directory id needed for azure cloud")
 		}
 		if account.ArmApplicationClientId == "" {
-			return fmt.Errorf("arm application id needed for azure cloud")
+			return diag.Errorf("arm application id needed for azure cloud")
 		}
 		if account.ArmApplicationClientSecret == "" {
-			return fmt.Errorf("arm application key needed for azure cloud")
+			return diag.Errorf("arm application key needed for azure cloud")
 		}
 	} else if account.CloudType == goaviatrix.OCI {
 		if account.OciTenancyID == "" {
-			return fmt.Errorf("oci tenancy ocid needed for oracle cloud")
+			return diag.Errorf("oci tenancy ocid needed for oracle cloud")
 		}
 		if account.OciUserID == "" {
-			return fmt.Errorf("oci user id needed for oracle cloud")
+			return diag.Errorf("oci user id needed for oracle cloud")
 		}
 		if account.OciCompartmentID == "" {
-			return fmt.Errorf("oci compartment ocid needed for oracle cloud")
+			return diag.Errorf("oci compartment ocid needed for oracle cloud")
 		}
 		if account.OciApiPrivateKeyFilePath == "" {
-			return fmt.Errorf("oci api private key filepath needed to upload file to controller")
+			return diag.Errorf("oci api private key filepath needed to upload file to controller")
 		}
 	} else if account.CloudType == goaviatrix.AWSGOV {
 		if account.AwsgovAccountNumber == "" {
-			return fmt.Errorf("aws gov account number needed for aws gov cloud")
+			return diag.Errorf("aws gov account number needed for aws gov cloud")
 		}
 		if account.AwsgovAccessKey == "" {
-			return fmt.Errorf("aws gov access key needed for aws gov cloud")
+			return diag.Errorf("aws gov access key needed for aws gov cloud")
 		}
 		if account.AwsgovSecretKey == "" {
-			return fmt.Errorf("aws gov secret key needed for aws gov cloud")
+			return diag.Errorf("aws gov secret key needed for aws gov cloud")
 		}
 	} else if account.CloudType == goaviatrix.AZUREGOV {
 		if account.AzureGovSubscriptionId == "" {
-			return fmt.Errorf("azure gov subsription id needed when creating an account for arm gov cloud")
+			return diag.Errorf("azure gov subsription id needed when creating an account for arm gov cloud")
 		}
 		if account.AzureGovApplicationEndpoint == "" {
-			return fmt.Errorf("azure gov directory id needed when creating an account for arm gov cloud")
+			return diag.Errorf("azure gov directory id needed when creating an account for arm gov cloud")
 		}
 		if account.AzureGovApplicationClientId == "" {
-			return fmt.Errorf("azure gov application id needed when creating an account for arm gov cloud")
+			return diag.Errorf("azure gov application id needed when creating an account for arm gov cloud")
 		}
 		if account.AzureGovApplicationClientSecret == "" {
-			return fmt.Errorf("azure gov application key needed when creating an account for arm gov cloud")
+			return diag.Errorf("azure gov application key needed when creating an account for arm gov cloud")
 		}
 	} else if account.CloudType == goaviatrix.ALICLOUD {
 		if account.AlicloudAccountId == "" {
-			return fmt.Errorf("alicloud_account_id is required for alibaba cloud")
+			return diag.Errorf("alicloud_account_id is required for alibaba cloud")
 		}
 		if account.AlicloudAccessKey == "" {
-			return fmt.Errorf("alicloud_access_key is required for alibaba cloud")
+			return diag.Errorf("alicloud_access_key is required for alibaba cloud")
 		}
 		if account.AlicloudSecretKey == "" {
-			return fmt.Errorf("alicloud_secret_key is required for alibaba cloud")
+			return diag.Errorf("alicloud_secret_key is required for alibaba cloud")
 		}
 	} else {
-		return fmt.Errorf("cloud type can only be either aws (1), gcp (4), azure (8), oci (16), azure gov (32), aws gov (256) or Alibaba Cloud (8192)")
+		return diag.Errorf("cloud type can only be either aws (1), gcp (4), azure (8), oci (16), azure gov (32), aws gov (256) or Alibaba Cloud (8192)")
 	}
 
 	var err error
@@ -357,15 +365,17 @@ func resourceAviatrixAccountCreate(d *schema.ResourceData, meta interface{}) err
 		err = client.CreateAccount(account)
 	}
 	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix Account: %s", err)
+		return diag.Errorf("failed to create Aviatrix Account: %s", err)
 	}
 
 	d.SetId(account.AccountName)
-	return resourceAviatrixAccountRead(d, meta)
+	return resourceAviatrixAccountRead(ctx, d, meta)
 }
 
-func resourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
+
+	var diags diag.Diagnostics
 
 	accountName := d.Get("account_name").(string)
 	if accountName == "" {
@@ -387,7 +397,7 @@ func resourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) error
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("aviatrix Account: %s", err)
+		return diag.Errorf("aviatrix Account: %s", err)
 	}
 
 	if acc != nil {
@@ -423,10 +433,21 @@ func resourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) error
 		d.SetId(acc.AccountName)
 	}
 
-	return nil
+	if d.Get("audit_account").(bool) {
+		err = client.AuditAccount(ctx, account)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "Aviatrix Account failed audit",
+				Detail:   fmt.Sprintf("%v", err),
+			})
+		}
+	}
+
+	return diags
 }
 
-func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	account := &goaviatrix.Account{
@@ -473,21 +494,21 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 	d.Partial(true)
 
 	if d.HasChange("cloud_type") {
-		return fmt.Errorf("update cloud_type is not allowed")
+		return diag.Errorf("update cloud_type is not allowed")
 	}
 
 	if d.HasChange("account_name") {
-		return fmt.Errorf("update account name is not allowed")
+		return diag.Errorf("update account name is not allowed")
 	}
 
 	if d.HasChanges("aws_gateway_role_app", "aws_gateway_role_ec2") {
 		if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWS) {
-			return fmt.Errorf("could not update Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used with AWS (1)")
+			return diag.Errorf("could not update Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used with AWS (1)")
 		}
 		_, gatewayRoleAppOk := d.GetOk("aws_gateway_role_app")
 		_, gatewayRoleEc2Ok := d.GetOk("aws_gateway_role_ec2")
 		if gatewayRoleAppOk != gatewayRoleEc2Ok {
-			return fmt.Errorf("failed to update Aviatrix account: must provide both aws_gateway_role_app and aws_gateway_role_ec2 when using separate IAM role and policy for gateways")
+			return diag.Errorf("failed to update Aviatrix account: must provide both aws_gateway_role_app and aws_gateway_role_ec2 when using separate IAM role and policy for gateways")
 		}
 	}
 
@@ -495,56 +516,56 @@ func resourceAviatrixAccountUpdate(d *schema.ResourceData, meta interface{}) err
 		if d.HasChanges("aws_account_number", "aws_access_key", "aws_secret_key", "aws_iam", "aws_role_app", "aws_role_ec2", "aws_gateway_role_app", "aws_gateway_role_ec2") {
 			err := client.UpdateAccount(account)
 			if err != nil {
-				return fmt.Errorf("failed to update Aviatrix Account: %s", err)
+				return diag.Errorf("failed to update Aviatrix Account: %s", err)
 			}
 		}
 	} else if account.CloudType == goaviatrix.GCP {
 		if d.HasChange("gcloud_project_id") || d.HasChange("gcloud_project_credentials_filepath") {
 			err := client.UpdateGCPAccount(account)
 			if err != nil {
-				return fmt.Errorf("failed to update Aviatrix Account: %s", err)
+				return diag.Errorf("failed to update Aviatrix Account: %s", err)
 			}
 		}
 	} else if account.CloudType == goaviatrix.AZURE {
 		if d.HasChange("arm_subscription_id") || d.HasChange("arm_directory_id") || d.HasChange("arm_application_id") || d.HasChange("arm_application_key") {
 			err := client.UpdateAccount(account)
 			if err != nil {
-				return fmt.Errorf("failed to update Aviatrix Account: %s", err)
+				return diag.Errorf("failed to update Aviatrix Account: %s", err)
 			}
 		}
 	} else if account.CloudType == goaviatrix.OCI {
 		if d.HasChange("oci_tenancy_id") || d.HasChange("oci_user_id") || d.HasChange("oci_compartment_id") || d.HasChange("oci_api_private_key_filepath") {
-			return fmt.Errorf("updating OCI account is not supported")
+			return diag.Errorf("updating OCI account is not supported")
 		}
 	} else if account.CloudType == goaviatrix.AWSGOV {
 		if d.HasChange("awsgov_account_number") || d.HasChange("awsgov_access_key") || d.HasChange("awsgov_secret_key") {
 			err := client.UpdateAccount(account)
 			if err != nil {
-				return fmt.Errorf("failed to update Aviatrix Account: %s", err)
+				return diag.Errorf("failed to update Aviatrix Account: %s", err)
 			}
 		}
 	} else if account.CloudType == goaviatrix.AZUREGOV {
 		if d.HasChanges("azure_gov_subscription_id", "azure_gov_directory_id", "azure_gov_application_id", "azure_gov_application_key") {
 			err := client.UpdateAccount(account)
 			if err != nil {
-				return fmt.Errorf("failed to update Azure GOV Aviatrix Account: %v", err)
+				return diag.Errorf("failed to update Azure GOV Aviatrix Account: %v", err)
 			}
 		}
 	} else if account.CloudType == goaviatrix.ALICLOUD {
 		if d.HasChange("alicloud_account_id") || d.HasChange("alicloud_access_key") || d.HasChange("alicloud_secret_key") {
 			err := client.UpdateAccount(account)
 			if err != nil {
-				return fmt.Errorf("failed to update Aviatrix Account: %s", err)
+				return diag.Errorf("failed to update Aviatrix Account: %s", err)
 			}
 		}
 	}
 
 	d.Partial(false)
-	return resourceAviatrixAccountRead(d, meta)
+	return resourceAviatrixAccountRead(ctx, d, meta)
 }
 
 //for now, deleting gcp account will not delete the credential file
-func resourceAviatrixAccountDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 	account := &goaviatrix.Account{
 		AccountName: d.Get("account_name").(string),
@@ -554,7 +575,7 @@ func resourceAviatrixAccountDelete(d *schema.ResourceData, meta interface{}) err
 
 	err := client.DeleteAccount(account)
 	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix Account: %s", err)
+		return diag.Errorf("failed to delete Aviatrix Account: %s", err)
 	}
 
 	return nil
