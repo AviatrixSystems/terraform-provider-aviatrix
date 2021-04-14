@@ -246,3 +246,7 @@ func ValidateAttachedVPCsForCustomizedRoutes(a, b [][]string) ([][]string, [][]s
 
 	return aa, bb
 }
+
+func IsCloudType(cloudType, compare int) bool {
+	return cloudType&compare != 0
+}

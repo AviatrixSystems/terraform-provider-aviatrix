@@ -393,6 +393,11 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable Multi-tier Transit mode on transit gateway.",
 			},
+			"storage_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Name of storage account with gateway images. Only valid for Azure China (2048)",
+			},
 			"eip": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -521,7 +526,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 	cloudType := d.Get("cloud_type").(int)
 	zone := d.Get("zone").(string)
-	if cloudType != goaviatrix.AZURE && zone != "" {
+	if !goaviatrix.IsCloudType(cloudType, goaviatrix.AZURE) && zone != "" {
 		return fmt.Errorf("attribute 'zone' is only for use with cloud_type = 8 (AZURE)")
 	}
 	if zone != "" {
@@ -530,40 +535,41 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		gateway.Subnet = fmt.Sprintf("%s~~%s~~", d.Get("subnet").(string), zone)
 	}
 
-	if intInSlice(cloudType, []int{goaviatrix.AWS, goaviatrix.GCP, goaviatrix.OCI, goaviatrix.AWSGOV, goaviatrix.ALIYUN}) {
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
 		gateway.VpcID = d.Get("vpc_id").(string)
 		if gateway.VpcID == "" {
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a transit gw")
 		}
-	} else if cloudType == goaviatrix.AZURE {
+	} else if goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		gateway.VNetNameResourceGroup = d.Get("vpc_id").(string)
 		if gateway.VNetNameResourceGroup == "" {
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a transit gw")
 		}
 	} else {
-		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), AZURE (8), OCI (16), AWSGOV (256), or Alibaba Cloud (8192)")
+		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), AZURE (8), OCI (16), AWSGOV (256), AWSCHINA (1024), AZURECHINA (2048) or Alibaba Cloud (8192)")
 	}
 
-	if intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AZURE, goaviatrix.OCI, goaviatrix.AWSGOV, goaviatrix.ALIYUN}) {
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
 		gateway.VpcRegion = d.Get("vpc_reg").(string)
-	} else if gateway.CloudType == goaviatrix.GCP {
+	} else if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
 		// for gcp, rest api asks for "zone" rather than vpc region
 		gateway.Zone = d.Get("vpc_reg").(string)
 	} else {
-		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), AZURE (8), OCI (16), AWSGOV (256), or Alibaba Cloud (8192)")
+		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), AZURE (8), OCI (16), AWSGOV (256), AWSCHINA (1024), AZURECHINA (2048) or Alibaba Cloud (8192)")
 	}
 
 	insaneMode := d.Get("insane_mode").(bool)
 	if insaneMode {
-		if cloudType != goaviatrix.AWS && cloudType != goaviatrix.GCP && cloudType != goaviatrix.AZURE && cloudType != goaviatrix.AWSGOV {
-			return fmt.Errorf("insane_mode is only supported for AWS, GCP, AZURE, and AWSGOV (cloud_type = 1, 4, 8 or 256)")
+		// Insane Mode encryption is not supported in China regions
+		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes^goaviatrix.AWSCHINA|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AZURECHINA) {
+			return fmt.Errorf("insane_mode is only supported for AWS (1), GCP (4), AZURE (8) and AWSGOV (256)")
 		}
-		if cloudType == goaviatrix.AWS || cloudType == goaviatrix.AWSGOV {
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
 			if d.Get("insane_mode_az").(string) == "" {
-				return fmt.Errorf("insane_mode_az needed if insane_mode is enabled for AWS/AWSGOV cloud")
+				return fmt.Errorf("insane_mode_az needed if insane_mode is enabled for AWS (1) or AWSGOV (256)")
 			}
 			if d.Get("ha_subnet").(string) != "" && d.Get("ha_insane_mode_az").(string) == "" {
-				return fmt.Errorf("ha_insane_mode_az needed if insane_mode is enabled for AWS/AWSGOV cloud and ha_subnet is set")
+				return fmt.Errorf("ha_insane_mode_az needed if insane_mode is enabled for AWS (1) or AWSGOV (256) clouds and ha_subnet is set")
 			}
 			// Append availability zone to subnet
 			var strs []string
@@ -571,7 +577,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			strs = append(strs, gateway.Subnet, insaneModeAz)
 			gateway.Subnet = strings.Join(strs, "~~")
 		}
-		if cloudType == goaviatrix.GCP && !d.Get("enable_active_mesh").(bool) {
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) && !d.Get("enable_active_mesh").(bool) {
 			return fmt.Errorf("insane_mode is supported for GCP provder only if active mesh 2.0 is enabled")
 		}
 		gateway.InsaneMode = "on"
@@ -581,13 +587,13 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 	haSubnet := d.Get("ha_subnet").(string)
 	haZone := d.Get("ha_zone").(string)
-	if haZone != "" && gateway.CloudType != goaviatrix.GCP && gateway.CloudType != goaviatrix.AZURE {
+	if haZone != "" && !goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 		return fmt.Errorf("'ha_zone' is only valid for GCP and AZURE providers when enabling HA")
 	}
-	if gateway.CloudType == goaviatrix.GCP && haSubnet != "" && haZone == "" {
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) && haSubnet != "" && haZone == "" {
 		return fmt.Errorf("'ha_zone' must be set to enable HA on GCP, cannot enable HA with only 'ha_subnet'")
 	}
-	if gateway.CloudType == goaviatrix.AZURE && haSubnet == "" && haZone != "" {
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) && haSubnet == "" && haZone != "" {
 		return fmt.Errorf("'ha_subnet' must be provided to enable HA on AZURE, cannot enable HA with only 'ha_zone'")
 	}
 	haGwSize := d.Get("ha_gw_size").(string)
@@ -601,8 +607,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 	enableEncryptVolume := d.Get("enable_encrypt_volume").(bool)
 	customerManagedKeys := d.Get("customer_managed_keys").(string)
-	if enableEncryptVolume && d.Get("cloud_type").(int) != goaviatrix.AWS && d.Get("cloud_type").(int) != goaviatrix.AWSGOV {
-		return fmt.Errorf("'enable_encrypt_volume' is only supported for AWS and AWSGOV providers")
+	if enableEncryptVolume && !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
+		return fmt.Errorf("'enable_encrypt_volume' is only supported for AWS (1), AWSGOV (256) or AWSCHINA (1024) providers")
 	}
 	if customerManagedKeys != "" {
 		if !enableEncryptVolume {
@@ -610,7 +616,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 		gateway.EncVolume = "no"
 	}
-	if !enableEncryptVolume && (gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV) {
+	if !enableEncryptVolume && goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
 		gateway.EncVolume = "no"
 	}
 
@@ -622,14 +628,19 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	}
 	lanVpcID := d.Get("lan_vpc_id").(string)
 	lanPrivateSubnet := d.Get("lan_private_subnet").(string)
+	// Transit FireNet function is not supported for AWS China or Azure China
+	if enableFireNet && goaviatrix.IsCloudType(cloudType, goaviatrix.AWSCHINA|goaviatrix.AZURECHINA) {
+		return fmt.Errorf("'enable_firenet' is not supported in AWSCHINA (1024) or AZURECHINA (2048)")
+	}
 	if enableTransitFireNet {
-		if !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.GCP, goaviatrix.AZURE}) {
-			return fmt.Errorf("'enable_transit_firenet' is only supported in AWS, AWSGOV, GCP and AZURE providers")
+		// Transit FireNet function is not supported for AWS China or Azure China
+		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes^goaviatrix.AWSCHINA|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AZURECHINA) {
+			return fmt.Errorf("'enable_transit_firenet' is only supported in AWS (1), GCP (4), AZURE (8) and AWSGOV (256)")
 		}
-		if intInSlice(gateway.CloudType, []int{goaviatrix.AZURE, goaviatrix.GCP}) {
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			gateway.EnableTransitFireNet = "on"
 		}
-		if gateway.CloudType == goaviatrix.GCP {
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
 			if lanVpcID == "" || lanPrivateSubnet == "" {
 				return fmt.Errorf("'lan_vpc_id' and 'lan_private_subnet' are required when 'cloud_type' = 4 (GCP) and 'enable_transit_firenet' = true")
 			}
@@ -637,19 +648,19 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			gateway.LanPrivateSubnet = lanPrivateSubnet
 		}
 	}
-	if (!enableTransitFireNet || gateway.CloudType != goaviatrix.GCP) && (lanVpcID != "" || lanPrivateSubnet != "") {
+	if (!enableTransitFireNet || !goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes)) && (lanVpcID != "" || lanPrivateSubnet != "") {
 		return fmt.Errorf("'lan_vpc_id' and 'lan_private_subnet' are only valid when 'cloud_type' = 4 (GCP) and 'enable_transit_firenet' = true")
 	}
 	if enableGatewayLoadBalancer && !enableFireNet && !enableTransitFireNet {
 		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'enable_firenet' or 'enable_transit_firenet' is set to true")
 	}
-	if enableGatewayLoadBalancer && gateway.CloudType != goaviatrix.AWS {
-		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'cloud_type' = 1 (AWS)")
+	if enableGatewayLoadBalancer && !goaviatrix.IsCloudType(cloudType, goaviatrix.AWS) {
+		return fmt.Errorf("'enable_gateway_load_balancer' is only supported by AWS (1)")
 	}
-
 	enableEgressTransitFireNet := d.Get("enable_egress_transit_firenet").(bool)
-	if enableEgressTransitFireNet && !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AZURE, goaviatrix.AWSGOV, goaviatrix.GCP}) {
-		return fmt.Errorf("'enable_egress_transit_firenet' is only supported in AWS, AZURE, GCP and AWSGOV cloud providers")
+	// Transit FireNet function is not supported for AWS China or Azure China
+	if enableEgressTransitFireNet && !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes^goaviatrix.AWSCHINA|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AZURE) {
+		return fmt.Errorf("'enable_egress_transit_firenet' is only supported by AWS (1), GCP (4), AZURE (8) and AWSGOV (256)")
 	}
 	if enableEgressTransitFireNet && !enableTransitFireNet {
 		return fmt.Errorf("'enable_egress_transit_firenet' requires 'enable_transit_firenet' to be set to true")
@@ -672,16 +683,17 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	for _, v := range d.Get("monitor_exclude_list").(*schema.Set).List() {
 		excludedInstances = append(excludedInstances, v.(string))
 	}
-	if enableMonitorSubnets && cloudType != goaviatrix.AWS && cloudType != goaviatrix.AWSGOV {
-		return fmt.Errorf("'enable_monitor_gateway_subnets' is only valid for cloud_type = 1 (AWS) or 256 (AWSGOV)")
+	// Enable monitor gateway subnets does not work with AWSCHINA
+	if enableMonitorSubnets && !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes^goaviatrix.AWSCHINA) {
+		return fmt.Errorf("'enable_monitor_gateway_subnets' is only valid for AWS (1) or AWSGOV (256)")
 	}
 	if !enableMonitorSubnets && len(excludedInstances) != 0 {
 		return fmt.Errorf("'monitor_exclude_list' must be empty if 'enable_monitor_gateway_subnets' is false")
 	}
 
 	bgpOverLan := d.Get("enable_bgp_over_lan").(bool)
-	if bgpOverLan && cloudType != goaviatrix.AZURE {
-		return fmt.Errorf("'enable_bgp_over_lan' is only valid for cloud_type = 8 (AZURE)")
+	if bgpOverLan && !goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+		return fmt.Errorf("'enable_bgp_over_lan' is only valid for AZURE (8) or AZURECHINA (2048)")
 	}
 	if bgpOverLan {
 		gateway.BgpOverLan = "on"
@@ -693,8 +705,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	haOobAvailabilityZone := d.Get("ha_oob_availability_zone").(string)
 
 	if enablePrivateOob {
-		if cloudType != goaviatrix.AWS && cloudType != goaviatrix.AWSGOV {
-			return fmt.Errorf("'enable_private_oob' is only valid for cloud_type = 1 (AWS) or 256 (AWSGOV)")
+		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
+			return fmt.Errorf("'enable_private_oob' is only valid for AWS (1), AWSGOV (256) or AWSCHINA (1024)")
 		}
 
 		if oobAvailabilityZone == "" {
@@ -732,7 +744,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 
 		if oobManagementSubnet != "" {
-			return fmt.Errorf("\"oob_mangeemnt_sbunet\" must be empty if \"enable_private_oob\" is false")
+			return fmt.Errorf("\"oob_management_subnet\" must be empty if \"enable_private_oob\" is false")
 		}
 
 		if haOobAvailabilityZone != "" {
@@ -748,6 +760,15 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	if enableMultitierTransit {
 		if d.Get("local_as_number") == "" {
 			return fmt.Errorf("local_as_number required to enable multi tier transit")
+		}
+	}
+
+	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AZURECHINA) {
+		storageName, storageNameOk := d.GetOk("storage_name")
+		if storageNameOk {
+			gateway.StorageName = storageName.(string)
+		} else {
+			return fmt.Errorf("storage_name is required when creating a Gateway in AZURECHINA (2048)")
 		}
 	}
 
@@ -809,7 +830,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			Eip:       d.Get("ha_eip").(string),
 		}
 
-		if insaneMode && (transitGateway.CloudType == goaviatrix.AWS || transitGateway.CloudType == goaviatrix.AWSGOV) {
+		if insaneMode && goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
 			var haStrs []string
 			insaneModeHaAz := d.Get("ha_insane_mode_az").(string)
 			haStrs = append(haStrs, haSubnet, insaneModeHaAz)
@@ -817,14 +838,14 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			transitGateway.HASubnet = haSubnet
 		}
 
-		if transitGateway.CloudType == goaviatrix.GCP && haZone == "" {
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) && haZone == "" {
 			return fmt.Errorf("no ha_zone is provided for enabling Transit HA gateway: %s", transitGateway.GwName)
-		} else if transitGateway.CloudType == goaviatrix.GCP {
+		} else if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
 			transitGateway.HAZone = haZone
 			transitGateway.HASubnetGCP = haSubnet
 		}
 
-		if transitGateway.CloudType == goaviatrix.AZURE && haZone != "" {
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) && haZone != "" {
 			transitGateway.HASubnet = fmt.Sprintf("%s~~%s~~", haSubnet, haZone)
 		}
 
@@ -835,7 +856,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 		log.Printf("[INFO] Enabling HA on Transit Gateway: %#v", haSubnet)
 
-		if transitGateway.CloudType == goaviatrix.GCP {
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
 			err = client.EnableHaTransitGateway(transitGateway)
 		} else {
 			err = client.EnableHaTransitVpc(transitGateway)
@@ -871,8 +892,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	_, tagListOk := d.GetOk("tag_list")
 	_, tagsOk := d.GetOk("tags")
 	if tagListOk || tagsOk {
-		if !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.AZURE}) {
-			return errors.New("error creating transit gateway: adding tags is only supported for AWS, AWSGOV and AZURE, cloud_type must be 1, 256 or 8")
+		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+			return errors.New("error creating transit gateway: adding tags is only supported for AWS (1), AZURE (8), AWSGOV (256), AWSCHINA (1024) and AZURECHINA (2048)")
 		}
 		tags := &goaviatrix.Tags{
 			ResourceType: "gw",
@@ -895,7 +916,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			tags.TagList = TagsMapToString(tagsMap)
 		}
 
-		if tags.CloudType == goaviatrix.AZURE {
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 			err := client.UpdateTags(tags)
 			if err != nil {
 				return fmt.Errorf("failed to add tags to transit gateway: %s", err)
@@ -910,8 +931,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 	enableHybridConnection := d.Get("enable_hybrid_connection").(bool)
 	if enableHybridConnection {
-		if cloudType != goaviatrix.AWS && cloudType != goaviatrix.AWSGOV {
-			return fmt.Errorf("'enable_hybrid_connection' is only supported for AWS/AWSGOV providers")
+		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
+			return fmt.Errorf("'enable_hybrid_connection' is only supported by AWS (1), AWSGOV (256) or AWSCHINA (1024)")
 		}
 
 		err := client.AttachTransitGWForHybrid(gateway)
@@ -953,7 +974,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	}
 
 	enableVpcDnsServer := d.Get("enable_vpc_dns_server").(bool)
-	if (d.Get("cloud_type").(int) == goaviatrix.AWS || d.Get("cloud_type").(int) == goaviatrix.AWSGOV) && enableVpcDnsServer {
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) && enableVpcDnsServer {
 		gwVpcDnsServer := &goaviatrix.Gateway{
 			GwName: d.Get("gw_name").(string),
 		}
@@ -965,7 +986,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("failed to enable VPC DNS Server: %s", err)
 		}
 	} else if enableVpcDnsServer {
-		return fmt.Errorf("'enable_vpc_dns_server' only supports AWS/AWSGOV providers")
+		return fmt.Errorf("'enable_vpc_dns_server' is only supported by AWS (1), AWSGOV (256), AWSCHINA (1024)")
 	}
 
 	enableAdvertiseTransitCidr := d.Get("enable_advertise_transit_cidr").(bool)
@@ -1042,7 +1063,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if enableTransitFireNet && (gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV) {
+	if enableTransitFireNet && goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
 		enableActiveMesh := d.Get("enable_active_mesh").(bool)
 		if !enableActiveMesh {
 			return fmt.Errorf("active_mesh needs to be enabled to enable transit firenet")
@@ -1228,7 +1249,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("gw_name", gw.GwName)
 		d.Set("subnet", gw.VpcNet)
 
-		if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV {
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 			d.Set("vpc_reg", gw.VpcRegion)
 			if gw.AllocateNewEipRead && !gw.EnablePrivateOob {
@@ -1236,7 +1257,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			} else {
 				d.Set("allocate_new_eip", false)
 			}
-		} else if gw.CloudType == goaviatrix.GCP {
+		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0])
 			d.Set("vpc_reg", gw.GatewayZone)
 			if gw.AllocateNewEipRead {
@@ -1244,7 +1265,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			} else {
 				d.Set("allocate_new_eip", false)
 			}
-		} else if gw.CloudType == goaviatrix.AZURE || gw.CloudType == goaviatrix.OCI {
+		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
 			d.Set("vpc_id", gw.VpcID)
 			d.Set("vpc_reg", gw.VpcRegion)
 			d.Set("allocate_new_eip", true)
@@ -1273,7 +1294,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("single_az_ha", false)
 		}
 
-		if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV {
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			d.Set("enable_hybrid_connection", gw.EnableHybridConnection)
 		} else {
 			d.Set("enable_hybrid_connection", false)
@@ -1287,7 +1308,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 		if gw.InsaneMode == "yes" {
 			d.Set("insane_mode", true)
-			if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV {
+			if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 				d.Set("insane_mode_az", gw.GatewayZone)
 			} else {
 				d.Set("insane_mode_az", "")
@@ -1362,12 +1383,12 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("customized_transit_vpc_routes", gwDetail.CustomizedTransitVpcRoutes)
 
 		d.Set("enable_transit_firenet", gwDetail.EnableTransitFireNet)
-		if gwDetail.EnableTransitFireNet && gw.CloudType == goaviatrix.GCP {
+		if gwDetail.EnableTransitFireNet && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			d.Set("lan_vpc_id", gwDetail.BundleVpcInfo.LAN.VpcID)
 			d.Set("lan_private_subnet", strings.Split(gwDetail.BundleVpcInfo.LAN.Subnet, "~~")[0])
 		}
 
-		if _, zoneIsSet := d.GetOk("zone"); gw.CloudType == goaviatrix.AZURE && (isImport || zoneIsSet) &&
+		if _, zoneIsSet := d.GetOk("zone"); goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && (isImport || zoneIsSet) &&
 			gwDetail.GwZone != "AvailabilitySet" {
 			d.Set("zone", "az-"+gwDetail.GwZone)
 		}
@@ -1378,7 +1399,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("enable_active_mesh", false)
 		}
 
-		if (gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV) && gw.EnableVpcDnsServer == "Enabled" {
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled" {
 			d.Set("enable_vpc_dns_server", true)
 		} else {
 			d.Set("enable_vpc_dns_server", false)
@@ -1429,7 +1450,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("enable_multi_tier_transit", gw.EnableMultitierTransit)
 	}
 
-	if gw.CloudType == goaviatrix.AWS || gw.CloudType == goaviatrix.AWSGOV || gw.CloudType == goaviatrix.AZURE {
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 		tags := &goaviatrix.Tags{
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
@@ -1481,7 +1502,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("local_as_number", advancedConfig.LocalASNumber)
 	d.Set("bgp_ecmp", advancedConfig.BgpEcmpEnabled)
 	d.Set("enable_active_standby", advancedConfig.ActiveStandbyEnabled)
-	if gw.CloudType == goaviatrix.AZURE {
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		d.Set("enable_bgp_over_lan", advancedConfig.TunnelAddrLocal != "")
 	} else {
 		d.Set("enable_bgp_over_lan", false)
@@ -1521,9 +1542,9 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway: %s", err)
 		}
 	} else {
-		if intInSlice(haGw.CloudType, []int{goaviatrix.AWS, goaviatrix.AZURE, goaviatrix.OCI, goaviatrix.AWSGOV, goaviatrix.ALIYUN}) {
+		if goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
 			d.Set("ha_subnet", haGw.VpcNet)
-			if zone := d.Get("ha_zone"); haGw.CloudType == goaviatrix.AZURE && (isImport || zone.(string) != "") {
+			if zone := d.Get("ha_zone"); goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && (isImport || zone.(string) != "") {
 				haGwDetail, err := client.GetGatewayDetail(haGateway)
 				if err != nil {
 					return fmt.Errorf("could not get HA transit gateway details: %v", err)
@@ -1536,7 +1557,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			} else {
 				d.Set("ha_zone", "")
 			}
-		} else if haGw.CloudType == goaviatrix.GCP {
+		} else if goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			d.Set("ha_zone", haGw.GatewayZone)
 			if d.Get("ha_subnet") != "" || isImport {
 				d.Set("ha_subnet", haGw.VpcNet)
@@ -1558,7 +1579,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("ha_oob_availability_zone", haGw.GatewayZone)
 		}
 
-		if haGw.InsaneMode == "yes" && (haGw.CloudType == goaviatrix.AWS || haGw.CloudType == goaviatrix.AWSGOV) {
+		if haGw.InsaneMode == "yes" && goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			d.Set("ha_insane_mode_az", haGw.GatewayZone)
 		} else {
 			d.Set("ha_insane_mode_az", "")
@@ -1584,17 +1605,17 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	d.Partial(true)
 	if d.HasChange("ha_zone") {
 		haZone := d.Get("ha_zone").(string)
-		if haZone != "" && gateway.CloudType != goaviatrix.GCP && gateway.CloudType != goaviatrix.AZURE {
+		if haZone != "" && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			return fmt.Errorf("'ha_zone' is only valid for GCP and AZURE providers when enabling HA")
 		}
 	}
 	if d.HasChange("ha_zone") || d.HasChange("ha_subnet") {
 		haZone := d.Get("ha_zone").(string)
 		haSubnet := d.Get("ha_subnet").(string)
-		if gateway.CloudType == goaviatrix.GCP && haSubnet != "" && haZone == "" {
+		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) && haSubnet != "" && haZone == "" {
 			return fmt.Errorf("'ha_zone' must be set to enable HA on GCP, cannot enable HA with only 'ha_subnet'")
 		}
-		if gateway.CloudType == goaviatrix.AZURE && haSubnet == "" && haZone != "" {
+		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && haSubnet == "" && haZone != "" {
 			return fmt.Errorf("'ha_subnet' must be provided to enable HA on AZURE, cannot enable HA with only 'ha_zone'")
 		}
 	}
@@ -1629,14 +1650,20 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("updating lan_private_subnet is not allowed")
 	}
 
-	if d.HasChange("enable_transit_firenet") && intInSlice(d.Get("cloud_type").(int), []int{goaviatrix.AZURE, goaviatrix.GCP}) {
-		return fmt.Errorf("editing 'enable_transit_firenet' in GCP and AZURE is not supported")
+	// Transit FireNet function is not supprted for AWS China and Azure China
+	if d.HasChange("enable_firenet") && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSCHINA|goaviatrix.AZURECHINA) {
+		return fmt.Errorf("editing 'enable_transit_firenet' in AWSCHINA (1024) and AZURECHINA (2048) is not supported")
+	}
+	// Transit FireNet function is not supprted for AWS China and Azure China
+	if d.HasChange("enable_transit_firenet") && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AWSCHINA) {
+		return fmt.Errorf("editing 'enable_transit_firenet' in GCP (4), AZURE (8), AWSCHINA (1024) and AZURECHINA (2048) is not supported")
 	}
 	if d.Get("enable_egress_transit_firenet").(bool) && !d.Get("enable_transit_firenet").(bool) {
 		return fmt.Errorf("'enable_egress_transit_firenet' requires 'enable_transit_firenet' to be set to true")
 	}
-	if d.Get("enable_egress_transit_firenet").(bool) && !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AZURE, goaviatrix.AWSGOV, goaviatrix.GCP}) {
-		return fmt.Errorf("'enable_egress_transit_firenet' is currently only supported on AWS, AZURE, GCP and AWSGOV cloud providers")
+	// Transit FireNet function is not supported for AWS China and Azure China
+	if d.Get("enable_egress_transit_firenet").(bool) && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes^goaviatrix.AWSCHINA|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AZURECHINA) {
+		return fmt.Errorf("'enable_egress_transit_firenet' is currently only supported in AWS (1), GCP (4), AZURE (8) and AWSGOV (256)")
 	}
 
 	if d.Get("enable_learned_cidrs_approval").(bool) && d.Get("learned_cidrs_approval_mode").(string) == "connection" {
@@ -1698,7 +1725,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			GwSize:    d.Get("ha_gw_size").(string),
 		}
 
-		if transitGw.CloudType == goaviatrix.AWS || transitGw.CloudType == goaviatrix.GCP || transitGw.CloudType == goaviatrix.AWSGOV {
+		if goaviatrix.IsCloudType(transitGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) {
 			transitGw.Eip = d.Get("ha_eip").(string)
 		}
 
@@ -1710,9 +1737,9 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		oldZone, newZone := d.GetChange("ha_zone")
 		deleteHaGw := false
 		changeHaGw := false
-		if intInSlice(transitGw.CloudType, []int{goaviatrix.AWS, goaviatrix.AZURE, goaviatrix.AWSGOV, goaviatrix.ALIYUN, goaviatrix.OCI}) {
+		if goaviatrix.IsCloudType(transitGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
 			transitGw.HASubnet = d.Get("ha_subnet").(string)
-			if transitGw.CloudType == goaviatrix.AZURE && d.Get("ha_zone").(string) != "" {
+			if goaviatrix.IsCloudType(transitGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && d.Get("ha_zone").(string) != "" {
 				transitGw.HASubnet = fmt.Sprintf("%s~~%s~~", d.Get("ha_subnet").(string), d.Get("ha_zone").(string))
 			}
 			if !enablePrivateOob {
@@ -1734,7 +1761,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 					changeHaGw = true
 				}
 			}
-		} else if transitGw.CloudType == goaviatrix.GCP {
+		} else if goaviatrix.IsCloudType(transitGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			transitGw.HAZone = d.Get("ha_zone").(string)
 			transitGw.HASubnetGCP = d.Get("ha_subnet").(string)
 			if oldZone == "" && newZone != "" {
@@ -1746,7 +1773,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 
-		if d.Get("insane_mode").(bool) && (transitGw.CloudType == goaviatrix.AWS || transitGw.CloudType == goaviatrix.AWSGOV) {
+		if d.Get("insane_mode").(bool) && goaviatrix.IsCloudType(transitGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			var haStrs []string
 			insaneModeHaAz := d.Get("ha_insane_mode_az").(string)
 			if insaneModeHaAz == "" {
@@ -1784,13 +1811,13 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				}
 
 				if haOobManagementSubnet != "" {
-					return fmt.Errorf("\"ha_oob_mangeemnt_sbunet\" must be empty if \"ha_subnet\" is empty")
+					return fmt.Errorf("\"ha_oob_management_subnet\" must be empty if \"ha_subnet\" is empty")
 				}
 			}
 		}
 
 		if newHaGwEnabled {
-			if transitGw.CloudType == goaviatrix.GCP {
+			if goaviatrix.IsCloudType(transitGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 				err := client.EnableHaTransitGateway(transitGw)
 				if err != nil {
 					return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
@@ -1814,7 +1841,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 			transitGw.Eip = ""
 
-			if transitGw.CloudType == goaviatrix.GCP {
+			if goaviatrix.IsCloudType(transitGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 				err := client.EnableHaTransitGateway(transitGw)
 				if err != nil {
 					return fmt.Errorf("failed to enable HA Aviatrix Transit Gateway: %s", err)
@@ -1831,8 +1858,8 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	}
 
 	if d.HasChange("tag_list") || d.HasChange("tags") {
-		if !intInSlice(gateway.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.AZURE}) {
-			return fmt.Errorf("failed to update transit gateway: adding tags is only supported for AWS, AWSGOV and AZURE, cloud_type must be set to 1, 256 or 8")
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+			return fmt.Errorf("failed to update transit gateway: adding tags is only supported for AWS (1), AZURE (8), AWSGOV (256), AWSCHINA (1024) and AZURECHINA (2048)")
 		}
 		tags := &goaviatrix.Tags{
 			ResourceType: "gw",
@@ -1952,7 +1979,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 	}
 
-	if gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV {
+	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		if d.HasChange("enable_hybrid_connection") {
 			transitGateway := &goaviatrix.TransitVpc{
 				CloudType:   d.Get("cloud_type").(int),
@@ -2079,7 +2106,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	if enableGatewayLoadBalancer && !enableFireNet && !enableTransitFireNet {
 		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'enable_firenet' or 'enable_transit_firenet' is set to true")
 	}
-	if enableGatewayLoadBalancer && gateway.CloudType != goaviatrix.AWS {
+	if enableGatewayLoadBalancer && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWS) {
 		return fmt.Errorf("'enable_gateway_load_balancer' is only valid when 'cloud_type' = 1 (AWS)")
 	}
 	if enableFireNet && enableTransitFireNet {
@@ -2262,7 +2289,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if d.HasChange("enable_vpc_dns_server") && (d.Get("cloud_type").(int) == goaviatrix.AWS || d.Get("cloud_type").(int) == goaviatrix.AWSGOV) {
+	if d.HasChange("enable_vpc_dns_server") && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		gw := &goaviatrix.Gateway{
 			CloudType: d.Get("cloud_type").(int),
 			GwName:    d.Get("gw_name").(string),
@@ -2320,8 +2347,8 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("enable_encrypt_volume") {
 		if d.Get("enable_encrypt_volume").(bool) {
-			if d.Get("cloud_type").(int) != goaviatrix.AWS && d.Get("cloud_type").(int) != goaviatrix.AWSGOV {
-				return fmt.Errorf("'enable_encrypt_volume' is only supported for AWS/AWSGOV providers")
+			if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+				return fmt.Errorf("'enable_encrypt_volume' is only supported by AWS (1), AWSGOV (256) and AWSCHINA (1024)")
 			}
 			gwEncVolume := &goaviatrix.Gateway{
 				GwName:              d.Get("gw_name").(string),
@@ -2641,12 +2668,12 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 	}
 
 	enableTransitFireNet := d.Get("enable_transit_firenet").(bool)
-	if enableTransitFireNet && (gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AWSGOV) {
+	if enableTransitFireNet && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		err := client.DisableTransitFireNet(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to disable transit firenet for %s due to %s", gateway.GwName, err)
 		}
-	} else if enableTransitFireNet && gateway.CloudType == goaviatrix.AZURE {
+	} else if enableTransitFireNet && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		err := client.IsTransitFireNetReadyToBeDisabled(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to disable transit firenet for %s due to %s", gateway.GwName, err)

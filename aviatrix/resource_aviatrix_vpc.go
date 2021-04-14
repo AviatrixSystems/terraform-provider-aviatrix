@@ -218,49 +218,49 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		NumOfSubnetPairs:       d.Get("num_of_subnet_pairs").(int),
 		EnablePrivateOobSubnet: d.Get("enable_private_oob_subnet").(bool),
 	}
-	if vpc.Region == "" && vpc.CloudType != goaviatrix.GCP {
+	if vpc.Region == "" && !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		return fmt.Errorf("please specifiy 'region'")
 	} else if vpc.Region != "" && vpc.CloudType == goaviatrix.GCP {
 		return fmt.Errorf("please specify 'region' in 'subnets' for GCP provider")
 	}
 
-	if vpc.Cidr == "" && vpc.CloudType != goaviatrix.GCP {
+	if vpc.Cidr == "" && !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		return fmt.Errorf("please specify 'cidr'")
-	} else if vpc.Cidr != "" && vpc.CloudType == goaviatrix.GCP {
+	} else if vpc.Cidr != "" && goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		return fmt.Errorf("please specify 'cidr' in 'subnets' for GCP provider")
 	}
 	if vpc.SubnetSize != 0 && vpc.NumOfSubnetPairs != 0 {
-		if vpc.CloudType != goaviatrix.AWS && vpc.CloudType != goaviatrix.AZURE {
-			return fmt.Errorf("advanced option('subnet_size' and 'num_of_subnet_pairs') is only supported for AWS and Azure provider")
+		if !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+			return fmt.Errorf("advanced option('subnet_size' and 'num_of_subnet_pairs') is only supported by AWS (1), Azure (8), AWSGOV (256), AWSCHINA (1024) and AZURECHINA (2048)")
 		}
 	} else if vpc.SubnetSize != 0 || vpc.NumOfSubnetPairs != 0 {
-		if vpc.CloudType == goaviatrix.AWS || vpc.CloudType == goaviatrix.AZURE {
+		if goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			return fmt.Errorf("please specify both 'subnet_size' and 'num_of_subnet_pairs' to enable advanced options")
 		} else {
-			return fmt.Errorf("advanced option('subnet_size' and 'num_of_subnet_pairs') is only supported for AWS and Azure provider")
+			return fmt.Errorf("advanced option('subnet_size' and 'num_of_subnet_pairs') is only supported by AWS (1), Azure (8), AWSGOV (256), AWSCHINA (1024) and AZURECHINA (2048)")
 		}
 	}
 	if vpc.EnablePrivateOobSubnet {
-		if vpc.CloudType != goaviatrix.AWS && vpc.CloudType != goaviatrix.AWSGOV {
-			return fmt.Errorf("advanced option('enable_private_oob_subnet') is only supported for AWS and AWSGOV provider")
+		if !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+			return fmt.Errorf("advanced option('enable_private_oob_subnet') is only supported by AWS (1), AWSGOV (256), and AWSCHINA (1024)")
 		}
 	}
 
 	aviatrixTransitVpc := d.Get("aviatrix_transit_vpc").(bool)
 	aviatrixFireNetVpc := d.Get("aviatrix_firenet_vpc").(bool)
 
-	if aviatrixTransitVpc && !intInSlice(vpc.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.ALIYUN}) {
-		return fmt.Errorf("currently 'aviatrix_transit_vpc' is only supported for AWS, AWSGOV, and Alibaba Cloud provider")
+	if aviatrixTransitVpc && !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
+		return fmt.Errorf("currently 'aviatrix_transit_vpc' is only supported by AWS (1), AWSGOV (256), AWSCHINA (1024) and Alibaba Cloud (8192)")
 	}
-	if aviatrixFireNetVpc && !intInSlice(vpc.CloudType, []int{goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.AZURE, goaviatrix.OCI}) {
-		return fmt.Errorf("currently 'aviatrix_firenet_vpc' is only supported for AWS, AWSGOV, AZURE and OCI provider")
+	if aviatrixFireNetVpc && !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
+		return fmt.Errorf("currently'aviatrix_firenet_vpc' is only supported by AWS (1), Azure (8), OCI (16), AWSGOV (256), AWSCHINA (1024) and AZURECHINA (2048)")
 	}
 	if aviatrixTransitVpc && aviatrixFireNetVpc {
 		return fmt.Errorf("vpc cannot be aviatrix transit vpc and aviatrix firenet vpc at the same time")
 	}
 
 	nativeGwlb := d.Get("enable_native_gwlb").(bool)
-	if nativeGwlb && vpc.CloudType != goaviatrix.AWS {
+	if nativeGwlb && !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AWS) {
 		return fmt.Errorf("'enable_native_gwlb' is only valid with cloud_type = 1 (AWS)")
 	}
 
@@ -276,7 +276,7 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[INFO] Creating a new VPC: %#v", vpc)
 	}
 
-	if vpc.CloudType == goaviatrix.GCP {
+	if goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		if _, ok := d.GetOk("subnets"); ok {
 			subnets := d.Get("subnets").([]interface{})
 			for _, subnet := range subnets {
@@ -359,7 +359,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cloud_type", vC.CloudType)
 	d.Set("account_name", vC.AccountName)
 	d.Set("name", vC.Name)
-	if vC.CloudType != goaviatrix.GCP {
+	if !goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		d.Set("region", vC.Region)
 		d.Set("cidr", vC.Cidr)
 	}
@@ -381,13 +381,13 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("aviatrix_firenet_vpc", false)
 	}
 
-	if vC.CloudType == goaviatrix.GCP {
+	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		d.Set("vpc_id", strings.Split(vC.VpcID, "~-~")[0])
 	} else {
 		d.Set("vpc_id", vC.VpcID)
 	}
 
-	if vC.CloudType == goaviatrix.AZURE {
+	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		account := &goaviatrix.Account{
 			AccountName: d.Get("account_name").(string),
 		}
@@ -420,17 +420,17 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	var subnetsKeyArray []string
 	for _, subnet := range vC.Subnets {
 		subnetInfo := make(map[string]interface{})
-		if vC.CloudType == goaviatrix.GCP {
+		if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			subnetInfo["region"] = subnet.Region
 		}
 		subnetInfo["cidr"] = subnet.Cidr
 		subnetInfo["name"] = subnet.Name
-		if vC.CloudType != goaviatrix.GCP {
+		if !goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			subnetInfo["subnet_id"] = subnet.SubnetID
 		}
 
 		var key string
-		if vC.CloudType == goaviatrix.GCP {
+		if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			key = subnet.Region + "~" + subnet.Cidr + "~" + subnet.Name
 		} else {
 			key = subnet.Cidr + "~" + subnet.Name + "~" + subnet.SubnetID
@@ -440,7 +440,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var subnetsFromFile []map[string]interface{}
-	if vC.CloudType == goaviatrix.GCP {
+	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		subnets := d.Get("subnets").([]interface{})
 		for _, subnet := range subnets {
 			sub := subnet.(map[string]interface{})
@@ -508,7 +508,7 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("enable_native_gwlb", firenetDetail.NativeGwlb)
 	}
 
-	if vC.CloudType == goaviatrix.AWS || vC.CloudType == goaviatrix.AWSGOV || vC.CloudType == goaviatrix.AZURE {
+	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 		var rtbs []string
 		rtbs, err = getAllRouteTables(vpc, client)
 

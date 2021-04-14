@@ -165,6 +165,35 @@ resource "aviatrix_gateway" "test_gateway_awsgov" {
 }
 ```
 ```hcl
+# Create an Aviatrix AWS China Gateway
+resource "aviatrix_gateway" "test_gateway_aws_china" {
+  cloud_type   = 1024
+  account_name = "devops-aws_china"
+  gw_name      = "avtx-gw-aws_china"
+  vpc_id       = "vpc-abcdef"
+  vpc_reg      = "cn-north-1"
+  gw_size      = "t2.micro"
+  subnet       = "10.0.0.0/24"
+  tags         = {
+    k1 = "v1",
+    k2 = "v2",
+  }
+}
+```
+```hcl
+# Create an Aviatrix Azure China Gateway
+resource "aviatrix_gateway" "test_gateway_azure_china" {
+  cloud_type   = 2048
+  account_name = "devops-azure-china"
+  gw_name      = "avtx-gw-azure-china"
+  vpc_id       = "vnet1:resourcegroup1"
+  vpc_reg      = "China North"
+  gw_size      = "Standard_A0"
+  subnet       = "10.13.0.0/24"
+  storage_name = "dev-storage"
+}
+```
+```hcl
 # Create an Aviatrix FQDN GCP Gateway
 resource "aviatrix_gateway" "test_gateway_gcp" {
   cloud_type      = 4
@@ -211,12 +240,12 @@ resource "aviatrix_gateway" "test_gateway_alibaba" {
 The following arguments are supported:
 
 ### Required
-* `cloud_type` - (Required) Cloud service provider to use to launch the gateway. Requires an integer value. Currently supports AWS(1), GCP(4), AZURE(8), OCI(16), AWSGov(256) and Alibaba Cloud (8192).
+* `cloud_type` - (Required) Cloud service provider to use to launch the gateway. Requires an integer value. Currently supports AWS(1), GCP(4), AZURE(8), OCI(16), AWSGOV(256), AWSCHINA(1024), AZURECHINA(2048) and Alibaba Cloud (8192).
 * `account_name` - (Required) Account name. This account will be used to launch Aviatrix gateway.
 * `gw_name` - (Required) Name of the Aviatrix gateway to be created.
-* `vpc_id` - (Required) VPC ID/VNet name of cloud provider. Example: AWS: "vpc-abcd1234", GCP: "vpc-gcp-test", AZURE: "vnet1:hello", OCI: "vpc-oracle-test1".
-* `vpc_reg` - (Required) VPC region the gateway will be created in. Example: AWS: "us-east-1", GCP: "us-west2-a", AZURE: "East US 2", OCI: "us-ashburn-1".
-* `gw_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", GCP: "n1-standard-1", AZURE: "Standard_B1s", OCI: "VM.Standard2.2".
+* `vpc_id` - (Required) VPC ID/VNet name of cloud provider. Example: AWS/AWSGov/AWSChina: "vpc-abcd1234", GCP: "vpc-gcp-test", AZURE/AzureChina: "vnet1:hello", OCI: "vpc-oracle-test1".
+* `vpc_reg` - (Required) VPC region the gateway will be created in. Example: AWS: "us-east-1", GCP: "us-west2-a", AZURE: "East US 2", OCI: "us-ashburn-1", AWSGov: "us-gov-west-1", AWSChina: "cn-north-1", AzureChina: "China North".
+* `gw_size` - (Required) Size of the gateway instance. Example: AWS/AWSGov/AWSChina: "t2.large", GCP: "n1-standard-1", AZURE/AzureChina: "Standard_B1s", OCI: "VM.Standard2.2".
 * `subnet` - (Required) A VPC network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode-1).**
 
 ### HA
@@ -228,8 +257,8 @@ The following arguments are supported:
 * `peering_ha_gw_size` - (Optional) Size of the Peering HA Gateway to be created. Required if enabling Peering HA. **NOTE: Please see notes [here](#peering_ha_gw_size-1) in regards to any deltas found in your state with the addition of this argument in R1.8.**
 
 ### Insane Mode
-* `insane_mode` - (Optional) Enable [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) for Gateway. Insane Mode gateway size must be at least c5 series (AWS) or Standard_D3_v2 (AZURE). If enabled, a valid /26 CIDR segment of the VPC must be specified to create a new subnet. Only supported for AWS, AWSGov or Azure. Valid values: true, false.
-* `insane_mode_az` - (Optional) Region + Availability Zone of subnet being created for Insane Mode gateway. Required for AWS and AWSGov if `insane_mode` is set. Example: AWS: "us-west-1a".
+* `insane_mode` - (Optional) Enable [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) for Gateway. Insane Mode gateway size must be at least c5 series (AWS) or Standard_D3_v2 (AZURE). If enabled, a valid /26 CIDR segment of the VPC must be specified to create a new subnet. Only supported for AWS, AWSGov or Azure.  Valid values: true, false.
+* `insane_mode_az` - (Optional) Region + Availability Zone of subnet being created for Insane Mode gateway. Required for AWS or AWSGov if `insane_mode` is set. Example: AWS: "us-west-1a".
 
 ### SNAT/DNAT
 * `single_ip_snat` - (Optional) Enable Source NAT in "single ip" mode for this gateway. Valid values: true, false. Default value: false. **NOTE: If using SNAT for FQDN use-case, please see notes [here](#fqdn).**
@@ -277,11 +306,11 @@ The following arguments are supported:
 * `renegotiation_interval` - (Optional) It sets the value (seconds) of the [renegotiation interval](https://docs.aviatrix.com/HowTos/openvpn_faq.html#how-do-i-fix-the-aviatrix-vpn-timing-out-too-quickly). This renegotiation interval feature is enable only if this attribute is set, otherwise it is disabled. The entered value must be an integer number greater than 300. Available in provider version R2.17.1+.
 
 ### Designated Gateway
-* `enable_designated_gateway` - (Optional) Enable Designated Gateway feature for Gateway. Only supported for AWS and AWSGov gateways. Valid values: true, false. Default value: false. Please view documentation [here](https://docs.aviatrix.com/HowTos/gateway.html#designated-gateway) for more information on this feature.
+* `enable_designated_gateway` - (Optional) Enable Designated Gateway feature for Gateway. Only supported for AWS, AWSGov and AWSChina gateways. Valid values: true, false. Default value: false. Please view documentation [here](https://docs.aviatrix.com/HowTos/gateway.html#designated-gateway) for more information on this feature.
 * `additional_cidrs_designated_gateway` - (Optional) A list of CIDR ranges separated by comma to configure when "Designated Gateway" feature is enabled. Example: "10.8.0.0/16,10.9.0.0/16,10.10.0.0/16".
 
 ### Encryption
-* `enable_encrypt_volume` - (Optional) Enable EBS volume encryption for the gateway. Only supported for AWS and AWSGov gateways. Valid values: true, false. Default value: false.
+* `enable_encrypt_volume` - (Optional) Enable EBS volume encryption for the gateway. Only supported for AWS, AWSGov and AWSChina gateways. Valid values: true, false. Default value: false.
 * `customer_managed_keys` - (Optional and Sensitive) Customer-managed key ID.
 
 ### Monitor Gateway Subnets
@@ -301,11 +330,12 @@ The following arguments are supported:
 ### Misc.
 * `allocate_new_eip` - (Optional) If set to false, use an available address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in Controller 2.7+. Valid values: true, false. Default: true. Option not available for Azure and OCI gateways, they will automatically allocate new EIPs.
 * `eip` - (Optional) Specified EIP to use for gateway creation. Required when `allocate_new_eip` is false.  Available in Controller version 3.5+. Only supported for AWS and GCP gateways.
-* `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for gateway. Currently only supported for AWS and AWSGov gateways. Valid values: true, false. Default value: false.
+* `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for gateway. Currently only supported for AWS, AWSGov and AWSChina gateways. Valid values: true, false. Default value: false.
 * `zone` - (Optional) Availability Zone. Only available for Azure and Public Subnet Filtering gateway. Available for Azure as of provider version R2.17+.
 * `enable_jumbo_frame` - (Optional) Enable jumbo frames for this gateway. Default value is true.
-* `tags` - (Optional) Map of tags to assign to the gateway. Only available for AWS, AWSGOV and Azure gateway. Allowed characters vary by cloud type but always include: letters, spaces, and numbers. AWS and AWSGOV allow the following special characters: + - = . _ : / @.  Azure allows the following special characters: + - = . _ : @. Example: {"key1" = "value1", "key2" = "value2"}.
+* `tags` - (Optional) Map of tags to assign to the gateway. Only available for AWS, AWSGOV, AWSCHINA, Azure and AzureChina gateways. Allowed characters vary by cloud type but always include: letters, spaces, and numbers. AWS, AWSGOV and AWSChina allow the following special characters: + - = . _ : / @.  Azure and AzureChina allows the following special characters: + - = . _ : @. Example: {"key1" = "value1", "key2" = "value2"}.
 * `tunnel_detection_time` - (Optional) The IPsec tunnel down detection time for the Gateway in seconds. Must be a number in the range [20-600]. The default value is set by the controller (60 seconds if nothing has been changed). **NOTE: The controller UI has an option to set the tunnel detection time for all gateways. To achieve the same functionality in Terraform, use the same TF_VAR to manage the tunnel detection time for all gateways.** Available in provider R2.19+.
+* `storage_name` (Optional) Specify a storage account. Required if `cloud_type` is 2048 (AzureChina). Available as of Provider version 2.19+.
 
 ### Public Subnet Filtering Gateway
 
@@ -350,7 +380,7 @@ The following arguments are deprecated:
 * `cloudn_bkup_gateway_inst_id` - Instance ID of the backup gateway.
 * `public_ip` - Public IP address of the gateway created.
 * `peering_ha_public_ip` - Public IP address of the peering HA Gateway created.
-* `tag_list` - (Optional) Tag list of the gateway instance. Only available for AWS, AWSGov and Azure gateways. Example: ["key1:value1", "key2:value2"].
+* `tag_list` - (Optional) Tag list of the gateway instance. Only available for AWS, AWSGov, AWSChina, Azure and AzureChina gateways. Example: ["key1:value1", "key2:value2"].
 
 ## Import
 

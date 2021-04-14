@@ -206,13 +206,13 @@ func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("aviatrix_firenet_vpc", false)
 	}
 
-	if vC.CloudType == goaviatrix.GCP {
+	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		d.Set("vpc_id", strings.Split(vC.VpcID, "~-~")[0])
 	} else {
 		d.Set("vpc_id", vC.VpcID)
 	}
 
-	if vC.CloudType == goaviatrix.AZURE {
+	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		account := &goaviatrix.Account{
 			AccountName: d.Get("account_name").(string),
 		}
@@ -279,7 +279,7 @@ func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] Error setting 'public_subnets' for (%s): %s", d.Id(), err)
 	}
 
-	if vC.CloudType == goaviatrix.AWS || vC.CloudType == goaviatrix.AWSGOV || vC.CloudType == goaviatrix.AZURE {
+	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 		var rtbs []string
 		routeTableFilter := d.Get("route_tables_filter")
 		if routeTableFilter == "private" {

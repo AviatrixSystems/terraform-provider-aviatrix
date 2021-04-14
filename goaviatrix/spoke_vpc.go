@@ -42,6 +42,7 @@ type SpokeVpc struct {
 	EnablePrivateOob      string `form:"private_oob,omitempty"`
 	OobManagementSubnet   string `form:"oob_mgmt_subnet,omitempty"`
 	HAOobManagementSubnet string
+	StorageName           string `form:"storage_name"`
 }
 
 func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) error {
@@ -148,7 +149,7 @@ func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 	enableSpokeHa.Add("gw_name", spoke.GwName)
 	enableSpokeHa.Add("eip", spoke.Eip)
 
-	if spoke.CloudType == GCP {
+	if IsCloudType(spoke.CloudType, GCPRelatedCloudTypes) {
 		enableSpokeHa.Add("new_zone", spoke.HAZone)
 	} else {
 		enableSpokeHa.Add("public_subnet", spoke.HASubnet)

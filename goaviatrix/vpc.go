@@ -96,9 +96,9 @@ func (c *Client) CreateVpc(vpc *Vpc) error {
 		createCustomVpc.Add("subnet_size", strconv.Itoa(vpc.SubnetSize))
 	}
 	if vpc.NumOfSubnetPairs != 0 {
-		if vpc.CloudType == AWS {
+		if IsCloudType(vpc.CloudType, AWSRelatedCloudTypes) {
 			createCustomVpc.Add("num_of_zones", strconv.Itoa(vpc.NumOfSubnetPairs))
-		} else if vpc.CloudType == AZURE {
+		} else if IsCloudType(vpc.CloudType, AzureArmRelatedCloudTypes) {
 			createCustomVpc.Add("num_of_subnets", strconv.Itoa(vpc.NumOfSubnetPairs))
 		}
 	}
