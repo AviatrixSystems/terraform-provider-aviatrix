@@ -56,6 +56,7 @@ func Provider() *schema.Provider {
 			"aviatrix_azure_peer":                                     resourceAviatrixAzurePeer(),
 			"aviatrix_azure_spoke_native_peering":                     resourceAviatrixAzureSpokeNativePeering(),
 			"aviatrix_azure_vng_conn":                                 resourceAviatrixAzureVngConn(),
+			"aviatrix_cloudn_transit_gateway_attachment":              resourceAviatrixCloudnTransitGatewayAttachment(),
 			"aviatrix_cloudwatch_agent":                               resourceAviatrixCloudwatchAgent(),
 			"aviatrix_controller_bgp_max_as_limit_config":             resourceAviatrixControllerBgpMaxAsLimitConfig(),
 			"aviatrix_controller_cert_domain_config":                  resourceAviatrixControllerCertDomainConfig(),

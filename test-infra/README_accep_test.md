@@ -69,6 +69,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_azure_spoke_native_peering  | SKIP_AZURE_SPOKE_NATIVE_PEERING    | aviatrix_account + AZURE_VNET_ID, AZURE_VNET_ID2, AZURE_REGION, AZURE_REGION2  |
 | aviatrix_azure_vng_conn              | SKIP_AZURE_VNG_CONN                | aviatrix_account + AZURE_VNG_VNET_ID, AZURE_REGION, AZURE_VNG_SUBNET, AZURE_VNG|
 | aviatrix_aws_tgw_vpn_conn            | SKIP_AWS_TGW_VPN_CONN              | aviatrix_aws_tgw                                                               |
+| aviatrix_cloudn_transit_gateway_attachment | SKIP_CLOUDN_TRANSIT_GATEWAY_ATTACHMENT | CLOUDN_DEVICE_NAME, TRANSIT_GATEWAY_NAME, CLOUDN_BGP_ASN, CLOUDN_LAN_INTERFACE_NEIGHBOR_IP, CLOUDN_LAN_INTERFACE_NEIGHBOR_BGP_ASN |
 | aviatrix_cloudwatch_agent            | SKIP_CLOUDWATCH_AGENT              | N/A                                                                            |
 | aviatrix_controller_config           | SKIP_CONTROLLER_CONFIG             | aviatrix_account                                                               |
 | aviatrix_controller_cert_domain_config | SKIP_CONTROLLER_CERT_DOMAIN_CONFIG | aviatrix_account                                                             |
