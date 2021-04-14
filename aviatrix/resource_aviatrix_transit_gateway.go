@@ -1091,6 +1091,13 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if val, ok := d.GetOk("local_as_number"); ok {
+		err := client.SetLocalASNumber(gateway, val.(string))
+		if err != nil {
+			return fmt.Errorf("could not set local_as_number: %v", err)
+		}
+	}
+
 	if val, ok := d.GetOk("prepend_as_path"); ok {
 		var prependASPath []string
 		slice := val.([]interface{})
@@ -1100,13 +1107,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		err := client.SetPrependASPath(gateway, prependASPath)
 		if err != nil {
 			return fmt.Errorf("could not set prepend_as_path: %v", err)
-		}
-	}
-
-	if val, ok := d.GetOk("local_as_number"); ok {
-		err := client.SetLocalASNumber(gateway, val.(string))
-		if err != nil {
-			return fmt.Errorf("could not set local_as_number: %v", err)
 		}
 	}
 
@@ -1229,7 +1229,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 	gateway := &goaviatrix.Gateway{
 		AccountName: d.Get("account_name").(string),
-		GwName:      d.Get("gw_name").(string),
+		GwName:      gwName,
 	}
 
 	gw, err := client.GetGateway(gateway)
@@ -1243,227 +1243,184 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[TRACE] reading gateway %s: %#v", d.Get("gw_name").(string), gw)
 
-	if gw != nil {
-		d.Set("cloud_type", gw.CloudType)
-		d.Set("account_name", gw.AccountName)
-		d.Set("gw_name", gw.GwName)
-		d.Set("subnet", gw.VpcNet)
+	d.Set("cloud_type", gw.CloudType)
+	d.Set("account_name", gw.AccountName)
+	d.Set("gw_name", gw.GwName)
+	d.Set("subnet", gw.VpcNet)
+	d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
+	d.Set("eip", gw.PublicIP)
+	d.Set("gw_size", gw.GwSize)
+	d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
+	d.Set("security_group_id", gw.GwSecurityGroupID)
+	d.Set("private_ip", gw.PrivateIP)
+	d.Set("single_ip_snat", gw.EnableNat == "yes" && gw.SnatMode == "primary")
+	d.Set("single_az_ha", gw.SingleAZ == "yes")
+	d.Set("enable_hybrid_connection", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) && gw.EnableHybridConnection)
+	d.Set("connected_transit", gw.ConnectedTransit == "yes")
+	d.Set("bgp_hold_time", gw.BgpHoldTime)
+	d.Set("bgp_polling_time", gw.BgpPollingTime)
+	var prependAsPath []string
+	for _, p := range strings.Split(gw.PrependASPath, ",") {
+		if p != "" {
+			prependAsPath = append(prependAsPath, p)
+		}
+	}
+	err = d.Set("prepend_as_path", prependAsPath)
+	if err != nil {
+		return fmt.Errorf("could not set prepend_as_path: %v", err)
+	}
+	d.Set("local_as_number", gw.LocalASNumber)
+	d.Set("bgp_ecmp", gw.BgpEcmp)
+	d.Set("enable_active_standby", gw.EnableActiveStandby)
+	d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan)
+	d.Set("enable_transit_summarize_cidr_to_tgw", gw.EnableTransitSummarizeCidrToTgw)
+	d.Set("enable_segmentation", gw.EnableSegmentation)
+	d.Set("learned_cidrs_approval_mode", gw.LearnedCidrsApprovalMode)
+	d.Set("enable_jumbo_frame", gw.JumboFrame)
+	d.Set("enable_private_oob", gw.EnablePrivateOob)
+	if gw.EnablePrivateOob {
+		d.Set("oob_management_subnet", strings.Split(gw.OobManagementSubnet, "~~")[0])
+		d.Set("oob_availability_zone", gw.GatewayZone)
+	}
+	d.Set("enable_firenet", gw.EnableFirenet)
+	d.Set("enable_gateway_load_balancer", gw.EnableGatewayLoadBalancer)
+	d.Set("enable_egress_transit_firenet", gw.EnableEgressTransitFirenet)
+	d.Set("customized_transit_vpc_routes", gw.CustomizedTransitVpcRoutes)
+	d.Set("enable_transit_firenet", gw.EnableTransitFirenet)
+	if gw.EnableTransitFirenet && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+		d.Set("lan_vpc_id", gw.BundleVpcInfo.LAN.VpcID)
+		d.Set("lan_private_subnet", strings.Split(gw.BundleVpcInfo.LAN.Subnet, "~~")[0])
+	}
 
-		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
-			d.Set("vpc_reg", gw.VpcRegion)
-			if gw.AllocateNewEipRead && !gw.EnablePrivateOob {
-				d.Set("allocate_new_eip", true)
-			} else {
-				d.Set("allocate_new_eip", false)
-			}
-		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-			d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0])
-			d.Set("vpc_reg", gw.GatewayZone)
-			if gw.AllocateNewEipRead {
-				d.Set("allocate_new_eip", true)
-			} else {
-				d.Set("allocate_new_eip", false)
-			}
-		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
-			d.Set("vpc_id", gw.VpcID)
-			d.Set("vpc_reg", gw.VpcRegion)
+	if _, zoneIsSet := d.GetOk("zone"); goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && (isImport || zoneIsSet) &&
+		gw.GatewayZone != "AvailabilitySet" {
+		d.Set("zone", "az-"+gw.GatewayZone)
+	}
+	d.Set("enable_active_mesh", gw.EnableActiveMesh == "yes")
+	d.Set("enable_vpc_dns_server", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled")
+	d.Set("enable_advertise_transit_cidr", gw.EnableAdvertiseTransitCidr)
+	d.Set("enable_learned_cidrs_approval", gw.EnableLearnedCidrsApproval)
+	d.Set("enable_monitor_gateway_subnets", gw.MonitorSubnetsAction == "enable")
+	if err := d.Set("monitor_exclude_list", gw.MonitorExcludeGWList); err != nil {
+		return fmt.Errorf("setting 'monitor_exclude_list' to state: %v", err)
+	}
+	d.Set("enable_multi_tier_transit", gw.EnableMultitierTransit)
+
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
+		d.Set("vpc_reg", gw.VpcRegion)
+		if gw.AllocateNewEipRead && !gw.EnablePrivateOob {
 			d.Set("allocate_new_eip", true)
-		} else if gw.CloudType == goaviatrix.ALIYUN {
-			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
-			d.Set("vpc_reg", gw.VpcRegion)
+		} else {
+			d.Set("allocate_new_eip", false)
+		}
+	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+		d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0])
+		d.Set("vpc_reg", gw.GatewayZone)
+		if gw.AllocateNewEipRead {
 			d.Set("allocate_new_eip", true)
-		}
-
-		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
-		d.Set("eip", gw.PublicIP)
-		d.Set("gw_size", gw.GwSize)
-		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
-		d.Set("security_group_id", gw.GwSecurityGroupID)
-		d.Set("private_ip", gw.PrivateIP)
-
-		if gw.EnableNat == "yes" && gw.SnatMode == "primary" {
-			d.Set("single_ip_snat", true)
 		} else {
-			d.Set("single_ip_snat", false)
+			d.Set("allocate_new_eip", false)
 		}
+	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
+		d.Set("vpc_id", gw.VpcID)
+		d.Set("vpc_reg", gw.VpcRegion)
+		d.Set("allocate_new_eip", true)
+	} else if gw.CloudType == goaviatrix.ALIYUN {
+		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
+		d.Set("vpc_reg", gw.VpcRegion)
+		d.Set("allocate_new_eip", true)
+	}
 
-		if gw.SingleAZ == "yes" {
-			d.Set("single_az_ha", true)
-		} else {
-			d.Set("single_az_ha", false)
-		}
-
+	if gw.InsaneMode == "yes" {
+		d.Set("insane_mode", true)
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-			d.Set("enable_hybrid_connection", gw.EnableHybridConnection)
+			d.Set("insane_mode_az", gw.GatewayZone)
 		} else {
-			d.Set("enable_hybrid_connection", false)
-		}
-
-		if gw.ConnectedTransit == "yes" {
-			d.Set("connected_transit", true)
-		} else {
-			d.Set("connected_transit", false)
-		}
-
-		if gw.InsaneMode == "yes" {
-			d.Set("insane_mode", true)
-			if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-				d.Set("insane_mode_az", gw.GatewayZone)
-			} else {
-				d.Set("insane_mode_az", "")
-			}
-		} else {
-			d.Set("insane_mode", false)
 			d.Set("insane_mode_az", "")
 		}
+	} else {
+		d.Set("insane_mode", false)
+		d.Set("insane_mode_az", "")
+	}
 
-		if len(gw.CustomizedSpokeVpcRoutes) != 0 {
-			if customizedRoutes := d.Get("customized_spoke_vpc_routes").(string); customizedRoutes != "" {
-				customizedRoutesArray := strings.Split(customizedRoutes, ",")
-				if len(goaviatrix.Difference(customizedRoutesArray, gw.CustomizedSpokeVpcRoutes)) == 0 &&
-					len(goaviatrix.Difference(gw.CustomizedSpokeVpcRoutes, customizedRoutesArray)) == 0 {
-					d.Set("customized_spoke_vpc_routes", customizedRoutes)
-				} else {
-					d.Set("customized_spoke_vpc_routes", strings.Join(gw.CustomizedSpokeVpcRoutes, ","))
-				}
+	if len(gw.CustomizedSpokeVpcRoutes) != 0 {
+		if customizedRoutes := d.Get("customized_spoke_vpc_routes").(string); customizedRoutes != "" {
+			customizedRoutesArray := strings.Split(customizedRoutes, ",")
+			if len(goaviatrix.Difference(customizedRoutesArray, gw.CustomizedSpokeVpcRoutes)) == 0 &&
+				len(goaviatrix.Difference(gw.CustomizedSpokeVpcRoutes, customizedRoutesArray)) == 0 {
+				d.Set("customized_spoke_vpc_routes", customizedRoutes)
 			} else {
 				d.Set("customized_spoke_vpc_routes", strings.Join(gw.CustomizedSpokeVpcRoutes, ","))
 			}
 		} else {
-			d.Set("customized_spoke_vpc_routes", "")
+			d.Set("customized_spoke_vpc_routes", strings.Join(gw.CustomizedSpokeVpcRoutes, ","))
 		}
+	} else {
+		d.Set("customized_spoke_vpc_routes", "")
+	}
 
-		if len(gw.FilteredSpokeVpcRoutes) != 0 {
-			if filteredSpokeVpcRoutes := d.Get("filtered_spoke_vpc_routes").(string); filteredSpokeVpcRoutes != "" {
-				filteredSpokeVpcRoutesArray := strings.Split(filteredSpokeVpcRoutes, ",")
-				if len(goaviatrix.Difference(filteredSpokeVpcRoutesArray, gw.FilteredSpokeVpcRoutes)) == 0 &&
-					len(goaviatrix.Difference(gw.FilteredSpokeVpcRoutes, filteredSpokeVpcRoutesArray)) == 0 {
-					d.Set("filtered_spoke_vpc_routes", filteredSpokeVpcRoutes)
-				} else {
-					d.Set("filtered_spoke_vpc_routes", strings.Join(gw.FilteredSpokeVpcRoutes, ","))
-				}
+	if len(gw.FilteredSpokeVpcRoutes) != 0 {
+		if filteredSpokeVpcRoutes := d.Get("filtered_spoke_vpc_routes").(string); filteredSpokeVpcRoutes != "" {
+			filteredSpokeVpcRoutesArray := strings.Split(filteredSpokeVpcRoutes, ",")
+			if len(goaviatrix.Difference(filteredSpokeVpcRoutesArray, gw.FilteredSpokeVpcRoutes)) == 0 &&
+				len(goaviatrix.Difference(gw.FilteredSpokeVpcRoutes, filteredSpokeVpcRoutesArray)) == 0 {
+				d.Set("filtered_spoke_vpc_routes", filteredSpokeVpcRoutes)
 			} else {
 				d.Set("filtered_spoke_vpc_routes", strings.Join(gw.FilteredSpokeVpcRoutes, ","))
 			}
 		} else {
-			d.Set("filtered_spoke_vpc_routes", "")
+			d.Set("filtered_spoke_vpc_routes", strings.Join(gw.FilteredSpokeVpcRoutes, ","))
 		}
+	} else {
+		d.Set("filtered_spoke_vpc_routes", "")
+	}
 
-		if len(gw.ExcludeCidrList) != 0 {
-			if advertisedSpokeRoutes := d.Get("excluded_advertised_spoke_routes").(string); advertisedSpokeRoutes != "" {
-				advertisedSpokeRoutesArray := strings.Split(advertisedSpokeRoutes, ",")
-				if len(goaviatrix.Difference(advertisedSpokeRoutesArray, gw.ExcludeCidrList)) == 0 &&
-					len(goaviatrix.Difference(gw.ExcludeCidrList, advertisedSpokeRoutesArray)) == 0 {
-					d.Set("excluded_advertised_spoke_routes", advertisedSpokeRoutes)
-				} else {
-					d.Set("excluded_advertised_spoke_routes", strings.Join(gw.ExcludeCidrList, ","))
-				}
+	if len(gw.ExcludeCidrList) != 0 {
+		if advertisedSpokeRoutes := d.Get("excluded_advertised_spoke_routes").(string); advertisedSpokeRoutes != "" {
+			advertisedSpokeRoutesArray := strings.Split(advertisedSpokeRoutes, ",")
+			if len(goaviatrix.Difference(advertisedSpokeRoutesArray, gw.ExcludeCidrList)) == 0 &&
+				len(goaviatrix.Difference(gw.ExcludeCidrList, advertisedSpokeRoutesArray)) == 0 {
+				d.Set("excluded_advertised_spoke_routes", advertisedSpokeRoutes)
 			} else {
 				d.Set("excluded_advertised_spoke_routes", strings.Join(gw.ExcludeCidrList, ","))
 			}
 		} else {
-			d.Set("excluded_advertised_spoke_routes", "")
+			d.Set("excluded_advertised_spoke_routes", strings.Join(gw.ExcludeCidrList, ","))
 		}
-
-		d.Set("enable_private_oob", gw.EnablePrivateOob)
-		if gw.EnablePrivateOob {
-			d.Set("oob_management_subnet", strings.Split(gw.OobManagementSubnet, "~~")[0])
-			d.Set("oob_availability_zone", gw.GatewayZone)
-		}
-
-		gwDetail, err := client.GetGatewayDetail(gw)
-		if err != nil {
-			return fmt.Errorf("couldn't get Aviatrix Transit Gateway: %s", err)
-		}
-
-		d.Set("enable_firenet", gwDetail.EnableFireNet)
-		d.Set("enable_gateway_load_balancer", gwDetail.EnabledGatewayLoadBalancer)
-		d.Set("enable_egress_transit_firenet", gwDetail.EnableEgressTransitFireNet)
-		d.Set("customized_transit_vpc_routes", gwDetail.CustomizedTransitVpcRoutes)
-
-		d.Set("enable_transit_firenet", gwDetail.EnableTransitFireNet)
-		if gwDetail.EnableTransitFireNet && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-			d.Set("lan_vpc_id", gwDetail.BundleVpcInfo.LAN.VpcID)
-			d.Set("lan_private_subnet", strings.Split(gwDetail.BundleVpcInfo.LAN.Subnet, "~~")[0])
-		}
-
-		if _, zoneIsSet := d.GetOk("zone"); goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && (isImport || zoneIsSet) &&
-			gwDetail.GwZone != "AvailabilitySet" {
-			d.Set("zone", "az-"+gwDetail.GwZone)
-		}
-
-		if gw.EnableActiveMesh == "yes" {
-			d.Set("enable_active_mesh", true)
-		} else {
-			d.Set("enable_active_mesh", false)
-		}
-
-		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled" {
-			d.Set("enable_vpc_dns_server", true)
-		} else {
-			d.Set("enable_vpc_dns_server", false)
-		}
-
-		if gwDetail.EnableAdvertiseTransitCidr == "yes" {
-			d.Set("enable_advertise_transit_cidr", true)
-		} else {
-			d.Set("enable_advertise_transit_cidr", false)
-		}
-
-		if gwDetail.LearnedCidrsApproval == "yes" {
-			d.Set("enable_learned_cidrs_approval", true)
-		} else {
-			d.Set("enable_learned_cidrs_approval", false)
-		}
-
-		var bgpManualSpokeAdvertiseCidrs []string
-		if _, ok := d.GetOk("bgp_manual_spoke_advertise_cidrs"); ok {
-			bgpManualSpokeAdvertiseCidrs = strings.Split(d.Get("bgp_manual_spoke_advertise_cidrs").(string), ",")
-		}
-		if len(goaviatrix.Difference(bgpManualSpokeAdvertiseCidrs, gwDetail.BgpManualSpokeAdvertiseCidrs)) != 0 ||
-			len(goaviatrix.Difference(gwDetail.BgpManualSpokeAdvertiseCidrs, bgpManualSpokeAdvertiseCidrs)) != 0 {
-			bgpMSAN := ""
-			for i := range gwDetail.BgpManualSpokeAdvertiseCidrs {
-				if i == 0 {
-					bgpMSAN = bgpMSAN + gwDetail.BgpManualSpokeAdvertiseCidrs[i]
-				} else {
-					bgpMSAN = bgpMSAN + "," + gwDetail.BgpManualSpokeAdvertiseCidrs[i]
-				}
-			}
-			d.Set("bgp_manual_spoke_advertise_cidrs", bgpMSAN)
-		} else {
-			d.Set("bgp_manual_spoke_advertise_cidrs", d.Get("bgp_manual_spoke_advertise_cidrs").(string))
-		}
-
-		lanCidr, err := client.GetTransitGatewayLanCidr(gw.GwName)
-		if err != nil && err != goaviatrix.ErrNotFound {
-			log.Printf("[WARN] Error getting lan cidr for transit gateway %s due to %s", gw.GwName, err)
-		}
-		d.Set("lan_interface_cidr", lanCidr)
-
-		d.Set("enable_monitor_gateway_subnets", gw.MonitorSubnetsAction == "enable")
-		if err := d.Set("monitor_exclude_list", gw.MonitorExcludeGWList); err != nil {
-			return fmt.Errorf("setting 'monitor_exclude_list' to state: %v", err)
-		}
-
-		d.Set("enable_multi_tier_transit", gw.EnableMultitierTransit)
+	} else {
+		d.Set("excluded_advertised_spoke_routes", "")
 	}
 
-	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-		tags := &goaviatrix.Tags{
-			ResourceType: "gw",
-			ResourceName: d.Get("gw_name").(string),
-			CloudType:    gw.CloudType,
+	var bgpManualSpokeAdvertiseCidrs []string
+	if _, ok := d.GetOk("bgp_manual_spoke_advertise_cidrs"); ok {
+		bgpManualSpokeAdvertiseCidrs = strings.Split(d.Get("bgp_manual_spoke_advertise_cidrs").(string), ",")
+	}
+	if len(goaviatrix.Difference(bgpManualSpokeAdvertiseCidrs, gw.BgpManualSpokeAdvertiseCidrs)) != 0 ||
+		len(goaviatrix.Difference(gw.BgpManualSpokeAdvertiseCidrs, bgpManualSpokeAdvertiseCidrs)) != 0 {
+		bgpMSAN := ""
+		for i := range gw.BgpManualSpokeAdvertiseCidrs {
+			if i == 0 {
+				bgpMSAN = bgpMSAN + gw.BgpManualSpokeAdvertiseCidrs[i]
+			} else {
+				bgpMSAN = bgpMSAN + "," + gw.BgpManualSpokeAdvertiseCidrs[i]
+			}
 		}
-		tagsMap, err := client.GetTagsMap(tags)
-		if err != nil {
-			return fmt.Errorf("unable to read tags for transit gateway: %v due to %v", gateway.GwName, err)
-		}
+		d.Set("bgp_manual_spoke_advertise_cidrs", bgpMSAN)
+	} else {
+		d.Set("bgp_manual_spoke_advertise_cidrs", d.Get("bgp_manual_spoke_advertise_cidrs").(string))
+	}
 
+	lanCidr, err := client.GetTransitGatewayLanCidr(gw.GwName)
+	if err != nil && err != goaviatrix.ErrNotFound {
+		log.Printf("[WARN] Error getting lan cidr for transit gateway %s due to %s", gw.GwName, err)
+	}
+	d.Set("lan_interface_cidr", lanCidr)
+
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 		if _, ok := d.GetOk("tag_list"); ok {
-			tagList := make([]string, 0, len(tagsMap))
-			for key, val := range tagsMap {
+			tagList := make([]string, 0, len(gw.Tags))
+			for key, val := range gw.Tags {
 				str := key + ":" + val
 				tagList = append(tagList, str)
 			}
@@ -1481,109 +1438,59 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				}
 			}
 		} else {
-			if err := d.Set("tags", tagsMap); err != nil {
+			if err := d.Set("tags", gw.Tags); err != nil {
 				log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
 			}
 		}
 	}
 
-	transitGateway := &goaviatrix.TransitVpc{GwName: gwName}
-	advancedConfig, err := client.GetTransitGatewayAdvancedConfig(transitGateway)
-	if err != nil {
-		return fmt.Errorf("could not get advanced config: %v", err)
+	if gw.HaGw.GwSize == "" {
+		d.Set("ha_gw_size", "")
+		d.Set("ha_subnet", "")
+		d.Set("ha_zone", "")
+		d.Set("ha_insane_mode_az", "")
+		d.Set("ha_eip", "")
+		d.Set("ha_oob_management_subnet", "")
+		d.Set("ha_oob_availability_zone", "")
+		return nil
 	}
-
-	d.Set("bgp_hold_time", advancedConfig.BgpHoldTime)
-	d.Set("bgp_polling_time", advancedConfig.BgpPollingTime)
-	err = d.Set("prepend_as_path", advancedConfig.PrependASPath)
-	if err != nil {
-		return fmt.Errorf("could not set prepend_as_path: %v", err)
-	}
-	d.Set("local_as_number", advancedConfig.LocalASNumber)
-	d.Set("bgp_ecmp", advancedConfig.BgpEcmpEnabled)
-	d.Set("enable_active_standby", advancedConfig.ActiveStandbyEnabled)
-	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-		d.Set("enable_bgp_over_lan", advancedConfig.TunnelAddrLocal != "")
-	} else {
-		d.Set("enable_bgp_over_lan", false)
-	}
-	d.Set("enable_transit_summarize_cidr_to_tgw", advancedConfig.EnableSummarizeCidrToTgw)
-
-	isSegmentationEnabled, err := client.IsSegmentationEnabled(transitGateway)
-	if err != nil {
-		return fmt.Errorf("could not read if segmentation is enabled: %v", err)
-	}
-	d.Set("enable_segmentation", isSegmentationEnabled)
-
-	d.Set("learned_cidrs_approval_mode", advancedConfig.LearnedCIDRsApprovalMode)
-
-	jumboFrameStatus, err := client.GetJumboFrameStatus(gateway)
-	if err != nil {
-		return fmt.Errorf("could not get jumbo frame status for transit gateway: %v", err)
-	}
-	d.Set("enable_jumbo_frame", jumboFrameStatus)
-	d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
-
-	haGateway := &goaviatrix.Gateway{
-		AccountName: d.Get("account_name").(string),
-		GwName:      d.Get("gw_name").(string) + "-hagw",
-	}
-	haGw, err := client.GetGateway(haGateway)
-	if err != nil {
-		if err == goaviatrix.ErrNotFound {
-			d.Set("ha_gw_size", "")
-			d.Set("ha_subnet", "")
-			d.Set("ha_zone", "")
-			d.Set("ha_insane_mode_az", "")
-			d.Set("ha_eip", "")
-			d.Set("ha_oob_management_subnet", "")
-			d.Set("ha_oob_availability_zone", "")
-		} else {
-			return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway: %s", err)
-		}
-	} else {
-		if goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
-			d.Set("ha_subnet", haGw.VpcNet)
-			if zone := d.Get("ha_zone"); goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && (isImport || zone.(string) != "") {
-				haGwDetail, err := client.GetGatewayDetail(haGateway)
-				if err != nil {
-					return fmt.Errorf("could not get HA transit gateway details: %v", err)
-				}
-				if haGwDetail.GwZone != "AvailabilitySet" {
-					d.Set("ha_zone", "az-"+haGwDetail.GwZone)
-				} else {
-					d.Set("ha_zone", "")
-				}
+	if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
+		d.Set("ha_subnet", gw.HaGw.VpcNet)
+		if zone := d.Get("ha_zone"); goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && (isImport || zone.(string) != "") {
+			if gw.HaGw.GatewayZone != "AvailabilitySet" {
+				d.Set("ha_zone", "az-"+gw.HaGw.GatewayZone)
 			} else {
 				d.Set("ha_zone", "")
 			}
-		} else if goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-			d.Set("ha_zone", haGw.GatewayZone)
-			if d.Get("ha_subnet") != "" || isImport {
-				d.Set("ha_subnet", haGw.VpcNet)
-			}
-		}
-		d.Set("ha_eip", haGw.PublicIP)
-		d.Set("ha_gw_size", haGw.GwSize)
-		d.Set("ha_cloud_instance_id", haGw.CloudnGatewayInstID)
-		d.Set("ha_gw_name", haGw.GwName)
-		d.Set("ha_private_ip", haGw.PrivateIP)
-		lanCidr, err := client.GetTransitGatewayLanCidr(haGw.GwName)
-		if err != nil && err != goaviatrix.ErrNotFound {
-			log.Printf("[WARN] Error getting lan cidr for HA transit gateway %s due to %s", haGw.GwName, err)
-		}
-		d.Set("ha_lan_interface_cidr", lanCidr)
-
-		if haGw.EnablePrivateOob {
-			d.Set("ha_oob_management_subnet", strings.Split(haGw.OobManagementSubnet, "~~")[0])
-			d.Set("ha_oob_availability_zone", haGw.GatewayZone)
-		}
-
-		if haGw.InsaneMode == "yes" && goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-			d.Set("ha_insane_mode_az", haGw.GatewayZone)
 		} else {
-			d.Set("ha_insane_mode_az", "")
+			d.Set("ha_zone", "")
 		}
+	} else if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+		d.Set("ha_zone", gw.HaGw.GatewayZone)
+		if d.Get("ha_subnet") != "" || isImport {
+			d.Set("ha_subnet", gw.HaGw.VpcNet)
+		}
+	}
+	d.Set("ha_eip", gw.HaGw.PublicIP)
+	d.Set("ha_gw_size", gw.HaGw.GwSize)
+	d.Set("ha_cloud_instance_id", gw.HaGw.CloudnGatewayInstID)
+	d.Set("ha_gw_name", gw.HaGw.GwName)
+	d.Set("ha_private_ip", gw.HaGw.PrivateIP)
+	lanCidr, err = client.GetTransitGatewayLanCidr(gw.HaGw.GwName)
+	if err != nil && err != goaviatrix.ErrNotFound {
+		log.Printf("[WARN] Error getting lan cidr for HA transit gateway %s due to %s", gw.HaGw.GwName, err)
+	}
+	d.Set("ha_lan_interface_cidr", lanCidr)
+
+	if gw.HaGw.EnablePrivateOob {
+		d.Set("ha_oob_management_subnet", strings.Split(gw.HaGw.OobManagementSubnet, "~~")[0])
+		d.Set("ha_oob_availability_zone", gw.HaGw.GatewayZone)
+	}
+
+	if gw.HaGw.InsaneMode == "yes" && goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+		d.Set("ha_insane_mode_az", gw.HaGw.GatewayZone)
+	} else {
+		d.Set("ha_insane_mode_az", "")
 	}
 
 	return nil
@@ -2451,6 +2358,17 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if d.HasChange("local_as_number") {
+		localAsNumber := d.Get("local_as_number").(string)
+		gateway := &goaviatrix.TransitVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		err := client.SetLocalASNumber(gateway, localAsNumber)
+		if err != nil {
+			return fmt.Errorf("could not set local_as_number: %v", err)
+		}
+	}
+
 	if d.HasChange("prepend_as_path") {
 		var prependASPath []string
 		slice := d.Get("prepend_as_path").([]interface{})
@@ -2463,17 +2381,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		err := client.SetPrependASPath(gateway, prependASPath)
 		if err != nil {
 			return fmt.Errorf("could not set prepend_as_path: %v", err)
-		}
-	}
-
-	if d.HasChange("local_as_number") {
-		localAsNumber := d.Get("local_as_number").(string)
-		gateway := &goaviatrix.TransitVpc{
-			GwName: d.Get("gw_name").(string),
-		}
-		err := client.SetLocalASNumber(gateway, localAsNumber)
-		if err != nil {
-			return fmt.Errorf("could not set local_as_number: %v", err)
 		}
 	}
 

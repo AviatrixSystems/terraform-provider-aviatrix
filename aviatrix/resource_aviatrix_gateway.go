@@ -1108,467 +1108,282 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		GwName:      d.Get("gw_name").(string),
 	}
 
-	if d.Get("single_az_ha").(bool) {
-		gateway.SingleAZ = "enabled"
-	} else {
-		gateway.SingleAZ = "disabled"
-	}
-
 	gw, err := client.GetGateway(gateway)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix Gateway: %s", gwName)
+		return fmt.Errorf("couldn't find Aviatrix Gateway %s: %v", gwName, err)
 	}
 
 	log.Printf("[TRACE] reading gateway %s: %#v", d.Get("gw_name").(string), gw)
 
-	if gw != nil {
-		d.Set("cloud_type", gw.CloudType)
-		d.Set("account_name", gw.AccountName)
-		d.Set("gw_name", gw.GwName)
+	d.Set("cloud_type", gw.CloudType)
+	d.Set("account_name", gw.AccountName)
+	d.Set("gw_name", gw.GwName)
+	d.Set("subnet", gw.VpcNet)
+	d.Set("single_ip_snat", gw.EnableNat == "yes" && gw.SnatMode == "primary")
+	d.Set("enable_ldap", gw.EnableLdapRead)
+	d.Set("vpn_cidr", gw.VpnCidr)
+	d.Set("saml_enabled", gw.SamlEnabled == "yes")
+	d.Set("okta_url", gw.OktaURL)
+	d.Set("okta_username_suffix", gw.OktaUsernameSuffix)
+	d.Set("duo_integration_key", gw.DuoIntegrationKey)
+	d.Set("duo_api_hostname", gw.DuoAPIHostname)
+	d.Set("duo_push_mode", gw.DuoPushMode)
+	d.Set("ldap_server", gw.LdapServer)
+	d.Set("ldap_bind_dn", gw.LdapBindDn)
+	d.Set("ldap_base_dn", gw.LdapBaseDn)
+	d.Set("ldap_username_attribute", gw.LdapUserAttr)
+	d.Set("single_az_ha", gw.SingleAZ == "yes")
+	d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
+	d.Set("eip", gw.PublicIP)
+	d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
+	d.Set("public_dns_server", gw.PublicDnsServer)
+	d.Set("security_group_id", gw.GwSecurityGroupID)
+	d.Set("private_ip", gw.PrivateIP)
+	d.Set("enable_jumbo_frame", gw.JumboFrame)
+	d.Set("enable_vpc_dns_server", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled")
+	d.Set("idle_timeout", gw.IdleTimeout)
+	d.Set("renegotiation_interval", gw.RenegotiationInterval)
 
-		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
-			// AWS vpc_id returns as <vpc_id>~~<other vpc info>
-			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
-			d.Set("vpc_reg", gw.VpcRegion)
-		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-			// gcp vpc_id returns as <vpc_id>~-~<other vpc info>
-			d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0])
-			d.Set("vpc_reg", gw.GatewayZone)
-		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-			d.Set("vpc_id", gw.VpcID)
-			d.Set("vpc_reg", gw.VpcRegion)
-		}
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
+		// AWS vpc_id returns as <vpc_id>~~<other vpc info>
+		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
+		d.Set("vpc_reg", gw.VpcRegion)
+	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+		// gcp vpc_id returns as <vpc_id>~-~<other vpc info>
+		d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0])
+		d.Set("vpc_reg", gw.GatewayZone)
+	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+		d.Set("vpc_id", gw.VpcID)
+		d.Set("vpc_reg", gw.VpcRegion)
+	}
 
-		d.Set("subnet", gw.VpcNet)
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) {
+		d.Set("allocate_new_eip", gw.AllocateNewEipRead)
+	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
+		// AZURE gateways don't have the option to allocate new eip's
+		// default for allocate_new_eip is on
+		d.Set("allocate_new_eip", true)
+	}
 
-		if gw.EnableNat == "yes" {
-			if gw.SnatMode == "primary" {
-				d.Set("single_ip_snat", true)
-			} else {
-				d.Set("single_ip_snat", false)
-			}
+	if gw.EnableDesignatedGateway == "Yes" || gw.EnableDesignatedGateway == "yes" {
+		d.Set("enable_designated_gateway", true)
+		cidrsTF := strings.Split(d.Get("additional_cidrs_designated_gateway").(string), ",")
+		cidrsRESTAPI := strings.Split(gw.AdditionalCidrsDesignatedGw, ",")
+		if len(goaviatrix.Difference(cidrsTF, cidrsRESTAPI)) == 0 && len(goaviatrix.Difference(cidrsRESTAPI, cidrsTF)) == 0 {
+			d.Set("additional_cidrs_designated_gateway", d.Get("additional_cidrs_designated_gateway").(string))
 		} else {
-			d.Set("single_ip_snat", false)
+			d.Set("additional_cidrs_designated_gateway", gw.AdditionalCidrsDesignatedGw)
 		}
+	} else {
+		d.Set("enable_designated_gateway", false)
+		d.Set("additional_cidrs_designated_gateway", "")
+	}
 
-		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) {
-			if gw.AllocateNewEipRead {
-				d.Set("allocate_new_eip", true)
-			} else {
-				d.Set("allocate_new_eip", false)
-			}
-		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
-			// AZURE gateways don't have the option to allocate new eip's
-			// default for allocate_new_eip is on
-			d.Set("allocate_new_eip", true)
-		}
+	_, zoneIsSet := d.GetOk("zone")
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && (isImport || zoneIsSet) && gw.GatewayZone != "AvailabilitySet" {
+		d.Set("zone", "az-"+gw.GatewayZone)
+	}
 
-		if gw.EnableDesignatedGateway == "Yes" || gw.EnableDesignatedGateway == "yes" {
-			d.Set("enable_designated_gateway", true)
-			cidrsTF := strings.Split(d.Get("additional_cidrs_designated_gateway").(string), ",")
-			cidrsRESTAPI := strings.Split(gw.AdditionalCidrsDesignatedGw, ",")
-			if len(goaviatrix.Difference(cidrsTF, cidrsRESTAPI)) == 0 && len(goaviatrix.Difference(cidrsRESTAPI, cidrsTF)) == 0 {
-				d.Set("additional_cidrs_designated_gateway", d.Get("additional_cidrs_designated_gateway").(string))
-			} else {
-				d.Set("additional_cidrs_designated_gateway", gw.AdditionalCidrsDesignatedGw)
-			}
-		} else {
-			d.Set("enable_designated_gateway", false)
-			d.Set("additional_cidrs_designated_gateway", "")
-		}
-
-		if gw.EnableLdapRead {
-			d.Set("enable_ldap", true)
-		} else {
-			d.Set("enable_ldap", false)
-		}
-
-		gwDetail, err := client.GetGatewayDetail(gateway)
-		if err != nil {
-			return fmt.Errorf("could not get gateway details for gw %q: %s", gateway.GwName, err)
-		}
-
-		_, zoneIsSet := d.GetOk("zone")
-		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && (isImport || zoneIsSet) && gwDetail.GwZone != "AvailabilitySet" {
-			d.Set("zone", "az-"+gwDetail.GwZone)
-		}
-
-		if gw.VpnStatus != "" {
-			if gw.VpnStatus == "disabled" {
-				d.Set("vpn_access", false)
-				d.Set("enable_vpn_nat", true)
-				d.Set("vpn_protocol", "")
-			} else if gw.VpnStatus == "enabled" {
-				d.Set("vpn_access", true)
-				gateway.VpcID = d.Get("vpc_id").(string)
-				if gwDetail.VpnNat {
-					d.Set("enable_vpn_nat", true)
-				} else {
-					d.Set("enable_vpn_nat", false)
-				}
-
-				if gw.ElbState == "enabled" {
-					if gwDetail.Elb.VpnProtocol == "udp" || gwDetail.Elb.VpnProtocol == "UDP" {
-						d.Set("vpn_protocol", "UDP")
-					} else {
-						d.Set("vpn_protocol", "TCP")
-					}
-				} else {
-					d.Set("vpn_protocol", "UDP")
-				}
-			}
-		}
-
-		vpnAccess := d.Get("vpn_access").(bool)
-		if !vpnAccess {
+	if gw.VpnStatus != "" {
+		if gw.VpnStatus == "disabled" {
+			d.Set("vpn_access", false)
+			d.Set("enable_vpn_nat", true)
+			d.Set("vpn_protocol", "")
 			d.Set("split_tunnel", true)
 			d.Set("max_vpn_conn", "")
-		} else {
-			if gw.SplitTunnel == "yes" {
-				d.Set("split_tunnel", true)
-			} else {
-				d.Set("split_tunnel", false)
-			}
-
+		} else if gw.VpnStatus == "enabled" {
+			d.Set("vpn_access", true)
+			d.Set("split_tunnel", gw.SplitTunnel == "yes")
 			d.Set("max_vpn_conn", gw.MaxConn)
-		}
-
-		d.Set("vpn_cidr", gw.VpnCidr)
-
-		if gw.ElbState == "enabled" {
-			d.Set("enable_elb", true)
-			d.Set("elb_name", gw.ElbName)
-			d.Set("elb_dns_name", gw.ElbDNSName)
-		} else {
-			d.Set("enable_elb", false)
-			d.Set("elb_name", "")
-		}
-
-		if gw.SamlEnabled == "yes" {
-			d.Set("saml_enabled", true)
-		} else {
-			d.Set("saml_enabled", false)
-		}
-
-		if gw.AuthMethod == "duo_auth" || gw.AuthMethod == "duo_auth+LDAP" {
-			d.Set("otp_mode", "2")
-		} else if gw.AuthMethod == "okta_auth" {
-			d.Set("otp_mode", "3")
-		} else {
-			d.Set("otp_mode", "")
-		}
-
-		d.Set("okta_url", gw.OktaURL)
-		d.Set("okta_username_suffix", gw.OktaUsernameSuffix)
-		d.Set("duo_integration_key", gw.DuoIntegrationKey)
-		d.Set("duo_api_hostname", gw.DuoAPIHostname)
-		d.Set("duo_push_mode", gw.DuoPushMode)
-		d.Set("ldap_server", gw.LdapServer)
-		d.Set("ldap_bind_dn", gw.LdapBindDn)
-		d.Set("ldap_base_dn", gw.LdapBaseDn)
-		d.Set("ldap_username_attribute", gw.LdapUserAttr)
-
-		if gw.NewZone != "" {
-			d.Set("zone", gw.NewZone)
-		}
-
-		if gw.SingleAZ != "" {
-			if gw.SingleAZ == "yes" {
-				d.Set("single_az_ha", true)
+			d.Set("enable_vpn_nat", gw.EnableVpnNat)
+			if gw.ElbState == "enabled" {
+				d.Set("vpn_protocol", strings.ToUpper(gw.VpnProtocol))
 			} else {
-				d.Set("single_az_ha", false)
+				d.Set("vpn_protocol", "UDP")
 			}
 		}
-		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
-		d.Set("eip", gw.PublicIP)
+	}
 
-		// Though go_aviatrix Gateway struct declares VpcSize as only used on gateway creation
-		// it is the attribute receiving the instance size of an existing gateway instead of
-		// GwSize. (at least in v3.5)
-		if gw.GwSize != "" {
-			d.Set("gw_size", gw.GwSize)
-		} else {
-			if gw.VpcSize != "" {
-				d.Set("gw_size", gw.VpcSize)
-			}
+	if gw.ElbState == "enabled" {
+		d.Set("enable_elb", true)
+		d.Set("elb_name", gw.ElbName)
+		d.Set("elb_dns_name", gw.ElbDNSName)
+	} else {
+		d.Set("enable_elb", false)
+		d.Set("elb_name", "")
+	}
+
+	if gw.AuthMethod == "duo_auth" || gw.AuthMethod == "duo_auth+LDAP" {
+		d.Set("otp_mode", "2")
+	} else if gw.AuthMethod == "okta_auth" {
+		d.Set("otp_mode", "3")
+	} else {
+		d.Set("otp_mode", "")
+	}
+
+	if gw.NewZone != "" {
+		d.Set("zone", gw.NewZone)
+	}
+
+	// Though go_aviatrix Gateway struct declares VpcSize as only used on gateway creation
+	// it is the attribute receiving the instance size of an existing gateway instead of
+	// GwSize. (at least in v3.5)
+	if gw.GwSize != "" {
+		d.Set("gw_size", gw.GwSize)
+	} else {
+		if gw.VpcSize != "" {
+			d.Set("gw_size", gw.VpcSize)
 		}
+	}
 
-		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
-		d.Set("public_dns_server", gw.PublicDnsServer)
-		d.Set("security_group_id", gw.GwSecurityGroupID)
-		d.Set("private_ip", gw.PrivateIP)
-
-		if gw.InsaneMode == "yes" {
-			d.Set("insane_mode", true)
-			if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-				d.Set("insane_mode_az", gw.GatewayZone)
-			} else {
-				d.Set("insane_mode_az", "")
-			}
+	if gw.InsaneMode == "yes" {
+		d.Set("insane_mode", true)
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+			d.Set("insane_mode_az", gw.GatewayZone)
 		} else {
-			d.Set("insane_mode", false)
 			d.Set("insane_mode_az", "")
 		}
+	} else {
+		d.Set("insane_mode", false)
+		d.Set("insane_mode_az", "")
+	}
 
-		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled" {
-			d.Set("enable_vpc_dns_server", true)
-		} else {
-			d.Set("enable_vpc_dns_server", false)
-		}
-
-		peeringHaSubnet := d.Get("peering_ha_subnet").(string)
-		peeringHaZone := d.Get("peering_ha_zone").(string)
-		if peeringHaSubnet != "" || peeringHaZone != "" || gwName == "" {
-			peeringHaGateway := &goaviatrix.Gateway{
-				AccountName: d.Get("account_name").(string),
-				GwName:      d.Get("gw_name").(string) + "-hagw",
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+		if _, ok := d.GetOk("tag_list"); ok {
+			tagList := make([]string, 0, len(gw.Tags))
+			for key, val := range gw.Tags {
+				str := key + ":" + val
+				tagList = append(tagList, str)
 			}
-			d.Set("peering_ha_cloud_instance_id", "")
-			d.Set("peering_ha_subnet", "")
-			d.Set("peering_ha_eip", "")
-			d.Set("peering_ha_gw_size", "")
-			d.Set("peering_ha_insane_mode_az", "")
-			gwHaGw, err := client.GetGateway(peeringHaGateway)
-			if err == nil {
-				d.Set("peering_ha_cloud_instance_id", gwHaGw.CloudnGatewayInstID)
-				d.Set("peering_ha_gw_name", gwHaGw.GwName)
-				d.Set("peering_ha_eip", gwHaGw.PublicIP)
-				d.Set("peering_ha_gw_size", gwHaGw.GwSize)
-				d.Set("peering_ha_private_ip", gwHaGw.PrivateIP)
-				if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-					d.Set("peering_ha_subnet", gwHaGw.VpcNet)
-					d.Set("peering_ha_zone", "")
-					if gwHaGw.InsaneMode == "yes" {
-						d.Set("peering_ha_insane_mode_az", gwHaGw.GatewayZone)
-					}
-				} else if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
-					d.Set("peering_ha_subnet", gwHaGw.VpcNet)
-					d.Set("peering_ha_zone", "")
-				} else if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-					d.Set("peering_ha_zone", gwHaGw.GatewayZone)
-					// only set peering_ha_subnet if the user has explicitly set it.
-					if peeringHaSubnet != "" || isImport {
-						d.Set("peering_ha_subnet", gwHaGw.VpcNet)
-					}
-				} else if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-					d.Set("peering_ha_subnet", gwHaGw.VpcNet)
-					if _, haZoneIsSet := d.GetOk("peering_ha_zone"); isImport || haZoneIsSet {
-						gwDetail, err := client.GetGatewayDetail(gwHaGw)
-						if err != nil {
-							return fmt.Errorf("could not get gateway detail for ha gateway: %v", err)
-						}
-						if gwDetail.GwZone != "AvailabilitySet" {
-							d.Set("peering_ha_zone", "az-"+gwDetail.GwZone)
-						}
-					}
-				} else if gwHaGw.CloudType == goaviatrix.ALIYUN {
-					d.Set("peering_ha_subnet", gwHaGw.VpcNet)
-					d.Set("peering_ha_zone", "")
+
+			tagListFromUserConfig := d.Get("tag_list").([]interface{})
+			tagListStr := goaviatrix.ExpandStringList(tagListFromUserConfig)
+
+			if len(goaviatrix.Difference(tagListStr, tagList)) != 0 || len(goaviatrix.Difference(tagList, tagListStr)) != 0 {
+				if err := d.Set("tag_list", tagList); err != nil {
+					log.Printf("[WARN] Error setting tag_list for (%s): %s", d.Id(), err)
 				}
 			} else {
-				d.Set("peering_ha_zone", "")
-				if err != goaviatrix.ErrNotFound {
-					return fmt.Errorf("unable to find peering ha gateway: %s", err)
-				} else {
-					if gwName == "" {
-						log.Printf("[DEBUG] Peering HA Gateway was not found during import, please confirm " +
-							"if primary gateway has peering HA enabled.")
-					}
+				if err := d.Set("tag_list", tagListStr); err != nil {
+					log.Printf("[WARN] Error setting tag_list for (%s): %s", d.Id(), err)
 				}
 			}
-			log.Printf("[TRACE] reading peering HA gateway %s: %#v", d.Get("gw_name").(string), gwHaGw)
 		} else {
-			d.Set("peering_ha_cloud_instance_id", "")
-			d.Set("peering_ha_subnet", "")
-			d.Set("peering_ha_zone", "")
-			d.Set("peering_ha_eip", "")
-			d.Set("peering_ha_gw_size", "")
-			d.Set("peering_ha_insane_mode_az", "")
-		}
-
-		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-			tags := &goaviatrix.Tags{
-				ResourceType: "gw",
-				ResourceName: d.Get("gw_name").(string),
-				CloudType:    gw.CloudType,
+			if err := d.Set("tags", gw.Tags); err != nil {
+				log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
 			}
-			tagsMap, err := client.GetTagsMap(tags)
+		}
+	}
+
+	if gw.VpnStatus == "enabled" && gw.SplitTunnel == "yes" {
+		d.Set("name_servers", gw.NameServers)
+		d.Set("search_domains", gw.SearchDomains)
+		d.Set("additional_cidrs", gw.AdditionalCidrs)
+	} else {
+		d.Set("name_servers", "")
+		d.Set("search_domains", "")
+		d.Set("additional_cidrs", "")
+	}
+
+	d.Set("enable_monitor_gateway_subnets", gw.MonitorSubnetsAction == "enable")
+	if err := d.Set("monitor_exclude_list", gw.MonitorExcludeGWList); err != nil {
+		return fmt.Errorf("setting 'monitor_exclude_list' to state: %v", err)
+	}
+
+	fqdnGatewayLanInterface := fmt.Sprintf("av-nic-%s_eth1", gw.GwName)
+	fqdnLanCidr, ok := gw.ArmFqdnLanCidr[gw.GwName]
+	if ok && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+		d.Set("fqdn_lan_interface", fqdnGatewayLanInterface)
+		d.Set("fqdn_lan_cidr", fqdnLanCidr)
+	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+		d.Set("fqdn_lan_vpc_id", gw.BundleVpcInfo.LAN.VpcID)
+		d.Set("fqdn_lan_cidr", strings.Split(gw.BundleVpcInfo.LAN.Subnet, "~~")[0])
+	} else {
+		d.Set("fqdn_lan_interface", "")
+		d.Set("fqdn_lan_cidr", "")
+	}
+
+	if !gw.IsPsfGateway {
+		d.Set("enable_public_subnet_filtering", false)
+		d.Set("public_subnet_filtering_route_tables", []string{})
+		d.Set("public_subnet_filtering_ha_route_tables", []string{})
+		d.Set("public_subnet_filtering_guard_duty_enforced", true)
+	} else {
+		d.Set("enable_public_subnet_filtering", true)
+		if err := d.Set("public_subnet_filtering_route_tables", gw.PsfDetails.RouteTableList); err != nil {
+			return fmt.Errorf("could not set public_subnet_filtering_route_tables into state: %v", err)
+		}
+		d.Set("public_subnet_filtering_guard_duty_enforced", gw.PsfDetails.GuardDutyEnforced == "yes")
+		d.Set("subnet", gw.PsfDetails.GwSubnetCidr)
+		d.Set("zone", gw.PsfDetails.GwSubnetAz)
+		if gw.HaGw.GwSize == "" {
+			err := d.Set("public_subnet_filtering_ha_route_tables", []string{})
 			if err != nil {
-				return fmt.Errorf("unable to read tags for gateway (%s): due to %v", d.Id(), err)
+				return fmt.Errorf("could not set public_subnet_filtering_ha_route_tables into state: %v", err)
 			}
-
-			if _, ok := d.GetOk("tag_list"); ok {
-				tagList := make([]string, 0, len(tagsMap))
-				for key, val := range tagsMap {
-					str := key + ":" + val
-					tagList = append(tagList, str)
-				}
-
-				tagListFromUserConfig := d.Get("tag_list").([]interface{})
-				tagListStr := goaviatrix.ExpandStringList(tagListFromUserConfig)
-
-				if len(goaviatrix.Difference(tagListStr, tagList)) != 0 || len(goaviatrix.Difference(tagList, tagListStr)) != 0 {
-					if err := d.Set("tag_list", tagList); err != nil {
-						log.Printf("[WARN] Error setting tag_list for (%s): %s", d.Id(), err)
-					}
-				} else {
-					if err := d.Set("tag_list", tagListStr); err != nil {
-						log.Printf("[WARN] Error setting tag_list for (%s): %s", d.Id(), err)
-					}
-				}
-			} else {
-				if err := d.Set("tags", tagsMap); err != nil {
-					log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
-				}
-			}
-		}
-
-		if gw.VpnStatus == "enabled" && gw.SplitTunnel == "yes" {
-			splitTunnel := &goaviatrix.SplitTunnel{
-				VpcID: gw.VpcID,
-			}
-			if gw.ElbState == "enabled" {
-				splitTunnel.ElbName = gw.ElbName
-			} else {
-				splitTunnel.ElbName = gw.GwName
-			}
-			splitTunnel1, err := client.GetSplitTunnel(splitTunnel)
-			if err != nil {
-				return fmt.Errorf("unable to read split information for gateway: %v due to %v", gw.GwName, err)
-			}
-			d.Set("name_servers", splitTunnel1.NameServers)
-			d.Set("search_domains", splitTunnel1.SearchDomains)
-			d.Set("additional_cidrs", splitTunnel1.AdditionalCidrs)
 		} else {
-			d.Set("name_servers", "")
-			d.Set("search_domains", "")
-			d.Set("additional_cidrs", "")
-		}
-
-		d.Set("enable_monitor_gateway_subnets", gw.MonitorSubnetsAction == "enable")
-		if err := d.Set("monitor_exclude_list", gw.MonitorExcludeGWList); err != nil {
-			return fmt.Errorf("setting 'monitor_exclude_list' to state: %v", err)
-		}
-
-		VPNGatewayServer := &goaviatrix.Gateway{
-			VpcID: gw.VpcID,
-		}
-
-		if gw.ElbState == "enabled" {
-			VPNGatewayServer.GwName = gw.ElbName
-		} else {
-			VPNGatewayServer.GwName = gw.GwName
-		}
-
-		vpnConfigList, err := client.GetVPNConfigList(VPNGatewayServer)
-		if err != nil && err != goaviatrix.ErrNotFound {
-			return fmt.Errorf("couldn't find vpn config list for gateway: %s due to %s", VPNGatewayServer.GwName, err)
-		}
-
-		vpnConfigIdle := getVPNConfig("Idle timeout", vpnConfigList)
-		if vpnConfigIdle == nil {
-			return fmt.Errorf("couldn't find vpn config (idle timeout) for the gateway %s", VPNGatewayServer.GwName)
-		}
-
-		if vpnConfigIdle.Status == "enabled" {
-			idleTimeoutValue, err := strconv.Atoi(vpnConfigIdle.Value)
-			if err != nil {
-				return fmt.Errorf("couldn't get vpn config value (idle timeout) for the gateway %s", VPNGatewayServer.GwName)
+			if err := d.Set("public_subnet_filtering_ha_route_tables", gw.PsfDetails.HaRouteTableList); err != nil {
+				return fmt.Errorf("could not set public_subnet_filtering_ha_route_tables into state: %v", err)
 			}
-			d.Set("idle_timeout", idleTimeoutValue)
-		} else {
-			d.Set("idle_timeout", -1)
+			d.Set("peering_ha_subnet", gw.PsfDetails.HaGwSubnetCidr)
+			d.Set("peering_ha_zone", gw.PsfDetails.HaGwSubnetAz)
 		}
+	}
 
-		vpnConfigRenego := getVPNConfig("Renegotiation interval", vpnConfigList)
-		if vpnConfigRenego == nil {
-			return fmt.Errorf("couldn't get vpn config value (renegotiation interval) for the gateway %s", VPNGatewayServer.GwName)
+	if gw.HaGw.GwSize == "" {
+		d.Set("peering_ha_cloud_instance_id", "")
+		d.Set("peering_ha_subnet", "")
+		d.Set("peering_ha_zone", "")
+		d.Set("peering_ha_eip", "")
+		d.Set("peering_ha_gw_size", "")
+		d.Set("peering_ha_insane_mode_az", "")
+		return nil
+	}
+
+	d.Set("peering_ha_cloud_instance_id", gw.HaGw.CloudnGatewayInstID)
+	d.Set("peering_ha_gw_name", gw.HaGw.GwName)
+	d.Set("peering_ha_eip", gw.HaGw.PublicIP)
+	d.Set("peering_ha_gw_size", gw.HaGw.GwSize)
+	d.Set("peering_ha_private_ip", gw.HaGw.PrivateIP)
+	if gw.IsPsfGateway {
+		// For PSF gateway, peering_ha_subnet and peering_ha_zone are
+		// set above. Return early.
+		return nil
+	}
+
+	if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+		d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
+		d.Set("peering_ha_zone", "")
+		if gw.HaGw.InsaneMode == "yes" {
+			d.Set("peering_ha_insane_mode_az", gw.HaGw.GatewayZone)
 		}
-
-		if vpnConfigRenego.Status == "enabled" {
-			renegoIntervalValue, err := strconv.Atoi(vpnConfigRenego.Value)
-			if err != nil {
-				return fmt.Errorf("couldn't get vpn config value (renegotiation interval) for the gateway %s", VPNGatewayServer.GwName)
+	} else if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
+		d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
+		d.Set("peering_ha_zone", "")
+	} else if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+		d.Set("peering_ha_zone", gw.HaGw.GatewayZone)
+		// only set peering_ha_subnet if the user has explicitly set it.
+		if d.Get("peering_ha_subnet").(string) != "" || isImport {
+			d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
+		}
+	} else if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+		d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
+		if _, haZoneIsSet := d.GetOk("peering_ha_zone"); isImport || haZoneIsSet {
+			if gw.GatewayZone != "AvailabilitySet" {
+				d.Set("peering_ha_zone", "az-"+gw.GatewayZone)
 			}
-			d.Set("renegotiation_interval", renegoIntervalValue)
-		} else {
-			d.Set("renegotiation_interval", -1)
-		}
-
-		gatewayServer := &goaviatrix.Gateway{
-			GwName: gw.GwName,
-			VpcID:  gw.VpcID,
-		}
-
-		fqdnGatewayInfo, err := client.GetFqdnGatewayInfo(gatewayServer)
-		if err != nil {
-			return fmt.Errorf("could not get fqdn gateway info: %v", err)
-		}
-
-		fqdnGatewayLanInterface := getFqdnGatewayLanInterface(fqdnGatewayInfo, gw.GwName)
-		if fqdnGatewayLanInterface != "" && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-			d.Set("fqdn_lan_interface", fqdnGatewayLanInterface)
-			d.Set("fqdn_lan_cidr", getFqdnGatewayLanCidr(fqdnGatewayInfo, gw.GwName))
-		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-			d.Set("fqdn_lan_vpc_id", gwDetail.BundleVpcInfo.LAN.VpcID)
-			d.Set("fqdn_lan_cidr", strings.Split(gwDetail.BundleVpcInfo.LAN.Subnet, "~~")[0])
-		} else {
-			d.Set("fqdn_lan_interface", "")
-			d.Set("fqdn_lan_cidr", "")
-		}
-
-		publicSubnetFilteringDetails, err := client.GetPublicSubnetFilteringGatewayDetails(gatewayServer)
-		if err != nil {
-			d.Set("enable_public_subnet_filtering", false)
-			d.Set("public_subnet_filtering_route_tables", []string{})
-			d.Set("public_subnet_filtering_ha_route_tables", []string{})
-			d.Set("public_subnet_filtering_guard_duty_enforced", true)
-			log.Printf("[INFO] Could not find public subnet filtering details for gateway %q with error: %v\n", gw.GwName, err)
-		} else {
-			d.Set("enable_public_subnet_filtering", true)
-			if err := d.Set("public_subnet_filtering_route_tables", publicSubnetFilteringDetails.RouteTableList); err != nil {
-				return fmt.Errorf("could not set public_subnet_filtering_route_tables into state: %v", err)
-			}
-			haGateway := &goaviatrix.Gateway{
-				GwName: gw.GwName + "-hagw",
-				VpcID:  gw.VpcID,
-			}
-			haPublicSubnetFilteringDetails, err := client.GetPublicSubnetFilteringGatewayDetails(haGateway)
-			if err != nil {
-				log.Println("[INFO] HA public subnet filtering gateway was not found: ", err)
-				err := d.Set("public_subnet_filtering_ha_route_tables", []string{})
-				if err != nil {
-					return fmt.Errorf("could not set public_subnet_filtering_ha_route_tables into state: %v", err)
-				}
-			} else {
-				if err := d.Set("public_subnet_filtering_ha_route_tables", haPublicSubnetFilteringDetails.RouteTableList); err != nil {
-					return fmt.Errorf("could not set public_subnet_filtering_ha_route_tables into state: %v", err)
-				}
-			}
-
-			d.Set("public_subnet_filtering_guard_duty_enforced", publicSubnetFilteringDetails.GuardDutyEnforced == "yes")
-			d.Set("subnet", publicSubnetFilteringDetails.GwSubnetCidr)
-			d.Set("zone", publicSubnetFilteringDetails.GwSubnetAz)
-			if haPublicSubnetFilteringDetails != nil {
-				d.Set("peering_ha_subnet", haPublicSubnetFilteringDetails.GwSubnetCidr)
-				d.Set("peering_ha_zone", haPublicSubnetFilteringDetails.GwSubnetAz)
-			}
-		}
-
-		if !d.Get("enable_public_subnet_filtering").(bool) {
-			jumboFrameStatus, err := client.GetJumboFrameStatus(gw)
-			if err != nil {
-				return fmt.Errorf("could not get jumbo frame status for gateway: %v", err)
-			}
-			d.Set("enable_jumbo_frame", jumboFrameStatus)
 		}
 
 		d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
+	} else if gw.HaGw.CloudType == goaviatrix.ALIYUN {
+		d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
+		d.Set("peering_ha_zone", "")
 	}
+
 	return nil
 }
 
@@ -2539,33 +2354,4 @@ var conflictingPublicSubnetFilteringGatewayConfigKeys = []string{
 	"vpn_cidr",
 	"vpn_protocol",
 	"enable_jumbo_frame",
-}
-
-func getFqdnGatewayLanCidr(fqdnGatewayInfo *goaviatrix.FQDNGatwayInfo, fqdnGatewayName string) string {
-	armFqdnLanCidr := fqdnGatewayInfo.ArmFqdnLanCidr
-	if _, ok := armFqdnLanCidr[fqdnGatewayName]; !ok {
-		return ""
-	}
-	return armFqdnLanCidr[fqdnGatewayName]
-}
-
-func getFqdnGatewayLanInterface(fqdnGatewayInfo *goaviatrix.FQDNGatwayInfo, fqdnGatewayName string) string {
-	targetInterface := "av-nic-" + fqdnGatewayName + "_eth1"
-	interfaces := fqdnGatewayInfo.Interface
-	fqdnGatewayInterfaces := interfaces[fqdnGatewayName]
-	for i := range fqdnGatewayInterfaces {
-		if fqdnGatewayInterfaces[i] == targetInterface {
-			return fqdnGatewayInterfaces[i]
-		}
-	}
-	return ""
-}
-
-func getVPNConfig(vpnConfigName string, vpnConfigList []goaviatrix.VPNConfig) *goaviatrix.VPNConfig {
-	for i := range vpnConfigList {
-		if vpnConfigList[i].Name == vpnConfigName {
-			return &vpnConfigList[i]
-		}
-	}
-	return nil
 }
