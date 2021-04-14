@@ -71,8 +71,8 @@ func resourceAviatrixAwsTgwSecurityDomainConnectionCreate(ctx context.Context, d
 	}
 
 	securityDomainDetails, err := client.GetSecurityDomainDetails(ctx, securityDomain)
-	if err != nil && err != goaviatrix.ErrNotFound {
-		return diag.Errorf("couldn't get the details of the security domain %s due to %v", securityDomain.Name, err)
+	if err != nil {
+		return diag.Errorf("could not get the details of the security domain %s: %v", securityDomain.Name, err)
 	}
 
 	for _, sd := range securityDomainDetails.ConnectedDomain {
@@ -144,7 +144,7 @@ func resourceAviatrixAwsTgwSecurityDomainConnectionRead(ctx context.Context, d *
 		return nil
 	}
 	if err != nil {
-		return diag.Errorf("couldn't get the details of the security domain %s: %v", sourceDomainName, err)
+		return diag.Errorf("could not get the details of the security domain %s: %v", sourceDomainName, err)
 	}
 
 	for _, sd := range securityDomainDetails.ConnectedDomain {
