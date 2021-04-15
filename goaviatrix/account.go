@@ -54,9 +54,9 @@ type Account struct {
 	AzureGovApplicationEndpoint           string `form:"azure_gov_application_endpoint,omitempty" json:"arm_gov_ad_tenant_id,omitempty"`
 	AzureGovApplicationClientId           string `form:"azure_gov_application_client_id,omitempty" json:"arm_gov_ad_client_id,omitempty"`
 	AzureGovApplicationClientSecret       string `form:"azure_gov_application_client_secret,omitempty" json:"azure_gov_application_client_secret,omitempty"`
-	AliyunAccountId                       string `form:"aliyun_account_id,omitempty"`
-	AliyunAccessKey                       string `form:"aliyun_access_key,omitempty"`
-	AliyunSecretKey                       string `form:"aliyun_secret_key,omitempty"`
+	AlicloudAccountId                     string `form:"aliyun_account_id,omitempty"`
+	AlicloudAccessKey                     string `form:"aliyun_access_key,omitempty"`
+	AlicloudSecretKey                     string `form:"aliyun_secret_key,omitempty"`
 }
 
 type AccountResult struct {

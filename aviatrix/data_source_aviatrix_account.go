@@ -78,7 +78,7 @@ func dataSourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS Gov Access Key.",
 			},
-			"aliyun_account_id": {
+			"alicloud_account_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Alibaba Cloud Account ID to associate with Aviatrix account.",
@@ -120,8 +120,8 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("azure_gov_subscription_id", acc.AzureGovSubscriptionId)
 	d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
 	d.Set("awsgov_access_key", acc.AwsgovAccessKey)
-	if acc.CloudType == goaviatrix.ALIYUN {
-		d.Set("aliyun_account_id", acc.AwsAccountNumber)
+	if acc.CloudType == goaviatrix.ALICLOUD {
+		d.Set("alicloud_account_id", acc.AwsAccountNumber)
 	}
 
 	d.SetId(acc.AccountName)

@@ -13,7 +13,7 @@ const (
 	AWSGOV     = 256
 	AWSCHINA   = 1024
 	AZURECHINA = 2048
-	ALIYUN     = 8192
+	ALICLOUD   = 8192
 )
 
 // Cloud vendor names
@@ -28,7 +28,7 @@ const (
 	GCPRelatedCloudTypes      = GCP
 	AzureArmRelatedCloudTypes = AZURE | AZURECHINA
 	OCIRelatedCloudTypes      = OCI
-	AliyunRelatedCloudTypes   = ALIYUN
+	AlicloudRelatedCloudTypes = ALICLOUD
 )
 
 // GetSupportedClouds returns the list of currently supported cloud IDs
@@ -49,7 +49,7 @@ func GetSupportedClouds() []int {
 		AWSGOV,
 		AZURECHINA,
 		AWSCHINA,
-		ALIYUN,
+		ALICLOUD,
 	}
 }
 

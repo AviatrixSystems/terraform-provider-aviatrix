@@ -249,7 +249,7 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	aviatrixTransitVpc := d.Get("aviatrix_transit_vpc").(bool)
 	aviatrixFireNetVpc := d.Get("aviatrix_firenet_vpc").(bool)
 
-	if aviatrixTransitVpc && !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
+	if aviatrixTransitVpc && !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AlicloudRelatedCloudTypes) {
 		return fmt.Errorf("currently 'aviatrix_transit_vpc' is only supported by AWS (1), AWSGOV (256), AWSCHINA (1024) and Alibaba Cloud (8192)")
 	}
 	if aviatrixFireNetVpc && !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
