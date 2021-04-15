@@ -396,7 +396,7 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	if firewallInstance.FirewallImageId != "" && !intInSlice(cloudType, []int{goaviatrix.AWS, goaviatrix.AZURE}) {
+	if firewallInstance.FirewallImageId != "" && !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 		return fmt.Errorf("'firewall_image_id' is only supported for AWS and Azure")
 	}
 
@@ -528,7 +528,7 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 			return fmt.Errorf("failed to set tags for firewall_instance on read: %v", err)
 		}
 	}
-	if fI.FirewallImageId != "" && intInSlice(cloudType, []int{goaviatrix.AWS, goaviatrix.AZURE}) {
+	if fI.FirewallImageId != "" && goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 		d.Set("firewall_image_id", fI.FirewallImageId)
 	}
 
