@@ -74,6 +74,7 @@ The following arguments are supported:
 * `remote_tunnel_ip` - (Optional) Remote tunnel IP address. Only valid for route based connection. Available as of provider version R2.19+.
 * `backup_local_tunnel_ip` - (Optional) Backup local tunnel IP address. Only valid when HA enabled route based connection. Available as of provider version R2.19+.
 * `backup_remote_tunnel_ip` - (Optional) Backup remote tunnel IP address. Only valid when HA enabled route based connection. Available as of provider version R2.19+.
+* `enable_single_ip_ha` - (Optional) Enable single IP HA feature. Available as of provider version 2.19+.
 
 ### Custom Algorithms
 * `custom_algorithms` - (Optional) Switch to enable custom/non-default algorithms for IPSec Authentication/Encryption. Valid values: true, false. **NOTE: Please see notes [here](#custom_algorithms-1) for more information.**

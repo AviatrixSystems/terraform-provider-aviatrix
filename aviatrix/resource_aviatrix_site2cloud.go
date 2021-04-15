@@ -276,6 +276,13 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				ForceNew:    true,
 				Description: "Enable custom mapped.",
 			},
+			"enable_single_ip_ha": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+				Description: "Enable single IP HA on a site2cloud connection.",
+			},
 			"remote_source_real_cidrs": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -422,6 +429,14 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	activeActive := d.Get("enable_active_active").(bool)
 	if activeActive && !haEnabled {
 		return fmt.Errorf("active_active_ha can't be enabled if HA isn't enabled for site2cloud connection")
+	}
+
+	singleIpHA := d.Get("enable_single_ip_ha").(bool)
+	if singleIpHA {
+		if !haEnabled {
+			return fmt.Errorf("'enable_single_ip_ha' can't be enabled if HA isn't enabled for site2cloud connection")
+		}
+		s2c.EnableSingleIpHA = true
 	}
 
 	if s2c.ConnType != "mapped" && s2c.ConnType != "unmapped" {
@@ -727,6 +742,7 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("enable_active_active", s2c.EnableActiveActive)
 		d.Set("forward_traffic_to_transit", s2c.ForwardToTransit)
 		d.Set("enable_event_triggered_ha", s2c.EventTriggeredHA)
+		d.Set("enable_single_ip_ha", s2c.EnableSingleIpHA)
 
 		if s2c.EnableIKEv2 == "true" {
 			d.Set("enable_ikev2", true)
