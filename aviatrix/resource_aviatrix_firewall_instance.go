@@ -186,6 +186,9 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Description: "Advanced option. Bootstrap storage name. Applicable to Check Point Series and Fortinet Series deployment only.",
+				DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
+					return strings.TrimSpace(o) == strings.TrimSpace(n)
+				},
 			},
 			"instance_id": {
 				Type:        schema.TypeString,
