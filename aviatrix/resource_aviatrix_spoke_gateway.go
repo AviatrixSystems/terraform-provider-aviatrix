@@ -405,7 +405,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
+	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AlicloudRelatedCloudTypes) {
 		gateway.VpcID = d.Get("vpc_id").(string)
 		if gateway.VpcID == "" {
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a spoke gw")
@@ -419,7 +419,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), AZURE (8), OCI (16), AWSGOV (256), AWSCHINA (1024), AZURECHINA (2048) or Alibaba Cloud (8192)")
 	}
 
-	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
+	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AlicloudRelatedCloudTypes) {
 		gateway.VpcRegion = d.Get("vpc_reg").(string)
 	} else if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		// for gcp, rest api asks for "zone" rather than vpc region
@@ -917,7 +917,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("account_name", gw.AccountName)
 	d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
 	d.Set("enable_private_vpc_default_route", gw.PrivateVpcDefaultEnabled)
-	d.Set("enable_skip_public_route_update", gw.SkipPublicVpcUpdateEnabled)
+	d.Set("enable_skip_public_route_table_update", gw.SkipPublicVpcUpdateEnabled)
 	d.Set("enable_auto_advertise_s2c_cidrs", gw.AutoAdvertiseCidrsEnabled)
 	d.Set("eip", gw.PublicIP)
 	d.Set("subnet", gw.VpcNet)
@@ -954,7 +954,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("vpc_reg", gw.VpcRegion)
 
 		d.Set("allocate_new_eip", true)
-	} else if gw.CloudType == goaviatrix.ALIYUN {
+	} else if gw.CloudType == goaviatrix.ALICLOUD {
 		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("allocate_new_eip", true)
@@ -1093,7 +1093,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	log.Printf("[INFO] Spoke HA Gateway size: %s", gw.HaGw.GwSize)
-	if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
+	if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AlicloudRelatedCloudTypes) {
 		d.Set("ha_subnet", gw.HaGw.VpcNet)
 		if zone := d.Get("ha_zone"); goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && (isImport || zone.(string) != "") {
 			if gw.HaGw.GatewayZone != "AvailabilitySet" {
@@ -1323,7 +1323,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		oldZone, newZone := d.GetChange("ha_zone")
 		deleteHaGw := false
 		changeHaGw := false
-		if goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
+		if goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AlicloudRelatedCloudTypes) {
 			spokeGw.HASubnet = d.Get("ha_subnet").(string)
 			if goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && d.Get("ha_zone").(string) != "" {
 				spokeGw.HASubnet = fmt.Sprintf("%s~~%s~~", d.Get("ha_subnet").(string), d.Get("ha_zone").(string))

@@ -91,11 +91,11 @@ resource "aviatrix_account" "temp_acc_awsgov" {
 ```hcl
 # Create an Alibaba Cloud Account
 resource "aviatrix_account" "temp_acc_alibaba" {
-  account_name      = "username"
-  cloud_type        = 8192
-  aliyun_account_id = "123456789012"
-  aliyun_access_key = "ABCDEFGHIJKL"
-  aliyun_secret_key = "ABCDEFGHIJKLabcdefghijkl"
+  account_name        = "username"
+  cloud_type          = 8192
+  alicloud_account_id = "123456789012"
+  alicloud_access_key = "ABCDEFGHIJKL"
+  alicloud_secret_key = "ABCDEFGHIJKLabcdefghijkl"
 }
 ```
 
@@ -146,9 +146,9 @@ The following arguments are supported:
 * `awsgov_secret_key` - (Optional) AWS Secret Key. Required when creating an account for AWS Gov.
 
 ### Alibaba Cloud
-* `aliyun_account_id` - (Optional) Alibaba Cloud Account number to associate with Aviatrix account. Required when creating an account for Alibaba Cloud.
-* `aliyun_access_key` - (Optional) Alibaba Cloud Access Key. Required when creating an account for Alibaba Cloud.
-* `aliyun_secret_key` - (Optional) Alibaba Cloud Secret Key. Required when creating an account for Alibaba Cloud.
+* `alicloud_account_id` - (Optional) Alibaba Cloud Account number to associate with Aviatrix account. Required when creating an account for Alibaba Cloud.
+* `alicloud_access_key` - (Optional) Alibaba Cloud Access Key. Required when creating an account for Alibaba Cloud.
+* `alicloud_secret_key` - (Optional) Alibaba Cloud Secret Key. Required when creating an account for Alibaba Cloud.
 
 -> **NOTE:** Please make sure that the IAM roles/profiles have already been created before running this, if `aws_iam = true`. More information on the IAM roles is at https://docs.aviatrix.com/HowTos/iam_policies.html and https://docs.aviatrix.com/HowTos/HowTo_IAM_role.html
 

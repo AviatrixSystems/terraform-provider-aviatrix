@@ -570,7 +570,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		gateway.VpcNet = fmt.Sprintf("%s~~%s~~", d.Get("subnet").(string), d.Get("zone").(string))
 	}
 
-	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
+	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AlicloudRelatedCloudTypes) {
 		gateway.VpcRegion = d.Get("vpc_reg").(string)
 	} else if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		// for gcp, rest api asks for "zone" rather than vpc region
@@ -903,7 +903,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			if peeringHaZone != "" {
 				peeringHaGateway.PeeringHASubnet = fmt.Sprintf("%s~~%s~~", peeringHaSubnet, peeringHaZone)
 			}
-		} else if peeringHaGateway.CloudType == goaviatrix.ALIYUN {
+		} else if peeringHaGateway.CloudType == goaviatrix.ALICLOUD {
 			peeringHaGateway.PeeringHASubnet = peeringHaSubnet
 		}
 
@@ -1145,10 +1145,28 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("private_ip", gw.PrivateIP)
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
 	d.Set("enable_vpc_dns_server", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled")
-	d.Set("idle_timeout", gw.IdleTimeout)
-	d.Set("renegotiation_interval", gw.RenegotiationInterval)
 
-	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
+	if gw.IdleTimeout != "NA" {
+		idleTimeout, err := strconv.Atoi(gw.IdleTimeout)
+		if err != nil {
+			return fmt.Errorf("couldn't get idle timeout for the gateway %s: %v", gw.GwName, err)
+		}
+		d.Set("idle_timeout", idleTimeout)
+	} else {
+		d.Set("idle_timeout", -1)
+	}
+
+	if gw.RenegotiationInterval != "NA" {
+		renegotiationInterval, err := strconv.Atoi(gw.RenegotiationInterval)
+		if err != nil {
+			return fmt.Errorf("couldn't get renegotiation interval for the gateway %s: %v", gw.GwName, err)
+		}
+		d.Set("renegotiation_interval", renegotiationInterval)
+	} else {
+		d.Set("renegotiation_interval", -1)
+	}
+
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AlicloudRelatedCloudTypes) {
 		// AWS vpc_id returns as <vpc_id>~~<other vpc info>
 		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 		d.Set("vpc_reg", gw.VpcRegion)
@@ -1163,7 +1181,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) {
 		d.Set("allocate_new_eip", gw.AllocateNewEipRead)
-	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
+	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AlicloudRelatedCloudTypes) {
 		// AZURE gateways don't have the option to allocate new eip's
 		// default for allocate_new_eip is on
 		d.Set("allocate_new_eip", true)
@@ -1379,7 +1397,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		}
 
 		d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
-	} else if gw.HaGw.CloudType == goaviatrix.ALIYUN {
+	} else if gw.HaGw.CloudType == goaviatrix.ALICLOUD {
 		d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
 		d.Set("peering_ha_zone", "")
 	}
@@ -1857,7 +1875,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		deleteHaGw := false
 		changeHaGw := false
 
-		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliyunRelatedCloudTypes) {
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AlicloudRelatedCloudTypes) {
 			gw.PeeringHASubnet = d.Get("peering_ha_subnet").(string)
 			if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && newZone != "" {
 				gw.PeeringHASubnet = fmt.Sprintf("%s~~%s~~", newSubnet, newZone)
