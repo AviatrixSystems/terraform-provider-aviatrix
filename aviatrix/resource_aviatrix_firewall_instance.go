@@ -13,6 +13,7 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixFirewallInstanceCreate,
 		Read:   resourceAviatrixFirewallInstanceRead,
+		Update: resourceAviatrixFirewallInstanceUpdate,
 		Delete: resourceAviatrixFirewallInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -190,6 +191,12 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 					return strings.TrimSpace(o) == strings.TrimSpace(n)
 				},
 			},
+			"firewall_image_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Firewall image ID.",
+			},
 			"instance_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -245,6 +252,7 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		FirewallName:         d.Get("firewall_name").(string),
 		FirewallImage:        d.Get("firewall_image").(string),
 		FirewallImageVersion: d.Get("firewall_image_version").(string),
+		FirewallImageId:      d.Get("firewall_image_id").(string),
 		FirewallSize:         d.Get("firewall_size").(string),
 		EgressSubnet:         d.Get("egress_subnet").(string),
 		EgressVpc:            d.Get("egress_vpc_id").(string),
@@ -391,6 +399,10 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		}
 	}
 
+	if firewallInstance.FirewallImageId != "" && !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+		return fmt.Errorf("'firewall_image_id' is only supported for AWS and Azure")
+	}
+
 	tags, err := extractTags(d, cloudType)
 	if err != nil {
 		return fmt.Errorf("error creating tags for firewall instance: %v", err)
@@ -519,8 +531,19 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 			return fmt.Errorf("failed to set tags for firewall_instance on read: %v", err)
 		}
 	}
+	if fI.FirewallImageId != "" && goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+		d.Set("firewall_image_id", fI.FirewallImageId)
+	}
 
 	return nil
+}
+
+func resourceAviatrixFirewallInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+	if d.HasChange("firewall_image_id") {
+		return fmt.Errorf("can not change firewall_image_id")
+	}
+
+	return resourceAviatrixFirewallInstanceRead(d, meta)
 }
 
 func resourceAviatrixFirewallInstanceDelete(d *schema.ResourceData, meta interface{}) error {
