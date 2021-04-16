@@ -1149,7 +1149,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	if gw.IdleTimeout != "NA" {
 		idleTimeout, err := strconv.Atoi(gw.IdleTimeout)
 		if err != nil {
-			return fmt.Errorf("couldn't get idle timeout for the gateway %s", gw.GwName)
+			return fmt.Errorf("couldn't get idle timeout for the gateway %s: %v", gw.GwName, err)
 		}
 		d.Set("idle_timeout", idleTimeout)
 	} else {
@@ -1159,7 +1159,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	if gw.RenegotiationInterval != "NA" {
 		renegotiationInterval, err := strconv.Atoi(gw.RenegotiationInterval)
 		if err != nil {
-			return fmt.Errorf("couldn't get renegotiation interval for the gateway %s", gw.GwName)
+			return fmt.Errorf("couldn't get renegotiation interval for the gateway %s: %v", gw.GwName, err)
 		}
 		d.Set("renegotiation_interval", renegotiationInterval)
 	} else {
