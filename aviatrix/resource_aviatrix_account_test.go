@@ -402,7 +402,6 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 			},
 		})
 	}
-	
 	if skipAZURECHINA == "yes" {
 		t.Log("Skipping AzureChina Access Account test as SKIP_ACCOUNT_AZURE_CHINA is set")
 	} else {

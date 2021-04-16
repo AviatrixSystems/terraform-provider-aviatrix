@@ -14,27 +14,27 @@ import (
 )
 
 type Account struct {
-	CID                        string `form:"CID,omitempty"`
-	Action                     string `form:"action,omitempty"`
-	AccountName                string `form:"account_name,omitempty" json:"account_name,omitempty"`
-	CloudType                  int    `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
-	AwsAccountNumber           string `form:"aws_account_number,omitempty" json:"account_number,omitempty"`
-	AwsIam                     string `form:"aws_iam,omitempty" json:"aws_iam,omitempty"`
-	AwsAccessKey               string `form:"aws_access_key,omitempty" json:"account_access_key,omitempty"`
-	AwsSecretKey               string `form:"aws_secret_key,omitempty" json:"account_secret_access_key,omitempty"`
-	AwsRoleApp                 string `form:"aws_role_arn,omitempty" json:"aws_role_arn,omitempty"`
-	AwsRoleEc2                 string `form:"aws_role_ec2,omitempty" json:"aws_role_ec2,omitempty"`
-	AwsGatewayRoleApp          string `form:"aws_gateway_role_app,omitempty" json:"aws_gateway_role_app,omitempty"`
-	AwsGatewayRoleEc2          string `form:"aws_gateway_role_ec2,omitempty" json:"aws_gateway_role_ec2,omitempty"`
-	AzureSubscriptionId        string `form:"azure_subscription_id,omitempty" json:"azure_subscription_id,omitempty"`
-	ArmSubscriptionId          string `form:"arm_subscription_id,omitempty" json:"arm_subscription_id,omitempty"`
-	ArmApplicationEndpoint     string `form:"arm_application_endpoint,omitempty" json:"arm_ad_tenant_id,omitempty"`
-	ArmApplicationClientId     string `form:"arm_application_client_id,omitempty" json:"arm_ad_client_id,omitempty"`
-	ArmApplicationClientSecret string `form:"arm_application_client_secret,omitempty" json:"arm_ad_client_secret,omitempty"`
-	AwsgovAccountNumber        string `form:"awsgov_account_number,omitempty" json:"awsgovcloud_account_number,omitempty"`
-	AwsgovAccessKey            string `form:"awsgov_access_key,omitempty" json:"awsgovcloud_access_key,omitempty"`
-	AwsgovSecretKey            string `form:"awsgov_secret_key,omitempty" json:"awsgovcloud_secret_key,omitempty"`
-	AwsgovCloudtrailBucket     string `form:"awsgov_cloudtrail_bucket,omitempty" json:"awsgov_cloudtrail_bucket,omitempty"`
+	CID                                   string `form:"CID,omitempty"`
+	Action                                string `form:"action,omitempty"`
+	AccountName                           string `form:"account_name,omitempty" json:"account_name,omitempty"`
+	CloudType                             int    `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
+	AwsAccountNumber                      string `form:"aws_account_number,omitempty" json:"account_number,omitempty"`
+	AwsIam                                string `form:"aws_iam,omitempty" json:"aws_iam,omitempty"`
+	AwsAccessKey                          string `form:"aws_access_key,omitempty" json:"account_access_key,omitempty"`
+	AwsSecretKey                          string `form:"aws_secret_key,omitempty" json:"account_secret_access_key,omitempty"`
+	AwsRoleApp                            string `form:"aws_role_arn,omitempty" json:"aws_role_arn,omitempty"`
+	AwsRoleEc2                            string `form:"aws_role_ec2,omitempty" json:"aws_role_ec2,omitempty"`
+	AwsGatewayRoleApp                     string `form:"aws_gateway_role_app,omitempty" json:"aws_gateway_role_app,omitempty"`
+	AwsGatewayRoleEc2                     string `form:"aws_gateway_role_ec2,omitempty" json:"aws_gateway_role_ec2,omitempty"`
+	AzureSubscriptionId                   string `form:"azure_subscription_id,omitempty" json:"azure_subscription_id,omitempty"`
+	ArmSubscriptionId                     string `form:"arm_subscription_id,omitempty" json:"arm_subscription_id,omitempty"`
+	ArmApplicationEndpoint                string `form:"arm_application_endpoint,omitempty" json:"arm_ad_tenant_id,omitempty"`
+	ArmApplicationClientId                string `form:"arm_application_client_id,omitempty" json:"arm_ad_client_id,omitempty"`
+	ArmApplicationClientSecret            string `form:"arm_application_client_secret,omitempty" json:"arm_ad_client_secret,omitempty"`
+	AwsgovAccountNumber                   string `form:"awsgov_account_number,omitempty" json:"awsgovcloud_account_number,omitempty"`
+	AwsgovAccessKey                       string `form:"awsgov_access_key,omitempty" json:"awsgovcloud_access_key,omitempty"`
+	AwsgovSecretKey                       string `form:"awsgov_secret_key,omitempty" json:"awsgovcloud_secret_key,omitempty"`
+	AwsgovCloudtrailBucket                string `form:"awsgov_cloudtrail_bucket,omitempty" json:"awsgov_cloudtrail_bucket,omitempty"`
 	ProjectCredentialsFilename            string `form:"filename,omitempty"` //Applies for both GCP and OCI
 	ProjectCredentialsContents            string `form:"contents,omitempty"` //Applies for both GCP and OCI
 	GcloudProjectCredentialsFilepathLocal string `form:"gcloud_project_credentials_local,omitempty"`

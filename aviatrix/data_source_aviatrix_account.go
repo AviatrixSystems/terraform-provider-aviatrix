@@ -78,6 +78,36 @@ func dataSourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS Gov Access Key.",
 			},
+			"aws_china_account_number": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS China Account number.",
+			},
+			"aws_china_iam": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "AWS China IAM-role based flag.",
+			},
+			"aws_china_role_app": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS China App role ARN.",
+			},
+			"aws_china_role_ec2": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS China EC2 role ARN.",
+			},
+			"aws_china_access_key": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWS China Access Key.",
+			},
+			"azure_china_subscription_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Azure China subscription ID.",
+			},
 			"alicloud_account_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -120,6 +150,20 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("azuregov_subscription_id", acc.AzuregovSubscriptionId)
 	d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
 	d.Set("awsgov_access_key", acc.AwsgovAccessKey)
+	if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AWSChina) {
+		d.Set("aws_china_account_number", acc.AwsChinaAccountNumber)
+		d.Set("aws_china_role_app", acc.AwsChinaRoleApp)
+		d.Set("aws_china_role_ec2", acc.AwsChinaRoleEc2)
+		d.Set("aws_china_access_key", acc.AwsChinaAccessKey)
+		if acc.AwsChinaRoleEc2 == "" {
+			d.Set("aws_china_iam", true)
+		} else {
+			d.Set("aws_china_iam", false)
+		}
+	} else if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AzureChina) {
+		d.Set("azure_china_subscription_id", acc.AzureChinaSubscriptionId)
+	}
+
 	if acc.CloudType == goaviatrix.AliCloud {
 		d.Set("alicloud_account_id", acc.AwsAccountNumber)
 	}
