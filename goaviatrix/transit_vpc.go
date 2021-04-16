@@ -95,8 +95,9 @@ type TransitGatewayAdvancedConfigRespResult struct {
 }
 
 type LearnedCIDRApprovalInfo struct {
-	ConnName        string `json:"conn_name"`
-	EnabledApproval string `json:"conn_learned_cidrs_approval"`
+	ConnName             string   `json:"conn_name"`
+	EnabledApproval      string   `json:"conn_learned_cidrs_approval"`
+	ApprovedLearnedCidrs []string `json:"conn_approved_learned_cidrs"`
 }
 
 type TransitGatewayAdvancedConfigResp struct {
@@ -708,6 +709,17 @@ func (c *Client) DisableTransitConnectionLearnedCIDRApproval(gwName, connName st
 		"CID":             c.CID,
 		"gateway_name":    gwName,
 		"connection_name": connName,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) UpdateTransitConnectionPendingApprovedCidrs(gwName, connName string, approvedCidrs []string) error {
+	data := map[string]string{
+		"action":                            "update_transit_connection_pending_approved_cidrs",
+		"CID":                               c.CID,
+		"gateway_name":                      gwName,
+		"connection_name":                   connName,
+		"connection_approved_learned_cidrs": strings.Join(approvedCidrs, ","),
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
 }

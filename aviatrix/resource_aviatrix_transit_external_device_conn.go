@@ -297,6 +297,13 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "Remote LAN IP.",
 			},
+			"approved_cidrs": {
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Computed:    true,
+				Description: "Set of approved cidrs. Requires 'enable_learned_cidrs_approval' to be true. Type: Set(String).",
+			},
 			"local_lan_ip": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -473,6 +480,11 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		return fmt.Errorf("'connection_type' must be 'bgp' if 'manual_bgp_advertised_cidrs' is not empty")
 	}
 
+	approvedCidrs := getStringSet(d, "approved_cidrs")
+	if !enableLearnedCIDRApproval && len(approvedCidrs) > 0 {
+		return fmt.Errorf("creating transit external device conn: 'approved_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
+	}
+
 	enableIkev2 := d.Get("enable_ikev2").(bool)
 	if enableIkev2 {
 		externalDeviceConn.EnableIkev2 = "true"
@@ -542,6 +554,12 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		err = client.EnableTransitConnectionLearnedCIDRApproval(externalDeviceConn.GwName, externalDeviceConn.ConnectionName)
 		if err != nil {
 			return fmt.Errorf("could not enable learned cidr approval: %v", err)
+		}
+		if len(approvedCidrs) > 0 {
+			err = client.UpdateTransitConnectionPendingApprovedCidrs(externalDeviceConn.GwName, externalDeviceConn.ConnectionName, approvedCidrs)
+			if err != nil {
+				return fmt.Errorf("could not update transit external device conn approved cidrs after creation: %v", err)
+			}
 		}
 	}
 
@@ -677,6 +695,10 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		for _, v := range transitAdvancedConfig.ConnectionLearnedCIDRApprovalInfo {
 			if v.ConnName == externalDeviceConn.ConnectionName {
 				d.Set("enable_learned_cidrs_approval", v.EnabledApproval == "yes")
+				err := d.Set("approved_cidrs", v.ApprovedLearnedCidrs)
+				if err != nil {
+					return fmt.Errorf("could not set 'approved_cidrs' in state: %v", err)
+				}
 				break
 			}
 		}
@@ -706,9 +728,15 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 
 func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
+	approvedCidrs := getStringSet(d, "approved_cidrs")
+	enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
+	if !enableLearnedCIDRApproval && len(approvedCidrs) > 0 {
+		return fmt.Errorf("updating transit external device conn: 'approved_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
+	}
+
 	gwName := d.Get("gw_name").(string)
 	connName := d.Get("connection_name").(string)
-
 	transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: gwName})
 	if err != nil {
 		return fmt.Errorf("could not get advanced config for transit gateway: %v", err)
@@ -759,6 +787,13 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 			if err != nil {
 				return fmt.Errorf("could not disable event triggered HA for external device conn during update: %v", err)
 			}
+		}
+	}
+
+	if d.HasChange("approved_cidrs") {
+		err := client.UpdateTransitConnectionPendingApprovedCidrs(gwName, connName, approvedCidrs)
+		if err != nil {
+			return fmt.Errorf("could not update transit external device conn learned cidrs during update: %v", err)
 		}
 	}
 
