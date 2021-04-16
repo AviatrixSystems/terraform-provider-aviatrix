@@ -52,6 +52,8 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |                     		           | SKIP_ACCOUNT_AZUREGOV	                | AZUREGOV_SUBSCRIPTION_ID, AZUREGOV_DIRECTORY_ID, AZUREGOV_APPLICATION_ID, AZUREGOV_APPLICATION_KEY        |
 |                     		           | SKIP_ACCOUNT_OCI	                | OCI_TENANCY_ID, OCI_USER_ID, OCI_COMPARTMENT_ID, OCI_API_KEY_FILEPATH          |
 |		                               | SKIP_ACCOUNT_AWSGOV                | AWSGOV_ACCOUNT_NUMBER, AWSGOV_ACCESS_KEY, AWSGOV_SECRET_KEY                    |
+|		                               | SKIP_ACCOUNT_AWS_CHINA_IAM         | AWS_CHINA_IAM_ACCOUNT_NUMBER                    |
+|		                               | SKIP_ACCOUNT_AWS_CHINA             | AWS_CHINA_ACCOUNT_NUMBER, AWS_CHINA_ACCESS_KEY, AWS_CHINA_SECRET_KEY           |
 | aviatrix_account_user                | SKIP_ACCOUNT_USER                  |                                                                                |
 | aviatrix_arm_peer                    | SKIP_ARM_PEER                      | aviatrix_account + ARM_VNET_ID, ARM_VNET_ID2, ARM_REGION, ARM_REGION2          |
 | aviatrix_aws_guard_duty              | SKIP_AWS_GUARD_DUTY                | aviatrix_account                                                               |

@@ -33,23 +33,10 @@ func resourceAviatrixAccount() *schema.Resource {
 				Description:  "Type of cloud service provider.",
 			},
 			"aws_account_number": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "AWS Account number to associate with Aviatrix account. Should be 12 digits.",
-				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-					v := val.(string)
-					if len(v) != 12 {
-						errs = append(errs, fmt.Errorf("%q must be 12 digits, got: %s", key, val))
-					} else {
-						for _, r := range v {
-							if r-'0' < 0 || r-'0' > 9 {
-								errs = append(errs, fmt.Errorf("%q must be 12 digits, got: %s", key, val))
-								break
-							}
-						}
-					}
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateAwsAccountNumber,
+				Description:  "AWS Account number to associate with Aviatrix account. Should be 12 digits.",
 			},
 			"aws_iam": {
 				Type:        schema.TypeBool,
@@ -78,9 +65,10 @@ func resourceAviatrixAccount() *schema.Resource {
 				Description: "AWS Secret Key.",
 			},
 			"awsgov_account_number": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "AWS Gov Account number to associate with Aviatrix account.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateAwsAccountNumber,
+				Description:  "AWS Gov Account number to associate with Aviatrix account.",
 			},
 			"awsgov_access_key": {
 				Type:        schema.TypeString,
@@ -208,6 +196,42 @@ func resourceAviatrixAccount() *schema.Resource {
 				Default:     true,
 				Description: "Enable account audit.",
 			},
+			"aws_china_account_number": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateAwsAccountNumber,
+				Description:  "AWS China Account Number.",
+			},
+			"aws_china_iam": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "AWS China IAM-role based flag.",
+			},
+			"aws_china_role_app": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "AWS China App Role ARN.",
+			},
+			"aws_china_role_ec2": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "AWS China EC2 Role ARN.",
+			},
+			"aws_china_access_key": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"aws_china_role_app", "aws_china_role_ec2", "aws_china_iam"},
+				Description:   "AWS China Access Key.",
+			},
+			"aws_china_secret_key": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				ConflictsWith: []string{"aws_china_role_app", "aws_china_role_ec2", "aws_china_iam"},
+				Description:   "AWS China Secret Key.",
+			},
 		},
 	}
 }
@@ -245,6 +269,11 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		AlicloudAccountId:                     d.Get("alicloud_account_id").(string),
 		AlicloudAccessKey:                     d.Get("alicloud_access_key").(string),
 		AlicloudSecretKey:                     d.Get("alicloud_secret_key").(string),
+		AwsChinaAccountNumber:                 d.Get("aws_china_account_number").(string),
+		AwsChinaRoleApp:                       d.Get("aws_china_role_app").(string),
+		AwsChinaRoleEc2:                       d.Get("aws_china_role_ec2").(string),
+		AwsChinaAccessKey:                     d.Get("aws_china_access_key").(string),
+		AwsChinaSecretKey:                     d.Get("aws_china_secret_key").(string),
 	}
 
 	awsIam := d.Get("aws_iam").(bool)
@@ -259,14 +288,25 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 
 	if gatewayRoleAppOk || gatewayRoleEc2Ok {
 		if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWS) {
-			return diag.Errorf("could not create Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used with AWS (1)")
+		return diag.Errorf("could not create Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used with AWS (1)")
 		}
 		if !awsIam {
-			return diag.Errorf("could not create Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used when awsIam is enabled")
+		return diag.Errorf("could not create Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used when awsIam is enabled")
 		}
 		if !(gatewayRoleAppOk && gatewayRoleEc2Ok) {
-			return diag.Errorf("could not create Aviatrix Account: must provide both aws_gateway_role_app and aws_gateway_role_ec2 when using separate IAM role and policy for gateways")
+		return diag.Errorf("could not create Aviatrix Account: must provide both aws_gateway_role_app and aws_gateway_role_ec2 when using separate IAM role and policy for gateways")
 		}
+	}
+
+	awsChinaIam := d.Get("aws_china_iam").(bool)
+	if awsChinaIam {
+		account.AwsChinaIam = "true"
+	} else {
+		account.AwsChinaIam = "false"
+	}
+
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSChina) && (awsChinaIam || account.AwsChinaRoleApp != "" || account.AwsChinaRoleEc2 != "" || account.AwsChinaAccessKey != "" || account.AwsChinaSecretKey != "") {
+		return diag.Errorf("could not create Aviatrix Account: 'aws_china_iam', 'aws_china_role_app', 'aws_china_role_ec2', 'aws_china_access_key' and 'aws_china_secret_key' can only be set when cloud_type is AWSCHINA (1024)")
 	}
 
 	if account.CloudType == goaviatrix.AWS {
@@ -342,6 +382,25 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		if account.AzuregovApplicationClientSecret == "" {
 			return diag.Errorf("azure gov application key needed when creating an account for arm gov cloud")
 		}
+	} else if goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSChina) {
+		if account.AwsChinaAccountNumber == "" {
+			return diag.Errorf("could not create Aviatrix Account in AWS China (1024): 'aws_china_account_number' is required")
+		}
+		if awsChinaIam {
+			if account.AwsChinaRoleApp == "" {
+				account.AwsChinaRoleApp = fmt.Sprintf("arn:aws-cn:iam::%s:role/aviatrix-role-app", account.AwsChinaAccountNumber)
+			}
+			if account.AwsChinaRoleEc2 == "" {
+				account.AwsChinaRoleEc2 = fmt.Sprintf("arn:aws-cn:iam::%s:role/aviatrix-role-ec2", account.AwsChinaAccountNumber)
+			}
+		} else {
+			if account.AwsChinaAccessKey == "" {
+				return diag.Errorf("could not create Aviatrix Account in AWS China (1024): 'aws_china_access_key' is required when 'aws_china_iam' is false")
+			}
+			if account.AwsChinaSecretKey == "" {
+				return diag.Errorf("could not create Aviatrix Account in AWS China (1024): 'aws_china_secret_key' is required when 'aws_china_iam' is false")
+			}
+		}
 	} else if account.CloudType == goaviatrix.AliCloud {
 		if account.AlicloudAccountId == "" {
 			return diag.Errorf("alicloud_account_id is required for alibaba cloud")
@@ -353,7 +412,7 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 			return diag.Errorf("alicloud_secret_key is required for alibaba cloud")
 		}
 	} else {
-		return diag.Errorf("cloud type can only be either aws (1), gcp (4), azure (8), oci (16), azure gov (32), aws gov (256) or Alibaba Cloud (8192)")
+		return diag.Errorf("cloud type can only be either AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048) or Alibaba Cloud (8192)")
 	}
 
 	var err error
@@ -426,7 +485,19 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 			d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
 			d.Set("awsgov_access_key", acc.AwsgovAccessKey)
 		} else if acc.CloudType == goaviatrix.AzureGov {
-			d.Set("azuregov_subscription_id", acc.AzuregovSubscriptionId)
+			d.Set("azure_gov_subscription_id", acc.AzuregovSubscriptionId)
+		} else if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AWSChina) {
+			d.Set("aws_china_account_number", acc.AwsChinaAccountNumber)
+			d.Set("aws_china_role_app", acc.AwsChinaRoleApp)
+			d.Set("aws_china_role_ec2", acc.AwsChinaRoleEc2)
+			d.Set("aws_china_access_key", acc.AwsChinaAccessKey)
+			if acc.AwsChinaRoleEc2 != "" {
+				// Force secret key to be empty
+				d.Set("aws_china_secret_key", "")
+				d.Set("aws_china_iam", true)
+			} else {
+				d.Set("aws_china_iam", false)
+			}
 		} else if acc.CloudType == goaviatrix.AliCloud {
 			d.Set("alicloud_account_id", acc.AwsAccountNumber)
 		}
@@ -480,6 +551,11 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 		AlicloudAccountId:                     d.Get("alicloud_account_id").(string),
 		AlicloudAccessKey:                     d.Get("alicloud_access_key").(string),
 		AlicloudSecretKey:                     d.Get("alicloud_secret_key").(string),
+		AwsChinaAccountNumber:                 d.Get("aws_china_account_number").(string),
+		AwsChinaRoleApp:                       d.Get("aws_china_role_app").(string),
+		AwsChinaRoleEc2:                       d.Get("aws_china_role_ec2").(string),
+		AwsChinaAccessKey:                     d.Get("aws_china_access_key").(string),
+		AwsChinaSecretKey:                     d.Get("aws_china_secret_key").(string),
 	}
 
 	awsIam := d.Get("aws_iam").(bool)
@@ -487,6 +563,13 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 		account.AwsIam = "true"
 	} else {
 		account.AwsIam = "false"
+	}
+
+	awsChinaIam := d.Get("aws_china_iam").(bool)
+	if awsChinaIam {
+		account.AwsChinaIam = "true"
+	} else {
+		account.AwsChinaIam = "false"
 	}
 
 	log.Printf("[INFO] Updating Aviatrix account: %#v", account)
@@ -551,6 +634,13 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 				return diag.Errorf("failed to update Azure GOV Aviatrix Account: %v", err)
 			}
 		}
+	} else if goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSChina) {
+		if d.HasChanges("aws_china_iam", "aws_china_role_app", "aws_china_role_ec2", "aws_china_access_key", "aws_china_secret_key") {
+			err := client.UpdateAccount(account)
+			if err != nil {
+				return diag.Errorf("faild to update AWS China Aviatrix Account: %v", err)
+			}
+		}
 	} else if account.CloudType == goaviatrix.AliCloud {
 		if d.HasChange("alicloud_account_id") || d.HasChange("alicloud_access_key") || d.HasChange("alicloud_secret_key") {
 			err := client.UpdateAccount(account)
@@ -579,4 +669,20 @@ func resourceAviatrixAccountDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	return nil
+}
+
+// Validate account number string is 12 digits
+func validateAwsAccountNumber(val interface{}, key string) (warns []string, errs []error) {
+	v := val.(string)
+	if len(v) != 12 {
+		errs = append(errs, fmt.Errorf("%q must be 12 digits, got: %s", key, val))
+	} else {
+		for _, r := range v {
+			if r-'0' < 0 || r-'0' > 9 {
+				errs = append(errs, fmt.Errorf("%q must be 12 digits, got: %s", key, val))
+				break
+			}
+		}
+	}
+	return
 }

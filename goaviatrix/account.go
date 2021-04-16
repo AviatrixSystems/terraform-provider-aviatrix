@@ -36,9 +36,6 @@ type Account struct {
 	AwsgovSecretKey                       string `form:"awsgov_secret_key,omitempty" json:"awsgovcloud_secret_key,omitempty"`
 	AwsgovCloudtrailBucket                string `form:"awsgov_cloudtrail_bucket,omitempty" json:"awsgov_cloudtrail_bucket,omitempty"`
 	AzurechinaSubscriptionId              string `form:"azurechina_subscription_id,omitempty" json:"azurechina_subscription_id,omitempty"`
-	AwschinaAccountNumber                 string `form:"awschina_account_number,omitempty" json:"awschina_account_number,omitempty"`
-	AwschinaAccessKey                     string `form:"awschina_access_key,omitempty" json:"awschinacloud_access_key,omitempty"`
-	AwschinaSecretKey                     string `form:"awschina_secret_key,omitempty" json:"awschinacloud_secret_key,omitempty"`
 	ArmChinaSubscriptionId                string `form:"arm_china_subscription_id,omitempty" json:"arm_china_subscription_id,omitempty"`
 	ArmChinaApplicationEndpoint           string `form:"arm_china_application_endpoint,omitempty" json:"arm_china_application_endpoint,omitempty"`
 	ArmChinaApplicationClientId           string `form:"arm_china_application_client_id,omitempty" json:"arm_china_application_client_id,omitempty"`
@@ -58,6 +55,12 @@ type Account struct {
 	AlicloudAccountId                     string `form:"aliyun_account_id,omitempty"`
 	AlicloudAccessKey                     string `form:"aliyun_access_key,omitempty"`
 	AlicloudSecretKey                     string `form:"aliyun_secret_key,omitempty"`
+	AwsChinaAccountNumber                 string `form:"aws_china_account_number,omitempty" json:"aws_china_account_number,omitempty"`
+	AwsChinaIam                           string `form:"aws_china_iam,omitempty"`
+	AwsChinaRoleApp                       string `form:"aws_china_role_arn,omitempty" json:"aws_china_aws_role_arn,omitempty"`
+	AwsChinaRoleEc2                       string `form:"aws_china_role_ec2,omitempty" json:"aws_china_aws_role_ec2,omitempty"`
+	AwsChinaAccessKey                     string `form:"aws_china_access_key,omitempty" json:"aws_china_access_key,omitempty"`
+	AwsChinaSecretKey                     string `form:"aws_china_secret_key,omitempty"`
 }
 
 type AccountResult struct {
