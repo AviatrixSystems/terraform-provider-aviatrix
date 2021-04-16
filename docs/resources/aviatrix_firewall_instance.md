@@ -270,11 +270,11 @@ Valid `firewall_image` values:
 * `storage_access_key` - (Optional) Advanced option. Storage access key. Applicable to Azure and Palo Alto Networks VM-Series deployment only. Available as of provider version R2.17.1+.
 * `file_share_folder` - (Optional) Advanced option. File share folder. Applicable to Azure and Palo Alto Networks VM-Series deployment only. Available as of provider version R2.17.1+.
 * `share_directory` - (Optional) Advanced option. Share directory. Applicable to Azure and Palo Alto Networks VM-Series deployment only. Available as of provider version R2.17.1+.
-* `sic_key` - (Optional) Advanced option. Bic key. Applicable to Azure and Check Point Series deployment only.
-* `container_folder` - (Optional) Advanced option. Bootstrap storage name. Applicable to Azure and Fortinet Series deployment only.
-* `sas_url_config` - (Optional) Advanced option. Bootstrap storage name. Applicable to Azure and Fortinet Series deployment only.
-* `sas_url_license` - (Optional) Advanced option. Bootstrap storage name. Applicable to Azure and Fortinet Series deployment only.
-* `user_data` - (Optional) Advanced option. Bootstrap storage name. Applicable to Check Point Series and Fortinet Series deployment only.
+* `sic_key` - (Optional) Advanced option. Sic key. Applicable to Azure and Check Point Series deployment only.
+* `container_folder` - (Optional) Advanced option. Container folder. Applicable to Azure and Fortinet Series deployment only.
+* `sas_url_config` - (Optional) Advanced option. SAS URL Config. Applicable to Azure and Fortinet Series deployment only.
+* `sas_url_license` - (Optional) Advanced option. SAS URL License. Applicable to Azure and Fortinet Series deployment only.
+* `user_data` - (Optional) Advanced option. User Data. Applicable to Check Point Series and Fortinet Series deployment only.
 
 ### Misc.
 * `tags` - (Optional) Mapping of key value pairs of tags for a firewall instance. Only available for AWS, AWSGov, GCP and Azure firewall instances. For AWS, AWSGOV and Azure allowed characters are: letters, spaces, and numbers plus the following special characters: + - = . _ : @. For GCP allowed characters are: lowercase letters, numbers, "-" and "_". Example: {"key1" = "value1", "key2" = "value2"}.
