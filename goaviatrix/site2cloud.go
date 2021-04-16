@@ -73,6 +73,10 @@ type Site2Cloud struct {
 	LocalSourceVirtualCIDRs       string `form:"local_src_virt_cidrs,omitempty"`
 	LocalDestinationRealCIDRs     string `form:"local_dst_real_cidrs,omitempty"`
 	LocalDestinationVirtualCIDRs  string `form:"local_dst_virt_cidrs,omitempty"`
+	LocalTunnelIp                 string `form:"local_tunnel_ip,omitempty"`
+	RemoteTunnelIp                string `form:"remote_tunnel_ip,omitempty"`
+	BackupLocalTunnelIp           string `form:"backup_local_tunnel_ip,omitempty"`
+	BackupRemoteTunnelIp          string `form:"backup_remote_tunnel_ip,omitempty"`
 }
 
 type EditSite2Cloud struct {
@@ -250,6 +254,11 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 		addSite2cloud.Add("local_dst_virt_cidrs", site2cloud.LocalDestinationVirtualCIDRs)
 	}
 
+	addSite2cloud.Add("local_tunnel_ip", site2cloud.LocalTunnelIp)
+	addSite2cloud.Add("remote_tunnel_ip", site2cloud.RemoteTunnelIp)
+	addSite2cloud.Add("backup_local_tunnel_ip", site2cloud.BackupLocalTunnelIp)
+	addSite2cloud.Add("backup_remote_tunnel_ip", site2cloud.BackupRemoteTunnelIp)
+
 	Url.RawQuery = addSite2cloud.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
@@ -420,6 +429,13 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 		site2cloud.LocalSourceVirtualCIDRs = s2cConnDetail.LocalSourceVirtualCIDRs
 		site2cloud.LocalDestinationRealCIDRs = s2cConnDetail.LocalDestinationRealCIDRs
 		site2cloud.LocalDestinationVirtualCIDRs = s2cConnDetail.LocalDestinationVirtualCIDRs
+
+		site2cloud.LocalTunnelIp = s2cConnDetail.BgpLocalIP
+		site2cloud.RemoteTunnelIp = s2cConnDetail.BgpRemoteIP
+		if site2cloud.HAEnabled == "enabled" {
+			site2cloud.BackupLocalTunnelIp = s2cConnDetail.BgpBackupLocalIP
+			site2cloud.BackupRemoteTunnelIp = s2cConnDetail.BgpBackupRemoteIP
+		}
 		return site2cloud, nil
 	}
 
