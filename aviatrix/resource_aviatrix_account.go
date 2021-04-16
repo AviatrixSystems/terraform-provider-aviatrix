@@ -232,6 +232,29 @@ func resourceAviatrixAccount() *schema.Resource {
 				ConflictsWith: []string{"aws_china_role_app", "aws_china_role_ec2", "aws_china_iam"},
 				Description:   "AWS China Secret Key.",
 			},
+			"azure_china_subscription_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Azure China Subscription ID.",
+			},
+			"azure_china_directory_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Azure China Directory ID.",
+			},
+			"azure_china_application_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Azure China Application ID.",
+			},
+			"azure_china_application_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Azure China Application Key.",
+			},
 		},
 	}
 }
@@ -274,6 +297,10 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		AwsChinaRoleEc2:                       d.Get("aws_china_role_ec2").(string),
 		AwsChinaAccessKey:                     d.Get("aws_china_access_key").(string),
 		AwsChinaSecretKey:                     d.Get("aws_china_secret_key").(string),
+		AzureChinaSubscriptionId:              d.Get("azure_china_subscription_id").(string),
+		AzureChinaApplicationEndpoint:         d.Get("azure_china_directory_id").(string),
+		AzureChinaApplicationClientId:         d.Get("azure_china_application_id").(string),
+		AzureChinaApplicationClientSecret:     d.Get("azure_china_application_key").(string),
 	}
 
 	awsIam := d.Get("aws_iam").(bool)
@@ -307,6 +334,9 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSChina) && (awsChinaIam || account.AwsChinaRoleApp != "" || account.AwsChinaRoleEc2 != "" || account.AwsChinaAccessKey != "" || account.AwsChinaSecretKey != "") {
 		return diag.Errorf("could not create Aviatrix Account: 'aws_china_iam', 'aws_china_role_app', 'aws_china_role_ec2', 'aws_china_access_key' and 'aws_china_secret_key' can only be set when cloud_type is AWSCHINA (1024)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AzureChina) && (account.AzureChinaSubscriptionId != "" || account.AzureChinaApplicationEndpoint != "" || account.AzureChinaApplicationClientId != "" || account.AzureChinaApplicationClientSecret != "") {
+		return diag.Errorf("could not create Aviatrix Account: `azure_china_subscription_id', 'azure_china_directory_id', 'azure_china_application_id' and 'azure_china_application_key' can only be set when cloud_type is AzureChina (2048)")
 	}
 
 	if account.CloudType == goaviatrix.AWS {
@@ -395,11 +425,24 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 			}
 		} else {
 			if account.AwsChinaAccessKey == "" {
-				return diag.Errorf("could not create Aviatrix Account in AWS China (1024): 'aws_china_access_key' is required when 'aws_china_iam' is false")
+				return diag.Errorf("could not create Aviatrix Account in AWSChina (1024): 'aws_china_access_key' is required when 'aws_china_iam' is false")
 			}
 			if account.AwsChinaSecretKey == "" {
-				return diag.Errorf("could not create Aviatrix Account in AWS China (1024): 'aws_china_secret_key' is required when 'aws_china_iam' is false")
+				return diag.Errorf("could not create Aviatrix Account in AWSChina (1024): 'aws_china_secret_key' is required when 'aws_china_iam' is false")
 			}
+		}
+	} else if goaviatrix.IsCloudType(account.CloudType, goaviatrix.AzureChina) {
+		if account.AzureChinaSubscriptionId == "" {
+			return diag.Errorf("could not create Aviatrix Account in AzureChina (2048): 'azure_china_subscription_id' is required")
+		}
+		if account.AzureChinaApplicationEndpoint == "" {
+			return diag.Errorf("could not create Aviatrix Account in AzureChina (2048): 'azure_china_directory_id' is required")
+		}
+		if account.AzureChinaApplicationClientId == "" {
+			return diag.Errorf("could not create Aviatrix Account in AzureChina (2048): 'azure_china_application_id' is required")
+		}
+		if account.AzureChinaApplicationClientSecret == "" {
+			return diag.Errorf("could not create Aviatrix Account in AzureChina (2048): 'azure_china_application_key' is required")
 		}
 	} else if account.CloudType == goaviatrix.AliCloud {
 		if account.AlicloudAccountId == "" {
@@ -498,6 +541,8 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 			} else {
 				d.Set("aws_china_iam", false)
 			}
+		} else if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AzureChina) {
+			d.Set("azure_china_subscription_id", acc.AzureChinaSubscriptionId)
 		} else if acc.CloudType == goaviatrix.AliCloud {
 			d.Set("alicloud_account_id", acc.AwsAccountNumber)
 		}
@@ -556,6 +601,10 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 		AwsChinaRoleEc2:                       d.Get("aws_china_role_ec2").(string),
 		AwsChinaAccessKey:                     d.Get("aws_china_access_key").(string),
 		AwsChinaSecretKey:                     d.Get("aws_china_secret_key").(string),
+		AzureChinaSubscriptionId:              d.Get("azure_china_subscription_id").(string),
+		AzureChinaApplicationEndpoint:         d.Get("azure_china_directory_id").(string),
+		AzureChinaApplicationClientId:         d.Get("azure_china_application_id").(string),
+		AzureChinaApplicationClientSecret:     d.Get("azure_china_application_key").(string),
 	}
 
 	awsIam := d.Get("aws_iam").(bool)
@@ -638,7 +687,14 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 		if d.HasChanges("aws_china_iam", "aws_china_role_app", "aws_china_role_ec2", "aws_china_access_key", "aws_china_secret_key") {
 			err := client.UpdateAccount(account)
 			if err != nil {
-				return diag.Errorf("faild to update AWS China Aviatrix Account: %v", err)
+				return diag.Errorf("faild to update AWSChina Aviatrix Account: %v", err)
+			}
+		}
+	} else if goaviatrix.IsCloudType(account.CloudType, goaviatrix.AZURECHINA) {
+		if d.HasChanges("azure_china_subscription_id", "azure_china_directory_id", "azure_china_application_id", "azure_china_application_key") {
+			err := client.UpdateAccount(account)
+			if err != nil {
+				return diag.Errorf("failed to update AzureChina Aviatrix Account: %v", err)
 			}
 		}
 	} else if account.CloudType == goaviatrix.AliCloud {

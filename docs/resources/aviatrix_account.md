@@ -111,6 +111,17 @@ resource "aviatrix_account" "temp_acc_aws_china" {
 }
 ```
 ```hcl
+# Create an Aviatrix Azure China Account
+resource "aviatrix_account" "temp_acc_azure_china" {
+  account_name                = "username"
+  cloud_type                  = 2048
+  azure_china_subscription_id = "12345678-abcd-efgh-ijkl-123456789abc"
+  azure_china_directory_id    = "abcdefgh-1234-5678-9100-abc123456789"
+  azure_china_application_id  = "1234abcd-12ab-34cd-56ef-abcdef123456"
+  azure_china_application_key = "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe="
+}
+```
+```hcl
 # Create an Alibaba Cloud Account
 resource "aviatrix_account" "temp_acc_alibaba" {
   account_name        = "username"
@@ -174,6 +185,12 @@ The following arguments are supported:
 * `aws_china_role_ec2` - (Optional) AWS China EC2 role ARN. Available when `aws_china_iam` is "true" and when creating an account for AWS China. If left empty, the ARN will be computed. Available as of provider version 2.19+.
 * `aws_china_access_key` - (Optional) AWS China Access Key. Required when `aws_china_iam` is "false" and when creating an account for AWS China. Available as of provider version 2.19+.
 * `aws_china_secret_key` - (Optional) AWS China Secret Key. Required when `aws_china_iam` is "false" and when creating an account for AWS China. Available as of provider version 2.19+.
+
+### Azure China
+* `azure_china_subscription_id` - (Optional) Azure China ARM Subscription ID. Required when creating an account for AzureChina. Available as of provider version 2.19+.
+* `azure_china_directory_id` - (Optional) Azure China ARM Directory ID. Required when creating an account for AzureChina. Available as of provider version 2.19+.
+* `azure_china_application_id` - (Optional) Azure China ARM Application ID. Required when creating an account for AzureChina. Available as of provider version 2.19+.
+* `azure_china_application_key` - (Optional) Azure China ARM Application key. Required when creating an account for AzureChina. Available as of provider version 2.19+.
 
 ### Alibaba Cloud
 * `alicloud_account_id` - (Optional) Alibaba Cloud Account number to associate with Aviatrix account. Required when creating an account for Alibaba Cloud.
