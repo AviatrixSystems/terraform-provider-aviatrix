@@ -2,6 +2,7 @@ package goaviatrix
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -289,6 +290,37 @@ func (c *Client) UploadOciApiPrivateKeyFile(account *Account) error {
 	}
 	if !data.Return {
 		return errors.New("Rest API upload_file Post failed: " + data.Reason)
+	}
+	return nil
+}
+
+func (c *Client) AuditAccount(ctx context.Context, account *Account) error {
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "get_account_audit_records",
+	}
+
+	type AccountAuditResult struct {
+		AccountName string `json:"account_name"`
+		Status      string `json:"status"`
+		Comment     string `json:"comment"`
+	}
+
+	type AccountAuditResponse struct {
+		Return  bool                 `json:"return"`
+		Results []AccountAuditResult `json:"results"`
+	}
+
+	var resp AccountAuditResponse
+	err := c.GetAPIContext(ctx, &resp, form["action"], form, BasicCheck)
+	if err != nil {
+		return err
+	}
+
+	for _, accountAuditResult := range resp.Results {
+		if accountAuditResult.AccountName == account.AccountName && !strings.Contains(accountAuditResult.Status, "Pass") {
+			return fmt.Errorf("%s", accountAuditResult.Comment)
+		}
 	}
 	return nil
 }
