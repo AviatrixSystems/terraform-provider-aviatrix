@@ -194,14 +194,14 @@ The following arguments are supported:
 
 ### HA
 * `single_az_ha` (Optional) Set to true if this [feature](https://docs.aviatrix.com/Solutions/gateway_ha.html#single-az-gateway) is desired. Valid values: true, false.
-* `ha_subnet` - (Optional) HA Subnet CIDR. Required only if enabling HA for AWS, Azure, AWSGov, AWSChina, AzureChina or Alibaba Cloud gateways. Optional for GCP. Setting to empty/unsetting will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24".
+* `ha_subnet` - (Optional) HA Subnet CIDR. Required only if enabling HA for AWS, Azure, AWSGov, AWSChina, AzureChina, OCI, or Alibaba Cloud gateways. Optional for GCP. Setting to empty/unsetting will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24".
 * `ha_zone` - (Optional) HA Zone. Required if enabling HA for GCP gateway. Optional if enabling HA for AZURE gateway. For GCP, setting to empty/unsetting will disable HA and setting to a valid zone will create an HA gateway in the zone. Example: "us-west1-c". For AZURE, this is an optional parameter to place the HA gateway in a specific availability zone. Valid values for AZURE gateways are in the form "az-n". Example: "az-2". Available for Azure as of provider version R2.17+.
 * `ha_insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit HA Gateway. Required for AWS, AWSGov and AWSChina if `insane_mode` is enabled and `ha_subnet` is set. Example: AWS: "us-west-1a".
 * `ha_eip` - (Optional) Public IP address that you want to assign to the HA peering instance. If no value is given, a new EIP will automatically be allocated. Only available for AWS, GCP, AWSGov and AWSChina.
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if enabling HA. Example: "t2.micro".
 
 ### Insane Mode
-* `insane_mode` - (Optional) Specify true for [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) high performance gateway. Insane Mode gateway size must be at least c5 size (AWS and AWSGov) or Standard_D3_v2 (Azure); for GCP only four size are supported: "n1-highcpu-4", "n1-highcpu-8", "n1-highcpu-16" and "n1-highcpu-32". If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet for AWS, Azure and AWSGov. Only available for AWS, GCP(with active mesh 2.0 enabled), Azure and AWSGov. Valid values: true, false.
+* `insane_mode` - (Optional) Specify true for [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) high performance gateway. Insane Mode gateway size must be at least c5 size (AWS and AWSGov) or Standard_D3_v2 (Azure); for GCP only four size are supported: "n1-highcpu-4", "n1-highcpu-8", "n1-highcpu-16" and "n1-highcpu-32". If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet for AWS, Azure and AWSGov. Only available for AWS, GCP/OCI(with active mesh 2.0 enabled), Azure and AWSGOV. Valid values: true, false. Default value: false.
 * `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit Gateway. Required for AWS or AWSGov if `insane_mode` is enabled. Example: AWS: "us-west-1a".
 
 ### SNAT
