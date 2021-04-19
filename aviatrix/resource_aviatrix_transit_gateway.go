@@ -100,7 +100,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.IsCIDR,
-				Description: "HA Subnet. Required for enabling HA for AWS/AZURE/AWSGOV gateway. " +
+				Description: "HA Subnet. Required for enabling HA for AWS/AWSGov/AWSChina/Azure/OCI/Alibaba Cloud. " +
 					"Optional for enabling HA for GCP gateway.",
 			},
 			"ha_zone": {
@@ -157,7 +157,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Enable Insane Mode for Transit. Valid values: true, false. If insane mode is enabled, gateway size has to at least be c5 size for AWS and Standard_D3_v2 size for AZURE.",
+				Description: "Enable Insane Mode for Transit. Valid values: true, false. Supported for AWS/AWSGOV, GCP, AZURE and OCI. If insane mode is enabled, gateway size has to at least be c5 size for AWS and Standard_D3_v2 size for AZURE.",
 			},
 			"enable_firenet": {
 				Type:        schema.TypeBool,
@@ -562,8 +562,9 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	insaneMode := d.Get("insane_mode").(bool)
 	if insaneMode {
 		// Insane Mode encryption is not supported in China regions
-		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes^goaviatrix.AWSCHINA|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AZURECHINA) {
-			return fmt.Errorf("insane_mode is only supported for AWS (1), GCP (4), AZURE (8) and AWSGOV (256)")
+		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes^goaviatrix.AWSCHINA|goaviatrix.GCPRelatedCloudTypes|
+			goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AZURECHINA|goaviatrix.OCIRelatedCloudTypes) {
+			return fmt.Errorf("insane_mode is only supported for AWS (1), GCP (4), AZURE (8), OCI (16) and AWSGOV (256)")
 		}
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
 			if d.Get("insane_mode_az").(string) == "" {
@@ -579,7 +580,10 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			gateway.Subnet = strings.Join(strs, "~~")
 		}
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) && !d.Get("enable_active_mesh").(bool) {
-			return fmt.Errorf("insane_mode is supported for GCP provder only if active mesh 2.0 is enabled")
+			return fmt.Errorf("insane_mode is supported for GCP provider only if active mesh 2.0 is enabled")
+		}
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.OCIRelatedCloudTypes) && !d.Get("enable_active_mesh").(bool) {
+			return fmt.Errorf("insane_mode is supported for OCI provider only if active mesh 2.0 is enabled")
 		}
 		gateway.InsaneMode = "on"
 	} else {
