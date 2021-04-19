@@ -330,6 +330,30 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Default:     false,
 				Description: "Enable Event Triggered HA.",
 			},
+			"local_tunnel_ip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Local tunnel IP address.",
+			},
+			"remote_tunnel_ip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Remote tunnel IP address.",
+			},
+			"backup_local_tunnel_ip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Backup local tunnel IP address.",
+			},
+			"backup_remote_tunnel_ip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Backup remote tunnel IP address.",
+			},
 		},
 	}
 }
@@ -368,13 +392,31 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		LocalSourceVirtualCIDRs:       getCSVFromStringList(d, "local_source_virtual_cidrs"),
 		LocalDestinationRealCIDRs:     getCSVFromStringList(d, "local_destination_real_cidrs"),
 		LocalDestinationVirtualCIDRs:  getCSVFromStringList(d, "local_destination_virtual_cidrs"),
+		LocalTunnelIp:                 d.Get("local_tunnel_ip").(string),
+		RemoteTunnelIp:                d.Get("remote_tunnel_ip").(string),
+		BackupLocalTunnelIp:           d.Get("backup_local_tunnel_ip").(string),
+		BackupRemoteTunnelIp:          d.Get("backup_remote_tunnel_ip").(string),
 	}
 
 	haEnabled := d.Get("ha_enabled").(bool)
 	if haEnabled {
 		s2c.HAEnabled = "yes"
+		if s2c.BackupGwName == "" || s2c.RemoteGwIP2 == "" {
+			return fmt.Errorf("'backup_gateway_name' and 'backup_remote_gateway_ip' are required when HA is enabled")
+		}
 	} else {
 		s2c.HAEnabled = "no"
+		if s2c.BackupGwName != "" || s2c.RemoteGwIP2 != "" || s2c.BackupLocalTunnelIp != "" || s2c.BackupRemoteTunnelIp != "" {
+			return fmt.Errorf("'backup_gateway_name', 'backup_remote_gateway_ip', 'backup_local_tunnel_ip' " +
+				"and 'backup_remote_tunnel_ip' are only valid when HA is enabled")
+		}
+	}
+
+	if s2c.TunnelType == "policy" {
+		if s2c.LocalTunnelIp != "" || s2c.RemoteTunnelIp != "" || s2c.BackupLocalTunnelIp != "" || s2c.BackupRemoteTunnelIp != "" {
+			return fmt.Errorf("'local_tunnel_ip', 'remote_tunnel_ip', 'backup_local_tunnel_ip' " +
+				"and 'backup_remote_tunnel_ip' are only valid for route based connection")
+		}
 	}
 
 	activeActive := d.Get("enable_active_active").(bool)
@@ -556,6 +598,10 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		if err != nil {
 			return fmt.Errorf("failed to enable active active HA for site2cloud: %s: %s", s2c.TunnelName, err)
 		}
+	} else {
+		if s2c.TunnelType == "route" && s2c.HAEnabled == "yes" {
+			return fmt.Errorf("please enable active active HA for HA enabled route based connection")
+		}
 	}
 
 	forwardToTransit := d.Get("forward_traffic_to_transit").(bool)
@@ -592,8 +638,12 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 	if tunnelName == "" || vpcID == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no tunnel name or vpc id names received. Import Id is %s", id)
-		d.Set("connection_name", strings.Split(id, "~")[0])
-		d.Set("vpc_id", strings.Split(id, "~")[1])
+		parts := strings.Split(id, "~")
+		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+			return fmt.Errorf("invalid import ID format")
+		}
+		d.Set("connection_name", parts[0])
+		d.Set("vpc_id", parts[1])
 		d.SetId(id)
 	}
 
@@ -622,14 +672,16 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 			d.Set("ha_enabled", false)
 		}
 
+		d.Set("remote_gateway_ip", s2c.RemoteGwIP)
+		d.Set("primary_cloud_gateway_name", s2c.GwName)
+		d.Set("local_tunnel_ip", s2c.LocalTunnelIp)
+		d.Set("remote_tunnel_ip", s2c.RemoteTunnelIp)
+
 		if s2c.HAEnabled == "enabled" {
-			d.Set("remote_gateway_ip", s2c.RemoteGwIP)
 			d.Set("backup_remote_gateway_ip", s2c.RemoteGwIP2)
-			d.Set("primary_cloud_gateway_name", s2c.GwName)
 			d.Set("backup_gateway_name", s2c.BackupGwName)
-		} else {
-			d.Set("remote_gateway_ip", s2c.RemoteGwIP)
-			d.Set("primary_cloud_gateway_name", s2c.GwName)
+			d.Set("backup_local_tunnel_ip", s2c.BackupLocalTunnelIp)
+			d.Set("backup_remote_tunnel_ip", s2c.BackupRemoteTunnelIp)
 		}
 
 		// Custom Mapped is a sub-type of Mapped

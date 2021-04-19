@@ -70,6 +70,10 @@ The following arguments are supported:
 * `backup_gateway_name` - (Optional) Backup gateway name. **NOTE: Please see notes [here](#ha-enabled) regarding HA requirements.**
 * `backup_remote_gateway_ip` - (Optional) Backup Remote Gateway IP. **NOTE: Please see notes [here](#ha-enabled) regarding HA requirements.**
 * `backup_pre_shared_key` - (Optional) Backup Pre-Shared Key.
+* `local_tunnel_ip` - (Optional) Local tunnel IP address. Only valid for route based connection. Available as of provider version R2.19+.
+* `remote_tunnel_ip` - (Optional) Remote tunnel IP address. Only valid for route based connection. Available as of provider version R2.19+.
+* `backup_local_tunnel_ip` - (Optional) Backup local tunnel IP address. Only valid when HA enabled route based connection. Available as of provider version R2.19+.
+* `backup_remote_tunnel_ip` - (Optional) Backup remote tunnel IP address. Only valid when HA enabled route based connection. Available as of provider version R2.19+.
 
 ### Custom Algorithms
 * `custom_algorithms` - (Optional) Switch to enable custom/non-default algorithms for IPSec Authentication/Encryption. Valid values: true, false. **NOTE: Please see notes [here](#custom_algorithms-1) for more information.**
