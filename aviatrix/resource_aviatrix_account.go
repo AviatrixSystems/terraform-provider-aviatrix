@@ -329,7 +329,7 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		if account.AwsgovSecretKey == "" {
 			return diag.Errorf("aws gov secret key needed for aws gov cloud")
 		}
-	} else if account.CloudType == goaviatrix.Azuregov {
+	} else if account.CloudType == goaviatrix.AzureGov {
 		if account.AzuregovSubscriptionId == "" {
 			return diag.Errorf("azure gov subsription id needed when creating an account for arm gov cloud")
 		}
@@ -425,7 +425,7 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 		} else if acc.CloudType == goaviatrix.AWSGov {
 			d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
 			d.Set("awsgov_access_key", acc.AwsgovAccessKey)
-		} else if acc.CloudType == goaviatrix.Azuregov {
+		} else if acc.CloudType == goaviatrix.AzureGov {
 			d.Set("azuregov_subscription_id", acc.AzuregovSubscriptionId)
 		} else if acc.CloudType == goaviatrix.AliCloud {
 			d.Set("alicloud_account_id", acc.AwsAccountNumber)
@@ -544,7 +544,7 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 				return diag.Errorf("failed to update Aviatrix Account: %s", err)
 			}
 		}
-	} else if account.CloudType == goaviatrix.Azuregov {
+	} else if account.CloudType == goaviatrix.AzureGov {
 		if d.HasChanges("azuregov_subscription_id", "azuregov_directory_id", "azuregov_application_id", "azuregov_application_key") {
 			err := client.UpdateAccount(account)
 			if err != nil {

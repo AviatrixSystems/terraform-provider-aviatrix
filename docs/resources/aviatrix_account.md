@@ -68,14 +68,19 @@ resource "aviatrix_account" "temp_acc_oci" {
 }
 ```
 ```hcl
+<<<<<<< HEAD
 # Create an Aviatrix AzureGov Account
 resource "aviatrix_account" "temp_acc_azure_gov" {
+=======
+# Create an Aviatrix Azure Gov Account
+resource "aviatrix_account" "temp_acc_azuregov" {
+>>>>>>> Update documentation and testing for AzureGov
   account_name              = "username"
   cloud_type                = 32
-  azure_gov_subscription_id = "12345678-abcd-efgh-ijkl-123456789abc"
-  azure_gov_directory_id    = "abcdefgh-1234-5678-9100-abc123456789"
-  azure_gov_application_id  = "1234abcd-12ab-34cd-56ef-abcdef123456"
-  azure_gov_application_key = "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe="
+  azuregov_subscription_id  = "12345678-abcd-efgh-ijkl-123456789abc"
+  azuregov_directory_id     = "abcdefgh-1234-5678-9100-abc123456789"
+  azuregov_application_id   = "1234abcd-12ab-34cd-56ef-abcdef123456"
+  azuregov_application_key  = "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe="
 }
 ```
 ```hcl
@@ -134,11 +139,12 @@ The following arguments are supported:
 * `oci_compartment_id` - (Optional) Oracle OCI Compartment ID. Required when creating an account for OCI.
 * `oci_api_private_key_filepath` - (Optional) Oracle OCI API Private Key local file path. Required when creating an account for OCI.
 
+<<<<<<< HEAD
 ### AzureGov Cloud
-* `azure_gov_subscription_id` - (Optional) AzureGov ARM Subscription ID. Required when creating an account for AzureGov. Available as of provider version R2.19+.
-* `azure_gov_directory_id` - (Optional) AzureGov ARM Directory ID. Required when creating an account for AzureGov. Available as of provider version R2.19+.
-* `azure_gov_application_id` - (Optional) AzureGov ARM Application ID. Required when creating an account for AzureGov. Available as of provider version R2.19+.
-* `azure_gov_application_key` - (Optional) AzureGov ARM Application key. Required when creating an account for AzureGov. Available as of provider version R2.19+.
+* `azuregov_subscription_id` - (Optional) AzureGov ARM Subscription ID. Required when creating an account for AzureGov. Available as of provider version R2.19+.
+* `azuregov_directory_id` - (Optional) AzureGov ARM Directory ID. Required when creating an account for AzureGov. Available as of provider version R2.19+.
+* `azuregov_application_id` - (Optional) AzureGov ARM Application ID. Required when creating an account for AzureGov. Available as of provider version R2.19+.
+* `azuregov_application_key` - (Optional) AzureGov ARM Application key. Required when creating an account for AzureGov. Available as of provider version R2.19+.
 
 ### AWSGov Cloud
 * `awsgov_account_number` - (Optional) AWSGov Account number to associate with Aviatrix account. Required when creating an account for AWSGov.
