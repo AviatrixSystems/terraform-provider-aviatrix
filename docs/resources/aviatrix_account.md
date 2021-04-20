@@ -68,13 +68,8 @@ resource "aviatrix_account" "temp_acc_oci" {
 }
 ```
 ```hcl
-<<<<<<< HEAD
 # Create an Aviatrix AzureGov Account
 resource "aviatrix_account" "temp_acc_azure_gov" {
-=======
-# Create an Aviatrix Azure Gov Account
-resource "aviatrix_account" "temp_acc_azuregov" {
->>>>>>> Update documentation and testing for AzureGov
   account_name              = "username"
   cloud_type                = 32
   azuregov_subscription_id  = "12345678-abcd-efgh-ijkl-123456789abc"
@@ -139,7 +134,6 @@ The following arguments are supported:
 * `oci_compartment_id` - (Optional) Oracle OCI Compartment ID. Required when creating an account for OCI.
 * `oci_api_private_key_filepath` - (Optional) Oracle OCI API Private Key local file path. Required when creating an account for OCI.
 
-<<<<<<< HEAD
 ### AzureGov Cloud
 * `azuregov_subscription_id` - (Optional) AzureGov ARM Subscription ID. Required when creating an account for AzureGov. Available as of provider version R2.19+.
 * `azuregov_directory_id` - (Optional) AzureGov ARM Directory ID. Required when creating an account for AzureGov. Available as of provider version R2.19+.
