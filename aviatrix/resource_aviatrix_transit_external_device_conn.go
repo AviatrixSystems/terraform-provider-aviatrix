@@ -515,7 +515,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 			log.Printf("[INFO] Could not get cloud_type for transit_external_device_conn validation "+
 				"from gw_name(%s) due to error(%v)", externalDeviceConn.GwName, err)
 		} else {
-			if gw.CloudType == goaviatrix.AZURE &&
+			if gw.CloudType == goaviatrix.Azure &&
 				(externalDeviceConn.LocalLanIP != "" || externalDeviceConn.BackupLocalLanIP != "") {
 				return fmt.Errorf("'local_lan_ip' and 'backup_local_lan_ip' are not valid for Azure transit gateways")
 			}

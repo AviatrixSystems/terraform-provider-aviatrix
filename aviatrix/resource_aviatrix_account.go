@@ -293,7 +293,7 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 			return diag.Errorf("gcloud project credentials local filepath needed to upload file to controller")
 		}
 		log.Printf("[INFO] Creating Aviatrix account: %#v", account)
-	} else if account.CloudType == goaviatrix.AZURE {
+	} else if account.CloudType == goaviatrix.Azure {
 		if account.ArmSubscriptionId == "" {
 			return diag.Errorf("arm subscription id needed for azure cloud")
 		}
@@ -319,7 +319,7 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		if account.OciApiPrivateKeyFilePath == "" {
 			return diag.Errorf("oci api private key filepath needed to upload file to controller")
 		}
-	} else if account.CloudType == goaviatrix.AWSGOV {
+	} else if account.CloudType == goaviatrix.AWSGov {
 		if account.AwsgovAccountNumber == "" {
 			return diag.Errorf("aws gov account number needed for aws gov cloud")
 		}
@@ -329,7 +329,7 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		if account.AwsgovSecretKey == "" {
 			return diag.Errorf("aws gov secret key needed for aws gov cloud")
 		}
-	} else if account.CloudType == goaviatrix.AZUREGOV {
+	} else if account.CloudType == goaviatrix.AzureGov {
 		if account.AzureGovSubscriptionId == "" {
 			return diag.Errorf("azure gov subsription id needed when creating an account for arm gov cloud")
 		}
@@ -342,7 +342,7 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		if account.AzureGovApplicationClientSecret == "" {
 			return diag.Errorf("azure gov application key needed when creating an account for arm gov cloud")
 		}
-	} else if account.CloudType == goaviatrix.ALICLOUD {
+	} else if account.CloudType == goaviatrix.AliCloud {
 		if account.AlicloudAccountId == "" {
 			return diag.Errorf("alicloud_account_id is required for alibaba cloud")
 		}
@@ -420,14 +420,14 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 			}
 		} else if acc.CloudType == goaviatrix.GCP {
 			d.Set("gcloud_project_id", acc.GcloudProjectName)
-		} else if acc.CloudType == goaviatrix.AZURE {
+		} else if acc.CloudType == goaviatrix.Azure {
 			d.Set("arm_subscription_id", acc.ArmSubscriptionId)
-		} else if acc.CloudType == goaviatrix.AWSGOV {
+		} else if acc.CloudType == goaviatrix.AWSGov {
 			d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
 			d.Set("awsgov_access_key", acc.AwsgovAccessKey)
-		} else if acc.CloudType == goaviatrix.AZUREGOV {
+		} else if acc.CloudType == goaviatrix.AzureGov {
 			d.Set("azure_gov_subscription_id", acc.AzureGovSubscriptionId)
-		} else if acc.CloudType == goaviatrix.ALICLOUD {
+		} else if acc.CloudType == goaviatrix.AliCloud {
 			d.Set("alicloud_account_id", acc.AwsAccountNumber)
 		}
 		d.SetId(acc.AccountName)
@@ -526,7 +526,7 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 				return diag.Errorf("failed to update Aviatrix Account: %s", err)
 			}
 		}
-	} else if account.CloudType == goaviatrix.AZURE {
+	} else if account.CloudType == goaviatrix.Azure {
 		if d.HasChange("arm_subscription_id") || d.HasChange("arm_directory_id") || d.HasChange("arm_application_id") || d.HasChange("arm_application_key") {
 			err := client.UpdateAccount(account)
 			if err != nil {
@@ -537,21 +537,21 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 		if d.HasChange("oci_tenancy_id") || d.HasChange("oci_user_id") || d.HasChange("oci_compartment_id") || d.HasChange("oci_api_private_key_filepath") {
 			return diag.Errorf("updating OCI account is not supported")
 		}
-	} else if account.CloudType == goaviatrix.AWSGOV {
+	} else if account.CloudType == goaviatrix.AWSGov {
 		if d.HasChange("awsgov_account_number") || d.HasChange("awsgov_access_key") || d.HasChange("awsgov_secret_key") {
 			err := client.UpdateAccount(account)
 			if err != nil {
 				return diag.Errorf("failed to update Aviatrix Account: %s", err)
 			}
 		}
-	} else if account.CloudType == goaviatrix.AZUREGOV {
+	} else if account.CloudType == goaviatrix.AzureGov {
 		if d.HasChanges("azure_gov_subscription_id", "azure_gov_directory_id", "azure_gov_application_id", "azure_gov_application_key") {
 			err := client.UpdateAccount(account)
 			if err != nil {
 				return diag.Errorf("failed to update Azure GOV Aviatrix Account: %v", err)
 			}
 		}
-	} else if account.CloudType == goaviatrix.ALICLOUD {
+	} else if account.CloudType == goaviatrix.AliCloud {
 		if d.HasChange("alicloud_account_id") || d.HasChange("alicloud_access_key") || d.HasChange("alicloud_secret_key") {
 			err := client.UpdateAccount(account)
 			if err != nil {

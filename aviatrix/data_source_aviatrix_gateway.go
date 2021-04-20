@@ -180,7 +180,7 @@ func dataSourceAviatrixGateway() *schema.Resource {
 			"peering_ha_subnet": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Public Subnet Information while creating Peering HA Gateway, only subnet is accepted. Required to create peering ha gateway if cloud_type = 1 or 8 (AWS or AZURE)",
+				Description: "Public Subnet Information while creating Peering HA Gateway, only subnet is accepted. Required to create peering ha gateway if cloud_type = 1 or 8 (AWS or Azure)",
 			},
 			"peering_ha_zone": {
 				Type:        schema.TypeString,
@@ -328,7 +328,7 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("account_name", gw.AccountName)
 		d.Set("gw_name", gw.GwName)
 
-		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AlicloudRelatedCloudTypes) {
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 			d.Set("vpc_reg", gw.VpcRegion)
 		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
@@ -357,7 +357,7 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 			} else {
 				d.Set("allocate_new_eip", false)
 			}
-		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AlicloudRelatedCloudTypes) {
+		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
 			d.Set("allocate_new_eip", true)
 		}
 
@@ -519,7 +519,7 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
 			} else if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 				d.Set("peering_ha_zone", gwHaGw.GatewayZone)
-			} else if gwHaGw.CloudType == goaviatrix.ALICLOUD {
+			} else if gwHaGw.CloudType == goaviatrix.AliCloud {
 				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
 			}
 		}

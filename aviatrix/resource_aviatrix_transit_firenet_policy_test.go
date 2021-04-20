@@ -60,7 +60,7 @@ func TestAccAviatrixTransitFireNetPolicy_basic(t *testing.T) {
 
 	if skipAccAZURE != "yes" {
 		resourceName := "aviatrix_transit_firenet_policy.test"
-		msgCommonAZURE := ". Set 'SKIP_TRANSIT_FIRENET_POLICY_AZURE' to 'yes' to skip transit firenet policy tests in AZURE"
+		msgCommonAZURE := ". Set 'SKIP_TRANSIT_FIRENET_POLICY_AZURE' to 'yes' to skip transit firenet policy tests in Azure"
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
@@ -86,7 +86,7 @@ func TestAccAviatrixTransitFireNetPolicy_basic(t *testing.T) {
 			},
 		})
 	} else {
-		t.Log("Skipping transit firenet policy tests in AZURE as 'SKIP_TRANSIT_FIRENET_POLICY_AZURE' is set")
+		t.Log("Skipping transit firenet policy tests in Azure as 'SKIP_TRANSIT_FIRENET_POLICY_AZURE' is set")
 	}
 }
 

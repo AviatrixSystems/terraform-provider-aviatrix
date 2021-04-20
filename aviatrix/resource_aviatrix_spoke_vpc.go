@@ -69,7 +69,7 @@ func resourceAviatrixSpokeVpc() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "HA Subnet. Required if enabling HA for AWS/AZURE.",
+				Description: "HA Subnet. Required if enabling HA for AWS/Azure.",
 			},
 			"ha_zone": {
 				Type:        schema.TypeString,
@@ -134,7 +134,7 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		if gateway.VpcID == "" {
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a spoke gw")
 		}
-	} else if gateway.CloudType == goaviatrix.AZURE {
+	} else if gateway.CloudType == goaviatrix.Azure {
 		gateway.VNetNameResourceGroup = d.Get("vpc_id").(string)
 		if gateway.VNetNameResourceGroup == "" {
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a spoke gw")
@@ -143,13 +143,13 @@ func resourceAviatrixSpokeVpcCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("invalid cloud type, it can only be aws (1), gcp (4), azure (8)")
 	}
 
-	if gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.AZURE {
+	if gateway.CloudType == goaviatrix.AWS || gateway.CloudType == goaviatrix.Azure {
 		gateway.VpcRegion = d.Get("vpc_reg").(string)
 	} else if gateway.CloudType == goaviatrix.GCP {
 		// for gcp, rest api asks for "zone" rather than vpc region
 		gateway.Zone = d.Get("vpc_reg").(string)
 	} else {
-		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), or AZURE (8)")
+		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), or Azure (8)")
 	}
 
 	haZone := d.Get("ha_zone").(string)
@@ -296,7 +296,7 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 		} else if gw.CloudType == goaviatrix.GCP {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0]) //gcp vpc_id returns as <vpc_id>~-~<other vpc info> in rest api
 			d.Set("vpc_reg", gw.GatewayZone)                   //gcp vpc_reg returns as gateway_zone in json
-		} else if gw.CloudType == goaviatrix.AZURE {
+		} else if gw.CloudType == goaviatrix.Azure {
 			d.Set("vpc_id", gw.VpcID)
 			d.Set("vpc_reg", gw.VpcRegion)
 		}
@@ -360,7 +360,7 @@ func resourceAviatrixSpokeVpcRead(d *schema.ResourceData, meta interface{}) erro
 		}
 	} else {
 		log.Printf("[INFO] Spoke HA Gateway size: %s", haGw.GwSize)
-		if haGw.CloudType == goaviatrix.AWS || haGw.CloudType == goaviatrix.AZURE {
+		if haGw.CloudType == goaviatrix.AWS || haGw.CloudType == goaviatrix.Azure {
 			d.Set("ha_subnet", haGw.VpcNet)
 			d.Set("ha_zone", "")
 		} else if haGw.CloudType == goaviatrix.GCP {
@@ -490,7 +490,7 @@ func resourceAviatrixSpokeVpcUpdate(d *schema.ResourceData, meta interface{}) er
 		oldZone, newZone := d.GetChange("ha_zone")
 		deleteHaGw := false
 		changeHaGw := false
-		if spokeGw.CloudType == goaviatrix.AWS || spokeGw.CloudType == goaviatrix.AZURE {
+		if spokeGw.CloudType == goaviatrix.AWS || spokeGw.CloudType == goaviatrix.Azure {
 			spokeGw.HASubnet = d.Get("ha_subnet").(string)
 			if oldSubnet == "" && newSubnet != "" {
 				newHaGwEnabled = true

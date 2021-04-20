@@ -7,13 +7,13 @@ package goaviatrix
 const (
 	AWS        = 1
 	GCP        = 4
-	AZURE      = 8
+	Azure      = 8
 	OCI        = 16
-	AZUREGOV   = 32
-	AWSGOV     = 256
-	AWSCHINA   = 1024
-	AZURECHINA = 2048
-	ALICLOUD   = 8192
+	AzureGov   = 32
+	AWSGov     = 256
+	AWSChina   = 1024
+	AzureChina = 2048
+	AliCloud   = 8192
 )
 
 // Cloud vendor names
@@ -24,11 +24,11 @@ var (
 )
 
 const (
-	AWSRelatedCloudTypes      = AWS | AWSGOV | AWSCHINA
+	AWSRelatedCloudTypes      = AWS | AWSGov | AWSChina
 	GCPRelatedCloudTypes      = GCP
-	AzureArmRelatedCloudTypes = AZURE | AZURECHINA
+	AzureArmRelatedCloudTypes = Azure | AzureChina
 	OCIRelatedCloudTypes      = OCI
-	AlicloudRelatedCloudTypes = ALICLOUD
+	AliCloudRelatedCloudTypes = AliCloud
 )
 
 // GetSupportedClouds returns the list of currently supported cloud IDs
@@ -43,13 +43,13 @@ func GetSupportedClouds() []int {
 	return []int{
 		AWS,
 		GCP,
-		AZURE,
+		Azure,
 		OCI,
-		AZUREGOV,
-		AWSGOV,
-		AZURECHINA,
-		AWSCHINA,
-		ALICLOUD,
+		AzureGov,
+		AWSGov,
+		AzureChina,
+		AWSChina,
+		AliCloud,
 	}
 }
 
@@ -59,17 +59,17 @@ func VendorToCloudType(vendor string) int {
 	case "AWS":
 		return AWS
 	case "AWS GOV":
-		return AWSGOV
+		return AWSGov
 	case "AWS CHINA":
-		return AWSCHINA
+		return AWSChina
 	case "Gcloud":
 		return GCP
 	case "Azure ARM":
-		return AZURE
+		return Azure
 	case "ARM GOV":
-		return AZUREGOV
+		return AzureGov
 	case "ARM CHINA":
-		return AZURECHINA
+		return AzureChina
 	case "Oracle Cloud Infrastructure":
 		return OCI
 	default:

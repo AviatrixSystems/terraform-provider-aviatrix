@@ -122,7 +122,7 @@ func extractTags(d *schema.ResourceData, cloudType int) (map[string]string, erro
 		return nil, nil
 	}
 	if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-		return nil, fmt.Errorf("adding tags is only supported for AWS (1), GCP (4), AZURE (8), AWSGOV (256), AWSCHINA (1024) and AZURECHINA (2048)")
+		return nil, fmt.Errorf("adding tags is only supported for AWS (1), GCP (4), Azure (8), AWSGov (256), AWSChina (1024) and AzureChina (2048)")
 	}
 	tagsMap := tags.(map[string]interface{})
 	tagsStrMap := make(map[string]string, len(tagsMap))

@@ -69,7 +69,7 @@ func dataSourceAviatrixVpcTracker() *schema.Resource {
 						"cidr": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "VPC cidr, for example '10.0.0.1/24'. Set for AWS/AZURE only.",
+							Description: "VPC cidr, for example '10.0.0.1/24'. Set for AWS/Azure only.",
 						},
 						"instance_count": {
 							Type:        schema.TypeInt,

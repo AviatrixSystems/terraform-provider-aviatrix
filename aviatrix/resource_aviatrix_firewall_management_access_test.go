@@ -60,7 +60,7 @@ func TestAccAviatrixFirewallManagementAccess_basic(t *testing.T) {
 
 	if skipAccAZURE != "yes" {
 		resourceName := "aviatrix_firewall_management_access.test"
-		msgCommonAZURE := ". Set 'SKIP_FIREWALL_MANAGEMENT_ACCESS_AZURE' to 'yes' to skip firewall management access tests in AZURE"
+		msgCommonAZURE := ". Set 'SKIP_FIREWALL_MANAGEMENT_ACCESS_AZURE' to 'yes' to skip firewall management access tests in Azure"
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
@@ -86,7 +86,7 @@ func TestAccAviatrixFirewallManagementAccess_basic(t *testing.T) {
 			},
 		})
 	} else {
-		t.Log("Skipping transit firenet policy tests in AZURE as 'SKIP_TRANSIT_FIRENET_POLICY_AZURE' is set")
+		t.Log("Skipping transit firenet policy tests in Azure as 'SKIP_TRANSIT_FIRENET_POLICY_AZURE' is set")
 	}
 }
 

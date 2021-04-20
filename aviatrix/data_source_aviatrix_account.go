@@ -120,7 +120,7 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("azure_gov_subscription_id", acc.AzureGovSubscriptionId)
 	d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
 	d.Set("awsgov_access_key", acc.AwsgovAccessKey)
-	if acc.CloudType == goaviatrix.ALICLOUD {
+	if acc.CloudType == goaviatrix.AliCloud {
 		d.Set("alicloud_account_id", acc.AwsAccountNumber)
 	}
 

@@ -97,7 +97,7 @@ func TestAccAviatrixVpc_basic(t *testing.T) {
 	}
 
 	if skipAccAZURE != "yes" {
-		msgCommon := ". Set 'SKIP_VPC_AZURE' to 'yes' to skip VPC tests in AZURE"
+		msgCommon := ". Set 'SKIP_VPC_AZURE' to 'yes' to skip VPC tests in Azure"
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
@@ -125,7 +125,7 @@ func TestAccAviatrixVpc_basic(t *testing.T) {
 			},
 		})
 	} else {
-		t.Log("Skipping VPC tests in AZURE as 'SKIP_VPC_AZURE' is set")
+		t.Log("Skipping VPC tests in Azure as 'SKIP_VPC_AZURE' is set")
 	}
 }
 
