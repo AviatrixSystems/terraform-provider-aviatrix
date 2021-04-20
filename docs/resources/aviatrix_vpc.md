@@ -134,9 +134,9 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `vpc_id` - ID of the vpc to be created.
+* `vpc_id` - ID of the VPC to be created.
 * `azure_vnet_resource_id` - Azure vnet resource ID.
-* `route_tables` - List of route table ids associated with this VPC. Only populated for AWS, AWSGov and Azure vpc.  
+* `route_tables` - List of route table ids associated with this VPC. Only populated for AWS, AWSGov and Azure VPC.
 * `subnets` - List of subnet of the VPC to be created.
   * `cidr` - CIDR block.
   * `name` - Name of this subnet.
