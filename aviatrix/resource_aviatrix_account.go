@@ -332,7 +332,6 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		account.AwsChinaIam = "false"
 	}
 
-
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSChina) && (awsChinaIam || account.AwsChinaRoleApp != "" || account.AwsChinaRoleEc2 != "" || account.AwsChinaAccessKey != "" || account.AwsChinaSecretKey != "") {
 		return diag.Errorf("could not create Aviatrix Account: 'awschina_iam', 'awschina_role_app', 'awschina_role_ec2', 'awschina_access_key' and 'awschina_secret_key' can only be set when cloud_type is AWSChina (1024)")
 	}
