@@ -67,7 +67,7 @@ In addition to all arguments above, the following attributes are exported:
 * `peering_ha_insane_mode_az` - AZ of subnet being created for Insane Mode Peering HA Gateway. Required if insane_mode is set.
 * `peering_ha_private_ip` - Private IP address of HA gateway.
 * `peering_ha_public_ip` - Public IP address that you want assigned to the HA peering instance.
-* `peering_ha_subnet` - Public Subnet Information while creating Peering HA Gateway, only subnet is accepted. Required to create peering ha gateway if cloud_type = 1 or 8 (AWS or AZURE).
+* `peering_ha_subnet` - Public Subnet Information while creating Peering HA Gateway, only subnet is accepted. Required to create peering ha gateway if cloud_type = 1 or 8 (AWS or Azure).
 * `peering_ha_zone` - Zone information for creating Peering HA Gateway. Required to create peering ha gateway if cloud_type = 4 (GCP).
 * `private_ip` - Private IP address of the Gateway created.
 * `public_dns_server` - NS server used by the gateway.

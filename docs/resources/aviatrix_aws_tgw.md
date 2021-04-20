@@ -67,7 +67,7 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
 }
 ```
 ```hcl
-# Create an Aviatrix AWS GOV TGW
+# Create an Aviatrix AWSGov TGW
 resource "aviatrix_aws_tgw" "test_aws_gov_tgw" {
   account_name                      = "devops"
   cloud_type                        = 256
@@ -75,7 +75,7 @@ resource "aviatrix_aws_tgw" "test_aws_gov_tgw" {
   manage_vpc_attachment             = false
   manage_transit_gateway_attachment = false
   region                            = "us-gov-east-1"
-  tgw_name                          = "test-AWS-GOV-TGW"
+  tgw_name                          = "test-AWSGov-TGW"
 
   security_domains {
     connected_domains    = [
@@ -160,7 +160,7 @@ The following arguments are supported:
 !> **WARNING:** Attribute `attached_aviatrix_transit_gateway` has been deprecated as of provider version R2.18.1+ and will not receive further updates. Please set `manage_transit_gateway_attachment` to false, and use the standalone `aviatrix_aws_tgw_transit_gateway_attachment` resource instead.
 
 * `attached_aviatrix_transit_gateway` - (Optional) A list of names of Aviatrix Transit Gateway(s) (transit VPCs) to attach to the Aviatrix_Edge_Domain.
-* `cloud_type` - (Optional) Type of cloud service provider, requires an integer value. Supported for AWS (1) and AWS GOV (256). Default value: 1.
+* `cloud_type` - (Optional) Type of cloud service provider, requires an integer value. Supported for AWS (1) and AWSGov (256). Default value: 1.
 * `manage_security_domain` - (Optional) This parameter is a switch used to determine whether or not to manage security domains using the **aviatrix_aws_tgw** resource. If this is set to false, creation and management of security domains must be done using the **aviatrix_aws_tgw_security_domain** resource. Valid values: true, false. Default value: true.
 
 -> **NOTE:** `manage_security_domain` - If you are using/upgraded to Aviatrix Terraform Provider R2.19+, and an **aviatrix_aws_tgw** resource was originally created with a provider version <R2.19, you must do 'terraform refresh' to update and apply the attribute's default value (true) into the state file.

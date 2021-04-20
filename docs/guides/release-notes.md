@@ -49,7 +49,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 6. Implemented support for IKEv2 for route-based Site2Cloud connections in **aviatrix_site2cloud**
 7. Implemented support for ``metrics_only`` option in **aviatrix_datadog_agent**
 8. Implemented support for building OOB Transit/Spoke gateway and HA in different AZs/Subnets
-9. Implemented support for controller backup for AWSGOV, Azure, GCP and OCI providers
+9. Implemented support for controller backup for AWSGov, Azure, GCP and OCI providers
 10. Implemented support for attribute ``route_tables`` in **aviatrix_vpc** resource and data source
 11. Implemented support for Management Access from on-prem in **aviatrix_site2cloud**
 12. Implemented support for Enable Transit Summarize CIDR to TGW in **aviatrix_transit_gateway** using ``enable_transit_summarize_cidr_to_tgw``
@@ -301,7 +301,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 ### Features:
 1. Implemented support for allowing multiple **aviatrix_transit_gateway** attachments to **aviatrix_spoke_gateway**
 2. Implemented support for Dual Transit FireNet through new attribute ``enable_egress_transit_firenet`` in **aviatrix_transit_gateway**
-3. Implemented support for AWSGOV cloud in the following resources:
+3. Implemented support for AWSGov cloud in the following resources:
   - **aviatrix_vpc**
   - **aviatrix_gateway**
   - **aviatrix_spoke_gateway**

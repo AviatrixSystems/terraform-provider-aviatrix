@@ -27,8 +27,8 @@ data "aviatrix_vpc_tracker" "foo" {
 The following arguments are supported:
 
 * `cloud_type` - (Optional) Filters VPC list by cloud provider id. For example, cloud_type = 1 will give all AWS VPCs.
-* `cidr` - (Optional) Filters VPC list by CIDR (AWS/AZURE only).
-* `region` - (Optional) Filters VPC list by region (AWS/AZURE only).
+* `cidr` - (Optional) Filters VPC list by CIDR (AWS/Azure only).
+* `region` - (Optional) Filters VPC list by region (AWS/Azure only).
 * `account_name` - (Optional) Filters VPC list by access account name.
 
 ## Attribute Reference
@@ -39,9 +39,9 @@ In addition to all arguments above, the following attributes are exported:
   * `cloud_type` - Cloud provider id hosting this VPC.
   * `vpc_id` - VPC id.
   * `account_name` - Aviatrix access account associated with the VPC.
-  * `region` - VPC region (AWS/AZURE only).
+  * `region` - VPC region (AWS/Azure only).
   * `name` - VPC name.
-  * `cidr` - VPC CIDR (AWS/AZURE only).
+  * `cidr` - VPC CIDR (AWS/Azure only).
   * `instance_count` - Number of running instances in the VPC.
   * `subnets` - List of subnets within this VPC (GCP only).
     * `region` - Subnet region.
