@@ -68,7 +68,7 @@ resource "aviatrix_account" "temp_acc_oci" {
 }
 ```
 ```hcl
-# Create an Aviatrix Azure Gov Account
+# Create an Aviatrix AzureGov Account
 resource "aviatrix_account" "temp_acc_azure_gov" {
   account_name              = "username"
   cloud_type                = 32
@@ -106,7 +106,7 @@ The following arguments are supported:
 
 ### Required
 * `account_name` - (Required) Account name. This can be used for logging in to CloudN console or UserConnect controller.
-* `cloud_type` - (Required) Type of cloud service provider. Only AWS, GCP, AZURE, OCI, and AWS Gov are supported currently. Enter 1 for AWS, 4 for GCP, 8 for AZURE, 16 for OCI, 32 for Azure Gov, 256 for AWS Gov.
+* `cloud_type` - (Required) Type of cloud service provider. Only AWS, GCP, Azure, OCI, and AWSGov are supported currently. Enter 1 for AWS, 4 for GCP, 8 for Azure, 16 for OCI, 32 for AzureGov, 256 for AWSGov.
 
 ### AWS
 * `aws_account_number` - (Optional) AWS Account number to associate with Aviatrix account. Required when creating an account for AWS.
@@ -134,16 +134,16 @@ The following arguments are supported:
 * `oci_compartment_id` - (Optional) Oracle OCI Compartment ID. Required when creating an account for OCI.
 * `oci_api_private_key_filepath` - (Optional) Oracle OCI API Private Key local file path. Required when creating an account for OCI.
 
-### Azure Gov Cloud
-* `azure_gov_subscription_id` - (Optional) Azure Gov ARM Subscription ID. Required when creating an account for Azure Gov. Available as of provider version R2.19+.
-* `azure_gov_directory_id` - (Optional) Azure Gov ARM Directory ID. Required when creating an account for Azure Gov. Available as of provider version R2.19+.
-* `azure_gov_application_id` - (Optional) Azure Gov ARM Application ID. Required when creating an account for Azure Gov. Available as of provider version R2.19+.
-* `azure_gov_application_key` - (Optional) Azure Gov ARM Application key. Required when creating an account for Azure Gov. Available as of provider version R2.19+.
+### AzureGov Cloud
+* `azure_gov_subscription_id` - (Optional) AzureGov ARM Subscription ID. Required when creating an account for AzureGov. Available as of provider version R2.19+.
+* `azure_gov_directory_id` - (Optional) AzureGov ARM Directory ID. Required when creating an account for AzureGov. Available as of provider version R2.19+.
+* `azure_gov_application_id` - (Optional) AzureGov ARM Application ID. Required when creating an account for AzureGov. Available as of provider version R2.19+.
+* `azure_gov_application_key` - (Optional) AzureGov ARM Application key. Required when creating an account for AzureGov. Available as of provider version R2.19+.
 
-### AWS GovCloud
-* `awsgov_account_number` - (Optional) AWS Gov Account number to associate with Aviatrix account. Required when creating an account for AWS Gov.
-* `awsgov_access_key` - (Optional) AWS Access Key. Required when creating an account for AWS Gov.
-* `awsgov_secret_key` - (Optional) AWS Secret Key. Required when creating an account for AWS Gov.
+### AWSGov Cloud
+* `awsgov_account_number` - (Optional) AWSGov Account number to associate with Aviatrix account. Required when creating an account for AWSGov.
+* `awsgov_access_key` - (Optional) AWS Access Key. Required when creating an account for AWSGov.
+* `awsgov_secret_key` - (Optional) AWS Secret Key. Required when creating an account for AWSGov.
 
 ### Alibaba Cloud
 * `alicloud_account_id` - (Optional) Alibaba Cloud Account number to associate with Aviatrix account. Required when creating an account for Alibaba Cloud.

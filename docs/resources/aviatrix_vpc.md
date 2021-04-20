@@ -104,10 +104,10 @@ resource "aviatrix_vpc" "azure_china_vnet" {
 The following arguments are supported:
 
 ### Required
-* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), AZURE(8), OCI(16), AWSGov(256), AWSChina(1024) and AzureChina(2048) are supported.
+* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), Azure(8), OCI(16), AWSGov(256), AWSChina(1024) and AzureChina(2048) are supported.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `name` - (Required) Name of the VPC to be created.
-* `region` - (Optional) Region of cloud provider. **Required to be empty for GCP provider, and non-empty for other providers.** Example: AWS: "us-east-1", AZURE: "East US 2", OCI: "us-ashburn-1", AWSGov: "us-gov-east-1", AWSChina: "cn-north-1", AzureChina: "China North".
+* `region` - (Optional) Region of cloud provider. **Required to be empty for GCP provider, and non-empty for other providers.** Example: AWS: "us-east-1", Azure: "East US 2", OCI: "us-ashburn-1", AWSGov: "us-gov-east-1", AWSChina: "cn-north-1", AzureChina: "China North".
 * `cidr` - (Optional) VPC CIDR. **Required to be empty for GCP provider, and non-empty for other providers.** Example: "10.11.0.0/24".
 
 ### Google Cloud
@@ -134,9 +134,9 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `vpc_id` - ID of the vpc to be created.
+* `vpc_id` - ID of the VPC to be created.
 * `azure_vnet_resource_id` - Azure vnet resource ID.
-* `route_tables` - List of route table ids associated with this VPC. Only populated for AWS, AWSGOV and Azure vpc.  
+* `route_tables` - List of route table ids associated with this VPC. Only populated for AWS, AWSGov and Azure VPC.
 * `subnets` - List of subnet of the VPC to be created.
   * `cidr` - CIDR block.
   * `name` - Name of this subnet.
