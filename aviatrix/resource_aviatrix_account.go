@@ -198,14 +198,14 @@ func resourceAviatrixAccount() *schema.Resource {
 			"awschina_access_key": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"awschina_role_app", "awschina_role_ec2", "awschina_iam"},
+				ConflictsWith: []string{"awschina_role_app", "awschina_role_ec2"},
 				Description:   "AWS China Access Key.",
 			},
 			"awschina_secret_key": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
-				ConflictsWith: []string{"awschina_role_app", "awschina_role_ec2", "awschina_iam"},
+				ConflictsWith: []string{"awschina_role_app", "awschina_role_ec2"},
 				Description:   "AWS China Secret Key.",
 			},
 			"azurechina_subscription_id": {

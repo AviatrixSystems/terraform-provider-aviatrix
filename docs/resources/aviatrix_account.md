@@ -105,6 +105,7 @@ resource "aviatrix_account" "temp_acc_awschina" {
   account_name             = "username"
   cloud_type               = 1024
   awschina_account_number  = "123456789012"
+  awschina_iam             = false
   awschina_access_key      = "ABCDEFGHIJKL"
   awschina_secret_key      = "ABCDEFGHIJKLabcdefghijkl"
 }
@@ -138,7 +139,7 @@ The following arguments are supported:
 
 ### Required
 * `account_name` - (Required) Account name. This can be used for logging in to CloudN console or UserConnect controller.
-* `cloud_type` - (Required) Type of cloud service provider. Only AWS, GCP, Azure, OCI, AzureGov, AWSGov, AWSChina and AzureChina are supported currently. Enter 1 for AWS, 4 for GCP, 8 for Azure, 16 for OCI, 32 for AzureGov, 256 for AWSGov, 1024 for AWSChina or 208 for AzureChina.
+* `cloud_type` - (Required) Type of cloud service provider. Only AWS, GCP, Azure, OCI, AzureGov, AWSGov, AWSChina and AzureChina are supported currently. Enter 1 for AWS, 4 for GCP, 8 for Azure, 16 for OCI, 32 for AzureGov, 256 for AWSGov, 1024 for AWSChina or 2048 for AzureChina.
 
 ### AWS
 * `aws_account_number` - (Optional) AWS Account number to associate with Aviatrix account. Required when creating an account for AWS.
