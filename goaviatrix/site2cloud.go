@@ -77,6 +77,7 @@ type Site2Cloud struct {
 	RemoteTunnelIp                string `form:"remote_tunnel_ip,omitempty"`
 	BackupLocalTunnelIp           string `form:"backup_local_tunnel_ip,omitempty"`
 	BackupRemoteTunnelIp          string `form:"backup_remote_tunnel_ip,omitempty"`
+	EnableSingleIpHA              bool
 }
 
 type EditSite2Cloud struct {
@@ -149,6 +150,7 @@ type EditSite2CloudConnDetail struct {
 	LocalDestinationVirtualCIDRs  string        `json:"local_dst_virt_cidrs"`
 	ManualBGPCidrs                []string      `json:"conn_bgp_manual_advertise_cidrs"`
 	EventTriggeredHA              string        `json:"event_triggered_ha"`
+	EnableSingleIpHA              string        `json:"single_ip_ha,omitempty"`
 }
 
 type Site2CloudConnDetailResp struct {
@@ -258,6 +260,9 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 	addSite2cloud.Add("remote_tunnel_ip", site2cloud.RemoteTunnelIp)
 	addSite2cloud.Add("backup_local_tunnel_ip", site2cloud.BackupLocalTunnelIp)
 	addSite2cloud.Add("backup_remote_tunnel_ip", site2cloud.BackupRemoteTunnelIp)
+	if site2cloud.EnableSingleIpHA {
+		addSite2cloud.Add("enable_single_ip_ha", "true")
+	}
 
 	Url.RawQuery = addSite2cloud.Encode()
 	resp, err := c.Get(Url.String(), nil)
@@ -429,13 +434,13 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 		site2cloud.LocalSourceVirtualCIDRs = s2cConnDetail.LocalSourceVirtualCIDRs
 		site2cloud.LocalDestinationRealCIDRs = s2cConnDetail.LocalDestinationRealCIDRs
 		site2cloud.LocalDestinationVirtualCIDRs = s2cConnDetail.LocalDestinationVirtualCIDRs
-
 		site2cloud.LocalTunnelIp = s2cConnDetail.BgpLocalIP
 		site2cloud.RemoteTunnelIp = s2cConnDetail.BgpRemoteIP
 		if site2cloud.HAEnabled == "enabled" {
 			site2cloud.BackupLocalTunnelIp = s2cConnDetail.BgpBackupLocalIP
 			site2cloud.BackupRemoteTunnelIp = s2cConnDetail.BgpBackupRemoteIP
 		}
+		site2cloud.EnableSingleIpHA = s2cConnDetail.EnableSingleIpHA == "enabled"
 		return site2cloud, nil
 	}
 
