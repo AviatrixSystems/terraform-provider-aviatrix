@@ -161,18 +161,6 @@ func resourceAviatrixAccount() *schema.Resource {
 				Sensitive:   true,
 				Description: "Azure Gov Application Key.",
 			},
-			"aws_role_app": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "AWS App role ARN.",
-			},
-			"aws_role_ec2": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "AWS EC2 role ARN.",
-			},
 			"alicloud_account_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -206,18 +194,6 @@ func resourceAviatrixAccount() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "AWS China IAM-role based flag.",
-			},
-			"awschina_role_app": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "AWS China App Role ARN.",
-			},
-			"awschina_role_ec2": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "AWS China EC2 Role ARN.",
 			},
 			"awschina_access_key": {
 				Type:          schema.TypeString,
@@ -254,6 +230,30 @@ func resourceAviatrixAccount() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				Description: "Azure China Application Key.",
+			},
+			"aws_role_app": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "AWS App role ARN.",
+			},
+			"aws_role_ec2": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "AWS EC2 role ARN.",
+			},
+			"awschina_role_app": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "AWS China App Role ARN.",
+			},
+			"awschina_role_ec2": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "AWS China EC2 Role ARN.",
 			},
 		},
 	}
