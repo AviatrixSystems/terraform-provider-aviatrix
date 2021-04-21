@@ -53,7 +53,7 @@ func resourceAviatrixFirewallInstanceAssociation() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Default:     "",
-				Description: "Firewall instance name, or FQDN Gateway's gw_name, required if it is a AWS or AZURE firewall instance. Not allowed for GCP",
+				Description: "Firewall instance name, or FQDN Gateway's gw_name, required if it is a AWS or Azure firewall instance. Not allowed for GCP",
 			},
 			"lan_interface": {
 				Type:        schema.TypeString,

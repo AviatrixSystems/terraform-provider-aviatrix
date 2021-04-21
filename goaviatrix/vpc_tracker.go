@@ -106,9 +106,9 @@ func vendorNameToCloudType(v string) int {
 	vendorToCloud := map[string]int{
 		"CLOUD_AWS":     AWS,
 		"CLOUD_GOOGLE":  GCP,
-		"CLOUD_AZURE":   AZURE,
+		"CLOUD_AZURE":   Azure,
 		"CLOUD_ORACLE":  OCI,
-		"CLOUD_AWS_GOV": AWSGOV,
+		"CLOUD_AWS_GOV": AWSGov,
 	}
 	ct, ok := vendorToCloud[v]
 	if !ok {

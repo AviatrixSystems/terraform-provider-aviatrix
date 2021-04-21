@@ -76,7 +76,7 @@ func resourceAviatrixControllerConfig() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "Bucket name. Required for AWS, AWSGOV, GCP and OCI.",
+				Description: "Bucket name. Required for AWS, AWSGov, GCP and OCI.",
 			},
 			"backup_storage_name": {
 				Type:        schema.TypeString,
@@ -697,15 +697,15 @@ func validateBackupConfig(d *schema.ResourceData) error {
 	}
 
 	switch backupCloudType {
-	case goaviatrix.AWS, goaviatrix.AWSGOV, goaviatrix.GCP:
+	case goaviatrix.AWS, goaviatrix.AWSGov, goaviatrix.GCP:
 		if backupBucketName == "" {
-			return fmt.Errorf("please specify 'backup_bucket_name' to enable backup configuration for AWS, AWSGOV and GCP")
+			return fmt.Errorf("please specify 'backup_bucket_name' to enable backup configuration for AWS, AWSGov and GCP")
 		}
 		if backupStorageName != "" || backupContainerName != "" || backupRegion != "" {
 			return fmt.Errorf("'backup_storage_name', 'backup_container_name' and 'backup_region'" +
-				" should be empty for AWS, AWSGOV and GCP")
+				" should be empty for AWS, AWSGov and GCP")
 		}
-	case goaviatrix.AZURE:
+	case goaviatrix.Azure:
 		if backupStorageName == "" || backupContainerName == "" || backupRegion == "" {
 			return fmt.Errorf("please specify 'backup_storage_name', 'backup_container_name' and" +
 				" 'backup_region' to enable backup configuration for Azure")

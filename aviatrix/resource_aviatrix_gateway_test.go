@@ -246,7 +246,7 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 		azureSubnet := os.Getenv("AZURE_SUBNET")
 		azureGwSize := os.Getenv("AZURE_GW_SIZE")
 		resourceNameAzure := "aviatrix_gateway.test_gw_azure"
-		msgCommonAzure := ". Set SKIP_GATEWAY_AZURE to yes to skip AZURE Gateway tests"
+		msgCommonAzure := ". Set SKIP_GATEWAY_AZURE to yes to skip Azure Gateway tests"
 
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
@@ -318,13 +318,13 @@ func TestAccAviatrixGateway_basic(t *testing.T) {
 	}
 
 	if skipAWSGOV == "yes" {
-		t.Log("Skipping AWSGOV Gateway test as SKIP_GATEWAY_AWSGOV is set")
+		t.Log("Skipping AWSGov Gateway test as SKIP_GATEWAY_AWSGOV is set")
 	} else {
 		awsgovVpcId := os.Getenv("AWSGOV_VPC_ID")
 		awsgovRegion := os.Getenv("AWSGOV_REGION")
 		awsgovVpcNet := os.Getenv("AWSGOV_SUBNET")
 		resourceNameAwsgov := "aviatrix_gateway.test_gw_awsgov"
-		msgCommonAwsgov := ". Set SKIP_GATEWAY_AWSGOV to yes to skip AWSGOV Gateway tests"
+		msgCommonAwsgov := ". Set SKIP_GATEWAY_AWSGOV to yes to skip AWSGov Gateway tests"
 
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {

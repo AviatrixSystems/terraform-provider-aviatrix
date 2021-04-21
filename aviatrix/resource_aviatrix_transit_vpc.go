@@ -145,7 +145,7 @@ func resourceAviatrixTransitVpcCreate(d *schema.ResourceData, meta interface{}) 
 		if gateway.VpcID == "" {
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a transit gw for aws vpc")
 		}
-	} else if cloudType == goaviatrix.AZURE {
+	} else if cloudType == goaviatrix.Azure {
 		gateway.VNetNameResourceGroup = d.Get("vpc_id").(string)
 		if gateway.VNetNameResourceGroup == "" {
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a transit gw for azure vnet")
@@ -344,7 +344,7 @@ func resourceAviatrixTransitVpcRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("subnet", gw.VpcNet)
 		if gw.CloudType == goaviatrix.AWS {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
-		} else if gw.CloudType == goaviatrix.AZURE {
+		} else if gw.CloudType == goaviatrix.Azure {
 			d.Set("vpc_id", gw.VpcID)
 		}
 		d.Set("vpc_reg", gw.VpcRegion)

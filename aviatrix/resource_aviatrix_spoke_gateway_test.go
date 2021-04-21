@@ -122,7 +122,7 @@ func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 	}
 
 	if skipAZURE == "yes" {
-		t.Log("Skipping AZURE Spoke Gateway test as SKIP_SPOKE_GATEWAY_AZURE is set")
+		t.Log("Skipping Azure Spoke Gateway test as SKIP_SPOKE_GATEWAY_AZURE is set")
 	} else {
 		importStateVerifyIgnore = append(importStateVerifyIgnore, "vpc_id")
 		resource.Test(t, resource.TestCase{

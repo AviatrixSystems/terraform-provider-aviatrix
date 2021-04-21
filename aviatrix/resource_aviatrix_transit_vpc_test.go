@@ -65,7 +65,7 @@ func TestAccAviatrixTransitGw_basic(t *testing.T) {
 	if skipGwAzure != "yes" {
 		resourceNameAzure := "aviatrix_transit_vpc.test_transit_vpc_azure"
 
-		msgCommonAzure := ". Set SKIP_TRANSIT_AZURE to yes to skip Transit Gateway tests in AZURE"
+		msgCommonAzure := ". Set SKIP_TRANSIT_AZURE to yes to skip Transit Gateway tests in Azure"
 		preGatewayCheckAZURE(t, msgCommonAzure)
 
 		resource.Test(t, resource.TestCase{

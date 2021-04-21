@@ -114,7 +114,7 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				ForceNew:    true,
-				Description: "Availability Zone. Only available for AWS, GCP and AZURE.",
+				Description: "Availability Zone. Only available for AWS, GCP and Azure.",
 			},
 			"iam_role": {
 				Type:        schema.TypeString,
@@ -332,8 +332,8 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 	}
 
 	zone := d.Get("zone").(string)
-	if zone != "" && cloudType != 0 && !intInSlice(cloudType, []int{goaviatrix.AZURE, goaviatrix.AWS, goaviatrix.GCP}) {
-		return fmt.Errorf("'zone' attribute is only valid for AWS, GCP or AZURE")
+	if zone != "" && cloudType != 0 && !intInSlice(cloudType, []int{goaviatrix.Azure, goaviatrix.AWS, goaviatrix.GCP}) {
+		return fmt.Errorf("'zone' attribute is only valid for AWS, GCP or Azure")
 	}
 	if zone != "" {
 		firewallInstance.AvailabilityZone = zone
@@ -363,7 +363,7 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 	}
 
 	if firewallInstance.Username != "" || firewallInstance.Password != "" || firewallInstance.SshPublicKey != "" {
-		if cloudType != 0 && cloudType != goaviatrix.AZURE {
+		if cloudType != 0 && cloudType != goaviatrix.Azure {
 			return fmt.Errorf("'username' and 'password' or 'ssh_public_key' are only supported for Azure")
 		}
 	}
@@ -379,22 +379,22 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("advanced option of 'user_data' is only supported for Check Point Series and Fortinet FortiGate Series, not for %s", firewallInstance.FirewallImage)
 	}
 	if firewallInstance.StorageAccessKey != "" || firewallInstance.FileShareFolder != "" || firewallInstance.ShareDirectory != "" {
-		if !strings.HasPrefix(firewallInstance.FirewallImage, "Palo Alto Networks") || (cloudType != 0 && cloudType != goaviatrix.AZURE) {
+		if !strings.HasPrefix(firewallInstance.FirewallImage, "Palo Alto Networks") || (cloudType != 0 && cloudType != goaviatrix.Azure) {
 			return fmt.Errorf("advanced options of 'storage_access_key', 'file_share_folder' and 'share_directory' are only supported for Azure and Palo Alto Networks VM-Series")
 		}
 	}
 	if firewallInstance.ContainerFolder != "" || firewallInstance.SasUrlConfig != "" || firewallInstance.SasUriLicense != "" {
-		if !strings.HasPrefix(firewallInstance.FirewallImage, "Fortinet FortiGate") || (cloudType != 0 && cloudType != goaviatrix.AZURE) {
+		if !strings.HasPrefix(firewallInstance.FirewallImage, "Fortinet FortiGate") || (cloudType != 0 && cloudType != goaviatrix.Azure) {
 			return fmt.Errorf("advanced options of 'container_folder', 'sas_url_config' and 'sas_url_license' are only supported for Azure and Fortinet FortiGate series")
 		}
 	}
 	if firewallInstance.BootstrapStorageName != "" {
-		if strings.HasPrefix(firewallInstance.FirewallImage, "Check Point CloudGuard") || (cloudType != 0 && cloudType != goaviatrix.AZURE) {
+		if strings.HasPrefix(firewallInstance.FirewallImage, "Check Point CloudGuard") || (cloudType != 0 && cloudType != goaviatrix.Azure) {
 			return fmt.Errorf("advanced option of 'bootstrap_storage_name' is only supported for Azure and Palo Alto Networks VM-Series/Fortinet FortiGate series")
 		}
 	}
 	if firewallInstance.SicKey != "" {
-		if !strings.HasPrefix(firewallInstance.FirewallImage, "Check Point CloudGuard") || (cloudType != 0 && cloudType != goaviatrix.AZURE) {
+		if !strings.HasPrefix(firewallInstance.FirewallImage, "Check Point CloudGuard") || (cloudType != 0 && cloudType != goaviatrix.Azure) {
 			return fmt.Errorf("advanced option of 'bootstrap_storage_name' is only supported for Azure and Check Point Series")
 		}
 	}
@@ -477,9 +477,9 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	}
 
 	if fI.AvailabilityZone != "" {
-		if cloudType == goaviatrix.AZURE && fI.AvailabilityZone != "AvailabilitySet" {
+		if cloudType == goaviatrix.Azure && fI.AvailabilityZone != "AvailabilitySet" {
 			d.Set("zone", "az-"+fI.AvailabilityZone)
-		} else if (cloudType == goaviatrix.AWS || cloudType == goaviatrix.AWSGOV && fI.GwName == "") || cloudType == goaviatrix.GCP {
+		} else if (cloudType == goaviatrix.AWS || cloudType == goaviatrix.AWSGov && fI.GwName == "") || cloudType == goaviatrix.GCP {
 			d.Set("zone", fI.AvailabilityZone)
 		}
 	}

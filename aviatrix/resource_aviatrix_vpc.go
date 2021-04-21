@@ -59,7 +59,7 @@ func resourceAviatrixVpc() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Default:     false,
-				Description: "Switch to enable private oob subnet. Only supported for AWS/AWSGOV provider. Valid values: true, false. Default value: false.",
+				Description: "Switch to enable private oob subnet. Only supported for AWS/AWSGov provider. Valid values: true, false. Default value: false.",
 			},
 			"subnet_size": {
 				Type:        schema.TypeInt,
@@ -231,29 +231,29 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	if vpc.SubnetSize != 0 && vpc.NumOfSubnetPairs != 0 {
 		if !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-			return fmt.Errorf("advanced option('subnet_size' and 'num_of_subnet_pairs') is only supported by AWS (1), Azure (8), AWSGOV (256), AWSCHINA (1024) and AZURECHINA (2048)")
+			return fmt.Errorf("advanced option('subnet_size' and 'num_of_subnet_pairs') is only supported by AWS (1), Azure (8), AWSGov (256), AWSChina (1024) and AzureChina (2048)")
 		}
 	} else if vpc.SubnetSize != 0 || vpc.NumOfSubnetPairs != 0 {
 		if goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			return fmt.Errorf("please specify both 'subnet_size' and 'num_of_subnet_pairs' to enable advanced options")
 		} else {
-			return fmt.Errorf("advanced option('subnet_size' and 'num_of_subnet_pairs') is only supported by AWS (1), Azure (8), AWSGOV (256), AWSCHINA (1024) and AZURECHINA (2048)")
+			return fmt.Errorf("advanced option('subnet_size' and 'num_of_subnet_pairs') is only supported by AWS (1), Azure (8), AWSGov (256), AWSChina (1024) and AzureChina (2048)")
 		}
 	}
 	if vpc.EnablePrivateOobSubnet {
 		if !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-			return fmt.Errorf("advanced option('enable_private_oob_subnet') is only supported by AWS (1), AWSGOV (256), and AWSCHINA (1024)")
+			return fmt.Errorf("advanced option('enable_private_oob_subnet') is only supported by AWS (1), AWSGov (256), and AWSChina (1024)")
 		}
 	}
 
 	aviatrixTransitVpc := d.Get("aviatrix_transit_vpc").(bool)
 	aviatrixFireNetVpc := d.Get("aviatrix_firenet_vpc").(bool)
 
-	if aviatrixTransitVpc && !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AlicloudRelatedCloudTypes) {
-		return fmt.Errorf("currently 'aviatrix_transit_vpc' is only supported by AWS (1), AWSGOV (256), AWSCHINA (1024) and Alibaba Cloud (8192)")
+	if aviatrixTransitVpc && !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
+		return fmt.Errorf("currently 'aviatrix_transit_vpc' is only supported by AWS (1), AWSGov (256), AWSChina (1024) and Alibaba Cloud (8192)")
 	}
 	if aviatrixFireNetVpc && !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
-		return fmt.Errorf("currently'aviatrix_firenet_vpc' is only supported by AWS (1), Azure (8), OCI (16), AWSGOV (256), AWSCHINA (1024) and AZURECHINA (2048)")
+		return fmt.Errorf("currently'aviatrix_firenet_vpc' is only supported by AWS (1), Azure (8), OCI (16), AWSGov (256), AWSChina (1024) and AzureChina (2048)")
 	}
 	if aviatrixTransitVpc && aviatrixFireNetVpc {
 		return fmt.Errorf("vpc cannot be aviatrix transit vpc and aviatrix firenet vpc at the same time")
@@ -296,7 +296,7 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if resourceGroup, ok := d.GetOk("resource_group"); ok {
-		if vpc.CloudType != goaviatrix.AZURE {
+		if vpc.CloudType != goaviatrix.Azure {
 			return fmt.Errorf("error creating vpc: resource_group is required to be empty for providers other than Azure")
 		}
 		vpc.ResourceGroup = resourceGroup.(string)
