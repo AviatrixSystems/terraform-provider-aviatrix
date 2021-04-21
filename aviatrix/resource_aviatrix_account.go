@@ -528,7 +528,7 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 			d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
 			d.Set("awsgov_access_key", acc.AwsgovAccessKey)
 		} else if acc.CloudType == goaviatrix.AzureGov {
-			d.Set("azure_gov_subscription_id", acc.AzuregovSubscriptionId)
+			d.Set("azuregov_subscription_id", acc.AzuregovSubscriptionId)
 		} else if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AWSChina) {
 			d.Set("awschina_account_number", acc.AwsChinaAccountNumber)
 			d.Set("awschina_role_app", acc.AwsChinaRoleApp)

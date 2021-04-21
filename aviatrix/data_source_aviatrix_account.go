@@ -63,7 +63,7 @@ func dataSourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "Azure Subscription ID.",
 			},
-			"azure_gov_subscription_id": {
+			"azuregov_subscription_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Azure Gov Subscription ID.",

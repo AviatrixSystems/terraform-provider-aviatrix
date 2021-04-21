@@ -48,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 * `gcloud_project_id` - GCloud Project ID.
 
 ### AzureGov Cloud
-* `azure_gov_subscription_id` - AzureGov ARM Subscription ID.
+* `azuregov_subscription_id` - AzureGov ARM Subscription ID.
 
 ### AWSGov Cloud
 * `awsgov_account_number` - AWSGov Account number.
