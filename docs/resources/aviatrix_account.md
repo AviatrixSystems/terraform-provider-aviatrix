@@ -105,7 +105,6 @@ resource "aviatrix_account" "temp_acc_awschina" {
   account_name             = "username"
   cloud_type               = 1024
   awschina_account_number  = "123456789012"
-  awschina_iam             = false
   awschina_access_key      = "ABCDEFGHIJKL"
   awschina_secret_key      = "ABCDEFGHIJKLabcdefghijkl"
 }

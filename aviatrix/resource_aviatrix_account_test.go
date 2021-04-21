@@ -517,10 +517,10 @@ func testAccAccountConfigAWSGOV(rInt int) string {
 func testAccAccountConfigAWSCHINAIAM(rInt int) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "awschinaiam" {
-	account_name				= "tfa-awschinaiam-%d"
-	cloud_type					= 1024
-	awschina_account_number 	= "%s"
-	awschina_iam				= true
+	account_name            = "tfa-awschinaiam-%d"
+	cloud_type              = 1024
+	awschina_account_number = "%s"
+	awschina_iam            = true
 }
 	`, rInt, os.Getenv("AWSCHINA_IAM_ACCOUNT_NUMBER"))
 }
@@ -528,11 +528,11 @@ resource "aviatrix_account" "awschinaiam" {
 func testAccAccountConfigAWSCHINA(rInt int) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "awschina" {
-	account_name				= "tfa-awschina-%d"
-	cloud_type					= 1024
-	awschina_account_number 	= "%s"
-	awschina_access_key		    = "%s"
-	awschina_secret_key		    = "%s"
+	account_name                = "tfa-awschina-%d"
+	cloud_type                  = 1024
+	awschina_account_number     = "%s"
+	awschina_access_key         = "%s"
+	awschina_secret_key         = "%s"
 }
 	`, rInt, os.Getenv("AWSCHINA_ACCOUNT_NUMBER"), os.Getenv("AWSCHINA_ACCESS_KEY"), os.Getenv("AWSCHINA_SECRET_KEY"))
 }
@@ -541,7 +541,7 @@ func testAccAccountConfigAZURECHINA(rInt int) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "azurechina" {
 	account_name                = "tfa-azurechina-%d"
-	cloud_type             	    = 2048
+	cloud_type                  = 2048
 	azurechina_subscription_id  = "%s"
 	azurechina_directory_id     = "%s"
 	azurechina_application_id   = "%s"
