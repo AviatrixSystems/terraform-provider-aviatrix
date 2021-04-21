@@ -126,7 +126,7 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Advanced option. Bootstrap bucket name. Only available for AWS.",
+				Description: "Advanced option. Bootstrap bucket name. Only available for AWS and GCP.",
 			},
 			"bootstrap_storage_name": {
 				Type:     schema.TypeString,
@@ -370,9 +370,9 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 	if firewallInstance.Password != "" && firewallInstance.SshPublicKey != "" {
 		return fmt.Errorf("anthentication method can be either a password or an SSH public key. Please specify one of them and set the other one to empty")
 	}
-	if firewallInstance.IamRole != "" || firewallInstance.BootstrapBucketName != "" {
+	if firewallInstance.IamRole != "" {
 		if cloudType != 0 && cloudType != goaviatrix.AWS {
-			return fmt.Errorf("advanced options of 'iam_role' and 'bootstrap_bucket_name' are only supported for AWS provider, please set them to empty")
+			return fmt.Errorf("advanced option 'iam_role' is only supported for AWS provider, please set to empty")
 		}
 	}
 	if firewallInstance.UserData != "" && strings.HasPrefix(firewallInstance.FirewallImage, "Palo Alto Networks") {
@@ -394,8 +394,8 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		}
 	}
 	if firewallInstance.SicKey != "" {
-		if !strings.HasPrefix(firewallInstance.FirewallImage, "Check Point CloudGuard") || (cloudType != 0 && cloudType != goaviatrix.Azure) {
-			return fmt.Errorf("advanced option of 'bootstrap_storage_name' is only supported for Azure and Check Point Series")
+		if !strings.HasPrefix(firewallInstance.FirewallImage, "Check Point CloudGuard") {
+			return fmt.Errorf("advanced option of 'sic_key' is only supported for Check Point Series")
 		}
 	}
 
