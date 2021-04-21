@@ -38,14 +38,25 @@ type AwsTgwVpnConnEdit struct {
 	PublicIP             string          `json:"public_ip,omitempty"`
 	OnpremASNRaw         json.RawMessage `json:"aws_side_asn,omitempty"`
 	OnpremASN            string
-	RemoteCIDR           []string `json:"remote_cidrs,omitempty"`
-	VpnID                string   `json:"vpc_id,omitempty"`
-	InsideIpCIDRTun1     string   `json:"inside_ip_cidr_tun_1,omitempty"`
-	InsideIpCIDRTun2     string   `json:"inside_ip_cidr_tun_2,omitempty"`
-	PreSharedKeyTun1     string   `json:"pre_shared_key_tun_1,omitempty"`
-	PreSharedKeyTun2     string   `json:"pre_shared_key_tun_2,omitempty"`
-	LearnedCidrsApproval string   `json:"learned_cidrs_approval,omitempty"`
-	EnableAcceleration   bool     `json:"enable_acceleration"`
+	RemoteCIDR           []string              `json:"remote_cidrs,omitempty"`
+	VpnID                string                `json:"vpc_id,omitempty"`
+	InsideIpCIDRTun1     string                `json:"inside_ip_cidr_tun_1,omitempty"`
+	InsideIpCIDRTun2     string                `json:"inside_ip_cidr_tun_2,omitempty"`
+	PreSharedKeyTun1     string                `json:"pre_shared_key_tun_1,omitempty"`
+	PreSharedKeyTun2     string                `json:"pre_shared_key_tun_2,omitempty"`
+	LearnedCidrsApproval string                `json:"learned_cidrs_approval,omitempty"`
+	EnableAcceleration   bool                  `json:"enable_acceleration"`
+	VpnTunnelData        map[string]TunnelData `json:"vpn_tunnel_data"`
+}
+
+type TunnelData struct {
+	Status               string `json:"status"`
+	RouteCount           int    `json:"route_count"`
+	VpnOutsideAddress    string `json:"vpn_outside_address"`
+	VpnInsideAddress     string `json:"vpn_inside_address"`
+	TgwAsn               string `json:"tgw_asn"`
+	StatusMessage        string `json:"status_message"`
+	LastStatusChangeTime string `json:"last_status_change"`
 }
 
 type AwsTgwVpnConnCreateResp struct {
@@ -284,4 +295,28 @@ func (c *Client) DisableVpnConnectionLearnedCidrsApproval(awsTgwVpnConn *AwsTgwV
 		return errors.New("Rest API 'disable_learned_cidrs_approval' Get failed: " + data.Reason)
 	}
 	return nil
+}
+
+func (c *Client) GetAwsTgwVpnTunnelData(awsTgwVpnConn *AwsTgwVpnConn) (*AwsTgwVpnConnEdit, error) {
+	params := map[string]string{
+		"action":          "list_attachment_route_table_details",
+		"CID":             c.CID,
+		"tgw_name":        awsTgwVpnConn.TgwName,
+		"attachment_name": awsTgwVpnConn.VpnID,
+	}
+
+	type Resp struct {
+		Return  bool              `json:"return"`
+		Results AwsTgwVpnConnEdit `json:"results"`
+		Reason  string            `json:"reason"`
+	}
+
+	var data Resp
+
+	err := c.GetAPI(&data, params["action"], params, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data.Results, nil
 }

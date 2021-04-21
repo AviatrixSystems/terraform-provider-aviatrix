@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -115,6 +116,55 @@ func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
 				Computed:    true,
 				Description: "ID of the vpn connection.",
 			},
+			"vpn_tunnel_data": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "VPN tunnel data.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"tunnel_name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Tunnel name.",
+						},
+						"status": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Tunnel status.",
+						},
+						"route_count": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "Tunnel route count.",
+						},
+						"vpn_outside_address": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Tunnel VPN outside address.",
+						},
+						"vpn_inside_address": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Tunnel VPN inside address.",
+						},
+						"tgw_asn": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Tunnel TGW ASN.",
+						},
+						"status_message": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Tunnel status message.",
+						},
+						"last_status_change_time": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Tunnel last status change time.",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -209,9 +259,9 @@ func resourceAviatrixAwsTgwVpnConnRead(d *schema.ResourceData, meta interface{})
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't find Aviatrix Aws Tgw VPN Connection: %s", err)
+		return fmt.Errorf("couldn't find Aviatrix AWS TGW VPN Connection: %s", err)
 	}
-	log.Printf("[INFO] Found Aviatrix Aws Tgw VPN Connection: %#v", vpnConn)
+	log.Printf("[INFO] Found Aviatrix AWS TGW VPN Connection: %#v", vpnConn)
 
 	d.Set("tgw_name", vpnConn.TgwName)
 	d.Set("route_domain_name", vpnConn.RouteDomainName)
@@ -229,6 +279,29 @@ func resourceAviatrixAwsTgwVpnConnRead(d *schema.ResourceData, meta interface{})
 	d.Set("inside_ip_cidr_tun_2", vpnConn.InsideIpCIDRTun2)
 	d.Set("enable_learned_cidrs_approval", vpnConn.LearnedCidrsApproval == "yes")
 	d.Set("enable_global_acceleration", vpnConn.EnableAcceleration == "yes")
+
+	AllVpnTunnelData, err := client.GetAwsTgwVpnTunnelData(vpnConn)
+	if err != nil {
+		return fmt.Errorf("couldn't get Aviatrix AWS TGW VPN Connection tunnel information: %s", err)
+	}
+
+	var vpnTunnelData []map[string]interface{}
+	count := 1
+	for _, td := range AllVpnTunnelData.VpnTunnelData {
+		vtd := make(map[string]interface{})
+		vtd["tunnel_name"] = "tunnel_" + strconv.Itoa(count)
+		vtd["status"] = td.Status
+		vtd["route_count"] = td.RouteCount
+		vtd["vpn_outside_address"] = td.VpnOutsideAddress
+		vtd["vpn_inside_address"] = td.VpnInsideAddress
+		vtd["tgw_asn"] = td.TgwAsn
+		vtd["status_message"] = td.StatusMessage
+		vtd["last_status_change_time"] = td.LastStatusChangeTime
+		count++
+		vpnTunnelData = append(vpnTunnelData, vtd)
+	}
+
+	d.Set("vpn_tunnel_data", vpnTunnelData)
 
 	d.SetId(vpnConn.TgwName + "~" + vpnConn.VpnID)
 	return nil
