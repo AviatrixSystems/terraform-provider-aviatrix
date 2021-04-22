@@ -89,6 +89,39 @@ resource "aviatrix_account" "temp_acc_awsgov" {
 }
 ```
 ```hcl
+# Create an Aviatrix AWS China Account with IAM roles
+resource "aviatrix_account" "temp_acc_aww_china_iam" {
+  account_name             = "username"
+  cloud_type               = 1024
+  awschina_account_number  = "123456789012"
+  awschina_iam             = true
+  awschina_role_app        = "arn:aws-cn:iam::123456789012:role/aviatrix-role-app"
+  awschina_role_ec2        = "arn:aws-cn:iam::123456789012:role/aviatrix-role-ec2"
+}
+```
+```hcl
+# Or you can create an Aviatrix AWS China Account with access_key/secret key
+resource "aviatrix_account" "temp_acc_awschina" {
+  account_name             = "username"
+  cloud_type               = 1024
+  awschina_account_number  = "123456789012"
+  awschina_iam             = false
+  awschina_access_key      = "ABCDEFGHIJKL"
+  awschina_secret_key      = "ABCDEFGHIJKLabcdefghijkl"
+}
+```
+```hcl
+# Create an Aviatrix Azure China Account
+resource "aviatrix_account" "temp_acc_azurechina" {
+  account_name                = "username"
+  cloud_type                  = 2048
+  azurechina_subscription_id  = "12345678-abcd-efgh-ijkl-123456789abc"
+  azurechina_directory_id     = "abcdefgh-1234-5678-9100-abc123456789"
+  azurechina_application_id   = "1234abcd-12ab-34cd-56ef-abcdef123456"
+  azurechina_application_key  = "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe="
+}
+```
+```hcl
 # Create an Alibaba Cloud Account
 resource "aviatrix_account" "temp_acc_alibaba" {
   account_name        = "username"
@@ -106,7 +139,7 @@ The following arguments are supported:
 
 ### Required
 * `account_name` - (Required) Account name. This can be used for logging in to CloudN console or UserConnect controller.
-* `cloud_type` - (Required) Type of cloud service provider. Only AWS, GCP, Azure, OCI, and AWSGov are supported currently. Enter 1 for AWS, 4 for GCP, 8 for Azure, 16 for OCI, 32 for AzureGov, 256 for AWSGov.
+* `cloud_type` - (Required) Type of cloud service provider. Only AWS, GCP, Azure, OCI, AzureGov, AWSGov, AWSChina, AzureChina and Alibaba Cloud are supported currently. Enter 1 for AWS, 4 for GCP, 8 for Azure, 16 for OCI, 32 for AzureGov, 256 for AWSGov, 1024 for AWSChina or 2048 for AzureChina, 8192 for Alibaba Cloud.
 
 ### AWS
 * `aws_account_number` - (Optional) AWS Account number to associate with Aviatrix account. Required when creating an account for AWS.
@@ -144,6 +177,20 @@ The following arguments are supported:
 * `awsgov_account_number` - (Optional) AWSGov Account number to associate with Aviatrix account. Required when creating an account for AWSGov.
 * `awsgov_access_key` - (Optional) AWS Access Key. Required when creating an account for AWSGov.
 * `awsgov_secret_key` - (Optional) AWS Secret Key. Required when creating an account for AWSGov.
+
+### AWSChina Cloud
+* `awschina_account_number` - (Optional) AWSChina Account number to associate with Aviatrix account. Required when creating an account for AWSChina. Available as of provider version 2.19+.
+* `awschina_iam` - (Optional) AWSChina IAM-role based flag. Available as of provider version 2.19+.
+* `awschina_role_app` - (Optional) AWSChina App role ARN. Available when `awschina_iam` is "true" and when creating an account for AWSChina. If left empty, the ARN will be computed. Available as of provider version 2.19+.
+* `awschina_role_ec2` - (Optional) AWSChina EC2 role ARN. Available when `awschina_iam` is "true" and when creating an account for AWSChina. If left empty, the ARN will be computed. Available as of provider version 2.19+.
+* `awschina_access_key` - (Optional) AWSChina Access Key. Required when `awschina_iam` is "false" and when creating an account for AWSChina. Available as of provider version 2.19+.
+* `awschina_secret_key` - (Optional) AWSChina Secret Key. Required when `awschina_iam` is "false" and when creating an account for AWSChina. Available as of provider version 2.19+.
+
+### AzureChina Cloud
+* `azurechina_subscription_id` - (Optional) AzureChina ARM Subscription ID. Required when creating an account for AzureChina. Available as of provider version 2.19+.
+* `azurechina_directory_id` - (Optional) AzureChina ARM Directory ID. Required when creating an account for AzureChina. Available as of provider version 2.19+.
+* `azurechina_application_id` - (Optional) AzureChina ARM Application ID. Required when creating an account for AzureChina. Available as of provider version 2.19+.
+* `azurechina_application_key` - (Optional) AzureChina ARM Application key. Required when creating an account for AzureChina. Available as of provider version 2.19+.
 
 ### Alibaba Cloud
 * `alicloud_account_id` - (Optional) Alibaba Cloud Account number to associate with Aviatrix account. Required when creating an account for Alibaba Cloud.

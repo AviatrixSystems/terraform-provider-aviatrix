@@ -84,6 +84,36 @@ func preAccountCheck(t *testing.T, msgEnd string) {
 			t.Fatal("AZUREGOV_APPLICATION_KEY must be set for azure gov acceptance tests. " + msgEnd)
 		}
 	}
+	if os.Getenv("SKIP_ACCOUNT_AWSCHINA_IAM") == "no" {
+		if os.Getenv("AWSCHINA_IAM_ACCOUNT_NUMBER") == "" {
+			t.Fatalf("AWSCHINA_IAM_ACCOUNT_NUMBER must be set for AWSChina with IAM acceptance tests. %s", msgEnd)
+		}
+	}
+	if os.Getenv("SKIP_ACCOUNT_AWSCHINA") == "no" {
+		if os.Getenv("AWSCHINA_ACCOUNT_NUMBER") == "" {
+			t.Fatalf("AWSCHINA_ACCOUNT_NUMBER must be set for AWSChina acceptance tests. %s", msgEnd)
+		}
+		if os.Getenv("AWSCHINA_ACCESS_KEY") == "" {
+			t.Fatalf("AWSCHINA_ACCESS_KEY must be set for AWSChina acceptance tests. %s", msgEnd)
+		}
+		if os.Getenv("AWSCHINA_SECRET_KEY") == "" {
+			t.Fatalf("AWSCHINA_SECRET_KEY must be set for AWSChina acceptance tests. %s", msgEnd)
+		}
+	}
+	if os.Getenv("SKIP_ACCOUNT_AZURECHINA") == "no" {
+		if os.Getenv("AZURECHINA_SUBSCRIPTION_ID") == "" {
+			t.Fatal("AZURECHINA_SUBSCRIPTION_ID must be set for AzureChina acceptance tests. " + msgEnd)
+		}
+		if os.Getenv("AZURECHINA_DIRECTORY_ID") == "" {
+			t.Fatal("AZURECHINA_DIRECTORY_ID must be set for AzureChina acceptance tests. " + msgEnd)
+		}
+		if os.Getenv("AZURECHINA_APPLICATION_ID") == "" {
+			t.Fatal("AZURECHINA_APPLICATION_ID must be set for AzureChina acceptance tests. " + msgEnd)
+		}
+		if os.Getenv("AZURECHINA_APPLICATION_KEY") == "" {
+			t.Fatal("AZURECHINA_APPLICATION_KEY must be set for AzureChina acceptance tests. " + msgEnd)
+		}
+	}
 }
 
 func TestAccAviatrixAccount_basic(t *testing.T) {
@@ -99,13 +129,17 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 	skipOCI := os.Getenv("SKIP_ACCOUNT_OCI")
 	skipAWSGOV := os.Getenv("SKIP_ACCOUNT_AWSGOV")
 	skipAZUREGOV := os.Getenv("SKIP_ACCOUNT_AZUREGOV")
+	skipAWSCHINAIAM := os.Getenv("SKIP_ACCOUNT_AWSCHINA_IAM")
+	skipAWSCHINA := os.Getenv("SKIP_ACCOUNT_AWSCHINA")
+	skipAZURECHINA := os.Getenv("SKIP_ACCOUNT_AZURECHINA")
 
 	if skipAcc == "yes" {
 		t.Skip("Skipping Access Account test as SKIP_ACCOUNT is set")
 	}
-	if skipAWS == "yes" && skipGCP == "yes" && skipAZURE == "yes" && skipOCI == "yes" && skipAZUREGOV == "yes" && skipAWSGOV == "yes" {
+	if skipAWS == "yes" && skipGCP == "yes" && skipAZURE == "yes" && skipOCI == "yes" && skipAZUREGOV == "yes" && skipAWSGOV == "yes" && skipAWSCHINAIAM == "yes" && skipAWSCHINA == "yes" && skipAZURECHINA == "yes" {
 		t.Skip("Skipping Access Account test as SKIP_ACCOUNT_AWS, SKIP_ACCOUNT_GCP, SKIP_ACCOUNT_AZURE, " +
-			"SKIP_ACCOUNT_OCI, SKIP_ACCOUNT_AZUREGOV, and SKIP_ACCOUNT_AWSGOV are all set, even though SKIP_ACCOUNT isn't set")
+			"SKIP_ACCOUNT_OCI, SKIP_ACCOUNT_AZUREGOV, SKIP_ACCOUNT_AWSGOV, SKIP_ACCOUNT_AWSCHINA_IAM, SKIP_ACCOUNT_AWSCHINA " +
+			"and SKIP_ACCOUNT_AZURECHINA are all set, even though SKIP_ACCOUNT isn't set")
 	}
 
 	if skipAWS == "yes" {
@@ -301,6 +335,105 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 			},
 		})
 	}
+
+	if skipAWSCHINAIAM == "yes" {
+		t.Log("Skipping AWS China IAM Access Account test as SKIP_ACCOUNT_AWSCHINA_IAM is set")
+	} else {
+		resourceName := "aviatrix_account.awschinaiam"
+		resource.Test(t, resource.TestCase{
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preAccountCheck(t, ". Set SKIP_ACCOUNT to yes to skip account tests")
+			},
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckAccountDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccAccountConfigAWSCHINAIAM(rInt),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckAccountExists(resourceName, &account),
+						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-awschinaiam-%d", rInt)),
+						resource.TestCheckResourceAttr(resourceName, "awschina_account_number", os.Getenv("AWSCHINA_IAM_ACCOUNT_NUMBER")),
+						resource.TestCheckResourceAttr(resourceName, "awschina_iam", "true"),
+						resource.TestCheckResourceAttr(resourceName, "awschina_role_app", fmt.Sprintf("arn:aws-cn:iam::%s:role/aviatrix-role-app", os.Getenv("AWSCHINA_IAM_ACCOUNT_NUMBER"))),
+						resource.TestCheckResourceAttr(resourceName, "awschina_role_ec2", fmt.Sprintf("arn:aws-cn:iam::%s:role/aviatrix-role-ec2", os.Getenv("AWSCHINA_IAM_ACCOUNT_NUMBER"))),
+					),
+				},
+				{
+					ResourceName:            resourceName,
+					ImportState:             true,
+					ImportStateVerify:       true,
+					ImportStateVerifyIgnore: importStateVerifyIgnore,
+				},
+			},
+		})
+	}
+
+	if skipAWSCHINA == "yes" {
+		t.Log("Skipping AWS China Access Account test as SKIP_ACCOUNT_AWSCHINA is set")
+	} else {
+		resourceName := "aviatrix_account.awschina"
+		importStateVerifyIgnore = append(importStateVerifyIgnore, "awschina_secret_key")
+		resource.Test(t, resource.TestCase{
+			PreCheck: func() {
+				testAccPreCheck(t)
+				preAccountCheck(t, ". Set SKIP_ACCOUNT to yes to skip account tests")
+			},
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckAccountDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccAccountConfigAWSCHINA(rInt),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckAccountExists(resourceName, &account),
+						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-awschina-%d", rInt)),
+						resource.TestCheckResourceAttr(resourceName, "awschina_account_number", os.Getenv("AWSCHINA_IAM_ACCOUNT_NUMBER")),
+						resource.TestCheckResourceAttr(resourceName, "awschina_iam", "false"),
+						resource.TestCheckResourceAttr(resourceName, "awschina_access_key", os.Getenv("AWSCHINA_ACCESS_KEY")),
+						resource.TestCheckResourceAttr(resourceName, "awschina_secret_key", os.Getenv("AWSCHINA_SECRET_KEY")),
+					),
+				},
+				{
+					ResourceName:            resourceName,
+					ImportState:             true,
+					ImportStateVerify:       true,
+					ImportStateVerifyIgnore: importStateVerifyIgnore,
+				},
+			},
+		})
+	}
+	if skipAZURECHINA == "yes" {
+		t.Log("Skipping AzureChina Access Account test as SKIP_ACCOUNT_AZURECHINA is set")
+	} else {
+		resourceName := "aviatrix_account.azurechina"
+		importStateVerifyIgnore = append(importStateVerifyIgnore, "azurechina_directory_id")
+		importStateVerifyIgnore = append(importStateVerifyIgnore, "azurechina_application_id")
+		importStateVerifyIgnore = append(importStateVerifyIgnore, "azurechina_application_key")
+		resource.Test(t, resource.TestCase{
+			PreCheck:     func() { testAccPreCheck(t) },
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckAccountDestroy,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccAccountConfigAZURECHINA(rInt),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckAccountExists(resourceName, &account),
+						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-azurechina-%d", rInt)),
+						resource.TestCheckResourceAttr(resourceName, "azurechina_subscription_id", os.Getenv("AZURECHINA_SUBSCRIPTION_ID")),
+						resource.TestCheckResourceAttr(resourceName, "azurechina_directory_id", os.Getenv("AZURECHINA_DIRECTORY_ID")),
+						resource.TestCheckResourceAttr(resourceName, "azurechina_application_id", os.Getenv("AZURECHINA_APPLICATION_ID")),
+						resource.TestCheckResourceAttr(resourceName, "azurechina_application_key", os.Getenv("AZURECHINA_APPLICATION_KEY")),
+					),
+				},
+				{
+					ResourceName:            resourceName,
+					ImportState:             true,
+					ImportStateVerify:       true,
+					ImportStateVerifyIgnore: importStateVerifyIgnore,
+				},
+			},
+		})
+	}
 }
 
 func testAccAccountConfigAWS(rInt int) string {
@@ -379,6 +512,43 @@ func testAccAccountConfigAWSGOV(rInt int) string {
 	awsgov_secret_key     = "%s"
 }
 	`, rInt, os.Getenv("AWSGOV_ACCOUNT_NUMBER"), os.Getenv("AWSGOV_ACCESS_KEY"), os.Getenv("AWSGOV_SECRET_KEY"))
+}
+
+func testAccAccountConfigAWSCHINAIAM(rInt int) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "awschinaiam" {
+	account_name            = "tfa-awschinaiam-%d"
+	cloud_type              = 1024
+	awschina_account_number = "%s"
+	awschina_iam            = true
+}
+	`, rInt, os.Getenv("AWSCHINA_IAM_ACCOUNT_NUMBER"))
+}
+
+func testAccAccountConfigAWSCHINA(rInt int) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "awschina" {
+	account_name                = "tfa-awschina-%d"
+	cloud_type                  = 1024
+	awschina_account_number     = "%s"
+	awschina_access_key         = "%s"
+	awschina_secret_key         = "%s"
+}
+	`, rInt, os.Getenv("AWSCHINA_ACCOUNT_NUMBER"), os.Getenv("AWSCHINA_ACCESS_KEY"), os.Getenv("AWSCHINA_SECRET_KEY"))
+}
+
+func testAccAccountConfigAZURECHINA(rInt int) string {
+	return fmt.Sprintf(`
+resource "aviatrix_account" "azurechina" {
+	account_name                = "tfa-azurechina-%d"
+	cloud_type                  = 2048
+	azurechina_subscription_id  = "%s"
+	azurechina_directory_id     = "%s"
+	azurechina_application_id   = "%s"
+	azurechina_application_key  = "%s"
+}
+	`, rInt, os.Getenv("AZURECHINA_SUBSCRIPTION_ID"), os.Getenv("AZURECHINA_DIRECTORY_ID"),
+		os.Getenv("AZURECHINA_APPLICATION_ID"), os.Getenv("AZURECHINA_APPLICATION_KEY"))
 }
 
 func testAccCheckAccountExists(n string, account *goaviatrix.Account) resource.TestCheckFunc {
