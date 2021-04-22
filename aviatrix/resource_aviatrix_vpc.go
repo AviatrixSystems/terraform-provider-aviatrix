@@ -296,8 +296,8 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if resourceGroup, ok := d.GetOk("resource_group"); ok {
-		if vpc.CloudType != goaviatrix.Azure {
-			return fmt.Errorf("error creating vpc: resource_group is required to be empty for providers other than Azure")
+		if !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+			return fmt.Errorf("error creating vpc: resource_group is required to be empty for providers other than Azure (8), AzureGov (32) and AzureChina (2048)")
 		}
 		vpc.ResourceGroup = resourceGroup.(string)
 	}

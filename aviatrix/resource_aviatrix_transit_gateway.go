@@ -547,7 +547,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a transit gw")
 		}
 	} else {
-		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), Azure (8), OCI (16), AWSGov (256), AWSChina (1024), AzureChina (2048) or Alibaba Cloud (8192)")
+		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048) or Alibaba Cloud (8192)")
 	}
 
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
@@ -556,7 +556,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		// for gcp, rest api asks for "zone" rather than vpc region
 		gateway.Zone = d.Get("vpc_reg").(string)
 	} else {
-		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), Azure (8), OCI (16), AWSGov (256), AWSChina (1024), AzureChina (2048) or Alibaba Cloud (8192)")
+		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048) or Alibaba Cloud (8192)")
 	}
 
 	insaneMode := d.Get("insane_mode").(bool)
@@ -564,7 +564,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		// Insane Mode encryption is not supported in China regions
 		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes^goaviatrix.AWSChina|goaviatrix.GCPRelatedCloudTypes|
 			goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AzureChina|goaviatrix.OCIRelatedCloudTypes) {
-			return fmt.Errorf("insane_mode is only supported for AWS (1), GCP (4), Azure (8), OCI (16) and AWSGov (256)")
+			return fmt.Errorf("insane_mode is only supported for AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32) and AWSGov (256)")
 		}
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
 			if d.Get("insane_mode_az").(string) == "" {
@@ -640,7 +640,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	if enableTransitFireNet {
 		// Transit FireNet function is not supported for AWS China or Azure China
 		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes^goaviatrix.AWSChina|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AzureChina|goaviatrix.OCIRelatedCloudTypes) {
-			return fmt.Errorf("'enable_transit_firenet' is only supported in AWS (1), GCP (4), Azure (8), AWSGov (256) and OCI (16)")
+			return fmt.Errorf("'enable_transit_firenet' is only supported in AWS (1), GCP (4), Azure (8), AzureGov (32), AWSGov (256) and OCI (16)")
 		}
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			gateway.EnableTransitFireNet = "on"
@@ -665,7 +665,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	enableEgressTransitFireNet := d.Get("enable_egress_transit_firenet").(bool)
 	// Transit FireNet function is not supported for AWS China or Azure China
 	if enableEgressTransitFireNet && !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes^goaviatrix.AWSChina|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.Azure) {
-		return fmt.Errorf("'enable_egress_transit_firenet' is only supported by AWS (1), GCP (4), Azure (8) and AWSGov (256)")
+		return fmt.Errorf("'enable_egress_transit_firenet' is only supported by AWS (1), GCP (4), Azure (8), AzureGov (32) and AWSGov (256)")
 	}
 	if enableEgressTransitFireNet && !enableTransitFireNet {
 		return fmt.Errorf("'enable_egress_transit_firenet' requires 'enable_transit_firenet' to be set to true")
@@ -698,7 +698,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 	bgpOverLan := d.Get("enable_bgp_over_lan").(bool)
 	if bgpOverLan && !goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-		return fmt.Errorf("'enable_bgp_over_lan' is only valid for Azure (8) or AzureChina (2048)")
+		return fmt.Errorf("'enable_bgp_over_lan' is only valid for Azure (8), AzureGov (32) or AzureChina (2048)")
 	}
 	if bgpOverLan {
 		gateway.BgpOverLan = "on"
@@ -898,7 +898,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	_, tagsOk := d.GetOk("tags")
 	if tagListOk || tagsOk {
 		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-			return errors.New("error creating transit gateway: adding tags is only supported for AWS (1), Azure (8), AWSGov (256), AWSChina (1024) and AzureChina (2048)")
+			return errors.New("error creating transit gateway: adding tags is only supported for AWS (1), Azure (8), AzureGov (32), AWSGov (256), AWSChina (1024) and AzureChina (2048)")
 		}
 		tags := &goaviatrix.Tags{
 			ResourceType: "gw",
@@ -1562,13 +1562,13 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("updating lan_private_subnet is not allowed")
 	}
 
-	// Transit FireNet function is not supprted for AWS China and Azure China
+	// Transit FireNet function is not supported for AWS China and Azure China
 	if d.HasChange("enable_firenet") && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSChina|goaviatrix.AzureChina) {
 		return fmt.Errorf("editing 'enable_transit_firenet' in AWSChina (1024) and AzureChina (2048) is not supported")
 	}
-	// Transit FireNet function is not supprted for AWS China and Azure China
+	// Transit FireNet function is not supported for AWS China and Azure China
 	if d.HasChange("enable_transit_firenet") && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AWSChina) {
-		return fmt.Errorf("editing 'enable_transit_firenet' in GCP (4), Azure (8), AWSChina (1024) and AzureChina (2048) is not supported")
+		return fmt.Errorf("editing 'enable_transit_firenet' in GCP (4), Azure (8), AzureGov (32), AWSChina (1024) and AzureChina (2048) is not supported")
 	}
 	if d.Get("enable_egress_transit_firenet").(bool) && !d.Get("enable_transit_firenet").(bool) {
 		return fmt.Errorf("'enable_egress_transit_firenet' requires 'enable_transit_firenet' to be set to true")

@@ -576,7 +576,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		// for gcp, rest api asks for "zone" rather than vpc region
 		gateway.Zone = d.Get("vpc_reg").(string)
 	} else {
-		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), Azure (8), OCI (16), AWSGov (256), AWSChina (1024), AzureChina (2048) or Alibaba Cloud (8192)")
+		return fmt.Errorf("invalid cloud type, it can only be AWS (1), GCP (4), AZURE (8), OCI (16), AzureGov (32), AWSGOV (256), AWSCHINA (1024), AZURECHINA (2048) or Alibaba Cloud (8192)")
 	}
 
 	singleIpNat := d.Get("single_ip_snat").(bool)
@@ -597,7 +597,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	if insaneMode {
 		// Insane Mode encryption is not supported in China regions
 		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes^goaviatrix.AWSChina|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AzureChina) {
-			return fmt.Errorf("insane_mode is only supported for AWS (1), Azure (8) and AWSGov (256)")
+			return fmt.Errorf("insane_mode is only supported for AWS (1), Azure (8), AzureGov (32) and AWSGov (256)")
 		}
 		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			if d.Get("insane_mode_az").(string) == "" {
@@ -951,7 +951,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	_, tagsOk := d.GetOk("tags")
 	if tagListOk || tagsOk {
 		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-			return errors.New("failed to create gateway: adding tags is only supported for AWS (1), Azure (8), AWSGov (256), AWSChina (1024) and AzureChina (2048)")
+			return errors.New("failed to create gateway: adding tags is only supported for AWS (1), Azure (8), AzureGov (32), AWSGov (256), AWSChina (1024) and AzureChina (2048)")
 		}
 		tags := &goaviatrix.Tags{
 			ResourceType: "gw",
@@ -1653,7 +1653,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 
 	if d.HasChange("tag_list") || d.HasChange("tags") {
 		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-			return fmt.Errorf("failed to update gateway: adding tags is only supported for AWS (1), Azure (8), AWSGov(256) AWSChina (1024) and AzureChina (2048)")
+			return fmt.Errorf("failed to update gateway: adding tags is only supported for AWS (1), Azure (8), AzureGov (32), AWSGov(256) AWSChina (1024) and AzureChina (2048)")
 		}
 
 		tags := &goaviatrix.Tags{

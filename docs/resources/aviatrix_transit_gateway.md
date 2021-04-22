@@ -82,6 +82,22 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_oracle" {
 }
 ```
 ```hcl
+# Create an Aviatrix AzureGov Transit Network Gateway
+resource "aviatrix_transit_gateway" "test_transit_gateway_azuregov" {
+  cloud_type         = 32
+  account_name       = "devops_azuregov"
+  gw_name            = "transit"
+  vpc_id             = "vnet1:hello"
+  vpc_reg            = "USGov Arizona"
+  gw_size            = "Standard_B1ms"
+  subnet             = "10.30.0.0/24"
+  ha_subnet          = "10.30.0.0/24"
+  ha_gw_size         = "Standard_B1ms"
+  connected_transit  = true
+  enable_active_mesh = true
+}
+```
+```hcl
 # Create an Aviatrix AWSGov Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_awsgov" {
   cloud_type               = 256
@@ -184,24 +200,24 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_alibaba" {
 The following arguments are supported:
 
 ### Required
-* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), Azure(8), OCI(16), AWSGov(256), AWSChina(1024), AzureChina(2048) and Alibaba Cloud(8192) are supported.
+* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), Azure(8), OCI(16), AzureGov(32), AWSGov(256), AWSChina(1024), AzureChina(2048) and Alibaba Cloud(8192) are supported.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `gw_name` - (Required) Name of the gateway which is going to be created.
-* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Example: AWS/AWSGov/AWSChina: "vpc-abcd1234", GCP: "vpc-gcp-test", Azure/AzureChina: "vnet1:hello", OCI: "vpc-oracle-test1".
-* `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", GCP: "us-west2-a", Azure: "East US 2", OCI: "us-ashburn-1", AWSGov: "us-gov-west-1", AWSChina: "cn-north-1", AzureChina: "China North".
-* `gw_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", Azure: "Standard_B1s", OCI: "VM.Standard2.2", GCP: "n1-standard-1", AWSGov: "t2.large", AWSChina: "t2.large", AzureChina: "Standard_A0".
+* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Example: AWS/AWSGov/AWSChina: "vpc-abcd1234", GCP: "vpc-gcp-test", Azure/AzureGov/AzureChina: "vnet1:hello", OCI: "vpc-oracle-test1".
+* `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", GCP: "us-west2-a", Azure: "East US 2", OCI: "us-ashburn-1", AzureGov: "USGov Arizona", AWSGov: "us-gov-west-1", AWSChina: "cn-north-1", AzureChina: "China North".
+* `gw_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", Azure/AzureGov: "Standard_B1s", OCI: "VM.Standard2.2", GCP: "n1-standard-1", AWSGov: "t2.large", AWSChina: "t2.large", AzureChina: "Standard_A0".
 * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode-1).**
 
 ### HA
 * `single_az_ha` (Optional) Set to true if this [feature](https://docs.aviatrix.com/Solutions/gateway_ha.html#single-az-gateway) is desired. Valid values: true, false.
-* `ha_subnet` - (Optional) HA Subnet CIDR. Required only if enabling HA for AWS, Azure, AWSGov, AWSChina, AzureChina, OCI, or Alibaba Cloud gateways. Optional for GCP. Setting to empty/unsetting will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24".
+* `ha_subnet` - (Optional) HA Subnet CIDR. Required only if enabling HA for AWS, Azure, AzureGov, AWSGov, AWSChina, AzureChina, OCI, or Alibaba Cloud gateways. Optional for GCP. Setting to empty/unsetting will disable HA. Setting to a valid subnet CIDR will create an HA gateway on the subnet. Example: "10.12.0.0/24".
 * `ha_zone` - (Optional) HA Zone. Required if enabling HA for GCP gateway. Optional if enabling HA for Azure gateway. For GCP, setting to empty/unsetting will disable HA and setting to a valid zone will create an HA gateway in the zone. Example: "us-west1-c". For Azure, this is an optional parameter to place the HA gateway in a specific availability zone. Valid values for Azure gateways are in the form "az-n". Example: "az-2". Available for Azure as of provider version R2.17+.
 * `ha_insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit HA Gateway. Required for AWS, AWSGov and AWSChina if `insane_mode` is enabled and `ha_subnet` is set. Example: AWS: "us-west-1a".
 * `ha_eip` - (Optional) Public IP address that you want to assign to the HA peering instance. If no value is given, a new EIP will automatically be allocated. Only available for AWS, GCP, AWSGov and AWSChina.
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if enabling HA. Example: "t2.micro".
 
 ### Insane Mode
-* `insane_mode` - (Optional) Specify true for [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) high performance gateway. Insane Mode gateway size must be at least c5 size (AWS and AWSGov) or Standard_D3_v2 (Azure); for GCP only four size are supported: "n1-highcpu-4", "n1-highcpu-8", "n1-highcpu-16" and "n1-highcpu-32". If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet for AWS, Azure and AWSGov. Only available for AWS, GCP/OCI(with active mesh 2.0 enabled), Azure and AWSGov. Valid values: true, false. Default value: false.
+* `insane_mode` - (Optional) Specify true for [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) high performance gateway. Insane Mode gateway size must be at least c5 size (AWS and AWSGov) or Standard_D3_v2 (Azure and AzureGov); for GCP only four size are supported: "n1-highcpu-4", "n1-highcpu-8", "n1-highcpu-16" and "n1-highcpu-32". If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet for AWS, Azure, AzureGov and AWSGov. Only available for AWS, GCP/OCI(with active mesh 2.0 enabled), Azure, AzureGov and AWSGov. Valid values: true, false. Default value: false.
 * `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit Gateway. Required for AWS or AWSGov if `insane_mode` is enabled. Example: AWS: "us-west-1a".
 
 ### SNAT
@@ -274,7 +290,7 @@ The following arguments are supported:
 * `zone` - (Optional) Availability Zone. Only available for cloud_type = 8 (Azure). Must be in the form 'az-n', for example, 'az-2'. Available in provider version R2.17+.
 * `enable_active_standby` - (Optional) Enables [Active-Standby Mode](https://docs.aviatrix.com/HowTos/transit_advanced.html#active-standby). Available only with Active Mesh Mode enabled and HA enabled. Valid values: true, false. Default value: false. Available in provider version R2.17.1+.
 * `enable_jumbo_frame` - (Optional) Enable jumbo frames for this transit gateway. Default value is true.
-* `tags` - (Optional) Map of tags to assign to the gateway. Only available for AWS, Azure, AWSGov, AWSChina and AzureChina gateways. Allowed characters vary by cloud type but always include: letters, spaces, and numbers. AWS, AWSGov and AWSChina allow the following special characters: + - = . _ : / @.  Azure and AzureChina allows the following special characters: + - = . _ : @. Example: {"key1" = "value1", "key2" = "value2"}.
+* `tags` - (Optional) Map of tags to assign to the gateway. Only available for AWS, Azure, AzureGov, AWSGov, AWSChina and AzureChina gateways. Allowed characters vary by cloud type but always include: letters, spaces, and numbers. AWS, AWSGov and AWSChina allow the following special characters: + - = . _ : / @.  Azure, AzureGov and AzureChina allows the following special characters: + - = . _ : @. Example: {"key1" = "value1", "key2" = "value2"}.
 * `tunnel_detection_time` - (Optional) The IPsec tunnel down detection time for the Transit Gateway in seconds. Must be a number in the range [20-600]. The default value is set by the controller (60 seconds if nothing has been changed). **NOTE: The controller UI has an option to set the tunnel detection time for all gateways. To achieve the same functionality in Terraform, use the same TF_VAR to manage the tunnel detection time for all gateways.** Available in provider R2.19+.
 * `storage_name` (Optional) Specify a storage account. Required if `cloud_type` is 2048 (AzureChina). Available as of Provider version 2.19+.
 
@@ -297,7 +313,7 @@ The following arguments are deprecated:
 
 * `enable_firenet_interfaces` - (Optional) Sign of readiness for FireNet connection. Valid values: true, false. Default value: false.
 * `enable_snat` - (Optional) Enable Source NAT for this container. Valid values: true, false.
-* `tag_list` - (Optional) Instance tag of cloud provider. Only supported for AWS, Azure, AWSGov, AWSChina and AzureChina. Example: ["key1:value1","key2:value2"].
+* `tag_list` - (Optional) Instance tag of cloud provider. Only supported for AWS, Azure, AzureGov, AWSGov, AWSChina and AzureChina. Example: ["key1:value1","key2:value2"].
 
 ## Import
 
