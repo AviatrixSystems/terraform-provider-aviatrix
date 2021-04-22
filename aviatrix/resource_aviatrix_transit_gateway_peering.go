@@ -66,22 +66,24 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				},
 			},
 			"prepend_as_path1": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Optional:    true,
 				Description: "AS Path Prepend customized by specifying AS PATH for a BGP connection. Applies on transit_gateway_name1.",
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: goaviatrix.ValidateASN,
 				},
+				MaxItems: 25,
 			},
 			"prepend_as_path2": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Optional:    true,
 				Description: "AS Path Prepend customized by specifying AS PATH for a BGP connection. Applies on transit_gateway_name2.",
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: goaviatrix.ValidateASN,
 				},
+				MaxItems: 25,
 			},
 			"enable_peering_over_private_network": {
 				Type:        schema.TypeBool,
@@ -181,7 +183,7 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 
 	if _, ok := d.GetOk("prepend_as_path1"); ok {
 		var prependASPath []string
-		for _, v := range d.Get("prepend_as_path1").(*schema.Set).List() {
+		for _, v := range d.Get("prepend_as_path1").([]interface{}) {
 			prependASPath = append(prependASPath, v.(string))
 		}
 		transGwPeering := &goaviatrix.TransitGatewayPeering{
@@ -197,7 +199,7 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 
 	if _, ok := d.GetOk("prepend_as_path2"); ok {
 		var prependASPath []string
-		for _, v := range d.Get("prepend_as_path2").(*schema.Set).List() {
+		for _, v := range d.Get("prepend_as_path2").([]interface{}) {
 			prependASPath = append(prependASPath, v.(string))
 		}
 		transGwPeering := &goaviatrix.TransitGatewayPeering{
@@ -350,7 +352,7 @@ func resourceAviatrixTransitGatewayPeeringUpdate(d *schema.ResourceData, meta in
 
 	if d.HasChange("prepend_as_path1") {
 		var prependASPath []string
-		for _, v := range d.Get("prepend_as_path1").(*schema.Set).List() {
+		for _, v := range d.Get("prepend_as_path1").([]interface{}) {
 			prependASPath = append(prependASPath, v.(string))
 		}
 
@@ -363,7 +365,7 @@ func resourceAviatrixTransitGatewayPeeringUpdate(d *schema.ResourceData, meta in
 
 	if d.HasChange("prepend_as_path2") {
 		var prependASPath []string
-		for _, v := range d.Get("prepend_as_path2").(*schema.Set).List() {
+		for _, v := range d.Get("prepend_as_path2").([]interface{}) {
 			prependASPath = append(prependASPath, v.(string))
 		}
 		transitGwPeering := &goaviatrix.TransitGatewayPeering{
