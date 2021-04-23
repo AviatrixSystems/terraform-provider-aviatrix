@@ -180,7 +180,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `tgw_id`- TGW ID. Available as of provider version R2.19+.
+* `tgw_id` - TGW ID. Available as of provider version R2.19+.
 
 ## Import
 
