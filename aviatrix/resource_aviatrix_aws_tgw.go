@@ -212,6 +212,11 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 				},
 				Description: "TGW CIDRs.",
 			},
+			"tgw_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "TGW ID.",
+			},
 		},
 	}
 }
@@ -559,6 +564,7 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("cloud_type", awsTgw.CloudType)
 	d.Set("aws_side_as_number", awsTgw.AwsSideAsNumber)
 	d.Set("enable_multicast", awsTgw.EnableMulticast)
+	d.Set("tgw_id", awsTgw.TgwId)
 	if err := d.Set("cidrs", awsTgw.CidrList); err != nil {
 		return fmt.Errorf("could not set aws_tgw.cidrs into state: %v", err)
 	}

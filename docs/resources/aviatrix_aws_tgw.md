@@ -176,6 +176,12 @@ The following arguments are supported:
 * `enable_multicast` - (Optional) Enable multicast. Default value: false. Valid values: true, false. Available in provider version R2.17+.
 * `cidrs` - (Optional) Set of TGW CIDRs. For example, `cidrs = ["10.0.10.0/24", "10.1.10.0/24"]`. Available as of provider version R2.18.1+.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `tgw_id`- TGW ID. Available as of provider version R2.19+.
+
 ## Import
 
 **aws_tgw** can be imported using the `tgw_name`, e.g.
