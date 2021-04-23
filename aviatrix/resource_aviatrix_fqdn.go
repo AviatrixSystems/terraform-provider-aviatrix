@@ -192,7 +192,7 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 	if fqdnStatus := d.Get("fqdn_enabled").(bool); fqdnStatus {
 		fqdn.FQDNStatus = "enabled"
 
-		log.Printf("[INOF] Enable FQDN tag status: %#v", fqdn)
+		log.Printf("[INFO] Enable FQDN tag status: %#v", fqdn)
 
 		err := client.UpdateFQDNStatus(fqdn)
 		if err != nil {
@@ -279,7 +279,7 @@ func resourceAviatrixFQDNRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("couldn't list FQDN domains: %s", err)
 	}
-	log.Printf("[INOF] Enable FQDN tag status: %#v", newfqdn)
+	log.Printf("[INFO] Enable FQDN tag status: %#v", newfqdn)
 
 	if newfqdn != nil {
 		// This is nothing IF ListDomains return empty
@@ -293,7 +293,7 @@ func resourceAviatrixFQDNRead(d *schema.ResourceData, meta interface{}) error {
 			filter = append(filter, dn)
 		}
 
-		log.Printf("[INOF] 3Enable FQDN tag status: %#v", fqdn)
+		log.Printf("[INFO] Enable FQDN tag status: %#v", fqdn)
 
 		// Only write domain names to state if the user has enabled in-line domain names.
 		if d.Get("manage_domain_names").(bool) {
@@ -408,7 +408,7 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 	// Update Domain list
-	if d.HasChange("domain_names") {
+	if d.HasChange("domain_names") && enabledInlineDomainNames {
 		if hasSetDomainNames {
 			names := d.Get("domain_names").([]interface{})
 			for _, domain := range names {
