@@ -28,6 +28,7 @@ type AWSTgw struct {
 	EnableMulticast           bool `form:"multicast_enable"`
 	CidrList                  []string
 	NotCreateDefaultDomains   bool `form:"not_create_default_domains,omitempty"`
+	TgwId                     string
 }
 
 type AWSTgwAPIResp struct {
@@ -113,6 +114,7 @@ type TgwInfoDetail struct {
 	CloudType       int      `json:"cloud_type"`
 	EnableMulticast bool     `json:"multicast_enable"`
 	CidrList        []string `json:"tgw_cidr_list"`
+	TgwId           string   `json:"tgw_id"`
 }
 
 type listAttachedVpcNamesResp struct {
@@ -735,6 +737,7 @@ func (c *Client) ListTgwDetails(awsTgw *AWSTgw) (*AWSTgw, error) {
 		awsTgw.CloudType = tgwInfoDetail.CloudType
 		awsTgw.EnableMulticast = tgwInfoDetail.EnableMulticast
 		awsTgw.CidrList = tgwInfoDetail.CidrList
+		awsTgw.TgwId = tgwInfoDetail.TgwId
 		return awsTgw, nil
 	}
 	return nil, ErrNotFound
