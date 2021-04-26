@@ -257,6 +257,18 @@ Valid `firewall_image` values:
   - R80.40-294.759
   - R81-392.787
 
+**OCI**
+1. Palo Alto Networks VM-Series Next-Generation Firewall Bundle 1
+- 10.0.3
+2. Palo Alto Networks VM-Series Next-Generation Firewall Bundle 2
+- 10.0.3
+3. Palo Alto Networks VM-Series Next-Generation Firewall (BYOL)
+- 10.0.4
+- 10.0.3
+- 10.0.0
+- 9.1.6
+- 9.1.3
+
 ### Authentication method
 * `key_name`- (Optional) Applicable to AWS deployment only. AWS Key Pair name. If not provided a Key Pair will be generated.
 * `username`- (Optional) Applicable to Azure deployment only. "admin" as a username is not accepted.
