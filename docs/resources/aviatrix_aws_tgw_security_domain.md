@@ -40,19 +40,19 @@ resource "aviatrix_aws_tgw_security_domain" "Aviatrix_Edge_Domain" {
 }
 
 resource "aviatrix_aws_tgw_security_domain_connection" "default_sd_conn1" {
-  tgw_name     = aviatrix_aws_tgw.test.tgw_name
+  tgw_name     = aviatrix_aws_tgw.test_aws_tgw.tgw_name
   domain_name1 = aviatrix_aws_tgw_security_domain.Aviatrix_Edge_Domain.name
   domain_name2 = aviatrix_aws_tgw_security_domain.Default_Domain.name
 }
 
 resource "aviatrix_aws_tgw_security_domain_connection" "default_sd_conn2" {
-  tgw_name     = aviatrix_aws_tgw.test.tgw_name
+  tgw_name     = aviatrix_aws_tgw.test_aws_tgw.tgw_name
   domain_name1 = aviatrix_aws_tgw_security_domain.Aviatrix_Edge_Domain.name
   domain_name2 = aviatrix_aws_tgw_security_domain.Shared_Service_Domain.name
 }
 
 resource "aviatrix_aws_tgw_security_domain_connection" "default_sd_conn3" {
-  tgw_name     = aviatrix_aws_tgw.test.tgw_name
+  tgw_name     = aviatrix_aws_tgw.test_aws_tgw.tgw_name
   domain_name1 = aviatrix_aws_tgw_security_domain.Default_Domain.name
   domain_name2 = aviatrix_aws_tgw_security_domain.Shared_Service_Domain.name
 }
