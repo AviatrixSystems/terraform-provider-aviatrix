@@ -1265,7 +1265,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("bgp_hold_time", gw.BgpHoldTime)
 	d.Set("bgp_polling_time", strconv.Itoa(gw.BgpPollingTime))
 	var prependAsPath []string
-	for _, p := range strings.Split(gw.PrependASPath, ",") {
+	for _, p := range strings.Split(gw.PrependASPath, " ") {
 		if p != "" {
 			prependAsPath = append(prependAsPath, p)
 		}
