@@ -227,7 +227,7 @@ func dataSourceAviatrixGateway() *schema.Resource {
 			"enable_vpc_dns_server": {
 				Type:        schema.TypeBool,
 				Computed:    true,
-				Description: "Enable vpc_dns_server for Gateway. Only supports AWS. Valid values: true, false.",
+				Description: "Enable vpc_dns_server for Gateway. Valid values: true, false.",
 			},
 			"enable_designated_gateway": {
 				Type:        schema.TypeBool,
@@ -493,7 +493,7 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 			d.Set("insane_mode_az", "")
 		}
 
-		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled" {
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled" {
 			d.Set("enable_vpc_dns_server", true)
 		} else {
 			d.Set("enable_vpc_dns_server", false)
