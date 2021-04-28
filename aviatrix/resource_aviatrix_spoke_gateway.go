@@ -178,7 +178,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Enable vpc_dns_server for Gateway. Only supports AWS. Valid values: true, false.",
+				Description: "Enable vpc_dns_server for Gateway. Valid values: true, false.",
 			},
 			"enable_encrypt_volume": {
 				Type:        schema.TypeBool,
@@ -730,7 +730,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	enableVpcDnsServer := d.Get("enable_vpc_dns_server").(bool)
-	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) && enableVpcDnsServer {
+	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) && enableVpcDnsServer {
 		gwVpcDnsServer := &goaviatrix.Gateway{
 			GwName: d.Get("gw_name").(string),
 		}
@@ -742,7 +742,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("failed to enable VPC DNS Server: %s", err)
 		}
 	} else if enableVpcDnsServer {
-		return fmt.Errorf("'enable_vpc_dns_server' only supports AWS (1), AWSGov (256) or AWSChina (1024) provider")
+		return fmt.Errorf("'enable_vpc_dns_server' only supported by AWS (1), Azure (8), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192)")
 	}
 
 	if customizedSpokeVpcRoutes := d.Get("customized_spoke_vpc_routes").(string); customizedSpokeVpcRoutes != "" {
@@ -931,7 +931,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("private_ip", gw.PrivateIP)
 	d.Set("single_az_ha", gw.SingleAZ == "yes")
 	d.Set("enable_active_mesh", gw.EnableActiveMesh == "yes")
-	d.Set("enable_vpc_dns_server", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled")
+	d.Set("enable_vpc_dns_server", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled")
 	d.Set("single_ip_snat", gw.EnableNat == "yes" && gw.SnatMode == "primary")
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
 
@@ -1503,7 +1503,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if d.HasChange("enable_vpc_dns_server") && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+	if d.HasChange("enable_vpc_dns_server") && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
 		gw := &goaviatrix.Gateway{
 			CloudType: d.Get("cloud_type").(int),
 			GwName:    d.Get("gw_name").(string),
@@ -1523,7 +1523,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 
 	} else if d.HasChange("enable_vpc_dns_server") {
-		return fmt.Errorf("'enable_vpc_dns_server' only supports AWS (1), AWSGov (256) and AWS CHINA (1024)")
+		return fmt.Errorf("'enable_vpc_dns_server' only supported by AWS (1), Azure (8), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192)")
 	}
 
 	if d.HasChange("enable_encrypt_volume") {
