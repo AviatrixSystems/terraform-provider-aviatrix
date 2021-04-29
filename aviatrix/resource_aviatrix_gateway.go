@@ -1219,7 +1219,11 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("max_vpn_conn", gw.MaxConn)
 			d.Set("enable_vpn_nat", gw.EnableVpnNat)
 			if gw.ElbState == "enabled" {
-				d.Set("vpn_protocol", strings.ToUpper(gw.VpnProtocol))
+				if strings.ToUpper(gw.VpnProtocol) == "UDP" {
+					d.Set("vpn_protocol", "UDP")
+				} else {
+					d.Set("vpn_protocol", "TCP")
+				}
 			} else {
 				d.Set("vpn_protocol", "UDP")
 			}
