@@ -574,6 +574,15 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("storage_name is required when creating a Spoke Gateway in AzureChina (2048)")
 		}
 	}
+
+	_, tagListOk := d.GetOk("tag_list")
+	_, tagsOk := d.GetOk("tags")
+	if tagListOk || tagsOk {
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+			return errors.New("failed to create spoke gateway: adding tags is only supported for AWS (1), Azure (8), AzureGov (32), AWSGov (256), AWSChina (1024) or AzureChina (2048)")
+		}
+	}
+
 	log.Printf("[INFO] Creating Aviatrix Spoke Gateway: %#v", gateway)
 
 	err := client.LaunchSpokeVpc(gateway)
@@ -689,12 +698,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	_, tagListOk := d.GetOk("tag_list")
-	_, tagsOk := d.GetOk("tags")
 	if tagListOk || tagsOk {
-		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-			return errors.New("failed to create spoke gateway: adding tags is only supported for AWS (1), Azure (8), AzureGov (32), AWSGov (256), AWSChina (1024) or AzureChina (2048)")
-		}
 		tags := &goaviatrix.Tags{
 			ResourceType: "gw",
 			ResourceName: d.Get("gw_name").(string),
