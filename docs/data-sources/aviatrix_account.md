@@ -35,7 +35,6 @@ In addition to all arguments above, the following attributes are exported:
 
 ### AWS
 * `aws_account_number` - AWS Account number.
-* `aws_access_key` - AWS Access Key.
 * `aws_role_arn` - AWS App role ARN.
 * `aws_role_ec2` - AWS EC2 role ARN.
 * `aws_gateway_role_app` - A separate AWS App role ARN to assign to gateways created by the controller. Available as of provider version R2.19+.
@@ -52,7 +51,6 @@ In addition to all arguments above, the following attributes are exported:
 
 ### AWSGov Cloud
 * `awsgov_account_number` - AWSGov Account number.
-* `awsgov_access_key` - AWSGov Access Key.
 
 ### AWSChina Cloud
 * `awschina_account_number` - AWSChina Account number. Available as of provider version R2.19+.

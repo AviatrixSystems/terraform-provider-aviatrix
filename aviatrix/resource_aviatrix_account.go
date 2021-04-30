@@ -56,6 +56,7 @@ func resourceAviatrixAccount() *schema.Resource {
 			"aws_access_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				Description: "AWS Access Key.",
 			},
 			"aws_secret_key": {
@@ -73,6 +74,7 @@ func resourceAviatrixAccount() *schema.Resource {
 			"awsgov_access_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				Description: "AWS Gov Access Key.",
 			},
 			"awsgov_secret_key": {
@@ -519,7 +521,6 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 				d.Set("aws_gateway_role_app", acc.AwsGatewayRoleApp)
 				d.Set("aws_gateway_role_ec2", acc.AwsGatewayRoleEc2)
 			} else {
-				d.Set("aws_access_key", acc.AwsAccessKey)
 				d.Set("aws_iam", false)
 			}
 		} else if acc.CloudType == goaviatrix.GCP {
@@ -528,7 +529,6 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 			d.Set("arm_subscription_id", acc.ArmSubscriptionId)
 		} else if acc.CloudType == goaviatrix.AWSGov {
 			d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
-			d.Set("awsgov_access_key", acc.AwsgovAccessKey)
 		} else if acc.CloudType == goaviatrix.AzureGov {
 			d.Set("azuregov_subscription_id", acc.AzuregovSubscriptionId)
 		} else if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AWSChina) {
