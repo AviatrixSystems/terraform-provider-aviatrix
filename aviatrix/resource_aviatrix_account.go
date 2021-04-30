@@ -198,6 +198,7 @@ func resourceAviatrixAccount() *schema.Resource {
 			"awschina_access_key": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Sensitive:     true,
 				ConflictsWith: []string{"awschina_role_app", "awschina_role_ec2"},
 				Description:   "AWS China Access Key.",
 			},
@@ -536,7 +537,8 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 			d.Set("awschina_role_ec2", acc.AwsChinaRoleEc2)
 			d.Set("awschina_access_key", acc.AwsChinaAccessKey)
 			if acc.AwsChinaRoleEc2 != "" {
-				// Force secret key to be empty
+				// Force access key and secret key to be empty
+				d.Set("awschina_access_key", "")
 				d.Set("awschina_secret_key", "")
 				d.Set("awschina_iam", true)
 			} else {

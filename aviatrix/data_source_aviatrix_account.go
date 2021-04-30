@@ -98,11 +98,6 @@ func dataSourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS China EC2 role ARN.",
 			},
-			"awschina_access_key": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "AWS China Access Key.",
-			},
 			"azurechina_subscription_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -154,7 +149,6 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("awschina_account_number", acc.AwsChinaAccountNumber)
 		d.Set("awschina_role_app", acc.AwsChinaRoleApp)
 		d.Set("awschina_role_ec2", acc.AwsChinaRoleEc2)
-		d.Set("awschina_access_key", acc.AwsChinaAccessKey)
 		if acc.AwsChinaRoleEc2 == "" {
 			d.Set("awschina_iam", true)
 		} else {
