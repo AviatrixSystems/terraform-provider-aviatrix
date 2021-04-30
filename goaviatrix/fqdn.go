@@ -278,9 +278,10 @@ func (c *Client) ListFQDNTags() ([]*FQDN, error) {
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
 		return nil, errors.New("Json Decode list_fqdn_filter_tags failed: " + err.Error() + "\n Body: " + bodyString)
 	}
-	if _, ok := data["reason"]; ok {
-		log.Errorf("Couldn't find Aviatrix FQDN tags: %s", data["reason"])
-		return nil, ErrNotFound
+	if !data["return"].(bool) {
+		reason := data["reason"].(string)
+		log.Errorf("couldn't find Aviatrix FQDN tags: %s", reason)
+		return nil, errors.New("Rest API list_fqdn_filter_tags Get failed: " + reason)
 	}
 	tags := make([]*FQDN, 0)
 	if val, ok := data["results"]; ok {
