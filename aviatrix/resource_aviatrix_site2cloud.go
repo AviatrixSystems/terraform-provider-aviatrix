@@ -112,12 +112,6 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Default:     false,
 				Description: "Specify whether enabling HA or not.",
 			},
-			"backup_remote_gateway_ip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Backup remote remote gateway IP.",
-			},
 			"backup_pre_shared_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -361,6 +355,13 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				ForceNew:    true,
 				Description: "Backup remote tunnel IP address.",
 			},
+			"backup_remote_gateway_ip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ForceNew:    true,
+				Description: "Backup remote remote gateway IP.",
+			},
 		},
 	}
 }
@@ -406,9 +407,11 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	haEnabled := d.Get("ha_enabled").(bool)
+	singleIpHA := d.Get("enable_single_ip_ha").(bool)
 	if haEnabled {
 		s2c.HAEnabled = "yes"
-		if s2c.BackupGwName == "" || s2c.RemoteGwIP2 == "" {
+		// 22021: Remote GW IP is not required when singleIPHA is enabled as only 1 tunnel is created
+		if s2c.BackupGwName == "" || (s2c.RemoteGwIP2 == "" && !singleIpHA) {
 			return fmt.Errorf("'backup_gateway_name' and 'backup_remote_gateway_ip' are required when HA is enabled")
 		}
 	} else {
@@ -431,7 +434,6 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("active_active_ha can't be enabled if HA isn't enabled for site2cloud connection")
 	}
 
-	singleIpHA := d.Get("enable_single_ip_ha").(bool)
 	if singleIpHA {
 		if !haEnabled {
 			return fmt.Errorf("'enable_single_ip_ha' can't be enabled if HA isn't enabled for site2cloud connection")
@@ -614,8 +616,9 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("failed to enable active active HA for site2cloud: %s: %s", s2c.TunnelName, err)
 		}
 	} else {
-		if s2c.TunnelType == "route" && s2c.HAEnabled == "yes" {
-			return fmt.Errorf("please enable active active HA for HA enabled route based connection")
+		// 22022: SingleIpHA also supports route based connections
+		if s2c.TunnelType == "route" && s2c.HAEnabled == "yes" && !s2c.EnableSingleIpHA {
+			return fmt.Errorf("please enable active active HA or single IP HA for HA enabled route based connection")
 		}
 	}
 
