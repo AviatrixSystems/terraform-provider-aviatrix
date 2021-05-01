@@ -48,11 +48,6 @@ func dataSourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS EC2 role ARN for gateways.",
 			},
-			"aws_access_key": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "AWS Access Key.",
-			},
 			"gcloud_project_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -73,11 +68,6 @@ func dataSourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS Gov Account number to associate with Aviatrix account.",
 			},
-			"awsgov_access_key": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "AWS Gov Access Key.",
-			},
 			"awschina_account_number": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -97,11 +87,6 @@ func dataSourceAviatrixAccount() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "AWS China EC2 role ARN.",
-			},
-			"awschina_access_key": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "AWS China Access Key.",
 			},
 			"azurechina_subscription_id": {
 				Type:        schema.TypeString,
@@ -140,7 +125,6 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 	if acc.CloudType == goaviatrix.AWS {
 		d.Set("aws_account_number", acc.AwsAccountNumber)
 	}
-	d.Set("aws_access_key", acc.AwsAccessKey)
 	d.Set("aws_role_arn", acc.AwsRoleApp)
 	d.Set("aws_role_ec2", acc.AwsRoleEc2)
 	d.Set("aws_gateway_role_app", acc.AwsGatewayRoleApp)
@@ -149,12 +133,10 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("arm_subscription_id", acc.ArmSubscriptionId)
 	d.Set("azuregov_subscription_id", acc.AzuregovSubscriptionId)
 	d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
-	d.Set("awsgov_access_key", acc.AwsgovAccessKey)
 	if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AWSChina) {
 		d.Set("awschina_account_number", acc.AwsChinaAccountNumber)
 		d.Set("awschina_role_app", acc.AwsChinaRoleApp)
 		d.Set("awschina_role_ec2", acc.AwsChinaRoleEc2)
-		d.Set("awschina_access_key", acc.AwsChinaAccessKey)
 		if acc.AwsChinaRoleEc2 == "" {
 			d.Set("awschina_iam", true)
 		} else {
