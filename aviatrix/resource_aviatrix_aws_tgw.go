@@ -1043,8 +1043,19 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 				}
 			}
 
+			defaultDomainsWithCreation := []string{"Aviatrix_Edge_Domain", "Default_Domain", "Shared_Service_Domain"}
+
+			// Since manage_security_domain is changed from false to true, domainsOld may not contain default domains.
+			// Missing default domains (fillers) are added here temporarily, otherwise ValidateAWSTgwDomains will crash.
+			fillersForDomainsOld := goaviatrix.Difference(defaultDomainsWithCreation, domainsOld)
+			if len(fillersForDomainsOld) != 0 {
+				domainsOld = append(domainsOld, fillersForDomainsOld...)
+			}
+
 			domainsToCreateOld, domainConnPolicyOld, domainConnRemoveOld, _ := client.ValidateAWSTgwDomains(domainsOld,
 				domainConnOld, attachedVPCOld)
+
+			existingDefaultDomains := goaviatrix.Difference(defaultDomainsWithCreation, fillersForDomainsOld)
 
 			var domainsNew []string
 			var domainConnNew [][]string
@@ -1168,6 +1179,10 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 
 			}
 
+			if len(goaviatrix.Difference(defaultDomainsWithCreation, domainsNew)) != 0 {
+				return fmt.Errorf("one or more of the three default domains are missing")
+			}
+
 			domainsToCreateNew, domainConnPolicyNew, domainConnRemoveNew, err := client.ValidateAWSTgwDomains(domainsNew,
 				domainConnNew, attachedVPCNew)
 			if err != nil {
@@ -1215,6 +1230,26 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 				}
 			}
 
+			// create default domains first
+			for i := range defaultDomainsWithCreation {
+				if stringInSlice(defaultDomainsWithCreation[i], existingDefaultDomains) {
+					continue
+				}
+				securityDomain := &goaviatrix.SecurityDomain{
+					Name:        defaultDomainsWithCreation[i],
+					AccountName: d.Get("account_name").(string),
+					Region:      d.Get("region").(string),
+					AwsTgwName:  d.Get("tgw_name").(string),
+				}
+
+				err := client.CreateSecurityDomain(securityDomain)
+				if err != nil {
+					resourceAviatrixAWSTgwRead(d, meta)
+					return fmt.Errorf("failed to create Security Domain: %s", err)
+				}
+			}
+
+			// then other domains
 			for i := range domainsToCreate {
 				securityDomain := &goaviatrix.SecurityDomain{
 					Name:                   domainsToCreate[i],
