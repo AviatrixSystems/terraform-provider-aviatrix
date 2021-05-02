@@ -79,9 +79,10 @@ func (c *Client) GetAWSPeer(awsPeer *AWSPeer) (*AWSPeer, error) {
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
 		return nil, errors.New("Json Decode list_aws_peerings failed: " + err.Error() + "\n Body: " + bodyString)
 	}
-	if _, ok := data["reason"]; ok {
-		log.Errorf("Couldn't find AWS peering between VPCs %s and %s: %s", awsPeer.VpcID1, awsPeer.VpcID2, data["reason"])
-		return nil, ErrNotFound
+	if !data["return"].(bool) {
+		reason := data["reason"].(string)
+		log.Errorf("Couldn't find AWS peering between VPCs %s and %s: %s", awsPeer.VpcID1, awsPeer.VpcID2, reason)
+		return nil, errors.New("Rest API list_aws_peerings Get failed: " + reason)
 	}
 	if val, ok := data["results"]; ok {
 		if pairList, ok1 := val.(map[string]interface{})["pair_list"].([]interface{}); ok1 {
