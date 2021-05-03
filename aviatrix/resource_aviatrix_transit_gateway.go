@@ -2027,6 +2027,17 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	if enableFireNet && enableTransitFireNet {
 		return fmt.Errorf("can't enable firenet function and transit firenet function at the same time")
 	}
+
+	if d.HasChange("enable_egress_transit_firenet") {
+		enableEgressTransitFirenet := d.Get("enable_egress_transit_firenet").(bool)
+		if !enableEgressTransitFirenet {
+			err := client.DisableEgressTransitFirenet(&goaviatrix.TransitVpc{GwName: gateway.GwName})
+			if err != nil {
+				return fmt.Errorf("could not disable egress transit firenet: %v", err)
+			}
+		}
+	}
+
 	if d.HasChange("enable_firenet") && d.HasChange("enable_transit_firenet") {
 		transitGW := &goaviatrix.TransitVpc{
 			GwName: gateway.GwName,
@@ -2080,7 +2091,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				}
 			}
 		}
-
 	} else if d.HasChange("enable_firenet") {
 		transitGW := &goaviatrix.TransitVpc{
 			GwName: gateway.GwName,
@@ -2104,7 +2114,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("failed to disable transit GW for FireNet Interfaces: %s", err)
 			}
 		}
-
 	} else if d.HasChange("enable_transit_firenet") {
 		if enableTransitFireNet {
 			enableActiveMesh := d.Get("enable_active_mesh").(bool)
@@ -2196,11 +2205,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			if err != nil {
 				return fmt.Errorf("could not enable egress transit firenet: %v", err)
 			}
-		} else {
-			err := client.DisableEgressTransitFirenet(&goaviatrix.TransitVpc{GwName: gateway.GwName})
-			if err != nil {
-				return fmt.Errorf("could not disable egress transit firenet: %v", err)
-			}
 		}
 	}
 
@@ -2222,7 +2226,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("failed to disable VPC DNS Server: %s", err)
 			}
 		}
-
 	} else if d.HasChange("enable_vpc_dns_server") {
 		return fmt.Errorf("'enable_vpc_dns_server' only supported by AWS (1), Azure (8), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192)")
 	}
@@ -2257,7 +2260,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if err != nil {
 			return fmt.Errorf("failed to set bgp manual spoke advertise CIDRs: %s", err)
 		}
-
 	}
 
 	if d.HasChange("enable_encrypt_volume") {
