@@ -1149,6 +1149,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("private_ip", gw.PrivateIP)
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
 	d.Set("enable_vpc_dns_server", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled")
+	d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
 
 	if gw.IdleTimeout != "NA" {
 		idleTimeout, err := strconv.Atoi(gw.IdleTimeout)
@@ -1403,8 +1404,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 				d.Set("peering_ha_zone", "az-"+gw.GatewayZone)
 			}
 		}
-
-		d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
 	} else if gw.HaGw.CloudType == goaviatrix.AliCloud {
 		d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
 		d.Set("peering_ha_zone", "")

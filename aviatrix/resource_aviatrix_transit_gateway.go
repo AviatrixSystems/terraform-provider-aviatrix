@@ -1313,6 +1313,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("setting 'monitor_exclude_list' to state: %v", err)
 	}
 	d.Set("enable_multi_tier_transit", gw.EnableMultitierTransit)
+	d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
