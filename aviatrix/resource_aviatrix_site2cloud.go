@@ -362,6 +362,18 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				ForceNew:    true,
 				Description: "Backup remote remote gateway IP.",
 			},
+			"phase1_remote_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					ip := d.Get("remote_gateway_ip").(string)
+					o, n := d.GetChange("phase1_remote_identifier")
+					return n.(string) == ip && o.(string) == ip
+
+				},
+				Description:  "Phase 1 remote identifier of the IPsec tunnel.",
+				ValidateFunc: validation.IsIPv4Address,
+			},
 		},
 	}
 }
@@ -637,6 +649,21 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	phase1RemoteIdentifier := d.Get("phase1_remote_identifier").(string)
+	if phase1RemoteIdentifier != "" && phase1RemoteIdentifier != s2c.RemoteGwIP2 {
+		editSite2cloud := &goaviatrix.EditSite2Cloud{
+			GwName:                 s2c.GwName,
+			VpcID:                  s2c.VpcID,
+			ConnName:               s2c.TunnelName,
+			Phase1RemoteIdentifier: phase1RemoteIdentifier,
+		}
+
+		err := client.UpdateSite2Cloud(editSite2cloud)
+		if err != nil {
+			return fmt.Errorf("failed to update Site2Cloud phase 1 remote identifier: %s", err)
+		}
+	}
+
 	return resourceAviatrixSite2CloudReadIfRequired(d, meta, &flag)
 }
 
@@ -793,6 +820,8 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 				return fmt.Errorf("could not write 'local_destination_virtual_cidrs' to state: %v", err)
 			}
 		}
+
+		d.Set("phase1_remote_identifier", s2c.Phase1RemoteIdentifier)
 	}
 
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", d.Get("connection_name").(string), site2cloud)
@@ -938,6 +967,17 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		err := client.UpdateSite2Cloud(s2c)
 		if err != nil {
 			return fmt.Errorf("could not update site2cloud connection Remote or Local CIDRs: %v", err)
+		}
+	}
+
+	if d.HasChange("phase1_remote_identifier") {
+		editSite2cloud.Phase1RemoteIdentifier = d.Get("phase1_remote_identifier").(string)
+		if editSite2cloud.Phase1RemoteIdentifier == "" {
+			editSite2cloud.Phase1RemoteIdentifier = d.Get("remote_gateway_ip").(string)
+		}
+		err := client.UpdateSite2Cloud(editSite2cloud)
+		if err != nil {
+			return fmt.Errorf("failed to update Site2Cloud phase 1 remote identifier: %s", err)
 		}
 	}
 

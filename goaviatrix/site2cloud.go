@@ -78,6 +78,7 @@ type Site2Cloud struct {
 	BackupLocalTunnelIp           string `form:"backup_local_tunnel_ip,omitempty"`
 	BackupRemoteTunnelIp          string `form:"backup_remote_tunnel_ip,omitempty"`
 	EnableSingleIpHA              bool
+	Phase1RemoteIdentifier        string
 }
 
 type EditSite2Cloud struct {
@@ -96,6 +97,7 @@ type EditSite2Cloud struct {
 	LocalSourceVirtualCIDRs       string `form:"local_src_virt_cidrs,omitempty"`
 	LocalDestinationRealCIDRs     string `form:"local_dst_real_cidrs,omitempty"`
 	LocalDestinationVirtualCIDRs  string `form:"local_dst_virt_cidrs,omitempty"`
+	Phase1RemoteIdentifier        string `form:"phase1_remote_identifier,omitempty"`
 }
 
 type Site2CloudResp struct {
@@ -151,6 +153,7 @@ type EditSite2CloudConnDetail struct {
 	ManualBGPCidrs                []string      `json:"conn_bgp_manual_advertise_cidrs"`
 	EventTriggeredHA              string        `json:"event_triggered_ha"`
 	EnableSingleIpHA              string        `json:"single_ip_ha,omitempty"`
+	Phase1RemoteIdentifier        []string      `json:"phase1_remote_id"`
 }
 
 type Site2CloudConnDetailResp struct {
@@ -441,6 +444,10 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 			site2cloud.BackupRemoteTunnelIp = s2cConnDetail.BgpBackupRemoteIP
 		}
 		site2cloud.EnableSingleIpHA = s2cConnDetail.EnableSingleIpHA == "enabled"
+		if len(s2cConnDetail.Phase1RemoteIdentifier) == 0 {
+			return nil, errors.New("could not get phase 1 remote identifier")
+		}
+		site2cloud.Phase1RemoteIdentifier = s2cConnDetail.Phase1RemoteIdentifier[0]
 		return site2cloud, nil
 	}
 
