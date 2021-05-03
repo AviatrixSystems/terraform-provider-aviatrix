@@ -110,6 +110,15 @@ func intInSlice(needle int, haystack []int) bool {
 	return false
 }
 
+func stringInSlice(needle string, haystack []string) bool {
+	for _, element := range haystack {
+		if element == needle {
+			return true
+		}
+	}
+	return false
+}
+
 var (
 	awsTagMatcher   = regexp.MustCompile(`^[a-zA-Z0-9+\-=._ :/@ ]*$`)
 	azureTagMatcher = regexp.MustCompile(`^[a-zA-Z0-9+\-=._ :@ ]*$`)
