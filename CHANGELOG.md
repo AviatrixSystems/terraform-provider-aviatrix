@@ -1,4 +1,96 @@
-## 2.18.2 (Unreleased)
+## 2.19.0 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.4.2416**
+- Supported Terraform version: **v0.12.x**, **v0.13.x** and **v0.14.x**
+
+### Features:
+1. Implemented support of following attributes in **aviatrix_spoke_gateway**:
+  - ``enable_private_vpc_default_route``
+  - ``enable_skip_public_route_table_update``
+  - ``enable_auto_advertise_s2c_cidrs``
+2. Implemented support of associating a controller with a CoPilot instance:
+  - New resource **aviatrix_copilot_association**
+3. Implemented support for enabling event triggered HA for Site2Cloud type connection resources:
+  - New attribute ``enable_event_triggered_ha`` in **aviatrix_site2cloud**, **aviatrix_transit_external_device_conn**, **aviatrix_vgw_conn** and **aviatrix_device_transit_gateway_attachment**
+4. Implemented support for GCP FireNet with Fortinet and CheckPoint firewall vendors
+5. Implemented support for Insane Mode over Internet with following attributes in **aviatrix_transit_gateway_peering**:
+  - ``enable_insane_mode_encryption_over_internet``
+  - ``tunnel_count``
+6. Implemented support for attaching a managed CloudN device to an **aviatrix_transit_gateway**:
+  - New resource **aviatrix_cloudn_transit_gateway_attachment**
+7. Implemented support for setting approved CIDRs in **aviatrix_transit_external_device_conn**:
+  - New attribute ``approved_cidrs``
+8. Implemented support for remote syslog profile name:
+  - New attribute ``name`` in **aviatrix_remote_syslog**
+9. Implemented new resources to decouple ``security_domains`` out of **aviatrix_aws_tgw**:
+  - **aviatrix_aws_tgw_security_domain**
+  - **aviatrix_aws_tgw_security_domain_connection**
+10. Implemented support for intra domain inspection:
+  - New resource **aviatrix_aws_tgw_intra_domain_inspection**
+11. Implemented support for multi-tier transit feature:
+  - New attribute ``enable_multi_tier_transit`` in **aviatrix_transit_gateway** and data source
+12. Implemented support for Alibaba Cloud in resources **aviatrix_account**, **aviatrix_vpc**, **aviatrix_gateway**, **aviatrix_transit_gateway** and **aviatrix_spoke_gateway** and data sources
+13. Implemented support for disabling sending exception emails to Aviatrix:
+  - New resource **aviatrix_controller_email_exception_notification_config**
+14. Implemented support for updating certificate domain:
+  - New resource **aviatrix_controller_cert_domain_config**
+15. Implemented support for TGW segmentation for Egress:
+  - New attribute ``tgw_segmentation_for_egress_enabled`` in **aviatrix_firenet** and data source
+16. Implemented support for OCI FireNet
+17. Implemented support for Egress FireNet route injection:
+  - New attribute ``egress_static_cidrs`` in **aviatrix_firenet** and data source
+18. Implemented support for launching user provided AMI for FireNet:
+  - New attribute ``firewall_image_id`` in **aviatrix_firewall_instance**
+19. Implemented support for optional tunnel ip addresses with following attributes in **aviatrix_site2cloud**:
+  - ``local_tunnel_ip``
+  - ``remote_tunnel_ip``
+  - ``backup_local_tunnel_ip``
+  - ``backup_remote_tunnel_ip``
+20. Implemented support for phase 1 remote identifier for Site2Cloud:
+  - New attribute ``phase1_remote_identifier`` in **aviatrix_site2cloud**
+21. Implemented support for AzureGov, AWSChina and AzureChina clouds in resources **aviatrix_account**, **aviatrix_vpc**, **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+22. Implemented support for creating an **aviatrix_vpc** in Azure with an existing resource group ``resource_group``
+23. Implemented support for separate IAM role and policy for gateways in AWS **aviatrix_account** with new attributes:
+  - ``aws_gateway_role_app``
+  - ``aws_gateway_role_ec2``
+24. Implemented support for IPSec tunnel down detection time in **aviatrix_gatewway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**:
+  - New attribute ``tunnel_detection_time``
+25. Implemented support for **aviatrix_site2cloud** connections to have a single public IP with two gateways:
+  - New attribute ``single_ip_ha``
+26. Implemented support for enabling auditing in **aviatrix_account**:
+  - New attribute ``audit_account``
+27. Implemented support for BGP max AS limit controller configuration:
+  - New resource **aviatrix_controller_bgp_max_as_limit_config**
+28. Implemented support for OCI insane mode in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+29. Implemented support for ``enable_egress_transit_firenet`` for Azure and OCI in **aviatrix_transit_gateway**
+
+### Enhancements:
+1. Added following attributes in **aviatrix_account** data source:
+  - ``gcloud_project_id``
+  - ``arm_subscription_id``
+  - ``awsgov_account_number``
+  - ``awsgov_access_key``
+2. Optimized state refresh performance for **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+3. Added support for Fortinet Fortigate in **data_source_aviatrix_firenet_vendor_integration**
+4. Added computed value ``tgw_id`` in **aviatrix_aws_tgw**
+5. Added new map type attribute ``tags`` to replace ``tag_list`` in **aviatrix_gatewway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+6. Changed ``aws_access_key`` and ``aws_gov_access_key`` in **aviatrix_acount** to be sensitive values
+
+### Bug Fixes:
+1. Fixed an edge case in **aviatrix_gateway** that could cause the provider to crash when refreshing the resource
+2. Fixed **aviatrix_transit_gateway_peering** to allow setting duplicate AS Numbers in the ``prepend_as_path1`` and ``prepend_as_path2`` attributes
+3. Fixed **aviatrix_fqdn** to not remove ``domain_names`` after importing the resource with ``manage_domain_names`` set to false
+4. Fixed reordering issue for ``security_domains`` in **aviatrix_aws_tgw**
+5. Fixed issue where disabling transit firenet and downsizing the gateway can't be done in one run
+6. Fixed issue where enabling HA for **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** with insane mode enabled errors out
+7. Fixed issue where disabling transit firenet and egress transit firenet can't be done in one run in **aviatrix_transit_gateway**
+
+### Deprecations:
+1. Deprecated the in-line attributes ``security_domains``, ``security_domain_name``, ``connected_domains``, ``aviatrix_firewall``, ``native_egress`` and ``native_firewall`` in **aviatrix_aws_tgw**. Please use the standalone resources **aviatrix_aws_tgw_security_domain** and **aviatrix_aws_tgw_security_domain_connection** instead
+2. Deprecated ``tag_list`` in **aviatrix_gatewway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** for new map type attribute ``tags``
+
+
+## 2.18.2 (March 22, 2021)
 ### Notes:
 - Supported Controller version: **UserConnect-6.3.2364**
 - Supported Terraform version: **v0.12.x** and **v0.13.x**
