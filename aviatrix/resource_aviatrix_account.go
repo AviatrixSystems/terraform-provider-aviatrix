@@ -535,7 +535,6 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 			d.Set("awschina_account_number", acc.AwsChinaAccountNumber)
 			d.Set("awschina_role_app", acc.AwsChinaRoleApp)
 			d.Set("awschina_role_ec2", acc.AwsChinaRoleEc2)
-			d.Set("awschina_access_key", acc.AwsChinaAccessKey)
 			if acc.AwsChinaRoleEc2 != "" {
 				// Force access key and secret key to be empty
 				d.Set("awschina_access_key", "")
