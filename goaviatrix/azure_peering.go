@@ -73,9 +73,10 @@ func (c *Client) GetAzurePeer(azurePeer *AzurePeer) (*AzurePeer, error) {
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
 		return nil, errors.New("Json Decode 'list_arm_peer_vnet_pairs' failed: " + err.Error() + "\n Body: " + bodyString)
 	}
-	if _, ok := data["reason"]; ok {
-		log.Errorf("Couldn't find ARM peering between VPCs %s and %s: %s", azurePeer.VNet1, azurePeer.VNet2, data["reason"])
-		return nil, ErrNotFound
+	if !data["return"].(bool) {
+		reason := data["reason"].(string)
+		log.Errorf("Couldn't find Azure peering between VPCs %s and %s: %s", azurePeer.VNet1, azurePeer.VNet2, reason)
+		return nil, errors.New("Rest API list_arm_peer_vnet_pairs Get failed: " + reason)
 	}
 	if val, ok := data["results"]; ok {
 		pairList := val.(interface{}).([]interface{})
