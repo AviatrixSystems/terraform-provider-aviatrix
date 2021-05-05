@@ -53,6 +53,15 @@ Run the following command:
 $ make build13
 ```
 
+### Windows
+Run the following command:
+```sh
+cd %GOPATH%\src\github.com\AviatrixSystems\terraform-provider-aviatrix
+go fmt
+go install
+xcopy "%GOPATH%\bin\terraform-provider-aviatrix.exe" "%APPDATA%\terraform.d\plugins\aviatrix.com\aviatrix\aviatrix\99.0.0\windows_amd64\" /Y
+```
+
 Using Aviatrix Provider (Terraform v0.12+)
 -----------------------
 
