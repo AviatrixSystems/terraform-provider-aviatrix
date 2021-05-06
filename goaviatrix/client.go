@@ -235,10 +235,13 @@ func (c *Client) GetAPI(v interface{}, action string, d map[string]string, check
 	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
 		return fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
 	}
+	if err := checkFunc(action, data.Reason, data.Return); err != nil {
+		return err
+	}
 	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&v); err != nil {
 		return fmt.Errorf("Json Decode failed: %v\n Body: %s", err, bodyString)
 	}
-	return checkFunc(action, data.Reason, data.Return)
+	return nil
 }
 
 // GetAPIContext makes a GET request to the Aviatrix API
@@ -260,10 +263,13 @@ func (c *Client) GetAPIContext(ctx context.Context, v interface{}, action string
 	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
 		return fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
 	}
+	if err := checkFunc(action, data.Reason, data.Return); err != nil {
+		return err
+	}
 	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&v); err != nil {
 		return fmt.Errorf("Json Decode failed: %v\n Body: %s", err, bodyString)
 	}
-	return checkFunc(action, data.Reason, data.Return)
+	return nil
 }
 
 func (c *Client) urlEncode(d map[string]string) (string, error) {
