@@ -153,7 +153,7 @@ type EditSite2CloudConnDetail struct {
 	ManualBGPCidrs                []string      `json:"conn_bgp_manual_advertise_cidrs"`
 	EventTriggeredHA              string        `json:"event_triggered_ha"`
 	EnableSingleIpHA              string        `json:"single_ip_ha,omitempty"`
-	Phase1RemoteIdentifier        []string      `json:"phase1_remote_id"`
+	Phase1RemoteIdentifier        string        `json:"phase1_remote_id"`
 }
 
 type Site2CloudConnDetailResp struct {
@@ -444,10 +444,7 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 			site2cloud.BackupRemoteTunnelIp = s2cConnDetail.BgpBackupRemoteIP
 		}
 		site2cloud.EnableSingleIpHA = s2cConnDetail.EnableSingleIpHA == "enabled"
-		if len(s2cConnDetail.Phase1RemoteIdentifier) == 0 {
-			return nil, errors.New("could not get phase 1 remote identifier")
-		}
-		site2cloud.Phase1RemoteIdentifier = s2cConnDetail.Phase1RemoteIdentifier[0]
+		site2cloud.Phase1RemoteIdentifier = s2cConnDetail.Phase1RemoteIdentifier
 		return site2cloud, nil
 	}
 
