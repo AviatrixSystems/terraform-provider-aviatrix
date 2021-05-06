@@ -297,6 +297,18 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "Remote LAN IP.",
 			},
+			"phase1_remote_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					ip := d.Get("remote_gateway_ip").(string)
+					o, n := d.GetChange("phase1_remote_identifier")
+					return n.(string) == ip && o.(string) == ip
+
+				},
+				Description:  "Phase 1 remote identifier of the IPsec tunnel.",
+				ValidateFunc: validation.IsIPv4Address,
+			},
 			"approved_cidrs": {
 				Type:        schema.TypeSet,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -570,6 +582,21 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		}
 	}
 
+	phase1RemoteIdentifier := d.Get("phase1_remote_identifier").(string)
+	if phase1RemoteIdentifier != "" && phase1RemoteIdentifier != externalDeviceConn.RemoteGatewayIP {
+		editSite2cloud := &goaviatrix.EditSite2Cloud{
+			GwName:                 externalDeviceConn.GwName,
+			VpcID:                  externalDeviceConn.VpcID,
+			ConnName:               externalDeviceConn.ConnectionName,
+			Phase1RemoteIdentifier: phase1RemoteIdentifier,
+		}
+
+		err := client.UpdateSite2Cloud(editSite2cloud)
+		if err != nil {
+			return fmt.Errorf("failed to update phase 1 remote identifier: %s", err)
+		}
+	}
+
 	return resourceAviatrixTransitExternalDeviceConnRead(d, meta)
 }
 
@@ -702,6 +729,10 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 				break
 			}
 		}
+		if len(transitAdvancedConfig.ConnectionLearnedCIDRApprovalInfo) == 0 {
+			d.Set("enable_learned_cidrs_approval", false)
+			d.Set("approved_cidrs", nil)
+		}
 
 		if conn.EnableIkev2 == "enabled" {
 			d.Set("enable_ikev2", true)
@@ -720,6 +751,18 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		if conn.TunnelProtocol == "LAN" {
 			d.Set("remote_vpc_name", conn.PeerVnetId)
 		}
+	}
+
+	site2cloud := &goaviatrix.Site2Cloud{
+		TunnelName: externalDeviceConn.ConnectionName,
+		VpcID:      externalDeviceConn.VpcID,
+	}
+	s2c, err := client.GetSite2CloudConnDetail(site2cloud)
+	if err != nil {
+		return fmt.Errorf("couldn't find Aviatrix Site2Cloud: %s, %#v", err, s2c)
+	}
+	if s2c != nil {
+		d.Set("phase1_remote_identifier", s2c.Phase1RemoteIdentifier)
 	}
 
 	d.SetId(conn.ConnectionName + "~" + conn.VpcID)
@@ -797,7 +840,24 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 		}
 	}
 
-	return nil
+	if d.HasChange("phase1_remote_identifier") {
+		editSite2cloud := &goaviatrix.EditSite2Cloud{
+			GwName:   gwName,
+			VpcID:    d.Get("vpc_id").(string),
+			ConnName: connName,
+		}
+
+		editSite2cloud.Phase1RemoteIdentifier = d.Get("phase1_remote_identifier").(string)
+		if editSite2cloud.Phase1RemoteIdentifier == "" {
+			editSite2cloud.Phase1RemoteIdentifier = d.Get("remote_gateway_ip").(string)
+		}
+		err := client.UpdateSite2Cloud(editSite2cloud)
+		if err != nil {
+			return fmt.Errorf("failed to update phase 1 remote identifier: %s", err)
+		}
+	}
+
+	return resourceAviatrixTransitExternalDeviceConnRead(d, meta)
 }
 
 func resourceAviatrixTransitExternalDeviceConnDelete(d *schema.ResourceData, meta interface{}) error {
