@@ -37,7 +37,17 @@ func resourceAviatrixControllerCertDomainConfigCreate(ctx context.Context, d *sc
 
 	err := client.SetCertDomain(ctx, certDomain)
 	if err != nil {
-		return diag.Errorf("could not set cert domain: %v", err)
+		if strings.Contains(err.Error(), "EOF") {
+			certDomainConfig, err := client.GetCertDomain(ctx)
+			if err != nil {
+				return diag.Errorf("could not confirm if cert domain is updated: %v", err)
+			}
+			if certDomainConfig.CertDomain != certDomain {
+				return diag.Errorf("could not set cert domain: %v", err)
+			}
+		} else {
+			return diag.Errorf("could not set cert domain: %v", err)
+		}
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
@@ -68,7 +78,17 @@ func resourceAviatrixControllerCertDomainConfigUpdate(ctx context.Context, d *sc
 	if d.HasChange("cert_domain") {
 		err := client.SetCertDomain(ctx, d.Get("cert_domain").(string))
 		if err != nil {
-			return diag.Errorf("could not update cert domain: %v", err)
+			if strings.Contains(err.Error(), "EOF") {
+				certDomainConfig, err := client.GetCertDomain(ctx)
+				if err != nil {
+					return diag.Errorf("could not confirm if cert domain is updated: %v", err)
+				}
+				if certDomainConfig.CertDomain != d.Get("cert_domain") {
+					return diag.Errorf("could not update cert domain: %v", err)
+				}
+			} else {
+				return diag.Errorf("could not update cert domain: %v", err)
+			}
 		}
 	}
 
@@ -80,7 +100,17 @@ func resourceAviatrixControllerCertDomainConfigDelete(ctx context.Context, d *sc
 
 	err := client.SetCertDomain(ctx, "aviatrixnetwork.com")
 	if err != nil {
-		return diag.Errorf("failed to set cert domain: %v", err)
+		if strings.Contains(err.Error(), "EOF") {
+			certDomainConfig, err := client.GetCertDomain(ctx)
+			if err != nil {
+				return diag.Errorf("could not confirm if cert domain is updated: %v", err)
+			}
+			if certDomainConfig.CertDomain != "aviatrixnetwork.com" {
+				return diag.Errorf("could not reset cert domain: %v", err)
+			}
+		} else {
+			return diag.Errorf("could not reset cert domain: %v", err)
+		}
 	}
 
 	return nil
