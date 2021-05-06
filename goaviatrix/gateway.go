@@ -521,29 +521,17 @@ func (c *Client) DisableSingleAZGateway(gateway *Gateway) error {
 }
 
 func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for list_vpcs_summary") + err.Error())
+	action := "list_vpcs_summary"
+	params := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": gateway.GwName,
 	}
-	listVpcSummary := url.Values{}
-	listVpcSummary.Add("CID", c.CID)
-	listVpcSummary.Add("action", "list_vpcs_summary")
-	listVpcSummary.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = listVpcSummary.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get list_vpcs_summary failed: " + err.Error())
-	}
+
 	var data GatewayListResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_vpcs_summary failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return nil, errors.New("Rest API list_vpcs_summary Get failed: " + data.Reason)
+	err := c.GetAPI(&data, action, params, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
 
 	gwList := data.Results
