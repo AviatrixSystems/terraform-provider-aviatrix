@@ -120,6 +120,7 @@ The following arguments are supported:
 * `enable_ikev2` - (Optional) Set as true to enable IKEv2 protocol.
 * `manual_bgp_advertised_cidrs` - (Optional) Configure manual BGP advertised CIDRs for this connection. Only valid with 'connection_type'= 'bgp'. Available as of provider version R2.18+.
 * `enable_event_triggered_ha` - (Optional) Enable Event Triggered HA. Default value: false. Valid values: true or false. Available as of provider version R2.19+.
+* `phase1_remote_identifier` - (Optional) Phase 1 remote identifier of the IPsec tunnel. This can be configured to be either the public IP address or the private IP address of the peer terminating the IPsec tunnel. Available as of provider version R2.19+.
 
 ## Import
 

@@ -369,7 +369,6 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 					ip := d.Get("remote_gateway_ip").(string)
 					o, n := d.GetChange("phase1_remote_identifier")
 					return n.(string) == ip && o.(string) == ip
-
 				},
 				Description:  "Phase 1 remote identifier of the IPsec tunnel.",
 				ValidateFunc: validation.IsIPv4Address,
