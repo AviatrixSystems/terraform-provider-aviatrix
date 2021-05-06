@@ -40,11 +40,10 @@ func resourceAviatrixControllerCertDomainConfigCreate(ctx context.Context, d *sc
 		if strings.Contains(err.Error(), "EOF") {
 			certDomainConfig, err := client.GetCertDomain(ctx)
 			if err != nil {
-				return diag.Errorf("could not get cert domain: %v", err)
+				return diag.Errorf("could not confirm if cert domain is updated: %v", err)
 			}
-			if certDomainConfig.CertDomain == certDomain {
-				d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
-				return resourceAviatrixControllerCertDomainConfigRead(ctx, d, meta)
+			if certDomainConfig.CertDomain != certDomain {
+				return diag.Errorf("could not set cert domain: %v", err)
 			}
 		} else {
 			return diag.Errorf("could not set cert domain: %v", err)
@@ -82,10 +81,10 @@ func resourceAviatrixControllerCertDomainConfigUpdate(ctx context.Context, d *sc
 			if strings.Contains(err.Error(), "EOF") {
 				certDomainConfig, err := client.GetCertDomain(ctx)
 				if err != nil {
-					return diag.Errorf("could not get cert domain: %v", err)
+					return diag.Errorf("could not confirm if cert domain is updated: %v", err)
 				}
-				if certDomainConfig.CertDomain == d.Get("cert_domain") {
-					return resourceAviatrixControllerCertDomainConfigRead(ctx, d, meta)
+				if certDomainConfig.CertDomain != d.Get("cert_domain") {
+					return diag.Errorf("could not update cert domain: %v", err)
 				}
 			} else {
 				return diag.Errorf("could not update cert domain: %v", err)
@@ -104,10 +103,10 @@ func resourceAviatrixControllerCertDomainConfigDelete(ctx context.Context, d *sc
 		if strings.Contains(err.Error(), "EOF") {
 			certDomainConfig, err := client.GetCertDomain(ctx)
 			if err != nil {
-				return diag.Errorf("could not get cert domain: %v", err)
+				return diag.Errorf("could not confirm if cert domain is updated: %v", err)
 			}
-			if certDomainConfig.CertDomain == "aviatrixnetwork.com" {
-				return nil
+			if certDomainConfig.CertDomain != "aviatrixnetwork.com" {
+				return diag.Errorf("could not reset cert domain: %v", err)
 			}
 		} else {
 			return diag.Errorf("could not reset cert domain: %v", err)
