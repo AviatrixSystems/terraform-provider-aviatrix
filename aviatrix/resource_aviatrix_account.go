@@ -483,7 +483,8 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 
 	accountName := d.Get("account_name").(string)
-	if accountName == "" {
+	isImport := accountName == ""
+	if isImport {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no account name received. Import Id is %s", id)
 		d.Set("account_name", id)
@@ -551,7 +552,9 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 		d.SetId(acc.AccountName)
 	}
 
-	if d.Get("audit_account").(bool) {
+	// Don't check account audit during import. In terraform version 0.14.11 or earlier, returning diag.Warning during import
+	// will cause it to fail silently. It will not return an error, but the state file will not be updated after.
+	if d.Get("audit_account").(bool) && !isImport {
 		err = client.AuditAccount(ctx, account)
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
