@@ -198,7 +198,8 @@ The following arguments are supported:
 * `alicloud_secret_key` - (Optional) Alibaba Cloud Secret Key. Required when creating an account for Alibaba Cloud.
 
 ### Misc.
-* `audit_account` - (Optional) Specify whether to enable the audit account feature. If this feature is enabled, terraform will give a warning if there is an issue with the account credentials. Valid values: true, false. Default: true. **Note: The warning may still appear for a few hours after fixing the underlying issue.**
+-> **NOTE:** On terraform versions 0.12.x, 0.13.x, and 0.14.x, terraform will not detect any changes for the account when the account audit fail warning is given. In order to apply changes or set `audit_account = false`, please run `terraform apply -refresh=false`.
+* `audit_account` - (Optional) Specify whether to enable the audit account feature. If this feature is enabled, terraform will give a warning if there is an issue with the account credentials. Valid values: true, false. Default: false. **Note: The warning may still appear for a few hours after fixing the underlying issue.**
 
 -> **NOTE:** Please make sure that the IAM roles/profiles have already been created before running this, if `aws_iam = true`. More information on the IAM roles is at https://docs.aviatrix.com/HowTos/iam_policies.html and https://docs.aviatrix.com/HowTos/HowTo_IAM_role.html
 

@@ -183,7 +183,7 @@ func resourceAviatrixAccount() *schema.Resource {
 			"audit_account": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     true,
+				Default:     false,
 				Description: "Enable account audit.",
 			},
 			"awschina_account_number": {
@@ -488,7 +488,6 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no account name received. Import Id is %s", id)
 		d.Set("account_name", id)
-		d.Set("audit_account", true)
 		d.SetId(id)
 	}
 
