@@ -4,65 +4,96 @@
 - Supported Terraform version: **v0.12.x**, **v0.13.x** and **v0.14.x**
 
 ### Features:
+#### Accounts
+1. Implemented support for Alibaba Cloud in resource **aviatrix_account** and data source
+2. Implemented support for AzureGov, AWSChina and AzureChina clouds in resource **aviatrix_account**
+3. Implemented support for separate IAM role and policy for gateways in AWS **aviatrix_account** with new attributes
+  - ``aws_gateway_role_app``
+  - ``aws_gateway_role_ec2``
+4. Implemented support for enabling auditing in **aviatrix_account**:
+  - New attribute ``audit_account``
+
+#### CloudWAN
+1. Implemented support for enabling event triggered HA for Site2Cloud type connection resources:
+  - New attribute ``enable_event_triggered_ha`` in **aviatrix_device_transit_gateway_attachment**
+
+#### Firewall Network
+1. Implemented support for GCP FireNet with Fortinet and CheckPoint firewall vendors
+2. Implemented support for TGW segmentation for Egress in TGW FireNet workflows:
+  - New attribute ``tgw_segmentation_for_egress_enabled`` in **aviatrix_firenet** and data source
+3. Implemented support for OCI FireNet
+4. Implemented support for Egress FireNet route injection:
+  - New attribute ``egress_static_cidrs`` in **aviatrix_firenet** and data source
+5. Implemented custom AMI support for Firewall instance, allowing customers to launch special images provided by firewall vendors:
+  - New attribute ``firewall_image_id`` in **aviatrix_firewall_instance**
+
+#### Gateway
+1. Implemented support for Alibaba Cloud in resource **aviatrix_gateway** and data source
+2. Implemented support for AzureGov, AWSChina and AzureChina clouds in resource **aviatrix_gateway**
+3. Implemented support for IPSec tunnel down detection time in **aviatrix_gateway**:
+  - New attribute ``tunnel_detection_time``
+
+#### Multi-Cloud Transit
 1. Implemented support for the following attributes in **aviatrix_spoke_gateway**:
   - ``enable_private_vpc_default_route``
   - ``enable_skip_public_route_table_update``
   - ``enable_auto_advertise_s2c_cidrs``
-2. Implemented support of associating a controller with a CoPilot instance, allowing user login without a username and password:
-  - New resource **aviatrix_copilot_association**
-3. Implemented support for enabling event triggered HA for Site2Cloud type connection resources:
-  - New attribute ``enable_event_triggered_ha`` in **aviatrix_site2cloud**, **aviatrix_transit_external_device_conn**, **aviatrix_vgw_conn** and **aviatrix_device_transit_gateway_attachment**
-4. Implemented support for GCP FireNet with Fortinet and CheckPoint firewall vendors
-5. Implemented Insane Mode support over Public Network for Transit Peering in **aviatrix_transit_gateway_peering**:
+2. Implemented support for enabling event triggered HA for Site2Cloud type connection resources:
+  - New attribute ``enable_event_triggered_ha`` in **aviatrix_transit_external_device_conn**, **aviatrix_vgw_conn**
+3. Implemented Insane Mode support over Public Network for Transit Peering in **aviatrix_transit_gateway_peering**:
   - ``enable_insane_mode_encryption_over_internet``
   - ``tunnel_count``
-6. Implemented support for attaching a managed CloudN device to an **aviatrix_transit_gateway**:
+4. Implemented support for attaching a managed CloudN device to an **aviatrix_transit_gateway**:
   - New resource **aviatrix_cloudn_transit_gateway_attachment**
-7. Implemented support for setting approved CIDRs in **aviatrix_transit_external_device_conn**:
+5. Implemented support for setting approved CIDRs in **aviatrix_transit_external_device_conn**:
   - New attribute ``approved_cidrs``
-8. Implemented support for adding profile names to Remote Syslog configs:
-  - New attribute ``name`` in **aviatrix_remote_syslog**
-9. Implemented new resources to decouple ``security_domains`` out of **aviatrix_aws_tgw**:
-  - **aviatrix_aws_tgw_security_domain**
-  - **aviatrix_aws_tgw_security_domain_connection**
-10. Implemented support for TGW intra-domain inspection:
-  - New resource **aviatrix_aws_tgw_intra_domain_inspection**
-11. Implemented support for Multi-Tier Transit feature:
+6. Implemented support for Multi-Tier Transit feature:
   - New attribute ``enable_multi_tier_transit`` in **aviatrix_transit_gateway** and data source
-12. Implemented support for Alibaba Cloud in resources **aviatrix_account**, **aviatrix_vpc**, **aviatrix_gateway**, **aviatrix_transit_gateway** and **aviatrix_spoke_gateway** and data sources
-13. Implemented support for enabling/disabling Controller from sending exception emails to Aviatrix:
+7. Implemented support for Alibaba Cloud in resources **aviatrix_transit_gateway** and **aviatrix_spoke_gateway** and data sources
+8. Implemented support for AzureGov, AWSChina and AzureChina clouds in resources **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+9. Implemented support for IPSec tunnel down detection time in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**:
+  - New attribute ``tunnel_detection_time``
+10. Implemented OCI transit Insane Mode support in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+11. Implemented support for ``enable_egress_transit_firenet`` for Azure and OCI in **aviatrix_transit_gateway**
+12. Implemented support for phase 1 remote identifier in **aviatrix_transit_external_device_conn**:
+  - New attribute ``phase1_remote_identifier``
+
+#### Settings
+1. Implemented support of associating a controller with a CoPilot instance, allowing user login without a username and password:
+  - New resource **aviatrix_copilot_association**
+2. Implemented support for adding profile names to Remote Syslog configs:
+  - New attribute ``name`` in **aviatrix_remote_syslog**
+3. Implemented support for enabling/disabling Controller from sending exception emails to Aviatrix:
   - New resource **aviatrix_controller_email_exception_notification_config**
-14. Implemented support for updating Controller's certificate domain, required for Aviatrix China Solution:
+4. Implemented support for updating Controller's certificate domain, required for Aviatrix China Solution:
   - New resource **aviatrix_controller_cert_domain_config**
-15. Implemented support for TGW segmentation for Egress in TGW FireNet workflows:
-  - New attribute ``tgw_segmentation_for_egress_enabled`` in **aviatrix_firenet** and data source
-16. Implemented support for OCI FireNet
-17. Implemented support for Egress FireNet route injection:
-  - New attribute ``egress_static_cidrs`` in **aviatrix_firenet** and data source
-18. Implemented custom AMI support for Firewall instance, allowing customers to launch special images provided by firewall vendors:
-  - New attribute ``firewall_image_id`` in **aviatrix_firewall_instance**
-19. Implemented support for setting optional tunnel IP address with the following attributes in **aviatrix_site2cloud**:
+5. Implemented support for BGP max AS limit controller configuration:
+  - New resource **aviatrix_controller_bgp_max_as_limit_config**
+
+#### Site2Cloud
+1. Implemented support for enabling event triggered HA for Site2Cloud resource:
+  - New attribute ``enable_event_triggered_ha`` in **aviatrix_site2cloud**
+2. Implemented support for setting optional tunnel IP address with the following attributes in **aviatrix_site2cloud**:
   - ``local_tunnel_ip``
   - ``remote_tunnel_ip``
   - ``backup_local_tunnel_ip``
   - ``backup_remote_tunnel_ip``
-20. Implemented support for phase 1 remote identifier for Site2Cloud:
-  - New attribute ``phase1_remote_identifier`` in **aviatrix_site2cloud**
-21. Implemented support for AzureGov, AWSChina and AzureChina clouds in resources **aviatrix_account**, **aviatrix_vpc**, **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
-22. Implemented support for creating an **aviatrix_vpc** in Azure with an existing ``resource_group``
-23. Implemented support for separate IAM role and policy for gateways in AWS **aviatrix_account** with new attributes:
-  - ``aws_gateway_role_app``
-  - ``aws_gateway_role_ec2``
-24. Implemented support for IPSec tunnel down detection time in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**:
-  - New attribute ``tunnel_detection_time``
-25. Implemented single public IP failover support for **aviatrix_site2cloud** connections:
+3. Implemented single public IP failover support for **aviatrix_site2cloud** connections:
   - New attribute ``single_ip_ha``
-26. Implemented support for enabling auditing in **aviatrix_account**:
-  - New attribute ``audit_account``
-27. Implemented support for BGP max AS limit controller configuration:
-  - New resource **aviatrix_controller_bgp_max_as_limit_config**
-28. Implemented OCI transit Insane Mode support in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
-29. Implemented support for ``enable_egress_transit_firenet`` for Azure and OCI in **aviatrix_transit_gateway**
+4. Implemented support for phase 1 remote identifier for Site2Cloud:
+  - New attribute ``phase1_remote_identifier`` in **aviatrix_site2cloud**
+
+#### TGW Orchestrator
+1. Implemented new resources to decouple ``security_domains`` out of **aviatrix_aws_tgw**:
+  - **aviatrix_aws_tgw_security_domain**
+  - **aviatrix_aws_tgw_security_domain_connection**
+2. Implemented support for TGW intra-domain inspection:
+  - New resource **aviatrix_aws_tgw_intra_domain_inspection**
+
+#### Useful Tools
+1. Implemented support for Alibaba Cloud in resource **aviatrix_vpc** and data source
+2. Implemented support for AzureGov, AWSChina and AzureChina clouds in resource **aviatrix_vpc**
+3. Implemented support for creating an **aviatrix_vpc** in Azure with an existing ``resource_group``
 
 ### Enhancements:
 1. Added following attributes in **aviatrix_account** data source:
@@ -70,11 +101,11 @@
   - ``arm_subscription_id``
   - ``awsgov_account_number``
   - ``awsgov_access_key``
-2. Optimized state refresh performance for **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
-3. Added support for Fortinet Fortigate in **data_source_aviatrix_firenet_vendor_integration**
-4. Added computed value ``tgw_id`` in **aviatrix_aws_tgw**
-5. Added new map type attribute ``tags`` to replace ``tag_list`` in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
-6. Changed ``aws_access_key`` and ``aws_gov_access_key`` in **aviatrix_acount** to be sensitive values
+2. Changed ``aws_access_key`` and ``aws_gov_access_key`` in **aviatrix_acount** to be sensitive values
+3. Optimized state refresh performance for **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+4. Added new map type attribute ``tags`` to replace ``tag_list`` in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+5. Added support for Fortinet Fortigate in **aviatrix_firenet_vendor_integration** data source
+6. Added computed value ``tgw_id`` in **aviatrix_aws_tgw**
 
 ### Bug Fixes:
 1. Fixed an edge case in **aviatrix_gateway** that could cause the provider to crash when refreshing the resource
