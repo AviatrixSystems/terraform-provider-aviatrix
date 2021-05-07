@@ -9,6 +9,7 @@ code change.
 - Boilerplate
 	- Acceptance Tests: Is your new feature/resource/attribute covered by an acceptance test?
 	- Documentation: Have you updated the relevant doc page?
+	- Release Notes: Is your change a new feature, enhancement or bug fix? If so, you need to update `docs/guides/release-notes.md` for the upcoming release.
 	- HCL Formatting: Is the HCL in your doc examples and acceptance tests formatted properly?
 	- gofmt & goimports: Have you ran `make fmt imports` yet?
 - Manual testing
