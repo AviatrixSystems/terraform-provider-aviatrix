@@ -409,6 +409,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"storage_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "Name of storage account with gateway images. Only valid for Azure China (2048)",
 			},
 			"eip": {
