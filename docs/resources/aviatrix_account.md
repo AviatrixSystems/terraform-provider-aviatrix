@@ -142,6 +142,7 @@ The following arguments are supported:
 * `cloud_type` - (Required) Type of cloud service provider. Only AWS, GCP, Azure, OCI, AzureGov, AWSGov, AWSChina, AzureChina and Alibaba Cloud are supported currently. Enter 1 for AWS, 4 for GCP, 8 for Azure, 16 for OCI, 32 for AzureGov, 256 for AWSGov, 1024 for AWSChina or 2048 for AzureChina, 8192 for Alibaba Cloud.
 
 ### AWS
+-> **NOTE:** As of Aviatrix provider version R2.19+, `aws_role_app` and `aws_role_ec2` can be set to custom IAM roles. If the controller's IAM role is changed through the AWS console, please run `terraform apply -refresh=false` in order to update `aws_role_app` and `aws_role_ec2`.
 * `aws_account_number` - (Optional) AWS Account number to associate with Aviatrix account. Required when creating an account for AWS.
 * `aws_iam` - (Optional) AWS IAM-role based flag, this option is for UserConnect.
 * `aws_access_key` - (Optional) AWS Access Key. Required when `aws_iam` is "false" and when creating an account for AWS.
@@ -198,7 +199,8 @@ The following arguments are supported:
 * `alicloud_secret_key` - (Optional) Alibaba Cloud Secret Key. Required when creating an account for Alibaba Cloud.
 
 ### Misc.
-* `audit_account` - (Optional) Specify whether to enable the audit account feature. If this feature is enabled, terraform will give a warning if there is an issue with the account credentials. Valid values: true, false. Default: true. **Note: The warning may still appear for a few hours after fixing the underlying issue.**
+-> **NOTE:** On terraform versions 0.12.x, 0.13.x, and 0.14.x, terraform will not detect any changes for the account when the account audit fail warning is given. In order to apply changes or set `audit_account = false`, please run `terraform apply -refresh=false`.
+* `audit_account` - (Optional) Specify whether to enable the audit account feature. If this feature is enabled, terraform will give a warning if there is an issue with the account credentials. Valid values: true, false. Default: false. **Note: The warning may still appear for a few hours after fixing the underlying issue.**
 
 -> **NOTE:** Please make sure that the IAM roles/profiles have already been created before running this, if `aws_iam = true`. More information on the IAM roles is at https://docs.aviatrix.com/HowTos/iam_policies.html and https://docs.aviatrix.com/HowTos/HowTo_IAM_role.html
 
