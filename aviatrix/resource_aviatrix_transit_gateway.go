@@ -1453,6 +1453,10 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureChina) {
+		d.Set("storage_name", gw.StorageName)
+	}
+
 	if gw.HaGw.GwSize == "" {
 		d.Set("ha_gw_size", "")
 		d.Set("ha_subnet", "")

@@ -1151,6 +1151,10 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("enable_vpc_dns_server", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled")
 	d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
 
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureChina) {
+		d.Set("storage_name", gw.StorageName)
+	}
+
 	if gw.IdleTimeout != "NA" {
 		idleTimeout, err := strconv.Atoi(gw.IdleTimeout)
 		if err != nil {
