@@ -409,6 +409,7 @@ func resourceAviatrixGateway() *schema.Resource {
 			"storage_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "Name of storage account with gateway images. Only valid for Azure China (2048)",
 			},
 			"eip": {
@@ -1150,6 +1151,10 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
 	d.Set("enable_vpc_dns_server", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled")
 	d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
+
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureChina) {
+		d.Set("storage_name", gw.StorageName)
+	}
 
 	if gw.IdleTimeout != "NA" {
 		idleTimeout, err := strconv.Atoi(gw.IdleTimeout)

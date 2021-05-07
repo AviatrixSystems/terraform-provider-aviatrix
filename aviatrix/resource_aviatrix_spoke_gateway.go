@@ -269,6 +269,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 			"storage_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "Name of storage account with gateway images. Only valid for Azure China (2048)",
 			},
 			"eip": {
@@ -1088,6 +1089,10 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		if (isImport || zoneIsSet) && gw.GatewayZone != "AvailabilitySet" {
 			d.Set("zone", "az-"+gw.GatewayZone)
 		}
+	}
+
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureChina) {
+		d.Set("storage_name", gw.StorageName)
 	}
 
 	if gw.HaGw.GwSize == "" {

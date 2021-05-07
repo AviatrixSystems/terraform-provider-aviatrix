@@ -397,6 +397,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"storage_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "Name of storage account with gateway images. Only valid for Azure China (2048)",
 			},
 			"eip": {
@@ -1451,6 +1452,10 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
 			}
 		}
+	}
+
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureChina) {
+		d.Set("storage_name", gw.StorageName)
 	}
 
 	if gw.HaGw.GwSize == "" {
