@@ -192,7 +192,9 @@ func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error
 			break
 		}
 	}
-
+	if len(transitAdvancedConfig.ConnectionLearnedCIDRApprovalInfo) == 0 {
+		d.Set("enable_learned_cidrs_approval", false)
+	}
 	return nil
 }
 

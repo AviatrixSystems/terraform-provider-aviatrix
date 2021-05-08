@@ -142,7 +142,7 @@ resource "aviatrix_gateway_snat" "test" {
 	}
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_SUBNET"))
+		os.Getenv("AWS_VPC_ID2"), os.Getenv("AWS_REGION2"), awsGwSize, os.Getenv("AWS_SUBNET2"))
 }
 
 func testAccGatewaySNatConfigAZURE(rName string) string {

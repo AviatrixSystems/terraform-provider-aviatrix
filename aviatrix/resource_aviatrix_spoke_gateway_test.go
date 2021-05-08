@@ -70,9 +70,9 @@ func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-aws-%s", rName)),
 						resource.TestCheckResourceAttr(resourceName, "gw_size", awsGwSize),
 						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-aws-%s", rName)),
-						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
-						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("AWS_SUBNET")),
-						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AWS_REGION")),
+						resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID2")),
+						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("AWS_SUBNET2")),
+						resource.TestCheckResourceAttr(resourceName, "vpc_reg", os.Getenv("AWS_REGION2")),
 						resource.TestCheckResourceAttr(resourceName, "single_ip_snat", "false"),
 					),
 				},
@@ -218,7 +218,7 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
 	single_ip_snat = false
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_SUBNET"))
+		os.Getenv("AWS_VPC_ID2"), os.Getenv("AWS_REGION2"), awsGwSize, os.Getenv("AWS_SUBNET2"))
 }
 
 func testAccSpokeGatewayConfigGCP(rName string) string {

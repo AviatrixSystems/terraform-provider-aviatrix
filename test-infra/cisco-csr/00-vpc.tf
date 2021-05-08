@@ -22,7 +22,7 @@ resource aws_subnet csr_vpc_subnet_1 {
     random_integer.csr_vpc_int[0].result,
     random_integer.csr_vpc_int[1].result,
     "10.0/24"])
-  availability_zone       = format("%s%s", var.aws_region, "b")
+  availability_zone       = format("%s%s", var.aws_region, "a")
   map_public_ip_on_launch = true
 
   tags = {

@@ -185,7 +185,7 @@ resource "aviatrix_spoke_vpc" "test_spoke_vpc" {
 	enable_nat   = "no"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_SUBNET"))
+		os.Getenv("AWS_VPC_ID2"), os.Getenv("AWS_REGION2"), awsGwSize, os.Getenv("AWS_SUBNET2"))
 }
 
 func testAccSpokeGwConfigGCP(rName string) string {
