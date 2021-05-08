@@ -855,7 +855,12 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 			}
 		}
 
-		d.Set("phase1_remote_identifier", strings.Split(strings.TrimSpace(s2c.Phase1RemoteIdentifier), ","))
+		ph1RemoteId := strings.Split(s2c.Phase1RemoteIdentifier, ",")
+		for i, v := range ph1RemoteId {
+			ph1RemoteId[i] = strings.TrimSpace(v)
+		}
+
+		d.Set("phase1_remote_identifier", ph1RemoteId)
 	}
 
 	log.Printf("[TRACE] Reading Aviatrix Site2Cloud %s: %#v", d.Get("connection_name").(string), site2cloud)
