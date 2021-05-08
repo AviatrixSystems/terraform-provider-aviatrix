@@ -44,11 +44,11 @@ func TestAccAviatrixSegmentationSecurityDomainConnectionPolicy_basic(t *testing.
 func testAccSegmentationSecurityDomainConnectionPolicyBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_segmentation_security_domain" "test_segmentation_security_domain_1" {
-	domain_name = "segmentation-security-domain-1-%[1]s"
+	domain_name = "segmentation-sd-1-%[1]s"
 }
 
 resource "aviatrix_segmentation_security_domain" "test_segmentation_security_domain_2" {
-	domain_name = "segmentation-security-domain-2-%[1]s"
+	domain_name = "segmentation-sd-2-%[1]s"
 }
 
 resource "aviatrix_segmentation_security_domain_connection_policy" "test_segmentation_security_domain_connection_policy" {
