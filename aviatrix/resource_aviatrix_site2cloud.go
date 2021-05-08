@@ -368,6 +368,10 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsIPv4Address},
 
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if d.HasChange("ha_enabled") {
+						return false
+					}
+
 					ip := d.Get("remote_gateway_ip").(string)
 					haip := d.Get("backup_remote_gateway_ip").(string)
 					o, n := d.GetChange("phase1_remote_identifier")
