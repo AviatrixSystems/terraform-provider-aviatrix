@@ -896,20 +896,12 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 			return fmt.Errorf("please either set one phase 1 remote ID or none, when HA is disabled")
 		}
 
-		if len(ph1RemoteIdList) == 1 && ph1RemoteIdList[0] != ip {
-			editSite2cloud.Phase1RemoteIdentifier = ph1RemoteIdList[0]
-		}
-
-		if len(ph1RemoteIdList) == 2 && (ph1RemoteIdList[0] != ip || ph1RemoteIdList[1] != haIp) {
-			editSite2cloud.Phase1RemoteIdentifier = strings.Join(ph1RemoteIdList, ",")
-		}
-
 		if len(ph1RemoteIdList) == 0 && haEnabled {
 			editSite2cloud.Phase1RemoteIdentifier = ip + "," + haIp
-		}
-
-		if len(ph1RemoteIdList) == 0 && !haEnabled {
+		} else if len(ph1RemoteIdList) == 0 && !haEnabled {
 			editSite2cloud.Phase1RemoteIdentifier = ip
+		} else {
+			editSite2cloud.Phase1RemoteIdentifier = strings.Join(ph1RemoteIdList, ",")
 		}
 
 		err := client.UpdateSite2Cloud(editSite2cloud)
