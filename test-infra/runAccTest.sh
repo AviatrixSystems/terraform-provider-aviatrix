@@ -12,7 +12,7 @@ fi
 if [ "$1" == "ALL" ]; then
   echoLog "Running acceptance tests for all resources"
   cd .. &&
-    TF_ACC=1 go test -v -timeout 10h ./...
+    TF_ACC=1 go test -v ./...
 else
   resources=" "
   for var in "$@"; do
@@ -32,5 +32,5 @@ else
   done
   echoLog "Go test regex: $test_regex"
   cd .. &&
-    TF_ACC=1 go test -v -timeout 10h ./aviatrix -run $test_regex
+    TF_ACC=1 go test -v ./aviatrix -run $test_regex
 fi
