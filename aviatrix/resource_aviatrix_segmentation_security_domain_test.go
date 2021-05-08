@@ -44,7 +44,7 @@ func TestAccAviatrixSegmentationSecurityDomain_basic(t *testing.T) {
 func testAccSegmentationSecurityDomainBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_segmentation_security_domain" "test_segmentation_security_domain" {
-	domain_name = "segmentation-security-domain-%s"
+	domain_name = "segmentation-sd-%s"
 }
 `, rName)
 }
