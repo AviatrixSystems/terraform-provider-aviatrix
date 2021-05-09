@@ -10,6 +10,8 @@ description: |-
 
 The **aviatrix_firewall_instance** resource allows the creation and management of Aviatrix Firewall Instances.
 
+This resource is used in [Aviatrix FireNet](https://docs.aviatrix.com/HowTos/firewall_network_faq.html) and [Aviatrix Transit FireNet](https://docs.aviatrix.com/HowTos/transit_firenet_faq.html) solutions, in conjunction with other resources that may include, and are not limited to: **firenet**, **firewall_instance_association**, **aws_tgw** and **transit_gateway** resources.
+
 ## Example Usage
 
 ```hcl
@@ -59,7 +61,7 @@ The following arguments are supported:
 
 ### Required
 * `vpc_id` - (Required) VPC ID of the Security VPC. For GCP, `vpc_id` must be in the form vpc_id~-~gcloud_project_id.
-* `firenet_gw_name` - (Optional) Name of the primary FireNet gateway. Required for FireNet without Native GWLB VPC.
+* `firenet_gw_name` - (Optional) Name of the primary FireNet gateway. **Required for all FireNet deployments that do not utilize the TGW-Integrated FireNet with AWS Native GWLB VPC.**
 * `firewall_name` - (Required) Name of the firewall instance to be created.
 * `firewall_image` - (Required) One of the AWS/Azure/GCP AMIs from various vendors such as Palo Alto Networks.
 * `firewall_image_id` - (Optional) Firewall image ID. Available as of provider version R2.19.
