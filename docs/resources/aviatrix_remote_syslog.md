@@ -27,7 +27,7 @@ resource "aviatrix_remote_syslog" "test_remote_syslog" {
 # Enable remote syslog with TLS
 resource "aviatrix_remote_syslog" "test_remote_syslog" {
   index                   = 0
-  name                    = "test"
+  name                    = "rsyslog-profilename"
   server                  = "1.2.3.4"
   port                    = 10
   protocol                = "TCP"
@@ -52,7 +52,7 @@ The following arguments are supported:
 * `ca_certificate_file` (Optional) The Certificate Authority (CA) certificate. Use the `file` function to read from a file.
 * `public_certificate_file` (Optional) The public certificate of the controller signed by the same CA. Use the `file` function to read from a file.
 * `private_key_file` (Optional) The private key of the controller that pairs with the public certificate. Use the `file` function to read from a file.
-  
+
 ~> **NOTE:** To enable TLS, either `ca_certificate_file`, or the combination of `ca_certificate_file`, `public_certificate_file` and `private_key_file` should be used.
 
 * `template` (Optional) Optional custom template.
