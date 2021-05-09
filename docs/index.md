@@ -23,7 +23,7 @@ provider "aviatrix" {
   username                = "admin"
   password                = "password"
   skip_version_validation = false
-  version                 = "2.5.0"
+  version                 = "2.19.0"
 }
 
 # Create an access account

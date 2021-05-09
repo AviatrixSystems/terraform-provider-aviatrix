@@ -98,13 +98,23 @@ resource "aviatrix_vpc" "azure_china_vnet" {
   cidr                 = "12.0.0.0/16"
 }
 ```
+```hcl
+# Create an Alibaba Cloud VPC
+resource "aviatrix_vpc" "aliyun_vpc" {
+  cloud_type           = 8192
+  account_name         = "devops"
+  region               = "acs-us-west-1 (Silicon Valley)"
+  name                 = "aliyun-vpc"
+  cidr                 = "10.0.0.0/20"
+}
+```
 
 ## Argument Reference
 
 The following arguments are supported:
 
 ### Required
-* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), Azure(8), OCI(16), AWSGov(256), AWSChina(1024) and AzureChina(2048) are supported.
+* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), Azure(8), OCI(16), AWSGov(256), AWSChina(1024), AzureChina(2048), Alibaba Cloud(8192) are supported.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `name` - (Required) Name of the VPC to be created.
 * `region` - (Optional) Region of cloud provider. **Required to be empty for GCP provider, and non-empty for other providers.** Example: AWS: "us-east-1", Azure: "East US 2", OCI: "us-ashburn-1", AWSGov: "us-gov-east-1", AWSChina: "cn-north-1", AzureChina: "China North".
@@ -120,12 +130,12 @@ The following arguments are supported:
 * `subnet_size` - (Optional) Subnet size. Only supported for AWS, Azure provider. Example: 24. Available in provider version R2.17+.
 * `num_of_subnet_pairs` - (Optional) Number of public subnet and private subnet pair created. Only supported for AWS, Azure provider. Example: 1. Available in provider version R2.17+.
 * `enable_private_oob_subnet` - (Optional) Switch to enable private oob subnet. Only supported for AWS, AWSGov and AWSChina providers. Valid values: true, false. Default value: false. Available as of provider version R2.18+.
+* `resource_group` - (Optional) The name of an existing resource group or a new resource group to be created for the Azure VNET.  A new resource group will be created if left blank. Only available for Azure, AzureGov and AzureChina providers. Available as of provider version R2.19+.
 
 ### Misc.
-* `aviatrix_transit_vpc` - (Optional) Specify whether it is an [Aviatrix Transit VPC](https://docs.aviatrix.com/HowTos/create_vpc.html#aviatrix-transit-vpc) to be used for [Transit Network](https://docs.aviatrix.com/HowTos/transitvpc_faq.html) or [TGW](https://docs.aviatrix.com/HowTos/tgw_faq.html) solutions. **Only AWS, AWSGov and AWSChina are supported. Required to be false for other providers.** Valid values: true, false. Default: false.
+* `aviatrix_transit_vpc` - (Optional) Specify whether it is an [Aviatrix Transit VPC](https://docs.aviatrix.com/HowTos/create_vpc.html#aviatrix-transit-vpc) to be used for [Transit Network](https://docs.aviatrix.com/HowTos/transitvpc_faq.html) or [TGW](https://docs.aviatrix.com/HowTos/tgw_faq.html) solutions. **Only AWS, AWSGov, AWSChina, and Alibaba Cloud are supported. Required to be false for other providers.** Valid values: true, false. Default: false.
 * `aviatrix_firenet_vpc` - (Optional) Specify whether it is an Aviatrix FireNet VPC to be used for [Aviatrix FireNet](https://docs.aviatrix.com/HowTos/firewall_network_faq.html) and [Transit FireNet](https://docs.aviatrix.com/HowTos/transit_firenet_faq.html) solutions. **Only AWS, Azure, AWSGov, AWSChina and AzureChina are supported. Required to be false for other providers.** Valid values: true, false. Default: false.
-* `enable_native_gwlb` - (Optional) Enable Native AWS Gateway Load Balancer for FireNet Function. Only valid with cloud_type = 1 (AWS). Currently, AWS Gateway Load Balancer is only supported in AWS regions: us-west-2, us-east-1, eu-west-1, ap-southeast-2 and sa-east-1. Valid values: true or false. Default value: false. Available as of provider version R2.18+.
-* `resource_group` - (Optional) The name of an existing resource group or a new resource group to be created for the Azure VNET.  A new resource group will be created if left blank. Only available for Azure, AzureGov and AzureChina providers. Available as of provider version R2.19+.
+* `enable_native_gwlb` - (Optional) Enable Native AWS Gateway Load Balancer for FireNet Function. Only valid with cloud_type = 1 (AWS). **This option is only applicable to TGW-integrated FireNet**. Currently, AWS Gateway Load Balancer is only supported in AWS regions: us-west-2, us-east-1, eu-west-1, ap-southeast-2 and sa-east-1. Valid values: true or false. Default value: false. Available as of provider version R2.18+.
 
 
 -> **NOTE:** `aviatrix_firenet_vpc` - If you are using/ upgraded to Aviatrix Terraform Provider R1.8+, and a VPC resource was originally created with a provider version <R1.8, you must do 'terraform refresh' to update and apply the attribute’s default value (false) into the state file.
