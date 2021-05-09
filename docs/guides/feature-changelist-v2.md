@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.18.2 (UserConnect-6.3.2364)``
+``Last updated: R2.19.0 (UserConnect-6.4)``
 
 
 ---
@@ -228,6 +228,7 @@ For most changes, unless stated otherwise in the tables below, after editing the
 |:----:|----------------|:-----------------:|----------------------------|
 |(changed) | gateway    | monitor_exclude_list | **Yes**; attribute has changed from string-type to a list. If this attribute is already being used in a comma-separated string, please convert values to a list of strings. Eg. ``"foo,bar"`` to ``["foo", "bar"]`` |
 
+
 ## R2.18.1 (UserConnect-6.3.2364)
 **NOTICE:** Starting in R2.18.1, as part of the initiative to improve future support, development and performance of the provider, certain attributes will be deprecated in order to avoid cross-resource behavior dependencies and improve scalability. In **R3.0**, we will fully remove these attributes.
 
@@ -240,3 +241,10 @@ Note there are standalone resources already in place to be used and one only nee
 |(deprecated) | firewall | policy           | **Yes**; Please set `manage_firewall_policies` to false, and use the standalone **aviatrix_firewall_policy** resource instead. |
 |(deprecated) | fqdn    | domain_names      | **Yes**; Please set `manage_domain_names` to false, and use the standalone **aviatrix_fqdn_tag_rule** resource instead. |
 |(deprecated) | spoke_gateway | transit_gw  | **Yes**; Please set `manage_transit_gateway_attachment` to false, and use the standalone **aviatrix_spoke_transit_attachment** resource instead. |
+
+
+## R2.19.0 (UserConnect-6.4)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(deprecated) | aws_tgw | security_domains, security_domain_name, connected_domains, aviatrix_firewall, native_egress, native_firewall | **Yes**; Please set `manage_security_domain` to false, and use the standalone **aviatrix_aws_tgw_security_domain** and **aviatrix_aws_tgw_security_domain_connection** resources instead. |
+|(deprecated) | gateway, spoke_gateway, transit_gateway | tag_list | **Yes**; Please migrate `tag_list` data values into a map-type format and use `tags` instead. Example: tags = {"key1" = "value1", "key2" = "value2"} |
