@@ -38,7 +38,7 @@
   - ``enable_private_vpc_default_route``
   - ``enable_skip_public_route_table_update``
   - ``enable_auto_advertise_s2c_cidrs``
-2. Implemented support for enabling event triggered HA for Site2Cloud type connection resources:
+2. Implemented support for enabling Event Triggered HA for Site2Cloud type connection resources:
   - New attribute ``enable_event_triggered_ha`` in **aviatrix_transit_external_device_conn**, **aviatrix_vgw_conn**
 3. Implemented Insane Mode support over Public Network for Transit Peering in **aviatrix_transit_gateway_peering**:
   - ``enable_insane_mode_encryption_over_internet``
@@ -59,7 +59,7 @@
   - New attribute ``phase1_remote_identifier``
 
 #### Settings
-1. Implemented support of associating a controller with a CoPilot instance, allowing user login without a username and password:
+1. Implemented support for associating a Controller with a CoPilot instance, allowing user login without a username and password:
   - New resource **aviatrix_copilot_association**
 2. Implemented support for adding profile names to Remote Syslog configs:
   - New attribute ``name`` in **aviatrix_remote_syslog**
