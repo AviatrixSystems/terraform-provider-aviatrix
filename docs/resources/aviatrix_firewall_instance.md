@@ -62,7 +62,7 @@ The following arguments are supported:
 * `firenet_gw_name` - (Optional) Name of the primary FireNet gateway. Required for FireNet without Native GWLB VPC.
 * `firewall_name` - (Required) Name of the firewall instance to be created.
 * `firewall_image` - (Required) One of the AWS/Azure/GCP AMIs from various vendors such as Palo Alto Networks.
-* `firewall_image_id` - (Optional) Firewall image ID. Available as of provider version R2.19. 
+* `firewall_image_id` - (Optional) Firewall image ID. Available as of provider version R2.19.
 * `firewall_size` - (Required) Instance size of the firewall. Example: "m5.xlarge".  
 * `management_subnet` - (Optional) Management Interface Subnet. Select the subnet whose name contains “gateway and firewall management”. For GCP, `management_subnet` must be in the form `cidr~~region~~name`. Required for Palo Alto Networks VM-Series, and required to be empty for Check Point or Fortinet series.
 * `egress_subnet` - (Required) Egress Interface Subnet. Select the subnet whose name contains “FW-ingress-egress”. For GCP, `egress_subnet` must be in the form `cidr~~region~~name`.
@@ -237,37 +237,75 @@ Valid `firewall_image` values:
   - 9.0.9
   - 8.1.15
 4. Fortinet FortiGate Next-Generation Firewall
+  - 6.0.9
+  - 6.2.3
   - 6.2.5
+  - 6.4.0
+  - 6.4.1
+  - 6.4.2
   - 6.4.3
   - 6.4.4
   - 6.4.5
+  - 7.0.0
 5. Fortinet FortiGate Next-Generation Firewall (BYOL)
+  - 6.0.9
+  - 6.2.3
   - 6.2.5
+  - 6.4.0
+  - 6.4.1
+  - 6.4.2
   - 6.4.3
   - 6.4.4
   - 6.4.5
-6. Check Point CloudGuard IaaS Firewall & Threat Prevention
-  - R80.30-273.755
+  - 7.0.0
+6. Check Point CloudGuard IaaS Firewall & Threat Prevention (Gateway only)
+  - R80.40-294.121
+  - R80.40-294.688
+  - R81-344.139
+  - R81-351.146
+  - R81-392.710
+  - R81-392.751
+7. Check Point CloudGuard IaaS Firewall & Threat Prevention (Gateway only) (BYOL)
+  - R80.40-294.688
+  - R81-369.hadarsh
+  - R81-378.152
+  - R81-383.704
+  - R81-385.155
+  - R81-385.700
+  - R81-386.706
+  - R81-390.708
+  - R81-392.710
+  - R81-392.751
+8. Check Point CloudGuard IaaS Firewall & Threat Prevention (Standalone)
+  - R80.40-294.127
+  - R80.40-294.587
   - R80.40-294.735
   - R80.40-294.759
   - R81-392.758
-  - R81-392.787
-7. Check Point CloudGuard IaaS Firewall & Threat Prevention (BYOL)
-  - R80.30-273.755
+  - R81-394.735
+9. Check Point CloudGuard IaaS Firewall & Threat Prevention (Standalone) (BYOL)
+  - R80.40-294.127
+  - R80.40-294.687
   - R80.40-294.759
-  - R81-392.787
+  - R81-295.119
+  - R81-344.139
+  - R81-351.146
+  - R81-373.150
+  - R81-386.706
+  - R81-392.710
+  - R81.10-125.217
 
 **OCI**
 1. Palo Alto Networks VM-Series Next-Generation Firewall Bundle 1
-- 10.0.3
+  - 10.0.3
 2. Palo Alto Networks VM-Series Next-Generation Firewall Bundle 2
-- 10.0.3
+  - 10.0.3
 3. Palo Alto Networks VM-Series Next-Generation Firewall (BYOL)
-- 10.0.4
-- 10.0.3
-- 10.0.0
-- 9.1.6
-- 9.1.3
+  - 10.0.4
+  - 10.0.3
+  - 10.0.0
+  - 9.1.6
+  - 9.1.3
 
 ### Authentication method
 * `key_name`- (Optional) Applicable to AWS deployment only. AWS Key Pair name. If not provided a Key Pair will be generated.
@@ -286,7 +324,7 @@ Valid `firewall_image` values:
 * `container_folder` - (Optional) Advanced option. Container folder. Applicable to Azure and Fortinet Series deployment only.
 * `sas_url_config` - (Optional) Advanced option. SAS URL Config. Applicable to Azure and Fortinet Series deployment only.
 * `sas_url_license` - (Optional) Advanced option. SAS URL License. Applicable to Azure and Fortinet Series deployment only.
-* `user_data` - (Optional) Advanced option. User Data. Applicable to Check Point Series and Fortinet Series deployment only.
+* `user_data` - (Optional) Advanced option. User Data. Applicable to Check Point Series and Fortinet Series deployment only. Type: String.
 
 ### Misc.
 * `tags` - (Optional) Mapping of key value pairs of tags for a firewall instance. Only available for AWS, AWSGov, GCP and Azure firewall instances. For AWS, AWSGov and Azure allowed characters are: letters, spaces, and numbers plus the following special characters: + - = . _ : @. For GCP allowed characters are: lowercase letters, numbers, "-" and "_". Example: {"key1" = "value1", "key2" = "value2"}.
