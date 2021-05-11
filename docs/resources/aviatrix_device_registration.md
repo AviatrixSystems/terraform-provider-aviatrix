@@ -46,7 +46,7 @@ The following arguments are supported:
 * `password` - (Optional) Password for SSH into the router. Either `key_file` or `password` must be set to register a device successfully. This attribute can also be set via environment variable 'AVIATRIX_DEVICE_PASSWORD'. If both are set, the value in the config file will be used.
 
 ### Optional
-* `host_os` - (Optional) Device host OS.  Default value is 'ios'. Only valid value is 'ios'.
+* `host_os` - (Optional) Device host OS. Default value is 'ios'. Valid values are 'ios' or 'aviatrix'.
 * `ssh_port` - (Optional) SSH port for connecting to the device. Default value is 22.
 * `address_1` - (Optional) Address line 1.
 * `address_2` - (Optional) Address line 2.
