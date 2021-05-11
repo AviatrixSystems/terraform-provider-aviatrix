@@ -1,12 +1,8 @@
 package goaviatrix
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"net/url"
 	"strconv"
 	"strings"
 
@@ -99,22 +95,7 @@ type AccountListResp struct {
 func (c *Client) CreateAccount(account *Account) error {
 	account.CID = c.CID
 	account.Action = "setup_account_profile"
-	resp, err := c.Post(c.baseURL, account)
-	if err != nil {
-		return errors.New("HTTP Post setup_account_profile failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode setup_account_profile failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API setup_account_profile Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(account.Action, account, BasicCheck)
 }
 
 func (c *Client) CreateGCPAccount(account *Account) error {
@@ -133,22 +114,7 @@ func (c *Client) CreateGCPAccount(account *Account) error {
 		},
 	}
 
-	resp, err := c.PostFile(c.baseURL, params, files)
-	if err != nil {
-		return errors.New("HTTP Post setup_account_profile failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode setup_account_profile failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API setup_account_profile Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostFileAPI(params, files, BasicCheck)
 }
 
 func (c *Client) CreateOCIAccount(account *Account) error {
@@ -169,22 +135,7 @@ func (c *Client) CreateOCIAccount(account *Account) error {
 		},
 	}
 
-	resp, err := c.PostFile(c.baseURL, params, files)
-	if err != nil {
-		return errors.New("HTTP Post setup_account_profile failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode setup_account_profile failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API setup_account_profile Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostFileAPI(params, files, BasicCheck)
 }
 
 func (c *Client) CreateAWSTSAccount(account *Account) error {
@@ -250,31 +201,17 @@ func (c *Client) CreateAWSSAccount(account *Account) error {
 }
 
 func (c *Client) GetAccount(account *Account) (*Account, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New("url Parsing failed for list_accounts " + err.Error())
-	}
-	listAccounts := url.Values{}
-	listAccounts.Add("CID", c.CID)
-	listAccounts.Add("action", "list_accounts")
-	Url.RawQuery = listAccounts.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get list_accounts failed: " + err.Error())
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "list_accounts",
 	}
 
-	var data AccountListResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_accounts failed: " + err.Error() + "\n Body: " + bodyString)
+	var resp AccountListResp
+	err := c.GetAPI(&resp, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
-	if !data.Return {
-		return nil, errors.New("Rest API list_accounts Get failed: " + data.Reason)
-	}
-	accList := data.Results.AccountList
+	accList := resp.Results.AccountList
 	for i := range accList {
 		if accList[i].AccountName == account.AccountName {
 			log.Infof("Found Aviatrix Account %s", account.AccountName)
@@ -288,22 +225,7 @@ func (c *Client) GetAccount(account *Account) (*Account, error) {
 func (c *Client) UpdateAccount(account *Account) error {
 	account.CID = c.CID
 	account.Action = "edit_account_profile"
-	resp, err := c.Post(c.baseURL, account)
-	if err != nil {
-		return errors.New("HTTP Post edit_account_profile failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_account_profile failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API edit_account_profile Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(account.Action, account, BasicCheck)
 }
 
 func (c *Client) UpdateGCPAccount(account *Account) error {
@@ -322,22 +244,7 @@ func (c *Client) UpdateGCPAccount(account *Account) error {
 		},
 	}
 
-	resp, err := c.PostFile(c.baseURL, params, files)
-	if err != nil {
-		return errors.New("HTTP Post edit_account_profile failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_account_profile failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API edit_account_profile Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostFileAPI(params, files, BasicCheck)
 }
 
 func (c *Client) UpdateAWSTSAccount(account *Account, fileChanges map[string]bool) error {
@@ -429,45 +336,15 @@ func (c *Client) UpdateAWSSAccount(account *Account, fileChanges map[string]bool
 }
 
 func (c *Client) DeleteAccount(account *Account) error {
-	path := c.baseURL + fmt.Sprintf("?action=delete_account_profile&CID=%s&account_name=%s",
-		c.CID, account.AccountName)
-	resp, err := c.Delete(path, nil)
-	if err != nil {
-		return errors.New("HTTP delete_account_profile failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_account_profile failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API delete_account_profile Post failed: " + data.Reason)
-	}
-	return nil
+	account.CID = c.CID
+	account.Action = "delete_account_profile"
+	return c.PostAPI(account.Action, account, BasicCheck)
 }
 
 func (c *Client) UploadOciApiPrivateKeyFile(account *Account) error {
 	account.CID = c.CID
 	account.Action = "upload_file"
-	resp, err := c.Post(c.baseURL, account)
-	if err != nil {
-		return errors.New("HTTP Post upload_file failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode upload_file failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API upload_file Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(account.Action, account, BasicCheck)
 }
 
 func (c *Client) AuditAccount(ctx context.Context, account *Account) error {
