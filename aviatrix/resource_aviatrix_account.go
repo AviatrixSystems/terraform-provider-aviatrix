@@ -71,6 +71,23 @@ func resourceAviatrixAccount() *schema.Resource {
 				ValidateFunc: validateAwsAccountNumber,
 				Description:  "AWS Gov Account number to associate with Aviatrix account.",
 			},
+			"awsgov_iam": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "AWSGov IAM-role based flag",
+			},
+			"awsgov_role_app": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "AWSGov App role ARN",
+			},
+			"awsgov_role_ec2": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "AWSGov EC2 role ARN",
+			},
 			"awsgov_access_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -276,6 +293,8 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		AwsAccessKey:                          d.Get("aws_access_key").(string),
 		AwsSecretKey:                          d.Get("aws_secret_key").(string),
 		AwsgovAccountNumber:                   d.Get("awsgov_account_number").(string),
+		AwsgovRoleApp:                         d.Get("awsgov_role_app").(string),
+		AwsgovRoleEc2:                         d.Get("awsgov_role_ec2").(string),
 		AwsgovAccessKey:                       d.Get("awsgov_access_key").(string),
 		AwsgovSecretKey:                       d.Get("awsgov_secret_key").(string),
 		GcloudProjectName:                     d.Get("gcloud_project_id").(string),
@@ -313,19 +332,11 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		account.AwsIam = "false"
 	}
 
-	_, gatewayRoleAppOk := d.GetOk("aws_gateway_role_app")
-	_, gatewayRoleEc2Ok := d.GetOk("aws_gateway_role_ec2")
-
-	if gatewayRoleAppOk || gatewayRoleEc2Ok {
-		if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWS) {
-			return diag.Errorf("could not create Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used with AWS (1)")
-		}
-		if !awsIam {
-			return diag.Errorf("could not create Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used when awsIam is enabled")
-		}
-		if !(gatewayRoleAppOk && gatewayRoleEc2Ok) {
-			return diag.Errorf("could not create Aviatrix Account: must provide both aws_gateway_role_app and aws_gateway_role_ec2 when using separate IAM role and policy for gateways")
-		}
+	awsGovIam := d.Get("awsgov_iam").(bool)
+	if awsGovIam {
+		account.AwsgovIam = "true"
+	} else {
+		account.AwsgovIam = "false"
 	}
 
 	awsChinaIam := d.Get("awschina_iam").(bool)
@@ -333,6 +344,27 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		account.AwsChinaIam = "true"
 	} else {
 		account.AwsChinaIam = "false"
+	}
+
+	_, gatewayRoleAppOk := d.GetOk("aws_gateway_role_app")
+	_, gatewayRoleEc2Ok := d.GetOk("aws_gateway_role_ec2")
+
+	if gatewayRoleAppOk || gatewayRoleEc2Ok {
+		if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+			return diag.Errorf("could not create Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used with AWS (1), AWSGov (256) and AWSChina (1024)")
+		}
+		if goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWS) && !awsIam {
+			return diag.Errorf("could not create Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used with AWS (1) when awsIam is enabled")
+		}
+		if goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSGov) && !awsGovIam {
+			return diag.Errorf("could not create Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used with AWSGov (256) when awsGovIam is enabled")
+		}
+		if goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSChina) && !awsChinaIam {
+			return diag.Errorf("could not create Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used with AWSChina (1024) when awsChinaIam is enabled")
+		}
+		if !(gatewayRoleAppOk && gatewayRoleEc2Ok) {
+			return diag.Errorf("could not create Aviatrix Account: must provide both aws_gateway_role_app and aws_gateway_role_ec2 when using separate IAM role and policy for gateways")
+		}
 	}
 
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSChina) && (awsChinaIam || account.AwsChinaRoleApp != "" || account.AwsChinaRoleEc2 != "" || account.AwsChinaAccessKey != "" || account.AwsChinaSecretKey != "") {
@@ -396,11 +428,20 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		if account.AwsgovAccountNumber == "" {
 			return diag.Errorf("aws gov account number needed for aws gov cloud")
 		}
-		if account.AwsgovAccessKey == "" {
-			return diag.Errorf("aws gov access key needed for aws gov cloud")
-		}
-		if account.AwsgovSecretKey == "" {
-			return diag.Errorf("aws gov secret key needed for aws gov cloud")
+		if awsGovIam {
+			if account.AwsgovRoleApp == "" {
+				account.AwsgovRoleApp = fmt.Sprintf("arn:aws-us-gov:iam::%s:role/aviatrix-role-app", account.AwsChinaAccountNumber)
+			}
+			if account.AwsgovRoleEc2 == "" {
+				account.AwsgovRoleEc2 = fmt.Sprintf("arn:aws-us-gov:iam::%s:role/aviatrix-role-ec2", account.AwsChinaAccountNumber)
+			}
+		} else {
+			if account.AwsgovAccessKey == "" {
+				return diag.Errorf("could not create Aviatrix Account in AWSGov (256): 'awsgov_access_key' is required when 'awsgov_iam' is false")
+			}
+			if account.AwsgovSecretKey == "" {
+				return diag.Errorf("could not create Aviatrix Account in AWSGov (256): 'awsgov_secret_key' is required when 'awsgov_iam' is false")
+			}
 		}
 	} else if account.CloudType == goaviatrix.AzureGov {
 		if account.AzuregovSubscriptionId == "" {
@@ -529,17 +570,30 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 			d.Set("arm_subscription_id", acc.ArmSubscriptionId)
 		} else if acc.CloudType == goaviatrix.AWSGov {
 			d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
+			if acc.AwsgovRoleEc2 != "" {
+				d.Set("awsgov_access_key", "")
+				d.Set("awsgov_secret_key", "")
+				d.Set("awsgov_iam", true)
+				d.Set("awsgov_role_app", acc.AwsgovRoleApp)
+				d.Set("awsgov_role_ec2", acc.AwsgovRoleEc2)
+				d.Set("aws_gateway_role_app", acc.AwsGatewayRoleApp)
+				d.Set("aws_gateway_role_ec2", acc.AwsGatewayRoleEc2)
+			} else {
+				d.Set("awsgov_iam", false)
+			}
 		} else if acc.CloudType == goaviatrix.AzureGov {
 			d.Set("azuregov_subscription_id", acc.AzuregovSubscriptionId)
 		} else if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AWSChina) {
 			d.Set("awschina_account_number", acc.AwsChinaAccountNumber)
-			d.Set("awschina_role_app", acc.AwsChinaRoleApp)
-			d.Set("awschina_role_ec2", acc.AwsChinaRoleEc2)
 			if acc.AwsChinaRoleEc2 != "" {
 				// Force access key and secret key to be empty
 				d.Set("awschina_access_key", "")
 				d.Set("awschina_secret_key", "")
 				d.Set("awschina_iam", true)
+				d.Set("awschina_role_app", acc.AwsChinaRoleApp)
+				d.Set("awschina_role_ec2", acc.AwsChinaRoleEc2)
+				d.Set("aws_gateway_role_app", acc.AwsGatewayRoleApp)
+				d.Set("aws_gateway_role_ec2", acc.AwsGatewayRoleEc2)
 			} else {
 				d.Set("awschina_iam", false)
 			}
@@ -581,6 +635,8 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 		AwsAccessKey:                          d.Get("aws_access_key").(string),
 		AwsSecretKey:                          d.Get("aws_secret_key").(string),
 		AwsgovAccountNumber:                   d.Get("awsgov_account_number").(string),
+		AwsgovRoleApp:                         d.Get("awsgov_role_app").(string),
+		AwsgovRoleEc2:                         d.Get("awsgov_role_ec2").(string),
 		AwsgovAccessKey:                       d.Get("awsgov_access_key").(string),
 		AwsgovSecretKey:                       d.Get("awsgov_secret_key").(string),
 		GcloudProjectName:                     d.Get("gcloud_project_id").(string),
@@ -618,6 +674,13 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 		account.AwsIam = "false"
 	}
 
+	awsGovIam := d.Get("awsgov_iam").(bool)
+	if awsGovIam {
+		account.AwsgovIam = "true"
+	} else {
+		account.AwsgovIam = "false"
+	}
+
 	awsChinaIam := d.Get("awschina_iam").(bool)
 	if awsChinaIam {
 		account.AwsChinaIam = "true"
@@ -638,13 +701,26 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if d.HasChanges("aws_gateway_role_app", "aws_gateway_role_ec2") {
-		if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWS) {
-			return diag.Errorf("could not update Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used with AWS (1)")
-		}
 		_, gatewayRoleAppOk := d.GetOk("aws_gateway_role_app")
 		_, gatewayRoleEc2Ok := d.GetOk("aws_gateway_role_ec2")
+
+		if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+			return diag.Errorf("could not update Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used with AWS (1), AWSGov (256) and AWSChina (1024)")
+		}
+		if goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWS) && !awsIam {
+			return diag.Errorf("could not update Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used with AWS (1) when awsIam is enabled")
+		}
+		if goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSGov) && !awsGovIam {
+			return diag.Errorf("could not update Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used with AWSGov (256) when awsGovIam is enabled")
+		}
+		if goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSChina) && !awsChinaIam {
+			return diag.Errorf("could not update Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used with AWSChina (1024) when awsChinaIam is enabled")
+		}
+		if !(gatewayRoleAppOk && gatewayRoleEc2Ok) {
+			return diag.Errorf("could not update Aviatrix Account: must provide both aws_gateway_role_app and aws_gateway_role_ec2 when using separate IAM role and policy for gateways")
+		}
 		if gatewayRoleAppOk != gatewayRoleEc2Ok {
-			return diag.Errorf("failed to update Aviatrix account: must provide both aws_gateway_role_app and aws_gateway_role_ec2 when using separate IAM role and policy for gateways")
+			return diag.Errorf("could not update Aviatrix account: must provide both aws_gateway_role_app and aws_gateway_role_ec2 when using separate IAM role and policy for gateways")
 		}
 	}
 
@@ -674,7 +750,7 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 			return diag.Errorf("updating OCI account is not supported")
 		}
 	} else if account.CloudType == goaviatrix.AWSGov {
-		if d.HasChange("awsgov_account_number") || d.HasChange("awsgov_access_key") || d.HasChange("awsgov_secret_key") {
+		if d.HasChanges("awsgov_account_number", "awsgov_access_key", "awsgov_secret_key", "aws_gateway_role_app", "aws_gateway_role_ec2") {
 			err := client.UpdateAccount(account)
 			if err != nil {
 				return diag.Errorf("failed to update Aviatrix Account: %s", err)
@@ -688,7 +764,7 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 			}
 		}
 	} else if goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSChina) {
-		if d.HasChanges("awschina_iam", "awschina_role_app", "awschina_role_ec2", "awschina_access_key", "awschina_secret_key") {
+		if d.HasChanges("awschina_iam", "awschina_role_app", "awschina_role_ec2", "awschina_access_key", "awschina_secret_key", "aws_gateway_role_app", "aws_gateway_role_ec2") {
 			err := client.UpdateAccount(account)
 			if err != nil {
 				return diag.Errorf("failed to update AWSChina Aviatrix Account: %v", err)

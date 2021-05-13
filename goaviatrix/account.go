@@ -32,6 +32,9 @@ type Account struct {
 	ArmApplicationClientId                string `form:"arm_application_client_id,omitempty" json:"arm_ad_client_id,omitempty"`
 	ArmApplicationClientSecret            string `form:"arm_application_client_secret,omitempty" json:"arm_ad_client_secret,omitempty"`
 	AwsgovAccountNumber                   string `form:"awsgov_account_number,omitempty" json:"awsgovcloud_account_number,omitempty"`
+	AwsgovIam                             string `form:"awsgov_iam,omitempty"`
+	AwsgovRoleApp                         string `form:"awsgov_role_arn,omitempty" json:"aws_gov_aws_role_arn,omitempty"`
+	AwsgovRoleEc2                         string `form:"awsgov_role_ec2,omitempty" json:"aws_gov_aws_role_ec2,omitempty"`
 	AwsgovAccessKey                       string `form:"awsgov_access_key,omitempty" json:"awsgovcloud_access_key,omitempty"`
 	AwsgovSecretKey                       string `form:"awsgov_secret_key,omitempty" json:"awsgovcloud_secret_key,omitempty"`
 	AwsgovCloudtrailBucket                string `form:"awsgov_cloudtrail_bucket,omitempty" json:"awsgov_cloudtrail_bucket,omitempty"`
