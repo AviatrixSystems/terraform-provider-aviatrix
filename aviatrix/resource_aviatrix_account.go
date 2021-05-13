@@ -356,11 +356,32 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSChina) && (awsChinaIam || account.AwsChinaRoleApp != "" || account.AwsChinaRoleEc2 != "" || account.AwsChinaAccessKey != "" || account.AwsChinaSecretKey != "") {
-		return diag.Errorf("could not create Aviatrix Account: 'awschina_iam', 'awschina_role_app', 'awschina_role_ec2', 'awschina_access_key' and 'awschina_secret_key' can only be set when cloud_type is AWSChina (1024)")
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWS) && (awsIam || account.AwsAccountNumber != "" || account.AwsRoleEc2 != "" || account.AwsRoleApp != "" || account.AwsAccessKey != "" || account.AwsSecretKey != "" || account.AwsGatewayRoleEc2 != "" || account.AwsGatewayRoleApp != "") {
+		return diag.Errorf("could not create Aviatrix Account: 'aws_iam', 'aws_account_number', 'aws_role_app', aws_role_ec2', 'aws_access_key', 'aws_secret_key', 'aws_gateway_role_app' and 'aws_gateway_role_ec2' can only be set when 'cloud_type' is AWS (1)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.GCP) && (account.GcloudProjectName != "" || account.GcloudProjectCredentialsFilepathLocal != "") {
+		return diag.Errorf("could not create Aviatrix Account: 'gcloud_project_id' and 'gcloud_project_credentials_filepath' can only be set when 'cloud_type' is GCP (4)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.Azure) && (account.ArmSubscriptionId != "" || account.ArmApplicationClientId != "" || account.ArmApplicationClientSecret != "" || account.ArmApplicationEndpoint != "") {
+		return diag.Errorf("could not create Aviatrix Account: 'arm_subscription_id', 'arm_directory_id', 'arm_application_id' and 'arm_application_key' can only be set when 'cloud_type' is Azure (8)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.OCI) && (account.OciCompartmentID != "" || account.OciApiPrivateKeyFilePath != "" || account.OciTenancyID != "" || account.OciUserID != "") {
+		return diag.Errorf("could not create Aviatrix Account: 'oci_compartment_id', oci_api_private_key_file_path', 'oci_tenancy_id' and 'oci_uesr_id' can only be set when cloud_type is OCI (16)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AzureGov) && (account.AzuregovSubscriptionId != "" || account.AzuregovApplicationEndpoint != "" || account.AzuregovApplicationClientId != "" || account.AzuregovApplicationClientSecret != "") {
+		return diag.Errorf("could not create Aviatrix Account: 'azuregov_subscription_id', 'azuregov_directory_id', 'azuregov_application_id' and 'azuregov_application_key' can only be set when 'cloud_type' is AzureGov (32)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSGov) && (awsGovIam || account.AwsgovAccountNumber != "" || account.AwsgovRoleApp != "" || account.AwsgovRoleEc2 != "" || account.AwsgovAccessKey != "" || account.AwsgovSecretKey != "") {
+		return diag.Errorf("could not create Aviatrix Account: 'awsgov_iam', 'awsgov_account_number', 'awsgov_role_app', 'awsgov_role_ec2', 'awsgov_access_key' and 'awsgov_secret_key' can only be set when 'cloud_type' is AWSGov (256)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSChina) && (awsChinaIam || account.AwsChinaAccountNumber != "" || account.AwsChinaRoleApp != "" || account.AwsChinaRoleEc2 != "" || account.AwsChinaAccessKey != "" || account.AwsChinaSecretKey != "") {
+		return diag.Errorf("could not create Aviatrix Account: 'awschina_iam', 'awschina_account_number', 'awschina_role_app', 'awschina_role_ec2', 'awschina_access_key' and 'awschina_secret_key' can only be set when 'cloud_type' is AWSChina (1024)")
 	}
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AzureChina) && (account.AzureChinaSubscriptionId != "" || account.AzureChinaApplicationEndpoint != "" || account.AzureChinaApplicationClientId != "" || account.AzureChinaApplicationClientSecret != "") {
-		return diag.Errorf("could not create Aviatrix Account: `azurechina_subscription_id', 'azurechina_directory_id', 'azurechina_application_id' and 'azurechina_application_key' can only be set when cloud_type is AzureChina (2048)")
+		return diag.Errorf("could not create Aviatrix Account: `azurechina_subscription_id', 'azurechina_directory_id', 'azurechina_application_id' and 'azurechina_application_key' can only be set when 'cloud_type' is AzureChina (2048)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AliCloud) && (account.AlicloudAccountId != "" || account.AlicloudAccessKey != "" || account.AlicloudSecretKey != "") {
+		return diag.Errorf("could not create Aviatrix Account: 'aliyun_account_id', 'aliyun_access_key' and 'aliyun_secret_key' can only be set when 'cloud_type' is Alibaba Cloud (8192)")
 	}
 
 	if account.CloudType == goaviatrix.AWS {
@@ -373,6 +394,10 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 
 		log.Printf("[INFO] Creating Aviatrix account: %#v", account)
 		if awsIam {
+			if account.AwsAccessKey != "" || account.AwsSecretKey != "" {
+				return diag.Errorf("could not create Aviatrix Account: 'aws_access_key' and 'aws_secret_key' can only be set when 'aws_iam' is false and 'cloud_type' is AWS (1)")
+			}
+
 			if _, ok := d.GetOk("aws_role_app"); !ok {
 				account.AwsRoleApp = fmt.Sprintf("arn:aws:iam::%s:role/aviatrix-role-app", account.AwsAccountNumber)
 			}
@@ -381,6 +406,13 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 			}
 			log.Printf("[TRACE] Reading Aviatrix account aws_role_app: [%s]", d.Get("aws_role_app").(string))
 			log.Printf("[TRACE] Reading Aviatrix account aws_role_ec2: [%s]", d.Get("aws_role_ec2").(string))
+		} else {
+			if account.AwsRoleApp != "" || account.AwsRoleEc2 != "" {
+				return diag.Errorf("could not create Aviatrix Account: 'aws_role_app' and 'aws_role_ec2' can only be set when 'aws_iam' is true and 'cloud_type' is AWS (1)")
+			}
+			if account.AwsAccessKey == "" || account.AwsSecretKey == "" {
+				return diag.Errorf("could not create Aviatrix Account: 'aws_access_key' and 'aws_secret_key' must be set when 'aws_iam' is false and 'cloud_type' is AWS (1)")
+			}
 		}
 	} else if account.CloudType == goaviatrix.GCP {
 		if account.GcloudProjectCredentialsFilepathLocal == "" {
@@ -418,6 +450,9 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 			return diag.Errorf("aws gov account number needed for aws gov cloud")
 		}
 		if awsGovIam {
+			if account.AwsgovAccessKey != "" || account.AwsgovSecretKey != "" {
+				return diag.Errorf("could not create Aviatrix Account: 'awsgov_access_key' and 'awsgov_secret_key' can only be set when 'awsgov_iam' is false and 'cloud_type' is AWSGov (256)")
+			}
 			if account.AwsgovRoleApp == "" {
 				account.AwsgovRoleApp = fmt.Sprintf("arn:aws-us-gov:iam::%s:role/aviatrix-role-app", account.AwsgovAccountNumber)
 			}
@@ -425,11 +460,11 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 				account.AwsgovRoleEc2 = fmt.Sprintf("arn:aws-us-gov:iam::%s:role/aviatrix-role-ec2", account.AwsgovAccountNumber)
 			}
 		} else {
-			if account.AwsgovAccessKey == "" {
-				return diag.Errorf("could not create Aviatrix Account in AWSGov (256): 'awsgov_access_key' is required when 'awsgov_iam' is false")
+			if account.AwsgovRoleApp != "" || account.AwsgovRoleEc2 != "" {
+				return diag.Errorf("could not create Aviatrix Account: 'awsgov_role_app' and 'awsgov_role_ec2' can only be set when 'awsgov_iam' is true and 'cloud_type' is AWSGov (256)")
 			}
-			if account.AwsgovSecretKey == "" {
-				return diag.Errorf("could not create Aviatrix Account in AWSGov (256): 'awsgov_secret_key' is required when 'awsgov_iam' is false")
+			if account.AwsgovAccessKey == "" || account.AwsgovSecretKey == "" {
+				return diag.Errorf("could not create Aviatrix Account: 'awsgov_access_key' and 'awsgov_secret_key' must be set when 'awsgov_iam' is false and 'cloud_type' is AWSGov (256)")
 			}
 		}
 	} else if account.CloudType == goaviatrix.AzureGov {
@@ -449,7 +484,11 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		if account.AwsChinaAccountNumber == "" {
 			return diag.Errorf("could not create Aviatrix Account in AWS China (1024): 'awschina_account_number' is required")
 		}
+
 		if awsChinaIam {
+			if account.AwsChinaAccessKey != "" || account.AwsChinaSecretKey != "" {
+				return diag.Errorf("could not create Aviatrix Account: 'awschina_access_key' and 'awschina_secret_key' can only be set when 'awschina_iam' is false and 'cloud_type' is AWSChina (1024)")
+			}
 			if account.AwsChinaRoleApp == "" {
 				account.AwsChinaRoleApp = fmt.Sprintf("arn:aws-cn:iam::%s:role/aviatrix-role-app", account.AwsChinaAccountNumber)
 			}
@@ -457,11 +496,11 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 				account.AwsChinaRoleEc2 = fmt.Sprintf("arn:aws-cn:iam::%s:role/aviatrix-role-ec2", account.AwsChinaAccountNumber)
 			}
 		} else {
-			if account.AwsChinaAccessKey == "" {
-				return diag.Errorf("could not create Aviatrix Account in AWSChina (1024): 'awschina_access_key' is required when 'awschina_iam' is false")
+			if account.AwsChinaRoleApp != "" || account.AwsChinaRoleEc2 != "" {
+				return diag.Errorf("could not create Aviatrix Account: 'awschina_role_app' and 'awschina_role_ec2' can only be set when 'awschina_iam' is true and 'cloud_type' is AWSChina (1024)")
 			}
-			if account.AwsChinaSecretKey == "" {
-				return diag.Errorf("could not create Aviatrix Account in AWSChina (1024): 'awschina_secret_key' is required when 'awschina_iam' is false")
+			if account.AwsChinaAccessKey == "" || account.AwsChinaSecretKey == "" {
+				return diag.Errorf("could not create Aviatrix Account: 'awschina_access_key' and 'awschina_secret_key' must be set when 'awschina_iam' is false and 'cloud_type' is AWSChina (1024)")
 			}
 		}
 	} else if goaviatrix.IsCloudType(account.CloudType, goaviatrix.AzureChina) {
@@ -698,7 +737,41 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWS) && (awsIam || account.AwsAccountNumber != "" || account.AwsRoleEc2 != "" || account.AwsRoleApp != "" || account.AwsAccessKey != "" || account.AwsSecretKey != "" || account.AwsGatewayRoleEc2 != "" || account.AwsGatewayRoleApp != "") {
+		return diag.Errorf("could not update Aviatrix Account: 'aws_iam', 'aws_account_number', 'aws_role_app', aws_role_ec2', 'aws_access_key', 'aws_secret_key', 'aws_gateway_role_app' and 'aws_gateway_role_ec2' can only be set when 'cloud_type' is AWS (1)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.GCP) && (account.GcloudProjectName != "" || account.GcloudProjectCredentialsFilepathLocal != "") {
+		return diag.Errorf("could not update Aviatrix Account: 'gcloud_project_id' and 'gcloud_project_credentials_filepath' can only be set when 'cloud_type' is GCP (4)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.Azure) && (account.ArmSubscriptionId != "" || account.ArmApplicationClientId != "" || account.ArmApplicationClientSecret != "" || account.ArmApplicationEndpoint != "") {
+		return diag.Errorf("could not update Aviatrix Account: 'arm_subscription_id', 'arm_directory_id', 'arm_application_id' and 'arm_application_key' can only be set when 'cloud_type' is Azure (8)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.OCI) && (account.OciCompartmentID != "" || account.OciApiPrivateKeyFilePath != "" || account.OciTenancyID != "" || account.OciUserID != "") {
+		return diag.Errorf("could not update Aviatrix Account: 'oci_compartment_id', oci_api_private_key_file_path', 'oci_tenancy_id' and 'oci_uesr_id' can only be set when cloud_type is OCI (16)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AzureGov) && (account.AzuregovSubscriptionId != "" || account.AzuregovApplicationEndpoint != "" || account.AzuregovApplicationClientId != "" || account.AzuregovApplicationClientSecret != "") {
+		return diag.Errorf("could not update Aviatrix Account: 'azuregov_subscription_id', 'azuregov_directory_id', 'azuregov_application_id' and 'azuregov_application_key' can only be set when 'cloud_type' is AzureGov (32)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSGov) && (awsGovIam || account.AwsgovAccountNumber != "" || account.AwsgovRoleApp != "" || account.AwsgovRoleEc2 != "" || account.AwsgovAccessKey != "" || account.AwsgovSecretKey != "") {
+		return diag.Errorf("could not update Aviatrix Account: 'awsgov_iam', 'awsgov_account_number', 'awsgov_role_app', 'awsgov_role_ec2', 'awsgov_access_key' and 'awsgov_secret_key' can only be set when 'cloud_type' is AWSGov (256)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSChina) && (awsChinaIam || account.AwsChinaAccountNumber != "" || account.AwsChinaRoleApp != "" || account.AwsChinaRoleEc2 != "" || account.AwsChinaAccessKey != "" || account.AwsChinaSecretKey != "") {
+		return diag.Errorf("could not update Aviatrix Account: 'awschina_iam', 'awschina_account_number', 'awschina_role_app', 'awschina_role_ec2', 'awschina_access_key' and 'awschina_secret_key' can only be set when 'cloud_type' is AWSChina (1024)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AzureChina) && (account.AzureChinaSubscriptionId != "" || account.AzureChinaApplicationEndpoint != "" || account.AzureChinaApplicationClientId != "" || account.AzureChinaApplicationClientSecret != "") {
+		return diag.Errorf("could not update Aviatrix Account: `azurechina_subscription_id', 'azurechina_directory_id', 'azurechina_application_id' and 'azurechina_application_key' can only be set when 'cloud_type' is AzureChina (2048)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AliCloud) && (account.AlicloudAccountId != "" || account.AlicloudAccessKey != "" || account.AlicloudSecretKey != "") {
+		return diag.Errorf("could not update Aviatrix Account: 'aliyun_account_id', 'aliyun_access_key' and 'aliyun_secret_key' can only be set when 'cloud_type' is Alibaba Cloud (8192)")
+	}
+
 	if account.CloudType == goaviatrix.AWS {
+		if awsIam && (account.AwsAccessKey != "" || account.AwsSecretKey != "") {
+			return diag.Errorf("could not update Aviatrix Account: 'aws_access_key' and 'aws_secret_key' can only be set when 'aws_iam' is false and 'cloud_type' is AWS (1)")
+		} else if !awsIam && (account.AwsRoleApp != "" || account.AwsRoleEc2 != "") {
+			return diag.Errorf("could not update Aviatrix Account: 'aws_role_app' and 'aws_role_ec2' can only be set when 'aws_iam' is true and 'cloud_type' is AWS (1)")
+		}
+
 		if d.HasChanges("aws_account_number", "aws_access_key", "aws_secret_key", "aws_iam", "aws_role_app", "aws_role_ec2", "aws_gateway_role_app", "aws_gateway_role_ec2") {
 			err := client.UpdateAccount(account)
 			if err != nil {
@@ -724,6 +797,12 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 			return diag.Errorf("updating OCI account is not supported")
 		}
 	} else if account.CloudType == goaviatrix.AWSGov {
+		if awsGovIam && (account.AwsgovAccessKey != "" || account.AwsgovSecretKey != "") {
+			return diag.Errorf("could not update Aviatrix Account: 'awsgov_access_key' and 'awsgov_secret_key' can only be set when 'awsgov_iam' is false and 'cloud_type' is AWSGov (256)")
+		} else if !awsGovIam && (account.AwsgovRoleApp != "" || account.AwsgovRoleEc2 != "") {
+			return diag.Errorf("could not update Aviatrix Account: 'awsgov_role_app' and 'awsgov_role_ec2' can only be set when 'awsgov_iam' is true and 'cloud_type' is AWSGov (256)")
+		}
+
 		if d.HasChanges("awsgov_account_number", "awsgov_access_key", "awsgov_secret_key", "awsgov_iam", "awsgov_role_app", "awsgov_role_ec2", "aws_gateway_role_app", "aws_gateway_role_ec2") {
 			err := client.UpdateAccount(account)
 			if err != nil {
@@ -745,6 +824,12 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 			}
 		}
 	} else if goaviatrix.IsCloudType(account.CloudType, goaviatrix.AzureChina) {
+		if awsChinaIam && (account.AwsChinaAccessKey != "" || account.AwsChinaSecretKey != "") {
+			return diag.Errorf("could not update Aviatrix Account: 'awschina_access_key' and 'awschina_secret_key' can only be set when 'awschina_iam' is false and 'cloud_type' is AWSChina (1024)")
+		} else if !awsChinaIam && (account.AwsChinaRoleApp != "" || account.AwsChinaRoleEc2 != "") {
+			return diag.Errorf("could not update Aviatrix Account: 'awschina_role_app' and 'awschina_role_ec2' can only be set when 'awschina_iam' is true and 'cloud_type' is AWSChina (1024)")
+		}
+
 		if d.HasChanges("azurechina_subscription_id", "azurechina_directory_id", "azurechina_application_id", "azurechina_application_key") {
 			err := client.UpdateAccount(account)
 			if err != nil {
