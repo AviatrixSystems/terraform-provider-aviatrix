@@ -317,7 +317,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 
 					if len(ph1RemoteIdListOld) != 0 && len(ph1RemoteIdListNew) != 0 {
 						if haEnabled {
-							if len(ph1RemoteIdListNew) != 2 {
+							if len(ph1RemoteIdListNew) != 2 || len(ph1RemoteIdListOld) != 2 {
 								return false
 							}
 							return ph1RemoteIdListOld[0] == ip && ph1RemoteIdListNew[0] == ip &&
@@ -329,13 +329,15 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 							return ph1RemoteIdListOld[0] == ip && ph1RemoteIdListNew[0] == ip
 						}
 					}
-
-					if !haEnabled && ph1RemoteIdListOld[0] == ip && len(ph1RemoteIdListNew) == 0 {
-						return true
+					if len(ph1RemoteIdListOld) > 0 {
+						if !haEnabled && ph1RemoteIdListOld[0] == ip && len(ph1RemoteIdListNew) == 0 {
+							return true
+						}
 					}
-
-					if haEnabled && ph1RemoteIdListOld[0] == ip && strings.TrimSpace(ph1RemoteIdListOld[1]) == haip && len(ph1RemoteIdListNew) == 0 {
-						return true
+					if len(ph1RemoteIdListOld) > 1 {
+						if haEnabled && ph1RemoteIdListOld[0] == ip && strings.TrimSpace(ph1RemoteIdListOld[1]) == haip && len(ph1RemoteIdListNew) == 0 {
+							return true
+						}
 					}
 
 					return false
