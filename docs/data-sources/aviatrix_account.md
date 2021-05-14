@@ -51,10 +51,13 @@ In addition to all arguments above, the following attributes are exported:
 
 ### AWSGov Cloud
 * `awsgov_account_number` - AWSGov Account number.
+* `awsgov_iam` - If enabled, `awsgov_role_app` and `awschina_role_ec2` will be set. Available as of provider version R2.19+.
+* `awsgov_role_app` - AWSGov App role ARN. Available as of provider version R2.19+.
+* `awsgov_role_ec2` - AWSGov EC2 role ARN. Available as of provider version R2.19+.
 
 ### AWSChina Cloud
 * `awschina_account_number` - AWSChina Account number. Available as of provider version R2.19+.
-* `awschina_iam` - If enabled, `awschina_role_app` and `awschina_role_ec2` will be set. Otherwise, `awschina_access_key` will be set. Available as of provider version R2.19+.
+* `awschina_iam` - If enabled, `awschina_role_app` and `awschina_role_ec2` will be set. Available as of provider version R2.19+.
 * `awschina_role_app` - AWSChina App role ARN. Available as of provider version R2.19+.
 * `awschina_role_ec2` - AWSChina EC2 role ARN. Available as of provider version R2.19+.
 
