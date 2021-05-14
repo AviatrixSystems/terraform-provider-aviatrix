@@ -69,18 +69,18 @@ func dataSourceAviatrixAccount() *schema.Resource {
 				Description: "AWS Gov Account number to associate with Aviatrix account.",
 			},
 			"awsgov_iam": {
-				Type: schema.TypeBool,
-				Computed: true,
+				Type:        schema.TypeBool,
+				Computed:    true,
 				Description: "AWSGov IAM role based flag.",
 			},
 			"awsgov_role_app": {
-				Type: schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 				Description: "AWSGov App role ARN.",
 			},
 			"awsgov_role_ec2": {
-				Type: schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
 				Description: "AWSGov EC2 role ARN.",
 			},
 			"awschina_account_number": {
