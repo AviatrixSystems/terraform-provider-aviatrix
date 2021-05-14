@@ -430,10 +430,10 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 		if awsGovIam {
 			if account.AwsgovRoleApp == "" {
-				account.AwsgovRoleApp = fmt.Sprintf("arn:aws-us-gov:iam::%s:role/aviatrix-role-app", account.AwsChinaAccountNumber)
+				account.AwsgovRoleApp = fmt.Sprintf("arn:aws-us-gov:iam::%s:role/aviatrix-role-app", account.AwsgovAccountNumber)
 			}
 			if account.AwsgovRoleEc2 == "" {
-				account.AwsgovRoleEc2 = fmt.Sprintf("arn:aws-us-gov:iam::%s:role/aviatrix-role-ec2", account.AwsChinaAccountNumber)
+				account.AwsgovRoleEc2 = fmt.Sprintf("arn:aws-us-gov:iam::%s:role/aviatrix-role-ec2", account.AwsgovAccountNumber)
 			}
 		} else {
 			if account.AwsgovAccessKey == "" {

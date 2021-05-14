@@ -179,8 +179,8 @@ The following arguments are supported:
 * `awsgov_iam` - (Optional) AWSGov IAM-role based flag. Available as of provider version 2.19+.
 * `awsgov_access_key` - (Optional) AWS Access Key. Required when creating an account for AWSGov.
 * `awsgov_secret_key` - (Optional) AWS Secret Key. Required when creating an account for AWSGov.
-* `awsgov_role_app` - (Optional) AWSGov App role ARN. Available when `awsgov_iam` is "true" and when creating an account for AWSChina. If left empty, the ARN will be computed. Available as of provider version 2.19+.
-* `awschina_role_ec2` - (Optional) AWSGov EC2 role ARN. Available when `awsgov_iam` is "true" and when creating an account for AWSGov. If left empty, the ARN will be computed. Available as of provider version 2.19+.
+* `awsgov_role_app` - (Optional) AWSGov App role ARN. Available when `awsgov_iam` is "true" and when creating an account for AWSGov. If left empty, the ARN will be computed. Available as of provider version 2.19+.
+* `awsgov_role_ec2` - (Optional) AWSGov EC2 role ARN. Available when `awsgov_iam` is "true" and when creating an account for AWSGov. If left empty, the ARN will be computed. Available as of provider version 2.19+.
 
 ### AWSChina Cloud
 * `awschina_account_number` - (Optional) AWSChina Account number to associate with Aviatrix account. Required when creating an account for AWSChina. Available as of provider version 2.19+.
