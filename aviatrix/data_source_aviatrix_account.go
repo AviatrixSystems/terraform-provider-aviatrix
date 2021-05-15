@@ -68,6 +68,21 @@ func dataSourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS Gov Account number to associate with Aviatrix account.",
 			},
+			"awsgov_iam": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "AWSGov IAM role based flag.",
+			},
+			"awsgov_role_app": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWSGov App role ARN.",
+			},
+			"awsgov_role_ec2": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "AWSGov EC2 role ARN.",
+			},
 			"awschina_account_number": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -132,8 +147,16 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("gcloud_project_id", acc.GcloudProjectName)
 	d.Set("arm_subscription_id", acc.ArmSubscriptionId)
 	d.Set("azuregov_subscription_id", acc.AzuregovSubscriptionId)
-	d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
-	if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AWSChina) {
+	if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AWSGov) {
+		d.Set("awsgov_account_number", acc.AwsgovAccountNumber)
+		if acc.AwsgovRoleEc2 != "" {
+			d.Set("awsgov_iam", true)
+			d.Set("awsgov_role_app", acc.AwsgovRoleApp)
+			d.Set("awsgov_role_ec2", acc.AwsgovRoleEc2)
+		} else {
+			d.Set("awsgov_iam", false)
+		}
+	} else if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AWSChina) {
 		d.Set("awschina_account_number", acc.AwsChinaAccountNumber)
 		d.Set("awschina_role_app", acc.AwsChinaRoleApp)
 		d.Set("awschina_role_ec2", acc.AwsChinaRoleEc2)

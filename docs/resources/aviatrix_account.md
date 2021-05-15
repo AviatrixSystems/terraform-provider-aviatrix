@@ -149,8 +149,8 @@ The following arguments are supported:
 * `aws_secret_key` - (Optional) AWS Secret Key. Required when `aws_iam` is "false" and when creating an account for AWS.
 * `aws_role_app` - (Optional) AWS App role ARN, this option is for UserConnect. Required when `aws_iam` is "true" and when creating an account for AWS.
 * `aws_role_ec2` - (Optional) AWS EC2 role ARN, this option is for UserConnect. Required when `aws_iam` is "true" and when creating an account for AWS.
-* `aws_gateway_role_app` - (Optional) A separate AWS App role ARN to assign to gateways created by the controller. Required when `aws_gateway_role_ec2` is set. Only allowed when `aws_iam` is "true" and when creating an account for AWS. Available as of provider version R2.19+.
-* `aws_gateway_role_ec2` - (Optional) A separate AWS EC2 role ARN to assign to gateways created by the controller. Required when `aws_gateway_role_app` is set. Only allowed when `aws_iam` is "true" and when creating an account for AWS. Available as of provider version R2.19+.
+* `aws_gateway_role_app` - (Optional) A separate AWS App role ARN to assign to gateways created by the controller. Required when `aws_gateway_role_ec2` is set. Only allowed when `aws_iam` is "true" and when creating an account for AWS, AWSGov and AWSChina. Available as of provider version R2.19+.
+* `aws_gateway_role_ec2` - (Optional) A separate AWS EC2 role ARN to assign to gateways created by the controller. Required when `aws_gateway_role_app` is set. Only allowed when `aws_iam` is "true" and when creating an account for AWS, AWSGov and AWSChina. Available as of provider version R2.19+.
 
 ### Azure
 * `arm_subscription_id` - (Optional) Azure ARM Subscription ID. Required when creating an account for Azure.
@@ -176,8 +176,11 @@ The following arguments are supported:
 
 ### AWSGov Cloud
 * `awsgov_account_number` - (Optional) AWSGov Account number to associate with Aviatrix account. Required when creating an account for AWSGov.
+* `awsgov_iam` - (Optional) AWSGov IAM-role based flag. Available as of provider version 2.19+.
 * `awsgov_access_key` - (Optional) AWS Access Key. Required when creating an account for AWSGov.
 * `awsgov_secret_key` - (Optional) AWS Secret Key. Required when creating an account for AWSGov.
+* `awsgov_role_app` - (Optional) AWSGov App role ARN. Available when `awsgov_iam` is "true" and when creating an account for AWSGov. If left empty, the ARN will be computed. Available as of provider version 2.19+.
+* `awsgov_role_ec2` - (Optional) AWSGov EC2 role ARN. Available when `awsgov_iam` is "true" and when creating an account for AWSGov. If left empty, the ARN will be computed. Available as of provider version 2.19+.
 
 ### AWSChina Cloud
 * `awschina_account_number` - (Optional) AWSChina Account number to associate with Aviatrix account. Required when creating an account for AWSChina. Available as of provider version 2.19+.
