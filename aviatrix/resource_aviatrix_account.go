@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -326,25 +327,13 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	awsIam := d.Get("aws_iam").(bool)
-	if awsIam {
-		account.AwsIam = "true"
-	} else {
-		account.AwsIam = "false"
-	}
+	account.AwsIam = strconv.FormatBool(awsIam)
 
 	awsGovIam := d.Get("awsgov_iam").(bool)
-	if awsGovIam {
-		account.AwsgovIam = "true"
-	} else {
-		account.AwsgovIam = "false"
-	}
+	account.AwsgovIam = strconv.FormatBool(awsGovIam)
 
 	awsChinaIam := d.Get("awschina_iam").(bool)
-	if awsChinaIam {
-		account.AwsChinaIam = "true"
-	} else {
-		account.AwsChinaIam = "false"
-	}
+	account.AwsChinaIam = strconv.FormatBool(awsChinaIam)
 
 	_, gatewayRoleAppOk := d.GetOk("aws_gateway_role_app")
 	_, gatewayRoleEc2Ok := d.GetOk("aws_gateway_role_ec2")
@@ -668,25 +657,13 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	awsIam := d.Get("aws_iam").(bool)
-	if awsIam {
-		account.AwsIam = "true"
-	} else {
-		account.AwsIam = "false"
-	}
+	account.AwsIam = strconv.FormatBool(awsIam)
 
 	awsGovIam := d.Get("awsgov_iam").(bool)
-	if awsGovIam {
-		account.AwsgovIam = "true"
-	} else {
-		account.AwsgovIam = "false"
-	}
+	account.AwsgovIam = strconv.FormatBool(awsGovIam)
 
 	awsChinaIam := d.Get("awschina_iam").(bool)
-	if awsChinaIam {
-		account.AwsChinaIam = "true"
-	} else {
-		account.AwsChinaIam = "false"
-	}
+	account.AwsChinaIam = strconv.FormatBool(awsChinaIam)
 
 	log.Printf("[INFO] Updating Aviatrix account: %#v", account)
 
