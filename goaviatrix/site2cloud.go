@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -668,4 +670,47 @@ func (c *Client) DisableSite2CloudEventTriggeredHA(vpcID, connectionName string)
 		"connection_name": connectionName,
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func Ph1RemoteIdDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
+	if d.HasChange("ha_enabled") {
+		return false
+	}
+
+	ip := d.Get("remote_gateway_ip").(string)
+	haip := d.Get("backup_remote_gateway_ip").(string)
+	o, n := d.GetChange("phase1_remote_identifier")
+	haEnabled := d.Get("ha_enabled").(bool)
+
+	ph1RemoteIdListOld := ExpandStringList(o.([]interface{}))
+	ph1RemoteIdListNew := ExpandStringList(n.([]interface{}))
+
+	if len(ph1RemoteIdListOld) != 0 && len(ph1RemoteIdListNew) != 0 {
+		if haEnabled {
+			if len(ph1RemoteIdListNew) != 2 || len(ph1RemoteIdListOld) != 2 {
+				return false
+			}
+			return ph1RemoteIdListOld[0] == ip && ph1RemoteIdListNew[0] == ip &&
+				strings.TrimSpace(ph1RemoteIdListOld[1]) == haip && strings.TrimSpace(ph1RemoteIdListNew[1]) == haip
+		} else {
+			if len(ph1RemoteIdListNew) != 1 {
+				return false
+			}
+			return ph1RemoteIdListOld[0] == ip && ph1RemoteIdListNew[0] == ip
+		}
+	}
+
+	if !haEnabled {
+		if len(ph1RemoteIdListOld) == 1 && ph1RemoteIdListOld[0] == ip && len(ph1RemoteIdListNew) == 0 {
+			return true
+		}
+	}
+
+	if haEnabled {
+		if len(ph1RemoteIdListOld) == 2 && ph1RemoteIdListOld[0] == ip && strings.TrimSpace(ph1RemoteIdListOld[1]) == haip && len(ph1RemoteIdListNew) == 0 {
+			return true
+		}
+	}
+
+	return false
 }

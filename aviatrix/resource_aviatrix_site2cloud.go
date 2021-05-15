@@ -363,49 +363,11 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Description: "Backup remote remote gateway IP.",
 			},
 			"phase1_remote_identifier": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsIPv4Address},
-
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if d.HasChange("ha_enabled") {
-						return false
-					}
-
-					ip := d.Get("remote_gateway_ip").(string)
-					haip := d.Get("backup_remote_gateway_ip").(string)
-					o, n := d.GetChange("phase1_remote_identifier")
-					haEnabled := d.Get("ha_enabled").(bool)
-
-					ph1RemoteIdListOld := goaviatrix.ExpandStringList(o.([]interface{}))
-					ph1RemoteIdListNew := goaviatrix.ExpandStringList(n.([]interface{}))
-
-					if len(ph1RemoteIdListOld) != 0 && len(ph1RemoteIdListNew) != 0 {
-						if haEnabled {
-							if len(ph1RemoteIdListNew) != 2 {
-								return false
-							}
-							return ph1RemoteIdListOld[0] == ip && ph1RemoteIdListNew[0] == ip &&
-								strings.TrimSpace(ph1RemoteIdListOld[1]) == haip && strings.TrimSpace(ph1RemoteIdListNew[1]) == haip
-						} else {
-							if len(ph1RemoteIdListNew) != 1 {
-								return false
-							}
-							return ph1RemoteIdListOld[0] == ip && ph1RemoteIdListNew[0] == ip
-						}
-					}
-
-					if !haEnabled && ph1RemoteIdListOld[0] == ip && len(ph1RemoteIdListNew) == 0 {
-						return true
-					}
-
-					if haEnabled && ph1RemoteIdListOld[0] == ip && strings.TrimSpace(ph1RemoteIdListOld[1]) == haip && len(ph1RemoteIdListNew) == 0 {
-						return true
-					}
-
-					return false
-				},
-				Description: "Phase 1 remote identifier of the IPsec tunnel.",
+				Type:             schema.TypeList,
+				Optional:         true,
+				Elem:             &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsIPv4Address},
+				DiffSuppressFunc: goaviatrix.Ph1RemoteIdDiffSuppressFunc,
+				Description:      "Phase 1 remote identifier of the IPsec tunnel.",
 			},
 		},
 	}
