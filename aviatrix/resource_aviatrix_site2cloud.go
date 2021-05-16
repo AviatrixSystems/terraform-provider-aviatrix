@@ -630,11 +630,6 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		if err != nil {
 			return fmt.Errorf("failed to enable active active HA for site2cloud: %s: %s", s2c.TunnelName, err)
 		}
-	} else {
-		// 22022: SingleIpHA also supports route based connections
-		if s2c.TunnelType == "route" && s2c.HAEnabled == "yes" && !s2c.EnableSingleIpHA {
-			return fmt.Errorf("please enable active active HA or single IP HA for HA enabled route based connection")
-		}
 	}
 
 	forwardToTransit := d.Get("forward_traffic_to_transit").(bool)
