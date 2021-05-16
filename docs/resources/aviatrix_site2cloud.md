@@ -61,9 +61,9 @@ The following arguments are supported:
 * `primary_cloud_gateway_name` - (Required) Primary cloud gateway name.
 * `remote_gateway_ip` - (Required) Remote gateway IP.
 * `remote_subnet_cidr` - (Required) Remote subnet CIDR. **Not required for custom_mapped connection.**
-* `remote_subnet_virtual` - Remote subnet CIDR (Virtual). **Required for connection type "mapped" only.**
-* `local_subnet_cidr` - (Optional) Local subnet CIDR. **Required for connection type "mapped".**
-* `local_subnet_virtual` - Local subnet CIDR (Virtual). **Required for connection type "mapped" only.**
+* `remote_subnet_virtual` - Remote subnet CIDR (Virtual). **Required for connection type "mapped", except for `custom_mapped` connection.**
+* `local_subnet_cidr` - (Optional) Local subnet CIDR. **Required for connection type "mapped", except for `custom_mapped` connection.**
+* `local_subnet_virtual` - Local subnet CIDR (Virtual). **Required for connection type "mapped", except for `custom_mapped` connection.**
 
 ### HA
 * `ha_enabled` - (Optional) Specify whether or not to enable HA. Valid Values: true, false. **NOTE: Please see notes [here](#ha-enabled) regarding HA requirements.**
