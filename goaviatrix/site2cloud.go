@@ -672,8 +672,8 @@ func (c *Client) DisableSite2CloudEventTriggeredHA(vpcID, connectionName string)
 	return c.PostAPI(data["action"], data, BasicCheck)
 }
 
-func Ph1RemoteIdDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
-	if d.HasChange("ha_enabled") {
+func S2CPh1RemoteIdDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
+	if d.HasChange("ha_enabled") || d.HasChange("enable_single_ip_ha") {
 		return false
 	}
 
@@ -681,18 +681,19 @@ func Ph1RemoteIdDiffSuppressFunc(k, old, new string, d *schema.ResourceData) boo
 	haip := d.Get("backup_remote_gateway_ip").(string)
 	o, n := d.GetChange("phase1_remote_identifier")
 	haEnabled := d.Get("ha_enabled").(bool)
+	singleIpHA := d.Get("enable_single_ip_ha").(bool)
 
 	ph1RemoteIdListOld := ExpandStringList(o.([]interface{}))
 	ph1RemoteIdListNew := ExpandStringList(n.([]interface{}))
 
 	if len(ph1RemoteIdListOld) != 0 && len(ph1RemoteIdListNew) != 0 {
-		if haEnabled {
+		if haEnabled && !singleIpHA {
 			if len(ph1RemoteIdListNew) != 2 || len(ph1RemoteIdListOld) != 2 {
 				return false
 			}
 			return ph1RemoteIdListOld[0] == ip && ph1RemoteIdListNew[0] == ip &&
 				strings.TrimSpace(ph1RemoteIdListOld[1]) == haip && strings.TrimSpace(ph1RemoteIdListNew[1]) == haip
-		} else {
+		} else if !haEnabled || singleIpHA {
 			if len(ph1RemoteIdListNew) != 1 {
 				return false
 			}
@@ -700,13 +701,13 @@ func Ph1RemoteIdDiffSuppressFunc(k, old, new string, d *schema.ResourceData) boo
 		}
 	}
 
-	if !haEnabled {
+	if !haEnabled || singleIpHA {
 		if len(ph1RemoteIdListOld) == 1 && ph1RemoteIdListOld[0] == ip && len(ph1RemoteIdListNew) == 0 {
 			return true
 		}
 	}
 
-	if haEnabled {
+	if haEnabled && !singleIpHA {
 		if len(ph1RemoteIdListOld) == 2 && ph1RemoteIdListOld[0] == ip && strings.TrimSpace(ph1RemoteIdListOld[1]) == haip && len(ph1RemoteIdListNew) == 0 {
 			return true
 		}

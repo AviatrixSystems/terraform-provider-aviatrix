@@ -366,7 +366,7 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Type:             schema.TypeList,
 				Optional:         true,
 				Elem:             &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsIPv4Address},
-				DiffSuppressFunc: goaviatrix.Ph1RemoteIdDiffSuppressFunc,
+				DiffSuppressFunc: goaviatrix.S2CPh1RemoteIdDiffSuppressFunc,
 				Description:      "Phase 1 remote identifier of the IPsec tunnel.",
 			},
 		},
@@ -599,10 +599,10 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 
 	phase1RemoteIdentifier := d.Get("phase1_remote_identifier").([]interface{})
 	ph1RemoteIdList := goaviatrix.ExpandStringList(phase1RemoteIdentifier)
-	if haEnabled && len(ph1RemoteIdList) != 0 && len(ph1RemoteIdList) != 2 {
-		return fmt.Errorf("please either set two phase 1 remote IDs or none, when HA is enabled")
-	} else if !haEnabled && len(phase1RemoteIdentifier) > 1 {
-		return fmt.Errorf("please either set one phase 1 remote ID or none, when HA is disabled")
+	if haEnabled && !singleIpHA && len(ph1RemoteIdList) != 0 && len(ph1RemoteIdList) != 2 {
+		return fmt.Errorf("please either set two phase 1 remote IDs or none, when HA is enabled and single IP HA is disabled")
+	} else if (!haEnabled || singleIpHA) && len(phase1RemoteIdentifier) > 1 {
+		return fmt.Errorf("please either set one phase 1 remote ID or none, when HA is disabled or single IP HA is enabled")
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Site2Cloud: %#v", s2c)
@@ -988,19 +988,21 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if d.HasChange("phase1_remote_identifier") {
 		haEnabled := d.Get("ha_enabled").(bool)
+		singleIpHA := d.Get("enable_single_ip_ha").(bool)
 		ip := d.Get("remote_gateway_ip").(string)
 		haIp := d.Get("backup_remote_gateway_ip").(string)
 		phase1RemoteIdentifier := d.Get("phase1_remote_identifier").([]interface{})
 		ph1RemoteIdList := goaviatrix.ExpandStringList(phase1RemoteIdentifier)
-		if haEnabled && len(ph1RemoteIdList) != 0 && len(ph1RemoteIdList) != 2 {
-			return fmt.Errorf("please either set two phase 1 remote IDs or none, when HA is enabled")
-		} else if !haEnabled && len(phase1RemoteIdentifier) > 1 {
-			return fmt.Errorf("please either set one phase 1 remote ID or none, when HA is disabled")
+
+		if haEnabled && !singleIpHA && len(ph1RemoteIdList) != 0 && len(ph1RemoteIdList) != 2 {
+			return fmt.Errorf("please either set two phase 1 remote IDs or none, when HA is enabled and single IP HA is disabled")
+		} else if (!haEnabled || singleIpHA) && len(phase1RemoteIdentifier) > 1 {
+			return fmt.Errorf("please either set one phase 1 remote ID or none, when HA is disabled or single IP HA is enabled")
 		}
 
-		if len(ph1RemoteIdList) == 0 && haEnabled {
+		if len(ph1RemoteIdList) == 0 && haEnabled && !singleIpHA {
 			editSite2cloud.Phase1RemoteIdentifier = ip + "," + haIp
-		} else if len(ph1RemoteIdList) == 0 && !haEnabled {
+		} else if len(ph1RemoteIdList) == 0 && (!haEnabled || singleIpHA) {
 			editSite2cloud.Phase1RemoteIdentifier = ip
 		} else {
 			editSite2cloud.Phase1RemoteIdentifier = strings.Join(ph1RemoteIdList, ",")
