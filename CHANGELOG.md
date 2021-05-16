@@ -9,7 +9,7 @@
   - ``awsgov_iam``
   - ``awsgov_role_app``
   - ``awsgov_role_ec2``
-2. Implemented support for IAM role based **aviatrix_account** and data source in AWSChina
+2. Implemented support for separate IAM role and policy for gateways in AWSChina and AWSGov **aviatrix_account** and data source
 
 ### Bug Fixes:
 1. Fixed an issue where creating an **aviatrix_transit_external_device_conn** with some setting crashes
