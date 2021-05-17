@@ -1,11 +1,11 @@
 ## 2.19.1 (Unreleased)
 ### Notes:
-- Supported Controller version: **UserConnect-6.4.2499**
+- Supported Controller version: **UserConnect-6.4.2554**
 - Supported Terraform version: **v0.12.x**, **v0.13.x** and **v0.14.x**
 
 ### Features:
 #### Accounts
-1. Implemented support for IAM role-based **aviatrix_account** and data source in AWSGov with new attributes
+1. Implemented support for AWSGov IAM role-based in resource **aviatrix_account** and data source with the following new attributes:
   - ``awsgov_iam``
   - ``awsgov_role_app``
   - ``awsgov_role_ec2``
