@@ -64,7 +64,7 @@ The following arguments are supported:
 * `firenet_gw_name` - (Optional) Name of the primary FireNet gateway. **Required for all FireNet deployments that do not utilize the TGW-Integrated FireNet with AWS Native GWLB VPC.**
 * `firewall_name` - (Required) Name of the firewall instance to be created.
 * `firewall_image` - (Required) One of the AWS/Azure/GCP AMIs from various vendors such as Palo Alto Networks.
-* `firewall_image_id` - (Optional) Firewall image ID. Available as of provider version R2.19.
+* `firewall_image_id` - (Optional) Firewall image ID. Applicable to AWS and Azure only. For AWS, please use AMI ID. For Azure, the format is “Publisher:Offer:Plan:Version”. Available as of provider version R2.19+.
 * `firewall_size` - (Required) Instance size of the firewall. Example: "m5.xlarge".  
 * `management_subnet` - (Optional) Management Interface Subnet. Select the subnet whose name contains “gateway and firewall management”. For GCP, `management_subnet` must be in the form `cidr~~region~~name`. Required for Palo Alto Networks VM-Series, and required to be empty for Check Point or Fortinet series.
 * `egress_subnet` - (Required) Egress Interface Subnet. Select the subnet whose name contains “FW-ingress-egress”. For GCP, `egress_subnet` must be in the form `cidr~~region~~name`.
