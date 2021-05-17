@@ -693,9 +693,6 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 		if goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSChina) && !awsChinaIam {
 			return diag.Errorf("could not update Aviatrix Account: aws_gateway_role_app and aws_gateway_role_ec2 can only be used with AWSChina (1024) when awsChinaIam is enabled")
 		}
-		if !(gatewayRoleAppOk && gatewayRoleEc2Ok) {
-			return diag.Errorf("could not update Aviatrix Account: must provide both aws_gateway_role_app and aws_gateway_role_ec2 when using separate IAM role and policy for gateways")
-		}
 		if gatewayRoleAppOk != gatewayRoleEc2Ok {
 			return diag.Errorf("could not update Aviatrix account: must provide both aws_gateway_role_app and aws_gateway_role_ec2 when using separate IAM role and policy for gateways")
 		}
