@@ -50,6 +50,7 @@ type ExternalDeviceConn struct {
 	BackupRemoteLanIP      string `form:"backup_remote_lan_ip,omitempty"`
 	BackupLocalLanIP       string `form:"backup_local_lan_ip,omitempty"`
 	EventTriggeredHA       bool
+	Phase1RemoteIdentifier string
 }
 
 type EditExternalDeviceConnDetail struct {
@@ -84,6 +85,7 @@ type EditExternalDeviceConnDetail struct {
 	BackupRemoteLanIP      string `json:"backup_remote_lan_ip"`
 	BackupLocalLanIP       string `json:"backup_local_lan_ip"`
 	EventTriggeredHA       string `json:"event_triggered_ha"`
+	Phase1RemoteIdentifier string `json:"phase1_remote_id"`
 }
 
 type ExternalDeviceConnDetailResp struct {
@@ -277,6 +279,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 		externalDeviceConn.LocalLanIP = externalDeviceConnDetail.LocalLanIP
 		externalDeviceConn.BackupRemoteLanIP = externalDeviceConnDetail.BackupRemoteLanIP
 		externalDeviceConn.BackupLocalLanIP = externalDeviceConnDetail.BackupLocalLanIP
+		externalDeviceConn.Phase1RemoteIdentifier = externalDeviceConnDetail.Phase1RemoteIdentifier
 
 		return externalDeviceConn, nil
 	}
