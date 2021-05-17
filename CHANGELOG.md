@@ -13,7 +13,7 @@
 
 ### Bug Fixes:
 1. Fixed an issue where creating an **aviatrix_transit_external_device_conn** with some setting crashes
-2. Fixed an issue where enabling active-active HA for an **aviatrix_site2cloud** with mapped config causes error
+2. Fixed an issue where enabling single IP HA for an **aviatrix_site2cloud** with mapped config causes error
 
 
 ## 2.19.0 (May 09, 2021)
