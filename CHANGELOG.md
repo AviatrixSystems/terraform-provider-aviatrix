@@ -5,7 +5,7 @@
 
 ### Features:
 #### Accounts
-1. Implemented support for IAM role based **aviatrix_account** and data source in AWSGov with new attributes
+1. Implemented support for IAM role-based **aviatrix_account** and data source in AWSGov with new attributes
   - ``awsgov_iam``
   - ``awsgov_role_app``
   - ``awsgov_role_ec2``
@@ -13,7 +13,7 @@
 
 ### Bug Fixes:
 1. Fixed an issue where creating an **aviatrix_transit_external_device_conn** with some setting crashes
-2. Fixed an issue where enabling single IP HA for an **aviatrix_site2cloud** with mapped config causes error
+2. Fixed an issue where enabling single IP HA for an **aviatrix_site2cloud** with mapped config reads deltas in the ``phase1_remote_identifier`` values
 
 
 ## 2.19.0 (May 09, 2021)
