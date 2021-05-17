@@ -767,23 +767,16 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		if conn.TunnelProtocol == "LAN" {
 			d.Set("remote_vpc_name", conn.PeerVnetId)
 		}
-	}
 
-	site2cloud := &goaviatrix.Site2Cloud{
-		TunnelName: externalDeviceConn.ConnectionName,
-		VpcID:      externalDeviceConn.VpcID,
-	}
-	s2c, err := client.GetSite2CloudConnDetail(site2cloud)
-	if err != nil {
-		return fmt.Errorf("couldn't find Aviatrix Site2Cloud: %s, %#v", err, s2c)
-	}
+		if conn.Phase1RemoteIdentifier != "" {
+			ph1RemoteId := strings.Split(conn.Phase1RemoteIdentifier, ",")
+			for i, v := range ph1RemoteId {
+				ph1RemoteId[i] = strings.TrimSpace(v)
+			}
 
-	ph1RemoteId := strings.Split(s2c.Phase1RemoteIdentifier, ",")
-	for i, v := range ph1RemoteId {
-		ph1RemoteId[i] = strings.TrimSpace(v)
+			d.Set("phase1_remote_identifier", ph1RemoteId)
+		}
 	}
-
-	d.Set("phase1_remote_identifier", ph1RemoteId)
 
 	d.SetId(conn.ConnectionName + "~" + conn.VpcID)
 	return nil
