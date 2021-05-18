@@ -515,6 +515,12 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AliCloud) && (account.AlicloudAccountId != "" || account.AlicloudAccessKey != "" || account.AlicloudSecretKey != "") {
 		return diag.Errorf("could not create Aviatrix Account: 'aliyun_account_id', 'aliyun_access_key' and 'aliyun_secret_key' can only be set when 'cloud_type' is Alibaba Cloud (8192)")
 	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSC2S) && (account.AwsOrangeAccountNumber != "" || account.AwsOrangeCapUrl != "" || account.AwsOrangeCapAgency != "" || account.AwsOrangeCapMission != "" || account.AwsOrangeCapRoleName != "" || account.AwsOrangeCapCert != "" || account.AwsOrangeCapCertKey != "" || account.AwsOrangeCaChainCert != "") {
+		return diag.Errorf("could not create Aviatrix Account: 'aws_orange_account_number', 'aws_orange_cap_url', 'aws_orange_cap_agency', 'aws_orange_cap_mission', 'aws_orange_cap_role_name', aws_orange_cap_cert', 'aws_orange_cap_cert_key' and 'aws_orange_ca_chain_cert' can only be set when 'cloud_type' is AWS Top Secret Region (16384)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSSC2S) && (account.AwsRedAccountNumber != "" || account.AwsRedCapUrl != "" || account.AwsRedCapAgency != "" || account.AwsRedCapAccountName != "" || account.AwsRedCapRoleName != "" || account.AwsRedCapCert != "" || account.AwsRedCapCertKey != "" || account.AwsRedCaChainCert != "") {
+		return diag.Errorf("could not create Aviatrix Account: 'aws_red_account_number', 'aws_red_cap_url', 'aws_red_cap_agency', 'aws_red_cap_account_name', 'aws_red_cap_role_name', aws_red_cap_cert', 'aws_red_cap_cert_key' and 'aws_red_ca_chain_cert' can only be set when 'cloud_type' is AWS Secret Region (32768)")
+	}
 
 	if account.CloudType == goaviatrix.AWS {
 		if account.AwsAccountNumber == "" {
@@ -990,6 +996,12 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AliCloud) && (account.AlicloudAccountId != "" || account.AlicloudAccessKey != "" || account.AlicloudSecretKey != "") {
 		return diag.Errorf("could not update Aviatrix Account: 'aliyun_account_id', 'aliyun_access_key' and 'aliyun_secret_key' can only be set when 'cloud_type' is Alibaba Cloud (8192)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSC2S) && (account.AwsOrangeAccountNumber != "" || account.AwsOrangeCapUrl != "" || account.AwsOrangeCapAgency != "" || account.AwsOrangeCapMission != "" || account.AwsOrangeCapRoleName != "" || account.AwsOrangeCapCert != "" || account.AwsOrangeCapCertKey != "" || account.AwsOrangeCaChainCert != "") {
+		return diag.Errorf("could not update Aviatrix Account: 'aws_orange_account_number', 'aws_orange_cap_url', 'aws_orange_cap_agency', 'aws_orange_cap_mission', 'aws_orange_cap_role_name', aws_orange_cap_cert', 'aws_orange_cap_cert_key' and 'aws_orange_ca_chain_cert' can only be set when 'cloud_type' is AWS Top Secret Region (16384)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSSC2S) && (account.AwsRedAccountNumber != "" || account.AwsRedCapUrl != "" || account.AwsRedCapAgency != "" || account.AwsRedCapAccountName != "" || account.AwsRedCapRoleName != "" || account.AwsRedCapCert != "" || account.AwsRedCapCertKey != "" || account.AwsRedCaChainCert != "") {
+		return diag.Errorf("could not update Aviatrix Account: 'aws_red_account_number', 'aws_red_cap_url', 'aws_red_cap_agency', 'aws_red_cap_account_name', 'aws_red_cap_role_name', aws_red_cap_cert', 'aws_red_cap_cert_key' and 'aws_red_ca_chain_cert' can only be set when 'cloud_type' is AWS Secret Region (32768)")
 	}
 
 	if account.CloudType == goaviatrix.AWS {
