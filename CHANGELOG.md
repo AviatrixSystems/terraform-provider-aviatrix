@@ -13,8 +13,7 @@
 
 ### Bug Fixes:
 1. Fixed crashing issue when creating an **aviatrix_transit_external_device_conn** without ``phase1_remote_identifier``
-2. Fixed blocker issue where creating a LAN tunnel_protocol **aviatrix_transit_external_device_conn** will read deltas in the ``phase1_remote_identifier`` values
-3. Fixed an issue where enabling Single IP HA failover for an **aviatrix_site2cloud** with mapped config will read deltas in the ``phase1_remote_identifier`` values
+2. Fixed an issue where enabling Single IP HA failover for an **aviatrix_site2cloud** with mapped config will read deltas in the ``phase1_remote_identifier`` values
 
 
 ## 2.19.0 (May 09, 2021)
