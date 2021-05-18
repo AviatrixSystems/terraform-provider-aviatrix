@@ -124,8 +124,8 @@ resource "aviatrix_account" "temp_acc_azurechina" {
 ```hcl
 # Create an Alibaba Cloud Account
 resource "aviatrix_account" "temp_acc_alibaba" {
-  account_name = "username"
-  cloud_type = 8192
+  account_name        = "username"
+  cloud_type          = 8192
   alicloud_account_id = "123456789012"
   alicloud_access_key = "ABCDEFGHIJKL"
   alicloud_secret_key = "ABCDEFGHIJKLabcdefghijkl"
