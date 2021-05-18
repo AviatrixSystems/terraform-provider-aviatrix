@@ -183,8 +183,6 @@ The following arguments are supported:
 * `aws_gateway_role_app` - (Optional) A separate AWS App role ARN to assign to gateways created by the controller. Required when `aws_gateway_role_ec2` is set. Only allowed when `aws_iam`, `awsgov_iam`, or `awschina_iam` is "true" when creating an account for AWS, AWSGov or AWSChina, respectively. Available as of provider version R2.19+.
 * `aws_gateway_role_ec2` - (Optional) A separate AWS EC2 role ARN to assign to gateways created by the controller. Required when `aws_gateway_role_app` is set. Only allowed when `aws_iam`, `awsgov_iam`, or `awschina_iam` is "true" when creating an account for AWS, AWSGov or AWSChina, respectively. Available as of provider version R2.19+.
 
--> **NOTE:** Please make sure that the IAM roles/profiles have already been created before running this, if `aws_iam = true`. More information on the IAM roles is at https://docs.aviatrix.com/HowTos/iam_policies.html and https://docs.aviatrix.com/HowTos/HowTo_IAM_role.html
-
 ### Azure
 * `arm_subscription_id` - (Optional) Azure ARM Subscription ID. Required when creating an account for Azure.
 * `arm_directory_id` - (Optional) Azure ARM Directory ID. Required when creating an account for Azure.
@@ -234,10 +232,6 @@ The following arguments are supported:
 * `alicloud_access_key` - (Optional) Alibaba Cloud Access Key. Required when creating an account for Alibaba Cloud.
 * `alicloud_secret_key` - (Optional) Alibaba Cloud Secret Key. Required when creating an account for Alibaba Cloud.
 
-### Misc.
--> **NOTE:** On terraform versions 0.12.x, 0.13.x, and 0.14.x, terraform will not detect any changes for the account when the account audit fail warning is given. In order to apply changes or set `audit_account = false`, please run `terraform apply -refresh=false`.
-* `audit_account` - (Optional) Specify whether to enable the audit account feature. If this feature is enabled, terraform will give a warning if there is an issue with the account credentials. Valid values: true, false. Default: false. **Note: The warning may still appear for a few hours after fixing the underlying issue.**
-
 ### AWS Top Secret Region
 * `aws_orange_account_number` - (Optional) AWS Top Secret Region Account Number. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19+.
 * `aws_orange_cap_url` - (Optional) AWS Top Secret Region CAP Url. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19+.
@@ -257,6 +251,12 @@ The following arguments are supported:
 * `aws_red_cap_cert` - (Optional) AWS Secret Region CAP Certificate local file path. Required when creating an account in AWS Secret Region. Available as of provider version R2.19+.
 * `aws_red_cap_cert_key` - (Optional) AWS Secret Region CAP Certificate Key local file path. Required when creating an account in AWS Secret Region. Available as of provider version R2.19+.
 * `aws_red_ca_chain_cert` - (Optional) AWS Secret Region Custom Certificate Authority local file path. Required when creating an account in AWS Secret Region. Available as of provider version R2.19+.
+
+### Misc.
+-> **NOTE:** On terraform versions 0.12.x, 0.13.x, and 0.14.x, terraform will not detect any changes for the account when the account audit fail warning is given. In order to apply changes or set `audit_account = false`, please run `terraform apply -refresh=false`.
+* `audit_account` - (Optional) Specify whether to enable the audit account feature. If this feature is enabled, terraform will give a warning if there is an issue with the account credentials. Valid values: true, false. Default: false. **Note: The warning may still appear for a few hours after fixing the underlying issue.**
+
+-> **NOTE:** Please make sure that the IAM roles/profiles have already been created before running this, if `aws_iam = true`. More information on the IAM roles is at https://docs.aviatrix.com/HowTos/iam_policies.html and https://docs.aviatrix.com/HowTos/HowTo_IAM_role.html
 
 ## Attribute Reference
 
