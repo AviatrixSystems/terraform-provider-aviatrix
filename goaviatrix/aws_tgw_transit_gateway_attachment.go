@@ -1,10 +1,8 @@
 package goaviatrix
 
 import (
-	"bytes"
 	"encoding/json"
-	"errors"
-	"net/url"
+	"fmt"
 	"strings"
 )
 
@@ -42,67 +40,38 @@ type AttachmentInfo struct {
 }
 
 func (c *Client) CreateAwsTgwTransitGwAttachment(awsTgwTransitGwAttachment *AwsTgwTransitGwAttachment) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for attach_vpc_to_tgw") + err.Error())
+	form := map[string]string{
+		"CID":               c.CID,
+		"action":            "attach_vpc_to_tgw",
+		"region":            awsTgwTransitGwAttachment.Region,
+		"vpc_account_name":  awsTgwTransitGwAttachment.VpcAccountName,
+		"vpc_name":          awsTgwTransitGwAttachment.VpcID,
+		"tgw_name":          awsTgwTransitGwAttachment.TgwName,
+		"route_domain_name": "Aviatrix_Edge_Domain",
+		"gateway_name":      awsTgwTransitGwAttachment.TransitGatewayName,
 	}
-	attachVpcFromTgw := url.Values{}
-	attachVpcFromTgw.Add("CID", c.CID)
-	attachVpcFromTgw.Add("action", "attach_vpc_to_tgw")
-	attachVpcFromTgw.Add("region", awsTgwTransitGwAttachment.Region)
-	attachVpcFromTgw.Add("vpc_account_name", awsTgwTransitGwAttachment.VpcAccountName)
-	attachVpcFromTgw.Add("vpc_name", awsTgwTransitGwAttachment.VpcID)
-	attachVpcFromTgw.Add("tgw_name", awsTgwTransitGwAttachment.TgwName)
-	attachVpcFromTgw.Add("route_domain_name", "Aviatrix_Edge_Domain")
-	attachVpcFromTgw.Add("gateway_name", awsTgwTransitGwAttachment.TransitGatewayName)
-	Url.RawQuery = attachVpcFromTgw.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get attach_vpc_to_tgw failed: " + err.Error())
-	}
-
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode attach_vpc_to_tgw failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API attach_vpc_to_tgw Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) GetAwsTgwTransitGwAttachment(awsTgwTransitGwAttachment *AwsTgwTransitGwAttachment) (*AwsTgwTransitGwAttachment, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for 'list_tgw_details': ") + err.Error())
-	}
-	listTgwDetails := url.Values{}
-	listTgwDetails.Add("CID", c.CID)
-	listTgwDetails.Add("action", "list_tgw_details")
-	listTgwDetails.Add("tgw_name", awsTgwTransitGwAttachment.TgwName)
-	Url.RawQuery = listTgwDetails.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get 'list_tgw_details' failed: " + err.Error())
-	}
-
 	var data TgwAttachmentResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode 'list_tgw_details' failed: " + err.Error() + "\n Body: " + bodyString)
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "list_tgw_details",
+		"tgw_name": awsTgwTransitGwAttachment.TgwName,
 	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "does not exist") {
-			return nil, ErrNotFound
+	check := func(action, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "does not exist") {
+				return ErrNotFound
+			}
+			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
 		}
-		return nil, errors.New("Rest API 'list_tgw_details' Get failed: " + data.Reason)
+		return nil
+	}
+	err := c.GetAPI(&data, form["action"], form, check)
+	if err != nil {
+		return nil, err
 	}
 	if _, ok := data.Results.Attachments[awsTgwTransitGwAttachment.VpcID]; ok {
 		if data.Results.Attachments[awsTgwTransitGwAttachment.VpcID].GwName != "" {
@@ -113,40 +82,24 @@ func (c *Client) GetAwsTgwTransitGwAttachment(awsTgwTransitGwAttachment *AwsTgwT
 		}
 		return nil, ErrNotFound
 	}
-
 	return nil, ErrNotFound
 }
 
 func (c *Client) DeleteAwsTgwTransitGwAttachment(awsTgwTransitGwAttachment *AwsTgwTransitGwAttachment) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'detach_vpc_from_tgw': ") + err.Error())
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "detach_vpc_from_tgw",
+		"tgw_name": awsTgwTransitGwAttachment.TgwName,
+		"vpc_name": awsTgwTransitGwAttachment.VpcID,
 	}
-	detachVpcFromTgw := url.Values{}
-	detachVpcFromTgw.Add("CID", c.CID)
-	detachVpcFromTgw.Add("action", "detach_vpc_from_tgw")
-	detachVpcFromTgw.Add("tgw_name", awsTgwTransitGwAttachment.TgwName)
-	detachVpcFromTgw.Add("vpc_name", awsTgwTransitGwAttachment.VpcID)
-	Url.RawQuery = detachVpcFromTgw.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'detach_vpc_from_tgw' failed: " + err.Error())
-	}
-
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'detach_vpc_from_tgw' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "is not attached to") {
-			return nil
+	check := func(action, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "is not attached to") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
 		}
-		return errors.New("Rest API 'detach_vpc_from_tgw' Get failed: " + data.Reason)
+		return nil
 	}
-
-	return nil
+	return c.PostAPI(form["action"], form, check)
 }
