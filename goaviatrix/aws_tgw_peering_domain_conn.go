@@ -1,10 +1,7 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
-	"net/url"
+	"fmt"
 	"strings"
 )
 
@@ -30,63 +27,36 @@ type ConnectedRouteDomainDetail struct {
 }
 
 func (c *Client) CreateDomainConn(domainConn *DomainConn) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'add_connection_between_route_domains': ") + err.Error())
+	form := map[string]string{
+		"CID":                           c.CID,
+		"action":                        "add_connection_between_route_domains",
+		"tgw_name":                      domainConn.TgwName1,
+		"source_route_domain_name":      domainConn.DomainName1,
+		"destination_route_domain_name": domainConn.TgwName2 + ":" + domainConn.DomainName2,
 	}
-	addConnectionBetweenRouteDomains := url.Values{}
-	addConnectionBetweenRouteDomains.Add("CID", c.CID)
-	addConnectionBetweenRouteDomains.Add("action", "add_connection_between_route_domains")
-	addConnectionBetweenRouteDomains.Add("tgw_name", domainConn.TgwName1)
-	addConnectionBetweenRouteDomains.Add("source_route_domain_name", domainConn.DomainName1)
-	addConnectionBetweenRouteDomains.Add("destination_route_domain_name", domainConn.TgwName2+":"+domainConn.DomainName2)
-	Url.RawQuery = addConnectionBetweenRouteDomains.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'add_connection_between_route_domains' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'add_connection_between_route_domains' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'add_connection_between_route_domains' Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) GetDomainConn(domainConn *DomainConn) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'list_connected_route_domains': ") + err.Error())
-	}
-	listConnectedRouteDomains := url.Values{}
-	listConnectedRouteDomains.Add("CID", c.CID)
-	listConnectedRouteDomains.Add("action", "list_connected_route_domains")
-	listConnectedRouteDomains.Add("tgw_name", domainConn.TgwName1)
-	listConnectedRouteDomains.Add("route_domain_name", domainConn.DomainName1)
-	Url.RawQuery = listConnectedRouteDomains.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'list_connected_route_domains' failed: " + err.Error())
-	}
 	var data ListConnectedRouteDomainsResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'list_connected_route_domains' failed: " + err.Error() + "\n Body: " + bodyString)
+	form := map[string]string{
+		"CID":               c.CID,
+		"action":            "list_connected_route_domains",
+		"tgw_name":          domainConn.TgwName1,
+		"route_domain_name": domainConn.DomainName1,
 	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "does not exist") {
-			return ErrNotFound
+	check := func(action, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(data.Reason, "does not exist") {
+				return ErrNotFound
+			}
+			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
 		}
-		return errors.New("Rest API 'list_connected_route_domains' Get failed: " + data.Reason)
+		return nil
+	}
+	err := c.GetAPI(&data, form["action"], form, check)
+	if err != nil {
+		return err
 	}
 	connectedDomains := data.Results.ConnectedDomainNames
 	for i := range connectedDomains {
@@ -98,31 +68,12 @@ func (c *Client) GetDomainConn(domainConn *DomainConn) error {
 }
 
 func (c *Client) DeleteDomainConn(domainConn *DomainConn) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'delete_connection_between_route_domains': ") + err.Error())
+	form := map[string]string{
+		"CID":                           c.CID,
+		"action":                        "delete_connection_between_route_domains",
+		"tgw_name":                      domainConn.TgwName1,
+		"source_route_domain_name":      domainConn.DomainName1,
+		"destination_route_domain_name": domainConn.TgwName2 + ":" + domainConn.DomainName2,
 	}
-	deleteConnectionBetweenRouteDomains := url.Values{}
-	deleteConnectionBetweenRouteDomains.Add("CID", c.CID)
-	deleteConnectionBetweenRouteDomains.Add("action", "delete_connection_between_route_domains")
-	deleteConnectionBetweenRouteDomains.Add("tgw_name", domainConn.TgwName1)
-	deleteConnectionBetweenRouteDomains.Add("source_route_domain_name", domainConn.DomainName1)
-	deleteConnectionBetweenRouteDomains.Add("destination_route_domain_name", domainConn.TgwName2+":"+domainConn.DomainName2)
-	Url.RawQuery = deleteConnectionBetweenRouteDomains.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'delete_connection_between_route_domains' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'delete_connection_between_route_domains' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'delete_connection_between_route_domains' Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
