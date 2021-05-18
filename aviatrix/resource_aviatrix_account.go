@@ -724,7 +724,7 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 			return diag.Errorf("updating OCI account is not supported")
 		}
 	} else if account.CloudType == goaviatrix.AWSGov {
-		if d.HasChanges("awsgov_account_number", "awsgov_access_key", "awsgov_secret_key", "aws_gateway_role_app", "aws_gateway_role_ec2") {
+		if d.HasChanges("awsgov_account_number", "awsgov_access_key", "awsgov_secret_key", "awsgov_iam", "awsgov_role_app", "awsgov_role_ec2", "aws_gateway_role_app", "aws_gateway_role_ec2") {
 			err := client.UpdateAccount(account)
 			if err != nil {
 				return diag.Errorf("failed to update Aviatrix Account: %s", err)
