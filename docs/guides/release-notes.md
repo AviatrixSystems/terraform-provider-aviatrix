@@ -19,8 +19,8 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ## 2.19.1
 ### Notes:
-- Release date: **(16 May 2021)**
-- Supported Controller version: **UserConnect-6.4.2554**
+- Release date: **(17 May 2021)**
+- Supported Controller version: **UserConnect-6.4.2561**
 - Supported Terraform version: **v0.12.x**, **v0.13.x** and **v0.14.x**
 
 ### Features:
@@ -32,8 +32,10 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 2. Implemented support for separate IAM role and policy for gateways in AWSChina and AWSGov **aviatrix_account** and data source
 
 ### Bug Fixes:
-1. Fixed an issue where creating an **aviatrix_transit_external_device_conn** with some setting crashes
-2. Fixed an issue where enabling single IP HA for an **aviatrix_site2cloud** with mapped config reads deltas in the ``phase1_remote_identifier`` values
+1. Fixed crashing issue when creating an **aviatrix_transit_external_device_conn** without ``phase1_remote_identifier``
+2. Fixed blocker issue where creating a LAN tunnel_protocol **aviatrix_transit_external_device_conn** will read deltas in the ``phase1_remote_identifier`` values
+3. Fixed an issue where enabling Single IP HA failover for an **aviatrix_site2cloud** with mapped config will read deltas in the ``phase1_remote_identifier`` values
+
 
 
 ## 2.19.0
