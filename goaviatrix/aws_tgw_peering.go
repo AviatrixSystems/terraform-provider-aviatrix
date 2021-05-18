@@ -1,10 +1,7 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
-	"net/url"
+	"fmt"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -26,51 +23,28 @@ type AwsTgwPeeringAPIResp struct {
 func (c *Client) CreateAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
 	awsTgwPeering.CID = c.CID
 	awsTgwPeering.Action = "add_tgw_peering"
-	resp, err := c.Post(c.baseURL, awsTgwPeering)
-	if err != nil {
-		return errors.New("HTTP Post 'add_tgw_peering' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'add_tgw_peering' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'add_tgw_peering' Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(awsTgwPeering.Action, awsTgwPeering, BasicCheck)
 }
 
 func (c *Client) GetAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'list_peered_tgw_names': ") + err.Error())
-	}
-	listPeeredTgwNames := url.Values{}
-	listPeeredTgwNames.Add("CID", c.CID)
-	listPeeredTgwNames.Add("action", "list_peered_tgw_names")
-	listPeeredTgwNames.Add("tgw_name", awsTgwPeering.TgwName1)
-	Url.RawQuery = listPeeredTgwNames.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'list_peered_tgw_names' failed: " + err.Error())
-	}
 	var data AwsTgwPeeringAPIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'list_peered_tgw_names' failed: " + err.Error() + "\n Body: " + bodyString)
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "list_peered_tgw_names",
+		"tgw_name": awsTgwPeering.TgwName1,
 	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "does not exist") {
-			return ErrNotFound
+	check := func(action, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(data.Reason, "does not exist") {
+				return ErrNotFound
+			}
+			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
 		}
-		return errors.New("Rest API 'list_peered_tgw_names' Get failed: " + data.Reason)
+		return nil
+	}
+	err := c.GetAPI(&data, form["action"], form, check)
+	if err != nil {
+		return err
 	}
 	if len(data.Results) == 0 {
 		log.Errorf("Aws tgw peering with tgw: %s and tgw: %s not found", awsTgwPeering.TgwName1, awsTgwPeering.TgwName2)
@@ -88,20 +62,5 @@ func (c *Client) GetAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
 func (c *Client) DeleteAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
 	awsTgwPeering.CID = c.CID
 	awsTgwPeering.Action = "delete_tgw_peering"
-	resp, err := c.Post(c.baseURL, awsTgwPeering)
-	if err != nil {
-		return errors.New("HTTP Post 'delete_tgw_peering' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'delete_tgw_peering' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'delete_tgw_peering' Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(awsTgwPeering.Action, awsTgwPeering, BasicCheck)
 }
