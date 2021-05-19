@@ -1,9 +1,6 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -64,30 +61,7 @@ func (c *Client) RegisterDevice(d *Device) error {
 			ParamName: "private_key_file",
 		},
 	}
-	resp, err := c.PostFile(c.baseURL, d.toMap(), files)
-	if err != nil {
-		return errors.New("HTTP Post register_cloudwan_device failed: " + err.Error())
-	}
-
-	type Resp struct {
-		Return  bool   `json:"return,omitempty"`
-		Results string `json:"results,omitempty"`
-		Reason  string `json:"reason,omitempty"`
-	}
-	var data Resp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
-	if err != nil {
-		return errors.New("Reading response body register_cloudwan_device failed: " + err.Error())
-	}
-
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return errors.New("Json Decode register_cloudwan_device failed: " + err.Error() + "\n Body: " + b.String())
-	}
-	if !data.Return {
-		return errors.New("Rest API register_cloudwan_device Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostFileAPI(d.toMap(), files, BasicCheck)
 }
 
 // toMap converts the struct to a map[string]string
@@ -107,35 +81,19 @@ func (br *Device) toMap() map[string]string {
 }
 
 func (c *Client) GetDevice(d *Device) (*Device, error) {
-	resp, err := c.Post(c.baseURL, struct {
-		CID    string `form:"CID"`
-		Action string `form:"action"`
-	}{
-		CID:    c.CID,
-		Action: "list_cloudwan_devices_summary",
-	})
-	if err != nil {
-		return nil, errors.New("HTTP POST list_cloudwan_devices_summary failed: " + err.Error())
-	}
-
 	type Resp struct {
 		Return  bool     `json:"return"`
 		Results []Device `json:"results"`
 		Reason  string   `json:"reason"`
 	}
 	var data Resp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "list_cloudwan_devices_summary",
+	}
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
 	if err != nil {
-		return nil, errors.New("Reading response body list_cloudwan_devices_summary failed: " + err.Error())
-	}
-
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_cloudwan_devices_summary failed: " + err.Error() +
-			"\n Body: " + b.String())
-	}
-	if !data.Return {
-		return nil, errors.New("Rest API list_cloudwan_devices_summary Post failed: " + data.Reason)
+		return nil, err
 	}
 	var foundDevice *Device
 	for _, device := range data.Results {
@@ -160,35 +118,19 @@ func (c *Client) GetDevice(d *Device) (*Device, error) {
 }
 
 func (c *Client) GetDeviceName(connName string) (string, error) {
-	resp, err := c.Post(c.baseURL, struct {
-		CID    string `form:"CID"`
-		Action string `form:"action"`
-	}{
-		CID:    c.CID,
-		Action: "list_cloudwan_devices_summary",
-	})
-	if err != nil {
-		return "", errors.New("HTTP POST list_cloudwan_devices_summary failed: " + err.Error())
-	}
-
 	type Resp struct {
 		Return  bool     `json:"return"`
 		Results []Device `json:"results"`
 		Reason  string   `json:"reason"`
 	}
 	var data Resp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "list_cloudwan_devices_summary",
+	}
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
 	if err != nil {
-		return "", errors.New("Reading response body list_cloudwan_devices_summary failed: " + err.Error())
-	}
-
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return "", errors.New("Json Decode list_cloudwan_devices_summary failed: " + err.Error() +
-			"\n Body: " + b.String())
-	}
-	if !data.Return {
-		return "", errors.New("Rest API list_cloudwan_devices_summary Post failed: " + data.Reason)
+		return "", err
 	}
 
 	for _, device := range data.Results {
@@ -214,66 +156,16 @@ func (c *Client) UpdateDevice(d *Device) error {
 			ParamName: "private_key_file",
 		},
 	}
-	resp, err := c.PostFile(c.baseURL, d.toMap(), files)
-	if err != nil {
-		return errors.New("HTTP Post update_cloudwan_device_info failed: " + err.Error())
-	}
-
-	type Resp struct {
-		Return  bool   `json:"return,omitempty"`
-		Results string `json:"results,omitempty"`
-		Reason  string `json:"reason,omitempty"`
-	}
-	var data Resp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
-	if err != nil {
-		return errors.New("Reading response body update_cloudwan_device_info failed: " + err.Error())
-	}
-
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return errors.New("Json Decode update_cloudwan_device_info failed: " + err.Error() + "\n Body: " + b.String())
-	}
-	if !data.Return {
-		return errors.New("Rest API update_cloudwan_device_info Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostFileAPI(d.toMap(), files, BasicCheck)
 }
 
 func (c *Client) DeregisterDevice(d *Device) error {
-	resp, err := c.Post(c.baseURL, struct {
-		CID    string `form:"CID"`
-		Action string `form:"action"`
-		Name   string `form:"device_name"`
-	}{
-		CID:    c.CID,
-		Action: "deregister_cloudwan_device",
-		Name:   d.Name,
-	})
-	if err != nil {
-		return errors.New("HTTP POST deregister_cloudwan_device failed: " + err.Error())
+	form := map[string]string{
+		"CID":         c.CID,
+		"action":      "deregister_cloudwan_device",
+		"device_name": d.Name,
 	}
-
-	type Resp struct {
-		Return  bool   `json:"return"`
-		Results string `json:"results"`
-		Reason  string `json:"reason"`
-	}
-	var data Resp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
-	if err != nil {
-		return errors.New("Reading response body deregister_cloudwan_device failed: " + err.Error())
-	}
-
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return errors.New("Json Decode deregister_cloudwan_device failed: " + err.Error() +
-			"\n Body: " + b.String())
-	}
-	if !data.Return {
-		return errors.New("Rest API deregister_cloudwan_device Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) ConfigureDeviceInterfaces(config *DeviceInterfaceConfig) error {
@@ -287,88 +179,39 @@ func (c *Client) ConfigureDeviceInterfaces(config *DeviceInterfaceConfig) error 
 			"Possible interfaces are [%s]", config.PrimaryInterface, strings.Join(availableInterfaces, ", "))
 	}
 
-	resp, err := c.Post(c.baseURL, struct {
-		CID                string `form:"CID"`
-		Action             string `form:"action"`
-		Name               string `form:"device_name"`
-		PrimaryInterface   string `form:"wan_primary_if"`
-		PrimaryInterfaceIP string `form:"wan_primary_ip"`
-	}{
-		CID:                c.CID,
-		Action:             "config_cloudwan_device_wan_interfaces",
-		Name:               config.DeviceName,
-		PrimaryInterface:   config.PrimaryInterface,
-		PrimaryInterfaceIP: config.PrimaryInterfaceIP,
-	})
-	if err != nil {
-		return errors.New("HTTP POST config_cloudwan_device_wan_interfaces failed: " + err.Error())
+	form := map[string]string{
+		"CID":            c.CID,
+		"action":         "config_cloudwan_device_wan_interfaces",
+		"device_name":    config.DeviceName,
+		"wan_primary_if": config.PrimaryInterface,
+		"wan_primary_ip": config.PrimaryInterfaceIP,
 	}
-
-	type Resp struct {
-		Return  bool   `json:"return"`
-		Results string `json:"results"`
-		Reason  string `json:"reason"`
-	}
-	var data Resp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
-	if err != nil {
-		return errors.New("Reading response body config_cloudwan_device_wan_interfaces failed: " + err.Error())
-	}
-
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return errors.New("Json Decode config_cloudwan_device_wan_interfaces failed: " + err.Error() +
-			"\n Body: " + b.String())
-	}
-	if !data.Return {
-		return errors.New("Rest API config_cloudwan_device_wan_interfaces Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) GetDeviceInterfaces(device *Device) ([]string, error) {
-	resp, err := c.Post(c.baseURL, struct {
-		CID    string `form:"CID"`
-		Action string `form:"action"`
-		Name   string `form:"device_name"`
-	}{
-		CID:    c.CID,
-		Action: "get_cloudwan_device_wan_interfaces",
-		Name:   device.Name,
-	})
-	if err != nil {
-		return nil, errors.New("HTTP POST get_cloudwan_device_wan_interfaces failed: " + err.Error())
-	}
-
 	type Result struct {
 		Interface string `json:"interface"`
 		IP        string `json:"ip"`
 	}
-
 	type Resp struct {
 		Return  bool     `json:"return"`
 		Results []Result `json:"results"`
 		Reason  string   `json:"reason"`
 	}
 	var data Resp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
+	form := map[string]string{
+		"CID":         c.CID,
+		"action":      "get_cloudwan_device_wan_interfaces",
+		"device_name": device.Name,
+	}
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
 	if err != nil {
-		return nil, errors.New("Reading response body get_cloudwan_device_wan_interfaces failed: " + err.Error())
-	}
-
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode get_cloudwan_device_wan_interfaces failed: " + err.Error() +
-			"\n Body: " + b.String())
-	}
-	if !data.Return {
-		return nil, errors.New("Rest API get_cloudwan_device_wan_interfaces Post failed: " + data.Reason)
+		return nil, err
 	}
 	var interfaces []string
-
 	for _, v := range data.Results {
 		interfaces = append(interfaces, v.Interface)
 	}
-
 	return interfaces, nil
 }
