@@ -2,7 +2,6 @@ package goaviatrix
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -61,23 +60,7 @@ func (c *Client) RegisterDevice(d *Device) error {
 			ParamName: "private_key_file",
 		},
 	}
-	return c.PostFileAPI(d.toMap(), files, BasicCheck)
-}
-
-// toMap converts the struct to a map[string]string
-// The 'map' tags on the struct tell us what the key name should be.
-func (br *Device) toMap() map[string]string {
-	out := make(map[string]string)
-	v := reflect.ValueOf(br).Elem()
-	tag := "map"
-	typ := v.Type()
-	for i := 0; i < v.NumField(); i++ {
-		fi := typ.Field(i)
-		if tagv := fi.Tag.Get(tag); tagv != "" && tagv != "-" {
-			out[tagv] = v.Field(i).String()
-		}
-	}
-	return out
+	return c.PostFileAPI(toMap(d), files, BasicCheck)
 }
 
 func (c *Client) GetDevice(d *Device) (*Device, error) {
@@ -156,7 +139,7 @@ func (c *Client) UpdateDevice(d *Device) error {
 			ParamName: "private_key_file",
 		},
 	}
-	return c.PostFileAPI(d.toMap(), files, BasicCheck)
+	return c.PostFileAPI(toMap(d), files, BasicCheck)
 }
 
 func (c *Client) DeregisterDevice(d *Device) error {

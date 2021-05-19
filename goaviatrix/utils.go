@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -249,4 +250,20 @@ func ValidateAttachedVPCsForCustomizedRoutes(a, b [][]string) ([][]string, [][]s
 
 func IsCloudType(cloudType, compare int) bool {
 	return cloudType&compare != 0
+}
+
+// toMap converts the struct to a map[string]string
+// The 'map' tags on the struct tell us what the key name should be.
+func toMap(s interface{}) map[string]string {
+	out := make(map[string]string)
+	v := reflect.ValueOf(s).Elem()
+	tag := "map"
+	typ := v.Type()
+	for i := 0; i < v.NumField(); i++ {
+		fi := typ.Field(i)
+		if tagv := fi.Tag.Get(tag); tagv != "" && tagv != "-" {
+			out[tagv] = v.Field(i).String()
+		}
+	}
+	return out
 }
