@@ -1,10 +1,7 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
-	"net/url"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -41,50 +38,19 @@ type AwsTgwDirectConnResp struct {
 func (c *Client) CreateAwsTgwDirectConnect(awsTgwDirectConnect *AwsTgwDirectConnect) error {
 	awsTgwDirectConnect.CID = c.CID
 	awsTgwDirectConnect.Action = "attach_direct_connect_to_tgw"
-	resp, err := c.Post(c.baseURL, awsTgwDirectConnect)
-	if err != nil {
-		return errors.New("HTTP Post attach_direct_connect_to_tgw failed: " + err.Error())
-	}
-
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode attach_direct_connect_to_tgw failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API attach_direct_connect_to_tgw Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(awsTgwDirectConnect.Action, awsTgwDirectConnect, BasicCheck)
 }
 
 func (c *Client) GetAwsTgwDirectConnect(awsTgwDirectConnect *AwsTgwDirectConnect) (*AwsTgwDirectConnect, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for list_all_tgw_attachments") + err.Error())
+	var data AwsTgwDirectConnResp
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "list_all_tgw_attachments",
+		"tgw_name": awsTgwDirectConnect.TgwName,
 	}
-	listAllTgwAttachments := url.Values{}
-	listAllTgwAttachments.Add("CID", c.CID)
-	listAllTgwAttachments.Add("action", "list_all_tgw_attachments")
-	listAllTgwAttachments.Add("tgw_name", awsTgwDirectConnect.TgwName)
-	Url.RawQuery = listAllTgwAttachments.Encode()
-	resp, err := c.Get(Url.String(), nil)
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
 	if err != nil {
 		return nil, errors.New("HTTP Get list_all_tgw_attachments failed: " + err.Error())
-	}
-
-	var data AwsTgwDirectConnResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_all_tgw_attachments failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return nil, errors.New("Rest API list_all_tgw_attachments Get failed: " + data.Reason)
 	}
 	allAwsTgwDirectConn := data.Results
 	for i := range allAwsTgwDirectConn {
@@ -103,105 +69,33 @@ func (c *Client) GetAwsTgwDirectConnect(awsTgwDirectConnect *AwsTgwDirectConnect
 func (c *Client) UpdateDirectConnAllowedPrefix(awsTgwDirectConnect *AwsTgwDirectConnect) error {
 	awsTgwDirectConnect.CID = c.CID
 	awsTgwDirectConnect.Action = "update_tgw_directconnect_allowed_prefix"
-	resp, err := c.Post(c.baseURL, awsTgwDirectConnect)
-	if err != nil {
-		return errors.New("HTTP Post update_tgw_directconnect_allowed_prefix failed: " + err.Error())
-	}
-
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode update_tgw_directconnect_allowed_prefix failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API update_tgw_directconnect_allowed_prefix Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(awsTgwDirectConnect.Action, awsTgwDirectConnect, BasicCheck)
 }
 
 func (c *Client) DeleteAwsTgwDirectConnect(awsTgwDirectConnect *AwsTgwDirectConnect) error {
 	awsTgwDirectConnect.CID = c.CID
 	awsTgwDirectConnect.Action = "detach_directconnect_from_tgw"
-	resp, err := c.Post(c.baseURL, awsTgwDirectConnect)
-	if err != nil {
-		return errors.New("HTTP Post detach_directconnect_from_tgw failed: " + err.Error())
-	}
-
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode detach_directconnect_from_tgw failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API detach_directconnect_from_tgw Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(awsTgwDirectConnect.Action, awsTgwDirectConnect, BasicCheck)
 }
 
 func (c *Client) EnableDirectConnectLearnedCidrsApproval(awsTgwDirectConnect *AwsTgwDirectConnect) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'enable_learned_cidrs_approval': ") + err.Error())
+	form := map[string]string{
+		"CID":                    c.CID,
+		"action":                 "enable_learned_cidrs_approval",
+		"tgw_name":               awsTgwDirectConnect.TgwName,
+		"attachment_name":        awsTgwDirectConnect.DxGatewayName,
+		"learned_cidrs_approval": awsTgwDirectConnect.LearnedCidrsApproval,
 	}
-	enableLearnedCidrsApproval := url.Values{}
-	enableLearnedCidrsApproval.Add("CID", c.CID)
-	enableLearnedCidrsApproval.Add("action", "enable_learned_cidrs_approval")
-	enableLearnedCidrsApproval.Add("tgw_name", awsTgwDirectConnect.TgwName)
-	enableLearnedCidrsApproval.Add("attachment_name", awsTgwDirectConnect.DxGatewayName)
-	enableLearnedCidrsApproval.Add("learned_cidrs_approval", awsTgwDirectConnect.LearnedCidrsApproval)
-	Url.RawQuery = enableLearnedCidrsApproval.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return errors.New("HTTP Get 'enable_learned_cidrs_approval' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'enable_learned_cidrs_approval' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'enable_learned_cidrs_approval' Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DisableDirectConnectLearnedCidrsApproval(awsTgwDirectConnect *AwsTgwDirectConnect) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'disable_learned_cidrs_approval': ") + err.Error())
+	form := map[string]string{
+		"CID":                    c.CID,
+		"action":                 "disable_learned_cidrs_approval",
+		"tgw_name":               awsTgwDirectConnect.TgwName,
+		"attachment_name":        awsTgwDirectConnect.DxGatewayName,
+		"learned_cidrs_approval": awsTgwDirectConnect.LearnedCidrsApproval,
 	}
-	enableLearnedCidrsApproval := url.Values{}
-	enableLearnedCidrsApproval.Add("CID", c.CID)
-	enableLearnedCidrsApproval.Add("action", "disable_learned_cidrs_approval")
-	enableLearnedCidrsApproval.Add("tgw_name", awsTgwDirectConnect.TgwName)
-	enableLearnedCidrsApproval.Add("attachment_name", awsTgwDirectConnect.DxGatewayName)
-	enableLearnedCidrsApproval.Add("learned_cidrs_approval", awsTgwDirectConnect.LearnedCidrsApproval)
-	Url.RawQuery = enableLearnedCidrsApproval.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return errors.New("HTTP Get 'disable_learned_cidrs_approval' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'disable_learned_cidrs_approval' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'disable_learned_cidrs_approval' Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }

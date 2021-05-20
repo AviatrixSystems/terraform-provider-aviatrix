@@ -1,10 +1,6 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
-	"net/url"
 	"strings"
 )
 
@@ -33,49 +29,20 @@ type AzureSpokeNativePeeringEdit struct {
 func (c *Client) CreateAzureSpokeNativePeering(azureSpokeNativePeering *AzureSpokeNativePeering) error {
 	azureSpokeNativePeering.CID = c.CID
 	azureSpokeNativePeering.Action = "attach_arm_native_spoke_to_transit"
-	resp, err := c.Post(c.baseURL, azureSpokeNativePeering)
-	if err != nil {
-		return errors.New("HTTP Post 'attach_arm_native_spoke_to_transit' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'attach_arm_native_spoke_to_transit' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'attach_arm_native_spoke_to_transit' Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(azureSpokeNativePeering.Action, azureSpokeNativePeering, BasicCheck)
 }
 
 func (c *Client) GetAzureSpokeNativePeering(azureSpokeNativePeering *AzureSpokeNativePeering) (*AzureSpokeNativePeering, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for 'GetAzureSpokeNativePeering': ") + err.Error())
-	}
-	listArmNativeSpokes := url.Values{}
-	listArmNativeSpokes.Add("CID", c.CID)
-	listArmNativeSpokes.Add("action", "list_arm_native_spokes")
-	listArmNativeSpokes.Add("transit_gateway_name", azureSpokeNativePeering.TransitGatewayName)
-	listArmNativeSpokes.Add("details", "true")
-	Url.RawQuery = listArmNativeSpokes.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get 'list_arm_native_spokes' failed: " + err.Error())
-	}
 	var data AzureSpokeNativePeeringAPIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode 'list_arm_native_spokes' failed: " + err.Error() + "\n Body: " + bodyString)
+	form := map[string]string{
+		"CID":                  c.CID,
+		"action":               "list_arm_native_spokes",
+		"transit_gateway_name": azureSpokeNativePeering.TransitGatewayName,
+		"details":              "true",
 	}
-	if !data.Return {
-		return nil, errors.New("Rest API 'list_arm_native_spokes' Get failed: " + data.Reason)
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
 	if len(data.Results) == 0 {
 		return nil, ErrNotFound
@@ -97,31 +64,11 @@ func (c *Client) GetAzureSpokeNativePeering(azureSpokeNativePeering *AzureSpokeN
 }
 
 func (c *Client) DeleteAzureSpokeNativePeering(azureSpokeNativePeering *AzureSpokeNativePeering) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'DeleteAzureSpokeNativePeering': ") + err.Error())
+	form := map[string]string{
+		"CID":                  c.CID,
+		"action":               "detach_arm_native_spoke_to_transit",
+		"transit_gateway_name": azureSpokeNativePeering.TransitGatewayName,
+		"spoke_name":           azureSpokeNativePeering.SpokeAccountName + ":" + strings.Replace(azureSpokeNativePeering.SpokeVpcID, ".", "-", -1),
 	}
-	detachArmNativeSpokeToTransit := url.Values{}
-	detachArmNativeSpokeToTransit.Add("CID", c.CID)
-	detachArmNativeSpokeToTransit.Add("action", "detach_arm_native_spoke_to_transit")
-	detachArmNativeSpokeToTransit.Add("transit_gateway_name", azureSpokeNativePeering.TransitGatewayName)
-	detachArmNativeSpokeToTransit.Add("spoke_name", azureSpokeNativePeering.SpokeAccountName+":"+
-		strings.Replace(azureSpokeNativePeering.SpokeVpcID, ".", "-", -1))
-	Url.RawQuery = detachArmNativeSpokeToTransit.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'detach_arm_native_spoke_to_transit' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'detach_arm_native_spoke_to_transit' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'detach_arm_native_spoke_to_transit' Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }

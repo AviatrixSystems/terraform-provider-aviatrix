@@ -1,15 +1,5 @@
 package goaviatrix
 
-import (
-	"bytes"
-	"encoding/json"
-	"errors"
-	"net/url"
-	"strings"
-
-	log "github.com/sirupsen/logrus"
-)
-
 type AzurePeer struct {
 	Action       string `form:"action,omitempty"`
 	CID          string `form:"CID,omitempty"`
@@ -32,51 +22,18 @@ type AzurePeerAPIResp struct {
 func (c *Client) CreateAzurePeer(azurePeer *AzurePeer) error {
 	azurePeer.CID = c.CID
 	azurePeer.Action = "arm_peer_vnet_pair"
-	resp, err := c.Post(c.baseURL, azurePeer)
-	if err != nil {
-		return errors.New("HTTP Post 'arm_peer_vnet_pair' failed: " + err.Error())
-	}
-	var data AzurePeerAPIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'arm_peer_vnet_pair' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'arm_peer_vnet_pair' Post failed: " + data.Reason)
-	}
-
-	return nil
+	return c.PostAPI(azurePeer.Action, azurePeer, BasicCheck)
 }
 
 func (c *Client) GetAzurePeer(azurePeer *AzurePeer) (*AzurePeer, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for 'list_arm_peer_vnet_pairs': ") + err.Error())
-	}
-	listAzurePeering := url.Values{}
-	listAzurePeering.Add("CID", c.CID)
-	listAzurePeering.Add("action", "list_arm_peer_vnet_pairs")
-	Url.RawQuery = listAzurePeering.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return nil, errors.New("HTTP Get 'list_arm_peer_vnet_pairs' failed: " + err.Error())
-	}
 	var data map[string]interface{}
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode 'list_arm_peer_vnet_pairs' failed: " + err.Error() + "\n Body: " + bodyString)
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "list_arm_peer_vnet_pairs",
 	}
-	if !data["return"].(bool) {
-		reason := data["reason"].(string)
-		log.Errorf("Couldn't find Azure peering between VPCs %s and %s: %s", azurePeer.VNet1, azurePeer.VNet2, reason)
-		return nil, errors.New("Rest API list_arm_peer_vnet_pairs Get failed: " + reason)
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
 	if val, ok := data["results"]; ok {
 		pairList := val.(interface{}).([]interface{})
@@ -114,31 +71,11 @@ func (c *Client) GetAzurePeer(azurePeer *AzurePeer) (*AzurePeer, error) {
 }
 
 func (c *Client) DeleteAzurePeer(azurePeer *AzurePeer) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'arm_unpeer_vnet_pair': ") + err.Error())
+	form := map[string]string{
+		"CID":       c.CID,
+		"action":    "arm_unpeer_vnet_pair",
+		"vpc_name1": azurePeer.VNet1,
+		"vpc_name2": azurePeer.VNet2,
 	}
-	azureUnpeerVNetPair := url.Values{}
-	azureUnpeerVNetPair.Add("CID", c.CID)
-	azureUnpeerVNetPair.Add("action", "arm_unpeer_vnet_pair")
-	azureUnpeerVNetPair.Add("vpc_name1", azurePeer.VNet1)
-	azureUnpeerVNetPair.Add("vpc_name2", azurePeer.VNet2)
-	Url.RawQuery = azureUnpeerVNetPair.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Post 'arm_unpeer_vnet_pair' failed: " + err.Error())
-	}
-
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'arm_unpeer_vnet_pair' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'arm_unpeer_vnet_pair' Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }

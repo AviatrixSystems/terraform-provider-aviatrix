@@ -1,12 +1,6 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
-	"net/url"
-	"strings"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -39,48 +33,18 @@ type AccountUserListResp struct {
 func (c *Client) CreateAccountUser(user *AccountUser) error {
 	user.CID = c.CID
 	user.Action = "add_account_user"
-	resp, err := c.Post(c.baseURL, user)
-	if err != nil {
-		return errors.New("HTTP Post add_account_user failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode add_account_user failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API add_account_user Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(user.Action, user, BasicCheck)
 }
 
 func (c *Client) GetAccountUser(user *AccountUser) (*AccountUser, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for list_account_users ") + err.Error())
-	}
-	listAccountUsers := url.Values{}
-	listAccountUsers.Add("CID", c.CID)
-	listAccountUsers.Add("action", "list_account_users")
-	Url.RawQuery = listAccountUsers.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return nil, errors.New("HTTP Get list_account_users failed: " + err.Error())
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "list_account_users",
 	}
 	var data AccountUserListResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_account_users failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return nil, errors.New("Rest API enable_transit_ha Get failed: " + data.Reason)
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
 	users := data.AccountUserList
 	for i := range users {
@@ -91,54 +55,16 @@ func (c *Client) GetAccountUser(user *AccountUser) (*AccountUser, error) {
 	}
 	log.Errorf("Couldn't find Aviatrix user account %s", user.UserName)
 	return nil, ErrNotFound
-
 }
 
 func (c *Client) UpdateAccountUserObject(user *AccountUserEdit) error {
 	user.CID = c.CID
 	user.Action = "edit_account_user"
-	resp, err := c.Post(c.baseURL, user)
-	if err != nil {
-		return errors.New("HTTP Post edit_account_user failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_account_user failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API edit_account_user Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(user.Action, user, BasicCheck)
 }
 
 func (c *Client) DeleteAccountUser(user *AccountUser) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for delete_account_user ") + err.Error())
-	}
-	deleteAccountUsers := url.Values{}
-	deleteAccountUsers.Add("CID", c.CID)
-	deleteAccountUsers.Add("action", "delete_account_user")
-	deleteAccountUsers.Add("username", user.UserName)
-	Url.RawQuery = deleteAccountUsers.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get delete_account_user failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_account_user failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API delete_account_user Get failed: " + data.Reason)
-	}
-	return nil
+	user.CID = c.CID
+	user.Action = "delete_account_user"
+	return c.PostAPI(user.Action, user, BasicCheck)
 }

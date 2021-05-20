@@ -1,11 +1,7 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 )
 
@@ -30,28 +26,14 @@ func (c *Client) EnablePrivateOob() error {
 }
 
 func (c *Client) GetPrivateOobState() (bool, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return false, errors.New(("url Parsing failed for get_private_oob_state") + err.Error())
-	}
-	getPrivateOobState := url.Values{}
-	getPrivateOobState.Add("CID", c.CID)
-	getPrivateOobState.Add("action", "get_private_oob_state")
-	Url.RawQuery = getPrivateOobState.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return false, errors.New("HTTP Get get_private_oob_state failed: " + err.Error())
-	}
 	var data PrivateOobResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return false, errors.New("Json Decode get_private_oob_state failed: " + err.Error() + "\n Body: " + bodyString)
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "get_private_oob_state",
 	}
-	if !data.Return {
-		return false, errors.New("Rest API get_private_oob_state Get failed: " + data.Reason)
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return false, err
 	}
 	if data.Results == "Enabled" || data.Results == "enabled" {
 		return true, nil

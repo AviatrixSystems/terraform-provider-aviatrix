@@ -1,11 +1,8 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 )
 
@@ -32,81 +29,42 @@ type DomainListResp struct {
 }
 
 func (c *Client) CreateAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for attach_vpc_to_tgw") + err.Error())
+	form := map[string]string{
+		"CID":               c.CID,
+		"action":            "attach_vpc_to_tgw",
+		"region":            awsTgwVpcAttachment.Region,
+		"vpc_account_name":  awsTgwVpcAttachment.VpcAccountName,
+		"vpc_name":          awsTgwVpcAttachment.VpcID,
+		"tgw_name":          awsTgwVpcAttachment.TgwName,
+		"route_domain_name": awsTgwVpcAttachment.SecurityDomainName,
 	}
-	attachVpcFromTgw := url.Values{}
-	attachVpcFromTgw.Add("CID", c.CID)
-	attachVpcFromTgw.Add("action", "attach_vpc_to_tgw")
-	attachVpcFromTgw.Add("region", awsTgwVpcAttachment.Region)
-	attachVpcFromTgw.Add("vpc_account_name", awsTgwVpcAttachment.VpcAccountName)
-	attachVpcFromTgw.Add("vpc_name", awsTgwVpcAttachment.VpcID)
-	attachVpcFromTgw.Add("tgw_name", awsTgwVpcAttachment.TgwName)
-	attachVpcFromTgw.Add("route_domain_name", awsTgwVpcAttachment.SecurityDomainName)
 	if awsTgwVpcAttachment.DisableLocalRoutePropagation {
-		attachVpcFromTgw.Add("disable_local_route_propagation", "yes")
+		form["disable_local_route_propagation"] = "yes"
 	}
 	if awsTgwVpcAttachment.CustomizedRoutes != "" {
-		attachVpcFromTgw.Add("customized_routes", awsTgwVpcAttachment.CustomizedRoutes)
+		form["customized_routes"] = awsTgwVpcAttachment.CustomizedRoutes
 	}
 	if awsTgwVpcAttachment.CustomizedRouteAdvertisement != "" {
-		attachVpcFromTgw.Add("customized_route_advertisement", awsTgwVpcAttachment.CustomizedRouteAdvertisement)
+		form["customized_route_advertisement"] = awsTgwVpcAttachment.CustomizedRouteAdvertisement
 	}
 	if awsTgwVpcAttachment.Subnets != "" {
-		attachVpcFromTgw.Add("subnet_list", awsTgwVpcAttachment.Subnets)
+		form["subnet_list"] = awsTgwVpcAttachment.Subnets
 	}
 	if awsTgwVpcAttachment.RouteTables != "" {
-		attachVpcFromTgw.Add("route_table_list", awsTgwVpcAttachment.RouteTables)
+		form["route_table_list"] = awsTgwVpcAttachment.RouteTables
 	}
-	Url.RawQuery = attachVpcFromTgw.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get attach_vpc_to_tgw failed: " + err.Error())
-	}
-
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode attach_vpc_to_tgw failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API attach_vpc_to_tgw Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) CreateAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for attach_vpc_to_tgw: ") + err.Error())
+	form := map[string]string{
+		"CID":         c.CID,
+		"action":      "connect_firenet_with_tgw",
+		"vpc_id":      awsTgwVpcAttachment.VpcID,
+		"tgw_name":    awsTgwVpcAttachment.TgwName,
+		"domain_name": awsTgwVpcAttachment.SecurityDomainName,
 	}
-	connectFireNetWithTgw := url.Values{}
-	connectFireNetWithTgw.Add("CID", c.CID)
-	connectFireNetWithTgw.Add("action", "connect_firenet_with_tgw")
-	connectFireNetWithTgw.Add("vpc_id", awsTgwVpcAttachment.VpcID)
-	connectFireNetWithTgw.Add("tgw_name", awsTgwVpcAttachment.TgwName)
-	connectFireNetWithTgw.Add("domain_name", awsTgwVpcAttachment.SecurityDomainName)
-	Url.RawQuery = connectFireNetWithTgw.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get connect_firenet_with_tgw failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode connect_firenet_with_tgw failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API connect_firenet_with_tgw Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment) (*AwsTgwVpcAttachment, error) {
@@ -182,68 +140,23 @@ func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment
 	return aTVA, nil
 }
 
-func (c *Client) UpdateAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {
-	return nil
-}
-
 func (c *Client) DeleteAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for detach_vpc_from_tgw") + err.Error())
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "detach_vpc_from_tgw",
+		"tgw_name": awsTgwVpcAttachment.TgwName,
+		"vpc_name": awsTgwVpcAttachment.VpcID,
 	}
-	detachVpcFromTgw := url.Values{}
-	detachVpcFromTgw.Add("CID", c.CID)
-	detachVpcFromTgw.Add("action", "detach_vpc_from_tgw")
-	detachVpcFromTgw.Add("tgw_name", awsTgwVpcAttachment.TgwName)
-	detachVpcFromTgw.Add("vpc_name", awsTgwVpcAttachment.VpcID)
-	Url.RawQuery = detachVpcFromTgw.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get detach_vpc_from_tgw failed: " + err.Error())
-	}
-
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode detach_vpc_from_tgw failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API detach_vpc_from_tgw Get failed: " + data.Reason)
-	}
-
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DeleteAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for disconnect_firenet_with_tgw") + err.Error())
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "disconnect_firenet_with_tgw",
+		"vpc_id": awsTgwVpcAttachment.VpcID,
 	}
-	disconnectFireNetWithTgw := url.Values{}
-	disconnectFireNetWithTgw.Add("CID", c.CID)
-	disconnectFireNetWithTgw.Add("action", "disconnect_firenet_with_tgw")
-	disconnectFireNetWithTgw.Add("vpc_id", awsTgwVpcAttachment.VpcID)
-	Url.RawQuery = disconnectFireNetWithTgw.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return errors.New("HTTP Get disconnect_firenet_with_tgw failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode disconnect_firenet_with_tgw failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API disconnect_firenet_with_tgw Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) GetAwsTgwDetail(awsTgw *AWSTgw) (*AWSTgw, error) {
@@ -256,33 +169,15 @@ func (c *Client) GetAwsTgwDetail(awsTgw *AWSTgw) (*AWSTgw, error) {
 }
 
 func (c *Client) GetAwsTgwDomain(awsTgw *AWSTgw, sDM string) error {
-	Url, err := url.Parse(c.baseURL)
+	var data DomainListResp
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "list_route_domain_names",
+		"tgw_name": awsTgw.Name,
+	}
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
 	if err != nil {
-		return errors.New(("url Parsing failed for list_route_domain_names") + err.Error())
-	}
-	listRouteDomainNames := url.Values{}
-	listRouteDomainNames.Add("CID", c.CID)
-	listRouteDomainNames.Add("action", "list_route_domain_names")
-	listRouteDomainNames.Add("tgw_name", awsTgw.Name)
-	Url.RawQuery = listRouteDomainNames.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get list_route_domain_names failed: " + err.Error())
-	}
-	data := DomainListResp{
-		Return:  false,
-		Results: make([]string, 0),
-		Reason:  "",
-	}
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode list_route_domain_names failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API list_route_domain_names Get failed: " + data.Reason)
+		return err
 	}
 	mDomain := make(map[string]bool)
 	for i := range data.Results {
@@ -296,29 +191,16 @@ func (c *Client) GetAwsTgwDomain(awsTgw *AWSTgw, sDM string) error {
 }
 
 func (c *Client) GetVPCAttachmentRouteTableDetails(awsTgwVpcAttachment *AwsTgwVpcAttachment) (*AwsTgwVpcAttachment, error) {
-	Url, _ := url.Parse(c.baseURL)
-	viewRouteDomainDetails := url.Values{}
-	viewRouteDomainDetails.Add("CID", c.CID)
-	viewRouteDomainDetails.Add("action", "view_route_domain_details")
-	viewRouteDomainDetails.Add("tgw_name", awsTgwVpcAttachment.TgwName)
-	viewRouteDomainDetails.Add("route_domain_name", awsTgwVpcAttachment.SecurityDomainName)
-	Url.RawQuery = viewRouteDomainDetails.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return nil, errors.New("HTTP Get view_route_domain_details failed: " + err.Error())
-	}
-
 	var data RouteDomainAPIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return awsTgwVpcAttachment, errors.New("Json Decode view_route_domain_details failed: " + err.Error() + "\n Body: " + bodyString)
+	form := map[string]string{
+		"CID":               c.CID,
+		"action":            "view_route_domain_details",
+		"tgw_name":          awsTgwVpcAttachment.TgwName,
+		"route_domain_name": awsTgwVpcAttachment.SecurityDomainName,
 	}
-	if !data.Return {
-		return awsTgwVpcAttachment, errors.New("Rest API view_route_domain_details Get failed: " + data.Reason)
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
 	routeDomainDetail := data.Results
 	attachedVPCs := routeDomainDetail[0].AttachedVPC
@@ -332,63 +214,25 @@ func (c *Client) GetVPCAttachmentRouteTableDetails(awsTgwVpcAttachment *AwsTgwVp
 }
 
 func (c *Client) EditTgwSpokeVpcCustomizedRoutes(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for edit_tgw_spoke_vpc_customized_routes: ") + err.Error())
+	form := map[string]string{
+		"CID":        c.CID,
+		"action":     "edit_tgw_spoke_vpc_customized_routes",
+		"tgw_name":   awsTgwVpcAttachment.TgwName,
+		"vpc_id":     awsTgwVpcAttachment.VpcID,
+		"route_list": awsTgwVpcAttachment.CustomizedRoutes,
 	}
-	editTgwSpokeVpcCustomizedRoutes := url.Values{}
-	editTgwSpokeVpcCustomizedRoutes.Add("CID", c.CID)
-	editTgwSpokeVpcCustomizedRoutes.Add("action", "edit_tgw_spoke_vpc_customized_routes")
-	editTgwSpokeVpcCustomizedRoutes.Add("tgw_name", awsTgwVpcAttachment.TgwName)
-	editTgwSpokeVpcCustomizedRoutes.Add("vpc_id", awsTgwVpcAttachment.VpcID)
-	editTgwSpokeVpcCustomizedRoutes.Add("route_list", awsTgwVpcAttachment.CustomizedRoutes)
-	Url.RawQuery = editTgwSpokeVpcCustomizedRoutes.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'edit_tgw_spoke_vpc_customized_routes' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'edit_tgw_spoke_vpc_customized_routes' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'edit_tgw_spoke_vpc_customized_routes' Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EditTgwSpokeVpcCustomizedRouteAdvertisement(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'update_customized_route_advertisement': ") + err.Error())
+	form := map[string]string{
+		"CID":             c.CID,
+		"action":          "update_customized_route_advertisement",
+		"tgw_name":        awsTgwVpcAttachment.TgwName,
+		"attachment_name": awsTgwVpcAttachment.VpcID,
+		"cidr_list":       awsTgwVpcAttachment.CustomizedRouteAdvertisement,
 	}
-	updateCustomizedRouteAdvertisement := url.Values{}
-	updateCustomizedRouteAdvertisement.Add("CID", c.CID)
-	updateCustomizedRouteAdvertisement.Add("action", "update_customized_route_advertisement")
-	updateCustomizedRouteAdvertisement.Add("tgw_name", awsTgwVpcAttachment.TgwName)
-	updateCustomizedRouteAdvertisement.Add("attachment_name", awsTgwVpcAttachment.VpcID)
-	updateCustomizedRouteAdvertisement.Add("cidr_list", awsTgwVpcAttachment.CustomizedRouteAdvertisement)
-	Url.RawQuery = updateCustomizedRouteAdvertisement.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'update_customized_route_advertisement' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'update_customized_route_advertisement' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'update_customized_route_advertisement' Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) UpdateFirewallAttachmentAccessFromOnprem(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {

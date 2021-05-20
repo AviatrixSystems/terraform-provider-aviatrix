@@ -1,22 +1,20 @@
 package goaviatrix
 
 import (
-	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 )
 
 type DeviceAwsTgwAttachment struct {
-	ConnectionName          string `form:"connection_name"`
-	DeviceName              string `form:"device_name"`
-	AwsTgwName              string `form:"tgw_name"`
-	DeviceAsn               string `form:"external_device_as_number"`
-	SecurityDomainName      string `form:"route_domain_name"`
-	EnableGlobalAccelerator string `form:"enable_global_accelerator"`
-	Action                  string `form:"action"`
-	CID                     string `form:"CID"`
+	ConnectionName          string `map:"connection_name" form:"connection_name"`
+	DeviceName              string `map:"device_name" form:"device_name"`
+	AwsTgwName              string `map:"tgw_name" form:"tgw_name"`
+	DeviceAsn               string `map:"external_device_as_number" form:"external_device_as_number"`
+	SecurityDomainName      string `map:"route_domain_name" form:"route_domain_name"`
+	EnableGlobalAccelerator string `map:"enable_global_accelerator" form:"enable_global_accelerator"`
+	Action                  string `map:"action" form:"action"`
+	CID                     string `map:"CID" form:"CID"`
 }
 
 func (b *DeviceAwsTgwAttachment) ID() string {
@@ -26,48 +24,16 @@ func (b *DeviceAwsTgwAttachment) ID() string {
 func (c *Client) CreateDeviceAwsTgwAttachment(attachment *DeviceAwsTgwAttachment) error {
 	attachment.Action = "attach_cloudwan_device_to_aws_tgw"
 	attachment.CID = c.CID
-	resp, err := c.Post(c.baseURL, attachment)
-	if err != nil {
-		return errors.New("HTTP Post attach_cloudwan_device_to_aws_tgw failed: " + err.Error())
-	}
-
-	var data APIResp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
-	if err != nil {
-		return errors.New("Reading response body attach_cloudwan_device_to_aws_tgw failed: " + err.Error())
-	}
-
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return errors.New("Json Decode attach_cloudwan_device_to_aws_tgw failed: " + err.Error() + "\n Body: " + b.String())
-	}
-	if !data.Return {
-		return errors.New("Rest API attach_cloudwan_device_to_aws_tgw Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(attachment.Action, attachment, BasicCheck)
 }
 
 func (c *Client) GetDeviceAwsTgwAttachment(tgwAttachment *DeviceAwsTgwAttachment) (*DeviceAwsTgwAttachment, error) {
 	tgwAttachment.CID = c.CID
 	tgwAttachment.Action = "list_tgw_details"
-
-	resp, err := c.Post(c.baseURL, tgwAttachment)
-	if err != nil {
-		return nil, errors.New("HTTP Post list_tgw_details failed: " + err.Error())
-	}
-
 	var data TgwAttachmentResp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
+	err := c.GetAPI(&data, tgwAttachment.Action, toMap(tgwAttachment), BasicCheck)
 	if err != nil {
-		return nil, errors.New("Reading response body list_tgw_details failed: " + err.Error())
-	}
-
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_tgw_details failed: " + err.Error() + "\n Body: " + b.String())
-	}
-	if !data.Return {
-		return nil, errors.New("Rest API list_tgw_details Post failed: " + data.Reason)
+		return nil, err
 	}
 
 	var deviceAttachment AttachmentInfo
@@ -92,7 +58,7 @@ func (c *Client) GetDeviceAwsTgwAttachment(tgwAttachment *DeviceAwsTgwAttachment
 			// String failed, must be int
 			err = json.Unmarshal(deviceAttachment.AwsSideAsnRaw, &asnInt)
 			if err != nil {
-				return nil, fmt.Errorf("json decode list_tgw_details aws_side_asn field failed: aws_side_asn = %s: %v \n Body: %s", string(deviceAttachment.AwsSideAsnRaw), err, b.String())
+				return nil, fmt.Errorf("json decode list_tgw_details aws_side_asn field failed: aws_side_asn = %s: %v", string(deviceAttachment.AwsSideAsnRaw), err)
 			}
 			asnString = strconv.Itoa(asnInt)
 		}
