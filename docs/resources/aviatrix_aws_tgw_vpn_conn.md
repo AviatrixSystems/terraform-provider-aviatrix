@@ -57,6 +57,7 @@ The following arguments are supported:
 * `inside_ip_cidr_tun_2` - (Optional) Inside IP CIDR for Tunnel 2. A /30 CIDR in 169.254.0.0/16.
 * `pre_shared_key_tun_2` - (Optional) Pre-Shared Key for Tunnel 2. A 8-64 character string with alphanumeric underscore(_) and dot(.). It cannot start with 0.
 * `enable_learned_cidrs_approval` - (Optional) Switch to enable/disable [encrypted transit approval](https://docs.aviatrix.com/HowTos/tgw_approval.html) for AWS TGW VPN connection. Valid values: true, false. Default value: false.
+* `enable_global_acceleration` - (Optional) Enable Global Acceleration. Type: Boolean. Default: false.
 
 ## Attribute Reference
 
