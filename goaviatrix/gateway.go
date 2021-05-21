@@ -196,6 +196,7 @@ type HaGateway struct {
 	InsaneMode          string `json:"high_perf"`
 	EnablePrivateOob    bool   `json:"private_oob"`
 	OobManagementSubnet string `json:"oob_mgmt_subnet"`
+	GwSecurityGroupID   string `json:"gw_security_group_id"`
 }
 
 type PolicyRule struct {
