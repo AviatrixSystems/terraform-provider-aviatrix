@@ -369,6 +369,7 @@ In addition to all arguments above, the following attributes are exported:
 * `elb_dns_name` - ELB DNS name.
 * `public_dns_server` - DNS server used by the gateway. Default is "8.8.8.8", can be overridden with the VPC's setting.
 * `security_group_id` - Security group used for the gateway.
+* `peering_ha_security_group_id` - HA security group used for the gateway.
 * `cloud_instance_id` - Cloud instance ID of the gateway.
 * `private_ip` - Private IP address of the gateway created.
 * `peering_ha_cloud_instance_id` - Cloud instance ID of the HA gateway.

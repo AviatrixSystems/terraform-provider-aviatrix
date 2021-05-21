@@ -199,6 +199,7 @@ type HaGateway struct {
 	EnablePrivateOob    bool   `json:"private_oob"`
 	OobManagementSubnet string `json:"oob_mgmt_subnet"`
 	FaultDomain         string `json:"fault_domain"`
+	GwSecurityGroupID   string `json:"gw_security_group_id"`
 }
 
 type PolicyRule struct {

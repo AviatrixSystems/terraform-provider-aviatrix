@@ -459,6 +459,11 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Security group used for the transit gateway.",
 			},
+			"ha_security_group_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "HA security group used for the transit gateway.",
+			},
 			"cloud_instance_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -1311,6 +1316,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("gw_size", gw.GwSize)
 	d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 	d.Set("security_group_id", gw.GwSecurityGroupID)
+	d.Set("ha_security_group_id", gw.HaGw.GwSecurityGroupID)
 	d.Set("private_ip", gw.PrivateIP)
 	d.Set("single_ip_snat", gw.EnableNat == "yes" && gw.SnatMode == "primary")
 	d.Set("single_az_ha", gw.SingleAZ == "yes")

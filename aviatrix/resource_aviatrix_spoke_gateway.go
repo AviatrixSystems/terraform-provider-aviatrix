@@ -324,6 +324,11 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Security group used for the spoke gateway.",
 			},
+			"ha_security_group_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "HA security group used for the spoke gateway.",
+			},
 			"cloud_instance_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -983,6 +988,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("gw_size", gw.GwSize)
 	d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 	d.Set("security_group_id", gw.GwSecurityGroupID)
+	d.Set("ha_security_group_id", gw.HaGw.GwSecurityGroupID)
 	d.Set("private_ip", gw.PrivateIP)
 	d.Set("single_az_ha", gw.SingleAZ == "yes")
 	d.Set("enable_active_mesh", gw.EnableActiveMesh == "yes")

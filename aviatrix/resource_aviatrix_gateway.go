@@ -481,6 +481,11 @@ func resourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Security group used for the gateway.",
 			},
+			"peering_ha_security_group_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Peering HA security group used for the gateway.",
+			},
 			"public_dns_server": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -1196,6 +1201,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 	d.Set("public_dns_server", gw.PublicDnsServer)
 	d.Set("security_group_id", gw.GwSecurityGroupID)
+	d.Set("peering_ha_security_group_id", gw.HaGw.GwSecurityGroupID)
 	d.Set("private_ip", gw.PrivateIP)
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
 	d.Set("enable_vpc_dns_server", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled")
