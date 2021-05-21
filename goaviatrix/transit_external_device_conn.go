@@ -22,6 +22,7 @@ type ExternalDeviceConn struct {
 	BgpRemoteAsNum         int    `form:"external_device_as_number,omitempty"`
 	RemoteGatewayIP        string `form:"external_device_ip_address"`
 	RemoteSubnet           string `form:"remote_subnet,omitempty"`
+	LocalSubnet            string `form:"local_subnet,omitempty"`
 	DirectConnect          string `form:"direct_connect,omitempty"`
 	PreSharedKey           string `form:"pre_shared_key,omitempty"`
 	LocalTunnelCidr        string `form:"local_tunnel_ip,omitempty"`
@@ -62,6 +63,7 @@ type EditExternalDeviceConnDetail struct {
 	BgpStatus              string        `json:"bgp_status,omitempty"`
 	RemoteGatewayIP        string        `json:"peer_ip,omitempty"`
 	RemoteSubnet           string        `json:"remote_cidr,omitempty"`
+	LocalSubnet            string        `json:"local_cidr"`
 	DirectConnect          bool          `json:"direct_connect_primary,omitempty"`
 	LocalTunnelCidr        string        `json:"bgp_local_ip,omitempty"`
 	RemoteTunnelCidr       string        `json:"bgp_remote_ip,omitempty"`
@@ -167,6 +169,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 			}
 		} else {
 			externalDeviceConn.RemoteSubnet = externalDeviceConnDetail.RemoteSubnet
+			externalDeviceConn.LocalSubnet = externalDeviceConnDetail.LocalSubnet
 			externalDeviceConn.ConnectionType = "static"
 		}
 		externalDeviceConn.RemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[0]
