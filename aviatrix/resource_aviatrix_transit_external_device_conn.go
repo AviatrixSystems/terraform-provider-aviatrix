@@ -899,13 +899,13 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 		}
 
 		editSite2cloud := &goaviatrix.EditSite2Cloud{
-			GwName:   gwName,
-			VpcID:    d.Get("vpc_id").(string),
-			ConnName: connName,
+			GwName:          gwName,
+			VpcID:           d.Get("vpc_id").(string),
+			ConnName:        connName,
+			CloudSubnetCidr: d.Get("local_subnet").(string),
+			NetworkType:     "1",
 		}
 
-		editSite2cloud.CloudSubnetCidr = d.Get("local_subnet").(string)
-		editSite2cloud.NetworkType = "1"
 		err := client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
 			return fmt.Errorf("failed to update transit external device conn local_subnet: %s", err)
