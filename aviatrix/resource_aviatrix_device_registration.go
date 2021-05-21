@@ -59,8 +59,8 @@ func resourceAviatrixDeviceRegistration() *schema.Resource {
 				Optional:     true,
 				Default:      "ios",
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"ios"}, false),
-				Description:  "Device host OS. Default value is 'ios'. Only valid value is 'ios'.",
+				ValidateFunc: validation.StringInSlice([]string{"ios", "aviatrix"}, false),
+				Description:  "Device host OS. Default value is 'ios'. Valid values are 'ios' or 'aviatrix'.",
 			},
 			"ssh_port": {
 				Type:        schema.TypeInt,
