@@ -28,6 +28,7 @@ type AwsTgwVpnConn struct {
 	PreSharedKeyTun1     string `form:"pre_shared_key_tun_1,omitempty"`
 	PreSharedKeyTun2     string `form:"pre_shared_key_tun_2,omitempty"`
 	LearnedCidrsApproval string `form:"learned_cidrs_approval,omitempty"`
+	EnableAcceleration   string `form:"enable_global_acceleration"`
 }
 
 type AwsTgwVpnConnEdit struct {
@@ -44,6 +45,7 @@ type AwsTgwVpnConnEdit struct {
 	PreSharedKeyTun1     string   `json:"pre_shared_key_tun_1,omitempty"`
 	PreSharedKeyTun2     string   `json:"pre_shared_key_tun_2,omitempty"`
 	LearnedCidrsApproval string   `json:"learned_cidrs_approval,omitempty"`
+	EnableAcceleration   bool     `json:"enable_acceleration"`
 }
 
 type AwsTgwVpnConnCreateResp struct {
@@ -96,6 +98,7 @@ func (c *Client) CreateAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (string, erro
 		attachEdgeVpnToTgw.Add("pre_shared_key_tun_2", awsTgwVpnConn.PreSharedKeyTun2)
 	}
 	attachEdgeVpnToTgw.Add("learned_cidrs_approval", awsTgwVpnConn.LearnedCidrsApproval)
+	attachEdgeVpnToTgw.Add("enable_global_acceleration", awsTgwVpnConn.EnableAcceleration)
 
 	Url.RawQuery = attachEdgeVpnToTgw.Encode()
 	resp, err := c.Get(Url.String(), nil)
@@ -168,6 +171,10 @@ func (c *Client) GetAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (*AwsTgwVpnConn,
 				awsTgwVpnConn.PreSharedKeyTun2 = allAwsTgwVpnConn[i].PreSharedKeyTun2
 			}
 			awsTgwVpnConn.LearnedCidrsApproval = allAwsTgwVpnConn[i].LearnedCidrsApproval
+			awsTgwVpnConn.EnableAcceleration = "no"
+			if allAwsTgwVpnConn[i].EnableAcceleration {
+				awsTgwVpnConn.EnableAcceleration = "yes"
+			}
 
 			// aws_side_asn can return as either string or int from API
 			var asnString string

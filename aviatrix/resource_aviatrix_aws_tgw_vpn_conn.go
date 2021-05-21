@@ -103,6 +103,13 @@ func resourceAviatrixAwsTgwVpnConn() *schema.Resource {
 				Default:     false,
 				Description: "Switch to enable/disable encrypted transit approval for vpn connection. Valid values: true, false.",
 			},
+			"enable_global_acceleration": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+				Description: "Enable Global Acceleration.",
+			},
 			"vpn_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -124,6 +131,9 @@ func resourceAviatrixAwsTgwVpnConnCreate(d *schema.ResourceData, meta interface{
 		InsideIpCIDRTun2: d.Get("inside_ip_cidr_tun_2").(string),
 		PreSharedKeyTun1: d.Get("pre_shared_key_tun_1").(string),
 		PreSharedKeyTun2: d.Get("pre_shared_key_tun_2").(string),
+	}
+	if d.Get("enable_global_acceleration").(bool) {
+		awsTgwVpnConn.EnableAcceleration = "yes"
 	}
 
 	connectionType := d.Get("connection_type").(string)
@@ -217,12 +227,8 @@ func resourceAviatrixAwsTgwVpnConnRead(d *schema.ResourceData, meta interface{})
 	d.Set("vpn_id", vpnConn.VpnID)
 	d.Set("inside_ip_cidr_tun_1", vpnConn.InsideIpCIDRTun1)
 	d.Set("inside_ip_cidr_tun_2", vpnConn.InsideIpCIDRTun2)
-
-	if vpnConn.LearnedCidrsApproval == "yes" {
-		d.Set("enable_learned_cidrs_approval", true)
-	} else {
-		d.Set("enable_learned_cidrs_approval", false)
-	}
+	d.Set("enable_learned_cidrs_approval", vpnConn.LearnedCidrsApproval == "yes")
+	d.Set("enable_global_acceleration", vpnConn.EnableAcceleration == "yes")
 
 	d.SetId(vpnConn.TgwName + "~" + vpnConn.VpnID)
 	return nil
