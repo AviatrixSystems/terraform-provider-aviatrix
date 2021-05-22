@@ -22,10 +22,9 @@ resource "aviatrix_gateway" "test_gateway_aws" {
   vpc_reg      = "us-west-1"
   gw_size      = "t2.micro"
   subnet       = "10.0.0.0/24"
-  tag_list     = [
-    "k1:v1",
-    "k2:v2",
-  ]
+  tags         = {
+    name = "value"
+  }
 }
 ```
 ```hcl
@@ -170,10 +169,6 @@ resource "aviatrix_gateway" "test_gateway_awsgov" {
   vpc_reg      = "us-gov-west-1"
   gw_size      = "t2.micro"
   subnet       = "10.0.0.0/24"
-  tag_list     = [
-    "k1:v1",
-    "k2:v2",
-  ]
 }
 ```
 ```hcl

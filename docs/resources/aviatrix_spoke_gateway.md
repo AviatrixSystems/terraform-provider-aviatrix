@@ -25,10 +25,9 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
   single_ip_snat                    = false
   enable_active_mesh                = true
   manage_transit_gateway_attachment = false
-  tag_list                          = [
-    "k1:v1",
-    "k2:v2",
-  ]
+  tags                              = {
+    name = "value"
+  }
 }
 ```
 ```hcl
@@ -104,10 +103,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_awsgov" {
   single_ip_snat                    = false
   enable_active_mesh                = true
   manage_transit_gateway_attachment = false
-  tag_list                          = [
-    "k1:v1",
-    "k2:v2",
-  ]
 }
 ```
 ```hcl

@@ -24,11 +24,9 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
   subnet                   = "10.1.0.0/24"
   ha_subnet                = "10.1.0.0/24"
   ha_gw_size               = "t2.micro"
-  tag_list                 = [
-    "name:value",
-    "name1:value1",
-    "name2:value2",
-  ]
+  tags                     = {
+    name = "value"
+  }
   enable_active_mesh       = true
   enable_hybrid_connection = true
   connected_transit        = true
@@ -109,11 +107,6 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_awsgov" {
   subnet                   = "10.1.0.0/24"
   ha_subnet                = "10.1.0.0/24"
   ha_gw_size               = "t2.micro"
-  tag_list                 = [
-    "name:value",
-    "name1:value1",
-    "name2:value2",
-  ]
   enable_active_mesh       = true
   enable_hybrid_connection = true
   connected_transit        = true
