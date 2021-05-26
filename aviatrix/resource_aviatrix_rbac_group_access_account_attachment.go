@@ -86,7 +86,7 @@ func resourceAviatrixRbacGroupAccessAccountAttachmentRead(d *schema.ResourceData
 	}
 	if accessAccountAttachment != nil {
 		d.Set("group_name", accessAccountAttachment.GroupName)
-		d.Set("account_name", accessAccountAttachment.AccessAccountName)
+		d.Set("access_account_name", accessAccountAttachment.AccessAccountName)
 		d.SetId(accessAccountAttachment.GroupName + "~" + accessAccountAttachment.AccessAccountName)
 	}
 
