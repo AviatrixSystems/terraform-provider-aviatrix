@@ -50,6 +50,7 @@ The following arguments are supported:
   * `dnat_ips` - (Optional) This is a rule field that specifies the translated destination IP address when all specified qualifier conditions meet. When not specified, this field is not used. One of the rule field must be specified for this rule to take effect.
   * `dnat_port` - (Optional) This is a rule field that specifies the translated destination port when all specified qualifier conditions meet. When not specified, this field is not used. One of the rule field must be specified for this rule to take effect.
   * `exclude_rtb` - (Optional) This field specifies which VPC private route table will not be programmed with the default route entry.
+  * `apply_route_entry` - (Optional) This is an option to program the route entry 'DST CIDR pointing to Aviatrix Gateway' into Cloud platform routing table. Type: Boolean. Default: True. Available as of provider version R2.19.2+.
 
 ## Import
 

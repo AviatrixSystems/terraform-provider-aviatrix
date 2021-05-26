@@ -200,19 +200,20 @@ type HaGateway struct {
 }
 
 type PolicyRule struct {
-	SrcIP      string `form:"src_ip,omitempty" json:"src_ip,omitempty"`
-	SrcPort    string `form:"src_port,omitempty" json:"src_port,omitempty"`
-	DstIP      string `form:"dst_ip,omitempty" json:"dst_ip,omitempty"`
-	DstPort    string `form:"dst_port,omitempty" json:"dst_port,omitempty"`
-	Protocol   string `form:"protocol,omitempty" json:"protocol,omitempty"`
-	Interface  string `form:"interface,omitempty" json:"interface,omitempty"`
-	Connection string `form:"connection,omitempty" json:"connection,omitempty"`
-	Mark       string `form:"mark,omitempty" json:"mark,omitempty"`
-	NewSrcIP   string `form:"new_src_ip,omitempty" json:"new_src_ip,omitempty"`
-	NewSrcPort string `form:"new_src_port,omitempty" json:"new_src_port,omitempty"`
-	ExcludeRTB string `form:"exclude_rtb,omitempty" json:"exclude_rtb,omitempty"`
-	NewDstIP   string `form:"new_dst_ip,omitempty" json:"new_dst_ip,omitempty"`
-	NewDstPort string `form:"new_dst_port,omitempty" json:"new_dst_port,omitempty"`
+	SrcIP           string `form:"src_ip,omitempty" json:"src_ip,omitempty"`
+	SrcPort         string `form:"src_port,omitempty" json:"src_port,omitempty"`
+	DstIP           string `form:"dst_ip,omitempty" json:"dst_ip,omitempty"`
+	DstPort         string `form:"dst_port,omitempty" json:"dst_port,omitempty"`
+	Protocol        string `form:"protocol,omitempty" json:"protocol,omitempty"`
+	Interface       string `form:"interface,omitempty" json:"interface,omitempty"`
+	Connection      string `form:"connection,omitempty" json:"connection,omitempty"`
+	Mark            string `form:"mark,omitempty" json:"mark,omitempty"`
+	NewSrcIP        string `form:"new_src_ip,omitempty" json:"new_src_ip,omitempty"`
+	NewSrcPort      string `form:"new_src_port,omitempty" json:"new_src_port,omitempty"`
+	ExcludeRTB      string `form:"exclude_rtb,omitempty" json:"exclude_rtb,omitempty"`
+	ApplyRouteEntry bool   `form:"apply_route_entry,omitempty" json:"apply_route_entry"`
+	NewDstIP        string `form:"new_dst_ip,omitempty" json:"new_dst_ip,omitempty"`
+	NewDstPort      string `form:"new_dst_port,omitempty" json:"new_dst_port,omitempty"`
 }
 
 type GatewayDetail struct {
