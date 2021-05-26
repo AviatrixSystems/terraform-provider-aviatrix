@@ -6,63 +6,66 @@ SetEnv () {
   export $1=$2
 }
 
-SetEnv ARM_APPLICATION_ID $(terraform output -raw ARM_APPLICATION_ID)
-SetEnv ARM_APPLICATION_KEY $(terraform output -raw ARM_APPLICATION_KEY)
-SetEnv ARM_DIRECTORY_ID $(terraform output -raw ARM_DIRECTORY_ID)
-SetEnv ARM_SUBSCRIPTION_ID $(terraform output -raw ARM_SUBSCRIPTION_ID)
-SetEnv AZURE_GW_SIZE $(terraform output -raw AZURE_GW_SIZE)
-SetEnv AZURE_REGION $(terraform output -raw AZURE_REGION)
-SetEnv AZURE_REGION2 $(terraform output -raw AZURE_REGION2)
-SetEnv AZURE_SUBNET $(terraform output -raw AZURE_SUBNET)
-SetEnv AZURE_SUBNET2 $(terraform output -raw AZURE_SUBNET2)
-SetEnv AZURE_VNET_ID $(terraform output -raw AZURE_VNET_ID)
-SetEnv AZURE_VNET_ID2 $(terraform output -raw AZURE_VNET_ID2)
-SetEnv AVIATRIX_CONTROLLER_IP $(terraform output -raw AVIATRIX_CONTROLLER_IP)
-SetEnv AVIATRIX_PASSWORD $(terraform output -raw AVIATRIX_PASSWORD)
-SetEnv AVIATRIX_USERNAME $(terraform output -raw AVIATRIX_USERNAME)
-SetEnv AWS_ACCESS_KEY $(terraform output -raw AWS_ACCESS_KEY)
-SetEnv AWS_ACCOUNT_NUMBER $(terraform output -raw AWS_ACCOUNT_NUMBER)
-SetEnv AWS_BGP_VGW_ID $(terraform output -raw AWS_BGP_VGW_ID)
-SetEnv AWS_REGION $(terraform output -raw AWS_REGION)
-SetEnv AWS_REGION2 $(terraform output -raw AWS_REGION2)
-SetEnv AWS_SECRET_KEY $(terraform output -raw AWS_SECRET_KEY)
-SetEnv AWS_SUBNET $(terraform output -raw AWS_SUBNET)
-SetEnv AWS_SUBNET2 $(terraform output -raw AWS_SUBNET2)
-SetEnv AWS_VPC_ID $(terraform output -raw AWS_VPC_ID)
-SetEnv AWS_VPC_ID2 $(terraform output -raw AWS_VPC_ID2)
-SetEnv AWS_DX_GATEWAY_ID $(terraform output -raw AWS_DX_GATEWAY_ID)
-SetEnv DOMAIN_NAME $(terraform output -raw DOMAIN_NAME)
-SetEnv AWSGOV_ACCESS_KEY $(terraform output -raw AWSGOV_ACCESS_KEY)
-SetEnv AWSGOV_SECRET_KEY $(terraform output -raw AWSGOV_SECRET_KEY)
-SetEnv AWSGOV_ACCOUNT_NUMBER $(terraform output -raw AWSGOV_ACCOUNT_NUMBER)
-SetEnv AWSGOV_REGION $(terraform output -raw AWSGOV_REGION)
-SetEnv AWSGOV_SUBNET $(terraform output -raw AWSGOV_SUBNET)
-SetEnv AWSGOV_VPC_ID $(terraform output -raw AWSGOV_VPC_ID)
-SetEnv DEVICE_PUBLIC_IP $(terraform output -raw DEVICE_PUBLIC_IP)
-SetEnv DEVICE_KEY_FILE_PATH $(terraform output -raw DEVICE_KEY_FILE_PATH)
-SetEnv GCP_CREDENTIALS_FILEPATH $(terraform output -raw GCP_CREDENTIALS_FILEPATH)
-SetEnv GCP_ID $(terraform output -raw GCP_ID)
-SetEnv GCP_SUBNET $(terraform output -raw GCP_SUBNET)
-SetEnv GCP_VPC_ID $(terraform output -raw GCP_VPC_ID)
-SetEnv GCP_ZONE $(terraform output -raw GCP_ZONE)
-SetEnv IDP_METADATA $(terraform output -raw IDP_METADATA)
-SetEnv IDP_METADATA_TYPE $(terraform output -raw IDP_METADATA_TYPE)
-SetEnv OCI_API_KEY_FILEPATH $(terraform output -raw OCI_API_KEY_FILEPATH)
-SetEnv OCI_COMPARTMENT_ID $(terraform output -raw OCI_COMPARTMENT_ID)
-SetEnv OCI_REGION $(terraform output -raw OCI_REGION)
-SetEnv OCI_SUBNET $(terraform output -raw OCI_SUBNET)
-SetEnv OCI_TENANCY_ID $(terraform output -raw OCI_TENANCY_ID)
-SetEnv OCI_USER_ID $(terraform output -raw OCI_USER_ID)
-SetEnv OCI_VPC_ID $(terraform output -raw OCI_VPC_ID)
-SetEnv controller_private_ip $(terraform output -raw controller_private_ip)
-SetEnv TRANSIT_GATEWAY_NAME $(terraform output -raw TRANSIT_GATEWAY_NAME)
-SetEnv ARM_RESOURCE_GROUP $(terraform output -raw ARM_RESOURCE_GROUP)
-SetEnv ARM_HUB_NAME $(terraform output -raw ARM_HUB_NAME)
-SetEnv AWS_TGW_NAME $(terraform output -raw AWS_TGW_NAME)
-SetEnv DATADOG_API_KEY $(terraform output -raw DATADOG_API_KEY)
-SetEnv AZURE_VNG_VNET_ID $(terraform output -raw AZURE_VNG_VNET_ID)
-SetEnv AZURE_VNG_SUBNET $(terraform output -raw AZURE_VNG_SUBNET)
-SetEnv AZURE_VNG $(terraform output -raw AZURE_VNG)
+echo "Running terraform output..."
+SetEnv ARM_APPLICATION_ID $(terraform output -raw ARM_APPLICATION_ID) &
+SetEnv ARM_APPLICATION_KEY $(terraform output -raw ARM_APPLICATION_KEY) &
+SetEnv ARM_DIRECTORY_ID $(terraform output -raw ARM_DIRECTORY_ID) &
+SetEnv ARM_SUBSCRIPTION_ID $(terraform output -raw ARM_SUBSCRIPTION_ID) &
+SetEnv AZURE_GW_SIZE $(terraform output -raw AZURE_GW_SIZE) &
+SetEnv AZURE_REGION $(terraform output -raw AZURE_REGION) &
+SetEnv AZURE_REGION2 $(terraform output -raw AZURE_REGION2) &
+SetEnv AZURE_SUBNET $(terraform output -raw AZURE_SUBNET) &
+SetEnv AZURE_SUBNET2 $(terraform output -raw AZURE_SUBNET2) &
+SetEnv AZURE_VNET_ID $(terraform output -raw AZURE_VNET_ID) &
+SetEnv AZURE_VNET_ID2 $(terraform output -raw AZURE_VNET_ID2) &
+SetEnv AVIATRIX_CONTROLLER_IP $(terraform output -raw AVIATRIX_CONTROLLER_IP) &
+SetEnv AVIATRIX_PASSWORD $(terraform output -raw AVIATRIX_PASSWORD) &
+SetEnv AVIATRIX_USERNAME $(terraform output -raw AVIATRIX_USERNAME) &
+SetEnv AWS_ACCESS_KEY $(terraform output -raw AWS_ACCESS_KEY) &
+SetEnv AWS_ACCOUNT_NUMBER $(terraform output -raw AWS_ACCOUNT_NUMBER) &
+SetEnv AWS_BGP_VGW_ID $(terraform output -raw AWS_BGP_VGW_ID) &
+SetEnv AWS_REGION $(terraform output -raw AWS_REGION) &
+SetEnv AWS_REGION2 $(terraform output -raw AWS_REGION2) &
+SetEnv AWS_SECRET_KEY $(terraform output -raw AWS_SECRET_KEY) &
+SetEnv AWS_SUBNET $(terraform output -raw AWS_SUBNET) &
+SetEnv AWS_SUBNET2 $(terraform output -raw AWS_SUBNET2) &
+SetEnv AWS_VPC_ID $(terraform output -raw AWS_VPC_ID) &
+SetEnv AWS_VPC_ID2 $(terraform output -raw AWS_VPC_ID2) &
+SetEnv AWS_DX_GATEWAY_ID $(terraform output -raw AWS_DX_GATEWAY_ID) &
+SetEnv DOMAIN_NAME $(terraform output -raw DOMAIN_NAME) &
+SetEnv AWSGOV_ACCESS_KEY $(terraform output -raw AWSGOV_ACCESS_KEY) &
+SetEnv AWSGOV_SECRET_KEY $(terraform output -raw AWSGOV_SECRET_KEY) &
+SetEnv AWSGOV_ACCOUNT_NUMBER $(terraform output -raw AWSGOV_ACCOUNT_NUMBER) &
+SetEnv AWSGOV_REGION $(terraform output -raw AWSGOV_REGION) &
+SetEnv AWSGOV_SUBNET $(terraform output -raw AWSGOV_SUBNET) &
+SetEnv AWSGOV_VPC_ID $(terraform output -raw AWSGOV_VPC_ID) &
+SetEnv DEVICE_PUBLIC_IP $(terraform output -raw DEVICE_PUBLIC_IP) &
+SetEnv DEVICE_KEY_FILE_PATH $(terraform output -raw DEVICE_KEY_FILE_PATH) &
+SetEnv GCP_CREDENTIALS_FILEPATH $(terraform output -raw GCP_CREDENTIALS_FILEPATH) &
+SetEnv GCP_ID $(terraform output -raw GCP_ID) &
+SetEnv GCP_SUBNET $(terraform output -raw GCP_SUBNET) &
+SetEnv GCP_VPC_ID $(terraform output -raw GCP_VPC_ID) &
+SetEnv GCP_ZONE $(terraform output -raw GCP_ZONE) &
+SetEnv IDP_METADATA $(terraform output -raw IDP_METADATA) &
+SetEnv IDP_METADATA_TYPE $(terraform output -raw IDP_METADATA_TYPE) &
+SetEnv OCI_API_KEY_FILEPATH $(terraform output -raw OCI_API_KEY_FILEPATH) &
+SetEnv OCI_COMPARTMENT_ID $(terraform output -raw OCI_COMPARTMENT_ID) &
+SetEnv OCI_REGION $(terraform output -raw OCI_REGION) &
+SetEnv OCI_SUBNET $(terraform output -raw OCI_SUBNET) &
+SetEnv OCI_TENANCY_ID $(terraform output -raw OCI_TENANCY_ID) &
+SetEnv OCI_USER_ID $(terraform output -raw OCI_USER_ID) &
+SetEnv OCI_VPC_ID $(terraform output -raw OCI_VPC_ID) &
+SetEnv controller_private_ip $(terraform output -raw controller_private_ip) &
+SetEnv TRANSIT_GATEWAY_NAME $(terraform output -raw TRANSIT_GATEWAY_NAME) &
+SetEnv ARM_RESOURCE_GROUP $(terraform output -raw ARM_RESOURCE_GROUP) &
+SetEnv ARM_HUB_NAME $(terraform output -raw ARM_HUB_NAME) &
+SetEnv AWS_TGW_NAME $(terraform output -raw AWS_TGW_NAME) &
+SetEnv DATADOG_API_KEY $(terraform output -raw DATADOG_API_KEY) &
+SetEnv AZURE_VNG_VNET_ID $(terraform output -raw AZURE_VNG_VNET_ID) &
+SetEnv AZURE_VNG_SUBNET $(terraform output -raw AZURE_VNG_SUBNET) &
+SetEnv AZURE_VNG $(terraform output -raw AZURE_VNG) &
+echo "Waiting for terraform..."
+wait
 
 SetEnv SKIP_DATA_ACCOUNT "no"
 SetEnv SKIP_DATA_CALLER_IDENTITY "no"
