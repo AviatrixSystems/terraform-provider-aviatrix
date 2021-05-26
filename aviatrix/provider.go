@@ -123,6 +123,7 @@ func Provider() *schema.Provider {
 			"aviatrix_account":                    dataSourceAviatrixAccount(),
 			"aviatrix_caller_identity":            dataSourceAviatrixCallerIdentity(),
 			"aviatrix_firenet":                    dataSourceAviatrixFireNet(),
+			"aviatrix_firenet_firewall_manager":   dataSourceAviatrixFireNetFirewallManager(),
 			"aviatrix_firenet_vendor_integration": dataSourceAviatrixFireNetVendorIntegration(),
 			"aviatrix_gateway":                    dataSourceAviatrixGateway(),
 			"aviatrix_spoke_gateway":              dataSourceAviatrixSpokeGateway(),
