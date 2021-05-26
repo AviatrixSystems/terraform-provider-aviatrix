@@ -75,7 +75,7 @@ $ terraform plan
 The following arguments are supported:
 
 ### Required
-* `controller_ip` - (Required) Aviatrix controller's public IP.
+* `controller_ip` - (Required) Aviatrix controller's public or private IP.
 * `username` - (Required) Aviatrix account username which will be used to login to Aviatrix controller.
 * `password` - (Required) Aviatrix account password corresponding to above username.
 
