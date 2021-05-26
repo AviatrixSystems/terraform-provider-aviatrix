@@ -139,6 +139,21 @@ func resourceAviatrixFireNet() *schema.Resource {
 					ValidateFunc: validation.IsCIDR,
 				},
 			},
+			"fail_close_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable Fail Close. When Fail Close is enabled, FireNet gateway drops all traffic when there are no firewalls attached to the FireNet gateways. Type: Boolean. Default: false. Available as of provider version R2.19.2+.",
+			},
+			"east_west_inspection_excluded_cidrs": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Network List Excluded From East-West Inspection. CIDRs to be excluded from inspection. Type: Set(String). Available as of provider version R2.19.2+.",
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsCIDR,
+				},
+			},
 		},
 	}
 }
@@ -254,6 +269,13 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	if d.Get("fail_close_enabled").(bool) {
+		err := client.EnableFirenetFailClose(fireNet)
+		if err != nil {
+			return fmt.Errorf("could not enable fail close: %v", err)
+		}
+	}
+
 	var egressStaticCidrs []string
 	for _, v := range d.Get("egress_static_cidrs").(*schema.Set).List() {
 		egressStaticCidrs = append(egressStaticCidrs, v.(string))
@@ -269,6 +291,18 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 		err := client.EditFirenetEgressStaticCidr(fireNet)
 		if err != nil {
 			return fmt.Errorf("could not edit egress static cidrs: %v", err)
+		}
+	}
+
+	var excludedCidrs []string
+	for _, v := range d.Get("east_west_inspection_excluded_cidrs").(*schema.Set).List() {
+		excludedCidrs = append(excludedCidrs, v.(string))
+	}
+	if len(excludedCidrs) != 0 {
+		fireNet.ExcludedCidrs = strings.Join(excludedCidrs, ",")
+		err := client.EditFirenetExcludedCidr(fireNet)
+		if err != nil {
+			return fmt.Errorf("could not edit east-west inspection excluded cidrs: %v", err)
 		}
 	}
 
@@ -315,17 +349,10 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("keep_alive_via_lan_interface_enabled", fireNetDetail.LanPing == "yes")
 	d.Set("tgw_segmentation_for_egress_enabled", fireNetDetail.TgwSegmentationForEgress == "yes")
 	d.Set("egress_static_cidrs", fireNetDetail.EgressStaticCidrs)
-
-	if fireNetDetail.Inspection == "yes" {
-		d.Set("inspection_enabled", true)
-	} else {
-		d.Set("inspection_enabled", false)
-	}
-	if fireNetDetail.FirewallEgress == "yes" {
-		d.Set("egress_enabled", true)
-	} else {
-		d.Set("egress_enabled", false)
-	}
+	d.Set("east_west_inspection_excluded_cidrs", fireNetDetail.ExcludedCidrs)
+	d.Set("fail_close_enabled", fireNetDetail.FailClose == "yes")
+	d.Set("inspection_enabled", fireNetDetail.Inspection == "yes")
+	d.Set("egress_enabled", fireNetDetail.FirewallEgress == "yes")
 
 	var firewallInstance []map[string]interface{}
 	for _, instance := range fireNetDetail.FirewallInstance {
@@ -589,6 +616,21 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	if d.HasChange("east_west_inspection_excluded_cidrs") {
+		var excludedCidrs []string
+		for _, v := range d.Get("east_west_inspection_excluded_cidrs").(*schema.Set).List() {
+			excludedCidrs = append(excludedCidrs, v.(string))
+		}
+		fn := &goaviatrix.FireNet{
+			VpcID:         d.Get("vpc_id").(string),
+			ExcludedCidrs: strings.Join(excludedCidrs, ","),
+		}
+		err := client.EditFirenetExcludedCidr(fn)
+		if err != nil {
+			return fmt.Errorf("could not edit east-west inspection excluded cidrs during update: %v", err)
+		}
+	}
+
 	if d.HasChange("keep_alive_via_lan_interface_enabled") {
 		fn := &goaviatrix.FireNet{
 			VpcID: d.Get("vpc_id").(string),
@@ -623,6 +665,23 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	if d.HasChange("fail_close_enabled") {
+		fn := &goaviatrix.FireNet{
+			VpcID: d.Get("vpc_id").(string),
+		}
+		if d.Get("fail_close_enabled").(bool) {
+			err := client.EnableFirenetFailClose(fn)
+			if err != nil {
+				return fmt.Errorf("could not enable fail_close_enabled during update: %v", err)
+			}
+		} else {
+			err := client.DisableFirenetFailClose(fn)
+			if err != nil {
+				return fmt.Errorf("could not disable fail_close_enabled during update: %v", err)
+			}
+		}
+	}
+
 	d.Partial(false)
 	return resourceAviatrixFireNetRead(d, meta)
 }
@@ -638,6 +697,13 @@ func resourceAviatrixFireNetDelete(d *schema.ResourceData, meta interface{}) err
 		err := client.EditFirenetEgressStaticCidr(fireNet)
 		if err != nil {
 			return fmt.Errorf("could not disable egress static cidrs: %v", err)
+		}
+	}
+
+	if len(d.Get("east_west_inspection_excluded_cidrs").(*schema.Set).List()) != 0 {
+		err := client.EditFirenetExcludedCidr(fireNet)
+		if err != nil {
+			return fmt.Errorf("could not disable east-west inspection excluded cidrs during firenet destroy: %v", err)
 		}
 	}
 
@@ -657,6 +723,13 @@ func resourceAviatrixFireNetDelete(d *schema.ResourceData, meta interface{}) err
 		err := client.DisableTgwSegmentationForEgress(fireNet)
 		if err != nil {
 			return fmt.Errorf("failed to disable tgw segmentation for egress: %v", err)
+		}
+	}
+
+	if d.Get("fail_close_enabled").(bool) {
+		err := client.DisableFirenetFailClose(fireNet)
+		if err != nil {
+			return fmt.Errorf("failed to disable fail close during firenet destroy: %v", err)
 		}
 	}
 

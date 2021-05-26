@@ -19,6 +19,7 @@ type FireNet struct {
 	Inspection        bool   `form:"inspection,omitempty" json:"inspection,omitempty"`
 	HashingAlgorithm  string `json:"firewall_hashing,omitempty"`
 	EgressStaticCidrs string
+	ExcludedCidrs     string
 }
 
 type FireNetDetail struct {
@@ -34,6 +35,8 @@ type FireNetDetail struct {
 	LanPing                  string                 `json:"lan_ping"`
 	TgwSegmentationForEgress string                 `json:"tgw_segmentation"`
 	EgressStaticCidrs        []string               `json:"egress_static_cidr"`
+	ExcludedCidrs            []string               `json:"exclude_cidr"`
+	FailClose                string                 `json:"fail_close"`
 }
 
 type GetFireNetResp struct {
@@ -458,4 +461,59 @@ func (c *Client) EditFirenetEgressStaticCidr(net *FireNet) error {
 	}
 
 	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) EditFirenetExcludedCidr(net *FireNet) error {
+	form := map[string]string{
+		"action":       "edit_firenet_excluded_cidr",
+		"CID":          c.CID,
+		"vpc_id":       net.VpcID,
+		"exclude_cidr": net.ExcludedCidrs,
+	}
+	check := func(act, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "list is not changed") {
+				return nil
+			}
+			return fmt.Errorf("rest API edit_firenet_excluded_cidr Post failed: %s", reason)
+		}
+		return nil
+	}
+	return c.PostAPI(form["action"], form, check)
+}
+
+func (c *Client) EnableFirenetFailClose(net *FireNet) error {
+	form := map[string]string{
+		"action": "enable_firenet_fail_close",
+		"CID":    c.CID,
+		"vpc_id": net.VpcID,
+	}
+	check := func(act, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "configuration not changed") {
+				return nil
+			}
+			return fmt.Errorf("rest API enable_firenet_fail_close Post failed: %s", reason)
+		}
+		return nil
+	}
+	return c.PostAPI(form["action"], form, check)
+}
+
+func (c *Client) DisableFirenetFailClose(net *FireNet) error {
+	form := map[string]string{
+		"action": "disable_firenet_fail_close",
+		"CID":    c.CID,
+		"vpc_id": net.VpcID,
+	}
+	check := func(act, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "configuration not changed") {
+				return nil
+			}
+			return fmt.Errorf("rest API disable_firenet_fail_close Post failed: %s", reason)
+		}
+		return nil
+	}
+	return c.PostAPI(form["action"], form, check)
 }
