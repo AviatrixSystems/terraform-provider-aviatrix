@@ -27,14 +27,14 @@ Quick at-a-glance access to Aviatrix Terraform provider's release compatibility 
 | 0.12, 0.13, 0.14  | 2.19.0                   | UserConnect-6.4              |
 | 0.12, 0.13        | 2.18.2                   | UserConnect-6.3.2364         |
 | 0.12, 0.13        | 2.18.1                   | UserConnect-6.3.2364         |
-| 0.12, 0.13        | 2.18                     | UserConnect-6.3              |
+| 0.12, 0.13        | 2.18.0                   | UserConnect-6.3              |
 | 0.12, 0.13        | 2.17.2                   | UserConnect-6.2.1914         |
 | 0.12, 0.13        | 2.17.1                   | UserConnect-6.2.1891         |
-| 0.12              | 2.17                     | UserConnect-6.2              |
+| 0.12              | 2.17.0                   | UserConnect-6.2              |
 | 0.12              | 2.16.3                   | UserConnect-6.1.1309         |
 | 0.12              | 2.16.2                   | UserConnect-6.1.1280         |
 | 0.12              | 2.16.1                   | UserConnect-6.1              |
-| 0.12              | 2.16                     | UserConnect-6.1              |
+| 0.12              | 2.16.0                   | UserConnect-6.1              |
 | 0.12              | 2.15.1                   | UserConnect-6.0              |
 | 0.12              | 2.15                     | **UserConnect-6.0 <sup>3</sup>** |
 | 0.12              | 2.14.1                   | UserConnect-5.4.1232         |
