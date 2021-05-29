@@ -12,9 +12,9 @@ import (
 
 func resourceAviatrixGatewayCertificateConfig() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAviatrixGatewayCertificateConfigCreate,
-		ReadContext:   resourceAviatrixGatewayCertificateConfigRead,
-		DeleteContext: resourceAviatrixGatewayCertificateConfigDelete,
+		CreateWithoutTimeout: resourceAviatrixGatewayCertificateConfigCreate,
+		ReadWithoutTimeout:   resourceAviatrixGatewayCertificateConfigRead,
+		DeleteWithoutTimeout: resourceAviatrixGatewayCertificateConfigDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

@@ -12,9 +12,9 @@ import (
 
 func resourceAviatrixAwsTgwConnect() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAviatrixAwsTgwConnectCreate,
-		ReadContext:   resourceAviatrixAwsTgwConnectRead,
-		DeleteContext: resourceAviatrixAwsTgwConnectDelete,
+		CreateWithoutTimeout: resourceAviatrixAwsTgwConnectCreate,
+		ReadWithoutTimeout:   resourceAviatrixAwsTgwConnectRead,
+		DeleteWithoutTimeout: resourceAviatrixAwsTgwConnectDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

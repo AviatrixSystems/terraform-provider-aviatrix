@@ -12,9 +12,9 @@ import (
 
 func resourceAviatrixCopilotAssociation() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAviatrixCopilotAssociationCreate,
-		ReadContext:   resourceAviatrixCopilotAssociationRead,
-		DeleteContext: resourceAviatrixCopilotAssociationDelete,
+		CreateWithoutTimeout: resourceAviatrixCopilotAssociationCreate,
+		ReadWithoutTimeout:   resourceAviatrixCopilotAssociationRead,
+		DeleteWithoutTimeout: resourceAviatrixCopilotAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

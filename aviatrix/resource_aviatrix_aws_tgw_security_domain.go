@@ -14,9 +14,9 @@ import (
 
 func resourceAviatrixAwsTgwSecurityDomain() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAviatrixAwsTgwSecurityDomainCreate,
-		ReadContext:   resourceAviatrixAwsTgwSecurityDomainRead,
-		DeleteContext: resourceAviatrixAwsTgwSecurityDomainDelete,
+		CreateWithoutTimeout: resourceAviatrixAwsTgwSecurityDomainCreate,
+		ReadWithoutTimeout:   resourceAviatrixAwsTgwSecurityDomainRead,
+		DeleteWithoutTimeout: resourceAviatrixAwsTgwSecurityDomainDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

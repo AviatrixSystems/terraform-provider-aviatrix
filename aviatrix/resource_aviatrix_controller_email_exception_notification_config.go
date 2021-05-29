@@ -11,10 +11,10 @@ import (
 
 func resourceAviatrixControllerEmailExceptionNotificationConfig() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAviatrixControllerEmailExceptionNotificationConfigCreate,
-		ReadContext:   resourceAviatrixControllerEmailExceptionNotificationConfigRead,
-		UpdateContext: resourceAviatrixControllerEmailExceptionNotificationConfigUpdate,
-		DeleteContext: resourceAviatrixControllerEmailExceptionNotificationConfigDelete,
+		CreateWithoutTimeout: resourceAviatrixControllerEmailExceptionNotificationConfigCreate,
+		ReadWithoutTimeout:   resourceAviatrixControllerEmailExceptionNotificationConfigRead,
+		UpdateWithoutTimeout: resourceAviatrixControllerEmailExceptionNotificationConfigUpdate,
+		DeleteWithoutTimeout: resourceAviatrixControllerEmailExceptionNotificationConfigDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

@@ -12,10 +12,10 @@ import (
 
 func resourceAviatrixControllerBgpMaxAsLimitConfig() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAviatrixControllerBgpMaxAsLimitConfigCreate,
-		ReadContext:   resourceAviatrixControllerBgpMaxAsLimitConfigRead,
-		UpdateContext: resourceAviatrixControllerBgpMaxAsLimitConfigUpdate,
-		DeleteContext: resourceAviatrixControllerBgpMaxAsLimitConfigDelete,
+		CreateWithoutTimeout: resourceAviatrixControllerBgpMaxAsLimitConfigCreate,
+		ReadWithoutTimeout:   resourceAviatrixControllerBgpMaxAsLimitConfigRead,
+		UpdateWithoutTimeout: resourceAviatrixControllerBgpMaxAsLimitConfigUpdate,
+		DeleteWithoutTimeout: resourceAviatrixControllerBgpMaxAsLimitConfigDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
