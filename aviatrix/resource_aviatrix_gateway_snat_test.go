@@ -39,7 +39,7 @@ func TestAccAviatrixGatewaySNat_basic(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
 				testAccPreCheck(t)
-				preGatewayCheck(t, msgCommon)
+				preGatewaySNatCheck(t, msgCommon)
 				preSpokeGatewayCheck(t, msgCommon)
 			},
 			Providers:    testAccProviders,
@@ -142,7 +142,7 @@ resource "aviatrix_gateway_snat" "test" {
 	}
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_SUBNET"))
+		os.Getenv("AWS_VPC_ID3"), os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_SUBNET3"))
 }
 
 func testAccGatewaySNatConfigAZURE(rName string) string {
@@ -236,4 +236,17 @@ func testAccCheckGatewaySNatDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func preGatewaySNatCheck(t *testing.T, msgCommon string) string {
+	requiredEnvVars := []string{
+		"AWS_VPC_ID3",
+		"AWS_SUBNET3",
+	}
+	for _, v := range requiredEnvVars {
+		if os.Getenv(v) == "" {
+			t.Fatalf("Env Var %s required %s", v, msgCommon)
+		}
+	}
+	return ""
 }
