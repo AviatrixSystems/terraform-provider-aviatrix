@@ -118,6 +118,22 @@ output "AWS_SUBNET2" {
   value = module.aviatrix_aws_vpc2.subnet
 }
 
+output "AWS_VPC_ID3" {
+  value = module.aviatrix_aws_vpc3.vpc
+}
+
+output "AWS_SUBNET3" {
+  value = module.aviatrix_aws_vpc3.subnet
+}
+
+output "AWS_VPC_ID4" {
+  value = module.aviatrix_aws_vpc4.vpc
+}
+
+output "AWS_SUBNET4" {
+  value = module.aviatrix_aws_vpc4.subnet
+}
+
 output "AWS_REGION" {
   value = data.aws_region.current.name
 }

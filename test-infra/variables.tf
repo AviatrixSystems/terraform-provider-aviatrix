@@ -25,12 +25,15 @@ variable "azure_client_secret" {}
 variable "aws_region1" {default="us-west-1"}
 variable "aws_region2" {default="us-west-1"}
 variable "aws_region3" {default="us-west-1"}
+variable "aws_region4" {default="us-west-1"}
 variable "aws_vpc_cidr1" {default="10.10.0.0/16"}
 variable "aws_vpc_cidr2" {default="10.20.0.0/16"}
-variable "aws_vpc_cidr3" {default="192.168.0.0.0/16"}
+variable "aws_vpc_cidr3" {default="192.168.0.0/16"}
+variable "aws_vpc_cidr4" {default="10.30.0.0/16"}
 variable "aws_vpc_subnet1" {default="10.10.0.0/24"}
 variable "aws_vpc_subnet2" {default="10.20.0.0/24"}
 variable "aws_vpc_subnet3" {default="192.168.0.0/24"}
+variable "aws_vpc_subnet4" {default="10.30.0.0/24"}
 variable "aws_access_key" {}
 variable "aws_secret_key" {}
 variable "domain_name" {}

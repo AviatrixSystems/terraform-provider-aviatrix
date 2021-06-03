@@ -82,6 +82,18 @@ module "aviatrix_aws_vpc2" {
   aws_vpc_subnet = var.aws_vpc_subnet2
   aws_region     = var.aws_region2
 }
+module "aviatrix_aws_vpc3" {
+  source         = "./aws"
+  aws_vpc_cidr   = var.aws_vpc_cidr3
+  aws_vpc_subnet = var.aws_vpc_subnet3
+  aws_region     = var.aws_region3
+}
+module "aviatrix_aws_vpc4" {
+  source         = "./aws"
+  aws_vpc_cidr   = var.aws_vpc_cidr4
+  aws_vpc_subnet = var.aws_vpc_subnet4
+  aws_region     = var.aws_region4
+}
 module "aviatrix_awsgov_vpc" {
   providers      = {
     aws = aws.gov
