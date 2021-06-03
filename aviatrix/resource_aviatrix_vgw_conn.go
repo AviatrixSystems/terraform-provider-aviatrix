@@ -156,7 +156,7 @@ func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) (er
 
 		err = client.EditVgwConnectionASPathPrepend(vgwConn, prependASPath)
 		if err != nil {
-			return fmt.Errorf("could not set prepend_as_path1: %v", err)
+			return fmt.Errorf("could not set prepend_as_path: %v", err)
 		}
 	}
 
@@ -210,7 +210,7 @@ func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error
 
 		err = d.Set("prepend_as_path", prependAsPath)
 		if err != nil {
-			return fmt.Errorf("could not set prepend_as_path: %v", err)
+			return fmt.Errorf("could not set value for prepend_as_path: %v", err)
 		}
 	}
 	d.SetId(vConn.ConnName + "~" + vConn.VPCId)
