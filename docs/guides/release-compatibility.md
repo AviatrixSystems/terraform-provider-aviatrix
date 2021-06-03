@@ -23,54 +23,55 @@ Quick at-a-glance access to Aviatrix Terraform provider's release compatibility 
 
 | Terraform Version (v) | Aviatrix Provider Version (R) | Minimum Supported Controller Version |
 |:-----------------:|:-------------------------:|:----------------------------:|
-| 0.11              | 1.0                      | UserConnect-4.0              |
-| 0.11              | 1.1                      | UserConnect-4.1              |
-| 0.11              | 1.2                      | UserConnect-4.1              |
-| 0.11              | 1.3                      | UserConnect-4.2              |
-| 0.11              | 1.4                      | UserConnect-4.2              |
-| 0.11              | 1.5                      | UserConnect-4.2              |
-| 0.11              | 1.6                      | UserConnect-4.2              |
-| 0.11              | 1.7                      | UserConnect-4.3              |
-| 0.11              | 1.8                      | UserConnect-4.3              |
-| 0.11              | 1.9                      | UserConnect-4.6              |
-| 0.11              | 1.10                     | UserConnect-4.6              |
-| 0.11              | 1.11                     | UserConnect-4.7              |
-| 0.11              | 1.12                     | UserConnect-4.7              |
-| 0.11              | 1.13                     | UserConnect-4.7              |
-| 0.11              | 1.14                     | UserConnect-4.7              |
-| 0.11              | 1.15                     | UserConnect-4.7              |
-| **0.12 <sup>1</sup>** | 1.16                 | UserConnect-4.7              |
-| 0.12              | **2.0 <sup>2</sup>**     | UserConnect-4.7              |
-| 0.12              | 2.1                      | UserConnect-4.7              |
-| 0.12              | 2.2                      | UserConnect-4.7              |
-| 0.12              | 2.3                      | UserConnect-5.0              |
-| 0.12              | 2.4                      | UserConnect-5.0              |
-| 0.12              | 2.5                      | UserConnect-5.1              |
-| 0.12              | 2.6                      | UserConnect-5.1              |
-| 0.12              | 2.7                      | UserConnect-5.1              |
-| 0.12              | 2.8                      | UserConnect-5.1, 5.2         |
-| 0.12              | 2.9                      | UserConnect-5.2              |
-| 0.12              | 2.9.1                    | UserConnect-5.2.2122         |
-| 0.12              | 2.10                     | UserConnect-5.2.2122         |
-| 0.12              | 2.11                     | UserConnect-5.3.1391         |
-| 0.12              | 2.12                     | UserConnect-5.3.1491         |
-| 0.12              | 2.13                     | UserConnect-5.4.1074         |
-| 0.12              | 2.14                     | UserConnect-5.4.1201         |
-| 0.12              | 2.14.1                   | UserConnect-5.4.1232         |
-| 0.12              | 2.15                     | **UserConnect-6.0 <sup>3</sup>** |
-| 0.12              | 2.15.1                   | UserConnect-6.0              |
-| 0.12              | 2.16                     | UserConnect-6.1              |
-| 0.12              | 2.16.1                   | UserConnect-6.1              |
-| 0.12              | 2.16.2                   | UserConnect-6.1.1280         |
-| 0.12              | 2.16.3                   | UserConnect-6.1.1309         |
-| 0.12              | 2.17                     | UserConnect-6.2              |
-| 0.12, 0.13        | 2.17.1                   | UserConnect-6.2.1891         |
-| 0.12, 0.13        | 2.17.2                   | UserConnect-6.2.1914         |
-| 0.12, 0.13        | 2.18                     | UserConnect-6.3              |
-| 0.12, 0.13        | 2.18.1                   | UserConnect-6.3.2364         |
-| 0.12, 0.13        | 2.18.2                   | UserConnect-6.3.2364         |
-| 0.12, 0.13, 0.14  | 2.19.0                   | UserConnect-6.4              |
 | 0.12, 0.13, 0.14  | 2.19.1                   | UserConnect-6.4.2561         |
+| 0.12, 0.13, 0.14  | 2.19.0                   | UserConnect-6.4              |
+| 0.12, 0.13        | 2.18.2                   | UserConnect-6.3.2364         |
+| 0.12, 0.13        | 2.18.1                   | UserConnect-6.3.2364         |
+| 0.12, 0.13        | 2.18.0                   | UserConnect-6.3              |
+| 0.12, 0.13        | 2.17.2                   | UserConnect-6.2.1914         |
+| 0.12, 0.13        | 2.17.1                   | UserConnect-6.2.1891         |
+| 0.12              | 2.17.0                   | UserConnect-6.2              |
+| 0.12              | 2.16.3                   | UserConnect-6.1.1309         |
+| 0.12              | 2.16.2                   | UserConnect-6.1.1280         |
+| 0.12              | 2.16.1                   | UserConnect-6.1              |
+| 0.12              | 2.16.0                   | UserConnect-6.1              |
+| 0.12              | 2.15.1                   | UserConnect-6.0              |
+| 0.12              | 2.15                     | **UserConnect-6.0 <sup>3</sup>** |
+| 0.12              | 2.14.1                   | UserConnect-5.4.1232         |
+| 0.12              | 2.14                     | UserConnect-5.4.1201         |
+| 0.12              | 2.13                     | UserConnect-5.4.1074         |
+| 0.12              | 2.12                     | UserConnect-5.3.1491         |
+| 0.12              | 2.11                     | UserConnect-5.3.1391         |
+| 0.12              | 2.10                     | UserConnect-5.2.2122         |
+| 0.12              | 2.9.1                    | UserConnect-5.2.2122         |
+| 0.12              | 2.9                      | UserConnect-5.2              |
+| 0.12              | 2.8                      | UserConnect-5.1, 5.2         |
+| 0.12              | 2.7                      | UserConnect-5.1              |
+| 0.12              | 2.6                      | UserConnect-5.1              |
+| 0.12              | 2.5                      | UserConnect-5.1              |
+| 0.12              | 2.4                      | UserConnect-5.0              |
+| 0.12              | 2.3                      | UserConnect-5.0              |
+| 0.12              | 2.2                      | UserConnect-4.7              |
+| 0.12              | 2.1                      | UserConnect-4.7              |
+| 0.12              | **2.0 <sup>2</sup>**     | UserConnect-4.7              |
+| **0.12 <sup>1</sup>** | 1.16                 | UserConnect-4.7              |
+| 0.11              | 1.15                     | UserConnect-4.7              |
+| 0.11              | 1.14                     | UserConnect-4.7              |
+| 0.11              | 1.13                     | UserConnect-4.7              |
+| 0.11              | 1.12                     | UserConnect-4.7              |
+| 0.11              | 1.11                     | UserConnect-4.7              |
+| 0.11              | 1.10                     | UserConnect-4.6              |
+| 0.11              | 1.9                      | UserConnect-4.6              |
+| 0.11              | 1.8                      | UserConnect-4.3              |
+| 0.11              | 1.7                      | UserConnect-4.3              |
+| 0.11              | 1.6                      | UserConnect-4.2              |
+| 0.11              | 1.5                      | UserConnect-4.2              |
+| 0.11              | 1.4                      | UserConnect-4.2              |
+| 0.11              | 1.3                      | UserConnect-4.2              |
+| 0.11              | 1.2                      | UserConnect-4.1              |
+| 0.11              | 1.1                      | UserConnect-4.1              |
+| 0.11              | 1.0                      | UserConnect-4.0              |
+
 
 **<sup>1</sup>** : Note that Terraform v0.12 is not backwards-compatible with previous Terraform versions. For R1.16, there will be a need to change some syntax in the Terraform configuration files. Please see Hashicorp's [announcement](https://www.hashicorp.com/blog/announcing-terraform-0-12) for more information
 
