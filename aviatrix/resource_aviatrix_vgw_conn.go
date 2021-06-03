@@ -89,6 +89,16 @@ func resourceAviatrixVGWConn() *schema.Resource {
 				Optional:    true,
 				Description: "Configure manual BGP advertised CIDRs for this connection. Available as of provider version R2.18+.",
 			},
+			"prepend_as_path": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Connection AS Path Prepend customized by specifying AS PATH for a BGP connection.",
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: goaviatrix.ValidateASN,
+				},
+				MaxItems: 25,
+			},
 		},
 	}
 }
@@ -138,6 +148,18 @@ func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) (er
 		}
 	}
 
+	if _, ok := d.GetOk("prepend_as_path"); ok {
+		var prependASPath []string
+		for _, v := range d.Get("prepend_as_path").([]interface{}) {
+			prependASPath = append(prependASPath, v.(string))
+		}
+
+		err = client.EditVgwConnectionASPathPrepend(vgwConn, prependASPath)
+		if err != nil {
+			return fmt.Errorf("could not set prepend_as_path1: %v", err)
+		}
+	}
+
 	return err
 }
 
@@ -180,6 +202,17 @@ func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("setting 'manual_bgp_advertised_cidrs' into state: %v", err)
 	}
 
+	if vConn.PrependAsPath != "" {
+		var prependAsPath []string
+		for _, str := range strings.Split(vConn.PrependAsPath, " ") {
+			prependAsPath = append(prependAsPath, strings.TrimSpace(str))
+		}
+
+		err = d.Set("prepend_as_path", prependAsPath)
+		if err != nil {
+			return fmt.Errorf("could not set prepend_as_path: %v", err)
+		}
+	}
 	d.SetId(vConn.ConnName + "~" + vConn.VPCId)
 
 	transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: vConn.GwName})
@@ -233,6 +266,20 @@ func resourceAviatrixVGWConnUpdate(d *schema.ResourceData, meta interface{}) err
 			if err != nil {
 				return fmt.Errorf("could not disable event triggered HA for vgw conn during update: %v", err)
 			}
+		}
+	}
+	if d.HasChange("prepend_as_path") {
+		var prependASPath []string
+		for _, v := range d.Get("prepend_as_path").([]interface{}) {
+			prependASPath = append(prependASPath, v.(string))
+		}
+		vgwConn := &goaviatrix.VGWConn{
+			ConnName: connName,
+			GwName:   gwName,
+		}
+		err := client.EditVgwConnectionASPathPrepend(vgwConn, prependASPath)
+		if err != nil {
+			return fmt.Errorf("could not update prepend_as_path: %v", err)
 		}
 	}
 	return nil
