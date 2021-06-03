@@ -88,7 +88,7 @@ func resourceAviatrixNetflowAgentCreate(d *schema.ResourceData, meta interface{}
 	netflowAgent := marshalNetflowAgentInput(d)
 
 	if err := client.EnableNetflowAgent(netflowAgent); err != nil {
-		return fmt.Errorf("could not enable datadog agent: %v", err)
+		return fmt.Errorf("could not enable netflow agent: %v", err)
 	}
 
 	d.SetId("netflow_agent")

@@ -2,6 +2,7 @@ package goaviatrix
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/url"
@@ -22,6 +23,22 @@ type VendorInfo struct {
 	PublicIP     string `form:"public_ip,omitempty"`
 	Save         bool
 	Synchronize  bool `form:"sync,omitempty"`
+}
+
+type FirewallManager struct {
+	CID           string
+	Action        string
+	VpcID         string
+	GatewayName   string
+	VendorType    string
+	PublicIP      string
+	Username      string
+	Password      string
+	Template      string
+	TemplateStack string
+	RouteTable    string
+	Save          bool
+	Synchronize   bool
 }
 
 func (c *Client) EditFireNetFirewallVendorInfo(vendorInfo *VendorInfo) error {
@@ -92,4 +109,34 @@ func (c *Client) ShowFireNetFirewallVendorConfig(vendorInfo *VendorInfo) error {
 		return errors.New("Rest API show_firenet_firewall_vendor_config Get failed: " + data.Reason)
 	}
 	return nil
+}
+
+func (c *Client) EditFireNetFirewallManagerVendorInfo(ctx context.Context, firewallManager *FirewallManager) error {
+	params := map[string]string{
+		"action":          "edit_firenet_firewall_manager_vendor_info",
+		"CID":             c.CID,
+		"vpc_id":          firewallManager.VpcID,
+		"gw_name":         firewallManager.GatewayName,
+		"firewall_vendor": firewallManager.VendorType,
+		"public_ip":       firewallManager.PublicIP,
+		"user":            firewallManager.Username,
+		"password":        firewallManager.Password,
+		"template":        firewallManager.Template,
+		"template_stack":  firewallManager.TemplateStack,
+		"route_table":     firewallManager.RouteTable,
+	}
+
+	return c.PostAPIContext(ctx, params["action"], params, BasicCheck)
+}
+
+func (c *Client) SyncFireNetFirewallManagerVendorConfig(ctx context.Context, firewallManager *FirewallManager) error {
+	params := map[string]string{
+		"action":  "show_firenet_firewall_vendor_config",
+		"CID":     c.CID,
+		"vpc_id":  firewallManager.VpcID,
+		"gw_name": firewallManager.GatewayName,
+		"sync":    "true",
+	}
+
+	return c.PostAPIContext(ctx, params["action"], params, BasicCheck)
 }

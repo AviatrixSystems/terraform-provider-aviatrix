@@ -12,8 +12,6 @@ Use this data source to do 'save' or 'sync' for vendor integration purposes for 
 
 -> **NOTE:** FireNet with Panorama should be set up using the **aviatrix_firenet_firewall_manager** data source. Do not use `save` or `sync` options listed below.
 
-~> **NOTE:** **aviatrix_firenet_firewall_manager** is currently under development.
-
 ## Example Usage
 
 ```hcl
