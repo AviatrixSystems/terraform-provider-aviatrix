@@ -358,7 +358,7 @@ func TransitExternalDeviceConnPh1RemoteIdDiffSuppressFunc(k, old, new string, d 
 	return false
 }
 
-func (c *Client) EditTransitExternalConnectionASPathPrepend(externalDeviceConn *ExternalDeviceConn, prependASPath []string) error {
+func (c *Client) EditTransitExternalDeviceConnASPathPrepend(externalDeviceConn *ExternalDeviceConn, prependASPath []string) error {
 	action := "edit_transit_connection_as_path_prepend"
 	return c.PostAPI(action, struct {
 		CID            string `form:"CID"`

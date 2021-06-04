@@ -642,7 +642,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 			prependASPath = append(prependASPath, v.(string))
 		}
 
-		err = client.EditTransitExternalConnectionASPathPrepend(externalDeviceConn, prependASPath)
+		err = client.EditTransitExternalDeviceConnASPathPrepend(externalDeviceConn, prependASPath)
 		if err != nil {
 			return fmt.Errorf("could not set prepend_as_path: %v", err)
 		}
@@ -967,7 +967,7 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 		for _, v := range d.Get("prepend_as_path").([]interface{}) {
 			prependASPath = append(prependASPath, v.(string))
 		}
-		err = client.EditTransitExternalConnectionASPathPrepend(externalDeviceConn, prependASPath)
+		err = client.EditTransitExternalDeviceConnASPathPrepend(externalDeviceConn, prependASPath)
 		if err != nil {
 			return fmt.Errorf("could not update prepend_as_path: %v", err)
 		}
