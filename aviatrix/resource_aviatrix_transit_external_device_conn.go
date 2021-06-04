@@ -310,6 +310,16 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				DiffSuppressFunc: goaviatrix.TransitExternalDeviceConnPh1RemoteIdDiffSuppressFunc,
 				Description:      "Phase 1 remote identifier of the IPsec tunnel.",
 			},
+			"prepend_as_path": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Connection AS Path Prepend customized by specifying AS PATH for a BGP connection.",
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: goaviatrix.ValidateASN,
+				},
+				MaxItems: 25,
+			},
 			"approved_cidrs": {
 				Type:        schema.TypeSet,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -544,6 +554,12 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		return fmt.Errorf("please either set one phase 1 remote ID or none, when HA is disabled")
 	}
 
+	if _, ok := d.GetOk("prepend_as_path"); ok {
+		if externalDeviceConn.ConnectionType != "bgp" {
+			return fmt.Errorf("'prepend_as_path' only supports 'bgp' connection. Please update 'connection_type' to 'bgp'")
+		}
+	}
+
 	err = client.CreateExternalDeviceConn(externalDeviceConn)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix external device connection: %s", err)
@@ -617,6 +633,18 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		err := client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
 			return fmt.Errorf("failed to update phase 1 remote identifier: %s", err)
+		}
+	}
+
+	if _, ok := d.GetOk("prepend_as_path"); ok {
+		var prependASPath []string
+		for _, v := range d.Get("prepend_as_path").([]interface{}) {
+			prependASPath = append(prependASPath, v.(string))
+		}
+
+		err = client.EditTransitExternalConnectionASPathPrepend(externalDeviceConn, prependASPath)
+		if err != nil {
+			return fmt.Errorf("could not set prepend_as_path: %v", err)
 		}
 	}
 
@@ -784,6 +812,18 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 
 			d.Set("phase1_remote_identifier", ph1RemoteId)
 		}
+
+		if conn.PrependAsPath != "" {
+			var prependAsPath []string
+			for _, str := range strings.Split(conn.PrependAsPath, " ") {
+				prependAsPath = append(prependAsPath, strings.TrimSpace(str))
+			}
+
+			err = d.Set("prepend_as_path", prependAsPath)
+			if err != nil {
+				return fmt.Errorf("could not set value for prepend_as_path: %v", err)
+			}
+		}
 	}
 
 	d.SetId(conn.ConnectionName + "~" + conn.VpcID)
@@ -792,6 +832,7 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 
 func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+	d.Partial(true)
 
 	approvedCidrs := getStringSet(d, "approved_cidrs")
 	enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
@@ -911,6 +952,28 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 			return fmt.Errorf("failed to update transit external device conn local_subnet: %s", err)
 		}
 	}
+
+	if d.HasChange("prepend_as_path") {
+		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
+			ConnectionName: connName,
+			GwName:         gwName,
+			ConnectionType: d.Get("connection_type").(string),
+		}
+		if externalDeviceConn.ConnectionType != "bgp" {
+			return fmt.Errorf("'prepend_as_path' only supports 'bgp' connection. Can't update 'prepend_as_path' for '%s' connection", externalDeviceConn.ConnectionType)
+		}
+
+		var prependASPath []string
+		for _, v := range d.Get("prepend_as_path").([]interface{}) {
+			prependASPath = append(prependASPath, v.(string))
+		}
+		err = client.EditTransitExternalConnectionASPathPrepend(externalDeviceConn, prependASPath)
+		if err != nil {
+			return fmt.Errorf("could not update prepend_as_path: %v", err)
+		}
+	}
+
+	d.Partial(false)
 	return resourceAviatrixTransitExternalDeviceConnRead(d, meta)
 }
 
