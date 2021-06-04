@@ -231,6 +231,8 @@ func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error
 
 func resourceAviatrixVGWConnUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+	d.Partial(true)
+
 	gwName := d.Get("gw_name").(string)
 	connName := d.Get("conn_name").(string)
 	if d.HasChange("enable_learned_cidrs_approval") {
@@ -282,7 +284,9 @@ func resourceAviatrixVGWConnUpdate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("could not update prepend_as_path: %v", err)
 		}
 	}
-	return nil
+
+	d.Partial(false)
+	return resourceAviatrixVGWConnRead(d, meta)
 }
 
 func resourceAviatrixVGWConnDelete(d *schema.ResourceData, meta interface{}) error {
