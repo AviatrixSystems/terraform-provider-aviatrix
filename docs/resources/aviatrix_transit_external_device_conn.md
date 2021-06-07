@@ -76,7 +76,6 @@ The following arguments are supported:
 * `bgp_local_as_num` - (Optional) BGP local ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
 * `bgp_remote_as_num` - (Optional) BGP remote ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
 * `remote_subnet` - (Optional) Remote CIDRs joined as a string with ','. Required for a 'static' type connection.
-* `local_subnet` - (Optional) Local CIDRs joined as a string with ','.
 
 ~> **NOTE:** To create a BGP over LAN connection with an Azure Transit Gateway, the Transit Gateway must have it's 'enable_bgp_over_lan' attribute set to true.
 

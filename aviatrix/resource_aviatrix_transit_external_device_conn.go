@@ -93,12 +93,6 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "Remote CIDRs joined as a string with ','. Required for a 'static' type connection.",
 			},
-			"local_subnet": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Local CIDRs joined as a string with ','.",
-			},
 			"direct_connect": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -351,7 +345,6 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		ConnectionType:         d.Get("connection_type").(string),
 		RemoteGatewayIP:        d.Get("remote_gateway_ip").(string),
 		RemoteSubnet:           d.Get("remote_subnet").(string),
-		LocalSubnet:            d.Get("local_subnet").(string),
 		PreSharedKey:           d.Get("pre_shared_key").(string),
 		LocalTunnelCidr:        d.Get("local_tunnel_cidr").(string),
 		RemoteTunnelCidr:       d.Get("remote_tunnel_cidr").(string),
@@ -433,8 +426,8 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		externalDeviceConn.EnableEdgeSegmentation = "true"
 	}
 
-	if externalDeviceConn.ConnectionType == "bgp" && (externalDeviceConn.RemoteSubnet != "" || externalDeviceConn.LocalSubnet != "") {
-		return fmt.Errorf("'remote_subnet' and 'local_subnet' are valid for connection type of 'static' not 'bgp'")
+	if externalDeviceConn.ConnectionType == "bgp" && externalDeviceConn.RemoteSubnet != "" {
+		return fmt.Errorf("'remote_subnet' is needed for connection type of 'static' not 'bgp'")
 	} else if externalDeviceConn.ConnectionType == "static" && (externalDeviceConn.BgpLocalAsNum != 0 || externalDeviceConn.BgpRemoteAsNum != 0) {
 		return fmt.Errorf("'bgp_local_as_num' and 'bgp_remote_as_num' are needed for connection type of 'bgp' not 'static'")
 	}
@@ -682,7 +675,6 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 			}
 		} else {
 			d.Set("remote_subnet", conn.RemoteSubnet)
-			d.Set("local_subnet", conn.LocalSubnet)
 		}
 		if conn.DirectConnect == "enabled" {
 			d.Set("direct_connect", true)
@@ -889,28 +881,10 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 
 		err := client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
-			return fmt.Errorf("failed to update transit external device conn phase 1 remote identifier: %s", err)
+			return fmt.Errorf("failed to update Site2Cloud phase 1 remote identifier: %s", err)
 		}
 	}
 
-	if d.HasChange("local_subnet") {
-		if d.Get("connection_type").(string) == "bgp" && d.Get("local_subnet").(string) != "" {
-			return fmt.Errorf("'local_subnet' is valid for connection type of 'static' not 'bgp'")
-		}
-
-		editSite2cloud := &goaviatrix.EditSite2Cloud{
-			GwName:          gwName,
-			VpcID:           d.Get("vpc_id").(string),
-			ConnName:        connName,
-			CloudSubnetCidr: d.Get("local_subnet").(string),
-			NetworkType:     "1",
-		}
-
-		err := client.UpdateSite2Cloud(editSite2cloud)
-		if err != nil {
-			return fmt.Errorf("failed to update transit external device conn local_subnet: %s", err)
-		}
-	}
 	return resourceAviatrixTransitExternalDeviceConnRead(d, meta)
 }
 
