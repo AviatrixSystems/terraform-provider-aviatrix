@@ -191,6 +191,18 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 					return strings.TrimSpace(o) == strings.TrimSpace(n)
 				},
 			},
+			"availability_domain": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Availability domain for OCI.",
+			},
+			"fault_domain": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Fault domain for OCI.",
+			},
 			"firewall_image_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -273,6 +285,8 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		SasUrlConfig:         d.Get("sas_url_config").(string),
 		SasUriLicense:        d.Get("sas_url_license").(string),
 		UserData:             d.Get("user_data").(string),
+		AvailabilityDomain:   d.Get("availability_domain").(string),
+		FaultDomain:          d.Get("fault_domain").(string),
 	}
 
 	if strings.HasPrefix(firewallInstance.FirewallImage, "Palo Alto Networks") {
@@ -409,6 +423,13 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 	}
 	firewallInstance.Tags = tags
 
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.OCIRelatedCloudTypes) && (firewallInstance.AvailabilityDomain == "" || firewallInstance.FaultDomain == "") {
+		return fmt.Errorf("'availability_domain' and 'fault_domain' are required for OCI")
+	}
+	if !goaviatrix.IsCloudType(cloudType, goaviatrix.OCIRelatedCloudTypes) && (firewallInstance.AvailabilityDomain != "" || firewallInstance.FaultDomain != "") {
+		return fmt.Errorf("'availability_domain' and 'fault_domain' are only valid for OCI")
+	}
+
 	instanceID, err := client.CreateFirewallInstance(firewallInstance)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
@@ -533,6 +554,10 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 	}
 	if fI.FirewallImageId != "" && goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 		d.Set("firewall_image_id", fI.FirewallImageId)
+	}
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.OCIRelatedCloudTypes) {
+		d.Set("availability_domain", fI.AvailabilityZone)
+		d.Set("fault_domain", fI.FaultDomain)
 	}
 
 	return nil

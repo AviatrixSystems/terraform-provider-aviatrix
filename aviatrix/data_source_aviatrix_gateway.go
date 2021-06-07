@@ -300,6 +300,16 @@ func dataSourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "The IPSec tunnel down detection time for the gateway.",
 			},
+			"availability_domain": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Availability domain for OCI.",
+			},
+			"fault_domain": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Fault domain for OCI.",
+			},
 		},
 	}
 }
@@ -497,6 +507,11 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 			d.Set("enable_vpc_dns_server", true)
 		} else {
 			d.Set("enable_vpc_dns_server", false)
+		}
+
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
+			d.Set("availability_domain", gw.GatewayZone)
+			d.Set("fault_domain", gw.FaultDomain)
 		}
 
 		peeringHaGateway := &goaviatrix.Gateway{

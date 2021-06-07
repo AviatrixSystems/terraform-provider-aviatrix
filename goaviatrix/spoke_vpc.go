@@ -43,6 +43,8 @@ type SpokeVpc struct {
 	OobManagementSubnet   string `form:"oob_mgmt_subnet,omitempty"`
 	HAOobManagementSubnet string
 	StorageName           string `form:"storage_name"`
+	AvailabilityDomain    string `form:"availability_domain,omitempty"`
+	FaultDomain           string `form:"fault_domain,omitempty"`
 }
 
 func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) error {

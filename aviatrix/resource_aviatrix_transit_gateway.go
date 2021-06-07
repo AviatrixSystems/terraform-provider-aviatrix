@@ -400,6 +400,18 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				ForceNew:    true,
 				Description: "Name of storage account with gateway images. Only valid for Azure China (2048)",
 			},
+			"availability_domain": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Availability domain for OCI.",
+			},
+			"fault_domain": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Fault domain for OCI.",
+			},
 			"eip": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -491,6 +503,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		Subnet:                   d.Get("subnet").(string),
 		EnableHybridConnection:   d.Get("enable_hybrid_connection").(bool),
 		EnableSummarizeCidrToTgw: d.Get("enable_transit_summarize_cidr_to_tgw").(bool),
+		AvailabilityDomain:       d.Get("availability_domain").(string),
+		FaultDomain:              d.Get("fault_domain").(string),
 	}
 
 	enableNAT := d.Get("single_ip_snat").(bool)
@@ -784,6 +798,13 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			return errors.New("error creating transit gateway: adding tags is only supported for AWS (1), Azure (8), AzureGov (32), AWSGov (256), AWSChina (1024) and AzureChina (2048)")
 		}
+	}
+
+	if goaviatrix.IsCloudType(cloudType, goaviatrix.OCIRelatedCloudTypes) && (gateway.AvailabilityDomain == "" || gateway.FaultDomain == "") {
+		return fmt.Errorf("'availability_domain' and 'fault_domain' are required for OCI")
+	}
+	if !goaviatrix.IsCloudType(cloudType, goaviatrix.OCIRelatedCloudTypes) && (gateway.AvailabilityDomain != "" || gateway.FaultDomain != "") {
+		return fmt.Errorf("'availability_domain' and 'fault_domain' are only valid for OCI")
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
@@ -1456,6 +1477,11 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureChina) {
 		d.Set("storage_name", gw.StorageName)
+	}
+
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
+		d.Set("availability_domain", gw.GatewayZone)
+		d.Set("fault_domain", gw.FaultDomain)
 	}
 
 	if gw.HaGw.GwSize == "" {

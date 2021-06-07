@@ -85,3 +85,5 @@ In addition to all arguments above, the following attributes are exported:
 * `vpn_access` - Status of user access through VPN to the container.
 * `vpn_cidr` - VPN CIDR block for the container.
 * `vpn_protocol` - ELB protocol for VPN gateway with ELB enabled.
+* `availability_domain` - Availability domain for OCI.
+* `fault_domain` - Fault domain for OCI.

@@ -412,6 +412,18 @@ func resourceAviatrixGateway() *schema.Resource {
 				ForceNew:    true,
 				Description: "Name of storage account with gateway images. Only valid for Azure China (2048)",
 			},
+			"availability_domain": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Availability domain for OCI.",
+			},
+			"fault_domain": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Fault domain for OCI.",
+			},
 			"eip": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -525,6 +537,8 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		SearchDomains:      d.Get("search_domains").(string),
 		Eip:                d.Get("eip").(string),
 		SaveTemplate:       "no",
+		AvailabilityDomain: d.Get("availability_domain").(string),
+		FaultDomain:        d.Get("fault_domain").(string),
 	}
 
 	err := checkPublicSubnetFilteringConfig(d)
@@ -792,6 +806,13 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			return errors.New("failed to create gateway: adding tags is only supported for AWS (1), Azure (8), AzureGov (32), AWSGov (256), AWSChina (1024) and AzureChina (2048)")
 		}
+	}
+
+	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.OCIRelatedCloudTypes) && (gateway.AvailabilityDomain == "" || gateway.FaultDomain == "") {
+		return fmt.Errorf("'availability_domain' and 'fault_domain' are required for OCI")
+	}
+	if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.OCIRelatedCloudTypes) && (gateway.AvailabilityDomain != "" || gateway.FaultDomain != "") {
+		return fmt.Errorf("'availability_domain' and 'fault_domain' are only valid for OCI")
 	}
 
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)
@@ -1366,6 +1387,11 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
+		d.Set("availability_domain", gw.GatewayZone)
+		d.Set("fault_domain", gw.FaultDomain)
+	}
+
 	if gw.HaGw.GwSize == "" {
 		d.Set("peering_ha_cloud_instance_id", "")
 		d.Set("peering_ha_subnet", "")
@@ -1887,7 +1913,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		deleteHaGw := false
 		changeHaGw := false
 
-		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
 			gw.PeeringHASubnet = d.Get("peering_ha_subnet").(string)
 			if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && newZone != "" {
 				gw.PeeringHASubnet = fmt.Sprintf("%s~~%s~~", newSubnet, newZone)

@@ -266,6 +266,16 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "The IPSec tunnel down detection time for the transit gateway.",
 			},
+			"availability_domain": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Availability domain for OCI.",
+			},
+			"fault_domain": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Fault domain for OCI.",
+			},
 		},
 	}
 }
@@ -447,6 +457,11 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 		if len(tagList) > 0 {
 			d.Set("tag_list", tagList)
 		}
+	}
+
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
+		d.Set("availability_domain", gw.GatewayZone)
+		d.Set("fault_domain", gw.FaultDomain)
 	}
 
 	haGateway := &goaviatrix.Gateway{
