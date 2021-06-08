@@ -11,10 +11,10 @@ import (
 
 func resourceAviatrixCloudnTransitGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAviatrixCloudnTransitGatewayAttachmentCreate,
-		ReadContext:   resourceAviatrixCloudnTransitGatewayAttachmentRead,
-		UpdateContext: resourceAviatrixCloudnTransitGatewayAttachmentUpdate,
-		DeleteContext: resourceAviatrixCloudnTransitGatewayAttachmentDelete,
+		CreateWithoutTimeout: resourceAviatrixCloudnTransitGatewayAttachmentCreate,
+		ReadWithoutTimeout:   resourceAviatrixCloudnTransitGatewayAttachmentRead,
+		UpdateWithoutTimeout: resourceAviatrixCloudnTransitGatewayAttachmentUpdate,
+		DeleteWithoutTimeout: resourceAviatrixCloudnTransitGatewayAttachmentDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
