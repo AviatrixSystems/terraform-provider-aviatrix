@@ -12,9 +12,9 @@ import (
 
 func resourceAviatrixAwsTgwIntraDomainInspection() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAviatrixAwsTgwIntraDomainInspectionCreate,
-		ReadContext:   resourceAviatrixAwsTgwIntraDomainInspectionRead,
-		DeleteContext: resourceAviatrixAwsTgwIntraDomainInspectionDelete,
+		CreateWithoutTimeout: resourceAviatrixAwsTgwIntraDomainInspectionCreate,
+		ReadWithoutTimeout:   resourceAviatrixAwsTgwIntraDomainInspectionRead,
+		DeleteWithoutTimeout: resourceAviatrixAwsTgwIntraDomainInspectionDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

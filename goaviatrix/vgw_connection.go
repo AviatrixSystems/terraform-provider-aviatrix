@@ -21,6 +21,7 @@ type VGWConn struct {
 	VPCId            string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
 	ManualBGPCidrs   []string
 	EventTriggeredHA bool
+	PrependAsPath    string
 }
 
 type VGWConnListResp struct {
@@ -55,6 +56,7 @@ type ConnectionDetail struct {
 	BgpLocalAsNum    string   `json:"bgp_local_asn_number"`
 	ManualBGPCidrs   []string `json:"conn_bgp_manual_advertise_cidrs"`
 	EventTriggeredHA string   `json:"event_triggered_ha"`
+	PrependAsPath    string   `json:"conn_bgp_prepend_as_path"`
 }
 
 type VGWConnEnableAdvertiseTransitCidrResp struct {
@@ -198,7 +200,25 @@ func (c *Client) GetVGWConnDetail(vgwConn *VGWConn) (*VGWConn, error) {
 		vgwConn.BgpLocalAsNum = data.Results.Connections.BgpLocalAsNum
 		vgwConn.ManualBGPCidrs = data.Results.Connections.ManualBGPCidrs
 		vgwConn.EventTriggeredHA = data.Results.Connections.EventTriggeredHA == "enabled"
+		vgwConn.PrependAsPath = data.Results.Connections.PrependAsPath
 		return vgwConn, nil
 	}
 	return nil, ErrNotFound
+}
+
+func (c *Client) EditVgwConnectionASPathPrepend(vgwConn *VGWConn, prependASPath []string) error {
+	action := "edit_transit_connection_as_path_prepend"
+	return c.PostAPI(action, struct {
+		CID            string `form:"CID"`
+		Action         string `form:"action"`
+		GatewayName    string `form:"gateway_name"`
+		ConnectionName string `form:"connection_name"`
+		PrependASPath  string `form:"connection_as_path_prepend"`
+	}{
+		CID:            c.CID,
+		Action:         action,
+		GatewayName:    vgwConn.GwName,
+		ConnectionName: vgwConn.ConnName,
+		PrependASPath:  strings.Join(prependASPath, ","),
+	}, BasicCheck)
 }

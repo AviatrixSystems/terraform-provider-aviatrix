@@ -56,7 +56,7 @@ The following arguments are supported:
 
 * `egress_static_cidrs` - (Optional) List of egress static CIDRs. Egress is required to be enabled. Example: ["1.171.15.184/32", "1.171.15.185/32"]. Available as of provider version R2.19+.
 * `east_west_inspection_excluded_cidrs` - (Optional) Network List Excluded From East-West Inspection. CIDRs to be excluded from inspection. Type: Set(String). Available as of provider version R2.19.2+.
-* `fail_close_enabled` - (Optional) Enable Fail Close. When Fail Close is enabled, FireNet gateway drops all traffic when there are no firewalls attached to the FireNet gateways. Type: Boolean. Default: false. Available as of provider version R2.19.2+.
+* `fail_close_enabled` - (Optional/Computed) Enable Fail Close. When Fail Close is enabled, FireNet gateway drops all traffic when there are no firewalls attached to the FireNet gateways. Type: Boolean. Available as of provider version R2.19.2+.
 * `tgw_segmentation_for_egress_enabled` - (Optional) Enable TGW segmentation for egress. Valid values: true or false. Default value: false. Available as of provider version R2.19+.
 * `hashing_algorithm` - (Optional) Hashing algorithm to load balance traffic across the firewall. Valid values: "2-Tuple", "5-Tuple". Default value: "5-Tuple".
 * `keep_alive_via_lan_interface_enabled` - (Optional) Enable Keep Alive via Firewall LAN Interface. Valid values: true or false. Default value: false. Available as of provider version R2.18.1+.

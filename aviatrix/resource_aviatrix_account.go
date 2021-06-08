@@ -13,10 +13,10 @@ import (
 
 func resourceAviatrixAccount() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAviatrixAccountCreate,
-		ReadContext:   resourceAviatrixAccountRead,
-		UpdateContext: resourceAviatrixAccountUpdate,
-		DeleteContext: resourceAviatrixAccountDelete,
+		CreateWithoutTimeout: resourceAviatrixAccountCreate,
+		ReadWithoutTimeout:   resourceAviatrixAccountRead,
+		UpdateWithoutTimeout: resourceAviatrixAccountUpdate,
+		DeleteWithoutTimeout: resourceAviatrixAccountDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

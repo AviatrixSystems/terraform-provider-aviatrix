@@ -11,10 +11,10 @@ import (
 
 func resourceAviatrixControllerCertDomainConfig() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAviatrixControllerCertDomainConfigCreate,
-		ReadContext:   resourceAviatrixControllerCertDomainConfigRead,
-		UpdateContext: resourceAviatrixControllerCertDomainConfigUpdate,
-		DeleteContext: resourceAviatrixControllerCertDomainConfigDelete,
+		CreateWithoutTimeout: resourceAviatrixControllerCertDomainConfigCreate,
+		ReadWithoutTimeout:   resourceAviatrixControllerCertDomainConfigRead,
+		UpdateWithoutTimeout: resourceAviatrixControllerCertDomainConfigUpdate,
+		DeleteWithoutTimeout: resourceAviatrixControllerCertDomainConfigDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
