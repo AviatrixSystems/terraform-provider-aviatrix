@@ -55,7 +55,7 @@ func (c *Client) GetTags(tags *Tags) ([]string, error) {
 		"resource_name": tags.ResourceName,
 	}
 	var resp TagAPIResp
-	err := c.GetAPI(&resp, data["Action"], data, BasicCheck)
+	err := c.GetAPI(&resp, data["action"], data, BasicCheck)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func (c *Client) GetTagsMap(tags *Tags) (map[string]string, error) {
 	}
 
 	var resp TagAPIResp
-	err := c.GetAPI(&resp, data["Action"], data, BasicCheck)
+	err := c.GetAPI(&resp, data["action"], data, BasicCheck)
 	if err != nil {
 		return nil, err
 	}
