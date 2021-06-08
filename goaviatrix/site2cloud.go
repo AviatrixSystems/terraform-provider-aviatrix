@@ -324,33 +324,25 @@ func (c *Client) GetSite2Cloud(site2cloud *Site2Cloud) (*Site2Cloud, error) {
 }
 
 func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for get_site2cloud_conn_detail") + err.Error())
+	form := map[string]string{
+		"CID":       c.CID,
+		"action":    "get_site2cloud_conn_detail",
+		"conn_name": site2cloud.TunnelName,
+		"vpc_id":    site2cloud.VpcID,
 	}
-	getSite2CloudConnDetail := url.Values{}
-	getSite2CloudConnDetail.Add("CID", c.CID)
-	getSite2CloudConnDetail.Add("action", "get_site2cloud_conn_detail")
-	getSite2CloudConnDetail.Add("conn_name", site2cloud.TunnelName)
-	getSite2CloudConnDetail.Add("vpc_id", site2cloud.VpcID)
-	Url.RawQuery = getSite2CloudConnDetail.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get get_site2cloud_conn_detail failed: " + err.Error())
+	check := func(action, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "does not exist") {
+				return ErrNotFound
+			}
+			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+		}
+		return nil
 	}
 	var data Site2CloudConnDetailResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode get_site2cloud_conn_detail failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "does not exist") {
-			return nil, ErrNotFound
-		}
-		return nil, errors.New("Rest API get_site2cloud_conn_detail Get failed: " + data.Reason)
+	err := c.GetAPI(&data, form["action"], form, check)
+	if err != nil {
+		return nil, err
 	}
 
 	s2cConnDetail := data.Results.Connections
