@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 
@@ -116,22 +117,25 @@ func (c *Client) GetTransitGatewayPeering(transitGatewayPeering *TransitGatewayP
 }
 
 func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitGatewayPeering) (*TransitGatewayPeering, error) {
-	transitGatewayPeering.CID = c.CID
-	transitGatewayPeering.Action = "get_inter_transit_gateway_peering_details"
-	resp, err := c.Post(c.baseURL, transitGatewayPeering)
-	if err != nil {
-		return nil, errors.New("HTTP POST get_inter_transit_gateway_peering_details failed: " + err.Error())
+	form := map[string]string{
+		"action":   "get_inter_transit_gateway_peering_details",
+		"CID":      c.CID,
+		"gateway1": transitGatewayPeering.TransitGatewayName1,
+		"gateway2": transitGatewayPeering.TransitGatewayName2,
+	}
+	check := func(action, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "does not exist") {
+				return ErrNotFound
+			}
+			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+		}
+		return nil
 	}
 	var data TransitGatewayPeeringDetailsAPIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode get_inter_transit_gateway_peering_details failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return nil, errors.New("Rest API get_inter_transit_gateway_peering_details Get failed: " + data.Reason)
+	err := c.GetAPI(&data, form["action"], form, check)
+	if err != nil {
+		return nil, err
 	}
 
 	transitGatewayPeering.Gateway1ExcludedCIDRsSlice = data.Results.Site1.ExcludedCIDRs
