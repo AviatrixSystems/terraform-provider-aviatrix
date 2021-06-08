@@ -194,12 +194,14 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 			"availability_domain": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    true,
 				Description: "Availability domain for OCI.",
 			},
 			"fault_domain": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    true,
 				Description: "Fault domain for OCI.",
 			},
