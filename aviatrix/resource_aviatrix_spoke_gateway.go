@@ -272,6 +272,20 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				ForceNew:    true,
 				Description: "Name of storage account with gateway images. Only valid for Azure China (2048)",
 			},
+			"availability_domain": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ForceNew:    true,
+				Description: "Availability domain for OCI.",
+			},
+			"fault_domain": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ForceNew:    true,
+				Description: "Fault domain for OCI.",
+			},
 			"eip": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -356,12 +370,14 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	client := meta.(*goaviatrix.Client)
 
 	gateway := &goaviatrix.SpokeVpc{
-		CloudType:   d.Get("cloud_type").(int),
-		AccountName: d.Get("account_name").(string),
-		GwName:      d.Get("gw_name").(string),
-		VpcSize:     d.Get("gw_size").(string),
-		Subnet:      d.Get("subnet").(string),
-		HASubnet:    d.Get("ha_subnet").(string),
+		CloudType:          d.Get("cloud_type").(int),
+		AccountName:        d.Get("account_name").(string),
+		GwName:             d.Get("gw_name").(string),
+		VpcSize:            d.Get("gw_size").(string),
+		Subnet:             d.Get("subnet").(string),
+		HASubnet:           d.Get("ha_subnet").(string),
+		AvailabilityDomain: d.Get("availability_domain").(string),
+		FaultDomain:        d.Get("fault_domain").(string),
 	}
 
 	manageTransitGwAttachment := d.Get("manage_transit_gateway_attachment").(bool)
@@ -582,6 +598,13 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			return errors.New("failed to create spoke gateway: adding tags is only supported for AWS (1), Azure (8), AzureGov (32), AWSGov (256), AWSChina (1024) or AzureChina (2048)")
 		}
+	}
+
+	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.OCIRelatedCloudTypes) && (gateway.AvailabilityDomain == "" || gateway.FaultDomain == "") {
+		return fmt.Errorf("'availability_domain' and 'fault_domain' are required for OCI")
+	}
+	if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.OCIRelatedCloudTypes) && (gateway.AvailabilityDomain != "" || gateway.FaultDomain != "") {
+		return fmt.Errorf("'availability_domain' and 'fault_domain' are only valid for OCI")
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Spoke Gateway: %#v", gateway)
@@ -1093,6 +1116,11 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureChina) {
 		d.Set("storage_name", gw.StorageName)
+	}
+
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
+		d.Set("availability_domain", gw.GatewayZone)
+		d.Set("fault_domain", gw.FaultDomain)
 	}
 
 	if gw.HaGw.GwSize == "" {

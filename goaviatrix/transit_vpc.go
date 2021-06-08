@@ -55,6 +55,8 @@ type TransitVpc struct {
 	HAOobManagementSubnet        string
 	EnableSummarizeCidrToTgw     bool
 	StorageName                  string `form:"storage_name,omitempty"`
+	AvailabilityDomain           string `form:"availability_domain,omitempty"`
+	FaultDomain                  string `form:"fault_domain,omitempty"`
 }
 
 type TransitGatewayAdvancedConfig struct {

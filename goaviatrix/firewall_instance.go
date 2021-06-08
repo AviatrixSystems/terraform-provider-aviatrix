@@ -55,6 +55,8 @@ type FirewallInstance struct {
 	UserData             string          `form:"user_data,omitempty" json:"user_data,omitempty"`
 	TagsMessage          json.RawMessage `json:"usr_tags"`
 	Tags                 map[string]string
+	AvailabilityDomain   string `form:"availability_domain,omitempty"`
+	FaultDomain          string `form:"fault_domain,omitempty" json:"fault_domain"`
 }
 
 type FirewallInstanceResp struct {
@@ -147,6 +149,12 @@ func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (str
 		tagListStr := strings.Join(tagList, ",")
 		addFirewallInstance.Add("tag_string", tagListStr)
 	}
+	if firewallInstance.AvailabilityDomain != "" && firewallInstance.FaultDomain != "" {
+		addFirewallInstance.Add("cloud_type", strconv.Itoa(OCI))
+		addFirewallInstance.Add("availability_domain", firewallInstance.AvailabilityDomain)
+		addFirewallInstance.Add("fault_domain", firewallInstance.FaultDomain)
+	}
+
 	Url.RawQuery = addFirewallInstance.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
