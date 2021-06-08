@@ -27,6 +27,22 @@ resource "aviatrix_transit_external_device_conn" "test" {
 }
 ```
 ```hcl
+# Create an Aviatrix Transit External Device Connection with Connection AS Path Prepend set
+resource "aviatrix_transit_external_device_conn" "test" {
+  vpc_id            = "vpc-abcd1234"
+  connection_name   = "my_conn"
+  gw_name           = "transitGw"
+  connection_type   = "bgp"
+  bgp_local_as_num  = "123"
+  bgp_remote_as_num = "345"
+  remote_gateway_ip = "172.12.13.14"
+  prepend_as_path  = [
+    "123",
+    "123"
+  ]
+}
+```
+```hcl
 # Create a BGP over LAN Aviatrix Transit External Device Connection with an Azure Transit Gateway
 resource "aviatrix_transit_external_device_conn" "ex-conn" {
   vpc_id            = aviatrix_transit_gateway.transit-gateway.vpc_id
@@ -122,7 +138,8 @@ The following arguments are supported:
 * `manual_bgp_advertised_cidrs` - (Optional) Configure manual BGP advertised CIDRs for this connection. Only valid with 'connection_type'= 'bgp'. Available as of provider version R2.18+.
 * `enable_event_triggered_ha` - (Optional) Enable Event Triggered HA. Default value: false. Valid values: true or false. Available as of provider version R2.19+.
 * `phase1_remote_identifier` - (Optional) Phase 1 remote identifier of the IPsec tunnel. This can be configured to be either the public IP address or the private IP address of the peer terminating the IPsec tunnel. Example: ["1.2.3.4"] when HA is disabled, ["1.2.3.4", "5.6.7.8"] when HA is enabled. Available as of provider version R2.19+.
-
+* `prepend_as_path` - (Optional) Connection AS Path Prepend customized by specifying AS PATH for a BGP connection. Available as of provider version R2.19.2.
+  
 ## Import
 
 **transit_external_device_conn** can be imported using the `connection_name` and `vpc_id`, e.g.
