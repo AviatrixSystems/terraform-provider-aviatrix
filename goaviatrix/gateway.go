@@ -182,6 +182,8 @@ type Gateway struct {
 	PsfDetails                      PublicSubnetFilteringGatewayDetails `json:"psf_details"`
 	BundleVpcInfo                   BundleVpcInfo                       `json:"bundle_vpc_info"`
 	HaGw                            HaGateway                           `json:"hagw_details"`
+	AvailabilityDomain              string                              `form:"availability_domain,omitempty"`
+	FaultDomain                     string                              `form:"fault_domain,omitempty" json:"fault_domain"`
 }
 
 type HaGateway struct {
