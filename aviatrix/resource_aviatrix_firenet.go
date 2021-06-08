@@ -142,8 +142,8 @@ func resourceAviatrixFireNet() *schema.Resource {
 			"fail_close_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
-				Description: "Enable Fail Close. When Fail Close is enabled, FireNet gateway drops all traffic when there are no firewalls attached to the FireNet gateways. Type: Boolean. Default: false. Available as of provider version R2.19.2+.",
+				Computed:    true,
+				Description: "Enable Fail Close. When Fail Close is enabled, FireNet gateway drops all traffic when there are no firewalls attached to the FireNet gateways. Type: Boolean. Available as of provider version R2.19.2+.",
 			},
 			"east_west_inspection_excluded_cidrs": {
 				Type:        schema.TypeSet,
@@ -723,13 +723,6 @@ func resourceAviatrixFireNetDelete(d *schema.ResourceData, meta interface{}) err
 		err := client.DisableTgwSegmentationForEgress(fireNet)
 		if err != nil {
 			return fmt.Errorf("failed to disable tgw segmentation for egress: %v", err)
-		}
-	}
-
-	if d.Get("fail_close_enabled").(bool) {
-		err := client.DisableFirenetFailClose(fireNet)
-		if err != nil {
-			return fmt.Errorf("failed to disable fail close during firenet destroy: %v", err)
 		}
 	}
 
