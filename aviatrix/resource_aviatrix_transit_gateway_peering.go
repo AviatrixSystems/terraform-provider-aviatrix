@@ -233,8 +233,12 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 	if transitGwName1 == "" || transitGwName2 == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no transit gateway names received. Import Id is %s", id)
-		d.Set("transit_gateway_name1", strings.Split(id, "~")[0])
-		d.Set("transit_gateway_name2", strings.Split(id, "~")[1])
+		parts := strings.Split(id, "~")
+		if len(parts) != 2 {
+			return fmt.Errorf("invalid import id expected transit_gateway_name1~transit_gateway_name2")
+		}
+		d.Set("transit_gateway_name1", parts[0])
+		d.Set("transit_gateway_name2", parts[1])
 		d.SetId(id)
 	}
 
@@ -243,16 +247,11 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 		TransitGatewayName2: d.Get("transit_gateway_name2").(string),
 	}
 
-	err := client.GetTransitGatewayPeering(transitGatewayPeering)
-	if err != nil {
-		if err == goaviatrix.ErrNotFound {
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("couldn't find Aviatrix Transit Gateway peering: %s", err)
+	transitGatewayPeering, err := client.GetTransitGatewayPeeringDetails(transitGatewayPeering)
+	if err == goaviatrix.ErrNotFound {
+		d.SetId("")
+		return nil
 	}
-
-	transitGatewayPeering, err = client.GetTransitGatewayPeeringDetails(transitGatewayPeering)
 	if err != nil {
 		return fmt.Errorf("could not get transit peering details: %v", err)
 	}
