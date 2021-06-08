@@ -3,9 +3,9 @@ package aviatrix
 import (
 	"context"
 	"fmt"
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"strings"
 
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
