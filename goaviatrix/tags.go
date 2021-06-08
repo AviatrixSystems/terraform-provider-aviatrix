@@ -55,7 +55,7 @@ func (c *Client) GetTags(tags *Tags) ([]string, error) {
 		"resource_name": tags.ResourceName,
 	}
 	var resp TagAPIResp
-	err := c.GetAPI(&resp, data["Action"], data, BasicCheck)
+	err := c.GetAPI(&resp, data["action"], data, BasicCheck)
 	if err != nil {
 		return nil, err
 	}
@@ -70,26 +70,6 @@ func (c *Client) GetTags(tags *Tags) ([]string, error) {
 	}
 
 	return tagList, nil
-}
-
-func (c *Client) GetTagsMap(tags *Tags) (map[string]string, error) {
-	data := map[string]string{
-		"action":        "list_resource_tags",
-		"CID":           c.CID,
-		"cloud_type":    strconv.Itoa(tags.CloudType),
-		"resource_type": tags.ResourceType,
-		"resource_name": tags.ResourceName,
-	}
-
-	var resp TagAPIResp
-	err := c.GetAPI(&resp, data["Action"], data, BasicCheck)
-	if err != nil {
-		return nil, err
-	}
-	if tagsMap, ok := resp.Results["usr_tags"]; ok {
-		return tagsMap, nil
-	}
-	return nil, nil
 }
 
 func (c *Client) DeleteTags(tags *Tags) error {
