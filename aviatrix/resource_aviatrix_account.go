@@ -356,8 +356,8 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWS) && (awsIam || account.AwsAccountNumber != "" || account.AwsRoleEc2 != "" || account.AwsRoleApp != "" || account.AwsAccessKey != "" || account.AwsSecretKey != "" || account.AwsGatewayRoleEc2 != "" || account.AwsGatewayRoleApp != "") {
-		return diag.Errorf("could not create Aviatrix Account: 'aws_iam', 'aws_account_number', 'aws_role_app', aws_role_ec2', 'aws_access_key', 'aws_secret_key', 'aws_gateway_role_app' and 'aws_gateway_role_ec2' can only be set when 'cloud_type' is AWS (1)")
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWS) && (awsIam || account.AwsAccountNumber != "" || account.AwsRoleEc2 != "" || account.AwsRoleApp != "" || account.AwsAccessKey != "" || account.AwsSecretKey != "") {
+		return diag.Errorf("could not create Aviatrix Account: 'aws_iam', 'aws_account_number', 'aws_role_app', aws_role_ec2', 'aws_access_key' and 'aws_secret_key' can only be set when 'cloud_type' is AWS (1)")
 	}
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.GCP) && (account.GcloudProjectName != "" || account.GcloudProjectCredentialsFilepathLocal != "") {
 		return diag.Errorf("could not create Aviatrix Account: 'gcloud_project_id' and 'gcloud_project_credentials_filepath' can only be set when 'cloud_type' is GCP (4)")
@@ -737,8 +737,8 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWS) && (awsIam || account.AwsAccountNumber != "" || account.AwsRoleEc2 != "" || account.AwsRoleApp != "" || account.AwsAccessKey != "" || account.AwsSecretKey != "" || account.AwsGatewayRoleEc2 != "" || account.AwsGatewayRoleApp != "") {
-		return diag.Errorf("could not update Aviatrix Account: 'aws_iam', 'aws_account_number', 'aws_role_app', aws_role_ec2', 'aws_access_key', 'aws_secret_key', 'aws_gateway_role_app' and 'aws_gateway_role_ec2' can only be set when 'cloud_type' is AWS (1)")
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWS) && (awsIam || account.AwsAccountNumber != "" || account.AwsRoleEc2 != "" || account.AwsRoleApp != "" || account.AwsAccessKey != "" || account.AwsSecretKey != "") {
+		return diag.Errorf("could not update Aviatrix Account: 'aws_iam', 'aws_account_number', 'aws_role_app', aws_role_ec2', 'aws_access_key' and 'aws_secret_key' can only be set when 'cloud_type' is AWS (1)")
 	}
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.GCP) && (account.GcloudProjectName != "" || account.GcloudProjectCredentialsFilepathLocal != "") {
 		return diag.Errorf("could not update Aviatrix Account: 'gcloud_project_id' and 'gcloud_project_credentials_filepath' can only be set when 'cloud_type' is GCP (4)")
