@@ -22,6 +22,10 @@ resource "aviatrix_vgw_conn" "test_vgw_conn" {
   bgp_vgw_account  = "dev-account-1"  
   bgp_vgw_region   = "us-east-1"
   bgp_local_as_num = "65001"
+  prepend_as_path  = [
+    "65001",
+    "65001"
+  ]
 }
 ```
 
@@ -42,6 +46,7 @@ The following arguments are supported:
 * `enable_learned_cidrs_approval` - (Optional) Enable learned CIDRs approval for the connection. Requires the transit_gateway's 'learned_cidrs_approval_mode' attribute be set to 'connection'. Valid values: true, false. Default value: false. Available as of provider version R2.18+.
 * `manual_bgp_advertised_cidrs` - (Optional) Configure manual BGP advertised CIDRs for this connection. Available as of provider version R2.18+.
 * `enable_event_triggered_ha` - (Optional) Enable Event Triggered HA. Default value: false. Valid values: true or false. Available as of provider version R2.19+.
+* `prepend_as_path` - (Optional) Connection AS Path Prepend customized by specifying AS PATH for a BGP connection. Available as of provider version R2.19.2.
 
 The following arguments are deprecated:
 
