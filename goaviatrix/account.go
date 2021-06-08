@@ -215,22 +215,7 @@ func (c *Client) CreateAWSC2SAccount(account *Account) error {
 		},
 	}
 
-	resp, err := c.PostFile(c.baseURL, params, files)
-	if err != nil {
-		return errors.New("HTTP Post setup_account_profile failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode setup_account_profile failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API setup_account_profile Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostFileAPI(params, files, BasicCheck)
 }
 
 func (c *Client) CreateAWSSC2SAccount(account *Account) error {
@@ -261,22 +246,7 @@ func (c *Client) CreateAWSSC2SAccount(account *Account) error {
 		},
 	}
 
-	resp, err := c.PostFile(c.baseURL, params, files)
-	if err != nil {
-		return errors.New("HTTP Post setup_account_profile failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode setup_account_profile failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API setup_account_profile Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostFileAPI(params, files, BasicCheck)
 }
 
 func (c *Client) GetAccount(account *Account) (*Account, error) {
@@ -411,22 +381,7 @@ func (c *Client) UpdateAWSC2SAccount(account *Account, fileChanges map[string]bo
 		params["aws_ca_cert_path"] = account.AwsCaCertPath
 	}
 
-	resp, err := c.PostFile(c.baseURL, params, files)
-	if err != nil {
-		return errors.New("HTTP Post edit_account_profile failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_account_profile failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API edit_account_profile Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostFileAPI(params, files, BasicCheck)
 }
 
 func (c *Client) UpdateAWSSC2SAccount(account *Account, fileChanges map[string]bool) error {
@@ -470,22 +425,7 @@ func (c *Client) UpdateAWSSC2SAccount(account *Account, fileChanges map[string]b
 		params["aws_ca_cert_path"] = account.AwsCaCertPath
 	}
 
-	resp, err := c.PostFile(c.baseURL, params, files)
-	if err != nil {
-		return errors.New("HTTP Post edit_account_profile failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_account_profile failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API edit_account_profile Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostFileAPI(params, files, BasicCheck)
 }
 
 func (c *Client) DeleteAccount(account *Account) error {
