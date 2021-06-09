@@ -582,7 +582,7 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 		} else {
 			if len(egressStaticCidrs) > 0 {
 				return fmt.Errorf("'egress_static_cidrs' must be empty before disabling egress")
-			} else if len(egressStaticCidrs) == 0 {
+			} else if d.HasChange("egress_static_cidrs") && len(egressStaticCidrs) == 0 {
 				err := client.EditFirenetEgressStaticCidr(fn)
 				if err != nil {
 					return fmt.Errorf("could not disable egress static cidrs: %v", err)
