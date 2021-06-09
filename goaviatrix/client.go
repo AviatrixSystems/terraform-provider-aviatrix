@@ -220,31 +220,11 @@ func decodeAndCheckAPIResp(resp *http.Response, action string, checkFunc CheckAP
 // First, we decode into the generic APIResp struct, then check for errors
 // If no errors, we will decode into the user defined structure that is passed in
 func (c *Client) GetAPI(v interface{}, action string, d map[string]string, checkFunc CheckAPIResponseFunc) error {
-	Url, err := c.urlEncode(d)
-	if err != nil {
-		return fmt.Errorf("could not url encode values for action %q: %v", action, err)
-	}
-	resp, err := c.Get(Url, nil)
-	if err != nil {
-		return fmt.Errorf("HTTP Get %s failed: %v", action, err)
-	}
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	var data APIResp
-	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
-		return fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
-	}
-	if err := checkFunc(action, data.Reason, data.Return); err != nil {
-		return err
-	}
-	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&v); err != nil {
-		return fmt.Errorf("Json Decode failed: %v\n Body: %s", err, bodyString)
-	}
-	return nil
+	return c.GetAPIContext(context.Background(), v, action, d, checkFunc)
 }
 
 // GetAPIContext makes a GET request to the Aviatrix API
+// If the GET request fails we will retry
 // First, we decode into the generic APIResp struct, then check for errors
 // If no errors, we will decode into the user defined structure that is passed in
 func (c *Client) GetAPIContext(ctx context.Context, v interface{}, action string, d map[string]string, checkFunc CheckAPIResponseFunc) error {
@@ -252,10 +232,30 @@ func (c *Client) GetAPIContext(ctx context.Context, v interface{}, action string
 	if err != nil {
 		return fmt.Errorf("could not url encode values for action %q: %v", action, err)
 	}
-	resp, err := c.GetContext(ctx, Url, nil)
-	if err != nil {
-		return fmt.Errorf("HTTP Get %s failed: %v", action, err)
+
+	try, maxTries, backoff := 0, 5, 500*time.Millisecond
+	var resp *http.Response
+	for {
+		try++
+		resp, err = c.GetContext(ctx, Url, nil)
+		if err == nil {
+			break
+		}
+
+		log.WithFields(log.Fields{
+			"try":    try,
+			"action": action,
+			"err":    err.Error(),
+		}).Warnf("HTTP GET request failed")
+
+		if try == maxTries {
+			return fmt.Errorf("HTTP Get %s failed: %v", action, err)
+		}
+		time.Sleep(backoff)
+		// Double the backoff time after each failed try
+		backoff *= 2
 	}
+
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
 	bodyString := buf.String()
@@ -476,29 +476,7 @@ func (c *Client) Do(verb string, req interface{}) (*http.Response, []byte, error
 // Request makes an HTTP request with the given interface being encoded as
 // form data.
 func (c *Client) Request(verb string, path string, i interface{}) (*http.Response, error) {
-	log.Tracef("%s %s", verb, path)
-	var req *http.Request
-	var err error
-	if i != nil {
-		buf := new(bytes.Buffer)
-		if err = form.NewEncoder(buf).Encode(i); err != nil {
-			return nil, err
-		}
-		body := buf.String()
-		log.Tracef("%s %s Body: %s", verb, path, body)
-		reader := strings.NewReader(body)
-		req, err = http.NewRequest(verb, path, reader)
-		if err == nil {
-			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		}
-	} else {
-		req, err = http.NewRequest(verb, path, nil)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-	return c.HTTPClient.Do(req)
+	return c.RequestContext(context.Background(), verb, path, i)
 }
 
 // RequestContext makes an HTTP request with the given interface being encoded as
