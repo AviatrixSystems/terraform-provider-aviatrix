@@ -264,6 +264,8 @@ The following arguments are supported:
 * `peering_ha_insane_mode_az` - (Optional) Region + Availability Zone of subnet being created for Insane Mode-enabled Peering HA Gateway. Required for AWS only if `insane_mode` is set and `peering_ha_subnet` is set. Example: AWS: "us-west-1a".
 * `peering_ha_eip` - (Optional) Public IP address to be assigned to the HA peering instance. Only available for AWS and GCP.
 * `peering_ha_gw_size` - (Optional) Size of the Peering HA Gateway to be created. Required if enabling Peering HA. **NOTE: Please see notes [here](#peering_ha_gw_size-1) in regards to any deltas found in your state with the addition of this argument in R1.8.**
+* `peering_ha_availability_domain` - (Optional) Peering HA gateway availability domain. Required and valid only for OCI. Available as of provider version R2.19.2.
+* `peering_ha_fault_domain` - (Optional) Peering HA gateway fault domain. Required and valid only for OCI. Available as of provider version R2.19.2.
 
 ### Insane Mode
 * `insane_mode` - (Optional) Enable [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) for Gateway. Insane Mode gateway size must be at least c5 series (AWS) or Standard_D3_v2 (Azure/AzureGov). If enabled, a valid /26 CIDR segment of the VPC must be specified to create a new subnet. Only supported for AWS, AWSGov, Azure or AzureGov.  Valid values: true, false.
