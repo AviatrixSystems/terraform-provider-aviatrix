@@ -426,6 +426,18 @@ func resourceAviatrixGateway() *schema.Resource {
 				ForceNew:    true,
 				Description: "Fault domain for OCI.",
 			},
+			"peering_ha_availability_domain": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Peering HA availability domain for OCI.",
+			},
+			"peering_ha_fault_domain": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Peering HA fault domain for OCI.",
+			},
 			"eip": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -740,6 +752,9 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	peeringHaGwSize := d.Get("peering_ha_gw_size").(string)
 	peeringHaSubnet := d.Get("peering_ha_subnet").(string)
 	peeringHaZone := d.Get("peering_ha_zone").(string)
+	peeringHaAvailabilityDomain := d.Get("peering_ha_availability_domain").(string)
+	peeringHaFaultDomain := d.Get("peering_ha_fault_domain").(string)
+
 	if peeringHaZone != "" && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) && !d.Get("enable_public_subnet_filtering").(bool) {
 		return fmt.Errorf("'peering_ha_zone' is only valid for GCP, Azure and Public Subnet Filtering Gateway if enabling Peering HA")
 	}
@@ -754,6 +769,15 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	if peeringHaSubnet == "" && peeringHaZone == "" && peeringHaGwSize != "" {
 		return fmt.Errorf("'peering_ha_gw_size' is only required if enabling Peering HA")
 	}
+	if peeringHaSubnet != "" {
+		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.OCIRelatedCloudTypes) && (peeringHaAvailabilityDomain == "" || peeringHaFaultDomain == "") {
+			return fmt.Errorf("'peering_ha_availability_domain' and 'peering_ha_fault_domain' are required to enable Peering HA on OCI")
+		}
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.OCIRelatedCloudTypes) && (peeringHaAvailabilityDomain != "" || peeringHaFaultDomain != "") {
+			return fmt.Errorf("'peering_ha_availability_domain' and 'peering_ha_fault_domain' are only valid for OCI")
+		}
+	}
+
 	enableDesignatedGw := d.Get("enable_designated_gateway").(bool)
 	if enableDesignatedGw {
 		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
@@ -926,6 +950,8 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			}
 		} else if goaviatrix.IsCloudType(peeringHaGateway.CloudType, goaviatrix.OCIRelatedCloudTypes) {
 			peeringHaGateway.PeeringHASubnet = peeringHaSubnet
+			peeringHaGateway.AvailabilityDomain = peeringHaAvailabilityDomain
+			peeringHaGateway.FaultDomain = peeringHaFaultDomain
 		} else if goaviatrix.IsCloudType(peeringHaGateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			peeringHaGateway.NewZone = peeringHaZone
 			if peeringHaSubnet != "" {
@@ -1390,7 +1416,11 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
-		d.Set("availability_domain", gw.GatewayZone)
+		if gw.GatewayZone != "" {
+			d.Set("availability_domain", gw.GatewayZone)
+		} else {
+			d.Set("availability_domain", d.Get("availability_domain").(string))
+		}
 		d.Set("fault_domain", gw.FaultDomain)
 	}
 
@@ -1424,6 +1454,12 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	} else if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
 		d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
 		d.Set("peering_ha_zone", "")
+		if gw.HaGw.GatewayZone != "" {
+			d.Set("peering_ha_availability_domain", gw.HaGw.GatewayZone)
+		} else {
+			d.Set("peering_ha_availability_domain", d.Get("peering_ha_availability_domain").(string))
+		}
+		d.Set("peering_ha_fault_domain", gw.HaGw.FaultDomain)
 	} else if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		d.Set("peering_ha_zone", gw.HaGw.GatewayZone)
 		// only set peering_ha_subnet if the user has explicitly set it.
@@ -1899,7 +1935,8 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 
 	}
 	newHaGwEnabled := false
-	if d.HasChange("peering_ha_subnet") || d.HasChange("peering_ha_zone") || d.HasChange("peering_ha_insane_mode_az") {
+	if d.HasChange("peering_ha_subnet") || d.HasChange("peering_ha_zone") || d.HasChange("peering_ha_insane_mode_az") ||
+		d.HasChange("peering_ha_availability_domain") || d.HasChange("peering_ha_fault_domain") {
 		if d.Get("enable_designated_gateway").(bool) {
 			return fmt.Errorf("can't update HA status for gateway with 'designated_gateway' enabled")
 		}
@@ -1920,13 +1957,27 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && newZone != "" {
 				gw.PeeringHASubnet = fmt.Sprintf("%s~~%s~~", newSubnet, newZone)
 			}
+			peeringHaAvailabilityDomain := d.Get("peering_ha_availability_domain").(string)
+			peeringHaFaultDomain := d.Get("peering_ha_fault_domain").(string)
+			if newSubnet != "" {
+				if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.OCIRelatedCloudTypes) && (peeringHaAvailabilityDomain == "" || peeringHaFaultDomain == "") {
+					return fmt.Errorf("'peering_ha_availability_domain' and 'peering_ha_fault_domain' are required to enable Peering HA on OCI")
+				}
+				if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.OCIRelatedCloudTypes) && (peeringHaAvailabilityDomain != "" || peeringHaFaultDomain != "") {
+					return fmt.Errorf("'peering_ha_availability_domain' and 'peering_ha_fault_domain' are only valid for OCI")
+				}
+			}
+			if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
+				gw.AvailabilityDomain = peeringHaAvailabilityDomain
+				gw.FaultDomain = peeringHaFaultDomain
+			}
 			if oldSubnet == "" && newSubnet != "" {
 				newHaGwEnabled = true
 			} else if oldSubnet != "" && newSubnet == "" {
 				deleteHaGw = true
 			} else if oldSubnet != "" && newSubnet != "" {
 				changeHaGw = true
-			} else if d.HasChange("peering_ha_zone") {
+			} else if d.HasChange("peering_ha_zone") || d.HasChange("peering_ha_availability_domain") || d.HasChange("peering_ha_fault_domain") {
 				changeHaGw = true
 			}
 		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {

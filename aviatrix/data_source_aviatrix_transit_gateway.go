@@ -276,6 +276,16 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Fault domain for OCI.",
 			},
+			"ha_availability_domain": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "HA availability domain for OCI.",
+			},
+			"ha_fault_domain": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "HA fault domain for OCI.",
+			},
 		},
 	}
 }
@@ -487,6 +497,11 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 			d.Set("ha_insane_mode_az", haGw.GatewayZone)
 		} else {
 			d.Set("ha_insane_mode_az", "")
+		}
+
+		if goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
+			d.Set("ha_availability_domain", haGw.GatewayZone)
+			d.Set("ha_fault_domain", haGw.FaultDomain)
 		}
 
 		if haGw.EnablePrivateOob {

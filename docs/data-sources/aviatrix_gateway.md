@@ -87,3 +87,5 @@ In addition to all arguments above, the following attributes are exported:
 * `vpn_protocol` - ELB protocol for VPN gateway with ELB enabled.
 * `availability_domain` - Availability domain for OCI.
 * `fault_domain` - Fault domain for OCI.
+* `peering_ha_availability_domain` - HA gateway availability domain for OCI.
+* `peering_ha_fault_domain` - HA gateway fault domain for OCI.
