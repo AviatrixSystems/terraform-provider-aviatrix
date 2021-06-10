@@ -217,6 +217,26 @@ func dataSourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "The IPSec tunnel down detection time for the spoke gateway.",
 			},
+			"availability_domain": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Availability domain for OCI.",
+			},
+			"fault_domain": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Fault domain for OCI.",
+			},
+			"ha_availability_domain": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "HA availability domain for OCI.",
+			},
+			"ha_fault_domain": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "HA fault domain for OCI.",
+			},
 		},
 	}
 }
@@ -354,6 +374,11 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("transit_gw", "")
 		}
 
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
+			d.Set("availability_domain", gw.GatewayZone)
+			d.Set("fault_domain", gw.FaultDomain)
+		}
+
 		haGateway := &goaviatrix.Gateway{
 			AccountName: d.Get("account_name").(string),
 			GwName:      d.Get("gw_name").(string) + "-hagw",
@@ -377,6 +402,11 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 				d.Set("ha_insane_mode_az", haGw.GatewayZone)
 			} else {
 				d.Set("ha_insane_mode_az", "")
+			}
+
+			if goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
+				d.Set("ha_availability_domain", haGw.GatewayZone)
+				d.Set("ha_fault_domain", haGw.FaultDomain)
 			}
 
 			if haGw.EnablePrivateOob {

@@ -77,3 +77,7 @@ In addition to all arguments above, the following attributes are exported:
 * `ha_oob_management_subnet` - HA OOB management subnet.
 * `ha_oob_availability_zone` - HA OOB availability zone.
 * `enable_multi_tier_transit` - Status of multi-tier transit mode on transit gateway.
+* `availability_domain` - Availability domain for OCI.
+* `fault_domain` - Fault domain for OCI.
+* `ha_availability_domain` - HA gateway availability domain for OCI.
+* `ha_fault_domain` - HA gateway fault domain for OCI.
