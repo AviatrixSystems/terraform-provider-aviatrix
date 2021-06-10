@@ -1,4 +1,30 @@
-## 2.19.1 (Unreleased)
+## 2.19.2 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.4.2664**
+- Supported Terraform version: **v0.12.x**, **v0.13.x**, **v0.14.x** and **v0.15.x**
+
+### Features:
+#### Firewall Network
+1. Implemented support for the following attributes for OCI in **aviatrix_firewall_instance**:
+- ``availability_domain``
+- ``fault_domain``
+
+#### Gateway
+1. Implemented support for the following attributes for OCI in **aviatrix_gateway** and data source:
+- ``availability_domain``
+- ``fault_domain``
+- ``peering_ha_availability_domain``
+- ``peering_ha_fault_domain``
+
+#### Multi-Cloud Transit
+1. Implemented support for the following attributes for OCI in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** and data source:
+- ``availability_domain``
+- ``fault_domain``
+- ``ha_availability_domain``
+- ``ha_fault_domain``
+
+
+## 2.19.1 (May 18, 2021)
 ### Notes:
 - Supported Controller version: **UserConnect-6.4.2561**
 - Supported Terraform version: **v0.12.x**, **v0.13.x** and **v0.14.x**
