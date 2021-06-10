@@ -310,6 +310,16 @@ func dataSourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Fault domain for OCI.",
 			},
+			"peering_ha_availability_domain": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Peering HA availability domain for OCI.",
+			},
+			"peering_ha_fault_domain": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Peering HA fault domain for OCI.",
+			},
 		},
 	}
 }
@@ -534,8 +544,12 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
 			} else if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 				d.Set("peering_ha_zone", gwHaGw.GatewayZone)
-			} else if gwHaGw.CloudType == goaviatrix.AliCloud {
+			} else if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.AliCloudRelatedCloudTypes) {
 				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
+			} else if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
+				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
+				d.Set("peering_ha_availability_domain", gwHaGw.GatewayZone)
+				d.Set("peering_ha_fault_domain", gwHaGw.FaultDomain)
 			}
 		}
 
