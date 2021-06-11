@@ -12,10 +12,37 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.19.1 (UserConnect-6.4.2561)``
+``Last updated: R2.19.2 (UserConnect-6.4.2669)``
 
 
 ---
+
+## 2.19.2
+### Notes:
+- Release date: **(10 Jun 2021)**
+- Supported Controller version: **UserConnect-6.4.2669**
+- Supported Terraform version: **v0.12.x**, **v0.13.x**, **v0.14.x** and **v0.15.x**
+
+### Features:
+#### Firewall Network
+1. Implemented support for the following attributes for OCI in **aviatrix_firewall_instance**:
+  - ``availability_domain``
+  - ``fault_domain``
+
+#### Gateway
+1. Implemented support for the following attributes for OCI in **aviatrix_gateway** and data source:
+  - ``availability_domain``
+  - ``fault_domain``
+  - ``peering_ha_availability_domain``
+  - ``peering_ha_fault_domain``
+
+#### Multi-Cloud Transit
+1. Implemented support for the following attributes for OCI in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** and data source:
+  - ``availability_domain``
+  - ``fault_domain``
+  - ``ha_availability_domain``
+  - ``ha_fault_domain``
+
 
 ## 2.19.1
 ### Notes:
@@ -34,7 +61,6 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 ### Bug Fixes:
 1. Fixed crashing issue when creating an **aviatrix_transit_external_device_conn** without ``phase1_remote_identifier``
 2. Fixed an issue where enabling Single IP HA failover for an **aviatrix_site2cloud** with mapped config will read deltas in the ``phase1_remote_identifier`` values
-
 
 
 ## 2.19.0

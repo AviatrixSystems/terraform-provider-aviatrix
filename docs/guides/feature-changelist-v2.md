@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.19.1 (UserConnect-6.4.2561)``
+``Last updated: R2.19.2 (UserConnect-6.4.2669)``
 
 
 ---
@@ -249,3 +249,11 @@ Note there are standalone resources already in place to be used and one only nee
 |(deprecated) | aws_tgw | security_domains, security_domain_name, connected_domains, aviatrix_firewall, native_egress, native_firewall | **Yes**; Please set `manage_security_domain` to false, and use the standalone **aviatrix_aws_tgw_security_domain** and **aviatrix_aws_tgw_security_domain_connection** resources instead. |
 |(deprecated) | gateway, spoke_gateway, transit_gateway | tag_list | **Yes**; Please migrate `tag_list` data values into a map-type format and use `tags` instead. Example: tags = {"key1" = "value1", "key2" = "value2"} |
 |(new) | remote_syslog  | name              | **Yes**; this is a new required attribute introduced in Controller 6.4. For customers who are already managing Remote Syslog in Terraform, please update the config files to include this, and a simple ``terraform apply`` will fix this issue. |
+
+
+## R2.19.2 (UserConnect-6.4.2669)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(new) | gateway        | availability_domain, fault_domain, peering_ha_availability_domain, peering_ha_fault_domain | **Yes**; while existing OCI infrastructure will not be affected due to attribute being computed value, future OCI gateways are required to launch with an `availability_domain` and `fault_domain`. The `peering_ha` variants will be required if the gateways are to HA-enabled. |
+|(new) | spoke_gateway, transit_gateway | availability_domain, fault_domain, ha_availability_domain, ha_fault_domain | **Yes**; while existing OCI infrastructure will not be affected as described above, all future OCI spokes and transit are required to launch with `availability_domain` and `fault_domain` specified. The `ha` variants will be required if the spokes/transits are to be HA-enabled. |
+|(new) | firewall_instance | availability_domain, fault_domain | **Yes**; while existing OCI infrastructure will not be affected as described above, all future OCI firewall instances are required to launch an `availability_domain` and `fault_domain`. |
