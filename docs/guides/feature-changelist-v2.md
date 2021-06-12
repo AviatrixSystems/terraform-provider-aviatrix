@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.19.2 (UserConnect-6.4.2669)``
+``Last updated: R2.19.2 (UserConnect-6.4.2672)``
 
 
 ---
@@ -251,7 +251,7 @@ Note there are standalone resources already in place to be used and one only nee
 |(new) | remote_syslog  | name              | **Yes**; this is a new required attribute introduced in Controller 6.4. For customers who are already managing Remote Syslog in Terraform, please update the config files to include this, and a simple ``terraform apply`` will fix this issue. |
 
 
-## R2.19.2 (UserConnect-6.4.2669)
+## R2.19.2 (UserConnect-6.4.2672)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
 |(new) | gateway        | availability_domain, fault_domain, peering_ha_availability_domain, peering_ha_fault_domain | **Yes**; while existing OCI infrastructure will not be affected due to attribute being computed value, future OCI gateways are required to launch with an `availability_domain` and `fault_domain`. The `peering_ha` variants will be required if the gateways are to HA-enabled. |
