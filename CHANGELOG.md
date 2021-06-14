@@ -23,6 +23,7 @@
 - ``ha_availability_domain``
 - ``ha_fault_domain``
 
+
 ## 2.19.2 (Jun 11, 2021)
 ### Notes:
 - Due to technical issues, 2.19.2 was not released correctly. Please use 2.19.3 instead.
