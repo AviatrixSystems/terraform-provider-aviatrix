@@ -72,8 +72,8 @@ The following arguments are supported:
 * `zone` - (Optional) Availability Zone. Required if creating a Firewall Instance with a Native AWS GWLB-enabled VPC. Applicable to AWS, Azure, and GCP only. Available as of provider version R2.17+.
 * `management_vpc_id` - (Optional) Management VPC ID. Only used for GCP firewall. Required for Palo Alto Networks VM-Series, and required to be empty for Check Point or Fortinet series. Available as of provider version R2.18.1+.
 * `egress_vpc_id` - (Optional) Egress VPC ID. Required for GCP. Available as of provider version R2.18.1+.
-* `availability_domain` - (Optional) Availability domain. Required and valid only for OCI. Available as of provider version R2.19.2.
-* `fault_domain` - (Optional) Fault domain. Required and valid only for OCI. Available as of provider version R2.19.2.
+* `availability_domain` - (Optional) Availability domain. Required and valid only for OCI. Available as of provider version R2.19.3.
+* `fault_domain` - (Optional) Fault domain. Required and valid only for OCI. Available as of provider version R2.19.3.
 
 Valid `firewall_image` values:
 
