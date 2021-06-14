@@ -19,7 +19,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ## 2.19.3
 ### Notes:
-- Release date: **(11 Jun 2021)**
+- Release date: **(14 Jun 2021)**
 - Supported Controller version: **UserConnect-6.4.2672**
 - Supported Terraform version: **v0.12.x**, **v0.13.x**, **v0.14.x** and **v0.15.x**
 
@@ -44,7 +44,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
   - ``ha_fault_domain``
 
 
-## 2.19.2 (Jun 11, 2021)
+## 2.19.2
 ### Notes:
 - Due to technical issues, 2.19.2 was not released correctly. Please use 2.19.3 instead.
 
