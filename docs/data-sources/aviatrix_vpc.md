@@ -57,3 +57,5 @@ In addition to all arguments above, the following attributes are exported:
   * `cidr` - Private subnet CIDR.
   * `name` - Private subnet name.
   * `subnet_id` - Private subnet ID.
+* `availability_domains` - List of OCI availability domains.
+* `fault_domains` - List of OCI fault domains.

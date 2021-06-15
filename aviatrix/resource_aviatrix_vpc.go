@@ -201,6 +201,22 @@ func resourceAviatrixVpc() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"availability_domains": {
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Description: "List of OCI availability domains.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"fault_domains": {
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Description: "List of OCI fault domains.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -521,6 +537,20 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	} else {
 		d.Set("route_tables", []string{})
+	}
+
+	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.OCIRelatedCloudTypes) {
+		availabilityDomains, err := client.ListOciVpcAvailabilityDomains(vC)
+		if err != nil {
+			return fmt.Errorf("could not get OCI availability domains: %v", err)
+		}
+		d.Set("availability_domains", availabilityDomains)
+
+		faultDomains, err := client.ListOciVpcFaultDomains(vC)
+		if err != nil {
+			return fmt.Errorf("could not get OCI fault domains: %v", err)
+		}
+		d.Set("fault_domains", faultDomains)
 	}
 
 	return nil
