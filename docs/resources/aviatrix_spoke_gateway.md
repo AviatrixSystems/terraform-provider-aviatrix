@@ -73,6 +73,8 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_oracle" {
   subnet                            = "10.7.0.0/16"
   enable_active_mesh                = true
   manage_transit_gateway_attachment = false
+  availability_domain               = aviatrix_vpc.oci_vpc.availability_domains[0]
+  fault_domain                      = aviatrix_vpc.oci_vpc.fault_domains[0]
 }
 ```
 ```hcl

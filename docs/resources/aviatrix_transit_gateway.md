@@ -69,14 +69,16 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_azure" {
 ```hcl
 # Create an Aviatrix OCI Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_oracle" {
-  cloud_type         = 16
-  account_name       = "devops-oracle"
-  gw_name            = "avtxgw-oracle"
-  vpc_id             = "vpc-oracle-test"
-  vpc_reg            = "us-ashburn-1"
-  gw_size            = "VM.Standard2.2"
-  subnet             = "10.7.0.0/16"
-  enable_active_mesh = true
+  cloud_type          = 16
+  account_name        = "devops-oracle"
+  gw_name             = "avtxgw-oracle"
+  vpc_id              = "vpc-oracle-test"
+  vpc_reg             = "us-ashburn-1"
+  gw_size             = "VM.Standard2.2"
+  subnet              = "10.7.0.0/16"
+  enable_active_mesh  = true
+  availability_domain = aviatrix_vpc.oci_vpc.availability_domains[0]
+  fault_domain        = aviatrix_vpc.oci_vpc.fault_domains[0]
 }
 ```
 ```hcl

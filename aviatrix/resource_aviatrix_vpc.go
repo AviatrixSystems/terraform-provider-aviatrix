@@ -202,7 +202,7 @@ func resourceAviatrixVpc() *schema.Resource {
 				},
 			},
 			"availability_domains": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Computed:    true,
 				Description: "List of OCI availability domains.",
 				Elem: &schema.Schema{
@@ -210,7 +210,7 @@ func resourceAviatrixVpc() *schema.Resource {
 				},
 			},
 			"fault_domains": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Computed:    true,
 				Description: "List of OCI fault domains.",
 				Elem: &schema.Schema{

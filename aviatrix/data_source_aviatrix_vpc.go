@@ -164,7 +164,7 @@ func dataSourceAviatrixVpc() *schema.Resource {
 				Description: "Azure vnet resource ID.",
 			},
 			"availability_domains": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Computed:    true,
 				Description: "List of OCI availability domains.",
 				Elem: &schema.Schema{
@@ -172,7 +172,7 @@ func dataSourceAviatrixVpc() *schema.Resource {
 				},
 			},
 			"fault_domains": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Computed:    true,
 				Description: "List of OCI fault domains.",
 				Elem: &schema.Schema{

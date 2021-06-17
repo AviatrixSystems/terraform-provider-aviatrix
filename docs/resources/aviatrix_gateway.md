@@ -138,13 +138,15 @@ resource "aviatrix_gateway" "test_gateway_azure" {
 ```hcl
 # Create an Aviatrix Oracle Gateway
 resource "aviatrix_gateway" "test_gateway_oci" {
-  cloud_type   = 16
-  account_name = "devops-oci"
-  gw_name      = "avtx-gw-oci"
-  vpc_id       = "vpc-oracle-test"
-  vpc_reg      = "us-ashburn-1"
-  gw_size      = "VM.Standard2.2"
-  subnet       = "10.7.0.0/16"
+  cloud_type          = 16
+  account_name        = "devops-oci"
+  gw_name             = "avtx-gw-oci"
+  vpc_id              = "vpc-oracle-test"
+  vpc_reg             = "us-ashburn-1"
+  gw_size             = "VM.Standard2.2"
+  subnet              = "10.7.0.0/16"
+  availability_domain = aviatrix_vpc.oci_vpc.availability_domains[0]
+  fault_domain        = aviatrix_vpc.oci_vpc.fault_domains[0]
 }
 ```
 ```hcl
