@@ -62,6 +62,7 @@ func Provider() *schema.Provider {
 			"aviatrix_controller_cert_domain_config":                  resourceAviatrixControllerCertDomainConfig(),
 			"aviatrix_controller_config":                              resourceAviatrixControllerConfig(),
 			"aviatrix_controller_email_exception_notification_config": resourceAviatrixControllerEmailExceptionNotificationConfig(),
+			"aviatrix_controller_gateway_keepalive_config":            resourceAviatrixControllerGatewayKeepaliveConfig(),
 			"aviatrix_controller_private_oob":                         resourceAviatrixControllerPrivateOob(),
 			"aviatrix_copilot_association":                            resourceAviatrixCopilotAssociation(),
 			"aviatrix_datadog_agent":                                  resourceAviatrixDatadogAgent(),
