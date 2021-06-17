@@ -23,14 +23,14 @@ func TestAccAviatrixControllerGatewayKeepaliveConfig_basic(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
-		Providers:    testAccProvidersVersionValidation,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckControllerGatewayKeepaliveConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccControllerGatewayKeepaliveConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControllerGatewayKeepaliveConfigExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "keep_alive_speed", "slow"),
+					resource.TestCheckResourceAttr(resourceName, "keepalive_speed", "slow"),
 				),
 			},
 			{
@@ -45,7 +45,7 @@ func TestAccAviatrixControllerGatewayKeepaliveConfig_basic(t *testing.T) {
 func testAccControllerGatewayKeepaliveConfigBasic() string {
 	return `
 resource "aviatrix_controller_gateway_keepalive_config" "test_gateway_keepalive" {
-	keep_alive_speed = "slow"
+	keepalive_speed = "slow"
 }
 `
 }
@@ -60,7 +60,7 @@ func testAccCheckControllerGatewayKeepaliveConfigExists(n string) resource.TestC
 			return fmt.Errorf("no gateway keepalive config resource ID is set")
 		}
 
-		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		client := testAccProvider.Meta().(*goaviatrix.Client)
 
 		_, err := client.GetGatewayKeepaliveConfig(context.Background())
 		if err != nil {
@@ -76,7 +76,7 @@ func testAccCheckControllerGatewayKeepaliveConfigExists(n string) resource.TestC
 }
 
 func testAccCheckControllerGatewayKeepaliveConfigDestroy(s *terraform.State) error {
-	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	client := testAccProvider.Meta().(*goaviatrix.Client)
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_gateway_keepalive_config" {

@@ -15,7 +15,7 @@ The **aviatrix_controller_gateway_keepalive_config** resource allows management 
 ```hcl
 # Create an Aviatrix Controller Gateway Keepalive config
 resource "aviatrix_controller_gateway_keepalive_config" "test_gateway_keepalive" {
-  keep_alive_speed = "medium"
+  keepalive_speed = "medium"
 }
 ```
 
@@ -25,7 +25,7 @@ resource "aviatrix_controller_gateway_keepalive_config" "test_gateway_keepalive"
 The following arguments are supported:
 
 ### Required
-* `keep_alive_speed` - The gateway keepalive template name. Must be one of "slow", "medium" or "fast". Visit [here](https://docs.aviatrix.com/HowTos/gateway.html#gateway-keepalives) for the complete documentation about the gateway keepalive configuration.
+* `keepalive_speed` - The gateway keepalive template name. Must be one of "slow", "medium" or "fast". Visit [here](https://docs.aviatrix.com/HowTos/gateway.html#gateway-keepalives) for the complete documentation about the gateway keepalive configuration.
 
 ## Import
 

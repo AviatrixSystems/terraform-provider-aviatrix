@@ -12,16 +12,16 @@ import (
 
 func resourceAviatrixControllerGatewayKeepaliveConfig() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceControllerGatewayKeepaliveConfigCreate,
-		ReadContext:   resourceControllerGatewayKeepaliveConfigRead,
-		UpdateContext: resourceControllerGatewayKeepaliveConfigUpdate,
-		DeleteContext: resourceControllerGatewayKeepaliveConfigDelete,
+		CreateWithoutTimeout: resourceControllerGatewayKeepaliveConfigCreate,
+		ReadWithoutTimeout:   resourceControllerGatewayKeepaliveConfigRead,
+		UpdateWithoutTimeout: resourceControllerGatewayKeepaliveConfigUpdate,
+		DeleteWithoutTimeout: resourceControllerGatewayKeepaliveConfigDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"keep_alive_speed": {
+			"keepalive_speed": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateControllerGatewayKeepaliveSpeed,
@@ -34,7 +34,7 @@ func resourceAviatrixControllerGatewayKeepaliveConfig() *schema.Resource {
 func resourceControllerGatewayKeepaliveConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	speed := d.Get("keep_alive_speed").(string)
+	speed := d.Get("keepalive_speed").(string)
 	err := client.SetGatewayKeepaliveConfig(ctx, speed)
 	if err != nil {
 		return diag.Errorf("could not create Controller Gateway Keepalive Config: %v", err)
@@ -60,7 +60,7 @@ func resourceControllerGatewayKeepaliveConfigRead(ctx context.Context, d *schema
 		return diag.Errorf("could not read Controller Gateway Keepalive Config: %v", err)
 	}
 
-	d.Set("keep_alive_speed", speed)
+	d.Set("keepalive_speed", speed)
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
@@ -68,8 +68,8 @@ func resourceControllerGatewayKeepaliveConfigRead(ctx context.Context, d *schema
 func resourceControllerGatewayKeepaliveConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	if d.HasChange("keep_alive_speed") {
-		speed := d.Get("keep_alive_speed").(string)
+	if d.HasChange("keepalive_speed") {
+		speed := d.Get("keepalive_speed").(string)
 		err := client.SetGatewayKeepaliveConfig(ctx, speed)
 		if err != nil {
 			return diag.Errorf("could not update Controller Gateway Keepalive Config: %v", err)
