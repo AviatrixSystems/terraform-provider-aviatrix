@@ -159,6 +159,8 @@ In addition to all arguments above, the following attributes are exported:
   * `cidr` - CIDR block.
   * `name` - Name of this subnet.
   * `subnet_id` - ID of this subnet.  
+* `availability_domains` - List of OCI availability domains.
+* `fault_domains` - List of OCI fault domains.
 
 -> **NOTE:** `subnets` - If created as a FireNet VPC, four public subnets will be created in the following order: subnet for firewall-mgmt in the first zone, subnet for ingress-egress in the first zone, subnet for firewall-mgmt in the second zone, and subnet for ingress-egress in the second zone.
 

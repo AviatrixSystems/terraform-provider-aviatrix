@@ -163,6 +163,22 @@ func dataSourceAviatrixVpc() *schema.Resource {
 				Computed:    true,
 				Description: "Azure vnet resource ID.",
 			},
+			"availability_domains": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "List of OCI availability domains.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"fault_domains": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "List of OCI fault domains.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -297,6 +313,20 @@ func dataSourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		if err := d.Set("route_tables", rtbs); err != nil {
 			log.Printf("[WARN] Error setting route tables for (%s): %s", d.Id(), err)
 		}
+	}
+
+	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.OCIRelatedCloudTypes) {
+		availabilityDomains, err := client.ListOciVpcAvailabilityDomains(vC)
+		if err != nil {
+			return fmt.Errorf("could not get OCI availability domains: %v", err)
+		}
+		d.Set("availability_domains", availabilityDomains)
+
+		faultDomains, err := client.ListOciVpcFaultDomains(vC)
+		if err != nil {
+			return fmt.Errorf("could not get OCI fault domains: %v", err)
+		}
+		d.Set("fault_domains", faultDomains)
 	}
 
 	d.SetId(vC.Name)

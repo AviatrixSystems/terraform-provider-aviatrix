@@ -343,3 +343,53 @@ func (c *Client) DisableNativeAwsGwlbFirenet(vpc *Vpc) error {
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
 }
+
+func (c *Client) ListOciVpcAvailabilityDomains(vpc *Vpc) ([]string, error) {
+	params := map[string]string{
+		"action":       "list_oci_vpc_availability_domains",
+		"CID":          c.CID,
+		"account_name": vpc.AccountName,
+		"region":       vpc.Region,
+		"vpc_id":       vpc.VpcID,
+	}
+
+	type Resp struct {
+		Return  bool     `json:"return"`
+		Results []string `json:"results"`
+	}
+
+	var data Resp
+
+	err := c.GetAPI(&data, params["action"], params, BasicCheck)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return data.Results, nil
+}
+
+func (c *Client) ListOciVpcFaultDomains(vpc *Vpc) ([]string, error) {
+	params := map[string]string{
+		"action":       "list_oci_vpc_fault_domains",
+		"CID":          c.CID,
+		"account_name": vpc.AccountName,
+		"region":       vpc.Region,
+		"vpc_id":       vpc.VpcID,
+	}
+
+	type Resp struct {
+		Return  bool     `json:"return"`
+		Results []string `json:"results"`
+	}
+
+	var data Resp
+
+	err := c.GetAPI(&data, params["action"], params, BasicCheck)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return data.Results, nil
+}
