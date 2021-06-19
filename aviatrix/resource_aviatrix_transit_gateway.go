@@ -1860,7 +1860,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			singleAZGateway.SingleAZ = "disabled"
 		}
 
-		if singleAZGateway.SingleAZ == "enabled" {
+		if singleAZ {
 			log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
 
 			err := client.EnableSingleAZGateway(singleAZGateway)
@@ -1877,7 +1877,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 					return fmt.Errorf("failed to enable single AZ GW HA for %s: %s", singleAZGatewayHA.GwName, err)
 				}
 			}
-		} else if singleAZGateway.SingleAZ == "disabled" {
+		} else {
 			log.Printf("[INFO] Disable Single AZ GW HA: %#v", singleAZGateway)
 			err := client.DisableSingleAZGateway(singleAZGateway)
 			if err != nil {
