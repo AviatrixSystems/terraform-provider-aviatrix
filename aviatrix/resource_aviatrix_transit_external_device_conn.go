@@ -349,7 +349,6 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	client := meta.(*goaviatrix.Client)
 
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-		VpcID:                  d.Get("vpc_id").(string),
 		ConnectionName:         d.Get("connection_name").(string),
 		GwName:                 d.Get("gw_name").(string),
 		ConnectionType:         d.Get("connection_type").(string),
@@ -374,6 +373,17 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		BackupRemoteLanIP:      d.Get("backup_remote_lan_ip").(string),
 		BackupLocalLanIP:       d.Get("backup_local_lan_ip").(string),
 	}
+
+	gateway := &goaviatrix.Gateway{
+		GwName: externalDeviceConn.GwName,
+	}
+
+	gw, err := client.GetGateway(gateway)
+	if err != nil {
+		return fmt.Errorf("couldn't find Aviatrix Transit Gateway: %s", err)
+	}
+
+	externalDeviceConn.VpcID = gw.VpcID
 
 	tunnelProtocol := strings.ToUpper(d.Get("tunnel_protocol").(string))
 	if tunnelProtocol == "IPSEC" {
@@ -647,23 +657,35 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
+	var externalDeviceConn = &goaviatrix.ExternalDeviceConn{}
+
 	connectionName := d.Get("connection_name").(string)
 	vpcID := d.Get("vpc_id").(string)
 	if connectionName == "" || vpcID == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no 'connection_name' or 'vpc_id' received. Import Id is %s", id)
-		parts := strings.Split(id, "~")
-		if len(parts) != 2 {
-			return fmt.Errorf("expected import ID in the form 'connection_name~vpc_id' instead got %q", id)
+		var parts []string
+		if strings.Contains(id, "~-~") {
+			parts = strings.SplitN(id, "~", 2)
+		} else {
+			parts = strings.Split(id, "~")
+			if len(parts) != 2 {
+				return fmt.Errorf("expected import ID in the form 'connection_name~vpc_id' instead got %q", id)
+			}
 		}
-		d.Set("connection_name", parts[0])
-		d.Set("vpc_id", parts[1])
-		d.SetId(id)
-	}
+		externalDeviceConn.VpcID = parts[1]
+		externalDeviceConn.ConnectionName = parts[0]
+	} else {
+		gateway := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
 
-	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-		VpcID:          d.Get("vpc_id").(string),
-		ConnectionName: d.Get("connection_name").(string),
+		gw, err := client.GetGateway(gateway)
+		if err != nil {
+			return fmt.Errorf("couldn't find Aviatrix Transit Gateway: %s", err)
+		}
+		externalDeviceConn.VpcID = gw.VpcID
+		externalDeviceConn.ConnectionName = connectionName
 	}
 
 	conn, err := client.GetExternalDeviceConnDetail(externalDeviceConn)
@@ -678,7 +700,11 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 	}
 
 	if conn != nil {
-		d.Set("vpc_id", conn.VpcID)
+		if strings.Contains(conn.VpcID, "~-~") {
+			d.Set("vpc_id", strings.Split(conn.VpcID, "~-~")[0])
+		} else {
+			d.Set("vpc_id", conn.VpcID)
+		}
 		d.Set("connection_name", conn.ConnectionName)
 		d.Set("gw_name", conn.GwName)
 		d.Set("connection_type", conn.ConnectionType)
@@ -955,13 +981,23 @@ func resourceAviatrixTransitExternalDeviceConnDelete(d *schema.ResourceData, met
 	client := meta.(*goaviatrix.Client)
 
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-		VpcID:          d.Get("vpc_id").(string),
 		ConnectionName: d.Get("connection_name").(string),
 	}
 
+	gateway := &goaviatrix.Gateway{
+		GwName: d.Get("gw_name").(string),
+	}
+
+	gw, err := client.GetGateway(gateway)
+	if err != nil {
+		return fmt.Errorf("couldn't find Aviatrix Transit Gateway: %s", err)
+	}
+
+	externalDeviceConn.VpcID = gw.VpcID
+
 	log.Printf("[INFO] Deleting Aviatrix external device connection: %#v", externalDeviceConn)
 
-	err := client.DeleteExternalDeviceConn(externalDeviceConn)
+	err = client.DeleteExternalDeviceConn(externalDeviceConn)
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix external device connection: %s", err)
 	}
