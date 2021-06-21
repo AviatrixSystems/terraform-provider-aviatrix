@@ -114,6 +114,7 @@ func (c *Client) init(controllerIP string) (*Client, error) {
 
 	if c.HTTPClient == nil {
 		tr := &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: true,
 			},
