@@ -26,7 +26,7 @@ var (
 )
 
 const (
-	AWSRelatedCloudTypes      = AWS | AWSGov | AWSChina
+	AWSRelatedCloudTypes      = AWS | AWSGov | AWSChina | AWSC2S
 	GCPRelatedCloudTypes      = GCP
 	AzureArmRelatedCloudTypes = Azure | AzureGov | AzureChina
 	OCIRelatedCloudTypes      = OCI
