@@ -2051,12 +2051,9 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if d.HasChange("single_az_ha") {
-		haEnabled := false
 		haSubnet := d.Get("peering_ha_subnet").(string)
 		haZone := d.Get("peering_ha_zone").(string)
-		if haSubnet != "" || haZone != "" {
-			haEnabled = true
-		}
+		haEnabled := haSubnet != "" || haZone != ""
 
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName: d.Get("gw_name").(string),
