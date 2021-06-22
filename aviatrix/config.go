@@ -24,6 +24,7 @@ type Config struct {
 //    error (if any)
 func (c *Config) Client() (*goaviatrix.Client, error) {
 	tr := &http.Transport{
+		Proxy:           http.ProxyFromEnvironment,
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client, err := goaviatrix.NewClient(c.Username, c.Password, c.ControllerIP, &http.Client{Transport: tr})
