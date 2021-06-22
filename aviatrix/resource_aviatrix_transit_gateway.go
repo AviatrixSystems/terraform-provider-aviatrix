@@ -1682,36 +1682,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if d.HasChange("single_az_ha") {
-		singleAZGateway := &goaviatrix.Gateway{
-			GwName: d.Get("gw_name").(string),
-		}
-
-		singleAZ := d.Get("single_az_ha").(bool)
-
-		if singleAZ {
-			singleAZGateway.SingleAZ = "enabled"
-		} else {
-			singleAZGateway.SingleAZ = "disabled"
-		}
-
-		if singleAZGateway.SingleAZ == "enabled" {
-			log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
-
-			err := client.EnableSingleAZGateway(singleAZGateway)
-			if err != nil {
-				return fmt.Errorf("failed to enable single AZ GW HA: %s", err)
-			}
-		} else if singleAZGateway.SingleAZ == "disabled" {
-			log.Printf("[INFO] Disable Single AZ GW HA: %#v", singleAZGateway)
-			err := client.DisableSingleAZGateway(singleAZGateway)
-			if err != nil {
-				return fmt.Errorf("failed to disable single AZ GW HA: %s", err)
-			}
-		}
-
-	}
-
 	newHaGwEnabled := false
 	if d.HasChange("ha_subnet") || d.HasChange("ha_zone") || d.HasChange("ha_insane_mode_az") ||
 		(enablePrivateOob && (d.HasChange("ha_oob_management_subnet") || d.HasChange("ha_oob_availability_zone"))) ||
@@ -1868,6 +1838,58 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 
 			newHaGwEnabled = true
+		}
+	}
+
+	if d.HasChange("single_az_ha") {
+		haSubnet := d.Get("ha_subnet").(string)
+		haZone := d.Get("ha_zone").(string)
+		haEnabled := haSubnet != "" || haZone != ""
+
+		singleAZGateway := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+
+		singleAZ := d.Get("single_az_ha").(bool)
+		if singleAZ {
+			singleAZGateway.SingleAZ = "enabled"
+		} else {
+			singleAZGateway.SingleAZ = "disabled"
+		}
+
+		if singleAZ {
+			log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
+
+			err := client.EnableSingleAZGateway(singleAZGateway)
+			if err != nil {
+				return fmt.Errorf("failed to enable single AZ GW HA for %s: %s", singleAZGateway.GwName, err)
+			}
+
+			if haEnabled {
+				singleAZGatewayHA := &goaviatrix.Gateway{
+					GwName: d.Get("gw_name").(string) + "-hagw",
+				}
+				err := client.EnableSingleAZGateway(singleAZGatewayHA)
+				if err != nil {
+					return fmt.Errorf("failed to enable single AZ GW HA for %s: %s", singleAZGatewayHA.GwName, err)
+				}
+			}
+		} else {
+			log.Printf("[INFO] Disable Single AZ GW HA: %#v", singleAZGateway)
+			err := client.DisableSingleAZGateway(singleAZGateway)
+			if err != nil {
+				return fmt.Errorf("failed to disable single AZ GW HA for %s: %s", singleAZGateway.GwName, err)
+			}
+
+			if haEnabled {
+				singleAZGatewayHA := &goaviatrix.Gateway{
+					GwName: d.Get("gw_name").(string) + "-hagw",
+				}
+				err := client.DisableSingleAZGateway(singleAZGatewayHA)
+				if err != nil {
+					return fmt.Errorf("failed to disable single AZ GW HA for %s: %s", singleAZGatewayHA.GwName, err)
+				}
+			}
 		}
 	}
 

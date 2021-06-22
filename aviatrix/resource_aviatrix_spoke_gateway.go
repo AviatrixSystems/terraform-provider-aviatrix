@@ -1315,36 +1315,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			"'aviatrix_spoke_transit_attachment' to attach this spoke to transit gateways")
 	}
 
-	if d.HasChange("single_az_ha") {
-		singleAZGateway := &goaviatrix.Gateway{
-			GwName: d.Get("gw_name").(string),
-		}
-
-		singleAZ := d.Get("single_az_ha").(bool)
-
-		if singleAZ {
-			singleAZGateway.SingleAZ = "enabled"
-		} else {
-			singleAZGateway.SingleAZ = "disabled"
-		}
-
-		if singleAZGateway.SingleAZ == "enabled" {
-			log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
-
-			err := client.EnableSingleAZGateway(singleAZGateway)
-			if err != nil {
-				return fmt.Errorf("failed to enable single AZ GW HA: %s", err)
-			}
-		} else if singleAZGateway.SingleAZ == "disabled" {
-			log.Printf("[INFO] Disable Single AZ GW HA: %#v", singleAZGateway)
-			err := client.DisableSingleAZGateway(singleAZGateway)
-			if err != nil {
-				return fmt.Errorf("failed to disable single AZ GW HA: %s", err)
-			}
-		}
-
-	}
-
 	if d.HasChange("tag_list") || d.HasChange("tags") {
 		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			return fmt.Errorf("error updating spoke gateway: adding tags is only supported for AWS (1), Azure (8), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048) and AWS Top Secret (16384)")
@@ -1551,6 +1521,58 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				}
 			}
 			newHaGwEnabled = true
+		}
+	}
+
+	if d.HasChange("single_az_ha") {
+		haSubnet := d.Get("ha_subnet").(string)
+		haZone := d.Get("ha_zone").(string)
+		haEnabled := haSubnet != "" || haZone != ""
+
+		singleAZGateway := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+
+		singleAZ := d.Get("single_az_ha").(bool)
+		if singleAZ {
+			singleAZGateway.SingleAZ = "enabled"
+		} else {
+			singleAZGateway.SingleAZ = "disabled"
+		}
+
+		if singleAZ {
+			log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
+
+			err := client.EnableSingleAZGateway(singleAZGateway)
+			if err != nil {
+				return fmt.Errorf("failed to enable single AZ GW HA for %s: %s", singleAZGateway.GwName, err)
+			}
+
+			if haEnabled {
+				singleAZGatewayHA := &goaviatrix.Gateway{
+					GwName: d.Get("gw_name").(string) + "-hagw",
+				}
+				err := client.EnableSingleAZGateway(singleAZGatewayHA)
+				if err != nil {
+					return fmt.Errorf("failed to enable single AZ GW HA for %s: %s", singleAZGatewayHA.GwName, err)
+				}
+			}
+		} else {
+			log.Printf("[INFO] Disable Single AZ GW HA: %#v", singleAZGateway)
+			err := client.DisableSingleAZGateway(singleAZGateway)
+			if err != nil {
+				return fmt.Errorf("failed to disable single AZ GW HA for %s: %s", singleAZGateway.GwName, err)
+			}
+
+			if haEnabled {
+				singleAZGatewayHA := &goaviatrix.Gateway{
+					GwName: d.Get("gw_name").(string) + "-hagw",
+				}
+				err := client.DisableSingleAZGateway(singleAZGatewayHA)
+				if err != nil {
+					return fmt.Errorf("failed to disable single AZ GW HA for %s: %s", singleAZGatewayHA.GwName, err)
+				}
+			}
 		}
 	}
 
