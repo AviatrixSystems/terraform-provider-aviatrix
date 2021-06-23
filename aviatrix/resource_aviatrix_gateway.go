@@ -754,6 +754,13 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.OCIRelatedCloudTypes) && (gateway.AvailabilityDomain == "" || gateway.FaultDomain == "") {
+		return fmt.Errorf("'availability_domain' and 'fault_domain' are required for OCI")
+	}
+	if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.OCIRelatedCloudTypes) && (gateway.AvailabilityDomain != "" || gateway.FaultDomain != "") {
+		return fmt.Errorf("'availability_domain' and 'fault_domain' are only valid for OCI")
+	}
+
 	peeringHaGwSize := d.Get("peering_ha_gw_size").(string)
 	peeringHaSubnet := d.Get("peering_ha_subnet").(string)
 	peeringHaZone := d.Get("peering_ha_zone").(string)
@@ -837,13 +844,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			return errors.New("failed to create gateway: adding tags is only supported for AWS (1), Azure (8), AzureGov (32), AWSGov (256), AWSChina (1024) and AzureChina (2048)")
 		}
-	}
-
-	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.OCIRelatedCloudTypes) && (gateway.AvailabilityDomain == "" || gateway.FaultDomain == "") {
-		return fmt.Errorf("'availability_domain' and 'fault_domain' are required for OCI")
-	}
-	if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.OCIRelatedCloudTypes) && (gateway.AvailabilityDomain != "" || gateway.FaultDomain != "") {
-		return fmt.Errorf("'availability_domain' and 'fault_domain' are only valid for OCI")
 	}
 
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)

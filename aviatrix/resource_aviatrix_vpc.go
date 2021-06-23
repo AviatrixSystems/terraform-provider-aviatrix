@@ -551,6 +551,9 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("could not get OCI fault domains: %v", err)
 		}
 		d.Set("fault_domains", faultDomains)
+	} else {
+		d.Set("availability_domains", nil)
+		d.Set("fault_domains", nil)
 	}
 
 	return nil
