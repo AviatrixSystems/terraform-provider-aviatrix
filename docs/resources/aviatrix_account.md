@@ -137,14 +137,14 @@ resource "aviatrix_account" "temp_acc_alibaba" {
 resource "aviatrix_account" "temp_acc_aws_top_secret" {
   account_name              = "username"
   cloud_type                = 16384
-  aws_orange_account_number = "123456789012"
-  aws_orange_cap_url        = "https://some.domain.com"
-  aws_orange_cap_agency     = "ABCDEFG"
-  aws_orange_cap_mission    = "Test-C2S-dev"
-  aws_orange_cap_role_name  = "C2S-role-TestRole"
-  aws_orange_cap_cert       = "path/to/cap_cert_file"
-  aws_orange_cap_cert_key   = "path/to/cap_cert_key_file"
-  aws_orange_ca_chain_cert  = "path/to/cap_chain_cert_file"
+  awsts_account_number = "123456789012"
+  awsts_cap_url        = "https://some.domain.com"
+  awsts_cap_agency     = "ABCDEFG"
+  awsts_cap_mission    = "Test-C2S-dev"
+  awsts_cap_role_name  = "C2S-role-TestRole"
+  awsts_cap_cert       = "path/to/cap_cert_file"
+  awsts_cap_cert_key   = "path/to/cap_cert_key_file"
+  awsts_ca_chain_cert  = "path/to/cap_chain_cert_file"
 }
 ```
 ```hcl
@@ -152,14 +152,14 @@ resource "aviatrix_account" "temp_acc_aws_top_secret" {
 resource "aviatrix_account" "temp_acc_aws_secret" {
   account_name              = "username"
   cloud_type                = 32768
-  aws_red_account_number    = "123456789012"
-  aws_red_cap_url           = "https://some.domain.com"
-  aws_red_cap_agency        = "ABCDEFG"
-  aws_red_cap_account_name  = "Test-SC2S-dev"
-  aws_red_cap_role_name     = "SC2S-role-TestRole"
-  aws_red_cap_cert          = "path/to/cap_cert_file"
-  aws_red_cap_cert_key      = "path/to/cap_cert_key_file"
-  aws_red_ca_chain_cert     = "path/to/cap_chain_cert_file"
+  awss_account_number    = "123456789012"
+  awss_cap_url           = "https://some.domain.com"
+  awss_cap_agency        = "ABCDEFG"
+  awss_cap_account_name  = "Test-SC2S-dev"
+  awss_cap_role_name     = "SC2S-role-TestRole"
+  awss_cap_cert          = "path/to/cap_cert_file"
+  awss_cap_cert_key      = "path/to/cap_cert_key_file"
+  awss_ca_chain_cert     = "path/to/cap_chain_cert_file"
 }
 ```
 
@@ -233,24 +233,24 @@ The following arguments are supported:
 * `alicloud_secret_key` - (Optional) Alibaba Cloud Secret Key. Required when creating an account for Alibaba Cloud.
 
 ### AWS Top Secret Region
-* `aws_orange_account_number` - (Optional) AWS Top Secret Region Account Number. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19+.
-* `aws_orange_cap_url` - (Optional) AWS Top Secret Region CAP Url. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19+.
-* `aws_orange_cap_agency` - (Optional) AWS Top Secret Region CAP Agency. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19+.
-* `aws_orange_cap_mission` - (Optional) AWS Top Secret Region Mission. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19+.
-* `aws_orange_cap_role_name` - (Optional) AWS Top Secret Region Role Name. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19+.
-* `aws_orange_cap_cert` - (Optional) AWS Top Secret Region CAP Certificate local file path. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19+.
-* `aws_orange_cap_cert_key` - (Optional) AWS Top Secret Region CAP Certificate Key local file path. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19+.
-* `aws_orange_ca_chain_cert` - (Optional) AWS Top Secret Region Custom Certificate Authority local file path. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19+.
+* `awsts_account_number` - (Optional) AWS Top Secret Region Account Number. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19+.
+* `awsts_cap_url` - (Optional) AWS Top Secret Region CAP Url. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19+.
+* `awsts_cap_agency` - (Optional) AWS Top Secret Region CAP Agency. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19+.
+* `awsts_cap_mission` - (Optional) AWS Top Secret Region Mission. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19+.
+* `awsts_cap_role_name` - (Optional) AWS Top Secret Region Role Name. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19+.
+* `awsts_cap_cert` - (Optional) AWS Top Secret Region CAP Certificate local file path. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19+.
+* `awsts_cap_cert_key` - (Optional) AWS Top Secret Region CAP Certificate Key local file path. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19+.
+* `awsts_ca_chain_cert` - (Optional) AWS Top Secret Region Custom Certificate Authority local file path. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19+.
 
 ### AWS Secret Region
-* `aws_red_account_number` - (Optional) AWS Secret Region Account Number. Required when creating an account in AWS Secret Region. Available as of provider version R2.19+.
-* `aws_red_cap_url` - (Optional) AWS Secret Region CAP Url. Required when creating an account in AWS Secret Region. Available as of provider version R2.19+.
-* `aws_red_cap_agency` - (Optional) AWS Secret Region CAP Agency. Required when creating an account in AWS Secret Region. Available as of provider version R2.19+.
-* `aws_red_cap_account_name` - (Optional) AWS Secret Region Account Name. Required when creating an account in AWS Secret Region. Available as of provider version R2.19+.
-* `aws_red_cap_role_name` - (Optional) AWS Secret Region Role Name. Required when creating an account in AWS Secret Region. Available as of provider version R2.19+.
-* `aws_red_cap_cert` - (Optional) AWS Secret Region CAP Certificate local file path. Required when creating an account in AWS Secret Region. Available as of provider version R2.19+.
-* `aws_red_cap_cert_key` - (Optional) AWS Secret Region CAP Certificate Key local file path. Required when creating an account in AWS Secret Region. Available as of provider version R2.19+.
-* `aws_red_ca_chain_cert` - (Optional) AWS Secret Region Custom Certificate Authority local file path. Required when creating an account in AWS Secret Region. Available as of provider version R2.19+.
+* `awss_account_number` - (Optional) AWS Secret Region Account Number. Required when creating an account in AWS Secret Region. Available as of provider version R2.19+.
+* `awss_cap_url` - (Optional) AWS Secret Region CAP Url. Required when creating an account in AWS Secret Region. Available as of provider version R2.19+.
+* `awss_cap_agency` - (Optional) AWS Secret Region CAP Agency. Required when creating an account in AWS Secret Region. Available as of provider version R2.19+.
+* `awss_cap_account_name` - (Optional) AWS Secret Region Account Name. Required when creating an account in AWS Secret Region. Available as of provider version R2.19+.
+* `awss_cap_role_name` - (Optional) AWS Secret Region Role Name. Required when creating an account in AWS Secret Region. Available as of provider version R2.19+.
+* `awss_cap_cert` - (Optional) AWS Secret Region CAP Certificate local file path. Required when creating an account in AWS Secret Region. Available as of provider version R2.19+.
+* `awss_cap_cert_key` - (Optional) AWS Secret Region CAP Certificate Key local file path. Required when creating an account in AWS Secret Region. Available as of provider version R2.19+.
+* `awss_ca_chain_cert` - (Optional) AWS Secret Region Custom Certificate Authority local file path. Required when creating an account in AWS Secret Region. Available as of provider version R2.19+.
 
 ### Misc.
 ~> **NOTE:** On Terraform versions 0.12.x, 0.13.x, and 0.14.x, Terraform will not detect any changes to the account when the account audit fail warning is given. In order to apply changes or set `audit_account = false`, please run `terraform apply -refresh=false`. 
@@ -262,11 +262,11 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `aws_orange_cap_cert_path` - (Optional) AWS Top Secret Region CAP Certificate file name on the controller. Available as of provider R2.19+.
-* `aws_orange_cap_cert_key_path` - (Optional) AWS Top Secret Region CAP Certificate Key file name on the controller. Available as of provider R2.19+.
+* `awsts_cap_cert_path` - (Optional) AWS Top Secret Region CAP Certificate file name on the controller. Available as of provider R2.19+.
+* `awsts_cap_cert_key_path` - (Optional) AWS Top Secret Region CAP Certificate Key file name on the controller. Available as of provider R2.19+.
 * `aws_ca_cert_path` - (Optional) AWS Top Secret Region or Secret Region Custom Certificate Authority file name on the controller. Available as of provider R2.19+.
-* `aws_red_cap_cert_path` - (Optional) AWS Secret Region CAP Certificate file name on the controller. Available as of provider R2.19+.
-* `aws_red_cap_cert_key_path` - (Optional) AWS Secret Region CAP Certificate Key file name on the controller. Available as of provider R2.19+.
+* `awss_cap_cert_path` - (Optional) AWS Secret Region CAP Certificate file name on the controller. Available as of provider R2.19+.
+* `awss_cap_cert_key_path` - (Optional) AWS Secret Region CAP Certificate Key file name on the controller. Available as of provider R2.19+.
 
 ## Import
 

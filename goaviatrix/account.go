@@ -63,27 +63,27 @@ type Account struct {
 	AzureChinaApplicationEndpoint         string `form:"arm_china_application_endpoint,omitempty"`
 	AzureChinaApplicationClientId         string `form:"arm_china_application_client_id,omitempty"`
 	AzureChinaApplicationClientSecret     string `form:"arm_china_application_client_secret,omitempty"`
-	AwsOrangeAccountNumber                string `json:"awsorangecloud_account_number,omitempty"`
-	AwsOrangeCapUrl                       string `json:"aws_orange_cap_url,omitempty"`
-	AwsOrangeCapAgency                    string `json:"aws_orange_cap_agency,omitempty"`
-	AwsOrangeCapMission                   string `json:"aws_orange_cap_mission,omitempty"`
-	AwsOrangeCapRoleName                  string `json:"aws_orange_cap_role_name,omitempty"`
-	AwsOrangeCapCert                      string
-	AwsOrangeCapCertKey                   string
-	AwsOrangeCaChainCert                  string
-	AwsOrangeCapCertPath                  string `json:"aws_orange_cap_cert_path,omitempty"`
-	AwsOrangeCapCertKeyPath               string `json:"aws_orange_cap_key_path,omitempty"`
+	AwsTsAccountNumber                    string `json:"awsorangecloud_account_number,omitempty"`
+	AwsTsCapUrl                           string `json:"aws_orange_cap_url,omitempty"`
+	AwsTsCapAgency                        string `json:"aws_orange_cap_agency,omitempty"`
+	AwsTsCapMission                       string `json:"aws_orange_cap_mission,omitempty"`
+	AwsTsCapRoleName                      string `json:"aws_orange_cap_role_name,omitempty"`
+	AwsTsCapCert                          string
+	AwsTsCapCertKey                       string
+	AwsTsCaChainCert                      string
+	AwsTsCapCertPath                      string `json:"aws_orange_cap_cert_path,omitempty"`
+	AwsTsCapCertKeyPath                   string `json:"aws_orange_cap_key_path,omitempty"`
 	AwsCaCertPath                         string `json:"aws_ca_cert_path,omitempty"`
-	AwsRedAccountNumber                   string `form:"aws_red_account_number,omitempty" json:"awsredcloud_account_number,omitempty"`
-	AwsRedCapUrl                          string `form:"aws_red_cap_url,omitempty" json:"aws_red_cap_url,omitempty"`
-	AwsRedCapAgency                       string `form:"aws_red_cap_agency,omitempty" json:"aws_red_cap_agency,omitempty"`
-	AwsRedCapAccountName                  string `form:"aws_red_cap_account_name,omitempty" json:"aws_red_cap_account_name,omitempty"`
-	AwsRedCapRoleName                     string `json:"aws_red_cap_role_name,omitempty"`
-	AwsRedCapCert                         string
-	AwsRedCapCertKey                      string
-	AwsRedCaChainCert                     string
-	AwsRedCapCertPath                     string `form:"aws_red_cap_cert_path,omitempty" json:"aws_red_cap_cert_path,omitempty"`
-	AwsRedCapCertKeyPath                  string `json:"aws_red_cap_key_path,omitempty"`
+	AwsSAccountNumber                     string `form:"aws_red_account_number,omitempty" json:"awsredcloud_account_number,omitempty"`
+	AwsSCapUrl                            string `form:"aws_red_cap_url,omitempty" json:"aws_red_cap_url,omitempty"`
+	AwsSCapAgency                         string `form:"aws_red_cap_agency,omitempty" json:"aws_red_cap_agency,omitempty"`
+	AwsSCapAccountName                    string `form:"aws_red_cap_account_name,omitempty" json:"aws_red_cap_account_name,omitempty"`
+	AwsSCapRoleName                       string `json:"aws_red_cap_role_name,omitempty"`
+	AwsSCapCert                           string
+	AwsSCapCertKey                        string
+	AwsSCaChainCert                       string
+	AwsSCapCertPath                       string `form:"aws_red_cap_cert_path,omitempty" json:"aws_red_cap_cert_path,omitempty"`
+	AwsSCapCertKeyPath                    string `json:"aws_red_cap_key_path,omitempty"`
 }
 
 type AccountResult struct {
@@ -187,30 +187,30 @@ func (c *Client) CreateOCIAccount(account *Account) error {
 	return nil
 }
 
-func (c *Client) CreateAWSC2SAccount(account *Account) error {
+func (c *Client) CreateAWSTSAccount(account *Account) error {
 	params := map[string]string{
 		"CID":                       c.CID,
 		"action":                    "setup_account_profile",
 		"account_name":              account.AccountName,
 		"cloud_type":                strconv.Itoa(account.CloudType),
-		"aws_orange_account_number": account.AwsOrangeAccountNumber,
-		"aws_orange_cap_url":        account.AwsOrangeCapUrl,
-		"aws_orange_cap_agency":     account.AwsOrangeCapAgency,
-		"aws_orange_cap_mission":    account.AwsOrangeCapMission,
-		"aws_orange_cap_role_name":  account.AwsOrangeCapRoleName,
+		"aws_orange_account_number": account.AwsTsAccountNumber,
+		"aws_orange_cap_url":        account.AwsTsCapUrl,
+		"aws_orange_cap_agency":     account.AwsTsCapAgency,
+		"aws_orange_cap_mission":    account.AwsTsCapMission,
+		"aws_orange_cap_role_name":  account.AwsTsCapRoleName,
 	}
 
 	files := []File{
 		{
-			Path:      account.AwsOrangeCapCert,
+			Path:      account.AwsTsCapCert,
 			ParamName: "aws_orange_cap_cert",
 		},
 		{
-			Path:      account.AwsOrangeCapCertKey,
+			Path:      account.AwsTsCapCertKey,
 			ParamName: "aws_orange_cap_cert_key",
 		},
 		{
-			Path:      account.AwsOrangeCaChainCert,
+			Path:      account.AwsTsCaChainCert,
 			ParamName: "aws_orange_ca_chain_cert",
 		},
 	}
@@ -218,30 +218,30 @@ func (c *Client) CreateAWSC2SAccount(account *Account) error {
 	return c.PostFileAPI(params, files, BasicCheck)
 }
 
-func (c *Client) CreateAWSSC2SAccount(account *Account) error {
+func (c *Client) CreateAWSSAccount(account *Account) error {
 	params := map[string]string{
 		"CID":                      c.CID,
 		"action":                   "setup_account_profile",
 		"account_name":             account.AccountName,
 		"cloud_type":               strconv.Itoa(account.CloudType),
-		"aws_red_account_number":   account.AwsRedAccountNumber,
-		"aws_red_cap_url":          account.AwsRedCapUrl,
-		"aws_red_cap_agency":       account.AwsRedCapAgency,
-		"aws_red_cap_account_name": account.AwsRedCapAccountName,
-		"aws_red_cap_role_name":    account.AwsRedCapRoleName,
+		"aws_red_account_number":   account.AwsSAccountNumber,
+		"aws_red_cap_url":          account.AwsSCapUrl,
+		"aws_red_cap_agency":       account.AwsSCapAgency,
+		"aws_red_cap_account_name": account.AwsSCapAccountName,
+		"aws_red_cap_role_name":    account.AwsSCapRoleName,
 	}
 
 	files := []File{
 		{
-			Path:      account.AwsRedCapCert,
+			Path:      account.AwsSCapCert,
 			ParamName: "aws_red_cap_cert",
 		},
 		{
-			Path:      account.AwsRedCapCertKey,
+			Path:      account.AwsSCapCertKey,
 			ParamName: "aws_red_cap_cert_key",
 		},
 		{
-			Path:      account.AwsRedCaChainCert,
+			Path:      account.AwsSCaChainCert,
 			ParamName: "aws_red_ca_chain_cert",
 		},
 	}
@@ -340,41 +340,41 @@ func (c *Client) UpdateGCPAccount(account *Account) error {
 	return nil
 }
 
-func (c *Client) UpdateAWSC2SAccount(account *Account, fileChanges map[string]bool) error {
+func (c *Client) UpdateAWSTSAccount(account *Account, fileChanges map[string]bool) error {
 	params := map[string]string{
 		"CID":                       c.CID,
 		"action":                    "edit_account_profile",
 		"account_name":              account.AccountName,
 		"cloud_type":                strconv.Itoa(account.CloudType),
-		"aws_orange_account_number": account.AwsOrangeAccountNumber,
-		"aws_orange_cap_url":        account.AwsOrangeCapUrl,
-		"aws_orange_cap_agency":     account.AwsOrangeCapAgency,
-		"aws_orange_cap_mission":    account.AwsOrangeCapMission,
-		"aws_orange_cap_role_name":  account.AwsOrangeCapRoleName,
+		"aws_orange_account_number": account.AwsTsAccountNumber,
+		"aws_orange_cap_url":        account.AwsTsCapUrl,
+		"aws_orange_cap_agency":     account.AwsTsCapAgency,
+		"aws_orange_cap_mission":    account.AwsTsCapMission,
+		"aws_orange_cap_role_name":  account.AwsTsCapRoleName,
 	}
 
 	files := make([]File, 0, 3)
 	if fileChanges["aws_orange_cap_cert"] {
 		files = append(files, File{
-			Path:      account.AwsOrangeCapCert,
+			Path:      account.AwsTsCapCert,
 			ParamName: "aws_orange_cap_cert",
 		})
 	} else {
-		params["aws_orange_cap_cert_path"] = account.AwsOrangeCapCertPath
+		params["aws_orange_cap_cert_path"] = account.AwsTsCapCertPath
 	}
 
 	if fileChanges["aws_orange_cap_cert_key"] {
 		files = append(files, File{
-			Path:      account.AwsOrangeCapCertKey,
+			Path:      account.AwsTsCapCertKey,
 			ParamName: "aws_orange_cap_cert_key",
 		})
 	} else {
-		params["aws_orange_cap_key_path"] = account.AwsOrangeCapCertKeyPath
+		params["aws_orange_cap_key_path"] = account.AwsTsCapCertKeyPath
 	}
 
 	if fileChanges["aws_orange_ca_chain_cert"] {
 		files = append(files, File{
-			Path:      account.AwsOrangeCaChainCert,
+			Path:      account.AwsTsCaChainCert,
 			ParamName: "aws_orange_ca_chain_cert",
 		})
 	} else {
@@ -384,41 +384,41 @@ func (c *Client) UpdateAWSC2SAccount(account *Account, fileChanges map[string]bo
 	return c.PostFileAPI(params, files, BasicCheck)
 }
 
-func (c *Client) UpdateAWSSC2SAccount(account *Account, fileChanges map[string]bool) error {
+func (c *Client) UpdateAWSSAccount(account *Account, fileChanges map[string]bool) error {
 	params := map[string]string{
 		"CID":                      c.CID,
 		"action":                   "edit_account_profile",
 		"account_name":             account.AccountName,
 		"cloud_type":               strconv.Itoa(account.CloudType),
-		"aws_red_account_number":   account.AwsRedAccountNumber,
-		"aws_red_cap_url":          account.AwsRedCapUrl,
-		"aws_red_cap_agency":       account.AwsRedCapAgency,
-		"aws_red_cap_account_name": account.AwsRedCapAccountName,
-		"aws_red_cap_role_name":    account.AwsRedCapRoleName,
+		"aws_red_account_number":   account.AwsSAccountNumber,
+		"aws_red_cap_url":          account.AwsSCapUrl,
+		"aws_red_cap_agency":       account.AwsSCapAgency,
+		"aws_red_cap_account_name": account.AwsSCapAccountName,
+		"aws_red_cap_role_name":    account.AwsSCapRoleName,
 	}
 
 	files := make([]File, 0, 3)
 	if fileChanges["aws_red_cap_cert"] {
 		files = append(files, File{
-			Path:      account.AwsRedCapCert,
+			Path:      account.AwsSCapCert,
 			ParamName: "aws_red_cap_cert",
 		})
 	} else {
-		params["aws_red_cap_cert_path"] = account.AwsRedCapCertPath
+		params["aws_red_cap_cert_path"] = account.AwsSCapCertPath
 	}
 
 	if fileChanges["aws_red_cap_cert_key"] {
 		files = append(files, File{
-			Path:      account.AwsRedCapCertKey,
+			Path:      account.AwsSCapCertKey,
 			ParamName: "aws_red_cap_cert_key",
 		})
 	} else {
-		params["aws_red_cap_key_path"] = account.AwsRedCapCertKeyPath
+		params["aws_red_cap_key_path"] = account.AwsSCapCertKeyPath
 	}
 
 	if fileChanges["aws_red_ca_chain_cert"] {
 		files = append(files, File{
-			Path:      account.AwsRedCaChainCert,
+			Path:      account.AwsSCaChainCert,
 			ParamName: "aws_red_ca_chain_cert",
 		})
 	} else {

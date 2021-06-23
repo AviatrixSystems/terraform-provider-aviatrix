@@ -252,87 +252,87 @@ func resourceAviatrixAccount() *schema.Resource {
 				Sensitive:   true,
 				Description: "Azure China Application Key.",
 			},
-			"aws_orange_account_number": {
+			"awsts_account_number": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "AWS Top Secret Region Account Number.",
 			},
-			"aws_orange_cap_url": {
+			"awsts_cap_url": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "AWS Top Secret Region CAP Endpoint URL.",
 			},
-			"aws_orange_cap_agency": {
+			"awsts_cap_agency": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "AWS Top Secret Region CAP Agency.",
 			},
-			"aws_orange_cap_mission": {
+			"awsts_cap_mission": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "AWS Top Secret Region CAP Mission.",
 			},
-			"aws_orange_cap_role_name": {
+			"awsts_cap_role_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "AWS Top Secret Region CAP Role Name.",
 			},
-			"aws_orange_cap_cert": {
+			"awsts_cap_cert": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "AWS Top Secret Region CAP Certificate file path.",
 			},
-			"aws_orange_cap_cert_key": {
+			"awsts_cap_cert_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "AWS Top Secret Region CAP Certificate Key file path.",
 			},
-			"aws_orange_ca_chain_cert": {
+			"awsts_ca_chain_cert": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "AWS Top Secret Region Custom Certificate Authority file path.",
 			},
-			"aws_red_account_number": {
+			"awss_account_number": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "AWS Secret Region Account Number.",
 			},
-			"aws_red_cap_url": {
+			"awss_cap_url": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "AWS Secret Region CAP Endpoint URL.",
 			},
-			"aws_red_cap_agency": {
+			"awss_cap_agency": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "AWS Secret Region CAP Agency.",
 			},
-			"aws_red_cap_account_name": {
+			"awss_cap_account_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "AWS Secret Region CAP Account Name.",
 			},
-			"aws_red_cap_role_name": {
+			"awss_cap_role_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "AWS Secret Region CAP Role Name.",
 			},
-			"aws_red_cap_cert": {
+			"awss_cap_cert": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "AWS Secret Region CAP Certificate file path.",
 			},
-			"aws_red_cap_cert_key": {
+			"awss_cap_cert_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				Description: "AWS Secret Region CAP Certificate Key file path.",
 			},
-			"aws_red_ca_chain_cert": {
+			"awss_ca_chain_cert": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
@@ -362,12 +362,12 @@ func resourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS China EC2 Role ARN.",
 			},
-			"aws_orange_cap_cert_path": {
+			"awsts_cap_cert_path": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "AWS Top Secret Region CAP Certificate file path on the controller.",
 			},
-			"aws_orange_cap_cert_key_path": {
+			"awsts_cap_cert_key_path": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "AWS Top Secret Region CAP Certificate Key file path on the controller.",
@@ -377,12 +377,12 @@ func resourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS Top Secret Region or Secret Region Custom Certificate Authority file path on the controller.",
 			},
-			"aws_red_cap_cert_path": {
+			"awss_cap_cert_path": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "AWS Secret Region CAP Certificate file path on the controller.",
 			},
-			"aws_red_cap_cert_key_path": {
+			"awss_cap_cert_key_path": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "AWS Secret Region CAP Certificate Key file path on the controller.",
@@ -435,27 +435,27 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		AzureChinaApplicationEndpoint:         d.Get("azurechina_directory_id").(string),
 		AzureChinaApplicationClientId:         d.Get("azurechina_application_id").(string),
 		AzureChinaApplicationClientSecret:     d.Get("azurechina_application_key").(string),
-		AwsOrangeAccountNumber:                d.Get("aws_orange_account_number").(string),
-		AwsOrangeCapUrl:                       d.Get("aws_orange_cap_url").(string),
-		AwsOrangeCapAgency:                    d.Get("aws_orange_cap_agency").(string),
-		AwsOrangeCapMission:                   d.Get("aws_orange_cap_mission").(string),
-		AwsOrangeCapRoleName:                  d.Get("aws_orange_cap_role_name").(string),
-		AwsOrangeCapCert:                      d.Get("aws_orange_cap_cert").(string),
-		AwsOrangeCapCertKey:                   d.Get("aws_orange_cap_cert_key").(string),
-		AwsOrangeCaChainCert:                  d.Get("aws_orange_ca_chain_cert").(string),
-		AwsOrangeCapCertPath:                  d.Get("aws_orange_cap_cert_path").(string),
-		AwsOrangeCapCertKeyPath:               d.Get("aws_orange_cap_cert_key_path").(string),
+		AwsTsAccountNumber:                    d.Get("awsts_account_number").(string),
+		AwsTsCapUrl:                           d.Get("awsts_cap_url").(string),
+		AwsTsCapAgency:                        d.Get("awsts_cap_agency").(string),
+		AwsTsCapMission:                       d.Get("awsts_cap_mission").(string),
+		AwsTsCapRoleName:                      d.Get("awsts_cap_role_name").(string),
+		AwsTsCapCert:                          d.Get("awsts_cap_cert").(string),
+		AwsTsCapCertKey:                       d.Get("awsts_cap_cert_key").(string),
+		AwsTsCaChainCert:                      d.Get("awsts_ca_chain_cert").(string),
+		AwsTsCapCertPath:                      d.Get("awsts_cap_cert_path").(string),
+		AwsTsCapCertKeyPath:                   d.Get("awsts_cap_cert_key_path").(string),
 		AwsCaCertPath:                         d.Get("aws_ca_cert_path").(string),
-		AwsRedAccountNumber:                   d.Get("aws_red_account_number").(string),
-		AwsRedCapUrl:                          d.Get("aws_red_cap_url").(string),
-		AwsRedCapAgency:                       d.Get("aws_red_cap_agency").(string),
-		AwsRedCapAccountName:                  d.Get("aws_red_cap_account_name").(string),
-		AwsRedCapRoleName:                     d.Get("aws_red_cap_role_name").(string),
-		AwsRedCapCert:                         d.Get("aws_red_cap_cert").(string),
-		AwsRedCapCertKey:                      d.Get("aws_red_cap_cert_key").(string),
-		AwsRedCaChainCert:                     d.Get("aws_red_ca_chain_cert").(string),
-		AwsRedCapCertPath:                     d.Get("aws_red_cap_cert_path").(string),
-		AwsRedCapCertKeyPath:                  d.Get("aws_red_cap_cert_key_path").(string),
+		AwsSAccountNumber:                     d.Get("awss_account_number").(string),
+		AwsSCapUrl:                            d.Get("awss_cap_url").(string),
+		AwsSCapAgency:                         d.Get("awss_cap_agency").(string),
+		AwsSCapAccountName:                    d.Get("awss_cap_account_name").(string),
+		AwsSCapRoleName:                       d.Get("awss_cap_role_name").(string),
+		AwsSCapCert:                           d.Get("awss_cap_cert").(string),
+		AwsSCapCertKey:                        d.Get("awss_cap_cert_key").(string),
+		AwsSCaChainCert:                       d.Get("awss_ca_chain_cert").(string),
+		AwsSCapCertPath:                       d.Get("awss_cap_cert_path").(string),
+		AwsSCapCertKeyPath:                    d.Get("awss_cap_cert_key_path").(string),
 	}
 
 	awsIam := d.Get("aws_iam").(bool)
@@ -515,11 +515,11 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AliCloud) && (account.AlicloudAccountId != "" || account.AlicloudAccessKey != "" || account.AlicloudSecretKey != "") {
 		return diag.Errorf("could not create Aviatrix Account: 'aliyun_account_id', 'aliyun_access_key' and 'aliyun_secret_key' can only be set when 'cloud_type' is Alibaba Cloud (8192)")
 	}
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSC2S) && (account.AwsOrangeAccountNumber != "" || account.AwsOrangeCapUrl != "" || account.AwsOrangeCapAgency != "" || account.AwsOrangeCapMission != "" || account.AwsOrangeCapRoleName != "" || account.AwsOrangeCapCert != "" || account.AwsOrangeCapCertKey != "" || account.AwsOrangeCaChainCert != "") {
-		return diag.Errorf("could not create Aviatrix Account: 'aws_orange_account_number', 'aws_orange_cap_url', 'aws_orange_cap_agency', 'aws_orange_cap_mission', 'aws_orange_cap_role_name', aws_orange_cap_cert', 'aws_orange_cap_cert_key' and 'aws_orange_ca_chain_cert' can only be set when 'cloud_type' is AWS Top Secret Region (16384)")
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSTS) && (account.AwsTsAccountNumber != "" || account.AwsTsCapUrl != "" || account.AwsTsCapAgency != "" || account.AwsTsCapMission != "" || account.AwsTsCapRoleName != "" || account.AwsTsCapCert != "" || account.AwsTsCapCertKey != "" || account.AwsTsCaChainCert != "") {
+		return diag.Errorf("could not create Aviatrix Account: 'awsts_account_number', 'awsts_cap_url', 'awsts_cap_agency', 'awsts_cap_mission', 'awsts_cap_role_name', awsts_cap_cert', 'awsts_cap_cert_key' and 'awsts_ca_chain_cert' can only be set when 'cloud_type' is AWS Top Secret Region (16384)")
 	}
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSSC2S) && (account.AwsRedAccountNumber != "" || account.AwsRedCapUrl != "" || account.AwsRedCapAgency != "" || account.AwsRedCapAccountName != "" || account.AwsRedCapRoleName != "" || account.AwsRedCapCert != "" || account.AwsRedCapCertKey != "" || account.AwsRedCaChainCert != "") {
-		return diag.Errorf("could not create Aviatrix Account: 'aws_red_account_number', 'aws_red_cap_url', 'aws_red_cap_agency', 'aws_red_cap_account_name', 'aws_red_cap_role_name', aws_red_cap_cert', 'aws_red_cap_cert_key' and 'aws_red_ca_chain_cert' can only be set when 'cloud_type' is AWS Secret Region (32768)")
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSS) && (account.AwsSAccountNumber != "" || account.AwsSCapUrl != "" || account.AwsSCapAgency != "" || account.AwsSCapAccountName != "" || account.AwsSCapRoleName != "" || account.AwsSCapCert != "" || account.AwsSCapCertKey != "" || account.AwsSCaChainCert != "") {
+		return diag.Errorf("could not create Aviatrix Account: 'awss_account_number', 'awss_cap_url', 'awss_cap_agency', 'awss_cap_account_name', 'awss_cap_role_name', awss_cap_cert', 'awss_cap_cert_key' and 'awss_ca_chain_cert' can only be set when 'cloud_type' is AWS Secret Region (32768)")
 	}
 
 	if account.CloudType == goaviatrix.AWS {
@@ -664,55 +664,55 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		if account.AlicloudSecretKey == "" {
 			return diag.Errorf("alicloud_secret_key is required for alibaba cloud")
 		}
-	} else if account.CloudType == goaviatrix.AWSC2S {
-		if account.AwsOrangeAccountNumber == "" {
-			return diag.Errorf("AWS orange account number is needed when creating an account for AWS Top Secret cloud")
+	} else if account.CloudType == goaviatrix.AWSTS {
+		if account.AwsTsAccountNumber == "" {
+			return diag.Errorf("AWS Top Secret account number is needed when creating an account for AWS Top Secret cloud")
 		}
-		if account.AwsOrangeCapUrl == "" {
-			return diag.Errorf("AWS orange CAP endpoint url is needed when creating an account for AWS Top Secret cloud")
+		if account.AwsTsCapUrl == "" {
+			return diag.Errorf("AWS Top Secret CAP endpoint url is needed when creating an account for AWS Top Secret cloud")
 		}
-		if account.AwsOrangeCapAgency == "" {
-			return diag.Errorf("AWS orange CAP agency is needed when creating an account for AWS Top Secret cloud")
+		if account.AwsTsCapAgency == "" {
+			return diag.Errorf("AWS Top Secret CAP agency is needed when creating an account for AWS Top Secret cloud")
 		}
-		if account.AwsOrangeCapMission == "" {
-			return diag.Errorf("AWS orange CAP mission is needed when creating an account for AWS Top Secret cloud")
+		if account.AwsTsCapMission == "" {
+			return diag.Errorf("AWS Top Secret CAP mission is needed when creating an account for AWS Top Secret cloud")
 		}
-		if account.AwsOrangeCapRoleName == "" {
-			return diag.Errorf("AWS orange CAP role name is needed when creating an account for AWS Top Secret cloud")
+		if account.AwsTsCapRoleName == "" {
+			return diag.Errorf("AWS Top Secret CAP role name is needed when creating an account for AWS Top Secret cloud")
 		}
-		if account.AwsOrangeCapCert == "" {
-			return diag.Errorf("AWS orange CAP cert file is needed when creating an account for AWS Top Secret cloud")
+		if account.AwsTsCapCert == "" {
+			return diag.Errorf("AWS Top Secret CAP cert file is needed when creating an account for AWS Top Secret cloud")
 		}
-		if account.AwsOrangeCapCertKey == "" {
-			return diag.Errorf("AWS orange CAP cert key file is needed when creating an account for AWS Top Secret cloud")
+		if account.AwsTsCapCertKey == "" {
+			return diag.Errorf("AWS Top Secret CAP cert key file is needed when creating an account for AWS Top Secret cloud")
 		}
-		if account.AwsOrangeCaChainCert == "" {
-			return diag.Errorf("AWS orange custom CA Chain file  is needed when creating an account for AWS Top Secret cloud")
+		if account.AwsTsCaChainCert == "" {
+			return diag.Errorf("AWS Top Secret custom CA Chain file  is needed when creating an account for AWS Top Secret cloud")
 		}
-	} else if account.CloudType == goaviatrix.AWSSC2S {
-		if account.AwsRedAccountNumber == "" {
-			return diag.Errorf("AWS red account number is needed when creating an account for AWS Secret cloud")
+	} else if account.CloudType == goaviatrix.AWSS {
+		if account.AwsSAccountNumber == "" {
+			return diag.Errorf("AWS Secret account number is needed when creating an account for AWS Secret cloud")
 		}
-		if account.AwsRedCapUrl == "" {
-			return diag.Errorf("AWS red CAP endpoint url is needed when creating an account for AWS Secret cloud")
+		if account.AwsSCapUrl == "" {
+			return diag.Errorf("AWS Secret CAP endpoint url is needed when creating an account for AWS Secret cloud")
 		}
-		if account.AwsRedCapAgency == "" {
-			return diag.Errorf("AWS red CAP agency is needed when creating an account for AWS Secret cloud")
+		if account.AwsSCapAgency == "" {
+			return diag.Errorf("AWS Secret CAP agency is needed when creating an account for AWS Secret cloud")
 		}
-		if account.AwsRedCapAccountName == "" {
-			return diag.Errorf("AWS red CAP Account Name is needed when creating an account for AWS Secret cloud")
+		if account.AwsSCapAccountName == "" {
+			return diag.Errorf("AWS Secret CAP Account Name is needed when creating an account for AWS Secret cloud")
 		}
-		if account.AwsRedCapRoleName == "" {
-			return diag.Errorf("AWS red CAP role name is needed when creating an account for AWS Secret cloud")
+		if account.AwsSCapRoleName == "" {
+			return diag.Errorf("AWS Secret CAP role name is needed when creating an account for AWS Secret cloud")
 		}
-		if account.AwsRedCapCert == "" {
-			return diag.Errorf("AWS red CAP cert file is needed when creating an account for AWS Secret cloud")
+		if account.AwsSCapCert == "" {
+			return diag.Errorf("AWS Secret CAP cert file is needed when creating an account for AWS Secret cloud")
 		}
-		if account.AwsRedCapCertKey == "" {
-			return diag.Errorf("AWS red CAP cert key file is needed when creating an account for AWS Secret cloud")
+		if account.AwsSCapCertKey == "" {
+			return diag.Errorf("AWS Secret CAP cert key file is needed when creating an account for AWS Secret cloud")
 		}
-		if account.AwsRedCaChainCert == "" {
-			return diag.Errorf("AWS red custom CA Chain file  is needed when creating an account for AWS Secret cloud")
+		if account.AwsSCaChainCert == "" {
+			return diag.Errorf("AWS Secret custom CA Chain file  is needed when creating an account for AWS Secret cloud")
 		}
 	} else {
 		return diag.Errorf("cloud type can only be either AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192), AWS Top Secret (16384) or AWS Secret (32768)")
@@ -723,10 +723,10 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		err = client.CreateGCPAccount(account)
 	} else if account.CloudType == goaviatrix.OCI {
 		err = client.CreateOCIAccount(account)
-	} else if account.CloudType == goaviatrix.AWSC2S {
-		err = client.CreateAWSC2SAccount(account)
-	} else if account.CloudType == goaviatrix.AWSSC2S {
-		err = client.CreateAWSSC2SAccount(account)
+	} else if account.CloudType == goaviatrix.AWSTS {
+		err = client.CreateAWSTSAccount(account)
+	} else if account.CloudType == goaviatrix.AWSS {
+		err = client.CreateAWSSAccount(account)
 	} else {
 		err = client.CreateAccount(account)
 	}
@@ -821,25 +821,25 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 			d.Set("azurechina_subscription_id", acc.AzureChinaSubscriptionId)
 		} else if acc.CloudType == goaviatrix.AliCloud {
 			d.Set("alicloud_account_id", acc.AwsAccountNumber)
-		} else if acc.CloudType == goaviatrix.AWSC2S {
-			d.Set("aws_orange_account_number", acc.AwsOrangeAccountNumber)
-			d.Set("aws_orange_cap_url", acc.AwsOrangeCapUrl)
-			d.Set("aws_orange_cap_agency", acc.AwsOrangeCapAgency)
-			d.Set("aws_orange_cap_mission", acc.AwsOrangeCapMission)
-			d.Set("aws_orange_cap_role_name", acc.AwsOrangeCapRoleName)
+		} else if acc.CloudType == goaviatrix.AWSTS {
+			d.Set("awsts_account_number", acc.AwsTsAccountNumber)
+			d.Set("awsts_cap_url", acc.AwsTsCapUrl)
+			d.Set("awsts_cap_agency", acc.AwsTsCapAgency)
+			d.Set("awsts_cap_mission", acc.AwsTsCapMission)
+			d.Set("awsts_cap_role_name", acc.AwsTsCapRoleName)
 
-			d.Set("aws_orange_cap_cert_path", acc.AwsOrangeCapCertPath)
-			d.Set("aws_orange_cap_cert_key_path", acc.AwsOrangeCapCertKeyPath)
+			d.Set("awsts_cap_cert_path", acc.AwsTsCapCertPath)
+			d.Set("awsts_cap_cert_key_path", acc.AwsTsCapCertKeyPath)
 			d.Set("aws_ca_cert_path", acc.AwsCaCertPath)
-		} else if acc.CloudType == goaviatrix.AWSSC2S {
-			d.Set("aws_red_account_number", acc.AwsRedAccountNumber)
-			d.Set("aws_red_cap_url", acc.AwsRedCapUrl)
-			d.Set("aws_red_cap_agency", acc.AwsRedCapAgency)
-			d.Set("aws_red_cap_account_name", acc.AwsRedCapAccountName)
-			d.Set("aws_red_cap_role_name", acc.AwsRedCapRoleName)
+		} else if acc.CloudType == goaviatrix.AWSS {
+			d.Set("awss_account_number", acc.AwsSAccountNumber)
+			d.Set("awss_cap_url", acc.AwsSCapUrl)
+			d.Set("awss_cap_agency", acc.AwsSCapAgency)
+			d.Set("awss_cap_account_name", acc.AwsSCapAccountName)
+			d.Set("awss_cap_role_name", acc.AwsSCapRoleName)
 
-			d.Set("aws_red_cap_cert_path", acc.AwsRedCapCertPath)
-			d.Set("aws_red_cap_cert_key_path", acc.AwsRedCapCertKeyPath)
+			d.Set("awss_cap_cert_path", acc.AwsSCapCertPath)
+			d.Set("awss_cap_cert_key_path", acc.AwsSCapCertKeyPath)
 			d.Set("aws_ca_cert_path", acc.AwsCaCertPath)
 		}
 		d.SetId(acc.AccountName)
@@ -905,27 +905,27 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 		AzureChinaApplicationEndpoint:         d.Get("azurechina_directory_id").(string),
 		AzureChinaApplicationClientId:         d.Get("azurechina_application_id").(string),
 		AzureChinaApplicationClientSecret:     d.Get("azurechina_application_key").(string),
-		AwsOrangeAccountNumber:                d.Get("aws_orange_account_number").(string),
-		AwsOrangeCapUrl:                       d.Get("aws_orange_cap_url").(string),
-		AwsOrangeCapAgency:                    d.Get("aws_orange_cap_agency").(string),
-		AwsOrangeCapMission:                   d.Get("aws_orange_cap_mission").(string),
-		AwsOrangeCapRoleName:                  d.Get("aws_orange_cap_role_name").(string),
-		AwsOrangeCapCert:                      d.Get("aws_orange_cap_cert").(string),
-		AwsOrangeCapCertKey:                   d.Get("aws_orange_cap_cert_key").(string),
-		AwsOrangeCaChainCert:                  d.Get("aws_orange_ca_chain_cert").(string),
-		AwsOrangeCapCertPath:                  d.Get("aws_orange_cap_cert_path").(string),
-		AwsOrangeCapCertKeyPath:               d.Get("aws_orange_cap_cert_key_path").(string),
+		AwsTsAccountNumber:                    d.Get("awsts_account_number").(string),
+		AwsTsCapUrl:                           d.Get("awsts_cap_url").(string),
+		AwsTsCapAgency:                        d.Get("awsts_cap_agency").(string),
+		AwsTsCapMission:                       d.Get("awsts_cap_mission").(string),
+		AwsTsCapRoleName:                      d.Get("awsts_cap_role_name").(string),
+		AwsTsCapCert:                          d.Get("awsts_cap_cert").(string),
+		AwsTsCapCertKey:                       d.Get("awsts_cap_cert_key").(string),
+		AwsTsCaChainCert:                      d.Get("awsts_ca_chain_cert").(string),
+		AwsTsCapCertPath:                      d.Get("awsts_cap_cert_path").(string),
+		AwsTsCapCertKeyPath:                   d.Get("awsts_cap_cert_key_path").(string),
 		AwsCaCertPath:                         d.Get("aws_ca_cert_path").(string),
-		AwsRedAccountNumber:                   d.Get("aws_red_account_number").(string),
-		AwsRedCapUrl:                          d.Get("aws_red_cap_url").(string),
-		AwsRedCapAgency:                       d.Get("aws_red_cap_agency").(string),
-		AwsRedCapAccountName:                  d.Get("aws_red_cap_account_name").(string),
-		AwsRedCapRoleName:                     d.Get("aws_red_cap_role_name").(string),
-		AwsRedCapCert:                         d.Get("aws_red_cap_cert").(string),
-		AwsRedCapCertKey:                      d.Get("aws_red_cap_cert_key").(string),
-		AwsRedCaChainCert:                     d.Get("aws_red_ca_chain_cert").(string),
-		AwsRedCapCertPath:                     d.Get("aws_red_cap_cert_path").(string),
-		AwsRedCapCertKeyPath:                  d.Get("aws_red_cap_cert_key_path").(string),
+		AwsSAccountNumber:                     d.Get("awss_account_number").(string),
+		AwsSCapUrl:                            d.Get("awss_cap_url").(string),
+		AwsSCapAgency:                         d.Get("awss_cap_agency").(string),
+		AwsSCapAccountName:                    d.Get("awss_cap_account_name").(string),
+		AwsSCapRoleName:                       d.Get("awss_cap_role_name").(string),
+		AwsSCapCert:                           d.Get("awss_cap_cert").(string),
+		AwsSCapCertKey:                        d.Get("awss_cap_cert_key").(string),
+		AwsSCaChainCert:                       d.Get("awss_ca_chain_cert").(string),
+		AwsSCapCertPath:                       d.Get("awss_cap_cert_path").(string),
+		AwsSCapCertKeyPath:                    d.Get("awss_cap_cert_key_path").(string),
 	}
 
 	awsIam := d.Get("aws_iam").(bool)
@@ -997,11 +997,11 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AliCloud) && (account.AlicloudAccountId != "" || account.AlicloudAccessKey != "" || account.AlicloudSecretKey != "") {
 		return diag.Errorf("could not update Aviatrix Account: 'aliyun_account_id', 'aliyun_access_key' and 'aliyun_secret_key' can only be set when 'cloud_type' is Alibaba Cloud (8192)")
 	}
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSC2S) && (account.AwsOrangeAccountNumber != "" || account.AwsOrangeCapUrl != "" || account.AwsOrangeCapAgency != "" || account.AwsOrangeCapMission != "" || account.AwsOrangeCapRoleName != "" || account.AwsOrangeCapCert != "" || account.AwsOrangeCapCertKey != "" || account.AwsOrangeCaChainCert != "") {
-		return diag.Errorf("could not update Aviatrix Account: 'aws_orange_account_number', 'aws_orange_cap_url', 'aws_orange_cap_agency', 'aws_orange_cap_mission', 'aws_orange_cap_role_name', aws_orange_cap_cert', 'aws_orange_cap_cert_key' and 'aws_orange_ca_chain_cert' can only be set when 'cloud_type' is AWS Top Secret Region (16384)")
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSTS) && (account.AwsTsAccountNumber != "" || account.AwsTsCapUrl != "" || account.AwsTsCapAgency != "" || account.AwsTsCapMission != "" || account.AwsTsCapRoleName != "" || account.AwsTsCapCert != "" || account.AwsTsCapCertKey != "" || account.AwsTsCaChainCert != "") {
+		return diag.Errorf("could not update Aviatrix Account: 'awsts_account_number', 'awsts_cap_url', 'awsts_cap_agency', 'awsts_cap_mission', 'awsts_cap_role_name', awsts_cap_cert', 'awsts_cap_cert_key' and 'awsts_ca_chain_cert' can only be set when 'cloud_type' is AWS Top Secret Region (16384)")
 	}
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSSC2S) && (account.AwsRedAccountNumber != "" || account.AwsRedCapUrl != "" || account.AwsRedCapAgency != "" || account.AwsRedCapAccountName != "" || account.AwsRedCapRoleName != "" || account.AwsRedCapCert != "" || account.AwsRedCapCertKey != "" || account.AwsRedCaChainCert != "") {
-		return diag.Errorf("could not update Aviatrix Account: 'aws_red_account_number', 'aws_red_cap_url', 'aws_red_cap_agency', 'aws_red_cap_account_name', 'aws_red_cap_role_name', aws_red_cap_cert', 'aws_red_cap_cert_key' and 'aws_red_ca_chain_cert' can only be set when 'cloud_type' is AWS Secret Region (32768)")
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSS) && (account.AwsSAccountNumber != "" || account.AwsSCapUrl != "" || account.AwsSCapAgency != "" || account.AwsSCapAccountName != "" || account.AwsSCapRoleName != "" || account.AwsSCapCert != "" || account.AwsSCapCertKey != "" || account.AwsSCaChainCert != "") {
+		return diag.Errorf("could not update Aviatrix Account: 'awss_account_number', 'awss_cap_url', 'awss_cap_agency', 'awss_cap_account_name', 'awss_cap_role_name', awss_cap_cert', 'awss_cap_cert_key' and 'awss_ca_chain_cert' can only be set when 'cloud_type' is AWS Secret Region (32768)")
 	}
 
 	if account.CloudType == goaviatrix.AWS {
@@ -1082,30 +1082,30 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 				return diag.Errorf("failed to update Aviatrix Account: %s", err)
 			}
 		}
-	} else if account.CloudType == goaviatrix.AWSC2S {
+	} else if account.CloudType == goaviatrix.AWSTS {
 		fileChanges := map[string]bool{
-			"aws_orange_cap_cert":      d.HasChange("aws_orange_cap_cert") && account.AwsOrangeCapCert != "",
-			"aws_orange_cap_cert_key":  d.HasChange("aws_orange_cap_cert_key") && account.AwsOrangeCapCertKey != "",
-			"aws_orange_ca_chain_cert": d.HasChange("aws_orange_ca_chain_cert") && account.AwsOrangeCaChainCert != "",
+			"awsts_cap_cert":      d.HasChange("awsts_cap_cert") && account.AwsTsCapCert != "",
+			"awsts_cap_cert_key":  d.HasChange("awsts_cap_cert_key") && account.AwsTsCapCertKey != "",
+			"awsts_ca_chain_cert": d.HasChange("awsts_ca_chain_cert") && account.AwsTsCaChainCert != "",
 		}
-		hasFileChanges := fileChanges["aws_orange_cap_cert"] || fileChanges["aws_orange_cap_cert_key"] || fileChanges["aws_orange_ca_chain_cert"]
+		hasFileChanges := fileChanges["awsts_cap_cert"] || fileChanges["awsts_cap_cert_key"] || fileChanges["awsts_ca_chain_cert"]
 
-		if d.HasChanges("aws_orange_account_number", "aws_orange_cap_url", "aws_orange_cap_agency", "aws_orange_cap_mission", "aws_orange_cap_role_name") || hasFileChanges {
-			err := client.UpdateAWSC2SAccount(account, fileChanges)
+		if d.HasChanges("awsts_account_number", "awsts_cap_url", "awsts_cap_agency", "awsts_cap_mission", "awsts_cap_role_name") || hasFileChanges {
+			err := client.UpdateAWSTSAccount(account, fileChanges)
 			if err != nil {
 				return diag.Errorf("failed to update AWS Secret Aviatrix Account: %v", err)
 			}
 		}
-	} else if account.CloudType == goaviatrix.AWSSC2S {
+	} else if account.CloudType == goaviatrix.AWSS {
 		fileChanges := map[string]bool{
-			"aws_red_cap_cert":      d.HasChange("aws_red_cap_cert") && account.AwsRedCapCert != "",
-			"aws_red_cap_cert_key":  d.HasChange("aws_red_cap_cert_key") && account.AwsRedCapCertKey != "",
-			"aws_red_ca_chain_cert": d.HasChange("aws_red_ca_chain_cert") && account.AwsRedCaChainCert != "",
+			"awss_cap_cert":      d.HasChange("awss_cap_cert") && account.AwsSCapCert != "",
+			"awss_cap_cert_key":  d.HasChange("awss_cap_cert_key") && account.AwsSCapCertKey != "",
+			"awss_ca_chain_cert": d.HasChange("awss_ca_chain_cert") && account.AwsSCaChainCert != "",
 		}
-		hasFileChanges := fileChanges["aws_red_cap_cert"] || fileChanges["aws_red_cap_cert_key"] || fileChanges["aws_red_ca_chain_cert"]
+		hasFileChanges := fileChanges["awss_cap_cert"] || fileChanges["awss_cap_cert_key"] || fileChanges["awss_ca_chain_cert"]
 
-		if d.HasChanges("aws_red_account_number", "aws_red_cap_url", "aws_red_cap_agency", "aws_red_cap_account_name", "aws_red_cap_role_name") || hasFileChanges {
-			err := client.UpdateAWSSC2SAccount(account, fileChanges)
+		if d.HasChanges("awss_account_number", "awss_cap_url", "awss_cap_agency", "awss_cap_account_name", "awss_cap_role_name") || hasFileChanges {
+			err := client.UpdateAWSSAccount(account, fileChanges)
 			if err != nil {
 				return diag.Errorf("failed to update AWS Top Secret Aviatrix Account: %v", err)
 			}
