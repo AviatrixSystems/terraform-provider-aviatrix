@@ -17,6 +17,7 @@ type Tags struct {
 	ResourceName string `form:"resource_name,omitempty"`
 	TagList      string `form:"new_tag_list,omitempty"`
 	Tags         map[string]string
+	TagJson      string `form:"new_tag_json,omitempty"`
 }
 
 type TagAPIResp struct {

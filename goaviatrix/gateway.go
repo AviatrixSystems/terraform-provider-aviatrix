@@ -57,76 +57,77 @@ type Gateway struct {
 	EnableNat  string `form:"enable_nat,omitempty" json:"enable_nat,omitempty"`
 	NatEnabled bool   `json:"nat_enabled,omitempty"`
 
-	SingleAZ                        string `form:"single_az_ha,omitempty" json:"single_az_ha,omitempty"`
-	EnableHybridConnection          bool   `json:"tgw_enabled,omitempty"`
-	EnablePbr                       string `form:"enable_pbr,omitempty"`
-	Expiration                      string `form:"expiration,omitempty" json:"expiration,omitempty"`
-	GatewayZone                     string `form:"gateway_zone,omitempty" json:"gateway_zone,omitempty"`
-	GwName                          string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
-	GwSecurityGroupID               string `form:"gw_security_group_id,omitempty" json:"gw_security_group_id,omitempty"`
-	GwSize                          string `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
-	GwSubnetID                      string `form:"gw_subnet_id,omitempty" json:"gw_subnet_id,omitempty"`
-	PeeringHASubnet                 string `form:"public_subnet,omitempty"`
-	NewZone                         string `form:"new_zone,omitempty"`
-	NewSubnet                       string `form:"new_subnet,omitempty"`
-	InsaneMode                      string `form:"insane_mode,omitempty" json:"high_perf,omitempty"`
-	InstState                       string `form:"inst_state,omitempty" json:"inst_state,omitempty"`
-	IntraVMRoute                    string `form:"intra_vm_route,omitempty" json:"intra_vm_route,omitempty"`
-	IsHagw                          string `form:"is_hagw,omitempty" json:"is_hagw,omitempty"`
-	JumboFrame                      bool   `json:"jumbo_frame"`
-	LdapAdditionalReq               string `form:"ldap_additional_req,omitempty"`
-	LdapBaseDn                      string `form:"ldap_base_dn,omitempty" json:"ldap_base_dn,omitempty"`
-	LdapBindDn                      string `form:"ldap_bind_dn,omitempty" json:"ldap_bind_dn,omitempty"`
-	LdapCaCert                      string `form:"ldap_ca_cert,omitempty" json:"ldap_ca_cert,omitempty"`
-	LdapClientCert                  string `form:"ldap_client_cert,omitempty" json:"ldap_client_cert,omitempty"`
-	LdapPassword                    string `form:"ldap_password,omitempty" json:"ldap_password,omitempty"`
-	LdapServer                      string `form:"ldap_server,omitempty" json:"ldap_server,omitempty"`
-	LdapUseSsl                      string `form:"ldap_use_ssl,omitempty" json:"ldap_use_ssl,omitempty"`
-	LdapUserAttr                    string `form:"ldap_username_attribute,omitempty" json:"ldap_username_attribute,omitempty"`
-	LicenseID                       string `form:"license_id,omitempty" json:"license_id,omitempty"`
-	MaxConn                         string `form:"max_conn,omitempty" json:"max_connections,omitempty"`
-	NameServers                     string `form:"nameservers,omitempty" json:"name_servers"`
-	OktaToken                       string `form:"okta_token,omitempty" json:"okta_token,omitempty"`
-	OktaURL                         string `form:"okta_url,omitempty" json:"okta_url,omitempty"`
-	OktaUsernameSuffix              string `form:"okta_username_suffix,omitempty" json:"okta_username_suffix,omitempty"`
-	OtpMode                         string `form:"otp_mode,omitempty" json:"otp_mode,omitempty"`
-	PbrDefaultGateway               string `form:"pbr_default_gateway,omitempty"`
-	PbrEnabled                      string `form:"pbr_enabled,omitempty" json:"pbr_enabled,omitempty"`
-	PbrLogging                      string `form:"pbr_logging,omitempty"`
-	PbrSubnet                       string `form:"pbr_subnet,omitempty"`
-	PrivateIP                       string `form:"private_ip,omitempty" json:"private_ip,omitempty"`
-	PublicIP                        string `form:"public_ip,omitempty" json:"public_ip,omitempty"`
-	SamlEnabled                     string `form:"saml_enabled,omitempty" json:"saml_enabled,omitempty"`
-	SandboxIP                       string `form:"sandbox_ip,omitempty" json:"sandbox_ip,omitempty"`
-	SaveTemplate                    string `form:"save_template,omitempty"`
-	SearchDomains                   string `form:"search_domains,omitempty" json:"search_domains"`
-	SplitTunnel                     string `form:"split_tunnel,omitempty" json:"split_tunnel,omitempty"`
-	SpokeVpc                        string `json:"spoke_vpc,omitempty"`
-	TagList                         string `form:"tags,omitempty"`
-	Tags                            map[string]string
-	TransitGwName                   string `form:"transit_gw_name,omitempty" json:"transit_gw_name,omitempty"`
-	EgressTransitGwName             string `form:"egress_transit_gw_name,omitempty" json:"egress_transit_gw_name,omitempty"`
-	TunnelName                      string `form:"tunnel_name,omitempty" json:"tunnel_name,omitempty"`
-	TunnelType                      string `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
-	VendorName                      string `form:"vendor_name,omitempty" json:"vendor_name,omitempty"`
-	VpcID                           string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	VpcNet                          string `form:"vpc_net,omitempty" json:"public_subnet,omitempty"`
-	VpcRegion                       string `form:"vpc_reg,omitempty" json:"vpc_region,omitempty"`
-	VpcSplunkIPPort                 string `form:"vpc_splunk_ip_port,omitempty" json:"vpc_splunk_ip_port,omitempty"`
-	VpcState                        string `form:"vpc_state,omitempty" json:"vpc_state,omitempty"`
-	VpcType                         string `form:"vpc_type,omitempty" json:"vpc_type,omitempty"`
-	VpnCidr                         string `form:"cidr,omitempty" json:"vpn_cidr,omitempty"`
-	VpnStatus                       string `form:"vpn_access,omitempty" json:"vpn_status,omitempty"`
-	Zone                            string `form:"zone,omitempty" json:"zone,omitempty"`
-	VpcSize                         string `form:"vpc_size,omitempty" ` //Only use for gateway create
-	DMZEnabled                      string `json:"dmz_enabled,omitempty"`
-	EnableActiveMesh                string `form:"enable_activemesh,omitempty" json:"enable_activemesh,omitempty"`
-	EnableVpnNat                    bool   `form:"vpn_nat,omitempty" json:"vpn_nat"`
-	EnableDesignatedGateway         string `form:"designated_gateway,omitempty" json:"designated_gateway,omitempty"`
-	AdditionalCidrsDesignatedGw     string `form:"additional_cidr_list,omitempty" json:"summarized_cidrs,omitempty"`
-	EnableEncryptVolume             bool   `json:"gw_enc,omitempty"`
-	CustomerManagedKeys             string `form:"customer_managed_keys,omitempty" json:"customer_managed_keys,omitempty"`
-	SnatMode                        string `form:"mode,omitempty" json:"snat_target,omitempty"`
+	SingleAZ                        string            `form:"single_az_ha,omitempty" json:"single_az_ha,omitempty"`
+	EnableHybridConnection          bool              `json:"tgw_enabled,omitempty"`
+	EnablePbr                       string            `form:"enable_pbr,omitempty"`
+	Expiration                      string            `form:"expiration,omitempty" json:"expiration,omitempty"`
+	GatewayZone                     string            `form:"gateway_zone,omitempty" json:"gateway_zone,omitempty"`
+	GwName                          string            `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
+	GwSecurityGroupID               string            `form:"gw_security_group_id,omitempty" json:"gw_security_group_id,omitempty"`
+	GwSize                          string            `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
+	GwSubnetID                      string            `form:"gw_subnet_id,omitempty" json:"gw_subnet_id,omitempty"`
+	PeeringHASubnet                 string            `form:"public_subnet,omitempty"`
+	NewZone                         string            `form:"new_zone,omitempty"`
+	NewSubnet                       string            `form:"new_subnet,omitempty"`
+	InsaneMode                      string            `form:"insane_mode,omitempty" json:"high_perf,omitempty"`
+	InstState                       string            `form:"inst_state,omitempty" json:"inst_state,omitempty"`
+	IntraVMRoute                    string            `form:"intra_vm_route,omitempty" json:"intra_vm_route,omitempty"`
+	IsHagw                          string            `form:"is_hagw,omitempty" json:"is_hagw,omitempty"`
+	JumboFrame                      bool              `json:"jumbo_frame"`
+	LdapAdditionalReq               string            `form:"ldap_additional_req,omitempty"`
+	LdapBaseDn                      string            `form:"ldap_base_dn,omitempty" json:"ldap_base_dn,omitempty"`
+	LdapBindDn                      string            `form:"ldap_bind_dn,omitempty" json:"ldap_bind_dn,omitempty"`
+	LdapCaCert                      string            `form:"ldap_ca_cert,omitempty" json:"ldap_ca_cert,omitempty"`
+	LdapClientCert                  string            `form:"ldap_client_cert,omitempty" json:"ldap_client_cert,omitempty"`
+	LdapPassword                    string            `form:"ldap_password,omitempty" json:"ldap_password,omitempty"`
+	LdapServer                      string            `form:"ldap_server,omitempty" json:"ldap_server,omitempty"`
+	LdapUseSsl                      string            `form:"ldap_use_ssl,omitempty" json:"ldap_use_ssl,omitempty"`
+	LdapUserAttr                    string            `form:"ldap_username_attribute,omitempty" json:"ldap_username_attribute,omitempty"`
+	LicenseID                       string            `form:"license_id,omitempty" json:"license_id,omitempty"`
+	MaxConn                         string            `form:"max_conn,omitempty" json:"max_connections,omitempty"`
+	NameServers                     string            `form:"nameservers,omitempty" json:"name_servers"`
+	OktaToken                       string            `form:"okta_token,omitempty" json:"okta_token,omitempty"`
+	OktaURL                         string            `form:"okta_url,omitempty" json:"okta_url,omitempty"`
+	OktaUsernameSuffix              string            `form:"okta_username_suffix,omitempty" json:"okta_username_suffix,omitempty"`
+	OtpMode                         string            `form:"otp_mode,omitempty" json:"otp_mode,omitempty"`
+	PbrDefaultGateway               string            `form:"pbr_default_gateway,omitempty"`
+	PbrEnabled                      string            `form:"pbr_enabled,omitempty" json:"pbr_enabled,omitempty"`
+	PbrLogging                      string            `form:"pbr_logging,omitempty"`
+	PbrSubnet                       string            `form:"pbr_subnet,omitempty"`
+	PrivateIP                       string            `form:"private_ip,omitempty" json:"private_ip,omitempty"`
+	PublicIP                        string            `form:"public_ip,omitempty" json:"public_ip,omitempty"`
+	SamlEnabled                     string            `form:"saml_enabled,omitempty" json:"saml_enabled,omitempty"`
+	SandboxIP                       string            `form:"sandbox_ip,omitempty" json:"sandbox_ip,omitempty"`
+	SaveTemplate                    string            `form:"save_template,omitempty"`
+	SearchDomains                   string            `form:"search_domains,omitempty" json:"search_domains"`
+	SplitTunnel                     string            `form:"split_tunnel,omitempty" json:"split_tunnel,omitempty"`
+	SpokeVpc                        string            `json:"spoke_vpc,omitempty"`
+	TagList                         string            `form:"tag_string,omitempty"`
+	Tags                            map[string]string `json:"tags,omitempty"`
+	TagJson                         string            `form:"tag_json,omitempty"`
+	TransitGwName                   string            `form:"transit_gw_name,omitempty" json:"transit_gw_name,omitempty"`
+	EgressTransitGwName             string            `form:"egress_transit_gw_name,omitempty" json:"egress_transit_gw_name,omitempty"`
+	TunnelName                      string            `form:"tunnel_name,omitempty" json:"tunnel_name,omitempty"`
+	TunnelType                      string            `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
+	VendorName                      string            `form:"vendor_name,omitempty" json:"vendor_name,omitempty"`
+	VpcID                           string            `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	VpcNet                          string            `form:"vpc_net,omitempty" json:"public_subnet,omitempty"`
+	VpcRegion                       string            `form:"vpc_reg,omitempty" json:"vpc_region,omitempty"`
+	VpcSplunkIPPort                 string            `form:"vpc_splunk_ip_port,omitempty" json:"vpc_splunk_ip_port,omitempty"`
+	VpcState                        string            `form:"vpc_state,omitempty" json:"vpc_state,omitempty"`
+	VpcType                         string            `form:"vpc_type,omitempty" json:"vpc_type,omitempty"`
+	VpnCidr                         string            `form:"cidr,omitempty" json:"vpn_cidr,omitempty"`
+	VpnStatus                       string            `form:"vpn_access,omitempty" json:"vpn_status,omitempty"`
+	Zone                            string            `form:"zone,omitempty" json:"zone,omitempty"`
+	VpcSize                         string            `form:"vpc_size,omitempty" ` //Only use for gateway create
+	DMZEnabled                      string            `json:"dmz_enabled,omitempty"`
+	EnableActiveMesh                string            `form:"enable_activemesh,omitempty" json:"enable_activemesh,omitempty"`
+	EnableVpnNat                    bool              `form:"vpn_nat,omitempty" json:"vpn_nat"`
+	EnableDesignatedGateway         string            `form:"designated_gateway,omitempty" json:"designated_gateway,omitempty"`
+	AdditionalCidrsDesignatedGw     string            `form:"additional_cidr_list,omitempty" json:"summarized_cidrs,omitempty"`
+	EnableEncryptVolume             bool              `json:"gw_enc,omitempty"`
+	CustomerManagedKeys             string            `form:"customer_managed_keys,omitempty" json:"customer_managed_keys,omitempty"`
+	SnatMode                        string            `form:"mode,omitempty" json:"snat_target,omitempty"`
 	SnatPolicy                      []PolicyRule
 	PolicyList                      string `form:"policy_list,omitempty"`
 	GatewayName                     string `form:"gateway_name,omitempty"`

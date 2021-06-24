@@ -837,6 +837,23 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			return errors.New("failed to create gateway: adding tags is only supported for AWS (1), Azure (8), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048) and AWS Top Secret (16384)")
 		}
+
+		if tagListOk {
+			tagList := d.Get("tag_list").([]interface{})
+			tagListStr := goaviatrix.ExpandStringList(tagList)
+			tagListStr = goaviatrix.TagListStrColon(tagListStr)
+			gateway.TagList = strings.Join(tagListStr, ",")
+		} else {
+			tagsMap, err := extractTags(d, gateway.CloudType)
+			if err != nil {
+				return fmt.Errorf("error creating tags for gateway: %v", err)
+			}
+			tagJson, err := TagsMapToJson(tagsMap)
+			if err != nil {
+				return fmt.Errorf("failed to add tags when creating gateway: %v", err)
+			}
+			gateway.TagJson = tagJson
+		}
 	}
 
 	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.OCIRelatedCloudTypes) && (gateway.AvailabilityDomain == "" || gateway.FaultDomain == "") {
@@ -1007,41 +1024,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			log.Printf("[INFO] Resizing Peering Ha Gateway size to: %s,", peeringHaGateway.GwSize)
 			if err != nil {
 				return fmt.Errorf("failed to update Aviatrix Peering HA Gateway size: %s", err)
-			}
-		}
-	}
-
-	if tagListOk || tagsOk {
-		tags := &goaviatrix.Tags{
-			ResourceType: "gw",
-			ResourceName: d.Get("gw_name").(string),
-			CloudType:    gateway.CloudType,
-		}
-
-		if tagListOk {
-			tagList := d.Get("tag_list").([]interface{})
-			tagListStr := goaviatrix.ExpandStringList(tagList)
-			tagListStr = goaviatrix.TagListStrColon(tagListStr)
-			gateway.TagList = strings.Join(tagListStr, ",")
-			tags.TagList = gateway.TagList
-		} else {
-			tagsMap, err := extractTags(d, gateway.CloudType)
-			if err != nil {
-				return fmt.Errorf("error creating tags for gateway: %v", err)
-			}
-			tags.Tags = tagsMap
-			tags.TagList = TagsMapToString(tagsMap)
-		}
-
-		if goaviatrix.IsCloudType(tags.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-			err := client.UpdateTags(tags)
-			if err != nil {
-				return fmt.Errorf("failed to add tags to gateway: %s", err)
-			}
-		} else {
-			err := client.AddTags(tags)
-			if err != nil {
-				return fmt.Errorf("failed to add tags to gateway: %s", err)
 			}
 		}
 	}
@@ -1759,7 +1741,11 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				return fmt.Errorf("failed to update tags for gateway: %v", err)
 			}
 			tags.Tags = tagsMap
-			tags.TagList = TagsMapToString(tagsMap)
+			tagJson, err := TagsMapToJson(tagsMap)
+			if err != nil {
+				return fmt.Errorf("failed to update tags for gateway: %v", err)
+			}
+			tags.TagJson = tagJson
 			err = client.UpdateTags(tags)
 			if err != nil {
 				return fmt.Errorf("failed to update tags for gateway: %v", err)
