@@ -31,7 +31,8 @@ type SpokeVpc struct {
 	HASubnetGCP           string `form:"new_subnet,omitempty"`
 	SingleAzHa            string `form:"single_az_ha,omitempty"`
 	TransitGateway        string `form:"transit_gw,omitempty"`
-	TagList               string `form:"tags,omitempty"`
+	TagList               string `form:"tag_string,omitempty"`
+	TagJson               string `form:"tag_json,omitempty"`
 	ReuseEip              string `form:"reuse_eip,omitempty"`
 	AllocateNewEipRead    bool   `json:"newly_allocated_eip,omitempty"`
 	Eip                   string `form:"eip,omitempty" json:"eip,omitempty"`

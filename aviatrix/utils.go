@@ -1,6 +1,7 @@
 package aviatrix
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -164,4 +165,12 @@ func TagsMapToString(tagsMap map[string]string) string {
 	}
 	tagListStr := strings.Join(tagList, ",")
 	return tagListStr
+}
+
+func TagsMapToJson(tagsMap map[string]string) (string, error) {
+	bytes, err := json.Marshal(tagsMap)
+	if err != nil {
+		return "", fmt.Errorf("could not marshal tags to json: %v", err)
+	}
+	return string(bytes), nil
 }
