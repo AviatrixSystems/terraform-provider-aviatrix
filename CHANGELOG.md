@@ -4,9 +4,9 @@
 - Supported Terraform version: **v0.12.x**, **v0.13.x**, **v0.14.x** and **v0.15.x**
 
 ### Enhancements:
-1. Added retries for GET requests in **aviatrix_transit_gateway_peering**
+1. Added retries for failed GET requests
 2. Optimized state refresh performance for **aviatrix_transit_gateway_peering**
-3. Updated Aviatrix HTTP Client to try to look for proxies in the default env variables HTTP_PROXY and HTTPS_PROXY
+3. Updated Aviatrix HTTP Client to try to look for proxies in the default env variables HTTP_PROXY/http_proxy and HTTPS_PROXY/https_proxy
 
 
 ## 2.19.3 (June 14, 2021)
