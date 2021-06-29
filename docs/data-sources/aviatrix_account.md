@@ -66,3 +66,22 @@ In addition to all arguments above, the following attributes are exported:
 
 ### Alibaba Cloud
 * `alicloud_account_id` - Alibaba Cloud Account ID.
+
+### AWS Top Secret Cloud
+* `awsts_account_number` - AWS Top Secret Region Account Number. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19.5+.
+* `awsts_cap_url` - AWS Top Secret Region CAP Url. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19.5+.
+* `awsts_cap_agency` - AWS Top Secret Region CAP Agency. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19.5+.
+* `awsts_cap_mission` - AWS Top Secret Region Mission. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19.5+.
+* `awsts_cap_role_name` - AWS Top Secret Region Role Name. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19.5+.
+  `awsts_cap_cert_path` - AWS Top Secret Region CAP Certificate file name on the controller. Available as of provider R2.19.5+.
+* `awsts_cap_cert_key_path` - AWS Top Secret Region CAP Certificate Key file name on the controller. Available as of provider R2.19.5+.
+* `aws_ca_cert_path` - AWS Top Secret Region or Secret Region Custom Certificate Authority file name on the controller. Available as of provider R2.19.5+.
+
+### AWS Secret Cloud
+* `awss_account_number` - AWS Secret Region Account Number. Required when creating an account in AWS Secret Region. Available as of provider version R2.19.5+.
+* `awss_cap_url` - AWS Secret Region CAP Url. Required when creating an account in AWS Secret Region. Available as of provider version R2.19.5+.
+* `awss_cap_agency` - AWS Secret Region CAP Agency. Required when creating an account in AWS Secret Region. Available as of provider version R2.19.5+.
+* `awss_cap_account_name` - AWS Secret Region Account Name. Required when creating an account in AWS Secret Region. Available as of provider version R2.19.5+.
+* `awss_cap_role_name` - AWS Secret Region Role Name. Required when creating an account in AWS Secret Region. Available as of provider version R2.19.5+.
+* `awss_cap_cert_path` - AWS Secret Region CAP Certificate file name on the controller. Available as of provider R2.19.5+.
+* `awss_cap_cert_key_path` - AWS Secret Region CAP Certificate Key file name on the controller. Available as of provider R2.19.5+.
