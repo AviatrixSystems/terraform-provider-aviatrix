@@ -2,6 +2,8 @@ package goaviatrix
 
 import (
 	"context"
+	"fmt"
+	"strings"
 )
 
 func (c *Client) SetGatewayKeepaliveConfig(ctx context.Context, speed string) error {
@@ -11,7 +13,14 @@ func (c *Client) SetGatewayKeepaliveConfig(ctx context.Context, speed string) er
 		"speed":  speed,
 	}
 
-	return c.PostAPIContext(ctx, data["action"], data, BasicCheck)
+	checkFunc := func(action, reason string, ret bool) error {
+		if ret || strings.Contains(reason, "Template is already set to") {
+			return nil
+		}
+		return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+	}
+
+	return c.PostAPIContext(ctx, data["action"], data, checkFunc)
 }
 
 func (c *Client) GetGatewayKeepaliveConfig(ctx context.Context) (string, error) {
