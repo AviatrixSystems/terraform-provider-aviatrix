@@ -14,8 +14,8 @@ const (
 	AWSChina   = 1024
 	AzureChina = 2048
 	AliCloud   = 8192
-	AWSC2S     = 16384 // AWS Top Secret Region
-	AWSSC2S    = 32768 // AWS Secret Region
+	AWSTS      = 16384 // AWS Top Secret Region (C2S)
+	AWSS       = 32768 // AWS Secret Region (SC2S)
 )
 
 // Cloud vendor names
@@ -26,7 +26,7 @@ var (
 )
 
 const (
-	AWSRelatedCloudTypes      = AWS | AWSGov | AWSChina | AWSC2S
+	AWSRelatedCloudTypes      = AWS | AWSGov | AWSChina | AWSTS
 	GCPRelatedCloudTypes      = GCP
 	AzureArmRelatedCloudTypes = Azure | AzureGov | AzureChina
 	OCIRelatedCloudTypes      = OCI
@@ -52,8 +52,8 @@ func GetSupportedClouds() []int {
 		AzureChina,
 		AWSChina,
 		AliCloud,
-		AWSC2S,
-		AWSSC2S,
+		AWSTS,
+		AWSS,
 	}
 }
 

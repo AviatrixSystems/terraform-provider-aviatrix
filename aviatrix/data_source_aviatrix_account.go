@@ -113,62 +113,62 @@ func dataSourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "Alibaba Cloud Account ID to associate with Aviatrix account.",
 			},
-			"aws_orange_account_number": {
+			"awsts_account_number": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "AWS Top Secret Region Account Number.",
 			},
-			"aws_orange_cap_url": {
+			"awsts_cap_url": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "AWS Top Secret Region CAP Endpoint URL.",
 			},
-			"aws_orange_cap_agency": {
+			"awsts_cap_agency": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "AWS Top Secret Region CAP Agency.",
 			},
-			"aws_orange_cap_mission": {
+			"awsts_cap_mission": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "AWS Top Secret Region CAP Mission.",
 			},
-			"aws_orange_cap_role_name": {
+			"awsts_cap_role_name": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "AWS Top Secret Region CAP Role Name.",
 			},
-			"aws_red_account_number": {
+			"awss_account_number": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "AWS Secret Region Account Number.",
 			},
-			"aws_red_cap_url": {
+			"awss_cap_url": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "AWS Secret Region CAP Endpoint URL.",
 			},
-			"aws_red_cap_agency": {
+			"awss_cap_agency": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "AWS Secret Region CAP Agency.",
 			},
-			"aws_red_cap_account_name": {
+			"awss_cap_account_name": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "AWS Secret Region CAP Account Name.",
 			},
-			"aws_red_cap_role_name": {
+			"awss_cap_role_name": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "AWS Secret Region CAP Role Name.",
 			},
-			"aws_orange_cap_cert_path": {
+			"awsts_cap_cert_path": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "AWS Top Secret Region CAP Certificate file path on the controller.",
 			},
-			"aws_orange_cap_cert_key_path": {
+			"awsts_cap_cert_key_path": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "AWS Top Secret Region CAP Certificate Key file path on the controller.",
@@ -178,12 +178,12 @@ func dataSourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS Top Secret Region or Secret Region Custom Certificate Authority file path on the controller.",
 			},
-			"aws_red_cap_cert_path": {
+			"awss_cap_cert_path": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "AWS Secret Region CAP Certificate file path on the controller.",
 			},
-			"aws_red_cap_cert_key_path": {
+			"awss_cap_cert_key_path": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "AWS Secret Region CAP Certificate Key file path on the controller.",
@@ -248,23 +248,23 @@ func dataSourceAviatrixAccountRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("alicloud_account_id", acc.AwsAccountNumber)
 	}
 
-	if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AWSC2S) {
-		d.Set("aws_orange_account_number", acc.AwsOrangeAccountNumber)
-		d.Set("aws_orange_cap_url", acc.AwsOrangeCapUrl)
-		d.Set("aws_orange_cap_agency", acc.AwsOrangeCapAgency)
-		d.Set("aws_orange_cap_mission", acc.AwsOrangeCapMission)
-		d.Set("aws_orange_cap_role_name", acc.AwsOrangeCapRoleName)
-		d.Set("aws_orange_cap_cert_path", acc.AwsOrangeCapCertPath)
-		d.Set("aws_orange_cap_cert_key_path", acc.AwsOrangeCapCertKeyPath)
+	if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AWSTS) {
+		d.Set("awsts_account_number", acc.AwsTsAccountNumber)
+		d.Set("awsts_cap_url", acc.AwsTsCapUrl)
+		d.Set("awsts_cap_agency", acc.AwsTsCapAgency)
+		d.Set("awsts_cap_mission", acc.AwsTsCapMission)
+		d.Set("awsts_cap_role_name", acc.AwsTsCapRoleName)
+		d.Set("awsts_cap_cert_path", acc.AwsTsCapCertPath)
+		d.Set("awsts_cap_cert_key_path", acc.AwsTsCapCertKeyPath)
 		d.Set("aws_ca_cert_path", acc.AwsCaCertPath)
-	} else if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AWSSC2S) {
-		d.Set("aws_red_account_number", acc.AwsRedAccountNumber)
-		d.Set("aws_red_cap_url", acc.AwsRedCapUrl)
-		d.Set("aws_red_cap_agency", acc.AwsRedCapAgency)
-		d.Set("aws_red_cap_account_name", acc.AwsRedCapAccountName)
-		d.Set("aws_red_cap_role_name", acc.AwsRedCapRoleName)
-		d.Set("aws_red_cap_cert_path", acc.AwsRedCapCertPath)
-		d.Set("aws_red_cap_cert_key_path", acc.AwsRedCapCertKeyPath)
+	} else if goaviatrix.IsCloudType(acc.CloudType, goaviatrix.AWSS) {
+		d.Set("awss_account_number", acc.AwsSAccountNumber)
+		d.Set("awss_cap_url", acc.AwsSCapUrl)
+		d.Set("awss_cap_agency", acc.AwsSCapAgency)
+		d.Set("awss_cap_account_name", acc.AwsSCapAccountName)
+		d.Set("awss_cap_role_name", acc.AwsSCapRoleName)
+		d.Set("awss_cap_cert_path", acc.AwsSCapCertPath)
+		d.Set("awss_cap_cert_key_path", acc.AwsSCapCertKeyPath)
 		d.Set("aws_ca_cert_path", acc.AwsCaCertPath)
 	}
 
