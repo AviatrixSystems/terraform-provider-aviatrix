@@ -600,7 +600,7 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 		egressEnabled := d.Get("egress_enabled").(bool)
 
 		if !d.HasChange("egress_enabled") && !egressEnabled {
-			return fmt.Errorf("egress must be enalbed to edit 'egress_static_cidrs'")
+			return fmt.Errorf("egress must be enabled to edit 'egress_static_cidrs'")
 		}
 
 		if egressEnabled {
