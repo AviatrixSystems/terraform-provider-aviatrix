@@ -423,7 +423,12 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 	if err != nil {
 		return fmt.Errorf("error creating tags for firewall instance: %v", err)
 	}
+	tagJson, err := TagsMapToJson(tags)
+	if err != nil {
+		return fmt.Errorf("failed to add tags when creating firewall instance: %v", err)
+	}
 	firewallInstance.Tags = tags
+	firewallInstance.TagJson = tagJson
 
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.OCIRelatedCloudTypes) && (firewallInstance.AvailabilityDomain == "" || firewallInstance.FaultDomain == "") {
 		return fmt.Errorf("'availability_domain' and 'fault_domain' are required for OCI")

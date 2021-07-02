@@ -55,6 +55,7 @@ type FirewallInstance struct {
 	UserData             string          `form:"user_data,omitempty" json:"user_data,omitempty"`
 	TagsMessage          json.RawMessage `json:"usr_tags"`
 	Tags                 map[string]string
+	TagJson              string
 	AvailabilityDomain   string `form:"availability_domain,omitempty"`
 	FaultDomain          string `form:"fault_domain,omitempty" json:"fault_domain"`
 }
@@ -142,12 +143,7 @@ func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (str
 		addFirewallInstance.Add("user_data", firewallInstance.UserData)
 	}
 	if len(firewallInstance.Tags) > 0 {
-		tagList := make([]string, 0, len(firewallInstance.Tags))
-		for key, val := range firewallInstance.Tags {
-			tagList = append(tagList, key+":"+val)
-		}
-		tagListStr := strings.Join(tagList, ",")
-		addFirewallInstance.Add("tag_string", tagListStr)
+		addFirewallInstance.Add("tag_json", firewallInstance.TagJson)
 	}
 	if firewallInstance.AvailabilityDomain != "" && firewallInstance.FaultDomain != "" {
 		addFirewallInstance.Add("cloud_type", strconv.Itoa(OCI))
