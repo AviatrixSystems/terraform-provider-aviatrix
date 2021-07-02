@@ -122,14 +122,12 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			"remote_subnet_virtual": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ForceNew:         true,
 				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceInString,
 				Description:      "Remote Subnet CIDR (Virtual).",
 			},
 			"local_subnet_virtual": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ForceNew:         true,
 				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceInString,
 				Description:      "Local Subnet CIDR (Virtual).",
 			},
@@ -860,10 +858,11 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[INFO] Updating Aviatrix Site2Cloud: %#v", editSite2cloud)
 
 	if d.HasChange("local_subnet_cidr") {
-		if d.Get("custom_mapped").(bool) {
+		if d.Get("custom_mapped").(bool) && d.Get("local_subnet_cidr").(string) != "" {
 			return fmt.Errorf("'local_subnet_cidr' is not valid when 'custom_mapped' is enabled")
 		}
 		editSite2cloud.CloudSubnetCidr = d.Get("local_subnet_cidr").(string)
+		editSite2cloud.CloudSubnetVirtual = d.Get("local_subnet_virtual").(string)
 		editSite2cloud.NetworkType = "1"
 		err := client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
@@ -871,15 +870,54 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	if d.HasChange("local_subnet_virtual") {
+		if d.Get("custom_mapped").(bool) && d.Get("local_subnet_virtual").(string) != "" {
+			return fmt.Errorf("'local_subnet_vitrual' is not valid when 'custom_mapped' is enabled")
+		}
+		if d.Get("connection_type").(string) == "mapped" && d.Get("local_subnet_virtual").(string) == "" {
+			return fmt.Errorf("'local_subnet_virtual' is required for connection type: mapped, unless 'custom_mapped' is enabled")
+		}
+		if d.Get("connection_type").(string) == "unmapped" && d.Get("local_subnet_virtual").(string) != "" {
+			return fmt.Errorf("'local_subnet_virtual' should be empty for connection type: ummapped")
+		}
+		editSite2cloud.CloudSubnetCidr = d.Get("local_subnet_cidr").(string)
+		editSite2cloud.CloudSubnetVirtual = d.Get("local_subnet_virtual").(string)
+		editSite2cloud.NetworkType = "1"
+		err := client.UpdateSite2Cloud(editSite2cloud)
+		if err != nil {
+			return fmt.Errorf("failed to update Site2Cloud local_subnet_virtual: %s", err)
+		}
+	}
+
 	if d.HasChange("remote_subnet_cidr") {
-		if d.Get("custom_mapped").(bool) {
+		if d.Get("custom_mapped").(bool) && d.Get("remote_subnet_cidr").(string) != "" {
 			return fmt.Errorf("'remote_subnet_cidr' is not valid when 'custom_mapped' is enabled")
 		}
 		editSite2cloud.CloudSubnetCidr = d.Get("remote_subnet_cidr").(string)
+		editSite2cloud.CloudSubnetVirtual = d.Get("remote_subnet_virtual").(string)
 		editSite2cloud.NetworkType = "2"
 		err := client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
 			return fmt.Errorf("failed to update Site2Cloud remote_subnet_cidr: %s", err)
+		}
+	}
+
+	if d.HasChange("remote_subnet_virtual") {
+		if d.Get("custom_mapped").(bool) && d.Get("remote_subnet_virtual").(string) != "" {
+			return fmt.Errorf("'remote_subnet_vitrual' is not valid when 'custom_mapped' is enabled")
+		}
+		if d.Get("connection_type").(string) == "mapped" && d.Get("remote_subnet_virtual").(string) == "" {
+			return fmt.Errorf("'remote_subnet_virtual' is required for connection type: mapped, unless 'custom_mapped' is enabled")
+		}
+		if d.Get("connection_type").(string) == "unmapped" && d.Get("remote_subnet_virtual").(string) != "" {
+			return fmt.Errorf("'remote_subnet_virtual' should be empty for connection type: ummapped")
+		}
+		editSite2cloud.CloudSubnetCidr = d.Get("remote_subnet_cidr").(string)
+		editSite2cloud.CloudSubnetVirtual = d.Get("remote_subnet_virtual").(string)
+		editSite2cloud.NetworkType = "2"
+		err := client.UpdateSite2Cloud(editSite2cloud)
+		if err != nil {
+			return fmt.Errorf("failed to update Site2Cloud remote_subnet_virtual: %s", err)
 		}
 	}
 
