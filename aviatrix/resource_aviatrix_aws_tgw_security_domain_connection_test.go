@@ -144,7 +144,7 @@ func testAccCheckAwsTgwSecurityDomainConnectionDestroy(s *terraform.State) error
 		} else {
 			for _, sd := range securityDomainDetails.ConnectedDomain {
 				if sd == rs.Primary.Attributes["domain_name2"] {
-					return fmt.Errorf("security domain connection still exits")
+					return fmt.Errorf("security domain connection still exists")
 				}
 			}
 		}

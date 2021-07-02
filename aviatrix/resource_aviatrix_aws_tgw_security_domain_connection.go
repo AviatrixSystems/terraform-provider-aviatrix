@@ -77,7 +77,7 @@ func resourceAviatrixAwsTgwSecurityDomainConnectionCreate(ctx context.Context, d
 
 	for _, sd := range securityDomainDetails.ConnectedDomain {
 		if sd == destinationDomainName {
-			return diag.Errorf("the connection between %s and %s already exits, please import to manage with Terraform", sourceDomainName, destinationDomainName)
+			return diag.Errorf("the connection between %s and %s already exists, please import to manage with Terraform", sourceDomainName, destinationDomainName)
 		}
 	}
 
