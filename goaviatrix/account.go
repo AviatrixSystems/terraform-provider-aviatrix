@@ -378,7 +378,7 @@ func (c *Client) UpdateAWSTSAccount(account *Account, fileChanges map[string]boo
 			ParamName: "aws_orange_ca_chain_cert",
 		})
 	} else {
-		params["aws_ca_cert_path"] = account.AwsCaCertPath
+		params["aws_orange_ca_cert_path"] = account.AwsCaCertPath
 	}
 
 	return c.PostFileAPI(params, files, BasicCheck)
@@ -422,7 +422,7 @@ func (c *Client) UpdateAWSSAccount(account *Account, fileChanges map[string]bool
 			ParamName: "aws_red_ca_chain_cert",
 		})
 	} else {
-		params["aws_ca_cert_path"] = account.AwsCaCertPath
+		params["aws_red_ca_cert_path"] = account.AwsCaCertPath
 	}
 
 	return c.PostFileAPI(params, files, BasicCheck)
