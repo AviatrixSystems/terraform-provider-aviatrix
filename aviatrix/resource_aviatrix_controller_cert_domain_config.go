@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -38,6 +39,12 @@ func resourceAviatrixControllerCertDomainConfigCreate(ctx context.Context, d *sc
 	err := client.SetCertDomain(ctx, certDomain)
 	if err != nil {
 		if strings.Contains(err.Error(), "EOF") {
+			sleepTime, err := client.GetSleepTime(ctx)
+			if err != nil {
+				return diag.Errorf("could not get sleep time: %v", err)
+			}
+			time.Sleep(sleepTime * time.Second)
+
 			certDomainConfig, err := client.GetCertDomain(ctx)
 			if err != nil {
 				return diag.Errorf("could not confirm if cert domain is updated: %v", err)
@@ -79,6 +86,12 @@ func resourceAviatrixControllerCertDomainConfigUpdate(ctx context.Context, d *sc
 		err := client.SetCertDomain(ctx, d.Get("cert_domain").(string))
 		if err != nil {
 			if strings.Contains(err.Error(), "EOF") {
+				sleepTime, err := client.GetSleepTime(ctx)
+				if err != nil {
+					return diag.Errorf("could not get sleep time: %v", err)
+				}
+				time.Sleep(sleepTime * time.Second)
+
 				certDomainConfig, err := client.GetCertDomain(ctx)
 				if err != nil {
 					return diag.Errorf("could not confirm if cert domain is updated: %v", err)
@@ -101,6 +114,12 @@ func resourceAviatrixControllerCertDomainConfigDelete(ctx context.Context, d *sc
 	err := client.SetCertDomain(ctx, "aviatrixnetwork.com")
 	if err != nil {
 		if strings.Contains(err.Error(), "EOF") {
+			sleepTime, err := client.GetSleepTime(ctx)
+			if err != nil {
+				return diag.Errorf("could not get sleep time: %v", err)
+			}
+			time.Sleep(sleepTime * time.Second)
+
 			certDomainConfig, err := client.GetCertDomain(ctx)
 			if err != nil {
 				return diag.Errorf("could not confirm if cert domain is updated: %v", err)
