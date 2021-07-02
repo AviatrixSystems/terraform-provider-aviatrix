@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -54,6 +56,11 @@ type GetCloudnBackupConfigResp struct {
 type CertDomainConfig struct {
 	CertDomain string `json:"cert_domain"`
 	IsDefault  bool   `json:"is_default"`
+}
+
+type ResourceCounts struct {
+	Name  string `json:"Name"`
+	Count int    `json:"Count"`
 }
 
 func (c *Client) EnableHttpAccess() error {
@@ -501,4 +508,39 @@ func (c *Client) GetCertDomain(ctx context.Context) (*CertDomainConfig, error) {
 	}
 
 	return &data.Results, nil
+}
+
+func (c *Client) GetGatewayCount(ctx context.Context) (int, error) {
+	params := map[string]string{
+		"action": "list_resource_counts",
+		"CID":    c.CID,
+	}
+
+	type Resp struct {
+		Return  bool             `json:"return"`
+		Results []ResourceCounts `json:"results"`
+	}
+
+	var data Resp
+	err := c.GetAPIContext(ctx, &data, params["action"], params, BasicCheck)
+	if err != nil {
+		return -1, err
+	}
+
+	var gatewayCount int
+	for _, resourceCount := range data.Results {
+		if strings.Contains(resourceCount.Name, "Gateways") {
+			gatewayCount += resourceCount.Count
+		}
+	}
+
+	return gatewayCount, nil
+}
+
+func (c *Client) GetSleepTime(ctx context.Context) (time.Duration, error) {
+	gatewayCount, err := c.GetGatewayCount(ctx)
+	if err != nil {
+		return -1, fmt.Errorf("could not get gateway count: %v", err)
+	}
+	return time.Duration(20 * int(math.Ceil(float64(gatewayCount)/15.0))), nil
 }
