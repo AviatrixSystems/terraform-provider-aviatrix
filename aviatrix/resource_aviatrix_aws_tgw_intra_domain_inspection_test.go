@@ -184,7 +184,7 @@ func testAccCheckAwsTgwIntraDomainInspectionDestroy(s *terraform.State) error {
 		err := client.GetIntraDomainInspectionStatus(context.Background(), intraDomainInspection)
 
 		if err == nil {
-			return fmt.Errorf("aws tgw intra domain inspection still exits")
+			return fmt.Errorf("aws tgw intra domain inspection still exists")
 		}
 	}
 
