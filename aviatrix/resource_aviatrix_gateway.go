@@ -2188,6 +2188,20 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			if err != nil {
 				return fmt.Errorf("failed to enable encrypt gateway volume for %s due to %s", gwEncVolume.GwName, err)
 			}
+
+			haSubnet := d.Get("peering_ha_subnet").(string)
+			haZone := d.Get("peering_ha_zone").(string)
+			haEnabled := haSubnet != "" || haZone != ""
+			if haEnabled {
+				gwHAEncVolume := &goaviatrix.Gateway{
+					GwName:              d.Get("gw_name").(string) + "-hagw",
+					CustomerManagedKeys: d.Get("customer_managed_keys").(string),
+				}
+				err := client.EnableEncryptVolume(gwHAEncVolume)
+				if err != nil {
+					return fmt.Errorf("failed to enable encrypt gateway volume for %s due to %s", gwHAEncVolume.GwName, err)
+				}
+			}
 		} else {
 			return fmt.Errorf("can't disable Encrypt Volume for gateway: %s", gateway.GwName)
 		}
