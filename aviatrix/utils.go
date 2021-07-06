@@ -151,9 +151,7 @@ func extractTags(d *schema.ResourceData, cloudType int) (map[string]string, erro
 		if !matched {
 			return nil, fmt.Errorf("illegal characters in tags")
 		}
-		escapedKey := strings.ReplaceAll(key, ":", "\\:")
-		escapedVal := strings.ReplaceAll(valStr, ":", "\\:")
-		tagsStrMap[escapedKey] = escapedVal
+		tagsStrMap[key] = valStr
 	}
 	return tagsStrMap, nil
 }
