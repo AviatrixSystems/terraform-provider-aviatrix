@@ -1,4 +1,88 @@
-## 2.19.4 (Unreleased)
+## 2.19.5 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.4**
+- Supported Terraform version: **v1.0**
+
+### Features:
+#### Accounts
+1. Implemented support for AWSChina in **aviatrix_account** and data source with the following new attributes:
+- ``awschina_role_app``
+- ``awschina_role_ec2``
+2. Implemented support for AzureChina in **aviatrix_account** and data source with the following new attributes:
+- ``azurechina_subscription_id``
+- ``azurechina_directory_id``
+- ``azurechina_application_id``
+- ``azurechina_application_key``
+3. Implemented support for AWSTS in **aviatrix_account** and data source with the following new attributes:
+- ``awsts_account_number``
+- ``awsts_cap_url``
+- ``awsts_cap_agency``
+- ``awsts_cap_mission``
+- ``awsts_cap_role_name``
+- ``awsts_cap_cert``
+- ``awsts_cap_cert_key``
+- ``awsts_ca_chain_cert``
+4. Implemented support for AWSS in **aviatrix_account** and data source with the following new attributes:
+- ``awss_account_number``
+- ``awss_cap_url``
+- ``awss_cap_agency``
+- ``awss_cap_account_name``
+- ``awss_cap_role_name``
+- ``awss_cap_cert``
+- ``awss_cap_cert_key``
+- ``awss_ca_chain_cert``
+
+#### Firewall Network
+1. Implemented support for Fail Close and Network List Excluded From East-West Inspection in **aviatrix_firenet**
+2. Implemented support for colon character in ``tags`` in **aviatrix_firewall_instance**
+
+#### Gateway
+1. Implemented support for Applying Route Entry in **aviatrix_gateway**
+2. Implemented support for AWS Top Secret provider in **aviatrix_gateway**
+3. Implemented support for AWS Secret provider in **aviatrix_gateway**
+4. Implemented support for configuring gateway keepalive settings
+- **aviatrix_controller_gateway_keepalive_config**
+5. Implemented support for colon character in ``tags`` in **aviatrix_gateway**
+
+#### Multi-Cloud Transit
+1. Implemented support for AWS Top Secret provider in **aviatrix_spoke_gateway**
+2. Implemented support for AWS Secret provider in **aviatrix_transit_gateway**
+3. Implemented support for colon character in ``tags`` in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+4. Implemented support for connection based BGP prepending in **aviatrix_transit_external_device_conn** and **aviatrix_vgw_conn**
+
+#### TGW Orchestrator
+1. Implemented support for the following attribute in **aviatrix_aws_tgw_vpn_conn**
+- ``enable_global_acceleration``
+
+### Enhancements:
+1. Allowed the value "aviatrix" for the attribute ``host_os`` to support managed cloudN deployment
+2. Added support for computed attribute``peering_ha_security_group_id`` in **aviatrix_gateway**
+3. Added support for computed attributes ``availability_domains`` and ``fault_domains`` in **aviatrix_vpc** and data source
+4. Added support for Panorama in **aviatrix_firenet_vendor_integration** data source
+
+### Bug Fixes:
+1. Fixed issue where creating, updating or deleting **aviatrix_controller_cert_domain_config** may cause timeout
+2. Fixed issue where disabling Egress fails when Egress is enabled without setting Egress Static CIDRs in **aviatrix_firenet**
+3. Fixed issue where setting "account_name" will cause panic in **aviatrix_rbac_group_access_account_attachment**
+4. Fixed issue where context deadline exceeded error happens in following resources
+- **aviatrix/resource_aviatrix_account**
+- **aviatrix/resource_aviatrix_aws_tgw_connect**
+- **aviatrix/resource_aviatrix_aws_tgw_connect_peer**
+- **aviatrix/resource_aviatrix_aws_tgw_intra_domain_inspection**
+- **aviatrix/resource_aviatrix_aws_tgw_security_domain**
+- **aviatrix/resource_aviatrix_aws_tgw_security_domain_connection**
+- **aviatrix/resource_aviatrix_cloudn_transit_gateway_attachment**
+- **aviatrix/resource_aviatrix_controller_bgp_max_as_limit_config**
+- **aviatrix/resource_aviatrix_controller_cert_domain_config**
+- **aviatrix/resource_aviatrix_controller_email_exception_notification_config**
+- **aviatrix/resource_aviatrix_copilot_association**
+- **aviatrix/resource_aviatrix_gateway_certificate_config**
+5. Fixed issue where ``local_subnet_cidr`` can't be updated for a mapped connection in **aviatrix_site2cloud**
+6. Fixed issue where updating access account to swap custom IAM roles for gateways fails
+7. Fixed issue where updating ``single_az_ha`` does not apply to HA gateway in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+8. Fixed issue where enabling EBS volume encryption after initial gateway deployment only applies to primary gateway in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+
+## 2.19.4 (June 24, 2021)
 ### Notes:
 - Supported Controller version: **UserConnect-6.4.2672**
 - Supported Terraform version: **v0.12.x**, **v0.13.x**, **v0.14.x** and **v0.15.x**
@@ -47,7 +131,7 @@
 
 ### Features:
 #### Accounts
-1. Implemented support for AWSGov IAM role-based in resource **aviatrix_account** and data source with the following new attributes:
+1. Implemented support for AWSGov IAM role-based in **aviatrix_account** and data source with the following new attributes:
   - ``awsgov_iam``
   - ``awsgov_role_app``
   - ``awsgov_role_ec2``
@@ -65,8 +149,8 @@
 
 ### Features:
 #### Accounts
-1. Implemented support for Alibaba Cloud in resource **aviatrix_account** and data source
-2. Implemented support for AzureGov, AWSChina and AzureChina clouds in resource **aviatrix_account**
+1. Implemented support for Alibaba Cloud in **aviatrix_account** and data source
+2. Implemented support for AzureGov, AWSChina and AzureChina clouds in **aviatrix_account**
 3. Implemented support for separate IAM role and policy for gateways in AWS **aviatrix_account** with new attributes
   - ``aws_gateway_role_app``
   - ``aws_gateway_role_ec2``
@@ -88,8 +172,8 @@
   - New attribute ``firewall_image_id`` in **aviatrix_firewall_instance**
 
 #### Gateway
-1. Implemented support for Alibaba Cloud in resource **aviatrix_gateway** and data source
-2. Implemented support for AzureGov, AWSChina and AzureChina clouds in resource **aviatrix_gateway**
+1. Implemented support for Alibaba Cloud in **aviatrix_gateway** and data source
+2. Implemented support for AzureGov, AWSChina and AzureChina clouds in **aviatrix_gateway**
 3. Implemented support for IPSec tunnel down detection time in **aviatrix_gateway**:
   - New attribute ``tunnel_detection_time``
 
@@ -109,8 +193,8 @@
   - New attribute ``approved_cidrs``
 6. Implemented support for Multi-Tier Transit feature:
   - New attribute ``enable_multi_tier_transit`` in **aviatrix_transit_gateway** and data source
-7. Implemented support for Alibaba Cloud in resources **aviatrix_transit_gateway** and **aviatrix_spoke_gateway** and data sources
-8. Implemented support for AzureGov, AWSChina and AzureChina clouds in resources **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+7. Implemented support for Alibaba Cloud in **aviatrix_transit_gateway** and **aviatrix_spoke_gateway** and data sources
+8. Implemented support for AzureGov, AWSChina and AzureChina clouds in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
 9. Implemented support for IPSec tunnel down detection time in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**:
   - New attribute ``tunnel_detection_time``
 10. Implemented OCI transit Insane Mode support in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
@@ -151,8 +235,8 @@
   - New resource **aviatrix_aws_tgw_intra_domain_inspection**
 
 #### Useful Tools
-1. Implemented support for Alibaba Cloud in resource **aviatrix_vpc** and data source
-2. Implemented support for AzureGov, AWSChina and AzureChina clouds in resource **aviatrix_vpc**
+1. Implemented support for Alibaba Cloud in **aviatrix_vpc** and data source
+2. Implemented support for AzureGov, AWSChina and AzureChina clouds in **aviatrix_vpc**
 3. Implemented support for creating an **aviatrix_vpc** in Azure with an existing ``resource_group``
 
 ### Enhancements:
