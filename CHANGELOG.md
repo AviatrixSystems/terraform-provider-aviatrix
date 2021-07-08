@@ -82,6 +82,7 @@
 7. Fixed issue where updating ``single_az_ha`` does not apply to HA gateway in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
 8. Fixed issue where enabling EBS volume encryption after initial gateway deployment only applies to primary gateway in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
 
+
 ## 2.19.4 (June 24, 2021)
 ### Notes:
 - Supported Controller version: **UserConnect-6.4.2672**
