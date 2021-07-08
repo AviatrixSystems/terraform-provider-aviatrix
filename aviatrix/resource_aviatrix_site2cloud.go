@@ -872,7 +872,7 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if d.HasChange("local_subnet_virtual") {
 		if d.Get("custom_mapped").(bool) && d.Get("local_subnet_virtual").(string) != "" {
-			return fmt.Errorf("'local_subnet_vitrual' is not valid when 'custom_mapped' is enabled")
+			return fmt.Errorf("'local_subnet_virtual' is not valid when 'custom_mapped' is enabled")
 		}
 		if d.Get("connection_type").(string) == "mapped" && d.Get("local_subnet_virtual").(string) == "" {
 			return fmt.Errorf("'local_subnet_virtual' is required for connection type: mapped, unless 'custom_mapped' is enabled")
@@ -904,7 +904,7 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if d.HasChange("remote_subnet_virtual") {
 		if d.Get("custom_mapped").(bool) && d.Get("remote_subnet_virtual").(string) != "" {
-			return fmt.Errorf("'remote_subnet_vitrual' is not valid when 'custom_mapped' is enabled")
+			return fmt.Errorf("'remote_subnet_virtual' is not valid when 'custom_mapped' is enabled")
 		}
 		if d.Get("connection_type").(string) == "mapped" && d.Get("remote_subnet_virtual").(string) == "" {
 			return fmt.Errorf("'remote_subnet_virtual' is required for connection type: mapped, unless 'custom_mapped' is enabled")
