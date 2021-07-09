@@ -170,5 +170,10 @@ func TagsMapToJson(tagsMap map[string]string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("could not marshal tags to json: %v", err)
 	}
-	return string(bytes), nil
+	tagsMapStr := string(bytes)
+	// Return empty json dict when tagsMap is nil
+	if tagsMapStr == "null" {
+		return "{}", nil
+	}
+	return tagsMapStr, nil
 }
