@@ -26,7 +26,6 @@
 
 #### Firewall Network
 1. Implemented support for Fail Close and Network List Excluded From East-West Inspection in **aviatrix_firenet**
-2. Implemented support for colon character in ``tags`` in **aviatrix_firewall_instance**
 
 #### Gateway
 1. Implemented support for applying route entry in **aviatrix_gateway_dnat**
@@ -38,8 +37,7 @@
 #### Multi-Cloud Transit
 1. Implemented support for AWS Top Secret provider in **aviatrix_spoke_gateway**
 2. Implemented support for AWS Secret provider in **aviatrix_transit_gateway**
-3. Implemented support for colon character in ``tags`` in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
-4. Implemented support for connection based BGP prepending in **aviatrix_transit_external_device_conn** and **aviatrix_vgw_conn**
+3. Implemented support for connection based BGP prepending in **aviatrix_transit_external_device_conn** and **aviatrix_vgw_conn**
 
 #### TGW Orchestrator
 1. Implemented support for the following attribute in **aviatrix_aws_tgw_vpn_conn**
