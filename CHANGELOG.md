@@ -35,8 +35,8 @@
 - **aviatrix_controller_gateway_keepalive_config**
 
 #### Multi-Cloud Transit
-1. Implemented support for AWS Top Secret provider in **aviatrix_spoke_gateway**
-2. Implemented support for AWS Secret provider in **aviatrix_transit_gateway**
+1. Implemented support for AWS Top Secret cloud  in **aviatrix_spoke_gateway**
+2. Implemented support for AWS Secret cloud in **aviatrix_transit_gateway**
 3. Implemented support for connection based BGP prepending in **aviatrix_transit_external_device_conn** and **aviatrix_vgw_conn**
 
 #### TGW Orchestrator
