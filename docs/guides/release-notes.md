@@ -45,7 +45,9 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
   - ``awss_ca_chain_cert``
 
 #### Firewall Network
-1. Implemented support for Fail Close and Network List Excluded From East-West Inspection in **aviatrix_firenet**
+1. Implemented support for Fail Close and Network List Excluded From East-West Inspection in **aviatrix_firenet**:
+  - ``fail_close_enabled``
+  - ``east_west_inspection_excluded_cidrs``
 
 #### Gateway
 1. Implemented support for applying route entry in **aviatrix_gateway_dnat**
@@ -60,7 +62,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 3. Implemented support for connection based BGP prepending in **aviatrix_transit_external_device_conn** and **aviatrix_vgw_conn**
 
 #### TGW Orchestrator
-1. Implemented support for the following attribute in **aviatrix_aws_tgw_vpn_conn**
+1. Implemented support for the following attribute in **aviatrix_aws_tgw_vpn_conn**:
   - ``enable_global_acceleration``
 
 ### Enhancements:
