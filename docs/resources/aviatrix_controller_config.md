@@ -22,7 +22,18 @@ resource "aviatrix_controller_config" "test_controller_config" {
 }
 ```
 ```hcl
-# Create an Aviatrix Controller Config with Controller Upgrade
+# Create an Aviatrix Controller Config with Controller Upgrade Without Upgrading Gateways
+resource "aviatrix_controller_config" "test_controller_config" {
+  sg_management_account_name = "username"
+  http_access                = true
+  fqdn_exception_rule        = false
+  security_group_management  = true
+  target_version             = "latest"
+  manage_gateway_upgrades    = false
+}
+```
+```hcl
+# Create an Aviatrix Controller Config with Controller Upgrade + Upgrade All Gateways
 resource "aviatrix_controller_config" "test_controller_config" {
   sg_management_account_name = "username"
   http_access                = true
@@ -60,6 +71,13 @@ resource "aviatrix_controller_config" "test_controller_config" {
 
 The following arguments are supported:
 
+### Controller and Gateway Upgrade
+
+-> **NOTE:** To selectively upgrade your gateways, you MUST set `manage_gateway_upgrades` to false. Gateway upgrades can then be managed via the software_version and image_version attributes of the gateway resources. If you do not wish to selectively upgrade gateways, `manage_gateway_upgrades` can be left as the default true value.
+
+* `target_version` - (Optional) The release version number to which the controller will be upgraded to. If not specified, controller will not be upgraded. If set to "latest", controller will be upgraded to the latest release. Please see the [Controller upgrade guide](https://docs.aviatrix.com/HowTos/inline_upgrade.html) for more information.
+* `manage_gateway_upgrades` - (Optional) If true, aviatrix_controller_config will upgrade all gateways when target_version is set. If false, only the controller will be upgraded when target_version is set. In that case gateway upgrades should be handled in each gateway resource individually using the software_version and image_version attributes. Type: boolean. Default: true. Available as of provider version R2.20.0+.
+
 ### Security Options
 * `sg_management_account_name` - (Optional) Select the [primary access account](https://docs.aviatrix.com/HowTos/aviatrix_account.html#setup-primary-access-account-for-aws-cloud).
 * `security_group_management` - (Optional) Enable to allow Controller to automatically manage inbound rules from gateways. Valid values: true, false. Default value: false.
@@ -85,7 +103,6 @@ The following arguments are supported:
 * `server_private_key_file_path` - (Optional) File path to server private key. Available as of provider version R2.18+.
 
 ### Misc.
-* `target_version` - (Optional) The release version number to which the controller will be upgraded to. If not specified, controller will not be upgraded. If set to "latest", controller will be upgraded to the latest release. Please see the [Controller upgrade guide](https://docs.aviatrix.com/HowTos/inline_upgrade.html) for more information.
 * `enable_vpc_dns_server` - (Optional) Enable VPC/VNET DNS Server for the controller. Valid values: true, false. Default value: false.
 
 ## Attribute Reference
