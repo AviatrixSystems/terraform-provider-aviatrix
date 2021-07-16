@@ -369,6 +369,16 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Optional:    true,
 				Description: "OOB HA availability zone.",
 			},
+			"azure_eip_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The name of the public IP address in Azure to assign to this Transit Gateway.",
+			},
+			"ha_azure_eip_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The name of the public IP address in Azure to assign to the HA Transit Gateway.",
+			},
 			"enable_jumbo_frame": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -555,7 +565,17 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			gateway.ReuseEip = "off"
 		} else {
 			gateway.ReuseEip = "on"
-			gateway.Eip = d.Get("eip").(string)
+
+			if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+				// AVX-9874 Azure EIP has a different format e.g. 'test_ip::104.45.186.20'
+				azureEipName, ok := d.GetOk("azure_eip_name")
+				if !ok {
+					return fmt.Errorf("failed to create transit gateway: 'azure_eip_name' must be set when 'allocate_new_eip' is true and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
+				}
+				gateway.Eip = fmt.Sprintf("%s::%s", azureEipName.(string), d.Get("eip").(string))
+			} else {
+				gateway.Eip = d.Get("eip").(string)
+			}
 		}
 	}
 
@@ -938,6 +958,15 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if enablePrivateOob {
 			transitGateway.HASubnet = transitGateway.HASubnet + "~~" + haOobAvailabilityZone
 			transitGateway.HAOobManagementSubnet = haOobManagementSubnet + "~~" + haOobAvailabilityZone
+		}
+
+		if goaviatrix.IsCloudType(transitGateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && transitGateway.Eip != "" {
+			// AVX-9874 Azure EIP has a different format e.g. 'test_ip::104.45.186.20'
+			haAzureEipName, ok := d.GetOk("haAzureEipName")
+			if !ok {
+				return fmt.Errorf("failed to create HA Transit Gateway: 'ha_azure_eip_name' must be set when a custom EIP is provided and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
+			}
+			transitGateway.Eip = fmt.Sprintf("%s::%s", haAzureEipName.(string), transitGateway.Eip)
 		}
 
 		log.Printf("[INFO] Enabling HA on Transit Gateway: %#v", haSubnet)
@@ -1365,15 +1394,11 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0])
 		d.Set("vpc_reg", gw.GatewayZone)
-		if gw.AllocateNewEipRead {
-			d.Set("allocate_new_eip", true)
-		} else {
-			d.Set("allocate_new_eip", false)
-		}
+		d.Set("allocate_new_eip", gw.AllocateNewEipRead)
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
 		d.Set("vpc_id", gw.VpcID)
 		d.Set("vpc_reg", gw.VpcRegion)
-		d.Set("allocate_new_eip", true)
+		d.Set("allocate_new_eip", gw.AllocateNewEipRead)
 	} else if gw.CloudType == goaviatrix.AliCloud {
 		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 		d.Set("vpc_reg", gw.VpcRegion)
@@ -1621,6 +1646,15 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("updating ha_eip is not allowed")
 		}
 	}
+	if d.HasChange("azure_eip_name") {
+		return fmt.Errorf("failed to update transit gateway: changing 'azure_eip_name' is not allowed")
+	}
+	if d.HasChange("ha_azure_eip_name") {
+		o, n := d.GetChange("ha_azure_eip_name")
+		if o.(string) != "" && n.(string) != "" {
+			return fmt.Errorf("failed to update transit gateway: changing 'ha_azure_eip_name' is not allowed")
+		}
+	}
 	if d.HasChange("lan_vpc_id") {
 		return fmt.Errorf("updating lan_vpc_id is not allowed")
 	}
@@ -1674,8 +1708,17 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			GwSize:    d.Get("ha_gw_size").(string),
 		}
 
-		if goaviatrix.IsCloudType(transitGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) {
-			transitGw.Eip = d.Get("ha_eip").(string)
+		haEip := d.Get("ha_eip").(string)
+		if goaviatrix.IsCloudType(transitGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
+			transitGw.Eip = haEip
+			// ha_eip can not be changed to empty string because it is computed. ALso check ha_gw_size to detect when HA gateway is being deleted.
+		} else if goaviatrix.IsCloudType(transitGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && haEip != "" && transitGw.GwSize != "" {
+			// AVX-9874 Azure EIP has a different format e.g. 'test_ip::104.45.186.20'
+			haAzureEipName, ok := d.GetOk("ha_azure_eip_name")
+			if !ok {
+				return fmt.Errorf("failed to create HA Transit Gateway: 'ha_azure_eip_name' must be set when a custom EIP is provided and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
+			}
+			transitGw.Eip = fmt.Sprintf("%s::%s", haAzureEipName.(string), haEip)
 		}
 
 		if !d.HasChange("ha_subnet") && d.HasChange("ha_insane_mode_az") {
