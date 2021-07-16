@@ -372,6 +372,10 @@ The following arguments are supported:
 * `fqdn_lan_cidr` - (Optional) If `fqdn_lan_cidr` is set, the FQDN gateway will be created with an additional LAN interface using the provided CIDR. This attribute is required when enabling FQDN gateway FireNet in Azure or GCP. Available in provider version R2.17.1+.
 * `fqdn_lan_vpc_id` - (Optional) FQDN LAN VPC ID. This attribute is required when enabling FQDN gateway FireNet in GCP. Available as of provider version R2.18.1+.
 
+### Spot Instance
+* `enable_spot_instance` - (Optional) Enable spot instance. NOT supported for production deployment.
+* `spot_price` - (Optional) Price for spot instance. NOT supported for production deployment.
+
 ### Misc.
 * `allocate_new_eip` - (Optional) If set to false, use an available address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in Controller 2.7+. Valid values: true, false. Default: true. Option not available for Azure and OCI gateways, they will automatically allocate new EIPs.
 * `eip` - (Optional) Specified EIP to use for gateway creation. Required when `allocate_new_eip` is false.  Available in Controller version 3.5+. Only supported for AWS and GCP gateways.
