@@ -144,15 +144,14 @@ func (c *Client) SyncFireNetFirewallManagerVendorConfig(ctx context.Context, fir
 
 func (c *Client) EditFireNetFirewallVendorInfoWithPrivateKey(vendorInfo *VendorInfo) error {
 	params := map[string]string{
-		"action":           "edit_firenet_firewall_vendor_info",
-		"CID":              c.CID,
-		"vpc_id":           vendorInfo.VpcID,
-		"firewall_id":      vendorInfo.InstanceID,
-		"firewall_name":    vendorInfo.FirewallName,
-		"public_ip":        vendorInfo.PublicIP,
-		"firewall_vendor":  vendorInfo.VendorType,
-		"user":             vendorInfo.Username,
-		"private_key_file": vendorInfo.PrivateKeyFile,
+		"action":          "edit_firenet_firewall_vendor_info",
+		"CID":             c.CID,
+		"vpc_id":          vendorInfo.VpcID,
+		"firewall_id":     vendorInfo.InstanceID,
+		"firewall_name":   vendorInfo.FirewallName,
+		"public_ip":       vendorInfo.PublicIP,
+		"firewall_vendor": vendorInfo.VendorType,
+		"user":            vendorInfo.Username,
 	}
 
 	var files []File
