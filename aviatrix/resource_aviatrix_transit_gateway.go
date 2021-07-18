@@ -1711,13 +1711,14 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		haEip := d.Get("ha_eip").(string)
 		if goaviatrix.IsCloudType(transitGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
 			transitGw.Eip = haEip
-			// ha_eip can not be changed to empty string because it is computed. ALso check ha_gw_size to detect when HA gateway is being deleted.
 		} else if goaviatrix.IsCloudType(transitGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && haEip != "" && transitGw.GwSize != "" {
-			// AVX-9874 Azure EIP has a different format e.g. 'test_ip::104.45.186.20'
+			// No change will be detected when ha_eip is set to the empty string because it is computed.
+			// Instead, check ha_gw_size to detect when HA gateway is being deleted.
 			haAzureEipName, ok := d.GetOk("ha_azure_eip_name")
 			if !ok {
 				return fmt.Errorf("failed to create HA Transit Gateway: 'ha_azure_eip_name' must be set when a custom EIP is provided and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
 			}
+			// AVX-9874 Azure EIP has a different format e.g. 'test_ip::104.45.186.20'
 			transitGw.Eip = fmt.Sprintf("%s::%s", haAzureEipName.(string), haEip)
 		}
 
@@ -2000,24 +2001,21 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				// (when ha gateway is enabled, it's size is by default the same as primary gateway)
 				_, err := client.GetGateway(haGateway)
 				if err != nil {
-					if err == goaviatrix.ErrNotFound {
-						d.Set("ha_gw_size", "")
-						d.Set("ha_subnet", "")
-						d.Set("ha_zone", "")
-						d.Set("ha_insane_mode_az", "")
-						return nil
+					// If HA gateway does not exist, don't try to change HA gateway size and continue with the rest of the updates
+					// to the gateway
+					if err != goaviatrix.ErrNotFound {
+						return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway while trying to update HA Gw size: %s", err)
 					}
-					return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway while trying to update HA Gw size: %s", err)
-				}
-
-				if haGateway.GwSize == "" {
-					return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
-						"ha_subnet or ha_zone is set")
-				}
-				err = client.UpdateGateway(haGateway)
-				log.Printf("[INFO] Updating HA Gateway size to: %s ", haGateway.GwSize)
-				if err != nil {
-					return fmt.Errorf("failed to update Aviatrix Transit HA Gateway size: %s", err)
+				} else {
+					if haGateway.GwSize == "" {
+						return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
+							"ha_subnet or ha_zone is set")
+					}
+					err = client.UpdateGateway(haGateway)
+					log.Printf("[INFO] Updating HA Gateway size to: %s ", haGateway.GwSize)
+					if err != nil {
+						return fmt.Errorf("failed to update Aviatrix Transit HA Gateway size: %s", err)
+					}
 				}
 			}
 		}
@@ -2323,26 +2321,28 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if d.HasChange("ha_gw_size") || newHaGwEnabled {
 			newHaGwSize := d.Get("ha_gw_size").(string)
 			if !newHaGwEnabled || (newHaGwSize != primaryGwSize) {
+				// MODIFIES HA GW SIZE if
+				// Ha gateway wasn't newly configured
+				// OR
+				// newly configured Ha gateway is set to be different size than primary gateway
+				// (when ha gateway is enabled, it's size is by default the same as primary gateway)
 				_, err := client.GetGateway(haGateway)
 				if err != nil {
-					if err == goaviatrix.ErrNotFound {
-						d.Set("ha_gw_size", "")
-						d.Set("ha_subnet", "")
-						d.Set("ha_zone", "")
-						d.Set("ha_insane_mode_az", "")
-						return nil
+					// If HA gateway does not exist, don't try to change gateway size and continue with the rest of the updates
+					// to the gateway
+					if err != goaviatrix.ErrNotFound {
+						return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway while trying to update HA Gw size: %s", err)
 					}
-					return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway while trying to update HA Gw size: %s", err)
-				}
-
-				if haGateway.GwSize == "" {
-					return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
-						"ha_subnet or ha_zone is set")
-				}
-				err = client.UpdateGateway(haGateway)
-				log.Printf("[INFO] Updating HA Gateway size to: %s ", haGateway.GwSize)
-				if err != nil {
-					return fmt.Errorf("failed to update Aviatrix Transit HA Gateway size: %s", err)
+				} else {
+					if haGateway.GwSize == "" {
+						return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
+							"ha_subnet or ha_zone is set")
+					}
+					err = client.UpdateGateway(haGateway)
+					log.Printf("[INFO] Updating HA Gateway size to: %s ", haGateway.GwSize)
+					if err != nil {
+						return fmt.Errorf("failed to update Aviatrix Transit HA Gateway size: %s", err)
+					}
 				}
 			}
 		}

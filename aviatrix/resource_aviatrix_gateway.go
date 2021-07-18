@@ -1948,13 +1948,14 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			GwSize:    d.Get("peering_ha_gw_size").(string),
 		}
 
-		// peering_ha_eip can not be changed to empty string because it is computed. ALso check peering_ha_gw_size to detect when Peering HA gateway is being deleted.
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.Eip != "" && gw.GwSize != "" {
-			// AVX-9874 Azure EIP has a different format e.g. 'test_ip::104.45.186.20'
+			// No change will be detected when peering_ha_eip is set to the empty string because it is computed.
+			// Instead, check peering_ha_gw_size to detect when HA gateway is being deleted.
 			haAzureEipName, ok := d.GetOk("peering_ha_azure_eip_name")
 			if !ok {
 				return fmt.Errorf("failed to create HA Gateway: 'peering_ha_azure_eip_name' must be set when a custom EIP is provided and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
 			}
+			// AVX-9874 Azure EIP has a different format e.g. 'test_ip::104.45.186.20'
 			gw.Eip = fmt.Sprintf("%s::%s", haAzureEipName.(string), gw.Eip)
 		}
 
@@ -2145,28 +2146,22 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			// (when peering ha gateway is enabled, it's size is by default the same as primary gateway)
 			_, err := client.GetGateway(peeringHaGateway)
 			if err != nil {
-				if err == goaviatrix.ErrNotFound {
-					d.Set("peering_ha_gw_size", "")
-					d.Set("peering_ha_subnet", "")
-					d.Set("peering_ha_zone", "")
-					d.Set("peering_ha_insane_mode_az", "")
-					return nil
+				if err != goaviatrix.ErrNotFound {
+					return fmt.Errorf("couldn't find Aviatrix Peering HA Gateway while trying to update HA Gw "+
+						"size: %s", err)
 				}
-				return fmt.Errorf("couldn't find Aviatrix Peering HA Gateway while trying to update HA Gw "+
-					"size: %s", err)
-			}
-
-			if peeringHaGateway.GwSize == "" {
-				return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for this resource if " +
-					"peering_ha_subnet or peering_ha_zone is set. Example: t2.micro or us-west1-b respectively")
-			}
-			err = client.UpdateGateway(peeringHaGateway)
-			log.Printf("[INFO] Updating Peering HA Gateway size to: %s ", peeringHaGateway.GwSize)
-			if err != nil {
-				return fmt.Errorf("failed to update Aviatrix Peering HA Gw size: %s", err)
+			} else {
+				if peeringHaGateway.GwSize == "" {
+					return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for this resource if " +
+						"peering_ha_subnet or peering_ha_zone is set. Example: t2.micro or us-west1-b respectively")
+				}
+				err = client.UpdateGateway(peeringHaGateway)
+				log.Printf("[INFO] Updating Peering HA Gateway size to: %s ", peeringHaGateway.GwSize)
+				if err != nil {
+					return fmt.Errorf("failed to update Aviatrix Peering HA Gw size: %s", err)
+				}
 			}
 		}
-
 	}
 
 	if d.HasChange("enable_vpc_dns_server") && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
