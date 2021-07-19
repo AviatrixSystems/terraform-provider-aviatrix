@@ -50,6 +50,12 @@ func dataSourceAviatrixFireNetVendorIntegration() *schema.Resource {
 				Sensitive:   true,
 				Description: "API token for Fortinet FortiGate.",
 			},
+			"private_key_file": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Private key file for Check Point Cloud Guard.",
+			},
 			"firewall_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -114,40 +120,61 @@ func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta
 	}
 
 	vendorInfo := &goaviatrix.VendorInfo{
-		VpcID:        d.Get("vpc_id").(string),
-		InstanceID:   d.Get("instance_id").(string),
-		FirewallName: d.Get("firewall_name").(string),
-		VendorType:   d.Get("vendor_type").(string),
-		Username:     d.Get("username").(string),
-		Password:     d.Get("password").(string),
-		ApiToken:     d.Get("api_token").(string),
-		RouteTable:   d.Get("route_table").(string),
-		PublicIP:     d.Get("public_ip").(string),
-		Save:         d.Get("save").(bool),
-		Synchronize:  d.Get("synchronize").(bool),
+		VpcID:          d.Get("vpc_id").(string),
+		InstanceID:     d.Get("instance_id").(string),
+		FirewallName:   d.Get("firewall_name").(string),
+		VendorType:     d.Get("vendor_type").(string),
+		Username:       d.Get("username").(string),
+		Password:       d.Get("password").(string),
+		ApiToken:       d.Get("api_token").(string),
+		PrivateKeyFile: d.Get("private_key_file").(string),
+		RouteTable:     d.Get("route_table").(string),
+		PublicIP:       d.Get("public_ip").(string),
+		Save:           d.Get("save").(bool),
+		Synchronize:    d.Get("synchronize").(bool),
 	}
 
 	if vendorInfo.Save && vendorInfo.Synchronize {
 		return fmt.Errorf("can't do 'save' and 'synchronize' at the same time for vendor integration")
 	}
 
-	if vendorInfo.VendorType == "Fortinet FortiGate" {
-		if vendorInfo.ApiToken == "" {
-			return fmt.Errorf("'api_token' is required for vendor type Fortinet FortiGate")
-		}
-	} else {
-		if vendorInfo.Username == "" || vendorInfo.Password == "" {
-			return fmt.Errorf("'username' and 'password' are required for vendor type 'Generic', 'Palo Alto Networks VM-Series', and 'Aviatrix FQDN Gateway'")
-		}
-	}
-
 	numberOfRetries := d.Get("number_of_retries").(int)
 	retryInterval := d.Get("retry_interval").(int)
 
 	if vendorInfo.Save {
+		if vendorInfo.VendorType == "Fortinet FortiGate" {
+			if vendorInfo.ApiToken == "" {
+				return fmt.Errorf("'api_token' is required for vendor type 'Fortinet FortiGate'")
+			}
+		} else if vendorInfo.VendorType == "Check Point Cloud Guard" {
+			if vendorInfo.PrivateKeyFile != "" {
+				if vendorInfo.Username != "" || vendorInfo.Password != "" {
+					return fmt.Errorf("'username' and 'password' should be empty when using 'private_key_file' for vendor type 'Check Point Cloud Guard'")
+				}
+			} else {
+				if vendorInfo.Username == "" || vendorInfo.Password == "" {
+					return fmt.Errorf("'username' and 'password' are required when not using 'private_key_file' for vendor type 'Check Point Cloud Guard'")
+				}
+			}
+		} else {
+			if vendorInfo.Username == "" || vendorInfo.Password == "" {
+				return fmt.Errorf("'username' and 'password' are required for vendor type 'Generic', 'Palo Alto Networks VM-Series', 'Palo Alto Networks Panorama' and 'Aviatrix FQDN Gateway'")
+			}
+			if vendorInfo.ApiToken != "" {
+				return fmt.Errorf("'api_token' is valid only for vendor type 'Fortinet FortiGate'")
+			}
+			if vendorInfo.PrivateKeyFile != "" {
+				return fmt.Errorf("'private_key_file' is valid only for vendor type 'Check Point Cloud Guard'")
+			}
+		}
+
 		var err error
 		for i := 0; ; i++ {
-			err = client.EditFireNetFirewallVendorInfo(vendorInfo)
+			if vendorInfo.VendorType == "Check Point Cloud Guard" && vendorInfo.PrivateKeyFile != "" {
+				err = client.EditFireNetFirewallVendorInfoWithPrivateKey(vendorInfo)
+			} else {
+				err = client.EditFireNetFirewallVendorInfo(vendorInfo)
+			}
 			if err == nil {
 				break
 			}
