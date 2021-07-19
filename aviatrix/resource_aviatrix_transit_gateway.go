@@ -400,6 +400,25 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				ForceNew:    true,
 				Description: "Name of storage account with gateway images. Only valid for Azure China (2048)",
 			},
+			"tags": {
+				Type:          schema.TypeMap,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				Optional:      true,
+				Description:   "A map of tags to assign to the transit gateway.",
+				ConflictsWith: []string{"tag_list"},
+			},
+			"enable_spot_instance": {
+				Type:         schema.TypeBool,
+				Optional:     true,
+				Description:  "Enable spot instance. NOT supported for production deployment.",
+				RequiredWith: []string{"spot_price"},
+			},
+			"spot_price": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Price for spot instance. NOT supported for production deployment.",
+				RequiredWith: []string{"enable_spot_instance"},
+			},
 			"availability_domain": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -498,13 +517,6 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Transit gateway lan interface cidr for the HA gateway.",
-			},
-			"tags": {
-				Type:          schema.TypeMap,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				Optional:      true,
-				Description:   "A map of tags to assign to the transit gateway.",
-				ConflictsWith: []string{"tag_list"},
 			},
 		},
 	}
@@ -854,6 +866,19 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	enableSpotInstance := d.Get("enable_spot_instance").(bool)
+	spotPrice := d.Get("spot_price").(string)
+	if enableSpotInstance {
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+			return fmt.Errorf("enable_spot_instance only supports AWS related cloud types")
+		}
+		gateway.EnableSpotInstance = true
+		gateway.SpotPrice = spotPrice
+	} else {
+		if spotPrice != "" {
+			return fmt.Errorf("spot_price is set for enabling spot instance. Please set enable_spot_instance to true")
+		}
+	}
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
 
 	err := client.LaunchTransitVpc(gateway)
@@ -1505,6 +1530,11 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("fault_domain", gw.FaultDomain)
 	}
 
+	if gw.EnableSpotInstance {
+		d.Set("enable_spot_instance", true)
+		d.Set("spot_price", gw.SpotPrice)
+	}
+
 	if gw.HaGw.GwSize == "" {
 		d.Set("ha_gw_size", "")
 		d.Set("ha_subnet", "")
@@ -1620,6 +1650,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if o.(string) != "" && n.(string) != "" {
 			return fmt.Errorf("updating ha_eip is not allowed")
 		}
+	}
+	if d.HasChange("enable_spot_instance") {
+		return fmt.Errorf("updating enable_spot_instance is not allowed")
+	}
+	if d.HasChange("spot_price") {
+		return fmt.Errorf("updating spot_price is not allowed")
 	}
 	if d.HasChange("lan_vpc_id") {
 		return fmt.Errorf("updating lan_vpc_id is not allowed")
