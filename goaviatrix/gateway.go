@@ -39,6 +39,7 @@ type Gateway struct {
 	DuoPushMode             string `form:"duo_push_mode,omitempty" json:"duo_push_mode,omitempty"`
 	DuoSecretKey            string `form:"duo_secret_key,omitempty" json:"duo_secret_key,omitempty"`
 	Eip                     string `form:"eip,omitempty" json:"eip,omitempty"`
+	ReuseEip                string `json:"reuse_eip,omitempty"`
 	ElbDNSName              string `form:"elb_dns_name,omitempty" json:"elb_dns_name,omitempty"`
 	ElbName                 string `form:"elb_name,omitempty" json:"lb_name,omitempty"`
 	ElbState                string `form:"elb_state,omitempty" json:"elb_state,omitempty"`
@@ -194,6 +195,7 @@ type HaGateway struct {
 	VpcNet              string `json:"public_subnet"`
 	PublicIP            string `json:"public_ip"`
 	PrivateIP           string `json:"private_ip"`
+	ReuseEip            string `json:"reuse_eip,omitempty"`
 	CloudnGatewayInstID string `json:"cloudn_gateway_inst_id"`
 	GatewayZone         string `json:"gateway_zone"`
 	InsaneMode          string `json:"high_perf"`
