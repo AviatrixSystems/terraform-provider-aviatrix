@@ -387,15 +387,17 @@ func resourceAviatrixGateway() *schema.Resource {
 				Optional:    true,
 				Description: "Route tables whose associated public subnets are protected for the HA PSF gateway. Required when enable_public_subnet_filtering and peering_ha_subnet are set.",
 			},
-			"azure_eip_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The name of the public IP address in Azure to assign to this Gateway.",
+			"azure_eip_name_resource_group": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "The name of the public IP address and its resource group in Azure to assign to this Gateway.",
+				ValidateFunc: validateAzureEipNameResourceGroup,
 			},
-			"peering_ha_azure_eip_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The name of the public IP address in Azure to assign to the Peering HA Gateway.",
+			"peering_ha_azure_eip_name_resource_group": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "The name of the public IP address and its resource group in Azure to assign to the Peering HA Gateway.",
+				ValidateFunc: validateAzureEipNameResourceGroup,
 			},
 			"public_subnet_filtering_guard_duty_enforced": {
 				Type:        schema.TypeBool,
@@ -637,12 +639,12 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		gateway.AllocateNewEip = "off"
 
 		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-			// AVX-9874 Azure EIP has a different format e.g. 'test_ip::104.45.186.20'
-			azureEipName, ok := d.GetOk("azure_eip_name")
+			// AVX-9874 Azure EIP has a different format e.g. 'test_ip:rg:104.45.186.20'
+			azureEipName, ok := d.GetOk("azure_eip_name_resource_group")
 			if !ok {
-				return fmt.Errorf("failed to create gateway: 'azure_eip_name' must be set when 'allocate_new_eip' is true and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
+				return fmt.Errorf("failed to create gateway: 'azure_eip_name_resource_group' must be set when 'allocate_new_eip' is true and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
 			}
-			gateway.Eip = fmt.Sprintf("%s::%s", azureEipName.(string), d.Get("eip").(string))
+			gateway.Eip = fmt.Sprintf("%s:%s", azureEipName.(string), d.Get("eip").(string))
 		} else {
 			gateway.Eip = d.Get("eip").(string)
 		}
@@ -1007,12 +1009,12 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			}
 
 			if peeringHaGateway.Eip != "" {
-				// AVX-9874 Azure EIP has a different format e.g. 'test_ip::104.45.186.20'
-				haAzureEipName, ok := d.GetOk("peering_ha_azure_eip_name")
+				// AVX-9874 Azure EIP has a different format e.g. 'test_ip:rg:104.45.186.20'
+				haAzureEipName, ok := d.GetOk("peering_ha_azure_eip_name_resource_group")
 				if !ok {
-					return fmt.Errorf("failed to create Peering HA Gateway: 'peering_ha_azure_eip_name' must be set when a custom EIP is provided and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
+					return fmt.Errorf("failed to create Peering HA Gateway: 'peering_ha_azure_eip_name_resource_group' must be set when a custom EIP is provided and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
 				}
-				peeringHaGateway.Eip = fmt.Sprintf("%s::%s", haAzureEipName.(string), peeringHaGateway.Eip)
+				peeringHaGateway.Eip = fmt.Sprintf("%s:%s", haAzureEipName.(string), peeringHaGateway.Eip)
 			}
 		} else if peeringHaGateway.CloudType == goaviatrix.AliCloud {
 			peeringHaGateway.PeeringHASubnet = peeringHaSubnet
@@ -1221,6 +1223,15 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureChina) {
 		d.Set("storage_name", gw.StorageName)
+	}
+
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+		azureEip := strings.Split(gw.ReuseEip, ":")
+		if len(azureEip) == 3 {
+			d.Set("azure_eip_name_resource_group", fmt.Sprintf("%s:%s", azureEip[0], azureEip[1]))
+		} else {
+			log.Printf("[WARN] could not get Azure EIP name and resource group for the Gateway %s", gw.GwName)
+		}
 	}
 
 	if gw.IdleTimeout != "NA" {
@@ -1445,6 +1456,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("peering_ha_subnet", "")
 		d.Set("peering_ha_zone", "")
 		d.Set("peering_ha_eip", "")
+		d.Set("peering_ha_azure_eip_name_resource_group", "")
 		d.Set("peering_ha_gw_size", "")
 		d.Set("peering_ha_insane_mode_az", "")
 		return nil
@@ -1488,6 +1500,13 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			if gw.GatewayZone != "AvailabilitySet" {
 				d.Set("peering_ha_zone", "az-"+gw.GatewayZone)
 			}
+		}
+
+		azureEip := strings.Split(gw.HaGw.ReuseEip, ":")
+		if len(azureEip) == 3 {
+			d.Set("peering_ha_azure_eip_name_resource_group", fmt.Sprintf("%s:%s", azureEip[0], azureEip[1]))
+		} else {
+			log.Printf("[WARN] could not get Azure EIP name and resource group for the Peering HA Gateway %s", gw.GwName)
 		}
 	} else if gw.HaGw.CloudType == goaviatrix.AliCloud {
 		d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
@@ -1539,13 +1558,13 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("updating peering_ha_eip is not allowed")
 		}
 	}
-	if d.HasChange("azure_eip_name") {
-		return fmt.Errorf("failed to update gateway: changing 'azure_eip_name' is not allowed")
+	if d.HasChange("azure_eip_name_resource_group") {
+		return fmt.Errorf("failed to update gateway: changing 'azure_eip_name_resource_group' is not allowed")
 	}
-	if d.HasChange("peering_ha_azure_eip_name") {
-		o, n := d.GetChange("peering_ha_azure_eip_name")
+	if d.HasChange("peering_ha_azure_eip_name_resource_group") {
+		o, n := d.GetChange("peering_ha_azure_eip_name_resource_group")
 		if o.(string) != "" && n.(string) != "" {
-			return fmt.Errorf("failed to update gateway: changing 'peering_ha_azure_eip_name' is not allowed")
+			return fmt.Errorf("failed to update gateway: changing 'peering_ha_azure_eip_name_resource_group' is not allowed")
 		}
 	}
 	if d.HasChange("enable_designated_gateway") {
@@ -1951,12 +1970,12 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.Eip != "" && gw.GwSize != "" {
 			// No change will be detected when peering_ha_eip is set to the empty string because it is computed.
 			// Instead, check peering_ha_gw_size to detect when HA gateway is being deleted.
-			haAzureEipName, ok := d.GetOk("peering_ha_azure_eip_name")
+			haAzureEipName, ok := d.GetOk("peering_ha_azure_eip_name_resource_group")
 			if !ok {
-				return fmt.Errorf("failed to create HA Gateway: 'peering_ha_azure_eip_name' must be set when a custom EIP is provided and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
+				return fmt.Errorf("failed to create HA Gateway: 'peering_ha_azure_eip_name_resource_group' must be set when a custom EIP is provided and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
 			}
-			// AVX-9874 Azure EIP has a different format e.g. 'test_ip::104.45.186.20'
-			gw.Eip = fmt.Sprintf("%s::%s", haAzureEipName.(string), gw.Eip)
+			// AVX-9874 Azure EIP has a different format e.g. 'test_ip:rg:104.45.186.20'
+			gw.Eip = fmt.Sprintf("%s:%s", haAzureEipName.(string), gw.Eip)
 		}
 
 		oldSubnet, newSubnet := d.GetChange("peering_ha_subnet")
