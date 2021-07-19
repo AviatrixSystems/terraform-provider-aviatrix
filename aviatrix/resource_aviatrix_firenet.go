@@ -178,7 +178,7 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 
 	_, err := client.GetFireNet(fireNet)
 	if err != nil {
-		return fmt.Errorf("couldn't find vpc: %s", fireNet.VpcID)
+		return fmt.Errorf("couldn't find vpc %s: %v", fireNet.VpcID, err)
 	}
 
 	d.SetId(fireNet.VpcID)
@@ -259,6 +259,11 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 		err := client.EnableFireNetLanKeepAlive(fireNet)
 		if err != nil {
 			return fmt.Errorf("could not enable keep alive via lan interface after creating firenet: %v", err)
+		}
+	} else {
+		err := client.DisableFireNetLanKeepAlive(fireNet)
+		if err != nil {
+			return fmt.Errorf("could not disable keep alive via lan interface after creating firenet: %v", err)
 		}
 	}
 

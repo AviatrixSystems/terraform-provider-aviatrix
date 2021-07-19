@@ -429,7 +429,19 @@ func (c *Client) DisableFireNetLanKeepAlive(net *FireNet) error {
 		"vpc_id":   net.VpcID,
 		"lan_ping": "false",
 	}
-	return c.PostAPI("edit_firenet(lan_ping=false)", data, BasicCheck)
+
+	customCheck := func(action, reason string, ret bool) error {
+		if !ret {
+			// [AVXERR-FIRENET-0029] No change in firenet attribute
+			if strings.Contains(reason, "AVXERR-FIRENET-0029") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+		}
+		return nil
+	}
+
+	return c.PostAPI("edit_firenet(lan_ping=false)", data, customCheck)
 }
 
 func (c *Client) EnableTgwSegmentationForEgress(net *FireNet) error {
