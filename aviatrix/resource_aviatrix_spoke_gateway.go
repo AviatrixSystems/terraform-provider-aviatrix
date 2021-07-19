@@ -370,6 +370,36 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				ValidateFunc: validation.IntBetween(20, 600),
 				Description:  "The IPSec tunnel down detection time for the Spoke Gateway.",
 			},
+			"software_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				Description: "software_version can be used to set the desired software version of the gateway. " +
+					"If set, we will attempt to update the gateway to the specified version. " +
+					"If left blank, the gateway software version will continue to be managed through the aviatrix_controller_config resource.",
+			},
+			"ha_software_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				Description: "ha_software_version can be used to set the desired software version of the HA gateway. " +
+					"If set, we will attempt to update the gateway to the specified version. " +
+					"If left blank, the gateway software version will continue to be managed through the aviatrix_controller_config resource.",
+			},
+			"image_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				Description: "image_version can be used to set the desired image version of the gateway. " +
+					"If set, we will attempt to update the gateway to the specified version.",
+			},
+			"ha_image_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				Description: "ha_image_version can be used to set the desired image version of the HA gateway. " +
+					"If set, we will attempt to update the gateway to the specified version.",
+			},
 			"security_group_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -701,6 +731,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("spot_price is set for enabling spot instance. Please set enable_spot_instance to true")
 		}
 	}
+
 	log.Printf("[INFO] Creating Aviatrix Spoke Gateway: %#v", gateway)
 
 	err := client.LaunchSpokeVpc(gateway)
@@ -1036,6 +1067,8 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("single_ip_snat", gw.EnableNat == "yes" && gw.SnatMode == "primary")
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
 	d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
+	d.Set("image_version", gw.ImageVersion)
+	d.Set("software_version", gw.SoftwareVersion)
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		azureEip := strings.Split(gw.ReuseEip, ":")
@@ -1257,6 +1290,8 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("ha_cloud_instance_id", gw.HaGw.CloudnGatewayInstID)
 	d.Set("ha_gw_name", gw.HaGw.GwName)
 	d.Set("ha_private_ip", gw.HaGw.PrivateIP)
+	d.Set("ha_software_version", gw.HaGw.SoftwareVersion)
+	d.Set("ha_image_version", gw.HaGw.ImageVersion)
 	if gw.HaGw.InsaneMode == "yes" && goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		d.Set("ha_insane_mode_az", gw.HaGw.GatewayZone)
 	} else {
@@ -1610,11 +1645,11 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if d.HasChange("single_az_ha") {
-		haSubnet := d.Get("ha_subnet").(string)
-		haZone := d.Get("ha_zone").(string)
-		haEnabled := haSubnet != "" || haZone != ""
+	haSubnet := d.Get("ha_subnet").(string)
+	haZone := d.Get("ha_zone").(string)
+	haEnabled := haSubnet != "" || haZone != ""
 
+	if d.HasChange("single_az_ha") {
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName: d.Get("gw_name").(string),
 		}
@@ -2056,6 +2091,35 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		err := client.ModifyTunnelDetectionTime(gateway.GwName, detectionTime)
 		if err != nil {
 			return fmt.Errorf("could not modify tunnel detection time during Spoke Gateway update: %v", err)
+		}
+	}
+
+	if d.HasChanges("software_version", "image_version") {
+		swVersion := d.Get("software_version").(string)
+		imageVersion := d.Get("image_version").(string)
+		gw := &goaviatrix.Gateway{
+			GwName:          d.Get("gw_name").(string),
+			SoftwareVersion: swVersion,
+			ImageVersion:    imageVersion,
+		}
+		err := client.UpgradeGateway(gw)
+		if err != nil {
+			return fmt.Errorf("could not upgrade spoke gateway during update image_version=%s software_version=%s: %v", gw.ImageVersion, gw.SoftwareVersion, err)
+		}
+	}
+	if haEnabled && d.HasChanges("ha_image_version", "ha_software_version") {
+		haSwVersion := d.Get("ha_software_version").(string)
+		haImageVersion := d.Get("ha_image_version").(string)
+		if haSwVersion != "" || haImageVersion != "" {
+			hagw := &goaviatrix.Gateway{
+				GwName:          gateway.GwName + "-hagw",
+				SoftwareVersion: haSwVersion,
+				ImageVersion:    haImageVersion,
+			}
+			err := client.UpgradeGateway(hagw)
+			if err != nil {
+				return fmt.Errorf("could not upgrade HA spoke gateway during update image_version=%s software_version=%s: %v", hagw.ImageVersion, hagw.SoftwareVersion, err)
+			}
 		}
 	}
 

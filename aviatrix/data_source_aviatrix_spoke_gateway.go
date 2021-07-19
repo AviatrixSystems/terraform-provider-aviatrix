@@ -237,6 +237,26 @@ func dataSourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "HA fault domain for OCI.",
 			},
+			"software_version": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Software version of the gateway.",
+			},
+			"ha_software_version": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Software version of the HA gateway.",
+			},
+			"image_version": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Image version of the gateway.",
+			},
+			"ha_image_version": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Image version of the HA gateway.",
+			},
 		},
 	}
 }
@@ -300,6 +320,8 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 		d.Set("security_group_id", gw.GwSecurityGroupID)
 		d.Set("private_ip", gw.PrivateIP)
+		d.Set("image_version", gw.ImageVersion)
+		d.Set("software_version", gw.SoftwareVersion)
 
 		d.Set("enable_private_oob", gw.EnablePrivateOob)
 		if gw.EnablePrivateOob {
@@ -398,6 +420,8 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("ha_cloud_instance_id", haGw.CloudnGatewayInstID)
 			d.Set("ha_gw_name", haGw.GwName)
 			d.Set("ha_private_ip", haGw.PrivateIP)
+			d.Set("ha_image_version", haGw.ImageVersion)
+			d.Set("ha_software_version", haGw.SoftwareVersion)
 			if haGw.InsaneMode == "yes" && goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 				d.Set("ha_insane_mode_az", haGw.GatewayZone)
 			} else {

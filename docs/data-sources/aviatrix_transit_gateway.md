@@ -81,3 +81,8 @@ In addition to all arguments above, the following attributes are exported:
 * `fault_domain` - Fault domain for OCI.
 * `ha_availability_domain` - HA gateway availability domain for OCI.
 * `ha_fault_domain` - HA gateway fault domain for OCI.
+* `software_version` - The software version of the gateway.
+* `image_version` - The image version of the gateway.
+* `ha_software_version` - The software version of the HA gateway.
+* `ha_image_version` - The image version of the HA gateway.
+

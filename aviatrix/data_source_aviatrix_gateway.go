@@ -320,6 +320,26 @@ func dataSourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Peering HA fault domain for OCI.",
 			},
+			"software_version": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Software version of the gateway.",
+			},
+			"peering_ha_software_version": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Software version of the HA gateway.",
+			},
+			"image_version": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Image version of the gateway.",
+			},
+			"peering_ha_image_version": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Image version of the HA gateway.",
+			},
 		},
 	}
 }
@@ -500,6 +520,8 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("public_dns_server", gw.PublicDnsServer)
 		d.Set("security_group_id", gw.GwSecurityGroupID)
 		d.Set("private_ip", gw.PrivateIP)
+		d.Set("image_version", gw.ImageVersion)
+		d.Set("software_version", gw.SoftwareVersion)
 
 		if gw.InsaneMode == "yes" {
 			d.Set("insane_mode", true)
@@ -535,6 +557,8 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 			d.Set("peering_ha_public_ip", gwHaGw.PublicIP)
 			d.Set("peering_ha_gw_size", gwHaGw.GwSize)
 			d.Set("peering_ha_private_ip", gwHaGw.PrivateIP)
+			d.Set("peering_ha_image_version", gwHaGw.ImageVersion)
+			d.Set("peering_ha_software_version", gwHaGw.SoftwareVersion)
 			if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
 				if gwHaGw.InsaneMode == "yes" {

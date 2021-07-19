@@ -98,6 +98,17 @@ func (c *Client) Upgrade(version *Version, upgradeGateways bool) error {
 	return nil
 }
 
+func (c *Client) UpgradeGateway(gateway *Gateway) error {
+	form := map[string]string{
+		"action":           "upgrade_selected_gateway",
+		"CID":              c.CID,
+		"gateway_list":     gateway.GwName,
+		"software_version": gateway.SoftwareVersion,
+		"image_version":    gateway.ImageVersion,
+	}
+	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
 func (c *Client) GetCurrentVersion() (string, *AviatrixVersion, error) {
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
