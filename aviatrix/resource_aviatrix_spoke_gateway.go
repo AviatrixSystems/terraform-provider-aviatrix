@@ -260,18 +260,6 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Optional:    true,
 				Description: "OOB HA availability zone.",
 			},
-			"azure_eip_name_resource_group": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "The name of the public IP address and its resource group in Azure to assign to this Spoke Gateway.",
-				ValidateFunc: validateAzureEipNameResourceGroup,
-			},
-			"ha_azure_eip_name_resource_group": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "The name of the public IP address and its resource group in Azure to assign to the HA Spoke Gateway.",
-				ValidateFunc: validateAzureEipNameResourceGroup,
-			},
 			"enable_jumbo_frame": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -360,6 +348,20 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IsIPAddress,
 				Description:  "Public IP address that you want assigned to the HA Spoke Gateway.",
+			},
+			"azure_eip_name_resource_group": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "The name of the public IP address and its resource group in Azure to assign to this Spoke Gateway.",
+				ValidateFunc: validateAzureEipNameResourceGroup,
+			},
+			"ha_azure_eip_name_resource_group": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "The name of the public IP address and its resource group in Azure to assign to the HA Spoke Gateway.",
+				ValidateFunc: validateAzureEipNameResourceGroup,
 			},
 			"tunnel_detection_time": {
 				Type:         schema.TypeInt,

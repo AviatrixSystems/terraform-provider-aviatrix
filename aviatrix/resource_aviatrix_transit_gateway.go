@@ -369,18 +369,6 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Optional:    true,
 				Description: "OOB HA availability zone.",
 			},
-			"azure_eip_name_resource_group": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "The name of the public IP address and its resource group in Azure to assign to this Transit Gateway.",
-				ValidateFunc: validateAzureEipNameResourceGroup,
-			},
-			"ha_azure_eip_name_resource_group": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "The name of the public IP address and its resource group in Azure to assign to the HA Transit Gateway.",
-				ValidateFunc: validateAzureEipNameResourceGroup,
-			},
 			"enable_jumbo_frame": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -470,6 +458,20 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IsIPAddress,
 				Description:  "Public IP address that you want assigned to the HA Transit Gateway.",
+			},
+			"azure_eip_name_resource_group": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "The name of the public IP address and its resource group in Azure to assign to this Transit Gateway.",
+				ValidateFunc: validateAzureEipNameResourceGroup,
+			},
+			"ha_azure_eip_name_resource_group": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "The name of the public IP address and its resource group in Azure to assign to the HA Transit Gateway.",
+				ValidateFunc: validateAzureEipNameResourceGroup,
 			},
 			"local_as_number": {
 				Type:         schema.TypeString,

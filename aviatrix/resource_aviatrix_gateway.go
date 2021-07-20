@@ -387,18 +387,6 @@ func resourceAviatrixGateway() *schema.Resource {
 				Optional:    true,
 				Description: "Route tables whose associated public subnets are protected for the HA PSF gateway. Required when enable_public_subnet_filtering and peering_ha_subnet are set.",
 			},
-			"azure_eip_name_resource_group": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "The name of the public IP address and its resource group in Azure to assign to this Gateway.",
-				ValidateFunc: validateAzureEipNameResourceGroup,
-			},
-			"peering_ha_azure_eip_name_resource_group": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "The name of the public IP address and its resource group in Azure to assign to the Peering HA Gateway.",
-				ValidateFunc: validateAzureEipNameResourceGroup,
-			},
 			"public_subnet_filtering_guard_duty_enforced": {
 				Type:        schema.TypeBool,
 				Default:     true,
@@ -473,6 +461,20 @@ func resourceAviatrixGateway() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Description: "Public IP address that you want assigned to the HA peering instance.",
+			},
+			"azure_eip_name_resource_group": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "The name of the public IP address and its resource group in Azure to assign to this Gateway.",
+				ValidateFunc: validateAzureEipNameResourceGroup,
+			},
+			"peering_ha_azure_eip_name_resource_group": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "The name of the public IP address and its resource group in Azure to assign to the Peering HA Gateway.",
+				ValidateFunc: validateAzureEipNameResourceGroup,
 			},
 			"elb_name": {
 				Type:        schema.TypeString,
