@@ -424,6 +424,18 @@ func resourceAviatrixGateway() *schema.Resource {
 				ForceNew:    true,
 				Description: "Name of storage account with gateway images. Only valid for Azure China (2048)",
 			},
+			"enable_spot_instance": {
+				Type:         schema.TypeBool,
+				Optional:     true,
+				Description:  "Enable spot instance. NOT supported for production deployment.",
+				RequiredWith: []string{"spot_price"},
+			},
+			"spot_price": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Price for spot instance. NOT supported for production deployment.",
+				RequiredWith: []string{"enable_spot_instance"},
+			},
 			"availability_domain": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -883,6 +895,20 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 				return fmt.Errorf("failed to add tags when creating gateway: %v", err)
 			}
 			gateway.TagJson = tagJson
+		}
+	}
+
+	enableSpotInstance := d.Get("enable_spot_instance").(bool)
+	spotPrice := d.Get("spot_price").(string)
+	if enableSpotInstance {
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+			return fmt.Errorf("enable_spot_instance only supports AWS related cloud types")
+		}
+		gateway.EnableSpotInstance = true
+		gateway.SpotPrice = spotPrice
+	} else {
+		if spotPrice != "" {
+			return fmt.Errorf("spot_price is set for enabling spot instance. Please set enable_spot_instance to true")
 		}
 	}
 
@@ -1451,6 +1477,11 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("fault_domain", gw.FaultDomain)
 	}
 
+	if gw.EnableSpotInstance {
+		d.Set("enable_spot_instance", true)
+		d.Set("spot_price", gw.SpotPrice)
+	}
+
 	if gw.HaGw.GwSize == "" {
 		d.Set("peering_ha_cloud_instance_id", "")
 		d.Set("peering_ha_subnet", "")
@@ -1566,6 +1597,12 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		if o.(string) != "" && n.(string) != "" {
 			return fmt.Errorf("failed to update gateway: changing 'peering_ha_azure_eip_name_resource_group' is not allowed")
 		}
+	}
+	if d.HasChange("enable_spot_instance") {
+		return fmt.Errorf("updating enable_spot_instance is not allowed")
+	}
+	if d.HasChange("spot_price") {
+		return fmt.Errorf("updating spot_price is not allowed")
 	}
 	if d.HasChange("enable_designated_gateway") {
 		return fmt.Errorf("updating enable_designated_gateway is not allowed")

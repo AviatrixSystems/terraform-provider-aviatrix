@@ -10,19 +10,20 @@ import (
 )
 
 type VendorInfo struct {
-	CID          string `form:"CID,omitempty"`
-	Action       string `form:"action,omitempty"`
-	VpcID        string `form:"vpc_id,omitempty"`
-	InstanceID   string `form:"firewall_id,omitempty"`
-	FirewallName string `form:"firewall_name,omitempty"`
-	VendorType   string `form:"firewall_vendor,omitempty"`
-	Username     string `form:"user,omitempty"`
-	Password     string `form:"password,omitempty"`
-	ApiToken     string `form:"api_token,omitempty"`
-	RouteTable   string `form:"route_table,omitempty"`
-	PublicIP     string `form:"public_ip,omitempty"`
-	Save         bool
-	Synchronize  bool `form:"sync,omitempty"`
+	CID            string `form:"CID,omitempty"`
+	Action         string `form:"action,omitempty"`
+	VpcID          string `form:"vpc_id,omitempty"`
+	InstanceID     string `form:"firewall_id,omitempty"`
+	FirewallName   string `form:"firewall_name,omitempty"`
+	VendorType     string `form:"firewall_vendor,omitempty"`
+	Username       string `form:"user,omitempty"`
+	Password       string `form:"password,omitempty"`
+	ApiToken       string `form:"api_token,omitempty"`
+	PrivateKeyFile string `form:"private_key_file,omitempty"`
+	RouteTable     string `form:"route_table,omitempty"`
+	PublicIP       string `form:"public_ip,omitempty"`
+	Save           bool
+	Synchronize    bool `form:"sync,omitempty"`
 }
 
 type FirewallManager struct {
@@ -139,4 +140,29 @@ func (c *Client) SyncFireNetFirewallManagerVendorConfig(ctx context.Context, fir
 	}
 
 	return c.PostAPIContext(ctx, params["action"], params, BasicCheck)
+}
+
+func (c *Client) EditFireNetFirewallVendorInfoWithPrivateKey(vendorInfo *VendorInfo) error {
+	params := map[string]string{
+		"action":          "edit_firenet_firewall_vendor_info",
+		"CID":             c.CID,
+		"vpc_id":          vendorInfo.VpcID,
+		"firewall_id":     vendorInfo.InstanceID,
+		"firewall_name":   vendorInfo.FirewallName,
+		"public_ip":       vendorInfo.PublicIP,
+		"firewall_vendor": vendorInfo.VendorType,
+		"user":            vendorInfo.Username,
+	}
+
+	var files []File
+
+	key := File{
+		ParamName:      "private_key_file",
+		UseFileContent: true,
+		FileName:       "key.pem", // fake name for key
+		FileContent:    vendorInfo.PrivateKeyFile,
+	}
+	files = append(files, key)
+
+	return c.PostFileAPI(params, files, BasicCheck)
 }

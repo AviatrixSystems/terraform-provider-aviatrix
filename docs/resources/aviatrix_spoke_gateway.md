@@ -280,6 +280,10 @@ The following arguments are supported:
 * `ha_oob_management_subnet` - (Optional) HA OOB management subnet. Required if enabling Private OOB and HA. Example: "11.0.0.48/28".
 * `ha_oob_availability_zone` - (Optional) HA OOB availability zone. Required if enabling Private OOB and HA. Example: "us-west-1b".
 
+### Spot Instance
+* `enable_spot_instance` - (Optional) Enable spot instance. NOT supported for production deployment.
+* `spot_price` - (Optional) Price for spot instance. NOT supported for production deployment.
+
 ### Misc.
 
 !> **WARNING:** Attribute `transit_gw` has been deprecated as of provider version R2.18.1+ and will not receive further updates. Please set `manage_transit_gateway_attachment` to false, and use the standalone `aviatrix_spoke_transit_attachment` resource instead.

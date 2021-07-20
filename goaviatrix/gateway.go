@@ -186,6 +186,8 @@ type Gateway struct {
 	HaGw                            HaGateway                           `json:"hagw_details"`
 	AvailabilityDomain              string                              `form:"availability_domain,omitempty"`
 	FaultDomain                     string                              `form:"fault_domain,omitempty" json:"fault_domain"`
+	EnableSpotInstance              bool                                `form:"spot_instance,omitempty" json:"spot_instance"`
+	SpotPrice                       string                              `form:"spot_price,omitempty" json:"spot_price"`
 }
 
 type HaGateway struct {

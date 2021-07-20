@@ -284,6 +284,43 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				ForceNew:    true,
 				Description: "Name of storage account with gateway images. Only valid for Azure China (2048)",
 			},
+			"tags": {
+				Type:          schema.TypeMap,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				Optional:      true,
+				Description:   "A map of tags to assign to the spoke gateway.",
+				ConflictsWith: []string{"tag_list"},
+			},
+			"enable_private_vpc_default_route": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Config Private VPC Default Route.",
+			},
+			"enable_skip_public_route_table_update": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Skip Public Route Table Update.",
+			},
+			"enable_auto_advertise_s2c_cidrs": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Automatically advertise remote CIDR to Aviatrix Transit Gateway when route based Site2Cloud Tunnel is created.",
+			},
+			"enable_spot_instance": {
+				Type:         schema.TypeBool,
+				Optional:     true,
+				Description:  "Enable spot instance. NOT supported for production deployment.",
+				RequiredWith: []string{"spot_price"},
+			},
+			"spot_price": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Price for spot instance. NOT supported for production deployment.",
+				RequiredWith: []string{"enable_spot_instance"},
+			},
 			"availability_domain": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -365,31 +402,6 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Private IP address of the spoke gateway created.",
-			},
-			"tags": {
-				Type:          schema.TypeMap,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				Optional:      true,
-				Description:   "A map of tags to assign to the spoke gateway.",
-				ConflictsWith: []string{"tag_list"},
-			},
-			"enable_private_vpc_default_route": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Config Private VPC Default Route.",
-			},
-			"enable_skip_public_route_table_update": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Skip Public Route Table Update.",
-			},
-			"enable_auto_advertise_s2c_cidrs": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Automatically advertise remote CIDR to Aviatrix Transit Gateway when route based Site2Cloud Tunnel is created.",
 			},
 		},
 	}
@@ -674,6 +686,19 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	enableSpotInstance := d.Get("enable_spot_instance").(bool)
+	spotPrice := d.Get("spot_price").(string)
+	if enableSpotInstance {
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+			return fmt.Errorf("enable_spot_instance only supports AWS related cloud types")
+		}
+		gateway.EnableSpotInstance = true
+		gateway.SpotPrice = spotPrice
+	} else {
+		if spotPrice != "" {
+			return fmt.Errorf("spot_price is set for enabling spot instance. Please set enable_spot_instance to true")
+		}
+	}
 	log.Printf("[INFO] Creating Aviatrix Spoke Gateway: %#v", gateway)
 
 	err := client.LaunchSpokeVpc(gateway)
@@ -1178,6 +1203,11 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("fault_domain", gw.FaultDomain)
 	}
 
+	if gw.EnableSpotInstance {
+		d.Set("enable_spot_instance", true)
+		d.Set("spot_price", gw.SpotPrice)
+	}
+
 	if gw.HaGw.GwSize == "" {
 		d.Set("ha_gw_size", "")
 		d.Set("ha_subnet", "")
@@ -1319,13 +1349,17 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("failed to update spoke gateway: changing 'ha_azure_eip_name_resource_group' is not allowed")
 		}
 	}
+	if d.HasChange("enable_spot_instance") {
+		return fmt.Errorf("updating enable_spot_instance is not allowed")
+	}
+	if d.HasChange("spot_price") {
+		return fmt.Errorf("updating spot_price is not allowed")
+	}
 
 	if d.HasChange("enable_private_oob") {
 		return fmt.Errorf("updating enable_private_oob is not allowed")
 	}
-
 	enablePrivateOob := d.Get("enable_private_oob").(bool)
-
 	if !enablePrivateOob {
 		if d.HasChange("ha_oob_management_subnet") {
 			return fmt.Errorf("updating ha_oob_management_subnet is not allowed if private oob is disabled")
