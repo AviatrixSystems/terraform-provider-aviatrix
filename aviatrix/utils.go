@@ -177,3 +177,23 @@ func TagsMapToJson(tagsMap map[string]string) (string, error) {
 	}
 	return tagsMapStr, nil
 }
+
+// validateAzureEipNameResourceGroup is a SchemaValidateFunc for Azure custom EIP name and resource group.
+func validateAzureEipNameResourceGroup(i interface{}, k string) (warnings []string, errors []error) {
+	v, ok := i.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+		return
+	}
+
+	if v == "" {
+		return
+	}
+
+	azureEipNameSlice := strings.Split(v, ":")
+	if len(azureEipNameSlice) != 2 {
+		errors = append(errors, fmt.Errorf("expected %s to be in the format: 'IP_Name:Resource_Group_Name'", k))
+	}
+
+	return
+}

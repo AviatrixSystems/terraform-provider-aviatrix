@@ -349,6 +349,20 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				ValidateFunc: validation.IsIPAddress,
 				Description:  "Public IP address that you want assigned to the HA Spoke Gateway.",
 			},
+			"azure_eip_name_resource_group": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "The name of the public IP address and its resource group in Azure to assign to this Spoke Gateway.",
+				ValidateFunc: validateAzureEipNameResourceGroup,
+			},
+			"ha_azure_eip_name_resource_group": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "The name of the public IP address and its resource group in Azure to assign to the HA Spoke Gateway.",
+				ValidateFunc: validateAzureEipNameResourceGroup,
+			},
 			"tunnel_detection_time": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -447,7 +461,17 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			gateway.ReuseEip = "off"
 		} else {
 			gateway.ReuseEip = "on"
-			gateway.Eip = d.Get("eip").(string)
+
+			if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+				// AVX-9874 Azure EIP has a different format e.g. 'test_ip:rg:104.45.186.20'
+				azureEipName, ok := d.GetOk("azure_eip_name_resource_group")
+				if !ok {
+					return fmt.Errorf("failed to create spoke gateway: 'azure_eip_name_resource_group' must be set when 'allocate_new_eip' is true and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
+				}
+				gateway.Eip = fmt.Sprintf("%s:%s", azureEipName.(string), d.Get("eip").(string))
+			} else {
+				gateway.Eip = d.Get("eip").(string)
+			}
 		}
 	}
 
@@ -762,6 +786,15 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			haGateway.HAOobManagementSubnet = haOobManagementSubnet + "~~" + haOobAvailabilityZone
 		}
 
+		if goaviatrix.IsCloudType(haGateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && haGateway.Eip != "" {
+			// AVX-9874 Azure EIP has a different format e.g. 'test_ip:rg:104.45.186.20'
+			haAzureEipName, ok := d.GetOk("ha_azure_eip_name_resource_group")
+			if !ok {
+				return fmt.Errorf("failed to create HA Spoke Gateway: 'ha_azure_eip_name_resource_group' must be set when a custom EIP is provided and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
+			}
+			haGateway.Eip = fmt.Sprintf("%s:%s", haAzureEipName.(string), haGateway.Eip)
+		}
+
 		if goaviatrix.IsCloudType(haGateway.CloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
 			err = client.EnableHaSpokeGateway(haGateway)
 		} else {
@@ -1004,6 +1037,15 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
 	d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
 
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+		azureEip := strings.Split(gw.ReuseEip, ":")
+		if len(azureEip) == 3 {
+			d.Set("azure_eip_name_resource_group", fmt.Sprintf("%s:%s", azureEip[0], azureEip[1]))
+		} else {
+			log.Printf("[WARN] could not get Azure EIP name and resource group for the Spoke Gateway %s", gw.GwName)
+		}
+	}
+
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0]) //AWS vpc_id returns as <vpc_id>~~<other vpc info> in rest api
 		d.Set("vpc_reg", gw.VpcRegion)                    //AWS vpc_reg returns as vpc_region in rest api
@@ -1017,16 +1059,12 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0]) //gcp vpc_id returns as <vpc_id>~-~<other vpc info> in rest api
 		d.Set("vpc_reg", gw.GatewayZone)                   //gcp vpc_reg returns as gateway_zone in json
 
-		if gw.AllocateNewEipRead {
-			d.Set("allocate_new_eip", true)
-		} else {
-			d.Set("allocate_new_eip", false)
-		}
+		d.Set("allocate_new_eip", gw.AllocateNewEipRead)
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
 		d.Set("vpc_id", gw.VpcID)
 		d.Set("vpc_reg", gw.VpcRegion)
 
-		d.Set("allocate_new_eip", true)
+		d.Set("allocate_new_eip", gw.AllocateNewEipRead)
 	} else if gw.CloudType == goaviatrix.AliCloud {
 		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 		d.Set("vpc_reg", gw.VpcRegion)
@@ -1177,6 +1215,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("ha_subnet", "")
 		d.Set("ha_zone", "")
 		d.Set("ha_eip", "")
+		d.Set("ha_azure_eip_name_resource_group", "")
 		d.Set("ha_insane_mode_az", "")
 		d.Set("ha_oob_management_subnet", "")
 		d.Set("ha_oob_availability_zone", "")
@@ -1226,6 +1265,14 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	if gw.HaGw.EnablePrivateOob {
 		d.Set("ha_oob_management_subnet", strings.Split(gw.HaGw.OobManagementSubnet, "~~")[0])
 		d.Set("ha_oob_availability_zone", gw.HaGw.GatewayZone)
+	}
+	if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+		azureEip := strings.Split(gw.HaGw.ReuseEip, ":")
+		if len(azureEip) == 3 {
+			d.Set("ha_azure_eip_name_resource_group", fmt.Sprintf("%s:%s", azureEip[0], azureEip[1]))
+		} else {
+			log.Printf("[WARN] could not get Azure EIP name and resource group for the HA Gateway %s", gw.GwName)
+		}
 	}
 
 	return nil
@@ -1293,6 +1340,15 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		o, n := d.GetChange("ha_eip")
 		if o.(string) != "" && n.(string) != "" {
 			return fmt.Errorf("updating ha_eip is not allowed")
+		}
+	}
+	if d.HasChange("azure_eip_name_resource_group") {
+		return fmt.Errorf("failed to update spoke gateway: changing 'azure_eip_name_resource_group' is not allowed")
+	}
+	if d.HasChange("ha_azure_eip_name_resource_group") {
+		o, n := d.GetChange("ha_azure_eip_name_resource_group")
+		if o.(string) != "" && n.(string) != "" {
+			return fmt.Errorf("failed to update spoke gateway: changing 'ha_azure_eip_name_resource_group' is not allowed")
 		}
 	}
 	if d.HasChange("enable_spot_instance") {
@@ -1390,8 +1446,18 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			GwSize:    d.Get("ha_gw_size").(string),
 		}
 
-		if goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) {
-			spokeGw.Eip = d.Get("ha_eip").(string)
+		haEip := d.Get("ha_eip").(string)
+		if goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
+			spokeGw.Eip = haEip
+		} else if goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && haEip != "" && spokeGw.GwSize != "" {
+			// No change will be detected when ha_eip is set to the empty string because it is computed.
+			// Instead, check ha_gw_size to detect when HA gateway is being deleted.
+			haAzureEipName, ok := d.GetOk("ha_azure_eip_name_resource_group")
+			if !ok {
+				return fmt.Errorf("failed to create HA Spoke Gateway: 'ha_azure_eip_name_resource_group' must be set when a custom EIP is provided and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
+			}
+			// AVX-9874 Azure EIP has a different format e.g. 'test_ip:rg:104.45.186.20'
+			spokeGw.Eip = fmt.Sprintf("%s:%s", haAzureEipName.(string), haEip)
 		}
 
 		if !d.HasChange("ha_subnet") && d.HasChange("ha_insane_mode_az") {
@@ -1606,24 +1672,21 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			// (when ha gateway is enabled, it's size is by default the same as primary gateway)
 			_, err := client.GetGateway(haGateway)
 			if err != nil {
-				if err == goaviatrix.ErrNotFound {
-					d.Set("ha_gw_size", "")
-					d.Set("ha_subnet", "")
-					d.Set("ha_zone", "")
-					d.Set("ha_insane_mode_az", "")
-					return nil
+				// If HA gateway does not exist, don't try to change gateway size and continue with the rest of the updates
+				// to the gateway
+				if err != goaviatrix.ErrNotFound {
+					return fmt.Errorf("couldn't find Aviatrix Spoke HA Gateway while trying to update HA Gw size: %s", err)
 				}
-				return fmt.Errorf("couldn't find Aviatrix Spoke HA Gateway while trying to update HA Gw size: %s", err)
-			}
-
-			if haGateway.GwSize == "" {
-				return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
-					"ha_subnet or ha_zone is set")
-			}
-			err = client.UpdateGateway(haGateway)
-			log.Printf("[INFO] Updating HA Gateway size to: %s ", haGateway.GwSize)
-			if err != nil {
-				return fmt.Errorf("failed to update Aviatrix Spoke HA Gateway size: %s", err)
+			} else {
+				if haGateway.GwSize == "" {
+					return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
+						"ha_subnet or ha_zone is set")
+				}
+				err = client.UpdateGateway(haGateway)
+				log.Printf("[INFO] Updating HA Gateway size to: %s ", haGateway.GwSize)
+				if err != nil {
+					return fmt.Errorf("failed to update Aviatrix Spoke HA Gateway size: %s", err)
+				}
 			}
 		}
 	}
