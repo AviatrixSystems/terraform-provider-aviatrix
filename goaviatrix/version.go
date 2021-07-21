@@ -45,25 +45,35 @@ type AviatrixVersion struct {
 	Build int64
 }
 
-func (c *Client) Upgrade(version *Version) error {
+func (c *Client) Upgrade(version *Version, upgradeGateways bool) error {
+	if version.Version == "" {
+		return errors.New("no target version is set")
+	}
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
 		return errors.New(("url Parsing failed for upgrade") + err.Error())
 	}
+	var action string
 	upgradeController := url.Values{}
 	upgradeController.Add("CID", c.CID)
-	upgradeController.Add("action", "upgrade")
-
-	if version.Version == "" {
-		return errors.New("no target version is set")
-	} else if version.Version != "latest" {
-		upgradeController.Add("version", version.Version)
+	if upgradeGateways {
+		action = "upgrade"
+		upgradeController.Add("action", action)
+		if version.Version != "latest" {
+			upgradeController.Add("version", version.Version)
+		}
+	} else {
+		action = "upgrade_platform"
+		upgradeController.Add("action", action)
+		upgradeController.Add("gateway_list", "")
+		upgradeController.Add("software_version", version.Version)
 	}
+
 	for i := 0; ; i++ {
 		Url.RawQuery = upgradeController.Encode()
 		resp, err := c.Get(Url.String(), nil)
 		if err != nil {
-			return errors.New("HTTP Get upgrade failed: " + err.Error())
+			return fmt.Errorf("HTTP Get %s failed: %v", action, err)
 		}
 		var data UpgradeResp
 		buf := new(bytes.Buffer)
@@ -71,7 +81,7 @@ func (c *Client) Upgrade(version *Version) error {
 		bodyString := buf.String()
 		bodyIoCopy := strings.NewReader(bodyString)
 		if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-			return errors.New("Json Decode upgrade failed: " + err.Error() + "\n Body: " + bodyString)
+			return fmt.Errorf("Json Decode %s failed: %v\n Body: %s", action, err, bodyString)
 		}
 		if !data.Return {
 			if strings.Contains(data.Reason, "Active upgrade in progress.") && i < 3 {
@@ -79,7 +89,7 @@ func (c *Client) Upgrade(version *Version) error {
 				time.Sleep(60 * time.Second)
 				continue
 			}
-			return errors.New("Rest API upgrade Get failed: " + data.Reason)
+			return fmt.Errorf("rest API %s Get failed: %v", action, data.Reason)
 		}
 		c.Login()
 		break

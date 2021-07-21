@@ -54,6 +54,15 @@ func resourceAviatrixControllerConfig() *schema.Resource {
 				Optional:    true,
 				Description: "The release version number to which the controller will be upgraded to.",
 			},
+			"manage_gateway_upgrades": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+				Description: "If true, aviatrix_controller_config will upgrade all gateways when target_version " +
+					"is set. If false, only the controller will be upgraded when target_version is set. In that " +
+					"case gateway upgrades should be handled in each gateway resource individually using the " +
+					"software_version and image_version attributes.",
+			},
 			"backup_configuration": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -217,7 +226,8 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 		Version: d.Get("target_version").(string),
 	}
 	if version.Version != "" {
-		err = client.Upgrade(version)
+		manageGatewayUpgrades := d.Get("manage_gateway_upgrades").(bool)
+		err = client.Upgrade(version, manageGatewayUpgrades)
 		if err != nil {
 			return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
 		}
@@ -469,24 +479,26 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 		version := &goaviatrix.Version{
 			Version: d.Get("target_version").(string),
 		}
-
-		targetVersion := d.Get("target_version").(string)
-		if targetVersion == "latest" {
-			if latestVersion != "" {
-				for i := range cur {
-					if cur[i] != latest[i] {
-						err := client.Upgrade(version)
-						if err != nil {
-							return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
+		if version.Version != "" {
+			manageGatewayUpgrades := d.Get("manage_gateway_upgrades").(bool)
+			targetVersion := d.Get("target_version").(string)
+			if targetVersion == "latest" {
+				if latestVersion != "" {
+					for i := range cur {
+						if cur[i] != latest[i] {
+							err := client.Upgrade(version, manageGatewayUpgrades)
+							if err != nil {
+								return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
+							}
+							break
 						}
-						break
 					}
 				}
-			}
-		} else {
-			err := client.Upgrade(version)
-			if err != nil {
-				return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
+			} else {
+				err := client.Upgrade(version, manageGatewayUpgrades)
+				if err != nil {
+					return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
+				}
 			}
 		}
 	}
