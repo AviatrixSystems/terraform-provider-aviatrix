@@ -2,6 +2,7 @@ package goaviatrix
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -219,4 +220,23 @@ func ParseVersion(version string) (string, *AviatrixVersion, error) {
 		return "", aver, errors.New("unable to get latest version when parsing version information")
 	}
 	return strconv.FormatInt(aver.Major, 10) + "." + strconv.FormatInt(aver.Minor, 10), aver, nil
+}
+
+func (c *Client) GetCompatibleImageVersion(ctx context.Context, cloudType int, softwareVersion string) (string, error) {
+	form := map[string]string{
+		"action":          "get_compatible_image_version",
+		"CID":             c.CID,
+		"software_verion": softwareVersion,
+		"cloud_type":      strconv.Itoa(cloudType),
+	}
+	var data struct {
+		Results struct {
+			ImageVersion string `json:"image_version"`
+		}
+	}
+	err := c.GetAPIContext(ctx, &data, form["action"], form, BasicCheck)
+	if err != nil {
+		return "", err
+	}
+	return data.Results.ImageVersion, nil
 }
