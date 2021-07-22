@@ -168,6 +168,7 @@ func (c *Client) GetLatestVersion() (string, error) {
 	listVersionInfo := url.Values{}
 	listVersionInfo.Add("CID", c.CID)
 	listVersionInfo.Add("action", "list_version_info")
+	listVersionInfo.Add("latest_version", strconv.FormatBool(true))
 	Url.RawQuery = listVersionInfo.Encode()
 	resp, err := c.Get(Url.String(), nil)
 	if err != nil {
