@@ -8,8 +8,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-
-	log "github.com/sirupsen/logrus"
 )
 
 type Vpc struct {
@@ -52,6 +50,12 @@ type VpcResp struct {
 	Return  bool                  `json:"return"`
 	Results AllVpcPoolVpcListResp `json:"results"`
 	Reason  string                `json:"reason"`
+}
+
+type GetVpcByNameResp struct {
+	Return  bool    `json:"return"`
+	Results VpcEdit `json:"results"`
+	Reason  string  `json:"reason"`
 }
 
 type AllVpcPoolVpcListResp struct {
@@ -183,61 +187,47 @@ func (c *Client) GetCloudTypeFromVpcID(vpcID string) (int, error) {
 }
 
 func (c *Client) GetVpc(vpc *Vpc) (*Vpc, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for list_custom_vpcs ") + err.Error())
+	form := map[string]string{
+		"action":   "get_custom_vpc_by_name",
+		"CID":      c.CID,
+		"vpc_name": vpc.Name,
 	}
-	listPeerVpcPairs := url.Values{}
-	listPeerVpcPairs.Add("CID", c.CID)
-	listPeerVpcPairs.Add("action", "list_custom_vpcs")
-	Url.RawQuery = listPeerVpcPairs.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return nil, errors.New("HTTP Get list_custom_vpcs failed: " + err.Error())
-	}
-	var data VpcResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_custom_vpcs failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return nil, errors.New("Rest API list_custom_vpcs Get failed: " + data.Reason)
-	}
-	allVpcPoolVpcListResp := data.Results.AllVpcPoolVpcList
-	for i := range allVpcPoolVpcListResp {
-		if allVpcPoolVpcListResp[i].Name == vpc.Name {
-			log.Debugf("Found VPC: %#v", allVpcPoolVpcListResp[i])
-
-			vpc.CloudType = allVpcPoolVpcListResp[i].CloudType
-			vpc.AccountName = allVpcPoolVpcListResp[i].AccountName
-			vpc.Region = allVpcPoolVpcListResp[i].Region
-			vpc.Cidr = allVpcPoolVpcListResp[i].Cidr
-			if allVpcPoolVpcListResp[i].AviatrixTransitVpc {
-				vpc.AviatrixTransitVpc = "yes"
-			} else {
-				vpc.AviatrixTransitVpc = "no"
+	var data GetVpcByNameResp
+	check := func(action, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "does not exist") {
+				return ErrNotFound
 			}
-			if allVpcPoolVpcListResp[i].AviatrixFireNetVpc {
-				vpc.AviatrixFireNetVpc = "yes"
-			} else {
-				vpc.AviatrixFireNetVpc = "no"
-			}
-			vpc.VpcID = allVpcPoolVpcListResp[i].VpcID[0]
-			vpc.Subnets = allVpcPoolVpcListResp[i].Subnets
-			vpc.PrivateSubnets = allVpcPoolVpcListResp[i].PrivateSubnets
-			vpc.PublicSubnets = allVpcPoolVpcListResp[i].PublicSubnets
-			vpc.SubnetSize = allVpcPoolVpcListResp[i].SubnetSize
-			vpc.NumOfSubnetPairs = allVpcPoolVpcListResp[i].NumOfSubnetPairs
-			vpc.EnablePrivateOobSubnet = allVpcPoolVpcListResp[i].EnablePrivateOobSubnet
-			return vpc, nil
+			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
 		}
+		return nil
 	}
-	log.Error("VPC not found")
-	return nil, ErrNotFound
+	err := c.GetAPI(&data, form["action"], form, check)
+	if err != nil {
+		return nil, err
+	}
+	vpc.CloudType = data.Results.CloudType
+	vpc.AccountName = data.Results.AccountName
+	vpc.Region = data.Results.Region
+	vpc.Cidr = data.Results.Cidr
+	if data.Results.AviatrixTransitVpc {
+		vpc.AviatrixTransitVpc = "yes"
+	} else {
+		vpc.AviatrixTransitVpc = "no"
+	}
+	if data.Results.AviatrixFireNetVpc {
+		vpc.AviatrixFireNetVpc = "yes"
+	} else {
+		vpc.AviatrixFireNetVpc = "no"
+	}
+	vpc.VpcID = data.Results.VpcID[0]
+	vpc.Subnets = data.Results.Subnets
+	vpc.PrivateSubnets = data.Results.PrivateSubnets
+	vpc.PublicSubnets = data.Results.PublicSubnets
+	vpc.SubnetSize = data.Results.SubnetSize
+	vpc.NumOfSubnetPairs = data.Results.NumOfSubnetPairs
+	vpc.EnablePrivateOobSubnet = data.Results.EnablePrivateOobSubnet
+	return vpc, nil
 }
 
 func (c *Client) GetVpcRouteTableIDs(vpc *Vpc) ([]string, error) {
