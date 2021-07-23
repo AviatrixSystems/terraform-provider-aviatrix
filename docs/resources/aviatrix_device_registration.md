@@ -56,6 +56,14 @@ The following arguments are supported:
 * `zip_code` - (Optional) Zip code.
 * `description` - (Optional) Description.
 
+### Managed CloudN (CaaG) Upgrade
+* `software_version` - (Optional/Computed) The desired software version of the CaaG. If set, we will attempt to update the CaaG to the specified version. If left blank, the software version will continue to be managed through the aviatrix_controller_config resource. Type: String. Example: "6.5.892". Available as of provider version R2.20.0.
+
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `is_caag` - Is this device a Managed CloudN (CaaG). Type: Boolean. Available as of provider version R2.20.0.
 
 ## Import
 

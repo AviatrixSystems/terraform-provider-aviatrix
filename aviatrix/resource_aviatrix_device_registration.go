@@ -103,6 +103,19 @@ func resourceAviatrixDeviceRegistration() *schema.Resource {
 				Optional:    true,
 				Description: "Description.",
 			},
+			"software_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				Description: "software_version can be used to set the desired software version of the CaaG. " +
+					"If set, we will attempt to update the gateway to the specified version. " +
+					"If left blank, the gateway software version will continue to be managed through the aviatrix_controller_config resource.",
+			},
+			"is_caag": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Whether this device is a Managed CloudN device (CaaG)",
+			},
 		},
 	}
 }
@@ -177,6 +190,8 @@ func resourceAviatrixDeviceRegistrationRead(d *schema.ResourceData, meta interfa
 	d.Set("country", device.Country)
 	d.Set("zip_code", device.ZipCode)
 	d.Set("description", device.Description)
+	d.Set("software_version", device.SoftwareVersion)
+	d.Set("is_caag", device.IsCaag)
 
 	d.SetId(device.Name)
 	return nil
@@ -189,6 +204,18 @@ func resourceAviatrixDeviceRegistrationUpdate(d *schema.ResourceData, meta inter
 
 	if err := client.UpdateDevice(device); err != nil {
 		return fmt.Errorf("could not update device registration information: %v", err)
+	}
+
+	if d.HasChange("software_version") {
+		isCaag := d.Get("is_caag").(bool)
+		if !isCaag {
+			return fmt.Errorf("'software_version' can only be updated for managed cloudN (CaaG) devices")
+		}
+		softwareVersion := d.Get("software_version").(string)
+		err := client.UpgradeGateway(&goaviatrix.Gateway{GwName: device.Name, SoftwareVersion: softwareVersion})
+		if err != nil {
+			return fmt.Errorf("could not upgrade CaaG: %v", err)
+		}
 	}
 
 	d.SetId(device.Name)
