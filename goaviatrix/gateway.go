@@ -188,6 +188,8 @@ type Gateway struct {
 	FaultDomain                     string                              `form:"fault_domain,omitempty" json:"fault_domain"`
 	EnableSpotInstance              bool                                `form:"spot_instance,omitempty" json:"spot_instance"`
 	SpotPrice                       string                              `form:"spot_price,omitempty" json:"spot_price"`
+	ImageVersion                    string                              `json:"gw_image_name"`
+	SoftwareVersion                 string                              `json:"gw_software_version"`
 }
 
 type HaGateway struct {
@@ -205,6 +207,8 @@ type HaGateway struct {
 	OobManagementSubnet string `json:"oob_mgmt_subnet"`
 	GwSecurityGroupID   string `json:"gw_security_group_id"`
 	FaultDomain         string `json:"fault_domain"`
+	ImageVersion        string `json:"gw_image_name"`
+	SoftwareVersion     string `json:"gw_software_version"`
 }
 
 type PolicyRule struct {

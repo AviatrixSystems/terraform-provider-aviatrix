@@ -497,6 +497,36 @@ func resourceAviatrixGateway() *schema.Resource {
 				ValidateFunc: validation.IntBetween(20, 600),
 				Description:  "The IPSec tunnel down detection time for the Gateway.",
 			},
+			"software_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				Description: "software_version can be used to set the desired software version of the gateway. " +
+					"If set, we will attempt to update the gateway to the specified version. " +
+					"If left blank, the gateway software version will continue to be managed through the aviatrix_controller_config resource.",
+			},
+			"peering_ha_software_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				Description: "ha_software_version can be used to set the desired software version of the HA gateway. " +
+					"If set, we will attempt to update the gateway to the specified version. " +
+					"If left blank, the gateway software version will continue to be managed through the aviatrix_controller_config resource.",
+			},
+			"image_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				Description: "image_version can be used to set the desired image version of the gateway. " +
+					"If set, we will attempt to update the gateway to the specified version.",
+			},
+			"peering_ha_image_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				Description: "ha_image_version can be used to set the desired image version of the HA gateway. " +
+					"If set, we will attempt to update the gateway to the specified version.",
+			},
 			"elb_dns_name": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -1248,6 +1278,8 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
 	d.Set("enable_vpc_dns_server", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled")
 	d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
+	d.Set("image_version", gw.ImageVersion)
+	d.Set("software_version", gw.SoftwareVersion)
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureChina) {
 		d.Set("storage_name", gw.StorageName)
@@ -1500,6 +1532,8 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("peering_ha_eip", gw.HaGw.PublicIP)
 	d.Set("peering_ha_gw_size", gw.HaGw.GwSize)
 	d.Set("peering_ha_private_ip", gw.HaGw.PrivateIP)
+	d.Set("peering_ha_software_version", gw.HaGw.SoftwareVersion)
+	d.Set("peering_ha_image_version", gw.HaGw.ImageVersion)
 	if gw.IsPsfGateway {
 		// For PSF gateway, peering_ha_subnet and peering_ha_zone are
 		// set above. Return early.
@@ -2141,12 +2175,10 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 		}
 	}
-
+	haSubnet := d.Get("peering_ha_subnet").(string)
+	haZone := d.Get("peering_ha_zone").(string)
+	haEnabled := haSubnet != "" || haZone != ""
 	if d.HasChange("single_az_ha") {
-		haSubnet := d.Get("peering_ha_subnet").(string)
-		haZone := d.Get("peering_ha_zone").(string)
-		haEnabled := haSubnet != "" || haZone != ""
-
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName: d.Get("gw_name").(string),
 		}
@@ -2466,6 +2498,35 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		err := client.ModifyTunnelDetectionTime(gateway.GwName, detectionTime)
 		if err != nil {
 			return fmt.Errorf("could not modify tunnel detection time during Gateway update: %v", err)
+		}
+	}
+
+	if d.HasChanges("software_version", "image_version") {
+		swVersion := d.Get("software_version").(string)
+		imageVersion := d.Get("image_version").(string)
+		gw := &goaviatrix.Gateway{
+			GwName:          d.Get("gw_name").(string),
+			SoftwareVersion: swVersion,
+			ImageVersion:    imageVersion,
+		}
+		err := client.UpgradeGateway(gw)
+		if err != nil {
+			return fmt.Errorf("could not upgrade primary gateway during update image_version=%s software_version=%s: %v", gw.ImageVersion, gw.SoftwareVersion, err)
+		}
+	}
+	if haEnabled && d.HasChanges("peering_ha_image_version", "peering_ha_software_version") {
+		haSwVersion := d.Get("peering_ha_software_version").(string)
+		haImageVersion := d.Get("peering_ha_image_version").(string)
+		if haSwVersion != "" || haImageVersion != "" {
+			hagw := &goaviatrix.Gateway{
+				GwName:          gateway.GwName + "-hagw",
+				SoftwareVersion: haSwVersion,
+				ImageVersion:    haImageVersion,
+			}
+			err = client.UpgradeGateway(hagw)
+			if err != nil {
+				return fmt.Errorf("could not upgrade PSF HA gateway during update image_version=%s software_version=%s: %v", hagw.ImageVersion, hagw.SoftwareVersion, err)
+			}
 		}
 	}
 
