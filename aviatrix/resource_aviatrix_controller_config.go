@@ -114,7 +114,17 @@ func resourceAviatrixControllerConfig() *schema.Resource {
 			"version": {
 				Type:        schema.TypeString,
 				Computed:    true,
+				Description: "Current version of the controller without the build number.",
+			},
+			"current_version": {
+				Type:        schema.TypeString,
+				Computed:    true,
 				Description: "Current version of the controller.",
+			},
+			"previous_version": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Previous version of the controller.",
 			},
 			"enable_vpc_dns_server": {
 				Type:        schema.TypeBool,
@@ -351,19 +361,24 @@ func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("could not read Aviatrix Controller Security Group Management Status")
 	}
 
-	current, _, err := client.GetCurrentVersion()
+	versionInfo, err := client.GetVersionInfo()
 	if err != nil {
-		return fmt.Errorf("unable to read current Controller version: %s (%s)", err, current)
+		return fmt.Errorf("unable to read Controller version information: %s", err)
 	}
 
+	current := versionInfo.Current.String(true)
+	currentWithoutBuild := versionInfo.Current.String(false)
+	previous := versionInfo.Previous.String(true)
 	targetVersion := d.Get("target_version")
 	if targetVersion == "latest" {
-		d.Set("target_version", current)
+		d.Set("target_version", currentWithoutBuild)
 	} else {
 		d.Set("target_version", targetVersion)
 	}
 
-	d.Set("version", current)
+	d.Set("version", currentWithoutBuild)
+	d.Set("previous_version", previous)
+	d.Set("current_version", current)
 
 	cloudnBackupConfig, err := client.GetCloudnBackupConfig()
 	if err != nil {

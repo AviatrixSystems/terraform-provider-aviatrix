@@ -109,7 +109,9 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `version` - Current version of the controller.
+* `version` - Current version of the controller without build number. Example: "6.5"
+* `previous_version` - Previous version of the controller including the build number. Example: "6.5.123". Available as of provider version R2.20.0+.
+* `current_version` - Current version of the controller including the build number. Example: "6.5.123". Available as of provider version R2.20.0+.
 
 ## Import
 
