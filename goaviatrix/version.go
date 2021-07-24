@@ -29,21 +29,34 @@ type UpgradeResp struct {
 	Reason  string `json:"reason"`
 }
 
-type VersionInfo struct {
+type VersionInfoResults struct {
 	CurrentVersion string `json:"current_version"`
 	LatestVersion  string `json:"latest_version"`
 }
 
 type VersionInfoResp struct {
-	Return  bool        `json:"return"`
-	Results VersionInfo `json:"results"`
-	Reason  string      `json:"reason"`
+	Return  bool               `json:"return"`
+	Results VersionInfoResults `json:"results"`
+	Reason  string             `json:"reason"`
 }
 
 type AviatrixVersion struct {
 	Major int64
 	Minor int64
 	Build int64
+}
+
+type VersionInfo struct {
+	Current  *AviatrixVersion
+	Previous *AviatrixVersion
+}
+
+func (av *AviatrixVersion) String(includeBuild bool) string {
+	if includeBuild {
+		return fmt.Sprintf("%d.%d.%d", av.Major, av.Minor, av.Build)
+	}
+	return fmt.Sprintf("%d.%d", av.Major, av.Minor)
+
 }
 
 func (c *Client) Upgrade(version *Version, upgradeGateways bool) error {
@@ -141,6 +154,35 @@ func (c *Client) GetCurrentVersion() (string, *AviatrixVersion, error) {
 	}
 
 	return curVersion, aVer, nil
+}
+
+func (c *Client) GetVersionInfo() (*VersionInfo, error) {
+	form := map[string]string{
+		"action": "list_version_info",
+		"CID":    c.CID,
+	}
+	var data struct {
+		Results struct {
+			PreviousVersion string `json:"previous_version"`
+			CurrentVersion  string `json:"current_version"`
+		}
+	}
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+	_, current, err := ParseVersion(data.Results.CurrentVersion)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse current version: %v", err)
+	}
+	_, previous, err := ParseVersion(data.Results.PreviousVersion)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse previous version: %v", err)
+	}
+	return &VersionInfo{
+		Current:  current,
+		Previous: previous,
+	}, nil
 }
 
 func (c *Client) Pre32Upgrade() error {
