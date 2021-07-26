@@ -237,7 +237,7 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 	}
 	if version.Version != "" {
 		manageGatewayUpgrades := d.Get("manage_gateway_upgrades").(bool)
-		err = client.Upgrade(version, manageGatewayUpgrades)
+		err = client.AsyncUpgrade(version, manageGatewayUpgrades)
 		if err != nil {
 			return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
 		}
@@ -501,7 +501,7 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 				if latestVersion != "" {
 					for i := range cur {
 						if cur[i] != latest[i] {
-							err := client.Upgrade(version, manageGatewayUpgrades)
+							err := client.AsyncUpgrade(version, manageGatewayUpgrades)
 							if err != nil {
 								return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
 							}
@@ -510,7 +510,7 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 					}
 				}
 			} else {
-				err := client.Upgrade(version, manageGatewayUpgrades)
+				err := client.AsyncUpgrade(version, manageGatewayUpgrades)
 				if err != nil {
 					return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
 				}
