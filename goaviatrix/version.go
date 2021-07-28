@@ -277,10 +277,10 @@ func ParseVersion(version string) (string, *AviatrixVersion, error) {
 
 func (c *Client) GetCompatibleImageVersion(ctx context.Context, cloudType int, softwareVersion string) (string, error) {
 	form := map[string]string{
-		"action":          "get_compatible_image_version",
-		"CID":             c.CID,
-		"software_verion": softwareVersion,
-		"cloud_type":      strconv.Itoa(cloudType),
+		"action":           "get_compatible_image_version",
+		"CID":              c.CID,
+		"software_version": softwareVersion,
+		"cloud_type":       strconv.Itoa(cloudType),
 	}
 	var data struct {
 		Results struct {
