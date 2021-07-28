@@ -135,6 +135,7 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 	if i == maxPoll {
 		return fmt.Errorf("waited %s but upgrade never finished. Please manually verify the upgrade status", maxPoll*sleepDuration)
 	}
+	c.Login()
 	return nil
 }
 
