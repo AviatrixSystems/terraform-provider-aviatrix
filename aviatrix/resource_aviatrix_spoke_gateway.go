@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -2094,31 +2095,71 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if d.HasChanges("software_version", "image_version") {
-		swVersion := d.Get("software_version").(string)
-		imageVersion := d.Get("image_version").(string)
-		gw := &goaviatrix.Gateway{
-			GwName:          d.Get("gw_name").(string),
-			SoftwareVersion: swVersion,
-			ImageVersion:    imageVersion,
-		}
-		err := client.UpgradeGateway(gw)
-		if err != nil {
-			return fmt.Errorf("could not upgrade spoke gateway during update image_version=%s software_version=%s: %v", gw.ImageVersion, gw.SoftwareVersion, err)
-		}
-	}
-	if haEnabled && d.HasChanges("ha_image_version", "ha_software_version") {
-		haSwVersion := d.Get("ha_software_version").(string)
-		haImageVersion := d.Get("ha_image_version").(string)
-		if haSwVersion != "" || haImageVersion != "" {
-			hagw := &goaviatrix.Gateway{
-				GwName:          gateway.GwName + "-hagw",
-				SoftwareVersion: haSwVersion,
-				ImageVersion:    haImageVersion,
+	primaryHasVersionChange := d.HasChanges("software_version", "image_version")
+	haHasVersionChange := haEnabled && d.HasChanges("ha_software_version", "ha_image_version")
+	primaryHasImageVersionChange := d.HasChange("image_version")
+	haHasImageVersionChange := d.HasChange("ha_image_version")
+	if primaryHasVersionChange || haHasVersionChange {
+		if primaryHasVersionChange && haHasVersionChange && !primaryHasImageVersionChange && !haHasImageVersionChange {
+			// Both Primary and HA have changed just their software_version
+			// so we can perform upgrade in parallel.
+			swVersion := d.Get("software_version").(string)
+			gw := &goaviatrix.Gateway{
+				GwName:          d.Get("gw_name").(string),
+				SoftwareVersion: swVersion,
 			}
-			err := client.UpgradeGateway(hagw)
-			if err != nil {
-				return fmt.Errorf("could not upgrade HA spoke gateway during update image_version=%s software_version=%s: %v", hagw.ImageVersion, hagw.SoftwareVersion, err)
+			haSwVersion := d.Get("ha_software_version").(string)
+			hagw := &goaviatrix.Gateway{
+				GwName:          d.Get("gw_name").(string) + "-hagw",
+				SoftwareVersion: haSwVersion,
+			}
+			var wg sync.WaitGroup
+			wg.Add(2)
+			var primaryErr, haErr error
+			go func() {
+				primaryErr = client.UpgradeGateway(gw)
+				wg.Done()
+			}()
+			go func() {
+				haErr = client.UpgradeGateway(hagw)
+				wg.Done()
+			}()
+			wg.Wait()
+			if primaryErr != nil && haErr != nil {
+				return fmt.Errorf("could not upgrade either primary or HA spoke gateway "+
+					"software_version=%s ha_software_version=%s: primaryErr: %v haErr: %v",
+					swVersion, haSwVersion, primaryErr, haErr)
+			} else if primaryErr != nil {
+				return fmt.Errorf("could not upgrade primary spoke gateway software_version=%s: %v", swVersion, primaryErr)
+			} else if haErr != nil {
+				return fmt.Errorf("could not upgrade HA spoke gateway ha_software_version=%s: %v", haSwVersion, primaryErr)
+			}
+		} else { // Only primary or only HA has changed, or they have changed image_version
+			if primaryHasVersionChange {
+				swVersion := d.Get("software_version").(string)
+				imageVersion := d.Get("image_version").(string)
+				gw := &goaviatrix.Gateway{
+					GwName:          d.Get("gw_name").(string),
+					SoftwareVersion: swVersion,
+					ImageVersion:    imageVersion,
+				}
+				err := client.UpgradeGateway(gw)
+				if err != nil {
+					return fmt.Errorf("could not upgrade spoke gateway during update image_version=%s software_version=%s: %v", gw.ImageVersion, gw.SoftwareVersion, err)
+				}
+			}
+			if haHasVersionChange {
+				haSwVersion := d.Get("ha_software_version").(string)
+				haImageVersion := d.Get("ha_image_version").(string)
+				hagw := &goaviatrix.Gateway{
+					GwName:          d.Get("gw_name").(string) + "-hagw",
+					SoftwareVersion: haSwVersion,
+					ImageVersion:    haImageVersion,
+				}
+				err := client.UpgradeGateway(hagw)
+				if err != nil {
+					return fmt.Errorf("could not upgrade HA spoke gateway during update image_version=%s software_version=%s: %v", hagw.ImageVersion, hagw.SoftwareVersion, err)
+				}
 			}
 		}
 	}
