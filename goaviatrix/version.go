@@ -100,8 +100,8 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 		"pos":    "0",
 	}
 	backendURL := fmt.Sprintf("https://%s/v1/backend1", c.ControllerIP)
-	const maxPoll = 60
-	sleepDuration := time.Second * 30
+	const maxPoll = 180
+	sleepDuration := time.Second * 10
 	var i int
 	for ; i < maxPoll; i++ {
 		resp, err = c.Post(backendURL, form)
