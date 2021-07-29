@@ -1,9 +1,16 @@
 name: go
 
-on: [push, pull_request]
+on: 
+  push:
+    paths-ignore:
+      - 'docs/**'
+      - 'test-infra/**'
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - 'test-infra/**'
 
 jobs:
-
   build:
     name: build
     runs-on: ubuntu-latest
