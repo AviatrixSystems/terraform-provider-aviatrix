@@ -7,12 +7,12 @@ import (
 )
 
 type DeviceTag struct {
-	Name          string `map:"tag_name" form:"tag_name,omitempty"`
-	Config        string `map:"custom_cfg" form:"custom_cfg,omitempty"`
+	Name          string `form:"tag_name,omitempty"`
+	Config        string `form:"custom_cfg,omitempty"`
 	Devices       []string
-	DevicesString string `map:"include_device_list" form:"include_device_list,omitempty"`
-	CID           string `map:"CID" form:"CID"`
-	Action        string `map:"action" form:"action"`
+	DevicesString string `form:"include_device_list,omitempty"`
+	CID           string `form:"CID"`
+	Action        string `form:"action"`
 }
 
 func (c *Client) CreateDeviceTag(deviceTag *DeviceTag) error {
@@ -44,15 +44,20 @@ func (c *Client) CreateDeviceTag(deviceTag *DeviceTag) error {
 
 func (c *Client) GetDeviceTag(brt *DeviceTag) (*DeviceTag, error) {
 	// Check if a tag exists with the given name
-	brt.CID = c.CID
-	brt.Action = "list_cloudwan_configtag_names"
+	form := map[string]string{
+		"action":              "list_cloudwan_configtag_names",
+		"CID":                 c.CID,
+		"tag_name":            brt.Name,
+		"custom_cfg":          brt.Config,
+		"include_device_list": brt.DevicesString,
+	}
 	type Resp struct {
 		Return  bool     `json:"return,omitempty"`
 		Results []string `json:"results,omitempty"`
 		Reason  string   `json:"reason,omitempty"`
 	}
 	var data Resp
-	err := c.GetAPI(&data, brt.Action, toMap(brt), BasicCheck)
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +67,7 @@ func (c *Client) GetDeviceTag(brt *DeviceTag) (*DeviceTag, error) {
 	}
 
 	// Get the details for the tag
-	brt.Action = "get_cloudwan_configtag_details"
+	form["action"] = "get_cloudwan_configtag_details"
 	type DetailsResults struct {
 		TagName         string   `json:"gtag_name"`
 		AttachedDevices []string `json:"rgw_name"`
@@ -74,7 +79,7 @@ func (c *Client) GetDeviceTag(brt *DeviceTag) (*DeviceTag, error) {
 		Reason  string         `json:"reason,omitempty"`
 	}
 	var detailsData DetailsResp
-	err = c.GetAPI(&detailsData, brt.Action, toMap(brt), BasicCheck)
+	err = c.GetAPI(&detailsData, form["action"], form, BasicCheck)
 	if err != nil {
 		return nil, err
 	}

@@ -7,14 +7,14 @@ import (
 )
 
 type DeviceAwsTgwAttachment struct {
-	ConnectionName          string `map:"connection_name" form:"connection_name"`
-	DeviceName              string `map:"device_name" form:"device_name"`
-	AwsTgwName              string `map:"tgw_name" form:"tgw_name"`
-	DeviceAsn               string `map:"external_device_as_number" form:"external_device_as_number"`
-	SecurityDomainName      string `map:"route_domain_name" form:"route_domain_name"`
-	EnableGlobalAccelerator string `map:"enable_global_accelerator" form:"enable_global_accelerator"`
-	Action                  string `map:"action" form:"action"`
-	CID                     string `map:"CID" form:"CID"`
+	ConnectionName          string `form:"connection_name"`
+	DeviceName              string `form:"device_name"`
+	AwsTgwName              string `form:"tgw_name"`
+	DeviceAsn               string `form:"external_device_as_number"`
+	SecurityDomainName      string `form:"route_domain_name"`
+	EnableGlobalAccelerator string `form:"enable_global_accelerator"`
+	Action                  string `form:"action"`
+	CID                     string `form:"CID"`
 }
 
 func (b *DeviceAwsTgwAttachment) ID() string {
@@ -28,10 +28,18 @@ func (c *Client) CreateDeviceAwsTgwAttachment(attachment *DeviceAwsTgwAttachment
 }
 
 func (c *Client) GetDeviceAwsTgwAttachment(tgwAttachment *DeviceAwsTgwAttachment) (*DeviceAwsTgwAttachment, error) {
-	tgwAttachment.CID = c.CID
-	tgwAttachment.Action = "list_tgw_details"
+	form := map[string]string{
+		"action":                    "list_tgw_details",
+		"CID":                       c.CID,
+		"connection_name":           tgwAttachment.ConnectionName,
+		"device_name":               tgwAttachment.DeviceName,
+		"tgw_name":                  tgwAttachment.AwsTgwName,
+		"external_device_as_number": tgwAttachment.DeviceAsn,
+		"route_domain_name":         tgwAttachment.SecurityDomainName,
+		"enable_global_accelerator": tgwAttachment.EnableGlobalAccelerator,
+	}
 	var data TgwAttachmentResp
-	err := c.GetAPI(&data, tgwAttachment.Action, toMap(tgwAttachment), BasicCheck)
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
 	if err != nil {
 		return nil, err
 	}

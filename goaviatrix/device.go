@@ -9,31 +9,31 @@ import (
 
 // Device represents a device used in CloudWAN
 type Device struct {
-	Action             string               `form:"action,omitempty" map:"action" json:"-"`
-	CID                string               `form:"CID,omitempty" map:"CID" json:"-"`
-	Name               string               `form:"device_name,omitempty" map:"device_name" json:"rgw_name"`
-	PublicIP           string               `form:"public_ip,omitempty" map:"public_ip" json:"hostname"`
-	Username           string               `form:"username,omitempty" map:"username" json:"username"`
-	KeyFile            string               `form:"-" map:"-" json:"-"`
-	Password           string               `form:"password,omitempty" map:"password" json:"-"`
-	HostOS             string               `form:"host_os,omitempty" map:"host_os" json:"host_os"`
-	SshPort            int                  `form:"-" map:"-" json:"ssh_port"`
-	SshPortStr         string               `form:"port,omitempty" map:"port" json:"-"`
-	Address1           string               `form:"addr_1,omitempty" map:"addr_1" json:"-"`
-	Address2           string               `form:"addr_2,omitempty" map:"addr_2" json:"-"`
-	City               string               `form:"city,omitempty" map:"city" json:"-"`
-	State              string               `form:"state,omitempty" map:"state" json:"-"`
-	Country            string               `form:"country,omitempty" map:"country" json:"-"`
-	ZipCode            string               `form:"zipcode,omitempty" map:"zipcode" json:"-"`
-	Description        string               `form:"description,omitempty" map:"description" json:"description"`
-	Address            GetDeviceRespAddress `form:"-" map:"-" json:"address"`
-	CheckReason        string               `form:"-" map:"-" json:"check_reason"`
-	DeviceState        string               `form:"-" map:"-" json:"registered"`
-	PrimaryInterface   string               `form:"-" map:"-" json:"wan_if_primary"`
-	PrimaryInterfaceIP string               `form:"-" map:"-" json:"wan_if_primary_public_ip"`
-	ConnectionName     string               `form:"-" map:"-" json:"conn_name"`
-	SoftwareVersion    string               `form:"-" map:"-" json:"software_version"`
-	IsCaag             bool                 `form:"-" map:"-" json:"is_caag"`
+	Action             string               `form:"action,omitempty" json:"-"`
+	CID                string               `form:"CID,omitempty" json:"-"`
+	Name               string               `form:"device_name,omitempty" json:"rgw_name"`
+	PublicIP           string               `form:"public_ip,omitempty" json:"hostname"`
+	Username           string               `form:"username,omitempty" json:"username"`
+	KeyFile            string               `form:"-" json:"-"`
+	Password           string               `form:"password,omitempty" json:"-"`
+	HostOS             string               `form:"host_os,omitempty" json:"host_os"`
+	SshPort            int                  `form:"-" json:"ssh_port"`
+	SshPortStr         string               `form:"port,omitempty" json:"-"`
+	Address1           string               `form:"addr_1,omitempty" json:"-"`
+	Address2           string               `form:"addr_2,omitempty" json:"-"`
+	City               string               `form:"city,omitempty" json:"-"`
+	State              string               `form:"state,omitempty" json:"-"`
+	Country            string               `form:"country,omitempty" json:"-"`
+	ZipCode            string               `form:"zipcode,omitempty" json:"-"`
+	Description        string               `form:"description,omitempty" json:"description"`
+	Address            GetDeviceRespAddress `form:"-" json:"address"`
+	CheckReason        string               `form:"-" json:"check_reason"`
+	DeviceState        string               `form:"-" json:"registered"`
+	PrimaryInterface   string               `form:"-" json:"wan_if_primary"`
+	PrimaryInterfaceIP string               `form:"-" json:"wan_if_primary_public_ip"`
+	ConnectionName     string               `form:"-" json:"conn_name"`
+	SoftwareVersion    string               `form:"-" json:"software_version"`
+	IsCaag             bool                 `form:"-" json:"is_caag"`
 }
 
 type DeviceInterfaceConfig struct {
@@ -52,15 +52,30 @@ type GetDeviceRespAddress struct {
 }
 
 func (c *Client) RegisterDevice(d *Device) error {
-	d.Action = "register_cloudwan_device"
-	d.CID = c.CID
+	form := map[string]string{
+		"action":      "register_cloudwan_device",
+		"CID":         c.CID,
+		"device_name": d.Name,
+		"public_ip":   d.PublicIP,
+		"username":    d.Username,
+		"password":    d.Password,
+		"host_os":     d.HostOS,
+		"port":        d.SshPortStr,
+		"addr_1":      d.Address1,
+		"addr_2":      d.Address2,
+		"city":        d.City,
+		"state":       d.State,
+		"country":     d.Country,
+		"zipcode":     d.ZipCode,
+		"description": d.Description,
+	}
 	files := []File{
 		{
 			Path:      d.KeyFile,
 			ParamName: "private_key_file",
 		},
 	}
-	return c.PostFileAPI(toMap(d), files, BasicCheck)
+	return c.PostFileAPI(form, files, BasicCheck)
 }
 
 func (c *Client) GetDevice(d *Device) (*Device, error) {
@@ -130,16 +145,30 @@ func (c *Client) GetDeviceName(connName string) (string, error) {
 }
 
 func (c *Client) UpdateDevice(d *Device) error {
-	d.Action = "update_cloudwan_device_info"
-	d.CID = c.CID
-
+	form := map[string]string{
+		"action":      "update_cloudwan_device_info",
+		"CID":         c.CID,
+		"device_name": d.Name,
+		"public_ip":   d.PublicIP,
+		"username":    d.Username,
+		"password":    d.Password,
+		"host_os":     d.HostOS,
+		"port":        d.SshPortStr,
+		"addr_1":      d.Address1,
+		"addr_2":      d.Address2,
+		"city":        d.City,
+		"state":       d.State,
+		"country":     d.Country,
+		"zipcode":     d.ZipCode,
+		"description": d.Description,
+	}
 	files := []File{
 		{
 			Path:      d.KeyFile,
 			ParamName: "private_key_file",
 		},
 	}
-	return c.PostFileAPI(toMap(d), files, BasicCheck)
+	return c.PostFileAPI(form, files, BasicCheck)
 }
 
 func (c *Client) DeregisterDevice(d *Device) error {
