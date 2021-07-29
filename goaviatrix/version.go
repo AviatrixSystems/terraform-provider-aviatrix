@@ -56,58 +56,86 @@ func (av *AviatrixVersion) String(includeBuild bool) string {
 		return fmt.Sprintf("%d.%d.%d", av.Major, av.Minor, av.Build)
 	}
 	return fmt.Sprintf("%d.%d", av.Major, av.Minor)
-
 }
 
-func (c *Client) Upgrade(version *Version, upgradeGateways bool) error {
-	if version.Version == "" {
-		return errors.New("no target version is set")
+// AsyncUpgrade will upgrade controller asynchronously
+func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
+	form := map[string]string{
+		"CID":    c.CID,
+		"caller": "ui", // indicates an async command
 	}
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for upgrade") + err.Error())
-	}
-	var action string
-	upgradeController := url.Values{}
-	upgradeController.Add("CID", c.CID)
 	if upgradeGateways {
-		action = "upgrade"
-		upgradeController.Add("action", action)
+		form["action"] = "upgrade"
 		if version.Version != "latest" {
-			upgradeController.Add("version", version.Version)
+			form["version"] = version.Version
 		}
 	} else {
-		action = "upgrade_platform"
-		upgradeController.Add("action", action)
-		upgradeController.Add("gateway_list", "")
-		upgradeController.Add("software_version", version.Version)
+		form["action"] = "upgrade_platform"
+		form["gateway_list"] = ""
+		form["software_version"] = version.Version
 	}
-
-	for i := 0; ; i++ {
-		Url.RawQuery = upgradeController.Encode()
-		resp, err := c.Get(Url.String(), nil)
+	resp, err := c.Post(c.baseURL, form)
+	if err != nil {
+		return fmt.Errorf("HTTP POST %s failed: %v", form["action"], err)
+	}
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	requestID, err := strconv.Atoi(buf.String())
+	if err != nil {
+		// Could not decode as integer, so something went wrong
+		// try decoding as JSON to get an error message.
+		var data APIResp
+		err = json.Unmarshal(buf.Bytes(), &data)
 		if err != nil {
-			return fmt.Errorf("HTTP Get %s failed: %v", action, err)
+			// Could not decode as JSON either, something is very wrong.
+			return fmt.Errorf("Decode %s failed: %v\n Body: %s", form["action"], err, buf.String())
 		}
-		var data UpgradeResp
-		buf := new(bytes.Buffer)
+		return fmt.Errorf("rest API %s POST failed to initiate async action: %v", form["action"], data.Reason)
+	}
+	// Use the requestID to poll until upgrade is finished
+	form = map[string]string{
+		"action": "check_upgrade_status",
+		"CID":    c.CID,
+		"id":     strconv.Itoa(requestID),
+		"pos":    "0",
+	}
+	backendURL := fmt.Sprintf("https://%s/v1/backend1", c.ControllerIP)
+	const maxPoll = 180
+	sleepDuration := time.Second * 10
+	var i int
+	for ; i < maxPoll; i++ {
+		resp, err = c.Post(backendURL, form)
+		if err != nil {
+			// Could be transient HTTP error, e.g. EOF error
+			time.Sleep(sleepDuration)
+			continue
+		}
+		buf = new(bytes.Buffer)
 		buf.ReadFrom(resp.Body)
-		bodyString := buf.String()
-		bodyIoCopy := strings.NewReader(bodyString)
-		if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-			return fmt.Errorf("Json Decode %s failed: %v\n Body: %s", action, err, bodyString)
+		var data struct {
+			Done   bool
+			Result string
 		}
-		if !data.Return {
-			if strings.Contains(data.Reason, "Active upgrade in progress.") && i < 3 {
-				log.Infof("Active upgrade is in progress. Retry after 60 secs...")
-				time.Sleep(60 * time.Second)
-				continue
-			}
-			return fmt.Errorf("rest API %s Get failed: %v", action, data.Reason)
+		err = json.Unmarshal(buf.Bytes(), &data)
+		if err != nil {
+			return fmt.Errorf("decode check_upgrade_status failed: %v\n Body: %s", err, buf.String())
 		}
-		c.Login()
+		if !data.Done {
+			// Not done yet
+			time.Sleep(sleepDuration)
+			continue
+		}
+		// Upgrade is done, check for error
+		if strings.HasPrefix(data.Result, "Error") {
+			return fmt.Errorf("post check_upgrade_status failed: %s", data.Result)
+		}
 		break
 	}
+	// Waited for too long and upgrade never finished
+	if i == maxPoll {
+		return fmt.Errorf("waited %s but upgrade never finished. Please manually verify the upgrade status", maxPoll*sleepDuration)
+	}
+	c.Login()
 	return nil
 }
 
