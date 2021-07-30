@@ -50,10 +50,10 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "Name of the gateway which is going to be created.",
 			},
 			"vpc_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "VPC-ID/VNet-Name of cloud provider.",
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				Description:      "VPC-ID/VNet-Name of cloud provider.",
 				DiffSuppressFunc: DiffSuppressFuncGatewayVpcId,
 			},
 			"vpc_reg": {
