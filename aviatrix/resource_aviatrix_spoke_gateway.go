@@ -493,14 +493,23 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		} else {
 			gateway.ReuseEip = "on"
 
+			if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
+				return fmt.Errorf("failed to spoke transit gateway: 'allocate_new_eip' can only be set to 'false' when cloud_type is AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048) or AWS Top Secret (16384)")
+			}
+			if _, ok := d.GetOk("eip"); !ok {
+				return fmt.Errorf("failed to create spoke gateway: 'eip' must be set when 'allocate_new_eip' is false")
+			}
+			azureEipName, azureEipNameOk := d.GetOk("azure_eip_name_resource_group")
 			if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 				// AVX-9874 Azure EIP has a different format e.g. 'test_ip:rg:104.45.186.20'
-				azureEipName, ok := d.GetOk("azure_eip_name_resource_group")
-				if !ok {
-					return fmt.Errorf("failed to create spoke gateway: 'azure_eip_name_resource_group' must be set when 'allocate_new_eip' is true and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
+				if !azureEipNameOk {
+					return fmt.Errorf("failed to create spoke gateway: 'azure_eip_name_resource_group' must be set when 'allocate_new_eip' is false and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
 				}
 				gateway.Eip = fmt.Sprintf("%s:%s", azureEipName.(string), d.Get("eip").(string))
 			} else {
+				if azureEipNameOk {
+					return fmt.Errorf("failed to create spoke gateway: 'azure_eip_name_resource_group' must be empty when cloud_type is not one of Azure (8), AzureGov (32) or AzureChina (2048)")
+				}
 				gateway.Eip = d.Get("eip").(string)
 			}
 		}
@@ -818,13 +827,19 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			haGateway.HAOobManagementSubnet = haOobManagementSubnet + "~~" + haOobAvailabilityZone
 		}
 
-		if goaviatrix.IsCloudType(haGateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && haGateway.Eip != "" {
-			// AVX-9874 Azure EIP has a different format e.g. 'test_ip:rg:104.45.186.20'
-			haAzureEipName, ok := d.GetOk("ha_azure_eip_name_resource_group")
-			if !ok {
-				return fmt.Errorf("failed to create HA Spoke Gateway: 'ha_azure_eip_name_resource_group' must be set when a custom EIP is provided and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
+		haAzureEipName, haAzureEipNameOk := d.GetOk("ha_azure_eip_name_resource_group")
+		if goaviatrix.IsCloudType(haGateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+			if haGateway.Eip != "" {
+				// AVX-9874 Azure EIP has a different format e.g. 'test_ip:rg:104.45.186.20'
+				if !haAzureEipNameOk {
+					return fmt.Errorf("failed to create HA Spoke Gateway: 'ha_azure_eip_name_resource_group' must be set when a custom EIP is provided and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
+				}
+				haGateway.Eip = fmt.Sprintf("%s:%s", haAzureEipName.(string), haGateway.Eip)
+			} else if haAzureEipNameOk {
+				return fmt.Errorf("failed to create HA Spoke Gateway: 'ha_azure_eip_name_resource_group' must be empty when 'ha_eip' is empty")
 			}
-			haGateway.Eip = fmt.Sprintf("%s:%s", haAzureEipName.(string), haGateway.Eip)
+		} else if haAzureEipNameOk {
+			return fmt.Errorf("failed to create HA Spoke Gateway: 'ha_azure_eip_name_resource_group' must be empty when cloud_type is not one of Azure (8), AzureGov (32) or AzureChina (2048)")
 		}
 
 		if goaviatrix.IsCloudType(haGateway.CloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
@@ -1485,15 +1500,23 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		haEip := d.Get("ha_eip").(string)
 		if goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
 			spokeGw.Eip = haEip
-		} else if goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && haEip != "" && spokeGw.GwSize != "" {
-			// No change will be detected when ha_eip is set to the empty string because it is computed.
-			// Instead, check ha_gw_size to detect when HA gateway is being deleted.
-			haAzureEipName, ok := d.GetOk("ha_azure_eip_name_resource_group")
-			if !ok {
-				return fmt.Errorf("failed to create HA Spoke Gateway: 'ha_azure_eip_name_resource_group' must be set when a custom EIP is provided and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
+		}
+
+		haAzureEipName, haAzureEipNameOk := d.GetOk("ha_azure_eip_name_resource_group")
+		if goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+			if haEip != "" && spokeGw.GwSize != "" {
+				// No change will be detected when ha_eip is set to the empty string because it is computed.
+				// Instead, check ha_gw_size to detect when HA gateway is being deleted.
+				if !haAzureEipNameOk {
+					return fmt.Errorf("failed to create HA Spoke Gateway: 'ha_azure_eip_name_resource_group' must be set when a custom EIP is provided and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
+				}
+				// AVX-9874 Azure EIP has a different format e.g. 'test_ip:rg:104.45.186.20'
+				spokeGw.Eip = fmt.Sprintf("%s:%s", haAzureEipName.(string), haEip)
 			}
-			// AVX-9874 Azure EIP has a different format e.g. 'test_ip:rg:104.45.186.20'
-			spokeGw.Eip = fmt.Sprintf("%s:%s", haAzureEipName.(string), haEip)
+		} else {
+			if haAzureEipNameOk {
+				return fmt.Errorf("failed to create HA Spoke Gateway: 'azure_eip_name_resource_group' must be empty when cloud_type is not one of Azure (8), AzureGov (32) or AzureChina (2048)")
+			}
 		}
 
 		if !d.HasChange("ha_subnet") && d.HasChange("ha_insane_mode_az") {
