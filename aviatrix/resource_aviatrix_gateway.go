@@ -698,7 +698,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			gateway.Eip = fmt.Sprintf("%s:%s", azureEipName.(string), d.Get("eip").(string))
 		} else {
 			if azureEipNameOk {
-				return fmt.Errorf("failed to create gateway: 'azure_eip_name_resource_group' must be empty when Azure is not one of Azure (8), AzureGov (32) or AzureChina (2048)")
+				return fmt.Errorf("failed to create gateway: 'azure_eip_name_resource_group' must be empty when cloud_type is not one of Azure (8), AzureGov (32) or AzureChina (2048)")
 			}
 			gateway.Eip = d.Get("eip").(string)
 		}

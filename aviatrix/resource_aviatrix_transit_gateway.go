@@ -1834,10 +1834,8 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				// AVX-9874 Azure EIP has a different format e.g. 'test_ip:rg:104.45.186.20'
 				transitGw.Eip = fmt.Sprintf("%s:%s", haAzureEipName.(string), haEip)
 			}
-		} else {
-			if haAzureEipNameOk {
-				return fmt.Errorf("failed to create HA Spoke Gateway: 'azure_eip_name_resource_group' must be empty when cloud_type is not one of Azure (8), AzureGov (32) or AzureChina (2048)")
-			}
+		} else if haAzureEipNameOk {
+			return fmt.Errorf("failed to create HA Spoke Gateway: 'azure_eip_name_resource_group' must be empty when cloud_type is not one of Azure (8), AzureGov (32) or AzureChina (2048)")
 		}
 
 		if !d.HasChange("ha_subnet") && d.HasChange("ha_insane_mode_az") {
