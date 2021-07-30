@@ -51,10 +51,11 @@ func resourceAviatrixGateway() *schema.Resource {
 				Description: "Aviatrix gateway unique name.",
 			},
 			"vpc_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "ID of legacy VPC/Vnet to be connected.",
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				Description:      "ID of legacy VPC/Vnet to be connected.",
+				DiffSuppressFunc: DiffSuppressFuncGatewayVpcId,
 			},
 			"vpc_reg": {
 				Type:        schema.TypeString,

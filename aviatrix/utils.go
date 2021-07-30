@@ -197,3 +197,21 @@ func validateAzureEipNameResourceGroup(i interface{}, k string) (warnings []stri
 
 	return
 }
+
+func DiffSuppressFuncGatewayVpcId(k, old, new string, d *schema.ResourceData) bool {
+	cloudType := d.Get("cloud_type").(int)
+	if !goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+		return false
+	}
+
+	// If gateway vpc_id is in the new format (3 tuple) e.g. name:rg_name:guid
+	// and the vpc_id provided in the terraform file is in the old format (2 tuple)
+	// e.g. name:rg_name only compare the first two parts and ignore the guid
+	oldValue := strings.Split(old, ":")
+	newValue := strings.Split(new, ":")
+	if len(oldValue) == 3 && len(newValue) == 2 {
+		return oldValue[0] == newValue[0] && oldValue[1] == newValue[1]
+	}
+
+	return false
+}
