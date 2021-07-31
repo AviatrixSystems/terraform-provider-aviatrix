@@ -19,7 +19,8 @@ type Gateway struct {
 	AdditionalCidrs         string `form:"additional_cidrs,omitempty" json:"additional_cidrs"`
 	AuthMethod              string `form:"auth_method,omitempty" json:"auth_method,omitempty"`
 	AllocateNewEip          string `form:"allocate_new_eip,omitempty"`
-	AllocateNewEipRead      bool   `json:"newly_allocated_eip,omitempty"`
+	AllocateNewEipReadPtr   *bool  `json:"newly_allocated_eip,omitempty"`
+	AllocateNewEipRead      bool
 	BkupGatewayZone         string `form:"bkup_gateway_zone,omitempty" json:"bkup_gateway_zone,omitempty"`
 	BkupPrivateIP           string `form:"bkup_private_ip,omitempty" json:"bkup_private_ip,omitempty"`
 	CID                     string `form:"CID,omitempty"`
@@ -551,6 +552,9 @@ func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
 	gwList := data.Results
 	for i := range gwList {
 		if gwList[i].GwName == gateway.GwName {
+			gw := &gwList[i]
+			// AllocateNewEipRead should default to true when not set by backend
+			gw.AllocateNewEipRead = gw.AllocateNewEipReadPtr == nil || *gw.AllocateNewEipReadPtr
 			return &gwList[i], nil
 		}
 	}
