@@ -1,13 +1,8 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
-	"net/url"
+	"fmt"
 	"strings"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // Spoke gateway simple struct to hold spoke details
@@ -53,83 +48,39 @@ type SpokeVpc struct {
 func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) error {
 	spoke.CID = c.CID
 	spoke.Action = "create_spoke_gw"
-	resp, err := c.Post(c.baseURL, spoke)
-	if err != nil {
-		return errors.New("HTTP Post create_spoke_gw failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode create_spoke_gw failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API create_spoke_gw Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(spoke.Action, spoke, BasicCheck)
 }
 
 func (c *Client) SpokeJoinTransit(spoke *SpokeVpc) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for attach_spoke_to_transit_gw") + err.Error())
+	form := map[string]string{
+		"CID":        c.CID,
+		"action":     "attach_spoke_to_transit_gw",
+		"spoke_gw":   spoke.GwName,
+		"transit_gw": spoke.TransitGateway,
 	}
-	attachSpokeToTransitGw := url.Values{}
-	attachSpokeToTransitGw.Add("CID", c.CID)
-	attachSpokeToTransitGw.Add("action", "attach_spoke_to_transit_gw")
-	attachSpokeToTransitGw.Add("spoke_gw", spoke.GwName)
-	attachSpokeToTransitGw.Add("transit_gw", spoke.TransitGateway)
-	Url.RawQuery = attachSpokeToTransitGw.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get attach_spoke_to_transit_gw failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode attach_spoke_to_transit_gw failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API attach_spoke_to_transit_gw Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) SpokeLeaveAllTransit(spoke *SpokeVpc) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for detach_spoke_from_transit_gw") + err.Error())
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "detach_spoke_from_transit_gw",
+		"spoke_gw": spoke.GwName,
 	}
-	detachSpokeFromTransitGw := url.Values{}
-	detachSpokeFromTransitGw.Add("CID", c.CID)
-	detachSpokeFromTransitGw.Add("action", "detach_spoke_from_transit_gw")
-	detachSpokeFromTransitGw.Add("spoke_gw", spoke.GwName)
-	Url.RawQuery = detachSpokeFromTransitGw.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get detach_spoke_from_transit_gw failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode detach_spoke_from_transit_gw failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "has not joined to any transit") {
-			log.Errorf("spoke VPC is already left from transit VPC %s", data.Reason)
-			return nil
+
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "has not joined to any transit") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
-		return errors.New("Rest API detach_spoke_from_transit_gw Get failed: " + data.Reason)
+		return nil
 	}
-	return nil
+
+	return c.PostAPI(form["action"], form, checkFunc)
 }
 
 func (c *Client) SpokeLeaveTransit(spoke *SpokeVpc) error {
@@ -144,67 +95,38 @@ func (c *Client) SpokeLeaveTransit(spoke *SpokeVpc) error {
 }
 
 func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for enable_spoke_ha") + err.Error())
+	form := map[string]string{
+		"CID":     c.CID,
+		"action":  "enable_spoke_ha",
+		"gw_name": spoke.GwName,
+		"eip":     spoke.Eip,
 	}
-	enableSpokeHa := url.Values{}
-	enableSpokeHa.Add("CID", c.CID)
-	enableSpokeHa.Add("action", "enable_spoke_ha")
-	enableSpokeHa.Add("gw_name", spoke.GwName)
-	enableSpokeHa.Add("eip", spoke.Eip)
 
 	if IsCloudType(spoke.CloudType, GCPRelatedCloudTypes) {
-		enableSpokeHa.Add("new_zone", spoke.HAZone)
+		form["new_zone"] = spoke.HAZone
 	} else {
-		enableSpokeHa.Add("public_subnet", spoke.HASubnet)
-		enableSpokeHa.Add("oob_mgmt_subnet", spoke.HAOobManagementSubnet)
+		form["public_subnet"] = spoke.HASubnet
+		form["oob_mgmt_subnet"] = spoke.HAOobManagementSubnet
 	}
 
-	Url.RawQuery = enableSpokeHa.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return errors.New("HTTP Get enable_spoke_ha failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_spoke_ha failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "HA GW already exists") {
-			log.Infof("HA is already enabled %s", data.Reason)
-			return nil
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "HA GW already exists") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
-		log.Errorf("Enabling HA failed with error %s", data.Reason)
-		return errors.New("Rest API enable_spoke_ha Get failed: " + data.Reason)
+		return nil
 	}
-	return nil
+
+	return c.PostAPI(form["action"], form, checkFunc)
 }
 
 func (c *Client) EnableHaSpokeGateway(gateway *SpokeVpc) error {
 	gateway.CID = c.CID
 	gateway.Action = "create_peering_ha_gateway"
-	resp, err := c.Post(c.baseURL, gateway)
-	if err != nil {
-		return errors.New("HTTP Post create_peering_ha_gateway failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode create_peering_ha_gateway failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API create_peering_ha_gateway Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) EnableAutoAdvertiseS2CCidrs(gateway *Gateway) error {

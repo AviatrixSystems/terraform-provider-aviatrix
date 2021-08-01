@@ -1,11 +1,7 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 )
 
@@ -79,33 +75,29 @@ func (c *Client) CreateFireNet(fireNet *FireNet) error {
 }
 
 func (c *Client) GetFireNet(fireNet *FireNet) (*FireNetDetail, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for show_firenet_detail: ") + err.Error())
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "show_firenet_detail",
+		"vpc_id": fireNet.VpcID,
 	}
-	showFireNetDetail := url.Values{}
-	showFireNetDetail.Add("CID", c.CID)
-	showFireNetDetail.Add("action", "show_firenet_detail")
-	showFireNetDetail.Add("vpc_id", fireNet.VpcID)
-	Url.RawQuery = showFireNetDetail.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get show_firenet_detail failed: " + err.Error())
-	}
+
 	var data GetFireNetResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode show_firenet_detail failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "not found in DB") {
-			return nil, ErrNotFound
+
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "not found in DB") {
+				return ErrNotFound
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
-		return nil, errors.New("Rest API show_firenet_detail Get failed: " + data.Reason)
+		return nil
 	}
+
+	err := c.GetAPI(&data, form["action"], form, checkFunc)
+	if err != nil {
+		return nil, err
+	}
+
 	if strings.Split(data.Results.VpcID, "~~")[0] == fireNet.VpcID {
 		data.Results.VpcID = fireNet.VpcID
 		return &data.Results, nil
@@ -114,270 +106,151 @@ func (c *Client) GetFireNet(fireNet *FireNet) (*FireNetDetail, error) {
 }
 
 func (c *Client) AssociateFirewallWithFireNet(firewallInstance *FirewallInstance) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for associate_firewall_with_firenet: ") + err.Error())
-	}
-	associateFirewallWithFireNet := url.Values{}
-	associateFirewallWithFireNet.Add("CID", c.CID)
-	associateFirewallWithFireNet.Add("action", "associate_firewall_with_firenet")
-	associateFirewallWithFireNet.Add("vpc_id", firewallInstance.VpcID)
-	associateFirewallWithFireNet.Add("gateway_name", firewallInstance.GwName)
-	associateFirewallWithFireNet.Add("firewall_id", firewallInstance.InstanceID)
-	if firewallInstance.LanInterface != "" {
-		associateFirewallWithFireNet.Add("lan_interface", firewallInstance.LanInterface)
-	}
-	if firewallInstance.VendorType == "Generic" {
-		associateFirewallWithFireNet.Add("firewall_name", firewallInstance.FirewallName)
-		associateFirewallWithFireNet.Add("management_interface", firewallInstance.ManagementInterface)
-		associateFirewallWithFireNet.Add("egress_interface", firewallInstance.EgressInterface)
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "associate_firewall_with_firenet",
+		"vpc_id":       firewallInstance.VpcID,
+		"gateway_name": firewallInstance.GwName,
+		"firewall_id":  firewallInstance.InstanceID,
 	}
 
-	Url.RawQuery = associateFirewallWithFireNet.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get associate_firewall_with_firenet failed: " + err.Error())
+	if firewallInstance.LanInterface != "" {
+		form["lan_interface"] = firewallInstance.LanInterface
 	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode associate_firewall_with_firenet failed: " + err.Error() + "\n Body: " + bodyString)
+	if firewallInstance.VendorType == "Generic" {
+		form["firewall_name"] = firewallInstance.FirewallName
+		form["management_interface"] = firewallInstance.ManagementInterface
+		form["egress_interface"] = firewallInstance.EgressInterface
 	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "already associated") {
-			return nil
+
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "already associated") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
-		return errors.New("Rest API associate_firewall_with_firenet Get failed: " + data.Reason)
+		return nil
 	}
-	return nil
+
+	return c.PostAPI(form["action"], form, checkFunc)
 }
 
 func (c *Client) DisassociateFirewallFromFireNet(firewallInstance *FirewallInstance) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for disassociate_firewall_with_firenet: ") + err.Error())
+	form := map[string]string{
+		"CID":         c.CID,
+		"action":      "disassociate_firewall_with_firenet",
+		"vpc_id":      firewallInstance.VpcID,
+		"firewall_id": firewallInstance.InstanceID,
 	}
-	disassociateFirewallWithFireNet := url.Values{}
-	disassociateFirewallWithFireNet.Add("CID", c.CID)
-	disassociateFirewallWithFireNet.Add("action", "disassociate_firewall_with_firenet")
-	disassociateFirewallWithFireNet.Add("vpc_id", firewallInstance.VpcID)
-	disassociateFirewallWithFireNet.Add("firewall_id", firewallInstance.InstanceID)
 
-	Url.RawQuery = disassociateFirewallWithFireNet.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get disassociate_firewall_with_firenet failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode disassociate_firewall_with_firenet failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "not found") {
-			return nil
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "not found") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
-		return errors.New("Rest API disassociate_firewall_with_firenet Get failed: " + data.Reason)
+		return nil
 	}
-	return nil
+
+	return c.PostAPI(form["action"], form, checkFunc)
 }
 
 func (c *Client) AttachFirewallToFireNet(firewallInstance *FirewallInstance) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for attach_firewall_to_firenet: ") + err.Error())
+	form := map[string]string{
+		"CID":         c.CID,
+		"action":      "attach_firewall_to_firenet",
+		"vpc_id":      firewallInstance.VpcID,
+		"firewall_id": firewallInstance.InstanceID,
 	}
 
-	attachFirewallToFireNet := url.Values{}
-	attachFirewallToFireNet.Add("CID", c.CID)
-	attachFirewallToFireNet.Add("action", "attach_firewall_to_firenet")
-	attachFirewallToFireNet.Add("vpc_id", firewallInstance.VpcID)
-	attachFirewallToFireNet.Add("firewall_id", firewallInstance.InstanceID)
-
-	Url.RawQuery = attachFirewallToFireNet.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get attach_firewall_to_firenet failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode attach_firewall_to_firenet failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API attach_firewall_to_firenet Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DetachFirewallFromFireNet(firewallInstance *FirewallInstance) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for detach_firewall_from_firenet: ") + err.Error())
+	form := map[string]string{
+		"CID":         c.CID,
+		"action":      "detach_firewall_from_firenet",
+		"vpc_id":      firewallInstance.VpcID,
+		"firewall_id": firewallInstance.InstanceID,
 	}
-	detachFirewallFromFireNet := url.Values{}
-	detachFirewallFromFireNet.Add("CID", c.CID)
-	detachFirewallFromFireNet.Add("action", "detach_firewall_from_firenet")
-	detachFirewallFromFireNet.Add("vpc_id", firewallInstance.VpcID)
-	detachFirewallFromFireNet.Add("firewall_id", firewallInstance.InstanceID)
-	Url.RawQuery = detachFirewallFromFireNet.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get detach_firewall_from_firenet failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode detach_firewall_from_firenet failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API detach_firewall_from_firenet Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) ConnectFireNetWithTgw(awsTgw *AWSTgw, vpcSolo VPCSolo, SecurityDomainName string) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for connect_firenet_with_tgw") + err.Error())
+	form := map[string]string{
+		"CID":         c.CID,
+		"action":      "connect_firenet_with_tgw",
+		"vpc_id":      vpcSolo.VpcID,
+		"tgw_name":    awsTgw.Name,
+		"domain_name": SecurityDomainName,
 	}
-	connectFireNetWithTgw := url.Values{}
-	connectFireNetWithTgw.Add("CID", c.CID)
-	connectFireNetWithTgw.Add("action", "connect_firenet_with_tgw")
-	connectFireNetWithTgw.Add("vpc_id", vpcSolo.VpcID)
-	connectFireNetWithTgw.Add("tgw_name", awsTgw.Name)
-	connectFireNetWithTgw.Add("domain_name", SecurityDomainName)
-	Url.RawQuery = connectFireNetWithTgw.Encode()
-	resp, err := c.Get(Url.String(), nil)
 
-	if err != nil {
-		return errors.New("HTTP Get connect_firenet_with_tgw failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode connect_firenet_with_tgw failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API connect_firenet_with_tgw Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DisconnectFireNetFromTgw(awsTgw *AWSTgw, vpcID string) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for disconnect_firenet_with_tgw") + err.Error())
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "disconnect_firenet_with_tgw",
+		"vpc_id": vpcID,
 	}
-	disconnectFireNetWithTgw := url.Values{}
-	disconnectFireNetWithTgw.Add("CID", c.CID)
-	disconnectFireNetWithTgw.Add("action", "disconnect_firenet_with_tgw")
-	disconnectFireNetWithTgw.Add("vpc_id", vpcID)
-	Url.RawQuery = disconnectFireNetWithTgw.Encode()
-	resp, err := c.Get(Url.String(), nil)
 
-	if err != nil {
-		return errors.New("HTTP Get disconnect_firenet_with_tgw failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode disconnect_firenet_with_tgw failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API disconnect_firenet_with_tgw Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EditFireNetInspection(fireNet *FireNet) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for edit_firenet") + err.Error())
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "edit_firenet",
+		"vpc_id": fireNet.VpcID,
 	}
-	editFireNet := url.Values{}
-	editFireNet.Add("CID", c.CID)
-	editFireNet.Add("action", "edit_firenet")
-	editFireNet.Add("vpc_id", fireNet.VpcID)
+
 	if fireNet.Inspection {
-		editFireNet.Add("inspection", "true")
+		form["inspection"] = "true"
 	} else {
-		editFireNet.Add("inspection", "false")
+		form["inspection"] = "false"
 	}
-	Url.RawQuery = editFireNet.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get edit_firenet failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_firenet failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "configuration not changed") {
-			return nil
+
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "configuration not found") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
-		return errors.New("Rest API edit_firenet Get failed: " + data.Reason)
+		return nil
 	}
-	return nil
+
+	return c.PostAPI(form["action"], form, checkFunc)
 }
 
 func (c *Client) EditFireNetEgress(fireNet *FireNet) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for edit_firenet") + err.Error())
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "edit_firenet",
+		"vpc_id": fireNet.VpcID,
 	}
-	editFireNet := url.Values{}
-	editFireNet.Add("CID", c.CID)
-	editFireNet.Add("action", "edit_firenet")
-	editFireNet.Add("vpc_id", fireNet.VpcID)
+
 	if fireNet.FirewallEgress {
-		editFireNet.Add("firewall_egress", "true")
+		form["firewall_egress"] = "true"
 	} else {
-		editFireNet.Add("firewall_egress", "false")
+		form["firewall_egress"] = "false"
 	}
-	Url.RawQuery = editFireNet.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get edit_firenet failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_firenet failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "configuration not changed") {
-			return nil
+
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "configuration not found") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
-		return errors.New("Rest API edit_firenet Get failed: " + data.Reason)
+		return nil
 	}
-	return nil
+
+	return c.PostAPI(form["action"], form, checkFunc)
 }
 
 func (c *Client) EditFireNetHashingAlgorithm(fireNet *FireNet) error {
@@ -387,12 +260,13 @@ func (c *Client) EditFireNetHashingAlgorithm(fireNet *FireNet) error {
 		"vpc_id":           fireNet.VpcID,
 		"firewall_hashing": fireNet.HashingAlgorithm,
 	}
-	checkFunc := func(act, reason string, ret bool) error {
+
+	checkFunc := func(act, method, reason string, ret bool) error {
 		if !ret {
 			if strings.Contains(reason, "configuration not changed") {
 				return nil
 			}
-			return fmt.Errorf("rest API edit_firenet Post failed: %s", reason)
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
 		return nil
 	}
@@ -408,7 +282,7 @@ func (c *Client) EnableFireNetLanKeepAlive(net *FireNet) error {
 		"lan_ping": "true",
 	}
 
-	customCheck := func(action, reason string, ret bool) error {
+	customCheck := func(action, method, reason string, ret bool) error {
 		if !ret {
 			// [AVXERR-FIRENET-0029] No change in firenet attribute
 			if strings.Contains(reason, "AVXERR-FIRENET-0029") {
@@ -430,7 +304,7 @@ func (c *Client) DisableFireNetLanKeepAlive(net *FireNet) error {
 		"lan_ping": "false",
 	}
 
-	customCheck := func(action, reason string, ret bool) error {
+	customCheck := func(action, method, reason string, ret bool) error {
 		if !ret {
 			// [AVXERR-FIRENET-0029] No change in firenet attribute
 			if strings.Contains(reason, "AVXERR-FIRENET-0029") {
@@ -482,7 +356,7 @@ func (c *Client) EditFirenetExcludedCidr(net *FireNet) error {
 		"vpc_id":       net.VpcID,
 		"exclude_cidr": net.ExcludedCidrs,
 	}
-	check := func(act, reason string, ret bool) error {
+	check := func(act, method, reason string, ret bool) error {
 		if !ret {
 			if strings.Contains(reason, "list is not changed") {
 				return nil
@@ -500,7 +374,7 @@ func (c *Client) EnableFirenetFailClose(net *FireNet) error {
 		"CID":    c.CID,
 		"vpc_id": net.VpcID,
 	}
-	check := func(act, reason string, ret bool) error {
+	check := func(act, method, reason string, ret bool) error {
 		if !ret {
 			if strings.Contains(reason, "configuration not changed") {
 				return nil
@@ -518,7 +392,7 @@ func (c *Client) DisableFirenetFailClose(net *FireNet) error {
 		"CID":    c.CID,
 		"vpc_id": net.VpcID,
 	}
-	check := func(act, reason string, ret bool) error {
+	check := func(act, method, reason string, ret bool) error {
 		if !ret {
 			if strings.Contains(reason, "configuration not changed") {
 				return nil

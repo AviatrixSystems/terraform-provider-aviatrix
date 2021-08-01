@@ -1,11 +1,8 @@
 package goaviatrix
 
 import (
-	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -53,133 +50,86 @@ type ProfileBasePolicyResp struct {
 }
 
 func (c *Client) CreateProfile(profile *Profile) error {
-	Url, err := url.Parse(c.baseURL)
+	form1 := map[string]string{
+		"CID":          c.CID,
+		"action":       "add_user_profile",
+		"profile_name": profile.Name,
+		"base_policy":  profile.BaseRule,
+	}
+
+	err := c.PostAPI(form1["action"], form1, BasicCheck)
 	if err != nil {
-		return errors.New(("url Parsing failed for add_user_profile") + err.Error())
-	}
-	addUserProfile := url.Values{}
-	addUserProfile.Add("CID", c.CID)
-	addUserProfile.Add("action", "add_user_profile")
-	addUserProfile.Add("profile_name", profile.Name)
-	addUserProfile.Add("base_policy", profile.BaseRule)
-	Url.RawQuery = addUserProfile.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get add_user_profile failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode add_user_profile failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API add_user_profile Get failed: " + data.Reason)
+		return err
 	}
 
 	policyStr, _ := json.Marshal(profile.Policy)
-	updateProfilePolicy := url.Values{}
-	updateProfilePolicy.Add("CID", c.CID)
-	updateProfilePolicy.Add("action", "update_profile_policy")
-	updateProfilePolicy.Add("profile_name", profile.Name)
-	updateProfilePolicy.Add("policy", string(policyStr))
-	Url.RawQuery = updateProfilePolicy.Encode()
-	log.Infof("Creating Aviatrix Profile with Policy: %v", Url.String())
-	resp, err = c.Get(Url.String(), nil)
+	form2 := map[string]string{
+		"CID":          c.CID,
+		"action":       "update_profile_policy",
+		"profile_name": profile.Name,
+		"policy":       string(policyStr),
+	}
+
+	err = c.PostAPI(form2["action"], form2, BasicCheck)
 	if err != nil {
-		return errors.New("HTTP Get update_profile_policy failed: " + err.Error())
-	}
-	buf = new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString = buf.String()
-	bodyIoCopy = strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode update_profile_policy failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API update_profile_policy failed: " + data.Reason)
+		return err
 	}
 
 	for _, user := range profile.UserList {
-		addProfileMember := url.Values{}
-		addProfileMember.Add("CID", c.CID)
-		addProfileMember.Add("action", "add_profile_member")
-		addProfileMember.Add("profile_name", profile.Name)
-		addProfileMember.Add("username", user)
-		Url.RawQuery = addProfileMember.Encode()
+		form := map[string]string{
+			"CID":          c.CID,
+			"action":       "add_profile_member",
+			"profile_name": profile.Name,
+			"username":     user,
+		}
 
-		resp, err = c.Get(Url.String(), nil)
+		err = c.PostAPI(form["action"], form, BasicCheck)
 		if err != nil {
-			return errors.New("HTTP Get add_profile_member failed: " + err.Error())
-		}
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(resp.Body)
-		bodyString := buf.String()
-		bodyIoCopy := strings.NewReader(bodyString)
-		if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-			return errors.New("Json Decode add_profile_member failed: " + err.Error() + "\n Body: " + bodyString)
-		}
-		if !data.Return {
-			return errors.New("API Get add_profile_member failed: " + data.Reason)
+			return err
 		}
 	}
 	return nil
 }
 
 func (c *Client) GetProfile(profile *Profile) (*Profile, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for list_profile_policies") + err.Error())
+	form1 := map[string]string{
+		"CID":          c.CID,
+		"action":       "list_profile_policies",
+		"profile_name": profile.Name,
 	}
-	listProfilePolicy := url.Values{}
-	listProfilePolicy.Add("CID", c.CID)
-	listProfilePolicy.Add("action", "list_profile_policies")
-	listProfilePolicy.Add("profile_name", profile.Name)
-	Url.RawQuery = listProfilePolicy.Encode()
 
-	resp, err := c.Get(Url.String(), nil)
+	var data1 ProfilePolicyListResp
 
-	if err != nil {
-		return nil, errors.New("HTTP Get list_profile_policies failed: " + err.Error())
-	}
-	var data ProfilePolicyListResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_profile_policies failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		log.Errorf("Couldn't find Aviatrix profile %s", profile.Name)
-		if strings.Contains(data.Reason, "does not exist") {
-			return nil, ErrNotFound
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "does not exist") {
+				return ErrNotFound
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
-		return nil, errors.New("API Get list_profile_policies failed: " + data.Reason)
+		return nil
 	}
-	profile.Policy = data.Results
+
+	err := c.GetAPI(&data1, form1["action"], form1, checkFunc)
+	if err != nil {
+		return nil, err
+	}
+
+	profile.Policy = data1.Results
 	log.Tracef("Profile policy %s", profile.Policy)
 
-	listUserProfileNames := url.Values{}
-	listUserProfileNames.Add("CID", c.CID)
-	listUserProfileNames.Add("action", "list_user_profile_names")
-	Url.RawQuery = listUserProfileNames.Encode()
+	form2 := map[string]string{
+		"CID":    c.CID,
+		"action": "list_user_profile_names",
+	}
 
-	resp, err = c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get list_user_profile_names failed: " + err.Error())
-	}
 	var data2 ProfileUserListResp
-	buf = new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString = buf.String()
-	bodyIoCopy = strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data2); err != nil {
-		return nil, errors.New("Json Decode list_user_profile_names failed: " + err.Error() + "\n Body: " + bodyString)
+
+	err = c.GetAPI(&data2, form2["action"], form2, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
-	//profile.BaseRule = data2.Results[profile.Name]
+
 	profile.UserList = data2.Results[profile.Name]
 	log.Tracef("Profile list of users %s", profile.UserList)
 	return profile, nil
@@ -188,64 +138,31 @@ func (c *Client) GetProfile(profile *Profile) (*Profile, error) {
 func (c *Client) UpdateProfilePolicy(profile *Profile) error {
 	log.Tracef("Updating Profile Policy %#v", profile)
 
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for update_profile_policy") + err.Error())
-	}
 	policyStr, _ := json.Marshal(profile.Policy)
-	updateProfilePolicy := url.Values{}
-	updateProfilePolicy.Add("CID", c.CID)
-	updateProfilePolicy.Add("action", "update_profile_policy")
-	updateProfilePolicy.Add("profile_name", profile.Name)
-	updateProfilePolicy.Add("policy", string(policyStr))
-	Url.RawQuery = updateProfilePolicy.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get update_profile_policy failed: " + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "update_profile_policy",
+		"profile_name": profile.Name,
+		"policy":       string(policyStr),
 	}
 
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode update_profile_policy failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API update_profile_policy failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) AttachUsers(profile *Profile) error {
 	log.Tracef("Attaching users %s", profile.UserList)
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		panic("boom")
-	}
-	for _, user := range profile.UserList {
-		addProfileMember := url.Values{}
-		addProfileMember.Add("CID", c.CID)
-		addProfileMember.Add("action", "add_profile_member")
-		addProfileMember.Add("profile_name", profile.Name)
-		addProfileMember.Add("username", user)
-		Url.RawQuery = addProfileMember.Encode()
 
-		resp, err := c.Get(Url.String(), nil)
+	for _, user := range profile.UserList {
+		form := map[string]string{
+			"CID":          c.CID,
+			"action":       "add_profile_member",
+			"profile_name": profile.Name,
+			"username":     user,
+		}
+
+		err := c.PostAPI(form["action"], form, BasicCheck)
 		if err != nil {
-			return errors.New("HTTP Get add_profile_member failed: " + err.Error())
-		}
-		var data APIResp
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(resp.Body)
-		bodyString := buf.String()
-		bodyIoCopy := strings.NewReader(bodyString)
-		if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-			return errors.New("Json Decode add_profile_member failed: " + err.Error() + "\n Body: " + bodyString)
-		}
-		if !data.Return {
-			return errors.New("API Get add_profile_member failed: " + data.Reason)
+			return err
 		}
 	}
 	return nil
@@ -253,96 +170,51 @@ func (c *Client) AttachUsers(profile *Profile) error {
 
 func (c *Client) DetachUsers(profile *Profile) error {
 	log.Tracef("Detaching users %s", profile.UserList)
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for del_profile_member") + err.Error())
-	}
+
 	for _, user := range profile.UserList {
-		delProfileMember := url.Values{}
-		delProfileMember.Add("CID", c.CID)
-		delProfileMember.Add("action", "del_profile_member")
-		delProfileMember.Add("profile_name", profile.Name)
-		delProfileMember.Add("username", user)
-		Url.RawQuery = delProfileMember.Encode()
-		resp, err := c.Get(Url.String(), nil)
+		form := map[string]string{
+			"CID":          c.CID,
+			"action":       "del_profile_member",
+			"profile_name": profile.Name,
+			"username":     user,
+		}
+
+		err := c.PostAPI(form["action"], form, BasicCheck)
 		if err != nil {
-			return errors.New("HTTP Get del_profile_member failed: " + err.Error())
-		}
-		var data APIResp
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(resp.Body)
-		bodyString := buf.String()
-		bodyIoCopy := strings.NewReader(bodyString)
-		if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-			return errors.New("Json Decode del_profile_member failed: " + err.Error() + "\n Body: " + bodyString)
-		}
-		if !data.Return {
-			return errors.New("API Get del_profile_member failed: " + data.Reason)
+			return err
 		}
 	}
 	return nil
 }
 
 func (c *Client) DeleteProfile(profile *Profile) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for del_user_profile") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "del_user_profile",
+		"profile_name": profile.Name,
 	}
-	delUserProfile := url.Values{}
-	delUserProfile.Add("CID", c.CID)
-	delUserProfile.Add("action", "del_user_profile")
-	delUserProfile.Add("profile_name", profile.Name)
-	Url.RawQuery = delUserProfile.Encode()
 
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get del_user_profile failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode del_user_profile failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("API Get del_user_profile failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) GetProfileBasePolicy(profile *Profile) (*Profile, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for get_profile_base_policy") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "get_profile_base_policy",
+		"profile_name": profile.Name,
 	}
-	getProfileBasePolicy := url.Values{}
-	getProfileBasePolicy.Add("CID", c.CID)
-	getProfileBasePolicy.Add("action", "get_profile_base_policy")
-	getProfileBasePolicy.Add("profile_name", profile.Name)
-	Url.RawQuery = getProfileBasePolicy.Encode()
 
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get get_profile_base_policy failed: " + err.Error())
-	}
 	var data ProfileBasePolicyResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode get_profile_base_policy failed: " + err.Error() + "\n Body: " + bodyString)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
-	if !data.Return {
-		return nil, errors.New("API Get get_profile_base_policy failed: " + data.Reason)
-	} else {
-		if strings.Contains(data.Results, "allow all") {
-			profile.BaseRule = "allow_all"
-		} else if strings.Contains(data.Results, "deny all") {
-			profile.BaseRule = "deny_all"
-		}
+
+	if strings.Contains(data.Results, "allow all") {
+		profile.BaseRule = "allow_all"
+	} else if strings.Contains(data.Results, "deny all") {
+		profile.BaseRule = "deny_all"
 	}
 
 	return profile, nil

@@ -1,11 +1,8 @@
 package goaviatrix
 
 import (
-	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"net/url"
 	"strconv"
 	"strings"
 )
@@ -78,130 +75,115 @@ type FirewallInstanceCreateResult struct {
 }
 
 func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (string, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return "", errors.New(("url Parsing failed for add_firewall_instance: ") + err.Error())
-	}
-	addFirewallInstance := url.Values{}
-	addFirewallInstance.Add("CID", c.CID)
-	addFirewallInstance.Add("action", "add_firewall_instance")
-	if firewallInstance.GwName != "" {
-		addFirewallInstance.Add("gw_name", firewallInstance.GwName)
-	} else {
-		addFirewallInstance.Add("vpc_id", firewallInstance.VpcID)
-	}
-	addFirewallInstance.Add("firewall_name", firewallInstance.FirewallName)
-	addFirewallInstance.Add("firewall_image", firewallInstance.FirewallImage)
-	addFirewallInstance.Add("firewall_image_version", firewallInstance.FirewallImageVersion)
-	addFirewallInstance.Add("firewall_image_id", firewallInstance.FirewallImageId)
-	addFirewallInstance.Add("firewall_size", firewallInstance.FirewallSize)
-	addFirewallInstance.Add("key_name", firewallInstance.KeyName)
-	addFirewallInstance.Add("iam_role", firewallInstance.IamRole)
-	addFirewallInstance.Add("bootstrap_bucket_name", firewallInstance.BootstrapBucketName)
-	addFirewallInstance.Add("no_associate", strconv.FormatBool(true))
-	addFirewallInstance.Add("username", firewallInstance.Username)
-	addFirewallInstance.Add("password", firewallInstance.Password)
-	if firewallInstance.EgressVpc != "" {
-		addFirewallInstance.Add("cloud_type", strconv.Itoa(GCP))
-		addFirewallInstance.Add("egress", firewallInstance.EgressSubnet)
-		addFirewallInstance.Add("egress_vpc", firewallInstance.EgressVpc)
-		addFirewallInstance.Add("management", firewallInstance.ManagementSubnet)
-		addFirewallInstance.Add("management_vpc", firewallInstance.ManagementVpc)
-		addFirewallInstance.Add("zone", firewallInstance.AvailabilityZone)
-	} else {
-		addFirewallInstance.Add("egress_subnet", firewallInstance.EgressSubnet)
-		addFirewallInstance.Add("management_subnet", firewallInstance.ManagementSubnet)
-	}
-	if firewallInstance.SshPublicKey != "" {
-		addFirewallInstance.Add("ssh_public_key", firewallInstance.SshPublicKey)
-	}
-	if firewallInstance.BootstrapStorageName != "" {
-		addFirewallInstance.Add("bootstrap_storage_name", firewallInstance.BootstrapStorageName)
-	}
-	if firewallInstance.StorageAccessKey != "" {
-		addFirewallInstance.Add("storage_access_key", firewallInstance.StorageAccessKey)
-	}
-	if firewallInstance.FileShareFolder != "" {
-		addFirewallInstance.Add("file_share_folder", firewallInstance.FileShareFolder)
-	}
-	if firewallInstance.ShareDirectory != "" {
-		addFirewallInstance.Add("share_directory", firewallInstance.ShareDirectory)
-	}
-	if firewallInstance.SicKey != "" {
-		addFirewallInstance.Add("sic_key", firewallInstance.SicKey)
-	}
-	if firewallInstance.ContainerFolder != "" {
-		addFirewallInstance.Add("container_folder", firewallInstance.ContainerFolder)
-	}
-	if firewallInstance.SasUrlConfig != "" {
-		addFirewallInstance.Add("sas_url_config", firewallInstance.SasUrlConfig)
-	}
-	if firewallInstance.SasUriLicense != "" {
-		addFirewallInstance.Add("sas_url_license", firewallInstance.SasUriLicense)
-	}
-	if firewallInstance.UserData != "" {
-		addFirewallInstance.Add("user_data", firewallInstance.UserData)
-	}
-	if len(firewallInstance.Tags) > 0 {
-		addFirewallInstance.Add("tag_json", firewallInstance.TagJson)
-	}
-	if firewallInstance.AvailabilityDomain != "" && firewallInstance.FaultDomain != "" {
-		addFirewallInstance.Add("cloud_type", strconv.Itoa(OCI))
-		addFirewallInstance.Add("availability_domain", firewallInstance.AvailabilityDomain)
-		addFirewallInstance.Add("fault_domain", firewallInstance.FaultDomain)
+	form := map[string]string{
+		"CID":                    c.CID,
+		"action":                 "add_firewall_instance",
+		"firewall_name":          firewallInstance.FirewallName,
+		"firewall_image":         firewallInstance.FirewallImage,
+		"firewall_image_version": firewallInstance.FirewallImageVersion,
+		"firewall_image_id":      firewallInstance.FirewallImageId,
+		"firewall_size":          firewallInstance.FirewallSize,
+		"key_name":               firewallInstance.KeyName,
+		"iam_role":               firewallInstance.IamRole,
+		"bootstrap_bucket_name":  firewallInstance.BootstrapBucketName,
+		"no_associate":           strconv.FormatBool(true),
+		"username":               firewallInstance.Username,
+		"password":               firewallInstance.Password,
 	}
 
-	Url.RawQuery = addFirewallInstance.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return "", errors.New("HTTP Get add_firewall_instance failed: " + err.Error())
+	if firewallInstance.GwName != "" {
+		form["gw_name"] = firewallInstance.GwName
+	} else {
+		form["vpc_id"] = firewallInstance.VpcID
+	}
+	if firewallInstance.EgressVpc != "" {
+		form["cloud_type"] = strconv.Itoa(GCP)
+		form["egress"] = firewallInstance.EgressSubnet
+		form["egress_vpc"] = firewallInstance.EgressVpc
+		form["management"] = firewallInstance.ManagementSubnet
+		form["management_vpc"] = firewallInstance.ManagementVpc
+		form["zone"] = firewallInstance.AvailabilityZone
+	} else {
+		form["egress_subnet"] = firewallInstance.EgressSubnet
+		form["management_subnet"] = firewallInstance.ManagementSubnet
+	}
+	if firewallInstance.SshPublicKey != "" {
+		form["ssh_public_key"] = firewallInstance.SshPublicKey
+	}
+	if firewallInstance.BootstrapStorageName != "" {
+		form["bootstrap_storage_name"] = firewallInstance.BootstrapStorageName
+	}
+	if firewallInstance.StorageAccessKey != "" {
+		form["storage_access_key"] = firewallInstance.StorageAccessKey
+	}
+	if firewallInstance.FileShareFolder != "" {
+		form["file_share_folder"] = firewallInstance.FileShareFolder
+	}
+	if firewallInstance.ShareDirectory != "" {
+		form["share_directory"] = firewallInstance.ShareDirectory
+	}
+	if firewallInstance.SicKey != "" {
+		form["sic_key"] = firewallInstance.SicKey
+	}
+	if firewallInstance.ContainerFolder != "" {
+		form["container_folder"] = firewallInstance.ContainerFolder
+	}
+	if firewallInstance.SasUrlConfig != "" {
+		form["sas_url_config"] = firewallInstance.SasUrlConfig
+	}
+	if firewallInstance.SasUriLicense != "" {
+		form["sas_url_license"] = firewallInstance.SasUriLicense
+	}
+	if firewallInstance.UserData != "" {
+		form["user_data"] = firewallInstance.UserData
+	}
+	if len(firewallInstance.Tags) > 0 {
+		form["tag_json"] = firewallInstance.TagJson
+	}
+	if firewallInstance.AvailabilityDomain != "" && firewallInstance.FaultDomain != "" {
+		form["cloud_type"] = strconv.Itoa(OCI)
+		form["availability_domain"] = firewallInstance.AvailabilityDomain
+		form["fault_domain"] = firewallInstance.FaultDomain
 	}
 
 	var data FirewallInstanceCreateResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return "", errors.New("Json Decode add_firewall_instance failed: " + err.Error() + "\n Body: " + bodyString)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return "", err
 	}
-	if !data.Return {
-		return "", errors.New("Rest API add_firewall_instance Get failed: " + data.Reason)
-	}
+
 	if data.Results.FirewallID != "" {
 		return data.Results.FirewallID, nil
 	}
+
 	return "", ErrNotFound
 }
 
 func (c *Client) GetFirewallInstance(firewallInstance *FirewallInstance) (*FirewallInstance, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for get_instance_by_id: ") + err.Error())
+	form := map[string]string{
+		"CID":         c.CID,
+		"action":      "get_instance_by_id",
+		"instance_id": firewallInstance.InstanceID,
 	}
-	getInstanceById := url.Values{}
-	getInstanceById.Add("CID", c.CID)
-	getInstanceById.Add("action", "get_instance_by_id")
-	getInstanceById.Add("instance_id", firewallInstance.InstanceID)
-	Url.RawQuery = getInstanceById.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get get_instance_by_id failed: " + err.Error())
-	}
+
 	var data FirewallInstanceResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode get_instance_by_id failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "Unrecognized firewall instance_id") {
-			return nil, ErrNotFound
+
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "Unrecognized firewall instance_id") {
+				return ErrNotFound
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
-		return nil, errors.New("Rest API get_instance_by_id Get failed: " + data.Reason)
+		return nil
 	}
+
+	err := c.GetAPI(&data, form["action"], form, checkFunc)
+	if err != nil {
+		return nil, err
+	}
+
 	if data.Results.InstanceID == firewallInstance.InstanceID {
 		// Only try to decode if tags are not empty string
 		if string(data.Results.TagsMessage) != `""` {
@@ -212,35 +194,16 @@ func (c *Client) GetFirewallInstance(firewallInstance *FirewallInstance) (*Firew
 		}
 		return &data.Results, nil
 	}
+
 	return nil, ErrNotFound
 }
 
 func (c *Client) DeleteFirewallInstance(firewallInstance *FirewallInstance) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for delete_firenet_firewall_instance ") + err.Error())
-	}
-	deleteFirenetFirewallInstance := url.Values{}
-	deleteFirenetFirewallInstance.Add("CID", c.CID)
-	deleteFirenetFirewallInstance.Add("action", "delete_firenet_firewall_instance")
-	deleteFirenetFirewallInstance.Add("vpc_id", firewallInstance.VpcID)
-	deleteFirenetFirewallInstance.Add("firewall_id", firewallInstance.InstanceID)
-	Url.RawQuery = deleteFirenetFirewallInstance.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get delete_firenet_firewall_instance failed: " + err.Error())
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "delete_firenet_firewall_instance",
+		"vpc_id": firewallInstance.VpcID,
 	}
 
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_firenet_firewall_instance failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API delete_firenet_firewall_instance Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }

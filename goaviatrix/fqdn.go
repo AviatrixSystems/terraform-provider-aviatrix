@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 
@@ -70,122 +69,51 @@ type FQDNPassThrough struct {
 }
 
 func (c *Client) CreateFQDN(fqdn *FQDN) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New("url Parsing failed for add_fqdn_filter_tag " + err.Error())
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "add_fqdn_filter_tag",
+		"tag_name": fqdn.FQDNTag,
 	}
-	addFQDNFilterTag := url.Values{}
-	addFQDNFilterTag.Add("CID", c.CID)
-	addFQDNFilterTag.Add("action", "add_fqdn_filter_tag")
-	addFQDNFilterTag.Add("tag_name", fqdn.FQDNTag)
-	Url.RawQuery = addFQDNFilterTag.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get add_fqdn_filter_tag failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode add_fqdn_filter_tag failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API add_fqdn_filter_tag Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DeleteFQDN(fqdn *FQDN) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New("url Parsing failed for del_fqdn_filter_tag " + err.Error())
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "del_fqdn_filter_tag",
+		"tag_name": fqdn.FQDNTag,
 	}
-	delFQDNFilterTag := url.Values{}
-	delFQDNFilterTag.Add("CID", c.CID)
-	delFQDNFilterTag.Add("action", "del_fqdn_filter_tag")
-	delFQDNFilterTag.Add("tag_name", fqdn.FQDNTag)
-	Url.RawQuery = delFQDNFilterTag.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get del_fqdn_filter_tag failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode del_fqdn_filter_tag failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API del_fqdn_filter_tag Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 //change state to 'enabled' or 'disabled'
 func (c *Client) UpdateFQDNStatus(fqdn *FQDN) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New("url Parsing failed for set_fqdn_filter_tag_state " + err.Error())
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "set_fqdn_filter_tag_state",
+		"tag_name": fqdn.FQDNTag,
+		"status":   fqdn.FQDNStatus,
 	}
-	setFQDNFilterTagState := url.Values{}
-	setFQDNFilterTagState.Add("CID", c.CID)
-	setFQDNFilterTagState.Add("action", "set_fqdn_filter_tag_state")
-	setFQDNFilterTagState.Add("tag_name", fqdn.FQDNTag)
-	setFQDNFilterTagState.Add("status", fqdn.FQDNStatus)
-	Url.RawQuery = setFQDNFilterTagState.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get set_fqdn_filter_tag_state failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode set_fqdn_filter_tag_state failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API set_fqdn_filter_tag_state Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 //Change default mode to 'white' or 'black'
 func (c *Client) UpdateFQDNMode(fqdn *FQDN) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New("url Parsing failed for set_fqdn_filter_tag_color " + err.Error())
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "set_fqdn_filter_tag_color",
+		"tag_name": fqdn.FQDNTag,
+		"color":    fqdn.FQDNMode,
 	}
-	setFQDNFilterTagColor := url.Values{}
-	setFQDNFilterTagColor.Add("CID", c.CID)
-	setFQDNFilterTagColor.Add("action", "set_fqdn_filter_tag_color")
-	setFQDNFilterTagColor.Add("tag_name", fqdn.FQDNTag)
-	setFQDNFilterTagColor.Add("color", fqdn.FQDNMode)
-	Url.RawQuery = setFQDNFilterTagColor.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get set_fqdn_filter_tag_color failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode set_fqdn_filter_tag_color failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API set_fqdn_filter_tag_color Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) UpdateDomains(fqdn *FQDN) error {
+	// TODO: use PostAPI - domain names need special processing
 	fqdn.CID = c.CID
 	fqdn.Action = "set_fqdn_filter_tag_domain_names"
 	log.Infof("Update domains: %#v", fqdn)
@@ -226,63 +154,36 @@ func (c *Client) AttachGws(fqdn *FQDN) error {
 }
 
 func (c *Client) DetachGws(fqdn *FQDN, gwList []string) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New("url Parsing failed for detach_fqdn_filter_tag_from_gw " + err.Error())
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "detach_fqdn_filter_tag_from_gw",
+		"tag_name": fqdn.FQDNTag,
 	}
-	detachFQDNFilterTagToGw := url.Values{}
-	detachFQDNFilterTagToGw.Add("CID", c.CID)
-	detachFQDNFilterTagToGw.Add("action", "detach_fqdn_filter_tag_from_gw")
-	detachFQDNFilterTagToGw.Add("tag_name", fqdn.FQDNTag)
+
 	for i := range gwList {
-		detachFQDNFilterTagToGw.Add("gw_name", gwList[i])
-		Url.RawQuery = detachFQDNFilterTagToGw.Encode()
-		resp, err := c.Get(Url.String(), nil)
+		form["gw_name"] = gwList[i]
+		err := c.PostAPI(form["action"], form, BasicCheck)
 		if err != nil {
-			return errors.New("HTTP Get detach_fqdn_filter_tag_from_gw failed: " + err.Error())
-		}
-		var data APIResp
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(resp.Body)
-		bodyString := buf.String()
-		bodyIoCopy := strings.NewReader(bodyString)
-		if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-			return errors.New("Json Decode detach_fqdn_filter_tag_from_gw failed: " + err.Error() + "\n Body: " + bodyString)
-		}
-		if !data.Return {
-			return errors.New("Rest API detach_fqdn_filter_tag_from_gw Get failed: " + data.Reason)
+			return err
 		}
 	}
+
 	return nil
 }
 
 func (c *Client) ListFQDNTags() ([]*FQDN, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New("url Parsing failed for list_fqdn_filter_tags " + err.Error())
-	}
-	listFQDNFilterTags := url.Values{}
-	listFQDNFilterTags.Add("CID", c.CID)
-	listFQDNFilterTags.Add("action", "list_fqdn_filter_tags")
-	Url.RawQuery = listFQDNFilterTags.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get list_fqdn_filter_tags failed: " + err.Error())
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "list_fqdn_filter_tags",
 	}
 
 	var data map[string]interface{}
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_fqdn_filter_tags failed: " + err.Error() + "\n Body: " + bodyString)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
-	if !data["return"].(bool) {
-		reason := data["reason"].(string)
-		log.Errorf("couldn't find Aviatrix FQDN tags: %s", reason)
-		return nil, errors.New("Rest API list_fqdn_filter_tags Get failed: " + reason)
-	}
+
 	tags := make([]*FQDN, 0)
 	if val, ok := data["results"]; ok {
 		for tag, data := range val.(map[string]interface{}) {
@@ -316,31 +217,17 @@ func (c *Client) GetFQDNTag(fqdn *FQDN) (*FQDN, error) {
 }
 
 func (c *Client) ListDomains(fqdn *FQDN) (*FQDN, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New("url Parsing failed for list_fqdn_filter_tag_domain_names " + err.Error())
-	}
-	listFQDNFilterTagDomainNames := url.Values{}
-	listFQDNFilterTagDomainNames.Add("CID", c.CID)
-	listFQDNFilterTagDomainNames.Add("action", "list_fqdn_filter_tag_domain_names")
-	listFQDNFilterTagDomainNames.Add("tag_name", fqdn.FQDNTag)
-	Url.RawQuery = listFQDNFilterTagDomainNames.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get list_fqdn_filter_tag_domain_names failed: " + err.Error())
-	}
-	var data map[string]interface{}
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_fqdn_filter_tag_domain_names failed: " + err.Error() + "\n Body: " + bodyString)
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "list_fqdn_filter_tag_domain_names",
+		"tag_name": fqdn.FQDNTag,
 	}
 
-	if ret := data["return"].(bool); !ret {
-		reason := data["reason"].(string)
-		return nil, fmt.Errorf("rest API list_fqdn_filter_tag_domain_names Get failed: %v", reason)
+	var data map[string]interface{}
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
 
 	names := data["results"].([]interface{})
@@ -359,104 +246,51 @@ func (c *Client) ListDomains(fqdn *FQDN) (*FQDN, error) {
 }
 
 func (c *Client) ListGws(fqdn *FQDN) ([]string, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New("url Parsing failed for list_fqdn_filter_tag_attached_gws " + err.Error())
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "list_fqdn_filter_tag_attached_gws",
+		"tag_name": fqdn.FQDNTag,
 	}
-	listFQDNFilterTagAttachedGws := url.Values{}
-	listFQDNFilterTagAttachedGws.Add("CID", c.CID)
-	listFQDNFilterTagAttachedGws.Add("action", "list_fqdn_filter_tag_attached_gws")
-	listFQDNFilterTagAttachedGws.Add("tag_name", fqdn.FQDNTag)
-	Url.RawQuery = listFQDNFilterTagAttachedGws.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get list_fqdn_filter_tag_attached_gws failed: " + err.Error())
-	}
+
 	var data ResultListResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_fqdn_filter_tag_attached_gws failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		log.Errorf("Couldn't find Aviatrix FQDN tag names: %s , Reason: %s", fqdn.FQDNTag, data.Reason)
-		return nil, errors.New("Rest API list_fqdn_filter_tag_attached_gws Get failed: " + data.Reason)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
 
 	return data.Results, nil
 }
 
 func (c *Client) AttachTagToGw(fqdn *FQDN, gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New("url Parsing failed for attach_fqdn_filter_tag_to_gw " + err.Error())
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "attach_fqdn_filter_tag_to_gw",
+		"tag_name": fqdn.FQDNTag,
+		"gw_name":  gateway.GwName,
 	}
-	attachFQDNFilterTagToGw := url.Values{}
-	attachFQDNFilterTagToGw.Add("CID", c.CID)
-	attachFQDNFilterTagToGw.Add("action", "attach_fqdn_filter_tag_to_gw")
-	attachFQDNFilterTagToGw.Add("tag_name", fqdn.FQDNTag)
-	attachFQDNFilterTagToGw.Add("gw_name", gateway.GwName)
-	Url.RawQuery = attachFQDNFilterTagToGw.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get attach_fqdn_filter_tag_to_gw failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode attach_fqdn_filter_tag_to_gw failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API attach_fqdn_filter_tag_to_gw Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) UpdateSourceIPFilters(fqdn *FQDN, gateway *Gateway, sourceIPs []string) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New("url Parsing failed for update_fqdn_filter_tag_source_ip_filters " + err.Error())
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "update_fqdn_filter_tag_source_ip_filters",
+		"tag_name": fqdn.FQDNTag,
+		"gw_name":  gateway.GwName,
 	}
-	attachFQDNFilterTagToGw := url.Values{}
-	attachFQDNFilterTagToGw.Add("CID", c.CID)
-	attachFQDNFilterTagToGw.Add("action", "update_fqdn_filter_tag_source_ip_filters")
-	attachFQDNFilterTagToGw.Add("tag_name", fqdn.FQDNTag)
-	attachFQDNFilterTagToGw.Add("gateway_name", gateway.GwName)
+
 	if len(sourceIPs) != 0 {
 		for i := range sourceIPs {
-			attachFQDNFilterTagToGw.Add("source_ips["+strconv.Itoa(i)+"]", sourceIPs[i])
+			form["source_ips["+strconv.Itoa(i)+"]"] = sourceIPs[i]
 		}
 	}
 
-	Url.RawQuery = attachFQDNFilterTagToGw.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get update_fqdn_filter_tag_source_ip_filters failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode update_fqdn_filter_tag_source_ip_filters failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API update_fqdn_filter_tag_source_ip_filters Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) GetGwFilterTagList(fqdn *FQDN) (*FQDN, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New("url Parsing failed for list_fqdn_filter_tag_source_ip_filters: " + err.Error())
-	}
 	listGws, err := c.ListGws(fqdn)
 	if err != nil {
 		return nil, errors.New("failed for list_fqdn_filter_tag_source_ip_filters: " + err.Error())
@@ -464,28 +298,20 @@ func (c *Client) GetGwFilterTagList(fqdn *FQDN) (*FQDN, error) {
 
 	var gwFilterTagList []GwFilterTag
 	for i := range listGws {
-		listFQDNFilterTagSourceIpFilters := url.Values{}
-		listFQDNFilterTagSourceIpFilters.Add("CID", c.CID)
-		listFQDNFilterTagSourceIpFilters.Add("action", "list_fqdn_filter_tag_source_ip_filters")
-		listFQDNFilterTagSourceIpFilters.Add("tag_name", fqdn.FQDNTag)
-		listFQDNFilterTagSourceIpFilters.Add("gateway_name", listGws[i])
+		form := map[string]string{
+			"CID":          c.CID,
+			"action":       "list_fqdn_filter_tag_source_ip_filters",
+			"tag_name":     fqdn.FQDNTag,
+			"gateway_name": listGws[i],
+		}
 
-		Url.RawQuery = listFQDNFilterTagSourceIpFilters.Encode()
-		resp, err := c.Get(Url.String(), nil)
-		if err != nil {
-			return nil, errors.New("HTTP Get list_fqdn_filter_tag_source_ip_filters failed: " + err.Error())
-		}
 		var data ResultListSourceIPResp
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(resp.Body)
-		bodyString := buf.String()
-		bodyIoCopy := strings.NewReader(bodyString)
-		if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-			return nil, errors.New("Json Decode list_fqdn_filter_tag_source_ip_filters failed: " + err.Error() + "\n Body: " + bodyString)
+
+		err = c.GetAPI(&data, form["action"], form, BasicCheck)
+		if err != nil {
+			return nil, err
 		}
-		if !data.Return {
-			return nil, errors.New("Rest API list_fqdn_filter_tag_source_ip_filters Get failed: " + data.Reason)
-		}
+
 		var gwFilterTag GwFilterTag
 		gwFilterTag.Name = listGws[i]
 		sourceIPs := make([]string, 0)
@@ -501,34 +327,17 @@ func (c *Client) GetGwFilterTagList(fqdn *FQDN) (*FQDN, error) {
 }
 
 func (c *Client) GetFQDNPassThroughCIDRs(gw *Gateway) ([]string, error) {
-	action := "list_fqdn_pass_through_cidrs"
-
-	resp, err := c.Post(c.baseURL, struct {
-		Action string `form:"action"`
-		CID    string `form:"CID"`
-		GwName string `form:"gateway_name"`
-	}{
-		Action: action,
-		CID:    c.CID,
-		GwName: gw.GwName,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("HTTP POST %s failed: %v", action, err)
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "list_fqdn_pass_through_cidrs",
+		"gateway_name": gw.GwName,
 	}
 
 	var data FQDNPassThroughResp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
 	if err != nil {
-		return nil, fmt.Errorf("reading response body %s failed: %v", action, err)
-	}
-
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return nil, fmt.Errorf("Json Decode %s failed: %v\n Body: %s", action, err, b.String())
-	}
-
-	if !data.Return {
-		return nil, fmt.Errorf("rest API %s Post failed: %s", action, data.Reason)
+		return nil, err
 	}
 
 	if len(data.Results.ConfiguredIPs) < 1 {
@@ -539,50 +348,43 @@ func (c *Client) GetFQDNPassThroughCIDRs(gw *Gateway) ([]string, error) {
 }
 
 func (c *Client) ConfigureFQDNPassThroughCIDRs(gw *Gateway, IPs []string) error {
-	action := "update_fqdn_pass_through_cidrs"
-
-	data := make(map[string]string)
-	data["action"] = action
-	data["CID"] = c.CID
-	data["gateway_name"] = gw.GwName
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "update_fqdn_pass_through_cidrs",
+		"gateway_name": gw.GwName,
+	}
 	for i, ip := range IPs {
 		key := fmt.Sprintf("source_cidrs[%d]", i)
-		data[key] = ip
+		form[key] = ip
 	}
 
-	return c.PostAPI(action, data, BasicCheck)
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DisableFQDNPassThrough(gw *Gateway) error {
-	action := "update_fqdn_pass_through_cidrs"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "update_fqdn_pass_through_cidrs",
+		"gateway_name": gw.GwName,
+	}
 
-	data := make(map[string]string)
-	data["action"] = action
-	data["CID"] = c.CID
-	data["gateway_name"] = gw.GwName
-
-	return c.PostAPI(action, data, BasicCheck)
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) AddFQDNTagRule(fqdn *FQDN) error {
-	action := "add_fqdn_policies_to_tag"
-
 	policies, err := json.Marshal(fqdn.DomainList)
 	if err != nil {
 		return fmt.Errorf("could not marshal fqdn domain: %v", err)
 	}
 
-	return c.PostAPI(action, struct {
-		Action   string `form:"action"`
-		CID      string `form:"CID"`
-		TagName  string `form:"tag_name"`
-		Policies string `form:"policies"`
-	}{
-		Action:   action,
-		CID:      c.CID,
-		TagName:  fqdn.FQDNTag,
-		Policies: string(policies),
-	}, BasicCheck)
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "add_fqdn_policies_to_tag",
+		"tag_name": fqdn.FQDNTag,
+		"policies": string(policies),
+	}
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) GetFQDNTagRule(fqdn *FQDN) (*FQDN, error) {
@@ -605,32 +407,27 @@ func (c *Client) GetFQDNTagRule(fqdn *FQDN) (*FQDN, error) {
 }
 
 func (c *Client) DeleteFQDNTagRule(fqdn *FQDN) error {
-	action := "delete_fqdn_policies_to_tag"
-
 	policies, err := json.Marshal(fqdn.DomainList)
 	if err != nil {
 		return fmt.Errorf("could not marshal fqdn domain: %v", err)
 	}
 
-	return c.PostAPI(action, struct {
-		Action   string `form:"action"`
-		CID      string `form:"CID"`
-		TagName  string `form:"tag_name"`
-		Policies string `form:"policies"`
-	}{
-		Action:   action,
-		CID:      c.CID,
-		TagName:  fqdn.FQDNTag,
-		Policies: string(policies),
-	}, func(action string, reason string, ret bool) error {
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "delete_fqdn_policies_to_tag",
+		"tag_name": fqdn.FQDNTag,
+		"policies": string(policies),
+	}
+
+	checkFunc := func(act, method, reason string, ret bool) error {
 		if !ret {
-			// Tried to delete a rule that did not exist.
 			if strings.Contains(reason, "the following rules were not found") {
 				return ErrNotFound
 			}
-
-			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
 		return nil
-	})
+	}
+
+	return c.PostAPI(form["action"], form, checkFunc)
 }

@@ -1,11 +1,8 @@
 package goaviatrix
 
 import (
-	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -39,34 +36,15 @@ type FirewallResp struct {
 }
 
 func (c *Client) SetBasePolicy(firewall *Firewall) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for attach_spoke_to_transit_gw") + err.Error())
+	form := map[string]string{
+		"CID":                    c.CID,
+		"action":                 "set_vpc_base_policy",
+		"vpc_name":               firewall.GwName,
+		"base_policy":            firewall.BasePolicy,
+		"base_policy_log_enable": firewall.BaseLogEnabled,
 	}
-	setVpcBasePolicy := url.Values{}
-	setVpcBasePolicy.Add("CID", c.CID)
-	setVpcBasePolicy.Add("action", "set_vpc_base_policy")
-	setVpcBasePolicy.Add("vpc_name", firewall.GwName)
-	setVpcBasePolicy.Add("base_policy", firewall.BasePolicy)
-	setVpcBasePolicy.Add("base_policy_log_enable", firewall.BaseLogEnabled)
-	Url.RawQuery = setVpcBasePolicy.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	log.Infof("Setting Base Policy: %#v", firewall)
-	if err != nil {
-		return errors.New("HTTP Get set_vpc_base_policy failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode set_vpc_base_policy failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API set_vpc_base_policy Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) UpdatePolicy(firewall *Firewall) error {
@@ -82,46 +60,24 @@ func (c *Client) UpdatePolicy(firewall *Firewall) error {
 		return err
 	}
 	firewall.NewPolicy = string(args)
-	resp, err := c.Post(c.baseURL, firewall)
-	if err != nil {
-		return errors.New("HTTP Post update_access_policy failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode update_access_policy failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API update_access_policy Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(firewall.Action, firewall, BasicCheck)
 }
 
 func (c *Client) GetPolicy(firewall *Firewall) (*Firewall, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for vpc_access_policy") + err.Error())
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "vpc_access_policy",
+		"vpc_name": firewall.GwName,
 	}
-	vpcAccessPolicy := url.Values{}
-	vpcAccessPolicy.Add("CID", c.CID)
-	vpcAccessPolicy.Add("action", "vpc_access_policy")
-	vpcAccessPolicy.Add("vpc_name", firewall.GwName)
-	Url.RawQuery = vpcAccessPolicy.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get vpc_access_policy failed: " + err.Error())
-	}
+
 	var data FirewallResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode vpc_access_policy failed: " + err.Error() + "\n Body: " + bodyString)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
+
 	if !data.Return {
 		log.Errorf("Couldn't find Aviatrix Firewall policies for gateway %s: %s", firewall.GwName, data.Reason)
 		return nil, ErrNotFound
@@ -171,55 +127,46 @@ func PolicyToMap(p *Policy) map[string]interface{} {
 }
 
 func (c *Client) AddFirewallPolicy(fw *Firewall) error {
-	action := "append_stateful_firewall_rules"
-
 	rules, err := json.Marshal(fw.PolicyList)
 	if err != nil {
 		return fmt.Errorf("could not marshal firewall policies: %v", err)
 	}
 
-	return c.PostAPI(action, struct {
-		Action string `form:"action"`
-		CID    string `form:"CID"`
-		GwName string `form:"gateway_name"`
-		Rules  string `form:"rules"`
-	}{
-		Action: action,
-		CID:    c.CID,
-		GwName: fw.GwName,
-		Rules:  string(rules),
-	}, BasicCheck)
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "append_stateful_firewall_rules",
+		"gateway_name": fw.GwName,
+		"rules":        string(rules),
+	}
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DeleteFirewallPolicy(fw *Firewall) error {
-	action := "delete_stateful_firewall_rules"
-
 	rules, err := json.Marshal(fw.PolicyList)
 	if err != nil {
 		return fmt.Errorf("could not marshal firewall policies: %v", err)
 	}
 
-	return c.PostAPI(action, struct {
-		Action string `form:"action"`
-		CID    string `form:"CID"`
-		GwName string `form:"gateway_name"`
-		Rules  string `form:"rules"`
-	}{
-		Action: action,
-		CID:    c.CID,
-		GwName: fw.GwName,
-		Rules:  string(rules),
-	}, func(action string, reason string, ret bool) error {
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "delete_stateful_firewall_rules",
+		"gateway_name": fw.GwName,
+		"rules":        string(rules),
+	}
+
+	checkFunc := func(act, method, reason string, ret bool) error {
 		if !ret {
 			// Tried to delete a rule that did not exist, we don't need to fail the apply.
 			if strings.Contains(reason, "Empty rules in Stateful Firewall to delete") {
 				return nil
 			}
-
-			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
 		return nil
-	})
+	}
+
+	return c.PostAPI(form["action"], form, checkFunc)
 }
 
 func (c *Client) GetFirewallPolicy(fw *Firewall) (*Firewall, error) {

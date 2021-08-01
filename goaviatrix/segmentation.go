@@ -1,11 +1,5 @@
 package goaviatrix
 
-import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-)
-
 type SegmentationSecurityDomain struct {
 	DomainName string
 }
@@ -42,13 +36,9 @@ func (c *Client) DeleteSegmentationSecurityDomain(domain *SegmentationSecurityDo
 }
 
 func (c *Client) GetSegmentationSecurityDomain(domain *SegmentationSecurityDomain) (*SegmentationSecurityDomain, error) {
-	action := "list_multi_cloud_security_domain_names"
-	resp, err := c.Post(c.baseURL, &APIRequest{
-		CID:    c.CID,
-		Action: action,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("HTTP POST %q failed: %v", action, err)
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "list_multi_cloud_security_domain_names",
 	}
 
 	type Resp struct {
@@ -58,18 +48,12 @@ func (c *Client) GetSegmentationSecurityDomain(domain *SegmentationSecurityDomai
 	}
 
 	var data Resp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
 	if err != nil {
-		return nil, fmt.Errorf("reading response body %q failed: %v", action, err)
+		return nil, err
 	}
 
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return nil, fmt.Errorf("json decode %q failed: %v\nBody: %s", action, err, b.String())
-	}
-	if !data.Return {
-		return nil, fmt.Errorf("rest API %q Post failed: %s", action, data.Reason)
-	}
 	if !Contains(data.Results, domain.DomainName) {
 		return nil, ErrNotFound
 	}
@@ -100,17 +84,10 @@ func (c *Client) DeleteSegmentationSecurityDomainConnectionPolicy(policy *Segmen
 }
 
 func (c *Client) GetSegmentationSecurityDomainConnectionPolicy(policy *SegmentationSecurityDomainConnectionPolicy) (*SegmentationSecurityDomainConnectionPolicy, error) {
-	action := "list_multi_cloud_security_domain_connection_policy"
-	form := map[string]interface{}{
-		"action": action,
-		"CID":    c.CID,
-
-		// List all connected domains for one of the given domains
+	form := map[string]string{
+		"CID":         c.CID,
+		"action":      "list_multi_cloud_security_domain_connection_policy",
 		"domain_name": policy.Domain1.DomainName,
-	}
-	resp, err := c.Post(c.baseURL, form)
-	if err != nil {
-		return nil, fmt.Errorf("HTTP POST %q failed: %v", action, err)
 	}
 
 	type Result struct {
@@ -125,17 +102,10 @@ func (c *Client) GetSegmentationSecurityDomainConnectionPolicy(policy *Segmentat
 	}
 
 	var data Resp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("reading response body %q failed: %v", action, err)
-	}
 
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return nil, fmt.Errorf("json decode %q failed: %v\nBody: %s", action, err, b.String())
-	}
-	if !data.Return {
-		return nil, fmt.Errorf("rest API %q Post failed: %s", action, data.Reason)
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
 
 	// Check if the other domain is included in the list of connected domains
@@ -169,13 +139,9 @@ func (c *Client) DeleteSegmentationSecurityDomainAssociation(association *Segmen
 }
 
 func (c *Client) GetSegmentationSecurityDomainAssociation(association *SegmentationSecurityDomainAssociation) (*SegmentationSecurityDomainAssociation, error) {
-	action := "list_multi_cloud_domain_attachments"
-	resp, err := c.Post(c.baseURL, &APIRequest{
-		CID:    c.CID,
-		Action: action,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("HTTP POST %q failed: %v", action, err)
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "list_multi_cloud_domain_attachments",
 	}
 
 	type Attachment struct {
@@ -195,17 +161,10 @@ func (c *Client) GetSegmentationSecurityDomainAssociation(association *Segmentat
 	}
 
 	var data Resp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("reading response body %q failed: %v", action, err)
-	}
 
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return nil, fmt.Errorf("json decode %q failed: %v\nBody: %s", action, err, b.String())
-	}
-	if !data.Return {
-		return nil, fmt.Errorf("rest API %q Post failed: %s", action, data.Reason)
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
 
 	found := false

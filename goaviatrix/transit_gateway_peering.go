@@ -1,11 +1,7 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -70,30 +66,18 @@ func (c *Client) CreateTransitGatewayPeering(transitGatewayPeering *TransitGatew
 }
 
 func (c *Client) GetTransitGatewayPeering(transitGatewayPeering *TransitGatewayPeering) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for list_inter_transit_gateway_peering ") + err.Error())
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "list_inter_transit_gateway_peering",
 	}
-	listInterTransitGwPeering := url.Values{}
-	listInterTransitGwPeering.Add("CID", c.CID)
-	listInterTransitGwPeering.Add("action", "list_inter_transit_gateway_peering")
-	Url.RawQuery = listInterTransitGwPeering.Encode()
-	resp, err := c.Get(Url.String(), nil)
 
-	if err != nil {
-		return errors.New("HTTP Get list_inter_transit_gateway_peering failed: " + err.Error())
-	}
 	var data TransitGatewayPeeringAPIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode list_inter_transit_gateway_peering failed: " + err.Error() + "\n Body: " + bodyString)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return err
 	}
-	if !data.Return {
-		return errors.New("Rest API list_inter_transit_gateway_peering Get failed: " + data.Reason)
-	}
+
 	if len(data.Results) == 0 {
 		log.Errorf("Transit gateway peering with gateways %s and %s not found",
 			transitGatewayPeering.TransitGatewayName1, transitGatewayPeering.TransitGatewayName2)
@@ -123,12 +107,12 @@ func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitG
 		"gateway1": transitGatewayPeering.TransitGatewayName1,
 		"gateway2": transitGatewayPeering.TransitGatewayName2,
 	}
-	check := func(action, reason string, ret bool) error {
+	check := func(action, method, reason string, ret bool) error {
 		if !ret {
 			if strings.Contains(reason, "does not exist") {
 				return ErrNotFound
 			}
-			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
 		return nil
 	}
@@ -158,52 +142,19 @@ func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitG
 func (c *Client) UpdateTransitGatewayPeering(transitGatewayPeering *TransitGatewayPeering) error {
 	transitGatewayPeering.CID = c.CID
 	transitGatewayPeering.Action = "edit_inter_transit_gateway_peering"
-	resp, err := c.Post(c.baseURL, transitGatewayPeering)
-	if err != nil {
-		return errors.New("HTTP POST edit_inter_transit_gateway_peering failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_inter_transit_gateway_peering failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API edit_inter_transit_gateway_peering Get failed: " + data.Reason)
-	}
 
-	return nil
+	return c.PostAPI(transitGatewayPeering.Action, transitGatewayPeering, BasicCheck)
 }
 
 func (c *Client) DeleteTransitGatewayPeering(transitGatewayPeering *TransitGatewayPeering) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for delete_inter_transit_gateway_peering ") + err.Error())
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "delete_inter_transit_gateway_peering",
+		"gateway1": transitGatewayPeering.TransitGatewayName1,
+		"gateway2": transitGatewayPeering.TransitGatewayName2,
 	}
-	deleteInterTransitGwPeering := url.Values{}
-	deleteInterTransitGwPeering.Add("CID", c.CID)
-	deleteInterTransitGwPeering.Add("action", "delete_inter_transit_gateway_peering")
-	deleteInterTransitGwPeering.Add("gateway1", transitGatewayPeering.TransitGatewayName1)
-	deleteInterTransitGwPeering.Add("gateway2", transitGatewayPeering.TransitGatewayName2)
-	Url.RawQuery = deleteInterTransitGwPeering.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get delete_inter_transit_gateway_peering failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_inter_transit_gateway_peering failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API delete_inter_transit_gateway_peering Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EditTransitConnectionASPathPrepend(transitGatewayPeering *TransitGatewayPeering, prependASPath []string) error {

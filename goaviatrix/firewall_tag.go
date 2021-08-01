@@ -33,26 +33,12 @@ type FirewallTagResp struct {
 func (c *Client) CreateFirewallTag(firewall_tag *FirewallTag) error {
 	firewall_tag.CID = c.CID
 	firewall_tag.Action = "add_policy_tag"
-	log.Infof("Setting Firewall Tag: %#v", firewall_tag)
-	resp, err := c.Post(c.baseURL, firewall_tag)
-	if err != nil {
-		return err
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return err
-	}
-	if !data.Return {
-		return errors.New(data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(firewall_tag.Action, firewall_tag, BasicCheck)
 }
 
 func (c *Client) UpdateFirewallTag(firewall_tag *FirewallTag) error {
+	// TODO: use PostAPI - tags need special processing
 	firewall_tag.CID = c.CID
 	firewall_tag.Action = "update_policy_members"
 	verb := "POST"
@@ -87,47 +73,32 @@ func (c *Client) UpdateFirewallTag(firewall_tag *FirewallTag) error {
 }
 
 func (c *Client) GetFirewallTag(firewall_tag *FirewallTag) (*FirewallTag, error) {
-	firewall_tag.CID = c.CID
-	firewall_tag.Action = "list_policy_members"
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "list_policy_members",
+		"tag_name": firewall_tag.Name,
+	}
 
-	log.Infof("Getting Firewall Tag: %#v", firewall_tag)
-	resp, err := c.Post(c.baseURL, firewall_tag)
-	if err != nil {
-		return nil, errors.New("HTTP Post list_policy_members failed: " + err.Error())
-	}
 	var data FirewallTagResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_policy_members failed: " + err.Error() + "\n Body: " + bodyString)
+
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			return ErrNotFound
+		}
+		return nil
 	}
-	if !data.Return {
-		log.Errorf("Couldn't find Aviatrix Firewall tag %s: %s", firewall_tag.Name, data.Reason)
-		return nil, ErrNotFound
+
+	err := c.GetAPI(&data, form["action"], form, checkFunc)
+	if err != nil {
+		return nil, err
 	}
+
 	return &data.Results, nil
 }
 
 func (c *Client) DeleteFirewallTag(firewall_tag *FirewallTag) error {
 	firewall_tag.CID = c.CID
 	firewall_tag.Action = "del_policy_tag"
-	log.Infof("Deleting Firewall Tag: %#v", firewall_tag)
-	resp, err := c.Post(c.baseURL, firewall_tag)
-	if err != nil {
-		return errors.New("HTTP Post del_policy_tag failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode del_policy_tag failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API del_policy_tag Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(firewall_tag.Action, firewall_tag, BasicCheck)
 }

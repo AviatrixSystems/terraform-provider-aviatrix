@@ -1,13 +1,5 @@
 package goaviatrix
 
-import (
-	"bytes"
-	"encoding/json"
-	"errors"
-	"net/url"
-	"strings"
-)
-
 type SplitTunnel struct {
 	Action          string `form:"action,omitempty"`
 	CID             string `form:"CID,omitempty"`
@@ -36,72 +28,40 @@ type SplitTunnelUnit struct {
 }
 
 func (c *Client) GetSplitTunnel(splitTunnel *SplitTunnel) (*SplitTunnelUnit, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for modify_split_tunnel") + err.Error())
+	form := map[string]string{
+		"CID":     c.CID,
+		"action":  "modify_split_tunnel",
+		"command": "get",
+		"vpc_id":  splitTunnel.VpcID,
+		"lb_name": splitTunnel.ElbName,
 	}
-	modifySplitTunnel := url.Values{}
-	modifySplitTunnel.Add("CID", c.CID)
-	modifySplitTunnel.Add("action", "modify_split_tunnel")
-	modifySplitTunnel.Add("command", "get")
-	modifySplitTunnel.Add("vpc_id", splitTunnel.VpcID)
-	modifySplitTunnel.Add("lb_name", splitTunnel.ElbName)
-	Url.RawQuery = modifySplitTunnel.Encode()
-	resp, err := c.Get(Url.String(), nil)
 
-	if err != nil {
-		return nil, errors.New("HTTP Get modify_split_tunnel(get) failed: " + err.Error())
-	}
 	var data SplitTunnelResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode modify_split_tunnel(get) failed: " + err.Error() + "\n Body: " + bodyString)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
-	if !data.Return {
-		return nil, errors.New("Rest API modify_split_tunnel(get) Get failed: " + data.Reason)
-	}
+
 	return &data.Results, nil
 }
 
 func (c *Client) ModifySplitTunnel(splitTunnel *SplitTunnel) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for modify_split_tunnel") + err.Error())
+	form := map[string]string{
+		"CID":              c.CID,
+		"action":           "modify_split_tunnel",
+		"command":          "modify",
+		"vpc_id":           splitTunnel.VpcID,
+		"lb_name":          splitTunnel.ElbName,
+		"split_tunnel":     splitTunnel.SplitTunnel,
+		"additional_cidrs": splitTunnel.AdditionalCidrs,
+		"nameservers":      splitTunnel.NameServers,
+		"search_domains":   splitTunnel.SearchDomains,
 	}
-	modifySplitTunnel := url.Values{}
-	modifySplitTunnel.Add("CID", c.CID)
-	modifySplitTunnel.Add("action", "modify_split_tunnel")
-	modifySplitTunnel.Add("command", "modify")
-	modifySplitTunnel.Add("vpc_id", splitTunnel.VpcID)
-	modifySplitTunnel.Add("lb_name", splitTunnel.ElbName)
-	modifySplitTunnel.Add("split_tunnel", splitTunnel.SplitTunnel)
-	modifySplitTunnel.Add("additional_cidrs", splitTunnel.AdditionalCidrs)
-	modifySplitTunnel.Add("nameservers", splitTunnel.NameServers)
-	modifySplitTunnel.Add("search_domains", splitTunnel.SearchDomains)
+
 	if splitTunnel.Dns == "true" {
-		modifySplitTunnel.Add("dns", "true")
+		form["dns"] = "true"
 	}
-	Url.RawQuery = modifySplitTunnel.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get modify_split_tunnel(modify) failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode modify_split_tunnel(modify) failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "Nothing to modify") {
-			return nil
-		}
-		return errors.New("Rest API modify_split_tunnel(modify) Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }

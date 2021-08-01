@@ -1,13 +1,5 @@
 package goaviatrix
 
-import (
-	"bytes"
-	"encoding/json"
-	"errors"
-	"net/url"
-	"strings"
-)
-
 type FirewallManagementAccess struct {
 	CID                          string `form:"CID,omitempty"`
 	Action                       string `form:"action,omitempty"`
@@ -22,59 +14,29 @@ type FirewallManagementAccessAPIResp struct {
 }
 
 func (c *Client) CreateFirewallManagementAccess(firewallManagementAccess *FirewallManagementAccess) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'CreateFirewallManagementAccess': ") + err.Error())
+	form := map[string]string{
+		"CID":               c.CID,
+		"action":            "edit_transit_firenet_management_access",
+		"gateway_name":      firewallManagementAccess.TransitFireNetGatewayName,
+		"management_access": firewallManagementAccess.ManagementAccessResourceName,
 	}
-	editTransitFireNetManagementAccess := url.Values{}
-	editTransitFireNetManagementAccess.Add("CID", c.CID)
-	editTransitFireNetManagementAccess.Add("action", "edit_transit_firenet_management_access")
-	editTransitFireNetManagementAccess.Add("gateway_name", firewallManagementAccess.TransitFireNetGatewayName)
-	editTransitFireNetManagementAccess.Add("management_access", firewallManagementAccess.ManagementAccessResourceName)
-	Url.RawQuery = editTransitFireNetManagementAccess.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'edit_transit_firenet_management_access' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'edit_transit_firenet_management_access' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'edit_transit_firenet_management_access' Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) GetFirewallManagementAccess(firewallManagementAccess *FirewallManagementAccess) (*FirewallManagementAccess, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for GetFirewallManagementAccess: ") + err.Error())
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "list_transit_firenet_spoke_policies",
 	}
-	listTransitFireNetSpokePolicies := url.Values{}
-	listTransitFireNetSpokePolicies.Add("CID", c.CID)
-	listTransitFireNetSpokePolicies.Add("action", "list_transit_firenet_spoke_policies")
-	Url.RawQuery = listTransitFireNetSpokePolicies.Encode()
-	resp, err := c.Get(Url.String(), nil)
 
-	if err != nil {
-		return nil, errors.New("HTTP Get list_transit_firenet_spoke_policies failed: " + err.Error())
-	}
 	var data FirewallManagementAccessAPIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_transit_firenet_spoke_policies failed: " + err.Error() + "\n Body: " + bodyString)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
-	if !data.Return {
-		return nil, errors.New("Rest API list_transit_firenet_spoke_policies Get failed: " + data.Reason)
-	}
+
 	if len(data.Results) == 0 {
 		return nil, ErrNotFound
 	}
@@ -93,30 +55,12 @@ func (c *Client) GetFirewallManagementAccess(firewallManagementAccess *FirewallM
 }
 
 func (c *Client) DestroyFirewallManagementAccess(firewallManagementAccess *FirewallManagementAccess) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'DestroyFirewallManagementAccess': ") + err.Error())
+	form := map[string]string{
+		"CID":               c.CID,
+		"action":            "edit_transit_firenet_management_access",
+		"gateway_name":      firewallManagementAccess.TransitFireNetGatewayName,
+		"management_access": firewallManagementAccess.ManagementAccessResourceName,
 	}
-	editTransitFireNetManagementAccess := url.Values{}
-	editTransitFireNetManagementAccess.Add("CID", c.CID)
-	editTransitFireNetManagementAccess.Add("action", "edit_transit_firenet_management_access")
-	editTransitFireNetManagementAccess.Add("gateway_name", firewallManagementAccess.TransitFireNetGatewayName)
-	editTransitFireNetManagementAccess.Add("management_access", firewallManagementAccess.ManagementAccessResourceName)
-	Url.RawQuery = editTransitFireNetManagementAccess.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'edit_transit_firenet_management_access' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'edit_transit_firenet_management_access' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'edit_transit_firenet_management_access' Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }

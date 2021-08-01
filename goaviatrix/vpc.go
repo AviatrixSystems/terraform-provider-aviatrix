@@ -70,6 +70,7 @@ type SubnetInfo struct {
 }
 
 func (c *Client) CreateVpc(vpc *Vpc) error {
+	// TODO: use PostAPI - long form
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
 		return errors.New(("url Parsing failed for create_custom_vpc ") + err.Error())
@@ -134,27 +135,18 @@ func (c *Client) CreateVpc(vpc *Vpc) error {
 // GetVpcCloudTypeById returns the cloud_type of the vpc with the given ID.
 // If the vpc does not exist, ErrNotFound is returned.
 func (c *Client) GetVpcCloudTypeById(ID string) (int, error) {
-	action := "list_custom_vpcs"
-	d := map[string]string{
+	form := map[string]string{
 		"CID":    c.CID,
-		"action": action,
+		"action": "list_custom_vpcs",
 	}
-	resp, err := c.Post(c.baseURL, d)
 
-	if err != nil {
-		return 0, fmt.Errorf("HTTP Get %s failed: %v", action, err)
-	}
 	var data VpcResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return 0, fmt.Errorf("Json Decode %s failed: %v\n Body: %s", action, err, bodyString)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return 0, err
 	}
-	if !data.Return {
-		return 0, fmt.Errorf("rest API %s Get failed: %s", action, data.Reason)
-	}
+
 	allVpcPoolVpcListResp := data.Results.AllVpcPoolVpcList
 	for _, vpcPool := range allVpcPoolVpcListResp {
 		for _, vpcID := range vpcPool.VpcID {
@@ -193,12 +185,12 @@ func (c *Client) GetVpc(vpc *Vpc) (*Vpc, error) {
 		"vpc_name": vpc.Name,
 	}
 	var data GetVpcByNameResp
-	check := func(action, reason string, ret bool) error {
+	check := func(action, method, reason string, ret bool) error {
 		if !ret {
 			if strings.Contains(reason, "does not exist") {
 				return ErrNotFound
 			}
-			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
 		return nil
 	}
@@ -231,25 +223,16 @@ func (c *Client) GetVpc(vpc *Vpc) (*Vpc, error) {
 }
 
 func (c *Client) GetVpcRouteTableIDs(vpc *Vpc) ([]string, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for list_vpc_route_tables ") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "list_vpc_route_tables",
+		"vpc_id":       vpc.VpcID,
+		"account_name": vpc.AccountName,
+		"vpc_region":   vpc.Region,
 	}
-	listRouteTables := url.Values{}
-	listRouteTables.Add("CID", c.CID)
-	listRouteTables.Add("action", "list_vpc_route_tables")
-	listRouteTables.Add("vpc_id", vpc.VpcID)
-	listRouteTables.Add("account_name", vpc.AccountName)
-	listRouteTables.Add("vpc_region", vpc.Region)
+
 	if vpc.PublicRoutesOnly {
-		listRouteTables.Add("public_only", "yes")
-	}
-
-	Url.RawQuery = listRouteTables.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return nil, errors.New("HTTP Get list_vpc_route_tables failed: " + err.Error())
+		form["public_only"] = "yes"
 	}
 
 	type RespResults struct {
@@ -262,15 +245,9 @@ func (c *Client) GetVpcRouteTableIDs(vpc *Vpc) ([]string, error) {
 	}
 	var data Resp
 
-	buf := new(bytes.Buffer)
-	_, _ = buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_vpc_route_tables failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return nil, errors.New("Rest API list_vpc_route_tables Get failed: " + data.Reason)
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
 
 	var rtbs []string
@@ -286,32 +263,14 @@ func (c *Client) UpdateVpc(vpc *Vpc) error {
 }
 
 func (c *Client) DeleteVpc(vpc *Vpc) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for delete_custom_vpc ") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "delete_custom_vpc",
+		"account_name": vpc.AccountName,
+		"pool_name":    vpc.Name,
 	}
-	createCustomVpc := url.Values{}
-	createCustomVpc.Add("CID", c.CID)
-	createCustomVpc.Add("action", "delete_custom_vpc")
-	createCustomVpc.Add("account_name", vpc.AccountName)
-	createCustomVpc.Add("pool_name", vpc.Name)
-	Url.RawQuery = createCustomVpc.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get delete_custom_vpc failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_custom_vpc failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API delete_custom_vpc Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EnableNativeAwsGwlbFirenet(vpc *Vpc) error {

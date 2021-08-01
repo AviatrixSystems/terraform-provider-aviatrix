@@ -1,13 +1,8 @@
 package goaviatrix
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"net/url"
-	"strings"
 )
 
 // AwsTGW simple struct to hold aws_tgw details
@@ -75,30 +70,15 @@ type IntraDomainInspection struct {
 func (c *Client) CreateSecurityDomain(securityDomain *SecurityDomain) error {
 	securityDomain.CID = c.CID
 	securityDomain.Action = "add_route_domain"
-	resp, err := c.Post(c.baseURL, securityDomain)
-	if err != nil {
-		return errors.New("HTTP Post add_route_domain failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode add_route_domain failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API add_route_domain Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(securityDomain.Action, securityDomain, BasicCheck)
 }
 
 func (c *Client) GetSecurityDomain(securityDomain *SecurityDomain) (string, error) {
-	securityDomain.CID = c.CID
-	securityDomain.Action = "list_route_domain_names"
-	resp, err := c.Post(c.baseURL, securityDomain)
-	if err != nil {
-		return "", errors.New("HTTP Post list_route_domain_names failed: " + err.Error())
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "list_route_domain_names",
+		"tgw_name": securityDomain.AwsTgwName,
 	}
 
 	data := SecurityDomainAPIResp{
@@ -106,16 +86,12 @@ func (c *Client) GetSecurityDomain(securityDomain *SecurityDomain) (string, erro
 		Results: make([]string, 0),
 		Reason:  "",
 	}
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return "", errors.New("Json Decode list_route_domain_names failed: " + err.Error() + "\n Body: " + bodyString)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return "", err
 	}
-	if !data.Return {
-		return "", errors.New("Rest API list_route_domain_names Post failed: " + data.Reason)
-	}
+
 	securityDomainList := data.Results
 	for i := range securityDomainList {
 		if securityDomainList[i] == securityDomain.Name {
@@ -132,88 +108,34 @@ func (c *Client) UpdateSecurityDomain(securityDomain *SecurityDomain) error {
 func (c *Client) DeleteSecurityDomain(securityDomain *SecurityDomain) error {
 	securityDomain.CID = c.CID
 	securityDomain.Action = "delete_route_domain"
-	resp, err := c.Post(c.baseURL, securityDomain)
-	if err != nil {
-		return errors.New("HTTP Post delete_route_domain failed: " + err.Error())
-	}
 
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_route_domain failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API delete_route_domain Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(securityDomain.Action, securityDomain, BasicCheck)
 }
 
 func (c *Client) CreateDomainConnection(awsTgw *AWSTgw, sourceDomain string, destinationDomain string) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for add_connection_between_route_domains") + err.Error())
-	}
-	addConnectionBetweenRouteDomains := url.Values{}
-	addConnectionBetweenRouteDomains.Add("CID", c.CID)
-	addConnectionBetweenRouteDomains.Add("action", "add_connection_between_route_domains")
-	addConnectionBetweenRouteDomains.Add("account_name", awsTgw.AccountName)
-	addConnectionBetweenRouteDomains.Add("region", awsTgw.Region)
-	addConnectionBetweenRouteDomains.Add("tgw_name", awsTgw.Name)
-	addConnectionBetweenRouteDomains.Add("source_route_domain_name", sourceDomain)
-	addConnectionBetweenRouteDomains.Add("destination_route_domain_name", destinationDomain)
-	Url.RawQuery = addConnectionBetweenRouteDomains.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get add_connection_between_route_domains failed: " + err.Error())
+	form := map[string]string{
+		"CID":                           c.CID,
+		"action":                        "add_connection_between_route_domains",
+		"account_name":                  awsTgw.AccountName,
+		"region":                        awsTgw.Region,
+		"tgw_name":                      awsTgw.Name,
+		"source_route_domain_name":      sourceDomain,
+		"destination_route_domain_name": destinationDomain,
 	}
 
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode add_connection_between_route_domains failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API add_connection_between_route_domains Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DeleteDomainConnection(awsTgw *AWSTgw, sourceDomain string, destinationDomain string) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for delete_connection_between_route_domains") + err.Error())
-	}
-	deleteConnectionBetweenRouteDomains := url.Values{}
-	deleteConnectionBetweenRouteDomains.Add("CID", c.CID)
-	deleteConnectionBetweenRouteDomains.Add("action", "delete_connection_between_route_domains")
-	deleteConnectionBetweenRouteDomains.Add("tgw_name", awsTgw.Name)
-	deleteConnectionBetweenRouteDomains.Add("source_route_domain_name", sourceDomain)
-	deleteConnectionBetweenRouteDomains.Add("destination_route_domain_name", destinationDomain)
-	Url.RawQuery = deleteConnectionBetweenRouteDomains.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get delete_connection_between_route_domains failed: " + err.Error())
+	form := map[string]string{
+		"CID":                           c.CID,
+		"action":                        "delete_connection_between_route_domains",
+		"tgw_name":                      awsTgw.Name,
+		"source_route_domain_name":      sourceDomain,
+		"destination_route_domain_name": destinationDomain,
 	}
 
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_connection_between_route_domains failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API delete_connection_between_route_domains Get failed: " + data.Reason)
-	}
-
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) SecurityDomainRuleValidation(securityDomainRule *SecurityDomainRule) bool {
