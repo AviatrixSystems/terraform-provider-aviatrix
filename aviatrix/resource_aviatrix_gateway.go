@@ -2538,14 +2538,18 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			// Both Primary and HA have changed just their software_version
 			// so we can perform upgrade in parallel.
 			swVersion := d.Get("software_version").(string)
+			imageVersion := d.Get("image_version").(string)
 			gw := &goaviatrix.Gateway{
 				GwName:          d.Get("gw_name").(string),
 				SoftwareVersion: swVersion,
+				ImageVersion:    imageVersion,
 			}
 			haSwVersion := d.Get("peering_ha_software_version").(string)
+			haImageVersion := d.Get("peering_ha_image_version").(string)
 			hagw := &goaviatrix.Gateway{
 				GwName:          d.Get("gw_name").(string) + "-hagw",
 				SoftwareVersion: haSwVersion,
+				ImageVersion:    haImageVersion,
 			}
 			var wg sync.WaitGroup
 			wg.Add(2)
@@ -2561,12 +2565,13 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			wg.Wait()
 			if primaryErr != nil && haErr != nil {
 				return fmt.Errorf("could not upgrade primary and HA gateway "+
-					"software_version=%s peering_ha_software_version=%s: primaryErr: %v haErr: %v",
-					swVersion, haSwVersion, primaryErr, haErr)
+					"software_version=%s peering_ha_software_version=%s image_version=%s peering_ha_image_version=%s:" +
+					"\n primaryErr: %v\n haErr: %v",
+					swVersion, haSwVersion, imageVersion, haImageVersion, primaryErr, haErr)
 			} else if primaryErr != nil {
 				return fmt.Errorf("could not upgrade primary gateway software_version=%s: %v", swVersion, primaryErr)
 			} else if haErr != nil {
-				return fmt.Errorf("could not upgrade HA gateway peering_ha_software_version=%s: %v", haSwVersion, primaryErr)
+				return fmt.Errorf("could not upgrade HA gateway peering_ha_software_version=%s: %v", haSwVersion, haErr)
 			}
 		} else { // Only primary or only HA has changed, or they have changed image_version
 			if primaryHasVersionChange {
