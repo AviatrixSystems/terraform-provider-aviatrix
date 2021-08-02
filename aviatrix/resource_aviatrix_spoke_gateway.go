@@ -1261,14 +1261,22 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if gw.HaGw.GwSize == "" {
+		d.Set("ha_availability_domain", "")
+		d.Set("ha_azure_eip_name_resource_group", "")
+		d.Set("ha_cloud_instance_id", "")
+		d.Set("ha_eip", "")
+		d.Set("ha_fault_domain", "")
+		d.Set("ha_gw_name", "")
 		d.Set("ha_gw_size", "")
+		d.Set("ha_image_version", "")
+		d.Set("ha_insane_mode_az", "")
+		d.Set("ha_oob_availability_zone", "")
+		d.Set("ha_oob_management_subnet", "")
+		d.Set("ha_private_ip", "")
+		d.Set("ha_security_group_id", "")
+		d.Set("ha_software_version", "")
 		d.Set("ha_subnet", "")
 		d.Set("ha_zone", "")
-		d.Set("ha_eip", "")
-		d.Set("ha_azure_eip_name_resource_group", "")
-		d.Set("ha_insane_mode_az", "")
-		d.Set("ha_oob_management_subnet", "")
-		d.Set("ha_oob_availability_zone", "")
 		return nil
 	}
 

@@ -1534,13 +1534,20 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if gw.HaGw.GwSize == "" {
+		d.Set("peering_ha_availability_domain", "")
+		d.Set("peering_ha_azure_eip_name_resource_group", "")
 		d.Set("peering_ha_cloud_instance_id", "")
+		d.Set("peering_ha_eip", "")
+		d.Set("peering_ha_fault_domain", "")
+		d.Set("peering_ha_gw_name", "")
+		d.Set("peering_ha_gw_size", "")
+		d.Set("peering_ha_image_version", "")
+		d.Set("peering_ha_insane_mode_az", "")
+		d.Set("peering_ha_private_ip", "")
+		d.Set("peering_ha_security_group_id", "")
+		d.Set("peering_ha_software_version", "")
 		d.Set("peering_ha_subnet", "")
 		d.Set("peering_ha_zone", "")
-		d.Set("peering_ha_eip", "")
-		d.Set("peering_ha_azure_eip_name_resource_group", "")
-		d.Set("peering_ha_gw_size", "")
-		d.Set("peering_ha_insane_mode_az", "")
 		return nil
 	}
 
