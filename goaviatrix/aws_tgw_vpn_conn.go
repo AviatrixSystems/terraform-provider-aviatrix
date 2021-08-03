@@ -1,11 +1,9 @@
 package goaviatrix
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/url"
 	"strconv"
 	"strings"
 
@@ -83,50 +81,34 @@ type GetAwsTgwVpnConnVpnIdResp struct {
 }
 
 func (c *Client) CreateAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (string, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return "", errors.New(("url Parsing failed for connect_transit_gw_to_vgw") + err.Error())
+	var data AwsTgwVpnConnCreateResp
+	form := map[string]string{
+		"CID":                        c.CID,
+		"action":                     "attach_edge_vpn_to_tgw",
+		"tgw_name":                   awsTgwVpnConn.TgwName,
+		"route_domain_name":          awsTgwVpnConn.RouteDomainName,
+		"connection_name":            awsTgwVpnConn.ConnName,
+		"public_ip":                  awsTgwVpnConn.PublicIP,
+		"onprem_asn":                 awsTgwVpnConn.OnpremASN,
+		"remote_cidr":                awsTgwVpnConn.RemoteCIDR,
+		"learned_cidrs_approval":     awsTgwVpnConn.LearnedCidrsApproval,
+		"enable_global_acceleration": awsTgwVpnConn.EnableAcceleration,
 	}
-	attachEdgeVpnToTgw := url.Values{}
-	attachEdgeVpnToTgw.Add("CID", c.CID)
-	attachEdgeVpnToTgw.Add("action", "attach_edge_vpn_to_tgw")
-	attachEdgeVpnToTgw.Add("tgw_name", awsTgwVpnConn.TgwName)
-	attachEdgeVpnToTgw.Add("route_domain_name", awsTgwVpnConn.RouteDomainName)
-	attachEdgeVpnToTgw.Add("connection_name", awsTgwVpnConn.ConnName)
-	attachEdgeVpnToTgw.Add("public_ip", awsTgwVpnConn.PublicIP)
-	attachEdgeVpnToTgw.Add("onprem_asn", awsTgwVpnConn.OnpremASN)
-	attachEdgeVpnToTgw.Add("remote_cidr", awsTgwVpnConn.RemoteCIDR)
 	if awsTgwVpnConn.InsideIpCIDRTun1 != "" {
-		attachEdgeVpnToTgw.Add("inside_ip_cidr_tun_1", awsTgwVpnConn.InsideIpCIDRTun1)
+		form["inside_ip_cidr_tun_1"] = awsTgwVpnConn.InsideIpCIDRTun1
 	}
 	if awsTgwVpnConn.InsideIpCIDRTun2 != "" {
-		attachEdgeVpnToTgw.Add("inside_ip_cidr_tun_2", awsTgwVpnConn.InsideIpCIDRTun2)
+		form["inside_ip_cidr_tun_2"] = awsTgwVpnConn.InsideIpCIDRTun2
 	}
 	if awsTgwVpnConn.PreSharedKeyTun1 != "" {
-		attachEdgeVpnToTgw.Add("pre_shared_key_tun_1", awsTgwVpnConn.PreSharedKeyTun1)
+		form["pre_shared_key_tun_1"] = awsTgwVpnConn.PreSharedKeyTun1
 	}
 	if awsTgwVpnConn.PreSharedKeyTun2 != "" {
-		attachEdgeVpnToTgw.Add("pre_shared_key_tun_2", awsTgwVpnConn.PreSharedKeyTun2)
+		form["pre_shared_key_tun_2"] = awsTgwVpnConn.PreSharedKeyTun2
 	}
-	attachEdgeVpnToTgw.Add("learned_cidrs_approval", awsTgwVpnConn.LearnedCidrsApproval)
-	attachEdgeVpnToTgw.Add("enable_global_acceleration", awsTgwVpnConn.EnableAcceleration)
-
-	Url.RawQuery = attachEdgeVpnToTgw.Encode()
-	resp, err := c.Get(Url.String(), nil)
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
 	if err != nil {
-		return "", errors.New("HTTP Get attach_edge_vpn_to_tgw failed: " + err.Error())
-	}
-
-	var data AwsTgwVpnConnCreateResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return "", errors.New("Json Decode attach_edge_vpn_to_tgw failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return "", errors.New("Rest API attach_edge_vpn_to_tgw Get failed: " + data.Reason)
+		return "", err
 	}
 	if data.Results.VpnID == "" {
 		return "", errors.New("could not get vpn_id information")
@@ -135,31 +117,16 @@ func (c *Client) CreateAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (string, erro
 }
 
 func (c *Client) GetAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (*AwsTgwVpnConn, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for list_all_tgw_attachments") + err.Error())
-	}
-	listAllTgwAttachments := url.Values{}
-	listAllTgwAttachments.Add("CID", c.CID)
-	listAllTgwAttachments.Add("action", "list_all_tgw_attachments")
-	listAllTgwAttachments.Add("tgw_name", awsTgwVpnConn.TgwName)
-	listAllTgwAttachments.Add("resource_type", "vpn")
-	Url.RawQuery = listAllTgwAttachments.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get list_all_tgw_attachments failed: " + err.Error())
-	}
-
 	var data AwsTgwVpnConnResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_all_tgw_attachments failed: " + err.Error() + "\n Body: " + bodyString)
+	form := map[string]string{
+		"CID":           c.CID,
+		"action":        "list_all_tgw_attachments",
+		"tgw_name":      awsTgwVpnConn.TgwName,
+		"resource_type": "vpn",
 	}
-	if !data.Return {
-		return nil, errors.New("Rest API list_all_tgw_attachments Get failed: " + data.Reason)
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
 
 	allAwsTgwVpnConn := data.Results
@@ -197,7 +164,7 @@ func (c *Client) GetAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (*AwsTgwVpnConn,
 					var asnInt int
 					err = json.Unmarshal(allAwsTgwVpnConn[i].OnpremASNRaw, &asnInt)
 					if err != nil {
-						return nil, fmt.Errorf("json decode list_all_tgw_attachments aws_side_asn field failed: aws_side_asn = %s: %v \n Body: %s", string(allAwsTgwVpnConn[i].OnpremASNRaw), err, bodyString)
+						return nil, fmt.Errorf("json decode list_all_tgw_attachments aws_side_asn field failed: aws_side_asn = %s: %v", string(allAwsTgwVpnConn[i].OnpremASNRaw), err)
 					}
 					asnString = strconv.Itoa(asnInt)
 				}
@@ -216,85 +183,29 @@ func (c *Client) GetAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (*AwsTgwVpnConn,
 func (c *Client) DeleteAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) error {
 	awsTgwVpnConn.CID = c.CID
 	awsTgwVpnConn.Action = "detach_vpn_from_tgw"
-	resp, err := c.Post(c.baseURL, awsTgwVpnConn)
-	if err != nil {
-		return errors.New("HTTP Post detach_vpn_from_tgw failed: " + err.Error())
-	}
-
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode detach_vpn_from_tgw failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API detach_vpn_from_tgw Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(awsTgwVpnConn.Action, awsTgwVpnConn, BasicCheck)
 }
 
 func (c *Client) EnableVpnConnectionLearnedCidrsApproval(awsTgwVpnConn *AwsTgwVpnConn) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'enable_learned_cidrs_approval': ") + err.Error())
+	form := map[string]string{
+		"CID":                    c.CID,
+		"action":                 "enable_learned_cidrs_approval",
+		"tgw_name":               awsTgwVpnConn.TgwName,
+		"attachment_name":        awsTgwVpnConn.VpnID,
+		"learned_cidrs_approval": awsTgwVpnConn.LearnedCidrsApproval,
 	}
-	enableLearnedCidrsApproval := url.Values{}
-	enableLearnedCidrsApproval.Add("CID", c.CID)
-	enableLearnedCidrsApproval.Add("action", "enable_learned_cidrs_approval")
-	enableLearnedCidrsApproval.Add("tgw_name", awsTgwVpnConn.TgwName)
-	enableLearnedCidrsApproval.Add("attachment_name", awsTgwVpnConn.VpnID)
-	enableLearnedCidrsApproval.Add("learned_cidrs_approval", awsTgwVpnConn.LearnedCidrsApproval)
-	Url.RawQuery = enableLearnedCidrsApproval.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return errors.New("HTTP Get 'enable_learned_cidrs_approval' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'enable_learned_cidrs_approval' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'enable_learned_cidrs_approval' Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DisableVpnConnectionLearnedCidrsApproval(awsTgwVpnConn *AwsTgwVpnConn) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'disable_learned_cidrs_approval': ") + err.Error())
+	form := map[string]string{
+		"CID":                    c.CID,
+		"action":                 "disable_learned_cidrs_approval",
+		"tgw_name":               awsTgwVpnConn.TgwName,
+		"attachment_name":        awsTgwVpnConn.VpnID,
+		"learned_cidrs_approval": awsTgwVpnConn.LearnedCidrsApproval,
 	}
-	enableLearnedCidrsApproval := url.Values{}
-	enableLearnedCidrsApproval.Add("CID", c.CID)
-	enableLearnedCidrsApproval.Add("action", "disable_learned_cidrs_approval")
-	enableLearnedCidrsApproval.Add("tgw_name", awsTgwVpnConn.TgwName)
-	enableLearnedCidrsApproval.Add("attachment_name", awsTgwVpnConn.VpnID)
-	enableLearnedCidrsApproval.Add("learned_cidrs_approval", awsTgwVpnConn.LearnedCidrsApproval)
-	Url.RawQuery = enableLearnedCidrsApproval.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return errors.New("HTTP Get 'disable_learned_cidrs_approval' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'disable_learned_cidrs_approval' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'disable_learned_cidrs_approval' Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) GetAwsTgwVpnTunnelData(awsTgwVpnConn *AwsTgwVpnConn) (*AwsTgwVpnConnEdit, error) {
