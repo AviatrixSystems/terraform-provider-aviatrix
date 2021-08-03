@@ -35,7 +35,7 @@ func (c *Client) GetAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
 	}
 	check := func(action, reason string, ret bool) error {
 		if !ret {
-			if strings.Contains(data.Reason, "does not exist") {
+			if strings.Contains(reason, "does not exist") {
 				return ErrNotFound
 			}
 			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
