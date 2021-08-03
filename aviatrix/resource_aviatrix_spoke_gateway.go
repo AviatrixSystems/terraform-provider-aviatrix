@@ -2161,7 +2161,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			wg.Wait()
 			if primaryErr != nil && haErr != nil {
 				return fmt.Errorf("could not upgrade primary and HA spoke gateway "+
-					"software_version=%s ha_software_version=%s image_version=%s ha_image_version=%s:" +
+					"software_version=%s ha_software_version=%s image_version=%s ha_image_version=%s:"+
 					"\n primaryErr: %v\n haErr: %v",
 					swVersion, haSwVersion, imageVersion, haImageVersion, primaryErr, haErr)
 			} else if primaryErr != nil {
