@@ -16,9 +16,9 @@ func (c *Client) EnablePrivateOob() error {
 		"action": "enable_private_oob",
 		"CID":    c.CID,
 	}
-	checkFunc := func(action, reason string, ret bool) error {
+	checkFunc := func(action, method, reason string, ret bool) error {
 		if !ret && !strings.HasPrefix(reason, "enable already") {
-			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
 		return nil
 	}
@@ -48,9 +48,9 @@ func (c *Client) DisablePrivateOob() error {
 		"action": "disable_private_oob",
 		"CID":    c.CID,
 	}
-	checkFunc := func(action, reason string, ret bool) error {
+	checkFunc := func(action, method, reason string, ret bool) error {
 		if !ret && !strings.HasPrefix(reason, "disable already") {
-			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
 		return nil
 	}

@@ -45,12 +45,12 @@ func (c *Client) GetDomainConn(domainConn *DomainConn) error {
 		"tgw_name":          domainConn.TgwName1,
 		"route_domain_name": domainConn.DomainName1,
 	}
-	check := func(action, reason string, ret bool) error {
+	check := func(action, method, reason string, ret bool) error {
 		if !ret {
 			if strings.Contains(reason, "does not exist") {
 				return ErrNotFound
 			}
-			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
 		return nil
 	}

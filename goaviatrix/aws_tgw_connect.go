@@ -61,13 +61,13 @@ func (c *Client) GetTGWConnect(ctx context.Context, connect *AwsTgwConnect) (*Aw
 		"tgw_name":        connect.TgwName,
 	}
 
-	check := func(action, reason string, ret bool) error {
+	check := func(action, method, reason string, ret bool) error {
 		if !ret {
 			// 'AVXERR-TGW-0072': 'TGW Connect {conn_name} does not exist.'
 			if strings.Contains(reason, "AVXERR-TGW-0072") {
 				return ErrNotFound
 			}
-			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
 		return nil
 	}
@@ -104,13 +104,13 @@ func (c *Client) GetTGWConnectPeer(ctx context.Context, peer *AwsTgwConnectPeer)
 		"connect_peer_name": peer.ConnectPeerName,
 	}
 
-	check := func(action, reason string, ret bool) error {
+	check := func(action, method, reason string, ret bool) error {
 		if !ret {
 			// 'AVXERR-TGW-0074': 'TGW Connect peer {conn_name}/{connect_peer_name} does not exist.',
 			if strings.Contains(reason, "AVXERR-TGW-0074") {
 				return ErrNotFound
 			}
-			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
 		return nil
 	}

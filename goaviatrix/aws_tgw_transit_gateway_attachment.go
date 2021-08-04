@@ -60,12 +60,12 @@ func (c *Client) GetAwsTgwTransitGwAttachment(awsTgwTransitGwAttachment *AwsTgwT
 		"action":   "list_tgw_details",
 		"tgw_name": awsTgwTransitGwAttachment.TgwName,
 	}
-	check := func(action, reason string, ret bool) error {
+	check := func(action, method, reason string, ret bool) error {
 		if !ret {
 			if strings.Contains(reason, "does not exist") {
 				return ErrNotFound
 			}
-			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
 		return nil
 	}
@@ -92,12 +92,12 @@ func (c *Client) DeleteAwsTgwTransitGwAttachment(awsTgwTransitGwAttachment *AwsT
 		"tgw_name": awsTgwTransitGwAttachment.TgwName,
 		"vpc_name": awsTgwTransitGwAttachment.VpcID,
 	}
-	check := func(action, reason string, ret bool) error {
+	check := func(action, method, reason string, ret bool) error {
 		if !ret {
 			if strings.Contains(reason, "is not attached to") {
 				return nil
 			}
-			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
 		return nil
 	}

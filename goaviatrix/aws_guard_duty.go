@@ -27,10 +27,10 @@ func (c *Client) UpdateAwsGuardDutyPollInterval(scanningInterval int) error {
 		"CID":      c.CID,
 		"interval": strconv.Itoa(scanningInterval),
 	}
-	checkFunc := func(action, reason string, ret bool) error {
+	checkFunc := func(action, method, reason string, ret bool) error {
 		// AVXERR-SECURITY-0093 is returned if you try to update the interval to its currently configured value.
 		if !ret && !strings.HasPrefix(reason, "[AVXERR-SECURITY-0093]") {
-			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
 		return nil
 	}
@@ -44,9 +44,9 @@ func (c *Client) EnableAwsGuardDuty(account *AwsGuardDutyAccount) error {
 		"account_name": account.AccountName,
 		"region":       account.Region,
 	}
-	checkFunc := func(action, reason string, ret bool) error {
+	checkFunc := func(action, method, reason string, ret bool) error {
 		if !ret && !strings.HasPrefix(reason, "[AVXERR-SECURITY-0089] GuardDuty is already enabled for the account") {
-			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
 		return nil
 	}
@@ -71,9 +71,9 @@ func (c *Client) UpdateAwsGuardDutyExcludedIPs(account *AwsGuardDutyAccount) err
 		"region":       account.Region,
 		"excluded_ips": strings.Join(account.ExcludedIPs, ","),
 	}
-	checkFunc := func(action, reason string, ret bool) error {
+	checkFunc := func(action, method, reason string, ret bool) error {
 		if !ret && !strings.HasPrefix(reason, "No change in the exclude ip list for account") {
-			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
 		return nil
 	}
