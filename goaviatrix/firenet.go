@@ -2,6 +2,7 @@ package goaviatrix
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -203,15 +204,10 @@ func (c *Client) DisconnectFireNetFromTgw(awsTgw *AWSTgw, vpcID string) error {
 
 func (c *Client) EditFireNetInspection(fireNet *FireNet) error {
 	form := map[string]string{
-		"CID":    c.CID,
-		"action": "edit_firenet",
-		"vpc_id": fireNet.VpcID,
-	}
-
-	if fireNet.Inspection {
-		form["inspection"] = "true"
-	} else {
-		form["inspection"] = "false"
+		"CID":        c.CID,
+		"action":     "edit_firenet",
+		"vpc_id":     fireNet.VpcID,
+		"inspection": strconv.FormatBool(fireNet.Inspection),
 	}
 
 	checkFunc := func(act, method, reason string, ret bool) error {
@@ -229,20 +225,15 @@ func (c *Client) EditFireNetInspection(fireNet *FireNet) error {
 
 func (c *Client) EditFireNetEgress(fireNet *FireNet) error {
 	form := map[string]string{
-		"CID":    c.CID,
-		"action": "edit_firenet",
-		"vpc_id": fireNet.VpcID,
-	}
-
-	if fireNet.FirewallEgress {
-		form["firewall_egress"] = "true"
-	} else {
-		form["firewall_egress"] = "false"
+		"CID":             c.CID,
+		"action":          "edit_firenet",
+		"vpc_id":          fireNet.VpcID,
+		"firewall_egress": strconv.FormatBool(fireNet.FirewallEgress),
 	}
 
 	checkFunc := func(act, method, reason string, ret bool) error {
 		if !ret {
-			if strings.Contains(reason, "configuration not found") {
+			if strings.Contains(reason, "configuration not changed") {
 				return nil
 			}
 			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)

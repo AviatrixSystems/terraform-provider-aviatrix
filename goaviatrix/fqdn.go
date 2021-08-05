@@ -275,10 +275,10 @@ func (c *Client) AttachTagToGw(fqdn *FQDN, gateway *Gateway) error {
 
 func (c *Client) UpdateSourceIPFilters(fqdn *FQDN, gateway *Gateway, sourceIPs []string) error {
 	form := map[string]string{
-		"CID":      c.CID,
-		"action":   "update_fqdn_filter_tag_source_ip_filters",
-		"tag_name": fqdn.FQDNTag,
-		"gw_name":  gateway.GwName,
+		"CID":          c.CID,
+		"action":       "update_fqdn_filter_tag_source_ip_filters",
+		"tag_name":     fqdn.FQDNTag,
+		"gateway_name": gateway.GwName,
 	}
 
 	if len(sourceIPs) != 0 {
