@@ -49,7 +49,8 @@ func (c *Client) GetAzureSpokeNativePeering(azureSpokeNativePeering *AzureSpokeN
 	}
 	peeringList := data.Results
 	for i := range peeringList {
-		if peeringList[i].Name == "" || len(strings.Split(peeringList[i].Name, ":")) != 3 {
+		nameParts := len(strings.Split(peeringList[i].Name, ":"))
+		if peeringList[i].Name == "" || !(nameParts == 3 || nameParts == 4) {
 			continue
 		}
 		spokeAccountName := peeringList[i].AccountName
