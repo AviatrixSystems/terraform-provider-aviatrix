@@ -1,10 +1,7 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
-	"net/url"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -45,51 +42,32 @@ type GetGeoVPNInfoResp struct {
 func (c *Client) EnableGeoVPN(geoVPN *GeoVPN) error {
 	geoVPN.CID = c.CID
 	geoVPN.Action = "enable_geo_vpn"
-	resp, err := c.Post(c.baseURL, geoVPN)
-	if err != nil {
-		return errors.New("HTTP Post 'enable_geo_vpn' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'enable_geo_vpn' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'enable_geo_vpn' Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(geoVPN.Action, geoVPN, BasicCheck)
 }
 
 func (c *Client) GetGeoVPNInfo(geoVPN *GeoVPN) (*GeoVPN, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for 'get_geo_vpn_info' ") + err.Error())
+	form := map[string]string{
+		"CID":        c.CID,
+		"action":     "get_geo_vpn_info",
+		"cloud_type": strconv.Itoa(geoVPN.CloudType),
 	}
-	getGeoVPNInfo := url.Values{}
-	getGeoVPNInfo.Add("CID", c.CID)
-	getGeoVPNInfo.Add("action", "get_geo_vpn_info")
-	getGeoVPNInfo.Add("cloud_type", strconv.Itoa(geoVPN.CloudType))
-	Url.RawQuery = getGeoVPNInfo.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get 'get_geo_vpn_info' failed: " + err.Error())
-	}
+
 	var data GetGeoVPNInfoResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode get_geo_vpn_info failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "Geo VPN is not enbled") || strings.Contains(data.Reason, "Geo VPN is not enabled") {
-			return nil, ErrNotFound
+
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "Geo VPN is not enbled") || strings.Contains(reason, "Geo VPN is not enabled") {
+				return ErrNotFound
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
-		return nil, errors.New("Rest API get_geo_vpn_info Get failed: " + data.Reason)
+		return nil
+	}
+
+	err := c.GetAPI(&data, form["action"], form, checkFunc)
+	if err != nil {
+		return nil, err
 	}
 
 	if data.Results.ServiceName == geoVPN.ServiceName && data.Results.DomainName == geoVPN.DomainName {
@@ -112,93 +90,46 @@ func (c *Client) GetGeoVPNInfo(geoVPN *GeoVPN) (*GeoVPN, error) {
 func (c *Client) AddElbToGeoVPN(geoVPN *GeoVPN) error {
 	geoVPN.CID = c.CID
 	geoVPN.Action = "add_elb_to_geo_vpn"
-	resp, err := c.Post(c.baseURL, geoVPN)
-	if err != nil {
-		return errors.New("HTTP Post 'add_elb_to_geo_vpn' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'add_elb_to_geo_vpn' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'add_elb_to_geo_vpn' Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(geoVPN.Action, geoVPN, BasicCheck)
 }
 
 func (c *Client) DeleteElbFromGeoVPN(geoVPN *GeoVPN) error {
 	geoVPN.CID = c.CID
 	geoVPN.Action = "delete_elb_from_geo_vpn"
-	resp, err := c.Post(c.baseURL, geoVPN)
-	if err != nil {
-		return errors.New("HTTP Post 'delete_elb_from_geo_vpn' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'delete_elb_from_geo_vpn' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'delete_elb_from_geo_vpn' Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(geoVPN.Action, geoVPN, BasicCheck)
 }
 
 func (c *Client) DisableGeoVPN(geoVPN *GeoVPN) error {
 	geoVPN.CID = c.CID
 	geoVPN.Action = "disable_geo_vpn"
-	resp, err := c.Post(c.baseURL, geoVPN)
-	if err != nil {
-		return errors.New("HTTP Post 'disable_geo_vpn' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'disable_geo_vpn' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'disable_geo_vpn' Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(geoVPN.Action, geoVPN, BasicCheck)
 }
 
 func (c *Client) GetGeoVPNName(gateway *Gateway) (*GeoVPN, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for 'get_geo_vpn_info': ") + err.Error())
+	form := map[string]string{
+		"CID":        c.CID,
+		"action":     "get_geo_vpn_info",
+		"cloud_type": strconv.Itoa(gateway.CloudType),
 	}
-	getGeoVPNInfo := url.Values{}
-	getGeoVPNInfo.Add("CID", c.CID)
-	getGeoVPNInfo.Add("action", "get_geo_vpn_info")
-	getGeoVPNInfo.Add("cloud_type", strconv.Itoa(gateway.CloudType))
-	Url.RawQuery = getGeoVPNInfo.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get 'get_geo_vpn_info' failed: " + err.Error())
-	}
+
 	var data GetGeoVPNInfoResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json 'Decode get_geo_vpn_info' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "Geo VPN is not enbled") || strings.Contains(data.Reason, "Geo VPN is not enabled") {
-			return nil, ErrNotFound
+
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "Geo VPN is not enbled") || strings.Contains(reason, "Geo VPN is not enabled") {
+				return ErrNotFound
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
-		return nil, errors.New("Rest API 'get_geo_vpn_info Get' failed: " + data.Reason)
+		return nil
+	}
+
+	err := c.GetAPI(&data, form["action"], form, checkFunc)
+	if err != nil {
+		return nil, err
 	}
 
 	policyList := data.Results.ElbDNSNames

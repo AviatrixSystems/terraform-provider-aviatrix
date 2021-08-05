@@ -148,12 +148,12 @@ func (c *Client) PostContext(ctx context.Context, path string, i interface{}) (*
 
 // CheckAPIResponseFunc looks at the Reason and Return fields from an API response
 // and returns an error
-type CheckAPIResponseFunc func(action, reason string, ret bool) error
+type CheckAPIResponseFunc func(action, method, reason string, ret bool) error
 
 // BasicCheck will only verify that the Return field was set the true
-var BasicCheck CheckAPIResponseFunc = func(action, reason string, ret bool) error {
+var BasicCheck CheckAPIResponseFunc = func(action, method, reason string, ret bool) error {
 	if !ret {
-		return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+		return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 	}
 	return nil
 }
@@ -214,7 +214,7 @@ func decodeAndCheckAPIResp(resp *http.Response, action string, checkFunc CheckAP
 		return fmt.Errorf("json Decode %q failed: %v\n Body: %s", action, err, b.String())
 	}
 
-	return checkFunc(action, data.Reason, data.Return)
+	return checkFunc(action, "Post", data.Reason, data.Return)
 }
 
 // GetAPI makes a GET request to the Aviatrix API
@@ -264,7 +264,7 @@ func (c *Client) GetAPIContext(ctx context.Context, v interface{}, action string
 	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
 		return fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
 	}
-	if err := checkFunc(action, data.Reason, data.Return); err != nil {
+	if err := checkFunc(action, "Get", data.Reason, data.Return); err != nil {
 		return err
 	}
 	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&v); err != nil {

@@ -1,9 +1,6 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -22,25 +19,7 @@ type DeviceVirtualWanAttachment struct {
 func (c *Client) CreateDeviceVirtualWanAttachment(attachment *DeviceVirtualWanAttachment) error {
 	attachment.Action = "attach_cloudwan_device_to_virtual_wan"
 	attachment.CID = c.CID
-	resp, err := c.Post(c.baseURL, attachment)
-	if err != nil {
-		return errors.New("HTTP Post attach_cloudwan_device_to_virtual_wan failed: " + err.Error())
-	}
-
-	var data APIResp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
-	if err != nil {
-		return errors.New("Reading response body attach_cloudwan_device_to_virtual_wan failed: " + err.Error())
-	}
-
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return errors.New("Json Decode attach_cloudwan_device_to_virtual_wan failed: " + err.Error() + "\n Body: " + b.String())
-	}
-	if !data.Return {
-		return errors.New("Rest API attach_cloudwan_device_to_virtual_wan Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(attachment.Action, attachment, BasicCheck)
 }
 
 func (c *Client) GetDeviceVirtualWanAttachment(attachment *DeviceVirtualWanAttachment) (*DeviceVirtualWanAttachment, error) {
@@ -54,38 +33,28 @@ func (c *Client) GetDeviceVirtualWanAttachment(attachment *DeviceVirtualWanAttac
 		return nil, fmt.Errorf("could not get device attachment VPC id: %v", err)
 	}
 
-	resp, err := c.Post(c.baseURL, struct {
-		CID            string `form:"CID"`
-		Action         string `form:"action"`
-		ConnectionName string `form:"conn_name"`
-		VpcID          string `form:"vpc_id"`
-	}{
-		CID:            c.CID,
-		Action:         "get_site2cloud_conn_detail",
-		ConnectionName: attachment.ConnectionName,
-		VpcID:          vpcID,
-	})
-	if err != nil {
-		return nil, errors.New("HTTP POST get_site2cloud_conn_detail failed: " + err.Error())
+	form := map[string]string{
+		"CID":       c.CID,
+		"action":    "get_site2cloud_conn_detail",
+		"vpc_id":    vpcID,
+		"conn_name": attachment.ConnectionName,
 	}
 
 	var data Site2CloudConnDetailResp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
-	if err != nil {
-		return nil, errors.New("Reading response body get_site2cloud_conn_detail failed: " + err.Error())
-	}
 
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode get_site2cloud_conn_detail failed: " + err.Error() +
-			"\n Body: " + b.String())
-	}
-
-	if !data.Return {
-		if strings.Contains(data.Reason, "does not exist") {
-			return nil, ErrNotFound
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "does not exist") {
+				return ErrNotFound
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
-		return nil, errors.New("Rest API get_site2cloud_conn_detail Post failed: " + data.Reason)
+		return nil
+	}
+
+	err = c.GetAPI(&data, form["action"], form, checkFunc)
+	if err != nil {
+		return nil, err
 	}
 
 	return &DeviceVirtualWanAttachment{

@@ -1,11 +1,8 @@
 package goaviatrix
 
 import (
-	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"net/url"
 	"strconv"
 	"strings"
 
@@ -340,22 +337,8 @@ type FQDNGatwayInfo struct {
 func (c *Client) CreateGateway(gateway *Gateway) error {
 	gateway.CID = c.CID
 	gateway.Action = "connect_container"
-	resp, err := c.Post(c.baseURL, gateway)
-	if err != nil {
-		return errors.New("HTTP Post connect_container failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode connect_container failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API connect_container Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) CreatePublicSubnetFilteringGateway(gateway *Gateway) error {
@@ -456,83 +439,29 @@ func (c *Client) DisableGuardDutyEnforcement(gateway *Gateway) error {
 func (c *Client) EnableNatGateway(gateway *Gateway) error {
 	gateway.CID = c.CID
 	gateway.Action = "enable_nat"
-	resp, err := c.Post(c.baseURL, gateway)
-	if err != nil {
-		return errors.New("HTTP Post enable_nat failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_nat failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API enable_nat Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
+
 func (c *Client) EnableSingleAZGateway(gateway *Gateway) error {
 	gateway.CID = c.CID
 	gateway.Action = "enable_single_az_ha"
-	resp, err := c.Post(c.baseURL, gateway)
-	if err != nil {
-		return errors.New("HTTP Post enable_single_az_ha failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_single_az_ha failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API enable_single_az_ha Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
+
 func (c *Client) EnablePeeringHaGateway(gateway *Gateway) error {
 	gateway.CID = c.CID
 	gateway.Action = "create_peering_ha_gateway"
-	resp, err := c.Post(c.baseURL, gateway)
-	if err != nil {
-		return errors.New("HTTP Post create_peering_ha_gateway failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode create_peering_ha_gateway failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API create_peering_ha_gateway Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) DisableSingleAZGateway(gateway *Gateway) error {
 	gateway.CID = c.CID
 	gateway.Action = "disable_single_az_ha"
-	resp, err := c.Post(c.baseURL, gateway)
-	if err != nil {
-		return errors.New("HTTP Post disable_single_az_ha failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_single_az_ha failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API disable_single_az_ha Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
@@ -563,30 +492,19 @@ func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
 }
 
 func (c *Client) GetGatewayDetail(gateway *Gateway) (*GatewayDetail, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for list_vpc_by_name") + err.Error())
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "list_vpc_by_name",
+		"vpc_name": gateway.GwName,
 	}
-	listVpcByName := url.Values{}
-	listVpcByName.Add("CID", c.CID)
-	listVpcByName.Add("action", "list_vpc_by_name")
-	listVpcByName.Add("vpc_name", gateway.GwName)
-	Url.RawQuery = listVpcByName.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get list_vpc_by_name failed: " + err.Error())
-	}
+
 	var data GatewayDetailApiResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_vpc_by_name failed: " + err.Error() + "\n Body: " + bodyString)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
-	if !data.Return {
-		return nil, errors.New("Rest API list_vpc_by_name Get failed: " + data.Reason)
-	}
+
 	if data.Results.GwName == gateway.GwName {
 		return &data.Results, nil
 	}
@@ -598,43 +516,19 @@ func (c *Client) GetGatewayDetail(gateway *Gateway) (*GatewayDetail, error) {
 func (c *Client) UpdateGateway(gateway *Gateway) error {
 	gateway.CID = c.CID
 	gateway.Action = "edit_gw_config"
-	resp, err := c.Post(c.baseURL, gateway)
-	if err != nil {
-		return errors.New("HTTP Post edit_gw_config failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_gw_config failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API edit_gw_config Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) DeleteGateway(gateway *Gateway) error {
-	path := c.baseURL + fmt.Sprintf("?action=delete_container&CID=%s&cloud_type=%d&gw_name=%s",
-		c.CID, gateway.CloudType, gateway.GwName)
-	resp, err := c.Delete(path, nil)
-	if err != nil {
-		return errors.New("HTTP Get delete_container failed: " + err.Error())
+	form := map[string]string{
+		"CID":        c.CID,
+		"action":     "delete_container",
+		"cloud_type": strconv.Itoa(gateway.CloudType),
+		"gw_name":    gateway.GwName,
 	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_container failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API delete_container Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EnableSNat(gateway *Gateway) error {
@@ -645,64 +539,22 @@ func (c *Client) EnableSNat(gateway *Gateway) error {
 		return err
 	}
 	gateway.PolicyList = string(args)
-	resp, err := c.Post(c.baseURL, gateway)
-	if err != nil {
-		return errors.New("HTTP Get enable_snat failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_snat failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API enable_snat Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) DisableSNat(gateway *Gateway) error {
 	gateway.CID = c.CID
 	gateway.Action = "disable_snat"
-	resp, err := c.Post(c.baseURL, gateway)
-	if err != nil {
-		return errors.New("HTTP Get 'disable_snat' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'disable_snat' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'disable_snat' Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) DisableCustomSNat(gateway *Gateway) error {
 	gateway.CID = c.CID
 	gateway.Action = "enable_snat"
-	resp, err := c.Post(c.baseURL, gateway)
-	if err != nil {
-		return errors.New("HTTP Get 'enable_snat' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'enable_snat' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'enable_snat' Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) UpdateDNat(gateway *Gateway) error {
@@ -713,468 +565,198 @@ func (c *Client) UpdateDNat(gateway *Gateway) error {
 		return err
 	}
 	gateway.PolicyList = string(args)
-	resp, err := c.Post(c.baseURL, gateway)
-	if err != nil {
-		return errors.New("HTTP Get update_dnat_config failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode update_dnat_config failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API update_dnat_config Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) UpdateVpnCidr(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for edit_vpn_gateway_virtual_address_range") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "edit_vpn_gateway_virtual_address_range",
+		"vpn_cidr":     gateway.VpnCidr,
+		"gateway_name": gateway.GwName,
 	}
-	setVpnClientCIDR := url.Values{}
-	setVpnClientCIDR.Add("CID", c.CID)
-	setVpnClientCIDR.Add("action", "edit_vpn_gateway_virtual_address_range")
-	setVpnClientCIDR.Add("vpn_cidr", gateway.VpnCidr)
-	setVpnClientCIDR.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = setVpnClientCIDR.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get edit_vpn_gateway_virtual_address_range failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_vpn_gateway_virtual_address_range failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API edit_vpn_gateway_virtual_address_range Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) UpdateMaxVpnConn(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for set_vpn_client_cidr") + err.Error())
+	form := map[string]string{
+		"CID":                c.CID,
+		"action":             "set_vpn_max_connection",
+		"max_connections":    gateway.MaxConn,
+		"vpc_id":             gateway.VpcID,
+		"lb_or_gateway_name": gateway.ElbName,
 	}
-	setMaxVpnConn := url.Values{}
-	setMaxVpnConn.Add("CID", c.CID)
-	setMaxVpnConn.Add("action", "set_vpn_max_connection")
-	setMaxVpnConn.Add("max_connections", gateway.MaxConn)
-	setMaxVpnConn.Add("vpc_id", gateway.VpcID)
-	setMaxVpnConn.Add("lb_or_gateway_name", gateway.ElbName)
+
 	if gateway.Dns == "true" {
-		setMaxVpnConn.Add("dns", "true")
+		form["dns"] = "true"
 	}
-	Url.RawQuery = setMaxVpnConn.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get set_vpn_max_connection failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode set_vpn_max_connection failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API set_vpn_max_connection Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) SetVpnGatewayAuthentication(gateway *VpnGatewayAuth) error {
 	gateway.CID = c.CID
 	gateway.Action = "set_vpn_gateway_authentication"
-	resp, err := c.Post(c.baseURL, gateway)
 
-	if err != nil {
-		return errors.New("HTTP Post set_vpn_gateway_authentication failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode set_vpn_gateway_authentication failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API set_vpn_gateway_authentication Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) EnableActiveMesh(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for enable_gateway_activemesh") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "enable_gateway_activemesh",
+		"gateway_name": gateway.GwName,
 	}
-	enableSNat := url.Values{}
-	enableSNat.Add("CID", c.CID)
-	enableSNat.Add("action", "enable_gateway_activemesh")
-	enableSNat.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = enableSNat.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get enable_gateway_activemesh failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_gateway_activemesh failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API enable_gateway_activemesh Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DisableActiveMesh(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for disable_gateway_activemesh") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "disable_gateway_activemesh",
+		"gateway_name": gateway.GwName,
 	}
-	enableSNat := url.Values{}
-	enableSNat.Add("CID", c.CID)
-	enableSNat.Add("action", "disable_gateway_activemesh")
-	enableSNat.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = enableSNat.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get disable_gateway_activemesh failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_gateway_activemesh failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API disable_gateway_activemesh Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EnableVpcDnsServer(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for enable_vpc_dns_server") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "enable_vpc_dns_server",
+		"gateway_name": gateway.GwName,
 	}
-	enableSNat := url.Values{}
-	enableSNat.Add("CID", c.CID)
-	enableSNat.Add("action", "enable_vpc_dns_server")
-	enableSNat.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = enableSNat.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get enable_vpc_dns_server failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_vpc_dns_server failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API enable_vpc_dns_server Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DisableVpcDnsServer(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for disable_vpc_dns_server") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "disable_vpc_dns_server",
+		"gateway_name": gateway.GwName,
 	}
-	disableSNat := url.Values{}
-	disableSNat.Add("CID", c.CID)
-	disableSNat.Add("action", "disable_vpc_dns_server")
-	disableSNat.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = disableSNat.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get disable_vpc_dns_server failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_vpc_dns_server failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API disable_vpc_dns_server Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EnableVpnNat(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for enable_nat_on_vpn_gateway") + err.Error())
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "enable_nat_on_vpn_gateway",
+		"vpc_id": gateway.VpcID,
 	}
-	enableVpnNat := url.Values{}
-	enableVpnNat.Add("CID", c.CID)
-	enableVpnNat.Add("action", "enable_nat_on_vpn_gateway")
-	enableVpnNat.Add("vpc_id", gateway.VpcID)
+
 	if gateway.ElbName != "" {
-		enableVpnNat.Add("lb_or_gateway_name", gateway.ElbName)
+		form["lb_or_gateway_name"] = gateway.ElbName
 	} else {
-		enableVpnNat.Add("lb_or_gateway_name", gateway.GwName)
+		form["lb_or_gateway_name"] = gateway.GwName
 	}
 	if gateway.Dns == "true" {
-		enableVpnNat.Add("dns", "true")
+		form["dns"] = "true"
 	}
-	Url.RawQuery = enableVpnNat.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get enable_nat_on_vpn_gateway failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_nat_on_vpn_gateway failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API enable_nat_on_vpn_gateway Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DisableVpnNat(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for disable_nat_on_vpn_gateway") + err.Error())
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "disable_nat_on_vpn_gateway",
+		"vpc_id": gateway.VpcID,
 	}
-	disableVpnNat := url.Values{}
-	disableVpnNat.Add("CID", c.CID)
-	disableVpnNat.Add("action", "disable_nat_on_vpn_gateway")
-	disableVpnNat.Add("vpc_id", gateway.VpcID)
+
 	if gateway.ElbName != "" {
-		disableVpnNat.Add("lb_or_gateway_name", gateway.ElbName)
+		form["lb_or_gateway_name"] = gateway.ElbName
 	} else {
-		disableVpnNat.Add("lb_or_gateway_name", gateway.GwName)
+		form["lb_or_gateway_name"] = gateway.GwName
 	}
 	if gateway.Dns == "true" {
-		disableVpnNat.Add("dns", "true")
+		form["dns"] = "true"
 	}
-	Url.RawQuery = disableVpnNat.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get disable_nat_on_vpn_gateway failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_nat_on_vpn_gateway failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API disable_nat_on_vpn_gateway Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EditDesignatedGateway(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'EditDesignatedGateway': ") + err.Error())
+	form := map[string]string{
+		"CID":                  c.CID,
+		"action":               "set_designated_gateway_additional_cidr_list",
+		"gateway_name":         gateway.GwName,
+		"additional_cidr_list": gateway.AdditionalCidrsDesignatedGw,
 	}
-	editDesignatedGateway := url.Values{}
-	editDesignatedGateway.Add("CID", c.CID)
-	editDesignatedGateway.Add("action", "set_designated_gateway_additional_cidr_list")
-	editDesignatedGateway.Add("gateway_name", gateway.GwName)
-	editDesignatedGateway.Add("additional_cidr_list", gateway.AdditionalCidrsDesignatedGw)
-	Url.RawQuery = editDesignatedGateway.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'set_designated_gateway_additional_cidr_list' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'set_designated_gateway_additional_cidr_list' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'set_designated_gateway_additional_cidr_list' Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EnableEncryptVolume(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'EnableEncryptVolume': ") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "encrypt_gateway_volume",
+		"gateway_name": gateway.GwName,
 	}
-	encryptGatewayVolume := url.Values{}
-	encryptGatewayVolume.Add("CID", c.CID)
-	encryptGatewayVolume.Add("action", "encrypt_gateway_volume")
-	encryptGatewayVolume.Add("gateway_name", gateway.GwName)
+
 	if gateway.CustomerManagedKeys != "" {
-		encryptGatewayVolume.Add("customer_managed_keys", gateway.CustomerManagedKeys)
+		form["customer_managed_keys"] = gateway.CustomerManagedKeys
 	}
-	Url.RawQuery = encryptGatewayVolume.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'encrypt_gateway_volume' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'encrypt_gateway_volume' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "already encrypted") {
-			return nil
+
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "already encrypted") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
-		return errors.New("Rest API 'encrypt_gateway_volume' Get failed: " + data.Reason)
+		return nil
 	}
-	return nil
+
+	return c.PostAPI(form["action"], form, checkFunc)
 }
 
 func (c *Client) EditGatewayCustomRoutes(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'EditCustomRoutes': ") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "edit_gateway_custom_routes",
+		"gateway_name": gateway.GwName,
+		"cidr":         strings.Join(gateway.CustomizedSpokeVpcRoutes, ","),
 	}
-	editGatewayCustomRoutes := url.Values{}
-	editGatewayCustomRoutes.Add("CID", c.CID)
-	editGatewayCustomRoutes.Add("action", "edit_gateway_custom_routes")
-	editGatewayCustomRoutes.Add("gateway_name", gateway.GwName)
-	editGatewayCustomRoutes.Add("cidr", strings.Join(gateway.CustomizedSpokeVpcRoutes, ","))
-	Url.RawQuery = editGatewayCustomRoutes.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'edit_gateway_custom_routes' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'edit_gateway_custom_routes' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'edit_gateway_custom_routes' Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EditGatewayFilterRoutes(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'EditFilterRoutes': ") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "edit_gateway_filter_routes",
+		"gateway_name": gateway.GwName,
+		"cidr":         strings.Join(gateway.FilteredSpokeVpcRoutes, ","),
 	}
-	editGatewayFilterRoutes := url.Values{}
-	editGatewayFilterRoutes.Add("CID", c.CID)
-	editGatewayFilterRoutes.Add("action", "edit_gateway_filter_routes")
-	editGatewayFilterRoutes.Add("gateway_name", gateway.GwName)
-	editGatewayFilterRoutes.Add("cidr", strings.Join(gateway.FilteredSpokeVpcRoutes, ","))
-	Url.RawQuery = editGatewayFilterRoutes.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'edit_gateway_filter_routes' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'edit_gateway_filter_routes' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'edit_gateway_filter_routes' Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EditGatewayAdvertisedCidr(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'EditGatewayAdveretisedCidr': ") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "edit_gateway_advertised_cidr",
+		"gateway_name": gateway.GwName,
+		"cidr":         strings.Join(gateway.AdvertisedSpokeRoutes, ","),
 	}
-	editGatewayFilterRoutes := url.Values{}
-	editGatewayFilterRoutes.Add("CID", c.CID)
-	editGatewayFilterRoutes.Add("action", "edit_gateway_advertised_cidr")
-	editGatewayFilterRoutes.Add("gateway_name", gateway.GwName)
-	editGatewayFilterRoutes.Add("cidr", strings.Join(gateway.AdvertisedSpokeRoutes, ","))
-	Url.RawQuery = editGatewayFilterRoutes.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'edit_gateway_advertised_cidr' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'edit_gateway_advertised_cidr' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'edit_gateway_advertised_cidr' Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EnableTransitFireNet(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'EnableTransitFireNet': ") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "enable_gateway_for_transit_firenet",
+		"gateway_name": gateway.GwName,
 	}
-	enableTransitFireNet := url.Values{}
-	enableTransitFireNet.Add("CID", c.CID)
-	enableTransitFireNet.Add("action", "enable_gateway_for_transit_firenet")
-	enableTransitFireNet.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = enableTransitFireNet.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'enable_gateway_for_transit_firenet' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'enable_gateway_for_transit_firenet' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'enable_gateway_for_transit_firenet' Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EnableTransitFireNetWithGWLB(gateway *Gateway) error {
@@ -1193,58 +775,28 @@ func (c *Client) DisableTransitFireNet(gateway *Gateway) error {
 		return err
 	}
 
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'DisableTransitFireNet': ") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "disable_gateway_for_transit_firenet",
+		"gateway_name": gateway.GwName,
 	}
-	enableTransitFireNet := url.Values{}
-	enableTransitFireNet.Add("CID", c.CID)
-	enableTransitFireNet.Add("action", "disable_gateway_for_transit_firenet")
-	enableTransitFireNet.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = enableTransitFireNet.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'disable_gateway_for_transit_firenet' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'disable_gateway_for_transit_firenet' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'disable_gateway_for_transit_firenet' Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) IsTransitFireNetReadyToBeDisabled(gateway *Gateway) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for IsTransitFireNetReadyToBeDisabled: ") + err.Error())
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "list_transit_firenet_spoke_policies",
 	}
-	listTransitFireNetSpokePolicies := url.Values{}
-	listTransitFireNetSpokePolicies.Add("CID", c.CID)
-	listTransitFireNetSpokePolicies.Add("action", "list_transit_firenet_spoke_policies")
-	Url.RawQuery = listTransitFireNetSpokePolicies.Encode()
-	resp, err := c.Get(Url.String(), nil)
 
-	if err != nil {
-		return errors.New("HTTP Get list_transit_firenet_spoke_policies failed: " + err.Error())
-	}
 	var data ListTransitFireNetPolicyResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode list_transit_firenet_spoke_policies failed: " + err.Error() + "\n Body: " + bodyString)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return err
 	}
-	if !data.Return {
-		return errors.New("Rest API list_transit_firenet_spoke_policies Get failed: " + data.Reason)
-	}
+
 	if len(data.Results) == 0 {
 		return nil
 	}
@@ -1285,13 +837,9 @@ func (c *Client) DisableSegmentation(transitGateway *TransitVpc) error {
 }
 
 func (c *Client) IsSegmentationEnabled(transitGateway *TransitVpc) (bool, error) {
-	action := "list_transit_gateways_for_multi_cloud_domains"
-	resp, err := c.Post(c.baseURL, &APIRequest{
-		CID:    c.CID,
-		Action: action,
-	})
-	if err != nil {
-		return false, fmt.Errorf("HTTP POST %q failed: %v", action, err)
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "list_transit_gateways_for_multi_cloud_domains",
 	}
 
 	type Result struct {
@@ -1306,17 +854,10 @@ func (c *Client) IsSegmentationEnabled(transitGateway *TransitVpc) (bool, error)
 	}
 
 	var data Resp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
-	if err != nil {
-		return false, fmt.Errorf("reading response body %q failed: %v", action, err)
-	}
 
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return false, fmt.Errorf("json decode %q failed: %v\nBody: %s", action, err, b.String())
-	}
-	if !data.Return {
-		return false, fmt.Errorf("rest API %q Post failed: %s", action, data.Reason)
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return false, err
 	}
 
 	return Contains(data.Results.EnabledDomains, transitGateway.GwName), nil
@@ -1362,12 +903,12 @@ func (c *Client) DisableMonitorGatewaySubnets(gwName string) error {
 		"action":       action,
 		"gateway_name": gwName,
 	}
-	check := func(action, reason string, ret bool) error {
+	check := func(action, method, reason string, ret bool) error {
 		if !ret {
 			if strings.Contains(reason, "no change needed") {
 				return nil
 			}
-			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
 		return nil
 	}
@@ -1403,32 +944,21 @@ func (c *Client) DisableVPNConfig(gateway *Gateway, vpnConfig *VPNConfig) error 
 }
 
 func (c *Client) GetVPNConfigList(gateway *Gateway) ([]VPNConfig, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for edit_vpn_config(show)") + err.Error())
+	form := map[string]string{
+		"CID":     c.CID,
+		"action":  "edit_vpn_config",
+		"command": "show",
+		"vpc_id":  gateway.VpcID,
+		"lb_name": gateway.GwName,
 	}
-	showVPNConfig := url.Values{}
-	showVPNConfig.Add("CID", c.CID)
-	showVPNConfig.Add("action", "edit_vpn_config")
-	showVPNConfig.Add("command", "show")
-	showVPNConfig.Add("vpc_id", gateway.VpcID)
-	showVPNConfig.Add("lb_name", gateway.GwName)
-	Url.RawQuery = showVPNConfig.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get edit_vpn_config(show) failed: " + err.Error())
-	}
+
 	var data VPNConfigListResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode edit_vpn_config(show) failed: " + err.Error() + "\n Body: " + bodyString)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
-	if !data.Return {
-		return nil, errors.New("Rest API edit_vpn_config(show) Get failed: " + data.Reason)
-	}
+
 	return data.Results, ErrNotFound
 }
 
@@ -1464,18 +994,10 @@ func (c *Client) SwitchActiveTransitGateway(gwName, connName string) error {
 }
 
 func (c *Client) GetTransitGatewayLanCidr(gatewayName string) (string, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return "", errors.New(("url Parsing failed for get_firewall_lan_cidr") + err.Error())
-	}
-	showLanCidr := url.Values{}
-	showLanCidr.Add("CID", c.CID)
-	showLanCidr.Add("gateway_name", gatewayName)
-	showLanCidr.Add("action", "get_firewall_lan_cidr")
-	Url.RawQuery = showLanCidr.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return "", errors.New("HTTP Get get_firewall_lan_cidr failed: " + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "get_firewall_lan_cidr",
+		"gateway_name": gatewayName,
 	}
 
 	type LANCidr struct {
@@ -1489,16 +1011,12 @@ func (c *Client) GetTransitGatewayLanCidr(gatewayName string) (string, error) {
 	}
 
 	var data LANCidrResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return "", errors.New("Json Decode get_firewall_lan_cidr failed: " + err.Error() + "\n Body: " + bodyString)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return "", err
 	}
-	if !data.Return {
-		return "", errors.New("Rest API get_firewall_lan_cidr Get failed: " + data.Reason)
-	}
+
 	return data.Results.FirewallLanCidr, ErrNotFound
 }
 

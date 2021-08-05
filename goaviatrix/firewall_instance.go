@@ -175,33 +175,29 @@ func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (str
 }
 
 func (c *Client) GetFirewallInstance(firewallInstance *FirewallInstance) (*FirewallInstance, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for get_instance_by_id: ") + err.Error())
+	form := map[string]string{
+		"CID":         c.CID,
+		"action":      "get_instance_by_id",
+		"instance_id": firewallInstance.InstanceID,
 	}
-	getInstanceById := url.Values{}
-	getInstanceById.Add("CID", c.CID)
-	getInstanceById.Add("action", "get_instance_by_id")
-	getInstanceById.Add("instance_id", firewallInstance.InstanceID)
-	Url.RawQuery = getInstanceById.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get get_instance_by_id failed: " + err.Error())
-	}
+
 	var data FirewallInstanceResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode get_instance_by_id failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "Unrecognized firewall instance_id") {
-			return nil, ErrNotFound
+
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "Unrecognized firewall instance_id") {
+				return ErrNotFound
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
-		return nil, errors.New("Rest API get_instance_by_id Get failed: " + data.Reason)
+		return nil
 	}
+
+	err := c.GetAPI(&data, form["action"], form, checkFunc)
+	if err != nil {
+		return nil, err
+	}
+
 	if data.Results.InstanceID == firewallInstance.InstanceID {
 		// Only try to decode if tags are not empty string
 		if string(data.Results.TagsMessage) != `""` {
@@ -212,35 +208,17 @@ func (c *Client) GetFirewallInstance(firewallInstance *FirewallInstance) (*Firew
 		}
 		return &data.Results, nil
 	}
+
 	return nil, ErrNotFound
 }
 
 func (c *Client) DeleteFirewallInstance(firewallInstance *FirewallInstance) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for delete_firenet_firewall_instance ") + err.Error())
-	}
-	deleteFirenetFirewallInstance := url.Values{}
-	deleteFirenetFirewallInstance.Add("CID", c.CID)
-	deleteFirenetFirewallInstance.Add("action", "delete_firenet_firewall_instance")
-	deleteFirenetFirewallInstance.Add("vpc_id", firewallInstance.VpcID)
-	deleteFirenetFirewallInstance.Add("firewall_id", firewallInstance.InstanceID)
-	Url.RawQuery = deleteFirenetFirewallInstance.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get delete_firenet_firewall_instance failed: " + err.Error())
+	form := map[string]string{
+		"CID":         c.CID,
+		"action":      "delete_firenet_firewall_instance",
+		"vpc_id":      firewallInstance.VpcID,
+		"firewall_id": firewallInstance.InstanceID,
 	}
 
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_firenet_firewall_instance failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API delete_firenet_firewall_instance Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }

@@ -14,9 +14,9 @@ func (c *Client) SetControllerBgpMaxAsLimit(ctx context.Context, maxAsLimit int)
 		"max_as_limit": fmt.Sprint(maxAsLimit),
 	}
 
-	checkFunc := func(action, reason string, ret bool) error {
+	checkFunc := func(action, method, reason string, ret bool) error {
 		if !ret && !strings.Contains(reason, "Configured BGP maximum AS limit is not changed") {
-			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
 		return nil
 	}
@@ -30,9 +30,9 @@ func (c *Client) DisableControllerBgpMaxAsLimit(ctx context.Context) error {
 		"max_as_limit": "",
 	}
 
-	checkFunc := func(action, reason string, ret bool) error {
+	checkFunc := func(action, method, reason string, ret bool) error {
 		if !ret && !strings.Contains(reason, "Configured BGP maximum AS limit is not changed") {
-			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
 		return nil
 	}

@@ -1,9 +1,7 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -103,22 +101,8 @@ type ExternalDeviceConnDetailList struct {
 func (c *Client) CreateExternalDeviceConn(externalDeviceConn *ExternalDeviceConn) error {
 	externalDeviceConn.CID = c.CID
 	externalDeviceConn.Action = "connect_transit_gw_to_external_device"
-	resp, err := c.Post(c.baseURL, externalDeviceConn)
-	if err != nil {
-		return errors.New("HTTP Post 'connect_transit_gw_to_external_device' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'connect_transit_gw_to_external_device' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'connect_transit_gw_to_external_device' Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(externalDeviceConn.Action, externalDeviceConn, BasicCheck)
 }
 
 func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceConn) (*ExternalDeviceConn, error) {
@@ -128,12 +112,12 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 		"conn_name": externalDeviceConn.ConnectionName,
 		"vpc_id":    externalDeviceConn.VpcID,
 	}
-	checkFunc := func(action, reason string, ret bool) error {
+	checkFunc := func(action, method, reason string, ret bool) error {
 		if !ret {
 			if strings.Contains(reason, "does not exist") {
 				return ErrNotFound
 			}
-			return errors.New("Rest API 'get_site2cloud_conn_detail' Get failed: " + reason)
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
 		return nil
 	}
@@ -293,23 +277,8 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 func (c *Client) DeleteExternalDeviceConn(externalDeviceConn *ExternalDeviceConn) error {
 	externalDeviceConn.CID = c.CID
 	externalDeviceConn.Action = "disconnect_transit_gw"
-	resp, err := c.Post(c.baseURL, externalDeviceConn)
-	if err != nil {
-		return errors.New("HTTP Post 'disconnect_transit_gw' failed: " + err.Error())
-	}
 
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'disconnect_transit_gw' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'disconnect_transit_gw' Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(externalDeviceConn.Action, externalDeviceConn, BasicCheck)
 }
 
 func TransitExternalDeviceConnPh1RemoteIdDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {

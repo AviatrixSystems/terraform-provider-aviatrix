@@ -3,12 +3,6 @@ package goaviatrix
 // Tunnel simple struct to hold tunnel details
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
-	"net/url"
-	"strings"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -32,60 +26,30 @@ type TunnelListResp struct {
 }
 
 func (c *Client) CreateTunnel(tunnel *Tunnel) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for peer_vpc_pair ") + err.Error())
+	form := map[string]string{
+		"CID":        c.CID,
+		"action":     "peer_vpc_pair",
+		"vpc_name1":  tunnel.VpcName1,
+		"vpc_name2":  tunnel.VpcName2,
+		"ha_enabled": tunnel.EnableHA,
 	}
-	peerVpcPair := url.Values{}
-	peerVpcPair.Add("CID", c.CID)
-	peerVpcPair.Add("action", "peer_vpc_pair")
-	peerVpcPair.Add("vpc_name1", tunnel.VpcName1)
-	peerVpcPair.Add("vpc_name2", tunnel.VpcName2)
-	peerVpcPair.Add("ha_enabled", tunnel.EnableHA)
-	Url.RawQuery = peerVpcPair.Encode()
-	resp, err := c.Get(Url.String(), nil)
 
-	if err != nil {
-		return errors.New("HTTP Get peer_vpc_pair failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode peer_vpc_pair failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API peer_vpc_pair Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) GetTunnel(tunnel *Tunnel) (*Tunnel, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for list_peer_vpc_pairs ") + err.Error())
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "list_peer_vpc_pairs",
 	}
-	listPeerVpcPairs := url.Values{}
-	listPeerVpcPairs.Add("CID", c.CID)
-	listPeerVpcPairs.Add("action", "list_peer_vpc_pairs")
-	Url.RawQuery = listPeerVpcPairs.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get list_peer_vpc_pairs failed: " + err.Error())
-	}
+
 	var data TunnelListResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_peer_vpc_pairs failed: " + err.Error() + "\n Body: " + bodyString)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
-	if !data.Return {
-		return nil, errors.New("Rest API list_peer_vpc_pairs Get failed: " + data.Reason)
-	}
+
 	tunList := data.Results.PairList
 	for i := range tunList {
 		if tunList[i].VpcName1 == tunnel.VpcName1 && tunList[i].VpcName2 == tunnel.VpcName2 {
@@ -102,30 +66,12 @@ func (c *Client) UpdateTunnel(tunnel *Tunnel) error {
 }
 
 func (c *Client) DeleteTunnel(tunnel *Tunnel) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for unpeer_vpc_pair ") + err.Error())
+	form := map[string]string{
+		"CID":       c.CID,
+		"action":    "unpeer_vpc_pair",
+		"vpc_name1": tunnel.VpcName1,
+		"vpc_name2": tunnel.VpcName2,
 	}
-	unPeerVpcPair := url.Values{}
-	unPeerVpcPair.Add("CID", c.CID)
-	unPeerVpcPair.Add("action", "unpeer_vpc_pair")
-	unPeerVpcPair.Add("vpc_name1", tunnel.VpcName1)
-	unPeerVpcPair.Add("vpc_name2", tunnel.VpcName2)
-	Url.RawQuery = unPeerVpcPair.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get unpeer_vpc_pair failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode unpeer_vpc_pair failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API unpeer_vpc_pair Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }

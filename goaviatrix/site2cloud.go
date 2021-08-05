@@ -5,14 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
-	log "github.com/sirupsen/logrus"
 )
 
 const Phase1AuthDefault = "SHA-256"
@@ -189,6 +186,7 @@ type AlgorithmInfo struct {
 }
 
 func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
+	// TODO: use PostAPI - long form
 	Url, err := url.Parse(c.baseURL)
 	if err != nil {
 		return errors.New("url Parsing failed for add_site2cloud " + err.Error())
@@ -290,31 +288,19 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 }
 
 func (c *Client) GetSite2Cloud(site2cloud *Site2Cloud) (*Site2Cloud, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for list_site2cloud_conn") + err.Error())
+	form := map[string]string{
+		"CID":             c.CID,
+		"action":          "list_site2cloud_conn",
+		"connection_name": site2cloud.TunnelName,
 	}
-	listSite2CloudConn := url.Values{}
-	listSite2CloudConn.Add("CID", c.CID)
-	listSite2CloudConn.Add("action", "list_site2cloud_conn")
-	listSite2CloudConn.Add("connection_name", site2cloud.TunnelName)
-	Url.RawQuery = listSite2CloudConn.Encode()
-	resp, err := c.Get(Url.String(), nil)
 
-	if err != nil {
-		return nil, errors.New("HTTP Get list_site2cloud_conn failed: " + err.Error())
-	}
 	var data Site2CloudResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode list_site2cloud_conn failed: " + err.Error() + "\n Body: " + bodyString)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
-	if !data.Return {
-		return nil, errors.New("Rest API list_site2cloud_conn Get failed: " + data.Reason)
-	}
+
 	for i := 0; i < len(data.Results.Connections); i++ {
 		conn := data.Results.Connections[i]
 		if site2cloud.VpcID == conn.VpcID && site2cloud.TunnelName == conn.TunnelName {
@@ -331,12 +317,12 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 		"conn_name": site2cloud.TunnelName,
 		"vpc_id":    site2cloud.VpcID,
 	}
-	check := func(action, reason string, ret bool) error {
+	check := func(action, method, reason string, ret bool) error {
 		if !ret {
 			if strings.Contains(reason, "does not exist") {
 				return ErrNotFound
 			}
-			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
 		return nil
 	}
@@ -449,180 +435,69 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 func (c *Client) UpdateSite2Cloud(site2cloud *EditSite2Cloud) error {
 	site2cloud.CID = c.CID
 	site2cloud.Action = "edit_site2cloud_conn"
-	resp, err := c.Post(c.baseURL, site2cloud)
-	if err != nil {
-		return errors.New("HTTP Post edit_site2cloud_conn failed: " + err.Error())
-	}
 
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_site2cloud_conn failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API edit_site2cloud_conn Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(site2cloud.Action, site2cloud, BasicCheck)
 }
 
 func (c *Client) DeleteSite2Cloud(site2cloud *Site2Cloud) error {
 	site2cloud.CID = c.CID
 	site2cloud.Action = "delete_site2cloud_connection"
-	verb := "POST"
-	body := fmt.Sprintf("CID=%s&action=%s&vpc_id=%s&connection_name=%s", c.CID, site2cloud.Action,
-		site2cloud.VpcID, site2cloud.TunnelName)
 
-	log.Tracef("%s %s Body: %s", verb, c.baseURL, body)
-	req, err := http.NewRequest(verb, c.baseURL, strings.NewReader(body))
-	if err == nil {
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	} else {
-		return errors.New("HTTP Post NewRequest delete_site2cloud_connection failed: " + err.Error())
-	}
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return errors.New("HTTP Post delete_site2cloud_connection failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_site2cloud_connection failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API delete_site2cloud_connection Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(site2cloud.Action, site2cloud, BasicCheck)
 }
 
 func (c *Client) EnableDeadPeerDetection(site2cloud *Site2Cloud) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for enable_dpd_config: ") + err.Error())
+	form := map[string]string{
+		"CID":             c.CID,
+		"action":          "enable_dpd_config",
+		"vpc_id":          site2cloud.VpcID,
+		"connection_name": site2cloud.TunnelName,
 	}
-	enableDPDConfig := url.Values{}
-	enableDPDConfig.Add("CID", c.CID)
-	enableDPDConfig.Add("action", "enable_dpd_config")
-	enableDPDConfig.Add("vpc_id", site2cloud.VpcID)
-	enableDPDConfig.Add("connection_name", site2cloud.TunnelName)
 
-	Url.RawQuery = enableDPDConfig.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return errors.New("HTTP Get enable_dpd_config failed: " + err.Error())
-	}
-	var data VGWConnEnableAdvertiseTransitCidrResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_dpd_config failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API enable_dpd_config Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DisableDeadPeerDetection(site2cloud *Site2Cloud) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for disable_dpd_config: ") + err.Error())
+	form := map[string]string{
+		"CID":             c.CID,
+		"action":          "disable_dpd_config",
+		"vpc_id":          site2cloud.VpcID,
+		"connection_name": site2cloud.TunnelName,
 	}
-	disableDPDConfig := url.Values{}
-	disableDPDConfig.Add("CID", c.CID)
-	disableDPDConfig.Add("action", "disable_dpd_config")
-	disableDPDConfig.Add("vpc_id", site2cloud.VpcID)
-	disableDPDConfig.Add("connection_name", site2cloud.TunnelName)
-	Url.RawQuery = disableDPDConfig.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get disable_dpd_config failed: " + err.Error())
-	}
-	var data VGWConnEnableAdvertiseTransitCidrResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_dpd_config failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API disable_dpd_config Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EnableSite2cloudActiveActive(site2cloud *Site2Cloud) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for EnableSite2cloudActiveActiveHA: ") + err.Error())
+	form := map[string]string{
+		"CID":             c.CID,
+		"action":          "enable_site2cloud_active_active_ha",
+		"vpc_id":          site2cloud.VpcID,
+		"connection_name": site2cloud.TunnelName,
 	}
-	enableActiveActiveHA := url.Values{}
-	enableActiveActiveHA.Add("CID", c.CID)
-	enableActiveActiveHA.Add("action", "enable_site2cloud_active_active_ha")
-	enableActiveActiveHA.Add("vpc_id", site2cloud.VpcID)
-	enableActiveActiveHA.Add("connection_name", site2cloud.TunnelName)
 
-	Url.RawQuery = enableActiveActiveHA.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return errors.New("HTTP Get 'enable_site2cloud_active_active_ha' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'enable_site2cloud_active_active_ha' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "already enabled") {
-			return nil
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "already enabled") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
-		return errors.New("Rest API 'enable_site2cloud_active_active_ha' Get failed: " + data.Reason)
+		return nil
 	}
-	return nil
+
+	return c.PostAPI(form["action"], form, checkFunc)
 }
 
 func (c *Client) DisableSite2cloudActiveActive(site2cloud *Site2Cloud) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for DisableSite2cloudActiveActiveHA: ") + err.Error())
+	form := map[string]string{
+		"CID":             c.CID,
+		"action":          "disable_site2cloud_active_active_ha",
+		"vpc_id":          site2cloud.VpcID,
+		"connection_name": site2cloud.TunnelName,
 	}
-	disableActiveActiveHA := url.Values{}
-	disableActiveActiveHA.Add("CID", c.CID)
-	disableActiveActiveHA.Add("action", "disable_site2cloud_active_active_ha")
-	disableActiveActiveHA.Add("vpc_id", site2cloud.VpcID)
-	disableActiveActiveHA.Add("connection_name", site2cloud.TunnelName)
 
-	Url.RawQuery = disableActiveActiveHA.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return errors.New("HTTP Get 'disable_site2cloud_active_active_ha' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'disable_site2cloud_active_active_ha' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'disable_site2cloud_active_active_ha' Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EnableSpokeMappedSite2CloudForwarding(site2cloud *Site2Cloud) error {

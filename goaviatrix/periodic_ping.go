@@ -1,11 +1,5 @@
 package goaviatrix
 
-import (
-	"bytes"
-	"encoding/json"
-	"errors"
-)
-
 type PeriodicPing struct {
 	Action        string `form:"action"`
 	CID           string `form:"CID"`
@@ -30,49 +24,22 @@ type PeriodicPingStatusResult struct {
 func (c *Client) CreatePeriodicPing(pp *PeriodicPing) error {
 	pp.Action = "enable_gateway_periodic_ping"
 	pp.CID = c.CID
-	resp, err := c.Post(c.baseURL, pp)
-	if err != nil {
-		return errors.New("HTTP Post enable_gateway_periodic_ping failed: " + err.Error())
-	}
 
-	var data APIResp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
-	if err != nil {
-		return errors.New("Reading response body enable_gateway_periodic_ping failed: " + err.Error())
-	}
-
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_gateway_periodic_ping failed: " + err.Error() + "\n Body: " + b.String())
-	}
-	if !data.Return {
-		return errors.New("Rest API enable_gateway_periodic_ping Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(pp.Action, pp, BasicCheck)
 }
 
 func (c *Client) GetPeriodicPing(pp *PeriodicPing) (*PeriodicPing, error) {
-	pp.Action = "get_gateway_periodic_ping_status"
-	pp.CID = c.CID
-	resp, err := c.Post(c.baseURL, pp)
-	if err != nil {
-		return nil, errors.New("HTTP POST get_gateway_periodic_ping_status failed: " + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "get_gateway_periodic_ping_status",
+		"gateway_name": pp.GwName,
 	}
 
 	var data PeriodicPingStatusResp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
 	if err != nil {
-		return nil, errors.New("Reading response body get_gateway_periodic_ping_status failed: " + err.Error())
-	}
-
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode get_gateway_periodic_ping_status failed: " + err.Error() +
-			"\n Body: " + b.String())
-	}
-
-	if !data.Return {
-		return nil, errors.New("Rest API get_gateway_periodic_ping_status Post failed: " + data.Reason)
+		return nil, err
 	}
 
 	if data.Result.Status != "enabled" {
@@ -89,25 +56,6 @@ func (c *Client) GetPeriodicPing(pp *PeriodicPing) (*PeriodicPing, error) {
 func (c *Client) DeletePeriodicPing(pp *PeriodicPing) error {
 	pp.Action = "disable_gateway_periodic_ping"
 	pp.CID = c.CID
-	resp, err := c.Post(c.baseURL, pp)
-	if err != nil {
-		return errors.New("HTTP POST disable_gateway_periodic_ping failed: " + err.Error())
-	}
 
-	var data APIResp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
-	if err != nil {
-		return errors.New("Reading response body disable_gateway_periodic_ping failed: " + err.Error())
-	}
-
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_gateway_periodic_ping failed: " + err.Error() +
-			"\n Body: " + b.String())
-	}
-	if !data.Return {
-		return errors.New("Rest API disable_gateway_periodic_ping Post failed: " + data.Reason)
-	}
-
-	return nil
+	return c.PostAPI(pp.Action, pp, BasicCheck)
 }

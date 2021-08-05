@@ -1,10 +1,7 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
-	"net/url"
+	"fmt"
 	"strings"
 )
 
@@ -49,52 +46,34 @@ type SamlResp struct {
 func (c *Client) CreateSamlEndpoint(samlEndpoint *SamlEndpoint) error {
 	samlEndpoint.CID = c.CID
 	samlEndpoint.Action = "create_saml_endpoint"
-	resp, err := c.Post(c.baseURL, samlEndpoint)
-	if err != nil {
-		return errors.New("HTTP Post 'create_saml_endpoint' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'create_saml_endpoint' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'create_saml_endpoint' Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(samlEndpoint.Action, samlEndpoint, BasicCheck)
 }
 
 func (c *Client) GetSamlEndpoint(samlEndpoint *SamlEndpoint) (*SamlEndpointInfo, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for 'get_saml_endpoint_information': ") + err.Error())
+	form := map[string]string{
+		"CID":           c.CID,
+		"action":        "get_saml_endpoint_information",
+		"endpoint_name": samlEndpoint.EndPointName,
 	}
-	getSamlEndpointInformation := url.Values{}
-	getSamlEndpointInformation.Add("CID", c.CID)
-	getSamlEndpointInformation.Add("action", "get_saml_endpoint_information")
-	getSamlEndpointInformation.Add("endpoint_name", samlEndpoint.EndPointName)
-	Url.RawQuery = getSamlEndpointInformation.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get 'get_saml_endpoint_information' failed: " + err.Error())
-	}
+
 	var data SamlResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode 'get_saml_endpoint_information' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "Invalid SAML endpoint name") {
-			return nil, ErrNotFound
+
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "Invalid SAML endpoint name") {
+				return ErrNotFound
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
-		return nil, errors.New("Rest API 'get_saml_endpoint_information' Get failed: " + data.Reason)
+		return nil
 	}
+
+	err := c.GetAPI(&data, form["action"], form, checkFunc)
+	if err != nil {
+		return nil, err
+	}
+
 	data.Results.EndPointName = samlEndpoint.EndPointName
 	return &data.Results, nil
 }
@@ -102,35 +81,16 @@ func (c *Client) GetSamlEndpoint(samlEndpoint *SamlEndpoint) (*SamlEndpointInfo,
 func (c *Client) EditSamlEndpoint(samlEndpoint *SamlEndpoint) error {
 	samlEndpoint.CID = c.CID
 	samlEndpoint.Action = "edit_saml_endpoint"
-	return c.PostAPI("edit_saml_endpoint", samlEndpoint, BasicCheck)
 
+	return c.PostAPI("edit_saml_endpoint", samlEndpoint, BasicCheck)
 }
 
 func (c *Client) DeleteSamlEndpoint(samlEndpoint *SamlEndpoint) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for delete_saml_endpoint ") + err.Error())
+	form := map[string]string{
+		"CID":           c.CID,
+		"action":        "delete_saml_endpoint",
+		"endpoint_name": samlEndpoint.EndPointName,
 	}
-	deleteSaml := url.Values{}
-	deleteSaml.Add("CID", c.CID)
-	deleteSaml.Add("action", "delete_saml_endpoint")
-	deleteSaml.Add("endpoint_name", samlEndpoint.EndPointName)
-	Url.RawQuery = deleteSaml.Encode()
-	resp, err := c.Get(Url.String(), nil)
 
-	if err != nil {
-		return errors.New("HTTP Get delete_saml_endpoint failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_saml_endpoint failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API delete_saml_endpoint Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }

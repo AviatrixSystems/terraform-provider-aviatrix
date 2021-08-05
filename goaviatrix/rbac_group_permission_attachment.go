@@ -1,12 +1,6 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
-	"net/url"
-	"strings"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -33,49 +27,24 @@ type PermissionAttachmentInfo struct {
 func (c *Client) CreateRbacGroupPermissionAttachment(rbacGroupPermissionAttachment *RbacGroupPermissionAttachment) error {
 	rbacGroupPermissionAttachment.CID = c.CID
 	rbacGroupPermissionAttachment.Action = "add_permissions_to_rbac_group"
-	resp, err := c.Post(c.baseURL, rbacGroupPermissionAttachment)
-	if err != nil {
-		return errors.New("HTTP Post 'add_permissions_to_rbac_group' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'add_permissions_to_rbac_group' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'add_permissions_to_rbac_group' Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(rbacGroupPermissionAttachment.Action, rbacGroupPermissionAttachment, BasicCheck)
 }
 
 func (c *Client) GetRbacGroupPermissionAttachment(rbacGroupPermissionAttachment *RbacGroupPermissionAttachment) (*RbacGroupPermissionAttachment, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for 'list_rbac_group_permissions': ") + err.Error())
+	form := map[string]string{
+		"CID":        c.CID,
+		"action":     "list_rbac_group_permissions",
+		"group_name": rbacGroupPermissionAttachment.GroupName,
 	}
-	listRbacGroupPermissions := url.Values{}
-	listRbacGroupPermissions.Add("CID", c.CID)
-	listRbacGroupPermissions.Add("action", "list_rbac_group_permissions")
-	listRbacGroupPermissions.Add("group_name", rbacGroupPermissionAttachment.GroupName)
-	Url.RawQuery = listRbacGroupPermissions.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get 'list_rbac_group_permissions' failed: " + err.Error())
-	}
+
 	var data RbacGroupPermissionAttachmentListResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode 'list_rbac_group_permissions' failed: " + err.Error() + "\n Body: " + bodyString)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
 	}
-	if !data.Return {
-		return nil, errors.New("Rest API 'list_rbac_group_permissions' Get failed: " + data.Reason)
-	}
+
 	attachments := data.RbacGroupPermissionAttachmentList
 	for i := range attachments {
 		if attachments[i].Name == rbacGroupPermissionAttachment.PermissionName {
@@ -91,30 +60,12 @@ func (c *Client) GetRbacGroupPermissionAttachment(rbacGroupPermissionAttachment 
 }
 
 func (c *Client) DeleteRbacGroupPermissionAttachment(rbacGroupPermissionAttachment *RbacGroupPermissionAttachment) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'delete_permissions_from_rbac_group': ") + err.Error())
+	form := map[string]string{
+		"CID":         c.CID,
+		"action":      "delete_permissions_from_rbac_group",
+		"group_name":  rbacGroupPermissionAttachment.GroupName,
+		"permissions": rbacGroupPermissionAttachment.PermissionName,
 	}
-	deletePermissionsFromRbacGroup := url.Values{}
-	deletePermissionsFromRbacGroup.Add("CID", c.CID)
-	deletePermissionsFromRbacGroup.Add("action", "delete_permissions_from_rbac_group")
-	deletePermissionsFromRbacGroup.Add("group_name", rbacGroupPermissionAttachment.GroupName)
-	deletePermissionsFromRbacGroup.Add("permissions", rbacGroupPermissionAttachment.PermissionName)
-	Url.RawQuery = deletePermissionsFromRbacGroup.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'delete_permissions_from_rbac_group' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'delete_permissions_from_rbac_group' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'delete_permissions_from_rbac_group' Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }

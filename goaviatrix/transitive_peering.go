@@ -30,25 +30,12 @@ type TransPeerListResp struct {
 func (c *Client) CreateTransPeer(transPeer *TransPeer) error {
 	transPeer.CID = c.CID
 	transPeer.Action = "add_extended_vpc_peer"
-	resp, err := c.Post(c.baseURL, transPeer)
-	if err != nil {
-		return errors.New("HTTP Post add_extended_vpc_peer failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode add_extended_vpc_peer failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API add_extended_vpc_peer Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(transPeer.Action, transPeer, BasicCheck)
 }
 
 func (c *Client) GetTransPeer(transPeer *TransPeer) (*TransPeer, error) {
+	// TODO: use GetAPI - need API details
 	transPeer.CID = c.CID
 	transPeer.Action = "list_extended_vpc_peer"
 	resp, err := c.Post(c.baseURL, transPeer)
@@ -84,20 +71,6 @@ func (c *Client) UpdateTransPeer(transPeer *TransPeer) error {
 func (c *Client) DeleteTransPeer(transPeer *TransPeer) error {
 	transPeer.CID = c.CID
 	transPeer.Action = "delete_extended_vpc_peer"
-	resp, err := c.Post(c.baseURL, transPeer)
-	if err != nil {
-		return errors.New("HTTP Post delete_extended_vpc_peer failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode delete_extended_vpc_peer failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API delete_extended_vpc_peer Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(transPeer.Action, transPeer, BasicCheck)
 }

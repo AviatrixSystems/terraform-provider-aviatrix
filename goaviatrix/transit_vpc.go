@@ -1,15 +1,9 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"net/url"
 	"strconv"
 	"strings"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // Gateway simple struct to hold gateway details
@@ -128,261 +122,113 @@ type TransitGwFireNetInterfacesResp struct {
 func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 	gateway.CID = c.CID
 	gateway.Action = "create_transit_gw"
-	resp, err := c.Post(c.baseURL, gateway)
-	if err != nil {
-		return errors.New("HTTP Post create_transit_gw failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode create_transit_gw failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API create_transit_gw Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) EnableHaTransitGateway(gateway *TransitVpc) error {
 	gateway.CID = c.CID
 	gateway.Action = "create_peering_ha_gateway"
-	resp, err := c.Post(c.baseURL, gateway)
-	if err != nil {
-		return errors.New("HTTP Post create_peering_ha_gateway failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode create_peering_ha_gateway failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API create_peering_ha_gateway Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New("url Parsing failed for enable_transit_ha " + err.Error())
+	form := map[string]string{
+		"CID":     c.CID,
+		"action":  "enable_transit_ha",
+		"gw_name": gateway.GwName,
+		"eip":     gateway.Eip,
 	}
-	enableTransitHa := url.Values{}
-	enableTransitHa.Add("CID", c.CID)
-	enableTransitHa.Add("action", "enable_transit_ha")
-	enableTransitHa.Add("gw_name", gateway.GwName)
-	enableTransitHa.Add("eip", gateway.Eip)
 
 	if gateway.CloudType == GCP {
-		enableTransitHa.Add("new_zone", gateway.HAZone)
+		form["new_zone"] = gateway.HAZone
 	} else {
-		enableTransitHa.Add("public_subnet", gateway.HASubnet)
-		enableTransitHa.Add("oob_mgmt_subnet", gateway.HAOobManagementSubnet)
+		form["public_subnet"] = gateway.HASubnet
+		form["oob_mgmt_subnet"] = gateway.HAOobManagementSubnet
 	}
 
-	Url.RawQuery = enableTransitHa.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return errors.New("HTTP Get enable_transit_ha failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_transit_ha failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "HA GW already exists") {
-			log.Infof("HA is already enabled %s", data.Reason)
-			return nil
+	checkFunc := func(action, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "HA GW already exists") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
-		log.Errorf("Enabling HA failed with error %s", data.Reason)
-
-		return errors.New("Rest API enable_transit_ha Get failed: " + data.Reason)
+		return nil
 	}
-	return nil
+
+	return c.PostAPI(form["action"], form, checkFunc)
 }
 
 func (c *Client) AttachTransitGWForHybrid(gateway *TransitVpc) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for enable_transit_gateway_interface_to_aws_tgw ") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "enable_transit_gateway_interface_to_aws_tgw",
+		"gateway_name": gateway.GwName,
 	}
-	enableTransitGatewayInterfaceToAwsTgw := url.Values{}
-	enableTransitGatewayInterfaceToAwsTgw.Add("CID", c.CID)
-	enableTransitGatewayInterfaceToAwsTgw.Add("action", "enable_transit_gateway_interface_to_aws_tgw")
-	enableTransitGatewayInterfaceToAwsTgw.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = enableTransitGatewayInterfaceToAwsTgw.Encode()
-	resp, err := c.Get(Url.String(), nil)
 
-	if err != nil {
-		return errors.New("HTTP Get enable_transit_gateway_interface_to_aws_tgw failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		if strings.Contains(err.Error(), "already enabled tgw interface") {
-			return nil
+	checkFunc := func(action, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "already enabled tgw interface") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
-		return errors.New("Json Decode enable_transit_gateway_interface_to_aws_tgw failed: " + err.Error() + "\n Body: " + bodyString)
+		return nil
 	}
-	if !data.Return {
-		return errors.New("Rest API enable_transit_gateway_interface_to_aws_tgw Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, checkFunc)
 }
 
 func (c *Client) DetachTransitGWForHybrid(gateway *TransitVpc) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for disable_transit_gateway_interface_to_aws_tgw") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "disable_transit_gateway_interface_to_aws_tgw",
+		"gateway_name": gateway.GwName,
 	}
-	disableTransitGatewayInterfaceToAwsTgw := url.Values{}
-	disableTransitGatewayInterfaceToAwsTgw.Add("CID", c.CID)
-	disableTransitGatewayInterfaceToAwsTgw.Add("action", "disable_transit_gateway_interface_to_aws_tgw")
-	disableTransitGatewayInterfaceToAwsTgw.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = disableTransitGatewayInterfaceToAwsTgw.Encode()
-	resp, err := c.Get(Url.String(), nil)
 
-	if err != nil {
-		return errors.New("HTTP Get disable_transit_gateway_interface_to_aws_tgw failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_transit_gateway_interface_to_aws_tgw failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API disable_transit_gateway_interface_to_aws_tgw Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EnableConnectedTransit(gateway *TransitVpc) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for enable_connected_transit_on_gateway") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "enable_connected_transit_on_gateway",
+		"gateway_name": gateway.GwName,
 	}
-	enableConnectedTransitOnGateway := url.Values{}
-	enableConnectedTransitOnGateway.Add("CID", c.CID)
-	enableConnectedTransitOnGateway.Add("action", "enable_connected_transit_on_gateway")
-	enableConnectedTransitOnGateway.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = enableConnectedTransitOnGateway.Encode()
-	resp, err := c.Get(Url.String(), nil)
 
-	if err != nil {
-		return errors.New("HTTP Get enable_connected_transit_on_gateway failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_connected_transit_on_gateway failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API enable_connected_transit_on_gateway Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DisableConnectedTransit(gateway *TransitVpc) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for disable_connected_transit_on_gateway") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "disable_connected_transit_on_gateway",
+		"gateway_name": gateway.GwName,
 	}
-	disableConnectedTransitOnGateway := url.Values{}
-	disableConnectedTransitOnGateway.Add("CID", c.CID)
-	disableConnectedTransitOnGateway.Add("action", "disable_connected_transit_on_gateway")
-	disableConnectedTransitOnGateway.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = disableConnectedTransitOnGateway.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get disable_connected_transit_on_gateway failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_connected_transit_on_gateway failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API disable_connected_transit_on_gateway Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EnableGatewayFireNetInterfaces(gateway *TransitVpc) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for enable_gateway_firenet_interfaces") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "enable_gateway_firenet_interfaces",
+		"gateway_name": gateway.GwName,
 	}
-	disableConnectedTransitOnGateway := url.Values{}
-	disableConnectedTransitOnGateway.Add("CID", c.CID)
-	disableConnectedTransitOnGateway.Add("action", "enable_gateway_firenet_interfaces")
-	disableConnectedTransitOnGateway.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = disableConnectedTransitOnGateway.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Post enable_gateway_firenet_interfaces failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_gateway_firenet_interfaces failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API enable_gateway_firenet_interfaces Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DisableGatewayFireNetInterfaces(gateway *TransitVpc) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for disable_gateway_firenet_interfaces") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "disable_gateway_firenet_interfaces",
+		"gateway_name": gateway.GwName,
 	}
-	disableConnectedTransitOnGateway := url.Values{}
-	disableConnectedTransitOnGateway.Add("CID", c.CID)
-	disableConnectedTransitOnGateway.Add("action", "disable_gateway_firenet_interfaces")
-	disableConnectedTransitOnGateway.Add("gateway", gateway.GwName)
-	Url.RawQuery = disableConnectedTransitOnGateway.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Post disable_gateway_firenet_interfaces failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_gateway_firenet_interfaces failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API disable_gateway_firenet_interfaces Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EnableGatewayFireNetInterfacesWithGWLB(gateway *TransitVpc) error {
@@ -396,156 +242,62 @@ func (c *Client) EnableGatewayFireNetInterfacesWithGWLB(gateway *TransitVpc) err
 }
 
 func (c *Client) EnableAdvertiseTransitCidr(transitGw *TransitVpc) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for enable_advertise_transit_cidr") + err.Error())
-	}
-	enableAdvertiseTransitCidr := url.Values{}
-	enableAdvertiseTransitCidr.Add("CID", c.CID)
-	enableAdvertiseTransitCidr.Add("action", "enable_advertise_transit_cidr")
-	enableAdvertiseTransitCidr.Add("gateway_name", transitGw.GwName)
-	if transitGw.EnableAdvertiseTransitCidr {
-		enableAdvertiseTransitCidr.Add("advertise_transit_cidr", "yes")
-	} else {
-		enableAdvertiseTransitCidr.Add("advertise_transit_cidr", "no")
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "enable_advertise_transit_cidr",
+		"gateway_name": transitGw.GwName,
 	}
 
-	Url.RawQuery = enableAdvertiseTransitCidr.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get enable_advertise_transit_cidr failed: " + err.Error())
+	if transitGw.EnableAdvertiseTransitCidr {
+		form["advertise_transit_cidr"] = "yes"
+	} else {
+		form["advertise_transit_cidr"] = "no"
 	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode enable_advertise_transit_cidr failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API enable_advertise_transit_cidr Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DisableAdvertiseTransitCidr(transitGw *TransitVpc) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for disable_advertise_transit_cidr") + err.Error())
+	form := map[string]string{
+		"CID":                    c.CID,
+		"action":                 "disable_advertise_transit_cidr",
+		"gateway_name":           transitGw.GwName,
+		"advertise_transit_cidr": "no",
 	}
-	enableAdvertiseTransitCidr := url.Values{}
-	enableAdvertiseTransitCidr.Add("CID", c.CID)
-	enableAdvertiseTransitCidr.Add("action", "disable_advertise_transit_cidr")
-	enableAdvertiseTransitCidr.Add("gateway_name", transitGw.GwName)
-	enableAdvertiseTransitCidr.Add("advertise_transit_cidr", "no")
 
-	Url.RawQuery = enableAdvertiseTransitCidr.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return errors.New("HTTP Get disable_advertise_transit_cidr failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode disable_advertise_transit_cidr failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API disable_advertise_transit_cidr Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) SetBgpManualSpokeAdvertisedNetworks(transitGw *TransitVpc) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for edit_aviatrix_transit_advanced_config") + err.Error())
+	form := map[string]string{
+		"CID":                              c.CID,
+		"action":                           "edit_aviatrix_transit_advanced_config",
+		"subaction":                        "bgp_manual_spoke",
+		"gateway_name":                     transitGw.GwName,
+		"bgp_manual_spoke_advertise_cidrs": transitGw.BgpManualSpokeAdvertiseCidrs,
 	}
-	editTransitAdvancedConfig := url.Values{}
-	editTransitAdvancedConfig.Add("CID", c.CID)
-	editTransitAdvancedConfig.Add("action", "edit_aviatrix_transit_advanced_config")
-	editTransitAdvancedConfig.Add("subaction", "bgp_manual_spoke")
-	editTransitAdvancedConfig.Add("gateway_name", transitGw.GwName)
-	editTransitAdvancedConfig.Add("bgp_manual_spoke_advertise_cidrs", transitGw.BgpManualSpokeAdvertiseCidrs)
-	Url.RawQuery = editTransitAdvancedConfig.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get edit_aviatrix_transit_advanced_config failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode edit_aviatrix_transit_advanced_config failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API edit_aviatrix_transit_advanced_config Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EnableTransitLearnedCidrsApproval(gateway *TransitVpc) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'enable_transit_learned_cidrs_approval': ") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "enable_transit_learned_cidrs_approval",
+		"gateway_name": gateway.GwName,
 	}
-	enableTransitLearnedCidrsApproval := url.Values{}
-	enableTransitLearnedCidrsApproval.Add("CID", c.CID)
-	enableTransitLearnedCidrsApproval.Add("action", "enable_transit_learned_cidrs_approval")
-	enableTransitLearnedCidrsApproval.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = enableTransitLearnedCidrsApproval.Encode()
-	resp, err := c.Get(Url.String(), nil)
 
-	if err != nil {
-		return errors.New("HTTP Get 'enable_transit_learned_cidrs_approval' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'enable_transit_learned_cidrs_approval' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'enable_transit_learned_cidrs_approval' Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DisableTransitLearnedCidrsApproval(gateway *TransitVpc) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'disable_transit_learned_cidrs_approval': ") + err.Error())
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "disable_transit_learned_cidrs_approval",
+		"gateway_name": gateway.GwName,
 	}
-	disableTransitLearnedCidrsApproval := url.Values{}
-	disableTransitLearnedCidrsApproval.Add("CID", c.CID)
-	disableTransitLearnedCidrsApproval.Add("action", "disable_transit_learned_cidrs_approval")
-	disableTransitLearnedCidrsApproval.Add("gateway_name", gateway.GwName)
-	Url.RawQuery = disableTransitLearnedCidrsApproval.Encode()
-	resp, err := c.Get(Url.String(), nil)
 
-	if err != nil {
-		return errors.New("HTTP Get 'disable_transit_learned_cidrs_approval' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'disable_transit_learned_cidrs_approval' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'disable_transit_learned_cidrs_approval' Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) SetBgpPollingTime(transitGateway *TransitVpc, newPollingTime string) error {
@@ -592,13 +344,13 @@ func (c *Client) SetLocalASNumber(transitGateway *TransitVpc, localASNumber stri
 		Action:        action,
 		GatewayName:   transitGateway.GwName,
 		LocalASNumber: localASNumber,
-	}, func(action, reason string, ret bool) error {
+	}, func(action, method, reason string, ret bool) error {
 		if !ret {
 			// Tried to set ASN to the same value, don't fail
 			if strings.Contains(reason, "No change on transit gateway") {
 				return nil
 			}
-			return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
 		return nil
 	})
@@ -621,33 +373,17 @@ func (c *Client) SetBgpEcmp(transitGateway *TransitVpc, enabled bool) error {
 }
 
 func (c *Client) GetTransitGatewayAdvancedConfig(transitGateway *TransitVpc) (*TransitGatewayAdvancedConfig, error) {
-	action := "list_aviatrix_transit_advanced_config"
-	resp, err := c.Post(c.baseURL, struct {
-		CID         string `form:"CID"`
-		Action      string `form:"action"`
-		GatewayName string `form:"transit_gateway_name"`
-	}{
-		CID:         c.CID,
-		Action:      action,
-		GatewayName: transitGateway.GwName,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("HTTP POST %s failed: %v", action, err)
+	form := map[string]string{
+		"CID":                  c.CID,
+		"action":               "list_aviatrix_transit_advanced_config",
+		"transit_gateway_name": transitGateway.GwName,
 	}
 
 	var data TransitGatewayAdvancedConfigResp
-	var b bytes.Buffer
-	_, err = b.ReadFrom(resp.Body)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
 	if err != nil {
-		return nil, fmt.Errorf("reading response body %s failed: %v", action, err)
-	}
-
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return nil, fmt.Errorf("json Decode %s failed: %v\n Body: %s", action, err, b.String())
-	}
-
-	if !data.Return {
-		return nil, fmt.Errorf("rest API %s Post failed: %s", action, data.Reason)
+		return nil, err
 	}
 
 	prependASPathStrings := strings.Split(data.Results.PrependASPath, " ")

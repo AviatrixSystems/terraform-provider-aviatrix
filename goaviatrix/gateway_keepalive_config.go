@@ -13,11 +13,11 @@ func (c *Client) SetGatewayKeepaliveConfig(ctx context.Context, speed string) er
 		"speed":  speed,
 	}
 
-	checkFunc := func(action, reason string, ret bool) error {
+	checkFunc := func(action, method, reason string, ret bool) error {
 		if ret || strings.Contains(reason, "Template is already set to") {
 			return nil
 		}
-		return fmt.Errorf("rest API %s Post failed: %s", action, reason)
+		return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 	}
 
 	return c.PostAPIContext(ctx, data["action"], data, checkFunc)

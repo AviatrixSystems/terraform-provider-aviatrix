@@ -1,10 +1,8 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
-	"net/url"
+	"fmt"
 	"strings"
 )
 
@@ -33,74 +31,57 @@ type VPNUserInfo struct {
 }
 
 func (c *Client) CreateVPNUser(vpnUser *VPNUser) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'add_vpn_user': ") + err.Error())
+	form := map[string]string{
+		"CID":           c.CID,
+		"action":        "add_vpn_user",
+		"username":      vpnUser.UserName,
+		"user_email":    vpnUser.UserEmail,
+		"saml_endpoint": vpnUser.SamlEndpoint,
 	}
-	addVpnUser := url.Values{}
-	addVpnUser.Add("CID", c.CID)
-	addVpnUser.Add("action", "add_vpn_user")
+
 	if vpnUser.DnsEnabled {
-		addVpnUser.Add("dns", "true")
-		addVpnUser.Add("lb_name", vpnUser.DnsName)
+		form["dns"] = "true"
+		form["lb_name"] = vpnUser.DnsName
 	} else {
-		addVpnUser.Add("vpc_id", vpnUser.VpcID)
-		addVpnUser.Add("lb_name", vpnUser.GwName)
+		form["vpc_id"] = vpnUser.VpcID
+		form["lb_name"] = vpnUser.GwName
 	}
-	addVpnUser.Add("username", vpnUser.UserName)
-	addVpnUser.Add("user_email", vpnUser.UserEmail)
-	addVpnUser.Add("saml_endpoint", vpnUser.SamlEndpoint)
-	Url.RawQuery = addVpnUser.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'add_vpn_user' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'add_vpn_user' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "Sending VPN certificates to email") {
-			return nil
+
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "Sending VPN certificates to email") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
-		return errors.New("Rest API 'add_vpn_user' Get failed: " + data.Reason)
+		return nil
 	}
-	return nil
+
+	return c.PostAPI(form["action"], form, checkFunc)
 }
 
 func (c *Client) GetVPNUser(vpnUser *VPNUser) (*VPNUser, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New(("url Parsing failed for 'get_vpn_user_by_name': ") + err.Error())
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "get_vpn_user_by_name",
+		"username": vpnUser.UserName,
 	}
-	getVpnUserByName := url.Values{}
-	getVpnUserByName.Add("CID", c.CID)
-	getVpnUserByName.Add("action", "get_vpn_user_by_name")
-	getVpnUserByName.Add("username", vpnUser.UserName)
 
-	Url.RawQuery = getVpnUserByName.Encode()
-	resp, err := c.Get(Url.String(), nil)
-
-	if err != nil {
-		return nil, errors.New("HTTP Get 'get_vpn_user_by_name' failed: " + err.Error())
-	}
 	var data VPNUserResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return nil, errors.New("Json Decode 'get_vpn_user_by_name' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		if strings.Contains(data.Reason, "Invalid VPN username") {
-			return nil, ErrNotFound
+
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "Invalid VPN username") {
+				return ErrNotFound
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
 		}
-		return nil, errors.New("Rest API 'get_vpn_user_by_name' Get failed: " + data.Reason)
+		return nil
+	}
+
+	err := c.GetAPI(&data, form["action"], form, checkFunc)
+	if err != nil {
+		return nil, err
 	}
 
 	if data.Results.VpnUser.UserName != "" {
@@ -115,35 +96,18 @@ func (c *Client) GetVPNUser(vpnUser *VPNUser) (*VPNUser, error) {
 }
 
 func (c *Client) DeleteVPNUser(vpnUser *VPNUser) error {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for 'delete_vpn_user': ") + err.Error())
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "delete_vpn_user",
+		"username": vpnUser.UserName,
 	}
-	deleteVpnUser := url.Values{}
-	deleteVpnUser.Add("CID", c.CID)
-	deleteVpnUser.Add("action", "delete_vpn_user")
+
 	if vpnUser.DnsEnabled {
-		deleteVpnUser.Add("dns", "true")
-		deleteVpnUser.Add("vpc_id", vpnUser.DnsName)
+		form["dns"] = "true"
+		form["vpc_id"] = vpnUser.DnsName
 	} else {
-		deleteVpnUser.Add("vpc_id", vpnUser.VpcID)
+		form["vpc_id"] = vpnUser.VpcID
 	}
-	deleteVpnUser.Add("username", vpnUser.UserName)
-	Url.RawQuery = deleteVpnUser.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get 'delete_vpn_user' failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode 'delete_vpn_user' failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API 'delete_vpn_user' Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }

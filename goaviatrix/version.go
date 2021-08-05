@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -153,29 +152,16 @@ func (c *Client) UpgradeGateway(gateway *Gateway) error {
 }
 
 func (c *Client) GetCurrentVersion() (string, *AviatrixVersion, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return "", nil, errors.New(("url Parsing failed for list_version_info") + err.Error())
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "list_version_info",
 	}
-	listVersionInfo := url.Values{}
-	listVersionInfo.Add("CID", c.CID)
-	listVersionInfo.Add("action", "list_version_info")
-	Url.RawQuery = listVersionInfo.Encode()
-	resp, err := c.Get(Url.String(), nil)
 
-	if err != nil {
-		return "", nil, errors.New("HTTP Get list_version_info failed: " + err.Error())
-	}
 	var data VersionInfoResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return "", nil, errors.New("Json Decode list_version_info failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return "", nil, errors.New("Rest API list_version_info Get failed: " + data.Reason)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return "", nil, err
 	}
 
 	curVersion, aVer, err := ParseVersion(data.Results.CurrentVersion)
@@ -245,29 +231,17 @@ func (c *Client) Pre32Upgrade() error {
 }
 
 func (c *Client) GetLatestVersion() (string, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return "", errors.New(("url Parsing failed for list_version_info") + err.Error())
+	form := map[string]string{
+		"CID":            c.CID,
+		"action":         "list_version_info",
+		"latest_version": strconv.FormatBool(true),
 	}
-	listVersionInfo := url.Values{}
-	listVersionInfo.Add("CID", c.CID)
-	listVersionInfo.Add("action", "list_version_info")
-	listVersionInfo.Add("latest_version", strconv.FormatBool(true))
-	Url.RawQuery = listVersionInfo.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return "", errors.New("HTTP Get list_version_info failed: " + err.Error())
-	}
+
 	var data VersionInfoResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return "", errors.New("Json Decode list_version_info failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return "", errors.New("Rest API list_version_info Get failed: " + data.Reason)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return "", err
 	}
 
 	latestVersion, _, err := ParseVersion(data.Results.LatestVersion)

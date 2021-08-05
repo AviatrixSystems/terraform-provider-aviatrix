@@ -1,11 +1,7 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
 	"strconv"
-	"strings"
 )
 
 // Tags simple struct to hold tag details
@@ -29,22 +25,8 @@ type TagAPIResp struct {
 func (c *Client) AddTags(tags *Tags) error {
 	tags.CID = c.CID
 	tags.Action = "add_resource_tags"
-	resp, err := c.Post(c.baseURL, tags)
-	if err != nil {
-		return errors.New("HTTP Post add_resource_tags failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode add_resource_tags failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API add_resource_tags Post failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(tags.Action, tags, BasicCheck)
 }
 
 func (c *Client) GetTags(tags *Tags) ([]string, error) {

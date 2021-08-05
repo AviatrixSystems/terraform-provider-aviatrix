@@ -1,11 +1,7 @@
 package goaviatrix
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
 	"math"
-	"net/url"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -47,29 +43,18 @@ type VpcTrackerResp struct {
 
 // GetVpcTracker retrieves the list of VPC's from the 'VPC Tracker' feature.
 func (c *Client) GetVpcTracker() ([]*VpcTracker, error) {
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return nil, errors.New("could not parse url for cloud_network_info: " + err.Error())
-	}
-
-	v := url.Values{}
-	v.Add("action", "cloud_network_info")
-	v.Add("CID", c.CID)
-	v.Add("cache", "no")
-	v.Add("show_all", "yes")
-	Url.RawQuery = v.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return nil, errors.New("HTTP Get cloud_network_info failed: " + err.Error())
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   "cloud_network_info",
+		"cache":    "no",
+		"show_all": "yes",
 	}
 
 	var data VpcTrackerResp
-	err = json.NewDecoder(resp.Body).Decode(&data)
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
 	if err != nil {
-		return nil, fmt.Errorf("Json Decode cloud_network_info failed: %s \n Body: %s", err.Error(), resp.Body)
-	}
-	if !data.Return {
-		return nil, errors.New("Rest API cloud_network_info Get failed: " + data.Reason)
+		return nil, err
 	}
 
 	var vpcList []*VpcTracker
