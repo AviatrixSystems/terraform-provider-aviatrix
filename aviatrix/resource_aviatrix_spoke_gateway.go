@@ -2130,20 +2130,34 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	primaryHasImageVersionChange := d.HasChange("image_version")
 	haHasImageVersionChange := d.HasChange("ha_image_version")
 	if primaryHasVersionChange || haHasVersionChange {
-		if primaryHasVersionChange && haHasVersionChange && !primaryHasImageVersionChange && !haHasImageVersionChange {
-			// Both Primary and HA have changed just their software_version
+		// To determine if this is an attempted software rollback, we check if
+		// old is a higher version than new. Or, the new version is the
+		// special string "previous".
+		oldPrimarySoftwareVersion, newPrimarySoftwareVersion := d.GetChange("software_version")
+		comparePrimary, err := goaviatrix.CompareSoftwareVersions(oldPrimarySoftwareVersion.(string), newPrimarySoftwareVersion.(string))
+		primaryRollbackSoftwareVersion := (err == nil && comparePrimary > 0) || newPrimarySoftwareVersion == "previous"
+
+		oldHaSoftwareVersion, newHaSoftwareVersion := d.GetChange("ha_software_version")
+		compareHa, err := goaviatrix.CompareSoftwareVersions(oldHaSoftwareVersion.(string), newHaSoftwareVersion.(string))
+		haRollbackSoftwareVersion := (err == nil && compareHa > 0) || newHaSoftwareVersion == "previous"
+
+		if primaryHasVersionChange && haHasVersionChange &&
+			!primaryHasImageVersionChange && !haHasImageVersionChange &&
+			!primaryRollbackSoftwareVersion && !haRollbackSoftwareVersion {
+			// Both Primary and HA have upgraded just their software_version
 			// so we can perform upgrade in parallel.
+			log.Printf("[INFO] Upgrading spoke gateway gw_name=%s ha/primary pair in parallel", gateway.GwName)
 			swVersion := d.Get("software_version").(string)
 			imageVersion := d.Get("image_version").(string)
 			gw := &goaviatrix.Gateway{
-				GwName:          d.Get("gw_name").(string),
+				GwName:          gateway.GwName,
 				SoftwareVersion: swVersion,
 				ImageVersion:    imageVersion,
 			}
 			haSwVersion := d.Get("ha_software_version").(string)
 			haImageVersion := d.Get("ha_image_version").(string)
 			hagw := &goaviatrix.Gateway{
-				GwName:          d.Get("gw_name").(string) + "-hagw",
+				GwName:          gateway.GwName + "-hagw",
 				SoftwareVersion: haSwVersion,
 				ImageVersion:    haImageVersion,
 			}
@@ -2169,12 +2183,13 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			} else if haErr != nil {
 				return fmt.Errorf("could not upgrade HA spoke gateway ha_software_version=%s: %v", haSwVersion, haErr)
 			}
-		} else { // Only primary or only HA has changed, or they have changed image_version
+		} else { // Only primary or only HA has changed, or image_version changed, or it is a software rollback
+			log.Printf("[INFO] Upgrading spoke gateway gw_name=%s ha or primary in serial", gateway.GwName)
 			if primaryHasVersionChange {
 				swVersion := d.Get("software_version").(string)
 				imageVersion := d.Get("image_version").(string)
 				gw := &goaviatrix.Gateway{
-					GwName:          d.Get("gw_name").(string),
+					GwName:          gateway.GwName,
 					SoftwareVersion: swVersion,
 					ImageVersion:    imageVersion,
 				}
@@ -2187,7 +2202,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				haSwVersion := d.Get("ha_software_version").(string)
 				haImageVersion := d.Get("ha_image_version").(string)
 				hagw := &goaviatrix.Gateway{
-					GwName:          d.Get("gw_name").(string) + "-hagw",
+					GwName:          gateway.GwName + "-hagw",
 					SoftwareVersion: haSwVersion,
 					ImageVersion:    haImageVersion,
 				}
