@@ -41,9 +41,11 @@ type VersionInfoResp struct {
 }
 
 type AviatrixVersion struct {
-	Major int64
-	Minor int64
-	Build int64
+	Major        int64
+	Minor        int64
+	Build        int64
+	MinorBuildID string
+	HasBuild     bool // HasBuild indicates if the version string originally included a build number.
 }
 
 type VersionInfo struct {
@@ -287,7 +289,9 @@ func ParseVersion(version string) (string, *AviatrixVersion, error) {
 	aver.Major, err1 = strconv.ParseInt(parts[0], 10, 0)
 	if len(parts) >= 2 {
 		if strings.Contains(parts[1], "-") {
-			aver.Minor, err2 = strconv.ParseInt(strings.Split(parts[1], "-")[0], 10, 0)
+			minorParts := strings.Split(parts[1], "-")
+			aver.MinorBuildID = minorParts[1]
+			aver.Minor, err2 = strconv.ParseInt(minorParts[0], 10, 0)
 		} else {
 			aver.Minor, err2 = strconv.ParseInt(parts[1], 10, 0)
 		}
@@ -296,6 +300,7 @@ func ParseVersion(version string) (string, *AviatrixVersion, error) {
 	}
 	if len(parts) >= 3 {
 		aver.Build, err3 = strconv.ParseInt(parts[2], 10, 0)
+		aver.HasBuild = true
 	}
 	if err1 != nil || err2 != nil || err3 != nil {
 		return "", aver, errors.New("unable to get latest version when parsing version information")
@@ -320,4 +325,54 @@ func (c *Client) GetCompatibleImageVersion(ctx context.Context, cloudType int, s
 		return "", err
 	}
 	return data.Results.ImageVersion, nil
+}
+
+// CompareSoftwareVersions first return value will be
+// less than 0 if a < b
+// equal to 0  if a == b
+// more than 0 if a > b
+func CompareSoftwareVersions(a, b string) (int, error) {
+	_, versionA, errA := ParseVersion(a)
+	_, versionB, errB := ParseVersion(b)
+	if errA != nil || errB != nil {
+		return 0, fmt.Errorf("invalid software version")
+	}
+	// Versions are exactly equal
+	if a == b {
+		return 0, nil
+	}
+	// Major versions are different
+	if versionA.Major-versionB.Major != 0 {
+		return int(versionA.Major - versionB.Major), nil
+	}
+	// Minor versions are different
+	if versionA.Minor-versionB.Minor != 0 {
+		return int(versionA.Minor - versionB.Minor), nil
+	}
+	// MinorBuildIDs are different
+	if versionA.MinorBuildID != versionB.MinorBuildID {
+		// A does not have a minor build ID but B does
+		if versionA.MinorBuildID == "" {
+			return -1, nil
+		}
+		// B does not have a minor build ID but A does
+		if versionB.MinorBuildID == "" {
+			return 1, nil
+		}
+		// Otherwise, both A and B have minor build IDs but they are different.
+		// e.g. 6.5-patch vs 6.5-cyruspatch
+		// We will just consider them as equal.
+	}
+	if versionA.HasBuild && versionB.HasBuild {
+		// Build versions are different
+		if versionA.Build-versionB.Build != 0 {
+			return int(versionA.Build - versionB.Build), nil
+		}
+	} else if versionA.HasBuild { // Having a build is always less than not having a build. e.g a=6.5.100 b=6.5, b is considered higher
+		return -1, nil
+	} else if versionB.HasBuild {
+		return 1, nil
+	}
+	// Versions are the same
+	return 0, nil
 }
