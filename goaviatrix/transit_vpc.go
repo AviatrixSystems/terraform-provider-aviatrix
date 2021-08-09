@@ -223,9 +223,9 @@ func (c *Client) EnableGatewayFireNetInterfaces(gateway *TransitVpc) error {
 
 func (c *Client) DisableGatewayFireNetInterfaces(gateway *TransitVpc) error {
 	form := map[string]string{
-		"CID":          c.CID,
-		"action":       "disable_gateway_firenet_interfaces",
-		"gateway_name": gateway.GwName,
+		"CID":     c.CID,
+		"action":  "disable_gateway_firenet_interfaces",
+		"gateway": gateway.GwName,
 	}
 
 	return c.PostAPI(form["action"], form, BasicCheck)
