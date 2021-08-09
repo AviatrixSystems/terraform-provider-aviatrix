@@ -1,5 +1,10 @@
 package goaviatrix
 
+import (
+	"fmt"
+	"strings"
+)
+
 type SplitTunnel struct {
 	Action          string `form:"action,omitempty"`
 	CID             string `form:"CID,omitempty"`
@@ -62,6 +67,14 @@ func (c *Client) ModifySplitTunnel(splitTunnel *SplitTunnel) error {
 	if splitTunnel.Dns == "true" {
 		form["dns"] = "true"
 	}
-
-	return c.PostAPI(form["action"], form, BasicCheck)
+	check := func(action, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "Nothing to modify.") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
+		}
+		return nil
+	}
+	return c.PostAPI(form["action"], form, check)
 }
