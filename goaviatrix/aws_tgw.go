@@ -214,6 +214,7 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 
 			if dm != "Aviatrix_Edge_Domain" {
 				form = map[string]string{
+					"CID":             c.CID,
 					"action":          "list_attachment_route_table_details",
 					"tgw_name":        awsTgw.Name,
 					"attachment_name": attachedVPCs[i].VPCId,
