@@ -178,6 +178,7 @@ func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
 		}
 
 		form = map[string]string{
+			"CID":               c.CID,
 			"action":            "view_route_domain_details",
 			"tgw_name":          awsTgw.Name,
 			"route_domain_name": dm,
