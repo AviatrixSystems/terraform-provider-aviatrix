@@ -212,7 +212,7 @@ func (c *Client) EditFireNetInspection(fireNet *FireNet) error {
 
 	checkFunc := func(act, method, reason string, ret bool) error {
 		if !ret {
-			if strings.Contains(reason, "configuration not found") {
+			if strings.Contains(reason, "configuration not changed") {
 				return nil
 			}
 			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
