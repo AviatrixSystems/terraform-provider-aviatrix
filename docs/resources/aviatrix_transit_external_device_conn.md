@@ -54,7 +54,7 @@ resource "aviatrix_transit_external_device_conn" "ex-conn" {
   bgp_remote_as_num = "345"
   remote_lan_ip     = "172.12.13.14"
   local_lan_ip      = "172.12.13.15"
-  remote_vpc_name   = "vnet-name:resource-group-name"
+  remote_vpc_name   = "vnet-name:resource-group-name:subscription-id"
 }
 ```
 ```hcl
@@ -69,7 +69,7 @@ resource "aviatrix_transit_external_device_conn" "ex-conn" {
   bgp_remote_as_num = "345"
   remote_lan_ip     = "172.12.13.14"
   local_lan_ip      = "172.12.13.15"
-  remote_vpc_name   = "vnet-name:resource-group-name"
+  remote_vpc_name   = "vnet-name:resource-group-name:subscription-id"
 
   ha_enabled               = true
   backup_bgp_remote_as_num = "678"
@@ -88,14 +88,17 @@ The following arguments are supported:
 * `gw_name` - (Required) Aviatrix transit gateway name.
 * `remote_gateway_ip` - (Optional) Remote gateway IP. Required when 'tunnel_protocol' != 'LAN'.
 * `connection_type` - (Required) Connection type. Valid values: 'bgp', 'static'. Default value: 'bgp'.
+
+~> **NOTE:** To create a BGP over LAN connection with an Azure Transit Gateway, the Transit Gateway must have it's 'enable_bgp_over_lan' attribute set to true.
+
 * `tunnel_protocol` - (Optional) Tunnel protocol, only valid with `connection_type` = 'bgp'. Valid values: 'IPsec', 'GRE' or 'LAN'. Default value: 'IPsec'. Case insensitive. Available as of provider version R2.18+.
 * `bgp_local_as_num` - (Optional) BGP local ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
 * `bgp_remote_as_num` - (Optional) BGP remote ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
 * `remote_subnet` - (Optional) Remote CIDRs joined as a string with ','. Required for a 'static' type connection.
 
-~> **NOTE:** To create a BGP over LAN connection with an Azure Transit Gateway, the Transit Gateway must have it's 'enable_bgp_over_lan' attribute set to true.
+~> **Note:** The format for `remote_vpc_name` was changed in provider version R2.20/Controller version 6.5 or later. For Controller version 6.5 or later, it must be in the form "<VNET-name>:<resource-group-name>:<subscription-id>". For Controller version 6.4 or earlier, it must be in the form "<VNET-name>:<resource-group-name>".
 
-* `remote_vpc_name` - (Optional) Name of the remote VPC for a LAN BGP connection with an Azure Transit Gateway. Required when 'connection_type' = 'bgp' and tunnel_protocol' = 'LAN' with an Azure transit gateway. Must be in the form "<VNET-name>:<resource-group-name>". Available as of provider version R2.18+.
+* `remote_vpc_name` - (Optional) Name of the remote VPC for a LAN BGP connection with an Azure Transit Gateway. Required when 'connection_type' = 'bgp' and tunnel_protocol' = 'LAN' with an Azure transit gateway. Must be in the form "<VNET-name>:<resource-group-name>:<subscription-id>". Available as of provider version R2.18+.
 
 ### HA
 * `ha_enabled` - (Optional) Set as true if there are two external devices.
