@@ -1,4 +1,69 @@
-## 2.19.5 (Unreleased)
+## 2.20.0 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.5**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Gateway
+1. Implemented support for Selective Gateway Upgrade in **aviatrix_gateway** with the following new attributes:
+- ``software_version``
+- ``peering_ha_software_version``
+- ``image_version``
+- ``peering_ha_image_version``
+2. Implemented new data source **aviatrix_gateway_image**
+3. Implemented support for preallocated IP for Azure in **aviatrix_gateway** with the following attributes:
+- ``eip``
+- ``ha_eip``
+- ``azure_eip_name_resource_group``
+- ``ha_azure_eip_name_resource_group``
+4. Implemented support for preallocated IP for OCI in **aviatrix_gateway** by updating the following attributes:
+- ``eip``
+- ``ha_eip``
+
+#### Multi-Cloud Transit
+1. Implemented support for Selective Gateway Upgrade in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** with the following new attributes:
+- ``software_version``
+- ``ha_software_version``
+- ``image_version``
+- ``ha_image_version``
+2. Implemented support for preallocated IP for Azure in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** with the following attributes:
+- ``eip``
+- ``ha_eip``
+- ``azure_eip_name_resource_group``
+- ``ha_azure_eip_name_resource_group``
+3. Implemented support for preallocated IP for OCI in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** by updating the following attributes:
+- ``eip``
+- ``ha_eip``
+4. Updated the format for ``remote_vpc_name`` in **aviatrix_transit_external_device_conn** for BGP over LAN connections to "<vnet_name>:<vnet_resource_group>:<subscription_id>"
+
+#### CloudWAN
+1. Implemented support for Selective Gateway Upgrade in **aviatrix_device_registration** when used for CloudN as a Gateway with the following new attributes:
+- ``software_version``
+- ``is_caag``
+
+#### Useful Tools
+1. Implemented cross subscription support for **aviatrix_vpc** in Azure by updating the following attribute:
+- ``vpc_id``
+
+#### Settings
+1. Implemented support for Selective Gateway Upgrade in **aviatrix_controller_config** with the following new attributes:
+- ``manage_gateway_upgrades``
+- ``current_version``
+- ``previous_version``
+
+
+### Enhancements:
+1. Improved refresh performance of **aviatrix_firenet_firewall_manager** resource and data source
+2. Added ``vpn_tunnel_data`` in **aviatrix_aws_tgw_vpn_conn** resource
+3. Added ``private_key_file`` in **aviatrix_firenet_vendor_integration** data source to allow the user to use private key file instead of username/password for Check Point Cloud Guard
+
+
+### Bug Fixes:
+1. Fixed issue in **aviatrix_firenet** where creating with ``keep_alive_via_lan_interface_enabled`` set to false would still set ``keep_alive_via_lan_interface_enabled`` to true
+2. Fixed issue where HA related attribute would be left in the state file after disabling HA on an **aviatrix_gatetway**, **aviatrix_spoke_gateway** or **aviatrix_transit_gateway**
+
+
+## 2.19.5 (July 14, 2021)
 ### Notes:
 - Supported Controller version: **UserConnect-6.4.2776**
 - Supported Terraform version: **v1.x**
