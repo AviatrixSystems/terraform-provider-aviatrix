@@ -42,8 +42,7 @@
 - ``is_caag``
 
 #### Useful Tools
-1. Implemented cross subscription support for **aviatrix_vpc** in Azure by updating the following attribute:
-- ``vpc_id``
+1. Implemented cross-subscription support for **aviatrix_vpc** for Azure by updating ``vpc_id`` to the new following 3-tuple format: "<vnet-name>:<resource-group-name>:<GUID>"
 
 #### Settings
 1. Implemented support for Selective Gateway Upgrade in **aviatrix_controller_config** with the following new attributes:
