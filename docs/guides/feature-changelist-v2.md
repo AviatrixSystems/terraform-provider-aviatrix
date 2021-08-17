@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.19.5 (UserConnect-6.4.2776)``
+``Last updated: R2.20 (UserConnect-6.5)``
 
 
 ---
@@ -257,3 +257,10 @@ Note there are standalone resources already in place to be used and one only nee
 |(new) | gateway        | availability_domain, fault_domain, peering_ha_availability_domain, peering_ha_fault_domain | **Yes**; while existing OCI infrastructure will not be affected due to attribute being computed value, future OCI gateways are required to launch with an `availability_domain` and `fault_domain`. The `peering_ha` variants will be required if the gateways are to HA-enabled. |
 |(new) | spoke_gateway, transit_gateway | availability_domain, fault_domain, ha_availability_domain, ha_fault_domain | **Yes**; while existing OCI infrastructure will not be affected as described above, all future OCI spokes and transit are required to launch with `availability_domain` and `fault_domain` specified. The `ha` variants will be required if the spokes/transits are to be HA-enabled. |
 |(new) | firewall_instance | availability_domain, fault_domain | **Yes**; while existing OCI infrastructure will not be affected as described above, all future OCI firewall instances are required to launch an `availability_domain` and `fault_domain`. |
+
+
+## R2.20 (UserConnect-6.5)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(changed) | vpc        | vpc_id            | **Yes**; while existing Azure VNets created will not be affected, all future VNets created in 6.5/R2.20 will be in the following new 3-tuple format `<vnet-name>:<resource-group-name>:<GUID>`. Any resources such as **gateways** that reference this attribute will be unaffected. |
+|(changed) | external_device_conn | remote_vpc_name | **Yes**; while existing **external_device_conn** resources created prior to 6.5/R2.20 will not experience any changes, all future **external_device_conn** must be created with the following new 3-tuple format `<vnet-name>:<resource-group-name>:<subscription-id>`. |

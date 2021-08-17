@@ -130,7 +130,7 @@ The following arguments are supported:
 * `subnet_size` - (Optional) Subnet size. Only supported for AWS, Azure provider. Example: 24. Available in provider version R2.17+.
 * `num_of_subnet_pairs` - (Optional) Number of public subnet and private subnet pair created. Only supported for AWS, Azure provider. Example: 1. Available in provider version R2.17+.
 * `enable_private_oob_subnet` - (Optional) Switch to enable private oob subnet. Only supported for AWS, AWSGov and AWSChina providers. Valid values: true, false. Default value: false. Available as of provider version R2.18+.
-* `resource_group` - (Optional) The name of an existing resource group or a new resource group to be created for the Azure VNET.  A new resource group will be created if left blank. Only available for Azure, AzureGov and AzureChina providers. Available as of provider version R2.19+.
+* `resource_group` - (Optional) The name of an existing resource group or a new resource group to be created for the Azure VNet.  A new resource group will be created if left blank. Only available for Azure, AzureGov and AzureChina providers. Available as of provider version R2.19+.
 
 ### Misc.
 * `aviatrix_transit_vpc` - (Optional) Specify whether it is an [Aviatrix Transit VPC](https://docs.aviatrix.com/HowTos/create_vpc.html#aviatrix-transit-vpc) to be used for [Transit Network](https://docs.aviatrix.com/HowTos/transitvpc_faq.html) or [TGW](https://docs.aviatrix.com/HowTos/tgw_faq.html) solutions. **Only AWS, AWSGov, AWSChina, and Alibaba Cloud are supported. Required to be false for other providers.** Valid values: true, false. Default: false.
@@ -146,7 +146,7 @@ In addition to all arguments above, the following attributes are exported:
 
 -> **NOTE** `vpc_id` should only be referenced to create Gateways, Spoke Gateways and Transit Gateways. The vpc_id attribute of the gateway created should be referenced to create other resources such as VPN Users or Site2Cloud connections.
 * `vpc_id` - ID of the VPC to be created.
-* `azure_vnet_resource_id` - Azure vnet resource ID.
+* `azure_vnet_resource_id` - Azure VNet resource ID.
 * `route_tables` - List of route table ids associated with this VPC. Only populated for AWS, AWSGov and Azure VPC.
 * `subnets` - List of subnet of the VPC to be created.
   * `cidr` - CIDR block.

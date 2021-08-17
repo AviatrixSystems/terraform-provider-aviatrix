@@ -86,19 +86,19 @@ The following arguments are supported:
 * `vpc_id` - (Required) VPC ID of the Aviatrix transit gateway.
 * `connection_name` - (Required) Transit external device connection name.
 * `gw_name` - (Required) Aviatrix transit gateway name.
-* `remote_gateway_ip` - (Optional) Remote gateway IP. Required when 'tunnel_protocol' != 'LAN'.
+* `remote_gateway_ip` - (Optional) Remote gateway IP. Required when `tunnel_protocol` != 'LAN'.
 * `connection_type` - (Required) Connection type. Valid values: 'bgp', 'static'. Default value: 'bgp'.
 
-~> **NOTE:** To create a BGP over LAN connection with an Azure Transit Gateway, the Transit Gateway must have it's 'enable_bgp_over_lan' attribute set to true.
+~> **NOTE:** To create a BGP over LAN connection with an Azure Transit Gateway, the Transit Gateway must have its `enable_bgp_over_lan` attribute set to true.
 
 * `tunnel_protocol` - (Optional) Tunnel protocol, only valid with `connection_type` = 'bgp'. Valid values: 'IPsec', 'GRE' or 'LAN'. Default value: 'IPsec'. Case insensitive. Available as of provider version R2.18+.
 * `bgp_local_as_num` - (Optional) BGP local ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
 * `bgp_remote_as_num` - (Optional) BGP remote ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
 * `remote_subnet` - (Optional) Remote CIDRs joined as a string with ','. Required for a 'static' type connection.
 
-~> **Note:** The format for `remote_vpc_name` was changed in provider version R2.20/Controller version 6.5 or later. For Controller version 6.5 or later, it must be in the form "<VNET-name>:<resource-group-name>:<subscription-id>". For Controller version 6.4 or earlier, it must be in the form "<VNET-name>:<resource-group-name>".
+~> **Note:** The format for `remote_vpc_name` was changed in provider version R2.20/Controller version 6.5 or later. For Controller version 6.5 or later, it must be in the format "<vnet-name>:<resource-group-name>:<subscription-id>". For Controller version 6.4 or earlier, it must be in the format "<vnet-name>:<resource-group-name>".
 
-* `remote_vpc_name` - (Optional) Name of the remote VPC for a LAN BGP connection with an Azure Transit Gateway. Required when 'connection_type' = 'bgp' and tunnel_protocol' = 'LAN' with an Azure transit gateway. Must be in the form "<VNET-name>:<resource-group-name>:<subscription-id>". Available as of provider version R2.18+.
+* `remote_vpc_name` - (Optional) Name of the remote VPC for a LAN BGP connection with an Azure Transit Gateway. Required when `connection_type` = 'bgp' and `tunnel_protocol` = 'LAN' with an Azure transit gateway. Must be in the format "<vnet-name>:<resource-group-name>:<subscription-id>". Available as of provider version R2.18+.
 
 ### HA
 * `ha_enabled` - (Optional) Set as true if there are two external devices.
@@ -120,7 +120,7 @@ The following arguments are supported:
 
 ### BGP over LAN (Available as of provider version R2.18+)
 
-~> **NOTE:** BGP over LAN attributes are only valid with 'tunnel_protocol' = 'LAN'.
+~> **NOTE:** BGP over LAN attributes are only valid with `tunnel_protocol` = 'LAN'.
 
 * `remote_lan_ip` - (Optional) Remote LAN IP. Required for BGP over LAN connection.
 * `local_lan_ip` - (Optional) Local LAN IP.
@@ -134,14 +134,14 @@ The following arguments are supported:
 * `remote_tunnel_cidr` - (Optional) Destination CIDR for the tunnel to the external device.
 * `enable_edge_segmentation` - (Optional) Switch to allow this connection to communicate with a Security Domain via Connection Policy.
 * `switch_to_ha_standby_gateway` - (Optional) Switch to HA Standby Transit Gateway connection. Only valid with Transit Gateway that has [Active-Standby Mode](https://docs.aviatrix.com/HowTos/transit_advanced.html#active-standby) enabled and for non-HA external device. Valid values: true, false. Default: false. Available in provider version R2.17.1+.
-* `enable_learned_cidrs_approval` - (Optional) Enable learned CIDRs approval for the connection. Only valid with 'connection_type' = 'bgp'. Requires the transit_gateway's 'learned_cidrs_approval_mode' attribute be set to 'connection'. Valid values: true, false. Default value: false. Available as of provider version R2.18+.
-* `approved_cidrs` - (Optional/Computed) Set of approved cidrs. Requires 'enable_learned_cidrs_approval' to be true. Type: Set(String).
+* `enable_learned_cidrs_approval` - (Optional) Enable learned CIDRs approval for the connection. Only valid with `connection_type` = 'bgp'. Requires the transit_gateway's `learned_cidrs_approval_mode` attribute be set to 'connection'. Valid values: true, false. Default value: false. Available as of provider version R2.18+.
+* `approved_cidrs` - (Optional/Computed) Set of approved CIDRs. Requires `enable_learned_cidrs_approval` to be true. Type: Set(String).
 * `enable_ikev2` - (Optional) Set as true to enable IKEv2 protocol.
-* `manual_bgp_advertised_cidrs` - (Optional) Configure manual BGP advertised CIDRs for this connection. Only valid with 'connection_type'= 'bgp'. Available as of provider version R2.18+.
+* `manual_bgp_advertised_cidrs` - (Optional) Configure manual BGP advertised CIDRs for this connection. Only valid with `connection_type`= 'bgp'. Available as of provider version R2.18+.
 * `enable_event_triggered_ha` - (Optional) Enable Event Triggered HA. Default value: false. Valid values: true or false. Available as of provider version R2.19+.
 * `phase1_remote_identifier` - (Optional) Phase 1 remote identifier of the IPsec tunnel. This can be configured to be either the public IP address or the private IP address of the peer terminating the IPsec tunnel. Example: ["1.2.3.4"] when HA is disabled, ["1.2.3.4", "5.6.7.8"] when HA is enabled. Available as of provider version R2.19+.
 * `prepend_as_path` - (Optional) Connection AS Path Prepend customized by specifying AS PATH for a BGP connection. Available as of provider version R2.19.2.
-  
+
 ## Import
 
 **transit_external_device_conn** can be imported using the `connection_name` and `vpc_id`, e.g.
