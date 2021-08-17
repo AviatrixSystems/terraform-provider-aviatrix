@@ -18,7 +18,7 @@
 - ``peering_ha_azure_eip_name_resource_group``
 4. Implemented support for preallocated IP for OCI in **aviatrix_gateway** by updating the following attributes:
 - ``eip``
-- ``ha_eip``
+- ``peering_ha_eip``
 
 #### Multi-Cloud Transit
 1. Implemented support for Selective Gateway Upgrade in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** with the following new attributes:
