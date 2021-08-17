@@ -53,10 +53,14 @@ type VersionInfo struct {
 }
 
 func (av *AviatrixVersion) String(includeBuild bool) string {
-	if includeBuild {
-		return fmt.Sprintf("%d.%d.%d", av.Major, av.Minor, av.Build)
+	version := fmt.Sprintf("%d.%d", av.Major, av.Minor)
+	if av.MinorBuildID != "" {
+		version += "-" + av.MinorBuildID
 	}
-	return fmt.Sprintf("%d.%d", av.Major, av.Minor)
+	if includeBuild {
+		version += "." + strconv.Itoa(int(av.Build))
+	}
+	return version
 }
 
 // AsyncUpgrade will upgrade controller asynchronously

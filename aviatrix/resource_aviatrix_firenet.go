@@ -279,11 +279,6 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 		if err != nil {
 			return fmt.Errorf("could not enable fail close: %v", err)
 		}
-	} else {
-		err := client.DisableFirenetFailClose(fireNet)
-		if err != nil {
-			return fmt.Errorf("could not disable fail close during creation: %v", err)
-		}
 	}
 
 	var egressStaticCidrs []string
