@@ -262,5 +262,5 @@ Note there are standalone resources already in place to be used and one only nee
 ## R2.20 (UserConnect-6.5)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
-|(changed) | vpc        | vpc_id            | **Yes**; while existing Azure VNets created will not be affected, all future VNets created in 6.5/R2.20 will be in the following new 3-tuple format `<VNet-name>:<resource-group-name>:<GUID>`. Any resources such as **gateways** that reference this attribute will be unaffected. |
-|(changed) | external_device_conn | remote_vpc_name | **Yes**; while existing **external_device_conn** resources created prior to 6.5/R2.20 will not experience any changes, all future **external_device_conn** must be created with the following new 3-tuple format `<VNet-name>:<resource-group-name>:<subscription-id>`. |
+|(changed) | vpc        | vpc_id            | **Yes**; while existing Azure VNets created will not be affected, all future VNets created in 6.5/R2.20 will be in the following new 3-tuple format `<vnet-name>:<resource-group-name>:<GUID>`. Any resources such as **gateways** that reference this attribute will be unaffected. |
+|(changed) | external_device_conn | remote_vpc_name | **Yes**; while existing **external_device_conn** resources created prior to 6.5/R2.20 will not experience any changes, all future **external_device_conn** must be created with the following new 3-tuple format `<vnet-name>:<resource-group-name>:<subscription-id>`. |
