@@ -38,7 +38,7 @@ resource "aviatrix_firenet" "gcp_firenet" {
   keep_alive_via_lan_interface_enabled = false
   manage_firewall_instance_association = false
 
-  depends_on = [
+  depends_on                           = [
     aviatrix_firewall_instance_association.association2
   ]
 }
