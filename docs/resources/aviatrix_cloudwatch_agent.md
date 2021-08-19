@@ -17,7 +17,10 @@ The **aviatrix_cloudwatch_agent** resource allows the enabling and disabling of 
 resource "aviatrix_cloudwatch_agent" "test_cloudwatch_agent" {
   cloudwatch_role_arn = "arn:aws:iam::469550033836:role/aviatrix-role-cloudwatch"
   region              = "us-east-1"
-  excluded_gateways   = ["a", "b"]
+  excluded_gateways   = [
+    "a", 
+    "b"
+  ]
 }
 ```
 

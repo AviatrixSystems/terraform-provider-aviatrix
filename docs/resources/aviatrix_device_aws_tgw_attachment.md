@@ -23,7 +23,9 @@ resource "aviatrix_device_aws_tgw_attachment" "test_device_aws_tgw_attachment" {
   device_bgp_asn       = 65001
   security_domain_name = "Default_Domain"
 
-  depends_on = [aviatrix_device_interface_config.test_device_interface_config]
+  depends_on           = [
+    aviatrix_device_interface_config.test_device_interface_config
+  ]
 }
 ```
 

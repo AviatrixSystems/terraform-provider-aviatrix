@@ -117,22 +117,22 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_awsgov" {
 ```hcl
 # Create an Aviatrix AWS China Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_aws_china" {
-  cloud_type               = 1024
-  account_name             = "devops_aws_china"
-  gw_name                  = "transit"
-  vpc_id                   = "vpc-abcd12345678"
-  vpc_reg                  = "cn-north-1"
-  gw_size                  = "t2.micro"
-  subnet                   = "10.1.0.0/24"
-  ha_subnet                = "10.1.0.0/24"
-  ha_gw_size               = "t2.micro"
-  tags                     = {
+  cloud_type         = 1024
+  account_name       = "devops_aws_china"
+  gw_name            = "transit"
+  vpc_id             = "vpc-abcd12345678"
+  vpc_reg            = "cn-north-1"
+  gw_size            = "t2.micro"
+  subnet             = "10.1.0.0/24"
+  ha_subnet          = "10.1.0.0/24"
+  ha_gw_size         = "t2.micro"
+  tags               = {
     name  = "value",
     name1 = "value1",
     name2 = "value2",
   }
-  enable_active_mesh       = true
-  connected_transit        = true
+  enable_active_mesh = true
+  connected_transit  = true
 }
 ```
 ```hcl
@@ -155,21 +155,19 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_azure_china" {
 ```hcl
 # Create an OOB Aviatrix AWS Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_oob_transit" {
-  cloud_type   = 1
-  account_name = "devops-aws"
-  gw_name      = "oob-transit"
-  vpc_id       = "vpc-abcd1234"
-  vpc_reg      = "us-west-1"
-  gw_size      = "c5.xlarge"
-  enable_active_mesh = true
-
-  enable_private_oob = true
-  subnet = "11.0.0.128/26"
-  oob_management_subnet = "11.0.2.0/24"
-  oob_availability_zone = "us-west-1a"
-
-  ha_subnet = "11.0.3.64/26"
-  ha_gw_size = "c5.xlarge"
+  cloud_type               = 1
+  account_name             = "devops-aws"
+  gw_name                  = "oob-transit"
+  vpc_id                   = "vpc-abcd1234"
+  vpc_reg                  = "us-west-1"
+  gw_size                  = "c5.xlarge"
+  enable_active_mesh       = true
+  enable_private_oob       = true
+  subnet                   = "11.0.0.128/26"
+  oob_management_subnet    = "11.0.2.0/24"
+  oob_availability_zone    = "us-west-1a"
+  ha_subnet                = "11.0.3.64/26"
+  ha_gw_size               = "c5.xlarge"
   ha_oob_management_subnet = "11.0.0.48/28"
   ha_oob_availability_zone = "us-west-1b"
 }
@@ -192,43 +190,43 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_alibaba" {
 ```hcl
 # Create an Aviatrix AWS Top Secret Region Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_aws_top_secret" {
-  cloud_type               = 16384
-  account_name             = "devops_aws_top_secret"
-  gw_name                  = "transit"
-  vpc_id                   = "vpc-abcd12345678"
-  vpc_reg                  = "us-iso-east-1"
-  gw_size                  = "t2.micro"
-  subnet                   = "10.1.0.0/24"
-  ha_subnet                = "10.1.0.0/24"
-  ha_gw_size               = "t2.micro"
-  tags                     = {
+  cloud_type         = 16384
+  account_name       = "devops_aws_top_secret"
+  gw_name            = "transit"
+  vpc_id             = "vpc-abcd12345678"
+  vpc_reg            = "us-iso-east-1"
+  gw_size            = "t2.micro"
+  subnet             = "10.1.0.0/24"
+  ha_subnet          = "10.1.0.0/24"
+  ha_gw_size         = "t2.micro"
+  tags               = {
     name  = "value",
     name1 = "value1",
     name2 = "value2",
   }
-  enable_active_mesh       = true
-  connected_transit        = true
+  enable_active_mesh = true
+  connected_transit  = true
 }
 ```
 ```hcl
 # Create an Aviatrix AWS Secret Region Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_aws_secret" {
-  cloud_type               = 32768
-  account_name             = "devops_aws_secret"
-  gw_name                  = "transit"
-  vpc_id                   = "vpc-abcd12345678"
-  vpc_reg                  = "us-isob-east-1"
-  gw_size                  = "t2.micro"
-  subnet                   = "10.1.0.0/24"
-  ha_subnet                = "10.1.0.0/24"
-  ha_gw_size               = "t2.micro"
-  tags                     = {
+  cloud_type         = 32768
+  account_name       = "devops_aws_secret"
+  gw_name            = "transit"
+  vpc_id             = "vpc-abcd12345678"
+  vpc_reg            = "us-isob-east-1"
+  gw_size            = "t2.micro"
+  subnet             = "10.1.0.0/24"
+  ha_subnet          = "10.1.0.0/24"
+  ha_gw_size         = "t2.micro"
+  tags               = {
     name  = "value",
     name1 = "value1",
     name2 = "value2",
   }
-  enable_active_mesh       = true
-  connected_transit        = true
+  enable_active_mesh = true
+  connected_transit  = true
 }
 ```
 

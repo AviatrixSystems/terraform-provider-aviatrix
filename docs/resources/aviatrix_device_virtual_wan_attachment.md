@@ -24,7 +24,9 @@ resource "aviatrix_device_virtual_wan_attachment" "test_device_virtual_wan_attac
   hub_name        = "aviatrix-hub"
   device_bgp_asn  = 65001
 
-  depends_on = [aviatrix_device_interface_config.test_device_interface_config]
+  depends_on      = [
+    aviatrix_device_interface_config.test_device_interface_config
+  ]
 }
 ```
 
