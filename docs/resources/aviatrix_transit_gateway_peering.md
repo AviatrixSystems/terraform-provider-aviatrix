@@ -15,18 +15,18 @@ The **aviatrix_transit_gateway_peering** resource allows the creation and manage
 ```hcl
 # Create an Aviatrix Transit Gateway Peering
 resource "aviatrix_transit_gateway_peering" "test_transit_gateway_peering" {
-  transit_gateway_name1               = "transit-Gw1"
-  transit_gateway_name2               = "transit-Gw2"
-  gateway1_excluded_network_cidrs     = ["10.0.0.48/28"]
-  gateway2_excluded_network_cidrs     = ["10.0.0.48/28"]
-  gateway1_excluded_tgw_connections   = ["vpn_connection_a"]
-  gateway2_excluded_tgw_connections   = ["vpn_connection_b"]
-  prepend_as_path1                    = [
+  transit_gateway_name1                       = "transit-Gw1"
+  transit_gateway_name2                       = "transit-Gw2"
+  gateway1_excluded_network_cidrs             = ["10.0.0.48/28"]
+  gateway2_excluded_network_cidrs             = ["10.0.0.48/28"]
+  gateway1_excluded_tgw_connections           = ["vpn_connection_a"]
+  gateway2_excluded_tgw_connections           = ["vpn_connection_b"]
+  prepend_as_path1                            = [
     "65001",
     "65001",
     "65001"
   ]
-  prepend_as_path2                    = [
+  prepend_as_path2                            = [
     "65002"
   ]
   enable_peering_over_private_network         = false

@@ -17,9 +17,9 @@ The **aviatrix_account_user** resource allows the creation and management of Avi
 ```hcl
 # Create an Aviatrix User Account
 resource "aviatrix_account_user" "test_accountuser" {
-  username     = "username1"
-  email        = "username1@testdomain.com"
-  password     = "passwordforuser1-1234"
+  username = "username1"
+  email    = "username1@testdomain.com"
+  password = "passwordforuser1-1234"
 }
 ```
 

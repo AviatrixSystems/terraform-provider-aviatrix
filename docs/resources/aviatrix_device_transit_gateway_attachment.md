@@ -23,7 +23,9 @@ resource "aviatrix_device_transit_gateway_attachment" "test_device_transit_gatew
   transit_gateway_bgp_asn = 65000
   device_bgp_asn          = 65001
 
-  depends_on = [aviatrix_device_interface_config.test_device_interface_config]
+  depends_on              = [
+    aviatrix_device_interface_config.test_device_interface_config
+  ]
 }
 ```
 

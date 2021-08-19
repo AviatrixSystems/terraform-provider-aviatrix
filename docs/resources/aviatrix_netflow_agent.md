@@ -18,7 +18,10 @@ resource "aviatrix_netflow_agent" "test_netflow_agent" {
   server_ip         = "1.2.3.4"
   port              = 10
   version           = 5
-  excluded_gateways = ["a", "b"]
+  excluded_gateways = [
+    "a", 
+    "b"
+  ]
 }
 ```
 

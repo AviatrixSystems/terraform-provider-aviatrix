@@ -16,7 +16,7 @@ The **aviatrix_vpn_cert_download** resource manages the VPN Certificate Download
 # Set up the Aviatrix VPN Certificate Download configuration
 resource "aviatrix_vpn_cert_download" "test_vpn_cert_download" {
   download_enabled = true
-  saml_endpoints = ["saml_endpoint_name"]
+  saml_endpoints   = ["saml_endpoint_name"]
 }
 ```
 ## Argument Reference

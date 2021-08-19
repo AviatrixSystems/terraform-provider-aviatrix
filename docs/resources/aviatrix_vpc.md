@@ -27,9 +27,9 @@ resource "aviatrix_vpc" "aws_vpc" {
 ```hcl
 # Create a GCP VPC
 resource "aviatrix_vpc" "gcp_vpc" {
-  cloud_type           = 4
-  account_name         = "devops"
-  name                 = "gcp-vpc"
+  cloud_type   = 4
+  account_name = "devops"
+  name         = "gcp-vpc"
 
   subnets {
     name   = "subnet-1"
@@ -40,7 +40,7 @@ resource "aviatrix_vpc" "gcp_vpc" {
   subnets {
     name   = "subnet-2"
     region = "us-west2"
-    cidr  = "10.11.0.0/24"
+    cidr   = "10.11.0.0/24"
   }
 }
 ```
@@ -91,21 +91,21 @@ resource "aviatrix_vpc" "aws_china_vnet" {
 ```hcl
 # Create an Azure China VNet
 resource "aviatrix_vpc" "azure_china_vnet" {
-  cloud_type           = 2048
-  account_name         = "devops"
-  region               = "China North"
-  name                 = "azure-china-vnet"
-  cidr                 = "12.0.0.0/16"
+  cloud_type   = 2048
+  account_name = "devops"
+  region       = "China North"
+  name         = "azure-china-vnet"
+  cidr         = "12.0.0.0/16"
 }
 ```
 ```hcl
 # Create an Alibaba Cloud VPC
 resource "aviatrix_vpc" "aliyun_vpc" {
-  cloud_type           = 8192
-  account_name         = "devops"
-  region               = "acs-us-west-1 (Silicon Valley)"
-  name                 = "aliyun-vpc"
-  cidr                 = "10.0.0.0/20"
+  cloud_type   = 8192
+  account_name = "devops"
+  region       = "acs-us-west-1 (Silicon Valley)"
+  name         = "aliyun-vpc"
+  cidr         = "10.0.0.0/20"
 }
 ```
 

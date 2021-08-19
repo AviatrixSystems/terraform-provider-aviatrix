@@ -24,7 +24,9 @@ resource "aviatrix_fqdn_pass_through" "test_fqdn_pass_through" {
     "10.0.2.0/24",
   ]
 
-  depends_on         = [aviatrix_fqdn.test_fqdn]
+  depends_on         = [
+    aviatrix_fqdn.test_fqdn
+  ]
 }
 ```
 

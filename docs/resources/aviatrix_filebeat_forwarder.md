@@ -19,7 +19,10 @@ resource "aviatrix_filebeat_forwarder" "test_filebeat_forwarder" {
   port              = 10
   trusted_ca_file   = file("/path/to/ca.pem")
   config_file       = file("/path/to/config.txt")
-  excluded_gateways = ["a", "b"]
+  excluded_gateways = [
+    "a", 
+    "b"
+  ]
 }
 ```
 

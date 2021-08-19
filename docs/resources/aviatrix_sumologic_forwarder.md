@@ -15,8 +15,8 @@ The **aviatrix_sumologic_forwarder** resource allows the enabling and disabling 
 ```hcl
 # Enable sumologic forwarder
 resource "aviatrix_sumologic_forwarder" "test_sumologic_forwarder" {
-  access_id       = 0
-  access_key      = "1.2.3.4"
+  access_id  = 0
+  access_key = "1.2.3.4"
 }
 ```
 

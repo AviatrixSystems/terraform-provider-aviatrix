@@ -70,12 +70,12 @@ resource "aviatrix_account" "temp_acc_oci" {
 ```hcl
 # Create an Aviatrix AzureGov Account
 resource "aviatrix_account" "temp_acc_azure_gov" {
-  account_name              = "username"
-  cloud_type                = 32
-  azuregov_subscription_id  = "12345678-abcd-efgh-ijkl-123456789abc"
-  azuregov_directory_id     = "abcdefgh-1234-5678-9100-abc123456789"
-  azuregov_application_id   = "1234abcd-12ab-34cd-56ef-abcdef123456"
-  azuregov_application_key  = "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe="
+  account_name             = "username"
+  cloud_type               = 32
+  azuregov_subscription_id = "12345678-abcd-efgh-ijkl-123456789abc"
+  azuregov_directory_id    = "abcdefgh-1234-5678-9100-abc123456789"
+  azuregov_application_id  = "1234abcd-12ab-34cd-56ef-abcdef123456"
+  azuregov_application_key = "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe="
 }
 ```
 ```hcl
@@ -91,34 +91,34 @@ resource "aviatrix_account" "temp_acc_awsgov" {
 ```hcl
 # Create an Aviatrix AWS China Account with IAM roles
 resource "aviatrix_account" "temp_acc_aww_china_iam" {
-  account_name             = "username"
-  cloud_type               = 1024
-  awschina_account_number  = "123456789012"
-  awschina_iam             = true
-  awschina_role_app        = "arn:aws-cn:iam::123456789012:role/aviatrix-role-app"
-  awschina_role_ec2        = "arn:aws-cn:iam::123456789012:role/aviatrix-role-ec2"
+  account_name            = "username"
+  cloud_type              = 1024
+  awschina_account_number = "123456789012"
+  awschina_iam            = true
+  awschina_role_app       = "arn:aws-cn:iam::123456789012:role/aviatrix-role-app"
+  awschina_role_ec2       = "arn:aws-cn:iam::123456789012:role/aviatrix-role-ec2"
 }
 ```
 ```hcl
 # Or you can create an Aviatrix AWS China Account with access_key/secret key
 resource "aviatrix_account" "temp_acc_awschina" {
-  account_name             = "username"
-  cloud_type               = 1024
-  awschina_account_number  = "123456789012"
-  awschina_iam             = false
-  awschina_access_key      = "ABCDEFGHIJKL"
-  awschina_secret_key      = "ABCDEFGHIJKLabcdefghijkl"
+  account_name            = "username"
+  cloud_type              = 1024
+  awschina_account_number = "123456789012"
+  awschina_iam            = false
+  awschina_access_key     = "ABCDEFGHIJKL"
+  awschina_secret_key     = "ABCDEFGHIJKLabcdefghijkl"
 }
 ```
 ```hcl
 # Create an Aviatrix Azure China Account
 resource "aviatrix_account" "temp_acc_azurechina" {
-  account_name                = "username"
-  cloud_type                  = 2048
-  azurechina_subscription_id  = "12345678-abcd-efgh-ijkl-123456789abc"
-  azurechina_directory_id     = "abcdefgh-1234-5678-9100-abc123456789"
-  azurechina_application_id   = "1234abcd-12ab-34cd-56ef-abcdef123456"
-  azurechina_application_key  = "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe="
+  account_name               = "username"
+  cloud_type                 = 2048
+  azurechina_subscription_id = "12345678-abcd-efgh-ijkl-123456789abc"
+  azurechina_directory_id    = "abcdefgh-1234-5678-9100-abc123456789"
+  azurechina_application_id  = "1234abcd-12ab-34cd-56ef-abcdef123456"
+  azurechina_application_key = "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe="
 }
 ```
 ```hcl
@@ -135,8 +135,8 @@ resource "aviatrix_account" "temp_acc_alibaba" {
 ```hcl
 # Create an Aviatrix AWS Top Secret Region Account
 resource "aviatrix_account" "temp_acc_aws_top_secret" {
-  account_name              = "username"
-  cloud_type                = 16384
+  account_name         = "username"
+  cloud_type           = 16384
   awsts_account_number = "123456789012"
   awsts_cap_url        = "https://some.domain.com"
   awsts_cap_agency     = "ABCDEFG"
@@ -150,16 +150,16 @@ resource "aviatrix_account" "temp_acc_aws_top_secret" {
 ```hcl
 # Create an Aviatrix AWS Secret Region Account
 resource "aviatrix_account" "temp_acc_aws_secret" {
-  account_name              = "username"
-  cloud_type                = 32768
-  awss_account_number    = "123456789012"
-  awss_cap_url           = "https://some.domain.com"
-  awss_cap_agency        = "ABCDEFG"
-  awss_cap_account_name  = "Test-SC2S-dev"
-  awss_cap_role_name     = "SC2S-role-TestRole"
-  awss_cap_cert          = "path/to/cap_cert_file"
-  awss_cap_cert_key      = "path/to/cap_cert_key_file"
-  awss_ca_chain_cert     = "path/to/cap_chain_cert_file"
+  account_name          = "username"
+  cloud_type            = 32768
+  awss_account_number   = "123456789012"
+  awss_cap_url          = "https://some.domain.com"
+  awss_cap_agency       = "ABCDEFG"
+  awss_cap_account_name = "Test-SC2S-dev"
+  awss_cap_role_name    = "SC2S-role-TestRole"
+  awss_cap_cert         = "path/to/cap_cert_file"
+  awss_cap_cert_key     = "path/to/cap_cert_key_file"
+  awss_ca_chain_cert    = "path/to/cap_chain_cert_file"
 }
 ```
 

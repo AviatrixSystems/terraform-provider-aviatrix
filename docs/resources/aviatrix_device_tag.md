@@ -17,11 +17,13 @@ The **aviatrix_device_tag** resource allows the creation and management of devic
 ```hcl
 # Create an Aviatrix Device Tag and commit it
 resource "aviatrix_device_tag" "test_device_tag" {
-  name                = "tag_hostname"
-  config              = <<EOT
+  name         = "tag_hostname"
+  config       = <<EOT
 hostname myrouter
 EOT
-  device_names        = [aviatrix_device_registration.test_device.name]
+  device_names = [
+    aviatrix_device_registration.test_device.name
+  ]
 }
 ```
 

@@ -17,7 +17,10 @@ The **aviatrix_datadog_agent** resource allows the enabling and disabling of dat
 resource "aviatrix_datadog_agent" "test_datadog_agent" {
   api_key           = "your_api_key"
   site              = "datadoghq.com"
-  excluded_gateways = ["a", "b"]
+  excluded_gateways = [
+    "a", 
+    "b"
+  ]
 }
 ```
 

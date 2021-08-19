@@ -36,7 +36,7 @@ resource "aviatrix_transit_external_device_conn" "test" {
   bgp_local_as_num  = "123"
   bgp_remote_as_num = "345"
   remote_gateway_ip = "172.12.13.14"
-  prepend_as_path  = [
+  prepend_as_path   = [
     "123",
     "123"
   ]
@@ -60,17 +60,16 @@ resource "aviatrix_transit_external_device_conn" "ex-conn" {
 ```hcl
 # Create a BGP over LAN Aviatrix HA Transit External Device Connection with an Azure Transit Gateway
 resource "aviatrix_transit_external_device_conn" "ex-conn" {
-  vpc_id            = aviatrix_transit_gateway.transit-gateway.vpc_id
-  connection_name   = "my_conn"
-  gw_name           = aviatrix_transit_gateway.transit-gateway.gw_name
-  connection_type   = "bgp"
-  tunnel_protocol   = "LAN"
-  bgp_local_as_num  = "123"
-  bgp_remote_as_num = "345"
-  remote_lan_ip     = "172.12.13.14"
-  local_lan_ip      = "172.12.13.15"
-  remote_vpc_name   = "vnet-name:resource-group-name:subscription-id"
-
+  vpc_id                   = aviatrix_transit_gateway.transit-gateway.vpc_id
+  connection_name          = "my_conn"
+  gw_name                  = aviatrix_transit_gateway.transit-gateway.gw_name
+  connection_type          = "bgp"
+  tunnel_protocol          = "LAN"
+  bgp_local_as_num         = "123"
+  bgp_remote_as_num        = "345"
+  remote_lan_ip            = "172.12.13.14"
+  local_lan_ip             = "172.12.13.15"
+  remote_vpc_name          = "vnet-name:resource-group-name:subscription-id"
   ha_enabled               = true
   backup_bgp_remote_as_num = "678"
   backup_remote_lan_ip     = "172.12.13.16"
