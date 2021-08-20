@@ -33,12 +33,12 @@ func (c *Client) CreateCloudnTransitGatewayAttachment(ctx context.Context, attac
 func (c *Client) GetCloudnTransitGatewayAttachment(ctx context.Context, connName string) (*CloudnTransitGatewayAttachment, error) {
 	deviceName, err := c.GetDeviceName(connName)
 	if err != nil {
-		return nil, fmt.Errorf("could not get cloudn transit gateway attachment device name: %v", err)
+		return nil, fmt.Errorf("could not get cloudn transit gateway attachment device name: %w", err)
 	}
 
 	vpcID, err := c.GetDeviceAttachmentVpcID(connName)
 	if err != nil {
-		return nil, fmt.Errorf("could not get cloudn transit gateway attachment VPC id: %v", err)
+		return nil, fmt.Errorf("could not get cloudn transit gateway attachment VPC id: %w", err)
 	}
 
 	type site2cloudResp struct {
