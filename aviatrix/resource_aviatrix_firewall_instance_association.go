@@ -132,13 +132,15 @@ func resourceAviatrixFirewallInstanceAssociationCreate(d *schema.ResourceData, m
 		}
 	}
 
+	id := fmt.Sprintf("%s~~%s~~%s", firewall.VpcID, firewall.GwName, firewall.InstanceID)
+	d.SetId(id)
+	flag := false
+	defer resourceAviatrixFirewallInstanceAssociationReadIfRequired(d, meta, &flag)
+
 	err := client.AssociateFirewallWithFireNet(firewall)
 	if err != nil {
 		return fmt.Errorf("failed to associate gateway and firewall/fqdn_gateway: %v", err)
 	}
-	id := fmt.Sprintf("%s~~%s~~%s", firewall.VpcID, firewall.GwName, firewall.InstanceID)
-	d.SetId(id)
-	defer resourceAviatrixFirewallInstanceAssociationRead(d, meta)
 
 	if d.Get("attached").(bool) {
 		err = client.AttachFirewallToFireNet(firewall)
@@ -147,6 +149,14 @@ func resourceAviatrixFirewallInstanceAssociationCreate(d *schema.ResourceData, m
 		}
 	}
 
+	return resourceAviatrixFirewallInstanceAssociationReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixFirewallInstanceAssociationReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixFirewallInstanceAssociationRead(d, meta)
+	}
 	return nil
 }
 

@@ -45,13 +45,24 @@ func resourceAviatrixFirewallManagementAccessCreate(d *schema.ResourceData, meta
 
 	log.Printf("[INFO] Creating Aviatrix firewall management access: %#v", firewallManagementAccess)
 
+	d.SetId(firewallManagementAccess.TransitFireNetGatewayName + "~" + firewallManagementAccess.ManagementAccessResourceName)
+	flag := false
+	defer resourceAviatrixFirewallManagementAccessReadIfRequired(d, meta, &flag)
+
 	err := client.CreateFirewallManagementAccess(firewallManagementAccess)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix firewall management access: %s", err)
 	}
 
-	d.SetId(firewallManagementAccess.TransitFireNetGatewayName + "~" + firewallManagementAccess.ManagementAccessResourceName)
-	return resourceAviatrixFirewallManagementAccessRead(d, meta)
+	return resourceAviatrixFirewallManagementAccessReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixFirewallManagementAccessReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixFirewallManagementAccessRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixFirewallManagementAccessRead(d *schema.ResourceData, meta interface{}) error {

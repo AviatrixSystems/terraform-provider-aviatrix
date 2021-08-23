@@ -120,17 +120,15 @@ func resourceAviatrixAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta inte
 
 	log.Printf("[INFO] Attaching vpc: %s to tgw %s", awsTgwVpcAttachment.VpcID, awsTgwVpcAttachment.TgwName)
 
+	d.SetId(awsTgwVpcAttachment.TgwName + "~" + awsTgwVpcAttachment.SecurityDomainName + "~" + awsTgwVpcAttachment.VpcID)
 	flag := false
+	defer resourceAviatrixAwsTgwVpcAttachmentReadIfRequired(d, meta, &flag)
 
 	if isFirewallSecurityDomain {
 		err = client.CreateAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment)
 		if err != nil {
 			return fmt.Errorf("failed to create Aviatrix Aws Tgw Vpc Attach for FireNet: %s", err)
 		}
-
-		d.SetId(awsTgwVpcAttachment.TgwName + "~" + awsTgwVpcAttachment.SecurityDomainName + "~" + awsTgwVpcAttachment.VpcID)
-
-		defer resourceAviatrixAwsTgwVpcAttachmentReadIfRequired(d, meta, &flag)
 
 		if awsTgwVpcAttachment.EdgeAttachment != "" {
 			err = client.UpdateFirewallAttachmentAccessFromOnprem(awsTgwVpcAttachment)
@@ -147,8 +145,6 @@ func resourceAviatrixAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta inte
 		if err != nil {
 			return fmt.Errorf("failed to create Aviatrix Aws Tgw Vpc Attach: %s", err)
 		}
-
-		d.SetId(awsTgwVpcAttachment.TgwName + "~" + awsTgwVpcAttachment.SecurityDomainName + "~" + awsTgwVpcAttachment.VpcID)
 	}
 
 	return resourceAviatrixAwsTgwVpcAttachmentReadIfRequired(d, meta, &flag)

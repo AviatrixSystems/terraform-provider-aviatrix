@@ -85,13 +85,24 @@ func resourceAviatrixAzurePeerCreate(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[INFO] Creating Aviatrix Azure peer: %#v", azurePeer)
 
+	d.SetId(azurePeer.VNet1 + "~" + azurePeer.VNet2)
+	flag := false
+	defer resourceAviatrixAzurePeerReadIfRequired(d, meta, &flag)
+
 	err := client.CreateAzurePeer(azurePeer)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Azure Peer: %s", err)
 	}
 
-	d.SetId(azurePeer.VNet1 + "~" + azurePeer.VNet2)
-	return resourceAviatrixAzurePeerRead(d, meta)
+	return resourceAviatrixAzurePeerReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixAzurePeerReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixAzurePeerRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixAzurePeerRead(d *schema.ResourceData, meta interface{}) error {

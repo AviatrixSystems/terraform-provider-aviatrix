@@ -45,13 +45,24 @@ func resourceAviatrixAWSTgwPeeringCreate(d *schema.ResourceData, meta interface{
 
 	log.Printf("[INFO] Creating Aviatrix AWS tgw peering: %#v", awsTgwPeering)
 
+	d.SetId(awsTgwPeering.TgwName1 + "~" + awsTgwPeering.TgwName2)
+	flag := false
+	defer resourceAviatrixAWSTgwPeeringReadIfRequired(d, meta, &flag)
+
 	err := client.CreateAwsTgwPeering(awsTgwPeering)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix AWS tgw peering: %s", err)
 	}
 
-	d.SetId(awsTgwPeering.TgwName1 + "~" + awsTgwPeering.TgwName2)
-	return resourceAviatrixAWSTgwPeeringRead(d, meta)
+	return resourceAviatrixAWSTgwPeeringReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixAWSTgwPeeringReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixAWSTgwPeeringRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixAWSTgwPeeringRead(d *schema.ResourceData, meta interface{}) error {

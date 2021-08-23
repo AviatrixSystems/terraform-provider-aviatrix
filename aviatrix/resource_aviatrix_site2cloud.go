@@ -605,15 +605,14 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 
 	log.Printf("[INFO] Creating Aviatrix Site2Cloud: %#v", s2c)
 
+	d.SetId(s2c.TunnelName + "~" + s2c.VpcID)
+	flag := false
+	defer resourceAviatrixSite2CloudReadIfRequired(d, meta, &flag)
+
 	err := client.CreateSite2Cloud(s2c)
 	if err != nil {
 		return fmt.Errorf("failed Site2Cloud create: %s", err)
 	}
-
-	d.SetId(s2c.TunnelName + "~" + s2c.VpcID)
-
-	flag := false
-	defer resourceAviatrixSite2CloudReadIfRequired(d, meta, &flag)
 
 	enableDeadPeerDetection := d.Get("enable_dead_peer_detection").(bool)
 	if !enableDeadPeerDetection {

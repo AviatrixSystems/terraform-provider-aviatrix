@@ -51,12 +51,22 @@ func resourceAviatrixSegmentationSecurityDomainConnectionPolicyCreate(d *schema.
 
 	policy := marshalSegmentationSecurityDomainConnectionPolicyInput(d)
 
+	d.SetId(policy.Domain1.DomainName + "~" + policy.Domain2.DomainName)
+	flag := false
+	defer resourceAviatrixSegmentationSecurityDomainConnectionPolicyReadIfRequired(d, meta, &flag)
+
 	if err := client.CreateSegmentationSecurityDomainConnectionPolicy(policy); err != nil {
 		return fmt.Errorf("could not create security domain connection policy: %v", err)
 	}
 
-	id := policy.Domain1.DomainName + "~" + policy.Domain2.DomainName
-	d.SetId(id)
+	return resourceAviatrixSegmentationSecurityDomainConnectionPolicyReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixSegmentationSecurityDomainConnectionPolicyReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixSegmentationSecurityDomainConnectionPolicyRead(d, meta)
+	}
 	return nil
 }
 

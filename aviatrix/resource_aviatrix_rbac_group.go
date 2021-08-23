@@ -45,15 +45,17 @@ func resourceAviatrixRbacGroupCreate(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[INFO] Creating Aviatrix RBAC permission group: %#v", group)
 
+	d.SetId(group.GroupName)
+	flag := false
+	defer resourceAviatrixRbacGroupReadIfRequired(d, meta, &flag)
+
 	err := client.CreatePermissionGroup(group)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix RBAC permission group: %s", err)
 	}
 
 	log.Printf("[DEBUG] Aviatrix RBAC permission group %s created", group.GroupName)
-	d.SetId(group.GroupName)
-	flag := false
-	defer resourceAviatrixRbacGroupReadIfRequired(d, meta, &flag)
+
 	if d.Get("local_login").(bool) {
 		err := client.EnableLocalLoginForRBACGroup(groupName)
 		if err != nil {

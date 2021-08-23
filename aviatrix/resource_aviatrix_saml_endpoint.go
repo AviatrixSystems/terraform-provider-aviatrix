@@ -101,13 +101,25 @@ func resourceAviatrixSamlEndpointCreate(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
+
+	d.SetId(samlEndpoint.EndPointName)
+	flag := false
+	defer resourceAviatrixSamlEndpointReadIfRequired(d, meta, &flag)
+
 	err = client.CreateSamlEndpoint(samlEndpoint)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix SAML endpoint: %s", err)
 	}
 
-	d.SetId(samlEndpoint.EndPointName)
-	return resourceAviatrixSamlEndpointRead(d, meta)
+	return resourceAviatrixSamlEndpointReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixSamlEndpointReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixSamlEndpointRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixSamlEndpointRead(d *schema.ResourceData, meta interface{}) error {

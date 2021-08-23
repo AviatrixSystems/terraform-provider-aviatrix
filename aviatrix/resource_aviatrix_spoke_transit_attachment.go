@@ -48,12 +48,24 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta i
 	client := meta.(*goaviatrix.Client)
 
 	attachment := marshalSpokeTransitAttachmentInput(d)
+
+	d.SetId(attachment.SpokeGwName + "~" + attachment.TransitGwName)
+	flag := false
+	defer resourceAviatrixSpokeTransitAttachmentReadIfRequired(d, meta, &flag)
+
 	if err := client.CreateSpokeTransitAttachment(attachment); err != nil {
 		return fmt.Errorf("could not attach spoke: %s to transit %s: %v", attachment.SpokeGwName, attachment.TransitGwName, err)
 	}
 
-	d.SetId(attachment.SpokeGwName + "~" + attachment.TransitGwName)
-	return resourceAviatrixSpokeTransitAttachmentRead(d, meta)
+	return resourceAviatrixSpokeTransitAttachmentReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixSpokeTransitAttachmentReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixSpokeTransitAttachmentRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta interface{}) error {

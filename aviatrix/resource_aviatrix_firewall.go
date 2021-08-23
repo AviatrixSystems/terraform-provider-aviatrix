@@ -131,6 +131,10 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[INFO] Creating Aviatrix firewall: %#v", firewall)
 
+	d.SetId(firewall.GwName)
+	flag := false
+	defer resourceAviatrixFirewallReadIfRequired(d, meta, &flag)
+
 	//If base_policy or base_log enable is present, set base policy
 	if firewall.BasePolicy != "" {
 		err := client.SetBasePolicy(firewall)
@@ -177,8 +181,15 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	d.SetId(firewall.GwName)
-	return resourceAviatrixFirewallRead(d, meta)
+	return resourceAviatrixFirewallReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixFirewallReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixFirewallRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) error {
@@ -365,7 +376,7 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.Partial(false)
-	return nil
+	return resourceAviatrixFirewallRead(d, meta)
 }
 
 func resourceAviatrixFirewallDelete(d *schema.ResourceData, meta interface{}) error {

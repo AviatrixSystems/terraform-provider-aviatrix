@@ -118,13 +118,14 @@ func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) (er
 
 	log.Printf("[INFO] Creating Aviatrix VGW Connection: %#v", vgwConn)
 
+	d.SetId(vgwConn.ConnName + "~" + vgwConn.VPCId)
+	flag := false
+	defer resourceAviatrixVGWConnReadIfRequired(d, meta, &flag)
+
 	err = client.CreateVGWConn(vgwConn)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix VGWConn: %s", err)
 	}
-
-	d.SetId(vgwConn.ConnName + "~" + vgwConn.VPCId)
-	defer captureErr(resourceAviatrixVGWConnRead, d, meta, &err)
 
 	enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
 	if enableLearnedCIDRApproval {
@@ -160,7 +161,15 @@ func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) (er
 		}
 	}
 
-	return err
+	return resourceAviatrixVGWConnReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixVGWConnReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixVGWConnRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixVGWConnRead(d *schema.ResourceData, meta interface{}) error {

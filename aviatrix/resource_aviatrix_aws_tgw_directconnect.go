@@ -77,13 +77,24 @@ func resourceAviatrixAWSTgwDirectConnectCreate(d *schema.ResourceData, meta inte
 		awsTgwDirectConnect.LearnedCidrsApproval = "no"
 	}
 
+	d.SetId(awsTgwDirectConnect.TgwName + "~" + awsTgwDirectConnect.DxGatewayID)
+	flag := false
+	defer resourceAviatrixAWSTgwDirectConnectReadIfRequired(d, meta, &flag)
+
 	err := client.CreateAwsTgwDirectConnect(awsTgwDirectConnect)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix AWS TGW Direct Connect: %s", err)
 	}
 
-	d.SetId(awsTgwDirectConnect.TgwName + "~" + awsTgwDirectConnect.DxGatewayID)
-	return resourceAviatrixAWSTgwDirectConnectRead(d, meta)
+	return resourceAviatrixAWSTgwDirectConnectReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixAWSTgwDirectConnectReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixAWSTgwDirectConnectRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixAWSTgwDirectConnectRead(d *schema.ResourceData, meta interface{}) error {

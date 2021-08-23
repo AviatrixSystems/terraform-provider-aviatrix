@@ -39,11 +39,22 @@ func resourceAviatrixSegmentationSecurityDomainCreate(d *schema.ResourceData, me
 
 	domain := marshalSegmentationSecurityDomainInput(d)
 
+	d.SetId(domain.DomainName)
+	flag := false
+	defer resourceAviatrixSegmentationSecurityDomainReadIfRequired(d, meta, &flag)
+
 	if err := client.CreateSegmentationSecurityDomain(domain); err != nil {
 		return fmt.Errorf("could not create security domain: %v", err)
 	}
 
-	d.SetId(domain.DomainName)
+	return resourceAviatrixSegmentationSecurityDomainReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixSegmentationSecurityDomainReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixSegmentationSecurityDomainRead(d, meta)
+	}
 	return nil
 }
 

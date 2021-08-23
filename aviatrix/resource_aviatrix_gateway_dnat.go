@@ -147,13 +147,25 @@ func resourceAviatrixGatewayDNatCreate(d *schema.ResourceData, meta interface{})
 			gateway.DnatPolicy = append(gateway.DnatPolicy, *customPolicy)
 		}
 	}
+
+	d.SetId(gateway.GatewayName)
+	flag := false
+	defer resourceAviatrixGatewayDNatReadIfRequired(d, meta, &flag)
+
 	err := client.UpdateDNat(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to update DNAT for gateway(name: %s) due to: %s", gateway.GatewayName, err)
 	}
 
-	d.SetId(gateway.GatewayName)
-	return resourceAviatrixGatewayDNatRead(d, meta)
+	return resourceAviatrixGatewayDNatReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixGatewayDNatReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixGatewayDNatRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixGatewayDNatRead(d *schema.ResourceData, meta interface{}) error {
@@ -262,7 +274,7 @@ func resourceAviatrixGatewayDNatUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	d.Partial(false)
-	d.SetId(d.Get("gw_name").(string))
+	d.SetId(gateway.GatewayName)
 	return resourceAviatrixGatewayDNatRead(d, meta)
 }
 

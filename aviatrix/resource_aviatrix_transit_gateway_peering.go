@@ -171,15 +171,14 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway peering: %#v", transitGatewayPeering)
 
+	d.SetId(transitGatewayPeering.TransitGatewayName1 + "~" + transitGatewayPeering.TransitGatewayName2)
+	flag := false
+	defer resourceAviatrixTransitGatewayPeeringReadIfRequired(d, meta, &flag)
+
 	err := client.CreateTransitGatewayPeering(transitGatewayPeering)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Transit Gateway peering: %s", err)
 	}
-
-	d.SetId(transitGatewayPeering.TransitGatewayName1 + "~" + transitGatewayPeering.TransitGatewayName2)
-
-	flag := false
-	defer resourceAviatrixTransitGatewayPeeringReadIfRequired(d, meta, &flag)
 
 	if _, ok := d.GetOk("prepend_as_path1"); ok {
 		var prependASPath []string

@@ -63,6 +63,10 @@ func resourceAviatrixRbacGroupPermissionAttachmentCreate(d *schema.ResourceData,
 
 	log.Printf("[INFO] Creating Aviatrix RBAC group permission attachment: %#v", attachment)
 
+	d.SetId(attachment.GroupName + "~" + attachment.PermissionName)
+	flag := false
+	defer resourceAviatrixRbacGroupPermissionAttachmentReadIfRequired(d, meta, &flag)
+
 	err := client.CreateRbacGroupPermissionAttachment(attachment)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix RBAC group permission attachment: %s", err)
@@ -70,8 +74,15 @@ func resourceAviatrixRbacGroupPermissionAttachmentCreate(d *schema.ResourceData,
 
 	log.Printf("[DEBUG] Aviatrix RBAC group permission attachment created")
 
-	d.SetId(attachment.GroupName + "~" + attachment.PermissionName)
-	return resourceAviatrixRbacGroupPermissionAttachmentRead(d, meta)
+	return resourceAviatrixRbacGroupPermissionAttachmentReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixRbacGroupPermissionAttachmentReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixRbacGroupPermissionAttachmentRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixRbacGroupPermissionAttachmentRead(d *schema.ResourceData, meta interface{}) error {

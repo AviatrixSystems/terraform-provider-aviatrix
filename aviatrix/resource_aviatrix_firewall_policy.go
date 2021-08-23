@@ -107,11 +107,22 @@ func resourceAviatrixFirewallPolicyCreate(d *schema.ResourceData, meta interface
 
 	fw := marshalFirewallPolicyInput(d)
 
+	d.SetId(getFirewallPolicyID(fw))
+	flag := false
+	defer resourceAviatrixFirewallPolicyReadIfRequired(d, meta, &flag)
+
 	if err := client.AddFirewallPolicy(fw); err != nil {
 		return err
 	}
 
-	d.SetId(getFirewallPolicyID(fw))
+	return resourceAviatrixFirewallPolicyReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixFirewallPolicyReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixFirewallPolicyRead(d, meta)
+	}
 	return nil
 }
 

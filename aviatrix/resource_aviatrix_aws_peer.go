@@ -106,13 +106,24 @@ func resourceAviatrixAWSPeerCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Creating Aviatrix aws_peer: %#v", awsPeer)
 
+	d.SetId(awsPeer.VpcID1 + "~" + awsPeer.VpcID2)
+	flag := false
+	defer resourceAviatrixAWSPeerReadIfRequired(d, meta, &flag)
+
 	_, err := client.CreateAWSPeer(awsPeer)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix AWSPeer: %s", err)
 	}
 
-	d.SetId(awsPeer.VpcID1 + "~" + awsPeer.VpcID2)
-	return resourceAviatrixAWSPeerRead(d, meta)
+	return resourceAviatrixAWSPeerReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixAWSPeerReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixAWSPeerRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixAWSPeerRead(d *schema.ResourceData, meta interface{}) error {

@@ -52,13 +52,24 @@ func resourceAviatrixTransPeerCreate(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[INFO] Creating Aviatrix transitive peering: %#v", transPeer)
 
+	d.SetId(transPeer.Source + "~" + transPeer.Nexthop + "~" + transPeer.ReachableCidr)
+	flag := false
+	defer resourceAviatrixTransPeerReadIfRequired(d, meta, &flag)
+
 	err := client.CreateTransPeer(transPeer)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Transitive peering: %s", err)
 	}
 
-	d.SetId(transPeer.Source + "~" + transPeer.Nexthop + "~" + transPeer.ReachableCidr)
-	return resourceAviatrixTransPeerRead(d, meta)
+	return resourceAviatrixTransPeerReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixTransPeerReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixTransPeerRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixTransPeerRead(d *schema.ResourceData, meta interface{}) error {

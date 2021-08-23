@@ -45,13 +45,24 @@ func resourceAviatrixTransitFireNetPolicyCreate(d *schema.ResourceData, meta int
 
 	log.Printf("[INFO] Creating Aviatrix transit firenet policy: %#v", transitFireNetPolicy)
 
+	d.SetId(transitFireNetPolicy.TransitFireNetGatewayName + "~" + transitFireNetPolicy.InspectedResourceName)
+	flag := false
+	defer resourceAviatrixTransitFireNetPolicyReadIfRequired(d, meta, &flag)
+
 	err := client.CreateTransitFireNetPolicy(transitFireNetPolicy)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix transit firenet Policy: %s", err)
 	}
 
-	d.SetId(transitFireNetPolicy.TransitFireNetGatewayName + "~" + transitFireNetPolicy.InspectedResourceName)
-	return resourceAviatrixTransitFireNetPolicyRead(d, meta)
+	return resourceAviatrixTransitFireNetPolicyReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixTransitFireNetPolicyReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixTransitFireNetPolicyRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixTransitFireNetPolicyRead(d *schema.ResourceData, meta interface{}) error {

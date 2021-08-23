@@ -157,13 +157,25 @@ func resourceAviatrixGatewaySNatCreate(d *schema.ResourceData, meta interface{})
 			gateway.SnatPolicy = append(gateway.SnatPolicy, *customPolicy)
 		}
 	}
+
+	d.SetId(gateway.GatewayName)
+	flag := false
+	defer resourceAviatrixGatewaySNatReadIfRequired(d, meta, &flag)
+
 	err := client.EnableSNat(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to configure policies for 'customized_snat' mode due to: %s", err)
 	}
 
-	d.SetId(gateway.GatewayName)
-	return resourceAviatrixGatewaySNatRead(d, meta)
+	return resourceAviatrixGatewaySNatReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixGatewaySNatReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixGatewaySNatRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixGatewaySNatRead(d *schema.ResourceData, meta interface{}) error {
@@ -292,7 +304,7 @@ func resourceAviatrixGatewaySNatUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	d.Partial(false)
-	d.SetId(d.Get("gw_name").(string))
+	d.SetId(gateway.GatewayName)
 	return resourceAviatrixGatewaySNatRead(d, meta)
 }
 

@@ -54,13 +54,22 @@ func resourceAviatrixSegmentationSecurityDomainAssociationCreate(d *schema.Resou
 
 	association := marshalSegmentationSecurityDomainAssociationInput(d)
 
+	d.SetId(association.TransitGatewayName + "~" + association.SecurityDomainName + "~" + association.AttachmentName)
+	flag := false
+	defer resourceAviatrixSegmentationSecurityDomainAssociationReadIfRequired(d, meta, &flag)
+
 	if err := client.CreateSegmentationSecurityDomainAssociation(association); err != nil {
 		return fmt.Errorf("could not create segmentation security domain association: %v", err)
 	}
 
-	id := association.TransitGatewayName + "~" + association.SecurityDomainName + "~" + association.AttachmentName
-	d.SetId(id)
+	return resourceAviatrixSegmentationSecurityDomainAssociationReadIfRequired(d, meta, &flag)
+}
 
+func resourceAviatrixSegmentationSecurityDomainAssociationReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixSegmentationSecurityDomainAssociationRead(d, meta)
+	}
 	return nil
 }
 

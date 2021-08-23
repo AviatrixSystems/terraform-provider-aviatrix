@@ -59,13 +59,24 @@ func resourceAviatrixAzureSpokeNativePeeringCreate(d *schema.ResourceData, meta 
 
 	log.Printf("[INFO] Creating Aviatrix Azure spoke native peering: %#v", azureSpokeNativePeering)
 
+	d.SetId(azureSpokeNativePeering.TransitGatewayName + "~" + azureSpokeNativePeering.SpokeAccountName + "~" + azureSpokeNativePeering.SpokeVpcID)
+	flag := false
+	defer resourceAviatrixAzureSpokeNativePeeringReadIfRequired(d, meta, &flag)
+
 	err := client.CreateAzureSpokeNativePeering(azureSpokeNativePeering)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Azure spoke native peering: %s", err)
 	}
 
-	d.SetId(azureSpokeNativePeering.TransitGatewayName + "~" + azureSpokeNativePeering.SpokeAccountName + "~" + azureSpokeNativePeering.SpokeVpcID)
-	return resourceAviatrixAzureSpokeNativePeeringRead(d, meta)
+	return resourceAviatrixAzureSpokeNativePeeringReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixAzureSpokeNativePeeringReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixAzureSpokeNativePeeringRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixAzureSpokeNativePeeringRead(d *schema.ResourceData, meta interface{}) error {

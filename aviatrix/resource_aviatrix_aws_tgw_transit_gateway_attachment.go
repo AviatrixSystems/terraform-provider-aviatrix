@@ -64,13 +64,24 @@ func resourceAviatrixAwsTgwTransitGatewayAttachmentCreate(d *schema.ResourceData
 		TransitGatewayName: d.Get("transit_gateway_name").(string),
 	}
 
+	d.SetId(awsTgwTransitGwAttachment.TgwName + "~" + awsTgwTransitGwAttachment.VpcID)
+	flag := false
+	defer resourceAviatrixAwsTgwTransitGatewayAttachmentReadIfRequired(d, meta, &flag)
+
 	err := client.CreateAwsTgwTransitGwAttachment(awsTgwTransitGwAttachment)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix AWS tgw transit gateway Attachment: %s", err)
 	}
 
-	d.SetId(awsTgwTransitGwAttachment.TgwName + "~" + awsTgwTransitGwAttachment.VpcID)
-	return resourceAviatrixAwsTgwTransitGatewayAttachmentRead(d, meta)
+	return resourceAviatrixAwsTgwTransitGatewayAttachmentReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixAwsTgwTransitGatewayAttachmentReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixAwsTgwTransitGatewayAttachmentRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixAwsTgwTransitGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) error {

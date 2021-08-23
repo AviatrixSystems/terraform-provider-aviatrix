@@ -133,15 +133,14 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 
 	log.Printf("[INFO] Creating Aviatrix FQDN: %#v", fqdn)
 
+	d.SetId(fqdn.FQDNTag)
+	flag := false
+	defer resourceAviatrixFQDNReadIfRequired(d, meta, &flag)
+
 	err := client.CreateFQDN(fqdn)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix FQDN: %s", err)
 	}
-
-	d.SetId(fqdn.FQDNTag)
-
-	flag := false
-	defer resourceAviatrixFQDNReadIfRequired(d, meta, &flag)
 
 	if hasSetDomainNames && enabledInlineDomainNames {
 		names := d.Get("domain_names").([]interface{})
@@ -492,7 +491,8 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	d.Partial(false)
-	return nil
+	d.SetId(fqdn.FQDNTag)
+	return resourceAviatrixFQDNRead(d, meta)
 }
 
 func resourceAviatrixFQDNDelete(d *schema.ResourceData, meta interface{}) error {
