@@ -323,11 +323,7 @@ func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface
 	log.Printf("[INFO] Getting controller %s configuration", d.Id())
 	result, err := client.GetHttpAccessEnabled()
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("could not read Aviatrix Controller Config: %s", err)
+		return fmt.Errorf("could not read Aviatrix Controller http access configuration: %s", err)
 	}
 
 	if result[1:5] == "True" {

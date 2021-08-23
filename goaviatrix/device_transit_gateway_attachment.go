@@ -39,11 +39,17 @@ func (c *Client) CreateDeviceTransitGatewayAttachment(attachment *DeviceTransitG
 func (c *Client) GetDeviceTransitGatewayAttachment(attachment *DeviceTransitGatewayAttachment) (*DeviceTransitGatewayAttachment, error) {
 	deviceName, err := c.GetDeviceName(attachment.ConnectionName)
 	if err != nil {
+		if err == ErrNotFound {
+			return nil, err
+		}
 		return nil, fmt.Errorf("could not get device name: %v", err)
 	}
 
 	vpcID, err := c.GetDeviceAttachmentVpcID(attachment.ConnectionName)
 	if err != nil {
+		if err == ErrNotFound {
+			return nil, err
+		}
 		return nil, fmt.Errorf("could not get device attachment VPC id: %v", err)
 	}
 

@@ -2,7 +2,6 @@ package goaviatrix
 
 import (
 	"context"
-	"fmt"
 )
 
 // AwsTGW simple struct to hold aws_tgw details
@@ -242,5 +241,5 @@ func (c *Client) GetIntraDomainInspectionStatus(ctx context.Context, intraDomain
 		}
 	}
 
-	return fmt.Errorf("could not find security domain %s in tgw %s", intraDomainInspection.RouteDomainName, intraDomainInspection.TgwName)
+	return ErrNotFound
 }
