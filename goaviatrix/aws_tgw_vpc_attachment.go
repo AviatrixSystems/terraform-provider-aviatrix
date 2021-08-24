@@ -73,12 +73,18 @@ func (c *Client) GetAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachment
 	}
 	awsTgw, err := c.ListTgwDetails(awsTgw)
 	if err != nil {
+		if err == ErrNotFound {
+			return nil, err
+		}
 		return nil, fmt.Errorf("couldn't find AWS TGW %s: %v", awsTgwVpcAttachment.TgwName, err)
 	}
 	awsTgwVpcAttachment.Region = awsTgw.Region
 
 	err = c.GetAwsTgwDomain(awsTgw, awsTgwVpcAttachment.SecurityDomainName)
 	if err != nil {
+		if err == ErrNotFound {
+			return nil, err
+		}
 		return nil, errors.New("aws tgw does not have security domain: " + err.Error())
 	}
 
@@ -184,7 +190,7 @@ func (c *Client) GetAwsTgwDomain(awsTgw *AWSTgw, sDM string) error {
 		mDomain[data.Results[i]] = true
 	}
 	if !mDomain[sDM] {
-		return errors.New(awsTgw.Name + " does not have security domain: " + sDM)
+		return ErrNotFound
 	}
 
 	return nil
