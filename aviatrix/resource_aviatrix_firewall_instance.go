@@ -291,19 +291,6 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		FaultDomain:          d.Get("fault_domain").(string),
 	}
 
-	if strings.HasPrefix(firewallInstance.FirewallImage, "Palo Alto Networks") {
-		if firewallInstance.ManagementSubnet == "" {
-			return fmt.Errorf("'management_subnet' is required unempty for Palo Alto Networks VM-Series")
-		}
-	} else if strings.HasPrefix(firewallInstance.FirewallImage, "Check Point CloudGuard") ||
-		strings.HasPrefix(firewallInstance.FirewallImage, "Fortinet FortiGate") {
-		if firewallInstance.ManagementSubnet != "" {
-			return fmt.Errorf("'management_subnet' is required to be empty for Check Point or Fortinet FortiGate series")
-		}
-	} else {
-		return fmt.Errorf("firewall image: %s is not supported", firewallInstance.FirewallImage)
-	}
-
 	// For additional config validation we try to get the cloud_type from the given
 	// gateway name or vpc_id. If there is an issue, we will just continue on without
 	// the additional validation.
@@ -320,6 +307,23 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 			log.Printf("[WARN] Could not get cloud_type from firenet_gw_name: %v", err)
 		} else {
 			cloudType = gw.CloudType
+		}
+	}
+
+	if strings.HasPrefix(firewallInstance.FirewallImage, "Palo Alto Networks") {
+		if firewallInstance.ManagementSubnet == "" {
+			return fmt.Errorf("'management_subnet' is required for Palo Alto Networks VM-Series")
+		}
+	} else if strings.Contains(firewallInstance.FirewallImage, "CloudGuard") {
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.OCIRelatedCloudTypes) && firewallInstance.ManagementSubnet == "" {
+			return fmt.Errorf("'management_subnet' is required for Check Point CloudGuard for OCI")
+		}
+		if !goaviatrix.IsCloudType(cloudType, goaviatrix.OCIRelatedCloudTypes) && firewallInstance.ManagementSubnet != "" {
+			return fmt.Errorf("'management_subnet' is required to be empty for Check Point CloudGuard except for OCI")
+		}
+	} else if strings.HasPrefix(firewallInstance.FirewallImage, "Fortinet FortiGate") {
+		if firewallInstance.ManagementSubnet != "" {
+			return fmt.Errorf("'management_subnet' is required to be empty for Fortinet FortiGate series")
 		}
 	}
 
