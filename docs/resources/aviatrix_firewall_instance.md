@@ -66,7 +66,7 @@ The following arguments are supported:
 * `firewall_image` - (Required) One of the AWS/Azure/GCP AMIs from various vendors such as Palo Alto Networks.
 * `firewall_image_id` - (Optional) Firewall image ID. Applicable to AWS and Azure only. For AWS, please use AMI ID. For Azure, the format is “Publisher:Offer:Plan:Version”. Available as of provider version R2.19+.
 * `firewall_size` - (Required) Instance size of the firewall. Example: "m5.xlarge".  
-* `management_subnet` - (Optional) Management Interface Subnet. Select the subnet whose name contains “gateway and firewall management”. For GCP, `management_subnet` must be in the form `cidr~~region~~name`. Required for Palo Alto Networks VM-Series, and required to be empty for Check Point or Fortinet series.
+* `management_subnet` - (Optional) Management Interface Subnet. Select the subnet whose name contains “gateway and firewall management”. For GCP, `management_subnet` must be in the form `cidr~~region~~name`. Required for Palo Alto Networks VM-Series. Only for OCI, required for Check Point. Required to be empty for Check Point (except for OCI) or Fortinet series.
 * `egress_subnet` - (Required) Egress Interface Subnet. Select the subnet whose name contains “FW-ingress-egress”. For GCP, `egress_subnet` must be in the form `cidr~~region~~name`.
 * `firewall_image_version` - (Optional) Version of firewall image. If not specified, Controller will automatically select the latest version available.
 * `zone` - (Optional) Availability Zone. Required if creating a Firewall Instance with a Native AWS GWLB-enabled VPC. Applicable to AWS, Azure, and GCP only. Available as of provider version R2.17+.
