@@ -325,8 +325,6 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		if firewallInstance.ManagementSubnet != "" {
 			return fmt.Errorf("'management_subnet' is required to be empty for Fortinet FortiGate series")
 		}
-	} else {
-		return fmt.Errorf("firewall image: %s is not supported", firewallInstance.FirewallImage)
 	}
 
 	firenetDetail, err := client.GetFireNet(&goaviatrix.FireNet{VpcID: firewallInstance.VpcID})
