@@ -129,13 +129,24 @@ func resourceAviatrixProfileCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Creating Aviatrix Profile with Policy: %v", profile.Policy)
 
+	d.SetId(profile.Name)
+	flag := false
+	defer resourceAviatrixProfileReadIfRequired(d, meta, &flag)
+
 	err := client.CreateProfile(profile)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Profile: %s", err)
 	}
 
-	d.SetId(profile.Name)
-	return resourceAviatrixProfileRead(d, meta)
+	return resourceAviatrixProfileReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixProfileReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixProfileRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixProfileRead(d *schema.ResourceData, meta interface{}) error {

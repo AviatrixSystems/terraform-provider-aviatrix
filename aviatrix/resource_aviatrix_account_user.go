@@ -62,6 +62,10 @@ func resourceAviatrixAccountUserCreate(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[INFO] Creating Aviatrix account user: %#v", user)
 
+	d.SetId(user.UserName)
+	flag := false
+	defer resourceAviatrixAccountUserReadIfRequired(d, meta, &flag)
+
 	err := client.CreateAccountUser(user)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Account User: %s", err)
@@ -69,8 +73,15 @@ func resourceAviatrixAccountUserCreate(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[DEBUG] Aviatrix account user %s created", user.UserName)
 
-	d.SetId(user.UserName)
-	return resourceAviatrixAccountUserRead(d, meta)
+	return resourceAviatrixAccountUserReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixAccountUserReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixAccountUserRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixAccountUserRead(d *schema.ResourceData, meta interface{}) error {
@@ -137,7 +148,7 @@ func resourceAviatrixAccountUserUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	d.Partial(false)
-	return nil
+	return resourceAviatrixAccountUserRead(d, meta)
 }
 
 func resourceAviatrixAccountUserDelete(d *schema.ResourceData, meta interface{}) error {

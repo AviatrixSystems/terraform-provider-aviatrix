@@ -553,12 +553,14 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		}
 	}
 
+	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID)
+	flag := false
+	defer resourceAviatrixTransitExternalDeviceConnReadIfRequired(d, meta, &flag)
+
 	err = client.CreateExternalDeviceConn(externalDeviceConn)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix external device connection: %s", err)
 	}
-
-	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID)
 
 	transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: externalDeviceConn.GwName})
 	if err != nil {
@@ -641,7 +643,15 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		}
 	}
 
-	return resourceAviatrixTransitExternalDeviceConnRead(d, meta)
+	return resourceAviatrixTransitExternalDeviceConnReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixTransitExternalDeviceConnReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixTransitExternalDeviceConnRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta interface{}) error {

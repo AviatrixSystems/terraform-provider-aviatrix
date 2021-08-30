@@ -45,6 +45,10 @@ func resourceAviatrixRbacGroupAccessAccountAttachmentCreate(d *schema.ResourceDa
 
 	log.Printf("[INFO] Creating Aviatrix RBAC permission group access account attachment: %#v", attachment)
 
+	d.SetId(attachment.GroupName + "~" + attachment.AccessAccountName)
+	flag := false
+	defer resourceAviatrixRbacGroupAccessAccountAttachmentReadIfRequired(d, meta, &flag)
+
 	err := client.CreateRbacGroupAccessAccountAttachment(attachment)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix RBAC permission group access account attachment: %s", err)
@@ -52,8 +56,15 @@ func resourceAviatrixRbacGroupAccessAccountAttachmentCreate(d *schema.ResourceDa
 
 	log.Printf("[DEBUG] Aviatrix RBAC permission group access account attachment created")
 
-	d.SetId(attachment.GroupName + "~" + attachment.AccessAccountName)
-	return resourceAviatrixRbacGroupAccessAccountAttachmentRead(d, meta)
+	return resourceAviatrixRbacGroupAccessAccountAttachmentReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixRbacGroupAccessAccountAttachmentReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixRbacGroupAccessAccountAttachmentRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixRbacGroupAccessAccountAttachmentRead(d *schema.ResourceData, meta interface{}) error {

@@ -58,12 +58,14 @@ func resourceAviatrixFirewallTagCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("invalid choice: firewall tag can't be empty")
 	}
 
+	d.SetId(firewallTag.Name)
+	flag := false
+	defer resourceAviatrixFirewallTagReadIfRequired(d, meta, &flag)
+
 	err := client.CreateFirewallTag(firewallTag)
 	if err != nil {
 		return fmt.Errorf("failed to create firewall tag: %s", err)
 	}
-
-	d.SetId(firewallTag.Name)
 
 	//If cidr list is present, update cidr list
 	if _, ok := d.GetOk("cidr_list"); ok {
@@ -89,7 +91,15 @@ func resourceAviatrixFirewallTagCreate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	return resourceAviatrixFirewallTagRead(d, meta)
+	return resourceAviatrixFirewallTagReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixFirewallTagReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixFirewallTagRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixFirewallTagRead(d *schema.ResourceData, meta interface{}) error {
@@ -163,7 +173,7 @@ func resourceAviatrixFirewallTagUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	d.Partial(false)
-	return nil
+	return resourceAviatrixFirewallTagRead(d, meta)
 }
 
 func resourceAviatrixFirewallTagDelete(d *schema.ResourceData, meta interface{}) error {

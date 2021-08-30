@@ -427,14 +427,14 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 		awsTgw.NotCreateDefaultDomains = true
 	}
 
+	d.SetId(awsTgw.Name)
+	flag := false
+	defer resourceAviatrixAWSTgwReadIfRequired(d, meta, &flag)
+
 	err1 := client.CreateAWSTgw(awsTgw)
 	if err1 != nil {
 		return fmt.Errorf("failed to create AWS TGW: %s", err1)
 	}
-	d.SetId(awsTgw.Name)
-
-	flag := false
-	defer resourceAviatrixAWSTgwReadIfRequired(d, meta, &flag)
 
 	if manageSecurityDomain {
 		for i := range domainsToCreate {

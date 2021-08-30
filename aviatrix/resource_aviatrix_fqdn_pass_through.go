@@ -54,7 +54,7 @@ func resourceAviatrixFQDNPassThroughCreate(d *schema.ResourceData, meta interfac
 	}
 
 	d.SetId(gw.GwName)
-	return nil
+	return resourceAviatrixFQDNPassThroughRead(d, meta)
 }
 
 func resourceAviatrixFQDNPassThroughRead(d *schema.ResourceData, meta interface{}) error {
@@ -97,8 +97,9 @@ func resourceAviatrixFQDNPassThroughRead(d *schema.ResourceData, meta interface{
 func resourceAviatrixFQDNPassThroughUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
+	gw := &goaviatrix.Gateway{GwName: d.Get("gw_name").(string)}
+
 	if d.HasChange("pass_through_cidrs") {
-		gw := &goaviatrix.Gateway{GwName: d.Get("gw_name").(string)}
 		var cidrs []string
 		for _, v := range d.Get("pass_through_cidrs").(*schema.Set).List() {
 			cidrs = append(cidrs, v.(string))
@@ -108,7 +109,8 @@ func resourceAviatrixFQDNPassThroughUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	return nil
+	d.SetId(gw.GwName)
+	return resourceAviatrixFQDNPassThroughRead(d, meta)
 }
 
 func resourceAviatrixFQDNPassThroughDelete(d *schema.ResourceData, meta interface{}) error {

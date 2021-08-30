@@ -59,13 +59,24 @@ func resourceAviatrixAWSTgwPeeringDomainConnCreate(d *schema.ResourceData, meta 
 
 	log.Printf("[INFO] Creating Aviatrix domain connection between tgw: %s and %s", domainConn.TgwName1, domainConn.TgwName2)
 
+	d.SetId(domainConn.TgwName1 + ":" + domainConn.DomainName1 + "~" + domainConn.TgwName2 + ":" + domainConn.DomainName2)
+	flag := false
+	defer resourceAviatrixAWSTgwPeeringDomainConnReadIfRequired(d, meta, &flag)
+
 	err := client.CreateDomainConn(domainConn)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix domain connection between two tgws: %s", err)
 	}
 
-	d.SetId(domainConn.TgwName1 + ":" + domainConn.DomainName1 + "~" + domainConn.TgwName2 + ":" + domainConn.DomainName2)
-	return resourceAviatrixAWSTgwPeeringDomainConnRead(d, meta)
+	return resourceAviatrixAWSTgwPeeringDomainConnReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixAWSTgwPeeringDomainConnReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixAWSTgwPeeringDomainConnRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixAWSTgwPeeringDomainConnRead(d *schema.ResourceData, meta interface{}) error {

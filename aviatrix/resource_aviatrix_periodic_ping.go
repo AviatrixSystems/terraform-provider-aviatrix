@@ -56,11 +56,22 @@ func resourceAviatrixPeriodicPingCreate(d *schema.ResourceData, meta interface{}
 
 	pp := marshalPeriodicPingInput(d)
 
+	d.SetId(pp.GwName)
+	flag := false
+	defer resourceAviatrixPeriodicPingReadIfRequired(d, meta, &flag)
+
 	if err := client.CreatePeriodicPing(pp); err != nil {
 		return err
 	}
 
-	d.SetId(pp.GwName)
+	return resourceAviatrixPeriodicPingReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixPeriodicPingReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixPeriodicPingRead(d, meta)
+	}
 	return nil
 }
 

@@ -947,15 +947,14 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
 
+	d.SetId(gateway.GwName)
+	flag := false
+	defer resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
+
 	err := client.LaunchTransitVpc(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
 	}
-
-	d.SetId(gateway.GwName)
-
-	flag := false
-	defer resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 
 	if customerManagedKeys != "" && enableEncryptVolume {
 		gwEncVolume := &goaviatrix.Gateway{

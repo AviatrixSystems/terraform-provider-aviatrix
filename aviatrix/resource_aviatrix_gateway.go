@@ -957,6 +957,10 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Creating Aviatrix gateway: %#v", gateway)
 
+	d.SetId(gateway.GwName)
+	flag := false
+	defer resourceAviatrixGatewayReadIfRequired(d, meta, &flag)
+
 	if d.Get("enable_public_subnet_filtering").(bool) {
 		err := client.CreatePublicSubnetFilteringGateway(gateway)
 		if err != nil {
@@ -976,11 +980,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("failed to create Aviatrix gateway: %s", err)
 		}
 	}
-
-	d.SetId(gateway.GwName)
-
-	flag := false
-	defer resourceAviatrixGatewayReadIfRequired(d, meta, &flag)
 
 	if customerManagedKeys != "" && enableEncryptVolume {
 		gwEncVolume := &goaviatrix.Gateway{

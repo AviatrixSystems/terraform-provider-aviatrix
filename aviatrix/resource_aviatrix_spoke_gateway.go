@@ -745,15 +745,14 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[INFO] Creating Aviatrix Spoke Gateway: %#v", gateway)
 
+	d.SetId(gateway.GwName)
+	flag := false
+	defer resourceAviatrixSpokeGatewayReadIfRequired(d, meta, &flag)
+
 	err := client.LaunchSpokeVpc(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Spoke Gateway: %s", err)
 	}
-
-	d.SetId(gateway.GwName)
-
-	flag := false
-	defer resourceAviatrixSpokeGatewayReadIfRequired(d, meta, &flag)
 
 	if customerManagedKeys != "" && enableEncryptVolume {
 		gwEncVolume := &goaviatrix.Gateway{

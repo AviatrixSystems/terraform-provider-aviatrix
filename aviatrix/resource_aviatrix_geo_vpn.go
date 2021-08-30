@@ -79,16 +79,15 @@ func resourceAviatrixGeoVPNCreate(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("please specify 'elb_dns_names' to enable Aviatrix Geo VPN")
 	}
 
+	d.SetId(geoVPN.ServiceName + "~" + geoVPN.DomainName)
+	flag := false
+	defer resourceAviatrixGeoVPNReadIfRequired(d, meta, &flag)
+
 	geoVPN.ElbDNSName = elbDNSNames[0]
 	err := client.EnableGeoVPN(geoVPN)
 	if err != nil {
 		return fmt.Errorf("failed to enable Aviatrix Geo VPN due to: %s", err)
 	}
-
-	d.SetId(geoVPN.ServiceName + "~" + geoVPN.DomainName)
-
-	flag := false
-	defer resourceAviatrixGeoVPNReadIfRequired(d, meta, &flag)
 
 	for i := 1; i < len(elbDNSNames); i++ {
 		geoVPN.ElbDNSName = elbDNSNames[i]

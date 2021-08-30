@@ -61,11 +61,22 @@ func resourceAviatrixAzureVngConnCreate(d *schema.ResourceData, meta interface{}
 
 	azureVngConn := marshalAzureVngConnInput(d)
 
+	d.SetId(azureVngConn.ConnectionName)
+	flag := false
+	defer resourceAviatrixAzureVngConnReadIfRequired(d, meta, &flag)
+
 	if err := client.ConnectAzureVng(azureVngConn); err != nil {
 		return fmt.Errorf("could not connect to azure vng: %v", err)
 	}
 
-	d.SetId(azureVngConn.ConnectionName)
+	return resourceAviatrixAzureVngConnReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixAzureVngConnReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixAzureVngConnRead(d, meta)
+	}
 	return nil
 }
 

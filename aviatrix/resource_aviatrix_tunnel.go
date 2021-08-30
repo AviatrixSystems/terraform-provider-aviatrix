@@ -75,13 +75,24 @@ func resourceAviatrixTunnelCreate(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[INFO] Creating Aviatrix tunnel: %#v", tunnel)
 
+	d.SetId(tunnel.VpcName1 + "~" + tunnel.VpcName2)
+	flag := false
+	defer resourceAviatrixTunnelReadIfRequired(d, meta, &flag)
+
 	err := client.CreateTunnel(tunnel)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Tunnel: %s", err)
 	}
 
-	d.SetId(tunnel.VpcName1 + "~" + tunnel.VpcName2)
-	return resourceAviatrixTunnelRead(d, meta)
+	return resourceAviatrixTunnelReadIfRequired(d, meta, &flag)
+}
+
+func resourceAviatrixTunnelReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixTunnelRead(d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixTunnelRead(d *schema.ResourceData, meta interface{}) error {

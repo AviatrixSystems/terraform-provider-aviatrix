@@ -113,14 +113,15 @@ func resourceAviatrixVPNUserCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Creating Aviatrix VPN User: %#v", vpnUser)
 
-	err := client.CreateVPNUser(vpnUser)
-	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix VPNUser: %s", err)
-	}
 	d.SetId(vpnUser.UserName)
 
 	flag := false
 	defer resourceAviatrixVPNUserReadIfRequired(d, meta, &flag)
+
+	err := client.CreateVPNUser(vpnUser)
+	if err != nil {
+		return fmt.Errorf("failed to create Aviatrix VPNUser: %s", err)
+	}
 
 	if manageUserAttachment && len(d.Get("profiles").([]interface{})) != 0 {
 		for _, profileName := range d.Get("profiles").([]interface{}) {
