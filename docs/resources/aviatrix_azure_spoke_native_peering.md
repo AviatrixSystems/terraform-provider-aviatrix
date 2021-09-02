@@ -18,7 +18,7 @@ resource "aviatrix_azure_spoke_native_peering" "test" {
   transit_gateway_name = "transit-gw-azure"
   spoke_account_name   = "devops-azure"
   spoke_region         = "West US"
-  spoke_vpc_id         = "Foo_VNet:Bar_RG"
+  spoke_vpc_id         = "Foo_VNet:Bar_RG:GUID"
 }
 ```
 
@@ -30,7 +30,7 @@ The following arguments are supported:
 * `transit_gateway_name` - (Required) Name of an Transit FireNet-enabled Azure transit gateway.
 * `spoke_account_name` - (Required) An Aviatrix account that corresponds to a subscription in Azure.
 * `spoke_region` - (Required) Spoke VNet region. Example: "West US".
-* `spoke_vpc_id` - (Required) Combination of the Spoke's VNet name and resource group. Example: "Foo_VNet:Bar_RG".
+* `spoke_vpc_id` - (Required) Combination of the Spoke's VNet name, resource group and GUID. Example: "Foo_VNet:Bar_RG:GUID". As of controller version 6.5 spoke_vpc_id must include the GUID of the VPC.
 
 ## Import
 
