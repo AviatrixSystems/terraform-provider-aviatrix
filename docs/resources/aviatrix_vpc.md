@@ -66,6 +66,17 @@ resource "aviatrix_vpc" "oci_vpc" {
 }
 ```
 ```hcl
+# Create an AzureGov VNet
+resource "aviatrix_vpc" "azure_vnet" {
+  cloud_type           = 32
+  account_name         = "devops"
+  region               = "USGov Arizona"
+  name                 = "azuregov-vnet"
+  cidr                 = "12.0.0.0/16"
+  aviatrix_firenet_vpc = false
+}
+```
+```hcl
 # Create an AWSGov VPC
 resource "aviatrix_vpc" "awsgov_vnet" {
   cloud_type           = 256
@@ -114,7 +125,7 @@ resource "aviatrix_vpc" "aliyun_vpc" {
 The following arguments are supported:
 
 ### Required
-* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), Azure(8), OCI(16), AWSGov(256), AWSChina(1024), AzureChina(2048), Alibaba Cloud(8192) are supported.
+* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), Azure(8), OCI(16), AzureGov(32), AWSGov(256), AWSChina(1024), AzureChina(2048), Alibaba Cloud(8192) are supported.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `name` - (Required) Name of the VPC to be created.
 * `region` - (Optional) Region of cloud provider. **Required to be empty for GCP provider, and non-empty for other providers.** Example: AWS: "us-east-1", Azure: "East US 2", OCI: "us-ashburn-1", AWSGov: "us-gov-east-1", AWSChina: "cn-north-1", AzureChina: "China North".
