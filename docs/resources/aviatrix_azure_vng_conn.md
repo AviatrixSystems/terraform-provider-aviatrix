@@ -38,7 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-**transit_gateway** can be imported using the `connection_name`, e.g.
+**aviatrix_azure_vng_conn** can be imported using the `connection_name`, e.g.
 
 ```
 $ terraform import aviatrix_azure_vng_conn.test connection
