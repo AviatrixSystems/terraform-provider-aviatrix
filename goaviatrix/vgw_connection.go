@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -130,12 +131,18 @@ func (c *Client) GetVGWConnDetail(vgwConn *VGWConn) (*VGWConn, error) {
 		"vpc_id":    vgwConn.VPCId,
 		"conn_name": vgwConn.ConnName,
 	}
-	var data VGWConnDetailResp
-	err := c.GetAPI(&data, params["action"], params, BasicCheck)
-	if err != nil {
-		if strings.Contains(data.Reason, "does not exist") {
-			return nil, ErrNotFound
+	check := func(action, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "does not exist") {
+				return ErrNotFound
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
 		}
+		return nil
+	}
+	var data VGWConnDetailResp
+	err := c.GetAPI(&data, params["action"], params, check)
+	if err != nil {
 		return nil, err
 	}
 	if data.Results.Connections.ConnName[0] != "" {
