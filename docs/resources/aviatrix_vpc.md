@@ -128,7 +128,7 @@ The following arguments are supported:
 * `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently only AWS(1), GCP(4), Azure(8), OCI(16), AzureGov(32), AWSGov(256), AWSChina(1024), AzureChina(2048), Alibaba Cloud(8192) are supported.
 * `account_name` - (Required) This parameter represents the name of a Cloud-Account in Aviatrix controller.
 * `name` - (Required) Name of the VPC to be created.
-* `region` - (Optional) Region of cloud provider. **Required to be empty for GCP provider, and non-empty for other providers.** Example: AWS: "us-east-1", Azure: "East US 2", OCI: "us-ashburn-1", AzureGov: "USGov Azirona", AWSGov: "us-gov-east-1", AWSChina: "cn-north-1", AzureChina: "China North".
+* `region` - (Optional) Region of cloud provider. **Required to be empty for GCP provider, and non-empty for other providers.** Example: AWS: "us-east-1", Azure: "East US 2", OCI: "us-ashburn-1", AzureGov: "USGov Arizona", AWSGov: "us-gov-east-1", AWSChina: "cn-north-1", AzureChina: "China North".
 * `cidr` - (Optional) VPC CIDR. **Required to be empty for GCP provider, and non-empty for other providers.** Example: "10.11.0.0/24".
 
 ### Google Cloud
