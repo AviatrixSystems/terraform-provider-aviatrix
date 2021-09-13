@@ -718,6 +718,10 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("cloud type can only be either AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192), AWS Top Secret (16384) or AWS Secret (32768)")
 	}
 
+	d.SetId(account.AccountName)
+	flag := false
+	defer resourceAviatrixAccountReadIfRequired(ctx, d, meta, &flag)
+
 	var err error
 	if account.CloudType == goaviatrix.GCP {
 		err = client.CreateGCPAccount(account)
@@ -734,8 +738,15 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("failed to create Aviatrix Account: %s", err)
 	}
 
-	d.SetId(account.AccountName)
-	return resourceAviatrixAccountRead(ctx, d, meta)
+	return resourceAviatrixAccountReadIfRequired(ctx, d, meta, &flag)
+}
+
+func resourceAviatrixAccountReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixAccountRead(ctx, d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
