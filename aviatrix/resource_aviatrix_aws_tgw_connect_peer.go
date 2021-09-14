@@ -101,12 +101,23 @@ func resourceAviatrixAwsTgwConnectPeerCreate(ctx context.Context, d *schema.Reso
 	client := meta.(*goaviatrix.Client)
 
 	peer := marshalAwsTgwConnectPeerInput(d)
+	d.SetId(peer.ID())
+	flag := false
+	defer resourceAviatrixAwsTgwConnectPeerReadIfRequired(ctx, d, meta, &flag)
+
 	if err := client.CreateTGWConnectPeer(ctx, peer); err != nil {
 		return diag.Errorf("could not create TGW Connect Peer: %v", err)
 	}
 
-	d.SetId(peer.ID())
-	return resourceAviatrixAwsTgwConnectPeerRead(ctx, d, meta)
+	return resourceAviatrixAwsTgwConnectPeerReadIfRequired(ctx, d, meta, &flag)
+}
+
+func resourceAviatrixAwsTgwConnectPeerReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixAwsTgwConnectPeerRead(ctx, d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixAwsTgwConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

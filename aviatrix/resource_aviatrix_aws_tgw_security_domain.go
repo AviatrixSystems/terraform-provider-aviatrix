@@ -91,12 +91,23 @@ func resourceAviatrixAwsTgwSecurityDomainCreate(ctx context.Context, d *schema.R
 		return diag.Errorf("only one or none of 'firewall_domain', 'native_egress' and 'native_firewall' could be set true")
 	}
 
+	d.SetId(securityDomain.AwsTgwName + "~" + securityDomain.Name)
+	flag := false
+	defer resourceAviatrixAwsTgwSecurityDomainReadIfRequired(ctx, d, meta, &flag)
+
 	if err := client.CreateSecurityDomain(securityDomain); err != nil {
 		return diag.Errorf("could not create security domain: %v", err)
 	}
 
-	d.SetId(securityDomain.AwsTgwName + "~" + securityDomain.Name)
-	return resourceAviatrixAwsTgwSecurityDomainRead(ctx, d, meta)
+	return resourceAviatrixAwsTgwSecurityDomainReadIfRequired(ctx, d, meta, &flag)
+}
+
+func resourceAviatrixAwsTgwSecurityDomainReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixAwsTgwSecurityDomainRead(ctx, d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixAwsTgwSecurityDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
