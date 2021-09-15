@@ -13,7 +13,8 @@ For customers who are currently already using Terraform to manage their infrastr
 ---
 ## Migration Steps
 
-If your Transit Network is built prior to Aviatrix software release 5.1, it’s very likely that the Transit Network is a non-ActiveMesh deployment where the IPSec tunnels between spoke gateways and transit gateways are in Active/Standby mode (i.e. only one IPSec tunnel is carrying the data traffic).
+If your Transit Network is built prior to Aviatrix software release 5.1, it’s very likely that the Transit Network is a non-ActiveMesh deployment where the IPSec tunnels between spoke gateways and transit gateways are in Active/Standby mode (i.e. only one IPSec tunnel is carrying the data traffic). Non-ActiveMesh features will be completely deprecated and removed in provider 2.21.0/controller 6.6. With non-ActiveMesh features, Aviatrix controller will not be able to upgrade to 6.6.
+
 1. Detach Aviatrix Spoke Gateway from Transit Network
    - If Spoke was attached to Transit by **aviatrix_spoke_transit_attachment**, destroy **aviatrix_spoke_transit_attachment** resource
    - If Spoke was attached to Transit by setting ``transit_gw`` inside **aviatrix_spoke_gateway**, remove ``transit_gw`` and then perform a "terraform apply"
