@@ -2,7 +2,7 @@
 layout: "aviatrix"
 page_title: "Migrating from Classic Aviatrix Encrypted Transit Network to Aviatrix ActiveMesh Transit Network"
 description: |-
-Aviatrix Transit Network Migration Guide
+  Aviatrix Transit Network Migration Guide
 ---
 
 # Aviatrix Transit Network Migration Guide
