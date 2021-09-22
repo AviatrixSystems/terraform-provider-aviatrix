@@ -17,8 +17,8 @@ The **aviatrix_azure_peer** resource allows the creation and management of the A
 resource "aviatrix_azure_peer" "test_azurepeer" {
   account_name1             = "test1-account"
   account_name2             = "test2-account"
-  vnet_name_resource_group1 = "Foo_VNet1:Bar_RG1"
-  vnet_name_resource_group2 = "Foo_VNet2:Bar_RG2"
+  vnet_name_resource_group1 = "Foo_VNet1:Bar_RG1:GUID1"
+  vnet_name_resource_group2 = "Foo_VNet2:Bar_RG2:GUID2"
   vnet_reg1                 = "Central US"
   vnet_reg2                 = "East US"
 }
@@ -31,8 +31,8 @@ The following arguments are supported:
 ### Required
 * `account_name1` - (Required) Name of the Azure cloud account in the Aviatrix controller for VNet 1.
 * `account_name2` - (Required) Name of the Azure cloud account in the Aviatrix controller for VNet 2.
-* `vnet_name_resource_group1` - (Required) Azure VNet 1's name. Example: "VNet_Name:Resource_Group_Name".
-* `vnet_name_resource_group2` - (Required) Azure VNet 2's name. Example: "VNet_Name:Resource_Group_Name".
+* `vnet_name_resource_group1` - (Required) Azure VNet 1's name. Example: "VNet_Name1:Resource_Group_Name1:GUID1". As of controller version 6.5, vnet_name_resource_group1 must include the GUID of the VPC.
+* `vnet_name_resource_group2` - (Required) Azure VNet 2's name. Example: "VNet_Name2:Resource_Group_Name2:GUID2". As of controller version 6.5, vnet_name_resource_group2 must include the GUID of the VPC.
 * `vnet_reg1` - (Required) Region of Azure VNet 1. Example: "East US 2".
 * `vnet_reg2` - (Required) Region of Azure VNet 2. Example: "East US 2".
 
