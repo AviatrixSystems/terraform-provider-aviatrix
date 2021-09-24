@@ -179,13 +179,11 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-				Deprecated: strings.TrimSpace(`
-Non-ActiveMesh features will be removed in aviatrix provider v2.21.0.
-
-If you have set 'enable_active_mesh = true', no action is needed at this time. After you upgrade to aviatrix provider v2.21.0, you can safely remove the 'enable_active_mesh' attribute from your configuration.
-
-If you have set 'enable_active_mesh = false', you must migrate to Aviatrix ActiveMesh Transit Network before you can upgrade to aviatrix provider v2.21.0. Please see the following guide to migrate from Classic Aviatrix Encrypted Transit Network to Aviatrix ActiveMesh Transit Network: https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/migrating_to_active_mesh_transit_network
-`),
+				Deprecated: "Non-ActiveMesh features will be removed in aviatrix provider v2.21.0. " +
+					"\n\nIf you have set 'enable_active_mesh = true', no action is needed at this time. After you upgrade to aviatrix provider v2.21.0, you can safely remove the 'enable_active_mesh' attribute from your configuration." +
+					"\n\nIf you have set 'enable_active_mesh = false', you must migrate to Aviatrix ActiveMesh Transit Network before you can upgrade to aviatrix provider v2.21.0. " +
+					"Please see the following guide to migrate from Classic Aviatrix Encrypted Transit Network to Aviatrix ActiveMesh Transit Network: " +
+					"https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/migrating_to_active_mesh_transit_network",
 				Description: "Switch to Enable/Disable Active Mesh Mode for Transit Gateway. Valid values: true, false.",
 			},
 			"enable_vpc_dns_server": {
