@@ -47,6 +47,19 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				Description: "Remote Gateway IP.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					oldIpList := strings.Split(old, ",")
+					newIpList := strings.Split(new, ",")
+					if len(oldIpList) == len(newIpList) {
+						for i := range oldIpList {
+							if strings.TrimSpace(oldIpList[i]) != strings.TrimSpace(newIpList[i]) {
+								return false
+							}
+						}
+						return true
+					}
+					return false
+				},
 			},
 			"connection_type": {
 				Type:        schema.TypeString,
@@ -543,8 +556,6 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	ph1RemoteIdList := goaviatrix.ExpandStringList(phase1RemoteIdentifier)
 	if haEnabled && len(ph1RemoteIdList) != 0 && len(ph1RemoteIdList) != 2 {
 		return fmt.Errorf("please either set two phase 1 remote IDs or none, when HA is enabled")
-	} else if !haEnabled && len(phase1RemoteIdentifier) > 1 {
-		return fmt.Errorf("please either set one phase 1 remote ID or none, when HA is disabled")
 	}
 
 	if _, ok := d.GetOk("prepend_as_path"); ok {
@@ -918,8 +929,6 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 		ph1RemoteIdList := goaviatrix.ExpandStringList(phase1RemoteIdentifier)
 		if haEnabled && len(ph1RemoteIdList) != 0 && len(ph1RemoteIdList) != 2 {
 			return fmt.Errorf("please either set two phase 1 remote IDs or none, when HA is enabled")
-		} else if !haEnabled && len(phase1RemoteIdentifier) > 1 {
-			return fmt.Errorf("please either set one phase 1 remote ID or none, when HA is disabled")
 		}
 
 		if len(ph1RemoteIdList) == 0 && haEnabled {
