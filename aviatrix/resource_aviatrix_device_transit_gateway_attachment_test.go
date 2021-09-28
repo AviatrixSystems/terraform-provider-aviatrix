@@ -42,6 +42,7 @@ func TestAccAviatrixDeviceTransitGatewayAttachment_basic(t *testing.T) {
 					"pre_shared_key",
 					"local_tunnel_ip",
 					"remote_tunnel_ip",
+					"enable_learned_cidrs_approval",
 				},
 			},
 		},
@@ -68,6 +69,7 @@ func TestAccAviatrixDeviceTransitGatewayAttachment_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"pre_shared_key",
+					"enable_learned_cidrs_approval",
 				},
 			},
 		},
