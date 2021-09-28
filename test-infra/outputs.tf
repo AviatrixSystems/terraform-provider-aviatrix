@@ -79,7 +79,7 @@ output "AZURE_REGION" {
 }
 
 output "AZURE_VNET_ID" {
-  value = "${module.aviatrix_azure_vpc1.vnet}:${module.aviatrix_azure_vpc1.group}"
+  value = "${module.aviatrix_azure_vpc1.vnet}:${module.aviatrix_azure_vpc1.group}:${module.aviatrix_azure_vpc1.guid}"
 }
 
 output "AZURE_SUBNET" {
@@ -91,7 +91,7 @@ output "AZURE_REGION2" {
 }
 
 output "AZURE_VNET_ID2" {
-  value = "${module.aviatrix_azure_vpc2.vnet}:${module.aviatrix_azure_vpc2.group}"
+  value = "${module.aviatrix_azure_vpc2.vnet}:${module.aviatrix_azure_vpc2.group}:${module.aviatrix_azure_vpc2.guid}"
 }
 
 output "AZURE_SUBNET2" {
