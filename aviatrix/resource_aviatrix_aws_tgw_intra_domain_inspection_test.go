@@ -134,6 +134,7 @@ resource "aviatrix_aws_tgw_intra_domain_inspection" "test" {
 	tgw_name             = aviatrix_aws_tgw.test.tgw_name
 	route_domain_name    = "%[6]s"
 	firewall_domain_name = "%[7]s"
+	depends_on = [aviatrix_aws_tgw_vpc_attachment.test]
 }
 	`, accName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		tgwName, routeDomainName, firewallDomainName)
