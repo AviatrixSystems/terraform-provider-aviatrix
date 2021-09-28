@@ -25,7 +25,7 @@ build13: fmtcheck
 test: fmtcheck
 	go test -i $(TEST) || exit 1
 	echo $(TEST) | \
-		xargs -t -n4 go test $(TESTARGS) -timeout=600s -parallel=4
+		xargs -t -n4 go test $(TESTARGS) -timeout=1800s -parallel=4
 
 testacc: fmtcheck
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 600m

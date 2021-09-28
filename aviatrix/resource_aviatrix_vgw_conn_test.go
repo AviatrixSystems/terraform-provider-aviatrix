@@ -29,6 +29,7 @@ func TestAccAviatrixVGWConn_basic(t *testing.T) {
 	rName := acctest.RandString(5)
 
 	resourceName := "aviatrix_vgw_conn.test_vgw_conn"
+	importStateVerifyIgnore := []string{"enable_learned_cidrs_approval"}
 
 	skipAcc := os.Getenv("SKIP_VGW_CONN")
 	if skipAcc == "yes" {
@@ -58,9 +59,10 @@ func TestAccAviatrixVGWConn_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: importStateVerifyIgnore,
 			},
 		},
 	})

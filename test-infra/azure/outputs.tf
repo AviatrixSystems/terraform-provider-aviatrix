@@ -7,3 +7,6 @@ output "group" {
 output "subnet" {
    value = azurerm_subnet.aviatrix.address_prefix
 }
+output "guid" {
+   value = azurerm_virtual_network.aviatrix.guid
+}

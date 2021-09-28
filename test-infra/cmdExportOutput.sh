@@ -3,7 +3,7 @@
 # SetEnv takes two arguments, key and value
 SetEnv () {
   echo "$1=$2"
-  export $1=$2
+  export $1="$2"
 }
 
 SetEnv ARM_APPLICATION_ID $(terraform output -raw ARM_APPLICATION_ID)
@@ -11,8 +11,8 @@ SetEnv ARM_APPLICATION_KEY $(terraform output -raw ARM_APPLICATION_KEY)
 SetEnv ARM_DIRECTORY_ID $(terraform output -raw ARM_DIRECTORY_ID)
 SetEnv ARM_SUBSCRIPTION_ID $(terraform output -raw ARM_SUBSCRIPTION_ID)
 SetEnv AZURE_GW_SIZE $(terraform output -raw AZURE_GW_SIZE)
-SetEnv AZURE_REGION $(terraform output -raw AZURE_REGION)
-SetEnv AZURE_REGION2 $(terraform output -raw AZURE_REGION2)
+SetEnv AZURE_REGION "$(terraform output -raw AZURE_REGION)"
+SetEnv AZURE_REGION2 "$(terraform output -raw AZURE_REGION2)"
 SetEnv AZURE_SUBNET $(terraform output -raw AZURE_SUBNET)
 SetEnv AZURE_SUBNET2 $(terraform output -raw AZURE_SUBNET2)
 SetEnv AZURE_VNET_ID $(terraform output -raw AZURE_VNET_ID)
@@ -71,6 +71,7 @@ SetEnv AZURE_VNG $(terraform output -raw AZURE_VNG)
 SetEnv SKIP_DATA_ACCOUNT "no"
 SetEnv SKIP_DATA_CALLER_IDENTITY "no"
 SetEnv SKIP_DATA_FIRENET "no"
+SetEnv SKIP_DATA_FIRENET_FIREWALL_MANAGER "no"
 SetEnv SKIP_DATA_FIRENET_VENDOR_INTEGRATION "no"
 SetEnv SKIP_DATA_FIREWALL "no"
 SetEnv SKIP_DATA_GATEWAY "no"
@@ -89,7 +90,7 @@ SetEnv SKIP_ACCOUNT "no"
 SetEnv SKIP_ACCOUNT_AWS "no"
 SetEnv SKIP_ACCOUNT_AZURE "no"
 SetEnv SKIP_ACCOUNT_GCP "no"
-SetEnv SKIP_ACCOUNT_OCI "yes"
+SetEnv SKIP_ACCOUNT_OCI "no"
 SetEnv SKIP_ACCOUNT_AZUREGOV "yes"
 SetEnv SKIP_ACCOUNT_AWSGOV "no"
 SetEnv SKIP_ACCOUNT_AWSCHINA_IAM "yes"
@@ -151,12 +152,13 @@ SetEnv SKIP_GATEWAY_GCP "no"
 SetEnv SKIP_GATEWAY_AZURE "no"
 SetEnv SKIP_GATEWAY_OCI "yes"
 SetEnv SKIP_GATEWAY_AWSGOV "yes"
+SetEnv SKIP_GATEWAY_CERTIFICATE_CONFIG "no"
 SetEnv SKIP_GATEWAY_DNAT "no"
 SetEnv SKIP_GATEWAY_DNAT_AWS "no"
 SetEnv SKIP_GATEWAY_DNAT_AZURE "no"
 SetEnv SKIP_GATEWAY_SNAT "no"
 SetEnv SKIP_GATEWAY_SNAT_AWS "no"
-SetEnv SKIP_GATEWAY_SNAT_AZURE "yes"
+SetEnv SKIP_GATEWAY_SNAT_AZURE "no"
 SetEnv SKIP_GEO_VPN "no"
 SetEnv SKIP_NETFLOW_AGENT "no"
 SetEnv SKIP_PERIODIC_PING "no"

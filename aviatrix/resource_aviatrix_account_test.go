@@ -172,7 +172,7 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 	var account goaviatrix.Account
 
 	rInt := acctest.RandInt()
-	importStateVerifyIgnore := []string{"aws_secret_key", "audit_account"}
+	importStateVerifyIgnore := []string{"aws_secret_key", "aws_access_key", "audit_account"}
 
 	skipAcc := os.Getenv("SKIP_ACCOUNT")
 	skipAWS := os.Getenv("SKIP_ACCOUNT_AWS")

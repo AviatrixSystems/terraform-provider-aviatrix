@@ -22,6 +22,7 @@ func TestAccAviatrixControllerConfig_basic(t *testing.T) {
 	}
 	msgCommon := ". Set SKIP_CONTROLLER_CONFIG to yes to skip Controller Config tests"
 	resourceName := "aviatrix_controller_config.test_controller_config"
+	importStateVerifyIgnore := []string{"backup_cloud_type", "backup_configuration", "manage_gateway_upgrades", "multiple_backups"}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -42,9 +43,10 @@ func TestAccAviatrixControllerConfig_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: importStateVerifyIgnore,
 			},
 		},
 	})
