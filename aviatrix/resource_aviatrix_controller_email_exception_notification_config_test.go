@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAviatrixControllerExceptionEmailNotificationConfig_basic(t *testing.T) {
+func TestAccAviatrixControllerEmailExceptionNotificationConfig_basic(t *testing.T) {
 	skipAcc := os.Getenv("SKIP_CONTROLLER_EMAIL_EXCEPTION_NOTIFICATION_CONFIG")
 	if skipAcc == "yes" {
 		t.Skip("Skipping Controller Email Exception Notification Config test as SKIP_CONTROLLER_EMAIL_EXCEPTION_NOTIFICATION_CONFIG is set")
