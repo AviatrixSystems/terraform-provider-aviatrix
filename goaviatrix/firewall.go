@@ -71,16 +71,20 @@ func (c *Client) GetPolicy(firewall *Firewall) (*Firewall, error) {
 		"vpc_name": firewall.GwName,
 	}
 
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "does not exist") {
+				log.Errorf("Couldn't find Aviatrix Firewall policies for gateway %s: %s", firewall.GwName, reason)
+				return ErrNotFound
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
+		}
+		return nil
+	}
 	var data FirewallResp
-
-	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	err := c.GetAPI(&data, form["action"], form, checkFunc)
 	if err != nil {
 		return nil, err
-	}
-
-	if !data.Return {
-		log.Errorf("Couldn't find Aviatrix Firewall policies for gateway %s: %s", firewall.GwName, data.Reason)
-		return nil, ErrNotFound
 	}
 
 	return &data.Results, nil
