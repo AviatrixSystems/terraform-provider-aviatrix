@@ -305,21 +305,21 @@ Please find available firewall images from OCI marketplace.
 
 ### Authentication method
 * `key_name`- (Optional) Applicable to AWS deployment only. AWS Key Pair name. If not provided a Key Pair will be generated.
-* `username`- (Optional) Applicable to Azure deployment only. "admin" as a username is not accepted.
-* `password`- (Optional) Applicable to Azure deployment only.
-* `ssh_public_key` - (Optional) Applicable to Azure deployment only.
+* `username`- (Optional) Applicable to Azure or AzureGov deployment only. "admin" as a username is not accepted.
+* `password`- (Optional) Applicable to Azure or AzureGov deployment only.
+* `ssh_public_key` - (Optional) Applicable to Azure or AzureGov deployment only.
 
 ### Advanced Options
 * `iam_role` - (Optional) Only available for AWS. In advanced mode, create an IAM Role on the AWS account that launched the FireNet gateway. Create a policy to attach to the role. The policy is to allow access to "Bootstrap Bucket".
 * `bootstrap_bucket_name`- (Optional) Only available for AWS and GCP. For GCP, only Palo Alto Networks VM-Series deployment can use this attribute. In advanced mode, specify a bootstrap bucket name where the initial configuration and policy file is stored.
-* `bootstrap_storage_name` - (Optional) Advanced option. Bootstrap storage name. Applicable to Azure and Palo Alto Networks VM-Series/Fortinet Series deployment only. Available as of provider version R2.17.1+.
-* `storage_access_key` - (Optional) Advanced option. Storage access key. Applicable to Azure and Palo Alto Networks VM-Series deployment only. Available as of provider version R2.17.1+.
-* `file_share_folder` - (Optional) Advanced option. File share folder. Applicable to Azure and Palo Alto Networks VM-Series deployment only. Available as of provider version R2.17.1+.
-* `share_directory` - (Optional) Advanced option. Share directory. Applicable to Azure and Palo Alto Networks VM-Series deployment only. Available as of provider version R2.17.1+.
+* `bootstrap_storage_name` - (Optional) Advanced option. Bootstrap storage name. Applicable to Azure or AzureGov and Palo Alto Networks VM-Series/Fortinet Series deployment only. Available as of provider version R2.17.1+.
+* `storage_access_key` - (Optional) Advanced option. Storage access key. Applicable to Azure or AzureGov and Palo Alto Networks VM-Series deployment only. Available as of provider version R2.17.1+.
+* `file_share_folder` - (Optional) Advanced option. File share folder. Applicable to Azure or AzureGov and Palo Alto Networks VM-Series deployment only. Available as of provider version R2.17.1+.
+* `share_directory` - (Optional) Advanced option. Share directory. Applicable to Azure or AzureGov and Palo Alto Networks VM-Series deployment only. Available as of provider version R2.17.1+.
 * `sic_key` - (Optional) Advanced option. Sic key. Applicable to Check Point Series deployment only.
-* `container_folder` - (Optional) Advanced option. Container folder. Applicable to Azure and Fortinet Series deployment only.
-* `sas_url_config` - (Optional) Advanced option. SAS URL Config. Applicable to Azure and Fortinet Series deployment only.
-* `sas_url_license` - (Optional) Advanced option. SAS URL License. Applicable to Azure and Fortinet Series deployment only.
+* `container_folder` - (Optional) Advanced option. Container folder. Applicable to Azure or AzureGov and Fortinet Series deployment only.
+* `sas_url_config` - (Optional) Advanced option. SAS URL Config. Applicable to Azure or AzureGov and Fortinet Series deployment only.
+* `sas_url_license` - (Optional) Advanced option. SAS URL License. Applicable to Azure or AzureGov and Fortinet Series deployment only.
 * `user_data` - (Optional) Advanced option. User Data. Applicable to Check Point Series and Fortinet Series deployment only. Type: String.
 
 ### Misc.
@@ -339,7 +339,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-**firewall_instance** can be imported using the `instance_id`. For Azure FireNet instances, the value will be the `firewall_name` concatenated with a ":" and the Resource Group of the `vpc_id` set for that instance. e.g.
+**firewall_instance** can be imported using the `instance_id`. For Azure or AzureGov FireNet instances, the value will be the `firewall_name` concatenated with a ":" and the Resource Group of the `vpc_id` set for that instance. e.g.
 
 ```
 $ terraform import aviatrix_firewall_instance.test instance_id
