@@ -101,16 +101,6 @@ func getStringSet(d *schema.ResourceData, k string) []string {
 	return sl
 }
 
-// intInSlice checks if the needle is in the haystack
-func intInSlice(needle int, haystack []int) bool {
-	for _, element := range haystack {
-		if element == needle {
-			return true
-		}
-	}
-	return false
-}
-
 func stringInSlice(needle string, haystack []string) bool {
 	for _, element := range haystack {
 		if element == needle {
@@ -154,15 +144,6 @@ func extractTags(d *schema.ResourceData, cloudType int) (map[string]string, erro
 		tagsStrMap[key] = valStr
 	}
 	return tagsStrMap, nil
-}
-
-func TagsMapToString(tagsMap map[string]string) string {
-	tagList := make([]string, 0, len(tagsMap))
-	for key, val := range tagsMap {
-		tagList = append(tagList, key+":"+val)
-	}
-	tagListStr := strings.Join(tagList, ",")
-	return tagListStr
 }
 
 func TagsMapToJson(tagsMap map[string]string) (string, error) {
