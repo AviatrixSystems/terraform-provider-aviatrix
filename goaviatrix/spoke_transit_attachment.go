@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"fmt"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -28,9 +29,20 @@ func (c *Client) GetSpokeTransitAttachment(spokeTransitAttachment *SpokeTransitA
 		"vpc_name": spokeTransitAttachment.SpokeGwName,
 	}
 
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "does not exist") {
+				log.Errorf("Couldn't find Spoke Transit Attachment: %s", reason)
+				return ErrNotFound
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
+		}
+		return nil
+	}
+
 	var data GatewayDetailApiResp
 
-	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	err := c.GetAPI(&data, form["action"], form, checkFunc)
 	if err != nil {
 		return nil, err
 	}
