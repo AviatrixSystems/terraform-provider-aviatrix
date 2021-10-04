@@ -32,5 +32,5 @@ else
   done
   echoLog "Go test regex: $test_regex"
   cd .. &&
-    TF_ACC=1 go test -v ./aviatrix -run $test_regex
+    TF_ACC=1 go test -v ./aviatrix -run $test_regex -timeout=1800s
 fi
