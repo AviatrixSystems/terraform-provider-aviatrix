@@ -93,32 +93,25 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				Description: "(Optional) Enable peering over private network. Insane mode is required on both transit gateways. Available as of provider version R2.17.1",
 			},
 			"enable_single_tunnel_mode": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return !d.Get("enable_peering_over_private_network").(bool)
-				},
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
 				Description: "Enable peering with Single-Tunnel mode.",
 			},
 			"enable_insane_mode_encryption_over_internet": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				Default:       false,
-				ForceNew:      true,
-				ConflictsWith: []string{"enable_peering_over_private_network", "enable_single_tunnel_mode"},
-				RequiredWith:  []string{"tunnel_count"},
-				Description:   "Enable Insane Mode Encryption over Internet. Type: Boolean. Default: false.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+				Description: "Enable Insane Mode Encryption over Internet. Type: Boolean. Default: false.",
 			},
 			"tunnel_count": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.IntBetween(2, 20),
-				ConflictsWith: []string{"enable_peering_over_private_network", "enable_single_tunnel_mode"},
-				RequiredWith:  []string{"enable_insane_mode_encryption_over_internet"},
-				Description:   "Number of public tunnels. Only valid with 'enable_insane_mode_encryption_over_internet'. Type: Integer. Default: 4. Valid Range: 2-20.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntBetween(2, 20),
+				Description:  "Number of public tunnels. Only valid with 'enable_insane_mode_encryption_over_internet'. Type: Integer. Default: 4. Valid Range: 2-20.",
 			},
 		},
 	}
@@ -156,6 +149,10 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 		InsaneModeOverInternet:         d.Get("enable_insane_mode_encryption_over_internet").(bool),
 	}
 
+	if transitGatewayPeering.PrivateIPPeering && transitGatewayPeering.InsaneModeOverInternet {
+		return fmt.Errorf("enable_peering_over_private_network conflicts with enable_insane_mode_encryption_over_internet")
+	}
+
 	if d.Get("enable_single_tunnel_mode").(bool) {
 		if transitGatewayPeering.PrivateIPPeering {
 			transitGatewayPeering.SingleTunnel = true
@@ -165,8 +162,16 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 	}
 
 	tunnelCount := d.Get("tunnel_count").(int)
-	if transitGatewayPeering.InsaneModeOverInternet {
-		transitGatewayPeering.TunnelCount = tunnelCount
+	if tunnelCount != 0 {
+		if transitGatewayPeering.InsaneModeOverInternet {
+			transitGatewayPeering.TunnelCount = tunnelCount
+		} else {
+			return fmt.Errorf("tunnel_count is only valid when enable_insane_mode_encryption_over_internet is set to true")
+		}
+	} else {
+		if transitGatewayPeering.InsaneModeOverInternet {
+			return fmt.Errorf("enable_insane_mode_encryption_over_internet set to true requires valid tunnel_count")
+		}
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway peering: %#v", transitGatewayPeering)
@@ -302,7 +307,9 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 	d.Set("enable_peering_over_private_network", transitGatewayPeering.PrivateIPPeering)
 	d.Set("enable_single_tunnel_mode", transitGatewayPeering.SingleTunnel)
 	d.Set("enable_insane_mode_encryption_over_internet", transitGatewayPeering.InsaneModeOverInternet)
-	d.Set("tunnel_count", transitGatewayPeering.TunnelCount)
+	if transitGatewayPeering.InsaneModeOverInternet {
+		d.Set("tunnel_count", transitGatewayPeering.TunnelCount)
+	}
 
 	d.SetId(transitGatewayPeering.TransitGatewayName1 + "~" + transitGatewayPeering.TransitGatewayName2)
 	return nil
