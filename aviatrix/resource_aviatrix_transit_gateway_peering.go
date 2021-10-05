@@ -170,7 +170,7 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 		}
 	} else {
 		if transitGatewayPeering.InsaneModeOverInternet {
-			return fmt.Errorf("enable_insane_mode_encryption_over_internet set to true requires valid tunnel_count")
+			return fmt.Errorf("enable_insane_mode_encryption_over_internet being set to true requires valid tunnel_count")
 		}
 	}
 
