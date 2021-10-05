@@ -111,7 +111,7 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(2, 20),
-				Description:  "Number of public tunnels. Only valid with 'enable_insane_mode_encryption_over_internet'. Type: Integer. Default: 4. Valid Range: 2-20.",
+				Description:  "Number of public tunnels. Only valid with 'enable_insane_mode_encryption_over_internet'. Type: Integer. Valid Range: 2-20.",
 			},
 		},
 	}
