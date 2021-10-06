@@ -12,7 +12,7 @@ fi
 if [ "$1" == "ALL" ]; then
   echoLog "Running acceptance tests for all resources"
   cd .. &&
-    TF_ACC=1 go test -v ./...
+    TF_ACC=1 go test -v ./... -timeout=1200m
 else
   resources=" "
   for var in "$@"; do
