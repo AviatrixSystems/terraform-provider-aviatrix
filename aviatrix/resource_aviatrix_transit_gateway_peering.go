@@ -92,6 +92,7 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				ForceNew: true,
 				Description: "(Optional) Advanced option. Enable peering over private network. Only appears and applies to " +
 					"when the two Multi-cloud Transit Gateways are each launched in Insane Mode and in a different cloud type. " +
+					"Conflicts with `enable_insane_mode_encryption_over_internet` and `tunnel_count`. " +
 					"Type: Boolean. Default: false. Available in provider version R2.17.1+",
 			},
 			"enable_single_tunnel_mode": {
@@ -104,8 +105,8 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 				},
 				Description: "(Optional) Advanced option. Enable peering with Single-Tunnel mode. Only appears and applies " +
 					"to when the two Multi-cloud Transit Gateways are each launched in Insane Mode and in a different cloud type. " +
-					"Required with `enable_peering_over_private_network`. Type: Boolean. Default: false. " +
-					"Available as of provider version R2.18+.",
+					"Required with `enable_peering_over_private_network`. Conflicts with `enable_insane_mode_encryption_over_internet` and `tunnel_count`. " +
+					"Type: Boolean. Default: false. Available as of provider version R2.18+.",
 			},
 			"enable_insane_mode_encryption_over_internet": {
 				Type:     schema.TypeBool,
