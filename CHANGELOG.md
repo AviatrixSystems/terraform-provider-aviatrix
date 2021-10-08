@@ -12,12 +12,14 @@
 
 ### Bug Fixes:
 1. Fixed issue where ``phase1_remote_identifier`` would always be unset when two IP addressed are used for ``remote_gateway_ip`` in **aviatrix_transit_external_device_conn**
-2. Fixed issue where CheckPoint couldn't be launched in OCI cloud in **aviatrix_firewall_instance**
+2. Fixed issue where OCI cloud **aviatrix_firewall_instance**s couldn't be launched with CheckPoint images
 3. Fixed issue where refreshing **aviatrix_cloudn_transit_gateway_attachment** state would fail if attachment is deleted from UI
 4. Fixed issue where refreshing **aviatrix_vgw_conn** state would fail it connection is deleted from UI
 
 ### Deprecations:
 1. Deprecated ``enable_active_mesh`` in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+- Non-ActiveMesh features will be removed in aviatrix provider v2.21.0. Please see the following guide to migrate from Classic Aviatrix Encrypted Transit Network to Aviatrix ActiveMesh Transit Network:
+  "https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/migrating_to_active_mesh_transit_network"
 
 
 ## 2.20.0 (August 17, 2021)
