@@ -2,10 +2,11 @@ package aviatrix
 
 import (
 	"context"
+	"log"
+
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"log"
 )
 
 func resourceAviatrixCloudnRegistration() *schema.Resource {
