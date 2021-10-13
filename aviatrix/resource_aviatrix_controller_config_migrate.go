@@ -22,11 +22,11 @@ func resourceAviatrixControllerConfigResourceV0() *schema.Resource {
 }
 
 func resourceAviatrixControllerConfigStateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
-	if _, ok := rawState["sg_management_account_name"]; !ok {
+	if _, ok := rawState["sg_management_account_name"]; ok {
 		delete(rawState, "sg_management_account_name")
 	}
 
-	if _, ok := rawState["security_group_management"]; !ok {
+	if _, ok := rawState["security_group_management"]; ok {
 		delete(rawState, "security_group_management")
 	}
 
