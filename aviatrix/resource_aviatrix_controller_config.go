@@ -25,15 +25,6 @@ func resourceAviatrixControllerConfig() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		SchemaVersion: 1,
-		StateUpgraders: []schema.StateUpgrader{
-			{
-				Type:    resourceAviatrixControllerConfigResourceV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: resourceAviatrixControllerConfigStateUpgradeV0,
-				Version: 0,
-			},
-		},
-
 		Schema: map[string]*schema.Schema{
 			"http_access": {
 				Type:        schema.TypeBool,
