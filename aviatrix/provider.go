@@ -64,6 +64,7 @@ func Provider() *schema.Provider {
 			"aviatrix_controller_email_exception_notification_config": resourceAviatrixControllerEmailExceptionNotificationConfig(),
 			"aviatrix_controller_gateway_keepalive_config":            resourceAviatrixControllerGatewayKeepaliveConfig(),
 			"aviatrix_controller_private_oob":                         resourceAviatrixControllerPrivateOob(),
+			"aviatrix_controller_security_group_management_config":    resourceAviatrixControllerSecurityGroupManagementConfig(),
 			"aviatrix_copilot_association":                            resourceAviatrixCopilotAssociation(),
 			"aviatrix_datadog_agent":                                  resourceAviatrixDatadogAgent(),
 			"aviatrix_device_aws_tgw_attachment":                      resourceAviatrixDeviceAwsTgwAttachment(),

@@ -15,31 +15,25 @@ The **aviatrix_controller_config** resource allows management of an Aviatrix Con
 ```hcl
 # Create an Aviatrix Controller Config
 resource "aviatrix_controller_config" "test_controller_config" {
-  sg_management_account_name = "username"
-  http_access                = true
-  fqdn_exception_rule        = false
-  security_group_management  = true
+  http_access         = true
+  fqdn_exception_rule = false
 }
 ```
 ```hcl
 # Create an Aviatrix Controller Config with Controller Upgrade Without Upgrading Gateways
 resource "aviatrix_controller_config" "test_controller_config" {
-  sg_management_account_name = "username"
-  http_access                = true
-  fqdn_exception_rule        = false
-  security_group_management  = true
-  target_version             = "latest"
-  manage_gateway_upgrades    = false
+  http_access             = true
+  fqdn_exception_rule     = false
+  target_version          = "latest"
+  manage_gateway_upgrades = false
 }
 ```
 ```hcl
 # Create an Aviatrix Controller Config with Controller Upgrade + Upgrade All Gateways
 resource "aviatrix_controller_config" "test_controller_config" {
-  sg_management_account_name = "username"
-  http_access                = true
-  fqdn_exception_rule        = false
-  security_group_management  = true
-  target_version             = "latest"
+  http_access         = true
+  fqdn_exception_rule = false
+  target_version      = "latest"
 }
 ```
 ```hcl
@@ -79,8 +73,6 @@ The following arguments are supported:
 * `manage_gateway_upgrades` - (Optional) If true, aviatrix_controller_config will upgrade all gateways when target_version is set. If false, only the controller will be upgraded when target_version is set. In that case gateway upgrades should be handled in each gateway resource individually using the software_version and image_version attributes. Type: boolean. Default: true. Available as of provider version R2.20.0+.
 
 ### Security Options
-* `sg_management_account_name` - (Optional) Select the [primary access account](https://docs.aviatrix.com/HowTos/aviatrix_account.html#setup-primary-access-account-for-aws-cloud).
-* `security_group_management` - (Optional) Enable to allow Controller to automatically manage inbound rules from gateways. Valid values: true, false. Default value: false.
 * `http_access` - (Optional) Switch for HTTP access. Valid values: true, false. Default value: false.
 * `fqdn_exception_rule` - (Optional) Enable/disable packets without an SNI field to pass through gateway(s). Valid values: true, false. Default value: true. For more information on this setting, please see [here](https://docs.aviatrix.com/HowTos/FQDN_Whitelists_Ref_Design.html#exception-rule)
 * `aws_guard_duty_scanning_interval` - (Optional) Configure the AWS Guard Duty scanning interval. Valid values: 5, 10, 15, 30 or 60. Default value: 60. Available as of provider version R2.18+.
@@ -112,6 +104,13 @@ In addition to all arguments above, the following attributes are exported:
 * `version` - Current version of the controller without build number. Example: "6.5"
 * `previous_version` - Previous version of the controller including the build number. Example: "6.5.123". Available as of provider version R2.20.0+.
 * `current_version` - Current version of the controller including the build number. Example: "6.5.123". Available as of provider version R2.20.0+.
+
+The following attributes are deprecated and removed. Please use **aviatrix_controller_security_group_management_config** resource to manage controller's security group management settings.
+
+
+* `sg_management_account_name` - (Optional) Select the [primary access account](https://docs.aviatrix.com/HowTos/aviatrix_account.html#setup-primary-access-account-for-aws-cloud).
+* `security_group_management` - (Optional) Enable to allow Controller to automatically manage inbound rules from gateways. Valid values: true, false. Default value: false.
+
 
 ## Import
 
