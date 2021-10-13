@@ -1,4 +1,28 @@
-## 2.20.0 (Unreleased)
+## 2.20.1 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.5.2404**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Firewall Network
+1. Implemented support for AzureGov cloud in **aviatrix_firewall_instance**
+
+### Enhancements:
+1. Added more validity checks for advanced option attributes in **aviatrix_transit_gateway_peering**
+
+### Bug Fixes:
+1. Fixed issue where ``phase1_remote_identifier`` would always be unset when two IP addressed are used for ``remote_gateway_ip`` in **aviatrix_transit_external_device_conn**
+2. Fixed issue where OCI cloud **aviatrix_firewall_instance**s couldn't be launched with CheckPoint images
+3. Fixed issue where refreshing **aviatrix_cloudn_transit_gateway_attachment** state would fail if attachment is deleted from UI
+4. Fixed issue where refreshing **aviatrix_vgw_conn** state would fail it connection is deleted from UI
+
+### Deprecations:
+1. Deprecated ``enable_active_mesh`` in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+- Non-ActiveMesh features will be removed in aviatrix provider v2.21.0. Please see the following guide to migrate from Classic Aviatrix Encrypted Transit Network to Aviatrix ActiveMesh Transit Network:
+  "https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/migrating_to_active_mesh_transit_network"
+
+
+## 2.20.0 (August 17, 2021)
 ### Notes:
 - Supported Controller version: **UserConnect-6.5**
 - Supported Terraform version: **v1.x**
@@ -50,12 +74,10 @@
 - ``current_version``
 - ``previous_version``
 
-
 ### Enhancements:
 1. Improved refresh performance of **aviatrix_firenet_firewall_manager** resource and data source
 2. Added ``vpn_tunnel_data`` in **aviatrix_aws_tgw_vpn_conn** resource
 3. Added ``private_key_file`` in **aviatrix_firenet_vendor_integration** data source to allow the user to use private key file instead of username/password for Check Point Cloud Guard
-
 
 ### Bug Fixes:
 1. Fixed issue in **aviatrix_firenet** where creating with ``keep_alive_via_lan_interface_enabled`` set to false would still set ``keep_alive_via_lan_interface_enabled`` to true
@@ -173,7 +195,7 @@
 - ``ha_fault_domain``
 
 
-## 2.19.2 (Jun 11, 2021)
+## 2.19.2 (June 11, 2021)
 ### Notes:
 - Due to technical issues, 2.19.2 was not released correctly. Please use 2.19.3 instead.
 
