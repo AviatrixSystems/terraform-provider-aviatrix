@@ -18,8 +18,8 @@
 
 ### Deprecations:
 1. Deprecated ``enable_active_mesh`` in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
-- Non-ActiveMesh features will be removed in aviatrix provider v2.21.0. Please see the following guide to migrate from Classic Aviatrix Encrypted Transit Network to Aviatrix ActiveMesh Transit Network:
-  "https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/migrating_to_active_mesh_transit_network"
+- Non-ActiveMesh features will be removed in Aviatrix provider v2.21.0. Please follow the guide [here](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/migrating_to_active_mesh_transit_network) to migrate from Classic Aviatrix Encrypted Transit Network to Aviatrix ActiveMesh Transit Network
+  
 
 
 ## 2.20.0 (August 17, 2021)
