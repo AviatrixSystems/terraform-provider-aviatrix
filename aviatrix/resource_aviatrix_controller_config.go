@@ -26,17 +26,6 @@ func resourceAviatrixControllerConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"sg_management_account_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Cloud account name of user.",
-			},
-			"security_group_management": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Used to manage the Controller instance’s inbound rules from gateways.",
-			},
 			"http_access": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -164,8 +153,6 @@ func resourceAviatrixControllerConfig() *schema.Resource {
 func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interface{}) error {
 	var err error
 
-	account := d.Get("sg_management_account_name").(string)
-
 	client := meta.(*goaviatrix.Client)
 
 	log.Printf("[INFO] Configuring Aviatrix controller : %#v", d)
@@ -210,26 +197,6 @@ func resourceAviatrixControllerConfigCreate(d *schema.ResourceData, meta interfa
 	}
 	if err != nil {
 		return fmt.Errorf("failed to configure controller exception rule: %s", err)
-	}
-
-	securityGroupManagement := d.Get("security_group_management").(bool)
-	if securityGroupManagement {
-		curStatus, _ := client.GetSecurityGroupManagementStatus()
-		if curStatus.State == "Enabled" {
-			log.Printf("[INFO] Security Group Management is already enabled")
-		} else {
-			err = client.EnableSecurityGroupManagement(account)
-		}
-	} else {
-		curStatus, _ := client.GetSecurityGroupManagementStatus()
-		if curStatus.State == "Disabled" {
-			log.Printf("[INFO] Security Group Management is already disabled")
-		} else {
-			err = client.DisableSecurityGroupManagement()
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("failed to configure controller Security Group Management: %s", err)
 	}
 
 	version := &goaviatrix.Version{
@@ -342,21 +309,6 @@ func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface
 		d.Set("fqdn_exception_rule", false)
 	}
 
-	sgm, err := client.GetSecurityGroupManagementStatus()
-	if err != nil {
-		return fmt.Errorf("could not read Aviatrix Controller Security Group Management Status: %s", err)
-	}
-	if sgm != nil {
-		if sgm.State == "Enabled" {
-			d.Set("security_group_management", true)
-		} else {
-			d.Set("security_group_management", false)
-		}
-		d.Set("sg_management_account_name", sgm.AccountName)
-	} else {
-		return fmt.Errorf("could not read Aviatrix Controller Security Group Management Status")
-	}
-
 	versionInfo, err := client.GetVersionInfo()
 	if err != nil {
 		return fmt.Errorf("unable to read Controller version information: %s", err)
@@ -393,6 +345,10 @@ func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface
 		} else {
 			d.Set("multiple_backups", false)
 		}
+	} else {
+		d.Set("backup_cloud_type", 0)
+		d.Set("backup_configuration", false)
+		d.Set("multiple_backups", false)
 	}
 
 	vpcDnsServerEnabled, err := client.GetControllerVpcDnsServerStatus()
@@ -424,7 +380,6 @@ func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface
 
 func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	account := d.Get("sg_management_account_name").(string)
 
 	log.Printf("[INFO] Updating Controller configuration: %#v", d)
 	d.Partial(true)
@@ -460,23 +415,6 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 			err := client.DisableExceptionRule()
 			if err != nil {
 				log.Printf("[ERROR] Failed to disable exception rule on controller %s", d.Id())
-				return err
-			}
-		}
-	}
-
-	if d.HasChange("security_group_management") {
-		securityGroupManagement := d.Get("security_group_management").(bool)
-		if securityGroupManagement {
-			err := client.EnableSecurityGroupManagement(account)
-			if err != nil {
-				log.Printf("[ERROR] Failed to enable Security Group Management on controller %s", d.Id())
-				return err
-			}
-		} else {
-			err := client.DisableSecurityGroupManagement()
-			if err != nil {
-				log.Printf("[ERROR] Failed to disable Security Group Management on controller %s", d.Id())
 				return err
 			}
 		}
@@ -664,16 +602,6 @@ func resourceAviatrixControllerConfigDelete(d *schema.ResourceData, meta interfa
 		err := client.EnableExceptionRule()
 		if err != nil {
 			log.Printf("[ERROR] Failed to enable exception rule on controller %s", d.Id())
-			return err
-		}
-	}
-
-	d.Set("security_group_management", false)
-	curStatusSG, _ := client.GetSecurityGroupManagementStatus()
-	if curStatusSG.State != "Disabled" {
-		err := client.DisableSecurityGroupManagement()
-		if err != nil {
-			log.Printf("[ERROR] Failed to disable security group management on controller %s", d.Id())
 			return err
 		}
 	}
