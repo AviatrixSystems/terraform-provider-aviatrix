@@ -85,11 +85,7 @@ func resourceAviatrixControllerSecurityGroupManagementConfigRead(d *schema.Resou
 		return fmt.Errorf("could not read Aviatrix Controller Security Group Management Status: %s", err)
 	}
 	if sgm != nil {
-		if sgm.State == "Enabled" {
-			d.Set("enable_security_group_management", true)
-		} else {
-			d.Set("enable_security_group_management", false)
-		}
+		d.Set("enable_security_group_management", sgm.State == "Enabled")
 		d.Set("account_name", sgm.AccountName)
 	} else {
 		return fmt.Errorf("could not read Aviatrix Controller Security Group Management Status")
@@ -102,28 +98,23 @@ func resourceAviatrixControllerSecurityGroupManagementConfigRead(d *schema.Resou
 func resourceAviatrixControllerSecurityGroupManagementConfigUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	account := d.Get("account_name").(string)
-
-	if d.HasChange("enable_security_group_management") {
+	if d.HasChange("account_name") || d.HasChange("enable_security_group_management") {
+		oldAccount, newAccount := d.GetChange("account_name")
 		securityGroupManagement := d.Get("enable_security_group_management").(bool)
-		if securityGroupManagement {
-			if account == "" {
-				return fmt.Errorf("account_name is needed to enable controller Security Group Management")
-			}
-			err := client.EnableSecurityGroupManagement(account)
-			if err != nil {
-				return fmt.Errorf("failed to enable Security Group Management on controller %s: %s", d.Id(), err)
-			}
-		} else {
-			if account != "" {
-				return fmt.Errorf("account_name isn't needed to disable controller Security Group Management")
-			}
+
+		if oldAccount.(string) != "" && newAccount.(string) != "" && securityGroupManagement {
 			err := client.DisableSecurityGroupManagement()
 			if err != nil {
 				if err != nil {
 					return fmt.Errorf("failed to disable Security Group Management on controller %s: %s", d.Id(), err)
 				}
 			}
+			err = client.EnableSecurityGroupManagement(newAccount.(string))
+			if err != nil {
+				return fmt.Errorf("failed to enable Security Group Management on controller %s: %s", d.Id(), err)
+			}
+		} else {
+			return resourceAviatrixControllerSecurityGroupManagementConfigCreate(d, meta)
 		}
 	}
 

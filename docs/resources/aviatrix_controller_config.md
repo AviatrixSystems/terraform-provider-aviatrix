@@ -105,8 +105,7 @@ In addition to all arguments above, the following attributes are exported:
 * `previous_version` - Previous version of the controller including the build number. Example: "6.5.123". Available as of provider version R2.20.0+.
 * `current_version` - Current version of the controller including the build number. Example: "6.5.123". Available as of provider version R2.20.0+.
 
-The following attributes are deprecated and removed. Please use **aviatrix_controller_security_group_management_config** resource to manage controller's security group management settings.
-
+~> **NOTE:** The following attributes are deprecated and removed. Please use **aviatrix_controller_security_group_management_config** resource to manage controller's security group management settings.
 
 * `sg_management_account_name` - (Optional) Select the [primary access account](https://docs.aviatrix.com/HowTos/aviatrix_account.html#setup-primary-access-account-for-aws-cloud).
 * `security_group_management` - (Optional) Enable to allow Controller to automatically manage inbound rules from gateways. Valid values: true, false. Default value: false.
