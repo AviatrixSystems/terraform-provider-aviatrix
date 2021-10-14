@@ -258,7 +258,8 @@ func (c *Client) GetLatestVersion() (string, error) {
 func ParseVersion(version string) (string, *AviatrixVersion, error) {
 	version = strings.TrimPrefix(version, "UserConnect-")
 	if version == "" {
-		return "", nil, errors.New("unable to parse version information since it is empty")
+		log.Infof("version is an empty string")
+		return "", nil, nil
 	}
 
 	parts := strings.Split(version, ".")
