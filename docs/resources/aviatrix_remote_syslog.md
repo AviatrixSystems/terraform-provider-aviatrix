@@ -18,8 +18,8 @@ resource "aviatrix_remote_syslog" "test_remote_syslog" {
   index    = 0
   name     = "test"
   server   = "1.2.3.4"
-  port     = 10
-  protocol = "TCP"
+  port     = 5000
+  protocol = "UDP"
 }
 ```
 
@@ -29,8 +29,8 @@ resource "aviatrix_remote_syslog" "test_remote_syslog" {
   index                   = 0
   name                    = "rsyslog-profilename"
   server                  = "1.2.3.4"
-  port                    = 10
-  protocol                = "TCP"
+  port                    = 5000
+  protocol                = "UDP"
   ca_certificate_file     = file("/path/to/ca.pem")
   public_certificate_file = file("/path/to/server.pem")
   private_key_file        = file("/path/to/client.pem")
