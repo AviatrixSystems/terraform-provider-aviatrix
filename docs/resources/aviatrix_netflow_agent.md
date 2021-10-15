@@ -16,7 +16,7 @@ The **aviatrix_netflow_agent** resource allows the enabling and disabling of net
 # Enable netflow agent
 resource "aviatrix_netflow_agent" "test_netflow_agent" {
   server_ip         = "1.2.3.4"
-  port              = 10
+  port              = 31283
   version           = 5
   excluded_gateways = [
     "a", 
