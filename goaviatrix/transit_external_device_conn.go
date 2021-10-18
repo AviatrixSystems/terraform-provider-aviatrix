@@ -299,6 +299,9 @@ func TransitExternalDeviceConnPh1RemoteIdDiffSuppressFunc(k, old, new string, d 
 	if len(ph1RemoteIdListOld) != 0 && len(ph1RemoteIdListNew) != 0 {
 		if haEnabled {
 			if len(ph1RemoteIdListNew) != 2 || len(ph1RemoteIdListOld) != 2 {
+				if len(ph1RemoteIdListNew) == 1 && len(ph1RemoteIdListOld) == 1 {
+					return ph1RemoteIdListOld[0] == ipList[0] && ph1RemoteIdListNew[0] == ipList[0]
+				}
 				return false
 			}
 			return ph1RemoteIdListOld[0] == ipList[0] && ph1RemoteIdListNew[0] == ipList[0] &&
@@ -330,6 +333,9 @@ func TransitExternalDeviceConnPh1RemoteIdDiffSuppressFunc(k, old, new string, d 
 
 	if haEnabled {
 		if len(ph1RemoteIdListOld) == 2 && ph1RemoteIdListOld[0] == ipList[0] && strings.TrimSpace(ph1RemoteIdListOld[1]) == haip && len(ph1RemoteIdListNew) == 0 {
+			return true
+		}
+		if len(ph1RemoteIdListOld) == 1 && ph1RemoteIdListOld[0] == ipList[0] && len(ph1RemoteIdListNew) == 0 {
 			return true
 		}
 	}
