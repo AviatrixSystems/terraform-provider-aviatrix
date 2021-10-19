@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.20.1 (UserConnect-6.5.2404)``
+``Last updated: R2.20.1 (UserConnect-6.5.2475)``
 
 
 ---
@@ -266,7 +266,8 @@ Note there are standalone resources already in place to be used and one only nee
 |(changed) | external_device_conn | remote_vpc_name | **Yes**; while existing **external_device_conn** resources created prior to 6.5/R2.20 will not experience any changes, all future **external_device_conn** must be created with the following new 3-tuple format `<vnet-name>:<resource-group-name>:<subscription-id>`. |
 
 
-## R2.20.1 (UserConnect-6.5.2404)
+## R2.20.1 (UserConnect-6.5.2475)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
 |(deprecated) | spoke_gateway, transit_gateway | enable_active_mesh | **Yes**; if customers are using spoke or transit gateways with `enable_active_mesh` set to **false**, action is required. Non-ActiveMesh features will no longer be supported in R2.21.0. Please follow the guide [here](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/migrating_to_active_mesh_transit_network) to migrate from Classic Aviatrix Encrypted Transit Network to Aviatrix ActiveMesh Transit Network. |
+|(deprecated) | controller_config | sg_management_account_name, security_group_management | **Yes**; if Security Group Management was enabled through the **aviatrix_controller_config** resource, these attributes must be removed from the config file and a ``terraform refresh`` must be performed. Please use the standalone **aviatrix_controller_security_group_management_config** resource instead and perform a ``terraform import``. |
