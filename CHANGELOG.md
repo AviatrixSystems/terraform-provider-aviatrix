@@ -20,7 +20,7 @@
 ### Deprecations:
 1. Deprecated ``enable_active_mesh`` in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
   - Non-ActiveMesh features will be removed in Aviatrix provider v2.21.0. Please follow the guide [here](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/migrating_to_active_mesh_transit_network) to migrate from Classic Aviatrix Encrypted Transit Network to Aviatrix ActiveMesh Transit Network
-2. Deprecated ``sg_management_account_name`` and ``security_group_management`` in **aviatrix_controller_config**.
+2. Deprecated ``sg_management_account_name`` and ``security_group_management`` in **aviatrix_controller_config**
   - Please remove the attributes from this resource, perform a refresh, and use the new **aviatrix_controller_security_group_management_config** resource to configure the Controller's Security Group Management settings
   
 
