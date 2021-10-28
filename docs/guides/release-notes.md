@@ -12,16 +12,43 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.20 (UserConnect-6.5)``
+``Last updated: R2.20.1 (UserConnect-6.5.2608)``
 
 
 ---
+
+## 2.20.1
+### Notes:
+- Release date: **(28 Oct 2021)**
+- Supported Controller version: **UserConnect-6.5.2608**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Firewall Network
+1. Implemented support for AzureGov cloud in **aviatrix_firewall_instance**
+
+### Enhancements:
+1. Added more validity checks for advanced option attributes in **aviatrix_transit_gateway_peering**
+2. Added new standalone resource **aviatrix_controller_security_group_management_config** to configure Controller's Security Group Management settings
+
+### Bug Fixes:
+1. Fixed issue where ``phase1_remote_identifier`` would always be unset when two IP addressed are used for ``remote_gateway_ip`` in **aviatrix_transit_external_device_conn**
+2. Fixed issue where OCI cloud **aviatrix_firewall_instance**s couldn't be launched with CheckPoint images
+3. Fixed issue where refreshing **aviatrix_cloudn_transit_gateway_attachment** state would fail if attachment is deleted from UI
+4. Fixed issue where refreshing **aviatrix_vgw_conn** state would fail it connection is deleted from UI
+
+### Deprecations:
+1. Deprecated ``enable_active_mesh`` in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+  - Non-ActiveMesh features will be removed in Aviatrix provider v2.21.0. Please follow the guide [here](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/migrating_to_active_mesh_transit_network) to migrate from Classic Aviatrix Encrypted Transit Network to Aviatrix ActiveMesh Transit Network
+2. Deprecated ``sg_management_account_name`` and ``security_group_management`` in **aviatrix_controller_config**
+  - Please remove the attributes from this resource, perform a refresh, and use the new **aviatrix_controller_security_group_management_config** resource to configure the Controller's Security Group Management settings
+
 
 ## 2.20.0
 ### Notes:
 - Release date: **(17 Jul 2021)**
 - Supported Controller version: **UserConnect-6.5**
-- Supported Terraform version: **0.12 - v1.x**
+- Supported Terraform version: **v1.x**
 
 ### Features:
 #### Gateway
