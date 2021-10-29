@@ -17,13 +17,22 @@ Use the navigation to the left to read about the available resources.
 ## Example Usage
 
 ```hcl
+# Configure Aviatrix provider source and version
+terraform {
+  required_providers {
+    aviatrix = {
+      source = "AviatrixSystems/aviatrix"
+      version = "2.20.1"
+    }
+  }
+}
+
 # Configure Aviatrix provider
 provider "aviatrix" {
   controller_ip           = "1.2.3.4"
   username                = "admin"
   password                = "password"
   skip_version_validation = false
-  version                 = "2.19.0"
 }
 
 # Create an access account
@@ -81,4 +90,4 @@ The following arguments are supported:
 
 ### Optional
 * `skip_version_validation` - (Optional) Valid values: true, false. Default: false. If set to true, it skips checking whether current Terraform provider supports current Controller version.
-* `version` - (Optional) Specify Aviatrix provider release version number. If not specified, Terraform will automatically pull and source the latest release.
+* `version` - (Optional) Specify Aviatrix provider release version number. If not specified, Terraform will automatically pull and source the latest release. For Terraform version 0.13+, do not use this attribute. Instead, set provider version using a `required_providers` block like in the example above.
