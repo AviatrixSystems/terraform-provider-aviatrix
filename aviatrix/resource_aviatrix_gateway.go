@@ -2126,9 +2126,16 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		if d.Get("insane_mode").(bool) && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			var haStrs []string
 			peeringHaInsaneModeAz := d.Get("peering_ha_insane_mode_az").(string)
-			if peeringHaInsaneModeAz == "" {
-				return fmt.Errorf("peering_ha_insane_mode_az needed if insane_mode is enabled and peering_ha_subnet is set")
+			peeringHaSubnet := d.Get("peering_ha_subnet").(string)
+
+			if peeringHaInsaneModeAz == "" && peeringHaSubnet != "" {
+				return fmt.Errorf("peering_ha_insane_mode_az needed if insane_mode is enabled and peering_ha_subnet " +
+					"is set for AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) or AWS Secret (32768)")
+			} else if peeringHaInsaneModeAz != "" && peeringHaSubnet == "" {
+				return fmt.Errorf("peering_ha_subnet needed if insane_mode is enabled and peering_ha_insane_mode_az " +
+					"is set for AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) or AWS Secret (32768)")
 			}
+
 			haStrs = append(haStrs, gw.PeeringHASubnet, peeringHaInsaneModeAz)
 			gw.PeeringHASubnet = strings.Join(haStrs, "~~")
 		}
