@@ -67,10 +67,10 @@ func TestAccAviatrixCloudnRegistration_basic(t *testing.T) {
 func testAccCloudnRegistrationBasic(rName, localASNumber string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_cloudn_registration" "test_cloudn_registration" {
-	name				= "%[1]s"
-	address				= "%[2]s"
-	username			= "%[3]s"
-	password			= "%[4]s"
+	name			= "%[1]s"
+	address			= "%[2]s"
+	username		= "%[3]s"
+	password		= "%[4]s"
 	local_as_number		= "%[5]s"
 }
 `, rName, os.Getenv("CLOUDN_IP"), os.Getenv("CLOUDN_USERNAME"), os.Getenv("CLOUDN_PASSWORD"),
@@ -80,10 +80,10 @@ resource "aviatrix_cloudn_registration" "test_cloudn_registration" {
 func testAccCloudnRegistrationBasicUpdated(rName, localASNumber string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_cloudn_registration" "test_cloudn_registration" {
-	name				= "%[1]s"
-	address				= "%[2]s"
-	username			= "%[3]s"
-	password			= "%[4]s"
+	name			= "%[1]s"
+	address			= "%[2]s"
+	username		= "%[3]s"
+	password		= "%[4]s"
 	local_as_number		= "%[5]s"
 	prepend_as_path		= ["%[5]s"]
 }
