@@ -1916,9 +1916,16 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if d.Get("insane_mode").(bool) && goaviatrix.IsCloudType(transitGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			var haStrs []string
 			insaneModeHaAz := d.Get("ha_insane_mode_az").(string)
-			if insaneModeHaAz == "" {
-				return fmt.Errorf("ha_insane_mode_az needed if insane_mode is enabled and ha_subnet is set")
+			haSubnet := d.Get("ha_subnet").(string)
+
+			if insaneModeHaAz == "" && haSubnet != "" {
+				return fmt.Errorf("ha_insane_mode_az needed if insane_mode is enabled and ha_subnet is set for " +
+					"AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) or AWS Secret (32768)")
+			} else if insaneModeHaAz != "" && haSubnet == "" {
+				return fmt.Errorf("ha_subnet needed if insane_mode is enabled and ha_insane_mode_az is set for " +
+					"AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) or AWS Secret (32768)")
 			}
+
 			haStrs = append(haStrs, transitGw.HASubnet, insaneModeHaAz)
 			transitGw.HASubnet = strings.Join(haStrs, "~~")
 		}
