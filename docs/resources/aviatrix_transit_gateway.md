@@ -27,7 +27,6 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
   tags                     = {
     name = "value"
   }
-  enable_active_mesh       = true
   enable_hybrid_connection = true
   connected_transit        = true
 }
@@ -35,35 +34,33 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
 ```hcl
 # Create an Aviatrix GCP Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_gcp" {
-  cloud_type         = 4
-  account_name       = "devops-gcp"
-  gw_name            = "avtxgw-gcp"
-  vpc_id             = "vpc-gcp-test"
-  vpc_reg            = "us-west2-a"
-  gw_size            = "n1-standard-1"
-  subnet             = "10.8.0.0/16"
-  ha_zone            = "us-west2-b"
-  ha_subnet          = "10.8.0.0/16"
-  ha_gw_size         = "n1-standard-1"
-  enable_active_mesh = true
+  cloud_type   = 4
+  account_name = "devops-gcp"
+  gw_name      = "avtxgw-gcp"
+  vpc_id       = "vpc-gcp-test"
+  vpc_reg      = "us-west2-a"
+  gw_size      = "n1-standard-1"
+  subnet       = "10.8.0.0/16"
+  ha_zone      = "us-west2-b"
+  ha_subnet    = "10.8.0.0/16"
+  ha_gw_size   = "n1-standard-1"
 }
 ```
 ```hcl
 # Create an Aviatrix Azure Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_azure" {
-  cloud_type         = 8
-  account_name       = "devops_azure"
-  gw_name            = "transit"
-  vpc_id             = "vnet1:hello"
-  vpc_reg            = "West US"
-  gw_size            = "Standard_B1ms"
-  subnet             = "10.30.0.0/24"
-  zone               = "az-1"
-  ha_subnet          = "10.30.0.0/24"
-  ha_zone            = "az-2"
-  ha_gw_size         = "Standard_B1ms"
-  connected_transit  = true
-  enable_active_mesh = true
+  cloud_type        = 8
+  account_name      = "devops_azure"
+  gw_name           = "transit"
+  vpc_id            = "vnet1:hello"
+  vpc_reg           = "West US"
+  gw_size           = "Standard_B1ms"
+  subnet            = "10.30.0.0/24"
+  zone              = "az-1"
+  ha_subnet         = "10.30.0.0/24"
+  ha_zone           = "az-2"
+  ha_gw_size        = "Standard_B1ms"
+  connected_transit = true
 }
 ```
 ```hcl
@@ -76,7 +73,6 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_oracle" {
   vpc_reg             = "us-ashburn-1"
   gw_size             = "VM.Standard2.2"
   subnet              = "10.7.0.0/16"
-  enable_active_mesh  = true
   availability_domain = aviatrix_vpc.oci_vpc.availability_domains[0]
   fault_domain        = aviatrix_vpc.oci_vpc.fault_domains[0]
 }
@@ -84,17 +80,16 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_oracle" {
 ```hcl
 # Create an Aviatrix AzureGov Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_azuregov" {
-  cloud_type         = 32
-  account_name       = "devops_azuregov"
-  gw_name            = "transit"
-  vpc_id             = "vnet1:hello"
-  vpc_reg            = "USGov Arizona"
-  gw_size            = "Standard_B1ms"
-  subnet             = "10.30.0.0/24"
-  ha_subnet          = "10.30.0.0/24"
-  ha_gw_size         = "Standard_B1ms"
-  connected_transit  = true
-  enable_active_mesh = true
+  cloud_type        = 32
+  account_name      = "devops_azuregov"
+  gw_name           = "transit"
+  vpc_id            = "vnet1:hello"
+  vpc_reg           = "USGov Arizona"
+  gw_size           = "Standard_B1ms"
+  subnet            = "10.30.0.0/24"
+  ha_subnet         = "10.30.0.0/24"
+  ha_gw_size        = "Standard_B1ms"
+  connected_transit = true
 }
 ```
 ```hcl
@@ -109,7 +104,6 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_awsgov" {
   subnet                   = "10.1.0.0/24"
   ha_subnet                = "10.1.0.0/24"
   ha_gw_size               = "t2.micro"
-  enable_active_mesh       = true
   enable_hybrid_connection = true
   connected_transit        = true
 }
@@ -117,39 +111,37 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_awsgov" {
 ```hcl
 # Create an Aviatrix AWS China Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_aws_china" {
-  cloud_type         = 1024
-  account_name       = "devops_aws_china"
-  gw_name            = "transit"
-  vpc_id             = "vpc-abcd12345678"
-  vpc_reg            = "cn-north-1"
-  gw_size            = "t2.micro"
-  subnet             = "10.1.0.0/24"
-  ha_subnet          = "10.1.0.0/24"
-  ha_gw_size         = "t2.micro"
-  tags               = {
+  cloud_type        = 1024
+  account_name      = "devops_aws_china"
+  gw_name           = "transit"
+  vpc_id            = "vpc-abcd12345678"
+  vpc_reg           = "cn-north-1"
+  gw_size           = "t2.micro"
+  subnet            = "10.1.0.0/24"
+  ha_subnet         = "10.1.0.0/24"
+  ha_gw_size        = "t2.micro"
+  tags              = {
     name  = "value",
     name1 = "value1",
     name2 = "value2",
   }
-  enable_active_mesh = true
-  connected_transit  = true
+  connected_transit = true
 }
 ```
 ```hcl
 # Create an Aviatrix Azure China Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_azure_china" {
-  cloud_type         = 2048
-  account_name       = "devops_azure_china"
-  gw_name            = "transit"
-  vpc_id             = "vnet1:hello"
-  vpc_reg            = "China North"
-  gw_size            = "Standard_A0"
-  subnet             = "10.30.0.0/24"
-  ha_subnet          = "10.30.0.0/24"
-  ha_zone            = "az-2"
-  ha_gw_size         = "Standard_A0"
-  storage_name       = "dev-storage"
-  enable_active_mesh = true
+  cloud_type   = 2048
+  account_name = "devops_azure_china"
+  gw_name      = "transit"
+  vpc_id       = "vnet1:hello"
+  vpc_reg      = "China North"
+  gw_size      = "Standard_A0"
+  subnet       = "10.30.0.0/24"
+  ha_subnet    = "10.30.0.0/24"
+  ha_zone      = "az-2"
+  ha_gw_size   = "Standard_A0"
+  storage_name = "dev-storage"
 }
 ```
 ```hcl
@@ -161,7 +153,6 @@ resource "aviatrix_transit_gateway" "test_oob_transit" {
   vpc_id                   = "vpc-abcd1234"
   vpc_reg                  = "us-west-1"
   gw_size                  = "c5.xlarge"
-  enable_active_mesh       = true
   enable_private_oob       = true
   subnet                   = "11.0.0.128/26"
   oob_management_subnet    = "11.0.2.0/24"
@@ -175,58 +166,55 @@ resource "aviatrix_transit_gateway" "test_oob_transit" {
 ```hcl
 # Create an Aviatrix Alibaba Cloud Transit Network Gateway with HA enabled
 resource "aviatrix_transit_gateway" "test_transit_gateway_alibaba" {
-  cloud_type         = 8192
-  account_name       = "devops"
-  gw_name            = "avtx-gw-1"
-  vpc_id             = "vpc-abcdef"
-  vpc_reg            = "acs-us-west-1 (Silicon Valley)"
-  gw_size            = "ecs.g5ne.large"
-  subnet             = "10.0.0.0/24"
-  enable_active_mesh = true
-  ha_subnet          = "10.0.0.0/24"
-  ha_gw_size         = "ecs.g5ne.large"
+  cloud_type   = 8192
+  account_name = "devops"
+  gw_name      = "avtx-gw-1"
+  vpc_id       = "vpc-abcdef"
+  vpc_reg      = "acs-us-west-1 (Silicon Valley)"
+  gw_size      = "ecs.g5ne.large"
+  subnet       = "10.0.0.0/24"
+  ha_subnet    = "10.0.0.0/24"
+  ha_gw_size   = "ecs.g5ne.large"
 }
 ```
 ```hcl
 # Create an Aviatrix AWS Top Secret Region Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_aws_top_secret" {
-  cloud_type         = 16384
-  account_name       = "devops_aws_top_secret"
-  gw_name            = "transit"
-  vpc_id             = "vpc-abcd12345678"
-  vpc_reg            = "us-iso-east-1"
-  gw_size            = "t2.micro"
-  subnet             = "10.1.0.0/24"
-  ha_subnet          = "10.1.0.0/24"
-  ha_gw_size         = "t2.micro"
-  tags               = {
+  cloud_type        = 16384
+  account_name      = "devops_aws_top_secret"
+  gw_name           = "transit"
+  vpc_id            = "vpc-abcd12345678"
+  vpc_reg           = "us-iso-east-1"
+  gw_size           = "t2.micro"
+  subnet            = "10.1.0.0/24"
+  ha_subnet         = "10.1.0.0/24"
+  ha_gw_size        = "t2.micro"
+  tags              = {
     name  = "value",
     name1 = "value1",
     name2 = "value2",
   }
-  enable_active_mesh = true
-  connected_transit  = true
+  connected_transit = true
 }
 ```
 ```hcl
 # Create an Aviatrix AWS Secret Region Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_aws_secret" {
-  cloud_type         = 32768
-  account_name       = "devops_aws_secret"
-  gw_name            = "transit"
-  vpc_id             = "vpc-abcd12345678"
-  vpc_reg            = "us-isob-east-1"
-  gw_size            = "t2.micro"
-  subnet             = "10.1.0.0/24"
-  ha_subnet          = "10.1.0.0/24"
-  ha_gw_size         = "t2.micro"
-  tags               = {
+  cloud_type        = 32768
+  account_name      = "devops_aws_secret"
+  gw_name           = "transit"
+  vpc_id            = "vpc-abcd12345678"
+  vpc_reg           = "us-isob-east-1"
+  gw_size           = "t2.micro"
+  subnet            = "10.1.0.0/24"
+  ha_subnet         = "10.1.0.0/24"
+  ha_gw_size        = "t2.micro"
+  tags              = {
     name  = "value",
     name1 = "value1",
     name2 = "value2",
   }
-  enable_active_mesh = true
-  connected_transit  = true
+  connected_transit = true
 }
 ```
 
@@ -259,7 +247,7 @@ The following arguments are supported:
 * `ha_fault_domain` - (Optional) HA gateway fault domain. Required and valid only for OCI. Available as of provider version R2.19.3.
 
 ### Insane Mode
-* `insane_mode` - (Optional) Specify true for [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) high performance gateway. Insane Mode gateway size must be at least c5 size (AWS, AWSGov, AWS Top Secret and AWS Secret) or Standard_D3_v2 (Azure and AzureGov); for GCP only four size are supported: "n1-highcpu-4", "n1-highcpu-8", "n1-highcpu-16" and "n1-highcpu-32". If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet for AWS, Azure, AzureGov, AWSGov, AWS Top Secret and AWS Secret. Only available for AWS, GCP/OCI (with Active Mesh 2.0 enabled), Azure, AzureGov, AWSGov, AWS Top Secret and AWS Secret. Valid values: true, false. Default value: false.
+* `insane_mode` - (Optional) Specify true for [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) high performance gateway. Insane Mode gateway size must be at least c5 size (AWS, AWSGov, AWS Top Secret and AWS Secret) or Standard_D3_v2 (Azure and AzureGov); for GCP only four size are supported: "n1-highcpu-4", "n1-highcpu-8", "n1-highcpu-16" and "n1-highcpu-32". If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet for AWS, Azure, AzureGov, AWSGov, AWS Top Secret and AWS Secret. Only available for AWS, GCP/OCI, Azure, AzureGov, AWSGov, AWS Top Secret and AWS Secret. Valid values: true, false. Default value: false.
 * `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit Gateway. Required for AWS, AWSGov, AWS Top Secret or AWS Secret if `insane_mode` is enabled. Example: AWS: "us-west-1a".
 
 ### SNAT
@@ -338,10 +326,9 @@ The following arguments are supported:
 * `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in Controller 4.7+. Valid values: true, false. Default: true. Option not available for Azure and OCI gateways, they will automatically allocate new EIPs.
 * `eip` - (Optional) Required when `allocate_new_eip` is false. It uses the specified EIP for this gateway. Available in Controller version 4.7+. Only available for AWS, GCP, Azure, OCI, AzureGov, AWSGov, AWSChina, AzureChina, AWS Top Secret and AWS Secret.
 * `azure_eip_name_resource_group` - (Optional) Name of public IP Address resource and its resource group in Azure to be assigned to the Transit Gateway instance. Example: "IP_Name:Resource_Group_Name". Required if `allocate_new_eip` is false and `cloud_type` is Azure, AzureGov or AzureChina. Available as of provider version 2.20+.
-* `enable_active_mesh` - (Optional) Switch to enable/disable [Active Mesh Mode](https://docs.aviatrix.com/HowTos/activemesh_faq.html) for Transit Gateway. Valid values: true, false. Default value: false.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supported for AWS, Azure, AzureGov, AWSGov, AWSChina, AzureChina, Alibaba Cloud, AWS Top Secret and AWS Secret gateways. Valid values: true, false. Default value: false.
 * `zone` - (Optional) Availability Zone. Only available for cloud_type = 8 (Azure). Must be in the form 'az-n', for example, 'az-2'. Available in provider version R2.17+.
-* `enable_active_standby` - (Optional) Enables [Active-Standby Mode](https://docs.aviatrix.com/HowTos/transit_advanced.html#active-standby). Available only with Active Mesh Mode enabled and HA enabled. Valid values: true, false. Default value: false. Available in provider version R2.17.1+.
+* `enable_active_standby` - (Optional) Enables [Active-Standby Mode](https://docs.aviatrix.com/HowTos/transit_advanced.html#active-standby). Available only with HA enabled. Valid values: true, false. Default value: false. Available in provider version R2.17.1+.
 * `enable_jumbo_frame` - (Optional) Enable jumbo frames for this transit gateway. Default value is true.
 * `tags` - (Optional) Map of tags to assign to the gateway. Only available for AWS, Azure, AzureGov, AWSGov, AWSChina, AzureChina, AWS Top Secret and AWS Secret gateways. Allowed characters vary by cloud type but always include: letters, spaces, and numbers. AWS, AWSGov, AWSChina, AWS Top Secret and AWS Secret allow the following special characters: + - = . _ : / @.  Azure, AzureGov and AzureChina allows the following special characters: + - = . _ : @. Example: {"key1" = "value1", "key2" = "value2"}.
 * `tunnel_detection_time` - (Optional) The IPsec tunnel down detection time for the Transit Gateway in seconds. Must be a number in the range [20-600]. The default value is set by the controller (60 seconds if nothing has been changed). **NOTE: The controller UI has an option to set the tunnel detection time for all gateways. To achieve the same functionality in Terraform, use the same TF_VAR to manage the tunnel detection time for all gateways.** Available in provider R2.19+.

@@ -23,7 +23,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
   gw_size                           = "t2.micro"
   subnet                            = "10.11.0.0/24"
   single_ip_snat                    = false
-  enable_active_mesh                = true
   manage_transit_gateway_attachment = false
   tags                              = {
     name = "value"
@@ -41,7 +40,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_gcp" {
   gw_size                           = "n1-standard-1"
   subnet                            = "10.12.0.0/24"
   single_ip_snat                    = false
-  enable_active_mesh                = true
   manage_transit_gateway_attachment = false
 }
 ```
@@ -57,7 +55,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
   subnet                            = "10.13.0.0/24"
   zone                              = "az-1"
   single_ip_snat                    = false
-  enable_active_mesh                = true
   manage_transit_gateway_attachment = false
 }
 ```
@@ -71,7 +68,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_oracle" {
   vpc_reg                           = "us-ashburn-1"
   gw_size                           = "VM.Standard2.2"
   subnet                            = "10.7.0.0/16"
-  enable_active_mesh                = true
   manage_transit_gateway_attachment = false
   availability_domain               = aviatrix_vpc.oci_vpc.availability_domains[0]
   fault_domain                      = aviatrix_vpc.oci_vpc.fault_domains[0]
@@ -88,7 +84,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_azuregov" {
   gw_size                           = "Standard_B1ms"
   subnet                            = "10.13.0.0/24"
   single_ip_snat                    = false
-  enable_active_mesh                = true
   manage_transit_gateway_attachment = false
 }
 ```
@@ -103,7 +98,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_awsgov" {
   gw_size                           = "t2.micro"
   subnet                            = "10.11.0.0/24"
   single_ip_snat                    = false
-  enable_active_mesh                = true
   manage_transit_gateway_attachment = false
 }
 ```
@@ -118,7 +112,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws_china" {
   gw_size                           = "t2.micro"
   subnet                            = "10.11.0.0/24"
   single_ip_snat                    = false
-  enable_active_mesh                = true
   manage_transit_gateway_attachment = false
   tags                              = {
     k1 = "v1",
@@ -137,7 +130,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
   gw_size                           = "Standard_A0"
   subnet                            = "10.13.0.0/24"
   single_ip_snat                    = false
-  enable_active_mesh                = true
   manage_transit_gateway_attachment = false
   storage_name                      = "dev-storage"
 }
@@ -151,7 +143,6 @@ resource "aviatrix_spoke_gateway" "test_oob_spoke" {
   vpc_id                   = "vpc-abcd1234"
   vpc_reg                  = "us-west-1"
   gw_size                  = "c5.xlarge"
-  enable_active_mesh       = true
   enable_private_oob       = true
   subnet                   = "11.0.0.128/26"
   oob_management_subnet    = "11.0.2.0/24"
@@ -172,7 +163,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_alibaba" {
   vpc_reg            = "acs-us-west-1 (Silicon Valley)"
   gw_size            = "ecs.g5ne.large"
   subnet             = "10.0.0.0/24"
-  enable_active_mesh = true
   ha_subnet          = "10.0.0.0/24"
   ha_gw_size         = "ecs.g5ne.large"
 }
@@ -188,7 +178,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws_top_secret" {
   gw_size                           = "t2.micro"
   subnet                            = "10.11.0.0/24"
   single_ip_snat                    = false
-  enable_active_mesh                = true
   manage_transit_gateway_attachment = false
   tags                              = {
     k1 = "v1",
@@ -207,7 +196,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws_secret" {
   gw_size                           = "t2.micro"
   subnet                            = "10.11.0.0/24"
   single_ip_snat                    = false
-  enable_active_mesh                = true
   manage_transit_gateway_attachment = false
   tags                              = {
     k1 = "v1",
@@ -245,7 +233,7 @@ The following arguments are supported:
 * `ha_fault_domain` - (Optional) HA gateway fault domain. Required and valid only for OCI. Available as of provider version R2.19.3.
 
 ### Insane Mode
-* `insane_mode` - (Optional) Enable [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) for Spoke Gateway. Insane Mode gateway size must be at least c5 size (AWS, AWSGov, AWS Top Secret and AWS Secret) or Standard_D3_v2 (Azure and AzureGov); for GCP only four size are supported: "n1-highcpu-4", "n1-highcpu-8", "n1-highcpu-16" and "n1-highcpu-32". If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet for AWS, Azure, AzureGov, AWSGov, AWS Top Secret and AWS Secret. Only available for AWS, GCP/OCI (with Active Mesh 2.0 enabled), Azure, AzureGov, AWSGov, AWS Top Secret and AWS Secret. Valid values: true, false. Default value: false.
+* `insane_mode` - (Optional) Enable [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) for Spoke Gateway. Insane Mode gateway size must be at least c5 size (AWS, AWSGov, AWS Top Secret and AWS Secret) or Standard_D3_v2 (Azure and AzureGov); for GCP only four size are supported: "n1-highcpu-4", "n1-highcpu-8", "n1-highcpu-16" and "n1-highcpu-32". If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet for AWS, Azure, AzureGov, AWSGov, AWS Top Secret and AWS Secret. Only available for AWS, GCP/OCI, Azure, AzureGov, AWSGov, AWS Top Secret and AWS Secret. Valid values: true, false. Default value: false.
 * `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Spoke Gateway. Required for AWS, AWSGov, AWS Top Secret or AWS Secret if `insane_mode` is enabled. Example: AWS: "us-west-1a".
 
 ### SNAT/DNAT
@@ -297,7 +285,6 @@ The following arguments are supported:
 * `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in Controller 4.7+. Valid values: true, false. Default: true. Option not available for Azure and OCI gateways, they will automatically allocate new EIPs.
 * `eip` - (Optional) Required when `allocate_new_eip` is false. It uses the specified EIP for this gateway. Available in Controller 4.7+. Only available for AWS, GCP, Azure, OCI, AzureGov, AWSGov, AWSChina, AzureChina, AWS Top Secret and AWS Secret.
 * `azure_eip_name_resource_group` - (Optional) Name of public IP Address resource and its resource group in Azure to be assigned to the Spoke Gateway instance. Example: "IP_Name:Resource_Group_Name". Required if `allocate_new_eip` is false and `cloud_type` is Azure, AzureGov or AzureChina. Available as of provider version 2.20+.
-* `enable_active_mesh` - (Optional) Switch to enable/disable [Active Mesh Mode](https://docs.aviatrix.com/HowTos/activemesh_faq.html) for Spoke Gateway. Valid values: true, false. Default value: false.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supported for AWS, Azure, AzureGov, AWSGov, AWSChina, AzureChina, Alibaba Cloud, AWS Top Secret and AWS Secret gateways. Valid values: true, false. Default value: false.
 * `zone` - (Optional) Availability Zone. Only available for cloud_type = 8 (Azure). Must be in the form 'az-n', for example, 'az-2'. Available in provider version R2.17+.
 * `manage_transit_gateway_attachment` - (Optional) Enable to manage spoke-to-Aviatrix transit gateway attachments using the **aviatrix_spoke_gateway** resource with the below `transit_gw` attribute. If this is set to false, attaching this spoke to transit gateways must be done using the **aviatrix_spoke_transit_attachment** resource. Valid values: true, false. Default value: true. Available in provider R2.17+.
