@@ -84,7 +84,7 @@ resource "aviatrix_cloudn_registration" "test_cloudn_registration" {
 	address			= "%[2]s"
 	username		= "%[3]s"
 	password		= "%[4]s"
-	local_as_number = "%[5]s"
+	local_as_number	= "%[5]s"
 	prepend_as_path	= ["%[5]s"]
 }
 `, rName, os.Getenv("CLOUDN_IP"), os.Getenv("CLOUDN_USERNAME"), os.Getenv("CLOUDN_PASSWORD"),

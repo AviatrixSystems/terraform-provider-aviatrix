@@ -3,7 +3,7 @@ subcategory: "CloudWAN"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_cloudn_registration"
 description: |-
-Register and Deregister CloudN as a Gateway
+  Register and Deregister CloudN as a Gateway
 ---
 
 # aviatrix_cloudn_registration
@@ -43,7 +43,7 @@ The following arguments are supported:
 
 ## Import
 
-**aviatrix_cloudn_registration** can be imported using the `name`, e.g.
+**cloudn_registration** can be imported using the `name`, e.g.
 
 ```
 $ terraform import aviatrix_cloudn_registration.test_cloudn_registration name

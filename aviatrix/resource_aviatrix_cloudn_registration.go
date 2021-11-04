@@ -24,26 +24,36 @@ func resourceAviatrixCloudnRegistration() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "CloudN IP Address or FQDN",
+				Description: "CloudN IP Address or FQDN.",
 			},
 			"username": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "CloudN username",
+				Description: "CloudN username.",
 			},
 			"password": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				Sensitive:   true,
-				Description: "CloudN password",
+				Description: "CloudN password.",
 			},
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "CloudN name to register on controller",
+				Description: "CloudN name to register on controller.",
+			},
+			"prepend_as_path": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "AS path prepend.",
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: goaviatrix.ValidateASN,
+				},
+				MaxItems: 25,
 			},
 			"local_as_number": {
 				Type:         schema.TypeString,
@@ -51,16 +61,6 @@ func resourceAviatrixCloudnRegistration() *schema.Resource {
 				Computed:     true,
 				Description:  "Changes the Aviatrix CloudN ASN number before you setup Aviatrix Transit Gateway connection configurations.",
 				ValidateFunc: goaviatrix.ValidateASN,
-			},
-			"prepend_as_path": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "AS path prepend",
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: goaviatrix.ValidateASN,
-				},
-				MaxItems: 25,
 			},
 		},
 	}
