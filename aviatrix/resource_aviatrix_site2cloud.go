@@ -598,7 +598,9 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	phase1RemoteIdentifier := d.Get("phase1_remote_identifier").([]interface{})
 	ph1RemoteIdList := goaviatrix.ExpandStringList(phase1RemoteIdentifier)
 	if haEnabled && !singleIpHA && len(ph1RemoteIdList) != 0 && len(ph1RemoteIdList) != 2 {
-		return fmt.Errorf("please either set two phase 1 remote IDs or none, when HA is enabled and single IP HA is disabled")
+		if !(s2c.RemoteGwIP != "" && s2c.RemoteGwIP2 != "" && s2c.RemoteGwIP == s2c.RemoteGwIP2 && len(ph1RemoteIdList) == 1) {
+			return fmt.Errorf("please either set two phase 1 remote IDs or none, when HA is enabled and single IP HA is disabled")
+		}
 	} else if (!haEnabled || singleIpHA) && len(phase1RemoteIdentifier) > 1 {
 		return fmt.Errorf("please either set one phase 1 remote ID or none, when HA is disabled or single IP HA is enabled")
 	}
@@ -1032,7 +1034,9 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		ph1RemoteIdList := goaviatrix.ExpandStringList(phase1RemoteIdentifier)
 
 		if haEnabled && !singleIpHA && len(ph1RemoteIdList) != 0 && len(ph1RemoteIdList) != 2 {
-			return fmt.Errorf("please either set two phase 1 remote IDs or none, when HA is enabled and single IP HA is disabled")
+			if !(ip != "" && haIp != "" && ip == haIp && len(ph1RemoteIdList) == 1) {
+				return fmt.Errorf("please either set two phase 1 remote IDs or none, when HA is enabled and single IP HA is disabled")
+			}
 		} else if (!haEnabled || singleIpHA) && len(phase1RemoteIdentifier) > 1 {
 			return fmt.Errorf("please either set one phase 1 remote ID or none, when HA is disabled or single IP HA is enabled")
 		}
