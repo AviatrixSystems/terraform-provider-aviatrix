@@ -14,6 +14,7 @@ type CloudnRegistration struct {
 	PrependAsPath     []string
 }
 
+// CreateCloudnRegistration should only be called with a CloudN Client, not the default controller Client
 func (c *Client) CreateCloudnRegistration(ctx context.Context, cloudnRegistration *CloudnRegistration) error {
 	cloudnRegistration.CID = c.CID
 	cloudnRegistration.Action = "register_caag_with_controller"

@@ -93,24 +93,28 @@ func resourceAviatrixCloudnRegistrationCreate(ctx context.Context, d *schema.Res
 	gateway := &goaviatrix.TransitVpc{
 		GwName: cloudnRegistration.Name,
 	}
+
+	_, prependAsPathOk := d.GetOk("prepend_as_path")
 	if _, ok := d.GetOk("local_as_number"); ok {
 		localASNumber := d.Get("local_as_number").(string)
 		err := client.SetLocalASNumber(gateway, localASNumber)
 		if err != nil {
 			return diag.Errorf("failed to create Aviatrix CloudN Registration: could not set local_as_number: %v", err)
 		}
-	}
 
-	if _, ok := d.GetOk("prepend_as_path"); ok {
-		var prependASPath []string
-		for _, v := range d.Get("prepend_as_path").([]interface{}) {
-			prependASPath = append(prependASPath, v.(string))
-		}
+		if prependAsPathOk {
+			var prependASPath []string
+			for _, v := range d.Get("prepend_as_path").([]interface{}) {
+				prependASPath = append(prependASPath, v.(string))
+			}
 
-		err := client.SetPrependASPath(gateway, prependASPath)
-		if err != nil {
-			return diag.Errorf("failed to create Aviatrix CloudN Registration: could not set prepend_as_path: %v", err)
+			err := client.SetPrependASPath(gateway, prependASPath)
+			if err != nil {
+				return diag.Errorf("failed to create Aviatrix CloudN Registration: could not set prepend_as_path: %v", err)
+			}
 		}
+	} else if prependAsPathOk {
+		return diag.Errorf("failed to create Aviatrix CloudN Registration: prepend_as_path must be empty when local_as_number has not been set")
 	}
 
 	return resourceAviatrixCloudnRegistrationReadIfRequired(ctx, d, meta, &flag)

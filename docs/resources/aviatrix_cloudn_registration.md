@@ -32,10 +32,10 @@ resource "aviatrix_cloudn_registration" "test_cloudn_registration" {
 The following arguments are supported:
 
 ### Required
-* `name` - (Required) Gateway name to assign to the CloudN device
-* `address` - (Required) Aviatrix CloudN's public or private IP.
-* `username` - (Required) Aviatrix account username which will be used to log in to Aviatrix CloudN.
-* `password` - (Required) Aviatrix account password corresponding to above username.
+* `name` - (Required) Gateway name to assign to the CloudN device. Type: String.
+* `address` - (Required) Aviatrix CloudN's public or private IP. Type: String.
+* `username` - (Required) Aviatrix account username which will be used to log in to Aviatrix CloudN. Type: String.
+* `password` - (Required) Aviatrix account password corresponding to above username. Type: String.
 
 ### Optional
 * `local_as_number` - (Optional) BGP AS Number to assign to the Transit Gateway. Type: String.
