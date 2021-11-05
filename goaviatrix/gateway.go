@@ -120,7 +120,6 @@ type Gateway struct {
 	Zone                            string            `form:"zone,omitempty" json:"zone,omitempty"`
 	VpcSize                         string            `form:"vpc_size,omitempty" ` //Only use for gateway create
 	DMZEnabled                      string            `json:"dmz_enabled,omitempty"`
-	EnableActiveMesh                string            `form:"enable_activemesh,omitempty" json:"enable_activemesh,omitempty"`
 	EnableVpnNat                    bool              `form:"vpn_nat,omitempty" json:"vpn_nat"`
 	EnableDesignatedGateway         string            `form:"designated_gateway,omitempty" json:"designated_gateway,omitempty"`
 	AdditionalCidrsDesignatedGw     string            `form:"additional_cidr_list,omitempty" json:"summarized_cidrs,omitempty"`
@@ -601,26 +600,6 @@ func (c *Client) SetVpnGatewayAuthentication(gateway *VpnGatewayAuth) error {
 	gateway.Action = "set_vpn_gateway_authentication"
 
 	return c.PostAPI(gateway.Action, gateway, BasicCheck)
-}
-
-func (c *Client) EnableActiveMesh(gateway *Gateway) error {
-	form := map[string]string{
-		"CID":          c.CID,
-		"action":       "enable_gateway_activemesh",
-		"gateway_name": gateway.GwName,
-	}
-
-	return c.PostAPI(form["action"], form, BasicCheck)
-}
-
-func (c *Client) DisableActiveMesh(gateway *Gateway) error {
-	form := map[string]string{
-		"CID":          c.CID,
-		"action":       "disable_gateway_activemesh",
-		"gateway_name": gateway.GwName,
-	}
-
-	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EnableVpcDnsServer(gateway *Gateway) error {

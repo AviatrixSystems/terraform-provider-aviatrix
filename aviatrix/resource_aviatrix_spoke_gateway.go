@@ -170,17 +170,6 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable Insane Mode for Spoke Gateway. Valid values: true, false. Supported for AWS/AWSGov, GCP, Azure and OCI. If insane mode is enabled, gateway size has to at least be c5 size for AWS and Standard_D3_v2 size for Azure.",
 			},
-			"enable_active_mesh": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				Deprecated: "Non-ActiveMesh features will be removed in aviatrix provider v2.21.0. " +
-					"\n\nIf you have set 'enable_active_mesh = true', no action is needed at this time. After you upgrade to aviatrix provider v2.21.0, you can safely remove the 'enable_active_mesh' attribute from your configuration." +
-					"\n\nIf you have set 'enable_active_mesh = false', you must migrate to Aviatrix ActiveMesh Transit Network before you can upgrade to aviatrix provider v2.21.0. " +
-					"Please see the following guide to migrate from Classic Aviatrix Encrypted Transit Network to Aviatrix ActiveMesh Transit Network: " +
-					"https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/migrating_to_active_mesh_transit_network",
-				Description: "Switch to Enable/Disable Active Mesh Mode for Spoke Gateway. Valid values: true, false.",
-			},
 			"enable_vpc_dns_server": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -590,12 +579,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			strs = append(strs, gateway.Subnet, insaneModeAz)
 			gateway.Subnet = strings.Join(strs, "~~")
 		}
-		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) && !d.Get("enable_active_mesh").(bool) {
-			return fmt.Errorf("insane_mode is supported for GCP provider only if active mesh 2.0 is enabled")
-		}
-		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.OCIRelatedCloudTypes) && !d.Get("enable_active_mesh").(bool) {
-			return fmt.Errorf("insane_mode is supported for OCI provider only if active mesh 2.0 is enabled")
-		}
 		gateway.InsaneMode = "on"
 	} else {
 		gateway.InsaneMode = "off"
@@ -767,18 +750,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		err := client.EnableEncryptVolume(gwEncVolume)
 		if err != nil {
 			return fmt.Errorf("failed to enable encrypt gateway volume when creating spoke gateway: %s due to %s", gwEncVolume.GwName, err)
-		}
-	}
-
-	if enableActiveMesh := d.Get("enable_active_mesh").(bool); !enableActiveMesh {
-		gw := &goaviatrix.Gateway{
-			GwName: d.Get("gw_name").(string),
-		}
-		gw.EnableActiveMesh = "no"
-
-		err := client.DisableActiveMesh(gw)
-		if err != nil {
-			return fmt.Errorf("couldn't disable Active Mode for Aviatrix Spoke Gateway: %s", err)
 		}
 	}
 
@@ -1083,7 +1054,6 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("ha_security_group_id", gw.HaGw.GwSecurityGroupID)
 	d.Set("private_ip", gw.PrivateIP)
 	d.Set("single_az_ha", gw.SingleAZ == "yes")
-	d.Set("enable_active_mesh", gw.EnableActiveMesh == "yes")
 	d.Set("enable_vpc_dns_server", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled")
 	d.Set("single_ip_snat", gw.EnableNat == "yes" && gw.SnatMode == "primary")
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
@@ -1950,115 +1920,45 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if d.HasChange("enable_active_mesh") && d.HasChange("transit_gw") {
-		spokeVPC := &goaviatrix.SpokeVpc{
-			CloudType: d.Get("cloud_type").(int),
-			GwName:    d.Get("gw_name").(string),
-			HASubnet:  d.Get("ha_subnet").(string),
-		}
+	if d.HasChange("transit_gw") {
+		if manageTransitGwAttachment {
+			spokeVPC := &goaviatrix.SpokeVpc{
+				CloudType: d.Get("cloud_type").(int),
+				GwName:    d.Get("gw_name").(string),
+				HASubnet:  d.Get("ha_subnet").(string),
+			}
 
-		o, n := d.GetChange("transit_gw")
-		oldTransitGws := strings.Split(o.(string), ",")
-		newTransitGws := strings.Split(n.(string), ",")
-		if len(oldTransitGws) > 0 && oldTransitGws[0] != "" && manageTransitGwAttachment {
-			for _, gw := range oldTransitGws {
-				// Leave any transit gateways that are in the old list but not in the new.
-				if goaviatrix.Contains(newTransitGws, gw) {
-					continue
-				}
-				spokeVPC.TransitGateway = gw
-				err := client.SpokeLeaveTransit(spokeVPC)
-				if err != nil {
-					return fmt.Errorf("failed to leave Transit Gateway: %s", err)
+			o, n := d.GetChange("transit_gw")
+			oldTransitGws := strings.Split(o.(string), ",")
+			newTransitGws := strings.Split(n.(string), ",")
+			if len(oldTransitGws) > 0 && oldTransitGws[0] != "" {
+				for _, gw := range oldTransitGws {
+					// Leave any transit gateways that are in the old list but not in the new.
+					if goaviatrix.Contains(newTransitGws, gw) {
+						continue
+					}
+					spokeVPC.TransitGateway = gw
+					err := client.SpokeLeaveTransit(spokeVPC)
+					if err != nil {
+						return fmt.Errorf("failed to leave Transit Gateway %q: %v", gw, err)
+					}
 				}
 			}
-		}
-
-		gw := &goaviatrix.Gateway{
-			GwName: d.Get("gw_name").(string),
-		}
-		enableActiveMesh := d.Get("enable_active_mesh").(bool)
-		if enableActiveMesh {
-			gw.EnableActiveMesh = "yes"
-			err := client.EnableActiveMesh(gw)
-			if err != nil {
-				return fmt.Errorf("failed to enable Active Mesh Mode: %s", err)
+			if len(newTransitGws) > 0 && newTransitGws[0] != "" {
+				for _, gw := range newTransitGws {
+					// Join any transit gateways that are in the new list but not in the old.
+					if goaviatrix.Contains(oldTransitGws, gw) {
+						continue
+					}
+					spokeVPC.TransitGateway = gw
+					err := client.SpokeJoinTransit(spokeVPC)
+					if err != nil {
+						return fmt.Errorf("failed to join Transit Gateway %q: %v", gw, err)
+					}
+				}
 			}
 		} else {
-			gw.EnableActiveMesh = "no"
-			err := client.DisableActiveMesh(gw)
-			if err != nil {
-				return fmt.Errorf("failed to disable Active Mesh Mode: %s", err)
-			}
-		}
-
-		if len(newTransitGws) > 0 && newTransitGws[0] != "" && manageTransitGwAttachment {
-			for _, gw := range newTransitGws {
-				// Join any transit gateways that are in the new list but not in the old.
-				if goaviatrix.Contains(oldTransitGws, gw) {
-					continue
-				}
-				spokeVPC.TransitGateway = gw
-				err := client.SpokeJoinTransit(spokeVPC)
-				if err != nil {
-					return fmt.Errorf("failed to join Transit Gateway %q: %v", gw, err)
-				}
-			}
-		}
-	} else if d.HasChange("enable_active_mesh") {
-		gw := &goaviatrix.Gateway{
-			GwName: d.Get("gw_name").(string),
-		}
-
-		enableActiveMesh := d.Get("enable_active_mesh").(bool)
-		if enableActiveMesh {
-			gw.EnableActiveMesh = "yes"
-			err := client.EnableActiveMesh(gw)
-			if err != nil {
-				return fmt.Errorf("failed to enable Active Mesh Mode: %s", err)
-			}
-		} else {
-			gw.EnableActiveMesh = "no"
-			err := client.DisableActiveMesh(gw)
-			if err != nil {
-				return fmt.Errorf("failed to disable Active Mesh Mode: %s", err)
-			}
-		}
-	} else if d.HasChange("transit_gw") && manageTransitGwAttachment {
-		spokeVPC := &goaviatrix.SpokeVpc{
-			CloudType: d.Get("cloud_type").(int),
-			GwName:    d.Get("gw_name").(string),
-			HASubnet:  d.Get("ha_subnet").(string),
-		}
-
-		o, n := d.GetChange("transit_gw")
-		oldTransitGws := strings.Split(o.(string), ",")
-		newTransitGws := strings.Split(n.(string), ",")
-		if len(oldTransitGws) > 0 && oldTransitGws[0] != "" {
-			for _, gw := range oldTransitGws {
-				// Leave any transit gateways that are in the old list but not in the new.
-				if goaviatrix.Contains(newTransitGws, gw) {
-					continue
-				}
-				spokeVPC.TransitGateway = gw
-				err := client.SpokeLeaveTransit(spokeVPC)
-				if err != nil {
-					return fmt.Errorf("failed to leave Transit Gateway %q: %v", gw, err)
-				}
-			}
-		}
-		if len(newTransitGws) > 0 && newTransitGws[0] != "" {
-			for _, gw := range newTransitGws {
-				// Join any transit gateways that are in the new list but not in the old.
-				if goaviatrix.Contains(oldTransitGws, gw) {
-					continue
-				}
-				spokeVPC.TransitGateway = gw
-				err := client.SpokeJoinTransit(spokeVPC)
-				if err != nil {
-					return fmt.Errorf("failed to join Transit Gateway %q: %v", gw, err)
-				}
-			}
+			return fmt.Errorf("not able to update transit_gw since transit attachment is managed elsewhere")
 		}
 	}
 

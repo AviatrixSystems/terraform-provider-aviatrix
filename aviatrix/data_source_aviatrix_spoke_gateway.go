@@ -116,11 +116,6 @@ func dataSourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Enable Insane Mode for Spoke Gateway. Valid values: true, false. If insane mode is enabled, gateway size has to at least be c5 size.",
 			},
-			"enable_active_mesh": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "Switch to Enable/Disable Active Mesh Mode for Spoke Gateway. Valid values: true, false.",
-			},
 			"enable_vpc_dns_server": {
 				Type:        schema.TypeBool,
 				Computed:    true,
@@ -345,12 +340,6 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 		} else {
 			d.Set("insane_mode", false)
 			d.Set("insane_mode_az", "")
-		}
-
-		if gw.EnableActiveMesh == "yes" {
-			d.Set("enable_active_mesh", true)
-		} else {
-			d.Set("enable_active_mesh", false)
 		}
 
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled" {

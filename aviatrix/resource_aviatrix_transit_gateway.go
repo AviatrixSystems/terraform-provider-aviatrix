@@ -175,17 +175,6 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					" are set to true and `cloud_type` = 1 (AWS). Currently AWS Gateway Load Balancer is only supported " +
 					"in AWS regions us-west-2 and us-east-1. Valid values: true or false. Default value: false.",
 			},
-			"enable_active_mesh": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				Deprecated: "Non-ActiveMesh features will be removed in aviatrix provider v2.21.0. " +
-					"\n\nIf you have set 'enable_active_mesh = true', no action is needed at this time. After you upgrade to aviatrix provider v2.21.0, you can safely remove the 'enable_active_mesh' attribute from your configuration." +
-					"\n\nIf you have set 'enable_active_mesh = false', you must migrate to Aviatrix ActiveMesh Transit Network before you can upgrade to aviatrix provider v2.21.0. " +
-					"Please see the following guide to migrate from Classic Aviatrix Encrypted Transit Network to Aviatrix ActiveMesh Transit Network: " +
-					"https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/migrating_to_active_mesh_transit_network",
-				Description: "Switch to Enable/Disable Active Mesh Mode for Transit Gateway. Valid values: true, false.",
-			},
 			"enable_vpc_dns_server": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -322,7 +311,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Enables Active-Standby Mode, available only with Active Mesh Mode and HA enabled.",
+				Description: "Enables Active-Standby Mode, available only with HA enabled.",
 			},
 			"enable_monitor_gateway_subnets": {
 				Type:     schema.TypeBool,
@@ -695,12 +684,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			strs = append(strs, gateway.Subnet, insaneModeAz)
 			gateway.Subnet = strings.Join(strs, "~~")
 		}
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) && !d.Get("enable_active_mesh").(bool) {
-			return fmt.Errorf("insane_mode is supported for GCP provider only if active mesh 2.0 is enabled")
-		}
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.OCIRelatedCloudTypes) && !d.Get("enable_active_mesh").(bool) {
-			return fmt.Errorf("insane_mode is supported for OCI provider only if active mesh 2.0 is enabled")
-		}
 		gateway.InsaneMode = "on"
 	} else {
 		gateway.InsaneMode = "off"
@@ -972,18 +955,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if enableActiveMesh := d.Get("enable_active_mesh").(bool); !enableActiveMesh {
-		gw := &goaviatrix.Gateway{
-			GwName: d.Get("gw_name").(string),
-		}
-		gw.EnableActiveMesh = "no"
-
-		err := client.DisableActiveMesh(gw)
-		if err != nil {
-			return fmt.Errorf("couldn't disable Active Mode for Aviatrix Transit Gateway: %s", err)
-		}
-	}
-
 	if !singleAZ {
 		singleAZGateway := &goaviatrix.Gateway{
 			GwName:   d.Get("gw_name").(string),
@@ -1220,10 +1191,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	}
 
 	if enableTransitFireNet && goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
-		enableActiveMesh := d.Get("enable_active_mesh").(bool)
-		if !enableActiveMesh {
-			return fmt.Errorf("active_mesh needs to be enabled to enable transit firenet")
-		}
 		gwTransitFireNet := &goaviatrix.Gateway{
 			GwName: d.Get("gw_name").(string),
 		}
@@ -1455,7 +1422,6 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		gw.GatewayZone != "AvailabilitySet" {
 		d.Set("zone", "az-"+gw.GatewayZone)
 	}
-	d.Set("enable_active_mesh", gw.EnableActiveMesh == "yes")
 	d.Set("enable_vpc_dns_server", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled")
 	d.Set("enable_advertise_transit_cidr", gw.EnableAdvertiseTransitCidr)
 	d.Set("enable_learned_cidrs_approval", gw.EnableLearnedCidrsApproval)
@@ -2205,27 +2171,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if d.HasChange("enable_active_mesh") {
-		gw := &goaviatrix.Gateway{
-			GwName: d.Get("gw_name").(string),
-		}
-
-		enableActiveMesh := d.Get("enable_active_mesh").(bool)
-		if enableActiveMesh {
-			gw.EnableActiveMesh = "yes"
-			err := client.EnableActiveMesh(gw)
-			if err != nil {
-				return fmt.Errorf("failed to enable Active Mesh Mode: %s", err)
-			}
-		} else {
-			gw.EnableActiveMesh = "no"
-			err := client.DisableActiveMesh(gw)
-			if err != nil {
-				return fmt.Errorf("failed to disable Active Mesh Mode: %s", err)
-			}
-		}
-	}
-
 	if d.HasChange("learned_cidrs_approval_mode") && d.HasChange("enable_learned_cidrs_approval") {
 		gw := &goaviatrix.TransitVpc{
 			GwName: d.Get("gw_name").(string),
@@ -2355,10 +2300,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 		if enableTransitFireNet {
-			enableActiveMesh := d.Get("enable_active_mesh").(bool)
-			if !enableActiveMesh {
-				return fmt.Errorf("active_mesh needs to be enabled to enable transit firenet")
-			}
 			gwTransitFireNet := &goaviatrix.Gateway{
 				GwName: d.Get("gw_name").(string),
 			}
@@ -2399,10 +2340,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	} else if d.HasChange("enable_transit_firenet") {
 		if enableTransitFireNet {
-			enableActiveMesh := d.Get("enable_active_mesh").(bool)
-			if !enableActiveMesh {
-				return fmt.Errorf("active_mesh needs to be enabled to enable transit firenet")
-			}
 			gwTransitFireNet := &goaviatrix.Gateway{
 				GwName: d.Get("gw_name").(string),
 			}
