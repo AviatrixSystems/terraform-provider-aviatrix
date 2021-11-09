@@ -532,6 +532,9 @@ func S2CPh1RemoteIdDiffSuppressFunc(k, old, new string, d *schema.ResourceData) 
 
 	if len(ph1RemoteIdListOld) != 0 && len(ph1RemoteIdListNew) != 0 {
 		if haEnabled && !singleIpHA {
+			if len(ph1RemoteIdListOld) == 1 && len(ph1RemoteIdListNew) == 1 && ip == haip && ph1RemoteIdListOld[0] == ip && ph1RemoteIdListNew[0] == ip {
+				return true
+			}
 			if len(ph1RemoteIdListNew) != 2 || len(ph1RemoteIdListOld) != 2 {
 				return false
 			}
@@ -553,6 +556,9 @@ func S2CPh1RemoteIdDiffSuppressFunc(k, old, new string, d *schema.ResourceData) 
 
 	if haEnabled && !singleIpHA {
 		if len(ph1RemoteIdListOld) == 2 && ph1RemoteIdListOld[0] == ip && strings.TrimSpace(ph1RemoteIdListOld[1]) == haip && len(ph1RemoteIdListNew) == 0 {
+			return true
+		}
+		if len(ph1RemoteIdListOld) == 1 && ph1RemoteIdListOld[0] == ip && ip == haip && len(ph1RemoteIdListNew) == 0 {
 			return true
 		}
 	}
