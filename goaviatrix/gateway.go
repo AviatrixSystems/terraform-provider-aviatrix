@@ -188,7 +188,7 @@ type Gateway struct {
 	SpotPrice                       string                              `form:"spot_price,omitempty" json:"spot_price"`
 	ImageVersion                    string                              `json:"gw_image_name"`
 	SoftwareVersion                 string                              `json:"gw_software_version"`
-	IsTransit                       string                              `json:"transit_vpc"`
+	TransitVpc                      string                              `json:"transit_vpc"`
 }
 
 type HaGateway struct {

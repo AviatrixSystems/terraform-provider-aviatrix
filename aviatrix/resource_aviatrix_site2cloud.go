@@ -452,7 +452,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("couldn't find Aviatrix Gateway %s: %v", s2c.GwName, err)
 	}
 
-	if gw.IsTransit == "yes" {
+	if gw.TransitVpc == "yes" {
 		if s2c.ConnType == "unmapped" && s2c.TunnelType == "policy" && haEnabled && !activeActive {
 			return fmt.Errorf("active_active_ha must be enabled if HA is enabled for transit gateway unmapped policy based site2cloud connection")
 		}
@@ -644,7 +644,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("failed to enable active active HA for site2cloud: %s: %s", s2c.TunnelName, err)
 		}
 	} else {
-		if gw.IsTransit == "no" && s2c.ConnType == "unmapped" && s2c.TunnelType == "route" && haEnabled {
+		if gw.TransitVpc == "no" && s2c.ConnType == "unmapped" && s2c.TunnelType == "route" && haEnabled {
 			err := client.DisableSite2cloudActiveActive(s2c)
 			if err != nil {
 				return fmt.Errorf("failed to disable active active HA for site2cloud: %s: %s", s2c.TunnelName, err)
