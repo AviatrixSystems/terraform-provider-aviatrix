@@ -120,8 +120,11 @@ func resourceAviatrixCloudnTransitGatewayAttachmentCreate(ctx context.Context, d
 	enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
 	approvedCidrs := getStringSet(d, "approved_cidrs")
 	if !enableLearnedCIDRApproval && len(approvedCidrs) > 0 {
-		return diag.Errorf("creating cloudn transit gateway attachment: 'approved_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
+		return diag.Errorf("error creating cloudn transit gateway attachment: 'approved_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
 	}
+
+	flag := false
+	defer resourceAviatrixCloudnTransitGatewayAttachmentReadIfRequired(ctx, d, meta, &flag)
 
 	err := client.CreateCloudnTransitGatewayAttachment(ctx, attachment)
 	if err != nil {
@@ -168,7 +171,15 @@ func resourceAviatrixCloudnTransitGatewayAttachmentCreate(ctx context.Context, d
 		}
 	}
 
-	return resourceAviatrixCloudnTransitGatewayAttachmentRead(ctx, d, meta)
+	return resourceAviatrixCloudnTransitGatewayAttachmentReadIfRequired(ctx, d, meta, &flag)
+}
+
+func resourceAviatrixCloudnTransitGatewayAttachmentReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixCloudnTransitGatewayAttachmentRead(ctx, d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixCloudnTransitGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -283,7 +294,7 @@ func resourceAviatrixCloudnTransitGatewayAttachmentUpdate(ctx context.Context, d
 	if d.HasChange("approved_cidrs") {
 		err := client.UpdateTransitConnectionPendingApprovedCidrs(attachment.TransitGatewayName, attachment.ConnectionName, approvedCidrs)
 		if err != nil {
-			return diag.Errorf("could not update cloudn transit gateway attachment approved cidrs during update: %v", err)
+			return diag.Errorf("could not update cloudn transit gateway attachment approved cidrs: %v", err)
 		}
 	}
 
