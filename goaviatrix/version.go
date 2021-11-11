@@ -94,13 +94,11 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
 		return errors.New("Json Decode " + form["action"] + " failed: " + err.Error() + "\n Body: " + bodyString)
 	}
-
-	requestID := data.Result
-	if requestID == 0 {
-		// Could not decode as integer, so something went wrong
+	if !data.Return || data.Result == 0 {
 		return fmt.Errorf("rest API %s POST failed to initiate async action", form["action"])
 	}
 
+	requestID := data.Result
 	form = map[string]string{
 		"action": "check_upgrade_status",
 		"CID":    c.CID,
