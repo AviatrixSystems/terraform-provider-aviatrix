@@ -48,11 +48,12 @@ type TransitVpc struct {
 	OobManagementSubnet          string `form:"oob_mgmt_subnet,omitempty"`
 	HAOobManagementSubnet        string
 	EnableSummarizeCidrToTgw     bool
-	StorageName                  string `form:"storage_name,omitempty"`
-	AvailabilityDomain           string `form:"availability_domain,omitempty"`
-	FaultDomain                  string `form:"fault_domain,omitempty"`
-	EnableSpotInstance           bool   `form:"spot_instance,omitempty"`
-	SpotPrice                    string `form:"spot_price,omitempty"`
+	StorageName                  string   `form:"storage_name,omitempty"`
+	AvailabilityDomain           string   `form:"availability_domain,omitempty"`
+	FaultDomain                  string   `form:"fault_domain,omitempty"`
+	EnableSpotInstance           bool     `form:"spot_instance,omitempty"`
+	SpotPrice                    string   `form:"spot_price,omitempty"`
+	ApprovedLearnedCidrs         []string `form:"approved_learned_cidrs"`
 }
 
 type TransitGatewayAdvancedConfig struct {
@@ -69,6 +70,7 @@ type TransitGatewayAdvancedConfig struct {
 	PeerVnetId                        []string
 	BgpHoldTime                       int
 	EnableSummarizeCidrToTgw          bool
+	ApprovedLearnedCidrs              []string
 }
 
 type StandbyConnection struct {
@@ -90,6 +92,7 @@ type TransitGatewayAdvancedConfigRespResult struct {
 	PeerVnetId                        []string                  `json:"peer_vnet_id"`
 	BgpHoldTime                       int                       `json:"bgp_hold_time"`
 	EnableSummarizeCidrToTgw          string                    `json:"summarize_cidr_to_tgw"`
+	ApprovedLearnedCidrs              []string                  `json:"approved_learned_cidrs"`
 }
 
 type LearnedCIDRApprovalInfo struct {
@@ -299,6 +302,17 @@ func (c *Client) DisableTransitLearnedCidrsApproval(gateway *TransitVpc) error {
 	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
+func (c *Client) UpdateTransitPendingApprovedCidrs(gateway *TransitVpc) error {
+	form := map[string]string{
+		"CID":                    c.CID,
+		"action":                 "update_transit_pending_approved_cidrs",
+		"gateway_name":           gateway.GwName,
+		"approved_learned_cidrs": strings.Join(gateway.ApprovedLearnedCidrs, ","),
+	}
+
+	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
 func (c *Client) SetBgpPollingTime(transitGateway *TransitVpc, newPollingTime string) error {
 	action := "change_bgp_polling_time"
 	return c.PostAPI(action, struct {
@@ -420,6 +434,7 @@ func (c *Client) GetTransitGatewayAdvancedConfig(transitGateway *TransitVpc) (*T
 		PeerVnetId:                        data.Results.PeerVnetId,
 		BgpHoldTime:                       data.Results.BgpHoldTime,
 		EnableSummarizeCidrToTgw:          data.Results.EnableSummarizeCidrToTgw == "yes",
+		ApprovedLearnedCidrs:              data.Results.ApprovedLearnedCidrs,
 	}, nil
 }
 
