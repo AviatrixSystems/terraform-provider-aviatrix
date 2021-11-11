@@ -66,8 +66,8 @@ func (av *AviatrixVersion) String(includeBuild bool) string {
 // AsyncUpgrade will upgrade controller asynchronously
 func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 	form := map[string]string{
-		"CID":    c.CID,
-		"caller": "ui", // indicates an async command
+		"CID":   c.CID,
+		"async": "true", // indicates an async command
 	}
 	if upgradeGateways {
 		form["action"] = "upgrade"
@@ -83,21 +83,22 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 	if err != nil {
 		return fmt.Errorf("HTTP POST %s failed: %v", form["action"], err)
 	}
+	var data struct {
+		Return bool `json:"return"`
+		Result int  `json:"results"`
+	}
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
-	requestID, err := strconv.Atoi(buf.String())
-	if err != nil {
-		// Could not decode as integer, so something went wrong
-		// try decoding as JSON to get an error message.
-		var data APIResp
-		err = json.Unmarshal(buf.Bytes(), &data)
-		if err != nil {
-			// Could not decode as JSON either, something is very wrong.
-			return fmt.Errorf("Decode %s failed: %v\n Body: %s", form["action"], err, buf.String())
-		}
-		return fmt.Errorf("rest API %s POST failed to initiate async action: %v", form["action"], data.Reason)
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return errors.New("Json Decode " + form["action"] + " failed: " + err.Error() + "\n Body: " + bodyString)
 	}
-	// Use the requestID to poll until upgrade is finished
+	if !data.Return || data.Result == 0 {
+		return fmt.Errorf("rest API %s POST failed to initiate async action", form["action"])
+	}
+
+	requestID := data.Result
 	form = map[string]string{
 		"action": "check_upgrade_status",
 		"CID":    c.CID,
@@ -118,8 +119,10 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 		buf = new(bytes.Buffer)
 		buf.ReadFrom(resp.Body)
 		var data struct {
-			Done   bool
-			Result string
+			Pos    int    `json:"pos"`
+			Done   bool   `json:"done"`
+			Status bool   `json:"status"`
+			Result string `json:"result"`
 		}
 		err = json.Unmarshal(buf.Bytes(), &data)
 		if err != nil {
@@ -130,6 +133,7 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 			time.Sleep(sleepDuration)
 			continue
 		}
+
 		// Upgrade is done, check for error
 		if strings.HasPrefix(data.Result, "Error") {
 			return fmt.Errorf("post check_upgrade_status failed: %s", data.Result)
