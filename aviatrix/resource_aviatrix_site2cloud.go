@@ -449,7 +449,11 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 
 	gw, err := client.GetGateway(gateway)
 	if err != nil {
-		return fmt.Errorf("couldn't find Aviatrix Gateway %s: %v", s2c.GwName, err)
+		if err == goaviatrix.ErrNotFound {
+			return fmt.Errorf("couldn't find Aviatrix Gateway %s", s2c.GwName)
+		} else {
+			return fmt.Errorf("couldn't find Aviatrix Gateway %s: %v", s2c.GwName, err)
+		}
 	}
 
 	if gw.TransitVpc == "yes" {
