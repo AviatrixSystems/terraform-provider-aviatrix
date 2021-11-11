@@ -83,6 +83,7 @@ func resourceAviatrixCloudnTransitGatewayAttachment() *schema.Resource {
 			"enable_learned_cidrs_approval": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     false,
 				Description: "Switch to enable/disable encrypted transit approval for cloudn transit gateway attachment. Valid values: true, false.",
 			},
 			"approved_cidrs": {
