@@ -216,7 +216,10 @@ func resourceAviatrixCloudnTransitGatewayAttachmentRead(ctx context.Context, d *
 	d.Set("enable_jumbo_frame", attachment.EnableJumboFrame)
 	d.Set("enable_dead_peer_detection", attachment.EnableDeadPeerDetection)
 	d.Set("enable_learned_cidrs_approval", attachment.EnableLearnedCidrsApproval)
-	d.Set("approved_cidrs", attachment.ApprovedCidrs)
+	err = d.Set("approved_cidrs", attachment.ApprovedCidrs)
+	if err != nil {
+		return diag.Errorf("failed to set approved_cidrs for cloudn_transit_gateway_attachment on read: %v", err)
+	}
 
 	d.SetId(attachment.ConnectionName)
 	return nil
