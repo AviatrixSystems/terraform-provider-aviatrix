@@ -447,6 +447,29 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("active_active_ha can't be enabled if HA isn't enabled for site2cloud connection")
 	}
 
+	if s2c.ConnType != "mapped" && s2c.ConnType != "unmapped" {
+		return fmt.Errorf("'connection_type' should be 'mapped' or 'unmapped'")
+	}
+
+	gateway := &goaviatrix.Gateway{
+		GwName: s2c.GwName,
+	}
+
+	gw, err := client.GetGateway(gateway)
+	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			return fmt.Errorf("couldn't find Aviatrix Gateway %s", s2c.GwName)
+		} else {
+			return fmt.Errorf("couldn't find Aviatrix Gateway %s: %v", s2c.GwName, err)
+		}
+	}
+
+	if gw.TransitVpc == "yes" {
+		if s2c.ConnType == "unmapped" && s2c.TunnelType == "policy" && haEnabled && !activeActive {
+			return fmt.Errorf("active_active_ha must be enabled if HA is enabled for transit gateway unmapped policy based site2cloud connection")
+		}
+	}
+
 	if singleIpHA {
 		if !haEnabled {
 			return fmt.Errorf("'enable_single_ip_ha' can't be enabled if HA isn't enabled for site2cloud connection")
@@ -454,9 +477,6 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		s2c.EnableSingleIpHA = true
 	}
 
-	if s2c.ConnType != "mapped" && s2c.ConnType != "unmapped" {
-		return fmt.Errorf("'connection_type' should be 'mapped' or 'unmapped'")
-	}
 	if !s2c.CustomMap && s2c.RemoteSubnet == "" {
 		return fmt.Errorf("'remote_subnet_cidr' is required unless you are using 'custom_mapped'")
 	}
@@ -619,7 +639,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	flag := false
 	defer resourceAviatrixSite2CloudReadIfRequired(d, meta, &flag)
 
-	err := client.CreateSite2Cloud(s2c)
+	err = client.CreateSite2Cloud(s2c)
 	if err != nil {
 		return fmt.Errorf("failed Site2Cloud create: %s", err)
 	}
@@ -636,6 +656,13 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		err := client.EnableSite2cloudActiveActive(s2c)
 		if err != nil {
 			return fmt.Errorf("failed to enable active active HA for site2cloud: %s: %s", s2c.TunnelName, err)
+		}
+	} else {
+		if gw.TransitVpc == "no" && s2c.ConnType == "unmapped" && s2c.TunnelType == "route" && haEnabled {
+			err := client.DisableSite2cloudActiveActive(s2c)
+			if err != nil {
+				return fmt.Errorf("failed to disable active active HA for site2cloud: %s: %s", s2c.TunnelName, err)
+			}
 		}
 	}
 
