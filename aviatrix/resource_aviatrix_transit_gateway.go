@@ -390,12 +390,6 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable Multi-tier Transit mode on transit gateway.",
 			},
-			"storage_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Name of storage account with gateway images. Only valid for Azure China (2048)",
-			},
 			"tags": {
 				Type:          schema.TypeMap,
 				Elem:          &schema.Schema{Type: schema.TypeString},
@@ -882,15 +876,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	if enableMultitierTransit {
 		if d.Get("local_as_number") == "" {
 			return fmt.Errorf("local_as_number required to enable multi tier transit")
-		}
-	}
-
-	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureChina) {
-		storageName, storageNameOk := d.GetOk("storage_name")
-		if storageNameOk {
-			gateway.StorageName = storageName.(string)
-		} else {
-			return fmt.Errorf("storage_name is required when creating a Gateway in AzureChina (2048)")
 		}
 	}
 
@@ -1573,10 +1558,6 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
 			}
 		}
-	}
-
-	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureChina) {
-		d.Set("storage_name", gw.StorageName)
 	}
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {

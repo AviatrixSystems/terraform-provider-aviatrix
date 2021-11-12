@@ -408,12 +408,6 @@ func resourceAviatrixGateway() *schema.Resource {
 				Description:   "A map of tags to assign to the gateway.",
 				ConflictsWith: []string{"tag_list"},
 			},
-			"storage_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Name of storage account with gateway images. Only valid for Azure China (2048)",
-			},
 			"enable_spot_instance": {
 				Type:         schema.TypeBool,
 				Optional:     true,
@@ -907,15 +901,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("'monitor_exclude_list' must be empty if 'enable_monitor_gateway_subnets' is false")
 	}
 
-	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureChina) {
-		storageName, storageNameOk := d.GetOk("storage_name")
-		if storageNameOk {
-			gateway.StorageName = storageName.(string)
-		} else {
-			return fmt.Errorf("storage_name is required when creating a Gateway in AzureChina (2048)")
-		}
-	}
-
 	_, tagListOk := d.GetOk("tag_list")
 	_, tagsOk := d.GetOk("tags")
 	if tagListOk || tagsOk {
@@ -1296,10 +1281,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
 	d.Set("image_version", gw.ImageVersion)
 	d.Set("software_version", gw.SoftwareVersion)
-
-	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureChina) {
-		d.Set("storage_name", gw.StorageName)
-	}
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		azureEip := strings.Split(gw.ReuseEip, ":")

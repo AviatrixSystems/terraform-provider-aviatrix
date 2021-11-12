@@ -48,7 +48,6 @@ type TransitVpc struct {
 	OobManagementSubnet          string `form:"oob_mgmt_subnet,omitempty"`
 	HAOobManagementSubnet        string
 	EnableSummarizeCidrToTgw     bool
-	StorageName                  string `form:"storage_name,omitempty"`
 	AvailabilityDomain           string `form:"availability_domain,omitempty"`
 	FaultDomain                  string `form:"fault_domain,omitempty"`
 	EnableSpotInstance           bool   `form:"spot_instance,omitempty"`
