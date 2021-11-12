@@ -9,6 +9,7 @@ import (
 )
 
 //ExternalDeviceConn: a simple struct to hold external device connection details
+
 type ExternalDeviceConn struct {
 	Action                 string `form:"action,omitempty"`
 	CID                    string `form:"CID,omitempty"`
@@ -86,7 +87,6 @@ type EditExternalDeviceConnDetail struct {
 	EventTriggeredHA       string `json:"event_triggered_ha"`
 	Phase1RemoteIdentifier string `json:"phase1_remote_id"`
 	PrependAsPath          string `json:"conn_bgp_prepend_as_path"`
-	GwActiveMesh           bool   `json:"gw_activemesh"`
 }
 
 type ExternalDeviceConnDetailResp struct {
@@ -204,20 +204,10 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 						externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
 						externalDeviceConn.HAEnabled = "disabled"
 					} else {
-						if externalDeviceConnDetail.GwActiveMesh {
-							externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
-							externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
-							externalDeviceConn.RemoteGatewayIP = remoteIP[0] + "," + remoteIP[1]
-							externalDeviceConn.HAEnabled = "disabled"
-						} else {
-							externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
-							externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
-							externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
-							externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
-							externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
-							externalDeviceConn.HAEnabled = "enabled"
-							externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
-						}
+						externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
+						externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
+						externalDeviceConn.RemoteGatewayIP = remoteIP[0] + "," + remoteIP[1]
+						externalDeviceConn.HAEnabled = "disabled"
 					}
 				}
 			} else if len(externalDeviceConnDetail.Tunnels) == 4 {
