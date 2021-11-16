@@ -4,7 +4,7 @@
 - Supported Terraform version: **v1.x**
 
 ### Bug Fixes:
-1. Fixed issue where upgrade controller using **aviatrix_controller_config** fails due to async action
+1. Fixed issue where upgrading Controller using **aviatrix_controller_config** fails due to async action
 
 
 ## 2.20.1 (October 28, 2021)
