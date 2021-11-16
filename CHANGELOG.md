@@ -1,4 +1,13 @@
-## 2.20.1 (Unreleased)
+## 2.20.2 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.5.2608**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes:
+1. Fixed issue where upgrade controller using **aviatrix_controller_config** fails due to async action
+
+
+## 2.20.1 (October 28, 2021)
 ### Notes:
 - Supported Controller version: **UserConnect-6.5.2608**
 - Supported Terraform version: **v1.x**
@@ -22,7 +31,6 @@
   - Non-ActiveMesh features will be removed in Aviatrix provider v2.21.0. Please follow the guide [here](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/migrating_to_active_mesh_transit_network) to migrate from Classic Aviatrix Encrypted Transit Network to Aviatrix ActiveMesh Transit Network
 2. Deprecated ``sg_management_account_name`` and ``security_group_management`` in **aviatrix_controller_config**
   - Please remove the attributes from this resource, perform a refresh, and use the new **aviatrix_controller_security_group_management_config** resource to configure the Controller's Security Group Management settings
-  
 
 
 ## 2.20.0 (August 17, 2021)
