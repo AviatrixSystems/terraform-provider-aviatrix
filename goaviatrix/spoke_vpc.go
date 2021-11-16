@@ -32,7 +32,6 @@ type SpokeVpc struct {
 	AllocateNewEipRead    bool   `json:"newly_allocated_eip,omitempty"`
 	Eip                   string `form:"eip,omitempty" json:"eip,omitempty"`
 	InsaneMode            string `form:"insane_mode,omitempty"`
-	EnableActiveMesh      string `form:"enable_activemesh,omitempty" json:"enable_activemesh,omitempty"`
 	Zone                  string `form:"zone,omitempty" json:"zone,omitempty"`
 	EncVolume             string `form:"enc_volume,omitempty"`
 	EnablePrivateOob      string `form:"private_oob,omitempty"`

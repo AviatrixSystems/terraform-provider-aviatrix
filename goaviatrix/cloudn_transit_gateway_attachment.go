@@ -17,10 +17,13 @@ type CloudnTransitGatewayAttachment struct {
 	EnableOverPrivateNetwork         bool   `form:"direct_connect" json:"direct_connect_primary"`
 	EnableJumboFrame                 bool   `json:"jumbo_frame"`
 	EnableDeadPeerDetection          bool
-	DpdConfig                        string `json:"dpd_config"`
-	RoutingProtocol                  string `form:"routing_protocol"`
-	Action                           string `form:"action"`
-	CID                              string `form:"CID"`
+	DpdConfig                        string   `json:"dpd_config"`
+	RoutingProtocol                  string   `form:"routing_protocol"`
+	Action                           string   `form:"action"`
+	CID                              string   `form:"CID"`
+	EnableLearnedCidrsApproval       bool     `form:"connection_learned_cidrs_approval"`
+	EnableLearnedCidrsApprovalValue  string   `json:"conn_learned_cidrs_approval"`
+	ApprovedCidrs                    []string `json:"conn_approved_learned_cidrs"`
 }
 
 func (c *Client) CreateCloudnTransitGatewayAttachment(ctx context.Context, attachment *CloudnTransitGatewayAttachment) error {
@@ -81,6 +84,7 @@ func (c *Client) GetCloudnTransitGatewayAttachment(ctx context.Context, connName
 	data.Results.Connections.ConnectionName = connName
 	data.Results.Connections.DeviceName = deviceName
 	data.Results.Connections.EnableDeadPeerDetection = data.Results.Connections.DpdConfig == "enable"
+	data.Results.Connections.EnableLearnedCidrsApproval = data.Results.Connections.EnableLearnedCidrsApprovalValue == "yes"
 	return &data.Results.Connections, nil
 }
 

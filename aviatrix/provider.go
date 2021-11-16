@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var supportedVersions = []string{"6.5"}
+var supportedVersions = []string{"6.6"}
 
 // Provider returns a schema.Provider for Aviatrix.
 func Provider() *schema.Provider {
@@ -56,6 +56,7 @@ func Provider() *schema.Provider {
 			"aviatrix_azure_peer":                                     resourceAviatrixAzurePeer(),
 			"aviatrix_azure_spoke_native_peering":                     resourceAviatrixAzureSpokeNativePeering(),
 			"aviatrix_azure_vng_conn":                                 resourceAviatrixAzureVngConn(),
+			"aviatrix_cloudn_registration":                            resourceAviatrixCloudnRegistration(),
 			"aviatrix_cloudn_transit_gateway_attachment":              resourceAviatrixCloudnTransitGatewayAttachment(),
 			"aviatrix_cloudwatch_agent":                               resourceAviatrixCloudwatchAgent(),
 			"aviatrix_controller_bgp_max_as_limit_config":             resourceAviatrixControllerBgpMaxAsLimitConfig(),

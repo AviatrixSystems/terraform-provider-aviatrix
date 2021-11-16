@@ -276,52 +276,60 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Description: "Enable single IP HA on a site2cloud connection.",
 			},
 			"remote_source_real_cidrs": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
-				Description: "Remote Initiated Traffic Source Real CIDRs.",
+				Type:             schema.TypeList,
+				Optional:         true,
+				Elem:             &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncRemoteSourceRealCIDRs,
+				Description:      "Remote Initiated Traffic Source Real CIDRs.",
 			},
 			"remote_source_virtual_cidrs": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
-				Description: "Remote Initiated Traffic Source Virtual CIDRs.",
+				Type:             schema.TypeList,
+				Optional:         true,
+				Elem:             &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncRemoteSourceVirtualCIDRs,
+				Description:      "Remote Initiated Traffic Source Virtual CIDRs.",
 			},
 			"remote_destination_real_cidrs": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
-				Description: "Remote Initiated Traffic Destination Real CIDRs.",
+				Type:             schema.TypeList,
+				Optional:         true,
+				Elem:             &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncRemoteDestinationRealCIDRs,
+				Description:      "Remote Initiated Traffic Destination Real CIDRs.",
 			},
 			"remote_destination_virtual_cidrs": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
-				Description: "Remote Initiated Traffic Destination Virtual CIDRs.",
+				Type:             schema.TypeList,
+				Optional:         true,
+				Elem:             &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncRemoteDestinationVirtualCIDRs,
+				Description:      "Remote Initiated Traffic Destination Virtual CIDRs.",
 			},
 			"local_source_real_cidrs": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
-				Description: "Local Initiated Traffic Source Real CIDRs.",
+				Type:             schema.TypeList,
+				Optional:         true,
+				Elem:             &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncLocalSourceRealCIDRs,
+				Description:      "Local Initiated Traffic Source Real CIDRs.",
 			},
 			"local_source_virtual_cidrs": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
-				Description: "Local Initiated Traffic Source Virtual CIDRs.",
+				Type:             schema.TypeList,
+				Optional:         true,
+				Elem:             &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncLocalSourceVirtualCIDRs,
+				Description:      "Local Initiated Traffic Source Virtual CIDRs.",
 			},
 			"local_destination_real_cidrs": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
-				Description: "Local Initiated Traffic Destination Real CIDRs.",
+				Type:             schema.TypeList,
+				Optional:         true,
+				Elem:             &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncLocalDestinationRealCIDRs,
+				Description:      "Local Initiated Traffic Destination Real CIDRs.",
 			},
 			"local_destination_virtual_cidrs": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
-				Description: "Local Initiated Traffic Destination Virtual CIDRs.",
+				Type:             schema.TypeList,
+				Optional:         true,
+				Elem:             &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsCIDR},
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncLocalDestinationVirtualCIDRs,
+				Description:      "Local Initiated Traffic Destination Virtual CIDRs.",
 			},
 			"enable_event_triggered_ha": {
 				Type:        schema.TypeBool,
@@ -439,6 +447,29 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("active_active_ha can't be enabled if HA isn't enabled for site2cloud connection")
 	}
 
+	if s2c.ConnType != "mapped" && s2c.ConnType != "unmapped" {
+		return fmt.Errorf("'connection_type' should be 'mapped' or 'unmapped'")
+	}
+
+	gateway := &goaviatrix.Gateway{
+		GwName: s2c.GwName,
+	}
+
+	gw, err := client.GetGateway(gateway)
+	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			return fmt.Errorf("couldn't find Aviatrix Gateway %s", s2c.GwName)
+		} else {
+			return fmt.Errorf("couldn't find Aviatrix Gateway %s: %v", s2c.GwName, err)
+		}
+	}
+
+	if gw.TransitVpc == "yes" {
+		if s2c.ConnType == "unmapped" && s2c.TunnelType == "policy" && haEnabled && !activeActive {
+			return fmt.Errorf("active_active_ha must be enabled if HA is enabled for transit gateway unmapped policy based site2cloud connection")
+		}
+	}
+
 	if singleIpHA {
 		if !haEnabled {
 			return fmt.Errorf("'enable_single_ip_ha' can't be enabled if HA isn't enabled for site2cloud connection")
@@ -446,9 +477,6 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		s2c.EnableSingleIpHA = true
 	}
 
-	if s2c.ConnType != "mapped" && s2c.ConnType != "unmapped" {
-		return fmt.Errorf("'connection_type' should be 'mapped' or 'unmapped'")
-	}
 	if !s2c.CustomMap && s2c.RemoteSubnet == "" {
 		return fmt.Errorf("'remote_subnet_cidr' is required unless you are using 'custom_mapped'")
 	}
@@ -598,7 +626,9 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	phase1RemoteIdentifier := d.Get("phase1_remote_identifier").([]interface{})
 	ph1RemoteIdList := goaviatrix.ExpandStringList(phase1RemoteIdentifier)
 	if haEnabled && !singleIpHA && len(ph1RemoteIdList) != 0 && len(ph1RemoteIdList) != 2 {
-		return fmt.Errorf("please either set two phase 1 remote IDs or none, when HA is enabled and single IP HA is disabled")
+		if !(s2c.RemoteGwIP != "" && s2c.RemoteGwIP2 != "" && s2c.RemoteGwIP == s2c.RemoteGwIP2 && len(ph1RemoteIdList) == 1) {
+			return fmt.Errorf("please either set two phase 1 remote IDs or none, when HA is enabled and single IP HA is disabled")
+		}
 	} else if (!haEnabled || singleIpHA) && len(phase1RemoteIdentifier) > 1 {
 		return fmt.Errorf("please either set one phase 1 remote ID or none, when HA is disabled or single IP HA is enabled")
 	}
@@ -609,7 +639,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	flag := false
 	defer resourceAviatrixSite2CloudReadIfRequired(d, meta, &flag)
 
-	err := client.CreateSite2Cloud(s2c)
+	err = client.CreateSite2Cloud(s2c)
 	if err != nil {
 		return fmt.Errorf("failed Site2Cloud create: %s", err)
 	}
@@ -626,6 +656,13 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		err := client.EnableSite2cloudActiveActive(s2c)
 		if err != nil {
 			return fmt.Errorf("failed to enable active active HA for site2cloud: %s: %s", s2c.TunnelName, err)
+		}
+	} else {
+		if gw.TransitVpc == "no" && s2c.ConnType == "unmapped" && s2c.TunnelType == "route" && haEnabled {
+			err := client.DisableSite2cloudActiveActive(s2c)
+			if err != nil {
+				return fmt.Errorf("failed to disable active active HA for site2cloud: %s: %s", s2c.TunnelName, err)
+			}
 		}
 	}
 
@@ -1032,7 +1069,9 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		ph1RemoteIdList := goaviatrix.ExpandStringList(phase1RemoteIdentifier)
 
 		if haEnabled && !singleIpHA && len(ph1RemoteIdList) != 0 && len(ph1RemoteIdList) != 2 {
-			return fmt.Errorf("please either set two phase 1 remote IDs or none, when HA is enabled and single IP HA is disabled")
+			if !(ip != "" && haIp != "" && ip == haIp && len(ph1RemoteIdList) == 1) {
+				return fmt.Errorf("please either set two phase 1 remote IDs or none, when HA is enabled and single IP HA is disabled")
+			}
 		} else if (!haEnabled || singleIpHA) && len(phase1RemoteIdentifier) > 1 {
 			return fmt.Errorf("please either set one phase 1 remote ID or none, when HA is disabled or single IP HA is enabled")
 		}

@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"github.com/ajg/form"
-	"github.com/google/go-querystring/query"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -160,11 +159,7 @@ var BasicCheck CheckAPIResponseFunc = func(action, method, reason string, ret bo
 
 // PostAPI makes a post request to the Aviatrix API, decodes the response and checks for any errors
 func (c *Client) PostAPI(action string, d interface{}, checkFunc CheckAPIResponseFunc) error {
-	resp, err := c.Post(c.baseURL, d)
-	if err != nil {
-		return fmt.Errorf("HTTP POST %q failed: %v", action, err)
-	}
-	return decodeAndCheckAPIResp(resp, action, checkFunc)
+	return c.PostAPIContext(context.Background(), action, d, checkFunc)
 }
 
 // PostAPIContext makes a post request to the Aviatrix API, decodes the response and checks for any errors
@@ -403,77 +398,6 @@ func escapeQuotes(s string) string {
 	return quoteEscaper.Replace(s)
 }
 
-// Do performs the HTTP request.
-// Arguments:
-//   verb - GET, PUT, POST, DELETE, etc
-//   req  - the query string (for GET) or body for others
-// Returns:
-//   http.Response - the HTTP response object (body is closed)
-//   []byte - the body string as a byte array
-//   error - if any
-func (c *Client) Do(verb string, req interface{}) (*http.Response, []byte, error) {
-	var err error
-	var resp *http.Response
-	var url string
-	var body []byte
-	respdata := new(APIResp)
-
-	// do request
-	var loop int
-	for {
-		url = c.baseURL
-		loop = loop + 1
-		if verb == "GET" {
-			// prepare query string
-			v, _ := query.Values(req)
-			url = url + "?" + v.Encode()
-			resp, err = c.Request(verb, url, nil)
-		} else {
-			resp, err = c.Request(verb, url, req)
-		}
-
-		// check response for error
-		if err != nil {
-			if loop > 2 {
-				return resp, nil, err
-			} else {
-				continue // try again
-			}
-		}
-
-		log.Tracef("%s %s: %d", verb, url, resp.StatusCode)
-		// decode the json response and look for errors to retry
-		defer resp.Body.Close()
-		if resp.StatusCode == http.StatusOK {
-			body, _ = ioutil.ReadAll(resp.Body)
-			if err = json.Unmarshal(body, respdata); err != nil {
-				return resp, body, err
-			}
-			// Check if the CID has expired; if so re-login
-			if respdata.Reason == "CID is invalid or expired." && loop < 2 {
-				log.Tracef("re-login (expired CID)")
-				time.Sleep(500 * time.Millisecond)
-				if err = c.Login(); err != nil {
-					return resp, body, err
-				}
-				// update the CID value in the object passed
-				s := reflect.ValueOf(req).Elem()
-				f := s.FieldByName("CID")
-				if f.IsValid() && f.CanSet() {
-					f.SetString(c.CID)
-				}
-				// loop around again using new CID
-			} else if !respdata.Return {
-				return resp, body, errors.New(respdata.Reason)
-			} else {
-				return resp, body, nil
-			}
-		} else {
-			return resp, body, errors.New("Status code")
-		}
-	}
-}
-
 // Request makes an HTTP request with the given interface being encoded as
 // form data.
 func (c *Client) Request(verb string, path string, i interface{}) (*http.Response, error) {
@@ -484,26 +408,99 @@ func (c *Client) Request(verb string, path string, i interface{}) (*http.Respons
 // form data.
 func (c *Client) RequestContext(ctx context.Context, verb string, path string, i interface{}) (*http.Response, error) {
 	log.Tracef("%s %s", verb, path)
+
+	try, maxTries, backoff := 0, 2, 500*time.Millisecond
 	var req *http.Request
 	var err error
-	if i != nil {
-		buf := new(bytes.Buffer)
-		if err = form.NewEncoder(buf).Encode(i); err != nil {
+	var data *APIResp
+	var resp *http.Response
+
+	for {
+		try++
+
+		if i != nil {
+			buf := new(bytes.Buffer)
+			if err = form.NewEncoder(buf).Encode(i); err != nil {
+				return nil, err
+			}
+			body := buf.String()
+			log.Tracef("%s %s Body: %s", verb, path, body)
+			reader := strings.NewReader(body)
+			req, err = http.NewRequestWithContext(ctx, verb, path, reader)
+			if err == nil {
+				req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			}
+		} else {
+			req, err = http.NewRequestWithContext(ctx, verb, path, nil)
+		}
+
+		if err != nil {
 			return nil, err
 		}
-		body := buf.String()
-		log.Tracef("%s %s Body: %s", verb, path, body)
-		reader := strings.NewReader(body)
-		req, err = http.NewRequestWithContext(ctx, verb, path, reader)
-		if err == nil {
-			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		}
-	} else {
-		req, err = http.NewRequestWithContext(ctx, verb, path, nil)
-	}
 
-	if err != nil {
-		return nil, err
+		resp, err = c.HTTPClient.Do(req)
+		if err != nil {
+			return resp, err
+		}
+
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(resp.Body)
+		resp.Body.Close()
+
+		// Replace resp.Body with new ReadCloser so that other methods can read the buffer again
+		resp.Body = io.NopCloser(buf)
+
+		bodyString := buf.String()
+		data = new(APIResp)
+		if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(data); err != nil {
+			return resp, fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
+		}
+
+		// Any error not related to expired CID should return
+		if !(strings.Contains(data.Reason, "CID is invalid") || strings.Contains(data.Reason, "Invalid session. Please login again.")) {
+			return resp, err
+		}
+
+		log.Tracef("CID invalid or expired. Trying to login again")
+		if err = c.Login(); err != nil {
+			return resp, err
+		}
+
+		// update the CID value in the object passed
+		if i != nil {
+			// Update CID in POST body
+			v := reflect.ValueOf(i)
+			if v.Kind() == reflect.Map {
+				v.SetMapIndex(reflect.ValueOf("CID"), reflect.ValueOf(c.CID))
+			} else {
+				s := v.Elem()
+				f := s.FieldByName("CID")
+				if f.IsValid() && f.CanSet() {
+					f.SetString(c.CID)
+				}
+			}
+		} else {
+			// Update CID in GET URL
+			Url, err := url.Parse(path)
+			if err != nil {
+				return resp, fmt.Errorf("failed to parse url: %v", err)
+			}
+			query := Url.Query()
+			query["CID"] = []string{c.CID}
+			Url.RawQuery = query.Encode()
+			path = Url.String()
+		}
+
+		log.WithFields(log.Fields{
+			"try": try,
+			"err": "CID is invalid",
+		}).Warnf("HTTP request failed with expired CID")
+
+		if try == maxTries {
+			return resp, fmt.Errorf("%v", data.Reason)
+		}
+		time.Sleep(backoff)
+		// Double the backoff time after each failed try
+		backoff *= 2
 	}
-	return c.HTTPClient.Do(req)
 }

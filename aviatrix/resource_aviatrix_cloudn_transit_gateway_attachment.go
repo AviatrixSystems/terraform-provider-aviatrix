@@ -80,6 +80,19 @@ func resourceAviatrixCloudnTransitGatewayAttachment() *schema.Resource {
 				Default:     true,
 				Description: "Enable dead peer detection.",
 			},
+			"enable_learned_cidrs_approval": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Switch to enable/disable encrypted transit approval for cloudn transit gateway attachment. Valid values: true, false.",
+			},
+			"approved_cidrs": {
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Computed:    true,
+				Description: "Set of approved cidrs. Requires 'enable_learned_cidrs_approval' to be true. Type: Set(String).",
+			},
 		},
 	}
 }
@@ -96,6 +109,7 @@ func marshalCloudnTransitGatewayAttachmentInput(d *schema.ResourceData) *goaviat
 		EnableOverPrivateNetwork:         d.Get("enable_over_private_network").(bool),
 		EnableJumboFrame:                 d.Get("enable_jumbo_frame").(bool),
 		EnableDeadPeerDetection:          d.Get("enable_dead_peer_detection").(bool),
+		EnableLearnedCidrsApproval:       d.Get("enable_learned_cidrs_approval").(bool),
 	}
 }
 
@@ -103,6 +117,15 @@ func resourceAviatrixCloudnTransitGatewayAttachmentCreate(ctx context.Context, d
 	client := meta.(*goaviatrix.Client)
 
 	attachment := marshalCloudnTransitGatewayAttachmentInput(d)
+
+	enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
+	approvedCidrs := getStringSet(d, "approved_cidrs")
+	if !enableLearnedCIDRApproval && len(approvedCidrs) > 0 {
+		return diag.Errorf("error creating cloudn transit gateway attachment: 'approved_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
+	}
+
+	flag := false
+	defer resourceAviatrixCloudnTransitGatewayAttachmentReadIfRequired(ctx, d, meta, &flag)
 
 	err := client.CreateCloudnTransitGatewayAttachment(ctx, attachment)
 	if err != nil {
@@ -136,7 +159,28 @@ func resourceAviatrixCloudnTransitGatewayAttachmentCreate(ctx context.Context, d
 		}
 	}
 
-	return resourceAviatrixCloudnTransitGatewayAttachmentRead(ctx, d, meta)
+	if enableLearnedCIDRApproval {
+		err = client.EnableTransitConnectionLearnedCIDRApproval(attachment.TransitGatewayName, attachment.ConnectionName)
+		if err != nil {
+			return diag.Errorf("could not enable learned cidr approval: %v", err)
+		}
+		if len(approvedCidrs) > 0 {
+			err = client.UpdateTransitConnectionPendingApprovedCidrs(attachment.TransitGatewayName, attachment.ConnectionName, approvedCidrs)
+			if err != nil {
+				return diag.Errorf("could not update cloudn transit gateway attachment approved cidrs after creation: %v", err)
+			}
+		}
+	}
+
+	return resourceAviatrixCloudnTransitGatewayAttachmentReadIfRequired(ctx, d, meta, &flag)
+}
+
+func resourceAviatrixCloudnTransitGatewayAttachmentReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixCloudnTransitGatewayAttachmentRead(ctx, d, meta)
+	}
+	return nil
 }
 
 func resourceAviatrixCloudnTransitGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -172,6 +216,11 @@ func resourceAviatrixCloudnTransitGatewayAttachmentRead(ctx context.Context, d *
 	d.Set("enable_over_private_network", attachment.EnableOverPrivateNetwork)
 	d.Set("enable_jumbo_frame", attachment.EnableJumboFrame)
 	d.Set("enable_dead_peer_detection", attachment.EnableDeadPeerDetection)
+	d.Set("enable_learned_cidrs_approval", attachment.EnableLearnedCidrsApproval)
+	err = d.Set("approved_cidrs", attachment.ApprovedCidrs)
+	if err != nil {
+		return diag.Errorf("failed to set approved_cidrs for cloudn_transit_gateway_attachment on read: %v", err)
+	}
 
 	d.SetId(attachment.ConnectionName)
 	return nil
@@ -179,8 +228,17 @@ func resourceAviatrixCloudnTransitGatewayAttachmentRead(ctx context.Context, d *
 
 func resourceAviatrixCloudnTransitGatewayAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
+	d.Partial(true)
 
 	attachment := marshalCloudnTransitGatewayAttachmentInput(d)
+
+	approvedCidrs := getStringSet(d, "approved_cidrs")
+	enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
+	// `approved_cidrs` is Optional/Computed so Terraform will not detect a change even if `approved_cidrs` is removed from Terraform configuration.
+	// Only prevent from setting `enable_learned_cidrs_approval = false` when Terraform detects a change to `approved_cidrs`.
+	if !enableLearnedCIDRApproval && len(approvedCidrs) > 0 && d.HasChange("approved_cidrs") {
+		return diag.Errorf("updating cloudn transit gateway attachment: 'approved_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
+	}
 
 	var vpcID string
 	if d.HasChanges("enable_jumbo_frame", "enable_dead_peer_detection") {
@@ -223,6 +281,28 @@ func resourceAviatrixCloudnTransitGatewayAttachmentUpdate(ctx context.Context, d
 		}
 	}
 
+	if d.HasChange("enable_learned_cidrs_approval") {
+		if attachment.EnableLearnedCidrsApproval {
+			err := client.EnableTransitConnectionLearnedCIDRApproval(attachment.TransitGatewayName, attachment.ConnectionName)
+			if err != nil {
+				return diag.Errorf("could not enable learned CIDRs approval during cloudn transit gateway attachment update: %v", err)
+			}
+		} else {
+			err := client.DisableTransitConnectionLearnedCIDRApproval(attachment.TransitGatewayName, attachment.ConnectionName)
+			if err != nil {
+				return diag.Errorf("could not disable learned CIDRs approval during cloudn transit gateway attachment update: %v", err)
+			}
+		}
+	}
+
+	if d.HasChange("approved_cidrs") {
+		err := client.UpdateTransitConnectionPendingApprovedCidrs(attachment.TransitGatewayName, attachment.ConnectionName, approvedCidrs)
+		if err != nil {
+			return diag.Errorf("could not update cloudn transit gateway attachment approved cidrs: %v", err)
+		}
+	}
+
+	d.Partial(false)
 	return nil
 }
 

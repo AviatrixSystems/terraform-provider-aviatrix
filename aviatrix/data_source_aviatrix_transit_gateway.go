@@ -125,11 +125,6 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Whether firenet interfaces is enabled.",
 			},
-			"enable_active_mesh": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "Enable/Disable active mesh mode for Transit Gateway.",
-			},
 			"enable_vpc_dns_server": {
 				Type:        schema.TypeBool,
 				Computed:    true,
@@ -434,12 +429,6 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 		d.Set("enable_transit_firenet", gwDetail.EnableTransitFireNet)
 		d.Set("enable_egress_transit_firenet", gwDetail.EnableEgressTransitFireNet)
 		d.Set("customized_transit_vpc_routes", gwDetail.CustomizedTransitVpcRoutes)
-
-		if gw.EnableActiveMesh == "yes" {
-			d.Set("enable_active_mesh", true)
-		} else {
-			d.Set("enable_active_mesh", false)
-		}
 
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled" {
 			d.Set("enable_vpc_dns_server", true)

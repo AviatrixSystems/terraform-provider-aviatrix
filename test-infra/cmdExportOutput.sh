@@ -68,6 +68,7 @@ SetEnv AZURE_VNG_VNET_ID $(terraform output -raw AZURE_VNG_VNET_ID)
 SetEnv AZURE_VNG_SUBNET $(terraform output -raw AZURE_VNG_SUBNET)
 SetEnv AZURE_VNG $(terraform output -raw AZURE_VNG)
 
+SetEnv SKIP_CID_EXPIRY "yes"
 SetEnv SKIP_DATA_ACCOUNT "no"
 SetEnv SKIP_DATA_CALLER_IDENTITY "no"
 SetEnv SKIP_DATA_FIRENET "no"

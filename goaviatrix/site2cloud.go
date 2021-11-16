@@ -1,11 +1,7 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"net/url"
 	"strconv"
 	"strings"
 
@@ -186,105 +182,85 @@ type AlgorithmInfo struct {
 }
 
 func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
-	// TODO: use PostAPI - long form
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New("url Parsing failed for add_site2cloud " + err.Error())
-	}
-	addSite2cloud := url.Values{}
-	addSite2cloud.Add("CID", c.CID)
-	addSite2cloud.Add("action", "add_site2cloud")
-	addSite2cloud.Add("vpc_id", site2cloud.VpcID)
-	addSite2cloud.Add("connection_name", site2cloud.TunnelName)
-	addSite2cloud.Add("connection_type", site2cloud.ConnType)
-	addSite2cloud.Add("remote_gateway_type", site2cloud.RemoteGwType)
-	addSite2cloud.Add("tunnel_type", site2cloud.TunnelType)
+	form := map[string]string{}
+	form["CID"] = c.CID
+	form["CID"] = c.CID
+	form["action"] = "add_site2cloud"
+	form["vpc_id"] = site2cloud.VpcID
+	form["connection_name"] = site2cloud.TunnelName
+	form["connection_type"] = site2cloud.ConnType
+	form["remote_gateway_type"] = site2cloud.RemoteGwType
+	form["tunnel_type"] = site2cloud.TunnelType
 
-	addSite2cloud.Add("ha_enabled", site2cloud.HAEnabled)
-	addSite2cloud.Add("backup_gateway_name", site2cloud.BackupGwName)
-	addSite2cloud.Add("backup_remote_gateway_ip", site2cloud.RemoteGwIP2)
+	form["ha_enabled"] = site2cloud.HAEnabled
+	form["backup_gateway_name"] = site2cloud.BackupGwName
+	form["backup_remote_gateway_ip"] = site2cloud.RemoteGwIP2
 
-	addSite2cloud.Add("phase1_auth", site2cloud.Phase1Auth)
-	addSite2cloud.Add("phase1_dh_group", site2cloud.Phase1DhGroups)
-	addSite2cloud.Add("phase1_encryption", site2cloud.Phase1Encryption)
-	addSite2cloud.Add("phase2_auth", site2cloud.Phase2Auth)
-	addSite2cloud.Add("phase2_dh_group", site2cloud.Phase2DhGroups)
-	addSite2cloud.Add("phase2_encryption", site2cloud.Phase2Encryption)
+	form["phase1_auth"] = site2cloud.Phase1Auth
+	form["phase1_dh_group"] = site2cloud.Phase1DhGroups
+	form["phase1_encryption"] = site2cloud.Phase1Encryption
+	form["phase2_auth"] = site2cloud.Phase2Auth
+	form["phase2_dh_group"] = site2cloud.Phase2DhGroups
+	form["phase2_encryption"] = site2cloud.Phase2Encryption
 
 	if site2cloud.TunnelType == "tcp" {
-		addSite2cloud.Add("ssl_server_pool", site2cloud.SslServerPool)
+		form["ssl_server_pool"] = site2cloud.SslServerPool
 	}
 
 	if site2cloud.EnableIKEv2 == "true" {
-		addSite2cloud.Add("enable_ikev2", "true")
+		form["enable_ikev2"] = "true"
 	}
 
 	if site2cloud.PrivateRouteEncryption == "true" {
-		addSite2cloud.Add("private_route_encryption", site2cloud.PrivateRouteEncryption)
+		form["private_route_encryption"] = site2cloud.PrivateRouteEncryption
 		if len(site2cloud.RouteTableList) != 0 {
 			for i := range site2cloud.RouteTableList {
-				addSite2cloud.Add("route_table_list["+strconv.Itoa(i)+"]", site2cloud.RouteTableList[i])
+				form["route_table_list["+strconv.Itoa(i)+"]"] = site2cloud.RouteTableList[i]
 			}
 		}
 		latitude := fmt.Sprintf("%f", site2cloud.RemoteGwLatitude)
 		longitude := fmt.Sprintf("%f", site2cloud.RemoteGwLongitude)
-		addSite2cloud.Add("remote_gateway_latitude", latitude)
-		addSite2cloud.Add("remote_gateway_longitude", longitude)
+		form["remote_gateway_latitude"] = latitude
+		form["remote_gateway_longitude"] = longitude
 		if site2cloud.HAEnabled == "yes" {
 			backupLatitude := fmt.Sprintf("%f", site2cloud.BackupRemoteGwLatitude)
 			backupLongitude := fmt.Sprintf("%f", site2cloud.BackupRemoteGwLongitude)
-			addSite2cloud.Add("remote_gateway_latitude", backupLatitude)
-			addSite2cloud.Add("remote_gateway_longitude", backupLongitude)
+			form["remote_gateway_latitude"] = backupLatitude
+			form["remote_gateway_longitude"] = backupLongitude
 		}
 	}
 
-	addSite2cloud.Add("primary_cloud_gateway_name", site2cloud.GwName)
-	addSite2cloud.Add("remote_gateway_ip", site2cloud.RemoteGwIP)
-	addSite2cloud.Add("remote_subnet_cidr", site2cloud.RemoteSubnet)
-	addSite2cloud.Add("local_subnet_cidr", site2cloud.LocalSubnet)
-	addSite2cloud.Add("virtual_remote_subnet_cidr", site2cloud.RemoteSubnetVirtual)
-	addSite2cloud.Add("virtual_local_subnet_cidr", site2cloud.LocalSubnetVirtual)
+	form["primary_cloud_gateway_name"] = site2cloud.GwName
+	form["remote_gateway_ip"] = site2cloud.RemoteGwIP
+	form["remote_subnet_cidr"] = site2cloud.RemoteSubnet
+	form["local_subnet_cidr"] = site2cloud.LocalSubnet
+	form["virtual_remote_subnet_cidr"] = site2cloud.RemoteSubnetVirtual
+	form["virtual_local_subnet_cidr"] = site2cloud.LocalSubnetVirtual
 
-	addSite2cloud.Add("pre_shared_key", site2cloud.PreSharedKey)
-	addSite2cloud.Add("backup_pre_shared_key", site2cloud.BackupPreSharedKey)
+	form["pre_shared_key"] = site2cloud.PreSharedKey
+	form["backup_pre_shared_key"] = site2cloud.BackupPreSharedKey
 
 	if site2cloud.CustomMap {
-		addSite2cloud.Add("custom_map", strconv.FormatBool(site2cloud.CustomMap))
-		addSite2cloud.Add("remote_src_real_cidrs", site2cloud.RemoteSourceRealCIDRs)
-		addSite2cloud.Add("remote_src_virt_cidrs", site2cloud.RemoteSourceVirtualCIDRs)
-		addSite2cloud.Add("remote_dst_real_cidrs", site2cloud.RemoteDestinationRealCIDRs)
-		addSite2cloud.Add("remote_dst_virt_cidrs", site2cloud.RemoteDestinationVirtualCIDRs)
-		addSite2cloud.Add("local_src_real_cidrs", site2cloud.LocalSourceRealCIDRs)
-		addSite2cloud.Add("local_src_virt_cidrs", site2cloud.LocalSourceVirtualCIDRs)
-		addSite2cloud.Add("local_dst_real_cidrs", site2cloud.LocalDestinationRealCIDRs)
-		addSite2cloud.Add("local_dst_virt_cidrs", site2cloud.LocalDestinationVirtualCIDRs)
+		form["custom_map"] = strconv.FormatBool(site2cloud.CustomMap)
+		form["remote_src_real_cidrs"] = site2cloud.RemoteSourceRealCIDRs
+		form["remote_src_virt_cidrs"] = site2cloud.RemoteSourceVirtualCIDRs
+		form["remote_dst_real_cidrs"] = site2cloud.RemoteDestinationRealCIDRs
+		form["remote_dst_virt_cidrs"] = site2cloud.RemoteDestinationVirtualCIDRs
+		form["local_src_real_cidrs"] = site2cloud.LocalSourceRealCIDRs
+		form["local_src_virt_cidrs"] = site2cloud.LocalSourceVirtualCIDRs
+		form["local_dst_real_cidrs"] = site2cloud.LocalDestinationRealCIDRs
+		form["local_dst_virt_cidrs"] = site2cloud.LocalDestinationVirtualCIDRs
 	}
 
-	addSite2cloud.Add("local_tunnel_ip", site2cloud.LocalTunnelIp)
-	addSite2cloud.Add("remote_tunnel_ip", site2cloud.RemoteTunnelIp)
-	addSite2cloud.Add("backup_local_tunnel_ip", site2cloud.BackupLocalTunnelIp)
-	addSite2cloud.Add("backup_remote_tunnel_ip", site2cloud.BackupRemoteTunnelIp)
+	form["local_tunnel_ip"] = site2cloud.LocalTunnelIp
+	form["remote_tunnel_ip"] = site2cloud.RemoteTunnelIp
+	form["backup_local_tunnel_ip"] = site2cloud.BackupLocalTunnelIp
+	form["backup_remote_tunnel_ip"] = site2cloud.BackupRemoteTunnelIp
 	if site2cloud.EnableSingleIpHA {
-		addSite2cloud.Add("enable_single_ip_ha", "true")
+		form["enable_single_ip_ha"] = "true"
 	}
 
-	Url.RawQuery = addSite2cloud.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get add_site2cloud failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode add_site2cloud failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API add_site2cloud Get failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) GetSite2Cloud(site2cloud *Site2Cloud) (*Site2Cloud, error) {
@@ -556,6 +532,9 @@ func S2CPh1RemoteIdDiffSuppressFunc(k, old, new string, d *schema.ResourceData) 
 
 	if len(ph1RemoteIdListOld) != 0 && len(ph1RemoteIdListNew) != 0 {
 		if haEnabled && !singleIpHA {
+			if len(ph1RemoteIdListOld) == 1 && len(ph1RemoteIdListNew) == 1 && ip == haip && ph1RemoteIdListOld[0] == ip && ph1RemoteIdListNew[0] == ip {
+				return true
+			}
 			if len(ph1RemoteIdListNew) != 2 || len(ph1RemoteIdListOld) != 2 {
 				return false
 			}
@@ -579,7 +558,81 @@ func S2CPh1RemoteIdDiffSuppressFunc(k, old, new string, d *schema.ResourceData) 
 		if len(ph1RemoteIdListOld) == 2 && ph1RemoteIdListOld[0] == ip && strings.TrimSpace(ph1RemoteIdListOld[1]) == haip && len(ph1RemoteIdListNew) == 0 {
 			return true
 		}
+		if len(ph1RemoteIdListOld) == 1 && ph1RemoteIdListOld[0] == ip && ip == haip && len(ph1RemoteIdListNew) == 0 {
+			return true
+		}
 	}
 
 	return false
+}
+
+func DiffSuppressFuncRemoteSourceRealCIDRs(k, old, new string, d *schema.ResourceData) bool {
+	o, n := d.GetChange("remote_source_real_cidrs")
+	cidrListOld := ExpandStringList(o.([]interface{}))
+	cidrListNew := ExpandStringList(n.([]interface{}))
+
+	return Equivalent(cidrListOld, cidrListNew)
+}
+
+func DiffSuppressFuncRemoteSourceVirtualCIDRs(k, old, new string, d *schema.ResourceData) bool {
+	o, n := d.GetChange("remote_source_virtual_cidrs")
+
+	cidrListOld := ExpandStringList(o.([]interface{}))
+	cidrListNew := ExpandStringList(n.([]interface{}))
+
+	return Equivalent(cidrListOld, cidrListNew)
+}
+
+func DiffSuppressFuncRemoteDestinationRealCIDRs(k, old, new string, d *schema.ResourceData) bool {
+	o, n := d.GetChange("remote_destination_real_cidrs")
+
+	cidrListOld := ExpandStringList(o.([]interface{}))
+	cidrListNew := ExpandStringList(n.([]interface{}))
+
+	return Equivalent(cidrListOld, cidrListNew)
+}
+
+func DiffSuppressFuncRemoteDestinationVirtualCIDRs(k, old, new string, d *schema.ResourceData) bool {
+	o, n := d.GetChange("remote_destination_virtual_cidrs")
+
+	cidrListOld := ExpandStringList(o.([]interface{}))
+	cidrListNew := ExpandStringList(n.([]interface{}))
+
+	return Equivalent(cidrListOld, cidrListNew)
+}
+
+func DiffSuppressFuncLocalSourceRealCIDRs(k, old, new string, d *schema.ResourceData) bool {
+	o, n := d.GetChange("local_source_real_cidrs")
+
+	cidrListOld := ExpandStringList(o.([]interface{}))
+	cidrListNew := ExpandStringList(n.([]interface{}))
+
+	return Equivalent(cidrListOld, cidrListNew)
+}
+
+func DiffSuppressFuncLocalSourceVirtualCIDRs(k, old, new string, d *schema.ResourceData) bool {
+	o, n := d.GetChange("local_source_virtual_cidrs")
+
+	cidrListOld := ExpandStringList(o.([]interface{}))
+	cidrListNew := ExpandStringList(n.([]interface{}))
+
+	return Equivalent(cidrListOld, cidrListNew)
+}
+
+func DiffSuppressFuncLocalDestinationRealCIDRs(k, old, new string, d *schema.ResourceData) bool {
+	o, n := d.GetChange("local_destination_real_cidrs")
+
+	cidrListOld := ExpandStringList(o.([]interface{}))
+	cidrListNew := ExpandStringList(n.([]interface{}))
+
+	return Equivalent(cidrListOld, cidrListNew)
+}
+
+func DiffSuppressFuncLocalDestinationVirtualCIDRs(k, old, new string, d *schema.ResourceData) bool {
+	o, n := d.GetChange("local_destination_virtual_cidrs")
+
+	cidrListOld := ExpandStringList(o.([]interface{}))
+	cidrListNew := ExpandStringList(n.([]interface{}))
+
+	return Equivalent(cidrListOld, cidrListNew)
 }
