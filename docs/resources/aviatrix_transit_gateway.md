@@ -298,6 +298,7 @@ The following arguments are supported:
 
 * `enable_learned_cidrs_approval` - (Optional) Switch to enable/disable encrypted transit approval for transit gateway. Valid values: true, false. Default value: false.
 * `learned_cidrs_approval_mode` - (Optional) Learned CIDRs approval mode. Either "gateway" (approval on a per gateway basis) or "connection" (approval on a per connection basis). Default value: "gateway". Available as of provider version R2.18+.
+* `approved_learned_cidrs` - (Optional) A set of approved learned CIDRs. Only valid when `enable_learned_cidrs_approval` is set to true. Example: ["10.250.0.0/16", "10.251.0.0/16"]. Available as of provider version R2.21+.
 
 ### [Monitor Gateway Subnets](https://docs.aviatrix.com/HowTos/gateway.html#monitor-gateway-subnet)
 ~> **NOTE:** This feature is only available for AWS gateways.
