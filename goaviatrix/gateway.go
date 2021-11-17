@@ -154,7 +154,6 @@ type Gateway struct {
 	EnableMultitierTransit          bool                                `json:"multitier_transit"`
 	AutoAdvertiseCidrsEnabled       bool                                `json:"auto_advertise_s2c_cidrs"`
 	TunnelDetectionTime             int                                 `json:"detection_time"`
-	StorageName                     string                              `form:"storage_name,omitempty" json:"storage_name,omitempty"`
 	BgpHoldTime                     int                                 `json:"bgp_hold_time"`
 	BgpPollingTime                  int                                 `json:"bgp_polling_time"`
 	PrependASPath                   string                              `json:"prepend_as_path"`

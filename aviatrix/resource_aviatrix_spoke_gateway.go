@@ -262,12 +262,6 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     true,
 				Description: "Enable jumbo frame support for spoke gateway. Valid values: true or false. Default value: true.",
 			},
-			"storage_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Name of storage account with gateway images. Only valid for Azure China (2048)",
-			},
 			"tags": {
 				Type:          schema.TypeMap,
 				Elem:          &schema.Schema{Type: schema.TypeString},
@@ -680,15 +674,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 
 		if haOobManagementSubnet != "" {
 			return fmt.Errorf("\"ha_oob_management_subnet\" must be empty if \"enable_private_oob\" is false")
-		}
-	}
-
-	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureChina) {
-		storageName, storageNameOk := d.GetOk("storage_name")
-		if storageNameOk {
-			gateway.StorageName = storageName.(string)
-		} else {
-			return fmt.Errorf("storage_name is required when creating a Spoke Gateway in AzureChina (2048)")
 		}
 	}
 
@@ -1214,10 +1199,6 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		if (isImport || zoneIsSet) && gw.GatewayZone != "AvailabilitySet" {
 			d.Set("zone", "az-"+gw.GatewayZone)
 		}
-	}
-
-	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureChina) {
-		d.Set("storage_name", gw.StorageName)
 	}
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {

@@ -37,7 +37,6 @@ type SpokeVpc struct {
 	EnablePrivateOob      string `form:"private_oob,omitempty"`
 	OobManagementSubnet   string `form:"oob_mgmt_subnet,omitempty"`
 	HAOobManagementSubnet string
-	StorageName           string `form:"storage_name"`
 	AvailabilityDomain    string `form:"availability_domain,omitempty"`
 	FaultDomain           string `form:"fault_domain,omitempty"`
 	EnableSpotInstance    bool   `form:"spot_instance,omitempty"`

@@ -199,7 +199,6 @@ resource "aviatrix_gateway" "test_gateway_azure_china" {
   vpc_reg      = "China North"
   gw_size      = "Standard_A0"
   subnet       = "10.13.0.0/24"
-  storage_name = "dev-storage"
 }
 ```
 ```hcl
@@ -394,7 +393,6 @@ The following arguments are supported:
 * `enable_jumbo_frame` - (Optional) Enable jumbo frames for this gateway. Default value is true.
 * `tags` - (Optional) Map of tags to assign to the gateway. Only available for AWS, AWSGov, AWSChina, Azure, AzureGov, AzureChina, AWS Top Secret and AWS Secret gateways. Allowed characters vary by cloud type but always include: letters, spaces, and numbers. AWS, AWSGov, AWSChina, AWS Top Secret and AWS Secret allow the following special characters: + - = . _ : / @.  Azure, AzureGov and AzureChina allows the following special characters: + - = . _ : @. Example: {"key1" = "value1", "key2" = "value2"}.
 * `tunnel_detection_time` - (Optional) The IPsec tunnel down detection time for the Gateway in seconds. Must be a number in the range [20-600]. The default value is set by the controller (60 seconds if nothing has been changed). **NOTE: The controller UI has an option to set the tunnel detection time for all gateways. To achieve the same functionality in Terraform, use the same TF_VAR to manage the tunnel detection time for all gateways.** Available in provider R2.19+.
-* `storage_name` (Optional) Specify a storage account. Required if `cloud_type` is 2048 (AzureChina). Available as of Provider version 2.19+.
 
 ### Public Subnet Filtering Gateway
 
@@ -441,6 +439,7 @@ The following arguments are deprecated:
 * `public_ip` - Public IP address of the gateway created.
 * `peering_ha_public_ip` - Public IP address of the peering HA Gateway created.
 * `tag_list` - (Optional) Tag list of the gateway instance. Only available for AWS, AWSGov, AWSChina, Azure, AzureGov and AzureChina gateways. Example: ["key1:value1", "key2:value2"].
+* `storage_name` (Optional) Specify a storage account. Required if `cloud_type` is 2048 (AzureChina). Removed in Provider version 2.21.0+.
 
 ## Import
 
