@@ -280,6 +280,15 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					"connection, use the enable_learned_cidrs_approval attribute within the connection resource to " +
 					"toggle learned CIDR approval. Valid values: 'gateway' or 'connection'. Default value: 'gateway'.",
 			},
+			"approved_learned_cidrs": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsCIDR,
+				},
+				Optional:    true,
+				Description: "Approved learned CIDRs. Available as of provider version R2.21+.",
+			},
 			"bgp_polling_time": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -570,6 +579,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		EnableSummarizeCidrToTgw: d.Get("enable_transit_summarize_cidr_to_tgw").(bool),
 		AvailabilityDomain:       d.Get("availability_domain").(string),
 		FaultDomain:              d.Get("fault_domain").(string),
+		ApprovedLearnedCidrs:     getStringSet(d, "approved_learned_cidrs"),
 	}
 
 	enableNAT := d.Get("single_ip_snat").(bool)
@@ -749,9 +759,9 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("'enable_firenet' is not supported in AWSChina (1024) or AzureChina (2048)")
 	}
 	if enableTransitFireNet {
-		// Transit FireNet function is not supported for AWS China or Azure China
-		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes^goaviatrix.AWSChina|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AzureChina|goaviatrix.OCIRelatedCloudTypes) {
-			return fmt.Errorf("'enable_transit_firenet' is only supported in AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWS Top Secret (16384) and AWS Secret (32768)")
+		// Transit FireNet function is not supported for Azure China
+		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AzureChina|goaviatrix.OCIRelatedCloudTypes) {
+			return fmt.Errorf("'enable_transit_firenet' is only supported in AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWS China (1024), AWS Top Secret (16384) and AWS Secret (32768)")
 		}
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			gateway.EnableTransitFireNet = "on"
@@ -774,9 +784,9 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("'enable_gateway_load_balancer' is only supported by AWS (1)")
 	}
 	enableEgressTransitFireNet := d.Get("enable_egress_transit_firenet").(bool)
-	// Transit FireNet function is not supported for AWS China or Azure China
-	if enableEgressTransitFireNet && !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes^goaviatrix.AWSChina|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AzureChina|goaviatrix.OCIRelatedCloudTypes) {
-		return fmt.Errorf("'enable_egress_transit_firenet' is only supported by AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWS Top Secret (16384) and AWS Secret (32768)")
+	// Transit FireNet function is not supported for Azure China
+	if enableEgressTransitFireNet && !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AzureChina|goaviatrix.OCIRelatedCloudTypes) {
+		return fmt.Errorf("'enable_egress_transit_firenet' is only supported by AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWS China (1024), AWS Top Secret (16384) and AWS Secret (32768)")
 	}
 	if enableEgressTransitFireNet && !enableTransitFireNet {
 		return fmt.Errorf("'enable_egress_transit_firenet' requires 'enable_transit_firenet' to be set to true")
@@ -792,6 +802,10 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 	if learnedCidrsApproval && d.Get("learned_cidrs_approval_mode").(string) == "connection" {
 		return fmt.Errorf("'enable_learned_cidrs_approval' must be false if 'learned_cidrs_approval_mode' is set to 'connection'")
+	}
+
+	if !learnedCidrsApproval && len(gateway.ApprovedLearnedCidrs) != 0 {
+		return fmt.Errorf("'approved_learned_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
 	}
 
 	enableMonitorSubnets := d.Get("enable_monitor_gateway_subnets").(bool)
@@ -1253,6 +1267,13 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if learnedCidrsApproval && len(gateway.ApprovedLearnedCidrs) != 0 {
+		err = client.UpdateTransitPendingApprovedCidrs(gateway)
+		if err != nil {
+			return fmt.Errorf("could not update approved CIDRs: %v", err)
+		}
+	}
+
 	var customizedTransitVpcRoutes []string
 	for _, v := range d.Get("customized_transit_vpc_routes").(*schema.Set).List() {
 		customizedTransitVpcRoutes = append(customizedTransitVpcRoutes, v.(string))
@@ -1410,6 +1431,18 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("enable_vpc_dns_server", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled")
 	d.Set("enable_advertise_transit_cidr", gw.EnableAdvertiseTransitCidr)
 	d.Set("enable_learned_cidrs_approval", gw.EnableLearnedCidrsApproval)
+	if gw.EnableLearnedCidrsApproval {
+		transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: gw.GwName})
+		if err != nil {
+			return fmt.Errorf("could not get advanced config for transit gateway: %v", err)
+		}
+
+		if err = d.Set("approved_learned_cidrs", transitAdvancedConfig.ApprovedLearnedCidrs); err != nil {
+			return fmt.Errorf("could not set transitAdvancedConfig.ApprovedLearnedCidrs into state: %v", err)
+		}
+	} else {
+		d.Set("approved_learned_cidrs", nil)
+	}
 	d.Set("enable_monitor_gateway_subnets", gw.MonitorSubnetsAction == "enable")
 	if err := d.Set("monitor_exclude_list", gw.MonitorExcludeGWList); err != nil {
 		return fmt.Errorf("setting 'monitor_exclude_list' to state: %v", err)
@@ -1735,22 +1768,29 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 	// Transit FireNet function is not supported for AWS China and Azure China
 	if d.HasChange("enable_firenet") && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSChina|goaviatrix.AzureChina) {
-		return fmt.Errorf("editing 'enable_transit_firenet' in AWSChina (1024) and AzureChina (2048) is not supported")
+		return fmt.Errorf("editing 'enable_firenet' in AWSChina (1024) and AzureChina (2048) is not supported")
 	}
-	// Transit FireNet function is not supported for AWS China and Azure China
-	if d.HasChange("enable_transit_firenet") && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AWSChina) {
-		return fmt.Errorf("editing 'enable_transit_firenet' in GCP (4), Azure (8), AzureGov (32), AWSChina (1024) and AzureChina (2048) is not supported")
+	// Transit FireNet function is not supported for Azure China
+	if d.HasChange("enable_transit_firenet") && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+		return fmt.Errorf("editing 'enable_transit_firenet' in GCP (4), Azure (8), AzureGov (32) and AzureChina (2048) is not supported")
 	}
 	if d.Get("enable_egress_transit_firenet").(bool) && !d.Get("enable_transit_firenet").(bool) {
 		return fmt.Errorf("'enable_egress_transit_firenet' requires 'enable_transit_firenet' to be set to true")
 	}
-	// Transit FireNet function is not supported for AWS China and Azure China
-	if d.Get("enable_egress_transit_firenet").(bool) && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes^goaviatrix.AWSChina|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AzureChina|goaviatrix.OCIRelatedCloudTypes) {
-		return fmt.Errorf("'enable_egress_transit_firenet' is currently only supported in AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWS Top Secret (16384) and AWS Secret (32768)")
+	// Transit FireNet function is not supported for Azure China
+	if d.Get("enable_egress_transit_firenet").(bool) && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AzureChina|goaviatrix.OCIRelatedCloudTypes) {
+		return fmt.Errorf("'enable_egress_transit_firenet' is currently only supported in AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWS China (1024), AWS Top Secret (16384) and AWS Secret (32768)")
 	}
 
-	if d.Get("enable_learned_cidrs_approval").(bool) && d.Get("learned_cidrs_approval_mode").(string) == "connection" {
+	learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
+	learnedCidrsApprovedMode := d.Get("learned_cidrs_approval_mode").(string)
+	approvedLearnedCidrs := getStringSet(d, "approved_learned_cidrs")
+
+	if learnedCidrsApproval && learnedCidrsApprovedMode == "connection" {
 		return fmt.Errorf("'enable_learned_cidrs_approval' must be false if 'learned_cidrs_approval_mode' is set to 'connection'")
+	}
+	if !learnedCidrsApproval && len(approvedLearnedCidrs) != 0 {
+		return fmt.Errorf("'approved_learned_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
 	}
 
 	if d.HasChange("enable_private_oob") {
@@ -2159,7 +2199,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		currentMode, _ := d.GetChange("learned_cidrs_approval_mode")
 		// API calls need to be in a specific order depending on the current mode
 		if currentMode.(string) == "gateway" {
-			learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
 			if learnedCidrsApproval {
 				err := client.EnableTransitLearnedCidrsApproval(gw)
 				if err != nil {
@@ -2182,7 +2221,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			if err != nil {
 				return fmt.Errorf("could not set learned CIDRs approval mode to %q: %v", mode, err)
 			}
-			learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
 			if learnedCidrsApproval {
 				err = client.EnableTransitLearnedCidrsApproval(gw)
 				if err != nil {
@@ -2208,7 +2246,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		gw := &goaviatrix.TransitVpc{
 			GwName: d.Get("gw_name").(string),
 		}
-		learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
 		if learnedCidrsApproval {
 			gw.LearnedCidrsApproval = "on"
 			err := client.EnableTransitLearnedCidrsApproval(gw)
@@ -2221,6 +2258,18 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			if err != nil {
 				return fmt.Errorf("failed to disable learned cidrs approval: %s", err)
 			}
+		}
+	}
+
+	if learnedCidrsApproval && d.HasChange("approved_learned_cidrs") {
+		gw := &goaviatrix.TransitVpc{
+			GwName:               d.Get("gw_name").(string),
+			ApprovedLearnedCidrs: approvedLearnedCidrs,
+		}
+
+		err := client.UpdateTransitPendingApprovedCidrs(gw)
+		if err != nil {
+			return fmt.Errorf("could not update approved CIDRs: %v", err)
 		}
 	}
 
