@@ -1451,7 +1451,10 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		if err != nil {
 			return fmt.Errorf("could not get advanced config for transit gateway: %v", err)
 		}
-		d.Set("approved_learned_cidrs", transitAdvancedConfig.ApprovedLearnedCidrs)
+
+		if err = d.Set("approved_learned_cidrs", transitAdvancedConfig.ApprovedLearnedCidrs); err != nil {
+			return fmt.Errorf("could not set transitAdvancedConfig.ApprovedLearnedCidrs into state: %v", err)
+		}
 	} else {
 		d.Set("approved_learned_cidrs", nil)
 	}
