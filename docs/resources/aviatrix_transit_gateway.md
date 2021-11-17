@@ -354,6 +354,7 @@ The following arguments are deprecated:
 * `enable_snat` - (Optional) Enable Source NAT for this container. Valid values: true, false.
 * `tag_list` - (Optional) Instance tag of cloud provider. Only supported for AWS, Azure, AzureGov, AWSGov, AWSChina, AzureChina. Example: ["key1:value1","key2:value2"].
 * `enable_active_mesh` - (Optional) Switch to enable/disable [Active Mesh Mode](https://docs.aviatrix.com/HowTos/activemesh_faq.html) for Transit Gateway. Valid values: true, false. Default value: false.
+* `storage_name` (Optional) Specify a storage account. Required if `cloud_type` is 2048 (AzureChina). Removed in Provider version 2.21.0+.
 
 ## Import
 

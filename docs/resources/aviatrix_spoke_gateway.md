@@ -339,6 +339,7 @@ The following arguments are deprecated:
   * `exclude_rtb` - (Optional) This field specifies which VPC private route table will not be programmed with the default route entry.
 * `tag_list` - (Optional) Instance tag of cloud provider. Only supported for AWS, Azure, AzureGov, AWSGov, AWSChina and AzureChina. Example: ["key1:value1", "key2:value2"].
 * `enable_active_mesh` - (Optional) Switch to enable/disable [Active Mesh Mode](https://docs.aviatrix.com/HowTos/activemesh_faq.html) for Spoke Gateway. Valid values: true, false. Default value: false.
+* `storage_name` (Optional) Specify a storage account. Required if `cloud_type` is 2048 (AzureChina). Removed in Provider version 2.21.0+.
 
 ## Import
 

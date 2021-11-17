@@ -439,6 +439,7 @@ The following arguments are deprecated:
 * `public_ip` - Public IP address of the gateway created.
 * `peering_ha_public_ip` - Public IP address of the peering HA Gateway created.
 * `tag_list` - (Optional) Tag list of the gateway instance. Only available for AWS, AWSGov, AWSChina, Azure, AzureGov and AzureChina gateways. Example: ["key1:value1", "key2:value2"].
+* `storage_name` (Optional) Specify a storage account. Required if `cloud_type` is 2048 (AzureChina). Removed in Provider version 2.21.0+.
 
 ## Import
 
