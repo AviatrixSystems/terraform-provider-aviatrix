@@ -13,6 +13,7 @@ import (
 
 func resourceAviatrixAwsTgwSecurityDomainConnection() *schema.Resource {
 	return &schema.Resource{
+		DeprecationMessage:   "Resource 'aviatrix_aws_tgw_security_domain_connection' will be deprecated in future release. Please use resource 'aviatrix_aws_tgw_peering_domain_conn' instead.",
 		CreateWithoutTimeout: resourceAviatrixAwsTgwSecurityDomainConnectionCreate,
 		ReadWithoutTimeout:   resourceAviatrixAwsTgwSecurityDomainConnectionRead,
 		DeleteWithoutTimeout: resourceAviatrixAwsTgwSecurityDomainConnectionDelete,
