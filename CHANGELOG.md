@@ -1,4 +1,16 @@
-## 2.20.2 (Unreleased)
+## 2.20.3 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.5.2721**
+- Supported Terraform version: **v1.x**
+
+#### Multi-Cloud Transit
+1. Implemented support for Transit FireNet for AWSChina
+
+### Bug Fixes:
+1. Fixed issue where Terraform Plan shows diff for a use case of **aviatrix_transit_external_device_conn** upgraded from 6.3.c- version
+
+
+## 2.20.2 (November 16, 2021)
 ### Notes:
 - Supported Controller version: **UserConnect-6.5.2608**
 - Supported Terraform version: **v1.x**
