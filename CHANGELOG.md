@@ -7,7 +7,7 @@
 1. Implemented support for Transit FireNet for AWSChina
 
 ### Bug Fixes:
-1. Fixed issue where Terraform Plan shows diff for a use case of **aviatrix_transit_external_device_conn** upgraded from 6.3.c- version
+1. Fixed issue where Terraform Plan shows diff for a use case of **aviatrix_transit_external_device_conn** when controller is upgraded from 6.5.c- to 6.5.c+
 
 
 ## 2.20.2 (November 16, 2021)
