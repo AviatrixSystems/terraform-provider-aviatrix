@@ -12,10 +12,23 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.20.2 (UserConnect-6.5.2608)``
+``Last updated: R2.20.3 (UserConnect-6.5.2721)``
 
 
 ---
+
+## 2.20.3
+### Notes:
+- Release date: **(22 Nov 2021)**
+- Supported Controller version: **UserConnect-6.5.2721**
+- Supported Terraform version: **v1.x**
+
+#### Multi-Cloud Transit
+1. Implemented support for Transit FireNet for AWSChina
+
+### Bug Fixes:
+1. Fixed issue where Terraform Plan shows diff for a use case of **aviatrix_transit_external_device_conn** when controller is upgraded from 6.5.c- to 6.5.c+
+
 
 ## 2.20.2
 ### Notes:
