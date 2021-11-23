@@ -209,6 +209,13 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 						externalDeviceConn.RemoteGatewayIP = remoteIP[0] + "," + remoteIP[1]
 						externalDeviceConn.HAEnabled = "disabled"
 					}
+				} else if len(remoteIP) == 4 {
+					if remoteIP[0] == remoteIP[2] && remoteIP[1] == remoteIP[3] {
+						externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
+						externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
+						externalDeviceConn.RemoteGatewayIP = remoteIP[0] + "," + remoteIP[1]
+						externalDeviceConn.HAEnabled = "disabled"
+					}
 				}
 			} else if len(externalDeviceConnDetail.Tunnels) == 4 {
 				externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
