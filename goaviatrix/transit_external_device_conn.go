@@ -195,49 +195,63 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 			backupBgpRemoteAsNumberRead, _ := strconv.Atoi(externalDeviceConnDetail.BackupBgpRemoteAsNum)
 			backupBgpRemoteAsNumber = backupBgpRemoteAsNumberRead
 		}
-		if externalDeviceConnDetail.HAEnabled == "enabled" {
-			if len(externalDeviceConnDetail.Tunnels) == 2 {
-				remoteIP := strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")
-				if len(remoteIP) == 2 {
-					if remoteIP[0] == remoteIP[1] {
-						externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
-						externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
-						externalDeviceConn.HAEnabled = "disabled"
-					} else {
-						externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
-						externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
-						externalDeviceConn.RemoteGatewayIP = remoteIP[0] + "," + remoteIP[1]
-						externalDeviceConn.HAEnabled = "disabled"
+
+		if externalDeviceConn.TunnelProtocol != "LAN" {
+			if externalDeviceConnDetail.HAEnabled == "enabled" {
+				if len(externalDeviceConnDetail.Tunnels) == 2 {
+					remoteIP := strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")
+					if len(remoteIP) == 2 {
+						if remoteIP[0] == remoteIP[1] {
+							externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
+							externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
+							externalDeviceConn.HAEnabled = "disabled"
+						} else {
+							externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
+							externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
+							externalDeviceConn.RemoteGatewayIP = remoteIP[0] + "," + remoteIP[1]
+							externalDeviceConn.HAEnabled = "disabled"
+						}
+					} else if len(remoteIP) == 4 {
+						if remoteIP[0] == remoteIP[2] && remoteIP[1] == remoteIP[3] {
+							externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
+							externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
+							externalDeviceConn.RemoteGatewayIP = remoteIP[0] + "," + remoteIP[1]
+							externalDeviceConn.HAEnabled = "disabled"
+						}
 					}
-				} else if len(remoteIP) == 4 {
-					if remoteIP[0] == remoteIP[2] && remoteIP[1] == remoteIP[3] {
-						externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr + "," + externalDeviceConnDetail.BackupLocalTunnelCidr
-						externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr + "," + externalDeviceConnDetail.BackupRemoteTunnelCidr
-						externalDeviceConn.RemoteGatewayIP = remoteIP[0] + "," + remoteIP[1]
-						externalDeviceConn.HAEnabled = "disabled"
-					}
+				} else if len(externalDeviceConnDetail.Tunnels) == 4 {
+					externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
+					externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
+					externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
+					externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
+					externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
+					externalDeviceConn.HAEnabled = "enabled"
+					externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
 				}
-			} else if len(externalDeviceConnDetail.Tunnels) == 4 {
+			} else {
 				externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
-				externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
 				externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
-				externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
-				externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
-				externalDeviceConn.HAEnabled = "enabled"
-				externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
+				if len(externalDeviceConnDetail.Tunnels) == 2 {
+					externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
+					externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
+					externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
+					externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
+					externalDeviceConn.HAEnabled = "enabled"
+				} else {
+					externalDeviceConn.HAEnabled = "disabled"
+				}
 			}
 		} else {
-			externalDeviceConn.LocalTunnelCidr = externalDeviceConnDetail.LocalTunnelCidr
-			externalDeviceConn.RemoteTunnelCidr = externalDeviceConnDetail.RemoteTunnelCidr
 			if len(externalDeviceConnDetail.Tunnels) == 2 {
-				externalDeviceConn.BackupLocalTunnelCidr = externalDeviceConnDetail.BackupLocalTunnelCidr
-				externalDeviceConn.BackupRemoteTunnelCidr = externalDeviceConnDetail.BackupRemoteTunnelCidr
-				externalDeviceConn.BackupRemoteGatewayIP = strings.Split(externalDeviceConnDetail.RemoteGatewayIP, ",")[1]
-				externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
 				externalDeviceConn.HAEnabled = "enabled"
+				externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
+				externalDeviceConn.BackupRemoteLanIP = externalDeviceConnDetail.BackupRemoteLanIP
+				externalDeviceConn.BackupLocalLanIP = externalDeviceConnDetail.BackupLocalLanIP
 			} else {
 				externalDeviceConn.HAEnabled = "disabled"
 			}
+			externalDeviceConn.RemoteLanIP = externalDeviceConnDetail.RemoteLanIP
+			externalDeviceConn.LocalLanIP = externalDeviceConnDetail.LocalLanIP
 		}
 
 		if externalDeviceConnDetail.BackupDirectConnect {
@@ -259,10 +273,6 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 		}
 		externalDeviceConn.EventTriggeredHA = externalDeviceConnDetail.EventTriggeredHA == "enabled"
 		externalDeviceConn.PeerVnetId = externalDeviceConnDetail.PeerVnetId
-		externalDeviceConn.RemoteLanIP = externalDeviceConnDetail.RemoteLanIP
-		externalDeviceConn.LocalLanIP = externalDeviceConnDetail.LocalLanIP
-		externalDeviceConn.BackupRemoteLanIP = externalDeviceConnDetail.BackupRemoteLanIP
-		externalDeviceConn.BackupLocalLanIP = externalDeviceConnDetail.BackupLocalLanIP
 		externalDeviceConn.Phase1RemoteIdentifier = externalDeviceConnDetail.Phase1RemoteIdentifier
 		externalDeviceConn.PrependAsPath = externalDeviceConnDetail.PrependAsPath
 
