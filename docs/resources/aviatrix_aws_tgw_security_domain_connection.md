@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_aws_tgw_security_domain_connection
 
-!> **WARNING:** Resource 'aviatrix_aws_tgw_security_domain_connection' will be deprecated in future release. Please use resource 'aviatrix_aws_tgw_peering_domain_conn' instead.
+!> **WARNING:** Resource 'aviatrix_aws_tgw_security_domain_connection' will be deprecated in future releases. Please use resource 'aviatrix_aws_tgw_peering_domain_conn' instead.
 
 The **aviatrix_aws_tgw_security_domain_connection** resource allows the creation and management of the connections between security domains in an AWS TGW.
 
