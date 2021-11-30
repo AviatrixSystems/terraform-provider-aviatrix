@@ -16,6 +16,7 @@ type AwsTgwConnect struct {
 	TransportVpcName        string `json:"transport_vpc_name"`
 	SecurityDomainName      string `form:"security_domain_name" json:"route_domain_name"`
 	ConnectAttachmentID     string `form:"connect_attachment_id" json:"connect_attachment_id"`
+	Async                   bool   `form:"async,omitempty"`
 }
 
 func (a *AwsTgwConnect) ID() string {
@@ -44,13 +45,15 @@ func (a *AwsTgwConnectPeer) ID() string {
 func (c *Client) AttachTGWConnectToTGW(ctx context.Context, connect *AwsTgwConnect) error {
 	connect.Action = "attach_tgw_connect_to_tgw"
 	connect.CID = c.CID
-	return c.PostAPIContext(ctx, connect.Action, connect, BasicCheck)
+	connect.Async = true
+	return c.PostAsyncAPIContext(ctx, connect.Action, connect, BasicCheck)
 }
 
 func (c *Client) DetachTGWConnectFromTGW(ctx context.Context, connect *AwsTgwConnect) error {
 	connect.Action = "detach_tgw_connect_from_tgw"
 	connect.CID = c.CID
-	return c.PostAPIContext(ctx, connect.Action, connect, BasicCheck)
+	connect.Async = true
+	return c.PostAsyncAPIContext(ctx, connect.Action, connect, BasicCheck)
 }
 
 func (c *Client) GetTGWConnect(ctx context.Context, connect *AwsTgwConnect) (*AwsTgwConnect, error) {

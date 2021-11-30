@@ -189,6 +189,7 @@ type Gateway struct {
 	TransitVpc                      string                              `json:"transit_vpc"`
 	EnableBgp                       bool                                `json:"bgp_enabled,omitempty"`
 	BgpLanInterfaces                []BundleVpcLanInfo                  `json:"gce_bgp_lan_info,omitempty"`
+	Async                           bool                                `form:"async,omitempty"`
 }
 
 type HaGateway struct {
@@ -356,8 +357,9 @@ func (c *Client) CreatePublicSubnetFilteringGateway(gateway *Gateway) error {
 		"gateway_subnet": gateway.VpcNet,
 		"route_table":    gateway.RouteTable,
 		"tag":            "",
+		"async":          "true",
 	}
-	return c.PostAPI(data["action"], data, BasicCheck)
+	return c.PostAsyncAPI(data["action"], data, BasicCheck)
 }
 
 func (c *Client) DeletePublicSubnetFilteringGateway(gateway *Gateway) error {
@@ -376,8 +378,9 @@ func (c *Client) EnablePublicSubnetFilteringHAGateway(gateway *Gateway) error {
 		"gateway_name":   gateway.GwName,
 		"gateway_subnet": gateway.PeeringHASubnet,
 		"route_tables":   gateway.RouteTable,
+		"async":          "true",
 	}
-	return c.PostAPI(data["action"], data, BasicCheck)
+	return c.PostAsyncAPI(data["action"], data, BasicCheck)
 }
 
 type PublicSubnetFilteringGatewayDetails struct {
@@ -455,8 +458,9 @@ func (c *Client) EnableSingleAZGateway(gateway *Gateway) error {
 func (c *Client) EnablePeeringHaGateway(gateway *Gateway) error {
 	gateway.CID = c.CID
 	gateway.Action = "create_peering_ha_gateway"
+	gateway.Async = true
 
-	return c.PostAPI(gateway.Action, gateway, BasicCheck)
+	return c.PostAsyncAPI(gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) DisableSingleAZGateway(gateway *Gateway) error {
@@ -518,8 +522,9 @@ func (c *Client) GetGatewayDetail(gateway *Gateway) (*GatewayDetail, error) {
 func (c *Client) UpdateGateway(gateway *Gateway) error {
 	gateway.CID = c.CID
 	gateway.Action = "edit_gw_config"
+	gateway.Async = true
 
-	return c.PostAPI(gateway.Action, gateway, BasicCheck)
+	return c.PostAsyncAPI(gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) DeleteGateway(gateway *Gateway) error {
@@ -528,9 +533,10 @@ func (c *Client) DeleteGateway(gateway *Gateway) error {
 		"action":     "delete_container",
 		"cloud_type": strconv.Itoa(gateway.CloudType),
 		"gw_name":    gateway.GwName,
+		"async":      "true",
 	}
 
-	return c.PostAPI(form["action"], form, BasicCheck)
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EnableSNat(gateway *Gateway) error {

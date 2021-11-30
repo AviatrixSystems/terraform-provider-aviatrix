@@ -12,6 +12,7 @@ type AwsTgwPeering struct {
 	CID      string `form:"CID,omitempty"`
 	TgwName1 string `form:"tgw_name1,omitempty" json:"tgw_name1,omitempty"`
 	TgwName2 string `form:"tgw_name2,omitempty" json:"tgw_name2,omitempty"`
+	Async    bool   `form:"async,omitempty"`
 }
 
 type AwsTgwPeeringAPIResp struct {
@@ -23,7 +24,8 @@ type AwsTgwPeeringAPIResp struct {
 func (c *Client) CreateAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
 	awsTgwPeering.CID = c.CID
 	awsTgwPeering.Action = "add_tgw_peering"
-	return c.PostAPI(awsTgwPeering.Action, awsTgwPeering, BasicCheck)
+	awsTgwPeering.Async = true
+	return c.PostAsyncAPI(awsTgwPeering.Action, awsTgwPeering, BasicCheck)
 }
 
 func (c *Client) GetAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
@@ -62,5 +64,6 @@ func (c *Client) GetAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
 func (c *Client) DeleteAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
 	awsTgwPeering.CID = c.CID
 	awsTgwPeering.Action = "delete_tgw_peering"
-	return c.PostAPI(awsTgwPeering.Action, awsTgwPeering, BasicCheck)
+	awsTgwPeering.Async = true
+	return c.PostAsyncAPI(awsTgwPeering.Action, awsTgwPeering, BasicCheck)
 }

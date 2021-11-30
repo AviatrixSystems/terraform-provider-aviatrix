@@ -158,6 +158,7 @@ func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) error {
 		"action":  "enable_transit_ha",
 		"gw_name": gateway.GwName,
 		"eip":     gateway.Eip,
+		"async":   "true",
 	}
 
 	if gateway.CloudType == GCP {
@@ -177,7 +178,7 @@ func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) error {
 		return nil
 	}
 
-	return c.PostAPI(form["action"], form, checkFunc)
+	return c.PostAsyncAPI(form["action"], form, checkFunc)
 }
 
 func (c *Client) AttachTransitGWForHybrid(gateway *TransitVpc) error {

@@ -143,6 +143,7 @@ func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 		"action":  "enable_spoke_ha",
 		"gw_name": spoke.GwName,
 		"eip":     spoke.Eip,
+		"async":   "true",
 	}
 
 	if IsCloudType(spoke.CloudType, GCPRelatedCloudTypes) {
@@ -162,7 +163,7 @@ func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 		return nil
 	}
 
-	return c.PostAPI(form["action"], form, checkFunc)
+	return c.PostAsyncAPI(form["action"], form, checkFunc)
 }
 
 func (c *Client) EnableHaSpokeGateway(gateway *SpokeVpc) error {

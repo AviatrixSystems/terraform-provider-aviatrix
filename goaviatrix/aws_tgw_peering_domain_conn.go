@@ -33,8 +33,9 @@ func (c *Client) CreateDomainConn(domainConn *DomainConn) error {
 		"tgw_name":                      domainConn.TgwName1,
 		"source_route_domain_name":      domainConn.DomainName1,
 		"destination_route_domain_name": domainConn.TgwName2 + ":" + domainConn.DomainName2,
+		"async":                         "true",
 	}
-	return c.PostAPI(form["action"], form, BasicCheck)
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) GetDomainConn(domainConn *DomainConn) error {
@@ -74,6 +75,7 @@ func (c *Client) DeleteDomainConn(domainConn *DomainConn) error {
 		"tgw_name":                      domainConn.TgwName1,
 		"source_route_domain_name":      domainConn.DomainName1,
 		"destination_route_domain_name": domainConn.TgwName2 + ":" + domainConn.DomainName2,
+		"async":                         "true",
 	}
-	return c.PostAPI(form["action"], form, BasicCheck)
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }

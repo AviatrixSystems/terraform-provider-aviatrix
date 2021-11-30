@@ -28,12 +28,14 @@ type DeviceTransitGatewayAttachment struct {
 	ManualBGPCidrs          []string
 	Action                  string `form:"action"`
 	CID                     string `form:"CID"`
+	Async                   bool   `form:"async,omitempty"`
 }
 
 func (c *Client) CreateDeviceTransitGatewayAttachment(attachment *DeviceTransitGatewayAttachment) error {
 	attachment.Action = "attach_cloudwan_device_to_transit_gateway"
 	attachment.CID = c.CID
-	return c.PostAPI(attachment.Action, attachment, BasicCheck)
+	attachment.Async = true
+	return c.PostAsyncAPI(attachment.Action, attachment, BasicCheck)
 }
 
 func (c *Client) GetDeviceTransitGatewayAttachment(attachment *DeviceTransitGatewayAttachment) (*DeviceTransitGatewayAttachment, error) {
@@ -142,7 +144,8 @@ func (c *Client) DeleteDeviceAttachment(connectionName string) error {
 		"action":          "detach_cloudwan_device",
 		"vpc_id":          vpcID,
 		"connection_name": connectionName,
+		"async":           "true",
 	}
 
-	return c.PostAPI(form["action"], form, BasicCheck)
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }
