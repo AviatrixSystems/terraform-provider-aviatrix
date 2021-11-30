@@ -79,15 +79,15 @@ resource "aviatrix_transit_gateway" "test" {
 	subnet       = "%[7]s"
 }
 resource "aviatrix_transit_cloudn_conn" "test" {
-	vpc_id = aviatrix_transit_gateway.test.vpc_id
-	connection_name = "%[1]s"
-	gw_name = aviatrix_transit_gateway.test.gw_name
-	bgp_local_as_num = "65003"
-	cloudn_remote_ip = "%[8]s"
-	cloudn_as_num = "65004"
-	cloudn_neighbor_ip = "%[9]s"
+	vpc_id                 = aviatrix_transit_gateway.test.vpc_id
+	connection_name        = "%[1]s"
+	gw_name                = aviatrix_transit_gateway.test.gw_name
+	bgp_local_as_num       = "65003"
+	cloudn_remote_ip       = "%[8]s"
+	cloudn_as_num          = "65004"
+	cloudn_neighbor_ip     = "%[9]s"
 	cloudn_neighbor_as_num = "65005"
-	enable_ha = false
+	enable_ha              = false
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"),
