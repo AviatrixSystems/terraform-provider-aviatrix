@@ -187,6 +187,7 @@ type Gateway struct {
 	ImageVersion                    string                              `json:"gw_image_name"`
 	SoftwareVersion                 string                              `json:"gw_software_version"`
 	TransitVpc                      string                              `json:"transit_vpc"`
+	EnableBgp                       bool                                `json:"bgp_enabled,omitempty"`
 }
 
 type HaGateway struct {

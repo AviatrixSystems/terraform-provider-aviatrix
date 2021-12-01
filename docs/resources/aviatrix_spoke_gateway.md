@@ -30,6 +30,24 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
 }
 ```
 ```hcl
+# Create an Aviatrix AWS Spoke Gateway with BGP enabled
+resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
+  cloud_type                        = 1
+  account_name                      = "my-aws"
+  gw_name                           = "spoke-gw-aws"
+  vpc_id                            = "vpc-abcd123"
+  vpc_reg                           = "us-west-1"
+  gw_size                           = "t2.micro"
+  subnet                            = "10.11.0.0/24"
+  single_ip_snat                    = false
+  enable_bpg                        = true
+  manage_transit_gateway_attachment = false
+  tags                              = {
+    name = "value"
+  }
+}
+```
+```hcl
 # Create an Aviatrix GCP Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_gcp" {
   cloud_type                        = 4
@@ -155,15 +173,16 @@ resource "aviatrix_spoke_gateway" "test_oob_spoke" {
 ```hcl
 # Create an Aviatrix Alibaba Cloud Spoke Gateway with HA enabled
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_alibaba" {
-  cloud_type         = 8192
-  account_name       = "devops"
-  gw_name            = "avtx-gw-1"
-  vpc_id             = "vpc-abcdef"
-  vpc_reg            = "acs-us-west-1 (Silicon Valley)"
-  gw_size            = "ecs.g5ne.large"
-  subnet             = "10.0.0.0/24"
-  ha_subnet          = "10.0.0.0/24"
-  ha_gw_size         = "ecs.g5ne.large"
+  cloud_type                        = 8192
+  account_name                      = "devops"
+  gw_name                           = "avtx-gw-1"
+  vpc_id                            = "vpc-abcdef"
+  vpc_reg                           = "acs-us-west-1 (Silicon Valley)"
+  gw_size                           = "ecs.g5ne.large"
+  subnet                            = "10.0.0.0/24"
+  ha_subnet                         = "10.0.0.0/24"
+  ha_gw_size                        = "ecs.g5ne.large"
+  manage_transit_gateway_attachment = false
 }
 ```
 ```hcl
@@ -291,6 +310,7 @@ The following arguments are supported:
 * `enable_jumbo_frame` - (Optional) Enable jumbo frames for this spoke gateway. Default value is true.
 * `tags` - (Optional) Map of tags to assign to the gateway. Only available for AWS, Azure, AzureGov, AWSGov, AWSChina, AzureChina, AWS Top Secret and AWS Secret gateways. Allowed characters vary by cloud type but always include: letters, spaces, and numbers. AWS, AWSGov, AWSChina, AWS Top Secret and AWS Secret allow the following special characters: + - = . _ : / @.  Azure, AzureGov and AzureChina allows the following special characters: + - = . _ : @. Example: {"key1" = "value1", "key2" = "value2"}.
 * `tunnel_detection_time` - (Optional) The IPsec tunnel down detection time for the Spoke Gateway in seconds. Must be a number in the range [20-600]. The default value is set by the controller (60 seconds if nothing has been changed). **NOTE: The controller UI has an option to set the tunnel detection time for all gateways. To achieve the same functionality in Terraform, use the same TF_VAR to manage the tunnel detection time for all gateways.** Available in provider R2.19+.
+* `enable_bgp` - (Optional) Enable BGP for this spoke gateway. Valid values: true, false. Default value: true. Available in provider R2.21.0+.
 
 -> **NOTE:** `manage_transit_gateway_attachment` - If you are using/upgraded to Aviatrix Terraform Provider R2.17+, and an **aviatrix_spoke_gateway** resource was originally created with a provider version <R2.17, you must do 'terraform refresh' to update and apply the attribute's default value (true) into the state file.
 

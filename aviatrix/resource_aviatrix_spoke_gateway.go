@@ -287,6 +287,13 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Automatically advertise remote CIDR to Aviatrix Transit Gateway when route based Site2Cloud Tunnel is created.",
 			},
+			"enable_bgp": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+				Description: "Enable BGP. Default: false.",
+			},
 			"enable_spot_instance": {
 				Type:         schema.TypeBool,
 				Optional:     true,
@@ -471,6 +478,11 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		gateway.SingleAzHa = "enabled"
 	} else {
 		gateway.SingleAzHa = "disabled"
+	}
+
+	enableBgp := d.Get("enable_bgp").(bool)
+	if enableBgp {
+		gateway.EnableBgp = "on"
 	}
 
 	enablePrivateOob := d.Get("enable_private_oob").(bool)
@@ -1039,6 +1051,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("ha_security_group_id", gw.HaGw.GwSecurityGroupID)
 	d.Set("private_ip", gw.PrivateIP)
 	d.Set("single_az_ha", gw.SingleAZ == "yes")
+	d.Set("enable_bgp", gw.EnableBgp)
 	d.Set("enable_vpc_dns_server", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled")
 	d.Set("single_ip_snat", gw.EnableNat == "yes" && gw.SnatMode == "primary")
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
