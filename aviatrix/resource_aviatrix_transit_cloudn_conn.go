@@ -44,6 +44,7 @@ func resourceAviatrixTransitCloudNConn() *schema.Resource {
 			"insane_mode": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     false,
 				ForceNew:    true,
 				Description: "Enable Insane Mode for this connection.",
 			},
@@ -90,6 +91,7 @@ func resourceAviatrixTransitCloudNConn() *schema.Resource {
 			"enable_ha": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     false,
 				ForceNew:    true,
 				Description: "Enable connection to HA CloudN.",
 			},
@@ -122,24 +124,28 @@ func resourceAviatrixTransitCloudNConn() *schema.Resource {
 			"backup_insane_mode": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     false,
 				ForceNew:    true,
 				Description: "Enable Insane Mode for connection to Backup Aviatrix CloudN.",
 			},
 			"backup_direct_connect": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     false,
 				ForceNew:    true,
 				Description: "Enable direct connect to Backup Aviatrix CloudN over private network.",
 			},
 			"enable_load_balancing": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     false,
 				ForceNew:    true,
 				Description: "Enable load balancing between Aviatrix CloudN and Backup CloudN.",
 			},
 			"enable_learned_cidrs_approval": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     false,
 				Description: "Enable learned CIDRs approval.",
 			},
 			"approved_cidrs": {

@@ -15,14 +15,14 @@ The **aviatrix_transit_cloudn_conn** resource creates and manages the connection
 ```hcl
 # Create an Aviatrix Transit Gateway to CloudN Connection
 resource "aviatrix_transit_cloudn_conn" "test" {
-  vpc_id                  = "vpc-abcd1234"
-  connection_name         = "my_conn"
-  gw_name                 = "transitGw"
-  bgp_local_as_num        = "123"
-  cloudn_as_num           = "345"
-  cloudn_remote_ip        = "172.12.13.14"
-  cloudn_neighbor_ip      = "182.1.2.3"
-  cloudn_neighbor_as_num  = "65005"
+  vpc_id                 = "vpc-abcd1234"
+  connection_name        = "my_conn"
+  gw_name                = "transitGw"
+  bgp_local_as_num       = "123"
+  cloudn_as_num          = "345"
+  cloudn_remote_ip       = "172.12.13.14"
+  cloudn_neighbor_ip     = "182.1.2.3"
+  cloudn_neighbor_as_num = "65005"
 }
 ```
 ```hcl
