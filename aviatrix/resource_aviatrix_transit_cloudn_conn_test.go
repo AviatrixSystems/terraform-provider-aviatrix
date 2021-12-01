@@ -12,6 +12,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+func testTransitCloudnConnPreCheck(t *testing.T) {
+	for _, key := range []string{"AWS_VPC_ID", "AWS_ACCOUNT_NUMBER", "AWS_ACCESS_KEY", "AWS_SECRET_KEY", "AWS_REGION", "AWS_SUBNET", "CLOUDN_IP", "CLOUDN_NEIGHBOR_IP"} {
+		if os.Getenv(key) == "" {
+			t.Fatalf("%s must be set for Transit CloudN Connection acceptance tests. Set SKIP_TRANSIT_CLOUDN_CONN to yes to skip acceptance tests", key)
+		}
+	}
+}
+
 func TestAccAviatrixTransitCloudnConn_basic(t *testing.T) {
 	rName := acctest.RandString(5)
 	resourceName := "aviatrix_transit_cloudn_conn.test"
@@ -19,18 +27,13 @@ func TestAccAviatrixTransitCloudnConn_basic(t *testing.T) {
 	skipAcc := os.Getenv("SKIP_TRANSIT_CLOUDN_CONN")
 	if skipAcc == "yes" {
 		t.Skip("Skipping transit CloudN Connection tests as 'SKIP_TRANSIT_CLOUDN_CONN' is set")
-	} else {
-		for _, key := range []string{"AWS_VPC_ID", "AWS_ACCOUNT_NUMBER", "AWS_ACCESS_KEY", "AWS_SECRET_KEY", "AWS_REGION", "AWS_SUBNET", "CLOUDN_IP", "CLOUDN_NEIGHBOR_IP"} {
-			if os.Getenv(key) == "" {
-				t.Fatalf("%s must be set for Transit CloudN Connection acceptance tests. Set SKIP_TRANSIT_CLOUDN_CONN to yes to skip acceptance tests", key)
-			}
-		}
 	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			preGatewayCheck(t, ". Set 'SKIP_TRANSIT_CLOUDN_CONN' to 'yes' to skip Site2Cloud transit CloudN Conn tests")
+			testTransitCloudnConnPreCheck(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckTransitCloudnConnDestroy,
