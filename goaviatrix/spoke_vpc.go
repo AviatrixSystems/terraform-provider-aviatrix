@@ -41,6 +41,7 @@ type SpokeVpc struct {
 	FaultDomain           string `form:"fault_domain,omitempty"`
 	EnableSpotInstance    bool   `form:"spot_instance,omitempty"`
 	SpotPrice             string `form:"spot_price,omitempty"`
+	EnableBgp             string `form:"enable_bgp"`
 }
 
 func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) error {
