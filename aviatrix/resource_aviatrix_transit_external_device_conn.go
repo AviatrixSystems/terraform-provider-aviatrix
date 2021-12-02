@@ -970,7 +970,7 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 		remoteSubnet := d.Get("remote_subnet").(string)
 		err = client.EditTransitConnectionRemoteSubnet(vpcID, connName, remoteSubnet)
 		if err != nil {
-			return fmt.Errorf("could not update transit external device conn remote subnet during update: %v", err)
+			return fmt.Errorf("could not update transit external device conn remote subnet: %v", err)
 		}
 	}
 
