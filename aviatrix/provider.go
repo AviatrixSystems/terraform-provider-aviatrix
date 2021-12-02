@@ -105,6 +105,7 @@ func Provider() *schema.Provider {
 			"aviatrix_site2cloud":                                     resourceAviatrixSite2Cloud(),
 			"aviatrix_splunk_logging":                                 resourceAviatrixSplunkLogging(),
 			"aviatrix_spoke_gateway":                                  resourceAviatrixSpokeGateway(),
+			"aviatrix_spoke_external_device_conn":                     resourceAviatrixSpokeExternalDeviceConn(),
 			"aviatrix_spoke_transit_attachment":                       resourceAviatrixSpokeTransitAttachment(),
 			"aviatrix_spoke_vpc":                                      resourceAviatrixSpokeVpc(),
 			"aviatrix_sumologic_forwarder":                            resourceAviatrixSumologicForwarder(),
