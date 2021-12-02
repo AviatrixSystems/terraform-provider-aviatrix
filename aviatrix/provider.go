@@ -109,6 +109,7 @@ func Provider() *schema.Provider {
 			"aviatrix_spoke_vpc":                                      resourceAviatrixSpokeVpc(),
 			"aviatrix_sumologic_forwarder":                            resourceAviatrixSumologicForwarder(),
 			"aviatrix_transit_external_device_conn":                   resourceAviatrixTransitExternalDeviceConn(),
+			"aviatrix_transit_cloudn_conn":                            resourceAviatrixTransitCloudNConn(),
 			"aviatrix_trans_peer":                                     resourceAviatrixTransPeer(),
 			"aviatrix_transit_firenet_policy":                         resourceAviatrixTransitFireNetPolicy(),
 			"aviatrix_transit_gateway":                                resourceAviatrixTransitGateway(),
