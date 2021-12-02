@@ -482,7 +482,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 
 	enableBgp := d.Get("enable_bgp").(bool)
 	if enableBgp {
-		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWS) && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.Azure) {
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWS|goaviatrix.Azure) {
 			return fmt.Errorf("enabling BGP is only supported for AWS (1) and Azure (8)")
 		}
 		gateway.EnableBgp = "on"
