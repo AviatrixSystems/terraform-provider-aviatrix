@@ -534,3 +534,15 @@ func (c *Client) DisableMultitierTransit(gwName string) error {
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
 }
+
+func (c *Client) EditTransitConnectionRemoteSubnet(vpcId, connName, remoteSubnet string) error {
+	data := map[string]string{
+		"action":            "edit_site2cloud_conn",
+		"CID":               c.CID,
+		"vpc_id":            vpcId,
+		"conn_name":         connName,
+		"network_type":      "2",
+		"cloud_subnet_cidr": remoteSubnet,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}

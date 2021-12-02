@@ -101,10 +101,10 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				ValidateFunc: goaviatrix.ValidateASN,
 			},
 			"remote_subnet": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Remote CIDRs joined as a string with ','. Required for a 'static' type connection.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceInString,
+				Description:      "Remote CIDRs joined as a string with ','. Required for a 'static' type connection.",
 			},
 			"direct_connect": {
 				Type:        schema.TypeBool,
@@ -962,6 +962,15 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 		err = client.EditTransitExternalDeviceConnASPathPrepend(externalDeviceConn, prependASPath)
 		if err != nil {
 			return fmt.Errorf("could not update prepend_as_path: %v", err)
+		}
+	}
+
+	if d.HasChange("remote_subnet") {
+		vpcID := d.Get("vpc_id").(string)
+		remoteSubnet := d.Get("remote_subnet").(string)
+		err = client.EditTransitConnectionRemoteSubnet(vpcID, connName, remoteSubnet)
+		if err != nil {
+			return fmt.Errorf("could not update transit external device conn remote subnet: %v", err)
 		}
 	}
 
