@@ -2,6 +2,7 @@ package goaviatrix
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -42,6 +43,46 @@ type SpokeVpc struct {
 	EnableSpotInstance    bool   `form:"spot_instance,omitempty"`
 	SpotPrice             string `form:"spot_price,omitempty"`
 	EnableBgp             string `form:"enable_bgp"`
+}
+
+type SpokeGatewayAdvancedConfig struct {
+	BgpPollingTime                    string
+	PrependASPath                     []string
+	LocalASNumber                     string
+	BgpEcmpEnabled                    bool
+	ActiveStandbyEnabled              bool
+	ActiveStandbyConnections          []StandbyConnection
+	LearnedCIDRsApprovalMode          string
+	ConnectionLearnedCIDRApprovalInfo []LearnedCIDRApprovalInfo
+	TunnelAddrLocal                   string
+	TunnelAddrLocalBackup             string
+	PeerVnetId                        []string
+	BgpHoldTime                       int
+	EnableSummarizeCidrToTgw          bool
+	ApprovedLearnedCidrs              []string
+}
+
+type SpokeGatewayAdvancedConfigResp struct {
+	Return  bool                                 `json:"return"`
+	Results SpokeGatewayAdvancedConfigRespResult `json:"results"`
+	Reason  string                               `json:"reason"`
+}
+
+type SpokeGatewayAdvancedConfigRespResult struct {
+	BgpPollingTime                    int                       `json:"bgp_polling_time"`
+	PrependASPath                     string                    `json:"bgp_prepend_as_path"`
+	LocalASNumber                     string                    `json:"local_asn_num"`
+	BgpEcmpEnabled                    string                    `json:"bgp_ecmp"`
+	ActiveStandby                     string                    `json:"active-standby"`
+	ActiveStandbyStatus               map[string]string         `json:"active_standby_status"`
+	LearnedCIDRsApprovalMode          string                    `json:"learned_cidrs_approval_mode"`
+	ConnectionLearnedCIDRApprovalInfo []LearnedCIDRApprovalInfo `json:"connection_learned_cidrs_approval_info"`
+	TunnelAddrLocal                   string                    `json:"tunnel_addr_local"`
+	TunnelAddrLocalBackup             string                    `json:"tunnel_addr_local_backup"`
+	PeerVnetId                        []string                  `json:"peer_vnet_id"`
+	BgpHoldTime                       int                       `json:"bgp_hold_time"`
+	EnableSummarizeCidrToTgw          string                    `json:"summarize_cidr_to_tgw"`
+	ApprovedLearnedCidrs              []string                  `json:"approved_learned_cidrs"`
 }
 
 func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) error {
@@ -144,4 +185,99 @@ func (c *Client) DisableAutoAdvertiseS2CCidrs(gateway *Gateway) error {
 		"gateway_name": gateway.GwName,
 	}
 	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
+func (c *Client) GetSpokeGatewayAdvancedConfig(spokeGateway *SpokeVpc) (*SpokeGatewayAdvancedConfig, error) {
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "list_aviatrix_spoke_advanced_config",
+		"gateway_name": spokeGateway.GwName,
+	}
+
+	var data SpokeGatewayAdvancedConfigResp
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+
+	prependASPathStrings := strings.Split(data.Results.PrependASPath, " ")
+	var filteredStrings []string
+	for _, v := range prependASPathStrings {
+		if v != "" {
+			filteredStrings = append(filteredStrings, v)
+		}
+	}
+
+	var standbyConnections []StandbyConnection
+	for k, v := range data.Results.ActiveStandbyStatus {
+		gwType := "Primary"
+		if strings.HasSuffix(v, "-hagw") {
+			gwType = "HA"
+		}
+
+		standbyConnections = append(standbyConnections, StandbyConnection{
+			ConnectionName:    k,
+			ActiveGatewayType: gwType,
+		})
+	}
+
+	return &SpokeGatewayAdvancedConfig{
+		BgpPollingTime:                    strconv.Itoa(data.Results.BgpPollingTime),
+		PrependASPath:                     filteredStrings,
+		LocalASNumber:                     data.Results.LocalASNumber,
+		BgpEcmpEnabled:                    data.Results.BgpEcmpEnabled == "yes",
+		ActiveStandbyEnabled:              data.Results.ActiveStandby == "yes",
+		ActiveStandbyConnections:          standbyConnections,
+		LearnedCIDRsApprovalMode:          data.Results.LearnedCIDRsApprovalMode,
+		ConnectionLearnedCIDRApprovalInfo: data.Results.ConnectionLearnedCIDRApprovalInfo,
+		TunnelAddrLocal:                   data.Results.TunnelAddrLocal,
+		TunnelAddrLocalBackup:             data.Results.TunnelAddrLocalBackup,
+		PeerVnetId:                        data.Results.PeerVnetId,
+		BgpHoldTime:                       data.Results.BgpHoldTime,
+		EnableSummarizeCidrToTgw:          data.Results.EnableSummarizeCidrToTgw == "yes",
+		ApprovedLearnedCidrs:              data.Results.ApprovedLearnedCidrs,
+	}, nil
+}
+
+func (c *Client) EnableSpokeConnectionLearnedCIDRApproval(gwName, connName string) error {
+	data := map[string]string{
+		"action":          "enable_transit_connection_learned_cidrs_approval",
+		"CID":             c.CID,
+		"gateway_name":    gwName,
+		"connection_name": connName,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) DisableSpokeConnectionLearnedCIDRApproval(gwName, connName string) error {
+	data := map[string]string{
+		"action":          "disable_transit_connection_learned_cidrs_approval",
+		"CID":             c.CID,
+		"gateway_name":    gwName,
+		"connection_name": connName,
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) UpdateSpokeConnectionPendingApprovedCidrs(gwName, connName string, approvedCidrs []string) error {
+	data := map[string]string{
+		"action":                            "update_transit_connection_pending_approved_cidrs",
+		"CID":                               c.CID,
+		"gateway_name":                      gwName,
+		"connection_name":                   connName,
+		"connection_approved_learned_cidrs": strings.Join(approvedCidrs, ","),
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) EditSpokeConnectionBGPManualAdvertiseCIDRs(gwName, connName string, cidrs []string) error {
+	data := map[string]string{
+		"action":                                "edit_spoke_connection_bgp_manual_advertise_cidrs",
+		"CID":                                   c.CID,
+		"gateway_name":                          gwName,
+		"connection_name":                       connName,
+		"connection_bgp_manual_advertise_cidrs": strings.Join(cidrs, ","),
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
 }

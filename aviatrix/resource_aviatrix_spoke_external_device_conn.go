@@ -254,12 +254,6 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "Backup direct connect for backup external device.",
 			},
-			"switch_to_ha_standby_gateway": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Only valid for Spoke Gateways with Active-Standby Mode enabled. Valid values: true, false. Default: false.",
-			},
 			"enable_learned_cidrs_approval": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -442,7 +436,7 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 
 	approvedCidrs := getStringSet(d, "approved_cidrs")
 	if !enableLearnedCIDRApproval && len(approvedCidrs) > 0 {
-		return fmt.Errorf("creating transit external device conn: 'approved_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
+		return fmt.Errorf("creating spoke external device conn: 'approved_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
 	}
 
 	enableIkev2 := d.Get("enable_ikev2").(bool)
@@ -475,21 +469,6 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		return fmt.Errorf("failed to create Aviatrix external device connection: %s", err)
 	}
 
-	transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: externalDeviceConn.GwName})
-	if err != nil {
-		return fmt.Errorf("could not get advanced config for transit gateway: %v", err)
-	}
-	if d.Get("switch_to_ha_standby_gateway").(bool) && !transitAdvancedConfig.ActiveStandbyEnabled {
-		return fmt.Errorf("can not set 'switch_to_ha_standby_gateway' unless Active-Standby Mode is enabled on " +
-			"the transit gateway. Please enable Active-Standby Mode on the transit gateway and try again")
-	}
-
-	if d.Get("switch_to_ha_standby_gateway").(bool) {
-		if err := client.SwitchActiveTransitGateway(externalDeviceConn.GwName, externalDeviceConn.ConnectionName); err != nil {
-			return fmt.Errorf("could not switch active transit gateway to HA: %v", err)
-		}
-	}
-
 	if d.Get("enable_event_triggered_ha").(bool) {
 		if err := client.EnableSite2CloudEventTriggeredHA(externalDeviceConn.VpcID, externalDeviceConn.ConnectionName); err != nil {
 			return fmt.Errorf("could not enable event triggered HA for external device conn after create: %v", err)
@@ -497,20 +476,20 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 	}
 
 	if enableLearnedCIDRApproval {
-		err = client.EnableTransitConnectionLearnedCIDRApproval(externalDeviceConn.GwName, externalDeviceConn.ConnectionName)
+		err = client.EnableSpokeConnectionLearnedCIDRApproval(externalDeviceConn.GwName, externalDeviceConn.ConnectionName)
 		if err != nil {
 			return fmt.Errorf("could not enable learned cidr approval: %v", err)
 		}
 		if len(approvedCidrs) > 0 {
-			err = client.UpdateTransitConnectionPendingApprovedCidrs(externalDeviceConn.GwName, externalDeviceConn.ConnectionName, approvedCidrs)
+			err = client.UpdateSpokeConnectionPendingApprovedCidrs(externalDeviceConn.GwName, externalDeviceConn.ConnectionName, approvedCidrs)
 			if err != nil {
-				return fmt.Errorf("could not update transit external device conn approved cidrs after creation: %v", err)
+				return fmt.Errorf("could not update spoke external device conn approved cidrs after creation: %v", err)
 			}
 		}
 	}
 
 	if len(manualBGPCidrs) > 0 {
-		err = client.EditTransitConnectionBGPManualAdvertiseCIDRs(externalDeviceConn.GwName, externalDeviceConn.ConnectionName, manualBGPCidrs)
+		err = client.EditSpokeConnectionBGPManualAdvertiseCIDRs(externalDeviceConn.GwName, externalDeviceConn.ConnectionName, manualBGPCidrs)
 		if err != nil {
 			return fmt.Errorf("could not edit manual advertised BGP cidrs: %v", err)
 		}
@@ -550,7 +529,7 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 			prependASPath = append(prependASPath, v.(string))
 		}
 
-		err = client.EditTransitExternalDeviceConnASPathPrepend(externalDeviceConn, prependASPath)
+		err = client.EditSpokeExternalDeviceConnASPathPrepend(externalDeviceConn, prependASPath)
 		if err != nil {
 			return fmt.Errorf("could not set prepend_as_path: %v", err)
 		}
@@ -562,7 +541,7 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 func resourceAviatrixSpokeExternalDeviceConnReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
 	if !(*flag) {
 		*flag = true
-		return resourceAviatrixTransitExternalDeviceConnRead(d, meta)
+		return resourceAviatrixSpokeExternalDeviceConnRead(d, meta)
 	}
 	return nil
 }
@@ -656,27 +635,12 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 			d.Set("backup_direct_connect", false)
 		}
 
-		if conn.EnableEdgeSegmentation == "enabled" {
-			d.Set("enable_edge_segmentation", true)
-		} else {
-			d.Set("enable_edge_segmentation", false)
-		}
-
-		transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: externalDeviceConn.GwName})
+		spokeAdvancedConfig, err := client.GetSpokeGatewayAdvancedConfig(&goaviatrix.SpokeVpc{GwName: externalDeviceConn.GwName})
 		if err != nil {
-			return fmt.Errorf("could not get advanced config for transit gateway: %v", err)
+			return fmt.Errorf("could not get advanced config for spoke gateway: %v", err)
 		}
 
-		activeGatewayType := "Primary"
-		for _, v := range transitAdvancedConfig.ActiveStandbyConnections {
-			if v.ConnectionName != externalDeviceConn.ConnectionName {
-				continue
-			}
-			activeGatewayType = v.ActiveGatewayType
-		}
-		d.Set("switch_to_ha_standby_gateway", activeGatewayType == "HA")
-
-		for _, v := range transitAdvancedConfig.ConnectionLearnedCIDRApprovalInfo {
+		for _, v := range spokeAdvancedConfig.ConnectionLearnedCIDRApprovalInfo {
 			if v.ConnName == externalDeviceConn.ConnectionName {
 				d.Set("enable_learned_cidrs_approval", v.EnabledApproval == "yes")
 				err := d.Set("approved_cidrs", v.ApprovedLearnedCidrs)
@@ -686,7 +650,7 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 				break
 			}
 		}
-		if len(transitAdvancedConfig.ConnectionLearnedCIDRApprovalInfo) == 0 {
+		if len(spokeAdvancedConfig.ConnectionLearnedCIDRApprovalInfo) == 0 {
 			d.Set("enable_learned_cidrs_approval", false)
 			d.Set("approved_cidrs", nil)
 		}
@@ -739,35 +703,21 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 	approvedCidrs := getStringSet(d, "approved_cidrs")
 	enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
 	if !enableLearnedCIDRApproval && len(approvedCidrs) > 0 {
-		return fmt.Errorf("updating transit external device conn: 'approved_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
+		return fmt.Errorf("updating spoke external device conn: 'approved_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
 	}
 
 	gwName := d.Get("gw_name").(string)
 	connName := d.Get("connection_name").(string)
-	transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: gwName})
-	if err != nil {
-		return fmt.Errorf("could not get advanced config for transit gateway: %v", err)
-	}
-	if d.Get("switch_to_ha_standby_gateway").(bool) && !transitAdvancedConfig.ActiveStandbyEnabled {
-		return fmt.Errorf("can not set 'switch_to_ha_standby_gateway' unless Active-Standby Mode is enabled on " +
-			"the transit gateway. Please enable Active-Standby Mode on the transit gateway and try again")
-	}
-
-	if d.HasChange("switch_to_ha_standby_gateway") {
-		if err := client.SwitchActiveTransitGateway(gwName, connName); err != nil {
-			return fmt.Errorf("could not switch active transit gateway: %v", err)
-		}
-	}
 
 	if d.HasChange("enable_learned_cidrs_approval") {
 		enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
 		if enableLearnedCIDRApproval {
-			err = client.EnableTransitConnectionLearnedCIDRApproval(gwName, connName)
+			err := client.EnableSpokeConnectionLearnedCIDRApproval(gwName, connName)
 			if err != nil {
 				return fmt.Errorf("could not enable learned cidr approval: %v", err)
 			}
 		} else {
-			err = client.DisableTransitConnectionLearnedCIDRApproval(gwName, connName)
+			err := client.DisableSpokeConnectionLearnedCIDRApproval(gwName, connName)
 			if err != nil {
 				return fmt.Errorf("could not disable learned cidr approval: %v", err)
 			}
@@ -776,7 +726,7 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 
 	if d.HasChange("manual_bgp_advertised_cidrs") {
 		manualBGPCidrs := getStringSet(d, "manual_bgp_advertised_cidrs")
-		err := client.EditTransitConnectionBGPManualAdvertiseCIDRs(gwName, connName, manualBGPCidrs)
+		err := client.EditSpokeConnectionBGPManualAdvertiseCIDRs(gwName, connName, manualBGPCidrs)
 		if err != nil {
 			return fmt.Errorf("could not edit manual advertise manual cidrs: %v", err)
 		}
@@ -798,9 +748,9 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 	}
 
 	if d.HasChange("approved_cidrs") {
-		err := client.UpdateTransitConnectionPendingApprovedCidrs(gwName, connName, approvedCidrs)
+		err := client.UpdateSpokeConnectionPendingApprovedCidrs(gwName, connName, approvedCidrs)
 		if err != nil {
-			return fmt.Errorf("could not update transit external device conn learned cidrs during update: %v", err)
+			return fmt.Errorf("could not update spoke external device conn learned cidrs during update: %v", err)
 		}
 	}
 
@@ -848,7 +798,7 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 		for _, v := range d.Get("prepend_as_path").([]interface{}) {
 			prependASPath = append(prependASPath, v.(string))
 		}
-		err = client.EditTransitExternalDeviceConnASPathPrepend(externalDeviceConn, prependASPath)
+		err := client.EditSpokeExternalDeviceConnASPathPrepend(externalDeviceConn, prependASPath)
 		if err != nil {
 			return fmt.Errorf("could not update prepend_as_path: %v", err)
 		}
@@ -856,7 +806,7 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 
 	d.Partial(false)
 
-	return resourceAviatrixTransitExternalDeviceConnRead(d, meta)
+	return resourceAviatrixSpokeExternalDeviceConnRead(d, meta)
 }
 
 func resourceAviatrixSpokeExternalDeviceConnDelete(d *schema.ResourceData, meta interface{}) error {
