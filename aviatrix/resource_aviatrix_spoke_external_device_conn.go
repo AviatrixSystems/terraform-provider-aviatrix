@@ -44,7 +44,7 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 			},
 			"remote_gateway_ip": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				ForceNew:    true,
 				Description: "Remote Gateway IP.",
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -254,13 +254,6 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "Backup direct connect for backup external device.",
 			},
-			"enable_edge_segmentation": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				ForceNew:    true,
-				Description: "Switch to allow this connection to communicate with a Security Domain via Connection Policy.",
-			},
 			"switch_to_ha_standby_gateway": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -298,18 +291,6 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 				Description: "Configure manual BGP advertised CIDRs for this connection. Only valid with 'connection_type'" +
 					" = 'bgp'.",
 			},
-			"remote_vpc_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Name of the remote VPC for a LAN BGP connection. Only valid when 'connection_type' = 'bgp' and tunnel_protocol' = 'LAN' with an Azure transit gateway. Must be in the form \"<VNET-name>:<resource-group-name>\". Available as of provider version R2.18+.",
-			},
-			"remote_lan_ip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Remote LAN IP.",
-			},
 			"phase1_remote_identifier": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -333,26 +314,6 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Description: "Set of approved cidrs. Requires 'enable_learned_cidrs_approval' to be true. Type: Set(String).",
-			},
-			"local_lan_ip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				ForceNew:    true,
-				Description: "Local LAN IP.",
-			},
-			"backup_remote_lan_ip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Backup Remote LAN IP.",
-			},
-			"backup_local_lan_ip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				ForceNew:    true,
-				Description: "Backup Local LAN IP.",
 			},
 		},
 	}
@@ -381,11 +342,6 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		BackupPreSharedKey:     d.Get("backup_pre_shared_key").(string),
 		BackupLocalTunnelCidr:  d.Get("backup_local_tunnel_cidr").(string),
 		BackupRemoteTunnelCidr: d.Get("backup_remote_tunnel_cidr").(string),
-		PeerVnetId:             d.Get("remote_vpc_name").(string),
-		RemoteLanIP:            d.Get("remote_lan_ip").(string),
-		LocalLanIP:             d.Get("local_lan_ip").(string),
-		BackupRemoteLanIP:      d.Get("backup_remote_lan_ip").(string),
-		BackupLocalLanIP:       d.Get("backup_local_lan_ip").(string),
 	}
 
 	tunnelProtocol := strings.ToUpper(d.Get("tunnel_protocol").(string))
@@ -393,27 +349,6 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		externalDeviceConn.TunnelProtocol = "IPsec"
 	} else {
 		externalDeviceConn.TunnelProtocol = tunnelProtocol
-	}
-
-	if (externalDeviceConn.RemoteGatewayIP != "" ||
-		externalDeviceConn.LocalTunnelCidr != "" ||
-		externalDeviceConn.BackupRemoteGatewayIP != "" ||
-		externalDeviceConn.BackupLocalTunnelCidr != "") && externalDeviceConn.TunnelProtocol == "LAN" {
-		return fmt.Errorf("'remote_gateway_ip', 'local_tunnel_cidr', 'backup_remote_gateway_ip' and 'backup_local_tunnel_cidr' " +
-			"cannot be set with 'tunnel_protocol' = 'LAN'. Please use the appropriate LAN attributes instead")
-	}
-	if (externalDeviceConn.RemoteLanIP != "" ||
-		externalDeviceConn.LocalLanIP != "" ||
-		externalDeviceConn.BackupRemoteLanIP != "" ||
-		externalDeviceConn.BackupLocalLanIP != "") && externalDeviceConn.TunnelProtocol != "LAN" {
-		return fmt.Errorf("'remote_lan_ip', 'local_lan_ip', 'backup_remote_lan_ip' and 'backup_local_lan_ip' " +
-			"can only be set with 'tunnel_protocol' = 'LAN'")
-	}
-	if externalDeviceConn.RemoteLanIP == "" && externalDeviceConn.TunnelProtocol == "LAN" {
-		return fmt.Errorf("'remote_lan_ip' is required when 'tunnel_protocol' = 'LAN'")
-	}
-	if externalDeviceConn.RemoteGatewayIP == "" && externalDeviceConn.TunnelProtocol != "LAN" {
-		return fmt.Errorf("'remote_gateway_ip' is required when 'tunnel_protocol' != 'LAN'")
 	}
 
 	bgpLocalAsNum, err := strconv.Atoi(d.Get("bgp_local_as_num").(string))
@@ -442,11 +377,6 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 	backupDirectConnect := d.Get("backup_direct_connect").(bool)
 	if backupDirectConnect {
 		externalDeviceConn.BackupDirectConnect = "true"
-	}
-
-	enableEdgeSegmentation := d.Get("enable_edge_segmentation").(bool)
-	if enableEdgeSegmentation {
-		externalDeviceConn.EnableEdgeSegmentation = "true"
 	}
 
 	if externalDeviceConn.ConnectionType == "bgp" && externalDeviceConn.RemoteSubnet != "" {
@@ -522,34 +452,6 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 
 	if externalDeviceConn.ConnectionType != "bgp" && externalDeviceConn.TunnelProtocol != "IPsec" {
 		return fmt.Errorf("'tunnel_protocol' can not be set unless 'connection_type' is 'bgp'")
-	}
-	greOrLan := externalDeviceConn.TunnelProtocol == "GRE" || externalDeviceConn.TunnelProtocol == "LAN"
-	if greOrLan && customAlgorithms {
-		return fmt.Errorf("custom algorithm paramters are not valid with 'tunnel_protocol' = GRE or LAN")
-	}
-	if greOrLan && enableIkev2 {
-		return fmt.Errorf("enable_ikev2 is not supported with 'tunnel_protocol' = GRE or LAN")
-	}
-	if greOrLan && externalDeviceConn.PreSharedKey != "" {
-		return fmt.Errorf("'pre_shared_key' is not valid with 'tunnel_protocol' = GRE or LAN")
-	}
-	if externalDeviceConn.PeerVnetId != "" && (externalDeviceConn.ConnectionType != "bgp" || externalDeviceConn.TunnelProtocol != "LAN") {
-		return fmt.Errorf("'remote_vpc_name' is only valid for 'connection_type' = 'bgp' and 'tunnel_protocol' = 'LAN'")
-	}
-	if externalDeviceConn.TunnelProtocol == "LAN" {
-		if externalDeviceConn.DirectConnect == "true" || externalDeviceConn.BackupDirectConnect == "true" {
-			return fmt.Errorf("enabling 'direct_connect' or 'backup_direct_connect' is not allowed for BGP over LAN connections")
-		}
-		gw, err := client.GetGateway(&goaviatrix.Gateway{GwName: externalDeviceConn.GwName})
-		if err != nil {
-			log.Printf("[INFO] Could not get cloud_type for transit_external_device_conn validation "+
-				"from gw_name(%s) due to error(%v)", externalDeviceConn.GwName, err)
-		} else {
-			if gw.CloudType == goaviatrix.Azure &&
-				(externalDeviceConn.LocalLanIP != "" || externalDeviceConn.BackupLocalLanIP != "") {
-				return fmt.Errorf("'local_lan_ip' and 'backup_local_lan_ip' are not valid for Azure transit gateways")
-			}
-		}
 	}
 
 	phase1RemoteIdentifier := d.Get("phase1_remote_identifier").([]interface{})
@@ -705,13 +607,8 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 		d.Set("connection_type", conn.ConnectionType)
 		d.Set("remote_tunnel_cidr", conn.RemoteTunnelCidr)
 		d.Set("enable_event_triggered_ha", conn.EventTriggeredHA)
-		if conn.TunnelProtocol == "LAN" {
-			d.Set("remote_lan_ip", conn.RemoteLanIP)
-			d.Set("local_lan_ip", conn.LocalLanIP)
-		} else {
-			d.Set("remote_gateway_ip", conn.RemoteGatewayIP)
-			d.Set("local_tunnel_cidr", conn.LocalTunnelCidr)
-		}
+		d.Set("remote_gateway_ip", conn.RemoteGatewayIP)
+		d.Set("local_tunnel_cidr", conn.LocalTunnelCidr)
 		if conn.ConnectionType == "bgp" {
 			if conn.BgpLocalAsNum != 0 {
 				d.Set("bgp_local_as_num", strconv.Itoa(conn.BgpLocalAsNum))
@@ -747,13 +644,8 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 			d.Set("ha_enabled", true)
 
 			d.Set("backup_remote_tunnel_cidr", conn.BackupRemoteTunnelCidr)
-			if conn.TunnelProtocol == "LAN" {
-				d.Set("backup_remote_lan_ip", conn.BackupRemoteLanIP)
-				d.Set("backup_local_lan_ip", conn.BackupLocalLanIP)
-			} else {
-				d.Set("backup_remote_gateway_ip", conn.BackupRemoteGatewayIP)
-				d.Set("backup_local_tunnel_cidr", conn.BackupLocalTunnelCidr)
-			}
+			d.Set("backup_remote_gateway_ip", conn.BackupRemoteGatewayIP)
+			d.Set("backup_local_tunnel_cidr", conn.BackupLocalTunnelCidr)
 			if conn.BackupDirectConnect == "enabled" {
 				d.Set("backup_direct_connect", true)
 			} else {
@@ -812,9 +704,6 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 			d.Set("tunnel_protocol", "IPsec")
 		} else {
 			d.Set("tunnel_protocol", conn.TunnelProtocol)
-		}
-		if conn.TunnelProtocol == "LAN" {
-			d.Set("remote_vpc_name", conn.PeerVnetId)
 		}
 
 		if conn.Phase1RemoteIdentifier != "" {
