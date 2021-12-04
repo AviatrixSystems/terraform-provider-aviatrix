@@ -281,3 +281,71 @@ func (c *Client) EditSpokeConnectionBGPManualAdvertiseCIDRs(gwName, connName str
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
 }
+
+func (c *Client) SetBgpEcmpSpoke(spokeGateway *SpokeVpc, enabled bool) error {
+	action := "enable_bgp_ecmp"
+	if !enabled {
+		action = "disable_bgp_ecmp"
+	}
+	return c.PostAPI(action, struct {
+		CID         string `form:"CID"`
+		Action      string `form:"action"`
+		GatewayName string `form:"gateway_name"`
+	}{
+		CID:         c.CID,
+		Action:      action,
+		GatewayName: spokeGateway.GwName,
+	}, BasicCheck)
+}
+
+func (c *Client) EnableActiveStandbySpoke(spokeGateway *SpokeVpc) error {
+	action := "enable_active_standby"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": spokeGateway.GwName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) DisableActiveStandbySpoke(spokeGateway *SpokeVpc) error {
+	action := "disable_active_standby"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": spokeGateway.GwName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) SetPrependASPathSpoke(spokeGateway *SpokeVpc, prependASPath []string) error {
+	action, subaction := "edit_aviatrix_spoke_advanced_config", "prepend_as_path"
+	return c.PostAPI(action+"/"+subaction, struct {
+		CID           string `form:"CID"`
+		Action        string `form:"action"`
+		Subaction     string `form:"subaction"`
+		GatewayName   string `form:"gateway_name"`
+		PrependASPath string `form:"bgp_prepend_as_path"`
+	}{
+		CID:           c.CID,
+		Action:        action,
+		Subaction:     subaction,
+		GatewayName:   spokeGateway.GwName,
+		PrependASPath: strings.Join(prependASPath, " "),
+	}, BasicCheck)
+}
+
+func (c *Client) SetBgpPollingTimeSpoke(spokeGateway *SpokeVpc, newPollingTime string) error {
+	action := "change_bgp_polling_time"
+	return c.PostAPI(action, struct {
+		CID         string `form:"CID"`
+		Action      string `form:"action"`
+		GatewayName string `form:"gateway_name"`
+		PollingTime string `form:"bgp_polling_time"`
+	}{
+		CID:         c.CID,
+		Action:      action,
+		GatewayName: spokeGateway.GwName,
+		PollingTime: newPollingTime,
+	}, BasicCheck)
+}

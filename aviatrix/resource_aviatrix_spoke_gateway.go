@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -293,6 +294,40 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				ForceNew:    true,
 				Description: "Enable BGP. Default: false.",
+			},
+			"bgp_ecmp": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable Equal Cost Multi Path (ECMP) routing for the next hop.",
+			},
+			"enable_active_standby": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enables Active-Standby Mode, available only with HA enabled.",
+			},
+			"prepend_as_path": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "List of AS numbers to populate BGP AP_PATH field when it advertises to VGW or peer devices.",
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: goaviatrix.ValidateASN,
+				},
+			},
+			"bgp_polling_time": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "50",
+				Description: "BGP route polling time. Unit is in seconds. Valid values are between 10 and 50.",
+			},
+			"bgp_hold_time": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      defaultBgpHoldTime,
+				ValidateFunc: validation.IntBetween(12, 360),
+				Description:  "BGP Hold Time.",
 			},
 			"enable_spot_instance": {
 				Type:         schema.TypeBool,
@@ -999,6 +1034,46 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	if val, ok := d.GetOk("bgp_ecmp"); ok {
+		err := client.SetBgpEcmpSpoke(gateway, val.(bool))
+		if err != nil {
+			return fmt.Errorf("could not set bgp_ecmp: %v", err)
+		}
+	}
+
+	enableActiveStandby := d.Get("enable_active_standby").(bool)
+	if enableActiveStandby {
+		if err := client.EnableActiveStandbySpoke(gateway); err != nil {
+			return fmt.Errorf("could not enable Active Standby Mode: %v", err)
+		}
+	}
+
+	if val, ok := d.GetOk("prepend_as_path"); ok {
+		var prependASPath []string
+		slice := val.([]interface{})
+		for _, v := range slice {
+			prependASPath = append(prependASPath, v.(string))
+		}
+		err := client.SetPrependASPathSpoke(gateway, prependASPath)
+		if err != nil {
+			return fmt.Errorf("could not set prepend_as_path: %v", err)
+		}
+	}
+
+	if val, ok := d.GetOk("bgp_polling_time"); ok {
+		err := client.SetBgpPollingTimeSpoke(gateway, val.(string))
+		if err != nil {
+			return fmt.Errorf("could not set bgp polling time: %v", err)
+		}
+	}
+
+	if holdTime := d.Get("bgp_hold_time").(int); holdTime != defaultBgpHoldTime {
+		err := client.ChangeBgpHoldTime(gateway.GwName, holdTime)
+		if err != nil {
+			return fmt.Errorf("could not change BGP Hold Time after Transit Gateway creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixSpokeGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -1058,6 +1133,20 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("enable_vpc_dns_server", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled")
 	d.Set("single_ip_snat", gw.EnableNat == "yes" && gw.SnatMode == "primary")
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
+	d.Set("bgp_ecmp", gw.BgpEcmp)
+	d.Set("enable_active_standby", gw.EnableActiveStandby)
+	var prependAsPath []string
+	for _, p := range strings.Split(gw.PrependASPath, " ") {
+		if p != "" {
+			prependAsPath = append(prependAsPath, p)
+		}
+	}
+	err = d.Set("prepend_as_path", prependAsPath)
+	if err != nil {
+		return fmt.Errorf("could not set prepend_as_path: %v", err)
+	}
+	d.Set("bgp_polling_time", strconv.Itoa(gw.BgpPollingTime))
+	d.Set("bgp_hold_time", gw.BgpHoldTime)
 	d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
 	d.Set("image_version", gw.ImageVersion)
 	d.Set("software_version", gw.SoftwareVersion)
@@ -2119,6 +2208,65 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 					return fmt.Errorf("could not upgrade HA spoke gateway during update image_version=%s software_version=%s: %v", hagw.ImageVersion, hagw.SoftwareVersion, err)
 				}
 			}
+		}
+	}
+
+	if d.HasChange("bgp_ecmp") {
+		enabled := d.Get("bgp_ecmp").(bool)
+		gateway := &goaviatrix.SpokeVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		err := client.SetBgpEcmpSpoke(gateway, enabled)
+		if err != nil {
+			return fmt.Errorf("could not set bgp_ecmp: %v", err)
+		}
+	}
+
+	if d.HasChange("enable_active_standby") {
+		gateway := &goaviatrix.SpokeVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		if d.Get("enable_active_standby").(bool) {
+			if err := client.EnableActiveStandbySpoke(gateway); err != nil {
+				return fmt.Errorf("could not enable active standby mode: %v", err)
+			}
+		} else {
+			if err := client.DisableActiveStandbySpoke(gateway); err != nil {
+				return fmt.Errorf("could not disable active standby mode: %v", err)
+			}
+		}
+	}
+
+	if d.HasChange("prepend_as_path") {
+		var prependASPath []string
+		slice := d.Get("prepend_as_path").([]interface{})
+		for _, v := range slice {
+			prependASPath = append(prependASPath, v.(string))
+		}
+		gateway := &goaviatrix.SpokeVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		err := client.SetPrependASPathSpoke(gateway, prependASPath)
+		if err != nil {
+			return fmt.Errorf("could not set prepend_as_path: %v", err)
+		}
+	}
+
+	if d.HasChange("bgp_polling_time") {
+		bgpPollingTime := d.Get("bgp_polling_time").(string)
+		gateway := &goaviatrix.SpokeVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		err := client.SetBgpPollingTimeSpoke(gateway, bgpPollingTime)
+		if err != nil {
+			return fmt.Errorf("could not update bgp polling time: %v", err)
+		}
+	}
+
+	if d.HasChange("bgp_hold_time") {
+		err := client.ChangeBgpHoldTime(gateway.GwName, d.Get("bgp_hold_time").(int))
+		if err != nil {
+			return fmt.Errorf("could not change BGP Hold Time during Transit Gateway update: %v", err)
 		}
 	}
 
