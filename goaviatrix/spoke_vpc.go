@@ -8,41 +8,42 @@ import (
 
 // Spoke gateway simple struct to hold spoke details
 type SpokeVpc struct {
-	AccountName           string `form:"account_name,omitempty" json:"account_name,omitempty"`
-	Action                string `form:"action,omitempty"`
-	CID                   string `form:"CID,omitempty"`
-	CloudType             int    `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
-	DnsServer             string `form:"dns_server,omitempty" json:"dns_server,omitempty"`
-	GwName                string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
-	GwSize                string `form:"gw_size,omitempty"`
-	VpcID                 string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	VNetNameResourceGroup string `form:"vnet_and_resource_group_names,omitempty"`
-	Subnet                string `form:"public_subnet,omitempty" json:"public_subnet,omitempty"`
-	VpcRegion             string `form:"region,omitempty" json:"vpc_region,omitempty"`
-	VpcSize               string `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
-	EnableNat             string `form:"nat_enabled,omitempty" json:"enable_nat,omitempty"`
-	EnableVpcDnsServer    string `json:"use_vpc_dns,omitempty"`
-	HASubnet              string `form:"ha_subnet,omitempty"`
-	HAZone                string `form:"new_zone,omitempty"`
-	HASubnetGCP           string `form:"new_subnet,omitempty"`
-	SingleAzHa            string `form:"single_az_ha,omitempty"`
-	TransitGateway        string `form:"transit_gw,omitempty"`
-	TagList               string `form:"tag_string,omitempty"`
-	TagJson               string `form:"tag_json,omitempty"`
-	ReuseEip              string `form:"reuse_eip,omitempty"`
-	AllocateNewEipRead    bool   `json:"newly_allocated_eip,omitempty"`
-	Eip                   string `form:"eip,omitempty" json:"eip,omitempty"`
-	InsaneMode            string `form:"insane_mode,omitempty"`
-	Zone                  string `form:"zone,omitempty" json:"zone,omitempty"`
-	EncVolume             string `form:"enc_volume,omitempty"`
-	EnablePrivateOob      string `form:"private_oob,omitempty"`
-	OobManagementSubnet   string `form:"oob_mgmt_subnet,omitempty"`
-	HAOobManagementSubnet string
-	AvailabilityDomain    string `form:"availability_domain,omitempty"`
-	FaultDomain           string `form:"fault_domain,omitempty"`
-	EnableSpotInstance    bool   `form:"spot_instance,omitempty"`
-	SpotPrice             string `form:"spot_price,omitempty"`
-	EnableBgp             string `form:"enable_bgp"`
+	AccountName                  string `form:"account_name,omitempty" json:"account_name,omitempty"`
+	Action                       string `form:"action,omitempty"`
+	CID                          string `form:"CID,omitempty"`
+	CloudType                    int    `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
+	DnsServer                    string `form:"dns_server,omitempty" json:"dns_server,omitempty"`
+	GwName                       string `form:"gw_name,omitempty" json:"vpc_name,omitempty"`
+	GwSize                       string `form:"gw_size,omitempty"`
+	VpcID                        string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	VNetNameResourceGroup        string `form:"vnet_and_resource_group_names,omitempty"`
+	Subnet                       string `form:"public_subnet,omitempty" json:"public_subnet,omitempty"`
+	VpcRegion                    string `form:"region,omitempty" json:"vpc_region,omitempty"`
+	VpcSize                      string `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
+	EnableNat                    string `form:"nat_enabled,omitempty" json:"enable_nat,omitempty"`
+	EnableVpcDnsServer           string `json:"use_vpc_dns,omitempty"`
+	HASubnet                     string `form:"ha_subnet,omitempty"`
+	HAZone                       string `form:"new_zone,omitempty"`
+	HASubnetGCP                  string `form:"new_subnet,omitempty"`
+	SingleAzHa                   string `form:"single_az_ha,omitempty"`
+	TransitGateway               string `form:"transit_gw,omitempty"`
+	TagList                      string `form:"tag_string,omitempty"`
+	TagJson                      string `form:"tag_json,omitempty"`
+	ReuseEip                     string `form:"reuse_eip,omitempty"`
+	AllocateNewEipRead           bool   `json:"newly_allocated_eip,omitempty"`
+	Eip                          string `form:"eip,omitempty" json:"eip,omitempty"`
+	InsaneMode                   string `form:"insane_mode,omitempty"`
+	Zone                         string `form:"zone,omitempty" json:"zone,omitempty"`
+	BgpManualSpokeAdvertiseCidrs string `form:"bgp_manual_spoke,omitempty"`
+	EncVolume                    string `form:"enc_volume,omitempty"`
+	EnablePrivateOob             string `form:"private_oob,omitempty"`
+	OobManagementSubnet          string `form:"oob_mgmt_subnet,omitempty"`
+	HAOobManagementSubnet        string
+	AvailabilityDomain           string `form:"availability_domain,omitempty"`
+	FaultDomain                  string `form:"fault_domain,omitempty"`
+	EnableSpotInstance           bool   `form:"spot_instance,omitempty"`
+	SpotPrice                    string `form:"spot_price,omitempty"`
+	EnableBgp                    string `form:"enable_bgp"`
 }
 
 type SpokeGatewayAdvancedConfig struct {
@@ -348,4 +349,16 @@ func (c *Client) SetBgpPollingTimeSpoke(spokeGateway *SpokeVpc, newPollingTime s
 		GatewayName: spokeGateway.GwName,
 		PollingTime: newPollingTime,
 	}, BasicCheck)
+}
+
+func (c *Client) SetBgpManualSpokeAdvertisedNetworksSpoke(spokeGateway *SpokeVpc) error {
+	form := map[string]string{
+		"CID":                              c.CID,
+		"action":                           "edit_aviatrix_transit_advanced_config",
+		"subaction":                        "bgp_manual_spoke",
+		"gateway_name":                     spokeGateway.GwName,
+		"bgp_manual_spoke_advertise_cidrs": spokeGateway.BgpManualSpokeAdvertiseCidrs,
+	}
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }

@@ -288,6 +288,13 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Automatically advertise remote CIDR to Aviatrix Transit Gateway when route based Site2Cloud Tunnel is created.",
 			},
+			"bgp_manual_spoke_advertise_cidrs": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "",
+				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceInString,
+				Description:      "Intended CIDR list to advertise to VGW.",
+			},
 			"enable_bgp": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -533,7 +540,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			gateway.ReuseEip = "on"
 
 			if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
-				return fmt.Errorf("failed to spoke transit gateway: 'allocate_new_eip' can only be set to 'false' when cloud_type is AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048) or AWS Top Secret (16384)")
+				return fmt.Errorf("failed to create spoke gateway: 'allocate_new_eip' can only be set to 'false' when cloud_type is AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048) or AWS Top Secret (16384)")
 			}
 			if _, ok := d.GetOk("eip"); !ok {
 				return fmt.Errorf("failed to create spoke gateway: 'eip' must be set when 'allocate_new_eip' is false")
@@ -1034,6 +1041,15 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	bgpManualSpokeAdvertiseCidrs := d.Get("bgp_manual_spoke_advertise_cidrs").(string)
+	if bgpManualSpokeAdvertiseCidrs != "" {
+		gateway.BgpManualSpokeAdvertiseCidrs = bgpManualSpokeAdvertiseCidrs
+		err := client.SetBgpManualSpokeAdvertisedNetworksSpoke(gateway)
+		if err != nil {
+			return fmt.Errorf("failed to set BGP Manual Spoke Advertise Cidrs: %s", err)
+		}
+	}
+
 	if val, ok := d.GetOk("bgp_ecmp"); ok {
 		err := client.SetBgpEcmpSpoke(gateway, val.(bool))
 		if err != nil {
@@ -1070,7 +1086,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	if holdTime := d.Get("bgp_hold_time").(int); holdTime != defaultBgpHoldTime {
 		err := client.ChangeBgpHoldTime(gateway.GwName, holdTime)
 		if err != nil {
-			return fmt.Errorf("could not change BGP Hold Time after Transit Gateway creation: %v", err)
+			return fmt.Errorf("could not change BGP Hold Time after Spoke Gateway creation: %v", err)
 		}
 	}
 
@@ -1291,6 +1307,25 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 				log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
 			}
 		}
+	}
+
+	var bgpManualSpokeAdvertiseCidrs []string
+	if _, ok := d.GetOk("bgp_manual_spoke_advertise_cidrs"); ok {
+		bgpManualSpokeAdvertiseCidrs = strings.Split(d.Get("bgp_manual_spoke_advertise_cidrs").(string), ",")
+	}
+	if len(goaviatrix.Difference(bgpManualSpokeAdvertiseCidrs, gw.BgpManualSpokeAdvertiseCidrs)) != 0 ||
+		len(goaviatrix.Difference(gw.BgpManualSpokeAdvertiseCidrs, bgpManualSpokeAdvertiseCidrs)) != 0 {
+		bgpMSAN := ""
+		for i := range gw.BgpManualSpokeAdvertiseCidrs {
+			if i == 0 {
+				bgpMSAN = bgpMSAN + gw.BgpManualSpokeAdvertiseCidrs[i]
+			} else {
+				bgpMSAN = bgpMSAN + "," + gw.BgpManualSpokeAdvertiseCidrs[i]
+			}
+		}
+		d.Set("bgp_manual_spoke_advertise_cidrs", bgpMSAN)
+	} else {
+		d.Set("bgp_manual_spoke_advertise_cidrs", d.Get("bgp_manual_spoke_advertise_cidrs").(string))
 	}
 
 	d.Set("enable_private_oob", gw.EnablePrivateOob)
@@ -2211,6 +2246,18 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	if d.HasChange("bgp_manual_spoke_advertise_cidrs") {
+		spokeGw := &goaviatrix.SpokeVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		bgpManualSpokeAdvertiseCidrs := d.Get("bgp_manual_spoke_advertise_cidrs").(string)
+		spokeGw.BgpManualSpokeAdvertiseCidrs = bgpManualSpokeAdvertiseCidrs
+		err := client.SetBgpManualSpokeAdvertisedNetworksSpoke(spokeGw)
+		if err != nil {
+			return fmt.Errorf("failed to set bgp manual spoke advertise CIDRs during Spoke Gateway update: %s", err)
+		}
+	}
+
 	if d.HasChange("bgp_ecmp") {
 		enabled := d.Get("bgp_ecmp").(bool)
 		gateway := &goaviatrix.SpokeVpc{
@@ -2218,7 +2265,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 		err := client.SetBgpEcmpSpoke(gateway, enabled)
 		if err != nil {
-			return fmt.Errorf("could not set bgp_ecmp: %v", err)
+			return fmt.Errorf("could not set bgp_ecmp during Spoke Gateway update: %v", err)
 		}
 	}
 
@@ -2228,11 +2275,11 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 		if d.Get("enable_active_standby").(bool) {
 			if err := client.EnableActiveStandbySpoke(gateway); err != nil {
-				return fmt.Errorf("could not enable active standby mode: %v", err)
+				return fmt.Errorf("could not enable active standby mode during Spoke Gateway update: %v", err)
 			}
 		} else {
 			if err := client.DisableActiveStandbySpoke(gateway); err != nil {
-				return fmt.Errorf("could not disable active standby mode: %v", err)
+				return fmt.Errorf("could not disable active standby mode during Spoke Gateway update: %v", err)
 			}
 		}
 	}
@@ -2248,7 +2295,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 		err := client.SetPrependASPathSpoke(gateway, prependASPath)
 		if err != nil {
-			return fmt.Errorf("could not set prepend_as_path: %v", err)
+			return fmt.Errorf("could not set prepend_as_path during Spoke Gateway update: %v", err)
 		}
 	}
 
@@ -2259,14 +2306,14 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 		err := client.SetBgpPollingTimeSpoke(gateway, bgpPollingTime)
 		if err != nil {
-			return fmt.Errorf("could not update bgp polling time: %v", err)
+			return fmt.Errorf("could not update bgp polling time during Spoke Gateway update: %v", err)
 		}
 	}
 
 	if d.HasChange("bgp_hold_time") {
 		err := client.ChangeBgpHoldTime(gateway.GwName, d.Get("bgp_hold_time").(int))
 		if err != nil {
-			return fmt.Errorf("could not change BGP Hold Time during Transit Gateway update: %v", err)
+			return fmt.Errorf("could not change BGP Hold Time during Spoke Gateway update: %v", err)
 		}
 	}
 
