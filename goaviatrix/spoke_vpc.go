@@ -356,7 +356,7 @@ func (c *Client) SetBgpPollingTimeSpoke(spokeGateway *SpokeVpc, newPollingTime s
 func (c *Client) SetBgpManualSpokeAdvertisedNetworksSpoke(spokeGateway *SpokeVpc) error {
 	form := map[string]string{
 		"CID":                              c.CID,
-		"action":                           "edit_aviatrix_transit_advanced_config",
+		"action":                           "list_aviatrix_spoke_advanced_config",
 		"subaction":                        "bgp_manual_spoke",
 		"gateway_name":                     spokeGateway.GwName,
 		"bgp_manual_spoke_advertise_cidrs": spokeGateway.BgpManualSpokeAdvertiseCidrs,
@@ -397,7 +397,7 @@ func (c *Client) UpdateSpokePendingApprovedCidrs(gateway *SpokeVpc) error {
 }
 
 func (c *Client) SetLocalASNumberSpoke(spokeGateway *SpokeVpc, localASNumber string) error {
-	action := "edit_transit_local_as_number"
+	action := "edit_spoke_local_as_number"
 	return c.PostAPI(action, struct {
 		CID           string `form:"CID"`
 		Action        string `form:"action"`
