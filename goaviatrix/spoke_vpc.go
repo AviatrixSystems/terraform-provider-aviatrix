@@ -356,7 +356,7 @@ func (c *Client) SetBgpPollingTimeSpoke(spokeGateway *SpokeVpc, newPollingTime s
 func (c *Client) SetBgpManualSpokeAdvertisedNetworksSpoke(spokeGateway *SpokeVpc) error {
 	form := map[string]string{
 		"CID":                              c.CID,
-		"action":                           "list_aviatrix_spoke_advanced_config",
+		"action":                           "edit_aviatrix_spoke_advanced_config",
 		"subaction":                        "bgp_manual_spoke",
 		"gateway_name":                     spokeGateway.GwName,
 		"bgp_manual_spoke_advertise_cidrs": spokeGateway.BgpManualSpokeAdvertiseCidrs,
