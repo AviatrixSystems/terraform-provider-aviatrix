@@ -411,7 +411,7 @@ func (c *Client) SetLocalASNumberSpoke(spokeGateway *SpokeVpc, localASNumber str
 	}, func(action, method, reason string, ret bool) error {
 		if !ret {
 			// Tried to set ASN to the same value, don't fail
-			if strings.Contains(reason, "No change on transit gateway") {
+			if strings.Contains(reason, "No change on gateway") {
 				return nil
 			}
 			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
