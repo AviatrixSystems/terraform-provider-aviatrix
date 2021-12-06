@@ -302,6 +302,30 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				ForceNew:    true,
 				Description: "Enable BGP. Default: false.",
 			},
+			"enable_learned_cidrs_approval": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Switch to enable/disable encrypted transit approval for BGP Spoke Gateway. Valid values: true, false.",
+			},
+			"learned_cidrs_approval_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      defaultLearnedCidrApprovalMode,
+				ValidateFunc: validation.StringInSlice([]string{"gateway"}, false),
+				Description: "Set the learned CIDRs approval mode. Only valid when 'enable_learned_cidrs_approval' is " +
+					"set to true. Only 'gateway' is supported for BGP spoke gateway. Learned CIDR approval applies to " +
+					"ALL connections. Default value: 'gateway'.",
+			},
+			"approved_learned_cidrs": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsCIDR,
+				},
+				Optional:    true,
+				Description: "Approved learned CIDRs. Available as of provider version R2.21+.",
+			},
 			"bgp_ecmp": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -314,10 +338,18 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enables Active-Standby Mode, available only with HA enabled.",
 			},
+			"local_as_number": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "Changes the Aviatrix Spoke Gateway ASN number before you setup Aviatrix Spoke Gateway connection configurations.",
+				ValidateFunc: goaviatrix.ValidateASN,
+			},
 			"prepend_as_path": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "List of AS numbers to populate BGP AP_PATH field when it advertises to VGW or peer devices.",
+				Type:         schema.TypeList,
+				Optional:     true,
+				RequiredWith: []string{"local_as_number"},
+				Description:  "List of AS numbers to populate BGP AP_PATH field when it advertises to VGW or peer devices.",
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: goaviatrix.ValidateASN,
@@ -482,14 +514,15 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	client := meta.(*goaviatrix.Client)
 
 	gateway := &goaviatrix.SpokeVpc{
-		CloudType:          d.Get("cloud_type").(int),
-		AccountName:        d.Get("account_name").(string),
-		GwName:             d.Get("gw_name").(string),
-		VpcSize:            d.Get("gw_size").(string),
-		Subnet:             d.Get("subnet").(string),
-		HASubnet:           d.Get("ha_subnet").(string),
-		AvailabilityDomain: d.Get("availability_domain").(string),
-		FaultDomain:        d.Get("fault_domain").(string),
+		CloudType:            d.Get("cloud_type").(int),
+		AccountName:          d.Get("account_name").(string),
+		GwName:               d.Get("gw_name").(string),
+		VpcSize:              d.Get("gw_size").(string),
+		Subnet:               d.Get("subnet").(string),
+		HASubnet:             d.Get("ha_subnet").(string),
+		AvailabilityDomain:   d.Get("availability_domain").(string),
+		FaultDomain:          d.Get("fault_domain").(string),
+		ApprovedLearnedCidrs: getStringSet(d, "approved_learned_cidrs"),
 	}
 
 	manageTransitGwAttachment := d.Get("manage_transit_gateway_attachment").(bool)
@@ -528,6 +561,11 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("enabling BGP is only supported for AWS (1) and Azure (8)")
 		}
 		gateway.EnableBgp = "on"
+	}
+
+	learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
+	if !learnedCidrsApproval && len(gateway.ApprovedLearnedCidrs) != 0 {
+		return fmt.Errorf("'approved_learned_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
 	}
 
 	enablePrivateOob := d.Get("enable_private_oob").(bool)
@@ -1041,6 +1079,20 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	if learnedCidrsApproval {
+		gateway.LearnedCidrsApproval = "on"
+		err := client.EnableSpokeLearnedCidrsApproval(gateway)
+		if err != nil {
+			return fmt.Errorf("failed to enable learned cidrs approval: %s", err)
+		}
+	}
+	if len(gateway.ApprovedLearnedCidrs) != 0 {
+		err := client.UpdateSpokePendingApprovedCidrs(gateway)
+		if err != nil {
+			return fmt.Errorf("failed to update approved CIDRs: %v", err)
+		}
+	}
+
 	bgpManualSpokeAdvertiseCidrs := d.Get("bgp_manual_spoke_advertise_cidrs").(string)
 	if bgpManualSpokeAdvertiseCidrs != "" {
 		gateway.BgpManualSpokeAdvertiseCidrs = bgpManualSpokeAdvertiseCidrs
@@ -1061,6 +1113,13 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	if enableActiveStandby {
 		if err := client.EnableActiveStandbySpoke(gateway); err != nil {
 			return fmt.Errorf("could not enable Active Standby Mode: %v", err)
+		}
+	}
+
+	if val, ok := d.GetOk("local_as_number"); ok {
+		err := client.SetLocalASNumberSpoke(gateway, val.(string))
+		if err != nil {
+			return fmt.Errorf("could not set local_as_number: %v", err)
 		}
 	}
 
@@ -1149,6 +1208,21 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("enable_vpc_dns_server", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled")
 	d.Set("single_ip_snat", gw.EnableNat == "yes" && gw.SnatMode == "primary")
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
+	d.Set("enable_learned_cidrs_approval", gw.EnableLearnedCidrsApproval)
+	d.Set("learned_cidrs_approval_mode", gw.LearnedCidrsApprovalMode)
+	if gw.EnableLearnedCidrsApproval {
+		spokeAdvancedConfig, err := client.GetSpokeGatewayAdvancedConfig(&goaviatrix.SpokeVpc{GwName: gw.GwName})
+		if err != nil {
+			return fmt.Errorf("could not get advanced config for spoke gateway: %v", err)
+		}
+
+		if err = d.Set("approved_learned_cidrs", spokeAdvancedConfig.ApprovedLearnedCidrs); err != nil {
+			return fmt.Errorf("could not set approved_learned_cidrs into state: %v", err)
+		}
+	} else {
+		d.Set("approved_learned_cidrs", nil)
+	}
+	d.Set("local_as_number", gw.LocalASNumber)
 	d.Set("bgp_ecmp", gw.BgpEcmp)
 	d.Set("enable_active_standby", gw.EnableActiveStandby)
 	var prependAsPath []string
@@ -1511,6 +1585,12 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	}
 	if d.HasChange("spot_price") {
 		return fmt.Errorf("updating spot_price is not allowed")
+	}
+
+	learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
+	approvedLearnedCidrs := getStringSet(d, "approved_learned_cidrs")
+	if !learnedCidrsApproval && len(approvedLearnedCidrs) != 0 {
+		return fmt.Errorf("'approved_learned_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
 	}
 
 	if d.HasChange("enable_private_oob") {
@@ -1901,6 +1981,37 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("'enable_vpc_dns_server' only supported by AWS (1), Azure (8), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192), AWS Top Secret (16384) and AWS Secret (32768)")
 	}
 
+	if d.HasChange("enable_learned_cidrs_approval") {
+		gw := &goaviatrix.SpokeVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		if learnedCidrsApproval {
+			gw.LearnedCidrsApproval = "on"
+			err := client.EnableSpokeLearnedCidrsApproval(gw)
+			if err != nil {
+				return fmt.Errorf("failed to enable learned cidrs approval: %s", err)
+			}
+		} else {
+			gw.LearnedCidrsApproval = "off"
+			err := client.DisableSpokeLearnedCidrsApproval(gw)
+			if err != nil {
+				return fmt.Errorf("failed to disable learned cidrs approval: %s", err)
+			}
+		}
+	}
+
+	if learnedCidrsApproval && d.HasChange("approved_learned_cidrs") {
+		gw := &goaviatrix.SpokeVpc{
+			GwName:               d.Get("gw_name").(string),
+			ApprovedLearnedCidrs: approvedLearnedCidrs,
+		}
+
+		err := client.UpdateSpokePendingApprovedCidrs(gw)
+		if err != nil {
+			return fmt.Errorf("could not update approved CIDRs: %v", err)
+		}
+	}
+
 	if d.HasChange("enable_encrypt_volume") {
 		if d.Get("enable_encrypt_volume").(bool) {
 			if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
@@ -2281,6 +2392,17 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			if err := client.DisableActiveStandbySpoke(gateway); err != nil {
 				return fmt.Errorf("could not disable active standby mode during Spoke Gateway update: %v", err)
 			}
+		}
+	}
+
+	if d.HasChange("local_as_number") {
+		localAsNumber := d.Get("local_as_number").(string)
+		gateway := &goaviatrix.SpokeVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		err := client.SetLocalASNumberSpoke(gateway, localAsNumber)
+		if err != nil {
+			return fmt.Errorf("could not set local_as_number: %v", err)
 		}
 	}
 
