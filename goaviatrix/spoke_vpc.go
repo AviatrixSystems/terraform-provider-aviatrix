@@ -39,11 +39,13 @@ type SpokeVpc struct {
 	EnablePrivateOob             string `form:"private_oob,omitempty"`
 	OobManagementSubnet          string `form:"oob_mgmt_subnet,omitempty"`
 	HAOobManagementSubnet        string
-	AvailabilityDomain           string `form:"availability_domain,omitempty"`
-	FaultDomain                  string `form:"fault_domain,omitempty"`
-	EnableSpotInstance           bool   `form:"spot_instance,omitempty"`
-	SpotPrice                    string `form:"spot_price,omitempty"`
-	EnableBgp                    string `form:"enable_bgp"`
+	AvailabilityDomain           string   `form:"availability_domain,omitempty"`
+	FaultDomain                  string   `form:"fault_domain,omitempty"`
+	EnableSpotInstance           bool     `form:"spot_instance,omitempty"`
+	SpotPrice                    string   `form:"spot_price,omitempty"`
+	EnableBgp                    string   `form:"enable_bgp"`
+	LearnedCidrsApproval         string   `form:"learned_cidrs_approval,omitempty"`
+	ApprovedLearnedCidrs         []string `form:"approved_learned_cidrs"`
 }
 
 type SpokeGatewayAdvancedConfig struct {
@@ -361,4 +363,59 @@ func (c *Client) SetBgpManualSpokeAdvertisedNetworksSpoke(spokeGateway *SpokeVpc
 	}
 
 	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
+func (c *Client) EnableSpokeLearnedCidrsApproval(gateway *SpokeVpc) error {
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "enable_transit_learned_cidrs_approval",
+		"gateway_name": gateway.GwName,
+	}
+
+	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
+func (c *Client) DisableSpokeLearnedCidrsApproval(gateway *SpokeVpc) error {
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "disable_transit_learned_cidrs_approval",
+		"gateway_name": gateway.GwName,
+	}
+
+	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
+func (c *Client) UpdateSpokePendingApprovedCidrs(gateway *SpokeVpc) error {
+	form := map[string]string{
+		"CID":                    c.CID,
+		"action":                 "update_transit_pending_approved_cidrs",
+		"gateway_name":           gateway.GwName,
+		"approved_learned_cidrs": strings.Join(gateway.ApprovedLearnedCidrs, ","),
+	}
+
+	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
+func (c *Client) SetLocalASNumberSpoke(spokeGateway *SpokeVpc, localASNumber string) error {
+	action := "edit_transit_local_as_number"
+	return c.PostAPI(action, struct {
+		CID           string `form:"CID"`
+		Action        string `form:"action"`
+		GatewayName   string `form:"gateway_name"`
+		LocalASNumber string `form:"local_as_num"`
+	}{
+		CID:           c.CID,
+		Action:        action,
+		GatewayName:   spokeGateway.GwName,
+		LocalASNumber: localASNumber,
+	}, func(action, method, reason string, ret bool) error {
+		if !ret {
+			// Tried to set ASN to the same value, don't fail
+			if strings.Contains(reason, "No change on transit gateway") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
+		}
+		return nil
+	})
 }

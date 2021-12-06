@@ -296,9 +296,10 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "BGP route polling time. Unit is in seconds. Valid values are between 10 and 50.",
 			},
 			"prepend_as_path": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "List of AS numbers to populate BGP AP_PATH field when it advertises to VGW or peer devices.",
+				Type:         schema.TypeList,
+				Optional:     true,
+				RequiredWith: []string{"local_as_number"},
+				Description:  "List of AS numbers to populate BGP AP_PATH field when it advertises to VGW or peer devices.",
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: goaviatrix.ValidateASN,
@@ -1438,7 +1439,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 
 		if err = d.Set("approved_learned_cidrs", transitAdvancedConfig.ApprovedLearnedCidrs); err != nil {
-			return fmt.Errorf("could not set transitAdvancedConfig.ApprovedLearnedCidrs into state: %v", err)
+			return fmt.Errorf("could not set approved_learned_cidrs into state: %v", err)
 		}
 	} else {
 		d.Set("approved_learned_cidrs", nil)
