@@ -353,7 +353,7 @@ func (c *Client) SetBgpPollingTimeSpoke(spokeGateway *SpokeVpc, newPollingTime s
 	}, BasicCheck)
 }
 
-func (c *Client) SetBgpManualSpokeAdvertisedNetworksSpoke(spokeGateway *SpokeVpc) error {
+func (c *Client) SetSpokeBgpManualAdvertisedNetworks(spokeGateway *SpokeVpc) error {
 	form := map[string]string{
 		"CID":                              c.CID,
 		"action":                           "edit_aviatrix_spoke_advanced_config",

@@ -192,7 +192,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Optional:         true,
 				Default:          "",
 				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceInString,
-				Description:      "Intended CIDR list to advertise to VGW.",
+				Description:      "Intended CIDR list to be advertised to external bgp router.",
 			},
 			"enable_encrypt_volume": {
 				Type:        schema.TypeBool,
