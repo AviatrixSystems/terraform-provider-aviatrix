@@ -288,12 +288,12 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Automatically advertise remote CIDR to Aviatrix Transit Gateway when route based Site2Cloud Tunnel is created.",
 			},
-			"bgp_manual_spoke_advertise_cidrs": {
+			"spoke_bgp_manual_advertise_cidrs": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          "",
 				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceInString,
-				Description:      "Intended CIDR list to advertise to VGW.",
+				Description:      "Intended CIDR list to be advertised to external BGP router.",
 			},
 			"enable_bgp": {
 				Type:        schema.TypeBool,
@@ -1093,12 +1093,12 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	bgpManualSpokeAdvertiseCidrs := d.Get("bgp_manual_spoke_advertise_cidrs").(string)
-	if bgpManualSpokeAdvertiseCidrs != "" {
-		gateway.BgpManualSpokeAdvertiseCidrs = bgpManualSpokeAdvertiseCidrs
-		err := client.SetBgpManualSpokeAdvertisedNetworksSpoke(gateway)
+	spokeBgpManualSpokeAdvertiseCidrs := d.Get("spoke_bgp_manual_advertise_cidrs").(string)
+	if spokeBgpManualSpokeAdvertiseCidrs != "" {
+		gateway.BgpManualSpokeAdvertiseCidrs = spokeBgpManualSpokeAdvertiseCidrs
+		err := client.SetSpokeBgpManualAdvertisedNetworks(gateway)
 		if err != nil {
-			return fmt.Errorf("failed to set BGP Manual Spoke Advertise Cidrs: %s", err)
+			return fmt.Errorf("failed to set spoke BGP Manual Advertise Cidrs: %s", err)
 		}
 	}
 
@@ -1383,12 +1383,12 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	var bgpManualSpokeAdvertiseCidrs []string
-	if _, ok := d.GetOk("bgp_manual_spoke_advertise_cidrs"); ok {
-		bgpManualSpokeAdvertiseCidrs = strings.Split(d.Get("bgp_manual_spoke_advertise_cidrs").(string), ",")
+	var spokeBgpManualAdvertiseCidrs []string
+	if _, ok := d.GetOk("spoke_bgp_manual_advertise_cidrs"); ok {
+		spokeBgpManualAdvertiseCidrs = strings.Split(d.Get("spoke_bgp_manual_advertise_cidrs").(string), ",")
 	}
-	if len(goaviatrix.Difference(bgpManualSpokeAdvertiseCidrs, gw.BgpManualSpokeAdvertiseCidrs)) != 0 ||
-		len(goaviatrix.Difference(gw.BgpManualSpokeAdvertiseCidrs, bgpManualSpokeAdvertiseCidrs)) != 0 {
+	if len(goaviatrix.Difference(spokeBgpManualAdvertiseCidrs, gw.BgpManualSpokeAdvertiseCidrs)) != 0 ||
+		len(goaviatrix.Difference(gw.BgpManualSpokeAdvertiseCidrs, spokeBgpManualAdvertiseCidrs)) != 0 {
 		bgpMSAN := ""
 		for i := range gw.BgpManualSpokeAdvertiseCidrs {
 			if i == 0 {
@@ -1397,9 +1397,9 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 				bgpMSAN = bgpMSAN + "," + gw.BgpManualSpokeAdvertiseCidrs[i]
 			}
 		}
-		d.Set("bgp_manual_spoke_advertise_cidrs", bgpMSAN)
+		d.Set("spoke_bgp_manual_advertise_cidrs", bgpMSAN)
 	} else {
-		d.Set("bgp_manual_spoke_advertise_cidrs", d.Get("bgp_manual_spoke_advertise_cidrs").(string))
+		d.Set("spoke_bgp_manual_advertise_cidrs", d.Get("spoke_bgp_manual_advertise_cidrs").(string))
 	}
 
 	d.Set("enable_private_oob", gw.EnablePrivateOob)
@@ -2357,15 +2357,15 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if d.HasChange("bgp_manual_spoke_advertise_cidrs") {
+	if d.HasChange("spoke_bgp_manual_advertise_cidrs") {
 		spokeGw := &goaviatrix.SpokeVpc{
 			GwName: d.Get("gw_name").(string),
 		}
-		bgpManualSpokeAdvertiseCidrs := d.Get("bgp_manual_spoke_advertise_cidrs").(string)
-		spokeGw.BgpManualSpokeAdvertiseCidrs = bgpManualSpokeAdvertiseCidrs
-		err := client.SetBgpManualSpokeAdvertisedNetworksSpoke(spokeGw)
+		spokeBgpManualAdvertiseCidrs := d.Get("spoke_bgp_manual_advertise_cidrs").(string)
+		spokeGw.BgpManualSpokeAdvertiseCidrs = spokeBgpManualAdvertiseCidrs
+		err := client.SetSpokeBgpManualAdvertisedNetworks(spokeGw)
 		if err != nil {
-			return fmt.Errorf("failed to set bgp manual spoke advertise CIDRs during Spoke Gateway update: %s", err)
+			return fmt.Errorf("failed to set spoke bgp manual advertise CIDRs during Spoke Gateway update: %s", err)
 		}
 	}
 
