@@ -313,8 +313,8 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Optional:     true,
 				Default:      defaultLearnedCidrApprovalMode,
 				ValidateFunc: validation.StringInSlice([]string{"gateway"}, false),
-				Description: "Set the learned CIDRs approval mode. Only valid when 'enable_learned_cidrs_approval' is " +
-					"set to true. Only 'gateway' is supported for BGP spoke gateway. Learned CIDR approval applies to " +
+				Description: "Set the learned CIDRs approval mode for BGP Spoke Gateway. Only valid when 'enable_learned_cidrs_approval' is " +
+					"set to true. Currently, only 'gateway' is supported: learned CIDR approval applies to " +
 					"ALL connections. Default value: 'gateway'.",
 			},
 			"approved_learned_cidrs": {
@@ -324,49 +324,50 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 					ValidateFunc: validation.IsCIDR,
 				},
 				Optional:    true,
-				Description: "Approved learned CIDRs. Available as of provider version R2.21+.",
+				Description: "Approved learned CIDRs for BGP Spoke Gateway. Available as of provider version R2.21+.",
 			},
 			"bgp_ecmp": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Enable Equal Cost Multi Path (ECMP) routing for the next hop.",
+				Description: "Enable Equal Cost Multi Path (ECMP) routing for the next hop for BGP Spoke Gateway.",
 			},
 			"enable_active_standby": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Enables Active-Standby Mode, available only with HA enabled.",
+				Description: "Enables Active-Standby Mode, available only with HA enabled for BGP Spoke Gateway.",
 			},
 			"local_as_number": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				Description:  "Changes the Aviatrix Spoke Gateway ASN number before you setup Aviatrix Spoke Gateway connection configurations.",
+				Description:  "Changes the Aviatrix BGP Spoke Gateway ASN number before you setup Aviatrix BGP Spoke Gateway connection configurations.",
 				ValidateFunc: goaviatrix.ValidateASN,
 			},
 			"prepend_as_path": {
 				Type:         schema.TypeList,
 				Optional:     true,
 				RequiredWith: []string{"local_as_number"},
-				Description:  "List of AS numbers to populate BGP AP_PATH field when it advertises to VGW or peer devices.",
+				Description:  "List of AS numbers to populate BGP AP_PATH field when it advertises to VGW or peer devices. Only valid for BGP Spoke Gateway",
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: goaviatrix.ValidateASN,
 				},
 			},
 			"bgp_polling_time": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "50",
-				Description: "BGP route polling time. Unit is in seconds. Valid values are between 10 and 50.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      50,
+				ValidateFunc: validation.IntBetween(10, 50),
+				Description:  "BGP route polling time for BGP Spoke Gateway. Unit is in seconds. Valid values are between 10 and 50.",
 			},
 			"bgp_hold_time": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      defaultBgpHoldTime,
 				ValidateFunc: validation.IntBetween(12, 360),
-				Description:  "BGP Hold Time.",
+				Description:  "BGP Hold Time for BGP Spoke Gateway. Unit is in seconds. Valid values are between 12 and 360.",
 			},
 			"enable_spot_instance": {
 				Type:         schema.TypeBool,
@@ -1136,7 +1137,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if val, ok := d.GetOk("bgp_polling_time"); ok {
-		err := client.SetBgpPollingTimeSpoke(gateway, val.(string))
+		err := client.SetBgpPollingTimeSpoke(gateway, strconv.Itoa(val.(int)))
 		if err != nil {
 			return fmt.Errorf("could not set bgp polling time: %v", err)
 		}
@@ -1204,12 +1205,11 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("ha_security_group_id", gw.HaGw.GwSecurityGroupID)
 	d.Set("private_ip", gw.PrivateIP)
 	d.Set("single_az_ha", gw.SingleAZ == "yes")
-	d.Set("enable_bgp", gw.EnableBgp)
 	d.Set("enable_vpc_dns_server", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled")
 	d.Set("single_ip_snat", gw.EnableNat == "yes" && gw.SnatMode == "primary")
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
+	d.Set("enable_bgp", gw.EnableBgp)
 	d.Set("enable_learned_cidrs_approval", gw.EnableLearnedCidrsApproval)
-	d.Set("learned_cidrs_approval_mode", gw.LearnedCidrsApprovalMode)
 	if gw.EnableLearnedCidrsApproval {
 		spokeAdvancedConfig, err := client.GetSpokeGatewayAdvancedConfig(&goaviatrix.SpokeVpc{GwName: gw.GwName})
 		if err != nil {
@@ -1235,8 +1235,15 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	if err != nil {
 		return fmt.Errorf("could not set prepend_as_path: %v", err)
 	}
-	d.Set("bgp_polling_time", strconv.Itoa(gw.BgpPollingTime))
-	d.Set("bgp_hold_time", gw.BgpHoldTime)
+	if gw.EnableBgp {
+		d.Set("learned_cidrs_approval_mode", gw.LearnedCidrsApprovalMode)
+		d.Set("bgp_polling_time", gw.BgpPollingTime)
+		d.Set("bgp_hold_time", gw.BgpHoldTime)
+	} else {
+		d.Set("learned_cidrs_approval_mode", "gateway")
+		d.Set("bgp_polling_time", 50)
+		d.Set("bgp_hold_time", 180)
+	}
 	d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
 	d.Set("image_version", gw.ImageVersion)
 	d.Set("software_version", gw.SoftwareVersion)
@@ -2422,11 +2429,11 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	}
 
 	if d.HasChange("bgp_polling_time") {
-		bgpPollingTime := d.Get("bgp_polling_time").(string)
+		bgpPollingTime := d.Get("bgp_polling_time")
 		gateway := &goaviatrix.SpokeVpc{
 			GwName: d.Get("gw_name").(string),
 		}
-		err := client.SetBgpPollingTimeSpoke(gateway, bgpPollingTime)
+		err := client.SetBgpPollingTimeSpoke(gateway, strconv.Itoa(bgpPollingTime.(int)))
 		if err != nil {
 			return fmt.Errorf("could not update bgp polling time during Spoke Gateway update: %v", err)
 		}
