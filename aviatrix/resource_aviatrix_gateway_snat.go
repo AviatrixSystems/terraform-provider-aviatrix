@@ -111,6 +111,12 @@ func resourceAviatrixGatewaySNat() *schema.Resource {
 							Optional:    true,
 							Description: "This field specifies which VPC private route table will not be programmed with the default route entry.",
 						},
+						"apply_route_entry": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     true,
+							Description: "This is an option to program the route entry 'DST CIDR pointing to Aviatrix Gateway' into Cloud platform routing table. Type: Boolean. Default: True.",
+						},
 					},
 				},
 			},
@@ -142,17 +148,18 @@ func resourceAviatrixGatewaySNatCreate(d *schema.ResourceData, meta interface{})
 		for _, policy := range policies {
 			pl := policy.(map[string]interface{})
 			customPolicy := &goaviatrix.PolicyRule{
-				SrcIP:      pl["src_cidr"].(string),
-				SrcPort:    pl["src_port"].(string),
-				DstIP:      pl["dst_cidr"].(string),
-				DstPort:    pl["dst_port"].(string),
-				Protocol:   pl["protocol"].(string),
-				Interface:  pl["interface"].(string),
-				Connection: pl["connection"].(string),
-				Mark:       pl["mark"].(string),
-				NewSrcIP:   pl["snat_ips"].(string),
-				NewSrcPort: pl["snat_port"].(string),
-				ExcludeRTB: pl["exclude_rtb"].(string),
+				SrcIP:           pl["src_cidr"].(string),
+				SrcPort:         pl["src_port"].(string),
+				DstIP:           pl["dst_cidr"].(string),
+				DstPort:         pl["dst_port"].(string),
+				Protocol:        pl["protocol"].(string),
+				Interface:       pl["interface"].(string),
+				Connection:      pl["connection"].(string),
+				Mark:            pl["mark"].(string),
+				NewSrcIP:        pl["snat_ips"].(string),
+				NewSrcPort:      pl["snat_port"].(string),
+				ExcludeRTB:      pl["exclude_rtb"].(string),
+				ApplyRouteEntry: pl["apply_route_entry"].(bool),
 			}
 			gateway.SnatPolicy = append(gateway.SnatPolicy, *customPolicy)
 		}
@@ -230,6 +237,7 @@ func resourceAviatrixGatewaySNatRead(d *schema.ResourceData, meta interface{}) e
 				sP["snat_ips"] = policy.NewSrcIP
 				sP["snat_port"] = policy.NewSrcPort
 				sP["exclude_rtb"] = policy.ExcludeRTB
+				sP["apply_route_entry"] = policy.ApplyRouteEntry
 
 				// To deduplicate we will generate a unique key for each policy.
 				key := fmt.Sprintf("%s~%s~%s~%s~%s~%s~%s~%s~%s~%s~%s", policy.SrcIP, policy.SrcPort, policy.DstIP,
@@ -281,17 +289,18 @@ func resourceAviatrixGatewaySNatUpdate(d *schema.ResourceData, meta interface{})
 			for _, policy := range policies {
 				pl := policy.(map[string]interface{})
 				customPolicy := &goaviatrix.PolicyRule{
-					SrcIP:      pl["src_cidr"].(string),
-					SrcPort:    pl["src_port"].(string),
-					DstIP:      pl["dst_cidr"].(string),
-					DstPort:    pl["dst_port"].(string),
-					Protocol:   pl["protocol"].(string),
-					Interface:  pl["interface"].(string),
-					Connection: pl["connection"].(string),
-					Mark:       pl["mark"].(string),
-					NewSrcIP:   pl["snat_ips"].(string),
-					NewSrcPort: pl["snat_port"].(string),
-					ExcludeRTB: pl["exclude_rtb"].(string),
+					SrcIP:           pl["src_cidr"].(string),
+					SrcPort:         pl["src_port"].(string),
+					DstIP:           pl["dst_cidr"].(string),
+					DstPort:         pl["dst_port"].(string),
+					Protocol:        pl["protocol"].(string),
+					Interface:       pl["interface"].(string),
+					Connection:      pl["connection"].(string),
+					Mark:            pl["mark"].(string),
+					NewSrcIP:        pl["snat_ips"].(string),
+					NewSrcPort:      pl["snat_port"].(string),
+					ExcludeRTB:      pl["exclude_rtb"].(string),
+					ApplyRouteEntry: pl["apply_route_entry"].(bool),
 				}
 				gateway.SnatPolicy = append(gateway.SnatPolicy, *customPolicy)
 			}
