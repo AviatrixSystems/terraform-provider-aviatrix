@@ -1160,3 +1160,28 @@ func (c *Client) ModifyTunnelDetectionTime(entity string, detectionTime int) err
 
 	return c.PostAPI(form["action"], form, BasicCheck)
 }
+
+func (c *Client) GetBgpManualSpokeAdvertiseCidrs(gateway *Gateway) ([]string, error) {
+	form := map[string]string{
+		"CID":                  c.CID,
+		"action":               "list_aviatrix_transit_advanced_config",
+		"transit_gateway_name": gateway.GwName,
+	}
+
+	type AdvancedConfigResults struct {
+		BgpManualSpokeAdvertiseCidrs []string `json:"bgp_Manual_spoke_advertise_cidrs"`
+	}
+
+	type AdvancedConfigResp struct {
+		Return  bool
+		Results AdvancedConfigResults
+		Reason  string
+	}
+
+	var resp AdvancedConfigResp
+	err := c.GetAPI(&resp, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Results.BgpManualSpokeAdvertiseCidrs, nil
+}

@@ -1557,18 +1557,24 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("excluded_advertised_spoke_routes", "")
 	}
 
+	// GetGateway (list_vpcs_summary) returns an incorrect list for BGP Manual Spoke Advertise CIDRs. We must call a
+	// separate API (list_aviatrix_transit_advanced_config) to get the correct result
+	bgpManualSpokeAdvertiseCidrsRead, err := client.GetBgpManualSpokeAdvertiseCidrs(gw)
+	if err != nil {
+		return fmt.Errorf("failed to read BGP Manual Spoke Advertise CIDRs for Transit Gateway: %v", err)
+	}
 	var bgpManualSpokeAdvertiseCidrs []string
 	if _, ok := d.GetOk("bgp_manual_spoke_advertise_cidrs"); ok {
 		bgpManualSpokeAdvertiseCidrs = strings.Split(d.Get("bgp_manual_spoke_advertise_cidrs").(string), ",")
 	}
-	if len(goaviatrix.Difference(bgpManualSpokeAdvertiseCidrs, gw.BgpManualSpokeAdvertiseCidrs)) != 0 ||
-		len(goaviatrix.Difference(gw.BgpManualSpokeAdvertiseCidrs, bgpManualSpokeAdvertiseCidrs)) != 0 {
+	if len(goaviatrix.Difference(bgpManualSpokeAdvertiseCidrs, bgpManualSpokeAdvertiseCidrsRead)) != 0 ||
+		len(goaviatrix.Difference(bgpManualSpokeAdvertiseCidrsRead, bgpManualSpokeAdvertiseCidrs)) != 0 {
 		bgpMSAN := ""
-		for i := range gw.BgpManualSpokeAdvertiseCidrs {
+		for i := range bgpManualSpokeAdvertiseCidrsRead {
 			if i == 0 {
-				bgpMSAN = bgpMSAN + gw.BgpManualSpokeAdvertiseCidrs[i]
+				bgpMSAN = bgpMSAN + bgpManualSpokeAdvertiseCidrsRead[i]
 			} else {
-				bgpMSAN = bgpMSAN + "," + gw.BgpManualSpokeAdvertiseCidrs[i]
+				bgpMSAN = bgpMSAN + "," + bgpManualSpokeAdvertiseCidrsRead[i]
 			}
 		}
 		d.Set("bgp_manual_spoke_advertise_cidrs", bgpMSAN)
