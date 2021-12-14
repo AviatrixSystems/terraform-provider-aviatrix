@@ -345,6 +345,47 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				ForceNew:    true,
 				Description: "Pre-allocate a network interface(eth4) for \"BGP over LAN\" functionality. Only valid for cloud_type = 8 (Azure). Valid values: true or false. Default value: false. Available as of provider version R2.18+",
 			},
+			"bgp_lan_interfaces": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Interfaces to run BGP protocol on top of the ethernet interface, to connect to the onprem/remote peer. Only available for GCP Transit.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"vpc_id": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "VPC-ID of GCP cloud provider.",
+						},
+						"subnet": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.IsCIDR,
+							Description:  "Subnet Info.",
+						},
+					},
+				},
+			},
+			"ha_bgp_lan_interfaces": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Interfaces to run BGP protocol on top of the ethernet interface, to connect to the onprem/remote peer. Only available for GCP HA Transit.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"vpc_id": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "VPC-ID of GCP cloud provider.",
+						},
+						"subnet": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.IsCIDR,
+							Description:  "Subnet Info.",
+						},
+					},
+				},
+			},
 			"enable_private_oob": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -823,11 +864,44 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	}
 
 	bgpOverLan := d.Get("enable_bgp_over_lan").(bool)
-	if bgpOverLan && !goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-		return fmt.Errorf("'enable_bgp_over_lan' is only valid for Azure (8), AzureGov (32) or AzureChina (2048)")
+	if bgpOverLan && !(goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCP)) {
+		return fmt.Errorf("'enable_bgp_over_lan' is only valid for GCP (4), Azure (8), AzureGov (32) or AzureChina (2048)")
+	}
+	var bgpLanVpcID []string
+	var bgpLanSpecifySubnet []string
+	var haBgpLanVpcID []string
+	var haBgpLanSpecifySubnet []string
+	for _, bgpInterface := range d.Get("bgp_lan_interfaces").([]interface{}) {
+		item := bgpInterface.(map[string]interface{})
+		bgpLanVpcID = append(bgpLanVpcID, item["vpc_id"].(string))
+		bgpLanSpecifySubnet = append(bgpLanSpecifySubnet, item["subnet"].(string))
+	}
+	for _, haBgpInterface := range d.Get("ha_bgp_lan_interfaces").([]interface{}) {
+		item := haBgpInterface.(map[string]interface{})
+		haBgpLanVpcID = append(haBgpLanVpcID, item["vpc_id"].(string))
+		haBgpLanSpecifySubnet = append(haBgpLanSpecifySubnet, item["subnet"].(string))
+	}
+	if !bgpOverLan && len(bgpLanVpcID) != 0 {
+		return fmt.Errorf("'bgp_lan_interfaces' is only valid with enable_bgp_over_lan being set true")
+	}
+	if (!bgpOverLan || haSubnet == "") && len(haBgpLanVpcID) != 0 {
+		return fmt.Errorf("'ha_bgp_lan_interfaces' is only valid with enable_bgp_over_lan is set true and HA is enabled")
+	}
+	if (len(bgpLanVpcID) != 0 || len(haBgpLanVpcID) != 0) && !(goaviatrix.IsCloudType(cloudType, goaviatrix.GCP)) {
+		return fmt.Errorf("'bgp_lan_interfaces' and 'ha_bgp_lan_interfaces' are only valid for GCP (4)")
 	}
 	if bgpOverLan {
 		gateway.BgpOverLan = "on"
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.GCP) {
+			if len(bgpLanVpcID) == 0 {
+				return fmt.Errorf("missing bgp_lan_interfaces for creating GCP transit gateway with BGP over LAN enabled")
+			}
+			if (haSubnet != "" || haZone != "") && len(haBgpLanVpcID) == 0 {
+				return fmt.Errorf("missing ha_bgp_lan_interfaces for creating GCP HA transit gateway with BGP over LAN enabled")
+			}
+			gateway.BgpLanVpcID = strings.Join(bgpLanVpcID, ",")
+			gateway.BgpLanSpecifySubnet = strings.Join(bgpLanSpecifySubnet, ",")
+		}
 	}
 
 	oobManagementSubnet := d.Get("oob_management_subnet").(string)
@@ -938,7 +1012,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	d.SetId(gateway.GwName)
 	flag := false
 	defer resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
-
 	err := client.LaunchTransitVpc(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
@@ -972,10 +1045,13 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	if haSubnet != "" || haZone != "" {
 		//Enable HA
 		transitGateway := &goaviatrix.TransitVpc{
-			CloudType: d.Get("cloud_type").(int),
-			GwName:    d.Get("gw_name").(string),
-			HASubnet:  haSubnet,
-			Eip:       d.Get("ha_eip").(string),
+			CloudType:           d.Get("cloud_type").(int),
+			GwName:              d.Get("gw_name").(string),
+			HASubnet:            haSubnet,
+			Eip:                 d.Get("ha_eip").(string),
+			BgpOverLan:          "on",
+			BgpLanVpcID:         strings.Join(haBgpLanVpcID, ","),
+			BgpLanSpecifySubnet: strings.Join(haBgpLanSpecifySubnet, ","),
 		}
 
 		if insaneMode && goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
@@ -1405,7 +1481,34 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("local_as_number", gw.LocalASNumber)
 	d.Set("bgp_ecmp", gw.BgpEcmp)
 	d.Set("enable_active_standby", gw.EnableActiveStandby)
-	d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan)
+	d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan)
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan {
+		if len(gw.BgpLanInterfaces) != 0 {
+			var interfaces []map[string]interface{}
+			for _, bgpLanInterface := range gw.BgpLanInterfaces {
+				interfaceDict := make(map[string]interface{})
+				interfaceDict["vpc_id"] = bgpLanInterface.VpcID
+				interfaceDict["subnet"] = bgpLanInterface.Subnet
+				interfaces = append(interfaces, interfaceDict)
+			}
+			if err = d.Set("bgp_lan_interfaces", interfaces); err != nil {
+				return fmt.Errorf("could not set bgp_lan_interfaces into state: %v", err)
+			}
+		}
+
+		if len(gw.HaGw.HaBgpLanInterfaces) != 0 {
+			var haInterfaces []map[string]interface{}
+			for _, haBgpLanInterface := range gw.HaGw.HaBgpLanInterfaces {
+				interfaceDict := make(map[string]interface{})
+				interfaceDict["vpc_id"] = haBgpLanInterface.VpcID
+				interfaceDict["subnet"] = haBgpLanInterface.Subnet
+				haInterfaces = append(haInterfaces, interfaceDict)
+			}
+			if err = d.Set("ha_bgp_lan_interfaces", haInterfaces); err != nil {
+				return fmt.Errorf("could not set ha_bgp_lan_interfaces into state: %v", err)
+			}
+		}
+	}
 	d.Set("enable_transit_summarize_cidr_to_tgw", gw.EnableTransitSummarizeCidrToTgw)
 	d.Set("enable_segmentation", gw.EnableSegmentation)
 	d.Set("learned_cidrs_approval_mode", gw.LearnedCidrsApprovalMode)
@@ -1810,6 +1913,32 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	var haBgpLanVpcID []string
+	var haBgpLanSpecifySubnet []string
+	for _, haBgpInterface := range d.Get("ha_bgp_lan_interfaces").([]interface{}) {
+		item := haBgpInterface.(map[string]interface{})
+		haBgpLanVpcID = append(haBgpLanVpcID, item["vpc_id"].(string))
+		haBgpLanSpecifySubnet = append(haBgpLanSpecifySubnet, item["subnet"].(string))
+	}
+	if d.HasChange("ha_bgp_lan_interfaces") {
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+			return fmt.Errorf("updating ha_bgp_lan_interfaces is not allowed for non-GCP Transit Gateway")
+		}
+		if !d.Get("enable_bgp_over_lan").(bool) {
+			return fmt.Errorf("updating ha_bgp_lan_interfaces is not allowed for non-BGP over LAN GCP Transit Gateway")
+		}
+		if !d.HasChange("ha_subnet") {
+			return fmt.Errorf("ha_bgp_lan_interfaces can only be updated along with BGP over LAN enabled GCP HA Transit Gateway's creation or deletion")
+		}
+
+		newHaSubnet := d.Get("ha_subnet").(string)
+		if len(haBgpLanVpcID) == 0 && newHaSubnet != "" {
+			return fmt.Errorf("missing ha_bgp_lan_interfaces for creating GCP HA transit gateway with BGP over LAN enabled in update")
+		} else if len(haBgpLanVpcID) != 0 && newHaSubnet == "" {
+			return fmt.Errorf("ha_bgp_lan_interfaces should be set empty for destroying GCP HA transit gateway with BGP over LAN enabled in update")
+		}
+	}
+
 	newHaGwEnabled := false
 	if d.HasChange("ha_subnet") || d.HasChange("ha_zone") || d.HasChange("ha_insane_mode_az") ||
 		(enablePrivateOob && (d.HasChange("ha_oob_management_subnet") || d.HasChange("ha_oob_availability_zone"))) ||
@@ -1818,6 +1947,14 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			GwName:    d.Get("gw_name").(string),
 			CloudType: d.Get("cloud_type").(int),
 			GwSize:    d.Get("ha_gw_size").(string),
+		}
+
+		if d.Get("enable_bgp_over_lan").(bool) {
+			transitGw.BgpOverLan = "on"
+			if goaviatrix.IsCloudType(transitGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+				transitGw.BgpLanVpcID = strings.Join(haBgpLanVpcID, ",")
+				transitGw.BgpLanSpecifySubnet = strings.Join(haBgpLanSpecifySubnet, ",")
+			}
 		}
 
 		haEip := d.Get("ha_eip").(string)
