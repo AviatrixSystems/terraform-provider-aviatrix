@@ -188,25 +188,27 @@ type Gateway struct {
 	SoftwareVersion                 string                              `json:"gw_software_version"`
 	TransitVpc                      string                              `json:"transit_vpc"`
 	EnableBgp                       bool                                `json:"bgp_enabled,omitempty"`
+	BgpLanInterfaces                []BundleVpcLanInfo                  `json:"gce_bgp_lan_info,omitempty"`
 }
 
 type HaGateway struct {
-	GwName              string `json:"vpc_name"`
-	CloudType           int    `json:"cloud_type"`
-	GwSize              string `json:"vpc_size"`
-	VpcNet              string `json:"public_subnet"`
-	PublicIP            string `json:"public_ip"`
-	PrivateIP           string `json:"private_ip"`
-	ReuseEip            string `json:"reuse_eip,omitempty"`
-	CloudnGatewayInstID string `json:"cloudn_gateway_inst_id"`
-	GatewayZone         string `json:"gateway_zone"`
-	InsaneMode          string `json:"high_perf"`
-	EnablePrivateOob    bool   `json:"private_oob"`
-	OobManagementSubnet string `json:"oob_mgmt_subnet"`
-	GwSecurityGroupID   string `json:"gw_security_group_id"`
-	FaultDomain         string `json:"fault_domain"`
-	ImageVersion        string `json:"gw_image_name"`
-	SoftwareVersion     string `json:"gw_software_version"`
+	GwName              string             `json:"vpc_name"`
+	CloudType           int                `json:"cloud_type"`
+	GwSize              string             `json:"vpc_size"`
+	VpcNet              string             `json:"public_subnet"`
+	PublicIP            string             `json:"public_ip"`
+	PrivateIP           string             `json:"private_ip"`
+	ReuseEip            string             `json:"reuse_eip,omitempty"`
+	CloudnGatewayInstID string             `json:"cloudn_gateway_inst_id"`
+	GatewayZone         string             `json:"gateway_zone"`
+	InsaneMode          string             `json:"high_perf"`
+	EnablePrivateOob    bool               `json:"private_oob"`
+	OobManagementSubnet string             `json:"oob_mgmt_subnet"`
+	GwSecurityGroupID   string             `json:"gw_security_group_id"`
+	FaultDomain         string             `json:"fault_domain"`
+	ImageVersion        string             `json:"gw_image_name"`
+	SoftwareVersion     string             `json:"gw_software_version"`
+	HaBgpLanInterfaces  []BundleVpcLanInfo `json:"gce_ha_bgp_lan_info,omitempty"`
 }
 
 type PolicyRule struct {
@@ -258,7 +260,7 @@ type BundleVpcInfo struct {
 
 type BundleVpcLanInfo struct {
 	VpcID  string `json:"vpc_id"`
-	Subnet string
+	Subnet string `json:"subnet"`
 }
 
 type ElbDetail struct {

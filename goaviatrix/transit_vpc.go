@@ -53,6 +53,8 @@ type TransitVpc struct {
 	EnableSpotInstance           bool     `form:"spot_instance,omitempty"`
 	SpotPrice                    string   `form:"spot_price,omitempty"`
 	ApprovedLearnedCidrs         []string `form:"approved_learned_cidrs"`
+	BgpLanVpcID                  string   `form:"bgp_lan_vpc"`
+	BgpLanSpecifySubnet          string   `form:"bgp_lan_specify_subnet"`
 }
 
 type TransitGatewayAdvancedConfig struct {

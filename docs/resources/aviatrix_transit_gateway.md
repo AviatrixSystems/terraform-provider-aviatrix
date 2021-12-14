@@ -47,6 +47,46 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_gcp" {
 }
 ```
 ```hcl
+# Create an Aviatrix GCP Transit Network Gateway with HA enabled and BGP over LAN enabled
+resource "aviatrix_transit_gateway" "test_transit_gateway_gcp" {
+  cloud_type        = 4
+  account_name      = "devops_gcp"
+  gw_name           = "avtxgw-gcp"
+  vpc_id            = "vpc-gcp-test"
+  vpc_reg           = "us-west1-a"
+  gw_size           = "n1-highcpu-16"
+  subnet            = "10.1.0.0/24"
+  ha_subnet         = "10.1.0.0/24"
+  ha_zone           = "us-west1-b"
+  ha_gw_size        = "n1-highcpu-16"
+  bgp_lan_interfaces {
+    vpc_id = "gcp-vpc-bgp"
+    subnet = "172.16.0.0/16"
+  }
+  bgp_lan_interfaces {
+    vpc_id = "gcp-vpc-bgp1"
+    subnet = "173.16.0.0/16"
+  }
+  bgp_lan_interfaces {
+    vpc_id = "gcp-vpc-bgp2"
+    subnet = "174.16.0.0/16"
+  }
+  ha_bgp_lan_interfaces {
+    vpc_id = "gcp-vpc-bgp3"
+    subnet = "175.16.0.0/16"
+  }
+  ha_bgp_lan_interfaces {
+    vpc_id = "gcp-vpc-bgp4"
+    subnet = "176.16.0.0/16"
+  }
+  ha_bgp_lan_interfaces {
+    vpc_id = "gcp-vpc-bgp5"
+    subnet = "177.16.0.0/16"
+  }
+  connected_transit = true
+}
+```
+```hcl
 # Create an Aviatrix Azure Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_azure" {
   cloud_type        = 8
@@ -278,8 +318,16 @@ The following arguments are supported:
 * `prepend_as_path` - (Optional) List of AS numbers to populate BGP AP_PATH field when it advertises to VGW or peer devices.
 * `local_as_number` - (Optional) Changes the Aviatrix Transit Gateway ASN number before you setup Aviatrix Transit Gateway connection configurations.
 * `bgp_ecmp` - (Optional) Enable Equal Cost Multi Path (ECMP) routing for the next hop. Default value: false.
-* `enable_bgp_over_lan` - (Optional) Pre-allocate a network interface(eth4) for "BGP over LAN" functionality. Must be enabled to create a BGP over LAN `aviatrix_transit_external_device_conn` resource with this Transit Gateway. Only valid for cloud_type = 8 (Azure). Valid values: true or false. Default value: false. Available as of provider version R2.18+
 * `enable_multi_tier_transit` - (Optional) Enable Multi-tier Transit mode on transit gateway. When enabled, transit gateway will propagate routes it receives from its transit peering peer to other transit peering peers. `local_as_number` is required. Default value: false. Available as of provider version R2.19+.
+
+### BGP over LAN
+* `enable_bgp_over_lan` - (Optional) Pre-allocate a network interface(eth4) for "BGP over LAN" functionality. Must be enabled to create a BGP over LAN `aviatrix_transit_external_device_conn` resource with this Transit Gateway. Only valid for GCP (4), Azure (8), AzureGov (32) or AzureChina (2048). Valid values: true or false. Default value: false. Available as of provider version R2.18+
+* `bgp_lan_interfaces` - (Optional) Interfaces to run BGP protocol on top of the ethernet interface, to connect to the onprem/remote peer. Only available for GCP Transit. Each interface has the following attributes:
+  * `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider.
+  * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges.
+* `ha_bgp_lan_interfaces` - (Optional) Interfaces to run BGP protocol on top of the ethernet interface, to connect to the onprem/remote peer. Only available for GCP Transit HA. Each interface has the following attributes:
+  * `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider.
+  * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges.
 
 ### Encryption
 * `enable_encrypt_volume` - (Optional) Enable EBS volume encryption for Gateway. Only supports AWS, AWSGov, AWSChina, AWS Top Secret and AWS Secret. Valid values: true, false. Default value: false.
