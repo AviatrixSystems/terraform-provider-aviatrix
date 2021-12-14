@@ -673,17 +673,12 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 	if connectionName == "" || vpcID == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no 'connection_name' or 'vpc_id' received. Import Id is %s", id)
-		parts := strings.Split(id, "~")
-		if len(parts) != 2 && len(parts) != 4 {
+		parts := strings.SplitN(id, "~", 2)
+		if len(parts) != 2 {
 			return fmt.Errorf("expected import ID in the form 'connection_name~vpc_id' instead got %q", id)
 		}
-		if len(parts) == 2 {
-			d.Set("connection_name", parts[0])
-			d.Set("vpc_id", parts[1])
-		} else {
-			d.Set("connection_name", parts[0])
-			d.Set("vpc_id", parts[1]+"~"+parts[2]+"~"+parts[3])
-		}
+		d.Set("connection_name", parts[0])
+		d.Set("vpc_id", parts[1])
 		d.SetId(id)
 	}
 
