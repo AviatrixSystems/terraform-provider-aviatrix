@@ -82,7 +82,7 @@ resource "aviatrix_transit_external_device_conn" "ex-conn" {
 The following arguments are supported:
 
 ### Required
-* `vpc_id` - (Required) VPC ID of the Aviatrix transit gateway.
+* `vpc_id` - (Required) VPC ID of the Aviatrix transit gateway. For GCP BGP over LAN connection, it is in the format of "vpc_name~-~account_name".
 * `connection_name` - (Required) Transit external device connection name.
 * `gw_name` - (Required) Aviatrix transit gateway name.
 * `remote_gateway_ip` - (Optional) Remote gateway IP. Required when `tunnel_protocol` != 'LAN'.
@@ -122,9 +122,9 @@ The following arguments are supported:
 ~> **NOTE:** BGP over LAN attributes are only valid with `tunnel_protocol` = 'LAN'.
 
 * `remote_lan_ip` - (Optional) Remote LAN IP. Required for BGP over LAN connection.
-* `local_lan_ip` - (Optional) Local LAN IP.
+* `local_lan_ip` - (Optional) Local LAN IP. Required for GCP BGP over LAN connection.
 * `backup_remote_lan_ip` - (Optional) Backup Remote LAN IP. Required for HA BGP over LAN connection.
-* `backup_local_lan_ip` - (Optional) Backup Local LAN IP.
+* `backup_local_lan_ip` - (Optional) Backup Local LAN IP. Required for GCP HA BGP over LAN connection.
 
 ### Misc.
 * `direct_connect` - (Optional) Set true for private network infrastructure.

@@ -28,7 +28,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "ID of the VPC where the Transit Gateway is located.",
+				Description: "ID of the VPC where the Transit Gateway is located. For GCP BGP over LAN connection, it is in the format of 'vpc_name~-~account_name'.",
 			},
 			"connection_name": {
 				Type:        schema.TypeString,
@@ -339,7 +339,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				ForceNew:    true,
-				Description: "Local LAN IP.",
+				Description: "Local LAN IP. Required for GCP BGP over LAN Connection.",
 			},
 			"backup_remote_lan_ip": {
 				Type:        schema.TypeString,
@@ -352,7 +352,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				ForceNew:    true,
-				Description: "Backup Local LAN IP.",
+				Description: "Backup Local LAN IP. Required for GCP BGP over LAN Connection with HA enabled.",
 			},
 		},
 	}
@@ -673,7 +673,7 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 	if connectionName == "" || vpcID == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no 'connection_name' or 'vpc_id' received. Import Id is %s", id)
-		parts := strings.Split(id, "~")
+		parts := strings.SplitN(id, "~", 2)
 		if len(parts) != 2 {
 			return fmt.Errorf("expected import ID in the form 'connection_name~vpc_id' instead got %q", id)
 		}
