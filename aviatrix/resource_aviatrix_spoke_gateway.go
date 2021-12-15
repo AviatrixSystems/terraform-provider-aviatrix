@@ -289,11 +289,11 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description: "Automatically advertise remote CIDR to Aviatrix Transit Gateway when route based Site2Cloud Tunnel is created.",
 			},
 			"spoke_bgp_manual_advertise_cidrs": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          "",
-				DiffSuppressFunc: DiffSuppressFuncIgnoreSpaceInString,
-				Description:      "Intended CIDR list to be advertised to external BGP router.",
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Default:     nil,
+				Description: "Intended CIDR list to be advertised to external BGP router.",
 			},
 			"enable_bgp": {
 				Type:        schema.TypeBool,
@@ -1094,9 +1094,13 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	spokeBgpManualSpokeAdvertiseCidrs := d.Get("spoke_bgp_manual_advertise_cidrs").(string)
-	if spokeBgpManualSpokeAdvertiseCidrs != "" {
-		gateway.BgpManualSpokeAdvertiseCidrs = spokeBgpManualSpokeAdvertiseCidrs
+	if val, ok := d.GetOk("spoke_bgp_manual_advertise_cidrs"); ok {
+		var spokeBgpManualSpokeAdvertiseCidrs []string
+		slice := val.([]interface{})
+		for _, v := range slice {
+			spokeBgpManualSpokeAdvertiseCidrs = append(spokeBgpManualSpokeAdvertiseCidrs, v.(string))
+		}
+		gateway.BgpManualSpokeAdvertiseCidrs = strings.Join(spokeBgpManualSpokeAdvertiseCidrs, ",")
 		err := client.SetSpokeBgpManualAdvertisedNetworks(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to set spoke BGP Manual Advertise Cidrs: %s", err)
@@ -1391,22 +1395,17 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	var spokeBgpManualAdvertiseCidrs []string
-	if _, ok := d.GetOk("spoke_bgp_manual_advertise_cidrs"); ok {
-		spokeBgpManualAdvertiseCidrs = strings.Split(d.Get("spoke_bgp_manual_advertise_cidrs").(string), ",")
+	if val, ok := d.GetOk("spoke_bgp_manual_advertise_cidrs"); ok {
+		slice := val.([]interface{})
+		for _, v := range slice {
+			spokeBgpManualAdvertiseCidrs = append(spokeBgpManualAdvertiseCidrs, v.(string))
+		}
 	}
 	if len(goaviatrix.Difference(spokeBgpManualAdvertiseCidrs, gw.BgpManualSpokeAdvertiseCidrs)) != 0 ||
 		len(goaviatrix.Difference(gw.BgpManualSpokeAdvertiseCidrs, spokeBgpManualAdvertiseCidrs)) != 0 {
-		bgpMSAN := ""
-		for i := range gw.BgpManualSpokeAdvertiseCidrs {
-			if i == 0 {
-				bgpMSAN = bgpMSAN + gw.BgpManualSpokeAdvertiseCidrs[i]
-			} else {
-				bgpMSAN = bgpMSAN + "," + gw.BgpManualSpokeAdvertiseCidrs[i]
-			}
-		}
-		d.Set("spoke_bgp_manual_advertise_cidrs", bgpMSAN)
+		d.Set("spoke_bgp_manual_advertise_cidrs", gw.BgpManualSpokeAdvertiseCidrs)
 	} else {
-		d.Set("spoke_bgp_manual_advertise_cidrs", d.Get("spoke_bgp_manual_advertise_cidrs").(string))
+		d.Set("spoke_bgp_manual_advertise_cidrs", spokeBgpManualAdvertiseCidrs)
 	}
 
 	d.Set("enable_private_oob", gw.EnablePrivateOob)
@@ -2368,8 +2367,11 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		spokeGw := &goaviatrix.SpokeVpc{
 			GwName: d.Get("gw_name").(string),
 		}
-		spokeBgpManualAdvertiseCidrs := d.Get("spoke_bgp_manual_advertise_cidrs").(string)
-		spokeGw.BgpManualSpokeAdvertiseCidrs = spokeBgpManualAdvertiseCidrs
+		var spokeBgpManualSpokeAdvertiseCidrs []string
+		for _, v := range d.Get("spoke_bgp_manual_advertise_cidrs").([]interface{}) {
+			spokeBgpManualSpokeAdvertiseCidrs = append(spokeBgpManualSpokeAdvertiseCidrs, v.(string))
+		}
+		spokeGw.BgpManualSpokeAdvertiseCidrs = strings.Join(spokeBgpManualSpokeAdvertiseCidrs, ",")
 		err := client.SetSpokeBgpManualAdvertisedNetworks(spokeGw)
 		if err != nil {
 			return fmt.Errorf("failed to set spoke bgp manual advertise CIDRs during Spoke Gateway update: %s", err)
