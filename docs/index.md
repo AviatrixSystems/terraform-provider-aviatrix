@@ -86,12 +86,15 @@ $ terraform plan
 The following arguments are supported:
 
 ### Required
-* `controller_ip` - (Required) Aviatrix controller's public or private IP.
+
+-> **NOTE:** It's recommended to verify the SSL certificate of the controller when `controller_ip` is a FQDN.
+
+* `controller_ip` - (Required) Aviatrix controller's public IP, private IP or FQDN.
 * `username` - (Required) Aviatrix account username which will be used to login to Aviatrix controller.
 * `password` - (Required) Aviatrix account password corresponding to above username.
 
 ### Optional
 * `skip_version_validation` - (Optional) Valid values: true, false. Default: false. If set to true, it skips checking whether current Terraform provider supports current Controller version.
 * `version` - (Optional) Specify Aviatrix provider release version number. If not specified, Terraform will automatically pull and source the latest release. For Terraform version 0.13+, do not use this attribute. Instead, set provider version using a `required_providers` block like in the example above.
-* `verify_ssl_certificate` - (Optional) Valid values: true, false. Default: false. If set to true, it verifies the SSL certificate of the controller.
-* `path_to_ca_certificate` - (Optional) Specify the path to the root CA certificate. Valid only when **verify_ssl_certificate** is true. The CA certificate is required when the controller is using a self-signed certificate.
+* `verify_ssl_certificate` - (Optional) Valid values: true, false. Default: false. If set to true, the SSL certificate of the controller will be verified.
+* `path_to_ca_certificate` - (Optional) Specify the path to the root CA certificate. Valid only when `verify_ssl_certificate` is true. The CA certificate is required when the controller is using a self-signed certificate.
