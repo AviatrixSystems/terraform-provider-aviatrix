@@ -27,16 +27,16 @@ type Config struct {
 // Returns:
 //    the aviatrix client (from goaviatrix)
 //    error (if any)
-func (c *Config) Client(config *Config) (*goaviatrix.Client, error) {
+func (c *Config) Client() (*goaviatrix.Client, error) {
 	tr := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: !config.VerifyCert,
+			InsecureSkipVerify: !c.VerifyCert,
 		},
 	}
 
-	if config.VerifyCert && config.PathToCACert != "" {
-		caCert, err := ioutil.ReadFile(config.PathToCACert)
+	if c.VerifyCert && c.PathToCACert != "" {
+		caCert, err := ioutil.ReadFile(c.PathToCACert)
 		if err != nil {
 			return nil, fmt.Errorf(err.Error())
 		}

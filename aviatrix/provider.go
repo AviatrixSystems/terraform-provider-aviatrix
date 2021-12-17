@@ -172,10 +172,10 @@ func aviatrixConfigure(d *schema.ResourceData) (interface{}, error) {
 
 	skipVersionValidation := d.Get("skip_version_validation").(bool)
 	if skipVersionValidation {
-		return config.Client(&config)
+		return config.Client()
 	}
 
-	client, err := config.Client(&config)
+	client, err := config.Client()
 	if err != nil {
 		return nil, err
 	}
@@ -197,5 +197,5 @@ func aviatrixConfigureWithoutVersionValidation(d *schema.ResourceData) (interfac
 		PathToCACert: d.Get("path_to_ca_certificate").(string),
 	}
 
-	return config.Client(&config)
+	return config.Client()
 }
