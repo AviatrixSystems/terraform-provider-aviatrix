@@ -86,6 +86,13 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 					return strings.ToUpper(old) == strings.ToUpper(new)
 				},
 			},
+			"enable_bgp_lan_activemesh": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+				Description: "Switch to enable BGP LAN ActiveMesh. Valid for GCP only. Default: false. Available as of provider version R2.21+.",
+			},
 			"bgp_local_as_num": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -564,6 +571,13 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		}
 	}
 
+	if val, ok := d.GetOk("enable_bgp_lan_activemesh"); ok && val.(bool) {
+		if externalDeviceConn.ConnectionType != "bgp" || externalDeviceConn.TunnelProtocol != "LAN" {
+			return fmt.Errorf("'enable_bgp_lan_activemesh' only supports 'bgp' connection with 'LAN' tunnel protocol")
+		}
+		externalDeviceConn.EnableBgpLanActiveMesh = true
+	}
+
 	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID)
 	flag := false
 	defer resourceAviatrixTransitExternalDeviceConnReadIfRequired(d, meta, &flag)
@@ -708,9 +722,11 @@ func resourceAviatrixTransitExternalDeviceConnRead(d *schema.ResourceData, meta 
 		if conn.TunnelProtocol == "LAN" {
 			d.Set("remote_lan_ip", conn.RemoteLanIP)
 			d.Set("local_lan_ip", conn.LocalLanIP)
+			d.Set("enable_bgp_lan_activemesh", conn.EnableBgpLanActiveMesh)
 		} else {
 			d.Set("remote_gateway_ip", conn.RemoteGatewayIP)
 			d.Set("local_tunnel_cidr", conn.LocalTunnelCidr)
+			d.Set("enable_bgp_lan_activemesh", false)
 		}
 		if conn.ConnectionType == "bgp" {
 			if conn.BgpLocalAsNum != 0 {

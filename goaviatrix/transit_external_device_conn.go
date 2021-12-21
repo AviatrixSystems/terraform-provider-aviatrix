@@ -43,6 +43,7 @@ type ExternalDeviceConn struct {
 	EnableIkev2            string `form:"enable_ikev2,omitempty"`
 	ManualBGPCidrs         []string
 	TunnelProtocol         string `form:"tunnel_protocol,omitempty"`
+	EnableBgpLanActiveMesh bool   `form:"bgp_lan_activemesh,omitempty"`
 	PeerVnetId             string `form:"peer_vnet_id,omitempty"`
 	RemoteLanIP            string `form:"remote_lan_ip,omitempty"`
 	LocalLanIP             string `form:"local_lan_ip,omitempty"`
@@ -60,6 +61,7 @@ type EditExternalDeviceConnDetail struct {
 	BgpLocalAsNum          string        `json:"bgp_local_asn_number,omitempty"`
 	BgpRemoteAsNum         string        `json:"bgp_remote_asn_number,omitempty"`
 	BgpStatus              string        `json:"bgp_status,omitempty"`
+	EnableBgpLanActiveMesh bool          `json:"bgp_lan_activemesh,omitempty"`
 	RemoteGatewayIP        string        `json:"peer_ip,omitempty"`
 	RemoteSubnet           string        `json:"remote_cidr,omitempty"`
 	DirectConnect          bool          `json:"direct_connect_primary,omitempty"`
@@ -242,6 +244,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 				}
 			}
 		} else {
+			externalDeviceConn.EnableBgpLanActiveMesh = externalDeviceConnDetail.EnableBgpLanActiveMesh
 			if len(externalDeviceConnDetail.Tunnels) == 2 {
 				externalDeviceConn.HAEnabled = "enabled"
 				externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
