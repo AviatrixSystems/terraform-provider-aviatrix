@@ -3096,9 +3096,33 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 	if haSubnet != "" || haZone != "" {
 		gateway.GwName += "-hagw"
 
-		err := client.DeleteGateway(gateway)
-		if err != nil {
-			return fmt.Errorf("failed to delete Aviatrix Transit Gateway HA gateway: %s", err)
+		try, EOFTimes, maxTries, backoff := 0, 0, 2, 500*time.Millisecond
+
+		for {
+			try++
+			err := client.DeleteGateway(gateway)
+			if err != nil {
+				if EOFTimes != 0 && strings.Contains(err.Error(), "not found") {
+					log.Printf("[DEBUG] Received EOF when deleteing HA in last try, now HA cannot be found")
+					break
+				}
+
+				if !strings.Contains(err.Error(), "EOF") {
+					return fmt.Errorf("failed to delete Aviatrix Transit Gateway HA gateway: %s", err)
+				} else {
+					EOFTimes++
+					log.Printf("[DEBUG] Received EOF when deleteing HA, this is the %d time", EOFTimes)
+				}
+			} else {
+				break
+			}
+
+			if try == maxTries {
+				return fmt.Errorf("failed to delete Aviatrix Transit Gateway HA gateway: %s", err)
+			}
+			time.Sleep(backoff)
+			// Double the backoff time after each failed try
+			backoff *= 2
 		}
 	}
 
