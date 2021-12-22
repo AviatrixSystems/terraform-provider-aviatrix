@@ -571,7 +571,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		}
 	}
 
-	if val, ok := d.GetOk("enable_bgp_lan_activemesh"); ok && val.(bool) {
+	if d.Get("enable_bgp_lan_activemesh").(bool) {
 		if externalDeviceConn.ConnectionType != "bgp" || externalDeviceConn.TunnelProtocol != "LAN" {
 			return fmt.Errorf("'enable_bgp_lan_activemesh' only supports 'bgp' connection with 'LAN' tunnel protocol")
 		}
