@@ -91,7 +91,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional:    true,
 				Default:     false,
 				ForceNew:    true,
-				Description: "Switch to enable BGP LAN ActiveMesh. Valid for GCP only. Default: false. Available as of provider version R2.21+.",
+				Description: "Switch to enable BGP LAN ActiveMesh. Only valid for GCP with Remote Gateway HA enabled. Default: false. Available as of provider version R2.21+.",
 			},
 			"bgp_local_as_num": {
 				Type:         schema.TypeString,
@@ -574,6 +574,9 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	if val, ok := d.GetOk("enable_bgp_lan_activemesh"); ok && val.(bool) {
 		if externalDeviceConn.ConnectionType != "bgp" || externalDeviceConn.TunnelProtocol != "LAN" {
 			return fmt.Errorf("'enable_bgp_lan_activemesh' only supports 'bgp' connection with 'LAN' tunnel protocol")
+		}
+		if externalDeviceConn.HAEnabled != "true" {
+			return fmt.Errorf("'enable_bgp_lan_activemesh' can only be enabled with Remote Gateway HA enabled ")
 		}
 		externalDeviceConn.EnableBgpLanActiveMesh = true
 	}

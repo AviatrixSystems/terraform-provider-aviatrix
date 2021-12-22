@@ -245,7 +245,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 			}
 		} else {
 			externalDeviceConn.EnableBgpLanActiveMesh = externalDeviceConnDetail.EnableBgpLanActiveMesh
-			if len(externalDeviceConnDetail.Tunnels) == 2 {
+			if len(externalDeviceConnDetail.Tunnels) == 2 || len(externalDeviceConnDetail.Tunnels) == 4 {
 				externalDeviceConn.HAEnabled = "enabled"
 				externalDeviceConn.BackupBgpRemoteAsNum = backupBgpRemoteAsNumber
 				externalDeviceConn.BackupRemoteLanIP = externalDeviceConnDetail.BackupRemoteLanIP
