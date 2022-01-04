@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -53,8 +54,23 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta i
 	flag := false
 	defer resourceAviatrixSpokeTransitAttachmentReadIfRequired(d, meta, &flag)
 
-	if err := client.CreateSpokeTransitAttachment(attachment); err != nil {
-		return fmt.Errorf("could not attach spoke: %s to transit %s: %v", attachment.SpokeGwName, attachment.TransitGwName, err)
+	try, maxTries, backoff := 0, 8, 1000*time.Millisecond
+	for {
+		try++
+		err := client.CreateSpokeTransitAttachment(attachment)
+		if err != nil {
+			if strings.Contains(err.Error(), "is not up") {
+				if try == maxTries {
+					return fmt.Errorf("could not attach spoke: %s to transit %s: %v", attachment.SpokeGwName, attachment.TransitGwName, err)
+				}
+				time.Sleep(backoff)
+				// Double the backoff time after each failed try
+				backoff *= 2
+				continue
+			}
+			return fmt.Errorf("failed to attach spoke: %s to transit %s: %v", attachment.SpokeGwName, attachment.TransitGwName, err)
+		}
+		break
 	}
 
 	return resourceAviatrixSpokeTransitAttachmentReadIfRequired(d, meta, &flag)
