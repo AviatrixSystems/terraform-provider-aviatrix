@@ -19,8 +19,7 @@ func (c *Client) CreateSpokeTransitAttachment(spokeTransitAttachment *SpokeTrans
 	action := "attach_spoke_to_transit_gw"
 	spokeTransitAttachment.CID = c.CID
 	spokeTransitAttachment.Action = action
-	return fmt.Errorf("-hagw is not uBring up the HA gateway and try again")
-	//return c.PostAPI(action, spokeTransitAttachment, BasicCheck)
+	return c.PostAPI(action, spokeTransitAttachment, BasicCheck)
 }
 
 func (c *Client) GetSpokeTransitAttachment(spokeTransitAttachment *SpokeTransitAttachment) (*SpokeTransitAttachment, error) {
