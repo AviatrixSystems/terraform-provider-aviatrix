@@ -66,25 +66,12 @@ func resourceAviatrixGatewaySNat() *schema.Resource {
 							Description: "This is a qualifier condition that specifies a destination port " +
 								"where the rule applies. When left blank, this field is not used.",
 						},
-						"protocol": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Description: "This is a qualifier condition that specifies a destination port protocol " +
-								"where the rule applies. When left blank, this field is not used.",
-						},
 						"interface": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "eth0",
 							Description: "This is a qualifier condition that specifies output interface " +
 								"where the rule applies. When left blank, this field is not used. Default value: 'eth0'. " +
 								"Empty string is not a valid value.",
-						},
-						"connection": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Default:     "None",
-							Description: "None.",
 						},
 						"mark": {
 							Type:     schema.TypeString,
@@ -110,6 +97,20 @@ func resourceAviatrixGatewaySNat() *schema.Resource {
 							Type:        schema.TypeString,
 							Optional:    true,
 							Description: "This field specifies which VPC private route table will not be programmed with the default route entry.",
+						},
+						"protocol": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "all",
+							ValidateFunc: validation.StringInSlice([]string{"all", "tcp", "udp", "icmp"}, false),
+							Description: "This is a qualifier condition that specifies a destination port protocol " +
+								"where the rule applies. Default: all.",
+						},
+						"connection": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "None",
+							Description: "None.",
 						},
 						"apply_route_entry": {
 							Type:        schema.TypeBool,
@@ -231,7 +232,7 @@ func resourceAviatrixGatewaySNatRead(d *schema.ResourceData, meta interface{}) e
 				sP["dst_cidr"] = policy.DstIP
 				sP["dst_port"] = policy.DstPort
 				sP["protocol"] = policy.Protocol
-				sP["interface"] = "eth0"
+				sP["interface"] = policy.Interface
 				sP["connection"] = policy.Connection
 				sP["mark"] = policy.Mark
 				sP["snat_ips"] = policy.NewSrcIP
@@ -241,7 +242,7 @@ func resourceAviatrixGatewaySNatRead(d *schema.ResourceData, meta interface{}) e
 
 				// To deduplicate we will generate a unique key for each policy.
 				key := fmt.Sprintf("%s~%s~%s~%s~%s~%s~%s~%s~%s~%s~%s", policy.SrcIP, policy.SrcPort, policy.DstIP,
-					policy.DstPort, policy.Protocol, "eth0", policy.Connection, policy.Mark, policy.NewSrcIP, policy.NewSrcPort, policy.ExcludeRTB)
+					policy.DstPort, policy.Protocol, policy.Interface, policy.Connection, policy.Mark, policy.NewSrcIP, policy.NewSrcPort, policy.ExcludeRTB)
 				// If the map already contains the unique key then we know this policy is a duplicate.
 				if _, ok := dedupMap[key]; ok {
 					continue

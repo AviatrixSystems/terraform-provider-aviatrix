@@ -45,8 +45,8 @@ The following arguments are supported:
   * `src_port` - (Optional) This is a qualifier condition that specifies a source port that the rule applies. When not specified, this field is not used.
   * `dst_cidr` - (Optional) This is a qualifier condition that specifies a destination IP address range where the rule applies. When not specified, this field is not used.
   * `dst_port` - (Optional) This is a qualifier condition that specifies a destination port where the rule applies. When not specified, this field is not used.
-  * `protocol` - (Optional) This is a qualifier condition that specifies a destination port protocol where the rule applies. When not specified, this field is not used.
-  * `interface` - (Optional) This is a qualifier condition that specifies output interface where the rule applies. When not specified, this field is not used. Default value: "eth0". Empty string is not a valid value.
+  * `protocol` - (Optional) This is a qualifier condition that specifies a destination port protocol where the rule applies. Valid values: 'all', 'tcp', 'udp', 'icmp'. 'Default: 'all'.
+  * `interface` - (Optional) This is a qualifier condition that specifies output interface where the rule applies. When not specified, this field is not used. Empty string is not a valid value.
   * `connection` - (Optional) Default value: "None".
   * `mark` - (Optional) This is a qualifier condition that specifies a tag or mark of a TCP session where the rule applies. When not specified, this field is not used.
   * `snat_ips` - (Optional) This is a rule field that specifies the changed source IP address when all specified qualifier conditions meet. When not specified, this field is not used. One of the rule fields must be specified for this rule to take effect.
