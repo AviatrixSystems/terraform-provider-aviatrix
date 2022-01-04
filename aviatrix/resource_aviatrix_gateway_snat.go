@@ -110,7 +110,7 @@ func resourceAviatrixGatewaySNat() *schema.Resource {
 							Type:        schema.TypeString,
 							Optional:    true,
 							Default:     "None",
-							Description: "None.",
+							Description: "This is a qualifier condition that specifies output connection where the rule applies. When left blank, this field is not used.",
 						},
 						"apply_route_entry": {
 							Type:        schema.TypeBool,
