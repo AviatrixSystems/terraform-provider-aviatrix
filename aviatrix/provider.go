@@ -33,6 +33,15 @@ func Provider() *schema.Provider {
 				Optional: true,
 				Default:  false,
 			},
+			"verify_ssl_certificate": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"path_to_ca_certificate": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -157,6 +166,8 @@ func aviatrixConfigure(d *schema.ResourceData) (interface{}, error) {
 		ControllerIP: d.Get("controller_ip").(string),
 		Username:     d.Get("username").(string),
 		Password:     d.Get("password").(string),
+		VerifyCert:   d.Get("verify_ssl_certificate").(bool),
+		PathToCACert: d.Get("path_to_ca_certificate").(string),
 	}
 
 	skipVersionValidation := d.Get("skip_version_validation").(bool)
@@ -182,6 +193,8 @@ func aviatrixConfigureWithoutVersionValidation(d *schema.ResourceData) (interfac
 		ControllerIP: d.Get("controller_ip").(string),
 		Username:     d.Get("username").(string),
 		Password:     d.Get("password").(string),
+		VerifyCert:   d.Get("verify_ssl_certificate").(bool),
+		PathToCACert: d.Get("path_to_ca_certificate").(string),
 	}
 
 	return config.Client()
