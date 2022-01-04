@@ -1021,9 +1021,23 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			gws := strings.Split(d.Get("transit_gw").(string), ",")
 			for _, gw := range gws {
 				gateway.TransitGateway = gw
-				err := client.SpokeJoinTransit(gateway)
-				if err != nil {
-					return fmt.Errorf("failed to join Transit Gateway %q: %v", gw, err)
+				try, maxTries, backoff := 0, 8, 1000*time.Millisecond
+				for {
+					try++
+					err := client.SpokeJoinTransit(gateway)
+					if err != nil {
+						if strings.Contains(err.Error(), "is not up") {
+							if try == maxTries {
+								return fmt.Errorf("spoke gateway %s couldn't join transit gateway %q: %v", gateway.GwName, gw, err)
+							}
+							time.Sleep(backoff)
+							// Double the backoff time after each failed try
+							backoff *= 2
+							continue
+						}
+						return fmt.Errorf("spoke gateway %s failed to join transit gateway %q: %v", gateway.GwName, gw, err)
+					}
+					break
 				}
 			}
 		} else {
