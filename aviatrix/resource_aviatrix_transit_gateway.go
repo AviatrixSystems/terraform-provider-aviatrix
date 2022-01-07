@@ -603,6 +603,18 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Transit gateway lan interface cidr for the HA gateway.",
 			},
+			"bgp_lan_ip_list": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Computed:    true,
+				Description: "List of available BGP LAN interface IPs for transit external device connection creation. Currently, only supports GCP.",
+			},
+			"ha_bgp_lan_ip_list": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Computed:    true,
+				Description: "List of available BGP LAN interface IPs for transit external device HA connection creation. Currently, only supports GCP.",
+			},
 		},
 	}
 }
@@ -1508,6 +1520,22 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("could not set ha_bgp_lan_interfaces into state: %v", err)
 			}
 		}
+
+		bgpLanIpInfo, err := client.GetBbpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
+		if err != nil {
+			return fmt.Errorf("could not get BGP LAN IP info for GCP transit gateway %s: %v", gateway.GwName, err)
+		}
+		if err = d.Set("bgp_lan_ip_list", bgpLanIpInfo.BgpLanIpList); err != nil {
+			return fmt.Errorf("could not set bgp_lan_ip_list into state: %v", err)
+		}
+		if len(bgpLanIpInfo.HaBgpLanIpList) != 0 {
+			if err = d.Set("ha_bgp_lan_ip_list", bgpLanIpInfo.HaBgpLanIpList); err != nil {
+				return fmt.Errorf("could not set ha_bgp_lan_ip_list into tate: %v", err)
+			}
+		}
+	} else {
+		d.Set("bgp_lan_ip_list", nil)
+		d.Set("ha_bgp_lan_ip_list", nil)
 	}
 	d.Set("enable_transit_summarize_cidr_to_tgw", gw.EnableTransitSummarizeCidrToTgw)
 	d.Set("enable_segmentation", gw.EnableSegmentation)

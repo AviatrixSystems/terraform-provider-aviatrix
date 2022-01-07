@@ -122,6 +122,22 @@ type TransitGwFireNetInterfacesResp struct {
 	Reason  string                     `json:"reason"`
 }
 
+type TransitGatewayBgpLanIpInfoResp struct {
+	Return  bool                                 `json:"return"`
+	Results TransitGatewayBgpLanIpInfoRespResult `json:"results"`
+	Reason  string                               `json:"reason"`
+}
+
+type TransitGatewayBgpLanIpInfoRespResult struct {
+	BgpLanIpList   []string `json:"gce_bgp_lan_all_intf_tuple_list"`
+	HaBgpLanIpList []string `json:"gce_bgp_lan_all_intf_ha_tuple_list"`
+}
+
+type TransitGatewayBgpLanIpInfo struct {
+	BgpLanIpList   []string
+	HaBgpLanIpList []string
+}
+
 func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 	gateway.CID = c.CID
 	gateway.Action = "create_transit_gw"
@@ -547,4 +563,33 @@ func (c *Client) EditTransitConnectionRemoteSubnet(vpcId, connName, remoteSubnet
 		"cloud_subnet_cidr": remoteSubnet,
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) GetBbpLanIPList(transitGateway *TransitVpc) (*TransitGatewayBgpLanIpInfo, error) {
+	form := map[string]string{
+		"CID":                  c.CID,
+		"action":               "list_aviatrix_transit_advanced_config",
+		"transit_gateway_name": transitGateway.GwName,
+	}
+
+	var data TransitGatewayBgpLanIpInfoResp
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+
+	var bgpLanIpList []string
+	var haBgpLanIpList []string
+	for _, bgpLanIp := range data.Results.BgpLanIpList {
+		bgpLanIpList = append(bgpLanIpList, strings.Split(bgpLanIp, ":")[2])
+	}
+	for _, haBgpLanIp := range data.Results.HaBgpLanIpList {
+		haBgpLanIpList = append(haBgpLanIpList, strings.Split(haBgpLanIp, ":")[2])
+	}
+
+	return &TransitGatewayBgpLanIpInfo{
+		BgpLanIpList:   bgpLanIpList,
+		HaBgpLanIpList: haBgpLanIpList,
+	}, nil
 }
