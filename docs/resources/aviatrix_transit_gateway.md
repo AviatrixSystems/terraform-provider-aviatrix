@@ -396,6 +396,8 @@ In addition to all arguments above, the following attributes are exported:
 * `ha_private_ip` - Private IP address of the HA transit gateway created.
 * `lan_interface_cidr` - LAN interface CIDR of the transit gateway created (will be used when enabling FQDN Firenet in Azure). Available in provider version R2.17.1+.
 * `ha_lan_interface_cidr` - LAN interface CIDR of the HA transit gateway created (will be used when enabling FQDN Firenet in Azure). Available in provider version R2.18+.
+* `bgp_lan_ip_list` - List of available BGP LAN interface IPs for transit external device connection creation. Only supports GCP. Available as of provider version R2.21.0+.
+* `ha_bgp_lan_ip_list` - List of available BGP LAN interface IPs for transit external device HA connection creation. Only supports GCP. Available as of provider version R2.21.0+.
 
 The following arguments are deprecated:
 
