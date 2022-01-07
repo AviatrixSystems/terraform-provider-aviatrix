@@ -565,7 +565,7 @@ func (c *Client) EditTransitConnectionRemoteSubnet(vpcId, connName, remoteSubnet
 	return c.PostAPI(data["action"], data, BasicCheck)
 }
 
-func (c *Client) GetBbpLanIPList(transitGateway *TransitVpc) (*TransitGatewayBgpLanIpInfo, error) {
+func (c *Client) GetBgpLanIPList(transitGateway *TransitVpc) (*TransitGatewayBgpLanIpInfo, error) {
 	form := map[string]string{
 		"CID":                  c.CID,
 		"action":               "list_aviatrix_transit_advanced_config",

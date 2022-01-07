@@ -604,16 +604,18 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "Transit gateway lan interface cidr for the HA gateway.",
 			},
 			"bgp_lan_ip_list": {
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Computed:    true,
-				Description: "List of available BGP LAN interface IPs for transit external device connection creation. Currently, only supports GCP.",
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+				Description: "List of available BGP LAN interface IPs for transit external device connection creation. " +
+					"Only supports GCP. Available as of provider version R2.21.0+.",
 			},
 			"ha_bgp_lan_ip_list": {
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Computed:    true,
-				Description: "List of available BGP LAN interface IPs for transit external device HA connection creation. Currently, only supports GCP.",
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+				Description: "List of available BGP LAN interface IPs for transit external device HA connection creation. " +
+					"Only supports GCP. Available as of provider version R2.21.0+.",
 			},
 		},
 	}
@@ -1521,7 +1523,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			}
 		}
 
-		bgpLanIpInfo, err := client.GetBbpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
+		bgpLanIpInfo, err := client.GetBgpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
 		if err != nil {
 			return fmt.Errorf("could not get BGP LAN IP info for GCP transit gateway %s: %v", gateway.GwName, err)
 		}
