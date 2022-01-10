@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -122,9 +123,23 @@ func resourceAviatrixVGWConnCreate(d *schema.ResourceData, meta interface{}) (er
 	flag := false
 	defer resourceAviatrixVGWConnReadIfRequired(d, meta, &flag)
 
-	err = client.CreateVGWConn(vgwConn)
-	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix VGWConn: %s", err)
+	try, maxTries, backoff := 0, 8, 1000*time.Millisecond
+	for {
+		try++
+		err := client.CreateVGWConn(vgwConn)
+		if err != nil {
+			if strings.Contains(err.Error(), "is not up") {
+				if try == maxTries {
+					return fmt.Errorf("couldn't create Aviatrix VGWConn: %s", err)
+				}
+				time.Sleep(backoff)
+				// Double the backoff time after each failed try
+				backoff *= 2
+				continue
+			}
+			return fmt.Errorf("failed to create Aviatrix VGWConn: %s", err)
+		}
+		break
 	}
 
 	enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
