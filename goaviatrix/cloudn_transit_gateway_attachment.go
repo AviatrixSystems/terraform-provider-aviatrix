@@ -24,6 +24,7 @@ type CloudnTransitGatewayAttachment struct {
 	EnableLearnedCidrsApproval       bool     `form:"connection_learned_cidrs_approval"`
 	EnableLearnedCidrsApprovalValue  string   `json:"conn_learned_cidrs_approval"`
 	ApprovedCidrs                    []string `json:"conn_approved_learned_cidrs"`
+	PrependAsPath                    string   `json:"conn_bgp_prepend_as_path"`
 }
 
 func (c *Client) CreateCloudnTransitGatewayAttachment(ctx context.Context, attachment *CloudnTransitGatewayAttachment) error {
