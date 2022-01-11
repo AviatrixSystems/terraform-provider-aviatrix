@@ -47,6 +47,7 @@ The following arguments are supported:
 * `enable_dead_peer_detection` - (Optional) Enable Dead Peer Detection. Type: Boolean. Default: true.
 * `enable_learned_cidrs_approval` - (Optional) Enable learned CIDRs approval. Type: Boolean. Default: false. Available as of provider version R2.21.0+.
 * `approved_cidrs` - (Optional/Computed) Set of approved CIDRs. Requires `enable_learned_cidrs_approval` to be true. Type: Set(String). Available as of provider version R2.21.0+.
+* `prepend_as_path` - (Optional)  Connection AS Path Prepend customized by specifying AS PATH for a BGP connection. Requires transit_gateway_bgp_asn to be set. Type: List. Available as of provider version R2.21.0+.
 
 ## Import
 

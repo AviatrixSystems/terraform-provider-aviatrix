@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -67,6 +68,16 @@ func resourceAviatrixCloudnTransitGatewayAttachment() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "Enable over private network.",
+			},
+			"prepend_as_path": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "AS path prepend.",
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: goaviatrix.ValidateASN,
+				},
+				MaxItems: 25,
 			},
 			"enable_jumbo_frame": {
 				Type:        schema.TypeBool,
@@ -172,6 +183,21 @@ func resourceAviatrixCloudnTransitGatewayAttachmentCreate(ctx context.Context, d
 		}
 	}
 
+	if _, ok := d.GetOk("prepend_as_path"); ok {
+		var prependASPath []string
+		for _, v := range d.Get("prepend_as_path").([]interface{}) {
+			prependASPath = append(prependASPath, v.(string))
+		}
+
+		gateway := &goaviatrix.TransitVpc{
+			GwName: attachment.TransitGatewayName,
+		}
+		err := client.SetPrependASPath(gateway, prependASPath)
+		if err != nil {
+			return diag.Errorf("could not update cloudn transit gateway attachment prepend_as_path after creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixCloudnTransitGatewayAttachmentReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -220,6 +246,18 @@ func resourceAviatrixCloudnTransitGatewayAttachmentRead(ctx context.Context, d *
 	err = d.Set("approved_cidrs", attachment.ApprovedCidrs)
 	if err != nil {
 		return diag.Errorf("failed to set approved_cidrs for cloudn_transit_gateway_attachment on read: %v", err)
+	}
+
+	if attachment.PrependAsPath != "" {
+		var prependAsPath []string
+		for _, str := range strings.Split(attachment.PrependAsPath, " ") {
+			prependAsPath = append(prependAsPath, strings.TrimSpace(str))
+		}
+
+		err = d.Set("prepend_as_path", prependAsPath)
+		if err != nil {
+			return diag.Errorf("could not set value for prepend_as_path: %v", err)
+		}
 	}
 
 	d.SetId(attachment.ConnectionName)
@@ -299,6 +337,21 @@ func resourceAviatrixCloudnTransitGatewayAttachmentUpdate(ctx context.Context, d
 		err := client.UpdateTransitConnectionPendingApprovedCidrs(attachment.TransitGatewayName, attachment.ConnectionName, approvedCidrs)
 		if err != nil {
 			return diag.Errorf("could not update cloudn transit gateway attachment approved cidrs: %v", err)
+		}
+	}
+
+	if d.HasChange("prepend_as_path") {
+		var prependASPath []string
+		for _, v := range d.Get("prepend_as_path").([]interface{}) {
+			prependASPath = append(prependASPath, v.(string))
+		}
+
+		gateway := &goaviatrix.TransitVpc{
+			GwName: attachment.TransitGatewayName,
+		}
+		err := client.SetPrependASPath(gateway, prependASPath)
+		if err != nil {
+			return diag.Errorf("could not update cloudn transit gateway attachment prepend_as_path: %v", err)
 		}
 	}
 
