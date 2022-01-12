@@ -6,6 +6,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -585,9 +586,23 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 	flag := false
 	defer resourceAviatrixTransitExternalDeviceConnReadIfRequired(d, meta, &flag)
 
-	err = client.CreateExternalDeviceConn(externalDeviceConn)
-	if err != nil {
-		return fmt.Errorf("failed to create Aviatrix external device connection: %s", err)
+	try, maxTries, backoff := 0, 8, 1000*time.Millisecond
+	for {
+		try++
+		err := client.CreateExternalDeviceConn(externalDeviceConn)
+		if err != nil {
+			if strings.Contains(err.Error(), "is not up") {
+				if try == maxTries {
+					return fmt.Errorf("couldn't create Aviatrix transit external device connection: %s", err)
+				}
+				time.Sleep(backoff)
+				// Double the backoff time after each failed try
+				backoff *= 2
+				continue
+			}
+			return fmt.Errorf("failed to create Aviatrix transit external device connection: %s", err)
+		}
+		break
 	}
 
 	transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: externalDeviceConn.GwName})
