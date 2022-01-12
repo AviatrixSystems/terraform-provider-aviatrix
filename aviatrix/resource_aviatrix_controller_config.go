@@ -309,9 +309,21 @@ func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface
 		d.Set("fqdn_exception_rule", false)
 	}
 
-	versionInfo, err := client.GetVersionInfo()
-	if err != nil {
-		return fmt.Errorf("unable to read Controller version information: %s", err)
+	var versionInfo *goaviatrix.VersionInfo
+	try, maxTries, backoff := 0, 3, 1000*time.Millisecond
+	for {
+		try++
+		versionInfo, err = client.GetVersionInfo()
+		if err != nil {
+			if try == maxTries {
+				return fmt.Errorf("unable to read Controller version information: %s", err)
+			}
+			time.Sleep(backoff)
+			// Double the backoff time after each failed try
+			backoff *= 2
+			continue
+		}
+		break
 	}
 
 	current := versionInfo.Current.String(true)
