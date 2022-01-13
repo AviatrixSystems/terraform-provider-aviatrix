@@ -56,17 +56,16 @@ resource "aviatrix_account" "test" {
 	arm_application_key = "%s"
 }
 resource "aviatrix_transit_gateway" "test" {
-	cloud_type     = 8
-	account_name   = aviatrix_account.test.account_name
-	gw_name        = "test-tgw-azure"
-	vpc_id         = "%s"
-	vpc_reg        = "%s"
-	gw_size        = "Standard_B2ms"
-	subnet         = "%s"
-	ha_subnet      = "%[7]s"
-	ha_gw_size     = "Standard_B2ms"
-	connected_transit = true
-	enable_active_mesh = true
+	cloud_type             = 8
+	account_name           = aviatrix_account.test.account_name
+	gw_name                = "test-tgw-azure"
+	vpc_id                 = "%s"
+	vpc_reg                = "%s"
+	gw_size                = "Standard_B2ms"
+	subnet                 = "%s"
+	ha_subnet              = "%[7]s"
+	ha_gw_size             = "Standard_B2ms"
+	connected_transit      = true
 	enable_transit_firenet = true
 }
 resource "aviatrix_azure_vng_conn" "test" {

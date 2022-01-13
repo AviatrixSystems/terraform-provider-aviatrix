@@ -66,7 +66,6 @@ resource "aviatrix_transit_gateway" "test_transit_gateway" {
 	subnet                   = aviatrix_vpc.test_vpc.subnets[0].cidr
 	enable_hybrid_connection = true
 	enable_firenet           = true
-	enable_active_mesh       = true
 }
 resource "aviatrix_firewall_instance" "test_firewall_instance" {
 	vpc_id            = aviatrix_vpc.test_vpc.vpc_id

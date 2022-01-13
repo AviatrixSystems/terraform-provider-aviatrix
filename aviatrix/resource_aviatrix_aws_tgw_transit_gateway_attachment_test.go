@@ -100,7 +100,6 @@ resource "aviatrix_transit_gateway" "test" {
 	vpc_reg                  = aviatrix_aws_tgw.test.region
 	gw_size                  = "c5.xlarge"
 	subnet                   = "%s"
-	enable_active_mesh       = true
 	enable_hybrid_connection = true
 	connected_transit        = true
 }
