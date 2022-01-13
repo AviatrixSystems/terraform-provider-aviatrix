@@ -42,7 +42,6 @@ In addition to all arguments above, the following attributes are exported:
 * `gw_size` - Size of transit gateway instance.
 * `gw_name` - Aviatrix transit gateway name.
 * `insane_mode_az` - AZ of subnet being created for Insane Mode transit gateway.
-* `enable_active_mesh` - Status of Active Mesh mode of the transit gateway.
 * `enable_advertise_transit_cidr` - Status of Advertise Transit VPC network CIDR of the transit gateway.
 * `enable_encrypt_volume` - Status of Encrypt Gateway EBS Volume of the transit gateway.
 * `enable_firenet` - Status of FireNet Interfaces of the transit gateway.

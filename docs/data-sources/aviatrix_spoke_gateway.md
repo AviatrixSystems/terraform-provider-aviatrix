@@ -36,7 +36,6 @@ In addition to all arguments above, the following attributes are exported:
 * `cloud_instance_id` - Cloud instance ID.
 * `cloud_type` - Type of cloud service provider.
 * `customized_spoke_vpc_routes` - A list of comma separated CIDRs to be customized for the spoke VPC routes.
-* `enable_active_mesh` - Status of Active Mesh Mode of spoke gateway.
 * `enable_encrypt_volume` - Status of Encrypt Volume of spoke gateway.
 * `enable_vpc_dns_server` - Status of VPC Dns Server of spoke gateway.
 * `filtered_spoke_vpc_routes` - A list of comma separated CIDRs to be filtered from the spoke VPC route table.

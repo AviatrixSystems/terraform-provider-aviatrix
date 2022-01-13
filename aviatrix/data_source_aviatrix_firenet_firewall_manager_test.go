@@ -66,12 +66,11 @@ resource "aviatrix_transit_gateway" "test_transit_gateway" {
 	subnet                   = aviatrix_vpc.test_vpc.subnets[0].cidr
 	enable_hybrid_connection = true
 	enable_firenet           = true
-	enable_active_mesh       = true
 }
 data "aviatrix_firenet_firewall_manager" "test" {
-	vpc_id        = aviatrix_vpc.test_vpc.vpc_id
-	gateway_name  = aviatrix_transit_gateway.test_transit_gateway.gw_name
-	vendor_type   = "Generic"
+	vpc_id       = aviatrix_vpc.test_vpc.vpc_id
+	gateway_name = aviatrix_transit_gateway.test_transit_gateway.gw_name
+	vendor_type  = "Generic"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_REGION"), rName)

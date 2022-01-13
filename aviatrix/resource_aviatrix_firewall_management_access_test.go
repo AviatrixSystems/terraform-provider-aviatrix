@@ -108,20 +108,18 @@ resource "aviatrix_transit_gateway" "test_transit_aws" {
 	vpc_reg                = "%s"
 	gw_size                = "c5.xlarge"
 	subnet                 = "%s"
-	enable_active_mesh     = true
 	connected_transit      = true 
 	enable_transit_firenet = true
 }
 resource "aviatrix_spoke_gateway" "test_spoke_aws" {
-	cloud_type         = 1
-	account_name       = aviatrix_account.test_account.account_name
-	gw_name            = "tfg-aws-%s"
-	vpc_id             = "%s"
-	vpc_reg            = "%s"
-	gw_size            = "t2.micro"
-	subnet             = "%s"
-	enable_active_mesh = true
-	transit_gw         = aviatrix_transit_gateway.test_transit_aws.gw_name
+	cloud_type   = 1
+	account_name = aviatrix_account.test_account.account_name
+	gw_name      = "tfg-aws-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	gw_size      = "t2.micro"
+	subnet       = "%s"
+	transit_gw   = aviatrix_transit_gateway.test_transit_aws.gw_name
 }
 resource "aviatrix_firewall_management_access" "test" {
 	transit_firenet_gateway_name    = aviatrix_transit_gateway.test_transit_aws.gw_name
@@ -150,20 +148,18 @@ resource "aviatrix_transit_gateway" "test_transit_azure" {
 	vpc_reg                = "%s"
 	gw_size                = "%s"
 	subnet                 = "%s"
-	enable_active_mesh     = true
 	connected_transit      = true 
 	enable_transit_firenet = true
 }
 resource "aviatrix_spoke_gateway" "test_spoke_azure" {
-	cloud_type         = 8
-	account_name       = aviatrix_account.test_acc_azure.account_name
-	gw_name            = "tfg-azure-%s"
-	vpc_id             = "%s"
-	vpc_reg            = "%s"
-	gw_size            = "%s"
-	subnet             = "%s"
-	enable_active_mesh = true
-	transit_gw         = aviatrix_transit_gateway.test_transit_azure.gw_name
+	cloud_type   = 8
+	account_name = aviatrix_account.test_acc_azure.account_name
+	gw_name      = "tfg-azure-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	gw_size      = "%s"
+	subnet       = "%s"
+	transit_gw   = aviatrix_transit_gateway.test_transit_azure.gw_name
 }
 resource "aviatrix_firewall_management_access" "test" {
 	transit_firenet_gateway_name    = aviatrix_transit_gateway.test_transit_azure.gw_name

@@ -76,7 +76,6 @@ resource "aviatrix_transit_gateway" "test" {
 	vpc_reg                  = aviatrix_vpc.test.region
 	gw_size                  = "c5.xlarge"
 	subnet                   = "10.0.0.0/28"
-	enable_active_mesh       = true
 	enable_firenet           = true
 	enable_hybrid_connection = true
 }

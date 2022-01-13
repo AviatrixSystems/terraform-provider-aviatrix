@@ -65,18 +65,16 @@ resource "aviatrix_spoke_gateway" "test"{
 	vpc_reg                           = "%s"
 	gw_size                           = "t2.micro"
 	subnet                            = "%s"
-	enable_active_mesh                = true
 	manage_transit_gateway_attachment = false
 }
 resource "aviatrix_transit_gateway" "test" {
-	cloud_type         = 1
-	account_name       = aviatrix_account.test.account_name
-	gw_name            = "tft-%s"
-	vpc_id             = "%s"
-	vpc_reg            = "%s"
-	gw_size            = "t2.micro"
-	subnet             = "%s"
-	enable_active_mesh = true
+	cloud_type   = 1
+	account_name = aviatrix_account.test.account_name
+	gw_name      = "tft-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	gw_size      = "t2.micro"
+	subnet       = "%s"
 }
 resource "aviatrix_spoke_transit_attachment" "test" {
 	spoke_gw_name   = aviatrix_spoke_gateway.test.gw_name

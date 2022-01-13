@@ -63,7 +63,6 @@ resource "aviatrix_transit_gateway" "test_transit_gateway" {
 	vpc_reg             = "%[6]s"
 	gw_size             = "t2.micro"
 	subnet              = "%[7]s"
-	enable_active_mesh  = true
 	enable_segmentation = true
 	connected_transit   = true
 }
@@ -77,7 +76,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway" {
 	gw_size            = "t2.micro"
 	subnet             = "%[10]s"
 	transit_gw         = aviatrix_transit_gateway.test_transit_gateway.gw_name
-	enable_active_mesh = true
 }
 
 resource "aviatrix_segmentation_security_domain" "test_segmentation_security_domain" {
