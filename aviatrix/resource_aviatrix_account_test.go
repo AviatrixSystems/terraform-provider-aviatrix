@@ -361,6 +361,7 @@ func TestAccAviatrixAccount_basic(t *testing.T) {
 		t.Log("Skipping AWSGov Access Account test as SKIP_ACCOUNT_AWSGOV is set")
 	} else {
 		resourceName := "aviatrix_account.awsgov"
+		importStateVerifyIgnore = append(importStateVerifyIgnore, "awsgov_access_key")
 		importStateVerifyIgnore = append(importStateVerifyIgnore, "awsgov_secret_key")
 		resource.Test(t, resource.TestCase{
 			PreCheck: func() {
@@ -624,8 +625,8 @@ resource "aviatrix_account" "oci" {
 func testAccAccountConfigAZUREGOV(rInt int) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "azuregov" {
-	account_name              = "tfa-azuregov-%d"
-	cloud_type             	  = 32
+	account_name             = "tfa-azuregov-%d"
+	cloud_type             	 = 32
 	azuregov_subscription_id = "%s"
 	azuregov_directory_id    = "%s"
 	azuregov_application_id  = "%s"
@@ -661,11 +662,11 @@ resource "aviatrix_account" "awschinaiam" {
 func testAccAccountConfigAWSCHINA(rInt int) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "awschina" {
-	account_name                = "tfa-awschina-%d"
-	cloud_type                  = 1024
-	awschina_account_number     = "%s"
-	awschina_access_key         = "%s"
-	awschina_secret_key         = "%s"
+	account_name            = "tfa-awschina-%d"
+	cloud_type              = 1024
+	awschina_account_number = "%s"
+	awschina_access_key     = "%s"
+	awschina_secret_key     = "%s"
 }
 	`, rInt, os.Getenv("AWSCHINA_ACCOUNT_NUMBER"), os.Getenv("AWSCHINA_ACCESS_KEY"), os.Getenv("AWSCHINA_SECRET_KEY"))
 }
@@ -673,12 +674,12 @@ resource "aviatrix_account" "awschina" {
 func testAccAccountConfigAZURECHINA(rInt int) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "azurechina" {
-	account_name                = "tfa-azurechina-%d"
-	cloud_type                  = 2048
-	azurechina_subscription_id  = "%s"
-	azurechina_directory_id     = "%s"
-	azurechina_application_id   = "%s"
-	azurechina_application_key  = "%s"
+	account_name               = "tfa-azurechina-%d"
+	cloud_type                 = 2048
+	azurechina_subscription_id = "%s"
+	azurechina_directory_id    = "%s"
+	azurechina_application_id  = "%s"
+	azurechina_application_key = "%s"
 }
 	`, rInt, os.Getenv("AZURECHINA_SUBSCRIPTION_ID"), os.Getenv("AZURECHINA_DIRECTORY_ID"),
 		os.Getenv("AZURECHINA_APPLICATION_ID"), os.Getenv("AZURECHINA_APPLICATION_KEY"))
@@ -687,16 +688,16 @@ resource "aviatrix_account" "azurechina" {
 func testAccAccountConfigAWSTS(rInt int) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "awsts" {
-	account_name                = "tfa-awsc2s-%d"
-	cloud_type                  = 16384
-	awsts_account_number   = "%s"
-	awsts_cap_url          = "%s"
-	awsts_cap_agency       = "%s"
-	awsts_cap_mission      = "%s"
-	awsts_cap_role_name    = "%s"
-	awsts_cap_cert         = "%s"
-	awsts_cap_cert_key     = "%s"
-	awsts_ca_chain_cert    = "%s"
+	account_name         = "tfa-awsc2s-%d"
+	cloud_type           = 16384
+	awsts_account_number = "%s"
+	awsts_cap_url        = "%s"
+	awsts_cap_agency     = "%s"
+	awsts_cap_mission    = "%s"
+	awsts_cap_role_name  = "%s"
+	awsts_cap_cert       = "%s"
+	awsts_cap_cert_key   = "%s"
+	awsts_ca_chain_cert  = "%s"
 }`, rInt, os.Getenv("AWSTS_ACCOUNT_NUMBER"), os.Getenv("AWSTS_CAP_URL"),
 		os.Getenv("AWSTS_CAP_AGENCY"), os.Getenv("AWSTS_CAP_MISSION"),
 		os.Getenv("AWSTS_CAP_ROLE_NAME"), os.Getenv("AWSTS_CAP_CERT"),
@@ -706,16 +707,16 @@ resource "aviatrix_account" "awsts" {
 func testAccAccountConfigAWSS(rInt int) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "aws_s" {
-	account_name                = "tfa-awssc2s-%d"
-	cloud_type                  = 32768
-	awss_account_number      = "%s"
-	awss_cap_url             = "%s"
-	awss_cap_agency          = "%s"
-	awss_cap_account_name    = "%s"
-	awss_cap_role_name       = "%s"
-	awss_cap_cert            = "%s"
-	awss_cap_cert_key        = "%s"
-	awss_ca_chain_cert       = "%s"
+	account_name          = "tfa-awssc2s-%d"
+	cloud_type            = 32768
+	awss_account_number   = "%s"
+	awss_cap_url          = "%s"
+	awss_cap_agency       = "%s"
+	awss_cap_account_name = "%s"
+	awss_cap_role_name    = "%s"
+	awss_cap_cert         = "%s"
+	awss_cap_cert_key     = "%s"
+	awss_ca_chain_cert    = "%s"
 }`, rInt, os.Getenv("AWSS_ACCOUNT_NUMBER"), os.Getenv("AWSS_CAP_URL"),
 		os.Getenv("AWSS_CAP_AGENCY"), os.Getenv("AWSS_CAP_ACCOUNT_NAME"),
 		os.Getenv("AWSS_CAP_ROLE_NAME"), os.Getenv("AWSS_CAP_CERT"),

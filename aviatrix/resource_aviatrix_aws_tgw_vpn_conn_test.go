@@ -16,6 +16,7 @@ func TestAccAviatrixAwsTgwVpnConn_basic(t *testing.T) {
 
 	rName := acctest.RandString(5)
 	resourceName := "aviatrix_aws_tgw_vpn_conn.test"
+	importStateVerifyIgnore := []string{"vpn_tunnel_data"}
 
 	skipAcc := os.Getenv("SKIP_AWS_TGW_VPN_CONN")
 	if skipAcc == "yes" {
@@ -46,9 +47,10 @@ func TestAccAviatrixAwsTgwVpnConn_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: importStateVerifyIgnore,
 			},
 		},
 	})
