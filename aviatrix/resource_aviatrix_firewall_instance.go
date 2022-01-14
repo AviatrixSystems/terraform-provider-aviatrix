@@ -86,6 +86,7 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 			"key_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				ForceNew:    true,
 				Description: "The .pem file name for SSH access to the firewall instance.",
 			},
@@ -523,9 +524,6 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 
 	if fI.FirewallImageVersion != "" {
 		d.Set("firewall_image_version", fI.FirewallImageVersion)
-	}
-	if fI.KeyFile == "" && goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
-		d.Set("key_name", fI.KeyName)
 	}
 	if fI.IamRole != "" {
 		d.Set("iam_role", fI.IamRole)
