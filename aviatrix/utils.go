@@ -111,7 +111,7 @@ func stringInSlice(needle string, haystack []string) bool {
 }
 
 var (
-	awsTagMatcher   = regexp.MustCompile(`^[a-zA-Z0-9+\-=._ :/@ ]*$`)
+	awsTagMatcher   = regexp.MustCompile(``) // AWS tags allow all characters
 	azureTagMatcher = regexp.MustCompile(`^[a-zA-Z0-9+\-=._ :@ ]*$`)
 	gcpTagMatcher   = regexp.MustCompile(`^[\p{Ll}\p{Lo}\p{N}_-]*$`)
 )
