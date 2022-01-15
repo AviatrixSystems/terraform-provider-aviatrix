@@ -38,7 +38,6 @@ func TestAccAviatrixControllerConfig_basic(t *testing.T) {
 					testAccCheckControllerConfigExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "fqdn_exception_rule", "false"),
 					resource.TestCheckResourceAttr(resourceName, "http_access", "true"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_management", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_vpc_dns_server", "true"),
 				),
 			},
@@ -63,10 +62,9 @@ resource "aviatrix_account" "test_account" {
 	aws_secret_key     = "%s"
 }
 resource "aviatrix_controller_config" "test_controller_config" {
-	fqdn_exception_rule 	  = false
-	http_access         	  = true
-	security_group_management = false
-	enable_vpc_dns_server     = true
+	fqdn_exception_rule   = false
+	http_access           = true
+	enable_vpc_dns_server = true
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"))
 }
