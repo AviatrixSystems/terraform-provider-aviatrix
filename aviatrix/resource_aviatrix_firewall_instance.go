@@ -88,7 +88,7 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				Optional:    true,
 				Sensitive:   true,
 				ForceNew:    true,
-				Description: "Applicable to AWS deployment only. AWS Key Pair name. If not provided a Key Pair will be generated.",
+				Description: "Applicable to AWS deployment only. AWS Key Pair name. If not provided, a Key Pair will be generated.",
 			},
 			"username": {
 				Type:        schema.TypeString,
