@@ -108,3 +108,20 @@ func (c *Client) DisableJumboFrameOnConnectionToCloudn(ctx context.Context, conn
 	}
 	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
 }
+
+func (c *Client) EditCloudnTransitGatewayAttachmentASPathPrepend(ctx context.Context, attachment *CloudnTransitGatewayAttachment, prependASPath []string) error {
+	action := "edit_transit_connection_as_path_prepend"
+	return c.PostAPIContext(ctx, action, struct {
+		CID            string `form:"CID"`
+		Action         string `form:"action"`
+		GatewayName    string `form:"gateway_name"`
+		ConnectionName string `form:"connection_name"`
+		PrependASPath  string `form:"connection_as_path_prepend"`
+	}{
+		CID:            c.CID,
+		Action:         action,
+		GatewayName:    attachment.TransitGatewayName,
+		ConnectionName: attachment.ConnectionName,
+		PrependASPath:  strings.Join(prependASPath, ","),
+	}, BasicCheck)
+}

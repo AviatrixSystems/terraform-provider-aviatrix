@@ -189,10 +189,7 @@ func resourceAviatrixCloudnTransitGatewayAttachmentCreate(ctx context.Context, d
 			prependASPath = append(prependASPath, v.(string))
 		}
 
-		gateway := &goaviatrix.TransitVpc{
-			GwName: attachment.TransitGatewayName,
-		}
-		err := client.SetPrependASPath(gateway, prependASPath)
+		err := client.EditCloudnTransitGatewayAttachmentASPathPrepend(ctx, attachment, prependASPath)
 		if err != nil {
 			return diag.Errorf("could not update cloudn transit gateway attachment prepend_as_path after creation: %v", err)
 		}
@@ -255,6 +252,11 @@ func resourceAviatrixCloudnTransitGatewayAttachmentRead(ctx context.Context, d *
 		}
 
 		err = d.Set("prepend_as_path", prependAsPath)
+		if err != nil {
+			return diag.Errorf("could not set value for prepend_as_path: %v", err)
+		}
+	} else {
+		err = d.Set("prepend_as_path", nil)
 		if err != nil {
 			return diag.Errorf("could not set value for prepend_as_path: %v", err)
 		}
@@ -346,10 +348,7 @@ func resourceAviatrixCloudnTransitGatewayAttachmentUpdate(ctx context.Context, d
 			prependASPath = append(prependASPath, v.(string))
 		}
 
-		gateway := &goaviatrix.TransitVpc{
-			GwName: attachment.TransitGatewayName,
-		}
-		err := client.SetPrependASPath(gateway, prependASPath)
+		err := client.EditCloudnTransitGatewayAttachmentASPathPrepend(ctx, attachment, prependASPath)
 		if err != nil {
 			return diag.Errorf("could not update cloudn transit gateway attachment prepend_as_path: %v", err)
 		}
