@@ -82,6 +82,7 @@ resource "aviatrix_transit_external_device_conn" "ex-conn" {
 The following arguments are supported:
 
 ### Required
+-> **NOTE:** As of Controller version 6.5+/provider version R2.20+, the `vpc_id` for Gateways in Azure should be in the format "vnet_name:rg_name:resource_guid".
 * `vpc_id` - (Required) VPC ID of the Aviatrix transit gateway. For GCP BGP over LAN connection, it is in the format of "vpc_name~-~account_name".
 * `connection_name` - (Required) Transit external device connection name.
 * `gw_name` - (Required) Aviatrix transit gateway name.
@@ -95,9 +96,9 @@ The following arguments are supported:
 * `bgp_remote_as_num` - (Optional) BGP remote ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
 * `remote_subnet` - (Optional) Remote CIDRs joined as a string with ','. Required for a 'static' type connection.
 
-~> **Note:** The format for `remote_vpc_name` was changed in provider version R2.20/Controller version 6.5 or later. For Controller version 6.5 or later, it must be in the format "<vnet-name>:<resource-group-name>:<subscription-id>". For Controller version 6.4 or earlier, it must be in the format "<vnet-name>:<resource-group-name>".
+~> **Note:** The format for `remote_vpc_name` was changed in provider version R2.20/Controller version 6.5 or later. For Controller version 6.5 or later, it must be in the format "<vnet-name>:<resource-group-name>:<resource-guid>". For Controller version 6.4 or earlier, it must be in the format "<vnet-name>:<resource-group-name>".
 
-* `remote_vpc_name` - (Optional) Name of the remote VPC for a LAN BGP connection with an Azure Transit Gateway. Required when `connection_type` = 'bgp' and `tunnel_protocol` = 'LAN' with an Azure transit gateway. Must be in the format "<vnet-name>:<resource-group-name>:<subscription-id>". Available as of provider version R2.18+.
+* `remote_vpc_name` - (Optional) Name of the remote VPC for a LAN BGP connection with an Azure Transit Gateway. Required when `connection_type` = 'bgp' and `tunnel_protocol` = 'LAN' with an Azure transit gateway. Must be in the format "<vnet-name>:<resource-group-name>:<resource-guid>". Available as of provider version R2.18+.
 
 ### HA
 * `ha_enabled` - (Optional) Set as true if there are two external devices.
