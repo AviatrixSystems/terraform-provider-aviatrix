@@ -21,11 +21,14 @@
 3. Implemented support for AWSChina in **aviatrix_firewall_instance**
 4. Implemented support for BGP Prepending AS-PATH with the following new attribute for **aviatrix_transit_gateway_attachment**:
   - ``prepend_as_path``
-5. Implemented support for BGP over LAN for GCP with the following new attributes in **aviatrix_transit_gateway**:
-  - ``bgp_lan_interfaces``
-  - ``ha_bgp_lan_interfaces``
-  - ``bgp_lan_ip_list``
-  - ``ha_bgp_lan_ip_list``
+5. Implemented support for BGP over LAN for GCP:
+  - New attributes in **aviatrix_transit_gateway**:
+    - ``bgp_lan_interfaces``
+    - ``ha_bgp_lan_interfaces``
+    - ``bgp_lan_ip_list``
+    - ``ha_bgp_lan_ip_list``
+  - New attribute in **aviatrix_transit_external_device_conn**
+    - ``enable_bgp_lan_activemesh``
 6. Implemented support for BGP over LAN on Spoke:
   - New attributes in **aviatrix_spoke_gateway**
     - ``enable_bgp``
