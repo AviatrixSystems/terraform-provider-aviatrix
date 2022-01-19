@@ -1,4 +1,78 @@
-## 2.20.3 (Unreleased)
+## 2.21.0 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.6**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Provider
+1. Implemented support for SSL certificate verification with the following new attributes in provider:
+  - ``verify_ssl_certificate``
+  - ``path_to_ca_certificate``
+
+#### Gateway
+1. Implemented support to enable the feature to apply route entries into cloud platform routing table when using source NAT by adding the following attribute for **aviatrix_gateway_snat**:
+  - ``apply_route_entry``
+
+#### Multi-Cloud Transit:
+1. Implemented a new resource to support registering a managed CloudN device to the controller:
+  - **aviatrix_cloudn_registration**
+2. Implemented a new resource to support connecting a standalone CloudN device to an **aviatrix_transit_gateway**:
+  - **aviatrix_cloudn_transit_conn**
+3. Implemented support for AWSChina in **aviatrix_firewall_instance**
+4. Implemented support for BGP Prepending AS-PATH with the following new attribute for **aviatrix_transit_gateway_attachment**:
+  - ``prepend_as_path``
+5. Implemented support for BGP over LAN for GCP:
+  - New attributes in **aviatrix_transit_gateway**:
+    - ``bgp_lan_interfaces``
+    - ``ha_bgp_lan_interfaces``
+    - ``bgp_lan_ip_list``
+    - ``ha_bgp_lan_ip_list``
+  - New attribute in **aviatrix_transit_external_device_conn**
+    - ``enable_bgp_lan_activemesh``
+6. Implemented support for BGP over LAN on Spoke:
+  - New attributes in **aviatrix_spoke_gateway**
+    - ``enable_bgp``
+    - ``spoke_bgp_manual_advertise_cidrs``
+    - ``bgp_ecmp``
+    - ``enable_active_standby``
+    - ``prepend_as_path``
+    - ``bgp_polling_time``
+    - ``bgp_hold_time``
+    - ``enable_learned_cidrs_approval``
+    - ``learned_cidrs_approval_mode``
+    - ``approved_learned_cidrs``
+    - ``local_as_number``
+  - New resource
+    - **aviatrix_spoke_external_device_conn**
+7. Implemented support for updating approved learned CIDRs with the following new attribute for **aviatrix_transit_gateway** :
+  - ``approved_learned_cidrs``
+8. Implemented support for BGP over LAN for GCP in **aviatrix_transit_external_device_conn**
+
+### Enhancements:
+1. Added support for updating ``remote_subnet`` in **aviatrix_transit_external_device_conn**
+2. Updated ``key_name`` to a sensitive attribute in **aviatrix_firewall_instance**
+3. Added retry when creating the following resources fails due to HA Transit is not up:
+  - **aviatrix_transit_external_device_conn**
+  - **aviatrix_vgw_conn**
+4. Added support for scale netmap CIDRs in **aviatrix_site2cloud**
+
+### Bug Fixes:
+1. Fixed issue where ``bgp_manual_spoke_advertise_cidrs`` attribute in **aviatrix_transit_gateway** would have incorrect values when using **aviatrix_gateway_snat**
+2. Removed the default value for ``interface`` attribute in **aviatrix_gateway_snat**
+3. Fixed issue where the spaces in ``remote_subnet`` cause force replacement in **aviatrix_transit_external_device_conn**
+4. Fixed issue where ``phase1_remote_identifier`` is set to two IP addresses when ``remote_gateway_ip`` and ``backup_remote_gateway_ip`` are with the same value
+5. Fixed issue where ``active_active_ha`` causes diff when ActiveActive HA is enabled by default in some cases in **aviatrix_site2cloud**
+6. Fixed issue where Terraform scripts with empty content is exported for **aviatrix_controller_cert_domain_config**, **aviatrix_controller_email_exception_notification_config** and **aviatrix_splunk_logging**
+7. Fixed issue where an EOF error is returned when deleting transit HA gateway
+8. Fixed issue where a service unavailable error may return when upgrading controller
+9. Fixed issue where deleting HA with insane mode enabled returns error in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+
+### Deprecations
+1. Removed support for ``storage_name`` attribute from **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** in AzureChina
+2. Removed support for Non-ActiveMesh features from **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+
+
+## 2.20.3 (November 22, 2021)
 ### Notes:
 - Supported Controller version: **UserConnect-6.5.2721**
 - Supported Terraform version: **v1.x**
@@ -53,49 +127,49 @@
 ### Features:
 #### Gateway
 1. Implemented support for Selective Gateway Upgrade in **aviatrix_gateway** with the following new attributes:
-- ``software_version``
-- ``peering_ha_software_version``
-- ``image_version``
-- ``peering_ha_image_version``
+  - ``software_version``
+  - ``peering_ha_software_version``
+  - ``image_version``
+  - ``peering_ha_image_version``
 2. Implemented new data source **aviatrix_gateway_image**
 3. Implemented support for preallocated IP for Azure in **aviatrix_gateway** with the following attributes:
-- ``eip``
-- ``peering_ha_eip``
-- ``azure_eip_name_resource_group``
-- ``peering_ha_azure_eip_name_resource_group``
+  - ``eip``
+  - ``peering_ha_eip``
+  - ``azure_eip_name_resource_group``
+  - ``peering_ha_azure_eip_name_resource_group``
 4. Implemented support for preallocated IP for OCI in **aviatrix_gateway** by updating the following attributes:
-- ``eip``
-- ``peering_ha_eip``
+  - ``eip``
+  - ``peering_ha_eip``
 
 #### Multi-Cloud Transit
 1. Implemented support for Selective Gateway Upgrade in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** with the following new attributes:
-- ``software_version``
-- ``ha_software_version``
-- ``image_version``
-- ``ha_image_version``
+  - ``software_version``
+  - ``ha_software_version``
+  - ``image_version``
+  - ``ha_image_version``
 2. Implemented support for preallocated IP for Azure in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** with the following attributes:
-- ``eip``
-- ``ha_eip``
-- ``azure_eip_name_resource_group``
-- ``ha_azure_eip_name_resource_group``
+  - ``eip``
+  - ``ha_eip``
+  - ``azure_eip_name_resource_group``
+  - ``ha_azure_eip_name_resource_group``
 3. Implemented support for preallocated IP for OCI in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** by updating the following attributes:
-- ``eip``
-- ``ha_eip``
+  - ``eip``
+  - ``ha_eip``
 4. Updated the format for ``remote_vpc_name`` in **aviatrix_transit_external_device_conn** for BGP over LAN connections to "<vnet_name>:<vnet_resource_group>:<subscription_id>"
 
 #### CloudWAN
 1. Implemented support for Selective Gateway Upgrade in **aviatrix_device_registration** when used for CloudN as a Gateway with the following new attributes:
-- ``software_version``
-- ``is_caag``
+  - ``software_version``
+  - ``is_caag``
 
 #### Useful Tools
 1. Implemented cross-subscription support for **aviatrix_vpc** for Azure by updating ``vpc_id`` to the new following 3-tuple format: "<vnet-name>:<resource-group-name>:<GUID>"
 
 #### Settings
 1. Implemented support for Selective Gateway Upgrade in **aviatrix_controller_config** with the following new attributes:
-- ``manage_gateway_upgrades``
-- ``current_version``
-- ``previous_version``
+  - ``manage_gateway_upgrades``
+  - ``current_version``
+  - ``previous_version``
 
 ### Enhancements:
 1. Improved refresh performance of **aviatrix_firenet_firewall_manager** resource and data source
@@ -115,23 +189,23 @@
 ### Features:
 #### Accounts
 1. Implemented support for AWSTS in **aviatrix_account** and data source with the following new attributes:
-- ``awsts_account_number``
-- ``awsts_cap_url``
-- ``awsts_cap_agency``
-- ``awsts_cap_mission``
-- ``awsts_cap_role_name``
-- ``awsts_cap_cert``
-- ``awsts_cap_cert_key``
-- ``awsts_ca_chain_cert``
+  - ``awsts_account_number``
+  - ``awsts_cap_url``
+  - ``awsts_cap_agency``
+  - ``awsts_cap_mission``
+  - ``awsts_cap_role_name``
+  - ``awsts_cap_cert``
+  - ``awsts_cap_cert_key``
+  - ``awsts_ca_chain_cert``
 2. Implemented support for AWSS in **aviatrix_account** and data source with the following new attributes:
-- ``awss_account_number``
-- ``awss_cap_url``
-- ``awss_cap_agency``
-- ``awss_cap_account_name``
-- ``awss_cap_role_name``
-- ``awss_cap_cert``
-- ``awss_cap_cert_key``
-- ``awss_ca_chain_cert``
+  - ``awss_account_number``
+  - ``awss_cap_url``
+  - ``awss_cap_agency``
+  - ``awss_cap_account_name``
+  - ``awss_cap_role_name``
+  - ``awss_cap_cert``
+  - ``awss_cap_cert_key``
+  - ``awss_ca_chain_cert``
 
 #### Firewall Network
 1. Implemented support for Fail Close and Network List Excluded From East-West Inspection in **aviatrix_firenet**
@@ -141,7 +215,7 @@
 2. Implemented support for AWS Top Secret cloud in **aviatrix_gateway**
 3. Implemented support for AWS Secret cloud in **aviatrix_gateway**
 4. Implemented support for configuring gateway keepalive settings
-- **aviatrix_controller_gateway_keepalive_config**
+  - **aviatrix_controller_gateway_keepalive_config**
 
 #### Multi-Cloud Transit
 1. Implemented support for AWS Top Secret cloud  in **aviatrix_spoke_gateway**
@@ -150,7 +224,7 @@
 
 #### TGW Orchestrator
 1. Implemented support for the following attribute in **aviatrix_aws_tgw_vpn_conn**
-- ``enable_global_acceleration``
+  - ``enable_global_acceleration``
 
 ### Enhancements:
 1. Allowed the value "aviatrix" for the attribute ``host_os`` to support managed cloudN deployment
@@ -163,18 +237,18 @@
 2. Fixed issue where disabling Egress fails when Egress is enabled without setting Egress Static CIDRs in **aviatrix_firenet**
 3. Fixed issue where setting "account_name" will cause panic in **aviatrix_rbac_group_access_account_attachment**
 4. Fixed issue where context deadline exceeded error happens in the following resources
-- **aviatrix_account**
-- **aviatrix_aws_tgw_connect**
-- **aviatrix_aws_tgw_connect_peer**
-- **aviatrix_aws_tgw_intra_domain_inspection**
-- **aviatrix_aws_tgw_security_domain**
-- **aviatrix_aws_tgw_security_domain_connection**
-- **aviatrix_cloudn_transit_gateway_attachment**
-- **aviatrix_controller_bgp_max_as_limit_config**
-- **aviatrix_controller_cert_domain_config**
-- **aviatrix_controller_email_exception_notification_config**
-- **aviatrix_copilot_association**
-- **aviatrix_gateway_certificate_config**
+  - **aviatrix_account**
+  - **aviatrix_aws_tgw_connect**
+  - **aviatrix_aws_tgw_connect_peer**
+  - **aviatrix_aws_tgw_intra_domain_inspection**
+  - **aviatrix_aws_tgw_security_domain**
+  - **aviatrix_aws_tgw_security_domain_connection**
+  - **aviatrix_cloudn_transit_gateway_attachment**
+  - **aviatrix_controller_bgp_max_as_limit_config**
+  - **aviatrix_controller_cert_domain_config**
+  - **aviatrix_controller_email_exception_notification_config**
+  - **aviatrix_copilot_association**
+  - **aviatrix_gateway_certificate_config**
 5. Fixed issue where ``local_subnet_cidr`` can't be updated for a mapped connection in **aviatrix_site2cloud**
 6. Fixed issue where updating access account to swap custom IAM roles for gateways fails
 7. Fixed issue where updating ``single_az_ha`` does not apply to HA gateway in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
@@ -200,22 +274,22 @@
 ### Features:
 #### Firewall Network
 1. Implemented support for the following attributes for OCI in **aviatrix_firewall_instance**:
-- ``availability_domain``
-- ``fault_domain``
+  - ``availability_domain``
+  - ``fault_domain``
 
 #### Gateway
 1. Implemented support for the following attributes for OCI in **aviatrix_gateway** and data source:
-- ``availability_domain``
-- ``fault_domain``
-- ``peering_ha_availability_domain``
-- ``peering_ha_fault_domain``
+  - ``availability_domain``
+  - ``fault_domain``
+  - ``peering_ha_availability_domain``
+  - ``peering_ha_fault_domain``
 
 #### Multi-Cloud Transit
 1. Implemented support for the following attributes for OCI in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** and data source:
-- ``availability_domain``
-- ``fault_domain``
-- ``ha_availability_domain``
-- ``ha_fault_domain``
+  - ``availability_domain``
+  - ``fault_domain``
+  - ``ha_availability_domain``
+  - ``ha_fault_domain``
 
 
 ## 2.19.2 (June 11, 2021)
@@ -528,7 +602,7 @@
 
 ### Features:
 1. Implemented further support for Custom Mapped and overlapping CIDR scenarios for **aviatrix_site2cloud** with attribute ``forward_traffic_to_transit``
-2. Implemented Connection-based BGP Prepending AS-PATH support with the following attributes for aviatrix_transit_gateway_peering:
+2. Implemented Connection-based BGP Prepending AS-PATH support with the following attributes for **aviatrix_transit_gateway_peering**:
   - ``prepend_as_path1``
   - ``prepend_as_path2``   
 
