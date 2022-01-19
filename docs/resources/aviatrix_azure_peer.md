@@ -31,8 +31,10 @@ The following arguments are supported:
 ### Required
 * `account_name1` - (Required) Name of the Azure cloud account in the Aviatrix controller for VNet 1.
 * `account_name2` - (Required) Name of the Azure cloud account in the Aviatrix controller for VNet 2.
-* `vnet_name_resource_group1` - (Required) Azure VNet 1's name. Example: "VNet_Name1:Resource_Group_Name1:GUID1". As of controller version 6.5, vnet_name_resource_group1 must include the GUID of the VPC.
-* `vnet_name_resource_group2` - (Required) Azure VNet 2's name. Example: "VNet_Name2:Resource_Group_Name2:GUID2". As of controller version 6.5, vnet_name_resource_group2 must include the GUID of the VPC.
+
+-> **NOTE:** As of Controller version 6.5+/provider version R2.20+, the `vnet_name_resource_group1` and `vnet_name_resource_group2` attributes should be in the format "vnet_name:rg_name:resource_guid".
+* `vnet_name_resource_group1` - (Required) Azure VNet 1's name. Example: "VNet_Name1:Resource_Group_Name1:GUID1".
+* `vnet_name_resource_group2` - (Required) Azure VNet 2's name. Example: "VNet_Name2:Resource_Group_Name2:GUID2".
 * `vnet_reg1` - (Required) Region of Azure VNet 1. Example: "East US 2".
 * `vnet_reg2` - (Required) Region of Azure VNet 2. Example: "East US 2".
 

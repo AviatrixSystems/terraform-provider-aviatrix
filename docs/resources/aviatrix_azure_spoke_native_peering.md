@@ -29,8 +29,9 @@ The following arguments are supported:
 ### Required
 * `transit_gateway_name` - (Required) Name of an Transit FireNet-enabled Azure transit gateway.
 * `spoke_account_name` - (Required) An Aviatrix account that corresponds to a subscription in Azure.
-* `spoke_region` - (Required) Spoke VNet region. Example: "West US".
-* `spoke_vpc_id` - (Required) Combination of the Spoke's VNet name, resource group and GUID. Example: "Foo_VNet:Bar_RG:GUID". As of controller version 6.5 spoke_vpc_id must include the GUID of the VPC.
+* `spoke_region` - (Required) Spoke VNet region. Example: "West US". 
+-> **NOTE:** As of Controller version 6.5+/provider version R2.20+, the `spoke_vpc_id` for Spoke Gateways in Azure should be in the format "vnet_name:rg_name:resource_guid".
+* `spoke_vpc_id` - (Required) Combination of the Spoke's VNet name, resource group and GUID. Example: "Foo_VNet:Bar_RG:GUID".
 
 ## Import
 
