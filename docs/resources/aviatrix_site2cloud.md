@@ -53,6 +53,7 @@ resource "aviatrix_site2cloud" "test_s2c" {
 The following arguments are supported:
 
 ### Required
+-> **NOTE:** As of Controller version 6.5+/provider version R2.20+, the `vpc_id` for Gateways in Azure should be in the format "vnet_name:rg_name:resource_guid".
 * `vpc_id` - (Required) VPC ID of the cloud gateway.
 * `connection_name` - (Required) Site2Cloud connection name.
 * `remote_gateway_type` - (Required) Remote gateway type. Valid Values: "generic", "avx", "aws", "azure", "sonicwall", "oracle".

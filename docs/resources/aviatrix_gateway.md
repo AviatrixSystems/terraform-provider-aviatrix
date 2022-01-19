@@ -128,7 +128,7 @@ resource "aviatrix_gateway" "test_gateway_azure" {
   cloud_type   = 8
   account_name = "devops-azure"
   gw_name      = "avtx-gw-azure"
-  vpc_id       = "vnet1:resourcegroup1"
+  vpc_id       = "vnet_name:rg_name:resource_guid"
   vpc_reg      = "West US"
   gw_size      = "Standard_D2"
   subnet       = "10.13.0.0/24"
@@ -155,7 +155,7 @@ resource "aviatrix_gateway" "test_gateway_azuregov" {
   cloud_type   = 32
   account_name = "devops-azuregov"
   gw_name      = "avtx-gw-azuregov"
-  vpc_id       = "vnet1:resourcegroup1"
+  vpc_id       = "vnet_name:rg_name:resource_guid"
   vpc_reg      = "USGov Arizona"
   gw_size      = "Standard_D2"
   subnet       = "10.13.0.0/24"
@@ -195,7 +195,7 @@ resource "aviatrix_gateway" "test_gateway_azure_china" {
   cloud_type   = 2048
   account_name = "devops-azure-china"
   gw_name      = "avtx-gw-azure-china"
-  vpc_id       = "vnet1:resourcegroup1"
+  vpc_id       = "vnet_name:rg_name:resource_guid"
   vpc_reg      = "China North"
   gw_size      = "Standard_A0"
   subnet       = "10.13.0.0/24"
@@ -285,7 +285,7 @@ The following arguments are supported:
 * `gw_name` - (Required) Name of the Aviatrix gateway to be created.
 
 !> When creating a Gateway with an Azure VNet created in Controller version 6.4 or earlier or with an Azure VNet created out of band, referencing `vpc_id` in another resource on the same apply that creates this Gateway will cause Terraform to throw an error. Please use the Gateway data source to reference the `vpc_id` of this Gateway in other resources.
-* `vpc_id` - (Required) VPC ID/VNet name of cloud provider. Example: AWS/AWSGov/AWSChina: "vpc-abcd1234", GCP: "vpc-gcp-test", Azure/AzureGov/AzureChina: "vnet1:hello", OCI: "vpc-oracle-test1".
+* `vpc_id` - (Required) VPC ID/VNet name of cloud provider. Example: AWS/AWSGov/AWSChina: "vpc-abcd1234", GCP: "vpc-gcp-test", Azure/AzureGov/AzureChina: "vnet_name:rg_name:resource_guid", OCI: "vpc-oracle-test1".
 * `vpc_reg` - (Required) VPC region the gateway will be created in. Example: AWS: "us-east-1", GCP: "us-west2-a", Azure: "East US 2", OCI: "us-ashburn-1", AzureGov: "USGov Arizona", AWSGov: "us-gov-west-1", AWSChina: "cn-north-1", AzureChina: "China North", AWS Top Secret: "us-iso-east-1", AWS Secret: "us-isob-east-1".
 * `gw_size` - (Required) Size of the gateway instance. Example: AWS/AWSGov/AWSChina: "t2.large", GCP: "n1-standard-1", Azure/AzureGov/AzureChina: "Standard_B1s", OCI: "VM.Standard2.2".
 * `subnet` - (Required) A VPC network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode-1).**

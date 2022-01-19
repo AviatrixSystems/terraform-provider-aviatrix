@@ -59,6 +59,7 @@ resource "aviatrix_spoke_external_device_conn" "test" {
 The following arguments are supported:
 
 ### Required
+-> **NOTE:** As of Controller version 6.5+/provider version R2.20+, the `vpc_id` for Gateways in Azure should be in the format "vnet_name:rg_name:resource_guid".
 * `vpc_id` - (Required) VPC ID of the Aviatrix spoke gateway.
 * `connection_name` - (Required) Spoke external device connection name.
 * `gw_name` - (Required) Aviatrix spoke gateway name.

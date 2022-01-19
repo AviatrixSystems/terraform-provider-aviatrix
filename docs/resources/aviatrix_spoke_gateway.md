@@ -67,7 +67,7 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
   cloud_type                        = 8
   account_name                      = "my-azure"
   gw_name                           = "spoke-gw-01"
-  vpc_id                            = "spoke:test-spoke-gw-123"
+  vpc_id                            = "vnet_name:rg_name:resource_guid"
   vpc_reg                           = "West US"
   gw_size                           = "Standard_B1ms"
   subnet                            = "10.13.0.0/24"
@@ -97,7 +97,7 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_azuregov" {
   cloud_type                        = 32
   account_name                      = "my-azuregov"
   gw_name                           = "spoke-gw-01"
-  vpc_id                            = "spoke:test-spoke-gw-123"
+  vpc_id                            = "vnet_name:rg_name:resource_guid"
   vpc_reg                           = "USGov Arizona"
   gw_size                           = "Standard_B1ms"
   subnet                            = "10.13.0.0/24"
@@ -143,7 +143,7 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
   cloud_type                        = 2048
   account_name                      = "my-azure-china"
   gw_name                           = "spoke-gw-01"
-  vpc_id                            = "spoke:test-spoke-gw-123"
+  vpc_id                            = "vnet_name:rg_name:resource_guid"
   vpc_reg                           = "China North"
   gw_size                           = "Standard_A0"
   subnet                            = "10.13.0.0/24"
@@ -232,7 +232,7 @@ The following arguments are supported:
 * `gw_name` - (Required) Name of the gateway which is going to be created.
 
 !> When creating a Spoke Gateway with an Azure VNet created in Controller version 6.4 or earlier or with an Azure VNet created out of band, referencing `vpc_id` in another resource on the same apply that creates this Spoke Gateway will cause Terraform to throw an error. Please use the Spoke Gateway data source to reference the `vpc_id` of this Spoke Gateway in other resources.
-* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Example: AWS/AWSGov/AWSChina: "vpc-abcd1234", GCP: "vpc-gcp-test", Azure/AzureGov/AzureChina: "vnet1:hello", OCI: "vpc-oracle-test1".
+* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Example: AWS/AWSGov/AWSChina: "vpc-abcd1234", GCP: "vpc-gcp-test", Azure/AzureGov/AzureChina: "vnet_name:rg_name:resource_guid", OCI: "vpc-oracle-test1".
 * `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", GCP: "us-west2-a", Azure: "East US 2", OCI: "us-ashburn-1", AzureGov: "USGov Arizona", AWSGov: "us-gov-west-1, AWSChina: "cn-north-1", AzureChina: "China North", AWS Top Secret: "us-iso-east-1", AWS Secret: "us-isob-east-1".
 * `gw_size` - (Required) Size of the gateway instance. Example: AWS/AWSGov/AWSChina: "t2.large", Azure/AzureGov/AzureChina: "Standard_B1s", OCI: "VM.Standard2.2", GCP: "n1-standard-1".
 * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode-1).**
