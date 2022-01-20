@@ -5,6 +5,8 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -56,23 +58,11 @@ func resourceAviatrixGatewayDNat() *schema.Resource {
 							Description: "This is a qualifier condition that specifies a destination port " +
 								"where the rule applies. When left blank, this field is not used.",
 						},
-						"protocol": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Description: "This is a qualifier condition that specifies a destination port protocol " +
-								"where the rule applies. When left blank, this field is not used.",
-						},
 						"interface": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Description: "This is a qualifier condition that specifies output interface where the rule applies. " +
 								"When left blank, this field is not used.",
-						},
-						"connection": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Default:     "None",
-							Description: "None.",
 						},
 						"mark": {
 							Type:     schema.TypeString,
@@ -98,6 +88,20 @@ func resourceAviatrixGatewayDNat() *schema.Resource {
 							Type:        schema.TypeString,
 							Optional:    true,
 							Description: "This field specifies which VPC private route table will not be programmed with the default route entry.",
+						},
+						"protocol": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "all",
+							ValidateFunc: validation.StringInSlice([]string{"all", "tcp", "udp", "icmp"}, false),
+							Description: "This is a qualifier condition that specifies a destination port protocol " +
+								"where the rule applies. Default: all.",
+						},
+						"connection": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Default:     "None",
+							Description: "This is a qualifier condition that specifies output connection where the rule applies. When left blank, this field is not used.",
 						},
 						"apply_route_entry": {
 							Type:        schema.TypeBool,
@@ -130,6 +134,10 @@ func resourceAviatrixGatewayDNatCreate(d *schema.ResourceData, meta interface{})
 		policies := d.Get("dnat_policy").([]interface{})
 		for _, policy := range policies {
 			pl := policy.(map[string]interface{})
+			connection := pl["connection"].(string)
+			if (connection != "" && connection != "None") && pl["interface"].(string) != "" {
+				return fmt.Errorf("failed to create DNAT policies for gateway %s: 'interface' must be empty when 'connection' is set", gateway.GatewayName)
+			}
 			customPolicy := &goaviatrix.PolicyRule{
 				SrcIP:           pl["src_cidr"].(string),
 				SrcPort:         pl["src_port"].(string),
@@ -250,6 +258,10 @@ func resourceAviatrixGatewayDNatUpdate(d *schema.ResourceData, meta interface{})
 			policies := d.Get("dnat_policy").([]interface{})
 			for _, policy := range policies {
 				pl := policy.(map[string]interface{})
+				connection := pl["connection"].(string)
+				if (connection != "" && connection != "None") && pl["interface"].(string) != "" {
+					return fmt.Errorf("failed to update DNAT policies for gateway %s: 'interface' must be empty when 'connection' is set", gateway.GatewayName)
+				}
 				customPolicy := &goaviatrix.PolicyRule{
 					SrcIP:           pl["src_cidr"].(string),
 					SrcPort:         pl["src_port"].(string),
