@@ -30,8 +30,8 @@ func dataSourceAviatrixFireNetVendorIntegration() *schema.Resource {
 			},
 			"public_ip": {
 				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The public IP address of the firewall management interface for API calls from the Aviatrix Controller.",
+				Optional:    true,
+				Description: "The IP address of the firewall management interface for API calls from the Aviatrix Controller.",
 			},
 			"username": {
 				Type:        schema.TypeString,
@@ -116,7 +116,10 @@ func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta
 			d.Set("vpc_id", fI.VpcID)
 		}
 		d.Set("instance_id", fI.InstanceID)
-		d.Set("public_ip", fI.ManagementPublicIP)
+
+		if d.Get("public_ip").(string) == "" {
+			d.Set("public_ip", fI.ManagementPublicIP)
+		}
 	}
 
 	vendorInfo := &goaviatrix.VendorInfo{
