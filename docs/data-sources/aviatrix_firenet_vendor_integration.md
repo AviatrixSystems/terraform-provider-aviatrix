@@ -35,7 +35,7 @@ The following arguments are supported:
 * `vpc_id` - (Required) VPC ID.
 * `instance_id` - (Required) ID of Firewall instance.
 * `vendor_type` - (Required) Select PAN. Valid values: "Generic", "Palo Alto Networks VM-Series", "Aviatrix FQDN Gateway" and "Fortinet FortiGate".
-* `public_ip` - (Optional) The IP address of the firewall management interface for API calls from the Aviatrix Controller.
+* `public_ip` - (Optional) The IP address of the firewall management interface for API calls from the Aviatrix Controller. If not set, the public IP of the firewall instance will be used. If the private IP is provided, please make sure that the controller can access the firewall.
 * `username` - (Optional) Firewall login name for API calls from the Controller. Required for vendor type "Generic", "Palo Alto Networks VM-Series" and "Aviatrix FQDN Gateway".
 * `password` - (Optional) Firewall login password for API calls. Required for vendor type "Generic", "Palo Alto Networks VM-Series" and "Aviatrix FQDN Gateway".
 * `api_token` - (Optional) API token for API calls. Required and valid only for vendor type "Fortinet FortiGate".  
