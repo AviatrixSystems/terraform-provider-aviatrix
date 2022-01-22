@@ -78,7 +78,7 @@ The following arguments are supported:
 * `enable_single_ip_ha` - (Optional) Enable single IP HA feature. Available as of provider version 2.19+.
 
 ### Custom Algorithms
-* `custom_algorithms` - (Optional) Switch to enable custom/non-default algorithms for IPSec Authentication/Encryption. Valid values: true, false. **NOTE: Please see notes [here](#custom_algorithms-1) for more information.**
+* `custom_algorithms` - (Optional) Switch to enable custom/non-default algorithms for IPSec Authentication/Encryption. Valid values: true, false. **NOTE: Please see notes [here](#custom_algorithms) for more information.**
 * `phase_1_authentication` - (Optional) Phase one Authentication. Valid values: "SHA-1", "SHA-256", "SHA-384" and "SHA-512". Default value: "SHA-256".
 * `phase_2_authentication` - (Optional) Phase two Authentication. Valid values: "NO-AUTH", "HMAC-SHA-1", "HMAC-SHA-256", "HMAC-SHA-384" and "HMAC-SHA-512". Default value: "HMAC-SHA-256".
 * `phase_1_dh_groups` - (Optional) Phase one DH Groups. Valid values: "1", "2", "5", "14", "15", "16", "17", "18", "19", "20" and "21". Default value: "14".
@@ -110,8 +110,8 @@ The following arguments are supported:
 
 ### Misc.
 * `pre_shared_key` - (Optional) Pre-Shared Key.
-* `ssl_server_pool` - (Optional) Specify ssl_server_pool. Default value: "192.168.44.0/24". **NOTE: Please see notes [here](#ssl_server_pool-1) for more information.**
-* `enable_dead_peer_detection` - (Optional) Enable/disable Deed Peer Detection for an existing site2cloud connection. Default value: true. **NOTE: Please see notes [here](#enable_dead_peer_detection-1) in regards to any deltas found in your state with the addition of this argument in R1.9**
+* `ssl_server_pool` - (Optional) Specify ssl_server_pool. Default value: "192.168.44.0/24". **NOTE: Please see notes [here](#ssl_server_pool) for more information.**
+* `enable_dead_peer_detection` - (Optional) Enable/disable Deed Peer Detection for an existing site2cloud connection. Default value: true. **NOTE: Please see notes [here](#enable_dead_peer_detection) in regards to any deltas found in your state with the addition of this argument in R1.9**
 * `enable_active_active` - (Optional) Enable/disable active active HA for an existing site2cloud connection. Valid values: true, false. Default value: false.
 * `enable_ikev2` - (Optional) Switch to enable IKEv2. Valid values: true, false. Default value: false.
 * `forward_traffic_to_transit` - (Optional) Enable spoke gateway with mapped site2cloud configurations to forward traffic from site2cloud connection to Aviatrix Transit Gateway. Default value: false. Valid values: true or false. Available in provider version 2.17.2+.
