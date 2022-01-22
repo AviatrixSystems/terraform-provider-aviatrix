@@ -54,7 +54,7 @@
 3. Added retry when creating the following resources fails due to HA Transit is not up:
   - **aviatrix_transit_external_device_conn**
   - **aviatrix_vgw_conn**
-4. Added support for scale netmap CIDRs in **aviatrix_site2cloud**
+4. Added support for scaling up to 64 netmap CIDRs in **aviatrix_site2cloud**
 
 ### Bug Fixes:
 1. Fixed issue where ``bgp_manual_spoke_advertise_cidrs`` attribute in **aviatrix_transit_gateway** would have incorrect values when using **aviatrix_gateway_snat**
