@@ -270,7 +270,7 @@ The following arguments are supported:
 * `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Example: AWS/AWSGov/AWSChina: "vpc-abcd1234", GCP: "vpc-gcp-test", Azure/AzureGov/AzureChina: "vnet_name:rg_name:resource_guid", OCI: "vpc-oracle-test1".
 * `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", GCP: "us-west2-a", Azure: "East US 2", OCI: "us-ashburn-1", AzureGov: "USGov Arizona", AWSGov: "us-gov-west-1", AWSChina: "cn-north-1", AzureChina: "China North", AWS Top Secret: "us-iso-east-1", AWS Secret: "us-isob-east-1".
 * `gw_size` - (Required) Size of the gateway instance. Example: AWS: "t2.large", Azure/AzureGov: "Standard_B1s", OCI: "VM.Standard2.2", GCP: "n1-standard-1", AWSGov: "t2.large", AWSChina: "t2.large", AzureChina: "Standard_A0".
-* `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode-1).**
+* `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode).**
 * `availability_domain` - (Optional) Availability domain. Required and valid only for OCI. Available as of provider version R2.19.3.
 * `fault_domain` - (Optional) Fault domain. Required and valid only for OCI. Available as of provider version R2.19.3.
 
@@ -290,7 +290,7 @@ The following arguments are supported:
 * `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Transit Gateway. Required for AWS, AWSGov, AWS Top Secret or AWS Secret if `insane_mode` is enabled. Example: AWS: "us-west-1a".
 
 ### SNAT
-* `single_ip_snat` - (Optional) Enable "single_ip" mode Source NAT for this container. Valid values: true, false. **NOTE: Please see notes [here](#enable_snat-1) in regards to changes to this argument in R2.10.**
+* `single_ip_snat` - (Optional) Enable "single_ip" mode Source NAT for this container. Valid values: true, false. **NOTE: Please see notes [here](#enable_snat) in regards to changes to this argument in R2.10.**
 
 ### Segmentation
 * `enable_segmentation` - (Optional) Enable transit gateway for segmentation. Valid values: true, false. Default: false.

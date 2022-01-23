@@ -235,7 +235,7 @@ The following arguments are supported:
 * `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Example: AWS/AWSGov/AWSChina: "vpc-abcd1234", GCP: "vpc-gcp-test", Azure/AzureGov/AzureChina: "vnet_name:rg_name:resource_guid", OCI: "vpc-oracle-test1".
 * `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", GCP: "us-west2-a", Azure: "East US 2", OCI: "us-ashburn-1", AzureGov: "USGov Arizona", AWSGov: "us-gov-west-1, AWSChina: "cn-north-1", AzureChina: "China North", AWS Top Secret: "us-iso-east-1", AWS Secret: "us-isob-east-1".
 * `gw_size` - (Required) Size of the gateway instance. Example: AWS/AWSGov/AWSChina: "t2.large", Azure/AzureGov/AzureChina: "Standard_B1s", OCI: "VM.Standard2.2", GCP: "n1-standard-1".
-* `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode-1).**
+* `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode).**
 * `availability_domain` - (Optional) Availability domain. Required and valid only for OCI. Available as of provider version R2.19.3.
 * `fault_domain` - (Optional) Fault domain. Required and valid only for OCI. Available as of provider version R2.19.3.
 
@@ -257,7 +257,7 @@ The following arguments are supported:
 ### SNAT/DNAT
 * `single_ip_snat` - (Optional) Specify whether to enable Source NAT feature in "single_ip" mode on the gateway or not. Please disable AWS NAT instance before enabling this feature. Currently only supports AWS(1) and Azure(8). Valid values: true, false.
 
--> **NOTE:** `enable_snat` has been renamed to `single_ip_snat` in provider version R2.10. Please see notes [here](#enable_snat-1) for more information.
+-> **NOTE:** `enable_snat` has been renamed to `single_ip_snat` in provider version R2.10. Please see notes [here](#enable_snat) for more information.
 
 ~> **NOTE:** Custom SNAT and DNAT support have been deprecated and functionality has been moved to **aviatrix_gateway_snat** and **aviatrix_gateway_dnat** respectively, in provider version R2.10. Please see notes for `snat_mode`, `snat_policy` and `dnat_policy` in the Notes section below.
 
@@ -268,7 +268,7 @@ The following arguments are supported:
 * `spoke_bgp_manual_advertise_cidrs` - (Optional) Intended CIDR list to be advertised to external BGP router. Example: "10.2.0.0/16,10.4.0.0/16". 
 * `enable_active_standby` - (Optional) Enables [Active-Standby Mode](https://docs.aviatrix.com/HowTos/transit_advanced.html#active-standby). Available only with HA enabled. Valid values: true, false. Default value: false.
 * `local_as_number` - (Optional) Changes the Aviatrix Spoke Gateway ASN number before you setup Aviatrix Spoke Gateway connection configurations.
-* `prepend_as_path` - (Optional) List of AS numbers to populate BGP AP_PATH field when it advertises to VGW or peer devices.
+* `prepend_as_path` - (Optional) List of AS numbers to populate BGP AS_PATH field when it advertises to VGW or peer devices.
 
 ### Encryption
 * `enable_encrypt_volume` - (Optional) Enable EBS volume encryption for Gateway. Only supports AWS, AWSGov, AWSChina, AWS Top Secret and AWS Secret providers. Valid values: true, false. Default value: false.
@@ -282,7 +282,7 @@ The following arguments are supported:
 * `enable_skip_public_route_table_update` - (Optional) Skip programming VPC public route table. Default: false. Valid values: true or false. Available as of provider version R2.19+.
 * `enable_auto_advertise_s2c_cidrs` - (Optional) Auto Advertise Spoke Site2Cloud CIDRs. Default: false. Valid values: true or false. Available as of provider version R2.19+.
 
-### [Learned CIDRs Approval] for BGP Spoke Gateway (https://docs.aviatrix.com/HowTos/transit_approval.html)
+### [Learned CIDRs Approval for BGP Spoke Gateway](https://docs.aviatrix.com/HowTos/transit_approval.html)
 
 -> **NOTE:** `enable_learned_cidrs_approval` can be set to true only if `learned_cidrs_approval_mode` is set to 'gateway'.
 

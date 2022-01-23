@@ -83,7 +83,7 @@ The following arguments are supported:
 
 ### Required
 -> **NOTE:** As of Controller version 6.5+/provider version R2.20+, the `vpc_id` for Gateways in Azure should be in the format "vnet_name:rg_name:resource_guid".
-* `vpc_id` - (Required) VPC ID of the Aviatrix transit gateway. For GCP BGP over LAN connection, it is in the format of "vpc_name~-~account_name".
+* `vpc_id` - (Required) VPC ID of the Aviatrix transit gateway. For GCP BGP over LAN connection, it is in the format of "vpc_name~-~project_name".
 * `connection_name` - (Required) Transit external device connection name.
 * `gw_name` - (Required) Aviatrix transit gateway name.
 * `remote_gateway_ip` - (Optional) Remote gateway IP. Required when `tunnel_protocol` != 'LAN'.

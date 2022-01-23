@@ -12,10 +12,85 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.20.3 (UserConnect-6.5.2721)``
+``Last updated: R2.21.0 (UserConnect-6.6)``
 
 
 ---
+
+## 2.21.0
+### Notes:
+- Release date: **(23 Jan 2022)**
+- Supported Controller version: **UserConnect-6.6**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Provider
+1. Implemented support for SSL certificate verification with the following new attributes in provider:
+  - ``verify_ssl_certificate``
+  - ``path_to_ca_certificate``
+
+#### Gateway
+1. Implemented support to enable the feature to apply route entries into cloud platform routing table when using source NAT by adding the following attribute for **aviatrix_gateway_snat**:
+  - ``apply_route_entry``
+
+#### Multi-Cloud Transit:
+1. Implemented a new resource to support registering a managed CloudN device to the controller:
+  - **aviatrix_cloudn_registration**
+2. Implemented a new resource to support connecting a standalone CloudN device to an **aviatrix_transit_gateway**:
+  - **aviatrix_cloudn_transit_conn**
+3. Implemented support for AWSChina in **aviatrix_firewall_instance**
+4. Implemented support for BGP Prepending AS-PATH with the following new attribute for **aviatrix_transit_gateway_attachment**:
+  - ``prepend_as_path``
+5. Implemented support for BGP over LAN for GCP:
+  - New attributes in **aviatrix_transit_gateway**:
+    - ``bgp_lan_interfaces``
+    - ``ha_bgp_lan_interfaces``
+    - ``bgp_lan_ip_list``
+    - ``ha_bgp_lan_ip_list``
+  - New attribute in **aviatrix_transit_external_device_conn**
+    - ``enable_bgp_lan_activemesh``
+6. Implemented support for BGP over LAN on Spoke:
+  - New attributes in **aviatrix_spoke_gateway**
+    - ``enable_bgp``
+    - ``spoke_bgp_manual_advertise_cidrs``
+    - ``bgp_ecmp``
+    - ``enable_active_standby``
+    - ``prepend_as_path``
+    - ``bgp_polling_time``
+    - ``bgp_hold_time``
+    - ``enable_learned_cidrs_approval``
+    - ``learned_cidrs_approval_mode``
+    - ``approved_learned_cidrs``
+    - ``local_as_number``
+  - New resource
+    - **aviatrix_spoke_external_device_conn**
+7. Implemented support for updating approved learned CIDRs with the following new attribute for **aviatrix_transit_gateway** :
+  - ``approved_learned_cidrs``
+8. Implemented support for BGP over LAN for GCP in **aviatrix_transit_external_device_conn**
+
+### Enhancements:
+1. Added support for updating ``remote_subnet`` in **aviatrix_transit_external_device_conn**
+2. Updated ``key_name`` to a sensitive attribute in **aviatrix_firewall_instance**
+3. Added retry when creating the following resources fails due to HA Transit is not up:
+  - **aviatrix_transit_external_device_conn**
+  - **aviatrix_vgw_conn**
+4. Added support for scaling up to 64 netmap CIDRs in **aviatrix_site2cloud**
+
+### Bug Fixes:
+1. Fixed issue where ``bgp_manual_spoke_advertise_cidrs`` attribute in **aviatrix_transit_gateway** would have incorrect values when using **aviatrix_gateway_snat**
+2. Removed the default value for ``interface`` attribute in **aviatrix_gateway_snat**
+3. Fixed issue where the spaces in ``remote_subnet`` cause force replacement in **aviatrix_transit_external_device_conn**
+4. Fixed issue where ``phase1_remote_identifier`` is set to two IP addresses when ``remote_gateway_ip`` and ``backup_remote_gateway_ip`` are with the same value
+5. Fixed issue where ``active_active_ha`` causes diff when ActiveActive HA is enabled by default in some cases in **aviatrix_site2cloud**
+6. Fixed issue where Terraform scripts with empty content is exported for **aviatrix_controller_cert_domain_config**, **aviatrix_controller_email_exception_notification_config** and **aviatrix_splunk_logging**
+7. Fixed issue where an EOF error is returned when deleting transit HA gateway
+8. Fixed issue where a service unavailable error may return when upgrading controller
+9. Fixed issue where deleting HA with insane mode enabled returns error in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+
+### Deprecations
+1. Removed support for ``storage_name`` attribute from **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** in AzureChina
+2. Removed support for Non-ActiveMesh features from **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+
 
 ## 2.20.3
 ### Notes:

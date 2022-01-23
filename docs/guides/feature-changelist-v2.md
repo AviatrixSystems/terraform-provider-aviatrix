@@ -23,7 +23,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.20.3 (UserConnect-6.5.2721)``
+``Last updated: R2.21.0 (UserConnect-6.6)``
 
 
 ---
@@ -271,3 +271,10 @@ Note there are standalone resources already in place to be used and one only nee
 |:----:|----------------|:-----------------:|----------------------------|
 |(deprecated) | spoke_gateway, transit_gateway | enable_active_mesh | **Yes**; if customers are using spoke or transit gateways with `enable_active_mesh` set to **false**, action is required. Non-ActiveMesh features will no longer be supported in R2.21.0. Please follow the guide [here](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/migrating_to_active_mesh_transit_network) to migrate from Classic Aviatrix Encrypted Transit Network to Aviatrix ActiveMesh Transit Network. |
 |(deprecated) | controller_config | sg_management_account_name, security_group_management | **Yes**; if Security Group Management was enabled through the **aviatrix_controller_config** resource, these attributes must be removed from the config file and a ``terraform refresh`` must be performed. Please use the standalone **aviatrix_controller_security_group_management_config** resource instead and perform a ``terraform import``. |
+
+
+## R2.21.0 (UserConnect-6.6)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(deprecated) | spoke_gateway, transit_gateway | enable_active_mesh | **Yes**; this attribute is now fully deprecated. Please see above note in the R2.20.1 table for details on how to migrate to ActiveMesh 2.0. If the gateways are already ActiveMesh-enabled, this attribute may be safely removed from configuration, and a ``terraform refresh`` may be run. |
+|(deprecated) | spoke_gateway, transit_gateway | storage_name | **Yes**; this attribute is fully deprecated. If there are existing AzureChina gateways, this attribute may be safely removed from configuration, and a ``terraform refresh`` may be run. New AzureChina gateways will no longer require this attribute. |
