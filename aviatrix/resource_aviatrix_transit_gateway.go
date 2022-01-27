@@ -1534,6 +1534,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			if err = d.Set("ha_bgp_lan_ip_list", bgpLanIpInfo.HaBgpLanIpList); err != nil {
 				return fmt.Errorf("could not set ha_bgp_lan_ip_list into tate: %v", err)
 			}
+		} else {
+			d.Set("ha_bgp_lan_ip_list", nil)
 		}
 	} else {
 		d.Set("bgp_lan_ip_list", nil)
