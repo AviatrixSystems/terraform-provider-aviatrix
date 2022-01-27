@@ -40,7 +40,7 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
   gw_size                           = "t2.micro"
   subnet                            = "10.11.0.0/24"
   single_ip_snat                    = false
-  enable_bpg                        = true
+  enable_bgp                        = true
   manage_transit_gateway_attachment = false
   tags                              = {
     name = "value"
