@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -279,12 +278,7 @@ func (c *Client) UpdateSourceIPFilters(fqdn *FQDN, gateway *Gateway, sourceIPs [
 		"action":       "update_fqdn_filter_tag_source_ip_filters",
 		"tag_name":     fqdn.FQDNTag,
 		"gateway_name": gateway.GwName,
-	}
-
-	if len(sourceIPs) != 0 {
-		for i := range sourceIPs {
-			form["source_ips["+strconv.Itoa(i)+"]"] = sourceIPs[i]
-		}
+		"source_ips":   strings.Join(sourceIPs[:], ","),
 	}
 
 	return c.PostAPI(form["action"], form, BasicCheck)
