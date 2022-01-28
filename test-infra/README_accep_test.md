@@ -137,6 +137,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |                                      | SKIP_SPOKE_GATEWAY_GCP             |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)             |
 |                                      | SKIP_SPOKE_GATEWAY_AZURE           |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
 |                                      | SKIP_SPOKE_GATEWAY_OCI             |         + OCI_VPC_ID, OCI_REGION, OCI_SUBNET, OCI_GW_SIZE(optional)            |
+| aviatrix_spoke_gateway_subnet_group  | SKIP_SPOKE_GATEWAY_SUBNET_GROUP    | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID, ARM_APPLICATION_KEY |
 | aviatrix_spoke_vpc                   | SKIP_SPOKE                         | aviatrix_gateway                                                               |
 |                                      | SKIP_SPOKE_AWS                     |         + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)           |
 |                                      | SKIP_SPOKE_GCP                     |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)             |

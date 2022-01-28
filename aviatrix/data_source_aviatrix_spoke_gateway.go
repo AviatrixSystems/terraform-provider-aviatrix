@@ -252,6 +252,14 @@ func dataSourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Image version of the HA gateway.",
 			},
+			"all_subnets_for_inspection": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "List of subnets for inspection.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -451,6 +459,12 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 
 		d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
 	}
+
+	allSubnetsForInspection, err := client.GetAllSubnetsForInspection(gateway.GwName)
+	if err != nil {
+		return fmt.Errorf("couldn't get all subnets for inspection: %s", err)
+	}
+	d.Set("all_subnets_for_inspection", allSubnetsForInspection)
 
 	d.SetId(gateway.GwName)
 	return nil
