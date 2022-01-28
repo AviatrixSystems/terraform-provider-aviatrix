@@ -58,7 +58,7 @@ func resourceAviatrixFQDN() *schema.Resource {
 							Description: "Name of the gateway to attach to the specific tag.",
 						},
 						"source_ip_list": {
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Elem:        &schema.Schema{Type: schema.TypeString},
 							Optional:    true,
 							Description: "List of source IPs in the VPC qualified for a specific tag.",
@@ -165,7 +165,6 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	gwFilterTags := d.Get("gw_filter_tag_list").([]interface{})
-
 	for _, gwFilterTag := range gwFilterTags {
 		gFT := gwFilterTag.(map[string]interface{})
 		gateway := &goaviatrix.Gateway{
@@ -176,7 +175,7 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 			return fmt.Errorf("failed to add filter tag to gateway : %s", err)
 		}
 		sourceIPs := make([]string, 0)
-		for _, sourceIP := range gFT["source_ip_list"].([]interface{}) {
+		for _, sourceIP := range gFT["source_ip_list"].(*schema.Set).List() {
 			sourceIPs = append(sourceIPs, sourceIP.(string))
 		}
 
@@ -190,7 +189,6 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 
 	if fqdnStatus := d.Get("fqdn_enabled").(bool); fqdnStatus {
 		fqdn.FQDNStatus = "enabled"
-
 		log.Printf("[INFO] Enable FQDN tag status: %#v", fqdn)
 
 		err := client.UpdateFQDNStatus(fqdn)
@@ -338,7 +336,7 @@ func resourceAviatrixFQDNRead(d *schema.ResourceData, meta interface{}) error {
 				mSourceIPsNew[sourceIPs[i]] = true
 			}
 
-			sourceIPs1 := gFT["source_ip_list"].([]interface{})
+			sourceIPs1 := gFT["source_ip_list"].(*schema.Set).List()
 			for i := 0; i < len(sourceIPs1); i++ {
 				if mSourceIPsNew[sourceIPs1[i].(string)] {
 					aSourceIPsNew = append(aSourceIPsNew, sourceIPs1[i].(string))
@@ -437,57 +435,55 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 		os := o.([]interface{})
 		ns := n.([]interface{})
 
-		oldGwList := make([]string, 0)
+		mapOldTagList := make(map[string][]string)
 		for _, oldGwFilterTags := range os {
 			oldGwFilterTag := oldGwFilterTags.(map[string]interface{})
-			gwName := oldGwFilterTag["gw_name"].(string)
-			oldGwList = append(oldGwList, gwName)
+			sourceIPs := make([]string, 0)
+			for _, sourceIP := range oldGwFilterTag["source_ip_list"].(*schema.Set).List() {
+				sourceIPs = append(sourceIPs, sourceIP.(string))
+			}
+			mapOldTagList[oldGwFilterTag["gw_name"].(string)] = sourceIPs
 		}
 
-		newGwList := make([]string, 0)
 		for _, newGwFilterTags := range ns {
 			newGwFilterTag := newGwFilterTags.(map[string]interface{})
-			gwName := newGwFilterTag["gw_name"].(string)
-			newGwList = append(newGwList, gwName)
-		}
-
-		gwToDelete := goaviatrix.Difference(oldGwList, newGwList)
-		err := client.DetachGws(fqdn, gwToDelete)
-		if err != nil {
-			return fmt.Errorf("failed to delete GWs for fqdn: %s", err)
-
-		}
-
-		gwToAdd := goaviatrix.Difference(newGwList, oldGwList)
-		mGwToAdd := make(map[string]bool)
-		for i := range gwToAdd {
-			mGwToAdd[gwToAdd[i]] = true
-		}
-
-		for _, gwFilterTag := range ns {
-			gFT := gwFilterTag.(map[string]interface{})
 			gateway := &goaviatrix.Gateway{
-				GwName: gFT["gw_name"].(string),
+				GwName: newGwFilterTag["gw_name"].(string),
 			}
-			if mGwToAdd[gateway.GwName] {
+
+			sourceIPs := make([]string, 0)
+			for _, sourceIP := range newGwFilterTag["source_ip_list"].(*schema.Set).List() {
+				sourceIPs = append(sourceIPs, sourceIP.(string))
+			}
+
+			val, ok := mapOldTagList[gateway.GwName]
+			if !ok {
 				err := client.AttachTagToGw(fqdn, gateway)
 				if err != nil {
 					return fmt.Errorf("failed to add filter tag to gateway : %s", err)
 				}
-			}
-			sourceIPs := make([]string, 0)
-			for _, sourceIP := range gFT["source_ip_list"].([]interface{}) {
-				sourceIPs = append(sourceIPs, sourceIP.(string))
+				continue
 			}
 
-			if len(sourceIPs) != 0 {
-				err = client.UpdateSourceIPFilters(fqdn, gateway, sourceIPs)
+			if !goaviatrix.Equivalent(val, sourceIPs) {
+				err := client.UpdateSourceIPFilters(fqdn, gateway, sourceIPs)
 				if err != nil {
 					return fmt.Errorf("failed to update source ips to gateway : %s", err)
 				}
 			}
+			delete(mapOldTagList, gateway.GwName)
 		}
 
+		keys := make([]string, 0)
+		for key := range mapOldTagList {
+			keys = append(keys, key)
+		}
+		if len(keys) != 0 {
+			err := client.DetachGws(fqdn, keys)
+			if err != nil {
+				return fmt.Errorf("failed to delete GWs for fqdn in update: %s", err)
+			}
+		}
 	}
 
 	d.Partial(false)
@@ -511,7 +507,6 @@ func resourceAviatrixFQDNDelete(d *schema.ResourceData, meta interface{}) error 
 	err = client.DetachGws(fqdn, gwList)
 	if err != nil {
 		return fmt.Errorf("failed to delete GWs for fqdn: %s", err)
-
 	}
 
 	err = client.DeleteFQDN(fqdn)
