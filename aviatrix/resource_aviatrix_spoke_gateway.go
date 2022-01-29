@@ -2210,7 +2210,9 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				}
 			}
 		} else {
-			return fmt.Errorf("not able to update transit_gw since transit attachment is managed elsewhere")
+			if !d.HasChange("manage_transit_gateway_attachment") {
+				return fmt.Errorf("not able to update transit_gw since transit attachment is managed elsewhere")
+			}
 		}
 	}
 
