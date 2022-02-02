@@ -72,7 +72,7 @@ func resourceAviatrixSpokeGatewaySubnetGroupCreate(ctx context.Context, d *schem
 
 	if len(spokeGatewaySubnetGroup.SubnetList) == 0 {
 		if err := client.AddSpokeGatewaySubnetGroup(ctx, spokeGatewaySubnetGroup); err != nil {
-			return diag.Errorf("could not create spoke gateway subnet group: %v", err)
+			return diag.Errorf("could not create an empty spoke gateway subnet group: %v", err)
 		}
 	} else {
 		if err := client.UpdateSpokeGatewaySubnetGroup(ctx, spokeGatewaySubnetGroup); err != nil {
@@ -136,9 +136,8 @@ func resourceAviatrixSpokeGatewaySubnetGroupRead(ctx context.Context, d *schema.
 func resourceAviatrixSpokeGatewaySubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	spokeGatewaySubnetGroup := marshalSpokeGatewaySubnetGroupInput(d)
-
 	if d.HasChange("subnets") {
+		spokeGatewaySubnetGroup := marshalSpokeGatewaySubnetGroupInput(d)
 		err := client.UpdateSpokeGatewaySubnetGroup(ctx, spokeGatewaySubnetGroup)
 		if err != nil {
 			return diag.Errorf("could not update spoke gateway subnet group: %v", err)

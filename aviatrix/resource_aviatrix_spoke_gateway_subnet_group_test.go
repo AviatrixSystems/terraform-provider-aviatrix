@@ -74,9 +74,12 @@ data "aviatrix_spoke_gateway" "test" {
 	gw_name = aviatrix_spoke_gateway.test_spoke.gw_name
 }
 resource "aviatrix_spoke_gateway_subnet_group" "test_group" {
-	name = "test-group"
+	name               = "test-group"
 	spoke_gateway_name = aviatrix_spoke_gateway.test_spoke.gw_name 
-	subnets = [data.aviatrix_spoke_gateway.test.all_subnets_for_inspection[0], data.aviatrix_spoke_gateway.test.all_subnets_for_inspection[1]]
+	subnets            = [
+		data.aviatrix_spoke_gateway.test.all_subnets_for_inspection[0],
+		data.aviatrix_spoke_gateway.test.all_subnets_for_inspection[1]
+	]
 }
     `, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"), os.Getenv("ARM_APPLICATION_ID"),
 		os.Getenv("ARM_APPLICATION_KEY"))
