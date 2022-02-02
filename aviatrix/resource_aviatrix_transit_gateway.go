@@ -2885,11 +2885,11 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if d.Get("enable_active_standby").(bool) {
 			if d.Get("enable_active_standby_preemptive").(bool) {
 				if err := client.EnableActiveStandbyPreemptive(gateway); err != nil {
-					return fmt.Errorf("could not enable Preemptive Mode for Active-Standby during Spoke Gatway update: %v", err)
+					return fmt.Errorf("could not enable Preemptive Mode for Active-Standby during Transit Gatway update: %v", err)
 				}
 			} else {
 				if err := client.EnableActiveStandby(gateway); err != nil {
-					return fmt.Errorf("could not enable Active-Standby during Spoke Gateway update: %v", err)
+					return fmt.Errorf("could not enable Active-Standby during Transit Gateway update: %v", err)
 				}
 			}
 		} else {
@@ -2897,7 +2897,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				return fmt.Errorf("could not enable Preemptive Mode with Active-Standby disabled")
 			}
 			if err := client.DisableActiveStandby(gateway); err != nil {
-				return fmt.Errorf("could not disable Active-Standby during Spoke Gateway update: %v", err)
+				return fmt.Errorf("could not disable Active-Standby during Transit Gateway update: %v", err)
 			}
 		}
 	}
