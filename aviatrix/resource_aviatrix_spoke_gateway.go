@@ -338,6 +338,12 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enables Active-Standby Mode, available only with HA enabled for BGP Spoke Gateway.",
 			},
+			"enable_active_standby_preemptive": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enables Preemptive Mode for Active-Standby, available only with Active-Standby enabled.",
+			},
 			"local_as_number": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -798,6 +804,18 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	enableActiveStandby := d.Get("enable_active_standby").(bool)
+	if haSubnet == "" && haZone == "" && enableActiveStandby {
+		return fmt.Errorf("could not configure Active-Standby as HA is not enabled")
+	}
+	if !enableBgp && enableActiveStandby {
+		return fmt.Errorf("could not configure Active-Standby as it is not BGP capable gateway")
+	}
+	enableActiveStandbyPreemptive := d.Get("enable_active_standby_preemptive").(bool)
+	if !enableActiveStandby && enableActiveStandbyPreemptive {
+		return fmt.Errorf("could not configure Preemptive Mode with Active-Standby disabled")
+	}
+
 	enableSpotInstance := d.Get("enable_spot_instance").(bool)
 	spotPrice := d.Get("spot_price").(string)
 	if enableSpotInstance {
@@ -1128,10 +1146,15 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	enableActiveStandby := d.Get("enable_active_standby").(bool)
 	if enableActiveStandby {
-		if err := client.EnableActiveStandbySpoke(gateway); err != nil {
-			return fmt.Errorf("could not enable Active Standby Mode: %v", err)
+		if enableActiveStandbyPreemptive {
+			if err := client.EnableActiveStandbyPreemptiveSpoke(gateway); err != nil {
+				return fmt.Errorf("could not enable Preemptive Mode for Active-Standby: %v", err)
+			}
+		} else {
+			if err := client.EnableActiveStandbySpoke(gateway); err != nil {
+				return fmt.Errorf("could not enable Active-Standby: %v", err)
+			}
 		}
 	}
 
@@ -1243,6 +1266,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("local_as_number", gw.LocalASNumber)
 	d.Set("bgp_ecmp", gw.BgpEcmp)
 	d.Set("enable_active_standby", gw.EnableActiveStandby)
+	d.Set("enable_active_standby_preemptive", gw.EnableActiveStandbyPreemptive)
 	var prependAsPath []string
 	for _, p := range strings.Split(gw.PrependASPath, " ") {
 		if p != "" {
@@ -2405,17 +2429,26 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if d.HasChange("enable_active_standby") {
+	if d.HasChange("enable_active_standby") || d.HasChange("enable_active_standby_preemptive") {
 		gateway := &goaviatrix.SpokeVpc{
 			GwName: d.Get("gw_name").(string),
 		}
 		if d.Get("enable_active_standby").(bool) {
-			if err := client.EnableActiveStandbySpoke(gateway); err != nil {
-				return fmt.Errorf("could not enable active standby mode during Spoke Gateway update: %v", err)
+			if d.Get("enable_active_standby_preemptive").(bool) {
+				if err := client.EnableActiveStandbyPreemptiveSpoke(gateway); err != nil {
+					return fmt.Errorf("could not enable Preemptive Mode for Active-Standby during Spoke Gatway update: %v", err)
+				}
+			} else {
+				if err := client.EnableActiveStandbySpoke(gateway); err != nil {
+					return fmt.Errorf("could not enable Active-Standby during Spoke Gateway update: %v", err)
+				}
 			}
 		} else {
+			if d.Get("enable_active_standby_preemptive").(bool) {
+				return fmt.Errorf("could not enable Preemptive Mode with Active-Standby disabled")
+			}
 			if err := client.DisableActiveStandbySpoke(gateway); err != nil {
-				return fmt.Errorf("could not disable active standby mode during Spoke Gateway update: %v", err)
+				return fmt.Errorf("could not disable Active-Standby during Spoke Gateway update: %v", err)
 			}
 		}
 	}
