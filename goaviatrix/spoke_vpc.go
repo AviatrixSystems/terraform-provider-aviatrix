@@ -419,3 +419,14 @@ func (c *Client) SetLocalASNumberSpoke(spokeGateway *SpokeVpc, localASNumber str
 		return nil
 	})
 }
+
+func (c *Client) EnableActiveStandbyPreemptiveSpoke(spokeGateway *SpokeVpc) error {
+	action := "enable_active_standby"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": spokeGateway.GwName,
+		"preemptive":   "true",
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}

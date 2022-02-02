@@ -160,6 +160,7 @@ type Gateway struct {
 	LocalASNumber                   string                              `json:"local_as_number"`
 	BgpEcmp                         bool                                `json:"bgp_ecmp"`
 	EnableActiveStandby             bool                                `json:"enable_active_standby"`
+	EnableActiveStandbyPreemptive   bool                                `json:"enabled_active_standby_preemptive"`
 	EnableBgpOverLan                bool                                `json:"enable_bgp_over_lan"`
 	EnableTransitSummarizeCidrToTgw bool                                `json:"enable_transit_summarize_cidr_to_tgw"`
 	EnableSegmentation              bool                                `json:"enable_segmentation"`
@@ -1141,4 +1142,15 @@ func (c *Client) ModifyTunnelDetectionTime(entity string, detectionTime int) err
 	}
 
 	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
+func (c *Client) EnableActiveStandbyPreemptive(transitGateway *TransitVpc) error {
+	action := "enable_active_standby"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": transitGateway.GwName,
+		"preemptive":   "true",
+	}
+	return c.PostAPI(action, form, BasicCheck)
 }
