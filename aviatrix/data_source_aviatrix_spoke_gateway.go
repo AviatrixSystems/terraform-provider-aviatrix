@@ -460,11 +460,13 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
 	}
 
-	subnetsForInspection, err := client.GetSubnetsForInspection(gateway.GwName)
-	if err != nil {
-		return fmt.Errorf("couldn't get subnets for inspection: %s", err)
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+		subnetsForInspection, err := client.GetSubnetsForInspection(gateway.GwName)
+		if err != nil {
+			return fmt.Errorf("couldn't get subnets for inspection: %s", err)
+		}
+		d.Set("subnets_for_inspection", subnetsForInspection)
 	}
-	d.Set("subnets_for_inspection", subnetsForInspection)
 
 	d.SetId(gateway.GwName)
 	return nil
