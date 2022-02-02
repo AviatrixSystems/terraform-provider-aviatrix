@@ -95,7 +95,7 @@ func (c *Client) DeleteSpokeGatewaySubnetGroup(ctx context.Context, spokeGateway
 	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
 }
 
-func (c *Client) GetAllSubnetsForInspection(gatewayName string) ([]string, error) {
+func (c *Client) GetSubnetsForInspection(gatewayName string) ([]string, error) {
 	form := map[string]string{
 		"action":       "list_spoke_gateway_subnets",
 		"CID":          c.CID,
