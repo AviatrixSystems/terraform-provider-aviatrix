@@ -32,28 +32,12 @@ func dataSourceAviatrixSpokeGatewayInspectionSubnets() *schema.Resource {
 func dataSourceAviatrixSpokeGatewayInspectionSubnetsRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	gateway := &goaviatrix.Gateway{
-		GwName: d.Get("gw_name").(string),
-	}
-
-	gw, err := client.GetGateway(gateway)
+	subnetsForInspection, err := client.GetSubnetsForInspection(d.Get("gw_name").(string))
 	if err != nil {
-		if err == goaviatrix.ErrNotFound {
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("couldn't find Aviatrix spoke gateway: %s", err)
+		return fmt.Errorf("couldn't get subnets for inspection: %s", err)
 	}
-	if gw != nil {
-		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-			subnetsForInspection, err := client.GetSubnetsForInspection(gateway.GwName)
-			if err != nil {
-				return fmt.Errorf("couldn't get subnets for inspection: %s", err)
-			}
-			d.Set("subnets_for_inspection", subnetsForInspection)
-		}
-	}
+	d.Set("subnets_for_inspection", subnetsForInspection)
 
-	d.SetId(gateway.GwName + "~subnet_inspection")
+	d.SetId(d.Get("gw_name").(string) + "~inspection_subnets")
 	return nil
 }
