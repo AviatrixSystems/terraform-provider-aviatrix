@@ -10,12 +10,12 @@ description: |-
 
 The **aviatrix_spoke_gateway_subnet_group** resource creates and manages the spoke gateway subnet groups.
 
--> **NOTE:** This feature is only valid for Azure now.
+-> **NOTE:** This feature is only valid for Azure.
 
 ## Example Usage
 
 ```hcl
-# Create an Aviatrix Spoke External Device Connection
+# Create an Aviatrix Spoke Inspection Subnet Group
 resource "aviatrix_spoke_gateway_subnet_group" "test" {
   name               = "subnet_group"
   spoke_gateway_name = "spoke"
