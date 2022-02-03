@@ -70,15 +70,15 @@ resource "aviatrix_spoke_gateway" "test_spoke" {
 	gw_size      = "Standard_B1ms"
 	subnet       = aviatrix_vpc.test_vpc.subnets[0].cidr
 }
-data "aviatrix_spoke_gateway" "test" {
+data "aviatrix_spoke_gateway_inspection_subnets" "test" {
 	gw_name = aviatrix_spoke_gateway.test_spoke.gw_name
 }
 resource "aviatrix_spoke_gateway_subnet_group" "test_group" {
 	name               = "test-group"
 	spoke_gateway_name = aviatrix_spoke_gateway.test_spoke.gw_name 
 	subnets            = [
-		data.aviatrix_spoke_gateway.test.all_subnets_for_inspection[0],
-		data.aviatrix_spoke_gateway.test.all_subnets_for_inspection[1]
+		data.aviatrix_spoke_gateway_inspection_subnets.test.subnets_for_inspection[0],
+		data.aviatrix_spoke_gateway_inspection_subnets.test.subnets_for_inspection[1]
 	]
 }
     `, os.Getenv("ARM_SUBSCRIPTION_ID"), os.Getenv("ARM_DIRECTORY_ID"), os.Getenv("ARM_APPLICATION_ID"),

@@ -252,14 +252,6 @@ func dataSourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Image version of the HA gateway.",
 			},
-			"subnets_for_inspection": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "List of all subnets available for the subnet inspection feature.",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
 		},
 	}
 }
@@ -458,14 +450,6 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 
 		d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
-	}
-
-	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-		subnetsForInspection, err := client.GetSubnetsForInspection(gateway.GwName)
-		if err != nil {
-			return fmt.Errorf("couldn't get subnets for inspection: %s", err)
-		}
-		d.Set("subnets_for_inspection", subnetsForInspection)
 	}
 
 	d.SetId(gateway.GwName)
