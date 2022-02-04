@@ -2838,7 +2838,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			// prependASPath must be deleted from the controller before local_as_number can be changed
 			err := client.SetPrependASPath(gateway, nil)
 			if err != nil {
-				return fmt.Errorf("could not to delete prepend_as_path during Transit Gateway update: %v", err)
+				return fmt.Errorf("could not delete prepend_as_path during Transit Gateway update: %v", err)
 			}
 		}
 
