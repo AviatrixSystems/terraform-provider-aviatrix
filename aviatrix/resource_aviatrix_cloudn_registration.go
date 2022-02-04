@@ -150,6 +150,7 @@ func resourceAviatrixCloudnRegistrationRead(ctx context.Context, d *schema.Resou
 		return diag.Errorf("failed to read Aviatrix CloudN Registration: %v", err)
 	}
 
+	d.Set("username", cloudnRegistration.Username)
 	d.Set("address", cloudnRegistration.ControllerAddress)
 
 	gateway := &goaviatrix.TransitVpc{
