@@ -30,7 +30,7 @@ func TestAccAviatrixSpokeGatewaySubnetGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpokeGatewaySubnetGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-group"),
-					resource.TestCheckResourceAttr(resourceName, "spoke_gateway_name", "test-spoke"),
+					resource.TestCheckResourceAttr(resourceName, "gw_name", "test-spoke"),
 					testAccCheckSpokeGatewaySubnetGroupSubnetsMatch(resourceName, []string{"18.9.16.0/20~~test-vpc-Public-subnet-1", "18.9.32.0/20~~test-vpc-Private-subnet-1"}),
 				),
 			},
@@ -74,9 +74,9 @@ data "aviatrix_spoke_gateway_inspection_subnets" "test" {
 	gw_name = aviatrix_spoke_gateway.test_spoke.gw_name
 }
 resource "aviatrix_spoke_gateway_subnet_group" "test_group" {
-	name               = "test-group"
-	spoke_gateway_name = aviatrix_spoke_gateway.test_spoke.gw_name 
-	subnets            = [
+	name    = "test-group"
+	gw_name = aviatrix_spoke_gateway.test_spoke.gw_name 
+	subnets = [
 		data.aviatrix_spoke_gateway_inspection_subnets.test.subnets_for_inspection[0],
 		data.aviatrix_spoke_gateway_inspection_subnets.test.subnets_for_inspection[1]
 	]
@@ -99,7 +99,7 @@ func testAccCheckSpokeGatewaySubnetGroupExists(resourceName string) resource.Tes
 
 		spokeGatewaySubnetGroup := &goaviatrix.SpokeGatewaySubnetGroup{
 			SubnetGroupName: rs.Primary.Attributes["name"],
-			GatewayName:     rs.Primary.Attributes["spoke_gateway_name"],
+			GatewayName:     rs.Primary.Attributes["gw_name"],
 		}
 		err := client.GetSpokeGatewaySubnetGroup(context.Background(), spokeGatewaySubnetGroup)
 		if err != nil {
@@ -123,7 +123,7 @@ func testAccCheckSpokeGatewaySubnetGroupSubnetsMatch(resourceName string, input 
 
 		spokeGatewaySubnetGroup := &goaviatrix.SpokeGatewaySubnetGroup{
 			SubnetGroupName: rs.Primary.Attributes["name"],
-			GatewayName:     rs.Primary.Attributes["spoke_gateway_name"],
+			GatewayName:     rs.Primary.Attributes["gw_name"],
 		}
 		err := client.GetSpokeGatewaySubnetGroup(context.Background(), spokeGatewaySubnetGroup)
 		if err != nil {
@@ -147,7 +147,7 @@ func testAccCheckSpokeGatewaySubnetGroupDestroy(s *terraform.State) error {
 
 		spokeGatewaySubnetGroup := &goaviatrix.SpokeGatewaySubnetGroup{
 			SubnetGroupName: rs.Primary.Attributes["name"],
-			GatewayName:     rs.Primary.Attributes["spoke_gateway_name"],
+			GatewayName:     rs.Primary.Attributes["gw_name"],
 		}
 
 		err := client.GetSpokeGatewaySubnetGroup(context.Background(), spokeGatewaySubnetGroup)

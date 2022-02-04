@@ -28,7 +28,7 @@ func resourceAviatrixSpokeGatewaySubnetGroup() *schema.Resource {
 				ForceNew:    true,
 				Description: "Subnet group name.",
 			},
-			"spoke_gateway_name": {
+			"gw_name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
@@ -54,7 +54,7 @@ func marshalSpokeGatewaySubnetGroupInput(d *schema.ResourceData) *goaviatrix.Spo
 
 	spokeGatewaySubnetGroup := &goaviatrix.SpokeGatewaySubnetGroup{
 		SubnetGroupName: d.Get("name").(string),
-		GatewayName:     d.Get("spoke_gateway_name").(string),
+		GatewayName:     d.Get("gw_name").(string),
 		SubnetList:      subnets,
 	}
 
@@ -101,15 +101,15 @@ func resourceAviatrixSpokeGatewaySubnetGroupRead(ctx context.Context, d *schema.
 		log.Printf("[DEBUG] Looks like an import. Import Id is %s", id)
 		parts := strings.Split(id, "~")
 		if len(parts) != 2 {
-			return diag.Errorf("invalid ID, expected ID spoke_gateway_name~subnet_group_name, instead got %s", d.Id())
+			return diag.Errorf("invalid ID, expected ID gw_name~name, instead got %s", d.Id())
 		}
-		d.Set("spoke_gateway_name", parts[0])
+		d.Set("gw_name", parts[0])
 		d.Set("name", parts[1])
 		d.SetId(id)
 	}
 
 	name = d.Get("name").(string)
-	spokeGatewayName := d.Get("spoke_gateway_name").(string)
+	spokeGatewayName := d.Get("gw_name").(string)
 
 	spokeGatewaySubnetGroup := &goaviatrix.SpokeGatewaySubnetGroup{
 		GatewayName:     spokeGatewayName,
