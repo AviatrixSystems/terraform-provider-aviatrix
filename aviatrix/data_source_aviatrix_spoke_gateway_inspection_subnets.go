@@ -32,12 +32,13 @@ func dataSourceAviatrixSpokeGatewayInspectionSubnets() *schema.Resource {
 func dataSourceAviatrixSpokeGatewayInspectionSubnetsRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	subnetsForInspection, err := client.GetSubnetsForInspection(d.Get("gw_name").(string))
+	gwName := d.Get("gw_name").(string)
+	subnetsForInspection, err := client.GetSubnetsForInspection(gwName)
 	if err != nil {
-		return fmt.Errorf("couldn't get subnets for inspection: %s", err)
+		return fmt.Errorf("couldn't get subnets for inspection for gateway %s: %s", gwName, err)
 	}
 	d.Set("subnets_for_inspection", subnetsForInspection)
 
-	d.SetId(d.Get("gw_name").(string) + "~inspection_subnets")
+	d.SetId(gwName)
 	return nil
 }
