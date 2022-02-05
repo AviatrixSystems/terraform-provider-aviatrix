@@ -1,11 +1,7 @@
 package goaviatrix
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"net/url"
 	"strconv"
 	"strings"
 )
@@ -70,66 +66,46 @@ type SubnetInfo struct {
 }
 
 func (c *Client) CreateVpc(vpc *Vpc) error {
-	// TODO: use PostAPI - long form
-	Url, err := url.Parse(c.baseURL)
-	if err != nil {
-		return errors.New(("url Parsing failed for create_custom_vpc ") + err.Error())
+	action := "create_custom_vpc"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"cloud_type":   strconv.Itoa(vpc.CloudType),
+		"account_name": vpc.AccountName,
+		"pool_name":    vpc.Name,
 	}
-	createCustomVpc := url.Values{}
-	createCustomVpc.Add("CID", c.CID)
-	createCustomVpc.Add("action", "create_custom_vpc")
-	createCustomVpc.Add("cloud_type", strconv.Itoa(vpc.CloudType))
-	createCustomVpc.Add("account_name", vpc.AccountName)
-	createCustomVpc.Add("pool_name", vpc.Name)
 	if vpc.CloudType != GCP {
-		createCustomVpc.Add("region", vpc.Region)
-		createCustomVpc.Add("vpc_cidr", vpc.Cidr)
-		createCustomVpc.Add("aviatrix_transit_vpc", vpc.AviatrixTransitVpc)
-		createCustomVpc.Add("aviatrix_firenet_vpc", vpc.AviatrixFireNetVpc)
+		form["region"] = vpc.Region
+		form["vpc_cidr"] = vpc.Cidr
+		form["aviatrix_transit_vpc"] = vpc.AviatrixTransitVpc
+		form["aviatrix_firenet_vpc"] = vpc.AviatrixFireNetVpc
 	} else {
 		if vpc.Subnets != nil && len(vpc.Subnets) != 0 {
-			i := 0
-			for _, subnetInfo := range vpc.Subnets {
-				createCustomVpc.Add("subnet_list["+strconv.Itoa(i)+"][name]", subnetInfo.Name)
-				createCustomVpc.Add("subnet_list["+strconv.Itoa(i)+"][region]", subnetInfo.Region)
-				createCustomVpc.Add("subnet_list["+strconv.Itoa(i)+"][cidr]", subnetInfo.Cidr)
-				i++
+			for i, subnetInfo := range vpc.Subnets {
+				form[fmt.Sprintf("subnet_list[%d][name]", i)] = subnetInfo.Name
+				form[fmt.Sprintf("subnet_list[%d][region]", i)] = subnetInfo.Region
+				form[fmt.Sprintf("subnet_list[%d][cidr]", i)] = subnetInfo.Cidr
 			}
 		}
 	}
 	if vpc.SubnetSize != 0 {
-		createCustomVpc.Add("subnet_size", strconv.Itoa(vpc.SubnetSize))
+		form["subnet_size"] = strconv.Itoa(vpc.SubnetSize)
 	}
 	if vpc.NumOfSubnetPairs != 0 {
 		if IsCloudType(vpc.CloudType, AWSRelatedCloudTypes) {
-			createCustomVpc.Add("num_of_zones", strconv.Itoa(vpc.NumOfSubnetPairs))
+			form["num_of_zones"] = strconv.Itoa(vpc.NumOfSubnetPairs)
 		} else if IsCloudType(vpc.CloudType, AzureArmRelatedCloudTypes) {
-			createCustomVpc.Add("num_of_subnets", strconv.Itoa(vpc.NumOfSubnetPairs))
+			form["num_of_subnets"] = strconv.Itoa(vpc.NumOfSubnetPairs)
 		}
 	}
 	if vpc.EnablePrivateOobSubnet {
-		createCustomVpc.Add("private_oob_subnet", "true")
+		form["private_oob_subnet"] = "true"
 	}
 	if vpc.ResourceGroup != "" {
-		createCustomVpc.Add("resource_group", vpc.ResourceGroup)
+		form["resource_group"] = vpc.ResourceGroup
 	}
-	Url.RawQuery = createCustomVpc.Encode()
-	resp, err := c.Get(Url.String(), nil)
-	if err != nil {
-		return errors.New("HTTP Get create_custom_vpc failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode create_custom_vpc failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API create_custom_vpc Get failed: " + data.Reason)
-	}
-	return nil
+
+	return c.PostAPI(action, form, BasicCheck)
 }
 
 // GetVpcCloudTypeById returns the cloud_type of the vpc with the given ID.
