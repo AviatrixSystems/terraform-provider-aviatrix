@@ -71,14 +71,18 @@ func (c *Client) GetSpokeGatewaySubnetGroup(ctx context.Context, spokeGatewaySub
 }
 
 func (c *Client) UpdateSpokeGatewaySubnetGroup(ctx context.Context, spokeGatewaySubnetGroup *SpokeGatewaySubnetGroup) error {
-	subnetsJson, _ := json.Marshal(spokeGatewaySubnetGroup.SubnetList)
-
 	form := map[string]string{
 		"action":            "update_spoke_gateway_subnet_group",
 		"CID":               c.CID,
 		"gateway_name":      spokeGatewaySubnetGroup.GatewayName,
 		"subnet_group_name": spokeGatewaySubnetGroup.SubnetGroupName,
-		"subnet_list":       string(subnetsJson),
+	}
+
+	if spokeGatewaySubnetGroup.SubnetList == nil {
+		form["subnet_list"] = "[]"
+	} else {
+		subnetsJson, _ := json.Marshal(spokeGatewaySubnetGroup.SubnetList)
+		form["subnet_list"] = string(subnetsJson)
 	}
 
 	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
