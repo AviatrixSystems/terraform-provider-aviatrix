@@ -234,7 +234,7 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 		"pos":    "0",
 	}
 	backendURL := fmt.Sprintf("https://%s/v1/backend1", c.ControllerIP)
-	const maxPoll = 180
+	const maxPoll = 360
 	sleepDuration := time.Second * 10
 	var j int
 	for ; j < maxPoll; j++ {
