@@ -55,6 +55,7 @@ type TransitVpc struct {
 	ApprovedLearnedCidrs         []string `form:"approved_learned_cidrs"`
 	BgpLanVpcID                  string   `form:"bgp_lan_vpc"`
 	BgpLanSpecifySubnet          string   `form:"bgp_lan_specify_subnet"`
+	Async                        bool     `form:"async,omitempty"`
 }
 
 type TransitGatewayAdvancedConfig struct {
@@ -141,8 +142,9 @@ type TransitGatewayBgpLanIpInfo struct {
 func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 	gateway.CID = c.CID
 	gateway.Action = "create_transit_gw"
+	gateway.Async = true
 
-	return c.PostAPI(gateway.Action, gateway, BasicCheck)
+	return c.PostAsyncAPI(gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) EnableHaTransitGateway(gateway *TransitVpc) error {

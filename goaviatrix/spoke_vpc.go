@@ -46,6 +46,7 @@ type SpokeVpc struct {
 	EnableBgp                    string   `form:"enable_bgp"`
 	LearnedCidrsApproval         string   `form:"learned_cidrs_approval,omitempty"`
 	ApprovedLearnedCidrs         []string `form:"approved_learned_cidrs"`
+	Async                        bool     `form:"async,omitempty"`
 }
 
 type SpokeGatewayAdvancedConfig struct {
@@ -91,8 +92,9 @@ type SpokeGatewayAdvancedConfigRespResult struct {
 func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) error {
 	spoke.CID = c.CID
 	spoke.Action = "create_spoke_gw"
+	spoke.Async = true
 
-	return c.PostAPI(spoke.Action, spoke, BasicCheck)
+	return c.PostAsyncAPI(spoke.Action, spoke, BasicCheck)
 }
 
 func (c *Client) SpokeJoinTransit(spoke *SpokeVpc) error {

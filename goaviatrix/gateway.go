@@ -340,8 +340,9 @@ type FQDNGatwayInfo struct {
 func (c *Client) CreateGateway(gateway *Gateway) error {
 	gateway.CID = c.CID
 	gateway.Action = "connect_container"
+	gateway.Async = true
 
-	return c.PostAPI(gateway.Action, gateway, BasicCheck)
+	return c.PostAsyncAPI(gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) CreatePublicSubnetFilteringGateway(gateway *Gateway) error {
