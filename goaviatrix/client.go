@@ -184,7 +184,7 @@ func (c *Client) PostAPIContextWithResponse(ctx context.Context, v interface{}, 
 	if err != nil {
 		return fmt.Errorf("HTTP POST %q failed: %v", action, err)
 	}
-	return checkAndReturnAPIResp(resp, v, action, checkFunc)
+	return checkAndReturnAPIResp(resp, v, "POST", action, checkFunc)
 }
 
 // PostFileAPI will encode the files and parameters with multipart form encoding and POST to the API.
@@ -231,7 +231,7 @@ func checkAPIResp(resp *http.Response, action string, checkFunc CheckAPIResponse
 
 // checkAndReturnAPIResp will decode the response and check for any errors with the provided checkFunc.
 // If there are no errors, the response will be put into the return value v.
-func checkAndReturnAPIResp(resp *http.Response, v interface{}, action string, checkFunc CheckAPIResponseFunc) error {
+func checkAndReturnAPIResp(resp *http.Response, v interface{}, method, action string, checkFunc CheckAPIResponseFunc) error {
 	var data APIResp
 	buf := new(bytes.Buffer)
 	_, err := buf.ReadFrom(resp.Body)
@@ -243,7 +243,7 @@ func checkAndReturnAPIResp(resp *http.Response, v interface{}, action string, ch
 	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
 		return fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
 	}
-	if err := checkFunc(action, "Get", data.Reason, data.Return); err != nil {
+	if err := checkFunc(action, method, data.Reason, data.Return); err != nil {
 		return err
 	}
 	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&v); err != nil {
