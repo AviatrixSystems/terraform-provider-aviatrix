@@ -433,3 +433,23 @@ func (c *Client) EnableActiveStandbyPreemptiveSpoke(spokeGateway *SpokeVpc) erro
 	}
 	return c.PostAPI(action, form, BasicCheck)
 }
+
+func (c *Client) EnableSpokeOnpremRoutePropagation(spokeGateway *SpokeVpc) error {
+	action := "enable_spoke_onprem_route_propagation"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": spokeGateway.GwName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) DisableSpokeOnpremRoutePropagation(spokeGateway *SpokeVpc) error {
+	action := "disable_spoke_onprem_route_propagation"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": spokeGateway.GwName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
