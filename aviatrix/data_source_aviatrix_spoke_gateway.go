@@ -5,6 +5,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -43,6 +45,11 @@ func dataSourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Size of the gateway instance.",
+			},
+			"zone": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Availability Zone. Only available for cloud_type = 8 (Azure). Must be in the form 'az-n', for example, 'az-2'.",
 			},
 			"subnet": {
 				Type:        schema.TypeString,
@@ -252,6 +259,140 @@ func dataSourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Image version of the HA gateway.",
 			},
+			// NEW ATTRIBUTES
+			"enable_monitor_gateway_subnets": {
+				Type:     schema.TypeBool,
+				Computed: true,
+				Description: "Enable [monitor gateway subnets](https://docs.aviatrix.com/HowTos/gateway.html#monitor-gateway-subnet). " +
+					"Only valid for cloud_type = 1 (AWS) or 256 (AWSGov). Valid values: true, false. Default value: false.",
+			},
+			"monitor_exclude_list": {
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "A set of monitored instance ids. Only set when 'enable_monitor_gateway_subnets' = true.",
+			},
+			"enable_jumbo_frame": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Enable jumbo frame support for spoke gateway.",
+			},
+			"enable_private_vpc_default_route": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Config Private VPC Default Route.",
+			},
+			"enable_skip_public_route_table_update": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Skip Public Route Table Update.",
+			},
+			"enable_auto_advertise_s2c_cidrs": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Automatically advertise remote CIDR to Aviatrix Transit Gateway when route based Site2Cloud Tunnel is created.",
+			},
+			"spoke_bgp_manual_advertise_cidrs": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Computed:    true,
+				Description: "Intended CIDR list to be advertised to external BGP router.",
+			},
+			"enable_bgp": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Enable BGP.",
+			},
+			"enable_learned_cidrs_approval": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Switch to enable/disable encrypted transit approval for BGP Spoke Gateway.",
+			},
+			"learned_cidrs_approval_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Description: "Set the learned CIDRs approval mode for BGP Spoke Gateway. Only valid when 'enable_learned_cidrs_approval' is " +
+					"set to true. Currently, only 'gateway' is supported: learned CIDR approval applies to " +
+					"ALL connections. Default value: 'gateway'.",
+			},
+			"approved_learned_cidrs": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsCIDR,
+				},
+				Computed:    true,
+				Description: "Approved learned CIDRs for BGP Spoke Gateway. Available as of provider version R2.21+.",
+			},
+			"bgp_ecmp": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Enable Equal Cost Multi Path (ECMP) routing for the next hop for BGP Spoke Gateway.",
+			},
+			"enable_active_standby": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Enables Active-Standby Mode, available only with HA enabled for BGP Spoke Gateway.",
+			},
+			"enable_active_standby_preemptive": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Enables Preemptive Mode for Active-Standby, available only with Active-Standby enabled.",
+			},
+			"disable_route_propagation": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Disables route propagation on BGP Spoke to attached Transit Gateway.",
+			},
+			"local_as_number": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Changes the Aviatrix BGP Spoke Gateway ASN number before you setup Aviatrix BGP Spoke Gateway connection configurations.",
+			},
+			"prepend_as_path": {
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: goaviatrix.ValidateASN,
+				},
+				Computed:    true,
+				Description: "List of AS numbers to populate BGP AP_PATH field when it advertises to VGW or peer devices. Only valid for BGP Spoke Gateway",
+			},
+			"bgp_polling_time": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "BGP route polling time for BGP Spoke Gateway. Unit is in seconds.",
+			},
+			"bgp_hold_time": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "BGP Hold Time for BGP Spoke Gateway. Unit is in seconds.",
+			},
+			"enable_spot_instance": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Enable spot instance. NOT supported for production deployment.",
+			},
+			"spot_price": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Price for spot instance. NOT supported for production deployment.",
+			},
+			"azure_eip_name_resource_group": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The name of the public IP address and its resource group in Azure to assign to this Spoke Gateway.",
+			},
+			"ha_azure_eip_name_resource_group": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The name of the public IP address and its resource group in Azure to assign to the HA Spoke Gateway.",
+			},
+			"ha_security_group_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "HA security group used for the spoke gateway.",
+			},
 		},
 	}
 }
@@ -301,6 +442,10 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("vpc_id", gw.VpcID)
 			d.Set("vpc_reg", gw.VpcRegion)
 			d.Set("allocate_new_eip", true)
+			_, zoneIsSet := d.GetOk("zone")
+			if zoneIsSet && gw.GatewayZone != "AvailabilitySet" {
+				d.Set("zone", "az-"+gw.GatewayZone)
+			}
 		} else if gw.CloudType == goaviatrix.AliCloud {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 			d.Set("vpc_reg", gw.VpcRegion)
@@ -411,6 +556,7 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("ha_private_ip", haGw.PrivateIP)
 			d.Set("ha_image_version", haGw.ImageVersion)
 			d.Set("ha_software_version", haGw.SoftwareVersion)
+			d.Set("ha_security_group_id", gw.HaGw.GwSecurityGroupID)
 			if haGw.InsaneMode == "yes" && goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 				d.Set("ha_insane_mode_az", haGw.GatewayZone)
 			} else {
@@ -425,6 +571,15 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 			if haGw.EnablePrivateOob {
 				d.Set("ha_oob_management_subnet", strings.Split(haGw.OobManagementSubnet, "~~")[0])
 				d.Set("ha_oob_availability_zone", haGw.GatewayZone)
+			}
+
+			if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+				azureEip := strings.Split(gw.HaGw.ReuseEip, ":")
+				if len(azureEip) == 3 {
+					d.Set("ha_azure_eip_name_resource_group", fmt.Sprintf("%s:%s", azureEip[0], azureEip[1]))
+				} else {
+					log.Printf("[WARN] could not get Azure EIP name and resource group for the HA Gateway %s", gw.GwName)
+				}
 			}
 		}
 
@@ -450,6 +605,65 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 		}
 
 		d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
+		d.Set("enable_jumbo_frame", gw.JumboFrame)
+		d.Set("enable_private_vpc_default_route", gw.PrivateVpcDefaultEnabled)
+		d.Set("enable_skip_public_route_table_update", gw.SkipPublicVpcUpdateEnabled)
+		d.Set("enable_auto_advertise_s2c_cidrs", gw.AutoAdvertiseCidrsEnabled)
+		d.Set("spoke_bgp_manual_advertise_cidrs", gw.BgpManualSpokeAdvertiseCidrs)
+		d.Set("enable_bgp", gw.EnableBgp)
+		d.Set("enable_learned_cidrs_approval", gw.EnableLearnedCidrsApproval)
+		if gw.EnableLearnedCidrsApproval {
+			spokeAdvancedConfig, err := client.GetSpokeGatewayAdvancedConfig(&goaviatrix.SpokeVpc{GwName: gw.GwName})
+			if err != nil {
+				return fmt.Errorf("could not get advanced config for spoke gateway: %v", err)
+			}
+
+			if err = d.Set("approved_learned_cidrs", spokeAdvancedConfig.ApprovedLearnedCidrs); err != nil {
+				return fmt.Errorf("could not set approved_learned_cidrs into state: %v", err)
+			}
+		} else {
+			d.Set("approved_learned_cidrs", nil)
+		}
+		d.Set("bgp_ecmp", gw.BgpEcmp)
+		d.Set("enable_active_standby", gw.EnableActiveStandby)
+		d.Set("enable_active_standby_preemptive", gw.EnableActiveStandbyPreemptive)
+		d.Set("disable_route_propagation", gw.DisableRoutePropagation)
+		var prependAsPath []string
+		for _, p := range strings.Split(gw.PrependASPath, " ") {
+			if p != "" {
+				prependAsPath = append(prependAsPath, p)
+			}
+		}
+		err = d.Set("prepend_as_path", prependAsPath)
+
+		d.Set("enable_monitor_gateway_subnets", gw.MonitorSubnetsAction == "enable")
+		if err := d.Set("monitor_exclude_list", gw.MonitorExcludeGWList); err != nil {
+			return fmt.Errorf("setting 'monitor_exclude_list' to state: %v", err)
+		}
+
+		if gw.EnableBgp {
+			d.Set("learned_cidrs_approval_mode", gw.LearnedCidrsApprovalMode)
+			d.Set("bgp_polling_time", gw.BgpPollingTime)
+			d.Set("bgp_hold_time", gw.BgpHoldTime)
+		} else {
+			d.Set("learned_cidrs_approval_mode", "gateway")
+			d.Set("bgp_polling_time", 50)
+			d.Set("bgp_hold_time", 180)
+		}
+
+		if gw.EnableSpotInstance {
+			d.Set("enable_spot_instance", true)
+			d.Set("spot_price", gw.SpotPrice)
+		}
+
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+			azureEip := strings.Split(gw.ReuseEip, ":")
+			if len(azureEip) == 3 {
+				d.Set("azure_eip_name_resource_group", fmt.Sprintf("%s:%s", azureEip[0], azureEip[1]))
+			} else {
+				log.Printf("[WARN] could not get Azure EIP name and resource group for the Spoke Gateway %s", gw.GwName)
+			}
+		}
 	}
 
 	d.SetId(gateway.GwName)
