@@ -344,6 +344,12 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enables Preemptive Mode for Active-Standby, available only with Active-Standby enabled.",
 			},
+			"disable_route_propagation": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Disables route propagation on BGP Spoke to attached Transit Gateway. Default: false.",
+			},
 			"local_as_number": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -563,11 +569,16 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	enableBgp := d.Get("enable_bgp").(bool)
+	disableRoutePropagation := d.Get("disable_route_propagation").(bool)
 	if enableBgp {
 		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWS|goaviatrix.Azure) {
 			return fmt.Errorf("enabling BGP is only supported for AWS (1) and Azure (8)")
 		}
 		gateway.EnableBgp = "on"
+	} else {
+		if disableRoutePropagation {
+			return fmt.Errorf("disable route propagation is not supported on Non-BGP Spoke")
+		}
 	}
 
 	learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
@@ -1158,6 +1169,12 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	if disableRoutePropagation {
+		if err := client.DisableSpokeOnpremRoutePropagation(gateway); err != nil {
+			return fmt.Errorf("could not disable route propagation for Spoke %s : %v", gateway.GwName, err)
+		}
+	}
+
 	if val, ok := d.GetOk("local_as_number"); ok {
 		err := client.SetLocalASNumberSpoke(gateway, val.(string))
 		if err != nil {
@@ -1267,6 +1284,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("bgp_ecmp", gw.BgpEcmp)
 	d.Set("enable_active_standby", gw.EnableActiveStandby)
 	d.Set("enable_active_standby_preemptive", gw.EnableActiveStandbyPreemptive)
+	d.Set("disable_route_propagation", gw.DisableRoutePropagation)
 	var prependAsPath []string
 	for _, p := range strings.Split(gw.PrependASPath, " ") {
 		if p != "" {
@@ -2501,6 +2519,28 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		err := client.ChangeBgpHoldTime(gateway.GwName, d.Get("bgp_hold_time").(int))
 		if err != nil {
 			return fmt.Errorf("could not change BGP Hold Time during Spoke Gateway update: %v", err)
+		}
+	}
+
+	if d.HasChange("disable_route_propagation") {
+		disableRoutePropagation := d.Get("disable_route_propagation").(bool)
+		enableBgp := d.Get("enable_bgp").(bool)
+		if disableRoutePropagation && !enableBgp {
+			return fmt.Errorf("disable route propagation is not supported for Non-BGP Spoke during Spoke Gateway update")
+		}
+		gw := &goaviatrix.SpokeVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		if disableRoutePropagation {
+			err := client.DisableSpokeOnpremRoutePropagation(gw)
+			if err != nil {
+				return fmt.Errorf("failed to disable route propagation for Spoke %s during Spoke Gateway update: %v", gw.GwName, err)
+			}
+		} else {
+			err := client.EnableSpokeOnpremRoutePropagation(gw)
+			if err != nil {
+				return fmt.Errorf("failed to enable route propagation for Spoke %s during Spoke Gateway update: %v", gw.GwName, err)
+			}
 		}
 	}
 
