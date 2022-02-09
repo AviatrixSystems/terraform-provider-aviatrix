@@ -107,7 +107,7 @@ func (c *Client) CreateAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (string, erro
 	if awsTgwVpnConn.PreSharedKeyTun2 != "" {
 		form["pre_shared_key_tun_2"] = awsTgwVpnConn.PreSharedKeyTun2
 	}
-	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	err := c.PostAPIWithResponse(&data, form["action"], form, BasicCheck)
 	if err != nil {
 		return "", err
 	}

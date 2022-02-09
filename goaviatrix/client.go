@@ -169,7 +169,23 @@ func (c *Client) PostAPIContext(ctx context.Context, action string, d interface{
 	if err != nil {
 		return fmt.Errorf("HTTP POST %q failed: %v", action, err)
 	}
-	return decodeAndCheckAPIResp(resp, action, checkFunc)
+	return checkAPIResp(resp, action, checkFunc)
+}
+
+// PostAPIWithResponse makes a post request to the Aviatrix API, decodes the response, checks for any errors
+// and decodes the response into the return value v.
+func (c *Client) PostAPIWithResponse(v interface{}, action string, d interface{}, checkFunc CheckAPIResponseFunc) error {
+	return c.PostAPIContextWithResponse(context.Background(), v, action, d, checkFunc)
+}
+
+// PostAPIContextWithResponse makes a post request to the Aviatrix API, decodes the response, checks for any errors
+// and decodes the response into the return value v.
+func (c *Client) PostAPIContextWithResponse(ctx context.Context, v interface{}, action string, d interface{}, checkFunc CheckAPIResponseFunc) error {
+	resp, err := c.PostContext(ctx, c.baseURL, d)
+	if err != nil {
+		return fmt.Errorf("HTTP POST %q failed: %v", action, err)
+	}
+	return checkAndReturnAPIResp(resp, v, "POST", action, checkFunc)
 }
 
 // PostFileAPI will encode the files and parameters with multipart form encoding and POST to the API.
@@ -182,7 +198,7 @@ func (c *Client) PostFileAPI(params map[string]string, files []File, checkFunc C
 	if err != nil {
 		return fmt.Errorf("HTTP POST %q failed: %v", params["action"], err)
 	}
-	return decodeAndCheckAPIResp(resp, params["action"], checkFunc)
+	return checkAPIResp(resp, params["action"], checkFunc)
 }
 
 // PostFileAPIContext will encode the files and parameters with multipart form encoding and POST to the API.
@@ -195,7 +211,7 @@ func (c *Client) PostFileAPIContext(ctx context.Context, params map[string]strin
 	if err != nil {
 		return fmt.Errorf("HTTP POST %q failed: %v", params["action"], err)
 	}
-	return decodeAndCheckAPIResp(resp, params["action"], checkFunc)
+	return checkAPIResp(resp, params["action"], checkFunc)
 }
 
 func (c *Client) PostAsyncAPI(action string, i interface{}, checkFunc CheckAPIResponseFunc) error {
@@ -269,7 +285,8 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 	return fmt.Errorf("waited %s but upgrade never finished. Please manually verify the upgrade status", maxPoll*sleepDuration)
 }
 
-func decodeAndCheckAPIResp(resp *http.Response, action string, checkFunc CheckAPIResponseFunc) error {
+// checkAPIResp will decode the response and check for any errors with the provided checkFunc
+func checkAPIResp(resp *http.Response, action string, checkFunc CheckAPIResponseFunc) error {
 	var data APIResp
 	var b bytes.Buffer
 	_, err := b.ReadFrom(resp.Body)
@@ -282,6 +299,29 @@ func decodeAndCheckAPIResp(resp *http.Response, action string, checkFunc CheckAP
 	}
 
 	return checkFunc(action, "Post", data.Reason, data.Return)
+}
+
+// checkAndReturnAPIResp will decode the response and check for any errors with the provided checkFunc.
+// If there are no errors, the response will be put into the return value v.
+func checkAndReturnAPIResp(resp *http.Response, v interface{}, method, action string, checkFunc CheckAPIResponseFunc) error {
+	var data APIResp
+	buf := new(bytes.Buffer)
+	_, err := buf.ReadFrom(resp.Body)
+	if err != nil {
+		return fmt.Errorf("reading response body %q failed: %v", action, err)
+	}
+	bodyString := buf.String()
+
+	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
+		return fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
+	}
+	if err := checkFunc(action, method, data.Reason, data.Return); err != nil {
+		return err
+	}
+	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&v); err != nil {
+		return fmt.Errorf("Json Decode failed: %v\n Body: %s", err, bodyString)
+	}
+	return nil
 }
 
 // GetAPI makes a GET request to the Aviatrix API
