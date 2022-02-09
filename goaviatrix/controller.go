@@ -260,8 +260,9 @@ func (c *Client) SetCertDomain(ctx context.Context, certDomain string) error {
 		"action":      "set_cert_domain",
 		"CID":         c.CID,
 		"cert_domain": certDomain,
+		"async":       "true",
 	}
-	return c.PostAPIContext(ctx, params["action"], params, BasicCheck)
+	return c.PostAsyncAPIContext(ctx, params["action"], params, BasicCheck)
 }
 
 func (c *Client) GetCertDomain(ctx context.Context) (*CertDomainConfig, error) {

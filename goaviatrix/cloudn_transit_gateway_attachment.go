@@ -25,13 +25,15 @@ type CloudnTransitGatewayAttachment struct {
 	EnableLearnedCidrsApprovalValue  string   `json:"conn_learned_cidrs_approval"`
 	ApprovedCidrs                    []string `json:"conn_approved_learned_cidrs"`
 	PrependAsPath                    string   `json:"conn_bgp_prepend_as_path"`
+	Async                            bool     `form:"async,omitempty"`
 }
 
 func (c *Client) CreateCloudnTransitGatewayAttachment(ctx context.Context, attachment *CloudnTransitGatewayAttachment) error {
 	attachment.Action = "attach_cloudwan_device_to_transit_gateway"
 	attachment.CID = c.CID
 	attachment.RoutingProtocol = "bgp"
-	return c.PostAPIContext(ctx, attachment.Action, attachment, BasicCheck)
+	attachment.Async = true
+	return c.PostAsyncAPIContext(ctx, attachment.Action, attachment, BasicCheck)
 }
 
 func (c *Client) GetCloudnTransitGatewayAttachment(ctx context.Context, connName string) (*CloudnTransitGatewayAttachment, error) {

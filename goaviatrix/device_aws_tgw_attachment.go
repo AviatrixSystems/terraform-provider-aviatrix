@@ -15,6 +15,7 @@ type DeviceAwsTgwAttachment struct {
 	EnableGlobalAccelerator string `form:"enable_global_accelerator"`
 	Action                  string `form:"action"`
 	CID                     string `form:"CID"`
+	Async                   bool   `form:"async,omitempty"`
 }
 
 func (b *DeviceAwsTgwAttachment) ID() string {
@@ -24,7 +25,8 @@ func (b *DeviceAwsTgwAttachment) ID() string {
 func (c *Client) CreateDeviceAwsTgwAttachment(attachment *DeviceAwsTgwAttachment) error {
 	attachment.Action = "attach_cloudwan_device_to_aws_tgw"
 	attachment.CID = c.CID
-	return c.PostAPI(attachment.Action, attachment, BasicCheck)
+	attachment.Async = true
+	return c.PostAsyncAPI(attachment.Action, attachment, BasicCheck)
 }
 
 func (c *Client) GetDeviceAwsTgwAttachment(tgwAttachment *DeviceAwsTgwAttachment) (*DeviceAwsTgwAttachment, error) {

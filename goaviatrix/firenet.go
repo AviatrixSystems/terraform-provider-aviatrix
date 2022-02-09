@@ -187,9 +187,10 @@ func (c *Client) ConnectFireNetWithTgw(awsTgw *AWSTgw, vpcSolo VPCSolo, Security
 		"vpc_id":      vpcSolo.VpcID,
 		"tgw_name":    awsTgw.Name,
 		"domain_name": SecurityDomainName,
+		"async":       "true",
 	}
 
-	return c.PostAPI(form["action"], form, BasicCheck)
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DisconnectFireNetFromTgw(awsTgw *AWSTgw, vpcID string) error {
@@ -197,9 +198,10 @@ func (c *Client) DisconnectFireNetFromTgw(awsTgw *AWSTgw, vpcID string) error {
 		"CID":    c.CID,
 		"action": "disconnect_firenet_with_tgw",
 		"vpc_id": vpcID,
+		"async":  "true",
 	}
 
-	return c.PostAPI(form["action"], form, BasicCheck)
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) EditFireNetInspection(fireNet *FireNet) error {

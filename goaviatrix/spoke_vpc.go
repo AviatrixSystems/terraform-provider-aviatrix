@@ -46,6 +46,7 @@ type SpokeVpc struct {
 	EnableBgp                    string   `form:"enable_bgp"`
 	LearnedCidrsApproval         string   `form:"learned_cidrs_approval,omitempty"`
 	ApprovedLearnedCidrs         []string `form:"approved_learned_cidrs"`
+	Async                        bool     `form:"async,omitempty"`
 }
 
 type SpokeGatewayAdvancedConfig struct {
@@ -91,8 +92,9 @@ type SpokeGatewayAdvancedConfigRespResult struct {
 func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) error {
 	spoke.CID = c.CID
 	spoke.Action = "create_spoke_gw"
+	spoke.Async = true
 
-	return c.PostAPI(spoke.Action, spoke, BasicCheck)
+	return c.PostAsyncAPI(spoke.Action, spoke, BasicCheck)
 }
 
 func (c *Client) SpokeJoinTransit(spoke *SpokeVpc) error {
@@ -143,6 +145,7 @@ func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 		"action":  "enable_spoke_ha",
 		"gw_name": spoke.GwName,
 		"eip":     spoke.Eip,
+		"async":   "true",
 	}
 
 	if IsCloudType(spoke.CloudType, GCPRelatedCloudTypes) {
@@ -162,7 +165,7 @@ func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 		return nil
 	}
 
-	return c.PostAPI(form["action"], form, checkFunc)
+	return c.PostAsyncAPI(form["action"], form, checkFunc)
 }
 
 func (c *Client) EnableHaSpokeGateway(gateway *SpokeVpc) error {

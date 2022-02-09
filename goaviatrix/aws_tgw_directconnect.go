@@ -18,6 +18,7 @@ type AwsTgwDirectConnect struct {
 	AllowedPrefix            string `form:"allowed_prefix,omitempty"`
 	DirectConnectID          string `form:"directconnect_id, omitempty"`
 	LearnedCidrsApproval     string `form:"learned_cidrs_approval,omitempty"`
+	Async                    bool   `form:"async,omitempty"`
 }
 
 type AwsTgwDirectConnEdit struct {
@@ -38,7 +39,8 @@ type AwsTgwDirectConnResp struct {
 func (c *Client) CreateAwsTgwDirectConnect(awsTgwDirectConnect *AwsTgwDirectConnect) error {
 	awsTgwDirectConnect.CID = c.CID
 	awsTgwDirectConnect.Action = "attach_direct_connect_to_tgw"
-	return c.PostAPI(awsTgwDirectConnect.Action, awsTgwDirectConnect, BasicCheck)
+	awsTgwDirectConnect.Async = true
+	return c.PostAsyncAPI(awsTgwDirectConnect.Action, awsTgwDirectConnect, BasicCheck)
 }
 
 func (c *Client) GetAwsTgwDirectConnect(awsTgwDirectConnect *AwsTgwDirectConnect) (*AwsTgwDirectConnect, error) {

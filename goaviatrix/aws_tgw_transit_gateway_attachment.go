@@ -49,8 +49,9 @@ func (c *Client) CreateAwsTgwTransitGwAttachment(awsTgwTransitGwAttachment *AwsT
 		"tgw_name":          awsTgwTransitGwAttachment.TgwName,
 		"route_domain_name": "Aviatrix_Edge_Domain",
 		"gateway_name":      awsTgwTransitGwAttachment.TransitGatewayName,
+		"async":             "true",
 	}
-	return c.PostAPI(form["action"], form, BasicCheck)
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) GetAwsTgwTransitGwAttachment(awsTgwTransitGwAttachment *AwsTgwTransitGwAttachment) (*AwsTgwTransitGwAttachment, error) {
@@ -91,6 +92,7 @@ func (c *Client) DeleteAwsTgwTransitGwAttachment(awsTgwTransitGwAttachment *AwsT
 		"action":   "detach_vpc_from_tgw",
 		"tgw_name": awsTgwTransitGwAttachment.TgwName,
 		"vpc_name": awsTgwTransitGwAttachment.VpcID,
+		"async":    "true",
 	}
 	check := func(action, method, reason string, ret bool) error {
 		if !ret {
@@ -101,5 +103,5 @@ func (c *Client) DeleteAwsTgwTransitGwAttachment(awsTgwTransitGwAttachment *AwsT
 		}
 		return nil
 	}
-	return c.PostAPI(form["action"], form, check)
+	return c.PostAsyncAPI(form["action"], form, check)
 }

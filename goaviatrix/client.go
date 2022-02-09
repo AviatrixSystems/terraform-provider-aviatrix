@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -195,6 +196,77 @@ func (c *Client) PostFileAPIContext(ctx context.Context, params map[string]strin
 		return fmt.Errorf("HTTP POST %q failed: %v", params["action"], err)
 	}
 	return decodeAndCheckAPIResp(resp, params["action"], checkFunc)
+}
+
+func (c *Client) PostAsyncAPI(action string, i interface{}, checkFunc CheckAPIResponseFunc) error {
+	return c.PostAsyncAPIContext(context.Background(), action, i, checkFunc)
+}
+
+func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i interface{}, checkFunc CheckAPIResponseFunc) error {
+	log.Printf("[DEBUG] Post AsyncAPI %s: %v", action, i)
+	resp, err := c.PostContext(ctx, c.baseURL, i)
+	if err != nil {
+		return fmt.Errorf("HTTP POST %s failed: %v", action, err)
+	}
+	var data struct {
+		Return bool   `json:"return"`
+		Result int    `json:"results"`
+		Reason string `json:"reason"`
+	}
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	resp.Body.Close()
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return fmt.Errorf("Json Decode %s failed %v\n Body: %s", action, err, bodyString)
+	}
+	if !data.Return || data.Result == 0 {
+		return fmt.Errorf("rest API %s POST failed to initiate async action: %s", action, data.Reason)
+	}
+
+	requestID := data.Result
+	form := map[string]string{
+		"action": "check_task_status",
+		"CID":    c.CID,
+		"id":     strconv.Itoa(requestID),
+		"pos":    "0",
+	}
+	backendURL := fmt.Sprintf("https://%s/v1/backend1", c.ControllerIP)
+	const maxPoll = 360
+	sleepDuration := time.Second * 10
+	var j int
+	for ; j < maxPoll; j++ {
+		resp, err = c.PostContext(ctx, backendURL, form)
+		if err != nil {
+			// Could be transient HTTP error, e.g. EOF error
+			time.Sleep(sleepDuration)
+			continue
+		}
+		buf = new(bytes.Buffer)
+		buf.ReadFrom(resp.Body)
+		var data struct {
+			Pos    int    `json:"pos"`
+			Done   bool   `json:"done"`
+			Status bool   `json:"status"`
+			Result string `json:"result"`
+		}
+		err = json.Unmarshal(buf.Bytes(), &data)
+		if err != nil {
+			return fmt.Errorf("decode check_task_status failed: %v\n Body: %s", err, buf.String())
+		}
+		if !data.Done {
+			// Not done yet
+			time.Sleep(sleepDuration)
+			continue
+		}
+
+		// Async API is done, return result of checkFunc
+		return checkFunc(action, "Post", data.Result, data.Status)
+	}
+	// Waited for too long and async API never finished
+	return fmt.Errorf("waited %s but upgrade never finished. Please manually verify the upgrade status", maxPoll*sleepDuration)
 }
 
 func decodeAndCheckAPIResp(resp *http.Response, action string, checkFunc CheckAPIResponseFunc) error {
