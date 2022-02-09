@@ -201,7 +201,8 @@ func (c *Client) DeleteFirewallInstance(firewallInstance *FirewallInstance) erro
 		"action":      "delete_firenet_firewall_instance",
 		"vpc_id":      firewallInstance.VpcID,
 		"firewall_id": firewallInstance.InstanceID,
+		"async":       "true",
 	}
 
-	return c.PostAPI(form["action"], form, BasicCheck)
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }

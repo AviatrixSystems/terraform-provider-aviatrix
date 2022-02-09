@@ -2825,29 +2825,36 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if d.HasChange("local_as_number") {
-		localAsNumber := d.Get("local_as_number").(string)
-		gateway := &goaviatrix.TransitVpc{
-			GwName: d.Get("gw_name").(string),
-		}
-		err := client.SetLocalASNumber(gateway, localAsNumber)
-		if err != nil {
-			return fmt.Errorf("could not set local_as_number: %v", err)
-		}
-	}
-
-	if d.HasChange("prepend_as_path") {
+	if d.HasChanges("local_as_number", "prepend_as_path") {
 		var prependASPath []string
-		slice := d.Get("prepend_as_path").([]interface{})
-		for _, v := range slice {
+		for _, v := range d.Get("prepend_as_path").([]interface{}) {
 			prependASPath = append(prependASPath, v.(string))
 		}
 		gateway := &goaviatrix.TransitVpc{
 			GwName: d.Get("gw_name").(string),
 		}
-		err := client.SetPrependASPath(gateway, prependASPath)
-		if err != nil {
-			return fmt.Errorf("could not set prepend_as_path: %v", err)
+
+		if d.HasChange("local_as_number") && d.HasChange("prepend_as_path") {
+			// prependASPath must be deleted from the controller before local_as_number can be changed
+			err := client.SetPrependASPath(gateway, nil)
+			if err != nil {
+				return fmt.Errorf("could not delete prepend_as_path during Transit Gateway update: %v", err)
+			}
+		}
+
+		if d.HasChange("local_as_number") {
+			localAsNumber := d.Get("local_as_number").(string)
+			err := client.SetLocalASNumber(gateway, localAsNumber)
+			if err != nil {
+				return fmt.Errorf("could not set local_as_number during Transit Gateway update: %v", err)
+			}
+		}
+
+		if d.HasChange("prepend_as_path") && len(prependASPath) > 0 {
+			err := client.SetPrependASPath(gateway, prependASPath)
+			if err != nil {
+				return fmt.Errorf("could not set prepend_as_path during Transit Gateway update: %v", err)
+			}
 		}
 	}
 

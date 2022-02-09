@@ -150,6 +150,7 @@ func resourceAviatrixCloudnRegistrationRead(ctx context.Context, d *schema.Resou
 		return diag.Errorf("failed to read Aviatrix CloudN Registration: %v", err)
 	}
 
+	d.Set("username", cloudnRegistration.Username)
 	d.Set("address", cloudnRegistration.ControllerAddress)
 
 	gateway := &goaviatrix.TransitVpc{
@@ -180,13 +181,11 @@ func resourceAviatrixCloudnRegistrationUpdate(ctx context.Context, d *schema.Res
 			prependASPath = append(prependASPath, v.(string))
 		}
 
-		prependASPathHasChange := d.HasChange("prepend_as_path")
-
-		if prependASPathHasChange && len(prependASPath) == 0 {
+		if d.HasChange("local_as_number") && d.HasChange("prepend_as_path") {
 			// prependASPath must be deleted from the controller before local_as_number can be changed
-			err := client.SetPrependASPath(gateway, prependASPath)
+			err := client.SetPrependASPath(gateway, nil)
 			if err != nil {
-				return diag.Errorf("failed to update Aviatrix CloudN Registration prepend_as_path: %v", err)
+				return diag.Errorf("failed to delete prepend_as_path during Aviatrix CloudN Registration update: %v", err)
 			}
 		}
 
@@ -198,7 +197,7 @@ func resourceAviatrixCloudnRegistrationUpdate(ctx context.Context, d *schema.Res
 			}
 		}
 
-		if prependASPathHasChange && len(prependASPath) > 0 {
+		if d.HasChange("prepend_as_path") && len(prependASPath) > 0 {
 			err := client.SetPrependASPath(gateway, prependASPath)
 			if err != nil {
 				return diag.Errorf("failed to update Aviatrix CloudN Registration prepend_as_path: %v", err)

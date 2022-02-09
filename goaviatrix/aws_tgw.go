@@ -25,6 +25,7 @@ type AWSTgw struct {
 	CidrList                  []string
 	NotCreateDefaultDomains   bool `form:"not_create_default_domains,omitempty"`
 	TgwId                     string
+	Async                     bool `form:"async,omitempty"`
 }
 
 type AWSTgwAPIResp struct {
@@ -153,7 +154,8 @@ type AttachmentDetail struct {
 func (c *Client) CreateAWSTgw(awsTgw *AWSTgw) error {
 	awsTgw.CID = c.CID
 	awsTgw.Action = "add_aws_tgw"
-	return c.PostAPI(awsTgw.Action, awsTgw, BasicCheck)
+	awsTgw.Async = true
+	return c.PostAsyncAPI(awsTgw.Action, awsTgw, BasicCheck)
 }
 
 func (c *Client) GetAWSTgw(awsTgw *AWSTgw) (*AWSTgw, error) {
@@ -428,8 +430,9 @@ func (c *Client) AttachAviatrixTransitGWToAWSTgw(awsTgw *AWSTgw, gateway *Gatewa
 		"tgw_account_name":  awsTgw.AccountName,
 		"tgw_name":          awsTgw.Name,
 		"route_domain_name": SecurityDomainName,
+		"async":             "true",
 	}
-	return c.PostAPI(form["action"], form, BasicCheck)
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DetachAviatrixTransitGWFromAWSTgw(awsTgw *AWSTgw, gateway *Gateway, SecurityDomainName string) error {
@@ -442,6 +445,7 @@ func (c *Client) DetachAviatrixTransitGWFromAWSTgw(awsTgw *AWSTgw, gateway *Gate
 		"action":   "detach_vpc_from_tgw",
 		"tgw_name": awsTgw.Name,
 		"vpc_name": transitGw.VpcID,
+		"async":    "true",
 	}
 	check := func(action, method, reason string, ret bool) error {
 		if !ret {
@@ -452,7 +456,7 @@ func (c *Client) DetachAviatrixTransitGWFromAWSTgw(awsTgw *AWSTgw, gateway *Gate
 		}
 		return nil
 	}
-	return c.PostAPI(form["action"], form, check)
+	return c.PostAsyncAPI(form["action"], form, check)
 }
 
 func (c *Client) AttachVpcToAWSTgw(awsTgw *AWSTgw, vpcSolo VPCSolo, SecurityDomainName string) error {
@@ -464,6 +468,7 @@ func (c *Client) AttachVpcToAWSTgw(awsTgw *AWSTgw, vpcSolo VPCSolo, SecurityDoma
 		"vpc_name":          vpcSolo.VpcID,
 		"tgw_name":          awsTgw.Name,
 		"route_domain_name": SecurityDomainName,
+		"async":             "true",
 	}
 	if vpcSolo.DisableLocalRoutePropagation {
 		form["disable_local_route_propagation"] = "yes"
@@ -480,7 +485,7 @@ func (c *Client) AttachVpcToAWSTgw(awsTgw *AWSTgw, vpcSolo VPCSolo, SecurityDoma
 	if vpcSolo.CustomizedRoutes != "" {
 		form["route_table_list"] = vpcSolo.RouteTables
 	}
-	return c.PostAPI(form["action"], form, BasicCheck)
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DetachVpcFromAWSTgw(awsTgw *AWSTgw, vpcID string) error {
@@ -489,8 +494,9 @@ func (c *Client) DetachVpcFromAWSTgw(awsTgw *AWSTgw, vpcID string) error {
 		"action":   "detach_vpc_from_tgw",
 		"tgw_name": awsTgw.Name,
 		"vpc_name": vpcID,
+		"async":    "true",
 	}
-	return c.PostAPI(form["action"], form, BasicCheck)
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) GetTransitGwFromVpcID(awsTgw *AWSTgw, gateway *Gateway) (*Gateway, error) {

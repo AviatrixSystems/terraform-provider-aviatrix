@@ -27,6 +27,7 @@ type AwsTgwVpnConn struct {
 	PreSharedKeyTun2     string `form:"pre_shared_key_tun_2,omitempty"`
 	LearnedCidrsApproval string `form:"learned_cidrs_approval,omitempty"`
 	EnableAcceleration   string `form:"enable_global_acceleration"`
+	Async                bool   `form:"async,omitempty"`
 }
 
 type AwsTgwVpnConnEdit struct {
@@ -183,7 +184,8 @@ func (c *Client) GetAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) (*AwsTgwVpnConn,
 func (c *Client) DeleteAwsTgwVpnConn(awsTgwVpnConn *AwsTgwVpnConn) error {
 	awsTgwVpnConn.CID = c.CID
 	awsTgwVpnConn.Action = "detach_vpn_from_tgw"
-	return c.PostAPI(awsTgwVpnConn.Action, awsTgwVpnConn, BasicCheck)
+	awsTgwVpnConn.Async = true
+	return c.PostAsyncAPI(awsTgwVpnConn.Action, awsTgwVpnConn, BasicCheck)
 }
 
 func (c *Client) EnableVpnConnectionLearnedCidrsApproval(awsTgwVpnConn *AwsTgwVpnConn) error {

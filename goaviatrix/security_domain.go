@@ -16,6 +16,7 @@ type SecurityDomain struct {
 	NativeEgressDomain     bool   `form:"native_egress_domain, omitempty"`
 	NativeFirewallDomain   bool   `form:"native_firewall_domain, omitempty"`
 	ForceDelete            bool   `form:"force,omitempty"`
+	Async                  bool   `form:"async,omitempty"`
 }
 
 type SecurityDomainAPIResp struct {
@@ -69,8 +70,9 @@ type IntraDomainInspection struct {
 func (c *Client) CreateSecurityDomain(securityDomain *SecurityDomain) error {
 	securityDomain.CID = c.CID
 	securityDomain.Action = "add_route_domain"
+	securityDomain.Async = true
 
-	return c.PostAPI(securityDomain.Action, securityDomain, BasicCheck)
+	return c.PostAsyncAPI(securityDomain.Action, securityDomain, BasicCheck)
 }
 
 func (c *Client) GetSecurityDomain(securityDomain *SecurityDomain) (string, error) {

@@ -14,12 +14,14 @@ type DeviceVirtualWanAttachment struct {
 	DeviceAsn      string `form:"external_device_as_number"`
 	Action         string `form:"action"`
 	CID            string `form:"CID"`
+	Async          bool   `form:"async,omitempty"`
 }
 
 func (c *Client) CreateDeviceVirtualWanAttachment(attachment *DeviceVirtualWanAttachment) error {
 	attachment.Action = "attach_cloudwan_device_to_virtual_wan"
 	attachment.CID = c.CID
-	return c.PostAPI(attachment.Action, attachment, BasicCheck)
+	attachment.Async = true
+	return c.PostAsyncAPI(attachment.Action, attachment, BasicCheck)
 }
 
 func (c *Client) GetDeviceVirtualWanAttachment(attachment *DeviceVirtualWanAttachment) (*DeviceVirtualWanAttachment, error) {

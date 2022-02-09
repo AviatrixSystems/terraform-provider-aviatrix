@@ -37,6 +37,7 @@ func (c *Client) CreateAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachm
 		"vpc_name":          awsTgwVpcAttachment.VpcID,
 		"tgw_name":          awsTgwVpcAttachment.TgwName,
 		"route_domain_name": awsTgwVpcAttachment.SecurityDomainName,
+		"async":             "true",
 	}
 	if awsTgwVpcAttachment.DisableLocalRoutePropagation {
 		form["disable_local_route_propagation"] = "yes"
@@ -152,8 +153,9 @@ func (c *Client) DeleteAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachm
 		"action":   "detach_vpc_from_tgw",
 		"tgw_name": awsTgwVpcAttachment.TgwName,
 		"vpc_name": awsTgwVpcAttachment.VpcID,
+		"async":    "true",
 	}
-	return c.PostAPI(form["action"], form, BasicCheck)
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) DeleteAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {
@@ -161,8 +163,9 @@ func (c *Client) DeleteAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment *AwsTgw
 		"CID":    c.CID,
 		"action": "disconnect_firenet_with_tgw",
 		"vpc_id": awsTgwVpcAttachment.VpcID,
+		"async":  "true",
 	}
-	return c.PostAPI(form["action"], form, BasicCheck)
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) GetAwsTgwDetail(awsTgw *AWSTgw) (*AWSTgw, error) {
