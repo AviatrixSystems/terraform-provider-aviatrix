@@ -629,6 +629,9 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 			}
 		}
 		err = d.Set("prepend_as_path", prependAsPath)
+		if err != nil {
+			return fmt.Errorf("could not set prepend_as_path: %v", err)
+		}
 
 		d.Set("enable_monitor_gateway_subnets", gw.MonitorSubnetsAction == "enable")
 		if err := d.Set("monitor_exclude_list", gw.MonitorExcludeGWList); err != nil {
