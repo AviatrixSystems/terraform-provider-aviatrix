@@ -304,8 +304,6 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Image version of the HA gateway.",
 			},
-
-			// NEW ATTRIBUTES
 			"zone": {
 				Type:        schema.TypeString,
 				Computed:    true,

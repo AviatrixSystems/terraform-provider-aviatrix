@@ -346,8 +346,6 @@ func dataSourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Image version of the HA gateway.",
 			},
-
-			// NEW ATTRIBUTES
 			"enable_monitor_gateway_subnets": {
 				Type:        schema.TypeBool,
 				Computed:    true,
