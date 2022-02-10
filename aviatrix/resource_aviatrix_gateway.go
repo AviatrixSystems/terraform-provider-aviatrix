@@ -1274,7 +1274,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 	d.Set("public_dns_server", gw.PublicDnsServer)
 	d.Set("security_group_id", gw.GwSecurityGroupID)
-	d.Set("peering_ha_security_group_id", gw.HaGw.GwSecurityGroupID)
 	d.Set("private_ip", gw.PrivateIP)
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
 	d.Set("enable_vpc_dns_server", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled")
@@ -1538,50 +1537,54 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("peering_ha_private_ip", gw.HaGw.PrivateIP)
 	d.Set("peering_ha_software_version", gw.HaGw.SoftwareVersion)
 	d.Set("peering_ha_image_version", gw.HaGw.ImageVersion)
-	if gw.IsPsfGateway {
-		// For PSF gateway, peering_ha_subnet and peering_ha_zone are
-		// set above. Return early.
-		return nil
-	}
+	d.Set("peering_ha_security_group_id", gw.HaGw.GwSecurityGroupID)
 
 	if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-		d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
-		d.Set("peering_ha_zone", "")
 		if gw.HaGw.InsaneMode == "yes" {
 			d.Set("peering_ha_insane_mode_az", gw.HaGw.GatewayZone)
 		}
 	} else if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
-		d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
-		d.Set("peering_ha_zone", "")
 		if gw.HaGw.GatewayZone != "" {
 			d.Set("peering_ha_availability_domain", gw.HaGw.GatewayZone)
 		} else {
 			d.Set("peering_ha_availability_domain", d.Get("peering_ha_availability_domain").(string))
 		}
 		d.Set("peering_ha_fault_domain", gw.HaGw.FaultDomain)
-	} else if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-		d.Set("peering_ha_zone", gw.HaGw.GatewayZone)
-		// only set peering_ha_subnet if the user has explicitly set it.
-		if d.Get("peering_ha_subnet").(string) != "" || isImport {
-			d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
-		}
 	} else if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-		d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
-		if _, haZoneIsSet := d.GetOk("peering_ha_zone"); isImport || haZoneIsSet {
-			if gw.GatewayZone != "AvailabilitySet" {
-				d.Set("peering_ha_zone", "az-"+gw.GatewayZone)
-			}
-		}
-
 		azureEip := strings.Split(gw.HaGw.ReuseEip, ":")
 		if len(azureEip) == 3 {
 			d.Set("peering_ha_azure_eip_name_resource_group", fmt.Sprintf("%s:%s", azureEip[0], azureEip[1]))
 		} else {
 			log.Printf("[WARN] could not get Azure EIP name and resource group for the Peering HA Gateway %s", gw.GwName)
 		}
-	} else if gw.HaGw.CloudType == goaviatrix.AliCloud {
-		d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
-		d.Set("peering_ha_zone", "")
+	}
+
+	if !gw.IsPsfGateway {
+		// For PSF gateway, peering_ha_subnet and peering_ha_zone are set above.
+		// This block is only to set peering_ha_subnet and peering_ha_zone.
+		if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+			d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
+			d.Set("peering_ha_zone", "")
+		} else if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
+			d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
+			d.Set("peering_ha_zone", "")
+		} else if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+			d.Set("peering_ha_zone", gw.HaGw.GatewayZone)
+			// only set peering_ha_subnet if the user has explicitly set it.
+			if d.Get("peering_ha_subnet").(string) != "" || isImport {
+				d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
+			}
+		} else if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+			d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
+			if _, haZoneIsSet := d.GetOk("peering_ha_zone"); isImport || haZoneIsSet {
+				if gw.GatewayZone != "AvailabilitySet" {
+					d.Set("peering_ha_zone", "az-"+gw.GatewayZone)
+				}
+			}
+		} else if gw.HaGw.CloudType == goaviatrix.AliCloud {
+			d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
+			d.Set("peering_ha_zone", "")
+		}
 	}
 
 	return nil

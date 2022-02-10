@@ -1492,7 +1492,6 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("gw_size", gw.GwSize)
 	d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 	d.Set("security_group_id", gw.GwSecurityGroupID)
-	d.Set("ha_security_group_id", gw.HaGw.GwSecurityGroupID)
 	d.Set("private_ip", gw.PrivateIP)
 	d.Set("single_ip_snat", gw.EnableNat == "yes" && gw.SnatMode == "primary")
 	d.Set("single_az_ha", gw.SingleAZ == "yes")
@@ -1818,6 +1817,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("ha_private_ip", gw.HaGw.PrivateIP)
 	d.Set("ha_software_version", gw.HaGw.SoftwareVersion)
 	d.Set("ha_image_version", gw.HaGw.ImageVersion)
+	d.Set("ha_security_group_id", gw.HaGw.GwSecurityGroupID)
 	lanCidr, err = client.GetTransitGatewayLanCidr(gw.HaGw.GwName)
 	if err != nil && err != goaviatrix.ErrNotFound {
 		log.Printf("[WARN] Error getting lan cidr for HA transit gateway %s due to %s", gw.HaGw.GwName, err)

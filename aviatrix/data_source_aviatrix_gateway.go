@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
@@ -48,6 +49,11 @@ func dataSourceAviatrixGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "A VPC Network address range selected from one of the available network ranges.",
+			},
+			"zone": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Availability Zone. Only set for Azure and Public Subnet Filtering gateway",
 			},
 			"insane_mode_az": {
 				Type:        schema.TypeString,
@@ -340,6 +346,96 @@ func dataSourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Image version of the HA gateway.",
 			},
+			"enable_monitor_gateway_subnets": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Enable monitor gateway subnets.",
+			},
+			"monitor_exclude_list": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Description: "A set of monitored instance ids. Only set when 'enable_monitor_gateway_subnets' = true",
+			},
+			"idle_timeout": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "Typed value when modifying idle_timeout. If it's -1, this feature is disabled.",
+			},
+			"renegotiation_interval": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "Typed value when modifying renegotiation_interval. If it's -1, this feature is disabled.",
+			},
+			"fqdn_lan_interface": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "FQDN gateway lan interface id.",
+			},
+			"fqdn_lan_cidr": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "FQDN gateway lan interface cidr.",
+			},
+			"fqdn_lan_vpc_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "LAN VPC ID. Only used for GCP FQDN Gateway.",
+			},
+			"enable_public_subnet_filtering": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Create a [Public Subnet Filtering gateway](https://docs.aviatrix.com/HowTos/public_subnet_filtering_faq.html).",
+			},
+			"public_subnet_filtering_route_tables": {
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Computed:    true,
+				Description: "Route tables whose associated public subnets are protected. Only set when `enable_public_subnet_filtering` attribute is true.",
+			},
+			"public_subnet_filtering_ha_route_tables": {
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Computed:    true,
+				Description: "Route tables whose associated public subnets are protected for the HA PSF gateway. Only set when enable_public_subnet_filtering and peering_ha_subnet are set.",
+			},
+			"public_subnet_filtering_guard_duty_enforced": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Whether to enforce Guard Duty IP blocking. Only set when `enable_public_subnet_filtering` attribute is true.",
+			},
+			"enable_jumbo_frame": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Enable jumbo frame support for Gateway.",
+			},
+			"enable_spot_instance": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Enable spot instance. NOT supported for production deployment.",
+			},
+			"spot_price": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Price for spot instance. NOT supported for production deployment.",
+			},
+			"azure_eip_name_resource_group": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The name of the public IP address and its resource group in Azure to assign to this Gateway.",
+			},
+			"peering_ha_azure_eip_name_resource_group": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The name of the public IP address and its resource group in Azure to assign to the Peering HA Gateway.",
+			},
+			"peering_ha_security_group_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Peering HA security group used for the gateway.",
+			},
 		},
 	}
 }
@@ -379,6 +475,13 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 			d.Set("vpc_reg", gw.VpcRegion)
 		}
 
+		_, zoneIsSet := d.GetOk("zone")
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && zoneIsSet && gw.GatewayZone != "AvailabilitySet" {
+			d.Set("zone", "az-"+gw.GatewayZone)
+		}
+		if gw.NewZone != "" {
+			d.Set("zone", gw.NewZone)
+		}
 		d.Set("subnet", gw.VpcNet)
 
 		if gw.EnableNat == "yes" {
@@ -546,6 +649,33 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 			d.Set("fault_domain", gw.FaultDomain)
 		}
 
+		if !gw.IsPsfGateway {
+			d.Set("enable_public_subnet_filtering", false)
+			d.Set("public_subnet_filtering_route_tables", nil)
+			d.Set("public_subnet_filtering_ha_route_tables", nil)
+			d.Set("public_subnet_filtering_guard_duty_enforced", true)
+		} else {
+			d.Set("enable_public_subnet_filtering", true)
+			if err := d.Set("public_subnet_filtering_route_tables", gw.PsfDetails.RouteTableList); err != nil {
+				return fmt.Errorf("could not set public_subnet_filtering_route_tables into state: %v", err)
+			}
+			d.Set("public_subnet_filtering_guard_duty_enforced", gw.PsfDetails.GuardDutyEnforced == "yes")
+			d.Set("subnet", gw.PsfDetails.GwSubnetCidr)
+			d.Set("zone", gw.PsfDetails.GwSubnetAz)
+			if gw.HaGw.GwSize == "" {
+				err := d.Set("public_subnet_filtering_ha_route_tables", nil)
+				if err != nil {
+					return fmt.Errorf("could not set public_subnet_filtering_ha_route_tables into state: %v", err)
+				}
+			} else {
+				if err := d.Set("public_subnet_filtering_ha_route_tables", gw.PsfDetails.HaRouteTableList); err != nil {
+					return fmt.Errorf("could not set public_subnet_filtering_ha_route_tables into state: %v", err)
+				}
+				d.Set("peering_ha_subnet", gw.PsfDetails.HaGwSubnetCidr)
+				d.Set("peering_ha_zone", gw.PsfDetails.HaGwSubnetAz)
+			}
+		}
+
 		peeringHaGateway := &goaviatrix.Gateway{
 			AccountName: d.Get("account_name").(string),
 			GwName:      d.Get("gw_name").(string) + "-hagw",
@@ -559,21 +689,42 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 			d.Set("peering_ha_private_ip", gwHaGw.PrivateIP)
 			d.Set("peering_ha_image_version", gwHaGw.ImageVersion)
 			d.Set("peering_ha_software_version", gwHaGw.SoftwareVersion)
-			if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
-				if gwHaGw.InsaneMode == "yes" {
-					d.Set("peering_ha_insane_mode_az", gwHaGw.GatewayZone)
+			d.Set("peering_ha_security_group_id", gw.HaGw.GwSecurityGroupID)
+			if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+				azureEip := strings.Split(gw.HaGw.ReuseEip, ":")
+				if len(azureEip) == 3 {
+					d.Set("peering_ha_azure_eip_name_resource_group", fmt.Sprintf("%s:%s", azureEip[0], azureEip[1]))
+				} else {
+					log.Printf("[WARN] could not get Azure EIP name and resource group for the Peering HA Gateway %s", gw.GwName)
 				}
-			} else if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
-				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
-			} else if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-				d.Set("peering_ha_zone", gwHaGw.GatewayZone)
-			} else if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.AliCloudRelatedCloudTypes) {
-				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
-			} else if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
-				d.Set("peering_ha_subnet", gwHaGw.VpcNet)
-				d.Set("peering_ha_availability_domain", gwHaGw.GatewayZone)
-				d.Set("peering_ha_fault_domain", gwHaGw.FaultDomain)
+			}
+			if !gw.IsPsfGateway {
+				// For PSF gateway, peering_ha_subnet and peering_ha_zone are set above
+				if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+					d.Set("peering_ha_subnet", gwHaGw.VpcNet)
+					d.Set("peering_ha_zone", "")
+					if gwHaGw.InsaneMode == "yes" {
+						d.Set("peering_ha_insane_mode_az", gwHaGw.GatewayZone)
+					}
+				} else if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+					d.Set("peering_ha_subnet", gwHaGw.VpcNet)
+					if _, haZoneIsSet := d.GetOk("peering_ha_zone"); haZoneIsSet {
+						if gw.GatewayZone != "AvailabilitySet" {
+							d.Set("peering_ha_zone", "az-"+gw.GatewayZone)
+						}
+					}
+				} else if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+					d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
+					d.Set("peering_ha_zone", gwHaGw.GatewayZone)
+				} else if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.AliCloudRelatedCloudTypes) {
+					d.Set("peering_ha_subnet", gwHaGw.VpcNet)
+					d.Set("peering_ha_zone", "")
+				} else if goaviatrix.IsCloudType(gwHaGw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
+					d.Set("peering_ha_subnet", gwHaGw.VpcNet)
+					d.Set("peering_ha_zone", "")
+					d.Set("peering_ha_availability_domain", gwHaGw.GatewayZone)
+					d.Set("peering_ha_fault_domain", gwHaGw.FaultDomain)
+				}
 			}
 		}
 
@@ -620,6 +771,59 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 		}
 
 		d.Set("tunnel_detection_time", gw.TunnelDetectionTime)
+		d.Set("enable_jumbo_frame", gw.JumboFrame)
+
+		d.Set("enable_monitor_gateway_subnets", gw.MonitorSubnetsAction == "enable")
+		if err := d.Set("monitor_exclude_list", gw.MonitorExcludeGWList); err != nil {
+			return fmt.Errorf("setting 'monitor_exclude_list' to state: %v", err)
+		}
+
+		if gw.IdleTimeout != "NA" {
+			idleTimeout, err := strconv.Atoi(gw.IdleTimeout)
+			if err != nil {
+				return fmt.Errorf("couldn't get idle timeout for the gateway %s: %v", gw.GwName, err)
+			}
+			d.Set("idle_timeout", idleTimeout)
+		} else {
+			d.Set("idle_timeout", -1)
+		}
+
+		if gw.RenegotiationInterval != "NA" {
+			renegotiationInterval, err := strconv.Atoi(gw.RenegotiationInterval)
+			if err != nil {
+				return fmt.Errorf("couldn't get renegotiation interval for the gateway %s: %v", gw.GwName, err)
+			}
+			d.Set("renegotiation_interval", renegotiationInterval)
+		} else {
+			d.Set("renegotiation_interval", -1)
+		}
+
+		fqdnGatewayLanInterface := fmt.Sprintf("av-nic-%s_eth1", gw.GwName)
+		fqdnLanCidr, ok := gw.ArmFqdnLanCidr[gw.GwName]
+		if ok && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+			d.Set("fqdn_lan_interface", fqdnGatewayLanInterface)
+			d.Set("fqdn_lan_cidr", fqdnLanCidr)
+		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+			d.Set("fqdn_lan_vpc_id", gw.BundleVpcInfo.LAN.VpcID)
+			d.Set("fqdn_lan_cidr", strings.Split(gw.BundleVpcInfo.LAN.Subnet, "~~")[0])
+		} else {
+			d.Set("fqdn_lan_interface", "")
+			d.Set("fqdn_lan_cidr", "")
+		}
+
+		if gw.EnableSpotInstance {
+			d.Set("enable_spot_instance", true)
+			d.Set("spot_price", gw.SpotPrice)
+		}
+
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+			azureEip := strings.Split(gw.ReuseEip, ":")
+			if len(azureEip) == 3 {
+				d.Set("azure_eip_name_resource_group", fmt.Sprintf("%s:%s", azureEip[0], azureEip[1]))
+			} else {
+				log.Printf("[WARN] could not get Azure EIP name and resource group for the Gateway %s", gw.GwName)
+			}
+		}
 	}
 
 	d.SetId(gateway.GwName)
