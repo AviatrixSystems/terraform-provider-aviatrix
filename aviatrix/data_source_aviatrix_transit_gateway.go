@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -336,11 +334,8 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 					"toggle learned CIDR approval.",
 			},
 			"approved_learned_cidrs": {
-				Type: schema.TypeSet,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.IsCIDR,
-				},
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 				Computed:    true,
 				Description: "Approved learned CIDRs. Available as of provider version R2.21+.",
 			},
@@ -350,11 +345,8 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Description: "BGP route polling time. Unit is in seconds.",
 			},
 			"prepend_as_path": {
-				Type: schema.TypeList,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: goaviatrix.ValidateASN,
-				},
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 				Computed:    true,
 				Description: "List of AS numbers to populate BGP AP_PATH field when it advertises to VGW or peer devices.",
 			},
@@ -409,10 +401,9 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 							Description: "VPC-ID of GCP cloud provider.",
 						},
 						"subnet": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.IsCIDR,
-							Description:  "Subnet Info.",
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Subnet Info.",
 						},
 					},
 				},
@@ -429,10 +420,9 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 							Description: "VPC-ID of GCP cloud provider.",
 						},
 						"subnet": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.IsCIDR,
-							Description:  "Subnet Info.",
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Subnet Info.",
 						},
 					},
 				},

@@ -5,8 +5,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -315,11 +313,8 @@ func dataSourceAviatrixSpokeGateway() *schema.Resource {
 					"ALL connections. Default value: 'gateway'.",
 			},
 			"approved_learned_cidrs": {
-				Type: schema.TypeSet,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.IsCIDR,
-				},
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 				Computed:    true,
 				Description: "Approved learned CIDRs for BGP Spoke Gateway. Available as of provider version R2.21+.",
 			},
@@ -349,11 +344,8 @@ func dataSourceAviatrixSpokeGateway() *schema.Resource {
 				Description: "Changes the Aviatrix BGP Spoke Gateway ASN number before you setup Aviatrix BGP Spoke Gateway connection configurations.",
 			},
 			"prepend_as_path": {
-				Type: schema.TypeList,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: goaviatrix.ValidateASN,
-				},
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 				Computed:    true,
 				Description: "List of AS numbers to populate BGP AP_PATH field when it advertises to VGW or peer devices. Only valid for BGP Spoke Gateway",
 			},
