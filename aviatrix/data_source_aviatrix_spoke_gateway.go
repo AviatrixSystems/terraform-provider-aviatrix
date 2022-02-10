@@ -442,14 +442,17 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("vpc_id", gw.VpcID)
 			d.Set("vpc_reg", gw.VpcRegion)
 			d.Set("allocate_new_eip", true)
-			_, zoneIsSet := d.GetOk("zone")
-			if zoneIsSet && gw.GatewayZone != "AvailabilitySet" {
-				d.Set("zone", "az-"+gw.GatewayZone)
-			}
 		} else if gw.CloudType == goaviatrix.AliCloud {
 			d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
 			d.Set("vpc_reg", gw.VpcRegion)
 			d.Set("allocate_new_eip", true)
+		}
+
+		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+			_, zoneIsSet := d.GetOk("zone")
+			if zoneIsSet && gw.GatewayZone != "AvailabilitySet" {
+				d.Set("zone", "az-"+gw.GatewayZone)
+			}
 		}
 
 		d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
