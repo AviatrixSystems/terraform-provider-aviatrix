@@ -1565,7 +1565,6 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
 			d.Set("peering_ha_zone", "")
-
 		} else if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
 			d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
 			d.Set("peering_ha_zone", "")
