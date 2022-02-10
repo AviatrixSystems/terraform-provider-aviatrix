@@ -84,6 +84,12 @@ The following arguments are supported:
 * `phase_1_encryption` - (Optional) Phase one Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC' and 'AES-256-CBC'. Default value: 'AES-256-CBC'.
 * `phase_2_encryption` - (Optional) Phase two Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC', 'AES-256-CBC', 'AES-128-GCM-64', 'AES-128-GCM-96' and 'AES-128-GCM-128'. Default value: 'AES-256-CBC'.
 
+### BGP MD5 Authentication (Available as of provider version R2.21.1+)
+~> **NOTE:** BGP MD5 Authentication is only valid with `connection_type` = 'bgp'.
+
+* `bgp_md5_key` - (Optional) BGP MD5 Authentication Key. Example: 'avx01,avx02'.
+* `backup_bgp_md5_key` - (Optional) Backup BGP MD5 Authentication Key. Valid with HA enabled for connection. Example: 'avx03,avx04'.
+
 ### Misc.
 * `tunnel_protocol` - (Optional) Tunnel protocol, only valid with `connection_type` = 'bgp'. Valid values: 'IPsec'. Default value: 'IPsec'. Case insensitive.
 * `bgp_local_as_num` - (Optional) BGP local ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.

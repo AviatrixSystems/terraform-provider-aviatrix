@@ -302,6 +302,20 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 				},
 				MaxItems: 25,
 			},
+			"bgp_md5_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				ForceNew:    true,
+				Description: "BGP MD5 authentication key.",
+			},
+			"backup_bgp_md5_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				ForceNew:    true,
+				Description: "Backup BGP MD5 authentication key.",
+			},
 			"approved_cidrs": {
 				Type:        schema.TypeSet,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -336,6 +350,8 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		BackupPreSharedKey:     d.Get("backup_pre_shared_key").(string),
 		BackupLocalTunnelCidr:  d.Get("backup_local_tunnel_cidr").(string),
 		BackupRemoteTunnelCidr: d.Get("backup_remote_tunnel_cidr").(string),
+		BgpMd5Key:              d.Get("bgp_md5_key").(string),
+		BackupBgpMd5Key:        d.Get("backup_bgp_md5_key").(string),
 	}
 
 	tunnelProtocol := strings.ToUpper(d.Get("tunnel_protocol").(string))
@@ -457,6 +473,15 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 	if _, ok := d.GetOk("prepend_as_path"); ok {
 		if externalDeviceConn.ConnectionType != "bgp" {
 			return fmt.Errorf("'prepend_as_path' only supports 'bgp' connection. Please update 'connection_type' to 'bgp'")
+		}
+	}
+
+	if externalDeviceConn.BgpMd5Key != "" || externalDeviceConn.BackupBgpMd5Key != "" {
+		if externalDeviceConn.ConnectionType != "bgp" {
+			return fmt.Errorf("BGP MD5 authentication key is only supported for BGP connection")
+		}
+		if externalDeviceConn.BackupBgpMd5Key != "" && !haEnabled {
+			return fmt.Errorf("couldn't configure backup BGP MD5 authentication key since HA is not enabled for BGP connection")
 		}
 	}
 

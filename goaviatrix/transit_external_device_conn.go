@@ -52,6 +52,8 @@ type ExternalDeviceConn struct {
 	EventTriggeredHA       bool
 	Phase1RemoteIdentifier string
 	PrependAsPath          string
+	BgpMd5Key              string `form:"bgp_md5_key,omitempty"`
+	BackupBgpMd5Key        string `form:"backup_bgp_md5_key,omitempty"`
 }
 
 type EditExternalDeviceConnDetail struct {
