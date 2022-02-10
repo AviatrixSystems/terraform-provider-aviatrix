@@ -433,7 +433,7 @@ func dataSourceAviatrixGateway() *schema.Resource {
 				Computed:    true,
 				Description: "The name of the public IP address and its resource group in Azure to assign to the Peering HA Gateway.",
 			},
-			"peering_ha_security_group_ip": {
+			"peering_ha_security_group_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Peering HA security group used for the gateway.",
