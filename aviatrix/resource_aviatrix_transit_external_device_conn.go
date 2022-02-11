@@ -335,6 +335,20 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				},
 				MaxItems: 25,
 			},
+			"bgp_md5_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				ForceNew:    true,
+				Description: "BGP MD5 authentication key.",
+			},
+			"backup_bgp_md5_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				ForceNew:    true,
+				Description: "Backup BGP MD5 authentication key.",
+			},
 			"approved_cidrs": {
 				Type:        schema.TypeSet,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -394,6 +408,8 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		LocalLanIP:             d.Get("local_lan_ip").(string),
 		BackupRemoteLanIP:      d.Get("backup_remote_lan_ip").(string),
 		BackupLocalLanIP:       d.Get("backup_local_lan_ip").(string),
+		BgpMd5Key:              d.Get("bgp_md5_key").(string),
+		BackupBgpMd5Key:        d.Get("backup_bgp_md5_key").(string),
 	}
 
 	tunnelProtocol := strings.ToUpper(d.Get("tunnel_protocol").(string))
@@ -580,6 +596,15 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 			return fmt.Errorf("'enable_bgp_lan_activemesh' can only be enabled with Remote Gateway HA enabled")
 		}
 		externalDeviceConn.EnableBgpLanActiveMesh = true
+	}
+
+	if externalDeviceConn.BgpMd5Key != "" || externalDeviceConn.BackupBgpMd5Key != "" {
+		if externalDeviceConn.ConnectionType != "bgp" {
+			return fmt.Errorf("BGP MD5 authentication key is only supported for BGP connection")
+		}
+		if externalDeviceConn.BackupBgpMd5Key != "" && !haEnabled {
+			return fmt.Errorf("couldn't configure backup BGP MD5 authentication key since HA is not enabled for BGP connection")
+		}
 	}
 
 	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID)

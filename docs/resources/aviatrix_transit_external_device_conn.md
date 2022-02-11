@@ -128,6 +128,12 @@ The following arguments are supported:
 * `backup_local_lan_ip` - (Optional) Backup Local LAN IP. Required for GCP HA BGP over LAN connection.
 * `enable_bgp_lan_activemesh` - (Optional) Switch to enable BGP LAN ActiveMesh mode. Only valid for GCP with Remote Gateway HA enabled. Default: false. Available as of provider version R2.21+.
 
+### BGP MD5 Authentication (Available as of provider version R2.21.1+)
+~> **NOTE:** BGP MD5 Authentication is only valid with `connection_type` = 'bgp'.
+
+* `bgp_md5_key` - (Optional) BGP MD5 Authentication Key. Example: 'avx01,avx02'. For BGP LAN ActiveMesh mode disabled, example: 'avx01'.
+* `backup_bgp_md5_key` - (Optional) Backup BGP MD5 Authentication Key. Valid with HA enabled for connection. Example: 'avx03,avx04'. For BGP LAN ActiveMesh mode disabled, example: 'avx03'.
+
 ### Misc.
 * `direct_connect` - (Optional) Set true for private network infrastructure.
 * `pre_shared_key` - (Optional) Pre-Shared Key.
