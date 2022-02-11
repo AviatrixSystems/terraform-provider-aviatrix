@@ -30,5 +30,5 @@ func (c *Client) ControllerVersionValidation(supportedVersions []string) error {
 	}
 
 	return errors.New("current Terraform branch does not support controller version: UserConnect-" + currentVersion +
-		". Please go to 'https://www.terraform.io/docs/providers/aviatrix/guides/release-compatibility' for version construct instructions")
+		". Please go to 'https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/release-compatibility' for version construct instructions")
 }
