@@ -38,7 +38,7 @@ func resourceAviatrixRbacGroupPermissionAttachment() *schema.Resource {
 					"all_tgw_orchestrator_write",
 					"all_transit_network_write",
 					"all_firewall_network_write",
-					"all_cloud_wan_write",
+					"all_cloudn_write",
 					"all_peering_write",
 					"all_site2cloud_write",
 					"all_openvpn_write",
