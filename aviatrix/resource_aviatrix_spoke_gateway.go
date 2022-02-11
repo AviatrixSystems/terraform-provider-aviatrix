@@ -306,7 +306,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Switch to enable/disable encrypted transit approval for BGP Spoke Gateway. Valid values: true, false.",
+				Description: "Switch to enable/disable learned CIDR approval for BGP Spoke Gateway. Valid values: true, false.",
 			},
 			"learned_cidrs_approval_mode": {
 				Type:         schema.TypeString,
