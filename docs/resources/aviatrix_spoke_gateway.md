@@ -265,7 +265,7 @@ The following arguments are supported:
 * `bgp_ecmp` - (Optional) Enable Equal Cost Multi Path (ECMP) routing for the next hop. Default value: false.
 * `bgp_hold_time` - (Optional) BGP hold time. Unit is in seconds. Valid values are between 12 and 360. Default value: 180.
 * `bgp_polling_time` - (Optional) BGP route polling time. Unit is in seconds. Valid values are between 10 and 50. Default value: "50".
-* `spoke_bgp_manual_advertise_cidrs` - (Optional) Intended CIDR list to be advertised to external BGP router. Example: "10.2.0.0/16,10.4.0.0/16". 
+* `spoke_bgp_manual_advertise_cidrs` - (Optional) Intended CIDR list to be advertised to external BGP router. Empty string is not valid. Example: "10.2.0.0/16,10.4.0.0/16".
 * `enable_active_standby` - (Optional) Enables [Active-Standby Mode](https://docs.aviatrix.com/HowTos/transit_advanced.html#active-standby). Available only with HA enabled. Valid values: true, false. Default value: false.
 * `enable_active_standby_preemptive` - (Optional) Enables Preemptive Mode for Active-Standby. Available only with BGP enabled, HA enabled and Active-Standby enabled. Valid values: true, false. Default value: false.
 * `local_as_number` - (Optional) Changes the Aviatrix Spoke Gateway ASN number before you setup Aviatrix Spoke Gateway connection configurations.
@@ -288,7 +288,7 @@ The following arguments are supported:
 
 -> **NOTE:** `enable_learned_cidrs_approval` can be set to true only if `learned_cidrs_approval_mode` is set to 'gateway'.
 
-* `enable_learned_cidrs_approval` - (Optional) Switch to enable/disable encrypted transit approval for BGP Spoke Gateway. Valid values: true, false. Default value: false.
+* `enable_learned_cidrs_approval` - (Optional) Switch to enable/disable learned CIDR approval for BGP Spoke Gateway. Valid values: true, false. Default value: false.
 * `learned_cidrs_approval_mode` - (Optional) Learned CIDRs approval mode. Either "gateway" (approval on a per-gateway basis) or "connection" (approval on a per-connection basis). Only "gateway" is supported for BGP SPOKE Gateway. Default value: "gateway". Available as of provider version R2.21+.
 * `approved_learned_cidrs` - (Optional) A set of approved learned CIDRs. Only valid when `enable_learned_cidrs_approval` is set to true. Example: ["10.250.0.0/16", "10.251.0.0/16"]. Available as of provider version R2.21+.
 
@@ -329,7 +329,7 @@ The following arguments are supported:
 * `enable_jumbo_frame` - (Optional) Enable jumbo frames for this spoke gateway. Default value is true.
 * `tags` - (Optional) Map of tags to assign to the gateway. Only available for AWS, Azure, AzureGov, AWSGov, AWSChina, AzureChina, AWS Top Secret and AWS Secret gateways. Allowed characters vary by cloud type but always include: letters, spaces, and numbers. AWS, AWSGov, AWSChina, AWS Top Secret and AWS Secret allow the use of any character. Azure, AzureGov and AzureChina allows the following special characters: + - = . _ : @. Example: {"key1" = "value1", "key2" = "value2"}.
 * `tunnel_detection_time` - (Optional) The IPsec tunnel down detection time for the Spoke Gateway in seconds. Must be a number in the range [20-600]. The default value is set by the controller (60 seconds if nothing has been changed). **NOTE: The controller UI has an option to set the tunnel detection time for all gateways. To achieve the same functionality in Terraform, use the same TF_VAR to manage the tunnel detection time for all gateways.** Available in provider R2.19+.
-* `enable_bgp` - (Optional) Enable BGP for this spoke gateway. Only available for AWS and Azure. Valid values: true, false. Default value: true. Available in provider R2.21.0+.
+* `enable_bgp` - (Optional) Enable BGP for this spoke gateway. Only available for AWS and Azure. Valid values: true, false. Default value: false. Available in provider R2.21.0+.
 
 -> **NOTE:** `manage_transit_gateway_attachment` - If you are using/upgraded to Aviatrix Terraform Provider R2.17+, and an **aviatrix_spoke_gateway** resource was originally created with a provider version <R2.17, you must do 'terraform refresh' to update and apply the attribute's default value (true) into the state file.
 
