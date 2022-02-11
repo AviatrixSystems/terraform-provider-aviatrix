@@ -20,15 +20,23 @@ func resourceAviatrixAWSTgwPeering() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"tgw_name1": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					tgwName2Old, _ := d.GetChange("tgw_name2")
+					return old == d.Get("tgw_name2").(string) && new == tgwName2Old.(string)
+				},
 				Description: "Name of the first AWS tgw to make a peer pair.",
 			},
 			"tgw_name2": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					tgwName1Old, _ := d.GetChange("tgw_name1")
+					return old == d.Get("tgw_name1").(string) && new == tgwName1Old.(string)
+				},
 				Description: "Name of the second AWS tgw to make a peer pair.",
 			},
 		},
