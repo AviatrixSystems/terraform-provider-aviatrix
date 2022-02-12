@@ -20,56 +20,32 @@ func resourceAviatrixAWSTgwPeeringDomainConn() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"tgw_name1": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					tgwName2Old, _ := d.GetChange("tgw_name2")
-					domainName1Old, _ := d.GetChange("domain_name1")
-					domainName2Old, _ := d.GetChange("domain_name2")
-					return old == d.Get("tgw_name2").(string) && new == tgwName2Old.(string) &&
-						d.Get("domain_name1") == domainName2Old.(string) && d.Get("domain_name2") == domainName1Old.(string)
-				},
-				Description: "The AWS tgw name of the source domain to make a connection.",
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncAwsTgwPeeringDomainConnTgwName1,
+				Description:      "The AWS tgw name of the source domain to make a connection.",
 			},
 			"domain_name1": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					tgwName1Old, _ := d.GetChange("tgw_name1")
-					tgwName2Old, _ := d.GetChange("tgw_name2")
-					domainName2Old, _ := d.GetChange("domain_name2")
-					return old == d.Get("domain_name2").(string) && new == domainName2Old.(string) &&
-						d.Get("tgw_name1") == tgwName2Old.(string) && d.Get("tgw_name2") == tgwName1Old.(string)
-				},
-				Description: "The name of the source domain to make a connection.",
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncAwsTgwPeeringDomainConnDomainName1,
+				Description:      "The name of the source domain to make a connection.",
 			},
 			"tgw_name2": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					tgwName1Old, _ := d.GetChange("tgw_name1")
-					domainName1Old, _ := d.GetChange("domain_name1")
-					domainName2Old, _ := d.GetChange("domain_name2")
-					return old == d.Get("tgw_name1").(string) && new == tgwName1Old.(string) &&
-						d.Get("domain_name1") == domainName2Old.(string) && d.Get("domain_name2") == domainName1Old.(string)
-				},
-				Description: "The AWS tgw name of the destination domain to make a connection.",
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncAwsTgwPeeringDomainConnTgwName2,
+				Description:      "The AWS tgw name of the destination domain to make a connection.",
 			},
 			"domain_name2": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					tgwName1Old, _ := d.GetChange("tgw_name1")
-					tgwName2Old, _ := d.GetChange("tgw_name2")
-					domainName1Old, _ := d.GetChange("domain_name1")
-					return old == d.Get("domain_name1").(string) && new == domainName1Old.(string) &&
-						d.Get("tgw_name1") == tgwName2Old.(string) && d.Get("tgw_name2") == tgwName1Old.(string)
-				},
-				Description: "The name of the destination domain to make a connection.",
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncAwsTgwPeeringDomainConnDomainName2,
+				Description:      "The name of the destination domain to make a connection.",
 			},
 		},
 	}

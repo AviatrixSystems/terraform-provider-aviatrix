@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -66,4 +68,14 @@ func (c *Client) DeleteAwsTgwPeering(awsTgwPeering *AwsTgwPeering) error {
 	awsTgwPeering.Action = "delete_tgw_peering"
 	awsTgwPeering.Async = true
 	return c.PostAsyncAPI(awsTgwPeering.Action, awsTgwPeering, BasicCheck)
+}
+
+func DiffSuppressFuncAwsTgwPeeringTgwName1(k, old, new string, d *schema.ResourceData) bool {
+	tgwName2Old, _ := d.GetChange("tgw_name2")
+	return old == d.Get("tgw_name2").(string) && new == tgwName2Old.(string)
+}
+
+func DiffSuppressFuncAwsTgwPeeringTgwName2(k, old, new string, d *schema.ResourceData) bool {
+	tgwName1Old, _ := d.GetChange("tgw_name1")
+	return old == d.Get("tgw_name1").(string) && new == tgwName1Old.(string)
 }
