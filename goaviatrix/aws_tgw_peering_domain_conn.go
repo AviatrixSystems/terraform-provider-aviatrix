@@ -3,6 +3,8 @@ package goaviatrix
 import (
 	"fmt"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type DomainConn struct {
@@ -78,4 +80,36 @@ func (c *Client) DeleteDomainConn(domainConn *DomainConn) error {
 		"async":                         "true",
 	}
 	return c.PostAsyncAPI(form["action"], form, BasicCheck)
+}
+
+func DiffSuppressFuncAwsTgwPeeringDomainConnTgwName1(k, old, new string, d *schema.ResourceData) bool {
+	tgwName2Old, _ := d.GetChange("tgw_name2")
+	domainName1Old, _ := d.GetChange("domain_name1")
+	domainName2Old, _ := d.GetChange("domain_name2")
+	return old == d.Get("tgw_name2").(string) && new == tgwName2Old.(string) &&
+		d.Get("domain_name1") == domainName2Old.(string) && d.Get("domain_name2") == domainName1Old.(string)
+}
+
+func DiffSuppressFuncAwsTgwPeeringDomainConnTgwName2(k, old, new string, d *schema.ResourceData) bool {
+	tgwName1Old, _ := d.GetChange("tgw_name1")
+	domainName1Old, _ := d.GetChange("domain_name1")
+	domainName2Old, _ := d.GetChange("domain_name2")
+	return old == d.Get("tgw_name1").(string) && new == tgwName1Old.(string) &&
+		d.Get("domain_name1") == domainName2Old.(string) && d.Get("domain_name2") == domainName1Old.(string)
+}
+
+func DiffSuppressFuncAwsTgwPeeringDomainConnDomainName1(k, old, new string, d *schema.ResourceData) bool {
+	tgwName1Old, _ := d.GetChange("tgw_name1")
+	tgwName2Old, _ := d.GetChange("tgw_name2")
+	domainName2Old, _ := d.GetChange("domain_name2")
+	return old == d.Get("domain_name2").(string) && new == domainName2Old.(string) &&
+		d.Get("tgw_name1") == tgwName2Old.(string) && d.Get("tgw_name2") == tgwName1Old.(string)
+}
+
+func DiffSuppressFuncAwsTgwPeeringDomainConnDomainName2(k, old, new string, d *schema.ResourceData) bool {
+	tgwName1Old, _ := d.GetChange("tgw_name1")
+	tgwName2Old, _ := d.GetChange("tgw_name2")
+	domainName1Old, _ := d.GetChange("domain_name1")
+	return old == d.Get("domain_name1").(string) && new == domainName1Old.(string) &&
+		d.Get("tgw_name1") == tgwName2Old.(string) && d.Get("tgw_name2") == tgwName1Old.(string)
 }
