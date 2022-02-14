@@ -2,7 +2,6 @@ package aviatrix
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -68,7 +67,7 @@ func dataSourceAviatrixFirewallInstanceImagesRead(d *schema.ResourceData, meta i
 	}
 
 	if err = d.Set("firewall_images", images); err != nil {
-		log.Printf("couldn't set firewall_images: %s", err)
+		return fmt.Errorf("couldn't set firewall_images: %s", err)
 	}
 
 	d.SetId(vpcId)
