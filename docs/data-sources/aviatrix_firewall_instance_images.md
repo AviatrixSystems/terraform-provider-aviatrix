@@ -25,7 +25,7 @@ data "aviatrix_firewall_instance_images" "foo" {
 
 The following argument is supported:
 
-* `vpc_id` - (Required) VPC ID.
+* `vpc_id` - (Required) VPC ID. Example: AWS: "vpc-abcd1234", GCP: "vpc-gcp-test~-~project_id", Azure: "vnet_name:rg_name:resource_guid", OCI: "vpc-oracle-test1".
 
 ## Attribute Reference
 
