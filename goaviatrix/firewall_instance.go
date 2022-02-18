@@ -74,6 +74,22 @@ type FirewallInstanceCreateResult struct {
 	FirewallID string `json:"firewall_id,omitempty"`
 }
 
+type FirewallInstanceImagesResp struct {
+	Return  bool                   `json:"return"`
+	Results FirewallInstanceImages `json:"results"`
+	Reason  string                 `json:"reason"`
+}
+
+type FirewallInstanceImages struct {
+	Images []FirewallInstanceImage `json:"images"`
+}
+
+type FirewallInstanceImage struct {
+	Image   string   `json:"description"`
+	Version []string `json:"version"`
+	Size    []string `json:"size"`
+}
+
 func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (string, error) {
 	action := "add_firewall_instance"
 	form := map[string]string{
@@ -205,4 +221,22 @@ func (c *Client) DeleteFirewallInstance(firewallInstance *FirewallInstance) erro
 	}
 
 	return c.PostAsyncAPI(form["action"], form, BasicCheck)
+}
+
+func (c *Client) GetFirewallInstanceImages(vpcId string) (*[]FirewallInstanceImage, error) {
+	form := map[string]string{
+		"CID":       c.CID,
+		"action":    "list_firenet",
+		"subaction": "firewall_image",
+		"vpc_id":    vpcId,
+	}
+
+	var data FirewallInstanceImagesResp
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data.Results.Images, nil
 }
