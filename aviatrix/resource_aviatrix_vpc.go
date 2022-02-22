@@ -515,13 +515,17 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(vC.Name)
 
-	firenetDetail, err := client.GetFireNet(&goaviatrix.FireNet{VpcID: vC.VpcID})
-	if err == goaviatrix.ErrNotFound {
-		d.Set("enable_native_gwlb", false)
-	} else if err != nil {
-		return fmt.Errorf("could not get FireNet details to read enable_native_gwlb: %v", err)
+	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.AWS) {
+		firenetDetail, err := client.GetFireNet(&goaviatrix.FireNet{VpcID: vC.VpcID})
+		if err == goaviatrix.ErrNotFound {
+			d.Set("enable_native_gwlb", false)
+		} else if err != nil {
+			return fmt.Errorf("could not get FireNet details to read enable_native_gwlb: %v", err)
+		} else {
+			d.Set("enable_native_gwlb", firenetDetail.NativeGwlb)
+		}
 	} else {
-		d.Set("enable_native_gwlb", firenetDetail.NativeGwlb)
+		d.Set("enable_native_gwlb", false)
 	}
 
 	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
