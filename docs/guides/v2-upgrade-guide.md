@@ -24,9 +24,7 @@ In summary:
 ### !! Important !!
 As Aviatrix is now an official Terraform provider, the process to setup and upgrade between versions have been significantly simplified. Upgrading to newer releases is as simple as specifying the "version" in the Aviatrix "provider" block, and running a ``terraform init``. Customers no longer need to source from Github and build our provider locally.
 
-Customers who previously have used Aviatrix as a provider prior to official acceptance may transition to the official provider by following Step 5.2 in our [setup tutorial](https://docs.aviatrix.com/HowTos/tf_aviatrix_howto.html#troubleshooting).
-
-For any further questions, please check out our [Support Center](https://docs.aviatrix.com/Support/support_center_terraform.html).
+For any further questions, please check out our [Support Operations page](https://docs.aviatrix.com/Support/support_center_operations.html) and our [Support Center](https://support.aviatrix.com/).
 
 ---
 ## Context
@@ -56,8 +54,8 @@ This phase involves first upgrading the Controller to 4.7. Afterwards, customers
   - [Controller Upgrade documentation](https://docs.aviatrix.com/HowTos/inline_upgrade.html)
   - [Controller Release Notes](https://docs.aviatrix.com/HowTos/UCC_Release_Notes.html)
 2. Update Terraform files (.tf) as necessary. Please reference documentation linked below to note specific changes to any resource attributes that you may be using in your configuration:
-  - Please refer **up to** [R1.14's table](https://www.terraform.io/docs/providers/aviatrix/guides/feature-changelist.html#r1-14-15-userconnect-4-7-474-) (for Terraform 0.11) (compatible with Controller 4.7):
-  - [Aviatrix Terraform Provider Release Notes](https://www.terraform.io/docs/providers/aviatrix/guides/release-notes.html)
+  - Please refer **up to** [R1.14's table](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/feature-changelist#r11415-userconnect-47474) (for Terraform 0.11) (compatible with Controller 4.7):
+  - [Aviatrix Terraform Provider Release Notes](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/release-notes)
 3. Update Aviatrix Terraform provider:
   - Navigate to Aviatrix Terraform provider directory:
       - Mac:
@@ -142,7 +140,7 @@ resource "aviatrix_gateway" "aws_vpn_gw" {
 ```
 After completion of editing your Terraform files, the rest of this phase is as simple as updating your Aviatrix Terraform provider repository and using the correct corresponding release.
 
-Navigate to your local Aviatrix Terraform provider repository, which by default, if setup according to our initial setup doc [here](https://github.com/terraform-providers/terraform-provider-aviatrix/blob/master/README.md), is ``$GOPATH/src/github.com/terraform-providers``. We will then use Git to pull latest changes from our remote repository (``git pull``), and switch to the branch that corresponds with our Controller version (``git checkout UserConnect-4.7-TF.11``). Build the provider as according to Step 3 depending on your OS. Finally, navigate back to where your Terraform files reside, and perform a ``terraform init`` to reinitialise the Terraform environment for the current directory based on the new provider, and run a ``terraform refresh``. A ``terraform plan`` may be performed to catch any deltas. If there are still any deltas, you may fix and repeat the refresh/ plan steps again.
+Navigate to your local Aviatrix Terraform provider repository, which by default, if setup according to our initial setup doc [here](https://github.com/AviatrixSystems/terraform-provider-aviatrix/blob/master/README.md), is ``$GOPATH/src/github.com/terraform-providers``. We will then use Git to pull latest changes from our remote repository (``git pull``), and switch to the branch that corresponds with our Controller version (``git checkout UserConnect-4.7-TF.11``). Build the provider as according to Step 3 depending on your OS. Finally, navigate back to where your Terraform files reside, and perform a ``terraform init`` to reinitialise the Terraform environment for the current directory based on the new provider, and run a ``terraform refresh``. A ``terraform plan`` may be performed to catch any deltas. If there are still any deltas, you may fix and repeat the refresh/ plan steps again.
 
 ---
 ## Phase 2: Upgrading Hashicorp's Terraform to v0.12
@@ -153,7 +151,7 @@ This phase involves upgrading Hashicorp's Terraform from v0.11 to v0.12. As far 
   - [Hashicorp Terraform Upgrade documentation](https://www.terraform.io/upgrade-guides/0-12.html)
   - [Hashicorp Terraform 0.12 Release Notes](https://www.hashicorp.com/blog/announcing-terraform-0-12)
 2. Update Terraform files (.tf) as necessary. Please reference documentation linked below to note specific changes to any resource attributes that you may be using in your configuration:
-  - Please follow the [**R1.16's table**](https://www.terraform.io/docs/providers/aviatrix/guides/feature-changelist.html#r1-16-20-userconnect-4-7-520-terraform-v0-12-) (for Terraform 0.12) (compatible with Controller 4.7):
+  - Please follow the [**R1.16's table**](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/feature-changelist#r11620-userconnect-47520-terraform-v012) (for Terraform 0.12) (compatible with Controller 4.7):
   - The same table is shown below for your convenience:
 
 ### R1.16.20 (UserConnect-4.7.520) (Terraform v0.12)
@@ -259,14 +257,14 @@ resource "aviatrix_vpn_profile" "vpn-profile-1" {
 ```
 Once again, as in Phase 1, you will have to update your Aviatrix Terraform provider repository and use the correct corresponding release.
 
-Navigate to your local Aviatrix Terraform provider repository, which by default, if setup according to our initial setup doc [here](https://github.com/terraform-providers/terraform-provider-aviatrix/blob/master/README.md), is ``$GOPATH/src/github.com/terraform-providers``. We will then use Git to pull latest changes from our remote repository (``git pull``), and switch to the branch that corresponds with our Controller version (``git checkout UserConnect-4.7-TF.12-v1``). Build the provider as according to Step 3 depending on your OS. Finally, navigate back to where your Terraform files reside, and perform a ``terraform init`` to reinitialise the Terraform environment for the current directory based on the new provider, and run a ``terraform refresh``. A ``terraform plan`` may be performed to catch any deltas. If there are still any deltas, you may fix and repeat the refresh/ plan steps again.
+Navigate to your local Aviatrix Terraform provider repository, which by default, if setup according to our initial setup doc [here](https://github.com/AviatrixSystems/terraform-provider-aviatrix/blob/master/README.md), is ``$GOPATH/src/github.com/terraform-providers``. We will then use Git to pull latest changes from our remote repository (``git pull``), and switch to the branch that corresponds with our Controller version (``git checkout UserConnect-4.7-TF.12-v1``). Build the provider as according to Step 3 depending on your OS. Finally, navigate back to where your Terraform files reside, and perform a ``terraform init`` to reinitialise the Terraform environment for the current directory based on the new provider, and run a ``terraform refresh``. A ``terraform plan`` may be performed to catch any deltas. If there are still any deltas, you may fix and repeat the refresh/ plan steps again.
 
 ---
 ## Phase 3: Upgrading Aviatrix Terraform Provider to R2.0
 **Summary:** This will be the largest phase in terms of the upgrade process. While this phase only involves upgrading the customer's (.tf) files as necessary, the amount of changes from R1.xx to R2.0+ are not small. Afterwards, customers must upgrade their Aviatrix Terraform provider version, and then perform ``terraform refresh`` or ``terraform import`` as necessary.
 
 1. Update Terraform files (.tf) as necessary. Please reference documentation linked below to note specific changes to any resource attributes that you may be using in your configuration:
-  - [Aviatrix Provider R2.x Feature Changelist](https://www.terraform.io/docs/providers/aviatrix/guides/feature-changelist-v2.html)
+  - [Aviatrix Provider R2.x Feature Changelist](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/feature-changelist-v2)
 2. Update Aviatrix Terraform provider:
   - Navigate to Aviatrix Terraform provider directory:
       - Mac:
@@ -330,7 +328,7 @@ resource "aviatrix_gateway" "aws_vpn_gw" {
 
 We will now need to update our Terraform file(s). In this case, note that due to the attribute re-naming, we will have to rename attributes such as ``vpc_size`` and ``vpc_net`` to ``gw_size`` and ``subnet``, respectively, as it is much more clear as to what these attributes refer to. ``enable_nat`` must also be changed to ``enable_snat`` here. In addition, due to boolean standardization, ``enable_snat``'s accepted value is changed from 'yes'/'no' to true/ false. ``vpn_access`` and ``enable_elb`` here did not get renamed, but the accepted value has also changed to boolean.
 
-**EDIT:** As of Aviatrix provider release R2.10, ``enable_snat`` has been renamed to ``single_ip_snat``. Please refer to the [R2.10 table](https://www.terraform.io/docs/providers/aviatrix/guides/feature-changelist-v2.html#r2-10-userconnect-5-2-2122-terraform-v0-12-) in the Features Changelist for more details. More on the Feature Changelist documentation is noted below in the following [section](#beyond-phase-3-to-infinity-and-beyond).
+**EDIT:** As of Aviatrix provider release R2.10, ``enable_snat`` has been renamed to ``single_ip_snat``. Please refer to the [R2.10 table](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/feature-changelist-v2#r210-userconnect-522122) in the Features Changelist for more details. More on the Feature Changelist documentation is noted below in the following [section](#beyond-phase-3-to-infinity-and-beyond).
 
 The updated file should now look something like:
 
@@ -364,7 +362,7 @@ resource "aviatrix_gateway" "aws_vpn_gw" {
 
 Once again, as in the previous two phases, you will have to update your Aviatrix Terraform provider repository and use the correct corresponding release.
 
-Navigate to your local Aviatrix Terraform provider repository, which by default, if setup according to our initial setup doc [here](https://github.com/terraform-providers/terraform-provider-aviatrix/blob/master/README.md), is ``$GOPATH/src/github.com/terraform-providers``. We will then use Git to pull latest changes from our remote repository (``git pull``), and switch to the branch that corresponds with our Controller version (``git checkout UserConnect-4.7-TF.12-v2``). Build the provider as according to Step 3 depending on your OS. Finally, navigate back to where your Terraform files reside, and perform a ``terraform init`` to reinitialise the Terraform environment for the current directory based on the new provider.
+Navigate to your local Aviatrix Terraform provider repository, which by default, if setup according to our initial setup doc [here](https://github.com/AviatrixSystems/terraform-provider-aviatrix/blob/master/README.md), is ``$GOPATH/src/github.com/terraform-providers``. We will then use Git to pull latest changes from our remote repository (``git pull``), and switch to the branch that corresponds with our Controller version (``git checkout UserConnect-4.7-TF.12-v2``). Build the provider as according to Step 3 depending on your OS. Finally, navigate back to where your Terraform files reside, and perform a ``terraform init`` to reinitialise the Terraform environment for the current directory based on the new provider.
 
 -> **NOTE:** Please note that when a ``terraform import`` command is being referred to in the context of this upgrade process, the resource in question must be removed from the Terraform state first. An import requires the resource to be removed from the state because normally, importing is used for bringing existing infrastructure created from other means, under Terraform management. This assumes the resource in question does not exist in the state. For details on how to safely remove a resource(s) from the state, please refer to the [**state rm**](https://www.terraform.io/docs/commands/state/rm.html) command.
 
@@ -373,7 +371,7 @@ Now, to determine whether or not to do a ``terraform refresh`` or ``terraform im
 ---
 ## Beyond Phase 3: to infinity and beyond
 - Any updates/ future releases for the Aviatrix Terraform provider will continue to be documented here:
-  - [Aviatrix Terraform Provider Release Notes](https://www.terraform.io/docs/providers/aviatrix/guides/release-notes.html)
+  - [Aviatrix Terraform Provider Release Notes](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/release-notes)
 - Any updates/ future releases for R2.0+ that might impact customers will continue to be documented here:
-  - [Aviatrix Terraform Provider R2.x Feature Changelist](https://www.terraform.io/docs/providers/aviatrix/guides/feature-changelist-v2.html)
+  - [Aviatrix Terraform Provider R2.x Feature Changelist](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/feature-changelist-v2)
   - Any future necessary changes will only be simple and only require small tweaks and a ``terraform refresh`` unless stated otherwise

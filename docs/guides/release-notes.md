@@ -1205,7 +1205,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 Major code-base restructuring, featuring renaming of attributes, resources, and attribute values. All these changes are all in the name of standardization of naming conventions and resources
 
 ### Changes:
-Please see the [R2.0 feature changelist table](https://www.terraform.io/docs/providers/aviatrix/guides/feature-changelist-v2.html#r2-0-userconnect-4-7-patch-terraform-v0-12-) for full details on the changes
+Please see the [R2.0 feature changelist table](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/feature-changelist-v2#r20-userconnect-47-patch-terraform-v012) for full details on the changes
 
 ---
 
