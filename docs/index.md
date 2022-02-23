@@ -11,7 +11,7 @@ The Aviatrix provider is used to interact with the many resources supported by A
 
 Use the navigation to the left to read about the available resources.
 
--> **NOTE:** Although *version* is an optional argument, we highly recommend users to specify the proper Aviatrix provider release version corresponding to their Controller version in order to avoid potential compatibility issues. Please see the [compatibility chart](https://www.terraform.io/docs/providers/aviatrix/guides/release-compatibility.html) for full details. For more information on versioning, a native Terraform provider argument, see [here](https://www.terraform.io/docs/configuration/providers.html#version-provider-versions).
+-> **NOTE:** Although *version* is an optional argument, we highly recommend users to specify the proper Aviatrix provider release version corresponding to their Controller version in order to avoid potential compatibility issues. Please see the [compatibility chart](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/release-compatibility) for full details. For more information on versioning, a native Terraform provider argument, see [here](https://www.terraform.io/language/providers/configuration#version-deprecated).
 
 
 ## Example Usage
