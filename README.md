@@ -2,7 +2,7 @@ Terraform Provider
 ==================
 A basic [Terraform](http://terraform.io) provider for Aviatrix. Read this [tutorial](https://docs.aviatrix.com/HowTos/tf_aviatrix_howto.html) as an alternative to the README, only if the instructions are unclear.
 
--> **NOTE:** This release has a big structure change from release v1.*, please read this [changelist-v2](https://www.terraform.io/docs/providers/aviatrix/guides/feature-changelist-v2.html) first, and change your cloud infrastructures accordingly.
+-> **NOTE:** This release has a big structure change from release v1.*, please read this [changelist-v2](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/feature-changelist-v2) first, and change your cloud infrastructures accordingly.
 
 Requirements
 ------------
@@ -110,9 +110,9 @@ terraform {
 Examples
 --------
 
-Check examples and documentation [here](https://www.terraform.io/docs/providers/aviatrix/)
+Check examples and documentation [here](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs)
 
-Visit [here](https://github.com/terraform-providers/terraform-provider-aviatrix/tree/master/website/docs/) for the complete documentation for all resources on github
+Visit [here](https://github.com/AviatrixSystems/terraform-provider-aviatrix/tree/master/docs) for the complete documentation for all resources on github
 
 
 Controller version

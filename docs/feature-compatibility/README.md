@@ -6,4 +6,4 @@ Click [HERE](https://view.officeapps.live.com/op/embed.aspx?src=https://github.c
 
 ## Note
 For the complete documentation of all resources, visit:
-https://www.terraform.io/docs/providers/aviatrix/
+https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs
