@@ -195,9 +195,10 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				Description: "Phase two Encryption. Valid values: '3DES', 'AES-128-CBC', 'AES-192-CBC', " +
-					"'AES-256-CBC', 'AES-128-GCM-64', 'AES-128-GCM-96' and 'AES-128-GCM-128'.",
+					"'AES-256-CBC', 'AES-128-GCM-64', 'AES-128-GCM-96', 'AES-128-GCM-128', and 'NULL-ENCR'.",
 				ValidateFunc: validation.StringInSlice([]string{
-					"3DES", "AES-128-CBC", "AES-192-CBC", "AES-256-CBC", "AES-128-GCM-64", "AES-128-GCM-96", "AES-128-GCM-128",
+					"3DES", "AES-128-CBC", "AES-192-CBC", "AES-256-CBC", "AES-128-GCM-64", "AES-128-GCM-96",
+					"AES-128-GCM-128", "NULL-ENCR",
 				}, false),
 			},
 			"ha_enabled": {
