@@ -71,4 +71,4 @@ resource "aviatrix_tunnel" "test_tunnel" {
 }
 
 # For the complete documentation of all resources visit
-# https://www.terraform.io/docs/providers/aviatrix/
+# https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs
