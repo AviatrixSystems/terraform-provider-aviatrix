@@ -1211,6 +1211,28 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	if d.Get("enable_public_subnet_filtering").(bool) && (len(gateway.TagList) > 0 || len(gateway.TagJson) > 0) {
+		// Workaround for setting tags during creation of a Public Subnet Filtering Gateway in R2.21.1
+		tags := &goaviatrix.Tags{
+			ResourceType: "gw",
+			ResourceName: d.Get("gw_name").(string),
+			CloudType:    gateway.CloudType,
+		}
+		if len(gateway.TagList) > 0 {
+			tags.TagList = gateway.TagList
+			err := client.UpdateTags(tags)
+			if err != nil {
+				return fmt.Errorf("failed to set tag_list for gateway during creation: %s", err)
+			}
+		} else if len(gateway.TagJson) > 0 {
+			tags.TagJson = gateway.TagJson
+			err := client.UpdateTags(tags)
+			if err != nil {
+				return fmt.Errorf("failed to set tags for gateway during creation: %s", err)
+			}
+		}
+	}
+
 	return resourceAviatrixGatewayReadIfRequired(d, meta, &flag)
 }
 
