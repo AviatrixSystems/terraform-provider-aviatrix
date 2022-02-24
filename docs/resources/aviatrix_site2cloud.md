@@ -83,8 +83,8 @@ The following arguments are supported:
 * `phase_2_authentication` - (Optional) Phase two Authentication. Valid values: "NO-AUTH", "HMAC-SHA-1", "HMAC-SHA-256", "HMAC-SHA-384" and "HMAC-SHA-512". Default value: "HMAC-SHA-256".
 * `phase_1_dh_groups` - (Optional) Phase one DH Groups. Valid values: "1", "2", "5", "14", "15", "16", "17", "18", "19", "20" and "21". Default value: "14".
 * `phase_2_dh_groups` - (Optional) Phase two DH Groups. Valid values: "1", "2", "5", "14", "15", "16", "17", "18", "19", "20" and "21". Default value: "14".
-* `phase_1_encryption` - (Optional) Phase one Encryption. Valid values: "3DES", "AES-128-CBC", "AES-192-CBC" and "AES-256-CBC". Default value: "AES-256-CBC".
-* `phase_2_encryption` - (Optional) Phase two Encryption. Valid values: "3DES", "AES-128-CBC", "AES-192-CBC", "AES-256-CBC", "AES-128-GCM-64", "AES-128-GCM-96", "AES-128-GCM-128" and "NULL-ENCR". Default value: "AES-256-CBC".
+* `phase_1_encryption` - (Optional) Phase one Encryption. Valid values: "3DES", "AES-128-CBC", "AES-192-CBC", "AES-256-CBC", "AES-128-GCM-64", "AES-128-GCM-96", "AES-128-GCM-128", "AES-256-GCM-64", "AES-256-GCM-96", and "AES-256-GCM-128". Default value: "AES-256-CBC".
+* `phase_2_encryption` - (Optional) Phase two Encryption. Valid values: "3DES", "AES-128-CBC", "AES-192-CBC", "AES-256-CBC", "AES-128-GCM-64", "AES-128-GCM-96", "AES-128-GCM-128", "AES-256-GCM-64", "AES-256-GCM-96", "AES-256-GCM-128" and "NULL-ENCR". Default value: "AES-256-CBC".
 
 ### Encryption over ExpressRoute/DirectConnect
 * `private_route_encryption` - (Optional) Private route encryption switch. Valid values: true, false.
