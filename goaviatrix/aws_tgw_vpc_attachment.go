@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 )
 
 type AwsTgwVpcAttachment struct {
@@ -207,18 +208,25 @@ func (c *Client) GetVPCAttachmentRouteTableDetails(awsTgwVpcAttachment *AwsTgwVp
 		"tgw_name":          awsTgwVpcAttachment.TgwName,
 		"route_domain_name": awsTgwVpcAttachment.SecurityDomainName,
 	}
-	err := c.GetAPI(&data, form["action"], form, BasicCheck)
-	if err != nil {
-		return nil, err
-	}
-	routeDomainDetail := data.Results
-	attachedVPCs := routeDomainDetail[0].AttachedVPC
-	for i := range attachedVPCs {
-		if attachedVPCs[i].VPCId == awsTgwVpcAttachment.VpcID {
-			awsTgwVpcAttachment.VpcAccountName = attachedVPCs[i].AccountName
-			return awsTgwVpcAttachment, nil
+
+	numberOfRetries := 3
+	retryInterval := 5
+	for i := 0; i < numberOfRetries; i++ {
+		err := c.GetAPI(&data, form["action"], form, BasicCheck)
+		if err != nil {
+			return nil, err
 		}
+		routeDomainDetail := data.Results
+		attachedVPCs := routeDomainDetail[0].AttachedVPC
+		for j := range attachedVPCs {
+			if attachedVPCs[j].VPCId == awsTgwVpcAttachment.VpcID {
+				awsTgwVpcAttachment.VpcAccountName = attachedVPCs[j].AccountName
+				return awsTgwVpcAttachment, nil
+			}
+		}
+		time.Sleep(time.Duration(retryInterval) * time.Second)
 	}
+
 	return nil, ErrNotFound
 }
 
