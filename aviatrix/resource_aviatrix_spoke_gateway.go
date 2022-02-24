@@ -2480,8 +2480,9 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			GwName: d.Get("gw_name").(string),
 		}
 
-		if d.HasChange("local_as_number") && d.HasChange("prepend_as_path") {
+		if (d.HasChange("local_as_number") && d.HasChange("prepend_as_path")) || len(prependASPath) == 0 {
 			// prependASPath must be deleted from the controller before local_as_number can be changed
+			// Handle the case where prependASPath is empty here so that the API is not called twice
 			err := client.SetPrependASPathSpoke(gateway, nil)
 			if err != nil {
 				return fmt.Errorf("could not delete prepend_as_path during Spoke Gateway update: %v", err)
