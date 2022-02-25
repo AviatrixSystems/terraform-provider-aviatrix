@@ -68,7 +68,7 @@ func resourceAviatrixSpokeGatewaySubnetGroupCreate(ctx context.Context, d *schem
 
 	d.SetId(spokeGatewaySubnetGroup.GatewayName + "~" + spokeGatewaySubnetGroup.SubnetGroupName)
 	flag := false
-	defer resourceAviatrixAwsTgwSecurityDomainReadIfRequired(ctx, d, meta, &flag)
+	defer resourceAviatrixSpokeGatewaySubnetGroupReadIfRequired(ctx, d, meta, &flag)
 
 	if len(spokeGatewaySubnetGroup.SubnetList) == 0 {
 		if err := client.AddSpokeGatewaySubnetGroup(ctx, spokeGatewaySubnetGroup); err != nil {
@@ -134,6 +134,9 @@ func resourceAviatrixSpokeGatewaySubnetGroupRead(ctx context.Context, d *schema.
 }
 
 func resourceAviatrixSpokeGatewaySubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	flag := false
+	defer resourceAviatrixSpokeGatewaySubnetGroupReadIfRequired(ctx, d, meta, &flag)
+
 	client := meta.(*goaviatrix.Client)
 
 	if d.HasChange("subnets") {
@@ -144,7 +147,7 @@ func resourceAviatrixSpokeGatewaySubnetGroupUpdate(ctx context.Context, d *schem
 		}
 	}
 
-	return nil
+	return resourceAviatrixSpokeGatewaySubnetGroupReadIfRequired(ctx, d, meta, &flag)
 }
 
 func resourceAviatrixSpokeGatewaySubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
