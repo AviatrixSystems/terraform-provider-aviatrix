@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 )
 
 type AwsTgwVpcAttachment struct {
@@ -55,7 +54,7 @@ func (c *Client) CreateAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachm
 	if awsTgwVpcAttachment.RouteTables != "" {
 		form["route_table_list"] = awsTgwVpcAttachment.RouteTables
 	}
-	return c.PostAPI(form["action"], form, BasicCheck)
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }
 
 func (c *Client) CreateAwsTgwVpcAttachmentForFireNet(awsTgwVpcAttachment *AwsTgwVpcAttachment) error {
@@ -209,22 +208,17 @@ func (c *Client) GetVPCAttachmentRouteTableDetails(awsTgwVpcAttachment *AwsTgwVp
 		"route_domain_name": awsTgwVpcAttachment.SecurityDomainName,
 	}
 
-	numberOfRetries := 3
-	retryInterval := 5
-	for i := 0; i < numberOfRetries; i++ {
-		err := c.GetAPI(&data, form["action"], form, BasicCheck)
-		if err != nil {
-			return nil, err
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+	routeDomainDetail := data.Results
+	attachedVPCs := routeDomainDetail[0].AttachedVPC
+	for i := range attachedVPCs {
+		if attachedVPCs[i].VPCId == awsTgwVpcAttachment.VpcID {
+			awsTgwVpcAttachment.VpcAccountName = attachedVPCs[i].AccountName
+			return awsTgwVpcAttachment, nil
 		}
-		routeDomainDetail := data.Results
-		attachedVPCs := routeDomainDetail[0].AttachedVPC
-		for j := range attachedVPCs {
-			if attachedVPCs[j].VPCId == awsTgwVpcAttachment.VpcID {
-				awsTgwVpcAttachment.VpcAccountName = attachedVPCs[j].AccountName
-				return awsTgwVpcAttachment, nil
-			}
-		}
-		time.Sleep(time.Duration(retryInterval) * time.Second)
 	}
 
 	return nil, ErrNotFound
