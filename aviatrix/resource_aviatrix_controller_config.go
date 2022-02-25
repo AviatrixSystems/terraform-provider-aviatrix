@@ -433,7 +433,7 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 	}
 
 	if d.HasChange("target_version") {
-		curVersion := d.Get("version").(string)
+		curVersion := d.Get("current_version").(string)
 		cur := strings.Split(curVersion, ".")
 		latestVersion, _ := client.GetLatestVersion()
 		latest := strings.Split(latestVersion, ".")
@@ -445,15 +445,24 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 			targetVersion := d.Get("target_version").(string)
 			if targetVersion == "latest" {
 				if latestVersion != "" {
-					for i := range cur {
-						if cur[i] != latest[i] {
-							err := client.AsyncUpgrade(version, manageGatewayUpgrades)
-							if err != nil {
-								return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
+					if len(cur) != len(latest) {
+						err := client.AsyncUpgrade(version, manageGatewayUpgrades)
+						if err != nil {
+							return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
+						}
+					} else {
+						for i := range cur {
+							if cur[i] != latest[i] {
+								err := client.AsyncUpgrade(version, manageGatewayUpgrades)
+								if err != nil {
+									return fmt.Errorf("failed to upgrade Aviatrix Controller: %s", err)
+								}
+								break
 							}
-							break
 						}
 					}
+				} else {
+					log.Printf("[INFO] Controller is already on latest version")
 				}
 			} else {
 				err := client.AsyncUpgrade(version, manageGatewayUpgrades)
