@@ -29,7 +29,7 @@
 
 ### Bug Fixes:
 1. Fixed issue where importing a resource with "symmetric" ID causes force replacement in **aviatrix_aws_tgw_peering** and **aviatrix_aws_tgw_peering_domain_conn**
-2. Fixed issue where setting `enable_public_subnet_filtering` attribute in **aviatrix_gateway** would prevent `tags` from being set during creation
+2. Fixed issue where setting ``enable_public_subnet_filtering`` attribute in **aviatrix_gateway** would prevent ``tags`` from being set during creation
 3. Fixed issue where Terraform Plan shows diff when creating a gcp transit with lan interface without HA
 4. Fixed issue where Aviatrix terraform provider fails to upgrade controller from a lower version than latest when target_version is set to "latest"
 
