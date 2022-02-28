@@ -12,10 +12,47 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.21.0 (UserConnect-6.6)``
+``Last updated: R2.21.1 (UserConnect-6.6.5404)``
 
 
 ---
+
+## 2.21.1
+### Notes:
+- Release date: **(28 Feb 2022)**
+- Supported Controller version: **UserConnect-6.6.5404**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Multi-Cloud Transit:
+1. Implemented a new resource and a new data source to support the Azure subnet inspection feature:
+  - new resource: **aviatrix_spoke_gateway_subnet_group**
+  - new data source: **aviatrix_spoke_gateway_inspection_subnets**
+2. Implemented support for Active-Standby behavior backward compatibility with a new attribute for **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**:
+  - ``enable_active_standby_preemptive``
+3. Implemented support for disabling route propagation on BGP Spoke to attached Transit Gateway with a new attribute for **aviatrix_spoke_gateway**:
+  - ``disable_route_propagation``
+4. Implemented support for BGP MD5 Authentication with the following new attributes in **aviatrix_spoke_external_device_conn** and **aviatrix_transit_external_device_conn**:
+  - ``bgp_md5_key``
+  - ``backup_bgp_md5_key``
+5. Renamed RBAC CloudWAN "all_cloudwan_write" to "all_cloudn_write" for ``permission_name`` in **aviatrix_rbac_group_permission_attachment**
+
+### Enhancements:
+1. Implemented a new data source to output Firewall Instance Images information:
+  - **aviatrix_firewall_instance_images**
+2. Updated attributes in data sources for **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+3. Made asynchronous calls to the API with constant polling for updates in order to prevent timeouts in those requests for some long-running HTTP requests
+4. Added support for "NULL-ENCR" for ``phase_2_encryption`` in **aviatrix_transit_external_device_conn**
+5. Extended GCM encryption in IPSec for **aviatrix_site2cloud**, **aviatrix_spoke_external_device_conn** and **aviatrix_transit_external_device_conn**:
+  - Added support for "AES-128-GCM-64", "AES-128-GCM-96", "AES-128-GCM-128", "AES-256-GCM-64", "AES-256-GCM-96" and "AES-256-GCM-128" in ``phase_1_encryption``
+  - Added support for "AES-256-GCM-64", "AES-256-GCM-96" and "AES-256-GCM-128" in ``phase_2_encryption``
+
+### Bug Fixes:
+1. Fixed issue where importing a resource with "symmetric" ID causes force replacement in **aviatrix_aws_tgw_peering** and **aviatrix_aws_tgw_peering_domain_conn**
+2. Fixed issue where setting ``enable_public_subnet_filtering`` attribute in **aviatrix_gateway** would prevent ``tags`` from being set during creation
+3. Fixed issue where ``terraform plan`` shows diff when creating a GCP transit with LAN interface without HA
+4. Fixed issue where Aviatrix Terraform provider fails to upgrade controller from a version lower than latest, when target_version is set to "latest"
+
 
 ## 2.21.0
 ### Notes:

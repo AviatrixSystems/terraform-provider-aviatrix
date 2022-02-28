@@ -22,7 +22,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.21.0 (UserConnect-6.6)``
+``Last updated: R2.21.1 (UserConnect-6.6.5404)``
 
 
 ---
@@ -277,3 +277,9 @@ Note there are standalone resources already in place to be used and one only nee
 |:----:|----------------|:-----------------:|----------------------------|
 |(deprecated) | spoke_gateway, transit_gateway | enable_active_mesh | **Yes**; this attribute is now fully deprecated. Please see above note in the R2.20.1 table for details on how to migrate to ActiveMesh 2.0. If the gateways are already ActiveMesh-enabled, this attribute may be safely removed from configuration, and a ``terraform refresh`` may be run. |
 |(deprecated) | spoke_gateway, transit_gateway | storage_name | **Yes**; this attribute is fully deprecated. If there are existing AzureChina gateways, this attribute may be safely removed from configuration, and a ``terraform refresh`` may be run. New AzureChina gateways will no longer require this attribute. |
+
+
+## R2.21.1 (UserConnect-6.6.5404)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(changed) | rbac_group_permission_attachment | permission_name | **Yes**; one of values of this attribute has been renamed:  `all_cloudwan_write` to `all_cloudn_write`. If this permission was set previously, it will be deleted and must be remade. The permission can be safely renamed in the configuration and re-applied. |
