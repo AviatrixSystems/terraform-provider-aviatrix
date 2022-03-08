@@ -90,9 +90,15 @@ The following arguments are supported:
 -> **NOTE:** `backup_bucket_name` is required for AWS, AWSGov and GCP. `backup_storage_name`, `backup_container_name` and `backup_region` are required for Azure. `backup_bucket_name` and `backup_region` are required for OCI.
 
 ### [TLS Certificate Import](https://docs.aviatrix.com/HowTos/controller_certificate.html)
+
+~> **NOTE:** Please use either the combination of `ca_certificate_file_path`, `server_public_certificate_file_path` and `server_private_key_file_path` or the combination of `ca_certificate_file`, `server_public_certificate_file` and `server_private_key_file`.
+
 * `ca_certificate_file_path` - (Optional) File path to CA certificate. Available as of provider version R2.18+.
 * `server_public_certificate_file_path` - (Optional) File path to the server public certificate. Available as of provider version R2.18+.
 * `server_private_key_file_path` - (Optional) File path to server private key. Available as of provider version R2.18+.
+* `ca_certificate_file` - (Optional) CA certificate. Available as of provider version R2.21.2+.
+* `server_public_certificate_file` - (Optional) Server public certificate. Available as of provider version R2.21.2+.
+* `server_private_key_file` - (Optional) Server private key. Available as of provider version R2.21.2+.
 
 ### Misc.
 * `enable_vpc_dns_server` - (Optional) Enable VPC/VNET DNS Server for the controller. Valid values: true, false. Default value: false.
