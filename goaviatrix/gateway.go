@@ -192,6 +192,7 @@ type Gateway struct {
 	BgpLanInterfaces                []BundleVpcLanInfo                  `json:"gce_bgp_lan_info,omitempty"`
 	Async                           bool                                `form:"async,omitempty"`
 	DisableRoutePropagation         bool                                `json:"disable_route_propagation,omitempty"`
+	EnableS2CRxBalancing            bool                                `json:"s2c_rx_balancing,omitempty"`
 }
 
 type HaGateway struct {

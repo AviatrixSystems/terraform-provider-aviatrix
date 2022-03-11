@@ -311,6 +311,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable Equal Cost Multi Path (ECMP) routing for the next hop.",
 			},
+			"enable_s2c_rx_balancing": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable S2C receive packet CPU re-balancing on transit gateway.",
+			},
 			"enable_segmentation": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -1435,6 +1441,14 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	enableS2CRxBalancing := d.Get("enable_s2c_rx_balancing").(bool)
+	if enableS2CRxBalancing {
+		err = client.EnableS2CRxBalancing(gateway.GwName)
+		if err != nil {
+			return fmt.Errorf("could not enable S2C receive packet CPU re-balancing on transit %s: %v", gateway.GwName, err)
+		}
+	}
+
 	if detectionTime, ok := d.GetOk("tunnel_detection_time"); ok {
 		err := client.ModifyTunnelDetectionTime(gateway.GwName, detectionTime.(int))
 		if err != nil {
@@ -1515,6 +1529,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("bgp_ecmp", gw.BgpEcmp)
 	d.Set("enable_active_standby", gw.EnableActiveStandby)
 	d.Set("enable_active_standby_preemptive", gw.EnableActiveStandbyPreemptive)
+	d.Set("enable_s2c_rx_balancing", gw.EnableS2CRxBalancing)
 	d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan)
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan {
 		if len(gw.BgpLanInterfaces) != 0 {
@@ -3001,6 +3016,20 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			err := client.DisableMultitierTransit(gateway.GwName)
 			if err != nil {
 				return fmt.Errorf("could not disable multi tier transit when updating: %v", err)
+			}
+		}
+	}
+
+	if d.HasChange("enable_s2c_rx_balancing") {
+		if d.Get("enable_s2c_rx_balancing").(bool) {
+			err := client.EnableS2CRxBalancing(gateway.GwName)
+			if err != nil {
+				return fmt.Errorf("could not enable S2C receive packet CPU re-balancing during Transit Gateway update: %v", err)
+			}
+		} else {
+			err := client.DisableS2CRxBalancing(gateway.GwName)
+			if err != nil {
+				return fmt.Errorf("could not disable S2C receive packet CPU re-balancing during Transit Gateway update: %v", err)
 			}
 		}
 	}

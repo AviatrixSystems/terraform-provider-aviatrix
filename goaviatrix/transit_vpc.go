@@ -596,3 +596,23 @@ func (c *Client) GetBgpLanIPList(transitGateway *TransitVpc) (*TransitGatewayBgp
 		HaBgpLanIpList: haBgpLanIpList,
 	}, nil
 }
+
+func (c *Client) EnableS2CRxBalancing(gwName string) error {
+	data := map[string]string{
+		"action":           "enable_s2c_rx_balancing",
+		"gateway_name":     gwName,
+		"CID":              c.CID,
+		"s2c_rx_balancing": "yes",
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) DisableS2CRxBalancing(gwName string) error {
+	data := map[string]string{
+		"action":           "disable_s2c_rx_balancing",
+		"gateway_name":     gwName,
+		"CID":              c.CID,
+		"s2c_rx_balancing": "no",
+	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
