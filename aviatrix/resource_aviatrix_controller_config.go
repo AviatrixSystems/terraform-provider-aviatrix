@@ -616,7 +616,7 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 			}
 			err := client.DisableImportedHTTPSCerts()
 			if err != nil {
-				return fmt.Errorf("problem trying to disable imported certs to prepare for importing new certs: %v", err)
+				return fmt.Errorf("could not disable imported certs to prepare for importing new certs: %v", err)
 			}
 			err = client.ImportNewHTTPSCerts(certConfig)
 			if err != nil {
@@ -630,7 +630,7 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 			}
 			err := client.DisableImportedHTTPSCerts()
 			if err != nil {
-				return fmt.Errorf("problem trying to disable imported certs to prepare for importing new certs: %v", err)
+				return fmt.Errorf("could not disable imported certs to prepare for importing new certs: %v", err)
 			}
 			err = client.ImportNewHTTPSCerts(certConfig)
 			if err != nil {
