@@ -1330,10 +1330,13 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("vpc_reg", gw.GatewayZone)                   //gcp vpc_reg returns as gateway_zone in json
 
 		d.Set("allocate_new_eip", gw.AllocateNewEipRead)
-	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
+	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		d.Set("vpc_id", gw.VpcID)
 		d.Set("vpc_reg", gw.VpcRegion)
-
+		d.Set("allocate_new_eip", gw.AllocateNewEipRead)
+	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
+		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0]) // oci vpc_id returns as <vpc_id>~~<vpc_name> in rest api
+		d.Set("vpc_reg", gw.VpcRegion)
 		d.Set("allocate_new_eip", gw.AllocateNewEipRead)
 	} else if gw.CloudType == goaviatrix.AliCloud {
 		d.Set("vpc_id", strings.Split(gw.VpcID, "~~")[0])
