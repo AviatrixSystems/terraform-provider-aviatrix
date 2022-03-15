@@ -49,6 +49,7 @@ resource "aviatrix_firenet" "gcp_firenet" {
 The following arguments are supported:
 
 ### Required
+-> As of Provider version R2.21.2+, the `vpc_id` of an Oracle VCN has been changed from its name to its OCID.
 * `vpc_id` - (Required) VPC ID of the Security VPC.
 * `inspection_enabled` - (Optional) Enable/disable traffic inspection. Valid values: true, false. Default value: true.
 

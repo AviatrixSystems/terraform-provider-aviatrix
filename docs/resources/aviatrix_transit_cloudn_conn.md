@@ -50,6 +50,8 @@ The following arguments are supported:
 
 ### Required
 -> **NOTE:** As of Controller version 6.5+/provider version R2.20+, the `vpc_id` for Gateways in Azure should be in the format "vnet_name:rg_name:resource_guid".
+
+-> As of Provider version R2.21.2+, the `vpc_id` of an Oracle VCN has been changed from its name to its OCID.
 * `vpc_id` - (Required) VPC ID of the Aviatrix Transit Gateway. Type: String.
 * `connection_name` - (Required) Name of the Transit Gateway to CloudN Connection. Type: String.
 * `gw_name` - (Required) Name of the Transit Gateway. Type: String.

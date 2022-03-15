@@ -60,6 +60,7 @@ resource "aviatrix_firewall_instance" "test_firewall_instance" {
 The following arguments are supported:
 
 ### Required
+-> As of Provider version R2.21.2+, the `vpc_id` of an Oracle VCN has been changed from its name to its OCID.
 * `vpc_id` - (Required) VPC ID of the Security VPC. For GCP, `vpc_id` must be in the form vpc_id~-~gcloud_project_id.
 * `firenet_gw_name` - (Optional) Name of the primary FireNet gateway. **Required for all FireNet deployments that do not utilize the TGW-Integrated FireNet with AWS Native GWLB VPC.**
 * `firewall_name` - (Required) Name of the firewall instance to be created.
