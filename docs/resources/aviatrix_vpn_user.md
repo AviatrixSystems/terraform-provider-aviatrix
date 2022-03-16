@@ -50,6 +50,7 @@ The following arguments are supported:
 
 ~> **NOTE:** For GCP, the vpc_id must be in the form `vpc_id~-~gcloud_project_id`. For example, `"${aviatrix_vpc.test_vpc.vpc_id}~-~${aviatrix_account.test_account.gcloud_project_id}"`.
 
+~> As of Provider version R2.21.2+, the `vpc_id` of an OCI VCN has been changed from its name to its OCID.
 * `vpc_id` - (Optional) VPC ID of Aviatrix VPN gateway. Used together with `gw_name`. Example: "vpc-abcd1234".
 * `gw_name` - (Optional) If ELB is enabled, this will be the name of the ELB, else it will be the name of the Aviatrix VPN gateway. Used together with `vpc_id`. Example: "gw1".
 * `dns_name` - (Optional) FQDN of a DNS based VPN service such as GeoVPN or UDP load balancer. Example: "vpn.testuser.com".

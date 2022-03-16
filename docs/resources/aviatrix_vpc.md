@@ -156,6 +156,8 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 -> **NOTE** `vpc_id` should only be referenced to create Gateways, Spoke Gateways and Transit Gateways. The vpc_id attribute of the gateway created should be referenced to create other resources such as VPN Users or Site2Cloud connections.
+
+~> As of Provider version R2.21.2+, the `vpc_id` of an OCI VCN has been changed from its name to its OCID.
 * `vpc_id` - ID of the VPC to be created.
 * `azure_vnet_resource_id` - Azure VNet resource ID.
 * `route_tables` - List of route table ids associated with this VPC. Only populated for AWS, AWSGov and Azure VPC.
