@@ -1599,8 +1599,8 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		} else if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 			d.Set("peering_ha_subnet", gw.HaGw.VpcNet)
 			if _, haZoneIsSet := d.GetOk("peering_ha_zone"); isImport || haZoneIsSet {
-				if gw.GatewayZone != "AvailabilitySet" {
-					d.Set("peering_ha_zone", "az-"+gw.GatewayZone)
+				if gw.HaGw.GatewayZone != "AvailabilitySet" {
+					d.Set("peering_ha_zone", "az-"+gw.HaGw.GatewayZone)
 				}
 			}
 		} else if gw.HaGw.CloudType == goaviatrix.AliCloud {
