@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var supportedVersions = []string{"6.6"}
+var supportedVersions = []string{"6.7"}
 
 // Provider returns a schema.Provider for Aviatrix.
 func Provider() *schema.Provider {
@@ -65,7 +65,7 @@ func Provider() *schema.Provider {
 			"aviatrix_azure_peer":                                     resourceAviatrixAzurePeer(),
 			"aviatrix_azure_spoke_native_peering":                     resourceAviatrixAzureSpokeNativePeering(),
 			"aviatrix_azure_vng_conn":                                 resourceAviatrixAzureVngConn(),
-			"aviatrix_cloudn_registration":                            resourceAviatrixCloudnRegistration(),
+			"aviatrix_cloudn_edge_gateway":                            resourceAviatrixCloudnEdgeGateway(),
 			"aviatrix_cloudn_transit_gateway_attachment":              resourceAviatrixCloudnTransitGatewayAttachment(),
 			"aviatrix_cloudwatch_agent":                               resourceAviatrixCloudwatchAgent(),
 			"aviatrix_controller_bgp_max_as_limit_config":             resourceAviatrixControllerBgpMaxAsLimitConfig(),
@@ -77,12 +77,6 @@ func Provider() *schema.Provider {
 			"aviatrix_controller_security_group_management_config":    resourceAviatrixControllerSecurityGroupManagementConfig(),
 			"aviatrix_copilot_association":                            resourceAviatrixCopilotAssociation(),
 			"aviatrix_datadog_agent":                                  resourceAviatrixDatadogAgent(),
-			"aviatrix_device_aws_tgw_attachment":                      resourceAviatrixDeviceAwsTgwAttachment(),
-			"aviatrix_device_interface_config":                        resourceAviatrixDeviceInterfaceConfig(),
-			"aviatrix_device_registration":                            resourceAviatrixDeviceRegistration(),
-			"aviatrix_device_tag":                                     resourceAviatrixDeviceTag(),
-			"aviatrix_device_transit_gateway_attachment":              resourceAviatrixDeviceTransitGatewayAttachment(),
-			"aviatrix_device_virtual_wan_attachment":                  resourceAviatrixDeviceVirtualWanAttachment(),
 			"aviatrix_filebeat_forwarder":                             resourceAviatrixFilebeatForwarder(),
 			"aviatrix_firenet":                                        resourceAviatrixFireNet(),
 			"aviatrix_firewall":                                       resourceAviatrixFirewall(),

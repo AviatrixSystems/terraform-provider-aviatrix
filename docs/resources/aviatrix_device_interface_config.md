@@ -1,5 +1,5 @@
 ---
-subcategory: "CloudWAN"
+subcategory: "Deprecated"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_device_interface_config"
 description: |-
