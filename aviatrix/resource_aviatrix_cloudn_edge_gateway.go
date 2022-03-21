@@ -145,7 +145,7 @@ func resourceAviatrixCloudnEdgeGatewayCreate(ctx context.Context, d *schema.Reso
 	defer resourceAviatrixCloudnEdgeGatewayReadIfRequired(ctx, d, meta, &flag)
 
 	if err := client.CreateCloundEdgeGateway(ctx, cloudnEdgeGateway); err != nil {
-		return diag.Errorf("could not create cloudn edge gateway: %v", err)
+		return diag.Errorf("could not create CloudN Edge Gateway: %v", err)
 	}
 
 	gateway := &goaviatrix.TransitVpc{
@@ -157,7 +157,7 @@ func resourceAviatrixCloudnEdgeGatewayCreate(ctx context.Context, d *schema.Reso
 		localASNumber := d.Get("local_as_number").(string)
 		err := client.SetLocalASNumber(gateway, localASNumber)
 		if err != nil {
-			return diag.Errorf("failed to create cloudn edge gateway: could not set local_as_number: %v", err)
+			return diag.Errorf("failed to create CloudN Edge Gateway: could not set local_as_number: %v", err)
 		}
 
 		if prependAsPathOk {
@@ -168,11 +168,11 @@ func resourceAviatrixCloudnEdgeGatewayCreate(ctx context.Context, d *schema.Reso
 
 			err := client.SetPrependASPath(gateway, prependASPath)
 			if err != nil {
-				return diag.Errorf("failed to create cloudn edge gateway: could not set prepend_as_path: %v", err)
+				return diag.Errorf("failed to create CloudN Edge Gateway: could not set prepend_as_path: %v", err)
 			}
 		}
 	} else if prependAsPathOk {
-		return diag.Errorf("failed to create cloudn edge gateway: prepend_as_path must be empty when local_as_number has not been set")
+		return diag.Errorf("failed to create CloudN Edge Gateway: prepend_as_path must be empty when local_as_number has not been set")
 	}
 
 	return resourceAviatrixCloudnEdgeGatewayReadIfRequired(ctx, d, meta, &flag)
@@ -226,7 +226,7 @@ func resourceAviatrixCloudnEdgeGatewayRead(ctx context.Context, d *schema.Resour
 	}
 	transitGatewayAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(gateway)
 	if err != nil {
-		return diag.Errorf("failed to read cloudn edge gateway transit gateway advanced config: %v", err)
+		return diag.Errorf("failed to read CloudN Edge Gateway transit gateway advanced config: %v", err)
 	}
 	if transitGatewayAdvancedConfig.LocalASNumber != "" {
 		d.Set("local_as_number", transitGatewayAdvancedConfig.LocalASNumber)
@@ -256,7 +256,7 @@ func resourceAviatrixCloudnEdgeGatewayUpdate(ctx context.Context, d *schema.Reso
 			// Handle the case where prependASPath is empty here so that the API is not called twice
 			err := client.SetPrependASPath(gateway, nil)
 			if err != nil {
-				return diag.Errorf("failed to delete prepend_as_path during Aviatrix CloudN Registration update: %v", err)
+				return diag.Errorf("failed to delete prepend_as_path during CloudN Edge Gateway update: %v", err)
 			}
 		}
 
@@ -264,14 +264,14 @@ func resourceAviatrixCloudnEdgeGatewayUpdate(ctx context.Context, d *schema.Reso
 			localASNumber := d.Get("local_as_number").(string)
 			err := client.SetLocalASNumber(gateway, localASNumber)
 			if err != nil {
-				return diag.Errorf("failed to update Aviatrix CloudN Registration: could not set local_as_number: %v", err)
+				return diag.Errorf("failed to update CloudN Edge Gateway: could not set local_as_number: %v", err)
 			}
 		}
 
 		if d.HasChange("prepend_as_path") && len(prependASPath) > 0 {
 			err := client.SetPrependASPath(gateway, prependASPath)
 			if err != nil {
-				return diag.Errorf("failed to update Aviatrix CloudN Registration prepend_as_path: %v", err)
+				return diag.Errorf("failed to update CloudN Edge Gateway prepend_as_path: %v", err)
 			}
 		}
 	}
@@ -288,7 +288,7 @@ func resourceAviatrixCloudnEdgeGatewayDelete(ctx context.Context, d *schema.Reso
 
 	err := client.DeleteCloudnEdgeGateway(ctx, gwName)
 	if err != nil {
-		return diag.Errorf("could not delete cloudn edge gateway: %v", err)
+		return diag.Errorf("could not delete CloudN Edge Gateway: %v", err)
 	}
 
 	err = os.Remove(imageDownloadPath + "/" + gwName + ".iso")
