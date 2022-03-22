@@ -398,7 +398,8 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if goaviatrix.IsCloudType(vC.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-		d.Set("vpc_id", strings.Split(vC.VpcID, "~-~")[0])
+		//d.Set("vpc_id", strings.Split(vC.VpcID, "~-~")[0])
+		d.Set("vpc_id", vC.VpcID)
 	} else {
 		d.Set("vpc_id", vC.VpcID)
 	}

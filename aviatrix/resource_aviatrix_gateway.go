@@ -1338,7 +1338,8 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("vpc_reg", gw.VpcRegion)
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		// gcp vpc_id returns as <vpc_id>~-~<other vpc info>
-		d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0])
+		//d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0])
+		d.Set("vpc_id", gw.VpcID)
 		d.Set("vpc_reg", gw.GatewayZone)
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		d.Set("vpc_id", gw.VpcID)
