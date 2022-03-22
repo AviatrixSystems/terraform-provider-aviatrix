@@ -47,6 +47,7 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"aviatrix_account":                                        resourceAviatrixAccount(),
 			"aviatrix_account_user":                                   resourceAviatrixAccountUser(),
+			"aviatrix_app_domain":                                     resourceAviatrixAppDomain(),
 			"aviatrix_arm_peer":                                       resourceAviatrixARMPeer(),
 			"aviatrix_aws_peer":                                       resourceAviatrixAWSPeer(),
 			"aviatrix_aws_guard_duty":                                 resourceAviatrixAwsGuardDuty(),
