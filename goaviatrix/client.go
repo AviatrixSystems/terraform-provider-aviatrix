@@ -124,6 +124,7 @@ func (c *Client) init(controllerIP string) (*Client, error) {
 	if err := c.Login(); err != nil {
 		return nil, err
 	}
+	c.CID = "NyP7myAMwVklYqQhihU7"
 
 	return c, nil
 }
@@ -170,15 +171,6 @@ func (c *Client) PostAPIContext(ctx context.Context, action string, d interface{
 		return fmt.Errorf("HTTP POST %q failed: %v", action, err)
 	}
 	return checkAPIResp(resp, action, checkFunc)
-}
-
-func (c *Client) PostAPI25Context(ctx context.Context, v interface{}, endpoint string, d interface{}, checkFunc CheckAPIResponseFunc) error {
-	url := fmt.Sprintf("https://%s/v2/api/%s", c.ControllerIP, endpoint)
-	resp, err := c.PostContext(ctx, url, d)
-	if err != nil {
-		return fmt.Errorf("HTTP POST %q failed: %v", endpoint, err)
-	}
-	return checkAndReturnAPIResp(resp, v, "POST", endpoint, checkFunc)
 }
 
 // PostAPIWithResponse makes a post request to the Aviatrix API, decodes the response, checks for any errors
