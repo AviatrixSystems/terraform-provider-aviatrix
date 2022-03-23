@@ -129,10 +129,6 @@ func (c *Client) GetAppDomain(ctx context.Context, uuid string) (*AppDomain, err
 			return appDomain, nil
 		}
 	}
-	//action := ""
-	//data := map[string]string {
-	//	"CID": c.CID,
-	//}
 	return nil, ErrNotFound
 }
 

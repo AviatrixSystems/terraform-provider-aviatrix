@@ -100,6 +100,7 @@ func Provider() *schema.Provider {
 			"aviatrix_gateway_dnat":                                   resourceAviatrixGatewayDNat(),
 			"aviatrix_gateway_snat":                                   resourceAviatrixGatewaySNat(),
 			"aviatrix_geo_vpn":                                        resourceAviatrixGeoVPN(),
+			"aviatrix_microsegmentation_policy_list":                  resourceAviatrixMicrosegmentationPolicyList(),
 			"aviatrix_netflow_agent":                                  resourceAviatrixNetflowAgent(),
 			"aviatrix_periodic_ping":                                  resourceAviatrixPeriodicPing(),
 			"aviatrix_proxy_config":                                   resourceAviatrixProxyConfig(),

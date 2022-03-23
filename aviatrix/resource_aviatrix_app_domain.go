@@ -42,6 +42,11 @@ func resourceAviatrixAppDomain() *schema.Resource {
 				Description: "Map of key value pairs to filter the app domain.",
 				//RequiredWith: []string{"resource_filter"},
 			},
+			"uuid": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "UUID of the App Domain.",
+			},
 			//"resources": {
 			//	Type:        schema.TypeList,
 			//	Optional:    true,
@@ -166,6 +171,8 @@ func resourceAviatrixAppDomainRead(ctx context.Context, d *schema.ResourceData, 
 	client := meta.(*goaviatrix.Client)
 
 	uuid := d.Id()
+	d.Set("uuid", uuid)
+
 	appDomain, err := client.GetAppDomain(ctx, uuid)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {

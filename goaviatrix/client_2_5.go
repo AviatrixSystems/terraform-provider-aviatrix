@@ -58,8 +58,8 @@ func (c *Client) urlencode25(d map[string]string, endpoint string) (string, erro
 }
 
 func (c *Client) PostAPIContext25(ctx context.Context, v interface{}, endpoint string, d interface{}) error {
-	url := fmt.Sprintf("https://%s/v2.5/api/%s", c.ControllerIP, endpoint)
-	resp, err := c.PostContext25(ctx, url, d)
+	Url := fmt.Sprintf("https://%s/v2.5/api/%s", c.ControllerIP, endpoint)
+	resp, err := c.PostContext25(ctx, Url, d)
 	if err != nil {
 		return fmt.Errorf("HTTP POST %q failed: %v", endpoint, err)
 	}
@@ -144,7 +144,7 @@ func (c *Client) RequestContext25(ctx context.Context, verb string, path string,
 		}
 		log.Tracef("%s %s Body: %s", verb, path, body)
 		log.Printf("[DEBUG] Body: %s", body)
-		reader := strings.NewReader(fmt.Sprintf("body=%s", string(body)))
+		reader := bytes.NewReader(body)
 
 		//buf := new(bytes.Buffer)
 		//if err = form.NewEncoder(buf).Encode(i); err != nil {
@@ -156,7 +156,7 @@ func (c *Client) RequestContext25(ctx context.Context, verb string, path string,
 		//reader := strings.NewReader(body)
 		req, err = http.NewRequestWithContext(ctx, verb, path, reader)
 		if err == nil {
-			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			req.Header.Set("Content-Type", "application/json")
 		}
 	} else {
 		req, err = http.NewRequestWithContext(ctx, verb, path, nil)
