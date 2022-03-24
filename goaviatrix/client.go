@@ -124,7 +124,6 @@ func (c *Client) init(controllerIP string) (*Client, error) {
 	if err := c.Login(); err != nil {
 		return nil, err
 	}
-	c.CID = "NyP7myAMwVklYqQhihU7"
 
 	return c, nil
 }
