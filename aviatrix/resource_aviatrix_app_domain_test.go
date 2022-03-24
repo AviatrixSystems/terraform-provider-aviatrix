@@ -23,7 +23,6 @@ func TestAccAviatrixAppDomain_basic(t *testing.T) {
 			testAccPreCheck(t)
 		},
 		Providers: testAccProvidersVersionValidation,
-		//Providers:    testAccProviders,
 		CheckDestroy: testAccAppDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,8 +49,8 @@ func TestAccAviatrixAppDomain_basic(t *testing.T) {
 func testAccAppDomainBasic() string {
 	return `
 resource "aviatrix_app_domain" "test" {
-	name = "test-app-domain"
-	ip_filter = [
+	name       = "test-app-domain"
+	ip_filter  = [
 		"10.0.0.0/16"
 	]
 	tag_filter = {

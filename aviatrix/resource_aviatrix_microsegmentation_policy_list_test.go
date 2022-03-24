@@ -50,14 +50,14 @@ func TestAccAviatrixMicrosegmentation_Policy_List_basic(t *testing.T) {
 func testAccMicrosegmentationPolicyListBasic() string {
 	return `
 resource "aviatrix_app_domain" "ad1" {
-	name = "test-app-domain-1"
+	name      = "test-app-domain-1"
 	ip_filter = [
 		"10.0.0.0/16"
 	]
 }
 
 resource "aviatrix_app_domain" "ad2" {
-	name = "test-app-domain-2"
+	name       = "test-app-domain-2"
 	tag_filter = {
 		k1 = "v1"
 	}
@@ -65,10 +65,10 @@ resource "aviatrix_app_domain" "ad2" {
 
 resource "aviatrix_microsegmentation_policy_list" "test" {
 	policies {
-		name = "test-microseg-policy"
-		action = "PERMIT"
-		priority = 0
-		protocol = "TCP"
+		name            = "test-microseg-policy"
+		action          = "PERMIT"
+		priority        = 0
+		protocol        = "TCP"
 		src_app_domains = [
 		  aviatrix_app_domain.ad1.uuid
 		]
