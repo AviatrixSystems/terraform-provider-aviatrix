@@ -19,6 +19,7 @@ type AppDomainTagFilter struct {
 
 type AppDomain struct {
 	Name      string
+	UUID      string
 	IpFilter  *AppDomainIPFilter
 	TagFilter *AppDomainTagFilter
 }
@@ -101,6 +102,7 @@ func (c *Client) GetAppDomain(ctx context.Context, uuid string) (*AppDomain, err
 		if appDomainResult.UUID == uuid {
 			appDomain := &AppDomain{
 				Name: appDomainResult.Name,
+				UUID: appDomainResult.UUID,
 			}
 
 			if len(appDomainResult.IpFilter.Ips) > 0 {
