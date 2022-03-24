@@ -22,15 +22,19 @@ func TestAccAviatrixAppDomain_basic(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
-		//Providers: testAccProvidersVersionValidation,
-		Providers:    testAccProviders,
+		Providers: testAccProvidersVersionValidation,
+		//Providers:    testAccProviders,
 		CheckDestroy: testAccAppDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppDomainBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppDomainExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "ip_filter.1", "10.0.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "name", "test-app-domain"),
+					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
+					resource.TestCheckResourceAttr(resourceName, "ip_filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ip_filter.0", "10.0.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "tag_filter.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tag_filter.k1", "v1"),
 				),
 			},
@@ -67,8 +71,8 @@ func testAccCheckAppDomainExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no App Domain ID is set")
 		}
 
-		//client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
-		client := testAccProvider.Meta().(*goaviatrix.Client)
+		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+		//client := testAccProvider.Meta().(*goaviatrix.Client)
 
 		appDomain, err := client.GetAppDomain(context.Background(), rs.Primary.ID)
 		if err != nil {
@@ -84,8 +88,8 @@ func testAccCheckAppDomainExists(n string) resource.TestCheckFunc {
 }
 
 func testAccAppDomainDestroy(s *terraform.State) error {
-	//client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
-	client := testAccProvider.Meta().(*goaviatrix.Client)
+	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+	//client := testAccProvider.Meta().(*goaviatrix.Client)
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_app_domain" {
