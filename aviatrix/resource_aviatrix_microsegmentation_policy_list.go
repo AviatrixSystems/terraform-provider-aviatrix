@@ -54,17 +54,18 @@ func resourceAviatrixMicrosegmentationPolicyList() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"hi": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntAtLeast(0),
-										Description:  "Upper bound of port range.",
-									},
 									"lo": {
 										Type:         schema.TypeInt,
 										Required:     true,
 										ValidateFunc: validation.IntAtLeast(0),
 										Description:  "Lower bound of port range.",
+									},
+									"hi": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.IntAtLeast(0),
+										Description:  "Upper bound of port range.",
 									},
 								},
 							},
@@ -72,13 +73,19 @@ func resourceAviatrixMicrosegmentationPolicyList() *schema.Resource {
 						"protocol": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"tcp", "udp"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP"}, false),
+							Description:  "Protocol for the policy to filter.",
 						},
 						"priority": {
 							Type:        schema.TypeInt,
 							Optional:    true,
 							Default:     0,
 							Description: "Priority level of this policy",
+						},
+						"uuid": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "UUID of the microsegmentation policy.",
 						},
 					},
 				},
@@ -112,8 +119,11 @@ func marshalMicrosegmentationPolicyListInput(d *schema.ResourceData) *goaviatrix
 		for _, portRangeInterface := range policy["port_ranges"].([]interface{}) {
 			portRangeMap := portRangeInterface.(map[string]interface{})
 			portRange := &goaviatrix.MicrosegmentationPortRange{
-				Hi: portRangeMap["hi"].(int),
 				Lo: portRangeMap["lo"].(int),
+			}
+
+			if hi, hiOk := portRangeMap["hi"]; hiOk {
+				portRange.Hi = hi.(int)
 			}
 			microsegmentationPolicy.PortRanges = append(microsegmentationPolicy.PortRanges, *portRange)
 		}
@@ -169,6 +179,7 @@ func resourceAviatrixMicrosegmentationPolicyListRead(ctx context.Context, d *sch
 		p["protocol"] = policy.Protocol
 		p["src_app_domains"] = policy.SrcAppDomains
 		p["dst_app_domains"] = policy.DstAppDomains
+		p["uuid"] = policy.UUID
 
 		var portRanges []map[string]interface{}
 		for _, portRange := range policy.PortRanges {
@@ -178,8 +189,13 @@ func resourceAviatrixMicrosegmentationPolicyListRead(ctx context.Context, d *sch
 			}
 			portRanges = append(portRanges, portRangeMap)
 		}
+		p["port_ranges"] = portRanges
 
 		policies = append(policies, p)
+	}
+
+	if err := d.Set("policies", policies); err != nil {
+		return diag.Errorf("failed to set policies during Microsegmentation Policy List read: %s\n", err)
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))

@@ -15,6 +15,7 @@ type MicrosegmentationPolicy struct {
 	PortRanges    []MicrosegmentationPortRange `json:"port_ranges"`
 	Priority      int                          `json:"priority"`
 	Protocol      string                       `json:"protocol"`
+	UUID          string                       `json:"uuid,omitempty"`
 }
 
 type MicrosegmentationPolicyList struct {
