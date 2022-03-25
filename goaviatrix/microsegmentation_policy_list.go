@@ -3,8 +3,8 @@ package goaviatrix
 import "context"
 
 type MicrosegmentationPortRange struct {
-	Hi int `json:"portEnd"`
-	Lo int `json:"portStart"`
+	Hi int `json:"hi"`
+	Lo int `json:"lo"`
 }
 
 type MicrosegmentationPolicy struct {
@@ -12,7 +12,7 @@ type MicrosegmentationPolicy struct {
 	Action        string                       `json:"action"`
 	DstAppDomains []string                     `json:"dst_ads"`
 	SrcAppDomains []string                     `json:"src_ads"`
-	PortRanges    []MicrosegmentationPortRange `json:"port_ranges"`
+	PortRanges    []MicrosegmentationPortRange `json:"port_ranges,omitempty"`
 	Priority      int                          `json:"priority"`
 	Protocol      string                       `json:"protocol"`
 	UUID          string                       `json:"uuid,omitempty"`
@@ -24,7 +24,7 @@ type MicrosegmentationPolicyList struct {
 
 func (c *Client) CreateMicrosegmentationPolicyList(ctx context.Context, policyList *MicrosegmentationPolicyList) error {
 	endpoint := "microseg/policy-list"
-	return c.PostAPIContext25(ctx, nil, endpoint, policyList)
+	return c.PutAPIContext25(ctx, endpoint, policyList)
 }
 
 func (c *Client) GetMicrosegmentationPolicyList(ctx context.Context) (*MicrosegmentationPolicyList, error) {
@@ -43,7 +43,7 @@ func (c *Client) GetMicrosegmentationPolicyList(ctx context.Context) (*Microsegm
 
 func (c *Client) UpdateMicrosegmentationPolicyList(ctx context.Context, policyList *MicrosegmentationPolicyList) error {
 	endpoint := "microseg/policy-list"
-	return c.PostAPIContext25(ctx, nil, endpoint, policyList)
+	return c.PutAPIContext25(ctx, endpoint, policyList)
 }
 
 func (c *Client) DeleteMicrosegmentationPolicyList(ctx context.Context) error {

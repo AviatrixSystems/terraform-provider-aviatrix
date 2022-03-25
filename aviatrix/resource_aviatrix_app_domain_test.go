@@ -22,7 +22,7 @@ func TestAccAviatrixAppDomain_basic(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
-		Providers: testAccProvidersVersionValidation,
+		Providers:    testAccProvidersVersionValidation,
 		CheckDestroy: testAccAppDomainDestroy,
 		Steps: []resource.TestStep{
 			{

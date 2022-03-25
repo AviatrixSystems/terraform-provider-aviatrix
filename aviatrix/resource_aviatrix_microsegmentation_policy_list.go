@@ -22,8 +22,9 @@ func resourceAviatrixMicrosegmentationPolicyList() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"policies": {
-				Type:     schema.TypeList,
-				Required: true,
+				Type:        schema.TypeList,
+				Required:    true,
+				Description: "List of micro-segmentation policies.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -37,21 +38,39 @@ func resourceAviatrixMicrosegmentationPolicyList() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{"PERMIT", "DENY"}, false),
 							Description:  "Microsegmentation action. Must be one of PERMIT or DENY.",
 						},
+						"enable_logging": {
+							Type:        schema.TypeBool,
+							Required:    true,
+							Description: "Enable logging for this policy.",
+						},
 						"dst_app_domains": {
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Required:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
 							Description: "List of destination App Domain UUIDs for this policy.",
 						},
 						"src_app_domains": {
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Required:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
 							Description: "List of source App Domain UUIDs for this policy.",
 						},
+						"protocol": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP"}, false),
+							Description:  "Protocol for the policy to filter.",
+						},
+						"priority": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     0,
+							Description: "Priority level of this policy",
+						},
 						"port_ranges": {
-							Type:     schema.TypeList,
-							Required: true,
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "List of port ranges for this policy.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"lo": {
@@ -69,18 +88,6 @@ func resourceAviatrixMicrosegmentationPolicyList() *schema.Resource {
 									},
 								},
 							},
-						},
-						"protocol": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP"}, false),
-							Description:  "Protocol for the policy to filter.",
-						},
-						"priority": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Default:     0,
-							Description: "Priority level of this policy",
 						},
 						"uuid": {
 							Type:        schema.TypeString,
@@ -108,11 +115,11 @@ func marshalMicrosegmentationPolicyListInput(d *schema.ResourceData) *goaviatrix
 			Protocol: policy["protocol"].(string),
 		}
 
-		for _, appDomain := range policy["src_app_domains"].([]interface{}) {
+		for _, appDomain := range policy["src_app_domains"].(*schema.Set).List() {
 			microsegmentationPolicy.SrcAppDomains = append(microsegmentationPolicy.SrcAppDomains, appDomain.(string))
 		}
 
-		for _, appDomain := range policy["dst_app_domains"].([]interface{}) {
+		for _, appDomain := range policy["dst_app_domains"].(*schema.Set).List() {
 			microsegmentationPolicy.DstAppDomains = append(microsegmentationPolicy.DstAppDomains, appDomain.(string))
 		}
 

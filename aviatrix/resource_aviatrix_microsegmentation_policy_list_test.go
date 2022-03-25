@@ -23,7 +23,7 @@ func TestAccAviatrixMicrosegmentation_Policy_List_basic(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
-		Providers: testAccProvidersVersionValidation,
+		Providers:    testAccProvidersVersionValidation,
 		CheckDestroy: testAccMicrosegmentationPolicyListDestroy,
 		Steps: []resource.TestStep{
 			{
