@@ -40,20 +40,20 @@ func resourceAviatrixMicrosegmentationPolicyList() *schema.Resource {
 						},
 						"enable_logging": {
 							Type:        schema.TypeBool,
-							Required:    true,
+							Optional:    true,
 							Description: "Enable logging for this policy.",
 						},
 						"dst_app_domains": {
 							Type:        schema.TypeSet,
 							Required:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "List of destination App Domain UUIDs for this policy.",
+							Description: "Set of destination App Domain UUIDs for this policy.",
 						},
 						"src_app_domains": {
 							Type:        schema.TypeSet,
 							Required:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "List of source App Domain UUIDs for this policy.",
+							Description: "Set of source App Domain UUIDs for this policy.",
 						},
 						"protocol": {
 							Type:         schema.TypeString,

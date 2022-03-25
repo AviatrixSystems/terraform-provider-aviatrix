@@ -27,13 +27,13 @@ func resourceAviatrixAppDomain() *schema.Resource {
 				Description: "Name of the App Domain.",
 			},
 			"ip_filter": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.IsCIDR,
 				},
-				Description: "List of CIDRs to filter the app domain.",
+				Description: "Set of CIDRs to filter the app domain.",
 			},
 			"tag_filter": {
 				Type:        schema.TypeMap,
@@ -93,7 +93,7 @@ func marshalAppDomainInput(d *schema.ResourceData) *goaviatrix.AppDomain {
 			Type: "ip",
 		}
 
-		for _, ip := range d.Get("ip_filter").([]interface{}) {
+		for _, ip := range d.Get("ip_filter").(*schema.Set).List() {
 			ipFilter.Ips = append(ipFilter.Ips, ip.(string))
 		}
 
