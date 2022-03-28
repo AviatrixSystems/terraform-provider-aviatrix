@@ -701,16 +701,16 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 
 	insaneMode := d.Get("insane_mode").(bool)
 	if insaneMode {
-		// Insane Mode encryption is not supported in China regions
-		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes^goaviatrix.AWSChina|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AzureChina) {
-			return fmt.Errorf("insane_mode is only supported for AWS (1), Azure (8), AzureGov (32), AWSGov (256), AWS Top Secret (16384) and AWS Secret (32768)")
+		// Insane Mode encryption is not supported in Azure China regions
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AzureChina) {
+			return fmt.Errorf("insane_mode is only supported for AWS (1), Azure (8), AzureGov (32), AWSGov (256), AWS China (1024), AWS Top Secret (16384) and AWS Secret (32768)")
 		}
 		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			if d.Get("insane_mode_az").(string) == "" {
-				return fmt.Errorf("insane_mode_az needed if insane_mode is enabled for AWS (1), AWSGov (256), AWS Top Secret (16384) or AWS Secret (32768)")
+				return fmt.Errorf("insane_mode_az needed if insane_mode is enabled for AWS (1), AWSGov (256), AWS China(1024), AWS Top Secret (16384) or AWS Secret (32768)")
 			}
 			if d.Get("peering_ha_subnet").(string) != "" && d.Get("peering_ha_insane_mode_az").(string) == "" {
-				return fmt.Errorf("peering_ha_insane_mode_az needed if insane_mode is enabled for AWS (1), AWSGov (256), AWS Top Secret (16384) or AWS Secret (32768) and ha_subnet is set")
+				return fmt.Errorf("peering_ha_insane_mode_az needed if insane_mode is enabled for AWS (1), AWSGov (256), AWS China(1024), AWS Top Secret (16384) or AWS Secret (32768) and ha_subnet is set")
 			}
 			// Append availability zone to subnet
 			var strs []string
