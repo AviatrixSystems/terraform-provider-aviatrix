@@ -58,7 +58,7 @@ func resourceAviatrixMicrosegmentationPolicyList() *schema.Resource {
 						"protocol": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP", "ICMP"}, false),
 							Description:  "Protocol for the policy to filter.",
 						},
 						"priority": {
