@@ -74,7 +74,6 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_azure_spoke_native_peering  | SKIP_AZURE_SPOKE_NATIVE_PEERING    | aviatrix_account + AZURE_VNET_ID, AZURE_VNET_ID2, AZURE_REGION, AZURE_REGION2  |
 | aviatrix_azure_vng_conn              | SKIP_AZURE_VNG_CONN                | aviatrix_account + AZURE_VNG_VNET_ID, AZURE_REGION, AZURE_VNG_SUBNET, AZURE_VNG|
 | aviatrix_aws_tgw_vpn_conn            | SKIP_AWS_TGW_VPN_CONN              | aviatrix_aws_tgw                                                               |
-| aviatrix_cloudn_edge_gateway         | SKIP_CLOUDN_EDGE_GATEWAY           | N/A                                                                            |
 | aviatrix_cloudn_transit_gateway_attachment | SKIP_CLOUDN_TRANSIT_GATEWAY_ATTACHMENT | CLOUDN_DEVICE_NAME, TRANSIT_GATEWAY_NAME, CLOUDN_BGP_ASN, CLOUDN_LAN_INTERFACE_NEIGHBOR_IP, CLOUDN_LAN_INTERFACE_NEIGHBOR_BGP_ASN |
 | aviatrix_cloudwatch_agent            | SKIP_CLOUDWATCH_AGENT              | N/A                                                                            |
 | aviatrix_controller_config           | SKIP_CONTROLLER_CONFIG             | aviatrix_account                                                               |
@@ -84,6 +83,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_controller_private_oob      | SKIP_CONTROLLER_PRIVATE_OOB        | N/A                                                                            |
 | aviatrix_controller_security_group_management_config      | SKIP_CONTROLLER_SECURITY_GROUP_MANAGEMENT_CONFIG        | N/A                                  |
 | aviatrix_datadog_agent               | SKIP_DATADOG_AGENT                 | datadog_api_key                                                                |
+| aviatrix_edge_gateway                | SKIP_EDGE_CAAG                     | N/A                                                                            |
 | aviatrix_filebeat_forwarder          | SKIP_FILEBEAT_FORWARDER            | N/A                                                                            |
 | aviatrix_firenet                     | SKIP_FIRENET                       | aviatrix_account + AWS_REGION, Palo Alto VM series                             |
 | aviatrix_firewall                    | SKIP_FIREWALL                      | aviatrix_gateway                                                               |

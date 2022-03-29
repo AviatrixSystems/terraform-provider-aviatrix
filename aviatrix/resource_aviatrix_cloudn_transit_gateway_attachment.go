@@ -63,8 +63,9 @@ func resourceAviatrixCloudnTransitGatewayAttachment() *schema.Resource {
 			},
 			"enable_over_private_network": {
 				Type:        schema.TypeBool,
-				Required:    true,
+				Optional:    true,
 				ForceNew:    true,
+				Default:     true,
 				Description: "Enable over private network.",
 			},
 		},
