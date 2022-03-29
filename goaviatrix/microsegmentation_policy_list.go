@@ -10,6 +10,7 @@ type MicrosegmentationPortRange struct {
 type MicrosegmentationPolicy struct {
 	Name          string                       `json:"name"`
 	Action        string                       `json:"action"`
+	Logging       bool                         `json:"logging,omitempty"`
 	DstAppDomains []string                     `json:"dst_ads"`
 	SrcAppDomains []string                     `json:"src_ads"`
 	PortRanges    []MicrosegmentationPortRange `json:"port_ranges,omitempty"`

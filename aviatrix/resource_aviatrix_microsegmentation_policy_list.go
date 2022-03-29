@@ -41,6 +41,7 @@ func resourceAviatrixMicrosegmentationPolicyList() *schema.Resource {
 						"enable_logging": {
 							Type:        schema.TypeBool,
 							Optional:    true,
+							Default:     false,
 							Description: "Enable logging for this policy.",
 						},
 						"dst_app_domains": {
@@ -115,6 +116,10 @@ func marshalMicrosegmentationPolicyListInput(d *schema.ResourceData) *goaviatrix
 			Protocol: policy["protocol"].(string),
 		}
 
+		if logging, loggingOk := policy["enable_logging"]; loggingOk {
+			microsegmentationPolicy.Logging = logging.(bool)
+		}
+
 		for _, appDomain := range policy["src_app_domains"].(*schema.Set).List() {
 			microsegmentationPolicy.SrcAppDomains = append(microsegmentationPolicy.SrcAppDomains, appDomain.(string))
 		}
@@ -182,6 +187,7 @@ func resourceAviatrixMicrosegmentationPolicyListRead(ctx context.Context, d *sch
 		p := make(map[string]interface{})
 		p["name"] = policy.Name
 		p["action"] = policy.Action
+		p["enable_logging"] = policy.Logging
 		p["priority"] = policy.Priority
 		p["protocol"] = policy.Protocol
 		p["src_app_domains"] = policy.SrcAppDomains
