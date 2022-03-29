@@ -22,7 +22,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.21.1 (UserConnect-6.6.5404)``
+``Last updated: R2.21.2 (UserConnect-6.6.5540)``
 
 
 ---
@@ -283,3 +283,9 @@ Note there are standalone resources already in place to be used and one only nee
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
 |(changed) | rbac_group_permission_attachment | permission_name | **Yes**; one of values of this attribute has been renamed:  `all_cloudwan_write` to `all_cloudn_write`. If this permission was set previously, it will be deleted and must be remade. The permission can be safely renamed in the configuration and re-applied. |
+
+
+## R2.21.2 (UserConnect-6.6.5540)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(changed) | gateway, spoke_gateway, transit_gateway, firenet, firewall_instance, site2cloud, transit_external_device_conn, spoke_external_device_conn, transit_cloudn_conn, vpn_user  | `vpc_id` | **Yes**; any of the listed resources built on OCI that references the `name` attribute from the **aviatrix_vpc** resource, should be changed to the `vpc_id` attribute. Running ``terraform refresh`` after this config change is made, will rectify any deltas in the state. This change was made to standardize the behavior between all CSPs (clouds). |
