@@ -15,10 +15,12 @@ type CloudnTransitGatewayAttachment struct {
 	CloudnLanInterfaceNeighborIP     string `form:"cloudn_neighbor_ip" json:"cloudn_neighbor_ip"`
 	CloudnLanInterfaceNeighborBgpAsn string `form:"cloudn_neighbor_as_number" json:"cloudn_neighbor_as_number"`
 	EnableOverPrivateNetwork         bool   `form:"direct_connect" json:"direct_connect_primary"`
+	EnableJumboFrame                 bool   `json:"jumbo_frame"`
 	DpdConfig                        string `json:"dpd_config"`
 	RoutingProtocol                  string `form:"routing_protocol"`
 	Action                           string `form:"action"`
 	CID                              string `form:"CID"`
+	PrependAsPath                    string `json:"conn_bgp_prepend_as_path"`
 	Async                            bool   `form:"async,omitempty"`
 }
 
@@ -82,4 +84,41 @@ func (c *Client) GetCloudnTransitGatewayAttachment(ctx context.Context, connName
 	data.Results.Connections.DeviceName = deviceName
 
 	return &data.Results.Connections, nil
+}
+
+func (c *Client) EnableJumboFrameOnConnectionToCloudn(ctx context.Context, connName, vpcID string) error {
+	form := map[string]string{
+		"action":          "enable_jumbo_frame_on_connection_to_cloudn",
+		"CID":             c.CID,
+		"connection_name": connName,
+		"vpc_id":          vpcID,
+	}
+	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
+}
+
+func (c *Client) DisableJumboFrameOnConnectionToCloudn(ctx context.Context, connName, vpcID string) error {
+	form := map[string]string{
+		"action":          "disable_jumbo_frame_on_connection_to_cloudn",
+		"CID":             c.CID,
+		"connection_name": connName,
+		"vpc_id":          vpcID,
+	}
+	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
+}
+
+func (c *Client) EditCloudnTransitGatewayAttachmentASPathPrepend(ctx context.Context, attachment *CloudnTransitGatewayAttachment, prependASPath []string) error {
+	action := "edit_transit_connection_as_path_prepend"
+	return c.PostAPIContext(ctx, action, struct {
+		CID            string `form:"CID"`
+		Action         string `form:"action"`
+		GatewayName    string `form:"gateway_name"`
+		ConnectionName string `form:"connection_name"`
+		PrependASPath  string `form:"connection_as_path_prepend"`
+	}{
+		CID:            c.CID,
+		Action:         action,
+		GatewayName:    attachment.TransitGatewayName,
+		ConnectionName: attachment.ConnectionName,
+		PrependASPath:  strings.Join(prependASPath, ","),
+	}, BasicCheck)
 }

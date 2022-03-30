@@ -41,6 +41,8 @@ The following arguments are supported:
 
 ### Optional
 * `enable_over_private_network` - (Optional) Enable connection over private network. Type: Boolean. Default: true.
+* `enable_jumbo_frame` - (Optional) Enable Jumbo Frame support for the connection. Type: Boolean. Default: false.
+* `prepend_as_path` - (Optional) Connection AS Path Prepend customized by specifying AS PATH for a BGP connection. Requires transit_gateway_bgp_asn to be set. Type: List. Available as of provider version R2.21.0+.
 
 ## Import
 

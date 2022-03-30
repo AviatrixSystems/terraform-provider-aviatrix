@@ -1,5 +1,5 @@
 ---
-subcategory: "Deprecated"
+subcategory: "CloudN"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_cloudn_registration"
 description: |-

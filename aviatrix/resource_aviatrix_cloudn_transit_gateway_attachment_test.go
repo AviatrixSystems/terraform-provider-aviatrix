@@ -53,6 +53,8 @@ resource "aviatrix_cloudn_transit_gateway_attachment" "test_cloudn_transit_gatew
 	cloudn_bgp_asn                        = "%[4]s"
 	cloudn_lan_interface_neighbor_ip      = "%[5]s"
 	cloudn_lan_interface_neighbor_bgp_asn = "%[6]s"
+	enable_over_private_network           = true
+	enable_jumbo_frame                    = false
 }
 `, rName, os.Getenv("CLOUDN_DEVICE_NAME"), os.Getenv("TRANSIT_GATEWAY_NAME"), os.Getenv("CLOUDN_BGP_ASN"),
 		os.Getenv("CLOUDN_LAN_INTERFACE_NEIGHBOR_IP"), os.Getenv("CLOUDN_LAN_INTERFACE_NEIGHBOR_BGP_ASN"))
