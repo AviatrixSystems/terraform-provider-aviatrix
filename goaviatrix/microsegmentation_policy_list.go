@@ -16,6 +16,7 @@ type MicrosegmentationPolicy struct {
 	PortRanges    []MicrosegmentationPortRange `json:"port_ranges,omitempty"`
 	Priority      int                          `json:"priority"`
 	Protocol      string                       `json:"protocol"`
+	Watch         bool                         `json:"watch,omitempty"`
 	UUID          string                       `json:"uuid,omitempty"`
 }
 

@@ -68,6 +68,11 @@ func resourceAviatrixMicrosegmentationPolicyList() *schema.Resource {
 							Default:     0,
 							Description: "Priority level of this policy",
 						},
+						"watch": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "Whether to enable watch mode.",
+						},
 						"port_ranges": {
 							Type:        schema.TypeList,
 							Optional:    true,
@@ -126,6 +131,10 @@ func marshalMicrosegmentationPolicyListInput(d *schema.ResourceData) *goaviatrix
 
 		for _, appDomain := range policy["dst_app_domains"].(*schema.Set).List() {
 			microsegmentationPolicy.DstAppDomains = append(microsegmentationPolicy.DstAppDomains, appDomain.(string))
+		}
+
+		if watch, watchOk := policy["watch"]; watchOk {
+			microsegmentationPolicy.Watch = watch.(bool)
 		}
 
 		for _, portRangeInterface := range policy["port_ranges"].([]interface{}) {
@@ -192,6 +201,7 @@ func resourceAviatrixMicrosegmentationPolicyListRead(ctx context.Context, d *sch
 		p["protocol"] = policy.Protocol
 		p["src_app_domains"] = policy.SrcAppDomains
 		p["dst_app_domains"] = policy.DstAppDomains
+		p["watch"] = policy.Watch
 		p["uuid"] = policy.UUID
 
 		var portRanges []map[string]interface{}

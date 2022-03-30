@@ -2,12 +2,11 @@ package aviatrix
 
 import (
 	"context"
-
+	"fmt"
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	log "github.com/sirupsen/logrus"
 )
 
 func resourceAviatrixAppDomain() *schema.Resource {
@@ -26,127 +25,117 @@ func resourceAviatrixAppDomain() *schema.Resource {
 				Required:    true,
 				Description: "Name of the App Domain.",
 			},
-			"ip_filter": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.IsCIDR,
+			"selector": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"match_expressions": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cidr": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.IsCIDR,
+										Description:  "CIDR block this filter matches.",
+									},
+									"type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice([]string{"vm", "vpc", "subnet"}, false),
+										Description:  "Type of resource this filter matches.",
+									},
+									"res_id": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Resource ID this filter matches.",
+									},
+									"account_id": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Account ID this filter matches.",
+									},
+									"account_name": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Account name this filter matches.",
+									},
+									"region": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Region this filter matches.",
+									},
+									"zone": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Zone this filter matches.",
+									},
+									"tags": {
+										Type:        schema.TypeMap,
+										Optional:    true,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+										Description: "Map of key value pairs to filter this selector.",
+									},
+								},
+							},
+						},
+					},
 				},
-				Description: "Set of CIDRs to filter the app domain.",
-			},
-			"tag_filter": {
-				Type:        schema.TypeMap,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Description: "Map of key value pairs to filter the app domain.",
-				//RequiredWith: []string{"resource_filter"},
+				Description: "List of selectors for this app domain.",
 			},
 			"uuid": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "UUID of the App Domain.",
 			},
-			//"resources": {
-			//	Type:        schema.TypeList,
-			//	Optional:    true,
-			//	Elem:        &schema.Schema{Type: schema.TypeString},
-			//	Description: "List of resources to apply the tag filters to.",
-			//	RequiredWith: []string{"tag_filter"},
-			//},
-			//"filters": {
-			//	Type:     schema.TypeList,
-			//	Required: true,
-			//	Elem: &schema.Resource{
-			//		Schema: map[string]*schema.Schema{
-			//			"type": {
-			//				Type:         schema.TypeString,
-			//				Required:     true,
-			//				ValidateFunc: validation.StringInSlice([]string{"ip", "tag"}, false),
-			//				Description:  "Type of filter. Must be one of ip or tag.",
-			//			},
-			//			"ips": {
-			//				Type:     schema.TypeList,
-			//
-			//			},
-			//			"tags": {
-			//				Type:        schema.TypeMap,
-			//
-			//			},
-			//			"resources": {
-			//
-			//			},
-			//		},
-			//	},
-			//},
 		},
 	}
 }
 
-func marshalAppDomainInput(d *schema.ResourceData) *goaviatrix.AppDomain {
+func marshalAppDomainInput(d *schema.ResourceData) (*goaviatrix.AppDomain, error) {
 	appDomain := &goaviatrix.AppDomain{
 		Name: d.Get("name").(string),
 	}
 
-	if _, ok := d.GetOk("ip_filter"); ok {
-		ipFilter := &goaviatrix.AppDomainIPFilter{
-			Type: "ip",
+	for _, selectorInterface := range d.Get("selector.0.match_expressions").([]interface{}) {
+		if selectorInterface == nil {
+			return nil, fmt.Errorf("filter block cannot be empty")
+		}
+		selectorInfo := selectorInterface.(map[string]interface{})
+		filter := &goaviatrix.AppDomainMatchExpression{
+			CIDR:        selectorInfo["cidr"].(string),
+			Type:        selectorInfo["type"].(string),
+			ResId:       selectorInfo["res_id"].(string),
+			AccountId:   selectorInfo["account_id"].(string),
+			AccountName: selectorInfo["account_name"].(string),
+			Region:      selectorInfo["region"].(string),
+			Zone:        selectorInfo["zone"].(string),
 		}
 
-		for _, ip := range d.Get("ip_filter").(*schema.Set).List() {
-			ipFilter.Ips = append(ipFilter.Ips, ip.(string))
+		if _, ok := selectorInfo["tags"]; ok {
+			tags := make(map[string]string)
+			for key, value := range selectorInfo["tags"].(map[string]interface{}) {
+				tags[key] = value.(string)
+			}
+			filter.Tags = tags
 		}
 
-		appDomain.IpFilter = ipFilter
+		appDomain.Selector.Expressions = append(appDomain.Selector.Expressions, filter)
 	}
 
-	if _, ok := d.GetOk("tag_filter"); ok {
-		tagFilter := &goaviatrix.AppDomainTagFilter{
-			Type: "tag",
-			Tags: make(map[string]string),
-		}
-
-		for key, val := range d.Get("tag_filter").(map[string]interface{}) {
-			tagFilter.Tags[key] = val.(string)
-		}
-
-		//for _, resource := range d.Get("resources").([]interface{}) {
-		//	tagFilter.Resources = append(tagFilter.Resources, resource.(string))
-		//}
-		appDomain.TagFilter = tagFilter
-	}
-
-	//for _, filterInterface := range filters {
-	//	filter := filterInterface.(map[string]interface{})
-	//	filterType := filter["type"].(string)
-	//	appDomainFilter := &goaviatrix.AppDomainFilter{
-	//		Type: filterType,
-	//	}
-	//	// TODO Check invalid ips or tags
-	//	if filterType == "ip" {
-	//		for _, ip := range filter["ips"].([]interface{}) {
-	//			appDomainFilter.Ips = append(appDomainFilter.Ips, ip.(string))
-	//		}
-	//	} else if filterType == "tag" {
-	//		appDomainFilter.Tags = map[string]string{}
-	//		for key, value := range filter["tags"].(map[string]interface{}) {
-	//			appDomainFilter.Tags[key] = value.(string)
-	//		}
-	//
-	//		for _, resource := range filter["resources"].([]interface{}) {
-	//			appDomainFilter.Resources = append(appDomainFilter.Ips, resource.(string))
-	//		}
-	//	}
-	//	appDomain.Filters = append(appDomain.Filters, appDomainFilter)
-	//}
-
-	return appDomain
+	return appDomain, nil
 }
 
 func resourceAviatrixAppDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	appDomain := marshalAppDomainInput(d)
+	appDomain, err := marshalAppDomainInput(d)
+	if err != nil {
+		return diag.Errorf("failed to marshal inputs for App Domain during create: %s", err)
+	}
 
 	flag := false
 	defer resourceAviatrixAppDomainReadIfRequired(ctx, d, meta, &flag)
@@ -184,16 +173,30 @@ func resourceAviatrixAppDomainRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.Set("name", appDomain.Name)
 
-	if appDomain.IpFilter != nil {
-		if err := d.Set("ip_filter", appDomain.IpFilter.Ips); err != nil {
-			log.Errorf("failed to set ip_filter during App Domain read: %s", err)
+	var expressions []interface{}
+
+	for _, filter := range appDomain.Selector.Expressions {
+		filterMap := map[string]interface{}{
+			"type":         filter.Type,
+			"cidr":         filter.CIDR,
+			"res_id":       filter.ResId,
+			"account_id":   filter.AccountId,
+			"account_name": filter.AccountName,
+			"region":       filter.Region,
+			"zone":         filter.Zone,
+			"tags":         filter.Tags,
 		}
+
+		expressions = append(expressions, filterMap)
 	}
 
-	if appDomain.TagFilter != nil {
-		if err := d.Set("tag_filter", appDomain.TagFilter.Tags); err != nil {
-			log.Errorf("failed to set tag_filter during App Domain read: %s", err)
-		}
+	selector := []interface{}{
+		map[string]interface{}{
+			"match_expressions": expressions,
+		},
+	}
+	if err := d.Set("selector", selector); err != nil {
+		return diag.Errorf("failed to set selectors during App Domain read: %s", err)
 	}
 
 	return nil
@@ -204,10 +207,13 @@ func resourceAviatrixAppDomainUpdate(ctx context.Context, d *schema.ResourceData
 
 	uuid := d.Id()
 	d.Partial(true)
-	if d.HasChanges("ip_filter", "tag_filter") {
-		appDomain := marshalAppDomainInput(d)
+	if d.HasChanges("selector") {
+		appDomain, err := marshalAppDomainInput(d)
+		if err != nil {
+			return diag.Errorf("failed to marshal inputs for App Domain during update: %s", err)
+		}
 
-		err := client.UpdateAppDomain(ctx, appDomain, uuid)
+		err = client.UpdateAppDomain(ctx, appDomain, uuid)
 		if err != nil {
 			return diag.Errorf("failed to update App Domain filters: %s", err)
 		}
