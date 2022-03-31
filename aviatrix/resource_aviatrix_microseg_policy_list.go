@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func resourceAviatrixMicrosegmentationPolicyList() *schema.Resource {
+func resourceAviatrixMicrosegPolicyList() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAviatrixMicrosegmentationPolicyListCreate,
-		ReadWithoutTimeout:   resourceAviatrixMicrosegmentationPolicyListRead,
-		UpdateWithoutTimeout: resourceAviatrixMicrosegmentationPolicyListUpdate,
-		DeleteWithoutTimeout: resourceAviatrixMicrosegmentationPolicyListDelete,
+		CreateWithoutTimeout: resourceAviatrixMicrosegPolicyListCreate,
+		ReadWithoutTimeout:   resourceAviatrixMicrosegPolicyListRead,
+		UpdateWithoutTimeout: resourceAviatrixMicrosegPolicyListUpdate,
+		DeleteWithoutTimeout: resourceAviatrixMicrosegPolicyListDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -108,14 +108,14 @@ func resourceAviatrixMicrosegmentationPolicyList() *schema.Resource {
 	}
 }
 
-func marshalMicrosegmentationPolicyListInput(d *schema.ResourceData) *goaviatrix.MicrosegmentationPolicyList {
-	policyList := &goaviatrix.MicrosegmentationPolicyList{}
+func marshalMicrosegPolicyListInput(d *schema.ResourceData) *goaviatrix.MicrosegPolicyList {
+	policyList := &goaviatrix.MicrosegPolicyList{}
 
 	policies := d.Get("policies").([]interface{})
 	for _, policyInterface := range policies {
 		policy := policyInterface.(map[string]interface{})
 
-		microsegmentationPolicy := &goaviatrix.MicrosegmentationPolicy{
+		microsegPolicy := &goaviatrix.MicrosegPolicy{
 			Name:     policy["name"].(string),
 			Action:   policy["action"].(string),
 			Priority: policy["priority"].(int),
@@ -123,67 +123,69 @@ func marshalMicrosegmentationPolicyListInput(d *schema.ResourceData) *goaviatrix
 		}
 
 		if logging, loggingOk := policy["logging"]; loggingOk {
-			microsegmentationPolicy.Logging = logging.(bool)
+			microsegPolicy.Logging = logging.(bool)
 		}
 
 		for _, appDomain := range policy["src_app_domains"].(*schema.Set).List() {
-			microsegmentationPolicy.SrcAppDomains = append(microsegmentationPolicy.SrcAppDomains, appDomain.(string))
+			microsegPolicy.SrcAppDomains = append(microsegPolicy.SrcAppDomains, appDomain.(string))
 		}
 
 		for _, appDomain := range policy["dst_app_domains"].(*schema.Set).List() {
-			microsegmentationPolicy.DstAppDomains = append(microsegmentationPolicy.DstAppDomains, appDomain.(string))
+			microsegPolicy.DstAppDomains = append(microsegPolicy.DstAppDomains, appDomain.(string))
 		}
 
 		if watch, watchOk := policy["watch"]; watchOk {
-			microsegmentationPolicy.Watch = watch.(bool)
+			microsegPolicy.Watch = watch.(bool)
 		}
 
 		for _, portRangeInterface := range policy["port_ranges"].([]interface{}) {
 			portRangeMap := portRangeInterface.(map[string]interface{})
-			portRange := &goaviatrix.MicrosegmentationPortRange{
+			portRange := &goaviatrix.MicrosegPortRange{
 				Lo: portRangeMap["lo"].(int),
 			}
 
 			if hi, hiOk := portRangeMap["hi"]; hiOk {
 				portRange.Hi = hi.(int)
+			} else {
+				portRange.Hi = portRange.Lo
 			}
-			microsegmentationPolicy.PortRanges = append(microsegmentationPolicy.PortRanges, *portRange)
+			microsegPolicy.PortRanges = append(microsegPolicy.PortRanges, *portRange)
 		}
 
-		policyList.Policies = append(policyList.Policies, *microsegmentationPolicy)
+		policyList.Policies = append(policyList.Policies, *microsegPolicy)
 	}
 
 	return policyList
 }
 
-func resourceAviatrixMicrosegmentationPolicyListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixMicrosegPolicyListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	policyList := marshalMicrosegmentationPolicyListInput(d)
+	policyList := marshalMicrosegPolicyListInput(d)
 
 	flag := false
-	defer resourceAviatrixMicrosegmentationPolicyListReadIfRequired(ctx, d, meta, &flag)
+	defer resourceAviatrixMicrosegPolicyListReadIfRequired(ctx, d, meta, &flag)
 
-	err := client.CreateMicrosegmentationPolicyList(ctx, policyList)
+	err := client.CreateMicrosegPolicyList(ctx, policyList)
 	if err != nil {
 		return diag.Errorf("failed to create Micro-segmentation Policy List: %s", err)
 	}
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
-	return resourceAviatrixMicrosegmentationPolicyListReadIfRequired(ctx, d, meta, &flag)
+	return resourceAviatrixMicrosegPolicyListReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixMicrosegmentationPolicyListReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixMicrosegPolicyListReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
-		return resourceAviatrixMicrosegmentationPolicyListRead(ctx, d, meta)
+		return resourceAviatrixMicrosegPolicyListRead(ctx, d, meta)
 	}
 	return nil
 }
 
-func resourceAviatrixMicrosegmentationPolicyListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixMicrosegPolicyListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	policyList, err := client.GetMicrosegmentationPolicyList(ctx)
+	policyList, err := client.GetMicrosegPolicyList(ctx)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
@@ -226,13 +228,13 @@ func resourceAviatrixMicrosegmentationPolicyListRead(ctx context.Context, d *sch
 	return nil
 }
 
-func resourceAviatrixMicrosegmentationPolicyListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixMicrosegPolicyListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	d.Partial(true)
 	if d.HasChange("policies") {
-		policyList := marshalMicrosegmentationPolicyListInput(d)
-		err := client.UpdateMicrosegmentationPolicyList(ctx, policyList)
+		policyList := marshalMicrosegPolicyListInput(d)
+		err := client.UpdateMicrosegPolicyList(ctx, policyList)
 		if err != nil {
 			return diag.Errorf("failed to update Micro-segmentation policies: %s", err)
 		}
@@ -242,10 +244,10 @@ func resourceAviatrixMicrosegmentationPolicyListUpdate(ctx context.Context, d *s
 	return nil
 }
 
-func resourceAviatrixMicrosegmentationPolicyListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixMicrosegPolicyListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	err := client.DeleteMicrosegmentationPolicyList(ctx)
+	err := client.DeleteMicrosegPolicyList(ctx)
 	if err != nil {
 		return diag.Errorf("failed to delete Micro-segmentation Policy List: %v", err)
 	}

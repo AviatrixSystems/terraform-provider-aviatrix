@@ -47,7 +47,7 @@ The `selector` block supports:
 
 The `match_expressions` block supports:
 * `cidr` - (Optional) - CIDR block this expression matches. `cidr` cannot be used with any other filters in the same `match_expressions` block.
-* `type` - (Optional) - Type of resource this expression matches.
+* `type` - (Optional) - Type of resource this expression matches. Must be one of "vm", "vpc" or "subnet".
 * `res_id` - (Optional) - Resource ID this expression matches.
 * `account_id` - (Optional) - Account ID this expression matches.
 * `account_name` - (Optional) - Account name this expression matches.

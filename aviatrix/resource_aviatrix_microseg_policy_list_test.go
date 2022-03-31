@@ -12,24 +12,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAviatrixMicrosegmentation_Policy_List_basic(t *testing.T) {
-	skipAcc := os.Getenv("SKIP_MICROSEGMENTATION_POLICY_LIST")
+func TestAccAviatrixMicroseg_Policy_List_basic(t *testing.T) {
+	skipAcc := os.Getenv("SKIP_MICROSEG_POLICY_LIST")
 	if skipAcc == "yes" {
-		t.Skip("Skipping Microsegmentation Policy List test as SKIP_MICROSEGMENTATION_POLICY_LIST is set")
+		t.Skip("Skipping Microseg Policy List test as SKIP_MICROSEGMENTATION_POLICY_LIST is set")
 	}
-	resourceName := "aviatrix_microsegmentation_policy_list.test"
+	resourceName := "aviatrix_microse_policy_list.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
 		Providers:    testAccProvidersVersionValidation,
-		CheckDestroy: testAccMicrosegmentationPolicyListDestroy,
+		CheckDestroy: testAccMicrosegPolicyListDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMicrosegmentationPolicyListBasic(),
+				Config: testAccMicrosegPolicyListBasic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMicrosegmentationPolicyListExists(resourceName),
+					testAccCheckMicrosegPolicyListExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policies.0.name", "test-microseg-policy"),
 					resource.TestCheckResourceAttr(resourceName, "policies.0.action", "PERMIT"),
 					resource.TestCheckResourceAttr(resourceName, "policies.0.priority", "0"),
@@ -47,7 +47,7 @@ func TestAccAviatrixMicrosegmentation_Policy_List_basic(t *testing.T) {
 	})
 }
 
-func testAccMicrosegmentationPolicyListBasic() string {
+func testAccMicrosegPolicyListBasic() string {
 	return `
 resource "aviatrix_app_domain" "ad1" {
 	name      = "test-app-domain-1"
@@ -67,7 +67,7 @@ resource "aviatrix_app_domain" "ad2" {
 	}
 }
 
-resource "aviatrix_microsegmentation_policy_list" "test" {
+resource "aviatrix_microseg_policy_list" "test" {
 	policies {
 		name            = "test-microseg-policy"
 		action          = "PERMIT"
@@ -90,32 +90,32 @@ resource "aviatrix_microsegmentation_policy_list" "test" {
 `
 }
 
-func testAccCheckMicrosegmentationPolicyListExists(n string) resource.TestCheckFunc {
+func testAccCheckMicrosegPolicyListExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("no Microsegmentation Policy List resource found: %s", n)
+			return fmt.Errorf("no Micro-segmentation Policy List resource found: %s", n)
 		}
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no Microsegmentation Policy List ID is set")
+			return fmt.Errorf("no Micro-segmentation Policy List ID is set")
 		}
 
 		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
 
-		_, err := client.GetMicrosegmentationPolicyList(context.Background())
+		_, err := client.GetMicrosegPolicyList(context.Background())
 		if err != nil {
-			return fmt.Errorf("failed to get Microsegmentation Policy List status: %v", err)
+			return fmt.Errorf("failed to get Micro-segmentation Policy List status: %v", err)
 		}
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
-			return fmt.Errorf("microsegmentation policy list ID not found")
+			return fmt.Errorf("micro-segmentation policy list ID not found")
 		}
 
 		return nil
 	}
 }
 
-func testAccMicrosegmentationPolicyListDestroy(s *terraform.State) error {
+func testAccMicrosegPolicyListDestroy(s *terraform.State) error {
 	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
 
 	for _, rs := range s.RootModule().Resources {
@@ -123,9 +123,9 @@ func testAccMicrosegmentationPolicyListDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := client.GetMicrosegmentationPolicyList(context.Background())
+		_, err := client.GetMicrosegPolicyList(context.Background())
 		if err == nil || err != goaviatrix.ErrNotFound {
-			return fmt.Errorf("microsegmentation policy list configured when it should be destroyed")
+			return fmt.Errorf("micro-segmentation policy list configured when it should be destroyed")
 		}
 	}
 

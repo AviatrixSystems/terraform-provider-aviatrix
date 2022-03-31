@@ -1,20 +1,20 @@
 ---
 subcategory: "Multi-Cloud Transit"
 layout: "aviatrix"
-page_title: "Aviatrix: aviatrix_microsegmentation_policy_list"
+page_title: "Aviatrix: aviatrix_microseg_policy_list"
 description: |-
 Creates and manages an Aviatrix Micro-segmentation Policy List
 ---
 
 # aviatrix_app_domain
 
-The **aviatrix_microsegmentation_policy_list** resource handles the creation and management of Micro-segmentation Policies. Available as of Provider R2.22.0+
+The **aviatrix_microseg_policy_list** resource handles the creation and management of Micro-segmentation Policies. Available as of Provider R2.22.0+
 
 ## Example Usage
 
 ```hcl
-# Create an Aviatrix Microsegmentation Policy
-resource "aviatrix_microsegmentation_policy_list" "test" {
+# Create an Aviatrix Microseg Policy
+resource "aviatrix_microseg_policy_list" "test" {
   policies {
     name            = "microseg-policy"
     action          = "PERMIT"
@@ -61,8 +61,8 @@ The `port_ranges` block supports:
 
 ## Import
 
-**aviatrix_microsegmentation_policy_list** can be imported using the controller IP, e.g. controller IP is : 10.11.12.13
+**aviatrix_microseg_policy_list** can be imported using the controller IP, e.g. controller IP is : 10.11.12.13
 
 ```
-$ terraform import aviatrix_microsegmentation_policy_list.test 10-11-12-13
+$ terraform import aviatrix_microseg_policy_list.test 10-11-12-13
 ```
