@@ -45,18 +45,18 @@ The following arguments are supported:
 
 
 The `policies` block supports:
-* `name` - (Required) Name of the Policy.
-* `action` - (Required) Action for the Policy. Must be one of PERMIT or DENY.
-* `priority` - (Optional)  Priority for the Policy. Default: 0. Type: Integer.
-* `protocol` - (Required) Protocol for the Policy. Must be one of TCP or UDP.
-* `src_app_domains` - (Required) List of App Domain UUIDs for the source for the Policy.
-* `dst_app_domains` - (Required) List of App Domain UUIDs for the destination for the Policy.
-* `port_ranges` - (Optional) List of port ranges for the Policy. Structure is documented below.
+* `name` - (Required) Name of the policy.
+* `action` - (Required) Action for the policy. Must be one of PERMIT or DENY.
+* `priority` - (Optional)  Priority for the policy. Default: 0. Type: Integer.
+* `protocol` - (Required) Protocol for the policy. Must be one of TCP or UDP.
+* `src_app_domains` - (Required) List of App Domain UUIDs for the source for the policy.
+* `dst_app_domains` - (Required) List of App Domain UUIDs for the destination for the policy.
+* `port_ranges` - (Optional) List of port ranges for the policy. Structure is documented below.
 * `uuid` - (Computed) UUID for the Policy.
 
 The `port_ranges` block supports:
 * `lo` - (Required) Lower bound for the range of ports.
-* `hi` - (Optional) Upper bound for the range of ports. When not set, it defaults to `lo`.
+* `hi` - (Optional) Upper bound for the range of ports. When not set, `lo` is the only port that matches the policy.
 
 
 ## Import

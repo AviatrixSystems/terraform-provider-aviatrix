@@ -89,7 +89,6 @@ func resourceAviatrixMicrosegPolicyList() *schema.Resource {
 									"hi": {
 										Type:         schema.TypeInt,
 										Optional:     true,
-										Computed:     true,
 										ValidateFunc: validation.IntAtLeast(0),
 										Description:  "Upper bound of port range.",
 									},
@@ -147,9 +146,8 @@ func marshalMicrosegPolicyListInput(d *schema.ResourceData) *goaviatrix.Microseg
 
 			if hi, hiOk := portRangeMap["hi"]; hiOk {
 				portRange.Hi = hi.(int)
-			} else {
-				portRange.Hi = portRange.Lo
 			}
+
 			microsegPolicy.PortRanges = append(microsegPolicy.PortRanges, *portRange)
 		}
 
