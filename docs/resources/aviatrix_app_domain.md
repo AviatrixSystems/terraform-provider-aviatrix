@@ -13,23 +13,22 @@ The **aviatrix_app_domain** resource handles the creation and management of App 
 ## Example Usage
 
 ```hcl
-# Create an Aviatrix App Domain with IP Filters
+# Create an Aviatrix App Domain
 resource "aviatrix_app_domain" "test_app_domain_ip" {
   name      = "app-domain"
-  ip_filter = [
-    "10.0.0.0/16",
-    "11.0.0.0/16"
-  ]
-}
-```
+  selector {
+    match_expressions {
+      type         = "vm"
+      account_name = "devops"
+      region       = "us-west-2"
+      tags         = {
+        k3 = "v3"
+      }
+    }
 
-```hcl
-# Create an Aviatrix App Domain with Tag Filters
-resource "aviatrix_app_domain" "test_app_domain_ip" {
-  name       = "app-domain"
-  tag_filter = {
-    k1 = "v1"
-    k2 = "v2"
+    match_expressions {
+      cidr = "10.0.0.0/16"
+    }
   }
 }
 ```
@@ -41,12 +40,20 @@ The following arguments are supported:
 ### Required
 
 * `name` - (Required) Name of the App Domain.
+* `selector` - (Required) Block containing match expressions to filter the App Domain. Structure is documented below.
 
-### Filters
+The `selector` block supports:
+* `match_expressions` - (Required) List of match expressions. The App Domain will be a union of all resources matched by each `match_expressions`. Structure is documented below. `match_expressions` blocks cannot be empty.
 
-* `ip_filter` - (Optional) List of IP CIDRs to filter the App Domain.
-* `tag_filter` - (Optional) Map of key-value tags to filter the App Domain. 
-
+The `match_expressions` block supports:
+* `cidr` - (Optional) - CIDR block this expression matches. `cidr` cannot be used with any other filters in the same `match_expressions` block.
+* `type` - (Optional) - Type of resource this expression matches.
+* `res_id` - (Optional) - Resource ID this expression matches.
+* `account_id` - (Optional) - Account ID this expression matches.
+* `account_name` - (Optional) - Account name this expression matches.
+* `region` - (Optional) - Region this expression matches.
+* `zone` - (Optional) - Zone this expression matches.
+* `tags` - (Optional) - Map of tags this expression matches.
 
 ## Attribute Reference
 
