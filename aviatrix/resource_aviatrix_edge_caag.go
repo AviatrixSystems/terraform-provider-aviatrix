@@ -103,7 +103,7 @@ func resourceAviatrixEdgeCaag() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				Description:  "Local AS number",
+				Description:  "Local AS number.",
 				ValidateFunc: goaviatrix.ValidateASN,
 			},
 			"prepend_as_path": {
@@ -247,10 +247,9 @@ func resourceAviatrixEdgeCaagRead(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return diag.Errorf("could not read Edge as a CaaG transit gateway advanced config: %v", err)
 	}
-	if transitGatewayAdvancedConfig.LocalASNumber != "" {
-		d.Set("local_as_number", transitGatewayAdvancedConfig.LocalASNumber)
-		d.Set("prepend_as_path", transitGatewayAdvancedConfig.PrependASPath)
-	}
+
+	d.Set("local_as_number", transitGatewayAdvancedConfig.LocalASNumber)
+	d.Set("prepend_as_path", transitGatewayAdvancedConfig.PrependASPath)
 
 	d.SetId(edgeCaag.Name)
 	return nil
