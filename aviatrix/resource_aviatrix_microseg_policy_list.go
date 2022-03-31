@@ -72,6 +72,7 @@ func resourceAviatrixMicrosegPolicyList() *schema.Resource {
 						"watch": {
 							Type:        schema.TypeBool,
 							Optional:    true,
+							Default:     false,
 							Description: "Whether to enable watch mode for the policy.",
 						},
 						"port_ranges": {
