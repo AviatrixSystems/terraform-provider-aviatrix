@@ -15,7 +15,7 @@ import (
 func TestAccAviatrixMicroseg_Policy_List_basic(t *testing.T) {
 	skipAcc := os.Getenv("SKIP_MICROSEG_POLICY_LIST")
 	if skipAcc == "yes" {
-		t.Skip("Skipping Microseg Policy List test as SKIP_MICROSEGMENTATION_POLICY_LIST is set")
+		t.Skip("Skipping Microseg Policy List test as SKIP_MICROSEG_POLICY_LIST is set")
 	}
 	resourceName := "aviatrix_microse_policy_list.test"
 
