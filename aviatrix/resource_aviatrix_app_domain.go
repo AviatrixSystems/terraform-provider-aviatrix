@@ -208,7 +208,7 @@ func resourceAviatrixAppDomainUpdate(ctx context.Context, d *schema.ResourceData
 
 	uuid := d.Id()
 	d.Partial(true)
-	if d.HasChanges("selector") {
+	if d.HasChanges("name", "selector") {
 		appDomain, err := marshalAppDomainInput(d)
 		if err != nil {
 			return diag.Errorf("failed to marshal inputs for App Domain during update: %s", err)
@@ -216,7 +216,7 @@ func resourceAviatrixAppDomainUpdate(ctx context.Context, d *schema.ResourceData
 
 		err = client.UpdateAppDomain(ctx, appDomain, uuid)
 		if err != nil {
-			return diag.Errorf("failed to update App Domain filters: %s", err)
+			return diag.Errorf("failed to update App Domain selector: %s", err)
 		}
 	}
 

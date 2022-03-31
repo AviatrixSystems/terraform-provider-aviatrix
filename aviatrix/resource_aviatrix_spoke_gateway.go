@@ -2341,7 +2341,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	haHasImageVersionChange := d.HasChange("ha_image_version")
 	if primaryHasVersionChange || haHasVersionChange {
 		// To determine if this is an attempted software rollback, we check if
-		// old is a higher version than new. Or, the new version is the
+		// old is a higher version than new. Any, the new version is the
 		// special string "previous".
 		oldPrimarySoftwareVersion, newPrimarySoftwareVersion := d.GetChange("software_version")
 		comparePrimary, err := goaviatrix.CompareSoftwareVersions(oldPrimarySoftwareVersion.(string), newPrimarySoftwareVersion.(string))

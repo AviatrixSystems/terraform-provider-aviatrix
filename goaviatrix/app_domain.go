@@ -104,17 +104,17 @@ func (c *Client) GetAppDomain(ctx context.Context, uuid string) (*AppDomain, err
 	endpoint := "app-domains"
 
 	type AppDomainMatchExpressionResult struct {
-		And map[string]string `json:"all"`
+		All map[string]string `json:"all"`
 	}
 
-	type AppDomainOrResult struct {
-		Or []AppDomainMatchExpressionResult `json:"any"`
+	type AppDomainAnyResult struct {
+		Any []AppDomainMatchExpressionResult `json:"any"`
 	}
 
 	type AppDomainResult struct {
-		UUID     string            `json:"uuid"`
-		Name     string            `json:"name"`
-		Selector AppDomainOrResult `json:"selector"`
+		UUID     string             `json:"uuid"`
+		Name     string             `json:"name"`
+		Selector AppDomainAnyResult `json:"selector"`
 	}
 
 	type AppDomainResp struct {
@@ -134,8 +134,8 @@ func (c *Client) GetAppDomain(ctx context.Context, uuid string) (*AppDomain, err
 				UUID: appDomainResult.UUID,
 			}
 
-			for _, filterResult := range appDomainResult.Selector.Or {
-				filterMap := filterResult.And
+			for _, filterResult := range appDomainResult.Selector.Any {
+				filterMap := filterResult.All
 
 				filter := &AppDomainMatchExpression{
 					CIDR:        filterMap["cidr"],

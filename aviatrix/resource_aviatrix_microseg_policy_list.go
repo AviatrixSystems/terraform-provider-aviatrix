@@ -30,7 +30,7 @@ func resourceAviatrixMicrosegPolicyList() *schema.Resource {
 						"name": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "name of the policy.",
+							Description: "Name of the policy.",
 						},
 						"action": {
 							Type:         schema.TypeString,
@@ -38,12 +38,6 @@ func resourceAviatrixMicrosegPolicyList() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{"PERMIT", "DENY"}, false),
 							Description: "Action for the specified source and destination App Domains." +
 								"Must be one of PERMIT or DENY.",
-						},
-						"logging": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Default:     false,
-							Description: "Whether to enable logging for the policy.",
 						},
 						"dst_app_domains": {
 							Type:        schema.TypeSet,
@@ -68,6 +62,12 @@ func resourceAviatrixMicrosegPolicyList() *schema.Resource {
 							Optional:    true,
 							Default:     0,
 							Description: "Priority level of the policy",
+						},
+						"logging": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     false,
+							Description: "Whether to enable logging for the policy.",
 						},
 						"watch": {
 							Type:        schema.TypeBool,
@@ -95,6 +95,7 @@ func resourceAviatrixMicrosegPolicyList() *schema.Resource {
 									},
 								},
 							},
+							MaxItems: 1,
 						},
 						"uuid": {
 							Type:        schema.TypeString,
@@ -122,16 +123,16 @@ func marshalMicrosegPolicyListInput(d *schema.ResourceData) *goaviatrix.Microseg
 			Protocol: policy["protocol"].(string),
 		}
 
-		if logging, loggingOk := policy["logging"]; loggingOk {
-			microsegPolicy.Logging = logging.(bool)
-		}
-
 		for _, appDomain := range policy["src_app_domains"].(*schema.Set).List() {
 			microsegPolicy.SrcAppDomains = append(microsegPolicy.SrcAppDomains, appDomain.(string))
 		}
 
 		for _, appDomain := range policy["dst_app_domains"].(*schema.Set).List() {
 			microsegPolicy.DstAppDomains = append(microsegPolicy.DstAppDomains, appDomain.(string))
+		}
+
+		if logging, loggingOk := policy["logging"]; loggingOk {
+			microsegPolicy.Logging = logging.(bool)
 		}
 
 		if watch, watchOk := policy["watch"]; watchOk {
@@ -199,11 +200,11 @@ func resourceAviatrixMicrosegPolicyListRead(ctx context.Context, d *schema.Resou
 		p := make(map[string]interface{})
 		p["name"] = policy.Name
 		p["action"] = policy.Action
-		p["logging"] = policy.Logging
 		p["priority"] = policy.Priority
 		p["protocol"] = policy.Protocol
 		p["src_app_domains"] = policy.SrcAppDomains
 		p["dst_app_domains"] = policy.DstAppDomains
+		p["logging"] = policy.Logging
 		p["watch"] = policy.Watch
 		p["uuid"] = policy.UUID
 
