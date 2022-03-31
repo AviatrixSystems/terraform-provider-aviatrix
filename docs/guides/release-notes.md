@@ -12,10 +12,32 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.21.1 (UserConnect-6.6.5404)``
+``Last updated: R2.21.2 (UserConnect-6.6.5544)``
 
 
 ---
+
+## 2.21.2
+### Notes:
+- Release date: **(31 Mar 2022)**
+- Supported Controller version: **UserConnect-6.6.5544**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Multi-Cloud Transit:
+1. Implemented support for S2C RX steering toggle with a new attribute for **aviatrix_transit_gateway**
+  - ``enable_s2c_rx_balancing``
+
+### Enhancements:
+1. Updated the ``vpc_id`` attribute for **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** created in OCI to use the VCN OCID.
+2. Implemented support for uploading certificate content with the following new attributes in resource **aviatrix_controller_config**:
+  - ``ca_certificate_file``
+  - ``server_public_certificate_file``
+  - ``server_private_key_file``
+
+### Bug Fixes:
+1. Fixed issue where the ``peering_ha_zone`` attribute in **aviatrix_gateway** would not be set to the correct value
+
 
 ## 2.21.1
 ### Notes:
