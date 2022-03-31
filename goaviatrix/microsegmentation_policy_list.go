@@ -8,16 +8,16 @@ type MicrosegPortRange struct {
 }
 
 type MicrosegPolicy struct {
-	Name          string                       `json:"name"`
-	Action        string                       `json:"action"`
-	Logging       bool                         `json:"logging,omitempty"`
-	DstAppDomains []string                     `json:"dst_ads"`
+	Name          string              `json:"name"`
+	Action        string              `json:"action"`
+	Logging       bool                `json:"logging,omitempty"`
+	DstAppDomains []string            `json:"dst_ads"`
 	SrcAppDomains []string            `json:"src_ads"`
 	PortRanges    []MicrosegPortRange `json:"port_ranges,omitempty"`
 	Priority      int                 `json:"priority"`
-	Protocol      string                       `json:"protocol"`
-	Watch         bool                         `json:"watch,omitempty"`
-	UUID          string                       `json:"uuid,omitempty"`
+	Protocol      string              `json:"protocol"`
+	Watch         bool                `json:"watch,omitempty"`
+	UUID          string              `json:"uuid,omitempty"`
 }
 
 type MicrosegPolicyList struct {
