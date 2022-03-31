@@ -96,9 +96,9 @@ The following arguments are supported:
 * `ca_certificate_file_path` - (Optional) File path to CA certificate. Available as of provider version R2.18+.
 * `server_public_certificate_file_path` - (Optional) File path to the server public certificate. Available as of provider version R2.18+.
 * `server_private_key_file_path` - (Optional) File path to server private key. Available as of provider version R2.18+.
-* `ca_certificate_file` - (Optional) CA certificate. Available as of provider version R2.21.2+.
-* `server_public_certificate_file` - (Optional) Server public certificate. Available as of provider version R2.21.2+.
-* `server_private_key_file` - (Optional) Server private key. Available as of provider version R2.21.2+.
+* `ca_certificate_file` - (Optional) CA certificate. To read certificate file from a file, please use the built-in `file` function. Available as of provider version R2.21.2+.
+* `server_public_certificate_file` - (Optional) Server public certificate. To read certificate file from a file, please use the built-in `file` function. Available as of provider version R2.21.2+.
+* `server_private_key_file` - (Optional) Server private key. To read the private key from a file, please use the built-in `file` function. Available as of provider version R2.21.2+.
 
 ### Misc.
 * `enable_vpc_dns_server` - (Optional) Enable VPC/VNET DNS Server for the controller. Valid values: true, false. Default value: false.
