@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"context"
 	"fmt"
+
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -40,51 +41,51 @@ func resourceAviatrixAppDomain() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.IsCIDR,
-										Description:  "CIDR block this filter matches.",
+										Description:  "CIDR block this expression matches.",
 									},
 									"type": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringInSlice([]string{"vm", "vpc", "subnet"}, false),
-										Description:  "Type of resource this filter matches.",
+										Description:  "Type of resource this expression matches.",
 									},
 									"res_id": {
 										Type:        schema.TypeString,
 										Optional:    true,
-										Description: "Resource ID this filter matches.",
+										Description: "Resource ID this expression matches.",
 									},
 									"account_id": {
 										Type:        schema.TypeString,
 										Optional:    true,
-										Description: "Account ID this filter matches.",
+										Description: "Account ID this expression matches.",
 									},
 									"account_name": {
 										Type:        schema.TypeString,
 										Optional:    true,
-										Description: "Account name this filter matches.",
+										Description: "Account name this expression matches.",
 									},
 									"region": {
 										Type:        schema.TypeString,
 										Optional:    true,
-										Description: "Region this filter matches.",
+										Description: "Region this expression matches.",
 									},
 									"zone": {
 										Type:        schema.TypeString,
 										Optional:    true,
-										Description: "Zone this filter matches.",
+										Description: "Zone this expression matches.",
 									},
 									"tags": {
 										Type:        schema.TypeMap,
 										Optional:    true,
 										Elem:        &schema.Schema{Type: schema.TypeString},
-										Description: "Map of key value pairs to filter this selector.",
+										Description: "Map of tags this expression matches.",
 									},
 								},
 							},
 						},
 					},
 				},
-				Description: "List of selectors for this app domain.",
+				Description: "List of match expressions for the App Domain.",
 			},
 			"uuid": {
 				Type:        schema.TypeString,
@@ -102,7 +103,7 @@ func marshalAppDomainInput(d *schema.ResourceData) (*goaviatrix.AppDomain, error
 
 	for _, selectorInterface := range d.Get("selector.0.match_expressions").([]interface{}) {
 		if selectorInterface == nil {
-			return nil, fmt.Errorf("filter block cannot be empty")
+			return nil, fmt.Errorf("match expressions block cannot be empty")
 		}
 		selectorInfo := selectorInterface.(map[string]interface{})
 		filter := &goaviatrix.AppDomainMatchExpression{
@@ -196,7 +197,7 @@ func resourceAviatrixAppDomainRead(ctx context.Context, d *schema.ResourceData, 
 		},
 	}
 	if err := d.Set("selector", selector); err != nil {
-		return diag.Errorf("failed to set selectors during App Domain read: %s", err)
+		return diag.Errorf("failed to set selector during App Domain read: %s", err)
 	}
 
 	return nil

@@ -36,25 +36,26 @@ func resourceAviatrixMicrosegmentationPolicyList() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"PERMIT", "DENY"}, false),
-							Description:  "Microsegmentation action. Must be one of PERMIT or DENY.",
+							Description: "Action for the specified source and destination App Domains." +
+								"Must be one of PERMIT or DENY.",
 						},
-						"enable_logging": {
+						"logging": {
 							Type:        schema.TypeBool,
 							Optional:    true,
 							Default:     false,
-							Description: "Enable logging for this policy.",
+							Description: "Whether to enable logging for the policy.",
 						},
 						"dst_app_domains": {
 							Type:        schema.TypeSet,
 							Required:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "Set of destination App Domain UUIDs for this policy.",
+							Description: "Set of destination App Domain UUIDs for the policy.",
 						},
 						"src_app_domains": {
 							Type:        schema.TypeSet,
 							Required:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "Set of source App Domain UUIDs for this policy.",
+							Description: "Set of source App Domain UUIDs for the policy.",
 						},
 						"protocol": {
 							Type:         schema.TypeString,
@@ -66,17 +67,17 @@ func resourceAviatrixMicrosegmentationPolicyList() *schema.Resource {
 							Type:        schema.TypeInt,
 							Optional:    true,
 							Default:     0,
-							Description: "Priority level of this policy",
+							Description: "Priority level of the policy",
 						},
 						"watch": {
 							Type:        schema.TypeBool,
 							Optional:    true,
-							Description: "Whether to enable watch mode.",
+							Description: "Whether to enable watch mode for the policy.",
 						},
 						"port_ranges": {
 							Type:        schema.TypeList,
 							Optional:    true,
-							Description: "List of port ranges for this policy.",
+							Description: "List of port ranges for the policy.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"lo": {
@@ -98,7 +99,7 @@ func resourceAviatrixMicrosegmentationPolicyList() *schema.Resource {
 						"uuid": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "UUID of the microsegmentation policy.",
+							Description: "UUID of the policy.",
 						},
 					},
 				},
@@ -121,7 +122,7 @@ func marshalMicrosegmentationPolicyListInput(d *schema.ResourceData) *goaviatrix
 			Protocol: policy["protocol"].(string),
 		}
 
-		if logging, loggingOk := policy["enable_logging"]; loggingOk {
+		if logging, loggingOk := policy["logging"]; loggingOk {
 			microsegmentationPolicy.Logging = logging.(bool)
 		}
 
@@ -165,7 +166,7 @@ func resourceAviatrixMicrosegmentationPolicyListCreate(ctx context.Context, d *s
 
 	err := client.CreateMicrosegmentationPolicyList(ctx, policyList)
 	if err != nil {
-		return diag.Errorf("failed to create Microsegmentation Policy List: %s", err)
+		return diag.Errorf("failed to create Micro-segmentation Policy List: %s", err)
 	}
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return resourceAviatrixMicrosegmentationPolicyListReadIfRequired(ctx, d, meta, &flag)
@@ -188,7 +189,7 @@ func resourceAviatrixMicrosegmentationPolicyListRead(ctx context.Context, d *sch
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("failed to read Microsegmentation Policy List: %s", err)
+		return diag.Errorf("failed to read Micro-segmentation Policy List: %s", err)
 	}
 
 	var policies []map[string]interface{}
@@ -196,7 +197,7 @@ func resourceAviatrixMicrosegmentationPolicyListRead(ctx context.Context, d *sch
 		p := make(map[string]interface{})
 		p["name"] = policy.Name
 		p["action"] = policy.Action
-		p["enable_logging"] = policy.Logging
+		p["logging"] = policy.Logging
 		p["priority"] = policy.Priority
 		p["protocol"] = policy.Protocol
 		p["src_app_domains"] = policy.SrcAppDomains
@@ -218,7 +219,7 @@ func resourceAviatrixMicrosegmentationPolicyListRead(ctx context.Context, d *sch
 	}
 
 	if err := d.Set("policies", policies); err != nil {
-		return diag.Errorf("failed to set policies during Microsegmentation Policy List read: %s\n", err)
+		return diag.Errorf("failed to set policies during Micro-segmentation Policy List read: %s\n", err)
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
@@ -231,10 +232,9 @@ func resourceAviatrixMicrosegmentationPolicyListUpdate(ctx context.Context, d *s
 	d.Partial(true)
 	if d.HasChange("policies") {
 		policyList := marshalMicrosegmentationPolicyListInput(d)
-
 		err := client.UpdateMicrosegmentationPolicyList(ctx, policyList)
 		if err != nil {
-			return diag.Errorf("failed to update Microsegmentation Policies: %s", err)
+			return diag.Errorf("failed to update Micro-segmentation policies: %s", err)
 		}
 	}
 
@@ -247,7 +247,7 @@ func resourceAviatrixMicrosegmentationPolicyListDelete(ctx context.Context, d *s
 
 	err := client.DeleteMicrosegmentationPolicyList(ctx)
 	if err != nil {
-		return diag.Errorf("failed to delete Microsegmentation Policy List: %v", err)
+		return diag.Errorf("failed to delete Micro-segmentation Policy List: %v", err)
 	}
 
 	return nil

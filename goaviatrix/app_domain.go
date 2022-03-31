@@ -7,17 +7,6 @@ import (
 	"strings"
 )
 
-type AppDomainIPFilter struct {
-	Type string
-	Ips  []string
-}
-
-type AppDomainTagFilter struct {
-	Type string
-	Tags map[string]string
-	//Resources []string
-}
-
 type AppDomainMatchExpression struct {
 	CIDR        string `json:"cidr,omitempty"`
 	Type        string `json:"type,omitempty"`
@@ -37,8 +26,6 @@ type AppDomain struct {
 	Name     string
 	UUID     string
 	Selector AppDomainSelector
-	//IpFilter  *AppDomainIPFilter
-	//TagFilter *AppDomainTagFilter
 }
 
 func appDomainFilterToMap(filter *AppDomainMatchExpression) map[string]string {
@@ -76,9 +63,7 @@ func appDomainFilterToMap(filter *AppDomainMatchExpression) map[string]string {
 	return filterMap
 }
 
-func (c *Client) CreateAppDomain(ctx context.Context, appDomain *AppDomain) (string, error) {
-	endpoint := "app-domains"
-
+func makeAppDomainForm(appDomain *AppDomain) map[string]interface{} {
 	form := map[string]interface{}{
 		"name": appDomain.Name,
 	}
@@ -86,15 +71,22 @@ func (c *Client) CreateAppDomain(ctx context.Context, appDomain *AppDomain) (str
 	var or []map[string]map[string]string
 	for _, appDomainSelector := range appDomain.Selector.Expressions {
 		and := map[string]map[string]string{
-			"_and": appDomainFilterToMap(appDomainSelector),
+			"all": appDomainFilterToMap(appDomainSelector),
 		}
 
 		or = append(or, and)
 	}
 
 	form["selector"] = map[string]interface{}{
-		"_or": or,
+		"any": or,
 	}
+
+	return form
+}
+
+func (c *Client) CreateAppDomain(ctx context.Context, appDomain *AppDomain) (string, error) {
+	endpoint := "app-domains"
+	form := makeAppDomainForm(appDomain)
 
 	type AppDomainResp struct {
 		UUID string `json:"uuid"`
@@ -111,28 +103,18 @@ func (c *Client) CreateAppDomain(ctx context.Context, appDomain *AppDomain) (str
 func (c *Client) GetAppDomain(ctx context.Context, uuid string) (*AppDomain, error) {
 	endpoint := "app-domains"
 
-	type AppDomainResultIps struct {
-		Ips []string `json:"ip_or_cidrs"`
-	}
-
-	type AppDomainResultTags struct {
-		Tags []map[string]string `json:"tags"`
-	}
-
-	type AppDomainFilter struct {
-		And map[string]string `json:"_and"`
+	type AppDomainMatchExpressionResult struct {
+		And map[string]string `json:"all"`
 	}
 
 	type AppDomainOrResult struct {
-		Or []AppDomainFilter `json:"_or"`
+		Or []AppDomainMatchExpressionResult `json:"any"`
 	}
 
 	type AppDomainResult struct {
 		UUID     string            `json:"uuid"`
 		Name     string            `json:"name"`
 		Selector AppDomainOrResult `json:"selector"`
-		//IpFilter  AppDomainResultIps  `json:"ip_filter,omitempty"`
-		//TagFilter AppDomainResultTags `json:"tag_filter,omitempty"`
 	}
 
 	type AppDomainResp struct {
@@ -169,7 +151,6 @@ func (c *Client) GetAppDomain(ctx context.Context, uuid string) (*AppDomain, err
 				for key, value := range filterMap {
 					if strings.HasPrefix(key, "tags.") {
 						tags[strings.TrimPrefix(key, "tags.")] = value
-					} else {
 					}
 				}
 
@@ -178,36 +159,7 @@ func (c *Client) GetAppDomain(ctx context.Context, uuid string) (*AppDomain, err
 				}
 
 				appDomain.Selector.Expressions = append(appDomain.Selector.Expressions, filter)
-
-				//var filter AppDomainMatchExpression
-				//json.Unmarshal()
-				//filter := make(map[string])
-
 			}
-
-			//if len(appDomainResult.IpFilter.Ips) > 0 {
-			//	appDomain.IpFilter = &AppDomainIPFilter{
-			//		Ips: appDomainResult.IpFilter.Ips,
-			//	}
-			//}
-			//
-			//if len(appDomainResult.TagFilter.Tags) > 0 {
-			//	appDomain.TagFilter = &AppDomainTagFilter{
-			//		Tags: make(map[string]string),
-			//	}
-			//
-			//	for _, keyValPair := range appDomainResult.TagFilter.Tags {
-			//		key, keyOk := keyValPair["key"]
-			//		val, valOk := keyValPair["val"]
-			//		if keyOk && valOk {
-			//			appDomain.TagFilter.Tags[key] = val
-			//		} else {
-			//			log.Printf("[TRACE] Invalid App Domain tag filter: %v\n", keyValPair)
-			//		}
-			//	}
-			//
-			//}
-
 			return appDomain, nil
 		}
 	}
@@ -216,24 +168,7 @@ func (c *Client) GetAppDomain(ctx context.Context, uuid string) (*AppDomain, err
 
 func (c *Client) UpdateAppDomain(ctx context.Context, appDomain *AppDomain, uuid string) error {
 	endpoint := fmt.Sprintf("app-domains/%s", uuid)
-
-	form := map[string]interface{}{
-		"name": appDomain.Name,
-	}
-
-	var or []map[string]map[string]string
-	for _, appDomainSelector := range appDomain.Selector.Expressions {
-		and := map[string]map[string]string{
-			"_and": appDomainFilterToMap(appDomainSelector),
-		}
-
-		or = append(or, and)
-	}
-
-	form["selector"] = map[string]interface{}{
-		"_or": or,
-	}
-
+	form := makeAppDomainForm(appDomain)
 	return c.PutAPIContext25(ctx, endpoint, form)
 }
 

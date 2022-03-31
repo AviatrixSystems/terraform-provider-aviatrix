@@ -31,10 +31,14 @@ func TestAccAviatrixAppDomain_basic(t *testing.T) {
 					testAccCheckAppDomainExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-app-domain"),
 					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
-					resource.TestCheckResourceAttr(resourceName, "ip_filter.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ip_filter.0", "10.0.0.0/16"),
-					resource.TestCheckResourceAttr(resourceName, "tag_filter.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tag_filter.k1", "v1"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.cidr", "11.0.0.0/16"),
+
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.1.type", "vm"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.1.account_name", "mlin-aviatrix"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.1.region", "us-west-2"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.1.tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.1.tags.k3", "v3"),
 				),
 			},
 			{
@@ -49,12 +53,21 @@ func TestAccAviatrixAppDomain_basic(t *testing.T) {
 func testAccAppDomainBasic() string {
 	return `
 resource "aviatrix_app_domain" "test" {
-	name       = "test-app-domain"
-	ip_filter  = [
-		"10.0.0.0/16"
-	]
-	tag_filter = {
-		k1 = "v1"
+	name = "test-app-domain"
+
+	selector {
+		match_expressions {
+			cidr = "11.0.0.0/16"
+		}
+
+		match_expressions {
+			type         = "vm"
+			account_name = "mlin-aviatrix"
+			region       = "us-west-2"
+			tags         = {
+				k3 = "v3"
+			}
+		}
 	}
 }
 `
@@ -71,7 +84,6 @@ func testAccCheckAppDomainExists(n string) resource.TestCheckFunc {
 		}
 
 		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
-		//client := testAccProvider.Meta().(*goaviatrix.Client)
 
 		appDomain, err := client.GetAppDomain(context.Background(), rs.Primary.ID)
 		if err != nil {
@@ -88,7 +100,6 @@ func testAccCheckAppDomainExists(n string) resource.TestCheckFunc {
 
 func testAccAppDomainDestroy(s *terraform.State) error {
 	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
-	//client := testAccProvider.Meta().(*goaviatrix.Client)
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aviatrix_app_domain" {
