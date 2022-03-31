@@ -3,12 +3,12 @@ subcategory: "Multi-Cloud Transit"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_microsegmentation_policy_list"
 description: |-
-Creates and manages an Aviatrix Microsegmentation Policy List
+Creates and manages an Aviatrix Micro-segmentation Policy List
 ---
 
 # aviatrix_app_domain
 
-The **aviatrix_microsegmentation_policy_list** resource handles the creation and management of Microsegmentation Policies. Available as of Provider R2.22.0+
+The **aviatrix_microsegmentation_policy_list** resource handles the creation and management of Micro-segmentation Policies. Available as of Provider R2.22.0+
 
 ## Example Usage
 
@@ -16,10 +16,10 @@ The **aviatrix_microsegmentation_policy_list** resource handles the creation and
 # Create an Aviatrix Microsegmentation Policy
 resource "aviatrix_microsegmentation_policy_list" "test" {
   policies {
-    name = "microseg-policy"
-    action = "PERMIT"
-    priority = 0
-    protocol = "TCP"
+    name            = "microseg-policy"
+    action          = "PERMIT"
+    priority        = 0
+    protocol        = "TCP"
     src_app_domains = [
       "7e7d1573-7a7a-4a53-bcb5-1ad5041961e0"
     ]
@@ -45,7 +45,7 @@ The following arguments are supported:
 
 
 The `policies` block supports:
-* `name` - (Required) Name of the Microsegmentation Policy.
+* `name` - (Required) Name of the Policy.
 * `action` - (Required) Action for the Policy. Must be one of PERMIT or DENY.
 * `priority` - (Optional)  Priority for the Policy. Default: 0. Type: Integer.
 * `protocol` - (Required) Protocol for the Policy. Must be one of TCP or UDP.

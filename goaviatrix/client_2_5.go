@@ -129,7 +129,6 @@ func (c *Client) GetContext25(ctx context.Context, path string, i interface{}) (
 
 func (c *Client) RequestContext25(ctx context.Context, verb string, path string, i interface{}) (*http.Response, error) {
 	log.Tracef("%s %s", verb, path)
-	log.Printf("[TRACE] Request %s %s", verb, path)
 
 	try, maxTries, backoff := 0, 2, 500*time.Millisecond
 	var req *http.Request
@@ -143,17 +142,8 @@ func (c *Client) RequestContext25(ctx context.Context, verb string, path string,
 			return nil, err
 		}
 		log.Tracef("%s %s Body: %s", verb, path, body)
-		log.Printf("[DEBUG] Body: %s", body)
 		reader := bytes.NewReader(body)
 
-		//buf := new(bytes.Buffer)
-		//if err = form.NewEncoder(buf).Encode(i); err != nil {
-		//	return nil, err
-		//}
-		//body := buf.String()
-		//log.Printf("[DEBUG] Body: %s", body)
-		//log.Tracef("%s %s Body: %s", verb, url, body)
-		//reader := strings.NewReader(body)
 		req, err = http.NewRequestWithContext(ctx, verb, path, reader)
 		if err == nil {
 			req.Header.Set("Content-Type", "application/json")
@@ -192,11 +182,11 @@ func (c *Client) RequestContext25(ctx context.Context, verb string, path string,
 			}
 
 			if !strings.Contains(apiError.Message, "Invalid CID") {
-				log.Printf("[DEBUG] API Response Error: %s\n", apiError.Message)
+				log.Debugf("[DEBUG] API Response Error: %s\n", apiError.Message)
 				return resp, err
 			}
 
-			log.Printf("[TRACE] CID invalid or expired. Trying to login again")
+			log.Tracef("CID invalid or expired. Trying to login again")
 			if err = c.Login(); err != nil {
 				return resp, err
 			}
@@ -212,7 +202,7 @@ func (c *Client) RequestContext25(ctx context.Context, verb string, path string,
 			// Double the backoff time after each failed try
 			backoff *= 2
 		} else {
-			log.Printf("[DEBUG] HTTP Response: %v\n", resp)
+			log.Debugf("[DEBUG] HTTP Response: %v\n", resp)
 			return resp, err
 		}
 	}

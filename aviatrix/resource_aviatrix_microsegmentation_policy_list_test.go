@@ -71,7 +71,7 @@ resource "aviatrix_microsegmentation_policy_list" "test" {
 	policies {
 		name            = "test-microseg-policy"
 		action          = "PERMIT"
-		logging = true
+		logging         = true
 		priority        = 0
 		protocol        = "TCP"
 		src_app_domains = [
