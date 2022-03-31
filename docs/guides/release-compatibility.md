@@ -15,7 +15,7 @@ Quick at-a-glance access to Aviatrix Terraform provider's release compatibility 
 
 ---
 
-``Last updated: R2.21.2 (UserConnect-6.6.5540)``
+``Last updated: R2.21.2 (UserConnect-6.6.5544)``
 
 
 ---
@@ -23,7 +23,7 @@ Quick at-a-glance access to Aviatrix Terraform provider's release compatibility 
 
 | Terraform Version (v) | Aviatrix Provider Version (R) |   Supported Controller Version   |
 | :-------------------: | :---------------------------: | :------------------------------: |
-|      0.12 - 1.0       |            2.21.2             |       UserConnect-6.6.5540       |
+|      0.12 - 1.0       |            2.21.2             |       UserConnect-6.6.5544       |
 |      0.12 - 1.0       |         2.21.1-6.6.ga         |       UserConnect-6.6.5404       |
 |      0.12 - 1.0       |         2.21.0-6.6.ga         |         UserConnect-6.6          |
 |      0.12 - 1.0       |            2.20.3             |       UserConnect-6.5.2721       |
