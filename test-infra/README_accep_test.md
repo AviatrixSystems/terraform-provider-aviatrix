@@ -58,6 +58,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |		                               | SKIP_ACCOUNT_AWSTS               | AWSTS_ACCOUNT_NUMBER, AWSTS_CAP_URL, AWSTS_CAP_AGENCY, AWSTS_CAP_MISSION, AWSTS_CAP_ROLE_NAME, AWSTS_CAP_CERT, AWSTS_CAP_CERT_KEY, AWSTS_CA_CHAIN_CERT                   |
 |		                               | SKIP_ACCOUNT_AWSS              | AWSS_ACCOUNT_NUMBER, AWSS_CAP_URL, AWSS_CAP_AGENCY, AWSS_CAP_ACCOUNT_NAME, AWSS_CAP_ROLE_NAME, AWSS_CAP_CERT, AWSS_CAP_CERT_KEY, AWSS_CA_CHAIN_CERT                   |
 | aviatrix_account_user                | SKIP_ACCOUNT_USER                  |                                                                                |
+| aviatrix_app_domain                  | SKIP_APP_DOMAIN                    | N/A
 | aviatrix_arm_peer                    | SKIP_ARM_PEER                      | aviatrix_account + ARM_VNET_ID, ARM_VNET_ID2, ARM_REGION, ARM_REGION2          |
 | aviatrix_aws_guard_duty              | SKIP_AWS_GUARD_DUTY                | aviatrix_account                                                               |
 | aviatrix_aws_peer                    | SKIP_AWS_PEER                      | aviatrix_account + AWS_VPC_ID, AWS_VPC_ID2, AWS_REGION, AWS_REGION2            |
@@ -117,6 +118,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |                                      | SKIP_GATEWAY_SNAT_AZURE            |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
 | aviatrix_geo_vpn                     | SKIP_GEO_VPN                       | aviatrix_account + DOMAIN_NAME + AWS_VPC_ID, AWS_REGION, AWS_SUBNET            |
 |                                      |                                    |                                + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2         |
+| aviatrix_microsegmentation_policy_list | SKIP_MICROSEGMENTATION_POLICY_LIST | N/A                                                                            |
 | aviatrix_netflow_agent               | SKIP_NETFLOW_AGENT                 | N/A                                                                            |
 | aviatrix_periodic_ping               | SKIP_PERIODIC_PING                 | aviatrix_gateway                                                               |
 | aviatrix_proxy_config                | SKIP_PROXY_CONFIG                  | N/A                                                                            |
