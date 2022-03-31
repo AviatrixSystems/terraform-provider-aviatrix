@@ -18,11 +18,11 @@ type APIError struct {
 	Message string
 }
 
-func checkAndReturnAPIResp25(resp *http.Response, v interface{}, method, endpoint string) error {
+func checkAndReturnAPIResp25(resp *http.Response, v interface{}, method, path string) error {
 	buf := new(bytes.Buffer)
 	_, err := buf.ReadFrom(resp.Body)
 	if err != nil {
-		return fmt.Errorf("reading response body %q failed: %v", endpoint, err)
+		return fmt.Errorf("reading response body %q failed: %v", path, err)
 	}
 	bodyString := buf.String()
 
@@ -31,7 +31,7 @@ func checkAndReturnAPIResp25(resp *http.Response, v interface{}, method, endpoin
 		if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&apiError); err != nil {
 			return fmt.Errorf("Json Decode failed: %v\n Body: %s", err, bodyString)
 		}
-		return fmt.Errorf("HTTP %s %q failed: %v\n", method, endpoint, apiError.Message)
+		return fmt.Errorf("HTTP %s %q failed: %v\n", method, path, apiError.Message)
 	}
 
 	if v != nil {
@@ -43,8 +43,8 @@ func checkAndReturnAPIResp25(resp *http.Response, v interface{}, method, endpoin
 	return nil
 }
 
-func (c *Client) urlencode25(d map[string]string, endpoint string) (string, error) {
-	link := fmt.Sprintf("https://%s/v2.5/api/%s", c.ControllerIP, endpoint)
+func (c *Client) urlencode25(d map[string]string, path string) (string, error) {
+	link := fmt.Sprintf("https://%s/v2.5/api/%s", c.ControllerIP, path)
 	Url, err := url.Parse(link)
 	if err != nil {
 		return "", fmt.Errorf("parsing url: %v", err)
@@ -57,78 +57,62 @@ func (c *Client) urlencode25(d map[string]string, endpoint string) (string, erro
 	return Url.String(), nil
 }
 
-func (c *Client) PostAPIContext25(ctx context.Context, v interface{}, endpoint string, d interface{}) error {
-	Url := fmt.Sprintf("https://%s/v2.5/api/%s", c.ControllerIP, endpoint)
-	resp, err := c.PostContext25(ctx, Url, d)
+func (c *Client) GetAPIContext25(ctx context.Context, v interface{}, path string, d map[string]string) error {
+	Url, err := c.urlencode25(d, path)
 	if err != nil {
-		return fmt.Errorf("HTTP POST %q failed: %v", endpoint, err)
-	}
-
-	return checkAndReturnAPIResp25(resp, v, "POST", endpoint)
-}
-
-func (c *Client) GetAPIContext25(ctx context.Context, v interface{}, endpoint string, d map[string]string) error {
-	Url, err := c.urlencode25(d, endpoint)
-	if err != nil {
-		return fmt.Errorf("could not url encode values for endpoint %q: %v", endpoint, err)
+		return fmt.Errorf("could not url encode values for path %q: %v", path, err)
 	}
 
 	try, maxTries, backoff := 0, 5, 500*time.Millisecond
 	var resp *http.Response
 	for {
 		try++
-		resp, err = c.GetContext25(ctx, Url, nil)
+		resp, err = c.RequestContext25(ctx, "GET", Url, nil)
 		if err == nil {
 			break
 		}
 
 		log.WithFields(log.Fields{
 			"try":    try,
-			"action": endpoint,
+			"action": path,
 			"err":    err.Error(),
 		}).Warnf("HTTP GET request failed")
 
 		if try == maxTries {
-			return fmt.Errorf("HTTP Get %s failed: %v", endpoint, err)
+			return fmt.Errorf("HTTP Get %s failed: %v", path, err)
 		}
 		time.Sleep(backoff)
 		// Double the backoff time after each failed try
 		backoff *= 2
 	}
 
-	return checkAndReturnAPIResp25(resp, v, "GET", endpoint)
+	return checkAndReturnAPIResp25(resp, v, "GET", path)
 }
 
-func (c *Client) PutAPIContext25(ctx context.Context, endpoint string, d interface{}) error {
-	Url := fmt.Sprintf("https://%s/v2.5/api/%s", c.ControllerIP, endpoint)
-	resp, err := c.RequestContext25(ctx, "PUT", Url, d)
+func (c *Client) PostAPIContext25(ctx context.Context, v interface{}, path string, d interface{}) error {
+	return c.DoAPIContext25(ctx, "POST", v, path, d)
+}
+
+func (c *Client) PutAPIContext25(ctx context.Context, path string, d interface{}) error {
+	return c.DoAPIContext25(ctx, "PUT", nil, path, d)
+}
+
+func (c *Client) DeleteAPIContext25(ctx context.Context, path string, d interface{}) error {
+	return c.DoAPIContext25(ctx, "DELETE", nil, path, d)
+}
+
+func (c *Client) DoAPIContext25(ctx context.Context, verb string, v interface{}, path string, d interface{}) error {
+	Url := fmt.Sprintf("https://%s/v2.5/api/%s", c.ControllerIP, path)
+	resp, err := c.RequestContext25(ctx, verb, Url, d)
 	if err != nil {
-		return fmt.Errorf("HTTP PUT %q failed: %v", endpoint, err)
+		return fmt.Errorf("HTTP %s %q failed: %v", verb, path, err)
 	}
 
-	return checkAndReturnAPIResp25(resp, nil, "PUT", endpoint)
+	return checkAndReturnAPIResp25(resp, v, verb, path)
 }
 
-func (c *Client) DeleteAPIContext25(ctx context.Context, endpoint string, d interface{}) error {
-	Url := fmt.Sprintf("https://%s/v2.5/api/%s", c.ControllerIP, endpoint)
-	resp, err := c.RequestContext25(ctx, "DELETE", Url, d)
-	if err != nil {
-		return fmt.Errorf("HTTP DELETE %q failed: %v", endpoint, err)
-	}
-
-	return checkAndReturnAPIResp25(resp, nil, "DELETE", endpoint)
-}
-
-func (c *Client) PostContext25(ctx context.Context, path string, i interface{}) (*http.Response, error) {
-	return c.RequestContext25(ctx, "POST", path, i)
-}
-
-func (c *Client) GetContext25(ctx context.Context, path string, i interface{}) (*http.Response, error) {
-	return c.RequestContext25(ctx, "GET", path, i)
-}
-
-func (c *Client) RequestContext25(ctx context.Context, verb string, path string, i interface{}) (*http.Response, error) {
-	log.Tracef("%s %s", verb, path)
+func (c *Client) RequestContext25(ctx context.Context, verb string, Url string, i interface{}) (*http.Response, error) {
+	log.Tracef("%s %s", verb, Url)
 
 	try, maxTries, backoff := 0, 2, 500*time.Millisecond
 	var req *http.Request
@@ -141,15 +125,15 @@ func (c *Client) RequestContext25(ctx context.Context, verb string, path string,
 		if err != nil {
 			return nil, err
 		}
-		log.Tracef("%s %s Body: %s", verb, path, body)
+		log.Tracef("%s %s Body: %s", verb, Url, body)
 		reader := bytes.NewReader(body)
 
-		req, err = http.NewRequestWithContext(ctx, verb, path, reader)
+		req, err = http.NewRequestWithContext(ctx, verb, Url, reader)
 		if err == nil {
 			req.Header.Set("Content-Type", "application/json")
 		}
 	} else {
-		req, err = http.NewRequestWithContext(ctx, verb, path, nil)
+		req, err = http.NewRequestWithContext(ctx, verb, Url, nil)
 	}
 
 	if err != nil {
