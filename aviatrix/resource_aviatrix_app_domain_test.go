@@ -35,7 +35,7 @@ func TestAccAviatrixAppDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.0.cidr", "11.0.0.0/16"),
 
 					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.1.type", "vm"),
-					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.1.account_name", "mlin-aviatrix"),
+					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.1.account_name", "devops"),
 					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.1.region", "us-west-2"),
 					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.1.tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "selector.0.match_expressions.1.tags.k3", "v3"),
