@@ -16,16 +16,12 @@ type CloudnTransitGatewayAttachment struct {
 	CloudnLanInterfaceNeighborBgpAsn string `form:"cloudn_neighbor_as_number" json:"cloudn_neighbor_as_number"`
 	EnableOverPrivateNetwork         bool   `form:"direct_connect" json:"direct_connect_primary"`
 	EnableJumboFrame                 bool   `json:"jumbo_frame"`
-	EnableDeadPeerDetection          bool
-	DpdConfig                        string   `json:"dpd_config"`
-	RoutingProtocol                  string   `form:"routing_protocol"`
-	Action                           string   `form:"action"`
-	CID                              string   `form:"CID"`
-	EnableLearnedCidrsApproval       bool     `form:"connection_learned_cidrs_approval"`
-	EnableLearnedCidrsApprovalValue  string   `json:"conn_learned_cidrs_approval"`
-	ApprovedCidrs                    []string `json:"conn_approved_learned_cidrs"`
-	PrependAsPath                    string   `json:"conn_bgp_prepend_as_path"`
-	Async                            bool     `form:"async,omitempty"`
+	DpdConfig                        string `json:"dpd_config"`
+	RoutingProtocol                  string `form:"routing_protocol"`
+	Action                           string `form:"action"`
+	CID                              string `form:"CID"`
+	PrependAsPath                    string `json:"conn_bgp_prepend_as_path"`
+	Async                            bool   `form:"async,omitempty"`
 }
 
 func (c *Client) CreateCloudnTransitGatewayAttachment(ctx context.Context, attachment *CloudnTransitGatewayAttachment) error {
@@ -86,8 +82,7 @@ func (c *Client) GetCloudnTransitGatewayAttachment(ctx context.Context, connName
 
 	data.Results.Connections.ConnectionName = connName
 	data.Results.Connections.DeviceName = deviceName
-	data.Results.Connections.EnableDeadPeerDetection = data.Results.Connections.DpdConfig == "enable"
-	data.Results.Connections.EnableLearnedCidrsApproval = data.Results.Connections.EnableLearnedCidrsApprovalValue == "yes"
+
 	return &data.Results.Connections, nil
 }
 

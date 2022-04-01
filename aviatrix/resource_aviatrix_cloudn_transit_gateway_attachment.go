@@ -65,8 +65,9 @@ func resourceAviatrixCloudnTransitGatewayAttachment() *schema.Resource {
 			},
 			"enable_over_private_network": {
 				Type:        schema.TypeBool,
-				Required:    true,
+				Optional:    true,
 				ForceNew:    true,
+				Default:     true,
 				Description: "Enable over private network.",
 			},
 			"prepend_as_path": {
@@ -85,25 +86,6 @@ func resourceAviatrixCloudnTransitGatewayAttachment() *schema.Resource {
 				Default:     false,
 				Description: "Enable jumbo frame.",
 			},
-			"enable_dead_peer_detection": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: "Enable dead peer detection.",
-			},
-			"enable_learned_cidrs_approval": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Switch to enable/disable encrypted transit approval for cloudn transit gateway attachment. Valid values: true, false.",
-			},
-			"approved_cidrs": {
-				Type:        schema.TypeSet,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Optional:    true,
-				Computed:    true,
-				Description: "Set of approved cidrs. Requires 'enable_learned_cidrs_approval' to be true. Type: Set(String).",
-			},
 		},
 	}
 }
@@ -119,8 +101,6 @@ func marshalCloudnTransitGatewayAttachmentInput(d *schema.ResourceData) *goaviat
 		CloudnLanInterfaceNeighborBgpAsn: d.Get("cloudn_lan_interface_neighbor_bgp_asn").(string),
 		EnableOverPrivateNetwork:         d.Get("enable_over_private_network").(bool),
 		EnableJumboFrame:                 d.Get("enable_jumbo_frame").(bool),
-		EnableDeadPeerDetection:          d.Get("enable_dead_peer_detection").(bool),
-		EnableLearnedCidrsApproval:       d.Get("enable_learned_cidrs_approval").(bool),
 	}
 }
 
@@ -128,12 +108,6 @@ func resourceAviatrixCloudnTransitGatewayAttachmentCreate(ctx context.Context, d
 	client := meta.(*goaviatrix.Client)
 
 	attachment := marshalCloudnTransitGatewayAttachmentInput(d)
-
-	enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
-	approvedCidrs := getStringSet(d, "approved_cidrs")
-	if !enableLearnedCIDRApproval && len(approvedCidrs) > 0 {
-		return diag.Errorf("error creating cloudn transit gateway attachment: 'approved_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
-	}
 
 	flag := false
 	defer resourceAviatrixCloudnTransitGatewayAttachmentReadIfRequired(ctx, d, meta, &flag)
@@ -145,7 +119,7 @@ func resourceAviatrixCloudnTransitGatewayAttachmentCreate(ctx context.Context, d
 	d.SetId(attachment.ConnectionName)
 
 	var vpcID string
-	if attachment.EnableJumboFrame || !attachment.EnableDeadPeerDetection {
+	if attachment.EnableJumboFrame {
 		vpcID, err = client.GetDeviceAttachmentVpcID(attachment.ConnectionName)
 		if err != nil {
 			return diag.Errorf("could not get cloudn transit gateway attachment VPC id after creating: %v", err)
@@ -156,30 +130,6 @@ func resourceAviatrixCloudnTransitGatewayAttachmentCreate(ctx context.Context, d
 		err = client.EnableJumboFrameOnConnectionToCloudn(ctx, attachment.ConnectionName, vpcID)
 		if err != nil {
 			return diag.Errorf("could not enable jumbo frame after creating cloudn transit gateway attachment: %v", err)
-		}
-	}
-
-	if !attachment.EnableDeadPeerDetection {
-		s2c := goaviatrix.Site2Cloud{
-			VpcID:      vpcID,
-			TunnelName: attachment.ConnectionName,
-		}
-		err = client.DisableDeadPeerDetection(&s2c)
-		if err != nil {
-			return diag.Errorf("could not enable dead peer detection after creating cloudn transit gateway attachment: %v", err)
-		}
-	}
-
-	if enableLearnedCIDRApproval {
-		err = client.EnableTransitConnectionLearnedCIDRApproval(attachment.TransitGatewayName, attachment.ConnectionName)
-		if err != nil {
-			return diag.Errorf("could not enable learned cidr approval: %v", err)
-		}
-		if len(approvedCidrs) > 0 {
-			err = client.UpdateTransitConnectionPendingApprovedCidrs(attachment.TransitGatewayName, attachment.ConnectionName, approvedCidrs)
-			if err != nil {
-				return diag.Errorf("could not update cloudn transit gateway attachment approved cidrs after creation: %v", err)
-			}
 		}
 	}
 
@@ -238,12 +188,6 @@ func resourceAviatrixCloudnTransitGatewayAttachmentRead(ctx context.Context, d *
 	d.Set("cloudn_lan_interface_neighbor_bgp_asn", attachment.CloudnLanInterfaceNeighborBgpAsn)
 	d.Set("enable_over_private_network", attachment.EnableOverPrivateNetwork)
 	d.Set("enable_jumbo_frame", attachment.EnableJumboFrame)
-	d.Set("enable_dead_peer_detection", attachment.EnableDeadPeerDetection)
-	d.Set("enable_learned_cidrs_approval", attachment.EnableLearnedCidrsApproval)
-	err = d.Set("approved_cidrs", attachment.ApprovedCidrs)
-	if err != nil {
-		return diag.Errorf("failed to set approved_cidrs for cloudn_transit_gateway_attachment on read: %v", err)
-	}
 
 	if attachment.PrependAsPath != "" {
 		var prependAsPath []string
@@ -272,16 +216,8 @@ func resourceAviatrixCloudnTransitGatewayAttachmentUpdate(ctx context.Context, d
 
 	attachment := marshalCloudnTransitGatewayAttachmentInput(d)
 
-	approvedCidrs := getStringSet(d, "approved_cidrs")
-	enableLearnedCIDRApproval := d.Get("enable_learned_cidrs_approval").(bool)
-	// `approved_cidrs` is Optional/Computed so Terraform will not detect a change even if `approved_cidrs` is removed from Terraform configuration.
-	// Only prevent from setting `enable_learned_cidrs_approval = false` when Terraform detects a change to `approved_cidrs`.
-	if !enableLearnedCIDRApproval && len(approvedCidrs) > 0 && d.HasChange("approved_cidrs") {
-		return diag.Errorf("updating cloudn transit gateway attachment: 'approved_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
-	}
-
 	var vpcID string
-	if d.HasChanges("enable_jumbo_frame", "enable_dead_peer_detection") {
+	if d.HasChanges("enable_jumbo_frame") {
 		var err error
 		vpcID, err = client.GetDeviceAttachmentVpcID(attachment.ConnectionName)
 		if err != nil {
@@ -300,45 +236,6 @@ func resourceAviatrixCloudnTransitGatewayAttachmentUpdate(ctx context.Context, d
 			if err != nil {
 				return diag.Errorf("could not disable jumbo frame during cloudn transit gateway attachment update: %v", err)
 			}
-		}
-	}
-
-	if d.HasChange("enable_dead_peer_detection") {
-		s2c := goaviatrix.Site2Cloud{
-			VpcID:      vpcID,
-			TunnelName: attachment.ConnectionName,
-		}
-		if attachment.EnableDeadPeerDetection {
-			err := client.EnableDeadPeerDetection(&s2c)
-			if err != nil {
-				return diag.Errorf("could not enable dead peer detection during cloudn transit gateway attachment update: %v", err)
-			}
-		} else {
-			err := client.DisableDeadPeerDetection(&s2c)
-			if err != nil {
-				return diag.Errorf("could not disable dead peer detection during cloudn transit gateway attachment update: %v", err)
-			}
-		}
-	}
-
-	if d.HasChange("enable_learned_cidrs_approval") {
-		if attachment.EnableLearnedCidrsApproval {
-			err := client.EnableTransitConnectionLearnedCIDRApproval(attachment.TransitGatewayName, attachment.ConnectionName)
-			if err != nil {
-				return diag.Errorf("could not enable learned CIDRs approval during cloudn transit gateway attachment update: %v", err)
-			}
-		} else {
-			err := client.DisableTransitConnectionLearnedCIDRApproval(attachment.TransitGatewayName, attachment.ConnectionName)
-			if err != nil {
-				return diag.Errorf("could not disable learned CIDRs approval during cloudn transit gateway attachment update: %v", err)
-			}
-		}
-	}
-
-	if d.HasChange("approved_cidrs") {
-		err := client.UpdateTransitConnectionPendingApprovedCidrs(attachment.TransitGatewayName, attachment.ConnectionName, approvedCidrs)
-		if err != nil {
-			return diag.Errorf("could not update cloudn transit gateway attachment approved cidrs: %v", err)
 		}
 	}
 

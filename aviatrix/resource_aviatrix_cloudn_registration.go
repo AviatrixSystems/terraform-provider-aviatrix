@@ -160,10 +160,10 @@ func resourceAviatrixCloudnRegistrationRead(ctx context.Context, d *schema.Resou
 	if err != nil {
 		return diag.Errorf("failed to read Aviatrix Cloudn Registration transit gateway advanced config: %v", err)
 	}
-	if transitGatewayAdvancedConfig.LocalASNumber != "" {
-		d.Set("local_as_number", transitGatewayAdvancedConfig.LocalASNumber)
-		d.Set("prepend_as_path", transitGatewayAdvancedConfig.PrependASPath)
-	}
+
+	d.Set("local_as_number", transitGatewayAdvancedConfig.LocalASNumber)
+	d.Set("prepend_as_path", transitGatewayAdvancedConfig.PrependASPath)
+
 	return nil
 }
 

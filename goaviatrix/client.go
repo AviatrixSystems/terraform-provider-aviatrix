@@ -172,6 +172,20 @@ func (c *Client) PostAPIContext(ctx context.Context, action string, d interface{
 	return checkAPIResp(resp, action, checkFunc)
 }
 
+// PostAPIDownloadContext makes a post request to the Aviatrix API, checks for errors and returns the response body
+func (c *Client) PostAPIDownloadContext(ctx context.Context, action string, d interface{}, checkFunc CheckAPIResponseFunc) (io.ReadCloser, error) {
+	resp, err := c.PostContext(ctx, c.baseURL, d)
+	if err != nil {
+		return nil, fmt.Errorf("HTTP POST %q failed: %v", action, err)
+	}
+
+	if strings.Contains(resp.Header.Get("Content-Type"), "json") {
+		return nil, checkAPIResp(resp, action, checkFunc)
+	}
+
+	return resp.Body, nil
+}
+
 // PostAPIWithResponse makes a post request to the Aviatrix API, decodes the response, checks for any errors
 // and decodes the response into the return value v.
 func (c *Client) PostAPIWithResponse(v interface{}, action string, d interface{}, checkFunc CheckAPIResponseFunc) error {
@@ -562,57 +576,61 @@ func (c *Client) RequestContext(ctx context.Context, verb string, path string, i
 		// Replace resp.Body with new ReadCloser so that other methods can read the buffer again
 		resp.Body = io.NopCloser(buf)
 
-		bodyString := buf.String()
-		data = new(APIResp)
-		if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(data); err != nil {
-			return resp, fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
-		}
+		if strings.Contains(resp.Header.Get("Content-Type"), "json") {
+			bodyString := buf.String()
+			data = new(APIResp)
+			if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(data); err != nil {
+				return resp, fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
+			}
 
-		// Any error not related to expired CID should return
-		if !(strings.Contains(data.Reason, "CID is invalid") || strings.Contains(data.Reason, "Invalid session. Please login again.")) {
-			return resp, err
-		}
+			// Any error not related to expired CID should return
+			if !(strings.Contains(data.Reason, "CID is invalid") || strings.Contains(data.Reason, "Invalid session. Please login again.")) {
+				return resp, err
+			}
 
-		log.Tracef("CID invalid or expired. Trying to login again")
-		if err = c.Login(); err != nil {
-			return resp, err
-		}
+			log.Tracef("CID invalid or expired. Trying to login again")
+			if err = c.Login(); err != nil {
+				return resp, err
+			}
 
-		// update the CID value in the object passed
-		if i != nil {
-			// Update CID in POST body
-			v := reflect.ValueOf(i)
-			if v.Kind() == reflect.Map {
-				v.SetMapIndex(reflect.ValueOf("CID"), reflect.ValueOf(c.CID))
-			} else {
-				s := v.Elem()
-				f := s.FieldByName("CID")
-				if f.IsValid() && f.CanSet() {
-					f.SetString(c.CID)
+			// update the CID value in the object passed
+			if i != nil {
+				// Update CID in POST body
+				v := reflect.ValueOf(i)
+				if v.Kind() == reflect.Map {
+					v.SetMapIndex(reflect.ValueOf("CID"), reflect.ValueOf(c.CID))
+				} else {
+					s := v.Elem()
+					f := s.FieldByName("CID")
+					if f.IsValid() && f.CanSet() {
+						f.SetString(c.CID)
+					}
 				}
+			} else {
+				// Update CID in GET URL
+				Url, err := url.Parse(path)
+				if err != nil {
+					return resp, fmt.Errorf("failed to parse url: %v", err)
+				}
+				query := Url.Query()
+				query["CID"] = []string{c.CID}
+				Url.RawQuery = query.Encode()
+				path = Url.String()
 			}
+
+			log.WithFields(log.Fields{
+				"try": try,
+				"err": "CID is invalid",
+			}).Warnf("HTTP request failed with expired CID")
+
+			if try == maxTries {
+				return resp, fmt.Errorf("%v", data.Reason)
+			}
+			time.Sleep(backoff)
+			// Double the backoff time after each failed try
+			backoff *= 2
 		} else {
-			// Update CID in GET URL
-			Url, err := url.Parse(path)
-			if err != nil {
-				return resp, fmt.Errorf("failed to parse url: %v", err)
-			}
-			query := Url.Query()
-			query["CID"] = []string{c.CID}
-			Url.RawQuery = query.Encode()
-			path = Url.String()
+			return resp, nil
 		}
-
-		log.WithFields(log.Fields{
-			"try": try,
-			"err": "CID is invalid",
-		}).Warnf("HTTP request failed with expired CID")
-
-		if try == maxTries {
-			return resp, fmt.Errorf("%v", data.Reason)
-		}
-		time.Sleep(backoff)
-		// Double the backoff time after each failed try
-		backoff *= 2
 	}
 }
