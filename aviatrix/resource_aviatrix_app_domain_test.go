@@ -62,7 +62,7 @@ resource "aviatrix_app_domain" "test" {
 
 		match_expressions {
 			type         = "vm"
-			account_name = "mlin-aviatrix"
+			account_name = "devops"
 			region       = "us-west-2"
 			tags         = {
 				k3 = "v3"

@@ -241,7 +241,7 @@ func resourceAviatrixMicrosegPolicyListUpdate(ctx context.Context, d *schema.Res
 	}
 
 	d.Partial(false)
-	return nil
+	return resourceAviatrixMicrosegPolicyListRead(ctx, d, meta)
 }
 
 func resourceAviatrixMicrosegPolicyListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -221,7 +221,7 @@ func resourceAviatrixAppDomainUpdate(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.Partial(false)
-	return nil
+	return resourceAviatrixAppDomainRead(ctx, d, meta)
 }
 
 func resourceAviatrixAppDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
