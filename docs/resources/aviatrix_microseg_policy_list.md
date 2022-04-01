@@ -3,12 +3,12 @@ subcategory: "Multi-Cloud Transit"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_microseg_policy_list"
 description: |-
-Creates and manages an Aviatrix Micro-segmentation Policy List
+  Creates and manages an Aviatrix Micro-segmentation Policy List
 ---
 
 # aviatrix_app_domain
 
-The **aviatrix_microseg_policy_list** resource handles the creation and management of Micro-segmentation Policies. Available as of Provider R2.22.0+
+The **aviatrix_microseg_policy_list** resource handles the creation and management of Micro-segmentation Policies. Available as of Provider R2.22.0+.
 
 ## Example Usage
 
@@ -41,23 +41,17 @@ The following arguments are supported:
 
 ### Required
 
-* `policies` - (Required) List of policies. Structure is documented below.
-
-
-The `policies` block supports:
-* `name` - (Required) Name of the policy.
-* `action` - (Required) Action for the policy. Must be one of PERMIT or DENY.
-* `priority` - (Optional)  Priority for the policy. Default: 0. Type: Integer.
-* `protocol` - (Required) Protocol for the policy. Must be one of TCP or UDP.
-* `src_app_domains` - (Required) List of App Domain UUIDs for the source for the policy.
-* `dst_app_domains` - (Required) List of App Domain UUIDs for the destination for the policy.
-* `port_ranges` - (Optional) List of port ranges for the policy. Structure is documented below.
-* `uuid` - (Computed) UUID for the Policy.
-
-The `port_ranges` block supports:
-* `lo` - (Required) Lower bound for the range of ports.
-* `hi` - (Optional) Upper bound for the range of ports. When not set, `lo` is the only port that matches the policy.
-
+* `policies` - (Required) List of policies.
+    * `name` - (Required) Name of the policy.
+    * `action` - (Required) Action for the policy. Must be one of PERMIT or DENY.
+    * `priority` - (Optional)  Priority for the policy. Default: 0. Type: Integer.
+    * `protocol` - (Required) Protocol for the policy. Must be one of TCP or UDP.
+    * `src_app_domains` - (Required) List of App Domain UUIDs for the source for the policy.
+    * `dst_app_domains` - (Required) List of App Domain UUIDs for the destination for the policy.
+    * `port_ranges` - (Optional) List of port ranges for the policy.
+      * `lo` - (Required) Lower bound for the range of ports.
+      * `hi` - (Optional) Upper bound for the range of ports. When not set, `lo` is the only port that matches the policy.
+    * `uuid` - (Computed) UUID for the Policy.
 
 ## Import
 
