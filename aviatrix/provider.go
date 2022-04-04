@@ -47,6 +47,7 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"aviatrix_account":                                        resourceAviatrixAccount(),
 			"aviatrix_account_user":                                   resourceAviatrixAccountUser(),
+			"aviatrix_app_domain":                                     resourceAviatrixAppDomain(),
 			"aviatrix_arm_peer":                                       resourceAviatrixARMPeer(),
 			"aviatrix_aws_peer":                                       resourceAviatrixAWSPeer(),
 			"aviatrix_aws_guard_duty":                                 resourceAviatrixAwsGuardDuty(),
@@ -94,6 +95,7 @@ func Provider() *schema.Provider {
 			"aviatrix_gateway_dnat":                                   resourceAviatrixGatewayDNat(),
 			"aviatrix_gateway_snat":                                   resourceAviatrixGatewaySNat(),
 			"aviatrix_geo_vpn":                                        resourceAviatrixGeoVPN(),
+			"aviatrix_microseg_policy_list":                           resourceAviatrixMicrosegPolicyList(),
 			"aviatrix_netflow_agent":                                  resourceAviatrixNetflowAgent(),
 			"aviatrix_periodic_ping":                                  resourceAviatrixPeriodicPing(),
 			"aviatrix_proxy_config":                                   resourceAviatrixProxyConfig(),
