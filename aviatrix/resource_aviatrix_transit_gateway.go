@@ -404,7 +404,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:      1,
 				ForceNew:     true,
 				ValidateFunc: validation.IntAtLeast(1),
-				Description:  "",
+				Description:  "Number of interfaces that will be created for BGP over LAN enabled Azure transit.",
 			},
 			"enable_private_oob": {
 				Type:        schema.TypeBool,
