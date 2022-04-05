@@ -193,6 +193,7 @@ type Gateway struct {
 	Async                           bool                                `form:"async,omitempty"`
 	DisableRoutePropagation         bool                                `json:"disable_route_propagation,omitempty"`
 	EnableS2CRxBalancing            bool                                `json:"s2c_rx_balancing,omitempty"`
+	BgpLanInterfacesCount           int                                 `json:"bgp_over_lan_intf_cnt,omitempty"`
 }
 
 type HaGateway struct {

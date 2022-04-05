@@ -398,6 +398,14 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 					},
 				},
 			},
+			"bgp_lan_interfaces_count": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      1,
+				ForceNew:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "Number of interfaces that will be created for BGP over LAN enabled Azure transit.",
+			},
 			"enable_private_oob": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -893,6 +901,10 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	if bgpOverLan && !(goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCP)) {
 		return fmt.Errorf("'enable_bgp_over_lan' is only valid for GCP (4), Azure (8), AzureGov (32) or AzureChina (2048)")
 	}
+	bgpLanInterfacesCount := d.Get("bgp_lan_interfaces_count").(int)
+	if bgpLanInterfacesCount != 1 && (!bgpOverLan || !goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes)) {
+		return fmt.Errorf("'bgp_lan_interfaces_count' is only valid for BGP over LAN enabled transit for Azure (8), AzureGov (32) or AzureChina (2048)")
+	}
 	var bgpLanVpcID []string
 	var bgpLanSpecifySubnet []string
 	var haBgpLanVpcID []string
@@ -927,6 +939,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			}
 			gateway.BgpLanVpcID = strings.Join(bgpLanVpcID, ",")
 			gateway.BgpLanSpecifySubnet = strings.Join(bgpLanSpecifySubnet, ",")
+		} else if goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+			gateway.BgpLanInterfacesCount = bgpLanInterfacesCount
 		}
 	}
 
@@ -1530,6 +1544,11 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("enable_active_standby", gw.EnableActiveStandby)
 	d.Set("enable_active_standby_preemptive", gw.EnableActiveStandbyPreemptive)
 	d.Set("enable_s2c_rx_balancing", gw.EnableS2CRxBalancing)
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.BgpLanInterfacesCount != 1 {
+		d.Set("bgp_lan_interfaces_count", gw.BgpLanInterfacesCount)
+	} else {
+		d.Set("bgp_lan_interfaces_count", 1)
+	}
 	d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan)
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan {
 		if len(gw.BgpLanInterfaces) != 0 {
