@@ -2,6 +2,9 @@ package aviatrix
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -61,8 +64,12 @@ func dataSourceAviatrixFirewallInstanceImagesRead(d *schema.ResourceData, meta i
 	for _, image := range *firewallInstanceImages {
 		fI := make(map[string]interface{})
 		fI["firewall_image"] = image.Image
-		fI["firewall_image_version"] = image.Version
-		fI["firewall_size"] = image.Size
+		listVersion := image.Version
+		sortImageVersion(listVersion)
+		fI["firewall_image_version"] = listVersion
+		listSize := image.Size
+		sortImageSize(listSize)
+		fI["firewall_size"] = listSize
 		images = append(images, fI)
 	}
 
@@ -72,4 +79,141 @@ func dataSourceAviatrixFirewallInstanceImagesRead(d *schema.ResourceData, meta i
 
 	d.SetId(vpcId)
 	return nil
+}
+
+func sortImageVersion(listVersion []string) []string {
+	var n = len(listVersion)
+	for i := 0; i <= n-1; i++ {
+		for j := i; j <= n-1; j++ {
+			var splitFlag string
+			if checkFirstCharacter(listVersion[i]) == "R" {
+				if strings.Contains(listVersion[i], "_") {
+					//format: Rab_abcxx.x
+					splitFlag = "_"
+					if compareVersion2(listVersion[i], listVersion[j], splitFlag) == 2 {
+						listVersion[i], listVersion[j] = listVersion[j], listVersion[i]
+					}
+				} else {
+					//format: Rab-xxx.xxx
+					splitFlag = "-"
+					if compareVersion2(listVersion[i], listVersion[j], splitFlag) == 2 {
+						listVersion[i], listVersion[j] = listVersion[j], listVersion[i]
+					}
+				}
+			} else if checkFirstCharacter(listVersion[i]) == "P" {
+				//format: Pa-bc-xx.xx.xx
+				splitFlag = "-"
+				if compareVersion3(listVersion[i], listVersion[j], splitFlag) == 2 {
+					listVersion[i], listVersion[j] = listVersion[j], listVersion[i]
+				}
+			} else {
+				//format: xx.xxx.xxx
+				splitFlag = "."
+				if compareVersion(listVersion[i], listVersion[j], splitFlag) == 2 {
+					listVersion[i], listVersion[j] = listVersion[j], listVersion[i]
+				}
+			}
+		}
+	}
+	return listVersion
+}
+
+func checkFirstCharacter(input string) string {
+	firstCharacter := input[0:1]
+	return firstCharacter
+}
+
+//format: xx.xx.xx
+func compareVersion(version1, version2, splitFlag string) (res int) {
+	imageVersionArray1 := strings.Split(version1, splitFlag)
+	imageVersionArray2 := strings.Split(version2, splitFlag)
+	for index := range imageVersionArray1 {
+		reg, _ := regexp.Compile("[^0-9]+")
+		v1SliceString := reg.ReplaceAllString(imageVersionArray1[index], ".")
+		v2SliceString := reg.ReplaceAllString(imageVersionArray2[index], ".")
+		int1, _ := strconv.ParseFloat(v1SliceString, 32)
+		int2, _ := strconv.ParseFloat(v2SliceString, 32)
+		if int1 > int2 {
+			return 1
+		}
+		if int1 < int2 {
+			return 2
+		}
+	}
+	return 1
+}
+
+//format: Rab-xxx.xxx and Rab_abcxx.x
+func compareVersion2(version1, version2, flag string) (res int) {
+	imageVersionArray1 := strings.Split(version1, flag)
+	imageVersionArray2 := strings.Split(version2, flag)
+	for index := range imageVersionArray1 {
+		reg, _ := regexp.Compile("[^0-9.]+")
+		v1SliceString := reg.ReplaceAllString(imageVersionArray1[index], "")
+		v2SliceString := reg.ReplaceAllString(imageVersionArray2[index], "")
+		int1, _ := strconv.ParseFloat(v1SliceString, 32)
+		int2, _ := strconv.ParseFloat(v2SliceString, 32)
+		if int1 > int2 {
+			return 1
+		}
+		if int1 < int2 {
+			return 2
+		}
+	}
+	return 1
+}
+
+//format: Pa-bc-xx.xx.xx
+func compareVersion3(version1, version2, flag string) (res int) {
+	imageVersionArray1 := strings.Split(version1, flag)
+	imageVersionArray2 := strings.Split(version2, flag)
+	return compareVersion(imageVersionArray1[2], imageVersionArray2[2], ".")
+}
+
+func sortImageSize(sizeList []string) []string {
+	var n = len(sizeList)
+	for i := 0; i <= n-1; i++ {
+		for j := i; j <= n-1; j++ {
+			if strings.Contains(sizeList[i], "-") {
+				if compareImageSize(sizeList[i], sizeList[j], "-", 2) == 1 {
+					sizeList[i], sizeList[j] = sizeList[j], sizeList[i]
+				}
+			} else if strings.Contains(sizeList[i], ".") {
+				if compareImageSize(sizeList[i], sizeList[j], ".", 1) == 1 {
+					sizeList[i], sizeList[j] = sizeList[j], sizeList[i]
+				}
+			} else if strings.Contains(sizeList[i], "_") {
+				if compareImageSize(sizeList[i], sizeList[j], "_", 1) == 1 {
+					sizeList[i], sizeList[j] = sizeList[j], sizeList[i]
+				}
+			}
+		}
+	}
+	return sizeList
+}
+func compareImageSize(imageSize1, imageSize2, flag string, indexFlag int) int {
+	imageSizeArray1 := strings.Split(imageSize1, flag)
+	imageSizeArray2 := strings.Split(imageSize2, flag)
+	for index := range imageSizeArray1 {
+		if index >= indexFlag {
+			reg, _ := regexp.Compile("[^0-9]+")
+			imageSizeIndex1 := reg.ReplaceAllString(imageSizeArray1[index], "")
+			imageSizeIndex2 := reg.ReplaceAllString(imageSizeArray2[index], "")
+			int1, _ := strconv.Atoi(imageSizeIndex1)
+			int2, _ := strconv.Atoi(imageSizeIndex2)
+			if int1 > int2 {
+				return 1
+			}
+			if int1 < int2 {
+				return 2
+			}
+		}
+		if imageSizeArray1[index] > imageSizeArray2[index] {
+			return 1
+		}
+		if imageSizeArray1[index] < imageSizeArray2[index] {
+			return 2
+		}
+	}
+	return 1
 }
