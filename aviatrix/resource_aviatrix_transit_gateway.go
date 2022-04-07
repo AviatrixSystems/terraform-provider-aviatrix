@@ -1544,7 +1544,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("enable_active_standby", gw.EnableActiveStandby)
 	d.Set("enable_active_standby_preemptive", gw.EnableActiveStandbyPreemptive)
 	d.Set("enable_s2c_rx_balancing", gw.EnableS2CRxBalancing)
-	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.BgpLanInterfacesCount != 1 {
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.BgpLanInterfacesCount > 1 {
 		d.Set("bgp_lan_interfaces_count", gw.BgpLanInterfacesCount)
 	} else {
 		d.Set("bgp_lan_interfaces_count", 1)
