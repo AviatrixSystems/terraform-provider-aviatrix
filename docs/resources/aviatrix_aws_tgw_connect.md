@@ -21,10 +21,10 @@ the `aviatrix_aws_tgw` `cidrs` attribute.
 ```hcl
 # Create an Aviatrix AWS TGW Connect
 resource "aviatrix_aws_tgw_connect" "test_aws_tgw_connect" {
-  tgw_name             = aviatrix_aws_tgw.test_aws_tgw.tgw_name
-  connection_name      = "aws-tgw-connect"
-  transport_vpc_id     = aviatrix_aws_tgw_vpc_attachment.test_aws_tgw_vpc_attachment.vpc_id
-  security_domain_name = aviatrix_aws_tgw_vpc_attachment.test_aws_tgw_vpc_attachment.security_domain_name
+  tgw_name            = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+  connection_name     = "aws-tgw-connect"
+  transport_vpc_id    = aviatrix_aws_tgw_vpc_attachment.test_aws_tgw_vpc_attachment.vpc_id
+  network_domain_name = aviatrix_aws_tgw_vpc_attachment.test_aws_tgw_vpc_attachment.network_domain_name
 }
 ```
 
@@ -37,7 +37,11 @@ The following arguments are supported:
 * `tgw_name` - (Required) AWS TGW name.
 * `connection_name` - (Required) Connection name.
 * `transport_vpc_id` - (Required) Transport Attachment VPC ID.
-* `security_domain_name` - (Required) Security Domain name.
+
+!> **WARNING:** Attribute `security_domain_name` will be deprecated in future releases. Please use the attribute `network_domain_name` instead. One of `security_domain_name` or `network_domain_name` must be configured.
+
+* `security_domain_name` - (Optional) Security Domain name.
+* `network_domain_name` - (Optional) Network Domain name.
 
 ## Attribute Reference
 

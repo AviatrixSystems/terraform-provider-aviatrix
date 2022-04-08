@@ -39,10 +39,19 @@ func resourceAviatrixAwsTgwConnect() *schema.Resource {
 				Description: "Transport Attachment VPC ID.",
 			},
 			"security_domain_name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "Security Domain Name.",
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				Deprecated:    "Please use network_domain_name instead.",
+				ConflictsWith: []string{"network_domain_name"},
+				Description:   "Security Domain Name.",
+			},
+			"network_domain_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"security_domain_name"},
+				Description:   "Network Domain Name.",
 			},
 			"connect_attachment_id": {
 				Type:        schema.TypeString,
@@ -63,14 +72,26 @@ func marshalAwsTgwConnectInput(d *schema.ResourceData) *goaviatrix.AwsTgwConnect
 		TgwName:               d.Get("tgw_name").(string),
 		ConnectionName:        d.Get("connection_name").(string),
 		TransportAttachmentID: d.Get("transport_vpc_id").(string),
-		SecurityDomainName:    d.Get("security_domain_name").(string),
 	}
 }
 
 func resourceAviatrixAwsTgwConnectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
+	securityDomainName, securityDomainNameOk := d.GetOk("security_domain_name")
+	networkDomainName, networkDomainNameOk := d.GetOk("network_domain_name")
+	if !securityDomainNameOk && !networkDomainNameOk {
+		return diag.Errorf("one of security_domain_name or network_domain_name must be configured")
+	}
+
 	connect := marshalAwsTgwConnectInput(d)
+
+	if securityDomainNameOk {
+		connect.SecurityDomainName = securityDomainName.(string)
+	} else {
+		connect.SecurityDomainName = networkDomainName.(string)
+	}
+
 	if err := client.AttachTGWConnectToTGW(ctx, connect); err != nil {
 		return diag.Errorf("could not create TGW Connect: %v", err)
 	}
@@ -112,9 +133,15 @@ func resourceAviatrixAwsTgwConnectRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("tgw_name", connect.TgwName)
 	d.Set("connection_name", connect.ConnectionName)
 	d.Set("transport_vpc_id", connect.TransportAttachmentName)
-	d.Set("security_domain_name", connect.SecurityDomainName)
 	d.Set("connect_attachment_id", connect.ConnectAttachmentID)
 	d.Set("transport_attachment_id", connect.TransportAttachmentID)
+
+	if _, ok := d.GetOk("security_domain_name"); ok {
+		d.Set("security_domain_name", connect.SecurityDomainName)
+	} else {
+		d.Set("network_domain_name", connect.SecurityDomainName)
+	}
+
 	d.SetId(connect.ID())
 	return nil
 }

@@ -11,9 +11,10 @@ import (
 
 func resourceAviatrixSegmentationSecurityDomainConnectionPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAviatrixSegmentationSecurityDomainConnectionPolicyCreate,
-		Read:   resourceAviatrixSegmentationSecurityDomainConnectionPolicyRead,
-		Delete: resourceAviatrixSegmentationSecurityDomainConnectionPolicyDelete,
+		DeprecationMessage: "Resource 'aviatrix_segmentation_security_domain_connection_policy' will be deprecated in future releases. Please use resource 'aviatrix_segmentation_network_domain_connection_policy' instead.",
+		Create:             resourceAviatrixSegmentationSecurityDomainConnectionPolicyCreate,
+		Read:               resourceAviatrixSegmentationSecurityDomainConnectionPolicyRead,
+		Delete:             resourceAviatrixSegmentationSecurityDomainConnectionPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

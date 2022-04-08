@@ -11,9 +11,10 @@ import (
 
 func resourceAviatrixSegmentationSecurityDomainAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAviatrixSegmentationSecurityDomainAssociationCreate,
-		Read:   resourceAviatrixSegmentationSecurityDomainAssociationRead,
-		Delete: resourceAviatrixSegmentationSecurityDomainAssociationDelete,
+		DeprecationMessage: "Resource 'aviatrix_segmentation_security_domain_association' will be deprecated in future releases. Please use resource 'aviatrix_segmentation_network_domain_association' instead.",
+		Create:             resourceAviatrixSegmentationSecurityDomainAssociationCreate,
+		Read:               resourceAviatrixSegmentationSecurityDomainAssociationRead,
+		Delete:             resourceAviatrixSegmentationSecurityDomainAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

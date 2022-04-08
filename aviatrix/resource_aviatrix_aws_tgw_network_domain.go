@@ -12,12 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func resourceAviatrixAwsTgwSecurityDomain() *schema.Resource {
+func resourceAviatrixAwsTgwNetworkDomain() *schema.Resource {
 	return &schema.Resource{
-		DeprecationMessage:   "Resource 'aviatrix_aws_tgw_security_domain' will be deprecated in future releases. Please use resource 'aviatrix_aws_tgw_network_domain' instead.",
-		CreateWithoutTimeout: resourceAviatrixAwsTgwSecurityDomainCreate,
-		ReadWithoutTimeout:   resourceAviatrixAwsTgwSecurityDomainRead,
-		DeleteWithoutTimeout: resourceAviatrixAwsTgwSecurityDomainDelete,
+		CreateWithoutTimeout: resourceAviatrixAwsTgwNetworkDomainCreate,
+		ReadWithoutTimeout:   resourceAviatrixAwsTgwNetworkDomainRead,
+		DeleteWithoutTimeout: resourceAviatrixAwsTgwNetworkDomainDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -27,7 +26,7 @@ func resourceAviatrixAwsTgwSecurityDomain() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				Description:  "Security domain name.",
+				Description:  "Network domain name.",
 				ValidateFunc: validation.StringDoesNotContainAny(":"),
 			},
 			"tgw_name": {
@@ -41,28 +40,28 @@ func resourceAviatrixAwsTgwSecurityDomain() *schema.Resource {
 				Optional:    true,
 				Default:     false,
 				ForceNew:    true,
-				Description: "Set to true if the security domain is an aviatrix firewall domain.",
+				Description: "Set to true if the network domain is an aviatrix firewall domain.",
 			},
 			"native_egress": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
 				ForceNew:    true,
-				Description: "Set to true if the security domain is a native egress domain.",
+				Description: "Set to true if the network domain is a native egress domain.",
 			},
 			"native_firewall": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
 				ForceNew:    true,
-				Description: "Set to true if the security domain is a native firewall domain.",
+				Description: "Set to true if the network domain is a native firewall domain.",
 			},
 		},
 	}
 }
 
-func marshalSecurityDomainInput(d *schema.ResourceData) *goaviatrix.SecurityDomain {
-	securityDomain := &goaviatrix.SecurityDomain{
+func marshalNetworkDomainInput(d *schema.ResourceData) *goaviatrix.SecurityDomain {
+	networkDomain := &goaviatrix.SecurityDomain{
 		Name:                   d.Get("name").(string),
 		AwsTgwName:             d.Get("tgw_name").(string),
 		AviatrixFirewallDomain: d.Get("aviatrix_firewall").(bool),
@@ -70,48 +69,48 @@ func marshalSecurityDomainInput(d *schema.ResourceData) *goaviatrix.SecurityDoma
 		NativeFirewallDomain:   d.Get("native_firewall").(bool),
 	}
 
-	return securityDomain
+	return networkDomain
 }
 
-func resourceAviatrixAwsTgwSecurityDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixAwsTgwNetworkDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	securityDomain := marshalSecurityDomainInput(d)
+	networkDomain := marshalNetworkDomainInput(d)
 
 	num := 0
-	if securityDomain.AviatrixFirewallDomain {
+	if networkDomain.AviatrixFirewallDomain {
 		num += 1
 	}
-	if securityDomain.NativeEgressDomain {
+	if networkDomain.NativeEgressDomain {
 		num += 1
 	}
-	if securityDomain.NativeFirewallDomain {
+	if networkDomain.NativeFirewallDomain {
 		num += 1
 	}
 	if num > 1 {
 		return diag.Errorf("only one or none of 'firewall_domain', 'native_egress' and 'native_firewall' could be set true")
 	}
 
-	d.SetId(securityDomain.AwsTgwName + "~" + securityDomain.Name)
+	d.SetId(networkDomain.AwsTgwName + "~" + networkDomain.Name)
 	flag := false
-	defer resourceAviatrixAwsTgwSecurityDomainReadIfRequired(ctx, d, meta, &flag)
+	defer resourceAviatrixAwsTgwNetworkDomainReadIfRequired(ctx, d, meta, &flag)
 
-	if err := client.CreateSecurityDomain(securityDomain); err != nil {
+	if err := client.CreateSecurityDomain(networkDomain); err != nil {
 		return diag.Errorf("could not create security domain: %v", err)
 	}
 
-	return resourceAviatrixAwsTgwSecurityDomainReadIfRequired(ctx, d, meta, &flag)
+	return resourceAviatrixAwsTgwNetworkDomainReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixAwsTgwSecurityDomainReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixAwsTgwNetworkDomainReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
-		return resourceAviatrixAwsTgwSecurityDomainRead(ctx, d, meta)
+		return resourceAviatrixAwsTgwNetworkDomainRead(ctx, d, meta)
 	}
 	return nil
 }
 
-func resourceAviatrixAwsTgwSecurityDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixAwsTgwNetworkDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	name := d.Get("name").(string)
@@ -131,32 +130,32 @@ func resourceAviatrixAwsTgwSecurityDomainRead(ctx context.Context, d *schema.Res
 	name = d.Get("name").(string)
 	tgwName := d.Get("tgw_name").(string)
 
-	securityDomain := &goaviatrix.SecurityDomain{
+	networkDomain := &goaviatrix.SecurityDomain{
 		Name:       name,
 		AwsTgwName: tgwName,
 	}
 
-	securityDomainDetails, err := client.GetSecurityDomainDetails(ctx, securityDomain)
+	networkDomainDetails, err := client.GetSecurityDomainDetails(ctx, networkDomain)
 	if err == goaviatrix.ErrNotFound {
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return diag.Errorf("couldn't get the details of the security domain %s due to %v", name, err)
+		return diag.Errorf("couldn't get the details of the network domain %s due to %v", name, err)
 	}
 
-	d.Set("aviatrix_firewall", securityDomainDetails.AviatrixFirewallDomain)
-	d.Set("native_egress", securityDomainDetails.NativeEgressDomain)
-	d.Set("native_firewall", securityDomainDetails.NativeFirewallDomain)
+	d.Set("aviatrix_firewall", networkDomainDetails.AviatrixFirewallDomain)
+	d.Set("native_egress", networkDomainDetails.NativeEgressDomain)
+	d.Set("native_firewall", networkDomainDetails.NativeFirewallDomain)
 
 	d.SetId(tgwName + "~" + name)
 	return nil
 }
 
-func resourceAviatrixAwsTgwSecurityDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixAwsTgwNetworkDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	securityDomain := &goaviatrix.SecurityDomain{
+	networkDomain := &goaviatrix.SecurityDomain{
 		Name:       d.Get("name").(string),
 		AwsTgwName: d.Get("tgw_name").(string),
 	}
@@ -164,13 +163,13 @@ func resourceAviatrixAwsTgwSecurityDomainDelete(ctx context.Context, d *schema.R
 	defaultDomains := []string{"Aviatrix_Edge_Domain", "Default_Domain", "Shared_Service_Domain"}
 
 	for _, d := range defaultDomains {
-		if securityDomain.Name == d {
-			securityDomain.ForceDelete = true
+		if networkDomain.Name == d {
+			networkDomain.ForceDelete = true
 		}
 	}
 
-	if err := client.DeleteSecurityDomain(securityDomain); err != nil {
-		return diag.Errorf("could not delete security domain: %v", err)
+	if err := client.DeleteSecurityDomain(networkDomain); err != nil {
+		return diag.Errorf("could not delete network domain: %v", err)
 	}
 
 	return nil
