@@ -94,60 +94,32 @@ func (p byVersion) Swap(i, j int) {
 func (p byVersion) Less(i, j int) bool {
 	if checkFirstCharacter(p[i]) == "R" {
 		if strings.Contains(p[i], "_") {
-			return compareVersion2(p[i], p[j], "_")
+			return compareVersion(p[i], p[j], "_", "", "[^0-9.]+")
 		} else if strings.Contains(p[i], "-") {
-			return compareVersion2(p[i], p[j], "-")
+			return compareVersion(p[i], p[j], "-", "", "[^0-9.]+")
 		} else {
 			log.Printf("need to add a new method sort this version format")
 		}
 	} else if checkFirstCharacter(p[i]) == "P" {
 		return compareVersion3(p[i], p[j], "-")
 	} else {
-		return compareVersion(p[i], p[j], ".")
+		return compareVersion(p[i], p[j], ".", ".", "[^0-9]+")
 	}
 	return false
 }
 
 //format: xx.xx.xx
-func compareVersion(version1, version2, splitFlag string) bool {
+//format: Rab-xxx.xxx and Rab_abcxx.x
+func compareVersion(version1, version2, splitFlag, secondFlag, regularExpression string) bool {
 	imageVersionArray1 := strings.Split(version1, splitFlag)
 	imageVersionArray2 := strings.Split(version2, splitFlag)
 	for index := range imageVersionArray1 {
-		reg, err := regexp.Compile("[^0-9]+")
+		reg, err := regexp.Compile(regularExpression)
 		if err != nil {
 			log.Printf("[WARN] Failed to remove character value %s: %v", imageVersionArray1[index], err)
 		}
-		v1SliceString := reg.ReplaceAllString(imageVersionArray1[index], ".")
-		v2SliceString := reg.ReplaceAllString(imageVersionArray2[index], ".")
-		int1, err := strconv.ParseFloat(v1SliceString, 32)
-		if err != nil {
-			log.Printf("[WARN] Failed to convert string to float %s: %v", v1SliceString, err)
-		}
-		int2, err := strconv.ParseFloat(v2SliceString, 32)
-		if err != nil {
-			log.Printf("[WARN] Failed to convert string to float %s: %v", v2SliceString, err)
-		}
-		if int1 > int2 {
-			return true
-		}
-		if int1 < int2 {
-			return false
-		}
-	}
-	return true
-}
-
-//format: Rab-xxx.xxx and Rab_abcxx.x
-func compareVersion2(version1, version2, flag string) bool {
-	imageVersionArray1 := strings.Split(version1, flag)
-	imageVersionArray2 := strings.Split(version2, flag)
-	for index := range imageVersionArray1 {
-		reg, err := regexp.Compile("[^0-9.]+")
-		if err != nil {
-			log.Printf("[WARN] Failed to remove character value %s: %v", imageVersionArray1[index], err)
-		}
-		v1SliceString := reg.ReplaceAllString(imageVersionArray1[index], "")
-		v2SliceString := reg.ReplaceAllString(imageVersionArray2[index], "")
+		v1SliceString := reg.ReplaceAllString(imageVersionArray1[index], secondFlag)
+		v2SliceString := reg.ReplaceAllString(imageVersionArray2[index], secondFlag)
 		int1, err := strconv.ParseFloat(v1SliceString, 32)
 		if err != nil {
 			log.Printf("[WARN] Failed to convert string to float %s: %v", v1SliceString, err)
@@ -170,7 +142,7 @@ func compareVersion2(version1, version2, flag string) bool {
 func compareVersion3(version1, version2, flag string) bool {
 	imageVersionArray1 := strings.Split(version1, flag)
 	imageVersionArray2 := strings.Split(version2, flag)
-	return compareVersion(imageVersionArray1[2], imageVersionArray2[2], ".")
+	return compareVersion(imageVersionArray1[2], imageVersionArray2[2], ".", ".", "[^0-9]+")
 }
 
 func checkFirstCharacter(input string) string {
