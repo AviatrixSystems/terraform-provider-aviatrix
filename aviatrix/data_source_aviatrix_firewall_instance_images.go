@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -93,12 +94,14 @@ func sortImageVersion(listVersion []string) []string {
 					if compareVersion2(listVersion[i], listVersion[j], splitFlag) == 2 {
 						listVersion[i], listVersion[j] = listVersion[j], listVersion[i]
 					}
-				} else {
+				} else if strings.Contains(listVersion[i], "-") {
 					//format: Rab-xxx.xxx
 					splitFlag = "-"
 					if compareVersion2(listVersion[i], listVersion[j], splitFlag) == 2 {
 						listVersion[i], listVersion[j] = listVersion[j], listVersion[i]
 					}
+				} else {
+					log.Printf("need to add a new method sort this version format")
 				}
 			} else if checkFirstCharacter(listVersion[i]) == "P" {
 				//format: Pa-bc-xx.xx.xx
@@ -128,11 +131,20 @@ func compareVersion(version1, version2, splitFlag string) (res int) {
 	imageVersionArray1 := strings.Split(version1, splitFlag)
 	imageVersionArray2 := strings.Split(version2, splitFlag)
 	for index := range imageVersionArray1 {
-		reg, _ := regexp.Compile("[^0-9]+")
+		reg, err := regexp.Compile("[^0-9]+")
+		if err != nil {
+			log.Printf("[WARN] Failed to remove character value %s: %v", imageVersionArray1[index], err)
+		}
 		v1SliceString := reg.ReplaceAllString(imageVersionArray1[index], ".")
 		v2SliceString := reg.ReplaceAllString(imageVersionArray2[index], ".")
-		int1, _ := strconv.ParseFloat(v1SliceString, 32)
-		int2, _ := strconv.ParseFloat(v2SliceString, 32)
+		int1, err := strconv.ParseFloat(v1SliceString, 32)
+		if err != nil {
+			log.Printf("[WARN] Failed to convert string to float %s: %v", v1SliceString, err)
+		}
+		int2, err := strconv.ParseFloat(v2SliceString, 32)
+		if err != nil {
+			log.Printf("[WARN] Failed to convert string to float %s: %v", v1SliceString, err)
+		}
 		if int1 > int2 {
 			return 1
 		}
@@ -148,11 +160,20 @@ func compareVersion2(version1, version2, flag string) (res int) {
 	imageVersionArray1 := strings.Split(version1, flag)
 	imageVersionArray2 := strings.Split(version2, flag)
 	for index := range imageVersionArray1 {
-		reg, _ := regexp.Compile("[^0-9.]+")
+		reg, err := regexp.Compile("[^0-9.]+")
+		if err != nil {
+			log.Printf("[WARN] Failed to remove character value %s: %v", imageVersionArray1[index], err)
+		}
 		v1SliceString := reg.ReplaceAllString(imageVersionArray1[index], "")
 		v2SliceString := reg.ReplaceAllString(imageVersionArray2[index], "")
-		int1, _ := strconv.ParseFloat(v1SliceString, 32)
-		int2, _ := strconv.ParseFloat(v2SliceString, 32)
+		int1, err := strconv.ParseFloat(v1SliceString, 32)
+		if err != nil {
+			log.Printf("[WARN] Failed to convert string to float %s: %v", v1SliceString, err)
+		}
+		int2, err := strconv.ParseFloat(v2SliceString, 32)
+		if err != nil {
+			log.Printf("[WARN] Failed to convert string to float %s: %v", v1SliceString, err)
+		}
 		if int1 > int2 {
 			return 1
 		}
