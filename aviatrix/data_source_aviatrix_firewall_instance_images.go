@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -66,10 +67,10 @@ func dataSourceAviatrixFirewallInstanceImagesRead(d *schema.ResourceData, meta i
 		fI := make(map[string]interface{})
 		fI["firewall_image"] = image.Image
 		listVersion := image.Version
-		sortImageVersion(listVersion)
+		sort.Sort(byVersion(listVersion))
 		fI["firewall_image_version"] = listVersion
 		listSize := image.Size
-		sortImageSize(listSize)
+		sort.Sort(sort.Reverse(bySize(listSize)))
 		fI["firewall_size"] = listSize
 		images = append(images, fI)
 	}
@@ -82,52 +83,33 @@ func dataSourceAviatrixFirewallInstanceImagesRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func sortImageVersion(listVersion []string) []string {
-	var n = len(listVersion)
-	for i := 0; i <= n-1; i++ {
-		for j := i; j <= n-1; j++ {
-			var splitFlag string
-			if checkFirstCharacter(listVersion[i]) == "R" {
-				if strings.Contains(listVersion[i], "_") {
-					//format: Rab_abcxx.x
-					splitFlag = "_"
-					if compareVersion2(listVersion[i], listVersion[j], splitFlag) == 2 {
-						listVersion[i], listVersion[j] = listVersion[j], listVersion[i]
-					}
-				} else if strings.Contains(listVersion[i], "-") {
-					//format: Rab-xxx.xxx
-					splitFlag = "-"
-					if compareVersion2(listVersion[i], listVersion[j], splitFlag) == 2 {
-						listVersion[i], listVersion[j] = listVersion[j], listVersion[i]
-					}
-				} else {
-					log.Printf("need to add a new method sort this version format")
-				}
-			} else if checkFirstCharacter(listVersion[i]) == "P" {
-				//format: Pa-bc-xx.xx.xx
-				splitFlag = "-"
-				if compareVersion3(listVersion[i], listVersion[j], splitFlag) == 2 {
-					listVersion[i], listVersion[j] = listVersion[j], listVersion[i]
-				}
-			} else {
-				//format: xx.xxx.xxx
-				splitFlag = "."
-				if compareVersion(listVersion[i], listVersion[j], splitFlag) == 2 {
-					listVersion[i], listVersion[j] = listVersion[j], listVersion[i]
-				}
-			}
-		}
-	}
-	return listVersion
-}
+type byVersion []string
 
-func checkFirstCharacter(input string) string {
-	firstCharacter := input[0:1]
-	return firstCharacter
+func (p byVersion) Len() int {
+	return len(p)
+}
+func (p byVersion) Swap(i, j int) {
+	p[i], p[j] = p[j], p[i]
+}
+func (p byVersion) Less(i, j int) bool {
+	if checkFirstCharacter(p[i]) == "R" {
+		if strings.Contains(p[i], "_") {
+			return compareVersion2(p[i], p[j], "_")
+		} else if strings.Contains(p[i], "-") {
+			return compareVersion2(p[i], p[j], "-")
+		} else {
+			log.Printf("need to add a new method sort this version format")
+		}
+	} else if checkFirstCharacter(p[i]) == "P" {
+		return compareVersion3(p[i], p[j], "-")
+	} else {
+		return compareVersion(p[i], p[j], ".")
+	}
+	return false
 }
 
 //format: xx.xx.xx
-func compareVersion(version1, version2, splitFlag string) (res int) {
+func compareVersion(version1, version2, splitFlag string) bool {
 	imageVersionArray1 := strings.Split(version1, splitFlag)
 	imageVersionArray2 := strings.Split(version2, splitFlag)
 	for index := range imageVersionArray1 {
@@ -143,20 +125,20 @@ func compareVersion(version1, version2, splitFlag string) (res int) {
 		}
 		int2, err := strconv.ParseFloat(v2SliceString, 32)
 		if err != nil {
-			log.Printf("[WARN] Failed to convert string to float %s: %v", v1SliceString, err)
+			log.Printf("[WARN] Failed to convert string to float %s: %v", v2SliceString, err)
 		}
 		if int1 > int2 {
-			return 1
+			return true
 		}
 		if int1 < int2 {
-			return 2
+			return false
 		}
 	}
-	return 1
+	return true
 }
 
 //format: Rab-xxx.xxx and Rab_abcxx.x
-func compareVersion2(version1, version2, flag string) (res int) {
+func compareVersion2(version1, version2, flag string) bool {
 	imageVersionArray1 := strings.Split(version1, flag)
 	imageVersionArray2 := strings.Split(version2, flag)
 	for index := range imageVersionArray1 {
@@ -172,69 +154,81 @@ func compareVersion2(version1, version2, flag string) (res int) {
 		}
 		int2, err := strconv.ParseFloat(v2SliceString, 32)
 		if err != nil {
-			log.Printf("[WARN] Failed to convert string to float %s: %v", v1SliceString, err)
+			log.Printf("[WARN] Failed to convert string to float %s: %v", v2SliceString, err)
 		}
 		if int1 > int2 {
-			return 1
+			return true
 		}
 		if int1 < int2 {
-			return 2
+			return false
 		}
 	}
-	return 1
+	return true
 }
 
 //format: Pa-bc-xx.xx.xx
-func compareVersion3(version1, version2, flag string) (res int) {
+func compareVersion3(version1, version2, flag string) bool {
 	imageVersionArray1 := strings.Split(version1, flag)
 	imageVersionArray2 := strings.Split(version2, flag)
 	return compareVersion(imageVersionArray1[2], imageVersionArray2[2], ".")
 }
 
-func sortImageSize(sizeList []string) []string {
-	var n = len(sizeList)
-	for i := 0; i <= n-1; i++ {
-		for j := i; j <= n-1; j++ {
-			if strings.Contains(sizeList[i], "-") {
-				if compareImageSize(sizeList[i], sizeList[j], "-", 2) == 1 {
-					sizeList[i], sizeList[j] = sizeList[j], sizeList[i]
-				}
-			} else if strings.Contains(sizeList[i], ".") {
-				if compareImageSize(sizeList[i], sizeList[j], ".", 1) == 1 {
-					sizeList[i], sizeList[j] = sizeList[j], sizeList[i]
-				}
-			} else if strings.Contains(sizeList[i], "_") {
-				if compareImageSize(sizeList[i], sizeList[j], "_", 1) == 1 {
-					sizeList[i], sizeList[j] = sizeList[j], sizeList[i]
-				}
-			}
-		}
-	}
-	return sizeList
+func checkFirstCharacter(input string) string {
+	firstCharacter := input[0:1]
+	return firstCharacter
 }
-func compareImageSize(imageSize1, imageSize2, flag string, indexFlag int) int {
+
+type bySize []string
+
+func (s bySize) Len() int {
+	return len(s)
+}
+func (s bySize) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s bySize) Less(i, j int) bool {
+	if strings.Contains(s[i], "-") {
+		return compareImageSizeTest(s[i], s[j], "-", 2)
+	} else if strings.Contains(s[i], ".") {
+		return compareImageSizeTest(s[i], s[j], ".", 1)
+	} else if strings.Contains(s[i], "_") {
+		return compareImageSizeTest(s[i], s[j], "_", 1)
+	}
+	return false
+}
+
+func compareImageSizeTest(imageSize1, imageSize2, flag string, indexFlag int) bool {
 	imageSizeArray1 := strings.Split(imageSize1, flag)
 	imageSizeArray2 := strings.Split(imageSize2, flag)
 	for index := range imageSizeArray1 {
 		if index >= indexFlag {
-			reg, _ := regexp.Compile("[^0-9]+")
+			reg, err := regexp.Compile("[^0-9]+")
+			if err != nil {
+				log.Printf("[WARN] Failed to remove character value %s: %v", imageSizeArray1[index], err)
+			}
 			imageSizeIndex1 := reg.ReplaceAllString(imageSizeArray1[index], "")
 			imageSizeIndex2 := reg.ReplaceAllString(imageSizeArray2[index], "")
-			int1, _ := strconv.Atoi(imageSizeIndex1)
-			int2, _ := strconv.Atoi(imageSizeIndex2)
+			int1, err := strconv.Atoi(imageSizeIndex1)
+			if err != nil {
+				log.Printf("[WARN] Failed to convert string to float %s: %v", imageSizeIndex1, err)
+			}
+			int2, err := strconv.Atoi(imageSizeIndex2)
+			if err != nil {
+				log.Printf("[WARN] Failed to convert string to float %s: %v", imageSizeIndex2, err)
+			}
 			if int1 > int2 {
-				return 1
+				return true
 			}
 			if int1 < int2 {
-				return 2
+				return false
 			}
 		}
 		if imageSizeArray1[index] > imageSizeArray2[index] {
-			return 1
+			return true
 		}
 		if imageSizeArray1[index] < imageSizeArray2[index] {
-			return 2
+			return false
 		}
 	}
-	return 1
+	return true
 }
