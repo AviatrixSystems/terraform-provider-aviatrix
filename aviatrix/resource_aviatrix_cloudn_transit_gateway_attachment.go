@@ -168,8 +168,6 @@ func resourceAviatrixCloudnTransitGatewayAttachmentRead(ctx context.Context, d *
 		d.SetId(connName)
 	}
 
-	attachment := marshalCloudnTransitGatewayAttachmentInput(d)
-
 	attachment, err := client.GetCloudnTransitGatewayAttachment(ctx, connName)
 	if err == goaviatrix.ErrNotFound {
 		d.SetId("")

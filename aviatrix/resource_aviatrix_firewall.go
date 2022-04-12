@@ -157,7 +157,7 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 				Description: pl["description"].(string),
 			}
 
-			logEnabled := pl["log_enabled"].(interface{}).(bool)
+			logEnabled := pl["log_enabled"].(bool)
 			if logEnabled {
 				firewallPolicy.LogEnabled = "on"
 			} else {
@@ -253,7 +253,7 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 			Action:      pl["action"].(string),
 			Description: pl["description"].(string),
 		}
-		logEnabled := pl["log_enabled"].(interface{}).(bool)
+		logEnabled := pl["log_enabled"].(bool)
 		if logEnabled {
 			firewallPolicy.LogEnabled = "on"
 		} else {
@@ -352,7 +352,7 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 				Description: pl["description"].(string),
 			}
 
-			if pl["log_enabled"].(interface{}).(bool) {
+			if pl["log_enabled"].(bool) {
 				firewallPolicy.LogEnabled = "on"
 			} else {
 				firewallPolicy.LogEnabled = "off"

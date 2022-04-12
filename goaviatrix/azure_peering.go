@@ -36,7 +36,7 @@ func (c *Client) GetAzurePeer(azurePeer *AzurePeer) (*AzurePeer, error) {
 		return nil, err
 	}
 	if val, ok := data["results"]; ok {
-		pairList := val.(interface{}).([]interface{})
+		pairList := val.([]interface{})
 		for i := range pairList {
 			if pairList[i].(map[string]interface{})["requester"].(map[string]interface{})["vpc_id"].(string) == azurePeer.VNet1 &&
 				pairList[i].(map[string]interface{})["accepter"].(map[string]interface{})["vpc_id"].(string) == azurePeer.VNet2 {
@@ -59,7 +59,7 @@ func (c *Client) GetAzurePeer(azurePeer *AzurePeer) (*AzurePeer, error) {
 				vnetCidrList2 := pairList[i].(map[string]interface{})["accepter"].(map[string]interface{})["vpc_cidr"].([]interface{})
 				var vnetCidr2 []string
 				for i := range vnetCidrList2 {
-					vnetCidr2 = append(vnetCidr2, vnetCidrList2[i].(interface{}).(string))
+					vnetCidr2 = append(vnetCidr2, vnetCidrList2[i].(string))
 				}
 				azurePeer.VNetCidr2 = vnetCidr2
 

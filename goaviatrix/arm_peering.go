@@ -79,7 +79,7 @@ func (c *Client) GetARMPeer(armPeer *ARMPeer) (*ARMPeer, error) {
 		return nil, ErrNotFound
 	}
 	if val, ok := data["results"]; ok {
-		pairList := val.(interface{}).([]interface{})
+		pairList := val.([]interface{})
 		for i := range pairList {
 			if pairList[i].(map[string]interface{})["requester"].(map[string]interface{})["vpc_id"].(string) == armPeer.VNet1 &&
 				pairList[i].(map[string]interface{})["accepter"].(map[string]interface{})["vpc_id"].(string) == armPeer.VNet2 {
@@ -95,7 +95,7 @@ func (c *Client) GetARMPeer(armPeer *ARMPeer) (*ARMPeer, error) {
 				vnetCidrList1 := pairList[i].(map[string]interface{})["requester"].(map[string]interface{})["vpc_cidr"].([]interface{})
 				var vnetCidr1 []string
 				for i := range vnetCidrList1 {
-					vnetCidr1 = append(vnetCidr1, vnetCidrList1[i].(interface{}).(string))
+					vnetCidr1 = append(vnetCidr1, vnetCidrList1[i].(string))
 				}
 				armPeer.VNetCidr1 = vnetCidr1
 
