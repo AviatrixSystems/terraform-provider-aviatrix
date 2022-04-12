@@ -1327,7 +1327,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("allocate_new_eip", false)
 		}
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-		//d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0]) //gcp vpc_id returns as <vpc_id>~-~<other vpc info> in rest api
+		// gcp vpc_id returns as <vpc name>~-~<project name>
 		d.Set("vpc_id", gw.VpcID)
 		d.Set("vpc_reg", gw.GatewayZone) //gcp vpc_reg returns as gateway_zone in json
 
