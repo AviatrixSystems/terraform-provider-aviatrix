@@ -52,7 +52,7 @@ func (c *Client) GetAzurePeer(azurePeer *AzurePeer) (*AzurePeer, error) {
 				vnetCidrList1 := pairList[i].(map[string]interface{})["requester"].(map[string]interface{})["vpc_cidr"].([]interface{})
 				var vnetCidr1 []string
 				for i := range vnetCidrList1 {
-					vnetCidr1 = append(vnetCidr1, vnetCidrList1[i].(interface{}).(string))
+					vnetCidr1 = append(vnetCidr1, vnetCidrList1[i].(string))
 				}
 				azurePeer.VNetCidr1 = vnetCidr1
 

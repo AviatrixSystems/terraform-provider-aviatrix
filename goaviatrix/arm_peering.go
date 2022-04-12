@@ -102,7 +102,7 @@ func (c *Client) GetARMPeer(armPeer *ARMPeer) (*ARMPeer, error) {
 				vnetCidrList2 := pairList[i].(map[string]interface{})["accepter"].(map[string]interface{})["vpc_cidr"].([]interface{})
 				var vnetCidr2 []string
 				for i := range vnetCidrList2 {
-					vnetCidr2 = append(vnetCidr2, vnetCidrList2[i].(interface{}).(string))
+					vnetCidr2 = append(vnetCidr2, vnetCidrList2[i].(string))
 				}
 				armPeer.VNetCidr2 = vnetCidr2
 

@@ -2780,16 +2780,8 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("customized_spoke_vpc_routes") {
 		o, n := d.GetChange("customized_spoke_vpc_routes")
-		if o == nil {
-			o = new(interface{})
-		}
-		if n == nil {
-			n = new(interface{})
-		}
-		os := o.(interface{})
-		ns := n.(interface{})
-		oldRouteList := strings.Split(os.(string), ",")
-		newRouteList := strings.Split(ns.(string), ",")
+		oldRouteList := strings.Split(o.(string), ",")
+		newRouteList := strings.Split(n.(string), ",")
 		if len(goaviatrix.Difference(oldRouteList, newRouteList)) != 0 || len(goaviatrix.Difference(newRouteList, oldRouteList)) != 0 {
 			transitGateway := &goaviatrix.Gateway{
 				GwName:                   d.Get("gw_name").(string),
@@ -2805,16 +2797,8 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("filtered_spoke_vpc_routes") {
 		o, n := d.GetChange("filtered_spoke_vpc_routes")
-		if o == nil {
-			o = new(interface{})
-		}
-		if n == nil {
-			n = new(interface{})
-		}
-		os := o.(interface{})
-		ns := n.(interface{})
-		oldRouteList := strings.Split(os.(string), ",")
-		newRouteList := strings.Split(ns.(string), ",")
+		oldRouteList := strings.Split(o.(string), ",")
+		newRouteList := strings.Split(n.(string), ",")
 		if len(goaviatrix.Difference(oldRouteList, newRouteList)) != 0 || len(goaviatrix.Difference(newRouteList, oldRouteList)) != 0 {
 			transitGateway := &goaviatrix.Gateway{
 				GwName:                 d.Get("gw_name").(string),
@@ -2830,16 +2814,8 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("excluded_advertised_spoke_routes") {
 		o, n := d.GetChange("excluded_advertised_spoke_routes")
-		if o == nil {
-			o = new(interface{})
-		}
-		if n == nil {
-			n = new(interface{})
-		}
-		os := o.(interface{})
-		ns := n.(interface{})
-		oldRouteList := strings.Split(os.(string), ",")
-		newRouteList := strings.Split(ns.(string), ",")
+		oldRouteList := strings.Split(o.(string), ",")
+		newRouteList := strings.Split(n.(string), ",")
 		if len(goaviatrix.Difference(oldRouteList, newRouteList)) != 0 || len(goaviatrix.Difference(newRouteList, oldRouteList)) != 0 {
 			transitGateway := &goaviatrix.Gateway{
 				GwName:                d.Get("gw_name").(string),
