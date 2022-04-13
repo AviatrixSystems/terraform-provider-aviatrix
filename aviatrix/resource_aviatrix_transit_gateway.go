@@ -1658,7 +1658,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("allocate_new_eip", false)
 		}
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-		d.Set("vpc_id", strings.Split(gw.VpcID, "~-~")[0])
+		// gcp vpc_id returns as <vpc name>~-~<project name>
+		d.Set("vpc_id", gw.VpcID)
 		d.Set("vpc_reg", gw.GatewayZone)
 		d.Set("allocate_new_eip", gw.AllocateNewEipRead)
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
@@ -2779,16 +2780,8 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("customized_spoke_vpc_routes") {
 		o, n := d.GetChange("customized_spoke_vpc_routes")
-		if o == nil {
-			o = new(interface{})
-		}
-		if n == nil {
-			n = new(interface{})
-		}
-		os := o.(interface{})
-		ns := n.(interface{})
-		oldRouteList := strings.Split(os.(string), ",")
-		newRouteList := strings.Split(ns.(string), ",")
+		oldRouteList := strings.Split(o.(string), ",")
+		newRouteList := strings.Split(n.(string), ",")
 		if len(goaviatrix.Difference(oldRouteList, newRouteList)) != 0 || len(goaviatrix.Difference(newRouteList, oldRouteList)) != 0 {
 			transitGateway := &goaviatrix.Gateway{
 				GwName:                   d.Get("gw_name").(string),
@@ -2804,16 +2797,8 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("filtered_spoke_vpc_routes") {
 		o, n := d.GetChange("filtered_spoke_vpc_routes")
-		if o == nil {
-			o = new(interface{})
-		}
-		if n == nil {
-			n = new(interface{})
-		}
-		os := o.(interface{})
-		ns := n.(interface{})
-		oldRouteList := strings.Split(os.(string), ",")
-		newRouteList := strings.Split(ns.(string), ",")
+		oldRouteList := strings.Split(o.(string), ",")
+		newRouteList := strings.Split(n.(string), ",")
 		if len(goaviatrix.Difference(oldRouteList, newRouteList)) != 0 || len(goaviatrix.Difference(newRouteList, oldRouteList)) != 0 {
 			transitGateway := &goaviatrix.Gateway{
 				GwName:                 d.Get("gw_name").(string),
@@ -2829,16 +2814,8 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("excluded_advertised_spoke_routes") {
 		o, n := d.GetChange("excluded_advertised_spoke_routes")
-		if o == nil {
-			o = new(interface{})
-		}
-		if n == nil {
-			n = new(interface{})
-		}
-		os := o.(interface{})
-		ns := n.(interface{})
-		oldRouteList := strings.Split(os.(string), ",")
-		newRouteList := strings.Split(ns.(string), ",")
+		oldRouteList := strings.Split(o.(string), ",")
+		newRouteList := strings.Split(n.(string), ",")
 		if len(goaviatrix.Difference(oldRouteList, newRouteList)) != 0 || len(goaviatrix.Difference(newRouteList, oldRouteList)) != 0 {
 			transitGateway := &goaviatrix.Gateway{
 				GwName:                d.Get("gw_name").(string),
