@@ -2,12 +2,13 @@ package aviatrix
 
 import (
 	"fmt"
-	"github.com/hashicorp/go-version"
 	"log"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/hashicorp/go-version"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
