@@ -33,7 +33,7 @@ The following arguments are supported:
 * `vpc_account_name` - (Required) The name of the cloud account in the Aviatrix controller, which is associated with the VPC.
 * `vpc_id` - (Required) VPC ID of the VPC to be attached to the specified `security_domain_name`.
 
-!> **WARNING:** Attribute `security_domain_name` will be deprecated in future releases. Please use the attribute `network_domain_name` instead. One of `security_domain_name` or `network_domain_name` must be configured.
+!> **WARNING:** Attribute `security_domain_name` will be deprecated in future releases. Please use the attribute `network_domain_name` instead. Either `security_domain_name` or `network_domain_name` must be configured.
 
 * `security_domain_name` - (optional) The name of the security domain, to which the VPC will be attached to. If changed, the VPC will be detached from the old domain, and attached to the new domain.
 * `network_domain_name` - (optional) The name of the network domain, to which the VPC will be attached to. If changed, the VPC will be detached from the old domain, and attached to the new domain.

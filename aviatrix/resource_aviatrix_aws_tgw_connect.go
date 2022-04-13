@@ -81,7 +81,7 @@ func resourceAviatrixAwsTgwConnectCreate(ctx context.Context, d *schema.Resource
 	securityDomainName, securityDomainNameOk := d.GetOk("security_domain_name")
 	networkDomainName, networkDomainNameOk := d.GetOk("network_domain_name")
 	if !securityDomainNameOk && !networkDomainNameOk {
-		return diag.Errorf("one of security_domain_name or network_domain_name must be configured")
+		return diag.Errorf("either security_domain_name or network_domain_name must be configured")
 	}
 
 	connect := marshalAwsTgwConnectInput(d)

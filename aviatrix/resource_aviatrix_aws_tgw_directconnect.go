@@ -81,7 +81,7 @@ func resourceAviatrixAWSTgwDirectConnectCreate(d *schema.ResourceData, meta inte
 	securityDomainName, securityDomainNameOk := d.GetOk("security_domain_name")
 	networkDomainName, networkDomainNameOk := d.GetOk("network_domain_name")
 	if !securityDomainNameOk && !networkDomainNameOk {
-		return fmt.Errorf("one of security_domain_name or network_domain_name must be configured")
+		return fmt.Errorf("either security_domain_name or network_domain_name must be configured")
 	}
 
 	if securityDomainNameOk {

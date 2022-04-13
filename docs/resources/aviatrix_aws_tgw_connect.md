@@ -38,7 +38,7 @@ The following arguments are supported:
 * `connection_name` - (Required) Connection name.
 * `transport_vpc_id` - (Required) Transport Attachment VPC ID.
 
-!> **WARNING:** Attribute `security_domain_name` will be deprecated in future releases. Please use the attribute `network_domain_name` instead. One of `security_domain_name` or `network_domain_name` must be configured.
+!> **WARNING:** Attribute `security_domain_name` will be deprecated in future releases. Please use the attribute `network_domain_name` instead. Either `security_domain_name` or `network_domain_name` must be configured.
 
 * `security_domain_name` - (Optional) Security Domain name.
 * `network_domain_name` - (Optional) Network Domain name.

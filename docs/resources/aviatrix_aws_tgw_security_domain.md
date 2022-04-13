@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_aws_tgw_security_domain
 
-!> **WARNING:** Resource 'aviatrix_aws_tgw_security_domain' will be deprecated in future releases. Please use resource 'aviatrix_aws_tgw_network_domain' instead.
+!> **WARNING:** Resource **aviatrix_aws_tgw_security_domain** will be deprecated in future releases. Please use resource **aviatrix_aws_tgw_network_domain** instead.
 
 The **aviatrix_aws_tgw_security_domain** resource allows the creation and management of Aviatrix security domains.
 

@@ -18,7 +18,7 @@ resource "aviatrix_aws_tgw_directconnect" "test_aws_tgw_directconnect" {
   tgw_name                   = "my-aws-tgw-1"
   directconnect_account_name = "username"
   dx_gateway_id              = "30321d76-dd01-49bf"
-  network_domain_name        = "my-sdn-1"
+  network_domain_name        = "my-ndn-1"
   allowed_prefix             = "10.12.0.0/24"
 }
 ```
@@ -34,7 +34,7 @@ The following arguments are supported:
 * `allowed_prefix` - (Required) A list of comma separated CIDRs for DXGW to advertise to remote(on-prem).
 * `enable_learned_cidrs_approval` - (Optional) Switch to enable/disable [encrypted transit approval](https://docs.aviatrix.com/HowTos/tgw_approval.html) for AWS TGW DirectConnect. Valid values: true, false. Default value: false.
 
-!> **WARNING:** Attribute `security_domain_name` will be deprecated in future releases. Please use the attribute `network_domain_name` instead. One of `security_domain_name` or `network_domain_name` must be configured.
+!> **WARNING:** Attribute `security_domain_name` will be deprecated in future releases. Please use the attribute `network_domain_name` instead. Either `security_domain_name` or `network_domain_name` must be configured.
 
 * `security_domain_name` - (Optional) The name of a security domain, to which the direct connect gateway will be attached.
 * `network_domain_name` - (Optional) The name of a network domain, to which the direct connect gateway will be attached.
