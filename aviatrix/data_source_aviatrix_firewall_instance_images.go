@@ -133,10 +133,7 @@ func versionFormat2(version1, version2, flag string) bool {
 func compareVersion(version1, version2 string) bool {
 	v1, _ := version.NewVersion(version1)
 	v2, _ := version.NewVersion(version2)
-	if v1.LessThan(v2) {
-		return true
-	}
-	return false
+	return v1.LessThan(v2)
 }
 
 func checkFirstCharacter(input string) string {
