@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"fmt"
+	"github.com/hashicorp/go-version"
 	"log"
 	"regexp"
 	"sort"
@@ -67,7 +68,7 @@ func dataSourceAviatrixFirewallInstanceImagesRead(d *schema.ResourceData, meta i
 		fI := make(map[string]interface{})
 		fI["firewall_image"] = image.Image
 		listVersion := image.Version
-		sort.Sort(byVersion(listVersion))
+		sort.Sort(sort.Reverse(byVersion(listVersion)))
 		fI["firewall_image_version"] = listVersion
 		listSize := image.Size
 		sort.Sort(sort.Reverse(bySize(listSize)))
@@ -94,55 +95,48 @@ func (p byVersion) Swap(i, j int) {
 func (p byVersion) Less(i, j int) bool {
 	if checkFirstCharacter(p[i]) == "R" {
 		if strings.Contains(p[i], "_") {
-			return compareVersion(p[i], p[j], "_", "", "[^0-9.]+")
+			return versionFormat1(p[i], p[j], "_")
 		} else if strings.Contains(p[i], "-") {
-			return compareVersion(p[i], p[j], "-", "", "[^0-9.]+")
+			return versionFormat1(p[i], p[j], "-")
 		} else {
 			log.Printf("need to add a new method sort this version format")
 		}
 	} else if checkFirstCharacter(p[i]) == "P" {
-		return compareVersion3(p[i], p[j], "-")
+		return versionFormat2(p[i], p[j], "-")
 	} else {
-		return compareVersion(p[i], p[j], ".", ".", "[^0-9]+")
+		return compareVersion(p[i], p[j])
 	}
 	return false
 }
 
-//format: xx.xx.xx
-//format: Rab-xxx.xxx and Rab_abcxx.x
-func compareVersion(version1, version2, splitFlag, secondFlag, regularExpression string) bool {
-	imageVersionArray1 := strings.Split(version1, splitFlag)
-	imageVersionArray2 := strings.Split(version2, splitFlag)
-	for index := range imageVersionArray1 {
-		reg, err := regexp.Compile(regularExpression)
-		if err != nil {
-			log.Printf("[WARN] Failed to remove character value %s: %v", imageVersionArray1[index], err)
-		}
-		v1SliceString := reg.ReplaceAllString(imageVersionArray1[index], secondFlag)
-		v2SliceString := reg.ReplaceAllString(imageVersionArray2[index], secondFlag)
-		int1, err := strconv.ParseFloat(v1SliceString, 32)
-		if err != nil {
-			log.Printf("[WARN] Failed to convert string to float %s: %v", v1SliceString, err)
-		}
-		int2, err := strconv.ParseFloat(v2SliceString, 32)
-		if err != nil {
-			log.Printf("[WARN] Failed to convert string to float %s: %v", v2SliceString, err)
-		}
-		if int1 > int2 {
-			return true
-		}
-		if int1 < int2 {
-			return false
-		}
+//Rxx.xx-xxx.xxx
+//Rxx.xx_revx.x
+func versionFormat1(version1, version2, flag string) bool {
+	//[Rxx.xx, xxx.xxx]
+	//[Rxx.xx, revx.x]
+	versionArray1 := strings.Split(version1, flag)
+	versionArray2 := strings.Split(version2, flag)
+	reg, _ := regexp.Compile("[^0-9.-]+")
+	if reg.ReplaceAllString(versionArray1[0], "") == reg.ReplaceAllString(versionArray2[0], "") {
+		return compareVersion(reg.ReplaceAllString(versionArray1[1], ""), reg.ReplaceAllString(versionArray2[1], ""))
 	}
-	return true
+	return compareVersion(reg.ReplaceAllString(versionArray1[0], ""), reg.ReplaceAllString(versionArray2[0], ""))
 }
 
-//format: Pa-bc-xx.xx.xx
-func compareVersion3(version1, version2, flag string) bool {
-	imageVersionArray1 := strings.Split(version1, flag)
-	imageVersionArray2 := strings.Split(version2, flag)
-	return compareVersion(imageVersionArray1[2], imageVersionArray2[2], ".", ".", "[^0-9]+")
+//PA-VM-xx.xxx.xx
+func versionFormat2(version1, version2, flag string) bool {
+	versionArray1 := strings.Split(version1, flag)
+	versionArray2 := strings.Split(version2, flag)
+	return compareVersion(versionArray1[2], versionArray2[2])
+}
+
+func compareVersion(version1, version2 string) bool {
+	v1, _ := version.NewVersion(version1)
+	v2, _ := version.NewVersion(version2)
+	if v1.LessThan(v2) {
+		return true
+	}
+	return false
 }
 
 func checkFirstCharacter(input string) string {
