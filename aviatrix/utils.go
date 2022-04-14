@@ -256,23 +256,31 @@ func compareVersion(version1, version2 string) bool {
 	return v1.GreaterThan(v2)
 }
 
-// checkVersionFormat removes special characters, only keep character, number, point and minus in a version
+// checkVersionFormat removes special characters, only keep dot, hyphen, alphanumerics in a version
 func checkVersionFormat(version string) string {
 	reg, _ := regexp.Compile("[^a-zA-Z0-9.-]+")
 	version = reg.ReplaceAllString(version, "")
-	pointNumber := strings.Count(version, ".")
-	if pointNumber > 2 {
-		version = removePoint(version)
+	dotNumber := strings.Count(version, ".")
+	if dotNumber > 2 {
+		version = removeAfterThirdDotValue(version)
 	}
 	return version
 }
 
-// removePoint removes all points after the second point in a version
-func removePoint(version string) string {
-	version = strings.Replace(version, ".", "$", 2)
-	version = strings.Replace(version, ".", "", -1)
-	version = strings.Replace(version, "$", ".", -1)
-	return version
+// removeAfterThirdDotValue removes everything after the third dot in a version
+func removeAfterThirdDotValue(version string) string {
+	time := 0
+	result := version
+	for i := 0; i < len(version); i++ {
+		if version[i] == '.' {
+			time++
+		}
+		if time == 3 {
+			result = version[0:i]
+			break
+		}
+	}
+	return result
 }
 
 func compareImageSize(imageSize1, imageSize2, flag string, indexFlag int) bool {
