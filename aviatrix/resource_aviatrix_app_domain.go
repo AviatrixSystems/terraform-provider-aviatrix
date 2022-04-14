@@ -40,8 +40,8 @@ func resourceAviatrixAppDomain() *schema.Resource {
 									"cidr": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.IsCIDR,
-										Description:  "CIDR block this expression matches.",
+										ValidateFunc: validation.Any(validation.IsCIDR, validation.IsIPAddress),
+										Description:  "CIDR block or IP Address this expression matches.",
 									},
 									"type": {
 										Type:         schema.TypeString,
@@ -114,6 +114,7 @@ func marshalAppDomainInput(d *schema.ResourceData) (*goaviatrix.AppDomain, error
 					return nil, fmt.Errorf("%q must be empty when %q is set", key, "cidr")
 				}
 			}
+
 			filter = &goaviatrix.AppDomainMatchExpression{
 				CIDR: selectorInfo["cidr"].(string),
 			}
