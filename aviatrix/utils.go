@@ -3,7 +3,6 @@ package aviatrix
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -202,20 +201,20 @@ func DiffSuppressFuncGatewayVpcId(k, old, new string, d *schema.ResourceData) bo
 }
 
 // sortVersion sorts the firewall_image_version list
-func sortVersion(versionList []string, i, j int) bool {
-	if checkFirstCharacter(versionList[i]) == "R" {
-		if strings.Contains(versionList[i], "_") {
-			return versionFormat1(versionList[i], versionList[j], "_")
-		} else if strings.Contains(versionList[i], "-") {
-			return versionFormat1(versionList[i], versionList[j], "-")
-		} else {
-			log.Printf("need to add a new method sort this version format")
-			return false
-		}
-	} else if checkFirstCharacter(versionList[i]) == "P" {
-		return versionFormat2(versionList[i], versionList[j], "-")
+func sortVersion(versionList []string, i, j int, imageName string) bool {
+	if strings.Contains(imageName, "CloudGuard Next-Gen Firewall") {
+		return compareCheckpointVersion(versionList[i], versionList[j], "_")
+	} else if strings.Contains(imageName, "Check Point CloudGuard IaaS") &&
+		(strings.Contains(imageName, "Next-Gen Firewall with Threat Prevention") ||
+			strings.Contains(imageName, "All-In-One") ||
+			strings.Contains(imageName, "Firewall & Threat Prevention")) {
+		return compareCheckpointVersion(versionList[i], versionList[j], "-")
+	} else if strings.Contains(imageName, "Palo Alto Networks VM-Series Bundle") {
+		return comparePAVersion(versionList[i], versionList[j], "-")
 	} else {
-		return compareVersion(versionList[i], versionList[j])
+		version1 := checkVersionFormat(versionList[i])
+		version2 := checkVersionFormat(versionList[j])
+		return compareVersion(version1, version2)
 	}
 }
 
@@ -231,8 +230,8 @@ func sortSize(sizeList []string, i, j int) bool {
 	return false
 }
 
-// versionFormat1 sorts the firewall_image_version format like: R81.10-335.883 && R81.10_rev1.0
-func versionFormat1(version1, version2, flag string) bool {
+// compareCheckpointVersion compares firewall_image_version format like: R81.10-335.883 && R81.10_rev1.0
+func compareCheckpointVersion(version1, version2, flag string) bool {
 	versionArray1 := strings.Split(version1, flag)
 	versionArray2 := strings.Split(version2, flag)
 	reg, _ := regexp.Compile("[^0-9.-]+")
@@ -242,23 +241,37 @@ func versionFormat1(version1, version2, flag string) bool {
 	return compareVersion(reg.ReplaceAllString(versionArray1[0], ""), reg.ReplaceAllString(versionArray2[0], ""))
 }
 
-// versionFormat2 sorts the firewall_image_version format like: PA-VM-10.1.0
-func versionFormat2(version1, version2, flag string) bool {
+// comparePAVersion compares firewall_image_version format like: PA-VM-10.1.0
+func comparePAVersion(version1, version2, flag string) bool {
 	versionArray1 := strings.Split(version1, flag)
 	versionArray2 := strings.Split(version2, flag)
 	return compareVersion(versionArray1[2], versionArray2[2])
 }
 
-// compareVersion sorts the Semantic Version
+// compareVersion compares two Semantic Versions
 func compareVersion(version1, version2 string) bool {
 	v1, _ := version.NewVersion(version1)
 	v2, _ := version.NewVersion(version2)
 	return v1.GreaterThan(v2)
 }
 
-func checkFirstCharacter(input string) string {
-	firstCharacter := input[0:1]
-	return firstCharacter
+// checkVersionFormat removes special characters, only keep character, number, point and minus in a version
+func checkVersionFormat(version string) string {
+	reg, _ := regexp.Compile("[^a-zA-Z0-9.-]+")
+	version = reg.ReplaceAllString(version, "")
+	pointNumber := strings.Count(version, ".")
+	if pointNumber > 2 {
+		version = removePoint(version)
+	}
+	return version
+}
+
+// removePoint removes all points after the second point in a version
+func removePoint(version string) string {
+	version = strings.Replace(version, ".", "$", 2)
+	version = strings.Replace(version, ".", "", -1)
+	version = strings.Replace(version, "$", ".", -1)
+	return version
 }
 
 func compareImageSize(imageSize1, imageSize2, flag string, indexFlag int) bool {
