@@ -23,8 +23,8 @@ As of Controller version 6.7+ and provider version 2.22.0+, security domain will
 - For resources **aviatrix_aws_tgw_security_domain**, **aviatrix_segmentation_security_domain**, **aviatrix_segmentation_security_domain_association** and **aviatrix_segmentation_security_domain_connection_policy**:
   1. Remove the states of the resources.
      - Please refer to this [link](https://www.terraform.io/cli/commands/state/rm) for instructions on removing the state of a resource.
-  1. In the configuration file, rename the resources by replacing `security_domain` with `network_domain`.
-  2. Import the existing infrastructures to the renamed resources.
+  2. In the configuration file, rename the resources by replacing `security_domain` with `network_domain`.
+  3. Import the existing infrastructures to the renamed resources.
      - Please refer to this [link](https://www.terraform.io/cli/import) for instructions on importing the resource.
 
 - For resources **aviatrix_aws_tgw_connect**, **aviatrix_aws_tgw_directconnect**, **aviatrix_aws_tgw_vpc_attachment**:
