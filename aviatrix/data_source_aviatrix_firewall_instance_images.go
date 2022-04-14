@@ -66,7 +66,7 @@ func dataSourceAviatrixFirewallInstanceImagesRead(d *schema.ResourceData, meta i
 		sort.Slice(versionList, func(i, j int) bool {
 			return sortVersion(versionList, i, j)
 		})
-		fI["firewall_image_version"] = reverseArray(versionList)
+		fI["firewall_image_version"] = versionList
 		sizeList := image.Size
 		sort.Slice(sizeList, func(i, j int) bool {
 			return sortSize(sizeList, i, j)

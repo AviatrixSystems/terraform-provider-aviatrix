@@ -201,14 +201,7 @@ func DiffSuppressFuncGatewayVpcId(k, old, new string, d *schema.ResourceData) bo
 	return false
 }
 
-func reverseArray(arr []string) []string {
-	for i, j := 0, len(arr)-1; i < j; i, j = i+1, j-1 {
-		arr[i], arr[j] = arr[j], arr[i]
-	}
-	return arr
-}
-
-// sort the firewall_image_version list
+// sortVersion sorts the firewall_image_version list
 func sortVersion(versionList []string, i, j int) bool {
 	if checkFirstCharacter(versionList[i]) == "R" {
 		if strings.Contains(versionList[i], "_") {
@@ -217,16 +210,16 @@ func sortVersion(versionList []string, i, j int) bool {
 			return versionFormat1(versionList[i], versionList[j], "-")
 		} else {
 			log.Printf("need to add a new method sort this version format")
+			return false
 		}
 	} else if checkFirstCharacter(versionList[i]) == "P" {
 		return versionFormat2(versionList[i], versionList[j], "-")
 	} else {
 		return compareVersion(versionList[i], versionList[j])
 	}
-	return false
 }
 
-// sort the firewall_size list
+// sortSize sorts the firewall_size list
 func sortSize(sizeList []string, i, j int) bool {
 	if strings.Contains(sizeList[i], "-") {
 		return compareImageSize(sizeList[i], sizeList[j], "-", 2)
@@ -238,7 +231,7 @@ func sortSize(sizeList []string, i, j int) bool {
 	return false
 }
 
-// this function can sort the firewall_image_version format like: R81.10-335.883 && R81.10_rev1.0
+// versionFormat1 sorts the firewall_image_version format like: R81.10-335.883 && R81.10_rev1.0
 func versionFormat1(version1, version2, flag string) bool {
 	versionArray1 := strings.Split(version1, flag)
 	versionArray2 := strings.Split(version2, flag)
@@ -249,18 +242,18 @@ func versionFormat1(version1, version2, flag string) bool {
 	return compareVersion(reg.ReplaceAllString(versionArray1[0], ""), reg.ReplaceAllString(versionArray2[0], ""))
 }
 
-// this function can sort the firewall_image_version format like: PA-VM-10.1.0
+// versionFormat2 sorts the firewall_image_version format like: PA-VM-10.1.0
 func versionFormat2(version1, version2, flag string) bool {
 	versionArray1 := strings.Split(version1, flag)
 	versionArray2 := strings.Split(version2, flag)
 	return compareVersion(versionArray1[2], versionArray2[2])
 }
 
-// this function can sort the Semantic Version
+// compareVersion sorts the Semantic Version
 func compareVersion(version1, version2 string) bool {
 	v1, _ := version.NewVersion(version1)
 	v2, _ := version.NewVersion(version2)
-	return v1.LessThan(v2)
+	return v1.GreaterThan(v2)
 }
 
 func checkFirstCharacter(input string) string {
