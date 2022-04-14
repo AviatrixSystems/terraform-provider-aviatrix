@@ -106,22 +106,37 @@ func marshalAppDomainInput(d *schema.ResourceData) (*goaviatrix.AppDomain, error
 			return nil, fmt.Errorf("match expressions block cannot be empty")
 		}
 		selectorInfo := selectorInterface.(map[string]interface{})
-		filter := &goaviatrix.AppDomainMatchExpression{
-			CIDR:        selectorInfo["cidr"].(string),
-			Type:        selectorInfo["type"].(string),
-			ResId:       selectorInfo["res_id"].(string),
-			AccountId:   selectorInfo["account_id"].(string),
-			AccountName: selectorInfo["account_name"].(string),
-			Region:      selectorInfo["region"].(string),
-			Zone:        selectorInfo["zone"].(string),
-		}
+		var filter *goaviatrix.AppDomainMatchExpression
 
-		if _, ok := selectorInfo["tags"]; ok {
-			tags := make(map[string]string)
-			for key, value := range selectorInfo["tags"].(map[string]interface{}) {
-				tags[key] = value.(string)
+		if mapContains(selectorInfo, "cidr") {
+			for _, key := range []string{"type", "res_id", "account_id", "account_name", "region", "zone", "tags"} {
+				if mapContains(selectorInfo, key) {
+					return nil, fmt.Errorf("%q must be empty when %q is set", key, "cidr")
+				}
 			}
-			filter.Tags = tags
+			filter = &goaviatrix.AppDomainMatchExpression{
+				CIDR: selectorInfo["cidr"].(string),
+			}
+		} else {
+			if !mapContains(selectorInfo, "type") {
+				return nil, fmt.Errorf("%q is required when %q is empty", "type", "cidr")
+			}
+			filter = &goaviatrix.AppDomainMatchExpression{
+				Type:        selectorInfo["type"].(string),
+				ResId:       selectorInfo["res_id"].(string),
+				AccountId:   selectorInfo["account_id"].(string),
+				AccountName: selectorInfo["account_name"].(string),
+				Region:      selectorInfo["region"].(string),
+				Zone:        selectorInfo["zone"].(string),
+			}
+
+			if _, ok := selectorInfo["tags"]; ok {
+				tags := make(map[string]string)
+				for key, value := range selectorInfo["tags"].(map[string]interface{}) {
+					tags[key] = value.(string)
+				}
+				filter.Tags = tags
+			}
 		}
 
 		appDomain.Selector.Expressions = append(appDomain.Selector.Expressions, filter)
@@ -135,7 +150,7 @@ func resourceAviatrixAppDomainCreate(ctx context.Context, d *schema.ResourceData
 
 	appDomain, err := marshalAppDomainInput(d)
 	if err != nil {
-		return diag.Errorf("failed to marshal inputs for App Domain during create: %s", err)
+		return diag.Errorf("invalid inputs for App Domain during create: %s", err)
 	}
 
 	flag := false
@@ -211,7 +226,7 @@ func resourceAviatrixAppDomainUpdate(ctx context.Context, d *schema.ResourceData
 	if d.HasChanges("name", "selector") {
 		appDomain, err := marshalAppDomainInput(d)
 		if err != nil {
-			return diag.Errorf("failed to marshal inputs for App Domain during update: %s", err)
+			return diag.Errorf("invalid inputs for App Domain during update: %s", err)
 		}
 
 		err = client.UpdateAppDomain(ctx, appDomain, uuid)

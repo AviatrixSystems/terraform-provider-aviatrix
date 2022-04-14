@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -195,4 +196,22 @@ func DiffSuppressFuncGatewayVpcId(k, old, new string, d *schema.ResourceData) bo
 	}
 
 	return false
+}
+
+func mapContains(m map[string]interface{}, key string) bool {
+	val, exists := m[key]
+	if !exists {
+		return false
+	}
+
+	switch val.(type) {
+	case string:
+		return len(val.(string)) > 0
+	case map[string]interface{}:
+		return len(val.(map[string]interface{})) > 0
+	case []interface{}:
+		return len(val.([]interface{})) > 0
+	default:
+		return !reflect.ValueOf(val).IsZero()
+	}
 }
