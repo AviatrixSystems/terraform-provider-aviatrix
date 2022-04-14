@@ -96,7 +96,7 @@ func resourceAviatrixAwsTgwNetworkDomainCreate(ctx context.Context, d *schema.Re
 	defer resourceAviatrixAwsTgwNetworkDomainReadIfRequired(ctx, d, meta, &flag)
 
 	if err := client.CreateSecurityDomain(networkDomain); err != nil {
-		return diag.Errorf("could not create security domain: %v", err)
+		return diag.Errorf("could not create network domain: %v", err)
 	}
 
 	return resourceAviatrixAwsTgwNetworkDomainReadIfRequired(ctx, d, meta, &flag)
