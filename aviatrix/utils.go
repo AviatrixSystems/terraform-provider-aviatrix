@@ -204,13 +204,13 @@ func mapContains(m map[string]interface{}, key string) bool {
 		return false
 	}
 
-	switch val.(type) {
+	switch v := val.(type) {
 	case string:
-		return len(val.(string)) > 0
+		return len(v) > 0
 	case map[string]interface{}:
-		return len(val.(map[string]interface{})) > 0
+		return len(v) > 0
 	case []interface{}:
-		return len(val.([]interface{})) > 0
+		return len(v) > 0
 	default:
 		return !reflect.ValueOf(val).IsZero()
 	}
