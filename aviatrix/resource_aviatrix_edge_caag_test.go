@@ -35,6 +35,7 @@ func TestAccAviatrixEdgeCaag_basic(t *testing.T) {
 					testAccCheckEdgeCaagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "management_interface_config", "DHCP"),
+					resource.TestCheckResourceAttr(resourceName, "management_egress_ip_prefix", "10.60.0.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "wan_interface_ip_prefix", "10.60.0.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "wan_default_gateway_ip", "10.60.0.0"),
 					resource.TestCheckResourceAttr(resourceName, "lan_interface_ip_prefix", "10.60.0.0/24"),
@@ -44,7 +45,7 @@ func TestAccAviatrixEdgeCaag_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"image_download_path"},
+				ImportStateVerifyIgnore: []string{"ztp_file_type", "ztp_file_download_path"},
 			},
 		},
 	})
@@ -55,10 +56,12 @@ func testAccEdgeCaagBasic(name string, path string) string {
 resource "aviatrix_edge_caag" "test" {
 	name                        = "%s"
 	management_interface_config = "DHCP"
+	management_egress_ip_prefix = "10.60.0.0/24"
 	wan_interface_ip_prefix     = "10.60.0.0/24"
 	wan_default_gateway_ip      = "10.60.0.0"
 	lan_interface_ip_prefix     = "10.60.0.0/24"
-	image_download_path         = "%s"
+	ztp_file_type               = "iso"
+	ztp_file_download_path      = "%s"
 }
    `, name, path)
 }

@@ -17,10 +17,12 @@ The **aviatrix_edge_caag** resource creates the Aviatrix Edge as a CaaG. This re
 resource "aviatrix_edge_caag" "test" {
   name                        = "edge-test"
   management_interface_config = "DHCP"
+  management_egress_ip_prefix = "10.60.0.0/24"
   wan_interface_ip_prefix     = "10.60.0.0/24"
   wan_default_gateway_ip      = "10.60.0.0"
   lan_interface_ip_prefix     = "10.60.0.0/24"
-  image_download_path         = "/image/download/path"
+  ztp_file_type               = "iso"
+  ztp_file_download_path      = "/image/download/path"
   local_as_number             = "65000"
   prepend_as_path = [
     "65000",
@@ -33,6 +35,7 @@ resource "aviatrix_edge_caag" "test" {
 resource "aviatrix_edge_caag" "test" {
   name                           = "edge-test"
   management_interface_config    = "Static"
+  management_egress_ip_prefix    = "10.60.0.0/24"
   wan_interface_ip_prefix        = "10.60.0.0/24"
   wan_default_gateway_ip         = "10.60.0.0"
   lan_interface_ip_prefix        = "10.60.0.0/24"
@@ -40,7 +43,8 @@ resource "aviatrix_edge_caag" "test" {
   management_default_gateway_ip  = "10.60.0.0"
   dns_server_ip                  = "10.60.0.0"
   secondary_dns_server_ip        = "10.60.0.0"
-  image_download_path            = "/image/download/path"
+  ztp_file_type                  = "iso"
+  ztp_file_download_path         = "/image/download/path"
   local_as_number                = "65000"
   prepend_as_path = [
     "65000",
@@ -56,10 +60,12 @@ The following arguments are supported:
 ### Required
 * `name` - (Required) Edge as a CaaG name.
 * `management_interface_config` - (Required) Management interface configuration. Valid values: "DHCP", "Static". 
+* `management_egress_ip_prefix` - (Required) Management egress gateway IP and subnet prefix.
 * `wan_interface_ip_prefix` - (Required) WAN interface IP and subnet prefix.
 * `wan_default_gateway_ip` - (Required) WAN default gateway IP.
 * `lan_interface_ip_prefix` - (Required) LAN interface IP and subnet prefix.
-* `image_download_path` - (Required) The folder path where the image file will be downloaded.
+* `ztp_file_type` - (Required) ZTP file type. Valid values: "iso", "cloud-init".
+* `ztp_file_download_path` - (Required) The folder path where the ZTP file will be downloaded.
 
 ### Optional
 * `enable_over_private_network` - (Optional) Indicates whether it is public or private connection between controller and gateway. Valid values: true, false. Default value: false.

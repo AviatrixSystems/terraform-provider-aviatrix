@@ -37,6 +37,11 @@ func resourceAviatrixEdgeCaag() *schema.Resource {
 				Description:  "Management interface configuration. Valid values: 'DHCP' and 'Static'.",
 				ValidateFunc: validation.StringInSlice([]string{"DHCP", "Static"}, false),
 			},
+			"management_egress_ip_prefix": {
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Management egress gateway IP / prefix.",
+			},
 			"wan_interface_ip_prefix": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -90,14 +95,21 @@ func resourceAviatrixEdgeCaag() *schema.Resource {
 				Description:  "Secondary DNS server IP.",
 				ValidateFunc: validation.IsIPAddress,
 			},
-			"image_download_path": {
+			"ztp_file_type": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				Description:  "ZTP file type.",
+				ValidateFunc: validation.StringInSlice([]string{"iso", "cloud-init"}, false),
+			},
+			"ztp_file_download_path": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return old != ""
 				},
-				Description: "The location where the Edge as a CaaG image will be stored.",
+				Description: "The location where the Edge as a CaaG ZTP file will be stored.",
 			},
 			"local_as_number": {
 				Type:         schema.TypeString,
@@ -129,6 +141,7 @@ func marshalEdgeCaagInput(d *schema.ResourceData) *goaviatrix.EdgeCaag {
 	edgeCaag := &goaviatrix.EdgeCaag{
 		Name:                        d.Get("name").(string),
 		ManagementInterfaceConfig:   d.Get("management_interface_config").(string),
+		ManagementEgressIpPrefix:    d.Get("management_egress_ip_prefix").(string),
 		EnableOverPrivateNetwork:    d.Get("enable_over_private_network").(bool),
 		WanInterfaceIpPrefix:        d.Get("wan_interface_ip_prefix").(string),
 		WanDefaultGatewayIp:         d.Get("wan_default_gateway_ip").(string),
@@ -137,7 +150,8 @@ func marshalEdgeCaagInput(d *schema.ResourceData) *goaviatrix.EdgeCaag {
 		ManagementDefaultGatewayIp:  d.Get("management_default_gateway_ip").(string),
 		DnsServerIp:                 d.Get("dns_server_ip").(string),
 		SecondaryDnsServerIp:        d.Get("secondary_dns_server_ip").(string),
-		ImageDownloadPath:           d.Get("image_download_path").(string),
+		ZtpFileType:                 d.Get("ztp_file_type").(string),
+		ZtpFileDownloadPath:         d.Get("ztp_file_download_path").(string),
 	}
 
 	return edgeCaag
@@ -225,6 +239,7 @@ func resourceAviatrixEdgeCaagRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("name", edgeCaag.Name)
 	d.Set("enable_over_private_network", edgeCaag.EnableOverPrivateNetwork)
+	d.Set("management_egress_ip_prefix", edgeCaag.ManagementEgressIpPrefix)
 	d.Set("wan_interface_ip_prefix", edgeCaag.WanInterfaceIpPrefix)
 	d.Set("wan_default_gateway_ip", edgeCaag.WanDefaultGatewayIp)
 	d.Set("lan_interface_ip_prefix", edgeCaag.LanInterfaceIpPrefix)
@@ -259,6 +274,15 @@ func resourceAviatrixEdgeCaagUpdate(ctx context.Context, d *schema.ResourceData,
 	client := meta.(*goaviatrix.Client)
 
 	d.Partial(true)
+	if d.HasChanges("management_egress_ip_prefix") {
+		edgeCaag := marshalEdgeCaagInput(d)
+
+		err := client.UpdateEdgeCaag(ctx, edgeCaag)
+		if err != nil {
+			return diag.Errorf("could not update manage_egress_ip_prefix during Edge as a CaaG update: %v", err)
+		}
+	}
+
 	gateway := &goaviatrix.TransitVpc{
 		GwName: d.Get("name").(string),
 	}
@@ -303,16 +327,24 @@ func resourceAviatrixEdgeCaagDelete(ctx context.Context, d *schema.ResourceData,
 
 	name := d.Get("name").(string)
 	state := d.Get("state").(string)
-	imageDownloadPath := d.Get("image_download_path").(string)
+	ztpFileDownloadPath := d.Get("ztp_file_download_path").(string)
+	ztpFileType := d.Get("ztp_file_type").(string)
 
 	err := client.DeleteEdgeCaag(ctx, name, state)
 	if err != nil {
 		return diag.Errorf("could not delete Edge as a CaaG: %v", err)
 	}
 
-	err = os.Remove(imageDownloadPath + "/" + name + ".iso")
+	var fileName string
+	if ztpFileType == "iso" {
+		fileName = ztpFileDownloadPath + "/" + name + ".iso"
+	} else {
+		fileName = ztpFileDownloadPath + "/" + name + "-cloud-init.txt"
+	}
+
+	err = os.Remove(fileName)
 	if err != nil {
-		log.Printf("[WARN] could not remove the image file: %v", err)
+		log.Printf("[WARN] could not remove the ztp file: %v", err)
 	}
 
 	return nil
