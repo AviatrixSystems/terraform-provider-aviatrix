@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
@@ -109,7 +110,7 @@ func resourceAviatrixMicrosegPolicyList() *schema.Resource {
 	}
 }
 
-func marshalMicrosegPolicyListInput(d *schema.ResourceData) *goaviatrix.MicrosegPolicyList {
+func marshalMicrosegPolicyListInput(d *schema.ResourceData) (*goaviatrix.MicrosegPolicyList, error) {
 	policyList := &goaviatrix.MicrosegPolicyList{}
 
 	policies := d.Get("policies").([]interface{})
@@ -139,34 +140,42 @@ func marshalMicrosegPolicyListInput(d *schema.ResourceData) *goaviatrix.Microseg
 			microsegPolicy.Watch = watch.(bool)
 		}
 
-		for _, portRangeInterface := range policy["port_ranges"].([]interface{}) {
-			portRangeMap := portRangeInterface.(map[string]interface{})
-			portRange := &goaviatrix.MicrosegPortRange{
-				Lo: portRangeMap["lo"].(int),
+		if mapContains(policy, "port_ranges") {
+			if microsegPolicy.Protocol == "ICMP" {
+				return nil, fmt.Errorf("%q must not be set when %q is %q", "port_ranges", "protocol", "ICMP")
 			}
+			for _, portRangeInterface := range policy["port_ranges"].([]interface{}) {
+				portRangeMap := portRangeInterface.(map[string]interface{})
+				portRange := &goaviatrix.MicrosegPortRange{
+					Lo: portRangeMap["lo"].(int),
+				}
 
-			if hi, hiOk := portRangeMap["hi"]; hiOk {
-				portRange.Hi = hi.(int)
+				if hi, hiOk := portRangeMap["hi"]; hiOk {
+					portRange.Hi = hi.(int)
+				}
+
+				microsegPolicy.PortRanges = append(microsegPolicy.PortRanges, *portRange)
 			}
-
-			microsegPolicy.PortRanges = append(microsegPolicy.PortRanges, *portRange)
 		}
 
 		policyList.Policies = append(policyList.Policies, *microsegPolicy)
 	}
 
-	return policyList
+	return policyList, nil
 }
 
 func resourceAviatrixMicrosegPolicyListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	policyList := marshalMicrosegPolicyListInput(d)
+	policyList, err := marshalMicrosegPolicyListInput(d)
+	if err != nil {
+		return diag.Errorf("invalid inputs for Micro-segmentation Policy during create: %s\n", err)
+	}
 
 	flag := false
 	defer resourceAviatrixMicrosegPolicyListReadIfRequired(ctx, d, meta, &flag)
 
-	err := client.CreateMicrosegPolicyList(ctx, policyList)
+	err = client.CreateMicrosegPolicyList(ctx, policyList)
 	if err != nil {
 		return diag.Errorf("failed to create Micro-segmentation Policy List: %s", err)
 	}
@@ -233,8 +242,11 @@ func resourceAviatrixMicrosegPolicyListUpdate(ctx context.Context, d *schema.Res
 
 	d.Partial(true)
 	if d.HasChange("policies") {
-		policyList := marshalMicrosegPolicyListInput(d)
-		err := client.UpdateMicrosegPolicyList(ctx, policyList)
+		policyList, err := marshalMicrosegPolicyListInput(d)
+		if err != nil {
+			return diag.Errorf("invalid inputs for Micro-segmentation Policy during update: %s\n", err)
+		}
+		err = client.UpdateMicrosegPolicyList(ctx, policyList)
 		if err != nil {
 			return diag.Errorf("failed to update Micro-segmentation policies: %s", err)
 		}
