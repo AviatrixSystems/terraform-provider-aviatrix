@@ -109,7 +109,7 @@ func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitG
 	}
 	check := func(action, method, reason string, ret bool) error {
 		if !ret {
-			if strings.Contains(reason, "does not exist") {
+			if strings.Contains(reason, "does not exist") || strings.Contains(reason, "not found") {
 				return ErrNotFound
 			}
 			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
