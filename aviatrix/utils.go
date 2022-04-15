@@ -235,7 +235,8 @@ func sortSize(sizeList []string, i, j int) bool {
 func compareCheckpointVersion(version1, version2, flag string) bool {
 	versionArray1 := strings.Split(version1, flag)
 	versionArray2 := strings.Split(version2, flag)
-	reg, _ := regexp.Compile("[^0-9.-]+")
+	const DotHyphenNumberRegexp = "[^0-9.-]+"
+	reg := regexp.MustCompile(DotHyphenNumberRegexp)
 	if reg.ReplaceAllString(versionArray1[0], "") == reg.ReplaceAllString(versionArray2[0], "") {
 		return compareVersion(reg.ReplaceAllString(versionArray1[1], ""), reg.ReplaceAllString(versionArray2[1], ""))
 	}
@@ -258,7 +259,8 @@ func compareVersion(version1, version2 string) bool {
 
 // checkVersionFormat removes special characters, only keep dot, hyphen, alphanumerics in a version
 func checkVersionFormat(version string) string {
-	reg, _ := regexp.Compile("[^a-zA-Z0-9.-]+")
+	const DotHyphenAlphanumericsRegexp = "[^a-zA-Z0-9.-]+"
+	reg := regexp.MustCompile(DotHyphenAlphanumericsRegexp)
 	version = reg.ReplaceAllString(version, "")
 	dotNumber := strings.Count(version, ".")
 	if dotNumber > 2 {
@@ -286,9 +288,10 @@ func removeAfterThirdDotValue(version string) string {
 func compareImageSize(imageSize1, imageSize2, flag string, indexFlag int) bool {
 	imageSizeArray1 := strings.Split(imageSize1, flag)
 	imageSizeArray2 := strings.Split(imageSize2, flag)
+	const NumberRegexp = "[^0-9]+"
+	reg := regexp.MustCompile(NumberRegexp)
 	for index := range imageSizeArray1 {
 		if index >= indexFlag {
-			reg, _ := regexp.Compile("[^0-9]+")
 			imageSizeIndex1 := reg.ReplaceAllString(imageSizeArray1[index], "")
 			imageSizeIndex2 := reg.ReplaceAllString(imageSizeArray2[index], "")
 			int1, _ := strconv.Atoi(imageSizeIndex1)
