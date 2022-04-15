@@ -15,11 +15,11 @@ The **aviatrix_aws_tgw_vpc_attachment** resource manages the attaching & detachi
 ```hcl
 # Create an Aviatrix AWS TGW VPC Attachment
 resource "aviatrix_aws_tgw_vpc_attachment" "test_aws_tgw_vpc_attachment" {
-  tgw_name             = "test-tgw"
-  region               = "us-east-1"
-  security_domain_name = "my-sdn"
-  vpc_account_name     = "test-account"
-  vpc_id               = "vpc-0e2fac2b91c6697b3"
+  tgw_name            = "test-tgw"
+  region              = "us-east-1"
+  network_domain_name = "my-ndn"
+  vpc_account_name    = "test-account"
+  vpc_id              = "vpc-0e2fac2b91c6697b3"
 }
 ```
 
@@ -30,9 +30,13 @@ The following arguments are supported:
 ### Required
 * `tgw_name` - (Required) Name of the AWS TGW.
 * `region` - (Required) AWS Region of the TGW.
-* `security_domain_name` - (Required & ForceNew) The name of the security domain, to which the VPC will be attached to. If changed, the VPC will be detached from the old domain, and attached to the new domain.
 * `vpc_account_name` - (Required) The name of the cloud account in the Aviatrix controller, which is associated with the VPC.
 * `vpc_id` - (Required) VPC ID of the VPC to be attached to the specified `security_domain_name`.
+
+!> **WARNING:** Attribute `security_domain_name` will be deprecated in future releases. Please use the attribute `network_domain_name` instead. Either `security_domain_name` or `network_domain_name` must be configured.
+
+* `security_domain_name` - (optional) The name of the security domain, to which the VPC will be attached to. If changed, the VPC will be detached from the old domain, and attached to the new domain.
+* `network_domain_name` - (optional) The name of the network domain, to which the VPC will be attached to. If changed, the VPC will be detached from the old domain, and attached to the new domain.
 
 -> **NOTE:** If used to attach/detach FireNet Transit Gateway to/from TGW Firewall Domain, `vpc_id` is the ID of the Security VPC, and `security_domain_name` is the domain name of the Aviatrix Firewall Domain in TGW.
 

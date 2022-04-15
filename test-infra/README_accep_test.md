@@ -65,6 +65,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_aws_tgw                     | SKIP_AWS_TGW                       | aviatrix_account + AWS_VPC_ID, AWS_REGION, AWS_VPC_TGW_ID                      |
 | aviatrix_aws_tgw_directconnect       | SKIP_AWS_TGW_DIRECTCONNECT         | aviatrix_aws_tgw + AWS_DX_GATEWAY                                              |
 | aviatrix_aws_tgw_intra_domain_inspection| SKIP_AWS_TGW_INTRA_DOMAIN_INSPECTION | aviatrix_account + AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY     |
+| aviatrix_aws_tgw_network_domain      | SKIP_AWS_TGW_NETWORK_DOMAIN        | aviatrix_account + AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY          |
 | aviatrix_aws_tgw_peering             | SKIP_AWS_TGW_PEERING               | aviatrix_account                                                               |
 | aviatrix_aws_tgw_peering_domain_conn | SKIP_AWS_TGW_PEERING_DOMAIN_CONN   | aviatrix_account                                                               |
 | aviatrix_aws_tgw_security_domain     | SKIP_AWS_TGW_SECURITY_DOMAIN       | aviatrix_account + AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY          |
@@ -124,6 +125,9 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_rbac_group_user_attachment  | SKIP_RBAC_GROUP_USER_ATTACHMENT    | aviatrix_account_user                                                          |
 | aviatrix_remote_syslog               | SKIP_REMOTE_SYSLOG                 | N/A                                                                            |
 | aviatrix_saml_endpoint               | SKIP_SAML_ENDPOINT                 | IDP_METADATA, IDP_METADATA_TYPE                                                |
+| aviatrix_segmentation_network_domain | SKIP_SEGMENTATION_NETWORK_DOMAIN   | N/A                                                                            |
+| aviatrix_segmentation_network_domain_association | SKIP_SEGMENTATION_NETWORK_DOMAIN_ASSOCIATION | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2 |
+| aviatrix_segmentation_network_domain_connection_policy | SKIP_SEGMENTATION_NETWORK_DOMAIN_CONNECTION_POLICY | N/A                                          |
 | aviatrix_segmentation_security_domain | SKIP_SEGMENTATION_SECURITY_DOMAIN | N/A                                                                            |
 | aviatrix_segmentation_security_domain_association | SKIP_SEGMENTATION_SECURITY_DOMAIN_ASSOCIATION | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2 |
 | aviatrix_segmentation_security_domain_connection_policy | SKIP_SEGMENTATION_SECURITY_DOMAIN_CONNECTION_POLICY | N/A                                        |

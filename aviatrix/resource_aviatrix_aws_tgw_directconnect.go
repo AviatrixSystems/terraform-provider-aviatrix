@@ -39,10 +39,19 @@ func resourceAviatrixAWSTgwDirectConnect() *schema.Resource {
 				Description: "This parameter represents the name of a Direct Connect Gateway ID.",
 			},
 			"security_domain_name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "The name of an Aviatrix security domain, to which the direct connect gateway will be attached.",
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				Deprecated:    "Please use network_domain_name instead.",
+				ConflictsWith: []string{"network_domain_name"},
+				Description:   "The name of an Aviatrix security domain, to which the direct connect gateway will be attached.",
+			},
+			"network_domain_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"security_domain_name"},
+				Description:   "The name of an Aviatrix network domain, to which the direct connect gateway will be attached.",
 			},
 			"allowed_prefix": {
 				Type:        schema.TypeString,
@@ -66,8 +75,19 @@ func resourceAviatrixAWSTgwDirectConnectCreate(d *schema.ResourceData, meta inte
 		TgwName:                  d.Get("tgw_name").(string),
 		DirectConnectAccountName: d.Get("directconnect_account_name").(string),
 		DxGatewayID:              d.Get("dx_gateway_id").(string),
-		SecurityDomainName:       d.Get("security_domain_name").(string),
 		AllowedPrefix:            d.Get("allowed_prefix").(string),
+	}
+
+	securityDomainName, securityDomainNameOk := d.GetOk("security_domain_name")
+	networkDomainName, networkDomainNameOk := d.GetOk("network_domain_name")
+	if !securityDomainNameOk && !networkDomainNameOk {
+		return fmt.Errorf("either security_domain_name or network_domain_name must be configured")
+	}
+
+	if securityDomainNameOk {
+		awsTgwDirectConnect.SecurityDomainName = securityDomainName.(string)
+	} else {
+		awsTgwDirectConnect.SecurityDomainName = networkDomainName.(string)
 	}
 
 	learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
@@ -132,8 +152,14 @@ func resourceAviatrixAWSTgwDirectConnectRead(d *schema.ResourceData, meta interf
 	d.Set("tgw_name", directConnect.TgwName)
 	d.Set("directconnect_account_name", directConnect.DirectConnectAccountName)
 	d.Set("dx_gateway_id", directConnect.DxGatewayID)
-	d.Set("security_domain_name", directConnect.SecurityDomainName)
 	d.Set("allowed_prefix", directConnect.AllowedPrefix)
+
+	if _, ok := d.GetOk("security_domain_name"); ok {
+		d.Set("security_domain_name", directConnect.SecurityDomainName)
+	} else {
+		d.Set("network_domain_name", directConnect.SecurityDomainName)
+	}
+
 	if directConnect.LearnedCidrsApproval == "yes" {
 		d.Set("enable_learned_cidrs_approval", true)
 	} else {

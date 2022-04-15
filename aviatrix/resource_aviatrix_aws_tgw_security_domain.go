@@ -14,6 +14,7 @@ import (
 
 func resourceAviatrixAwsTgwSecurityDomain() *schema.Resource {
 	return &schema.Resource{
+		DeprecationMessage:   "Resource 'aviatrix_aws_tgw_security_domain' will be deprecated in future releases. Please use resource 'aviatrix_aws_tgw_network_domain' instead.",
 		CreateWithoutTimeout: resourceAviatrixAwsTgwSecurityDomainCreate,
 		ReadWithoutTimeout:   resourceAviatrixAwsTgwSecurityDomainRead,
 		DeleteWithoutTimeout: resourceAviatrixAwsTgwSecurityDomainDelete,

@@ -269,7 +269,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 				Optional:    true,
 				Default:     false,
 				ForceNew:    true,
-				Description: "Switch to allow this connection to communicate with a Security Domain via Connection Policy.",
+				Description: "Switch to allow this connection to communicate with a Network Domain via Connection Policy.",
 			},
 			"switch_to_ha_standby_gateway": {
 				Type:        schema.TypeBool,

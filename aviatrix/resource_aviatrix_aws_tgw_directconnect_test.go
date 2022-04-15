@@ -41,7 +41,7 @@ func TestAccAviatrixAwsTgwDirectConnect_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tgw_name", fmt.Sprintf("tft-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "directconnect_account_name", fmt.Sprintf("tfa-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "dx_gateway_id", os.Getenv("AWS_DX_GATEWAY_ID")),
-					resource.TestCheckResourceAttr(resourceName, "security_domain_name", "Default_Domain"),
+					resource.TestCheckResourceAttr(resourceName, "network_domain_name", "Default_Domain"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefix", "10.12.0.0/24"),
 				),
 			},
@@ -64,39 +64,36 @@ resource "aviatrix_account" "test_account" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
+
 resource "aviatrix_aws_tgw" "test_aws_tgw" {
-	account_name          = aviatrix_account.test_account.account_name
-	aws_side_as_number    = "64513"
-	manage_vpc_attachment = false
-	region                = "%s"
-	tgw_name              = "tft-%s"
-	security_domains {
-		connected_domains    = [
-			"Default_Domain",
-			"Shared_Service_Domain"
-		]
-		security_domain_name = "Aviatrix_Edge_Domain"
-	}
-	security_domains {
-		connected_domains    = [
-			"Aviatrix_Edge_Domain",
-			"Shared_Service_Domain"
-		]
-		security_domain_name = "Default_Domain"
-	}
-	security_domains {
-		connected_domains    = [
-			"Aviatrix_Edge_Domain",
-			"Default_Domain"
-		]
-		security_domain_name = "Shared_Service_Domain"
-	}
+	account_name           = aviatrix_account.test_account.account_name
+	aws_side_as_number     = "64513"
+	region                 = "%s"
+	tgw_name               = "tft-%s"
+	manage_security_domain = false
+	manage_vpc_attachment  = false
 }
+
+resource "aviatrix_aws_tgw_network_domain" "Default_Domain" {
+	name     = "Default_Domain"
+	tgw_name = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+}
+
+resource "aviatrix_aws_tgw_network_domain" "Shared_Service_Domain" {
+	name     = "Shared_Service_Domain"
+	tgw_name = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+}
+
+resource "aviatrix_aws_tgw_network_domain" "Aviatrix_Edge_Domain" {
+	name     = "Aviatrix_Edge_Domain"
+	tgw_name = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+}
+
 resource "aviatrix_aws_tgw_directconnect" "test" {
 	tgw_name                   = aviatrix_aws_tgw.test_aws_tgw.tgw_name
 	directconnect_account_name = aviatrix_account.test_account.account_name
 	dx_gateway_id              = "%s"
-	security_domain_name       = "Default_Domain"
+	network_domain_name        = "Default_Domain"
 	allowed_prefix             = "10.12.0.0/24"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),

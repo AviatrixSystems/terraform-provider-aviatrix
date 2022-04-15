@@ -62,7 +62,7 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 			"security_domains": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Deprecated:  "Please set `manage_security_domain` to false, and use the standalone aviatrix_aws_tgw_security_domain resource instead.",
+				Deprecated:  "Please set `manage_security_domain` to false, and use the standalone aviatrix_aws_tgw_network_domain resource instead.",
 				Description: "Security Domains to create together with AWS TGW's creation.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
