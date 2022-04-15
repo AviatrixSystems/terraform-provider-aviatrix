@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -61,8 +62,16 @@ func dataSourceAviatrixFirewallInstanceImagesRead(d *schema.ResourceData, meta i
 	for _, image := range *firewallInstanceImages {
 		fI := make(map[string]interface{})
 		fI["firewall_image"] = image.Image
-		fI["firewall_image_version"] = image.Version
-		fI["firewall_size"] = image.Size
+		versionList := image.Version
+		sort.Slice(versionList, func(i, j int) bool {
+			return sortVersion(versionList, i, j, image.Image)
+		})
+		fI["firewall_image_version"] = versionList
+		sizeList := image.Size
+		sort.Slice(sizeList, func(i, j int) bool {
+			return sortSize(sizeList, i, j)
+		})
+		fI["firewall_size"] = sizeList
 		images = append(images, fI)
 	}
 

@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
+
+	"github.com/hashicorp/go-version"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -195,6 +198,115 @@ func DiffSuppressFuncGatewayVpcId(k, old, new string, d *schema.ResourceData) bo
 		return oldValue[0] == newValue[0] && oldValue[1] == newValue[1]
 	}
 
+	return false
+}
+
+// sortVersion sorts the firewall_image_version list
+func sortVersion(versionList []string, i, j int, imageName string) bool {
+	if strings.Contains(imageName, "CloudGuard Next-Gen Firewall") {
+		return compareCheckpointVersion(versionList[i], versionList[j], "_")
+	} else if strings.Contains(imageName, "Check Point CloudGuard IaaS") &&
+		(strings.Contains(imageName, "Next-Gen Firewall with Threat Prevention") ||
+			strings.Contains(imageName, "All-In-One") ||
+			strings.Contains(imageName, "Firewall & Threat Prevention")) {
+		return compareCheckpointVersion(versionList[i], versionList[j], "-")
+	} else if strings.Contains(imageName, "Palo Alto Networks VM-Series Bundle") {
+		return comparePAVersion(versionList[i], versionList[j], "-")
+	} else {
+		version1 := checkVersionFormat(versionList[i])
+		version2 := checkVersionFormat(versionList[j])
+		return compareVersion(version1, version2)
+	}
+}
+
+// sortSize sorts the firewall_size list
+func sortSize(sizeList []string, i, j int) bool {
+	if strings.Contains(sizeList[i], "-") {
+		return compareImageSize(sizeList[i], sizeList[j], "-", 2)
+	} else if strings.Contains(sizeList[i], ".") {
+		return compareImageSize(sizeList[i], sizeList[j], ".", 1)
+	} else if strings.Contains(sizeList[i], "_") {
+		return compareImageSize(sizeList[i], sizeList[j], "_", 1)
+	}
+	return false
+}
+
+// compareCheckpointVersion compares firewall_image_version format like: R81.10-335.883 && R81.10_rev1.0
+func compareCheckpointVersion(version1, version2, flag string) bool {
+	versionArray1 := strings.Split(version1, flag)
+	versionArray2 := strings.Split(version2, flag)
+	reg := regexp.MustCompile("[^0-9.-]+")
+	if reg.ReplaceAllString(versionArray1[0], "") == reg.ReplaceAllString(versionArray2[0], "") {
+		return compareVersion(reg.ReplaceAllString(versionArray1[1], ""), reg.ReplaceAllString(versionArray2[1], ""))
+	}
+	return compareVersion(reg.ReplaceAllString(versionArray1[0], ""), reg.ReplaceAllString(versionArray2[0], ""))
+}
+
+// comparePAVersion compares firewall_image_version format like: PA-VM-10.1.0
+func comparePAVersion(version1, version2, flag string) bool {
+	versionArray1 := strings.Split(version1, flag)
+	versionArray2 := strings.Split(version2, flag)
+	return compareVersion(versionArray1[2], versionArray2[2])
+}
+
+// compareVersion compares two Semantic Versions
+func compareVersion(version1, version2 string) bool {
+	v1, _ := version.NewVersion(version1)
+	v2, _ := version.NewVersion(version2)
+	return v1.GreaterThan(v2)
+}
+
+// checkVersionFormat removes special characters, only keep dot, hyphen, alphanumerics in a version
+func checkVersionFormat(version string) string {
+	reg := regexp.MustCompile("[^a-zA-Z0-9.-]+")
+	version = reg.ReplaceAllString(version, "")
+	dotNumber := strings.Count(version, ".")
+	if dotNumber > 2 {
+		version = removeAfterThirdDotValue(version)
+	}
+	return version
+}
+
+// removeAfterThirdDotValue removes everything after the third dot in a version
+func removeAfterThirdDotValue(version string) string {
+	time := 0
+	result := version
+	for i := 0; i < len(version); i++ {
+		if version[i] == '.' {
+			time++
+		}
+		if time == 3 {
+			result = version[0:i]
+			break
+		}
+	}
+	return result
+}
+
+func compareImageSize(imageSize1, imageSize2, flag string, indexFlag int) bool {
+	imageSizeArray1 := strings.Split(imageSize1, flag)
+	imageSizeArray2 := strings.Split(imageSize2, flag)
+	reg := regexp.MustCompile("[^0-9]+")
+	for index := range imageSizeArray1 {
+		if index >= indexFlag {
+			imageSizeIndex1 := reg.ReplaceAllString(imageSizeArray1[index], "")
+			imageSizeIndex2 := reg.ReplaceAllString(imageSizeArray2[index], "")
+			int1, _ := strconv.Atoi(imageSizeIndex1)
+			int2, _ := strconv.Atoi(imageSizeIndex2)
+			if int1 > int2 {
+				return false
+			}
+			if int1 < int2 {
+				return true
+			}
+		}
+		if imageSizeArray1[index] > imageSizeArray2[index] {
+			return false
+		}
+		if imageSizeArray1[index] < imageSizeArray2[index] {
+			return true
+		}
+	}
 	return false
 }
 
