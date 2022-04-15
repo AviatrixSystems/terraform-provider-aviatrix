@@ -15,6 +15,7 @@ type EdgeCaag struct {
 	Caag                        bool   `form:"caag,omitempty"`
 	Name                        string `form:"gateway_name,omitempty" json:"name"`
 	ManagementInterfaceConfig   string
+	ManagementEgressIpPrefix    string `form:"mgmt_egress_ip" json:"mgmt_egress_ip"`
 	EnableOverPrivateNetwork    bool   `form:"mgmt_over_private_network,omitempty" json:"mgmt_over_private_network"`
 	WanInterfaceIpPrefix        string `form:"wan_ip,omitempty" json:"wan_ip"`
 	WanDefaultGatewayIp         string `form:"wan_default_gateway,omitempty" json:"wan_default_gateway"`
@@ -25,7 +26,8 @@ type EdgeCaag struct {
 	SecondaryDnsServerIp        string `form:"dns_server_ip_secondary,omitempty" json:"dns_server_ip_secondary"`
 	Dhcp                        bool   `form:"dhcp,omitempty" json:"dhcp"`
 	Hpe                         bool   `form:"hpe,omitempty"`
-	ImageDownloadPath           string
+	ZtpFileType                 string `form:"ztp_file_type,omitempty"`
+	ZtpFileDownloadPath         string
 	State                       string `json:"state"`
 }
 
@@ -45,7 +47,14 @@ func (c *Client) CreateEdgeCaag(ctx context.Context, edgeCaag *EdgeCaag) error {
 		return err
 	}
 
-	outFile, err := os.Create(edgeCaag.ImageDownloadPath + "/" + edgeCaag.Name + ".iso")
+	var fileName string
+	if edgeCaag.ZtpFileType == "iso" {
+		fileName = edgeCaag.ZtpFileDownloadPath + "/" + edgeCaag.Name + ".iso"
+	} else {
+		fileName = edgeCaag.ZtpFileDownloadPath + "/" + edgeCaag.Name + "-cloud-init.txt"
+	}
+
+	outFile, err := os.Create(fileName)
 	if err != nil {
 		return err
 	}
@@ -88,6 +97,17 @@ func (c *Client) GetEdgeCaag(ctx context.Context, name string) (*EdgeCaag, error
 	}
 
 	return &data.Results, nil
+}
+
+func (c *Client) UpdateEdgeCaag(ctx context.Context, edgeCaag *EdgeCaag) error {
+	form := map[string]string{
+		"action":         "update_edge_gateway",
+		"CID":            c.CID,
+		"gateway_name":   edgeCaag.Name,
+		"mgmt_egress_ip": edgeCaag.ManagementEgressIpPrefix,
+	}
+
+	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
 }
 
 func (c *Client) DeleteEdgeCaag(ctx context.Context, name string, state string) error {
