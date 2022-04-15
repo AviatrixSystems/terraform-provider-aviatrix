@@ -93,6 +93,15 @@ type EditExternalDeviceConnDetail struct {
 	PrependAsPath          string `json:"conn_bgp_prepend_as_path"`
 }
 
+type EditBgpMd5Key struct {
+	Action         string `form:"action,omitempty"`
+	CID            string `form:"CID,omitempty"`
+	ConnectionName string `form:"conn_name,omitempty"`
+	GwName         string `form:"gateway_name,omitempty"`
+	BgpMd5Key      string `form:"bgp_md5_key,omitempty"`
+	BgpRemoteIP    string `form:"bgp_remote_ip,omitempty"`
+}
+
 type ExternalDeviceConnDetailResp struct {
 	Return  bool                         `json:"return"`
 	Results ExternalDeviceConnDetailList `json:"results"`
@@ -370,4 +379,11 @@ func (c *Client) EditTransitExternalDeviceConnASPathPrepend(externalDeviceConn *
 		ConnectionName: externalDeviceConn.ConnectionName,
 		PrependASPath:  strings.Join(prependASPath, ","),
 	}, BasicCheck)
+}
+
+func (c *Client) EditBgpMd5Key(editBgpMd5Key *EditBgpMd5Key) error {
+	editBgpMd5Key.CID = c.CID
+	editBgpMd5Key.Action = "update_bgp_connection_md5_signature"
+
+	return c.PostAPI(editBgpMd5Key.Action, editBgpMd5Key, BasicCheck)
 }
