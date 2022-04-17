@@ -837,7 +837,12 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 		oldKey, newKey := d.GetChange("bgp_md5_key")
 		oldKeyList := strings.Split(oldKey.(string), ",")
 		newKeyList := strings.Split(newKey.(string), ",")
-		bgpRemoteIp := strings.Split(d.Get("remote_tunnel_cidr").(string), ",")
+		var bgpRemoteIp []string
+		if strings.ToUpper(d.Get("tunnel_protocol").(string)) == "LAN" {
+			bgpRemoteIp = strings.Split(d.Get("remote_lan_ip").(string), ",")
+		} else {
+			bgpRemoteIp = strings.Split(d.Get("remote_tunnel_cidr").(string), ",")
+		}
 		if len(oldKeyList) != len(newKeyList) || len(newKeyList) != len(bgpRemoteIp) {
 			return fmt.Errorf("can't update BGP MD5 authentication key since it is not set correctly for BGP connection")
 		}
@@ -868,7 +873,12 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 		oldKey, newKey := d.GetChange("backup_bgp_md5_key")
 		oldKeyList := strings.Split(oldKey.(string), ",")
 		newKeyList := strings.Split(newKey.(string), ",")
-		bgpRemoteIp := strings.Split(d.Get("backup_remote_tunnel_cidr").(string), ",")
+		var bgpRemoteIp []string
+		if strings.ToUpper(d.Get("tunnel_protocol").(string)) == "LAN" {
+			bgpRemoteIp = strings.Split(d.Get("backup_remote_lan_ip").(string), ",")
+		} else {
+			bgpRemoteIp = strings.Split(d.Get("backup_remote_tunnel_cidr").(string), ",")
+		}
 		if len(oldKeyList) != len(newKeyList) || len(newKeyList) != len(bgpRemoteIp) {
 			return fmt.Errorf("can't update backup BGP MD5 authentication key since it is not set correctly for BGP connection")
 		}
