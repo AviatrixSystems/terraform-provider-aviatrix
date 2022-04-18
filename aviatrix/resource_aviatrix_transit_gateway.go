@@ -3167,7 +3167,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("rx_queue_size") {
 		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-			return fmt.Errorf("can not update rx_queue_size since it only supports AWS related cloud types")
+			return fmt.Errorf("could not update rx_queue_size since it only supports AWS related cloud types")
 		}
 		gw := &goaviatrix.Gateway{
 			GwName:      gateway.GwName,
