@@ -308,14 +308,12 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				ForceNew:    true,
 				Description: "BGP MD5 authentication key.",
 			},
 			"backup_bgp_md5_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				ForceNew:    true,
 				Description: "Backup BGP MD5 authentication key.",
 			},
 			"approved_cidrs": {
@@ -828,6 +826,75 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 		err := client.EditSpokeExternalDeviceConnASPathPrepend(externalDeviceConn, prependASPath)
 		if err != nil {
 			return fmt.Errorf("could not update prepend_as_path: %v", err)
+		}
+	}
+
+	if d.HasChange("bgp_md5_key") {
+		if d.Get("connection_type").(string) != "bgp" {
+			return fmt.Errorf("can't update BGP MD5 authentication key since it is only supported for BGP connection")
+		}
+
+		oldKey, newKey := d.GetChange("bgp_md5_key")
+		oldKeyList := strings.Split(oldKey.(string), ",")
+		newKeyList := strings.Split(newKey.(string), ",")
+		var bgpRemoteIp []string
+		if strings.ToUpper(d.Get("tunnel_protocol").(string)) == "LAN" {
+			bgpRemoteIp = strings.Split(d.Get("remote_lan_ip").(string), ",")
+		} else {
+			bgpRemoteIp = strings.Split(d.Get("remote_tunnel_cidr").(string), ",")
+		}
+		if len(oldKeyList) != len(newKeyList) || len(newKeyList) != len(bgpRemoteIp) {
+			return fmt.Errorf("can't update BGP MD5 authentication key since it is not set correctly for BGP connection")
+		}
+		for i, v := range newKeyList {
+			if strings.TrimSpace(oldKeyList[i]) != strings.TrimSpace(v) {
+				editBgpMd5Key := &goaviatrix.EditBgpMd5Key{
+					GwName:         gwName,
+					ConnectionName: connName,
+					BgpRemoteIP:    bgpRemoteIp[i],
+					BgpMd5Key:      v,
+				}
+				err := client.EditBgpMd5Key(editBgpMd5Key)
+				if err != nil {
+					return fmt.Errorf("failed to update BGP MD5 authentication key: %v", err)
+				}
+			}
+		}
+	}
+
+	if d.HasChange("backup_bgp_md5_key") {
+		if d.Get("connection_type").(string) != "bgp" {
+			return fmt.Errorf("can't update backup BGP MD5 authentication key since it is only supported for BGP connection")
+		}
+		if !d.Get("ha_enabled").(bool) {
+			return fmt.Errorf("can't update BGP backup MD5 authentication key since ha is not enabled")
+		}
+
+		oldKey, newKey := d.GetChange("backup_bgp_md5_key")
+		oldKeyList := strings.Split(oldKey.(string), ",")
+		newKeyList := strings.Split(newKey.(string), ",")
+		var bgpRemoteIp []string
+		if strings.ToUpper(d.Get("tunnel_protocol").(string)) == "LAN" {
+			bgpRemoteIp = strings.Split(d.Get("backup_remote_lan_ip").(string), ",")
+		} else {
+			bgpRemoteIp = strings.Split(d.Get("backup_remote_tunnel_cidr").(string), ",")
+		}
+		if len(oldKeyList) != len(newKeyList) || len(newKeyList) != len(bgpRemoteIp) {
+			return fmt.Errorf("can't update backup BGP MD5 authentication key since it is not set correctly for BGP connection")
+		}
+		for i, v := range newKeyList {
+			if strings.TrimSpace(oldKeyList[i]) != strings.TrimSpace(v) {
+				editBgpMd5Key := &goaviatrix.EditBgpMd5Key{
+					GwName:         gwName,
+					ConnectionName: connName,
+					BgpRemoteIP:    bgpRemoteIp[i],
+					BgpMd5Key:      v,
+				}
+				err := client.EditBgpMd5Key(editBgpMd5Key)
+				if err != nil {
+					return fmt.Errorf("failed to update backup BGP MD5 authentication key: %v", err)
+				}
+			}
 		}
 	}
 
