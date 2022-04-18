@@ -194,6 +194,7 @@ type Gateway struct {
 	DisableRoutePropagation         bool                                `json:"disable_route_propagation,omitempty"`
 	EnableS2CRxBalancing            bool                                `json:"s2c_rx_balancing,omitempty"`
 	BgpLanInterfacesCount           int                                 `json:"bgp_over_lan_intf_cnt,omitempty"`
+	RxQueueSize                     string                              `json:"rx_queue_size"`
 }
 
 type HaGateway struct {
@@ -1163,4 +1164,15 @@ func (c *Client) EnableActiveStandbyPreemptive(transitGateway *TransitVpc) error
 		"preemptive":   "true",
 	}
 	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) SetRxQueueSize(gateway *Gateway) error {
+	form := map[string]string{
+		"CID":           c.CID,
+		"action":        "set_rx_queue_size",
+		"gateway_name":  gateway.GwName,
+		"rx_queue_size": gateway.RxQueueSize,
+	}
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
