@@ -480,6 +480,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description:  "Price for spot instance. NOT supported for production deployment.",
 				RequiredWith: []string{"enable_spot_instance"},
 			},
+			"rx_queue_size": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"1K", "2K", "4K", "8K", "16K"}, false),
+				Description:  "Gateway ethernet interface RX queue size. Supported for AWS related clouds only.",
+			},
 			"availability_domain": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -1056,6 +1062,11 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	rxQueueSize := d.Get("rx_queue_size").(string)
+	if rxQueueSize != "" && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+		return fmt.Errorf("rx_queue_size only supports AWS related cloud types")
+	}
+
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
 
 	d.SetId(gateway.GwName)
@@ -1470,6 +1481,17 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if rxQueueSize != "" {
+		gwRxQueueSize := &goaviatrix.Gateway{
+			GwName:      d.Get("gw_name").(string),
+			RxQueueSize: rxQueueSize,
+		}
+		err := client.SetRxQueueSize(gwRxQueueSize)
+		if err != nil {
+			return fmt.Errorf("failed to set rx queue size for transit %s: %s", gateway.GwName, err)
+		}
+	}
+
 	return resourceAviatrixTransitGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -1529,6 +1551,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("bgp_polling_time", strconv.Itoa(gw.BgpPollingTime))
 	d.Set("image_version", gw.ImageVersion)
 	d.Set("software_version", gw.SoftwareVersion)
+	d.Set("rx_queue_size", gw.RxQueueSize)
+
 	var prependAsPath []string
 	for _, p := range strings.Split(gw.PrependASPath, " ") {
 		if p != "" {
@@ -3138,6 +3162,20 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 					return fmt.Errorf("could not upgrade HA transit gateway during update image_version=%s software_version=%s: %v", hagw.ImageVersion, hagw.SoftwareVersion, err)
 				}
 			}
+		}
+	}
+
+	if d.HasChange("rx_queue_size") {
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+			return fmt.Errorf("can not update rx_queue_size since it only supports AWS related cloud types")
+		}
+		gw := &goaviatrix.Gateway{
+			GwName:      gateway.GwName,
+			RxQueueSize: d.Get("rx_queue_size").(string),
+		}
+		err := client.SetRxQueueSize(gw)
+		if err != nil {
+			return fmt.Errorf("could not modify rx queue size for transit: %s during gateway update: %v", gw.GatewayName, err)
 		}
 	}
 
