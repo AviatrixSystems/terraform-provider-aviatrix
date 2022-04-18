@@ -89,10 +89,11 @@ func resourceAviatrixMicrosegPolicyList() *schema.Resource {
 										Description:  "Lower bound of port range.",
 									},
 									"hi": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(0),
-										Description:  "Upper bound of port range.",
+										Type:             schema.TypeInt,
+										Optional:         true,
+										ValidateFunc:     validation.IntAtLeast(0),
+										DiffSuppressFunc: DiffSuppressFuncMicrosegPolicyPortRangeHi,
+										Description:      "Upper bound of port range.",
 									},
 								},
 							},
@@ -216,15 +217,17 @@ func resourceAviatrixMicrosegPolicyListRead(ctx context.Context, d *schema.Resou
 		p["watch"] = policy.Watch
 		p["uuid"] = policy.UUID
 
-		var portRanges []map[string]interface{}
-		for _, portRange := range policy.PortRanges {
-			portRangeMap := map[string]interface{}{
-				"hi": portRange.Hi,
-				"lo": portRange.Lo,
+		if policy.Protocol != "ICMP" {
+			var portRanges []map[string]interface{}
+			for _, portRange := range policy.PortRanges {
+				portRangeMap := map[string]interface{}{
+					"hi": portRange.Hi,
+					"lo": portRange.Lo,
+				}
+				portRanges = append(portRanges, portRangeMap)
 			}
-			portRanges = append(portRanges, portRangeMap)
+			p["port_ranges"] = portRanges
 		}
-		p["port_ranges"] = portRanges
 
 		policies = append(policies, p)
 	}

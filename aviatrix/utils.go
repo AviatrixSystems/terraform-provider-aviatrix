@@ -201,6 +201,14 @@ func DiffSuppressFuncGatewayVpcId(k, old, new string, d *schema.ResourceData) bo
 	return false
 }
 
+// DiffSuppressFuncMicrosegPolicyPortRangeHi suppresses a diff in a microseg policy's port range when hi is not set
+// and hi returned from the API is equal to lo,
+func DiffSuppressFuncMicrosegPolicyPortRangeHi(k, old, new string, d *schema.ResourceData) bool {
+	loKey := strings.Replace(k, "hi", "lo", 1)
+	lo := d.Get(loKey).(int)
+	return new == "0" && old == fmt.Sprintf("%d", lo)
+}
+
 // sortVersion sorts the firewall_image_version list
 func sortVersion(versionList []string, i, j int, imageName string) bool {
 	if strings.Contains(imageName, "CloudGuard Next-Gen Firewall") {

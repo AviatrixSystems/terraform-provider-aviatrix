@@ -3,7 +3,7 @@ package goaviatrix
 import "context"
 
 type MicrosegPortRange struct {
-	Hi int `json:"hi"`
+	Hi int `json:"hi,omitempty"`
 	Lo int `json:"lo"`
 }
 
