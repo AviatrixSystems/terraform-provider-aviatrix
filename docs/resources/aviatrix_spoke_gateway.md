@@ -53,7 +53,7 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_gcp" {
   cloud_type                        = 4
   account_name                      = "my-gcp"
   gw_name                           = "spoke-gw-gcp"
-  vpc_id                            = "gcp-spoke-vpc~-~project-name"
+  vpc_id                            = "gcp-spoke-vpc~-~project-id"
   vpc_reg                           = "us-west1-b"
   gw_size                           = "n1-standard-1"
   subnet                            = "10.12.0.0/24"
@@ -235,8 +235,8 @@ The following arguments are supported:
 
 ~> As of Provider version R2.21.2+, the `vpc_id` of an OCI VCN has been changed from its name to its OCID.
 
-~> As of Provider version R.22.0+, the `vpc_id` of a GCP VPC has been updated to include the project name.
-* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Example: AWS/AWSGov/AWSChina: "vpc-abcd1234", GCP: "vpc-gcp-test~-~project-name", Azure/AzureGov/AzureChina: "vnet_name:rg_name:resource_guid", OCI: "ocid1.vcn.oc1.iad.aaaaaaaaba3pv6wkcr4jqae5f44n2b2m2yt2j6rx32uzr4h25vqstifsfdsq".
+!> As of Provider version R.22.0+, the `vpc_id` of a GCP VPC has been updated to include the project ID, e.g. vpc_name~-~project_id. When creating a Spoke Gateway using the old format, referencing `vpc_id` in another resource on the same apply that creates this Spoke Gateway will cause Terraform to throw an error. Please use the Spoke Gateway data source to reference the `vpc_id` of this Spoke Gateway in other resources.
+* `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider. Example: AWS/AWSGov/AWSChina: "vpc-abcd1234", GCP: "vpc-gcp-test~-~project-id", Azure/AzureGov/AzureChina: "vnet_name:rg_name:resource_guid", OCI: "ocid1.vcn.oc1.iad.aaaaaaaaba3pv6wkcr4jqae5f44n2b2m2yt2j6rx32uzr4h25vqstifsfdsq".
 * `vpc_reg` - (Required) Region of cloud provider. Example: AWS: "us-east-1", GCP: "us-west2-a", Azure: "East US 2", OCI: "us-ashburn-1", AzureGov: "USGov Arizona", AWSGov: "us-gov-west-1, AWSChina: "cn-north-1", AzureChina: "China North", AWS Top Secret: "us-iso-east-1", AWS Secret: "us-isob-east-1".
 * `gw_size` - (Required) Size of the gateway instance. Example: AWS/AWSGov/AWSChina: "t2.large", Azure/AzureGov/AzureChina: "Standard_B1s", OCI: "VM.Standard2.2", GCP: "n1-standard-1".
 * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode).**
