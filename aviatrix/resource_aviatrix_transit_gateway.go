@@ -254,9 +254,10 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "Specify whether to enable transit firenet interfaces or not.",
 			},
 			"lan_vpc_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "LAN VPC ID. Only used for GCP Transit FireNet.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: DiffSuppressFuncGCPVpcId,
+				Description:      "LAN VPC ID. Only used for GCP Transit FireNet.",
 			},
 			"lan_private_subnet": {
 				Type:        schema.TypeString,
@@ -365,9 +366,10 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"vpc_id": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "VPC-ID of GCP cloud provider.",
+							Type:             schema.TypeString,
+							Required:         true,
+							DiffSuppressFunc: DiffSuppressFuncGCPVpcId,
+							Description:      "VPC-ID of GCP cloud provider.",
 						},
 						"subnet": {
 							Type:         schema.TypeString,
@@ -385,9 +387,10 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"vpc_id": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "VPC-ID of GCP cloud provider.",
+							Type:             schema.TypeString,
+							Required:         true,
+							DiffSuppressFunc: DiffSuppressFuncGCPVpcId,
+							Description:      "VPC-ID of GCP cloud provider.",
 						},
 						"subnet": {
 							Type:         schema.TypeString,

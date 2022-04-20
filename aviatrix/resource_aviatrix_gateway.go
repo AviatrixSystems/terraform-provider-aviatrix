@@ -361,10 +361,11 @@ func resourceAviatrixGateway() *schema.Resource {
 				Description: "FQDN gateway lan interface cidr.",
 			},
 			"fqdn_lan_vpc_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "LAN VPC ID. Only used for GCP FQDN Gateway.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: DiffSuppressFuncGCPVpcId,
+				Description:      "LAN VPC ID. Only used for GCP FQDN Gateway.",
 			},
 			"enable_public_subnet_filtering": {
 				Type:     schema.TypeBool,

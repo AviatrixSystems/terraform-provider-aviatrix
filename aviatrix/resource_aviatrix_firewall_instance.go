@@ -21,10 +21,11 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "ID of the Security VPC.",
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: DiffSuppressFuncGCPVpcId,
+				Description:      "ID of the Security VPC.",
 			},
 			"firenet_gw_name": {
 				Type:        schema.TypeString,
@@ -57,10 +58,11 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 				Description: "Egress Interface Subnet.",
 			},
 			"egress_vpc_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Egress VPC ID. Required for GCP.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: DiffSuppressFuncGCPVpcId,
+				Description:      "Egress VPC ID. Required for GCP.",
 			},
 			"management_subnet": {
 				Type:     schema.TypeString,
@@ -70,9 +72,10 @@ func resourceAviatrixFirewallInstance() *schema.Resource {
 					"and required to be empty for Check Point or Fortinet series.",
 			},
 			"management_vpc_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: DiffSuppressFuncGCPVpcId,
 				Description: "Management VPC ID. Required for GCP Palo Alto Networks VM-Series. " +
 					"Required to be empty for GCP Check Point or Fortinet series.",
 			},
