@@ -216,6 +216,18 @@ func DiffSuppressFuncGCPVpcId(k, old, new string, d *schema.ResourceData) bool {
 	return false
 }
 
+func DiffSuppressFuncNatInterface(k, old, new string, d *schema.ResourceData) bool {
+	connectionKey := strings.Replace(k, "interface", "connection", 1)
+	connection := d.Get(connectionKey).(string)
+	// Must check if ID != "" so that interface can be set on initial create. Without
+	// this check, the value for interface will be suppressed and interface = "" will
+	// be passed to the API even if interface = "eth0" in the configuration.
+	if d.Id() != "" && !(connection == "" || connection == "None") {
+		return old == "" && new == "eth0"
+	}
+	return false
+}
+
 // DiffSuppressFuncMicrosegPolicyPortRangeHi suppresses a diff in a microseg policy's port range when hi is not set
 // and hi returned from the API is equal to lo,
 func DiffSuppressFuncMicrosegPolicyPortRangeHi(k, old, new string, d *schema.ResourceData) bool {
