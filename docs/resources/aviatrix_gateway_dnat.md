@@ -44,6 +44,8 @@ The following arguments are supported:
   * `dst_cidr` - (Optional) This is a qualifier condition that specifies a destination IP address range where the rule applies. When not specified, this field is not used.
   * `dst_port` - (Optional) This is a qualifier condition that specifies a destination port where the rule applies. When not specified, this field is not used.
   * `protocol` - (Optional) This is a qualifier condition that specifies a destination port protocol where the rule applies. When not specified, this field is not used.
+  
+  !> `interface` must be empty when using a route-based connection in a policy.
   * `interface` - (Optional) This is a qualifier condition that specifies output interface where the rule applies. When not specified, this field is not used. Must be empty when `connection` is set.
   * `connection` - (Optional) This is a qualifier condition that specifies output connection where the rule applies. Default value: "None".
   * `mark` - (Optional) This is a rule field that specifies a tag or mark of a TCP session when all qualifier conditions meet. When not specified, this field is not used.

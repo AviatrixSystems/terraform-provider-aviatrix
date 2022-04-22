@@ -67,8 +67,9 @@ func resourceAviatrixGatewaySNat() *schema.Resource {
 								"where the rule applies. When left blank, this field is not used.",
 						},
 						"interface": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: DiffSuppressFuncNatInterface,
 							Description: "This is a qualifier condition that specifies output interface " +
 								"where the rule applies. When left blank, this field is not used.",
 						},
@@ -147,10 +148,6 @@ func resourceAviatrixGatewaySNatCreate(d *schema.ResourceData, meta interface{})
 		policies := d.Get("snat_policy").([]interface{})
 		for _, policy := range policies {
 			pl := policy.(map[string]interface{})
-			connection := pl["connection"].(string)
-			if (connection != "" && connection != "None") && pl["interface"].(string) != "" {
-				return fmt.Errorf("failed to create policies for 'cutomised_snat' mode: 'interface' must be empty when 'connection' is set")
-			}
 			customPolicy := &goaviatrix.PolicyRule{
 				SrcIP:           pl["src_cidr"].(string),
 				SrcPort:         pl["src_port"].(string),
@@ -292,10 +289,6 @@ func resourceAviatrixGatewaySNatUpdate(d *schema.ResourceData, meta interface{})
 			policies := d.Get("snat_policy").([]interface{})
 			for _, policy := range policies {
 				pl := policy.(map[string]interface{})
-				connection := pl["connection"].(string)
-				if (connection != "" && connection != "None") && pl["interface"].(string) != "" {
-					return fmt.Errorf("failed to update policies for 'cutomised_snat' mode: 'interface' must be empty when 'connection' is set")
-				}
 				customPolicy := &goaviatrix.PolicyRule{
 					SrcIP:           pl["src_cidr"].(string),
 					SrcPort:         pl["src_port"].(string),
