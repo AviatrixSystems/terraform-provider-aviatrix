@@ -56,7 +56,6 @@ type TransitVpc struct {
 	BgpLanVpcID                  string   `form:"bgp_lan_vpc"`
 	BgpLanSpecifySubnet          string   `form:"bgp_lan_specify_subnet"`
 	Async                        bool     `form:"async,omitempty"`
-	BgpLanInterfacesCount        int      `form:"bgp_lan_intf_count,omitempty"`
 }
 
 type TransitGatewayAdvancedConfig struct {
