@@ -104,27 +104,6 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_azure" {
 }
 ```
 ```hcl
-# Create an Aviatrix Azure Transit Network Gateway with HA enabled and BGP over LAN enabled with multiple interfaces
-resource "aviatrix_transit_gateway" "test_transit_gateway_azure" {
-  cloud_type                  = 8
-  account_name                = "devops_azure"
-  gw_name                     = "transit"
-  vpc_id                      = "vnet_name:rg_name:resource_guid"
-  vpc_reg                     = "West US"
-  gw_size                     = "Standard_B1ms"
-  subnet                      = "10.30.0.0/24"
-  zone                        = "az-1"
-  ha_subnet                   = "10.30.0.0/24"
-  ha_zone                     = "az-2"
-  ha_gw_size                  = "Standard_B1ms"
-  connected_transit           = true
-  learned_cidrs_approval_mode = "connection"
-  single_az_ha                = true
-  enable_bgp_over_lan         = true
-  bgp_lan_interfaces_count    = 2
-}
-```
-```hcl
 # Create an Aviatrix OCI Transit Network Gateway
 resource "aviatrix_transit_gateway" "test_transit_gateway_oracle" {
   cloud_type          = 16
@@ -350,14 +329,13 @@ The following arguments are supported:
 * `enable_gateway_load_balancer` - (Optional) Enable FireNet interfaces with AWS Gateway Load Balancer. Only valid when `enable_firenet` or `enable_transit_firenet` are set to true and `cloud_type` = 1 (AWS). Currently, AWS Gateway Load Balancer is only supported in AWS regions: us-west-2, us-east-1, eu-west-1, ap-southeast-2 and sa-east-1. Valid values: true or false. Default value: false. Available as of provider version R2.18+.
 
 ### BGP over LAN
-* `enable_bgp_over_lan` - (Optional) Pre-allocate a network interface(eth4) for "BGP over LAN" functionality. Must be enabled to create a BGP over LAN `aviatrix_transit_external_device_conn` resource with this Transit Gateway. Only valid for GCP (4), Azure (8), AzureGov (32) or AzureChina (2048). Valid values: true or false. Default value: false. Available as of provider version R2.18+.
+* `enable_bgp_over_lan` - (Optional) Pre-allocate a network interface(eth4) for "BGP over LAN" functionality. Must be enabled to create a BGP over LAN `aviatrix_transit_external_device_conn` resource with this Transit Gateway. Only valid for GCP (4), Azure (8), AzureGov (32) or AzureChina (2048). Valid values: true or false. Default value: false. Available as of provider version R2.18+
 * `bgp_lan_interfaces` - (Optional) Interfaces to run BGP protocol on top of the ethernet interface, to connect to the onprem/remote peer. Only available for GCP Transit. Each interface has the following attributes:
   * `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider.
   * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges.
 * `ha_bgp_lan_interfaces` - (Optional) Interfaces to run BGP protocol on top of the ethernet interface, to connect to the onprem/remote peer. Only available for GCP Transit HA. Each interface has the following attributes:
   * `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider.
   * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges.
-* `bgp_lan_interfaces_count` - (Optional) Number of interfaces that will be created for BGP over LAN enabled Azure transit. Valid value: 1~5 for FireNet case, 1~7 for Non-FireNet case. Default value: 1. Available as of provider version R2.22+.
 
 ### Encryption
 * `enable_encrypt_volume` - (Optional) Enable EBS volume encryption for Gateway. Only supports AWS, AWSGov, AWSChina, AWS Top Secret and AWS Secret. Valid values: true, false. Default value: false.
