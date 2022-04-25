@@ -37,11 +37,6 @@ func resourceAviatrixEdgeCaag() *schema.Resource {
 				Description:  "Management interface configuration. Valid values: 'DHCP' and 'Static'.",
 				ValidateFunc: validation.StringInSlice([]string{"DHCP", "Static"}, false),
 			},
-			"management_egress_ip_prefix": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Management egress gateway IP / prefix.",
-			},
 			"wan_interface_ip_prefix": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -60,6 +55,11 @@ func resourceAviatrixEdgeCaag() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "LAN interface IP / prefix.",
+			},
+			"management_egress_ip_prefix": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Management egress gateway IP / prefix.",
 			},
 			"enable_over_private_network": {
 				Type:        schema.TypeBool,

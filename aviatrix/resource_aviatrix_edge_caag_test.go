@@ -35,7 +35,6 @@ func TestAccAviatrixEdgeCaag_basic(t *testing.T) {
 					testAccCheckEdgeCaagExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "management_interface_config", "DHCP"),
-					resource.TestCheckResourceAttr(resourceName, "management_egress_ip_prefix", "10.60.0.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "wan_interface_ip_prefix", "10.60.0.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "wan_default_gateway_ip", "10.60.0.0"),
 					resource.TestCheckResourceAttr(resourceName, "lan_interface_ip_prefix", "10.60.0.0/24"),
@@ -56,7 +55,6 @@ func testAccEdgeCaagBasic(name string, path string) string {
 resource "aviatrix_edge_caag" "test" {
 	name                        = "%s"
 	management_interface_config = "DHCP"
-	management_egress_ip_prefix = "10.60.0.0/24"
 	wan_interface_ip_prefix     = "10.60.0.0/24"
 	wan_default_gateway_ip      = "10.60.0.0"
 	lan_interface_ip_prefix     = "10.60.0.0/24"
