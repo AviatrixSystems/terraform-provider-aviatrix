@@ -17,7 +17,6 @@ The **aviatrix_edge_caag** resource creates the Aviatrix Edge as a CaaG. This re
 resource "aviatrix_edge_caag" "test" {
   name                        = "edge-test"
   management_interface_config = "DHCP"
-  management_egress_ip_prefix = "10.60.0.0/24"
   wan_interface_ip_prefix     = "10.60.0.0/24"
   wan_default_gateway_ip      = "10.60.0.0"
   lan_interface_ip_prefix     = "10.60.0.0/24"
@@ -35,7 +34,6 @@ resource "aviatrix_edge_caag" "test" {
 resource "aviatrix_edge_caag" "test" {
   name                           = "edge-test"
   management_interface_config    = "Static"
-  management_egress_ip_prefix    = "10.60.0.0/24"
   wan_interface_ip_prefix        = "10.60.0.0/24"
   wan_default_gateway_ip         = "10.60.0.0"
   lan_interface_ip_prefix        = "10.60.0.0/24"
@@ -59,8 +57,7 @@ The following arguments are supported:
 
 ### Required
 * `name` - (Required) Edge as a CaaG name.
-* `management_interface_config` - (Required) Management interface configuration. Valid values: "DHCP", "Static". 
-* `management_egress_ip_prefix` - (Required) Management egress gateway IP and subnet prefix.
+* `management_interface_config` - (Required) Management interface configuration. Valid values: "DHCP", "Static".
 * `wan_interface_ip_prefix` - (Required) WAN interface IP and subnet prefix.
 * `wan_default_gateway_ip` - (Required) WAN default gateway IP.
 * `lan_interface_ip_prefix` - (Required) LAN interface IP and subnet prefix.
@@ -68,6 +65,7 @@ The following arguments are supported:
 * `ztp_file_download_path` - (Required) The folder path where the ZTP file will be downloaded.
 
 ### Optional
+* `management_egress_ip_prefix` - (Optional) Management egress gateway IP and subnet prefix.
 * `enable_over_private_network` - (Optional) Indicates whether it is public or private connection between controller and gateway. Valid values: true, false. Default value: false.
 * `management_interface_ip_prefix` - (Optional) Management interface IP and subnet prefix. Required and valid when `management_interface_config` is "Static". 
 * `management_default_gateway_ip` - (Optional) Management default gateway IP. Required and valid when `management_interface_config` is "Static".
