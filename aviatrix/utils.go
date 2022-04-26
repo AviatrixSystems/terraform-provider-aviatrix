@@ -220,6 +220,10 @@ func sortVersion(versionList []string, i, j int, imageName string) bool {
 		return compareCheckpointVersion(versionList[i], versionList[j], "-")
 	} else if strings.Contains(imageName, "Palo Alto Networks VM-Series Bundle") {
 		return comparePAVersion(versionList[i], versionList[j], "-")
+	} else if strings.Contains(imageName, "Palo Alto Networks VM-Series Next Generation Firewall") {
+		version1 := checkPAVMVersionFormat(versionList[i])
+		version2 := checkPAVMVersionFormat(versionList[j])
+		return compareVersion(version1, version2)
 	} else {
 		version1 := checkVersionFormat(versionList[i])
 		version2 := checkVersionFormat(versionList[j])
@@ -255,6 +259,14 @@ func comparePAVersion(version1, version2, flag string) bool {
 	versionArray1 := strings.Split(version1, flag)
 	versionArray2 := strings.Split(version2, flag)
 	return compareVersion(versionArray1[2], versionArray2[2])
+}
+
+// checkPAVMVersionFormat check version list include the PA-VM- format version and Semantic Version, will remove PA-VM- to compare
+func checkPAVMVersionFormat(version string) string {
+	if strings.Contains(version, "PA-VM-") {
+		return version[6:]
+	}
+	return version
 }
 
 // compareVersion compares two Semantic Versions
