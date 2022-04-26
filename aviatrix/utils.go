@@ -300,9 +300,13 @@ func checkPAVMVersionFormat(version string) string {
 // compareVersion compares two Semantic Versions
 func compareVersion(version1, version2 string) bool {
 	v1, err := version.NewVersion(version1)
+	if err != nil {
+		log.Println("not support sort this version format: ", version1, err)
+		return false
+	}
 	v2, err := version.NewVersion(version2)
 	if err != nil {
-		log.Println("not support compare these versions format: ", version1, version2, err)
+		log.Println("not support sort this version format: ", version2, err)
 		return false
 	}
 	return v1.GreaterThan(v2)
