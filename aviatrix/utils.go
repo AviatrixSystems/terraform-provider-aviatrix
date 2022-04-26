@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -298,6 +299,11 @@ func checkPAVMVersionFormat(version string) string {
 
 // compareVersion compares two Semantic Versions
 func compareVersion(version1, version2 string) bool {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("not support compare this version format: ", version1, version2, err)
+		}
+	}()
 	v1, _ := version.NewVersion(version1)
 	v2, _ := version.NewVersion(version2)
 	return v1.GreaterThan(v2)
