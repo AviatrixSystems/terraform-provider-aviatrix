@@ -159,6 +159,10 @@ func marshalMicrosegPolicyListInput(d *schema.ResourceData) (*goaviatrix.Microse
 			}
 		}
 
+		if uuid, uuidOk := policy["uuid"]; uuidOk {
+			microsegPolicy.UUID = uuid.(string)
+		}
+
 		policyList.Policies = append(policyList.Policies, *microsegPolicy)
 	}
 
