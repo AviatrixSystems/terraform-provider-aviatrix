@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -221,6 +222,8 @@ func resourceAviatrixCloudnRegistrationDelete(ctx context.Context, d *schema.Res
 	if err != nil {
 		return diag.Errorf("failed to delete Aviatrix CloudN Registration: %v", err)
 	}
+
+	time.Sleep(30 * time.Second)
 
 	return nil
 }
