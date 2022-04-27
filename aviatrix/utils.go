@@ -301,12 +301,12 @@ func checkPAVMVersionFormat(version string) string {
 func compareVersion(version1, version2 string) bool {
 	v1, err := version.NewVersion(version1)
 	if err != nil {
-		log.Println("not support sort this version format: ", version1, err)
+		log.Printf("unsupported firewall image version format: %s\n", version1)
 		return false
 	}
 	v2, err := version.NewVersion(version2)
 	if err != nil {
-		log.Println("not support sort this version format: ", version2, err)
+		log.Printf("unsupported firewall image version format: %s\n", version2)
 		return false
 	}
 	return v1.GreaterThan(v2)
