@@ -55,8 +55,7 @@ The following arguments are supported:
   * `snat_port` - (Optional) This is a rule field that specifies the changed source port when all specified qualifier conditions meet. When not specified, this field is not used. One of the rule fields must be specified for this rule to take effect.
   * `exclude_rtb` - (Optional) This field specifies which VPC private route table will not be programmed with the default route entry.
 
-!> **WARNING:** Apply Route Entry was added in Provider version R2.21.0 with a default value of True. Any existing source NAT policy resources created in Terraform before R2.21.0 will see a diff. Please add `apply_route_entry = false` to any of these Terraform configurations to prevent any changes.
-
+  !> **WARNING:** Apply Route Entry was added in Provider version R2.21.0 with a default value of True. Any existing source NAT policy resources created in Terraform before R2.21.0 will see a diff. Please add `apply_route_entry = false` to any of these Terraform configurations to prevent any changes.
   * `apply_route_entry` - (Optional) This is an option to program the route entry 'DST CIDR pointing to Aviatrix Gateway' into Cloud platform routing table. Type: Boolean. Default: True. Available as of provider version R2.21.0+.
 
 ## Import
