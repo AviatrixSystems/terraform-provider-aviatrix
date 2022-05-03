@@ -5,7 +5,7 @@ page_title: "Aviatrix: aviatrix_microseg_policy_list"
 description: |-
   Creates and manages an Aviatrix Micro-segmentation Policy List
 ---
-!> **Warning** **aviatrix_microseg_policy_list** is part of the Micro-segmentation private preview feature for R2.22.0. If you wish to enable a private preview mode feature, please contact your sales representative or Aviatrix Support.
+!> **WARNING** **aviatrix_microseg_policy_list** is part of the Micro-segmentation private preview feature for R2.22.0. If you wish to enable a private preview mode feature, please contact your sales representative or Aviatrix Support.
 
 # aviatrix_microseg_policy_list
 
