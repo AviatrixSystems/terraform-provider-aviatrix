@@ -5,7 +5,7 @@ page_title: "Aviatrix: aviatrix_app_domain"
 description: |-
   Creates and manages an Aviatrix App Domain
 ---
-
+!> **WARNING** **aviatrix_app_domain** is part of the Micro-segmentation private preview feature for R2.22.0. If you wish to enable a private preview mode feature, please contact your sales representative or Aviatrix Support.
 # aviatrix_app_domain
 
 The **aviatrix_app_domain** resource handles the creation and management of App Domains. Available as of Provider R2.22.0+.
