@@ -1,15 +1,75 @@
-## 2.21.2 (Unreleased)
+## 2.22.0 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.7.1158**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Gateway
+1. Implemented support for setting rx queue size in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** with the following new attribute:
+  - ``rx_queue_size``
+
+#### Multi-Cloud Transit:
+1. Implemented support for modifying BGP connection's MD5 signature in **aviatrix_spoke_external_device_conn** and **aviatrix_transit_external_device_conn**:
+  - ``bgp_md5_key``
+  - ``backup_bgp_md5_key``
+
+#### CloudN
+1. Implemented a new resource to support Edge as a CaaG:
+  - **aviatrix_edge_caag**
+2. Implemented a new data source to get the list of device WAN interfaces:
+  - **aviatrix_device_interfaces**
+
+### Enhancements:
+1. Implemented new resources to support the renaming from security domain to network domain. Resources and attributes whose name include "security_domain" will be deprecated in future releases.
+Please follow the guide [here](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/migrating_from_security_domain_to_network_domain) for migration:
+  - **aviatrix_aws_tgw_network_domain**
+  - **aviatrix_segmentation_network_domain**
+  - **aviatrix_segmentation_network_domain_association**
+  - **aviatrix_segmentation_network_domain_connection_policy**
+2. Renamed the attribute ``security_domain_name`` to ``network_domain_name`` in resources **aviatrix_aws_tgw_connect**, **aviatrix_aws_tgw_directconnect** and **aviatrix_aws_tgw_vpc_attachment**
+to support the renaming from security domain to network domain. Resources and attributes whose name includes security domain will be deprecated in future releases.
+Please follow the guide [here](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/migrating_from_security_domain_to_network_domain) for migration
+3. Updated the ``vpc_id`` attribute for **aviatrix_gateway**, **aviatrix_spoke_gateway**, **aviatrix_transit_gateway** and **aviatrix_vpc** created in GCP to include the project id:
+  - New format: "vpc-gcp-test~-~project-id"
+4. Added support for ``insane_mode`` for **aviatrix_gateway**, **aviatrix_spoke_gateway**, and **aviatrix_transit_gateway** created in AWS China
+5. Sorted the lists of ``firewall_image_version`` and ``firewall_size`` in data source **aviatrix_firewall_instance_images**
+
+### Bug Fixes:
+1. Fixed issue where the forced replacement of the resource **aviatrix_cloudn_registration** errors out
+2. Fixed issue where the creation of the resource **aviatrix_aws_tgw_vpc_attachment** errors out
+3. Fixed issue where ``interface`` attribute in **aviatrix_snat** and **aviatrix_dnat** ``policy`` could not be set when using policy-based connections
+4. Fixed issue with **aviatrix_transit_gateway_peering** creation when using gateways that do not exist
+
+### Preview Features:
+1. Implemented new resources to support micro-segmentation:
+  - **aviatrix_app_domain**
+  - **aviatrix_microseg_policy_list**
+
+### Deprecations
+1. Deprecated support for CloudWAN. The following resources are removed:
+  - **aviatrix_device_registration**
+  - **aviatrix_device_tag**
+  - **aviatrix_device_transit_gateway_attachment**
+  - **aviatrix_device_aws_tgw_attachment**
+  - **aviatrix_device_virtual_wan_attachment**
+2. Removed support for the following attributes from the resource **aviatrix_cloudn_transit_gateway_attachment**:
+  - ``enable_dead_peer_detection``
+  - ``enable_learned_cidrs_approval``
+  - ``approved_cidrs``
+
+
+## 2.21.2 (March 31, 2022)
 ### Notes:
 - Supported Controller version: **UserConnect-6.6.5544**
 - Supported Terraform version: **v1.x**
 
 ### Features:
 #### Multi-Cloud Transit:
-1. Implemented support for S2C RX steering toggle with a new attribute for **aviatrix_transit_gateway**
+1. Implemented support for S2C RX steering toggle with a new attribute for **aviatrix_transit_gateway**:
   - ``enable_s2c_rx_balancing``
 
 ### Enhancements:
-1. Updated the ``vpc_id`` attribute for **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** created in OCI to use the VCN OCID.
+1. Updated the ``vpc_id`` attribute for **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway** created in OCI to use the VCN OCID
 2. Implemented support for uploading certificate content with the following new attributes in resource **aviatrix_controller_config**:
   - ``ca_certificate_file``
   - ``server_public_certificate_file``
