@@ -22,7 +22,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.21.2 (UserConnect-6.6.5544)``
+``Last updated: R2.22.0 (UserConnect-6.7)``
 
 
 ---
@@ -288,4 +288,26 @@ Note there are standalone resources already in place to be used and one only nee
 ## R2.21.2 (UserConnect-6.6.5544)
 | Diff | Resource       | Attribute         | Action Required?           |
 |:----:|----------------|:-----------------:|----------------------------|
-|(changed) | gateway, spoke_gateway, transit_gateway, firenet, firewall_instance, site2cloud, transit_external_device_conn, spoke_external_device_conn, transit_cloudn_conn, vpn_user  | `vpc_id` | **Yes**; any of the listed resources built on OCI that references the `name` attribute from the **aviatrix_vpc** resource, should be changed to the `vpc_id` attribute. Running ``terraform refresh`` after this config change is made, will rectify any deltas in the state. This change was made to standardize the behavior between all CSPs (clouds). |
+|(changed) | gateway <br> spoke_gateway <br> transit_gateway <br> firenet <br> firewall_instance <br> site2cloud <br> transit_external_device_conn <br> spoke_external_device_conn <br> transit_cloudn_conn <br> vpn_user  | `vpc_id` | **Yes**; any of the listed resources built on OCI that references the `name` attribute from the **aviatrix_vpc** resource, should be changed to the `vpc_id` attribute. Running ``terraform refresh`` after this config change is made, will rectify any deltas in the state. This change was made to standardize the behavior between all CSPs (clouds). |
+
+
+## R2.22.0 (UserConnect-6.7)
+### Resource Renaming
+| Diff | Resource       | New Resource Name | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(deprecated) | aviatrix_aws_tgw_security_domain  | aviatrix_aws_tgw_network_domain  | **Yes**; **aws_tgw_security_domain** will be deprecated and replaced with **aws_tgw_network_domain**. It will be kept for now for backward compatibility and will be removed in the future. Please use **aws_tgw_network_domain** instead <br><br> You will need to remove any pre-existing **aws_tgw_security_domain** resources from the statefile, update your .tf files to **aws_tgw_network_domain**, as well as any attributes (and corresponding values) as necessary, and ``terraform import`` as **aviatrix_aws_tgw_network_domain** <br>|
+|(deprecated) | segmentation_security_domain | segmentation_network_domain | **Yes**; please see above for details or follow the guide [here](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/migrating_from_security_domain_to_network_domain) for migration steps |
+|(deprecated) | segmentation_security_domain_association | segmentation_network_domain_association | **Yes**; please see above |
+|(deprecated) | segmentation_security_domain_connection_policy | segmentation_network_domain_connection_policy | **Yes**; please see above |
+
+### Attribute Renaming
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(changed) | aws_tgw_connect <br> aws_tgw_directconnect <br> aws_tgw_vpc_attachment | security_domain_name | **Yes**; renamed to ``network_domain_name``. Please follow the guide [here](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/migrating_from_security_domain_to_network_domain) for migration steps |
+
+### Misc.
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(changed) | gateway <br> spoke_gateway <br> transit_gateway <br> vpc | vpc_id | **No**; the attribute value for these resources created in GCP now include the project ID. The new format is `<vpc_name>~-~<project_id>`; if some resources referenced the `vpc_id` and concatenated the project ID, it is no longer necessary |
+|(deprecated) | device_registration <br> device_tag <br> device_transit_gateway_attachment <br> device_aws_tgw_attachment <br> device_virtual_wan_attachment | -- | **Yes**; these resources are removed from Terraform as CloudWAN is no longer a supported feature |
+|(deprecated) | cloudn_transit_gateway_attachment | enable_dead_peer_detection <br> enable_learned_cidrs_approval <br> approved_cirs | **Yes**; these attributes are no longer supported in this resource. They can be safely removed from .tf config |
