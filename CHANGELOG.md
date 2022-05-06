@@ -30,7 +30,7 @@ Please follow the guide [here](https://registry.terraform.io/providers/AviatrixS
 to support the renaming from security domain to network domain. Resources and attributes whose name includes security domain will be deprecated in future releases.
 Please follow the guide [here](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/migrating_from_security_domain_to_network_domain) for migration
 3. Updated the ``vpc_id`` attribute for **aviatrix_gateway**, **aviatrix_spoke_gateway**, **aviatrix_transit_gateway** and **aviatrix_vpc** created in GCP to include the project id:
-  - New format: "vpc-gcp-test~-~project-id"
+  - New format: ``"<vpc_name>~-~<project_id>"``
 4. Added support for ``insane_mode`` for **aviatrix_gateway**, **aviatrix_spoke_gateway**, and **aviatrix_transit_gateway** created in AWS China
 5. Sorted the lists of ``firewall_image_version`` and ``firewall_size`` in data source **aviatrix_firewall_instance_images**
 
