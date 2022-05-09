@@ -40,7 +40,7 @@ The following arguments are supported:
 * `cloudn_lan_interface_neighbor_bgp_asn` - (Required) CloudN LAN Interface Neighbor's AS Number. Type: String.
 
 ### Optional
-!> **WARNING:** Attributes `enable_dead_peer_detection`, `enable_learned_cidrs_approval` and `approved_cidrs` have been deprecated as of provider version R2.22+.
+!> **WARNING:** Attributes `enable_dead_peer_detection`, `enable_learned_cidrs_approval` and `approved_cidrs` have been deprecated and removed as of provider version R2.22+.
 
 * `enable_over_private_network` - (Optional) Enable connection over private network. Type: Boolean. Default: true.
 * `enable_jumbo_frame` - (Optional) Enable Jumbo Frame support for the connection. Type: Boolean. Default: false.
