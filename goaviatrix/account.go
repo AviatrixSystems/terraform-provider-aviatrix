@@ -80,6 +80,7 @@ type Account struct {
 	AwsSCaChainCert                       string
 	AwsSCapCertPath                       string `form:"aws_red_cap_cert_path,omitempty" json:"aws_red_cap_cert_path,omitempty"`
 	AwsSCapCertKeyPath                    string `json:"aws_red_cap_key_path,omitempty"`
+	GroupName                             string `form:"groups,omitempty" json:"groups,omitempty"`
 }
 
 type AccountResult struct {
@@ -105,6 +106,7 @@ func (c *Client) CreateGCPAccount(account *Account) error {
 		"account_name":        account.AccountName,
 		"cloud_type":          strconv.Itoa(account.CloudType),
 		"gcloud_project_name": account.GcloudProjectName,
+		"groups":              account.GroupName,
 	}
 
 	files := []File{
@@ -126,6 +128,7 @@ func (c *Client) CreateOCIAccount(account *Account) error {
 		"oci_tenancy_id":     account.OciTenancyID,
 		"oci_user_id":        account.OciUserID,
 		"oci_compartment_id": account.OciCompartmentID,
+		"groups":             account.GroupName,
 	}
 
 	files := []File{
@@ -149,6 +152,7 @@ func (c *Client) CreateAWSTSAccount(account *Account) error {
 		"aws_orange_cap_agency":     account.AwsTsCapAgency,
 		"aws_orange_cap_mission":    account.AwsTsCapMission,
 		"aws_orange_cap_role_name":  account.AwsTsCapRoleName,
+		"groups":                    account.GroupName,
 	}
 
 	files := []File{
@@ -180,6 +184,7 @@ func (c *Client) CreateAWSSAccount(account *Account) error {
 		"aws_red_cap_agency":       account.AwsSCapAgency,
 		"aws_red_cap_account_name": account.AwsSCapAccountName,
 		"aws_red_cap_role_name":    account.AwsSCapRoleName,
+		"groups":                   account.GroupName,
 	}
 
 	files := []File{

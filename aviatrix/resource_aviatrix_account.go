@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -387,6 +388,12 @@ func resourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS Secret Region CAP Certificate Key file path on the controller.",
 			},
+			"group_name": {
+				Type:        schema.TypeList,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "RBAC permission group name.",
+			},
 		},
 	}
 }
@@ -456,6 +463,10 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		AwsSCaChainCert:                       d.Get("awss_ca_chain_cert").(string),
 		AwsSCapCertPath:                       d.Get("awss_cap_cert_path").(string),
 		AwsSCapCertKeyPath:                    d.Get("awss_cap_cert_key_path").(string),
+	}
+
+	if _, ok := d.GetOk("group_name"); ok {
+		account.GroupName = strings.Join(goaviatrix.ExpandStringList(d.Get("group_name").([]interface{})), ",")
 	}
 
 	awsIam := d.Get("aws_iam").(bool)
@@ -853,6 +864,9 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 			d.Set("awss_cap_cert_key_path", acc.AwsSCapCertKeyPath)
 			d.Set("aws_ca_cert_path", acc.AwsCaCertPath)
 		}
+		if acc.GroupName != "" {
+			d.Set("group_name", acc.GroupName)
+		}
 		d.SetId(acc.AccountName)
 	}
 
@@ -939,6 +953,10 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 		AwsSCapCertKeyPath:                    d.Get("awss_cap_cert_key_path").(string),
 	}
 
+	if _, ok := d.GetOk("group_name"); ok {
+		account.GroupName = strings.Join(goaviatrix.ExpandStringList(d.Get("group_name").([]interface{})), ",")
+	}
+
 	awsIam := d.Get("aws_iam").(bool)
 	account.AwsIam = strconv.FormatBool(awsIam)
 
@@ -958,6 +976,10 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	if d.HasChange("account_name") {
 		return diag.Errorf("update account name is not allowed")
+	}
+
+	if d.HasChanges("group_name") {
+		return diag.Errorf("update RBAC permission group is not allowed")
 	}
 
 	if d.HasChanges("aws_gateway_role_app", "aws_gateway_role_ec2") {
