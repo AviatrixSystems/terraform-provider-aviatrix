@@ -23,7 +23,7 @@ resource "aviatrix_account" "temp_acc_aws" {
   aws_iam            = true
   aws_role_app       = "arn:aws:iam::123456789012:role/aviatrix-role-app"
   aws_role_ec2       = "arn:aws:iam::123456789012:role/aviatrix-role-ec2"
-  group_name         = ["write_only"]
+  group_names        = ["write_only"]
 }
 ```
 ```hcl
@@ -35,7 +35,7 @@ resource "aviatrix_account" "temp_acc_aws" {
   aws_account_number = "123456789012"
   aws_access_key     = "ABCDEFGHIJKL"
   aws_secret_key     = "ABCDEFGHIJKLabcdefghijkl"
-  group_name         = ["write_only"]
+  group_names        = ["write_only"]
 }
 ```
 ```hcl
@@ -45,7 +45,7 @@ resource "aviatrix_account" "temp_acc_gcp" {
   cloud_type                          = 4
   gcloud_project_id                   = "aviatrix-123456"
   gcloud_project_credentials_filepath = "/home/ubuntu/test_gcp/aviatrix-abc123.json"
-  group_name                          = ["write_only"]
+  group_names                         = ["write_only"]
 }
 ```
 ```hcl
@@ -57,7 +57,7 @@ resource "aviatrix_account" "temp_acc_azure" {
   arm_directory_id    = "abcdefgh-1234-5678-9100-abc123456789"
   arm_application_id  = "1234abcd-12ab-34cd-56ef-abcdef123456"
   arm_application_key = "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe="
-  group_name          = ["write_only"]
+  group_names         = ["write_only"]
 }
 ```
 ```hcl
@@ -69,7 +69,7 @@ resource "aviatrix_account" "temp_acc_oci" {
   oci_user_id                  = "ocid1.user.oc1..aaaaaaaazly"
   oci_compartment_id           = "ocid1.tenancy.oc1..aaaaaaaaxo"
   oci_api_private_key_filepath = "/Users/public/Documents/oci_api_key.pem"
-  group_name                   = ["write_only"]
+  group_names                  = ["write_only"]
 }
 ```
 ```hcl
@@ -81,7 +81,7 @@ resource "aviatrix_account" "temp_acc_azure_gov" {
   azuregov_directory_id    = "abcdefgh-1234-5678-9100-abc123456789"
   azuregov_application_id  = "1234abcd-12ab-34cd-56ef-abcdef123456"
   azuregov_application_key = "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe="
-  group_name               = ["write_only"]
+  group_names              = ["write_only"]
 }
 ```
 ```hcl
@@ -92,7 +92,7 @@ resource "aviatrix_account" "temp_acc_awsgov" {
   awsgov_account_number = "123456789012"
   awsgov_access_key     = "ABCDEFGHIJKL"
   awsgov_secret_key     = "ABCDEFGHIJKLabcdefghijkl"
-  group_name            = ["write_only"]
+  group_names           = ["write_only"]
 }
 ```
 ```hcl
@@ -104,7 +104,7 @@ resource "aviatrix_account" "temp_acc_aww_china_iam" {
   awschina_iam            = true
   awschina_role_app       = "arn:aws-cn:iam::123456789012:role/aviatrix-role-app"
   awschina_role_ec2       = "arn:aws-cn:iam::123456789012:role/aviatrix-role-ec2"
-  group_name              = ["write_only"]
+  group_names             = ["write_only"]
 }
 ```
 ```hcl
@@ -116,7 +116,7 @@ resource "aviatrix_account" "temp_acc_awschina" {
   awschina_iam            = false
   awschina_access_key     = "ABCDEFGHIJKL"
   awschina_secret_key     = "ABCDEFGHIJKLabcdefghijkl"
-  group_name              = ["write_only"]
+  group_names             = ["write_only"]
 }
 ```
 ```hcl
@@ -128,7 +128,7 @@ resource "aviatrix_account" "temp_acc_azurechina" {
   azurechina_directory_id    = "abcdefgh-1234-5678-9100-abc123456789"
   azurechina_application_id  = "1234abcd-12ab-34cd-56ef-abcdef123456"
   azurechina_application_key = "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe="
-  group_name                 = ["write_only"]
+  group_names                = ["write_only"]
 }
 ```
 ```hcl
@@ -139,7 +139,7 @@ resource "aviatrix_account" "temp_acc_alibaba" {
   alicloud_account_id = "123456789012"
   alicloud_access_key = "ABCDEFGHIJKL"
   alicloud_secret_key = "ABCDEFGHIJKLabcdefghijkl"
-  group_name          = ["write_only"]
+  group_names         = ["write_only"]
 }
  ```
   
@@ -156,7 +156,7 @@ resource "aviatrix_account" "temp_acc_aws_top_secret" {
   awsts_cap_cert       = "path/to/cap_cert_file"
   awsts_cap_cert_key   = "path/to/cap_cert_key_file"
   awsts_ca_chain_cert  = "path/to/cap_chain_cert_file"
-  group_name           = ["write_only"]
+  group_names          = ["write_only"]
 }
 ```
 ```hcl
@@ -172,7 +172,7 @@ resource "aviatrix_account" "temp_acc_aws_secret" {
   awss_cap_cert         = "path/to/cap_cert_file"
   awss_cap_cert_key     = "path/to/cap_cert_key_file"
   awss_ca_chain_cert    = "path/to/cap_chain_cert_file"
-  group_name            = ["write_only"]
+  group_names           = ["write_only"]
 }
 ```
 
@@ -195,33 +195,28 @@ The following arguments are supported:
 * `aws_role_ec2` - (Optional) AWS EC2 role ARN, this option is for UserConnect. Required when `aws_iam` is "true" and when creating an account for AWS.
 * `aws_gateway_role_app` - (Optional) A separate AWS App role ARN to assign to gateways created by the controller. Required when `aws_gateway_role_ec2` is set. Only allowed when `aws_iam`, `awsgov_iam`, or `awschina_iam` is "true" when creating an account for AWS, AWSGov or AWSChina, respectively. Available as of provider version R2.19+.
 * `aws_gateway_role_ec2` - (Optional) A separate AWS EC2 role ARN to assign to gateways created by the controller. Required when `aws_gateway_role_app` is set. Only allowed when `aws_iam`, `awsgov_iam`, or `awschina_iam` is "true" when creating an account for AWS, AWSGov or AWSChina, respectively. Available as of provider version R2.19+.
-* `group_name` - (Optional) A list of RBAC groups name.
 
 ### Azure
 * `arm_subscription_id` - (Optional) Azure ARM Subscription ID. Required when creating an account for Azure.
 * `arm_directory_id` - (Optional) Azure ARM Directory ID. Required when creating an account for Azure.
 * `arm_application_id` - (Optional) Azure ARM Application ID. Required when creating an account for Azure.
 * `arm_application_key` - (Optional) Azure ARM Application key. Required when creating an account for Azure.
-* `group_name` - (Optional) A list of RBAC groups name.
 
 ### Google Cloud
 * `gcloud_project_id` - (Optional) GCloud Project ID.
 * `gcloud_project_credentials_filepath` - (Optional) GCloud Project Credentials [local filepath].json. Required when creating an account for GCP.
-* `group_name` - (Optional) A list of RBAC groups name.
 
 ### Oracle Cloud
 * `oci_tenancy_id` - (Optional) Oracle OCI Tenancy ID. Required when creating an account for OCI.
 * `oci_user_id` - (Optional) Oracle OCI User ID. Required when creating an account for OCI.
 * `oci_compartment_id` - (Optional) Oracle OCI Compartment ID. Required when creating an account for OCI.
 * `oci_api_private_key_filepath` - (Optional) Oracle OCI API Private Key local file path. Required when creating an account for OCI.
-* `group_name` - (Optional) A list of RBAC groups name.
 
 ### AzureGov Cloud
 * `azuregov_subscription_id` - (Optional) AzureGov ARM Subscription ID. Required when creating an account for AzureGov. Available as of provider version R2.19+.
 * `azuregov_directory_id` - (Optional) AzureGov ARM Directory ID. Required when creating an account for AzureGov. Available as of provider version R2.19+.
 * `azuregov_application_id` - (Optional) AzureGov ARM Application ID. Required when creating an account for AzureGov. Available as of provider version R2.19+.
 * `azuregov_application_key` - (Optional) AzureGov ARM Application key. Required when creating an account for AzureGov. Available as of provider version R2.19+.
-* `group_name` - (Optional) A list of RBAC groups name.
 
 ### AWSGov Cloud
 * `awsgov_account_number` - (Optional) AWSGov Account number to associate with Aviatrix account. Required when creating an account for AWSGov.
@@ -230,7 +225,6 @@ The following arguments are supported:
 * `awsgov_secret_key` - (Optional) AWS Secret Key. Required when creating an account for AWSGov.
 * `awsgov_role_app` - (Optional) AWSGov App role ARN. Available when `awsgov_iam` is "true" and when creating an account for AWSGov. If left empty, the ARN will be computed. Available as of provider version 2.19+.
 * `awsgov_role_ec2` - (Optional) AWSGov EC2 role ARN. Available when `awsgov_iam` is "true" and when creating an account for AWSGov. If left empty, the ARN will be computed. Available as of provider version 2.19+.
-* `group_name` - (Optional) A list of RBAC groups name.
 
 ### AWSChina Cloud
 * `awschina_account_number` - (Optional) AWSChina Account number to associate with Aviatrix account. Required when creating an account for AWSChina. Available as of provider version 2.19+.
@@ -239,20 +233,17 @@ The following arguments are supported:
 * `awschina_role_ec2` - (Optional) AWSChina EC2 role ARN. Available when `awschina_iam` is "true" and when creating an account for AWSChina. If left empty, the ARN will be computed. Available as of provider version 2.19+.
 * `awschina_access_key` - (Optional) AWSChina Access Key. Required when `awschina_iam` is "false" and when creating an account for AWSChina. Available as of provider version 2.19+.
 * `awschina_secret_key` - (Optional) AWSChina Secret Key. Required when `awschina_iam` is "false" and when creating an account for AWSChina. Available as of provider version 2.19+.
-* `group_name` - (Optional) A list of RBAC groups name.
 
 ### AzureChina Cloud
 * `azurechina_subscription_id` - (Optional) AzureChina ARM Subscription ID. Required when creating an account for AzureChina. Available as of provider version 2.19+.
 * `azurechina_directory_id` - (Optional) AzureChina ARM Directory ID. Required when creating an account for AzureChina. Available as of provider version 2.19+.
 * `azurechina_application_id` - (Optional) AzureChina ARM Application ID. Required when creating an account for AzureChina. Available as of provider version 2.19+.
 * `azurechina_application_key` - (Optional) AzureChina ARM Application key. Required when creating an account for AzureChina. Available as of provider version 2.19+.
-* `group_name` - (Optional) A list of RBAC groups name.
 
 ### Alibaba Cloud
 * `alicloud_account_id` - (Optional) Alibaba Cloud Account number to associate with Aviatrix account. Required when creating an account for Alibaba Cloud.
 * `alicloud_access_key` - (Optional) Alibaba Cloud Access Key. Required when creating an account for Alibaba Cloud.
 * `alicloud_secret_key` - (Optional) Alibaba Cloud Secret Key. Required when creating an account for Alibaba Cloud.
-* `group_name` - (Optional) A list of RBAC groups name.
 
 ### AWS Top Secret Region
 * `awsts_account_number` - (Optional) AWS Top Secret Region Account Number. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19.5+.
@@ -263,7 +254,6 @@ The following arguments are supported:
 * `awsts_cap_cert` - (Optional) AWS Top Secret Region CAP Certificate local file path. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19.5+.
 * `awsts_cap_cert_key` - (Optional) AWS Top Secret Region CAP Certificate Key local file path. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19.5+.
 * `awsts_ca_chain_cert` - (Optional) AWS Top Secret Region Custom Certificate Authority local file path. Required when creating an account in AWS Top Secret Region. Available as of provider version R2.19.5+.
-* `group_name` - (Optional) A list of RBAC groups name.
 
 ### AWS Secret Region
 * `awss_account_number` - (Optional) AWS Secret Region Account Number. Required when creating an account in AWS Secret Region. Available as of provider version R2.19.5+.
@@ -274,11 +264,11 @@ The following arguments are supported:
 * `awss_cap_cert` - (Optional) AWS Secret Region CAP Certificate local file path. Required when creating an account in AWS Secret Region. Available as of provider version R2.19.5+.
 * `awss_cap_cert_key` - (Optional) AWS Secret Region CAP Certificate Key local file path. Required when creating an account in AWS Secret Region. Available as of provider version R2.19.5+.
 * `awss_ca_chain_cert` - (Optional) AWS Secret Region Custom Certificate Authority local file path. Required when creating an account in AWS Secret Region. Available as of provider version R2.19.5+.
-* `group_name` - (Optional) A list of RBAC groups name.
 
 ### Misc.
 ~> **NOTE:** On Terraform versions 0.12.x, 0.13.x, and 0.14.x, Terraform will not detect any changes to the account when the account audit fail warning is given. In order to apply changes or set `audit_account = false`, please run `terraform apply -refresh=false`. 
 * `audit_account` - (Optional) Specify whether to enable the audit account feature. If this feature is enabled, terraform will give a warning if there is an issue with the account credentials. Changing `audit_account` to "false" will not prevent the Controller from performing account audits. It will only prevent Terraform from displaying a warning. Valid values: true, false. Default: false. Available as of provider version 2.19+. **Note: The warning may still appear for a few hours after fixing the underlying issue.**
+* `group_names` - (Optional) A list of RBAC groups name. This attribute not allow update in aviatrix_account resource, if update will show no change. 
 
 -> **NOTE:** Please make sure that the IAM roles/profiles have already been created before running this, if `aws_iam = true`. More information on the IAM roles is at https://docs.aviatrix.com/HowTos/iam_policies.html and https://docs.aviatrix.com/HowTos/HowTo_IAM_role.html
 

@@ -78,9 +78,10 @@ type Account struct {
 	AwsSCapCert                           string
 	AwsSCapCertKey                        string
 	AwsSCaChainCert                       string
-	AwsSCapCertPath                       string `form:"aws_red_cap_cert_path,omitempty" json:"aws_red_cap_cert_path,omitempty"`
-	AwsSCapCertKeyPath                    string `json:"aws_red_cap_key_path,omitempty"`
-	GroupName                             string `form:"groups,omitempty" json:"groups,omitempty"`
+	AwsSCapCertPath                       string   `form:"aws_red_cap_cert_path,omitempty" json:"aws_red_cap_cert_path,omitempty"`
+	AwsSCapCertKeyPath                    string   `json:"aws_red_cap_key_path,omitempty"`
+	GroupName                             string   `form:"groups,omitempty"`
+	GroupNameReturn                       []string `json:"rbac_groups,omitempty"`
 }
 
 type AccountResult struct {

@@ -388,11 +388,15 @@ func resourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS Secret Region CAP Certificate Key file path on the controller.",
 			},
-			"group_name": {
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Optional:    true,
-				Description: "RBAC permission group name.",
+			"group_names": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					groupNameOld, _ := d.GetChange("group_names")
+					return len(groupNameOld.([]interface{})) != 0
+				},
+				Description: "List of RBAC permission group names.",
 			},
 		},
 	}
@@ -465,8 +469,8 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		AwsSCapCertKeyPath:                    d.Get("awss_cap_cert_key_path").(string),
 	}
 
-	if _, ok := d.GetOk("group_name"); ok {
-		account.GroupName = strings.Join(goaviatrix.ExpandStringList(d.Get("group_name").([]interface{})), ",")
+	if _, ok := d.GetOk("group_names"); ok {
+		account.GroupName = strings.Join(goaviatrix.ExpandStringList(d.Get("group_names").([]interface{})), ",")
 	}
 
 	awsIam := d.Get("aws_iam").(bool)
@@ -864,9 +868,8 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 			d.Set("awss_cap_cert_key_path", acc.AwsSCapCertKeyPath)
 			d.Set("aws_ca_cert_path", acc.AwsCaCertPath)
 		}
-		if acc.GroupName != "" {
-			d.Set("group_name", acc.GroupName)
-		}
+
+		d.Set("group_names", acc.GroupNameReturn)
 		d.SetId(acc.AccountName)
 	}
 
@@ -953,10 +956,6 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 		AwsSCapCertKeyPath:                    d.Get("awss_cap_cert_key_path").(string),
 	}
 
-	if _, ok := d.GetOk("group_name"); ok {
-		account.GroupName = strings.Join(goaviatrix.ExpandStringList(d.Get("group_name").([]interface{})), ",")
-	}
-
 	awsIam := d.Get("aws_iam").(bool)
 	account.AwsIam = strconv.FormatBool(awsIam)
 
@@ -976,10 +975,6 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	if d.HasChange("account_name") {
 		return diag.Errorf("update account name is not allowed")
-	}
-
-	if d.HasChanges("group_name") {
-		return diag.Errorf("update RBAC permission group is not allowed")
 	}
 
 	if d.HasChanges("aws_gateway_role_app", "aws_gateway_role_ec2") {
