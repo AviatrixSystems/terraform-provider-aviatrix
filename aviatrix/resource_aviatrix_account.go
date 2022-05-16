@@ -470,7 +470,7 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if _, ok := d.GetOk("group_names"); ok {
-		account.GroupName = strings.Join(goaviatrix.ExpandStringList(d.Get("group_names").([]interface{})), ",")
+		account.GroupNames = strings.Join(goaviatrix.ExpandStringList(d.Get("group_names").([]interface{})), ",")
 	}
 
 	awsIam := d.Get("aws_iam").(bool)
@@ -869,7 +869,7 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 			d.Set("aws_ca_cert_path", acc.AwsCaCertPath)
 		}
 
-		d.Set("group_names", acc.GroupNameReturn)
+		d.Set("group_names", acc.GroupNamesRead)
 		d.SetId(acc.AccountName)
 	}
 
