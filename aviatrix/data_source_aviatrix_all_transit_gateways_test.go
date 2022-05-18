@@ -107,11 +107,11 @@ resource "aviatrix_transit_gateway" "test2" {
 }
 
 func testAccDataSourceAviatrixAllTransitGatewaysConfigBasic() string {
-	return fmt.Sprint(`
+	return `
 data "aviatrix_all_transit_gateways" "foo" {
    all_transit_gateway = true
 }
-`)
+`
 }
 
 func testAccDataSourceAviatrixAllTransitGateways(name string) resource.TestCheckFunc {
