@@ -152,6 +152,7 @@ func Provider() *schema.Provider {
 			"aviatrix_vpc_tracker":                      dataSourceAviatrixVpcTracker(),
 			"aviatrix_firewall":                         dataSourceAviatrixFirewall(),
 			"aviatrix_firewall_instance_images":         dataSourceAviatrixFirewallInstanceImages(),
+			"aviatrix_all_transit_gateways":             dataSourceAviatrixListAllTransitGateway(),
 		},
 		ConfigureFunc: aviatrixConfigure,
 	}

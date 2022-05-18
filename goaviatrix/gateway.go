@@ -503,6 +503,27 @@ func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
 	return nil, ErrNotFound
 }
 
+func (c *Client) GetTransitGatewayNameList() ([]string, error) {
+	action := "list_vpcs_summary"
+	params := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"transit_only": "true",
+	}
+	var data GatewayListResp
+	err := c.GetAPI(&data, action, params, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+	gwList := data.Results
+	var GwNameList []string
+	for i := range gwList {
+		GwNameList = append(GwNameList, gwList[i].GwName)
+	}
+
+	return GwNameList, nil
+}
+
 func (c *Client) GetGatewayDetail(gateway *Gateway) (*GatewayDetail, error) {
 	form := map[string]string{
 		"CID":      c.CID,
