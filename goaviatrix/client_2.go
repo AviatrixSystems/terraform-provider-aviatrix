@@ -15,18 +15,45 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (c *Client) PostAPIContext2(ctx context.Context, action string, d interface{}, checkFunc CheckAPIResponseFunc) error {
-	return c.DoAPIContext2(ctx, "POST", action, d, checkFunc)
+func checkAndReturnAPIResp2(resp *http.Response, v interface{}, method, action string, checkFunc CheckAPIResponseFunc) error {
+	var data APIResp
+	buf := new(bytes.Buffer)
+	_, err := buf.ReadFrom(resp.Body)
+	if err != nil {
+		return fmt.Errorf("reading response body %q failed: %v", action, err)
+	}
+	bodyString := buf.String()
+
+	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
+		return fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
+	}
+	if err := checkFunc(action, method, data.Reason, data.Return); err != nil {
+		return err
+	}
+
+	if v != nil {
+		if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&v); err != nil {
+			return fmt.Errorf("Json Decode failed: %v\n Body: %s", err, bodyString)
+		}
+	}
+
+	return nil
 }
 
-func (c *Client) DoAPIContext2(ctx context.Context, verb string, action string, d interface{}, checkFunc CheckAPIResponseFunc) error {
+// PostAPIContext2 makes a post request to the Aviatrix v2 API, checks for any errors and decodes the response into the
+// return value v if it is not nil.
+func (c *Client) PostAPIContext2(ctx context.Context, v interface{}, action string, d interface{}, checkFunc CheckAPIResponseFunc) error {
+	return c.DoAPIContext2(ctx, "POST", v, action, d, checkFunc)
+}
+
+func (c *Client) DoAPIContext2(ctx context.Context, verb string, v interface{}, action string, d interface{}, checkFunc CheckAPIResponseFunc) error {
 	Url := fmt.Sprintf("https://%s/v2/api", c.ControllerIP)
 	resp, err := c.RequestContext2(ctx, verb, Url, d)
 	if err != nil {
 		return fmt.Errorf("HTTP %s %q failed: %v", verb, Url, err)
 	}
 
-	return checkAPIResp(resp, action, checkFunc)
+	return checkAndReturnAPIResp2(resp, v, verb, action, checkFunc)
 }
 
 func (c *Client) RequestContext2(ctx context.Context, verb string, path string, i interface{}) (*http.Response, error) {
