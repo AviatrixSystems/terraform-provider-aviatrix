@@ -503,7 +503,7 @@ func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
 	return nil, ErrNotFound
 }
 
-func (c *Client) GetTransitGatewayNameList() ([]string, error) {
+func (c *Client) GetTransitGatewayList() ([]Gateway, error) {
 	action := "list_vpcs_summary"
 	params := map[string]string{
 		"CID":          c.CID,
@@ -516,12 +516,12 @@ func (c *Client) GetTransitGatewayNameList() ([]string, error) {
 		return nil, err
 	}
 	gwList := data.Results
-	var GwNameList []string
 	for i := range gwList {
-		GwNameList = append(GwNameList, gwList[i].GwName)
+		gw := &gwList[i]
+		gw.AllocateNewEipRead = gw.AllocateNewEipReadPtr == nil || *gw.AllocateNewEipReadPtr
 	}
 
-	return GwNameList, nil
+	return gwList, nil
 }
 
 func (c *Client) GetGatewayDetail(gateway *Gateway) (*GatewayDetail, error) {

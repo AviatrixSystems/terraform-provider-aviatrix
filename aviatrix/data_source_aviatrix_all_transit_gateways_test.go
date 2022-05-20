@@ -18,56 +18,44 @@ func TestAccDataSourceAviatrixAllTransitGateways_basic(t *testing.T) {
 	if skipAcc == "yes" {
 		t.Skip("Skipping Data Source All Transit Gateway tests as SKIP_DATA_ALL_TRANSIT_GATEWAY is set")
 	}
-	if skipAcc != "yes" {
-		gcpGwSize := os.Getenv("GCP_GW_SIZE")
-		if gcpGwSize == "" {
-			gcpGwSize = "n1-standard-1"
-		}
-		resource.Test(t, resource.TestCase{
-			PreCheck: func() {
-				testAccPreCheck(t)
-				preGatewayCheck(t, ". Set SKIP_DATA_ALL_TRANSIT_GATEWAY to yes to skip Data Source All Transit Gateway tests")
-			},
-			Providers: testAccProviders,
-			Steps: []resource.TestStep{
-				{
-					Config: testAccDataSourceAviatrixAllTransitGatewaysConfigPreBasic(rName),
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			preGatewayCheck(t, ". Set SKIP_DATA_ALL_TRANSIT_GATEWAY to yes to skip Data Source All Transit Gateway tests")
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAviatrixAllTransitGatewaysConfigPreBasic(rName),
 
-					Check: resource.ComposeTestCheckFunc(
-						resource.TestCheckResourceAttr("aviatrix_transit_gateway.test", "gw_name", fmt.Sprintf("aa-tfg-aws-%s", rName)),
-						resource.TestCheckResourceAttr("aviatrix_transit_gateway.test2", "gw_name", fmt.Sprintf("aa-tfg-gcp-%s", rName)),
-					),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aviatrix_transit_gateway.test", "gw_name", fmt.Sprintf("aa-tfg-aws-%s", rName)),
+					resource.TestCheckResourceAttr("aviatrix_transit_gateway.test2", "gw_name", fmt.Sprintf("aa-tfg-gcp-%s", rName)),
+				),
 
-					Destroy: false,
-				},
-				{
-					Config: testAccDataSourceAviatrixAllTransitGatewaysConfigBasic(),
-					Check: resource.ComposeTestCheckFunc(
-						testAccDataSourceAviatrixAllTransitGateways(resourceName),
-						resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.0.gw_name", fmt.Sprintf("aa-tfg-aws-%s", rName)),
-						resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.0.vpc_id", os.Getenv("AWS_VPC_ID")),
-						resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.0.vpc_reg", os.Getenv("AWS_REGION")),
-						resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.0.gw_size", "t2.micro"),
-						resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.1.gw_name", fmt.Sprintf("aa-tfg-gcp-%s", rName)),
-						resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.1.gw_size", gcpGwSize),
-						resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.1.account_name", fmt.Sprintf("aa-tfa-gcp-%s", rName)),
-						resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.1.subnet", os.Getenv("GCP_SUBNET")),
-						resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.1.vpc_reg", os.Getenv("GCP_ZONE")),
-					),
-					Destroy: true,
-				},
+				Destroy: false,
 			},
-		})
-	} else {
-		t.Log("Skipping Date Source All Transit Gateway test in AWS as SKIP_DATA_ALL_TRANSIT_GATEWAY_AWS is set")
-	}
+			{
+				Config: testAccDataSourceAviatrixAllTransitGatewaysConfigBasic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccDataSourceAviatrixAllTransitGateways(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.0.gw_name", fmt.Sprintf("aa-tfg-aws-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.0.vpc_id", os.Getenv("AWS_VPC_ID")),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.0.vpc_reg", os.Getenv("AWS_REGION")),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.0.gw_size", "t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.1.gw_name", fmt.Sprintf("aa-tfg-gcp-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.1.gw_size", "n1-standard-1"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.1.account_name", fmt.Sprintf("aa-tfa-gcp-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.1.subnet", os.Getenv("GCP_SUBNET")),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.1.vpc_reg", os.Getenv("GCP_ZONE")),
+				),
+				Destroy: true,
+			},
+		},
+	})
 }
 
 func testAccDataSourceAviatrixAllTransitGatewaysConfigPreBasic(rName string) string {
-	gcpGwSize := os.Getenv("GCP_GW_SIZE")
-	if gcpGwSize == "" {
-		gcpGwSize = "n1-standard-1"
-	}
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account" {
 	account_name 	   = "aa-tfa-%[1]s"
@@ -98,18 +86,18 @@ resource "aviatrix_transit_gateway" "test2" {
 	gw_name      = "aa-tfg-gcp-%[1]s"
 	vpc_id       = "%[10]s"
 	vpc_reg      = "%[11]s"
-	gw_size      = "%[12]s"
-	subnet       = "%[13]s"
+	gw_size      = "n1-standard-1"
+	subnet       = "%[12]s"
 }
 `, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"),
-		os.Getenv("GCP_VPC_ID"), os.Getenv("GCP_ZONE"), gcpGwSize, os.Getenv("GCP_SUBNET"))
+		os.Getenv("GCP_VPC_ID"), os.Getenv("GCP_ZONE"), os.Getenv("GCP_SUBNET"))
 }
 
 func testAccDataSourceAviatrixAllTransitGatewaysConfigBasic() string {
 	return `
 data "aviatrix_all_transit_gateways" "foo" {
-   all_transit_gateway = true
+
 }
 `
 }

@@ -84,7 +84,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_controller_email_exception_notification_config | SKIP_CONTROLLER_EMAIL_EXCEPTION_NOTIFICATION_CONFIG | aviatrix_account                           |
 | aviatrix_controller_gateway_keepalive_config | SKIP_CONTROLLER_GATEWAY_KEEPALIVE_CONFIG | N/A                                                              |
 | aviatrix_controller_private_oob      | SKIP_CONTROLLER_PRIVATE_OOB        | N/A                                                                            |
-| aviatrix_controller_security_group_management_config      | SKIP_CONTROLLER_SECURITY_GROUP_MANAGEMENT_CONFIG        | N/A                                  |
+| aviatrix_controller_security_group_management_config | SKIP_CONTROLLER_SECURITY_GROUP_MANAGEMENT_CONFIG        | N/A                                  |
 | aviatrix_device_interface_config	   | SKIP_DEVICE_INTERFACE_CONFIG	    | CLOUDN_DEVICE_NAME                                                             |
 | aviatrix_datadog_agent               | SKIP_DATADOG_AGENT                 | datadog_api_key                                                                |
 | aviatrix_edge_gateway                | SKIP_EDGE_CAAG                     | N/A                                                                            |
@@ -169,6 +169,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_vpn_user                    | SKIP_VPN_USER                      | aviatrix_gateway                                                               |
 | aviatrix_vpn_user_accelerator	       | SKIP_VPN_USER_ACCELERATOR          | aviatrix_gateway						                                         |
 | aviatrix_data_source_account         | SKIP_DATA_ACCOUNT                  | aviatrix_account                                                               |
+| aviatrix_data_source_all_transit_gateways    | SKIP_DATA_ALL_TRANSIT_GATEWAY      | aviatrix_transit_gateway
 | aviatrix_data_source_caller_identity | SKIP_DATA_CALLER_IDENTITY          |                                                                                |
 | aviatrix_data_source_device_interfaces | SKIP_DATA_DEVICE_INTERFACES      | CLOUDN_DEVICE_NAME                                                             |
 | aviatrix_data_source_firenet         | SKIP_DATA_FIRENET                  | aviatrix_firenet                                                               |
