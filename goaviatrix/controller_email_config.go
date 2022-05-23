@@ -117,11 +117,5 @@ func (c *Client) SetStatusChangeNotificationInterval(emailConfiguration *EmailCo
 		"send_rate": strconv.Itoa(emailConfiguration.StatusChangeNotificationInterval),
 	}
 
-	type Resp struct {
-		Return  bool   `json:"return"`
-		Results string `json:"results"`
-		Reason  string `json:"reason"`
-	}
-
 	return c.PostAPI(form["action"], form, BasicCheck)
 }
