@@ -176,7 +176,7 @@ func resourceAviatrixControllerPrivateModeConfigUpdate(ctx context.Context, d *s
 		}
 	}
 
-	return resourceAviatrixControllerEmailConfigRead(ctx, d, meta)
+	return resourceAviatrixControllerPrivateModeConfigRead(ctx, d, meta)
 }
 
 func resourceAviatrixControllerPrivateModeConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
