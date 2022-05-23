@@ -22,34 +22,50 @@ func resourceAviatrixControllerEmailConfig() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"admin_alert_email": {
 				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     true,
-				Description: "Enable email exception notification.",
+				Required:    true,
+				Description: "Email to receive important account and certification information.",
 			},
 			"critical_alert_email": {
 				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     true,
-				Description: "Enable email exception notification.",
+				Required:    true,
+				Description: "Email to receive field notices and critical notices.",
 			},
 			"security_event_email": {
 				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     true,
-				Description: "Enable email exception notification.",
+				Required:    true,
+				Description: "Email to receive security and CVE (Common Vulnerabilities and Exposures) notification emails.",
 			},
 			"status_change_email": {
 				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     true,
-				Description: "Enable email exception notification.",
+				Required:    true,
+				Description: "Email to receive system/tunnel status notification emails.",
 			},
-			//"status_change_notification_interval": {
-			//	Type:        schema.TypeInt,
-			//	Optional:    true,
-			//	Default:     true,
-			//	Description: "Enable email exception notification.",
-			//},
+			"status_change_notification_interval": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     60,
+				Description: "Status change notification interval in seconds.",
+			},
+			"admin_alert_email_verified": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Whether admin alert notification email is verified.",
+			},
+			"critical_alert_email_verified": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Whether critical alert notification email is verified.",
+			},
+			"security_event_email_verified": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Whether security event notification email is verified.",
+			},
+			"status_change_email_verified": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Whether status change notification email is verified.",
+			},
 		},
 	}
 }
@@ -58,20 +74,38 @@ func resourceAviatrixControllerEmailConfigCreate(ctx context.Context, d *schema.
 	client := meta.(*goaviatrix.Client)
 
 	emailConfiguration := &goaviatrix.EmailConfiguration{
-		AdminAlertEmail:    d.Get("admin_alert_email").(string),
-		CriticalAlertEmail: d.Get("critical_alert_email").(string),
-		SecurityEventEmail: d.Get("security_event_email").(string),
-		StatusChangeEmail:  d.Get("status_change_email").(string),
+		AdminAlertEmail:                  d.Get("admin_alert_email").(string),
+		CriticalAlertEmail:               d.Get("critical_alert_email").(string),
+		SecurityEventEmail:               d.Get("security_event_email").(string),
+		StatusChangeEmail:                d.Get("status_change_email").(string),
+		StatusChangeNotificationInterval: d.Get("status_change_notification_interval").(int),
 	}
 
-	err := client.ConfigNotificationEmails(emailConfiguration)
+	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
+	flag := false
+	defer resourceAviatrixControllerEmailConfigReadIfRequired(ctx, d, meta, &flag)
+
+	err := client.ConfigNotificationEmails(ctx, emailConfiguration)
 	if err != nil {
 		return diag.Errorf("could not config controller emails: %v", err)
 	}
 
-	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
+	if emailConfiguration.StatusChangeNotificationInterval != 60 {
+		err := client.SetStatusChangeNotificationInterval(emailConfiguration)
+		if err != nil {
+			return diag.Errorf("could not set status change notification interval: %v", err)
+		}
+	}
+
+	return resourceAviatrixControllerEmailConfigReadIfRequired(ctx, d, meta, &flag)
+}
+
+func resourceAviatrixControllerEmailConfigReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+	if !(*flag) {
+		*flag = true
+		return resourceAviatrixControllerEmailConfigRead(ctx, d, meta)
+	}
 	return nil
-	//return resourceAviatrixControllerEmailConfigRead(ctx, d, meta)
 }
 
 func resourceAviatrixControllerEmailConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -81,11 +115,19 @@ func resourceAviatrixControllerEmailConfigRead(ctx context.Context, d *schema.Re
 		return diag.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
 	}
 
-	enableEmailExceptionNotification, err := client.GetEmailExceptionNotificationStatus(ctx)
+	emailConfiguration, err := client.GetNotificationEmails(ctx)
 	if err != nil {
-		return diag.Errorf("could not get exception email notification status: %v", err)
+		return diag.Errorf("could not get notification emails: %v", err)
 	}
-	d.Set("enable_email_exception_notification", enableEmailExceptionNotification)
+	d.Set("admin_alert_email", emailConfiguration.AdminAlertEmail)
+	d.Set("critical_alert_email", emailConfiguration.CriticalAlertEmail)
+	d.Set("security_event_email", emailConfiguration.SecurityEventEmail)
+	d.Set("status_change_email", emailConfiguration.StatusChangeEmail)
+	d.Set("status_change_notification_interval", emailConfiguration.StatusChangeNotificationInterval)
+	d.Set("admin_alert_email_verified", emailConfiguration.AdminAlertEmailVerified)
+	d.Set("critical_alert_email_verified", emailConfiguration.CriticalAlertEmailVerified)
+	d.Set("security_event_email_verified", emailConfiguration.SecurityEventEmailVerified)
+	d.Set("status_change_email_verified", emailConfiguration.StatusChangeEmailVerified)
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
@@ -94,23 +136,45 @@ func resourceAviatrixControllerEmailConfigRead(ctx context.Context, d *schema.Re
 func resourceAviatrixControllerEmailConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	if d.HasChange("enable_email_exception_notification") {
-		err := client.SetEmailExceptionNotification(ctx, d.Get("enable_email_exception_notification").(bool))
+	if d.HasChanges("admin_alert_email", "critical_alert_email", "security_event_email", "status_change_email") {
+		emailConfiguration := &goaviatrix.EmailConfiguration{
+			AdminAlertEmail:    d.Get("admin_alert_email").(string),
+			CriticalAlertEmail: d.Get("critical_alert_email").(string),
+			SecurityEventEmail: d.Get("security_event_email").(string),
+			StatusChangeEmail:  d.Get("status_change_email").(string),
+		}
+
+		err := client.ConfigNotificationEmails(ctx, emailConfiguration)
 		if err != nil {
-			return diag.Errorf("could not update email exception notification: %v", err)
+			return diag.Errorf("could not config controller emails: %v", err)
 		}
 	}
 
-	return resourceAviatrixControllerEmailExceptionNotificationConfigRead(ctx, d, meta)
+	if d.HasChange("status_change_notification_interval") {
+		emailConfiguration := &goaviatrix.EmailConfiguration{
+			StatusChangeNotificationInterval: d.Get("status_change_notification_interval").(int),
+		}
+
+		err := client.SetStatusChangeNotificationInterval(emailConfiguration)
+		if err != nil {
+			return diag.Errorf("could not update status change notification interval: %v", err)
+		}
+	}
+
+	return resourceAviatrixControllerEmailConfigRead(ctx, d, meta)
 }
 
 func resourceAviatrixControllerEmailConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	//client := meta.(*goaviatrix.Client)
-	//
-	//err := client.SetEmailExceptionNotification(ctx, true)
-	//if err != nil {
-	//	return diag.Errorf("failed to enable email exception notification: %v", err)
-	//}
+	client := meta.(*goaviatrix.Client)
+
+	emailConfiguration := &goaviatrix.EmailConfiguration{
+		StatusChangeNotificationInterval: 60,
+	}
+
+	err := client.SetStatusChangeNotificationInterval(emailConfiguration)
+	if err != nil {
+		return diag.Errorf("could not set status change notification interval to default value: %v", err)
+	}
 
 	return nil
 }

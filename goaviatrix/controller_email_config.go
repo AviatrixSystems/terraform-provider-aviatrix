@@ -1,36 +1,34 @@
 package goaviatrix
 
 import (
-	"encoding/json"
-
-	log "github.com/sirupsen/logrus"
+	"context"
+	"strconv"
 )
 
 type EmailConfiguration struct {
-	CID                string `form:"CID,omitempty"`
-	Action             string `form:"action,omitempty"`
-	AdminAlertEmail    string `json:"admin_alert_email,omitempty"`
-	CriticalAlertEmail string `json:"critical_alert_email,omitempty"`
-	SecurityEventEmail string `json:"security_event_email,omitempty"`
-	StatusChangeEmail  string `json:"status_change_email,omitempty"`
+	CID                              string `form:"CID,omitempty"`
+	Action                           string `form:"action,omitempty"`
+	AdminAlertEmail                  string `form:"admin_alert_email,omitempty"`
+	CriticalAlertEmail               string `form:"critical_alert_email,omitempty"`
+	SecurityEventEmail               string `form:"security_event_email,omitempty"`
+	StatusChangeEmail                string `form:"status_change_email,omitempty"`
+	StatusChangeNotificationInterval int    `form:"status_change_notification_interval"`
+	AdminAlertEmailVerified          bool
+	CriticalAlertEmailVerified       bool
+	SecurityEventEmailVerified       bool
+	StatusChangeEmailVerified        bool
 }
 
-//type EmailArgs struct {
-//	admin_alert    map[string]string
-//	critical_alert map[string]string
-//	security_event map[string]string
-//	status_change  map[string]string
-//}
-
-type EmailArgs struct {
-	AdminAlertEmail    EmailArgsSingle `form:"admin_alert"`
-	CriticalAlertEmail EmailArgsSingle `form:"critical_alert"`
-	SecurityEventEmail EmailArgsSingle `form:"security_event"`
-	StatusChangeEmail  EmailArgsSingle `form:"status_change"`
+type ListAdminEmailAddrResp struct {
+	AdminAlertEmail    EmailCell `json:"admin_alert"`
+	CriticalAlertEmail EmailCell `json:"critical_alert"`
+	SecurityEventEmail EmailCell `json:"security_event"`
+	StatusChangeEmail  EmailCell `json:"status_change"`
 }
 
-type EmailArgsSingle struct {
-	Address string `form:"address"`
+type EmailCell struct {
+	Address  string `json:"address"`
+	Verified bool   `json:"verified"`
 }
 
 type ControllerEmailConfigResp struct {
@@ -39,85 +37,91 @@ type ControllerEmailConfigResp struct {
 	Reason  string `json:"reason"`
 }
 
-//type EmailArgs struct {
-//	AdminAlertEmail    string `json:"admin_alert_email,omitempty"`
-//	CriticalAlertEmail string `json:"critical_alert_email,omitempty"`
-//	SecurityEventEmail int    `json:"security_event_email,omitempty"`
-//	StatusChangeEmail  string `json:"status_change_email,omitempty"`
-//}
-
-func (c *Client) ConfigNotificationEmails(emailConfiguration *EmailConfiguration) error {
-	//var emailArgs map[string]map[string]string
-	//emailArgs := EmailArgs{
-	//	AdminAlertEmail: EmailArgsSingle{
-	//		Address: emailConfiguration.AdminAlertEmail,
-	//	},
-	//	CriticalAlertEmail: EmailArgsSingle{
-	//		Address: emailConfiguration.CriticalAlertEmail,
-	//	},
-	//	SecurityEventEmail: EmailArgsSingle{
-	//		Address: emailConfiguration.SecurityEventEmail,
-	//	},
-	//	StatusChangeEmail: EmailArgsSingle{
-	//		Address: emailConfiguration.StatusChangeEmail,
-	//	},
-	//}
-	adminEmail := map[string]interface{}{
-		"address": emailConfiguration.AdminAlertEmail,
-	}
-	str, _ := json.Marshal(adminEmail)
-
-	criticalEmail := map[string]interface{}{
-		"address": emailConfiguration.CriticalAlertEmail,
-	}
-	str1, _ := json.Marshal(criticalEmail)
-
-	securityEmail := map[string]interface{}{
-		"address": emailConfiguration.SecurityEventEmail,
-	}
-	str2, _ := json.Marshal(securityEmail)
-
-	statusEmail := map[string]interface{}{
-		"address": emailConfiguration.StatusChangeEmail,
-	}
-	str3, _ := json.Marshal(statusEmail)
-
-	emailArgs := map[string]string{
-		"admin_alert":    string(str),
-		"critical_alert": string(str1),
-		"security_event": string(str2),
-		"status_change":  string(str3),
+func (c *Client) ConfigNotificationEmails(ctx context.Context, emailConfiguration *EmailConfiguration) error {
+	form := map[string]interface{}{
+		"CID":    c.CID,
+		"action": "add_notif_email_addr",
+		"notif_email_args": map[string]interface{}{
+			"admin_alert": map[string]interface{}{
+				"address": emailConfiguration.AdminAlertEmail,
+			},
+			"critical_alert": map[string]interface{}{
+				"address": emailConfiguration.CriticalAlertEmail,
+			},
+			"security_event": map[string]interface{}{
+				"address": emailConfiguration.SecurityEventEmail,
+			},
+			"status_change": map[string]interface{}{
+				"address": emailConfiguration.StatusChangeEmail,
+			},
+		},
 	}
 
-	//emailArgs := map[string]interface{}{
-	//	"admin_alert":    adminEmail,
-	//	"critical_alert": criticalEmail,
-	//	"security_event": securityEmail,
-	//	"status_change":  statusEmail,
-	//}
+	return c.PostAPIContext2(ctx, nil, form["action"].(string), form, BasicCheck)
+}
 
-	//emailArgs := map[string]interface{}{
-	//	"admin_alert":    string(str),
-	//	"critical_alert": string(str1),
-	//	"security_event": string(str2),
-	//	"status_change":  string(str3),
-	//}
-
-	log.Printf("zjin00: emailArgs is %v", emailArgs)
-	str4, _ := json.Marshal(emailArgs)
-	log.Printf("zjin01: emailArgs is %v", emailArgs)
-
-	//if err != nil {
-	//	return err
-	//}
-	log.Printf("zjin02: str is %v", string(str4))
+func (c *Client) GetNotificationEmails(ctx context.Context) (*EmailConfiguration, error) {
 	form := map[string]string{
-		"CID":              c.CID,
-		"action":           "add_notif_email_addr",
-		"notif_email_args": string(str4),
+		"CID":    c.CID,
+		"action": "list_notif_email_addr",
 	}
-	log.Printf("zjin03: str is %v", form)
 
-	var data ControllerEmailConfigResp
-	return c.PostAPIWithResponse2(&data, form["action"], form, BasicCheck)
+	type Resp struct {
+		Return  bool                   `json:"return"`
+		Results ListAdminEmailAddrResp `json:"results"`
+		Reason  string                 `json:"reason"`
+	}
+
+	var data Resp
+	err := c.GetAPIContext(ctx, &data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+
+	form1 := map[string]string{
+		"CID":    c.CID,
+		"action": "get_rate_limit_emails",
+	}
+
+	var data1 struct {
+		Return  bool   `json:"return"`
+		Results string `json:"results"`
+		Reason  string `json:"reason"`
+	}
+	err = c.GetAPIContext(ctx, &data1, form1["action"], form1, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+
+	interval, err := strconv.Atoi(data1.Results)
+	if err != nil {
+		return nil, err
+	}
+	return &EmailConfiguration{
+		AdminAlertEmail:                  data.Results.AdminAlertEmail.Address,
+		CriticalAlertEmail:               data.Results.CriticalAlertEmail.Address,
+		SecurityEventEmail:               data.Results.SecurityEventEmail.Address,
+		StatusChangeEmail:                data.Results.StatusChangeEmail.Address,
+		StatusChangeNotificationInterval: interval,
+		AdminAlertEmailVerified:          data.Results.AdminAlertEmail.Verified,
+		CriticalAlertEmailVerified:       data.Results.CriticalAlertEmail.Verified,
+		SecurityEventEmailVerified:       data.Results.SecurityEventEmail.Verified,
+		StatusChangeEmailVerified:        data.Results.StatusChangeEmail.Verified,
+	}, nil
+}
+
+func (c *Client) SetStatusChangeNotificationInterval(emailConfiguration *EmailConfiguration) error {
+	form := map[string]string{
+		"CID":       c.CID,
+		"action":    "set_rate_limit_emails",
+		"send_rate": strconv.Itoa(emailConfiguration.StatusChangeNotificationInterval),
+	}
+
+	type Resp struct {
+		Return  bool   `json:"return"`
+		Results string `json:"results"`
+		Reason  string `json:"reason"`
+	}
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
