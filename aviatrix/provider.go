@@ -102,6 +102,8 @@ func Provider() *schema.Provider {
 			"aviatrix_microseg_policy_list":                           resourceAviatrixMicrosegPolicyList(),
 			"aviatrix_netflow_agent":                                  resourceAviatrixNetflowAgent(),
 			"aviatrix_periodic_ping":                                  resourceAviatrixPeriodicPing(),
+			"aviatrix_private_mode_lb":                                resourceAviatrixPrivateModeLb(),
+			"aviatrix_private_mode_multicloud_endpoint":               resourceAviatrixPrivateModeMulticloudEndpoint(),
 			"aviatrix_proxy_config":                                   resourceAviatrixProxyConfig(),
 			"aviatrix_rbac_group":                                     resourceAviatrixRbacGroup(),
 			"aviatrix_rbac_group_access_account_attachment":           resourceAviatrixRbacGroupAccessAccountAttachment(),
