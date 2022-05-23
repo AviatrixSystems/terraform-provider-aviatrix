@@ -85,10 +85,11 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_controller_email_exception_notification_config | SKIP_CONTROLLER_EMAIL_EXCEPTION_NOTIFICATION_CONFIG | aviatrix_account                           |
 | aviatrix_controller_gateway_keepalive_config | SKIP_CONTROLLER_GATEWAY_KEEPALIVE_CONFIG | N/A                                                              |
 | aviatrix_controller_private_oob      | SKIP_CONTROLLER_PRIVATE_OOB        | N/A                                                                            |
-| aviatrix_controller_security_group_management_config | SKIP_CONTROLLER_SECURITY_GROUP_MANAGEMENT_CONFIG        | N/A                                  |
+| aviatrix_controller_security_group_management_config | SKIP_CONTROLLER_SECURITY_GROUP_MANAGEMENT_CONFIG | N/A                                              |
+| aviatrix_copilot_security_group_management_config | SKIP_COPILOT_SECURITY_GROUP_MANAGEMENT_CONFIG | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY, AWS_VPC_ID, AWS_REGION, AWS_SUBNET |
 | aviatrix_device_interface_config	   | SKIP_DEVICE_INTERFACE_CONFIG	    | CLOUDN_DEVICE_NAME                                                             |
 | aviatrix_datadog_agent               | SKIP_DATADOG_AGENT                 | datadog_api_key                                                                |
-| aviatrix_edge_gateway                | SKIP_EDGE_CAAG                     | N/A                                                                            |
+| aviatrix_edge_caag                   | SKIP_EDGE_CAAG                     | N/A                                                                            |
 | aviatrix_filebeat_forwarder          | SKIP_FILEBEAT_FORWARDER            | N/A                                                                            |
 | aviatrix_firenet                     | SKIP_FIRENET                       | aviatrix_account + AWS_REGION, Palo Alto VM series                             |
 | aviatrix_firewall                    | SKIP_FIREWALL                      | aviatrix_gateway                                                               |
