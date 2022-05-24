@@ -614,11 +614,8 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 				ServerCertificateFilePath: d.Get("server_public_certificate_file_path").(string),
 				ServerPrivateKeyFilePath:  d.Get("server_private_key_file_path").(string),
 			}
-			err := client.DisableImportedHTTPSCerts()
-			if err != nil {
-				return fmt.Errorf("could not disable imported certs to prepare for importing new certs: %v", err)
-			}
-			err = client.ImportNewHTTPSCerts(certConfig)
+
+			err := client.ImportNewHTTPSCerts(certConfig)
 			if err != nil {
 				return fmt.Errorf("could not import new HTTPS certs: %v", err)
 			}
@@ -628,11 +625,8 @@ func resourceAviatrixControllerConfigUpdate(d *schema.ResourceData, meta interfa
 				ServerCertificateFile: d.Get("server_public_certificate_file").(string),
 				ServerPrivateKeyFile:  d.Get("server_private_key_file").(string),
 			}
-			err := client.DisableImportedHTTPSCerts()
-			if err != nil {
-				return fmt.Errorf("could not disable imported certs to prepare for importing new certs: %v", err)
-			}
-			err = client.ImportNewHTTPSCerts(certConfig)
+
+			err := client.ImportNewHTTPSCerts(certConfig)
 			if err != nil {
 				return fmt.Errorf("could not import new HTTPS certs: %v", err)
 			}
