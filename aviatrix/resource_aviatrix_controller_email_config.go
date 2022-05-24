@@ -137,11 +137,18 @@ func resourceAviatrixControllerEmailConfigUpdate(ctx context.Context, d *schema.
 	client := meta.(*goaviatrix.Client)
 
 	if d.HasChanges("admin_alert_email", "critical_alert_email", "security_event_email", "status_change_email") {
-		emailConfiguration := &goaviatrix.EmailConfiguration{
-			AdminAlertEmail:    d.Get("admin_alert_email").(string),
-			CriticalAlertEmail: d.Get("critical_alert_email").(string),
-			SecurityEventEmail: d.Get("security_event_email").(string),
-			StatusChangeEmail:  d.Get("status_change_email").(string),
+		emailConfiguration := &goaviatrix.EmailConfiguration{}
+		if d.HasChange("admin_alert_email") {
+			emailConfiguration.AdminAlertEmail = d.Get("admin_alert_email").(string)
+		}
+		if d.HasChange("critical_alert_email") {
+			emailConfiguration.CriticalAlertEmail = d.Get("critical_alert_email").(string)
+		}
+		if d.HasChange("security_event_email") {
+			emailConfiguration.SecurityEventEmail = d.Get("security_event_email").(string)
+		}
+		if d.HasChange("status_change_email") {
+			emailConfiguration.StatusChangeEmail = d.Get("status_change_email").(string)
 		}
 
 		err := client.ConfigNotificationEmails(ctx, emailConfiguration)
