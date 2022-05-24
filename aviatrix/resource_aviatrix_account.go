@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -387,6 +388,16 @@ func resourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS Secret Region CAP Certificate Key file path on the controller.",
 			},
+			"group_names": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					groupNameOld, _ := d.GetChange("group_names")
+					return len(groupNameOld.([]interface{})) != 0
+				},
+				Description: "List of RBAC permission group names.",
+			},
 		},
 	}
 }
@@ -456,6 +467,10 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		AwsSCaChainCert:                       d.Get("awss_ca_chain_cert").(string),
 		AwsSCapCertPath:                       d.Get("awss_cap_cert_path").(string),
 		AwsSCapCertKeyPath:                    d.Get("awss_cap_cert_key_path").(string),
+	}
+
+	if _, ok := d.GetOk("group_names"); ok {
+		account.GroupNames = strings.Join(goaviatrix.ExpandStringList(d.Get("group_names").([]interface{})), ",")
 	}
 
 	awsIam := d.Get("aws_iam").(bool)
@@ -853,6 +868,8 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 			d.Set("awss_cap_cert_key_path", acc.AwsSCapCertKeyPath)
 			d.Set("aws_ca_cert_path", acc.AwsCaCertPath)
 		}
+
+		d.Set("group_names", acc.GroupNamesRead)
 		d.SetId(acc.AccountName)
 	}
 

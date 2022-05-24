@@ -78,8 +78,10 @@ type Account struct {
 	AwsSCapCert                           string
 	AwsSCapCertKey                        string
 	AwsSCaChainCert                       string
-	AwsSCapCertPath                       string `form:"aws_red_cap_cert_path,omitempty" json:"aws_red_cap_cert_path,omitempty"`
-	AwsSCapCertKeyPath                    string `json:"aws_red_cap_key_path,omitempty"`
+	AwsSCapCertPath                       string   `form:"aws_red_cap_cert_path,omitempty" json:"aws_red_cap_cert_path,omitempty"`
+	AwsSCapCertKeyPath                    string   `json:"aws_red_cap_key_path,omitempty"`
+	GroupNames                            string   `form:"groups,omitempty"`
+	GroupNamesRead                        []string `json:"rbac_groups,omitempty"`
 }
 
 type AccountResult struct {
@@ -105,6 +107,7 @@ func (c *Client) CreateGCPAccount(account *Account) error {
 		"account_name":        account.AccountName,
 		"cloud_type":          strconv.Itoa(account.CloudType),
 		"gcloud_project_name": account.GcloudProjectName,
+		"groups":              account.GroupNames,
 	}
 
 	files := []File{
@@ -126,6 +129,7 @@ func (c *Client) CreateOCIAccount(account *Account) error {
 		"oci_tenancy_id":     account.OciTenancyID,
 		"oci_user_id":        account.OciUserID,
 		"oci_compartment_id": account.OciCompartmentID,
+		"groups":             account.GroupNames,
 	}
 
 	files := []File{
@@ -149,6 +153,7 @@ func (c *Client) CreateAWSTSAccount(account *Account) error {
 		"aws_orange_cap_agency":     account.AwsTsCapAgency,
 		"aws_orange_cap_mission":    account.AwsTsCapMission,
 		"aws_orange_cap_role_name":  account.AwsTsCapRoleName,
+		"groups":                    account.GroupNames,
 	}
 
 	files := []File{
@@ -180,6 +185,7 @@ func (c *Client) CreateAWSSAccount(account *Account) error {
 		"aws_red_cap_agency":       account.AwsSCapAgency,
 		"aws_red_cap_account_name": account.AwsSCapAccountName,
 		"aws_red_cap_role_name":    account.AwsSCapRoleName,
+		"groups":                   account.GroupNames,
 	}
 
 	files := []File{
