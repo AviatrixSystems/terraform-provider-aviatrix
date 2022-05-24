@@ -38,23 +38,32 @@ type ControllerEmailConfigResp struct {
 }
 
 func (c *Client) ConfigNotificationEmails(ctx context.Context, emailConfiguration *EmailConfiguration) error {
+	notificationEmailArgs := make(map[string]interface{})
+	if emailConfiguration.AdminAlertEmail != "" {
+		notificationEmailArgs["admin_alert"] = map[string]interface{}{
+			"address": emailConfiguration.AdminAlertEmail,
+		}
+	}
+	if emailConfiguration.CriticalAlertEmail != "" {
+		notificationEmailArgs["critical_alert"] = map[string]interface{}{
+			"address": emailConfiguration.CriticalAlertEmail,
+		}
+	}
+	if emailConfiguration.SecurityEventEmail != "" {
+		notificationEmailArgs["security_event"] = map[string]interface{}{
+			"address": emailConfiguration.SecurityEventEmail,
+		}
+	}
+	if emailConfiguration.StatusChangeEmail != "" {
+		notificationEmailArgs["status_change"] = map[string]interface{}{
+			"address": emailConfiguration.StatusChangeEmail,
+		}
+	}
+
 	form := map[string]interface{}{
-		"CID":    c.CID,
-		"action": "add_notif_email_addr",
-		"notif_email_args": map[string]interface{}{
-			"admin_alert": map[string]interface{}{
-				"address": emailConfiguration.AdminAlertEmail,
-			},
-			"critical_alert": map[string]interface{}{
-				"address": emailConfiguration.CriticalAlertEmail,
-			},
-			"security_event": map[string]interface{}{
-				"address": emailConfiguration.SecurityEventEmail,
-			},
-			"status_change": map[string]interface{}{
-				"address": emailConfiguration.StatusChangeEmail,
-			},
-		},
+		"CID":              c.CID,
+		"action":           "add_notif_email_addr",
+		"notif_email_args": notificationEmailArgs,
 	}
 
 	return c.PostAPIContext2(ctx, nil, form["action"].(string), form, BasicCheck)
