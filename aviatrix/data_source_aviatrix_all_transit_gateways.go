@@ -72,31 +72,6 @@ func dataSourceAviatrixListAllTransitGateway() *schema.Resource {
 							Computed:    true,
 							Description: "Public IP address of the Transit Gateway created.",
 						},
-						"ha_subnet": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "HA Subnet. Required for enabling HA for AWS/Azure transit gateway.",
-						},
-						"ha_zone": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "HA Zone. Required if enabling HA for GCP.",
-						},
-						"ha_insane_mode_az": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "AZ of subnet being created for Insane Mode Transit HA Gateway. Required if insane_mode is enabled and ha_subnet is set.",
-						},
-						"ha_gw_size": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "HA Gateway Size. Mandatory if HA is enabled (ha_subnet is set).",
-						},
-						"ha_public_ip": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Public IP address that you want assigned to the HA Transit Gateway.",
-						},
 						"single_az_ha": {
 							Type:        schema.TypeBool,
 							Computed:    true,
@@ -106,12 +81,6 @@ func dataSourceAviatrixListAllTransitGateway() *schema.Resource {
 							Type:        schema.TypeBool,
 							Computed:    true,
 							Description: "Enable or disable Source NAT feature in 'single_ip' mode for this container.",
-						},
-						"tag_list": {
-							Type:        schema.TypeList,
-							Elem:        &schema.Schema{Type: schema.TypeString},
-							Computed:    true,
-							Description: "Instance tag of cloud provider. Only supported for AWS provider.",
 						},
 						"enable_hybrid_connection": {
 							Type:        schema.TypeBool,
@@ -128,25 +97,10 @@ func dataSourceAviatrixListAllTransitGateway() *schema.Resource {
 							Computed:    true,
 							Description: "Enable/Disable Insane Mode for Spoke Gateway.",
 						},
-						"enable_firenet": {
-							Type:        schema.TypeBool,
-							Computed:    true,
-							Description: "Whether firenet interfaces is enabled.",
-						},
 						"enable_vpc_dns_server": {
 							Type:        schema.TypeBool,
 							Computed:    true,
 							Description: "Enable/Disable vpc_dns_server for Gateway. Valid values: true, false.",
-						},
-						"enable_advertise_transit_cidr": {
-							Type:        schema.TypeBool,
-							Computed:    true,
-							Description: "Enable/Disable advertise transit VPC network CIDR.",
-						},
-						"bgp_manual_spoke_advertise_cidrs": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Intended CIDR list to advertise to VGW.",
 						},
 						"enable_encrypt_volume": {
 							Type:        schema.TypeBool,
@@ -173,31 +127,6 @@ func dataSourceAviatrixListAllTransitGateway() *schema.Resource {
 								"When configured, it inspects all the advertised CIDRs from its spoke gateways and " +
 								"remove those included in the 'Excluded CIDR List'.",
 						},
-						"customized_transit_vpc_routes": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Description: "A list of CIDRs to be customized for the transit VPC routes. " +
-								"When configured, it will replace all learned routes in VPC routing tables, including RFC1918 and non-RFC1918 CIDRs." +
-								"To be effective, `enable_advertise_transit_cidr` or firewall management access for a transit firenet gateway must be enabled.",
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"enable_transit_firenet": {
-							Type:        schema.TypeBool,
-							Computed:    true,
-							Description: "Switch to enable/disable transit firenet interfaces for transit gateway.",
-						},
-						"enable_egress_transit_firenet": {
-							Type:        schema.TypeBool,
-							Computed:    true,
-							Description: "Specify whether to enable egress transit firenet interfaces or not.",
-						},
-						"enable_learned_cidrs_approval": {
-							Type:        schema.TypeBool,
-							Computed:    true,
-							Description: "Switch to enable/disable encrypted transit approval for transit gateway.",
-						},
 						"security_group_id": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -213,21 +142,6 @@ func dataSourceAviatrixListAllTransitGateway() *schema.Resource {
 							Computed:    true,
 							Description: "Private IP address of the transit gateway created.",
 						},
-						"ha_cloud_instance_id": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Cloud instance ID of HA transit gateway.",
-						},
-						"ha_gw_name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Aviatrix transit gateway unique name of HA transit gateway.",
-						},
-						"ha_private_ip": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Private IP address of HA transit gateway.",
-						},
 						"enable_private_oob": {
 							Type:        schema.TypeBool,
 							Computed:    true,
@@ -242,22 +156,6 @@ func dataSourceAviatrixListAllTransitGateway() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "OOB subnet availability zone.",
-						},
-						"ha_oob_management_subnet": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "OOB HA management subnet.",
-						},
-						"ha_oob_availability_zone": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "OOB HA availability zone.",
-						},
-						"tags": {
-							Type:        schema.TypeMap,
-							Elem:        &schema.Schema{Type: schema.TypeString},
-							Computed:    true,
-							Description: "A map of tags assigned to the transit gateway.",
 						},
 						"enable_multi_tier_transit": {
 							Type:        schema.TypeBool,
@@ -279,35 +177,15 @@ func dataSourceAviatrixListAllTransitGateway() *schema.Resource {
 							Computed:    true,
 							Description: "Fault domain for OCI.",
 						},
-						"ha_availability_domain": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "HA availability domain for OCI.",
-						},
-						"ha_fault_domain": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "HA fault domain for OCI.",
-						},
 						"software_version": {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "Software version of the gateway.",
 						},
-						"ha_software_version": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Software version of the HA gateway.",
-						},
 						"image_version": {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "Image version of the gateway.",
-						},
-						"ha_image_version": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Image version of the HA gateway.",
 						},
 						"zone": {
 							Type:        schema.TypeString,
@@ -339,12 +217,6 @@ func dataSourceAviatrixListAllTransitGateway() *schema.Resource {
 								"'connection', learned CIDR approval is configured on a per connection basis. When configuring per " +
 								"connection, use the enable_learned_cidrs_approval attribute within the connection resource to " +
 								"toggle learned CIDR approval.",
-						},
-						"approved_learned_cidrs": {
-							Type:        schema.TypeSet,
-							Elem:        &schema.Schema{Type: schema.TypeString},
-							Computed:    true,
-							Description: "Approved learned CIDRs. Available as of provider version R2.21+.",
 						},
 						"bgp_polling_time": {
 							Type:        schema.TypeString,
@@ -464,30 +336,10 @@ func dataSourceAviatrixListAllTransitGateway() *schema.Resource {
 							Computed:    true,
 							Description: "The name of the public IP address and its resource group in Azure to assign to this Transit Gateway.",
 						},
-						"ha_azure_eip_name_resource_group": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "The name of the public IP address and its resource group in Azure to assign to the HA Transit Gateway.",
-						},
 						"local_as_number": {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "Changes the Aviatrix Transit Gateway ASN number before you setup Aviatrix Transit Gateway connection configurations.",
-						},
-						"ha_security_group_id": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "HA security group used for the transit gateway.",
-						},
-						"lan_interface_cidr": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Transit gateway lan interface cidr.",
-						},
-						"ha_lan_interface_cidr": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Transit gateway lan interface cidr for the HA gateway.",
 						},
 						"bgp_lan_ip_list": {
 							Type:     schema.TypeList,
@@ -528,19 +380,11 @@ func dataSourceAviatrixAllTransitGatewayRead(d *schema.ResourceData, meta interf
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			transitGateway["vpc_id"] = strings.Split(gw.VpcID, "~~")[0]
 			transitGateway["vpc_reg"] = gw.VpcRegion
-			if gw.AllocateNewEipRead {
-				transitGateway["allocate_new_eip"] = true
-			} else {
-				transitGateway["allocate_new_eip"] = false
-			}
+			transitGateway["allocate_new_eip"] = gw.AllocateNewEipRead
 		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			transitGateway["vpc_id"] = gw.VpcID
 			transitGateway["vpc_reg"] = gw.GatewayZone
-			if gw.AllocateNewEipRead {
-				transitGateway["allocate_new_eip"] = true
-			} else {
-				transitGateway["allocate_new_eip"] = false
-			}
+			transitGateway["allocate_new_eip"] = gw.AllocateNewEipRead
 		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
 			transitGateway["vpc_id"] = gw.VpcID
 			transitGateway["vpc_reg"] = gw.VpcRegion
@@ -621,119 +465,14 @@ func dataSourceAviatrixAllTransitGatewayRead(d *schema.ResourceData, meta interf
 		} else {
 			transitGateway["excluded_advertised_spoke_routes"] = ""
 		}
-
-		gwDetail, err := client.GetGatewayDetail(&gw)
-		if err != nil {
-			return fmt.Errorf("couldn't get Aviatrix Transit Gateway: %s", err)
-		}
-
-		transitGateway["enable_firenet"] = gwDetail.EnableFireNet
-		transitGateway["enable_transit_firenet"] = gwDetail.EnableTransitFireNet
-		transitGateway["enable_egress_transit_firenet"] = gwDetail.EnableEgressTransitFireNet
-		transitGateway["customized_transit_vpc_routes"] = gwDetail.CustomizedTransitVpcRoutes
-
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) && gw.EnableVpcDnsServer == "Enabled" {
 			transitGateway["enable_vpc_dns_server"] = true
 		} else {
 			transitGateway["enable_vpc_dns_server"] = false
 		}
-
-		if gwDetail.EnableAdvertiseTransitCidr == "yes" {
-			transitGateway["enable_advertise_transit_cidr"] = true
-		} else {
-			transitGateway["enable_advertise_transit_cidr"] = false
-		}
-
-		if gwDetail.LearnedCidrsApproval == "yes" {
-			transitGateway["enable_learned_cidrs_approval"] = true
-		} else {
-			transitGateway["enable_learned_cidrs_approval"] = false
-		}
-
-		bgpMSAN := ""
-		for i := range gwDetail.BgpManualSpokeAdvertiseCidrs {
-			if i == 0 {
-				bgpMSAN = bgpMSAN + gwDetail.BgpManualSpokeAdvertiseCidrs[i]
-			} else {
-				bgpMSAN = bgpMSAN + "," + gwDetail.BgpManualSpokeAdvertiseCidrs[i]
-			}
-		}
-		transitGateway["bgp_manual_spoke_advertise_cidrs"] = bgpMSAN
-
-		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-			tags := &goaviatrix.Tags{
-				ResourceType: "gw",
-				ResourceName: transitGateway["gw_name"].(string),
-				CloudType:    gw.CloudType,
-			}
-
-			tagList, err := client.GetTags(tags)
-			if err != nil {
-				log.Printf("[WARN] Failed to get tags for transit gateway %s: %v", tags.ResourceName, err)
-			}
-
-			if len(tagList) > 0 {
-				transitGateway["tag_list"] = tagList
-			}
-		}
-
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
 			transitGateway["availability_domain"] = gw.GatewayZone
 			transitGateway["fault_domain"] = gw.FaultDomain
-		}
-
-		haGateway := &goaviatrix.Gateway{
-			AccountName: gw.AccountName,
-			GwName:      gw.GwName + "-hagw",
-		}
-		haGw, _ := client.GetGateway(haGateway)
-		if haGw != nil {
-			if goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
-				transitGateway["ha_subnet"] = haGw.VpcNet
-				transitGateway["ha_zone"] = ""
-			} else if goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-				transitGateway["ha_zone"] = haGw.GatewayZone
-				transitGateway["ha_subnet"] = ""
-			}
-			transitGateway["ha_public_ip"] = haGw.PublicIP
-			transitGateway["ha_gw_size"] = haGw.GwSize
-			transitGateway["ha_cloud_instance_id"] = haGw.CloudnGatewayInstID
-			transitGateway["ha_gw_name"] = haGw.GwName
-			transitGateway["ha_private_ip"] = haGw.PrivateIP
-			transitGateway["ha_image_version"] = haGw.ImageVersion
-			transitGateway["ha_software_version"] = haGw.SoftwareVersion
-			transitGateway["ha_security_group_id"] = haGw.GwSecurityGroupID
-
-			if haGw.InsaneMode == "yes" && goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-				transitGateway["ha_insane_mode_az"] = haGw.GatewayZone
-			} else {
-				transitGateway["ha_insane_mode_az"] = ""
-			}
-
-			if goaviatrix.IsCloudType(haGw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
-				transitGateway["ha_availability_domain"] = haGw.GatewayZone
-				transitGateway["ha_fault_domain"] = haGw.FaultDomain
-			}
-
-			if haGw.EnablePrivateOob {
-				transitGateway["ha_oob_management_subnet"] = strings.Split(haGw.OobManagementSubnet, "~~")[0]
-				transitGateway["ha_oob_availability_zone"] = haGw.GatewayZone
-			}
-
-			if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-				azureEip := strings.Split(gw.HaGw.ReuseEip, ":")
-				if len(azureEip) == 3 {
-					transitGateway["ha_azure_eip_name_resource_group"] = fmt.Sprintf("%s:%s", azureEip[0], azureEip[1])
-				} else {
-					log.Printf("[WARN] could not get Azure EIP name and resource group for the HA Gateway %s", gw.GwName)
-				}
-			}
-
-			lanCidr, err := client.GetTransitGatewayLanCidr(gw.HaGw.GwName)
-			if err != nil && err != goaviatrix.ErrNotFound {
-				log.Printf("[WARN] Error getting lan cidr for HA transit gateway %s due to %s", gw.HaGw.GwName, err)
-			}
-			transitGateway["ha_lan_interface_cidr"] = lanCidr
 		}
 		transitGateway["tunnel_detection_time"] = gw.TunnelDetectionTime
 		transitGateway["enable_gateway_load_balancer"] = gw.EnableGatewayLoadBalancer
@@ -752,16 +491,6 @@ func dataSourceAviatrixAllTransitGatewayRead(d *schema.ResourceData, meta interf
 		if gw.EnableTransitFirenet && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			transitGateway["lan_vpc_id"] = gw.BundleVpcInfo.LAN.VpcID
 			transitGateway["lan_private_subnet"] = strings.Split(gw.BundleVpcInfo.LAN.Subnet, "~~")[0]
-		}
-
-		if gw.EnableLearnedCidrsApproval {
-			transitAdvancedConfig, err := client.GetTransitGatewayAdvancedConfig(&goaviatrix.TransitVpc{GwName: gw.GwName})
-			if err != nil {
-				return fmt.Errorf("could not get advanced config for transit gateway: %v", err)
-			}
-			transitGateway["approved_learned_cidrs"] = transitAdvancedConfig.ApprovedLearnedCidrs
-		} else {
-			transitGateway["approved_learned_cidrs"] = nil
 		}
 
 		var prependAsPath []string
@@ -798,18 +527,6 @@ func dataSourceAviatrixAllTransitGatewayRead(d *schema.ResourceData, meta interf
 				}
 				transitGateway["ha_bgp_lan_interfaces"] = haInterfaces
 			}
-
-			bgpLanIpInfo, err := client.GetBgpLanIPList(&goaviatrix.TransitVpc{GwName: gw.GwName})
-			if err != nil {
-				return fmt.Errorf("could not get BGP LAN IP info for GCP transit gateway %s: %v", gw.GwName, err)
-			}
-			transitGateway["bgp_lan_ip_list"] = bgpLanIpInfo.BgpLanIpList
-
-			if len(bgpLanIpInfo.HaBgpLanIpList) != 0 {
-				transitGateway["ha_bgp_lan_ip_list"] = bgpLanIpInfo.HaBgpLanIpList
-			} else {
-				transitGateway["ha_bgp_lan_ip_list"] = nil
-			}
 		} else {
 			transitGateway["bgp_lan_ip_list"] = nil
 			transitGateway["ha_bgp_lan_ip_list"] = nil
@@ -828,12 +545,6 @@ func dataSourceAviatrixAllTransitGatewayRead(d *schema.ResourceData, meta interf
 				log.Printf("[WARN] could not get Azure EIP name and resource group for the Transit Gateway %s", gw.GwName)
 			}
 		}
-
-		lanCidr, err := client.GetTransitGatewayLanCidr(gw.GwName)
-		if err != nil && err != goaviatrix.ErrNotFound {
-			log.Printf("[WARN] Error getting lan cidr for transit gateway %s due to %s", gw.GwName, err)
-		}
-		transitGateway["lan_interface_cidr"] = lanCidr
 
 		result = append(result, transitGateway)
 	}
