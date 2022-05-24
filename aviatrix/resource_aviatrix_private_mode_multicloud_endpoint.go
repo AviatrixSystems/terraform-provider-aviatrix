@@ -65,6 +65,8 @@ func resourceAviatrixPrivateModeMulticloudEndpointCreate(ctx context.Context, d 
 		return diag.Errorf("failed to create Private Mode multicloud endpoint: %s", err)
 	}
 
+	d.SetId(privateModeMulticloudEndpoint.VpcId)
+
 	return resourceAviatrixPrivateModeMulticloudEndpointReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -79,7 +81,7 @@ func resourceAviatrixPrivateModeMulticloudEndpointReadIfRequired(ctx context.Con
 func resourceAviatrixPrivateModeMulticloudEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	if _, ok := d.GetOk("vpc_id"); ok {
+	if _, ok := d.GetOk("vpc_id"); !ok {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no vpc_id received. Import Id is %s", id)
 		d.Set("vpc_id", id)
@@ -88,11 +90,16 @@ func resourceAviatrixPrivateModeMulticloudEndpointRead(ctx context.Context, d *s
 	vpcId := d.Get("vpc_id").(string)
 	privateModeMulticloudEndpoint, err := client.GetPrivateModeMulticloudEndpoint(ctx, vpcId)
 	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return diag.Errorf("failed to get Private Mode multicloud endpoint: %s", err)
 	}
 
 	d.Set("account_name", privateModeMulticloudEndpoint.AccountName)
 	d.Set("vpc_id", privateModeMulticloudEndpoint.VpcId)
+	d.Set("region", privateModeMulticloudEndpoint.Region)
 	d.Set("controller_lb_vpc_id", privateModeMulticloudEndpoint.ControllerLbVpcId)
 
 	return nil

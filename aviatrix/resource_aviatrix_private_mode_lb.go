@@ -37,11 +37,6 @@ func resourceAviatrixPrivateModeLb() *schema.Resource {
 				Required:    true,
 				Description: "Name of the VPC region.",
 			},
-			"cloud_type": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "Type of cloud service provider.",
-			},
 			"lb_type": { // TODO: Check name
 				Type:         schema.TypeString,
 				Required:     true,
@@ -50,7 +45,7 @@ func resourceAviatrixPrivateModeLb() *schema.Resource {
 			},
 			"multicloud_access_vpc_id": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: "VPC ID of multicloud access VPC to connect to. Required when lb_type is multicloud.",
 			},
 			"proxies": {
@@ -82,11 +77,10 @@ func marshalPrivateModeLb(d *schema.ResourceData) (*goaviatrix.PrivateModeLb, er
 		AccountName: d.Get("account_name").(string),
 		VpcId:       d.Get("vpc_id").(string),
 		Region:      d.Get("region").(string),
-		CloudType:   d.Get("cloud_type").(int),
 		LbType:      d.Get("lb_type").(string),
 	}
 
-	if privateModeLb.LbType != "multicloud" {
+	if privateModeLb.LbType == "controller" {
 		if _, ok := d.GetOk("multicloud_access_vpc_id"); ok {
 			return nil, fmt.Errorf("%q must be empty when %q is multicloud", "multicloud_access_vpc_id", "lb_type")
 		}
@@ -94,7 +88,7 @@ func marshalPrivateModeLb(d *schema.ResourceData) (*goaviatrix.PrivateModeLb, er
 		if _, ok := d.GetOk("proxies"); ok {
 			return nil, fmt.Errorf("%q must be empty when %q is multicloud", "proxies", "lb_type")
 		}
-	} else {
+	} else if privateModeLb.LbType == "multicloud" {
 		privateModeLb.MulticloudAccessVpcId = d.Get("multicloud_access_vpc_id").(string)
 		for _, proxy := range d.Get("proxies").([]interface{}) {
 			proxyMap := proxy.(map[string]interface{})
@@ -104,6 +98,7 @@ func marshalPrivateModeLb(d *schema.ResourceData) (*goaviatrix.PrivateModeLb, er
 			}
 			privateModeLb.Proxies = append(privateModeLb.Proxies, privateModeMulticloudProxy)
 		}
+		privateModeLb.EdgeVpc = true
 	}
 
 	return privateModeLb, nil
@@ -140,6 +135,8 @@ func resourceAviatrixPrivateModeLbCreate(ctx context.Context, d *schema.Resource
 		}
 	}
 
+	d.SetId(privateModeLb.VpcId)
+
 	return resourceAviatrixPrivateModeLbReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -154,7 +151,7 @@ func resourceAviatrixPrivateModeLbReadIfRequired(ctx context.Context, d *schema.
 func resourceAviatrixPrivateModeLbRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	if _, ok := d.GetOk("vpc_id"); ok {
+	if _, ok := d.GetOk("vpc_id"); !ok {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no vpc_id received. Import Id is %s", id)
 		d.Set("vpc_id", id)
@@ -163,12 +160,16 @@ func resourceAviatrixPrivateModeLbRead(ctx context.Context, d *schema.ResourceDa
 	vpcId := d.Get("vpc_id").(string)
 	privateModeLb, err := client.GetPrivateModeLoadBalancer(ctx, vpcId)
 	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
 		return diag.Errorf("failed to read Private Mode load balancer details: %s", err)
 	}
 
 	d.Set("account_name", privateModeLb.AccountName)
 	d.Set("region", privateModeLb.Region)
-	d.Set("cloud_type", privateModeLb.CloudType)
+	d.Set("lb_type", privateModeLb.LbType)
 
 	if privateModeLb.LbType == "controller" {
 		d.Set("multicloud_access_vpc_id", nil)

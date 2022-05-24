@@ -3,14 +3,24 @@ package goaviatrix
 import "context"
 
 type PrivateModeLb struct {
-	CID                   string
-	Action                string
-	AccountName           string
-	VpcId                 string
-	Region                string
-	CloudType             int
-	LbType                string
-	MulticloudAccessVpcId string
+	CID                   string `json:"CID"`
+	Action                string `json:"action"`
+	AccountName           string `json:"account_name"`
+	VpcId                 string `json:"vpc_id"`
+	Region                string `json:"region"`
+	LbType                string `json:"lb_type"`
+	MulticloudAccessVpcId string `json:"endpoint_vpc_id,omitempty"`
+	EdgeVpc               bool   `json:"edge_vpc,omitempty"`
+	Proxies               []PrivateModeMulticloudProxy
+}
+
+type PrivateModeLbRead struct {
+	AccountName           string `json:"account_name"`
+	VpcId                 string `json:"vpc_id"`
+	Region                string `json:"region"`
+	LbType                string `json:"lb_type"`
+	MulticloudAccessVpcId string `json:"multicloud_access_vpc_id,omitempty"`
+	EdgeVpc               bool   `json:"edge_vpc,omitempty"`
 	Proxies               []PrivateModeMulticloudProxy
 }
 
@@ -43,7 +53,7 @@ func (c *Client) UpdatePrivateModeMulticloudProxies(ctx context.Context, private
 	return c.PostAPIContext2(ctx, nil, action, form, BasicCheck)
 }
 
-func (c *Client) GetPrivateModeLoadBalancer(ctx context.Context, loadBalancerVpcId string) (*PrivateModeLb, error) {
+func (c *Client) GetPrivateModeLoadBalancer(ctx context.Context, loadBalancerVpcId string) (*PrivateModeLbRead, error) {
 	action := "get_private_mode_load_balancer_detail"
 	form := map[string]string{
 		"CID":                  c.CID,
@@ -52,16 +62,16 @@ func (c *Client) GetPrivateModeLoadBalancer(ctx context.Context, loadBalancerVpc
 	}
 
 	type PrivateModeLoadBalancerResp struct {
-		Result PrivateModeLb
+		Results PrivateModeLbRead
 	}
 
 	var resp PrivateModeLoadBalancerResp
-	err := c.GetAPIContext(ctx, &resp, action, form, BasicCheck)
+	err := c.PostAPIContext2(ctx, &resp, action, form, BasicCheck)
 	if err != nil {
 		return nil, err
 	}
 
-	return &resp.Result, nil
+	return &resp.Results, nil
 }
 
 func (c *Client) DeletePrivateModeLoadBalancer(ctx context.Context, loadBalancerVpcId string) error {

@@ -81,8 +81,16 @@ func (c *Client) GetPrivateModeInfo(ctx context.Context) (*ControllerPrivateMode
 		"action": action,
 	}
 
+	type ControllerPrivateModeConfigContents struct {
+		PrivateModeEnabled bool `json:"private_mode_enabled"`
+	}
+
+	type ControllerPrivateModeConfigResults struct {
+		Contents ControllerPrivateModeConfigContents `json:"contents"`
+	}
+
 	type ControllerPrivateModeConfigResp struct {
-		Result ControllerPrivateModeConfig `json:"result"`
+		Results ControllerPrivateModeConfigResults `json:"results"`
 	}
 
 	var resp ControllerPrivateModeConfigResp
@@ -91,5 +99,8 @@ func (c *Client) GetPrivateModeInfo(ctx context.Context) (*ControllerPrivateMode
 		return nil, err
 	}
 
-	return &resp.Result, nil
+	controllerPrivateModeConfig := &ControllerPrivateModeConfig{
+		EnablePrivateMode: resp.Results.Contents.PrivateModeEnabled,
+	}
+	return controllerPrivateModeConfig, nil
 }
