@@ -42,95 +42,95 @@ The resource test identifier is the same as the resource name without the
 
 Passing an environment value of "yes" to the skip parameter allows you to skip the particular resource. If it is not skipped, it checks for the existence of other required variables. Generic variables are required for any acceptance test
 
-| Test module name                     | Skip parameter                     | Required variables                                                             |
-| ------------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------ |
-| Generic                              | N/A                                | AVIATRIX_USERNAME, AVIATRIX_PASSWORD, AVIATRIX_CONTROLLER_IP                   |
-| aviatrix_account                     | SKIP_ACCOUNT                       |                                                                                |
-|		                               | SKIP_ACCOUNT_AWS	                | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY                             |
-|                     		           | SKIP_ACCOUNT_GCP	                | GCP_ID, GCP_CREDENTIALS_FILEPATH	                                             |
-|		                               | SKIP_ACCOUNT_AZURE	                | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID, ARM_APPLICATION_KEY |
-|                     		           | SKIP_ACCOUNT_AZUREGOV	                | AZUREGOV_SUBSCRIPTION_ID, AZUREGOV_DIRECTORY_ID, AZUREGOV_APPLICATION_ID, AZUREGOV_APPLICATION_KEY        |
-|                     		           | SKIP_ACCOUNT_OCI	                | OCI_TENANCY_ID, OCI_USER_ID, OCI_COMPARTMENT_ID, OCI_API_KEY_FILEPATH          |
-|		                               | SKIP_ACCOUNT_AWSGOV                | AWSGOV_ACCOUNT_NUMBER, AWSGOV_ACCESS_KEY, AWSGOV_SECRET_KEY                    |
-|		                               | SKIP_ACCOUNT_AWSCHINA_IAM         | AWSCHINA_IAM_ACCOUNT_NUMBER                    |
-|		                               | SKIP_ACCOUNT_AWSCHINA             | AWSCHINA_ACCOUNT_NUMBER, AWSCHINA_ACCESS_KEY, AWSCHINA_SECRET_KEY           |
-|		                               | SKIP_ACCOUNT_AZURECHINA             | AZURECHINA_SUBSCRIPTION_ID, AZURECHINA_DIRECTORY_ID, AZURECHINA_APPLICATION_ID, AZURECHINA_APPLICATION_KEY           |
-|		                               | SKIP_ACCOUNT_AWSTS               | AWSTS_ACCOUNT_NUMBER, AWSTS_CAP_URL, AWSTS_CAP_AGENCY, AWSTS_CAP_MISSION, AWSTS_CAP_ROLE_NAME, AWSTS_CAP_CERT, AWSTS_CAP_CERT_KEY, AWSTS_CA_CHAIN_CERT                   |
-|		                               | SKIP_ACCOUNT_AWSS              | AWSS_ACCOUNT_NUMBER, AWSS_CAP_URL, AWSS_CAP_AGENCY, AWSS_CAP_ACCOUNT_NAME, AWSS_CAP_ROLE_NAME, AWSS_CAP_CERT, AWSS_CAP_CERT_KEY, AWSS_CA_CHAIN_CERT                   |
-| aviatrix_account_user                | SKIP_ACCOUNT_USER                  |                                                                                |
-| aviatrix_app_domain                  | SKIP_APP_DOMAIN                    | N/A
-| aviatrix_arm_peer                    | SKIP_ARM_PEER                      | aviatrix_account + ARM_VNET_ID, ARM_VNET_ID2, ARM_REGION, ARM_REGION2          |
-| aviatrix_aws_guard_duty              | SKIP_AWS_GUARD_DUTY                | aviatrix_account                                                               |
-| aviatrix_aws_peer                    | SKIP_AWS_PEER                      | aviatrix_account + AWS_VPC_ID, AWS_VPC_ID2, AWS_REGION, AWS_REGION2            |
-| aviatrix_aws_tgw                     | SKIP_AWS_TGW                       | aviatrix_account + AWS_VPC_ID, AWS_REGION, AWS_VPC_TGW_ID                      |
-| aviatrix_aws_tgw_directconnect       | SKIP_AWS_TGW_DIRECTCONNECT         | aviatrix_aws_tgw + AWS_DX_GATEWAY                                              |
-| aviatrix_aws_tgw_intra_domain_inspection| SKIP_AWS_TGW_INTRA_DOMAIN_INSPECTION | aviatrix_account + AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY     |
-| aviatrix_aws_tgw_network_domain      | SKIP_AWS_TGW_NETWORK_DOMAIN        | aviatrix_account + AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY          |
-| aviatrix_aws_tgw_peering             | SKIP_AWS_TGW_PEERING               | aviatrix_account                                                               |
-| aviatrix_aws_tgw_peering_domain_conn | SKIP_AWS_TGW_PEERING_DOMAIN_CONN   | aviatrix_account                                                               |
-| aviatrix_aws_tgw_security_domain     | SKIP_AWS_TGW_SECURITY_DOMAIN       | aviatrix_account + AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY          |
-| aviatrix_aws_tgw_security_domain_connection | SKIP_AWS_TGW_SECURITY_DOMAIN_CONNECTION | aviatrix_account + AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY |
-| aviatrix_aws_tgw_vpc_attachment      | SKIP_AWS_TGW_VPC_ATTACHMENT        | aviatrix_aws_tgw                                                               |
-| aviatrix_aws_tgw_vpc_attachment      | SKIP_AWS_TGW_TRANSIT_GATEWAY_ATTACHMENT | aviatrix_aws_tgw + aviatrix_transit_gateway                               |
-| aviatrix_azure_peer                  | SKIP_AZURE_PEER                    | aviatrix_account + AZURE_VNET_ID, AZURE_VNET_ID2, AZURE_REGION, AZURE_REGION2  |
-| aviatrix_azure_spoke_native_peering  | SKIP_AZURE_SPOKE_NATIVE_PEERING    | aviatrix_account + AZURE_VNET_ID, AZURE_VNET_ID2, AZURE_REGION, AZURE_REGION2  |
-| aviatrix_azure_vng_conn              | SKIP_AZURE_VNG_CONN                | aviatrix_account + AZURE_VNG_VNET_ID, AZURE_REGION, AZURE_VNG_SUBNET, AZURE_VNG|
-| aviatrix_aws_tgw_vpn_conn            | SKIP_AWS_TGW_VPN_CONN              | aviatrix_aws_tgw                                                               |
-| aviatrix_cloudn_registration	       | SKIP_CLOUDN_REGISTRATION	        | CLOUDN_IP, CLOUDN_USERNAME, CLOUDN_PASSWORD                                    |
-| aviatrix_cloudn_transit_gateway_attachment | SKIP_CLOUDN_TRANSIT_GATEWAY_ATTACHMENT | CLOUDN_DEVICE_NAME, TRANSIT_GATEWAY_NAME, CLOUDN_BGP_ASN, CLOUDN_LAN_INTERFACE_NEIGHBOR_IP, CLOUDN_LAN_INTERFACE_NEIGHBOR_BGP_ASN |
-| aviatrix_cloudwatch_agent            | SKIP_CLOUDWATCH_AGENT              | N/A                                                                            |
-| aviatrix_controller_config           | SKIP_CONTROLLER_CONFIG             | aviatrix_account                                                               |
-| aviatrix_controller_cert_domain_config | SKIP_CONTROLLER_CERT_DOMAIN_CONFIG | aviatrix_account                                                             |
-| aviatrix_controller_email_config     | SKIP_CONTROLLER_EMAIL_CONFIG       | aviatrix_account                                                               |
+| Test module name                                        | Skip parameter                     | Required variables                                                             |
+|---------------------------------------------------------| ---------------------------------- | ------------------------------------------------------------------------------ |
+| Generic                                                 | N/A                                | AVIATRIX_USERNAME, AVIATRIX_PASSWORD, AVIATRIX_CONTROLLER_IP                   |
+| aviatrix_account                                        | SKIP_ACCOUNT                       |                                                                                |
+| 		                                                      | SKIP_ACCOUNT_AWS	                | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY                             |
+| 		                                                      | SKIP_ACCOUNT_GCP	                | GCP_ID, GCP_CREDENTIALS_FILEPATH	                                             |
+| 		                                                      | SKIP_ACCOUNT_AZURE	                | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID, ARM_APPLICATION_KEY |
+| 		                                                      | SKIP_ACCOUNT_AZUREGOV	             | AZUREGOV_SUBSCRIPTION_ID, AZUREGOV_DIRECTORY_ID, AZUREGOV_APPLICATION_ID, AZUREGOV_APPLICATION_KEY        |
+| 		                                                      | SKIP_ACCOUNT_OCI	                | OCI_TENANCY_ID, OCI_USER_ID, OCI_COMPARTMENT_ID, OCI_API_KEY_FILEPATH          |
+| 		                                                      | SKIP_ACCOUNT_AWSGOV                | AWSGOV_ACCOUNT_NUMBER, AWSGOV_ACCESS_KEY, AWSGOV_SECRET_KEY                    |
+| 		                                                      | SKIP_ACCOUNT_AWSCHINA_IAM         | AWSCHINA_IAM_ACCOUNT_NUMBER                    |
+| 		                                                      | SKIP_ACCOUNT_AWSCHINA             | AWSCHINA_ACCOUNT_NUMBER, AWSCHINA_ACCESS_KEY, AWSCHINA_SECRET_KEY           |
+| 		                                                      | SKIP_ACCOUNT_AZURECHINA            | AZURECHINA_SUBSCRIPTION_ID, AZURECHINA_DIRECTORY_ID, AZURECHINA_APPLICATION_ID, AZURECHINA_APPLICATION_KEY           |
+| 		                                                      | SKIP_ACCOUNT_AWSTS               | AWSTS_ACCOUNT_NUMBER, AWSTS_CAP_URL, AWSTS_CAP_AGENCY, AWSTS_CAP_MISSION, AWSTS_CAP_ROLE_NAME, AWSTS_CAP_CERT, AWSTS_CAP_CERT_KEY, AWSTS_CA_CHAIN_CERT                   |
+| 		                                                      | SKIP_ACCOUNT_AWSS              | AWSS_ACCOUNT_NUMBER, AWSS_CAP_URL, AWSS_CAP_AGENCY, AWSS_CAP_ACCOUNT_NAME, AWSS_CAP_ROLE_NAME, AWSS_CAP_CERT, AWSS_CAP_CERT_KEY, AWSS_CA_CHAIN_CERT                   |
+| aviatrix_account_user                                   | SKIP_ACCOUNT_USER                  |                                                                                |
+| aviatrix_app_domain                                     | SKIP_APP_DOMAIN                    | N/A
+| aviatrix_arm_peer                                       | SKIP_ARM_PEER                      | aviatrix_account + ARM_VNET_ID, ARM_VNET_ID2, ARM_REGION, ARM_REGION2          |
+| aviatrix_aws_guard_duty                                 | SKIP_AWS_GUARD_DUTY                | aviatrix_account                                                               |
+| aviatrix_aws_peer                                       | SKIP_AWS_PEER                      | aviatrix_account + AWS_VPC_ID, AWS_VPC_ID2, AWS_REGION, AWS_REGION2            |
+| aviatrix_aws_tgw                                        | SKIP_AWS_TGW                       | aviatrix_account + AWS_VPC_ID, AWS_REGION, AWS_VPC_TGW_ID                      |
+| aviatrix_aws_tgw_directconnect                          | SKIP_AWS_TGW_DIRECTCONNECT         | aviatrix_aws_tgw + AWS_DX_GATEWAY                                              |
+| aviatrix_aws_tgw_intra_domain_inspection                | SKIP_AWS_TGW_INTRA_DOMAIN_INSPECTION | aviatrix_account + AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY     |
+| aviatrix_aws_tgw_network_domain                         | SKIP_AWS_TGW_NETWORK_DOMAIN        | aviatrix_account + AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY          |
+| aviatrix_aws_tgw_peering                                | SKIP_AWS_TGW_PEERING               | aviatrix_account                                                               |
+| aviatrix_aws_tgw_peering_domain_conn                    | SKIP_AWS_TGW_PEERING_DOMAIN_CONN   | aviatrix_account                                                               |
+| aviatrix_aws_tgw_security_domain                        | SKIP_AWS_TGW_SECURITY_DOMAIN       | aviatrix_account + AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY          |
+| aviatrix_aws_tgw_security_domain_connection             | SKIP_AWS_TGW_SECURITY_DOMAIN_CONNECTION | aviatrix_account + AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY |
+| aviatrix_aws_tgw_vpc_attachment                         | SKIP_AWS_TGW_VPC_ATTACHMENT        | aviatrix_aws_tgw                                                               |
+| aviatrix_aws_tgw_vpc_attachment                         | SKIP_AWS_TGW_TRANSIT_GATEWAY_ATTACHMENT | aviatrix_aws_tgw + aviatrix_transit_gateway                               |
+| aviatrix_azure_peer                                     | SKIP_AZURE_PEER                    | aviatrix_account + AZURE_VNET_ID, AZURE_VNET_ID2, AZURE_REGION, AZURE_REGION2  |
+| aviatrix_azure_spoke_native_peering                     | SKIP_AZURE_SPOKE_NATIVE_PEERING    | aviatrix_account + AZURE_VNET_ID, AZURE_VNET_ID2, AZURE_REGION, AZURE_REGION2  |
+| aviatrix_azure_vng_conn                                 | SKIP_AZURE_VNG_CONN                | aviatrix_account + AZURE_VNG_VNET_ID, AZURE_REGION, AZURE_VNG_SUBNET, AZURE_VNG|
+| aviatrix_aws_tgw_vpn_conn                               | SKIP_AWS_TGW_VPN_CONN              | aviatrix_aws_tgw                                                               |
+| aviatrix_cloudn_registration	                           | SKIP_CLOUDN_REGISTRATION	        | CLOUDN_IP, CLOUDN_USERNAME, CLOUDN_PASSWORD                                    |
+| aviatrix_cloudn_transit_gateway_attachment              | SKIP_CLOUDN_TRANSIT_GATEWAY_ATTACHMENT | CLOUDN_DEVICE_NAME, TRANSIT_GATEWAY_NAME, CLOUDN_BGP_ASN, CLOUDN_LAN_INTERFACE_NEIGHBOR_IP, CLOUDN_LAN_INTERFACE_NEIGHBOR_BGP_ASN |
+| aviatrix_cloudwatch_agent                               | SKIP_CLOUDWATCH_AGENT              | N/A                                                                            |
+| aviatrix_controller_config                              | SKIP_CONTROLLER_CONFIG             | aviatrix_account                                                               |
+| aviatrix_controller_cert_domain_config                  | SKIP_CONTROLLER_CERT_DOMAIN_CONFIG | aviatrix_account                                                             |
+| aviatrix_controller_email_config                        | SKIP_CONTROLLER_EMAIL_CONFIG       | aviatrix_account                                                               |
 | aviatrix_controller_email_exception_notification_config | SKIP_CONTROLLER_EMAIL_EXCEPTION_NOTIFICATION_CONFIG | aviatrix_account                           |
-| aviatrix_controller_gateway_keepalive_config | SKIP_CONTROLLER_GATEWAY_KEEPALIVE_CONFIG | N/A                                                              |
-| aviatrix_controller_private_oob      | SKIP_CONTROLLER_PRIVATE_OOB        | N/A                                                                            |
-| aviatrix_controller_security_group_management_config      | SKIP_CONTROLLER_SECURITY_GROUP_MANAGEMENT_CONFIG        | N/A                                  |
-| aviatrix_device_interface_config	   | SKIP_DEVICE_INTERFACE_CONFIG	    | CLOUDN_DEVICE_NAME                                                             |
-| aviatrix_datadog_agent               | SKIP_DATADOG_AGENT                 | datadog_api_key                                                                |
-| aviatrix_edge_gateway                | SKIP_EDGE_CAAG                     | N/A                                                                            |
-| aviatrix_filebeat_forwarder          | SKIP_FILEBEAT_FORWARDER            | N/A                                                                            |
-| aviatrix_firenet                     | SKIP_FIRENET                       | aviatrix_account + AWS_REGION, Palo Alto VM series                             |
-| aviatrix_firewall                    | SKIP_FIREWALL                      | aviatrix_gateway                                                               |
-| aviatrix_firewall_instance           | SKIP_FIREWALL_INSTANCE             | aviatrix_account + AWS_REGION, Palo Alto VM series                             |
-| aviatrix_firewall_instance_association | SKIP_FIREWALL_INSTANCE_ASSOCIATION | aviatrix_firenet, transit_gateway                                            |
-| aviatrix_firewall_management_access  | SKIP_FIREWALL_MANAGEMENT_ACCESS    | aviatrix_account                                                               |
-|                                      | SKIP_FIREWALL_MANAGEMENT_ACCESS_AWS|       + aviatrix_transit_gateway + aviatrix_spoke_gateway in AWS               |
-|                                      | SKIP_FIREWALL_MANAGEMENT_ACCESS_AZURE|     + aviatrix_transit_gateway + aviatrix_spoke_gateway in AZURE             |   
-| aviatrix_firewall_policy             | SKIP_FIREWALL_POLICY               | aviatrix_gateway                                                               |
-| aviatrix_firewall_tag                | SKIP_FIREWALL_TAG                  |                                                                                |
-| aviatrix_fqdn                        | SKIP_FQDN                          | aviatrix_gateway                                                               |
-| aviatrix_fqdn_pass_through           | SKIP_FQDN_PASS_THROUGH             | aviatrix_gateway                                                               |
-| aviatrix_fqdn_tag_rule               | SKIP_FQDN_TAG_RULE                 | aviatrix_gateway                                                               |
-| aviatrix_gateway                     | SKIP_GATEWAY                       | aviatrix_account                                                               |  
-|				                       | SKIP_GATEWAY_AWS                   |		    + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)         |
-|                                      | SKIP_GATEWAY_GCP                   |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)             |
-|                                      | SKIP_GATEWAY_AZURE                 |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
-|                                      | SKIP_GATEWAY_OCI                   |         + OCI_VPC_ID, OCI_REGION, OCI_SUBNET, OCI_GW_SIZE(optional)            |
-|                                      | SKIP_GATEWAY_AWSGOV                |         + AWSGOV_VPC_ID, AWSGOV_REGION, AWSGOV_SUBNET, AWSGOV_GW_SIZE(optional)|
-| aviatrix_gateway_dnat                | SKIP_GATEWAY_DNAT                  | aviatrix_account                                                               |
-|				                       | SKIP_GATEWAY_DNAT_AWS              |		    + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)         |
-|                                      | SKIP_GATEWAY_DNAT_AZURE            |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
-| aviatrix_gateway_snat                | SKIP_GATEWAY_SNAT                  | aviatrix_account                                                               |
-|				                       | SKIP_GATEWAY_SNAT_AWS              |		    + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)         |
-|                                      | SKIP_GATEWAY_SNAT_AZURE            |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
-| aviatrix_geo_vpn                     | SKIP_GEO_VPN                       | aviatrix_account + DOMAIN_NAME + AWS_VPC_ID, AWS_REGION, AWS_SUBNET            |
-|                                      |                                    |                                + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2         |
-| aviatrix_microseg_policy_list        | SKIP_MICROSEG_POLICY_LIST          | N/A                                                                            |
-| aviatrix_netflow_agent               | SKIP_NETFLOW_AGENT                 | N/A                                                                            |
-| aviatrix_periodic_ping               | SKIP_PERIODIC_PING                 | aviatrix_gateway                                                               |
-| aviatrix_proxy_config                | SKIP_PROXY_CONFIG                  | N/A                                                                            |
-| aviatrix_rbac_group                  | SKIP_RBAC_GROUP                    | N/A                                                                            |
-| aviatrix_rbac_group_access_account_attachment | SKIP_RBAC_GROUP_ACCESS_ACCOUNT_ATTACHMENT | aviatrix_account                                               |
-| aviatrix_rbac_group_permission_attachment | SKIP_RBAC_GROUP_PERMISSION_ATTACHMENT | N/A                                                                    |
-| aviatrix_rbac_group_user_attachment  | SKIP_RBAC_GROUP_USER_ATTACHMENT    | aviatrix_account_user                                                          |
-| aviatrix_remote_syslog               | SKIP_REMOTE_SYSLOG                 | N/A                                                                            |
-| aviatrix_saml_endpoint               | SKIP_SAML_ENDPOINT                 | IDP_METADATA, IDP_METADATA_TYPE                                                |
-| aviatrix_segmentation_network_domain | SKIP_SEGMENTATION_NETWORK_DOMAIN   | N/A                                                                            |
-| aviatrix_segmentation_network_domain_association | SKIP_SEGMENTATION_NETWORK_DOMAIN_ASSOCIATION | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2 |
-| aviatrix_segmentation_network_domain_connection_policy | SKIP_SEGMENTATION_NETWORK_DOMAIN_CONNECTION_POLICY | N/A                                          |
-| aviatrix_segmentation_security_domain | SKIP_SEGMENTATION_SECURITY_DOMAIN | N/A                                                                            |
-| aviatrix_segmentation_security_domain_association | SKIP_SEGMENTATION_SECURITY_DOMAIN_ASSOCIATION | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2 |
+| aviatrix_controller_gateway_keepalive_config            | SKIP_CONTROLLER_GATEWAY_KEEPALIVE_CONFIG | N/A                                                              |
+| aviatrix_controller_private_oob                         | SKIP_CONTROLLER_PRIVATE_OOB        | N/A                                                                            |
+| aviatrix_controller_security_group_management_config    | SKIP_CONTROLLER_SECURITY_GROUP_MANAGEMENT_CONFIG | N/A                                  |
+| aviatrix_device_interface_config	                       | SKIP_DEVICE_INTERFACE_CONFIG	    | CLOUDN_DEVICE_NAME                                                             |
+| aviatrix_datadog_agent                                  | SKIP_DATADOG_AGENT                 | datadog_api_key                                                                |
+| aviatrix_edge_gateway                                   | SKIP_EDGE_CAAG                     | N/A                                                                            |
+| aviatrix_filebeat_forwarder                             | SKIP_FILEBEAT_FORWARDER            | N/A                                                                            |
+| aviatrix_firenet                                        | SKIP_FIRENET                       | aviatrix_account + AWS_REGION, Palo Alto VM series                             |
+| aviatrix_firewall                                       | SKIP_FIREWALL                      | aviatrix_gateway                                                               |
+| aviatrix_firewall_instance                              | SKIP_FIREWALL_INSTANCE             | aviatrix_account + AWS_REGION, Palo Alto VM series                             |
+| aviatrix_firewall_instance_association                  | SKIP_FIREWALL_INSTANCE_ASSOCIATION | aviatrix_firenet, transit_gateway                                            |
+| aviatrix_firewall_management_access                     | SKIP_FIREWALL_MANAGEMENT_ACCESS    | aviatrix_account                                                               |
+|                                                         | SKIP_FIREWALL_MANAGEMENT_ACCESS_AWS|       + aviatrix_transit_gateway + aviatrix_spoke_gateway in AWS               |
+|                                                         | SKIP_FIREWALL_MANAGEMENT_ACCESS_AZURE|     + aviatrix_transit_gateway + aviatrix_spoke_gateway in AZURE             |   
+| aviatrix_firewall_policy                                | SKIP_FIREWALL_POLICY               | aviatrix_gateway                                                               |
+| aviatrix_firewall_tag                                   | SKIP_FIREWALL_TAG                  |                                                                                |
+| aviatrix_fqdn                                           | SKIP_FQDN                          | aviatrix_gateway                                                               |
+| aviatrix_fqdn_pass_through                              | SKIP_FQDN_PASS_THROUGH             | aviatrix_gateway                                                               |
+| aviatrix_fqdn_tag_rule                                  | SKIP_FQDN_TAG_RULE                 | aviatrix_gateway                                                               |
+| aviatrix_gateway                                        | SKIP_GATEWAY                       | aviatrix_account                                                               |  
+| 				                                                    | SKIP_GATEWAY_AWS                   |		    + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)         |
+|                                                         | SKIP_GATEWAY_GCP                   |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)             |
+|                                                         | SKIP_GATEWAY_AZURE                 |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
+|                                                         | SKIP_GATEWAY_OCI                   |         + OCI_VPC_ID, OCI_REGION, OCI_SUBNET, OCI_GW_SIZE(optional)            |
+|                                                         | SKIP_GATEWAY_AWSGOV                |         + AWSGOV_VPC_ID, AWSGOV_REGION, AWSGOV_SUBNET, AWSGOV_GW_SIZE(optional)|
+| aviatrix_gateway_dnat                                   | SKIP_GATEWAY_DNAT                  | aviatrix_account                                                               |
+| 				                                                    | SKIP_GATEWAY_DNAT_AWS              |		    + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)         |
+|                                                         | SKIP_GATEWAY_DNAT_AZURE            |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
+| aviatrix_gateway_snat                                   | SKIP_GATEWAY_SNAT                  | aviatrix_account                                                               |
+| 				                                                    | SKIP_GATEWAY_SNAT_AWS              |		    + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)         |
+|                                                         | SKIP_GATEWAY_SNAT_AZURE            |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
+| aviatrix_geo_vpn                                        | SKIP_GEO_VPN                       | aviatrix_account + DOMAIN_NAME + AWS_VPC_ID, AWS_REGION, AWS_SUBNET            |
+|                                                         |                                    |                                + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2         |
+| aviatrix_microseg_policy_list                           | SKIP_MICROSEG_POLICY_LIST          | N/A                                                                            |
+| aviatrix_netflow_agent                                  | SKIP_NETFLOW_AGENT                 | N/A                                                                            |
+| aviatrix_periodic_ping                                  | SKIP_PERIODIC_PING                 | aviatrix_gateway                                                               |
+| aviatrix_proxy_config                                   | SKIP_PROXY_CONFIG                  | N/A                                                                            |
+| aviatrix_rbac_group                                     | SKIP_RBAC_GROUP                    | N/A                                                                            |
+| aviatrix_rbac_group_access_account_attachment           | SKIP_RBAC_GROUP_ACCESS_ACCOUNT_ATTACHMENT | aviatrix_account                                               |
+| aviatrix_rbac_group_permission_attachment               | SKIP_RBAC_GROUP_PERMISSION_ATTACHMENT | N/A                                                                    |
+| aviatrix_rbac_group_user_attachment                     | SKIP_RBAC_GROUP_USER_ATTACHMENT    | aviatrix_account_user                                                          |
+| aviatrix_remote_syslog                                  | SKIP_REMOTE_SYSLOG                 | N/A                                                                            |
+| aviatrix_saml_endpoint                                  | SKIP_SAML_ENDPOINT                 | IDP_METADATA, IDP_METADATA_TYPE                                                |
+| aviatrix_segmentation_network_domain                    | SKIP_SEGMENTATION_NETWORK_DOMAIN   | N/A                                                                            |
+| aviatrix_segmentation_network_domain_association        | SKIP_SEGMENTATION_NETWORK_DOMAIN_ASSOCIATION | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2 |
+| aviatrix_segmentation_network_domain_connection_policy  | SKIP_SEGMENTATION_NETWORK_DOMAIN_CONNECTION_POLICY | N/A                                          |
+| aviatrix_segmentation_security_domain                   | SKIP_SEGMENTATION_SECURITY_DOMAIN | N/A                                                                            |
+| aviatrix_segmentation_security_domain_association       | SKIP_SEGMENTATION_SECURITY_DOMAIN_ASSOCIATION | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2 |
 | aviatrix_segmentation_security_domain_connection_policy | SKIP_SEGMENTATION_SECURITY_DOMAIN_CONNECTION_POLICY | N/A                                        |
 | aviatrix_site2cloud                  | SKIP_S2C                           | aviatrix_gateway                                                               |
 | aviatrix_splunk_logging              | SKIP_SPLUNK_LOGGING                | N/A                                                                            |
@@ -170,6 +170,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_vpn_user                    | SKIP_VPN_USER                      | aviatrix_gateway                                                               |
 | aviatrix_vpn_user_accelerator	       | SKIP_VPN_USER_ACCELERATOR          | aviatrix_gateway						                                         |
 | aviatrix_data_source_account         | SKIP_DATA_ACCOUNT                  | aviatrix_account                                                               |
+| aviatrix_data_source_all_networtk_domain                | SKIP_DATA_ALL_NETWORK_DOMAINS      | aviatrix_account + AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY                                                               |
 | aviatrix_data_source_caller_identity | SKIP_DATA_CALLER_IDENTITY          |                                                                                |
 | aviatrix_data_source_device_interfaces | SKIP_DATA_DEVICE_INTERFACES      | CLOUDN_DEVICE_NAME                                                             |
 | aviatrix_data_source_firenet         | SKIP_DATA_FIRENET                  | aviatrix_firenet                                                               |

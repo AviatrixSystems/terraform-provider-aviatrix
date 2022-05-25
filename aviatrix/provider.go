@@ -146,6 +146,7 @@ func Provider() *schema.Provider {
 			"aviatrix_firenet_vendor_integration":       dataSourceAviatrixFireNetVendorIntegration(),
 			"aviatrix_gateway":                          dataSourceAviatrixGateway(),
 			"aviatrix_gateway_image":                    dataSourceAviatrixGatewayImage(),
+			"aviatrix_all_network_domains":              dataSourceAviatrixAllNetworkDomains(),
 			"aviatrix_spoke_gateway":                    dataSourceAviatrixSpokeGateway(),
 			"aviatrix_spoke_gateway_inspection_subnets": dataSourceAviatrixSpokeGatewayInspectionSubnets(),
 			"aviatrix_transit_gateway":                  dataSourceAviatrixTransitGateway(),

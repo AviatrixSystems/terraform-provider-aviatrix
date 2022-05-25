@@ -67,6 +67,21 @@ type IntraDomainInspection struct {
 	IntraDomainInspectionEnabled bool   `json:"intra_domain_inspection"`
 }
 
+type DomainDetails struct {
+	Name                         string `json:"name""`
+	TgwName                      string `json:"tgw_name"`
+	RouteTableId                 string `json:"route_table_id"`
+	Account                      string `json:"account"`
+	CouldType                    string `json:"cloud_type"`
+	Region                       string `json:"region"`
+	IntraDomainInspectionEnabled bool   `json:"intra_domain_inspection"`
+	EgressInspection             bool   `json:"egress_inspection"`
+	InspectionPolicy             string `json:"inspection_policy"`
+	IntraDomainInspectionName    string `json:"intra_domain_inspection_name"`
+	EgressInspectionName         string `json:"egress_inspection_name"`
+	Type                         string `json:"type"`
+}
+
 func (c *Client) CreateSecurityDomain(securityDomain *SecurityDomain) error {
 	securityDomain.CID = c.CID
 	securityDomain.Action = "add_route_domain"
@@ -205,6 +220,31 @@ func (c *Client) DisableIntraDomainInspection(ctx context.Context, intraDomainIn
 	}
 
 	return c.PostAPIContext(ctx, params["action"], params, BasicCheck)
+}
+
+func (c *Client) GetAllSecurityDomains() ([]DomainDetails, error) {
+	params := map[string]string{
+		"action": "list_all_tgw_security_domains",
+		"CID":    c.CID,
+	}
+
+	type DomainDetail struct {
+		Domains []DomainDetails `json:"domains"`
+	}
+
+	type Resp struct {
+		Return  bool         `json:"return"`
+		Results DomainDetail `json:"results"`
+		Reason  string       `json:"reason"`
+	}
+
+	var data Resp
+	err := c.GetAPI(&data, params["action"], params, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+	domainList := data.Results.Domains
+	return domainList, nil
 }
 
 func (c *Client) GetIntraDomainInspectionStatus(ctx context.Context, intraDomainInspection *IntraDomainInspection) error {
