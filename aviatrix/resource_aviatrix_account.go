@@ -388,12 +388,12 @@ func resourceAviatrixAccount() *schema.Resource {
 				Computed:    true,
 				Description: "AWS Secret Region CAP Certificate Key file path on the controller.",
 			},
-			"group_names": {
+			"rbac_groups": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					groupNameOld, _ := d.GetChange("group_names")
+					groupNameOld, _ := d.GetChange("rbac_groups")
 					return len(groupNameOld.([]interface{})) != 0
 				},
 				Description: "List of RBAC permission group names.",
@@ -469,8 +469,8 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		AwsSCapCertKeyPath:                    d.Get("awss_cap_cert_key_path").(string),
 	}
 
-	if _, ok := d.GetOk("group_names"); ok {
-		account.GroupNames = strings.Join(goaviatrix.ExpandStringList(d.Get("group_names").([]interface{})), ",")
+	if _, ok := d.GetOk("rbac_groups"); ok {
+		account.GroupNames = strings.Join(goaviatrix.ExpandStringList(d.Get("rbac_groups").([]interface{})), ",")
 	}
 
 	awsIam := d.Get("aws_iam").(bool)
@@ -869,7 +869,7 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 			d.Set("aws_ca_cert_path", acc.AwsCaCertPath)
 		}
 
-		d.Set("group_names", acc.GroupNamesRead)
+		d.Set("rbac_groups", acc.GroupNamesRead)
 		d.SetId(acc.AccountName)
 	}
 
