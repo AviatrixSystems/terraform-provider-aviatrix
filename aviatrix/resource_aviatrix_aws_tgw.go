@@ -212,6 +212,13 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 				},
 				Description: "TGW CIDRs.",
 			},
+			"inspection_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "Domain-based",
+				Description:  "Inspection mode. Valid values: 'Domain-based' and 'Connection-based'.",
+				ValidateFunc: validation.StringInSlice([]string{"Domain-based", "Connection-based"}, false),
+			},
 			"tgw_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -233,6 +240,7 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 		AttachedAviatrixTransitGW: make([]string, 0),
 		SecurityDomains:           make([]goaviatrix.SecurityDomainRule, 0),
 		EnableMulticast:           d.Get("enable_multicast").(bool),
+		InspectionMode:            d.Get("inspection_mode").(string),
 	}
 
 	manageSecurityDomain := d.Get("manage_security_domain").(bool)
@@ -522,6 +530,13 @@ func resourceAviatrixAWSTgwCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
+	if awsTgw.InspectionMode == "Connection-based" {
+		err := client.UpdateTGWInspectionMode(awsTgw.Name, awsTgw.InspectionMode)
+		if err != nil {
+			return fmt.Errorf("could not update TGW inspection mode after creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixAWSTgwReadIfRequired(d, meta, &flag)
 }
 
@@ -565,6 +580,7 @@ func resourceAviatrixAWSTgwRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("aws_side_as_number", awsTgw.AwsSideAsNumber)
 	d.Set("enable_multicast", awsTgw.EnableMulticast)
 	d.Set("tgw_id", awsTgw.TgwId)
+	d.Set("inspection_mode", awsTgw.InspectionMode)
 	if err := d.Set("cidrs", awsTgw.CidrList); err != nil {
 		return fmt.Errorf("could not set aws_tgw.cidrs into state: %v", err)
 	}
@@ -1864,6 +1880,13 @@ func resourceAviatrixAWSTgwUpdate(d *schema.ResourceData, meta interface{}) erro
 		err := client.UpdateTGWCidrs(awsTgw.Name, cidrs)
 		if err != nil {
 			return fmt.Errorf("could not update TGW CIDRs during update: %v", err)
+		}
+	}
+
+	if d.HasChange("inspection_mode") {
+		err := client.UpdateTGWInspectionMode(awsTgw.Name, d.Get("inspection_mode").(string))
+		if err != nil {
+			return fmt.Errorf("could not update TGW inspection mode during update: %v", err)
 		}
 	}
 

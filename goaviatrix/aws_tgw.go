@@ -26,6 +26,7 @@ type AWSTgw struct {
 	NotCreateDefaultDomains   bool `form:"not_create_default_domains,omitempty"`
 	TgwId                     string
 	Async                     bool `form:"async,omitempty"`
+	InspectionMode            string
 }
 
 type AWSTgwAPIResp struct {
@@ -105,13 +106,14 @@ type TGWInfoList struct {
 }
 
 type TgwInfoDetail struct {
-	AccountName     string   `json:"acct_name"`
-	Region          string   `json:"region"`
-	AwsSideAsNumber int      `json:"tgw_aws_asn"`
-	CloudType       int      `json:"cloud_type"`
-	EnableMulticast bool     `json:"multicast_enable"`
-	CidrList        []string `json:"tgw_cidr_list"`
-	TgwId           string   `json:"tgw_id"`
+	AccountName               string   `json:"acct_name"`
+	Region                    string   `json:"region"`
+	AwsSideAsNumber           int      `json:"tgw_aws_asn"`
+	CloudType                 int      `json:"cloud_type"`
+	EnableMulticast           bool     `json:"multicast_enable"`
+	CidrList                  []string `json:"tgw_cidr_list"`
+	TgwId                     string   `json:"tgw_id"`
+	ConnectionBasedInspection bool     `json:"connection_based_inspection"`
 }
 
 type listAttachedVpcNamesResp struct {
@@ -551,6 +553,11 @@ func (c *Client) ListTgwDetails(awsTgw *AWSTgw) (*AWSTgw, error) {
 		awsTgw.EnableMulticast = tgwInfoDetail.EnableMulticast
 		awsTgw.CidrList = tgwInfoDetail.CidrList
 		awsTgw.TgwId = tgwInfoDetail.TgwId
+		if tgwInfoDetail.ConnectionBasedInspection {
+			awsTgw.InspectionMode = "Connection-based"
+		} else {
+			awsTgw.InspectionMode = "Domain-based"
+		}
 		return awsTgw, nil
 	}
 	return nil, ErrNotFound
@@ -599,5 +606,16 @@ func (c *Client) UpdateTGWCidrs(tgwName string, cidrs []string) error {
 		"tgw_name":  tgwName,
 		"cidr_list": strings.Join(cidrs, ","),
 	}
+	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) UpdateTGWInspectionMode(tgwName, inspectionMode string) error {
+	data := map[string]string{
+		"action":   "edit_aws_tgw_inspection_mode",
+		"CID":      c.CID,
+		"tgw_name": tgwName,
+		"mode":     inspectionMode,
+	}
+
 	return c.PostAPI(data["action"], data, BasicCheck)
 }
