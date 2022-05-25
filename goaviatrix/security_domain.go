@@ -68,7 +68,7 @@ type IntraDomainInspection struct {
 }
 
 type DomainDetails struct {
-	Name                         string `json:"name""`
+	Name                         string `json:"name"`
 	TgwName                      string `json:"tgw_name"`
 	RouteTableId                 string `json:"route_table_id"`
 	Account                      string `json:"account"`
