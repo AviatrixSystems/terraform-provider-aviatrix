@@ -29,8 +29,9 @@ func dataSourceAviatrixAllNetworkDomains() *schema.Resource {
 							Description: "AWS TGW name.",
 						},
 						"route_table_id": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Route table id",
 						},
 						"account": {
 							Type:        schema.TypeString,
@@ -63,8 +64,9 @@ func dataSourceAviatrixAllNetworkDomains() *schema.Resource {
 							Description: "Inspection policy name.",
 						},
 						"intra_domain_inspection_name": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Intra domain inspection name",
 						},
 						"egress_inspection_name": {
 							Type:        schema.TypeString,

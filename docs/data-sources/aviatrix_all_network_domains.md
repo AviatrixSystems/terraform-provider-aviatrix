@@ -3,7 +3,7 @@ subcategory: "Multi-Cloud Transit"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_all_network_domain"
 description: |-
-Get a list of all network domains and detail
+  Get a list of all network domains and detail
 ---
 
 # aviatrix_all_network_domains
@@ -22,7 +22,7 @@ The **aviatrix_all_network_domains** data source provides details about all netw
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+Use above data source, the following attributes are exported:
 * `network_domain_list` - The list of all network domains
     * `name` - Network domain name.
     * `tgw_name` - AWS TGW name.
