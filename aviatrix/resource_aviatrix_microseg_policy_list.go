@@ -55,8 +55,11 @@ func resourceAviatrixMicrosegPolicyList() *schema.Resource {
 						"protocol": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP", "ICMP"}, false),
-							Description:  "Protocol for the policy to filter.",
+							ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP", "ICMP", "ANY"}, true),
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return strings.EqualFold(old, new)
+							},
+							Description: "Protocol for the policy to filter.",
 						},
 						"priority": {
 							Type:        schema.TypeInt,
@@ -122,7 +125,13 @@ func marshalMicrosegPolicyListInput(d *schema.ResourceData) (*goaviatrix.Microse
 			Name:     policy["name"].(string),
 			Action:   policy["action"].(string),
 			Priority: policy["priority"].(int),
-			Protocol: policy["protocol"].(string),
+		}
+
+		protocol := strings.ToLower(policy["protocol"].(string))
+		if protocol == "ANY" {
+			microsegPolicy.Protocol = "PROTOCOL_UNSPECIFIED"
+		} else {
+			microsegPolicy.Protocol = protocol
 		}
 
 		for _, appDomain := range policy["src_app_domains"].(*schema.Set).List() {
@@ -214,12 +223,17 @@ func resourceAviatrixMicrosegPolicyListRead(ctx context.Context, d *schema.Resou
 		p["name"] = policy.Name
 		p["action"] = policy.Action
 		p["priority"] = policy.Priority
-		p["protocol"] = policy.Protocol
 		p["src_app_domains"] = policy.SrcAppDomains
 		p["dst_app_domains"] = policy.DstAppDomains
 		p["logging"] = policy.Logging
 		p["watch"] = policy.Watch
 		p["uuid"] = policy.UUID
+
+		if strings.EqualFold(policy.Protocol, "PROTOCOL_UNSPECIFIED") {
+			p["protocol"] = "ANY"
+		} else {
+			p["protocol"] = policy.Protocol
+		}
 
 		if policy.Protocol != "ICMP" {
 			var portRanges []map[string]interface{}
