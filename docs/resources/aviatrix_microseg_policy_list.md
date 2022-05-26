@@ -61,7 +61,7 @@ The following arguments are supported:
     * `name` - (Required) Name of the policy.
     * `action` - (Required) Action for the policy. Must be one of PERMIT or DENY.
     * `priority` - (Optional)  Priority for the policy. Default: 0. Type: Integer.
-    * `protocol` - (Required) Protocol for the policy. Must be one of TCP, UDP or ICMP.
+    * `protocol` - (Required) Protocol for the policy. Must be one of TCP, UDP, ICMP or ANY.
     * `src_app_domains` - (Required) List of App Domain UUIDs for the source for the policy.
     * `dst_app_domains` - (Required) List of App Domain UUIDs for the destination for the policy.
     * `port_ranges` - (Optional) List of port ranges for the policy. Cannot be used when `protocol` is "ICMP".
