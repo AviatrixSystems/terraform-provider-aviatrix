@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	//"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -19,7 +18,7 @@ func dataSourceAviatrixListAllTransitGateway() *schema.Resource {
 			"transit_gateway_list": {
 				Type:        schema.TypeList,
 				Computed:    true,
-				Description: "list of all transit gateways and attributes",
+				Description: "List of all Transit Gateways",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"gw_name": {
