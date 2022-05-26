@@ -23,7 +23,6 @@ resource "aviatrix_account" "temp_acc_aws" {
   aws_iam            = true
   aws_role_app       = "arn:aws:iam::123456789012:role/aviatrix-role-app"
   aws_role_ec2       = "arn:aws:iam::123456789012:role/aviatrix-role-ec2"
-  rbac_groups        = ["write_only"]
 }
 ```
 ```hcl
@@ -35,7 +34,6 @@ resource "aviatrix_account" "temp_acc_aws" {
   aws_account_number = "123456789012"
   aws_access_key     = "ABCDEFGHIJKL"
   aws_secret_key     = "ABCDEFGHIJKLabcdefghijkl"
-  rbac_groups        = ["write_only"]
 }
 ```
 ```hcl
@@ -45,7 +43,6 @@ resource "aviatrix_account" "temp_acc_gcp" {
   cloud_type                          = 4
   gcloud_project_id                   = "aviatrix-123456"
   gcloud_project_credentials_filepath = "/home/ubuntu/test_gcp/aviatrix-abc123.json"
-  rbac_groups                         = ["write_only"]
 }
 ```
 ```hcl
@@ -57,7 +54,6 @@ resource "aviatrix_account" "temp_acc_azure" {
   arm_directory_id    = "abcdefgh-1234-5678-9100-abc123456789"
   arm_application_id  = "1234abcd-12ab-34cd-56ef-abcdef123456"
   arm_application_key = "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe="
-  rbac_groups         = ["write_only"]
 }
 ```
 ```hcl
@@ -69,7 +65,6 @@ resource "aviatrix_account" "temp_acc_oci" {
   oci_user_id                  = "ocid1.user.oc1..aaaaaaaazly"
   oci_compartment_id           = "ocid1.tenancy.oc1..aaaaaaaaxo"
   oci_api_private_key_filepath = "/Users/public/Documents/oci_api_key.pem"
-  rbac_groups                  = ["write_only"]
 }
 ```
 ```hcl
@@ -81,7 +76,6 @@ resource "aviatrix_account" "temp_acc_azure_gov" {
   azuregov_directory_id    = "abcdefgh-1234-5678-9100-abc123456789"
   azuregov_application_id  = "1234abcd-12ab-34cd-56ef-abcdef123456"
   azuregov_application_key = "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe="
-  rbac_groups              = ["write_only"]
 }
 ```
 ```hcl
@@ -92,7 +86,6 @@ resource "aviatrix_account" "temp_acc_awsgov" {
   awsgov_account_number = "123456789012"
   awsgov_access_key     = "ABCDEFGHIJKL"
   awsgov_secret_key     = "ABCDEFGHIJKLabcdefghijkl"
-  rbac_groups           = ["write_only"]
 }
 ```
 ```hcl
@@ -104,7 +97,6 @@ resource "aviatrix_account" "temp_acc_aww_china_iam" {
   awschina_iam            = true
   awschina_role_app       = "arn:aws-cn:iam::123456789012:role/aviatrix-role-app"
   awschina_role_ec2       = "arn:aws-cn:iam::123456789012:role/aviatrix-role-ec2"
-  rbac_groups             = ["write_only"]
 }
 ```
 ```hcl
@@ -116,7 +108,6 @@ resource "aviatrix_account" "temp_acc_awschina" {
   awschina_iam            = false
   awschina_access_key     = "ABCDEFGHIJKL"
   awschina_secret_key     = "ABCDEFGHIJKLabcdefghijkl"
-  rbac_groups             = ["write_only"]
 }
 ```
 ```hcl
@@ -128,7 +119,6 @@ resource "aviatrix_account" "temp_acc_azurechina" {
   azurechina_directory_id    = "abcdefgh-1234-5678-9100-abc123456789"
   azurechina_application_id  = "1234abcd-12ab-34cd-56ef-abcdef123456"
   azurechina_application_key = "213df1SDF1231Gsaf/fa23-4A/324j12390801+FSwe="
-  rbac_groups                = ["write_only"]
 }
 ```
 ```hcl
@@ -139,7 +129,6 @@ resource "aviatrix_account" "temp_acc_alibaba" {
   alicloud_account_id = "123456789012"
   alicloud_access_key = "ABCDEFGHIJKL"
   alicloud_secret_key = "ABCDEFGHIJKLabcdefghijkl"
-  rbac_groups         = ["write_only"]
 }
  ```
   
@@ -156,7 +145,6 @@ resource "aviatrix_account" "temp_acc_aws_top_secret" {
   awsts_cap_cert       = "path/to/cap_cert_file"
   awsts_cap_cert_key   = "path/to/cap_cert_key_file"
   awsts_ca_chain_cert  = "path/to/cap_chain_cert_file"
-  rbac_groups          = ["write_only"]
 }
 ```
 ```hcl
@@ -172,7 +160,18 @@ resource "aviatrix_account" "temp_acc_aws_secret" {
   awss_cap_cert         = "path/to/cap_cert_file"
   awss_cap_cert_key     = "path/to/cap_cert_key_file"
   awss_ca_chain_cert    = "path/to/cap_chain_cert_file"
-  rbac_groups           = ["write_only"]
+}
+```
+```hcl
+# Create an Aviatrix AWS Account with IAM roles and RBAC group: group-c
+resource "aviatrix_account" "temp_acc_aws" {
+  account_name       = "username"
+  cloud_type         = 1
+  aws_account_number = "123456789012"
+  aws_iam            = true
+  aws_role_app       = "arn:aws:iam::123456789012:role/aviatrix-role-app"
+  aws_role_ec2       = "arn:aws:iam::123456789012:role/aviatrix-role-ec2"
+  rbac_groups        = ["group-c"]
 }
 ```
 
