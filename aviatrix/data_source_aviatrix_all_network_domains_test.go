@@ -31,14 +31,14 @@ func TestAccDataSourceAviatrixAllNetworkDomains_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAviatrixAllNetworkDomainsConfigPreBase(rName, tgwName, awsSideAsNumber, ndName),
+				Config: testAccDataSourceAviatrixAllNetworkDomainsConfigBasic(rName, tgwName, awsSideAsNumber, ndName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTgwNetworkDomainExists("aviatrix_aws_tgw_network_domain.test", tgwName, ndName),
 				),
 				Destroy: false,
 			},
 			{
-				Config: testAccDataSourceAviatrixAllNetworkDomainsConfigBase(),
+				Config: testAccDataSourceAviatrixAllNetworkDomainsConfigBasic(rName, tgwName, awsSideAsNumber, ndName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "network_domain_list.0.tgw_name", tgwName),
 					resource.TestCheckResourceAttr(resourceName, "network_domain_list.3.account", fmt.Sprintf("tfa-%s", rName)),
@@ -51,7 +51,7 @@ func TestAccDataSourceAviatrixAllNetworkDomains_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAviatrixAllNetworkDomainsConfigPreBase(rName string, tgwName string, awsSideAsNumber string, ndName string) string {
+func testAccDataSourceAviatrixAllNetworkDomainsConfigBasic(rName string, tgwName string, awsSideAsNumber string, ndName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
 	account_name       = "tfa-%s"
@@ -91,16 +91,11 @@ resource "aviatrix_aws_tgw_network_domain" "test" {
     	aviatrix_aws_tgw_network_domain.Aviatrix_Edge_Domain
   ]
 }
-`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		awsSideAsNumber, tgwName, ndName)
-}
-
-func testAccDataSourceAviatrixAllNetworkDomainsConfigBase() string {
-	return `
 data "aviatrix_all_network_domains" "test"{
 
 }
-`
+`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
+		awsSideAsNumber, tgwName, ndName)
 }
 
 func testAccCheckTgwNetworkDomainExists(resourceName string, tgwName string, ndName string) resource.TestCheckFunc {

@@ -67,7 +67,7 @@ type IntraDomainInspection struct {
 	IntraDomainInspectionEnabled bool   `json:"intra_domain_inspection"`
 }
 
-type DomainDetails struct {
+type NetworkDomainDetails struct {
 	Name                         string `json:"name"`
 	TgwName                      string `json:"tgw_name"`
 	RouteTableId                 string `json:"route_table_id"`
@@ -222,14 +222,14 @@ func (c *Client) DisableIntraDomainInspection(ctx context.Context, intraDomainIn
 	return c.PostAPIContext(ctx, params["action"], params, BasicCheck)
 }
 
-func (c *Client) GetAllSecurityDomains() ([]DomainDetails, error) {
+func (c *Client) GetAllSecurityDomains() ([]NetworkDomainDetails, error) {
 	params := map[string]string{
 		"action": "list_all_tgw_security_domains",
 		"CID":    c.CID,
 	}
 
 	type DomainDetail struct {
-		Domains []DomainDetails `json:"domains"`
+		Domains []NetworkDomainDetails `json:"domains"`
 	}
 
 	type Resp struct {

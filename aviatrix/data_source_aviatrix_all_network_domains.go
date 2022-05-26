@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -15,13 +16,13 @@ func dataSourceAviatrixAllNetworkDomains() *schema.Resource {
 			"network_domain_list": {
 				Type:        schema.TypeList,
 				Computed:    true,
-				Description: "list of network domains and attributes",
+				Description: "List of Network Domains.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Network domain name.",
+							Description: "Network Domain name.",
 						},
 						"tgw_name": {
 							Type:        schema.TypeString,
@@ -31,7 +32,7 @@ func dataSourceAviatrixAllNetworkDomains() *schema.Resource {
 						"route_table_id": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Route table id",
+							Description: "Route table id.",
 						},
 						"account": {
 							Type:        schema.TypeString,
@@ -66,7 +67,7 @@ func dataSourceAviatrixAllNetworkDomains() *schema.Resource {
 						"intra_domain_inspection_name": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Intra domain inspection name",
+							Description: "Intra domain inspection name.",
 						},
 						"egress_inspection_name": {
 							Type:        schema.TypeString,
@@ -76,7 +77,7 @@ func dataSourceAviatrixAllNetworkDomains() *schema.Resource {
 						"type": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "Type of network domain.",
+							Description: "Type of Network Domain.",
 						},
 					},
 				},
@@ -95,24 +96,25 @@ func dataSourceAviatrixAllNetworkDomainsRead(d *schema.ResourceData, meta interf
 	var result []map[string]interface{}
 	for i := range domainList {
 		domain := domainList[i]
-		tempDomain := make(map[string]interface{})
-		tempDomain["name"] = domain.Name
-		tempDomain["tgw_name"] = domain.TgwName
-		tempDomain["route_table_id"] = domain.RouteTableId
-		tempDomain["account"] = domain.Account
-		tempDomain["cloud_type"] = domain.CouldType
-		tempDomain["region"] = domain.Region
-		tempDomain["intra_domain_inspection"] = domain.IntraDomainInspectionEnabled
-		tempDomain["egress_inspection"] = domain.EgressInspection
-		tempDomain["inspection_policy"] = domain.InspectionPolicy
-		tempDomain["intra_domain_inspection_name"] = domain.IntraDomainInspectionName
-		tempDomain["egress_inspection_name"] = domain.EgressInspectionName
-		tempDomain["type"] = domain.Type
+		tempDomain := map[string]interface{}{
+			"name":                         domain.Name,
+			"tgw_name":                     domain.TgwName,
+			"route_table_id":               domain.RouteTableId,
+			"account":                      domain.Account,
+			"cloud_type":                   domain.CouldType,
+			"region":                       domain.Region,
+			"intra_domain_inspection":      domain.IntraDomainInspectionEnabled,
+			"egress_inspection":            domain.EgressInspection,
+			"inspection_policy":            domain.InspectionPolicy,
+			"intra_domain_inspection_name": domain.IntraDomainInspectionName,
+			"egress_inspection_name":       domain.EgressInspectionName,
+			"type":                         domain.Type,
+		}
 		result = append(result, tempDomain)
 	}
 	if err = d.Set("network_domain_list", result); err != nil {
 		return fmt.Errorf("couldn't set network_domain_list: %s", err)
 	}
-	d.SetId("network_domain_list-id")
+	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }

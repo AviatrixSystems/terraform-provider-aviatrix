@@ -1,14 +1,14 @@
 ---
-subcategory: "Multi-Cloud Transit"
+subcategory: "TGW Orchestrator"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_all_network_domain"
 description: |-
-  Get a list of all network domains and detail
+  Get a list of all Network Domains and detail
 ---
 
 # aviatrix_all_network_domains
 
-The **aviatrix_all_network_domains** data source provides details about all network domains created by the Aviatrix Controller.
+The **aviatrix_all_network_domains** data source provides details about all Network Domains created by the Aviatrix Controller. Available as of provider version 2.23+.
 
 ## Example Usage
 
@@ -23,8 +23,8 @@ The **aviatrix_all_network_domains** data source provides details about all netw
 ## Attribute Reference
 
 Use above data source, the following attributes are exported:
-* `network_domain_list` - The list of all network domains
-    * `name` - Network domain name.
+* `network_domain_list` - The list of all Network Domains
+    * `name` - Network Domain name.
     * `tgw_name` - AWS TGW name.
     * `account` - Access Account name.
     * `route_table_id` - Route table's id.
