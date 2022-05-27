@@ -169,6 +169,7 @@ type Gateway struct {
 	EnableTransitFirenet            bool                                `json:"enable_transit_firenet"`
 	EnableGatewayLoadBalancer       bool                                `json:"enable_gateway_load_balancer"`
 	EnableEgressTransitFirenet      bool                                `json:"enable_egress_transit_firenet"`
+	EnablePreserveAsPath            bool                                `json:"preserve_as_path"`
 	CustomizedTransitVpcRoutes      []string                            `json:"customized_transit_vpc_routes"`
 	EnableAdvertiseTransitCidr      bool                                `json:"enable_advertise_transit_cidr"`
 	EnableLearnedCidrsApproval      bool                                `json:"enable_learned_cidrs_approval"`
@@ -873,6 +874,46 @@ func (c *Client) DisableEgressTransitFirenet(transitGateway *TransitVpc) error {
 		"CID":          c.CID,
 		"action":       action,
 		"gateway_name": transitGateway.GwName,
+	}
+	return c.PostAPI(action, data, BasicCheck)
+}
+
+func (c *Client) EnableTransitPreserveAsPath(transitGateway *TransitVpc) error {
+	action := "enable_transit_preserve_as_path"
+	data := map[string]interface{}{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": transitGateway.GwName,
+	}
+	return c.PostAPI(action, data, BasicCheck)
+}
+
+func (c *Client) DisableTransitPreserveAsPath(transitGateway *TransitVpc) error {
+	action := "disable_transit_preserve_as_path"
+	data := map[string]interface{}{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": transitGateway.GwName,
+	}
+	return c.PostAPI(action, data, BasicCheck)
+}
+
+func (c *Client) EnableSpokePreserveAsPath(spokeGateway *SpokeVpc) error {
+	action := "enable_spoke_preserve_as_path"
+	data := map[string]interface{}{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": spokeGateway.GwName,
+	}
+	return c.PostAPI(action, data, BasicCheck)
+}
+
+func (c *Client) DisableSpokePreserveAsPath(spokeGateway *SpokeVpc) error {
+	action := "disable_spoke_preserve_as_path"
+	data := map[string]interface{}{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": spokeGateway.GwName,
 	}
 	return c.PostAPI(action, data, BasicCheck)
 }

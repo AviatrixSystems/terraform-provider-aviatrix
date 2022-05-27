@@ -183,6 +183,12 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable encrypt gateway EBS volume. Only supported for AWS provider. Valid values: true, false. Default value: false.",
 			},
+			"enable_spoke_preserve_as_path": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable preserve as_path when advertising manual summary cidrs on BGP spoke gateway.",
+			},
 			"customized_spoke_vpc_routes": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -593,6 +599,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	enablePrivateOob := d.Get("enable_private_oob").(bool)
+	enableSpokePreserveAsPath := d.Get("enable_spoke_preserve_as_path").(bool)
 
 	if !enablePrivateOob {
 		allocateNewEip := d.Get("allocate_new_eip").(bool)
@@ -1220,6 +1227,13 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	if enableSpokePreserveAsPath {
+		err := client.EnableSpokePreserveAsPath(gateway)
+		if err != nil {
+			return fmt.Errorf("could not enable_spoke_preserve_as_path: %v", err)
+		}
+	}
+
 	if rxQueueSize != "" {
 		gwRxQueueSize := &goaviatrix.Gateway{
 			GwName:      d.Get("gw_name").(string),
@@ -1290,6 +1304,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
 	d.Set("enable_bgp", gw.EnableBgp)
 	d.Set("enable_learned_cidrs_approval", gw.EnableLearnedCidrsApproval)
+	d.Set("enable_spoke_preserve_as_path", gw.EnablePreserveAsPath)
 	d.Set("rx_queue_size", gw.RxQueueSize)
 
 	if gw.EnableLearnedCidrsApproval {
@@ -1695,6 +1710,21 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 
 		if d.HasChange("ha_oob_availability_zone") {
 			return fmt.Errorf("updating ha_oob_availability_zone is not allowed if private oob is disabled")
+		}
+	}
+
+	if d.HasChange("enable_spoke_preserve_as_path") {
+		enableSpokePreserveAsPath := d.Get("enable_spoke_preserve_as_path").(bool)
+		if !enableSpokePreserveAsPath {
+			err := client.DisableSpokePreserveAsPath(&goaviatrix.SpokeVpc{GwName: gateway.GwName})
+			if err != nil {
+				return fmt.Errorf("could not disable spoke preserve as path: %v", err)
+			}
+		} else {
+			err := client.EnableSpokePreserveAsPath(&goaviatrix.SpokeVpc{GwName: gateway.GwName})
+			if err != nil {
+				return fmt.Errorf("could nor enbale spoke preserve as path: %v", err)
+			}
 		}
 	}
 

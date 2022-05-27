@@ -275,6 +275,7 @@ The following arguments are supported:
 * `local_as_number` - (Optional) Changes the Aviatrix Spoke Gateway ASN number before you setup Aviatrix Spoke Gateway connection configurations.
 * `prepend_as_path` - (Optional) List of AS numbers to populate BGP AS_PATH field when it advertises to VGW or peer devices.
 * `disable_route_propagation` - (Optional) Disables route propagation on BGP Spoke to attached Transit Gateway. Default value: false.
+* `enable_spoke_preserve_as_path` - (Optional) Enable preserve as_path when advertising manual summary cidrs on BGP spoke gateway. Valid values: true, false. Default value: false.
 
 ### Encryption
 * `enable_encrypt_volume` - (Optional) Enable EBS volume encryption for Gateway. Only supports AWS, AWSGov, AWSChina, AWS Top Secret and AWS Secret providers. Valid values: true, false. Default value: false.
