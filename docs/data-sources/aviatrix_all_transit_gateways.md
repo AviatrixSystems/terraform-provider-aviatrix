@@ -15,9 +15,7 @@ The **aviatrix_all_transit_gateways** data source provides details about all tra
 
 ```hcl
 # Aviatrix All Transit Gateways Data Source
-data "aviatrix_all_transit_gateways" "foo" {
-  
-}
+data "aviatrix_all_transit_gateways" "foo" {}
 ```
 
 
