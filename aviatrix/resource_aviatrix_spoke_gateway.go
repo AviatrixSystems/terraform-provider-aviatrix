@@ -350,6 +350,11 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Disables route propagation on BGP Spoke to attached Transit Gateway. Default: false.",
 			},
+			"lb_vpc_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Private Mode controller load balancer vpc_id",
+			},
 			"local_as_number": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -851,6 +856,14 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	rxQueueSize := d.Get("rx_queue_size").(string)
 	if rxQueueSize != "" && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		return fmt.Errorf("rx_queue_size only supports AWS related cloud types")
+	}
+
+	if _, ok := d.GetOk("load_balancer_vpc"); ok {
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+			return fmt.Errorf("private mode is only supported in AWS and Azure. %q must be empty", "load_balancer_vpc")
+		}
+
+		gateway.LbVpcId = d.Get("load_balancer_vpc").(string)
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Spoke Gateway: %#v", gateway)

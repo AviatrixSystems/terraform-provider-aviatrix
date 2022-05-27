@@ -94,6 +94,11 @@ func resourceAviatrixVpc() *schema.Resource {
 				Description: "Enable Native AWS GWLB for FireNet Function. Only valid with cloud_type = 1 (AWS). " +
 					"Valid values: true or false. Default value: false. Available as of provider version R2.18+.",
 			},
+			"private_mode_subnets": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "", // TODO lb vpc id desc
+			},
 			"subnets": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -316,6 +321,10 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error creating vpc: resource_group is required to be empty for providers other than Azure (8), AzureGov (32) and AzureChina (2048)")
 		}
 		vpc.ResourceGroup = resourceGroup.(string)
+	}
+
+	if _, ok := d.GetOk("private_mode_subnets"); ok {
+		vpc.PrivateModeSubnets = true
 	}
 
 	err := client.CreateVpc(vpc)

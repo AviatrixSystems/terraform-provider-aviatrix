@@ -47,6 +47,7 @@ type SpokeVpc struct {
 	LearnedCidrsApproval         string   `form:"learned_cidrs_approval,omitempty"`
 	ApprovedLearnedCidrs         []string `form:"approved_learned_cidrs"`
 	Async                        bool     `form:"async,omitempty"`
+	LbVpcId                      string   `form:"lb_vpc_id"`
 }
 
 type SpokeGatewayAdvancedConfig struct {

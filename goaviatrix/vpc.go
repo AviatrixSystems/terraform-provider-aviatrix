@@ -23,6 +23,7 @@ type Vpc struct {
 	PrivateSubnets         []SubnetInfo
 	PublicRoutesOnly       bool
 	ResourceGroup          string `json:"resource_group,omitempty"`
+	PrivateModeSubnets     bool   `json:"private_mode_subnets"`
 }
 
 type VpcEdit struct {
@@ -103,6 +104,10 @@ func (c *Client) CreateVpc(vpc *Vpc) error {
 	}
 	if vpc.ResourceGroup != "" {
 		form["resource_group"] = vpc.ResourceGroup
+	}
+
+	if vpc.PrivateModeSubnets {
+		form["private_mode_subnets"] = "true"
 	}
 
 	return c.PostAPI(action, form, BasicCheck)

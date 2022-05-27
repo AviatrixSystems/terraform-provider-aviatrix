@@ -1,6 +1,10 @@
 package goaviatrix
 
-import "context"
+import (
+	"context"
+	"fmt"
+	"strings"
+)
 
 type PrivateModeLb struct {
 	CID                   string `json:"CID"`
@@ -27,6 +31,16 @@ type PrivateModeLbRead struct {
 type PrivateModeMulticloudProxy struct {
 	InstanceId string
 	ProxyType  string
+}
+
+func privateModeLoadBalancerCheckFunc(action, method, reason string, ret bool) error {
+	if !ret {
+		if strings.Contains(reason, "Private Mode is not enabled") {
+			return ErrNotFound
+		}
+		return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
+	}
+	return nil
 }
 
 func (c *Client) CreatePrivateModeControllerLoadBalancer(ctx context.Context, privateModeLb *PrivateModeLb) error {
@@ -66,7 +80,7 @@ func (c *Client) GetPrivateModeLoadBalancer(ctx context.Context, loadBalancerVpc
 	}
 
 	var resp PrivateModeLoadBalancerResp
-	err := c.PostAPIContext2(ctx, &resp, action, form, BasicCheck)
+	err := c.PostAPIContext2(ctx, &resp, action, form, privateModeLoadBalancerCheckFunc)
 	if err != nil {
 		return nil, err
 	}

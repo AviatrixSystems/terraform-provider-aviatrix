@@ -69,11 +69,11 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "Size of the gateway instance.",
 			},
 			"subnet": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsCIDR,
-				Description:  "Public Subnet Name.",
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				//ValidateFunc: validation.IsCIDR,
+				Description: "Public Subnet Name.",
 			},
 			"zone": {
 				Type:         schema.TypeString,
@@ -488,6 +488,11 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"1K", "2K", "4K", "8K", "16K"}, false),
 				Description:  "Gateway ethernet interface RX queue size. Supported for AWS related clouds only.",
+			},
+			"load_balancer_vpc": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Controller load balancer VPC ID. Required when private mode is enabled for the Controller.",
 			},
 			"availability_domain": {
 				Type:        schema.TypeString,
@@ -1068,6 +1073,14 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	rxQueueSize := d.Get("rx_queue_size").(string)
 	if rxQueueSize != "" && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		return fmt.Errorf("rx_queue_size only supports AWS related cloud types")
+	}
+
+	if _, ok := d.GetOk("load_balancer_vpc"); ok {
+		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+			return fmt.Errorf("private mode is only supported in AWS and Azure. %q must be empty", "load_balancer_vpc")
+		}
+
+		gateway.LbVpcId = d.Get("load_balancer_vpc").(string)
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Transit Gateway: %#v", gateway)
@@ -1828,6 +1841,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("enable_spot_instance", true)
 		d.Set("spot_price", gw.SpotPrice)
 	}
+
+	d.Set("load_balancer_vpc", gw.LbVpcId)
 
 	if gw.HaGw.GwSize == "" {
 		d.Set("ha_availability_domain", "")

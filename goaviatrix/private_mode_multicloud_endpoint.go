@@ -38,7 +38,7 @@ func (c *Client) GetPrivateModeMulticloudEndpoint(ctx context.Context, vpcId str
 	}
 
 	var resp PrivateModeMulticloudEndpointResp
-	err := c.GetAPIContext(ctx, &resp, action, form, BasicCheck)
+	err := c.GetAPIContext(ctx, &resp, action, form, privateModeLoadBalancerCheckFunc)
 	if err != nil {
 		return nil, err
 	}

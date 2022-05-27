@@ -82,7 +82,8 @@ func (c *Client) GetPrivateModeInfo(ctx context.Context) (*ControllerPrivateMode
 	}
 
 	type ControllerPrivateModeConfigContents struct {
-		PrivateModeEnabled bool `json:"private_mode_enabled"`
+		PrivateModeEnabled bool                   `json:"private_mode_enabled"`
+		ProxyInfo          map[string]interface{} `json:"proxy_info,omitempty"`
 	}
 
 	type ControllerPrivateModeConfigResults struct {
@@ -102,5 +103,10 @@ func (c *Client) GetPrivateModeInfo(ctx context.Context) (*ControllerPrivateMode
 	controllerPrivateModeConfig := &ControllerPrivateModeConfig{
 		EnablePrivateMode: resp.Results.Contents.PrivateModeEnabled,
 	}
+
+	for k := range resp.Results.Contents.ProxyInfo {
+		controllerPrivateModeConfig.Proxies = append(controllerPrivateModeConfig.Proxies, k)
+	}
+
 	return controllerPrivateModeConfig, nil
 }
