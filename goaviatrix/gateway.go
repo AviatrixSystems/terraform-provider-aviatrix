@@ -878,46 +878,6 @@ func (c *Client) DisableEgressTransitFirenet(transitGateway *TransitVpc) error {
 	return c.PostAPI(action, data, BasicCheck)
 }
 
-func (c *Client) EnableTransitPreserveAsPath(transitGateway *TransitVpc) error {
-	action := "enable_transit_preserve_as_path"
-	data := map[string]interface{}{
-		"CID":          c.CID,
-		"action":       action,
-		"gateway_name": transitGateway.GwName,
-	}
-	return c.PostAPI(action, data, BasicCheck)
-}
-
-func (c *Client) DisableTransitPreserveAsPath(transitGateway *TransitVpc) error {
-	action := "disable_transit_preserve_as_path"
-	data := map[string]interface{}{
-		"CID":          c.CID,
-		"action":       action,
-		"gateway_name": transitGateway.GwName,
-	}
-	return c.PostAPI(action, data, BasicCheck)
-}
-
-func (c *Client) EnableSpokePreserveAsPath(spokeGateway *SpokeVpc) error {
-	action := "enable_spoke_preserve_as_path"
-	data := map[string]interface{}{
-		"CID":          c.CID,
-		"action":       action,
-		"gateway_name": spokeGateway.GwName,
-	}
-	return c.PostAPI(action, data, BasicCheck)
-}
-
-func (c *Client) DisableSpokePreserveAsPath(spokeGateway *SpokeVpc) error {
-	action := "disable_spoke_preserve_as_path"
-	data := map[string]interface{}{
-		"CID":          c.CID,
-		"action":       action,
-		"gateway_name": spokeGateway.GwName,
-	}
-	return c.PostAPI(action, data, BasicCheck)
-}
-
 func (c *Client) EnableMonitorGatewaySubnets(gwName string, excludedInstances []string) error {
 	action := "enable_monitor_gateway_subnets"
 	form := map[string]string{
