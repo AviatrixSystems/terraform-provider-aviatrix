@@ -1403,7 +1403,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	if enableTransitPreserveAsPath {
 		err := client.EnableTransitPreserveAsPath(gateway)
 		if err != nil {
-			return fmt.Errorf("could not enable_transit_preserve_as_path: %v", err)
+			return fmt.Errorf("could not enable transit preserve as path: %v", err)
 		}
 	}
 
