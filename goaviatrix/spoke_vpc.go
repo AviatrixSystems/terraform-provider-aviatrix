@@ -453,3 +453,23 @@ func (c *Client) DisableSpokeOnpremRoutePropagation(spokeGateway *SpokeVpc) erro
 	}
 	return c.PostAPI(action, form, BasicCheck)
 }
+
+func (c *Client) EnableSpokePreserveAsPath(spokeGateway *SpokeVpc) error {
+	action := "enable_spoke_preserve_as_path"
+	data := map[string]interface{}{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": spokeGateway.GwName,
+	}
+	return c.PostAPI(action, data, BasicCheck)
+}
+
+func (c *Client) DisableSpokePreserveAsPath(spokeGateway *SpokeVpc) error {
+	action := "disable_spoke_preserve_as_path"
+	data := map[string]interface{}{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": spokeGateway.GwName,
+	}
+	return c.PostAPI(action, data, BasicCheck)
+}

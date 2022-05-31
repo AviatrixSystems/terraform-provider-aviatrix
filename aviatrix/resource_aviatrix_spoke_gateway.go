@@ -1731,7 +1731,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		} else {
 			err := client.EnableSpokePreserveAsPath(&goaviatrix.SpokeVpc{GwName: gateway.GwName})
 			if err != nil {
-				return fmt.Errorf("could nor enbale spoke preserve as path: %v", err)
+				return fmt.Errorf("could not enbale spoke preserve as path: %v", err)
 			}
 		}
 	}

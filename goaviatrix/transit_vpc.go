@@ -617,3 +617,23 @@ func (c *Client) DisableS2CRxBalancing(gwName string) error {
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
 }
+
+func (c *Client) EnableTransitPreserveAsPath(transitGateway *TransitVpc) error {
+	action := "enable_transit_preserve_as_path"
+	data := map[string]interface{}{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": transitGateway.GwName,
+	}
+	return c.PostAPI(action, data, BasicCheck)
+}
+
+func (c *Client) DisableTransitPreserveAsPath(transitGateway *TransitVpc) error {
+	action := "disable_transit_preserve_as_path"
+	data := map[string]interface{}{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": transitGateway.GwName,
+	}
+	return c.PostAPI(action, data, BasicCheck)
+}
