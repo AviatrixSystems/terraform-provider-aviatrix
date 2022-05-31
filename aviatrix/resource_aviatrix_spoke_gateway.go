@@ -599,7 +599,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	enablePrivateOob := d.Get("enable_private_oob").(bool)
-	enableSpokePreserveAsPath := d.Get("enable_spoke_preserve_as_path").(bool)
 
 	if !enablePrivateOob {
 		allocateNewEip := d.Get("allocate_new_eip").(bool)
@@ -1227,11 +1226,16 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if enableSpokePreserveAsPath {
-		err := client.EnableSpokePreserveAsPath(gateway)
-		if err != nil {
-			return fmt.Errorf("could not enable_spoke_preserve_as_path: %v", err)
+	enableSpokePreserveAsPath := d.Get("enable_spoke_preserve_as_path").(bool)
+	if enableBgp {
+		if enableSpokePreserveAsPath {
+			err := client.EnableSpokePreserveAsPath(gateway)
+			if err != nil {
+				return fmt.Errorf("could not enable_spoke_preserve_as_path: %v", err)
+			}
 		}
+	} else {
+		return fmt.Errorf("enableSpokePreserveAsPath only work for the BGP spoke gateway")
 	}
 
 	if rxQueueSize != "" {
@@ -1714,7 +1718,11 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	}
 
 	if d.HasChange("enable_spoke_preserve_as_path") {
+		enableBgp := d.Get("enable_bgp").(bool)
 		enableSpokePreserveAsPath := d.Get("enable_spoke_preserve_as_path").(bool)
+		if enableSpokePreserveAsPath && !enableBgp {
+			return fmt.Errorf("enableSpokePreserveAsPath is not supported for Non-BGP Spoke during Spoke Gateway update")
+		}
 		if !enableSpokePreserveAsPath {
 			err := client.DisableSpokePreserveAsPath(&goaviatrix.SpokeVpc{GwName: gateway.GwName})
 			if err != nil {
