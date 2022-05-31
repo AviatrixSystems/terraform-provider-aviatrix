@@ -175,6 +175,7 @@ The following arguments are supported:
 
 * `enable_multicast` - (Optional) Enable multicast. Default value: false. Valid values: true, false. Available in provider version R2.17+.
 * `cidrs` - (Optional) Set of TGW CIDRs. For example, `cidrs = ["10.0.10.0/24", "10.1.10.0/24"]`. Available as of provider version R2.18.1+.
+* `inspection_mode` - (Optional) Inspection mode. Valid values: "Domain-based", "Connection-based". Default value: "Domain-based". Available as of provider version R2.23+.
 
 ## Attribute Reference
 
