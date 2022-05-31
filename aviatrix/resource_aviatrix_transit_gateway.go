@@ -247,7 +247,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Specify whether to enable egress transit firenet interfaces or not.",
 			},
-			"enable_transit_preserve_as_path": {
+			"enable_preserve_as_path": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
@@ -886,7 +886,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("'enable_egress_transit_firenet' requires 'connected_transit' to be set to false")
 	}
 
-	enableTransitPreserveAsPath := d.Get("enable_transit_preserve_as_path").(bool)
+	enableTransitPreserveAsPath := d.Get("enable_preserve_as_path").(bool)
 
 	learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
 	if learnedCidrsApproval {
@@ -1649,7 +1649,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("enable_firenet", gw.EnableFirenet)
 	d.Set("enable_gateway_load_balancer", gw.EnableGatewayLoadBalancer)
 	d.Set("enable_egress_transit_firenet", gw.EnableEgressTransitFirenet)
-	d.Set("enable_transit_preserve_as_path", gw.EnablePreserveAsPath)
+	d.Set("enable_preserve_as_path", gw.EnablePreserveAsPath)
 	d.Set("customized_transit_vpc_routes", gw.CustomizedTransitVpcRoutes)
 	d.Set("enable_transit_firenet", gw.EnableTransitFirenet)
 	if gw.EnableTransitFirenet && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
@@ -2569,8 +2569,8 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if d.HasChanges("enable_transit_preserve_as_path") {
-		enableTransitPreserveAsPath := d.Get("enable_transit_preserve_as_path").(bool)
+	if d.HasChanges("enable_preserve_as_path") {
+		enableTransitPreserveAsPath := d.Get("enable_preserve_as_path").(bool)
 		if !enableTransitPreserveAsPath {
 			err := client.DisableTransitPreserveAsPath(&goaviatrix.TransitVpc{GwName: gateway.GwName})
 			if err != nil {
@@ -3235,7 +3235,7 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 		}
 	}
 
-	enableTransitPreserveAsPath := d.Get("enable_transit_preserve_as_path").(bool)
+	enableTransitPreserveAsPath := d.Get("enable_preserve_as_path").(bool)
 	if enableTransitPreserveAsPath {
 		err := client.DisableTransitPreserveAsPath(&goaviatrix.TransitVpc{GwName: gateway.GwName})
 		if err != nil {

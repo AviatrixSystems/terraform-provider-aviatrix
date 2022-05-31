@@ -336,7 +336,7 @@ The following arguments are supported:
 * `bgp_ecmp` - (Optional) Enable Equal Cost Multi Path (ECMP) routing for the next hop. Default value: false.
 * `enable_multi_tier_transit` - (Optional) Enable Multi-tier Transit mode on transit gateway. When enabled, transit gateway will propagate routes it receives from its transit peering peer to other transit peering peers. `local_as_number` is required. Default value: false. Available as of provider version R2.19+.
 * `enable_s2c_rx_balancing` - (Optional) Enable S2C receive packet CPU re-balancing on transit gateway. Valid values: true, false. Default value: false. Available in provider version R2.21.2+.
-* `enable_transit_preserve_as_path` - (Optional) Enable preserve as_path when advertising manual summary cidrs on transit gateway. Valid values: true, false. Default value: false.
+* `enable_preserve_as_path` - (Optional) Enable preserve as_path when advertising manual summary cidrs on transit gateway. Valid values: true, false. Default value: false.
   },
 
 -> **NOTE:** Enabling FireNet will automatically enable hybrid connection. If `enable_firenet` is set to true, please set `enable_hybrid_connection` to true in the respective **aviatrix_transit_gateway** as well.

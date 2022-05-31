@@ -183,7 +183,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable encrypt gateway EBS volume. Only supported for AWS provider. Valid values: true, false. Default value: false.",
 			},
-			"enable_spoke_preserve_as_path": {
+			"enable_preserve_as_path": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
@@ -1226,7 +1226,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	enableSpokePreserveAsPath := d.Get("enable_spoke_preserve_as_path").(bool)
+	enableSpokePreserveAsPath := d.Get("enable_preserve_as_path").(bool)
 	if enableBgp {
 		if enableSpokePreserveAsPath {
 			err := client.EnableSpokePreserveAsPath(gateway)
@@ -1235,7 +1235,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			}
 		}
 	} else {
-		return fmt.Errorf("enable_spoke_preserve_as_path only work for the BGP spoke gateway")
+		return fmt.Errorf("enable_preserve_as_path only work for the BGP spoke gateway")
 	}
 
 	if rxQueueSize != "" {
@@ -1308,7 +1308,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
 	d.Set("enable_bgp", gw.EnableBgp)
 	d.Set("enable_learned_cidrs_approval", gw.EnableLearnedCidrsApproval)
-	d.Set("enable_spoke_preserve_as_path", gw.EnablePreserveAsPath)
+	d.Set("enable_preserve_as_path", gw.EnablePreserveAsPath)
 	d.Set("rx_queue_size", gw.RxQueueSize)
 
 	if gw.EnableLearnedCidrsApproval {
@@ -1717,11 +1717,11 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if d.HasChange("enable_spoke_preserve_as_path") {
+	if d.HasChange("enable_preserve_as_path") {
 		enableBgp := d.Get("enable_bgp").(bool)
-		enableSpokePreserveAsPath := d.Get("enable_spoke_preserve_as_path").(bool)
+		enableSpokePreserveAsPath := d.Get("enable_preserve_as_path").(bool)
 		if enableSpokePreserveAsPath && !enableBgp {
-			return fmt.Errorf("enable_spoke_preserve_as_path is not supported for Non-BGP Spoke during Spoke Gateway update")
+			return fmt.Errorf("enable_preserve_as_path is not supported for Non-BGP Spoke during Spoke Gateway update")
 		}
 		if !enableSpokePreserveAsPath {
 			err := client.DisableSpokePreserveAsPath(&goaviatrix.SpokeVpc{GwName: gateway.GwName})
