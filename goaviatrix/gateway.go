@@ -169,6 +169,7 @@ type Gateway struct {
 	EnableTransitFirenet            bool                                `json:"enable_transit_firenet"`
 	EnableGatewayLoadBalancer       bool                                `json:"enable_gateway_load_balancer"`
 	EnableEgressTransitFirenet      bool                                `json:"enable_egress_transit_firenet"`
+	EnablePreserveAsPath            bool                                `json:"preserve_as_path"`
 	CustomizedTransitVpcRoutes      []string                            `json:"customized_transit_vpc_routes"`
 	EnableAdvertiseTransitCidr      bool                                `json:"enable_advertise_transit_cidr"`
 	EnableLearnedCidrsApproval      bool                                `json:"enable_learned_cidrs_approval"`
