@@ -3239,7 +3239,7 @@ func resourceAviatrixTransitGatewayDelete(d *schema.ResourceData, meta interface
 	if enableTransitPreserveAsPath {
 		err := client.DisableTransitPreserveAsPath(&goaviatrix.TransitVpc{GwName: gateway.GwName})
 		if err != nil {
-			return fmt.Errorf("could not diable transit preserve as path: %v", err)
+			return fmt.Errorf("could not disable transit preserve as path: %v", err)
 		}
 	}
 
