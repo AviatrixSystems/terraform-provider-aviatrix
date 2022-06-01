@@ -1726,12 +1726,12 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		if !enableSpokePreserveAsPath {
 			err := client.DisableSpokePreserveAsPath(&goaviatrix.SpokeVpc{GwName: gateway.GwName})
 			if err != nil {
-				return fmt.Errorf("could not disable Spoke Preserve AS Path during Spoke Gateway update: %v", err)
+				return fmt.Errorf("could not disable Preserve AS Path during Spoke Gateway update: %v", err)
 			}
 		} else {
 			err := client.EnableSpokePreserveAsPath(&goaviatrix.SpokeVpc{GwName: gateway.GwName})
 			if err != nil {
-				return fmt.Errorf("could not enable Spoke Preserve AS Path during Spoke Gateway update: %v", err)
+				return fmt.Errorf("could not enable Preserve AS Path during Spoke Gateway update: %v", err)
 			}
 		}
 	}
