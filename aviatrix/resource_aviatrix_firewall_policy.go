@@ -78,10 +78,7 @@ func resourceAviatrixFirewallPolicy() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old != "" {
-						return true
-					}
-					return false
+					return old != ""
 				},
 				Description: "Position in the policy list, where the firewall policy will be inserted to.",
 			},
