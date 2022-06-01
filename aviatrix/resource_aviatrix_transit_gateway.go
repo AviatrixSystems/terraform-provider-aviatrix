@@ -16,6 +16,7 @@ import (
 
 const (
 	defaultLearnedCidrApprovalMode = "gateway"
+	defaultBgpPollingTime          = 50
 	defaultBgpHoldTime             = 180
 )
 
