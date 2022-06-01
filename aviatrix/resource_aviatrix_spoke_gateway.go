@@ -1227,15 +1227,15 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	enableSpokePreserveAsPath := d.Get("enable_preserve_as_path").(bool)
-	if enableBgp {
-		if enableSpokePreserveAsPath {
+	if enableSpokePreserveAsPath {
+		if enableBgp {
 			err := client.EnableSpokePreserveAsPath(gateway)
 			if err != nil {
 				return fmt.Errorf("could not enable spoke preserve as path: %v", err)
 			}
+		} else {
+			return fmt.Errorf("enable_preserve_as_path only work for the BGP spoke gateway")
 		}
-	} else {
-		return fmt.Errorf("enable_preserve_as_path only work for the BGP spoke gateway")
 	}
 
 	if rxQueueSize != "" {
