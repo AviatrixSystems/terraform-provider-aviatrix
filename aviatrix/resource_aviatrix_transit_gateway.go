@@ -2574,12 +2574,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if !enableTransitPreserveAsPath {
 			err := client.DisableTransitPreserveAsPath(&goaviatrix.TransitVpc{GwName: gateway.GwName})
 			if err != nil {
-				return fmt.Errorf("could not disable transit preserve as path: %v", err)
+				return fmt.Errorf("could not disable Preserve AS Path during Transit Gateway update: %v", err)
 			}
 		} else {
 			err := client.EnableTransitPreserveAsPath(&goaviatrix.TransitVpc{GwName: gateway.GwName})
 			if err != nil {
-				return fmt.Errorf("could not enable transit preserve as path: %v", err)
+				return fmt.Errorf("could not enable Preserve AS Path during Transit Gateway update: %v", err)
 			}
 		}
 	}
