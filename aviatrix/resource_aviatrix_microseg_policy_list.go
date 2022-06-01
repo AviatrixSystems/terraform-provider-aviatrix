@@ -127,7 +127,7 @@ func marshalMicrosegPolicyListInput(d *schema.ResourceData) (*goaviatrix.Microse
 			Priority: policy["priority"].(int),
 		}
 
-		protocol := strings.ToLower(policy["protocol"].(string))
+		protocol := strings.ToUpper(policy["protocol"].(string))
 		if protocol == "ANY" {
 			microsegPolicy.Protocol = "PROTOCOL_UNSPECIFIED"
 		} else {
