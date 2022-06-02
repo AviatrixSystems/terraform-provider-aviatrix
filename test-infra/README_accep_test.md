@@ -90,6 +90,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_device_interface_config	   | SKIP_DEVICE_INTERFACE_CONFIG	    | CLOUDN_DEVICE_NAME                                                             |
 | aviatrix_datadog_agent               | SKIP_DATADOG_AGENT                 | datadog_api_key                                                                |
 | aviatrix_edge_caag                   | SKIP_EDGE_CAAG                     | N/A                                                                            |
+| aviatrix_edge_spoke_transit_attachment | SKIP_EDGE_SPOKE_TRANSIT_ATTACHMENT | EDGE_SPOKE_NAME                                                              |
 | aviatrix_filebeat_forwarder          | SKIP_FILEBEAT_FORWARDER            | N/A                                                                            |
 | aviatrix_firenet                     | SKIP_FIRENET                       | aviatrix_account + AWS_REGION, Palo Alto VM series                             |
 | aviatrix_firewall                    | SKIP_FIREWALL                      | aviatrix_gateway                                                               |
