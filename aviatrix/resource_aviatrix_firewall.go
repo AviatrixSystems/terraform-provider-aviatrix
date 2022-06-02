@@ -310,7 +310,11 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 		if firewall.BasePolicy == "deny" {
 			firewall.BasePolicy = "deny-all"
 		}
-		firewall.BaseLogEnabled = d.Get("base_log_enabled").(string)
+		if d.Get("base_log_enabled").(bool) {
+			firewall.BaseLogEnabled = "on"
+		} else {
+			firewall.BaseLogEnabled = "off"
+		}
 	}
 
 	if ok := d.HasChange("base_log_enabled"); ok {

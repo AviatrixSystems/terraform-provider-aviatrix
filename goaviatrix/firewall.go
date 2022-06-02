@@ -3,6 +3,7 @@ package goaviatrix
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -16,6 +17,7 @@ type Policy struct {
 	Action      string `form:"deny_allow,omitempty" json:"deny_allow,omitempty"`
 	LogEnabled  string `form:"log_enable,omitempty" json:"log_enable,omitempty"`
 	Description string `form:"description,omitempty" json:"description,omitempty"`
+	Position    int    `form:"position,omitempty" json:"position,omitempty"`
 }
 
 // Gateway simple struct to hold firewall details
@@ -181,7 +183,7 @@ func (c *Client) GetFirewallPolicy(fw *Firewall) (*Firewall, error) {
 	rule := fw.PolicyList[0]
 	found := false
 
-	for _, p := range foundFirewall.PolicyList {
+	for i, p := range foundFirewall.PolicyList {
 		if p.SrcIP == rule.SrcIP &&
 			p.DstIP == rule.DstIP &&
 			p.Protocol == rule.Protocol &&
@@ -189,6 +191,7 @@ func (c *Client) GetFirewallPolicy(fw *Firewall) (*Firewall, error) {
 			p.Action == rule.Action {
 			found = true
 			fw.PolicyList = []*Policy{p}
+			fw.PolicyList[0].Position = i + 1
 			break
 		}
 	}
@@ -197,4 +200,21 @@ func (c *Client) GetFirewallPolicy(fw *Firewall) (*Firewall, error) {
 	}
 
 	return fw, nil
+}
+
+func (c *Client) InsertFirewallPolicy(fw *Firewall) error {
+	rules, err := json.Marshal(fw.PolicyList)
+	if err != nil {
+		return fmt.Errorf("could not marshal firewall policies: %v", err)
+	}
+
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       "insert_stateful_firewall_rules",
+		"gateway_name": fw.GwName,
+		"rules":        string(rules),
+		"position":     strconv.Itoa(fw.PolicyList[0].Position),
+	}
+
+	return c.PostAPI(form["action"], form, BasicCheck)
 }

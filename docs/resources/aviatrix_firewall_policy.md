@@ -27,7 +27,20 @@ resource "aviatrix_firewall_policy" "test_firewall_policy" {
   description = "Test policy."
 }
 ```
-
+```hcl
+# Create an Aviatrix Stateful Firewall Policy and insert it to a specific position
+resource "aviatrix_firewall_policy" "test_firewall_policy" {
+  gw_name     = aviatrix_firewall.test_firewall.gw_name
+  src_ip      = "10.15.0.225/32"
+  dst_ip      = "10.12.0.173/32"
+  protocol    = "tcp"
+  port        = "0:65535"
+  action      = "allow"
+  log_enabled = true
+  description = "Test policy."
+  position    = 2
+}
+```
 ## Argument Reference
 
 The following arguments are supported:
@@ -40,6 +53,7 @@ The following arguments are supported:
 * `action`- (Required) Valid values: "allow", "deny" and "force-drop" (in stateful firewall rule to allow immediate packet dropping on established sessions).
 * `log_enabled`- (Optional) Valid values: true, false. Default value: false.
 * `description`- (Optional) Description of the policy. Example: "This is policy no.1".
+* `position`- (Optional) Position in the policy list, where the firewall policy will be inserted to. Valid values: any positive integer. Example: 2. If it is larger than the size of policy list, the policy will be inserted to the end.
 
 ## Import
 

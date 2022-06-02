@@ -5,6 +5,8 @@ import (
 	"log"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -70,6 +72,16 @@ func resourceAviatrixFirewallPolicy() *schema.Resource {
 				ForceNew:    true,
 				Description: "Description of this firewall policy.",
 			},
+			"position": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return old != ""
+				},
+				Description: "Position in the policy list, where the firewall policy will be inserted to.",
+			},
 		},
 	}
 }
@@ -97,6 +109,7 @@ func marshalFirewallPolicyInput(d *schema.ResourceData) *goaviatrix.Firewall {
 				Action:      d.Get("action").(string),
 				LogEnabled:  logEnabled,
 				Description: d.Get("description").(string),
+				Position:    d.Get("position").(int),
 			},
 		},
 	}
@@ -110,9 +123,14 @@ func resourceAviatrixFirewallPolicyCreate(d *schema.ResourceData, meta interface
 	d.SetId(getFirewallPolicyID(fw))
 	flag := false
 	defer resourceAviatrixFirewallPolicyReadIfRequired(d, meta, &flag)
-
-	if err := client.AddFirewallPolicy(fw); err != nil {
-		return err
+	if fw.PolicyList[0].Position == 0 {
+		if err := client.AddFirewallPolicy(fw); err != nil {
+			return err
+		}
+	} else {
+		if err := client.InsertFirewallPolicy(fw); err != nil {
+			return err
+		}
 	}
 
 	return resourceAviatrixFirewallPolicyReadIfRequired(d, meta, &flag)
@@ -187,6 +205,7 @@ func resourceAviatrixFirewallPolicyRead(d *schema.ResourceData, meta interface{}
 	d.Set("action", fw.PolicyList[0].Action)
 	d.Set("log_enabled", fw.PolicyList[0].LogEnabled == "on")
 	d.Set("description", fw.PolicyList[0].Description)
+	d.Set("position", fw.PolicyList[0].Position)
 
 	d.SetId(id)
 	return nil
