@@ -1,7 +1,7 @@
 ---
 subcategory: "Multi-Cloud Transit"
 layout: "aviatrix"
-page_title: "Aviatrix: aviatrix_all_transit_gateways"
+page_title: "Aviatrix: aviatrix_transit_gateways"
 description: |-
 Gets a list of all Aviatrix transit gateway's details.
 ---
@@ -9,13 +9,13 @@ Gets a list of all Aviatrix transit gateway's details.
 
 # aviatrix_all_transit_gateways
 
-The **aviatrix_all_transit_gateways** data source provides details about all transit gateways created by the Aviatrix Controller.
+The **aviatrix_transit_gateways** data source provides details about all transit gateways created by the Aviatrix Controller.
 
 ## Example Usage
 
 ```hcl
 # Aviatrix All Transit Gateways Data Source
-data "aviatrix_all_transit_gateways" "foo" {}
+data "aviatrix_transit_gateways" "foo" {}
 ```
 
 

@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceAviatrixListAllTransitGateway() *schema.Resource {
+func dataSourceAviatrixTransitGateways() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAviatrixAllTransitGatewayRead,
+		Read: dataSourceAviatrixTransitGatewaysRead,
 
 		Schema: map[string]*schema.Schema{
 			"transit_gateway_list": {
@@ -361,7 +361,7 @@ func dataSourceAviatrixListAllTransitGateway() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixAllTransitGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAviatrixTransitGatewaysRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	TransitGatewayList, err := client.GetTransitGatewayList()

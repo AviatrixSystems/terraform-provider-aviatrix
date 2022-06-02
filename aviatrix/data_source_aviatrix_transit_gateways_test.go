@@ -10,23 +10,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccDataSourceAviatrixAllTransitGateways_basic(t *testing.T) {
+func TestAccDataSourceAviatrixTransitGateways_basic(t *testing.T) {
 	rName := acctest.RandString(5)
-	resourceName := "data.aviatrix_all_transit_gateways.foo"
+	resourceName := "data.aviatrix_transit_gateways.foo"
 
-	skipAcc := os.Getenv("SKIP_DATA_ALL_TRANSIT_GATEWAY")
+	skipAcc := os.Getenv("SKIP_DATA_TRANSIT_GATEWAYS")
 	if skipAcc == "yes" {
-		t.Skip("Skipping Data Source All Transit Gateway tests as SKIP_DATA_ALL_TRANSIT_GATEWAY is set")
+		t.Skip("Skipping Data Source All Transit Gateway tests as SKIP_DATA_TRANSIT_GATEWAYS is set")
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			preGatewayCheck(t, ". Set SKIP_DATA_ALL_TRANSIT_GATEWAY to yes to skip Data Source All Transit Gateway tests")
+			preGatewayCheck(t, ". Set SKIP_DATA_TRANSIT_GATEWAYS to yes to skip Data Source All Transit Gateway tests")
 		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAviatrixAllTransitGatewaysConfigPreBasic(rName),
+				Config: testAccDataSourceAviatrixTransitGatewaysConfigBasic(rName),
 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aviatrix_transit_gateway.test", "gw_name", fmt.Sprintf("aa-tfg-aws-%s", rName)),
@@ -36,9 +36,9 @@ func TestAccDataSourceAviatrixAllTransitGateways_basic(t *testing.T) {
 				Destroy: false,
 			},
 			{
-				Config: testAccDataSourceAviatrixAllTransitGatewaysConfigBasic(),
+				Config: testAccDataSourceAviatrixTransitGatewaysConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAviatrixAllTransitGateways(resourceName),
+					testAccDataSourceAviatrixTransitGateways(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.0.gw_name", fmt.Sprintf("aa-tfg-aws-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.0.vpc_id", os.Getenv("AWS_VPC_ID")),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_list.0.vpc_reg", os.Getenv("AWS_REGION")),
@@ -55,7 +55,7 @@ func TestAccDataSourceAviatrixAllTransitGateways_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAviatrixAllTransitGatewaysConfigPreBasic(rName string) string {
+func testAccDataSourceAviatrixTransitGatewaysConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account" {
 	account_name 	   = "aa-tfa-%[1]s"
@@ -89,20 +89,15 @@ resource "aviatrix_transit_gateway" "test2" {
 	gw_size      = "n1-standard-1"
 	subnet       = "%[12]s"
 }
+data "aviatrix_transit_gateways" "foo" {
+
+}
 `, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"),
 		os.Getenv("GCP_VPC_ID"), os.Getenv("GCP_ZONE"), os.Getenv("GCP_SUBNET"))
 }
 
-func testAccDataSourceAviatrixAllTransitGatewaysConfigBasic() string {
-	return `
-data "aviatrix_all_transit_gateways" "foo" {
-
-}
-`
-}
-
-func testAccDataSourceAviatrixAllTransitGateways(name string) resource.TestCheckFunc {
+func testAccDataSourceAviatrixTransitGateways(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[name]
 		if !ok {

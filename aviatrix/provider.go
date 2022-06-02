@@ -148,11 +148,11 @@ func Provider() *schema.Provider {
 			"aviatrix_spoke_gateway":                    dataSourceAviatrixSpokeGateway(),
 			"aviatrix_spoke_gateway_inspection_subnets": dataSourceAviatrixSpokeGatewayInspectionSubnets(),
 			"aviatrix_transit_gateway":                  dataSourceAviatrixTransitGateway(),
+			"aviatrix_transit_gateways":                 dataSourceAviatrixTransitGateways(),
 			"aviatrix_vpc":                              dataSourceAviatrixVpc(),
 			"aviatrix_vpc_tracker":                      dataSourceAviatrixVpcTracker(),
 			"aviatrix_firewall":                         dataSourceAviatrixFirewall(),
 			"aviatrix_firewall_instance_images":         dataSourceAviatrixFirewallInstanceImages(),
-			"aviatrix_all_transit_gateways":             dataSourceAviatrixListAllTransitGateway(),
 		},
 		ConfigureFunc: aviatrixConfigure,
 	}
