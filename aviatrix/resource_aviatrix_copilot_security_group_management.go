@@ -31,12 +31,6 @@ func resourceAviatrixCopilotSecurityGroupManagement() *schema.Resource {
 				ForceNew:    true,
 				Description: "Access account name.",
 			},
-			"region": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "Region.",
-			},
 			"vpc_id": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -49,16 +43,28 @@ func resourceAviatrixCopilotSecurityGroupManagement() *schema.Resource {
 				ForceNew:    true,
 				Description: "Copilot instance ID.",
 			},
+			"region": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Copilot region. Valid for AWS and Azure.",
+			},
+			"zone": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Copilot zone. Valid for GCP.",
+			},
 		},
 	}
 }
 
 func marshalCopilotSecurityGroupManagementInput(d *schema.ResourceData) *goaviatrix.CopilotSecurityGroupManagement {
 	copilotSecurityGroupManagement := &goaviatrix.CopilotSecurityGroupManagement{
-		//CloudType: strconv.Itoa(d.Get("cloud_type").(int)),
 		CloudType:   d.Get("cloud_type").(int),
 		AccountName: d.Get("account_name").(string),
 		Region:      d.Get("region").(string),
+		Zone:        d.Get("zone").(string),
 		VpcId:       d.Get("vpc_id").(string),
 		InstanceID:  d.Get("instance_id").(string),
 	}
@@ -70,6 +76,16 @@ func resourceAviatrixCopilotSecurityGroupManagementCreate(ctx context.Context, d
 	client := meta.(*goaviatrix.Client)
 
 	copilotSecurityGroupManagement := marshalCopilotSecurityGroupManagementInput(d)
+
+	if goaviatrix.IsCloudType(copilotSecurityGroupManagement.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) &&
+		(copilotSecurityGroupManagement.Region == "" || copilotSecurityGroupManagement.Zone != "") {
+		return diag.Errorf("'region' is required and valid for AWS and Azure, 'zone' must be emtpy")
+	}
+
+	if goaviatrix.IsCloudType(copilotSecurityGroupManagement.CloudType, goaviatrix.GCPRelatedCloudTypes) &&
+		(copilotSecurityGroupManagement.Region != "" || copilotSecurityGroupManagement.Zone == "") {
+		return diag.Errorf("'zone' is required and valid for GCP, 'region' must be emtpy")
+	}
 
 	d.SetId(copilotSecurityGroupManagement.InstanceID)
 	flag := false
@@ -111,9 +127,14 @@ func resourceAviatrixCopilotSecurityGroupManagementRead(ctx context.Context, d *
 
 	d.Set("cloud_type", copilotSecurityGroupManagement.CloudType)
 	d.Set("account_name", copilotSecurityGroupManagement.AccountName)
-	d.Set("region", copilotSecurityGroupManagement.Region)
 	d.Set("vpc_id", copilotSecurityGroupManagement.VpcId)
 	d.Set("instance_id", copilotSecurityGroupManagement.InstanceID)
+
+	if goaviatrix.IsCloudType(copilotSecurityGroupManagement.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+		d.Set("region", copilotSecurityGroupManagement.Region)
+	} else if goaviatrix.IsCloudType(copilotSecurityGroupManagement.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+		d.Set("zone", copilotSecurityGroupManagement.Zone)
+	}
 
 	d.SetId(copilotSecurityGroupManagement.InstanceID)
 	return nil

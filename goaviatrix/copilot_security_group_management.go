@@ -10,6 +10,7 @@ type CopilotSecurityGroupManagement struct {
 	CloudType   int    `form:"cloud_type,omitempty" json:"cloud_type"`
 	AccountName string `form:"account_name,omitempty" json:"account_name"`
 	Region      string `form:"region,omitempty" json:"region"`
+	Zone        string `form:"zone,omitempty" json:"zone"`
 	VpcId       string `form:"vpc_id,omitempty" json:"vpc_id"`
 	InstanceID  string `form:"instance_id,omitempty" json:"inst_id"`
 	LogEnable   bool   `form:"log_enable"`

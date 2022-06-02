@@ -28,11 +28,15 @@ resource "aviatrix_copilot_security_group_management" "test" {
 
 The following arguments are supported:
 
-* `cloud_type` - (Required) Cloud type. The type of this attribute is Integer.
+### Required
+* `cloud_type` - (Required) Cloud type. The type of this attribute is Integer. Only support AWS, Azure and OCI.
 * `account_name` - (Required) Aviatrix access account name.
-* `region` - (Required) Region where CoPilot is deployed.
 * `vpc_id` - (Required) VPC ID.
 * `instance_id` - (Required) CoPilot instance ID.
+
+### Optional
+* `region` - (Optional) Region where CoPilot is deployed. Required and valid for AWS and Azure.
+* `zone` - (Optional) Zone where CoPilot is deployed. Required and valid for GCP.
 
 ## Import
 
