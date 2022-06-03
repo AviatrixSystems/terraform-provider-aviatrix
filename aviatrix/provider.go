@@ -139,7 +139,6 @@ func Provider() *schema.Provider {
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"aviatrix_account":                          dataSourceAviatrixAccount(),
-			"aviatrix_all_network_domains":              dataSourceAviatrixAllNetworkDomains(),
 			"aviatrix_caller_identity":                  dataSourceAviatrixCallerIdentity(),
 			"aviatrix_device_interfaces":                dataSourceAviatrixDeviceInterfaces(),
 			"aviatrix_firenet":                          dataSourceAviatrixFireNet(),
@@ -147,6 +146,7 @@ func Provider() *schema.Provider {
 			"aviatrix_firenet_vendor_integration":       dataSourceAviatrixFireNetVendorIntegration(),
 			"aviatrix_gateway":                          dataSourceAviatrixGateway(),
 			"aviatrix_gateway_image":                    dataSourceAviatrixGatewayImage(),
+			"aviatrix_network_domains":                  dataSourceAviatrixNetworkDomains(),
 			"aviatrix_spoke_gateway":                    dataSourceAviatrixSpokeGateway(),
 			"aviatrix_spoke_gateway_inspection_subnets": dataSourceAviatrixSpokeGatewayInspectionSubnets(),
 			"aviatrix_transit_gateway":                  dataSourceAviatrixTransitGateway(),

@@ -11,17 +11,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccDataSourceAviatrixAllNetworkDomains_basic(t *testing.T) {
+func TestAccDataSourceAviatrixNetworkDomains_basic(t *testing.T) {
 	rName := acctest.RandString(5)
 	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	tgwName := acctest.RandStringFromCharSet(5, charset) + acctest.RandString(5)
 	awsSideAsNumber := "64512"
 	ndName := acctest.RandStringFromCharSet(5, charset) + acctest.RandString(5)
-	resourceName := "data.aviatrix_all_network_domains.test"
+	resourceName := "data.aviatrix_network_domains.test"
 
-	skipAcc := os.Getenv("SKIP_DATA_ALL_NETWORK_DOMAINS")
+	skipAcc := os.Getenv("SKIP_DATA_NETWORK_DOMAINS")
 	if skipAcc == "yes" {
-		t.Skip("Skipping Data Source All Network Domains tests as SKIP_DATA_ALL_NETWORK_DOMAINS is set")
+		t.Skip("Skipping Data Source All Network Domains tests as SKIP_DATA_NETWORK_DOMAINS is set")
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -31,14 +31,14 @@ func TestAccDataSourceAviatrixAllNetworkDomains_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAviatrixAllNetworkDomainsConfigBasic(rName, tgwName, awsSideAsNumber, ndName),
+				Config: testAccDataSourceAviatrixNetworkDomainsConfigBasic(rName, tgwName, awsSideAsNumber, ndName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTgwNetworkDomainExists("aviatrix_aws_tgw_network_domain.test", tgwName, ndName),
 				),
 				Destroy: false,
 			},
 			{
-				Config: testAccDataSourceAviatrixAllNetworkDomainsConfigBasic(rName, tgwName, awsSideAsNumber, ndName),
+				Config: testAccDataSourceAviatrixNetworkDomainsConfigBasic(rName, tgwName, awsSideAsNumber, ndName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "network_domain_list.0.tgw_name", tgwName),
 					resource.TestCheckResourceAttr(resourceName, "network_domain_list.3.account", fmt.Sprintf("tfa-%s", rName)),
@@ -51,7 +51,7 @@ func TestAccDataSourceAviatrixAllNetworkDomains_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAviatrixAllNetworkDomainsConfigBasic(rName string, tgwName string, awsSideAsNumber string, ndName string) string {
+func testAccDataSourceAviatrixNetworkDomainsConfigBasic(rName string, tgwName string, awsSideAsNumber string, ndName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
 	account_name       = "tfa-%s"
@@ -91,7 +91,7 @@ resource "aviatrix_aws_tgw_network_domain" "test" {
     	aviatrix_aws_tgw_network_domain.Aviatrix_Edge_Domain
   ]
 }
-data "aviatrix_all_network_domains" "test"{
+data "aviatrix_network_domains" "test"{
 
 }
 `, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),

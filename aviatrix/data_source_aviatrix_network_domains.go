@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceAviatrixAllNetworkDomains() *schema.Resource {
+func dataSourceAviatrixNetworkDomains() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAviatrixAllNetworkDomainsRead,
+		Read: dataSourceAviatrixNetworkDomainsRead,
 
 		Schema: map[string]*schema.Schema{
 			"network_domain_list": {
@@ -86,7 +86,7 @@ func dataSourceAviatrixAllNetworkDomains() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixAllNetworkDomainsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAviatrixNetworkDomainsRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	domainList, err := client.GetAllSecurityDomains()

@@ -1,20 +1,20 @@
 ---
 subcategory: "TGW Orchestrator"
 layout: "aviatrix"
-page_title: "Aviatrix: aviatrix_all_network_domain"
+page_title: "Aviatrix: aviatrix_network_domains"
 description: |-
   Get a list of all Network Domains and detail
 ---
 
 # aviatrix_all_network_domains
 
-The **aviatrix_all_network_domains** data source provides details about all Network Domains created by the Aviatrix Controller. Available as of provider version 2.23+.
+The **aviatrix_network_domains** data source provides details about all Network Domains created by the Aviatrix Controller. Available as of provider version 2.23+.
 
 ## Example Usage
 
  ```hcl
  # Aviatrix All Network Domains Data Source
- data "aviatrix_all_network_domains" "foo" {
+ data "aviatrix_network_domains" "foo" {
    
  }
  ```
