@@ -12,10 +12,36 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.22.0 (UserConnect-6.7)``
+``Last updated: R2.22.1 (UserConnect-6.7.1306)``
 
 
 ---
+
+## 2.22.1
+### Notes:
+- Release date: **(10 June 2022)**
+- Supported Controller version: **UserConnect-6.7.1306**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Multi-Cloud Transit:
+1. Implemented support for enabling preserve AS path when advertising manual summary CIDRs in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**:
+  - ``enable_preserve_as_path``
+2. Implemented new resources to support micro-segmentation:
+  - **aviatrix_app_domain**
+  - **aviatrix_microseg_policy_list**
+
+#### Settings
+1. Implemented a new resource to support setting email configs for critical alerts and security events:
+  - **aviatrix_controller_email_config**
+
+### Enhancements:
+1. Add support for "ANY" protocol for micro-segmentation policies in **aviatrix_microseg_policy_list**
+
+### Bug Fixes:
+1. Fixed issue where Terraform tries to disable the certificates when uploading renewed certificates
+2. Fixed issue where destroying app domains created with Terraform errors out
+
 
 ## 2.22.0
 ### Notes:
