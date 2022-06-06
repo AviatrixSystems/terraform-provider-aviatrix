@@ -1,4 +1,29 @@
-## 2.22.0 (Unreleased)
+## 2.22.1 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.7.1306**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Multi-Cloud Transit:
+1. Implemented support for enabling preserve as path when advertising manual summary cidrs in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**:
+  - ``enable_preserve_as_path``
+2. Implemented new resources to support micro-segmentation:
+  - **aviatrix_app_domain**
+  - **aviatrix_microseg_policy_list**
+
+#### Settings
+1. Implemented a new resource to support critical alters email and security events email config
+  - **aviatrix_controller_email_config**
+
+### Enhancement:
+1. Add support for "ANY" protocol for micro-segmentation policies in *aviatrix_microseg_policy_list*
+
+### Bug Fixes:
+1. Fixed issue where Terraform tries to disable the certificate when uploading renewed certificate
+2. Fixed issue where destroying app domains created with Terraform errors out
+
+
+## 2.22.0 (May 09, 2022)
 ### Notes:
 - Supported Controller version: **UserConnect-6.7**
 - Supported Terraform version: **v1.x**
