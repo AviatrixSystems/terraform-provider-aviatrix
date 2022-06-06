@@ -5,21 +5,21 @@
 
 ### Features:
 #### Multi-Cloud Transit:
-1. Implemented support for enabling preserve as path when advertising manual summary cidrs in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**:
+1. Implemented support for enabling preserve AS path when advertising manual summary CIDRs in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**:
   - ``enable_preserve_as_path``
 2. Implemented new resources to support micro-segmentation:
   - **aviatrix_app_domain**
   - **aviatrix_microseg_policy_list**
 
 #### Settings
-1. Implemented a new resource to support critical alerts email and security events email config
+1. Implemented a new resource to support setting email configs for critical alerts and security events:
   - **aviatrix_controller_email_config**
 
 ### Enhancements:
 1. Add support for "ANY" protocol for micro-segmentation policies in **aviatrix_microseg_policy_list**
 
 ### Bug Fixes:
-1. Fixed issue where Terraform tries to disable the certificate when uploading renewed certificate
+1. Fixed issue where Terraform tries to disable the certificates when uploading renewed certificates
 2. Fixed issue where destroying app domains created with Terraform errors out
 
 
