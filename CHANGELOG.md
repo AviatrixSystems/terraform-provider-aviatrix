@@ -15,7 +15,7 @@
 1. Implemented a new resource to support critical alters email and security events email config
   - **aviatrix_controller_email_config**
 
-### Enhancement:
+### Enhancements:
 1. Add support for "ANY" protocol for micro-segmentation policies in *aviatrix_microseg_policy_list*
 
 ### Bug Fixes:
