@@ -23,7 +23,7 @@ data "aviatrix_transit_gateways" "foo" {}
 
 In addition to all arguments above, the following attributes are exported:
 
-* `transit_gateway_list` - The list of all transit gateways
+* `gateway_list` - The list of all transit gateways
   * `account_name` - Aviatrix account name.
   * `allocate_new_eip` - When value is false, an idle address in Elastic IP pool is reused for this gateway. Otherwise, a new Elastic IP is allocated and used for this gateway.
   * `cloud_instance_id` - Instance ID of the transit gateway.

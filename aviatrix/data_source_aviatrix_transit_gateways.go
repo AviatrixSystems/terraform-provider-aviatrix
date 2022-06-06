@@ -15,7 +15,7 @@ func dataSourceAviatrixTransitGateways() *schema.Resource {
 		Read: dataSourceAviatrixTransitGatewaysRead,
 
 		Schema: map[string]*schema.Schema{
-			"transit_gateway_list": {
+			"gateway_list": {
 				Type:        schema.TypeList,
 				Computed:    true,
 				Description: "List of all Transit Gateways.",
@@ -548,8 +548,8 @@ func dataSourceAviatrixTransitGatewaysRead(d *schema.ResourceData, meta interfac
 		result = append(result, transitGateway)
 	}
 
-	if err = d.Set("transit_gateway_list", result); err != nil {
-		return fmt.Errorf("couldn't set transit_gateway_list: %s", err)
+	if err = d.Set("gateway_list", result); err != nil {
+		return fmt.Errorf("couldn't set gateway_list: %s", err)
 	}
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
