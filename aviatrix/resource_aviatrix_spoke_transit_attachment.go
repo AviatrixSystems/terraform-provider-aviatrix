@@ -14,6 +14,7 @@ func resourceAviatrixSpokeTransitAttachment() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAviatrixSpokeTransitAttachmentCreate,
 		Read:   resourceAviatrixSpokeTransitAttachmentRead,
+		Update: resourceAviatrixSpokeTransitAttachmentUpdate,
 		Delete: resourceAviatrixSpokeTransitAttachmentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -41,6 +42,31 @@ func resourceAviatrixSpokeTransitAttachment() *schema.Resource {
 				ForceNew:    true,
 				Description: "Learned routes will be propagated to these route tables.",
 			},
+			"spoke_prepend_as_path": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "AS Path Prepend customized by specifying AS PATH for a BGP connection. Applies on spoke gateway.",
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: goaviatrix.ValidateASN,
+				},
+				MaxItems: 25,
+			},
+			"transit_prepend_as_path": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "AS Path Prepend customized by specifying AS PATH for a BGP connection. Applies on transit gateway.",
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: goaviatrix.ValidateASN,
+				},
+				MaxItems: 25,
+			},
+			"spoke_bgp_enabled": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Indicates whether the spoke gateway is BGP enabled or not.",
+			},
 		},
 	}
 }
@@ -49,6 +75,15 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta i
 	client := meta.(*goaviatrix.Client)
 
 	attachment := marshalSpokeTransitAttachmentInput(d)
+
+	spoke, err := client.GetGateway(&goaviatrix.Gateway{GwName: attachment.SpokeGwName})
+	if err != nil {
+		return fmt.Errorf("could not find spoke gateway: %s", err)
+	}
+
+	if !spoke.EnableBgp && (len(attachment.SpokePrependAsPath) != 0 || len(attachment.TransitPrependAsPath) != 0) {
+		return fmt.Errorf("'spoke_prepend_as_path' and 'transit_prepend_as_path' are only valid for BGP enabled spoke gateway")
+	}
 
 	d.SetId(attachment.SpokeGwName + "~" + attachment.TransitGwName)
 	flag := false
@@ -71,6 +106,30 @@ func resourceAviatrixSpokeTransitAttachmentCreate(d *schema.ResourceData, meta i
 			return fmt.Errorf("failed to attach spoke: %s to transit %s: %v", attachment.SpokeGwName, attachment.TransitGwName, err)
 		}
 		break
+	}
+
+	if len(attachment.SpokePrependAsPath) != 0 {
+		transGwPeering := &goaviatrix.TransitGatewayPeering{
+			TransitGatewayName1: attachment.SpokeGwName,
+			TransitGatewayName2: attachment.TransitGwName,
+		}
+
+		err := client.EditTransitConnectionASPathPrepend(transGwPeering, attachment.SpokePrependAsPath)
+		if err != nil {
+			return fmt.Errorf("could not set spoke_prepend_as_path: %v", err)
+		}
+	}
+
+	if len(attachment.TransitPrependAsPath) != 0 {
+		transGwPeering := &goaviatrix.TransitGatewayPeering{
+			TransitGatewayName1: attachment.TransitGwName,
+			TransitGatewayName2: attachment.SpokeGwName,
+		}
+
+		err := client.EditTransitConnectionASPathPrepend(transGwPeering, attachment.TransitPrependAsPath)
+		if err != nil {
+			return fmt.Errorf("could not set transit_prepend_as_path: %v", err)
+		}
 	}
 
 	return resourceAviatrixSpokeTransitAttachmentReadIfRequired(d, meta, &flag)
@@ -117,6 +176,7 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta int
 
 	d.Set("spoke_gw_name", attachment.SpokeGwName)
 	d.Set("transit_gw_name", attachment.TransitGwName)
+	d.Set("spoke_bgp_enabled", attachment.SpokeBgpEnabled)
 
 	if attachment.RouteTables != "" {
 		var routeTables []string
@@ -130,8 +190,86 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta int
 		}
 	}
 
+	if attachment.SpokeBgpEnabled {
+		transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
+			TransitGatewayName1: spokeGwName,
+			TransitGatewayName2: transitGwName,
+		}
+
+		transitGatewayPeering, err = client.GetTransitGatewayPeeringDetails(transitGatewayPeering)
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
+
+		if transitGatewayPeering.PrependAsPath1 != "" {
+			var prependAsPath []string
+			for _, str := range strings.Split(transitGatewayPeering.PrependAsPath1, " ") {
+				prependAsPath = append(prependAsPath, strings.TrimSpace(str))
+			}
+
+			err = d.Set("spoke_prepend_as_path", prependAsPath)
+			if err != nil {
+				return fmt.Errorf("could not set spoke_prepend_as_path: %v", err)
+			}
+		}
+
+		if transitGatewayPeering.PrependAsPath2 != "" {
+			var prependAsPath []string
+			for _, str := range strings.Split(transitGatewayPeering.PrependAsPath2, " ") {
+				prependAsPath = append(prependAsPath, strings.TrimSpace(str))
+			}
+
+			err = d.Set("transit_prepend_as_path", prependAsPath)
+			if err != nil {
+				return fmt.Errorf("could not set transit_prepend_as_path: %v", err)
+			}
+		}
+	}
+
 	d.SetId(attachment.SpokeGwName + "~" + attachment.TransitGwName)
 	return nil
+}
+
+func resourceAviatrixSpokeTransitAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*goaviatrix.Client)
+
+	if !d.Get("spoke_bgp_enabled").(bool) && d.HasChanges("spoke_prepend_as_path", "transit_prepend_as_path") {
+		return fmt.Errorf("'spoke_prepend_as_path' and 'transit_prepend_as_path' are only valid for BGP enabled spoke gateway")
+	}
+
+	d.Partial(true)
+
+	spokeGwName := d.Get("spoke_gw_name").(string)
+	transitGwName := d.Get("transit_gw_name").(string)
+
+	if d.HasChange("spoke_prepend_as_path") {
+		transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
+			TransitGatewayName1: spokeGwName,
+			TransitGatewayName2: transitGwName,
+		}
+
+		err := client.EditTransitConnectionASPathPrepend(transitGatewayPeering, getStringList(d, "spoke_prepend_as_path"))
+		if err != nil {
+			return fmt.Errorf("could not update spoke_prepend_as_path: %v", err)
+		}
+	}
+
+	if d.HasChange("transit_prepend_as_path") {
+		transitGwPeering := &goaviatrix.TransitGatewayPeering{
+			TransitGatewayName1: transitGwName,
+			TransitGatewayName2: spokeGwName,
+		}
+
+		err := client.EditTransitConnectionASPathPrepend(transitGwPeering, getStringList(d, "transit_prepend_as_path"))
+		if err != nil {
+			return fmt.Errorf("could not update transit_prepend_as_path: %v", err)
+		}
+	}
+
+	d.Partial(false)
+	d.SetId(spokeGwName + "~" + transitGwName)
+	return resourceAviatrixSpokeTransitAttachmentRead(d, meta)
 }
 
 func resourceAviatrixSpokeTransitAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
@@ -151,16 +289,11 @@ func resourceAviatrixSpokeTransitAttachmentDelete(d *schema.ResourceData, meta i
 
 func marshalSpokeTransitAttachmentInput(d *schema.ResourceData) *goaviatrix.SpokeTransitAttachment {
 	spokeTransitAttachment := &goaviatrix.SpokeTransitAttachment{
-		SpokeGwName:   d.Get("spoke_gw_name").(string),
-		TransitGwName: d.Get("transit_gw_name").(string),
-	}
-
-	var routeTables []string
-	for _, v := range d.Get("route_tables").(*schema.Set).List() {
-		routeTables = append(routeTables, v.(string))
-	}
-	if len(routeTables) != 0 {
-		spokeTransitAttachment.RouteTables = strings.Join(routeTables, ",")
+		SpokeGwName:          d.Get("spoke_gw_name").(string),
+		TransitGwName:        d.Get("transit_gw_name").(string),
+		RouteTables:          strings.Join(getStringSet(d, "route_tables"), ","),
+		SpokePrependAsPath:   getStringList(d, "spoke_prepend_as_path"),
+		TransitPrependAsPath: getStringList(d, "transit_prepend_as_path"),
 	}
 
 	return spokeTransitAttachment

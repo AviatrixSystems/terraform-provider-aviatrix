@@ -259,6 +259,7 @@ type GatewayDetail struct {
 	RouteTables                  []string      `json:"spoke_rtb_list,omitempty"`
 	CustomizedTransitVpcRoutes   []string      `json:"customized_transit_vpc_cidrs"`
 	BundleVpcInfo                BundleVpcInfo `json:"bundle_vpc_info"`
+	BgpEnabled                   bool          `json:"bgp_enabled"`
 }
 
 type BundleVpcInfo struct {
