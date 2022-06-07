@@ -225,6 +225,9 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta int
 				return fmt.Errorf("could not set transit_prepend_as_path: %v", err)
 			}
 		}
+	} else {
+		d.Set("spoke_prepend_as_path", nil)
+		d.Set("transit_prepend_as_path", nil)
 	}
 
 	d.SetId(attachment.SpokeGwName + "~" + attachment.TransitGwName)
