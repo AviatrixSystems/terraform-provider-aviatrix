@@ -221,6 +221,20 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws_secret" {
   }
 }
 ```
+```hcl
+#Create an Aviatrix AWS Spoke Gateway in Private Mode
+resource "aviatrix_spoke_gateway" "test" {
+  account_name = "devops"
+  cloud_type   = 1
+  gw_name      = "spoke"
+  gw_size      = "t2.micro"
+  subnet       = "10.190.224.0/20"
+  vpc_id       = "vpc-abcd1234"
+  vpc_reg      = "us-east-1"
+  private_mode_lb_vpc_id = "vpc-abcdef"
+  private_mode_subnet_zone = "us-east-1a"
+}
+```
 
 ## Argument Reference
 
@@ -324,7 +338,7 @@ The following arguments are supported:
 !> **WARNING:** Attribute `transit_gw` has been deprecated as of provider version R2.18.1+ and will not receive further updates. Please set `manage_transit_gateway_attachment` to false, and use the standalone `aviatrix_spoke_transit_attachment` resource instead.
 
 * `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in Controller 4.7+. Valid values: true, false. Default: true.
-* `eip` - (Optional) Required when `allocate_new_eip` is false and Private Mode is not enabled on the Controller. It uses the specified EIP for this gateway. Available in Controller 4.7+. Only available for AWS, GCP, Azure, OCI, AzureGov, AWSGov, AWSChina, AzureChina, AWS Top Secret and AWS Secret.
+* `eip` - (Optional) Required when `allocate_new_eip` is false. It uses the specified EIP for this gateway. Available in Controller 4.7+. Only available for AWS, GCP, Azure, OCI, AzureGov, AWSGov, AWSChina, AzureChina, AWS Top Secret and AWS Secret.
 * `azure_eip_name_resource_group` - (Optional) Name of public IP Address resource and its resource group in Azure to be assigned to the Spoke Gateway instance. Example: "IP_Name:Resource_Group_Name". Required if `allocate_new_eip` is false and `cloud_type` is Azure, AzureGov or AzureChina. Available as of provider version 2.20+.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supported for AWS, Azure, AzureGov, AWSGov, AWSChina, AzureChina, Alibaba Cloud, AWS Top Secret and AWS Secret gateways. Valid values: true, false. Default value: false.
 * `zone` - (Optional) Availability Zone. Only available for cloud_type = 8 (Azure). Must be in the form 'az-n', for example, 'az-2'. Available in provider version R2.17+.
@@ -336,6 +350,8 @@ The following arguments are supported:
 * `enable_bgp` - (Optional) Enable BGP for this spoke gateway. Only available for AWS and Azure. Valid values: true, false. Default value: false. Available in provider R2.21.0+.
 * `rx_queue_size` - (Optional) Gateway ethernet interface RX queue size. Once set, can't be deleted or disabled. Available for AWS as of provider version R2.22+.
 * `private_mode_lb_vpc_id` - (Optional) VPC ID of Private Mode load balancer. Required when Private Mode is enabled on the Controller. Available in provider version R2.23+.
+* `private_mode_subnet_zone` - (Optional) Availability Zone of the subnet. Required when Private Mode is enabled on the Controller and `cloud_type` is AWS or AWSGov(). Available in Provider version R2.23+.
+
 
 -> **NOTE:** `manage_transit_gateway_attachment` - If you are using/upgraded to Aviatrix Terraform Provider R2.17+, and an **aviatrix_spoke_gateway** resource was originally created with a provider version <R2.17, you must do 'terraform refresh' to update and apply the attribute's default value (true) into the state file.
 

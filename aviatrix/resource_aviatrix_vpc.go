@@ -97,7 +97,7 @@ func resourceAviatrixVpc() *schema.Resource {
 			"private_mode_subnets": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "", // TODO lb vpc id desc
+				Description: "Switch to only launch private subnets. Only available when Private Mode is enabled on the Controller.",
 			},
 			"subnets": {
 				Type:        schema.TypeList,

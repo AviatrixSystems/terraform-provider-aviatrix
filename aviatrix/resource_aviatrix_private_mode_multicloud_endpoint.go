@@ -46,7 +46,7 @@ func resourceAviatrixPrivateModeMulticloudEndpoint() *schema.Resource {
 			"dns_entry": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "",
+				Description: "DNS entry of this endpoint.",
 			},
 		},
 	}

@@ -70,11 +70,11 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "Size of the gateway instance.",
 			},
 			"subnet": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				//ValidateFunc: validation.IsCIDR,
-				Description: "Public Subnet Name.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsCIDR,
+				Description:  "Public Subnet Name.",
 			},
 			"zone": {
 				Type:         schema.TypeString,
@@ -94,7 +94,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Optional: true,
 				Default:  true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return d.Get("enable_private_oob").(bool)
+					return d.Get("enable_private_oob").(bool) || d.Get("private_mode_lb_vpc_id").(string) != ""
 				},
 				Description: "If false, reuse an idle address in Elastic IP pool for this gateway. " +
 					"Otherwise, allocate a new Elastic IP and use it for this gateway.",
@@ -491,9 +491,15 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description:  "Gateway ethernet interface RX queue size. Supported for AWS related clouds only.",
 			},
 			"private_mode_lb_vpc_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Description:   "Private Mode Controller load balancer VPC ID. Required when private mode is enabled for the Controller.",
+				ConflictsWith: []string{"allocate_new_eip"},
+			},
+			"private_mode_subnet_zone": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Controller load balancer VPC ID. Required when private mode is enabled for the Controller.",
+				Description: "Private Mode subnet availability zone.",
 			},
 			"availability_domain": {
 				Type:        schema.TypeString,
@@ -693,8 +699,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	} else {
 		gateway.ConnectedTransit = "no"
 	}
-
-	enablePrivateOob := d.Get("enable_private_oob").(bool)
 
 	cloudType := d.Get("cloud_type").(int)
 	zone := d.Get("zone").(string)
@@ -930,6 +934,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	enablePrivateOob := d.Get("enable_private_oob").(bool)
 	oobManagementSubnet := d.Get("oob_management_subnet").(string)
 	oobAvailabilityZone := d.Get("oob_availability_zone").(string)
 	haOobManagementSubnet := d.Get("ha_oob_management_subnet").(string)
@@ -1048,42 +1053,44 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	}
 
 	privateModeInfo, _ := client.GetPrivateModeInfo(context.Background())
-	if !enablePrivateOob {
+	if !enablePrivateOob && !privateModeInfo.EnablePrivateMode {
 		allocateNewEip := d.Get("allocate_new_eip").(bool)
 		if allocateNewEip {
 			gateway.ReuseEip = "off"
 		} else {
 			gateway.ReuseEip = "on"
 
-			// Set ReuseEip to "on" but don't check for eip in Private Mode
-			if !privateModeInfo.EnablePrivateMode {
-				if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
-					return fmt.Errorf("failed to create transit gateway: 'allocate_new_eip' can only be set to 'false' when cloud_type is AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048) or AWS Top Secret (16384)")
+			if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
+				return fmt.Errorf("failed to create transit gateway: 'allocate_new_eip' can only be set to 'false' when cloud_type is AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048) or AWS Top Secret (16384)")
+			}
+			if _, ok := d.GetOk("eip"); !ok {
+				return fmt.Errorf("failed to create transit gateway: 'eip' must be set when 'allocate_new_eip' is false")
+			}
+			azureEipName, azureEipNameOk := d.GetOk("azure_eip_name_resource_group")
+			if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+				// AVX-9874 Azure EIP has a different format e.g. 'test_ip:rg:104.45.186.20'
+				if !azureEipNameOk {
+					return fmt.Errorf("failed to create transit gateway: 'azure_eip_name_resource_group' must be set when 'allocate_new_eip' is false and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
 				}
-				if _, ok := d.GetOk("eip"); !ok {
-					return fmt.Errorf("failed to create transit gateway: 'eip' must be set when 'allocate_new_eip' is false")
+				gateway.Eip = fmt.Sprintf("%s:%s", azureEipName.(string), d.Get("eip").(string))
+			} else {
+				if azureEipNameOk {
+					return fmt.Errorf("failed to create transit gateway: 'azure_eip_name_resource_group' must be empty when cloud_type is not one of Azure (8), AzureGov (32) or AzureChina (2048)")
 				}
-				azureEipName, azureEipNameOk := d.GetOk("azure_eip_name_resource_group")
-				if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-					// AVX-9874 Azure EIP has a different format e.g. 'test_ip:rg:104.45.186.20'
-					if !azureEipNameOk {
-						return fmt.Errorf("failed to create transit gateway: 'azure_eip_name_resource_group' must be set when 'allocate_new_eip' is false and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
-					}
-					gateway.Eip = fmt.Sprintf("%s:%s", azureEipName.(string), d.Get("eip").(string))
-				} else {
-					if azureEipNameOk {
-						return fmt.Errorf("failed to create transit gateway: 'azure_eip_name_resource_group' must be empty when cloud_type is not one of Azure (8), AzureGov (32) or AzureChina (2048)")
-					}
-					gateway.Eip = d.Get("eip").(string)
-				}
+				gateway.Eip = d.Get("eip").(string)
 			}
 		}
 	}
 
 	if privateModeInfo.EnablePrivateMode {
-		if gateway.ReuseEip != "on" {
-			return fmt.Errorf("%q must be false when Private Mode is enabled", "allocate_new_eip")
+		if privateModeSubnetZone, ok := d.GetOk("private_mode_subnet_zone"); ok {
+			gateway.Subnet = fmt.Sprintf("%s~~%s", gateway.Subnet, privateModeSubnetZone.(string))
+		} else {
+			if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
+				return fmt.Errorf("%q must be set when creating a Transit Gateway in AWS with Private Mode enabled on the Controller", "private_mode_subnet_zone")
+			}
 		}
+
 		if _, ok := d.GetOk("private_mode_lb_vpc_id"); ok {
 			if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 				return fmt.Errorf("private mode is only supported in AWS and Azure. %q must be empty", "private_mode_lb_vpc_id")
@@ -1092,6 +1099,9 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			gateway.LbVpcId = d.Get("private_mode_lb_vpc_id").(string)
 		}
 	} else {
+		if _, ok := d.GetOk("private_mode_subnet_zone"); ok {
+			return fmt.Errorf("%q is only valid when Private Mode is enabled on the Controller", "private_mode_subnet_zone")
+		}
 		if _, ok := d.GetOk("private_mode_lb_vpc_id"); ok {
 			return fmt.Errorf("%q is only valid on when Private Mode is enabled", "private_mode_lb_vpc_id")
 		}
@@ -1857,6 +1867,11 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	}
 
 	d.Set("private_mode_lb_vpc_id", gw.LbVpcId)
+	if gw.LbVpcId != "" && goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+		d.Set("private_mode_subnet_zone", gw.GatewayZone)
+	} else {
+		d.Set("private_mode_subnet_zone", nil)
+	}
 
 	if gw.HaGw.GwSize == "" {
 		d.Set("ha_availability_domain", "")

@@ -27,7 +27,7 @@ The following arguments are supported:
 ### Required
 * `enable_private_mode` - (Required) Whether to enable Private Mode on an Aviatrix Controller.
 * `copilot_instance_id` - (Optional) Instance ID of a copilot instance to associate with an Aviatrix Controller in Private Mode. The copilot instance must be in the same VPC as the Aviatrix Controller.
-* `proxies` - (Optional) List of proxies // TODO
+* `proxies` - (Optional) List of Controller proxies for Private Mode.
 
 ## Import
 

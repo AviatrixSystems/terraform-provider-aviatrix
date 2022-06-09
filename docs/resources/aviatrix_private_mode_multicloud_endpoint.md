@@ -30,6 +30,11 @@ The following arguments are supported:
 * `region` - (Required) Region of the VPC.
 * `controller_lb_vpc_id` - (Required) ID of the VPC containing a Private Mode controller load balancer.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attributes are exported:
+* `dns_entry` - DNS entry of the endpoint.
+
 ## Import
 
 **aviatrix_private_mode_multicloud_endpoint** can be imported using the `vpc_id`, e.g.

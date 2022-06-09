@@ -37,7 +37,7 @@ func resourceAviatrixPrivateModeLb() *schema.Resource {
 				Required:    true,
 				Description: "Name of the VPC region.",
 			},
-			"lb_type": { // TODO: Check name
+			"lb_type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"controller", "multicloud"}, false),
@@ -129,15 +129,14 @@ func resourceAviatrixPrivateModeLbCreate(ctx context.Context, d *schema.Resource
 	} else {
 		err := client.CreatePrivateModeMulticloudLoadBalancer(ctx, privateModeLb)
 		if err != nil {
-			return diag.Errorf("failed to create multicloud Private Mode Controller load balancer: %s", err)
+			return diag.Errorf("failed to create multicloud Private Mode load balancer: %s", err)
 		}
 	}
 
 	if _, ok := d.GetOk("proxies"); ok {
 		err := client.UpdatePrivateModeMulticloudProxies(ctx, privateModeLb)
 		if err != nil {
-			return diag.Errorf("failed to set Multicloud proxies during Private Mode Controller load balancer"+
-				"create: %s", err)
+			return diag.Errorf("failed to set Multicloud proxies during Private Mode Controller load balance create: %s", err)
 		}
 	}
 

@@ -14,11 +14,9 @@ import (
 )
 
 func prePrivateModeCheck(t *testing.T, msgEnd string) {
-	if os.Getenv("SKIP_PRIVATE_MODE_LB") != "yes" {
-		for _, key := range []string{"CONTROLLER_VPC_ID", "AWS_REGION"} {
-			if os.Getenv(key) == "" {
-				t.Fatal(fmt.Sprintf("%s must be set for Private Mode tests using load balancers. %s", key, msgEnd))
-			}
+	for _, key := range []string{"CONTROLLER_VPC_ID", "AWS_REGION"} {
+		if os.Getenv(key) == "" {
+			t.Fatal(fmt.Sprintf("%s must be set for Private Mode tests using load balancers. %s", key, msgEnd))
 		}
 	}
 }
@@ -44,7 +42,7 @@ func TestAccAviatrixPrivateModeLb_basic(t *testing.T) {
 			{
 				Config: testAccAviatrixPrivateModeLbBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAviatrixPrivateModeLbExists(resourceName),
+					testAccAviatrixPrivateModeLbExists(resourceName, nil),
 					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "region", os.Getenv("AWS_REGION")),
 					resource.TestCheckResourceAttr(resourceName, "lb_type", "controller"),
@@ -86,7 +84,7 @@ resource "aviatrix_private_mode_lb" "test" {
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"), os.Getenv("CONTROLLER_VPC_ID"), os.Getenv("AWS_REGION"))
 }
 
-func testAccAviatrixPrivateModeLbExists(n string) resource.TestCheckFunc {
+func testAccAviatrixPrivateModeLbExists(n string, rLB *goaviatrix.PrivateModeLbRead) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -99,11 +97,12 @@ func testAccAviatrixPrivateModeLbExists(n string) resource.TestCheckFunc {
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
 		vpcId := rs.Primary.ID
-		_, err := client.GetPrivateModeLoadBalancer(context.Background(), vpcId)
+		foundLB, err := client.GetPrivateModeLoadBalancer(context.Background(), vpcId)
 		if err != nil {
 			return err
 		}
 
+		*rLB = *foundLB
 		return nil
 	}
 }
@@ -124,6 +123,7 @@ func testAccAviatrixPrivateModeLbDestroy(s *terraform.State) error {
 			}
 			return fmt.Errorf("failed to destroy Private Mode load balancer: %s", err)
 		}
+		return fmt.Errorf("failed to destroy Private Mode load balancer")
 	}
 
 	return nil

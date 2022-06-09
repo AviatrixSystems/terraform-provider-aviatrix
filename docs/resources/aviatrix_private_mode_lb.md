@@ -13,9 +13,27 @@ The **aviatrix_private_mode_lb** resource allows management of a Private Mode lo
 ## Example Usage
 
 ```hcl
-# Create a Private Mode load balancer
+# Create a Private Mode Controller load balancer
 resource "aviatrix_private_mode_lb" "test" {
-  // TODO
+  account_name = "devops"
+  vpc_id = "vpc-abcdef"
+  region = "us-east-1"
+  lb_type = "controller"
+}
+```
+```hcl
+# Create a Private Mode multicloud load balancer
+resource "aviatrix_private_mode_lb" "test2" {
+  account_name = "devops"
+  vpc_id = "vpc-abcdef"
+  region = "us-east-1"
+  lb_type = "multicloud"
+  multicloud_access_vpc_id = "vpc-abcdef"
+  proxies {
+    instance_id = "i-123456"
+    proxy_type = "multicloud"
+    vpc_id = "vpc-abcdef"
+  }
 }
 ```
 
@@ -33,6 +51,7 @@ The following arguments are supported:
 * `proxies` - (Optional) List of multicloud proxies. Only valid when `lb_type` is multicloud.
   * `instance_id` - (Required) Instance ID of the proxy.
   * `proxy_type` - (Required) Type of load balancer. Must be one of controller or multicloud.
+  * `vpc_id` - (Required) VPC ID of the proxy.
 
 ## Import
 
