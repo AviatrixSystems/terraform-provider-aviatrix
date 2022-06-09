@@ -8,11 +8,14 @@ import (
 )
 
 type SpokeTransitAttachment struct {
-	Action        string `form:"action,omitempty"`
-	CID           string `form:"CID,omitempty"`
-	SpokeGwName   string `form:"spoke_gw,omitempty"`
-	TransitGwName string `form:"transit_gw,omitempty"`
-	RouteTables   string `form:"route_table_list,omitempty"`
+	Action               string `form:"action,omitempty"`
+	CID                  string `form:"CID,omitempty"`
+	SpokeGwName          string `form:"spoke_gw,omitempty"`
+	TransitGwName        string `form:"transit_gw,omitempty"`
+	RouteTables          string `form:"route_table_list,omitempty"`
+	SpokeBgpEnabled      bool
+	SpokePrependAsPath   []string
+	TransitPrependAsPath []string
 }
 
 func (c *Client) CreateSpokeTransitAttachment(spokeTransitAttachment *SpokeTransitAttachment) error {
@@ -50,6 +53,7 @@ func (c *Client) GetSpokeTransitAttachment(spokeTransitAttachment *SpokeTransitA
 	if data.Results.GwName == spokeTransitAttachment.SpokeGwName {
 		if data.Results.TransitGwName == spokeTransitAttachment.TransitGwName || data.Results.EgressTransitGwName == spokeTransitAttachment.TransitGwName {
 			spokeTransitAttachment.RouteTables = strings.Join(data.Results.RouteTables, ",")
+			spokeTransitAttachment.SpokeBgpEnabled = data.Results.BgpEnabled
 			return spokeTransitAttachment, nil
 		}
 	}

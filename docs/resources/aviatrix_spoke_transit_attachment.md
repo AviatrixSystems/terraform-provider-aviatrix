@@ -37,8 +37,15 @@ The following arguments are supported:
 * `transit_gw_name` - (Required) Name of the transit gateway to attach the spoke gateway to.
 
 ### Advanced Options
-* `route_tables` - (Optional) Advanced option. Learned routes will be propagated to these route tables. Example: ["rtb-212ff547","rtb-04539787"].
+* `route_tables` - (Optional) Learned routes will be propagated to these route tables. Example: ["rtb-212ff547","rtb-04539787"].
+* `spoke_prepend_as_path` - (Optional) Connection based AS Path Prepend. Valid only for BGP connection. Can only use the gateway's own local AS number, repeated up to 25 times. Applies on spoke_gateway_name. Available as of provider version R2.23+.
+* `transit_prepend_as_path` - (Optional) Connection based AS Path Prepend. Valid only for BGP connection. Can only use the gateway's own local AS number, repeated up to 25 times. Applies on transit_gateway_name. Available as of provider version R2.23+.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attribute is exported:
+
+* `spoke_bgp_enabled` - Indicates whether the spoke gateway is BGP enabled or not.
 
 ## Import
 
