@@ -459,6 +459,7 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 
 func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+	ignoreTagsConfig := client.IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
 	if instanceID == "" {
@@ -559,7 +560,8 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 		d.Set("user_data", fI.UserData)
 	}
 	if len(fI.Tags) > 0 {
-		err := d.Set("tags", fI.Tags)
+		tags := goaviatrix.KeyValueTags(fI.Tags).IgnoreConfig(ignoreTagsConfig)
+		err := d.Set("tags", tags)
 		if err != nil {
 			return fmt.Errorf("failed to set tags for firewall_instance on read: %v", err)
 		}

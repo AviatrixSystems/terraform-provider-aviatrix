@@ -45,12 +45,13 @@ type APIRequest struct {
 
 // Client for accessing the Aviatrix Controller
 type Client struct {
-	HTTPClient   *http.Client
-	Username     string
-	Password     string
-	CID          string
-	ControllerIP string
-	baseURL      string
+	HTTPClient       *http.Client
+	Username         string
+	Password         string
+	CID              string
+	ControllerIP     string
+	baseURL          string
+	IgnoreTagsConfig *IgnoreTagsConfig
 }
 
 // Login to the Aviatrix controller with the username/password provided in
@@ -93,8 +94,8 @@ func (c *Client) Login() error {
 //   error - if any
 // See Also:
 //   init()
-func NewClient(username string, password string, controllerIP string, HTTPClient *http.Client) (*Client, error) {
-	client := &Client{Username: username, Password: password, HTTPClient: HTTPClient, ControllerIP: controllerIP}
+func NewClient(username string, password string, controllerIP string, HTTPClient *http.Client, ignoreTagsConfig *IgnoreTagsConfig) (*Client, error) {
+	client := &Client{Username: username, Password: password, HTTPClient: HTTPClient, ControllerIP: controllerIP, IgnoreTagsConfig: ignoreTagsConfig}
 	return client.init(controllerIP)
 }
 

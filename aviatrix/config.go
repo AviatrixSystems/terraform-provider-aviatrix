@@ -19,6 +19,7 @@ type Config struct {
 	ControllerIP string
 	VerifyCert   bool
 	PathToCACert string
+	IgnoreTags   *goaviatrix.IgnoreTagsConfig
 }
 
 // Client gets the Aviatrix client to access the Controller
@@ -45,7 +46,7 @@ func (c *Config) Client() (*goaviatrix.Client, error) {
 		tr.TLSClientConfig.RootCAs = caCertPool
 	}
 
-	client, err := goaviatrix.NewClient(c.Username, c.Password, c.ControllerIP, &http.Client{Transport: tr})
+	client, err := goaviatrix.NewClient(c.Username, c.Password, c.ControllerIP, &http.Client{Transport: tr}, c.IgnoreTags)
 
 	log.Printf("[INFO] Aviatrix Client configured for use")
 

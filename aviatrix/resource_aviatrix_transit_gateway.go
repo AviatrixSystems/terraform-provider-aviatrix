@@ -1523,6 +1523,7 @@ func resourceAviatrixTransitGatewayReadIfRequired(d *schema.ResourceData, meta i
 
 func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+	ignoreTagsConfig := client.IgnoreTagsConfig
 
 	var isImport bool
 	gwName := d.Get("gw_name").(string)
@@ -1825,7 +1826,8 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 				}
 			}
 		} else {
-			if err := d.Set("tags", gw.Tags); err != nil {
+			tags := goaviatrix.KeyValueTags(gw.Tags).IgnoreConfig(ignoreTagsConfig)
+			if err := d.Set("tags", tags); err != nil {
 				log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
 			}
 		}
@@ -1931,6 +1933,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 
 func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+
 	gateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string),
