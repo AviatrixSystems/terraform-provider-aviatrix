@@ -31,7 +31,7 @@ The following arguments are supported:
 
 ### Options
 
-* `enable_over_private_network` - (Optional) Switch to enable over the private network. Valid values: true, false. Default: false.
+* `enable_over_private_network` - (Optional) Switch to enable over the private network. Valid values: true, false. Default: true.
 * `enable_jumbo_frame` - (Optional) Switch to enable jumbo frame. Valid values: true, false. Default: false.
 * `enable_insane_mode` - (Optional) Switch to enable insane mode. Valid values: true, false. Default: false.
 * `insane_mode_tunnel_number` - (Optional) Insane mode tunnel number. Default: 0.

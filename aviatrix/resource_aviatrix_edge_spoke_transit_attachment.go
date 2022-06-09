@@ -39,7 +39,7 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				ForceNew:    true,
-				Default:     false,
+				Default:     true,
 				Description: "Enable over private network.",
 			},
 			"enable_jumbo_frame": {
