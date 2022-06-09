@@ -18,6 +18,7 @@ type PrivateModeMultiCloudEndpointRead struct {
 	VpcId             string `json:"endpoint_vpc_id"`
 	Region            string `json:"region"`
 	ControllerLbVpcId string `json:"endpoint_lb_vpc_id"`
+	DnsEntry          string `json:"dns_entry"`
 }
 
 func (c *Client) CreatePrivateModeMulticloudEndpoint(ctx context.Context, privateModeMulticloudEndpoint *PrivateModeMulticloudEndpoint) error {

@@ -250,6 +250,7 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 
 	form["pre_shared_key"] = site2cloud.PreSharedKey
 	form["backup_pre_shared_key"] = site2cloud.BackupPreSharedKey
+	form["auth_type"] = "psk"
 
 	if site2cloud.CustomMap {
 		form["custom_map"] = strconv.FormatBool(site2cloud.CustomMap)

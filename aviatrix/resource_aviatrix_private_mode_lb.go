@@ -54,6 +54,11 @@ func resourceAviatrixPrivateModeLb() *schema.Resource {
 				Description: "List of multicloud proxies.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"vpc_id": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "VPC ID of proxy",
+						},
 						"instance_id": {
 							Type:        schema.TypeString,
 							Required:    true,
@@ -95,6 +100,7 @@ func marshalPrivateModeLb(d *schema.ResourceData) (*goaviatrix.PrivateModeLb, er
 			privateModeMulticloudProxy := goaviatrix.PrivateModeMulticloudProxy{
 				InstanceId: proxyMap["instance_id"].(string),
 				ProxyType:  proxyMap["proxy_type"].(string),
+				VpcId:      proxyMap["vpc_id"].(string),
 			}
 			privateModeLb.Proxies = append(privateModeLb.Proxies, privateModeMulticloudProxy)
 		}

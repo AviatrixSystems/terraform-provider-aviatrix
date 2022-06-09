@@ -43,6 +43,11 @@ func resourceAviatrixPrivateModeMulticloudEndpoint() *schema.Resource {
 				ForceNew:    true,
 				Description: "ID of the VPC with the Controller load balancer.",
 			},
+			"dns_entry": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "",
+			},
 		},
 	}
 }
@@ -101,6 +106,7 @@ func resourceAviatrixPrivateModeMulticloudEndpointRead(ctx context.Context, d *s
 	d.Set("vpc_id", privateModeMulticloudEndpoint.VpcId)
 	d.Set("region", privateModeMulticloudEndpoint.Region)
 	d.Set("controller_lb_vpc_id", privateModeMulticloudEndpoint.ControllerLbVpcId)
+	d.Set("dns_entry", privateModeMulticloudEndpoint.DnsEntry)
 
 	return nil
 }

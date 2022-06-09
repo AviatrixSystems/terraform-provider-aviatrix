@@ -238,6 +238,7 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		SubnetSize:             d.Get("subnet_size").(int),
 		NumOfSubnetPairs:       d.Get("num_of_subnet_pairs").(int),
 		EnablePrivateOobSubnet: d.Get("enable_private_oob_subnet").(bool),
+		PrivateModeSubnets:     d.Get("private_mode_subnets").(bool),
 	}
 	if vpc.Region == "" && !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		return fmt.Errorf("please specifiy 'region'")
@@ -321,10 +322,6 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error creating vpc: resource_group is required to be empty for providers other than Azure (8), AzureGov (32) and AzureChina (2048)")
 		}
 		vpc.ResourceGroup = resourceGroup.(string)
-	}
-
-	if _, ok := d.GetOk("private_mode_subnets"); ok {
-		vpc.PrivateModeSubnets = true
 	}
 
 	err := client.CreateVpc(vpc)

@@ -29,13 +29,14 @@ type PrivateModeLbRead struct {
 }
 
 type PrivateModeMulticloudProxy struct {
-	InstanceId string
-	ProxyType  string
+	InstanceId string `json:"instance_id"`
+	ProxyType  string `json:"proxy_type"`
+	VpcId      string `json:"vpc_id"`
 }
 
 func privateModeLoadBalancerCheckFunc(action, method, reason string, ret bool) error {
 	if !ret {
-		if strings.Contains(reason, "Private Mode is not enabled") {
+		if strings.Contains(reason, "Private Mode is not enabled") || strings.Contains(reason, "There is no Load Balancer in VPC") {
 			return ErrNotFound
 		}
 		return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
@@ -58,10 +59,13 @@ func (c *Client) CreatePrivateModeMulticloudLoadBalancer(ctx context.Context, pr
 func (c *Client) UpdatePrivateModeMulticloudProxies(ctx context.Context, privateModeLb *PrivateModeLb) error {
 	action := "update_private_mode_multicloud_proxies"
 	form := map[string]interface{}{
-		"CID":           c.CID,
-		"action":        action,
-		"account_name":  privateModeLb.AccountName,
-		"instance_info": privateModeLb.Proxies,
+		"CID":          c.CID,
+		"action":       action,
+		"lb_vpc_id":    privateModeLb.VpcId,
+		"account_name": privateModeLb.AccountName,
+		"instance_info": map[string]interface{}{
+			"instances": privateModeLb.Proxies,
+		},
 	}
 
 	return c.PostAPIContext2(ctx, nil, action, form, BasicCheck)

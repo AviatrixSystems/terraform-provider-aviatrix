@@ -104,7 +104,12 @@ func (c *Client) GetPrivateModeInfo(ctx context.Context) (*ControllerPrivateMode
 		EnablePrivateMode: resp.Results.Contents.PrivateModeEnabled,
 	}
 
-	for k := range resp.Results.Contents.ProxyInfo {
+	for k, v := range resp.Results.Contents.ProxyInfo {
+		proxyInfo := v.(map[string]interface{})
+		proxyType, ok := proxyInfo["proxy_type"]
+		if !ok || proxyType.(string) != "http_proxy" {
+			continue
+		}
 		controllerPrivateModeConfig.Proxies = append(controllerPrivateModeConfig.Proxies, k)
 	}
 
