@@ -12,7 +12,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.22.1 (UserConnect-6.7.1306)``
+``Last updated: R2.22.1 (UserConnect-6.7.1319)``
 
 
 ---
@@ -20,7 +20,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 ## 2.22.1
 ### Notes:
 - Release date: **(10 June 2022)**
-- Supported Controller version: **UserConnect-6.7.1306**
+- Supported Controller version: **UserConnect-6.7.1319**
 - Supported Terraform version: **v1.x**
 
 ### Features:
