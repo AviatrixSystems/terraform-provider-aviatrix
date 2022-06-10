@@ -74,6 +74,9 @@ type Site2Cloud struct {
 	BackupRemoteTunnelIp          string `form:"backup_remote_tunnel_ip,omitempty"`
 	EnableSingleIpHA              bool
 	Phase1RemoteIdentifier        string
+	AuthType                      string `form:"auth_type,omitempty"`
+	CertName                      string `form:"cert_name,omitempty"`
+	RemoteIdentifier              string `form:"remote_identifier,omitempty"`
 }
 
 type EditSite2Cloud struct {
@@ -94,6 +97,8 @@ type EditSite2Cloud struct {
 	LocalDestinationRealCIDRs     string `form:"local_dst_real_cidrs,omitempty"`
 	LocalDestinationVirtualCIDRs  string `form:"local_dst_virt_cidrs,omitempty"`
 	Phase1RemoteIdentifier        string `form:"phase1_remote_identifier,omitempty"`
+	CertName                      string `form:"cert_name,omitempty"`
+	RemoteIdentifier              string `form:"remote_identifier,omitempty"`
 }
 
 type Site2CloudResp struct {
@@ -161,6 +166,9 @@ type EditSite2CloudConnDetail struct {
 	CloudnNeighborAsNum            string        `json:"cloudn_neighbor_as_number,omitempty"`
 	CloudnBackupNeighborIP         string        `json:"cloudn_backup_neighbor_ip,omitempty"`
 	CloudnBackupNeighborAsNum      string        `json:"cloudn_backup_neighbor_as_number,omitempty"`
+	AuthType                       string        `json:"auth_type,omitempty"`
+	CertName                       string        `json:"s2c_cacert_name,omitempty"`
+	RemoteIdentifier               string        `json:"s2c_remote_id,omitempty"`
 }
 
 type Site2CloudConnDetailResp struct {
@@ -202,6 +210,12 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 	form["connection_type"] = site2cloud.ConnType
 	form["remote_gateway_type"] = site2cloud.RemoteGwType
 	form["tunnel_type"] = site2cloud.TunnelType
+
+	if site2cloud.AuthType == "pubkey" {
+		form["auth_type"] = site2cloud.AuthType
+		form["cert_name"] = site2cloud.CertName
+		form["remote_identifier"] = site2cloud.RemoteIdentifier
+	}
 
 	form["ha_enabled"] = site2cloud.HAEnabled
 	form["backup_gateway_name"] = site2cloud.BackupGwName
@@ -321,6 +335,9 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 
 	s2cConnDetail := data.Results.Connections
 	if len(s2cConnDetail.TunnelName) != 0 {
+		site2cloud.AuthType = s2cConnDetail.AuthType
+		site2cloud.CertName = s2cConnDetail.CertName
+		site2cloud.RemoteIdentifier = s2cConnDetail.RemoteIdentifier
 		site2cloud.GwName = s2cConnDetail.GwName
 		site2cloud.ConnType = s2cConnDetail.ConnType
 		if s2cConnDetail.TunnelType == "policy" || s2cConnDetail.TunnelType == "Policy" || s2cConnDetail.TunnelType == "Site2Cloud_Policy" {
