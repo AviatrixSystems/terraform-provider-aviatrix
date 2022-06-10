@@ -763,8 +763,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	if insaneMode {
 		// Insane Mode encryption is not supported in China regions
 		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|
-			goaviatrix.AzureArmRelatedCloudTypes^goaviatrix.AzureChina|goaviatrix.OCIRelatedCloudTypes) {
-			return fmt.Errorf("insane_mode is only supported for AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWS China (1024), AWS Top Secret (16384) and AWS Secret (32768)")
+			goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
+			return fmt.Errorf("insane_mode is only supported for AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWS China (1024), AzureChina (2048), AWS Top Secret (16384) and AWS Secret (32768)")
 		}
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
 			if d.Get("insane_mode_az").(string) == "" {
