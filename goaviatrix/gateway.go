@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -503,7 +504,7 @@ func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
 	return nil, ErrNotFound
 }
 
-func (c *Client) GetTransitGatewayList() ([]Gateway, error) {
+func (c *Client) GetTransitGatewayList(ctx context.Context) ([]Gateway, error) {
 	action := "list_vpcs_summary"
 	params := map[string]string{
 		"CID":          c.CID,
@@ -511,7 +512,7 @@ func (c *Client) GetTransitGatewayList() ([]Gateway, error) {
 		"transit_only": "true",
 	}
 	var data GatewayListResp
-	err := c.GetAPI(&data, action, params, BasicCheck)
+	err := c.GetAPIContext(ctx, &data, action, params, BasicCheck)
 	if err != nil {
 		return nil, err
 	}

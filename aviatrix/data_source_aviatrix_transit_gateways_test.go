@@ -31,14 +31,6 @@ func TestAccDataSourceAviatrixTransitGateways_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aviatrix_transit_gateway.test", "gw_name", fmt.Sprintf("aa-tfg-aws-%s", rName)),
 					resource.TestCheckResourceAttr("aviatrix_transit_gateway.test2", "gw_name", fmt.Sprintf("aa-tfg-gcp-%s", rName)),
-				),
-
-				Destroy: false,
-			},
-			{
-				Config: testAccDataSourceAviatrixTransitGatewaysConfigBasic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAviatrixTransitGateways(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "gateway_list.0.gw_name", fmt.Sprintf("aa-tfg-aws-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "gateway_list.0.vpc_id", os.Getenv("AWS_VPC_ID")),
 					resource.TestCheckResourceAttr(resourceName, "gateway_list.0.vpc_reg", os.Getenv("AWS_REGION")),
@@ -49,7 +41,6 @@ func TestAccDataSourceAviatrixTransitGateways_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "gateway_list.1.subnet", os.Getenv("GCP_SUBNET")),
 					resource.TestCheckResourceAttr(resourceName, "gateway_list.1.vpc_reg", os.Getenv("GCP_ZONE")),
 				),
-				Destroy: true,
 			},
 		},
 	})
@@ -90,7 +81,10 @@ resource "aviatrix_transit_gateway" "test2" {
 	subnet       = "%[12]s"
 }
 data "aviatrix_transit_gateways" "foo" {
-
+    depends_on = [
+     aviatrix_transit_gateway.test,
+     aviatrix_transit_gateway.test2
+    ]
 }
 `, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"), os.Getenv("GCP_ID"), os.Getenv("GCP_CREDENTIALS_FILEPATH"),

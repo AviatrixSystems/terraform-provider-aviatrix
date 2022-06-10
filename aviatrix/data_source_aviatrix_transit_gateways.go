@@ -1,10 +1,13 @@
 package aviatrix
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -12,7 +15,7 @@ import (
 
 func dataSourceAviatrixTransitGateways() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAviatrixTransitGatewaysRead,
+		ReadWithoutTimeout: dataSourceAviatrixTransitGatewaysRead,
 
 		Schema: map[string]*schema.Schema{
 			"gateway_list": {
@@ -361,12 +364,12 @@ func dataSourceAviatrixTransitGateways() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixTransitGatewaysRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAviatrixTransitGatewaysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	TransitGatewayList, err := client.GetTransitGatewayList()
+	TransitGatewayList, err := client.GetTransitGatewayList(ctx)
 	if err != nil {
-		return err
+		return diag.Errorf("could not get Aviatrix Transit Gateway List: %s", err)
 	}
 	var result []map[string]interface{}
 	for i := range TransitGatewayList {
@@ -549,7 +552,7 @@ func dataSourceAviatrixTransitGatewaysRead(d *schema.ResourceData, meta interfac
 	}
 
 	if err = d.Set("gateway_list", result); err != nil {
-		return fmt.Errorf("couldn't set gateway_list: %s", err)
+		return diag.Errorf("couldn't set gateway_list: %s", err)
 	}
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
