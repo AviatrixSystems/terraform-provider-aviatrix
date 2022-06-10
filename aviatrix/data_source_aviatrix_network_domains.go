@@ -1,8 +1,10 @@
 package aviatrix
 
 import (
-	"fmt"
+	"context"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -10,10 +12,10 @@ import (
 
 func dataSourceAviatrixNetworkDomains() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAviatrixNetworkDomainsRead,
+		ReadWithoutTimeout: dataSourceAviatrixNetworkDomainsRead,
 
 		Schema: map[string]*schema.Schema{
-			"network_domain_list": {
+			"network_domains": {
 				Type:        schema.TypeList,
 				Computed:    true,
 				Description: "List of Network Domains.",
@@ -86,16 +88,16 @@ func dataSourceAviatrixNetworkDomains() *schema.Resource {
 	}
 }
 
-func dataSourceAviatrixNetworkDomainsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAviatrixNetworkDomainsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	domainList, err := client.GetAllSecurityDomains()
+	domainList, err := client.GetAllNetworkDomains(ctx)
 	if err != nil {
-		return err
+		return diag.Errorf("could not get Aviatrix Network Domains: %s", err)
 	}
 	var result []map[string]interface{}
-	for i := range domainList {
-		domain := domainList[i]
+	for i, domain := range domainList {
+		domainList[i] = domain
 		tempDomain := map[string]interface{}{
 			"name":                         domain.Name,
 			"tgw_name":                     domain.TgwName,
@@ -112,8 +114,8 @@ func dataSourceAviatrixNetworkDomainsRead(d *schema.ResourceData, meta interface
 		}
 		result = append(result, tempDomain)
 	}
-	if err = d.Set("network_domain_list", result); err != nil {
-		return fmt.Errorf("couldn't set network_domain_list: %s", err)
+	if err = d.Set("network_domains", result); err != nil {
+		return diag.Errorf("couldn't set network_domains: %s", err)
 	}
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil

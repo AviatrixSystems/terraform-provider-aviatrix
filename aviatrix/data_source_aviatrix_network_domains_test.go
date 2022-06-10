@@ -34,17 +34,11 @@ func TestAccDataSourceAviatrixNetworkDomains_basic(t *testing.T) {
 				Config: testAccDataSourceAviatrixNetworkDomainsConfigBasic(rName, tgwName, awsSideAsNumber, ndName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTgwNetworkDomainExists("aviatrix_aws_tgw_network_domain.test", tgwName, ndName),
-				),
-				Destroy: false,
-			},
-			{
-				Config: testAccDataSourceAviatrixNetworkDomainsConfigBasic(rName, tgwName, awsSideAsNumber, ndName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "network_domain_list.0.tgw_name", tgwName),
-					resource.TestCheckResourceAttr(resourceName, "network_domain_list.3.account", fmt.Sprintf("tfa-%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "network_domain_list.3.name", ndName),
-					resource.TestCheckResourceAttr(resourceName, "network_domain_list.2.cloud_type", "AWS"),
-					resource.TestCheckResourceAttr(resourceName, "network_domain_list.1.region", "us-west-1"),
+					resource.TestCheckResourceAttr(resourceName, "network_domains.0.tgw_name", tgwName),
+					resource.TestCheckResourceAttr(resourceName, "network_domains.3.account", fmt.Sprintf("tfa-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "network_domains.3.name", ndName),
+					resource.TestCheckResourceAttr(resourceName, "network_domains.2.cloud_type", "AWS"),
+					resource.TestCheckResourceAttr(resourceName, "network_domains.1.region", "us-west-1"),
 				),
 			},
 		},
@@ -92,7 +86,12 @@ resource "aviatrix_aws_tgw_network_domain" "test" {
   ]
 }
 data "aviatrix_network_domains" "test"{
-
+	depends_on = [
+    	aviatrix_aws_tgw_network_domain.Default_Domain,
+    	aviatrix_aws_tgw_network_domain.Shared_Service_Domain,
+    	aviatrix_aws_tgw_network_domain.Aviatrix_Edge_Domain,
+        aviatrix_aws_tgw_network_domain.test
+  ]
 }
 `, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		awsSideAsNumber, tgwName, ndName)

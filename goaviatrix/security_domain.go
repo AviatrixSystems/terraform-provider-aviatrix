@@ -222,7 +222,7 @@ func (c *Client) DisableIntraDomainInspection(ctx context.Context, intraDomainIn
 	return c.PostAPIContext(ctx, params["action"], params, BasicCheck)
 }
 
-func (c *Client) GetAllSecurityDomains() ([]NetworkDomainDetails, error) {
+func (c *Client) GetAllNetworkDomains(ctx context.Context) ([]NetworkDomainDetails, error) {
 	params := map[string]string{
 		"action": "list_all_tgw_security_domains",
 		"CID":    c.CID,
@@ -239,12 +239,11 @@ func (c *Client) GetAllSecurityDomains() ([]NetworkDomainDetails, error) {
 	}
 
 	var data Resp
-	err := c.GetAPI(&data, params["action"], params, BasicCheck)
+	err := c.GetAPIContext(ctx, &data, params["action"], params, BasicCheck)
 	if err != nil {
 		return nil, err
 	}
-	domainList := data.Results.Domains
-	return domainList, nil
+	return data.Results.Domains, nil
 }
 
 func (c *Client) GetIntraDomainInspectionStatus(ctx context.Context, intraDomainInspection *IntraDomainInspection) error {

@@ -3,7 +3,7 @@ subcategory: "TGW Orchestrator"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_network_domains"
 description: |-
-  Get a list of all Network Domains and detail
+  Gets a list of all Network Domains.
 ---
 
 # aviatrix_all_network_domains
@@ -14,16 +14,14 @@ The **aviatrix_network_domains** data source provides details about all Network 
 
  ```hcl
  # Aviatrix All Network Domains Data Source
- data "aviatrix_network_domains" "foo" {
-   
- }
+ data "aviatrix_network_domains" "foo" {}
  ```
 
 
 ## Attribute Reference
 
-Use above data source, the following attributes are exported:
-* `network_domain_list` - The list of all Network Domains
+The following attributes are exported:
+* `network_domains` - The list of all Network Domains
     * `name` - Network Domain name.
     * `tgw_name` - AWS TGW name.
     * `account` - Access Account name.
