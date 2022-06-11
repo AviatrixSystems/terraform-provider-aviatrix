@@ -29,6 +29,7 @@ func TestAccDataSourceAviatrixTransitGateways_basic(t *testing.T) {
 				Config: testAccDataSourceAviatrixTransitGatewaysConfigBasic(rName),
 
 				Check: resource.ComposeTestCheckFunc(
+					testAccDataSourceAviatrixTransitGateways(resourceName),
 					resource.TestCheckResourceAttr("aviatrix_transit_gateway.test", "gw_name", fmt.Sprintf("aa-tfg-aws-%s", rName)),
 					resource.TestCheckResourceAttr("aviatrix_transit_gateway.test2", "gw_name", fmt.Sprintf("aa-tfg-gcp-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "gateway_list.0.gw_name", fmt.Sprintf("aa-tfg-aws-%s", rName)),
