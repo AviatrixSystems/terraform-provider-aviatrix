@@ -30,7 +30,7 @@ type PrivateModeLbRead struct {
 
 type PrivateModeMulticloudProxy struct {
 	InstanceId string `json:"instance_id"`
-	VpcId string `json:"vpc_id"`
+	VpcId      string `json:"vpc_id"`
 }
 
 func privateModeLoadBalancerCheckFunc(action, method, reason string, ret bool) error {

@@ -26,12 +26,9 @@ func TestAccAviatrixPrivateModeMulticloudEndpoint_basic(t *testing.T) {
 	if skipAcc == "yes" {
 		t.Skip("Skipping Controller Private Mode multicloud endpoint tests as SKIP_PRIVATE_MODE_MULTICLOUD_ENDPOINT is set")
 	}
-	var lb goaviatrix.PrivateModeLbRead
 	msgCommon := "Set SKIP_PRIVATE_MODE_MULTICLOUD_ENDPOINT to yes to skip Controller Private Mode load balancer tests"
 	resourceName := "aviatrix_private_mode_multicloud_endpoint.test"
 
-	awsVpcId := os.Getenv("AWS_VPC_ID")
-	awsRegion := os.Getenv("AWS_REGION")
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -43,19 +40,15 @@ func TestAccAviatrixPrivateModeMulticloudEndpoint_basic(t *testing.T) {
 		CheckDestroy: testAccAviatrixPrivateModeMulticloudEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAviatrixPrivateModeLbBasic(rName),
-				Check:  testAccAviatrixPrivateModeLbExists("aviatrix_private_mode_lb.test", &lb),
-			},
-			{
-				Config: testAccAviatrixPrivateModeMulticloudEndpointBasic(rName, awsVpcId, awsRegion, lb),
+				Config: testAccAviatrixPrivateModeMulticloudEndpointBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAviatrixPrivateModeMulticloudEndpointExists(resourceName),
+					testAccAviatrixPrivateModeLbExists("aviatrix_private_mode_lb.test"),
 					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "region", os.Getenv("AWS_REGION")),
-					resource.TestCheckResourceAttr(resourceName, "controller_lb_vpc_id", lb.VpcId),
+					resource.TestCheckResourceAttr(resourceName, "controller_lb_vpc_id", os.Getenv("CONTROLLER_VPC_ID")),
 				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -65,15 +58,37 @@ func TestAccAviatrixPrivateModeMulticloudEndpoint_basic(t *testing.T) {
 	})
 }
 
-func testAccAviatrixPrivateModeMulticloudEndpointBasic(rName, vpcId, vpcRegion string, lb goaviatrix.PrivateModeLbRead) string {
+func testAccAviatrixPrivateModeMulticloudEndpointBasic(rName string) string {
 	return fmt.Sprintf(`
-resource "aviatrix_private_mode_multicloud_endpoint" "test" {
-	account_name = "tfa-%s"
-	vpc_id = "%s"
-	region = "%s"
-	controller_lb_vpc_id = "%s"
+resource "aviatrix_account" "test_account" {
+	account_name       = "tfa-%[1]s"
+	cloud_type         = 1
+	aws_account_number = "%[2]s"
+	aws_iam            = false
+	aws_access_key     = "%[3]s"
+	aws_secret_key     = "%[4]s"
 }
-	`, rName, vpcId, vpcRegion, lb.VpcId)
+
+resource "aviatrix_controller_private_mode_config" "test" {
+	enable_private_mode = true
+}
+
+resource "aviatrix_private_mode_lb" "test" {
+	account_name = aviatrix_account.test_account.account_name
+	vpc_id       = "%[5]s"
+	region       = "%[6]s"
+	lb_type      = "controller"
+
+	depends_on = [aviatrix_controller_private_mode_config.test]
+}
+
+resource "aviatrix_private_mode_multicloud_endpoint" "test" {
+	account_name         = "tfa-%[1]s"
+	vpc_id               = "%[7]s"
+	region               = "%[6]s"
+	controller_lb_vpc_id = aviatrix_private_mode_lb.test.vpc_id
+}
+	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"), os.Getenv("CONTROLLER_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_ID"))
 }
 
 func testAccAviatrixPrivateModeMulticloudEndpointExists(n string) resource.TestCheckFunc {
