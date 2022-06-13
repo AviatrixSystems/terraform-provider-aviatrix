@@ -115,3 +115,50 @@ func (c *Client) GetPrivateModeInfo(ctx context.Context) (*ControllerPrivateMode
 
 	return controllerPrivateModeConfig, nil
 }
+
+func (c *Client) GetPrivateModeProxies(ctx context.Context, lbVpcId string) ([]*PrivateModeMulticloudProxy, error) {
+	action := "get_private_mode_info"
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": action,
+	}
+
+	type ControllerPrivateModeConfigContents struct {
+		ProxyInfo map[string]interface{} `json:"proxy_info,omitempty"`
+	}
+
+	type ControllerPrivateModeConfigResults struct {
+		Contents ControllerPrivateModeConfigContents `json:"contents"`
+	}
+
+	type ControllerPrivateModeConfigResp struct {
+		Results ControllerPrivateModeConfigResults `json:"results"`
+	}
+
+	var resp ControllerPrivateModeConfigResp
+	err := c.GetAPIContext(ctx, &resp, action, form, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+
+	var privateModeProxies []*PrivateModeMulticloudProxy
+	for _, v := range resp.Results.Contents.ProxyInfo {
+		proxyInfo := v.(map[string]interface{})
+		lbVpcIdsInterface, ok := proxyInfo["lb_vpc_ids"]
+		if !ok {
+			continue
+		}
+
+		lbVpcIds := ExpandStringList(lbVpcIdsInterface.([]interface{}))
+
+		if Contains(lbVpcIds, lbVpcId) {
+			privateModeProxy := &PrivateModeMulticloudProxy{
+				InstanceId: proxyInfo["resource_id"].(string),
+				VpcId:      lbVpcId,
+			}
+			privateModeProxies = append(privateModeProxies, privateModeProxy)
+		}
+	}
+
+	return privateModeProxies, nil
+}

@@ -30,8 +30,7 @@ type PrivateModeLbRead struct {
 
 type PrivateModeMulticloudProxy struct {
 	InstanceId string `json:"instance_id"`
-	ProxyType  string `json:"proxy_type"`
-	VpcId      string `json:"vpc_id"`
+	VpcId string `json:"vpc_id"`
 }
 
 func privateModeLoadBalancerCheckFunc(action, method, reason string, ret bool) error {
@@ -63,9 +62,15 @@ func (c *Client) UpdatePrivateModeMulticloudProxies(ctx context.Context, private
 		"action":       action,
 		"lb_vpc_id":    privateModeLb.VpcId,
 		"account_name": privateModeLb.AccountName,
-		"instance_info": map[string]interface{}{
+	}
+	if len(privateModeLb.Proxies) != 0 {
+		form["instance_info"] = map[string]interface{}{
 			"instances": privateModeLb.Proxies,
-		},
+		}
+	} else {
+		form["instance_info"] = map[string]interface{}{
+			"instances": []string{},
+		}
 	}
 
 	return c.PostAPIContext2(ctx, nil, action, form, BasicCheck)

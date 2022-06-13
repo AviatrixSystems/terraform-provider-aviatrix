@@ -64,12 +64,6 @@ func resourceAviatrixPrivateModeLb() *schema.Resource {
 							Required:    true,
 							Description: "Instance ID of proxy.",
 						},
-						"proxy_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"controller", "multicloud"}, false),
-							Description:  "Type of load balancer. Must be one of controller or multicloud.",
-						},
 					},
 				},
 			},
@@ -99,7 +93,6 @@ func marshalPrivateModeLb(d *schema.ResourceData) (*goaviatrix.PrivateModeLb, er
 			proxyMap := proxy.(map[string]interface{})
 			privateModeMulticloudProxy := goaviatrix.PrivateModeMulticloudProxy{
 				InstanceId: proxyMap["instance_id"].(string),
-				ProxyType:  proxyMap["proxy_type"].(string),
 				VpcId:      proxyMap["vpc_id"].(string),
 			}
 			privateModeLb.Proxies = append(privateModeLb.Proxies, privateModeMulticloudProxy)
@@ -182,15 +175,20 @@ func resourceAviatrixPrivateModeLbRead(ctx context.Context, d *schema.ResourceDa
 	} else {
 		d.Set("multicloud_access_vpc_id", privateModeLb.MulticloudAccessVpcId)
 
-		proxies := make([]map[string]string, len(privateModeLb.Proxies))
-		for i, proxy := range privateModeLb.Proxies {
+		proxies, err := client.GetPrivateModeProxies(ctx, privateModeLb.VpcId)
+		if err != nil {
+			return diag.Errorf("failed to read Private Mode multicloud proxy details: %s", err)
+		}
+
+		proxiesMap := make([]map[string]string, len(proxies))
+		for i, proxy := range proxies {
 			proxyMap := map[string]string{
 				"instance_id": proxy.InstanceId,
-				"proxy_type":  proxy.ProxyType,
+				"vpc_id":      proxy.VpcId,
 			}
-			proxies[i] = proxyMap
+			proxiesMap[i] = proxyMap
 		}
-		if err := d.Set("proxies", proxies); err != nil {
+		if err := d.Set("proxies", proxiesMap); err != nil {
 			return diag.Errorf("failed to set proxies during read: %s", err)
 		}
 	}
