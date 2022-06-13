@@ -23,7 +23,7 @@ type Vpc struct {
 	PrivateSubnets         []SubnetInfo
 	PublicRoutesOnly       bool
 	ResourceGroup          string `json:"resource_group,omitempty"`
-	PrivateModeSubnets     bool   `json:"private_mode_subnets"`
+	PrivateModeSubnets     bool
 }
 
 type VpcEdit struct {
@@ -41,6 +41,7 @@ type VpcEdit struct {
 	Subnets                []SubnetInfo `json:"subnets,omitempty"`
 	PublicSubnets          []SubnetInfo `json:"public_subnets,omitempty"`
 	PrivateSubnets         []SubnetInfo `json:"private_subnets,omitempty"`
+	PrivateModeSubnets     bool         `json:"private_mode_subnets"`
 }
 
 type VpcResp struct {
@@ -200,6 +201,7 @@ func (c *Client) GetVpc(vpc *Vpc) (*Vpc, error) {
 	vpc.SubnetSize = data.Results.SubnetSize
 	vpc.NumOfSubnetPairs = data.Results.NumOfSubnetPairs
 	vpc.EnablePrivateOobSubnet = data.Results.EnablePrivateOobSubnet
+	vpc.PrivateModeSubnets = data.Results.PrivateModeSubnets
 	return vpc, nil
 }
 

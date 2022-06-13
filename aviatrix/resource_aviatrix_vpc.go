@@ -567,6 +567,8 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("fault_domains", nil)
 	}
 
+	d.Set("private_mode_subnets", vC.PrivateModeSubnets)
+
 	return nil
 }
 
