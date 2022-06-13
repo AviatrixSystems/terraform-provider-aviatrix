@@ -80,7 +80,6 @@ The following arguments are supported:
 ### Advanced Options
 * `local_as_number` - (Optional) BGP AS Number to assign to Edge as a Spoke.
 * `prepend_as_path` - (Optional) List of AS numbers to prepend gateway BGP AS_Path field. Valid only when `local_as_number` is set. Example: ["65023", "65023"].
-* `edge_gateway_static_local_cidrs` - (Optional) Set of CIDRs to be advertised as 'Edge Gateway Static Local CIDRs'. Example: ["10.1.0.0/116", "10.2.0.0/16"].
 * `enable_learned_cidrs_approval` - (Optional) Switch to enable learned CIDR approval. Valid values: true, false. Default value: false.
 * `approved_learned_cidrs` - (Optional) Set of approved learned CIDRs. Valid only when `enable_learned_cidrs_approval` is set to true. Example: ["10.1.0.0/116", "10.2.0.0/16"].
 * `spoke_bgp_manual_advertise_cidrs` - (Optional) Set of intended CIDRs to be advertised to external BGP router. Example: ["10.1.0.0/116", "10.2.0.0/16"].
@@ -91,6 +90,7 @@ The following arguments are supported:
 * `enable_jumbo_frame` - (Optional) Switch to enable jumbo frame. Valid values: true, false. Default value: false.
 * `latitude` - (Optional) Latitude of Edge as a Spoke. Valid values are between -90 and 90. Example: 47.7511.
 * `longitude` - (Optional) Longitude of Edge as a Spoke. Valid values are between -180 and 180. Example: 120.7401.
+* `wan_public_ip` - (Optional) WAN public IP. Required for attaching connections over the Internet.
 
 ## Import
 

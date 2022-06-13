@@ -33,11 +33,9 @@ type EdgeSpoke struct {
 	EnableActiveStandbyPreemptive bool   `json:"edge_active_standby_preemptive"`
 	LocalAsNumber                 string `json:"local_as_number"`
 	PrependAsPath                 []string
-	PrependAsPathReturn           string `json:"prepend_as_path"`
-	EdgeGatewayStaticLocalCidrs   []string
+	PrependAsPathReturn           string   `json:"prepend_as_path"`
 	IncludeCidrList               []string `json:"include_cidr_list"`
 	EnableLearnedCidrsApproval    bool     `json:"enable_learned_cidrs_approval"`
-	//LearnedCidrsApproval          string   `form:"learned_cidrs_approval,omitempty"`
 	ApprovedLearnedCidrs          []string `form:"approved_learned_cidrs,omitempty"`
 	SpokeBgpManualAdvertisedCidrs []string `json:"bgp_manual_spoke_advertise_cidrs"`
 	EnablePreserveAsPath          bool     `json:"preserve_as_path"`
@@ -47,6 +45,8 @@ type EdgeSpoke struct {
 	EnableJumboFrame              bool     `json:"jumbo_frame"`
 	Latitude                      float64  `json:"latitude"`
 	Longitude                     float64  `json:"longitude"`
+	WanPublicIp                   string   `form:"wan_discovery_ip" json:"public_ip"`
+	PrivateIP                     string   `json:"private_ip"`
 }
 
 type EdgeSpokeListResp struct {
@@ -129,6 +129,7 @@ func (c *Client) UpdateEdgeSpokeIpConfigurations(ctx context.Context, edgeSpoke 
 		"wan_default_gateway": edgeSpoke.WanDefaultGatewayIp,
 		"lan_ip":              edgeSpoke.LanInterfaceIpPrefix,
 		"mgmt_egress_ip":      edgeSpoke.ManagementEgressIpPrefix,
+		"wan_discovery_ip":    edgeSpoke.WanPublicIp,
 	}
 
 	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)

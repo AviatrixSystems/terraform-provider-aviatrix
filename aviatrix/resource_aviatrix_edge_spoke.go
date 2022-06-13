@@ -6,7 +6,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -134,7 +133,7 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 				},
 				MaxItems: 25,
 			},
-			"enable_active_standby": { // TODO edge_active_standby?
+			"enable_active_standby": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				ForceNew:    true,
@@ -147,15 +146,6 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 				ForceNew:    true,
 				Default:     false,
 				Description: "Enables Preemptive Mode for Active-Standby, available only with Active-Standby enabled.",
-			},
-			"edge_gateway_static_local_cidrs": { // same as "included_advertised_spoke_routes" in spoke
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.IsCIDR,
-				},
-				Description: "A set of CIDRs to be advertised as 'Included CIDR List'.",
 			},
 			"enable_learned_cidrs_approval": {
 				Type:        schema.TypeBool,
@@ -215,16 +205,30 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 			"latitude": {
 				Type:         schema.TypeFloat,
 				Optional:     true,
-				Default:      0,
+				Computed:     true,
 				ValidateFunc: validation.FloatBetween(-90, 90),
 				Description:  "The latitude of the Edge as a Spoke.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					_, n := d.GetChange("latitude")
+					return n.(float64) == 0
+				},
 			},
 			"longitude": {
 				Type:         schema.TypeFloat,
 				Optional:     true,
-				Default:      0,
+				Computed:     true,
 				ValidateFunc: validation.FloatBetween(-180, 180),
 				Description:  "The longitude of the Edge as a Spoke.",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					_, n := d.GetChange("longitude")
+					return n.(float64) == 0
+				},
+			},
+			"wan_public_ip": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "WAN interface public IP.",
 			},
 		},
 	}
@@ -250,17 +254,17 @@ func marshalEdgeSpokeInput(d *schema.ResourceData) *goaviatrix.EdgeSpoke {
 		EnableActiveStandbyPreemptive: d.Get("enable_active_standby_preemptive").(bool),
 		LocalAsNumber:                 d.Get("local_as_number").(string),
 		PrependAsPath:                 getStringList(d, "prepend_as_path"),
-		EdgeGatewayStaticLocalCidrs:   getStringSet(d, "edge_gateway_static_local_cidrs"),
 		EnableLearnedCidrsApproval:    d.Get("enable_learned_cidrs_approval").(bool),
 		ApprovedLearnedCidrs:          getStringSet(d, "approved_learned_cidrs"),
 		SpokeBgpManualAdvertisedCidrs: getStringSet(d, "spoke_bgp_manual_advertise_cidrs"),
 		EnablePreserveAsPath:          d.Get("enable_preserve_as_path").(bool),
 		BgpPollingTime:                d.Get("bgp_polling_time").(int),
-		BgpHoldTime:                   d.Get("bgp_polling_time").(int),
+		BgpHoldTime:                   d.Get("bgp_hold_time").(int),
 		EnableEdgeTransitiveRouting:   d.Get("enable_edge_transitive_routing").(bool),
 		EnableJumboFrame:              d.Get("enable_jumbo_frame").(bool),
 		Latitude:                      d.Get("latitude").(float64),
 		Longitude:                     d.Get("longitude").(float64),
+		WanPublicIp:                   d.Get("wan_public_ip").(string),
 	}
 
 	return edgeSpoke
@@ -336,22 +340,6 @@ func resourceAviatrixEdgeSpokeCreate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if len(edgeSpoke.EdgeGatewayStaticLocalCidrs) != 0 {
-		gatewayForGatewayFunctions.AdvertisedSpokeRoutes = edgeSpoke.EdgeGatewayStaticLocalCidrs
-
-		for i := 0; ; i++ {
-			err := client.EditGatewayAdvertisedCidr(gatewayForGatewayFunctions)
-			if err == nil {
-				break
-			}
-			if i <= 30 && (strings.Contains(err.Error(), "when it is down") || strings.Contains(err.Error(), "gateway is down")) {
-				time.Sleep(10 * time.Second)
-			} else {
-				return diag.Errorf("could not edit Edge gateway static local CIDRs after Edge as a Spoke creation due to: %v", err)
-			}
-		}
-	}
-
 	if edgeSpoke.EnableLearnedCidrsApproval {
 		err := client.EnableTransitLearnedCidrsApproval(gatewayForTransitFunctions)
 		if err != nil {
@@ -359,7 +347,7 @@ func resourceAviatrixEdgeSpokeCreate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if len(gatewayForTransitFunctions.ApprovedLearnedCidrs) != 0 {
+	if len(edgeSpoke.ApprovedLearnedCidrs) != 0 {
 		gatewayForTransitFunctions.ApprovedLearnedCidrs = edgeSpoke.ApprovedLearnedCidrs
 		err := client.UpdateTransitPendingApprovedCidrs(gatewayForTransitFunctions)
 		if err != nil {
@@ -417,6 +405,13 @@ func resourceAviatrixEdgeSpokeCreate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
+	if edgeSpoke.WanPublicIp != "" {
+		err := client.UpdateEdgeSpokeIpConfigurations(ctx, edgeSpoke)
+		if err != nil {
+			return diag.Errorf("could not config WAN public IP after Edge as a Spoke creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixEdgeSpokeReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -470,22 +465,6 @@ func resourceAviatrixEdgeSpokeRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("enable_active_standby", edgeSpoke.EnableActiveStandby)
 	d.Set("enable_active_standby_preemptive", edgeSpoke.EnableActiveStandbyPreemptive)
 
-	if len(edgeSpoke.IncludeCidrList) != 0 {
-		edgeGatewayStaticLocalCidrs := getStringSet(d, "edge_gateway_static_local_cidrs")
-		if len(edgeGatewayStaticLocalCidrs) != 0 {
-			if len(goaviatrix.Difference(edgeGatewayStaticLocalCidrs, edgeSpoke.IncludeCidrList)) == 0 &&
-				len(goaviatrix.Difference(edgeSpoke.IncludeCidrList, edgeGatewayStaticLocalCidrs)) == 0 {
-				d.Set("edge_gateway_static_local_cidrs", edgeGatewayStaticLocalCidrs)
-			} else {
-				d.Set("edge_gateway_static_local_cidrs", edgeSpoke.IncludeCidrList)
-			}
-		} else {
-			d.Set("edge_gateway_static_local_cidrs", edgeSpoke.IncludeCidrList)
-		}
-	} else {
-		d.Set("edge_gateway_static_local_cidrs", nil)
-	}
-
 	d.Set("enable_learned_cidrs_approval", edgeSpoke.EnableLearnedCidrsApproval)
 
 	if edgeSpoke.EnableLearnedCidrsApproval {
@@ -517,6 +496,7 @@ func resourceAviatrixEdgeSpokeRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("enable_jumbo_frame", edgeSpoke.EnableJumboFrame)
 	d.Set("latitude", edgeSpoke.Latitude)
 	d.Set("longitude", edgeSpoke.Longitude)
+	d.Set("wan_public_ip", edgeSpoke.WanPublicIp)
 
 	d.SetId(edgeSpoke.GwName)
 	return nil
@@ -539,10 +519,6 @@ func resourceAviatrixEdgeSpokeUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if edgeSpoke.Latitude == 0 && edgeSpoke.Longitude == 0 {
-		return diag.Errorf("'coordinate (0, 0) is not allowed")
-	}
-
 	d.Partial(true)
 
 	// update configs
@@ -557,7 +533,7 @@ func resourceAviatrixEdgeSpokeUpdate(ctx context.Context, d *schema.ResourceData
 		GwName: edgeSpoke.GwName,
 	}
 
-	if d.HasChanges("management_egress_ip_prefix", "wan_interface_ip_prefix", "wan_default_gateway_ip", "lan_interface_ip_prefix") {
+	if d.HasChanges("management_egress_ip_prefix", "wan_interface_ip_prefix", "wan_default_gateway_ip", "lan_interface_ip_prefix", "wan_public_ip") {
 		err := client.UpdateEdgeSpokeIpConfigurations(ctx, edgeSpoke)
 		if err != nil {
 			return diag.Errorf("could not update IP configurations during Edge as a Spoke update: %v", err)
@@ -585,20 +561,6 @@ func resourceAviatrixEdgeSpokeUpdate(ctx context.Context, d *schema.ResourceData
 			err := client.SetPrependASPath(gatewayForTransitFunctions, edgeSpoke.PrependAsPath)
 			if err != nil {
 				return diag.Errorf("could not set prepend_as_path during Edge as a Spoke update: %v", err)
-			}
-		}
-	}
-
-	if d.HasChange("edge_gateway_static_local_cidrs") {
-		o, n := d.GetChange("edge_gateway_static_local_cidrs")
-		oldRouteList := o.([]string)
-		newRouteList := n.([]string)
-
-		if len(goaviatrix.Difference(oldRouteList, newRouteList)) != 0 || len(goaviatrix.Difference(newRouteList, oldRouteList)) != 0 {
-			gatewayForGatewayFunctions.AdvertisedSpokeRoutes = newRouteList
-			err := client.EditGatewayAdvertisedCidr(gatewayForGatewayFunctions)
-			if err != nil {
-				return diag.Errorf("could not edit Edge gateway static local CIDRs during Edge as a Spoke update due to: %v", err)
 			}
 		}
 	}
@@ -655,7 +617,7 @@ func resourceAviatrixEdgeSpokeUpdate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if d.HasChange("bgp_hold_time") {
-		err := client.ChangeBgpHoldTime(gatewayForSpokeFunctions.GwName, edgeSpoke.BgpHoldTime)
+		err := client.ChangeBgpHoldTime(edgeSpoke.GwName, edgeSpoke.BgpHoldTime)
 		if err != nil {
 			return diag.Errorf("could not change bgp hold time during Edge as a Spoke update: %v", err)
 		}
@@ -698,7 +660,7 @@ func resourceAviatrixEdgeSpokeUpdate(ctx context.Context, d *schema.ResourceData
 
 	d.Partial(false)
 
-	return resourceAviatrixEdgeCaagRead(ctx, d, meta)
+	return resourceAviatrixEdgeSpokeRead(ctx, d, meta)
 }
 
 func resourceAviatrixEdgeSpokeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
