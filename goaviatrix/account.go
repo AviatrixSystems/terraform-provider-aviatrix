@@ -97,7 +97,7 @@ type AccountListResp struct {
 func (c *Client) CreateAccount(account *Account) error {
 	account.CID = c.CID
 	account.Action = "setup_account_profile"
-	return c.PostAPI(account.Action, account, BasicCheck)
+	return c.PostAPI(account.Action, account, DuplicateBasicCheck)
 }
 
 func (c *Client) CreateGCPAccount(account *Account) error {
