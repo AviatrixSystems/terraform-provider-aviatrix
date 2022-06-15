@@ -220,10 +220,11 @@ func DiffSuppressFuncGCPVpcId(k, old, new string, d *schema.ResourceData) bool {
 func DiffSuppressFuncNatInterface(k, old, new string, d *schema.ResourceData) bool {
 	connectionKey := strings.Replace(k, "interface", "connection", 1)
 	connection := d.Get(connectionKey).(string)
-	// Must check if ID != "" so that interface can be set on initial create. Without
-	// this check, the value for interface will be suppressed and interface = "" will
+
+	// Check if the number of snat policies has not changed so that interface can be set when a policy is added.
+	// Without this check, the value for interface will be suppressed and interface = "" will
 	// be passed to the API even if interface = "eth0" in the configuration.
-	if d.Id() != "" && !(connection == "" || connection == "None") {
+	if !d.HasChange("snat_policy.#") && !(connection == "" || connection == "None") {
 		return old == "" && new == "eth0"
 	}
 	return false
