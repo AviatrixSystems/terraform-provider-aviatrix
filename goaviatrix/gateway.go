@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -503,6 +504,27 @@ func (c *Client) GetGateway(gateway *Gateway) (*Gateway, error) {
 	}
 	log.Errorf("Couldn't find Aviatrix gateway %s", gateway.GwName)
 	return nil, ErrNotFound
+}
+
+func (c *Client) GetTransitGatewayList(ctx context.Context) ([]Gateway, error) {
+	action := "list_vpcs_summary"
+	params := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"transit_only": "true",
+	}
+	var data GatewayListResp
+	err := c.GetAPIContext(ctx, &data, action, params, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+	gwList := data.Results
+	for i := range gwList {
+		gw := &gwList[i]
+		gw.AllocateNewEipRead = gw.AllocateNewEipReadPtr == nil || *gw.AllocateNewEipReadPtr
+	}
+
+	return gwList, nil
 }
 
 func (c *Client) GetGatewayDetail(gateway *Gateway) (*GatewayDetail, error) {

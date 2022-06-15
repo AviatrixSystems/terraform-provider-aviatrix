@@ -85,7 +85,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_controller_email_exception_notification_config | SKIP_CONTROLLER_EMAIL_EXCEPTION_NOTIFICATION_CONFIG | aviatrix_account                           |
 | aviatrix_controller_gateway_keepalive_config | SKIP_CONTROLLER_GATEWAY_KEEPALIVE_CONFIG | N/A                                                              |
 | aviatrix_controller_private_oob      | SKIP_CONTROLLER_PRIVATE_OOB        | N/A                                                                            |
-| aviatrix_controller_security_group_management_config      | SKIP_CONTROLLER_SECURITY_GROUP_MANAGEMENT_CONFIG        | N/A                                  |
+| aviatrix_controller_security_group_management_config | SKIP_CONTROLLER_SECURITY_GROUP_MANAGEMENT_CONFIG        | N/A                                  |
 | aviatrix_device_interface_config	   | SKIP_DEVICE_INTERFACE_CONFIG	    | CLOUDN_DEVICE_NAME                                                             |
 | aviatrix_datadog_agent               | SKIP_DATADOG_AGENT                 | datadog_api_key                                                                |
 | aviatrix_edge_gateway                | SKIP_EDGE_CAAG                     | N/A                                                                            |
@@ -181,5 +181,6 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_data_source_spoke_gateway   | SKIP_DATA_SPOKE_GATEWAY            | aviatrix_spoke_gateway                                                         |
 | aviatrix_data_source_spoke_gateway_inspection_subnets| SKIP_DATA_SPOKE_GATEWAY_INSPECTION_SUBNETS | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID, ARM_APPLICATION_KEY |
 | aviatrix_data_source_transit_gateway | SKIP_DATA_TRANSIT_GATEWAY          | aviatrix_transit_gateway                                                       |
+| aviatrix_data_source_transit_gateways    |   SKIP_DATA_TRANSIT_GATEWAYS    | aviatrix_transit_gateway
 | aviatrix_data_source_vpc             | SKIP_DATA_VPC                      | aviatrix_vpc                                                                   |
 | aviatrix_data_source_vpc_tracker     | SKIP_DATA_VPC_TRACKER              | aviatrix_vpc                                                           |
