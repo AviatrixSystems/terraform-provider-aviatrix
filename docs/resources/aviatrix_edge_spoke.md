@@ -69,9 +69,9 @@ The following arguments are supported:
 
 ### Optional
 * `management_egress_ip_prefix` - (Optional) Management egress gateway IP and subnet prefix.
-* `enable_over_private_network` - (Optional) Switch to enable management over the private network. Valid values: true, false. Default value: false.
-* `enable_active_standby` - (Optional) Switch to enable Active-Standby mode. Valid values: true, false. Default value: false.
-* `enable_active_standby_preemptive` - (Optional) Switch to enable Preemptive Mode for Active-Standby. Valid values: true, false. Default value: false.
+* `enable_management_over_private_network` - (Optional) Switch to enable management over the private network. Valid values: true, false. Default value: false.
+* `enable_edge_active_standby` - (Optional) Switch to enable Edge Active-Standby mode. Valid values: true, false. Default value: false.
+* `enable_edge_active_standby_preemptive` - (Optional) Switch to enable Preemptive Mode for Edge Active-Standby. Valid values: true, false. Default value: false.
 * `management_interface_ip_prefix` - (Optional) Management interface IP and subnet prefix. Required and valid when `management_interface_config` is "Static".
 * `management_default_gateway_ip` - (Optional) Management default gateway IP. Required and valid when `management_interface_config` is "Static".
 * `dns_server_ip` - (Optional) DNS server IP. Required and valid when `management_interface_config` is "Static".
@@ -88,8 +88,8 @@ The following arguments are supported:
 * `bgp_hold_time` - (Optional) BGP hold time. Unit is in seconds. Valid values are between 12 and 360. Default value: 180.
 * `enable_edge_transitive_routing` - (Optional) Switch to enable Edge transitive routing. Valid values: true, false. Default value: false.
 * `enable_jumbo_frame` - (Optional) Switch to enable jumbo frame. Valid values: true, false. Default value: false.
-* `latitude` - (Optional) Latitude of Edge as a Spoke. Valid values are between -90 and 90. Example: 47.7511.
-* `longitude` - (Optional) Longitude of Edge as a Spoke. Valid values are between -180 and 180. Example: 120.7401.
+* `latitude` - (Optional) Latitude of Edge as a Spoke. Valid values are between -90 and 90. Example: "47.7511".
+* `longitude` - (Optional) Longitude of Edge as a Spoke. Valid values are between -180 and 180. Example: "120.7401".
 * `wan_public_ip` - (Optional) WAN public IP. Required for attaching connections over the Internet.
 
 ## Import

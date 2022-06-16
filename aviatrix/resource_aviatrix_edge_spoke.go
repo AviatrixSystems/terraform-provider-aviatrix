@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -66,7 +67,7 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 				Optional:    true,
 				Description: "Management egress gateway IP / prefix.",
 			},
-			"enable_over_private_network": {
+			"enable_management_over_private_network": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				ForceNew:    true,
@@ -133,19 +134,19 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 				},
 				MaxItems: 25,
 			},
-			"enable_active_standby": {
+			"enable_edge_active_standby": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				ForceNew:    true,
 				Default:     false,
-				Description: "Enables Active-Standby Mode.",
+				Description: "Enables Edge Active-Standby Mode.",
 			},
-			"enable_active_standby_preemptive": {
+			"enable_edge_active_standby_preemptive": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				ForceNew:    true,
 				Default:     false,
-				Description: "Enables Preemptive Mode for Active-Standby, available only with Active-Standby enabled.",
+				Description: "Enables Preemptive Mode for Edge Active-Standby, available only with Active-Standby enabled.",
 			},
 			"enable_learned_cidrs_approval": {
 				Type:        schema.TypeBool,
@@ -203,26 +204,20 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 				Description: "Enable jumbo frame.",
 			},
 			"latitude": {
-				Type:         schema.TypeFloat,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.FloatBetween(-90, 90),
-				Description:  "The latitude of the Edge as a Spoke.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					_, n := d.GetChange("latitude")
-					return n.(float64) == 0
-				},
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateFunc:     goaviatrix.ValidateEdgeSpokeLatitude,
+				Description:      "The latitude of the Edge as a Spoke.",
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncEdgeSpokeCoordinate,
 			},
 			"longitude": {
-				Type:         schema.TypeFloat,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.FloatBetween(-180, 180),
-				Description:  "The longitude of the Edge as a Spoke.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					_, n := d.GetChange("longitude")
-					return n.(float64) == 0
-				},
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateFunc:     goaviatrix.ValidateEdgeSpokeLongitude,
+				Description:      "The longitude of the Edge as a Spoke.",
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncEdgeSpokeCoordinate,
 			},
 			"wan_public_ip": {
 				Type:        schema.TypeString,
@@ -236,35 +231,35 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 
 func marshalEdgeSpokeInput(d *schema.ResourceData) *goaviatrix.EdgeSpoke {
 	edgeSpoke := &goaviatrix.EdgeSpoke{
-		GwName:                        d.Get("gw_name").(string),
-		SiteId:                        d.Get("site_id").(string),
-		ManagementInterfaceConfig:     d.Get("management_interface_config").(string),
-		ManagementEgressIpPrefix:      d.Get("management_egress_ip_prefix").(string),
-		EnableOverPrivateNetwork:      d.Get("enable_over_private_network").(bool),
-		WanInterfaceIpPrefix:          d.Get("wan_interface_ip_prefix").(string),
-		WanDefaultGatewayIp:           d.Get("wan_default_gateway_ip").(string),
-		LanInterfaceIpPrefix:          d.Get("lan_interface_ip_prefix").(string),
-		ManagementInterfaceIpPrefix:   d.Get("management_interface_ip_prefix").(string),
-		ManagementDefaultGatewayIp:    d.Get("management_default_gateway_ip").(string),
-		DnsServerIp:                   d.Get("dns_server_ip").(string),
-		SecondaryDnsServerIp:          d.Get("secondary_dns_server_ip").(string),
-		ZtpFileType:                   d.Get("ztp_file_type").(string),
-		ZtpFileDownloadPath:           d.Get("ztp_file_download_path").(string),
-		EnableActiveStandby:           d.Get("enable_active_standby").(bool),
-		EnableActiveStandbyPreemptive: d.Get("enable_active_standby_preemptive").(bool),
-		LocalAsNumber:                 d.Get("local_as_number").(string),
-		PrependAsPath:                 getStringList(d, "prepend_as_path"),
-		EnableLearnedCidrsApproval:    d.Get("enable_learned_cidrs_approval").(bool),
-		ApprovedLearnedCidrs:          getStringSet(d, "approved_learned_cidrs"),
-		SpokeBgpManualAdvertisedCidrs: getStringSet(d, "spoke_bgp_manual_advertise_cidrs"),
-		EnablePreserveAsPath:          d.Get("enable_preserve_as_path").(bool),
-		BgpPollingTime:                d.Get("bgp_polling_time").(int),
-		BgpHoldTime:                   d.Get("bgp_hold_time").(int),
-		EnableEdgeTransitiveRouting:   d.Get("enable_edge_transitive_routing").(bool),
-		EnableJumboFrame:              d.Get("enable_jumbo_frame").(bool),
-		Latitude:                      d.Get("latitude").(float64),
-		Longitude:                     d.Get("longitude").(float64),
-		WanPublicIp:                   d.Get("wan_public_ip").(string),
+		GwName:                             d.Get("gw_name").(string),
+		SiteId:                             d.Get("site_id").(string),
+		ManagementInterfaceConfig:          d.Get("management_interface_config").(string),
+		ManagementEgressIpPrefix:           d.Get("management_egress_ip_prefix").(string),
+		EnableManagementOverPrivateNetwork: d.Get("enable_management_over_private_network").(bool),
+		WanInterfaceIpPrefix:               d.Get("wan_interface_ip_prefix").(string),
+		WanDefaultGatewayIp:                d.Get("wan_default_gateway_ip").(string),
+		LanInterfaceIpPrefix:               d.Get("lan_interface_ip_prefix").(string),
+		ManagementInterfaceIpPrefix:        d.Get("management_interface_ip_prefix").(string),
+		ManagementDefaultGatewayIp:         d.Get("management_default_gateway_ip").(string),
+		DnsServerIp:                        d.Get("dns_server_ip").(string),
+		SecondaryDnsServerIp:               d.Get("secondary_dns_server_ip").(string),
+		ZtpFileType:                        d.Get("ztp_file_type").(string),
+		ZtpFileDownloadPath:                d.Get("ztp_file_download_path").(string),
+		EnableEdgeActiveStandby:            d.Get("enable_edge_active_standby").(bool),
+		EnableEdgeActiveStandbyPreemptive:  d.Get("enable_edge_active_standby_preemptive").(bool),
+		LocalAsNumber:                      d.Get("local_as_number").(string),
+		PrependAsPath:                      getStringList(d, "prepend_as_path"),
+		EnableLearnedCidrsApproval:         d.Get("enable_learned_cidrs_approval").(bool),
+		ApprovedLearnedCidrs:               getStringSet(d, "approved_learned_cidrs"),
+		SpokeBgpManualAdvertisedCidrs:      getStringSet(d, "spoke_bgp_manual_advertise_cidrs"),
+		EnablePreserveAsPath:               d.Get("enable_preserve_as_path").(bool),
+		BgpPollingTime:                     d.Get("bgp_polling_time").(int),
+		BgpHoldTime:                        d.Get("bgp_hold_time").(int),
+		EnableEdgeTransitiveRouting:        d.Get("enable_edge_transitive_routing").(bool),
+		EnableJumboFrame:                   d.Get("enable_jumbo_frame").(bool),
+		Latitude:                           d.Get("latitude").(string),
+		Longitude:                          d.Get("longitude").(string),
+		WanPublicIp:                        d.Get("wan_public_ip").(string),
 	}
 
 	return edgeSpoke
@@ -287,11 +282,11 @@ func resourceAviatrixEdgeSpokeCreate(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("'management_interface_ip', 'management_default_gateway_ip', 'dns_server_ip' and 'secondary_dns_server_ip' are required when 'management_interface_config' is Static")
 	}
 
-	if !edgeSpoke.EnableActiveStandby && edgeSpoke.EnableActiveStandbyPreemptive {
+	if !edgeSpoke.EnableEdgeActiveStandby && edgeSpoke.EnableEdgeActiveStandbyPreemptive {
 		return diag.Errorf("could not configure Preemptive Mode with Active-Standby disabled")
-	} else if edgeSpoke.EnableActiveStandby && !edgeSpoke.EnableActiveStandbyPreemptive {
+	} else if edgeSpoke.EnableEdgeActiveStandby && !edgeSpoke.EnableEdgeActiveStandbyPreemptive {
 		edgeSpoke.ActiveStandby = "non-preemptive"
-	} else if edgeSpoke.EnableActiveStandbyPreemptive {
+	} else if edgeSpoke.EnableEdgeActiveStandbyPreemptive {
 		edgeSpoke.ActiveStandby = "preemptive"
 	}
 
@@ -302,6 +297,14 @@ func resourceAviatrixEdgeSpokeCreate(ctx context.Context, d *schema.ResourceData
 	if len(edgeSpoke.PrependAsPath) != 0 {
 		if edgeSpoke.LocalAsNumber == "" {
 			return diag.Errorf("'prepend_as_path' must be empty if 'local_as_number' is not set")
+		}
+	}
+
+	if edgeSpoke.Latitude != "" && edgeSpoke.Longitude != "" {
+		latitude, _ := strconv.ParseFloat(edgeSpoke.Latitude, 64)
+		longitude, _ := strconv.ParseFloat(edgeSpoke.Longitude, 64)
+		if latitude == 0 && longitude == 0 {
+			return diag.Errorf("latitude and longitude must not be zero at the same time")
 		}
 	}
 
@@ -398,7 +401,7 @@ func resourceAviatrixEdgeSpokeCreate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if edgeSpoke.Latitude != 0 || edgeSpoke.Longitude != 0 {
+	if edgeSpoke.Latitude != "" || edgeSpoke.Longitude != "" {
 		err := client.UpdateEdgeSpokeGeoCoordinate(ctx, edgeSpoke)
 		if err != nil {
 			return diag.Errorf("could not enable Edge transitive routing after Edge as a Spoke creation: %v", err)
@@ -444,7 +447,7 @@ func resourceAviatrixEdgeSpokeRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.Set("gw_name", edgeSpoke.GwName)
-	d.Set("enable_over_private_network", edgeSpoke.EnableOverPrivateNetwork)
+	d.Set("enable_management_over_private_network", edgeSpoke.EnableManagementOverPrivateNetwork)
 	d.Set("management_egress_ip_prefix", edgeSpoke.ManagementEgressIpPrefix)
 	d.Set("wan_interface_ip_prefix", edgeSpoke.WanInterfaceIpPrefix)
 	d.Set("wan_default_gateway_ip", edgeSpoke.WanDefaultGatewayIp)
@@ -462,8 +465,8 @@ func resourceAviatrixEdgeSpokeRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.Set("local_as_number", edgeSpoke.LocalAsNumber)
 	d.Set("prepend_as_path", edgeSpoke.PrependAsPath)
-	d.Set("enable_active_standby", edgeSpoke.EnableActiveStandby)
-	d.Set("enable_active_standby_preemptive", edgeSpoke.EnableActiveStandbyPreemptive)
+	d.Set("enable_edge_active_standby", edgeSpoke.EnableEdgeActiveStandby)
+	d.Set("enable_edge_active_standby_preemptive", edgeSpoke.EnableEdgeActiveStandbyPreemptive)
 
 	d.Set("enable_learned_cidrs_approval", edgeSpoke.EnableLearnedCidrsApproval)
 
@@ -494,8 +497,13 @@ func resourceAviatrixEdgeSpokeRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("bgp_hold_time", edgeSpoke.BgpHoldTime)
 	d.Set("enable_edge_transitive_routing", edgeSpoke.EnableEdgeTransitiveRouting)
 	d.Set("enable_jumbo_frame", edgeSpoke.EnableJumboFrame)
-	d.Set("latitude", edgeSpoke.Latitude)
-	d.Set("longitude", edgeSpoke.Longitude)
+	if edgeSpoke.LatitudeReturn != 0 || edgeSpoke.LongitudeReturn != 0 {
+		d.Set("latitude", fmt.Sprintf("%.6f", edgeSpoke.LatitudeReturn))
+		d.Set("longitude", fmt.Sprintf("%.6f", edgeSpoke.LongitudeReturn))
+	} else {
+		d.Set("latitude", "")
+		d.Set("longitude", "")
+	}
 	d.Set("wan_public_ip", edgeSpoke.WanPublicIp)
 
 	d.SetId(edgeSpoke.GwName)
@@ -516,6 +524,14 @@ func resourceAviatrixEdgeSpokeUpdate(ctx context.Context, d *schema.ResourceData
 	if len(edgeSpoke.PrependAsPath) != 0 {
 		if edgeSpoke.LocalAsNumber == "" {
 			return diag.Errorf("'prepend_as_path' must be empty if 'local_as_number' is not set")
+		}
+	}
+
+	if edgeSpoke.Latitude != "" && edgeSpoke.Longitude != "" {
+		latitude, _ := strconv.ParseFloat(edgeSpoke.Latitude, 64)
+		longitude, _ := strconv.ParseFloat(edgeSpoke.Longitude, 64)
+		if latitude == 0 && longitude == 0 {
+			return diag.Errorf("latitude and longitude must not be zero at the same time")
 		}
 	}
 
