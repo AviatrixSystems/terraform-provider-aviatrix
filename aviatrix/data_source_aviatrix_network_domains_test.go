@@ -5,10 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccDataSourceAviatrixNetworkDomains_basic(t *testing.T) {
@@ -33,7 +31,7 @@ func TestAccDataSourceAviatrixNetworkDomains_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAviatrixNetworkDomainsConfigBasic(rName, tgwName, awsSideAsNumber, ndName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTgwNetworkDomainExists("aviatrix_aws_tgw_network_domain.test", tgwName, ndName),
+					testAccCheckAwsTgwNetworkDomainExists("aviatrix_aws_tgw_network_domain.test", tgwName, ndName),
 					resource.TestCheckResourceAttr(resourceName, "network_domains.0.tgw_name", tgwName),
 					resource.TestCheckResourceAttr(resourceName, "network_domains.3.account", fmt.Sprintf("tfa-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "network_domains.3.name", ndName),
@@ -95,27 +93,4 @@ data "aviatrix_network_domains" "test"{
 }
 `, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		awsSideAsNumber, tgwName, ndName)
-}
-
-func testAccCheckTgwNetworkDomainExists(resourceName string, tgwName string, ndName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("resource %s not found", resourceName)
-		}
-
-		client := testAccProvider.Meta().(*goaviatrix.Client)
-
-		nd := &goaviatrix.SecurityDomain{
-			Name:       ndName,
-			AwsTgwName: tgwName,
-		}
-
-		_, err := client.GetSecurityDomain(nd)
-		if err == goaviatrix.ErrNotFound {
-			return fmt.Errorf("network domain %s not found", ndName)
-		}
-
-		return nil
-	}
 }
