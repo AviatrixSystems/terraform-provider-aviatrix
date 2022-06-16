@@ -531,6 +531,16 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Private IP address of the spoke gateway created.",
 			},
+			"public_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Public IP address of the Spoke Gateway created.",
+			},
+			"ha_public_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Public IP address of the HA Spoke Gateway.",
+			},
 		},
 	}
 }
@@ -1310,6 +1320,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("enable_learned_cidrs_approval", gw.EnableLearnedCidrsApproval)
 	d.Set("enable_preserve_as_path", gw.EnablePreserveAsPath)
 	d.Set("rx_queue_size", gw.RxQueueSize)
+	d.Set("public_ip", gw.PublicIP)
 
 	if gw.EnableLearnedCidrsApproval {
 		spokeAdvancedConfig, err := client.GetSpokeGatewayAdvancedConfig(&goaviatrix.SpokeVpc{GwName: gw.GwName})
@@ -1555,6 +1566,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("ha_software_version", "")
 		d.Set("ha_subnet", "")
 		d.Set("ha_zone", "")
+		d.Set("ha_public_ip", "")
 		return nil
 	}
 
@@ -1596,6 +1608,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("ha_software_version", gw.HaGw.SoftwareVersion)
 	d.Set("ha_image_version", gw.HaGw.ImageVersion)
 	d.Set("ha_security_group_id", gw.HaGw.GwSecurityGroupID)
+	d.Set("ha_public_ip", gw.HaGw.PublicIP)
 	if gw.HaGw.InsaneMode == "yes" && goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		d.Set("ha_insane_mode_az", gw.HaGw.GatewayZone)
 	} else {

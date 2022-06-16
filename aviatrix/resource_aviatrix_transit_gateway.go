@@ -652,6 +652,16 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "List of available BGP LAN interface IPs for transit external device HA connection creation. " +
 					"Only supports GCP. Available as of provider version R2.21.0+.",
 			},
+			"public_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Public IP address of the Transit Gateway created.",
+			},
+			"ha_public_ip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Public IP address of the HA Transit Gateway.",
+			},
 		},
 	}
 }
@@ -1557,6 +1567,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("subnet", gw.VpcNet)
 	d.Set("enable_encrypt_volume", gw.EnableEncryptVolume)
 	d.Set("eip", gw.PublicIP)
+	d.Set("public_ip", gw.PublicIP)
 	d.Set("gw_size", gw.GwSize)
 	d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 	d.Set("security_group_id", gw.GwSecurityGroupID)
@@ -1863,6 +1874,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("ha_software_version", "")
 		d.Set("ha_subnet", "")
 		d.Set("ha_zone", "")
+		d.Set("ha_public_ip", "")
 		return nil
 	}
 	if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
@@ -1893,6 +1905,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	}
 
 	d.Set("ha_eip", gw.HaGw.PublicIP)
+	d.Set("ha_public_ip", gw.HaGw.PublicIP)
 	d.Set("ha_gw_size", gw.HaGw.GwSize)
 	d.Set("ha_cloud_instance_id", gw.HaGw.CloudnGatewayInstID)
 	d.Set("ha_gw_name", gw.HaGw.GwName)
