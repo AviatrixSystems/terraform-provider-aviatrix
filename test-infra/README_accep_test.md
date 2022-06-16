@@ -178,6 +178,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_data_source_firewall        | SKIP_DATA_FIREWALL                 | aviatrix_gateway                                                               |
 | aviatrix_data_source_firewall_instance_images | SKIP_DATA_FIREWALL_INSTANCE_IMAGES | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY, AWS_REGION |                                                             |
 | aviatrix_data_source_gateway         | SKIP_DATA_GATEWAY                  | aviatrix_gateway                                                               |
+| aviatrix_data_source_networtk_domains                | SKIP_DATA_NETWORK_DOMAINS      | aviatrix_account + AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY                                                               |
 | aviatrix_data_source_spoke_gateway   | SKIP_DATA_SPOKE_GATEWAY            | aviatrix_spoke_gateway                                                         |
 | aviatrix_data_source_spoke_gateway_inspection_subnets| SKIP_DATA_SPOKE_GATEWAY_INSPECTION_SUBNETS | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID, ARM_APPLICATION_KEY |
 | aviatrix_data_source_transit_gateway | SKIP_DATA_TRANSIT_GATEWAY          | aviatrix_transit_gateway                                                       |
