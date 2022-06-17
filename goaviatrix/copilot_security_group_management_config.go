@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-type CopilotSecurityGroupManagement struct {
+type CopilotSecurityGroupManagementConfig struct {
 	Action      string `form:"action,omitempty"`
 	CID         string `form:"CID,omitempty"`
 	CloudType   int    `form:"cloud_type,omitempty" json:"cloud_type"`
@@ -17,12 +17,12 @@ type CopilotSecurityGroupManagement struct {
 	State       string `json:"state"`
 }
 
-func (c *Client) EnableCopilotSecurityGroupManagement(ctx context.Context, copilotSecurityGroupManagement *CopilotSecurityGroupManagement) error {
-	copilotSecurityGroupManagement.Action = "enable_copilot_sg"
-	copilotSecurityGroupManagement.CID = c.CID
-	copilotSecurityGroupManagement.LogEnable = true
+func (c *Client) EnableCopilotSecurityGroupManagement(ctx context.Context, copilotSecurityGroupManagementConfig *CopilotSecurityGroupManagementConfig) error {
+	copilotSecurityGroupManagementConfig.Action = "enable_copilot_sg"
+	copilotSecurityGroupManagementConfig.CID = c.CID
+	copilotSecurityGroupManagementConfig.LogEnable = true
 
-	err := c.PostAPIContext(ctx, copilotSecurityGroupManagement.Action, copilotSecurityGroupManagement, BasicCheck)
+	err := c.PostAPIContext(ctx, copilotSecurityGroupManagementConfig.Action, copilotSecurityGroupManagementConfig, BasicCheck)
 	if err != nil {
 		return err
 	}
@@ -30,16 +30,16 @@ func (c *Client) EnableCopilotSecurityGroupManagement(ctx context.Context, copil
 	return nil
 }
 
-func (c *Client) GetCopilotSecurityGroupManagement(ctx context.Context) (*CopilotSecurityGroupManagement, error) {
+func (c *Client) GetCopilotSecurityGroupManagementConfig(ctx context.Context) (*CopilotSecurityGroupManagementConfig, error) {
 	form := map[string]string{
 		"action": "get_copilot_sg",
 		"CID":    c.CID,
 	}
 
 	type Resp struct {
-		Return  bool                           `json:"return"`
-		Results CopilotSecurityGroupManagement `json:"results"`
-		Reason  string                         `json:"reason"`
+		Return  bool                                 `json:"return"`
+		Results CopilotSecurityGroupManagementConfig `json:"results"`
+		Reason  string                               `json:"reason"`
 	}
 
 	var data Resp

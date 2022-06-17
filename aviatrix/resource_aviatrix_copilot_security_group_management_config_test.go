@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAviatrixCopilotSecurityGroupManagement_basic(t *testing.T) {
-	if os.Getenv("SKIP_COPILOT_SECURITY_GROUP_MANAGEMENT") == "yes" {
-		t.Skip("Skipping copilot security group management test as SKIP_COPILOT_SECURITY_GROUP_MANAGEMENT is set")
+func TestAccAviatrixCopilotSecurityGroupManagementConfig_basic(t *testing.T) {
+	if os.Getenv("SKIP_COPILOT_SECURITY_GROUP_MANAGEMENT_CONFIG") == "yes" {
+		t.Skip("Skipping copilot security group management config test as SKIP_COPILOT_SECURITY_GROUP_MANAGEMENT_CONFIG is set")
 	}
 
-	resourceName := "aviatrix_copilot_security_group_management.test"
+	resourceName := "aviatrix_copilot_security_group_management_config.test"
 	rName := acctest.RandString(5)
 
 	resource.Test(t, resource.TestCase{
@@ -26,12 +26,12 @@ func TestAccAviatrixCopilotSecurityGroupManagement_basic(t *testing.T) {
 			testAccPreCheck(t)
 		},
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCopilotSecurityGroupManagementDestroy,
+		CheckDestroy: testAccCheckCopilotSecurityGroupManagementConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCopilotSecurityGroupManagementBasic(rName),
+				Config: testAccCopilotSecurityGroupManagementConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCopilotSecurityGroupManagementExists(resourceName),
+					testAccCheckCopilotSecurityGroupManagementConfigExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-aws-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_id", os.Getenv("AWS_VPC_ID")),
 					resource.TestCheckResourceAttr(resourceName, "region", os.Getenv("AWS_REGION")),
@@ -46,7 +46,7 @@ func TestAccAviatrixCopilotSecurityGroupManagement_basic(t *testing.T) {
 	})
 }
 
-func testAccCopilotSecurityGroupManagementBasic(rName string) string {
+func testAccCopilotSecurityGroupManagementConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_acc_aws" {
 	account_name       = "tfa-aws-%s"
@@ -65,7 +65,7 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
 	gw_size      = "t2.micro"
 	subnet       = "%[7]s"
 }
-resource "aviatrix_copilot_security_group_management" "test" {
+resource "aviatrix_copilot_security_group_management_config" "test" {
 	cloud_type   = 1
 	account_name = aviatrix_account.test_acc_aws.account_name
 	region       = aviatrix_transit_gateway.test_transit_gateway_aws.vpc_reg
@@ -76,40 +76,40 @@ resource "aviatrix_copilot_security_group_management" "test" {
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"))
 }
 
-func testAccCheckCopilotSecurityGroupManagementExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckCopilotSecurityGroupManagementConfigExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("copilot security group management not found: %s", resourceName)
+			return fmt.Errorf("could not find copilot security group management config: %s", resourceName)
 		}
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no copilot security group management id is set")
+			return fmt.Errorf("copilot security group management config id is not set")
 		}
 
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
-		copilotSecurityGroupManagement, err := client.GetCopilotSecurityGroupManagement(context.Background())
+		copilotSecurityGroupManagementConfig, err := client.GetCopilotSecurityGroupManagementConfig(context.Background())
 		if err != nil {
 			return err
 		}
-		if copilotSecurityGroupManagement.InstanceID != rs.Primary.ID {
-			return fmt.Errorf("could not find copilot security group management")
+		if copilotSecurityGroupManagementConfig.InstanceID != rs.Primary.ID {
+			return fmt.Errorf("could not find copilot security group management id")
 		}
 		return nil
 	}
 }
 
-func testAccCheckCopilotSecurityGroupManagementDestroy(s *terraform.State) error {
+func testAccCheckCopilotSecurityGroupManagementConfigDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*goaviatrix.Client)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aviatrix_copilot_security_group_management" {
+		if rs.Type != "aviatrix_copilot_security_group_management_config" {
 			continue
 		}
 
-		_, err := client.GetCopilotSecurityGroupManagement(context.Background())
+		_, err := client.GetCopilotSecurityGroupManagementConfig(context.Background())
 		if err != goaviatrix.ErrNotFound {
-			return fmt.Errorf("copilot security group management still exists")
+			return fmt.Errorf("copilot security group management is still enabled")
 		}
 	}
 	return nil

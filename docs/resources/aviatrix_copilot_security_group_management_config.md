@@ -1,20 +1,20 @@
 ---
 subcategory: "Settings"
 layout: "aviatrix"
-page_title: "Aviatrix: aviatrix_copilot_security_group_management"
+page_title: "Aviatrix: aviatrix_copilot_security_group_management_config"
 description: |-
-  Creates and manages CoPilot Security Group Management 
+  Creates and manages CoPilot Security Group Management Configuration
 ---
 
-# aviatrix_copilot_security_group_management
+# aviatrix_copilot_security_group_management_config
 
-The **aviatrix_copilot_security_group_management** resource allows management of controller CoPilot Security Group Management. This resource is available as of provider version R2.23+.
+The **aviatrix_copilot_security_group_management_config** resource allows management of controller CoPilot security group management configuration. This resource is available as of provider version R2.23+.
 
 ## Example Usage
 
 ```hcl
 # Enable the CoPilot Security Group Management
-resource "aviatrix_copilot_security_group_management" "test" {
+resource "aviatrix_copilot_security_group_management_config" "test" {
     cloud_type   = 1
     account_name = "aws-account"
     region       = "us-east-1"
@@ -40,8 +40,8 @@ The following arguments are supported:
 
 ## Import
 
-**aviatrix_copilot_security_group_management** can be imported using instance ID, e.g.
+**aviatrix_copilot_security_group_management_config** can be imported using instance ID, e.g.
 
 ```
-$ terraform import aviatrix_copilot_security_group_management.test i-1234567890
+$ terraform import aviatrix_copilot_security_group_management_config.test i-1234567890
 ```
