@@ -84,6 +84,7 @@ func (c *Client) GetPrivateModeInfo(ctx context.Context) (*ControllerPrivateMode
 	type ControllerPrivateModeConfigContents struct {
 		PrivateModeEnabled bool                   `json:"private_mode_enabled"`
 		ProxyInfo          map[string]interface{} `json:"proxy_info,omitempty"`
+		CopilotResourceId  string                 `json:"copilot_resource_id,omitempty"`
 	}
 
 	type ControllerPrivateModeConfigResults struct {
@@ -102,6 +103,7 @@ func (c *Client) GetPrivateModeInfo(ctx context.Context) (*ControllerPrivateMode
 
 	controllerPrivateModeConfig := &ControllerPrivateModeConfig{
 		EnablePrivateMode: resp.Results.Contents.PrivateModeEnabled,
+		CopilotInstanceID: resp.Results.Contents.CopilotResourceId,
 	}
 
 	for k, v := range resp.Results.Contents.ProxyInfo {
