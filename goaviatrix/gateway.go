@@ -606,6 +606,7 @@ func (c *Client) UpdateDNat(gateway *Gateway) error {
 		return err
 	}
 	gateway.PolicyList = string(args)
+	gateway.Compress = true
 
 	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
