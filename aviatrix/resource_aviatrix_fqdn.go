@@ -409,7 +409,7 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("domain_names") && enabledInlineDomainNames {
 		o, _ := d.GetChange("domain_names")
 		os := o.([]interface{})
-		if os != nil && len(os) > 0 {
+		if len(os) > 0 {
 			for _, domain := range os {
 				dn := domain.(map[string]interface{})
 				fqdnDomain := &goaviatrix.Filters{
