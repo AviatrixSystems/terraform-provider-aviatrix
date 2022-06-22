@@ -12,6 +12,14 @@ import (
 
 var ErrNotFound = fmt.Errorf("ErrNotFound")
 
+type DuplicateError struct {
+	Err error
+}
+
+func (d DuplicateError) Error() string {
+	return d.Err.Error()
+}
+
 func ExpandStringList(configured []interface{}) []string {
 	vs := make([]string, 0, len(configured))
 	for _, v := range configured {

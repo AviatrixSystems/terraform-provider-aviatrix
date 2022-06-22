@@ -150,10 +150,25 @@ func (c *Client) PostContext(ctx context.Context, path string, i interface{}) (*
 // and returns an error
 type CheckAPIResponseFunc func(action, method, reason string, ret bool) error
 
-// BasicCheck will only verify that the Return field was set the true
+// BasicCheck will only verify that the Return field was set to true
 var BasicCheck CheckAPIResponseFunc = func(action, method, reason string, ret bool) error {
 	if !ret {
 		return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
+	}
+	return nil
+}
+
+// DuplicateBasicCheck will verify that the Return field was set to true
+// If the Return is false and Reason contains "already exists", it will return a DuplicateError
+var DuplicateBasicCheck CheckAPIResponseFunc = func(action, method, reason string, ret bool) error {
+	if !ret {
+		err := fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
+		if strings.Contains(strings.ToLower(reason), "already exists") {
+			return DuplicateError{
+				Err: err,
+			}
+		}
+		return err
 	}
 	return nil
 }
