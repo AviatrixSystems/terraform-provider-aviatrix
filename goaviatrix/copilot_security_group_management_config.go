@@ -5,17 +5,18 @@ import (
 )
 
 type CopilotSecurityGroupManagementConfig struct {
-	Action           string `json:"action,omitempty"`
-	CID              string `json:"CID,omitempty"`
-	CloudType        int    `json:"cloud_type,omitempty"`
-	AccountName      string `json:"account_name,omitempty"`
-	Region           string `json:"region,omitempty"`
-	Zone             string `json:"zone,omitempty"`
-	VpcId            string `json:"vpc_id,omitempty"`
-	InstanceID       string `json:"instance_id,omitempty"`
-	InstanceIDReturn string `json:"inst_id,omitempty"`
-	LogEnable        bool   `json:"log_enable,omitempty"`
-	State            string `json:"state,omitempty"`
+	Action                               string `json:"action,omitempty"`
+	CID                                  string `json:"CID,omitempty"`
+	CloudType                            int    `json:"cloud_type,omitempty"`
+	AccountName                          string `json:"account_name,omitempty"`
+	Region                               string `json:"region,omitempty"`
+	Zone                                 string `json:"zone,omitempty"`
+	VpcId                                string `json:"vpc_id,omitempty"`
+	InstanceId                           string `json:"instance_id,omitempty"`
+	InstanceIdReturn                     string `json:"inst_id,omitempty"`
+	EnableCopilotSecurityGroupManagement bool
+	LogEnable                            bool   `json:"log_enable,omitempty"`
+	State                                string `json:"state,omitempty"`
 }
 
 func (c *Client) EnableCopilotSecurityGroupManagement(ctx context.Context, copilotSecurityGroupManagementConfig *CopilotSecurityGroupManagementConfig) error {
@@ -46,13 +47,8 @@ func (c *Client) GetCopilotSecurityGroupManagementConfig(ctx context.Context) (*
 	var data Resp
 
 	err := c.GetAPIContext(ctx, &data, form["action"], form, BasicCheck)
-
 	if err != nil {
 		return nil, err
-	}
-
-	if data.Results.State == "Disabled" {
-		return nil, ErrNotFound
 	}
 
 	return &data.Results, nil

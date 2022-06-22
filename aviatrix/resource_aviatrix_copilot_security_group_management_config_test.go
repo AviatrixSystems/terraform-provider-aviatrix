@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -66,11 +67,12 @@ resource "aviatrix_transit_gateway" "test_transit_gateway_aws" {
 	subnet       = "%[7]s"
 }
 resource "aviatrix_copilot_security_group_management_config" "test" {
-	cloud_type   = 1
-	account_name = aviatrix_account.test_acc_aws.account_name
-	region       = aviatrix_transit_gateway.test_transit_gateway_aws.vpc_reg
-	vpc_id       = aviatrix_transit_gateway.test_transit_gateway_aws.vpc_id
-	instance_id  = aviatrix_transit_gateway.test_transit_gateway_aws.cloud_instance_id
+	enable_copilot_security_group_management = true
+	cloud_type                               = 1
+	account_name                             = aviatrix_account.test_acc_aws.account_name
+	region                                   = aviatrix_transit_gateway.test_transit_gateway_aws.vpc_reg
+	vpc_id                                   = aviatrix_transit_gateway.test_transit_gateway_aws.vpc_id
+	instance_id                              = aviatrix_transit_gateway.test_transit_gateway_aws.cloud_instance_id
 }
 `, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
 		os.Getenv("AWS_VPC_ID"), os.Getenv("AWS_REGION"), os.Getenv("AWS_SUBNET"))
@@ -88,11 +90,7 @@ func testAccCheckCopilotSecurityGroupManagementConfigExists(resourceName string)
 
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
-		copilotSecurityGroupManagementConfig, err := client.GetCopilotSecurityGroupManagementConfig(context.Background())
-		if err != nil {
-			return err
-		}
-		if copilotSecurityGroupManagementConfig.InstanceID != rs.Primary.ID {
+		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
 			return fmt.Errorf("could not find copilot security group management id")
 		}
 		return nil
@@ -107,8 +105,11 @@ func testAccCheckCopilotSecurityGroupManagementConfigDestroy(s *terraform.State)
 			continue
 		}
 
-		_, err := client.GetCopilotSecurityGroupManagementConfig(context.Background())
-		if err != goaviatrix.ErrNotFound {
+		copilotSecurityGroupManagementConfig, err := client.GetCopilotSecurityGroupManagementConfig(context.Background())
+		if err != nil {
+			return fmt.Errorf("could not read copilot security group management config due to err: %v", err)
+		}
+		if copilotSecurityGroupManagementConfig.State == "Enabled" {
 			return fmt.Errorf("copilot security group management is still enabled")
 		}
 	}
