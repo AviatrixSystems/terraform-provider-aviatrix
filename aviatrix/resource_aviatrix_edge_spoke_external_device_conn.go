@@ -44,14 +44,14 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 			},
 			"bgp_local_as_num": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
 				ForceNew:     true,
 				Description:  "BGP local AS number.",
 				ValidateFunc: goaviatrix.ValidateASN,
 			},
 			"bgp_remote_as_num": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
 				ForceNew:     true,
 				Description:  "BGP remote AS number.",
 				ValidateFunc: goaviatrix.ValidateASN,

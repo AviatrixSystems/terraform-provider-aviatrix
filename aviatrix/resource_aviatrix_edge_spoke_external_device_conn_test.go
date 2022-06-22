@@ -23,6 +23,7 @@ func TestAccAviatrixEdgeSpokeExternalDeviceConn_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			preEdgeSpokeExternalDeviceConnCheck(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEdgeSpokeExternalDeviceConnDestroy,
@@ -47,6 +48,16 @@ func TestAccAviatrixEdgeSpokeExternalDeviceConn_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func preEdgeSpokeExternalDeviceConnCheck(t *testing.T) {
+	if os.Getenv("EDGE_SPOKE_NAME") == "" {
+		t.Fatal("Environment variable EDGE_SPOKE_NAME is not set")
+	}
+
+	if os.Getenv("EDGE_SPOKE_SITE_ID") == "" {
+		t.Fatal("Environment variable EDGE_SPOKE_SITE_ID is not set")
+	}
 }
 
 func testAccEdgeSpokeExternalDeviceConnConfigBasic(rName string) string {
