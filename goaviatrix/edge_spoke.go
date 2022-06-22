@@ -46,13 +46,16 @@ type EdgeSpoke struct {
 	BgpPollingTime                     int      `json:"bgp_polling_time"`
 	BgpHoldTime                        int      `json:"bgp_hold_time"`
 	EnableEdgeTransitiveRouting        bool     `json:"edge_transitive_routing"`
-	EnableJumboFrame                   bool     `json:"jumbo_frame"`
+	EnableJumboFrame                   bool
+	JumboFrameUserConfig               bool `json:"jumbo_frame_user_config"`
+	JumboFrameActualState              bool `json:"jumbo_frame"`
 	Latitude                           string
 	Longitude                          string
 	LatitudeReturn                     float64 `json:"latitude"`
 	LongitudeReturn                    float64 `json:"longitude"`
 	WanPublicIp                        string  `form:"wan_discovery_ip" json:"public_ip"`
 	PrivateIP                          string  `json:"private_ip"`
+	State                              string  `json:"vpc_state"`
 }
 
 type EdgeSpokeListResp struct {
