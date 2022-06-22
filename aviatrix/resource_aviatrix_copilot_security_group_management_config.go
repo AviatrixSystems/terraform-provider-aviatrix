@@ -128,7 +128,7 @@ func resourceAviatrixCopilotSecurityGroupManagementConfigRead(ctx context.Contex
 	d.Set("cloud_type", copilotSecurityGroupManagementConfig.CloudType)
 	d.Set("account_name", copilotSecurityGroupManagementConfig.AccountName)
 	d.Set("vpc_id", copilotSecurityGroupManagementConfig.VpcId)
-	d.Set("instance_id", copilotSecurityGroupManagementConfig.InstanceID)
+	d.Set("instance_id", copilotSecurityGroupManagementConfig.InstanceIDReturn)
 
 	if goaviatrix.IsCloudType(copilotSecurityGroupManagementConfig.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 		d.Set("region", copilotSecurityGroupManagementConfig.Region)
@@ -136,7 +136,7 @@ func resourceAviatrixCopilotSecurityGroupManagementConfigRead(ctx context.Contex
 		d.Set("zone", copilotSecurityGroupManagementConfig.Zone)
 	}
 
-	d.SetId(copilotSecurityGroupManagementConfig.InstanceID)
+	d.SetId(copilotSecurityGroupManagementConfig.InstanceIDReturn)
 	return nil
 }
 

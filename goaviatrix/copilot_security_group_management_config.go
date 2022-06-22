@@ -5,16 +5,17 @@ import (
 )
 
 type CopilotSecurityGroupManagementConfig struct {
-	Action      string `form:"action,omitempty"`
-	CID         string `form:"CID,omitempty"`
-	CloudType   int    `form:"cloud_type,omitempty" json:"cloud_type"`
-	AccountName string `form:"account_name,omitempty" json:"account_name"`
-	Region      string `form:"region,omitempty" json:"region"`
-	Zone        string `form:"zone,omitempty" json:"zone"`
-	VpcId       string `form:"vpc_id,omitempty" json:"vpc_id"`
-	InstanceID  string `form:"instance_id,omitempty" json:"inst_id"`
-	LogEnable   bool   `form:"log_enable"`
-	State       string `json:"state"`
+	Action           string `json:"action,omitempty"`
+	CID              string `json:"CID,omitempty"`
+	CloudType        int    `json:"cloud_type,omitempty"`
+	AccountName      string `json:"account_name,omitempty"`
+	Region           string `json:"region,omitempty"`
+	Zone             string `json:"zone,omitempty"`
+	VpcId            string `json:"vpc_id,omitempty"`
+	InstanceID       string `json:"instance_id,omitempty"`
+	InstanceIDReturn string `json:"inst_id,omitempty"`
+	LogEnable        bool   `json:"log_enable,omitempty"`
+	State            string `json:"state,omitempty"`
 }
 
 func (c *Client) EnableCopilotSecurityGroupManagement(ctx context.Context, copilotSecurityGroupManagementConfig *CopilotSecurityGroupManagementConfig) error {
@@ -22,7 +23,7 @@ func (c *Client) EnableCopilotSecurityGroupManagement(ctx context.Context, copil
 	copilotSecurityGroupManagementConfig.CID = c.CID
 	copilotSecurityGroupManagementConfig.LogEnable = true
 
-	err := c.PostAPIContext(ctx, copilotSecurityGroupManagementConfig.Action, copilotSecurityGroupManagementConfig, BasicCheck)
+	err := c.PostAPIContext2(ctx, nil, copilotSecurityGroupManagementConfig.Action, copilotSecurityGroupManagementConfig, BasicCheck)
 	if err != nil {
 		return err
 	}
