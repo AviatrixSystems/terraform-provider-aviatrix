@@ -119,7 +119,7 @@ func testAccAviatrixPrivateModeLbDestroy(s *terraform.State) error {
 			if err == goaviatrix.ErrNotFound {
 				return nil
 			}
-			return fmt.Errorf("failed to destroy Private Mode load balancer: %s", err)
+			return fmt.Errorf("error getting Private Mode load balancer after destroy: %s", err)
 		}
 		return fmt.Errorf("failed to destroy Private Mode load balancer")
 	}

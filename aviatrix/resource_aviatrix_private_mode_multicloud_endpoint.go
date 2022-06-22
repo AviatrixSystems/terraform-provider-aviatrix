@@ -108,6 +108,7 @@ func resourceAviatrixPrivateModeMulticloudEndpointRead(ctx context.Context, d *s
 	d.Set("controller_lb_vpc_id", privateModeMulticloudEndpoint.ControllerLbVpcId)
 	d.Set("dns_entry", privateModeMulticloudEndpoint.DnsEntry)
 
+	d.SetId(privateModeMulticloudEndpoint.VpcId)
 	return nil
 }
 

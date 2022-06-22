@@ -135,7 +135,7 @@ func testAccAviatrixPrivateModeMulticloudEndpointDestroy(s *terraform.State) err
 				if err == goaviatrix.ErrNotFound {
 					continue
 				}
-				return fmt.Errorf("failed to destroy Private Mode multicloud endpoint: %s", err)
+				return fmt.Errorf("error getting Private Mode multicloud endpoint after destroy: %s", err)
 			}
 			return fmt.Errorf("failed to destroy Private Mode multicloud endpoint")
 		}
