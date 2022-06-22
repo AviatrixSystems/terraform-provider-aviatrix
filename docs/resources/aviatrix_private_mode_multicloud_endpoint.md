@@ -15,7 +15,10 @@ The **aviatrix_private_mode_multicloud_endpoint** resource allows management of 
 ```hcl
 # Create an Aviatrix Controller Private Mode config
 resource "aviatrix_private_mode_multicloud_endpoint" "test" {
-  enable_private_mode = true
+  account_name = "devops"
+  vpc_id = "vpc-abcdef"
+  region = "us-east-1"
+  controller_lb_vpc_id = "vpc-abcdefg"
 }
 ```
 

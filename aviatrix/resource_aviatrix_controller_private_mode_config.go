@@ -34,7 +34,7 @@ func resourceAviatrixControllerPrivateModeConfig() *schema.Resource {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
-				Description: "List of proxies.",
+				Description: "Set of proxies.",
 			},
 		},
 	}
