@@ -425,3 +425,20 @@ func (c *Client) DeleteFQDNTagRule(fqdn *FQDN) error {
 
 	return c.PostAPI(form["action"], form, checkFunc)
 }
+
+func (c *Client) ValidateFqdnTagRules(fqdn *FQDN) bool {
+	if len(fqdn.DomainList) == 0 {
+		return true
+	}
+
+	mapPolicy := make(map[string]bool)
+	for _, policy := range fqdn.DomainList {
+		str := policy.FQDN + policy.Protocol + policy.Port + policy.Verdict
+		if mapPolicy[str] {
+			return false
+		}
+		mapPolicy[str] = true
+	}
+
+	return true
+}

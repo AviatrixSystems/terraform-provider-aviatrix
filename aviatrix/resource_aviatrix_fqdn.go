@@ -69,8 +69,7 @@ func resourceAviatrixFQDN() *schema.Resource {
 			"domain_names": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Deprecated:  "Please set `manage_domain_names` to false, and use the standalone aviatrix_fqdn_tag_rule resource instead.",
-				Description: "A list of one or more domain names.",
+				Description: "A list of one or more domain names/tag rules.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"fqdn": {
@@ -158,9 +157,11 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 			}
 		}
 
-		err = client.UpdateDomains(fqdn)
-		if err != nil {
-			return fmt.Errorf("failed to add domain : %s", err)
+		if valid := client.ValidateFqdnTagRules(fqdn); !valid {
+			return fmt.Errorf("validation on domain_names failed: duplicate rules are not allowed")
+		}
+		if err := client.AddFQDNTagRule(fqdn); err != nil {
+			return err
 		}
 	}
 
@@ -406,6 +407,25 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 	// Update Domain list
 	if d.HasChange("domain_names") && enabledInlineDomainNames {
+		o, _ := d.GetChange("domain_names")
+		os := o.([]interface{})
+		if os != nil && len(os) > 0 {
+			for _, domain := range os {
+				dn := domain.(map[string]interface{})
+				fqdnDomain := &goaviatrix.Filters{
+					FQDN:     dn["fqdn"].(string),
+					Protocol: dn["proto"].(string),
+					Port:     dn["port"].(string),
+					Verdict:  dn["action"].(string),
+				}
+				fqdn.DomainList = append(fqdn.DomainList, fqdnDomain)
+			}
+			if err := client.DeleteFQDNTagRule(fqdn); err != nil {
+				return err
+			}
+			fqdn.DomainList = nil
+		}
+
 		if hasSetDomainNames {
 			names := d.Get("domain_names").([]interface{})
 			for _, domain := range names {
@@ -418,10 +438,15 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 				}
 				fqdn.DomainList = append(fqdn.DomainList, fqdnDomain)
 			}
-		}
-		err := client.UpdateDomains(fqdn)
-		if err != nil {
-			return fmt.Errorf("failed to add domain : %s", err)
+
+			if len(fqdn.DomainList) > 0 {
+				if valid := client.ValidateFqdnTagRules(fqdn); !valid {
+					return fmt.Errorf("validation on domain_names failed in update: duplicate rules are not allowed")
+				}
+				if err := client.AddFQDNTagRule(fqdn); err != nil {
+					return err
+				}
+			}
 		}
 	}
 	if d.HasChange("gw_filter_tag_list") {
