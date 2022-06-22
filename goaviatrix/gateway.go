@@ -198,6 +198,7 @@ type Gateway struct {
 	BgpLanInterfacesCount           int                                 `json:"bgp_over_lan_intf_cnt,omitempty"`
 	RxQueueSize                     string                              `json:"rx_queue_size"`
 	LbVpcId                         string                              `json:"lb_vpc_id,omitempty"`
+	Compress                        bool                                `form:"compress,omitempty"`
 }
 
 type HaGateway struct {
@@ -578,6 +579,7 @@ func (c *Client) EnableSNat(gateway *Gateway) error {
 		return err
 	}
 	gateway.PolicyList = string(args)
+	gateway.Compress = true
 
 	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
