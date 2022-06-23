@@ -47,7 +47,7 @@ func resourceAviatrixControllerPrivateModeConfigCreate(ctx context.Context, d *s
 	if !enablePrivateMode {
 		for _, key := range []string{"copilot_instance_id", "proxies"} {
 			if _, ok := d.GetOk(key); ok {
-				return diag.Errorf("failed to create Controller Private Mode config: %q must be empty when %q is false", key, "enable_private_mode")
+				return diag.Errorf("failed to create Controller Private Mode config: %q and %q must be empty when %q is false", "copilot_instance_id", "proxies", "enable_private_mode")
 			}
 		}
 	}
@@ -136,7 +136,7 @@ func resourceAviatrixControllerPrivateModeConfigUpdate(ctx context.Context, d *s
 	if d.HasChanges("enable_private_mode", "copilot_instance_id", "proxies") && !enablePrivateMode {
 		for _, key := range []string{"copilot_instance_id", "proxies"} {
 			if _, ok := d.GetOk(key); ok {
-				return diag.Errorf("failed to update Controller Private Mode config: %q must be empty when %q is false", key, "enable_private_mode")
+				return diag.Errorf("failed to update Controller Private Mode config: %q and %q must be empty when %q is false", "copilot_instance_id", "proxies", "enable_private_mode")
 			}
 		}
 	}
