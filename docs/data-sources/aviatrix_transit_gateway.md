@@ -84,4 +84,6 @@ In addition to all arguments above, the following attributes are exported:
 * `image_version` - The image version of the gateway.
 * `ha_software_version` - The software version of the HA gateway.
 * `ha_image_version` - The image version of the HA gateway.
+* `eip` - The EIP address of the Transit Gateway.
+* `ha_eip` - The EIP address of the HA Transit Gateway.
 

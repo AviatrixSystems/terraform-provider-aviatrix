@@ -496,6 +496,16 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Description: "List of available BGP LAN interface IPs for transit external device HA connection creation. " +
 					"Only supports GCP. Available as of provider version R2.21.0+.",
 			},
+			"eip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The EIP address of the Transit Gateway.",
+			},
+			"ha_eip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The EIP address of the HA Transit Gateway.",
+			},
 		},
 	}
 }
@@ -563,6 +573,8 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 		d.Set("enable_multi_tier_transit", gw.EnableMultitierTransit)
 		d.Set("image_version", gw.ImageVersion)
 		d.Set("software_version", gw.SoftwareVersion)
+		d.Set("eip", gw.PublicIP)
+		d.Set("ha_eip", gw.HaGw.PublicIP)
 
 		d.Set("enable_private_oob", gw.EnablePrivateOob)
 		if gw.EnablePrivateOob {

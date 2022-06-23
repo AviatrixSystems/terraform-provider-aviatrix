@@ -384,6 +384,16 @@ func dataSourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "HA security group used for the spoke gateway.",
 			},
+			"eip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The EIP address of the Spoke Gateway.",
+			},
+			"ha_eip": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The EIP address of the HA Spoke Gateway.",
+			},
 		},
 	}
 }
@@ -456,6 +466,8 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("private_ip", gw.PrivateIP)
 		d.Set("image_version", gw.ImageVersion)
 		d.Set("software_version", gw.SoftwareVersion)
+		d.Set("eip", gw.PublicIP)
+		d.Set("ha_eip", gw.HaGw.PublicIP)
 
 		d.Set("enable_private_oob", gw.EnablePrivateOob)
 		if gw.EnablePrivateOob {
