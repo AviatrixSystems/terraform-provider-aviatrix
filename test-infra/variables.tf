@@ -67,3 +67,5 @@ variable "type" {default="metered"}
 variable "customer_id" {default = ""}
 
 variable "datadog_api_key" {}
+
+variable "edge_spoke_name" {}

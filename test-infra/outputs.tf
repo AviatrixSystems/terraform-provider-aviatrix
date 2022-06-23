@@ -237,3 +237,7 @@ output "AZURE_VNG_SUBNET" {
 output "AZURE_VNG" {
   value = module.azure-vng.vng
 }
+
+output "EDGE_SPOKE_NAME" {
+  value = var.edge_spoke_name
+}

@@ -67,6 +67,7 @@ SetEnv DATADOG_API_KEY $(terraform output -raw DATADOG_API_KEY)
 SetEnv AZURE_VNG_VNET_ID $(terraform output -raw AZURE_VNG_VNET_ID)
 SetEnv AZURE_VNG_SUBNET $(terraform output -raw AZURE_VNG_SUBNET)
 SetEnv AZURE_VNG $(terraform output -raw AZURE_VNG)
+SetEnv EDGE_SPOKE_NAME $(terraform output -raw EDGE_SPOKE_NAME)
 
 SetEnv SKIP_CID_EXPIRY "yes"
 SetEnv SKIP_DATA_ACCOUNT "no"
@@ -142,6 +143,7 @@ SetEnv SKIP_DATADOG_AGENT "no"
 SetEnv SKIP_DEVICE_INTERFACE_CONFIG "no"
 SetEnv SKIP_EDGE_CAAG "no"
 SetEnv SKIP_EDGE_SPOKE "no"
+SetEnv SKIP_EDGE_SPOKE_TRANSIT_ATTACHMENT "no"
 SetEnv SKIP_FILEBEAT_FORWARDER "no"
 SetEnv SKIP_FIRENET "no"
 SetEnv SKIP_FIREWALL "no"
