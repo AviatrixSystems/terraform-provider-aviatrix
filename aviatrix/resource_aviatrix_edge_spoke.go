@@ -49,7 +49,7 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 			"wan_interface_ip_prefix": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "WAN interface IP / prefix.",
+				Description: "WAN interface IP/prefix.",
 			},
 			"wan_default_gateway_ip": {
 				Type:         schema.TypeString,
@@ -60,12 +60,12 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 			"lan_interface_ip_prefix": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "LAN interface IP / prefix.",
+				Description: "LAN interface IP/prefix.",
 			},
 			"management_egress_ip_prefix": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Management egress gateway IP / prefix.",
+				Description: "Management egress gateway IP/prefix.",
 			},
 			"enable_management_over_private_network": {
 				Type:        schema.TypeBool,
@@ -78,7 +78,7 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Management interface IP / prefix.",
+				Description: "Management interface IP/prefix.",
 			},
 			"management_default_gateway_ip": {
 				Type:         schema.TypeString,
@@ -161,7 +161,7 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 					ValidateFunc: validation.IsCIDR,
 				},
 				Optional:    true,
-				Description: "Approved learned CIDRs for BGP Spoke Gateway. Available as of provider version R2.21+.",
+				Description: "Approved learned CIDRs for BGP Spoke Gateway.",
 			},
 			"spoke_bgp_manual_advertise_cidrs": {
 				Type: schema.TypeSet,
