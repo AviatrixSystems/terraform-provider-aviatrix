@@ -94,6 +94,12 @@ func resourceAviatrixVpc() *schema.Resource {
 				Description: "Enable Native AWS GWLB for FireNet Function. Only valid with cloud_type = 1 (AWS). " +
 					"Valid values: true or false. Default value: false. Available as of provider version R2.18+.",
 			},
+			"private_mode_subnets": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Switch to only launch private subnets. Only available when Private Mode is enabled on the Controller.",
+			},
 			"subnets": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -233,6 +239,7 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		SubnetSize:             d.Get("subnet_size").(int),
 		NumOfSubnetPairs:       d.Get("num_of_subnet_pairs").(int),
 		EnablePrivateOobSubnet: d.Get("enable_private_oob_subnet").(bool),
+		PrivateModeSubnets:     d.Get("private_mode_subnets").(bool),
 	}
 	if vpc.Region == "" && !goaviatrix.IsCloudType(vpc.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 		return fmt.Errorf("please specifiy 'region'")
@@ -560,6 +567,8 @@ func resourceAviatrixVpcRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("availability_domains", nil)
 		d.Set("fault_domains", nil)
 	}
+
+	d.Set("private_mode_subnets", vC.PrivateModeSubnets)
 
 	return nil
 }

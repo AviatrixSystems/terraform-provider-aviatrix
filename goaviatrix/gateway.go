@@ -197,6 +197,7 @@ type Gateway struct {
 	EnableS2CRxBalancing            bool                                `json:"s2c_rx_balancing,omitempty"`
 	BgpLanInterfacesCount           int                                 `json:"bgp_over_lan_intf_cnt,omitempty"`
 	RxQueueSize                     string                              `json:"rx_queue_size"`
+	LbVpcId                         string                              `json:"lb_vpc_id,omitempty"`
 }
 
 type HaGateway struct {

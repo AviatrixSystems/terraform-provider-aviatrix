@@ -84,6 +84,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_controller_email_config     | SKIP_CONTROLLER_EMAIL_CONFIG       | aviatrix_account                                                               |
 | aviatrix_controller_email_exception_notification_config | SKIP_CONTROLLER_EMAIL_EXCEPTION_NOTIFICATION_CONFIG | aviatrix_account                           |
 | aviatrix_controller_gateway_keepalive_config | SKIP_CONTROLLER_GATEWAY_KEEPALIVE_CONFIG | N/A                                                              |
+| aviatrix_controller_private_mode_config | SKIP_CONTROLLER_PRIVATE_MODE_CONFIG | N/A                                                                        |
 | aviatrix_controller_private_oob      | SKIP_CONTROLLER_PRIVATE_OOB        | N/A                                                                            |
 | aviatrix_controller_security_group_management_config | SKIP_CONTROLLER_SECURITY_GROUP_MANAGEMENT_CONFIG | N/A                                              |
 | aviatrix_copilot_security_group_management_config | SKIP_COPILOT_SECURITY_GROUP_MANAGEMENT_CONFIG | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY, AWS_VPC_ID, AWS_REGION, AWS_SUBNET |
@@ -122,6 +123,8 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_microseg_policy_list        | SKIP_MICROSEG_POLICY_LIST          | N/A                                                                            |
 | aviatrix_netflow_agent               | SKIP_NETFLOW_AGENT                 | N/A                                                                            |
 | aviatrix_periodic_ping               | SKIP_PERIODIC_PING                 | aviatrix_gateway                                                               |
+| aviatrix_private_mode_lb             | SKIP_PRIVATE_MODE_LB               | CONTROLLER_VPC_ID, AWS_REGION, AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY |
+| aviatrix_private_mode_multicloud_endpoint | SKIP_PRIVATE_MODE_MULTICLOUD_ENDPOINT | CONTROLLER_VPC_ID, AWS_VPC_ID, AWS_REGION, AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY |
 | aviatrix_proxy_config                | SKIP_PROXY_CONFIG                  | N/A                                                                            |
 | aviatrix_rbac_group                  | SKIP_RBAC_GROUP                    | N/A                                                                            |
 | aviatrix_rbac_group_access_account_attachment | SKIP_RBAC_GROUP_ACCESS_ACCOUNT_ATTACHMENT | aviatrix_account                                               |
