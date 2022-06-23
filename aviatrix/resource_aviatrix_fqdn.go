@@ -143,6 +143,7 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 
 	if hasSetDomainNames && enabledInlineDomainNames {
 		names := d.Get("domain_names").([]interface{})
+		mapDomains := make(map[string]bool)
 		for _, domain := range names {
 			if domain != nil {
 				dn := domain.(map[string]interface{})
@@ -152,16 +153,16 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 					Port:     dn["port"].(string),
 					Verdict:  dn["action"].(string),
 				}
-
+				str := fqdnFilter.FQDN + fqdnFilter.Protocol + fqdnFilter.Port + fqdnFilter.Verdict
+				if mapDomains[str] {
+					return fmt.Errorf("validation on domain_names failed: duplicate rules are not allowed")
+				}
+				mapDomains[str] = true
 				fqdn.DomainList = append(fqdn.DomainList, fqdnFilter)
 			}
 		}
-
-		if valid := client.ValidateFqdnTagRules(fqdn); !valid {
-			return fmt.Errorf("validation on domain_names failed: duplicate rules are not allowed")
-		}
-		if err := client.AddFQDNTagRule(fqdn); err != nil {
-			return err
+		if err := client.UpdateDomains(fqdn); err != nil {
+			return fmt.Errorf("failed to set domain names: %s", err)
 		}
 	}
 
@@ -407,27 +408,9 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 	// Update Domain list
 	if d.HasChange("domain_names") && enabledInlineDomainNames {
-		o, _ := d.GetChange("domain_names")
-		os := o.([]interface{})
-		if len(os) > 0 {
-			for _, domain := range os {
-				dn := domain.(map[string]interface{})
-				fqdnDomain := &goaviatrix.Filters{
-					FQDN:     dn["fqdn"].(string),
-					Protocol: dn["proto"].(string),
-					Port:     dn["port"].(string),
-					Verdict:  dn["action"].(string),
-				}
-				fqdn.DomainList = append(fqdn.DomainList, fqdnDomain)
-			}
-			if err := client.DeleteFQDNTagRule(fqdn); err != nil {
-				return err
-			}
-			fqdn.DomainList = nil
-		}
-
 		if hasSetDomainNames {
 			names := d.Get("domain_names").([]interface{})
+			mapDomains := make(map[string]bool)
 			for _, domain := range names {
 				dn := domain.(map[string]interface{})
 				fqdnDomain := &goaviatrix.Filters{
@@ -436,17 +419,16 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 					Port:     dn["port"].(string),
 					Verdict:  dn["action"].(string),
 				}
-				fqdn.DomainList = append(fqdn.DomainList, fqdnDomain)
-			}
-
-			if len(fqdn.DomainList) > 0 {
-				if valid := client.ValidateFqdnTagRules(fqdn); !valid {
+				str := fqdnDomain.FQDN + fqdnDomain.Protocol + fqdnDomain.Port + fqdnDomain.Verdict
+				if mapDomains[str] {
 					return fmt.Errorf("validation on domain_names failed in update: duplicate rules are not allowed")
 				}
-				if err := client.AddFQDNTagRule(fqdn); err != nil {
-					return err
-				}
+				mapDomains[str] = true
+				fqdn.DomainList = append(fqdn.DomainList, fqdnDomain)
 			}
+		}
+		if err := client.UpdateDomains(fqdn); err != nil {
+			return fmt.Errorf("failed to set domain names in update : %s", err)
 		}
 	}
 	if d.HasChange("gw_filter_tag_list") {
