@@ -2,6 +2,7 @@ package goaviatrix
 
 import (
 	"strconv"
+	"strings"
 )
 
 // Tags simple struct to hold tag details
@@ -20,6 +21,75 @@ type TagAPIResp struct {
 	Return  bool                         `json:"return"`
 	Results map[string]map[string]string `json:"results"`
 	Reason  string                       `json:"reason"`
+}
+
+type IgnoreTagsConfig struct {
+	Keys        KeyValueTags
+	KeyPrefixes KeyValueTags
+}
+
+type KeyValueTags map[string]string
+
+func NewIgnoreTags(i interface{}) KeyValueTags {
+	switch value := i.(type) {
+	case []interface{}:
+		kvtm := make(KeyValueTags, len(value))
+
+		for _, v := range value {
+			kvtm[v.(string)] = ""
+		}
+
+		return kvtm
+	default:
+		return make(KeyValueTags)
+	}
+}
+
+func (tags KeyValueTags) IgnoreConfig(config *IgnoreTagsConfig) KeyValueTags {
+	if config == nil {
+		return tags
+	}
+
+	result := tags.IgnorePrefixes(config.KeyPrefixes)
+	result = result.Ignore(config.Keys)
+
+	return result
+}
+
+func (tags KeyValueTags) IgnorePrefixes(ignoreTagPrefixes KeyValueTags) KeyValueTags {
+	result := make(KeyValueTags)
+
+	for k, v := range tags {
+		var ignore bool
+
+		for ignoreTagPrefix := range ignoreTagPrefixes {
+			if strings.HasPrefix(k, ignoreTagPrefix) {
+				ignore = true
+				break
+			}
+		}
+
+		if ignore {
+			continue
+		}
+
+		result[k] = v
+	}
+	return result
+}
+
+func (tags KeyValueTags) Ignore(ignoreTags KeyValueTags) KeyValueTags {
+	result := make(KeyValueTags)
+
+	for k, v := range tags {
+		if _, ok := ignoreTags[k]; ok {
+			continue
+		}
+
+		result[k] = v
+	}
+
+	return result
 }
 
 func (c *Client) AddTags(tags *Tags) error {

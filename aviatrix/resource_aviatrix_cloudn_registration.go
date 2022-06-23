@@ -77,7 +77,7 @@ func resourceAviatrixCloudnRegistrationCreate(ctx context.Context, d *schema.Res
 		Password:          client.Password,
 	}
 
-	cloudnClient, err := goaviatrix.NewClient(d.Get("username").(string), d.Get("password").(string), d.Get("address").(string), nil)
+	cloudnClient, err := goaviatrix.NewClient(d.Get("username").(string), d.Get("password").(string), d.Get("address").(string), nil, nil)
 	if err != nil {
 		return diag.Errorf("failed to initialize Aviatrix CloudN Client: %v", err)
 	}

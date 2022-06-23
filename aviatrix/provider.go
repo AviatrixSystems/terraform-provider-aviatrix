@@ -4,6 +4,8 @@ import (
 	"errors"
 	"os"
 
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -41,6 +43,30 @@ func Provider() *schema.Provider {
 			"path_to_ca_certificate": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"ignore_tags": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems:    1,
+				Description: "Configuration block with settings to ignore tags across all resources.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"keys": {
+							Type:        schema.TypeSet,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Set:         schema.HashString,
+							Description: "Tag keys to ignore across all resources.",
+						},
+						"key_prefixes": {
+							Type:        schema.TypeSet,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Set:         schema.HashString,
+							Description: "Tag key prefixes to ignore across all resources.",
+						},
+					},
+				},
 			},
 		},
 
@@ -183,6 +209,7 @@ func aviatrixConfigure(d *schema.ResourceData) (interface{}, error) {
 		Password:     d.Get("password").(string),
 		VerifyCert:   d.Get("verify_ssl_certificate").(bool),
 		PathToCACert: d.Get("path_to_ca_certificate").(string),
+		IgnoreTags:   expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
 	}
 
 	skipVersionValidation := d.Get("skip_version_validation").(bool)
@@ -210,7 +237,27 @@ func aviatrixConfigureWithoutVersionValidation(d *schema.ResourceData) (interfac
 		Password:     d.Get("password").(string),
 		VerifyCert:   d.Get("verify_ssl_certificate").(bool),
 		PathToCACert: d.Get("path_to_ca_certificate").(string),
+		IgnoreTags:   expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
 	}
 
 	return config.Client()
+}
+
+func expandProviderIgnoreTags(l []interface{}) *goaviatrix.IgnoreTagsConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	ignoreConfig := &goaviatrix.IgnoreTagsConfig{}
+	m := l[0].(map[string]interface{})
+
+	if v, ok := m["keys"].(*schema.Set); ok {
+		ignoreConfig.Keys = goaviatrix.NewIgnoreTags(v.List())
+	}
+
+	if v, ok := m["key_prefixes"].(*schema.Set); ok {
+		ignoreConfig.KeyPrefixes = goaviatrix.NewIgnoreTags(v.List())
+	}
+
+	return ignoreConfig
 }

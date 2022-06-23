@@ -1311,6 +1311,7 @@ func resourceAviatrixSpokeGatewayReadIfRequired(d *schema.ResourceData, meta int
 
 func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
+	ignoreTagsConfig := client.IgnoreTagsConfig
 
 	var isImport bool
 	gwName := d.Get("gw_name").(string)
@@ -1541,7 +1542,8 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 				}
 			}
 		} else {
-			if err := d.Set("tags", gw.Tags); err != nil {
+			tags := goaviatrix.KeyValueTags(gw.Tags).IgnoreConfig(ignoreTagsConfig)
+			if err := d.Set("tags", tags); err != nil {
 				log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
 			}
 		}
