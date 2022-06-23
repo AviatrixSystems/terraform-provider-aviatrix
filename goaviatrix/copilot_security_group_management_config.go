@@ -2,6 +2,8 @@ package goaviatrix
 
 import (
 	"context"
+	"fmt"
+	"strings"
 )
 
 type CopilotSecurityGroupManagementConfig struct {
@@ -24,12 +26,7 @@ func (c *Client) EnableCopilotSecurityGroupManagement(ctx context.Context, copil
 	copilotSecurityGroupManagementConfig.CID = c.CID
 	copilotSecurityGroupManagementConfig.LogEnable = true
 
-	err := c.PostAPIContext2(ctx, nil, copilotSecurityGroupManagementConfig.Action, copilotSecurityGroupManagementConfig, BasicCheck)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return c.PostAPIContext2(ctx, nil, copilotSecurityGroupManagementConfig.Action, copilotSecurityGroupManagementConfig, BasicCheck)
 }
 
 func (c *Client) GetCopilotSecurityGroupManagementConfig(ctx context.Context) (*CopilotSecurityGroupManagementConfig, error) {
@@ -61,5 +58,15 @@ func (c *Client) DisableCopilotSecurityGroupManagement(ctx context.Context) erro
 		"log_enable": "true",
 	}
 
-	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "not enabled") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
+		}
+		return nil
+	}
+
+	return c.PostAPIContext(ctx, form["action"], form, checkFunc)
 }

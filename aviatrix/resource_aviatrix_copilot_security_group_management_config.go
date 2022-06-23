@@ -2,7 +2,6 @@ package aviatrix
 
 import (
 	"context"
-	"log"
 	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
@@ -114,11 +113,7 @@ func resourceAviatrixCopilotSecurityGroupManagementConfigCreate(ctx context.Cont
 
 		err := client.DisableCopilotSecurityGroupManagement(ctx)
 		if err != nil {
-			if strings.Contains(err.Error(), "not enabled") {
-				log.Printf("copilot security group management is already disabled")
-			} else {
-				return diag.Errorf("could not disable copilot security group management: %v", err)
-			}
+			return diag.Errorf("could not disable copilot security group management: %v", err)
 		}
 	}
 
@@ -200,11 +195,7 @@ func resourceAviatrixCopilotSecurityGroupManagementConfigUpdate(ctx context.Cont
 
 			err := client.DisableCopilotSecurityGroupManagement(ctx)
 			if err != nil {
-				if strings.Contains(err.Error(), "not enabled") {
-					log.Printf("copilot security group management is already disabled")
-				} else {
-					return diag.Errorf("could not disable copilot security group management: %v", err)
-				}
+				return diag.Errorf("could not disable copilot security group management: %v", err)
 			}
 		}
 	} else {
@@ -212,11 +203,7 @@ func resourceAviatrixCopilotSecurityGroupManagementConfigUpdate(ctx context.Cont
 			if d.HasChanges("cloud_type", "account_name", "region", "zone", "vpc_id", "instance_id") {
 				err := client.DisableCopilotSecurityGroupManagement(ctx)
 				if err != nil {
-					if strings.Contains(err.Error(), "not enabled") {
-						log.Printf("copilot security group management is already disabled")
-					} else {
-						return diag.Errorf("could not disable copilot security group management: %v", err)
-					}
+					return diag.Errorf("could not disable copilot security group management: %v", err)
 				}
 
 				if copilotSecurityGroupManagementConfig.CloudType == 0 || copilotSecurityGroupManagementConfig.AccountName == "" ||
@@ -254,11 +241,7 @@ func resourceAviatrixCopilotSecurityGroupManagementConfigDelete(ctx context.Cont
 
 	err := client.DisableCopilotSecurityGroupManagement(ctx)
 	if err != nil {
-		if strings.Contains(err.Error(), "not enabled") {
-			log.Printf("copilot security group management is already disabled")
-		} else {
-			return diag.Errorf("could not disable copilot security group management: %v", err)
-		}
+		return diag.Errorf("could not disable copilot security group management: %v", err)
 	}
 
 	return nil
