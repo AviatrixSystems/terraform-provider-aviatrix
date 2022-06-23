@@ -241,3 +241,7 @@ output "AZURE_VNG" {
 output "EDGE_SPOKE_NAME" {
   value = var.edge_spoke_name
 }
+
+output "EDGE_SPOKE_SITE_ID" {
+  value = var.edge_spoke_site_id
+}
