@@ -44,8 +44,6 @@ resource "aviatrix_fqdn" "test_fqdn" {
 
 ## Argument Reference
 
-!> **WARNING:** Attribute `domain_names` has been deprecated as of provider version R2.18.1+ and will not receive further updates. Please set `manage_domain_names` to false, and use the standalone `aviatrix_fqdn_tag_rule` resource instead.
-
 The following arguments are supported:
 
 * `fqdn_tag` - (Required) FQDN Filter tag name.

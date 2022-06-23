@@ -69,8 +69,7 @@ func resourceAviatrixFQDN() *schema.Resource {
 			"domain_names": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Deprecated:  "Please set `manage_domain_names` to false, and use the standalone aviatrix_fqdn_tag_rule resource instead.",
-				Description: "A list of one or more domain names.",
+				Description: "A list of one or more domain names/tag rules.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"fqdn": {
@@ -144,6 +143,7 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 
 	if hasSetDomainNames && enabledInlineDomainNames {
 		names := d.Get("domain_names").([]interface{})
+		mapDomains := make(map[string]bool)
 		for _, domain := range names {
 			if domain != nil {
 				dn := domain.(map[string]interface{})
@@ -153,14 +153,16 @@ func resourceAviatrixFQDNCreate(d *schema.ResourceData, meta interface{}) error 
 					Port:     dn["port"].(string),
 					Verdict:  dn["action"].(string),
 				}
-
+				str := fqdnFilter.FQDN + fqdnFilter.Protocol + fqdnFilter.Port + fqdnFilter.Verdict
+				if mapDomains[str] {
+					return fmt.Errorf("validation on domain_names failed: duplicate rules are not allowed")
+				}
+				mapDomains[str] = true
 				fqdn.DomainList = append(fqdn.DomainList, fqdnFilter)
 			}
 		}
-
-		err = client.UpdateDomains(fqdn)
-		if err != nil {
-			return fmt.Errorf("failed to add domain : %s", err)
+		if err := client.UpdateDomains(fqdn); err != nil {
+			return fmt.Errorf("failed to set domain names: %s", err)
 		}
 	}
 
@@ -408,6 +410,7 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("domain_names") && enabledInlineDomainNames {
 		if hasSetDomainNames {
 			names := d.Get("domain_names").([]interface{})
+			mapDomains := make(map[string]bool)
 			for _, domain := range names {
 				dn := domain.(map[string]interface{})
 				fqdnDomain := &goaviatrix.Filters{
@@ -416,12 +419,16 @@ func resourceAviatrixFQDNUpdate(d *schema.ResourceData, meta interface{}) error 
 					Port:     dn["port"].(string),
 					Verdict:  dn["action"].(string),
 				}
+				str := fqdnDomain.FQDN + fqdnDomain.Protocol + fqdnDomain.Port + fqdnDomain.Verdict
+				if mapDomains[str] {
+					return fmt.Errorf("validation on domain_names failed in update: duplicate rules are not allowed")
+				}
+				mapDomains[str] = true
 				fqdn.DomainList = append(fqdn.DomainList, fqdnDomain)
 			}
 		}
-		err := client.UpdateDomains(fqdn)
-		if err != nil {
-			return fmt.Errorf("failed to add domain : %s", err)
+		if err := client.UpdateDomains(fqdn); err != nil {
+			return fmt.Errorf("failed to set domain names in update : %s", err)
 		}
 	}
 	if d.HasChange("gw_filter_tag_list") {
