@@ -117,7 +117,7 @@ func (c *Client) CreateGCPAccount(account *Account) error {
 		},
 	}
 
-	return c.PostFileAPI(params, files, BasicCheck)
+	return c.PostFileAPI(params, files, DuplicateBasicCheck)
 }
 
 func (c *Client) CreateOCIAccount(account *Account) error {
@@ -139,7 +139,7 @@ func (c *Client) CreateOCIAccount(account *Account) error {
 		},
 	}
 
-	return c.PostFileAPI(params, files, BasicCheck)
+	return c.PostFileAPI(params, files, DuplicateBasicCheck)
 }
 
 func (c *Client) CreateAWSTSAccount(account *Account) error {
@@ -203,7 +203,7 @@ func (c *Client) CreateAWSSAccount(account *Account) error {
 		},
 	}
 
-	return c.PostFileAPI(params, files, BasicCheck)
+	return c.PostFileAPI(params, files, DuplicateBasicCheck)
 }
 
 func (c *Client) GetAccount(account *Account) (*Account, error) {
