@@ -225,11 +225,6 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 				Computed:    true,
 				Description: "WAN interface public IP.",
 			},
-			"state": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "State of Edge as a Spoke.",
-			},
 		},
 	}
 }
@@ -501,13 +496,7 @@ func resourceAviatrixEdgeSpokeRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("bgp_polling_time", edgeSpoke.BgpPollingTime)
 	d.Set("bgp_hold_time", edgeSpoke.BgpHoldTime)
 	d.Set("enable_edge_transitive_routing", edgeSpoke.EnableEdgeTransitiveRouting)
-
-	if edgeSpoke.State == "waiting" {
-		d.Set("enable_jumbo_frame", edgeSpoke.JumboFrameUserConfig)
-	} else {
-		d.Set("enable_jumbo_frame", edgeSpoke.JumboFrameActualState)
-	}
-
+	d.Set("enable_jumbo_frame", edgeSpoke.EnableJumboFrame)
 	if edgeSpoke.LatitudeReturn != 0 || edgeSpoke.LongitudeReturn != 0 {
 		d.Set("latitude", fmt.Sprintf("%.6f", edgeSpoke.LatitudeReturn))
 		d.Set("longitude", fmt.Sprintf("%.6f", edgeSpoke.LongitudeReturn))
@@ -515,9 +504,7 @@ func resourceAviatrixEdgeSpokeRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("latitude", "")
 		d.Set("longitude", "")
 	}
-
 	d.Set("wan_public_ip", edgeSpoke.WanPublicIp)
-	d.Set("state", edgeSpoke.State)
 
 	d.SetId(edgeSpoke.GwName)
 	return nil
