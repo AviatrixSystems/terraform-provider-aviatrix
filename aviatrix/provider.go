@@ -83,7 +83,7 @@ func Provider() *schema.Provider {
 			"aviatrix_datadog_agent":                                  resourceAviatrixDatadogAgent(),
 			"aviatrix_device_interface_config":                        resourceAviatrixDeviceInterfaceConfig(),
 			"aviatrix_edge_caag":                                      resourceAviatrixEdgeCaag(),
-      "aviatrix_edge_spoke":                                     resourceAviatrixEdgeSpoke(),
+			"aviatrix_edge_spoke":                                     resourceAviatrixEdgeSpoke(),
 			"aviatrix_edge_spoke_transit_attachment":                  resourceAviatrixEdgeSpokeTransitAttachment(),
 			"aviatrix_filebeat_forwarder":                             resourceAviatrixFilebeatForwarder(),
 			"aviatrix_firenet":                                        resourceAviatrixFireNet(),
