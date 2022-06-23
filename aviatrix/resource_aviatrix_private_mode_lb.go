@@ -25,27 +25,32 @@ func resourceAviatrixPrivateModeLb() *schema.Resource {
 			"account_name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Name of the access account.",
 			},
 			"vpc_id": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "ID of the VPC for the load balancer.",
 			},
 			"region": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Name of the VPC region.",
 			},
 			"lb_type": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{"controller", "multicloud"}, false),
 				Description:  "Type of load balancer to create. Must be one of controller or multicloud.",
 			},
 			"multicloud_access_vpc_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "VPC ID of multicloud access VPC to connect to. Required when lb_type is multicloud.",
 			},
 			"proxies": {

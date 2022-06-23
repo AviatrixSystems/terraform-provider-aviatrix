@@ -354,12 +354,14 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 			"private_mode_lb_vpc_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				ForceNew:      true,
 				Description:   "Private Mode controller load balancer vpc_id.  Required when private mode is enabled for the Controller.",
 				ConflictsWith: []string{"allocate_new_eip"},
 			},
 			"private_mode_subnet_zone": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "Subnet availability zone. Required when Private Mode is enabled on the Controller and cloud_type is AWS.",
 			},
 			"local_as_number": {

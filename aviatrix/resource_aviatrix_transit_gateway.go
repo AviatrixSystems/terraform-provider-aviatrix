@@ -493,12 +493,14 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"private_mode_lb_vpc_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				ForceNew:      true,
 				Description:   "Private Mode Controller load balancer VPC ID. Required when private mode is enabled for the Controller.",
 				ConflictsWith: []string{"allocate_new_eip"},
 			},
 			"private_mode_subnet_zone": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 				Description: "Private Mode subnet availability zone.",
 			},
 			"availability_domain": {
