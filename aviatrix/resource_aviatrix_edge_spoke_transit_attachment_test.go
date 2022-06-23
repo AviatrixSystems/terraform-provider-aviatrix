@@ -24,6 +24,7 @@ func TestAccAviatrixEdgeSpokeTransitAttachment_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			preEdgeSpokeTransitAttachmentCheck(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEdgeSpokeTransitAttachmentDestroy,
@@ -43,6 +44,12 @@ func TestAccAviatrixEdgeSpokeTransitAttachment_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func preEdgeSpokeTransitAttachmentCheck(t *testing.T) {
+	if os.Getenv("EDGE_SPOKE_NAME") == "" {
+		t.Fatal("Environment variable EDGE_SPOKE_NAME is not set")
+	}
 }
 
 func testAccEdgeSpokeTransitAttachmentConfigBasic(rName string) string {

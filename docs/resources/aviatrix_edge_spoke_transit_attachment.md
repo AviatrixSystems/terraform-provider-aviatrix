@@ -35,8 +35,8 @@ The following arguments are supported:
 * `enable_jumbo_frame` - (Optional) Switch to enable jumbo frame. Valid values: true, false. Default: false.
 * `enable_insane_mode` - (Optional) Switch to enable insane mode. Valid values: true, false. Default: false.
 * `insane_mode_tunnel_number` - (Optional) Insane mode tunnel number. Default: 0.
-* `spoke_prepend_as_path` - (Optional) Connection based AS Path Prepend. Can only use the gateway's own local AS number, repeated up to 25 times. Applies on spoke_gateway_name.
-* `transit_prepend_as_path` - (Optional) Connection based AS Path Prepend. Can only use the gateway's own local AS number, repeated up to 25 times. Applies on transit_gateway_name.
+* `spoke_prepend_as_path` - (Optional) Connection based AS Path Prepend. Can only use the gateway's own local AS number, repeated up to 25 times. Applies on the Edge as a Spoke.
+* `transit_prepend_as_path` - (Optional) Connection based AS Path Prepend. Can only use the gateway's own local AS number, repeated up to 25 times. Applies on the Transit Gateway.
 
 ## Import
 
