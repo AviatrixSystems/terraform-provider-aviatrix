@@ -170,9 +170,12 @@ func resourceAviatrixFirewallPolicyRead(d *schema.ResourceData, meta interface{}
 	}
 
 	fw, err := client.GetFirewallPolicy(fw)
-	if err == goaviatrix.ErrNotFound {
-		d.SetId("")
-		return nil
+	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
+		return err
 	}
 	id := getFirewallPolicyID(fw)
 	if err != nil {
