@@ -396,10 +396,29 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 	}
 
 	customAlgorithms := d.Get("custom_algorithms").(bool)
-	if !customAlgorithms && (externalDeviceConn.Phase1Auth != "" || externalDeviceConn.Phase1DhGroups != "" ||
-		externalDeviceConn.Phase1Encryption != "" || externalDeviceConn.Phase2Auth != "" ||
-		externalDeviceConn.Phase2DhGroups != "" || externalDeviceConn.Phase2Encryption != "") {
-		return fmt.Errorf("'custom_algorithms' is not enabled, all algorithms fields should be left empty")
+	if customAlgorithms {
+		if externalDeviceConn.Phase1Auth == "" ||
+			externalDeviceConn.Phase2Auth == "" ||
+			externalDeviceConn.Phase1DhGroups == "" ||
+			externalDeviceConn.Phase2DhGroups == "" ||
+			externalDeviceConn.Phase1Encryption == "" ||
+			externalDeviceConn.Phase2Encryption == "" {
+			return fmt.Errorf("custom_algorithms is enabled, please set all of the algorithm parameters")
+		} else if externalDeviceConn.Phase1Auth == goaviatrix.Phase1AuthDefault &&
+			externalDeviceConn.Phase2Auth == goaviatrix.Phase2AuthDefault &&
+			externalDeviceConn.Phase1DhGroups == goaviatrix.Phase1DhGroupDefault &&
+			externalDeviceConn.Phase2DhGroups == goaviatrix.Phase2DhGroupDefault &&
+			externalDeviceConn.Phase1Encryption == goaviatrix.Phase1EncryptionDefault &&
+			externalDeviceConn.Phase2Encryption == goaviatrix.Phase2EncryptionDefault {
+			return fmt.Errorf("custom_algorithms is enabled, cannot use default values for " +
+				"all six algorithm parameters. Please change value of one or multiple of the six algorithm parameters")
+		}
+	} else {
+		if externalDeviceConn.Phase1Auth != "" || externalDeviceConn.Phase1DhGroups != "" ||
+			externalDeviceConn.Phase1Encryption != "" || externalDeviceConn.Phase2Auth != "" ||
+			externalDeviceConn.Phase2DhGroups != "" || externalDeviceConn.Phase2Encryption != "" {
+			return fmt.Errorf("'custom_algorithms' is not enabled, all algorithms fields should be left empty")
+		}
 	}
 
 	if haEnabled {
