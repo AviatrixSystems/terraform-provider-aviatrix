@@ -411,13 +411,13 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 			externalDeviceConn.Phase1Encryption == goaviatrix.Phase1EncryptionDefault &&
 			externalDeviceConn.Phase2Encryption == goaviatrix.Phase2EncryptionDefault {
 			return fmt.Errorf("custom_algorithms is enabled, cannot use default values for " +
-				"all six algorithm parameters. Please change value of one or multiple of the six algorithm parameters")
+				"all six algorithm parameters. Please change the value of at least one of the six algorithm parameters")
 		}
 	} else {
 		if externalDeviceConn.Phase1Auth != "" || externalDeviceConn.Phase1DhGroups != "" ||
 			externalDeviceConn.Phase1Encryption != "" || externalDeviceConn.Phase2Auth != "" ||
 			externalDeviceConn.Phase2DhGroups != "" || externalDeviceConn.Phase2Encryption != "" {
-			return fmt.Errorf("custom_algorithms is not enabled, all algorithms fields should be left empty")
+			return fmt.Errorf("custom_algorithms is not enabled, all algorithm fields should be left empty")
 		}
 	}
 
