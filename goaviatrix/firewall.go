@@ -178,6 +178,9 @@ func (c *Client) DeleteFirewallPolicy(fw *Firewall) error {
 func (c *Client) GetFirewallPolicy(fw *Firewall) (*Firewall, error) {
 	foundFirewall, err := c.GetPolicy(fw)
 	if err != nil {
+		if err == ErrNotFound {
+			return nil, err
+		}
 		return nil, fmt.Errorf("could not list firewall rules: %v", err)
 	}
 	rule := fw.PolicyList[0]
