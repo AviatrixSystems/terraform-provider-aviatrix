@@ -501,7 +501,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		if externalDeviceConn.Phase1Auth != "" || externalDeviceConn.Phase1DhGroups != "" ||
 			externalDeviceConn.Phase1Encryption != "" || externalDeviceConn.Phase2Auth != "" ||
 			externalDeviceConn.Phase2DhGroups != "" || externalDeviceConn.Phase2Encryption != "" {
-			return fmt.Errorf("'custom_algorithms' is not enabled, all algorithms fields should be left empty")
+			return fmt.Errorf("custom_algorithms is not enabled, all algorithms fields should be left empty")
 		}
 	}
 
