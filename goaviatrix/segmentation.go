@@ -1,5 +1,7 @@
 package goaviatrix
 
+import "strings"
+
 type SegmentationSecurityDomain struct {
 	DomainName string
 }
@@ -148,6 +150,7 @@ func (c *Client) GetSegmentationSecurityDomainAssociation(association *Segmentat
 		Name        string `json:"name"`
 		Domain      string `json:"domain"`
 		TransitName string `json:"transit_name"`
+		Type        string `json:"type"`
 	}
 
 	type Result struct {
@@ -169,6 +172,10 @@ func (c *Client) GetSegmentationSecurityDomainAssociation(association *Segmentat
 
 	found := false
 	for _, attachment := range data.Results.Attachments {
+		if attachment.Type == "EDGESPOKE" {
+			attachment.Name = strings.Split(attachment.Name, ":")[0]
+		}
+
 		if attachment.Domain == association.SecurityDomainName &&
 			attachment.Name == association.AttachmentName &&
 			attachment.TransitName == association.TransitGatewayName {
