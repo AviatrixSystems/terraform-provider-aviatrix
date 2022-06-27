@@ -1,7 +1,6 @@
 package aviatrix
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -35,7 +34,7 @@ func TestAccAviatrixFQDNGlobalConfigs_basic(t *testing.T) {
 }
 
 func testAccFQDNGlobalConfigsBasic() string {
-	return fmt.Sprint(`
+	return `
 resource "aviatrix_fqdn_global_configs" "test_fqdn_global_configs" {
   exception_rule    = false
   network_filtering = "Customize Network Filtering"
@@ -43,5 +42,5 @@ resource "aviatrix_fqdn_global_configs" "test_fqdn_global_configs" {
   caching           = false
   exact_match       = true
 }
-`)
+`
 }
