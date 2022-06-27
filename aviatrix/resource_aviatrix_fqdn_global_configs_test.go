@@ -35,7 +35,7 @@ func TestAccAviatrixFQDNGlobalConfigs_basic(t *testing.T) {
 }
 
 func testAccFQDNGlobalConfigsBasic() string {
-	return fmt.Sprintf(`
+	return fmt.Sprint(`
 resource "aviatrix_fqdn_global_configs" "test_fqdn_global_configs" {
   exception_rule    = false
   network_filtering = "Customize Network Filtering"
