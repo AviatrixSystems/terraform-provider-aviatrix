@@ -2,6 +2,7 @@ package goaviatrix
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -65,6 +66,17 @@ type FQDNPassThroughResp struct {
 
 type FQDNPassThrough struct {
 	ConfiguredIPs []string `json:"configured_ips"`
+}
+
+type FQDNPrivateNetworkingFilteringResp struct {
+	Return bool                                 `json:"return"`
+	Result FQDNPrivateNetworkingFilteringStatus `json:"results"`
+}
+
+type FQDNPrivateNetworkingFilteringStatus struct {
+	PrivateSubFilter string   `json:"private_sub_filter"`
+	ConfiguredIps    []string `json:"configured_ips"`
+	Rfc1918          []string `json:"rfc_1918"`
 }
 
 func (c *Client) CreateFQDN(fqdn *FQDN) error {
@@ -424,4 +436,151 @@ func (c *Client) DeleteFQDNTagRule(fqdn *FQDN) error {
 	}
 
 	return c.PostAPI(form["action"], form, checkFunc)
+}
+
+func (c *Client) EnableFQDNExceptionRule(ctx context.Context) error {
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "enable_fqdn_exception_rule",
+	}
+
+	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
+}
+
+func (c *Client) DisableFQDNExceptionRule(ctx context.Context) error {
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "disable_fqdn_exception_rule",
+	}
+
+	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
+}
+
+func (c *Client) EnableFQDNPrivateNetworks(ctx context.Context) error {
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "enable_fqdn_on_private_networks",
+	}
+
+	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
+}
+
+func (c *Client) DisableFQDNPrivateNetwork(ctx context.Context) error {
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "disable_fqdn_on_private_networks",
+	}
+
+	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
+}
+
+func (c *Client) SetFQDNCustomNetwork(ctx context.Context, configIpString string) error {
+	action := "disable_fqdn_on_custom_networks"
+	form := map[string]interface{}{
+		"CID":        c.CID,
+		"action":     action,
+		"source_ips": configIpString,
+	}
+	return c.PostAPIContext(ctx, action, form, BasicCheck)
+}
+
+func (c *Client) EnableFQDNCache(ctx context.Context) error {
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "enable_fqdn_cache_global",
+	}
+
+	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
+}
+
+func (c *Client) DisableFQDNCache(ctx context.Context) error {
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "disable_fqdn_cache_global",
+	}
+
+	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
+}
+
+func (c *Client) EnableFQDNExactMatch(ctx context.Context) error {
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "enable_fqdn_exact_match",
+	}
+
+	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
+}
+
+func (c *Client) DisableFQDNExactMatch(ctx context.Context) error {
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "disable_fqdn_exact_match",
+	}
+
+	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
+}
+
+func (c *Client) GetFQDNCacheGlobalStatus(ctx context.Context) (*string, error) {
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "get_fqdn_cache_global_status",
+	}
+
+	var data map[string]interface{}
+
+	err := c.GetAPIContext(ctx, &data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+
+	result := data["results"].(string)
+	return &result, nil
+}
+
+func (c *Client) GetFQDNExactMatchStatus(ctx context.Context) (*string, error) {
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "get_fqdn_exact_match_status",
+	}
+
+	var data map[string]interface{}
+
+	err := c.GetAPIContext(ctx, &data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+	result := data["results"].(string)
+	return &result, nil
+
+}
+
+func (c *Client) GetFQDNExceptionRuleStatus(ctx context.Context) (*string, error) {
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "get_fqdn_exception_rule_status",
+	}
+
+	var data map[string]interface{}
+
+	err := c.GetAPIContext(ctx, &data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+	result := data["results"].(string)
+	return &result, nil
+}
+
+func (c *Client) GetFQDNPrivateNetworkFilteringStatus(ctx context.Context) (*FQDNPrivateNetworkingFilteringStatus, error) {
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "get_fqdn_private_network_filtering_status",
+	}
+
+	var data FQDNPrivateNetworkingFilteringResp
+
+	err := c.GetAPIContext(ctx, &data, form["action"], form, BasicCheck)
+	if err != nil {
+		return nil, err
+	}
+	return &data.Result, nil
 }
