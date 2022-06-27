@@ -122,6 +122,7 @@ func Provider() *schema.Provider {
 			"aviatrix_firewall_policy":                                resourceAviatrixFirewallPolicy(),
 			"aviatrix_firewall_tag":                                   resourceAviatrixFirewallTag(),
 			"aviatrix_fqdn":                                           resourceAviatrixFQDN(),
+			"aviatrix_fqdn_global_configs":                            resourceAviatrixFQDNGlobalConfigs(),
 			"aviatrix_fqdn_pass_through":                              resourceAviatrixFQDNPassThrough(),
 			"aviatrix_fqdn_tag_rule":                                  resourceAviatrixFQDNTagRule(),
 			"aviatrix_gateway":                                        resourceAviatrixGateway(),
@@ -169,7 +170,6 @@ func Provider() *schema.Provider {
 			"aviatrix_vpn_profile":                                    resourceAviatrixProfile(),
 			"aviatrix_vpn_user":                                       resourceAviatrixVPNUser(),
 			"aviatrix_vpn_user_accelerator":                           resourceAviatrixVPNUserAccelerator(),
-			"aviatrix_fqdn_global_configs":                            resourceAviatrixFQDNGlobalConfigs(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"aviatrix_account":                          dataSourceAviatrixAccount(),
