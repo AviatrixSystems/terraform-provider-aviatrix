@@ -75,10 +75,11 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"policy", "route"}, false),
 				Description:  "Site2Cloud Tunnel Type. Valid values: 'policy' and 'route'.",
 			},
-			"cert_name": {
+			"ca_cert_tag_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Name of Remote CA Certificate for creating Site2Cloud tunnels. Required for Cert based authentication type.",
+				ForceNew:    true,
+				Description: "Name of Remote CA Certificate Tag for creating Site2Cloud tunnels. Required for Cert based authentication type.",
 			},
 			"remote_identifier": {
 				Type:        schema.TypeString,
@@ -416,7 +417,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		ConnType:                      d.Get("connection_type").(string),
 		AuthType:                      d.Get("auth_type").(string),
 		TunnelType:                    d.Get("tunnel_type").(string),
-		CertName:                      d.Get("cert_name").(string),
+		CaCertTagName:                 d.Get("ca_cert_tag_name").(string),
 		RemoteIdentifier:              d.Get("remote_identifier").(string),
 		RemoteGwType:                  d.Get("remote_gateway_type").(string),
 		RemoteGwIP:                    d.Get("remote_gateway_ip").(string),
@@ -443,13 +444,13 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if s2c.AuthType == "Cert" {
-		if s2c.CertName == "" || s2c.RemoteIdentifier == "" {
-			return fmt.Errorf("'cert_name' and 'remote_identifier' are both required for Cert based authentication type")
+		if s2c.CaCertTagName == "" || s2c.RemoteIdentifier == "" {
+			return fmt.Errorf("'ca_cert_tag_name' and 'remote_identifier' are both required for Cert based authentication type")
 		}
 		s2c.AuthType = "pubkey"
 	} else {
-		if s2c.CertName != "" || s2c.RemoteIdentifier != "" {
-			return fmt.Errorf("'cert_name' and 'remote_identifier' are only required for PSK based authentication type")
+		if s2c.CaCertTagName != "" || s2c.RemoteIdentifier != "" {
+			return fmt.Errorf("'ca_cert_tag_name' and 'remote_identifier' are only required for PSK based authentication type")
 		}
 	}
 
@@ -790,7 +791,7 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("tunnel_type", s2c.TunnelType)
 		if s2c.AuthType == "pubkey" {
 			d.Set("auth_type", "Cert")
-			d.Set("cert_name", s2c.CertName)
+			d.Set("ca_cert_tag_name", s2c.CaCertTagName)
 			d.Set("remote_identifier", s2c.RemoteIdentifier)
 		} else {
 			d.Set("auth_type", "PSK")
@@ -1131,26 +1132,26 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	if d.HasChange("cert_name") {
-		if d.Get("auth_type").(string) != "Cert" {
-			return fmt.Errorf("attribute 'cert_name' is not valid for PSK based authentication type")
-		}
-		certName := d.Get("cert_name").(string)
-		if certName == "" {
-			return fmt.Errorf("attribute 'cert_name' is required for Cert based authentication type")
-		}
-		s2c := &goaviatrix.EditSite2Cloud{
-			VpcID:            d.Get("vpc_id").(string),
-			ConnName:         d.Get("connection_name").(string),
-			CertName:         certName,
-			RemoteIdentifier: d.Get("remote_identifier").(string),
-		}
-
-		err := client.UpdateSite2Cloud(s2c)
-		if err != nil {
-			return fmt.Errorf("failedd to update cert_name for site2cloud connection: %v", err)
-		}
-	}
+	//if d.HasChange("ca_cert_tag_name") {
+	//	if d.Get("auth_type").(string) != "Cert" {
+	//		return fmt.Errorf("attribute 'ca_cert_tag_name' is not valid for PSK based authentication type")
+	//	}
+	//	caCertTagName := d.Get("ca_cert_tag_name").(string)
+	//	if caCertTagName == "" {
+	//		return fmt.Errorf("attribute 'ca_cert_tag_name' is required for Cert based authentication type")
+	//	}
+	//	s2c := &goaviatrix.EditSite2Cloud{
+	//		VpcID:            d.Get("vpc_id").(string),
+	//		ConnName:         d.Get("connection_name").(string),
+	//		CaCertTagName:    caCertTagName,
+	//		RemoteIdentifier: d.Get("remote_identifier").(string),
+	//	}
+	//
+	//	err := client.UpdateSite2Cloud(s2c)
+	//	if err != nil {
+	//		return fmt.Errorf("failed to update ca_cert_tag_name for site2cloud connection: %v", err)
+	//	}
+	//}
 
 	d.Partial(false)
 	d.SetId(editSite2cloud.ConnName + "~" + editSite2cloud.VpcID)

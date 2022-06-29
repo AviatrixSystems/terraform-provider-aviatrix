@@ -3,7 +3,7 @@ subcategory: "Site2Cloud"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_site2cloud"
 description: |-
-  Create and manage Aviatrix Site2Cloud connections
+  Creates and manages Aviatrix Site2Cloud connections
 ---
 
 # aviatrix_site2cloud
@@ -45,6 +45,23 @@ resource "aviatrix_site2cloud" "test_s2c" {
   local_source_virtual_cidrs       = ["10.11.1.0/24"]
   local_destination_real_cidrs     = ["10.11.2.0/24"]
   local_destination_virtual_cidrs  = ["10.11.4.0/24"]
+}
+```
+```hcl
+# Create an Aviatrix Site2cloud Route Based Custom Unmapped Connection with Cert based Authentication
+resource "aviatrix_site2cloud" "test_s2c" {
+  vpc_id                     = "vpc-abcd1234"
+  connection_name            = "my_conn"
+  connection_type            = "unmapped"
+  remote_gateway_type        = "generic"
+  tunnel_type                = "route"
+  auth_type                  = "Cert"
+  ca_cert_tag_name           = "tag1"
+  remote_identifier          = "gw-10-10-0-115"
+  primary_cloud_gateway_name = "gw1"
+  remote_gateway_ip          = "5.5.5.5"
+  remote_subnet_cidr         = "170.1.1.0/24"
+  local_subnet_cidr          = "10.1.1.0/24"
 }
 ```
 
@@ -111,7 +128,10 @@ The following arguments are supported:
 * `local_destination_virtual_cidrs` - (Optional) List of Local Initiated Traffic Destination Virtual CIDRs.
 
 ### Misc.
+* `auth_type` - (Optional) Authentication Type. Valid values: 'PSK' and 'Cert'. Default value: 'PSK'.
 * `pre_shared_key` - (Optional) Pre-Shared Key.
+* `ca_cert_tag_name` - (Optional) Name of Remote CA Certificate Tag for creating Site2Cloud tunnels. Required for Cert based authentication type.
+* `remote_identifier` - (Optional) Remote identifier. Required for Cert based authentication type. Example: "gw-10-10-0-115".
 * `ssl_server_pool` - (Optional) Specify ssl_server_pool. Default value: "192.168.44.0/24". **NOTE: Please see notes [here](#ssl_server_pool) for more information.**
 * `enable_dead_peer_detection` - (Optional) Enable/disable Deed Peer Detection for an existing site2cloud connection. Default value: true. **NOTE: Please see notes [here](#enable_dead_peer_detection) in regards to any deltas found in your state with the addition of this argument in R1.9**
 * `enable_active_active` - (Optional) Enable/disable active active HA for an existing site2cloud connection. Valid values: true, false. Default value: false.
