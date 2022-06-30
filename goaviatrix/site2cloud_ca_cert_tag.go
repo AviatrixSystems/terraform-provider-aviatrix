@@ -72,8 +72,8 @@ func (c *Client) GetS2CCaCertTag(s2cCaCertTag *S2CCaCertTag) (*S2CCaCertTag, err
 		TagName: s2cCaCertTag.TagName,
 	}
 	if len(data.Results) != 0 {
-		for _, certInstance := range data.Results {
-			s2cCaCertTagReturn.CaCertificates = append(s2cCaCertTagReturn.CaCertificates, certInstance)
+		for i, _ := range data.Results {
+			s2cCaCertTagReturn.CaCertificates = append(s2cCaCertTagReturn.CaCertificates, data.Results[i])
 		}
 		return s2cCaCertTagReturn, nil
 	}
