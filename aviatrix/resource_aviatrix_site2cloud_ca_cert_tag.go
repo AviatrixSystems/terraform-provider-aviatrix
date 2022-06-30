@@ -97,7 +97,6 @@ func resourceAviatrixSite2CloudCaCertTagRead(ctx context.Context, d *schema.Reso
 	if tagName == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import. Import Id is %s", id)
-
 		d.Set("tag_name", id)
 		d.SetId(id)
 	}
@@ -178,7 +177,6 @@ func resourceAviatrixSite2CloudCaCertTagUpdate(ctx context.Context, d *schema.Re
 	}
 
 	d.Partial(false)
-
 	d.SetId(d.Get("tag_name").(string))
 	return resourceAviatrixSite2CloudCaCertTagRead(ctx, d, meta)
 }
