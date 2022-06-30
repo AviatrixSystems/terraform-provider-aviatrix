@@ -54,14 +54,14 @@ resource "aviatrix_account" "test_account" {
     aws_secret_key     = "%s"
 }
 resource "aviatrix_site2cloud_ca_cert_tag" "test" {
-    tag_name = "test"
+    tag_name = "%s"
 
     ca_certificates {
         cert_content = file("%s")
     }
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"),
-		os.Getenv("AWS_SECRET_KEY"), os.Getenv("site2cloud_ca_cert_file"))
+		os.Getenv("AWS_SECRET_KEY"), rName, os.Getenv("site2cloud_ca_cert_file"))
 }
 
 func testAccCheckSite2CloudCaCertTagExists(n string) resource.TestCheckFunc {
