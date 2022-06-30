@@ -1,6 +1,7 @@
 package aviatrix
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -79,7 +80,7 @@ func testAccCheckSite2CloudCaCertTagExists(n string) resource.TestCheckFunc {
 			TagName: rs.Primary.Attributes["tag_name"],
 		}
 
-		s2cCaCertTagResp, err := client.GetS2CCaCertTag(s2cCaCertTag)
+		s2cCaCertTagResp, err := client.GetS2CCaCertTag(context.Background(), s2cCaCertTag)
 		if err != nil {
 			return err
 		}
@@ -103,7 +104,7 @@ func testAccCheckSite2CloudCaCertTagDestroy(s *terraform.State) error {
 			TagName: rs.Primary.Attributes["tag_name"],
 		}
 
-		_, err := client.GetS2CCaCertTag(s2cCaCertTag)
+		_, err := client.GetS2CCaCertTag(context.Background(), s2cCaCertTag)
 		if err == nil {
 			return fmt.Errorf("site2cloud ca cert tag still exists")
 		}
