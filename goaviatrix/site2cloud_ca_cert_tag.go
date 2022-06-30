@@ -1,5 +1,9 @@
 package goaviatrix
 
+import (
+	"context"
+)
+
 type S2CCaCertTag struct {
 	Action         string `form:"action,omitempty"`
 	CID            string `form:"CID,omitempty"`
@@ -31,7 +35,7 @@ type CaCertInstance struct {
 	CertContent    string `json:"cert_content,omitempty"`
 }
 
-func (c *Client) CreateS2CCaCert(s2cCaCert *S2CCaCert) error {
+func (c *Client) CreateS2CCaCert(ctx context.Context, s2cCaCert *S2CCaCert) error {
 	action := "add_s2c_ca_cert"
 	params := map[string]string{
 		"CID":                 c.CID,
@@ -49,21 +53,20 @@ func (c *Client) CreateS2CCaCert(s2cCaCert *S2CCaCert) error {
 			FileContent:    s2cCaCert.CaCertificate,
 		}
 		files = append(files, ca)
-		return c.PostFileAPI(params, files, BasicCheck)
+		return c.PostFileAPIContext(ctx, params, files, BasicCheck)
 	} else {
-		return c.PostAPI(action, params, BasicCheck)
+		return c.PostAPIContext(ctx, action, params, BasicCheck)
 	}
-
 }
 
-func (c *Client) GetS2CCaCertTag(s2cCaCertTag *S2CCaCertTag) (*S2CCaCertTag, error) {
+func (c *Client) GetS2CCaCertTag(ctx context.Context, s2cCaCertTag *S2CCaCertTag) (*S2CCaCertTag, error) {
 	formData := map[string]string{
 		"action":              "get_s2c_ca_cert_list_by_name",
 		"CID":                 c.CID,
 		"s2c_cacert_tag_name": s2cCaCertTag.TagName,
 	}
 	var data S2CCaCertListResp
-	err := c.GetAPI(&data, formData["action"], formData, BasicCheck)
+	err := c.GetAPIContext(ctx, &data, formData["action"], formData, BasicCheck)
 	if err != nil {
 		return nil, err
 	}
@@ -81,12 +84,12 @@ func (c *Client) GetS2CCaCertTag(s2cCaCertTag *S2CCaCertTag) (*S2CCaCertTag, err
 	return nil, ErrNotFound
 }
 
-func (c *Client) DeleteCertInstance(caCertInstance *CaCertInstance) error {
+func (c *Client) DeleteCertInstance(ctx context.Context, caCertInstance *CaCertInstance) error {
 	action := "delete_s2c_ca_cert"
 	data := map[string]interface{}{
 		"action": action,
 		"CID":    c.CID,
 		"id":     caCertInstance.ID,
 	}
-	return c.PostAPI(action, data, BasicCheck)
+	return c.PostAPIContext(ctx, action, data, BasicCheck)
 }

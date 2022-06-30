@@ -1,8 +1,10 @@
 package aviatrix
 
 import (
-	"fmt"
+	"context"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -10,10 +12,10 @@ import (
 
 func resourceAviatrixSite2CloudCaCertTag() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAviatrixSite2CloudCaCertTagCreate,
-		Read:   resourceAviatrixSite2CloudCaCertTagRead,
-		Update: resourceAviatrixSite2CloudCaCertTagUpdate,
-		Delete: resourceAviatrixSite2CloudCaCertTagDelete,
+		CreateWithoutTimeout: resourceAviatrixSite2CloudCaCertTagCreate,
+		ReadWithoutTimeout:   resourceAviatrixSite2CloudCaCertTagRead,
+		UpdateWithoutTimeout: resourceAviatrixSite2CloudCaCertTagUpdate,
+		DeleteWithoutTimeout: resourceAviatrixSite2CloudCaCertTagDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -68,7 +70,7 @@ func resourceAviatrixSite2CloudCaCertTag() *schema.Resource {
 	}
 }
 
-func resourceAviatrixSite2CloudCaCertTagCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSite2CloudCaCertTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	for _, v := range d.Get("ca_certificates").(*schema.Set).List() {
@@ -78,16 +80,16 @@ func resourceAviatrixSite2CloudCaCertTagCreate(d *schema.ResourceData, meta inte
 			CaCertificate: certInstance["cert_content"].(string),
 		}
 
-		if err := client.CreateS2CCaCert(s2cCaCert); err != nil {
-			return fmt.Errorf("failed to create s2c ca cert tag: %v", err)
+		if err := client.CreateS2CCaCert(ctx, s2cCaCert); err != nil {
+			return diag.Errorf("failed to create s2c ca cert tag: %v", err)
 		}
 	}
 
 	d.SetId(d.Get("tag_name").(string))
-	return resourceAviatrixSite2CloudCaCertTagRead(d, meta)
+	return resourceAviatrixSite2CloudCaCertTagRead(ctx, d, meta)
 }
 
-func resourceAviatrixSite2CloudCaCertTagRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSite2CloudCaCertTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	tagName := d.Get("tag_name").(string)
@@ -104,13 +106,13 @@ func resourceAviatrixSite2CloudCaCertTagRead(d *schema.ResourceData, meta interf
 		TagName: d.Get("tag_name").(string),
 	}
 
-	s2cCaCertTagResp, err := client.GetS2CCaCertTag(s2cCaCertTag)
+	s2cCaCertTagResp, err := client.GetS2CCaCertTag(ctx, s2cCaCertTag)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("couldn't get site2cloud ca cert tag: %s", err)
+		return diag.Errorf("couldn't get site2cloud ca cert tag: %s", err)
 	}
 
 	d.Set("tag_name", s2cCaCertTagResp.TagName)
@@ -135,7 +137,7 @@ func resourceAviatrixSite2CloudCaCertTagRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAviatrixSite2CloudCaCertTagUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSite2CloudCaCertTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 	d.Partial(true)
 
@@ -156,8 +158,8 @@ func resourceAviatrixSite2CloudCaCertTagUpdate(d *schema.ResourceData, meta inte
 					CaCertificate: certInstance["cert_content"].(string),
 				}
 
-				if err := client.CreateS2CCaCert(s2cCaCert); err != nil {
-					return fmt.Errorf("failed to create s2c ca cert in update: %v", err)
+				if err := client.CreateS2CCaCert(ctx, s2cCaCert); err != nil {
+					return diag.Errorf("failed to create s2c ca cert in update: %v", err)
 				}
 				continue
 			}
@@ -169,8 +171,8 @@ func resourceAviatrixSite2CloudCaCertTagUpdate(d *schema.ResourceData, meta inte
 				ID: id,
 			}
 
-			if err := client.DeleteCertInstance(cert); err != nil {
-				return fmt.Errorf("failed to delete ca cert %s in update: %s", cert.ID, err)
+			if err := client.DeleteCertInstance(ctx, cert); err != nil {
+				return diag.Errorf("failed to delete ca cert %s in update: %s", cert.ID, err)
 			}
 		}
 	}
@@ -178,10 +180,10 @@ func resourceAviatrixSite2CloudCaCertTagUpdate(d *schema.ResourceData, meta inte
 	d.Partial(false)
 
 	d.SetId(d.Get("tag_name").(string))
-	return resourceAviatrixSite2CloudCaCertTagRead(d, meta)
+	return resourceAviatrixSite2CloudCaCertTagRead(ctx, d, meta)
 }
 
-func resourceAviatrixSite2CloudCaCertTagDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAviatrixSite2CloudCaCertTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	for _, cert := range d.Get("ca_certificates").(*schema.Set).List() {
@@ -190,9 +192,9 @@ func resourceAviatrixSite2CloudCaCertTagDelete(d *schema.ResourceData, meta inte
 			ID: certInstance["id"].(string),
 		}
 
-		err := client.DeleteCertInstance(cert)
+		err := client.DeleteCertInstance(ctx, cert)
 		if err != nil {
-			return fmt.Errorf("failed to delete ca cert %s: %s", cert.ID, err)
+			return diag.Errorf("failed to delete ca cert %s: %s", cert.ID, err)
 		}
 	}
 
