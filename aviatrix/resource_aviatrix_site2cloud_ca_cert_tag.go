@@ -164,7 +164,7 @@ func resourceAviatrixSite2CloudCaCertTagUpdate(d *schema.ResourceData, meta inte
 			delete(mapCaCertID, certInstance["id"].(string))
 		}
 
-		for id, _ := range mapCaCertID {
+		for id := range mapCaCertID {
 			cert := &goaviatrix.CaCertInstance{
 				ID: id,
 			}
