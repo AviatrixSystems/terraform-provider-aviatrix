@@ -67,6 +67,26 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"policy", "route"}, false),
 				Description:  "Site2Cloud Tunnel Type. Valid values: 'policy' and 'route'.",
 			},
+			"auth_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "PSK",
+				ValidateFunc: validation.StringInSlice([]string{"PSK", "Cert"}, false),
+				Description:  "Authentication Type. Valid values: 'PSK' and 'Cert'. Default value: 'PSK'.",
+			},
+			"ca_cert_tag_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Name of Remote CA Certificate Tag for creating Site2Cloud tunnels. Required for Cert based authentication type.",
+			},
+			"remote_identifier": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Remote identifier. Required for Cert based authentication type.",
+			},
 			"primary_cloud_gateway_name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -395,7 +415,10 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		VpcID:                         d.Get("vpc_id").(string),
 		TunnelName:                    d.Get("connection_name").(string),
 		ConnType:                      d.Get("connection_type").(string),
+		AuthType:                      d.Get("auth_type").(string),
 		TunnelType:                    d.Get("tunnel_type").(string),
+		CaCertTagName:                 d.Get("ca_cert_tag_name").(string),
+		RemoteIdentifier:              d.Get("remote_identifier").(string),
 		RemoteGwType:                  d.Get("remote_gateway_type").(string),
 		RemoteGwIP:                    d.Get("remote_gateway_ip").(string),
 		RemoteGwIP2:                   d.Get("backup_remote_gateway_ip").(string),
@@ -418,6 +441,17 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		RemoteTunnelIp:                d.Get("remote_tunnel_ip").(string),
 		BackupLocalTunnelIp:           d.Get("backup_local_tunnel_ip").(string),
 		BackupRemoteTunnelIp:          d.Get("backup_remote_tunnel_ip").(string),
+	}
+
+	if s2c.AuthType == "Cert" {
+		if s2c.CaCertTagName == "" || s2c.RemoteIdentifier == "" {
+			return fmt.Errorf("'ca_cert_tag_name' and 'remote_identifier' are both required for Cert based authentication type")
+		}
+		s2c.AuthType = "pubkey"
+	} else {
+		if s2c.CaCertTagName != "" || s2c.RemoteIdentifier != "" {
+			return fmt.Errorf("'ca_cert_tag_name' and 'remote_identifier' are only required for PSK based authentication type")
+		}
 	}
 
 	haEnabled := d.Get("ha_enabled").(bool)
@@ -755,6 +789,13 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("vpc_id", s2c.VpcID)
 		d.Set("remote_gateway_type", s2c.RemoteGwType)
 		d.Set("tunnel_type", s2c.TunnelType)
+		if s2c.AuthType == "pubkey" {
+			d.Set("auth_type", "Cert")
+			d.Set("ca_cert_tag_name", s2c.CaCertTagName)
+			d.Set("remote_identifier", s2c.RemoteIdentifier)
+		} else {
+			d.Set("auth_type", "PSK")
+		}
 		d.Set("local_subnet_cidr", s2c.LocalSubnet)
 		d.Set("remote_subnet_cidr", s2c.RemoteSubnet)
 		if s2c.HAEnabled == "enabled" {

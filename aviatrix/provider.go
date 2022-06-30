@@ -148,6 +148,7 @@ func Provider() *schema.Provider {
 			"aviatrix_segmentation_security_domain_association":       resourceAviatrixSegmentationSecurityDomainAssociation(),
 			"aviatrix_segmentation_security_domain_connection_policy": resourceAviatrixSegmentationSecurityDomainConnectionPolicy(),
 			"aviatrix_site2cloud":                                     resourceAviatrixSite2Cloud(),
+			"aviatrix_site2cloud_ca_cert_tag":                         resourceAviatrixSite2CloudCaCertTag(),
 			"aviatrix_splunk_logging":                                 resourceAviatrixSplunkLogging(),
 			"aviatrix_spoke_gateway":                                  resourceAviatrixSpokeGateway(),
 			"aviatrix_spoke_gateway_subnet_group":                     resourceAviatrixSpokeGatewaySubnetGroup(),
