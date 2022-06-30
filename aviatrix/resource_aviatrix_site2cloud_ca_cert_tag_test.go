@@ -45,19 +45,19 @@ func TestAccAviatrixSite2CloudCaCertTag_basic(t *testing.T) {
 func testAccSite2CloudCaCertTagBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account" {
-	account_name       = "tfa-%s"
-	cloud_type         = 1
-	aws_account_number = "%s"
-	aws_iam            = false
-	aws_access_key     = "%s"
-	aws_secret_key     = "%s"
+    account_name       = "tfa-%s"
+    cloud_type         = 1
+    aws_account_number = "%s"
+    aws_iam            = false
+    aws_access_key     = "%s"
+    aws_secret_key     = "%s"
 }
 resource "aviatrix_site2cloud_ca_cert_tag" "test" {
-	tag_name = "test"
+    tag_name = "test"
 
-	ca_certificates {
-		cert_content  = file("%s")
-	}
+    ca_certificates {
+        cert_content = file("%s")
+    }
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"),
 		os.Getenv("AWS_SECRET_KEY"), os.Getenv("site2cloud_ca_cert_file"))
