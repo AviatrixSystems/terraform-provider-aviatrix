@@ -92,6 +92,12 @@ The following arguments are supported:
 * `longitude` - (Optional) Longitude of Edge as a Spoke. Valid values are between -180 and 180. Example: "120.7401".
 * `wan_public_ip` - (Optional) WAN public IP. Required for attaching connections over the Internet.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attribute is exported:
+
+* `state` - State of Edge as a Spoke.
+
 ## Import
 
 **edge_spoke** can be imported using the `gw_name`, e.g.

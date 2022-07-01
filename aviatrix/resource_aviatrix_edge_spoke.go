@@ -225,6 +225,11 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 				Computed:    true,
 				Description: "WAN interface public IP.",
 			},
+			"state": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "State of Edge as a Spoke.",
+			},
 		},
 	}
 }
@@ -505,6 +510,7 @@ func resourceAviatrixEdgeSpokeRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("longitude", "")
 	}
 	d.Set("wan_public_ip", edgeSpoke.WanPublicIp)
+	d.Set("state", edgeSpoke.State)
 
 	d.SetId(edgeSpoke.GwName)
 	return nil
