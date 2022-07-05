@@ -74,6 +74,12 @@ The following arguments are supported:
 * `local_as_number` - (Optional) BGP AS Number to assign to Edge as a CaaG.
 * `prepend_as_path` - (Optional) Connection AS Path Prepend customized by specifying AS PATH for a BGP connection. Requires local_as_number to be set. Type: List.
 
+## Attribute Reference
+
+In addition to all arguments above, the following attribute is exported:
+
+* `state` - State of Edge as a CaaG.
+
 ## Import
 
 **edge_caag** can be imported using the `name`, e.g.
