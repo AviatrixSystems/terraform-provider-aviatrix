@@ -67,6 +67,8 @@ The following arguments are supported:
     * `port_ranges` - (Optional) List of port ranges for the policy. Cannot be used when `protocol` is "ICMP".
       * `lo` - (Required) Lower bound for the range of ports.
       * `hi` - (Optional) Upper bound for the range of ports. When not set, `lo` is the only port that matches the policy.
+    * `watch` - (Optional) Whether to enforce the policy or only watch packets. If `true` packets are only watched. This allows you to observe if the traffic impacted by this rule causes any inadvertent issues (such as traffic being dropped). Type: Boolean.
+    * `logging` - (Optional) Whether to enable logging for packets that match the policy. Type: Boolean.
     * `uuid` - (Computed) UUID for the Policy.
 
 ## Import
