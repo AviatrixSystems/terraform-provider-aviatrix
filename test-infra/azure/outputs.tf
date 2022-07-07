@@ -4,8 +4,8 @@ output "vnet" {
 output "group" {
    value = azurerm_subnet.aviatrix.resource_group_name
 }
-output "subnet" {
-   value = azurerm_subnet.aviatrix.address_prefix
+output "subnets" {
+   value = azurerm_subnet.aviatrix.address_prefixes
 }
 output "guid" {
    value = azurerm_virtual_network.aviatrix.guid
