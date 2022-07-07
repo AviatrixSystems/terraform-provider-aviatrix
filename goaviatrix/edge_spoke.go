@@ -53,6 +53,7 @@ type EdgeSpoke struct {
 	LongitudeReturn                    float64 `json:"longitude"`
 	WanPublicIp                        string  `form:"wan_discovery_ip" json:"public_ip"`
 	PrivateIP                          string  `json:"private_ip"`
+	RxQueueSize                        string  `json:"rx_queue_size"`
 	State                              string  `json:"vpc_state"`
 }
 
