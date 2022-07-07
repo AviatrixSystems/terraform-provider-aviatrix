@@ -450,7 +450,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		s2c.AuthType = "pubkey"
 	} else {
 		if s2c.CaCertTagName != "" || s2c.RemoteIdentifier != "" {
-			return fmt.Errorf("'ca_cert_tag_name' and 'remote_identifier' are only required for PSK based authentication type")
+			return fmt.Errorf("'ca_cert_tag_name' and 'remote_identifier' are required to be empty for PSK based authentication type")
 		}
 	}
 
