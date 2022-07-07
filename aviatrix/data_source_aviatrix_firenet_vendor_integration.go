@@ -151,8 +151,8 @@ func dataSourceAviatrixFireNetVendorIntegrationRead(d *schema.ResourceData, meta
 			}
 		} else if vendorInfo.VendorType == "Check Point Cloud Guard" {
 			if vendorInfo.PrivateKeyFile != "" {
-				if vendorInfo.Username != "" || vendorInfo.Password != "" {
-					return fmt.Errorf("'username' and 'password' should be empty when using 'private_key_file' for vendor type 'Check Point Cloud Guard'")
+				if vendorInfo.Password != "" {
+					return fmt.Errorf("'password' should be empty when using 'private_key_file' for vendor type 'Check Point Cloud Guard'")
 				}
 			} else {
 				if vendorInfo.Username == "" || vendorInfo.Password == "" {
