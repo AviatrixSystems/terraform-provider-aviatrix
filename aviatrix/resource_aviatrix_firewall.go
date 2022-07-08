@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -34,16 +36,17 @@ func resourceAviatrixFirewall() *schema.Resource {
 				Description: "The name of gateway.",
 			},
 			"base_policy": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "deny-all",
-				Description: "New base policy.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "deny-all",
+				ValidateFunc: validation.StringInSlice([]string{"deny-all", "allow-all"}, false),
+				Description:  "New base policy.",
 			},
 			"base_log_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Indicates whether enable logging or not. Valid values: true or false.",
+				Description: "Indicates whether enable logging or not. Valid values: true, false. Default value: false.",
 			},
 			"manage_firewall_policies": {
 				Type:     schema.TypeBool,
@@ -55,25 +58,25 @@ func resourceAviatrixFirewall() *schema.Resource {
 			"policy": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Deprecated:  "Please set `manage_firewall_policies` to false, and use the standalone aviatrix_firewall_policy resource instead.",
 				Description: "New access policy for the gateway.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"src_ip": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "CIDRs separated by comma or tag names such 'HR' or 'marketing' etc.",
+							Description: "Source address, a valid IPv4 address or tag name.",
 						},
 						"dst_ip": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "CIDRs separated by comma or tag names such 'HR' or 'marketing' etc.",
+							Description: "Destination address, a valid IPv4 address or tag name.",
 						},
 						"protocol": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Default:     "all",
-							Description: "'all', 'tcp', 'udp', 'icmp', 'sctp', 'rdp', 'dccp'.",
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "all",
+							ValidateFunc: validation.StringInSlice([]string{"all", "tcp", "udp", "icmp", "sctp", "rdp", "dccp"}, false),
+							Description:  "Valid values: 'all', 'tcp', 'udp', 'icmp', 'sctp', 'rdp', 'dccp'.",
 						},
 						"port": {
 							Type:        schema.TypeString,
@@ -81,15 +84,16 @@ func resourceAviatrixFirewall() *schema.Resource {
 							Description: "A single port or a range of port numbers.",
 						},
 						"action": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "Valid values: 'allow', 'deny' or 'force-drop'(in stateful firewall rule to allow immediate packet dropping on established sessions).",
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice([]string{"allow", "deny", "force-drop"}, false),
+							Description:  "Valid values: 'allow', 'deny' or 'force-drop'(in stateful firewall rule to allow immediate packet dropping on established sessions).",
 						},
 						"log_enabled": {
 							Type:        schema.TypeBool,
 							Optional:    true,
 							Default:     false,
-							Description: "Valid values: true or false.",
+							Description: "Valid values: true, false. Default value: false.",
 						},
 						"description": {
 							Type:        schema.TypeString,
@@ -118,35 +122,12 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("manage_firewall_policies must be set to true to set in-line policies")
 	}
 
-	if firewall.BasePolicy != "allow-all" && firewall.BasePolicy != "deny-all" {
-		return fmt.Errorf("base_policy can only be 'allow-all', or 'deny-all'")
-	}
-
-	baseLogEnabled := d.Get("base_log_enabled").(bool)
-	if baseLogEnabled {
-		firewall.BaseLogEnabled = "on"
-	} else {
-		firewall.BaseLogEnabled = "off"
-	}
-
-	log.Printf("[INFO] Creating Aviatrix firewall: %#v", firewall)
-
-	d.SetId(firewall.GwName)
-	flag := false
-	defer resourceAviatrixFirewallReadIfRequired(d, meta, &flag)
-
-	//If base_policy or base_log enable is present, set base policy
-	if firewall.BasePolicy != "" {
-		err := client.SetBasePolicy(firewall)
-		if err != nil {
-			return fmt.Errorf("failed to set base firewall policies for GW %s: %s", firewall.GwName, err)
-		}
-	}
-
+	var mapPolicyKey = make(map[string]bool)
+	var previousActionIsForceDrop = true
 	// If policies are present and manage_firewall_policies is set to true, update policies
 	if hasSetPolicies && enabledInlinePolicies {
 		policies := d.Get("policy").([]interface{})
-		for _, policy := range policies {
+		for index, policy := range policies {
 			pl := policy.(map[string]interface{})
 			firewallPolicy := &goaviatrix.Policy{
 				SrcIP:       pl["src_ip"].(string),
@@ -157,6 +138,28 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 				Description: pl["description"].(string),
 			}
 
+			if !previousActionIsForceDrop && firewallPolicy.Action == "force-drop" {
+				return fmt.Errorf("validation on policy rules failed: rule no. %v in policy list is a 'force-drop' rule. It should be ahead of other type rules in Policy list", index+1)
+			}
+			if previousActionIsForceDrop && firewallPolicy.Action != "force-drop" {
+				previousActionIsForceDrop = false
+			}
+
+			key := firewallPolicy.SrcIP + "~" + firewallPolicy.DstIP + "~" + firewallPolicy.Protocol + "~" + firewallPolicy.Port
+			if mapPolicyKey[key] {
+				return fmt.Errorf("validation on policy rules failed: rule no. %v in policy list is a duplicate rule", index+1)
+			}
+			mapPolicyKey[key] = true
+
+			if firewallPolicy.Protocol == "all" && firewallPolicy.Port != "0:65535" {
+				return fmt.Errorf("validation on policy rules failed: rule no. %v's port should be '0:65535' for protocol 'all'", index+1)
+			} else if firewallPolicy.Protocol == "all" {
+				firewallPolicy.Port = ""
+			}
+			if firewallPolicy.Protocol == "icmp" && (firewallPolicy.Port != "") {
+				return fmt.Errorf("validation on policy rules failed: rule no. %v's port should be empty for protocol 'icmp'", index+1)
+			}
+
 			logEnabled := pl["log_enabled"].(bool)
 			if logEnabled {
 				firewallPolicy.LogEnabled = "on"
@@ -164,23 +167,40 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 				firewallPolicy.LogEnabled = "off"
 			}
 
-			err := client.ValidatePolicy(firewallPolicy)
-			if err != nil {
-				return fmt.Errorf("policy validation failed: %v", err)
-			}
-			if firewallPolicy.Protocol == "all" {
-				firewallPolicy.Port = ""
-			}
-
 			firewall.PolicyList = append(firewall.PolicyList, firewallPolicy)
-		}
-
-		err := client.UpdatePolicy(firewall)
-		if err != nil {
-			return fmt.Errorf("failed to create Aviatrix Firewall: %s", err)
 		}
 	}
 
+	log.Printf("[INFO] Creating Aviatrix firewall: %#v", firewall)
+
+	d.SetId(firewall.GwName)
+	flag := false
+	defer resourceAviatrixFirewallReadIfRequired(d, meta, &flag)
+
+	//If base_policy or base_log enable is present, set base policy
+	if firewall.BasePolicy == "allow-all" {
+		firewall.BaseLogEnabled = "off"
+		err := client.SetBasePolicy(firewall)
+		if err != nil {
+			return fmt.Errorf("failed to set base firewall policy for GW %s: %s", firewall.GwName, err)
+		}
+	}
+
+	baseLogEnabled := d.Get("base_log_enabled").(bool)
+	if baseLogEnabled {
+		firewall.BaseLogEnabled = "on"
+		err := client.SetBasePolicy(firewall)
+		if err != nil {
+			return fmt.Errorf("failed to enable base logging for GW %s: %s", firewall.GwName, err)
+		}
+	}
+
+	if hasSetPolicies && enabledInlinePolicies {
+		err := client.UpdatePolicy(firewall)
+		if err != nil {
+			return fmt.Errorf("failed to set Aviatrix firewall policies for GW %s: %s", firewall.GwName, err)
+		}
+	}
 	return resourceAviatrixFirewallReadIfRequired(d, meta, &flag)
 }
 
@@ -219,8 +239,7 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[TRACE] Reading policy for gateway %s: %#v", firewall.GwName, fw)
 
-	policyMap := make(map[string]map[string]interface{})
-	var policyKeyArray []string
+	var policiesFromFile []map[string]interface{}
 	if fw != nil {
 		if fw.BasePolicy == "allow-all" {
 			d.Set("base_policy", "allow-all")
@@ -234,45 +253,7 @@ func resourceAviatrixFirewallRead(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		for _, policy := range fw.PolicyList {
-			pl := goaviatrix.PolicyToMap(policy)
-			key := policy.SrcIP + "~" + policy.DstIP + "~" + policy.Protocol + "~" + policy.Port
-			policyMap[key] = pl
-			policyKeyArray = append(policyKeyArray, key)
-		}
-	}
-
-	var policiesFromFile []map[string]interface{}
-	policies := d.Get("policy").([]interface{})
-	for _, policy := range policies {
-		pl := policy.(map[string]interface{})
-		firewallPolicy := &goaviatrix.Policy{
-			SrcIP:       pl["src_ip"].(string),
-			DstIP:       pl["dst_ip"].(string),
-			Protocol:    pl["protocol"].(string),
-			Port:        pl["port"].(string),
-			Action:      pl["action"].(string),
-			Description: pl["description"].(string),
-		}
-		logEnabled := pl["log_enabled"].(bool)
-		if logEnabled {
-			firewallPolicy.LogEnabled = "on"
-		} else {
-			firewallPolicy.LogEnabled = "off"
-		}
-
-		key := firewallPolicy.SrcIP + "~" + firewallPolicy.DstIP + "~" + firewallPolicy.Protocol + "~" + firewallPolicy.Port
-		if val, ok := policyMap[key]; ok {
-			if goaviatrix.CompareMapOfInterface(pl, val) {
-				policiesFromFile = append(policiesFromFile, pl)
-				delete(policyMap, key)
-			}
-		}
-	}
-	if len(policyKeyArray) != 0 {
-		for i := 0; i < len(policyKeyArray); i++ {
-			if policyMap[policyKeyArray[i]] != nil {
-				policiesFromFile = append(policiesFromFile, policyMap[policyKeyArray[i]])
-			}
+			policiesFromFile = append(policiesFromFile, goaviatrix.PolicyToMap(policy))
 		}
 	}
 
@@ -306,46 +287,50 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 		firewall.BasePolicy = d.Get("base_policy").(string)
 		if firewall.BasePolicy == "allow" {
 			firewall.BasePolicy = "allow-all"
-		}
-		if firewall.BasePolicy == "deny" {
+		} else if firewall.BasePolicy == "deny" {
 			firewall.BasePolicy = "deny-all"
 		}
-		if d.Get("base_log_enabled").(bool) {
-			firewall.BaseLogEnabled = "on"
+
+		if d.HasChange("base_log_enabled") {
+			old, _ := d.GetChange("base_log_enabled")
+			if old.(bool) {
+				firewall.BaseLogEnabled = "on"
+			} else {
+				firewall.BaseLogEnabled = "off"
+			}
 		} else {
-			firewall.BaseLogEnabled = "off"
+			if d.Get("base_log_enabled").(bool) {
+				firewall.BaseLogEnabled = "on"
+			} else {
+				firewall.BaseLogEnabled = "off"
+			}
+		}
+
+		err := client.SetBasePolicy(firewall)
+		if err != nil {
+			return fmt.Errorf("failed to update base firewall policies for GW %s: %s", firewall.GwName, err)
 		}
 	}
 
 	if ok := d.HasChange("base_log_enabled"); ok {
 		firewall.BasePolicy = d.Get("base_policy").(string)
-
-		baseLogEnabled := d.Get("base_log_enabled").(bool)
-		if baseLogEnabled {
+		if d.Get("base_log_enabled").(bool) {
 			firewall.BaseLogEnabled = "on"
 		} else {
 			firewall.BaseLogEnabled = "off"
 		}
-	}
 
-	//If base_policy or base_log enable is present, first delete
-	//existing policies, set base policy, and then reapply deleted policies.
-	if firewall.BasePolicy != "" || firewall.BaseLogEnabled != "" {
-		firewall.PolicyList = make([]*goaviatrix.Policy, 0)
-		err := client.UpdatePolicy(firewall)
+		err := client.SetBasePolicy(firewall)
 		if err != nil {
-			return fmt.Errorf("failed to create Aviatrix Firewall: %s", err)
-		}
-		err = client.SetBasePolicy(firewall)
-		if err != nil {
-			return fmt.Errorf("failed to set base firewall policies for GW %s: %s", firewall.GwName, err)
+			return fmt.Errorf("failed to update base logging for GW %s: %s", firewall.GwName, err)
 		}
 	}
 
-	//If policy list is present, update policy list
 	if ok := d.HasChange("policy"); ok && enabledInlinePolicies {
+		var mapPolicyKey = make(map[string]bool)
+		var previousActionIsForceDrop = true
 		policies := d.Get("policy").([]interface{})
-		for _, policy := range policies {
+		for index, policy := range policies {
 			pl := policy.(map[string]interface{})
 			firewallPolicy := &goaviatrix.Policy{
 				SrcIP:       pl["src_ip"].(string),
@@ -356,18 +341,33 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 				Description: pl["description"].(string),
 			}
 
-			if pl["log_enabled"].(bool) {
+			if !previousActionIsForceDrop && firewallPolicy.Action == "force-drop" {
+				return fmt.Errorf("validation on policy rules failed: rule no. %v in policy list is a 'force-drop' rule. It should be ahead of other type rules in Policy list", index+1)
+			}
+			if previousActionIsForceDrop && firewallPolicy.Action != "force-drop" {
+				previousActionIsForceDrop = false
+			}
+
+			key := firewallPolicy.SrcIP + "~" + firewallPolicy.DstIP + "~" + firewallPolicy.Protocol + "~" + firewallPolicy.Port
+			if mapPolicyKey[key] {
+				return fmt.Errorf("validation on policy rules failed: rule no. %v in policy list is a duplicate rule", index+1)
+			}
+			mapPolicyKey[key] = true
+
+			if firewallPolicy.Protocol == "all" && firewallPolicy.Port != "0:65535" {
+				return fmt.Errorf("validation on policy rules failed: rule no. %v's port should be '0:65535' for protocol 'all'", index+1)
+			} else if firewallPolicy.Protocol == "all" {
+				firewallPolicy.Port = ""
+			}
+			if firewallPolicy.Protocol == "icmp" && (firewallPolicy.Port != "") {
+				return fmt.Errorf("validation on policy rules failed: rule no. %v's port should be empty for protocol 'icmp'", index+1)
+			}
+
+			logEnabled := pl["log_enabled"].(bool)
+			if logEnabled {
 				firewallPolicy.LogEnabled = "on"
 			} else {
 				firewallPolicy.LogEnabled = "off"
-			}
-
-			err := client.ValidatePolicy(firewallPolicy)
-			if err != nil {
-				return fmt.Errorf("policy validation failed: %v", err)
-			}
-			if firewallPolicy.Protocol == "all" {
-				firewallPolicy.Port = ""
 			}
 
 			firewall.PolicyList = append(firewall.PolicyList, firewallPolicy)
@@ -375,7 +375,7 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 
 		err := client.UpdatePolicy(firewall)
 		if err != nil {
-			return fmt.Errorf("failed to create Aviatrix Firewall: %s", err)
+			return fmt.Errorf("failed to update Aviatrix Firewall policy: %s", err)
 		}
 	}
 
@@ -396,12 +396,30 @@ func resourceAviatrixFirewallDelete(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix Firewall policy list: %s", err)
 	}
-	//FIXME: Need to reset base policy rules and base logging too to
-	//allow-all and on(default values).
-	//There is a bug in API set_vpc_base_policy, in which changing
-	//both base_policy and base_policy_log_enable together to the
-	//opposite of their current values gives error.
-	//Add base policy resetting after the bug gets fixed
+
+	if d.Get("base_policy").(string) != "deny-all" {
+		firewall.BasePolicy = "deny-all"
+		baseLogEnabled := d.Get("base_log_enabled").(bool)
+		if baseLogEnabled {
+			firewall.BaseLogEnabled = "on"
+		} else {
+			firewall.BaseLogEnabled = "off"
+		}
+		err = client.SetBasePolicy(firewall)
+		if err != nil {
+			return fmt.Errorf("failed to set base firewall policies to default: %s", err)
+		}
+	}
+
+	if d.Get("base_log_enabled").(bool) {
+		firewall.BasePolicy = "deny-all"
+
+		firewall.BaseLogEnabled = "off"
+		err = client.SetBasePolicy(firewall)
+		if err != nil {
+			return fmt.Errorf("failed to set base logging to default: %s", err)
+		}
+	}
 
 	return nil
 }
