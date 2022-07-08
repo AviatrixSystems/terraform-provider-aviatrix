@@ -225,6 +225,12 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 				Computed:    true,
 				Description: "WAN interface public IP.",
 			},
+			"rx_queue_size": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"1K", "2K", "4K"}, false),
+				Description:  "Ethernet interface RX queue size.",
+			},
 			"state": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -265,6 +271,7 @@ func marshalEdgeSpokeInput(d *schema.ResourceData) *goaviatrix.EdgeSpoke {
 		Latitude:                           d.Get("latitude").(string),
 		Longitude:                          d.Get("longitude").(string),
 		WanPublicIp:                        d.Get("wan_public_ip").(string),
+		RxQueueSize:                        d.Get("rx_queue_size").(string),
 	}
 
 	return edgeSpoke
@@ -420,6 +427,14 @@ func resourceAviatrixEdgeSpokeCreate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
+	if edgeSpoke.RxQueueSize != "" {
+		gatewayForGatewayFunctions.RxQueueSize = edgeSpoke.RxQueueSize
+		err := client.SetRxQueueSize(gatewayForGatewayFunctions)
+		if err != nil {
+			return diag.Errorf("could not set rx queue size after Edge as a Spoke creation: %v", err)
+		}
+	}
+
 	return resourceAviatrixEdgeSpokeReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -510,6 +525,7 @@ func resourceAviatrixEdgeSpokeRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("longitude", "")
 	}
 	d.Set("wan_public_ip", edgeSpoke.WanPublicIp)
+	d.Set("rx_queue_size", edgeSpoke.RxQueueSize)
 	d.Set("state", edgeSpoke.State)
 
 	d.SetId(edgeSpoke.GwName)
@@ -677,6 +693,14 @@ func resourceAviatrixEdgeSpokeUpdate(ctx context.Context, d *schema.ResourceData
 		err := client.UpdateEdgeSpokeGeoCoordinate(ctx, edgeSpoke)
 		if err != nil {
 			return diag.Errorf("could not update geo coordinate during Edge as a Spoke update: %v", err)
+		}
+	}
+
+	if d.HasChange("rx_queue_size") {
+		gatewayForGatewayFunctions.RxQueueSize = edgeSpoke.RxQueueSize
+		err := client.SetRxQueueSize(gatewayForGatewayFunctions)
+		if err != nil {
+			return diag.Errorf("could not update rx queue size during Edge as a Spoke update: %v", err)
 		}
 	}
 

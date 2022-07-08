@@ -91,6 +91,7 @@ The following arguments are supported:
 * `latitude` - (Optional) Latitude of Edge as a Spoke. Valid values are between -90 and 90. Example: "47.7511".
 * `longitude` - (Optional) Longitude of Edge as a Spoke. Valid values are between -180 and 180. Example: "120.7401".
 * `wan_public_ip` - (Optional) WAN public IP. Required for attaching connections over the Internet.
+* `rx_queue_size` - (Optional) Ethernet interface RX queue size. Once set, can't be deleted or disabled. Valid values: "1K", "2K", "4K".
 
 ## Attribute Reference
 
