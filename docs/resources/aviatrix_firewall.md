@@ -81,7 +81,7 @@ The following arguments are supported:
 * `base_policy` - (Optional) New base policy. Valid Values: "allow-all", "deny-all". Default value: "deny-all"
 * `base_log_enabled` - (Optional) Indicates whether enable logging or not. Valid Values: true, false. Default value: false.
 * `manage_firewall_policies` - (Optional) Enable to manage firewall policies via in-line rules. If false, policies must be managed using `aviatrix_firewall_policy` resources. Default: true. Valid values: true, false. Available in provider version R2.17+.
-* `policy` - (Optional) New access policy for the gateway. Seven fields are required for each policy item: `src_ip`, `dst_ip`, `protocol`, `port`, `action`, `log_enabled` and `description`. No duplicate rules(with same `src_ip`, `dst_ip`, `protocol` and `port`) are allowed 
+* `policy` - (Optional) New access policy for the gateway. Seven fields are required for each policy item: `src_ip`, `dst_ip`, `protocol`, `port`, `action`, `log_enabled` and `description`. No duplicate rules (with same `src_ip`, `dst_ip`, `protocol` and `port`) are allowed.
   * `src_ip` - (Required) Source address, a valid IPv4 address or tag name such "HR" or "marketing" etc. Example: "10.30.0.0/16". The **aviatrix_firewall_tag** resource should be created prior to using the tag name.
   * `dst_ip` - (Required) Destination address, a valid IPv4 address or tag name such "HR" or "marketing" etc. Example: "10.30.0.0/16". The **aviatrix_firewall_tag** resource should be created prior to using the tag name.
   * `protocol`- (Optional): Valid values: "all", "tcp", "udp", "icmp", "sctp", "rdp", "dccp". Default value: "all".
