@@ -122,53 +122,13 @@ func resourceAviatrixFirewallCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("manage_firewall_policies must be set to true to set in-line policies")
 	}
 
-	var mapPolicyKey = make(map[string]bool)
-	var previousActionIsForceDrop = true
 	// If policies are present and manage_firewall_policies is set to true, update policies
 	if hasSetPolicies && enabledInlinePolicies {
-		policies := d.Get("policy").([]interface{})
-		for index, policy := range policies {
-			pl := policy.(map[string]interface{})
-			firewallPolicy := &goaviatrix.Policy{
-				SrcIP:       pl["src_ip"].(string),
-				DstIP:       pl["dst_ip"].(string),
-				Protocol:    pl["protocol"].(string),
-				Port:        pl["port"].(string),
-				Action:      pl["action"].(string),
-				Description: pl["description"].(string),
-			}
-
-			if !previousActionIsForceDrop && firewallPolicy.Action == "force-drop" {
-				return fmt.Errorf("validation on policy rules failed: rule no. %v in policy list is a 'force-drop' rule. It should be ahead of other type rules in Policy list", index+1)
-			}
-			if previousActionIsForceDrop && firewallPolicy.Action != "force-drop" {
-				previousActionIsForceDrop = false
-			}
-
-			key := firewallPolicy.SrcIP + "~" + firewallPolicy.DstIP + "~" + firewallPolicy.Protocol + "~" + firewallPolicy.Port
-			if mapPolicyKey[key] {
-				return fmt.Errorf("validation on policy rules failed: rule no. %v in policy list is a duplicate rule", index+1)
-			}
-			mapPolicyKey[key] = true
-
-			if firewallPolicy.Protocol == "all" && firewallPolicy.Port != "0:65535" {
-				return fmt.Errorf("validation on policy rules failed: rule no. %v's port should be '0:65535' for protocol 'all'", index+1)
-			} else if firewallPolicy.Protocol == "all" {
-				firewallPolicy.Port = ""
-			}
-			if firewallPolicy.Protocol == "icmp" && (firewallPolicy.Port != "") {
-				return fmt.Errorf("validation on policy rules failed: rule no. %v's port should be empty for protocol 'icmp'", index+1)
-			}
-
-			logEnabled := pl["log_enabled"].(bool)
-			if logEnabled {
-				firewallPolicy.LogEnabled = "on"
-			} else {
-				firewallPolicy.LogEnabled = "off"
-			}
-
-			firewall.PolicyList = append(firewall.PolicyList, firewallPolicy)
+		policyList, err := getAndValidatePolicy(d)
+		if err != nil {
+			return err
 		}
+		firewall.PolicyList = policyList
 	}
 
 	log.Printf("[INFO] Creating Aviatrix firewall: %#v", firewall)
@@ -327,53 +287,13 @@ func resourceAviatrixFirewallUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if ok := d.HasChange("policy"); ok && enabledInlinePolicies {
-		var mapPolicyKey = make(map[string]bool)
-		var previousActionIsForceDrop = true
-		policies := d.Get("policy").([]interface{})
-		for index, policy := range policies {
-			pl := policy.(map[string]interface{})
-			firewallPolicy := &goaviatrix.Policy{
-				SrcIP:       pl["src_ip"].(string),
-				DstIP:       pl["dst_ip"].(string),
-				Protocol:    pl["protocol"].(string),
-				Port:        pl["port"].(string),
-				Action:      pl["action"].(string),
-				Description: pl["description"].(string),
-			}
-
-			if !previousActionIsForceDrop && firewallPolicy.Action == "force-drop" {
-				return fmt.Errorf("validation on policy rules failed: rule no. %v in policy list is a 'force-drop' rule. It should be ahead of other type rules in Policy list", index+1)
-			}
-			if previousActionIsForceDrop && firewallPolicy.Action != "force-drop" {
-				previousActionIsForceDrop = false
-			}
-
-			key := firewallPolicy.SrcIP + "~" + firewallPolicy.DstIP + "~" + firewallPolicy.Protocol + "~" + firewallPolicy.Port
-			if mapPolicyKey[key] {
-				return fmt.Errorf("validation on policy rules failed: rule no. %v in policy list is a duplicate rule", index+1)
-			}
-			mapPolicyKey[key] = true
-
-			if firewallPolicy.Protocol == "all" && firewallPolicy.Port != "0:65535" {
-				return fmt.Errorf("validation on policy rules failed: rule no. %v's port should be '0:65535' for protocol 'all'", index+1)
-			} else if firewallPolicy.Protocol == "all" {
-				firewallPolicy.Port = ""
-			}
-			if firewallPolicy.Protocol == "icmp" && (firewallPolicy.Port != "") {
-				return fmt.Errorf("validation on policy rules failed: rule no. %v's port should be empty for protocol 'icmp'", index+1)
-			}
-
-			logEnabled := pl["log_enabled"].(bool)
-			if logEnabled {
-				firewallPolicy.LogEnabled = "on"
-			} else {
-				firewallPolicy.LogEnabled = "off"
-			}
-
-			firewall.PolicyList = append(firewall.PolicyList, firewallPolicy)
+		policyList, err := getAndValidatePolicy(d)
+		if err != nil {
+			return err
 		}
+		firewall.PolicyList = policyList
 
-		err := client.UpdatePolicy(firewall)
+		err = client.UpdatePolicy(firewall)
 		if err != nil {
 			return fmt.Errorf("failed to update Aviatrix Firewall policy: %s", err)
 		}
@@ -413,7 +333,6 @@ func resourceAviatrixFirewallDelete(d *schema.ResourceData, meta interface{}) er
 
 	if d.Get("base_log_enabled").(bool) {
 		firewall.BasePolicy = "deny-all"
-
 		firewall.BaseLogEnabled = "off"
 		err = client.SetBasePolicy(firewall)
 		if err != nil {
@@ -422,4 +341,56 @@ func resourceAviatrixFirewallDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	return nil
+}
+
+func getAndValidatePolicy(d *schema.ResourceData) ([]*goaviatrix.Policy, error) {
+	var mapPolicyKey = make(map[string]bool)
+	var previousActionIsForceDrop = true
+	var policyList []*goaviatrix.Policy
+
+	policies := d.Get("policy").([]interface{})
+	for index, policy := range policies {
+		pl := policy.(map[string]interface{})
+		firewallPolicy := &goaviatrix.Policy{
+			SrcIP:       pl["src_ip"].(string),
+			DstIP:       pl["dst_ip"].(string),
+			Protocol:    pl["protocol"].(string),
+			Port:        pl["port"].(string),
+			Action:      pl["action"].(string),
+			Description: pl["description"].(string),
+		}
+
+		if !previousActionIsForceDrop && firewallPolicy.Action == "force-drop" {
+			return nil, fmt.Errorf("validation on policy rules failed: rule no. %v in policy list is a 'force-drop' rule. It should be ahead of other type rules in Policy list", index+1)
+		}
+		if previousActionIsForceDrop && firewallPolicy.Action != "force-drop" {
+			previousActionIsForceDrop = false
+		}
+
+		key := firewallPolicy.SrcIP + "~" + firewallPolicy.DstIP + "~" + firewallPolicy.Protocol + "~" + firewallPolicy.Port
+		if mapPolicyKey[key] {
+			return nil, fmt.Errorf("validation on policy rules failed: rule no. %v in policy list is a duplicate rule", index+1)
+		}
+		mapPolicyKey[key] = true
+
+		if firewallPolicy.Protocol == "all" && firewallPolicy.Port != "0:65535" {
+			return nil, fmt.Errorf("validation on policy rules failed: rule no. %v's port should be '0:65535' for protocol 'all'", index+1)
+		} else if firewallPolicy.Protocol == "all" {
+			firewallPolicy.Port = ""
+		}
+		if firewallPolicy.Protocol == "icmp" && (firewallPolicy.Port != "") {
+			return nil, fmt.Errorf("validation on policy rules failed: rule no. %v's port should be empty for protocol 'icmp'", index+1)
+		}
+
+		logEnabled := pl["log_enabled"].(bool)
+		if logEnabled {
+			firewallPolicy.LogEnabled = "on"
+		} else {
+			firewallPolicy.LogEnabled = "off"
+		}
+
+		policyList = append(policyList, firewallPolicy)
+	}
+
+	return policyList, nil
 }
