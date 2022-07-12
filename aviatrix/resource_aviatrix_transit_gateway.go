@@ -510,6 +510,11 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				ForceNew:    true,
 				Description: "Private Mode subnet availability zone.",
 			},
+			"ha_private_mode_subnet_zone": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: " Private Mode HA subnet availability zone.",
+			},
 			"availability_domain": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -1201,6 +1206,11 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if enablePrivateOob {
 			transitGateway.HASubnet = transitGateway.HASubnet + "~~" + haOobAvailabilityZone
 			transitGateway.HAOobManagementSubnet = haOobManagementSubnet + "~~" + haOobAvailabilityZone
+		}
+
+		if privateModeInfo.EnablePrivateMode {
+			haPrivateModeSubnetZone := d.Get("ha_private_mode_subnet_zone").(string)
+			transitGateway.HASubnet = haSubnet + "~~" + haPrivateModeSubnetZone
 		}
 
 		haAzureEipName, haAzureEipNameOk := d.GetOk("ha_azure_eip_name_resource_group")
@@ -1924,6 +1934,7 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("ha_subnet", "")
 		d.Set("ha_zone", "")
 		d.Set("ha_public_ip", "")
+		d.Set("ha_private_mode_subnet_zone", "")
 		return nil
 	}
 	if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
@@ -1971,6 +1982,10 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	if gw.HaGw.EnablePrivateOob {
 		d.Set("ha_oob_management_subnet", strings.Split(gw.HaGw.OobManagementSubnet, "~~")[0])
 		d.Set("ha_oob_availability_zone", gw.HaGw.GatewayZone)
+	}
+
+	if gw.LbVpcId != "" {
+		d.Set("ha_private_mode_subnet_zone", gw.HaGw.GatewayZone)
 	}
 
 	if gw.HaGw.InsaneMode == "yes" && goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
@@ -2100,6 +2115,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	}
 
 	enablePrivateOob := d.Get("enable_private_oob").(bool)
+	privateModeInfo, _ := client.GetPrivateModeInfo(context.Background())
 
 	if !enablePrivateOob {
 		if d.HasChange("ha_oob_management_subnet") {
@@ -2108,6 +2124,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 		if d.HasChange("ha_oob_availability_zone") {
 			return fmt.Errorf("updating ha_oob_availability_zone is not allowed if private oob is disabled")
+		}
+	}
+
+	if !privateModeInfo.EnablePrivateMode {
+		if d.HasChange("ha_private_mode_subnet_zone") {
+			return fmt.Errorf("updating %q is not allowed if private mode is disabled", "ha_private_mode_subnet_zone")
 		}
 	}
 
@@ -2140,6 +2162,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	newHaGwEnabled := false
 	if d.HasChange("ha_subnet") || d.HasChange("ha_zone") || d.HasChange("ha_insane_mode_az") ||
 		(enablePrivateOob && (d.HasChange("ha_oob_management_subnet") || d.HasChange("ha_oob_availability_zone"))) ||
+		(privateModeInfo.EnablePrivateMode && d.HasChange("ha_private_mode_subnet_zone")) ||
 		d.HasChange("ha_availability_domain") || d.HasChange("ha_fault_domain") {
 		transitGw := &goaviatrix.TransitVpc{
 			GwName:    d.Get("gw_name").(string),
@@ -2205,24 +2228,16 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				transitGw.FaultDomain = haFaultDomain
 			}
 
-			if !enablePrivateOob {
-				if oldSubnet == "" && newSubnet != "" {
-					newHaGwEnabled = true
-				} else if oldSubnet != "" && newSubnet == "" {
-					deleteHaGw = true
-				} else if oldSubnet != "" && newSubnet != "" {
-					changeHaGw = true
-				} else if d.HasChange("ha_zone") || d.HasChange("ha_availability_domain") || d.HasChange("ha_fault_domain") {
-					changeHaGw = true
-				}
-			} else {
-				if oldSubnet == "" && newSubnet != "" {
-					newHaGwEnabled = true
-				} else if newSubnet == "" {
-					deleteHaGw = true
-				} else if oldSubnet != newSubnet || (oldSubnet == newSubnet && (d.HasChange("ha_oob_management_subnet") || d.HasChange("ha_oob_availability_zone"))) {
-					changeHaGw = true
-				}
+			if oldSubnet == "" && newSubnet != "" {
+				newHaGwEnabled = true
+			} else if oldSubnet != "" && newSubnet == "" {
+				deleteHaGw = true
+			} else if oldSubnet != "" && newSubnet != "" {
+				changeHaGw = true
+			} else if enablePrivateOob && d.HasChanges("ha_oob_management_subnet", "ha_oob_availability_zone") ||
+				privateModeInfo.EnablePrivateMode && d.HasChange("ha_private_mode_subnet_zone") ||
+				d.HasChanges("ha_zone", "ha_availability_domain", "ha_fault_domain") {
+				changeHaGw = true
 			}
 		} else if goaviatrix.IsCloudType(transitGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			transitGw.HAZone = d.Get("ha_zone").(string)
@@ -2283,6 +2298,17 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 				if haOobManagementSubnet != "" {
 					return fmt.Errorf("\"ha_oob_management_subnet\" must be empty if \"ha_subnet\" is empty")
 				}
+			}
+		}
+
+		if privateModeInfo.EnablePrivateMode {
+			if newHaGwEnabled || changeHaGw {
+				if _, ok := d.GetOk("ha_private_mode_subnet_zone"); !ok {
+					return fmt.Errorf("%q is required if private mode is enabled and %q is provided", "ha_private_mode_subnet_zone", "ha_subnet")
+				}
+
+				privateModeSubnetZone := d.Get("ha_private_mode_subnet_zone").(string)
+				transitGw.HASubnet += "~~" + privateModeSubnetZone
 			}
 		}
 

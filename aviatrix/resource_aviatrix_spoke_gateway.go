@@ -370,6 +370,11 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				ForceNew:    true,
 				Description: "Subnet availability zone. Required when Private Mode is enabled on the Controller and cloud_type is AWS.",
 			},
+			"ha_private_mode_subnet_zone": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: " Private Mode HA subnet availability zone.",
+			},
 			"local_as_number": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -978,6 +983,11 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		if enablePrivateOob {
 			haGateway.HASubnet = haGateway.HASubnet + "~~" + haOobAvailabilityZone
 			haGateway.HAOobManagementSubnet = haOobManagementSubnet + "~~" + haOobAvailabilityZone
+		}
+
+		if privateModeInfo.EnablePrivateMode {
+			haPrivateModeSubnetZone := d.Get("ha_private_mode_subnet_zone").(string)
+			haGateway.HASubnet = haSubnet + "~~" + haPrivateModeSubnetZone
 		}
 
 		haAzureEipName, haAzureEipNameOk := d.GetOk("ha_azure_eip_name_resource_group")
@@ -1615,6 +1625,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("ha_subnet", "")
 		d.Set("ha_zone", "")
 		d.Set("ha_public_ip", "")
+		d.Set("ha_private_mode_subnet_zone", "")
 		return nil
 	}
 
@@ -1665,6 +1676,9 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	if gw.HaGw.EnablePrivateOob {
 		d.Set("ha_oob_management_subnet", strings.Split(gw.HaGw.OobManagementSubnet, "~~")[0])
 		d.Set("ha_oob_availability_zone", gw.HaGw.GatewayZone)
+	}
+	if gw.LbVpcId != "" {
+		d.Set("ha_private_mode_subnet_zone", gw.HaGw.GatewayZone)
 	}
 	if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		azureEip := strings.Split(gw.HaGw.ReuseEip, ":")
@@ -1768,6 +1782,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("updating enable_private_oob is not allowed")
 	}
 	enablePrivateOob := d.Get("enable_private_oob").(bool)
+	privateModeInfo, _ := client.GetPrivateModeInfo(context.Background())
 	if !enablePrivateOob {
 		if d.HasChange("ha_oob_management_subnet") {
 			return fmt.Errorf("updating ha_oob_management_subnet is not allowed if private oob is disabled")
@@ -1775,6 +1790,11 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 
 		if d.HasChange("ha_oob_availability_zone") {
 			return fmt.Errorf("updating ha_oob_availability_zone is not allowed if private oob is disabled")
+		}
+	}
+	if !privateModeInfo.EnablePrivateMode {
+		if d.HasChange("ha_private_mode_subnet_zone") {
+			return fmt.Errorf("updating %q is not allowed if private mode is disabled", "ha_private_mode_subnet_zone")
 		}
 	}
 
@@ -1864,6 +1884,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	newHaGwEnabled := false
 	if d.HasChange("ha_subnet") || d.HasChange("ha_zone") || d.HasChange("ha_insane_mode_az") ||
 		(enablePrivateOob && (d.HasChange("ha_oob_management_subnet") || d.HasChange("ha_oob_availability_zone"))) ||
+		(privateModeInfo.EnablePrivateMode && d.HasChange("ha_private_mode_subnet_zone")) ||
 		d.HasChange("ha_availability_domain") || d.HasChange("ha_fault_domain") {
 		spokeGw := &goaviatrix.SpokeVpc{
 			GwName:    d.Get("gw_name").(string),
@@ -1921,24 +1942,16 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				spokeGw.FaultDomain = haFaultDomain
 			}
 
-			if !enablePrivateOob {
-				if oldSubnet == "" && newSubnet != "" {
-					newHaGwEnabled = true
-				} else if oldSubnet != "" && newSubnet == "" {
-					deleteHaGw = true
-				} else if oldSubnet != "" && newSubnet != "" {
-					changeHaGw = true
-				} else if d.HasChange("ha_zone") || d.HasChange("ha_availability_domain") || d.HasChange("ha_fault_domain") {
-					changeHaGw = true
-				}
-			} else {
-				if oldSubnet == "" && newSubnet != "" {
-					newHaGwEnabled = true
-				} else if newSubnet == "" {
-					deleteHaGw = true
-				} else if oldSubnet != newSubnet || (oldSubnet == newSubnet && (d.HasChange("ha_oob_management_subnet") || d.HasChange("ha_oob_availability_zone"))) {
-					changeHaGw = true
-				}
+			if oldSubnet == "" && newSubnet != "" {
+				newHaGwEnabled = true
+			} else if oldSubnet != "" && newSubnet == "" {
+				deleteHaGw = true
+			} else if oldSubnet != "" && newSubnet != "" {
+				changeHaGw = true
+			} else if enablePrivateOob && d.HasChanges("ha_oob_management_subnet", "ha_oob_availability_zone") ||
+				privateModeInfo.EnablePrivateMode && d.HasChange("ha_private_mode_subnet_zone") ||
+				d.HasChanges("ha_zone", "ha_availability_domain", "ha_fault_domain") {
+				changeHaGw = true
 			}
 		} else if goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			spokeGw.HAZone = d.Get("ha_zone").(string)
@@ -2000,6 +2013,17 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				if haOobManagementSubnet != "" {
 					return fmt.Errorf("\"ha_oob_management_subnet\" must be empty if \"ha_subnet\" is empty")
 				}
+			}
+		}
+
+		if privateModeInfo.EnablePrivateMode {
+			if newHaGwEnabled || changeHaGw {
+				if _, ok := d.GetOk("ha_private_mode_subnet_zone"); !ok {
+					return fmt.Errorf("%q is required if private mode is enabled and %q is provided", "ha_private_mode_subnet_zone", "ha_subnet")
+				}
+
+				privateModeSubnetZone := d.Get("ha_private_mode_subnet_zone").(string)
+				spokeGw.HASubnet += "~~" + privateModeSubnetZone
 			}
 		}
 
