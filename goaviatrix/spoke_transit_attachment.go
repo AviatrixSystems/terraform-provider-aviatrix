@@ -8,11 +8,12 @@ import (
 )
 
 type SpokeTransitAttachment struct {
-	Action        string `form:"action,omitempty"`
-	CID           string `form:"CID,omitempty"`
-	SpokeGwName   string `form:"spoke_gw,omitempty"`
-	TransitGwName string `form:"transit_gw,omitempty"`
-	RouteTables   string `form:"route_table_list,omitempty"`
+	Action           string `form:"action,omitempty"`
+	CID              string `form:"CID,omitempty"`
+	SpokeGwName      string `form:"spoke_gw,omitempty"`
+	TransitGwName    string `form:"transit_gw,omitempty"`
+	RouteTables      string `form:"route_table_list,omitempty"`
+	NoMaxPerformance bool   `form:"no_max_performance,omitempty"`
 }
 
 func (c *Client) CreateSpokeTransitAttachment(spokeTransitAttachment *SpokeTransitAttachment) error {
