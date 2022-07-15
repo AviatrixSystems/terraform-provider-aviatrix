@@ -21,6 +21,7 @@ type SpokeTransitAttachment struct {
 	EnableJumboFrame         bool `form:"jumbo_frame,omitempty"`
 	EnableInsaneMode         bool `form:"insane_mode,omitempty"`
 	InsaneModeTunnelNumber   int  `form:"tunnel_count,omitempty"`
+	NoMaxPerformance         bool `form:"no_max_performance,omitempty"`
 }
 
 type EdgeSpokeTransitAttachmentResp struct {

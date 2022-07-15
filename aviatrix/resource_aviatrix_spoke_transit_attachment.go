@@ -42,6 +42,15 @@ func resourceAviatrixSpokeTransitAttachment() *schema.Resource {
 				ForceNew:    true,
 				Description: "Learned routes will be propagated to these route tables.",
 			},
+			"enable_max_performance": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+				ForceNew: true,
+				Description: "Indicates whether the maximum amount of HPE tunnels will be created. " +
+					"Only valid when transit and spoke gateways are each launched in Insane Mode and in the same cloud type. " +
+					"Available as of provider version R2.22.2+.",
+			},
 			"spoke_prepend_as_path": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -190,18 +199,20 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta int
 		}
 	}
 
+	transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
+		TransitGatewayName1: spokeGwName,
+		TransitGatewayName2: transitGwName,
+	}
+
+	transitGatewayPeering, err = client.GetTransitGatewayPeeringDetails(transitGatewayPeering)
+	if err == goaviatrix.ErrNotFound {
+		d.SetId("")
+		return nil
+	}
+
+	d.Set("enable_max_performance", !transitGatewayPeering.NoMaxPerformance)
+
 	if attachment.SpokeBgpEnabled {
-		transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
-			TransitGatewayName1: spokeGwName,
-			TransitGatewayName2: transitGwName,
-		}
-
-		transitGatewayPeering, err = client.GetTransitGatewayPeeringDetails(transitGatewayPeering)
-		if err == goaviatrix.ErrNotFound {
-			d.SetId("")
-			return nil
-		}
-
 		if transitGatewayPeering.PrependAsPath1 != "" {
 			var prependAsPath []string
 			for _, str := range strings.Split(transitGatewayPeering.PrependAsPath1, " ") {
@@ -297,6 +308,7 @@ func marshalSpokeTransitAttachmentInput(d *schema.ResourceData) *goaviatrix.Spok
 		RouteTables:          strings.Join(getStringSet(d, "route_tables"), ","),
 		SpokePrependAsPath:   getStringList(d, "spoke_prepend_as_path"),
 		TransitPrependAsPath: getStringList(d, "transit_prepend_as_path"),
+		NoMaxPerformance:     !d.Get("enable_max_performance").(bool),
 	}
 
 	return spokeTransitAttachment
