@@ -27,6 +27,33 @@ resource "aviatrix_transit_external_device_conn" "test" {
 }
 ```
 ```hcl
+# Create a bgp/GRE Aviatrix Transit External Device Connection with jumbo frame enabled and ha enabled
+resource "aviatrix_transit_external_device_conn" "test" {
+  vpc_id                    = "vpc-abcd1234"
+  connection_name           = "my_conn"
+  gw_name                   = aviatrix_transit_gateway.test.gw_name
+  connection_type           = "bgp"
+  tunnel_protocol           = "GRE"
+  bgp_local_as_num          = "123"
+  bgp_remote_as_num         = "345"
+  remote_gateway_ip         = aviatrix_transit_gateway.test1.private_ip
+  direct_connect            = true
+  ha_enabled                = true
+  local_tunnel_cidr         = "169.254.29.2/30,169.254.30.2/30"
+  remote_tunnel_cidr        = "169.254.29.1/30,169.254.30.1/30"
+  backup_local_tunnel_cidr  = "169.254.39.2/30,169.254.40.2/30"
+  backup_remote_tunnel_cidr = "169.254.39.1/30,169.254.40.1/30"
+  backup_bgp_remote_as_num  = "65002"
+  backup_remote_gateway_ip  = aviatrix_transit_gateway.test1.ha_private_ip
+  backup_direct_connect     = true
+  enable_edge_segmentation  = false
+
+  depends_on = [
+    aviatrix_aws_peer.test
+  ]
+}
+```
+```hcl
 # Create an Aviatrix Transit External Device Connection with Connection AS Path Prepend set
 resource "aviatrix_transit_external_device_conn" "test" {
   vpc_id            = "vpc-abcd1234"
@@ -149,6 +176,7 @@ The following arguments are supported:
 * `enable_ikev2` - (Optional) Set as true to enable IKEv2 protocol.
 * `manual_bgp_advertised_cidrs` - (Optional) Configure manual BGP advertised CIDRs for this connection. Only valid with `connection_type`= 'bgp'. Available as of provider version R2.18+.
 * `enable_event_triggered_ha` - (Optional) Enable Event Triggered HA. Default value: false. Valid values: true or false. Available as of provider version R2.19+.
+* `enable_jumbo_frame` - (Optional)	Enable Jumbo Frame for the transit external device connection. Only valid with 'GRE' tunnels under 'bgp' connection. Requires transit to be jumbo frame and insane mode enabled. Valid values: true, false. Default value: false. Available as of provider version R2.22.2+.
 * `phase1_remote_identifier` - (Optional) Phase 1 remote identifier of the IPsec tunnel. This can be configured to be either the public IP address or the private IP address of the peer terminating the IPsec tunnel. Example: ["1.2.3.4"] when HA is disabled, ["1.2.3.4", "5.6.7.8"] when HA is enabled. Available as of provider version R2.19+.
 * `prepend_as_path` - (Optional) Connection AS Path Prepend customized by specifying AS PATH for a BGP connection. Available as of provider version R2.19.2.
 
@@ -163,3 +191,6 @@ $ terraform import aviatrix_transit_external_device_conn.test connection_name~vp
 ## Notes
 ### custom_algorithms
 If set to true, the six algorithm arguments cannot all be default value. If set to false, default values will be used for all six algorithm arguments.
+
+### enable_jumbo_frame
+If you are using/upgraded to Aviatrix Terraform Provider R2.22.2+, and a **transit_external_device_conn** resource was originally created with jumbo frame enabled and a provider version <R2.22.2, you must add `enable_jumbo_frame = true` in your `.tf` file, and do 'terraform refresh' to update and apply the attribute’s value (true) into the state file.
