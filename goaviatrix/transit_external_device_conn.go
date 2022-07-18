@@ -50,6 +50,7 @@ type ExternalDeviceConn struct {
 	BackupRemoteLanIP      string `form:"backup_remote_lan_ip,omitempty"`
 	BackupLocalLanIP       string `form:"backup_local_lan_ip,omitempty"`
 	EventTriggeredHA       bool
+	EnableJumboFrame       bool
 	Phase1RemoteIdentifier string
 	PrependAsPath          string
 	BgpMd5Key              string `form:"bgp_md5_key,omitempty"`
@@ -91,6 +92,7 @@ type EditExternalDeviceConnDetail struct {
 	EventTriggeredHA       string `json:"event_triggered_ha"`
 	Phase1RemoteIdentifier string `json:"phase1_remote_id"`
 	PrependAsPath          string `json:"conn_bgp_prepend_as_path"`
+	EnableJumboFrame       bool   `json:"jumbo_frame,omitempty"`
 }
 
 type EditBgpMd5Key struct {
@@ -286,6 +288,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 			externalDeviceConn.EnableIkev2 = "disabled"
 		}
 		externalDeviceConn.EventTriggeredHA = externalDeviceConnDetail.EventTriggeredHA == "enabled"
+		externalDeviceConn.EnableJumboFrame = externalDeviceConnDetail.EnableJumboFrame
 		externalDeviceConn.PeerVnetId = externalDeviceConnDetail.PeerVnetId
 		externalDeviceConn.Phase1RemoteIdentifier = externalDeviceConnDetail.Phase1RemoteIdentifier
 		externalDeviceConn.PrependAsPath = externalDeviceConnDetail.PrependAsPath
@@ -386,4 +389,46 @@ func (c *Client) EditBgpMd5Key(editBgpMd5Key *EditBgpMd5Key) error {
 	editBgpMd5Key.Action = "update_bgp_connection_md5_signature"
 
 	return c.PostAPI(editBgpMd5Key.Action, editBgpMd5Key, BasicCheck)
+}
+
+func (c *Client) EnableJumboFrameExternalDeviceConn(externalDeviceConn *ExternalDeviceConn) error {
+	params := map[string]string{
+		"CID":             c.CID,
+		"action":          "enable_jumbo_frame_on_connection_to_cloudn",
+		"connection_name": externalDeviceConn.ConnectionName,
+		"vpc_id":          externalDeviceConn.VpcID,
+	}
+
+	checkFunc := func(action, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "is already enabled") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
+		}
+		return nil
+	}
+
+	return c.PostAPI(externalDeviceConn.Action, params, checkFunc)
+}
+
+func (c *Client) DisableJumboFrameExternalDeviceConn(externalDeviceConn *ExternalDeviceConn) error {
+	params := map[string]string{
+		"CID":             c.CID,
+		"action":          "disable_jumbo_frame_on_connection_to_cloudn",
+		"connection_name": externalDeviceConn.ConnectionName,
+		"vpc_id":          externalDeviceConn.VpcID,
+	}
+
+	checkFunc := func(action, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "is already disabled") || strings.Contains(reason, "AVXERR-SITE2CLOUD-0069") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)
+		}
+		return nil
+	}
+
+	return c.PostAPI(externalDeviceConn.Action, params, checkFunc)
 }
