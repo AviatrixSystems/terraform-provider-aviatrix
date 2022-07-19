@@ -1,4 +1,24 @@
-## 2.22.1 (Unreleased)
+## 2.22.2 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.7.1324**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Multi-Cloud Transit:
+1. Implemented support for enabling/disabling jumbo frames on GRE tunnels under bgp connection in **aviatrix_transit_external_device_conn**:
+   - ``enable_jumbo_frame``
+
+### Enhancements:
+1. Added duplicate rules check and remove deprecation message for ``domain_names`` in **aviatrix_fqdn** to continue support it and the standalone **aviatrix_fqdn_tag_rule** resource as well
+2. Added duplicate rules check and Remove deprecation message for ``policy`` in **aviatrix_firewall** to continue support it and the standalone **aviatrix_firewall_policy** resource as well
+
+### Bug Fixes:
+1. Fixed issue where adding custom SNAT rules to Policy after creation on policy-based S2C fails
+2. Fixed issue where editing FQDN default policy from allow-all to deny-all errors out
+3. Fixed issue where importing invalid ID crashed plugin for **aviatrix_firewall_policy**
+
+
+## 2.22.1 (June 10, 2022)
 ### Notes:
 - Supported Controller version: **UserConnect-6.7.1319**
 - Supported Terraform version: **v1.x**
@@ -16,7 +36,7 @@
   - **aviatrix_controller_email_config**
 
 ### Enhancements:
-1. Add support for "ANY" protocol for micro-segmentation policies in **aviatrix_microseg_policy_list**
+1. Added support for "ANY" protocol for micro-segmentation policies in **aviatrix_microseg_policy_list**
 
 ### Bug Fixes:
 1. Fixed issue where Terraform tries to disable the certificates when uploading renewed certificates
