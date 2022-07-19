@@ -5,7 +5,7 @@
 
 ### Features:
 #### Multi-Cloud Transit:
-1. Implemented support for enabling/disabling jumbo frames on GRE tunnels under bgp connection in **aviatrix_transit_external_device_conn**:
+1. Implemented support for enabling/disabling Jumbo Frames on GRE tunnels under BGP connections in **aviatrix_transit_external_device_conn**:
    - ``enable_jumbo_frame``
 
 ### Enhancements:
