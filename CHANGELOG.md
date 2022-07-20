@@ -15,7 +15,7 @@
 ### Bug Fixes:
 1. Fixed issue where adding more custom SNAT policy rules to ``snat_policy`` after creation on policy-based S2C fails
 2. Fixed issue where editing FQDN default policy from allow-all to deny-all errors out
-3. Fixed issue where importing invalid ID crashed plugin for **aviatrix_firewall_policy**
+3. Fixed issue where importing invalid ID crashes plugin for **aviatrix_firewall_policy**
 
 
 ## 2.22.1 (June 10, 2022)
