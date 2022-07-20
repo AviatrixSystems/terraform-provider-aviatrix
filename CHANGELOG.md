@@ -9,8 +9,8 @@
    - ``enable_jumbo_frame``
 
 ### Enhancements:
-1. Added duplicate rules check and remove deprecation message for ``domain_names`` in **aviatrix_fqdn** to continue support in-line tag rules and the standalone **aviatrix_fqdn_tag_rule** resource
-2. Added duplicate rules check and remove deprecation message for ``policy`` in **aviatrix_firewall** to continue support in-line policy rules and the standalone **aviatrix_firewall_policy** resource
+1. Added duplicate rules check and removed deprecation message for ``domain_names`` in **aviatrix_fqdn** to continue support in-line tag rules and the standalone **aviatrix_fqdn_tag_rule** resource
+2. Added duplicate rules check and removed deprecation message for ``policy`` in **aviatrix_firewall** to continue support in-line policy rules and the standalone **aviatrix_firewall_policy** resource
 
 ### Bug Fixes:
 1. Fixed issue where adding more custom SNAT policy rules to ``snat_policy`` after creation on policy-based S2C fails
