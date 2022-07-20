@@ -60,27 +60,6 @@ func resourceAviatrixControllerPrivateModeConfigCreate(ctx context.Context, d *s
 		if err != nil {
 			return diag.Errorf("failed to enable Private Mode: %s", err)
 		}
-
-		if _, ok := d.GetOk("copilot_instance_id"); ok {
-			copilotInstanceId := d.Get("copilot_instance_id").(string)
-			err = client.UpdatePrivateModeCopilot(ctx, copilotInstanceId)
-			if err != nil {
-				return diag.Errorf("failed to set Copilot instance ID: %s", err)
-			}
-		}
-
-		if _, ok := d.GetOk("proxies"); ok {
-			proxiesSet := d.Get("proxies").(*schema.Set)
-			proxies := make([]string, proxiesSet.Len())
-			for i, proxy := range proxiesSet.List() {
-				proxies[i] = proxy.(string)
-			}
-
-			err = client.UpdatePrivateModeControllerProxies(ctx, proxies)
-			if err != nil {
-				return diag.Errorf("failed to set Controller proxies: %s", err)
-			}
-		}
 	} else {
 		err := client.DisablePrivateMode(ctx)
 		if err != nil {
@@ -89,6 +68,27 @@ func resourceAviatrixControllerPrivateModeConfigCreate(ctx context.Context, d *s
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
+
+	if _, ok := d.GetOk("copilot_instance_id"); ok {
+		copilotInstanceId := d.Get("copilot_instance_id").(string)
+		err := client.UpdatePrivateModeCopilot(ctx, copilotInstanceId)
+		if err != nil {
+			return diag.Errorf("failed to set Copilot instance ID: %s", err)
+		}
+	}
+
+	if _, ok := d.GetOk("proxies"); ok {
+		proxiesSet := d.Get("proxies").(*schema.Set)
+		proxies := make([]string, proxiesSet.Len())
+		for i, proxy := range proxiesSet.List() {
+			proxies[i] = proxy.(string)
+		}
+
+		err := client.UpdatePrivateModeControllerProxies(ctx, proxies)
+		if err != nil {
+			return diag.Errorf("failed to set Controller proxies: %s", err)
+		}
+	}
 
 	return resourceAviatrixControllerPrivateModeConfigReadIfRequired(ctx, d, meta, &flag)
 }
