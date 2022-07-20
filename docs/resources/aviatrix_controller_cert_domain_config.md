@@ -6,10 +6,11 @@ description: |-
   Creates and manages an Aviatrix controller cert domain config
 ---
 
-!> **WARNING** Changing the Controller's cert domain config causes all other API calls to the controller to fail. If multiple other resources are created with the **aviatrix_controller_cert_domain_config** resource, a dependency on the **aviatrix_controller_cert_domain_config** resource must be added.
 # aviatrix_controller_cert_domain_config
 
 The **aviatrix_controller_cert_domain_config** resource allows management of an Aviatrix Controller's cert domain config. This resource is available as of provider version R2.19+.
+
+!> **WARNING:** Changing the Controller's cert domain config causes all other API calls to the controller to fail. If multiple other resources are created with the **aviatrix_controller_cert_domain_config** resource, a dependency on the **aviatrix_controller_cert_domain_config** resource must be added.
 
 ## Example Usage
 
