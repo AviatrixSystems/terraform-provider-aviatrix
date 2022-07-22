@@ -26,6 +26,7 @@ func resourceAviatrixAccount() *schema.Resource {
 			"account_name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Account name. This can be used for logging in to CloudN console or UserConnect controller.",
 			},
 			"cloud_type": {
@@ -975,10 +976,6 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	if d.HasChange("cloud_type") {
 		return diag.Errorf("update cloud_type is not allowed")
-	}
-
-	if d.HasChange("account_name") {
-		return diag.Errorf("update account name is not allowed")
 	}
 
 	if d.HasChanges("aws_gateway_role_app", "aws_gateway_role_ec2") {
