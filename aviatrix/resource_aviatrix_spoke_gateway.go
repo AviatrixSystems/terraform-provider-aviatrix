@@ -1677,8 +1677,10 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("ha_oob_management_subnet", strings.Split(gw.HaGw.OobManagementSubnet, "~~")[0])
 		d.Set("ha_oob_availability_zone", gw.HaGw.GatewayZone)
 	}
-	if gw.LbVpcId != "" {
+	if gw.LbVpcId != "" && goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		d.Set("ha_private_mode_subnet_zone", gw.HaGw.GatewayZone)
+	} else {
+		d.Set("ha_private_mode_subnet_zone", "")
 	}
 	if goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		azureEip := strings.Split(gw.HaGw.ReuseEip, ":")
