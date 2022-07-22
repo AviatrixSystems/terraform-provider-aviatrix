@@ -1984,8 +1984,10 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("ha_oob_availability_zone", gw.HaGw.GatewayZone)
 	}
 
-	if gw.LbVpcId != "" {
+	if gw.LbVpcId != "" && goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		d.Set("ha_private_mode_subnet_zone", gw.HaGw.GatewayZone)
+	} else {
+		d.Set("ha_private_mode_subnet_zone", "")
 	}
 
 	if gw.HaGw.InsaneMode == "yes" && goaviatrix.IsCloudType(gw.HaGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
