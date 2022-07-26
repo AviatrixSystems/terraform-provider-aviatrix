@@ -72,6 +72,17 @@
 //         "name": "alice",
 //     }
 //
+// When decoding from a struct to a map, the squash tag squashes the struct
+// fields into a single map. Using the example structs from above:
+//
+//     Friend{Person: Person{Name: "alice"}}
+//
+// Will be decoded into a map:
+//
+//     map[string]interface{}{
+//         "name": "alice",
+//     }
+//
 // DecoderConfig has a field that changes the behavior of mapstructure
 // to always squash embedded structs.
 //
@@ -111,7 +122,7 @@
 // field value is zero and a numeric type, the field is empty, and it won't
 // be encoded into the destination type.
 //
-//     type Source {
+//     type Source struct {
 //         Age int `mapstructure:",omitempty"`
 //     }
 //
@@ -161,10 +172,11 @@ import (
 // data transformations. See "DecodeHook" in the DecoderConfig
 // struct.
 //
-// The type should be DecodeHookFuncType or DecodeHookFuncKind.
-// Either is accepted. Types are a superset of Kinds (Types can return
-// Kinds) and are generally a richer thing to use, but Kinds are simpler
-// if you only need those.
+// The type must be one of DecodeHookFuncType, DecodeHookFuncKind, or
+// DecodeHookFuncValue.
+// Values are a superset of Types (Values can return types), and Types are a
+// superset of Kinds (Types can return Kinds) and are generally a richer thing
+// to use, but Kinds are simpler if you only need those.
 //
 // The reason DecodeHookFunc is multi-typed is for backwards compatibility:
 // we started with Kinds and then realized Types were the better solution,
@@ -180,7 +192,7 @@ type DecodeHookFuncType func(reflect.Type, reflect.Type, interface{}) (interface
 // source and target types.
 type DecodeHookFuncKind func(reflect.Kind, reflect.Kind, interface{}) (interface{}, error)
 
-// DecodeHookFuncRaw is a DecodeHookFunc which has complete access to both the source and target
+// DecodeHookFuncValue is a DecodeHookFunc which has complete access to both the source and target
 // values.
 type DecodeHookFuncValue func(from reflect.Value, to reflect.Value) (interface{}, error)
 
@@ -189,16 +201,25 @@ type DecodeHookFuncValue func(from reflect.Value, to reflect.Value) (interface{}
 type DecoderConfig struct {
 	// DecodeHook, if set, will be called before any decoding and any
 	// type conversion (if WeaklyTypedInput is on). This lets you modify
-	// the values before they're set down onto the resulting struct.
+	// the values before they're set down onto the resulting struct. The
+	// DecodeHook is called for every map and value in the input. This means
+	// that if a struct has embedded fields with squash tags the decode hook
+	// is called only once with all of the input data, not once for each
+	// embedded struct.
 	//
-	// If an error is returned, the entire decode will fail with that
-	// error.
+	// If an error is returned, the entire decode will fail with that error.
 	DecodeHook DecodeHookFunc
 
 	// If ErrorUnused is true, then it is an error for there to exist
 	// keys in the original map that were unused in the decoding process
 	// (extra keys).
 	ErrorUnused bool
+
+	// If ErrorUnset is true, then it is an error for there to exist
+	// fields in the result that were not set in the decoding process
+	// (extra fields). This only applies to decoding to a struct. This
+	// will affect all nested structs as well.
+	ErrorUnset bool
 
 	// ZeroFields, if set to true, will zero fields before writing them.
 	// For example, a map will be emptied before decoded values are put in
@@ -243,6 +264,15 @@ type DecoderConfig struct {
 	// The tag name that mapstructure reads for field names. This
 	// defaults to "mapstructure"
 	TagName string
+
+	// IgnoreUntaggedFields ignores all struct fields without explicit
+	// TagName, comparable to `mapstructure:"-"` as default behaviour.
+	IgnoreUntaggedFields bool
+
+	// MatchName is the function used to match the map key to the struct
+	// field name or tag. Defaults to `strings.EqualFold`. This can be used
+	// to implement case-sensitive tag values, support snake casing, etc.
+	MatchName func(mapKey, fieldName string) bool
 }
 
 // A Decoder takes a raw interface value and turns it into structured
@@ -264,6 +294,11 @@ type Metadata struct {
 	// Unused is a slice of keys that were found in the raw value but
 	// weren't decoded since there was no matching field in the result interface
 	Unused []string
+
+	// Unset is a slice of field names that were found in the result interface
+	// but weren't set in the decoding process since there was no matching value
+	// in the input
+	Unset []string
 }
 
 // Decode takes an input structure and uses reflection to translate it to
@@ -355,10 +390,18 @@ func NewDecoder(config *DecoderConfig) (*Decoder, error) {
 		if config.Metadata.Unused == nil {
 			config.Metadata.Unused = make([]string, 0)
 		}
+
+		if config.Metadata.Unset == nil {
+			config.Metadata.Unset = make([]string, 0)
+		}
 	}
 
 	if config.TagName == "" {
 		config.TagName = "mapstructure"
+	}
+
+	if config.MatchName == nil {
+		config.MatchName = strings.EqualFold
 	}
 
 	result := &Decoder{
@@ -660,16 +703,12 @@ func (d *Decoder) decodeUint(name string, data interface{}, val reflect.Value) e
 		}
 	case dataType.PkgPath() == "encoding/json" && dataType.Name() == "Number":
 		jn := data.(json.Number)
-		i, err := jn.Int64()
+		i, err := strconv.ParseUint(string(jn), 0, 64)
 		if err != nil {
 			return fmt.Errorf(
 				"error decoding json.Number into %s: %s", name, err)
 		}
-		if i < 0 && !d.config.WeaklyTypedInput {
-			return fmt.Errorf("cannot parse '%s', %d overflows uint",
-				name, i)
-		}
-		val.SetUint(uint64(i))
+		val.SetUint(i)
 	default:
 		return fmt.Errorf(
 			"'%s' expected type '%s', got unconvertible type '%s', value: '%v'",
@@ -879,10 +918,6 @@ func (d *Decoder) decodeMapFromStruct(name string, dataVal reflect.Value, val re
 		// Next get the actual value of this field and verify it is assignable
 		// to the map value.
 		v := dataVal.Field(i)
-		if v.Kind() == reflect.Ptr && v.Elem().Kind() == reflect.Struct {
-			// Handle embedded struct pointers as embedded structs.
-			v = v.Elem()
-		}
 		if !v.Type().AssignableTo(valMap.Type().Elem()) {
 			return fmt.Errorf("cannot assign type '%s' to map value field of type '%s'", v.Type(), valMap.Type().Elem())
 		}
@@ -890,8 +925,15 @@ func (d *Decoder) decodeMapFromStruct(name string, dataVal reflect.Value, val re
 		tagValue := f.Tag.Get(d.config.TagName)
 		keyName := f.Name
 
+		if tagValue == "" && d.config.IgnoreUntaggedFields {
+			continue
+		}
+
 		// If Squash is set in the config, we squash the field down.
 		squash := d.config.Squash && v.Kind() == reflect.Struct && f.Anonymous
+
+		v = dereferencePtrToStructIfNeeded(v, d.config.TagName)
+
 		// Determine the name of the key in the map
 		if index := strings.Index(tagValue, ","); index != -1 {
 			if tagValue[:index] == "-" {
@@ -903,11 +945,21 @@ func (d *Decoder) decodeMapFromStruct(name string, dataVal reflect.Value, val re
 			}
 
 			// If "squash" is specified in the tag, we squash the field down.
-			squash = !squash && strings.Index(tagValue[index+1:], "squash") != -1
-			if squash && v.Kind() != reflect.Struct {
-				return fmt.Errorf("cannot squash non-struct type '%s'", v.Type())
+			squash = squash || strings.Index(tagValue[index+1:], "squash") != -1
+			if squash {
+				// When squashing, the embedded type can be a pointer to a struct.
+				if v.Kind() == reflect.Ptr && v.Elem().Kind() == reflect.Struct {
+					v = v.Elem()
+				}
+
+				// The final type must be a struct
+				if v.Kind() != reflect.Struct {
+					return fmt.Errorf("cannot squash non-struct type '%s'", v.Type())
+				}
 			}
-			keyName = tagValue[:index]
+			if keyNameTagValue := tagValue[:index]; keyNameTagValue != "" {
+				keyName = keyNameTagValue
+			}
 		} else if len(tagValue) > 0 {
 			if tagValue == "-" {
 				continue
@@ -1063,7 +1115,7 @@ func (d *Decoder) decodeSlice(name string, data interface{}, val reflect.Value) 
 	}
 
 	// If the input value is nil, then don't allocate since empty != nil
-	if dataVal.IsNil() {
+	if dataValKind != reflect.Array && dataVal.IsNil() {
 		return nil
 	}
 
@@ -1225,6 +1277,7 @@ func (d *Decoder) decodeStructFromMap(name string, dataVal, val reflect.Value) e
 		dataValKeysUnused[dataValKey.Interface()] = struct{}{}
 	}
 
+	targetValKeysUnused := make(map[interface{}]struct{})
 	errors := make([]string, 0)
 
 	// This slice will keep track of all the structs we'll be decoding.
@@ -1320,7 +1373,7 @@ func (d *Decoder) decodeStructFromMap(name string, dataVal, val reflect.Value) e
 					continue
 				}
 
-				if strings.EqualFold(mK, fieldName) {
+				if d.config.MatchName(mK, fieldName) {
 					rawMapKey = dataValKey
 					rawMapVal = dataVal.MapIndex(dataValKey)
 					break
@@ -1329,7 +1382,8 @@ func (d *Decoder) decodeStructFromMap(name string, dataVal, val reflect.Value) e
 
 			if !rawMapVal.IsValid() {
 				// There was no matching key in the map for the value in
-				// the struct. Just ignore.
+				// the struct. Remember it for potential errors and metadata.
+				targetValKeysUnused[fieldName] = struct{}{}
 				continue
 			}
 		}
@@ -1389,6 +1443,17 @@ func (d *Decoder) decodeStructFromMap(name string, dataVal, val reflect.Value) e
 		errors = appendErrors(errors, err)
 	}
 
+	if d.config.ErrorUnset && len(targetValKeysUnused) > 0 {
+		keys := make([]string, 0, len(targetValKeysUnused))
+		for rawKey := range targetValKeysUnused {
+			keys = append(keys, rawKey.(string))
+		}
+		sort.Strings(keys)
+
+		err := fmt.Errorf("'%s' has unset fields: %s", name, strings.Join(keys, ", "))
+		errors = appendErrors(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return &Error{errors}
 	}
@@ -1402,6 +1467,14 @@ func (d *Decoder) decodeStructFromMap(name string, dataVal, val reflect.Value) e
 			}
 
 			d.config.Metadata.Unused = append(d.config.Metadata.Unused, key)
+		}
+		for rawKey := range targetValKeysUnused {
+			key := rawKey.(string)
+			if name != "" {
+				key = name + "." + key
+			}
+
+			d.config.Metadata.Unset = append(d.config.Metadata.Unset, key)
 		}
 	}
 
@@ -1439,4 +1512,29 @@ func getKind(val reflect.Value) reflect.Kind {
 	default:
 		return kind
 	}
+}
+
+func isStructTypeConvertibleToMap(typ reflect.Type, checkMapstructureTags bool, tagName string) bool {
+	for i := 0; i < typ.NumField(); i++ {
+		f := typ.Field(i)
+		if f.PkgPath == "" && !checkMapstructureTags { // check for unexported fields
+			return true
+		}
+		if checkMapstructureTags && f.Tag.Get(tagName) != "" { // check for mapstructure tags inside
+			return true
+		}
+	}
+	return false
+}
+
+func dereferencePtrToStructIfNeeded(v reflect.Value, tagName string) reflect.Value {
+	if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Struct {
+		return v
+	}
+	deref := v.Elem()
+	derefT := deref.Type()
+	if isStructTypeConvertibleToMap(derefT, true, tagName) {
+		return deref
+	}
+	return v
 }
