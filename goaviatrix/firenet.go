@@ -33,7 +33,6 @@ type FireNetDetail struct {
 	TgwSegmentationForEgress string                 `json:"tgw_segmentation"`
 	EgressStaticCidrs        []string               `json:"egress_static_cidr"`
 	ExcludedCidrs            []string               `json:"exclude_cidr"`
-	FailClose                string                 `json:"fail_close"`
 }
 
 type GetFireNetResp struct {
@@ -355,42 +354,6 @@ func (c *Client) EditFirenetExcludedCidr(net *FireNet) error {
 				return nil
 			}
 			return fmt.Errorf("rest API edit_firenet_excluded_cidr Post failed: %s", reason)
-		}
-		return nil
-	}
-	return c.PostAPI(form["action"], form, check)
-}
-
-func (c *Client) EnableFirenetFailClose(net *FireNet) error {
-	form := map[string]string{
-		"action": "enable_firenet_fail_close",
-		"CID":    c.CID,
-		"vpc_id": net.VpcID,
-	}
-	check := func(act, method, reason string, ret bool) error {
-		if !ret {
-			if strings.Contains(reason, "configuration not changed") {
-				return nil
-			}
-			return fmt.Errorf("rest API enable_firenet_fail_close Post failed: %s", reason)
-		}
-		return nil
-	}
-	return c.PostAPI(form["action"], form, check)
-}
-
-func (c *Client) DisableFirenetFailClose(net *FireNet) error {
-	form := map[string]string{
-		"action": "disable_firenet_fail_close",
-		"CID":    c.CID,
-		"vpc_id": net.VpcID,
-	}
-	check := func(act, method, reason string, ret bool) error {
-		if !ret {
-			if strings.Contains(reason, "configuration not changed") {
-				return nil
-			}
-			return fmt.Errorf("rest API disable_firenet_fail_close Post failed: %s", reason)
 		}
 		return nil
 	}

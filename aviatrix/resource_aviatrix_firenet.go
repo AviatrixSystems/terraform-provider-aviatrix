@@ -139,12 +139,6 @@ func resourceAviatrixFireNet() *schema.Resource {
 					ValidateFunc: validation.IsCIDR,
 				},
 			},
-			"fail_close_enabled": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Computed:    true,
-				Description: "Enable Fail Close. When Fail Close is enabled, FireNet gateway drops all traffic when there are no firewalls attached to the FireNet gateways. Type: Boolean. Available as of provider version R2.19.2+.",
-			},
 			"east_west_inspection_excluded_cidrs": {
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -274,13 +268,6 @@ func resourceAviatrixFireNetCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	if d.Get("fail_close_enabled").(bool) {
-		err := client.EnableFirenetFailClose(fireNet)
-		if err != nil {
-			return fmt.Errorf("could not enable fail close: %v", err)
-		}
-	}
-
 	var egressStaticCidrs []string
 	for _, v := range d.Get("egress_static_cidrs").(*schema.Set).List() {
 		egressStaticCidrs = append(egressStaticCidrs, v.(string))
@@ -355,7 +342,6 @@ func resourceAviatrixFireNetRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("tgw_segmentation_for_egress_enabled", fireNetDetail.TgwSegmentationForEgress == "yes")
 	d.Set("egress_static_cidrs", fireNetDetail.EgressStaticCidrs)
 	d.Set("east_west_inspection_excluded_cidrs", fireNetDetail.ExcludedCidrs)
-	d.Set("fail_close_enabled", fireNetDetail.FailClose == "yes")
 	d.Set("inspection_enabled", fireNetDetail.Inspection == "yes")
 	d.Set("egress_enabled", fireNetDetail.FirewallEgress == "yes")
 
@@ -666,23 +652,6 @@ func resourceAviatrixFireNetUpdate(d *schema.ResourceData, meta interface{}) err
 			err := client.DisableTgwSegmentationForEgress(fn)
 			if err != nil {
 				return fmt.Errorf("could not disable tgw_segmentation_for_egress: %v", err)
-			}
-		}
-	}
-
-	if d.HasChange("fail_close_enabled") {
-		fn := &goaviatrix.FireNet{
-			VpcID: d.Get("vpc_id").(string),
-		}
-		if d.Get("fail_close_enabled").(bool) {
-			err := client.EnableFirenetFailClose(fn)
-			if err != nil {
-				return fmt.Errorf("could not enable fail_close_enabled during update: %v", err)
-			}
-		} else {
-			err := client.DisableFirenetFailClose(fn)
-			if err != nil {
-				return fmt.Errorf("could not disable fail_close_enabled during update: %v", err)
 			}
 		}
 	}
