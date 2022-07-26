@@ -48,6 +48,12 @@ func (e *TemplateExpr) Value(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) 
 			continue
 		}
 
+		// Unmark the part and merge its marks into the set
+		unmarkedVal, partMarks := partVal.Unmark()
+		for k, v := range partMarks {
+			marks[k] = v
+		}
+
 		if !partVal.IsKnown() {
 			// If any part is unknown then the result as a whole must be
 			// unknown too. We'll keep on processing the rest of the parts
@@ -57,7 +63,7 @@ func (e *TemplateExpr) Value(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) 
 			continue
 		}
 
-		strVal, err := convert.Convert(partVal, cty.String)
+		strVal, err := convert.Convert(unmarkedVal, cty.String)
 		if err != nil {
 			diags = append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
@@ -74,13 +80,7 @@ func (e *TemplateExpr) Value(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) 
 			continue
 		}
 
-		// Unmark the part and merge its marks into the set
-		unmarked, partMarks := strVal.Unmark()
-		for k, v := range partMarks {
-			marks[k] = v
-		}
-
-		buf.WriteString(unmarked.AsString())
+		buf.WriteString(strVal.AsString())
 	}
 
 	var ret cty.Value
@@ -152,6 +152,8 @@ func (e *TemplateJoinExpr) Value(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnosti
 		return cty.UnknownVal(cty.String), diags
 	}
 
+	tuple, marks := tuple.Unmark()
+	allMarks := []cty.ValueMarks{marks}
 	buf := &bytes.Buffer{}
 	it := tuple.ElementIterator()
 	for it.Next() {
@@ -171,7 +173,7 @@ func (e *TemplateJoinExpr) Value(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnosti
 			continue
 		}
 		if val.Type() == cty.DynamicPseudoType {
-			return cty.UnknownVal(cty.String), diags
+			return cty.UnknownVal(cty.String).WithMarks(marks), diags
 		}
 		strVal, err := convert.Convert(val, cty.String)
 		if err != nil {
@@ -189,13 +191,17 @@ func (e *TemplateJoinExpr) Value(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnosti
 			continue
 		}
 		if !val.IsKnown() {
-			return cty.UnknownVal(cty.String), diags
+			return cty.UnknownVal(cty.String).WithMarks(marks), diags
 		}
 
+		strVal, strValMarks := strVal.Unmark()
+		if len(strValMarks) > 0 {
+			allMarks = append(allMarks, strValMarks)
+		}
 		buf.WriteString(strVal.AsString())
 	}
 
-	return cty.StringVal(buf.String()), diags
+	return cty.StringVal(buf.String()).WithMarks(allMarks...), diags
 }
 
 func (e *TemplateJoinExpr) Range() hcl.Range {
