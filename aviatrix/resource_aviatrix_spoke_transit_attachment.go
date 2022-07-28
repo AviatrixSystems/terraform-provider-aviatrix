@@ -41,6 +41,15 @@ func resourceAviatrixSpokeTransitAttachment() *schema.Resource {
 				ForceNew:    true,
 				Description: "Learned routes will be propagated to these route tables.",
 			},
+			"enable_max_performance": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+				ForceNew: true,
+				Description: "Indicates whether the maximum amount of HPE tunnels will be created. " +
+					"Only valid when transit and spoke gateways are each launched in Insane Mode and in the same cloud type. " +
+					"Available as of provider version R2.22.3+.",
+			},
 		},
 	}
 }
@@ -130,6 +139,19 @@ func resourceAviatrixSpokeTransitAttachmentRead(d *schema.ResourceData, meta int
 		}
 	}
 
+	transitGatewayPeering := &goaviatrix.TransitGatewayPeering{
+		TransitGatewayName1: spokeGwName,
+		TransitGatewayName2: transitGwName,
+	}
+
+	transitGatewayPeering, err = client.GetTransitGatewayPeeringDetails(transitGatewayPeering)
+	if err == goaviatrix.ErrNotFound {
+		d.SetId("")
+		return nil
+	}
+
+	d.Set("enable_max_performance", !transitGatewayPeering.NoMaxPerformance)
+
 	d.SetId(attachment.SpokeGwName + "~" + attachment.TransitGwName)
 	return nil
 }
@@ -151,16 +173,10 @@ func resourceAviatrixSpokeTransitAttachmentDelete(d *schema.ResourceData, meta i
 
 func marshalSpokeTransitAttachmentInput(d *schema.ResourceData) *goaviatrix.SpokeTransitAttachment {
 	spokeTransitAttachment := &goaviatrix.SpokeTransitAttachment{
-		SpokeGwName:   d.Get("spoke_gw_name").(string),
-		TransitGwName: d.Get("transit_gw_name").(string),
-	}
-
-	var routeTables []string
-	for _, v := range d.Get("route_tables").(*schema.Set).List() {
-		routeTables = append(routeTables, v.(string))
-	}
-	if len(routeTables) != 0 {
-		spokeTransitAttachment.RouteTables = strings.Join(routeTables, ",")
+		SpokeGwName:      d.Get("spoke_gw_name").(string),
+		TransitGwName:    d.Get("transit_gw_name").(string),
+		RouteTables:      strings.Join(getStringSet(d, "route_tables"), ","),
+		NoMaxPerformance: !d.Get("enable_max_performance").(bool),
 	}
 
 	return spokeTransitAttachment

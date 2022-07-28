@@ -127,6 +127,15 @@ func resourceAviatrixTransitGatewayPeering() *schema.Resource {
 					"Conflicts with `enable_peering_over_private_network` and `enable_single_tunnel_mode`. Type: Integer. Valid Range: 2-20. " +
 					"Available as of provider version R2.19+.",
 			},
+			"enable_max_performance": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+				ForceNew: true,
+				Description: "Indicates whether the maximum amount of HPE tunnels will be created. " +
+					"Only valid when the two transit gateways are each launched in Insane Mode and in the same cloud type. " +
+					"Available as of provider version R2.22.3+.",
+			},
 		},
 	}
 }
@@ -161,6 +170,7 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 		Gateway2ExcludedTGWConnections: strings.Join(gw2Tgws, ","),
 		PrivateIPPeering:               d.Get("enable_peering_over_private_network").(bool),
 		InsaneModeOverInternet:         d.Get("enable_insane_mode_encryption_over_internet").(bool),
+		NoMaxPerformance:               !d.Get("enable_max_performance").(bool),
 	}
 
 	if transitGatewayPeering.PrivateIPPeering && transitGatewayPeering.InsaneModeOverInternet {
@@ -328,6 +338,8 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 	if transitGatewayPeering.InsaneModeOverInternet {
 		d.Set("tunnel_count", transitGatewayPeering.TunnelCount)
 	}
+
+	d.Set("enable_max_performance", !transitGatewayPeering.NoMaxPerformance)
 
 	d.SetId(transitGatewayPeering.TransitGatewayName1 + "~" + transitGatewayPeering.TransitGatewayName2)
 	return nil

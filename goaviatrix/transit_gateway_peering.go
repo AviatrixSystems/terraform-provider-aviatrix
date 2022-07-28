@@ -26,6 +26,7 @@ type TransitGatewayPeering struct {
 	CID                                 string `form:"CID,omitempty"`
 	Action                              string `form:"action,omitempty"`
 	SingleTunnel                        bool   `form:"single_tunnel"`
+	NoMaxPerformance                    bool   `form:"no_max_performance,omitempty"`
 }
 
 type TransitGatewayPeeringAPIResp struct {
@@ -47,6 +48,7 @@ type TransitGatewayPeeringDetailsResults struct {
 	Tunnels                []TunnelsDetail             `json:"tunnels"`
 	InsaneModeOverInternet bool                        `json:"insane_mode_over_internet"`
 	TunnelCount            int                         `json:"tunnel_count"`
+	NoMaxPerformance       bool                        `json:"no_max_performance"`
 }
 
 type TransitGatewayPeeringDetail struct {
@@ -131,6 +133,7 @@ func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitG
 	transitGatewayPeering.TunnelCount = data.Results.TunnelCount
 	transitGatewayPeering.PrependAsPath1 = data.Results.Site1.ConnBGPPrependAsPath
 	transitGatewayPeering.PrependAsPath2 = data.Results.Site2.ConnBGPPrependAsPath
+	transitGatewayPeering.NoMaxPerformance = data.Results.NoMaxPerformance
 
 	if len(data.Results.Tunnels[0].LicenseId) == 1 {
 		transitGatewayPeering.SingleTunnel = true
