@@ -1,4 +1,15 @@
-## 2.22.2 (Unreleased)
+## 2.22.3 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.7.1428**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Multi-Cloud Transit:
+1. Implemented support for creating one HPE tunnel per instance size in **aviatrix_spoke_transit_attachment** and **aviatrix_transit_gateway_peering**:
+  - ``enable_max_performance``
+
+
+## 2.22.2 (July 20, 2022)
 ### Notes:
 - Supported Controller version: **UserConnect-6.7.1324**
 - Supported Terraform version: **v1.x**
@@ -6,7 +17,7 @@
 ### Features:
 #### Multi-Cloud Transit:
 1. Implemented support for enabling/disabling Jumbo Frames on GRE tunnels under BGP connections in **aviatrix_transit_external_device_conn**:
-   - ``enable_jumbo_frame``
+  - ``enable_jumbo_frame``
 
 ### Enhancements:
 1. Added duplicate rules check and removed deprecation message for ``domain_names`` in **aviatrix_fqdn** to continue support in-line tag rules and the standalone **aviatrix_fqdn_tag_rule** resource
