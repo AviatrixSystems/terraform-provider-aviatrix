@@ -59,9 +59,9 @@
 4. Added support for ``insane_mode`` for **aviatrix_gateway**, **aviatrix_spoke_gateway**, and **aviatrix_transit_gateway** for Azure China
 
 ### Bug Fixes:
-1. Fixed issue where duplicate *aviatrix_account* resources would be set into state even after giving an error
+1. Fixed issue where duplicate **aviatrix_account** resources would be set into state even after giving an error
 2. Fixed issue where ``username`` could not be specified with ``private_key_file`` in **aviatrix_firenet_vendor_integration**
-3. Fixed issue where setting ``custom_algorithms`` to True but still using default values tried to replace tunnel in **aviatrix_transit_external_device_conn**
+3. Fixed issue where setting ``custom_algorithms`` to true would still use default values, causing tunnel replacement in **aviatrix_transit_external_device_conn**
 
 
 ## 2.22.3 (August 02, 2022)
