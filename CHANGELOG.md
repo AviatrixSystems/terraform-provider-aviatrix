@@ -5,7 +5,7 @@
 
 ### Features:
 #### Provider:
-1. Implemented support to ignore selected tag changes across all resources
+1. Implemented support to ignore changes in selected tag keys across all resources
 
 #### Multi-Cloud Transit:
 1. Implemented support for Private Mode:
@@ -15,15 +15,15 @@
     - ``ha_private_mode_subnet_zone``
   - New attribute in **aviatrix_vpc**:
     - ``private_mode_subnets``
-  - New resources
+  - New resources:
     - **aviatrix_controller_private_mode_config**
     - **aviatrix_private_mode_lb**
     - **aviatrix_private_mode_multicloud_endpoint**
 2. Implemented a new resource to support Edge as a Spoke:
   - **aviatrix_edge_spoke**
-3. Implemented a new resource to support attaching Edge as a Spoke to Transit Gateway
+3. Implemented a new resource to support attaching Edge as a Spoke to Transit Gateway:
   - **aviatrix_edge_spoke_transit_attachment**
-4. Implemented a new resource to support Edge as a Spoke External Device Connection
+4. Implemented a new resource to support Edge as a Spoke External Device Connection:
   - **aviatrix_edge_spoke_external_device_conn**
 5. Implemented support for connection based AS path prepend for BGP Spoke Transit attachment in **aviatrix_spoke_transit_attachment** with the following new attributes:
   - ``spoke_prepend_as_path``
@@ -36,7 +36,7 @@
   - ``position``
 
 #### Settings
-1. Implemented a new resource to support CoPilot Security Group Management
+1. Implemented a new resource to support CoPilot Security Group Management:
   - **aviatrix_copilot_security_group_management_config**
 
 #### Site2Cloud
