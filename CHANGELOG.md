@@ -1,4 +1,70 @@
-## 2.22.3 (Unreleased)
+## 2.23.0 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.8**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Provider:
+1. Implemented support to ignore changes in selected tag keys across all resources
+
+#### Multi-Cloud Transit:
+1. Implemented support for Private Mode:
+  - New attributes in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**:
+    - ``private_mode_lb_vpc_id``
+    - ``private_mode_subnet_zone``
+    - ``ha_private_mode_subnet_zone``
+  - New attribute in **aviatrix_vpc**:
+    - ``private_mode_subnets``
+  - New resources:
+    - **aviatrix_controller_private_mode_config**
+    - **aviatrix_private_mode_lb**
+    - **aviatrix_private_mode_multicloud_endpoint**
+2. Implemented a new resource to support Edge as a Spoke:
+  - **aviatrix_edge_spoke**
+3. Implemented a new resource to support attaching Edge as a Spoke to Transit Gateway:
+  - **aviatrix_edge_spoke_transit_attachment**
+4. Implemented a new resource to support Edge as a Spoke External Device Connection:
+  - **aviatrix_edge_spoke_external_device_conn**
+5. Implemented support for connection based AS path prepend for BGP Spoke Transit attachment in **aviatrix_spoke_transit_attachment** with the following new attributes:
+  - ``spoke_prepend_as_path``
+  - ``transit_prepend_as_path``
+6. Implemented support for creating multiple BGP over LAN interfaces in **aviatrix_transit_gateway** for Azure with the following new attribute:
+  - ``bgp_lan_interfaces_count``
+
+#### Security
+1. Implemented support for order of rules and rule addition to any place in **aviatrix_firewall_policy** with the following new attribute:
+  - ``position``
+
+#### Settings
+1. Implemented a new resource to support CoPilot Security Group Management:
+  - **aviatrix_copilot_security_group_management_config**
+
+#### Site2Cloud
+1. Implemented support for Certificate based Authentication for Site2Cloud VPN:
+  - New attributes in **aviatrix_site2cloud**
+    - ``auth_type``
+    - ``ca_cert_tag_name``
+    - ``remote_identifier``
+  - New resource
+    - **aviatrix_site2cloud_ca_cert_tag**
+
+#### TGW Orchestrator
+1. Implemented support for setting AWS TGW inspection mode in **aviatrix_aws_tgw** with the following new attribute:
+  - ``inspection_mode``
+
+### Enhancements:
+1. Increased maximum number of policies allowed for **aviatrix_dnat** and **aviatrix_snat**
+2. Removed ``fail_close_enabled`` from **aviatrix_firenet**. ``fail_close_enabled`` will automatically be true for all **aviatrix_firenet** for R2.23+
+3. Updated ``account_name`` to ForceNew in **aviatrix_account**
+4. Added support for ``insane_mode`` for **aviatrix_gateway**, **aviatrix_spoke_gateway**, and **aviatrix_transit_gateway** for Azure China
+
+### Bug Fixes:
+1. Fixed issue where duplicate **aviatrix_account** resources would be set into state even after giving an error
+2. Fixed issue where ``username`` could not be specified with ``private_key_file`` in **aviatrix_firenet_vendor_integration**
+3. Fixed issue where setting ``custom_algorithms`` to true would still use default values, causing tunnel replacement in **aviatrix_transit_external_device_conn**
+
+
+## 2.22.3 (August 02, 2022)
 ### Notes:
 - Supported Controller version: **UserConnect-6.7.1376**
 - Supported Terraform version: **v1.x**
