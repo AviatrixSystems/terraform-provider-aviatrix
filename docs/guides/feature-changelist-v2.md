@@ -22,7 +22,7 @@ We **highly** recommend customers that are starting to adopt Terraform to manage
 
 ---
 
-``Last updated: R2.22.0 (UserConnect-6.7)``
+``Last updated: R2.23.0 (UserConnect-6.8)``
 
 
 ---
@@ -311,3 +311,9 @@ Note there are standalone resources already in place to be used and one only nee
 |(changed) | gateway <br> spoke_gateway <br> transit_gateway <br> vpc | vpc_id | **No**; the attribute value for these resources created in GCP now include the project ID. The new format is `<vpc_name>~-~<project_id>`; if some resources referenced the `vpc_id` and concatenated the project ID, it is no longer necessary |
 |(deprecated) | device_registration <br> device_tag <br> device_transit_gateway_attachment <br> device_aws_tgw_attachment <br> device_virtual_wan_attachment | -- | **Yes**; these resources are removed from Terraform as CloudWAN is no longer a supported feature |
 |(deprecated) | cloudn_transit_gateway_attachment | enable_dead_peer_detection <br> enable_learned_cidrs_approval <br> approved_cirs | **Yes**; these attributes are no longer supported in this resource. They can be safely removed from .tf config |
+
+
+## R2.23.0 (UserConnect-6.8)
+| Diff | Resource       | Attribute         | Action Required?           |
+|:----:|----------------|:-----------------:|----------------------------|
+|(deprecated) | firenet | fail_close_enabled | **Yes**; if customers are using FireNet with `fail_close_enabled` set to **true/false**, action is required. This attribute is fully deprecated as Fail Close will be enabled by default in Controller 6.8+. This attribute may be safely removed from configuration, and a ``terraform refresh`` may be run. |

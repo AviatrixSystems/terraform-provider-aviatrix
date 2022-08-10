@@ -5,7 +5,10 @@
 
 ### Features:
 #### Provider:
-1. Implemented support to ignore changes in selected tag keys across all resources
+1. Implemented support to ignore changes in selected tag keys across all resources on the provider-level:
+  - New configuration block ``ignore_tags {}`` with the following options:
+    - ``keys``
+    - ``key_prefixes`` 
 
 #### Multi-Cloud Transit:
 1. Implemented support for Private Mode:
@@ -41,11 +44,11 @@
 
 #### Site2Cloud
 1. Implemented support for Certificate based Authentication for Site2Cloud VPN:
-  - New attributes in **aviatrix_site2cloud**
+  - New attributes in **aviatrix_site2cloud**:
     - ``auth_type``
     - ``ca_cert_tag_name``
     - ``remote_identifier``
-  - New resource
+  - New resource:
     - **aviatrix_site2cloud_ca_cert_tag**
 
 #### TGW Orchestrator
@@ -54,7 +57,7 @@
 
 ### Enhancements:
 1. Increased maximum number of policies allowed for **aviatrix_dnat** and **aviatrix_snat**
-2. Removed ``fail_close_enabled`` from **aviatrix_firenet**. ``fail_close_enabled`` will automatically be true for all **aviatrix_firenet** for R2.23+
+2. Removed ``fail_close_enabled`` from **aviatrix_firenet**. ``fail_close_enabled`` will automatically be true for all **aviatrix_firenet** for R2.23.0+
 3. Updated ``account_name`` to ForceNew in **aviatrix_account**
 4. Added support for ``insane_mode`` for **aviatrix_gateway**, **aviatrix_spoke_gateway**, and **aviatrix_transit_gateway** for Azure China
 
