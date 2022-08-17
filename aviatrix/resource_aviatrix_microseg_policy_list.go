@@ -100,7 +100,7 @@ func resourceAviatrixMicrosegPolicyList() *schema.Resource {
 									},
 								},
 							},
-							MaxItems: 1,
+							MaxItems: 64,
 						},
 						"uuid": {
 							Type:        schema.TypeString,
