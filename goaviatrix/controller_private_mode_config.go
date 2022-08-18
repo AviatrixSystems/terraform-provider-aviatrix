@@ -80,6 +80,7 @@ func (c *Client) GetPrivateModeInfo(ctx context.Context) (*ControllerPrivateMode
 		"CID":    c.CID,
 		"action": action,
 	}
+	controllerPrivateModeConfig := &ControllerPrivateModeConfig{}
 
 	type ControllerPrivateModeConfigContents struct {
 		PrivateModeEnabled bool                   `json:"private_mode_enabled"`
@@ -98,13 +99,11 @@ func (c *Client) GetPrivateModeInfo(ctx context.Context) (*ControllerPrivateMode
 	var resp ControllerPrivateModeConfigResp
 	err := c.GetAPIContext(ctx, &resp, action, form, BasicCheck)
 	if err != nil {
-		return nil, err
+		return controllerPrivateModeConfig, err
 	}
 
-	controllerPrivateModeConfig := &ControllerPrivateModeConfig{
-		EnablePrivateMode: resp.Results.Contents.PrivateModeEnabled,
-		CopilotInstanceID: resp.Results.Contents.CopilotResourceId,
-	}
+	controllerPrivateModeConfig.EnablePrivateMode = resp.Results.Contents.PrivateModeEnabled
+	controllerPrivateModeConfig.CopilotInstanceID = resp.Results.Contents.CopilotResourceId
 
 	for k, v := range resp.Results.Contents.ProxyInfo {
 		proxyInfo := v.(map[string]interface{})
