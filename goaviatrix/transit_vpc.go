@@ -132,13 +132,17 @@ type TransitGatewayBgpLanIpInfoResp struct {
 }
 
 type TransitGatewayBgpLanIpInfoRespResult struct {
-	BgpLanIpList   []string `json:"gce_bgp_lan_all_intf_tuple_list"`
-	HaBgpLanIpList []string `json:"gce_bgp_lan_all_intf_ha_tuple_list"`
+	BgpLanIpList        []string `json:"gce_bgp_lan_all_intf_tuple_list"`
+	HaBgpLanIpList      []string `json:"gce_bgp_lan_all_intf_ha_tuple_list"`
+	AzureBgpLanIpList   []string `json:"arm_bgp_lan_all_intf_ip_list"`
+	AzureHaBgpLanIpList []string `json:"arm_bgp_lan_all_intf_ha_ip_list"`
 }
 
 type TransitGatewayBgpLanIpInfo struct {
-	BgpLanIpList   []string
-	HaBgpLanIpList []string
+	BgpLanIpList        []string
+	HaBgpLanIpList      []string
+	AzureBgpLanIpList   []string
+	AzureHaBgpLanIpList []string
 }
 
 func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
@@ -586,16 +590,26 @@ func (c *Client) GetBgpLanIPList(transitGateway *TransitVpc) (*TransitGatewayBgp
 
 	var bgpLanIpList []string
 	var haBgpLanIpList []string
+	var azureBgpLanIpList []string
+	var azureHaBgpLanIpList []string
 	for _, bgpLanIp := range data.Results.BgpLanIpList {
 		bgpLanIpList = append(bgpLanIpList, strings.Split(bgpLanIp, ":")[2])
 	}
 	for _, haBgpLanIp := range data.Results.HaBgpLanIpList {
 		haBgpLanIpList = append(haBgpLanIpList, strings.Split(haBgpLanIp, ":")[2])
 	}
+	for _, azureBgpLanIp := range data.Results.AzureBgpLanIpList {
+		azureBgpLanIpList = append(azureBgpLanIpList, azureBgpLanIp)
+	}
+	for _, azureHaBgpLanIp := range data.Results.AzureHaBgpLanIpList {
+		azureHaBgpLanIpList = append(azureHaBgpLanIpList, azureHaBgpLanIp)
+	}
 
 	return &TransitGatewayBgpLanIpInfo{
-		BgpLanIpList:   bgpLanIpList,
-		HaBgpLanIpList: haBgpLanIpList,
+		BgpLanIpList:        bgpLanIpList,
+		HaBgpLanIpList:      haBgpLanIpList,
+		AzureBgpLanIpList:   azureBgpLanIpList,
+		AzureHaBgpLanIpList: azureHaBgpLanIpList,
 	}, nil
 }
 

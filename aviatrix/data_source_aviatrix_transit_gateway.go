@@ -487,14 +487,14 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 				Description: "List of available BGP LAN interface IPs for transit external device connection creation. " +
-					"Only supports GCP. Available as of provider version R2.21.0+.",
+					"Only supports GCP and Azure. Available as of provider version R2.21.0+.",
 			},
 			"ha_bgp_lan_ip_list": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 				Description: "List of available BGP LAN interface IPs for transit external device HA connection creation. " +
-					"Only supports GCP. Available as of provider version R2.21.0+.",
+					"Only supports GCP and Azure. Available as of provider version R2.21.0+.",
 			},
 			"eip": {
 				Type:        schema.TypeString,
@@ -838,6 +838,21 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 			if len(bgpLanIpInfo.HaBgpLanIpList) != 0 {
 				if err = d.Set("ha_bgp_lan_ip_list", bgpLanIpInfo.HaBgpLanIpList); err != nil {
 					return fmt.Errorf("could not set ha_bgp_lan_ip_list into tate: %v", err)
+				}
+			} else {
+				d.Set("ha_bgp_lan_ip_list", nil)
+			}
+		} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan {
+			bgpLanIpInfo, err := client.GetBgpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
+			if err != nil {
+				return fmt.Errorf("could not get BGP LAN IP info for Azure transit gateway %s: %v", gateway.GwName, err)
+			}
+			if err = d.Set("bgp_lan_ip_list", bgpLanIpInfo.AzureBgpLanIpList); err != nil {
+				return fmt.Errorf("could not set bgp_lan_ip_list into state: %v", err)
+			}
+			if len(bgpLanIpInfo.AzureHaBgpLanIpList) != 0 {
+				if err = d.Set("ha_bgp_lan_ip_list", bgpLanIpInfo.AzureHaBgpLanIpList); err != nil {
+					return fmt.Errorf("could not set ha_bgp_lan_ip_list into state: %v", err)
 				}
 			} else {
 				d.Set("ha_bgp_lan_ip_list", nil)

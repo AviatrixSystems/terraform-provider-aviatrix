@@ -84,6 +84,40 @@ In addition to all arguments above, the following attributes are exported:
 * `image_version` - The image version of the gateway.
 * `ha_software_version` - The software version of the HA gateway.
 * `ha_image_version` - The image version of the HA gateway.
+* `zone` - Availability Zone for Azure.
+* `enable_gateway_load_balancer` - Status of AWS Gateway Load Balancer.
+* `lan_vpc_id` - LAN VPC ID for GCP Transit FireNet.
+* `lan_private_subnet` - LAN Private Subnet for GCP Transit FireNet.
+* `learned_cidrs_approval_mode` - Learned CIDRs approval mode.
+* `approved_learned_cidrs` - Approved learned CIDRs.
+* `bgp_polling_time` - BGP route polling time.
+* `prepend_as_path` - List of AS numbers to populate BGP AP_PATH field when it advertises to VGW or peer devices.
+* `bgp_ecmp` - Status of Equal Cost Multi Path (ECMP) routing for the next hop.
+* `enable_segmentation` - Status of segmentation.
+* `enable_active_standby` - Status of Active-Standby Mode.
+* `enable_active_standby_preemptive` - Status of Preemptive Mode for Active-Standby.
+* `enable_monitor_gateway_subnets` - Status of monitor gateway subnets.
+* `monitor_exclude_list` - A set of monitored instance IDs.
+* `enable_bgp_over_lan` - Status of BGP over LAN functionality.
+* `bgp_lan_interfaces` - Interfaces to run BGP protocol on top of the ethernet interface, to connect to the onprem/remote peer.
+  * `vpc_id` - VPC-ID of GCP cloud provider.
+  * `subnet` - Subnet Info.
+* `ha_bgp_lan_interfaces` - Interfaces to run BGP protocol on top of the ethernet interface, to connect to the onprem/remote peer. Only available for GCP HA Transit.
+  * `vpc_id` - VPC-ID of GCP cloud provider.
+  * `subnet` - Subnet Info.
+* `enable_jumbo_frame` - Status of jumbo frame support.
+* `bgp_hold_time` - BGP Hold Time.
+* `enable_transit_summarize_cidr_to_tgw` - Status of transit summarize CIDR to TGW.
+* `enable_spot_instance` - Status of spot instance.
+* `spot_price` - Price for spot instance.
+* `azure_eip_name_resource_group` - The name of the public IP address and its resource group in Azure to assign to this Transit Gateway.
+* `ha_azure_eip_name_resource_group` - The name of the public IP address and its resource group in Azure to assign to the HA Transit Gateway.
+* `local_as_number` - Local ASN number.
+* `ha_security_group_id` - HA security group used for the transit gateway.
+* `lan_interface_cidr` - Transit gateway lan interface cidr.
+* `ha_lan_interface_cidr` - Transit gateway lan interface cidr for the HA gateway.
+* `bgp_lan_ip_list` - List of available BGP LAN interface IPs for transit external device connection creation. Only supports GCP and Azure.
+* `ha_bgp_lan_ip_list` - List of available BGP LAN interface IPs for transit external device HA connection creation. Only supports GCP and Azure.
 * `eip` - The EIP address of the Transit Gateway.
 * `ha_eip` - The EIP address of the HA Transit Gateway.
 
