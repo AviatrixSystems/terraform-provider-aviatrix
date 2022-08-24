@@ -34,8 +34,9 @@ func (c *Client) CreateTransitFireNetPolicy(transitFireNetPolicy *TransitFireNet
 
 func (c *Client) GetTransitFireNetPolicy(transitFireNetPolicy *TransitFireNetPolicy) error {
 	form := map[string]string{
-		"CID":    c.CID,
-		"action": "list_transit_firenet_spoke_policies",
+		"CID":          c.CID,
+		"action":       "list_transit_firenet_spoke_policies",
+		"gateway_name": transitFireNetPolicy.TransitFireNetGatewayName,
 	}
 
 	var data TransitFireNetPolicyAPIResp
