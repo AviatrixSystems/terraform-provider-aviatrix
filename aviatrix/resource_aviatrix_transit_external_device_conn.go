@@ -1153,7 +1153,7 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 				BgpRemoteIP:    v,
 				BgpMd5Key:      bgpMd5Key,
 			}
-			err = client.EditBgpMd5Key(editBgpMd5Key)
+			err := client.EditBgpMd5Key(editBgpMd5Key)
 			if err != nil {
 				return fmt.Errorf("failed to update BGP MD5 authentication key: %v", err)
 			}
@@ -1194,7 +1194,7 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 				BgpRemoteIP:    v,
 				BgpMd5Key:      bgpMd5Key,
 			}
-			err = client.EditBgpMd5Key(editBgpMd5Key)
+			err := client.EditBgpMd5Key(editBgpMd5Key)
 			if err != nil {
 				return fmt.Errorf("failed to update backup BGP MD5 authentication key: %v", err)
 			}
