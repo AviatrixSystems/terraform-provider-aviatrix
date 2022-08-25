@@ -623,7 +623,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 			return fmt.Errorf("BGP MD5 authentication key is only supported for BGP connection")
 		}
 		if externalDeviceConn.BackupBgpMd5Key != "" && !haEnabled {
-			return fmt.Errorf("couldn't configure backup BGP MD5 authentication key since HA is not enabled for BGP connection")
+			return fmt.Errorf("couldn't configure backup BGP MD5 authentication key since HA is not enabled for BGP connection: %s", externalDeviceConn.ConnectionName)
 		}
 
 		if externalDeviceConn.BgpMd5Key != "" {
@@ -635,7 +635,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 				bgpRemoteIp = strings.Split(externalDeviceConn.RemoteTunnelCidr, ",")
 			}
 			if len(md5KeyList) != len(bgpRemoteIp) {
-				return fmt.Errorf("can't apply BGP MD5 authentication key since it is not set correctly for BGP connection")
+				return fmt.Errorf("can't apply BGP MD5 authentication key since it is not set correctly for BGP connection: %s", externalDeviceConn.ConnectionName)
 			}
 		}
 
@@ -648,7 +648,7 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 				backupBgpRemoteIp = strings.Split(externalDeviceConn.BackupRemoteTunnelCidr, ",")
 			}
 			if len(backupMd5KeyList) != len(backupBgpRemoteIp) {
-				return fmt.Errorf("can't apply Backup BGP MD5 authentication key since it is not set correctly for BGP connection")
+				return fmt.Errorf("can't apply Backup BGP MD5 authentication key since it is not set correctly for BGP connection: %s", externalDeviceConn.ConnectionName)
 			}
 		}
 	}
@@ -1137,14 +1137,14 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 			bgpRemoteIp = strings.Split(d.Get("remote_tunnel_cidr").(string), ",")
 		}
 		if newKey.(string) != "" && len(newKeyList) != len(bgpRemoteIp) {
-			return fmt.Errorf("can't update BGP MD5 authentication key since it is not set correctly for BGP connection")
+			return fmt.Errorf("can't update BGP MD5 authentication key since it is not set correctly for BGP connection: %s", d.Get("connection_name").(string))
 		}
 		for i, v := range bgpRemoteIp {
 			bgpMd5Key := ""
 			if newKey.(string) != "" {
 				bgpMd5Key = newKeyList[i]
 			}
-			if newKey.(string) != "" && oldKey.(string) != "" && strings.TrimSpace(newKeyList[i]) != strings.TrimSpace(oldKeyList[i]) {
+			if newKey.(string) != "" && oldKey.(string) != "" && strings.TrimSpace(newKeyList[i]) == strings.TrimSpace(oldKeyList[i]) {
 				continue
 			}
 			editBgpMd5Key := &goaviatrix.EditBgpMd5Key{
@@ -1178,7 +1178,7 @@ func resourceAviatrixTransitExternalDeviceConnUpdate(d *schema.ResourceData, met
 			bgpRemoteIp = strings.Split(d.Get("backup_remote_tunnel_cidr").(string), ",")
 		}
 		if newKey.(string) != "" && len(newKeyList) != len(bgpRemoteIp) {
-			return fmt.Errorf("can't update backup BGP MD5 authentication key since it is not set correctly for BGP connection")
+			return fmt.Errorf("can't update backup BGP MD5 authentication key since it is not set correctly for BGP connection: %s", d.Get("connection_name").(string))
 		}
 		for i, v := range bgpRemoteIp {
 			bgpMd5Key := ""
