@@ -36,10 +36,11 @@ func resourceAviatrixGatewaySNat() *schema.Resource {
 				Description:  "Nat mode. Currently only supports 'customized_snat'.",
 			},
 			"snat_policy": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Default:     nil,
-				Description: "Policy rules applied for 'snat_mode'' of 'customized_snat'.'",
+				Type:             schema.TypeList,
+				Optional:         true,
+				Default:          nil,
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncGatewaySNat,
+				Description:      "Policy rules applied for 'snat_mode'' of 'customized_snat'.'",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"src_cidr": {
@@ -126,6 +127,120 @@ func resourceAviatrixGatewaySNat() *schema.Resource {
 				Optional:    true,
 				Default:     false,
 				Description: "Whether to sync the policies to the HA gateway.",
+			},
+			"connection_policy": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "Computed attribute to store the previous connection policy.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"src_cidr": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"src_port": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"dst_cidr": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"dst_port": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"interface": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"mark": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"snat_ips": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"snat_port": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"exclude_rtb": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"protocol": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"connection": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"apply_route_entry": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"interface_policy": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "Computed attribute to store the previous interface policy.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"src_cidr": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"src_port": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"dst_cidr": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"dst_port": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"interface": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"mark": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"snat_ips": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"snat_port": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"exclude_rtb": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"protocol": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"connection": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"apply_route_entry": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -221,6 +336,8 @@ func resourceAviatrixGatewaySNatRead(d *schema.ResourceData, meta interface{}) e
 		if gw.NatEnabled && gw.SnatMode == "customized" {
 			d.Set("snat_mode", "customized_snat")
 			var snatPolicy []map[string]interface{}
+			var connectionPolicy []map[string]interface{}
+			var interfacePolicy []map[string]interface{}
 
 			// Duplicate SNAT policies can be returned from the API.
 			// Before we save the policies to state we need to deduplicate.
@@ -251,10 +368,25 @@ func resourceAviatrixGatewaySNatRead(d *schema.ResourceData, meta interface{}) e
 				// Otherwise, its a unique policy so we write it to state and the dedupMap.
 				dedupMap[key] = struct{}{}
 				snatPolicy = append(snatPolicy, sP)
+
+				if policy.Connection != "None" {
+					connectionPolicy = append(connectionPolicy, sP)
+				}
+				if policy.Interface != "" {
+					interfacePolicy = append(interfacePolicy, sP)
+				}
 			}
 
 			if err := d.Set("snat_policy", snatPolicy); err != nil {
 				log.Printf("[WARN] Error setting 'snat_policy' for (%s): %s", d.Id(), err)
+			}
+
+			if err := d.Set("connection_policy", connectionPolicy); err != nil {
+				log.Printf("[WARN] Error setting 'connection_policy' for (%s): %s", d.Id(), err)
+			}
+
+			if err := d.Set("interface_policy", interfacePolicy); err != nil {
+				log.Printf("[WARN] Error setting 'interface_policy' for (%s): %s", d.Id(), err)
 			}
 
 			d.Set("sync_to_ha", gwDetail.SyncSNATToHA)
