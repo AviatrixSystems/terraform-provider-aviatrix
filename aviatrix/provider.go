@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var supportedVersions = []string{"6.8"}
+var supportedVersions = []string{"6.9"}
 
 // Provider returns a schema.Provider for Aviatrix.
 func Provider() *schema.Provider {
