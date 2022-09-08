@@ -10,10 +10,10 @@
 
 ### Enhancements:
 1. Added support for updating ``bgp_md5_key`` and ``backup_bgp_md5_key`` for **aviatrix_spoke_external_device_conn** and **aviatrix_transit_external_device_conn**
-2. Added optimization on read operation for **aviatrix_transit_firenet_policy**
+2. Optimized the read operation for **aviatrix_transit_firenet_policy**
 
 ### Bug Fixes:
-1. Fixed issue where NAT config has order issue and causes refresh problem for **aviatrix_gateway_dnat** and **aviatrix_gateway_snat**
+1. Fixed issue where NAT config has ordering issues that would cause refresh problems for **aviatrix_gateway_dnat** and **aviatrix_gateway_snat**
 2. Fixed issue where provider crashes for private mode config
 3. Fixed issue where exported SNAT/DNAT interface shows tunnel ID when using Transit connection or route-based S2C
 4. Fixed issue where creating FQDN gateway with ``fqdn_lan_interface`` causes replacement
