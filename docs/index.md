@@ -75,9 +75,9 @@ provider "aviatrix" {}
 **Usage:**
 
 ```sh
-$ export AVIATRIX_CONTROLLER_IP = "1.2.3.4"
-$ export AVIATRIX_USERNAME = "admin"
-$ export AVIATRIX_PASSWORD = "password"
+$ export AVIATRIX_CONTROLLER_IP="1.2.3.4"
+$ export AVIATRIX_USERNAME="admin"
+$ export AVIATRIX_PASSWORD="password"
 $ terraform plan
 ```
 
