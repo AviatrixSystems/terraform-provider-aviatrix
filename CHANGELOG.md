@@ -1,4 +1,4 @@
-## 2.24.0 (Unreleased)
+## 2.24.0 (September 09, 2022)
 ### Notes:
 - Supported Controller version: **UserConnect-6.9**
 - Supported Terraform version: **v1.x**
