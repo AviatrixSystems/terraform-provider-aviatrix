@@ -3,8 +3,11 @@ package goaviatrix
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -1175,4 +1178,108 @@ func (c *Client) SetRxQueueSize(gateway *Gateway) error {
 	}
 
 	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
+func DiffSuppressFuncGatewaySNat(k, old, new string, d *schema.ResourceData) bool {
+	connectionPolicy := d.Get("connection_policy").([]interface{})
+	var connectionPolicyOld []map[string]interface{}
+
+	for _, policy := range connectionPolicy {
+		pl := policy.(map[string]interface{})
+
+		connectionPolicyOld = append(connectionPolicyOld, pl)
+	}
+
+	interfacePolicy := d.Get("interface_policy").([]interface{})
+	var interfacePolicyOld []map[string]interface{}
+
+	for _, policy := range interfacePolicy {
+		pl := policy.(map[string]interface{})
+
+		interfacePolicyOld = append(interfacePolicyOld, pl)
+	}
+
+	snatPolicies := d.Get("snat_policy").([]interface{})
+	var connectionPolicyNew []map[string]interface{}
+	var interfacePolicyNew []map[string]interface{}
+
+	for _, policy := range snatPolicies {
+		pl := policy.(map[string]interface{})
+		customPolicy := PolicyRule{
+			SrcIP:           pl["src_cidr"].(string),
+			SrcPort:         pl["src_port"].(string),
+			DstIP:           pl["dst_cidr"].(string),
+			DstPort:         pl["dst_port"].(string),
+			Protocol:        pl["protocol"].(string),
+			Interface:       pl["interface"].(string),
+			Connection:      pl["connection"].(string),
+			Mark:            pl["mark"].(string),
+			NewSrcIP:        pl["snat_ips"].(string),
+			NewSrcPort:      pl["snat_port"].(string),
+			ExcludeRTB:      pl["exclude_rtb"].(string),
+			ApplyRouteEntry: pl["apply_route_entry"].(bool),
+		}
+
+		if customPolicy.Connection != "None" {
+			connectionPolicyNew = append(connectionPolicyNew, pl)
+		}
+		if customPolicy.Interface != "" {
+			interfacePolicyNew = append(interfacePolicyNew, pl)
+		}
+	}
+
+	return reflect.DeepEqual(connectionPolicyOld, connectionPolicyNew) &&
+		reflect.DeepEqual(interfacePolicyOld, interfacePolicyNew)
+}
+
+func DiffSuppressFuncGatewayDNat(k, old, new string, d *schema.ResourceData) bool {
+	connectionPolicy := d.Get("connection_policy").([]interface{})
+	var connectionPolicyOld []map[string]interface{}
+
+	for _, policy := range connectionPolicy {
+		pl := policy.(map[string]interface{})
+
+		connectionPolicyOld = append(connectionPolicyOld, pl)
+	}
+
+	interfacePolicy := d.Get("interface_policy").([]interface{})
+	var interfacePolicyOld []map[string]interface{}
+
+	for _, policy := range interfacePolicy {
+		pl := policy.(map[string]interface{})
+
+		interfacePolicyOld = append(interfacePolicyOld, pl)
+	}
+
+	dnatPolicies := d.Get("dnat_policy").([]interface{})
+	var connectionPolicyNew []map[string]interface{}
+	var interfacePolicyNew []map[string]interface{}
+
+	for _, policy := range dnatPolicies {
+		pl := policy.(map[string]interface{})
+		customPolicy := PolicyRule{
+			SrcIP:           pl["src_cidr"].(string),
+			SrcPort:         pl["src_port"].(string),
+			DstIP:           pl["dst_cidr"].(string),
+			DstPort:         pl["dst_port"].(string),
+			Protocol:        pl["protocol"].(string),
+			Interface:       pl["interface"].(string),
+			Connection:      pl["connection"].(string),
+			Mark:            pl["mark"].(string),
+			NewDstIP:        pl["dnat_ips"].(string),
+			NewDstPort:      pl["dnat_port"].(string),
+			ExcludeRTB:      pl["exclude_rtb"].(string),
+			ApplyRouteEntry: pl["apply_route_entry"].(bool),
+		}
+
+		if customPolicy.Connection != "None" {
+			connectionPolicyNew = append(connectionPolicyNew, pl)
+		}
+		if customPolicy.Interface != "" {
+			interfacePolicyNew = append(interfacePolicyNew, pl)
+		}
+	}
+
+	return reflect.DeepEqual(connectionPolicyOld, connectionPolicyNew) &&
+		reflect.DeepEqual(interfacePolicyOld, interfacePolicyNew)
 }

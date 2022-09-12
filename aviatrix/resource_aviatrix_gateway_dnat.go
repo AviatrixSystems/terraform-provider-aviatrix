@@ -29,9 +29,10 @@ func resourceAviatrixGatewayDNat() *schema.Resource {
 				Description: "Name of the gateway.",
 			},
 			"dnat_policy": {
-				Type:        schema.TypeList,
-				Required:    true,
-				Description: "Policy rule to be applied to gateway.",
+				Type:             schema.TypeList,
+				Required:         true,
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncGatewayDNat,
+				Description:      "Policy rule to be applied to gateway.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"src_cidr": {
@@ -118,6 +119,120 @@ func resourceAviatrixGatewayDNat() *schema.Resource {
 				Optional:    true,
 				Default:     true,
 				Description: "Whether to sync the policies to the HA gateway.",
+			},
+			"connection_policy": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "Computed attribute to store the previous connection policy.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"src_cidr": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"src_port": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"dst_cidr": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"dst_port": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"interface": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"mark": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"dnat_ips": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"dnat_port": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"exclude_rtb": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"protocol": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"connection": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"apply_route_entry": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"interface_policy": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "Computed attribute to store the previous interface policy.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"src_cidr": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"src_port": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"dst_cidr": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"dst_port": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"interface": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"mark": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"dnat_ips": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"dnat_port": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"exclude_rtb": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"protocol": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"connection": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"apply_route_entry": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -207,6 +322,9 @@ func resourceAviatrixGatewayDNatRead(d *schema.ResourceData, meta interface{}) e
 		}
 		if len(gwDetail.DnatPolicy) != 0 {
 			var dnatPolicy []map[string]interface{}
+			var connectionPolicy []map[string]interface{}
+			var interfacePolicy []map[string]interface{}
+
 			for _, policy := range gwDetail.DnatPolicy {
 				dP := make(map[string]interface{})
 				dP["src_cidr"] = policy.SrcIP
@@ -222,10 +340,25 @@ func resourceAviatrixGatewayDNatRead(d *schema.ResourceData, meta interface{}) e
 				dP["exclude_rtb"] = policy.ExcludeRTB
 				dP["apply_route_entry"] = policy.ApplyRouteEntry
 				dnatPolicy = append(dnatPolicy, dP)
+
+				if policy.Connection != "None" {
+					connectionPolicy = append(connectionPolicy, dP)
+				}
+				if policy.Interface != "" {
+					interfacePolicy = append(interfacePolicy, dP)
+				}
 			}
 
 			if err := d.Set("dnat_policy", dnatPolicy); err != nil {
 				log.Printf("[WARN] Error setting 'dnat_policy' for (%s): %s", d.Id(), err)
+			}
+
+			if err := d.Set("connection_policy", connectionPolicy); err != nil {
+				log.Printf("[WARN] Error setting 'connection_policy' for (%s): %s", d.Id(), err)
+			}
+
+			if err := d.Set("interface_policy", interfacePolicy); err != nil {
+				log.Printf("[WARN] Error setting 'interface_policy' for (%s): %s", d.Id(), err)
 			}
 
 			d.Set("sync_to_ha", gwDetail.SyncDNATToHA)
