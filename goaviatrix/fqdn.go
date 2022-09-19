@@ -446,8 +446,6 @@ func (c *Client) EnableFQDNExceptionRule(ctx context.Context) error {
 
 	checkFunc := func(act, method, reason string, ret bool) error {
 		if !ret {
-			log.Printf("zjin00: %v", reason)
-
 			if strings.Contains(reason, "No change in") {
 				return nil
 			}
@@ -467,8 +465,6 @@ func (c *Client) DisableFQDNExceptionRule(ctx context.Context) error {
 
 	checkFunc := func(act, method, reason string, ret bool) error {
 		if !ret {
-			log.Printf("zjin00: %v", reason)
-
 			if strings.Contains(reason, "No change in") {
 				return nil
 			}
@@ -488,8 +484,6 @@ func (c *Client) EnableFQDNPrivateNetworks(ctx context.Context) error {
 
 	checkFunc := func(act, method, reason string, ret bool) error {
 		if !ret {
-			log.Printf("zjin00: %v", reason)
-
 			if strings.Contains(reason, "No change in") {
 				return nil
 			}
@@ -509,8 +503,6 @@ func (c *Client) DisableFQDNPrivateNetwork(ctx context.Context) error {
 
 	checkFunc := func(act, method, reason string, ret bool) error {
 		if !ret {
-			log.Printf("zjin00: %v", reason)
-
 			if strings.Contains(reason, "No change in") {
 				return nil
 			}
@@ -540,8 +532,6 @@ func (c *Client) EnableFQDNCache(ctx context.Context) error {
 
 	checkFunc := func(act, method, reason string, ret bool) error {
 		if !ret {
-			log.Printf("zjin00: %v", reason)
-
 			if strings.Contains(reason, "No change in") {
 				return nil
 			}
@@ -561,8 +551,6 @@ func (c *Client) DisableFQDNCache(ctx context.Context) error {
 
 	checkFunc := func(act, method, reason string, ret bool) error {
 		if !ret {
-			log.Printf("zjin00: %v", reason)
-
 			if strings.Contains(reason, "No change in") {
 				return nil
 			}
@@ -582,8 +570,6 @@ func (c *Client) EnableFQDNExactMatch(ctx context.Context) error {
 
 	checkFunc := func(act, method, reason string, ret bool) error {
 		if !ret {
-			log.Printf("zjin00: %v", reason)
-
 			if strings.Contains(reason, "No change in") {
 				return nil
 			}
@@ -603,7 +589,6 @@ func (c *Client) DisableFQDNExactMatch(ctx context.Context) error {
 
 	checkFunc := func(act, method, reason string, ret bool) error {
 		if !ret {
-			log.Printf("zjin00: %v", reason)
 			if strings.Contains(reason, "No change in") {
 				return nil
 			}
