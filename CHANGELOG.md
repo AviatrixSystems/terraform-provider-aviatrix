@@ -19,7 +19,7 @@
 4. Fixed issue where creating FQDN gateway with ``fqdn_lan_interface`` causes replacement
 
 
-## 2.23.1 (Unreleased)
+## 2.23.1 (September 13, 2022)
 ### Notes:
 - Supported Controller version: **UserConnect-6.8.1311**
 - Supported Terraform version: **v1.x**
@@ -107,6 +107,18 @@
 1. Fixed issue where duplicate **aviatrix_account** resources would be set into state even after giving an error
 2. Fixed issue where ``username`` could not be specified with ``private_key_file`` in **aviatrix_firenet_vendor_integration**
 3. Fixed issue where setting ``custom_algorithms`` to true would still use default values, causing tunnel replacement in **aviatrix_transit_external_device_conn**
+
+
+## 2.22.4 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.7.1480**
+- Supported Terraform version: **v1.x**
+
+### Enhancements:
+1. Optimized the read operation for **aviatrix_transit_firenet_policy**
+
+### Bug Fixes:
+1. Fixed issue where NAT config has ordering issues that would cause refresh problems for **aviatrix_gateway_dnat** and **aviatrix_gateway_snat**
 
 
 ## 2.22.3 (August 02, 2022)
