@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAviatrixFQDNGlobalConfigs_basic(t *testing.T) {
+func TestAccAviatrixFQDNGlobalConfig_basic(t *testing.T) {
 	if os.Getenv("SKIP_FQDN_GLOBAL_CONFIG") == "yes" {
 		t.Skip("Skipping FQDN global config test as SKIP_FQDN_GLOBAL_CONFIG is set")
 	}

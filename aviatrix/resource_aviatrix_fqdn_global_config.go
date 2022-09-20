@@ -11,9 +11,9 @@ import (
 
 func resourceAviatrixFQDNGlobalConfig() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAviatrixFQDNGlobalConfigsCreate,
-		ReadWithoutTimeout:   resourceAviatrixFQDNGlobalConfigsRead,
-		UpdateWithoutTimeout: resourceAviatrixFQDNGlobalConfigsUpdate,
+		CreateWithoutTimeout: resourceAviatrixFQDNGlobalConfigCreate,
+		ReadWithoutTimeout:   resourceAviatrixFQDNGlobalConfigRead,
+		UpdateWithoutTimeout: resourceAviatrixFQDNGlobalConfigUpdate,
 		DeleteWithoutTimeout: resourceAviatrixFQDNGlobalConfigDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -69,7 +69,7 @@ func resourceAviatrixFQDNGlobalConfig() *schema.Resource {
 	}
 }
 
-func resourceAviatrixFQDNGlobalConfigsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixFQDNGlobalConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	enablePrivateNetworkFiltering := d.Get("enable_private_network_filtering").(bool)
@@ -90,7 +90,7 @@ func resourceAviatrixFQDNGlobalConfigsCreate(ctx context.Context, d *schema.Reso
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	flag := false
-	defer resourceAviatrixFQDNGlobalConfigsReadIfRequired(ctx, d, meta, &flag)
+	defer resourceAviatrixFQDNGlobalConfigReadIfRequired(ctx, d, meta, &flag)
 
 	if d.Get("enable_exception_rule").(bool) {
 		err := client.EnableFQDNExceptionRule(ctx)
@@ -148,18 +148,18 @@ func resourceAviatrixFQDNGlobalConfigsCreate(ctx context.Context, d *schema.Reso
 		}
 	}
 
-	return resourceAviatrixFQDNGlobalConfigsReadIfRequired(ctx, d, meta, &flag)
+	return resourceAviatrixFQDNGlobalConfigReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixFQDNGlobalConfigsReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixFQDNGlobalConfigReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
-		return resourceAviatrixFQDNGlobalConfigsRead(ctx, d, meta)
+		return resourceAviatrixFQDNGlobalConfigRead(ctx, d, meta)
 	}
 	return nil
 }
 
-func resourceAviatrixFQDNGlobalConfigsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixFQDNGlobalConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
@@ -216,8 +216,10 @@ func resourceAviatrixFQDNGlobalConfigsRead(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func resourceAviatrixFQDNGlobalConfigsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixFQDNGlobalConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
+
+	d.Partial(true)
 
 	if d.HasChange("enable_exception_rule") {
 		if d.Get("enable_exception_rule").(bool) {
@@ -250,13 +252,6 @@ func resourceAviatrixFQDNGlobalConfigsUpdate(ctx context.Context, d *schema.Reso
 			}
 		}
 
-		if d.HasChange("enable_private_network_filtering") && !enablePrivateNetworkFiltering {
-			err := client.DisableFQDNPrivateNetwork(ctx)
-			if err != nil {
-				return diag.Errorf("failed to disable private network filtering in update: %s", err)
-			}
-		}
-
 		if d.HasChanges("enable_custom_network_filtering", "configured_ips") {
 			if enableCustomNetworkFiltering {
 				configIpString := strings.Join(goaviatrix.ExpandStringList(d.Get("configured_ips").([]interface{})), ",")
@@ -274,12 +269,20 @@ func resourceAviatrixFQDNGlobalConfigsUpdate(ctx context.Context, d *schema.Reso
 			}
 		}
 
-		if d.HasChange("enable_private_network_filtering") && enablePrivateNetworkFiltering {
-			err := client.EnableFQDNPrivateNetworks(ctx)
-			if err != nil {
-				return diag.Errorf("failed to enable private network filtering in update: %s", err)
+		if d.HasChange("enable_private_network_filtering") {
+			if enablePrivateNetworkFiltering {
+				err := client.EnableFQDNPrivateNetworks(ctx)
+				if err != nil {
+					return diag.Errorf("failed to enable private network filtering in update: %s", err)
+				}
+			} else {
+				if !enableCustomNetworkFiltering {
+					err := client.DisableFQDNPrivateNetwork(ctx)
+					if err != nil {
+						return diag.Errorf("failed to disable private network filtering in update: %s", err)
+					}
+				}
 			}
-
 		}
 	}
 
@@ -312,8 +315,8 @@ func resourceAviatrixFQDNGlobalConfigsUpdate(ctx context.Context, d *schema.Reso
 		}
 	}
 
-	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
-	return resourceAviatrixFQDNGlobalConfigsRead(ctx, d, meta)
+	d.Partial(false)
+	return resourceAviatrixFQDNGlobalConfigRead(ctx, d, meta)
 }
 
 func resourceAviatrixFQDNGlobalConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
