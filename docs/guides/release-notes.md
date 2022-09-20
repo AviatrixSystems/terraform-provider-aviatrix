@@ -130,6 +130,19 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 3. Fixed issue where setting ``custom_algorithms`` to true would still use default values, causing tunnel replacement in **aviatrix_transit_external_device_conn**
 
 
+## 2.22.4
+### Notes:
+- Release date: **(20 Sep 2022)** 
+- Supported Controller version: **UserConnect-6.7.1480**
+- Supported Terraform version: **v1.x**
+
+### Enhancements:
+1. Optimized the read operation for **aviatrix_transit_firenet_policy**
+
+### Bug Fixes:
+1. Fixed issue where NAT config has ordering issues that would cause refresh problems for **aviatrix_gateway_dnat** and **aviatrix_gateway_snat**
+
+
 ## 2.22.3
 ### Notes:
 - Release date: **(2 Aug 2022)**
