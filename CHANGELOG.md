@@ -1,4 +1,16 @@
-## 2.22.3 (Unreleased)
+## 2.22.4 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.7.1480**
+- Supported Terraform version: **v1.x**
+
+### Enhancements:
+1. Optimized the read operation for **aviatrix_transit_firenet_policy**
+
+### Bug Fixes:
+1. Fixed issue where NAT config has ordering issues that would cause refresh problems for **aviatrix_gateway_dnat** and **aviatrix_gateway_snat**
+
+
+## 2.22.3 (August 02, 2022)
 ### Notes:
 - Supported Controller version: **UserConnect-6.7.1376**
 - Supported Terraform version: **v1.x**
