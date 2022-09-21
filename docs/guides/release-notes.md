@@ -12,10 +12,23 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.22.3 (UserConnect-6.7.1376)``
+``Last updated: R2.22.4 (UserConnect-6.7.1480)``
 
 
 ---
+
+## 2.22.4
+### Notes:
+- Release date: **(20 Sep 2022)**
+- Supported Controller version: **UserConnect-6.7.1480**
+- Supported Terraform version: **v1.x**
+
+### Enhancements:
+1. Optimized the read operation for **aviatrix_transit_firenet_policy**
+
+### Bug Fixes:
+1. Fixed issue where NAT config has ordering issues that would cause refresh problems for **aviatrix_gateway_dnat** and **aviatrix_gateway_snat**
+
 
 ## 2.22.3
 ### Notes:
