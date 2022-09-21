@@ -84,7 +84,6 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 			"remote_identifier": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				ForceNew:    true,
 				Description: "Remote identifier. Required for Cert based authentication type.",
 			},
 			"primary_cloud_gateway_name": {
@@ -138,6 +137,11 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				ForceNew:    true,
 				Sensitive:   true,
 				Description: "Backup Pre-Shared Key.",
+			},
+			"backup_remote_identifier": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Backup remote identifier. Required for Cert based authentication type with HA enabled.",
 			},
 			"remote_subnet_virtual": {
 				Type:             schema.TypeString,
@@ -424,6 +428,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		RemoteGwIP2:                   d.Get("backup_remote_gateway_ip").(string),
 		PreSharedKey:                  d.Get("pre_shared_key").(string),
 		BackupPreSharedKey:            d.Get("backup_pre_shared_key").(string),
+		BackupRemoteIdentifier:        d.Get("backup_remote_identifier").(string),
 		RemoteSubnet:                  d.Get("remote_subnet_cidr").(string),
 		LocalSubnet:                   d.Get("local_subnet_cidr").(string),
 		RemoteSubnetVirtual:           d.Get("remote_subnet_virtual").(string),
@@ -443,18 +448,21 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		BackupRemoteTunnelIp:          d.Get("backup_remote_tunnel_ip").(string),
 	}
 
+	haEnabled := d.Get("ha_enabled").(bool)
 	if s2c.AuthType == "Cert" {
 		if s2c.CaCertTagName == "" || s2c.RemoteIdentifier == "" {
 			return fmt.Errorf("'ca_cert_tag_name' and 'remote_identifier' are both required for Cert based authentication type")
 		}
+		if haEnabled && s2c.BackupRemoteIdentifier == "" {
+			return fmt.Errorf("'backup_remote_identifier' is required for Cert based authentication type with HA enabled")
+		}
 		s2c.AuthType = "pubkey"
 	} else {
-		if s2c.CaCertTagName != "" || s2c.RemoteIdentifier != "" {
-			return fmt.Errorf("'ca_cert_tag_name' and 'remote_identifier' are required to be empty for PSK(Pubkey) based authentication type")
+		if s2c.CaCertTagName != "" || s2c.RemoteIdentifier != "" || s2c.BackupRemoteIdentifier != "" {
+			return fmt.Errorf("'ca_cert_tag_name', 'remote_identifier' and 'backup_remote_identifier' are required to be empty for PSK(Pubkey) based authentication type")
 		}
 	}
 
-	haEnabled := d.Get("ha_enabled").(bool)
 	singleIpHA := d.Get("enable_single_ip_ha").(bool)
 	if haEnabled {
 		s2c.HAEnabled = "yes"
@@ -793,6 +801,9 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 			d.Set("auth_type", "Cert")
 			d.Set("ca_cert_tag_name", s2c.CaCertTagName)
 			d.Set("remote_identifier", s2c.RemoteIdentifier)
+			if s2c.HAEnabled == "enabled" {
+				d.Set("backup_remote_identifier", s2c.BackupRemoteIdentifier)
+			}
 		} else {
 			d.Set("auth_type", "PSK")
 		}
@@ -1129,6 +1140,50 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		err := client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
 			return fmt.Errorf("failed to update Site2Cloud phase 1 remote identifier: %s", err)
+		}
+	}
+
+	if d.HasChanges("remote_identifier", "backup_remote_identifier") {
+		haEnabled := d.Get("ha_enabled").(bool)
+		authType := d.Get("auth_type").(string)
+		remoteIdentifier := d.Get("remote_identifier").(string)
+		backupRemoteIdentifier := d.Get("backup_remote_identifier").(string)
+
+		if authType == "Cert" {
+			if remoteIdentifier == "" {
+				return fmt.Errorf("'ca_cert_tag_name' and 'remote_identifier' are both required for Cert based authentication type")
+			}
+			if haEnabled && backupRemoteIdentifier == "" {
+				return fmt.Errorf("'backup_remote_identifier' is required for Cert based authentication type with HA enabled")
+			}
+		} else {
+			if remoteIdentifier != "" || backupRemoteIdentifier != "" {
+				return fmt.Errorf("'remote_identifier' and 'backup_remote_identifier' are both required to be empty for PSK(Pubkey) based authentication type")
+			}
+		}
+		if d.HasChanges("remote_identifier") {
+			s2c := &goaviatrix.EditSite2Cloud{
+				VpcID:            d.Get("vpc_id").(string),
+				ConnName:         d.Get("connection_name").(string),
+				RemoteIdentifier: remoteIdentifier,
+			}
+
+			err := client.UpdateSite2Cloud(s2c)
+			if err != nil {
+				return fmt.Errorf("failed to update remote identifier: %s", err)
+			}
+		}
+		if d.HasChanges("backup_remote_identifier") {
+			s2c := &goaviatrix.EditSite2Cloud{
+				VpcID:                  d.Get("vpc_id").(string),
+				ConnName:               d.Get("connection_name").(string),
+				BackupRemoteIdentifier: backupRemoteIdentifier,
+			}
+
+			err := client.UpdateSite2Cloud(s2c)
+			if err != nil {
+				return fmt.Errorf("failed to update backup remote identifier: %s", err)
+			}
 		}
 	}
 
