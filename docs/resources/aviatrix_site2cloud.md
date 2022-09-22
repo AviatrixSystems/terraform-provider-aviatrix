@@ -132,7 +132,7 @@ The following arguments are supported:
 * `pre_shared_key` - (Optional) Pre-Shared Key.
 * `ca_cert_tag_name` - (Optional) Name of Remote CA Certificate Tag for creating Site2Cloud tunnels. Required for Cert based authentication type.
 * `remote_identifier` - (Optional) Remote identifier. Required for Cert based authentication type. Example: "gw-10-10-0-115".
-* `backup_remote_identifier` - (Optional) Backup emote identifier. Required for Cert based authentication type with HA enabled. Example: "gw-10-10-0-116".
+* `backup_remote_identifier` - (Optional) Backup remote identifier. Required for Cert based authentication type with HA enabled. Example: "gw-10-10-0-116".
 * `ssl_server_pool` - (Optional) Specify ssl_server_pool. Default value: "192.168.44.0/24". **NOTE: Please see notes [here](#ssl_server_pool) for more information.**
 * `enable_dead_peer_detection` - (Optional) Enable/disable Deed Peer Detection for an existing site2cloud connection. Default value: true. **NOTE: Please see notes [here](#enable_dead_peer_detection) in regards to any deltas found in your state with the addition of this argument in R1.9**
 * `enable_active_active` - (Optional) Enable/disable active active HA for an existing site2cloud connection. Valid values: true, false. Default value: false.
