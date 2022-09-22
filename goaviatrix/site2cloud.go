@@ -77,6 +77,7 @@ type Site2Cloud struct {
 	AuthType                      string `form:"auth_type,omitempty"`
 	CaCertTagName                 string `form:"cert_name,omitempty"`
 	RemoteIdentifier              string `form:"cert_based_s2c_remote_id,omitempty"`
+	BackupRemoteIdentifier        string `form:"cert_based_s2c_ha_remote_id,omitempty"`
 }
 
 type EditSite2Cloud struct {
@@ -99,6 +100,7 @@ type EditSite2Cloud struct {
 	Phase1RemoteIdentifier        string `form:"phase1_remote_identifier,omitempty"`
 	CaCertTagName                 string `form:"s2c_cacert_tag_name,omitempty"`
 	RemoteIdentifier              string `form:"cert_based_s2c_remote_id,omitempty"`
+	BackupRemoteIdentifier        string `form:"cert_based_s2c_ha_remote_id,omitempty"`
 }
 
 type Site2CloudResp struct {
@@ -169,6 +171,7 @@ type EditSite2CloudConnDetail struct {
 	AuthType                       string        `json:"auth_type,omitempty"`
 	CaCertTagName                  string        `json:"s2c_cacert_tag_name,omitempty"`
 	RemoteIdentifier               string        `json:"cert_based_s2c_remote_id,omitempty"`
+	BackupRemoteIdentifier         string        `json:"cert_based_s2c_ha_remote_id,omitempty"`
 }
 
 type Site2CloudConnDetailResp struct {
@@ -215,6 +218,9 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 		form["auth_type"] = site2cloud.AuthType
 		form["cert_name"] = site2cloud.CaCertTagName
 		form["remote_identifier"] = site2cloud.RemoteIdentifier
+		if site2cloud.HAEnabled == "yes" {
+			form["cert_based_s2c_ha_remote_id"] = site2cloud.BackupRemoteIdentifier
+		}
 	}
 
 	form["ha_enabled"] = site2cloud.HAEnabled
@@ -338,6 +344,7 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 		site2cloud.AuthType = s2cConnDetail.AuthType
 		site2cloud.CaCertTagName = s2cConnDetail.CaCertTagName
 		site2cloud.RemoteIdentifier = s2cConnDetail.RemoteIdentifier
+		site2cloud.BackupRemoteIdentifier = s2cConnDetail.BackupRemoteIdentifier
 		site2cloud.GwName = s2cConnDetail.GwName
 		site2cloud.ConnType = s2cConnDetail.ConnType
 		if s2cConnDetail.TunnelType == "policy" || s2cConnDetail.TunnelType == "Policy" || s2cConnDetail.TunnelType == "Site2Cloud_Policy" {
