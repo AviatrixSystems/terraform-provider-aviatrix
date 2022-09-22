@@ -340,6 +340,17 @@ func resourceAviatrixAccount() *schema.Resource {
 				Sensitive:   true,
 				Description: "AWS Secret Region Custom Certificate Authority file path.",
 			},
+			"edge_csp_username": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Edge CSP username.",
+			},
+			"edge_csp_password": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Edge CSP password.",
+			},
 			"aws_role_app": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -468,6 +479,8 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		AwsSCaChainCert:                       d.Get("awss_ca_chain_cert").(string),
 		AwsSCapCertPath:                       d.Get("awss_cap_cert_path").(string),
 		AwsSCapCertKeyPath:                    d.Get("awss_cap_cert_key_path").(string),
+		EdgeCSPUsername:                       d.Get("edge_csp_username").(string),
+		EdgeCSPPassword:                       d.Get("edge_csp_password").(string),
 	}
 
 	if _, ok := d.GetOk("rbac_groups"); ok {
@@ -536,6 +549,9 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSS) && (account.AwsSAccountNumber != "" || account.AwsSCapUrl != "" || account.AwsSCapAgency != "" || account.AwsSCapAccountName != "" || account.AwsSCapRoleName != "" || account.AwsSCapCert != "" || account.AwsSCapCertKey != "" || account.AwsSCaChainCert != "") {
 		return diag.Errorf("could not create Aviatrix Account: 'awss_account_number', 'awss_cap_url', 'awss_cap_agency', 'awss_cap_account_name', 'awss_cap_role_name', awss_cap_cert', 'awss_cap_cert_key' and 'awss_ca_chain_cert' can only be set when 'cloud_type' is AWS Secret Region (32768)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.EDGECSP) && (account.EdgeCSPUsername != "" || account.EdgeCSPPassword != "") {
+		return diag.Errorf("could not create Aviatrix Account: 'edge_csp_username' and 'edge_csp_password' can only be set when 'cloud_type' is Edge CSP (65536)")
 	}
 
 	if account.CloudType == goaviatrix.AWS {
@@ -728,10 +744,17 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 			return diag.Errorf("AWS Secret CAP cert key file is needed when creating an account for AWS Secret cloud")
 		}
 		if account.AwsSCaChainCert == "" {
-			return diag.Errorf("AWS Secret custom CA Chain file  is needed when creating an account for AWS Secret cloud")
+			return diag.Errorf("AWS Secret custom CA Chain file is needed when creating an account for AWS Secret cloud")
+		}
+	} else if account.CloudType == goaviatrix.EDGECSP {
+		if account.EdgeCSPUsername == "" {
+			return diag.Errorf("edge_csp_username is required for Edge CSP")
+		}
+		if account.EdgeCSPPassword == "" {
+			return diag.Errorf("edge_csp_password is required for Edge CSP")
 		}
 	} else {
-		return diag.Errorf("cloud type can only be either AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192), AWS Top Secret (16384) or AWS Secret (32768)")
+		return diag.Errorf("cloud type can only be either AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), Alibaba Cloud (8192), AWS Top Secret (16384), AWS Secret (32768) or Edge CSP (65536)")
 	}
 
 	var err error
@@ -872,6 +895,8 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 			d.Set("awss_cap_cert_path", acc.AwsSCapCertPath)
 			d.Set("awss_cap_cert_key_path", acc.AwsSCapCertKeyPath)
 			d.Set("aws_ca_cert_path", acc.AwsCaCertPath)
+		} else if acc.CloudType == goaviatrix.EDGECSP {
+			d.Set("edge_csp_username", acc.EdgeCSPUsername)
 		}
 
 		d.Set("rbac_groups", acc.GroupNamesRead)
@@ -959,6 +984,8 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 		AwsSCaChainCert:                       d.Get("awss_ca_chain_cert").(string),
 		AwsSCapCertPath:                       d.Get("awss_cap_cert_path").(string),
 		AwsSCapCertKeyPath:                    d.Get("awss_cap_cert_key_path").(string),
+		EdgeCSPUsername:                       d.Get("edge_csp_username").(string),
+		EdgeCSPPassword:                       d.Get("edge_csp_password").(string),
 	}
 
 	awsIam := d.Get("aws_iam").(bool)
@@ -1031,6 +1058,9 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSS) && (account.AwsSAccountNumber != "" || account.AwsSCapUrl != "" || account.AwsSCapAgency != "" || account.AwsSCapAccountName != "" || account.AwsSCapRoleName != "" || account.AwsSCapCert != "" || account.AwsSCapCertKey != "" || account.AwsSCaChainCert != "") {
 		return diag.Errorf("could not update Aviatrix Account: 'awss_account_number', 'awss_cap_url', 'awss_cap_agency', 'awss_cap_account_name', 'awss_cap_role_name', awss_cap_cert', 'awss_cap_cert_key' and 'awss_ca_chain_cert' can only be set when 'cloud_type' is AWS Secret Region (32768)")
+	}
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.EDGECSP) && (account.EdgeCSPUsername != "" || account.EdgeCSPPassword != "") {
+		return diag.Errorf("could not create Aviatrix Account: 'edge_csp_username' and 'edge_csp_password' can only be set when 'cloud_type' is Edge CSP (65536)")
 	}
 
 	if account.CloudType == goaviatrix.AWS {
@@ -1137,6 +1167,13 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 			err := client.UpdateAWSSAccount(account, fileChanges)
 			if err != nil {
 				return diag.Errorf("failed to update AWS Top Secret Aviatrix Account: %v", err)
+			}
+		}
+	} else if account.CloudType == goaviatrix.EDGECSP {
+		if d.HasChange("edge_csp_username") || d.HasChange("edge_csp_password") {
+			err := client.UpdateAccount(account)
+			if err != nil {
+				return diag.Errorf("failed to update Aviatrix Account: %s", err)
 			}
 		}
 	}

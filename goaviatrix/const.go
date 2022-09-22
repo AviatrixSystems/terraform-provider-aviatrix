@@ -16,6 +16,7 @@ const (
 	AliCloud   = 8192
 	AWSTS      = 16384 // AWS Top Secret Region (C2S)
 	AWSS       = 32768 // AWS Secret Region (SC2S)
+	EDGECSP    = 65536
 )
 
 // Cloud vendor names
@@ -54,6 +55,7 @@ func GetSupportedClouds() []int {
 		AliCloud,
 		AWSTS,
 		AWSS,
+		EDGECSP,
 	}
 }
 

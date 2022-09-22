@@ -82,6 +82,8 @@ type Account struct {
 	AwsSCapCertKeyPath                    string   `json:"aws_red_cap_key_path,omitempty"`
 	GroupNames                            string   `form:"groups,omitempty"`
 	GroupNamesRead                        []string `json:"rbac_groups,omitempty"`
+	EdgeCSPUsername                       string   `form:"edge_csp_username,omitempty"`
+	EdgeCSPPassword                       string   `form:"edge_csp_password,omitempty"`
 }
 
 type AccountResult struct {
@@ -97,6 +99,7 @@ type AccountListResp struct {
 func (c *Client) CreateAccount(account *Account) error {
 	account.CID = c.CID
 	account.Action = "setup_account_profile"
+	account.AwsIam = "true"
 	return c.PostAPI(account.Action, account, DuplicateBasicCheck)
 }
 

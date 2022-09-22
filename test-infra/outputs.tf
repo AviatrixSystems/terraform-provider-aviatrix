@@ -245,3 +245,23 @@ output "EDGE_SPOKE_NAME" {
 output "EDGE_SPOKE_SITE_ID" {
   value = var.edge_spoke_site_id
 }
+
+output "EDGE_CSP_USERNAME" {
+  value = var.edge_spoke_site_id
+}
+
+output "EDGE_CSP_PASSWORD" {
+  value = var.edge_spoke_site_id
+}
+
+output "EDGE_CSP_PROJECT_UUID" {
+  value = var.edge_spoke_site_id
+}
+
+output "EDGE_CSP_COMPUTE_UUID" {
+  value = var.edge_spoke_site_id
+}
+
+output "EDGE_CSP_TEMPLATE_UUID" {
+  value = var.edge_spoke_site_id
+}
