@@ -93,6 +93,7 @@ func Provider() *schema.Provider {
 			"aviatrix_azure_peer":                                     resourceAviatrixAzurePeer(),
 			"aviatrix_azure_spoke_native_peering":                     resourceAviatrixAzureSpokeNativePeering(),
 			"aviatrix_azure_vng_conn":                                 resourceAviatrixAzureVngConn(),
+			"aviatrix_centralized_transit_firenet":                    resourceAviatrixCentralizedTransitFireNet(),
 			"aviatrix_cloudn_registration":                            resourceAviatrixCloudnRegistration(),
 			"aviatrix_cloudn_transit_gateway_attachment":              resourceAviatrixCloudnTransitGatewayAttachment(),
 			"aviatrix_cloudwatch_agent":                               resourceAviatrixCloudwatchAgent(),
