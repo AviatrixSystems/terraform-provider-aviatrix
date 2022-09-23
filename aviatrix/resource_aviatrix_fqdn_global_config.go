@@ -40,10 +40,11 @@ func resourceAviatrixFQDNGlobalConfig() *schema.Resource {
 				Description: "If enabled, it customizes packet destination address ranges not to be filtered by FQDN.",
 			},
 			"configured_ips": {
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Optional:    true,
-				Description: "Source IPs configured for a specific tag. Can be subnet CIDRs or host IP addressesConfig IP addresses.",
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+				Description: "Customized packet destination address ranges not to be filtered by FQDN. " +
+					"Can be selected from pre-defined RFC 1918 range, or own network range.",
 			},
 			"enable_caching": {
 				Type:        schema.TypeBool,
@@ -58,12 +59,6 @@ func resourceAviatrixFQDNGlobalConfig() *schema.Resource {
 				Description: "If enabled, the resolved IP address from FQDN filter is cached so that " +
 					"if subsequent TCP session matches the cached IP address list, " +
 					"FQDN domain name is not checked and the session is allowed to pass.",
-			},
-			"rfc_1918": {
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Computed:    true,
-				Description: "Unconfigured Private IP address range.",
 			},
 		},
 	}
@@ -190,7 +185,6 @@ func resourceAviatrixFQDNGlobalConfigRead(ctx context.Context, d *schema.Resourc
 	} else {
 		d.Set("enable_custom_network_filtering", false)
 	}
-	d.Set("rfc_1918", privateSubFilter.Rfc1918)
 
 	cacheGlobalStatus, err := client.GetFQDNCacheGlobalStatus(ctx)
 	if err != nil {

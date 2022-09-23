@@ -43,15 +43,9 @@ The following arguments are supported:
 * `enable_exception_rule` - (Optional) If enabled, it allows packets passing through the gateway without an SNI field. Only applies to whitelist. Valid values: true, false. Default value: true.
 * `enable_private_network_filtering` - (Optional) If enabled, destination FQDN names that translate to private IP address range (RFC 1918) are subject to FQDN whitelist filtering function. Valid values: true, false. Default value: false.
 * `enable_custom_network_filtering` - (Optional) If enabled, it customizes packet destination address ranges not to be filtered by FQDN. Valid values: true, false. Default value: false.
-* `configured_ips` - (Optional) Source IPs configured for a specific tag. Can be subnet CIDRs or host IP addressesConfig IP addresses. Required with `enable_custom_network_filtering` enabled.
+* `configured_ips` - (Optional) Customized packet destination address ranges not to be filtered by FQDN. Can be selected from pre-defined RFC 1918 range, or own network range. Required with `enable_custom_network_filtering` enabled.
 * `enable_caching` - (Optional) If enabled, it caches the resolved IP address from FQDN filter. Valid values: true, false. Default value: true.
 * `enable_exact_match` - (Optional) If enabled, the resolved IP address from FQDN filter is cached so that if subsequent TCP session matches the cached IP address list, FQDN domain name is not checked and the session is allowed to pass. Valid values: true, false. Default value: false.
-
-## Attribute Reference
-
-In addition to all arguments above, the following attributes are exported:
-
-* `rfc_1918` - (Computed) Unconfigured Private IP address range.
 
 ## Import
 
