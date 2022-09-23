@@ -517,6 +517,18 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		if !haEnabled {
 			return fmt.Errorf("'enable_single_ip_ha' can't be enabled if HA isn't enabled for site2cloud connection")
 		}
+		if s2c.AuthType == "pubkey" {
+			return fmt.Errorf("single IP HA is only supported for PSK authentication type based site2cloud connection")
+		}
+		if s2c.RemoteGwIP2 != "" && s2c.RemoteGwIP != s2c.RemoteGwIP2 {
+			return fmt.Errorf("'backup_remote_gateway_ip' is required to be empty or the same as 'remote_gateway_ip' when single IP HA is enabled")
+		}
+		if s2c.BackupPreSharedKey != "" && s2c.PreSharedKey != s2c.BackupPreSharedKey {
+			return fmt.Errorf("'backup_pre_shared_key' is required to be empty or the same as 'pre_shared_key' when single IP HA is enabled")
+		}
+		if s2c.BackupLocalTunnelIp != "" || s2c.BackupRemoteTunnelIp != "" {
+			return fmt.Errorf("'backup_local_tunnel_ip' and 'backup_remote_tunnel_ip' are required to be empty when single IP HA is enabled")
+		}
 		s2c.EnableSingleIpHA = true
 	}
 
