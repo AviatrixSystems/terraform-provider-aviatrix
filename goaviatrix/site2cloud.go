@@ -508,7 +508,17 @@ func (c *Client) DisableSite2cloudActiveActive(site2cloud *Site2Cloud) error {
 		"connection_name": site2cloud.TunnelName,
 	}
 
-	return c.PostAPI(form["action"], form, BasicCheck)
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "already disabled") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
+		}
+		return nil
+	}
+
+	return c.PostAPI(form["action"], form, checkFunc)
 }
 
 func (c *Client) EnableSpokeMappedSite2CloudForwarding(site2cloud *Site2Cloud) error {
