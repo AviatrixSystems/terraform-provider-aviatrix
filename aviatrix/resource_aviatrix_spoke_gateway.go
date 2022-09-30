@@ -26,12 +26,17 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceAviatrixSpokeGatewayResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: resourceAviatrixSpokeGatewayStateUpgradeV0,
 				Version: 0,
+			},
+			{
+				Type:    resourceAviatrixSpokeGatewayResourceV1().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAviatrixSpokeGatewayStateUpgradeV1,
+				Version: 1,
 			},
 		},
 
