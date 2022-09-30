@@ -38,6 +38,23 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 3. Fixed issue where exported SNAT/DNAT interface shows tunnel ID when using Transit connection or route-based S2C
 4. Fixed issue where creating FQDN gateway with ``fqdn_lan_interface`` causes replacement
 
+
+## 2.23.2
+### Notes:
+- Release date: **(30 Sep 2022)**
+- Supported Controller version: **UserConnect-6.8.1342**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Site2Cloud
+1. Implemented support for Certificate based HA Gateway Remote Identifier for Site2Cloud VPN:
+   - New attributes in **aviatrix_site2cloud**:
+     - ``backup_remote_identifier``
+
+### Bug Fixes:
+1. Fixed issue where route-based Single IP HA tunnel S2C creation fails for **aviatrix_site2cloud**
+
+
 ## 2.23.1
 ### Notes:
 - Release date: **(12 Sep 2022)**
