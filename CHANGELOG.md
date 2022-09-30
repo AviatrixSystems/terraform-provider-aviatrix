@@ -19,6 +19,21 @@
 4. Fixed issue where creating FQDN gateway with ``fqdn_lan_interface`` causes replacement
 
 
+## 2.23.2 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.8.1342**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Site2Cloud
+1. Implemented support for Certificate based HA Gateway Remote Identifier for Site2Cloud VPN:
+   - New attributes in **aviatrix_site2cloud**:
+     - ``backup_remote_identifier``
+
+### Bug Fixes:
+1. Fixed issue where route-based Single IP HA tunnel S2C creation fails for **aviatrix_site2cloud**
+
+
 ## 2.23.1 (September 13, 2022)
 ### Notes:
 - Supported Controller version: **UserConnect-6.8.1311**
@@ -109,7 +124,7 @@
 3. Fixed issue where setting ``custom_algorithms`` to true would still use default values, causing tunnel replacement in **aviatrix_transit_external_device_conn**
 
 
-## 2.22.4 (Unreleased)
+## 2.22.4 (September 20, 2022)
 ### Notes:
 - Supported Controller version: **UserConnect-6.7.1480**
 - Supported Terraform version: **v1.x**
