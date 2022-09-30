@@ -1733,19 +1733,24 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		GwName:    d.Get("gw_name").(string),
 	}
 
-	manageHaGwAttachment := d.Get("manage_ha_gateway").(bool)
+	manageHaGw := d.Get("manage_ha_gateway").(bool)
 	if d.HasChange("manage_ha_gateway") {
-		_, nMTGA := d.GetChange("manage_ha_gateway")
-		newManageHaGwAttachment := nMTGA.(bool)
-		if newManageHaGwAttachment {
+		_, nMHG := d.GetChange("manage_ha_gateway")
+		newManageHaGw := nMHG.(bool)
+		if newManageHaGw {
 			d.Set("manage_ha_gateway", true)
 		} else {
 			d.Set("manage_ha_gateway", false)
 		}
 	}
 
-	if !manageHaGwAttachment {
-		if d.HasChanges("ha_subnet", "ha_zone", "ha_insane_mode_az", "ha_eip", "ha_azure_eip_name_resource_group", "ha_gw_size", "ha_availability_domain", "ha_fault_domain") {
+	if !manageHaGw {
+		haSubnet := d.Get("ha_subnet").(string)
+		haZone := d.Get("ha_zone").(string)
+		haGwSize := d.Get("ha_gw_size").(string)
+
+		if haSubnet != "" || haZone != "" || haGwSize != "" ||
+			d.HasChanges("ha_insane_mode_az", "ha_eip", "ha_azure_eip_name_resource_group", "ha_availability_domain", "ha_fault_domain", "ha_software_version", "ha_image_version") {
 			return fmt.Errorf("'manage_ha_gateway' is set to false. Please set it to true, or use 'aviatrix_spoke_ha_gateway' to manage editing spoke ha gateway")
 		}
 	}
@@ -1932,7 +1937,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	}
 
 	newHaGwEnabled := false
-	if d.HasChange("ha_subnet") || d.HasChange("ha_zone") || d.HasChange("ha_insane_mode_az") ||
+	if d.HasChange("ha_subnet") && manageHaGw || d.HasChange("ha_zone") && manageHaGw || d.HasChange("ha_insane_mode_az") ||
 		(enablePrivateOob && (d.HasChange("ha_oob_management_subnet") || d.HasChange("ha_oob_availability_zone"))) ||
 		(privateModeInfo.EnablePrivateMode && d.HasChange("ha_private_mode_subnet_zone")) ||
 		d.HasChange("ha_availability_domain") || d.HasChange("ha_fault_domain") {
@@ -2174,7 +2179,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if d.HasChange("ha_gw_size") || newHaGwEnabled {
+	if d.HasChange("ha_gw_size") && manageHaGw || newHaGwEnabled {
 		newHaGwSize := d.Get("ha_gw_size").(string)
 		if !newHaGwEnabled || (newHaGwSize != primaryGwSize) {
 			// MODIFIES HA GW SIZE if
