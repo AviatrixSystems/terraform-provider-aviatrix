@@ -47,13 +47,6 @@ func resourceAviatrixSpokeHaGateway() *schema.Resource {
 				ForceNew:    true,
 				Description: "Name of the HA gateway which is going to be created.",
 			},
-			"vpc_reg": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				ForceNew:    true,
-				Description: "Region of cloud provider.",
-			},
 			"gw_size": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -124,6 +117,11 @@ func resourceAviatrixSpokeHaGateway() *schema.Resource {
 				Description: "image_version can be used to set the desired image version of the gateway. " +
 					"If set, we will attempt to update the gateway to the specified version.",
 			},
+			"vpc_reg": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Region of cloud provider.",
+			},
 			"security_group_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -158,7 +156,6 @@ func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta interface
 		GwName:             d.Get("gw_name").(string),
 		GwSize:             d.Get("gw_size").(string),
 		Subnet:             d.Get("subnet").(string),
-		VpcRegion:          d.Get("vpc_reg").(string),
 		Zone:               d.Get("zone").(string),
 		AvailabilityDomain: d.Get("availability_domain").(string),
 		FaultDomain:        d.Get("fault_domain").(string),
@@ -169,6 +166,47 @@ func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta interface
 		gateway.InsaneMode = "yes"
 	} else {
 		gateway.InsaneMode = "no"
+	}
+
+	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+		if gateway.Zone != "" || gateway.AvailabilityDomain != "" || gateway.FaultDomain != "" {
+			return fmt.Errorf("'zone', 'availability_domain' and 'fault_domain' are required to be empty for creating an AWS/Azure spoke ha gateway")
+		}
+	}
+
+	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+		if gateway.Zone == "" {
+			return fmt.Errorf("'zone' is required for creating an GCP spoke ha gateway")
+		}
+		if gateway.AvailabilityDomain != "" || gateway.FaultDomain != "" {
+			return fmt.Errorf("'availability_domain' and 'fault_domain' are required to be empty for creating an GCP spoke ha gateway")
+		}
+	}
+
+	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.OCIRelatedCloudTypes) {
+		if gateway.AvailabilityDomain == "" || gateway.FaultDomain == "" {
+			return fmt.Errorf("'availability_domain' and 'fault_domain' are required for creating an OCI spoke ha gateway")
+		}
+		if gateway.Zone != "" {
+			return fmt.Errorf("'zone' is required to be empty for creating an OCI spoke ha gateway")
+		}
+	}
+
+	if gateway.InsaneMode == "yes" {
+		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|
+			goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
+			return fmt.Errorf("insane_mode is only supported for AWS (1), GCP (4), Azure (8), OCI (16), AzureGov (32), AWSGov (256), AWS China (1024), AzureChina (2048), AWS Top Secret (16384) and AWS Secret (32768)")
+		}
+
+		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+			insaneModeAz := d.Get("insane_mode_az").(string)
+			if insaneModeAz == "" {
+				return fmt.Errorf("'insane_mode_az' is required if insane_mode is enabled for AWS (1), AWSGov (256), AWS China (1024), AWS Top Secret (16384) or AWS Secret (32768)")
+			}
+			var insaneModeSubnet []string
+			insaneModeSubnet = append(insaneModeSubnet, gateway.Subnet, insaneModeAz)
+			gateway.Subnet = strings.Join(insaneModeSubnet, "~~")
+		}
 	}
 
 	d.SetId(gateway.GwName)
@@ -193,12 +231,9 @@ func resourceAviatrixSpokeHaGatewayReadIfRequired(d *schema.ResourceData, meta i
 
 func resourceAviatrixSpokeHaGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
-	//ignoreTagsConfig := client.IgnoreTagsConfig
 
-	var isImport bool
 	gwName := d.Get("gw_name").(string)
 	if gwName == "" {
-		isImport = true
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
 		d.Set("gw_name", id)
@@ -234,15 +269,6 @@ func resourceAviatrixSpokeHaGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("image_version", gw.ImageVersion)
 	d.Set("software_version", gw.SoftwareVersion)
 
-	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-		azureEip := strings.Split(gw.ReuseEip, ":")
-		if len(azureEip) == 3 {
-			d.Set("azure_eip_name_resource_group", fmt.Sprintf("%s:%s", azureEip[0], azureEip[1]))
-		} else {
-			log.Printf("[WARN] could not get Azure EIP name and resource group for the Spoke Gateway %s", gw.GwName)
-		}
-	}
-
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		d.Set("vpc_reg", gw.VpcRegion)
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
@@ -259,19 +285,9 @@ func resourceAviatrixSpokeHaGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("insane_mode", true)
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			d.Set("insane_mode_az", gw.GatewayZone)
-		} else {
-			d.Set("insane_mode_az", "")
 		}
 	} else {
 		d.Set("insane_mode", false)
-		d.Set("insane_mode_az", "")
-	}
-
-	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-		_, zoneIsSet := d.GetOk("zone")
-		if (isImport || zoneIsSet) && gw.GatewayZone != "AvailabilitySet" {
-			d.Set("zone", "az-"+gw.GatewayZone)
-		}
 	}
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
