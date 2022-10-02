@@ -336,7 +336,7 @@ func testAccCheckSpokeGatewayDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*goaviatrix.Client)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aviatrix_spoke_vpc" {
+		if rs.Type != "aviatrix_spoke_gateway" {
 			continue
 		}
 		foundGateway := &goaviatrix.Gateway{
