@@ -51,7 +51,6 @@ type Client struct {
 	CID              string
 	ControllerIP     string
 	baseURL          string
-	ApiToken         string
 	IgnoreTagsConfig *IgnoreTagsConfig
 }
 
@@ -67,27 +66,32 @@ type ApiTokenInfo struct {
 	Reason     string `json:"reason"`
 }
 
-func (c *Client) GetApiToken() error {
+type AccountLogin struct {
+	Action   string `json:"login"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+func (c *Client) GetApiToken() (string, error) {
 	apiToken := make(map[string]interface{})
 	apiToken["action"] = "get_api_token"
 	apiToken["log_enable"] = true
 
 	log.Infof("Getting API token...")
-	resp, err := c.Get(c.baseURL, apiToken)
+	Url := fmt.Sprintf("https://%s/v2/api", c.ControllerIP)
+	resp, err := c.Get(Url, apiToken)
 	if err != nil {
-		return err
+		return "", err
 	}
 	var data GetApiTokenResp
 	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return err
+		return "", err
 	}
 	if !data.Return {
-		return errors.New(data.Reason)
+		return "", errors.New(data.Reason)
 	}
 	log.Tracef("Token is '%s'.", data.Results.ApiToken)
-	c.ApiToken = data.Results.ApiToken
-	log.Printf("zjin00: token is %s", data.Results.ApiToken)
-	return nil
+	return data.Results.ApiToken, nil
 }
 
 // Login to the Aviatrix controller with the username/password provided in
@@ -97,20 +101,19 @@ func (c *Client) GetApiToken() error {
 // Returns:
 //    error - if any
 func (c *Client) Login() error {
-	err := c.GetApiToken()
+	ApiToken, err := c.GetApiToken()
 	if err != nil {
 		return err
 	}
 
-	form := map[string]interface{}{
+	form := map[string]string{
 		"action":   "login",
 		"username": c.Username,
 		"password": c.Password,
-		//"X-Access-key": c.ApiToken,
 	}
 
 	Url := fmt.Sprintf("https://%s/v2/api", c.ControllerIP)
-	resp, err := c.RequestContext2(context.Background(), "login", Url, form)
+	resp, err := c.RequestContextLogin(context.Background(), "POST", Url, form, ApiToken)
 	if err != nil {
 		return err
 	}
@@ -121,29 +124,7 @@ func (c *Client) Login() error {
 	if !data.Return {
 		return errors.New(data.Reason)
 	}
-	log.Tracef("CID is '%s'.", data.CID)
 	c.CID = data.CID
-
-	//account := make(map[string]interface{})
-	//account["action"] = "login"
-	//account["username"] = c.Username
-	//account["password"] = c.Password
-	//account["X-Access-key"] = c.ApiToken
-	//
-	//log.Infof("Parsed Aviatrix login: %s", account["username"])
-	//resp, err := c.Post(c.baseURL, account)
-	//if err != nil {
-	//	return err
-	//}
-	//var data LoginResp
-	//if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
-	//	return err
-	//}
-	//if !data.Return {
-	//	return errors.New(data.Reason)
-	//}
-	//log.Tracef("CID is '%s'.", data.CID)
-	//c.CID = data.CID
 	return nil
 }
 
@@ -635,6 +616,111 @@ func (c *Client) RequestContext(ctx context.Context, verb string, path string, i
 			req, err = http.NewRequestWithContext(ctx, verb, path, reader)
 			if err == nil {
 				req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			}
+		} else {
+			req, err = http.NewRequestWithContext(ctx, verb, path, nil)
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		resp, err = c.HTTPClient.Do(req)
+		if err != nil {
+			return resp, err
+		}
+
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(resp.Body)
+		resp.Body.Close()
+
+		// Replace resp.Body with new ReadCloser so that other methods can read the buffer again
+		resp.Body = io.NopCloser(buf)
+
+		if strings.Contains(resp.Header.Get("Content-Type"), "json") {
+			bodyString := buf.String()
+			data = new(APIResp)
+			if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(data); err != nil {
+				return resp, fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
+			}
+
+			// Any error not related to expired CID should return
+			if !(strings.Contains(data.Reason, "CID is invalid") || strings.Contains(data.Reason, "Invalid session. Please login again.")) {
+				return resp, err
+			}
+
+			log.Tracef("CID invalid or expired. Trying to login again")
+			if err = c.Login(); err != nil {
+				return resp, err
+			}
+
+			// update the CID value in the object passed
+			if i != nil {
+				// Update CID in POST body
+				v := reflect.ValueOf(i)
+				if v.Kind() == reflect.Map {
+					v.SetMapIndex(reflect.ValueOf("CID"), reflect.ValueOf(c.CID))
+				} else {
+					s := v.Elem()
+					f := s.FieldByName("CID")
+					if f.IsValid() && f.CanSet() {
+						f.SetString(c.CID)
+					}
+				}
+			} else {
+				// Update CID in GET URL
+				Url, err := url.Parse(path)
+				if err != nil {
+					return resp, fmt.Errorf("failed to parse url: %v", err)
+				}
+				query := Url.Query()
+				query["CID"] = []string{c.CID}
+				Url.RawQuery = query.Encode()
+				path = Url.String()
+			}
+
+			log.WithFields(log.Fields{
+				"try": try,
+				"err": "CID is invalid",
+			}).Warnf("HTTP request failed with expired CID")
+
+			if try == maxTries {
+				return resp, fmt.Errorf("%v", data.Reason)
+			}
+			time.Sleep(backoff)
+			// Double the backoff time after each failed try
+			backoff *= 2
+		} else {
+			return resp, nil
+		}
+	}
+}
+
+func (c *Client) RequestContextLogin(ctx context.Context, verb string, path string, i interface{}, token string) (*http.Response, error) {
+	log.Tracef("%s %s", verb, path)
+
+	try, maxTries, backoff := 0, 2, 500*time.Millisecond
+	var req *http.Request
+	var err error
+	var data *APIResp
+	var resp *http.Response
+
+	for {
+		try++
+
+		if i != nil {
+			buf := new(bytes.Buffer)
+			if err = form.NewEncoder(buf).Encode(i); err != nil {
+				return nil, err
+			}
+			body := buf.String()
+			log.Tracef("%s %s Body: %s", verb, path, body)
+
+			reader := strings.NewReader(body)
+			req, err = http.NewRequestWithContext(ctx, verb, path, reader)
+			if err == nil {
+				req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+				req.Header.Add("X-Access-Key", token)
 			}
 		} else {
 			req, err = http.NewRequestWithContext(ctx, verb, path, nil)
