@@ -51,7 +51,43 @@ type Client struct {
 	CID              string
 	ControllerIP     string
 	baseURL          string
+	ApiToken         string
 	IgnoreTagsConfig *IgnoreTagsConfig
+}
+
+type GetApiTokenResp struct {
+	Return  bool         `json:"return"`
+	Results ApiTokenInfo `json:"results"`
+	Reason  string       `json:"reason"`
+}
+
+type ApiTokenInfo struct {
+	ApiToken   string `json:"api_token"`
+	LegalTerms string `json:"legal_terms"`
+	Reason     string `json:"reason"`
+}
+
+func (c *Client) GetApiToken() error {
+	apiToken := make(map[string]interface{})
+	apiToken["action"] = "get_api_token"
+	apiToken["log_enable"] = true
+
+	log.Infof("Getting API token...")
+	resp, err := c.Get(c.baseURL, apiToken)
+	if err != nil {
+		return err
+	}
+	var data GetApiTokenResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return err
+	}
+	if !data.Return {
+		return errors.New(data.Reason)
+	}
+	log.Tracef("Token is '%s'.", data.Results.ApiToken)
+	c.ApiToken = data.Results.ApiToken
+	log.Printf("zjin00: token is %s", data.Results.ApiToken)
+	return nil
 }
 
 // Login to the Aviatrix controller with the username/password provided in
@@ -61,13 +97,20 @@ type Client struct {
 // Returns:
 //    error - if any
 func (c *Client) Login() error {
-	account := make(map[string]interface{})
-	account["action"] = "login"
-	account["username"] = c.Username
-	account["password"] = c.Password
+	err := c.GetApiToken()
+	if err != nil {
+		return err
+	}
 
-	log.Infof("Parsed Aviatrix login: %s", account["username"])
-	resp, err := c.Post(c.baseURL, account)
+	form := map[string]interface{}{
+		"action":   "login",
+		"username": c.Username,
+		"password": c.Password,
+		//"X-Access-key": c.ApiToken,
+	}
+
+	Url := fmt.Sprintf("https://%s/v2/api", c.ControllerIP)
+	resp, err := c.RequestContext2(context.Background(), "login", Url, form)
 	if err != nil {
 		return err
 	}
@@ -80,6 +123,27 @@ func (c *Client) Login() error {
 	}
 	log.Tracef("CID is '%s'.", data.CID)
 	c.CID = data.CID
+
+	//account := make(map[string]interface{})
+	//account["action"] = "login"
+	//account["username"] = c.Username
+	//account["password"] = c.Password
+	//account["X-Access-key"] = c.ApiToken
+	//
+	//log.Infof("Parsed Aviatrix login: %s", account["username"])
+	//resp, err := c.Post(c.baseURL, account)
+	//if err != nil {
+	//	return err
+	//}
+	//var data LoginResp
+	//if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	//	return err
+	//}
+	//if !data.Return {
+	//	return errors.New(data.Reason)
+	//}
+	//log.Tracef("CID is '%s'.", data.CID)
+	//c.CID = data.CID
 	return nil
 }
 
