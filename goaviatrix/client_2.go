@@ -79,7 +79,6 @@ func (c *Client) RequestContext2(ctx context.Context, verb string, path string, 
 			req, err = http.NewRequestWithContext(ctx, verb, path, reader)
 			if err == nil {
 				req.Header.Set("Content-Type", "application/json")
-				req.Header.Set("X-Access-Key", "")
 			}
 		} else {
 			req, err = http.NewRequestWithContext(ctx, verb, path, nil)

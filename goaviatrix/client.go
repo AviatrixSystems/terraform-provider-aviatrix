@@ -106,14 +106,14 @@ func (c *Client) Login() error {
 		return err
 	}
 
-	form := map[string]string{
-		"action":   "login",
-		"username": c.Username,
-		"password": c.Password,
-	}
+	account := make(map[string]interface{})
+	account["action"] = "login"
+	account["username"] = c.Username
+	account["password"] = c.Password
 
 	Url := fmt.Sprintf("https://%s/v2/api", c.ControllerIP)
-	resp, err := c.RequestContextLogin(context.Background(), "POST", Url, form, ApiToken)
+	log.Infof("Parsed Aviatrix login: %s", account["username"])
+	resp, err := c.RequestContextLogin(context.Background(), "POST", Url, account, ApiToken)
 	if err != nil {
 		return err
 	}
