@@ -66,12 +66,6 @@ type ApiTokenInfo struct {
 	Reason     string `json:"reason"`
 }
 
-type AccountLogin struct {
-	Action   string `json:"login"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
 func (c *Client) GetApiToken() (string, error) {
 	apiToken := make(map[string]interface{})
 	apiToken["action"] = "get_api_token"
