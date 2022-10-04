@@ -76,10 +76,6 @@ func resourceAviatrixControllerSecurityGroupManagementConfigCreate(d *schema.Res
 func resourceAviatrixControllerSecurityGroupManagementConfigRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
-	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
-		return fmt.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
-	}
-
 	sgm, err := client.GetSecurityGroupManagementStatus()
 	if err != nil {
 		return fmt.Errorf("could not read Aviatrix Controller Security Group Management Status: %s", err)
