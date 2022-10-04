@@ -25,76 +25,30 @@ type EdgeCSP struct {
 	DnsServerIp                        string `json:"dns_server_ip,omitempty"`
 	SecondaryDnsServerIp               string `json:"dns_server_ip_secondary,omitempty"`
 	Dhcp                               bool   `json:"dhcp,omitempty"`
-	//ActiveStandby                      string `json:"active_standby,omitempty"`
-	EnableEdgeActiveStandby           bool   `json:"enable_active_standby"`
-	EnableEdgeActiveStandbyPreemptive bool   `json:"enable_active_standby_preemptive"`
-	LocalAsNumber                     string `json:"local_as_number"`
-	PrependAsPath                     []string
-	PrependAsPathReturn               string   `json:"prepend_as_path"`
-	IncludeCidrList                   []string `json:"include_cidr_list"`
-	EnableLearnedCidrsApproval        bool     `json:"enable_learned_cidrs_approval"`
-	ApprovedLearnedCidrs              []string `json:"approved_learned_cidrs,omitempty"`
-	SpokeBgpManualAdvertisedCidrs     []string `json:"bgp_manual_spoke_advertise_cidrs"`
-	EnablePreserveAsPath              bool     `json:"preserve_as_path"`
-	BgpPollingTime                    int      `json:"bgp_polling_time"`
-	BgpHoldTime                       int      `json:"bgp_hold_time"`
-	EnableEdgeTransitiveRouting       bool     `json:"edge_transitive_routing"`
-	EnableJumboFrame                  bool     `json:"jumbo_frame"`
-	Latitude                          string
-	Longitude                         string
-	LatitudeReturn                    float64 `json:"latitude"`
-	LongitudeReturn                   float64 `json:"longitude"`
-	WanPublicIp                       string  `json:"wan_discovery_ip"`
-	PrivateIP                         string  `json:"private_ip"`
-	RxQueueSize                       string  `json:"rx_queue_size"`
-	State                             string  `json:"vpc_state"`
-	NoProgressBar                     bool    `json:"no_progress_bar,omitempty"`
+	EnableEdgeActiveStandby            bool   `json:"enable_active_standby"`
+	EnableEdgeActiveStandbyPreemptive  bool   `json:"enable_active_standby_preemptive"`
+	LocalAsNumber                      string `json:"local_as_number"`
+	PrependAsPath                      []string
+	PrependAsPathReturn                string   `json:"prepend_as_path"`
+	IncludeCidrList                    []string `json:"include_cidr_list"`
+	EnableLearnedCidrsApproval         bool     `json:"enable_learned_cidrs_approval"`
+	ApprovedLearnedCidrs               []string `json:"approved_learned_cidrs,omitempty"`
+	SpokeBgpManualAdvertisedCidrs      []string `json:"bgp_manual_spoke_advertise_cidrs"`
+	EnablePreserveAsPath               bool     `json:"preserve_as_path"`
+	BgpPollingTime                     int      `json:"bgp_polling_time"`
+	BgpHoldTime                        int      `json:"bgp_hold_time"`
+	EnableEdgeTransitiveRouting        bool     `json:"edge_transitive_routing"`
+	EnableJumboFrame                   bool     `json:"jumbo_frame"`
+	Latitude                           string
+	Longitude                          string
+	LatitudeReturn                     float64 `json:"latitude"`
+	LongitudeReturn                    float64 `json:"longitude"`
+	WanPublicIp                        string  `json:"wan_discovery_ip"`
+	PrivateIP                          string  `json:"private_ip"`
+	RxQueueSize                        string  `json:"rx_queue_size"`
+	State                              string  `json:"vpc_state"`
+	NoProgressBar                      bool    `json:"no_progress_bar,omitempty"`
 }
-
-//type EdgeSpokeZededa struct {
-//	Action                             string `form:"action,omitempty"`
-//	CID                                string `form:"CID,omitempty"`
-//	AccountName                        string `form:"account_name,omitempty"`
-//	GwName                             string `form:"name,omitempty" json:"gw_name"`
-//	SiteId                             string `form:"site_id,omitempty" json:"vpc_id"`
-//	ProjectUuid                        string `form:"project_uuid,omitempty"`
-//	ComputeNodeUuid                    string `form:"compute_node_uuid,omitempty"`
-//	TemplateUuid                       string `form:"template_uuid,omitempty"`
-//	ManagementInterfaceConfig          string
-//	ManagementEgressIpPrefix           string `form:"mgmt_egress_ip,omitempty" json:"mgmt_egress_ip"`
-//	EnableManagementOverPrivateNetwork bool   `form:"mgmt_over_private_network,omitempty" json:"mgmt_over_private_network"`
-//	WanInterfaceIpPrefix               string `form:"wan_ip,omitempty" json:"wan_ip"`
-//	WanDefaultGatewayIp                string `form:"wan_default_gateway,omitempty" json:"wan_default_gateway"`
-//	LanInterfaceIpPrefix               string `form:"lan_ip,omitempty" json:"lan_ip"`
-//	ManagementInterfaceIpPrefix        string `form:"mgmt_ip,omitempty" json:"mgmt_ip"`
-//	ManagementDefaultGatewayIp         string `form:"mgmt_default_gateway,omitempty" json:"mgmt_default_gateway"`
-//	DnsServerIp                        string `form:"dns_server_ip,omitempty" json:"dns_server_ip"`
-//	SecondaryDnsServerIp               string `form:"dns_server_ip_secondary,omitempty" json:"dns_server_ip_secondary"`
-//	Dhcp                               bool   `form:"dhcp,omitempty" json:"dhcp"`
-//	ActiveStandby                      string `form:"active_standby,omitempty"`
-//	EnableEdgeActiveStandby            bool   `json:"edge_active_standby"`
-//	EnableEdgeActiveStandbyPreemptive  bool   `json:"edge_active_standby_preemptive"`
-//	LocalAsNumber                      string `json:"local_as_number"`
-//	PrependAsPath                      []string
-//	PrependAsPathReturn                string   `json:"prepend_as_path"`
-//	IncludeCidrList                    []string `json:"include_cidr_list"`
-//	EnableLearnedCidrsApproval         bool     `json:"enable_learned_cidrs_approval"`
-//	ApprovedLearnedCidrs               []string `form:"approved_learned_cidrs,omitempty"`
-//	SpokeBgpManualAdvertisedCidrs      []string `json:"bgp_manual_spoke_advertise_cidrs"`
-//	EnablePreserveAsPath               bool     `json:"preserve_as_path"`
-//	BgpPollingTime                     int      `json:"bgp_polling_time"`
-//	BgpHoldTime                        int      `json:"bgp_hold_time"`
-//	EnableEdgeTransitiveRouting        bool     `json:"edge_transitive_routing"`
-//	EnableJumboFrame                   bool     `json:"jumbo_frame"`
-//	Latitude                           string
-//	Longitude                          string
-//	LatitudeReturn                     float64 `json:"latitude"`
-//	LongitudeReturn                    float64 `json:"longitude"`
-//	WanPublicIp                        string  `form:"wan_discovery_ip,omitempty" json:"public_ip"`
-//	PrivateIP                          string  `json:"private_ip"`
-//	RxQueueSize                        string  `json:"rx_queue_size"`
-//	State                              string  `json:"vpc_state"`
-//}
 
 type EdgeCSPResp struct {
 	AccountName                        string `json:"account_name"`
