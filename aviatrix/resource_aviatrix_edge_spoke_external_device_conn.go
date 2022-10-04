@@ -5,6 +5,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -87,6 +88,20 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 					return strings.ToUpper(old) == strings.ToUpper(new)
 				},
 			},
+			"number_of_retries": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     0,
+				ForceNew:    true,
+				Description: "Number of retries.",
+			},
+			"retry_interval": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     300,
+				ForceNew:    true,
+				Description: "Retry interval in seconds.",
+			},
 		},
 	}
 }
@@ -123,9 +138,25 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnCreate(ctx context.Context, d *s
 	flag := false
 	defer resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx, d, meta, &flag)
 
-	err := client.CreateExternalDeviceConn(externalDeviceConn)
-	if err != nil {
-		return diag.Errorf("failed to create Edge as a Spoke external device connection: %s", err)
+	numberOfRetries := d.Get("number_of_retries").(int)
+	retryInterval := d.Get("retry_interval").(int)
+
+	var err error
+	for i := 0; ; i++ {
+		err = client.CreateExternalDeviceConn(externalDeviceConn)
+		if err != nil {
+			if !strings.Contains(err.Error(), "not ready") && !strings.Contains(err.Error(), "not up") {
+				return diag.Errorf("failed to create Edge as a Spoke external device connection: %s", err)
+			}
+		} else {
+			break
+		}
+		if i < numberOfRetries {
+			time.Sleep(time.Duration(retryInterval) * time.Second)
+		} else {
+			d.SetId("")
+			return diag.Errorf("failed to create Edge as a Spoke external device connection: %s", err)
+		}
 	}
 
 	return resourceAviatrixEdgeSpokeExternalDeviceConnReadIfRequired(ctx, d, meta, &flag)

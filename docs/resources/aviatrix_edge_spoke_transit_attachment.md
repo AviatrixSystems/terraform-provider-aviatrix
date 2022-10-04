@@ -37,6 +37,8 @@ The following arguments are supported:
 * `insane_mode_tunnel_number` - (Optional) Insane mode tunnel number. Default: 0.
 * `spoke_prepend_as_path` - (Optional) Connection based AS Path Prepend. Can only use the gateway's own local AS number, repeated up to 25 times. Applies on the Edge as a Spoke.
 * `transit_prepend_as_path` - (Optional) Connection based AS Path Prepend. Can only use the gateway's own local AS number, repeated up to 25 times. Applies on the Transit Gateway.
+* `number_of_retries` - (Optional) Number of retries. Default value: 0.
+* `retry_interval` - (Optional) Retry interval in seconds. Default value: 300.
 
 ## Import
 

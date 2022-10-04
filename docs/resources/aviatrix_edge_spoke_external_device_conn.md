@@ -44,6 +44,8 @@ The following arguments are supported:
 ### Optional
 * `connection_type` - (Optional) Connection type. Valid value: 'bgp'. Default value: 'bgp'.
 * `tunnel_protocol` - (Optional) Tunnel protocol. Valid value: 'LAN'. Default value: 'LAN'. Case insensitive.
+* `number_of_retries` - (Optional) Number of retries. Default value: 0.
+* `retry_interval` - (Optional) Retry interval in seconds. Default value: 300.
 
 ## Import
 

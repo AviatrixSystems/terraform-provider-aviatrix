@@ -83,6 +83,18 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 				},
 				MaxItems: 25,
 			},
+			"number_of_retries": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     0,
+				Description: "Number of retries.",
+			},
+			"retry_interval": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Default:     300,
+				Description: "Retry interval in seconds.",
+			},
 		},
 	}
 }
@@ -119,23 +131,25 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 	flag := false
 	defer resourceAviatrixEdgeSpokeTransitAttachmentReadIfRequired(ctx, d, meta, &flag)
 
-	try, maxTries, backoff := 0, 8, 1000*time.Millisecond
-	for {
-		try++
-		err := client.CreateSpokeTransitAttachment(attachment)
+	numberOfRetries := d.Get("number_of_retries").(int)
+	retryInterval := d.Get("retry_interval").(int)
+
+	var err error
+	for i := 0; ; i++ {
+		err = client.CreateSpokeTransitAttachment(attachment)
 		if err != nil {
-			if strings.Contains(err.Error(), "is not up") {
-				if try == maxTries {
-					return diag.Errorf("could not attach Edge as a Spoke: %s to transit %s: %v", attachment.SpokeGwName, attachment.TransitGwName, err)
-				}
-				time.Sleep(backoff)
-				// Double the backoff time after each failed try
-				backoff *= 2
-				continue
+			if !strings.Contains(err.Error(), "not ready") && !strings.Contains(err.Error(), "not up") {
+				return diag.Errorf("could not attach Edge as a Spoke: %s to transit %s: %v", attachment.SpokeGwName, attachment.TransitGwName, err)
 			}
+		} else {
+			break
+		}
+		if i < numberOfRetries {
+			time.Sleep(time.Duration(retryInterval) * time.Second)
+		} else {
+			d.SetId("")
 			return diag.Errorf("could not attach Edge as a Spoke: %s to transit %s: %v", attachment.SpokeGwName, attachment.TransitGwName, err)
 		}
-		break
 	}
 
 	if len(attachment.SpokePrependAsPath) != 0 {
@@ -144,7 +158,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 			TransitGatewayName2: attachment.TransitGwName,
 		}
 
-		err := client.EditTransitConnectionASPathPrepend(transGwPeering, attachment.SpokePrependAsPath)
+		err = client.EditTransitConnectionASPathPrepend(transGwPeering, attachment.SpokePrependAsPath)
 		if err != nil {
 			return diag.Errorf("could not set spoke_prepend_as_path: %v", err)
 		}
@@ -156,7 +170,7 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 			TransitGatewayName2: attachment.SpokeGwName,
 		}
 
-		err := client.EditTransitConnectionASPathPrepend(transGwPeering, attachment.TransitPrependAsPath)
+		err = client.EditTransitConnectionASPathPrepend(transGwPeering, attachment.TransitPrependAsPath)
 		if err != nil {
 			return diag.Errorf("could not set transit_prepend_as_path: %v", err)
 		}
