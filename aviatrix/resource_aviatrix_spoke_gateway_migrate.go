@@ -24,3 +24,22 @@ func resourceAviatrixSpokeGatewayStateUpgradeV0(ctx context.Context, rawState ma
 
 	return rawState, nil
 }
+
+func resourceAviatrixSpokeGatewayResourceV1() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"manage_ha_gateway": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+		},
+	}
+}
+
+func resourceAviatrixSpokeGatewayStateUpgradeV1(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	if _, ok := rawState["manage_ha_gateway"]; !ok {
+		rawState["manage_ha_gateway"] = "true"
+	}
+
+	return rawState, nil
+}

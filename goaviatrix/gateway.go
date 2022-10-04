@@ -202,6 +202,7 @@ type Gateway struct {
 	RxQueueSize                     string                              `json:"rx_queue_size"`
 	LbVpcId                         string                              `json:"lb_vpc_id,omitempty"`
 	Compress                        bool                                `form:"compress,omitempty"`
+	PrimaryGwName                   string                              `json:"primary_gw_name,omitempty"`
 }
 
 type HaGateway struct {
