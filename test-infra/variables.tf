@@ -70,3 +70,8 @@ variable "datadog_api_key" {}
 
 variable "edge_spoke_name" {}
 variable "edge_spoke_site_id" {}
+variable "edge_csp_username" {}
+variable "edge_csp_password" {}
+variable "edge_csp_project_uuid" {}
+variable "edge_csp_compute_node_uuid" {}
+variable "edge_csp_template_uuid" {}

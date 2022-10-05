@@ -20,7 +20,7 @@ type EdgeSpoke struct {
 	GwName                             string `form:"gateway_name,omitempty" json:"gw_name"`
 	SiteId                             string `form:"site_id,omitempty" json:"vpc_id"`
 	ManagementInterfaceConfig          string
-	ManagementEgressIpPrefix           string `form:"mgmt_egress_ip" json:"mgmt_egress_ip"`
+	ManagementEgressIpPrefix           string `form:"mgmt_egress_ip,omitempty" json:"mgmt_egress_ip"`
 	EnableManagementOverPrivateNetwork bool   `form:"mgmt_over_private_network,omitempty" json:"mgmt_over_private_network"`
 	WanInterfaceIpPrefix               string `form:"wan_ip,omitempty" json:"wan_ip"`
 	WanDefaultGatewayIp                string `form:"wan_default_gateway,omitempty" json:"wan_default_gateway"`
@@ -51,7 +51,7 @@ type EdgeSpoke struct {
 	Longitude                          string
 	LatitudeReturn                     float64 `json:"latitude"`
 	LongitudeReturn                    float64 `json:"longitude"`
-	WanPublicIp                        string  `form:"wan_discovery_ip" json:"public_ip"`
+	WanPublicIp                        string  `form:"wan_discovery_ip,omitempty" json:"public_ip"`
 	PrivateIP                          string  `json:"private_ip"`
 	RxQueueSize                        string  `json:"rx_queue_size"`
 	State                              string  `json:"vpc_state"`

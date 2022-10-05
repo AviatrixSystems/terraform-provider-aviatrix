@@ -111,6 +111,7 @@ func Provider() *schema.Provider {
 			"aviatrix_datadog_agent":                                  resourceAviatrixDatadogAgent(),
 			"aviatrix_device_interface_config":                        resourceAviatrixDeviceInterfaceConfig(),
 			"aviatrix_edge_caag":                                      resourceAviatrixEdgeCaag(),
+			"aviatrix_edge_csp":                                       resourceAviatrixEdgeCSP(),
 			"aviatrix_edge_spoke":                                     resourceAviatrixEdgeSpoke(),
 			"aviatrix_edge_spoke_external_device_conn":                resourceAviatrixEdgeSpokeExternalDeviceConn(),
 			"aviatrix_edge_spoke_transit_attachment":                  resourceAviatrixEdgeSpokeTransitAttachment(),

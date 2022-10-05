@@ -82,6 +82,16 @@ type Account struct {
 	AwsSCapCertKeyPath                    string   `json:"aws_red_cap_key_path,omitempty"`
 	GroupNames                            string   `form:"groups,omitempty"`
 	GroupNamesRead                        []string `json:"rbac_groups,omitempty"`
+	EdgeCSPUsername                       string   `json:"edge_csp_username"`
+}
+
+type EdgeCSPAccount struct {
+	CID             string `json:"CID,omitempty"`
+	Action          string `json:"action,omitempty"`
+	AccountName     string `json:"account_name,omitempty"`
+	CloudType       int    `json:"cloud_type,omitempty"`
+	EdgeCSPUsername string `json:"edge_csp_username,omitempty"`
+	EdgeCSPPassword string `json:"edge_csp_password,omitempty"`
 }
 
 type AccountResult struct {
@@ -382,4 +392,16 @@ func (c *Client) AuditAccount(ctx context.Context, account *Account) error {
 		}
 	}
 	return nil
+}
+
+func (c *Client) CreateEdgeCSPAccount(edgeCSPAccount *EdgeCSPAccount) error {
+	edgeCSPAccount.CID = c.CID
+	edgeCSPAccount.Action = "setup_account_profile"
+	return c.PostAPIContext2(context.Background(), nil, edgeCSPAccount.Action, edgeCSPAccount, DuplicateBasicCheck)
+}
+
+func (c *Client) UpdateEdgeCSPAccount(edgeCSPAccount *EdgeCSPAccount) error {
+	edgeCSPAccount.CID = c.CID
+	edgeCSPAccount.Action = "edit_account_profile"
+	return c.PostAPIContext2(context.Background(), nil, edgeCSPAccount.Action, edgeCSPAccount, BasicCheck)
 }
