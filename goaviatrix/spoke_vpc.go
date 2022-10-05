@@ -36,6 +36,7 @@ type SpokeVpc struct {
 	Zone                         string `form:"zone,omitempty" json:"zone,omitempty"`
 	BgpManualSpokeAdvertiseCidrs string `form:"bgp_manual_spoke,omitempty"`
 	EncVolume                    string `form:"enc_volume,omitempty"`
+	CustomerManagedKeys          string `form:"customer_managed_keys,omitempty"`
 	EnablePrivateOob             string `form:"private_oob,omitempty"`
 	OobManagementSubnet          string `form:"oob_mgmt_subnet,omitempty"`
 	HAOobManagementSubnet        string

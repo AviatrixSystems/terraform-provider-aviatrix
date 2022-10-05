@@ -43,6 +43,7 @@ type TransitVpc struct {
 	LanPrivateSubnet             string `form:"lan_private_subnet,omitempty"`
 	LearnedCidrsApproval         string `form:"learned_cidrs_approval,omitempty"`
 	EncVolume                    string `form:"enc_volume,omitempty"`
+	CustomerManagedKeys          string `form:"customer_managed_keys,omitempty"`
 	BgpOverLan                   string `form:"bgp_over_lan,omitempty"`
 	EnablePrivateOob             string `form:"private_oob,omitempty"`
 	OobManagementSubnet          string `form:"oob_mgmt_subnet,omitempty"`

@@ -888,7 +888,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		if !enableEncryptVolume {
 			return fmt.Errorf("'customer_managed_keys' should be empty since Encrypt Volume is not enabled")
 		}
-		gateway.EncVolume = "no"
+		gateway.CustomerManagedKeys = customerManagedKeys
 	}
 	if !enableEncryptVolume && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		gateway.EncVolume = "no"
@@ -978,17 +978,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		if err != nil {
 			log.Printf("[INFO] failed to create Aviatrix gateway: %#v", gateway)
 			return fmt.Errorf("failed to create Aviatrix gateway: %s", err)
-		}
-	}
-
-	if customerManagedKeys != "" && enableEncryptVolume {
-		gwEncVolume := &goaviatrix.Gateway{
-			GwName:              d.Get("gw_name").(string),
-			CustomerManagedKeys: d.Get("customer_managed_keys").(string),
-		}
-		err := client.EnableEncryptVolume(gwEncVolume)
-		if err != nil {
-			return fmt.Errorf("failed to enable encrypt gateway volume when creating gateway: %s due to %s", gwEncVolume.GwName, err)
 		}
 	}
 
