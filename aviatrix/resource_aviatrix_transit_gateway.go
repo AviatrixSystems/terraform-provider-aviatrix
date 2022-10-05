@@ -830,7 +830,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		if !enableEncryptVolume {
 			return fmt.Errorf("'customer_managed_keys' should be empty since Encrypt Volume is not enabled")
 		}
-		gateway.EncVolume = "no"
+		gateway.CustomerManagedKeys = customerManagedKeys
 	}
 	if !enableEncryptVolume && goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
 		gateway.EncVolume = "no"
@@ -1141,17 +1141,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	err := client.LaunchTransitVpc(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Transit Gateway: %s", err)
-	}
-
-	if customerManagedKeys != "" && enableEncryptVolume {
-		gwEncVolume := &goaviatrix.Gateway{
-			GwName:              d.Get("gw_name").(string),
-			CustomerManagedKeys: d.Get("customer_managed_keys").(string),
-		}
-		err := client.EnableEncryptVolume(gwEncVolume)
-		if err != nil {
-			return fmt.Errorf("failed to enable encrypt gateway volume when creating transit gateway: %s due to %s", gwEncVolume.GwName, err)
-		}
 	}
 
 	if !singleAZ {

@@ -759,7 +759,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		if !enableEncryptVolume {
 			return fmt.Errorf("'customer_managed_keys' should be empty since Encrypt Volume is not enabled")
 		}
-		gateway.EncVolume = "no"
+		gateway.CustomerManagedKeys = customerManagedKeys
 	}
 	if !enableEncryptVolume && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		gateway.EncVolume = "no"
@@ -956,17 +956,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	err := client.LaunchSpokeVpc(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Spoke Gateway: %s", err)
-	}
-
-	if customerManagedKeys != "" && enableEncryptVolume {
-		gwEncVolume := &goaviatrix.Gateway{
-			GwName:              d.Get("gw_name").(string),
-			CustomerManagedKeys: d.Get("customer_managed_keys").(string),
-		}
-		err := client.EnableEncryptVolume(gwEncVolume)
-		if err != nil {
-			return fmt.Errorf("failed to enable encrypt gateway volume when creating spoke gateway: %s due to %s", gwEncVolume.GwName, err)
-		}
 	}
 
 	if !singleAZ {
