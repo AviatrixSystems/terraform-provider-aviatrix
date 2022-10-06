@@ -558,7 +558,7 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSS) && (account.AwsSAccountNumber != "" || account.AwsSCapUrl != "" || account.AwsSCapAgency != "" || account.AwsSCapAccountName != "" || account.AwsSCapRoleName != "" || account.AwsSCapCert != "" || account.AwsSCapCertKey != "" || account.AwsSCaChainCert != "") {
 		return diag.Errorf("could not create Aviatrix Account: 'awss_account_number', 'awss_cap_url', 'awss_cap_agency', 'awss_cap_account_name', 'awss_cap_role_name', awss_cap_cert', 'awss_cap_cert_key' and 'awss_ca_chain_cert' can only be set when 'cloud_type' is AWS Secret Region (32768)")
 	}
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.EDGECSP) && (edgeCSPAccount.EdgeCSPUsername != "" || edgeCSPAccount.EdgeCSPPassword != "") {
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.EDGECSP) && (d.Get("edge_csp_username").(string) != "" || d.Get("edge_csp_password").(string) != "") {
 		return diag.Errorf("could not create Aviatrix Account: 'edge_csp_username' and 'edge_csp_password' can only be set when 'cloud_type' is Edge CSP (65536)")
 	}
 
@@ -1077,7 +1077,7 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.AWSS) && (account.AwsSAccountNumber != "" || account.AwsSCapUrl != "" || account.AwsSCapAgency != "" || account.AwsSCapAccountName != "" || account.AwsSCapRoleName != "" || account.AwsSCapCert != "" || account.AwsSCapCertKey != "" || account.AwsSCaChainCert != "") {
 		return diag.Errorf("could not update Aviatrix Account: 'awss_account_number', 'awss_cap_url', 'awss_cap_agency', 'awss_cap_account_name', 'awss_cap_role_name', awss_cap_cert', 'awss_cap_cert_key' and 'awss_ca_chain_cert' can only be set when 'cloud_type' is AWS Secret Region (32768)")
 	}
-	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.EDGECSP) && (edgeCSPAccount.EdgeCSPUsername != "" || edgeCSPAccount.EdgeCSPPassword != "") {
+	if !goaviatrix.IsCloudType(account.CloudType, goaviatrix.EDGECSP) && (d.Get("edge_csp_username").(string) != "" || d.Get("edge_csp_password").(string) != "") {
 		return diag.Errorf("could not update Aviatrix Account: 'edge_csp_username' and 'edge_csp_password' can only be set when 'cloud_type' is Edge CSP (65536)")
 	}
 
