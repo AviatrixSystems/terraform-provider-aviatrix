@@ -364,6 +364,12 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enables Preemptive Mode for Active-Standby, available only with Active-Standby enabled.",
 			},
+			"enable_gateway_load_balancer": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "",
+			},
 			"disable_route_propagation": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -1331,6 +1337,13 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	if d.Get("enable_gateway_load_balancer").(bool) {
+		err := client.EnableSpokeGatewayLoadBalancer(gateway)
+		if err != nil {
+			return fmt.Errorf("failed to enable gateway load balancer for spoke %s: %s", gateway.GwName, err)
+		}
+	}
+
 	return resourceAviatrixSpokeGatewayReadIfRequired(d, meta, &flag)
 }
 
@@ -1395,6 +1408,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("enable_preserve_as_path", gw.EnablePreserveAsPath)
 	d.Set("rx_queue_size", gw.RxQueueSize)
 	d.Set("public_ip", gw.PublicIP)
+	d.Set("enable_gateway_load_balancer", gw.SpokeGatewayLoadBalancer == "yes")
 
 	if gw.EnableLearnedCidrsApproval {
 		spokeAdvancedConfig, err := client.GetSpokeGatewayAdvancedConfig(&goaviatrix.SpokeVpc{GwName: gw.GwName})
@@ -2731,6 +2745,23 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		err := client.SetRxQueueSize(gw)
 		if err != nil {
 			return fmt.Errorf("could not modify rx queue size for spoke: %s during gateway update: %v", gw.GatewayName, err)
+		}
+	}
+
+	if d.HasChange("enable_gateway_load_balancer") {
+		gw := &goaviatrix.SpokeVpc{
+			GwName: d.Get("gw_name").(string),
+		}
+		if d.Get("enable_gateway_load_balancer").(bool) {
+			err := client.EnableSpokeGatewayLoadBalancer(gw)
+			if err != nil {
+				return fmt.Errorf("failed to enable gateway load balancer for spoke %s in update: %s", gateway.GwName, err)
+			}
+		} else {
+			err := client.DisableSpokeGatewayLoadBalancer(gw)
+			if err != nil {
+				return fmt.Errorf("failed to disable gateway load balancer for spoke %s in update: %s", gateway.GwName, err)
+			}
 		}
 	}
 
