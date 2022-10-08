@@ -203,7 +203,7 @@ type Gateway struct {
 	LbVpcId                         string                              `json:"lb_vpc_id,omitempty"`
 	Compress                        bool                                `form:"compress,omitempty"`
 	PrimaryGwName                   string                              `json:"primary_gw_name,omitempty"`
-	SpokeGatewayLoadBalancer        string                              `json:"enable_gwlb,omitempty"`
+	SpokeGatewayLoadBalancer        bool                                `json:"group_gwlb_enabled,omitempty"`
 }
 
 type HaGateway struct {

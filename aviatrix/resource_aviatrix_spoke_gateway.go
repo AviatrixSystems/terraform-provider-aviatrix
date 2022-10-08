@@ -368,7 +368,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "",
+				Description: "Enables Spoke Gateway group load balancer. Valid values: true, false.",
 			},
 			"disable_route_propagation": {
 				Type:        schema.TypeBool,
@@ -1408,7 +1408,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("enable_preserve_as_path", gw.EnablePreserveAsPath)
 	d.Set("rx_queue_size", gw.RxQueueSize)
 	d.Set("public_ip", gw.PublicIP)
-	d.Set("enable_gateway_load_balancer", gw.SpokeGatewayLoadBalancer == "yes")
+	d.Set("enable_gateway_load_balancer", gw.SpokeGatewayLoadBalancer)
 
 	if gw.EnableLearnedCidrsApproval {
 		spokeAdvancedConfig, err := client.GetSpokeGatewayAdvancedConfig(&goaviatrix.SpokeVpc{GwName: gw.GwName})
