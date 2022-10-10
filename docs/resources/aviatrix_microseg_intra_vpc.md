@@ -13,8 +13,8 @@ The **aviatrix_microseg_intra_vpc** resource handles the creation and management
 ## Example Usage
 
 ```hcl
-# Create an Aviatrix Microseg Policy
-resource "aviatrix_microseg_policy_list" "test" {
+# Create an Aviatrix Microseg Intra VPC
+resource "aviatrix_microseg_intra_vpc" "test" {
   vpcs {
     account_name = "azure-account"
     vpc_id       = "azure-vpc-0:rg-av-azure-vpc-0-808200:8168668b-a646-45b9-b88b-d756e60cf130"
