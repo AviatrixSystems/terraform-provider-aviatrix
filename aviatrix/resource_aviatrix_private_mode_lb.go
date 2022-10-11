@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -35,9 +36,12 @@ func resourceAviatrixPrivateModeLb() *schema.Resource {
 				Description: "ID of the VPC for the load balancer.",
 			},
 			"region": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.Split(old, " (")[0] == strings.Split(new, " (")[0]
+				},
 				Description: "Name of the VPC region.",
 			},
 			"lb_type": {
