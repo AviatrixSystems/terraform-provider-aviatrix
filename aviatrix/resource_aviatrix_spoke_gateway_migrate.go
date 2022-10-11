@@ -39,7 +39,7 @@ func resourceAviatrixSpokeGatewayResourceV1() *schema.Resource {
 func resourceAviatrixSpokeGatewayStateUpgradeV1(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	if _, ok := rawState["manage_ha_gateway"]; !ok {
 		rawState["manage_ha_gateway"] = "true"
-		rawState["enable_gateway_load_balancer"] = "false"
+		rawState["enable_vpc_gwlb"] = "false"
 	}
 
 	return rawState, nil
