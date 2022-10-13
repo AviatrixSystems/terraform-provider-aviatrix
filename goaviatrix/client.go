@@ -122,6 +122,29 @@ func (c *Client) Login() error {
 	return nil
 }
 
+func (c *Client) LoginForCloudn() error {
+	account := make(map[string]interface{})
+	account["action"] = "login"
+	account["username"] = c.Username
+	account["password"] = c.Password
+
+	log.Infof("Parsed Aviatrix login: %s", account["username"])
+	resp, err := c.Post(c.baseURL, account)
+	if err != nil {
+		return err
+	}
+	var data LoginResp
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return err
+	}
+	if !data.Return {
+		return errors.New(data.Reason)
+	}
+	log.Tracef("CID is '%s'.", data.CID)
+	c.CID = data.CID
+	return nil
+}
+
 // NewClient creates a Client object using the arguments provided.
 // Arguments:
 //   username - the controller username
@@ -136,6 +159,11 @@ func (c *Client) Login() error {
 func NewClient(username string, password string, controllerIP string, HTTPClient *http.Client, ignoreTagsConfig *IgnoreTagsConfig) (*Client, error) {
 	client := &Client{Username: username, Password: password, HTTPClient: HTTPClient, ControllerIP: controllerIP, IgnoreTagsConfig: ignoreTagsConfig}
 	return client.init(controllerIP)
+}
+
+func NewClientForCloudn(username string, password string, controllerIP string, HTTPClient *http.Client, ignoreTagsConfig *IgnoreTagsConfig) (*Client, error) {
+	client := &Client{Username: username, Password: password, HTTPClient: HTTPClient, ControllerIP: controllerIP, IgnoreTagsConfig: ignoreTagsConfig}
+	return client.initForCloudn(controllerIP)
 }
 
 // init initializes the new client with the given controller IP/host.  Logs
@@ -162,6 +190,29 @@ func (c *Client) init(controllerIP string) (*Client, error) {
 		c.HTTPClient = &http.Client{Transport: tr}
 	}
 	if err := c.Login(); err != nil {
+		return nil, err
+	}
+
+	return c, nil
+}
+
+func (c *Client) initForCloudn(controllerIP string) (*Client, error) {
+	if len(controllerIP) == 0 {
+		return nil, fmt.Errorf("Aviatrix: Client: Controller IP is not set")
+	}
+
+	c.baseURL = "https://" + controllerIP + "/v1/api"
+
+	if c.HTTPClient == nil {
+		tr := &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		}
+		c.HTTPClient = &http.Client{Transport: tr}
+	}
+	if err := c.LoginForCloudn(); err != nil {
 		return nil, err
 	}
 
