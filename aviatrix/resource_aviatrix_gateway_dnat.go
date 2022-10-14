@@ -3,7 +3,6 @@ package aviatrix
 import (
 	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -113,12 +112,6 @@ func resourceAviatrixGatewayDNat() *schema.Resource {
 						},
 					},
 				},
-			},
-			"sync_to_ha": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     true,
-				Description: "Whether to sync the policies to the HA gateway.",
 			},
 			"connection_policy": {
 				Type:        schema.TypeList,
@@ -244,7 +237,6 @@ func resourceAviatrixGatewayDNatCreate(d *schema.ResourceData, meta interface{})
 	gateway := &goaviatrix.Gateway{
 		GatewayName: d.Get("gw_name").(string),
 	}
-	gateway.SyncDNATToHA = strconv.FormatBool(d.Get("sync_to_ha").(bool))
 
 	if _, ok := d.GetOk("dnat_policy"); ok {
 		policies := d.Get("dnat_policy").([]interface{})
@@ -361,7 +353,6 @@ func resourceAviatrixGatewayDNatRead(d *schema.ResourceData, meta interface{}) e
 				log.Printf("[WARN] Error setting 'interface_policy' for (%s): %s", d.Id(), err)
 			}
 
-			d.Set("sync_to_ha", gwDetail.SyncDNATToHA)
 		} else {
 			d.SetId("")
 			return nil
@@ -381,9 +372,7 @@ func resourceAviatrixGatewayDNatUpdate(d *schema.ResourceData, meta interface{})
 		GatewayName: d.Get("gw_name").(string),
 	}
 
-	gateway.SyncDNATToHA = strconv.FormatBool(d.Get("sync_to_ha").(bool))
-
-	if d.HasChange("dnat_policy") || d.HasChange("sync_to_ha") {
+	if d.HasChange("dnat_policy") {
 		if _, ok := d.GetOk("dnat_policy"); ok {
 			policies := d.Get("dnat_policy").([]interface{})
 			for _, policy := range policies {
@@ -419,9 +408,8 @@ func resourceAviatrixGatewayDNatUpdate(d *schema.ResourceData, meta interface{})
 func resourceAviatrixGatewayDNatDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 	gateway := &goaviatrix.Gateway{
-		GatewayName:  d.Get("gw_name").(string),
-		DnatPolicy:   make([]goaviatrix.PolicyRule, 0),
-		SyncDNATToHA: strconv.FormatBool(d.Get("sync_to_ha").(bool)),
+		GatewayName: d.Get("gw_name").(string),
+		DnatPolicy:  make([]goaviatrix.PolicyRule, 0),
 	}
 
 	err := client.UpdateDNat(gateway)
