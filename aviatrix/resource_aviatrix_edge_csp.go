@@ -243,6 +243,27 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 				Computed:    true,
 				Description: "State of Edge as a Spoke.",
 			},
+			"wan_interface_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "eth0",
+				ForceNew:    true,
+				Description: "WAN interface name.",
+			},
+			"lan_interface_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "eth1",
+				ForceNew:    true,
+				Description: "LAN interface name.",
+			},
+			"management_interface_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "eth2",
+				ForceNew:    true,
+				Description: "Management interface name.",
+			},
 		},
 	}
 }
@@ -281,6 +302,9 @@ func marshalEdgeCSPInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 		Longitude:                          d.Get("longitude").(string),
 		WanPublicIp:                        d.Get("wan_public_ip").(string),
 		RxQueueSize:                        d.Get("rx_queue_size").(string),
+		WanInterface:                       d.Get("wan_interface_name").(string),
+		LanInterface:                       d.Get("lan_interface_name").(string),
+		MgmtInterface:                      d.Get("management_interface_name").(string),
 	}
 
 	return edgeCSP
@@ -547,6 +571,9 @@ func resourceAviatrixEdgeCSPRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("wan_public_ip", edgeCSPResp.WanPublicIp)
 	d.Set("rx_queue_size", edgeCSPResp.RxQueueSize)
 	d.Set("state", edgeCSPResp.State)
+	d.Set("wan_interface_name", edgeCSPResp.WanInterface)
+	d.Set("lan_interface_name", edgeCSPResp.LanInterface)
+	d.Set("management_interface_name", edgeCSPResp.MgmtInterface)
 
 	d.SetId(edgeCSPResp.GwName)
 	return nil
