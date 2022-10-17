@@ -76,6 +76,9 @@ The following arguments are supported:
 * `management_default_gateway_ip` - (Optional) Management default gateway IP. Required and valid when `management_interface_config` is "Static".
 * `dns_server_ip` - (Optional) DNS server IP. Required and valid when `management_interface_config` is "Static".
 * `secondary_dns_server_ip` - (Optional) Secondary DNS server IP. Required and valid when `management_interface_config` is "Static".
+* `wan_interface_name` - (Optional) WAN interface name. Default value: "eth0".
+* `lan_interface_name` - (Optional) LAN interface name. Default value: "eth1".
+* `management_interface_name` - (Optional) Management interface name. Default value: "eth2".
 
 ### Advanced Options
 * `local_as_number` - (Optional) BGP AS Number to assign to Edge CSP.

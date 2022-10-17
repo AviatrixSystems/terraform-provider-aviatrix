@@ -48,6 +48,9 @@ type EdgeCSP struct {
 	RxQueueSize                        string  `json:"rx_queue_size"`
 	State                              string  `json:"vpc_state"`
 	NoProgressBar                      bool    `json:"no_progress_bar,omitempty"`
+	WanInterface                       string  `json:"wan_ifname"`
+	LanInterface                       string  `json:"lan_ifname"`
+	MgmtInterface                      string  `json:"mgmt_ifname"`
 }
 
 type EdgeCSPResp struct {
@@ -91,6 +94,9 @@ type EdgeCSPResp struct {
 	PrivateIP                          string  `json:"private_ip"`
 	RxQueueSize                        string  `json:"rx_queue_size"`
 	State                              string  `json:"vpc_state"`
+	WanInterface                       string  `json:"edge_csp_wan_ifname"`
+	LanInterface                       string  `json:"edge_csp_lan_ifname"`
+	MgmtInterface                      string  `json:"edge_csp_mgmt_ifname"`
 }
 
 type EdgeCSPListResp struct {
