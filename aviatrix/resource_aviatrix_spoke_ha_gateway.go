@@ -29,12 +29,6 @@ func resourceAviatrixSpokeHaGateway() *schema.Resource {
 				Description:  "Type of cloud service provider.",
 				ValidateFunc: validateCloudType,
 			},
-			"account_name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "This parameter represents the name of a Cloud-Account in Aviatrix controller.",
-			},
 			"primary_gw_name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -43,13 +37,15 @@ func resourceAviatrixSpokeHaGateway() *schema.Resource {
 			},
 			"gw_name": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				ForceNew:    true,
 				Description: "Name of the HA gateway which is going to be created.",
 			},
 			"gw_size": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Size of the gateway instance.",
 			},
 			"subnet": {
@@ -102,20 +98,20 @@ func resourceAviatrixSpokeHaGateway() *schema.Resource {
 				ValidateFunc: validation.IsIPAddress,
 				Description:  "If set, the specified EIP is used for this gateway.",
 			},
+			"account_name": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "This parameter represents the name of a Cloud-Account in Aviatrix controller.",
+			},
 			"software_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				Description: "software_version can be used to set the desired software version of the gateway. " +
-					"If set, we will attempt to update the gateway to the specified version. " +
-					"If left blank, the gateway software version will continue to be managed through the aviatrix_controller_config resource.",
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Software version of the gateway.",
 			},
 			"image_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				Description: "image_version can be used to set the desired image version of the gateway. " +
-					"If set, we will attempt to update the gateway to the specified version.",
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Image version of the gateway.",
 			},
 			"vpc_reg": {
 				Type:        schema.TypeString,
@@ -151,7 +147,6 @@ func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta interface
 
 	gateway := &goaviatrix.SpokeHaGateway{
 		CloudType:          d.Get("cloud_type").(int),
-		AccountName:        d.Get("account_name").(string),
 		PrimaryGwName:      d.Get("primary_gw_name").(string),
 		GwName:             d.Get("gw_name").(string),
 		GwSize:             d.Get("gw_size").(string),
@@ -160,6 +155,10 @@ func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta interface
 		AvailabilityDomain: d.Get("availability_domain").(string),
 		FaultDomain:        d.Get("fault_domain").(string),
 		Eip:                d.Get("eip").(string),
+	}
+
+	if gateway.GwName == "" {
+		gateway.AutoGenHaGwName = "yes"
 	}
 
 	if d.Get("insane_mode").(bool) {
@@ -209,24 +208,13 @@ func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	d.SetId(gateway.GwName)
-	flag := false
-	defer resourceAviatrixSpokeHaGatewayReadIfRequired(d, meta, &flag)
-
-	err := client.CreateSpokeHaGw(gateway)
+	spokeHaGwName, err := client.CreateSpokeHaGw(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to create Aviatrix Spoke HA Gateway: %s", err)
 	}
 
-	return resourceAviatrixSpokeHaGatewayReadIfRequired(d, meta, &flag)
-}
-
-func resourceAviatrixSpokeHaGatewayReadIfRequired(d *schema.ResourceData, meta interface{}, flag *bool) error {
-	if !(*flag) {
-		*flag = true
-		return resourceAviatrixSpokeHaGatewayRead(d, meta)
-	}
-	return nil
+	d.SetId(spokeHaGwName)
+	return resourceAviatrixSpokeHaGatewayRead(d, meta)
 }
 
 func resourceAviatrixSpokeHaGatewayRead(d *schema.ResourceData, meta interface{}) error {
@@ -257,11 +245,11 @@ func resourceAviatrixSpokeHaGatewayRead(d *schema.ResourceData, meta interface{}
 	log.Printf("[TRACE] reading spoke gateway %s: %#v", d.Get("gw_name").(string), gw)
 
 	d.Set("cloud_type", gw.CloudType)
-	d.Set("account_name", gw.AccountName)
 	d.Set("primary_gw_name", gw.PrimaryGwName)
 	d.Set("eip", gw.PublicIP)
 	d.Set("subnet", gw.VpcNet)
 	d.Set("gw_size", gw.GwSize)
+	d.Set("account_name", gw.AccountName)
 	d.Set("cloud_instance_id", gw.CloudnGatewayInstID)
 	d.Set("security_group_id", gw.GwSecurityGroupID)
 	d.Set("private_ip", gw.PrivateIP)

@@ -45,7 +45,6 @@ func TestAccAviatrixSpokeHaGateway_basic(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "gw_name", fmt.Sprintf("tfg-aws-%s-hagw", rName)),
 						resource.TestCheckResourceAttr(resourceName, "gw_size", awsGwSize),
 						resource.TestCheckResourceAttr(resourceName, "account_name", fmt.Sprintf("tfa-aws-%s", rName)),
-						resource.TestCheckResourceAttr(resourceName, "subnet", os.Getenv("AWS_SUBNET4")),
 					),
 				},
 			},
@@ -86,14 +85,13 @@ resource "aviatrix_spoke_gateway" "test" {
 }
 resource "aviatrix_spoke_ha_gateway" "test" {
 	cloud_type      = 1
-	account_name    = aviatrix_vpc.test.account_name
 	primary_gw_name = aviatrix_spoke_gateway.test.gw_name
 	gw_name         = "tfg-aws-%[1]s-hagw"
 	gw_size         = "%[6]s"
 	subnet          = aviatrix_vpc.test.public_subnets[1].cidr
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_SUBNET4"))
+		os.Getenv("AWS_REGION"), awsGwSize, os.Getenv("AWS_SUBNET"))
 }
 
 func testAccCheckSpokeHaGatewayExists(n string, gateway *goaviatrix.Gateway) resource.TestCheckFunc {
