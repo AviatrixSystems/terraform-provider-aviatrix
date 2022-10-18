@@ -23,11 +23,19 @@ type SpokeHaGateway struct {
 	InsaneMode            string `json:"insane_mode"`
 	TagList               string `json:"tag_string"`
 	TagJson               string `json:"tag_json"`
+	AutoGenHaGwName       string `json:"autogen_hagw_name"`
 }
 
-func (c *Client) CreateSpokeHaGw(spokeHaGateway *SpokeHaGateway) error {
+type APIRespHaGw struct {
+	Return   bool   `json:"return"`
+	Results  string `json:"results"`
+	Reason   string `json:"reason"`
+	HaGwName string `json:"ha_gw_name"`
+}
+
+func (c *Client) CreateSpokeHaGw(spokeHaGateway *SpokeHaGateway) (string, error) {
 	spokeHaGateway.CID = c.CID
 	spokeHaGateway.Action = "create_multicloud_ha_gateway"
 
-	return c.PostAPIContext2(context.Background(), nil, spokeHaGateway.Action, spokeHaGateway, BasicCheck)
+	return c.PostAPIContext2HaGw(context.Background(), nil, spokeHaGateway.Action, spokeHaGateway, BasicCheck)
 }
