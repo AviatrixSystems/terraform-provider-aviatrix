@@ -300,6 +300,7 @@ func resourceAviatrixSpokeHaGatewayUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("gw_size") {
 		gateway.GwName = d.Get("gw_name").(string)
+		gateway.GwSize = d.Get("gw_size").(string)
 		err := client.UpdateGateway(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to update Aviatrix Spoke HA Gateway %s: %s", gateway.GwName, err)
@@ -308,7 +309,7 @@ func resourceAviatrixSpokeHaGatewayUpdate(d *schema.ResourceData, meta interface
 
 	d.Partial(false)
 	d.SetId(gateway.GwName)
-	return resourceAviatrixSpokeGatewayRead(d, meta)
+	return resourceAviatrixSpokeHaGatewayRead(d, meta)
 }
 
 func resourceAviatrixSpokeHaGatewayDelete(d *schema.ResourceData, meta interface{}) error {
