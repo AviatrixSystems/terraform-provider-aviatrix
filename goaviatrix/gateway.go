@@ -142,8 +142,6 @@ type Gateway struct {
 	LearnedCidrsApproval            string   `json:"learned_cidrs_approval,omitempty"`
 	Dns                             string   `json:"dns,omitempty"`
 	EncVolume                       string   `form:"enc_volume,omitempty"`
-	SyncSNATToHA                    string   `form:"sync_snat_to_ha,omitempty"`
-	SyncDNATToHA                    string   `form:"sync_dnat_to_ha,omitempty"`
 	MonitorSubnetsAction            string   `form:"monitor_subnets_action,omitempty" json:"monitor_subnets_action,omitempty"`
 	MonitorExcludeGWList            []string `form:"monitor_exclude_gw_list,omitempty" json:"monitor_exclude_gw_list,omitempty"`
 	FqdnLanCidr                     string   `form:"fqdn_lan_cidr,omitempty"`
@@ -259,8 +257,6 @@ type GatewayDetail struct {
 	EnabledGatewayLoadBalancer   bool          `json:"gwlb_enabled,omitempty"`
 	EnableTransitFireNet         bool          `json:"transit_firenet_enabled,omitempty"`
 	LearnedCidrsApproval         string        `json:"learned_cidrs_approval,omitempty"`
-	SyncSNATToHA                 bool          `json:"sync_snat_to_ha,omitempty"`
-	SyncDNATToHA                 bool          `json:"sync_dnat_to_ha,omitempty"`
 	GwZone                       string        `json:"gw_zone,omitempty"`
 	TransitGwName                string        `json:"transit_gw_name,omitempty"`
 	EgressTransitGwName          string        `json:"egress_transit_gw_name,omitempty"`
