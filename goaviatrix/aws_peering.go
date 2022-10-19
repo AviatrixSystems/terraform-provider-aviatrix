@@ -31,6 +31,28 @@ type AwsPeerAPIResp struct {
 	Results map[string]string `json:"results"`
 }
 
+type AwsPeerGetAPIResp struct {
+	Return  bool     `json:"return"`
+	Reason  string   `json:"reason"`
+	Results PairList `json:"results"`
+}
+
+type PairList struct {
+	PairLists []AWSPeerEdit `json:"pair_list,omitempty"`
+}
+
+type AWSPeerEdit struct {
+	AWSVpc1 AwsVpcInfo `json:"requester,omitempty"`
+	AWSVpc2 AwsVpcInfo `json:"accepter,omitempty"`
+}
+
+type AwsVpcInfo struct {
+	AccountName   string   `json:"account_name,omitempty"`
+	VpcID         string   `json:"vpc_id,omitempty"`
+	Region        string   `json:"region,omitempty"`
+	RoutingTables []string `json:"peering_route_tables,omitempty"`
+}
+
 func (c *Client) CreateAWSPeer(awsPeer *AWSPeer) (string, error) {
 	awsPeer.CID = c.CID
 	awsPeer.Action = "create_aws_peering"
@@ -68,10 +90,7 @@ func (c *Client) GetAWSPeer(awsPeer *AWSPeer) (*AWSPeer, error) {
 		return nil, errors.New("HTTP Get list_aws_peerings failed: " + err.Error())
 	}
 
-	//Output result for this query cannot be unmarshalled
-	//easily into our defined struct AWSPeer.
-	//So using a map of string->interface{}
-	var data map[string]interface{}
+	var data AwsPeerGetAPIResp
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
 	bodyString := buf.String()
@@ -79,27 +98,19 @@ func (c *Client) GetAWSPeer(awsPeer *AWSPeer) (*AWSPeer, error) {
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
 		return nil, errors.New("Json Decode list_aws_peerings failed: " + err.Error() + "\n Body: " + bodyString)
 	}
-	if !data["return"].(bool) {
-		reason := data["reason"].(string)
-		log.Errorf("Couldn't find AWS peering between VPCs %s and %s: %s", awsPeer.VpcID1, awsPeer.VpcID2, reason)
-		return nil, errors.New("Rest API list_aws_peerings Get failed: " + reason)
+	if !data.Return {
+		log.Errorf("Couldn't find AWS peering between VPCs %s and %s: %s", awsPeer.VpcID1, awsPeer.VpcID2, data.Reason)
+		return nil, errors.New("Rest API list_aws_peerings Get failed: " + data.Reason)
 	}
-	if val, ok := data["results"]; ok {
-		if pairList, ok1 := val.(map[string]interface{})["pair_list"].([]interface{}); ok1 {
-			for i := range pairList {
-				if pairList[i].(map[string]interface{})["requester"].(map[string]interface{})["vpc_id"].(string) == awsPeer.VpcID1 &&
-					pairList[i].(map[string]interface{})["accepter"].(map[string]interface{})["vpc_id"].(string) == awsPeer.VpcID2 {
-					awsPeer := &AWSPeer{
-						VpcID1:       pairList[i].(map[string]interface{})["requester"].(map[string]interface{})["vpc_id"].(string),
-						VpcID2:       pairList[i].(map[string]interface{})["accepter"].(map[string]interface{})["vpc_id"].(string),
-						AccountName1: pairList[i].(map[string]interface{})["requester"].(map[string]interface{})["account_name"].(string),
-						AccountName2: pairList[i].(map[string]interface{})["accepter"].(map[string]interface{})["account_name"].(string),
-						Region1:      pairList[i].(map[string]interface{})["requester"].(map[string]interface{})["region"].(string),
-						Region2:      pairList[i].(map[string]interface{})["accepter"].(map[string]interface{})["region"].(string),
-					}
-					return awsPeer, nil
-				}
-			}
+	for i := range data.Results.PairLists {
+		if data.Results.PairLists[i].AWSVpc1.VpcID == awsPeer.VpcID1 && data.Results.PairLists[i].AWSVpc2.VpcID == awsPeer.VpcID2 {
+			awsPeer.AccountName1 = data.Results.PairLists[i].AWSVpc1.AccountName
+			awsPeer.AccountName2 = data.Results.PairLists[i].AWSVpc2.AccountName
+			awsPeer.Region1 = data.Results.PairLists[i].AWSVpc1.Region
+			awsPeer.Region2 = data.Results.PairLists[i].AWSVpc2.Region
+			awsPeer.RtbList1 = strings.Join(data.Results.PairLists[i].AWSVpc1.RoutingTables, ",")
+			awsPeer.RtbList2 = strings.Join(data.Results.PairLists[i].AWSVpc2.RoutingTables, ",")
+			return awsPeer, nil
 		}
 	}
 	log.Errorf("No AWS peering between VPC %s and %s is present.", awsPeer.VpcID1, awsPeer.VpcID2)

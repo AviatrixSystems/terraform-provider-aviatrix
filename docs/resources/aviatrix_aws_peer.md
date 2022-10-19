@@ -35,21 +35,14 @@ resource "aviatrix_aws_peer" "test_awspeer" {
 The following arguments are supported:
 
 ### Required
-* `account_name1` - (Required) This parameter represents the name of an AWS Cloud-Account in Aviatrix controller.
-* `account_name2` - (Required) This parameter represents the name of an AWS Cloud-Account in Aviatrix controller.
-* `vpc_id1` - (Required) VPC ID of AWS cloud. Example: AWS: "vpc-abcd1234".
-* `vpc_id2` - (Required) VPC ID of AWS cloud. Example: AWS: "vpc-abcd1234".
-* `vpc_reg1` - (Required) Region of AWS cloud. Example: AWS: "us-east-1".
-* `vpc_reg2` - (Required) Region of AWS cloud. Example: AWS: "us-east-1".
-* `rtb_list1` - (Optional) List of Route table ID. Valid Values: ["all"], ["rtb-abcd1234"] OR ["rtb-abcd1234,rtb-wxyz5678"].
-* `rtb_list2` - (Optional) List of Route table ID. Valid Values: ["all"], ["rtb-abcd1234"] OR ["rtb-abcd1234,rtb-wxyz5678"].
-
-## Attribute Reference
-
-In addition to all arguments above, the following attributes are exported:
-
-* `rtb_list1_output` - List of route table ID of vpc_id1.
-* `rtb_list2_output` - List of route table ID of vpc_id2.
+* `account_name1` - (Required) Account name of AWS VPC1.
+* `account_name2` - (Required) Account name of AWS VPC2.
+* `vpc_id1` - (Required) VPC ID of AWS VPC1. Example: AWS: "vpc-abcd1234".
+* `vpc_id2` - (Required) VPC ID of AWS VPC2. Example: AWS: "vpc-abcd1234".
+* `vpc_reg1` - (Required) Region of AWS VPC1. Example: AWS: "us-east-1".
+* `vpc_reg2` - (Required) Region of AWS VPC2. Example: AWS: "us-east-1".
+* `rtb_list1` - (Optional) List of Route table IDs of VPC1. Example: ["rtb-abcd1234", "rtb-wxyz5678"].
+* `rtb_list2` - (Optional) List of Route table IDs of VPC2. Example: ["rtb-abcd1234", "rtb-wxyz5678"].
 
 ## Import
 
