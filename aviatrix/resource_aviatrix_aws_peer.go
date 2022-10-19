@@ -59,27 +59,17 @@ func resourceAviatrixAWSPeer() *schema.Resource {
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    true,
-				Description: "List of Route table ID.",
+				Description: "List of Route table IDs of VPC1.",
 			},
 			"rtb_list2": {
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    true,
-				Description: "List of Route table ID.",
-			},
-			"rtb_list1_output": {
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Computed:    true,
-				Description: "List of route table ID of vpc_id1.",
-			},
-			"rtb_list2_output": {
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Computed:    true,
-				Description: "List of route table ID of vpc_id2.",
+				Description: "List of Route table IDs of VPC2.",
 			},
 		},
 	}
@@ -162,12 +152,14 @@ func resourceAviatrixAWSPeerRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("account_name2", ap.AccountName2)
 		d.Set("vpc_reg1", ap.Region1)
 		d.Set("vpc_reg2", ap.Region2)
+		log.Printf("zjin00: ap.RtbList1 is %v", ap.RtbList1)
+		log.Printf("zjin01: ap.RtbList1 is %v", strings.Split(ap.RtbList1, ","))
 
-		if err := d.Set("rtb_list1_output", strings.Split(ap.RtbList1, ",")); err != nil {
-			log.Printf("[WARN] Error setting rtb_list1_output for (%s): %s", d.Id(), err)
+		if err := d.Set("rtb_list1", strings.Split(ap.RtbList1, ",")); err != nil {
+			log.Printf("[WARN] Error setting rtb_list1 for (%s): %s", d.Id(), err)
 		}
-		if err := d.Set("rtb_list2_output", strings.Split(ap.RtbList2, ",")); err != nil {
-			log.Printf("[WARN] Error setting rtb_list2_output for (%s): %s", d.Id(), err)
+		if err := d.Set("rtb_list2", strings.Split(ap.RtbList2, ",")); err != nil {
+			log.Printf("[WARN] Error setting rtb_list2 for (%s): %s", d.Id(), err)
 		}
 	}
 
