@@ -84,7 +84,6 @@ resource "aviatrix_spoke_gateway" "test" {
 	manage_ha_gateway = false
 }
 resource "aviatrix_spoke_ha_gateway" "test" {
-	cloud_type      = 1
 	primary_gw_name = aviatrix_spoke_gateway.test.gw_name
 	gw_name         = "tfg-aws-%[1]s-hagw"
 	gw_size         = "%[6]s"

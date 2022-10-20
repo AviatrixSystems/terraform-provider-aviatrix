@@ -60,7 +60,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_oracle" {
 The following arguments are supported:
 
 ### Required
-* `cloud_type` - (Required) Type of cloud service provider, requires an integer value. Currently, only AWS(1), GCP(4), Azure(8), OCI(16), AzureGov(32), AWSGov(256), AWSChina(1024), AzureChina(2048), Alibaba Cloud(8192), AWS Top Secret(16384) and AWS Secret (32768) are supported.
 * `primary_gw_name` - (Required) Name of the primary gateway which is already or will be created before this Spoke HA Gateway.
 * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode).**
 * `zone` - (Optional) Availability Zone. Required for GCP gateway. Example: "us-west1-c".
@@ -80,6 +79,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `cloud_type` - Type of cloud service provider.
 * `account_name` - Name of a Cloud-Account in Aviatrix controller.
 * `software_version` - Software version of the gateway.
 * `image_version` - Image version of the gateway.
