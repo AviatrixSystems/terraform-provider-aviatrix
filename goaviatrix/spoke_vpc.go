@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	"golang.org/x/net/context"
 )
 
 // Spoke gateway simple struct to hold spoke details
@@ -476,24 +474,4 @@ func (c *Client) DisableSpokePreserveAsPath(spokeGateway *SpokeVpc) error {
 		"gateway_name": spokeGateway.GwName,
 	}
 	return c.PostAPI(action, data, BasicCheck)
-}
-
-func (c *Client) EnableSpokeGatewayLoadBalancer(spokeGateway *SpokeVpc) error {
-	form := map[string]interface{}{
-		"CID":          c.CID,
-		"action":       "enable_spoke_gateway_loadbalancer",
-		"gateway_name": spokeGateway.GwName,
-	}
-
-	return c.PostAPIContext2(context.Background(), nil, form["action"].(string), form, BasicCheck)
-}
-
-func (c *Client) DisableSpokeGatewayLoadBalancer(spokeGateway *SpokeVpc) error {
-	form := map[string]interface{}{
-		"CID":          c.CID,
-		"action":       "disable_spoke_gateway_loadbalancer",
-		"gateway_name": spokeGateway.GwName,
-	}
-
-	return c.PostAPIContext2(context.Background(), nil, form["action"].(string), form, BasicCheck)
 }
