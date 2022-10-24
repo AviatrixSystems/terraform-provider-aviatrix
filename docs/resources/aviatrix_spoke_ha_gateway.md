@@ -15,16 +15,14 @@ The **aviatrix_spoke_ha_gateway** resource allows the creation and management of
 ```hcl
 # Create an Aviatrix AWS Spoke HA Gateway
 resource "aviatrix_spoke_ha_gateway" "test_spoke_ha_aws" {
-  cloud_type      = 1
-  primary_gw_name = "spoke-gw-aws"
+  primary_gw_name = aviatrix_spoke_gateway.primary_spoke.id
   subnet          = "10.11.0.0/24"
 }
 ```
 ```hcl
 # Create an Aviatrix GCP Spoke HA Gateway
 resource "aviatrix_spoke_ha_gateway" "test_spoke_ha_gcp" {
-  cloud_type      = 4
-  primary_gw_name = "spoke-gw-gcp"
+  primary_gw_name = aviatrix_spoke_gateway.primary_spoke.id
   gw_name         = "spoke-gw-gcp-ha"
   zone            = "us-west1-b"
   gw_size         = "n1-standard-1"
@@ -34,18 +32,16 @@ resource "aviatrix_spoke_ha_gateway" "test_spoke_ha_gcp" {
 ```hcl
 # Create an Aviatrix Azure Spoke HA Gateway
 resource "aviatrix_spoke_ha_gateway" "test_spoke_ha_azure" {
-  cloud_type      = 8
-  primary_gw_name = "spoke-gw-azure"
+  primary_gw_name = aviatrix_spoke_gateway.primary_spoke.id
   gw_name         = "spoke-gw-azure-ha"
   gw_size         = "Standard_B1ms"
   subnet          = "10.13.0.0/24"
 }
 ```
 ```hcl
-# Create an Aviatrix OCI Spoke Gateway
+# Create an Aviatrix OCI Spoke HA Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_oracle" {
-  cloud_type          = 16
-  primary_gw_name     = "spoke-gw-oci"
+  primary_gw_name     = aviatrix_spoke_gateway.primary_spoke.id
   gw_name             = "spoke-gw-oci-ha"
   gw_size             = "VM.Standard2.2"
   subnet              = "10.7.0.0/16"
@@ -73,7 +69,7 @@ The following arguments are supported:
 ### Misc.
 * `gw_name` - (Optional) Name of the Spoke HA Gateway which is going to be created. If not set, controller will auto generate a name for this gateway.
 * `gw_size` - (Optional) Size of the Spoke HA Gateway instance. If not set, controller will use the same value as primary gateway's. Example: AWS/AWSGov/AWSChina: "t2.large", Azure/AzureGov/AzureChina: "Standard_B1s", OCI: "VM.Standard2.2", GCP: "n1-standard-1".
-* `eip` - (Optional) Required when `allocate_new_eip` is false. It uses the specified EIP for this gateway. Available in Controller 4.7+. Only available for AWS, GCP, Azure, OCI, AzureGov, AWSGov, AWSChina, AzureChina, AWS Top Secret and AWS Secret.
+* `eip` - (Optional) If set, the set IP will be used for this gateway.
 
 ## Attribute Reference
 
