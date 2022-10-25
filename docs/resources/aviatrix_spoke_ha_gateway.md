@@ -58,7 +58,7 @@ The following arguments are supported:
 ### Required
 * `primary_gw_name` - (Required) Name of the primary gateway which is already or will be created before this Spoke HA Gateway.
 * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges. Example: "172.31.0.0/20". **NOTE: If using `insane_mode`, please see notes [here](#insane_mode).**
-* `zone` - (Optional) Availability Zone. Required for GCP gateway. Example: "us-west1-c".
+* `zone` - (Optional) Availability Zone. Required for GCP gateway, example: "us-west1-c". Optional for Azure gateway in the form "az-n", example: "az-2".
 * `availability_domain` - (Optional) Availability domain. Required and valid only for OCI.
 * `fault_domain` - (Optional) Fault domain. Required and valid only for OCI.
 
