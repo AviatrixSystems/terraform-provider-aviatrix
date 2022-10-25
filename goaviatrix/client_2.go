@@ -40,6 +40,24 @@ func checkAndReturnAPIResp2(resp *http.Response, v interface{}, method, action s
 	return nil
 }
 
+// PostAPI2 makes a post request to V2 API, decodes the response and checks for any errors
+// form data, no context
+func (c *Client) PostAPI2(action string, d interface{}, checkFunc CheckAPIResponseFunc) error {
+	return c.PostAPIContext2Form(context.Background(), action, d, checkFunc)
+}
+
+// PostAPIContext2Form makes a post request to V2 API, decodes the response and checks for any errors
+// form data
+func (c *Client) PostAPIContext2Form(ctx context.Context, action string, d interface{}, checkFunc CheckAPIResponseFunc) error {
+	url := c.baseURL[:len(c.baseURL)-5]
+	url += "2/api"
+	resp, err := c.PostContext(ctx, url, d)
+	if err != nil {
+		return fmt.Errorf("HTTP POST %q failed: %v", action, err)
+	}
+	return checkAPIResp(resp, action, checkFunc)
+}
+
 // PostAPIContext2 makes a post request to the Aviatrix v2 API, checks for any errors and decodes the response into the
 // return value v if it is not nil.
 func (c *Client) PostAPIContext2(ctx context.Context, v interface{}, action string, d interface{}, checkFunc CheckAPIResponseFunc) error {

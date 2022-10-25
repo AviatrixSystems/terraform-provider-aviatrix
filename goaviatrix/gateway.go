@@ -629,7 +629,7 @@ func (c *Client) UpdateDNat(gateway *Gateway) error {
 	gateway.PolicyList = string(args)
 	gateway.Compress = true
 
-	return c.PostAPI(gateway.Action, gateway, BasicCheck)
+	return c.PostAPI2(gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) UpdateVpnCidr(gateway *Gateway) error {
