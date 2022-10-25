@@ -52,7 +52,7 @@ func resourceAviatrixSpokeHaGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Availability Zone. Required for cloud_type = 4 (GCP).",
+				Description: "Availability Zone. Required for GCP gateway, example: 'us-west1-c'. Optional for Azure gateway in the form 'az-n', example: 'az-2'.",
 			},
 			"insane_mode": {
 				Type:     schema.TypeBool,
@@ -172,9 +172,18 @@ func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta interface
 		gateway.InsaneMode = "no"
 	}
 
-	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		if gateway.Zone != "" || gateway.AvailabilityDomain != "" || gateway.FaultDomain != "" {
-			return fmt.Errorf("'zone', 'availability_domain' and 'fault_domain' are required to be empty for creating an AWS/Azure spoke ha gateway")
+			return fmt.Errorf("'zone', 'availability_domain' and 'fault_domain' are required to be empty for creating an AWS related cloud type spoke ha gateway")
+		}
+	}
+
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+		if gateway.AvailabilityDomain != "" || gateway.FaultDomain != "" {
+			return fmt.Errorf("'availability_domain' and 'fault_domain' are required to be empty for creating an Azure related cloud type spoke ha gateway")
+		}
+		if gateway.Zone != "" {
+			gateway.Subnet = fmt.Sprintf("%s~~%s", gateway.Subnet, gateway.Zone)
 		}
 	}
 
@@ -183,16 +192,16 @@ func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("'zone' is required for creating an GCP spoke ha gateway")
 		}
 		if gateway.AvailabilityDomain != "" || gateway.FaultDomain != "" {
-			return fmt.Errorf("'availability_domain' and 'fault_domain' are required to be empty for creating an GCP spoke ha gateway")
+			return fmt.Errorf("'availability_domain' and 'fault_domain' are required to be empty for creating an GCP related cloud type spoke ha gateway")
 		}
 	}
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
 		if gateway.AvailabilityDomain == "" || gateway.FaultDomain == "" {
-			return fmt.Errorf("'availability_domain' and 'fault_domain' are required for creating an OCI spoke ha gateway")
+			return fmt.Errorf("'availability_domain' and 'fault_domain' are required for creating an OCI related cloud type spoke ha gateway")
 		}
 		if gateway.Zone != "" {
-			return fmt.Errorf("'zone' is required to be empty for creating an OCI spoke ha gateway")
+			return fmt.Errorf("'zone' is required to be empty for creating an OCI related cloud type spoke ha gateway")
 		}
 	}
 
@@ -225,8 +234,10 @@ func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta interface
 func resourceAviatrixSpokeHaGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
+	var isImport bool
 	gwName := d.Get("gw_name").(string)
 	if gwName == "" {
+		isImport = true
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
 		d.Set("gw_name", id)
@@ -268,6 +279,10 @@ func resourceAviatrixSpokeHaGatewayRead(d *schema.ResourceData, meta interface{}
 		d.Set("zone", gw.GatewayZone)
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 		d.Set("vpc_reg", gw.VpcRegion)
+		_, zoneIsSet := d.GetOk("zone")
+		if (isImport || zoneIsSet) && gw.GatewayZone != "AvailabilitySet" {
+			d.Set("zone", "az-"+gw.GatewayZone)
+		}
 	} else if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
 		d.Set("vpc_reg", gw.VpcRegion)
 	} else if gw.CloudType == goaviatrix.AliCloud {
