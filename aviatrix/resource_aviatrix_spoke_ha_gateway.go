@@ -183,7 +183,7 @@ func resourceAviatrixSpokeHaGatewayCreate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("'availability_domain' and 'fault_domain' are required to be empty for creating an Azure related cloud type spoke ha gateway")
 		}
 		if gateway.Zone != "" {
-			gateway.Subnet = fmt.Sprintf("%s~~%s", gateway.Subnet, gateway.Zone)
+			gateway.Subnet = fmt.Sprintf("%s~~%s~~", gateway.Subnet, gateway.Zone)
 		}
 	}
 
