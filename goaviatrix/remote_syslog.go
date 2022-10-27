@@ -1,8 +1,15 @@
 package goaviatrix
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
 	"log"
+	"net/http"
 	"strconv"
+	"strings"
+	"time"
 )
 
 type RemoteSyslog struct {
@@ -19,16 +26,39 @@ type RemoteSyslog struct {
 	ExcludeGatewayInput string `form:"exclude_gateway_list,omitempty"`
 }
 
+type PortWrapper string
+
+func (w *PortWrapper) UnmarshalJSON(data []byte) (err error) {
+	if port, err := strconv.Atoi(string(data)); err == nil {
+		str := strconv.Itoa(port)
+		*w = PortWrapper(str)
+		return nil
+	}
+	var str string
+	err = myUnmarshal(data, &str)
+	if err != nil {
+		return err
+	}
+	return myUnmarshal([]byte(str), w)
+}
+
+func myUnmarshal(input []byte, target interface{}) error {
+	if len(input) == 0 {
+		return nil
+	}
+	return json.Unmarshal(input, target)
+}
+
 type RemoteSyslogResp struct {
-	Server           string   `json:"server"`
-	Port             string   `json:"port"`
-	Protocol         string   `json:"protocol"`
-	Index            string   `json:"index"`
-	Name             string   `json:"name"`
-	Template         string   `json:"template"`
-	ExcludedGateways []string `json:"excluded_gateway"`
-	Status           string   `json:"status"`
-	Notls            bool     `json:"notls"`
+	Server           string      `json:"server"`
+	Port             PortWrapper `json:"port"`
+	Protocol         string      `json:"protocol"`
+	Index            string      `json:"index"`
+	Name             string      `json:"name"`
+	Template         string      `json:"template"`
+	ExcludedGateways []string    `json:"excluded_gateway"`
+	Status           string      `json:"status"`
+	Notls            bool        `json:"notls"`
 }
 
 func (c *Client) EnableRemoteSyslog(r *RemoteSyslog) error {
@@ -94,7 +124,7 @@ func (c *Client) GetRemoteSyslogStatus(idx int) (*RemoteSyslogResp, error) {
 
 	var data Resp
 
-	err := c.GetAPI(&data, params["action"], params, BasicCheck)
+	err := c.GetAPIRemoteSyslog(&data, params["action"], params, BasicCheck)
 	if err != nil {
 		return nil, err
 	}
@@ -116,4 +146,46 @@ func (c *Client) DisableRemoteSyslog(idx int) error {
 	log.Printf("[INFO] Deleting remote syslog index %d", idx)
 
 	return c.PostAPI(params["action"], params, BasicCheck)
+}
+
+func (c *Client) GetAPIRemoteSyslog(v interface{}, action string, d map[string]string, checkFunc CheckAPIResponseFunc) error {
+	Url, err := c.urlEncode(d)
+	if err != nil {
+		return fmt.Errorf("could not url encode values for action %q: %v", action, err)
+	}
+
+	try, maxTries, backoff := 0, 5, 500*time.Millisecond
+	var resp *http.Response
+	for {
+		try++
+		resp, err = c.GetContext(context.Background(), Url, nil)
+		if err == nil {
+			break
+		}
+
+		if try == maxTries {
+			return fmt.Errorf("HTTP Get %s failed: %v", action, err)
+		}
+		time.Sleep(backoff)
+		// Double the backoff time after each failed try
+		backoff *= 2
+	}
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	bodyString := buf.String()
+	var data APIResp
+	if err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&data); err != nil {
+		return fmt.Errorf("Json Decode into standard format failed: %v\n Body: %s", err, bodyString)
+	}
+	if err := checkFunc(action, "Get", data.Reason, data.Return); err != nil {
+		return err
+	}
+
+	err = myUnmarshal(buf.Bytes(), &v)
+	if err != nil {
+		return fmt.Errorf("json unmarshal failed: %v\n Body: %s", err, buf.String())
+	}
+
+	return nil
 }
