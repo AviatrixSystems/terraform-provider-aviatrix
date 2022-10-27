@@ -41,6 +41,13 @@ func resourceAviatrixNetflowAgent() *schema.Resource {
 				ValidateFunc: validation.IntInSlice([]int{5, 9}),
 				Description:  "Netflow version.",
 			},
+			"enable_l7_mode": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				ForceNew:    true,
+				Description: "Enable L7 mode.",
+			},
 			"excluded_gateways": {
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -72,6 +79,12 @@ func marshalNetflowAgentInput(d *schema.ResourceData) *goaviatrix.NetflowAgent {
 	}
 	if len(excludedGateways) != 0 {
 		netflowAgent.ExcludedGatewaysInput = strings.Join(excludedGateways, ",")
+	}
+
+	if d.Get("enable_l7_mode").(bool) {
+		netflowAgent.L7Mode = "enable"
+	} else {
+		netflowAgent.L7Mode = "disable"
 	}
 
 	return netflowAgent
@@ -115,6 +128,7 @@ func resourceAviatrixNetflowAgentRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("port", port)
 	version, _ := strconv.Atoi(netflowAgentStatus.Version)
 	d.Set("version", version)
+	d.Set("enable_l7_mode", netflowAgentStatus.L7Mode)
 	if len(netflowAgentStatus.ExcludedGateways) != 0 {
 		d.Set("excluded_gateways", netflowAgentStatus.ExcludedGateways)
 	}

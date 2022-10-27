@@ -7,6 +7,7 @@ type NetflowAgent struct {
 	ServerIp              string
 	Port                  int
 	Version               int
+	L7Mode                string
 	ExcludedGatewaysInput string
 }
 
@@ -14,6 +15,7 @@ type NetflowAgentResp struct {
 	ServerIp         string   `json:"server_ip"`
 	Port             string   `json:"port"`
 	Version          string   `json:"version"`
+	L7Mode           bool     `json:"l7_mode_enabled"`
 	ExcludedGateways []string `json:"excluded_gateway"`
 	Status           string   `json:"status"`
 }
@@ -25,6 +27,7 @@ func (c *Client) EnableNetflowAgent(r *NetflowAgent) error {
 		"server_ip":            r.ServerIp,
 		"port":                 strconv.Itoa(r.Port),
 		"version":              strconv.Itoa(r.Version),
+		"l7_mode":              r.L7Mode,
 		"exclude_gateway_list": r.ExcludedGatewaysInput,
 	}
 
