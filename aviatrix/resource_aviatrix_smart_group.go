@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func resourceAviatrixAppDomain() *schema.Resource {
+func resourceAviatrixSmartGroup() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAviatrixAppDomainCreate,
-		ReadWithoutTimeout:   resourceAviatrixAppDomainRead,
-		UpdateWithoutTimeout: resourceAviatrixAppDomainUpdate,
-		DeleteWithoutTimeout: resourceAviatrixAppDomainDelete,
+		CreateWithoutTimeout: resourceAviatrixSmartGroupCreate,
+		ReadWithoutTimeout:   resourceAviatrixSmartGroupRead,
+		UpdateWithoutTimeout: resourceAviatrixSmartGroupUpdate,
+		DeleteWithoutTimeout: resourceAviatrixSmartGroupDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -24,7 +24,7 @@ func resourceAviatrixAppDomain() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Name of the App Domain.",
+				Description: "Name of the Smart Group.",
 			},
 			"selector": {
 				Type:     schema.TypeList,
@@ -85,19 +85,19 @@ func resourceAviatrixAppDomain() *schema.Resource {
 						},
 					},
 				},
-				Description: "List of match expressions for the App Domain.",
+				Description: "List of match expressions for the Smart Group.",
 			},
 			"uuid": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "UUID of the App Domain.",
+				Description: "UUID of the Smart Group.",
 			},
 		},
 	}
 }
 
-func marshalAppDomainInput(d *schema.ResourceData) (*goaviatrix.AppDomain, error) {
-	appDomain := &goaviatrix.AppDomain{
+func marshalSmartGroupInput(d *schema.ResourceData) (*goaviatrix.SmartGroup, error) {
+	smartGroup := &goaviatrix.SmartGroup{
 		Name: d.Get("name").(string),
 	}
 
@@ -106,7 +106,7 @@ func marshalAppDomainInput(d *schema.ResourceData) (*goaviatrix.AppDomain, error
 			return nil, fmt.Errorf("match expressions block cannot be empty")
 		}
 		selectorInfo := selectorInterface.(map[string]interface{})
-		var filter *goaviatrix.AppDomainMatchExpression
+		var filter *goaviatrix.SmartGroupMatchExpression
 
 		if mapContains(selectorInfo, "cidr") {
 			for _, key := range []string{"type", "res_id", "account_id", "account_name", "region", "zone", "tags"} {
@@ -115,14 +115,14 @@ func marshalAppDomainInput(d *schema.ResourceData) (*goaviatrix.AppDomain, error
 				}
 			}
 
-			filter = &goaviatrix.AppDomainMatchExpression{
+			filter = &goaviatrix.SmartGroupMatchExpression{
 				CIDR: selectorInfo["cidr"].(string),
 			}
 		} else {
 			if !mapContains(selectorInfo, "type") {
 				return nil, fmt.Errorf("%q is required when %q is empty", "type", "cidr")
 			}
-			filter = &goaviatrix.AppDomainMatchExpression{
+			filter = &goaviatrix.SmartGroupMatchExpression{
 				Type:        selectorInfo["type"].(string),
 				ResId:       selectorInfo["res_id"].(string),
 				AccountId:   selectorInfo["account_id"].(string),
@@ -140,59 +140,59 @@ func marshalAppDomainInput(d *schema.ResourceData) (*goaviatrix.AppDomain, error
 			}
 		}
 
-		appDomain.Selector.Expressions = append(appDomain.Selector.Expressions, filter)
+		smartGroup.Selector.Expressions = append(smartGroup.Selector.Expressions, filter)
 	}
 
-	return appDomain, nil
+	return smartGroup, nil
 }
 
-func resourceAviatrixAppDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSmartGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	appDomain, err := marshalAppDomainInput(d)
+	smartGroup, err := marshalSmartGroupInput(d)
 	if err != nil {
-		return diag.Errorf("invalid inputs for App Domain during create: %s", err)
+		return diag.Errorf("invalid inputs for Smart Group during create: %s", err)
 	}
 
 	flag := false
-	defer resourceAviatrixAppDomainReadIfRequired(ctx, d, meta, &flag)
+	defer resourceAviatrixSmartGroupReadIfRequired(ctx, d, meta, &flag)
 
-	uuid, err := client.CreateAppDomain(ctx, appDomain)
+	uuid, err := client.CreateSmartGroup(ctx, smartGroup)
 	if err != nil {
-		return diag.Errorf("failed to create App Domain: %s", err)
+		return diag.Errorf("failed to create Smart Group: %s", err)
 	}
 	d.SetId(uuid)
-	return resourceAviatrixAppDomainReadIfRequired(ctx, d, meta, &flag)
+	return resourceAviatrixSmartGroupReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixAppDomainReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixSmartGroupReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
-		return resourceAviatrixAppDomainRead(ctx, d, meta)
+		return resourceAviatrixSmartGroupRead(ctx, d, meta)
 	}
 	return nil
 }
 
-func resourceAviatrixAppDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSmartGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	uuid := d.Id()
 	d.Set("uuid", uuid)
 
-	appDomain, err := client.GetAppDomain(ctx, uuid)
+	smartGroup, err := client.GetSmartGroup(ctx, uuid)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("failed to read App Domain: %s", err)
+		return diag.Errorf("failed to read Smart Group: %s", err)
 	}
 
-	d.Set("name", appDomain.Name)
+	d.Set("name", smartGroup.Name)
 
 	var expressions []interface{}
 
-	for _, filter := range appDomain.Selector.Expressions {
+	for _, filter := range smartGroup.Selector.Expressions {
 		filterMap := map[string]interface{}{
 			"type":         filter.Type,
 			"cidr":         filter.CIDR,
@@ -213,40 +213,40 @@ func resourceAviatrixAppDomainRead(ctx context.Context, d *schema.ResourceData, 
 		},
 	}
 	if err := d.Set("selector", selector); err != nil {
-		return diag.Errorf("failed to set selector during App Domain read: %s", err)
+		return diag.Errorf("failed to set selector during Smart Group read: %s", err)
 	}
 
 	return nil
 }
 
-func resourceAviatrixAppDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSmartGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	uuid := d.Id()
 	d.Partial(true)
 	if d.HasChanges("name", "selector") {
-		appDomain, err := marshalAppDomainInput(d)
+		smartGroup, err := marshalSmartGroupInput(d)
 		if err != nil {
-			return diag.Errorf("invalid inputs for App Domain during update: %s", err)
+			return diag.Errorf("invalid inputs for Smart Group during update: %s", err)
 		}
 
-		err = client.UpdateAppDomain(ctx, appDomain, uuid)
+		err = client.UpdateSmartGroup(ctx, smartGroup, uuid)
 		if err != nil {
-			return diag.Errorf("failed to update App Domain selector: %s", err)
+			return diag.Errorf("failed to update Smart Group selector: %s", err)
 		}
 	}
 
 	d.Partial(false)
-	return resourceAviatrixAppDomainRead(ctx, d, meta)
+	return resourceAviatrixSmartGroupRead(ctx, d, meta)
 }
 
-func resourceAviatrixAppDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixSmartGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	uuid := d.Id()
-	err := client.DeleteAppDomain(ctx, uuid)
+	err := client.DeleteSmartGroup(ctx, uuid)
 	if err != nil {
-		return diag.Errorf("failed to delete App Domain: %v", err)
+		return diag.Errorf("failed to delete Smart Group: %v", err)
 	}
 
 	return nil

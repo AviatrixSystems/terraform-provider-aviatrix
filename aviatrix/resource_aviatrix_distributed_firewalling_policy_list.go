@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func resourceAviatrixMicrosegPolicyList() *schema.Resource {
+func resourceAviatrixDistributedFirewallingPolicyList() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAviatrixMicrosegPolicyListCreate,
-		ReadWithoutTimeout:   resourceAviatrixMicrosegPolicyListRead,
-		UpdateWithoutTimeout: resourceAviatrixMicrosegPolicyListUpdate,
-		DeleteWithoutTimeout: resourceAviatrixMicrosegPolicyListDelete,
+		CreateWithoutTimeout: resourceAviatrixDistributedFirewallingPolicyListCreate,
+		ReadWithoutTimeout:   resourceAviatrixDistributedFirewallingPolicyListRead,
+		UpdateWithoutTimeout: resourceAviatrixDistributedFirewallingPolicyListUpdate,
+		DeleteWithoutTimeout: resourceAviatrixDistributedFirewallingPolicyListDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -25,7 +25,7 @@ func resourceAviatrixMicrosegPolicyList() *schema.Resource {
 			"policies": {
 				Type:        schema.TypeList,
 				Required:    true,
-				Description: "List of micro-segmentation policies.",
+				Description: "List of distributed-firewalling policies.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -37,20 +37,20 @@ func resourceAviatrixMicrosegPolicyList() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"PERMIT", "DENY"}, false),
-							Description: "Action for the specified source and destination App Domains." +
+							Description: "Action for the specified source and destination Smart Groups." +
 								"Must be one of PERMIT or DENY.",
 						},
-						"dst_app_domains": {
+						"dst_smart_groups": {
 							Type:        schema.TypeSet,
 							Required:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "Set of destination App Domain UUIDs for the policy.",
+							Description: "Set of destination Smart Group UUIDs for the policy.",
 						},
-						"src_app_domains": {
+						"src_smart_groups": {
 							Type:        schema.TypeSet,
 							Required:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "Set of source App Domain UUIDs for the policy.",
+							Description: "Set of source Smart Group UUIDs for the policy.",
 						},
 						"protocol": {
 							Type:         schema.TypeString,
@@ -95,7 +95,7 @@ func resourceAviatrixMicrosegPolicyList() *schema.Resource {
 										Type:             schema.TypeInt,
 										Optional:         true,
 										ValidateFunc:     validation.IntAtLeast(0),
-										DiffSuppressFunc: DiffSuppressFuncMicrosegPolicyPortRangeHi,
+										DiffSuppressFunc: DiffSuppressFuncDistributedFirewallingPolicyPortRangeHi,
 										Description:      "Upper bound of port range.",
 									},
 								},
@@ -114,14 +114,14 @@ func resourceAviatrixMicrosegPolicyList() *schema.Resource {
 	}
 }
 
-func marshalMicrosegPolicyListInput(d *schema.ResourceData) (*goaviatrix.MicrosegPolicyList, error) {
-	policyList := &goaviatrix.MicrosegPolicyList{}
+func marshalDistributedFirewallingPolicyListInput(d *schema.ResourceData) (*goaviatrix.DistributedFirewallingPolicyList, error) {
+	policyList := &goaviatrix.DistributedFirewallingPolicyList{}
 
 	policies := d.Get("policies").([]interface{})
 	for _, policyInterface := range policies {
 		policy := policyInterface.(map[string]interface{})
 
-		microsegPolicy := &goaviatrix.MicrosegPolicy{
+		distributedFirewallingPolicy := &goaviatrix.DistributedFirewallingPolicy{
 			Name:     policy["name"].(string),
 			Action:   policy["action"].(string),
 			Priority: policy["priority"].(int),
@@ -129,34 +129,34 @@ func marshalMicrosegPolicyListInput(d *schema.ResourceData) (*goaviatrix.Microse
 
 		protocol := strings.ToUpper(policy["protocol"].(string))
 		if protocol == "ANY" {
-			microsegPolicy.Protocol = "PROTOCOL_UNSPECIFIED"
+			distributedFirewallingPolicy.Protocol = "PROTOCOL_UNSPECIFIED"
 		} else {
-			microsegPolicy.Protocol = protocol
+			distributedFirewallingPolicy.Protocol = protocol
 		}
 
-		for _, appDomain := range policy["src_app_domains"].(*schema.Set).List() {
-			microsegPolicy.SrcAppDomains = append(microsegPolicy.SrcAppDomains, appDomain.(string))
+		for _, smartGroup := range policy["src_smart_groups"].(*schema.Set).List() {
+			distributedFirewallingPolicy.SrcSmartGroups = append(distributedFirewallingPolicy.SrcSmartGroups, smartGroup.(string))
 		}
 
-		for _, appDomain := range policy["dst_app_domains"].(*schema.Set).List() {
-			microsegPolicy.DstAppDomains = append(microsegPolicy.DstAppDomains, appDomain.(string))
+		for _, smartGroup := range policy["dst_smart_groups"].(*schema.Set).List() {
+			distributedFirewallingPolicy.DstSmartGroups = append(distributedFirewallingPolicy.DstSmartGroups, smartGroup.(string))
 		}
 
 		if logging, loggingOk := policy["logging"]; loggingOk {
-			microsegPolicy.Logging = logging.(bool)
+			distributedFirewallingPolicy.Logging = logging.(bool)
 		}
 
 		if watch, watchOk := policy["watch"]; watchOk {
-			microsegPolicy.Watch = watch.(bool)
+			distributedFirewallingPolicy.Watch = watch.(bool)
 		}
 
 		if mapContains(policy, "port_ranges") {
-			if microsegPolicy.Protocol == "ICMP" {
+			if distributedFirewallingPolicy.Protocol == "ICMP" {
 				return nil, fmt.Errorf("%q must not be set when %q is %q", "port_ranges", "protocol", "ICMP")
 			}
 			for _, portRangeInterface := range policy["port_ranges"].([]interface{}) {
 				portRangeMap := portRangeInterface.(map[string]interface{})
-				portRange := &goaviatrix.MicrosegPortRange{
+				portRange := &goaviatrix.DistributedFirewallingPortRange{
 					Lo: portRangeMap["lo"].(int),
 				}
 
@@ -164,57 +164,57 @@ func marshalMicrosegPolicyListInput(d *schema.ResourceData) (*goaviatrix.Microse
 					portRange.Hi = hi.(int)
 				}
 
-				microsegPolicy.PortRanges = append(microsegPolicy.PortRanges, *portRange)
+				distributedFirewallingPolicy.PortRanges = append(distributedFirewallingPolicy.PortRanges, *portRange)
 			}
 		}
 
 		if uuid, uuidOk := policy["uuid"]; uuidOk {
-			microsegPolicy.UUID = uuid.(string)
+			distributedFirewallingPolicy.UUID = uuid.(string)
 		}
 
-		policyList.Policies = append(policyList.Policies, *microsegPolicy)
+		policyList.Policies = append(policyList.Policies, *distributedFirewallingPolicy)
 	}
 
 	return policyList, nil
 }
 
-func resourceAviatrixMicrosegPolicyListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingPolicyListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	policyList, err := marshalMicrosegPolicyListInput(d)
+	policyList, err := marshalDistributedFirewallingPolicyListInput(d)
 	if err != nil {
-		return diag.Errorf("invalid inputs for Micro-segmentation Policy during create: %s\n", err)
+		return diag.Errorf("invalid inputs for Distributed-firewalling Policy during create: %s\n", err)
 	}
 
 	flag := false
-	defer resourceAviatrixMicrosegPolicyListReadIfRequired(ctx, d, meta, &flag)
+	defer resourceAviatrixDistributedFirewallingPolicyListReadIfRequired(ctx, d, meta, &flag)
 
-	err = client.CreateMicrosegPolicyList(ctx, policyList)
+	err = client.CreateDistributedFirewallingPolicyList(ctx, policyList)
 	if err != nil {
-		return diag.Errorf("failed to create Micro-segmentation Policy List: %s", err)
+		return diag.Errorf("failed to create Distributed-firewalling Policy List: %s", err)
 	}
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
-	return resourceAviatrixMicrosegPolicyListReadIfRequired(ctx, d, meta, &flag)
+	return resourceAviatrixDistributedFirewallingPolicyListReadIfRequired(ctx, d, meta, &flag)
 }
 
-func resourceAviatrixMicrosegPolicyListReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingPolicyListReadIfRequired(ctx context.Context, d *schema.ResourceData, meta interface{}, flag *bool) diag.Diagnostics {
 	if !(*flag) {
 		*flag = true
-		return resourceAviatrixMicrosegPolicyListRead(ctx, d, meta)
+		return resourceAviatrixDistributedFirewallingPolicyListRead(ctx, d, meta)
 	}
 	return nil
 }
 
-func resourceAviatrixMicrosegPolicyListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingPolicyListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	policyList, err := client.GetMicrosegPolicyList(ctx)
+	policyList, err := client.GetDistributedFirewallingPolicyList(ctx)
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("failed to read Micro-segmentation Policy List: %s", err)
+		return diag.Errorf("failed to read Distributed-firewalling Policy List: %s", err)
 	}
 
 	var policies []map[string]interface{}
@@ -223,8 +223,8 @@ func resourceAviatrixMicrosegPolicyListRead(ctx context.Context, d *schema.Resou
 		p["name"] = policy.Name
 		p["action"] = policy.Action
 		p["priority"] = policy.Priority
-		p["src_app_domains"] = policy.SrcAppDomains
-		p["dst_app_domains"] = policy.DstAppDomains
+		p["src_smart_groups"] = policy.SrcSmartGroups
+		p["dst_smart_groups"] = policy.DstSmartGroups
 		p["logging"] = policy.Logging
 		p["watch"] = policy.Watch
 		p["uuid"] = policy.UUID
@@ -251,38 +251,38 @@ func resourceAviatrixMicrosegPolicyListRead(ctx context.Context, d *schema.Resou
 	}
 
 	if err := d.Set("policies", policies); err != nil {
-		return diag.Errorf("failed to set policies during Micro-segmentation Policy List read: %s\n", err)
+		return diag.Errorf("failed to set policies during Distributed-firewalling Policy List read: %s\n", err)
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
 
-func resourceAviatrixMicrosegPolicyListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingPolicyListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	d.Partial(true)
 	if d.HasChange("policies") {
-		policyList, err := marshalMicrosegPolicyListInput(d)
+		policyList, err := marshalDistributedFirewallingPolicyListInput(d)
 		if err != nil {
-			return diag.Errorf("invalid inputs for Micro-segmentation Policy during update: %s\n", err)
+			return diag.Errorf("invalid inputs for Distributed-firewalling Policy during update: %s\n", err)
 		}
-		err = client.UpdateMicrosegPolicyList(ctx, policyList)
+		err = client.UpdateDistributedFirewallingPolicyList(ctx, policyList)
 		if err != nil {
-			return diag.Errorf("failed to update Micro-segmentation policies: %s", err)
+			return diag.Errorf("failed to update Distributed-firewalling policies: %s", err)
 		}
 	}
 
 	d.Partial(false)
-	return resourceAviatrixMicrosegPolicyListRead(ctx, d, meta)
+	return resourceAviatrixDistributedFirewallingPolicyListRead(ctx, d, meta)
 }
 
-func resourceAviatrixMicrosegPolicyListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixDistributedFirewallingPolicyListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	err := client.DeleteMicrosegPolicyList(ctx)
+	err := client.DeleteDistributedFirewallingPolicyList(ctx)
 	if err != nil {
-		return diag.Errorf("failed to delete Micro-segmentation Policy List: %v", err)
+		return diag.Errorf("failed to delete Distributed-firewalling Policy List: %v", err)
 	}
 
 	return nil

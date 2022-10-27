@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type AppDomainMatchExpression struct {
+type SmartGroupMatchExpression struct {
 	CIDR        string `json:"cidr,omitempty"`
 	Type        string `json:"type,omitempty"`
 	ResId       string `json:"res_id,omitempty"`
@@ -18,17 +18,17 @@ type AppDomainMatchExpression struct {
 	Tags        map[string]string
 }
 
-type AppDomainSelector struct {
-	Expressions []*AppDomainMatchExpression
+type SmartGroupSelector struct {
+	Expressions []*SmartGroupMatchExpression
 }
 
-type AppDomain struct {
+type SmartGroup struct {
 	Name     string
 	UUID     string
-	Selector AppDomainSelector
+	Selector SmartGroupSelector
 }
 
-func appDomainFilterToMap(filter *AppDomainMatchExpression) map[string]string {
+func smartGroupFilterToMap(filter *SmartGroupMatchExpression) map[string]string {
 	filterMap := make(map[string]string)
 
 	if len(filter.Type) > 0 {
@@ -63,15 +63,15 @@ func appDomainFilterToMap(filter *AppDomainMatchExpression) map[string]string {
 	return filterMap
 }
 
-func makeAppDomainForm(appDomain *AppDomain) map[string]interface{} {
+func makeSmartGroupForm(smartGroup *SmartGroup) map[string]interface{} {
 	form := map[string]interface{}{
-		"name": appDomain.Name,
+		"name": smartGroup.Name,
 	}
 
 	var or []map[string]map[string]string
-	for _, appDomainSelector := range appDomain.Selector.Expressions {
+	for _, smartGroupSelector := range smartGroup.Selector.Expressions {
 		and := map[string]map[string]string{
-			"all": appDomainFilterToMap(appDomainSelector),
+			"all": smartGroupFilterToMap(smartGroupSelector),
 		}
 
 		or = append(or, and)
@@ -84,15 +84,15 @@ func makeAppDomainForm(appDomain *AppDomain) map[string]interface{} {
 	return form
 }
 
-func (c *Client) CreateAppDomain(ctx context.Context, appDomain *AppDomain) (string, error) {
+func (c *Client) CreateSmartGroup(ctx context.Context, smartGroup *SmartGroup) (string, error) {
 	endpoint := "app-domains"
-	form := makeAppDomainForm(appDomain)
+	form := makeSmartGroupForm(smartGroup)
 
-	type AppDomainResp struct {
+	type SmartGroupResp struct {
 		UUID string `json:"uuid"`
 	}
 
-	var data AppDomainResp
+	var data SmartGroupResp
 	err := c.PostAPIContext25(ctx, &data, endpoint, form)
 	if err != nil {
 		return "", err
@@ -100,44 +100,44 @@ func (c *Client) CreateAppDomain(ctx context.Context, appDomain *AppDomain) (str
 	return data.UUID, nil
 }
 
-func (c *Client) GetAppDomain(ctx context.Context, uuid string) (*AppDomain, error) {
+func (c *Client) GetSmartGroup(ctx context.Context, uuid string) (*SmartGroup, error) {
 	endpoint := "app-domains"
 
-	type AppDomainMatchExpressionResult struct {
+	type SmartGroupMatchExpressionResult struct {
 		All map[string]string `json:"all"`
 	}
 
-	type AppDomainAnyResult struct {
-		Any []AppDomainMatchExpressionResult `json:"any"`
+	type SmartGroupAnyResult struct {
+		Any []SmartGroupMatchExpressionResult `json:"any"`
 	}
 
-	type AppDomainResult struct {
-		UUID     string             `json:"uuid"`
-		Name     string             `json:"name"`
-		Selector AppDomainAnyResult `json:"selector"`
+	type SmartGroupResult struct {
+		UUID     string              `json:"uuid"`
+		Name     string              `json:"name"`
+		Selector SmartGroupAnyResult `json:"selector"`
 	}
 
-	type AppDomainResp struct {
-		AppDomains []AppDomainResult `json:"app_domains"`
+	type SmartGroupResp struct {
+		SmartGroups []SmartGroupResult `json:"app_domains"`
 	}
 
-	var data AppDomainResp
+	var data SmartGroupResp
 	err := c.GetAPIContext25(ctx, &data, endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, appDomainResult := range data.AppDomains {
-		if appDomainResult.UUID == uuid {
-			appDomain := &AppDomain{
-				Name: appDomainResult.Name,
-				UUID: appDomainResult.UUID,
+	for _, smartGroupResult := range data.SmartGroups {
+		if smartGroupResult.UUID == uuid {
+			smartGroup := &SmartGroup{
+				Name: smartGroupResult.Name,
+				UUID: smartGroupResult.UUID,
 			}
 
-			for _, filterResult := range appDomainResult.Selector.Any {
+			for _, filterResult := range smartGroupResult.Selector.Any {
 				filterMap := filterResult.All
 
-				filter := &AppDomainMatchExpression{
+				filter := &SmartGroupMatchExpression{
 					CIDR:        filterMap["cidr"],
 					Type:        filterMap["type"],
 					ResId:       filterMap["res_id"],
@@ -158,21 +158,21 @@ func (c *Client) GetAppDomain(ctx context.Context, uuid string) (*AppDomain, err
 					filter.Tags = tags
 				}
 
-				appDomain.Selector.Expressions = append(appDomain.Selector.Expressions, filter)
+				smartGroup.Selector.Expressions = append(smartGroup.Selector.Expressions, filter)
 			}
-			return appDomain, nil
+			return smartGroup, nil
 		}
 	}
 	return nil, ErrNotFound
 }
 
-func (c *Client) UpdateAppDomain(ctx context.Context, appDomain *AppDomain, uuid string) error {
+func (c *Client) UpdateSmartGroup(ctx context.Context, smartGroup *SmartGroup, uuid string) error {
 	endpoint := fmt.Sprintf("app-domains/%s", uuid)
-	form := makeAppDomainForm(appDomain)
+	form := makeSmartGroupForm(smartGroup)
 	return c.PutAPIContext25(ctx, endpoint, form)
 }
 
-func (c *Client) DeleteAppDomain(ctx context.Context, uuid string) error {
+func (c *Client) DeleteSmartGroup(ctx context.Context, uuid string) error {
 	endpoint := fmt.Sprintf("app-domains/%s", uuid)
 	return c.DeleteAPIContext25(ctx, endpoint, nil)
 }

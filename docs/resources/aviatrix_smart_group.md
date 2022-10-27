@@ -1,21 +1,21 @@
 ---
 subcategory: "Multi-Cloud Transit"
 layout: "aviatrix"
-page_title: "Aviatrix: aviatrix_app_domain"
+page_title: "Aviatrix: aviatrix_smart_group"
 description: |-
-  Creates and manages an Aviatrix App Domain
+  Creates and manages an Aviatrix Smart Group
 ---
-!> **WARNING** **aviatrix_app_domain** is part of the Micro-segmentation private preview feature for R2.22.0. If you wish to enable a private preview mode feature, please contact your sales representative or Aviatrix Support.
-# aviatrix_app_domain
 
-The **aviatrix_app_domain** resource handles the creation and management of App Domains. Available as of Provider R2.22.0+.
+# aviatrix_smart_group
+
+The **aviatrix_smart_group** resource handles the creation and management of Smart Groups. Available as of Provider R2.22.0+.
 
 ## Example Usage
 
 ```hcl
-# Create an Aviatrix App Domain
-resource "aviatrix_app_domain" "test_app_domain_ip" {
-  name = "app-domain"
+# Create an Aviatrix Smart Group
+resource "aviatrix_smart_group" "test_smart_group_ip" {
+  name = "smart-group"
   selector {
     match_expressions {
       type         = "vm"
@@ -39,9 +39,9 @@ The following arguments are supported:
 
 ### Required
 
-* `name` - (Required) Name of the App Domain.
-* `selector` - (Required) Block containing match expressions to filter the App Domain.
-  * `match_expressions` - (Required) List of match expressions. The App Domain will be a union of all resources matched by each `match_expressions`.`match_expressions` blocks cannot be empty.
+* `name` - (Required) Name of the Smart Group.
+* `selector` - (Required) Block containing match expressions to filter the Smart Group.
+  * `match_expressions` - (Required) List of match expressions. The Smart Group will be a union of all resources matched by each `match_expressions`.`match_expressions` blocks cannot be empty.
       * `cidr` - (Optional) - CIDR block or IP Address this expression matches. `cidr` cannot be used with any other filters in the same `match_expressions` block.
       * `type` - (Optional) - Type of resource this expression matches. Must be one of "vm", "vpc" or "subnet". `type` is required when `cidr` is not used.
       * `res_id` - (Optional) - Resource ID this expression matches.
@@ -55,12 +55,12 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `uuid` - UUID of the App Domain.
+* `uuid` - UUID of the Smart Group.
 
 ## Import
 
-**aviatrix_app_domain** can be imported using the `uuid`, e.g.
+**aviatrix_smart_group** can be imported using the `uuid`, e.g.
 
 ```
-$ terraform import aviatrix_app_domain.test 41984f8b-5a37-4272-89b3-57c79e9ff77c
+$ terraform import aviatrix_smart_group.test 41984f8b-5a37-4272-89b3-57c79e9ff77c
 ```
