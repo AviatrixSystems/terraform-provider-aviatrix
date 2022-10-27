@@ -34,7 +34,8 @@ The following arguments are supported:
 * `port` (Required) Netflow server port.
 
 ### Optional
-* `version` (Optional) Netflow version (5 or 9). 5 by default. 
+* `version` (Optional) Netflow version (5 or 9). Default value: 5. 
+* `enable_l7_mode` (Optional) Enable L7 mode. Default value: false.
 * `excluded_gateways` (Optional) List of gateways to be excluded from logging. e.g.: ["gateway01", "gateway02", "gateway01-hagw"].
 
 ## Attribute Reference
