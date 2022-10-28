@@ -14,26 +14,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAviatrixMicrosegIntraVpc_basic(t *testing.T) {
-	skipAcc := os.Getenv("SKIP_MICROSEG_INTRA_VPC")
+func TestAccAviatrixDistributedFirewallingIntraVpc_basic(t *testing.T) {
+	skipAcc := os.Getenv("SKIP_DISTRIBUTED_FIREWALLING_INTRA_VPC")
 	if skipAcc == "yes" {
-		t.Skip("Skipping Microseg Intra VPC test as SKIP_MICROSEG_INTRA_VPC is set")
+		t.Skip("Skipping Distributed-firewalling Intra VPC test as SKIP_DISTRIBUTED_FIREWALLING_INTRA_VPC is set")
 	}
 
 	rName := acctest.RandString(5)
-	resourceName := "aviatrix_microseg_intra_vpc.test"
+	resourceName := "aviatrix_distributed_firewalling_intra_vpc.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
 		Providers:    testAccProvidersVersionValidation,
-		CheckDestroy: testAccMicrosegIntraVpcDestroy,
+		CheckDestroy: testAccDistributedFirewallingIntraVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMicrosegIntraVpcBasic(rName),
+				Config: testAccDistributedFirewallingIntraVpcBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMicrosegIntraVpcExists(resourceName),
+					testAccCheckDistributedFirewallingIntraVpcExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "vpcs.0.account_name", fmt.Sprintf("tfa-azure-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "vpcs.0.region", "Central US"),
 					resource.TestCheckResourceAttr(resourceName, "vpcs.1.region", "Central US"),
@@ -48,7 +48,7 @@ func TestAccAviatrixMicrosegIntraVpc_basic(t *testing.T) {
 	})
 }
 
-func testAccMicrosegIntraVpcBasic(rName string) string {
+func testAccDistributedFirewallingIntraVpcBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
   account_name        = "tfa-azure-%[1]s"
@@ -72,7 +72,27 @@ resource "aviatrix_vpc" "test1" {
   name         = "azure-vpc-1-%[1]s"
   cidr         = "16.0.0.0/20"
 }
-resource "aviatrix_microseg_intra_vpc" "test"{
+resource "aviatrix_spoke_gateway" "test"{
+  cloud_type   = aviatrix_account.test.cloud_type
+  account_name = aviatrix_account.test.account_name
+  gw_name      = "azure-spoke-0"
+  vpc_id       = aviatrix_vpc.test.vpc_id
+  vpc_reg      = aviatrix_vpc.test.region
+  gw_size      = "Standard_D3_v2"
+  subnet       = aviatrix_vpc.test.public_subnets[0].cidr
+  enable_bgp   = true
+}
+resource "aviatrix_spoke_gateway" "test1"{
+  cloud_type   = aviatrix_account.test.cloud_type
+  account_name = aviatrix_account.test.account_name
+  gw_name      = "azure-spoke-1"
+  vpc_id       = aviatrix_vpc.test1.vpc_id
+  vpc_reg      = aviatrix_vpc.test1.region
+  gw_size      = "Standard_D3_v2"
+  subnet       = aviatrix_vpc.test1.public_subnets[0].cidr
+  enable_bgp   = true
+}
+resource "aviatrix_distributed_firewalling_intra_vpc" "test"{
   vpcs {
     account_name = aviatrix_vpc.test.account_name
     vpc_id       = aviatrix_vpc.test.vpc_id
@@ -84,47 +104,52 @@ resource "aviatrix_microseg_intra_vpc" "test"{
     vpc_id       = aviatrix_vpc.test1.vpc_id
     region       = aviatrix_vpc.test1.region
   }
+
+  depends_on = [
+    aviatrix_spoke_gateway.test,
+    aviatrix_spoke_gateway.test1
+  ]
 }
 	`, rName, os.Getenv("azure_subscription_id"), os.Getenv("azure_tenant_id"),
 		os.Getenv("azure_client_id"), os.Getenv("azure_client_secret"))
 }
 
-func testAccCheckMicrosegIntraVpcExists(n string) resource.TestCheckFunc {
+func testAccCheckDistributedFirewallingIntraVpcExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("no Micro-segmentation Intra VPC resource found: %s", n)
+			return fmt.Errorf("no Distributed-firewalling Intra VPC resource found: %s", n)
 		}
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no Micro-segmentation Intra VPC ID is set")
+			return fmt.Errorf("no Distributed-firewalling Intra VPC ID is set")
 		}
 
 		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
 
-		_, err := client.GetMicrosegIntraVpc(context.Background())
+		_, err := client.GetDistributedFirewallingIntraVpc(context.Background())
 		if err != nil {
-			return fmt.Errorf("failed to get Micro-segmentation Policy List status: %v", err)
+			return fmt.Errorf("failed to get Distributed-firewalling Policy List status: %v", err)
 		}
 
 		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
-			return fmt.Errorf("micro-segmentation policy list ID not found")
+			return fmt.Errorf("distributed-firewalling policy list ID not found")
 		}
 
 		return nil
 	}
 }
 
-func testAccMicrosegIntraVpcDestroy(s *terraform.State) error {
+func testAccDistributedFirewallingIntraVpcDestroy(s *terraform.State) error {
 	client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aviatrix_microseg_intra_vpc" {
+		if rs.Type != "aviatrix_distributed_firewalling_intra_vpc" {
 			continue
 		}
 
-		_, err := client.GetMicrosegIntraVpc(context.Background())
+		_, err := client.GetDistributedFirewallingIntraVpc(context.Background())
 		if err == nil || err != goaviatrix.ErrNotFound {
-			return fmt.Errorf("micro-segmentation intra vpc configured when it should be destroyed")
+			return fmt.Errorf("distributed-firewalling intra vpc configured when it should be destroyed")
 		}
 	}
 

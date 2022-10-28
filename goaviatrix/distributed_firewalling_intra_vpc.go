@@ -2,25 +2,25 @@ package goaviatrix
 
 import "context"
 
-type MicrosegIntraVpc struct {
+type DistributedFirewallingIntraVpc struct {
 	VpcId       string `json:"vpc_id"`
 	AccountName string `json:"account_name"`
 	Region      string `json:"region,omitempty"`
 }
 
-type MicrosegIntraVpcList struct {
-	VPCs []MicrosegIntraVpc `json:"vpcs"`
+type DistributedFirewallingIntraVpcList struct {
+	VPCs []DistributedFirewallingIntraVpc `json:"vpcs"`
 }
 
-func (c *Client) CreateMicrosegIntraVpc(ctx context.Context, vpcList *MicrosegIntraVpcList) error {
+func (c *Client) CreateDistributedFirewallingIntraVpc(ctx context.Context, vpcList *DistributedFirewallingIntraVpcList) error {
 	endpoint := "microseg/intra-vpc"
 	return c.PutAPIContext25(ctx, endpoint, vpcList)
 }
 
-func (c *Client) GetMicrosegIntraVpc(ctx context.Context) (*MicrosegIntraVpcList, error) {
+func (c *Client) GetDistributedFirewallingIntraVpc(ctx context.Context) (*DistributedFirewallingIntraVpcList, error) {
 	endpoint := "microseg/intra-vpc"
 
-	var vpcList MicrosegIntraVpcList
+	var vpcList DistributedFirewallingIntraVpcList
 	err := c.GetAPIContext25(ctx, &vpcList, endpoint, nil)
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (c *Client) GetMicrosegIntraVpc(ctx context.Context) (*MicrosegIntraVpcList
 	return &vpcList, nil
 }
 
-func (c *Client) DeleteMicrosegIntraVpc(ctx context.Context) error {
+func (c *Client) DeleteDistributedFirewallingIntraVpc(ctx context.Context) error {
 	endpoint := "microseg/intra-vpc"
 	return c.DeleteAPIContext25(ctx, endpoint, nil)
 }
