@@ -68,8 +68,6 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_aws_tgw_network_domain      | SKIP_AWS_TGW_NETWORK_DOMAIN        | aviatrix_account + AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY          |
 | aviatrix_aws_tgw_peering             | SKIP_AWS_TGW_PEERING               | aviatrix_account                                                               |
 | aviatrix_aws_tgw_peering_domain_conn | SKIP_AWS_TGW_PEERING_DOMAIN_CONN   | aviatrix_account                                                               |
-| aviatrix_aws_tgw_security_domain     | SKIP_AWS_TGW_SECURITY_DOMAIN       | aviatrix_account + AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY          |
-| aviatrix_aws_tgw_security_domain_connection | SKIP_AWS_TGW_SECURITY_DOMAIN_CONNECTION | aviatrix_account + AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY |
 | aviatrix_aws_tgw_vpc_attachment      | SKIP_AWS_TGW_VPC_ATTACHMENT        | aviatrix_aws_tgw                                                               |
 | aviatrix_aws_tgw_vpc_attachment      | SKIP_AWS_TGW_TRANSIT_GATEWAY_ATTACHMENT | aviatrix_aws_tgw + aviatrix_transit_gateway                               |
 | aviatrix_azure_peer                  | SKIP_AZURE_PEER                    | aviatrix_account + AZURE_VNET_ID, AZURE_VNET_ID2, AZURE_REGION, AZURE_REGION2  |
@@ -140,9 +138,6 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_segmentation_network_domain | SKIP_SEGMENTATION_NETWORK_DOMAIN   | N/A                                                                            |
 | aviatrix_segmentation_network_domain_association | SKIP_SEGMENTATION_NETWORK_DOMAIN_ASSOCIATION | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2 |
 | aviatrix_segmentation_network_domain_connection_policy | SKIP_SEGMENTATION_NETWORK_DOMAIN_CONNECTION_POLICY | N/A                                          |
-| aviatrix_segmentation_security_domain | SKIP_SEGMENTATION_SECURITY_DOMAIN | N/A                                                                            |
-| aviatrix_segmentation_security_domain_association | SKIP_SEGMENTATION_SECURITY_DOMAIN_ASSOCIATION | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2 |
-| aviatrix_segmentation_security_domain_connection_policy | SKIP_SEGMENTATION_SECURITY_DOMAIN_CONNECTION_POLICY | N/A                                        |
 | aviatrix_site2cloud                  | SKIP_S2C                           | aviatrix_gateway                                                               |
 | aviatrix_site2cloud_ca_cert_tag      | SKIP_S2C_CA_CERT_TAG               | N/A                                                                            |
 | aviatrix_splunk_logging              | SKIP_SPLUNK_LOGGING                | N/A                                                                            |
