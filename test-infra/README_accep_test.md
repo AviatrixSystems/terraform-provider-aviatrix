@@ -124,8 +124,8 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |                                      | SKIP_GATEWAY_SNAT_AZURE            |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
 | aviatrix_geo_vpn                     | SKIP_GEO_VPN                       | aviatrix_account + DOMAIN_NAME + AWS_VPC_ID, AWS_REGION, AWS_SUBNET            |
 |                                      |                                    |                                + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2         |
-| aviatrix_microseg_intra_vpc          | SKIP_MICROSEG_INTRA_VPC            | aviatrix_account + aviatrix_vpc                                                |
-| aviatrix_microseg_policy_list        | SKIP_MICROSEG_POLICY_LIST          | N/A                                                                            |
+| aviatrix_distributed_firewalling_intra_vpc | SKIP_DISTRIBUTED_FIREWALLING_INTRA_VPC | aviatrix_account + aviatrix_vpc                                      |
+| aviatrix_distributed_firewalling_policy_list | SKIP_DISTRIBUTED_FIREWALLING_POLICY_LIST | N/A                                                              |
 | aviatrix_netflow_agent               | SKIP_NETFLOW_AGENT                 | N/A                                                                            |
 | aviatrix_periodic_ping               | SKIP_PERIODIC_PING                 | aviatrix_gateway                                                               |
 | aviatrix_private_mode_lb             | SKIP_PRIVATE_MODE_LB               | CONTROLLER_VPC_ID, AWS_REGION, AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY |
