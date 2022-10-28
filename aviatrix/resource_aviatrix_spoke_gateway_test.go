@@ -11,6 +11,30 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+func preSpokeGatewayCheck(t *testing.T, msgCommon string) string {
+	preAccountCheck(t, msgCommon)
+
+	azureGwSize := os.Getenv("AZURE_GW_SIZE")
+	if azureGwSize == "" {
+		t.Fatal("Environment variable AZURE_GW_SIZE is not set" + msgCommon)
+	}
+	return azureGwSize
+}
+
+func preAwsSpokeGatewayCheck(t *testing.T, msgCommon string) string {
+	requiredEnvVars := []string{
+		"AWS_VPC_ID4",
+		"AWS_SUBNET4",
+		"AWS_REGION",
+	}
+	for _, v := range requiredEnvVars {
+		if os.Getenv(v) == "" {
+			t.Fatalf("Env Var %s required %s", v, msgCommon)
+		}
+	}
+	return ""
+}
+
 func TestAccAviatrixSpokeGateway_basic(t *testing.T) {
 	var gateway goaviatrix.Gateway
 
