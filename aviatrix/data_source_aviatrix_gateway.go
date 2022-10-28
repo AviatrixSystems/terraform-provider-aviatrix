@@ -219,12 +219,6 @@ func dataSourceAviatrixGateway() *schema.Resource {
 				Description: "When value is false, reuse an idle address in Elastic IP pool for this gateway. " +
 					"Otherwise, allocate a new Elastic IP and use it for this gateway.",
 			},
-			"tag_list": {
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Computed:    true,
-				Description: "Instance tag of cloud provider.",
-			},
 			"insane_mode": {
 				Type:        schema.TypeBool,
 				Computed:    true,
@@ -735,7 +729,7 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 				CloudType:    gw.CloudType,
 			}
 
-			tagList, err := client.GetTags(tags)
+			_, err := client.GetTags(tags)
 			if err != nil {
 				log.Printf("[WARN] Failed to get tags for gateway %s: %v", tags.ResourceName, err)
 			}
@@ -743,9 +737,6 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 				if err := d.Set("tags", tags.Tags); err != nil {
 					log.Printf("[WARN] Error setting tags for gateway %s: %v", tags.ResourceName, err)
 				}
-			}
-			if len(tagList) > 0 {
-				d.Set("tag_list", tagList)
 			}
 		}
 
