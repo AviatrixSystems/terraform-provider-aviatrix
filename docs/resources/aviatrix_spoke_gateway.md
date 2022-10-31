@@ -23,7 +23,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
   gw_size                           = "t2.micro"
   subnet                            = "10.11.0.0/24"
   single_ip_snat                    = false
-  manage_transit_gateway_attachment = false
   tags                              = {
     name = "value"
   }
@@ -41,7 +40,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
   subnet                            = "10.11.0.0/24"
   single_ip_snat                    = false
   enable_bgp                        = true
-  manage_transit_gateway_attachment = false
   tags                              = {
     name = "value"
   }
@@ -58,7 +56,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_gcp" {
   gw_size                           = "n1-standard-1"
   subnet                            = "10.12.0.0/24"
   single_ip_snat                    = false
-  manage_transit_gateway_attachment = false
 }
 ```
 ```hcl
@@ -73,7 +70,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
   subnet                            = "10.13.0.0/24"
   zone                              = "az-1"
   single_ip_snat                    = false
-  manage_transit_gateway_attachment = false
 }
 ```
 ```hcl
@@ -86,7 +82,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_oracle" {
   vpc_reg                           = "us-ashburn-1"
   gw_size                           = "VM.Standard2.2"
   subnet                            = "10.7.0.0/16"
-  manage_transit_gateway_attachment = false
   availability_domain               = aviatrix_vpc.oci_vpc.availability_domains[0]
   fault_domain                      = aviatrix_vpc.oci_vpc.fault_domains[0]
 }
@@ -102,7 +97,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_azuregov" {
   gw_size                           = "Standard_B1ms"
   subnet                            = "10.13.0.0/24"
   single_ip_snat                    = false
-  manage_transit_gateway_attachment = false
 }
 ```
 ```hcl
@@ -116,7 +110,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_awsgov" {
   gw_size                           = "t2.micro"
   subnet                            = "10.11.0.0/24"
   single_ip_snat                    = false
-  manage_transit_gateway_attachment = false
 }
 ```
 ```hcl
@@ -130,7 +123,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws_china" {
   gw_size                           = "t2.micro"
   subnet                            = "10.11.0.0/24"
   single_ip_snat                    = false
-  manage_transit_gateway_attachment = false
   tags                              = {
     k1 = "v1",
     k2 = "v2",
@@ -148,7 +140,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
   gw_size                           = "Standard_A0"
   subnet                            = "10.13.0.0/24"
   single_ip_snat                    = false
-  manage_transit_gateway_attachment = false
 }
 ```
 ```hcl
@@ -182,7 +173,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_alibaba" {
   subnet                            = "10.0.0.0/24"
   ha_subnet                         = "10.0.0.0/24"
   ha_gw_size                        = "ecs.g5ne.large"
-  manage_transit_gateway_attachment = false
 }
 ```
 ```hcl
@@ -196,7 +186,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws_top_secret" {
   gw_size                           = "t2.micro"
   subnet                            = "10.11.0.0/24"
   single_ip_snat                    = false
-  manage_transit_gateway_attachment = false
   tags                              = {
     k1 = "v1",
     k2 = "v2",
@@ -214,7 +203,6 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws_secret" {
   gw_size                           = "t2.micro"
   subnet                            = "10.11.0.0/24"
   single_ip_snat                    = false
-  manage_transit_gateway_attachment = false
   tags                              = {
     k1 = "v1",
     k2 = "v2",
@@ -336,15 +324,11 @@ The following arguments are supported:
 
 ### Misc.
 
-!> **WARNING:** Attribute `transit_gw` has been deprecated as of provider version R2.18.1+ and will not receive further updates. Please set `manage_transit_gateway_attachment` to false, and use the standalone `aviatrix_spoke_transit_attachment` resource instead.
-
 * `allocate_new_eip` - (Optional) When value is false, reuse an idle address in Elastic IP pool for this gateway. Otherwise, allocate a new Elastic IP and use it for this gateway. Available in Controller 4.7+. Valid values: true, false. Default: true.
 * `eip` - (Optional) Required when `allocate_new_eip` is false. It uses the specified EIP for this gateway. Available in Controller 4.7+. Only available for AWS, GCP, Azure, OCI, AzureGov, AWSGov, AWSChina, AzureChina, AWS Top Secret and AWS Secret.
 * `azure_eip_name_resource_group` - (Optional) Name of public IP Address resource and its resource group in Azure to be assigned to the Spoke Gateway instance. Example: "IP_Name:Resource_Group_Name". Required if `allocate_new_eip` is false and `cloud_type` is Azure, AzureGov or AzureChina. Available as of provider version 2.20+.
 * `enable_vpc_dns_server` - (Optional) Enable VPC DNS Server for Gateway. Currently only supported for AWS, Azure, AzureGov, AWSGov, AWSChina, AzureChina, Alibaba Cloud, AWS Top Secret and AWS Secret gateways. Valid values: true, false. Default value: false.
 * `zone` - (Optional) Availability Zone. Only available for Azure (8), Azure GOV (32) and Azure CHINA (2048). Must be in the form 'az-n', for example, 'az-2'. Available in provider version R2.17+.
-* `manage_transit_gateway_attachment` - (Optional) Enable to manage spoke-to-Aviatrix transit gateway attachments using the **aviatrix_spoke_gateway** resource with the below `transit_gw` attribute. If this is set to false, attaching this spoke to transit gateways must be done using the **aviatrix_spoke_transit_attachment** resource. Valid values: true, false. Default value: true. Available in provider R2.17+.
-* `transit_gw` - (Optional) Specify the Aviatrix transit gateways to attach this spoke gateway to. Format is a comma separated list of transit gateway names. For example: "transit-gw1,transit-gw2".
 * `enable_jumbo_frame` - (Optional) Enable jumbo frames for this spoke gateway. Default value is true.
 * `tags` - (Optional) Map of tags to assign to the gateway. Only available for AWS, Azure, AzureGov, AWSGov, AWSChina, AzureChina, AWS Top Secret and AWS Secret gateways. Allowed characters vary by cloud type but always include: letters, spaces, and numbers. AWS, AWSGov, AWSChina, AWS Top Secret and AWS Secret allow the use of any character. Azure, AzureGov and AzureChina allows the following special characters: + - = . _ : @. Example: {"key1" = "value1", "key2" = "value2"}.
 * `tunnel_detection_time` - (Optional) The IPsec tunnel down detection time for the Spoke Gateway in seconds. Must be a number in the range [20-600]. The default value is set by the controller (60 seconds if nothing has been changed). **NOTE: The controller UI has an option to set the tunnel detection time for all gateways. To achieve the same functionality in Terraform, use the same TF_VAR to manage the tunnel detection time for all gateways.** Available in provider R2.19+.
@@ -353,10 +337,6 @@ The following arguments are supported:
 * `private_mode_lb_vpc_id` - (Optional) VPC ID of Private Mode load balancer. Required when Private Mode is enabled on the Controller. Available in provider version R2.23+.
 * `private_mode_subnet_zone` - (Optional) Availability Zone of the subnet. Required when Private Mode is enabled on the Controller and `cloud_type` is AWS or AWSGov. Available in Provider version R2.23+.
 * `ha_private_mode_subnet_zone` - (Optional) Availability Zone of the HA subnet. Required when Private Mode is enabled on the Controller and `cloud_type` is AWS or AWSGov with HA. Available in Provider version R2.23+.
-
-
--> **NOTE:** `manage_transit_gateway_attachment` - If you are using/upgraded to Aviatrix Terraform Provider R2.17+, and an **aviatrix_spoke_gateway** resource was originally created with a provider version <R2.17, you must do 'terraform refresh' to update and apply the attribute's default value (true) into the state file.
-
 
 ## Attribute Reference
 
@@ -402,9 +382,14 @@ The following arguments are deprecated:
   * `new_src_ip` - (Optional) The changed source IP address when all specified qualifier conditions meet. One of the rule fields must be specified for this rule to take effect.
   * `new_src_port` - (Optional) The translated destination port when all specified qualifier conditions meet. One of the rule field must be specified for this rule to take effect.
   * `exclude_rtb` - (Optional) This field specifies which VPC private route table will not be programmed with the default route entry.
-* `tag_list` - (Optional) Instance tag of cloud provider. Only supported for AWS, Azure, AzureGov, AWSGov, AWSChina and AzureChina. Example: ["key1:value1", "key2:value2"].
 * `enable_active_mesh` - (Optional) Switch to enable/disable [Active Mesh Mode](https://docs.aviatrix.com/HowTos/activemesh_faq.html) for Spoke Gateway. Valid values: true, false. Default value: false.
 * `storage_name` (Optional) Specify a storage account. Required if `cloud_type` is 2048 (AzureChina). Removed in Provider version 2.21.0+.
+
+The following arguments are deprecated:
+
+* `manage_transit_gateway_attachment` - (Optional) Enable to manage spoke-to-Aviatrix transit gateway attachments using the **aviatrix_spoke_gateway** resource with the below `transit_gw` attribute. If this is set to false, attaching this spoke to transit gateways must be done using the **aviatrix_spoke_transit_attachment** resource. Valid values: true, false. Default value: true. Available in provider R2.17+.
+* `transit_gw` - (Optional) Specify the Aviatrix transit gateways to attach this spoke gateway to. Format is a comma separated list of transit gateway names. For example: "transit-gw1,transit-gw2".
+* `tag_list` - (Optional) Instance tag of cloud provider. Only supported for AWS, Azure, AzureGov, AWSGov, AWSChina and AzureChina. Example: ["key1:value1", "key2:value2"].
 
 ## Import
 
@@ -413,8 +398,6 @@ The following arguments are deprecated:
 ```
 $ terraform import aviatrix_spoke_gateway.test gw_name
 ```
--> **NOTE:** If `manage_transit_gateway_attachment` is set to "false", import action will also import the information of the transit gateways to which this spoke is attached to into the state file. Will need to do *terraform apply* to sync `manage_transit_gateway_attachment` to "false".
-
 
 ## Notes
 ### insane_mode

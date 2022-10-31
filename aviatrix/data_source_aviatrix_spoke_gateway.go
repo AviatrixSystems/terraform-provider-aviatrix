@@ -105,17 +105,6 @@ func dataSourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Set to 'enabled' if this feature is desired.",
 			},
-			"transit_gw": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Transit Gateways this spoke has joined.",
-			},
-			"tag_list": {
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Computed:    true,
-				Description: "Instance tag of cloud provider.",
-			},
 			"insane_mode": {
 				Type:        schema.TypeBool,
 				Computed:    true,
@@ -523,19 +512,6 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 			d.Set("included_advertised_spoke_routes", "")
 		}
 
-		if gw.SpokeVpc == "yes" {
-			var transitGws []string
-			if gw.TransitGwName != "" {
-				transitGws = append(transitGws, gw.TransitGwName)
-			}
-			if gw.EgressTransitGwName != "" {
-				transitGws = append(transitGws, gw.EgressTransitGwName)
-			}
-			d.Set("transit_gw", strings.Join(transitGws, ","))
-		} else {
-			d.Set("transit_gw", "")
-		}
-
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
 			d.Set("availability_domain", gw.GatewayZone)
 			d.Set("fault_domain", gw.FaultDomain)
@@ -596,7 +572,7 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 				CloudType:    gw.CloudType,
 			}
 
-			tagList, err := client.GetTags(tags)
+			_, err := client.GetTags(tags)
 			if err != nil {
 				log.Printf("[WARN] Failed to get tags for spoke gateway %s: %v", tags.ResourceName, err)
 			}
@@ -604,9 +580,6 @@ func dataSourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}
 				if err := d.Set("tags", tags.Tags); err != nil {
 					log.Printf("[WARN] Error setting tags for spoke gateway %s: %v", tags.ResourceName, err)
 				}
-			}
-			if len(tagList) > 0 {
-				d.Set("tag_list", tagList)
 			}
 		}
 
