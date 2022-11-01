@@ -67,7 +67,6 @@ In addition to all arguments above, the following attributes are exported:
 * `single_az_ha` - Status of Single AZ HA of transit gateway.
 * `single_ip_snat` - Status of Single IP Source Nat mode of the transit gateway.
 * `subnet` - A VPC Network address range selected from one of the available network ranges.
-* `tag_list` - Instance tag of cloud provider.
 * `vpc_id` - VPC-ID/VNet-Name of cloud provider.
 * `vpc_reg` - Region of cloud provider.
 * `enable_private_oob` - Status of private OOB for the transit gateway.
@@ -121,3 +120,6 @@ In addition to all arguments above, the following attributes are exported:
 * `eip` - The EIP address of the Transit Gateway.
 * `ha_eip` - The EIP address of the HA Transit Gateway.
 
+The following argument is deprecated:
+
+* `tag_list` - Instance tag of cloud provider.
