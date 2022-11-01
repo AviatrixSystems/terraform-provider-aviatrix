@@ -79,7 +79,7 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Availability Zone. Only available for Azure and Public Subnet Filtering gateway",
+				Description: "Availability Zone. Only available for Azure (8), Azure GOV (32), Azure CHINA (2048) and Public Subnet Filtering gateway. Must be in the form 'az-n', for example, 'az-2'.",
 			},
 			"insane_mode_az": {
 				Type:        schema.TypeString,
@@ -656,7 +656,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && !d.Get("enable_public_subnet_filtering").(bool) && d.Get("zone").(string) != "" {
-		return fmt.Errorf("attribute 'zone' is only valid for Azure and Public Subnet Filtering Gateways")
+		return fmt.Errorf("attribute 'zone' is only valid for Azure, Azure GOV, Azure China or Public Subnet Filtering Gateways")
 	}
 
 	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && d.Get("zone").(string) != "" {

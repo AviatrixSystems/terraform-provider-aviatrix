@@ -52,7 +52,7 @@ func resourceAviatrixSpokeHaGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Availability Zone. Required for GCP gateway, example: 'us-west1-c'. Optional for Azure gateway in the form 'az-n', example: 'az-2'.",
+				Description: "Availability Zone. Required for GCP gateway, example: 'us-west1-c'. Optional for Azure / Azure GOV / Azure CHINA gateway in the form 'az-n', example: 'az-2'.",
 			},
 			"insane_mode": {
 				Type:     schema.TypeBool,
