@@ -82,7 +82,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validateAzureAZ,
-				Description:  "Availability Zone. Only available for cloud_type = 8 (Azure). Must be in the form 'az-n', for example, 'az-2'.",
+				Description:  "Availability Zone. Only available for Azure (8), Azure GOV (32) and Azure CHINA (2048). Must be in the form 'az-n', for example, 'az-2'.",
 			},
 			"insane_mode_az": {
 				Type:        schema.TypeString,
@@ -726,8 +726,8 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 	cloudType := d.Get("cloud_type").(int)
 	zone := d.Get("zone").(string)
-	if !goaviatrix.IsCloudType(cloudType, goaviatrix.Azure) && zone != "" {
-		return fmt.Errorf("attribute 'zone' is only for use with cloud_type = 8 (Azure)")
+	if !goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) && zone != "" {
+		return fmt.Errorf("attribute 'zone' is only for use with Azure (8), Azure GOV (32) and Azure CHINA (2048)")
 	}
 	if zone != "" {
 		// The API uses the same string field to hold both subnet and zone
