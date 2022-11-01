@@ -38,6 +38,9 @@ In addition to all arguments above, the following attributes are exported:
 * `tgw_segmentation_for_egress_enabled` - Enable TGW segmentation for egress.  
 * `hashing_algorithm` - (Optional) Hashing algorithm to load balance traffic across the firewall.
 * `keep_alive_via_lan_interface_enabled` - (Optional) Enable Keep Alive via Firewall LAN Interface.
+
+The following arguments are deprecated:
+
 * `firewall_instance_association` - List of firewall instances associated with fireNet.
   * `firenet_gw_name` - Name of the primary FireNet gateway.
   * `instance_id` - ID of Firewall instance.
@@ -47,4 +50,3 @@ In addition to all arguments above, the following attributes are exported:
   * `management_interface` - Management interface ID.
   * `egress_interface`- Egress interface ID.
   * `attached`- Switch to attach/detach firewall instance to/from fireNet.
-  
