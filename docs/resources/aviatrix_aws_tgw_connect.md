@@ -37,10 +37,6 @@ The following arguments are supported:
 * `tgw_name` - (Required) AWS TGW name.
 * `connection_name` - (Required) Connection name.
 * `transport_vpc_id` - (Required) Transport Attachment VPC ID.
-
-!> **WARNING:** Attribute `security_domain_name` will be deprecated in future releases. Please use the attribute `network_domain_name` instead. Either `security_domain_name` or `network_domain_name` must be configured.
-
-* `security_domain_name` - (Optional) Security Domain name.
 * `network_domain_name` - (Optional) Network Domain name.
 
 ## Attribute Reference
@@ -49,6 +45,10 @@ In addition to all arguments above, the following attributes are exported:
 
 * `connect_attachment_id` - Connect Attachment ID.
 * `transport_attachment_id` - Transport Attachment ID.
+
+The following argument is deprecated:
+
+* `security_domain_name` - (Optional) Security Domain name.
 
 ## Import
 
