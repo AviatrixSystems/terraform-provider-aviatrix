@@ -19,12 +19,6 @@ func resourceAviatrixSegmentationNetworkDomainAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"transit_gateway_name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "Transit Gateway name.",
-			},
 			"network_domain_name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -36,6 +30,12 @@ func resourceAviatrixSegmentationNetworkDomainAssociation() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "Attachment name, either Spoke or Edge.",
+			},
+			"transit_gateway_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Transit Gateway name.",
 			},
 		},
 	}

@@ -15,7 +15,6 @@ The **aviatrix_segmentation_network_domain_association** resource handles creati
 ```hcl
 # Create an Aviatrix Segmentation Network Domain Association
 resource "aviatrix_segmentation_network_domain_association" "test_segmentation_network_domain_association" {
-  transit_gateway_name = "transit-gw-name"
   network_domain_name  = "network-domain-name"
   attachment_name      = "attachment-name"
 }
@@ -27,9 +26,12 @@ The following arguments are supported:
 
 ### Required
 
-* `transit_gateway_name` - (Required) Name of the Transit Gateway.
 * `network_domain_name` - (Required) Name of the Segmentation Network Domain.
 * `attachment_name` - (Required) Name of the transit gateway attachment, Spoke or Edge, to associate with the network domain.
+
+### Optional
+
+* `transit_gateway_name` - (Optional) Name of the Transit Gateway.
 
 ## Import
 
