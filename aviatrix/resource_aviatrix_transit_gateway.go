@@ -237,11 +237,10 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				},
 			},
 			"customer_managed_keys": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringIsNotEmpty,
-				Description:  "Customer managed key ID.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Customer managed key ID.",
 			},
 			"enable_egress_transit_firenet": {
 				Type:        schema.TypeBool,
