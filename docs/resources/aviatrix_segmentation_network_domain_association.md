@@ -35,8 +35,8 @@ The following arguments are supported:
 
 ## Import
 
-**aviatrix_segmentation_network_domain_association** can be imported using `transit_gateway_name`, `network_domain_name` and `attachment_name` separated by a `~` e.g.
+**aviatrix_segmentation_network_domain_association** can be imported using `network_domain_name` and `attachment_name` separated by a `~` e.g.
 
 ```
-$ terraform import aviatrix_segmentation_network_domain_association.test transit_gateway_name~network_domain_name~attachment_name
+$ terraform import aviatrix_segmentation_network_domain_association.test network_domain_name~attachment_name
 ```
