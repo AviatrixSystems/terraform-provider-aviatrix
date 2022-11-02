@@ -91,6 +91,9 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_copilot_security_group_management_config | SKIP_COPILOT_SECURITY_GROUP_MANAGEMENT_CONFIG | AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY, AWS_VPC_ID, AWS_REGION, AWS_SUBNET |
 | aviatrix_device_interface_config	   | SKIP_DEVICE_INTERFACE_CONFIG	    | CLOUDN_DEVICE_NAME                                                             |
 | aviatrix_datadog_agent               | SKIP_DATADOG_AGENT                 | datadog_api_key                                                                |
+| aviatrix_distributed_firewalling_config | SKIP_DISTRIBUTED_FIREWALLING_CONFIG | N/A                                                                        |
+| aviatrix_distributed_firewalling_intra_vpc | SKIP_DISTRIBUTED_FIREWALLING_INTRA_VPC | aviatrix_account + aviatrix_vpc                                      |
+| aviatrix_distributed_firewalling_policy_list | SKIP_DISTRIBUTED_FIREWALLING_POLICY_LIST | N/A                                                              |
 | aviatrix_edge_caag                   | SKIP_EDGE_CAAG                     | N/A                                                                            |
 | aviatrix_edge_csp                    | SKIP_EDGE_CSP                      | EDGE_CSP_USERNAME, EDGE_CSP_PASSWORD, EDGE_CSP_PROJECT_UUID, EDGE_CSP_COMPUTE_NODE_UUID, EDGE_CSP_TEMPLATE_UUID |
 | aviatrix_edge_spoke                  | SKIP_EDGE_SPOKE                    | N/A                                                                            |
@@ -124,8 +127,6 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |                                      | SKIP_GATEWAY_SNAT_AZURE            |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
 | aviatrix_geo_vpn                     | SKIP_GEO_VPN                       | aviatrix_account + DOMAIN_NAME + AWS_VPC_ID, AWS_REGION, AWS_SUBNET            |
 |                                      |                                    |                                + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2         |
-| aviatrix_distributed_firewalling_intra_vpc | SKIP_DISTRIBUTED_FIREWALLING_INTRA_VPC | aviatrix_account + aviatrix_vpc                                      |
-| aviatrix_distributed_firewalling_policy_list | SKIP_DISTRIBUTED_FIREWALLING_POLICY_LIST | N/A                                                              |
 | aviatrix_netflow_agent               | SKIP_NETFLOW_AGENT                 | N/A                                                                            |
 | aviatrix_periodic_ping               | SKIP_PERIODIC_PING                 | aviatrix_gateway                                                               |
 | aviatrix_private_mode_lb             | SKIP_PRIVATE_MODE_LB               | CONTROLLER_VPC_ID, AWS_REGION, AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY |
