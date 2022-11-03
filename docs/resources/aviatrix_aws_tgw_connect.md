@@ -37,7 +37,7 @@ The following arguments are supported:
 * `tgw_name` - (Required) AWS TGW name.
 * `connection_name` - (Required) Connection name.
 * `transport_vpc_id` - (Required) Transport Attachment VPC ID.
-* `network_domain_name` - (Optional) Network Domain name.
+* `network_domain_name` - (Required) Network Domain name.
 
 ## Attribute Reference
 
