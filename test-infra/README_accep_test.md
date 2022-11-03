@@ -91,7 +91,6 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_distributed_firewalling_config | SKIP_DISTRIBUTED_FIREWALLING_CONFIG | N/A                                                                        |
 | aviatrix_distributed_firewalling_intra_vpc | SKIP_DISTRIBUTED_FIREWALLING_INTRA_VPC | aviatrix_account + aviatrix_vpc                                      |
 | aviatrix_distributed_firewalling_policy_list | SKIP_DISTRIBUTED_FIREWALLING_POLICY_LIST | N/A                                                              |
-| aviatrix_edge_caag                   | SKIP_EDGE_CAAG                     | N/A                                                                            |
 | aviatrix_edge_csp                    | SKIP_EDGE_CSP                      | EDGE_CSP_USERNAME, EDGE_CSP_PASSWORD, EDGE_CSP_PROJECT_UUID, EDGE_CSP_COMPUTE_NODE_UUID, EDGE_CSP_TEMPLATE_UUID |
 | aviatrix_edge_spoke                  | SKIP_EDGE_SPOKE                    | N/A                                                                            |
 | aviatrix_edge_spoke_external_device_conn | SKIP_EDGE_SPOKE_EXTERNAL_DEVICE_CONN | EDGE_SPOKE_NAME, EDGE_SPOKE_SITE_ID                                      |
