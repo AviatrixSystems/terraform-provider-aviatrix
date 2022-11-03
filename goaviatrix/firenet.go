@@ -11,7 +11,6 @@ type FireNet struct {
 	Action            string `form:"action,omitempty"`
 	VpcID             string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
 	GwName            string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
-	FirewallInstance  []FirewallInstance
 	FirewallEgress    bool   `form:"firewall_egress,omitempty" json:"firewall_egress,omitempty"`
 	Inspection        bool   `form:"inspection,omitempty" json:"inspection,omitempty"`
 	HashingAlgorithm  string `json:"firewall_hashing,omitempty"`
