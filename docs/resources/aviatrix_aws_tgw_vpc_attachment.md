@@ -31,14 +31,10 @@ The following arguments are supported:
 * `tgw_name` - (Required) Name of the AWS TGW.
 * `region` - (Required) AWS Region of the TGW.
 * `vpc_account_name` - (Required) The name of the cloud account in the Aviatrix controller, which is associated with the VPC.
-* `vpc_id` - (Required) VPC ID of the VPC to be attached to the specified `security_domain_name`.
+* `vpc_id` - (Required) VPC ID of the VPC to be attached to the specified `network_domain_name`.
+* `network_domain_name` - (Required) The name of the network domain, to which the VPC will be attached to. If changed, the VPC will be detached from the old domain, and attached to the new domain.
 
-!> **WARNING:** Attribute `security_domain_name` will be deprecated in future releases. Please use the attribute `network_domain_name` instead. Either `security_domain_name` or `network_domain_name` must be configured.
-
-* `security_domain_name` - (optional) The name of the security domain, to which the VPC will be attached to. If changed, the VPC will be detached from the old domain, and attached to the new domain.
-* `network_domain_name` - (optional) The name of the network domain, to which the VPC will be attached to. If changed, the VPC will be detached from the old domain, and attached to the new domain.
-
--> **NOTE:** If used to attach/detach FireNet Transit Gateway to/from TGW Firewall Domain, `vpc_id` is the ID of the Security VPC, and `security_domain_name` is the domain name of the Aviatrix Firewall Domain in TGW.
+-> **NOTE:** If used to attach/detach FireNet Transit Gateway to/from TGW Firewall Domain, `vpc_id` is the ID of the Security VPC, and `network_domain_name` is the domain name of the Aviatrix Firewall Domain in TGW.
 
 ### Advanced Options
 * `subnets` - (Optional and ForceNew) Advanced option. VPC subnets separated by ',' to attach to the VPC. If omitted, the Aviatrix Controller automatically computes a subnet representing each AZ for the VPC attachment and Terraform will not manage this attribute. Example: "subnet-214f5646,subnet-085e8c81a89d70846".
@@ -48,10 +44,14 @@ The following arguments are supported:
 * `disable_local_route_propagation` - (Optional and ForceNew) Advanced option. If set to true, it disables automatic route propagation of this VPC to other VPCs within the same security domain. Valid values: true, false. Default value: false.
 * `edge_attachment` - (Optional) Advanced option. To allow access to the private IP of the MGMT interface of the Firewalls, set this attribute to enable Management Access From Onprem. This feature advertises the Firewalls private MGMT subnet to your Edge domain. Example: "vpn-0068bb31917ff2289".
 
+The following argument is deprecated:
+
+* `security_domain_name` - (optional) The name of the security domain, to which the VPC will be attached to. If changed, the VPC will be detached from the old domain, and attached to the new domain.
+
 ## Import
 
-**aws_tgw_vpc_attachment** can be imported using the `tgw_name`, `security_domain_name` and `vpc_id`, e.g.
+**aws_tgw_vpc_attachment** can be imported using the `tgw_name`, `network_domain_name` and `vpc_id`, e.g.
 
 ```
-$ terraform import aviatrix_aws_tgw_vpc_attachment.test tgw_name~security_domain_name~vpc_id
+$ terraform import aviatrix_aws_tgw_vpc_attachment.test tgw_name~network_domain_name~vpc_id
 ```
