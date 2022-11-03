@@ -59,7 +59,6 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |		                               | SKIP_ACCOUNT_AWSS              | AWSS_ACCOUNT_NUMBER, AWSS_CAP_URL, AWSS_CAP_AGENCY, AWSS_CAP_ACCOUNT_NAME, AWSS_CAP_ROLE_NAME, AWSS_CAP_CERT, AWSS_CAP_CERT_KEY, AWSS_CA_CHAIN_CERT                   |
 | aviatrix_account_user                | SKIP_ACCOUNT_USER                  |                                                                                |
 | aviatrix_app_domain                  | SKIP_APP_DOMAIN                    | N/A
-| aviatrix_arm_peer                    | SKIP_ARM_PEER                      | aviatrix_account + ARM_VNET_ID, ARM_VNET_ID2, ARM_REGION, ARM_REGION2          |
 | aviatrix_aws_guard_duty              | SKIP_AWS_GUARD_DUTY                | aviatrix_account                                                               |
 | aviatrix_aws_peer                    | SKIP_AWS_PEER                      | aviatrix_account + AWS_VPC_ID, AWS_VPC_ID2, AWS_REGION, AWS_REGION2            |
 | aviatrix_aws_tgw                     | SKIP_AWS_TGW                       | aviatrix_account + AWS_VPC_ID, AWS_REGION, AWS_VPC_TGW_ID                      |
@@ -68,8 +67,6 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_aws_tgw_network_domain      | SKIP_AWS_TGW_NETWORK_DOMAIN        | aviatrix_account + AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY          |
 | aviatrix_aws_tgw_peering             | SKIP_AWS_TGW_PEERING               | aviatrix_account                                                               |
 | aviatrix_aws_tgw_peering_domain_conn | SKIP_AWS_TGW_PEERING_DOMAIN_CONN   | aviatrix_account                                                               |
-| aviatrix_aws_tgw_security_domain     | SKIP_AWS_TGW_SECURITY_DOMAIN       | aviatrix_account + AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY          |
-| aviatrix_aws_tgw_security_domain_connection | SKIP_AWS_TGW_SECURITY_DOMAIN_CONNECTION | aviatrix_account + AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY |
 | aviatrix_aws_tgw_vpc_attachment      | SKIP_AWS_TGW_VPC_ATTACHMENT        | aviatrix_aws_tgw                                                               |
 | aviatrix_aws_tgw_vpc_attachment      | SKIP_AWS_TGW_TRANSIT_GATEWAY_ATTACHMENT | aviatrix_aws_tgw + aviatrix_transit_gateway                               |
 | aviatrix_azure_peer                  | SKIP_AZURE_PEER                    | aviatrix_account + AZURE_VNET_ID, AZURE_VNET_ID2, AZURE_REGION, AZURE_REGION2  |
@@ -141,9 +138,6 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_segmentation_network_domain | SKIP_SEGMENTATION_NETWORK_DOMAIN   | N/A                                                                            |
 | aviatrix_segmentation_network_domain_association | SKIP_SEGMENTATION_NETWORK_DOMAIN_ASSOCIATION | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2 |
 | aviatrix_segmentation_network_domain_connection_policy | SKIP_SEGMENTATION_NETWORK_DOMAIN_CONNECTION_POLICY | N/A                                          |
-| aviatrix_segmentation_security_domain | SKIP_SEGMENTATION_SECURITY_DOMAIN | N/A                                                                            |
-| aviatrix_segmentation_security_domain_association | SKIP_SEGMENTATION_SECURITY_DOMAIN_ASSOCIATION | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2 |
-| aviatrix_segmentation_security_domain_connection_policy | SKIP_SEGMENTATION_SECURITY_DOMAIN_CONNECTION_POLICY | N/A                                        |
 | aviatrix_site2cloud                  | SKIP_S2C                           | aviatrix_gateway                                                               |
 | aviatrix_site2cloud_ca_cert_tag      | SKIP_S2C_CA_CERT_TAG               | N/A                                                                            |
 | aviatrix_splunk_logging              | SKIP_SPLUNK_LOGGING                | N/A                                                                            |
@@ -155,10 +149,6 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |                                      | SKIP_SPOKE_GATEWAY_AZURE           |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
 |                                      | SKIP_SPOKE_GATEWAY_OCI             |         + OCI_VPC_ID, OCI_REGION, OCI_SUBNET, OCI_GW_SIZE(optional)            |
 | aviatrix_spoke_gateway_subnet_group  | SKIP_SPOKE_GATEWAY_SUBNET_GROUP    | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID, ARM_APPLICATION_KEY |
-| aviatrix_spoke_vpc                   | SKIP_SPOKE                         | aviatrix_gateway                                                               |
-|                                      | SKIP_SPOKE_AWS                     |         + AWS_VPC_ID, AWS_REGION, AWS_SUBNET, AWS_GW_SIZE (optional)           |
-|                                      | SKIP_SPOKE_GCP                     |         + GCP_VPC_ID, GCP_ZONE, GCP_SUBNET, GCP_GW_SIZE (optional)             |
-|                                      | SKIP_SPOKE_AZURE                   |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
 | aviatrix_spoke_transit_attachment    | SKIP_SPOKE_TRANSIT_ATTACHMENT      | aviatrix_spoke_gateway + aviatrix_transit_gateway                              |
 | aviatrix_sumologic_forwarder         | SKIP_SUMOLOGIC_FORWARDER           | N/A                                                                            |
 | aviatrix_trans_peer                  | SKIP_TRANS_PEER                    | aviatrix_tunnel                                                                |
@@ -171,9 +161,6 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |                                      | SKIP_TRANSIT_GATEWAY_AZURE         | aviatrix_gateway in AZURE                                                      |
 |                                      | SKIP_GATEWAY_GCP                   | aviatrix_gateway in GCP                                                        |
 |                                      | SKIP_GATEWAY_OCI                   | aviatrix_gateway in OCI                                                        |
-| aviatrix_transit_vpc                 | SKIP_TRANSIT                       | aviatrix_gateway                                                               |
-|                                      | SKIP_TRANSIT_AWS                   | aviatrix_gateway in AWS                                                        |
-|                                      | SKIP_TRANSIT_AZURE                 | aviatrix_gateway in AZURE                                                      |  
 | aviatrix_transit_gateway_peering     | SKIP_TRANSIT_GATEWAY_PEERING       | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2                       |
 | aviatrix_tunnel                      | SKIP_TUNNEL                        | aviatrix_gateway + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2                       |
 | aviatrix_version                     | SKIP_VERSION                       |                                                                                |
