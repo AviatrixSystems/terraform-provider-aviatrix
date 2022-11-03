@@ -28,16 +28,20 @@ resource "aviatrix_aws_tgw_directconnect" "test_aws_tgw_directconnect" {
 The following arguments are supported:
 
 ### Required
+
 * `tgw_name` - (Required) This parameter represents the name of an AWS TGW.
 * `directconnect_account_name` - (Required) This parameter represents the name of an Account in Aviatrix controller.
 * `dx_gateway_id` - (Required) This parameter represents the name of a Direct Connect Gateway ID.
 * `allowed_prefix` - (Required) A list of comma separated CIDRs for DXGW to advertise to remote(on-prem).
+* `network_domain_name` - (Required) The name of a network domain, to which the direct connect gateway will be attached.
+
+### Optional
+
 * `enable_learned_cidrs_approval` - (Optional) Switch to enable/disable [encrypted transit approval](https://docs.aviatrix.com/HowTos/tgw_approval.html) for AWS TGW DirectConnect. Valid values: true, false. Default value: false.
 
-!> **WARNING:** Attribute `security_domain_name` will be deprecated in future releases. Please use the attribute `network_domain_name` instead. Either `security_domain_name` or `network_domain_name` must be configured.
+The following argument is deprecated:
 
 * `security_domain_name` - (Optional) The name of a security domain, to which the direct connect gateway will be attached.
-* `network_domain_name` - (Optional) The name of a network domain, to which the direct connect gateway will be attached.
 
 ## Import
 
