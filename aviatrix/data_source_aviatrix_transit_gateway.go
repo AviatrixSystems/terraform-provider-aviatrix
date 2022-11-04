@@ -100,12 +100,6 @@ func dataSourceAviatrixTransitGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Enable or disable Source NAT feature in 'single_ip' mode for this container.",
 			},
-			"tag_list": {
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Computed:    true,
-				Description: "Instance tag of cloud provider. Only supported for AWS provider.",
-			},
 			"enable_hybrid_connection": {
 				Type:        schema.TypeBool,
 				Computed:    true,
@@ -679,7 +673,7 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 				CloudType:    gw.CloudType,
 			}
 
-			tagList, err := client.GetTags(tags)
+			_, err := client.GetTags(tags)
 			if err != nil {
 				log.Printf("[WARN] Failed to get tags for transit gateway %s: %v", tags.ResourceName, err)
 			}
@@ -687,9 +681,6 @@ func dataSourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface
 				if err := d.Set("tags", tags.Tags); err != nil {
 					log.Printf("[WARN] Error setting tags for transit gateway %s: %v", tags.ResourceName, err)
 				}
-			}
-			if len(tagList) > 0 {
-				d.Set("tag_list", tagList)
 			}
 		}
 

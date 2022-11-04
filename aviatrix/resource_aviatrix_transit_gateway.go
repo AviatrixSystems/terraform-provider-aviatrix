@@ -137,14 +137,6 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     false,
 				Description: "Enable or disable Source NAT feature in 'single_ip' mode for this container.",
 			},
-			"tag_list": {
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Optional:    true,
-				Default:     nil,
-				Deprecated:  "Use tags instead.",
-				Description: "Instance tag of cloud provider.",
-			},
 			"enable_hybrid_connection": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -472,11 +464,10 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Description: "Enable Multi-tier Transit mode on transit gateway.",
 			},
 			"tags": {
-				Type:          schema.TypeMap,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				Optional:      true,
-				Description:   "A map of tags to assign to the transit gateway.",
-				ConflictsWith: []string{"tag_list"},
+				Type:        schema.TypeMap,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "A map of tags to assign to the transit gateway.",
 			},
 			"enable_spot_instance": {
 				Type:         schema.TypeBool,
@@ -1024,29 +1015,20 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	_, tagListOk := d.GetOk("tag_list")
 	_, tagsOk := d.GetOk("tags")
-	if tagListOk || tagsOk {
+	if tagsOk {
 		if !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			return errors.New("error creating transit gateway: adding tags is only supported for AWS (1), Azure (8), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), AWS Top Secret (16384) and AWS Secret (32768)")
 		}
-
-		if tagListOk {
-			tagList := d.Get("tag_list").([]interface{})
-			tagListStr := goaviatrix.ExpandStringList(tagList)
-			tagListStr = goaviatrix.TagListStrColon(tagListStr)
-			gateway.TagList = strings.Join(tagListStr, ",")
-		} else {
-			tagsMap, err := extractTags(d, gateway.CloudType)
-			if err != nil {
-				return fmt.Errorf("error creating tags for transit gateway: %v", err)
-			}
-			tagJson, err := TagsMapToJson(tagsMap)
-			if err != nil {
-				return fmt.Errorf("failed to add tags when creating transit gateway: %v", err)
-			}
-			gateway.TagJson = tagJson
+		tagsMap, err := extractTags(d, gateway.CloudType)
+		if err != nil {
+			return fmt.Errorf("error creating tags for transit gateway: %v", err)
 		}
+		tagJson, err := TagsMapToJson(tagsMap)
+		if err != nil {
+			return fmt.Errorf("failed to add tags when creating transit gateway: %v", err)
+		}
+		gateway.TagJson = tagJson
 	}
 
 	enableActiveStandby := d.Get("enable_active_standby").(bool)
@@ -1870,30 +1852,9 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("lan_interface_cidr", lanCidr)
 
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-		if _, ok := d.GetOk("tag_list"); ok {
-			tagList := make([]string, 0, len(gw.Tags))
-			for key, val := range gw.Tags {
-				str := key + ":" + val
-				tagList = append(tagList, str)
-			}
-
-			tagListFromUserConfig := d.Get("tag_list").([]interface{})
-			tagListStr := goaviatrix.ExpandStringList(tagListFromUserConfig)
-
-			if len(goaviatrix.Difference(tagListStr, tagList)) != 0 || len(goaviatrix.Difference(tagList, tagListStr)) != 0 {
-				if err := d.Set("tag_list", tagList); err != nil {
-					log.Printf("[WARN] Error setting tag_list for (%s): %s", d.Id(), err)
-				}
-			} else {
-				if err := d.Set("tag_list", tagListStr); err != nil {
-					log.Printf("[WARN] Error setting tag_list for (%s): %s", d.Id(), err)
-				}
-			}
-		} else {
-			tags := goaviatrix.KeyValueTags(gw.Tags).IgnoreConfig(ignoreTagsConfig)
-			if err := d.Set("tags", tags); err != nil {
-				log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
-			}
+		tags := goaviatrix.KeyValueTags(gw.Tags).IgnoreConfig(ignoreTagsConfig)
+		if err := d.Set("tags", tags); err != nil {
+			log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -2408,7 +2369,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if d.HasChange("tag_list") || d.HasChange("tags") {
+	if d.HasChange("tags") {
 		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			return fmt.Errorf("failed to update transit gateway: adding tags is only supported for AWS (1), Azure (8), AWSGov (256), AWSChina (1024), AzureChina (2048), AWS Top Secret (16384) and AWS Secret (32768)")
 		}
@@ -2417,17 +2378,8 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			ResourceName: d.Get("gw_name").(string),
 			CloudType:    gateway.CloudType,
 		}
-		tagList := goaviatrix.ExpandStringList(d.Get("tag_list").([]interface{}))
 
-		if d.HasChange("tag_list") {
-			tagList = goaviatrix.TagListStrColon(tagList)
-			tags.TagList = strings.Join(tagList, ",")
-			err := client.UpdateTags(tags)
-			if err != nil {
-				return fmt.Errorf("failed to update tags for transit gateway: %s", err)
-			}
-		}
-		if d.HasChange("tags") && len(tagList) == 0 {
+		if d.HasChange("tags") {
 			tagsMap, err := extractTags(d, gateway.CloudType)
 			if err != nil {
 				return fmt.Errorf("failed to update tags for transit gateway: %v", err)
