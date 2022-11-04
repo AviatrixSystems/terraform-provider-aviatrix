@@ -15,7 +15,6 @@ The **aviatrix_segmentation_network_domain_association** resource handles creati
 ```hcl
 # Create an Aviatrix Segmentation Network Domain Association
 resource "aviatrix_segmentation_network_domain_association" "test_segmentation_network_domain_association" {
-  transit_gateway_name = "transit-gw-name"
   network_domain_name  = "network-domain-name"
   attachment_name      = "attachment-name"
 }
@@ -27,14 +26,19 @@ The following arguments are supported:
 
 ### Required
 
-* `transit_gateway_name` - (Required) Name of the Transit Gateway.
 * `network_domain_name` - (Required) Name of the Segmentation Network Domain.
 * `attachment_name` - (Required) Name of the transit gateway attachment, Spoke or Edge, to associate with the network domain.
 
+### Optional
+
+* `transit_gateway_name` - (Optional) Name of the Transit Gateway.
+
 ## Import
 
-**aviatrix_segmentation_network_domain_association** can be imported using `transit_gateway_name`, `network_domain_name` and `attachment_name` separated by a `~` e.g.
+-> **NOTE:** Starting from Aviatrix Terraform Provider R3.0+, the resource ID will not contain `transit_gateway_name` since it is optional. If you are using/upgraded to Aviatrix Terraform Provider R3.0+, and an **aviatrix_segmentation_network_domain_association** resource was originally created with a provider version <R3.0, please perform a 'terraform refresh' to rectify the state file.
+
+**aviatrix_segmentation_network_domain_association** can be imported using `network_domain_name` and `attachment_name` separated by a `~` e.g.
 
 ```
-$ terraform import aviatrix_segmentation_network_domain_association.test transit_gateway_name~network_domain_name~attachment_name
+$ terraform import aviatrix_segmentation_network_domain_association.test network_domain_name~attachment_name
 ```

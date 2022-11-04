@@ -176,9 +176,7 @@ func (c *Client) GetSegmentationSecurityDomainAssociation(association *Segmentat
 			attachment.Name = strings.Split(attachment.Name, ":")[0]
 		}
 
-		if attachment.Domain == association.SecurityDomainName &&
-			attachment.Name == association.AttachmentName &&
-			attachment.TransitName == association.TransitGatewayName {
+		if attachment.Domain == association.SecurityDomainName && attachment.Name == association.AttachmentName {
 			found = true
 		}
 	}

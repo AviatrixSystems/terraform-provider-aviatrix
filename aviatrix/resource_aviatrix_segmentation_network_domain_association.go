@@ -19,12 +19,6 @@ func resourceAviatrixSegmentationNetworkDomainAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"transit_gateway_name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "Transit Gateway name.",
-			},
 			"network_domain_name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -36,6 +30,12 @@ func resourceAviatrixSegmentationNetworkDomainAssociation() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "Attachment name, either Spoke or Edge.",
+			},
+			"transit_gateway_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Transit Gateway name.",
 			},
 		},
 	}
@@ -54,7 +54,7 @@ func resourceAviatrixSegmentationNetworkDomainAssociationCreate(d *schema.Resour
 
 	association := marshalSegmentationNetworkDomainAssociationInput(d)
 
-	d.SetId(association.TransitGatewayName + "~" + association.SecurityDomainName + "~" + association.AttachmentName)
+	d.SetId(association.SecurityDomainName + "~" + association.AttachmentName)
 	flag := false
 	defer resourceAviatrixSegmentationNetworkDomainAssociationReadIfRequired(d, meta, &flag)
 
@@ -79,14 +79,13 @@ func resourceAviatrixSegmentationNetworkDomainAssociationRead(d *schema.Resource
 	transitGatewayName := d.Get("transit_gateway_name").(string)
 	networkDomainName := d.Get("network_domain_name").(string)
 	attachmentName := d.Get("attachment_name").(string)
-	if transitGatewayName == "" {
+	if networkDomainName == "" {
 		id := d.Id()
-		log.Printf("[DEBUG] Looks like an import, no segmentation_network_domain_association transit_gateway_name received. Import Id is %s", id)
+		log.Printf("[DEBUG] Looks like an import, no segmentation_network_domain_association network_domain_name received. Import Id is %s", id)
 		d.SetId(id)
 		parts := strings.Split(id, "~")
-		transitGatewayName = parts[0]
-		networkDomainName = parts[1]
-		attachmentName = parts[2]
+		networkDomainName = parts[0]
+		attachmentName = parts[1]
 	}
 
 	association := &goaviatrix.SegmentationSecurityDomainAssociation{
@@ -101,13 +100,13 @@ func resourceAviatrixSegmentationNetworkDomainAssociationRead(d *schema.Resource
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("could not find segmentation_network_domain_association %s: %v", transitGatewayName+"~"+networkDomainName+"~"+attachmentName, err)
+		return fmt.Errorf("could not find segmentation_network_domain_association %s: %v", networkDomainName+"~"+attachmentName, err)
 	}
 
 	d.Set("transit_gateway_name", transitGatewayName)
 	d.Set("network_domain_name", networkDomainName)
 	d.Set("attachment_name", attachmentName)
-	d.SetId(transitGatewayName + "~" + networkDomainName + "~" + attachmentName)
+	d.SetId(networkDomainName + "~" + attachmentName)
 
 	return nil
 }
