@@ -58,8 +58,6 @@ In addition to all arguments above, the following attributes are exported:
 * `single_az_ha` - Status of Single AZ HA of spoke gateway.
 * `single_ip_snat` - Status of Single IP Source NAT mode of the spoke gateway.
 * `subnet` - A VPC Network address range selected from one of the available network ranges.
-* `tag_list` - Instance tag of cloud provider.
-* `transit_gw` - Transit gateways attached to this spoke gateway.
 * `vpc_id` - VPC-ID/VNet-Name of cloud provider.
 * `vpc_reg` - Region of cloud provider.
 * `enable_private_oob` - Status of private OOB for the spoke gateway.
@@ -77,3 +75,8 @@ In addition to all arguments above, the following attributes are exported:
 * `ha_image_version` - The image version of the HA gateway.
 * `eip` - The EIP address of the Spoke Gateway.
 * `ha_eip` - The EIP address of the HA Spoke Gateway.
+
+The following arguments are deprecated:
+
+* `tag_list` - Instance tag of cloud provider.
+* `transit_gw` - Transit gateways attached to this spoke gateway.

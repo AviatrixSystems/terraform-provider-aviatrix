@@ -142,27 +142,6 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:     false,
 				Description: "Set to 'enabled' if this feature is desired.",
 			},
-			"transit_gw": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Default:     "",
-				Deprecated:  "Please set `manage_transit_gateway_attachment` to false, and use the standalone aviatrix_spoke_transit_attachment resource instead.",
-				Description: "Specify the transit Gateways to attach to this spoke. Format is a comma-separated list of transit gateway names. For example, 'transit-gw1,transit-gw2'.",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					oldGws := strings.Split(old, ",")
-					newGws := strings.Split(new, ",")
-					return goaviatrix.Equivalent(oldGws, newGws)
-				},
-			},
-			"manage_transit_gateway_attachment": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-				Description: "This parameter is a switch used to determine whether or not to manage attaching this spoke gateway to transit gateways " +
-					"using the aviatrix_spoke_gateway resource. If this is set to false, attaching this spoke gateway to " +
-					"transit gateways must be done using the aviatrix_spoke_transit_attachment resource. " +
-					"Valid values: true, false. Default value: true.",
-			},
 			"manage_ha_gateway": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -170,14 +149,6 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description: "This parameter is a switch used to determine whether or not to manage spoke ha gateway " +
 					"using the aviatrix_spoke_gateway resource. If this is set to false, managing spoke ha gateway " +
 					"must be done using the aviatrix_spoke_ha_gateway resource. Valid values: true, false. Default value: true.",
-			},
-			"tag_list": {
-				Type:        schema.TypeList,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Optional:    true,
-				Default:     nil,
-				Deprecated:  "Use tags instead.",
-				Description: "Instance tag of cloud provider.",
 			},
 			"insane_mode": {
 				Type:        schema.TypeBool,
@@ -283,11 +254,10 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Description: "Enable jumbo frame support for spoke gateway. Valid values: true or false. Default value: true.",
 			},
 			"tags": {
-				Type:          schema.TypeMap,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				Optional:      true,
-				Description:   "A map of tags to assign to the spoke gateway.",
-				ConflictsWith: []string{"tag_list"},
+				Type:        schema.TypeMap,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "A map of tags to assign to the spoke gateway.",
 			},
 			"enable_private_vpc_default_route": {
 				Type:        schema.TypeBool,
@@ -612,8 +582,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	manageTransitGwAttachment := d.Get("manage_transit_gateway_attachment").(bool)
-
 	if d.Get("enable_private_vpc_default_route").(bool) && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 		return fmt.Errorf("enable_private_vpc_default_route is only valid for AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) and AWS Secret (32768)")
 	}
@@ -835,29 +803,21 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	_, tagListOk := d.GetOk("tag_list")
 	_, tagsOk := d.GetOk("tags")
-	if tagListOk || tagsOk {
+	if tagsOk {
 		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			return errors.New("failed to create spoke gateway: adding tags is only supported for AWS (1), Azure (8), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), AWS Top Secret (16384) or AWS Secret (32768)")
 		}
 
-		if tagListOk {
-			tagList := d.Get("tag_list").([]interface{})
-			tagListStr := goaviatrix.ExpandStringList(tagList)
-			tagListStr = goaviatrix.TagListStrColon(tagListStr)
-			gateway.TagList = strings.Join(tagListStr, ",")
-		} else {
-			tagsMap, err := extractTags(d, gateway.CloudType)
-			if err != nil {
-				return fmt.Errorf("error creating tags for spoke gateway: %v", err)
-			}
-			tagJson, err := TagsMapToJson(tagsMap)
-			if err != nil {
-				return fmt.Errorf("failed to add tags whenc creating spoke gateway: %v", err)
-			}
-			gateway.TagJson = tagJson
+		tagsMap, err := extractTags(d, gateway.CloudType)
+		if err != nil {
+			return fmt.Errorf("error creating tags for spoke gateway: %v", err)
 		}
+		tagJson, err := TagsMapToJson(tagsMap)
+		if err != nil {
+			return fmt.Errorf("failed to add tags whenc creating spoke gateway: %v", err)
+		}
+		gateway.TagJson = tagJson
 	}
 
 	enableActiveStandby := d.Get("enable_active_standby").(bool)
@@ -1144,36 +1104,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if transitGwName := d.Get("transit_gw").(string); transitGwName != "" {
-		if manageTransitGwAttachment {
-			gws := strings.Split(d.Get("transit_gw").(string), ",")
-			for _, gw := range gws {
-				gateway.TransitGateway = gw
-				try, maxTries, backoff := 0, 8, 1000*time.Millisecond
-				for {
-					try++
-					err := client.SpokeJoinTransit(gateway)
-					if err != nil {
-						if strings.Contains(err.Error(), "is not up") {
-							if try == maxTries {
-								return fmt.Errorf("spoke gateway %s couldn't join transit gateway %q: %v", gateway.GwName, gw, err)
-							}
-							time.Sleep(backoff)
-							// Double the backoff time after each failed try
-							backoff *= 2
-							continue
-						}
-						return fmt.Errorf("spoke gateway %s failed to join transit gateway %q: %v", gateway.GwName, gw, err)
-					}
-					break
-				}
-			}
-		} else {
-			return fmt.Errorf("'manage_transit_gateway_attachment' is set to false. Please set it to true, or use " +
-				"'aviatrix_spoke_transit_attachment' to attach this spoke to transit gateways")
-		}
-	}
-
 	if !d.Get("enable_jumbo_frame").(bool) {
 		gw := &goaviatrix.Gateway{
 			GwName: d.Get("gw_name").(string),
@@ -1352,7 +1282,6 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no gateway name received. Import Id is %s", id)
 		d.Set("gw_name", id)
-		d.Set("manage_transit_gateway_attachment", true)
 		d.Set("manage_ha_gateway", true)
 		d.SetId(id)
 	}
@@ -1538,47 +1467,10 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("setting 'monitor_exclude_list' to state: %v", err)
 	}
 
-	manageTransitGwAttachment := d.Get("manage_transit_gateway_attachment").(bool)
-	if manageTransitGwAttachment {
-		if gw.SpokeVpc == "yes" {
-			var transitGws []string
-			if gw.EgressTransitGwName != "" {
-				transitGws = append(transitGws, gw.EgressTransitGwName)
-			}
-			if gw.TransitGwName != "" {
-				transitGws = append(transitGws, gw.TransitGwName)
-			}
-			d.Set("transit_gw", strings.Join(transitGws, ","))
-		} else {
-			d.Set("transit_gw", "")
-		}
-	}
-
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-		if _, ok := d.GetOk("tag_list"); ok {
-			tagList := make([]string, 0, len(gw.Tags))
-			for key, val := range gw.Tags {
-				str := key + ":" + val
-				tagList = append(tagList, str)
-			}
-
-			tagListFromUserConfig := d.Get("tag_list").([]interface{})
-			tagListStr := goaviatrix.ExpandStringList(tagListFromUserConfig)
-
-			if len(goaviatrix.Difference(tagListStr, tagList)) != 0 || len(goaviatrix.Difference(tagList, tagListStr)) != 0 {
-				if err := d.Set("tag_list", tagList); err != nil {
-					log.Printf("[WARN] Error setting tag_list for (%s): %s", d.Id(), err)
-				}
-			} else {
-				if err := d.Set("tag_list", tagListStr); err != nil {
-					log.Printf("[WARN] Error setting tag_list for (%s): %s", d.Id(), err)
-				}
-			}
-		} else {
-			tags := goaviatrix.KeyValueTags(gw.Tags).IgnoreConfig(ignoreTagsConfig)
-			if err := d.Set("tags", tags); err != nil {
-				log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
-			}
+		tags := goaviatrix.KeyValueTags(gw.Tags).IgnoreConfig(ignoreTagsConfig)
+		if err := d.Set("tags", tags); err != nil {
+			log.Printf("[WARN] Error setting tags for (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -1863,22 +1755,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	manageTransitGwAttachment := d.Get("manage_transit_gateway_attachment").(bool)
-	if d.HasChange("manage_transit_gateway_attachment") {
-		_, nMTGA := d.GetChange("manage_transit_gateway_attachment")
-		newManageTransitGwAttachment := nMTGA.(bool)
-		if newManageTransitGwAttachment {
-			d.Set("manage_transit_gateway_attachment", true)
-		} else {
-			d.Set("manage_transit_gateway_attachment", false)
-		}
-	}
-	if !manageTransitGwAttachment && d.Get("transit_gw").(string) != "" {
-		return fmt.Errorf("'manage_transit_gateway_attachment' is set to false. Please set it to true, or use " +
-			"'aviatrix_spoke_transit_attachment' to attach this spoke to transit gateways")
-	}
-
-	if d.HasChange("tag_list") || d.HasChange("tags") {
+	if d.HasChange("tags") {
 		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 			return fmt.Errorf("error updating spoke gateway: adding tags is only supported for AWS (1), Azure (8), AzureGov (32), AWSGov (256), AWSChina (1024), AzureChina (2048), AWS Top Secret (16384) and AWS Secret (32768)")
 		}
@@ -1887,31 +1764,20 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			ResourceName: d.Get("gw_name").(string),
 			CloudType:    gateway.CloudType,
 		}
-		tagList := goaviatrix.ExpandStringList(d.Get("tag_list").([]interface{}))
 
-		if d.HasChange("tag_list") {
-			tagList = goaviatrix.TagListStrColon(tagList)
-			tags.TagList = strings.Join(tagList, ",")
-			err := client.UpdateTags(tags)
-			if err != nil {
-				return fmt.Errorf("failed to update tags for spoke gateway: %s", err)
-			}
+		tagsMap, err := extractTags(d, gateway.CloudType)
+		if err != nil {
+			return fmt.Errorf("failed to update tags for spoke gateway: %v", err)
 		}
-		if d.HasChange("tags") && len(tagList) == 0 {
-			tagsMap, err := extractTags(d, gateway.CloudType)
-			if err != nil {
-				return fmt.Errorf("failed to update tags for spoke gateway: %v", err)
-			}
-			tags.Tags = tagsMap
-			tagJson, err := TagsMapToJson(tagsMap)
-			if err != nil {
-				return fmt.Errorf("failed to update tags for spoke gateway: %v", err)
-			}
-			tags.TagJson = tagJson
-			err = client.UpdateTags(tags)
-			if err != nil {
-				return fmt.Errorf("failed to update tags for spoke gateway: %v", err)
-			}
+		tags.Tags = tagsMap
+		tagJson, err := TagsMapToJson(tagsMap)
+		if err != nil {
+			return fmt.Errorf("failed to update tags for spoke gateway: %v", err)
+		}
+		tags.TagJson = tagJson
+		err = client.UpdateTags(tags)
+		if err != nil {
+			return fmt.Errorf("failed to update tags for spoke gateway: %v", err)
 		}
 	}
 
@@ -2388,50 +2254,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if d.HasChange("transit_gw") {
-		if manageTransitGwAttachment {
-			spokeVPC := &goaviatrix.SpokeVpc{
-				CloudType: d.Get("cloud_type").(int),
-				GwName:    d.Get("gw_name").(string),
-				HASubnet:  d.Get("ha_subnet").(string),
-			}
-
-			o, n := d.GetChange("transit_gw")
-			oldTransitGws := strings.Split(o.(string), ",")
-			newTransitGws := strings.Split(n.(string), ",")
-			if len(oldTransitGws) > 0 && oldTransitGws[0] != "" {
-				for _, gw := range oldTransitGws {
-					// Leave any transit gateways that are in the old list but not in the new.
-					if goaviatrix.Contains(newTransitGws, gw) {
-						continue
-					}
-					spokeVPC.TransitGateway = gw
-					err := client.SpokeLeaveTransit(spokeVPC)
-					if err != nil {
-						return fmt.Errorf("failed to leave Transit Gateway %q: %v", gw, err)
-					}
-				}
-			}
-			if len(newTransitGws) > 0 && newTransitGws[0] != "" {
-				for _, gw := range newTransitGws {
-					// Join any transit gateways that are in the new list but not in the old.
-					if goaviatrix.Contains(oldTransitGws, gw) {
-						continue
-					}
-					spokeVPC.TransitGateway = gw
-					err := client.SpokeJoinTransit(spokeVPC)
-					if err != nil {
-						return fmt.Errorf("failed to join Transit Gateway %q: %v", gw, err)
-					}
-				}
-			}
-		} else {
-			if !d.HasChange("manage_transit_gateway_attachment") {
-				return fmt.Errorf("not able to update transit_gw since transit attachment is managed elsewhere")
-			}
-		}
-	}
-
 	if d.HasChange("enable_jumbo_frame") {
 		if d.Get("enable_jumbo_frame").(bool) {
 			err := client.EnableJumboFrame(gateway)
@@ -2747,24 +2569,6 @@ func resourceAviatrixSpokeGatewayDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	log.Printf("[INFO] Deleting Aviatrix Spoke Gateway: %#v", gateway)
-
-	manageTransitGwAttachment := d.Get("manage_transit_gateway_attachment").(bool)
-	if manageTransitGwAttachment {
-		if transitGw := d.Get("transit_gw").(string); transitGw != "" {
-			spokeVPC := &goaviatrix.SpokeVpc{
-				GwName: d.Get("gw_name").(string),
-			}
-
-			gws := strings.Split(transitGw, ",")
-			for _, gw := range gws {
-				spokeVPC.TransitGateway = gw
-				err := client.SpokeLeaveTransit(spokeVPC)
-				if err != nil {
-					return fmt.Errorf("failed to leave transit gateway %q: %v", gw, err)
-				}
-			}
-		}
-	}
 
 	//If HA is enabled, delete HA GW first.
 	if d.Get("manage_ha_gateway").(bool) {
