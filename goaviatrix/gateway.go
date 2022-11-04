@@ -105,7 +105,6 @@ type Gateway struct {
 	SearchDomains                   string            `form:"search_domains,omitempty" json:"search_domains"`
 	SplitTunnel                     string            `form:"split_tunnel,omitempty" json:"split_tunnel,omitempty"`
 	SpokeVpc                        string            `json:"spoke_vpc,omitempty"`
-	TagList                         string            `form:"tag_string,omitempty"`
 	Tags                            map[string]string `json:"tags,omitempty"`
 	TagJson                         string            `form:"tag_json,omitempty"`
 	TransitGwName                   string            `form:"transit_gw_name,omitempty" json:"transit_gw_name,omitempty"`
