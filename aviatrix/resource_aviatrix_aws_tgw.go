@@ -20,6 +20,19 @@ func resourceAviatrixAWSTgw() *schema.Resource {
 		},
 
 		SchemaVersion: 3,
+		MigrateState:  resourceAviatrixAWSTgwMigrateState,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceAviatrixAWSTgwResourceV1().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAviatrixAWSTgwStateUpgradeV1,
+				Version: 1,
+			},
+			{
+				Type:    resourceAviatrixAWSTgwResourceV2().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAviatrixAWSTgwStateUpgradeV2,
+				Version: 2,
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"tgw_name": {
