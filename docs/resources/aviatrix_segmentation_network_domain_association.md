@@ -35,6 +35,8 @@ The following arguments are supported:
 
 ## Import
 
+-> **NOTE:** Starting from Aviatrix Terraform Provider R3.0+, the resource ID will not contain `transit_gateway_name` since it is optional. If you are using/upgraded to Aviatrix Terraform Provider R3.0+, and an **aviatrix_segmentation_network_domain_association** resource was originally created with a provider version <R3.0, please perform a 'terraform refresh' to rectify the state file.
+
 **aviatrix_segmentation_network_domain_association** can be imported using `network_domain_name` and `attachment_name` separated by a `~` e.g.
 
 ```
