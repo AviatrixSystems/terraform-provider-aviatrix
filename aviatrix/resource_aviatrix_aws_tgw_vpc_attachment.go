@@ -31,20 +31,11 @@ func resourceAviatrixAwsTgwVpcAttachment() *schema.Resource {
 				Required:    true,
 				Description: "Region of cloud provider.",
 			},
-			"security_domain_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				Deprecated:    "Please use network_domain_name instead.",
-				ConflictsWith: []string{"network_domain_name"},
-				Description:   "The name of the security domain.",
-			},
 			"network_domain_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"security_domain_name"},
-				Description:   "The name of the network domain.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "The name of the network domain.",
 			},
 			"vpc_account_name": {
 				Type:        schema.TypeString,
@@ -116,18 +107,7 @@ func resourceAviatrixAwsTgwVpcAttachmentCreate(d *schema.ResourceData, meta inte
 		CustomizedRouteAdvertisement: d.Get("customized_route_advertisement").(string),
 		DisableLocalRoutePropagation: d.Get("disable_local_route_propagation").(bool),
 		EdgeAttachment:               d.Get("edge_attachment").(string),
-	}
-
-	securityDomainName, securityDomainNameOk := d.GetOk("security_domain_name")
-	networkDomainName, networkDomainNameOk := d.GetOk("network_domain_name")
-	if !securityDomainNameOk && !networkDomainNameOk {
-		return fmt.Errorf("either security_domain_name or network_domain_name must be configured")
-	}
-
-	if securityDomainNameOk {
-		awsTgwVpcAttachment.SecurityDomainName = securityDomainName.(string)
-	} else {
-		awsTgwVpcAttachment.SecurityDomainName = networkDomainName.(string)
+		SecurityDomainName:           d.Get("network_domain_name").(string),
 	}
 
 	isFirewallSecurityDomain, err := client.IsFirewallSecurityDomain(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.SecurityDomainName)
@@ -192,17 +172,9 @@ func resourceAviatrixAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta interf
 		d.Set("vpc_id", strings.Split(id, "~")[2])
 	}
 	awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
-		TgwName: d.Get("tgw_name").(string),
-		VpcID:   d.Get("vpc_id").(string),
-	}
-
-	securityDomainName, securityDomainNameOk := d.GetOk("security_domain_name")
-	networkDomainName, _ := d.GetOk("network_domain_name")
-
-	if securityDomainNameOk {
-		awsTgwVpcAttachment.SecurityDomainName = securityDomainName.(string)
-	} else {
-		awsTgwVpcAttachment.SecurityDomainName = networkDomainName.(string)
+		TgwName:            d.Get("tgw_name").(string),
+		VpcID:              d.Get("vpc_id").(string),
+		SecurityDomainName: d.Get("network_domain_name").(string),
 	}
 
 	aTVA, err := client.GetAwsTgwVpcAttachment(awsTgwVpcAttachment)
@@ -216,13 +188,7 @@ func resourceAviatrixAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta interf
 	if aTVA != nil {
 		d.Set("tgw_name", aTVA.TgwName)
 		d.Set("region", aTVA.Region)
-
-		if securityDomainNameOk {
-			d.Set("security_domain_name", aTVA.SecurityDomainName)
-		} else {
-			d.Set("network_domain_name", aTVA.SecurityDomainName)
-		}
-
+		d.Set("network_domain_name", aTVA.SecurityDomainName)
 		d.Set("vpc_account_name", aTVA.VpcAccountName)
 		d.Set("vpc_id", aTVA.VpcID)
 		d.Set("disable_local_route_propagation", aTVA.DisableLocalRoutePropagation)
@@ -308,17 +274,10 @@ func resourceAviatrixAwsTgwVpcAttachmentUpdate(d *schema.ResourceData, meta inte
 
 	if d.HasChange("edge_attachment") {
 		awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
-			TgwName:        d.Get("tgw_name").(string),
-			VpcID:          d.Get("vpc_id").(string),
-			EdgeAttachment: d.Get("edge_attachment").(string),
-		}
-
-		securityDomainName, securityDomainNameOk := d.GetOk("security_domain_name")
-		networkDomainName, _ := d.GetOk("network_domain_name")
-		if securityDomainNameOk {
-			awsTgwVpcAttachment.SecurityDomainName = securityDomainName.(string)
-		} else {
-			awsTgwVpcAttachment.SecurityDomainName = networkDomainName.(string)
+			TgwName:            d.Get("tgw_name").(string),
+			VpcID:              d.Get("vpc_id").(string),
+			EdgeAttachment:     d.Get("edge_attachment").(string),
+			SecurityDomainName: d.Get("network_domain_name").(string),
 		}
 
 		isFirewallSecurityDomain, err := client.IsFirewallSecurityDomain(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.SecurityDomainName)
@@ -370,18 +329,11 @@ func resourceAviatrixAwsTgwVpcAttachmentDelete(d *schema.ResourceData, meta inte
 	client := meta.(*goaviatrix.Client)
 
 	awsTgwVpcAttachment := &goaviatrix.AwsTgwVpcAttachment{
-		TgwName:        d.Get("tgw_name").(string),
-		Region:         d.Get("region").(string),
-		VpcAccountName: d.Get("vpc_account_name").(string),
-		VpcID:          d.Get("vpc_id").(string),
-	}
-
-	securityDomainName, securityDomainNameOk := d.GetOk("security_domain_name")
-	networkDomainName, _ := d.GetOk("network_domain_name")
-	if securityDomainNameOk {
-		awsTgwVpcAttachment.SecurityDomainName = securityDomainName.(string)
-	} else {
-		awsTgwVpcAttachment.SecurityDomainName = networkDomainName.(string)
+		TgwName:            d.Get("tgw_name").(string),
+		Region:             d.Get("region").(string),
+		VpcAccountName:     d.Get("vpc_account_name").(string),
+		VpcID:              d.Get("vpc_id").(string),
+		SecurityDomainName: d.Get("network_domain_name").(string),
 	}
 
 	isFirewallSecurityDomain, err := client.IsFirewallSecurityDomain(awsTgwVpcAttachment.TgwName, awsTgwVpcAttachment.SecurityDomainName)
