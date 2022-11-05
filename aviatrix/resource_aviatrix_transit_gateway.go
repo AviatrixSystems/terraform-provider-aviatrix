@@ -485,7 +485,7 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"1K", "2K", "4K", "8K", "16K"}, false),
-				Description:  "Gateway ethernet interface RX queue size. Supported for AWS related clouds only.",
+				Description:  "Gateway ethernet interface RX queue size. Supported for AWS related clouds only. Applies on HA as well if enabled.",
 			},
 			"private_mode_lb_vpc_id": {
 				Type:          schema.TypeString,
@@ -1537,6 +1537,16 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		err := client.SetRxQueueSize(gwRxQueueSize)
 		if err != nil {
 			return fmt.Errorf("failed to set rx queue size for transit %s: %s", gateway.GwName, err)
+		}
+		if haSubnet != "" || haZone != "" {
+			haGwRxQueueSize := &goaviatrix.Gateway{
+				GwName:      d.Get("gw_name").(string) + "-hagw",
+				RxQueueSize: rxQueueSize,
+			}
+			err := client.SetRxQueueSize(haGwRxQueueSize)
+			if err != nil {
+				return fmt.Errorf("failed to set rx queue size for transit ha %s : %s", haGwRxQueueSize.GwName, err)
+			}
 		}
 	}
 
@@ -3256,6 +3266,16 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		err := client.SetRxQueueSize(gw)
 		if err != nil {
 			return fmt.Errorf("could not modify rx queue size for transit: %s during gateway update: %v", gw.GatewayName, err)
+		}
+		if haSubnet != "" || haZone != "" {
+			haGwRxQueueSize := &goaviatrix.Gateway{
+				GwName:      d.Get("gw_name").(string) + "-hagw",
+				RxQueueSize: d.Get("rx_queue_size").(string),
+			}
+			err := client.SetRxQueueSize(haGwRxQueueSize)
+			if err != nil {
+				return fmt.Errorf("could not modify rx queue size for transit ha: %s during gateway update: %v", haGwRxQueueSize.GwName, err)
+			}
 		}
 	}
 
