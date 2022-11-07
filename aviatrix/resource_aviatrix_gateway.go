@@ -2159,6 +2159,18 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 				if err != nil {
 					return fmt.Errorf("failed to enable Aviatrix peering HA gateway: %s", err)
 				}
+				if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+					if d.Get("rx_queue_size").(string) != "" && !d.HasChange("rx_queue_size") {
+						haGwRxQueueSize := &goaviatrix.Gateway{
+							GwName:      d.Get("gw_name").(string) + "-hagw",
+							RxQueueSize: d.Get("rx_queue_size").(string),
+						}
+						err := client.SetRxQueueSize(haGwRxQueueSize)
+						if err != nil {
+							return fmt.Errorf("could not set rx queue size for gateway ha: %s during gateway update: %v", haGwRxQueueSize.GwName, err)
+						}
+					}
+				}
 			} else if deleteHaGw {
 				err := client.DeleteGateway(peeringHaGateway)
 				if err != nil {

@@ -1961,6 +1961,18 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				if err != nil {
 					return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
 				}
+				if goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+					if d.Get("rx_queue_size").(string) != "" && !d.HasChange("rx_queue_size") {
+						haGwRxQueueSize := &goaviatrix.Gateway{
+							GwName:      d.Get("gw_name").(string) + "-hagw",
+							RxQueueSize: d.Get("rx_queue_size").(string),
+						}
+						err := client.SetRxQueueSize(haGwRxQueueSize)
+						if err != nil {
+							return fmt.Errorf("could not set rx queue size for spoke ha: %s during gateway update: %v", haGwRxQueueSize.GwName, err)
+						}
+					}
+				}
 			}
 		} else if deleteHaGw {
 			//Ha configuration has been deleted
