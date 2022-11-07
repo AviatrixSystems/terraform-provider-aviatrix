@@ -15,13 +15,10 @@ The **aviatrix_aws_tgw_network_domain** resource allows the creation and managem
 ```hcl
 # Create an Aviatrix AWS TGW network domain
 resource "aviatrix_aws_tgw" "test_aws_tgw" {
-  account_name                      = "devops"
-  aws_side_as_number                = "64512"
-  region                            = "us-east-1"
-  tgw_name                          = "test-AWS-TGW"
-  manage_security_domain            = false
-  manage_vpc_attachment             = false
-  manage_transit_gateway_attachment = false
+  account_name       = "devops"
+  aws_side_as_number = "64512"
+  region             = "us-east-1"
+  tgw_name           = "test-AWS-TGW"
 }
 
 resource "aviatrix_aws_tgw_network_domain" "Default_Domain" {

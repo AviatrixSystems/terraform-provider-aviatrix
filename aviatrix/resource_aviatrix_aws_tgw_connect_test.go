@@ -54,32 +54,43 @@ func testAccAwsTgwConnectBasic(rName string) string {
 %s
 
 resource "aviatrix_aws_tgw" "test_aws_tgw" {
-	account_name                      = aviatrix_account.aws.account_name
-	aws_side_as_number                = "64512"
-	region                            = "%[3]s"
-	tgw_name                          = "aws-tgw-%[2]s"
-	manage_security_domain            = false
-	manage_vpc_attachment             = false
-	manage_transit_gateway_attachment = false
+	account_name       = aviatrix_account.aws.account_name
+	aws_side_as_number = "64512"
+	region             = "%[3]s"
+	tgw_name           = "aws-tgw-%[2]s"
 
 	cidrs = ["10.0.0.0/24", "10.1.0.0/24", "8.0.0.0/24", "5.0.0.0/24"]
 }
-
 resource "aviatrix_aws_tgw_network_domain" "Default_Domain" {
 	name     = "Default_Domain"
 	tgw_name = aviatrix_aws_tgw.test_aws_tgw.tgw_name
 }
-
 resource "aviatrix_aws_tgw_network_domain" "Shared_Service_Domain" {
 	name     = "Shared_Service_Domain"
 	tgw_name = aviatrix_aws_tgw.test_aws_tgw.tgw_name
 }
-
 resource "aviatrix_aws_tgw_network_domain" "Aviatrix_Edge_Domain" {
 	name     = "Aviatrix_Edge_Domain"
 	tgw_name = aviatrix_aws_tgw.test_aws_tgw.tgw_name
 }
-
+resource "aviatrix_aws_tgw_peering_domain_conn" "default_nd_conn1" {
+	tgw_name1    = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+	domain_name1 = aviatrix_aws_tgw_network_domain.Aviatrix_Edge_Domain.name
+	tgw_name2    = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+	domain_name2 = aviatrix_aws_tgw_network_domain.Default_Domain.name
+}
+resource "aviatrix_aws_tgw_peering_domain_conn" "default_nd_conn2" {
+	tgw_name1    = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+	domain_name1 = aviatrix_aws_tgw_network_domain.Aviatrix_Edge_Domain.name
+	tgw_name2    = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+	domain_name2 = aviatrix_aws_tgw_network_domain.Shared_Service_Domain.name
+}
+resource "aviatrix_aws_tgw_peering_domain_conn" "default_nd_conn3" {
+	tgw_name1    = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+	domain_name1 = aviatrix_aws_tgw_network_domain.Default_Domain.name
+	tgw_name2    = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+	domain_name2 = aviatrix_aws_tgw_network_domain.Shared_Service_Domain.name
+}
 resource aviatrix_vpc tgw_attach_vpc {
 	cloud_type           = aviatrix_account.aws.cloud_type
 	account_name         = aviatrix_account.aws.account_name
@@ -89,7 +100,6 @@ resource aviatrix_vpc tgw_attach_vpc {
 	aviatrix_firenet_vpc = false
 	aviatrix_transit_vpc = false
 }
-
 resource "aviatrix_aws_tgw_vpc_attachment" "aws_tgw_vpc_attachment" {
 	tgw_name            = aviatrix_aws_tgw.test_aws_tgw.tgw_name
 	region              = "%[3]s"
@@ -97,7 +107,6 @@ resource "aviatrix_aws_tgw_vpc_attachment" "aws_tgw_vpc_attachment" {
 	vpc_account_name    = aviatrix_account.aws.account_name
 	vpc_id              = aviatrix_vpc.tgw_attach_vpc.vpc_id
 }
-
 resource "aviatrix_aws_tgw_connect" "test_aws_tgw_connect" {
 	tgw_name            = aviatrix_aws_tgw.test_aws_tgw.tgw_name
 	connection_name     = "aws-tgw-connect-%[2]s"
