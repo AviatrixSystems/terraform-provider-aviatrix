@@ -164,7 +164,7 @@ func resourceAviatrixAwsTgwVpcAttachmentRead(d *schema.ResourceData, meta interf
 	tgwName := d.Get("tgw_name").(string)
 	vpcID := d.Get("vpc_id").(string)
 
-	if tgwName == "" || (d.Get("security_domain_name").(string) == "" && d.Get("network_domain_name").(string) == "") || vpcID == "" {
+	if tgwName == "" || d.Get("network_domain_name").(string) == "" || vpcID == "" {
 		id := d.Id()
 		log.Printf("[DEBUG] Looks like an import, no vpc names received. Import Id is %s", id)
 		d.Set("tgw_name", strings.Split(id, "~")[0])
