@@ -103,7 +103,7 @@ resource aviatrix_vpc tgw_attach_vpc {
 resource "aviatrix_aws_tgw_vpc_attachment" "aws_tgw_vpc_attachment" {
 	tgw_name            = aviatrix_aws_tgw.test_aws_tgw.tgw_name
 	region              = "%[3]s"
-	network_domain_name = "Shared_Service_Domain"
+	network_domain_name = aviatrix_aws_tgw_network_domain.Shared_Service_Domain.name
 	vpc_account_name    = aviatrix_account.aws.account_name
 	vpc_id              = aviatrix_vpc.tgw_attach_vpc.vpc_id
 }
