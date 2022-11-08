@@ -111,13 +111,12 @@ resource "aviatrix_aws_tgw_network_domain" "test" {
 resource "aviatrix_aws_tgw_vpc_attachment" "test" {
 	tgw_name            = aviatrix_aws_tgw.test_aws_tgw.tgw_name
 	region              = "%s"
-	network_domain_name = "%s"
+	network_domain_name = aviatrix_aws_tgw_network_domain.test.name
 	vpc_account_name    = aviatrix_account.test_account.account_name
 	vpc_id              = "%s"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),
-		awsSideAsNumber, os.Getenv("AWS_REGION"), rName, nDm, os.Getenv("AWS_REGION"), nDm,
-		os.Getenv("AWS_VPC_ID"))
+		awsSideAsNumber, os.Getenv("AWS_REGION"), rName, nDm, os.Getenv("AWS_REGION"), os.Getenv("AWS_VPC_ID"))
 }
 
 func tesAccCheckAwsTgwVpcAttachmentExists(n string, awsTgwVpcAttachment *goaviatrix.AwsTgwVpcAttachment) resource.TestCheckFunc {

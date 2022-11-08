@@ -104,7 +104,7 @@ resource "aviatrix_aws_tgw_peering_domain_conn" "default_nd_conn3" {
 }
 resource "aviatrix_aws_tgw_vpn_conn" "test" {
 	tgw_name          = aviatrix_aws_tgw.test_aws_tgw.tgw_name
-	route_domain_name = "Default_Domain"
+	route_domain_name = aviatrix_aws_tgw_network_domain.Default_Domain.name
 	connection_name   = "tfc-%s"
 	public_ip         = "40.0.0.0"
 	remote_as_number  = "%s"

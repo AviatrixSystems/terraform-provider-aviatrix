@@ -104,7 +104,7 @@ resource "aviatrix_aws_tgw_directconnect" "test" {
 	tgw_name                   = aviatrix_aws_tgw.test_aws_tgw.tgw_name
 	directconnect_account_name = aviatrix_account.test_account.account_name
 	dx_gateway_id              = "%s"
-	network_domain_name        = "Default_Domain"
+	network_domain_name        = aviatrix_aws_tgw_network_domain.Default_Domain.name
 	allowed_prefix             = "10.12.0.0/24"
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),

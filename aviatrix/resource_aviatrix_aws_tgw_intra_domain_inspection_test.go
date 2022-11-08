@@ -53,12 +53,12 @@ func TestAccAviatrixAwsTgwIntraDomainInspection_basic(t *testing.T) {
 func testAccAwsTgwIntraDomainInspectionBasic(accName string, tgwName string, routeDomainName string, firewallDomainName string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test" {
-	account_name       = "%[1]s"
+	account_name       = "%s"
 	cloud_type         = 1
-	aws_account_number = "%[2]s"
+	aws_account_number = "%s"
 	aws_iam            = false
-	aws_access_key     = "%[3]s"
-	aws_secret_key     = "%[4]s"
+	aws_access_key     = "%s"
+	aws_secret_key     = "%s"
 }
 resource "aviatrix_vpc" "test" {
  	cloud_type           = 1
@@ -83,7 +83,7 @@ resource "aviatrix_aws_tgw" "test" {
 	account_name       = aviatrix_account.test.account_name
 	aws_side_as_number = "64512"
 	region             = aviatrix_vpc.test.region
-	tgw_name           = "%[5]s"
+	tgw_name           = "%s"
 }
 resource "aviatrix_aws_tgw_network_domain" "Default_Domain" {
 	name     = "Default_Domain"
@@ -115,19 +115,19 @@ resource "aviatrix_aws_tgw_peering_domain_conn" "default_nd_conn3" {
 	tgw_name2    = aviatrix_aws_tgw.test.tgw_name
 	domain_name2 = aviatrix_aws_tgw_network_domain.Shared_Service_Domain.name
 }
-resource "aviatrix_aws_tgw_network_domain" "firewall_domain" {
-	name              = "%[7]s"
-	tgw_name          = aviatrix_aws_tgw.test.tgw_name
-	aviatrix_firewall = true
+resource "aviatrix_aws_tgw_network_domain" "route_domain" {
+	name       = "%s"
+	tgw_name   = aviatrix_aws_tgw.test.tgw_name
 	depends_on = [
     	aviatrix_aws_tgw_network_domain.Default_Domain,
     	aviatrix_aws_tgw_network_domain.Shared_Service_Domain,
     	aviatrix_aws_tgw_network_domain.Aviatrix_Edge_Domain
 	]
 }
-resource "aviatrix_aws_tgw_network_domain" "route_domain" {
-	name       = "%[6]s"
-	tgw_name   = aviatrix_aws_tgw.test.tgw_name
+resource "aviatrix_aws_tgw_network_domain" "firewall_domain" {
+	name              = "%s"
+	tgw_name          = aviatrix_aws_tgw.test.tgw_name
+	aviatrix_firewall = true
 	depends_on = [
     	aviatrix_aws_tgw_network_domain.Default_Domain,
     	aviatrix_aws_tgw_network_domain.Shared_Service_Domain,
@@ -141,17 +141,17 @@ resource "aviatrix_aws_tgw_peering_domain_conn" "nd_conn" {
 	domain_name2 = aviatrix_aws_tgw_network_domain.route_domain.name
 }
 resource "aviatrix_aws_tgw_vpc_attachment" "test" {
-	tgw_name             = aviatrix_aws_tgw.test.tgw_name
-	region               = aviatrix_vpc.test.region
-	security_domain_name = "%[7]s"
-	vpc_account_name     = aviatrix_vpc.test.account_name
-	vpc_id               = aviatrix_vpc.test.vpc_id
+	tgw_name            = aviatrix_aws_tgw.test.tgw_name
+	region              = aviatrix_vpc.test.region
+	network_domain_name = aviatrix_aws_tgw_network_domain.firewall_domain.name
+	vpc_account_name    = aviatrix_vpc.test.account_name
+	vpc_id              = aviatrix_vpc.test.vpc_id
    	depends_on = [aviatrix_transit_gateway.test]
 }
 resource "aviatrix_aws_tgw_intra_domain_inspection" "test" {
 	tgw_name             = aviatrix_aws_tgw.test.tgw_name
-	route_domain_name    = "%[6]s"
-	firewall_domain_name = "%[7]s"
+	route_domain_name    = aviatrix_aws_tgw_network_domain.route_domain.name
+	firewall_domain_name = aviatrix_aws_tgw_network_domain.firewall_domain.name
 	depends_on = [aviatrix_aws_tgw_vpc_attachment.test]
 }
 	`, accName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"),

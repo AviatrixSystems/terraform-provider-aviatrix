@@ -131,6 +131,14 @@ resource "aviatrix_aws_tgw_peering_domain_conn" "test2_default_sd_conn3" {
 resource "aviatrix_aws_tgw_peering" "test" {
 	tgw_name1 = aviatrix_aws_tgw.test1.tgw_name
 	tgw_name2 = aviatrix_aws_tgw.test2.tgw_name
+	depends_on = [
+		aviatrix_aws_tgw_network_domain.test1_Default_Domain,
+		aviatrix_aws_tgw_network_domain.test1_Shared_Service_Domain,
+		aviatrix_aws_tgw_network_domain.test1_Aviatrix_Edge_Domain,
+		aviatrix_aws_tgw_network_domain.test2_Default_Domain,
+		aviatrix_aws_tgw_network_domain.test2_Shared_Service_Domain,
+		aviatrix_aws_tgw_network_domain.test2_Aviatrix_Edge_Domain
+	]
 }
 	`, rName, os.Getenv("AWS_ACCOUNT_NUMBER"), os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_SECRET_KEY"))
 }
