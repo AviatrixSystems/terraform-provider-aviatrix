@@ -86,20 +86,22 @@ resource "aviatrix_firewall_instance" "test_firewall_instance" {
 	management_subnet = aviatrix_vpc.test_vpc.subnets[0].cidr
 	egress_subnet     = aviatrix_vpc.test_vpc.subnets[1].cidr
 }
+resource "aviatrix_firewall_instance_association" "firewall_instance_association" {
+	vpc_id               = aviatrix_firewall_instance.test_firewall_instance.vpc_id
+	firenet_gw_name      = aviatrix_transit_gateway.test_transit_gateway.gw_name
+	instance_id          = aviatrix_firewall_instance.test_firewall_instance.instance_id
+	firewall_name        = aviatrix_firewall_instance.test_firewall_instance.firewall_name
+	lan_interface        = aviatrix_firewall_instance.test_firewall_instance.lan_interface
+	management_interface = aviatrix_firewall_instance.test_firewall_instance.management_interface
+	egress_interface     = aviatrix_firewall_instance.test_firewall_instance.egress_interface
+	attached             = true
+}
 resource "aviatrix_firenet" "test_firenet" {
 	vpc_id             = aviatrix_vpc.test_vpc.vpc_id
 	inspection_enabled = true
 	egress_enabled     = false
 
-	firewall_instance_association {
-		firenet_gw_name      = aviatrix_transit_gateway.test_transit_gateway.gw_name
-		instance_id          = aviatrix_firewall_instance.test_firewall_instance.instance_id
-		firewall_name        = aviatrix_firewall_instance.test_firewall_instance.firewall_name
-		attached             = true
-		lan_interface        = aviatrix_firewall_instance.test_firewall_instance.lan_interface
-		management_interface = aviatrix_firewall_instance.test_firewall_instance.management_interface
-		egress_interface     = aviatrix_firewall_instance.test_firewall_instance.egress_interface
-	}
+	depends_on = [aviatrix_firewall_instance_association.firewall_instance_association]
 }
 data "aviatrix_firenet" "foo" {
 	vpc_id = aviatrix_firenet.test_firenet.vpc_id

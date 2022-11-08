@@ -63,32 +63,42 @@ resource "aviatrix_account" "test_account" {
 	aws_access_key     = "%s"
 	aws_secret_key     = "%s"
 }
-
 resource "aviatrix_aws_tgw" "test_aws_tgw" {
-	account_name           = aviatrix_account.test_account.account_name
-	aws_side_as_number     = "%s"
-	manage_vpc_attachment  = false
-	region                 = "%s"
-	tgw_name               = "tft-%s"
-	manage_security_domain = false
-	manage_vpc_attachment  = false
+	account_name       = aviatrix_account.test_account.account_name
+	aws_side_as_number = "%s"
+	region             = "%s"
+	tgw_name           = "tft-%s"
 }
-
 resource "aviatrix_aws_tgw_network_domain" "Default_Domain" {
 	name     = "Default_Domain"
 	tgw_name = aviatrix_aws_tgw.test_aws_tgw.tgw_name
 }
-
 resource "aviatrix_aws_tgw_network_domain" "Shared_Service_Domain" {
 	name     = "Shared_Service_Domain"
 	tgw_name = aviatrix_aws_tgw.test_aws_tgw.tgw_name
 }
-
 resource "aviatrix_aws_tgw_network_domain" "Aviatrix_Edge_Domain" {
 	name     = "Aviatrix_Edge_Domain"
 	tgw_name = aviatrix_aws_tgw.test_aws_tgw.tgw_name
 }
-
+resource "aviatrix_aws_tgw_peering_domain_conn" "default_sd_conn1" {
+	tgw_name1    = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+	domain_name1 = aviatrix_aws_tgw_network_domain.Aviatrix_Edge_Domain.name
+	tgw_name2    = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+	domain_name2 = aviatrix_aws_tgw_network_domain.Default_Domain.name
+}
+resource "aviatrix_aws_tgw_peering_domain_conn" "default_sd_conn2" {
+	tgw_name1    = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+	domain_name1 = aviatrix_aws_tgw_network_domain.Aviatrix_Edge_Domain.name
+	tgw_name2    = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+	domain_name2 = aviatrix_aws_tgw_network_domain.Shared_Service_Domain.name
+}
+resource "aviatrix_aws_tgw_peering_domain_conn" "default_sd_conn3" {
+	tgw_name1    = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+	domain_name1 = aviatrix_aws_tgw_network_domain.Default_Domain.name
+	tgw_name2    = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+	domain_name2 = aviatrix_aws_tgw_network_domain.Shared_Service_Domain.name
+}
 resource "aviatrix_aws_tgw_network_domain" "test" {
 	name       = "%s"
 	tgw_name   = aviatrix_aws_tgw.test_aws_tgw.tgw_name
@@ -96,9 +106,8 @@ resource "aviatrix_aws_tgw_network_domain" "test" {
     	aviatrix_aws_tgw_network_domain.Default_Domain,
     	aviatrix_aws_tgw_network_domain.Shared_Service_Domain,
     	aviatrix_aws_tgw_network_domain.Aviatrix_Edge_Domain
-  ]
+	]
 }
-
 resource "aviatrix_aws_tgw_vpc_attachment" "test" {
 	tgw_name            = aviatrix_aws_tgw.test_aws_tgw.tgw_name
 	region              = "%s"

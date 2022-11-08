@@ -79,7 +79,6 @@ In addition to all arguments above, the following attributes are exported:
 * `single_ip_snat` - Single IP Source NAT status for the container.
 * `split_tunnel` - Status of split tunnel mode.
 * `subnet` - A VPC Network address range selected from one of the available network ranges.
-* `tag_list` - Instance tag of cloud provider.
 * `vpc_id` - VPC-ID/VNet-Name of cloud provider.
 * `vpc_reg` - Region of cloud provider.
 * `vpn_access` - Status of user access through VPN to the container.
@@ -93,3 +92,7 @@ In addition to all arguments above, the following attributes are exported:
 * `image_version` - The image version of the gateway.
 * `peering_ha_software_version` - The software version of the HA gateway.
 * `peering_ha_image_version` - The image version of the HA gateway.
+
+The following argument is deprecated:
+
+* `tag_list` - Instance tag of cloud provider.

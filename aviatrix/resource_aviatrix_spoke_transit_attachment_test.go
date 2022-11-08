@@ -58,14 +58,13 @@ resource "aviatrix_account" "test" {
 	aws_secret_key     = "%s"
 }
 resource "aviatrix_spoke_gateway" "test"{
-	cloud_type                        = 1
-	account_name                      = aviatrix_account.test.account_name
-	gw_name                           = "tfs-%s"
-	vpc_id                            = "%s"
-	vpc_reg                           = "%s"
-	gw_size                           = "t2.micro"
-	subnet                            = "%s"
-	manage_transit_gateway_attachment = false
+	cloud_type   = 1
+	account_name = aviatrix_account.test.account_name
+	gw_name      = "tfs-%s"
+	vpc_id       = "%s"
+	vpc_reg      = "%s"
+	gw_size      = "t2.micro"
+	subnet       = "%s"
 }
 resource "aviatrix_transit_gateway" "test" {
 	cloud_type   = 1
