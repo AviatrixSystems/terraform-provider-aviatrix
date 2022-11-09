@@ -105,7 +105,7 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 		"id":     strconv.Itoa(requestID),
 		"pos":    "0",
 	}
-	backendURL := fmt.Sprintf("https://%s/v1/backend1", c.ControllerIP)
+	backendURL := fmt.Sprintf("https://%s/v2/backend1", c.ControllerIP)
 	const maxPoll = 180
 	sleepDuration := time.Second * 10
 	var i int
@@ -210,7 +210,7 @@ func (c *Client) GetVersionInfo() (*VersionInfo, error) {
 }
 
 func (c *Client) Pre32Upgrade() error {
-	privateBaseURL := strings.Replace(c.baseURL, "/v1/api", "/v1/backend1", 1)
+	privateBaseURL := strings.Replace(c.baseURL, "/v2/api", "/v2/backend1", 1)
 	params := &Version{
 		Action: "userconnect_release",
 		CID:    c.CID,
