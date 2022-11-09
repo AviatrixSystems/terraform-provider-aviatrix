@@ -178,7 +178,7 @@ func (c *Client) init(controllerIP string) (*Client, error) {
 		return nil, fmt.Errorf("Aviatrix: Client: Controller IP is not set")
 	}
 
-	c.baseURL = "https://" + controllerIP + "/v1/api"
+	c.baseURL = "https://" + controllerIP + "/v2/api"
 
 	if c.HTTPClient == nil {
 		tr := &http.Transport{
@@ -201,7 +201,7 @@ func (c *Client) initForCloudn(controllerIP string) (*Client, error) {
 		return nil, fmt.Errorf("Aviatrix: Client: Controller IP is not set")
 	}
 
-	c.baseURL = "https://" + controllerIP + "/v1/api"
+	c.baseURL = "https://" + controllerIP + "/v2/api"
 
 	if c.HTTPClient == nil {
 		tr := &http.Transport{
@@ -369,7 +369,7 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 		"id":     strconv.Itoa(requestID),
 		"pos":    "0",
 	}
-	backendURL := fmt.Sprintf("https://%s/v1/backend1", c.ControllerIP)
+	backendURL := fmt.Sprintf("https://%s/v2/backend1", c.ControllerIP)
 	const maxPoll = 360
 	sleepDuration := time.Second * 10
 	var j int
