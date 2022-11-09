@@ -21,7 +21,7 @@ In Controller 7.0 and provider version 3.0, a new resource **aviatrix_spoke_ha_g
 HA gateway creation.
 
 In order to be able to use this new resource, the attribute `manage_ha_gateway` must be set to false in
-**aviatrix_spoke_gateway**; this will mark the spoke gateway to be used only as the primary.
+**aviatrix_spoke_gateway**; this will mark the **aviatrix_spoke_gateway** to be used only as the primary.
 
 ---
 ## Migration Steps
@@ -30,7 +30,7 @@ In order to be able to use this new resource, the attribute `manage_ha_gateway` 
   - If HA is currently not enabled in the resource:
     - Please set attribute `manage_ha_gateway` to false, and do a "terraform refresh" to set its value to the state file
   - If HA is currently being enabled in the resource:
-    - Please set attribute `manage_ha_gateway` to false, and do a "terraform refresh" to set its value to the state file and remove Spoke HA gateway status from the state file
-    - Please create a new resource **aviatrix_spoke_ha_gateway** with local name and map the settings of the above Spoke HA Gateway into the new resource
+    - Please set attribute `manage_ha_gateway` to false and remove all the attributes with prefix "ha_", then do a "terraform refresh" to set `manage_ha_gateway = false` to the state file and remove Spoke HA gateway status from the state file as well
+    - Please create a new resource **aviatrix_spoke_ha_gateway** and map the settings of the above Spoke HA Gateway into the new resource
     - Please run "terraform import aviatrix_spoke_ha_gateway.local_name primary_spoke_gateway + '-hagw''" to import Spoke HA Gateway status into state file
   
