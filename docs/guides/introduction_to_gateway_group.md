@@ -8,17 +8,27 @@ description: |-
 # Introduction to Aviatrix Gateway Group feature
 
 ## What is Gateway Group
-As of Controller version 7.0+ and provider version 3.0.0+, gateway group feature will be introduced. Gateway group feature allows creation of multiple ha gateways under the same primary gateway. Only Spoke Gateway is supported in 7.0. Ha gateway are only supported to be created one by one.
+The Gateway Group feature allows for better horizontal scaling by moving from the current "primary + HA" gateway-pair
+model, to support a gateway grouping, represented by a "primary + N number of HA gateways". The Gateway Group feature
+allows for users to create N number of HA gateways under a primary gateway.
+
+For 7.0 release, only spoke gateways will be supported and HA gateways can only be created sequentially (one by one).
+In future releases, transit gateways and regular gateways will support this feature as well, and restrictions will be 
+removed.
 
 ## How Spoke Gateway Group is supported in 7.0
-As in Controller version 7.0, a new resource aviatrix_spoke_ha_gateway is added to be used for Spoke HA Gateway creation. In order to be able to use the new resource, attribute `network_domain` needs to be set as false, which makes aviatrix_spoke_gateway only be used to create primary spoke gateway.
+In Controller 7.0 and provider version 3.0, a new resource **aviatrix_spoke_ha_gateway** has been added to support spoke
+HA gateway creation.
+
+In order to be able to use this new resource, the attribute `manage_ha_gateway` must be set to false in
+**aviatrix_spoke_gateway**; this will mark the spoke gateway to be used only as the primary.
 
 ---
 ## Migration Steps
 
 - For resource **aviatrix_spoke_gateway**:
   - If HA is currently not enabled in the resource:
-    - Please set attribute `manage_ha_gateway` to false, and do a "terraform refresh" to set its value to the state file.
+    - Please set attribute `manage_ha_gateway` to false, and do a "terraform refresh" to set its value to the state file
   - If HA is currently being enabled in the resource:
     - Please set attribute `manage_ha_gateway` to false, and do a "terraform refresh" to set its value to the state file and remove Spoke HA gateway status from the state file
     - Please create a new resource **aviatrix_spoke_ha_gateway** with local name and map the settings of the above Spoke HA Gateway into the new resource
