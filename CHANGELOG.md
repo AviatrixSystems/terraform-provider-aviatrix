@@ -76,15 +76,15 @@
    - ``manage_transit_gateway_attachment``
    - ``attached_transit_gateway``
 10. Removed support for the following attribute from the resource **aviatrix_aws_tgw_connect**:
-    - ``security_domain_name``
+   - ``security_domain_name``
 11. Removed support for the following attribute from the resource **aviatrix_aws_tgw_directconnect**:
-    - ``security_domain_name``
+   - ``security_domain_name``
 12. Removed support for the following attribute from the resource **aviatrix_aws_tgw_vpc_attachment**:
-    - ``security_domain_name``
+   - ``security_domain_name``
 13. Deprecated Spoke HA in **aviatrix_spoke_gateway**
-    - Spoke HA gateway attributes will be removed in a future Aviatrix provider release. Please follow the guide [here](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/introduction_to_gateway_group) to migrate Spoke HA to a new resource **aviatrix_spoke_ha_gateway**
+   - Spoke HA gateway attributes will be removed in a future Aviatrix provider release. Please follow the guide [here](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/introduction_to_gateway_group) to migrate Spoke HA to a new resource **aviatrix_spoke_ha_gateway**
 14. Deprecated **aviatrix_trans_peer**
-    - **aviatrix_trans_peer** will be removed in Aviatrix provider 3.0.1
+   - **aviatrix_trans_peer** will be removed in Aviatrix provider 3.0.1
 
 
 ## 2.24.1 (September 30, 2022)
