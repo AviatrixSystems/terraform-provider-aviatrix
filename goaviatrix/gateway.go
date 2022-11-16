@@ -451,13 +451,6 @@ func (c *Client) DisableGuardDutyEnforcement(gateway *Gateway) error {
 	return c.PostAPI(data["action"], data, BasicCheck)
 }
 
-func (c *Client) EnableNatGateway(gateway *Gateway) error {
-	gateway.CID = c.CID
-	gateway.Action = "enable_nat"
-
-	return c.PostAPI(gateway.Action, gateway, BasicCheck)
-}
-
 func (c *Client) EnableSingleAZGateway(gateway *Gateway) error {
 	gateway.CID = c.CID
 	gateway.Action = "enable_single_az_ha"
