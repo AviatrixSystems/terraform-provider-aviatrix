@@ -551,9 +551,9 @@ func (c *Client) GetSpokeGatewayList(ctx context.Context) ([]Gateway, error) {
 
 func (c *Client) GetGatewayDetail(gateway *Gateway) (*GatewayDetail, error) {
 	form := map[string]string{
-		"CID":      c.CID,
-		"action":   "list_vpc_by_name",
-		"vpc_name": gateway.GwName,
+		"CID":          c.CID,
+		"action":       "get_gateway_info",
+		"gateway_name": gateway.GwName,
 	}
 
 	var data GatewayDetailApiResp
