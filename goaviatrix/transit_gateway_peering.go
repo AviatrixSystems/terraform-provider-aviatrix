@@ -58,7 +58,8 @@ type TransitGatewayPeeringDetail struct {
 }
 
 type TunnelsDetail struct {
-	LicenseId [][]string `json:"license_id"`
+	LicenseId      [][]string `json:"license_id"`
+	SubTunnelCount int        `json:"sub_tunnel_count"`
 }
 
 func (c *Client) CreateTransitGatewayPeering(transitGatewayPeering *TransitGatewayPeering) error {
@@ -134,10 +135,7 @@ func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitG
 	transitGatewayPeering.PrependAsPath1 = data.Results.Site1.ConnBGPPrependAsPath
 	transitGatewayPeering.PrependAsPath2 = data.Results.Site2.ConnBGPPrependAsPath
 	transitGatewayPeering.NoMaxPerformance = data.Results.NoMaxPerformance
-
-	if len(data.Results.Tunnels[0].LicenseId) == 1 {
-		transitGatewayPeering.SingleTunnel = true
-	}
+	transitGatewayPeering.SingleTunnel = data.Results.Tunnels[0].SubTunnelCount == 1
 
 	return transitGatewayPeering, nil
 }
