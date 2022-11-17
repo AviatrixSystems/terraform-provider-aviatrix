@@ -2,7 +2,8 @@
 subcategory: "Gateway"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_gateway_image"
-description: |- Gets an Aviatrix gateway image version details.
+description: |-
+  Gets an Aviatrix gateway image version details.
 ---
 
 # aviatrix_gateway_image
