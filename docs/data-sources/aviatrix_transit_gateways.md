@@ -80,4 +80,3 @@ In addition to all arguments above, the following attributes are exported:
   * `vpc_id` - VPC-ID/VNet-Name of cloud provider.
   * `vpc_reg` - Region of cloud provider.
   * `zone` - Availability Zone. Only available for cloud_type = 8 (Azure). Must be in the form 'az-n', for example, 'az-2'.
-

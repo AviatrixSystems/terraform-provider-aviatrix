@@ -1,5 +1,5 @@
 ---
-subcategory: "Multi-Cloud Transit"
+subcategory: "Secured Networking"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_smart_group"
 description: |-

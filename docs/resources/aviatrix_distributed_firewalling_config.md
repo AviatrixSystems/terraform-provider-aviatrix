@@ -1,5 +1,5 @@
 ---
-subcategory: "Multi-Cloud Transit"
+subcategory: "Secured Networking"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_distributed_firewalling_config"
 description: |-

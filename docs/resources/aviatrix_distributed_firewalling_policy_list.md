@@ -1,5 +1,5 @@
 ---
-subcategory: "Multi-Cloud Transit"
+subcategory: "Secured Networking"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_distributed_firewalling_policy_list"
 description: |-
@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_distributed_firewalling_policy_list
 
-The **aviatrix_distributed_irewalling_policy_list** resource handles the creation and management of Distributed-firewalling Policies. Available as of Provider R2.22.0+.
+The **aviatrix_distributed_firewalling_policy_list** resource handles the creation and management of Distributed-firewalling Policies. Available as of Provider R2.22.0+.
 
 ## Example Usage
 
