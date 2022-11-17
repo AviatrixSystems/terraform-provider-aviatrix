@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -207,35 +205,6 @@ func (c *Client) GetVersionInfo() (*VersionInfo, error) {
 		Current:  current,
 		Previous: previous,
 	}, nil
-}
-
-func (c *Client) Pre32Upgrade() error {
-	privateBaseURL := strings.Replace(c.baseURL, "/v2/api", "/v2/backend1", 1)
-	params := &Version{
-		Action: "userconnect_release",
-		CID:    c.CID,
-	}
-	path := privateBaseURL
-	for i := 0; ; i++ {
-		resp, err := c.Post(path, params)
-		if err != nil {
-			return errors.New("HTTP Post userconnect_release failed: " + err.Error())
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode == http.StatusOK {
-			body, _ := ioutil.ReadAll(resp.Body)
-			log.Tracef("response %s", body)
-			if strings.Contains(string(body), "in progress") && i < 3 {
-				log.Infof("Active upgrade is in progress. Retry after 60 secs...")
-				time.Sleep(60 * time.Second)
-			} else {
-				break
-			}
-		} else {
-			return fmt.Errorf("status code %d", resp.StatusCode)
-		}
-	}
-	return nil
 }
 
 func (c *Client) GetLatestVersion() (string, error) {
