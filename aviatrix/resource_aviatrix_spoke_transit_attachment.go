@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -22,16 +24,18 @@ func resourceAviatrixSpokeTransitAttachment() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"spoke_gw_name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "Name of the spoke gateway to attach to transit network.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotWhiteSpace,
+				Description:  "Name of the spoke gateway to attach to transit network.",
 			},
 			"transit_gw_name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "Name of the transit gateway to attach the spoke gateway to.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotWhiteSpace,
+				Description:  "Name of the transit gateway to attach the spoke gateway to.",
 			},
 			"route_tables": {
 				Type: schema.TypeSet,
