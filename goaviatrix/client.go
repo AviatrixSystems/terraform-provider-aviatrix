@@ -15,7 +15,6 @@ import (
 	"net/url"
 	"os"
 	"reflect"
-	"strconv"
 	"strings"
 	"time"
 
@@ -346,7 +345,7 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 	}
 	var data struct {
 		Return bool   `json:"return"`
-		Result int    `json:"results"`
+		Result string `json:"results"`
 		Reason string `json:"reason"`
 	}
 
@@ -358,23 +357,22 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
 		return fmt.Errorf("Json Decode %s failed %v\n Body: %s", action, err, bodyString)
 	}
-	if !data.Return || data.Result == 0 {
+	if !data.Return {
 		return fmt.Errorf("rest API %s POST failed to initiate async action: %s", action, data.Reason)
 	}
 
 	requestID := data.Result
 	form := map[string]string{
-		"action": "check_task_status",
-		"CID":    c.CID,
-		"id":     strconv.Itoa(requestID),
-		"pos":    "0",
+		"action":     "check_task_status",
+		"CID":        c.CID,
+		"request_id": requestID,
 	}
-	backendURL := fmt.Sprintf("https://%s/v2/backend1", c.ControllerIP)
+
 	const maxPoll = 360
 	sleepDuration := time.Second * 10
 	var j int
 	for ; j < maxPoll; j++ {
-		resp, err = c.PostContext(ctx, backendURL, form)
+		resp, err = c.PostContext(ctx, c.baseURL, form)
 		if err != nil {
 			// Could be transient HTTP error, e.g. EOF error
 			time.Sleep(sleepDuration)
@@ -382,24 +380,18 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 		}
 		buf = new(bytes.Buffer)
 		buf.ReadFrom(resp.Body)
-		var data struct {
-			Pos    int    `json:"pos"`
-			Done   bool   `json:"done"`
-			Status bool   `json:"status"`
-			Result string `json:"result"`
-		}
 		err = json.Unmarshal(buf.Bytes(), &data)
 		if err != nil {
 			return fmt.Errorf("decode check_task_status failed: %v\n Body: %s", err, buf.String())
 		}
-		if !data.Done {
+		if !data.Return {
 			// Not done yet
 			time.Sleep(sleepDuration)
 			continue
 		}
 
 		// Async API is done, return result of checkFunc
-		return checkFunc(action, "Post", data.Result, data.Status)
+		return checkFunc(action, "Post", data.Result, data.Return)
 	}
 	// Waited for too long and async API never finished
 	return fmt.Errorf("waited %s but upgrade never finished. Please manually verify the upgrade status", maxPoll*sleepDuration)
