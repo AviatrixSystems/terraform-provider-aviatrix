@@ -10,7 +10,7 @@ description: |-
 
 The **aviatrix_centralized_transit_firenet** resource allows the creation and management of the centralized Transit FireNet.
 
--> **NOTE:** Before creating a centralized Transit FireNet, please make sure both primary FireNet and secondary FireNet meet the required conditions. Please refer to this [link](https://??????) for more details.
+-> **NOTE:** Before creating a centralized Transit FireNet, please make sure both primary FireNet and secondary FireNet meet the required conditions. Please refer to this [link](https://docs.aviatrix.com/documentation/latest/firewall-and-security/firenet-centralized.html?expand=true) for more details.
 
 ## Example Usage
 
