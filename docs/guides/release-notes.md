@@ -76,7 +76,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 3. Removed support for the attribute ``tag_list`` from the following resources and their respective data sources:
    - **aviatrix_gateway**
    - **aviatrix_spoke_gateway**
-   - **aviatrix_tranitt_gateway**
+   - **aviatrix_transit_gateway**
 4. Removed support for ``manage_transit_gateway_attachment`` and ``transit_gw`` from the resource **aviatrix_spoke_gateway**
 5. Removed support for managing in-line firewall instance associations by removing the following attributes from the resource **aviatrix_firenet** and its respective data source:
    - ``manage_firewall_instance_association`` (from the resource)
