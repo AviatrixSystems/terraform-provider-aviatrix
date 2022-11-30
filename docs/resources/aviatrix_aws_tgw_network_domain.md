@@ -23,40 +23,43 @@ resource "aviatrix_aws_tgw" "test_aws_tgw" {
 
 resource "aviatrix_aws_tgw_network_domain" "Default_Domain" {
   name     = "Default_Domain"
-  tgw_name = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+  tgw_name = aviatrix_aws_tgw.test_aws_tgw.id
 }
 
 resource "aviatrix_aws_tgw_network_domain" "Shared_Service_Domain" {
   name     = "Shared_Service_Domain"
-  tgw_name = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+  tgw_name = aviatrix_aws_tgw.test_aws_tgw.id
 }
 
 resource "aviatrix_aws_tgw_network_domain" "Aviatrix_Edge_Domain" {
   name     = "Aviatrix_Edge_Domain"
-  tgw_name = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+  tgw_name = aviatrix_aws_tgw.test_aws_tgw.id
 }
 
-resource "aviatrix_aws_tgw_security_domain_connection" "default_sd_conn1" {
-  tgw_name     = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+resource "aviatrix_aws_tgw_peering_domain_conn" "default_sd_conn1" {
+  tgw_name1     = aviatrix_aws_tgw.test_aws_tgw.id
+  tgw_name2     = aviatrix_aws_tgw.test_aws_tgw.id
   domain_name1 = aviatrix_aws_tgw_network_domain.Aviatrix_Edge_Domain.name
   domain_name2 = aviatrix_aws_tgw_network_domain.Default_Domain.name
 }
 
-resource "aviatrix_aws_tgw_security_domain_connection" "default_sd_conn2" {
-  tgw_name     = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+resource "aviatrix_aws_tgw_peering_domain_conn" "default_sd_conn2" {
+  tgw_name1     = aviatrix_aws_tgw.test_aws_tgw.id
+  tgw_name2     = aviatrix_aws_tgw.test_aws_tgw.id
   domain_name1 = aviatrix_aws_tgw_network_domain.Aviatrix_Edge_Domain.name
   domain_name2 = aviatrix_aws_tgw_network_domain.Shared_Service_Domain.name
 }
 
-resource "aviatrix_aws_tgw_security_domain_connection" "default_sd_conn3" {
-  tgw_name     = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+resource "aviatrix_aws_tgw_peering_domain_conn" "default_sd_conn3" {
+  tgw_name1     = aviatrix_aws_tgw.test_aws_tgw.id
+  tgw_name2     = aviatrix_aws_tgw.test_aws_tgw.id
   domain_name1 = aviatrix_aws_tgw_network_domain.Default_Domain.name
   domain_name2 = aviatrix_aws_tgw_network_domain.Shared_Service_Domain.name
 }
 
 resource "aviatrix_aws_tgw_network_domain" "test" {
   name       = "test_domain"
-  tgw_name   = aviatrix_aws_tgw.test_aws_tgw.tgw_name
+  tgw_name   = aviatrix_aws_tgw.test_aws_tgw.id
   depends_on = [
     aviatrix_aws_tgw_network_domain.Default_Domain,
     aviatrix_aws_tgw_network_domain.Shared_Service_Domain,
