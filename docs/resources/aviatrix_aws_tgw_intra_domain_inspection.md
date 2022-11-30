@@ -3,12 +3,12 @@ subcategory: "TGW Orchestrator"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_aws_tgw_intra_domain_inspection"
 description: |-
-  Creates and manages the intra domain inspection of security domains in an AWS TGW
+  Creates and manages the intra domain inspection of network domains in an AWS TGW
 ---
 
 # aviatrix_aws_tgw_intra_domain_inspection
 
-The **aviatrix_aws_tgw_intra_domain_inspection** resource allows the creation and management of intra domain inspection of security domains in an AWS TGW.
+The **aviatrix_aws_tgw_intra_domain_inspection** resource allows the creation and management of intra domain inspection of network domains in an AWS TGW.
 
 ## Example Usage
 
@@ -27,8 +27,8 @@ The following arguments are supported:
 
 ### Required
 * `tgw_name` - (Required) The AWS TGW name.
-* `route_domain_name` - (Required) The name of a security domain.
-* `firewall_domain_name` - (Required) The name of a firewall security domain.
+* `route_domain_name` - (Required) The name of a network domain.
+* `firewall_domain_name` - (Required) The name of a firewall network domain.
 
 ## Import
 

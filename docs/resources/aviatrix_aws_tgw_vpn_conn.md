@@ -8,7 +8,7 @@ description: |-
 
 # aviatrix_aws_tgw_vpn_conn
 
-The **aviatrix_aws_tgw_vpn_conn** resource allows the creation and management of Aviatrix AWS TGW VPN connections in their selected Security Domain.
+The **aviatrix_aws_tgw_vpn_conn** resource allows the creation and management of Aviatrix AWS TGW VPN connections in their selected network domain.
 
 ## Example Usage
 

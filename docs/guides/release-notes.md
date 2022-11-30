@@ -12,10 +12,88 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.24.1 (UserConnect-6.9.161)``
+``Last updated: R3.0.0 (UserConnect-7.0)``
 
 
 ---
+
+## 3.0.0
+### Notes:
+- Release date: **(8 Dec 2022)**
+- Supported Controller version: **UserConnect-7.0**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Multi-Cloud Transit:
+1. Implemented a new resource to support Edge CSP:
+   - **aviatrix_edge_csp**
+2. Implemented a new resource to support Centralized Transit FireNet:
+   - **aviatrix_centralized_transit_firenet**
+3. Implemented a new data source to get the list of Spoke Gateways:
+   - **aviatrix_spoke_gateways**
+4. Implemented support for Gateway Group:
+   Please check [here](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/introduction_to_gateway_group) for more information:
+   - New resource: **aviatrix_spoke_ha_gateway**
+   - New attributes in **aviatrix_spoke_gateway**:
+      - ``manage_ha_gateway``
+5. Implemented a new resource to support configuring Distributed Firewalling:
+   - **aviatrix_distributed_firewalling_config**
+6. Implemented a new resource to support Distributed Firewalling Intra VPC:
+   - **aviatrix_distributed_firewalling_intra_vpc**
+
+#### Security
+1. Implemented a new resource to support configuring FQDN Global settings:
+   - **aviatrix_fqdn_global_config**
+
+### Enhancements:
+1. Updated ``transit_gateway_name`` to be an optional attribute in **aviatrix_segmentation_network_domain_association**
+2. Removed validation for controller IP address during import in **aviatrix_controller_security_group_management_config**
+3. Renamed **aviatrix_app_domain** to **aviatrix_smart_group**
+4. Renamed **aviatrix_microseg_policy_list** to **aviatrix_distributed_firewalling_policy_list**
+5. Added API key for server and client authentication
+
+### Bug Fixes:
+1. Fixed issue where configuring large number of policies errors out in **aviatrix_gateway_dnat**
+2. Fixed issue where delta shows on ``region`` when same ``region`` is provided in different formats
+3. Fixed issue where ``rx_queue_size`` does not apply on HA in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+4. Fixed issue where route table list is missing in state file while importing **aviatrix_aws_peering**
+5. Fixed issue where HA creation does not use the right CMK for volume encryption when CMK is provided in **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**
+
+### Deprecations
+1. The following resources are removed:
+   - **aviatrix_arm_peer**
+   - **aviatrix_aws_tgw_security_domain**
+   - **aviatrix_aws_tgw_security_domain_connection**
+   - **aviatrix_edge_caag**
+   - **aviatrix_segmentation_security_domain**
+   - **aviatrix_segmentation_security_domain_association**
+   - **aviatrix_segmentation_security_domain_connection_policy**
+   - **aviatrix_spoke_vpc**
+   - **aviatrix_transit_vpc**
+2. Removed support for the attribute ``sync_to_ha`` from the following resources:
+   - **aviatrix_gateway_snat**
+   - **aviatrix_gateway_dnat**
+3. Removed support for the attribute ``tag_list`` from the following resources and their respective data sources:
+   - **aviatrix_gateway**
+   - **aviatrix_spoke_gateway**
+   - **aviatrix_transit_gateway**
+4. Removed support for ``manage_transit_gateway_attachment`` and ``transit_gw`` from the resource **aviatrix_spoke_gateway**
+5. Removed support for managing in-line firewall instance associations by removing the following attributes from the resource **aviatrix_firenet** and its respective data source:
+   - ``manage_firewall_instance_association`` (from the resource)
+   - ``firewall_instance_association`` (from both)
+6. Removed support for managing in-line TGW network domains, VPC attachments and transit gateway attachments by removing the following attributes from the resource **aviatrix_aws_tgw**:
+   - ``manage_security_domain``
+   - ``security_domains``
+   - ``manage_vpc_attachment``
+   - ``attached_vpc``
+   - ``manage_transit_gateway_attachment``
+   - ``attached_transit_gateway``
+7. Removed support for the attribute ``security_domain_name`` from the following resources:
+   - **aviatrix_aws_tgw_connect**
+   - **aviatrix_aws_tgw_directconnect**
+   - **aviatrix_aws_tgw_vpc_attachment**
+8. Deprecated **aviatrix_trans_peer** and it will be removed in Aviatrix provider 3.0.1
+
 
 ## 2.24.1
 ### Notes:
