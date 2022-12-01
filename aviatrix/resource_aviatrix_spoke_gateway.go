@@ -628,14 +628,9 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("'approved_learned_cidrs' must be empty if 'enable_learned_cidrs_approval' is false")
 	}
 
-	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
+	if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
 		gateway.VpcID = d.Get("vpc_id").(string)
 		if gateway.VpcID == "" {
-			return fmt.Errorf("'vpc_id' cannot be empty for creating a spoke gw")
-		}
-	} else if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-		gateway.VNetNameResourceGroup = d.Get("vpc_id").(string)
-		if gateway.VNetNameResourceGroup == "" {
 			return fmt.Errorf("'vpc_id' cannot be empty for creating a spoke gw")
 		}
 	} else {
@@ -698,9 +693,9 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			strs = append(strs, gateway.Subnet, insaneModeAz)
 			gateway.Subnet = strings.Join(strs, "~~")
 		}
-		gateway.InsaneMode = "on"
+		gateway.InsaneMode = "yes"
 	} else {
-		gateway.InsaneMode = "off"
+		gateway.InsaneMode = "no"
 	}
 	if haZone != "" || haSubnet != "" {
 		if haGwSize == "" {
@@ -932,54 +927,47 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if haSubnet != "" || haZone != "" {
-		//Enable HA
-		haGateway := &goaviatrix.SpokeVpc{
-			GwName:    d.Get("gw_name").(string),
-			CloudType: d.Get("cloud_type").(int),
-			HASubnet:  haSubnet,
-			HAZone:    haZone,
-			Eip:       d.Get("ha_eip").(string),
+		spokeHaGw := &goaviatrix.SpokeHaGateway{
+			PrimaryGwName: d.Get("gw_name").(string),
+			GwName:        d.Get("gw_name").(string) + "-hagw",
+			GwSize:        d.Get("ha_gw_size").(string),
+			Subnet:        haSubnet,
+			Zone:          haZone,
+			Eip:           d.Get("ha_eip").(string),
+			InsaneMode:    "no",
 		}
 
-		if goaviatrix.IsCloudType(haGateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-			haGateway.HASubnetGCP = haSubnet
-		}
-
-		if insaneMode && goaviatrix.IsCloudType(haGateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+		if insaneMode && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			var haStrs []string
 			haStrs = append(haStrs, haSubnet, haInsaneModeAz)
 			haSubnet = strings.Join(haStrs, "~~")
-			haGateway.HASubnet = haSubnet
+			spokeHaGw.Subnet = haSubnet
+			spokeHaGw.InsaneMode = "yes"
 		}
 
-		if goaviatrix.IsCloudType(haGateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && haZone != "" {
-			haGateway.HASubnet = fmt.Sprintf("%s~~%s~~", haSubnet, haZone)
+		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && haZone != "" {
+			spokeHaGw.Subnet = fmt.Sprintf("%s~~%s~~", haSubnet, haZone)
 		}
 
-		if goaviatrix.IsCloudType(haGateway.CloudType, goaviatrix.OCIRelatedCloudTypes) {
-			haGateway.Subnet = haSubnet
-			haGateway.AvailabilityDomain = haAvailabilityDomain
-			haGateway.FaultDomain = haFaultDomain
-		}
-
-		if enablePrivateOob {
-			haGateway.HASubnet = haGateway.HASubnet + "~~" + haOobAvailabilityZone
-			haGateway.HAOobManagementSubnet = haOobManagementSubnet + "~~" + haOobAvailabilityZone
+		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.OCIRelatedCloudTypes) {
+			spokeHaGw.Subnet = haSubnet
+			spokeHaGw.AvailabilityDomain = haAvailabilityDomain
+			spokeHaGw.FaultDomain = haFaultDomain
 		}
 
 		if privateModeInfo.EnablePrivateMode {
 			haPrivateModeSubnetZone := d.Get("ha_private_mode_subnet_zone").(string)
-			haGateway.HASubnet = haSubnet + "~~" + haPrivateModeSubnetZone
+			spokeHaGw.Subnet = haSubnet + "~~" + haPrivateModeSubnetZone
 		}
 
 		haAzureEipName, haAzureEipNameOk := d.GetOk("ha_azure_eip_name_resource_group")
-		if goaviatrix.IsCloudType(haGateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-			if haGateway.Eip != "" {
+		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+			if spokeHaGw.Eip != "" {
 				// AVX-9874 Azure EIP has a different format e.g. 'test_ip:rg:104.45.186.20'
 				if !haAzureEipNameOk {
 					return fmt.Errorf("failed to create HA Spoke Gateway: 'ha_azure_eip_name_resource_group' must be set when a custom EIP is provided and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
 				}
-				haGateway.Eip = fmt.Sprintf("%s:%s", haAzureEipName.(string), haGateway.Eip)
+				spokeHaGw.Eip = fmt.Sprintf("%s:%s", haAzureEipName.(string), spokeHaGw.Eip)
 			} else if haAzureEipNameOk {
 				return fmt.Errorf("failed to create HA Spoke Gateway: 'ha_azure_eip_name_resource_group' must be empty when 'ha_eip' is empty")
 			}
@@ -987,11 +975,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			return fmt.Errorf("failed to create HA Spoke Gateway: 'ha_azure_eip_name_resource_group' must be empty when cloud_type is not one of Azure (8), AzureGov (32) or AzureChina (2048)")
 		}
 
-		if goaviatrix.IsCloudType(haGateway.CloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
-			err = client.EnableHaSpokeGateway(haGateway)
-		} else {
-			err = client.EnableHaSpokeVpc(haGateway)
-		}
+		_, err := client.CreateSpokeHaGw(spokeHaGw)
 		if err != nil {
 			return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
 		}
@@ -1808,27 +1792,28 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		(enablePrivateOob && (d.HasChange("ha_oob_management_subnet") || d.HasChange("ha_oob_availability_zone"))) ||
 		(privateModeInfo.EnablePrivateMode && d.HasChange("ha_private_mode_subnet_zone")) ||
 		d.HasChange("ha_availability_domain") || d.HasChange("ha_fault_domain")) {
-		spokeGw := &goaviatrix.SpokeVpc{
-			GwName:    d.Get("gw_name").(string),
-			CloudType: d.Get("cloud_type").(int),
-			GwSize:    d.Get("ha_gw_size").(string),
+		spokeHaGw := &goaviatrix.SpokeHaGateway{
+			PrimaryGwName: d.Get("gw_name").(string),
+			GwName:        d.Get("gw_name").(string) + "-hagw",
+			GwSize:        d.Get("ha_gw_size").(string),
+			InsaneMode:    "no",
 		}
 
 		haEip := d.Get("ha_eip").(string)
-		if goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
-			spokeGw.Eip = haEip
+		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
+			spokeHaGw.Eip = haEip
 		}
 
 		haAzureEipName, haAzureEipNameOk := d.GetOk("ha_azure_eip_name_resource_group")
-		if goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-			if haEip != "" && spokeGw.GwSize != "" {
+		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+			if haEip != "" && spokeHaGw.GwSize != "" {
 				// No change will be detected when ha_eip is set to the empty string because it is computed.
 				// Instead, check ha_gw_size to detect when HA gateway is being deleted.
 				if !haAzureEipNameOk {
 					return fmt.Errorf("failed to create HA Spoke Gateway: 'ha_azure_eip_name_resource_group' must be set when a custom EIP is provided and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
 				}
 				// AVX-9874 Azure EIP has a different format e.g. 'test_ip:rg:104.45.186.20'
-				spokeGw.Eip = fmt.Sprintf("%s:%s", haAzureEipName.(string), haEip)
+				spokeHaGw.Eip = fmt.Sprintf("%s:%s", haAzureEipName.(string), haEip)
 			}
 		} else if haAzureEipNameOk {
 			return fmt.Errorf("failed to create HA Spoke Gateway: 'azure_eip_name_resource_group' must be empty when cloud_type is not one of Azure (8), AzureGov (32) or AzureChina (2048)")
@@ -1842,26 +1827,26 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		oldZone, newZone := d.GetChange("ha_zone")
 		deleteHaGw := false
 		changeHaGw := false
-		if goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
-			spokeGw.HASubnet = d.Get("ha_subnet").(string)
-			if goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && d.Get("ha_zone").(string) != "" {
-				spokeGw.HASubnet = fmt.Sprintf("%s~~%s~~", d.Get("ha_subnet").(string), d.Get("ha_zone").(string))
+		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
+			spokeHaGw.Subnet = d.Get("ha_subnet").(string)
+			if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && d.Get("ha_zone").(string) != "" {
+				spokeHaGw.Subnet = fmt.Sprintf("%s~~%s~~", d.Get("ha_subnet").(string), d.Get("ha_zone").(string))
 			}
 
 			haAvailabilityDomain := d.Get("ha_availability_domain").(string)
 			haFaultDomain := d.Get("ha_fault_domain").(string)
 			if newSubnet != "" {
-				if goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.OCIRelatedCloudTypes) && (haAvailabilityDomain == "" || haFaultDomain == "") {
+				if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.OCIRelatedCloudTypes) && (haAvailabilityDomain == "" || haFaultDomain == "") {
 					return fmt.Errorf("'ha_availability_domain' and 'ha_fault_domain' are required to enable HA on OCI")
 				}
-				if !goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.OCIRelatedCloudTypes) && (haAvailabilityDomain != "" || haFaultDomain != "") {
+				if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.OCIRelatedCloudTypes) && (haAvailabilityDomain != "" || haFaultDomain != "") {
 					return fmt.Errorf("'ha_availability_domain' and 'ha_fault_domain' are only valid for OCI")
 				}
 			}
-			if goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.OCIRelatedCloudTypes) {
-				spokeGw.Subnet = d.Get("ha_subnet").(string)
-				spokeGw.AvailabilityDomain = haAvailabilityDomain
-				spokeGw.FaultDomain = haFaultDomain
+			if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.OCIRelatedCloudTypes) {
+				spokeHaGw.Subnet = d.Get("ha_subnet").(string)
+				spokeHaGw.AvailabilityDomain = haAvailabilityDomain
+				spokeHaGw.FaultDomain = haFaultDomain
 			}
 
 			if oldSubnet == "" && newSubnet != "" {
@@ -1875,9 +1860,9 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				d.HasChanges("ha_zone", "ha_availability_domain", "ha_fault_domain") {
 				changeHaGw = true
 			}
-		} else if goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.GCPRelatedCloudTypes) {
-			spokeGw.HAZone = d.Get("ha_zone").(string)
-			spokeGw.HASubnetGCP = d.Get("ha_subnet").(string)
+		} else if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+			spokeHaGw.Zone = d.Get("ha_zone").(string)
+			spokeHaGw.Subnet = d.Get("ha_subnet").(string)
 			if oldZone == "" && newZone != "" {
 				newHaGwEnabled = true
 			} else if oldZone != "" && newZone == "" {
@@ -1887,7 +1872,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			}
 		}
 
-		if d.Get("insane_mode").(bool) && goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+		if d.Get("insane_mode").(bool) && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
 			var haStrs []string
 			insaneModeHaAz := d.Get("ha_insane_mode_az").(string)
 			haSubnet := d.Get("ha_subnet").(string)
@@ -1900,14 +1885,15 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 					"for AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) or AWS Secret (32768)")
 			}
 
-			haStrs = append(haStrs, spokeGw.HASubnet, insaneModeHaAz)
-			spokeGw.HASubnet = strings.Join(haStrs, "~~")
+			haStrs = append(haStrs, spokeHaGw.Subnet, insaneModeHaAz)
+			spokeHaGw.Subnet = strings.Join(haStrs, "~~")
+			spokeHaGw.InsaneMode = "yes"
 		}
 
-		if (newHaGwEnabled || changeHaGw) && spokeGw.GwSize == "" {
+		if (newHaGwEnabled || changeHaGw) && spokeHaGw.GwSize == "" {
 			return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
 				"ha_subnet or ha_zone is set")
-		} else if deleteHaGw && spokeGw.GwSize != "" {
+		} else if deleteHaGw && spokeHaGw.GwSize != "" {
 			return fmt.Errorf("ha_gw_size must be empty if spoke HA gateway is deleted")
 
 		}
@@ -1924,9 +1910,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				if haOobManagementSubnet == "" {
 					return fmt.Errorf("\"ha_oob_management_subnet\" is required if \"enable_private_oob\" is true and \"ha_subnet\" is provided")
 				}
-
-				spokeGw.HASubnet = spokeGw.HASubnet + "~~" + haOobAvailabilityZone
-				spokeGw.HAOobManagementSubnet = haOobManagementSubnet + "~~" + haOobAvailabilityZone
 			} else if deleteHaGw {
 				if haOobAvailabilityZone != "" {
 					return fmt.Errorf("\"ha_oob_availability_zone\" must be empty if \"ha_subnet\" is empty")
@@ -1945,35 +1928,29 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				}
 
 				privateModeSubnetZone := d.Get("ha_private_mode_subnet_zone").(string)
-				spokeGw.HASubnet += "~~" + privateModeSubnetZone
+				spokeHaGw.Subnet += "~~" + privateModeSubnetZone
 			}
 		}
 
 		if newHaGwEnabled {
 			//New configuration to enable HA
-			if goaviatrix.IsCloudType(haGateway.CloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
-				err := client.EnableHaSpokeGateway(spokeGw)
-				if err != nil {
-					return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
-				}
-			} else {
-				err := client.EnableHaSpokeVpc(spokeGw)
-				if err != nil {
-					return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
-				}
-				if goaviatrix.IsCloudType(spokeGw.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-					if d.Get("rx_queue_size").(string) != "" && !d.HasChange("rx_queue_size") {
-						haGwRxQueueSize := &goaviatrix.Gateway{
-							GwName:      d.Get("gw_name").(string) + "-hagw",
-							RxQueueSize: d.Get("rx_queue_size").(string),
-						}
-						err := client.SetRxQueueSize(haGwRxQueueSize)
-						if err != nil {
-							return fmt.Errorf("could not set rx queue size for spoke ha: %s during gateway update: %v", haGwRxQueueSize.GwName, err)
-						}
+			_, err := client.CreateSpokeHaGw(spokeHaGw)
+			if err != nil {
+				return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
+			}
+			if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+				if d.Get("rx_queue_size").(string) != "" && !d.HasChange("rx_queue_size") {
+					haGwRxQueueSize := &goaviatrix.Gateway{
+						GwName:      d.Get("gw_name").(string) + "-hagw",
+						RxQueueSize: d.Get("rx_queue_size").(string),
+					}
+					err := client.SetRxQueueSize(haGwRxQueueSize)
+					if err != nil {
+						return fmt.Errorf("could not set rx queue size for spoke ha: %s during gateway update: %v", haGwRxQueueSize.GwName, err)
 					}
 				}
 			}
+			//}
 		} else if deleteHaGw {
 			//Ha configuration has been deleted
 			err := client.DeleteGateway(haGateway)
@@ -1988,19 +1965,11 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("failed to delete Aviatrix Spoke HA gateway: %s", err)
 			}
 
-			spokeGw.Eip = ""
+			spokeHaGw.Eip = ""
 
-			//New configuration to enable HA
-			if goaviatrix.IsCloudType(haGateway.CloudType, goaviatrix.GCPRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes) {
-				err := client.EnableHaSpokeGateway(spokeGw)
-				if err != nil {
-					return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
-				}
-			} else {
-				err := client.EnableHaSpokeVpc(spokeGw)
-				if err != nil {
-					return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
-				}
+			_, err = client.CreateSpokeHaGw(spokeHaGw)
+			if err != nil {
+				return fmt.Errorf("failed to enable HA Aviatrix Spoke Gateway: %s", err)
 			}
 			newHaGwEnabled = true
 		}

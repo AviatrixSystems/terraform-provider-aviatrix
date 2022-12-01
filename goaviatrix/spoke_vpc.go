@@ -17,8 +17,8 @@ type SpokeVpc struct {
 	GwSize                       string `form:"gw_size,omitempty"`
 	VpcID                        string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
 	VNetNameResourceGroup        string `form:"vnet_and_resource_group_names,omitempty"`
-	Subnet                       string `form:"public_subnet,omitempty" json:"public_subnet,omitempty"`
-	VpcRegion                    string `form:"region,omitempty" json:"vpc_region,omitempty"`
+	Subnet                       string `form:"gw_subnet,omitempty" json:"gw_subnet,omitempty"`
+	VpcRegion                    string `form:"vpc_region,omitempty" json:"vpc_region,omitempty"`
 	VpcSize                      string `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
 	EnableNat                    string `form:"nat_enabled,omitempty" json:"enable_nat,omitempty"`
 	EnableVpcDnsServer           string `json:"use_vpc_dns,omitempty"`
@@ -92,7 +92,7 @@ type SpokeGatewayAdvancedConfigRespResult struct {
 
 func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) error {
 	spoke.CID = c.CID
-	spoke.Action = "create_spoke_gw"
+	spoke.Action = "create_multicloud_primary_gateway"
 	spoke.Async = true
 
 	return c.PostAsyncAPI(spoke.Action, spoke, BasicCheck)
@@ -143,7 +143,7 @@ func (c *Client) SpokeLeaveTransit(spoke *SpokeVpc) error {
 func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 	form := map[string]string{
 		"CID":     c.CID,
-		"action":  "enable_spoke_ha",
+		"action":  "create_multicloud_ha_gateway",
 		"gw_name": spoke.GwName,
 		"eip":     spoke.Eip,
 		"async":   "true",
