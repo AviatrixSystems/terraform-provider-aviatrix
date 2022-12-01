@@ -82,8 +82,8 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 		return fmt.Errorf("HTTP POST %s failed: %v", form["action"], err)
 	}
 	var data struct {
-		Return bool `json:"return"`
-		Result int  `json:"results"`
+		Return bool   `json:"return"`
+		Result string `json:"results"`
 	}
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
@@ -92,23 +92,22 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
 		return errors.New("Json Decode " + form["action"] + " failed: " + err.Error() + "\n Body: " + bodyString)
 	}
-	if !data.Return || data.Result == 0 {
+	if !data.Return {
 		return fmt.Errorf("rest API %s POST failed to initiate async action", form["action"])
 	}
 
 	requestID := data.Result
 	form = map[string]string{
-		"action": "check_upgrade_status",
-		"CID":    c.CID,
-		"id":     strconv.Itoa(requestID),
-		"pos":    "0",
+		"action":     "check_task_status",
+		"CID":        c.CID,
+		"request_id": requestID,
 	}
-	backendURL := fmt.Sprintf("https://%s/v2/backend1", c.ControllerIP)
+
 	const maxPoll = 180
 	sleepDuration := time.Second * 10
 	var i int
 	for ; i < maxPoll; i++ {
-		resp, err = c.Post(backendURL, form)
+		resp, err = c.Post(c.baseURL, form)
 		if err != nil {
 			// Could be transient HTTP error, e.g. EOF error
 			time.Sleep(sleepDuration)
@@ -116,17 +115,11 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 		}
 		buf = new(bytes.Buffer)
 		buf.ReadFrom(resp.Body)
-		var data struct {
-			Pos    int    `json:"pos"`
-			Done   bool   `json:"done"`
-			Status bool   `json:"status"`
-			Result string `json:"result"`
-		}
 		err = json.Unmarshal(buf.Bytes(), &data)
 		if err != nil {
-			return fmt.Errorf("decode check_upgrade_status failed: %v\n Body: %s", err, buf.String())
+			return fmt.Errorf("decode check_task_status failed: %v\n Body: %s", err, buf.String())
 		}
-		if !data.Done {
+		if !data.Return {
 			// Not done yet
 			time.Sleep(sleepDuration)
 			continue
@@ -134,7 +127,7 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 
 		// Upgrade is done, check for error
 		if strings.HasPrefix(data.Result, "Error") {
-			return fmt.Errorf("post check_upgrade_status failed: %s", data.Result)
+			return fmt.Errorf("post check_task_status failed: %s", data.Result)
 		}
 		break
 	}
