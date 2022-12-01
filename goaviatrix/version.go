@@ -84,6 +84,7 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 	var data struct {
 		Return bool   `json:"return"`
 		Result string `json:"results"`
+		Reason string `json:"reason"`
 	}
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
@@ -93,11 +94,11 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 		return errors.New("Json Decode " + form["action"] + " failed: " + err.Error() + "\n Body: " + bodyString)
 	}
 	if !data.Return {
-		return fmt.Errorf("rest API %s POST failed to initiate async action", form["action"])
+		return fmt.Errorf("rest API %s POST failed to initiate async action: %s", form["action"], data.Reason)
 	}
 
 	requestID := data.Result
-	form = map[string]string{
+	form1 := map[string]string{
 		"action":     "check_task_status",
 		"CID":        c.CID,
 		"request_id": requestID,
@@ -107,7 +108,7 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 	sleepDuration := time.Second * 10
 	var i int
 	for ; i < maxPoll; i++ {
-		resp, err = c.Post(c.baseURL, form)
+		resp, err = c.Post(c.baseURL, form1)
 		if err != nil {
 			// Could be transient HTTP error, e.g. EOF error
 			time.Sleep(sleepDuration)
@@ -120,6 +121,10 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 			return fmt.Errorf("decode check_task_status failed: %v\n Body: %s", err, buf.String())
 		}
 		if !data.Return {
+			if data.Reason != "REQUEST_IN_PROGRESS" {
+				return fmt.Errorf("rest API %s POST failed: %s", form["action"], data.Reason)
+			}
+
 			// Not done yet
 			time.Sleep(sleepDuration)
 			continue

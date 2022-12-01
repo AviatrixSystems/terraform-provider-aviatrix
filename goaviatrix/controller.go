@@ -367,13 +367,18 @@ func (c *Client) PostAsyncAPIContextSetCertDomain(ctx context.Context, action st
 		buf = new(bytes.Buffer)
 		buf.ReadFrom(resp.Body)
 		var data struct {
-			Return bool `json:"return"`
+			Return bool   `json:"return"`
+			Reason string `json:"reason"`
 		}
 		err = json.Unmarshal(buf.Bytes(), &data)
 		if err != nil {
 			return fmt.Errorf("decode check_task_status failed: %v\n Body: %s", err, buf.String())
 		}
 		if !data.Return {
+			if data.Reason != "REQUEST_IN_PROGRESS" {
+				return fmt.Errorf("rest API %s POST failed: %s", action, data.Reason)
+			}
+
 			// Not done yet
 			time.Sleep(sleepDuration)
 			continue
