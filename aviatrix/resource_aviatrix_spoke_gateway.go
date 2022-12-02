@@ -930,7 +930,6 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		spokeHaGw := &goaviatrix.SpokeHaGateway{
 			PrimaryGwName: d.Get("gw_name").(string),
 			GwName:        d.Get("gw_name").(string) + "-hagw",
-			GwSize:        d.Get("ha_gw_size").(string),
 			Subnet:        haSubnet,
 			Zone:          haZone,
 			Eip:           d.Get("ha_eip").(string),
@@ -1795,7 +1794,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		spokeHaGw := &goaviatrix.SpokeHaGateway{
 			PrimaryGwName: d.Get("gw_name").(string),
 			GwName:        d.Get("gw_name").(string) + "-hagw",
-			GwSize:        d.Get("ha_gw_size").(string),
 			InsaneMode:    "no",
 		}
 
