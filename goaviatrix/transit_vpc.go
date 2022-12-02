@@ -17,12 +17,12 @@ type TransitVpc struct {
 	GwSize                       string `form:"gw_size,omitempty"`
 	VpcID                        string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
 	VNetNameResourceGroup        string `form:"vnet_and_resource_group_names,omitempty"`
-	Subnet                       string `form:"public_subnet,omitempty" json:"vpc_net,omitempty"`
+	Subnet                       string `form:"gw_subnet,omitempty" json:"gw_subnet,omitempty"`
 	HASubnet                     string `form:"ha_subnet,omitempty"`
 	HAZone                       string `form:"new_zone,omitempty"`
 	HASubnetGCP                  string `form:"new_subnet,omitempty"`
 	PeeringHASubnet              string `json:"public_subnet,omitempty"`
-	VpcRegion                    string `form:"region,omitempty" json:"vpc_region,omitempty"`
+	VpcRegion                    string `form:"vpc_region,omitempty" json:"vpc_region,omitempty"`
 	VpcSize                      string `form:"gw_size,omitempty" json:"gw_size,omitempty"`
 	EnableNAT                    string `form:"nat_enabled,omitempty" json:"enable_nat,omitempty"`
 	SingleAzHa                   string `form:"single_az_ha,omitempty"`
@@ -57,7 +57,7 @@ type TransitVpc struct {
 	BgpLanSpecifySubnet          string   `form:"bgp_lan_specify_subnet"`
 	Async                        bool     `form:"async,omitempty"`
 	BgpLanInterfacesCount        int      `form:"bgp_lan_intf_count,omitempty"`
-	LbVpcId                      string   `form:"private_mode_load_balancer,omitempty"`
+	LbVpcId                      string   `form:"lb_vpc_id,omitempty"`
 }
 
 type TransitGatewayAdvancedConfig struct {
@@ -147,7 +147,7 @@ type TransitGatewayBgpLanIpInfo struct {
 
 func (c *Client) LaunchTransitVpc(gateway *TransitVpc) error {
 	gateway.CID = c.CID
-	gateway.Action = "create_transit_gw"
+	gateway.Action = "create_multicloud_primary_gateway"
 	gateway.Async = true
 
 	return c.PostAsyncAPI(gateway.Action, gateway, BasicCheck)
@@ -163,7 +163,7 @@ func (c *Client) EnableHaTransitGateway(gateway *TransitVpc) error {
 func (c *Client) EnableHaTransitVpc(gateway *TransitVpc) error {
 	form := map[string]string{
 		"CID":     c.CID,
-		"action":  "enable_transit_ha",
+		"action":  "create_multicloud_ha_gateway",
 		"gw_name": gateway.GwName,
 		"eip":     gateway.Eip,
 		"async":   "true",
