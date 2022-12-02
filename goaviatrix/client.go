@@ -385,6 +385,10 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 			return fmt.Errorf("decode check_task_status failed: %v\n Body: %s", err, buf.String())
 		}
 		if !data.Return {
+			if data.Reason != "REQUEST_IN_PROGRESS" {
+				return fmt.Errorf("rest API %s POST failed: %s", action, data.Reason)
+			}
+
 			// Not done yet
 			time.Sleep(sleepDuration)
 			continue
