@@ -27,7 +27,7 @@ type SpokeVpc struct {
 	HASubnetGCP                  string `form:"new_subnet,omitempty"`
 	SingleAzHa                   string `form:"single_az_ha,omitempty"`
 	TransitGateway               string `form:"transit_gw,omitempty"`
-	TagJson                      string `form:"tag_json,omitempty"`
+	TagJson                      string `form:"json_tags,omitempty"`
 	ReuseEip                     string `form:"reuse_eip,omitempty"`
 	AllocateNewEipRead           bool   `json:"newly_allocated_eip,omitempty"`
 	Eip                          string `form:"eip,omitempty" json:"eip,omitempty"`
@@ -35,7 +35,7 @@ type SpokeVpc struct {
 	Zone                         string `form:"zone,omitempty" json:"zone,omitempty"`
 	BgpManualSpokeAdvertiseCidrs string `form:"bgp_manual_spoke,omitempty"`
 	EncVolume                    string `form:"enc_volume,omitempty"`
-	CustomerManagedKeys          string `form:"customer_managed_keys,omitempty"`
+	CustomerManagedKeys          string `form:"cmk,omitempty"`
 	EnablePrivateOob             string `form:"private_oob,omitempty"`
 	OobManagementSubnet          string `form:"oob_mgmt_subnet,omitempty"`
 	HAOobManagementSubnet        string
