@@ -930,18 +930,19 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		spokeHaGw := &goaviatrix.SpokeHaGateway{
 			PrimaryGwName: d.Get("gw_name").(string),
 			GwName:        d.Get("gw_name").(string) + "-hagw",
-			GwSize:        d.Get("ha_gw_size").(string),
 			Subnet:        haSubnet,
 			Zone:          haZone,
 			Eip:           d.Get("ha_eip").(string),
 			InsaneMode:    "no",
 		}
 
-		if insaneMode && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-			var haStrs []string
-			haStrs = append(haStrs, haSubnet, haInsaneModeAz)
-			haSubnet = strings.Join(haStrs, "~~")
-			spokeHaGw.Subnet = haSubnet
+		if insaneMode {
+			if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+				var haStrs []string
+				haStrs = append(haStrs, haSubnet, haInsaneModeAz)
+				haSubnet = strings.Join(haStrs, "~~")
+				spokeHaGw.Subnet = haSubnet
+			}
 			spokeHaGw.InsaneMode = "yes"
 		}
 
@@ -1795,7 +1796,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		spokeHaGw := &goaviatrix.SpokeHaGateway{
 			PrimaryGwName: d.Get("gw_name").(string),
 			GwName:        d.Get("gw_name").(string) + "-hagw",
-			GwSize:        d.Get("ha_gw_size").(string),
 			InsaneMode:    "no",
 		}
 
@@ -1872,21 +1872,23 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			}
 		}
 
-		if d.Get("insane_mode").(bool) && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-			var haStrs []string
-			insaneModeHaAz := d.Get("ha_insane_mode_az").(string)
-			haSubnet := d.Get("ha_subnet").(string)
+		if d.Get("insane_mode").(bool) {
+			if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+				var haStrs []string
+				insaneModeHaAz := d.Get("ha_insane_mode_az").(string)
+				haSubnet := d.Get("ha_subnet").(string)
 
-			if insaneModeHaAz == "" && haSubnet != "" {
-				return fmt.Errorf("ha_insane_mode_az needed if insane_mode is enabled and ha_subnet is set " +
-					"for AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) or AWS Secret (32768)")
-			} else if insaneModeHaAz != "" && haSubnet == "" {
-				return fmt.Errorf("ha_subnet needed if insane_mode is enabled and ha_insane_mode_az is set " +
-					"for AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) or AWS Secret (32768)")
+				if insaneModeHaAz == "" && haSubnet != "" {
+					return fmt.Errorf("ha_insane_mode_az needed if insane_mode is enabled and ha_subnet is set " +
+						"for AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) or AWS Secret (32768)")
+				} else if insaneModeHaAz != "" && haSubnet == "" {
+					return fmt.Errorf("ha_subnet needed if insane_mode is enabled and ha_insane_mode_az is set " +
+						"for AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) or AWS Secret (32768)")
+				}
+
+				haStrs = append(haStrs, spokeHaGw.Subnet, insaneModeHaAz)
+				spokeHaGw.Subnet = strings.Join(haStrs, "~~")
 			}
-
-			haStrs = append(haStrs, spokeHaGw.Subnet, insaneModeHaAz)
-			spokeHaGw.Subnet = strings.Join(haStrs, "~~")
 			spokeHaGw.InsaneMode = "yes"
 		}
 
