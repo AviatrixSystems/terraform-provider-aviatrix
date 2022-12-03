@@ -17,8 +17,8 @@ type TransitHaGateway struct {
 	Zone                  string `json:"zone"`
 	AvailabilityDomain    string `json:"availability_domain"`
 	FaultDomain           string `json:"fault_domain"`
-	BgpLanVpcId           string `json:"bpg_lan_vpc_id"`
-	BgpLanSubnet          string `json:"bgp_lan_subnet"`
+	BgpLanVpcId           string `json:"bgp_lan_vpc"`
+	BgpLanSubnet          string `json:"bgp_lan_specify_subnet"`
 	Eip                   string `json:"eip,omitempty"`
 	InsaneMode            string `json:"insane_mode"`
 	TagList               string `json:"tag_string"`

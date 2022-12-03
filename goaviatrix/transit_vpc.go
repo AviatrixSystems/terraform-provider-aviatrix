@@ -24,10 +24,10 @@ type TransitVpc struct {
 	PeeringHASubnet              string `json:"public_subnet,omitempty"`
 	VpcRegion                    string `form:"vpc_region,omitempty" json:"vpc_region,omitempty"`
 	VpcSize                      string `form:"gw_size,omitempty" json:"gw_size,omitempty"`
-	EnableNAT                    string `form:"nat_enabled,omitempty" json:"enable_nat,omitempty"`
+	EnableNAT                    string `form:"enable_nat,omitempty" json:"enable_nat,omitempty"`
 	SingleAzHa                   string `form:"single_az_ha,omitempty"`
 	EnableVpcDnsServer           string `json:"use_vpc_dns,omitempty"`
-	TagJson                      string `form:"tag_json,omitempty"`
+	TagJson                      string `form:"json_tags,omitempty"`
 	EnableHybridConnection       bool   `form:"enable_hybrid_connection" json:"tgw_enabled,omitempty"`
 	ConnectedTransit             string `form:"connected_transit" json:"connected_transit,omitempty"`
 	InsaneMode                   string `form:"insane_mode,omitempty"`
@@ -38,12 +38,12 @@ type TransitVpc struct {
 	EnableAdvertiseTransitCidr   bool
 	BgpManualSpokeAdvertiseCidrs string `form:"bgp_manual_spoke,omitempty"`
 	EnableTransitFireNet         string `form:"enable_transit_firenet,omitempty"`
-	LanVpcID                     string `form:"lan_vpc_id,omitempty"`
-	LanPrivateSubnet             string `form:"lan_private_subnet,omitempty"`
+	LanVpcID                     string `form:"lan_vpc,omitempty"`
+	LanPrivateSubnet             string `form:"lan_subnet,omitempty"`
 	LearnedCidrsApproval         string `form:"learned_cidrs_approval,omitempty"`
 	EncVolume                    string `form:"enc_volume,omitempty"`
-	CustomerManagedKeys          string `form:"customer_managed_keys,omitempty"`
-	BgpOverLan                   string `form:"bgp_over_lan,omitempty"`
+	CustomerManagedKeys          string `form:"cmk,omitempty"`
+	BgpOverLan                   bool   `form:"bgp_lan,omitempty"`
 	EnablePrivateOob             string `form:"private_oob,omitempty"`
 	OobManagementSubnet          string `form:"oob_mgmt_subnet,omitempty"`
 	HAOobManagementSubnet        string
@@ -54,7 +54,7 @@ type TransitVpc struct {
 	SpotPrice                    string   `form:"spot_price,omitempty"`
 	ApprovedLearnedCidrs         []string `form:"approved_learned_cidrs"`
 	BgpLanVpcID                  string   `form:"bgp_lan_vpc"`
-	BgpLanSpecifySubnet          string   `form:"bgp_lan_specify_subnet"`
+	BgpLanSpecifySubnet          string   `form:"bgp_lan_subnet"`
 	Async                        bool     `form:"async,omitempty"`
 	BgpLanInterfacesCount        int      `form:"bgp_lan_intf_count,omitempty"`
 	LbVpcId                      string   `form:"lb_vpc_id,omitempty"`
@@ -414,9 +414,9 @@ func (c *Client) SetBgpEcmp(transitGateway *TransitVpc, enabled bool) error {
 
 func (c *Client) GetTransitGatewayAdvancedConfig(transitGateway *TransitVpc) (*TransitGatewayAdvancedConfig, error) {
 	form := map[string]string{
-		"CID":                  c.CID,
-		"action":               "list_aviatrix_transit_advanced_config",
-		"transit_gateway_name": transitGateway.GwName,
+		"CID":          c.CID,
+		"action":       "list_aviatrix_transit_advanced_config",
+		"gateway_name": transitGateway.GwName,
 	}
 
 	var data TransitGatewayAdvancedConfigResp
@@ -577,9 +577,9 @@ func (c *Client) EditTransitConnectionRemoteSubnet(vpcId, connName, remoteSubnet
 
 func (c *Client) GetBgpLanIPList(transitGateway *TransitVpc) (*TransitGatewayBgpLanIpInfo, error) {
 	form := map[string]string{
-		"CID":                  c.CID,
-		"action":               "list_aviatrix_transit_advanced_config",
-		"transit_gateway_name": transitGateway.GwName,
+		"CID":          c.CID,
+		"action":       "list_aviatrix_transit_advanced_config",
+		"gateway_name": transitGateway.GwName,
 	}
 
 	var data TransitGatewayBgpLanIpInfoResp

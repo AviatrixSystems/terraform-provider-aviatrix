@@ -931,7 +931,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("'bgp_lan_interfaces' and 'ha_bgp_lan_interfaces' are only valid for GCP (4)")
 	}
 	if bgpOverLan {
-		gateway.BgpOverLan = "on"
+		gateway.BgpOverLan = true
 		if goaviatrix.IsCloudType(cloudType, goaviatrix.GCP) {
 			if len(bgpLanVpcID) == 0 {
 				return fmt.Errorf("missing bgp_lan_interfaces for creating GCP transit gateway with BGP over LAN enabled")
@@ -1147,12 +1147,14 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			BgpLanSubnet:  strings.Join(haBgpLanSpecifySubnet, ","),
 		}
 
-		if insaneMode && goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
-			var haStrs []string
-			insaneModeHaAz := d.Get("ha_insane_mode_az").(string)
-			haStrs = append(haStrs, haSubnet, insaneModeHaAz)
-			haSubnet = strings.Join(haStrs, "~~")
-			transitHaGw.Subnet = haSubnet
+		if insaneMode {
+			if goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
+				var haStrs []string
+				insaneModeHaAz := d.Get("ha_insane_mode_az").(string)
+				haStrs = append(haStrs, haSubnet, insaneModeHaAz)
+				haSubnet = strings.Join(haStrs, "~~")
+				transitHaGw.Subnet = haSubnet
+			}
 			transitHaGw.InsaneMode = "yes"
 		}
 
@@ -1185,6 +1187,11 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			}
 		} else if haAzureEipNameOk {
 			return fmt.Errorf("failed to create HA Transit Gateway: 'ha_azure_eip_name_resource_group' must be empty when cloud_type is not one of Azure (8), AzureGov (32) or AzureChina (2048)")
+		}
+
+		if bgpOverLan && goaviatrix.IsCloudType(cloudType, goaviatrix.GCP) {
+			transitHaGw.BgpLanVpcId = strings.Join(haBgpLanVpcID, ",")
+			transitHaGw.BgpLanSubnet = strings.Join(haBgpLanSpecifySubnet, ",")
 		}
 
 		log.Printf("[INFO] Enabling HA on Transit Gateway: %#v", haSubnet)
@@ -2212,21 +2219,23 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			}
 		}
 
-		if d.Get("insane_mode").(bool) && goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
-			var haStrs []string
-			insaneModeHaAz := d.Get("ha_insane_mode_az").(string)
-			haSubnet := d.Get("ha_subnet").(string)
+		if d.Get("insane_mode").(bool) {
+			if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes) {
+				var haStrs []string
+				insaneModeHaAz := d.Get("ha_insane_mode_az").(string)
+				haSubnet := d.Get("ha_subnet").(string)
 
-			if insaneModeHaAz == "" && haSubnet != "" {
-				return fmt.Errorf("ha_insane_mode_az needed if insane_mode is enabled and ha_subnet is set for " +
-					"AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) or AWS Secret (32768)")
-			} else if insaneModeHaAz != "" && haSubnet == "" {
-				return fmt.Errorf("ha_subnet needed if insane_mode is enabled and ha_insane_mode_az is set for " +
-					"AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) or AWS Secret (32768)")
+				if insaneModeHaAz == "" && haSubnet != "" {
+					return fmt.Errorf("ha_insane_mode_az needed if insane_mode is enabled and ha_subnet is set for " +
+						"AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) or AWS Secret (32768)")
+				} else if insaneModeHaAz != "" && haSubnet == "" {
+					return fmt.Errorf("ha_subnet needed if insane_mode is enabled and ha_insane_mode_az is set for " +
+						"AWS (1), AWSGov (256), AWSChina (1024), AWS Top Secret (16384) or AWS Secret (32768)")
+				}
+
+				haStrs = append(haStrs, transitHaGw.Subnet, insaneModeHaAz)
+				transitHaGw.Subnet = strings.Join(haStrs, "~~")
 			}
-
-			haStrs = append(haStrs, transitHaGw.Subnet, insaneModeHaAz)
-			transitHaGw.Subnet = strings.Join(haStrs, "~~")
 			transitHaGw.InsaneMode = "yes"
 		}
 
