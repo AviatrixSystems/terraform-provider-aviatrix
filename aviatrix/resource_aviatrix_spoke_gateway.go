@@ -616,7 +616,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWS|goaviatrix.Azure) {
 			return fmt.Errorf("enabling BGP is only supported for AWS (1) and Azure (8)")
 		}
-		gateway.EnableBgp = "on"
+		gateway.EnableBgp = "yes"
 	} else {
 		if disableRoutePropagation {
 			return fmt.Errorf("disable route propagation is not supported on Non-BGP Spoke")
