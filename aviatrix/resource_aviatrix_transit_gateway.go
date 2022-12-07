@@ -1158,15 +1158,17 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			transitHaGw.InsaneMode = "yes"
 		}
 
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) && haZone == "" {
-			return fmt.Errorf("no ha_zone is provided for enabling Transit HA gateway: %s", transitHaGw.GwName)
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.GCPRelatedCloudTypes) {
+			if haZone == "" {
+				return fmt.Errorf("no ha_zone is provided for enabling Transit HA gateway: %s", transitHaGw.GwName)
+			}
+		} else if goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+			if haZone != "" {
+				transitHaGw.Subnet = fmt.Sprintf("%s~~%s~~", haSubnet, haZone)
+			}
 		} else if goaviatrix.IsCloudType(cloudType, goaviatrix.OCIRelatedCloudTypes) {
 			transitHaGw.AvailabilityDomain = haAvailabilityDomain
 			transitHaGw.FaultDomain = haFaultDomain
-		}
-
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) && haZone != "" {
-			transitHaGw.Subnet = fmt.Sprintf("%s~~%s~~", haSubnet, haZone)
 		}
 
 		if privateModeInfo.EnablePrivateMode {
@@ -1175,18 +1177,22 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 
 		haAzureEipName, haAzureEipNameOk := d.GetOk("ha_azure_eip_name_resource_group")
-		if goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) && transitHaGw.Eip != "" {
+		if goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) {
 			if transitHaGw.Eip != "" {
 				// AVX-9874 Azure EIP has a different format e.g. 'test_ip:rg:104.45.186.20'
 				if !haAzureEipNameOk {
 					return fmt.Errorf("failed to create HA Transit Gateway: 'ha_azure_eip_name_resource_group' must be set when a custom EIP is provided and cloud_type is Azure (8), AzureGov (32) or AzureChina (2048)")
 				}
 				transitHaGw.Eip = fmt.Sprintf("%s:%s", haAzureEipName.(string), transitHaGw.Eip)
-			} else if haAzureEipNameOk {
-				return fmt.Errorf("failed to create HA Transit Gateway: 'ha_azure_eip_name_resource_group' must be empty when 'ha_eip' is empty")
+			} else {
+				if haAzureEipNameOk {
+					return fmt.Errorf("failed to create HA Transit Gateway: 'ha_azure_eip_name_resource_group' must be empty when 'ha_eip' is empty")
+				}
 			}
-		} else if haAzureEipNameOk {
-			return fmt.Errorf("failed to create HA Transit Gateway: 'ha_azure_eip_name_resource_group' must be empty when cloud_type is not one of Azure (8), AzureGov (32) or AzureChina (2048)")
+		} else {
+			if haAzureEipNameOk {
+				return fmt.Errorf("failed to create HA Transit Gateway: 'ha_azure_eip_name_resource_group' must be empty when cloud_type is not one of Azure (8), AzureGov (32) or AzureChina (2048)")
+			}
 		}
 
 		if bgpOverLan && goaviatrix.IsCloudType(cloudType, goaviatrix.GCP) {
@@ -1213,10 +1219,10 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			haGateway := &goaviatrix.Gateway{
 				CloudType: d.Get("cloud_type").(int),
 				GwName:    d.Get("gw_name").(string) + "-hagw",
-				GwSize:    d.Get("ha_gw_size").(string),
+				VpcSize:   d.Get("ha_gw_size").(string),
 			}
 
-			log.Printf("[INFO] Resizing Transit HA GAteway size to: %s ", haGateway.GwSize)
+			log.Printf("[INFO] Resizing Transit HA GAteway size to: %s ", haGateway.VpcSize)
 
 			err = client.UpdateGateway(haGateway)
 			if err != nil {
@@ -1984,7 +1990,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	haGateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string) + "-hagw",
-		GwSize:    d.Get("ha_gw_size").(string),
+		VpcSize:   d.Get("ha_gw_size").(string),
 	}
 	log.Printf("[INFO] Updating Aviatrix Transit Gateway: %#v", gateway)
 
@@ -2172,6 +2178,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 
 		oldSubnet, newSubnet := d.GetChange("ha_subnet")
 		oldZone, newZone := d.GetChange("ha_zone")
+		haGwSize := d.Get("ha_gw_size").(string)
 		deleteHaGw := false
 		changeHaGw := false
 		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
@@ -2239,10 +2246,10 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			transitHaGw.InsaneMode = "yes"
 		}
 
-		if (newHaGwEnabled || changeHaGw) && transitHaGw.GwSize == "" {
+		if (newHaGwEnabled || changeHaGw) && haGwSize == "" {
 			return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
 				"ha_subnet or ha_zone is set")
-		} else if deleteHaGw && transitHaGw.GwSize != "" {
+		} else if deleteHaGw && haGwSize != "" {
 			return fmt.Errorf("ha_gw_size must be empty if transit HA gateway is deleted")
 		}
 
@@ -2446,12 +2453,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 						return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway while trying to update HA Gw size: %s", err)
 					}
 				} else {
-					if haGateway.GwSize == "" {
+					if haGateway.VpcSize == "" {
 						return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
 							"ha_subnet or ha_zone is set")
 					}
 					err = client.UpdateGateway(haGateway)
-					log.Printf("[INFO] Updating HA Gateway size to: %s ", haGateway.GwSize)
+					log.Printf("[INFO] Updating HA Gateway size to: %s ", haGateway.VpcSize)
 					if err != nil {
 						return fmt.Errorf("failed to update Aviatrix Transit HA Gateway size: %s", err)
 					}
@@ -2768,12 +2775,12 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 						return fmt.Errorf("couldn't find Aviatrix Transit HA Gateway while trying to update HA Gw size: %s", err)
 					}
 				} else {
-					if haGateway.GwSize == "" {
+					if haGateway.VpcSize == "" {
 						return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
 							"ha_subnet or ha_zone is set")
 					}
 					err = client.UpdateGateway(haGateway)
-					log.Printf("[INFO] Updating HA Gateway size to: %s ", haGateway.GwSize)
+					log.Printf("[INFO] Updating HA Gateway size to: %s ", haGateway.VpcSize)
 					if err != nil {
 						return fmt.Errorf("failed to update Aviatrix Transit HA Gateway size: %s", err)
 					}
