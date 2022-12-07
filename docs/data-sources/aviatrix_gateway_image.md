@@ -18,7 +18,7 @@ the gateway.
 
 ```hcl
 # Aviatrix Gateway Image Data Source using interpolation from a spoke gateway
-data "aviatrix_gateway" "foo" {
+data "aviatrix_gateway_image" "foo" {
   cloud_type       = aviatrix_spoke_gateway.spoke.cloud_type
   software_version = aviatrix_spoke_gateway.spoke.software_version
 }
@@ -26,7 +26,7 @@ data "aviatrix_gateway" "foo" {
 
 ```hcl
 # Aviatrix Gateway Image Data Source
-data "aviatrix_gateway" "foo" {
+data "aviatrix_gateway_image" "foo" {
   cloud_type       = 4
   software_version = "6.4.2487"
 }
