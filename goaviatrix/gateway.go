@@ -121,7 +121,7 @@ type Gateway struct {
 	VpnCidr                         string            `form:"cidr,omitempty" json:"vpn_cidr,omitempty"`
 	VpnStatus                       string            `form:"vpn_access,omitempty" json:"vpn_status,omitempty"`
 	Zone                            string            `form:"zone,omitempty" json:"zone,omitempty"`
-	VpcSize                         string            `form:"gw_size,omitempty"` //Only use for gateway create
+	VpcSize                         string            `form:"gw_size,omitempty" ` //Only use for gateway create
 	DMZEnabled                      string            `json:"dmz_enabled,omitempty"`
 	EnableVpnNat                    bool              `form:"vpn_nat,omitempty" json:"vpn_nat"`
 	EnableDesignatedGateway         string            `form:"designated_gateway,omitempty" json:"designated_gateway,omitempty"`
@@ -460,7 +460,7 @@ func (c *Client) EnableSingleAZGateway(gateway *Gateway) error {
 
 func (c *Client) EnablePeeringHaGateway(gateway *Gateway) error {
 	gateway.CID = c.CID
-	gateway.Action = "create_multicloud_ha_gateway"
+	gateway.Action = "create_peering_ha_gateway"
 	gateway.Async = true
 
 	return c.PostAsyncAPI(gateway.Action, gateway, BasicCheck)
