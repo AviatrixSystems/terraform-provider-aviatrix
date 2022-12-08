@@ -79,10 +79,10 @@ func (c *Client) UpdateSpokeGatewaySubnetGroup(ctx context.Context, spokeGateway
 	}
 
 	if spokeGatewaySubnetGroup.SubnetList == nil {
-		form["subnet_list"] = "[]"
+		form["subnet_group_config"] = "[]"
 	} else {
 		subnetsJson, _ := json.Marshal(spokeGatewaySubnetGroup.SubnetList)
-		form["subnet_list"] = string(subnetsJson)
+		form["subnet_group_config"] = string(subnetsJson)
 	}
 
 	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
