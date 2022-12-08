@@ -992,10 +992,10 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 			haGateway := &goaviatrix.Gateway{
 				CloudType: d.Get("cloud_type").(int),
 				GwName:    d.Get("gw_name").(string) + "-hagw",
-				GwSize:    d.Get("ha_gw_size").(string),
+				VpcSize:   d.Get("ha_gw_size").(string),
 			}
 
-			log.Printf("[INFO] Resizing Spoke HA Gateway size to: %s ", haGateway.GwSize)
+			log.Printf("[INFO] Resizing Spoke HA Gateway size to: %s ", haGateway.VpcSize)
 
 			err := client.UpdateGateway(haGateway)
 			if err != nil {
@@ -1636,7 +1636,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 	haGateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string) + "-hagw",
-		GwSize:    d.Get("ha_gw_size").(string),
+		VpcSize:   d.Get("ha_gw_size").(string),
 	}
 
 	log.Printf("[INFO] Updating Aviatrix gateway: %#v", gateway)
@@ -1827,6 +1827,7 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		oldZone, newZone := d.GetChange("ha_zone")
 		deleteHaGw := false
 		changeHaGw := false
+		haGwSize := d.Get("ha_gw_size").(string)
 		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.OCIRelatedCloudTypes|goaviatrix.AliCloudRelatedCloudTypes) {
 			spokeHaGw.Subnet = d.Get("ha_subnet").(string)
 			if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && d.Get("ha_zone").(string) != "" {
@@ -1892,10 +1893,10 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			spokeHaGw.InsaneMode = "yes"
 		}
 
-		if (newHaGwEnabled || changeHaGw) && spokeHaGw.GwSize == "" {
+		if (newHaGwEnabled || changeHaGw) && haGwSize == "" {
 			return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
 				"ha_subnet or ha_zone is set")
-		} else if deleteHaGw && spokeHaGw.GwSize != "" {
+		} else if deleteHaGw && haGwSize != "" {
 			return fmt.Errorf("ha_gw_size must be empty if spoke HA gateway is deleted")
 
 		}
@@ -2045,12 +2046,12 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 					return fmt.Errorf("couldn't find Aviatrix Spoke HA Gateway while trying to update HA Gw size: %s", err)
 				}
 			} else {
-				if haGateway.GwSize == "" {
+				if haGateway.VpcSize == "" {
 					return fmt.Errorf("A valid non empty ha_gw_size parameter is mandatory for this resource if " +
 						"ha_subnet or ha_zone is set")
 				}
 				err = client.UpdateGateway(haGateway)
-				log.Printf("[INFO] Updating HA Gateway size to: %s ", haGateway.GwSize)
+				log.Printf("[INFO] Updating HA Gateway size to: %s ", haGateway.VpcSize)
 				if err != nil {
 					return fmt.Errorf("failed to update Aviatrix Spoke HA Gateway size: %s", err)
 				}

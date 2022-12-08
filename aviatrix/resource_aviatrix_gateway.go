@@ -1095,9 +1095,9 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 				GwName:    d.Get("gw_name").(string) + "-hagw", //CHECK THE NAME of peering ha gateway in
 				// controller, test out first. just assuming it has that suffix
 			}
-			peeringHaGateway.GwSize = peeringHaGwSize
+			peeringHaGateway.VpcSize = peeringHaGwSize
 			err := client.UpdateGateway(peeringHaGateway)
-			log.Printf("[INFO] Resizing Peering Ha Gateway size to: %s,", peeringHaGateway.GwSize)
+			log.Printf("[INFO] Resizing Peering Ha Gateway size to: %s,", peeringHaGateway.VpcSize)
 			if err != nil {
 				return fmt.Errorf("failed to update Aviatrix Peering HA Gateway size: %s", err)
 			}
@@ -1661,7 +1661,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	gateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string),
-		GwSize:    d.Get("gw_size").(string),
+		VpcSize:   d.Get("gw_size").(string),
 	}
 	vpnAccess := d.Get("vpn_access").(bool)
 	enableElb := false
@@ -1709,7 +1709,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	peeringHaGateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string) + "-hagw",
-		GwSize:    d.Get("peering_ha_gw_size").(string),
+		VpcSize:   d.Get("peering_ha_gw_size").(string),
 	}
 
 	// Get primary gw size if gw_size changed, to be used later on for peering ha gw size update
@@ -2033,12 +2033,12 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			Eip:       d.Get("peering_ha_eip").(string),
 			GwName:    d.Get("gw_name").(string),
 			CloudType: d.Get("cloud_type").(int),
-			GwSize:    d.Get("peering_ha_gw_size").(string),
+			VpcSize:   d.Get("peering_ha_gw_size").(string),
 		}
 
 		haAzureEipName, haAzureEipNameOk := d.GetOk("peering_ha_azure_eip_name_resource_group")
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-			if gw.Eip != "" && gw.GwSize != "" {
+			if gw.Eip != "" && gw.VpcSize != "" {
 				// No change will be detected when peering_ha_eip is set to the empty string because it is computed.
 				// Instead, check peering_ha_gw_size to detect when HA gateway is being deleted.
 				if !haAzureEipNameOk {
@@ -2113,10 +2113,10 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			gw.PeeringHASubnet = strings.Join(haStrs, "~~")
 		}
 
-		if (newHaGwEnabled || changeHaGw) && gw.GwSize == "" {
+		if (newHaGwEnabled || changeHaGw) && gw.VpcSize == "" {
 			return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for this resource if " +
 				"peering_ha_subnet or peering_ha_zone is set")
-		} else if deleteHaGw && gw.GwSize != "" {
+		} else if deleteHaGw && gw.VpcSize != "" {
 			return fmt.Errorf("peering_ha_gw_size must be empty if transit HA gateway is deleted")
 		}
 
@@ -2260,12 +2260,12 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 						"size: %s", err)
 				}
 			} else {
-				if peeringHaGateway.GwSize == "" {
+				if peeringHaGateway.VpcSize == "" {
 					return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for this resource if " +
 						"peering_ha_subnet or peering_ha_zone is set. Example: t2.micro or us-west1-b respectively")
 				}
 				err = client.UpdateGateway(peeringHaGateway)
-				log.Printf("[INFO] Updating Peering HA Gateway size to: %s ", peeringHaGateway.GwSize)
+				log.Printf("[INFO] Updating Peering HA Gateway size to: %s ", peeringHaGateway.VpcSize)
 				if err != nil {
 					return fmt.Errorf("failed to update Aviatrix Peering HA Gw size: %s", err)
 				}

@@ -113,15 +113,15 @@ type Gateway struct {
 	TunnelType                      string            `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
 	VendorName                      string            `form:"vendor_name,omitempty" json:"vendor_name,omitempty"`
 	VpcID                           string            `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	VpcNet                          string            `form:"vpc_net,omitempty" json:"public_subnet,omitempty"`
-	VpcRegion                       string            `form:"vpc_reg,omitempty" json:"vpc_region,omitempty"`
+	VpcNet                          string            `form:"gw_subnet,omitempty" json:"public_subnet,omitempty"`
+	VpcRegion                       string            `form:"vpc_region,omitempty" json:"vpc_region,omitempty"`
 	VpcSplunkIPPort                 string            `form:"vpc_splunk_ip_port,omitempty" json:"vpc_splunk_ip_port,omitempty"`
 	VpcState                        string            `form:"vpc_state,omitempty" json:"vpc_state,omitempty"`
 	VpcType                         string            `form:"vpc_type,omitempty" json:"vpc_type,omitempty"`
 	VpnCidr                         string            `form:"cidr,omitempty" json:"vpn_cidr,omitempty"`
 	VpnStatus                       string            `form:"vpn_access,omitempty" json:"vpn_status,omitempty"`
 	Zone                            string            `form:"zone,omitempty" json:"zone,omitempty"`
-	VpcSize                         string            `form:"vpc_size,omitempty" ` //Only use for gateway create
+	VpcSize                         string            `form:"gw_size,omitempty" ` //Only use for gateway create
 	DMZEnabled                      string            `json:"dmz_enabled,omitempty"`
 	EnableVpnNat                    bool              `form:"vpn_nat,omitempty" json:"vpn_nat"`
 	EnableDesignatedGateway         string            `form:"designated_gateway,omitempty" json:"designated_gateway,omitempty"`
