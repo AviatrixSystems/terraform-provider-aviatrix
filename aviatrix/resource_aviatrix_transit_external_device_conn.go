@@ -323,7 +323,7 @@ func resourceAviatrixTransitExternalDeviceConn() *schema.Resource {
 			"phase1_remote_identifier": {
 				Type:             schema.TypeList,
 				Optional:         true,
-				Elem:             &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.IsIPv4Address},
+				Elem:             &schema.Schema{Type: schema.TypeString},
 				DiffSuppressFunc: goaviatrix.TransitExternalDeviceConnPh1RemoteIdDiffSuppressFunc,
 				Description:      "Phase 1 remote identifier of the IPsec tunnel.",
 			},
