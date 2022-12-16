@@ -398,7 +398,7 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Optional:         true,
 				Elem:             &schema.Schema{Type: schema.TypeString},
 				DiffSuppressFunc: goaviatrix.S2CPh1RemoteIdDiffSuppressFunc,
-				Description:      "Phase 1 remote identifier of the IPsec tunnel.",
+				Description:      "List of phase 1 remote identifier of the IPsec tunnel. This can be configured as a list of any string, including emtpy string.",
 			},
 		},
 	}
@@ -680,8 +680,8 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 
 	phase1RemoteIdentifier := d.Get("phase1_remote_identifier").([]interface{})
 	ph1RemoteIdList := goaviatrix.ExpandStringList(phase1RemoteIdentifier)
-	if haEnabled && !singleIpHA && len(ph1RemoteIdList) != 0 && len(ph1RemoteIdList) != 2 {
-		if !(s2c.RemoteGwIP != "" && s2c.RemoteGwIP2 != "" && s2c.RemoteGwIP == s2c.RemoteGwIP2 && len(ph1RemoteIdList) == 1) {
+	if haEnabled && !singleIpHA && len(phase1RemoteIdentifier) != 0 && len(phase1RemoteIdentifier) != 2 {
+		if !(s2c.RemoteGwIP != "" && s2c.RemoteGwIP2 != "" && s2c.RemoteGwIP == s2c.RemoteGwIP2 && len(phase1RemoteIdentifier) == 1) {
 			return fmt.Errorf("please either set two phase 1 remote IDs or none, when HA is enabled and single IP HA is disabled")
 		}
 	} else if (!haEnabled || singleIpHA) && len(phase1RemoteIdentifier) > 1 {
@@ -736,29 +736,49 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	if len(ph1RemoteIdList) == 1 && ph1RemoteIdList[0] != s2c.RemoteGwIP {
+	if len(phase1RemoteIdentifier) == 1 {
+		var ph1RemoteId string
+
+		if phase1RemoteIdentifier[0] == nil {
+			ph1RemoteId = "\"\""
+		} else {
+			ph1RemoteId = phase1RemoteIdentifier[0].(string)
+		}
+
 		editSite2cloud := &goaviatrix.EditSite2Cloud{
 			GwName:                 s2c.GwName,
 			VpcID:                  s2c.VpcID,
 			ConnName:               s2c.TunnelName,
-			Phase1RemoteIdentifier: ph1RemoteIdList[0],
+			Phase1RemoteIdentifier: ph1RemoteId,
 		}
 
-		err := client.UpdateSite2Cloud(editSite2cloud)
+		err = client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
 			return fmt.Errorf("failed to update Site2Cloud phase 1 remote identifier: %s", err)
 		}
 	}
 
-	if len(ph1RemoteIdList) == 2 && (ph1RemoteIdList[0] != s2c.RemoteGwIP || ph1RemoteIdList[1] != s2c.RemoteGwIP2) {
+	if len(phase1RemoteIdentifier) == 2 {
+		var ph1RemoteId string
+
+		if phase1RemoteIdentifier[0] == nil && phase1RemoteIdentifier[1] != nil {
+			ph1RemoteId = "\"\"" + "," + phase1RemoteIdentifier[1].(string)
+		} else if phase1RemoteIdentifier[0] != nil && phase1RemoteIdentifier[1] == nil {
+			ph1RemoteId = phase1RemoteIdentifier[0].(string) + "," + "\"\""
+		} else if phase1RemoteIdentifier[0] == nil && phase1RemoteIdentifier[1] == nil {
+			ph1RemoteId = "\"\", \"\""
+		} else {
+			ph1RemoteId = strings.Join(ph1RemoteIdList, ",")
+		}
+
 		editSite2cloud := &goaviatrix.EditSite2Cloud{
 			GwName:                 s2c.GwName,
 			VpcID:                  s2c.VpcID,
 			ConnName:               s2c.TunnelName,
-			Phase1RemoteIdentifier: strings.Join(ph1RemoteIdList, ","),
+			Phase1RemoteIdentifier: ph1RemoteId,
 		}
 
-		err := client.UpdateSite2Cloud(editSite2cloud)
+		err = client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
 			return fmt.Errorf("failed to update Site2Cloud phase 1 remote identifier: %s", err)
 		}
@@ -934,6 +954,15 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 		ph1RemoteId := strings.Split(s2c.Phase1RemoteIdentifier, ",")
 		for i, v := range ph1RemoteId {
 			ph1RemoteId[i] = strings.TrimSpace(v)
+		}
+
+		haEnabled := d.Get("ha_enabled").(bool)
+		singleIpHA := d.Get("enable_single_ip_ha").(bool)
+		ip := d.Get("remote_gateway_ip").(string)
+		haIp := d.Get("backup_remote_gateway_ip").(string)
+
+		if haEnabled && !singleIpHA && !(ip != "" && haIp != "" && ip == haIp) && len(ph1RemoteId) == 1 && ph1RemoteId[0] == "" {
+			ph1RemoteId = append(ph1RemoteId, "")
 		}
 
 		d.Set("phase1_remote_identifier", ph1RemoteId)
@@ -1133,22 +1162,37 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 		phase1RemoteIdentifier := d.Get("phase1_remote_identifier").([]interface{})
 		ph1RemoteIdList := goaviatrix.ExpandStringList(phase1RemoteIdentifier)
 
-		if haEnabled && !singleIpHA && len(ph1RemoteIdList) != 0 && len(ph1RemoteIdList) != 2 {
-			if !(ip != "" && haIp != "" && ip == haIp && len(ph1RemoteIdList) == 1) {
-				return fmt.Errorf("please either set two phase 1 remote IDs or none, when HA is enabled and single IP HA is disabled")
+		if haEnabled && !singleIpHA && len(phase1RemoteIdentifier) != 2 {
+			if !(ip != "" && haIp != "" && ip == haIp && len(phase1RemoteIdentifier) == 1) {
+				return fmt.Errorf("please set two phase 1 remote IDs, when HA is enabled and single IP HA is disabled")
 			}
-		} else if (!haEnabled || singleIpHA) && len(phase1RemoteIdentifier) > 1 {
-			return fmt.Errorf("please either set one phase 1 remote ID or none, when HA is disabled or single IP HA is enabled")
+		} else if (!haEnabled || singleIpHA) && len(phase1RemoteIdentifier) != 1 {
+			return fmt.Errorf("please set one phase 1 remote ID, when HA is disabled or single IP HA is enabled")
 		}
 
-		if len(ph1RemoteIdList) == 0 && haEnabled && !singleIpHA {
-			editSite2cloud.Phase1RemoteIdentifier = ip + "," + haIp
-		} else if len(ph1RemoteIdList) == 0 && (!haEnabled || singleIpHA) {
-			editSite2cloud.Phase1RemoteIdentifier = ip
-		} else {
-			editSite2cloud.Phase1RemoteIdentifier = strings.Join(ph1RemoteIdList, ",")
+		var ph1RemoteId string
+
+		if len(phase1RemoteIdentifier) == 1 {
+			if phase1RemoteIdentifier[0].(string) == "" {
+				ph1RemoteId = "\"\""
+			} else {
+				ph1RemoteId = phase1RemoteIdentifier[0].(string)
+			}
 		}
 
+		if len(phase1RemoteIdentifier) == 2 {
+			if phase1RemoteIdentifier[0].(string) == "" && phase1RemoteIdentifier[1].(string) != "" {
+				ph1RemoteId = "\"\"" + "," + phase1RemoteIdentifier[1].(string)
+			} else if phase1RemoteIdentifier[0].(string) != "" && phase1RemoteIdentifier[1].(string) == "" {
+				ph1RemoteId = phase1RemoteIdentifier[0].(string) + "," + "\"\""
+			} else if phase1RemoteIdentifier[0].(string) == "" && phase1RemoteIdentifier[1].(string) == "" {
+				ph1RemoteId = "\"\", \"\""
+			} else {
+				ph1RemoteId = strings.Join(ph1RemoteIdList, ",")
+			}
+		}
+
+		editSite2cloud.Phase1RemoteIdentifier = ph1RemoteId
 		err := client.UpdateSite2Cloud(editSite2cloud)
 		if err != nil {
 			return fmt.Errorf("failed to update Site2Cloud phase 1 remote identifier: %s", err)

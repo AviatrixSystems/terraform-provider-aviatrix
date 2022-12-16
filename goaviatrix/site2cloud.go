@@ -593,21 +593,6 @@ func S2CPh1RemoteIdDiffSuppressFunc(k, old, new string, d *schema.ResourceData) 
 		}
 	}
 
-	if !haEnabled || singleIpHA {
-		if len(ph1RemoteIdListOld) == 1 && ph1RemoteIdListOld[0] == ip && len(ph1RemoteIdListNew) == 0 {
-			return true
-		}
-	}
-
-	if haEnabled && !singleIpHA {
-		if len(ph1RemoteIdListOld) == 2 && ph1RemoteIdListOld[0] == ip && strings.TrimSpace(ph1RemoteIdListOld[1]) == haip && len(ph1RemoteIdListNew) == 0 {
-			return true
-		}
-		if len(ph1RemoteIdListOld) == 1 && ph1RemoteIdListOld[0] == ip && ip == haip && len(ph1RemoteIdListNew) == 0 {
-			return true
-		}
-	}
-
 	return false
 }
 
