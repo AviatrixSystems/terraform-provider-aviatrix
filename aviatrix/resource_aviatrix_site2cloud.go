@@ -398,7 +398,7 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Optional:         true,
 				Elem:             &schema.Schema{Type: schema.TypeString},
 				DiffSuppressFunc: goaviatrix.S2CPh1RemoteIdDiffSuppressFunc,
-				Description:      "Phase 1 remote identifier of the IPsec tunnel.",
+				Description:      "List of phase 1 remote identifier of the IPsec tunnel. This can be configured as a list of any string, including emtpy string.",
 			},
 		},
 	}
