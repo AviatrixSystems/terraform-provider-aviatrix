@@ -8,7 +8,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 )
 
 // Config contains the configuration for the Aviatrix provider

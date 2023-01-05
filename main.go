@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/aviatrix"
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/aviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 )
 

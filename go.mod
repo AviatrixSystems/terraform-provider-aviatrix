@@ -1,4 +1,4 @@
-module github.com/AviatrixSystems/terraform-provider-aviatrix/v2
+module github.com/AviatrixSystems/terraform-provider-aviatrix/v3
 
 go 1.18
 
