@@ -12,7 +12,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R3.0.0 (UserConnect-7.0)``
+``Last updated: R2.23.3 (UserConnect-6.8.1455)``
 
 
 ---
@@ -131,6 +131,23 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 2. Fixed issue where provider crashes for private mode config
 3. Fixed issue where exported SNAT/DNAT interface shows tunnel ID when using Transit connection or route-based S2C
 4. Fixed issue where creating FQDN gateway with ``fqdn_lan_interface`` causes replacement
+
+
+## 2.23.3
+### Notes:
+- Release date: **(6 Jan 2022)**
+- Supported Controller version: **UserConnect-6.8.1455**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Site2Cloud
+1. Implemented support for remote identification using empty string in the following resources:
+    - **aviatrix_site2cloud**
+    - **aviatrix_spoke_external_device_conn**
+    - **aviatrix_transit_external_device_conn**
+
+### Bug Fixes:
+1. Fixed issue where FQDN tag's ``source_ip_list`` requires executing terraform apply twice for more than 2 gateways
 
 
 ## 2.23.2
