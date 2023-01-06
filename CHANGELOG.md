@@ -124,7 +124,7 @@
     - **aviatrix_transit_external_device_conn**
 
 ### Bug Fixes:
-1. Fixed issue where FQDN tag source_ip_list requires executing terraform apply twice for more than 2 x GWs in **aviatrix_fqdn**
+1. Fixed issue where FQDN tag's ``source_ip_list`` requires executing terraform apply twice for more than 2 gateways
 
 
 ## 2.23.2 (September 30, 2022)
