@@ -1,4 +1,20 @@
-## 2.23.2 (Unreleased)
+## 2.23.3 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.8.1455**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Site2Cloud
+1. Implemented support for remote identification using empty string in the following resources:
+    - **aviatrix_site2cloud**
+    - **aviatrix_spoke_external_device_conn**
+    - **aviatrix_transit_external_device_conn**
+
+### Bug Fixes:
+1. Fixed issue where FQDN tag's ``source_ip_list`` requires executing terraform apply twice for more than 2 gateways
+
+
+## 2.23.2 (September 30, 2022)
 ### Notes:
 - Supported Controller version: **UserConnect-6.8.1342**
 - Supported Terraform version: **v1.x**
