@@ -269,7 +269,7 @@ The following arguments are supported:
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if enabling HA.
 * `ha_availability_domain` - (Optional) HA gateway availability domain. Required and valid only for OCI. Available as of provider version R2.19.3.
 * `ha_fault_domain` - (Optional) HA gateway fault domain. Required and valid only for OCI. Available as of provider version R2.19.3.
-* `manage_ha_gateway` - (Optional) Enable to manage Aviatrix spoke ha gateway using the aviatrix_spoke_gateway resource. If this is set to false, spoke ha gateways must be managed using the aviatrix_spoke_ha_gateway resource. Valid values: true, false. Default value: true. Available in provider R3.0+.
+* `manage_ha_gateway` - (Optional) Enable to manage Aviatrix spoke HA gateway using the aviatrix_spoke_gateway resource. If this is set to false, spoke HA gateways must be managed using the aviatrix_spoke_ha_gateway resource. Valid values: true, false. Default value: true. Available in provider R3.0+.
 
 -> **NOTE:** `manage_ha_gateway` - If you are using/upgraded to Aviatrix Terraform Provider R3.0+, and an aviatrix_spoke_gateway resource was originally created with a provider version <R3.0, you must do 'terraform refresh' to update and apply the attribute's default value (true) into the state file. Please see notes [Introduction to Gateway Group](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/introduction_to_gateway_group) for more information.
 
