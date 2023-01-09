@@ -15,15 +15,16 @@ The **aviatrix_spoke_gateway** resource allows the creation and management of Av
 ```hcl
 # Create an Aviatrix AWS Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
-  cloud_type                        = 1
-  account_name                      = "my-aws"
-  gw_name                           = "spoke-gw-aws"
-  vpc_id                            = "vpc-abcd123"
-  vpc_reg                           = "us-west-1"
-  gw_size                           = "t2.micro"
-  subnet                            = "10.11.0.0/24"
-  single_ip_snat                    = false
-  tags                              = {
+  cloud_type        = 1
+  account_name      = "my-aws"
+  gw_name           = "spoke-gw-aws"
+  vpc_id            = "vpc-abcd123"
+  vpc_reg           = "us-west-1"
+  gw_size           = "t2.micro"
+  subnet            = "10.11.0.0/24"
+  single_ip_snat    = false
+  manage_ha_gateway = false
+  tags              = {
     name = "value"
   }
 }
@@ -31,15 +32,16 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
 ```hcl
 # Create an Aviatrix AWS Spoke Gateway with BGP enabled
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
-  cloud_type                        = 1
-  account_name                      = "my-aws"
-  gw_name                           = "spoke-gw-aws"
-  vpc_id                            = "vpc-abcd123"
-  vpc_reg                           = "us-west-1"
-  gw_size                           = "t2.micro"
-  subnet                            = "10.11.0.0/24"
-  single_ip_snat                    = false
-  enable_bgp                        = true
+  cloud_type        = 1
+  account_name      = "my-aws"
+  gw_name           = "spoke-gw-aws"
+  vpc_id            = "vpc-abcd123"
+  vpc_reg           = "us-west-1"
+  gw_size           = "t2.micro"
+  subnet            = "10.11.0.0/24"
+  single_ip_snat    = false
+  enable_bgp        = true
+  manage_ha_gateway = false
   tags                              = {
     name = "value"
   }
@@ -48,81 +50,87 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws" {
 ```hcl
 # Create an Aviatrix GCP Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_gcp" {
-  cloud_type                        = 4
-  account_name                      = "my-gcp"
-  gw_name                           = "spoke-gw-gcp"
-  vpc_id                            = "gcp-spoke-vpc~-~project-id"
-  vpc_reg                           = "us-west1-b"
-  gw_size                           = "n1-standard-1"
-  subnet                            = "10.12.0.0/24"
-  single_ip_snat                    = false
+  cloud_type        = 4
+  account_name      = "my-gcp"
+  gw_name           = "spoke-gw-gcp"
+  vpc_id            = "gcp-spoke-vpc~-~project-id"
+  vpc_reg           = "us-west1-b"
+  gw_size           = "n1-standard-1"
+  subnet            = "10.12.0.0/24"
+  single_ip_snat    = false
+  manage_ha_gateway = false
 }
 ```
 ```hcl
 # Create an Aviatrix Azure Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
-  cloud_type                        = 8
-  account_name                      = "my-azure"
-  gw_name                           = "spoke-gw-01"
-  vpc_id                            = "vnet_name:rg_name:resource_guid"
-  vpc_reg                           = "West US"
-  gw_size                           = "Standard_B1ms"
-  subnet                            = "10.13.0.0/24"
-  zone                              = "az-1"
-  single_ip_snat                    = false
+  cloud_type        = 8
+  account_name      = "my-azure"
+  gw_name           = "spoke-gw-01"
+  vpc_id            = "vnet_name:rg_name:resource_guid"
+  vpc_reg           = "West US"
+  gw_size           = "Standard_B1ms"
+  subnet            = "10.13.0.0/24"
+  zone              = "az-1"
+  single_ip_snat    = false
+  manage_ha_gateway = false
 }
 ```
 ```hcl
 # Create an Aviatrix OCI Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_oracle" {
-  cloud_type                        = 16
-  account_name                      = "my-oracle"
-  gw_name                           = "avtxgw-oracle"
-  vpc_id                            = "ocid1.vcn.oc1.iad.aaaaaaaaba3pv6wkcr4jqae5f44n2b2m2yt2j6rx32uzr4h25vqstifsfdsq"
-  vpc_reg                           = "us-ashburn-1"
-  gw_size                           = "VM.Standard2.2"
-  subnet                            = "10.7.0.0/16"
-  availability_domain               = aviatrix_vpc.oci_vpc.availability_domains[0]
-  fault_domain                      = aviatrix_vpc.oci_vpc.fault_domains[0]
+  cloud_type          = 16
+  account_name        = "my-oracle"
+  gw_name             = "avtxgw-oracle"
+  vpc_id              = "ocid1.vcn.oc1.iad.aaaaaaaaba3pv6wkcr4jqae5f44n2b2m2yt2j6rx32uzr4h25vqstifsfdsq"
+  vpc_reg             = "us-ashburn-1"
+  gw_size             = "VM.Standard2.2"
+  subnet              = "10.7.0.0/16"
+  availability_domain = aviatrix_vpc.oci_vpc.availability_domains[0]
+  fault_domain        = aviatrix_vpc.oci_vpc.fault_domains[0]
+  manage_ha_gateway   = false
 }
 ```
 ```hcl
 # Create an Aviatrix AzureGov Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_azuregov" {
-  cloud_type                        = 32
-  account_name                      = "my-azuregov"
-  gw_name                           = "spoke-gw-01"
-  vpc_id                            = "vnet_name:rg_name:resource_guid"
-  vpc_reg                           = "USGov Arizona"
-  gw_size                           = "Standard_B1ms"
-  subnet                            = "10.13.0.0/24"
-  single_ip_snat                    = false
+  cloud_type        = 32
+  account_name      = "my-azuregov"
+  gw_name           = "spoke-gw-01"
+  vpc_id            = "vnet_name:rg_name:resource_guid"
+  vpc_reg           = "USGov Arizona"
+  gw_size           = "Standard_B1ms"
+  subnet            = "10.13.0.0/24"
+  single_ip_snat    = false
+  manage_ha_gateway = false
 }
 ```
 ```hcl
 # Create an Aviatrix AWSGov Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_awsgov" {
-  cloud_type                        = 256
-  account_name                      = "my-awsgov"
-  gw_name                           = "spoke-gw-awsgov"
-  vpc_id                            = "vpc-abcd123"
-  vpc_reg                           = "us-gov-west-1"
-  gw_size                           = "t2.micro"
-  subnet                            = "10.11.0.0/24"
-  single_ip_snat                    = false
+  cloud_type        = 256
+  account_name      = "my-awsgov"
+  gw_name           = "spoke-gw-awsgov"
+  vpc_id            = "vpc-abcd123"
+  vpc_reg           = "us-gov-west-1"
+  gw_size           = "t2.micro"
+  subnet            = "10.11.0.0/24"
+  single_ip_snat    = false
+  manage_ha_gateway = false
 }
 ```
 ```hcl
 # Create an Aviatrix AWS China Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws_china" {
-  cloud_type                        = 1024
-  account_name                      = "my-aws-china"
-  gw_name                           = "spoke-gw-aws-china"
-  vpc_id                            = "vpc-abcd123"
-  vpc_reg                           = "cn-north-1"
-  gw_size                           = "t2.micro"
-  subnet                            = "10.11.0.0/24"
-  single_ip_snat                    = false
+  cloud_type        = 1024
+  account_name      = "my-aws-china"
+  gw_name           = "spoke-gw-aws-china"
+  vpc_id            = "vpc-abcd123"
+  vpc_reg           = "cn-north-1"
+  gw_size           = "t2.micro"
+  subnet            = "10.11.0.0/24"
+  single_ip_snat    = false
+  manage_ha_gateway = false
   tags                              = {
     k1 = "v1",
     k2 = "v2",
@@ -132,18 +140,19 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws_china" {
 ```hcl
 # Create an Aviatrix Azure China Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
-  cloud_type                        = 2048
-  account_name                      = "my-azure-china"
-  gw_name                           = "spoke-gw-01"
-  vpc_id                            = "vnet_name:rg_name:resource_guid"
-  vpc_reg                           = "China North"
-  gw_size                           = "Standard_A0"
-  subnet                            = "10.13.0.0/24"
-  single_ip_snat                    = false
+  cloud_type        = 2048
+  account_name      = "my-azure-china"
+  gw_name           = "spoke-gw-01"
+  vpc_id            = "vnet_name:rg_name:resource_guid"
+  vpc_reg           = "China North"
+  gw_size           = "Standard_A0"
+  subnet            = "10.13.0.0/24"
+  single_ip_snat    = false
+  manage_ha_gateway = false
 }
 ```
 ```hcl
-# Create an OOB Aviatrix AWS Spoke Gateway
+# Create an OOB Aviatrix AWS Spoke Gateway with HA enabled
 resource "aviatrix_spoke_gateway" "test_oob_spoke" {
   cloud_type               = 1
   account_name             = "devops-aws"
@@ -159,34 +168,37 @@ resource "aviatrix_spoke_gateway" "test_oob_spoke" {
   ha_gw_size               = "c5.xlarge"
   ha_oob_management_subnet = "11.0.0.48/28"
   ha_oob_availability_zone = "us-west-1b"
+  manage_ha_gateway        = true
 }
 ```
 ```hcl
 # Create an Aviatrix Alibaba Cloud Spoke Gateway with HA enabled
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_alibaba" {
-  cloud_type                        = 8192
-  account_name                      = "devops"
-  gw_name                           = "avtx-gw-1"
-  vpc_id                            = "vpc-abcdef"
-  vpc_reg                           = "acs-us-west-1 (Silicon Valley)"
-  gw_size                           = "ecs.g5ne.large"
-  subnet                            = "10.0.0.0/24"
-  ha_subnet                         = "10.0.0.0/24"
-  ha_gw_size                        = "ecs.g5ne.large"
+  cloud_type        = 8192
+  account_name      = "devops"
+  gw_name           = "avtx-gw-1"
+  vpc_id            = "vpc-abcdef"
+  vpc_reg           = "acs-us-west-1 (Silicon Valley)"
+  gw_size           = "ecs.g5ne.large"
+  subnet            = "10.0.0.0/24"
+  ha_subnet         = "10.0.0.0/24"
+  ha_gw_size        = "ecs.g5ne.large"
+  manage_ha_gateway = true
 }
 ```
 ```hcl
 # Create an Aviatrix AWS Top Secret Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws_top_secret" {
-  cloud_type                        = 16384
-  account_name                      = "my-aws-top-secret"
-  gw_name                           = "spoke-gw-aws-top-secret"
-  vpc_id                            = "vpc-abcd123"
-  vpc_reg                           = "us-iso-east-1"
-  gw_size                           = "t2.micro"
-  subnet                            = "10.11.0.0/24"
-  single_ip_snat                    = false
-  tags                              = {
+  cloud_type        = 16384
+  account_name      = "my-aws-top-secret"
+  gw_name           = "spoke-gw-aws-top-secret"
+  vpc_id            = "vpc-abcd123"
+  vpc_reg           = "us-iso-east-1"
+  gw_size           = "t2.micro"
+  subnet            = "10.11.0.0/24"
+  single_ip_snat    = false
+  manage_ha_gateway = false
+  tags              = {
     k1 = "v1",
     k2 = "v2",
   }
@@ -195,15 +207,16 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws_top_secret" {
 ```hcl
 # Create an Aviatrix AWS Secret Spoke Gateway
 resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws_secret" {
-  cloud_type                        = 16384
-  account_name                      = "my-aws-secret"
-  gw_name                           = "spoke-gw-aws-secret"
-  vpc_id                            = "vpc-abcd123"
-  vpc_reg                           = "us-isob-east-1"
-  gw_size                           = "t2.micro"
-  subnet                            = "10.11.0.0/24"
-  single_ip_snat                    = false
-  tags                              = {
+  cloud_type        = 16384
+  account_name      = "my-aws-secret"
+  gw_name           = "spoke-gw-aws-secret"
+  vpc_id            = "vpc-abcd123"
+  vpc_reg           = "us-isob-east-1"
+  gw_size           = "t2.micro"
+  subnet            = "10.11.0.0/24"
+  single_ip_snat    = false
+  manage_ha_gateway = false
+  tags              = {
     k1 = "v1",
     k2 = "v2",
   }
@@ -212,15 +225,16 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws_secret" {
 ```hcl
 #Create an Aviatrix AWS Spoke Gateway in Private Mode
 resource "aviatrix_spoke_gateway" "test" {
-  account_name = "devops"
-  cloud_type   = 1
-  gw_name      = "spoke"
-  gw_size      = "t2.micro"
-  subnet       = "10.190.224.0/20"
-  vpc_id       = "vpc-abcd1234"
-  vpc_reg      = "us-east-1"
-  private_mode_lb_vpc_id = "vpc-abcdef"
+  account_name             = "devops"
+  cloud_type               = 1
+  gw_name                  = "spoke"
+  gw_size                  = "t2.micro"
+  subnet                   = "10.190.224.0/20"
+  vpc_id                   = "vpc-abcd1234"
+  vpc_reg                  = "us-east-1"
+  private_mode_lb_vpc_id   = "vpc-abcdef"
   private_mode_subnet_zone = "us-east-1a"
+  manage_ha_gateway        = false
 }
 ```
 
@@ -255,13 +269,16 @@ The following arguments are supported:
 * `ha_gw_size` - (Optional) HA Gateway Size. Mandatory if enabling HA.
 * `ha_availability_domain` - (Optional) HA gateway availability domain. Required and valid only for OCI. Available as of provider version R2.19.3.
 * `ha_fault_domain` - (Optional) HA gateway fault domain. Required and valid only for OCI. Available as of provider version R2.19.3.
+* `manage_ha_gateway` - (Optional) Enable to manage Aviatrix spoke HA gateway using the aviatrix_spoke_gateway resource. If this is set to false, spoke HA gateways must be managed using the aviatrix_spoke_ha_gateway resource. Valid values: true, false. Default value: true. Available in provider R3.0+.
+
+-> **NOTE:** `manage_ha_gateway` - If you are using/upgraded to Aviatrix Terraform Provider R3.0+, and an aviatrix_spoke_gateway resource was originally created with a provider version <R3.0, you must do 'terraform refresh' to update and apply the attribute's default value (true) into the state file. Please see notes [Introduction to Gateway Group](https://registry.terraform.io/providers/AviatrixSystems/aviatrix/latest/docs/guides/introduction_to_gateway_group) for more information.
 
 ### Insane Mode
 * `insane_mode` - (Optional) Enable [Insane Mode](https://docs.aviatrix.com/HowTos/insane_mode.html) for Spoke Gateway. Insane Mode gateway size must be at least c5 size (AWS, AWSGov, AWS China, AWS Top Secret and AWS Secret) or Standard_D3_v2 (Azure and AzureGov); for GCP only four size are supported: "n1-highcpu-4", "n1-highcpu-8", "n1-highcpu-16" and "n1-highcpu-32". If enabled, you must specify a valid /26 CIDR segment of the VPC to create a new subnet for AWS, Azure, AzureGov, AWSGov, AWS Top Secret and AWS Secret. Only available for AWS, GCP/OCI, Azure, AzureGov, AzureChina, AWSGov, AWS Top Secret and AWS Secret. Valid values: true, false. Default value: false.
 * `insane_mode_az` - (Optional) AZ of subnet being created for Insane Mode Spoke Gateway. Required for AWS, AWSGov, AWS China, AWS Top Secret or AWS Secret if `insane_mode` is enabled. Example: AWS: "us-west-1a".
 
 ### SNAT/DNAT
-* `single_ip_snat` - (Optional) Specify whether to enable Source NAT feature in "single_ip" mode on the gateway or not. Please disable AWS NAT instance before enabling this feature. Currently only supports AWS(1) and Azure(8). Valid values: true, false.
+* `single_ip_snat` - (Optional) Specify whether to enable Source NAT feature in "single_ip" mode on the gateway or not. Please disable AWS NAT instance before enabling this feature. Currently, only supports AWS(1) and Azure(8). Valid values: true, false.
 
 -> **NOTE:** `enable_snat` has been renamed to `single_ip_snat` in provider version R2.10. Please see notes [here](#enable_snat) for more information.
 
