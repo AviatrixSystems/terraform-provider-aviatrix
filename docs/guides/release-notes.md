@@ -12,10 +12,32 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.24.2 (UserConnect-6.9.282)``
+``Last updated: R3.0.1 (UserConnect-7.0.1373)``
 
 
 ---
+
+## 3.0.1
+### Notes:
+- Release date: **(9 Jan 2023)**
+- Supported Controller version: **UserConnect-7.0.1373**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Site2Cloud
+1. Implemented support for remote identification using empty string in the following resources:
+    - **aviatrix_site2cloud**
+    - **aviatrix_spoke_external_device_conn**
+    - **aviatrix_transit_external_device_conn**
+
+### Bug Fixes:
+1. Fixed issue where FQDN tag's ``source_ip_list`` requires executing terraform apply twice for more than 2 gateways
+2. Fixed issue where ``eip`` is not valid for creating Azure **aviatrix_spoke_ha_gateway**
+
+### Deprecations
+1. The following resource is removed:
+    - **aviatrix_transit_cloudn_conn**
+
 
 ## 3.0.0
 ### Notes:
@@ -97,7 +119,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ## 2.24.2
 ### Notes:
-- Release date: **(6 Jan 2022)**
+- Release date: **(6 Jan 2023)**
 - Supported Controller version: **UserConnect-6.9.282**
 - Supported Terraform version: **v1.x**
 
@@ -152,7 +174,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ## 2.23.3
 ### Notes:
-- Release date: **(6 Jan 2022)**
+- Release date: **(6 Jan 2023)**
 - Supported Controller version: **UserConnect-6.8.1455**
 - Supported Terraform version: **v1.x**
 
