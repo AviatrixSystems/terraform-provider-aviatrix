@@ -19,8 +19,6 @@ resource "aviatrix_edge_csp" "test" {
   gw_name                     = "edge-test"
   site_id                     = "site-123"
   management_interface_config = "DHCP"
-  wan_interface_ip_prefix     = "10.60.0.0/24"
-  wan_default_gateway_ip      = "10.60.0.0"
   lan_interface_ip_prefix     = "10.60.0.0/24"
   local_as_number             = "65000"
   prepend_as_path = [
@@ -36,8 +34,6 @@ resource "aviatrix_edge_csp" "test" {
   gw_name                        = "edge-test"
   site_id                        = "site-123"
   management_interface_config    = "Static"
-  wan_interface_ip_prefix        = "10.60.0.0/24"
-  wan_default_gateway_ip         = "10.60.0.0"
   lan_interface_ip_prefix        = "10.60.0.0/24"
   management_interface_ip_prefix = "10.60.0.0/24"
   management_default_gateway_ip  = "10.60.0.0"
@@ -63,8 +59,6 @@ The following arguments are supported:
 * `compute_node_uuid` - (Required) Edge CSP compute node UUID.
 * `template_uuid` - (Required) Edge CSP template UUID.
 * `management_interface_config` - (Required) Management interface configuration. Valid values: "DHCP", "Static".
-* `wan_interface_ip_prefix` - (Required) WAN interface IP and subnet prefix.
-* `wan_default_gateway_ip` - (Required) WAN default gateway IP.
 * `lan_interface_ip_prefix` - (Required) LAN interface IP and subnet prefix.
 
 ### Optional
