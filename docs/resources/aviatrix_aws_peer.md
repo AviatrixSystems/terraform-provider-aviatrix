@@ -44,6 +44,11 @@ The following arguments are supported:
 * `rtb_list1` - (Optional) List of Route table IDs of VPC1. Example: ["rtb-abcd1234", "rtb-wxyz5678"].
 * `rtb_list2` - (Optional) List of Route table IDs of VPC2. Example: ["rtb-abcd1234", "rtb-wxyz5678"].
 
+~> **NOTE:** For attributes `rtb_list1` and `rtb_list2`, only valid route table IDs with prefix "rtb-" are supported.
+Therefore, "all" will no longer be supported as a valid input as of 3.0.2 onward. If an **aviatrix_aws_peer** resource
+was created with provider 3.0.1- and any `rtb_list1` or `rtb_list2` was set as ["all"], it will need to be updated to
+a list of valid route table IDs.
+
 ## Import
 
 **aws_peer** can be imported using the `vpc_id1` and `vpc_id2`, e.g.

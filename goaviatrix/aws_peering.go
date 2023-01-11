@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -108,8 +110,12 @@ func (c *Client) GetAWSPeer(awsPeer *AWSPeer) (*AWSPeer, error) {
 			awsPeer.AccountName2 = data.Results.PairLists[i].AWSVpc2.AccountName
 			awsPeer.Region1 = data.Results.PairLists[i].AWSVpc1.Region
 			awsPeer.Region2 = data.Results.PairLists[i].AWSVpc2.Region
-			awsPeer.RtbList1 = strings.Join(data.Results.PairLists[i].AWSVpc1.RoutingTables, ",")
-			awsPeer.RtbList2 = strings.Join(data.Results.PairLists[i].AWSVpc2.RoutingTables, ",")
+			if len(data.Results.PairLists[i].AWSVpc1.RoutingTables) != 0 {
+				awsPeer.RtbList1 = strings.Join(data.Results.PairLists[i].AWSVpc1.RoutingTables, ",")
+			}
+			if len(data.Results.PairLists[i].AWSVpc2.RoutingTables) != 0 {
+				awsPeer.RtbList2 = strings.Join(data.Results.PairLists[i].AWSVpc2.RoutingTables, ",")
+			}
 			return awsPeer, nil
 		}
 	}
@@ -141,4 +147,22 @@ func (c *Client) DeleteAWSPeer(awsPeer *AWSPeer) error {
 		return errors.New("Rest API delete_aws_peering Post failed: " + data.Reason)
 	}
 	return nil
+}
+
+func DiffSuppressFuncRtbList1(k, old, new string, d *schema.ResourceData) bool {
+	o, n := d.GetChange("rtb_list1")
+
+	rtbListOld := ExpandStringList(o.([]interface{}))
+	rtbListNew := ExpandStringList(n.([]interface{}))
+
+	return Equivalent(rtbListOld, rtbListNew)
+}
+
+func DiffSuppressFuncRtbList2(k, old, new string, d *schema.ResourceData) bool {
+	o, n := d.GetChange("rtb_list2")
+
+	rtbListOld := ExpandStringList(o.([]interface{}))
+	rtbListNew := ExpandStringList(n.([]interface{}))
+
+	return Equivalent(rtbListOld, rtbListNew)
 }
