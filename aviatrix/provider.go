@@ -110,6 +110,7 @@ func Provider() *schema.Provider {
 			"aviatrix_distributed_firewalling_config":                 resourceAviatrixDistributedFirewallingConfig(),
 			"aviatrix_distributed_firewalling_intra_vpc":              resourceAviatrixDistributedFirewallingIntraVpc(),
 			"aviatrix_distributed_firewalling_policy_list":            resourceAviatrixDistributedFirewallingPolicyList(),
+			"aviatrix_dns_profile_list":                               resourceAviatrixDNSProfileList(),
 			"aviatrix_edge_csp":                                       resourceAviatrixEdgeCSP(),
 			"aviatrix_edge_spoke":                                     resourceAviatrixEdgeSpoke(),
 			"aviatrix_edge_spoke_external_device_conn":                resourceAviatrixEdgeSpokeExternalDeviceConn(),
