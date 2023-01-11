@@ -258,3 +258,18 @@ func ValidateAttachedVPCsForCustomizedRoutes(a, b [][]string) ([][]string, [][]s
 func IsCloudType(cloudType, compare int) bool {
 	return cloudType&compare != 0
 }
+
+func ValidateRtbId(val interface{}, key string) (warns []string, errs []error) {
+	v, ok := val.(string)
+	if !ok {
+		errs = append(errs, fmt.Errorf("%q must be of type string", key))
+		return
+	}
+
+	if !strings.HasPrefix(v, "rtb-") {
+		errs = append(errs, fmt.Errorf("%q must has a prefix 'rtb-', got: %s", key, val))
+		return
+	}
+
+	return warns, errs
+}
