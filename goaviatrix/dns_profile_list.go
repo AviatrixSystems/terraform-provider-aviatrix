@@ -4,9 +4,10 @@ import (
 	"context"
 	b64 "encoding/base64"
 	"encoding/json"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"reflect"
 	"sort"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type DNSProfileListResp struct {

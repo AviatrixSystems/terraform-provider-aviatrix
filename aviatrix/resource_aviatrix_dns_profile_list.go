@@ -112,7 +112,7 @@ func resourceAviatrixDNSProfileListCreate(ctx context.Context, d *schema.Resourc
 	defer resourceAviatrixDNSProfileListReadIfRequired(ctx, d, meta, &flag)
 
 	if err := client.CreateDNSProfileList(ctx, data); err != nil {
-		return diag.Errorf("could not create Edge CSP: %v", err)
+		return diag.Errorf("could not create DNS profiles: %v", err)
 	}
 
 	return resourceAviatrixDNSProfileListReadIfRequired(ctx, d, meta, &flag)
@@ -135,7 +135,7 @@ func resourceAviatrixDNSProfileListRead(ctx context.Context, d *schema.ResourceD
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("failed to read Distributed-firewalling Policy List: %s", err)
+		return diag.Errorf("failed to read DNS profiles: %s", err)
 	}
 
 	data := marshalDNSProfileListInput(d)
@@ -154,7 +154,7 @@ func resourceAviatrixDNSProfileListRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err = d.Set("profiles", profiles); err != nil {
-		return diag.Errorf("failed to set policies during Distributed-firewalling Policy List read: %s\n", err)
+		return diag.Errorf("failed to set DNS profiles: %s\n", err)
 	}
 
 	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
@@ -232,14 +232,14 @@ func resourceAviatrixDNSProfileListUpdate(ctx context.Context, d *schema.Resourc
 		if len(nameCreate) != 0 {
 			err := client.CreateDNSProfileList(ctx, dataCreate)
 			if err != nil {
-				return diag.Errorf("failed to update Distributed-firewalling policies: %s", err)
+				return diag.Errorf("failed to create new DNS profiles during update: %s", err)
 			}
 		}
 
 		if len(nameUpdate) != 0 {
 			err := client.UpdateDNSProfileList(ctx, dataUpdate)
 			if err != nil {
-				return diag.Errorf("failed to update Distributed-firewalling policies: %s", err)
+				return diag.Errorf("failed to update DNS profiles: %s", err)
 			}
 		}
 
@@ -254,7 +254,7 @@ func resourceAviatrixDNSProfileListUpdate(ctx context.Context, d *schema.Resourc
 		if len(nameDelete) != 0 {
 			err := client.DeleteDNSProfileList(ctx, dataDelete)
 			if err != nil {
-				return diag.Errorf("failed to update Distributed-firewalling policies: %s", err)
+				return diag.Errorf("failed to delete DNS profiles during update: %s", err)
 			}
 		}
 	}
@@ -271,7 +271,7 @@ func resourceAviatrixDNSProfileListDelete(ctx context.Context, d *schema.Resourc
 
 	err := client.DeleteDNSProfileList(ctx, data)
 	if err != nil {
-		return diag.Errorf("could not delete Edge CSP: %v", err)
+		return diag.Errorf("could not delete DNS profiles: %v", err)
 	}
 
 	return nil
