@@ -330,13 +330,17 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 							Optional:    true,
 							Description: "",
 						},
+						"vrrp_state": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "",
+						},
 					},
 				},
 			},
 			"vlan": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				ForceNew:    true,
 				Description: "",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -445,6 +449,7 @@ func marshalEdgeCSPInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 			GatewayIp:    if1["gateway_ip"].(string),
 			DnsPrimary:   if1["dns_primary"].(string),
 			DnsSecondary: if1["dns_secondary"].(string),
+			VrrpState:    if1["vrrp_state"].(bool),
 		}
 
 		if if1["admin_state"].(bool) {
@@ -455,30 +460,6 @@ func marshalEdgeCSPInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 
 		edgeCSP.InterfaceList = append(edgeCSP.InterfaceList, if2)
 	}
-	//for _, if0 := range d.Get("interfaces").(*schema.Set).List() {
-	//	if1 := if0.(map[string]interface{})
-	//
-	//	if2 := &goaviatrix.Interface{
-	//		IfName:       if1["ifname"].(string),
-	//		Type:         if1["type"].(string),
-	//		Bandwidth:    if1["bandwidth"].(int),
-	//		PublicIp:     if1["public_ip"].(string),
-	//		Tag:          if1["tag"].(string),
-	//		Dhcp:         if1["dhcp"].(bool),
-	//		IpAddr:       if1["ipaddr"].(string),
-	//		GatewayIp:    if1["gateway_ip"].(string),
-	//		DnsPrimary:   if1["dns_primary"].(string),
-	//		DnsSecondary: if1["dns_secondary"].(string),
-	//	}
-	//
-	//	if if1["admin_state"].(bool) {
-	//		if2.AdminState = "enabled"
-	//	} else {
-	//		if2.AdminState = "disabled"
-	//	}
-	//
-	//	edgeCSP.InterfaceList = append(edgeCSP.InterfaceList, if2)
-	//}
 
 	vlan := d.Get("vlan").([]interface{})
 	for _, v0 := range vlan {
@@ -672,7 +653,7 @@ func resourceAviatrixEdgeCSPCreate(ctx context.Context, d *schema.ResourceData, 
 	if len(edgeCSP.InterfaceList) != 0 || len(edgeCSP.VlanList) != 0 || edgeCSP.DnsProfileName != "" {
 		err := client.UpdateEdgeCSP(ctx, edgeCSP)
 		if err != nil {
-			return diag.Errorf("could not config WAN public IP after Edge CSP creation: %v", err)
+			return diag.Errorf("could not config WAN/LAN/VLAN after Edge CSP creation: %v", err)
 		}
 	}
 
@@ -797,6 +778,10 @@ func resourceAviatrixEdgeCSPRead(ctx context.Context, d *schema.ResourceData, me
 				if1["admin_state"] = false
 			}
 
+			if if0.Type == "LAN" {
+				if1["vrrp_state"] = if0.VrrpState
+			}
+
 			if if0.Type == "LAN" && if0.SubInterfaces != nil {
 				for _, v0 := range if0.SubInterfaces {
 					v1 := make(map[string]interface{})
@@ -825,11 +810,11 @@ func resourceAviatrixEdgeCSPRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err = d.Set("interfaces", interfaces); err != nil {
-		return diag.Errorf("failed to set policies during Distributed-firewalling Policy List read: %s\n", err)
+		return diag.Errorf("failed to set interfaces: %s\n", err)
 	}
 
 	if err = d.Set("vlan", vlan); err != nil {
-		return diag.Errorf("failed to set policies during Distributed-firewalling Policy List read: %s\n", err)
+		return diag.Errorf("failed to set vlan: %s\n", err)
 	}
 
 	d.Set("dns_profile_name", edgeCSPResp.DnsProfileName)
@@ -860,6 +845,13 @@ func resourceAviatrixEdgeCSPUpdate(ctx context.Context, d *schema.ResourceData, 
 		longitude, _ := strconv.ParseFloat(edgeCSP.Longitude, 64)
 		if latitude == 0 && longitude == 0 {
 			return diag.Errorf("latitude and longitude must not be zero at the same time")
+		}
+	}
+
+	if d.HasChange("vlan") {
+		vlanOld, _ := d.GetChange("vlan")
+		if len(vlanOld.([]interface{})) != 0 {
+			return diag.Errorf("vlan is not allowed to be updated")
 		}
 	}
 
@@ -1019,10 +1011,10 @@ func resourceAviatrixEdgeCSPUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if d.HasChange("interfaces") || d.HasChange("dns_profile_name") {
+	if d.HasChange("interfaces") || d.HasChange("vlan") || d.HasChange("dns_profile_name") {
 		err := client.UpdateEdgeCSP(ctx, edgeCSP)
 		if err != nil {
-			return diag.Errorf("could not update WAN/LAN interfaces or DNS profile name during Edge CSP update: %v", err)
+			return diag.Errorf("could not update WAN/LAN/VLAN interfaces or DNS profile name during Edge CSP update: %v", err)
 		}
 	}
 

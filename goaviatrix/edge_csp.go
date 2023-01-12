@@ -4,7 +4,8 @@ import (
 	"context"
 	b64 "encoding/base64"
 	"encoding/json"
-	"log"
+	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -72,6 +73,7 @@ type Interface struct {
 	DnsSecondary  string  `json:"dns_secondary"`
 	AdminState    string  `json:"admin_state"`
 	SubInterfaces []*Vlan `json:"subinterfaces"`
+	VrrpState     bool    `json:"vrrp_state"`
 }
 
 type Vlan struct {
@@ -233,76 +235,23 @@ func DiffSuppressFuncInterfaces(k, old, new string, d *schema.ResourceData) bool
 
 	for _, if0 := range ifOld.([]interface{}) {
 		if1 := if0.(map[string]interface{})
-
-		//keys := make([]string, 0, len(if1))
-		//for k := range if1 {
-		//	keys = append(keys, k)
-		//}
-		//sort.Strings(keys)
-
 		interfacesOld = append(interfacesOld, if1)
 	}
 
-	//ifNew := d.Get("interfaces").([]interface{})
 	var interfacesNew []map[string]interface{}
 
 	for _, if0 := range ifNew.([]interface{}) {
 		if1 := if0.(map[string]interface{})
-
-		//keys := make([]string, 0, len(if1))
-		//for k := range if1 {
-		//	keys = append(keys, k)
-		//}
-		//sort.Strings(keys)
-
-		//if if1["dns_primary"] == nil || if1["dns_primary"] == "" {
-		//	if1["dns_primary"] = "*"
-		//}
-		//if if1["dns_secondary"] == nil || if1["dns_secondary"] == "" {
-		//	if1["dns_secondary"] = "*"
-		//}
-
 		interfacesNew = append(interfacesNew, if1)
 	}
 
-	//sort.Slice(interfacesOld, func(i, j int) bool {
-	//	return interfacesOld[i]["ifname"].(string) < interfacesOld[j]["ifname"].(string)
-	//})
-	//
-	//sort.Slice(interfacesNew, func(i, j int) bool {
-	//	return interfacesNew[i]["ifname"].(string) < interfacesNew[j]["ifname"].(string)
-	//})
+	sort.Slice(interfacesOld, func(i, j int) bool {
+		return interfacesOld[i]["ifname"].(string) < interfacesOld[j]["ifname"].(string)
+	})
 
-	for _, x := range interfacesOld {
-		for _, y := range interfacesNew {
-			if x["ifname"].(string) == y["ifname"].(string) {
-				if x["type"].(string) != y["type"].(string) || x["bandwidth"].(int) != y["bandwidth"].(int) ||
-					x["public_ip"].(string) != y["public_ip"].(string) || x["tag"].(string) != y["tag"].(string) ||
-					x["dhcp"].(bool) != y["dhcp"].(bool) || x["ipaddr"].(string) != y["ipaddr"].(string) ||
-					x["gateway_ip"].(string) != y["gateway_ip"].(string) || x["admin_state"].(bool) != y["admin_state"].(bool) ||
-					x["dns_primary"] == nil && y["dns_primary"] != nil || x["dns_primary"] != nil && y["dns_primary"] == nil ||
-					(x["dns_primary"] != nil && y["dns_primary"] != nil && x["dns_primary"].(string) != y["dns_primary"].(string)) {
+	sort.Slice(interfacesNew, func(i, j int) bool {
+		return interfacesNew[i]["ifname"].(string) < interfacesNew[j]["ifname"].(string)
+	})
 
-					//if (x["dns_primary"] == nil && y["dns_primary"] != nil) || (x["dns_primary"] != nil && y["dns_primary"] == nil) ||
-					//	(x["dns_primary"] != nil && y["dns_primary"] != nil && x["dns_primary"].(string) != y["dns_primary"].(string)) {
-					//	return false
-					//}
-					//
-					//if (x["dns_secondary"] == nil && y["dns_secondary"] != nil) || (x["dns_secondary"] != nil && y["dns_secondary"] == nil) ||
-					//	(x["dns_secondary"] != nil && y["dns_secondary"] != nil && x["dns_secondary"].(string) != y["dns_secondary"].(string)) {
-					//	return false
-					//}
-
-					//x["dns_primary"].(string) != y["dns_primary"].(string) || x["dns_secondary"].(string) != y["dns_secondary"].(string)
-					log.Printf("xxxxx")
-					log.Printf(x["dns_primary"].(string))
-					log.Printf(y["dns_primary"].(string))
-					return false
-				}
-			}
-		}
-	}
-
-	return true
-	//return reflect.DeepEqual(interfacesOld, interfacesNew)
+	return reflect.DeepEqual(interfacesOld, interfacesNew)
 }
