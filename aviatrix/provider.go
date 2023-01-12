@@ -131,6 +131,7 @@ func Provider() *schema.Provider {
 			"aviatrix_gateway_dnat":                                   resourceAviatrixGatewayDNat(),
 			"aviatrix_gateway_snat":                                   resourceAviatrixGatewaySNat(),
 			"aviatrix_geo_vpn":                                        resourceAviatrixGeoVPN(),
+			"aviatrix_link_hierarchy":                                 resourceAviatrixLinkHierarchy(),
 			"aviatrix_netflow_agent":                                  resourceAviatrixNetflowAgent(),
 			"aviatrix_periodic_ping":                                  resourceAviatrixPeriodicPing(),
 			"aviatrix_private_mode_lb":                                resourceAviatrixPrivateModeLb(),
