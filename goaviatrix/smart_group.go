@@ -13,6 +13,7 @@ type SmartGroupMatchExpression struct {
 	ResId       string `json:"res_id,omitempty"`
 	AccountId   string `json:"account_id,omitempty"`
 	AccountName string `json:"account_name,omitempty"`
+	Name        string `json:"name,omitempty"`
 	Region      string `json:"region,omitempty"`
 	Zone        string `json:"zone,omitempty"`
 	Tags        map[string]string
@@ -45,6 +46,9 @@ func smartGroupFilterToMap(filter *SmartGroupMatchExpression) map[string]string 
 	}
 	if len(filter.AccountName) > 0 {
 		filterMap["account_name"] = filter.AccountName
+	}
+	if len(filter.Name) > 0 {
+		filterMap["name"] = filter.Name
 	}
 	if len(filter.Region) > 0 {
 		filterMap["region"] = filter.Region
@@ -143,6 +147,7 @@ func (c *Client) GetSmartGroup(ctx context.Context, uuid string) (*SmartGroup, e
 					ResId:       filterMap["res_id"],
 					AccountId:   filterMap["account_id"],
 					AccountName: filterMap["account_name"],
+					Name:        filterMap["name"],
 					Region:      filterMap["region"],
 					Zone:        filterMap["zone"],
 				}
