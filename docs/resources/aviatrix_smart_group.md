@@ -47,6 +47,7 @@ The following arguments are supported:
       * `res_id` - (Optional) - Resource ID this expression matches.
       * `account_id` - (Optional) - Account ID this expression matches.
       * `account_name` - (Optional) - Account name this expression matches.
+      * `name` - (Optional) - Name this expression matches.
       * `region` - (Optional) - Region this expression matches.
       * `zone` - (Optional) - Zone this expression matches.
       * `tags` - (Optional) - Map of tags this expression matches.
