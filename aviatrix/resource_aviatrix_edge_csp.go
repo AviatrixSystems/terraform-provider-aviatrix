@@ -339,9 +339,10 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 				},
 			},
 			"vlan": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "",
+				Type:             schema.TypeList,
+				Optional:         true,
+				Description:      "",
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncVlan,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"parent_interface": {

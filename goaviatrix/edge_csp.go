@@ -255,3 +255,30 @@ func DiffSuppressFuncInterfaces(k, old, new string, d *schema.ResourceData) bool
 
 	return reflect.DeepEqual(interfacesOld, interfacesNew)
 }
+
+func DiffSuppressFuncVlan(k, old, new string, d *schema.ResourceData) bool {
+	vOld, vNew := d.GetChange("vlan")
+	var vlanOld []map[string]interface{}
+
+	for _, v0 := range vOld.([]interface{}) {
+		v1 := v0.(map[string]interface{})
+		vlanOld = append(vlanOld, v1)
+	}
+
+	var vlanNew []map[string]interface{}
+
+	for _, v0 := range vNew.([]interface{}) {
+		v1 := v0.(map[string]interface{})
+		vlanNew = append(vlanNew, v1)
+	}
+
+	sort.Slice(vlanOld, func(i, j int) bool {
+		return vlanOld[i]["parent_interface"].(string) < vlanOld[j]["parent_interface"].(string)
+	})
+
+	sort.Slice(vlanNew, func(i, j int) bool {
+		return vlanNew[i]["parent_interface"].(string) < vlanNew[j]["parent_interface"].(string)
+	})
+
+	return reflect.DeepEqual(vlanOld, vlanNew)
+}
