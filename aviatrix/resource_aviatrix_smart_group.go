@@ -64,6 +64,11 @@ func resourceAviatrixSmartGroup() *schema.Resource {
 										Optional:    true,
 										Description: "Account name this expression matches.",
 									},
+									"name": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Name this expression matches.",
+									},
 									"region": {
 										Type:        schema.TypeString,
 										Optional:    true,
@@ -109,7 +114,7 @@ func marshalSmartGroupInput(d *schema.ResourceData) (*goaviatrix.SmartGroup, err
 		var filter *goaviatrix.SmartGroupMatchExpression
 
 		if mapContains(selectorInfo, "cidr") {
-			for _, key := range []string{"type", "res_id", "account_id", "account_name", "region", "zone", "tags"} {
+			for _, key := range []string{"type", "res_id", "account_id", "account_name", "name", "region", "zone", "tags"} {
 				if mapContains(selectorInfo, key) {
 					return nil, fmt.Errorf("%q must be empty when %q is set", key, "cidr")
 				}
@@ -127,6 +132,7 @@ func marshalSmartGroupInput(d *schema.ResourceData) (*goaviatrix.SmartGroup, err
 				ResId:       selectorInfo["res_id"].(string),
 				AccountId:   selectorInfo["account_id"].(string),
 				AccountName: selectorInfo["account_name"].(string),
+				Name:        selectorInfo["name"].(string),
 				Region:      selectorInfo["region"].(string),
 				Zone:        selectorInfo["zone"].(string),
 			}
@@ -199,6 +205,7 @@ func resourceAviatrixSmartGroupRead(ctx context.Context, d *schema.ResourceData,
 			"res_id":       filter.ResId,
 			"account_id":   filter.AccountId,
 			"account_name": filter.AccountName,
+			"name":         filter.Name,
 			"region":       filter.Region,
 			"zone":         filter.Zone,
 			"tags":         filter.Tags,
