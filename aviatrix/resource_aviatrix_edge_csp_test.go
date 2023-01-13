@@ -37,8 +37,6 @@ func TestAccAviatrixEdgeCSP_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "gw_name", gwName),
 					resource.TestCheckResourceAttr(resourceName, "site_id", siteId),
 					resource.TestCheckResourceAttr(resourceName, "management_interface_config", "DHCP"),
-					resource.TestCheckResourceAttr(resourceName, "wan_interface_ip_prefix", "10.60.0.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "wan_default_gateway_ip", "10.60.0.0"),
 					resource.TestCheckResourceAttr(resourceName, "lan_interface_ip_prefix", "10.60.0.0/24"),
 				),
 			},
@@ -68,8 +66,6 @@ resource "aviatrix_edge_csp" "test" {
  	compute_node_uuid           = "%s"
  	template_uuid               = "%s"
 	management_interface_config = "DHCP"
-	wan_interface_ip_prefix     = "10.60.0.0/24"
-	wan_default_gateway_ip      = "10.60.0.0"
 	lan_interface_ip_prefix     = "10.60.0.0/24"
 }
  `, accountName, os.Getenv("EDGE_CSP_USERNAME"), os.Getenv("EDGE_CSP_PASSWORD"), gwName, siteId,
