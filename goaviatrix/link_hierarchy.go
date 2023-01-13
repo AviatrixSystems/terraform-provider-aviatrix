@@ -32,15 +32,16 @@ type LinkHierarchyResp struct {
 func (c *Client) CreateLinkHierarchy(ctx context.Context, linkHierarchy map[string]interface{}) (string, error) {
 	endpoint := "ipsla/link-hierarchy"
 
-	type LinkHierarchyResp struct {
+	type resp struct {
 		UUID string `json:"uuid"`
 	}
 
-	var data LinkHierarchyResp
+	var data resp
 	err := c.PostAPIContext25(ctx, &data, endpoint, linkHierarchy)
 	if err != nil {
 		return "", err
 	}
+
 	return data.UUID, nil
 }
 
