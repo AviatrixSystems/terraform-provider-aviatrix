@@ -95,6 +95,15 @@ func resourceAviatrixEdgeSpokeTransitAttachment() *schema.Resource {
 				Default:     300,
 				Description: "Retry interval in seconds.",
 			},
+			"edge_wan_interfaces": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Edge WAN interfaces.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -109,6 +118,7 @@ func marshalEdgeSpokeTransitAttachmentInput(d *schema.ResourceData) *goaviatrix.
 		InsaneModeTunnelNumber:   d.Get("insane_mode_tunnel_number").(int),
 		SpokePrependAsPath:       getStringList(d, "spoke_prepend_as_path"),
 		TransitPrependAsPath:     getStringList(d, "transit_prepend_as_path"),
+		EdgeWanInterfaces:        strings.Join(getStringList(d, "edge_wan_interfaces"), ","),
 	}
 
 	return edgeSpokeTransitAttachment
@@ -246,6 +256,8 @@ func resourceAviatrixEdgeSpokeTransitAttachmentRead(ctx context.Context, d *sche
 	} else {
 		d.Set("transit_prepend_as_path", nil)
 	}
+
+	d.Set("edge_wan_interfaces", attachment.EdgeWanInterfacesResp)
 
 	d.SetId(spokeGwName + "~" + transitGwName)
 	return nil
