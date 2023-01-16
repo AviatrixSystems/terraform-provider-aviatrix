@@ -14,8 +14,7 @@ type WanLink struct {
 }
 
 type Link struct {
-	Name string `json:"name"`
-	//WanLinkList []map[string]interface{} `json:"wan_link"`
+	Name        string    `json:"name"`
 	WanLinkList []WanLink `json:"wan_link"`
 }
 

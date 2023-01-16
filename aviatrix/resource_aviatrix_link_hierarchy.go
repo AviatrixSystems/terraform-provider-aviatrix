@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -36,14 +37,13 @@ func resourceAviatrixLinkHierarchy() *schema.Resource {
 							Required: true,
 						},
 						"wan_link": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
-							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"wan_tag": {
 										Type:        schema.TypeString,
-										Optional:    true,
+										Required:    true,
 										Description: "",
 									},
 								},
@@ -65,23 +65,21 @@ func marshalLinkHierarchyInput(d *schema.ResourceData) map[string]interface{} {
 	var links []map[string]interface{}
 	linksInput := d.Get("links").([]interface{})
 
-	for _, v0 := range linksInput {
+	for n0, v0 := range linksInput {
 		link := make(map[string]interface{})
-		for k1, v1 := range v0.(map[string]interface{}) {
-			if k1 == "name" {
-				link[k1] = v1
-			} else {
-				var wanLinkList []map[string]interface{}
-				wanlink := make(map[string]interface{})
-				for _, v2 := range v1.([]interface{}) {
-					for k3, v3 := range v2.(map[string]interface{}) {
-						wanlink[k3] = v3
-					}
-				}
-				wanLinkList = append(wanLinkList, wanlink)
-				link["wan_link"] = wanLinkList
-			}
+		var wanLink []map[string]interface{}
+
+		link["name"] = v0.(map[string]interface{})["name"]
+		wanLinkList := d.Get("links." + strconv.Itoa(n0) + ".wan_link").(*schema.Set).List()
+
+		for _, v1 := range wanLinkList {
+			wanTag := make(map[string]interface{})
+			wanTag["wan_tag"] = v1.(map[string]interface{})["wan_tag"]
+			wanLink = append(wanLink, wanTag)
 		}
+
+		link["wan_link"] = wanLink
+
 		links = append(links, link)
 	}
 
@@ -104,6 +102,7 @@ func resourceAviatrixLinkHierarchyCreate(ctx context.Context, d *schema.Resource
 	if err != nil {
 		return diag.Errorf("failed to create link hierarchy: %s", err)
 	}
+
 	d.SetId(uuid)
 	return resourceAviatrixLinkHierarchyReadIfRequired(ctx, d, meta, &flag)
 }

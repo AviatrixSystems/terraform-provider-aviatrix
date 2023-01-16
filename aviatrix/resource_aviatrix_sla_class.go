@@ -50,10 +50,10 @@ func resourceAviatrixSLAClass() *schema.Resource {
 
 func marshalSLAClassInput(d *schema.ResourceData) *goaviatrix.SLAClass {
 	slaClass := &goaviatrix.SLAClass{
-		Name:            d.Get("name").(string),
-		Latency:         d.Get("latency").(int),
-		Jitter:          d.Get("jitter").(int),
-		PackageDropRate: d.Get("packet_drop_rate").(int),
+		Name:           d.Get("name").(string),
+		Latency:        d.Get("latency").(int),
+		Jitter:         d.Get("jitter").(int),
+		PacketDropRate: d.Get("packet_drop_rate").(int),
 	}
 
 	return slaClass
@@ -102,7 +102,7 @@ func resourceAviatrixSLAClassRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("name", slaClass.Name)
 	d.Set("latency", slaClass.Latency)
 	d.Set("jitter", slaClass.Jitter)
-	d.Set("package_drop_rate", slaClass.PackageDropRate)
+	d.Set("packet_drop_rate", slaClass.PacketDropRate)
 
 	return nil
 }
