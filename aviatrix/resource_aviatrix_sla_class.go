@@ -35,7 +35,7 @@ func resourceAviatrixSLAClass() *schema.Resource {
 				Description: "",
 			},
 			"packet_drop_rate": {
-				Type:        schema.TypeInt,
+				Type:        schema.TypeFloat,
 				Required:    true,
 				Description: "",
 			},
@@ -53,7 +53,7 @@ func marshalSLAClassInput(d *schema.ResourceData) *goaviatrix.SLAClass {
 		Name:           d.Get("name").(string),
 		Latency:        d.Get("latency").(int),
 		Jitter:         d.Get("jitter").(int),
-		PacketDropRate: d.Get("packet_drop_rate").(int),
+		PacketDropRate: d.Get("packet_drop_rate").(float64),
 	}
 
 	return slaClass

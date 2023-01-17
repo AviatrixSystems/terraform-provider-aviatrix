@@ -2,7 +2,10 @@ package goaviatrix
 
 import (
 	"context"
-	"fmt"
+	"reflect"
+	"sort"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type PortRange struct {
@@ -11,16 +14,16 @@ type PortRange struct {
 }
 
 type TCPolicy struct {
-	UUID          string      `json:"uuid"`
-	Name          string      `json:"name"`
-	SrcSgs        []string    `json:"src_sgs"`
-	DstSgs        []string    `json:"dst_sgs"`
+	UUID          string      `json:"uuid,omitempty"`
+	Name          string      `json:"name,omitempty"`
+	SrcSgs        []string    `json:"src_sgs,omitempty"`
+	DstSgs        []string    `json:"dst_sgs,omitempty"`
 	PortRanges    []PortRange `json:"port_ranges,omitempty"`
-	Protocol      string      `json:"protocol"`
-	LinkHierarchy string      `json:"link_hierarchy"`
-	SlaClass      string      `json:"sla_class"`
-	Logging       bool        `json:"logging"`
-	RouteType     string      `json:"route_type"`
+	Protocol      string      `json:"protocol,omitempty"`
+	LinkHierarchy string      `json:"link_hierarchy,omitempty"`
+	SlaClass      string      `json:"sla_class,omitempty"`
+	Logging       bool        `json:"logging,omitempty"`
+	RouteType     string      `json:"route_type,omitempty"`
 }
 
 type PolicyList struct {
@@ -31,71 +34,102 @@ type TrafficClassifierResp struct {
 	TrafficClassifier []PolicyList `json:"traffic_classifier_policies"`
 }
 
-func (c *Client) CreateTrafficClassifier(ctx context.Context, policyList *PolicyList) (string, error) {
+func (c *Client) CreateTrafficClassifier(ctx context.Context, policyList *PolicyList) error {
 	endpoint := "ipsla/traffic-classifier"
 
-	type resp struct {
-		UUID string `json:"uuid"`
-	}
+	return c.PutAPIContext25(ctx, endpoint, policyList)
+}
 
-	var data resp
-	//err := c.PostAPIContext25(ctx, &data, endpoint, policyList)
-	err := c.PutAPIContext25(ctx, endpoint, policyList)
+func (c *Client) GetTrafficClassifier(ctx context.Context) (*[]PolicyList, error) {
+	endpoint := "ipsla/traffic-classifier"
+
+	var data TrafficClassifierResp
+	err := c.GetAPIContext25(ctx, &data, endpoint, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return data.UUID, nil
+	if len(data.TrafficClassifier) == 0 {
+		return nil, ErrNotFound
+	}
+
+	return &data.TrafficClassifier, nil
 }
 
-func (c *Client) GetTrafficClassifier(ctx context.Context, uuid string) (*PolicyList, error) {
-	//endpoint := fmt.Sprintf("ipsla/traffic-classifier/%s", uuid)
-	//
-	//var data TrafficClassifierResp
-	//err := c.GetAPIContext25(ctx, &data, endpoint, nil)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//for _, trafficClassifier := range data.TrafficClassifier {
-	//	for _, policy := range trafficClassifier.Policies {
-	//		if policy.UUID == uuid {
-	//			return &policy, nil
-	//		}
-	//	}
-	//}
-
-	return nil, ErrNotFound
-}
-
-func (c *Client) DeleteTrafficClassifier(ctx context.Context, uuid string) error {
-	endpoint := fmt.Sprintf("ipsla/traffic-classifier/%s", uuid)
+func (c *Client) DeleteTrafficClassifier(ctx context.Context) error {
+	endpoint := "ipsla/traffic-classifier"
 	return c.DeleteAPIContext25(ctx, endpoint, nil)
 }
 
-//func DiffSuppressFuncLinkHierarchy(k, old, new string, d *schema.ResourceData) bool {
-//	lOld, lNew := d.GetChange("links")
-//	var linksOld []map[string]interface{}
-//
-//	for _, l0 := range lOld.([]interface{}) {
-//		l1 := l0.(map[string]interface{})
-//		linksOld = append(linksOld, l1)
-//	}
-//
-//	var linksNew []map[string]interface{}
-//
-//	for _, l0 := range lNew.([]interface{}) {
-//		l1 := l0.(map[string]interface{})
-//		linksNew = append(linksNew, l1)
-//	}
-//
-//	sort.Slice(linksOld, func(i, j int) bool {
-//		return linksOld[i]["name"].(string) < linksOld[j]["name"].(string)
-//	})
-//
-//	sort.Slice(linksNew, func(i, j int) bool {
-//		return linksNew[i]["name"].(string) < linksNew[j]["name"].(string)
-//	})
-//
-//	return reflect.DeepEqual(linksOld, linksNew)
-//}
+func DiffSuppressFuncTrafficClassifier(k, old, new string, d *schema.ResourceData) bool {
+	pOld, pNew := d.GetChange("policies")
+	var policiesOld []map[string]interface{}
+
+	for _, p0 := range pOld.([]interface{}) {
+		p1 := p0.(map[string]interface{})
+		p2 := make(map[string]interface{})
+
+		for k, v := range p1 {
+			if k != "uuid" && k != "port_ranges" {
+				p2[k] = v
+			}
+		}
+
+		pr := p1["port_ranges"].(*schema.Set).List()
+		var portRanges []map[string]interface{}
+		for _, v := range pr {
+			temp := make(map[string]interface{})
+			temp["lo"] = v.(map[string]interface{})["lo"]
+			temp["hi"] = v.(map[string]interface{})["hi"]
+			portRanges = append(portRanges, temp)
+		}
+
+		sort.Slice(portRanges, func(i, j int) bool {
+			return portRanges[i]["lo"].(string) < portRanges[j]["lo"].(string)
+		})
+
+		p2["port_ranges"] = portRanges
+
+		policiesOld = append(policiesOld, p2)
+	}
+
+	var policiesNew []map[string]interface{}
+
+	for _, p0 := range pNew.([]interface{}) {
+		p1 := p0.(map[string]interface{})
+		p2 := make(map[string]interface{})
+
+		for k, v := range p1 {
+			if k != "uuid" && k != "port_ranges" {
+				p2[k] = v
+			}
+		}
+
+		pr := p1["port_ranges"].(*schema.Set).List()
+		var portRanges []map[string]interface{}
+		for _, v := range pr {
+			temp := make(map[string]interface{})
+			temp["lo"] = v.(map[string]interface{})["lo"]
+			temp["hi"] = v.(map[string]interface{})["hi"]
+			portRanges = append(portRanges, temp)
+		}
+
+		sort.Slice(portRanges, func(i, j int) bool {
+			return portRanges[i]["lo"].(string) < portRanges[j]["lo"].(string)
+		})
+
+		p2["port_ranges"] = portRanges
+
+		policiesNew = append(policiesNew, p2)
+	}
+
+	sort.Slice(policiesOld, func(i, j int) bool {
+		return policiesOld[i]["name"].(string) < policiesOld[j]["name"].(string)
+	})
+
+	sort.Slice(policiesNew, func(i, j int) bool {
+		return policiesNew[i]["name"].(string) < policiesNew[j]["name"].(string)
+	})
+
+	return reflect.DeepEqual(policiesOld, policiesNew)
+}

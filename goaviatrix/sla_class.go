@@ -6,11 +6,11 @@ import (
 )
 
 type SLAClass struct {
-	UUID           string `json:"uuid"`
-	Name           string `json:"name"`
-	Latency        int    `json:"latency_ms"`
-	Jitter         int    `json:"jitter_ms"`
-	PacketDropRate int    `json:"packet_drop_rate"`
+	UUID           string  `json:"uuid"`
+	Name           string  `json:"name"`
+	Latency        int     `json:"latency_ms"`
+	Jitter         int     `json:"jitter_ms"`
+	PacketDropRate float64 `json:"packet_drop_rate"`
 }
 
 type SLAClassResp struct {

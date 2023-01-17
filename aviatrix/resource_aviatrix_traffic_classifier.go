@@ -19,11 +19,11 @@ func resourceAviatrixTrafficClassifier() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"policies": {
-				Type:        schema.TypeList,
-				Required:    true,
-				ForceNew:    true,
-				Description: "",
-				//DiffSuppressFunc: goaviatrix.DiffSuppressFuncLinkHierarchy,
+				Type:             schema.TypeList,
+				Required:         true,
+				ForceNew:         true,
+				Description:      "",
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncTrafficClassifier,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -163,12 +163,12 @@ func resourceAviatrixTrafficClassifierCreate(ctx context.Context, d *schema.Reso
 	flag := false
 	defer resourceAviatrixTrafficClassifierReadIfRequired(ctx, d, meta, &flag)
 
-	_, err := client.CreateTrafficClassifier(ctx, policyList)
+	err := client.CreateTrafficClassifier(ctx, policyList)
 	if err != nil {
 		return diag.Errorf("failed to create traffic classifier: %s", err)
 	}
 
-	//d.SetId(uuid)
+	d.SetId("traffic_classifier_policies")
 	return resourceAviatrixTrafficClassifierReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -181,42 +181,51 @@ func resourceAviatrixTrafficClassifierReadIfRequired(ctx context.Context, d *sch
 }
 
 func resourceAviatrixTrafficClassifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	//client := meta.(*goaviatrix.Client)
-	//
-	//uuid := d.Id()
-	//d.Set("uuid", uuid)
-	//
-	//linkHierarchy, err := client.GetTrafficClassifier(ctx, uuid)
-	//if err != nil {
-	//	if err == goaviatrix.ErrNotFound {
-	//		d.SetId("")
-	//		return nil
-	//	}
-	//	return diag.Errorf("failed to read link hierarchy: %s", err)
-	//}
-	//
-	//d.Set("name", linkHierarchy.Name)
-	//
-	//var links []interface{}
-	//
-	//for _, l := range linkHierarchy.Links {
-	//	link := make(map[string]interface{})
-	//	var wanLinkList []map[string]interface{}
-	//
-	//	for _, w := range l.WanLinkList {
-	//		wanLink := make(map[string]interface{})
-	//		wanLink["wan_tag"] = w.WanTag
-	//		wanLinkList = append(wanLinkList, wanLink)
-	//	}
-	//
-	//	link["name"] = l.Name
-	//	link["wan_link"] = wanLinkList
-	//	links = append(links, link)
-	//}
-	//
-	//if err := d.Set("links", links); err != nil {
-	//	return diag.Errorf("failed to set links: %s", err)
-	//}
+	client := meta.(*goaviatrix.Client)
+
+	tcResp, err := client.GetTrafficClassifier(ctx)
+	if err != nil {
+		if err == goaviatrix.ErrNotFound {
+			d.SetId("")
+			return nil
+		}
+		return diag.Errorf("failed to read traffic classifier: %s", err)
+	}
+
+	var policies []map[string]interface{}
+
+	for _, policyList := range *tcResp {
+		for _, policy := range policyList.Policies {
+			p := make(map[string]interface{})
+			p["uuid"] = policy.UUID
+			p["name"] = policy.Name
+			p["src_sgs"] = policy.SrcSgs
+			p["dst_sgs"] = policy.DstSgs
+			p["link_hierarchy"] = policy.LinkHierarchy
+			p["sla_class"] = policy.SlaClass
+			p["logging"] = policy.Logging
+			p["route_type"] = policy.RouteType
+
+			if policy.Protocol != "PROTOCOL_UNSPECIFIED" {
+				p["protocol"] = policy.Protocol
+			}
+
+			var portRanges []map[string]interface{}
+			for _, pr := range policy.PortRanges {
+				p1 := make(map[string]interface{})
+				p1["lo"] = pr.Lo
+				p1["hi"] = pr.Hi
+				portRanges = append(portRanges, p1)
+			}
+			p["port_ranges"] = portRanges
+
+			policies = append(policies, p)
+		}
+	}
+
+	if err := d.Set("policies", policies); err != nil {
+		return diag.Errorf("failed to set policies: %s", err)
+	}
 
 	return nil
 }
@@ -224,8 +233,7 @@ func resourceAviatrixTrafficClassifierRead(ctx context.Context, d *schema.Resour
 func resourceAviatrixTrafficClassifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	uuid := d.Id()
-	err := client.DeleteTrafficClassifier(ctx, uuid)
+	err := client.DeleteTrafficClassifier(ctx)
 	if err != nil {
 		return diag.Errorf("failed to delete traffic classifier: %v", err)
 	}
