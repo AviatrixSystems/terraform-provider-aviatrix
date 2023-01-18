@@ -288,9 +288,12 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 					" = 'bgp'.",
 			},
 			"phase1_remote_identifier": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				Elem:             &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: goaviatrix.StringCanBeEmptyButCannotBeWhiteSpace,
+				},
 				DiffSuppressFunc: goaviatrix.TransitExternalDeviceConnPh1RemoteIdDiffSuppressFunc,
 				Description:      "List of phase 1 remote identifier of the IPsec tunnel. This can be configured as a list of any string, including emtpy string.",
 			},
