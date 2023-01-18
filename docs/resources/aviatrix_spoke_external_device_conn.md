@@ -53,6 +53,21 @@ resource "aviatrix_spoke_external_device_conn" "test" {
   ]
 }
 ```
+```hcl
+# Create an Aviatrix Spoke External Device Connection with Cert based Authentication
+resource "aviatrix_spoke_external_device_conn" "test" {
+  vpc_id             = "vpc-abcd1234"
+  connection_name    = "my_conn"
+  gw_name            = "spokeGw"
+  connection_type    = "bgp"
+  tunnel_protocol    = "IPsec"
+  bgp_local_as_num   = "123"
+  bgp_remote_as_num  = "345"
+  remote_gateway_ip  = "172.12.13.14"
+  local_tunnel_cidr  = "169.254.124.214/30"
+  remote_tunnel_cidr = "169.254.124.213/30"
+}
+```
 
 ## Argument Reference
 
@@ -93,6 +108,10 @@ The following arguments are supported:
 * `backup_bgp_md5_key` - (Optional) Backup BGP MD5 Authentication Key. Valid with HA enabled for connection. Example: 'avx03,avx04'.
 
 ### Misc.
+* `auth_type` - (Optional) Authentication Type. Valid values: 'PSK' and 'Cert'. Default value: 'PSK'.
+* `ca_cert_tag_name` - (Optional) Name of Remote CA Certificate Tag for creating Site2Cloud tunnels. Required for Cert based authentication type.
+* `remote_identifier` - (Optional) Remote identifier. Required for Cert based authentication type. Example: "gw-10-10-0-115".
+* `backup_remote_identifier` - (Optional) Backup remote identifier. Required for Cert based authentication type with HA enabled. Example: "gw-10-10-0-116".
 * `tunnel_protocol` - (Optional) Tunnel protocol, only valid with `connection_type` = 'bgp'. Valid values: 'IPsec'. Default value: 'IPsec'. Case insensitive.
 * `bgp_local_as_num` - (Optional) BGP local ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
 * `bgp_remote_as_num` - (Optional) BGP remote ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.

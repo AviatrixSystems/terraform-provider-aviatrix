@@ -36,6 +36,25 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "The name of the spoke external device connection which is going to be created.",
 			},
+			"auth_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "PSK",
+				ValidateFunc: validation.StringInSlice([]string{"PSK", "Cert"}, false),
+				Description:  "Authentication Type. Valid values: 'PSK' and 'Cert'. Default value: 'PSK'.",
+			},
+			"ca_cert_tag_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Name of Remote CA Certificate Tag for creating Site2Cloud tunnels. Required for Cert based authentication type.",
+			},
+			"remote_identifier": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Remote identifier. Required for Cert based authentication type.",
+			},
 			"gw_name": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -233,6 +252,11 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "Backup pre shared key.",
 			},
+			"backup_remote_identifier": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Backup remote identifier. Required for Cert based authentication type with HA enabled.",
+			},
 			"backup_local_tunnel_cidr": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -333,6 +357,9 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
 		VpcID:                  d.Get("vpc_id").(string),
 		ConnectionName:         d.Get("connection_name").(string),
+		AuthType:               d.Get("auth_type").(string),
+		CaCertTagName:          d.Get("ca_cert_tag_name").(string),
+		RemoteIdentifier:       d.Get("remote_identifier").(string),
 		GwName:                 d.Get("gw_name").(string),
 		ConnectionType:         d.Get("connection_type").(string),
 		RemoteGatewayIP:        d.Get("remote_gateway_ip").(string),
@@ -348,10 +375,28 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		Phase2Encryption:       d.Get("phase_2_encryption").(string),
 		BackupRemoteGatewayIP:  d.Get("backup_remote_gateway_ip").(string),
 		BackupPreSharedKey:     d.Get("backup_pre_shared_key").(string),
+		BackupRemoteIdentifier: d.Get("backup_remote_identifier").(string),
 		BackupLocalTunnelCidr:  d.Get("backup_local_tunnel_cidr").(string),
 		BackupRemoteTunnelCidr: d.Get("backup_remote_tunnel_cidr").(string),
 		BgpMd5Key:              d.Get("bgp_md5_key").(string),
 		BackupBgpMd5Key:        d.Get("backup_bgp_md5_key").(string),
+	}
+
+	haEnabled := d.Get("ha_enabled").(bool)
+	if externalDeviceConn.AuthType == "Cert" {
+		if externalDeviceConn.CaCertTagName == "" || externalDeviceConn.RemoteIdentifier == "" {
+			return fmt.Errorf("'ca_cert_tag_name' and 'remote_identifier' are both required for Cert based authentication type")
+		}
+		if haEnabled && externalDeviceConn.BackupRemoteIdentifier == "" {
+			return fmt.Errorf("'backup_remote_identifier' is required for Cert based authentication type with HA enabled")
+		} else if !haEnabled && externalDeviceConn.BackupRemoteIdentifier != "" {
+			return fmt.Errorf("'backup_remote_identifier' is required to be empty for Cert based authentication type with HA disabled")
+		}
+		externalDeviceConn.AuthType = "pubkey"
+	} else {
+		if externalDeviceConn.CaCertTagName != "" || externalDeviceConn.RemoteIdentifier != "" || externalDeviceConn.BackupRemoteIdentifier != "" {
+			return fmt.Errorf("'ca_cert_tag_name', 'remote_identifier' and 'backup_remote_identifier' are required to be empty for PSK(Pubkey) based authentication type")
+		}
 	}
 
 	tunnelProtocol := strings.ToUpper(d.Get("tunnel_protocol").(string))
@@ -379,7 +424,6 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		externalDeviceConn.DirectConnect = "true"
 	}
 
-	haEnabled := d.Get("ha_enabled").(bool)
 	if haEnabled {
 		externalDeviceConn.HAEnabled = "true"
 	}
@@ -673,6 +717,16 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 	if conn != nil {
 		d.Set("vpc_id", conn.VpcID)
 		d.Set("connection_name", conn.ConnectionName)
+		if conn.AuthType == "pubkey" {
+			d.Set("auth_type", "Cert")
+			d.Set("ca_cert_tag_name", conn.CaCertTagName)
+			d.Set("remote_identifier", conn.RemoteIdentifier)
+			if conn.HAEnabled == "enabled" {
+				d.Set("backup_remote_identifier", conn.BackupRemoteIdentifier)
+			}
+		} else {
+			d.Set("auth_type", "PSK")
+		}
 		d.Set("gw_name", conn.GwName)
 		d.Set("connection_type", conn.ConnectionType)
 		d.Set("remote_tunnel_cidr", conn.RemoteTunnelCidr)
@@ -992,6 +1046,52 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 			err := client.EditBgpMd5Key(editBgpMd5Key)
 			if err != nil {
 				return fmt.Errorf("failed to update backup BGP MD5 authentication key: %v", err)
+			}
+		}
+	}
+
+	if d.HasChanges("remote_identifier", "backup_remote_identifier") {
+		haEnabled := d.Get("ha_enabled").(bool)
+		authType := d.Get("auth_type").(string)
+		remoteIdentifier := d.Get("remote_identifier").(string)
+		backupRemoteIdentifier := d.Get("backup_remote_identifier").(string)
+
+		if authType == "Cert" {
+			if remoteIdentifier == "" {
+				return fmt.Errorf("'ca_cert_tag_name' and 'remote_identifier' are both required for Cert based authentication type")
+			}
+			if haEnabled && backupRemoteIdentifier == "" {
+				return fmt.Errorf("'backup_remote_identifier' is required for Cert based authentication type with HA enabled")
+			} else if !haEnabled && backupRemoteIdentifier != "" {
+				return fmt.Errorf("'backup_remote_identifier' is required to be empty for Cert based authentication type with HA disabled")
+			}
+		} else {
+			if remoteIdentifier != "" || backupRemoteIdentifier != "" {
+				return fmt.Errorf("'remote_identifier' and 'backup_remote_identifier' are both required to be empty for PSK(Pubkey) based authentication type")
+			}
+		}
+		if d.HasChanges("remote_identifier") {
+			s2c := &goaviatrix.EditSite2Cloud{
+				VpcID:            d.Get("vpc_id").(string),
+				ConnName:         d.Get("connection_name").(string),
+				RemoteIdentifier: remoteIdentifier,
+			}
+
+			err := client.UpdateSite2Cloud(s2c)
+			if err != nil {
+				return fmt.Errorf("failed to update remote identifier: %s", err)
+			}
+		}
+		if d.HasChanges("backup_remote_identifier") {
+			s2c := &goaviatrix.EditSite2Cloud{
+				VpcID:                  d.Get("vpc_id").(string),
+				ConnName:               d.Get("connection_name").(string),
+				BackupRemoteIdentifier: backupRemoteIdentifier,
+			}
+
+			err := client.UpdateSite2Cloud(s2c)
+			if err != nil {
+				return fmt.Errorf("failed to update backup remote identifier: %s", err)
 			}
 		}
 	}

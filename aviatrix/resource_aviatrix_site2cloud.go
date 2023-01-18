@@ -455,6 +455,8 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		}
 		if haEnabled && s2c.BackupRemoteIdentifier == "" {
 			return fmt.Errorf("'backup_remote_identifier' is required for Cert based authentication type with HA enabled")
+		} else if !haEnabled && s2c.BackupRemoteIdentifier != "" {
+			return fmt.Errorf("'backup_remote_identifier' is required to be empty for Cert based authentication type with HA disabled")
 		}
 		s2c.AuthType = "pubkey"
 	} else {
@@ -1211,6 +1213,8 @@ func resourceAviatrixSite2CloudUpdate(d *schema.ResourceData, meta interface{}) 
 			}
 			if haEnabled && backupRemoteIdentifier == "" {
 				return fmt.Errorf("'backup_remote_identifier' is required for Cert based authentication type with HA enabled")
+			} else if !haEnabled && backupRemoteIdentifier != "" {
+				return fmt.Errorf("'backup_remote_identifier' is required to be empty for Cert based authentication type with HA disabled")
 			}
 		} else {
 			if remoteIdentifier != "" || backupRemoteIdentifier != "" {

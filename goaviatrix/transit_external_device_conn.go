@@ -55,6 +55,10 @@ type ExternalDeviceConn struct {
 	PrependAsPath          string
 	BgpMd5Key              string `form:"bgp_md5_key,omitempty"`
 	BackupBgpMd5Key        string `form:"backup_bgp_md5_key,omitempty"`
+	AuthType               string `form:"auth_type,omitempty"`
+	CaCertTagName          string `form:"cert_name,omitempty"`
+	RemoteIdentifier       string `form:"remote_identifier,omitempty"`
+	BackupRemoteIdentifier string `form:"remote_ha_identifier,omitempty"`
 }
 
 type EditExternalDeviceConnDetail struct {
@@ -93,6 +97,10 @@ type EditExternalDeviceConnDetail struct {
 	Phase1RemoteIdentifier string `json:"phase1_remote_id"`
 	PrependAsPath          string `json:"conn_bgp_prepend_as_path"`
 	EnableJumboFrame       bool   `json:"jumbo_frame,omitempty"`
+	AuthType               string `json:"auth_type,omitempty"`
+	CaCertTagName          string `json:"s2c_cacert_tag_name,omitempty"`
+	RemoteIdentifier       string `json:"cert_based_s2c_remote_id,omitempty"`
+	BackupRemoteIdentifier string `json:"cert_based_s2c_ha_remote_id,omitempty"`
 }
 
 type EditBgpMd5Key struct {
@@ -151,6 +159,11 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 
 		externalDeviceConn.ConnectionName = externalDeviceConnDetail.ConnectionName[0]
 		externalDeviceConn.GwName = externalDeviceConnDetail.GwName
+
+		externalDeviceConn.AuthType = externalDeviceConnDetail.AuthType
+		externalDeviceConn.CaCertTagName = externalDeviceConnDetail.CaCertTagName
+		externalDeviceConn.RemoteIdentifier = externalDeviceConnDetail.RemoteIdentifier
+		externalDeviceConn.BackupRemoteIdentifier = externalDeviceConnDetail.BackupRemoteIdentifier
 
 		if externalDeviceConnDetail.BgpStatus == "enabled" || externalDeviceConnDetail.BgpStatus == "Enabled" {
 			bgpLocalAsNumber, _ := strconv.Atoi(externalDeviceConnDetail.BgpLocalAsNum)
