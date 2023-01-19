@@ -875,7 +875,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 
 	learnedCidrsApproval := d.Get("enable_learned_cidrs_approval").(bool)
 	if learnedCidrsApproval {
-		gateway.LearnedCidrsApproval = "on"
+		gateway.LearnedCidrsApproval = "yes"
 	}
 
 	if learnedCidrsApproval && d.Get("learned_cidrs_approval_mode").(string) == "connection" {
@@ -2571,13 +2571,13 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			GwName: d.Get("gw_name").(string),
 		}
 		if learnedCidrsApproval {
-			gw.LearnedCidrsApproval = "on"
+			gw.LearnedCidrsApproval = "yes"
 			err := client.EnableTransitLearnedCidrsApproval(gw)
 			if err != nil {
 				return fmt.Errorf("failed to enable learned cidrs approval: %s", err)
 			}
 		} else {
-			gw.LearnedCidrsApproval = "off"
+			gw.LearnedCidrsApproval = "no"
 			err := client.DisableTransitLearnedCidrsApproval(gw)
 			if err != nil {
 				return fmt.Errorf("failed to disable learned cidrs approval: %s", err)
