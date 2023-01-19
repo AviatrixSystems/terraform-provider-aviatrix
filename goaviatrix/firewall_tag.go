@@ -1,14 +1,7 @@
 package goaviatrix
 
 import (
-	"bytes"
 	"encoding/json"
-	"errors"
-	"fmt"
-	"net/http"
-	"strings"
-
-	log "github.com/sirupsen/logrus"
 )
 
 type CIDRMember struct {
@@ -38,38 +31,23 @@ func (c *Client) CreateFirewallTag(firewall_tag *FirewallTag) error {
 }
 
 func (c *Client) UpdateFirewallTag(firewall_tag *FirewallTag) error {
-	// TODO: use PostAPI - tags need special processing
-	firewall_tag.CID = c.CID
-	firewall_tag.Action = "update_policy_members"
-	verb := "POST"
-	body := fmt.Sprintf("CID=%s&action=%s&tag_name=%s", c.CID, firewall_tag.Action, firewall_tag.Name)
-	for i, cidr := range firewall_tag.CIDRList {
-		body = body + fmt.Sprintf("&new_policies[%d][name]=%s&new_policies[%d][cidr]=%s", i, cidr.CIDRTag, i, cidr.CIDR)
+	action := "update_policy_members"
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   action,
+		"tag_name": firewall_tag.Name,
 	}
-	log.Tracef("%s %s Body: %s", verb, c.baseURL, body)
-	req, err := http.NewRequest(verb, c.baseURL, strings.NewReader(body))
-	if err == nil {
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	} else {
-		return err
-	}
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return errors.New("HTTP Post update_policy_members failed: " + err.Error())
+	if firewall_tag.CIDRList == nil || len(firewall_tag.CIDRList) == 0 {
+		firewall_tag.CIDRList = []CIDRMember{}
 	}
 
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode update_policy_members failed: " + err.Error() + "\n Body: " + bodyString)
+	args, err := json.Marshal(firewall_tag.CIDRList)
+	if err != nil {
+		return err
 	}
-	if !data.Return {
-		return errors.New("Rest API update_policy_members Post failed: " + data.Reason)
-	}
-	return nil
+	form["new_policies"] = string(args)
+
+	return c.PostAPI(action, form, BasicCheck)
 }
 
 func (c *Client) GetFirewallTag(firewall_tag *FirewallTag) (*FirewallTag, error) {
