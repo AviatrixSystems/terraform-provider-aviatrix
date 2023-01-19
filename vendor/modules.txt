@@ -1,7 +1,7 @@
 # github.com/agext/levenshtein v1.2.3
 ## explicit
 github.com/agext/levenshtein
-# github.com/ajg/form v1.5.1
+# github.com/ajg/form v1.5.2-0.20200323032839-9aeb3cf462e1
 ## explicit
 github.com/ajg/form
 # github.com/apparentlymart/go-cidr v1.1.0
