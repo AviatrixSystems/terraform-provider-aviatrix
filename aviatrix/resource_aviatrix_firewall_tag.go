@@ -183,12 +183,7 @@ func resourceAviatrixFirewallTagDelete(d *schema.ResourceData, meta interface{})
 		Name: d.Get("firewall_tag").(string),
 	}
 
-	err := client.UpdateFirewallTag(firewallTag)
-	if err != nil {
-		return fmt.Errorf("failed to delete Aviatrix FirewallTag policy list: %s", err)
-	}
-
-	err = client.DeleteFirewallTag(firewallTag)
+	err := client.DeleteFirewallTag(firewallTag)
 	if err != nil {
 		return fmt.Errorf("failed to delete Aviatrix FirewallTag policy list: %s", err)
 	}
