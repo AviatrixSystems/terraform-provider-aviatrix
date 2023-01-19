@@ -8,9 +8,9 @@ import (
 )
 
 type FirewallInstance struct {
-	CID    string `form:"CID,omitempty"`
-	Action string `form:"action,omitempty"`
-
+	CID                  string `form:"CID,omitempty"`
+	Action               string `form:"action,omitempty"`
+	CloudType            int    `form:"cloud_type,omitempty"`
 	VpcID                string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
 	FirenetVpc           string `json:"firenet_vpc"`
 	GwName               string `form:"gw_name,omitempty" json:"gw_name,omitempty"`
@@ -95,6 +95,7 @@ func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (str
 	form := map[string]string{
 		"CID":                    c.CID,
 		"action":                 action,
+		"cloud_type":             strconv.Itoa(firewallInstance.CloudType),
 		"firewall_name":          firewallInstance.FirewallName,
 		"firewall_image":         firewallInstance.FirewallImage,
 		"firewall_image_version": firewallInstance.FirewallImageVersion,
@@ -116,13 +117,14 @@ func (c *Client) CreateFirewallInstance(firewallInstance *FirewallInstance) (str
 		form["cloud_type"] = strconv.Itoa(GCP)
 		form["egress"] = firewallInstance.EgressSubnet
 		form["egress_vpc"] = firewallInstance.EgressVpc
-		form["management"] = firewallInstance.ManagementSubnet
 		form["management_vpc"] = firewallInstance.ManagementVpc
 		form["zone"] = firewallInstance.AvailabilityZone
 	} else {
 		form["egress_subnet"] = firewallInstance.EgressSubnet
-		form["management_subnet"] = firewallInstance.ManagementSubnet
 	}
+
+	form["management"] = firewallInstance.ManagementSubnet
+
 	if firewallInstance.SshPublicKey != "" {
 		form["ssh_public_key"] = firewallInstance.SshPublicKey
 	}
