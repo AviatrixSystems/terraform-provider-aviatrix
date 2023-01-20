@@ -666,3 +666,18 @@ func DiffSuppressFuncLocalDestinationVirtualCIDRs(k, old, new string, d *schema.
 
 	return Equivalent(cidrListOld, cidrListNew)
 }
+
+func StringCanBeEmptyButCannotBeWhiteSpace(val interface{}, key string) (warns []string, errs []error) {
+	v, ok := val.(string)
+	if !ok {
+		return nil, []error{fmt.Errorf("expected type of %q to be string", key)}
+	}
+
+	if v != "" {
+		if strings.TrimSpace(v) == "" {
+			return nil, []error{fmt.Errorf("expected %q to not be an whitespace", key)}
+		}
+	}
+
+	return nil, nil
+}
