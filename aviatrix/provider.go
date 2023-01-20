@@ -175,6 +175,7 @@ func Provider() *schema.Provider {
 		DataSourcesMap: map[string]*schema.Resource{
 			"aviatrix_account":                          dataSourceAviatrixAccount(),
 			"aviatrix_caller_identity":                  dataSourceAviatrixCallerIdentity(),
+			"aviatrix_controller_metadata":              dataSourceAviatrixControllerMetadata(),
 			"aviatrix_device_interfaces":                dataSourceAviatrixDeviceInterfaces(),
 			"aviatrix_firenet":                          dataSourceAviatrixFireNet(),
 			"aviatrix_firenet_firewall_manager":         dataSourceAviatrixFireNetFirewallManager(),
