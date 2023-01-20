@@ -647,13 +647,11 @@ func (c *Client) RequestContext(ctx context.Context, verb string, path string, i
 		try++
 
 		if i != nil {
-			buf := new(bytes.Buffer)
-			if err = form.NewEncoder(buf).Encode(i); err != nil {
+			body, err := form.EncodeToValues(i, true)
+			if err != nil {
 				return nil, err
 			}
-			body := buf.String()
-			log.Tracef("%s %s Body: %s", verb, path, body)
-			reader := strings.NewReader(body)
+			reader := strings.NewReader(body.Encode())
 			req, err = http.NewRequestWithContext(ctx, verb, path, reader)
 			if err == nil {
 				req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
