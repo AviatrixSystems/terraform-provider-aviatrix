@@ -37,7 +37,7 @@ type TransitVpc struct {
 	Zone                         string `form:"zone,omitempty" json:"zone,omitempty"`
 	EnableAdvertiseTransitCidr   bool
 	BgpManualSpokeAdvertiseCidrs string `form:"bgp_manual_spoke,omitempty"`
-	EnableTransitFireNet         string `form:"enable_transit_firenet,omitempty"`
+	EnableTransitFireNet         bool   `form:"firenet,omitempty"`
 	LanVpcID                     string `form:"lan_vpc,omitempty"`
 	LanPrivateSubnet             string `form:"lan_subnet,omitempty"`
 	LearnedCidrsApproval         string `form:"learned_cidrs_approval,omitempty"`
