@@ -388,6 +388,25 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				ValidateFunc: validation.IntBetween(12, 360),
 				Description:  "BGP Hold Time for BGP Spoke Gateway. Unit is in seconds. Valid values are between 12 and 360.",
 			},
+			"enable_bgp_over_lan": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+				Description: "Pre-allocate a network interface(eth4) for \"BGP over LAN\" functionality. " +
+					"Only valid for 8 (Azure) and 32 (AzureGov). Valid values: true or false. Default value: false. " +
+					"Available as of provider version R3.0.2+.",
+			},
+			"bgp_lan_interfaces_count": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      1,
+				ForceNew:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description: "Number of interfaces that will be created for BGP over LAN enabled Azure spoke. " +
+					"Only valid for 8 (Azure) and 32 (AzureGov). Valid values: true or false. Default value: false. " +
+					"Available as of provider version R3.0.2+.",
+			},
 			"enable_spot_instance": {
 				Type:         schema.TypeBool,
 				Optional:     true,
@@ -743,6 +762,22 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	}
 	if !enableMonitorSubnets && len(excludedInstances) != 0 {
 		return fmt.Errorf("'monitor_exclude_list' must be empty if 'enable_monitor_gateway_subnets' is false")
+	}
+
+	bgpOverLan := d.Get("enable_bgp_over_lan").(bool)
+	if bgpOverLan && !enableBgp {
+		return fmt.Errorf("'enable_bgp' is required to be true to enable bgp over lan")
+	}
+	if bgpOverLan && !(goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes)) {
+		return fmt.Errorf("'enable_bgp_over_lan' is only valid for Azure (8), AzureGov (32) or AzureChina (2048)")
+	}
+	bgpLanInterfacesCount := d.Get("bgp_lan_interfaces_count").(int)
+	if bgpLanInterfacesCount != 1 && (!bgpOverLan || !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes)) {
+		return fmt.Errorf("'bgp_lan_interfaces_count' is only valid for BGP over LAN enabled spoke for Azure (8), AzureGov (32) or AzureChina (2048)")
+	}
+	if bgpOverLan {
+		gateway.BgpOverLan = "on"
+		gateway.BgpLanInterfacesCount = bgpLanInterfacesCount
 	}
 
 	enablePrivateOob := d.Get("enable_private_oob").(bool)
@@ -1329,6 +1364,12 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("single_ip_snat", gw.EnableNat == "yes" && gw.SnatMode == "primary")
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
 	d.Set("enable_bgp", gw.EnableBgp)
+	d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan)
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.BgpLanInterfacesCount > 1 {
+		d.Set("bgp_lan_interfaces_count", gw.BgpLanInterfacesCount)
+	} else {
+		d.Set("bgp_lan_interfaces_count", 1)
+	}
 	d.Set("enable_learned_cidrs_approval", gw.EnableLearnedCidrsApproval)
 	d.Set("enable_preserve_as_path", gw.EnablePreserveAsPath)
 	d.Set("rx_queue_size", gw.RxQueueSize)
