@@ -2430,7 +2430,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if d.HasChange("gw_size") {
 			old, _ := d.GetChange("gw_size")
 			primaryGwSize = old.(string)
-			gateway.GwSize = d.Get("gw_size").(string)
+			gateway.VpcSize = d.Get("gw_size").(string)
 			err := client.UpdateGateway(gateway)
 			if err != nil {
 				return fmt.Errorf("failed to update Aviatrix Transit Gateway: %s", err)
@@ -2752,7 +2752,7 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 		if d.HasChange("gw_size") {
 			old, _ := d.GetChange("gw_size")
 			primaryGwSize = old.(string)
-			gateway.GwSize = d.Get("gw_size").(string)
+			gateway.VpcSize = d.Get("gw_size").(string)
 			err := client.UpdateGateway(gateway)
 			if err != nil {
 				return fmt.Errorf("failed to update Aviatrix Transit Gateway: %s", err)
