@@ -103,6 +103,21 @@ resource "aviatrix_transit_external_device_conn" "ex-conn" {
   backup_local_lan_ip      = "172.12.13.17"
 }
 ```
+```hcl
+# Create an Aviatrix Transit External Device Connection with Cert based Authentication
+resource "aviatrix_transit_external_device_conn" "test" {
+  vpc_id             = "vpc-abcd1234"
+  connection_name    = "my_conn"
+  gw_name            = "transitGw"
+  connection_type    = "bgp"
+  tunnel_protocol    = "IPsec"
+  bgp_local_as_num   = "123"
+  bgp_remote_as_num  = "345"
+  remote_gateway_ip  = "172.12.13.14"
+  local_tunnel_cidr  = "169.254.124.214/30"
+  remote_tunnel_cidr = "169.254.124.213/30"
+}
+```
 
 ## Argument Reference
 
@@ -166,6 +181,10 @@ The following arguments are supported:
 
 ### Misc.
 * `direct_connect` - (Optional) Set true for private network infrastructure.
+* `auth_type` - (Optional) Authentication Type. Valid values: 'PSK' and 'Cert'. Default value: 'PSK'.
+* `ca_cert_tag_name` - (Optional) Name of Remote CA Certificate Tag for creating Site2Cloud tunnels. Required for Cert based authentication type.
+* `remote_identifier` - (Optional) Remote identifier. Required for Cert based authentication type. Example: "gw-10-10-0-115".
+* `backup_remote_identifier` - (Optional) Backup remote identifier. Required for Cert based authentication type with HA enabled. Example: "gw-10-10-0-116".
 * `pre_shared_key` - (Optional) Pre-Shared Key.
 * `local_tunnel_cidr` - (Optional) Source CIDR for the tunnel from the Aviatrix transit gateway.
 * `remote_tunnel_cidr` - (Optional) Destination CIDR for the tunnel to the external device.
