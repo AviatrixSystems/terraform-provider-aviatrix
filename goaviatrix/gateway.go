@@ -15,51 +15,66 @@ import (
 
 // Gateway simple struct to hold gateway details
 type Gateway struct {
-	AccountName             string `form:"account_name,omitempty" json:"account_name,omitempty"`
-	Action                  string `form:"action,omitempty"`
-	AdditionalCidrs         string `form:"additional_cidrs,omitempty" json:"additional_cidrs"`
-	AuthMethod              string `form:"auth_method,omitempty" json:"auth_method,omitempty"`
-	AllocateNewEip          string `form:"allocate_new_eip,omitempty"`
-	AllocateNewEipReadPtr   *bool  `json:"newly_allocated_eip,omitempty"`
-	AllocateNewEipRead      bool
-	BkupGatewayZone         string `form:"bkup_gateway_zone,omitempty" json:"bkup_gateway_zone,omitempty"`
-	BkupPrivateIP           string `form:"bkup_private_ip,omitempty" json:"bkup_private_ip,omitempty"`
-	CID                     string `form:"CID,omitempty"`
-	CIDR                    string `form:"cidr,omitempty"`
-	ClientCertAuth          string `form:"client_cert_auth,omitempty" json:"client_cert_auth,omitempty"`
-	ClientCertSharing       string `form:"client_cert_sharing,omitempty" json:"client_cert_sharing,omitempty"`
-	CloudType               int    `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
-	CloudnBkupGatewayInstID string `form:"cloudn_bkup_gateway_inst_id,omitempty" json:"cloudn_bkup_gateway_inst_id,omitempty"`
-	CloudnGatewayInstID     string `form:"cloudn_gateway_inst_id,omitempty" json:"cloudn_gateway_inst_id,omitempty"`
-	ConnectedTransit        string `json:"connected_transit,omitempty"`
-	DirectInternet          string `form:"direct_internet,omitempty" json:"direct_internet,omitempty"`
-	DockerConsulIP          string `form:"docker_consul_ip,omitempty" json:"docker_consul_ip,omitempty"`
-	DockerNtwkCidr          string `form:"docker_ntwk_cidr,omitempty" json:"docker_ntwk_cidr,omitempty"`
-	DockerNtwkName          string `form:"docker_ntwk_name,omitempty" json:"docker_ntwk_name,omitempty"`
-	DuoAPIHostname          string `form:"duo_api_hostname,omitempty" json:"duo_api_hostname,omitempty"`
-	DuoIntegrationKey       string `form:"duo_integration_key,omitempty" json:"duo_integration_key,omitempty"`
-	DuoPushMode             string `form:"duo_push_mode,omitempty" json:"duo_push_mode,omitempty"`
-	DuoSecretKey            string `form:"duo_secret_key,omitempty" json:"duo_secret_key,omitempty"`
-	Eip                     string `form:"eip,omitempty" json:"eip,omitempty"`
-	ReuseEip                string `json:"reuse_eip,omitempty"`
-	ElbDNSName              string `form:"elb_dns_name,omitempty" json:"elb_dns_name,omitempty"`
-	ElbName                 string `form:"elb_name,omitempty" json:"lb_name,omitempty"`
-	ElbState                string `form:"elb_state,omitempty" json:"elb_state,omitempty"`
-	VpnProtocol             string `json:"vpn_protocol" form:"elb_protocol,omitempty"`
-	EnableClientCertSharing string `form:"enable_client_cert_sharing,omitempty"`
-	EnableElb               string `form:"enable_elb,omitempty"`
-	EnableLdap              string `form:"enable_ldap,omitempty"`
-	EnableLdapRead          bool   `json:"enable_ldap,omitempty"`
-	EnableVpcDnsServer      string `json:"use_vpc_dns,omitempty"`
-	DnsServer               string `form:"dns_server,omitempty"`
-	PublicDnsServer         string `form:"public_dns_server,omitempty" json:"public_dns_server,omitempty"`
-
+	AccountName                  string `form:"account_name,omitempty" json:"account_name,omitempty"`
+	Action                       string `form:"action,omitempty"`
+	AdditionalCidrs              string `form:"additional_cidrs,omitempty" json:"additional_cidrs"`
+	AuthMethod                   string `form:"auth_method,omitempty" json:"auth_method,omitempty"`
+	AllocateNewEip               string `form:"allocate_new_eip,omitempty"`
+	AllocateNewEipReadPtr        *bool  `json:"newly_allocated_eip,omitempty"`
+	AllocateNewEipRead           bool
+	BkupGatewayZone              string `form:"bkup_gateway_zone,omitempty" json:"bkup_gateway_zone,omitempty"`
+	BkupPrivateIP                string `form:"bkup_private_ip,omitempty" json:"bkup_private_ip,omitempty"`
+	CID                          string `form:"CID,omitempty"`
+	CIDR                         string `form:"cidr,omitempty"`
+	ClientCertAuth               string `form:"client_cert_auth,omitempty" json:"client_cert_auth,omitempty"`
+	ClientCertSharing            string `form:"client_cert_sharing,omitempty" json:"client_cert_sharing,omitempty"`
+	CloudType                    int    `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
+	CloudnBkupGatewayInstID      string `form:"cloudn_bkup_gateway_inst_id,omitempty" json:"cloudn_bkup_gateway_inst_id,omitempty"`
+	CloudnGatewayInstID          string `form:"cloudn_gateway_inst_id,omitempty" json:"cloudn_gateway_inst_id,omitempty"`
+	ConnectedTransit             string `json:"connected_transit,omitempty"`
+	DirectInternet               string `form:"direct_internet,omitempty" json:"direct_internet,omitempty"`
+	DockerConsulIP               string `form:"docker_consul_ip,omitempty" json:"docker_consul_ip,omitempty"`
+	DockerNtwkCidr               string `form:"docker_ntwk_cidr,omitempty" json:"docker_ntwk_cidr,omitempty"`
+	DockerNtwkName               string `form:"docker_ntwk_name,omitempty" json:"docker_ntwk_name,omitempty"`
+	DuoAPIHostname               string `form:"duo_api_hostname,omitempty" json:"duo_api_hostname,omitempty"`
+	DuoIntegrationKey            string `form:"duo_integration_key,omitempty" json:"duo_integration_key,omitempty"`
+	DuoPushMode                  string `form:"duo_push_mode,omitempty" json:"duo_push_mode,omitempty"`
+	DuoSecretKey                 string `form:"duo_secret_key,omitempty" json:"duo_secret_key,omitempty"`
+	Eip                          string `form:"eip,omitempty" json:"eip,omitempty"`
+	ReuseEip                     string `json:"reuse_eip,omitempty"`
+	ElbDNSName                   string `form:"elb_dns_name,omitempty" json:"elb_dns_name,omitempty"`
+	ElbName                      string `form:"elb_name,omitempty" json:"lb_name,omitempty"`
+	ElbState                     string `form:"elb_state,omitempty" json:"elb_state,omitempty"`
+	VpnProtocol                  string `json:"vpn_protocol" form:"elb_protocol,omitempty"`
+	EnableClientCertSharing      string `form:"enable_client_cert_sharing,omitempty"`
+	EnableElb                    string `form:"enable_elb,omitempty"`
+	EnableLdap                   string `form:"enable_ldap,omitempty"`
+	EnableLdapRead               bool   `json:"enable_ldap,omitempty"`
+	EnableVpcDnsServer           string `form:"use_vpc_dns_server,omitempty" json:"use_vpc_dns,omitempty"`
+	DnsServer                    string `form:"dns_server,omitempty"`
+	PublicDnsServer              string `form:"public_dns_server,omitempty" json:"public_dns_server,omitempty"`
+	GwAutoRestart                string `form:"gw_auto_restart,omitempty"`
+	DisableSkipRfc1918Routes     string `form:"disable_skip_rfc1918_routes,omitempty"`
+	ExcludeCtrlerIpsecPolicy     string `form:"exclude_ctrler_ipsec_policy,omitempty"`
+	EditDesignatedGw             string `form:"edit_designated_gateway,omitempty"`
+	CustomizingGwRoute           string `form:"customizing_gateway_route,omitempty"`
+	FilteringGwRoute             string `form:"filtering_gateway_route,omitempty"`
+	AdvertiseGwRoute             string `form:"advertise_gateway_route,omitempty"`
+	TransitPeeringAsOnpremBackup string `form:"transit_peering_as_onprem_backup,omitempty"`
+	EnableActiveMesh             string `form:"enable_activemesh,omitempty"`
+	PrivateVpcDefault            string `form:"private_vpc_default,omitempty"`
+	SkipPublicVpcUpdate          string `form:"skip_public_vpc_update,omitempty"`
+	Ipv6Action                   string `form:"ipv6_action,omitempty"`
+	GroGso                       string `form:"gro_gso,omitempty"`
+	AutoAdvertiseS2cCidrs        string `form:"auto_advertise_s2c_cidrs,omitempty"`
+	Biflow                       string `form:"biflow,omitempty"`
+	IpslaTxlb                    string `form:"ipsla_txlb,omitempty"`
+	EnableJumboFrame             string `form:"jumbo_frame,omitempty"`
 	// These two are very similar but have a slight difference
 	// EnableNat - will be "yes" if single/multiple SNAT is enabled
 	// NatEnabled - will be true if single/multiple/customized SNAT is enabled
-	EnableNat  string `form:"enable_nat,omitempty" json:"enable_nat,omitempty"`
-	NatEnabled bool   `json:"nat_enabled,omitempty"`
-
+	EnableNat                       string            `form:"enable_nat,omitempty" json:"enable_nat,omitempty"`
+	NatEnabled                      bool              `json:"nat_enabled,omitempty"`
 	SingleAZ                        string            `form:"single_az_ha,omitempty" json:"single_az_ha,omitempty"`
 	EnableHybridConnection          bool              `json:"tgw_enabled,omitempty"`
 	EnablePbr                       string            `form:"enable_pbr,omitempty"`
@@ -76,7 +91,7 @@ type Gateway struct {
 	InstState                       string            `form:"inst_state,omitempty" json:"inst_state,omitempty"`
 	IntraVMRoute                    string            `form:"intra_vm_route,omitempty" json:"intra_vm_route,omitempty"`
 	IsHagw                          string            `form:"is_hagw,omitempty" json:"is_hagw,omitempty"`
-	JumboFrame                      bool              `json:"jumbo_frame"`
+	JumboFrame                      bool              `json:"jumbo_frame,omitempty"`
 	LdapAdditionalReq               string            `form:"ldap_additional_req,omitempty"`
 	LdapBaseDn                      string            `form:"ldap_base_dn,omitempty" json:"ldap_base_dn,omitempty"`
 	LdapBindDn                      string            `form:"ldap_bind_dn,omitempty" json:"ldap_bind_dn,omitempty"`
@@ -153,7 +168,7 @@ type Gateway struct {
 	PrivateVpcDefaultEnabled        bool                                `json:"private_vpc_default_enabled"`
 	SkipPublicVpcUpdateEnabled      bool                                `json:"skip_public_vpc_update_enabled"`
 	EnableMultitierTransit          bool                                `json:"multitier_transit"`
-	AutoAdvertiseCidrsEnabled       bool                                `json:"auto_advertise_s2c_cidrs"`
+	AutoAdvertiseCidrsEnabled       bool                                `json:"auto_advertise_s2c_cidrs,omitempty"`
 	TunnelDetectionTime             int                                 `json:"detection_time"`
 	BgpHoldTime                     int                                 `json:"bgp_hold_time"`
 	BgpPollingTime                  int                                 `json:"bgp_polling_time"`
