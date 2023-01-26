@@ -394,8 +394,8 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Default:  false,
 				ForceNew: true,
 				Description: "Pre-allocate a network interface(eth4) for \"BGP over LAN\" functionality. " +
-					"Only valid for 8 (Azure) and 32 (AzureGov). Valid values: true or false. Default value: false. " +
-					"Available as of provider version R3.0.2+.",
+					"Only valid for 8 (Azure), 32 (AzureGov) or AzureChina (2048). Valid values: true or false. " +
+					"Default value: false. Available as of provider version R3.0.2+.",
 			},
 			"bgp_lan_interfaces_count": {
 				Type:         schema.TypeInt,
@@ -404,7 +404,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 				Description: "Number of interfaces that will be created for BGP over LAN enabled Azure spoke. " +
-					"Only valid for 8 (Azure) and 32 (AzureGov). Valid values: true or false. Default value: false. " +
+					"Only valid for 8 (Azure), 32 (AzureGov) or AzureChina (2048). Default value: 1. " +
 					"Available as of provider version R3.0.2+.",
 			},
 			"enable_spot_instance": {
@@ -560,6 +560,20 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Public IP address of the HA Spoke Gateway.",
+			},
+			"bgp_lan_ip_list": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+				Description: "List of available BGP LAN interface IPs for spoke external device connection creation. " +
+					"Only supports 8 (Azure), 32 (AzureGov) or AzureChina (2048). Available as of provider version R3.0.2+.",
+			},
+			"ha_bgp_lan_ip_list": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+				Description: "List of available BGP LAN interface IPs for spoke external device HA connection creation. " +
+					"Only supports 8 (Azure), 32 (AzureGov) or AzureChina (2048). Available as of provider version R3.0.2+.",
 			},
 		},
 	}
@@ -1365,6 +1379,26 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
 	d.Set("enable_bgp", gw.EnableBgp)
 	d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan)
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan {
+		bgpLanIpInfo, err := client.GetBgpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
+		if err != nil {
+			return fmt.Errorf("could not get BGP LAN IP info for Azure spoke gateway %s: %v", gateway.GwName, err)
+		}
+		if err = d.Set("bgp_lan_ip_list", bgpLanIpInfo.AzureBgpLanIpList); err != nil {
+			log.Printf("[WARN] could not set bgp_lan_ip_list into state: %v", err)
+		}
+		if len(bgpLanIpInfo.AzureHaBgpLanIpList) != 0 {
+			if err = d.Set("ha_bgp_lan_ip_list", bgpLanIpInfo.AzureHaBgpLanIpList); err != nil {
+				log.Printf("[WARN] could not set ha_bgp_lan_ip_list into state: %v", err)
+			}
+		} else {
+			d.Set("ha_bgp_lan_ip_list", nil)
+		}
+	} else {
+		d.Set("bgp_lan_ip_list", nil)
+		d.Set("ha_bgp_lan_ip_list", nil)
+	}
+
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.BgpLanInterfacesCount > 1 {
 		d.Set("bgp_lan_interfaces_count", gw.BgpLanInterfacesCount)
 	} else {
@@ -1593,6 +1627,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("ha_zone", "")
 			d.Set("ha_public_ip", "")
 			d.Set("ha_private_mode_subnet_zone", "")
+			d.Set("ha_bgp_lan_ip_list", nil)
 			return nil
 		}
 

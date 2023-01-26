@@ -433,21 +433,21 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `ha_gw_name` - Aviatrix transit gateway unique name of HA transit gateway.
 * `eip` - Public IP address assigned to the gateway.
 * `ha_eip` - Public IP address assigned to the HA gateway.
+* `public_ip` - Public IP address of the Transit Gateway created.
+* `ha_public_ip` - Public IP address of the HA Transit Gateway.
+* `private_ip` - Private IP address of the transit gateway created.
+* `ha_private_ip` - Private IP address of the HA transit gateway created.
 * `security_group_id` - Security group used for the transit gateway.
 * `ha_security_group_id` - HA security group used for the transit gateway.
 * `cloud_instance_id` - Cloud instance ID of the transit gateway.
-* `private_ip` - Private IP address of the transit gateway created.
 * `ha_cloud_instance_id` - Cloud instance ID of the HA transit gateway.
-* `ha_gw_name` - Aviatrix transit gateway unique name of HA transit gateway.
-* `ha_private_ip` - Private IP address of the HA transit gateway created.
 * `lan_interface_cidr` - LAN interface CIDR of the transit gateway created (will be used when enabling FQDN Firenet in Azure). Available in provider version R2.17.1+.
 * `ha_lan_interface_cidr` - LAN interface CIDR of the HA transit gateway created (will be used when enabling FQDN Firenet in Azure). Available in provider version R2.18+.
 * `bgp_lan_ip_list` - List of available BGP LAN interface IPs for transit external device connection creation. Only supports GCP and Azure. Available as of provider version R2.21.0+.
 * `ha_bgp_lan_ip_list` - List of available BGP LAN interface IPs for transit external device HA connection creation. Only supports GCP and Azure. Available as of provider version R2.21.0+.
-* `public_ip` - Public IP address of the Transit Gateway created.
-* `ha_public_ip` - Public IP address of the HA Transit Gateway.
 
 The following arguments are deprecated:
 
