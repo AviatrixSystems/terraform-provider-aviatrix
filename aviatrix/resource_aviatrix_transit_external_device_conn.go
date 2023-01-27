@@ -584,16 +584,6 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		if externalDeviceConn.DirectConnect == "true" || externalDeviceConn.BackupDirectConnect == "true" {
 			return fmt.Errorf("enabling 'direct_connect' or 'backup_direct_connect' is not allowed for BGP over LAN connections")
 		}
-		gw, err := client.GetGateway(&goaviatrix.Gateway{GwName: externalDeviceConn.GwName})
-		if err != nil {
-			log.Printf("[INFO] Could not get cloud_type for transit_external_device_conn validation "+
-				"from gw_name(%s) due to error(%v)", externalDeviceConn.GwName, err)
-		} else {
-			if gw.CloudType == goaviatrix.Azure &&
-				(externalDeviceConn.LocalLanIP != "" || externalDeviceConn.BackupLocalLanIP != "") {
-				return fmt.Errorf("'local_lan_ip' and 'backup_local_lan_ip' are not valid for Azure transit gateways")
-			}
-		}
 	}
 
 	phase1RemoteIdentifier := d.Get("phase1_remote_identifier").([]interface{})
