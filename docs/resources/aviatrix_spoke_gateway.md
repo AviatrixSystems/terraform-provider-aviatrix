@@ -224,9 +224,9 @@ resource "aviatrix_spoke_gateway" "test_spoke_gateway_aws_secret" {
 ```
 ```hcl
 #Create an Aviatrix AWS Spoke Gateway in Private Mode
-resource "aviatrix_spoke_gateway" "test" {
-  account_name             = "devops"
+resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
   cloud_type               = 1
+  account_name             = "devops"
   gw_name                  = "spoke"
   gw_size                  = "t2.micro"
   subnet                   = "10.190.224.0/20"
@@ -235,6 +235,23 @@ resource "aviatrix_spoke_gateway" "test" {
   private_mode_lb_vpc_id   = "vpc-abcdef"
   private_mode_subnet_zone = "us-east-1a"
   manage_ha_gateway        = false
+}
+```
+```hcl
+# Create an Aviatrix Azure Spoke Network Gateway with HA enabled and BGP over LAN enabled with multiple interfaces
+resource "aviatrix_spoke_gateway" "test_spoke_gateway_azure" {
+  cloud_type               = 8
+  account_name             = "devops_azure"
+  gw_name                  = "transit"
+  gw_size                  = "Standard_B1ms"
+  subnet                   = "10.30.0.0/24"
+  vpc_id                   = "vnet_name:rg_name:resource_guid"
+  vpc_reg                  = "West US"
+  ha_subnet                = "10.30.0.0/24"
+  ha_gw_size               = "Standard_B1ms"
+  enable_bgp               = true
+  enable_bgp_over_lan      = true
+  bgp_lan_interfaces_count = 2
 }
 ```
 
@@ -295,6 +312,10 @@ The following arguments are supported:
 * `prepend_as_path` - (Optional) List of AS numbers to populate BGP AS_PATH field when it advertises to VGW or peer devices.
 * `disable_route_propagation` - (Optional) Disables route propagation on BGP Spoke to attached Transit Gateway. Default value: false.
 * `enable_preserve_as_path` - (Optional) Enable preserve as_path when advertising manual summary cidrs on BGP spoke gateway. Valid values: true, false. Default value: false. Available as of provider version R.2.22.1+
+
+### BGP over LAN
+* `enable_bgp_over_lan` - (Optional) Pre-allocate a network interface(eth4) for "BGP over LAN" functionality. Must be enabled to create a BGP over LAN `aviatrix_spoke_external_device_conn` resource with this Spoke Gateway. Only valid for 8 (Azure), 32 (AzureGov) or AzureChina (2048). Valid values: true or false. Default value: false. Available as of provider version R3.0.2+.
+* `bgp_lan_interfaces_count` - (Optional) (Optional) Number of interfaces that will be created for BGP over LAN enabled Azure spoke. Default value: 1. Available as of provider version R3.0.2+.
 
 ### Encryption
 * `enable_encrypt_volume` - (Optional) Enable EBS volume encryption for Gateway. Only supports AWS, AWSGov, AWSChina, AWS Top Secret and AWS Secret providers. Valid values: true, false. Default value: false.
@@ -359,17 +380,19 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `ha_gw_name` - Aviatrix spoke gateway unique name of HA spoke gateway.
 * `eip` - Public IP address assigned to the gateway.
 * `ha_eip` - Public IP address assigned to the HA gateway.
+* `public_ip` - Public IP address of the Spoke Gateway created.
+* `ha_public_ip` - Public IP address of the HA Spoke Gateway.
+* `private_ip` - Private IP address of the spoke gateway created.
+* `ha_private_ip` - Private IP address of HA spoke gateway.
 * `security_group_id` - Security group used for the spoke gateway.
 * `ha_security_group_id` - HA security group used for the spoke gateway.
 * `cloud_instance_id` - Cloud instance ID of the spoke gateway.
-* `private_ip` - Private IP address of the spoke gateway created.
 * `ha_cloud_instance_id` - Cloud instance ID of the HA spoke gateway.
-* `ha_gw_name` - Aviatrix spoke gateway unique name of HA spoke gateway.
-* `ha_private_ip` - Private IP address of HA spoke gateway.
-* `public_ip` - Public IP address of the Spoke Gateway created.
-* `ha_public_ip` - Public IP address of the HA Spoke Gateway.
+* `bgp_lan_ip_list` - List of available BGP LAN interface IPs for spoke external device connection creation. Only supports 8 (Azure), 32 (AzureGov) or AzureChina (2048). Available as of provider version R3.0.2+.
+* `ha_bgp_lan_ip_list` - List of available BGP LAN interface IPs for spoke external device HA connection creation. Only supports 8 (Azure), 32 (AzureGov) or AzureChina (2048). Available as of provider version R3.0.2+.
 
 The following arguments are deprecated:
 
