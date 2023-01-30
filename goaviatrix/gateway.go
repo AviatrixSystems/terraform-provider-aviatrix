@@ -162,9 +162,9 @@ type Gateway struct {
 	RouteTable                      string
 	EnablePrivateOob                bool                                `json:"private_oob"`
 	OobManagementSubnet             string                              `json:"oob_mgmt_subnet"`
-	LanVpcID                        string                              `form:"lan_vpc_id"`
-	LanPrivateSubnet                string                              `form:"lan_private_subnet"`
-	CreateFQDNGateway               bool                                `form:"create_firewall_gw"`
+	LanVpcID                        string                              `form:"lan_vpc,omitempty"`
+	LanPrivateSubnet                string                              `form:"lan_subnet,omitempty"`
+	CreateFQDNGateway               bool                                `form:"create_firewall_gw,omitempty"`
 	PrivateVpcDefaultEnabled        bool                                `json:"private_vpc_default_enabled"`
 	SkipPublicVpcUpdateEnabled      bool                                `json:"skip_public_vpc_update_enabled"`
 	EnableMultitierTransit          bool                                `json:"multitier_transit"`
