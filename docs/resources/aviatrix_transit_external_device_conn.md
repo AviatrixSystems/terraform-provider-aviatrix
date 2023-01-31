@@ -156,7 +156,7 @@ The following arguments are supported:
 * `local_lan_ip` - (Optional) Local LAN IP. Required for GCP BGP over LAN connection.
 * `backup_remote_lan_ip` - (Optional) Backup Remote LAN IP. Required for HA BGP over LAN connection.
 * `backup_local_lan_ip` - (Optional) Backup Local LAN IP. Required for GCP HA BGP over LAN connection.
-* `enable_bgp_lan_activemesh` - (Optional) Switch to enable BGP LAN ActiveMesh mode. Only valid for GCP with Remote Gateway HA enabled. Default: false. Available as of provider version R2.21+.
+* `enable_bgp_lan_activemesh` - (Optional) Switch to enable BGP LAN ActiveMesh mode. Only valid for GCP and Azure with Remote Gateway HA enabled. Requires Azure Remote Gateway insane mode enabled. Valid values: true, false. Default: false. Available as of provider version R2.21+.
 
 ### BGP MD5 Authentication (Available as of provider version R2.21.1+)
 ~> **NOTE:** BGP MD5 Authentication is only valid with `connection_type` = 'bgp'.
