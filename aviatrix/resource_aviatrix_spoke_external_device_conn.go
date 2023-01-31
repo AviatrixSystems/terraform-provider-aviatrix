@@ -86,6 +86,15 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 					return strings.ToUpper(old) == strings.ToUpper(new)
 				},
 			},
+			"enable_bgp_lan_activemesh": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+				Description: "Switch to enable BGP LAN ActiveMesh. Only valid for GCP and Azure with Remote Gateway HA enabled. " +
+					"Requires Azure Remote Gateway insane mode enabled. Valid values: true, false. Default: false. " +
+					"Available as of provider version R3.0.2+.",
+			},
 			"bgp_local_as_num": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -578,6 +587,16 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		}
 	}
 
+	if d.Get("enable_bgp_lan_activemesh").(bool) {
+		if externalDeviceConn.ConnectionType != "bgp" || externalDeviceConn.TunnelProtocol != "LAN" {
+			return fmt.Errorf("'enable_bgp_lan_activemesh' only supports 'bgp' connection with 'LAN' tunnel protocol")
+		}
+		if externalDeviceConn.HAEnabled != "true" {
+			return fmt.Errorf("'enable_bgp_lan_activemesh' can only be enabled with Remote Gateway HA enabled")
+		}
+		externalDeviceConn.EnableBgpLanActiveMesh = true
+	}
+
 	if externalDeviceConn.BgpMd5Key != "" || externalDeviceConn.BackupBgpMd5Key != "" {
 		if externalDeviceConn.ConnectionType != "bgp" {
 			return fmt.Errorf("BGP MD5 authentication key is only supported for BGP connection")
@@ -762,9 +781,11 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 		if conn.TunnelProtocol == "LAN" {
 			d.Set("remote_lan_ip", conn.RemoteLanIP)
 			d.Set("local_lan_ip", conn.LocalLanIP)
+			d.Set("enable_bgp_lan_activemesh", conn.EnableBgpLanActiveMesh)
 		} else {
 			d.Set("remote_gateway_ip", conn.RemoteGatewayIP)
 			d.Set("local_tunnel_cidr", conn.LocalTunnelCidr)
+			d.Set("enable_bgp_lan_activemesh", false)
 		}
 		if conn.ConnectionType == "bgp" {
 			if conn.BgpLocalAsNum != 0 {
