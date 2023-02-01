@@ -55,7 +55,7 @@ func (c *Client) GetTransPeer(transPeer *TransPeer) (*TransPeer, error) {
 	}
 	transPeerList := data.Results
 	for i := range transPeerList {
-		if transPeerList[i].Source == transPeer.Source && transPeerList[i].Nexthop == transPeer.Nexthop {
+		if transPeerList[i].Source == transPeer.Source && transPeerList[i].Nexthop == transPeer.Nexthop && transPeerList[i].ReachableCidr == transPeer.ReachableCidr {
 			return &transPeerList[i], nil
 		}
 	}
