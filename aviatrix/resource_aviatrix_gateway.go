@@ -983,14 +983,18 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 
 		log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
 
-		err := client.EnableSingleAZGateway(gateway)
+		err := client.EnableSingleAZGateway(singleAZGateway)
 		if err != nil {
 			return fmt.Errorf("failed to create single AZ GW HA: %s", err)
 		}
 	} else if !singleAZ && d.Get("enable_public_subnet_filtering").(bool) {
 		// Public Subnet Filtering Gateways are created with single_az_ha=true by default.
 		// Thus, if user set single_az_ha=false, we need to disable.
-		err := client.DisableSingleAZGateway(gateway)
+		singleAZGateway := &goaviatrix.Gateway{
+			GwName:   d.Get("gw_name").(string),
+			SingleAZ: "disabled",
+		}
+		err := client.DisableSingleAZGateway(singleAZGateway)
 		if err != nil {
 			return fmt.Errorf("failed to disable single AZ : %v", err)
 		}
