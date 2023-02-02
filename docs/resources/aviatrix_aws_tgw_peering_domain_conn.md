@@ -13,7 +13,7 @@ The **aviatrix_aws_tgw_peering_domain_conn** resource allows the creation and ma
 ## Example Usage
 
 ```hcl
-# Create an Aviatrix Domian Connection between Peered AWS Tgws
+# Create an Aviatrix Domain Connection between Peered AWS TGWs
 resource "aviatrix_aws_tgw_peering_domain_conn" "test" {
   tgw_name1    = "tgw1"
   domain_name1 = "Default_Domain"
