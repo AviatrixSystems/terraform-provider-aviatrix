@@ -1,4 +1,13 @@
-## 2.23.3 (Unreleased)
+## 2.23.4 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.8.1483**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes:
+1. Fixed issue where creating multiple **aviatrix_trans_peer** between the same gateways with different ``reachable_cidrs`` errors out
+
+
+## 2.23.3 (January 06, 2023)
 ### Notes:
 - Supported Controller version: **UserConnect-6.8.1455**
 - Supported Terraform version: **v1.x**
