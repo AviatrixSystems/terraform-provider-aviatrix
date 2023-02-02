@@ -849,13 +849,6 @@ func resourceAviatrixEdgeCSPUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if d.HasChange("vlan") {
-		vlanOld, _ := d.GetChange("vlan")
-		if len(vlanOld.([]interface{})) != 0 {
-			return diag.Errorf("vlan is not allowed to be updated")
-		}
-	}
-
 	d.Partial(true)
 
 	// update configs

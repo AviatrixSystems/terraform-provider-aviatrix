@@ -369,13 +369,6 @@ func resourceAviatrixEdgeCSPHaUpdate(ctx context.Context, d *schema.ResourceData
 
 	edgeCSPHa := marshalEdgeCSPHaInput(d)
 
-	if d.HasChange("vlan") {
-		vlanOld, _ := d.GetChange("vlan")
-		if len(vlanOld.([]interface{})) != 0 {
-			return diag.Errorf("vlan is not allowed to be updated")
-		}
-	}
-
 	d.Partial(true)
 
 	gatewayForEaasFunctions := &goaviatrix.EdgeSpoke{
