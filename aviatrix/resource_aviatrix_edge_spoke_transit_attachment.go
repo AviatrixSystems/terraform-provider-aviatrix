@@ -148,7 +148,8 @@ func resourceAviatrixEdgeSpokeTransitAttachmentCreate(ctx context.Context, d *sc
 	for i := 0; ; i++ {
 		err = client.CreateSpokeTransitAttachment(attachment)
 		if err != nil {
-			if !strings.Contains(err.Error(), "not ready") && !strings.Contains(err.Error(), "not up") {
+			if !strings.Contains(err.Error(), "not ready") && !strings.Contains(err.Error(), "not up") &&
+				!strings.Contains(err.Error(), "try again") {
 				return diag.Errorf("could not attach Edge as a Spoke: %s to transit %s: %v", attachment.SpokeGwName, attachment.TransitGwName, err)
 			}
 		} else {
