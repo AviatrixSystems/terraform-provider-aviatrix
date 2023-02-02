@@ -74,6 +74,7 @@ type Interface struct {
 	AdminState    string  `json:"admin_state"`
 	SubInterfaces []*Vlan `json:"subinterfaces"`
 	VrrpState     bool    `json:"vrrp_state"`
+	VirtualIp     string  `json:"virtual_ip"`
 }
 
 type Vlan struct {

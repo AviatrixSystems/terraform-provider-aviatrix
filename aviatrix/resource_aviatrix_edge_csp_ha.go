@@ -116,6 +116,11 @@ func resourceAviatrixEdgeCSPHa() *schema.Resource {
 							Optional:    true,
 							Description: "",
 						},
+						"virtual_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "",
+						},
 					},
 				},
 			},
@@ -202,6 +207,7 @@ func marshalEdgeCSPHaInput(d *schema.ResourceData) *goaviatrix.EdgeCSPHa {
 			DnsPrimary:   if1["dns_primary"].(string),
 			DnsSecondary: if1["dns_secondary"].(string),
 			VrrpState:    if1["vrrp_state"].(bool),
+			VirtualIp:    if1["virtual_ip"].(string),
 		}
 
 		if if1["admin_state"].(bool) {
@@ -314,6 +320,7 @@ func resourceAviatrixEdgeCSPHaRead(ctx context.Context, d *schema.ResourceData, 
 			if1["gateway_ip"] = if0.GatewayIp
 			if1["dns_primary"] = if0.DnsPrimary
 			if1["dns_secondary"] = if0.DnsSecondary
+			if1["virtual_ip"] = if0.VirtualIp
 
 			if if0.AdminState == "enabled" {
 				if1["admin_state"] = true
