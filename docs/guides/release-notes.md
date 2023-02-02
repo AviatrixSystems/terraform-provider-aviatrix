@@ -12,10 +12,20 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.23.3 (UserConnect-6.8.1455)``
+``Last updated: R2.23.4 (UserConnect-6.8.1483)``
 
 
 ---
+
+## 2.23.4
+### Notes:
+- Release date: **(2 Feb 2023)**
+- Supported Controller version: **UserConnect-6.8.1483**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes:
+1. Fixed issue where creating multiple **aviatrix_trans_peer** between the same gateways with different ``reachable_cidrs`` errors out
+
 
 ## 2.23.3
 ### Notes:
