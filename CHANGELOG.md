@@ -1,4 +1,4 @@
-## 3.0.1 (Unreleased)
+## 3.0.1 (January 09, 2023)
 ### Notes:
 - Supported Controller version: **UserConnect-7.0.1373**
 - Supported Terraform version: **v1.x**
@@ -146,6 +146,15 @@
 2. Fixed issue where provider crashes for private mode config
 3. Fixed issue where exported SNAT/DNAT interface shows tunnel ID when using Transit connection or route-based S2C
 4. Fixed issue where creating FQDN gateway with ``fqdn_lan_interface`` causes replacement
+
+
+## 2.23.4 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.8.1483**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes:
+1. Fixed issue where creating multiple **aviatrix_trans_peer** between the same gateways with different ``reachable_cidrs`` errors out
 
 
 ## 2.23.3 (January 06, 2023)
