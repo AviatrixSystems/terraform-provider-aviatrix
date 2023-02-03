@@ -1250,17 +1250,6 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if enableNAT {
-		gw := &goaviatrix.Gateway{
-			GatewayName: gateway.GwName,
-		}
-
-		err := client.EnableSNat(gw)
-		if err != nil {
-			return fmt.Errorf("failed to enable SNAT: %s", err)
-		}
-	}
-
 	if enableFireNet {
 		if enableGatewayLoadBalancer {
 			err := client.EnableGatewayFireNetInterfacesWithGWLB(gateway)
