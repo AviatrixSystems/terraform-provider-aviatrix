@@ -74,7 +74,7 @@ type Gateway struct {
 	// EnableNat - will be "yes" if single/multiple SNAT is enabled
 	// NatEnabled - will be true if single/multiple/customized SNAT is enabled
 	EnableNat                       string            `form:"enable_nat,omitempty" json:"enable_nat,omitempty"`
-	NatEnabled                      bool              `json:"nat_enabled,omitempty"`
+	NatEnabled                      bool              `form:"nat_enabled,omitempty" json:"nat_enabled,omitempty"`
 	SingleAZ                        string            `form:"single_az_ha,omitempty" json:"single_az_ha,omitempty"`
 	EnableHybridConnection          bool              `json:"tgw_enabled,omitempty"`
 	EnablePbr                       string            `form:"enable_pbr,omitempty"`
