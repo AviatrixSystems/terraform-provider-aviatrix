@@ -224,9 +224,6 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 	}
 
 	form["ha_enabled"] = site2cloud.HAEnabled
-	form["backup_gateway_name"] = site2cloud.BackupGwName
-	form["backup_remote_gateway_ip"] = site2cloud.RemoteGwIP2
-
 	form["phase1_auth"] = site2cloud.Phase1Auth
 	form["phase1_dh_group"] = site2cloud.Phase1DhGroups
 	form["phase1_encryption"] = site2cloud.Phase1Encryption
@@ -260,9 +257,16 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 			form["remote_gateway_longitude"] = backupLongitude
 		}
 	}
-
-	form["primary_cloud_gateway_name"] = site2cloud.GwName
-	form["remote_gateway_ip"] = site2cloud.RemoteGwIP
+	if site2cloud.BackupGwName == "" {
+		form["primary_cloud_gateway_name"] = site2cloud.GwName
+	} else {
+		form["primary_cloud_gateway_name"] = site2cloud.GwName + "," + site2cloud.BackupGwName
+	}
+	if site2cloud.RemoteGwIP2 == "" {
+		form["remote_gateway_ip"] = site2cloud.RemoteGwIP
+	} else {
+		form["remote_gateway_ip"] = site2cloud.RemoteGwIP + "," + site2cloud.RemoteGwIP2
+	}
 	form["remote_subnet_cidr"] = site2cloud.RemoteSubnet
 	form["local_subnet_cidr"] = site2cloud.LocalSubnet
 	form["virtual_remote_subnet_cidr"] = site2cloud.RemoteSubnetVirtual
