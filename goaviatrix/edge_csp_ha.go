@@ -13,7 +13,6 @@ type EdgeCSPHa struct {
 	ManagementInterfaceConfig string
 	LanInterfaceIpPrefix      string       `json:"lan_ip"`
 	InterfaceList             []*Interface `json:"interfaces"`
-	VlanList                  []*Vlan      `json:"vlan"`
 }
 
 type EdgeCSPHaResp struct {
