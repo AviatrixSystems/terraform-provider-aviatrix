@@ -5,27 +5,28 @@ import (
 	"strconv"
 	"strings"
 
+	"golang.org/x/net/context"
+
 	log "github.com/sirupsen/logrus"
 )
 
 type GeoVPN struct {
-	AccountName string   `form:"account_name,omitempty" json:"account_name,omitempty"`
-	Action      string   `form:"action,omitempty"`
-	CID         string   `form:"CID,omitempty"`
-	CloudType   int      `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
-	ServiceName string   `form:"cname,omitempty" json:"cname,omitempty"`
-	DomainName  string   `form:"domain_name,omitempty" json:"domain_name,omitempty"`
-	ElbDNSName  string   `form:"elb_dns_name,omitempty"`
-	ElbDNSNames []string `json:"elb_dns_name,omitempty"`
+	Action      string `json:"action,omitempty"`
+	CID         string `json:"CID,omitempty"`
+	AccountName string `json:"account_name,omitempty"`
+	CloudType   int    `json:"cloud_type,omitempty"`
+	DomainName  string `json:"domain_name,omitempty"`
+	ElbDNSName  string `json:"elb_dns_name,omitempty"`
+	ServiceName string `json:"cname,omitempty"`
 }
 
 type GeoVPNEdit struct {
 	AccountName string         `json:"account_name,omitempty"`
 	CloudType   int            `json:"cloud_type,omitempty"`
-	ServiceName string         `json:"cname,omitempty"`
 	DomainName  string         `json:"domain_name,omitempty"`
-	ElbDNSNames []GeoVPNPolicy `json:"geo_vpn_policy,omitempty"`
 	DnsName     string         `json:"service_name,omitempty"`
+	ElbDNSNames []GeoVPNPolicy `json:"geo_vpn_policy,omitempty"`
+	ServiceName string         `json:"cname,omitempty"`
 }
 
 type GeoVPNPolicy struct {
@@ -39,11 +40,11 @@ type GetGeoVPNInfoResp struct {
 	Reason  string     `json:"reason"`
 }
 
-func (c *Client) EnableGeoVPN(geoVPN *GeoVPN) error {
+func (c *Client) EnableGeoVPN(ctx context.Context, geoVPN *GeoVPN) error {
 	geoVPN.CID = c.CID
 	geoVPN.Action = "enable_geo_vpn"
 
-	return c.PostAPI(geoVPN.Action, geoVPN, BasicCheck)
+	return c.PostAPIContext2(ctx, nil, geoVPN.Action, geoVPN, BasicCheck)
 }
 
 func (c *Client) GetGeoVPNInfo(geoVPN *GeoVPN) (*GeoVPN, error) {
@@ -79,7 +80,7 @@ func (c *Client) GetGeoVPNInfo(geoVPN *GeoVPN) (*GeoVPN, error) {
 			elbDNS := data.Results.ElbDNSNames[i]
 			elbDNSNameList = append(elbDNSNameList, elbDNS.ElbDNSName)
 		}
-		geoVPN.ElbDNSNames = elbDNSNameList
+		geoVPN.ElbDNSName = strings.Join(elbDNSNameList, ",")
 		return geoVPN, nil
 	}
 
