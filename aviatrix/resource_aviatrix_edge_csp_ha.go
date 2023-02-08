@@ -3,7 +3,6 @@ package aviatrix
 import (
 	"context"
 	"log"
-	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -124,56 +123,6 @@ func resourceAviatrixEdgeCSPHa() *schema.Resource {
 					},
 				},
 			},
-			"vlan": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				Description:      "",
-				DiffSuppressFunc: goaviatrix.DiffSuppressFuncVlan,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"parent_interface": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "",
-						},
-						"vlan_id": {
-							Type:        schema.TypeInt,
-							Required:    true,
-							Description: "",
-						},
-						"ipaddr": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "",
-						},
-						"gateway_ip": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "",
-						},
-						"admin_state": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Description: "",
-						},
-						"peer_ipaddr": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "",
-						},
-						"peer_gateway_ip": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "",
-						},
-						"virtual_ip": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: "",
-						},
-					},
-				},
-			},
 			"account_name": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -219,30 +168,6 @@ func marshalEdgeCSPHaInput(d *schema.ResourceData) *goaviatrix.EdgeCSPHa {
 		edgeCSPHa.InterfaceList = append(edgeCSPHa.InterfaceList, if2)
 	}
 
-	vlan := d.Get("vlan").([]interface{})
-	for _, v0 := range vlan {
-		v1 := v0.(map[string]interface{})
-
-		v2 := &goaviatrix.Vlan{
-			ParentInterface: v1["parent_interface"].(string),
-			IpAddr:          v1["ipaddr"].(string),
-			GatewayIp:       v1["gateway_ip"].(string),
-			PeerIpAddr:      v1["peer_ipaddr"].(string),
-			PeerGatewayIp:   v1["peer_gateway_ip"].(string),
-			VirtualIp:       v1["virtual_ip"].(string),
-		}
-
-		v2.VlanId = strconv.Itoa(v1["vlan_id"].(int))
-
-		if v1["admin_state"].(bool) {
-			v2.AdminState = "enabled"
-		} else {
-			v2.AdminState = "disabled"
-		}
-
-		edgeCSPHa.VlanList = append(edgeCSPHa.VlanList, v2)
-	}
-
 	return edgeCSPHa
 }
 
@@ -262,13 +187,12 @@ func resourceAviatrixEdgeCSPHaCreate(ctx context.Context, d *schema.ResourceData
 		GwName: edgeCSPHaName,
 	}
 
-	if len(edgeCSPHa.InterfaceList) != 0 || len(edgeCSPHa.VlanList) != 0 {
+	if len(edgeCSPHa.InterfaceList) != 0 {
 		gatewayForEdgeCSPFunctions.InterfaceList = edgeCSPHa.InterfaceList
-		gatewayForEdgeCSPFunctions.VlanList = edgeCSPHa.VlanList
 
 		err = client.UpdateEdgeCSP(ctx, gatewayForEdgeCSPFunctions)
 		if err != nil {
-			return diag.Errorf("could not config WAN/LAN/VLAN after Edge CSP HA creation: %v", err)
+			return diag.Errorf("could not config WAN/LAN interfaces after Edge CSP HA creation: %v", err)
 		}
 	}
 
@@ -306,7 +230,6 @@ func resourceAviatrixEdgeCSPHaRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	var interfaces []map[string]interface{}
-	var vlan []map[string]interface{}
 	for _, if0 := range edgeCSPHaResp.InterfaceList {
 		if if0.Type != "MANAGEMENT" {
 			if1 := make(map[string]interface{})
@@ -332,39 +255,12 @@ func resourceAviatrixEdgeCSPHaRead(ctx context.Context, d *schema.ResourceData, 
 				if1["vrrp_state"] = if0.VrrpState
 			}
 
-			if if0.Type == "LAN" && if0.SubInterfaces != nil {
-				for _, v0 := range if0.SubInterfaces {
-					v1 := make(map[string]interface{})
-					v1["parent_interface"] = v0.ParentInterface
-					v1["ipaddr"] = v0.IpAddr
-					v1["gateway_ip"] = v0.GatewayIp
-					v1["peer_ipaddr"] = v0.PeerIpAddr
-					v1["peer_gateway_ip"] = v0.PeerGatewayIp
-					v1["virtual_ip"] = v0.VirtualIp
-
-					vlandid, _ := strconv.Atoi(v0.VlanId)
-					v1["vlan_id"] = vlandid
-
-					if v0.AdminState == "enabled" {
-						v1["admin_state"] = true
-					} else {
-						v1["admin_state"] = false
-					}
-
-					vlan = append(vlan, v1)
-				}
-			}
-
 			interfaces = append(interfaces, if1)
 		}
 	}
 
 	if err = d.Set("interfaces", interfaces); err != nil {
 		return diag.Errorf("failed to set interfaces: %s\n", err)
-	}
-
-	if err = d.Set("vlan", vlan); err != nil {
-		return diag.Errorf("failed to set vlan: %s\n", err)
 	}
 
 	d.SetId(edgeCSPHaResp.GwName)
@@ -394,13 +290,12 @@ func resourceAviatrixEdgeCSPHaUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if d.HasChange("interfaces") || d.HasChange("vlan") {
+	if d.HasChange("interfaces") {
 		gatewayForEdgeCSPFunctions.InterfaceList = edgeCSPHa.InterfaceList
-		gatewayForEdgeCSPFunctions.VlanList = edgeCSPHa.VlanList
 
 		err := client.UpdateEdgeCSP(ctx, gatewayForEdgeCSPFunctions)
 		if err != nil {
-			return diag.Errorf("could not update WAN/LAN/VLAN interfaces during Edge CSP HA update: %v", err)
+			return diag.Errorf("could not update WAN/LAN interfaces during Edge CSP HA update: %v", err)
 		}
 	}
 

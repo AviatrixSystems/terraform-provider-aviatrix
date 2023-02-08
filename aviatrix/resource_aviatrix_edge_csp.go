@@ -800,8 +800,8 @@ func resourceAviatrixEdgeCSPRead(ctx context.Context, d *schema.ResourceData, me
 					v1["peer_gateway_ip"] = v0.PeerGatewayIp
 					v1["virtual_ip"] = v0.VirtualIp
 
-					vlandid, _ := strconv.Atoi(v0.VlanId)
-					v1["vlan_id"] = vlandid
+					vlanId, _ := strconv.Atoi(v0.VlanId)
+					v1["vlan_id"] = vlanId
 
 					if v0.AdminState == "enabled" {
 						v1["admin_state"] = true
