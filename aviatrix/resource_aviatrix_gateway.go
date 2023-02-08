@@ -736,8 +736,6 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	enableElb := d.Get("enable_elb").(bool)
 	if enableElb {
 		gateway.EnableElb = "yes"
-	} else {
-		gateway.EnableElb = "no"
 	}
 
 	enableLdap := d.Get("enable_ldap").(bool)
