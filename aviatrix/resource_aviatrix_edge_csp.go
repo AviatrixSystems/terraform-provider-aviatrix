@@ -398,6 +398,12 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 				Optional:    true,
 				Description: "DNS Profile to be associated with gateway, select an existing template.",
 			},
+			"single_ip_snat": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable Single IP SNAT.",
+			},
 		},
 	}
 }
@@ -438,6 +444,7 @@ func marshalEdgeCSPInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 		LanInterface:                       strings.Join(getStringList(d, "lan_interface_name"), ","),
 		MgmtInterface:                      strings.Join(getStringList(d, "management_interface_name"), ","),
 		DnsProfileName:                     d.Get("dns_profile_name").(string),
+		SingleIpSnat:                       d.Get("single_ip_snat").(bool),
 	}
 
 	interfaces := d.Get("interfaces").([]interface{})
@@ -664,6 +671,14 @@ func resourceAviatrixEdgeCSPCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
+	if edgeCSP.SingleIpSnat {
+		gatewayForGatewayFunctions.GatewayName = edgeCSP.GwName
+		err := client.EnableSNat(gatewayForGatewayFunctions)
+		if err != nil {
+			return diag.Errorf("failed to enable single IP SNAT: %s", err)
+		}
+	}
+
 	return resourceAviatrixEdgeCSPReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -826,6 +841,7 @@ func resourceAviatrixEdgeCSPRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.Set("dns_profile_name", edgeCSPResp.DnsProfileName)
+	d.Set("single_ip_snat", edgeCSPResp.SingleIpSnat)
 
 	d.SetId(edgeCSPResp.GwName)
 	return nil
@@ -1017,6 +1033,23 @@ func resourceAviatrixEdgeCSPUpdate(ctx context.Context, d *schema.ResourceData, 
 		if err != nil {
 			return diag.Errorf("could not update WAN/LAN/VLAN interfaces or DNS profile name during Edge CSP update: %v", err)
 		}
+	}
+
+	if d.HasChange("single_ip_snat") {
+		gatewayForGatewayFunctions.GatewayName = edgeCSP.GwName
+
+		if edgeCSP.SingleIpSnat {
+			err := client.EnableSNat(gatewayForGatewayFunctions)
+			if err != nil {
+				return diag.Errorf("failed to enable single IP SNAT during update: %s", err)
+			}
+		} else {
+			err := client.DisableSNat(gatewayForGatewayFunctions)
+			if err != nil {
+				return diag.Errorf("failed to disable single IP SNAT during update: %s", err)
+			}
+		}
+
 	}
 
 	d.Partial(false)

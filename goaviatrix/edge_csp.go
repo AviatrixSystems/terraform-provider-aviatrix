@@ -58,6 +58,7 @@ type EdgeCSP struct {
 	InterfaceList                      []*Interface `json:"interfaces"`
 	VlanList                           []*Vlan      `json:"vlan"`
 	DnsProfileName                     string       `json:"dns_profile_name"`
+	SingleIpSnat                       bool
 }
 
 type Interface struct {
@@ -132,6 +133,7 @@ type EdgeCSPResp struct {
 	MgmtInterface                      []string     `json:"edge_csp_mgmt_ifname"`
 	InterfaceList                      []*Interface `json:"interfaces"`
 	DnsProfileName                     string       `json:"dns_profile_name"`
+	SingleIpSnat                       bool         `json:"nat_enabled"`
 }
 
 type EdgeCSPListResp struct {
