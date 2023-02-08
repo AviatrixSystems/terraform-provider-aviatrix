@@ -714,9 +714,9 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			strs = append(strs, gateway.VpcNet, insaneModeAz)
 			gateway.VpcNet = strings.Join(strs, "~~")
 		}
-		gateway.InsaneMode = "on"
+		gateway.InsaneMode = "yes"
 	} else {
-		gateway.InsaneMode = "off"
+		gateway.InsaneMode = "no"
 	}
 
 	samlEnabled := d.Get("saml_enabled").(bool)
