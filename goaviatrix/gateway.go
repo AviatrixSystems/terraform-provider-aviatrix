@@ -48,8 +48,7 @@ type Gateway struct {
 	VpnProtocol                  string `json:"vpn_protocol" form:"elb_protocol,omitempty"`
 	EnableClientCertSharing      string `form:"enable_client_cert_sharing,omitempty"`
 	EnableElb                    string `form:"enable_elb,omitempty"`
-	EnableLdap                   string `form:"enable_ldap,omitempty"`
-	EnableLdapRead               bool   `json:"enable_ldap,omitempty"`
+	EnableLdap                   bool   `form:"enable_ldap,omitempty" json:"enable_ldap,omitempty"`
 	EnableVpcDnsServer           string `form:"use_vpc_dns_server,omitempty" json:"use_vpc_dns,omitempty"`
 	DnsServer                    string `form:"dns_server,omitempty"`
 	PublicDnsServer              string `form:"public_dns_server,omitempty" json:"public_dns_server,omitempty"`
@@ -306,8 +305,8 @@ type VpnGatewayAuth struct { // Used for set_vpn_gateway_authentication rest api
 	DuoIntegrationKey  string `form:"duo_integration_key,omitempty" json:"duo_integration_key,omitempty"`
 	DuoPushMode        string `form:"duo_push_mode,omitempty" json:"duo_push_mode,omitempty"`
 	DuoSecretKey       string `form:"duo_secret_key,omitempty" json:"duo_secret_key,omitempty"`
-	EnableLdap         string `form:"enable_ldap,omitempty"`
-	LbOrGatewayName    string `form:"lb_or_gateway_name,omitempty" json:"lb_or_gateway_name,omitempty"`
+	EnableLdap         bool   `form:"enable_ldap,omitempty" json:"enable_ldap,omitempty"`
+	LbOrGatewayName    string `form:"lb_name,omitempty" json:"lb_name,omitempty"`
 	LdapAdditionalReq  string `form:"ldap_additional_req,omitempty"`
 	LdapBaseDn         string `form:"ldap_base_dn,omitempty" json:"ldap_base_dn,omitempty"`
 	LdapBindDn         string `form:"ldap_bind_dn,omitempty" json:"ldap_bind_dn,omitempty"`

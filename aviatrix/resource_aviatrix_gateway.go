@@ -210,7 +210,7 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Specify whether to enable LDAP or not. Supported values: 'yes' and 'no'.",
+				Description: "Specify whether to enable LDAP or not.",
 			},
 			"ldap_server": {
 				Type:        schema.TypeString,
@@ -738,12 +738,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		gateway.EnableElb = "yes"
 	}
 
-	enableLdap := d.Get("enable_ldap").(bool)
-	if enableLdap {
-		gateway.EnableLdap = "yes"
-	} else {
-		gateway.EnableLdap = "no"
-	}
+	gateway.EnableLdap = d.Get("enable_ldap").(bool)
 
 	vpnStatus := d.Get("vpn_access").(bool)
 	vpnProtocol := d.Get("vpn_protocol").(string)
@@ -759,7 +754,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if gateway.SamlEnabled == "yes" {
-			if gateway.EnableLdap == "yes" || gateway.OtpMode != "" {
+			if gateway.EnableLdap || gateway.OtpMode != "" {
 				return fmt.Errorf("ldap and mfa can't be configured if saml is enabled")
 			}
 		}
@@ -768,10 +763,10 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("otp_mode can only be '2' or '3' or empty string")
 		}
 
-		if gateway.EnableLdap == "yes" && gateway.OtpMode == "3" {
+		if gateway.EnableLdap && gateway.OtpMode == "3" {
 			return fmt.Errorf("ldap can't be configured along with okta authentication")
 		}
-		if gateway.EnableLdap == "yes" {
+		if gateway.EnableLdap {
 			if gateway.LdapServer == "" {
 				return fmt.Errorf("ldap server must be set if ldap is enabled")
 			}
@@ -1279,7 +1274,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("gw_name", gw.GwName)
 	d.Set("subnet", gw.VpcNet)
 	d.Set("single_ip_snat", gw.EnableNat == "yes" && gw.SnatMode == "primary")
-	d.Set("enable_ldap", gw.EnableLdapRead)
+	d.Set("enable_ldap", gw.EnableLdap)
 	d.Set("vpn_cidr", gw.VpnCidr)
 	d.Set("saml_enabled", gw.SamlEnabled == "yes")
 	d.Set("okta_url", gw.OktaURL)
@@ -1761,12 +1756,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			vpn_gw.SamlEnabled = "no"
 		}
 
-		enableLdap := d.Get("enable_ldap").(bool)
-		if enableLdap {
-			vpn_gw.EnableLdap = "yes"
-		} else {
-			vpn_gw.EnableLdap = "no"
-		}
+		vpn_gw.EnableLdap = d.Get("enable_ldap").(bool)
 
 		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			// GCP vpn gw rest api call needs gcloud project id included in vpc id
@@ -1784,14 +1774,14 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("otp_mode can only be '2' or '3' or empty string")
 		}
 		if vpn_gw.SamlEnabled == "yes" {
-			if vpn_gw.EnableLdap == "yes" || vpn_gw.OtpMode != "" {
+			if vpn_gw.EnableLdap || vpn_gw.OtpMode != "" {
 				return fmt.Errorf("ldap and mfa can't be configured if saml is enabled")
 			}
 		}
-		if vpn_gw.EnableLdap == "yes" && vpn_gw.OtpMode == "3" {
+		if vpn_gw.EnableLdap && vpn_gw.OtpMode == "3" {
 			return fmt.Errorf("ldap can't be configured along with okta authentication")
 		}
-		if vpn_gw.EnableLdap == "yes" {
+		if vpn_gw.EnableLdap {
 			if vpn_gw.LdapServer == "" {
 				return fmt.Errorf("ldap server must be set if ldap is enabled")
 			}
@@ -1821,7 +1811,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			if vpn_gw.DuoPushMode != "auto" && vpn_gw.DuoPushMode != "token" && vpn_gw.DuoPushMode != "selective" {
 				return fmt.Errorf("duo push mode must be set to a valid value (auto, selective, or token)")
 			}
-			if vpn_gw.EnableLdap == "yes" {
+			if vpn_gw.EnableLdap {
 				vpn_gw.AuthType = "duo_ldap_auth"
 			} else {
 				vpn_gw.AuthType = "duo_auth"
@@ -1835,7 +1825,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 			vpn_gw.AuthType = "okta_auth"
 		} else {
-			if vpn_gw.EnableLdap == "yes" {
+			if vpn_gw.EnableLdap {
 				vpn_gw.AuthType = "ldap_auth"
 			} else if vpn_gw.SamlEnabled == "yes" {
 				vpn_gw.AuthType = "saml_auth"
