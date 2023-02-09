@@ -56,7 +56,7 @@ In addition to all arguments above, the following attributes are exported:
 * `ldap_base_dn` - LDAP base DN.
 * `ldap_server` - LDAP server address.
 * `ldap_username_attribute` - LDAP user attribute.
-* `max_vpn_conn` - Maximum connection of VPN access.
+* `max_vpn_conn` - Maximum connection of VPN access. Valid for VPN gateway only. If not set, '100' will be default value.
 * `name_servers` - A list of DNS servers used to resolve domain names by a connected VPN user when Split Tunnel Mode is enabled.
 * `okta_url` - URL for Okta auth mode.
 * `okta_username_suffix` - Username suffix for Okta auth mode.

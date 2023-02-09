@@ -120,8 +120,9 @@ func resourceAviatrixGateway() *schema.Resource {
 			"max_vpn_conn": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "",
-				Description: "Maximum connection of VPN access.",
+				Default:     nil,
+				Computed:    true,
+				Description: "Maximum connection of VPN access. Valid for VPN gateway only. If not set, '100' will be default value.",
 			},
 			"name_servers": {
 				Type:     schema.TypeString,
