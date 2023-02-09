@@ -801,6 +801,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			if gateway.DuoPushMode != "auto" && gateway.DuoPushMode != "token" && gateway.DuoPushMode != "selective" {
 				return fmt.Errorf("duo push mode must be set to a valid value (auto, selective, or token)")
 			}
+			gateway.AuthMethod = "DUO"
 		} else if gateway.OtpMode == "3" {
 			if gateway.OktaToken == "" {
 				return fmt.Errorf("okta token must be set if otp_mode is set to 3")
@@ -808,6 +809,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			if gateway.OktaURL == "" {
 				return fmt.Errorf("okta url must be set if otp_mode is set to 3")
 			}
+			gateway.AuthMethod = "okta"
 		}
 
 	} else {
