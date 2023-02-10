@@ -1,7 +1,10 @@
 package goaviatrix
 
 import (
+	"bytes"
+	"compress/zlib"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -606,6 +609,25 @@ func (c *Client) EnableSNat(gateway *Gateway) error {
 		return err
 	}
 	gateway.PolicyList = string(args)
+	gateway.Compress = true
+
+	return c.PostAPI(gateway.Action, gateway, BasicCheck)
+}
+
+func (c *Client) EnableCustomizedSNat(gateway *Gateway) error {
+	gateway.CID = c.CID
+	gateway.Action = "edit_gw_customized_snat_config"
+	args, err := json.Marshal(gateway.SnatPolicy)
+	if err != nil {
+		return err
+	}
+
+	var b bytes.Buffer
+	w := zlib.NewWriter(&b)
+	w.Write(args)
+	w.Close()
+
+	gateway.PolicyList = base64.StdEncoding.EncodeToString(b.Bytes())
 	gateway.Compress = true
 
 	return c.PostAPI(gateway.Action, gateway, BasicCheck)
