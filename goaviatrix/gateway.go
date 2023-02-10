@@ -642,7 +642,19 @@ func (c *Client) DisableSNat(gateway *Gateway) error {
 
 func (c *Client) DisableCustomSNat(gateway *Gateway) error {
 	gateway.CID = c.CID
-	gateway.Action = "enable_snat"
+	gateway.Action = "edit_gw_customized_snat_config"
+	args, err := json.Marshal(gateway.SnatPolicy)
+	if err != nil {
+		return err
+	}
+
+	var b bytes.Buffer
+	w := zlib.NewWriter(&b)
+	w.Write(args)
+	w.Close()
+
+	gateway.PolicyList = base64.StdEncoding.EncodeToString(b.Bytes())
+	gateway.Compress = true
 
 	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
