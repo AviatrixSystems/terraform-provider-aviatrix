@@ -404,7 +404,7 @@ func (c *Client) EnablePublicSubnetFilteringHAGateway(gateway *Gateway) error {
 		"CID":            c.CID,
 		"gateway_name":   gateway.GwName,
 		"gateway_subnet": gateway.PeeringHASubnet,
-		"route_tables":   gateway.RouteTable,
+		"route_table":    gateway.RouteTable,
 		"async":          "true",
 	}
 	return c.PostAsyncAPI(data["action"], data, BasicCheck)
