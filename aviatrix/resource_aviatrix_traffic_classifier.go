@@ -19,11 +19,10 @@ func resourceAviatrixTrafficClassifier() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"policies": {
-				Type:             schema.TypeList,
-				Required:         true,
-				ForceNew:         true,
-				Description:      "",
-				DiffSuppressFunc: goaviatrix.DiffSuppressFuncTrafficClassifier,
+				Type:        schema.TypeList,
+				Required:    true,
+				ForceNew:    true,
+				Description: "",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
