@@ -4,11 +4,7 @@ import (
 	"context"
 	b64 "encoding/base64"
 	"encoding/json"
-	"reflect"
-	"sort"
 	"strings"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type EdgeCSP struct {
@@ -87,6 +83,7 @@ type Vlan struct {
 	PeerIpAddr      string `json:"peer_ipaddr"`
 	PeerGatewayIp   string `json:"peer_gateway_ip"`
 	VirtualIp       string `json:"virtual_ip"`
+	Tag             string `json:"tag"`
 }
 
 type EdgeCSPResp struct {
@@ -207,81 +204,27 @@ func (c *Client) UpdateEdgeCSP(ctx context.Context, edgeCSP *EdgeCSP) error {
 		"name":   edgeCSP.GwName,
 	}
 
-	if edgeCSP.InterfaceList != nil && len(edgeCSP.InterfaceList) != 0 {
-		interfaces, err := json.Marshal(edgeCSP.InterfaceList)
-		if err != nil {
-			return err
-		}
-
-		form["interfaces"] = b64.StdEncoding.EncodeToString(interfaces)
+	interfaces, err := json.Marshal(edgeCSP.InterfaceList)
+	if err != nil {
+		return err
 	}
 
-	if edgeCSP.VlanList != nil && len(edgeCSP.VlanList) != 0 {
-		vlan, err := json.Marshal(edgeCSP.VlanList)
-		if err != nil {
-			return err
-		}
+	form["interfaces"] = b64.StdEncoding.EncodeToString(interfaces)
 
-		form["vlan"] = b64.StdEncoding.EncodeToString(vlan)
+	if edgeCSP.VlanList == nil || len(edgeCSP.VlanList) == 0 {
+		edgeCSP.VlanList = []*Vlan{}
 	}
+
+	vlan, err := json.Marshal(edgeCSP.VlanList)
+	if err != nil {
+		return err
+	}
+
+	form["vlan"] = b64.StdEncoding.EncodeToString(vlan)
 
 	if edgeCSP.DnsProfileName != "" {
 		form["dns_profile_name"] = edgeCSP.DnsProfileName
 	}
 
 	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
-}
-
-func DiffSuppressFuncInterfaces(k, old, new string, d *schema.ResourceData) bool {
-	ifOld, ifNew := d.GetChange("interfaces")
-	var interfacesOld []map[string]interface{}
-
-	for _, if0 := range ifOld.([]interface{}) {
-		if1 := if0.(map[string]interface{})
-		interfacesOld = append(interfacesOld, if1)
-	}
-
-	var interfacesNew []map[string]interface{}
-
-	for _, if0 := range ifNew.([]interface{}) {
-		if1 := if0.(map[string]interface{})
-		interfacesNew = append(interfacesNew, if1)
-	}
-
-	sort.Slice(interfacesOld, func(i, j int) bool {
-		return interfacesOld[i]["ifname"].(string) < interfacesOld[j]["ifname"].(string)
-	})
-
-	sort.Slice(interfacesNew, func(i, j int) bool {
-		return interfacesNew[i]["ifname"].(string) < interfacesNew[j]["ifname"].(string)
-	})
-
-	return reflect.DeepEqual(interfacesOld, interfacesNew)
-}
-
-func DiffSuppressFuncVlan(k, old, new string, d *schema.ResourceData) bool {
-	vOld, vNew := d.GetChange("vlan")
-	var vlanOld []map[string]interface{}
-
-	for _, v0 := range vOld.([]interface{}) {
-		v1 := v0.(map[string]interface{})
-		vlanOld = append(vlanOld, v1)
-	}
-
-	var vlanNew []map[string]interface{}
-
-	for _, v0 := range vNew.([]interface{}) {
-		v1 := v0.(map[string]interface{})
-		vlanNew = append(vlanNew, v1)
-	}
-
-	sort.Slice(vlanOld, func(i, j int) bool {
-		return vlanOld[i]["parent_interface"].(string) < vlanOld[j]["parent_interface"].(string)
-	})
-
-	sort.Slice(vlanNew, func(i, j int) bool {
-		return vlanNew[i]["parent_interface"].(string) < vlanNew[j]["parent_interface"].(string)
-	})
-
-	return reflect.DeepEqual(vlanOld, vlanNew)
 }
