@@ -559,7 +559,7 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		return fmt.Errorf("enable_ikev2 is not supported with 'tunnel_protocol' = LAN")
 	}
 	if greOrLan && externalDeviceConn.PreSharedKey != "" {
-		return fmt.Errorf("'pre_shared_key' is not valid with 'tunnel_protocol' = or LAN")
+		return fmt.Errorf("'pre_shared_key' is not valid with 'tunnel_protocol' = LAN")
 	}
 	if externalDeviceConn.PeerVnetId != "" && (externalDeviceConn.ConnectionType != "bgp" || externalDeviceConn.TunnelProtocol != "LAN") {
 		return fmt.Errorf("'remote_vpc_name' is only valid for 'connection_type' = 'bgp' and 'tunnel_protocol' = 'LAN'")
@@ -627,6 +627,10 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 				return fmt.Errorf("can't apply Backup BGP MD5 authentication key since it is not set correctly for BGP connection: %s", externalDeviceConn.ConnectionName)
 			}
 		}
+	}
+
+	if externalDeviceConn.PreSharedKey != "" {
+		externalDeviceConn.AuthType = "psk"
 	}
 
 	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID)
