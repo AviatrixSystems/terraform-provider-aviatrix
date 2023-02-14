@@ -269,10 +269,9 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 				},
 			},
 			"interfaces": {
-				Type:             schema.TypeList,
-				Required:         true,
-				Description:      "",
-				DiffSuppressFunc: goaviatrix.DiffSuppressFuncInterfaces,
+				Type:        schema.TypeSet,
+				Required:    true,
+				Description: "",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ifname": {
@@ -344,10 +343,9 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 				},
 			},
 			"vlan": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				Description:      "",
-				DiffSuppressFunc: goaviatrix.DiffSuppressFuncVlan,
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"parent_interface": {
@@ -388,6 +386,11 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 						"virtual_ip": {
 							Type:        schema.TypeString,
 							Required:    true,
+							Description: "",
+						},
+						"tag": {
+							Type:        schema.TypeString,
+							Optional:    true,
 							Description: "",
 						},
 					},
@@ -447,7 +450,7 @@ func marshalEdgeCSPInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 		SingleIpSnat:                       d.Get("single_ip_snat").(bool),
 	}
 
-	interfaces := d.Get("interfaces").([]interface{})
+	interfaces := d.Get("interfaces").(*schema.Set).List()
 	for _, if0 := range interfaces {
 		if1 := if0.(map[string]interface{})
 
@@ -475,7 +478,7 @@ func marshalEdgeCSPInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 		edgeCSP.InterfaceList = append(edgeCSP.InterfaceList, if2)
 	}
 
-	vlan := d.Get("vlan").([]interface{})
+	vlan := d.Get("vlan").(*schema.Set).List()
 	for _, v0 := range vlan {
 		v1 := v0.(map[string]interface{})
 
@@ -486,6 +489,7 @@ func marshalEdgeCSPInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 			PeerIpAddr:      v1["peer_ipaddr"].(string),
 			PeerGatewayIp:   v1["peer_gateway_ip"].(string),
 			VirtualIp:       v1["virtual_ip"].(string),
+			Tag:             v1["tag"].(string),
 		}
 
 		v2.VlanId = strconv.Itoa(v1["vlan_id"].(int))
@@ -814,6 +818,7 @@ func resourceAviatrixEdgeCSPRead(ctx context.Context, d *schema.ResourceData, me
 					v1["peer_ipaddr"] = v0.PeerIpAddr
 					v1["peer_gateway_ip"] = v0.PeerGatewayIp
 					v1["virtual_ip"] = v0.VirtualIp
+					v1["tag"] = v0.Tag
 
 					vlanId, _ := strconv.Atoi(v0.VlanId)
 					v1["vlan_id"] = vlanId

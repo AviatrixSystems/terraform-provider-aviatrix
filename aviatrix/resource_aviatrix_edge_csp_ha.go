@@ -49,10 +49,9 @@ func resourceAviatrixEdgeCSPHa() *schema.Resource {
 				Description: "LAN interface IP/prefix.",
 			},
 			"interfaces": {
-				Type:             schema.TypeList,
-				Required:         true,
-				Description:      "",
-				DiffSuppressFunc: goaviatrix.DiffSuppressFuncInterfaces,
+				Type:        schema.TypeSet,
+				Required:    true,
+				Description: "",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ifname": {
@@ -130,7 +129,7 @@ func marshalEdgeCSPHaInput(d *schema.ResourceData) *goaviatrix.EdgeCSPHa {
 		LanInterfaceIpPrefix:      d.Get("lan_interface_ip_prefix").(string),
 	}
 
-	interfaces := d.Get("interfaces").([]interface{})
+	interfaces := d.Get("interfaces").(*schema.Set).List()
 	for _, if0 := range interfaces {
 		if1 := if0.(map[string]interface{})
 
