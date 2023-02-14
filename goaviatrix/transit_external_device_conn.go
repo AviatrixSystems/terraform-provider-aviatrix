@@ -55,6 +55,7 @@ type ExternalDeviceConn struct {
 	PrependAsPath          string
 	BgpMd5Key              string `form:"bgp_md5_key,omitempty"`
 	BackupBgpMd5Key        string `form:"backup_bgp_md5_key,omitempty"`
+	AuthType               string `form:"auth_type,omitempty"`
 }
 
 type EditExternalDeviceConnDetail struct {
