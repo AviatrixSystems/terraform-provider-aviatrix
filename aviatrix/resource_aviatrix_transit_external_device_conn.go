@@ -657,6 +657,10 @@ func resourceAviatrixTransitExternalDeviceConnCreate(d *schema.ResourceData, met
 		}
 	}
 
+	if externalDeviceConn.PreSharedKey != "" {
+		externalDeviceConn.AuthType = "psk"
+	}
+
 	d.SetId(externalDeviceConn.ConnectionName + "~" + externalDeviceConn.VpcID)
 	flag := false
 	defer resourceAviatrixTransitExternalDeviceConnReadIfRequired(d, meta, &flag)
