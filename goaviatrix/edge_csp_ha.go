@@ -2,6 +2,8 @@ package goaviatrix
 
 import (
 	"context"
+	b64 "encoding/base64"
+	"encoding/json"
 )
 
 type EdgeCSPHa struct {
@@ -64,4 +66,21 @@ func (c *Client) GetEdgeCSPHa(ctx context.Context, gwName string) (*EdgeCSPHaRes
 	}
 
 	return nil, ErrNotFound
+}
+
+func (c *Client) UpdateEdgeCSPHa(ctx context.Context, edgeCSP *EdgeCSP) error {
+	form := map[string]string{
+		"action": "update_edge_gateway",
+		"CID":    c.CID,
+		"name":   edgeCSP.GwName,
+	}
+
+	interfaces, err := json.Marshal(edgeCSP.InterfaceList)
+	if err != nil {
+		return err
+	}
+
+	form["interfaces"] = b64.StdEncoding.EncodeToString(interfaces)
+
+	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
 }
