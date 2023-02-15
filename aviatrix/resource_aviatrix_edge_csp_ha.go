@@ -177,7 +177,7 @@ func resourceAviatrixEdgeCSPHaCreate(ctx context.Context, d *schema.ResourceData
 	if len(edgeCSPHa.InterfaceList) != 0 {
 		gatewayForEdgeCSPFunctions.InterfaceList = edgeCSPHa.InterfaceList
 
-		err = client.UpdateEdgeCSP(ctx, gatewayForEdgeCSPFunctions)
+		err = client.UpdateEdgeCSPHa(ctx, gatewayForEdgeCSPFunctions)
 		if err != nil {
 			return diag.Errorf("could not config WAN/LAN interfaces after Edge CSP HA creation: %v", err)
 		}
@@ -275,7 +275,7 @@ func resourceAviatrixEdgeCSPHaUpdate(ctx context.Context, d *schema.ResourceData
 	if d.HasChange("interfaces") {
 		gatewayForEdgeCSPFunctions.InterfaceList = edgeCSPHa.InterfaceList
 
-		err := client.UpdateEdgeCSP(ctx, gatewayForEdgeCSPFunctions)
+		err := client.UpdateEdgeCSPHa(ctx, gatewayForEdgeCSPFunctions)
 		if err != nil {
 			return diag.Errorf("could not update WAN/LAN interfaces during Edge CSP HA update: %v", err)
 		}
