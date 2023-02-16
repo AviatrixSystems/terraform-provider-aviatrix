@@ -41,20 +41,21 @@ type EdgeCSP struct {
 	EnableJumboFrame                   bool     `json:"jumbo_frame"`
 	Latitude                           string
 	Longitude                          string
-	LatitudeReturn                     float64      `json:"latitude"`
-	LongitudeReturn                    float64      `json:"longitude"`
-	WanPublicIp                        string       `json:"wan_discovery_ip"`
-	PrivateIP                          string       `json:"private_ip"`
-	RxQueueSize                        string       `json:"rx_queue_size"`
-	State                              string       `json:"vpc_state"`
-	NoProgressBar                      bool         `json:"no_progress_bar,omitempty"`
-	WanInterface                       string       `json:"wan_ifname"`
-	LanInterface                       string       `json:"lan_ifname"`
-	MgmtInterface                      string       `json:"mgmt_ifname"`
-	InterfaceList                      []*Interface `json:"interfaces"`
-	VlanList                           []*Vlan      `json:"vlan"`
-	DnsProfileName                     string       `json:"dns_profile_name"`
+	LatitudeReturn                     float64 `json:"latitude"`
+	LongitudeReturn                    float64 `json:"longitude"`
+	WanPublicIp                        string  `json:"wan_discovery_ip"`
+	PrivateIP                          string  `json:"private_ip"`
+	RxQueueSize                        string  `json:"rx_queue_size"`
+	State                              string  `json:"vpc_state"`
+	NoProgressBar                      bool    `json:"no_progress_bar,omitempty"`
+	WanInterface                       string  `json:"wan_ifname"`
+	LanInterface                       string  `json:"lan_ifname"`
+	MgmtInterface                      string  `json:"mgmt_ifname"`
+	InterfaceList                      []*Interface
+	VlanList                           []*Vlan
+	DnsProfileName                     string `json:"dns_profile_name"`
 	SingleIpSnat                       bool
+	AutoAdvertiseLanCidrs              bool
 }
 
 type Interface struct {
@@ -131,6 +132,7 @@ type EdgeCSPResp struct {
 	InterfaceList                      []*Interface `json:"interfaces"`
 	DnsProfileName                     string       `json:"dns_profile_name"`
 	SingleIpSnat                       bool         `json:"nat_enabled"`
+	AutoAdvertiseLanCidrs              bool         `json:"auto_advertise_lan_cidrs"`
 }
 
 type EdgeCSPListResp struct {
@@ -224,6 +226,12 @@ func (c *Client) UpdateEdgeCSP(ctx context.Context, edgeCSP *EdgeCSP) error {
 
 	if edgeCSP.DnsProfileName != "" {
 		form["dns_profile_name"] = edgeCSP.DnsProfileName
+	}
+
+	if edgeCSP.AutoAdvertiseLanCidrs {
+		form["auto_advertise_lan_cidrs"] = "enable"
+	} else {
+		form["auto_advertise_lan_cidrs"] = "disable"
 	}
 
 	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
