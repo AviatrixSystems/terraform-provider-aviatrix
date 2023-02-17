@@ -10,8 +10,8 @@ import (
 type TransitGatewayPeering struct {
 	TransitGatewayName1                 string `form:"gateway1,omitempty" json:"gateway_1,omitempty"`
 	TransitGatewayName2                 string `form:"gateway2,omitempty" json:"gateway_2,omitempty"`
-	Gateway1ExcludedCIDRs               string `form:"source_filter_cidrs,omitempty"`
-	Gateway2ExcludedCIDRs               string `form:"destination_filter_cidrs,omitempty"`
+	Gateway1ExcludedCIDRs               string `form:"src_filter_list,omitempty"`
+	Gateway2ExcludedCIDRs               string `form:"dst_filter_list,omitempty"`
 	Gateway1ExcludedTGWConnections      string `form:"source_exclude_connections,omitempty"`
 	Gateway2ExcludedTGWConnections      string `form:"destination_exclude_connections,omitempty"`
 	PrivateIPPeering                    bool   `form:"private_ip_peering,omitempty"`
