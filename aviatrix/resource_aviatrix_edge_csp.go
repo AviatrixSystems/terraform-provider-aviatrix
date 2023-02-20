@@ -75,9 +75,12 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 				Description: "LAN interface IP/prefix.",
 			},
 			"management_egress_ip_prefix": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeList,
 				Optional:    true,
 				Description: "Management egress gateway IP/prefix.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"enable_management_over_private_network": {
 				Type:        schema.TypeBool,
@@ -420,7 +423,7 @@ func marshalEdgeCSPInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 		ComputeNodeUuid:                    d.Get("compute_node_uuid").(string),
 		TemplateUuid:                       d.Get("template_uuid").(string),
 		ManagementInterfaceConfig:          d.Get("management_interface_config").(string),
-		ManagementEgressIpPrefix:           d.Get("management_egress_ip_prefix").(string),
+		ManagementEgressIpPrefix:           strings.Join(getStringList(d, "management_egress_ip_prefix"), ","),
 		EnableManagementOverPrivateNetwork: d.Get("enable_management_over_private_network").(bool),
 		LanInterfaceIpPrefix:               d.Get("lan_interface_ip_prefix").(string),
 		ManagementInterfaceIpPrefix:        d.Get("management_interface_ip_prefix").(string),
@@ -721,7 +724,7 @@ func resourceAviatrixEdgeCSPRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("compute_node_uuid", edgeCSPResp.ComputeNodeUuid)
 	d.Set("template_uuid", edgeCSPResp.TemplateUuid)
 	d.Set("enable_management_over_private_network", edgeCSPResp.EnableManagementOverPrivateNetwork)
-	d.Set("management_egress_ip_prefix", edgeCSPResp.ManagementEgressIpPrefix)
+	d.Set("management_egress_ip_prefix", strings.Split(edgeCSPResp.ManagementEgressIpPrefix, ","))
 	d.Set("lan_interface_ip_prefix", edgeCSPResp.LanInterfaceIpPrefix)
 	d.Set("management_default_gateway_ip", edgeCSPResp.ManagementDefaultGatewayIp)
 	d.Set("dns_server_ip", edgeCSPResp.DnsServerIp)
