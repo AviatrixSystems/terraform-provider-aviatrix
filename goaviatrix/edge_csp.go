@@ -55,7 +55,7 @@ type EdgeCSP struct {
 	VlanList                           []*Vlan
 	DnsProfileName                     string `json:"dns_profile_name"`
 	SingleIpSnat                       bool
-	AutoAdvertiseLanCidrs              bool
+	EnableAutoAdvertiseLanCidrs        bool
 }
 
 type Interface struct {
@@ -132,7 +132,7 @@ type EdgeCSPResp struct {
 	InterfaceList                      []*Interface `json:"interfaces"`
 	DnsProfileName                     string       `json:"dns_profile_name"`
 	SingleIpSnat                       bool         `json:"nat_enabled"`
-	AutoAdvertiseLanCidrs              bool         `json:"auto_advertise_lan_cidrs"`
+	EnableAutoAdvertiseLanCidrs        bool         `json:"auto_advertise_lan_cidrs"`
 }
 
 type EdgeCSPListResp struct {
@@ -228,7 +228,7 @@ func (c *Client) UpdateEdgeCSP(ctx context.Context, edgeCSP *EdgeCSP) error {
 		form["dns_profile_name"] = edgeCSP.DnsProfileName
 	}
 
-	if edgeCSP.AutoAdvertiseLanCidrs {
+	if edgeCSP.EnableAutoAdvertiseLanCidrs {
 		form["auto_advertise_lan_cidrs"] = "enable"
 	} else {
 		form["auto_advertise_lan_cidrs"] = "disable"

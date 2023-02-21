@@ -407,7 +407,7 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 				Default:     false,
 				Description: "Enable Single IP SNAT.",
 			},
-			"auto_advertise_lan_cidrs": {
+			"enable_auto_advertise_lan_cidrs": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     true,
@@ -454,7 +454,7 @@ func marshalEdgeCSPInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 		MgmtInterface:                      strings.Join(getStringList(d, "management_interface_name"), ","),
 		DnsProfileName:                     d.Get("dns_profile_name").(string),
 		SingleIpSnat:                       d.Get("single_ip_snat").(bool),
-		AutoAdvertiseLanCidrs:              d.Get("auto_advertise_lan_cidrs").(bool),
+		EnableAutoAdvertiseLanCidrs:        d.Get("enable_auto_advertise_lan_cidrs").(bool),
 	}
 
 	interfaces := d.Get("interfaces").(*schema.Set).List()
@@ -675,7 +675,7 @@ func resourceAviatrixEdgeCSPCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if len(edgeCSP.InterfaceList) != 0 || len(edgeCSP.VlanList) != 0 || edgeCSP.DnsProfileName != "" || !edgeCSP.AutoAdvertiseLanCidrs {
+	if len(edgeCSP.InterfaceList) != 0 || len(edgeCSP.VlanList) != 0 || edgeCSP.DnsProfileName != "" || !edgeCSP.EnableAutoAdvertiseLanCidrs {
 		err := client.UpdateEdgeCSP(ctx, edgeCSP)
 		if err != nil {
 			return diag.Errorf("could not config WAN/LAN/VLAN, DNS profile name or auto advertise LAN CIDRs after Edge CSP creation: %v", err)
@@ -854,7 +854,7 @@ func resourceAviatrixEdgeCSPRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.Set("dns_profile_name", edgeCSPResp.DnsProfileName)
 	d.Set("single_ip_snat", edgeCSPResp.SingleIpSnat)
-	d.Set("auto_advertise_lan_cidrs", edgeCSPResp.AutoAdvertiseLanCidrs)
+	d.Set("enable_auto_advertise_lan_cidrs", edgeCSPResp.EnableAutoAdvertiseLanCidrs)
 
 	d.SetId(edgeCSPResp.GwName)
 	return nil
@@ -1041,7 +1041,7 @@ func resourceAviatrixEdgeCSPUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if d.HasChange("interfaces") || d.HasChange("vlan") || d.HasChange("dns_profile_name") || d.HasChange("auto_advertise_lan_cidrs") {
+	if d.HasChange("interfaces") || d.HasChange("vlan") || d.HasChange("dns_profile_name") || d.HasChange("enable_auto_advertise_lan_cidrs") {
 		err := client.UpdateEdgeCSP(ctx, edgeCSP)
 		if err != nil {
 			return diag.Errorf("could not update WAN/LAN/VLAN interfaces, DNS profile name or auto advertise LAN CIDRs during Edge CSP update: %v", err)
