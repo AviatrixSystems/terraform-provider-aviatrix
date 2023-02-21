@@ -326,7 +326,7 @@ func resourceAviatrixControllerConfigRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("could not read Aviatrix Controller http access configuration: %s", err)
 	}
 
-	if result[1:5] == "True" {
+	if result == "True" {
 		d.Set("http_access", true)
 	} else {
 		d.Set("http_access", false)
