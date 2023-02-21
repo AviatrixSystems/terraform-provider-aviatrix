@@ -158,7 +158,7 @@ func (c *Client) EnableCloudnBackupConfig(cloudnBackupConfiguration *CloudnBacku
 		"CID":            c.CID,
 		"action":         "enable_cloudn_backup_config",
 		"cloud_type":     strconv.Itoa(cloudnBackupConfiguration.BackupCloudType),
-		"account_name":   cloudnBackupConfiguration.BackupAccountName,
+		"acct_name":      cloudnBackupConfiguration.BackupAccountName,
 		"bucket_name":    cloudnBackupConfiguration.BackupBucketName,
 		"storage_name":   cloudnBackupConfiguration.BackupStorageName,
 		"container_name": cloudnBackupConfiguration.BackupContainerName,
