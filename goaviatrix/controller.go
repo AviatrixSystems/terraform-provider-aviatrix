@@ -37,9 +37,9 @@ type CloudnBackupConfiguration struct {
 	BackupAccountName   string `json:"acct_name,omitempty"`
 	BackupCloudType     int    `json:"cloud_type,omitempty"`
 	BackupBucketName    string `json:"bucket_name,omitempty"`
-	BackupStorageName   string `json:"storage_name"`
-	BackupContainerName string `json:"container_name"`
-	BackupRegion        string `json:"region"`
+	BackupStorageName   string `json:"storage_name,omitempty"`
+	BackupContainerName string `json:"container_name,omitempty"`
+	BackupRegion        string `json:"region,omitempty"`
 	MultipleBackups     string `json:"multiple_bkup,omitempty"`
 }
 
@@ -165,7 +165,7 @@ func (c *Client) EnableCloudnBackupConfig(cloudnBackupConfiguration *CloudnBacku
 		"region":         cloudnBackupConfiguration.BackupRegion,
 	}
 	if cloudnBackupConfiguration.MultipleBackups == "true" {
-		form["multiple"] = "true"
+		form["multiple_bkup"] = "true"
 	}
 	return c.PostAPI(form["action"], form, BasicCheck)
 }
