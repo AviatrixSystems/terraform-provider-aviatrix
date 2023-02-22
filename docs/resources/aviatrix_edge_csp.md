@@ -62,7 +62,7 @@ The following arguments are supported:
 * `lan_interface_ip_prefix` - (Required) LAN interface IP and subnet prefix.
 
 ### Optional
-* `management_egress_ip_prefix` - (Optional) Management egress gateway IP and subnet prefix.
+* `management_egress_ip_prefix_list` - (Optional) List of management egress gateway IP and subnet prefix. Example: ["67.207.104.16/29", "64.71.12.144/29"].
 * `enable_management_over_private_network` - (Optional) Switch to enable management over the private network. Valid values: true, false. Default value: false.
 * `enable_edge_active_standby` - (Optional) Switch to enable Edge Active-Standby mode. Valid values: true, false. Default value: false.
 * `enable_edge_active_standby_preemptive` - (Optional) Switch to enable Preemptive Mode for Edge Active-Standby. Valid values: true, false. Default value: false.
