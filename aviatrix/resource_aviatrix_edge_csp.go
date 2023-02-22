@@ -74,10 +74,10 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 				Required:    true,
 				Description: "LAN interface IP/prefix.",
 			},
-			"management_egress_ip_prefix": {
+			"management_egress_ip_prefix_list": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "Management egress gateway IP/prefix.",
+				Description: "List of management egress gateway IP/prefix.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -423,7 +423,7 @@ func marshalEdgeCSPInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 		ComputeNodeUuid:                    d.Get("compute_node_uuid").(string),
 		TemplateUuid:                       d.Get("template_uuid").(string),
 		ManagementInterfaceConfig:          d.Get("management_interface_config").(string),
-		ManagementEgressIpPrefix:           strings.Join(getStringList(d, "management_egress_ip_prefix"), ","),
+		ManagementEgressIpPrefix:           strings.Join(getStringList(d, "management_egress_ip_prefix_list"), ","),
 		EnableManagementOverPrivateNetwork: d.Get("enable_management_over_private_network").(bool),
 		LanInterfaceIpPrefix:               d.Get("lan_interface_ip_prefix").(string),
 		ManagementInterfaceIpPrefix:        d.Get("management_interface_ip_prefix").(string),
@@ -724,7 +724,7 @@ func resourceAviatrixEdgeCSPRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("compute_node_uuid", edgeCSPResp.ComputeNodeUuid)
 	d.Set("template_uuid", edgeCSPResp.TemplateUuid)
 	d.Set("enable_management_over_private_network", edgeCSPResp.EnableManagementOverPrivateNetwork)
-	d.Set("management_egress_ip_prefix", strings.Split(edgeCSPResp.ManagementEgressIpPrefix, ","))
+	d.Set("management_egress_ip_prefix_list", strings.Split(edgeCSPResp.ManagementEgressIpPrefix, ","))
 	d.Set("lan_interface_ip_prefix", edgeCSPResp.LanInterfaceIpPrefix)
 	d.Set("management_default_gateway_ip", edgeCSPResp.ManagementDefaultGatewayIp)
 	d.Set("dns_server_ip", edgeCSPResp.DnsServerIp)
@@ -897,7 +897,7 @@ func resourceAviatrixEdgeCSPUpdate(ctx context.Context, d *schema.ResourceData, 
 		GwName: edgeCSP.GwName,
 	}
 
-	if d.HasChanges("management_egress_ip_prefix", "lan_interface_ip_prefix", "wan_public_ip") {
+	if d.HasChanges("management_egress_ip_prefix_list", "lan_interface_ip_prefix", "wan_public_ip") {
 		gatewayForEaasFunctions.LanInterfaceIpPrefix = edgeCSP.LanInterfaceIpPrefix
 		gatewayForEaasFunctions.ManagementEgressIpPrefix = edgeCSP.ManagementEgressIpPrefix
 		gatewayForEaasFunctions.WanPublicIp = edgeCSP.WanPublicIp
