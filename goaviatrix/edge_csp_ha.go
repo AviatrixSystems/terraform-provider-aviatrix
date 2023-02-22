@@ -15,6 +15,7 @@ type EdgeCSPHa struct {
 	ManagementInterfaceConfig string
 	LanInterfaceIpPrefix      string       `json:"lan_ip"`
 	InterfaceList             []*Interface `json:"interfaces"`
+	NoProgressBar             bool         `json:"no_progress_bar,omitempty"`
 }
 
 type EdgeCSPHaResp struct {
@@ -36,6 +37,7 @@ type EdgeCSPHaListResp struct {
 func (c *Client) CreateEdgeCSPHa(ctx context.Context, edgeCSPHa *EdgeCSPHa) (string, error) {
 	edgeCSPHa.CID = c.CID
 	edgeCSPHa.Action = "create_multicloud_ha_gateway"
+	edgeCSPHa.NoProgressBar = true
 
 	if edgeCSPHa.ManagementInterfaceConfig == "DHCP" {
 		edgeCSPHa.Dhcp = true
