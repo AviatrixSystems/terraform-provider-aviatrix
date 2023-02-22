@@ -168,18 +168,22 @@ func resourceAviatrixTransitGatewayPeeringCreate(d *schema.ResourceData, meta in
 		Gateway2ExcludedCIDRs:          strings.Join(gw2Cidrs, ","),
 		Gateway1ExcludedTGWConnections: strings.Join(gw1Tgws, ","),
 		Gateway2ExcludedTGWConnections: strings.Join(gw2Tgws, ","),
-		PrivateIPPeering:               d.Get("enable_peering_over_private_network").(bool),
 		InsaneModeOverInternet:         d.Get("enable_insane_mode_encryption_over_internet").(bool),
 		NoMaxPerformance:               !d.Get("enable_max_performance").(bool),
 	}
+	if d.Get("enable_peering_over_private_network").(bool) {
+		transitGatewayPeering.PrivateIPPeering = "yes"
+	} else {
+		transitGatewayPeering.PrivateIPPeering = "no"
+	}
 
-	if transitGatewayPeering.PrivateIPPeering && transitGatewayPeering.InsaneModeOverInternet {
+	if transitGatewayPeering.PrivateIPPeering == "yes" && transitGatewayPeering.InsaneModeOverInternet {
 		return fmt.Errorf("enable_peering_over_private_network conflicts with enable_insane_mode_encryption_over_internet")
 	}
 
 	if d.Get("enable_single_tunnel_mode").(bool) {
-		if transitGatewayPeering.PrivateIPPeering {
-			transitGatewayPeering.SingleTunnel = true
+		if transitGatewayPeering.PrivateIPPeering == "yes" {
+			transitGatewayPeering.SingleTunnel = "yes"
 		} else {
 			return fmt.Errorf("enable_single_tunnel_mode is only valid when enable_peering_over_private_network is set to true")
 		}
@@ -328,9 +332,9 @@ func resourceAviatrixTransitGatewayPeeringRead(d *schema.ResourceData, meta inte
 		}
 	}
 
-	d.Set("enable_peering_over_private_network", transitGatewayPeering.PrivateIPPeering)
-	if transitGatewayPeering.PrivateIPPeering {
-		d.Set("enable_single_tunnel_mode", transitGatewayPeering.SingleTunnel)
+	d.Set("enable_peering_over_private_network", transitGatewayPeering.PrivateIPPeering == "yes")
+	if transitGatewayPeering.PrivateIPPeering == "yes" {
+		d.Set("enable_single_tunnel_mode", transitGatewayPeering.SingleTunnel == "yes")
 	} else {
 		d.Set("enable_single_tunnel_mode", false)
 	}
