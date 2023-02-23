@@ -216,7 +216,8 @@ func (c *Client) GetVpcRouteTableIDs(vpc *Vpc) ([]string, error) {
 	}
 
 	if vpc.PublicRoutesOnly {
-		form["public_only"] = "yes"
+		form["public_only"] = "true"
+		form["ignore_filtering"] = "true"
 	}
 
 	type RespResults struct {
