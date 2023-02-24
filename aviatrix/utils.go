@@ -11,7 +11,7 @@ import (
 
 	"github.com/hashicorp/go-version"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -117,7 +117,7 @@ func stringInSlice(needle string, haystack []string) bool {
 
 var (
 	awsTagMatcher   = regexp.MustCompile(``) // AWS tags allow all characters
-	azureTagMatcher = regexp.MustCompile(`^[a-zA-Z0-9+\-=._ :@ ]*$`)
+	azureTagMatcher = regexp.MustCompile(`^[a-zA-Z0-9+\-=._ :@# ]*$`)
 	gcpTagMatcher   = regexp.MustCompile(`^[\p{Ll}\p{Lo}\p{N}_-]*$`)
 )
 

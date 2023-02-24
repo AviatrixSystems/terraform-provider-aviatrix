@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"

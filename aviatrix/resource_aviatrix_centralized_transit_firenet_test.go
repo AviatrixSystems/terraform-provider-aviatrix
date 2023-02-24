@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"

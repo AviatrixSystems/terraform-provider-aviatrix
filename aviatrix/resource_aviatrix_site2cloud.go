@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -394,9 +394,12 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Description: "Backup remote remote gateway IP.",
 			},
 			"phase1_remote_identifier": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				Elem:             &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: goaviatrix.StringCanBeEmptyButCannotBeWhiteSpace,
+				},
 				DiffSuppressFunc: goaviatrix.S2CPh1RemoteIdDiffSuppressFunc,
 				Description:      "List of phase 1 remote identifier of the IPsec tunnel. This can be configured as a list of any string, including emtpy string.",
 			},

@@ -2,6 +2,8 @@ package goaviatrix
 
 import (
 	"context"
+	b64 "encoding/base64"
+	"encoding/json"
 	"strings"
 )
 
@@ -17,8 +19,6 @@ type EdgeCSP struct {
 	ManagementInterfaceConfig          string
 	ManagementEgressIpPrefix           string `json:"mgmt_egress_ip,omitempty"`
 	EnableManagementOverPrivateNetwork bool   `json:"mgmt_over_private_network,omitempty"`
-	WanInterfaceIpPrefix               string `json:"wan_ip,omitempty"`
-	WanDefaultGatewayIp                string `json:"wan_default_gateway,omitempty"`
 	LanInterfaceIpPrefix               string `json:"lan_ip,omitempty"`
 	ManagementInterfaceIpPrefix        string `json:"mgmt_ip,omitempty"`
 	ManagementDefaultGatewayIp         string `json:"mgmt_default_gateway,omitempty"`
@@ -51,6 +51,40 @@ type EdgeCSP struct {
 	WanInterface                       string  `json:"wan_ifname"`
 	LanInterface                       string  `json:"lan_ifname"`
 	MgmtInterface                      string  `json:"mgmt_ifname"`
+	InterfaceList                      []*Interface
+	VlanList                           []*Vlan
+	DnsProfileName                     string `json:"dns_profile_name"`
+	SingleIpSnat                       bool
+	EnableAutoAdvertiseLanCidrs        bool
+}
+
+type Interface struct {
+	IfName        string  `json:"ifname"`
+	Type          string  `json:"type"`
+	Bandwidth     int     `json:"bandwidth"`
+	PublicIp      string  `json:"public_ip"`
+	Tag           string  `json:"tag"`
+	Dhcp          bool    `json:"dhcp"`
+	IpAddr        string  `json:"ipaddr"`
+	GatewayIp     string  `json:"gateway_ip"`
+	DnsPrimary    string  `json:"dns_primary"`
+	DnsSecondary  string  `json:"dns_secondary"`
+	AdminState    string  `json:"admin_state"`
+	SubInterfaces []*Vlan `json:"subinterfaces"`
+	VrrpState     bool    `json:"vrrp_state"`
+	VirtualIp     string  `json:"virtual_ip"`
+}
+
+type Vlan struct {
+	ParentInterface string `json:"parent_interface"`
+	VlanId          string `json:"vlan_id"`
+	IpAddr          string `json:"ipaddr"`
+	GatewayIp       string `json:"gateway_ip"`
+	AdminState      string `json:"admin_state"`
+	PeerIpAddr      string `json:"peer_ipaddr"`
+	PeerGatewayIp   string `json:"peer_gateway_ip"`
+	VirtualIp       string `json:"virtual_ip"`
+	Tag             string `json:"tag"`
 }
 
 type EdgeCSPResp struct {
@@ -63,8 +97,6 @@ type EdgeCSPResp struct {
 	ManagementInterfaceConfig          string
 	ManagementEgressIpPrefix           string `json:"mgmt_egress_ip"`
 	EnableManagementOverPrivateNetwork bool   `json:"mgmt_over_private_network"`
-	WanInterfaceIpPrefix               string `json:"wan_ip"`
-	WanDefaultGatewayIp                string `json:"wan_default_gateway"`
 	LanInterfaceIpPrefix               string `json:"lan_ip"`
 	ManagementInterfaceIpPrefix        string `json:"mgmt_ip"`
 	ManagementDefaultGatewayIp         string `json:"mgmt_default_gateway"`
@@ -88,15 +120,19 @@ type EdgeCSPResp struct {
 	EnableJumboFrame                   bool     `json:"jumbo_frame"`
 	Latitude                           string
 	Longitude                          string
-	LatitudeReturn                     float64 `json:"latitude"`
-	LongitudeReturn                    float64 `json:"longitude"`
-	WanPublicIp                        string  `json:"public_ip"`
-	PrivateIP                          string  `json:"private_ip"`
-	RxQueueSize                        string  `json:"rx_queue_size"`
-	State                              string  `json:"vpc_state"`
-	WanInterface                       string  `json:"edge_csp_wan_ifname"`
-	LanInterface                       string  `json:"edge_csp_lan_ifname"`
-	MgmtInterface                      string  `json:"edge_csp_mgmt_ifname"`
+	LatitudeReturn                     float64      `json:"latitude"`
+	LongitudeReturn                    float64      `json:"longitude"`
+	WanPublicIp                        string       `json:"public_ip"`
+	PrivateIP                          string       `json:"private_ip"`
+	RxQueueSize                        string       `json:"rx_queue_size"`
+	State                              string       `json:"vpc_state"`
+	WanInterface                       []string     `json:"edge_csp_wan_ifname"`
+	LanInterface                       []string     `json:"edge_csp_lan_ifname"`
+	MgmtInterface                      []string     `json:"edge_csp_mgmt_ifname"`
+	InterfaceList                      []*Interface `json:"interfaces"`
+	DnsProfileName                     string       `json:"dns_profile_name"`
+	SingleIpSnat                       bool         `json:"nat_enabled"`
+	EnableAutoAdvertiseLanCidrs        bool         `json:"auto_advertise_lan_cidrs"`
 }
 
 type EdgeCSPListResp struct {
@@ -158,6 +194,44 @@ func (c *Client) DeleteEdgeCSP(ctx context.Context, accountName, name string) er
 		"CID":          c.CID,
 		"account_name": accountName,
 		"name":         name,
+	}
+
+	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
+}
+
+func (c *Client) UpdateEdgeCSP(ctx context.Context, edgeCSP *EdgeCSP) error {
+	form := map[string]string{
+		"action": "update_edge_gateway",
+		"CID":    c.CID,
+		"name":   edgeCSP.GwName,
+	}
+
+	interfaces, err := json.Marshal(edgeCSP.InterfaceList)
+	if err != nil {
+		return err
+	}
+
+	form["interfaces"] = b64.StdEncoding.EncodeToString(interfaces)
+
+	if edgeCSP.VlanList == nil || len(edgeCSP.VlanList) == 0 {
+		edgeCSP.VlanList = []*Vlan{}
+	}
+
+	vlan, err := json.Marshal(edgeCSP.VlanList)
+	if err != nil {
+		return err
+	}
+
+	form["vlan"] = b64.StdEncoding.EncodeToString(vlan)
+
+	if edgeCSP.DnsProfileName != "" {
+		form["dns_profile_name"] = edgeCSP.DnsProfileName
+	}
+
+	if edgeCSP.EnableAutoAdvertiseLanCidrs {
+		form["auto_advertise_lan_cidrs"] = "enable"
+	} else {
+		form["auto_advertise_lan_cidrs"] = "disable"
 	}
 
 	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)

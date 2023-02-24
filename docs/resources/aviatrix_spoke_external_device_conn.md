@@ -53,6 +53,40 @@ resource "aviatrix_spoke_external_device_conn" "test" {
   ]
 }
 ```
+```hcl
+# Create a BGP over LAN Aviatrix Spoke External Device Connection with an Azure Spoke Gateway
+resource "aviatrix_spoke_external_device_conn" "ex-conn" {
+  vpc_id            = aviatrix_spoke_gateway.spoke-gateway.vpc_id
+  connection_name   = "my_conn"
+  gw_name           = aviatrix_spoke_gateway.spoke-gateway.gw_name
+  connection_type   = "bgp"
+  tunnel_protocol   = "LAN"
+  bgp_local_as_num  = "123"
+  bgp_remote_as_num = "345"
+  remote_lan_ip     = "172.12.13.14"
+  local_lan_ip      = "172.12.13.15"
+  remote_vpc_name   = "vnet-name:resource-group-name:subscription-id"
+}
+```
+```hcl
+# Create a BGP over LAN Aviatrix HA Spoke External Device Connection with an Azure Spoke Gateway
+resource "aviatrix_spoke_external_device_conn" "ex-conn" {
+  vpc_id                   = aviatrix_spoke_gateway.spoke-gateway.vpc_id
+  connection_name          = "my_conn"
+  gw_name                  = aviatrix_spoke_gateway.spoke-gateway.gw_name
+  connection_type          = "bgp"
+  tunnel_protocol          = "LAN"
+  bgp_local_as_num         = "123"
+  bgp_remote_as_num        = "345"
+  remote_lan_ip            = "172.12.13.14"
+  local_lan_ip             = "172.12.13.15"
+  remote_vpc_name          = "vnet-name:resource-group-name:subscription-id"
+  ha_enabled               = true
+  backup_bgp_remote_as_num = "678"
+  backup_remote_lan_ip     = "172.12.13.16"
+  backup_local_lan_ip      = "172.12.13.17"
+}
+```
 
 ## Argument Reference
 
@@ -67,6 +101,13 @@ The following arguments are supported:
 * `gw_name` - (Required) Aviatrix spoke gateway name.
 * `remote_gateway_ip` - (Optional) Remote gateway IP.
 * `connection_type` - (Required) Connection type. Valid values: 'bgp', 'static'. Default value: 'bgp'.
+
+~> **NOTE:** To create a BGP over LAN connection with an Azure Spoke Gateway, the Spoke Gateway must have its `enable_bgp` and `enable_bgp_over_lan` attributes set to true.
+
+* `tunnel_protocol` - (Optional) Tunnel protocol, only valid with `connection_type` = 'bgp'. Valid values: 'IPsec', 'LAN'. Default value: 'IPsec'. Case insensitive.
+* `bgp_local_as_num` - (Optional) BGP local ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
+* `bgp_remote_as_num` - (Optional) BGP remote ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
+* `remote_subnet` - (Optional) Remote CIDRs joined as a string with ','. Required for a 'static' type connection.
 
 ### HA
 * `ha_enabled` - (Optional) Set as true if there are two external devices.
@@ -86,6 +127,17 @@ The following arguments are supported:
 * `phase_1_encryption` - (Optional) Phase one Encryption. Valid values: "3DES", "AES-128-CBC", "AES-192-CBC", "AES-256-CBC", "AES-128-GCM-64", "AES-128-GCM-96", "AES-128-GCM-128", "AES-256-GCM-64", "AES-256-GCM-96", and "AES-256-GCM-128". Default value: "AES-256-CBC".
 * `phase_2_encryption` - (Optional) Phase two Encryption. Valid values: "3DES", "AES-128-CBC", "AES-192-CBC", "AES-256-CBC", "AES-128-GCM-64", "AES-128-GCM-96", "AES-128-GCM-128", "AES-256-GCM-64", "AES-256-GCM-96", "AES-256-GCM-128" and "NULL-ENCR". Default value: "AES-256-CBC".
 
+### BGP over LAN (Available as of provider version R2.18+)
+
+~> **NOTE:** BGP over LAN attributes are only valid with `tunnel_protocol` = 'LAN'.
+
+* `remote_vpc_name` - (Optional) Name of the remote VPC for a LAN BGP connection with an Azure Spoke Gateway. Required when `connection_type` = 'bgp' and `tunnel_protocol` = 'LAN' with an Azure spoke gateway. Must be in the format "<vnet-name>:<resource-group-name>:<subscription-id>". Available as of provider version R3.0.2+.
+* `remote_lan_ip` - (Optional) Remote LAN IP. Required for BGP over LAN connection.
+* `local_lan_ip` - (Optional) Local LAN IP. Required for GCP BGP over LAN connection.
+* `backup_remote_lan_ip` - (Optional) Backup Remote LAN IP. Required for HA BGP over LAN connection.
+* `backup_local_lan_ip` - (Optional) Backup Local LAN IP. Required for GCP HA BGP over LAN connection.
+* * `enable_bgp_lan_activemesh` - (Optional) Switch to enable BGP LAN ActiveMesh mode. Only valid for GCP and Azure with Remote Gateway HA enabled. Requires Azure Remote Gateway insane mode enabled. Valid values: true, false. Default: false. Available as of provider version R3.0.2+.
+
 ### BGP MD5 Authentication (Available as of provider version R2.21.1+)
 ~> **NOTE:** BGP MD5 Authentication is only valid with `connection_type` = 'bgp'.
 
@@ -93,10 +145,6 @@ The following arguments are supported:
 * `backup_bgp_md5_key` - (Optional) Backup BGP MD5 Authentication Key. Valid with HA enabled for connection. Example: 'avx03,avx04'.
 
 ### Misc.
-* `tunnel_protocol` - (Optional) Tunnel protocol, only valid with `connection_type` = 'bgp'. Valid values: 'IPsec'. Default value: 'IPsec'. Case insensitive.
-* `bgp_local_as_num` - (Optional) BGP local ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
-* `bgp_remote_as_num` - (Optional) BGP remote ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
-* `remote_subnet` - (Optional) Remote CIDRs joined as a string with ','. Required for a 'static' type connection.
 * `direct_connect` - (Optional) Set true for private network infrastructure.
 * `pre_shared_key` - (Optional) Pre-Shared Key.
 * `local_tunnel_cidr` - (Optional) Source CIDR for the tunnel from the Aviatrix spoke gateway.
