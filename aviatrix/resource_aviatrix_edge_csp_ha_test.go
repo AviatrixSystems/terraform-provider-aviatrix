@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAviatrixEdgeCSP_basic(t *testing.T) {
-	if os.Getenv("SKIP_EDGE_CSP") == "yes" {
-		t.Skip("Skipping Edge CSP test as SKIP_EDGE_CSP is set")
+func TestAccAviatrixEdgeCSPHa_basic(t *testing.T) {
+	if os.Getenv("SKIP_EDGE_CSP_HA") == "yes" {
+		t.Skip("Skipping Edge CSP HA test as SKIP_EDGE_CSP_HA is set")
 	}
 
-	resourceName := "aviatrix_edge_csp.test"
+	resourceName := "aviatrix_edge_csp_ha.test"
 	accountName := "edge-csp-acc-" + acctest.RandString(5)
 	gwName := "edge-csp-" + acctest.RandString(5)
 	siteId := "site-" + acctest.RandString(5)
@@ -28,29 +28,27 @@ func TestAccAviatrixEdgeCSP_basic(t *testing.T) {
 			testAccPreCheck(t)
 		},
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckEdgeCSPDestroy,
+		CheckDestroy: testAccCheckEdgeCSPHaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEdgeCSPBasic(accountName, gwName, siteId),
+				Config: testAccEdgeCSPHaBasic(accountName, gwName, siteId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEdgeCSPExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "gw_name", gwName),
-					resource.TestCheckResourceAttr(resourceName, "site_id", siteId),
+					testAccCheckEdgeCSPHaExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "primary_gw_name", gwName+"_ha"),
 					resource.TestCheckResourceAttr(resourceName, "management_interface_config", "DHCP"),
 					resource.TestCheckResourceAttr(resourceName, "lan_interface_ip_prefix", "10.60.0.0/24"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"ztp_file_type", "ztp_file_download_path"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func testAccEdgeCSPBasic(accountName, gwName, siteId string) string {
+func testAccEdgeCSPHaBasic(accountName, gwName, siteId string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_account" "test_account" {
  	account_name      = "%s"
@@ -75,44 +73,58 @@ resource "aviatrix_edge_csp" "test" {
 		gateway_ip = "10.220.11.1"
 	}
 }
+resource "aviatrix_edge_csp_ha" "test" {
+	primary_gw_name             = aviatrix_edge_csp.test.gw_name
+	management_interface_config = "DHCP"
+	compute_node_uuid           = "%s"
+	lan_interface_ip_prefix     = "10.220.11.20/24"
+
+	interfaces {
+		name       = "eth1"
+		type       = "LAN"
+		ip_address = "10.220.11.20/24"
+		gateway_ip = "10.220.11.1"
+	}
+}
  `, accountName, os.Getenv("EDGE_CSP_USERNAME"), os.Getenv("EDGE_CSP_PASSWORD"), gwName, siteId,
-		os.Getenv("EDGE_CSP_PROJECT_UUID"), os.Getenv("EDGE_CSP_COMPUTE_NODE_UUID"), os.Getenv("EDGE_CSP_TEMPLATE_UUID"))
+		os.Getenv("EDGE_CSP_PROJECT_UUID"), os.Getenv("EDGE_CSP_COMPUTE_NODE_UUID"),
+		os.Getenv("EDGE_CSP_TEMPLATE_UUID"), os.Getenv("EDGE_CSP_HA_COMPUTE_NODE_UUID"))
 }
 
-func testAccCheckEdgeCSPExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckEdgeCSPHaExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("edge csp not found: %s", resourceName)
+			return fmt.Errorf("edge csp ha not found: %s", resourceName)
 		}
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no edge csp id is set")
+			return fmt.Errorf("no edge csp ha id is set")
 		}
 
 		client := testAccProvider.Meta().(*goaviatrix.Client)
 
-		edgeSpoke, err := client.GetEdgeCSP(context.Background(), rs.Primary.Attributes["gw_name"])
+		edgeCSPHa, err := client.GetEdgeCSPHa(context.Background(), rs.Primary.Attributes["primary_gw_name"]+"-hagw")
 		if err != nil {
 			return err
 		}
-		if edgeSpoke.GwName != rs.Primary.ID {
-			return fmt.Errorf("could not find edge csp")
+		if edgeCSPHa.GwName != rs.Primary.ID {
+			return fmt.Errorf("could not find edge csp ha")
 		}
 		return nil
 	}
 }
 
-func testAccCheckEdgeCSPDestroy(s *terraform.State) error {
+func testAccCheckEdgeCSPHaDestroy(s *terraform.State) error {
 	client := testAccProvider.Meta().(*goaviatrix.Client)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aviatrix_edge_csp" {
+		if rs.Type != "aviatrix_edge_csp_ha" {
 			continue
 		}
 
-		_, err := client.GetEdgeCSP(context.Background(), rs.Primary.Attributes["gw_name"])
+		_, err := client.GetEdgeCSPHa(context.Background(), rs.Primary.Attributes["primary_gw_name"]+"-hagw")
 		if err != goaviatrix.ErrNotFound {
-			return fmt.Errorf("edge csp still exists")
+			return fmt.Errorf("edge csp ha still exists")
 		}
 	}
 

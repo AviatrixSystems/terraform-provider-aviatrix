@@ -28,13 +28,13 @@ func resourceAviatrixEdgeCSPHa() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Name of the primary gateway.",
+				Description: "Primary gateway name.",
 			},
 			"compute_node_uuid": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "",
+				Description: "Compute node UUID.",
 			},
 			"management_interface_config": {
 				Type:         schema.TypeString,
@@ -54,60 +54,55 @@ func resourceAviatrixEdgeCSPHa() *schema.Resource {
 				Description: "",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ifname": {
+						"name": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "",
+							Description: "Interface name.",
 						},
 						"type": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "",
+							Description: "Interface type.",
 						},
 						"bandwidth": {
 							Type:        schema.TypeInt,
 							Optional:    true,
-							Description: "",
+							Description: "Bandwidth.",
 						},
-						"public_ip": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "",
-						},
-						"tag": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "",
-						},
-						"dhcp": {
+						"enable_dhcp": {
 							Type:        schema.TypeBool,
 							Optional:    true,
-							Description: "",
+							Description: "Enable DHCP.",
 						},
-						"ipaddr": {
+						"wan_public_ip": {
 							Type:        schema.TypeString,
-							Required:    true,
-							Description: "",
+							Optional:    true,
+							Description: "WAN interface public IP.",
+						},
+						"ip_address": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Interface static IP address.",
 						},
 						"gateway_ip": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "",
+							Description: "Gateway IP.",
 						},
-						"dns_primary": {
+						"dns_server_ip": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "",
+							Description: "Primary DNS server IP.",
 						},
-						"dns_secondary": {
+						"secondary_dns_server_ip": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "",
+							Description: "Secondary DNS server IP.",
 						},
-						"admin_state": {
-							Type:        schema.TypeBool,
+						"tag": {
+							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "",
+							Description: "Tag.",
 						},
 					},
 				},
@@ -134,22 +129,16 @@ func marshalEdgeCSPHaInput(d *schema.ResourceData) *goaviatrix.EdgeCSPHa {
 		if1 := if0.(map[string]interface{})
 
 		if2 := &goaviatrix.Interface{
-			IfName:       if1["ifname"].(string),
+			IfName:       if1["name"].(string),
 			Type:         if1["type"].(string),
 			Bandwidth:    if1["bandwidth"].(int),
-			PublicIp:     if1["public_ip"].(string),
+			PublicIp:     if1["wan_public_ip"].(string),
 			Tag:          if1["tag"].(string),
-			Dhcp:         if1["dhcp"].(bool),
-			IpAddr:       if1["ipaddr"].(string),
+			Dhcp:         if1["enable_dhcp"].(bool),
+			IpAddr:       if1["ip_address"].(string),
 			GatewayIp:    if1["gateway_ip"].(string),
-			DnsPrimary:   if1["dns_primary"].(string),
-			DnsSecondary: if1["dns_secondary"].(string),
-		}
-
-		if if1["admin_state"].(bool) {
-			if2.AdminState = "enabled"
-		} else {
-			if2.AdminState = "disabled"
+			DnsPrimary:   if1["dns_server_ip"].(string),
+			DnsSecondary: if1["secondary_dns_server_ip"].(string),
 		}
 
 		edgeCSPHa.InterfaceList = append(edgeCSPHa.InterfaceList, if2)
@@ -220,22 +209,16 @@ func resourceAviatrixEdgeCSPHaRead(ctx context.Context, d *schema.ResourceData, 
 	for _, if0 := range edgeCSPHaResp.InterfaceList {
 		if if0.Type != "MANAGEMENT" {
 			if1 := make(map[string]interface{})
-			if1["ifname"] = if0.IfName
+			if1["name"] = if0.IfName
 			if1["type"] = if0.Type
 			if1["bandwidth"] = if0.Bandwidth
-			if1["public_ip"] = if0.PublicIp
+			if1["wan_public_ip"] = if0.PublicIp
 			if1["tag"] = if0.Tag
-			if1["dhcp"] = if0.Dhcp
-			if1["ipaddr"] = if0.IpAddr
+			if1["enable_dhcp"] = if0.Dhcp
+			if1["ip_address"] = if0.IpAddr
 			if1["gateway_ip"] = if0.GatewayIp
-			if1["dns_primary"] = if0.DnsPrimary
-			if1["dns_secondary"] = if0.DnsSecondary
-
-			if if0.AdminState == "enabled" {
-				if1["admin_state"] = true
-			} else {
-				if1["admin_state"] = false
-			}
+			if1["dns_server_ip"] = if0.DnsPrimary
+			if1["secondary_dns_server_ip"] = if0.DnsSecondary
 
 			interfaces = append(interfaces, if1)
 		}
