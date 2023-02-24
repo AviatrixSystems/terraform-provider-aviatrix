@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -424,8 +424,8 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	if firewallInstance.FirewallImageId != "" && !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
-		return fmt.Errorf("'firewall_image_id' is only supported for AWS and Azure")
+	if firewallInstance.FirewallImageId != "" && !goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
+		return fmt.Errorf("'firewall_image_id' is only supported for AWS")
 	}
 
 	tags, err := extractTags(d, cloudType)
@@ -567,7 +567,7 @@ func resourceAviatrixFirewallInstanceRead(d *schema.ResourceData, meta interface
 			return fmt.Errorf("failed to set tags for firewall_instance on read: %v", err)
 		}
 	}
-	if fI.FirewallImageId != "" && goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes|goaviatrix.AzureArmRelatedCloudTypes) {
+	if fI.FirewallImageId != "" && goaviatrix.IsCloudType(cloudType, goaviatrix.AWSRelatedCloudTypes) {
 		d.Set("firewall_image_id", fI.FirewallImageId)
 	}
 	if goaviatrix.IsCloudType(cloudType, goaviatrix.OCIRelatedCloudTypes) {

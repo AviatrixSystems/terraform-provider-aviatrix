@@ -4,12 +4,12 @@ import (
 	"errors"
 	"os"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var supportedVersions = []string{"7.0"}
+var supportedVersions = []string{"7.1"}
 
 // Provider returns a schema.Provider for Aviatrix.
 func Provider() *schema.Provider {
@@ -110,7 +110,9 @@ func Provider() *schema.Provider {
 			"aviatrix_distributed_firewalling_config":                 resourceAviatrixDistributedFirewallingConfig(),
 			"aviatrix_distributed_firewalling_intra_vpc":              resourceAviatrixDistributedFirewallingIntraVpc(),
 			"aviatrix_distributed_firewalling_policy_list":            resourceAviatrixDistributedFirewallingPolicyList(),
+			"aviatrix_dns_profile":                                    resourceAviatrixDNSProfile(),
 			"aviatrix_edge_csp":                                       resourceAviatrixEdgeCSP(),
+			"aviatrix_edge_csp_ha":                                    resourceAviatrixEdgeCSPHa(),
 			"aviatrix_edge_spoke":                                     resourceAviatrixEdgeSpoke(),
 			"aviatrix_edge_spoke_external_device_conn":                resourceAviatrixEdgeSpokeExternalDeviceConn(),
 			"aviatrix_edge_spoke_transit_attachment":                  resourceAviatrixEdgeSpokeTransitAttachment(),
@@ -131,6 +133,7 @@ func Provider() *schema.Provider {
 			"aviatrix_gateway_dnat":                                   resourceAviatrixGatewayDNat(),
 			"aviatrix_gateway_snat":                                   resourceAviatrixGatewaySNat(),
 			"aviatrix_geo_vpn":                                        resourceAviatrixGeoVPN(),
+			"aviatrix_link_hierarchy":                                 resourceAviatrixLinkHierarchy(),
 			"aviatrix_netflow_agent":                                  resourceAviatrixNetflowAgent(),
 			"aviatrix_periodic_ping":                                  resourceAviatrixPeriodicPing(),
 			"aviatrix_private_mode_lb":                                resourceAviatrixPrivateModeLb(),
@@ -147,6 +150,7 @@ func Provider() *schema.Provider {
 			"aviatrix_segmentation_network_domain_connection_policy":  resourceAviatrixSegmentationNetworkDomainConnectionPolicy(),
 			"aviatrix_site2cloud":                                     resourceAviatrixSite2Cloud(),
 			"aviatrix_site2cloud_ca_cert_tag":                         resourceAviatrixSite2CloudCaCertTag(),
+			"aviatrix_sla_class":                                      resourceAviatrixSLAClass(),
 			"aviatrix_splunk_logging":                                 resourceAviatrixSplunkLogging(),
 			"aviatrix_spoke_gateway":                                  resourceAviatrixSpokeGateway(),
 			"aviatrix_spoke_ha_gateway":                               resourceAviatrixSpokeHaGateway(),
@@ -154,6 +158,7 @@ func Provider() *schema.Provider {
 			"aviatrix_spoke_external_device_conn":                     resourceAviatrixSpokeExternalDeviceConn(),
 			"aviatrix_spoke_transit_attachment":                       resourceAviatrixSpokeTransitAttachment(),
 			"aviatrix_sumologic_forwarder":                            resourceAviatrixSumologicForwarder(),
+			"aviatrix_traffic_classifier":                             resourceAviatrixTrafficClassifier(),
 			"aviatrix_transit_external_device_conn":                   resourceAviatrixTransitExternalDeviceConn(),
 			"aviatrix_trans_peer":                                     resourceAviatrixTransPeer(),
 			"aviatrix_transit_firenet_policy":                         resourceAviatrixTransitFireNetPolicy(),
@@ -170,6 +175,7 @@ func Provider() *schema.Provider {
 		DataSourcesMap: map[string]*schema.Resource{
 			"aviatrix_account":                          dataSourceAviatrixAccount(),
 			"aviatrix_caller_identity":                  dataSourceAviatrixCallerIdentity(),
+			"aviatrix_controller_metadata":              dataSourceAviatrixControllerMetadata(),
 			"aviatrix_device_interfaces":                dataSourceAviatrixDeviceInterfaces(),
 			"aviatrix_firenet":                          dataSourceAviatrixFireNet(),
 			"aviatrix_firenet_firewall_manager":         dataSourceAviatrixFireNetFirewallManager(),

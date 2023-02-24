@@ -171,6 +171,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_vpn_user_accelerator	       | SKIP_VPN_USER_ACCELERATOR          | aviatrix_gateway						                                         |
 | aviatrix_data_source_account         | SKIP_DATA_ACCOUNT                  | aviatrix_account                                                               |
 | aviatrix_data_source_caller_identity | SKIP_DATA_CALLER_IDENTITY          |                                                                                |
+| aviatrix_data_source_controller_metadata | SKIP_DATA_CONTROLLER_METADATA  |                                                                                |
 | aviatrix_data_source_device_interfaces | SKIP_DATA_DEVICE_INTERFACES      | CLOUDN_DEVICE_NAME                                                             |
 | aviatrix_data_source_firenet         | SKIP_DATA_FIRENET                  | aviatrix_firenet                                                               |
 | aviatrix_data_source_firenet_firewall_manager | SKIP_DATA_FIRENET_FIREWALL_MANAGER | AWS_ACCOUNT_NUMBER + AWS_ACCESS_KEY + AWS_SECRET_KEY + AWS_REGION, Palo Alto Networks Panorama |
