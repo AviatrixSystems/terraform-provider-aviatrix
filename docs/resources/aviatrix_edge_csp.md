@@ -25,6 +25,13 @@ resource "aviatrix_edge_csp" "test" {
     "65000",
     "65000",
   ]
+
+  interfaces {
+    name       = "eth1"
+    type       = "LAN"
+    ip_address = "10.220.11.10/24"
+    gateway_ip = "10.220.11.1"
+  }
 }
 ```
 ```hcl
@@ -44,6 +51,13 @@ resource "aviatrix_edge_csp" "test" {
     "65000",
     "65000",
   ]
+
+  interfaces {
+    name       = "eth1"
+    type       = "LAN"
+    ip_address = "10.220.11.10/24"
+    gateway_ip = "10.220.11.1"
+  }
 }
 ```
 
