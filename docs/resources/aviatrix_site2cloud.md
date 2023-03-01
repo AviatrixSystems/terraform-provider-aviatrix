@@ -107,11 +107,11 @@ The following arguments are supported:
 
 ### Encryption over ExpressRoute/DirectConnect
 * `private_route_encryption` - (Optional) Private route encryption switch. Valid values: true, false.
-* `route_table_list` - (Optional) Route tables to modify.
-* `remote_gateway_latitude` - (Optional) Latitude of remote gateway. Does not support refresh.
-* `remote_gateway_longitude` - (Optional) Longitude of remote gateway. Does not support refresh.
-* `backup_remote_gateway_latitude` - (Optional) Latitude of backup remote gateway. Does not support refresh.
-* `backup_remote_gateway_longitude` - (Optional) Longitude of backup remote gateway. Does not support refresh.
+* `route_table_list` - (Optional) Route tables to modify. Required when `private_route_encryption` is true.
+* `remote_gateway_latitude` - (Optional) Latitude of remote gateway. Required when `private_route_encryption` is true.
+* `remote_gateway_longitude` - (Optional) Longitude of remote gateway. Required when `private_route_encryption` is true.
+* `backup_remote_gateway_latitude` - (Optional) Latitude of backup remote gateway. Required when `private_route_encryption` is true.
+* `backup_remote_gateway_longitude` - (Optional) Longitude of backup remote gateway. Required when `private_route_encryption` is true.
 
 ### Custom Mapped
 
