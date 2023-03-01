@@ -243,24 +243,32 @@ func resourceAviatrixSite2Cloud() *schema.Resource {
 				Description: "Route tables to modify.",
 			},
 			"remote_gateway_latitude": {
-				Type:        schema.TypeFloat,
-				Optional:    true,
-				Description: "Latitude of remote gateway.",
+				Type:             schema.TypeFloat,
+				Optional:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncRemoteGwLatitude,
+				Description:      "Latitude of remote gateway.",
 			},
 			"remote_gateway_longitude": {
-				Type:        schema.TypeFloat,
-				Optional:    true,
-				Description: "Longitude of remote gateway.",
+				Type:             schema.TypeFloat,
+				Optional:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncRemoteGwLongitude,
+				Description:      "Longitude of remote gateway.",
 			},
 			"backup_remote_gateway_latitude": {
-				Type:        schema.TypeFloat,
-				Optional:    true,
-				Description: "Latitude of backup remote gateway.",
+				Type:             schema.TypeFloat,
+				Optional:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncBackupRemoteGwLatitude,
+				Description:      "Latitude of backup remote gateway.",
 			},
 			"backup_remote_gateway_longitude": {
-				Type:        schema.TypeFloat,
-				Optional:    true,
-				Description: "Longitude of backup remote gateway.",
+				Type:             schema.TypeFloat,
+				Optional:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: goaviatrix.DiffSuppressFuncBackupRemoteGwLongitude,
+				Description:      "Longitude of backup remote gateway.",
 			},
 			"ssl_server_pool": {
 				Type:        schema.TypeString,
@@ -644,22 +652,36 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 	for i := range rTList {
 		routeTableList = append(routeTableList, rTList[i].(string))
 	}
+	remoteGwLatitude := d.Get("remote_gateway_latitude").(float64)
+	remoteGwLongitude := d.Get("remote_gateway_longitude").(float64)
+	backupRemoteGwLatitude := d.Get("backup_remote_gateway_latitude").(float64)
+	backupRemoteGwLongitude := d.Get("backup_remote_gateway_longitude").(float64)
 
 	if privateRouteEncryption && len(routeTableList) == 0 {
 		return fmt.Errorf("private_route_encryption is enabled, route_table_list cannot be empty")
 	} else if privateRouteEncryption {
 		s2c.PrivateRouteEncryption = "true"
-		s2c.RouteTableList = routeTableList
-		s2c.RemoteGwLatitude = d.Get("remote_gateway_latitude").(float64)
-		s2c.RemoteGwLongitude = d.Get("remote_gateway_longitude").(float64)
+		s2c.RouteTableList = strings.Join(routeTableList, ",")
+		if remoteGwLatitude == 0 || remoteGwLongitude == 0 {
+			return fmt.Errorf("private_route_encryption is enabled, please set remote_gateway_latitude and remote_gateway_longitude")
+		}
+		s2c.RemoteGwLatitude = remoteGwLatitude
+		s2c.RemoteGwLongitude = remoteGwLongitude
 		if s2c.HAEnabled == "yes" {
-			s2c.BackupRemoteGwLatitude = d.Get("backup_remote_gateway_latitude").(float64)
-			s2c.BackupRemoteGwLongitude = d.Get("backup_remote_gateway_longitude").(float64)
+			if backupRemoteGwLatitude == 0 || backupRemoteGwLongitude == 0 {
+				return fmt.Errorf("private_route_encryption is enabled and ha is enabled, please set backup_remote_gateway_latitude and backup_remote_gateway_longitude")
+			}
+			s2c.BackupRemoteGwLatitude = backupRemoteGwLatitude
+			s2c.BackupRemoteGwLongitude = backupRemoteGwLongitude
 		}
 	} else {
 		s2c.PrivateRouteEncryption = "false"
 		if len(routeTableList) != 0 {
 			return fmt.Errorf("private route encryption is disabled, route_table_list should be empty")
+		}
+		if remoteGwLatitude != 0 || remoteGwLongitude != 0 || backupRemoteGwLatitude != 0 || backupRemoteGwLongitude != 0 {
+			return fmt.Errorf("private route encryption is disabled, all of remote_gateway_latitude, " +
+				"backup_remote_gateway_latitude and backup_remote_gateway_longitude should be empty")
 		}
 	}
 
@@ -889,9 +911,14 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 
 		if s2c.PrivateRouteEncryption == "true" {
 			d.Set("private_route_encryption", true)
-
-			if err := d.Set("route_table_list", s2c.RouteTableList); err != nil {
+			if err := d.Set("route_table_list", strings.Split(s2c.RouteTableList, ",")); err != nil {
 				log.Printf("[WARN] Error setting route_table_list for (%s): %s", d.Id(), err)
+			}
+			d.Set("remote_gateway_latitude", s2c.RemoteGwLatitude)
+			d.Set("remote_gateway_longitude", s2c.RemoteGwLongitude)
+			if s2c.HAEnabled == "enabled" {
+				d.Set("backup_remote_gateway_latitude", s2c.BackupRemoteGwLatitude)
+				d.Set("backup_remote_gateway_longitude", s2c.BackupRemoteGwLongitude)
 			}
 		} else {
 			d.Set("private_route_encryption", false)
