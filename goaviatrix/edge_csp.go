@@ -54,7 +54,7 @@ type EdgeCSP struct {
 	InterfaceList                      []*Interface
 	VlanList                           []*Vlan
 	DnsProfileName                     string `json:"dns_profile_name"`
-	SingleIpSnat                       bool
+	EnableSingleIpSnat                 bool
 	EnableAutoAdvertiseLanCidrs        bool
 }
 
@@ -69,7 +69,6 @@ type Interface struct {
 	GatewayIp     string  `json:"gateway_ip"`
 	DnsPrimary    string  `json:"dns_primary"`
 	DnsSecondary  string  `json:"dns_secondary"`
-	AdminState    string  `json:"admin_state"`
 	SubInterfaces []*Vlan `json:"subinterfaces"`
 	VrrpState     bool    `json:"vrrp_state"`
 	VirtualIp     string  `json:"virtual_ip"`
@@ -80,7 +79,6 @@ type Vlan struct {
 	VlanId          string `json:"vlan_id"`
 	IpAddr          string `json:"ipaddr"`
 	GatewayIp       string `json:"gateway_ip"`
-	AdminState      string `json:"admin_state"`
 	PeerIpAddr      string `json:"peer_ipaddr"`
 	PeerGatewayIp   string `json:"peer_gateway_ip"`
 	VirtualIp       string `json:"virtual_ip"`

@@ -235,11 +235,11 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 				Computed:    true,
 				Description: "State of Edge as a Spoke.",
 			},
-			"wan_interface_name": {
+			"wan_interface_names": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "WAN interface name.",
+				Description: "List of WAN interface names.",
 				DefaultFunc: func() (any, error) {
 					return []string{"eth0"}, nil
 				},
@@ -247,11 +247,11 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"lan_interface_name": {
+			"lan_interface_names": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "LAN interface name.",
+				Description: "List of LAN interface names.",
 				DefaultFunc: func() (any, error) {
 					return []string{"eth1"}, nil
 				},
@@ -259,11 +259,11 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"management_interface_name": {
+			"management_interface_names": {
 				Type:        schema.TypeList,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Management interface name.",
+				Description: "List of management interface names.",
 				DefaultFunc: func() (any, error) {
 					return []string{"eth2"}, nil
 				},
@@ -274,73 +274,68 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 			"interfaces": {
 				Type:        schema.TypeSet,
 				Required:    true,
-				Description: "",
+				Description: "WAN/LAN interfaces.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ifname": {
+						"name": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "",
+							Description: "Interface name.",
 						},
 						"type": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "",
+							Description: "Interface type.",
 						},
 						"bandwidth": {
 							Type:        schema.TypeInt,
 							Optional:    true,
-							Description: "",
+							Description: "Bandwidth.",
 						},
-						"public_ip": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "",
-						},
-						"tag": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "",
-						},
-						"dhcp": {
+						"enable_dhcp": {
 							Type:        schema.TypeBool,
 							Optional:    true,
-							Description: "",
+							Description: "Enable DHCP.",
 						},
-						"ipaddr": {
+						"wan_public_ip": {
 							Type:        schema.TypeString,
-							Required:    true,
-							Description: "",
+							Optional:    true,
+							Description: "WAN interface public IP.",
+						},
+						"ip_address": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Interface static IP address.",
 						},
 						"gateway_ip": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "",
+							Description: "Gateway IP.",
 						},
-						"dns_primary": {
+						"dns_server_ip": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "",
+							Description: "Primary DNS server IP.",
 						},
-						"dns_secondary": {
+						"secondary_dns_server_ip": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "",
+							Description: "Secondary DNS server IP.",
 						},
-						"admin_state": {
+						"enable_vrrp": {
 							Type:        schema.TypeBool,
 							Optional:    true,
-							Description: "",
+							Description: "Enable VRRP.",
 						},
-						"vrrp_state": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Description: "",
-						},
-						"virtual_ip": {
+						"vrrp_virtual_ip": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "",
+							Description: "VRRP virtual IP.",
+						},
+						"tag": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Tag.",
 						},
 					},
 				},
@@ -348,53 +343,48 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 			"vlan": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "",
+				Description: "VLAN configuration.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"parent_interface": {
+						"parent_interface_name": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "",
+							Description: "Parent interface name.",
 						},
 						"vlan_id": {
 							Type:        schema.TypeInt,
 							Required:    true,
-							Description: "",
+							Description: "VLAN ID.",
 						},
-						"ipaddr": {
+						"ip_address": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "",
+							Description: "LAN sub-interface IP address.",
 						},
 						"gateway_ip": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "",
+							Description: "LAN sub-interface gateway IP.",
 						},
-						"admin_state": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Description: "",
-						},
-						"peer_ipaddr": {
+						"peer_ip_address": {
 							Type:        schema.TypeString,
-							Required:    true,
-							Description: "",
+							Optional:    true,
+							Description: "LAN sub-interface IP address on HA gateway.",
 						},
 						"peer_gateway_ip": {
 							Type:        schema.TypeString,
-							Required:    true,
-							Description: "",
+							Optional:    true,
+							Description: "LAN sub-interface gateway IP on HA gateway.",
 						},
-						"virtual_ip": {
+						"vrrp_virtual_ip": {
 							Type:        schema.TypeString,
-							Required:    true,
-							Description: "",
+							Optional:    true,
+							Description: "LAN sub-interface virtual IP.",
 						},
 						"tag": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "",
+							Description: "Tag.",
 						},
 					},
 				},
@@ -402,9 +392,9 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 			"dns_profile_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "DNS Profile to be associated with gateway, select an existing template.",
+				Description: "DNS profile to be associated with gateway, select an existing template.",
 			},
-			"single_ip_snat": {
+			"enable_single_ip_snat": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
@@ -452,11 +442,11 @@ func marshalEdgeCSPInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 		Longitude:                          d.Get("longitude").(string),
 		WanPublicIp:                        d.Get("wan_public_ip").(string),
 		RxQueueSize:                        d.Get("rx_queue_size").(string),
-		WanInterface:                       strings.Join(getStringList(d, "wan_interface_name"), ","),
-		LanInterface:                       strings.Join(getStringList(d, "lan_interface_name"), ","),
-		MgmtInterface:                      strings.Join(getStringList(d, "management_interface_name"), ","),
+		WanInterface:                       strings.Join(getStringList(d, "wan_interface_names"), ","),
+		LanInterface:                       strings.Join(getStringList(d, "lan_interface_names"), ","),
+		MgmtInterface:                      strings.Join(getStringList(d, "management_interface_names"), ","),
 		DnsProfileName:                     d.Get("dns_profile_name").(string),
-		SingleIpSnat:                       d.Get("single_ip_snat").(bool),
+		EnableSingleIpSnat:                 d.Get("enable_single_ip_snat").(bool),
 		EnableAutoAdvertiseLanCidrs:        d.Get("enable_auto_advertise_lan_cidrs").(bool),
 	}
 
@@ -465,24 +455,18 @@ func marshalEdgeCSPInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 		if1 := if0.(map[string]interface{})
 
 		if2 := &goaviatrix.Interface{
-			IfName:       if1["ifname"].(string),
+			IfName:       if1["name"].(string),
 			Type:         if1["type"].(string),
 			Bandwidth:    if1["bandwidth"].(int),
-			PublicIp:     if1["public_ip"].(string),
+			PublicIp:     if1["wan_public_ip"].(string),
 			Tag:          if1["tag"].(string),
-			Dhcp:         if1["dhcp"].(bool),
-			IpAddr:       if1["ipaddr"].(string),
+			Dhcp:         if1["enable_dhcp"].(bool),
+			IpAddr:       if1["ip_address"].(string),
 			GatewayIp:    if1["gateway_ip"].(string),
-			DnsPrimary:   if1["dns_primary"].(string),
-			DnsSecondary: if1["dns_secondary"].(string),
-			VrrpState:    if1["vrrp_state"].(bool),
-			VirtualIp:    if1["virtual_ip"].(string),
-		}
-
-		if if1["admin_state"].(bool) {
-			if2.AdminState = "enabled"
-		} else {
-			if2.AdminState = "disabled"
+			DnsPrimary:   if1["dns_server_ip"].(string),
+			DnsSecondary: if1["secondary_dns_server_ip"].(string),
+			VrrpState:    if1["enable_vrrp"].(bool),
+			VirtualIp:    if1["vrrp_virtual_ip"].(string),
 		}
 
 		edgeCSP.InterfaceList = append(edgeCSP.InterfaceList, if2)
@@ -493,22 +477,16 @@ func marshalEdgeCSPInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 		v1 := v0.(map[string]interface{})
 
 		v2 := &goaviatrix.Vlan{
-			ParentInterface: v1["parent_interface"].(string),
-			IpAddr:          v1["ipaddr"].(string),
+			ParentInterface: v1["parent_interface_name"].(string),
+			IpAddr:          v1["ip_address"].(string),
 			GatewayIp:       v1["gateway_ip"].(string),
-			PeerIpAddr:      v1["peer_ipaddr"].(string),
+			PeerIpAddr:      v1["peer_ip_address"].(string),
 			PeerGatewayIp:   v1["peer_gateway_ip"].(string),
-			VirtualIp:       v1["virtual_ip"].(string),
+			VirtualIp:       v1["vrrp_virtual_ip"].(string),
 			Tag:             v1["tag"].(string),
 		}
 
 		v2.VlanId = strconv.Itoa(v1["vlan_id"].(int))
-
-		if v1["admin_state"].(bool) {
-			v2.AdminState = "enabled"
-		} else {
-			v2.AdminState = "disabled"
-		}
 
 		edgeCSP.VlanList = append(edgeCSP.VlanList, v2)
 	}
@@ -685,7 +663,7 @@ func resourceAviatrixEdgeCSPCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if edgeCSP.SingleIpSnat {
+	if edgeCSP.EnableSingleIpSnat {
 		gatewayForGatewayFunctions.GatewayName = edgeCSP.GwName
 		err := client.EnableSNat(gatewayForGatewayFunctions)
 		if err != nil {
@@ -788,56 +766,44 @@ func resourceAviatrixEdgeCSPRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("wan_public_ip", edgeCSPResp.WanPublicIp)
 	d.Set("rx_queue_size", edgeCSPResp.RxQueueSize)
 	d.Set("state", edgeCSPResp.State)
-	d.Set("wan_interface_name", edgeCSPResp.WanInterface)
-	d.Set("lan_interface_name", edgeCSPResp.LanInterface)
-	d.Set("management_interface_name", edgeCSPResp.MgmtInterface)
+	d.Set("wan_interface_names", edgeCSPResp.WanInterface)
+	d.Set("lan_interface_names", edgeCSPResp.LanInterface)
+	d.Set("management_interface_names", edgeCSPResp.MgmtInterface)
 
 	var interfaces []map[string]interface{}
 	var vlan []map[string]interface{}
 	for _, if0 := range edgeCSPResp.InterfaceList {
 		if if0.Type != "MANAGEMENT" {
 			if1 := make(map[string]interface{})
-			if1["ifname"] = if0.IfName
+			if1["name"] = if0.IfName
 			if1["type"] = if0.Type
 			if1["bandwidth"] = if0.Bandwidth
-			if1["public_ip"] = if0.PublicIp
+			if1["wan_public_ip"] = if0.PublicIp
 			if1["tag"] = if0.Tag
-			if1["dhcp"] = if0.Dhcp
-			if1["ipaddr"] = if0.IpAddr
+			if1["enable_dhcp"] = if0.Dhcp
+			if1["ip_address"] = if0.IpAddr
 			if1["gateway_ip"] = if0.GatewayIp
-			if1["dns_primary"] = if0.DnsPrimary
-			if1["dns_secondary"] = if0.DnsSecondary
-			if1["virtual_ip"] = if0.VirtualIp
-
-			if if0.AdminState == "enabled" {
-				if1["admin_state"] = true
-			} else {
-				if1["admin_state"] = false
-			}
+			if1["dns_server_ip"] = if0.DnsPrimary
+			if1["secondary_dns_server_ip"] = if0.DnsSecondary
+			if1["vrrp_virtual_ip"] = if0.VirtualIp
 
 			if if0.Type == "LAN" {
-				if1["vrrp_state"] = if0.VrrpState
+				if1["enable_vrrp"] = if0.VrrpState
 			}
 
 			if if0.Type == "LAN" && if0.SubInterfaces != nil {
 				for _, v0 := range if0.SubInterfaces {
 					v1 := make(map[string]interface{})
-					v1["parent_interface"] = v0.ParentInterface
-					v1["ipaddr"] = v0.IpAddr
+					v1["parent_interface_name"] = v0.ParentInterface
+					v1["ip_address"] = v0.IpAddr
 					v1["gateway_ip"] = v0.GatewayIp
-					v1["peer_ipaddr"] = v0.PeerIpAddr
+					v1["peer_ip_address"] = v0.PeerIpAddr
 					v1["peer_gateway_ip"] = v0.PeerGatewayIp
-					v1["virtual_ip"] = v0.VirtualIp
+					v1["vrrp_virtual_ip"] = v0.VirtualIp
 					v1["tag"] = v0.Tag
 
 					vlanId, _ := strconv.Atoi(v0.VlanId)
 					v1["vlan_id"] = vlanId
-
-					if v0.AdminState == "enabled" {
-						v1["admin_state"] = true
-					} else {
-						v1["admin_state"] = false
-					}
 
 					vlan = append(vlan, v1)
 				}
@@ -856,7 +822,7 @@ func resourceAviatrixEdgeCSPRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.Set("dns_profile_name", edgeCSPResp.DnsProfileName)
-	d.Set("single_ip_snat", edgeCSPResp.SingleIpSnat)
+	d.Set("enable_single_ip_snat", edgeCSPResp.SingleIpSnat)
 	d.Set("enable_auto_advertise_lan_cidrs", edgeCSPResp.EnableAutoAdvertiseLanCidrs)
 
 	d.SetId(edgeCSPResp.GwName)
@@ -1051,10 +1017,10 @@ func resourceAviatrixEdgeCSPUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if d.HasChange("single_ip_snat") {
+	if d.HasChange("enable_single_ip_snat") {
 		gatewayForGatewayFunctions.GatewayName = edgeCSP.GwName
 
-		if edgeCSP.SingleIpSnat {
+		if edgeCSP.EnableSingleIpSnat {
 			err := client.EnableSNat(gatewayForGatewayFunctions)
 			if err != nil {
 				return diag.Errorf("failed to enable single IP SNAT during update: %s", err)

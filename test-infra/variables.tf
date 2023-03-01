@@ -75,3 +75,4 @@ variable "edge_csp_password" {}
 variable "edge_csp_project_uuid" {}
 variable "edge_csp_compute_node_uuid" {}
 variable "edge_csp_template_uuid" {}
+variable "edge_csp_ha_compute_node_uuid" {}

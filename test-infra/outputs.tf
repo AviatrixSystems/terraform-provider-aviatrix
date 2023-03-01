@@ -251,17 +251,21 @@ output "EDGE_CSP_USERNAME" {
 }
 
 output "EDGE_CSP_PASSWORD" {
-  value = var.edge_spoke_site_id
+  value = var.edge_csp_password
 }
 
 output "EDGE_CSP_PROJECT_UUID" {
-  value = var.edge_spoke_site_id
+  value = var.edge_csp_project_uuid
 }
 
-output "EDGE_CSP_COMPUTE_UUID" {
-  value = var.edge_spoke_site_id
+output "EDGE_CSP_COMPUTE_NODE_UUID" {
+  value = var.edge_csp_compute_node_uuid
 }
 
 output "EDGE_CSP_TEMPLATE_UUID" {
-  value = var.edge_spoke_site_id
+  value = var.edge_csp_template_uuid
+}
+
+output "EDGE_CSP_HA_COMPUTE_NODE_UUID" {
+  value = var.edge_csp_ha_compute_node_uuid
 }
