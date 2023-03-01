@@ -23,20 +23,12 @@ func resourceAviatrixDNSProfile() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "",
+				Description: "DNS profile name.",
 			},
-			"global": {
+			"global_dns_servers": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"lan": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "",
+				Description: "List of global DNS servers.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -44,15 +36,23 @@ func resourceAviatrixDNSProfile() *schema.Resource {
 			"local_domain_names": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "",
+				Description: "List of local domain names.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
-			"wan": {
+			"lan_dns_servers": {
 				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "",
+				Description: "List of LAN DNS servers.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"wan_dns_servers": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "List of WAN DNS servers.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -66,10 +66,10 @@ func marshalDNSProfileInput(d *schema.ResourceData) map[string]interface{} {
 	var templateName []string
 
 	dnsProfile := &goaviatrix.DNSProfile{
-		Global:           getStringList(d, "global"),
-		Lan:              getStringList(d, "lan"),
+		Global:           getStringList(d, "global_dns_servers"),
+		Lan:              getStringList(d, "lan_dns_servers"),
 		LocalDomainNames: getStringList(d, "local_domain_names"),
-		Wan:              getStringList(d, "wan"),
+		Wan:              getStringList(d, "wan_dns_servers"),
 	}
 
 	name := d.Get("name").(string)
@@ -123,10 +123,10 @@ func resourceAviatrixDNSProfileRead(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("failed to read DNS profile: %s", err)
 	}
 
-	d.Set("global", profile["global"])
-	d.Set("lan", profile["lan"])
+	d.Set("global_dns_servers", profile["global"])
+	d.Set("lan_dns_servers", profile["lan"])
 	d.Set("local_domain_names", profile["local_domain_names"])
-	d.Set("wan", profile["wan"])
+	d.Set("wan_dns_servers", profile["wan"])
 
 	d.SetId(d.Get("name").(string))
 	return nil
