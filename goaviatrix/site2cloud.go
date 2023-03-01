@@ -699,4 +699,3 @@ func DiffSuppressFuncBackupRemoteGwLongitude(k, old, new string, d *schema.Resou
 
 	return math.Abs(o.(float64)-n.(float64)) < 1
 }
-
