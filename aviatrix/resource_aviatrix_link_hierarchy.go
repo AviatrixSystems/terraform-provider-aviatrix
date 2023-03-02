@@ -23,28 +23,30 @@ func resourceAviatrixLinkHierarchy() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "",
+				Description: "Name of link hierarchy.",
 			},
 			"links": {
 				Type:             schema.TypeList,
 				Required:         true,
-				Description:      "",
+				Description:      "List of named links.",
 				DiffSuppressFunc: goaviatrix.DiffSuppressFuncLinkHierarchy,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Name.",
 						},
 						"wan_link": {
-							Type:     schema.TypeSet,
-							Required: true,
+							Type:        schema.TypeSet,
+							Required:    true,
+							Description: "Set of WAN links.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"wan_tag": {
 										Type:        schema.TypeString,
 										Required:    true,
-										Description: "",
+										Description: "WAN tag.",
 									},
 								},
 							},
@@ -55,7 +57,7 @@ func resourceAviatrixLinkHierarchy() *schema.Resource {
 			"uuid": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "",
+				Description: "UUID of link hierarchy.",
 			},
 		},
 	}
