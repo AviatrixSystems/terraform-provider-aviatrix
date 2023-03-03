@@ -472,6 +472,10 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		} else if s2c.RemoteGwIP2 != "" && singleIpHA {
 			return fmt.Errorf("'backup_remote_gateway_ip' is not required when HA is enabled and single ip ha is enabled")
 		}
+		if s2c.RemoteGwIP2 != "" {
+			s2c.RemoteGwIP = s2c.RemoteGwIP + "," + s2c.RemoteGwIP2
+			s2c.RemoteGwIP2 = ""
+		}
 	} else {
 		s2c.HAEnabled = "no"
 		if s2c.BackupGwName != "" || s2c.RemoteGwIP2 != "" || s2c.BackupLocalTunnelIp != "" || s2c.BackupRemoteTunnelIp != "" {
