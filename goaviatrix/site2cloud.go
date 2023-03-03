@@ -21,7 +21,7 @@ type Site2Cloud struct {
 	Action                        string   `form:"action,omitempty"`
 	CID                           string   `form:"CID,omitempty"`
 	VpcID                         string   `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	TunnelName                    string   `form:"connection_name" json:"name,omitempty"`
+	TunnelName                    string   `form:"connection_name,omitempty" json:"name,omitempty"`
 	RemoteGwType                  string   `form:"remote_gateway_type,omitempty"`
 	ConnType                      string   `form:"connection_type,omitempty" json:"type,omitempty"`
 	TunnelType                    string   `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
