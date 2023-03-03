@@ -1,6 +1,6 @@
 module github.com/AviatrixSystems/terraform-provider-aviatrix/v2
 
-go 1.17
+go 1.18
 
 require (
 	github.com/ajg/form v1.5.2-0.20200323032839-9aeb3cf462e1
