@@ -22,27 +22,27 @@ func resourceAviatrixSLAClass() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "",
+				Description: "Name of SLA class.",
 			},
 			"latency": {
 				Type:        schema.TypeInt,
 				Required:    true,
-				Description: "",
+				Description: "Latency of sla class in ms.",
 			},
 			"jitter": {
 				Type:        schema.TypeInt,
 				Required:    true,
-				Description: "",
+				Description: "Jitter of sla class in ms.",
 			},
 			"packet_drop_rate": {
 				Type:        schema.TypeFloat,
 				Required:    true,
-				Description: "",
+				Description: "Packet drop rate of sla class.",
 			},
 			"uuid": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "",
+				Description: "UUID of SLA class.",
 			},
 		},
 	}
