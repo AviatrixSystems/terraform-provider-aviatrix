@@ -22,29 +22,29 @@ func resourceAviatrixTrafficClassifier() *schema.Resource {
 				Type:        schema.TypeList,
 				Required:    true,
 				ForceNew:    true,
-				Description: "",
+				Description: "List of traffic classifier policies.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:        schema.TypeString,
 							Required:    true,
 							ForceNew:    true,
-							Description: "",
+							Description: "Policy name.",
 						},
-						"src_sgs": {
+						"source_smart_group_uuids": {
 							Type:        schema.TypeList,
 							Required:    true,
 							ForceNew:    true,
-							Description: "",
+							Description: "List of source smart group UUIDs.",
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
 						},
-						"dst_sgs": {
+						"destination_smart_group_uuids": {
 							Type:        schema.TypeList,
 							Required:    true,
 							ForceNew:    true,
-							Description: "",
+							Description: "List of destination smart group UUIDs.",
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -53,20 +53,20 @@ func resourceAviatrixTrafficClassifier() *schema.Resource {
 							Type:        schema.TypeSet,
 							Optional:    true,
 							ForceNew:    true,
-							Description: "",
+							Description: "Port ranges.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"lo": {
+									"low": {
 										Type:        schema.TypeInt,
 										Optional:    true,
 										ForceNew:    true,
-										Description: "",
+										Description: "Low port range.",
 									},
-									"hi": {
+									"high": {
 										Type:        schema.TypeInt,
 										Optional:    true,
 										ForceNew:    true,
-										Description: "",
+										Description: "High port range.",
 									},
 								},
 							},
@@ -75,36 +75,36 @@ func resourceAviatrixTrafficClassifier() *schema.Resource {
 							Type:        schema.TypeString,
 							Optional:    true,
 							ForceNew:    true,
-							Description: "",
+							Description: "Protocol.",
 						},
-						"link_hierarchy": {
+						"link_hierarchy_uuid": {
 							Type:        schema.TypeString,
 							Optional:    true,
 							ForceNew:    true,
-							Description: "",
+							Description: "Link hierarchy UUID.",
 						},
-						"sla_class": {
+						"sla_class_uuid": {
 							Type:        schema.TypeString,
 							Optional:    true,
 							ForceNew:    true,
-							Description: "",
+							Description: "SLA class UUID.",
 						},
-						"logging": {
+						"enable_logging": {
 							Type:        schema.TypeBool,
 							Optional:    true,
 							ForceNew:    true,
-							Description: "",
+							Description: "Enable logging.",
 						},
 						"route_type": {
 							Type:        schema.TypeString,
 							Optional:    true,
 							ForceNew:    true,
-							Description: "",
+							Description: "Route type.",
 						},
 						"uuid": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "",
+							Description: "Traffic classifier policy UUID.",
 						},
 					},
 				},
@@ -123,17 +123,17 @@ func marshalTrafficClassifierInput(d *schema.ResourceData) *goaviatrix.PolicyLis
 		if2 := goaviatrix.TCPolicy{
 			Name:          v1["name"].(string),
 			Protocol:      v1["protocol"].(string),
-			LinkHierarchy: v1["link_hierarchy"].(string),
-			SlaClass:      v1["sla_class"].(string),
-			Logging:       v1["logging"].(bool),
+			LinkHierarchy: v1["link_hierarchy_uuid"].(string),
+			SlaClass:      v1["sla_class_uuid"].(string),
+			Logging:       v1["enable_logging"].(bool),
 			RouteType:     v1["route_type"].(string),
 		}
 
-		for _, ss := range v1["src_sgs"].([]interface{}) {
+		for _, ss := range v1["source_smart_group_uuids"].([]interface{}) {
 			if2.SrcSgs = append(if2.SrcSgs, ss.(string))
 		}
 
-		for _, ds := range v1["dst_sgs"].([]interface{}) {
+		for _, ds := range v1["destination_smart_group_uuids"].([]interface{}) {
 			if2.DstSgs = append(if2.DstSgs, ds.(string))
 		}
 
@@ -141,8 +141,8 @@ func marshalTrafficClassifierInput(d *schema.ResourceData) *goaviatrix.PolicyLis
 			v3 := v2.(map[string]interface{})
 
 			pr := goaviatrix.PortRange{
-				Lo: v3["lo"].(int),
-				Hi: v3["hi"].(int),
+				Lo: v3["low"].(int),
+				Hi: v3["high"].(int),
 			}
 
 			if2.PortRanges = append(if2.PortRanges, pr)
@@ -198,11 +198,11 @@ func resourceAviatrixTrafficClassifierRead(ctx context.Context, d *schema.Resour
 			p := make(map[string]interface{})
 			p["uuid"] = policy.UUID
 			p["name"] = policy.Name
-			p["src_sgs"] = policy.SrcSgs
-			p["dst_sgs"] = policy.DstSgs
-			p["link_hierarchy"] = policy.LinkHierarchy
-			p["sla_class"] = policy.SlaClass
-			p["logging"] = policy.Logging
+			p["source_smart_group_uuids"] = policy.SrcSgs
+			p["destination_smart_group_uuids"] = policy.DstSgs
+			p["link_hierarchy_uuid"] = policy.LinkHierarchy
+			p["sla_class_uuid"] = policy.SlaClass
+			p["enable_logging"] = policy.Logging
 			p["route_type"] = policy.RouteType
 
 			if policy.Protocol != "PROTOCOL_UNSPECIFIED" {
@@ -212,8 +212,8 @@ func resourceAviatrixTrafficClassifierRead(ctx context.Context, d *schema.Resour
 			var portRanges []map[string]interface{}
 			for _, pr := range policy.PortRanges {
 				p1 := make(map[string]interface{})
-				p1["lo"] = pr.Lo
-				p1["hi"] = pr.Hi
+				p1["low"] = pr.Lo
+				p1["high"] = pr.Hi
 				portRanges = append(portRanges, p1)
 			}
 			p["port_ranges"] = portRanges
