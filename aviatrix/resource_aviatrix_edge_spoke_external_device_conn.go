@@ -102,19 +102,34 @@ func resourceAviatrixEdgeSpokeExternalDeviceConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "Retry interval in seconds.",
 			},
+			"enable_edge_underlay": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Enable BGP over WAN underlay.",
+			},
+			"remote_cloud_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice([]string{"AWS", "AZURE"}, false),
+				Description:  "Remote cloud type.",
+			},
 		},
 	}
 }
 
 func marshalEdgeSpokeExternalDeviceConnInput(d *schema.ResourceData) *goaviatrix.ExternalDeviceConn {
 	externalDeviceConn := &goaviatrix.ExternalDeviceConn{
-		VpcID:          d.Get("site_id").(string),
-		ConnectionName: d.Get("connection_name").(string),
-		GwName:         d.Get("gw_name").(string),
-		ConnectionType: d.Get("connection_type").(string),
-		TunnelProtocol: strings.ToUpper(d.Get("tunnel_protocol").(string)),
-		LocalLanIP:     d.Get("local_lan_ip").(string),
-		RemoteLanIP:    d.Get("remote_lan_ip").(string),
+		VpcID:              d.Get("site_id").(string),
+		ConnectionName:     d.Get("connection_name").(string),
+		GwName:             d.Get("gw_name").(string),
+		ConnectionType:     d.Get("connection_type").(string),
+		TunnelProtocol:     strings.ToUpper(d.Get("tunnel_protocol").(string)),
+		LocalLanIP:         d.Get("local_lan_ip").(string),
+		RemoteLanIP:        d.Get("remote_lan_ip").(string),
+		EnableEdgeUnderlay: d.Get("enable_edge_underlay").(bool),
+		RemoteCloudType:    d.Get("remote_cloud_type").(string),
 	}
 
 	bgpLocalAsNum, err := strconv.Atoi(d.Get("bgp_local_as_num").(string))
@@ -210,6 +225,8 @@ func resourceAviatrixEdgeSpokeExternalDeviceConnRead(ctx context.Context, d *sch
 	d.Set("bgp_remote_as_num", strconv.Itoa(conn.BgpRemoteAsNum))
 	d.Set("local_lan_ip", conn.LocalLanIP)
 	d.Set("remote_lan_ip", conn.RemoteLanIP)
+	d.Set("enable_edge_underlay", conn.EnableEdgeUnderlay)
+	d.Set("remote_cloud_type", conn.RemoteCloudType)
 
 	d.SetId(conn.ConnectionName + "~" + conn.VpcID)
 	return nil

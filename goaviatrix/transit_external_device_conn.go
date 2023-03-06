@@ -56,6 +56,8 @@ type ExternalDeviceConn struct {
 	BgpMd5Key              string `form:"bgp_md5_key,omitempty"`
 	BackupBgpMd5Key        string `form:"backup_bgp_md5_key,omitempty"`
 	AuthType               string `form:"auth_type,omitempty"`
+	EnableEdgeUnderlay     bool   `form:"edge_underlay,omitempty"`
+	RemoteCloudType        string `form:"remote_cloud_type,omitempty"`
 }
 
 type EditExternalDeviceConnDetail struct {
@@ -94,6 +96,8 @@ type EditExternalDeviceConnDetail struct {
 	Phase1RemoteIdentifier string `json:"phase1_remote_id"`
 	PrependAsPath          string `json:"conn_bgp_prepend_as_path"`
 	EnableJumboFrame       bool   `json:"jumbo_frame,omitempty"`
+	EnableEdgeUnderlay     bool   `json:"edge_underlay"`
+	RemoteCloudType        string `json:"remote_cloud_type"`
 }
 
 type EditBgpMd5Key struct {
@@ -293,6 +297,8 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 		externalDeviceConn.PeerVnetId = externalDeviceConnDetail.PeerVnetId
 		externalDeviceConn.Phase1RemoteIdentifier = externalDeviceConnDetail.Phase1RemoteIdentifier
 		externalDeviceConn.PrependAsPath = externalDeviceConnDetail.PrependAsPath
+		externalDeviceConn.EnableEdgeUnderlay = externalDeviceConnDetail.EnableEdgeUnderlay
+		externalDeviceConn.RemoteCloudType = externalDeviceConnDetail.RemoteCloudType
 
 		return externalDeviceConn, nil
 	}
