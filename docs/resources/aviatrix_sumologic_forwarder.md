@@ -8,6 +8,8 @@ description: |-
 
 # aviatrix_sumologic_forwarder
 
+!> **WARNING:** As of provider version R3.1.0+, enabling sumologic forwarder won't be supported. Enabled sumologic forwarder can still be imported and disabled.
+
 The **aviatrix_sumologic_forwarder** resource allows the enabling and disabling of sumologic forwarder.
 
 ## Example Usage

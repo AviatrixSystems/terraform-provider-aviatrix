@@ -67,42 +67,17 @@ func resourceAviatrixFilebeatForwarder() *schema.Resource {
 	}
 }
 
-func marshalFilebeatForwarderInput(d *schema.ResourceData) *goaviatrix.FilebeatForwarder {
-	filebeatForwarder := &goaviatrix.FilebeatForwarder{
-		Server:        d.Get("server").(string),
-		Port:          d.Get("port").(int),
-		TrustedCAFile: d.Get("trusted_ca_file").(string),
-		ConfigFile:    d.Get("config_file").(string),
-	}
-
-	var excludedGateways []string
-	for _, v := range d.Get("excluded_gateways").(*schema.Set).List() {
-		excludedGateways = append(excludedGateways, v.(string))
-	}
-	if len(excludedGateways) != 0 {
-		filebeatForwarder.ExcludedGatewaysInput = strings.Join(excludedGateways, ",")
-	}
-
-	return filebeatForwarder
-}
-
 func resourceAviatrixFilebeatForwarderCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	_, err := client.GetFilebeatForwarderStatus()
 	if err != goaviatrix.ErrNotFound {
 		return fmt.Errorf("the filebeat_forwarder is already enabled, please import to manage with Terraform")
+	} else {
+		return fmt.Errorf("the support for filebeat forwarder is deprecated")
 	}
-
-	filebeatForwarder := marshalFilebeatForwarderInput(d)
-
-	if err := client.EnableFilebeatForwarder(filebeatForwarder); err != nil {
-		return fmt.Errorf("could not enable filebeat forwarder: %v", err)
-	}
-
-	d.SetId("filebeat_forwarder")
-	return nil
 }
+
 func resourceAviatrixFilebeatForwarderRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 

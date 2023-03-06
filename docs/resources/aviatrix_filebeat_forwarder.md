@@ -8,6 +8,8 @@ description: |-
 
 # aviatrix_filebeat_forwarder
 
+!> **WARNING:** As of provider version R3.1.0+, enabling filebeat forwarder won't be supported. Enabled filebeat forwarder can still be imported and disabled.
+
 The **aviatrix_filebeat_forwarder** resource allows the enabling and disabling of filebeat forwarder.
 
 ## Example Usage
