@@ -67,61 +67,17 @@ func resourceAviatrixSplunkLogging() *schema.Resource {
 	}
 }
 
-func marshalSplunkLoggingInput(d *schema.ResourceData, useCustomConfig bool) *goaviatrix.SplunkLogging {
-	var splunkLogging = new(goaviatrix.SplunkLogging)
-
-	if useCustomConfig {
-		splunkLogging.UseConfigFile = true
-		splunkLogging.ConfigFile = d.Get("custom_output_config_file").(string)
-	} else {
-		splunkLogging.UseConfigFile = false
-		splunkLogging.Server = d.Get("server").(string)
-		splunkLogging.Port = d.Get("port").(int)
-	}
-
-	splunkLogging.CustomConfig = d.Get("custom_input_config").(string)
-
-	var excludedGateways []string
-	for _, v := range d.Get("excluded_gateways").(*schema.Set).List() {
-		excludedGateways = append(excludedGateways, v.(string))
-	}
-	if len(excludedGateways) != 0 {
-		splunkLogging.ExcludedGatewaysInput = strings.Join(excludedGateways, ",")
-	}
-
-	return splunkLogging
-}
-
 func resourceAviatrixSplunkLoggingCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 
 	_, err := client.GetSplunkLoggingStatus()
 	if err != goaviatrix.ErrNotFound {
 		return fmt.Errorf("the splunk_logging is already enabled, please import to manage with Terraform")
-	}
-
-	var splunkLogging *goaviatrix.SplunkLogging
-
-	// port number cannot be 0
-	if d.Get("server").(string) == "" && d.Get("port").(int) == 0 && d.Get("custom_output_config_file").(string) == "" {
-		return fmt.Errorf("please provide either server/port or configuration file")
-	} else if d.Get("custom_output_config_file").(string) != "" {
-		splunkLogging = marshalSplunkLoggingInput(d, true)
 	} else {
-		if d.Get("port").(int) == 0 || d.Get("server").(string) == "" {
-			return fmt.Errorf("please provide both server and port")
-		}
-
-		splunkLogging = marshalSplunkLoggingInput(d, false)
+		return fmt.Errorf("the support for splunk logging is deprecated")
 	}
-
-	if err := client.EnableSplunkLogging(splunkLogging); err != nil {
-		return fmt.Errorf("could not enable splunk logging: %v", err)
-	}
-
-	d.SetId("splunk_logging")
-	return nil
 }
+
 func resourceAviatrixSplunkLoggingRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*goaviatrix.Client)
 

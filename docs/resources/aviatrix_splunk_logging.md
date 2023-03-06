@@ -8,6 +8,8 @@ description: |-
 
 # aviatrix_splunk_logging
 
+!> **WARNING:** As of provider version R3.1.0+, enabling splunk logging won't be supported. Enabled splunk logging can still be imported and disabled.
+
 The **aviatrix_splunk_logging** resource allows the enabling and disabling of splunk logging.
 
 ## Example Usage
