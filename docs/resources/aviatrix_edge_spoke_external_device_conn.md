@@ -44,6 +44,8 @@ The following arguments are supported:
 ### Optional
 * `connection_type` - (Optional) Connection type. Valid value: 'bgp'. Default value: 'bgp'.
 * `tunnel_protocol` - (Optional) Tunnel protocol. Valid value: 'LAN'. Default value: 'LAN'. Case insensitive.
+* `enable_edge_underlay` - (Optional) Enable BGP over WAN underlay. Valid values: true, false. Default value: false.
+* `remote_cloud_type` - (Optional) Remote cloud type. Valid values: "AWS", "AZURE".
 * `number_of_retries` - (Optional) Number of retries. Default value: 0.
 * `retry_interval` - (Optional) Retry interval in seconds. Default value: 300.
 
