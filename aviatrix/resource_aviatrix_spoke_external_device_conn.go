@@ -80,8 +80,8 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 				Optional:     true,
 				Default:      "IPsec",
 				ForceNew:     true,
-				Description:  "Tunnel Protocol. Valid values: 'IPsec', 'LAN'. Default value: 'IPsec'. Case insensitive.",
-				ValidateFunc: validation.StringInSlice([]string{"IPsec", "LAN"}, true),
+				Description:  "Tunnel Protocol. Valid values: 'IPsec', 'GRE' or 'LAN'. Default value: 'IPsec'. Case insensitive.",
+				ValidateFunc: validation.StringInSlice([]string{"IPsec", "GRE", "LAN"}, true),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return strings.ToUpper(old) == strings.ToUpper(new)
 				},
@@ -286,6 +286,12 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 				Default:     false,
 				Description: "Enable Event Triggered HA.",
 			},
+			"enable_jumbo_frame": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable Jumbo Frame for the transit external device connection. Valid values: true, false.",
+			},
 			"manual_bgp_advertised_cidrs": {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{
@@ -403,6 +409,7 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		BackupRemoteTunnelCidr: d.Get("backup_remote_tunnel_cidr").(string),
 		BgpMd5Key:              d.Get("bgp_md5_key").(string),
 		BackupBgpMd5Key:        d.Get("backup_bgp_md5_key").(string),
+		EnableJumboFrame:       d.Get("enable_jumbo_frame").(bool),
 	}
 
 	tunnelProtocol := strings.ToUpper(d.Get("tunnel_protocol").(string))
@@ -554,15 +561,15 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 	if externalDeviceConn.ConnectionType != "bgp" && externalDeviceConn.TunnelProtocol != "IPsec" {
 		return fmt.Errorf("'tunnel_protocol' can not be set unless 'connection_type' is 'bgp'")
 	}
-	greOrLan := externalDeviceConn.TunnelProtocol == "LAN"
+	greOrLan := externalDeviceConn.TunnelProtocol == "GRE" || externalDeviceConn.TunnelProtocol == "LAN"
 	if greOrLan && customAlgorithms {
-		return fmt.Errorf("custom algorithm paramters are not valid with 'tunnel_protocol' = LAN")
+		return fmt.Errorf("custom algorithm paramters are not valid with 'tunnel_protocol' = GRE or LAN")
 	}
 	if greOrLan && enableIkev2 {
-		return fmt.Errorf("enable_ikev2 is not supported with 'tunnel_protocol' = LAN")
+		return fmt.Errorf("enable_ikev2 is not supported with 'tunnel_protocol' = GRE or LAN")
 	}
 	if greOrLan && externalDeviceConn.PreSharedKey != "" {
-		return fmt.Errorf("'pre_shared_key' is not valid with 'tunnel_protocol' = LAN")
+		return fmt.Errorf("'pre_shared_key' is not valid with 'tunnel_protocol' = GRE or LAN")
 	}
 	if externalDeviceConn.PeerVnetId != "" && (externalDeviceConn.ConnectionType != "bgp" || externalDeviceConn.TunnelProtocol != "LAN") {
 		return fmt.Errorf("'remote_vpc_name' is only valid for 'connection_type' = 'bgp' and 'tunnel_protocol' = 'LAN'")
@@ -632,6 +639,13 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		}
 	}
 
+	enableJumboFrame := d.Get("enable_jumbo_frame").(bool)
+	if enableJumboFrame {
+		if externalDeviceConn.ConnectionType != "bgp" || strings.ToUpper(externalDeviceConn.TunnelProtocol) != "GRE" {
+			return fmt.Errorf("jumbo frame is only supported on GRE tunnels under bgp connection")
+		}
+	}
+
 	if externalDeviceConn.PreSharedKey != "" {
 		externalDeviceConn.AuthType = "psk"
 	}
@@ -648,6 +662,18 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 	if d.Get("enable_event_triggered_ha").(bool) {
 		if err := client.EnableSite2CloudEventTriggeredHA(externalDeviceConn.VpcID, externalDeviceConn.ConnectionName); err != nil {
 			return fmt.Errorf("could not enable event triggered HA for external device conn after create: %v", err)
+		}
+	}
+
+	if enableJumboFrame {
+		if err := client.EnableJumboFrameExternalDeviceConn(externalDeviceConn); err != nil {
+			return fmt.Errorf("could not enable jumbo frame for external device conn: %v after create: %v", externalDeviceConn.ConnectionName, err)
+		}
+	} else {
+		if externalDeviceConn.ConnectionType == "bgp" && strings.ToUpper(externalDeviceConn.TunnelProtocol) == "GRE" {
+			if err := client.DisableJumboFrameExternalDeviceConn(externalDeviceConn); err != nil {
+				return fmt.Errorf("could not disable jumbo frame for external device conn: %v after create: %v", externalDeviceConn.ConnectionName, err)
+			}
 		}
 	}
 
@@ -782,6 +808,7 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 		d.Set("connection_type", conn.ConnectionType)
 		d.Set("remote_tunnel_cidr", conn.RemoteTunnelCidr)
 		d.Set("enable_event_triggered_ha", conn.EventTriggeredHA)
+		d.Set("enable_jumbo_frame", conn.EnableJumboFrame)
 		if conn.TunnelProtocol == "LAN" {
 			d.Set("remote_lan_ip", conn.RemoteLanIP)
 			d.Set("local_lan_ip", conn.LocalLanIP)
@@ -960,6 +987,29 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 			err := client.DisableSite2CloudEventTriggeredHA(vpcID, connName)
 			if err != nil {
 				return fmt.Errorf("could not disable event triggered HA for external device conn during update: %v", err)
+			}
+		}
+	}
+
+	if d.HasChange("enable_jumbo_frame") {
+		externalDeviceConn := &goaviatrix.ExternalDeviceConn{
+			VpcID:            d.Get("vpc_id").(string),
+			ConnectionName:   d.Get("connection_name").(string),
+			GwName:           d.Get("gw_name").(string),
+			ConnectionType:   d.Get("connection_type").(string),
+			TunnelProtocol:   d.Get("tunnel_protocol").(string),
+			EnableJumboFrame: d.Get("enable_jumbo_frame").(bool),
+		}
+		if externalDeviceConn.EnableJumboFrame {
+			if externalDeviceConn.ConnectionType != "bgp" || strings.ToUpper(externalDeviceConn.TunnelProtocol) != "GRE" {
+				return fmt.Errorf("jumbo frame is only supported on GRE tunnels under BGP connection")
+			}
+			if err := client.EnableJumboFrameExternalDeviceConn(externalDeviceConn); err != nil {
+				return fmt.Errorf("could not enable jumbo frame for external device conn: %v during update: %v", externalDeviceConn.ConnectionName, err)
+			}
+		} else {
+			if err := client.DisableJumboFrameExternalDeviceConn(externalDeviceConn); err != nil {
+				return fmt.Errorf("could not disable jumbo frame for external device conn: %v during update: %v", externalDeviceConn.ConnectionName, err)
 			}
 		}
 	}

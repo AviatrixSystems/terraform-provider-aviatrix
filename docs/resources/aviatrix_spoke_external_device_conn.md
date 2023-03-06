@@ -38,6 +38,26 @@ resource "aviatrix_spoke_external_device_conn" "test" {
 }
 ```
 ```hcl
+# Create a bgp/GRE Aviatrix Spoke External Device Connection with jumbo frame enabled and ha enabled
+resource "aviatrix_transit_external_device_conn" "test" {
+  vpc_id                    = "vpc-abcd1234"
+  connection_name           = "my_conn"
+  gw_name                   = "spokeGw"
+  connection_type           = "bgp"
+  tunnel_protocol           = "GRE"
+  bgp_local_as_num          = "65001"
+  bgp_remote_as_num         = "65000"
+  remote_gateway_ip         = "172.12.13.14"
+  ha_enabled                = true
+  local_tunnel_cidr         = "169.254.29.2/30,169.254.30.2/30"
+  remote_tunnel_cidr        = "169.254.29.1/30,169.254.30.1/30"
+  backup_local_tunnel_cidr  = "169.254.39.2/30,169.254.40.2/30"
+  backup_remote_tunnel_cidr = "169.254.39.1/30,169.254.40.1/30"
+  backup_bgp_remote_as_num  = "65000"
+  backup_remote_gateway_ip  = "172.12.13.15"
+}
+```
+```hcl
 # Create an Aviatrix Spoke External Device Connection with Connection AS Path Prepend set
 resource "aviatrix_spoke_external_device_conn" "test" {
   vpc_id            = "vpc-abcd1234"
@@ -104,7 +124,7 @@ The following arguments are supported:
 
 ~> **NOTE:** To create a BGP over LAN connection with an Azure Spoke Gateway, the Spoke Gateway must have its `enable_bgp` and `enable_bgp_over_lan` attributes set to true.
 
-* `tunnel_protocol` - (Optional) Tunnel protocol, only valid with `connection_type` = 'bgp'. Valid values: 'IPsec', 'LAN'. Default value: 'IPsec'. Case insensitive.
+* `tunnel_protocol` - (Optional) Tunnel protocol, only valid with `connection_type` = 'bgp'. Valid values: 'IPsec', 'GRE' or 'LAN'. Default value: 'IPsec'. Case insensitive.
 * `bgp_local_as_num` - (Optional) BGP local ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
 * `bgp_remote_as_num` - (Optional) BGP remote ASN (Autonomous System Number). Integer between 1-4294967294. Required for 'bgp' connection.
 * `remote_subnet` - (Optional) Remote CIDRs joined as a string with ','. Required for a 'static' type connection.
@@ -136,7 +156,7 @@ The following arguments are supported:
 * `local_lan_ip` - (Optional) Local LAN IP. Required for GCP BGP over LAN connection.
 * `backup_remote_lan_ip` - (Optional) Backup Remote LAN IP. Required for HA BGP over LAN connection.
 * `backup_local_lan_ip` - (Optional) Backup Local LAN IP. Required for GCP HA BGP over LAN connection.
-* * `enable_bgp_lan_activemesh` - (Optional) Switch to enable BGP LAN ActiveMesh mode. Only valid for GCP and Azure with Remote Gateway HA enabled. Requires Azure Remote Gateway insane mode enabled. Valid values: true, false. Default: false. Available as of provider version R3.0.2+.
+* `enable_bgp_lan_activemesh` - (Optional) Switch to enable BGP LAN ActiveMesh mode. Only valid for GCP and Azure with Remote Gateway HA enabled. Requires Azure Remote Gateway insane mode enabled. Valid values: true, false. Default: false. Available as of provider version R3.0.2+.
 
 ### BGP MD5 Authentication (Available as of provider version R2.21.1+)
 ~> **NOTE:** BGP MD5 Authentication is only valid with `connection_type` = 'bgp'.
@@ -154,6 +174,7 @@ The following arguments are supported:
 * `enable_ikev2` - (Optional) Set as true to enable IKEv2 protocol.
 * `manual_bgp_advertised_cidrs` - (Optional) Configure manual BGP advertised CIDRs for this connection. Only valid with `connection_type`= 'bgp'.
 * `enable_event_triggered_ha` - (Optional) Enable Event Triggered HA. Default value: false. Valid values: true or false.
+* `enable_jumbo_frame` - (Optional) Enable Jumbo Frame for the transit external device connection. Only valid with 'GRE' tunnels under 'bgp' connection. Requires spoke to be jumbo frame and insane mode enabled. Valid values: true, false. Default value: false. Available as of provider version R3.0.2+.
 * `phase1_remote_identifier` - (Optional) List of phase 1 remote identifier of the IPsec tunnel. This can be configured as a list of any string, including emtpy string. Example: ["1.2.3.4"] when HA is disabled, ["1.2.3.4", "abcd"] when HA is enabled. Available as of provider version R2.19+.
 * `prepend_as_path` - (Optional) Connection AS Path Prepend customized by specifying AS PATH for a BGP connection.
 
