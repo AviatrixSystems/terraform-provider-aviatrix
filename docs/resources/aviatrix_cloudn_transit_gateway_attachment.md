@@ -23,6 +23,9 @@ resource "aviatrix_cloudn_transit_gateway_attachment" "test" {
   cloudn_lan_interface_neighbor_ip      = "10.210.38.100"
   cloudn_lan_interface_neighbor_bgp_asn = "65219"
   enable_over_private_network           = false
+  enable_jumbo_frame                    = true
+  enable_dead_peer_detection            = true
+  enable_over_private_network           = false
 }
 ```
 
@@ -40,11 +43,13 @@ The following arguments are supported:
 * `cloudn_lan_interface_neighbor_bgp_asn` - (Required) CloudN LAN Interface Neighbor's AS Number. Type: String.
 
 ### Optional
-!> **WARNING:** Attributes `enable_dead_peer_detection`, `enable_learned_cidrs_approval` and `approved_cidrs` have been deprecated and removed as of provider version R2.22+.
 
 * `enable_over_private_network` - (Optional) Enable connection over private network. Type: Boolean. Default: true.
 * `enable_jumbo_frame` - (Optional) Enable Jumbo Frame support for the connection. Type: Boolean. Default: false.
-* `prepend_as_path` - (Optional) Connection AS Path Prepend customized by specifying AS PATH for a BGP connection. Requires transit_gateway_bgp_asn to be set. Type: List. Available as of provider version R2.21.0+.
+* `enable_dead_peer_detection` - (Optional) Enable Dead Peer Detection. Type: Boolean. Default: true.
+* `enable_learned_cidrs_approval` - (Optional) Enable learned CIDRs approval. Type: Boolean. Default: false. Available as of provider version R2.21.0+.
+* `approved_cidrs` - (Optional/Computed) Set of approved CIDRs. Requires `enable_learned_cidrs_approval` to be true. Type: Set(String). Available as of provider version R2.21.0+.
+* `prepend_as_path` - (Optional)  Connection AS Path Prepend customized by specifying AS PATH for a BGP connection. Requires transit_gateway_bgp_asn to be set. Type: List. Available as of provider version R2.21.0+.
 
 ## Import
 
