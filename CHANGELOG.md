@@ -1,3 +1,25 @@
+## 3.0.2 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-7.0.1577**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Multi-Cloud Transit:
+1. Implemented support for BGP over LAN on Spoke in the following resources:
+    - **aviatrix_spoke_gateway**
+    - **aviatrix_spoke_external_device_conn**
+
+### Enhancements:
+1. Added support of ``#`` as a valid character in resource tags for Azure CSP
+2. Added support of ``name`` as one of the attributes under ``selector`` in **aviatrix_smart_group**
+
+### Bug Fixes:
+1. Fixed the issue where white space is allowed for ``phase1_remote_identifier`` in **aviatrix_site2cloud**, **aviatrix_transit_external_device_conn** and **aviatrix_spoke_external_device_conn**
+2. Fixed the issue where ``cloud_image_id`` is allowed for Azure in **aviatrix_firewall_instance**
+3. Fixed the issue where S2C creation failed for an exception error
+4. Fixed the re-ordering issue of ``rtb_list1`` and ``rtb_list2`` in **aviatrix_aws_peer**
+
+
 ## 3.0.1 (January 09, 2023)
 ### Notes:
 - Supported Controller version: **UserConnect-7.0.1373**
@@ -148,7 +170,7 @@
 4. Fixed issue where creating FQDN gateway with ``fqdn_lan_interface`` causes replacement
 
 
-## 2.23.4 (Unreleased)
+## 2.23.4 (February 02, 2023)
 ### Notes:
 - Supported Controller version: **UserConnect-6.8.1483**
 - Supported Terraform version: **v1.x**
