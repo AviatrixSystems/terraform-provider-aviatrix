@@ -542,6 +542,11 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Computed:    true,
 				Description: "Public IP address of the HA Spoke Gateway.",
 			},
+			"enable_global_vpc": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enable global VPC.",
+			},
 		},
 	}
 }
@@ -559,6 +564,7 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		AvailabilityDomain:   d.Get("availability_domain").(string),
 		FaultDomain:          d.Get("fault_domain").(string),
 		ApprovedLearnedCidrs: getStringSet(d, "approved_learned_cidrs"),
+		EnableGlobalVpc:      d.Get("enable_global_vpc").(bool),
 	}
 
 	if !d.Get("manage_ha_gateway").(bool) {
@@ -899,6 +905,10 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 		if _, ok := d.GetOk("private_mode_lb_vpc_id"); ok {
 			return fmt.Errorf("%q is only valid when Private Mode is enabled", "private_mode_lb_vpc_id")
 		}
+	}
+
+	if gateway.EnableGlobalVpc && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+		return fmt.Errorf("'enable_global_vpc' is only valid for GCP")
 	}
 
 	log.Printf("[INFO] Creating Aviatrix Spoke Gateway: %#v", gateway)
@@ -1318,6 +1328,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("enable_preserve_as_path", gw.EnablePreserveAsPath)
 	d.Set("rx_queue_size", gw.RxQueueSize)
 	d.Set("public_ip", gw.PublicIP)
+	d.Set("enable_global_vpc", gw.EnableGlobalVpc)
 
 	if gw.EnableLearnedCidrsApproval {
 		spokeAdvancedConfig, err := client.GetSpokeGatewayAdvancedConfig(&goaviatrix.SpokeVpc{GwName: gw.GwName})
@@ -1729,6 +1740,10 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		if d.HasChange("ha_private_mode_subnet_zone") {
 			return fmt.Errorf("updating %q is not allowed if private mode is disabled", "ha_private_mode_subnet_zone")
 		}
+	}
+
+	if d.HasChange("enable_global_vpc") && !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
+		return fmt.Errorf("'enable_global_vpc' is only valid for GCP")
 	}
 
 	if d.HasChange("enable_preserve_as_path") {
@@ -2545,6 +2560,20 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 			err := client.SetRxQueueSize(haGwRxQueueSize)
 			if err != nil {
 				return fmt.Errorf("could not modify rx queue size for spoke ha: %s during gateway update: %v", haGwRxQueueSize.GwName, err)
+			}
+		}
+	}
+
+	if d.HasChange("enable_global_vpc") {
+		if d.Get("enable_global_vpc").(bool) {
+			err := client.EnableGlobalVpc(gateway)
+			if err != nil {
+				return fmt.Errorf("could not enable global vpc during spoke gateway update: %v", err)
+			}
+		} else {
+			err := client.DisableGlobalVpc(gateway)
+			if err != nil {
+				return fmt.Errorf("could not disable global vpc during spoke gateway update: %v", err)
 			}
 		}
 	}

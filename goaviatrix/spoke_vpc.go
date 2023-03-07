@@ -48,6 +48,7 @@ type SpokeVpc struct {
 	ApprovedLearnedCidrs         []string `form:"approved_learned_cidrs"`
 	Async                        bool     `form:"async,omitempty"`
 	LbVpcId                      string   `form:"private_mode_load_balancer,omitempty"`
+	EnableGlobalVpc              bool     `form:"global_vpc"`
 }
 
 type SpokeGatewayAdvancedConfig struct {
@@ -473,4 +474,22 @@ func (c *Client) DisableSpokePreserveAsPath(spokeGateway *SpokeVpc) error {
 		"gateway_name": spokeGateway.GwName,
 	}
 	return c.PostAPI(action, data, BasicCheck)
+}
+
+func (c *Client) EnableGlobalVpc(gateway *Gateway) error {
+	form := map[string]string{
+		"action":       "enable_global_vpc",
+		"CID":          c.CID,
+		"gateway_name": gateway.GwName,
+	}
+	return c.PostAPI(form["action"], form, BasicCheck)
+}
+
+func (c *Client) DisableGlobalVpc(gateway *Gateway) error {
+	form := map[string]string{
+		"action":       "disable_global_vpc",
+		"CID":          c.CID,
+		"gateway_name": gateway.GwName,
+	}
+	return c.PostAPI(form["action"], form, BasicCheck)
 }
