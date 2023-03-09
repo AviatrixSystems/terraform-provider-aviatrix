@@ -96,7 +96,7 @@ type EditExternalDeviceConnDetail struct {
 	Phase1RemoteIdentifier string `json:"phase1_remote_id"`
 	PrependAsPath          string `json:"conn_bgp_prepend_as_path"`
 	EnableJumboFrame       bool   `json:"jumbo_frame,omitempty"`
-	EnableEdgeUnderlay     bool   `json:"edge_underlay"`
+	WanUnderlay            bool   `json:"wan_underlay"`
 	RemoteCloudType        string `json:"remote_cloud_type"`
 }
 
@@ -297,7 +297,7 @@ func (c *Client) GetExternalDeviceConnDetail(externalDeviceConn *ExternalDeviceC
 		externalDeviceConn.PeerVnetId = externalDeviceConnDetail.PeerVnetId
 		externalDeviceConn.Phase1RemoteIdentifier = externalDeviceConnDetail.Phase1RemoteIdentifier
 		externalDeviceConn.PrependAsPath = externalDeviceConnDetail.PrependAsPath
-		externalDeviceConn.EnableEdgeUnderlay = externalDeviceConnDetail.EnableEdgeUnderlay
+		externalDeviceConn.EnableEdgeUnderlay = externalDeviceConnDetail.WanUnderlay
 		externalDeviceConn.RemoteCloudType = externalDeviceConnDetail.RemoteCloudType
 
 		return externalDeviceConn, nil
