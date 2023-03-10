@@ -44,12 +44,14 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 			"cloud_type": {
 				Type:         schema.TypeInt,
 				Required:     true,
+				ForceNew:     true,
 				Description:  "Type of cloud service provider.",
 				ValidateFunc: validateCloudType,
 			},
 			"account_name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "This parameter represents the name of a Cloud-Account in Aviatrix controller.",
 			},
 			"gw_name": {
@@ -94,6 +96,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
+				ForceNew:    true,
 				Description: "AZ of subnet being created for Insane Mode Spoke Gateway. Required if insane_mode is enabled for AWS cloud.",
 			},
 			"single_ip_snat": {
@@ -154,6 +157,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
+				ForceNew:    true,
 				Description: "Enable Insane Mode for Spoke Gateway. Valid values: true, false. Supported for AWS/AWSGov, GCP, Azure and OCI. If insane mode is enabled, gateway size has to at least be c5 size for AWS and Standard_D3_v2 size for Azure.",
 			},
 			"enable_vpc_dns_server": {
@@ -1755,18 +1759,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && haSubnet == "" && haZone != "" {
 			return fmt.Errorf("'ha_subnet' must be provided to enable HA for Azure (8), AzureGov (32) or AzureChina (2048), cannot enable HA with only 'ha_zone'")
 		}
-	}
-	if d.HasChange("cloud_type") {
-		return fmt.Errorf("updating cloud_type is not allowed")
-	}
-	if d.HasChange("account_name") {
-		return fmt.Errorf("updating account_name is not allowed")
-	}
-	if d.HasChange("insane_mode") {
-		return fmt.Errorf("updating insane_mode is not allowed")
-	}
-	if d.HasChange("insane_mode_az") {
-		return fmt.Errorf("updating insane_mode_az is not allowed")
 	}
 	if d.HasChange("allocate_new_eip") {
 		return fmt.Errorf("updating allocate_new_eip is not allowed")
