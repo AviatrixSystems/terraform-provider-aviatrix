@@ -2013,18 +2013,6 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("'ha_subnet' must be provided to enable HA on Azure, cannot enable HA with only 'ha_zone'")
 		}
 	}
-	if d.HasChange("cloud_type") {
-		return fmt.Errorf("updating cloud_type is not allowed")
-	}
-	if d.HasChange("account_name") {
-		return fmt.Errorf("updating account_name is not allowed")
-	}
-	if d.HasChange("insane_mode") {
-		return fmt.Errorf("updating insane_mode is not allowed")
-	}
-	if d.HasChange("insane_mode_az") {
-		return fmt.Errorf("updating insane_mode_az is not allowed")
-	}
 	if d.HasChange("allocate_new_eip") {
 		return fmt.Errorf("updating allocate_new_eip is not allowed")
 	}
