@@ -404,9 +404,8 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      1,
-				ForceNew:     true,
 				ValidateFunc: validation.IntAtLeast(1),
-				Description:  "Number of interfaces that will be created for BGP over LAN enabled Azure transit.",
+				Description:  "Number of interfaces that will be created for BGP over LAN enabled Azure transit. Applies on HA Transit as well if enabled. Updatable since 3.0.3+.",
 			},
 			"enable_private_oob": {
 				Type:        schema.TypeBool,
@@ -3275,6 +3274,31 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			err := client.SetRxQueueSize(haGwRxQueueSize)
 			if err != nil {
 				return fmt.Errorf("could not modify rx queue size for transit ha: %s during gateway update: %v", haGwRxQueueSize.GwName, err)
+			}
+		}
+	}
+
+	if d.HasChange("bgp_lan_interfaces_count") {
+		if !d.Get("enable_bgp_over_lan").(bool) || !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+			return fmt.Errorf("coult not update bgp_lan_interfaces_count since it only supports BGP over LAN enabled spoke for Azure (8), AzureGov (32) or AzureChina (2048)")
+
+		}
+		gw := &goaviatrix.Gateway{
+			GwName:                gateway.GwName,
+			BgpLanInterfacesCount: d.Get("bgp_lan_interfaces_count").(int),
+		}
+		err := client.ChangeBgpOverLanIntfCnt(gw)
+		if err != nil {
+			return fmt.Errorf("could not modify bgp lan interface count for transit: %s during gateway update: %v", gw.GatewayName, err)
+		}
+		if haSubnet != "" {
+			haGw := &goaviatrix.Gateway{
+				GwName:                d.Get("gw_name").(string) + "-hagw",
+				BgpLanInterfacesCount: d.Get("bgp_lan_interfaces_count").(int),
+			}
+			err := client.ChangeBgpOverLanIntfCnt(haGw)
+			if err != nil {
+				return fmt.Errorf("could not modify bgp lan interface count for transit ha: %s during gateway update: %v", haGw.GwName, err)
 			}
 		}
 	}
