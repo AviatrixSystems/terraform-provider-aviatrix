@@ -372,7 +372,7 @@ The following arguments are supported:
 * `ha_bgp_lan_interfaces` - (Optional) Interfaces to run BGP protocol on top of the ethernet interface, to connect to the onprem/remote peer. Only available for GCP Transit HA. Each interface has the following attributes:
   * `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider.
   * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges.
-* `bgp_lan_interfaces_count` - (Optional) Number of interfaces that will be created for BGP over LAN enabled Azure transit. Valid value: 1~5 for FireNet case, 1~7 for Non-FireNet case. Default value: 1. Available as of provider version R2.22+.
+* `bgp_lan_interfaces_count` - (Optional) Number of interfaces that will be created for BGP over LAN enabled Azure transit. Applies on HA Transit as well if enabled. Valid value: 1~5 for FireNet case, 1~7 for Non-FireNet case. Default value: 1. Available as of provider version R2.22+. Updatable since 3.0.3+.
 
 ### Encryption
 * `enable_encrypt_volume` - (Optional) Enable EBS volume encryption for Gateway. Only supports AWS, AWSGov, AWSChina, AWS Top Secret and AWS Secret. Valid values: true, false. Default value: false.
