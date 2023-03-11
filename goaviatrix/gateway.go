@@ -1328,3 +1328,15 @@ func DiffSuppressFuncGatewayDNat(k, old, new string, d *schema.ResourceData) boo
 	return reflect.DeepEqual(connectionPolicyOld, connectionPolicyNew) &&
 		reflect.DeepEqual(interfacePolicyOld, interfacePolicyNew)
 }
+
+func (c *Client) ChangeBgpOverLanIntfCnt(gateway *Gateway) error {
+	form := map[string]interface{}{
+		"CID":                   c.CID,
+		"action":                "change_bgp_over_lan_intf_cnt",
+		"gw_name":               gateway.GwName,
+		"bgp_over_lan":          "enable",
+		"bgp_over_lan_intf_cnt": gateway.BgpLanInterfacesCount,
+	}
+
+	return c.PostAPIContext2(context.Background(), nil, form["action"].(string), form, BasicCheck)
+}
