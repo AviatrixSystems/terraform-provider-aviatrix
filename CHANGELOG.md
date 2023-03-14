@@ -1,4 +1,17 @@
-## 2.22.4 (Unreleased)
+## 2.22.5 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.7.1574**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### CloudN
+1. Restored support of CloudN transit attachment cidr approval features in **aviatrix_cloudn_transit_gateway_attachment**:
+    - ``enable_dead_peer_detection``
+    - ``enable_learned_cidrs_approval``
+    - ``approved_cidrs``
+
+
+## 2.22.4 (September 20, 2022)
 ### Notes:
 - Supported Controller version: **UserConnect-6.7.1480**
 - Supported Terraform version: **v1.x**
