@@ -1,4 +1,4 @@
-## 2.23.4 (Unreleased)
+## 2.23.4 (February 02, 2023)
 ### Notes:
 - Supported Controller version: **UserConnect-6.8.1483**
 - Supported Terraform version: **v1.x**
@@ -126,6 +126,19 @@
 1. Fixed issue where duplicate **aviatrix_account** resources would be set into state even after giving an error
 2. Fixed issue where ``username`` could not be specified with ``private_key_file`` in **aviatrix_firenet_vendor_integration**
 3. Fixed issue where setting ``custom_algorithms`` to true would still use default values, causing tunnel replacement in **aviatrix_transit_external_device_conn**
+
+
+## 2.22.5 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.7.1574**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### CloudN
+1. Restored support of CloudN transit attachment cidr approval features in **aviatrix_cloudn_transit_gateway_attachment**:
+    - ``enable_dead_peer_detection``
+    - ``enable_learned_cidrs_approval``
+    - ``approved_cidrs``
 
 
 ## 2.22.4 (September 20, 2022)
