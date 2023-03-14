@@ -12,8 +12,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.22.5 (UserConnect-6.7.1574)``
-
+``Last updated: R2.23.5 (UserConnect-6.8.1509)``
 
 ---
 
@@ -193,6 +192,20 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 2. Fixed issue where provider crashes for private mode config
 3. Fixed issue where exported SNAT/DNAT interface shows tunnel ID when using Transit connection or route-based S2C
 4. Fixed issue where creating FQDN gateway with ``fqdn_lan_interface`` causes replacement
+
+
+## 2.23.5
+### Notes:
+- Release date: **(14 Mar 2023)**
+- Supported Controller version: **UserConnect-6.8.1509**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### CloudN
+1. Restored support of CloudN transit attachment cidr approval features in **aviatrix_cloudn_transit_gateway_attachment**:
+    - ``enable_dead_peer_detection``
+    - ``enable_learned_cidrs_approval``
+    - ``approved_cidrs``
 
 
 ## 2.23.4
