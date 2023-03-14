@@ -12,10 +12,23 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.22.4 (UserConnect-6.7.1480)``
-
+``Last updated: R2.22.5 (UserConnect-6.7.1574)``
 
 ---
+
+## 2.22.5
+### Notes:
+- Release date: **(14 Mar 2023)**
+- Supported Controller version: **UserConnect-6.7.1574**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### CloudN
+1. Restored support of CloudN transit attachment cidr approval features in **aviatrix_cloudn_transit_gateway_attachment**:
+    - ``enable_dead_peer_detection``
+    - ``enable_learned_cidrs_approval``
+    - ``approved_cidrs``
+
 
 ## 2.22.4
 ### Notes:
