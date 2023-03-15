@@ -32,7 +32,7 @@ func resourceAviatrixDatadogAgent() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      "datadoghq.com",
-				ValidateFunc: validation.StringInSlice([]string{"datadoghq.com", "datadoghq.eu"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"datadoghq.com", "datadoghq.eu", "ddog-gov.com"}, false),
 				Description:  "Site preference.",
 			},
 			"excluded_gateways": {
