@@ -30,7 +30,7 @@ The following arguments are supported:
 
 ### Required
 * `api_key` (Required) API key.
-* `site` (Optional) Site preference ("datadoghq.com" or" datadoghq.eu"). "datadoghq.com" by default.
+* `site` (Optional) Site preference. Valid values: "datadoghq.com", "datadoghq.eu" or "ddog-gov.com". Default value: "datadoghq.com".
 
 ### Optional
 * `metrics_only` (Optional) Only export metrics without exporting logs. False by default.
