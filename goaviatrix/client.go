@@ -413,9 +413,9 @@ func checkAPIResp(resp *http.Response, action string, checkFunc CheckAPIResponse
 	if err != nil {
 		return fmt.Errorf("reading response body %q failed: %v", action, err)
 	}
-
-	if err = json.NewDecoder(&b).Decode(&data); err != nil {
-		return fmt.Errorf("json Decode %q failed: %v\n Body: %s", action, err, b.String())
+	body := b.String()
+	if err = json.Unmarshal([]byte(body), &data); err != nil {
+		return fmt.Errorf("json Decode %q failed: %v\n Body: %s", action, err, body)
 	}
 
 	return checkFunc(action, "Post", data.Reason, data.Return)
