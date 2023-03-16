@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -242,9 +243,11 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 	if site2cloud.PrivateRouteEncryption == "true" {
 		form["private_route_encryption"] = site2cloud.PrivateRouteEncryption
 		if len(site2cloud.RouteTableList) != 0 {
-			for i := range site2cloud.RouteTableList {
-				form["route_table_list["+strconv.Itoa(i)+"]"] = site2cloud.RouteTableList[i]
+			args, err := json.Marshal(strings.Join(site2cloud.RouteTableList, ","))
+			if err != nil {
+				return err
 			}
+			form["route_table_list"] = string(args)
 		}
 		latitude := fmt.Sprintf("%f", site2cloud.RemoteGwLatitude)
 		longitude := fmt.Sprintf("%f", site2cloud.RemoteGwLongitude)
