@@ -85,7 +85,17 @@ func (c *Client) UpdateSpokeGatewaySubnetGroup(ctx context.Context, spokeGateway
 	}
 
 	if spokeGatewaySubnetGroup.SubnetList == nil {
-		form["subnet_group_config"] = "[]"
+		err := c.DeleteSpokeGatewaySubnetGroup(ctx, spokeGatewaySubnetGroup)
+		if err != nil {
+			return err
+		}
+
+		err = c.AddSpokeGatewaySubnetGroup(ctx, spokeGatewaySubnetGroup)
+		if err != nil {
+			return err
+		}
+
+		return nil
 	} else {
 		subnetGroupConfig := SubnetGroupConfig{
 			SubnetGroupName: spokeGatewaySubnetGroup.SubnetGroupName,
