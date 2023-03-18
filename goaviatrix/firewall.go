@@ -156,7 +156,7 @@ func (c *Client) DeleteFirewallPolicy(fw *Firewall) error {
 		return fmt.Errorf("could not marshal firewall policies: %v", err)
 	}
 
-	form := map[string]string{
+	form := map[string]interface{}{
 		"CID":          c.CID,
 		"action":       "delete_stateful_firewall_rules",
 		"gateway_name": fw.GwName,
@@ -174,7 +174,7 @@ func (c *Client) DeleteFirewallPolicy(fw *Firewall) error {
 		return nil
 	}
 
-	return c.PostAPI(form["action"], form, checkFunc)
+	return c.PostAPIContext2(context.Background(), nil, form["action"].(string), form, checkFunc)
 }
 
 func (c *Client) GetFirewallPolicy(fw *Firewall) (*Firewall, error) {
