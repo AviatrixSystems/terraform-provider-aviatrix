@@ -5,7 +5,7 @@
 
 ### Features:
 #### CloudN
-1. Restored support of CloudN transit attachment cidr approval features in **aviatrix_cloudn_transit_gateway_attachment**:
+1. Restored support of CloudN transit attachment CIDR approval features in **aviatrix_cloudn_transit_gateway_attachment**:
     - ``enable_dead_peer_detection``
     - ``enable_learned_cidrs_approval``
     - ``approved_cidrs``
@@ -73,7 +73,7 @@
 
 ### Features:
 #### CloudN
-1. Restored support of CloudN transit attachment cidr approval features in **aviatrix_cloudn_transit_gateway_attachment**:
+1. Restored support of CloudN transit attachment CIDR approval features in **aviatrix_cloudn_transit_gateway_attachment**:
     - ``enable_dead_peer_detection``
     - ``enable_learned_cidrs_approval``
     - ``approved_cidrs``
@@ -216,7 +216,7 @@
 
 ### Features:
 #### CloudN
-1. Restored support of CloudN transit attachment cidr approval features in **aviatrix_cloudn_transit_gateway_attachment**:
+1. Restored support of CloudN transit attachment CIDR approval features in **aviatrix_cloudn_transit_gateway_attachment**:
     - ``enable_dead_peer_detection``
     - ``enable_learned_cidrs_approval``
     - ``approved_cidrs``
