@@ -12,7 +12,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.23.5 (UserConnect-6.8.1509)``
+``Last updated: R2.24.3 (UserConnect-6.9.349)``
 
 ---
 
@@ -139,6 +139,20 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 8. Deprecated **aviatrix_trans_peer** and it will be removed in Aviatrix provider 3.0.1
 
 
+## 2.24.3
+### Notes:
+- Release date: **(20 Mar 2023)**
+- Supported Controller version: **UserConnect-6.9.349**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### CloudN
+1. Restored support of CloudN transit attachment CIDR approval features in **aviatrix_cloudn_transit_gateway_attachment**:
+    - ``enable_dead_peer_detection``
+    - ``enable_learned_cidrs_approval``
+    - ``approved_cidrs``
+
+
 ## 2.24.2
 ### Notes:
 - Release date: **(6 Jan 2023)**
@@ -202,7 +216,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ### Features:
 #### CloudN
-1. Restored support of CloudN transit attachment cidr approval features in **aviatrix_cloudn_transit_gateway_attachment**:
+1. Restored support of CloudN transit attachment CIDR approval features in **aviatrix_cloudn_transit_gateway_attachment**:
     - ``enable_dead_peer_detection``
     - ``enable_learned_cidrs_approval``
     - ``approved_cidrs``
@@ -351,7 +365,7 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ### Features:
 #### CloudN
-1. Restored support of CloudN transit attachment cidr approval features in **aviatrix_cloudn_transit_gateway_attachment**:
+1. Restored support of CloudN transit attachment CIDR approval features in **aviatrix_cloudn_transit_gateway_attachment**:
     - ``enable_dead_peer_detection``
     - ``enable_learned_cidrs_approval``
     - ``approved_cidrs``
