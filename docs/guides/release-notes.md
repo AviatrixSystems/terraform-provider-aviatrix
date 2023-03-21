@@ -152,6 +152,9 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
     - ``enable_learned_cidrs_approval``
     - ``approved_cidrs``
 
+### Enhancements:
+1. Added support of "datadoghq.com" for ``site`` in **aviatrix_datadog_agent**
+
 
 ## 2.24.2
 ### Notes:
