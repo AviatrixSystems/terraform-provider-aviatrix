@@ -118,6 +118,22 @@
 8. Deprecated **aviatrix_trans_peer** and it will be removed in Aviatrix provider 3.0.1
 
 
+## 2.24.3 (Unreleased)
+### Notes:
+- Supported Controller version: **UserConnect-6.9.349**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### CloudN
+1. Restored support of CloudN transit attachment cidr approval features in **aviatrix_cloudn_transit_gateway_attachment**:
+    - ``enable_dead_peer_detection``
+    - ``enable_learned_cidrs_approval``
+    - ``approved_cidrs``
+
+### Enhancements:
+1. Added support of "datadoghq.com" for ``site`` in **aviatrix_datadog_agent**
+
+
 ## 2.24.2 (January 06, 2023)
 ### Notes:
 - Supported Controller version: **UserConnect-6.9.282**
@@ -170,7 +186,7 @@
 4. Fixed issue where creating FQDN gateway with ``fqdn_lan_interface`` causes replacement
 
 
-## 2.23.5 (Unreleased)
+## 2.23.5 (March 14, 2023)
 ### Notes:
 - Supported Controller version: **UserConnect-6.8.1509**
 - Supported Terraform version: **v1.x**
