@@ -75,6 +75,7 @@ func (c *Client) UpdateEdgeCSPHa(ctx context.Context, edgeCSP *EdgeCSP) error {
 		"action": "update_edge_gateway",
 		"CID":    c.CID,
 		"name":   edgeCSP.GwName,
+		"lan_ip": edgeCSP.LanInterfaceIpPrefix,
 	}
 
 	interfaces, err := json.Marshal(edgeCSP.InterfaceList)

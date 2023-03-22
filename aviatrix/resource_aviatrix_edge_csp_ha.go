@@ -239,23 +239,14 @@ func resourceAviatrixEdgeCSPHaUpdate(ctx context.Context, d *schema.ResourceData
 
 	d.Partial(true)
 
-	gatewayForEaasFunctions := &goaviatrix.EdgeSpoke{
-		GwName: d.Id(),
-	}
+	//gatewayForEaasFunctions := &goaviatrix.EdgeSpoke{
+	//	GwName: d.Id(),
+	//}
 	gatewayForEdgeCSPFunctions := &goaviatrix.EdgeCSP{
 		GwName: d.Id(),
 	}
 
-	if d.HasChanges("lan_interface_ip_prefix") {
-		gatewayForEaasFunctions.LanInterfaceIpPrefix = edgeCSPHa.LanInterfaceIpPrefix
-
-		err := client.UpdateEdgeSpokeIpConfigurations(ctx, gatewayForEaasFunctions)
-		if err != nil {
-			return diag.Errorf("could not update IP configurations during Edge CSP HA update: %v", err)
-		}
-	}
-
-	if d.HasChange("interfaces") {
+	if d.HasChanges("lan_interface_ip_prefix", "interfaces") {
 		gatewayForEdgeCSPFunctions.InterfaceList = edgeCSPHa.InterfaceList
 
 		err := client.UpdateEdgeCSPHa(ctx, gatewayForEdgeCSPFunctions)

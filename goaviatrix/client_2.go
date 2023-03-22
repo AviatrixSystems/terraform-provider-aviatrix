@@ -46,6 +46,20 @@ func (c *Client) PostAPI2(action string, d interface{}, checkFunc CheckAPIRespon
 	return c.PostAPIContext2Form(context.Background(), action, d, checkFunc)
 }
 
+func (c *Client) PostAPIContext2Download(ctx context.Context, action string, d interface{}, checkFunc CheckAPIResponseFunc) (io.ReadCloser, error) {
+	Url := fmt.Sprintf("https://%s/v2/api", c.ControllerIP)
+	resp, err := c.RequestContext2(ctx, "POST", Url, d)
+	if err != nil {
+		return nil, fmt.Errorf("HTTP %s %q failed: %v", "POST", Url, err)
+	}
+
+	if strings.Contains(resp.Header.Get("Content-Type"), "json") {
+		return nil, checkAPIResp(resp, action, checkFunc)
+	}
+
+	return resp.Body, nil
+}
+
 // PostAPIContext2Form makes a post request to V2 API, decodes the response and checks for any errors
 // form data
 func (c *Client) PostAPIContext2Form(ctx context.Context, action string, d interface{}, checkFunc CheckAPIResponseFunc) error {
