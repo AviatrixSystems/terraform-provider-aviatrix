@@ -480,6 +480,12 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		// 22021: Remote GW IP is not required when singleIPHA is enabled as only 1 tunnel is created
 		if s2c.BackupGwName == "" || (s2c.RemoteGwIP2 == "" && !singleIpHA) {
 			return fmt.Errorf("'backup_gateway_name' and 'backup_remote_gateway_ip' are required when HA is enabled")
+		} else if s2c.RemoteGwIP2 != "" && singleIpHA {
+			return fmt.Errorf("'backup_remote_gateway_ip' is not required when HA is enabled and single ip ha is enabled")
+		}
+		if s2c.RemoteGwIP2 != "" {
+			s2c.RemoteGwIP = s2c.RemoteGwIP + "," + s2c.RemoteGwIP2
+			s2c.RemoteGwIP2 = ""
 		}
 	} else {
 		s2c.HAEnabled = "no"

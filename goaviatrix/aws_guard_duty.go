@@ -69,8 +69,19 @@ func (c *Client) UpdateAwsGuardDutyExcludedIPs(account *AwsGuardDutyAccount) err
 		"CID":          c.CID,
 		"account_name": account.AccountName,
 		"region":       account.Region,
-		"excluded_ips": strings.Join(account.ExcludedIPs, ","),
 	}
+
+	excludedIps := `[`
+	for i, v := range account.ExcludedIPs {
+		excludedIps += `"` + v + `"`
+		if i != len(account.ExcludedIPs)-1 {
+			excludedIps += `,`
+		}
+	}
+	excludedIps += `]`
+
+	data["excluded_ips"] = excludedIps
+
 	checkFunc := func(action, method, reason string, ret bool) error {
 		if !ret && !strings.HasPrefix(reason, "No change in the exclude ip list for account") {
 			return fmt.Errorf("rest API %s %s failed: %s", action, method, reason)

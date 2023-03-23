@@ -214,7 +214,7 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Specify whether to enable LDAP or not. Supported values: 'yes' and 'no'.",
+				Description: "Specify whether to enable LDAP or not.",
 			},
 			"ldap_server": {
 				Type:        schema.TypeString,
@@ -719,9 +719,9 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			strs = append(strs, gateway.VpcNet, insaneModeAz)
 			gateway.VpcNet = strings.Join(strs, "~~")
 		}
-		gateway.InsaneMode = "on"
+		gateway.InsaneMode = "yes"
 	} else {
-		gateway.InsaneMode = "off"
+		gateway.InsaneMode = "no"
 	}
 
 	samlEnabled := d.Get("saml_enabled").(bool)
@@ -741,16 +741,9 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	enableElb := d.Get("enable_elb").(bool)
 	if enableElb {
 		gateway.EnableElb = "yes"
-	} else {
-		gateway.EnableElb = "no"
 	}
 
-	enableLdap := d.Get("enable_ldap").(bool)
-	if enableLdap {
-		gateway.EnableLdap = "yes"
-	} else {
-		gateway.EnableLdap = "no"
-	}
+	gateway.EnableLdap = d.Get("enable_ldap").(bool)
 
 	vpnStatus := d.Get("vpn_access").(bool)
 	vpnProtocol := d.Get("vpn_protocol").(string)
@@ -766,7 +759,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if gateway.SamlEnabled == "yes" {
-			if gateway.EnableLdap == "yes" || gateway.OtpMode != "" {
+			if gateway.EnableLdap || gateway.OtpMode != "" {
 				return fmt.Errorf("ldap and mfa can't be configured if saml is enabled")
 			}
 		}
@@ -775,10 +768,10 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("otp_mode can only be '2' or '3' or empty string")
 		}
 
-		if gateway.EnableLdap == "yes" && gateway.OtpMode == "3" {
+		if gateway.EnableLdap && gateway.OtpMode == "3" {
 			return fmt.Errorf("ldap can't be configured along with okta authentication")
 		}
-		if gateway.EnableLdap == "yes" {
+		if gateway.EnableLdap {
 			if gateway.LdapServer == "" {
 				return fmt.Errorf("ldap server must be set if ldap is enabled")
 			}
@@ -808,6 +801,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			if gateway.DuoPushMode != "auto" && gateway.DuoPushMode != "token" && gateway.DuoPushMode != "selective" {
 				return fmt.Errorf("duo push mode must be set to a valid value (auto, selective, or token)")
 			}
+			gateway.AuthMethod = "DUO"
 		} else if gateway.OtpMode == "3" {
 			if gateway.OktaToken == "" {
 				return fmt.Errorf("okta token must be set if otp_mode is set to 3")
@@ -815,6 +809,7 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 			if gateway.OktaURL == "" {
 				return fmt.Errorf("okta url must be set if otp_mode is set to 3")
 			}
+			gateway.AuthMethod = "okta"
 		}
 
 	} else {
@@ -988,14 +983,18 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 
 		log.Printf("[INFO] Enable Single AZ GW HA: %#v", singleAZGateway)
 
-		err := client.EnableSingleAZGateway(gateway)
+		err := client.EnableSingleAZGateway(singleAZGateway)
 		if err != nil {
 			return fmt.Errorf("failed to create single AZ GW HA: %s", err)
 		}
 	} else if !singleAZ && d.Get("enable_public_subnet_filtering").(bool) {
 		// Public Subnet Filtering Gateways are created with single_az_ha=true by default.
 		// Thus, if user set single_az_ha=false, we need to disable.
-		err := client.DisableSingleAZGateway(gateway)
+		singleAZGateway := &goaviatrix.Gateway{
+			GwName:   d.Get("gw_name").(string),
+			SingleAZ: "disabled",
+		}
+		err := client.DisableSingleAZGateway(singleAZGateway)
 		if err != nil {
 			return fmt.Errorf("failed to disable single AZ : %v", err)
 		}
@@ -1100,9 +1099,9 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 				GwName:    d.Get("gw_name").(string) + "-hagw", //CHECK THE NAME of peering ha gateway in
 				// controller, test out first. just assuming it has that suffix
 			}
-			peeringHaGateway.GwSize = peeringHaGwSize
+			peeringHaGateway.VpcSize = peeringHaGwSize
 			err := client.UpdateGateway(peeringHaGateway)
-			log.Printf("[INFO] Resizing Peering Ha Gateway size to: %s,", peeringHaGateway.GwSize)
+			log.Printf("[INFO] Resizing Peering Ha Gateway size to: %s,", peeringHaGateway.VpcSize)
 			if err != nil {
 				return fmt.Errorf("failed to update Aviatrix Peering HA Gateway size: %s", err)
 			}
@@ -1280,7 +1279,7 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("gw_name", gw.GwName)
 	d.Set("subnet", gw.VpcNet)
 	d.Set("single_ip_snat", gw.EnableNat == "yes" && gw.SnatMode == "primary")
-	d.Set("enable_ldap", gw.EnableLdapRead)
+	d.Set("enable_ldap", gw.EnableLdap)
 	d.Set("vpn_cidr", gw.VpnCidr)
 	d.Set("saml_enabled", gw.SamlEnabled == "yes")
 	d.Set("okta_url", gw.OktaURL)
@@ -1654,7 +1653,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	gateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string),
-		GwSize:    d.Get("gw_size").(string),
+		VpcSize:   d.Get("gw_size").(string),
 	}
 	vpnAccess := d.Get("vpn_access").(bool)
 	enableElb := false
@@ -1702,7 +1701,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	peeringHaGateway := &goaviatrix.Gateway{
 		CloudType: d.Get("cloud_type").(int),
 		GwName:    d.Get("gw_name").(string) + "-hagw",
-		GwSize:    d.Get("peering_ha_gw_size").(string),
+		VpcSize:   d.Get("peering_ha_gw_size").(string),
 	}
 
 	// Get primary gw size if gw_size changed, to be used later on for peering ha gw size update
@@ -1750,12 +1749,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			vpn_gw.SamlEnabled = "no"
 		}
 
-		enableLdap := d.Get("enable_ldap").(bool)
-		if enableLdap {
-			vpn_gw.EnableLdap = "yes"
-		} else {
-			vpn_gw.EnableLdap = "no"
-		}
+		vpn_gw.EnableLdap = d.Get("enable_ldap").(bool)
 
 		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.GCPRelatedCloudTypes) {
 			// GCP vpn gw rest api call needs gcloud project id included in vpc id
@@ -1773,14 +1767,14 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("otp_mode can only be '2' or '3' or empty string")
 		}
 		if vpn_gw.SamlEnabled == "yes" {
-			if vpn_gw.EnableLdap == "yes" || vpn_gw.OtpMode != "" {
+			if vpn_gw.EnableLdap || vpn_gw.OtpMode != "" {
 				return fmt.Errorf("ldap and mfa can't be configured if saml is enabled")
 			}
 		}
-		if vpn_gw.EnableLdap == "yes" && vpn_gw.OtpMode == "3" {
+		if vpn_gw.EnableLdap && vpn_gw.OtpMode == "3" {
 			return fmt.Errorf("ldap can't be configured along with okta authentication")
 		}
-		if vpn_gw.EnableLdap == "yes" {
+		if vpn_gw.EnableLdap {
 			if vpn_gw.LdapServer == "" {
 				return fmt.Errorf("ldap server must be set if ldap is enabled")
 			}
@@ -1810,7 +1804,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			if vpn_gw.DuoPushMode != "auto" && vpn_gw.DuoPushMode != "token" && vpn_gw.DuoPushMode != "selective" {
 				return fmt.Errorf("duo push mode must be set to a valid value (auto, selective, or token)")
 			}
-			if vpn_gw.EnableLdap == "yes" {
+			if vpn_gw.EnableLdap {
 				vpn_gw.AuthType = "duo_ldap_auth"
 			} else {
 				vpn_gw.AuthType = "duo_auth"
@@ -1824,7 +1818,7 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 			vpn_gw.AuthType = "okta_auth"
 		} else {
-			if vpn_gw.EnableLdap == "yes" {
+			if vpn_gw.EnableLdap {
 				vpn_gw.AuthType = "ldap_auth"
 			} else if vpn_gw.SamlEnabled == "yes" {
 				vpn_gw.AuthType = "saml_auth"
@@ -2026,12 +2020,12 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			Eip:       d.Get("peering_ha_eip").(string),
 			GwName:    d.Get("gw_name").(string),
 			CloudType: d.Get("cloud_type").(int),
-			GwSize:    d.Get("peering_ha_gw_size").(string),
+			VpcSize:   d.Get("peering_ha_gw_size").(string),
 		}
 
 		haAzureEipName, haAzureEipNameOk := d.GetOk("peering_ha_azure_eip_name_resource_group")
 		if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-			if gw.Eip != "" && gw.GwSize != "" {
+			if gw.Eip != "" && gw.VpcSize != "" {
 				// No change will be detected when peering_ha_eip is set to the empty string because it is computed.
 				// Instead, check peering_ha_gw_size to detect when HA gateway is being deleted.
 				if !haAzureEipNameOk {
@@ -2106,10 +2100,10 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			gw.PeeringHASubnet = strings.Join(haStrs, "~~")
 		}
 
-		if (newHaGwEnabled || changeHaGw) && gw.GwSize == "" {
+		if (newHaGwEnabled || changeHaGw) && gw.VpcSize == "" {
 			return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for this resource if " +
 				"peering_ha_subnet or peering_ha_zone is set")
-		} else if deleteHaGw && gw.GwSize != "" {
+		} else if deleteHaGw && gw.VpcSize != "" {
 			return fmt.Errorf("peering_ha_gw_size must be empty if transit HA gateway is deleted")
 		}
 
@@ -2253,12 +2247,12 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 						"size: %s", err)
 				}
 			} else {
-				if peeringHaGateway.GwSize == "" {
+				if peeringHaGateway.VpcSize == "" {
 					return fmt.Errorf("A valid non empty peering_ha_gw_size parameter is mandatory for this resource if " +
 						"peering_ha_subnet or peering_ha_zone is set. Example: t2.micro or us-west1-b respectively")
 				}
 				err = client.UpdateGateway(peeringHaGateway)
-				log.Printf("[INFO] Updating Peering HA Gateway size to: %s ", peeringHaGateway.GwSize)
+				log.Printf("[INFO] Updating Peering HA Gateway size to: %s ", peeringHaGateway.VpcSize)
 				if err != nil {
 					return fmt.Errorf("failed to update Aviatrix Peering HA Gw size: %s", err)
 				}

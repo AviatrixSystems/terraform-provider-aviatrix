@@ -1,12 +1,10 @@
 package goaviatrix
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -124,40 +122,21 @@ func (c *Client) UpdateFQDNMode(fqdn *FQDN) error {
 }
 
 func (c *Client) UpdateDomains(fqdn *FQDN) error {
-	// TODO: use PostAPI - domain names need special processing
-	fqdn.CID = c.CID
-	fqdn.Action = "set_fqdn_filter_tag_domain_names"
-	log.Infof("Update domains: %#v", fqdn)
+	action := "set_fqdn_filter_tag_domain_names"
+	form := map[string]string{
+		"CID":      c.CID,
+		"action":   action,
+		"tag_name": fqdn.FQDNTag,
+	}
+	if fqdn.DomainList != nil && len(fqdn.DomainList) != 0 {
+		args, err := json.Marshal(fqdn.DomainList)
+		if err != nil {
+			return err
+		}
+		form["domain_names"] = string(args)
+	}
 
-	verb := "POST"
-	body := fmt.Sprintf("CID=%s&action=%s&tag_name=%s", c.CID, fqdn.Action, fqdn.FQDNTag)
-	for i, dn := range fqdn.DomainList {
-		body = body + fmt.Sprintf("&domain_names[%d][fqdn]=%s&domain_names[%d]"+
-			"[proto]=%s&domain_names[%d][port]=%s&domain_names[%d][verdict]=%s", i, dn.FQDN, i, dn.Protocol, i, dn.Port, i, dn.Verdict)
-	}
-	log.Tracef("%s %s Body: %s", verb, c.baseURL, body)
-	req, err := http.NewRequest(verb, c.baseURL, strings.NewReader(body))
-	if err == nil {
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	} else {
-		return errors.New("HTTP NewRequest set_fqdn_filter_tag_domain_names failed: " + err.Error())
-	}
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return errors.New("HTTP Post set_fqdn_filter_tag_domain_names failed: " + err.Error())
-	}
-	var data APIResp
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(resp.Body)
-	bodyString := buf.String()
-	bodyIoCopy := strings.NewReader(bodyString)
-	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
-		return errors.New("Json Decode set_fqdn_filter_tag_domain_names failed: " + err.Error() + "\n Body: " + bodyString)
-	}
-	if !data.Return {
-		return errors.New("Rest API set_fqdn_filter_tag_domain_names Post failed: " + data.Reason)
-	}
-	return nil
+	return c.PostAPI(action, form, BasicCheck)
 }
 
 func (c *Client) AttachGws(fqdn *FQDN) error {
@@ -290,7 +269,14 @@ func (c *Client) UpdateSourceIPFilters(fqdn *FQDN, gateway *Gateway, sourceIPs [
 		"action":       "update_fqdn_filter_tag_source_ip_filters",
 		"tag_name":     fqdn.FQDNTag,
 		"gateway_name": gateway.GwName,
-		"source_ips":   strings.Join(sourceIPs[:], ","),
+	}
+
+	if sourceIPs != nil && len(sourceIPs) != 0 {
+		args, err := json.Marshal(sourceIPs)
+		if err != nil {
+			return err
+		}
+		form["source_ips"] = string(args)
 	}
 
 	return c.PostAPI(form["action"], form, BasicCheck)
@@ -359,9 +345,13 @@ func (c *Client) ConfigureFQDNPassThroughCIDRs(gw *Gateway, IPs []string) error 
 		"action":       "update_fqdn_pass_through_cidrs",
 		"gateway_name": gw.GwName,
 	}
-	for i, ip := range IPs {
-		key := fmt.Sprintf("source_cidrs[%d]", i)
-		form[key] = ip
+
+	if IPs != nil && len(IPs) != 0 {
+		args, err := json.Marshal(IPs)
+		if err != nil {
+			return err
+		}
+		form["source_cidrs"] = string(args)
 	}
 
 	return c.PostAPI(form["action"], form, BasicCheck)
@@ -514,13 +504,21 @@ func (c *Client) DisableFQDNPrivateNetwork(ctx context.Context) error {
 	return c.PostAPIContext(ctx, form["action"], form, checkFunc)
 }
 
-func (c *Client) SetFQDNCustomNetwork(ctx context.Context, configIpString string) error {
+func (c *Client) SetFQDNCustomNetwork(ctx context.Context, configIPs []string) error {
 	action := "disable_fqdn_on_custom_networks"
 	form := map[string]interface{}{
-		"CID":        c.CID,
-		"action":     action,
-		"source_ips": configIpString,
+		"CID":    c.CID,
+		"action": action,
 	}
+
+	if configIPs != nil && len(configIPs) != 0 {
+		args, err := json.Marshal(configIPs)
+		if err != nil {
+			return err
+		}
+		form["source_ips"] = string(args)
+	}
+
 	return c.PostAPIContext(ctx, action, form, BasicCheck)
 }
 

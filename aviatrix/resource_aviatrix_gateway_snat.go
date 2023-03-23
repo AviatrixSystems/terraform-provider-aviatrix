@@ -284,7 +284,7 @@ func resourceAviatrixGatewaySNatCreate(d *schema.ResourceData, meta interface{})
 	flag := false
 	defer resourceAviatrixGatewaySNatReadIfRequired(d, meta, &flag)
 
-	err := client.EnableSNat(gateway)
+	err := client.EnableCustomizedSNat(gateway)
 	if err != nil {
 		return fmt.Errorf("failed to configure policies for 'customized_snat' mode due to: %s", err)
 	}
@@ -434,7 +434,7 @@ func resourceAviatrixGatewaySNatUpdate(d *schema.ResourceData, meta interface{})
 			}
 		}
 
-		err := client.EnableSNat(gateway)
+		err := client.EnableCustomizedSNat(gateway)
 		if err != nil {
 			return fmt.Errorf("failed to enable SNAT of 'customized_snat': %s", err)
 		}

@@ -313,6 +313,7 @@ func resourceAviatrixFirewallInstanceCreate(d *schema.ResourceData, meta interfa
 			cloudType = gw.CloudType
 		}
 	}
+	firewallInstance.CloudType = cloudType
 
 	if strings.HasPrefix(firewallInstance.FirewallImage, "Palo Alto Networks") {
 		if firewallInstance.ManagementSubnet == "" {

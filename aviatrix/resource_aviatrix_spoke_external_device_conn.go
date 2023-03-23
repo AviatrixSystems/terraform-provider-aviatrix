@@ -524,6 +524,10 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		if externalDeviceConn.BackupBgpRemoteAsNum == 0 && externalDeviceConn.ConnectionType == "bgp" {
 			return fmt.Errorf("ha is enabled, and 'connection_type' is 'bgp', please specify 'backup_bgp_remote_as_num'")
 		}
+		if externalDeviceConn.BackupRemoteGatewayIP != "" {
+			externalDeviceConn.RemoteGatewayIP = externalDeviceConn.RemoteGatewayIP + "," + externalDeviceConn.BackupRemoteGatewayIP
+			externalDeviceConn.BackupRemoteGatewayIP = ""
+		}
 	} else {
 		if backupDirectConnect {
 			return fmt.Errorf("ha is not enabled, please set 'backup_direct_connect' to false")

@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -83,11 +84,11 @@ func (c *Client) CreateVpc(vpc *Vpc) error {
 		form["aviatrix_firenet_vpc"] = vpc.AviatrixFireNetVpc
 	} else {
 		if vpc.Subnets != nil && len(vpc.Subnets) != 0 {
-			for i, subnetInfo := range vpc.Subnets {
-				form[fmt.Sprintf("subnet_list[%d][name]", i)] = subnetInfo.Name
-				form[fmt.Sprintf("subnet_list[%d][region]", i)] = subnetInfo.Region
-				form[fmt.Sprintf("subnet_list[%d][cidr]", i)] = subnetInfo.Cidr
+			args, err := json.Marshal(vpc.Subnets)
+			if err != nil {
+				return err
 			}
+			form["subnet_list"] = string(args)
 		}
 	}
 	if vpc.SubnetSize != 0 {
@@ -215,7 +216,8 @@ func (c *Client) GetVpcRouteTableIDs(vpc *Vpc) ([]string, error) {
 	}
 
 	if vpc.PublicRoutesOnly {
-		form["public_only"] = "yes"
+		form["public_only"] = "true"
+		form["ignore_filtering"] = "true"
 	}
 
 	type RespResults struct {

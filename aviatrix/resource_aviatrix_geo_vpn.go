@@ -5,6 +5,8 @@ import (
 	"log"
 	"strings"
 
+	"golang.org/x/net/context"
+
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -84,7 +86,7 @@ func resourceAviatrixGeoVPNCreate(d *schema.ResourceData, meta interface{}) erro
 	defer resourceAviatrixGeoVPNReadIfRequired(d, meta, &flag)
 
 	geoVPN.ElbDNSName = elbDNSNames[0]
-	err := client.EnableGeoVPN(geoVPN)
+	err := client.EnableGeoVPN(context.Background(), geoVPN)
 	if err != nil {
 		return fmt.Errorf("failed to enable Aviatrix Geo VPN due to: %s", err)
 	}
@@ -141,7 +143,7 @@ func resourceAviatrixGeoVPNRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("account_name", geoVPNDetail.AccountName)
 	d.Set("service_name", geoVPNDetail.ServiceName)
 	d.Set("domain_name", geoVPNDetail.DomainName)
-	if err := d.Set("elb_dns_names", geoVPNDetail.ElbDNSNames); err != nil {
+	if err := d.Set("elb_dns_names", strings.Split(geoVPNDetail.ElbDNSName, ",")); err != nil {
 		log.Printf("[WARN] Error setting 'elb_dns_names' for (%s): %s", d.Id(), err)
 	}
 

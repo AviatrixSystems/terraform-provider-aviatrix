@@ -10,11 +10,11 @@ import (
 type TransitGatewayPeering struct {
 	TransitGatewayName1                 string `form:"gateway1,omitempty" json:"gateway_1,omitempty"`
 	TransitGatewayName2                 string `form:"gateway2,omitempty" json:"gateway_2,omitempty"`
-	Gateway1ExcludedCIDRs               string `form:"source_filter_cidrs,omitempty"`
-	Gateway2ExcludedCIDRs               string `form:"destination_filter_cidrs,omitempty"`
+	Gateway1ExcludedCIDRs               string `form:"src_filter_list,omitempty"`
+	Gateway2ExcludedCIDRs               string `form:"dst_filter_list,omitempty"`
 	Gateway1ExcludedTGWConnections      string `form:"source_exclude_connections,omitempty"`
 	Gateway2ExcludedTGWConnections      string `form:"destination_exclude_connections,omitempty"`
-	PrivateIPPeering                    bool   `form:"private_ip_peering,omitempty"`
+	PrivateIPPeering                    string `form:"private_ip_peering,omitempty"`
 	InsaneModeOverInternet              bool   `form:"insane_mode_over_internet,omitempty"`
 	TunnelCount                         int    `form:"tunnel_count,omitempty"`
 	Gateway1ExcludedCIDRsSlice          []string
@@ -25,7 +25,7 @@ type TransitGatewayPeering struct {
 	PrependAsPath2                      string
 	CID                                 string `form:"CID,omitempty"`
 	Action                              string `form:"action,omitempty"`
-	SingleTunnel                        bool   `form:"single_tunnel"`
+	SingleTunnel                        string `form:"single_tunnel,omitempty"`
 	NoMaxPerformance                    bool   `form:"no_max_performance,omitempty"`
 }
 
@@ -129,13 +129,21 @@ func (c *Client) GetTransitGatewayPeeringDetails(transitGatewayPeering *TransitG
 	transitGatewayPeering.Gateway1ExcludedTGWConnectionsSlice = data.Results.Site1.ExcludedTGWConnections
 	transitGatewayPeering.Gateway2ExcludedCIDRsSlice = data.Results.Site2.ExcludedCIDRs
 	transitGatewayPeering.Gateway2ExcludedTGWConnectionsSlice = data.Results.Site2.ExcludedTGWConnections
-	transitGatewayPeering.PrivateIPPeering = data.Results.PrivateNetworkPeering
+	if data.Results.PrivateNetworkPeering {
+		transitGatewayPeering.PrivateIPPeering = "yes"
+	} else {
+		transitGatewayPeering.PrivateIPPeering = "no"
+	}
 	transitGatewayPeering.InsaneModeOverInternet = data.Results.InsaneModeOverInternet
 	transitGatewayPeering.TunnelCount = data.Results.TunnelCount
 	transitGatewayPeering.PrependAsPath1 = data.Results.Site1.ConnBGPPrependAsPath
 	transitGatewayPeering.PrependAsPath2 = data.Results.Site2.ConnBGPPrependAsPath
 	transitGatewayPeering.NoMaxPerformance = data.Results.NoMaxPerformance
-	transitGatewayPeering.SingleTunnel = data.Results.Tunnels[0].SubTunnelCount == 1
+	if data.Results.Tunnels[0].SubTunnelCount == 1 {
+		transitGatewayPeering.SingleTunnel = "yes"
+	} else {
+		transitGatewayPeering.SingleTunnel = "no"
+	}
 
 	return transitGatewayPeering, nil
 }

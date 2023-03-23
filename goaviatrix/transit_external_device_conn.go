@@ -19,7 +19,7 @@ type ExternalDeviceConn struct {
 	ConnectionType         string `form:"routing_protocol,omitempty"`
 	BgpLocalAsNum          int    `form:"bgp_local_as_number,omitempty"`
 	BgpRemoteAsNum         int    `form:"external_device_as_number,omitempty"`
-	RemoteGatewayIP        string `form:"external_device_ip_address"`
+	RemoteGatewayIP        string `form:"external_device_ip_address,omitempty"`
 	RemoteSubnet           string `form:"remote_subnet,omitempty"`
 	DirectConnect          string `form:"direct_connect,omitempty"`
 	PreSharedKey           string `form:"pre_shared_key,omitempty"`
@@ -33,7 +33,7 @@ type ExternalDeviceConn struct {
 	Phase2DhGroups         string `form:"phase2_dh_groups,omitempty"`
 	Phase2Encryption       string `form:"phase2_encryption,omitempty"`
 	HAEnabled              string `form:"enable_ha,omitempty" json:"enable_ha,omitempty"`
-	BackupRemoteGatewayIP  string `form:"backup_external_device_ip_address"`
+	BackupRemoteGatewayIP  string `form:"backup_external_device_ip_address,omitempty"`
 	BackupBgpRemoteAsNum   int    `form:"backup_external_device_as_number,omitempty"`
 	BackupPreSharedKey     string `form:"backup_pre_shared_key,omitempty"`
 	BackupLocalTunnelCidr  string `form:"backup_local_tunnel_ip,omitempty"`

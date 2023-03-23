@@ -17,8 +17,8 @@ type SpokeVpc struct {
 	GwSize                       string `form:"gw_size,omitempty"`
 	VpcID                        string `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
 	VNetNameResourceGroup        string `form:"vnet_and_resource_group_names,omitempty"`
-	Subnet                       string `form:"public_subnet,omitempty" json:"public_subnet,omitempty"`
-	VpcRegion                    string `form:"region,omitempty" json:"vpc_region,omitempty"`
+	Subnet                       string `form:"gw_subnet,omitempty" json:"gw_subnet,omitempty"`
+	VpcRegion                    string `form:"vpc_region,omitempty" json:"vpc_region,omitempty"`
 	VpcSize                      string `form:"gw_size,omitempty" json:"vpc_size,omitempty"`
 	EnableNat                    string `form:"nat_enabled,omitempty" json:"enable_nat,omitempty"`
 	EnableVpcDnsServer           string `json:"use_vpc_dns,omitempty"`
@@ -27,7 +27,7 @@ type SpokeVpc struct {
 	HASubnetGCP                  string `form:"new_subnet,omitempty"`
 	SingleAzHa                   string `form:"single_az_ha,omitempty"`
 	TransitGateway               string `form:"transit_gw,omitempty"`
-	TagJson                      string `form:"tag_json,omitempty"`
+	TagJson                      string `form:"json_tags,omitempty"`
 	ReuseEip                     string `form:"reuse_eip,omitempty"`
 	AllocateNewEipRead           bool   `json:"newly_allocated_eip,omitempty"`
 	Eip                          string `form:"eip,omitempty" json:"eip,omitempty"`
@@ -35,7 +35,7 @@ type SpokeVpc struct {
 	Zone                         string `form:"zone,omitempty" json:"zone,omitempty"`
 	BgpManualSpokeAdvertiseCidrs string `form:"bgp_manual_spoke,omitempty"`
 	EncVolume                    string `form:"enc_volume,omitempty"`
-	CustomerManagedKeys          string `form:"customer_managed_keys,omitempty"`
+	CustomerManagedKeys          string `form:"cmk,omitempty"`
 	EnablePrivateOob             string `form:"private_oob,omitempty"`
 	OobManagementSubnet          string `form:"oob_mgmt_subnet,omitempty"`
 	HAOobManagementSubnet        string
@@ -94,7 +94,7 @@ type SpokeGatewayAdvancedConfigRespResult struct {
 
 func (c *Client) LaunchSpokeVpc(spoke *SpokeVpc) error {
 	spoke.CID = c.CID
-	spoke.Action = "create_spoke_gw"
+	spoke.Action = "create_multicloud_primary_gateway"
 	spoke.Async = true
 
 	return c.PostAsyncAPI(spoke.Action, spoke, BasicCheck)
@@ -145,7 +145,7 @@ func (c *Client) SpokeLeaveTransit(spoke *SpokeVpc) error {
 func (c *Client) EnableHaSpokeVpc(spoke *SpokeVpc) error {
 	form := map[string]string{
 		"CID":     c.CID,
-		"action":  "enable_spoke_ha",
+		"action":  "create_multicloud_ha_gateway",
 		"gw_name": spoke.GwName,
 		"eip":     spoke.Eip,
 		"async":   "true",

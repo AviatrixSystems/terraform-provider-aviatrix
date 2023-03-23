@@ -55,9 +55,9 @@ func (c *Client) CreateSpokeTransitAttachment(spokeTransitAttachment *SpokeTrans
 
 func (c *Client) GetSpokeTransitAttachment(spokeTransitAttachment *SpokeTransitAttachment) (*SpokeTransitAttachment, error) {
 	form := map[string]string{
-		"CID":      c.CID,
-		"action":   "list_vpc_by_name",
-		"vpc_name": spokeTransitAttachment.SpokeGwName,
+		"CID":          c.CID,
+		"action":       "get_gateway_info",
+		"gateway_name": spokeTransitAttachment.SpokeGwName,
 	}
 
 	checkFunc := func(act, method, reason string, ret bool) error {

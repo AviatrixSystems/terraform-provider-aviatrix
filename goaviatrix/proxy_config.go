@@ -21,8 +21,8 @@ func (c *Client) CreateProxyConfig(proxyConfig *ProxyConfig) error {
 	params := map[string]string{
 		"CID":         c.CID,
 		"action":      action,
-		"http_proxy":  proxyConfig.HttpProxy,
-		"https_proxy": proxyConfig.HttpsProxy,
+		"http_proxy":  "http://" + proxyConfig.HttpProxy,
+		"https_proxy": "https://" + proxyConfig.HttpsProxy,
 	}
 
 	if proxyConfig.ProxyCaCertificate != "" {

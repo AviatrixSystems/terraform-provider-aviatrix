@@ -97,9 +97,13 @@ func resourceAviatrixAWSPeerCreate(d *schema.ResourceData, meta interface{}) err
 
 	if _, ok := d.GetOk("rtb_list1"); ok {
 		awsPeer.RtbList1 = strings.Join(goaviatrix.ExpandStringList(d.Get("rtb_list1").([]interface{})), ",")
+	} else {
+		awsPeer.RtbList1 = "all"
 	}
 	if _, ok := d.GetOk("rtb_list2"); ok {
 		awsPeer.RtbList2 = strings.Join(goaviatrix.ExpandStringList(d.Get("rtb_list2").([]interface{})), ",")
+	} else {
+		awsPeer.RtbList2 = "all"
 	}
 
 	log.Printf("[INFO] Creating Aviatrix aws_peer: %#v", awsPeer)

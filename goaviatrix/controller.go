@@ -1,7 +1,9 @@
 package goaviatrix
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"math"
 	"strconv"
@@ -35,9 +37,9 @@ type CloudnBackupConfiguration struct {
 	BackupAccountName   string `json:"acct_name,omitempty"`
 	BackupCloudType     int    `json:"cloud_type,omitempty"`
 	BackupBucketName    string `json:"bucket_name,omitempty"`
-	BackupStorageName   string `json:"storage_name"`
-	BackupContainerName string `json:"container_name"`
-	BackupRegion        string `json:"region"`
+	BackupStorageName   string `json:"storage_name,omitempty"`
+	BackupContainerName string `json:"container_name,omitempty"`
+	BackupRegion        string `json:"region,omitempty"`
 	MultipleBackups     string `json:"multiple_bkup,omitempty"`
 }
 
@@ -156,14 +158,14 @@ func (c *Client) EnableCloudnBackupConfig(cloudnBackupConfiguration *CloudnBacku
 		"CID":            c.CID,
 		"action":         "enable_cloudn_backup_config",
 		"cloud_type":     strconv.Itoa(cloudnBackupConfiguration.BackupCloudType),
-		"account_name":   cloudnBackupConfiguration.BackupAccountName,
+		"acct_name":      cloudnBackupConfiguration.BackupAccountName,
 		"bucket_name":    cloudnBackupConfiguration.BackupBucketName,
 		"storage_name":   cloudnBackupConfiguration.BackupStorageName,
 		"container_name": cloudnBackupConfiguration.BackupContainerName,
 		"region":         cloudnBackupConfiguration.BackupRegion,
 	}
 	if cloudnBackupConfiguration.MultipleBackups == "true" {
-		form["multiple"] = "true"
+		form["multiple_bkup"] = "true"
 	}
 	return c.PostAPI(form["action"], form, BasicCheck)
 }
@@ -262,7 +264,7 @@ func (c *Client) SetCertDomain(ctx context.Context, certDomain string) error {
 		"cert_domain": certDomain,
 		"async":       "true",
 	}
-	return c.PostAsyncAPIContext(ctx, params["action"], params, BasicCheck)
+	return c.PostAsyncAPIContextSetCertDomain(ctx, params["action"], params, BasicCheck)
 }
 
 func (c *Client) GetCertDomain(ctx context.Context) (*CertDomainConfig, error) {
@@ -320,4 +322,71 @@ func (c *Client) GetSleepTime(ctx context.Context) (time.Duration, error) {
 		return -1, fmt.Errorf("could not get gateway count: %v", err)
 	}
 	return time.Duration(20 * int(math.Ceil(float64(gatewayCount)/15.0))), nil
+}
+
+func (c *Client) PostAsyncAPIContextSetCertDomain(ctx context.Context, action string, i interface{}, checkFunc CheckAPIResponseFunc) error {
+	resp, err := c.PostContext(ctx, c.baseURL, i)
+	if err != nil {
+		return fmt.Errorf("HTTP POST %s failed: %v", action, err)
+	}
+	var data struct {
+		Return bool   `json:"return"`
+		Result string `json:"results"`
+		Reason string `json:"reason"`
+	}
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(resp.Body)
+	resp.Body.Close()
+	bodyString := buf.String()
+	bodyIoCopy := strings.NewReader(bodyString)
+	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
+		return fmt.Errorf("Json Decode %s failed %v\n Body: %s", action, err, bodyString)
+	}
+	if !data.Return {
+		return fmt.Errorf("rest API %s POST failed to initiate async action: %s", action, data.Reason)
+	}
+
+	requestID := data.Result
+	form := map[string]string{
+		"action":     "check_task_status",
+		"CID":        c.CID,
+		"request_id": requestID,
+	}
+
+	const maxPoll = 360
+	sleepDuration := time.Second * 10
+	var j int
+	for ; j < maxPoll; j++ {
+		resp, err = c.PostContext(ctx, c.baseURL, form)
+		if err != nil {
+			// Could be transient HTTP error, e.g. EOF error
+			time.Sleep(sleepDuration)
+			continue
+		}
+		buf = new(bytes.Buffer)
+		buf.ReadFrom(resp.Body)
+		var data struct {
+			Return bool   `json:"return"`
+			Reason string `json:"reason"`
+		}
+		err = json.Unmarshal(buf.Bytes(), &data)
+		if err != nil {
+			return fmt.Errorf("decode check_task_status failed: %v\n Body: %s", err, buf.String())
+		}
+		if !data.Return {
+			if data.Reason != "REQUEST_IN_PROGRESS" {
+				return fmt.Errorf("rest API %s POST failed: %s", action, data.Reason)
+			}
+
+			// Not done yet
+			time.Sleep(sleepDuration)
+			continue
+		}
+
+		// Async API is done, return result of checkFunc
+		return checkFunc(action, "Post", "", data.Return)
+	}
+	// Waited for too long and async API never finished
+	return fmt.Errorf("waited %s but upgrade never finished. Please manually verify the upgrade status", maxPoll*sleepDuration)
 }

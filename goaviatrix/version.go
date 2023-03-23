@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -84,8 +82,9 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 		return fmt.Errorf("HTTP POST %s failed: %v", form["action"], err)
 	}
 	var data struct {
-		Return bool `json:"return"`
-		Result int  `json:"results"`
+		Return bool   `json:"return"`
+		Result string `json:"results"`
+		Reason string `json:"reason"`
 	}
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
@@ -94,23 +93,22 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
 		return errors.New("Json Decode " + form["action"] + " failed: " + err.Error() + "\n Body: " + bodyString)
 	}
-	if !data.Return || data.Result == 0 {
-		return fmt.Errorf("rest API %s POST failed to initiate async action", form["action"])
+	if !data.Return {
+		return fmt.Errorf("rest API %s POST failed to initiate async action: %s", form["action"], data.Reason)
 	}
 
 	requestID := data.Result
-	form = map[string]string{
-		"action": "check_upgrade_status",
-		"CID":    c.CID,
-		"id":     strconv.Itoa(requestID),
-		"pos":    "0",
+	form1 := map[string]string{
+		"action":     "check_task_status",
+		"CID":        c.CID,
+		"request_id": requestID,
 	}
-	backendURL := fmt.Sprintf("https://%s/v1/backend1", c.ControllerIP)
+
 	const maxPoll = 180
 	sleepDuration := time.Second * 10
 	var i int
 	for ; i < maxPoll; i++ {
-		resp, err = c.Post(backendURL, form)
+		resp, err = c.Post(c.baseURL, form1)
 		if err != nil {
 			// Could be transient HTTP error, e.g. EOF error
 			time.Sleep(sleepDuration)
@@ -118,17 +116,15 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 		}
 		buf = new(bytes.Buffer)
 		buf.ReadFrom(resp.Body)
-		var data struct {
-			Pos    int    `json:"pos"`
-			Done   bool   `json:"done"`
-			Status bool   `json:"status"`
-			Result string `json:"result"`
-		}
 		err = json.Unmarshal(buf.Bytes(), &data)
 		if err != nil {
-			return fmt.Errorf("decode check_upgrade_status failed: %v\n Body: %s", err, buf.String())
+			return fmt.Errorf("decode check_task_status failed: %v\n Body: %s", err, buf.String())
 		}
-		if !data.Done {
+		if !data.Return {
+			if data.Reason != "REQUEST_IN_PROGRESS" {
+				return fmt.Errorf("rest API %s POST failed: %s", form["action"], data.Reason)
+			}
+
 			// Not done yet
 			time.Sleep(sleepDuration)
 			continue
@@ -136,7 +132,7 @@ func (c *Client) AsyncUpgrade(version *Version, upgradeGateways bool) error {
 
 		// Upgrade is done, check for error
 		if strings.HasPrefix(data.Result, "Error") {
-			return fmt.Errorf("post check_upgrade_status failed: %s", data.Result)
+			return fmt.Errorf("post check_task_status failed: %s", data.Result)
 		}
 		break
 	}
@@ -207,35 +203,6 @@ func (c *Client) GetVersionInfo() (*VersionInfo, error) {
 		Current:  current,
 		Previous: previous,
 	}, nil
-}
-
-func (c *Client) Pre32Upgrade() error {
-	privateBaseURL := strings.Replace(c.baseURL, "/v1/api", "/v1/backend1", 1)
-	params := &Version{
-		Action: "userconnect_release",
-		CID:    c.CID,
-	}
-	path := privateBaseURL
-	for i := 0; ; i++ {
-		resp, err := c.Post(path, params)
-		if err != nil {
-			return errors.New("HTTP Post userconnect_release failed: " + err.Error())
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode == http.StatusOK {
-			body, _ := ioutil.ReadAll(resp.Body)
-			log.Tracef("response %s", body)
-			if strings.Contains(string(body), "in progress") && i < 3 {
-				log.Infof("Active upgrade is in progress. Retry after 60 secs...")
-				time.Sleep(60 * time.Second)
-			} else {
-				break
-			}
-		} else {
-			return fmt.Errorf("status code %d", resp.StatusCode)
-		}
-	}
-	return nil
 }
 
 func (c *Client) GetLatestVersion() (string, error) {

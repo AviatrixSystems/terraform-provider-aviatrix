@@ -12,8 +12,9 @@ type CloudnTransitGatewayAttachment struct {
 	ConnectionName                   string `form:"connection_name"`
 	TransitGatewayBgpAsn             string `form:"bgp_local_as_number" json:"bgp_local_asn_number"`
 	CloudnBgpAsn                     string `form:"external_device_as_number" json:"bgp_remote_asn_number"`
-	CloudnLanInterfaceNeighborIP     string `form:"cloudn_neighbor_ip" json:"cloudn_neighbor_ip"`
-	CloudnLanInterfaceNeighborBgpAsn string `form:"cloudn_neighbor_as_number" json:"cloudn_neighbor_as_number"`
+	CloudnLanInterfaceNeighborIP     string `json:"cloudn_neighbor_ip"`
+	CloudnLanInterfaceNeighborBgpAsn string `json:"cloudn_neighbor_as_number"`
+	CloudnNeighbor                   string `form:"cloudn_neighbor"`
 	EnableOverPrivateNetwork         bool   `form:"direct_connect" json:"direct_connect_primary"`
 	EnableJumboFrame                 bool   `json:"jumbo_frame"`
 	EnableDeadPeerDetection          bool
@@ -32,6 +33,7 @@ func (c *Client) CreateCloudnTransitGatewayAttachment(ctx context.Context, attac
 	attachment.Action = "attach_cloudwan_device_to_transit_gateway"
 	attachment.CID = c.CID
 	attachment.RoutingProtocol = "bgp"
+	attachment.CloudnNeighbor = `"[{"ip_addr": ` + attachment.CloudnLanInterfaceNeighborIP + `, "as_num": ` + attachment.CloudnLanInterfaceNeighborBgpAsn + `}]"`
 	attachment.Async = true
 	return c.PostAsyncAPIContext(ctx, attachment.Action, attachment, BasicCheck)
 }
@@ -127,4 +129,54 @@ func (c *Client) EditCloudnTransitGatewayAttachmentASPathPrepend(ctx context.Con
 		ConnectionName: attachment.ConnectionName,
 		PrependASPath:  strings.Join(prependASPath, ","),
 	}, BasicCheck)
+}
+
+func (c *Client) GetDeviceAttachmentVpcID(connectionName string) (string, error) {
+	form := map[string]string{
+		"CID":    c.CID,
+		"action": "list_cloudwan_attachments",
+	}
+
+	type CloudWanAttachments struct {
+		VpcID string `json:"vpc_id"`
+		Name  string `json:"name"`
+	}
+
+	type Resp struct {
+		Return  bool                  `json:"return"`
+		Results []CloudWanAttachments `json:"results"`
+		Reason  string                `json:"reason"`
+	}
+
+	var data Resp
+
+	err := c.GetAPI(&data, form["action"], form, BasicCheck)
+	if err != nil {
+		return "", err
+	}
+
+	for _, attachment := range data.Results {
+		if attachment.Name == connectionName {
+			return attachment.VpcID, nil
+		}
+	}
+
+	return "", ErrNotFound
+}
+
+func (c *Client) DeleteDeviceAttachment(connectionName string) error {
+	vpcID, err := c.GetDeviceAttachmentVpcID(connectionName)
+	if err != nil {
+		return fmt.Errorf("could not get device attachment VPC id: %v", err)
+	}
+
+	form := map[string]string{
+		"CID":             c.CID,
+		"action":          "detach_cloudwan_device",
+		"vpc_id":          vpcID,
+		"connection_name": connectionName,
+		"async":           "true",
+	}
+
+	return c.PostAsyncAPI(form["action"], form, BasicCheck)
 }

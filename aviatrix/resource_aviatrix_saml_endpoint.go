@@ -259,6 +259,10 @@ func GetAviatrixSamlEndpointInput(d *schema.ResourceData) (*goaviatrix.SamlEndpo
 		samlEndpoint.CustomEntityId = customEntityID
 	}
 
+	if samlEndpoint.MsgTemplate != "" {
+		samlEndpoint.MsgTemplateType = "Custom"
+	}
+
 	var rbacGroups []string
 	for _, rbacGroup := range d.Get("rbac_groups").([]interface{}) {
 		rbacGroups = append(rbacGroups, rbacGroup.(string))

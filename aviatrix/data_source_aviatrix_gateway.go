@@ -161,7 +161,7 @@ func dataSourceAviatrixGateway() *schema.Resource {
 			"enable_ldap": {
 				Type:        schema.TypeBool,
 				Computed:    true,
-				Description: "Specify whether to enable LDAP or not. Supported values: 'yes' and 'no'.",
+				Description: "Whether enable LDAP or not.",
 			},
 			"ldap_server": {
 				Type:        schema.TypeString,
@@ -506,7 +506,7 @@ func dataSourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) err
 			d.Set("additional_cidrs_designated_gateway", "")
 		}
 
-		if gw.EnableLdapRead {
+		if gw.EnableLdap {
 			d.Set("enable_ldap", true)
 		} else {
 			d.Set("enable_ldap", false)

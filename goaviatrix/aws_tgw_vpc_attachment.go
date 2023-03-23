@@ -40,8 +40,9 @@ func (c *Client) CreateAwsTgwVpcAttachment(awsTgwVpcAttachment *AwsTgwVpcAttachm
 		"async":             "true",
 	}
 	if awsTgwVpcAttachment.DisableLocalRoutePropagation {
-		form["disable_local_route_propagation"] = "yes"
+		form["disable_local_propagation"] = "true"
 	}
+
 	if awsTgwVpcAttachment.CustomizedRoutes != "" {
 		form["customized_routes"] = awsTgwVpcAttachment.CustomizedRoutes
 	}

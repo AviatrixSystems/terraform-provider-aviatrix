@@ -15,7 +15,6 @@ import (
 	"net/url"
 	"os"
 	"reflect"
-	"strconv"
 	"strings"
 	"time"
 
@@ -178,7 +177,7 @@ func (c *Client) init(controllerIP string) (*Client, error) {
 		return nil, fmt.Errorf("Aviatrix: Client: Controller IP is not set")
 	}
 
-	c.baseURL = "https://" + controllerIP + "/v1/api"
+	c.baseURL = "https://" + controllerIP + "/v2/api"
 
 	if c.HTTPClient == nil {
 		tr := &http.Transport{
@@ -201,7 +200,7 @@ func (c *Client) initForCloudn(controllerIP string) (*Client, error) {
 		return nil, fmt.Errorf("Aviatrix: Client: Controller IP is not set")
 	}
 
-	c.baseURL = "https://" + controllerIP + "/v1/api"
+	c.baseURL = "https://" + controllerIP + "/v2/api"
 
 	if c.HTTPClient == nil {
 		tr := &http.Transport{
@@ -346,7 +345,7 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 	}
 	var data struct {
 		Return bool   `json:"return"`
-		Result int    `json:"results"`
+		Result string `json:"results"`
 		Reason string `json:"reason"`
 	}
 
@@ -358,23 +357,22 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 	if err = json.NewDecoder(bodyIoCopy).Decode(&data); err != nil {
 		return fmt.Errorf("Json Decode %s failed %v\n Body: %s", action, err, bodyString)
 	}
-	if !data.Return || data.Result == 0 {
+	if !data.Return {
 		return fmt.Errorf("rest API %s POST failed to initiate async action: %s", action, data.Reason)
 	}
 
 	requestID := data.Result
 	form := map[string]string{
-		"action": "check_task_status",
-		"CID":    c.CID,
-		"id":     strconv.Itoa(requestID),
-		"pos":    "0",
+		"action":     "check_task_status",
+		"CID":        c.CID,
+		"request_id": requestID,
 	}
-	backendURL := fmt.Sprintf("https://%s/v1/backend1", c.ControllerIP)
+
 	const maxPoll = 360
 	sleepDuration := time.Second * 10
 	var j int
 	for ; j < maxPoll; j++ {
-		resp, err = c.PostContext(ctx, backendURL, form)
+		resp, err = c.PostContext(ctx, c.baseURL, form)
 		if err != nil {
 			// Could be transient HTTP error, e.g. EOF error
 			time.Sleep(sleepDuration)
@@ -382,24 +380,22 @@ func (c *Client) PostAsyncAPIContext(ctx context.Context, action string, i inter
 		}
 		buf = new(bytes.Buffer)
 		buf.ReadFrom(resp.Body)
-		var data struct {
-			Pos    int    `json:"pos"`
-			Done   bool   `json:"done"`
-			Status bool   `json:"status"`
-			Result string `json:"result"`
-		}
 		err = json.Unmarshal(buf.Bytes(), &data)
 		if err != nil {
 			return fmt.Errorf("decode check_task_status failed: %v\n Body: %s", err, buf.String())
 		}
-		if !data.Done {
+		if !data.Return {
+			if data.Reason != "" && data.Reason != "REQUEST_IN_PROGRESS" {
+				return fmt.Errorf("rest API %s POST failed: %s", action, data.Reason)
+			}
+
 			// Not done yet
 			time.Sleep(sleepDuration)
 			continue
 		}
 
 		// Async API is done, return result of checkFunc
-		return checkFunc(action, "Post", data.Result, data.Status)
+		return checkFunc(action, "Post", data.Result, data.Return)
 	}
 	// Waited for too long and async API never finished
 	return fmt.Errorf("waited %s but upgrade never finished. Please manually verify the upgrade status", maxPoll*sleepDuration)
@@ -651,13 +647,11 @@ func (c *Client) RequestContext(ctx context.Context, verb string, path string, i
 		try++
 
 		if i != nil {
-			buf := new(bytes.Buffer)
-			if err = form.NewEncoder(buf).Encode(i); err != nil {
+			body, err := form.EncodeToValues(i, true)
+			if err != nil {
 				return nil, err
 			}
-			body := buf.String()
-			log.Tracef("%s %s Body: %s", verb, path, body)
-			reader := strings.NewReader(body)
+			reader := strings.NewReader(body.Encode())
 			req, err = http.NewRequestWithContext(ctx, verb, path, reader)
 			if err == nil {
 				req.Header.Set("Content-Type", "application/x-www-form-urlencoded")

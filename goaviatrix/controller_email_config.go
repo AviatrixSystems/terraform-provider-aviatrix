@@ -94,7 +94,7 @@ func (c *Client) GetNotificationEmails(ctx context.Context) (*EmailConfiguration
 
 	var data1 struct {
 		Return  bool   `json:"return"`
-		Results string `json:"results"`
+		Results int    `json:"results"`
 		Reason  string `json:"reason"`
 	}
 	err = c.GetAPIContext(ctx, &data1, form1["action"], form1, BasicCheck)
@@ -102,16 +102,12 @@ func (c *Client) GetNotificationEmails(ctx context.Context) (*EmailConfiguration
 		return nil, err
 	}
 
-	interval, err := strconv.Atoi(data1.Results)
-	if err != nil {
-		return nil, err
-	}
 	return &EmailConfiguration{
 		AdminAlertEmail:                  data.Results.AdminAlertEmail.Address,
 		CriticalAlertEmail:               data.Results.CriticalAlertEmail.Address,
 		SecurityEventEmail:               data.Results.SecurityEventEmail.Address,
 		StatusChangeEmail:                data.Results.StatusChangeEmail.Address,
-		StatusChangeNotificationInterval: interval,
+		StatusChangeNotificationInterval: data1.Results,
 		AdminAlertEmailVerified:          data.Results.AdminAlertEmail.Verified,
 		CriticalAlertEmailVerified:       data.Results.CriticalAlertEmail.Verified,
 		SecurityEventEmailVerified:       data.Results.SecurityEventEmail.Verified,

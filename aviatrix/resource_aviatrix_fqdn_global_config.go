@@ -112,8 +112,11 @@ func resourceAviatrixFQDNGlobalConfigCreate(ctx context.Context, d *schema.Resou
 	}
 
 	if enableCustomNetworkFiltering {
-		configIpString := strings.Join(goaviatrix.ExpandStringList(d.Get("configured_ips").([]interface{})), ",")
-		err := client.SetFQDNCustomNetwork(ctx, configIpString)
+		var configIPs []string
+		for _, v := range d.Get("configured_ips").([]interface{}) {
+			configIPs = append(configIPs, v.(string))
+		}
+		err := client.SetFQDNCustomNetwork(ctx, configIPs)
 		if err != nil {
 			return diag.Errorf("failed to customize network filtering: %s", err)
 		}
@@ -248,8 +251,11 @@ func resourceAviatrixFQDNGlobalConfigUpdate(ctx context.Context, d *schema.Resou
 
 		if d.HasChanges("enable_custom_network_filtering", "configured_ips") {
 			if enableCustomNetworkFiltering {
-				configIpString := strings.Join(goaviatrix.ExpandStringList(d.Get("configured_ips").([]interface{})), ",")
-				err := client.SetFQDNCustomNetwork(ctx, configIpString)
+				var configIPs []string
+				for _, v := range d.Get("configured_ips").([]interface{}) {
+					configIPs = append(configIPs, v.(string))
+				}
+				err := client.SetFQDNCustomNetwork(ctx, configIPs)
 				if err != nil {
 					return diag.Errorf("failed to customize network filtering in update: %s", err)
 				}

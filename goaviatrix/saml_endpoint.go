@@ -11,10 +11,10 @@ type SamlEndpoint struct {
 	EndPointName      string   `form:"endpoint_name,omitempty" json:"name,omitempty"`
 	IdpMetadataType   string   `form:"idp_metadata_type,omitempty" json:"metadata_type,omitempty"`
 	IdpMetadata       string   `form:"idp_metadata,omitempty" json:"idp_metadata,omitempty"`
-	EntityIdType      string   `json:"entity_id,omitempty"`
-	CustomEntityId    string   `form:"entity_id,omitempty" json:"custom_entityID,omitempty"`
+	EntityIdType      string   `form:"entityID,omitempty" json:"entity_id,omitempty"`
+	CustomEntityId    string   `form:"custom_entityID,omitempty" json:"custom_entityID,omitempty"`
 	MsgTemplate       string   `form:"msgtemplate,omitempty" json:"msgtemplate,omitempty"`
-	MsgTemplateType   string   `json:"msgtemplate_type,omitempty"`
+	MsgTemplateType   string   `form:"msgtemplatetype,omitempty" json:"msgtemplate_type,omitempty"`
 	ControllerLogin   string   `form:"controller_login,omitempty" json:"controller_login,omitempty"`
 	AccessSetBy       string   `form:"access_ctrl,omitempty" json:"access_ctrl,omitempty"`
 	RbacGroups        string   `form:"groups,omitempty"`

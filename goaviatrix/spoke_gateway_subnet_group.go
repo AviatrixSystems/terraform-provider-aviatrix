@@ -29,6 +29,7 @@ func (c *Client) AddSpokeGatewaySubnetGroup(ctx context.Context, spokeGatewaySub
 		"CID":               c.CID,
 		"gateway_name":      spokeGatewaySubnetGroup.GatewayName,
 		"subnet_group_name": spokeGatewaySubnetGroup.SubnetGroupName,
+		"subnet_list":       "[]",
 	}
 
 	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
@@ -78,11 +79,30 @@ func (c *Client) UpdateSpokeGatewaySubnetGroup(ctx context.Context, spokeGateway
 		"subnet_group_name": spokeGatewaySubnetGroup.SubnetGroupName,
 	}
 
+	type SubnetGroupConfig struct {
+		SubnetGroupName string   `json:"subnet_group_name"`
+		SubnetList      []string `json:"subnet_list"`
+	}
+
 	if spokeGatewaySubnetGroup.SubnetList == nil {
-		form["subnet_list"] = "[]"
+		err := c.DeleteSpokeGatewaySubnetGroup(ctx, spokeGatewaySubnetGroup)
+		if err != nil {
+			return err
+		}
+
+		err = c.AddSpokeGatewaySubnetGroup(ctx, spokeGatewaySubnetGroup)
+		if err != nil {
+			return err
+		}
+
+		return nil
 	} else {
-		subnetsJson, _ := json.Marshal(spokeGatewaySubnetGroup.SubnetList)
-		form["subnet_list"] = string(subnetsJson)
+		subnetGroupConfig := SubnetGroupConfig{
+			SubnetGroupName: spokeGatewaySubnetGroup.SubnetGroupName,
+			SubnetList:      spokeGatewaySubnetGroup.SubnetList,
+		}
+		subnetGroupConfigJson, _ := json.Marshal(subnetGroupConfig)
+		form["subnet_group_config"] = "[" + string(subnetGroupConfigJson) + "]"
 	}
 
 	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)

@@ -290,10 +290,14 @@ func resourceAviatrixVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	if aviatrixTransitVpc {
 		vpc.AviatrixTransitVpc = "yes"
 		log.Printf("[INFO] Creating a new Aviatrix Transit VPC: %#v", vpc)
+	} else {
+		vpc.AviatrixTransitVpc = "no"
 	}
 	if aviatrixFireNetVpc {
 		vpc.AviatrixFireNetVpc = "yes"
 		log.Printf("[INFO] Creating a new Aviatrix FireNet VPC: %#v", vpc)
+	} else {
+		vpc.AviatrixFireNetVpc = "no"
 	}
 	if !aviatrixTransitVpc && !aviatrixFireNetVpc {
 		log.Printf("[INFO] Creating a new VPC: %#v", vpc)

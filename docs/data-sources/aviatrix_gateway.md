@@ -45,7 +45,7 @@ In addition to all arguments above, the following attributes are exported:
 * `enable_designated_gateway` - Status of Designated Gateway feature for Gateway.
 * `enable_elb` - Status of ELB for the gateway.
 * `enable_encrypt_volume` - Enable encrypt gateway EBS volume. Only supported for AWS provider.
-* `enable_ldap` - Status LDAP or not.
+* `enable_ldap` - Status of LDAP enabled or not.
 * `enable_vpc_dns_server` - Status of VPC Dns Server for Gateway.
 * `enable_vpn_nat` - Status of VPN NAT.
 * `gw_size` - Size of gateway Instance.

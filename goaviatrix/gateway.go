@@ -1,7 +1,10 @@
 package goaviatrix
 
 import (
+	"bytes"
+	"compress/zlib"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -15,51 +18,65 @@ import (
 
 // Gateway simple struct to hold gateway details
 type Gateway struct {
-	AccountName             string `form:"account_name,omitempty" json:"account_name,omitempty"`
-	Action                  string `form:"action,omitempty"`
-	AdditionalCidrs         string `form:"additional_cidrs,omitempty" json:"additional_cidrs"`
-	AuthMethod              string `form:"auth_method,omitempty" json:"auth_method,omitempty"`
-	AllocateNewEip          string `form:"allocate_new_eip,omitempty"`
-	AllocateNewEipReadPtr   *bool  `json:"newly_allocated_eip,omitempty"`
-	AllocateNewEipRead      bool
-	BkupGatewayZone         string `form:"bkup_gateway_zone,omitempty" json:"bkup_gateway_zone,omitempty"`
-	BkupPrivateIP           string `form:"bkup_private_ip,omitempty" json:"bkup_private_ip,omitempty"`
-	CID                     string `form:"CID,omitempty"`
-	CIDR                    string `form:"cidr,omitempty"`
-	ClientCertAuth          string `form:"client_cert_auth,omitempty" json:"client_cert_auth,omitempty"`
-	ClientCertSharing       string `form:"client_cert_sharing,omitempty" json:"client_cert_sharing,omitempty"`
-	CloudType               int    `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
-	CloudnBkupGatewayInstID string `form:"cloudn_bkup_gateway_inst_id,omitempty" json:"cloudn_bkup_gateway_inst_id,omitempty"`
-	CloudnGatewayInstID     string `form:"cloudn_gateway_inst_id,omitempty" json:"cloudn_gateway_inst_id,omitempty"`
-	ConnectedTransit        string `json:"connected_transit,omitempty"`
-	DirectInternet          string `form:"direct_internet,omitempty" json:"direct_internet,omitempty"`
-	DockerConsulIP          string `form:"docker_consul_ip,omitempty" json:"docker_consul_ip,omitempty"`
-	DockerNtwkCidr          string `form:"docker_ntwk_cidr,omitempty" json:"docker_ntwk_cidr,omitempty"`
-	DockerNtwkName          string `form:"docker_ntwk_name,omitempty" json:"docker_ntwk_name,omitempty"`
-	DuoAPIHostname          string `form:"duo_api_hostname,omitempty" json:"duo_api_hostname,omitempty"`
-	DuoIntegrationKey       string `form:"duo_integration_key,omitempty" json:"duo_integration_key,omitempty"`
-	DuoPushMode             string `form:"duo_push_mode,omitempty" json:"duo_push_mode,omitempty"`
-	DuoSecretKey            string `form:"duo_secret_key,omitempty" json:"duo_secret_key,omitempty"`
-	Eip                     string `form:"eip,omitempty" json:"eip,omitempty"`
-	ReuseEip                string `json:"reuse_eip,omitempty"`
-	ElbDNSName              string `form:"elb_dns_name,omitempty" json:"elb_dns_name,omitempty"`
-	ElbName                 string `form:"elb_name,omitempty" json:"lb_name,omitempty"`
-	ElbState                string `form:"elb_state,omitempty" json:"elb_state,omitempty"`
-	VpnProtocol             string `json:"vpn_protocol" form:"elb_protocol,omitempty"`
-	EnableClientCertSharing string `form:"enable_client_cert_sharing,omitempty"`
-	EnableElb               string `form:"enable_elb,omitempty"`
-	EnableLdap              string `form:"enable_ldap,omitempty"`
-	EnableLdapRead          bool   `json:"enable_ldap,omitempty"`
-	EnableVpcDnsServer      string `json:"use_vpc_dns,omitempty"`
-	DnsServer               string `form:"dns_server,omitempty"`
-	PublicDnsServer         string `form:"public_dns_server,omitempty" json:"public_dns_server,omitempty"`
-
+	AccountName                  string `form:"account_name,omitempty" json:"account_name,omitempty"`
+	Action                       string `form:"action,omitempty"`
+	AdditionalCidrs              string `form:"additional_cidrs,omitempty" json:"additional_cidrs"`
+	AuthMethod                   string `form:"auth_method,omitempty" json:"auth_method,omitempty"`
+	AllocateNewEip               string `form:"allocate_new_eip,omitempty"`
+	AllocateNewEipReadPtr        *bool  `json:"newly_allocated_eip,omitempty"`
+	AllocateNewEipRead           bool
+	BkupGatewayZone              string `form:"bkup_gateway_zone,omitempty" json:"bkup_gateway_zone,omitempty"`
+	BkupPrivateIP                string `form:"bkup_private_ip,omitempty" json:"bkup_private_ip,omitempty"`
+	CID                          string `form:"CID,omitempty"`
+	CIDR                         string `form:"cidr,omitempty"`
+	ClientCertAuth               string `form:"client_cert_auth,omitempty" json:"client_cert_auth,omitempty"`
+	ClientCertSharing            string `form:"client_cert_sharing,omitempty" json:"client_cert_sharing,omitempty"`
+	CloudType                    int    `form:"cloud_type,omitempty" json:"cloud_type,omitempty"`
+	CloudnBkupGatewayInstID      string `form:"cloudn_bkup_gateway_inst_id,omitempty" json:"cloudn_bkup_gateway_inst_id,omitempty"`
+	CloudnGatewayInstID          string `form:"cloudn_gateway_inst_id,omitempty" json:"cloudn_gateway_inst_id,omitempty"`
+	ConnectedTransit             string `json:"connected_transit,omitempty"`
+	DirectInternet               string `form:"direct_internet,omitempty" json:"direct_internet,omitempty"`
+	DockerConsulIP               string `form:"docker_consul_ip,omitempty" json:"docker_consul_ip,omitempty"`
+	DockerNtwkCidr               string `form:"docker_ntwk_cidr,omitempty" json:"docker_ntwk_cidr,omitempty"`
+	DockerNtwkName               string `form:"docker_ntwk_name,omitempty" json:"docker_ntwk_name,omitempty"`
+	DuoAPIHostname               string `form:"duo_api_hostname,omitempty" json:"duo_api_hostname,omitempty"`
+	DuoIntegrationKey            string `form:"duo_integration_key,omitempty" json:"duo_integration_key,omitempty"`
+	DuoPushMode                  string `form:"duo_push_mode,omitempty" json:"duo_push_mode,omitempty"`
+	DuoSecretKey                 string `form:"duo_secret_key,omitempty" json:"duo_secret_key,omitempty"`
+	Eip                          string `form:"eip,omitempty" json:"eip,omitempty"`
+	ReuseEip                     string `json:"reuse_eip,omitempty"`
+	ElbDNSName                   string `form:"elb_dns_name,omitempty" json:"elb_dns_name,omitempty"`
+	ElbName                      string `form:"elb_name,omitempty" json:"lb_name,omitempty"`
+	ElbState                     string `form:"elb_state,omitempty" json:"elb_state,omitempty"`
+	VpnProtocol                  string `json:"vpn_protocol" form:"elb_protocol,omitempty"`
+	EnableClientCertSharing      string `form:"enable_client_cert_sharing,omitempty"`
+	EnableElb                    string `form:"enable_elb,omitempty"`
+	EnableLdap                   bool   `form:"enable_ldap,omitempty" json:"enable_ldap,omitempty"`
+	EnableVpcDnsServer           string `form:"use_vpc_dns_server,omitempty" json:"use_vpc_dns,omitempty"`
+	DnsServer                    string `form:"dns_server,omitempty"`
+	PublicDnsServer              string `form:"public_dns_server,omitempty" json:"public_dns_server,omitempty"`
+	GwAutoRestart                string `form:"gw_auto_restart,omitempty"`
+	DisableSkipRfc1918Routes     string `form:"disable_skip_rfc1918_routes,omitempty"`
+	ExcludeCtrlerIpsecPolicy     string `form:"exclude_ctrler_ipsec_policy,omitempty"`
+	EditDesignatedGw             string `form:"edit_designated_gateway,omitempty"`
+	CustomizingGwRoute           string `form:"customizing_gateway_route,omitempty"`
+	FilteringGwRoute             string `form:"filtering_gateway_route,omitempty"`
+	AdvertiseGwRoute             string `form:"advertise_gateway_route,omitempty"`
+	TransitPeeringAsOnpremBackup string `form:"transit_peering_as_onprem_backup,omitempty"`
+	EnableActiveMesh             string `form:"enable_activemesh,omitempty"`
+	PrivateVpcDefault            string `form:"private_vpc_default,omitempty"`
+	SkipPublicVpcUpdate          string `form:"skip_public_vpc_update,omitempty"`
+	Ipv6Action                   string `form:"ipv6_action,omitempty"`
+	GroGso                       string `form:"gro_gso,omitempty"`
+	AutoAdvertiseS2cCidrs        string `form:"auto_advertise_s2c_cidrs,omitempty"`
+	Biflow                       string `form:"biflow,omitempty"`
+	IpslaTxlb                    string `form:"ipsla_txlb,omitempty"`
+	EnableJumboFrame             string `form:"jumbo_frame,omitempty"`
 	// These two are very similar but have a slight difference
 	// EnableNat - will be "yes" if single/multiple SNAT is enabled
 	// NatEnabled - will be true if single/multiple/customized SNAT is enabled
-	EnableNat  string `form:"enable_nat,omitempty" json:"enable_nat,omitempty"`
-	NatEnabled bool   `json:"nat_enabled,omitempty"`
-
+	EnableNat                       string            `form:"enable_nat,omitempty" json:"enable_nat,omitempty"`
+	NatEnabled                      bool              `form:"nat_enabled,omitempty" json:"nat_enabled,omitempty"`
 	SingleAZ                        string            `form:"single_az_ha,omitempty" json:"single_az_ha,omitempty"`
 	EnableHybridConnection          bool              `json:"tgw_enabled,omitempty"`
 	EnablePbr                       string            `form:"enable_pbr,omitempty"`
@@ -76,7 +93,7 @@ type Gateway struct {
 	InstState                       string            `form:"inst_state,omitempty" json:"inst_state,omitempty"`
 	IntraVMRoute                    string            `form:"intra_vm_route,omitempty" json:"intra_vm_route,omitempty"`
 	IsHagw                          string            `form:"is_hagw,omitempty" json:"is_hagw,omitempty"`
-	JumboFrame                      bool              `json:"jumbo_frame"`
+	JumboFrame                      bool              `json:"jumbo_frame,omitempty"`
 	LdapAdditionalReq               string            `form:"ldap_additional_req,omitempty"`
 	LdapBaseDn                      string            `form:"ldap_base_dn,omitempty" json:"ldap_base_dn,omitempty"`
 	LdapBindDn                      string            `form:"ldap_bind_dn,omitempty" json:"ldap_bind_dn,omitempty"`
@@ -113,15 +130,15 @@ type Gateway struct {
 	TunnelType                      string            `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
 	VendorName                      string            `form:"vendor_name,omitempty" json:"vendor_name,omitempty"`
 	VpcID                           string            `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	VpcNet                          string            `form:"vpc_net,omitempty" json:"public_subnet,omitempty"`
-	VpcRegion                       string            `form:"vpc_reg,omitempty" json:"vpc_region,omitempty"`
+	VpcNet                          string            `form:"gw_subnet,omitempty" json:"public_subnet,omitempty"`
+	VpcRegion                       string            `form:"vpc_region,omitempty" json:"vpc_region,omitempty"`
 	VpcSplunkIPPort                 string            `form:"vpc_splunk_ip_port,omitempty" json:"vpc_splunk_ip_port,omitempty"`
 	VpcState                        string            `form:"vpc_state,omitempty" json:"vpc_state,omitempty"`
 	VpcType                         string            `form:"vpc_type,omitempty" json:"vpc_type,omitempty"`
 	VpnCidr                         string            `form:"cidr,omitempty" json:"vpn_cidr,omitempty"`
 	VpnStatus                       string            `form:"vpn_access,omitempty" json:"vpn_status,omitempty"`
 	Zone                            string            `form:"zone,omitempty" json:"zone,omitempty"`
-	VpcSize                         string            `form:"vpc_size,omitempty" ` //Only use for gateway create
+	VpcSize                         string            `form:"gw_size,omitempty" ` //Only use for gateway create
 	DMZEnabled                      string            `json:"dmz_enabled,omitempty"`
 	EnableVpnNat                    bool              `form:"vpn_nat,omitempty" json:"vpn_nat"`
 	EnableDesignatedGateway         string            `form:"designated_gateway,omitempty" json:"designated_gateway,omitempty"`
@@ -147,13 +164,13 @@ type Gateway struct {
 	RouteTable                      string
 	EnablePrivateOob                bool                                `json:"private_oob"`
 	OobManagementSubnet             string                              `json:"oob_mgmt_subnet"`
-	LanVpcID                        string                              `form:"lan_vpc_id"`
-	LanPrivateSubnet                string                              `form:"lan_private_subnet"`
-	CreateFQDNGateway               bool                                `form:"create_firewall_gw"`
+	LanVpcID                        string                              `form:"lan_vpc,omitempty"`
+	LanPrivateSubnet                string                              `form:"lan_subnet,omitempty"`
+	CreateFQDNGateway               bool                                `form:"create_firewall_gw,omitempty"`
 	PrivateVpcDefaultEnabled        bool                                `json:"private_vpc_default_enabled"`
 	SkipPublicVpcUpdateEnabled      bool                                `json:"skip_public_vpc_update_enabled"`
 	EnableMultitierTransit          bool                                `json:"multitier_transit"`
-	AutoAdvertiseCidrsEnabled       bool                                `json:"auto_advertise_s2c_cidrs"`
+	AutoAdvertiseCidrsEnabled       bool                                `json:"auto_advertise_s2c_cidrs,omitempty"`
 	TunnelDetectionTime             int                                 `json:"detection_time"`
 	BgpHoldTime                     int                                 `json:"bgp_hold_time"`
 	BgpPollingTime                  int                                 `json:"bgp_polling_time"`
@@ -291,8 +308,8 @@ type VpnGatewayAuth struct { // Used for set_vpn_gateway_authentication rest api
 	DuoIntegrationKey  string `form:"duo_integration_key,omitempty" json:"duo_integration_key,omitempty"`
 	DuoPushMode        string `form:"duo_push_mode,omitempty" json:"duo_push_mode,omitempty"`
 	DuoSecretKey       string `form:"duo_secret_key,omitempty" json:"duo_secret_key,omitempty"`
-	EnableLdap         string `form:"enable_ldap,omitempty"`
-	LbOrGatewayName    string `form:"lb_or_gateway_name,omitempty" json:"lb_or_gateway_name,omitempty"`
+	EnableLdap         bool   `form:"enable_ldap,omitempty" json:"enable_ldap,omitempty"`
+	LbOrGatewayName    string `form:"lb_name,omitempty" json:"lb_name,omitempty"`
 	LdapAdditionalReq  string `form:"ldap_additional_req,omitempty"`
 	LdapBaseDn         string `form:"ldap_base_dn,omitempty" json:"ldap_base_dn,omitempty"`
 	LdapBindDn         string `form:"ldap_bind_dn,omitempty" json:"ldap_bind_dn,omitempty"`
@@ -387,7 +404,7 @@ func (c *Client) EnablePublicSubnetFilteringHAGateway(gateway *Gateway) error {
 		"CID":            c.CID,
 		"gateway_name":   gateway.GwName,
 		"gateway_subnet": gateway.PeeringHASubnet,
-		"route_tables":   gateway.RouteTable,
+		"route_table":    gateway.RouteTable,
 		"async":          "true",
 	}
 	return c.PostAsyncAPI(data["action"], data, BasicCheck)
@@ -449,13 +466,6 @@ func (c *Client) DisableGuardDutyEnforcement(gateway *Gateway) error {
 		"gateway_name": gateway.GwName,
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
-}
-
-func (c *Client) EnableNatGateway(gateway *Gateway) error {
-	gateway.CID = c.CID
-	gateway.Action = "enable_nat"
-
-	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
 
 func (c *Client) EnableSingleAZGateway(gateway *Gateway) error {
@@ -551,9 +561,9 @@ func (c *Client) GetSpokeGatewayList(ctx context.Context) ([]Gateway, error) {
 
 func (c *Client) GetGatewayDetail(gateway *Gateway) (*GatewayDetail, error) {
 	form := map[string]string{
-		"CID":      c.CID,
-		"action":   "list_vpc_by_name",
-		"vpc_name": gateway.GwName,
+		"CID":          c.CID,
+		"action":       "get_gateway_info",
+		"gateway_name": gateway.GwName,
 	}
 
 	var data GatewayDetailApiResp
@@ -604,6 +614,25 @@ func (c *Client) EnableSNat(gateway *Gateway) error {
 	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
 
+func (c *Client) EnableCustomizedSNat(gateway *Gateway) error {
+	gateway.CID = c.CID
+	gateway.Action = "edit_gw_customized_snat_config"
+	args, err := json.Marshal(gateway.SnatPolicy)
+	if err != nil {
+		return err
+	}
+
+	var b bytes.Buffer
+	w := zlib.NewWriter(&b)
+	w.Write(args)
+	w.Close()
+
+	gateway.PolicyList = base64.StdEncoding.EncodeToString(b.Bytes())
+	gateway.Compress = true
+
+	return c.PostAPI(gateway.Action, gateway, BasicCheck)
+}
+
 func (c *Client) DisableSNat(gateway *Gateway) error {
 	gateway.CID = c.CID
 	gateway.Action = "disable_snat"
@@ -613,7 +642,19 @@ func (c *Client) DisableSNat(gateway *Gateway) error {
 
 func (c *Client) DisableCustomSNat(gateway *Gateway) error {
 	gateway.CID = c.CID
-	gateway.Action = "enable_snat"
+	gateway.Action = "edit_gw_customized_snat_config"
+	args, err := json.Marshal(gateway.SnatPolicy)
+	if err != nil {
+		return err
+	}
+
+	var b bytes.Buffer
+	w := zlib.NewWriter(&b)
+	w.Write(args)
+	w.Close()
+
+	gateway.PolicyList = base64.StdEncoding.EncodeToString(b.Bytes())
+	gateway.Compress = true
 
 	return c.PostAPI(gateway.Action, gateway, BasicCheck)
 }
