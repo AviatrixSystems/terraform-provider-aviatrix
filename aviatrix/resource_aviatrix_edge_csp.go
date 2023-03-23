@@ -11,7 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -69,26 +69,18 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 				Description:  "Management interface configuration. Valid values: 'DHCP' and 'Static'.",
 				ValidateFunc: validation.StringInSlice([]string{"DHCP", "Static"}, false),
 			},
-			"wan_interface_ip_prefix": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "WAN interface IP/prefix.",
-			},
-			"wan_default_gateway_ip": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "WAN default gateway IP.",
-				ValidateFunc: validation.IsIPAddress,
-			},
 			"lan_interface_ip_prefix": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "LAN interface IP/prefix.",
 			},
-			"management_egress_ip_prefix": {
-				Type:        schema.TypeString,
+			"management_egress_ip_prefix_list": {
+				Type:        schema.TypeList,
 				Optional:    true,
-				Description: "Management egress gateway IP/prefix.",
+				Description: "List of management egress gateway IP/prefix.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"enable_management_over_private_network": {
 				Type:        schema.TypeBool,
@@ -243,26 +235,176 @@ func resourceAviatrixEdgeCSP() *schema.Resource {
 				Computed:    true,
 				Description: "State of Edge as a Spoke.",
 			},
-			"wan_interface_name": {
-				Type:        schema.TypeString,
+			"wan_interface_names": {
+				Type:        schema.TypeList,
 				Optional:    true,
-				Default:     "eth0",
 				ForceNew:    true,
-				Description: "WAN interface name.",
+				Description: "List of WAN interface names.",
+				DefaultFunc: func() (any, error) {
+					return []string{"eth0"}, nil
+				},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
-			"lan_interface_name": {
-				Type:        schema.TypeString,
+			"lan_interface_names": {
+				Type:        schema.TypeList,
 				Optional:    true,
-				Default:     "eth1",
 				ForceNew:    true,
-				Description: "LAN interface name.",
+				Description: "List of LAN interface names.",
+				DefaultFunc: func() (any, error) {
+					return []string{"eth1"}, nil
+				},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
-			"management_interface_name": {
+			"management_interface_names": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "List of management interface names.",
+				DefaultFunc: func() (any, error) {
+					return []string{"eth2"}, nil
+				},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"interfaces": {
+				Type:        schema.TypeSet,
+				Required:    true,
+				Description: "WAN/LAN interfaces.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Interface name.",
+						},
+						"type": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Interface type.",
+						},
+						"bandwidth": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "Bandwidth.",
+						},
+						"enable_dhcp": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "Enable DHCP.",
+						},
+						"wan_public_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "WAN interface public IP.",
+						},
+						"ip_address": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Interface static IP address.",
+						},
+						"gateway_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Gateway IP.",
+						},
+						"dns_server_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Primary DNS server IP.",
+						},
+						"secondary_dns_server_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Secondary DNS server IP.",
+						},
+						"enable_vrrp": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "Enable VRRP.",
+						},
+						"vrrp_virtual_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "VRRP virtual IP.",
+						},
+						"tag": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Tag.",
+						},
+					},
+				},
+			},
+			"vlan": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "VLAN configuration.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"parent_interface_name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Parent interface name.",
+						},
+						"vlan_id": {
+							Type:        schema.TypeInt,
+							Required:    true,
+							Description: "VLAN ID.",
+						},
+						"ip_address": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "LAN sub-interface IP address.",
+						},
+						"gateway_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "LAN sub-interface gateway IP.",
+						},
+						"peer_ip_address": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "LAN sub-interface IP address on HA gateway.",
+						},
+						"peer_gateway_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "LAN sub-interface gateway IP on HA gateway.",
+						},
+						"vrrp_virtual_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "LAN sub-interface virtual IP.",
+						},
+						"tag": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Tag.",
+						},
+					},
+				},
+			},
+			"dns_profile_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "eth2",
-				ForceNew:    true,
-				Description: "Management interface name.",
+				Description: "DNS profile to be associated with gateway, select an existing template.",
+			},
+			"enable_single_ip_snat": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Enable Single IP SNAT.",
+			},
+			"enable_auto_advertise_lan_cidrs": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Enable auto advertise LAN CIDRs.",
 			},
 		},
 	}
@@ -277,10 +419,8 @@ func marshalEdgeCSPInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 		ComputeNodeUuid:                    d.Get("compute_node_uuid").(string),
 		TemplateUuid:                       d.Get("template_uuid").(string),
 		ManagementInterfaceConfig:          d.Get("management_interface_config").(string),
-		ManagementEgressIpPrefix:           d.Get("management_egress_ip_prefix").(string),
+		ManagementEgressIpPrefix:           strings.Join(getStringList(d, "management_egress_ip_prefix_list"), ","),
 		EnableManagementOverPrivateNetwork: d.Get("enable_management_over_private_network").(bool),
-		WanInterfaceIpPrefix:               d.Get("wan_interface_ip_prefix").(string),
-		WanDefaultGatewayIp:                d.Get("wan_default_gateway_ip").(string),
 		LanInterfaceIpPrefix:               d.Get("lan_interface_ip_prefix").(string),
 		ManagementInterfaceIpPrefix:        d.Get("management_interface_ip_prefix").(string),
 		ManagementDefaultGatewayIp:         d.Get("management_default_gateway_ip").(string),
@@ -302,9 +442,53 @@ func marshalEdgeCSPInput(d *schema.ResourceData) *goaviatrix.EdgeCSP {
 		Longitude:                          d.Get("longitude").(string),
 		WanPublicIp:                        d.Get("wan_public_ip").(string),
 		RxQueueSize:                        d.Get("rx_queue_size").(string),
-		WanInterface:                       d.Get("wan_interface_name").(string),
-		LanInterface:                       d.Get("lan_interface_name").(string),
-		MgmtInterface:                      d.Get("management_interface_name").(string),
+		WanInterface:                       strings.Join(getStringList(d, "wan_interface_names"), ","),
+		LanInterface:                       strings.Join(getStringList(d, "lan_interface_names"), ","),
+		MgmtInterface:                      strings.Join(getStringList(d, "management_interface_names"), ","),
+		DnsProfileName:                     d.Get("dns_profile_name").(string),
+		EnableSingleIpSnat:                 d.Get("enable_single_ip_snat").(bool),
+		EnableAutoAdvertiseLanCidrs:        d.Get("enable_auto_advertise_lan_cidrs").(bool),
+	}
+
+	interfaces := d.Get("interfaces").(*schema.Set).List()
+	for _, if0 := range interfaces {
+		if1 := if0.(map[string]interface{})
+
+		if2 := &goaviatrix.Interface{
+			IfName:       if1["name"].(string),
+			Type:         if1["type"].(string),
+			Bandwidth:    if1["bandwidth"].(int),
+			PublicIp:     if1["wan_public_ip"].(string),
+			Tag:          if1["tag"].(string),
+			Dhcp:         if1["enable_dhcp"].(bool),
+			IpAddr:       if1["ip_address"].(string),
+			GatewayIp:    if1["gateway_ip"].(string),
+			DnsPrimary:   if1["dns_server_ip"].(string),
+			DnsSecondary: if1["secondary_dns_server_ip"].(string),
+			VrrpState:    if1["enable_vrrp"].(bool),
+			VirtualIp:    if1["vrrp_virtual_ip"].(string),
+		}
+
+		edgeCSP.InterfaceList = append(edgeCSP.InterfaceList, if2)
+	}
+
+	vlan := d.Get("vlan").(*schema.Set).List()
+	for _, v0 := range vlan {
+		v1 := v0.(map[string]interface{})
+
+		v2 := &goaviatrix.Vlan{
+			ParentInterface: v1["parent_interface_name"].(string),
+			IpAddr:          v1["ip_address"].(string),
+			GatewayIp:       v1["gateway_ip"].(string),
+			PeerIpAddr:      v1["peer_ip_address"].(string),
+			PeerGatewayIp:   v1["peer_gateway_ip"].(string),
+			VirtualIp:       v1["vrrp_virtual_ip"].(string),
+			Tag:             v1["tag"].(string),
+		}
+
+		v2.VlanId = strconv.Itoa(v1["vlan_id"].(int))
+
+		edgeCSP.VlanList = append(edgeCSP.VlanList, v2)
 	}
 
 	return edgeCSP
@@ -455,8 +639,6 @@ func resourceAviatrixEdgeCSPCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if edgeCSP.WanPublicIp != "" {
-		gatewayForEaasFunctions.WanInterfaceIpPrefix = edgeCSP.WanInterfaceIpPrefix
-		gatewayForEaasFunctions.WanDefaultGatewayIp = edgeCSP.WanDefaultGatewayIp
 		gatewayForEaasFunctions.LanInterfaceIpPrefix = edgeCSP.LanInterfaceIpPrefix
 		gatewayForEaasFunctions.ManagementEgressIpPrefix = edgeCSP.ManagementEgressIpPrefix
 		gatewayForEaasFunctions.WanPublicIp = edgeCSP.WanPublicIp
@@ -471,6 +653,21 @@ func resourceAviatrixEdgeCSPCreate(ctx context.Context, d *schema.ResourceData, 
 		err := client.SetRxQueueSize(gatewayForGatewayFunctions)
 		if err != nil {
 			return diag.Errorf("could not set rx queue size after Edge CSP creation: %v", err)
+		}
+	}
+
+	if len(edgeCSP.InterfaceList) != 0 || len(edgeCSP.VlanList) != 0 || edgeCSP.DnsProfileName != "" || !edgeCSP.EnableAutoAdvertiseLanCidrs {
+		err := client.UpdateEdgeCSP(ctx, edgeCSP)
+		if err != nil {
+			return diag.Errorf("could not config WAN/LAN/VLAN, DNS profile name or auto advertise LAN CIDRs after Edge CSP creation: %v", err)
+		}
+	}
+
+	if edgeCSP.EnableSingleIpSnat {
+		gatewayForGatewayFunctions.GatewayName = edgeCSP.GwName
+		err := client.EnableSNat(gatewayForGatewayFunctions)
+		if err != nil {
+			return diag.Errorf("failed to enable single IP SNAT: %s", err)
 		}
 	}
 
@@ -512,9 +709,7 @@ func resourceAviatrixEdgeCSPRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("compute_node_uuid", edgeCSPResp.ComputeNodeUuid)
 	d.Set("template_uuid", edgeCSPResp.TemplateUuid)
 	d.Set("enable_management_over_private_network", edgeCSPResp.EnableManagementOverPrivateNetwork)
-	d.Set("management_egress_ip_prefix", edgeCSPResp.ManagementEgressIpPrefix)
-	d.Set("wan_interface_ip_prefix", edgeCSPResp.WanInterfaceIpPrefix)
-	d.Set("wan_default_gateway_ip", edgeCSPResp.WanDefaultGatewayIp)
+	d.Set("management_egress_ip_prefix_list", strings.Split(edgeCSPResp.ManagementEgressIpPrefix, ","))
 	d.Set("lan_interface_ip_prefix", edgeCSPResp.LanInterfaceIpPrefix)
 	d.Set("management_default_gateway_ip", edgeCSPResp.ManagementDefaultGatewayIp)
 	d.Set("dns_server_ip", edgeCSPResp.DnsServerIp)
@@ -571,9 +766,64 @@ func resourceAviatrixEdgeCSPRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("wan_public_ip", edgeCSPResp.WanPublicIp)
 	d.Set("rx_queue_size", edgeCSPResp.RxQueueSize)
 	d.Set("state", edgeCSPResp.State)
-	d.Set("wan_interface_name", edgeCSPResp.WanInterface)
-	d.Set("lan_interface_name", edgeCSPResp.LanInterface)
-	d.Set("management_interface_name", edgeCSPResp.MgmtInterface)
+	d.Set("wan_interface_names", edgeCSPResp.WanInterface)
+	d.Set("lan_interface_names", edgeCSPResp.LanInterface)
+	d.Set("management_interface_names", edgeCSPResp.MgmtInterface)
+
+	var interfaces []map[string]interface{}
+	var vlan []map[string]interface{}
+	for _, if0 := range edgeCSPResp.InterfaceList {
+		if if0.Type != "MANAGEMENT" {
+			if1 := make(map[string]interface{})
+			if1["name"] = if0.IfName
+			if1["type"] = if0.Type
+			if1["bandwidth"] = if0.Bandwidth
+			if1["wan_public_ip"] = if0.PublicIp
+			if1["tag"] = if0.Tag
+			if1["enable_dhcp"] = if0.Dhcp
+			if1["ip_address"] = if0.IpAddr
+			if1["gateway_ip"] = if0.GatewayIp
+			if1["dns_server_ip"] = if0.DnsPrimary
+			if1["secondary_dns_server_ip"] = if0.DnsSecondary
+			if1["vrrp_virtual_ip"] = if0.VirtualIp
+
+			if if0.Type == "LAN" {
+				if1["enable_vrrp"] = if0.VrrpState
+			}
+
+			if if0.Type == "LAN" && if0.SubInterfaces != nil {
+				for _, v0 := range if0.SubInterfaces {
+					v1 := make(map[string]interface{})
+					v1["parent_interface_name"] = v0.ParentInterface
+					v1["ip_address"] = v0.IpAddr
+					v1["gateway_ip"] = v0.GatewayIp
+					v1["peer_ip_address"] = v0.PeerIpAddr
+					v1["peer_gateway_ip"] = v0.PeerGatewayIp
+					v1["vrrp_virtual_ip"] = v0.VirtualIp
+					v1["tag"] = v0.Tag
+
+					vlanId, _ := strconv.Atoi(v0.VlanId)
+					v1["vlan_id"] = vlanId
+
+					vlan = append(vlan, v1)
+				}
+			}
+
+			interfaces = append(interfaces, if1)
+		}
+	}
+
+	if err = d.Set("interfaces", interfaces); err != nil {
+		return diag.Errorf("failed to set interfaces: %s\n", err)
+	}
+
+	if err = d.Set("vlan", vlan); err != nil {
+		return diag.Errorf("failed to set vlan: %s\n", err)
+	}
+
+	d.Set("dns_profile_name", edgeCSPResp.DnsProfileName)
+	d.Set("enable_single_ip_snat", edgeCSPResp.SingleIpSnat)
+	d.Set("enable_auto_advertise_lan_cidrs", edgeCSPResp.EnableAutoAdvertiseLanCidrs)
 
 	d.SetId(edgeCSPResp.GwName)
 	return nil
@@ -621,9 +871,7 @@ func resourceAviatrixEdgeCSPUpdate(ctx context.Context, d *schema.ResourceData, 
 		GwName: edgeCSP.GwName,
 	}
 
-	if d.HasChanges("management_egress_ip_prefix", "wan_interface_ip_prefix", "wan_default_gateway_ip", "lan_interface_ip_prefix", "wan_public_ip") {
-		gatewayForEaasFunctions.WanInterfaceIpPrefix = edgeCSP.WanInterfaceIpPrefix
-		gatewayForEaasFunctions.WanDefaultGatewayIp = edgeCSP.WanDefaultGatewayIp
+	if d.HasChanges("management_egress_ip_prefix_list", "lan_interface_ip_prefix", "wan_public_ip") {
 		gatewayForEaasFunctions.LanInterfaceIpPrefix = edgeCSP.LanInterfaceIpPrefix
 		gatewayForEaasFunctions.ManagementEgressIpPrefix = edgeCSP.ManagementEgressIpPrefix
 		gatewayForEaasFunctions.WanPublicIp = edgeCSP.WanPublicIp
@@ -760,6 +1008,30 @@ func resourceAviatrixEdgeCSPUpdate(ctx context.Context, d *schema.ResourceData, 
 		if err != nil {
 			return diag.Errorf("could not update rx queue size during Edge CSP update: %v", err)
 		}
+	}
+
+	if d.HasChange("interfaces") || d.HasChange("vlan") || d.HasChange("dns_profile_name") || d.HasChange("enable_auto_advertise_lan_cidrs") {
+		err := client.UpdateEdgeCSP(ctx, edgeCSP)
+		if err != nil {
+			return diag.Errorf("could not update WAN/LAN/VLAN interfaces, DNS profile name or auto advertise LAN CIDRs during Edge CSP update: %v", err)
+		}
+	}
+
+	if d.HasChange("enable_single_ip_snat") {
+		gatewayForGatewayFunctions.GatewayName = edgeCSP.GwName
+
+		if edgeCSP.EnableSingleIpSnat {
+			err := client.EnableSNat(gatewayForGatewayFunctions)
+			if err != nil {
+				return diag.Errorf("failed to enable single IP SNAT during update: %s", err)
+			}
+		} else {
+			err := client.DisableSNat(gatewayForGatewayFunctions)
+			if err != nil {
+				return diag.Errorf("failed to disable single IP SNAT during update: %s", err)
+			}
+		}
+
 	}
 
 	d.Partial(false)

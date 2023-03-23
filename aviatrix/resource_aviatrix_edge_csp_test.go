@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -37,8 +37,6 @@ func TestAccAviatrixEdgeCSP_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "gw_name", gwName),
 					resource.TestCheckResourceAttr(resourceName, "site_id", siteId),
 					resource.TestCheckResourceAttr(resourceName, "management_interface_config", "DHCP"),
-					resource.TestCheckResourceAttr(resourceName, "wan_interface_ip_prefix", "10.60.0.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "wan_default_gateway_ip", "10.60.0.0"),
 					resource.TestCheckResourceAttr(resourceName, "lan_interface_ip_prefix", "10.60.0.0/24"),
 				),
 			},
@@ -68,12 +66,17 @@ resource "aviatrix_edge_csp" "test" {
  	compute_node_uuid           = "%s"
  	template_uuid               = "%s"
 	management_interface_config = "DHCP"
-	wan_interface_ip_prefix     = "10.60.0.0/24"
-	wan_default_gateway_ip      = "10.60.0.0"
 	lan_interface_ip_prefix     = "10.60.0.0/24"
+
+	interfaces {
+		name       = "eth1"
+		type       = "LAN"
+		ip_address = "10.220.11.10/24"
+		gateway_ip = "10.220.11.1"
+	}
 }
  `, accountName, os.Getenv("EDGE_CSP_USERNAME"), os.Getenv("EDGE_CSP_PASSWORD"), gwName, siteId,
-		os.Getenv("EDGE_CSP_PROJECT_UUID"), os.Getenv("EDGE_CSP_COMPUTE_UUID"), os.Getenv("EDGE_CSP_TEMPLATE_UUID"))
+		os.Getenv("EDGE_CSP_PROJECT_UUID"), os.Getenv("EDGE_CSP_COMPUTE_NODE_UUID"), os.Getenv("EDGE_CSP_TEMPLATE_UUID"))
 }
 
 func testAccCheckEdgeCSPExists(resourceName string) resource.TestCheckFunc {

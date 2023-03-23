@@ -12,10 +12,32 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R3.0.1 (UserConnect-7.0.1373)``
-
+``Last updated: R2.24.3 (UserConnect-6.9.349)``
 
 ---
+
+## 3.0.2
+### Notes:
+- Release date: **(7 Mar 2023)**
+- Supported Controller version: **UserConnect-7.0.1577**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### Multi-Cloud Transit:
+1. Implemented support for BGP over LAN on Spoke in the following resources:
+    - **aviatrix_spoke_gateway**
+    - **aviatrix_spoke_external_device_conn**
+
+### Enhancements:
+1. Added support of ``#`` as a valid character in resource tags for Azure CSP
+2. Added support of ``name`` as one of the attributes under ``selector`` in **aviatrix_smart_group**
+
+### Bug Fixes:
+1. Fixed the issue where white space is allowed for ``phase1_remote_identifier`` in **aviatrix_site2cloud**, **aviatrix_transit_external_device_conn** and **aviatrix_spoke_external_device_conn**
+2. Fixed the issue where ``cloud_image_id`` is allowed for Azure in **aviatrix_firewall_instance**
+3. Fixed the issue where S2C creation failed for an exception error
+4. Fixed the re-ordering issue of ``rtb_list1`` and ``rtb_list2`` in **aviatrix_aws_peer**
+
 
 ## 3.0.1
 ### Notes:
@@ -117,6 +139,23 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 8. Deprecated **aviatrix_trans_peer** and it will be removed in Aviatrix provider 3.0.1
 
 
+## 2.24.3
+### Notes:
+- Release date: **(20 Mar 2023)**
+- Supported Controller version: **UserConnect-6.9.349**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### CloudN
+1. Restored support of CloudN transit attachment CIDR approval features in **aviatrix_cloudn_transit_gateway_attachment**:
+    - ``enable_dead_peer_detection``
+    - ``enable_learned_cidrs_approval``
+    - ``approved_cidrs``
+
+### Enhancements:
+1. Added support of "datadoghq.com" for ``site`` in **aviatrix_datadog_agent**
+
+
 ## 2.24.2
 ### Notes:
 - Release date: **(6 Jan 2023)**
@@ -170,6 +209,30 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 2. Fixed issue where provider crashes for private mode config
 3. Fixed issue where exported SNAT/DNAT interface shows tunnel ID when using Transit connection or route-based S2C
 4. Fixed issue where creating FQDN gateway with ``fqdn_lan_interface`` causes replacement
+
+
+## 2.23.5
+### Notes:
+- Release date: **(14 Mar 2023)**
+- Supported Controller version: **UserConnect-6.8.1509**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### CloudN
+1. Restored support of CloudN transit attachment CIDR approval features in **aviatrix_cloudn_transit_gateway_attachment**:
+    - ``enable_dead_peer_detection``
+    - ``enable_learned_cidrs_approval``
+    - ``approved_cidrs``
+
+
+## 2.23.4
+### Notes:
+- Release date: **(2 Feb 2023)**
+- Supported Controller version: **UserConnect-6.8.1483**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes:
+1. Fixed issue where creating multiple **aviatrix_trans_peer** between the same gateways with different ``reachable_cidrs`` errors out
 
 
 ## 2.23.3
@@ -295,6 +358,20 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 1. Fixed issue where duplicate **aviatrix_account** resources would be set into state even after giving an error
 2. Fixed issue where ``username`` could not be specified with ``private_key_file`` in **aviatrix_firenet_vendor_integration**
 3. Fixed issue where setting ``custom_algorithms`` to true would still use default values, causing tunnel replacement in **aviatrix_transit_external_device_conn**
+
+
+## 2.22.5
+### Notes:
+- Release date: **(14 Mar 2023)**
+- Supported Controller version: **UserConnect-6.7.1574**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### CloudN
+1. Restored support of CloudN transit attachment CIDR approval features in **aviatrix_cloudn_transit_gateway_attachment**:
+    - ``enable_dead_peer_detection``
+    - ``enable_learned_cidrs_approval``
+    - ``approved_cidrs``
 
 
 ## 2.22.4

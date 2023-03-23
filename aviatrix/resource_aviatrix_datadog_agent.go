@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -32,7 +32,7 @@ func resourceAviatrixDatadogAgent() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      "datadoghq.com",
-				ValidateFunc: validation.StringInSlice([]string{"datadoghq.com", "datadoghq.eu"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"datadoghq.com", "datadoghq.eu", "ddog-gov.com"}, false),
 				Description:  "Site preference.",
 			},
 			"excluded_gateways": {

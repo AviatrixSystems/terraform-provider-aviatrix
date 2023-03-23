@@ -91,11 +91,12 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_distributed_firewalling_config | SKIP_DISTRIBUTED_FIREWALLING_CONFIG | N/A                                                                        |
 | aviatrix_distributed_firewalling_intra_vpc | SKIP_DISTRIBUTED_FIREWALLING_INTRA_VPC | aviatrix_account + aviatrix_vpc                                      |
 | aviatrix_distributed_firewalling_policy_list | SKIP_DISTRIBUTED_FIREWALLING_POLICY_LIST | N/A                                                              |
+| aviatrix_dns_profile                 | SKIP_DNS_PROFILE                   | N/A                                                                            |
 | aviatrix_edge_csp                    | SKIP_EDGE_CSP                      | EDGE_CSP_USERNAME, EDGE_CSP_PASSWORD, EDGE_CSP_PROJECT_UUID, EDGE_CSP_COMPUTE_NODE_UUID, EDGE_CSP_TEMPLATE_UUID |
+| aviatrix_edge_csp_ha                 | SKIP_EDGE_CSP_HA                   | EDGE_CSP_USERNAME, EDGE_CSP_PASSWORD, EDGE_CSP_PROJECT_UUID, EDGE_CSP_COMPUTE_NODE_UUID, EDGE_CSP_TEMPLATE_UUID, EDGE_CSP_HA_COMPUTE_NODE_UUID |
 | aviatrix_edge_spoke                  | SKIP_EDGE_SPOKE                    | N/A                                                                            |
 | aviatrix_edge_spoke_external_device_conn | SKIP_EDGE_SPOKE_EXTERNAL_DEVICE_CONN | EDGE_SPOKE_NAME, EDGE_SPOKE_SITE_ID                                      |
 | aviatrix_edge_spoke_transit_attachment | SKIP_EDGE_SPOKE_TRANSIT_ATTACHMENT | EDGE_SPOKE_NAME                                                              |
-| aviatrix_filebeat_forwarder          | SKIP_FILEBEAT_FORWARDER            | N/A                                                                            |
 | aviatrix_firenet                     | SKIP_FIRENET                       | aviatrix_account + AWS_REGION, Palo Alto VM series                             |
 | aviatrix_firewall                    | SKIP_FIREWALL                      | aviatrix_gateway                                                               |
 | aviatrix_firewall_instance           | SKIP_FIREWALL_INSTANCE             | aviatrix_account + AWS_REGION, Palo Alto VM series                             |
@@ -123,6 +124,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |                                      | SKIP_GATEWAY_SNAT_AZURE            |         + AZURE_VNET_ID, AZURE_REGION, AZURE_SUBNET, AZURE_GW_SIZE             |
 | aviatrix_geo_vpn                     | SKIP_GEO_VPN                       | aviatrix_account + DOMAIN_NAME + AWS_VPC_ID, AWS_REGION, AWS_SUBNET            |
 |                                      |                                    |                                + AWS_VPC_ID2, AWS_REGION2, AWS_SUBNET2         |
+| aviatrix_link_hierarchy              | SKIP_LINK_HIERARCHY                | N/A                                                                            |
 | aviatrix_netflow_agent               | SKIP_NETFLOW_AGENT                 | N/A                                                                            |
 | aviatrix_periodic_ping               | SKIP_PERIODIC_PING                 | aviatrix_gateway                                                               |
 | aviatrix_private_mode_lb             | SKIP_PRIVATE_MODE_LB               | CONTROLLER_VPC_ID, AWS_REGION, AWS_ACCOUNT_NUMBER, AWS_ACCESS_KEY, AWS_SECRET_KEY |
@@ -139,7 +141,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_segmentation_network_domain_connection_policy | SKIP_SEGMENTATION_NETWORK_DOMAIN_CONNECTION_POLICY | N/A                                          |
 | aviatrix_site2cloud                  | SKIP_S2C                           | aviatrix_gateway                                                               |
 | aviatrix_site2cloud_ca_cert_tag      | SKIP_S2C_CA_CERT_TAG               | N/A                                                                            |
-| aviatrix_splunk_logging              | SKIP_SPLUNK_LOGGING                | N/A                                                                            |
+| aviatrix_sla_class                   | SKIP_SLA_CLASS                     | N/A                                                                            |
 | aviatrix_spoke_external_device_conn  | SKIP_SPOKE_EXTERNAL_DEVICE_CONN    | aviatrix_account + aviatrix_spoke_gateway                                      |
 | aviatrix_spoke_ha_gateway            | SKIP_SPOKE_HA_GATEWAY              | aviatrix_account + aviatrix_vpc + aviatrix_spoke_gateway                       |
 | aviatrix_spoke_gateway               | SKIP_SPOKE_GATEWAY                 | aviatrix_gateway                                                               |
@@ -149,7 +151,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 |                                      | SKIP_SPOKE_GATEWAY_OCI             |         + OCI_VPC_ID, OCI_REGION, OCI_SUBNET, OCI_GW_SIZE(optional)            |
 | aviatrix_spoke_gateway_subnet_group  | SKIP_SPOKE_GATEWAY_SUBNET_GROUP    | ARM_SUBSCRIPTION_ID, ARM_DIRECTORY_ID, ARM_APPLICATION_ID, ARM_APPLICATION_KEY |
 | aviatrix_spoke_transit_attachment    | SKIP_SPOKE_TRANSIT_ATTACHMENT      | aviatrix_spoke_gateway + aviatrix_transit_gateway                              |
-| aviatrix_sumologic_forwarder         | SKIP_SUMOLOGIC_FORWARDER           | N/A                                                                            |
+| aviatrix_traffic_classifier          | SKIP_TRAFFIC_CLASSIFIER            | N/A                                                                            |
 | aviatrix_trans_peer                  | SKIP_TRANS_PEER                    | aviatrix_tunnel                                                                |
 | aviatrix_transit_external_device_conn| SKIP_TRANSIT_EXTERNAL_DEVICE_CONN  | aviatrix_account + aviatrix_transit_gateway                                    |
 | aviatrix_transit_firenet_policy      | SKIP_TRANSIT_FIRENET_POLICY        | aviatrix_account                                                               |
@@ -171,6 +173,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_vpn_user_accelerator	       | SKIP_VPN_USER_ACCELERATOR          | aviatrix_gateway						                                         |
 | aviatrix_data_source_account         | SKIP_DATA_ACCOUNT                  | aviatrix_account                                                               |
 | aviatrix_data_source_caller_identity | SKIP_DATA_CALLER_IDENTITY          |                                                                                |
+| aviatrix_data_source_controller_metadata | SKIP_DATA_CONTROLLER_METADATA  |                                                                                |
 | aviatrix_data_source_device_interfaces | SKIP_DATA_DEVICE_INTERFACES      | CLOUDN_DEVICE_NAME                                                             |
 | aviatrix_data_source_firenet         | SKIP_DATA_FIRENET                  | aviatrix_firenet                                                               |
 | aviatrix_data_source_firenet_firewall_manager | SKIP_DATA_FIRENET_FIREWALL_MANAGER | AWS_ACCOUNT_NUMBER + AWS_ACCESS_KEY + AWS_SECRET_KEY + AWS_REGION, Palo Alto Networks Panorama |

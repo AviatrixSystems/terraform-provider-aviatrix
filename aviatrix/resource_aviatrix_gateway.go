@@ -10,7 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -37,12 +37,14 @@ func resourceAviatrixGateway() *schema.Resource {
 			"cloud_type": {
 				Type:         schema.TypeInt,
 				Required:     true,
+				ForceNew:     true,
 				Description:  "Type of cloud service provider.",
 				ValidateFunc: validateCloudType,
 			},
 			"account_name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Account name. This account will be used to launch Aviatrix gateway.",
 			},
 			"gw_name": {
@@ -85,6 +87,7 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
+				ForceNew:    true,
 				Description: "AZ of subnet being created for Insane Mode Gateway. Required if insane_mode is set.",
 			},
 			"single_ip_snat": {
@@ -285,6 +288,7 @@ func resourceAviatrixGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
+				ForceNew:    true,
 				Description: "Enable Insane Mode for Gateway. Valid values: true, false.",
 			},
 			"enable_vpc_dns_server": {
@@ -1596,12 +1600,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[INFO] Updating Aviatrix gateway: %#v", d.Get("gw_name").(string))
 
 	d.Partial(true)
-	if d.HasChange("cloud_type") {
-		return fmt.Errorf("updating cloud_type is not allowed")
-	}
-	if d.HasChange("account_name") {
-		return fmt.Errorf("updating account_name is not allowed")
-	}
 	if d.HasChange("vpn_access") {
 		return fmt.Errorf("updating vpn_access is not allowed")
 	}
@@ -1619,12 +1617,6 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 	if d.HasChange("eip") {
 		return fmt.Errorf("updating eip is not allowed")
-	}
-	if d.HasChange("insane_mode") {
-		return fmt.Errorf("updating insane_mode is not allowed")
-	}
-	if d.HasChange("insane_mode_az") {
-		return fmt.Errorf("updating insane_mode_az is not allowed")
 	}
 	if d.HasChange("peering_ha_eip") {
 		o, n := d.GetChange("peering_ha_eip")

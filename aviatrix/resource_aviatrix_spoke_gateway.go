@@ -12,7 +12,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -44,12 +44,14 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 			"cloud_type": {
 				Type:         schema.TypeInt,
 				Required:     true,
+				ForceNew:     true,
 				Description:  "Type of cloud service provider.",
 				ValidateFunc: validateCloudType,
 			},
 			"account_name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "This parameter represents the name of a Cloud-Account in Aviatrix controller.",
 			},
 			"gw_name": {
@@ -94,6 +96,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
+				ForceNew:    true,
 				Description: "AZ of subnet being created for Insane Mode Spoke Gateway. Required if insane_mode is enabled for AWS cloud.",
 			},
 			"single_ip_snat": {
@@ -154,6 +157,7 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
+				ForceNew:    true,
 				Description: "Enable Insane Mode for Spoke Gateway. Valid values: true, false. Supported for AWS/AWSGov, GCP, Azure and OCI. If insane mode is enabled, gateway size has to at least be c5 size for AWS and Standard_D3_v2 size for Azure.",
 			},
 			"enable_vpc_dns_server": {
@@ -388,6 +392,25 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				ValidateFunc: validation.IntBetween(12, 360),
 				Description:  "BGP Hold Time for BGP Spoke Gateway. Unit is in seconds. Valid values are between 12 and 360.",
 			},
+			"enable_bgp_over_lan": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+				Description: "Pre-allocate a network interface(eth4) for \"BGP over LAN\" functionality. " +
+					"Only valid for 8 (Azure), 32 (AzureGov) or AzureChina (2048). Valid values: true or false. " +
+					"Default value: false. Available as of provider version R3.0.2+.",
+			},
+			"bgp_lan_interfaces_count": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      1,
+				ForceNew:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description: "Number of interfaces that will be created for BGP over LAN enabled Azure spoke. " +
+					"Only valid for 8 (Azure), 32 (AzureGov) or AzureChina (2048). Default value: 1. " +
+					"Available as of provider version R3.0.2+.",
+			},
 			"enable_spot_instance": {
 				Type:         schema.TypeBool,
 				Optional:     true,
@@ -541,6 +564,20 @@ func resourceAviatrixSpokeGateway() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Public IP address of the HA Spoke Gateway.",
+			},
+			"bgp_lan_ip_list": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+				Description: "List of available BGP LAN interface IPs for spoke external device connection creation. " +
+					"Only supports 8 (Azure), 32 (AzureGov) or AzureChina (2048). Available as of provider version R3.0.2+.",
+			},
+			"ha_bgp_lan_ip_list": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+				Description: "List of available BGP LAN interface IPs for spoke external device HA connection creation. " +
+					"Only supports 8 (Azure), 32 (AzureGov) or AzureChina (2048). Available as of provider version R3.0.2+.",
 			},
 		},
 	}
@@ -738,6 +775,22 @@ func resourceAviatrixSpokeGatewayCreate(d *schema.ResourceData, meta interface{}
 	}
 	if !enableMonitorSubnets && len(excludedInstances) != 0 {
 		return fmt.Errorf("'monitor_exclude_list' must be empty if 'enable_monitor_gateway_subnets' is false")
+	}
+
+	bgpOverLan := d.Get("enable_bgp_over_lan").(bool)
+	if bgpOverLan && !enableBgp {
+		return fmt.Errorf("'enable_bgp' is required to be true to enable bgp over lan")
+	}
+	if bgpOverLan && !(goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes)) {
+		return fmt.Errorf("'enable_bgp_over_lan' is only valid for Azure (8), AzureGov (32) or AzureChina (2048)")
+	}
+	bgpLanInterfacesCount := d.Get("bgp_lan_interfaces_count").(int)
+	if bgpLanInterfacesCount != 1 && (!bgpOverLan || !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes)) {
+		return fmt.Errorf("'bgp_lan_interfaces_count' is only valid for BGP over LAN enabled spoke for Azure (8), AzureGov (32) or AzureChina (2048)")
+	}
+	if bgpOverLan {
+		gateway.BgpOverLan = "on"
+		gateway.BgpLanInterfacesCount = bgpLanInterfacesCount
 	}
 
 	enablePrivateOob := d.Get("enable_private_oob").(bool)
@@ -1314,6 +1367,32 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("single_ip_snat", gw.EnableNat == "yes" && gw.SnatMode == "primary")
 	d.Set("enable_jumbo_frame", gw.JumboFrame)
 	d.Set("enable_bgp", gw.EnableBgp)
+	d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan)
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan {
+		bgpLanIpInfo, err := client.GetBgpLanIPList(&goaviatrix.TransitVpc{GwName: gateway.GwName})
+		if err != nil {
+			return fmt.Errorf("could not get BGP LAN IP info for Azure spoke gateway %s: %v", gateway.GwName, err)
+		}
+		if err = d.Set("bgp_lan_ip_list", bgpLanIpInfo.AzureBgpLanIpList); err != nil {
+			log.Printf("[WARN] could not set bgp_lan_ip_list into state: %v", err)
+		}
+		if len(bgpLanIpInfo.AzureHaBgpLanIpList) != 0 {
+			if err = d.Set("ha_bgp_lan_ip_list", bgpLanIpInfo.AzureHaBgpLanIpList); err != nil {
+				log.Printf("[WARN] could not set ha_bgp_lan_ip_list into state: %v", err)
+			}
+		} else {
+			d.Set("ha_bgp_lan_ip_list", nil)
+		}
+	} else {
+		d.Set("bgp_lan_ip_list", nil)
+		d.Set("ha_bgp_lan_ip_list", nil)
+	}
+
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.BgpLanInterfacesCount > 1 {
+		d.Set("bgp_lan_interfaces_count", gw.BgpLanInterfacesCount)
+	} else {
+		d.Set("bgp_lan_interfaces_count", 1)
+	}
 	d.Set("enable_learned_cidrs_approval", gw.EnableLearnedCidrsApproval)
 	d.Set("enable_preserve_as_path", gw.EnablePreserveAsPath)
 	d.Set("rx_queue_size", gw.RxQueueSize)
@@ -1537,6 +1616,7 @@ func resourceAviatrixSpokeGatewayRead(d *schema.ResourceData, meta interface{}) 
 			d.Set("ha_zone", "")
 			d.Set("ha_public_ip", "")
 			d.Set("ha_private_mode_subnet_zone", "")
+			d.Set("ha_bgp_lan_ip_list", nil)
 			return nil
 		}
 
@@ -1664,18 +1744,6 @@ func resourceAviatrixSpokeGatewayUpdate(d *schema.ResourceData, meta interface{}
 		if goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && haSubnet == "" && haZone != "" {
 			return fmt.Errorf("'ha_subnet' must be provided to enable HA for Azure (8), AzureGov (32) or AzureChina (2048), cannot enable HA with only 'ha_zone'")
 		}
-	}
-	if d.HasChange("cloud_type") {
-		return fmt.Errorf("updating cloud_type is not allowed")
-	}
-	if d.HasChange("account_name") {
-		return fmt.Errorf("updating account_name is not allowed")
-	}
-	if d.HasChange("insane_mode") {
-		return fmt.Errorf("updating insane_mode is not allowed")
-	}
-	if d.HasChange("insane_mode_az") {
-		return fmt.Errorf("updating insane_mode_az is not allowed")
 	}
 	if d.HasChange("allocate_new_eip") {
 		return fmt.Errorf("updating allocate_new_eip is not allowed")

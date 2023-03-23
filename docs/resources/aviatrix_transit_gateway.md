@@ -365,14 +365,14 @@ The following arguments are supported:
 * `enable_gateway_load_balancer` - (Optional) Enable FireNet interfaces with AWS Gateway Load Balancer. Only valid when `enable_firenet` or `enable_transit_firenet` are set to true and `cloud_type` = 1 (AWS). Currently, AWS Gateway Load Balancer is only supported in AWS regions: us-west-2, us-east-1, eu-west-1, ap-southeast-2 and sa-east-1. Valid values: true or false. Default value: false. Available as of provider version R2.18+.
 
 ### BGP over LAN
-* `enable_bgp_over_lan` - (Optional) Pre-allocate a network interface(eth4) for "BGP over LAN" functionality. Must be enabled to create a BGP over LAN `aviatrix_transit_external_device_conn` resource with this Transit Gateway. Only valid for GCP (4), Azure (8), AzureGov (32) or AzureChina (2048). Valid values: true or false. Default value: false. Available as of provider version R2.18+.
+* `enable_bgp_over_lan` - (Optional) Pre-allocate a network interface(eth4) for "BGP over LAN" functionality. Must be enabled to create a BGP over LAN `aviatrix_transit_external_device_conn` resource with this Transit Gateway. Only valid for GCP (4), Azure (8), AzureGov (32) or AzureChina (2048). Valid values: true or false. Default value: false. Available as of provider version R2.18+. Updatable as of provider version 3.0.3+.
 * `bgp_lan_interfaces` - (Optional) Interfaces to run BGP protocol on top of the ethernet interface, to connect to the onprem/remote peer. Only available for GCP Transit. Each interface has the following attributes:
   * `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider.
   * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges.
 * `ha_bgp_lan_interfaces` - (Optional) Interfaces to run BGP protocol on top of the ethernet interface, to connect to the onprem/remote peer. Only available for GCP Transit HA. Each interface has the following attributes:
   * `vpc_id` - (Required) VPC-ID/VNet-Name of cloud provider.
   * `subnet` - (Required) A VPC Network address range selected from one of the available network ranges.
-* `bgp_lan_interfaces_count` - (Optional) Number of interfaces that will be created for BGP over LAN enabled Azure transit. Valid value: 1~5 for FireNet case, 1~7 for Non-FireNet case. Default value: 1. Available as of provider version R2.22+.
+* `bgp_lan_interfaces_count` - (Optional) Number of interfaces that will be created for BGP over LAN enabled Azure transit. Applies on HA Transit as well if enabled. Valid value: 1~5 for FireNet case, 1~7 for Non-FireNet case. Default value: 1. Available as of provider version R2.22+. Updatable as of provider version 3.0.3+.
 
 ### Encryption
 * `enable_encrypt_volume` - (Optional) Enable EBS volume encryption for Gateway. Only supports AWS, AWSGov, AWSChina, AWS Top Secret and AWS Secret. Valid values: true, false. Default value: false.
@@ -433,21 +433,21 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `ha_gw_name` - Aviatrix transit gateway unique name of HA transit gateway.
 * `eip` - Public IP address assigned to the gateway.
 * `ha_eip` - Public IP address assigned to the HA gateway.
+* `public_ip` - Public IP address of the Transit Gateway created.
+* `ha_public_ip` - Public IP address of the HA Transit Gateway.
+* `private_ip` - Private IP address of the transit gateway created.
+* `ha_private_ip` - Private IP address of the HA transit gateway created.
 * `security_group_id` - Security group used for the transit gateway.
 * `ha_security_group_id` - HA security group used for the transit gateway.
 * `cloud_instance_id` - Cloud instance ID of the transit gateway.
-* `private_ip` - Private IP address of the transit gateway created.
 * `ha_cloud_instance_id` - Cloud instance ID of the HA transit gateway.
-* `ha_gw_name` - Aviatrix transit gateway unique name of HA transit gateway.
-* `ha_private_ip` - Private IP address of the HA transit gateway created.
 * `lan_interface_cidr` - LAN interface CIDR of the transit gateway created (will be used when enabling FQDN Firenet in Azure). Available in provider version R2.17.1+.
 * `ha_lan_interface_cidr` - LAN interface CIDR of the HA transit gateway created (will be used when enabling FQDN Firenet in Azure). Available in provider version R2.18+.
 * `bgp_lan_ip_list` - List of available BGP LAN interface IPs for transit external device connection creation. Only supports GCP and Azure. Available as of provider version R2.21.0+.
 * `ha_bgp_lan_ip_list` - List of available BGP LAN interface IPs for transit external device HA connection creation. Only supports GCP and Azure. Available as of provider version R2.21.0+.
-* `public_ip` - Public IP address of the Transit Gateway created.
-* `ha_public_ip` - Public IP address of the HA Transit Gateway.
 
 The following arguments are deprecated:
 

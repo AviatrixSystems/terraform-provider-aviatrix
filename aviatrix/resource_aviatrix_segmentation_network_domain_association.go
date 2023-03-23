@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -103,7 +103,7 @@ func resourceAviatrixSegmentationNetworkDomainAssociationRead(d *schema.Resource
 		return fmt.Errorf("could not find segmentation_network_domain_association %s: %v", networkDomainName+"~"+attachmentName, err)
 	}
 
-	d.Set("transit_gateway_name", transitGatewayName)
+	d.Set("transit_gateway_name", association.TransitGatewayName)
 	d.Set("network_domain_name", networkDomainName)
 	d.Set("attachment_name", attachmentName)
 	d.SetId(networkDomainName + "~" + attachmentName)

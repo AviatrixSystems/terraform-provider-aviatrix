@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AviatrixSystems/terraform-provider-aviatrix/v2/goaviatrix"
+	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -55,6 +55,7 @@ resource "aviatrix_cloudn_transit_gateway_attachment" "test_cloudn_transit_gatew
 	cloudn_lan_interface_neighbor_bgp_asn = "%[6]s"
 	enable_over_private_network           = true
 	enable_jumbo_frame                    = false
+	enable_dead_peer_detection            = true
 }
 `, rName, os.Getenv("CLOUDN_DEVICE_NAME"), os.Getenv("TRANSIT_GATEWAY_NAME"), os.Getenv("CLOUDN_BGP_ASN"),
 		os.Getenv("CLOUDN_LAN_INTERFACE_NEIGHBOR_IP"), os.Getenv("CLOUDN_LAN_INTERFACE_NEIGHBOR_BGP_ASN"))
