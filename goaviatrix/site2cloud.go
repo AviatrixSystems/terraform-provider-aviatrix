@@ -251,7 +251,7 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 			//if err != nil {
 			//	return err
 			//}
-			form["route_table_list"] = string(site2cloud.RouteTableList)
+			form["route_table_list"] = site2cloud.RouteTableList
 		}
 		latitude := fmt.Sprintf("%f", site2cloud.RemoteGwLatitude)
 		longitude := fmt.Sprintf("%f", site2cloud.RemoteGwLongitude)
