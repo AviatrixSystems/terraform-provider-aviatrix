@@ -1,7 +1,6 @@
 package goaviatrix
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
 	"strconv"
@@ -23,7 +22,7 @@ type Site2Cloud struct {
 	Action                        string  `form:"action,omitempty"`
 	CID                           string  `form:"CID,omitempty"`
 	VpcID                         string  `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	TunnelName                    string   `form:"connection_name,omitempty" json:"name,omitempty"`
+	TunnelName                    string  `form:"connection_name,omitempty" json:"name,omitempty"`
 	RemoteGwType                  string  `form:"remote_gateway_type,omitempty"`
 	ConnType                      string  `form:"connection_type,omitempty" json:"type,omitempty"`
 	TunnelType                    string  `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
@@ -248,11 +247,11 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 	if site2cloud.PrivateRouteEncryption == "true" {
 		form["private_route_encryption"] = site2cloud.PrivateRouteEncryption
 		if len(site2cloud.RouteTableList) != 0 {
-			args, err := json.Marshal(strings.Join(site2cloud.RouteTableList, ","))
-			if err != nil {
-				return err
-			}
-			form["route_table_list"] = string(args)
+			//args, err := json.Marshal(strings.Join(site2cloud.RouteTableList, ","))
+			//if err != nil {
+			//	return err
+			//}
+			form["route_table_list"] = string(site2cloud.RouteTableList)
 		}
 		latitude := fmt.Sprintf("%f", site2cloud.RemoteGwLatitude)
 		longitude := fmt.Sprintf("%f", site2cloud.RemoteGwLongitude)
