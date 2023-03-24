@@ -1,6 +1,7 @@
 package goaviatrix
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"strconv"
@@ -19,42 +20,42 @@ const SslServerPoolDefault = "192.168.44.0/24"
 
 // Site2Cloud simple struct to hold site2cloud details
 type Site2Cloud struct {
-	Action                        string  `form:"action,omitempty"`
-	CID                           string  `form:"CID,omitempty"`
-	VpcID                         string  `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
-	TunnelName                    string  `form:"connection_name,omitempty" json:"name,omitempty"`
-	RemoteGwType                  string  `form:"remote_gateway_type,omitempty"`
-	ConnType                      string  `form:"connection_type,omitempty" json:"type,omitempty"`
-	TunnelType                    string  `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
-	GwName                        string  `form:"primary_cloud_gateway_name,omitempty" json:"gw_name,omitempty"`
-	BackupGwName                  string  `form:"backup_gateway_name,omitempty"`
-	RemoteGwIP                    string  `form:"remote_gateway_ip,omitempty" json:"peer_ip,omitempty"`
-	RemoteGwIP2                   string  `form:"backup_remote_gateway_ip,omitempty"`
-	PreSharedKey                  string  `form:"pre_shared_key,omitempty"`
-	BackupPreSharedKey            string  `form:"backup_pre_shared_key,omitempty"`
-	RemoteSubnet                  string  `form:"remote_subnet_cidr,omitempty" json:"remote_cidr,omitempty"`
-	LocalSubnet                   string  `form:"local_subnet_cidr,omitempty" json:"local_cidr,omitempty"`
-	HAEnabled                     string  `form:"ha_enabled,omitempty" json:"ha_status,omitempty"`
-	PeerType                      string  `form:"peer_type,omitempty"`
-	SslServerPool                 string  `form:"ssl_server_pool,omitempty"`
-	NetworkType                   string  `form:"network_type,omitempty"`
-	CloudSubnetCidr               string  `form:"cloud_subnet_cidr,omitempty"`
-	RemoteCidr                    string  `form:"remote_cidr,omitempty"`
-	RemoteSubnetVirtual           string  `form:"virtual_remote_subnet_cidr,omitempty" json:"virtual_remote_subnet_cidr,omitempty"`
-	LocalSubnetVirtual            string  `form:"virtual_local_subnet_cidr,omitempty" json:"virtual_local_subnet_cidr,omitempty"`
-	Phase1Auth                    string  `form:"phase1_auth,omitempty"`
-	Phase1DhGroups                string  `form:"phase1_dh_group,omitempty"`
-	Phase1Encryption              string  `form:"phase1_encryption,omitempty"`
-	Phase2Auth                    string  `form:"phase2_auth,omitempty"`
-	Phase2DhGroups                string  `form:"phase2_dh_group,omitempty"`
-	Phase2Encryption              string  `form:"phase2_encryption,omitempty"`
-	EnableIKEv2                   string  `form:"enable_ikev2,omitempty"`
-	PrivateRouteEncryption        string  `form:"private_route_encryption,omitempty"`
-	RemoteGwLatitude              float64 `form:"remote_gateway_latitude,omitempty"`
-	RemoteGwLongitude             float64 `form:"remote_gateway_longitude,omitempty"`
-	BackupRemoteGwLatitude        float64 `form:"backup_remote_gateway_latitude,omitempty"`
-	BackupRemoteGwLongitude       float64 `form:"backup_remote_gateway_longitude,omitempty"`
-	RouteTableList                string  `form:"route_table_list,omitempty"`
+	Action                        string   `form:"action,omitempty"`
+	CID                           string   `form:"CID,omitempty"`
+	VpcID                         string   `form:"vpc_id,omitempty" json:"vpc_id,omitempty"`
+	TunnelName                    string   `form:"connection_name,omitempty" json:"name,omitempty"`
+	RemoteGwType                  string   `form:"remote_gateway_type,omitempty"`
+	ConnType                      string   `form:"connection_type,omitempty" json:"type,omitempty"`
+	TunnelType                    string   `form:"tunnel_type,omitempty" json:"tunnel_type,omitempty"`
+	GwName                        string   `form:"primary_cloud_gateway_name,omitempty" json:"gw_name,omitempty"`
+	BackupGwName                  string   `form:"backup_gateway_name,omitempty"`
+	RemoteGwIP                    string   `form:"remote_gateway_ip,omitempty" json:"peer_ip,omitempty"`
+	RemoteGwIP2                   string   `form:"backup_remote_gateway_ip,omitempty"`
+	PreSharedKey                  string   `form:"pre_shared_key,omitempty"`
+	BackupPreSharedKey            string   `form:"backup_pre_shared_key,omitempty"`
+	RemoteSubnet                  string   `form:"remote_subnet_cidr,omitempty" json:"remote_cidr,omitempty"`
+	LocalSubnet                   string   `form:"local_subnet_cidr,omitempty" json:"local_cidr,omitempty"`
+	HAEnabled                     string   `form:"ha_enabled,omitempty" json:"ha_status,omitempty"`
+	PeerType                      string   `form:"peer_type,omitempty"`
+	SslServerPool                 string   `form:"ssl_server_pool,omitempty"`
+	NetworkType                   string   `form:"network_type,omitempty"`
+	CloudSubnetCidr               string   `form:"cloud_subnet_cidr,omitempty"`
+	RemoteCidr                    string   `form:"remote_cidr,omitempty"`
+	RemoteSubnetVirtual           string   `form:"virtual_remote_subnet_cidr,omitempty" json:"virtual_remote_subnet_cidr,omitempty"`
+	LocalSubnetVirtual            string   `form:"virtual_local_subnet_cidr,omitempty" json:"virtual_local_subnet_cidr,omitempty"`
+	Phase1Auth                    string   `form:"phase1_auth,omitempty"`
+	Phase1DhGroups                string   `form:"phase1_dh_group,omitempty"`
+	Phase1Encryption              string   `form:"phase1_encryption,omitempty"`
+	Phase2Auth                    string   `form:"phase2_auth,omitempty"`
+	Phase2DhGroups                string   `form:"phase2_dh_group,omitempty"`
+	Phase2Encryption              string   `form:"phase2_encryption,omitempty"`
+	EnableIKEv2                   string   `form:"enable_ikev2,omitempty"`
+	PrivateRouteEncryption        string   `form:"private_route_encryption,omitempty"`
+	RemoteGwLatitude              float64  `form:"remote_gateway_latitude,omitempty"`
+	RemoteGwLongitude             float64  `form:"remote_gateway_longitude,omitempty"`
+	BackupRemoteGwLatitude        float64  `form:"backup_remote_gateway_latitude,omitempty"`
+	BackupRemoteGwLongitude       float64  `form:"backup_remote_gateway_longitude,omitempty"`
+	RouteTableList                []string `form:"route_table_list,omitempty"`
 	CustomAlgorithms              bool
 	DeadPeerDetection             bool
 	EnableActiveActive            bool
@@ -247,17 +248,20 @@ func (c *Client) CreateSite2Cloud(site2cloud *Site2Cloud) error {
 	if site2cloud.PrivateRouteEncryption == "true" {
 		form["private_route_encryption"] = site2cloud.PrivateRouteEncryption
 		if len(site2cloud.RouteTableList) != 0 {
-			form["route_table_list"] = site2cloud.RouteTableList
+			args, err := json.Marshal(strings.Join(site2cloud.RouteTableList, ","))
+			if err != nil {
+				return err
+			}
+			form["route_table_list"] = string(args)
 		}
 		latitude := fmt.Sprintf("%f", site2cloud.RemoteGwLatitude)
 		longitude := fmt.Sprintf("%f", site2cloud.RemoteGwLongitude)
-		form["remote_gateway_latitude"] = latitude
-		form["remote_gateway_longitude"] = longitude
 		if site2cloud.HAEnabled == "yes" {
 			backupLatitude := fmt.Sprintf("%f", site2cloud.BackupRemoteGwLatitude)
 			backupLongitude := fmt.Sprintf("%f", site2cloud.BackupRemoteGwLongitude)
-			form["backup_remote_gateway_latitude"] = backupLatitude
-			form["backup_remote_gateway_longitude"] = backupLongitude
+			form["peer_geo_info"] = latitude + ", " + longitude + ", " + backupLatitude + ", " + backupLongitude
+		} else {
+			form["peer_geo_info"] = latitude + ", " + longitude
 		}
 	}
 	if site2cloud.BackupGwName == "" {
@@ -401,7 +405,7 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 			site2cloud.Phase2Encryption = s2cConnDetail.Algorithm.Phase2Encrption[0]
 		}
 		if len(s2cConnDetail.RouteTableList) > 0 {
-			site2cloud.RouteTableList = strings.Join(s2cConnDetail.RouteTableList, ",")
+			site2cloud.RouteTableList = s2cConnDetail.RouteTableList
 			site2cloud.PrivateRouteEncryption = "true"
 			site2cloud.RemoteGwLatitude = s2cConnDetail.RemoteGwLatitude
 			site2cloud.RemoteGwLongitude = s2cConnDetail.RemoteGwLongitude

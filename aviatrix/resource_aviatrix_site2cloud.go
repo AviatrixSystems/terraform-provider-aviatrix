@@ -667,7 +667,7 @@ func resourceAviatrixSite2CloudCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("private_route_encryption is enabled, route_table_list cannot be empty")
 	} else if privateRouteEncryption {
 		s2c.PrivateRouteEncryption = "true"
-		s2c.RouteTableList = strings.Join(routeTableList, ",")
+		s2c.RouteTableList = routeTableList
 		if remoteGwLatitude == 0 || remoteGwLongitude == 0 {
 			return fmt.Errorf("private_route_encryption is enabled, please set remote_gateway_latitude and remote_gateway_longitude")
 		}
@@ -917,7 +917,7 @@ func resourceAviatrixSite2CloudRead(d *schema.ResourceData, meta interface{}) er
 
 		if s2c.PrivateRouteEncryption == "true" {
 			d.Set("private_route_encryption", true)
-			if err := d.Set("route_table_list", strings.Split(s2c.RouteTableList, ",")); err != nil {
+			if err := d.Set("route_table_list", s2c.RouteTableList); err != nil {
 				log.Printf("[WARN] Error setting route_table_list for (%s): %s", d.Id(), err)
 			}
 			d.Set("remote_gateway_latitude", s2c.RemoteGwLatitude)
