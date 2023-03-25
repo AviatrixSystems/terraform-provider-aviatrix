@@ -12,9 +12,34 @@ Track all Aviatrix Terraform provider's releases. New resources, features, and b
 
 ---
 
-``Last updated: R2.24.3 (UserConnect-6.9.349)``
+``Last updated: R3.0.3 (UserConnect-7.0.1601)``
 
 ---
+
+## 3.0.3
+### Notes:
+- Release date: **(24 Mar 2023)**
+- Supported Controller version: **UserConnect-7.0.1601**
+- Supported Terraform version: **v1.x**
+
+### Features:
+#### CloudN
+1. Restored support of CloudN transit attachment CIDR approval features in **aviatrix_cloudn_transit_gateway_attachment**:
+    - ``enable_dead_peer_detection``
+    - ``enable_learned_cidrs_approval``
+    - ``approved_cidrs``
+
+#### Multi-Cloud Transit
+1. Implemented support for adding additional BGP over LAN interfaces to Azure Transit without redeploying **aviatrix_transit_gateway**
+
+### Enhancements:
+1. Added support of "datadoghq.com" for ``site`` in **aviatrix_datadog_agent**
+2. Updated following attributes to "ForceNew" in **aviatrix_gateway**, **aviatrix_spoke_gateway** and **aviatrix_transit_gateway**:
+   - ``cloud_type``
+   - ``account_name``
+   - ``insane_mode_az``
+   - ``insane_mode``
+
 
 ## 3.0.2
 ### Notes:
