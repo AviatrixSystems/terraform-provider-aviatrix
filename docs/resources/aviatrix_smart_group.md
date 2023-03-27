@@ -29,6 +29,10 @@ resource "aviatrix_smart_group" "test_smart_group_ip" {
     match_expressions {
       cidr = "10.0.0.0/16"
     }
+
+    match_expressions {
+      fqdn = "www.aviatrix.com"
+    }
   }
 }
 ```
@@ -43,7 +47,8 @@ The following arguments are supported:
 * `selector` - (Required) Block containing match expressions to filter the Smart Group.
   * `match_expressions` - (Required) List of match expressions. The Smart Group will be a union of all resources matched by each `match_expressions`.`match_expressions` blocks cannot be empty.
       * `cidr` - (Optional) - CIDR block or IP Address this expression matches. `cidr` cannot be used with any other filters in the same `match_expressions` block.
-      * `type` - (Optional) - Type of resource this expression matches. Must be one of "vm", "vpc" or "subnet". `type` is required when `cidr` is not used.
+      * `fqdn` - (Optional) - FQDN address this expression matches. `fqdn` cannot be used with any other filters in the same `match_expressions` block.
+      * `type` - (Optional) - Type of resource this expression matches. Must be one of "vm", "vpc" or "subnet". `type` is required when both `cidr` and `fqdn` are not used.
       * `res_id` - (Optional) - Resource ID this expression matches.
       * `account_id` - (Optional) - Account ID this expression matches.
       * `account_name` - (Optional) - Account name this expression matches.
