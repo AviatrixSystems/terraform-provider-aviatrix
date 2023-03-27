@@ -43,6 +43,12 @@ func resourceAviatrixSmartGroup() *schema.Resource {
 										ValidateFunc: validation.Any(validation.IsCIDR, validation.IsIPAddress),
 										Description:  "CIDR block or IP Address this expression matches.",
 									},
+									"fqdn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringIsNotWhiteSpace,
+										Description:  "Fqdn address this expression matches.",
+									},
 									"type": {
 										Type:         schema.TypeString,
 										Optional:     true,
@@ -113,7 +119,7 @@ func marshalSmartGroupInput(d *schema.ResourceData) (*goaviatrix.SmartGroup, err
 		selectorInfo := selectorInterface.(map[string]interface{})
 		var filter *goaviatrix.SmartGroupMatchExpression
 
-		if mapContains(selectorInfo, "cidr") {
+		if mapContains(selectorInfo, "cidr") || mapContains(selectorInfo, "fqdn") {
 			for _, key := range []string{"type", "res_id", "account_id", "account_name", "name", "region", "zone", "tags"} {
 				if mapContains(selectorInfo, key) {
 					return nil, fmt.Errorf("%q must be empty when %q is set", key, "cidr")
@@ -122,10 +128,11 @@ func marshalSmartGroupInput(d *schema.ResourceData) (*goaviatrix.SmartGroup, err
 
 			filter = &goaviatrix.SmartGroupMatchExpression{
 				CIDR: selectorInfo["cidr"].(string),
+				FQDN: selectorInfo["fqdn"].(string),
 			}
 		} else {
 			if !mapContains(selectorInfo, "type") {
-				return nil, fmt.Errorf("%q is required when %q is empty", "type", "cidr")
+				return nil, fmt.Errorf("%q is required when both %q and %q are empty", "type", "cidr", "fqdn")
 			}
 			filter = &goaviatrix.SmartGroupMatchExpression{
 				Type:        selectorInfo["type"].(string),
@@ -202,6 +209,7 @@ func resourceAviatrixSmartGroupRead(ctx context.Context, d *schema.ResourceData,
 		filterMap := map[string]interface{}{
 			"type":         filter.Type,
 			"cidr":         filter.CIDR,
+			"fqdn":         filter.FQDN,
 			"res_id":       filter.ResId,
 			"account_id":   filter.AccountId,
 			"account_name": filter.AccountName,
