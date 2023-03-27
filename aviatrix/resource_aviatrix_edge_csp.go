@@ -647,15 +647,19 @@ func resourceAviatrixEdgeCSPRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("compute_node_uuid", edgeCSPResp.ComputeNodeUuid)
 	d.Set("template_uuid", edgeCSPResp.TemplateUuid)
 	d.Set("enable_management_over_private_network", edgeCSPResp.EnableManagementOverPrivateNetwork)
-	d.Set("management_egress_ip_prefix_list", strings.Split(edgeCSPResp.ManagementEgressIpPrefix, ","))
 	d.Set("dns_server_ip", edgeCSPResp.DnsServerIp)
 	d.Set("secondary_dns_server_ip", edgeCSPResp.SecondaryDnsServerIp)
 	d.Set("local_as_number", edgeCSPResp.LocalAsNumber)
 	d.Set("prepend_as_path", edgeCSPResp.PrependAsPath)
 	d.Set("enable_edge_active_standby", edgeCSPResp.EnableEdgeActiveStandby)
 	d.Set("enable_edge_active_standby_preemptive", edgeCSPResp.EnableEdgeActiveStandbyPreemptive)
-
 	d.Set("enable_learned_cidrs_approval", edgeCSPResp.EnableLearnedCidrsApproval)
+
+	if edgeCSPResp.ManagementEgressIpPrefix == "" {
+		d.Set("management_egress_ip_prefix_list", nil)
+	} else {
+		d.Set("management_egress_ip_prefix_list", strings.Split(edgeCSPResp.ManagementEgressIpPrefix, ","))
+	}
 
 	if edgeCSPResp.EnableLearnedCidrsApproval {
 		spokeAdvancedConfig, err := client.GetSpokeGatewayAdvancedConfig(&goaviatrix.SpokeVpc{GwName: edgeCSPResp.GwName})

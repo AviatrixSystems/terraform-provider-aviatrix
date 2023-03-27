@@ -462,15 +462,19 @@ func resourceAviatrixEdgeSpokeRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("gw_name", edgeSpoke.GwName)
 	d.Set("site_id", edgeSpoke.SiteId)
 	d.Set("enable_management_over_private_network", edgeSpoke.EnableManagementOverPrivateNetwork)
-	d.Set("management_egress_ip_prefix_list", strings.Split(edgeSpoke.ManagementEgressIpPrefix, ","))
 	d.Set("dns_server_ip", edgeSpoke.DnsServerIp)
 	d.Set("secondary_dns_server_ip", edgeSpoke.SecondaryDnsServerIp)
 	d.Set("local_as_number", edgeSpoke.LocalAsNumber)
 	d.Set("prepend_as_path", edgeSpoke.PrependAsPath)
 	d.Set("enable_edge_active_standby", edgeSpoke.EnableEdgeActiveStandby)
 	d.Set("enable_edge_active_standby_preemptive", edgeSpoke.EnableEdgeActiveStandbyPreemptive)
-
 	d.Set("enable_learned_cidrs_approval", edgeSpoke.EnableLearnedCidrsApproval)
+
+	if edgeSpoke.ManagementEgressIpPrefix == "" {
+		d.Set("management_egress_ip_prefix_list", nil)
+	} else {
+		d.Set("management_egress_ip_prefix_list", strings.Split(edgeSpoke.ManagementEgressIpPrefix, ","))
+	}
 
 	if edgeSpoke.EnableLearnedCidrsApproval {
 		spokeAdvancedConfig, err := client.GetSpokeGatewayAdvancedConfig(&goaviatrix.SpokeVpc{GwName: edgeSpoke.GwName})
