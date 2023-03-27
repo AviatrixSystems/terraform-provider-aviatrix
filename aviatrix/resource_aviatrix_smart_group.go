@@ -47,7 +47,13 @@ func resourceAviatrixSmartGroup() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringIsNotWhiteSpace,
-										Description:  "Fqdn address this expression matches.",
+										Description:  "FQDN address this expression matches.",
+									},
+									"site": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringIsNotWhiteSpace,
+										Description:  "Edge Site-ID this expression matches.",
 									},
 									"type": {
 										Type:         schema.TypeString,
@@ -119,7 +125,7 @@ func marshalSmartGroupInput(d *schema.ResourceData) (*goaviatrix.SmartGroup, err
 		selectorInfo := selectorInterface.(map[string]interface{})
 		var filter *goaviatrix.SmartGroupMatchExpression
 
-		if mapContains(selectorInfo, "cidr") || mapContains(selectorInfo, "fqdn") {
+		if mapContains(selectorInfo, "cidr") || mapContains(selectorInfo, "fqdn") || mapContains(selectorInfo, "site") {
 			for _, key := range []string{"type", "res_id", "account_id", "account_name", "name", "region", "zone", "tags"} {
 				if mapContains(selectorInfo, key) {
 					return nil, fmt.Errorf("%q must be empty when %q is set", key, "cidr")
@@ -129,10 +135,11 @@ func marshalSmartGroupInput(d *schema.ResourceData) (*goaviatrix.SmartGroup, err
 			filter = &goaviatrix.SmartGroupMatchExpression{
 				CIDR: selectorInfo["cidr"].(string),
 				FQDN: selectorInfo["fqdn"].(string),
+				Site: selectorInfo["site"].(string),
 			}
 		} else {
 			if !mapContains(selectorInfo, "type") {
-				return nil, fmt.Errorf("%q is required when both %q and %q are empty", "type", "cidr", "fqdn")
+				return nil, fmt.Errorf("%q is required when %q, %q and %q are all empty", "type", "cidr", "fqdn", "site")
 			}
 			filter = &goaviatrix.SmartGroupMatchExpression{
 				Type:        selectorInfo["type"].(string),
@@ -210,6 +217,7 @@ func resourceAviatrixSmartGroupRead(ctx context.Context, d *schema.ResourceData,
 			"type":         filter.Type,
 			"cidr":         filter.CIDR,
 			"fqdn":         filter.FQDN,
+			"site":         filter.Site,
 			"res_id":       filter.ResId,
 			"account_id":   filter.AccountId,
 			"account_name": filter.AccountName,
