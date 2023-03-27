@@ -213,7 +213,7 @@ func (c *Client) InsertFirewallPolicy(fw *Firewall) error {
 		return fmt.Errorf("could not marshal firewall policies: %v", err)
 	}
 
-	form := map[string]string{
+	form := map[string]interface{}{
 		"CID":          c.CID,
 		"action":       "insert_stateful_firewall_rules",
 		"gateway_name": fw.GwName,
@@ -221,5 +221,5 @@ func (c *Client) InsertFirewallPolicy(fw *Firewall) error {
 		"position":     strconv.Itoa(fw.PolicyList[0].Position),
 	}
 
-	return c.PostAPI(form["action"], form, BasicCheck)
+	return c.PostAPIContext2(context.Background(), nil, form["action"].(string), form, BasicCheck)
 }
