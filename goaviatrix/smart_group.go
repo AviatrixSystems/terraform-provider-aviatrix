@@ -11,6 +11,7 @@ type SmartGroupMatchExpression struct {
 	CIDR        string `json:"cidr,omitempty"`
 	FQDN        string `json:"fqdn,omitempty"`
 	Type        string `json:"type,omitempty"`
+	Site        string `json:"site,omitempty"`
 	ResId       string `json:"res_id,omitempty"`
 	AccountId   string `json:"account_id,omitempty"`
 	AccountName string `json:"account_name,omitempty"`
@@ -41,6 +42,9 @@ func smartGroupFilterToMap(filter *SmartGroupMatchExpression) map[string]string 
 	}
 	if len(filter.FQDN) > 0 {
 		filterMap["fqdn"] = filter.FQDN
+	}
+	if len(filter.Site) > 0 {
+		filterMap["site"] = filter.Site
 	}
 	if len(filter.ResId) > 0 {
 		filterMap["res_id"] = filter.ResId
@@ -149,6 +153,7 @@ func (c *Client) GetSmartGroup(ctx context.Context, uuid string) (*SmartGroup, e
 					CIDR:        filterMap["cidr"],
 					FQDN:        filterMap["fqdn"],
 					Type:        filterMap["type"],
+					Site:        filterMap["site"],
 					ResId:       filterMap["res_id"],
 					AccountId:   filterMap["account_id"],
 					AccountName: filterMap["account_name"],
