@@ -277,6 +277,16 @@ func (c *Client) PostAPIContext(ctx context.Context, action string, d interface{
 	return checkAPIResp(resp, action, checkFunc)
 }
 
+// PostAPIContext1 makes a post request to the V1 API, decodes the response and checks for any errors
+func (c *Client) PostAPIContext1(ctx context.Context, action string, d interface{}, checkFunc CheckAPIResponseFunc) error {
+	Url := fmt.Sprintf("https://%s/v1/api", c.ControllerIP)
+	resp, err := c.PostContext(ctx, Url, d)
+	if err != nil {
+		return fmt.Errorf("HTTP POST %q failed: %v", action, err)
+	}
+	return checkAPIResp(resp, action, checkFunc)
+}
+
 // PostAPIDownloadContext makes a post request to the Aviatrix API, checks for errors and returns the response body
 func (c *Client) PostAPIDownloadContext(ctx context.Context, action string, d interface{}, checkFunc CheckAPIResponseFunc) (io.ReadCloser, error) {
 	resp, err := c.PostContext(ctx, c.baseURL, d)
