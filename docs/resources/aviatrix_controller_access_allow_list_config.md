@@ -1,22 +1,22 @@
 ---
 subcategory: "Settings"
 layout: "aviatrix"
-page_title: "Aviatrix: aviatrix_controller_access_allow_list"
+page_title: "Aviatrix: aviatrix_controller_access_allow_list_config"
 description: |-
-  Creates Aviatrix Controller Access Allow List
+  Creates Aviatrix Controller Access Allow List Config
 ---
 
-# aviatrix_controller_access_allow_list
+# aviatrix_controller_access_allow_list_config
 
 !> **WARNING:** If any of the Allow List IPs are incorrect, the Controller will be inaccessible.
 
-The **aviatrix_controller_access_allow_list** resource creates the Aviatrix Controller Access Allow List.
+The **aviatrix_controller_access_allow_list_config** resource creates the Aviatrix Controller Access Allow List Config.
 
 ## Example Usage
 
 ```hcl
-# Create a Controller Access Allow List
-resource "aviatrix_controller_access_allow_list" "test" {
+# Create a Controller Access Allow List Config
+resource "aviatrix_controller_access_allow_list_config" "test" {
   allow_list {
     ip_address = "0.0.0.0"
   }
@@ -41,8 +41,8 @@ The following arguments are supported:
 
 ## Import
 
-**controller_access_allow_list** can be imported using "allow_list", e.g.
+**controller_access_allow_list_config** can be imported using "allow_list_config", e.g.
 
 ```
-$ terraform import aviatrix_controller_access_allow_list.test allow_list
+$ terraform import aviatrix_controller_access_allow_list_config.test allow_list_config
 ```
