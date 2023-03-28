@@ -239,9 +239,6 @@ func resourceAviatrixEdgeCSPHaUpdate(ctx context.Context, d *schema.ResourceData
 
 	d.Partial(true)
 
-	//gatewayForEaasFunctions := &goaviatrix.EdgeSpoke{
-	//	GwName: d.Id(),
-	//}
 	gatewayForEdgeCSPFunctions := &goaviatrix.EdgeCSP{
 		GwName: d.Id(),
 	}

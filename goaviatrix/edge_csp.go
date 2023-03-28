@@ -100,31 +100,29 @@ type EdgeCSPResp struct {
 	EnableEdgeActiveStandbyPreemptive  bool   `json:"edge_active_standby_preemptive"`
 	LocalAsNumber                      string `json:"local_as_number"`
 	PrependAsPath                      []string
-	PrependAsPathReturn                string   `json:"prepend_as_path"`
-	IncludeCidrList                    []string `json:"include_cidr_list"`
-	EnableLearnedCidrsApproval         bool     `json:"enable_learned_cidrs_approval"`
-	ApprovedLearnedCidrs               []string `json:"approved_learned_cidrs,omitempty"`
-	SpokeBgpManualAdvertisedCidrs      []string `json:"bgp_manual_spoke_advertise_cidrs"`
-	EnablePreserveAsPath               bool     `json:"preserve_as_path"`
-	BgpPollingTime                     int      `json:"bgp_polling_time"`
-	BgpHoldTime                        int      `json:"bgp_hold_time"`
-	EnableEdgeTransitiveRouting        bool     `json:"edge_transitive_routing"`
-	EnableJumboFrame                   bool     `json:"jumbo_frame"`
-	//Latitude                           string
-	//Longitude                          string
-	Latitude                    float64      `json:"latitude"`
-	Longitude                   float64      `json:"longitude"`
-	WanPublicIp                 string       `json:"public_ip"`
-	PrivateIP                   string       `json:"private_ip"`
-	RxQueueSize                 string       `json:"rx_queue_size"`
-	State                       string       `json:"vpc_state"`
-	WanInterface                []string     `json:"edge_csp_wan_ifname"`
-	LanInterface                []string     `json:"edge_csp_lan_ifname"`
-	MgmtInterface               []string     `json:"edge_csp_mgmt_ifname"`
-	InterfaceList               []*Interface `json:"interfaces"`
-	DnsProfileName              string       `json:"dns_profile_name"`
-	SingleIpSnat                bool         `json:"nat_enabled"`
-	EnableAutoAdvertiseLanCidrs bool         `json:"auto_advertise_lan_cidrs"`
+	PrependAsPathReturn                string       `json:"prepend_as_path"`
+	IncludeCidrList                    []string     `json:"include_cidr_list"`
+	EnableLearnedCidrsApproval         bool         `json:"enable_learned_cidrs_approval"`
+	ApprovedLearnedCidrs               []string     `json:"approved_learned_cidrs,omitempty"`
+	SpokeBgpManualAdvertisedCidrs      []string     `json:"bgp_manual_spoke_advertise_cidrs"`
+	EnablePreserveAsPath               bool         `json:"preserve_as_path"`
+	BgpPollingTime                     int          `json:"bgp_polling_time"`
+	BgpHoldTime                        int          `json:"bgp_hold_time"`
+	EnableEdgeTransitiveRouting        bool         `json:"edge_transitive_routing"`
+	EnableJumboFrame                   bool         `json:"jumbo_frame"`
+	Latitude                           float64      `json:"latitude"`
+	Longitude                          float64      `json:"longitude"`
+	WanPublicIp                        string       `json:"public_ip"`
+	PrivateIP                          string       `json:"private_ip"`
+	RxQueueSize                        string       `json:"rx_queue_size"`
+	State                              string       `json:"vpc_state"`
+	WanInterface                       []string     `json:"edge_csp_wan_ifname"`
+	LanInterface                       []string     `json:"edge_csp_lan_ifname"`
+	MgmtInterface                      []string     `json:"edge_csp_mgmt_ifname"`
+	InterfaceList                      []*Interface `json:"interfaces"`
+	DnsProfileName                     string       `json:"dns_profile_name"`
+	SingleIpSnat                       bool         `json:"nat_enabled"`
+	EnableAutoAdvertiseLanCidrs        bool         `json:"auto_advertise_lan_cidrs"`
 }
 
 type EdgeCSPListResp struct {
@@ -137,10 +135,6 @@ func (c *Client) CreateEdgeCSP(ctx context.Context, edgeCSP *EdgeCSP) error {
 	edgeCSP.Action = "create_edge_csp_instance"
 	edgeCSP.CID = c.CID
 	edgeCSP.NoProgressBar = true
-
-	//if edgeCSP.ManagementInterfaceConfig == "DHCP" {
-	//	edgeCSP.Dhcp = true
-	//}
 
 	interfaces, err := json.Marshal(edgeCSP.InterfaceList)
 	if err != nil {
