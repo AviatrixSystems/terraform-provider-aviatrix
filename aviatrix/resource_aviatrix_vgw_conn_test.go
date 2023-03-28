@@ -123,7 +123,7 @@ func testAccCheckVGWConnExists(n string, vgwConn *goaviatrix.VGWConn) resource.T
 			BgpLocalAsNum: rs.Primary.Attributes["bgp_local_as_num"],
 		}
 
-		foundVGWConn2, err := client.GetVGWConn(foundVGWConn)
+		foundVGWConn2, err := client.GetVGWConnDetail(foundVGWConn)
 		if err != nil {
 			return err
 		}
@@ -154,7 +154,7 @@ func testAccCheckVGWConnDestroy(s *terraform.State) error {
 			BgpLocalAsNum: rs.Primary.Attributes["bgp_local_as_num"],
 		}
 
-		_, err := client.GetVGWConn(foundVGWConn)
+		_, err := client.GetVGWConnDetail(foundVGWConn)
 		if err != goaviatrix.ErrNotFound {
 			return fmt.Errorf("vgw connection still exists")
 		}
