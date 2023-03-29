@@ -19,7 +19,7 @@ func (c *Client) CreateCloudnRegistration(ctx context.Context, cloudnRegistratio
 	cloudnRegistration.CID = c.CID
 	cloudnRegistration.Action = "register_caag_with_controller"
 
-	return c.PostAPIContext(ctx, cloudnRegistration.Action, cloudnRegistration, BasicCheck)
+	return c.PostAPIContext1(ctx, cloudnRegistration.Action, cloudnRegistration, BasicCheck)
 }
 
 func (c *Client) GetCloudnRegistration(ctx context.Context, cloudnRegistration *CloudnRegistration) (*CloudnRegistration, error) {
