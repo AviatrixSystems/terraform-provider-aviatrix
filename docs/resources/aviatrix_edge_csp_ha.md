@@ -41,16 +41,16 @@ The following arguments are supported:
 
 -> **NOTE:** At least one LAN interface is required.
 * `interfaces` - (Required) WAN/LAN interfaces.
-    * `name` - (Required) Interface name.
-    * `type` - (Required) Type.
-    * `bandwidth` - (Optional) Bandwidth.
-    * `enable_dhcp` - (Optional) Enable DHCP. Valid values: true, false. Default value: false.
-    * `wan_public_ip` - (Optional) WAN public IP.
-    * `ip_address` - (Optional) Interface static IP address.
-    * `gateway_ip` - (Optional) Gateway IP.
-    * `dns_server_ip` - (Optional) Primary DNS server IP.
-    * `secondary_dns_server_ip` - (Optional) Secondary DNS server IP.
-    * `tag` - (Optional) Tag.
+  * `name` - (Required) Interface name.
+  * `type` - (Required) Type.
+  * `bandwidth` - (Optional) Bandwidth.
+  * `enable_dhcp` - (Optional) Enable DHCP. Valid values: true, false. Default value: false.
+  * `wan_public_ip` - (Optional) WAN public IP.
+  * `ip_address` - (Optional) Interface static IP address.
+  * `gateway_ip` - (Optional) Gateway IP.
+  * `dns_server_ip` - (Optional) Primary DNS server IP.
+  * `secondary_dns_server_ip` - (Optional) Secondary DNS server IP.
+  * `tag` - (Optional) Tag.
     
 ## Attribute Reference
 

@@ -54,31 +54,31 @@ func TestAccAviatrixEdgeSpoke_basic(t *testing.T) {
 func testAccEdgeSpokeBasic(gwName, siteId, path string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_edge_spoke" "test" {
-	gw_name                     = "%s"
-	site_id                     = "%s"
-	ztp_file_type               = "iso"
-	ztp_file_download_path      = "%s"
+	gw_name                = "%s"
+	site_id                = "%s"
+	ztp_file_type          = "iso"
+	ztp_file_download_path = "%s"
 
 	interfaces {
-		name = "eth0"
-		type = "WAN"
-		ip_address = "10.230.5.32/24"
-		gateway_ip = "10.230.5.100"
+		name          = "eth0"
+		type          = "WAN"
+		ip_address    = "10.230.5.32/24"
+		gateway_ip    = "10.230.5.100"
 		wan_public_ip = "64.71.24.221"
 	}
 	
 	interfaces {
-		name = "eth1"
-		type = "LAN"
+		name       = "eth1"
+		type       = "LAN"
 		ip_address = "10.230.3.32/24"
 	}
 	
 	interfaces {
-		name = "eth2"
-		type = "MANAGEMENT"
+		name        = "eth2"
+		type        = "MANAGEMENT"
 		enable_dhcp = false
-		ip_address = "172.16.15.162/20"
-		gateway_ip = "172.16.0.1"
+		ip_address  = "172.16.15.162/20"
+		gateway_ip  = "172.16.0.1"
 	}
 }
   `, gwName, siteId, path)
