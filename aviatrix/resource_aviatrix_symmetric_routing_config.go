@@ -25,7 +25,6 @@ func resourceAviatrixSymmetricRoutingConfig() *schema.Resource {
 			"enable_symmetric_routing": {
 				Type:        schema.TypeBool,
 				Required:    true,
-				Default:     false,
 				Description: "Specify whether to enable symmetric routing for a given spoke gateway or not.",
 			},
 			"gw_name": {

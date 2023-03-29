@@ -26,7 +26,7 @@ resource "aviatrix_symmetric_routing_config" "test" {
 The following arguments are supported:
 
 * `gw_name` - (Required) Spoke gateway name.
-* `enable_symmetric_routing` - (Required) Enable symmetric routing. Valid values: true, false. Default: false.
+* `enable_symmetric_routing` - (Required) Enable symmetric routing. Valid values: true, false.
 
 
 ## Import
