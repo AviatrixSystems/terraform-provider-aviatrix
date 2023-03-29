@@ -398,6 +398,12 @@ func resourceAviatrixGateway() *schema.Resource {
 				Optional:    true,
 				Description: "Enable jumbo frame support for Gateway. Valid values: true or false. Default value: true.",
 			},
+			"enable_gro_gso": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Specify whether to disable GRO/GSO or not.",
+			},
 			"tags": {
 				Type:        schema.TypeMap,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -1193,6 +1199,13 @@ func resourceAviatrixGatewayCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	if !d.Get("enable_gro_gso").(bool) {
+		err := client.DisableGroGso(gateway)
+		if err != nil {
+			return fmt.Errorf("couldn't disable GRO/GSO on gateway: %s", err)
+		}
+	}
+
 	if detectionTime, ok := d.GetOk("tunnel_detection_time"); ok {
 		err := client.ModifyTunnelDetectionTime(gateway.GwName, detectionTime.(int))
 		if err != nil {
@@ -1590,6 +1603,12 @@ func resourceAviatrixGatewayRead(d *schema.ResourceData, meta interface{}) error
 			d.Set("peering_ha_zone", "")
 		}
 	}
+
+	enableGroGso, err := client.GetGroGsoStatus(gw)
+	if err != nil {
+		return fmt.Errorf("failed to get GRO/GSO status of gateway %s: %v", gw.GwName, err)
+	}
+	d.Set("enable_gro_gso", enableGroGso)
 
 	return nil
 }
@@ -2486,6 +2505,20 @@ func resourceAviatrixGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 			err := client.DisableJumboFrame(gateway)
 			if err != nil {
 				return fmt.Errorf("couldn't disable jumbo frames for Gateway when updating: %s", err)
+			}
+		}
+	}
+
+	if d.HasChange("enable_gro_gso") {
+		if d.Get("enable_gro_gso").(bool) {
+			err := client.EnableGroGso(gateway)
+			if err != nil {
+				return fmt.Errorf("couldn't enable GRO/GSO on gateway when updating: %s", err)
+			}
+		} else {
+			err := client.DisableGroGso(gateway)
+			if err != nil {
+				return fmt.Errorf("couldn't disable GRO/GSO on gateway when updating: %s", err)
 			}
 		}
 	}

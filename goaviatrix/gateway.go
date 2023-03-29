@@ -1381,3 +1381,45 @@ func (c *Client) ChangeBgpOverLanIntfCnt(gateway *Gateway) error {
 
 	return c.PostAPIContext2(context.Background(), nil, form["action"].(string), form, BasicCheck)
 }
+
+func (c *Client) EnableGroGso(gateway *Gateway) error {
+	action := "enable_gro_gso"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": gateway.GwName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) DisableGroGso(gateway *Gateway) error {
+	action := "disable_gro_gso"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": gateway.GwName,
+	}
+	return c.PostAPI(action, form, BasicCheck)
+}
+
+func (c *Client) GetGroGsoStatus(gateway *Gateway) (bool, error) {
+	action := "get_gro_gso_status"
+	form := map[string]string{
+		"CID":          c.CID,
+		"action":       action,
+		"gateway_name": gateway.GwName,
+	}
+
+	type GetGroGeoResult struct {
+		Return  bool   `json:"return"`
+		Results string `json:"results"`
+		Reason  string `json:"reason"`
+	}
+
+	var resp GetGroGeoResult
+	err := c.GetAPI(&resp, form["action"], form, BasicCheck)
+	if err != nil {
+		return false, err
+	}
+	return strings.Contains(resp.Results, "GRO/GSO is enabled"), nil
+}
