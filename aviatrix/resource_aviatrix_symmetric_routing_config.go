@@ -25,13 +25,14 @@ func resourceAviatrixSymmetricRoutingConfig() *schema.Resource {
 			"enable_symmetric_routing": {
 				Type:        schema.TypeBool,
 				Required:    true,
-				Description: "Enable symmetric routing.",
+				Default:     false,
+				Description: "Specify whether to enable symmetric routing for a given spoke gateway or not.",
 			},
 			"gw_name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Gateway name.",
+				Description: "Spoke gateway name.",
 			},
 		},
 	}
@@ -50,7 +51,7 @@ func resourceAviatrixSymmetricRoutingConfigCreate(ctx context.Context, d *schema
 		} else {
 			err := client.EnableSymmetricRouting(ctx, gwName)
 			if err != nil {
-				return diag.Errorf("failed to enable symmetric routing: %s", err)
+				return diag.Errorf("failed to enable symmetric routing for spoke gateway %s: %s", gwName, err)
 			}
 		}
 	} else {
@@ -60,7 +61,7 @@ func resourceAviatrixSymmetricRoutingConfigCreate(ctx context.Context, d *schema
 		} else {
 			err := client.DisableSymmetricRouting(ctx, gwName)
 			if err != nil {
-				return diag.Errorf("failed to disable symmetric routing: %s", err)
+				return diag.Errorf("failed to disable symmetric routing for spoke gateway %s: %s", gwName, err)
 			}
 		}
 	}
@@ -104,12 +105,12 @@ func resourceAviatrixSymmetricRoutingConfigUpdate(ctx context.Context, d *schema
 		if enableSymmetricRouting {
 			err := client.EnableSymmetricRouting(ctx, gwName)
 			if err != nil {
-				return diag.Errorf("failed to enable symmetric routing: %s", err)
+				return diag.Errorf("failed to enable symmetric routing for spoke gateway %s during update: %s", gwName, err)
 			}
 		} else {
 			err := client.DisableSymmetricRouting(ctx, gwName)
 			if err != nil {
-				return diag.Errorf("failed to disable symmetric routing: %s", err)
+				return diag.Errorf("failed to disable symmetric routing for spoke gateway %s during update: %s", gwName, err)
 			}
 		}
 	}
@@ -124,7 +125,7 @@ func resourceAviatrixSymmetricRoutingConfigDelete(ctx context.Context, d *schema
 
 	err := client.DisableSymmetricRouting(ctx, gwName)
 	if err != nil {
-		return diag.Errorf("could not delete symmetric routing: %v", err)
+		return diag.Errorf("failed to disable symmetric routing for spoke gateway %s during deletion: %s", gwName, err)
 	}
 
 	return nil
