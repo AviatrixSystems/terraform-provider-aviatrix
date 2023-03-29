@@ -3,19 +3,19 @@ subcategory: "Settings"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_controller_access_allow_list_config"
 description: |-
-  Creates Aviatrix Controller Access Allow List Config
+  Creates and manages an Aviatrix Controller's Access Allow List  Config
 ---
 
 # aviatrix_controller_access_allow_list_config
 
 !> **WARNING:** If any of the Allow List IPs are incorrect, the Controller will be inaccessible.
 
-The **aviatrix_controller_access_allow_list_config** resource creates the Aviatrix Controller Access Allow List Config.
+The **aviatrix_controller_access_allow_list_config** resource allows management of an Aviatrix Controller's Access Allow List.
 
 ## Example Usage
 
 ```hcl
-# Create a Controller Access Allow List Config
+# Create an Aviatrix Controller Access Allow List Config
 resource "aviatrix_controller_access_allow_list_config" "test" {
   allow_list {
     ip_address = "0.0.0.0"
@@ -33,8 +33,8 @@ The following arguments are supported:
 
 ### Required
 * `allow_list` - (Required) List of allowed IPs.
-    * `ip_address` - (Required) IP address.
-    * `description` - (Optional) Description.
+  * `ip_address` - (Required) IP address.
+  * `description` - (Optional) Description.
 
 ### Optional
 * `enable_enforce` - (Optional) Enable enforce. Valid values: true, false. Default: false.

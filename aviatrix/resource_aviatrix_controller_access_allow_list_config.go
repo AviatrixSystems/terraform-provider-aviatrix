@@ -41,6 +41,7 @@ func resourceAviatrixControllerAccessAllowListConfig() *schema.Resource {
 			"enable_enforce": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     false,
 				Description: "Enable enforce.",
 			},
 		},
