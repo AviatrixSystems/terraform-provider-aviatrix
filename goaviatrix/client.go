@@ -200,7 +200,7 @@ func (c *Client) initForCloudn(controllerIP string) (*Client, error) {
 		return nil, fmt.Errorf("Aviatrix: Client: Controller IP is not set")
 	}
 
-	c.baseURL = "https://" + controllerIP + "/v2/api"
+	c.baseURL = "https://" + controllerIP + "/v1/api"
 
 	if c.HTTPClient == nil {
 		tr := &http.Transport{
