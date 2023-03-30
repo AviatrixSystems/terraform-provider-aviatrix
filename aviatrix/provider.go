@@ -94,6 +94,7 @@ func Provider() *schema.Provider {
 			"aviatrix_cloudn_registration":                            resourceAviatrixCloudnRegistration(),
 			"aviatrix_cloudn_transit_gateway_attachment":              resourceAviatrixCloudnTransitGatewayAttachment(),
 			"aviatrix_cloudwatch_agent":                               resourceAviatrixCloudwatchAgent(),
+			"aviatrix_controller_access_allow_list_config":            resourceAviatrixControllerAccessAllowListConfig(),
 			"aviatrix_controller_bgp_max_as_limit_config":             resourceAviatrixControllerBgpMaxAsLimitConfig(),
 			"aviatrix_controller_cert_domain_config":                  resourceAviatrixControllerCertDomainConfig(),
 			"aviatrix_controller_config":                              resourceAviatrixControllerConfig(),

@@ -77,6 +77,7 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_cloudn_registration	       | SKIP_CLOUDN_REGISTRATION	        | CLOUDN_IP, CLOUDN_USERNAME, CLOUDN_PASSWORD                                    |
 | aviatrix_cloudn_transit_gateway_attachment | SKIP_CLOUDN_TRANSIT_GATEWAY_ATTACHMENT | CLOUDN_DEVICE_NAME, TRANSIT_GATEWAY_NAME, CLOUDN_BGP_ASN, CLOUDN_LAN_INTERFACE_NEIGHBOR_IP, CLOUDN_LAN_INTERFACE_NEIGHBOR_BGP_ASN |
 | aviatrix_cloudwatch_agent            | SKIP_CLOUDWATCH_AGENT              | N/A                                                                            |
+| aviatrix_controller_access_allow_list_config | SKIP_CONTROLLER_ACCESS_ALLOW_LIST_CONFIG | N/A                                                              |
 | aviatrix_controller_config           | SKIP_CONTROLLER_CONFIG             | aviatrix_account                                                               |
 | aviatrix_controller_cert_domain_config | SKIP_CONTROLLER_CERT_DOMAIN_CONFIG | aviatrix_account                                                             |
 | aviatrix_controller_email_config     | SKIP_CONTROLLER_EMAIL_CONFIG       | aviatrix_account                                                               |
