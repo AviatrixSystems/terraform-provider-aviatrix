@@ -39,33 +39,13 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 				ForceNew:    true,
 				Description: "Site ID.",
 			},
-			"management_interface_config": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				Description:  "Management interface configuration. Valid values: 'DHCP' and 'Static'.",
-				ValidateFunc: validation.StringInSlice([]string{"DHCP", "Static"}, false),
-			},
-			"wan_interface_ip_prefix": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "WAN interface IP/prefix.",
-			},
-			"wan_default_gateway_ip": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "WAN default gateway IP.",
-				ValidateFunc: validation.IsIPAddress,
-			},
-			"lan_interface_ip_prefix": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "LAN interface IP/prefix.",
-			},
-			"management_egress_ip_prefix": {
-				Type:        schema.TypeString,
+			"management_egress_ip_prefix_list": {
+				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Management egress gateway IP/prefix.",
+				Description: "Set of management egress gateway IP/prefix.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"enable_management_over_private_network": {
 				Type:        schema.TypeBool,
@@ -73,19 +53,6 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 				ForceNew:    true,
 				Default:     false,
 				Description: "Enable management over private network.",
-			},
-			"management_interface_ip_prefix": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Management interface IP/prefix.",
-			},
-			"management_default_gateway_ip": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Description:  "Management default gateway IP.",
-				ValidateFunc: validation.IsIPAddress,
 			},
 			"dns_server_ip": {
 				Type:         schema.TypeString,
@@ -219,12 +186,6 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 				Description:      "The longitude of the Edge as a Spoke.",
 				DiffSuppressFunc: goaviatrix.DiffSuppressFuncEdgeSpokeCoordinate,
 			},
-			"wan_public_ip": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "WAN interface public IP.",
-			},
 			"rx_queue_size": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -236,6 +197,46 @@ func resourceAviatrixEdgeSpoke() *schema.Resource {
 				Computed:    true,
 				Description: "State of Edge as a Spoke.",
 			},
+			"interfaces": {
+				Type:        schema.TypeSet,
+				Required:    true,
+				Description: "WAN/LAN/MANAGEMENT interfaces.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Interface name.",
+						},
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Interface type.",
+							ValidateFunc: validation.StringInSlice([]string{"WAN", "LAN", "MANAGEMENT"}, false),
+						},
+						"enable_dhcp": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "Enable DHCP.",
+						},
+						"wan_public_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "WAN interface public IP.",
+						},
+						"ip_address": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Interface static IP address.",
+						},
+						"gateway_ip": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Gateway IP.",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -244,14 +245,8 @@ func marshalEdgeSpokeInput(d *schema.ResourceData) *goaviatrix.EdgeSpoke {
 	edgeSpoke := &goaviatrix.EdgeSpoke{
 		GwName:                             d.Get("gw_name").(string),
 		SiteId:                             d.Get("site_id").(string),
-		ManagementInterfaceConfig:          d.Get("management_interface_config").(string),
-		ManagementEgressIpPrefix:           d.Get("management_egress_ip_prefix").(string),
+		ManagementEgressIpPrefix:           strings.Join(getStringSet(d, "management_egress_ip_prefix_list"), ","),
 		EnableManagementOverPrivateNetwork: d.Get("enable_management_over_private_network").(bool),
-		WanInterfaceIpPrefix:               d.Get("wan_interface_ip_prefix").(string),
-		WanDefaultGatewayIp:                d.Get("wan_default_gateway_ip").(string),
-		LanInterfaceIpPrefix:               d.Get("lan_interface_ip_prefix").(string),
-		ManagementInterfaceIpPrefix:        d.Get("management_interface_ip_prefix").(string),
-		ManagementDefaultGatewayIp:         d.Get("management_default_gateway_ip").(string),
 		DnsServerIp:                        d.Get("dns_server_ip").(string),
 		SecondaryDnsServerIp:               d.Get("secondary_dns_server_ip").(string),
 		ZtpFileType:                        d.Get("ztp_file_type").(string),
@@ -270,8 +265,23 @@ func marshalEdgeSpokeInput(d *schema.ResourceData) *goaviatrix.EdgeSpoke {
 		EnableJumboFrame:                   d.Get("enable_jumbo_frame").(bool),
 		Latitude:                           d.Get("latitude").(string),
 		Longitude:                          d.Get("longitude").(string),
-		WanPublicIp:                        d.Get("wan_public_ip").(string),
 		RxQueueSize:                        d.Get("rx_queue_size").(string),
+	}
+
+	interfaces := d.Get("interfaces").(*schema.Set).List()
+	for _, if0 := range interfaces {
+		if1 := if0.(map[string]interface{})
+
+		if2 := &goaviatrix.EdgeSpokeInterface{
+			IfName:    if1["name"].(string),
+			Type:      if1["type"].(string),
+			Dhcp:      if1["enable_dhcp"].(bool),
+			PublicIp:  if1["wan_public_ip"].(string),
+			IpAddr:    if1["ip_address"].(string),
+			GatewayIp: if1["gateway_ip"].(string),
+		}
+
+		edgeSpoke.InterfaceList = append(edgeSpoke.InterfaceList, if2)
 	}
 
 	return edgeSpoke
@@ -284,16 +294,6 @@ func resourceAviatrixEdgeSpokeCreate(ctx context.Context, d *schema.ResourceData
 	edgeSpoke := marshalEdgeSpokeInput(d)
 
 	// checks before creation
-	if edgeSpoke.ManagementInterfaceConfig == "DHCP" && (edgeSpoke.ManagementInterfaceIpPrefix != "" || edgeSpoke.ManagementDefaultGatewayIp != "" ||
-		edgeSpoke.DnsServerIp != "" || edgeSpoke.SecondaryDnsServerIp != "") {
-		return diag.Errorf("'management_interface_ip', 'management_default_gateway_ip', 'dns_server_ip' and 'secondary_dns_server_ip' are only valid when 'management_interface_config' is Static")
-	}
-
-	if edgeSpoke.ManagementInterfaceConfig == "Static" && (edgeSpoke.ManagementInterfaceIpPrefix == "" || edgeSpoke.ManagementDefaultGatewayIp == "" ||
-		edgeSpoke.DnsServerIp == "" || edgeSpoke.SecondaryDnsServerIp == "") {
-		return diag.Errorf("'management_interface_ip', 'management_default_gateway_ip', 'dns_server_ip' and 'secondary_dns_server_ip' are required when 'management_interface_config' is Static")
-	}
-
 	if !edgeSpoke.EnableEdgeActiveStandby && edgeSpoke.EnableEdgeActiveStandbyPreemptive {
 		return diag.Errorf("could not configure Preemptive Mode with Active-Standby disabled")
 	} else if edgeSpoke.EnableEdgeActiveStandby && !edgeSpoke.EnableEdgeActiveStandbyPreemptive {
@@ -420,13 +420,6 @@ func resourceAviatrixEdgeSpokeCreate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if edgeSpoke.WanPublicIp != "" {
-		err := client.UpdateEdgeSpokeIpConfigurations(ctx, edgeSpoke)
-		if err != nil {
-			return diag.Errorf("could not config WAN public IP after Edge as a Spoke creation: %v", err)
-		}
-	}
-
 	if edgeSpoke.RxQueueSize != "" {
 		gatewayForGatewayFunctions.RxQueueSize = edgeSpoke.RxQueueSize
 		err := client.SetRxQueueSize(gatewayForGatewayFunctions)
@@ -469,27 +462,19 @@ func resourceAviatrixEdgeSpokeRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("gw_name", edgeSpoke.GwName)
 	d.Set("site_id", edgeSpoke.SiteId)
 	d.Set("enable_management_over_private_network", edgeSpoke.EnableManagementOverPrivateNetwork)
-	d.Set("management_egress_ip_prefix", edgeSpoke.ManagementEgressIpPrefix)
-	d.Set("wan_interface_ip_prefix", edgeSpoke.WanInterfaceIpPrefix)
-	d.Set("wan_default_gateway_ip", edgeSpoke.WanDefaultGatewayIp)
-	d.Set("lan_interface_ip_prefix", edgeSpoke.LanInterfaceIpPrefix)
-	d.Set("management_default_gateway_ip", edgeSpoke.ManagementDefaultGatewayIp)
 	d.Set("dns_server_ip", edgeSpoke.DnsServerIp)
 	d.Set("secondary_dns_server_ip", edgeSpoke.SecondaryDnsServerIp)
-
-	if edgeSpoke.Dhcp {
-		d.Set("management_interface_config", "DHCP")
-	} else {
-		d.Set("management_interface_config", "Static")
-		d.Set("management_interface_ip_prefix", edgeSpoke.ManagementInterfaceIpPrefix)
-	}
-
 	d.Set("local_as_number", edgeSpoke.LocalAsNumber)
 	d.Set("prepend_as_path", edgeSpoke.PrependAsPath)
 	d.Set("enable_edge_active_standby", edgeSpoke.EnableEdgeActiveStandby)
 	d.Set("enable_edge_active_standby_preemptive", edgeSpoke.EnableEdgeActiveStandbyPreemptive)
-
 	d.Set("enable_learned_cidrs_approval", edgeSpoke.EnableLearnedCidrsApproval)
+
+	if edgeSpoke.ManagementEgressIpPrefix == "" {
+		d.Set("management_egress_ip_prefix_list", nil)
+	} else {
+		d.Set("management_egress_ip_prefix_list", strings.Split(edgeSpoke.ManagementEgressIpPrefix, ","))
+	}
 
 	if edgeSpoke.EnableLearnedCidrsApproval {
 		spokeAdvancedConfig, err := client.GetSpokeGatewayAdvancedConfig(&goaviatrix.SpokeVpc{GwName: edgeSpoke.GwName})
@@ -518,16 +503,34 @@ func resourceAviatrixEdgeSpokeRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("bgp_hold_time", edgeSpoke.BgpHoldTime)
 	d.Set("enable_edge_transitive_routing", edgeSpoke.EnableEdgeTransitiveRouting)
 	d.Set("enable_jumbo_frame", edgeSpoke.EnableJumboFrame)
-	if edgeSpoke.LatitudeReturn != 0 || edgeSpoke.LongitudeReturn != 0 {
-		d.Set("latitude", fmt.Sprintf("%.6f", edgeSpoke.LatitudeReturn))
-		d.Set("longitude", fmt.Sprintf("%.6f", edgeSpoke.LongitudeReturn))
+	if edgeSpoke.Latitude != 0 || edgeSpoke.Longitude != 0 {
+		d.Set("latitude", fmt.Sprintf("%.6f", edgeSpoke.Latitude))
+		d.Set("longitude", fmt.Sprintf("%.6f", edgeSpoke.Longitude))
 	} else {
 		d.Set("latitude", "")
 		d.Set("longitude", "")
 	}
-	d.Set("wan_public_ip", edgeSpoke.WanPublicIp)
+
 	d.Set("rx_queue_size", edgeSpoke.RxQueueSize)
 	d.Set("state", edgeSpoke.State)
+
+	var interfaces []map[string]interface{}
+
+	for _, if0 := range edgeSpoke.InterfaceList {
+		if1 := make(map[string]interface{})
+		if1["name"] = if0.IfName
+		if1["type"] = if0.Type
+		if1["enable_dhcp"] = if0.Dhcp
+		if1["wan_public_ip"] = if0.PublicIp
+		if1["ip_address"] = if0.IpAddr
+		if1["gateway_ip"] = if0.GatewayIp
+
+		interfaces = append(interfaces, if1)
+	}
+
+	if err = d.Set("interfaces", interfaces); err != nil {
+		return diag.Errorf("failed to set interfaces: %s\n", err)
+	}
 
 	d.SetId(edgeSpoke.GwName)
 	return nil
@@ -572,10 +575,10 @@ func resourceAviatrixEdgeSpokeUpdate(ctx context.Context, d *schema.ResourceData
 		GwName: edgeSpoke.GwName,
 	}
 
-	if d.HasChanges("management_egress_ip_prefix", "wan_interface_ip_prefix", "wan_default_gateway_ip", "lan_interface_ip_prefix", "wan_public_ip") {
-		err := client.UpdateEdgeSpokeIpConfigurations(ctx, edgeSpoke)
+	if d.HasChanges("management_egress_ip_prefix_list", "interfaces") {
+		err := client.UpdateEdgeSpoke(ctx, edgeSpoke)
 		if err != nil {
-			return diag.Errorf("could not update IP configurations during Edge as a Spoke update: %v", err)
+			return diag.Errorf("could not update management egress ip prefix list or WAN/LAN/MANAGEMENT interfaces during Edge as a Spoke update: %v", err)
 		}
 	}
 

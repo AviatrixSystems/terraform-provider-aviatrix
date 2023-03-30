@@ -13,43 +13,39 @@ The **aviatrix_edge_spoke** resource creates the Aviatrix Edge as a Spoke. This 
 ## Example Usage
 
 ```hcl
-# Create a DHCP Edge as a Spoke
+# Create an Edge as a Spoke
 resource "aviatrix_edge_spoke" "test" {
-  gw_name                     = "edge-test"
-  site_id                     = "site-123"
-  management_interface_config = "DHCP"
-  wan_interface_ip_prefix     = "10.60.0.0/24"
-  wan_default_gateway_ip      = "10.60.0.0"
-  lan_interface_ip_prefix     = "10.60.0.0/24"
-  ztp_file_type               = "iso"
-  ztp_file_download_path      = "/ztp/download/path"
-  local_as_number             = "65000"
+  gw_name                = "edge-test"
+  site_id                = "site-123"
+  ztp_file_type          = "iso"
+  ztp_file_download_path = "/ztp/download/path"
+  local_as_number        = "65000"
   prepend_as_path = [
     "65000",
     "65000",
   ]
-}
-```
-```hcl
-# Create a Static Edge as a Spoke
-resource "aviatrix_edge_spoke" "test" {
-  gw_name                        = "edge-test"
-  site_id                        = "site-123"
-  management_interface_config    = "Static"
-  wan_interface_ip_prefix        = "10.60.0.0/24"
-  wan_default_gateway_ip         = "10.60.0.0"
-  lan_interface_ip_prefix        = "10.60.0.0/24"
-  management_interface_ip_prefix = "10.60.0.0/24"
-  management_default_gateway_ip  = "10.60.0.0"
-  dns_server_ip                  = "10.60.0.0"
-  secondary_dns_server_ip        = "10.60.0.0"
-  ztp_file_type                  = "iso"
-  ztp_file_download_path         = "/ztp/download/path"
-  local_as_number                = "65000"
-  prepend_as_path = [
-    "65000",
-    "65000",
-  ]
+
+  interfaces {
+    name          = "eth0"
+    type          = "WAN"
+    ip_address    = "10.230.5.32/24"
+    gateway_ip    = "10.230.5.100"
+    wan_public_ip = "64.71.24.221"
+  }
+
+  interfaces {
+    name       = "eth1"
+    type       = "LAN"
+    ip_address = "10.230.3.32/24"
+  }
+
+  interfaces {
+    name        = "eth2"
+    type        = "MANAGEMENT"
+    enable_dhcp = false
+    ip_address  = "172.16.15.162/20"
+    gateway_ip  = "172.16.0.1"
+  }
 }
 ```
 
@@ -60,20 +56,21 @@ The following arguments are supported:
 ### Required
 * `gw_name` - (Required) Edge as a Spoke name.
 * `site_id` - (Required) Site ID.
-* `management_interface_config` - (Required) Management interface configuration. Valid values: "DHCP", "Static".
-* `wan_interface_ip_prefix` - (Required) WAN interface IP and subnet prefix.
-* `wan_default_gateway_ip` - (Required) WAN default gateway IP.
-* `lan_interface_ip_prefix` - (Required) LAN interface IP and subnet prefix.
 * `ztp_file_type` - (Required) ZTP file type. Valid values: "iso", "cloud-init".
 * `ztp_file_download_path` - (Required) The folder path where the ZTP file will be downloaded.
+* `interfaces` - (Required) WAN/LAN/MANAGEMENT interfaces.
+  * `name` - (Required) Interface name.
+  * `type` - (Required) Type. Valid values: WAN, LAN, or MANAGEMENT.
+  * `enable_dhcp` - (Optional) Enable DHCP. Valid values: true, false. Default value: false.
+  * `wan_public_ip` - (Optional) WAN public IP.
+  * `ip_address` - (Optional) Interface static IP address.
+  * `gateway_ip` - (Optional) Gateway IP.
 
 ### Optional
-* `management_egress_ip_prefix` - (Optional) Management egress gateway IP and subnet prefix.
+* `management_egress_ip_prefix_list` - (Optional) Set of management egress gateway IP and subnet prefix.
 * `enable_management_over_private_network` - (Optional) Switch to enable management over the private network. Valid values: true, false. Default value: false.
 * `enable_edge_active_standby` - (Optional) Switch to enable Edge Active-Standby mode. Valid values: true, false. Default value: false.
 * `enable_edge_active_standby_preemptive` - (Optional) Switch to enable Preemptive Mode for Edge Active-Standby. Valid values: true, false. Default value: false.
-* `management_interface_ip_prefix` - (Optional) Management interface IP and subnet prefix. Required and valid when `management_interface_config` is "Static".
-* `management_default_gateway_ip` - (Optional) Management default gateway IP. Required and valid when `management_interface_config` is "Static".
 * `dns_server_ip` - (Optional) DNS server IP. Required and valid when `management_interface_config` is "Static".
 * `secondary_dns_server_ip` - (Optional) Secondary DNS server IP. Required and valid when `management_interface_config` is "Static".
 
@@ -90,7 +87,6 @@ The following arguments are supported:
 * `enable_jumbo_frame` - (Optional) Switch to enable jumbo frame. Valid values: true, false. Default value: false.
 * `latitude` - (Optional) Latitude of Edge as a Spoke. Valid values are between -90 and 90. Example: "47.7511".
 * `longitude` - (Optional) Longitude of Edge as a Spoke. Valid values are between -180 and 180. Example: "120.7401".
-* `wan_public_ip` - (Optional) WAN public IP. Required for attaching connections over the Internet.
 * `rx_queue_size` - (Optional) Ethernet interface RX queue size. Once set, can't be deleted or disabled. Valid values: "1K", "2K", "4K".
 
 ## Attribute Reference

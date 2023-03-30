@@ -36,10 +36,9 @@ func TestAccAviatrixEdgeSpoke_basic(t *testing.T) {
 					testAccCheckEdgeSpokeExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "gw_name", gwName),
 					resource.TestCheckResourceAttr(resourceName, "site_id", siteId),
-					resource.TestCheckResourceAttr(resourceName, "management_interface_config", "DHCP"),
-					resource.TestCheckResourceAttr(resourceName, "wan_interface_ip_prefix", "10.60.0.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "wan_default_gateway_ip", "10.60.0.0"),
-					resource.TestCheckResourceAttr(resourceName, "lan_interface_ip_prefix", "10.60.0.0/24"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.0.ip_address", "10.230.5.32/24"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.1.ip_address", "10.230.3.32/24"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.2.ip_address", "172.16.15.162/20"),
 				),
 			},
 			{
@@ -55,14 +54,32 @@ func TestAccAviatrixEdgeSpoke_basic(t *testing.T) {
 func testAccEdgeSpokeBasic(gwName, siteId, path string) string {
 	return fmt.Sprintf(`
 resource "aviatrix_edge_spoke" "test" {
-	gw_name                     = "%s"
-	site_id                     = "%s"
-	management_interface_config = "DHCP"
-	wan_interface_ip_prefix     = "10.60.0.0/24"
-	wan_default_gateway_ip      = "10.60.0.0"
-	lan_interface_ip_prefix     = "10.60.0.0/24"
-	ztp_file_type               = "iso"
-	ztp_file_download_path      = "%s"
+	gw_name                = "%s"
+	site_id                = "%s"
+	ztp_file_type          = "iso"
+	ztp_file_download_path = "%s"
+
+	interfaces {
+		name          = "eth0"
+		type          = "WAN"
+		ip_address    = "10.230.5.32/24"
+		gateway_ip    = "10.230.5.100"
+		wan_public_ip = "64.71.24.221"
+	}
+	
+	interfaces {
+		name       = "eth1"
+		type       = "LAN"
+		ip_address = "10.230.3.32/24"
+	}
+	
+	interfaces {
+		name        = "eth2"
+		type        = "MANAGEMENT"
+		enable_dhcp = false
+		ip_address  = "172.16.15.162/20"
+		gateway_ip  = "172.16.0.1"
+	}
 }
   `, gwName, siteId, path)
 }

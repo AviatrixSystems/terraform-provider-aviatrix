@@ -13,50 +13,37 @@ The **aviatrix_edge_csp** resource creates the Aviatrix Edge CSP.
 ## Example Usage
 
 ```hcl
-# Create a DHCP Edge CSP
+# Create an Edge CSP
 resource "aviatrix_edge_csp" "test" {
-  account_name                = "edge_csp_account"
-  gw_name                     = "edge-test"
-  site_id                     = "site-123"
-  management_interface_config = "DHCP"
-  lan_interface_ip_prefix     = "10.60.0.0/24"
-  local_as_number             = "65000"
+  account_name    = "edge_csp_account"
+  gw_name         = "edge-test"
+  site_id         = "site-123"
+  local_as_number = "65000"
   prepend_as_path = [
     "65000",
     "65000",
   ]
 
   interfaces {
-    name       = "eth1"
-    type       = "LAN"
-    ip_address = "10.220.11.10/24"
-    gateway_ip = "10.220.11.1"
+    name          = "eth0"
+    type          = "WAN"
+    ip_address    = "10.230.5.32/24"
+    gateway_ip    = "10.230.5.100"
+    wan_public_ip = "64.71.24.221"
   }
-}
-```
-```hcl
-# Create a Static Edge CSP
-resource "aviatrix_edge_csp" "test" {
-  
-  gw_name                        = "edge-test"
-  site_id                        = "site-123"
-  management_interface_config    = "Static"
-  lan_interface_ip_prefix        = "10.60.0.0/24"
-  management_interface_ip_prefix = "10.60.0.0/24"
-  management_default_gateway_ip  = "10.60.0.0"
-  dns_server_ip                  = "10.60.0.0"
-  secondary_dns_server_ip        = "10.60.0.0"
-  local_as_number                = "65000"
-  prepend_as_path = [
-    "65000",
-    "65000",
-  ]
 
   interfaces {
     name       = "eth1"
     type       = "LAN"
-    ip_address = "10.220.11.10/24"
-    gateway_ip = "10.220.11.1"
+    ip_address = "10.230.3.32/24"
+  }
+
+  interfaces {
+    name        = "eth2"
+    type        = "MANAGEMENT"
+    enable_dhcp = false
+    ip_address  = "172.16.15.162/20"
+    gateway_ip  = "172.16.0.1"
   }
 }
 ```
@@ -72,13 +59,9 @@ The following arguments are supported:
 * `project_uuid` - (Required) Edge CSP project UUID.
 * `compute_node_uuid` - (Required) Edge CSP compute node UUID.
 * `template_uuid` - (Required) Edge CSP template UUID.
-* `management_interface_config` - (Required) Management interface configuration. Valid values: "DHCP", "Static".
-* `lan_interface_ip_prefix` - (Required) LAN interface IP and subnet prefix.
-
--> **NOTE:** At least one LAN interface is required.
-* `interfaces` - (Required) WAN/LAN interfaces.
+* `interfaces` - (Required) WAN/LAN/MANAGEMENT interfaces.
   * `name` - (Required) Interface name.
-  * `type` - (Required) Type.
+  * `type` - (Required) Type. Valid values: WAN, LAN, or MANAGEMENT.
   * `bandwidth` - (Optional) Bandwidth.
   * `enable_dhcp` - (Optional) Enable DHCP. Valid values: true, false. Default value: false.
   * `wan_public_ip` - (Optional) WAN public IP.
@@ -91,12 +74,10 @@ The following arguments are supported:
   * `tag` - (Optional) Tag.
   
 ### Optional
-* `management_egress_ip_prefix_list` - (Optional) List of management egress gateway IP and subnet prefix. Example: ["67.207.104.16/29", "64.71.12.144/29"].
+* `management_egress_ip_prefix_list` - (Optional) Set of management egress gateway IP and subnet prefix. Example: ["67.207.104.16/29", "64.71.12.144/29"].
 * `enable_management_over_private_network` - (Optional) Switch to enable management over the private network. Valid values: true, false. Default value: false.
 * `enable_edge_active_standby` - (Optional) Switch to enable Edge Active-Standby mode. Valid values: true, false. Default value: false.
 * `enable_edge_active_standby_preemptive` - (Optional) Switch to enable Preemptive Mode for Edge Active-Standby. Valid values: true, false. Default value: false.
-* `management_interface_ip_prefix` - (Optional) Management interface IP and subnet prefix. Required and valid when `management_interface_config` is "Static".
-* `management_default_gateway_ip` - (Optional) Management default gateway IP. Required and valid when `management_interface_config` is "Static".
 * `dns_server_ip` - (Optional) DNS server IP. Required and valid when `management_interface_config` is "Static".
 * `secondary_dns_server_ip` - (Optional) Secondary DNS server IP. Required and valid when `management_interface_config` is "Static".
 * `wan_interface_names` - (Optional) List of WAN interface names. Default value: ["eth0"].
@@ -114,7 +95,6 @@ The following arguments are supported:
 * `enable_jumbo_frame` - (Optional) Switch to enable jumbo frame. Valid values: true, false. Default value: false.
 * `latitude` - (Optional) Latitude of Edge CSP. Valid values are between -90 and 90. Example: "47.7511".
 * `longitude` - (Optional) Longitude of Edge CSP. Valid values are between -180 and 180. Example: "120.7401".
-* `wan_public_ip` - (Optional) WAN public IP. Required for attaching connections over the Internet.
 * `rx_queue_size` - (Optional) Ethernet interface RX queue size. Once set, can't be deleted or disabled. Valid values: "1K", "2K", "4K".
 * `vlan` - (Required) VLAN configuration.
   * `parent_interface_name` - (Required) Parent interface name.

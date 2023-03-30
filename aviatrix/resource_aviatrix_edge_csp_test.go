@@ -36,8 +36,9 @@ func TestAccAviatrixEdgeCSP_basic(t *testing.T) {
 					testAccCheckEdgeCSPExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "gw_name", gwName),
 					resource.TestCheckResourceAttr(resourceName, "site_id", siteId),
-					resource.TestCheckResourceAttr(resourceName, "management_interface_config", "DHCP"),
-					resource.TestCheckResourceAttr(resourceName, "lan_interface_ip_prefix", "10.60.0.0/24"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.0.ip_address", "10.230.5.32/24"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.1.ip_address", "10.230.3.32/24"),
+					resource.TestCheckResourceAttr(resourceName, "interfaces.2.ip_address", "172.16.15.162/20"),
 				),
 			},
 			{
@@ -59,20 +60,33 @@ resource "aviatrix_account" "test_account" {
 	edge_csp_password = "%s"
 }
 resource "aviatrix_edge_csp" "test" {
-	account_name                = aviatrix_account.test_account.account_name
-	gw_name                     = "%s"
-	site_id                     = "%s"
- 	project_uuid                = "%s"
- 	compute_node_uuid           = "%s"
- 	template_uuid               = "%s"
-	management_interface_config = "DHCP"
-	lan_interface_ip_prefix     = "10.60.0.0/24"
+	account_name      = aviatrix_account.test_account.account_name
+	gw_name           = "%s"
+	site_id           = "%s"
+ 	project_uuid      = "%s"
+ 	compute_node_uuid = "%s"
+ 	template_uuid     = "%s"
 
+	interfaces {
+		name          = "eth0"
+		type          = "WAN"
+		ip_address    = "10.230.5.32/24"
+		gateway_ip    = "10.230.5.100"
+		wan_public_ip = "64.71.24.221"
+	}
+	
 	interfaces {
 		name       = "eth1"
 		type       = "LAN"
-		ip_address = "10.220.11.10/24"
-		gateway_ip = "10.220.11.1"
+		ip_address = "10.230.3.32/24"
+	}
+	
+	interfaces {
+		name        = "eth2"
+		type        = "MANAGEMENT"
+		enable_dhcp = false
+		ip_address  = "172.16.15.162/20"
+		gateway_ip  = "172.16.0.1"
 	}
 }
  `, accountName, os.Getenv("EDGE_CSP_USERNAME"), os.Getenv("EDGE_CSP_PASSWORD"), gwName, siteId,

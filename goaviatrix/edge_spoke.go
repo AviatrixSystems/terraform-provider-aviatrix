@@ -2,6 +2,8 @@ package goaviatrix
 
 import (
 	"context"
+	b64 "encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"math"
@@ -13,26 +15,19 @@ import (
 )
 
 type EdgeSpoke struct {
-	Action                             string `form:"action,omitempty"`
-	CID                                string `form:"CID,omitempty"`
-	Type                               string `form:"type,omitempty"`
-	Caag                               bool   `form:"caag,omitempty"`
-	GwName                             string `form:"gateway_name,omitempty" json:"gw_name"`
-	SiteId                             string `form:"site_id,omitempty" json:"vpc_id"`
-	ManagementInterfaceConfig          string
-	ManagementEgressIpPrefix           string `form:"mgmt_egress_ip,omitempty" json:"mgmt_egress_ip"`
-	EnableManagementOverPrivateNetwork bool   `form:"mgmt_over_private_network,omitempty" json:"mgmt_over_private_network"`
-	WanInterfaceIpPrefix               string `form:"wan_ip,omitempty" json:"wan_ip"`
-	WanDefaultGatewayIp                string `form:"wan_default_gateway,omitempty" json:"wan_default_gateway"`
-	LanInterfaceIpPrefix               string `form:"lan_ip,omitempty" json:"lan_ip"`
-	ManagementInterfaceIpPrefix        string `form:"mgmt_ip,omitempty" json:"mgmt_ip"`
-	ManagementDefaultGatewayIp         string `form:"mgmt_default_gateway,omitempty" json:"mgmt_default_gateway"`
-	DnsServerIp                        string `form:"dns_server_ip,omitempty" json:"dns_server_ip"`
-	SecondaryDnsServerIp               string `form:"dns_server_ip_secondary,omitempty" json:"dns_server_ip_secondary"`
-	Dhcp                               bool   `form:"dhcp,omitempty" json:"dhcp"`
-	ZtpFileType                        string `form:"ztp_file_type,omitempty"`
+	Action                             string `json:"action,omitempty"`
+	CID                                string `json:"CID,omitempty"`
+	Type                               string `json:"type,omitempty"`
+	Caag                               bool   `json:"caag,omitempty"`
+	GwName                             string `json:"gateway_name,omitempty"`
+	SiteId                             string `json:"site_id,omitempty"`
+	ManagementEgressIpPrefix           string `json:"mgmt_egress_ip,omitempty"`
+	EnableManagementOverPrivateNetwork bool   `json:"mgmt_over_private_network,omitempty"`
+	DnsServerIp                        string `json:"dns_server_ip,omitempty"`
+	SecondaryDnsServerIp               string `json:"dns_server_ip_secondary,omitempty"`
+	ZtpFileType                        string `json:"ztp_file_type,omitempty"`
 	ZtpFileDownloadPath                string
-	ActiveStandby                      string `form:"active_standby,omitempty"`
+	ActiveStandby                      string `json:"active_standby,omitempty"`
 	EnableEdgeActiveStandby            bool   `json:"edge_active_standby"`
 	EnableEdgeActiveStandbyPreemptive  bool   `json:"edge_active_standby_preemptive"`
 	LocalAsNumber                      string `json:"local_as_number"`
@@ -51,16 +46,53 @@ type EdgeSpoke struct {
 	Longitude                          string
 	LatitudeReturn                     float64 `json:"latitude"`
 	LongitudeReturn                    float64 `json:"longitude"`
-	WanPublicIp                        string  `form:"wan_discovery_ip,omitempty" json:"public_ip"`
-	PrivateIP                          string  `json:"private_ip"`
 	RxQueueSize                        string  `json:"rx_queue_size"`
 	State                              string  `json:"vpc_state"`
+	InterfaceList                      []*EdgeSpokeInterface
+	Interfaces                         string `json:"interfaces"`
+}
+
+type EdgeSpokeInterface struct {
+	IfName    string `json:"ifname"`
+	Type      string `json:"type"`
+	Dhcp      bool   `json:"dhcp"`
+	PublicIp  string `json:"public_ip"`
+	IpAddr    string `json:"ipaddr"`
+	GatewayIp string `json:"gateway_ip"`
+}
+
+type EdgeSpokeResp struct {
+	GwName                             string `json:"gw_name"`
+	SiteId                             string `json:"vpc_id"`
+	ManagementEgressIpPrefix           string `json:"mgmt_egress_ip"`
+	EnableManagementOverPrivateNetwork bool   `json:"mgmt_over_private_network"`
+	DnsServerIp                        string `json:"dns_server_ip"`
+	SecondaryDnsServerIp               string `json:"dns_server_ip_secondary"`
+	EnableEdgeActiveStandby            bool   `json:"edge_active_standby"`
+	EnableEdgeActiveStandbyPreemptive  bool   `json:"edge_active_standby_preemptive"`
+	LocalAsNumber                      string `json:"local_as_number"`
+	PrependAsPath                      []string
+	PrependAsPathReturn                string                `json:"prepend_as_path"`
+	IncludeCidrList                    []string              `json:"include_cidr_list"`
+	EnableLearnedCidrsApproval         bool                  `json:"enable_learned_cidrs_approval"`
+	ApprovedLearnedCidrs               []string              `form:"approved_learned_cidrs,omitempty"`
+	SpokeBgpManualAdvertisedCidrs      []string              `json:"bgp_manual_spoke_advertise_cidrs"`
+	EnablePreserveAsPath               bool                  `json:"preserve_as_path"`
+	BgpPollingTime                     int                   `json:"bgp_polling_time"`
+	BgpHoldTime                        int                   `json:"bgp_hold_time"`
+	EnableEdgeTransitiveRouting        bool                  `json:"edge_transitive_routing"`
+	EnableJumboFrame                   bool                  `json:"jumbo_frame"`
+	Latitude                           float64               `json:"latitude"`
+	Longitude                          float64               `json:"longitude"`
+	RxQueueSize                        string                `json:"rx_queue_size"`
+	State                              string                `json:"vpc_state"`
+	InterfaceList                      []*EdgeSpokeInterface `json:"interfaces"`
 }
 
 type EdgeSpokeListResp struct {
-	Return  bool        `json:"return"`
-	Results []EdgeSpoke `json:"results"`
-	Reason  string      `json:"reason"`
+	Return  bool            `json:"return"`
+	Results []EdgeSpokeResp `json:"results"`
+	Reason  string          `json:"reason"`
 }
 
 func (c *Client) CreateEdgeSpoke(ctx context.Context, edgeSpoke *EdgeSpoke) error {
@@ -69,11 +101,14 @@ func (c *Client) CreateEdgeSpoke(ctx context.Context, edgeSpoke *EdgeSpoke) erro
 	edgeSpoke.Type = "spoke"
 	edgeSpoke.Caag = false
 
-	if edgeSpoke.ManagementInterfaceConfig == "DHCP" {
-		edgeSpoke.Dhcp = true
+	interfaces, err := json.Marshal(edgeSpoke.InterfaceList)
+	if err != nil {
+		return err
 	}
 
-	resp, err := c.PostAPIDownloadContext(ctx, edgeSpoke.Action, edgeSpoke, BasicCheck)
+	edgeSpoke.Interfaces = b64.StdEncoding.EncodeToString(interfaces)
+
+	resp, err := c.PostAPIContext2Download(ctx, edgeSpoke.Action, edgeSpoke, BasicCheck)
 	if err != nil {
 		return err
 	}
@@ -98,7 +133,7 @@ func (c *Client) CreateEdgeSpoke(ctx context.Context, edgeSpoke *EdgeSpoke) erro
 	return nil
 }
 
-func (c *Client) GetEdgeSpoke(ctx context.Context, gwName string) (*EdgeSpoke, error) {
+func (c *Client) GetEdgeSpoke(ctx context.Context, gwName string) (*EdgeSpokeResp, error) {
 	form := map[string]string{
 		"action":       "list_vpcs_summary",
 		"CID":          c.CID,
@@ -107,7 +142,7 @@ func (c *Client) GetEdgeSpoke(ctx context.Context, gwName string) (*EdgeSpoke, e
 
 	var data EdgeSpokeListResp
 
-	err := c.GetAPIContext(ctx, &data, form["action"], form, BasicCheck)
+	err := c.PostAPIContext2(ctx, &data, form["action"], form, BasicCheck)
 	if err != nil {
 		return nil, err
 	}
@@ -128,19 +163,22 @@ func (c *Client) GetEdgeSpoke(ctx context.Context, gwName string) (*EdgeSpoke, e
 	return nil, ErrNotFound
 }
 
-func (c *Client) UpdateEdgeSpokeIpConfigurations(ctx context.Context, edgeSpoke *EdgeSpoke) error {
+func (c *Client) UpdateEdgeSpoke(ctx context.Context, edgeSpoke *EdgeSpoke) error {
 	form := map[string]string{
-		"action":              "update_edge_gateway",
-		"CID":                 c.CID,
-		"gateway_name":        edgeSpoke.GwName,
-		"wan_ip":              edgeSpoke.WanInterfaceIpPrefix,
-		"wan_default_gateway": edgeSpoke.WanDefaultGatewayIp,
-		"lan_ip":              edgeSpoke.LanInterfaceIpPrefix,
-		"mgmt_egress_ip":      edgeSpoke.ManagementEgressIpPrefix,
-		"wan_discovery_ip":    edgeSpoke.WanPublicIp,
+		"action":         "update_edge_gateway",
+		"CID":            c.CID,
+		"gateway_name":   edgeSpoke.GwName,
+		"mgmt_egress_ip": edgeSpoke.ManagementEgressIpPrefix,
 	}
 
-	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
+	interfaces, err := json.Marshal(edgeSpoke.InterfaceList)
+	if err != nil {
+		return err
+	}
+
+	form["interfaces"] = b64.StdEncoding.EncodeToString(interfaces)
+
+	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
 }
 
 func (c *Client) DeleteEdgeSpoke(ctx context.Context, name string) error {
@@ -150,7 +188,7 @@ func (c *Client) DeleteEdgeSpoke(ctx context.Context, name string) error {
 		"name":   name,
 	}
 
-	return c.PostAPIContext(ctx, form["action"], form, BasicCheck)
+	return c.PostAPIContext2(ctx, nil, form["action"], form, BasicCheck)
 }
 
 func (c *Client) EnableEdgeSpokeTransitiveRouting(ctx context.Context, name string) error {
