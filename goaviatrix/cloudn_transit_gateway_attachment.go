@@ -2,7 +2,9 @@ package goaviatrix
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -33,8 +35,23 @@ func (c *Client) CreateCloudnTransitGatewayAttachment(ctx context.Context, attac
 	attachment.Action = "attach_cloudwan_device_to_transit_gateway"
 	attachment.CID = c.CID
 	attachment.RoutingProtocol = "bgp"
-	attachment.CloudnNeighbor = `"[{"ip_addr": ` + attachment.CloudnLanInterfaceNeighborIP + `, "as_num": ` + attachment.CloudnLanInterfaceNeighborBgpAsn + `}]"`
 	attachment.Async = true
+
+	type CloudnNeighbor struct {
+		IpAddr string `json:"ip_addr"`
+		AsNum  int    `json:"as_num"`
+	}
+
+	asn, _ := strconv.Atoi(attachment.CloudnLanInterfaceNeighborBgpAsn)
+
+	cloudnNeighbor := CloudnNeighbor{
+		IpAddr: attachment.CloudnLanInterfaceNeighborIP,
+		AsNum:  asn,
+	}
+
+	cloudnNeighborJson, _ := json.Marshal(cloudnNeighbor)
+	attachment.CloudnNeighbor = "[" + string(cloudnNeighborJson) + "]"
+
 	return c.PostAsyncAPIContext(ctx, attachment.Action, attachment, BasicCheck)
 }
 
