@@ -23,13 +23,13 @@ func resourceAviatrixControllerAccessAllowListConfig() *schema.Resource {
 			"allow_list": {
 				Type:        schema.TypeSet,
 				Required:    true,
-				Description: "Set of allowed IPs which have the access to the controller.",
+				Description: "Set of IPs allowed access to the Controller.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ip_address": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "IP address which has the access to the controller.",
+							Description: "IP address allowed access to the Controller.",
 						},
 						"description": {
 							Type:        schema.TypeString,
@@ -43,7 +43,7 @@ func resourceAviatrixControllerAccessAllowListConfig() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Specify whether to enable enforce or not.",
+				Description: "Set to true to enable enforcement of the `allow_list {}`'s IPs.",
 			},
 		},
 	}
