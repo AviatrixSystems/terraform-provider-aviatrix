@@ -2,6 +2,7 @@ package aviatrix
 
 import (
 	"context"
+	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -22,18 +23,18 @@ func resourceAviatrixControllerAccessAllowListConfig() *schema.Resource {
 			"allow_list": {
 				Type:        schema.TypeSet,
 				Required:    true,
-				Description: "List of allowed IPs.",
+				Description: "Set of allowed IPs which have the access to the controller.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ip_address": {
 							Type:        schema.TypeString,
 							Required:    true,
-							Description: "IP address.",
+							Description: "IP address which has the access to the controller.",
 						},
 						"description": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							Description: "Description.",
+							Description: "Description of the IP address.",
 						},
 					},
 				},
@@ -42,7 +43,7 @@ func resourceAviatrixControllerAccessAllowListConfig() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
-				Description: "Enable enforce.",
+				Description: "Specify whether to enable enforce or not.",
 			},
 		},
 	}
@@ -81,7 +82,7 @@ func resourceAviatrixControllerAccessAllowListConfigCreate(ctx context.Context, 
 		return diag.Errorf("failed to create controller access allow list config: %s", err)
 	}
 
-	d.SetId("allow_list_config")
+	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return resourceAviatrixControllerAccessAllowListConfigReadIfRequired(ctx, d, meta, &flag)
 }
 
@@ -95,6 +96,10 @@ func resourceAviatrixControllerAccessAllowListConfigReadIfRequired(ctx context.C
 
 func resourceAviatrixControllerAccessAllowListConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
+
+	if d.Id() != strings.Replace(client.ControllerIP, ".", "-", -1) {
+		return diag.Errorf("ID: %s does not match controller IP. Please provide correct ID for importing", d.Id())
+	}
 
 	allowList, err := client.GetControllerAccessAllowList(ctx)
 	if err != nil {
@@ -121,6 +126,7 @@ func resourceAviatrixControllerAccessAllowListConfigRead(ctx context.Context, d 
 		return diag.Errorf("failed to set allow_list: %s", err)
 	}
 
+	d.SetId(strings.Replace(client.ControllerIP, ".", "-", -1))
 	return nil
 }
 

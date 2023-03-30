@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -63,7 +64,9 @@ func testAccCheckControllerAccessAllowListConfigExists(n string) resource.TestCh
 			return fmt.Errorf("no controller access allow list config ID is set")
 		}
 
-		if rs.Primary.ID != "allow_list_config" {
+		client := testAccProviderVersionValidation.Meta().(*goaviatrix.Client)
+
+		if strings.Replace(client.ControllerIP, ".", "-", -1) != rs.Primary.ID {
 			return fmt.Errorf("controller access allow list config ID not found")
 		}
 

@@ -3,7 +3,7 @@ subcategory: "Settings"
 layout: "aviatrix"
 page_title: "Aviatrix: aviatrix_controller_access_allow_list_config"
 description: |-
-  Creates and manages an Aviatrix Controller's Access Allow List  Config
+  Creates and manages an Aviatrix Controller's Access Allow List Config
 ---
 
 # aviatrix_controller_access_allow_list_config
@@ -32,17 +32,17 @@ resource "aviatrix_controller_access_allow_list_config" "test" {
 The following arguments are supported:
 
 ### Required
-* `allow_list` - (Required) List of allowed IPs.
-  * `ip_address` - (Required) IP address.
-  * `description` - (Optional) Description.
+* `allow_list` - (Required) Set of allowed IPs which have the access to the controller.
+  * `ip_address` - (Required) IP address which has the access to the controller.
+  * `description` - (Optional) Description of the IP address.
 
 ### Optional
-* `enable_enforce` - (Optional) Enable enforce. Valid values: true, false. Default: false.
+* `enable_enforce` - (Optional) Specify whether to enable enforce or not. Valid values: true, false. Default: false.
 
 ## Import
 
-**controller_access_allow_list_config** can be imported using "allow_list_config", e.g.
+**controller_access_allow_list_config** can be imported using controller IP, e.g.
 
 ```
-$ terraform import aviatrix_controller_access_allow_list_config.test allow_list_config
+$ terraform import aviatrix_controller_access_allow_list_config.test 10-11-12-13
 ```
