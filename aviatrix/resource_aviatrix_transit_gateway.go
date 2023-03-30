@@ -442,6 +442,12 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 				Default:     true,
 				Description: "Enable jumbo frame support for transit gateway. Valid values: true or false. Default value: true.",
 			},
+			"enable_gro_gso": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Specify whether to disable GRO/GSO or not.",
+			},
 			"bgp_hold_time": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -1491,6 +1497,16 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if !d.Get("enable_gro_gso").(bool) {
+		gw := &goaviatrix.Gateway{
+			GwName: d.Get("gw_name").(string),
+		}
+		err := client.DisableGroGso(gw)
+		if err != nil {
+			return fmt.Errorf("couldn't disable GRO/GSO on transit gateway: %s", err)
+		}
+	}
+
 	if holdTime := d.Get("bgp_hold_time").(int); holdTime != defaultBgpHoldTime {
 		err := client.ChangeBgpHoldTime(gateway.GwName, holdTime)
 		if err != nil {
@@ -1976,6 +1992,12 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 			log.Printf("[WARN] could not get Azure EIP name and resource group for the HA Gateway %s", gw.GwName)
 		}
 	}
+
+	enableGroGso, err := client.GetGroGsoStatus(gw)
+	if err != nil {
+		return fmt.Errorf("failed to get GRO/GSO status of transit gateway %s: %v", gw.GwName, err)
+	}
+	d.Set("enable_gro_gso", enableGroGso)
 
 	return nil
 }
@@ -3090,6 +3112,20 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 			err := client.DisableJumboFrame(gateway)
 			if err != nil {
 				return fmt.Errorf("could not disable jumbo frame for transit gateway when updating: %v", err)
+			}
+		}
+	}
+
+	if d.HasChange("enable_gro_gso") {
+		if d.Get("enable_gro_gso").(bool) {
+			err := client.EnableGroGso(gateway)
+			if err != nil {
+				return fmt.Errorf("couldn't enable GRO/GSO on transit gateway when updating: %s", err)
+			}
+		} else {
+			err := client.DisableGroGso(gateway)
+			if err != nil {
+				return fmt.Errorf("couldn't disable GRO/GSO on transit gateway when updating: %s", err)
 			}
 		}
 	}
