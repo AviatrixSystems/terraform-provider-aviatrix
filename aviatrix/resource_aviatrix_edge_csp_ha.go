@@ -5,8 +5,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -35,18 +33,6 @@ func resourceAviatrixEdgeCSPHa() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "Compute node UUID.",
-			},
-			"management_interface_config": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				Description:  "Management interface configuration. Valid values: 'DHCP' and 'Static'.",
-				ValidateFunc: validation.StringInSlice([]string{"DHCP", "Static"}, false),
-			},
-			"lan_interface_ip_prefix": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "LAN interface IP/prefix.",
 			},
 			"interfaces": {
 				Type:        schema.TypeSet,
@@ -118,10 +104,8 @@ func resourceAviatrixEdgeCSPHa() *schema.Resource {
 
 func marshalEdgeCSPHaInput(d *schema.ResourceData) *goaviatrix.EdgeCSPHa {
 	edgeCSPHa := &goaviatrix.EdgeCSPHa{
-		PrimaryGwName:             d.Get("primary_gw_name").(string),
-		ComputeNodeUuid:           d.Get("compute_node_uuid").(string),
-		ManagementInterfaceConfig: d.Get("management_interface_config").(string),
-		LanInterfaceIpPrefix:      d.Get("lan_interface_ip_prefix").(string),
+		PrimaryGwName:   d.Get("primary_gw_name").(string),
+		ComputeNodeUuid: d.Get("compute_node_uuid").(string),
 	}
 
 	interfaces := d.Get("interfaces").(*schema.Set).List()
@@ -199,29 +183,21 @@ func resourceAviatrixEdgeCSPHaRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("compute_node_uuid", edgeCSPHaResp.ComputeNodeUuid)
 	d.Set("account_name", edgeCSPHaResp.AccountName)
 
-	if edgeCSPHaResp.Dhcp {
-		d.Set("management_interface_config", "DHCP")
-	} else {
-		d.Set("management_interface_config", "Static")
-	}
-
 	var interfaces []map[string]interface{}
 	for _, if0 := range edgeCSPHaResp.InterfaceList {
-		if if0.Type != "MANAGEMENT" {
-			if1 := make(map[string]interface{})
-			if1["name"] = if0.IfName
-			if1["type"] = if0.Type
-			if1["bandwidth"] = if0.Bandwidth
-			if1["wan_public_ip"] = if0.PublicIp
-			if1["tag"] = if0.Tag
-			if1["enable_dhcp"] = if0.Dhcp
-			if1["ip_address"] = if0.IpAddr
-			if1["gateway_ip"] = if0.GatewayIp
-			if1["dns_server_ip"] = if0.DnsPrimary
-			if1["secondary_dns_server_ip"] = if0.DnsSecondary
+		if1 := make(map[string]interface{})
+		if1["name"] = if0.IfName
+		if1["type"] = if0.Type
+		if1["bandwidth"] = if0.Bandwidth
+		if1["wan_public_ip"] = if0.PublicIp
+		if1["tag"] = if0.Tag
+		if1["enable_dhcp"] = if0.Dhcp
+		if1["ip_address"] = if0.IpAddr
+		if1["gateway_ip"] = if0.GatewayIp
+		if1["dns_server_ip"] = if0.DnsPrimary
+		if1["secondary_dns_server_ip"] = if0.DnsSecondary
 
-			interfaces = append(interfaces, if1)
-		}
+		interfaces = append(interfaces, if1)
 	}
 
 	if err = d.Set("interfaces", interfaces); err != nil {
@@ -243,7 +219,7 @@ func resourceAviatrixEdgeCSPHaUpdate(ctx context.Context, d *schema.ResourceData
 		GwName: d.Id(),
 	}
 
-	if d.HasChanges("lan_interface_ip_prefix", "interfaces") {
+	if d.HasChange("interfaces") {
 		gatewayForEdgeCSPFunctions.InterfaceList = edgeCSPHa.InterfaceList
 
 		err := client.UpdateEdgeCSPHa(ctx, gatewayForEdgeCSPFunctions)
