@@ -39,7 +39,7 @@ type EdgeSpokeTransitAttachmentResults struct {
 	EnableJumboFrame         bool       `json:"jumbo_frame"`
 	EnableInsaneMode         bool       `json:"insane_mode"`
 	InsaneModeTunnelNumber   int        `json:"tunnel_count"`
-	EdgeWanInterfaces        []string   `json:"edge_wan_interfaces"`
+	EdgeWanInterfaces        []string   `json:"src_wan_interfaces"`
 }
 
 type SiteDetail struct {
