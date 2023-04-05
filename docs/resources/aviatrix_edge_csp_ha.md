@@ -15,16 +15,20 @@ The **aviatrix_edge_csp_ha** resource creates the Aviatrix Edge CSP HA.
 ```hcl
 # Create an Edge CSP HA
 resource "aviatrix_edge_csp_ha" "test" {
-  primary_gw_name             = "primary_edge_csp"
-  management_interface_config = "DHCP"
-  compute_node_uuid           = "abcde12345"
-  lan_interface_ip_prefix     = "10.220.11.20/24"
+  primary_gw_name   = "primary_edge_csp"
+  compute_node_uuid = "abcde12345"
 
   interfaces {
     name       = "eth1"
     type       = "LAN"
     ip_address = "10.220.11.20/24"
     gateway_ip = "10.220.11.1"
+  }
+
+  interfaces {
+    name        = "eth2"
+    type        = "MANAGEMENT"
+    enable_dhcp = true
   }
 }
 ```
@@ -36,8 +40,6 @@ The following arguments are supported:
 ### Required
 * `primary_gw_name` - (Required) Edge CSP name.
 * `compute_node_uuid` - (Required) Edge CSP compute node UUID.
-* `management_interface_config` - (Required) Management interface configuration. Valid values: "DHCP", "Static".
-* `lan_interface_ip_prefix` - (Required) LAN interface IP and subnet prefix.
 
 -> **NOTE:** At least one LAN interface is required.
 * `interfaces` - (Required) WAN/LAN interfaces.
