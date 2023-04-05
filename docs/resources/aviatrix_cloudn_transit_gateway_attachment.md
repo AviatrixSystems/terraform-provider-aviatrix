@@ -25,7 +25,6 @@ resource "aviatrix_cloudn_transit_gateway_attachment" "test" {
   enable_over_private_network           = false
   enable_jumbo_frame                    = true
   enable_dead_peer_detection            = true
-  enable_over_private_network           = false
 }
 ```
 

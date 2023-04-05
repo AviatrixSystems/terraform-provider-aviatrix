@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -77,9 +78,24 @@ func resourceAviatrixCloudnRegistrationCreate(ctx context.Context, d *schema.Res
 		Password:          client.Password,
 	}
 
-	cloudnClient, err := goaviatrix.NewClientForCloudn(d.Get("username").(string), d.Get("password").(string), d.Get("address").(string), nil, nil)
-	if err != nil {
-		return diag.Errorf("failed to initialize Aviatrix CloudN Client: %v", err)
+	var cloudnClient *goaviatrix.Client
+	var err error
+	for i := 0; ; i++ {
+		cloudnClient, err = goaviatrix.NewClientForCloudn(d.Get("username").(string), d.Get("password").(string), d.Get("address").(string), nil, nil)
+
+		if err != nil {
+			if !strings.Contains(err.Error(), "RequestRefused") {
+				return diag.Errorf("failed to initialize Aviatrix CloudN Client: %v", err)
+			}
+		} else {
+			break
+		}
+		if i < 2 {
+			time.Sleep(time.Duration(15) * time.Second)
+		} else {
+			d.SetId("")
+			return diag.Errorf("failed to initialize Aviatrix CloudN Client: %v", err)
+		}
 	}
 
 	d.SetId(cloudnRegistration.Name)

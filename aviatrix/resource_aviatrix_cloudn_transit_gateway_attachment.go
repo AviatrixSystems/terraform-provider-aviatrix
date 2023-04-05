@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"context"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/AviatrixSystems/terraform-provider-aviatrix/v3/goaviatrix"
@@ -110,19 +111,28 @@ func resourceAviatrixCloudnTransitGatewayAttachment() *schema.Resource {
 }
 
 func marshalCloudnTransitGatewayAttachmentInput(d *schema.ResourceData) *goaviatrix.CloudnTransitGatewayAttachment {
-	return &goaviatrix.CloudnTransitGatewayAttachment{
-		DeviceName:                       d.Get("device_name").(string),
-		TransitGatewayName:               d.Get("transit_gateway_name").(string),
-		ConnectionName:                   d.Get("connection_name").(string),
-		TransitGatewayBgpAsn:             d.Get("transit_gateway_bgp_asn").(string),
-		CloudnBgpAsn:                     d.Get("cloudn_bgp_asn").(string),
-		CloudnLanInterfaceNeighborIP:     d.Get("cloudn_lan_interface_neighbor_ip").(string),
-		CloudnLanInterfaceNeighborBgpAsn: d.Get("cloudn_lan_interface_neighbor_bgp_asn").(string),
-		EnableOverPrivateNetwork:         d.Get("enable_over_private_network").(bool),
-		EnableJumboFrame:                 d.Get("enable_jumbo_frame").(bool),
-		EnableDeadPeerDetection:          d.Get("enable_dead_peer_detection").(bool),
-		EnableLearnedCidrsApproval:       d.Get("enable_learned_cidrs_approval").(bool),
+	attachment := &goaviatrix.CloudnTransitGatewayAttachment{
+		DeviceName:                   d.Get("device_name").(string),
+		TransitGatewayName:           d.Get("transit_gateway_name").(string),
+		ConnectionName:               d.Get("connection_name").(string),
+		TransitGatewayBgpAsn:         d.Get("transit_gateway_bgp_asn").(string),
+		CloudnBgpAsn:                 d.Get("cloudn_bgp_asn").(string),
+		CloudnLanInterfaceNeighborIP: d.Get("cloudn_lan_interface_neighbor_ip").(string),
+		EnableOverPrivateNetwork:     d.Get("enable_over_private_network").(bool),
+		EnableJumboFrame:             d.Get("enable_jumbo_frame").(bool),
+		EnableDeadPeerDetection:      d.Get("enable_dead_peer_detection").(bool),
 	}
+
+	cloudnNeighborAsNumber, _ := strconv.Atoi(d.Get("cloudn_lan_interface_neighbor_bgp_asn").(string))
+	attachment.CloudnLanInterfaceNeighborBgpAsn = cloudnNeighborAsNumber
+
+	if d.Get("enable_learned_cidrs_approval").(bool) {
+		attachment.EnableLearnedCidrsApproval = "yes"
+	} else {
+		attachment.EnableLearnedCidrsApproval = "no"
+	}
+
+	return attachment
 }
 
 func resourceAviatrixCloudnTransitGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -234,11 +244,17 @@ func resourceAviatrixCloudnTransitGatewayAttachmentRead(ctx context.Context, d *
 	d.Set("transit_gateway_bgp_asn", attachment.TransitGatewayBgpAsn)
 	d.Set("cloudn_bgp_asn", attachment.CloudnBgpAsn)
 	d.Set("cloudn_lan_interface_neighbor_ip", attachment.CloudnLanInterfaceNeighborIP)
-	d.Set("cloudn_lan_interface_neighbor_bgp_asn", attachment.CloudnLanInterfaceNeighborBgpAsn)
+	d.Set("cloudn_lan_interface_neighbor_bgp_asn", strconv.Itoa(attachment.CloudnLanInterfaceNeighborBgpAsn))
 	d.Set("enable_over_private_network", attachment.EnableOverPrivateNetwork)
 	d.Set("enable_jumbo_frame", attachment.EnableJumboFrame)
 	d.Set("enable_dead_peer_detection", attachment.EnableDeadPeerDetection)
-	d.Set("enable_learned_cidrs_approval", attachment.EnableLearnedCidrsApproval)
+
+	if attachment.EnableLearnedCidrsApproval == "yes" {
+		d.Set("enable_learned_cidrs_approval", true)
+	} else {
+		d.Set("enable_learned_cidrs_approval", false)
+	}
+
 	err = d.Set("approved_cidrs", attachment.ApprovedCidrs)
 	if err != nil {
 		return diag.Errorf("failed to set approved_cidrs for cloudn_transit_gateway_attachment on read: %v", err)
@@ -321,7 +337,7 @@ func resourceAviatrixCloudnTransitGatewayAttachmentUpdate(ctx context.Context, d
 	}
 
 	if d.HasChange("enable_learned_cidrs_approval") {
-		if attachment.EnableLearnedCidrsApproval {
+		if attachment.EnableLearnedCidrsApproval == "yes" {
 			err := client.EnableTransitConnectionLearnedCIDRApproval(attachment.TransitGatewayName, attachment.ConnectionName)
 			if err != nil {
 				return diag.Errorf("could not enable learned CIDRs approval during cloudn transit gateway attachment update: %v", err)
