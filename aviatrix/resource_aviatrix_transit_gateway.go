@@ -402,7 +402,6 @@ func resourceAviatrixTransitGateway() *schema.Resource {
 			"bgp_lan_interfaces_count": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      1,
 				ValidateFunc: validation.IntAtLeast(1),
 				Description:  "Number of interfaces that will be created for BGP over LAN enabled Azure transit. Applies on HA Transit as well if enabled. Updatable as of provider version 3.0.3+.",
 			},
@@ -907,9 +906,11 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 	if bgpOverLan && !(goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCP)) {
 		return fmt.Errorf("'enable_bgp_over_lan' is only valid for GCP (4), Azure (8), AzureGov (32) or AzureChina (2048)")
 	}
-	bgpLanInterfacesCount := d.Get("bgp_lan_interfaces_count").(int)
-	if bgpLanInterfacesCount != 1 && (!bgpOverLan || !goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes)) {
+	bgpLanInterfacesCount, isCountSet := d.GetOk("bgp_lan_interfaces_count")
+	if isCountSet && (!bgpOverLan || !goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes)) {
 		return fmt.Errorf("'bgp_lan_interfaces_count' is only valid for BGP over LAN enabled transit for Azure (8), AzureGov (32) or AzureChina (2048)")
+	} else if !isCountSet && bgpOverLan && goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+		return fmt.Errorf("please specify 'bgp_lan_interfaces_count' for BGP over LAN enabled Azure transit: %s", gateway.GwName)
 	}
 	var bgpLanVpcID []string
 	var bgpLanSpecifySubnet []string
@@ -946,7 +947,7 @@ func resourceAviatrixTransitGatewayCreate(d *schema.ResourceData, meta interface
 			gateway.BgpLanVpcID = strings.Join(bgpLanVpcID, ",")
 			gateway.BgpLanSpecifySubnet = strings.Join(bgpLanSpecifySubnet, ",")
 		} else if goaviatrix.IsCloudType(cloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-			gateway.BgpLanInterfacesCount = bgpLanInterfacesCount
+			gateway.BgpLanInterfacesCount = bgpLanInterfacesCount.(int)
 		}
 	}
 
@@ -1629,10 +1630,10 @@ func resourceAviatrixTransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("enable_active_standby", gw.EnableActiveStandby)
 	d.Set("enable_active_standby_preemptive", gw.EnableActiveStandbyPreemptive)
 	d.Set("enable_s2c_rx_balancing", gw.EnableS2CRxBalancing)
-	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.BgpLanInterfacesCount > 1 {
+	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes) && gw.EnableBgpOverLan {
 		d.Set("bgp_lan_interfaces_count", gw.BgpLanInterfacesCount)
 	} else {
-		d.Set("bgp_lan_interfaces_count", 1)
+		d.Set("bgp_lan_interfaces_count", nil)
 	}
 	d.Set("enable_bgp_over_lan", goaviatrix.IsCloudType(gw.CloudType, goaviatrix.AzureArmRelatedCloudTypes|goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan)
 	if goaviatrix.IsCloudType(gw.CloudType, goaviatrix.GCPRelatedCloudTypes) && gw.EnableBgpOverLan {
@@ -3286,12 +3287,20 @@ func resourceAviatrixTransitGatewayUpdate(d *schema.ResourceData, meta interface
 	}
 
 	if d.HasChanges("enable_bgp_over_lan", "bgp_lan_interfaces_count") {
-		if d.HasChange("enable_bgp_over_lan") && !d.Get("enable_bgp_over_lan").(bool) {
-			return fmt.Errorf("disabling BGP over LAN during update is not supported for transit: %s", gateway.GwName)
+		if d.HasChange("enable_bgp_over_lan") {
+			if !d.Get("enable_bgp_over_lan").(bool) {
+				return fmt.Errorf("disabling BGP over LAN during update is not supported for transit: %s", gateway.GwName)
+			}
+			if !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
+				return fmt.Errorf("enabling BGP over LAN during update is only supported for Azure transit")
+			}
+			if _, ok := d.GetOk("bgp_lan_interfaces_count"); !ok {
+				return fmt.Errorf("please specify 'bgp_lan_interfaces_count' to enable BGP over LAN during update for Azure transit: %s", gateway.GwName)
+			}
 		}
 		if d.HasChange("bgp_lan_interfaces_count") {
 			if !d.Get("enable_bgp_over_lan").(bool) || !goaviatrix.IsCloudType(gateway.CloudType, goaviatrix.AzureArmRelatedCloudTypes) {
-				return fmt.Errorf("could not update BGP over LAN interface count since it only supports BGP over LAN enabled spoke for Azure (8), AzureGov (32) or AzureChina (2048)")
+				return fmt.Errorf("could not update BGP over LAN interface count since it only supports BGP over LAN enabled transit for Azure (8), AzureGov (32) or AzureChina (2048)")
 			}
 			oldCount, newCount := d.GetChange("bgp_lan_interfaces_count")
 			if oldCount.(int) > newCount.(int) {
