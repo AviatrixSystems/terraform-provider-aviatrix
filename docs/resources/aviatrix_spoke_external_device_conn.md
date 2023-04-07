@@ -175,6 +175,10 @@ The following arguments are supported:
 * `manual_bgp_advertised_cidrs` - (Optional) Configure manual BGP advertised CIDRs for this connection. Only valid with `connection_type`= 'bgp'.
 * `enable_event_triggered_ha` - (Optional) Enable Event Triggered HA. Default value: false. Valid values: true or false.
 * `enable_jumbo_frame` - (Optional) Enable Jumbo Frame for the transit external device connection. Only valid with 'GRE' tunnels under 'bgp' connection. Requires spoke to be jumbo frame and insane mode enabled. Valid values: true, false. Default value: false. Available as of provider version R3.0.2+.
+
+-> **NOTE:** If you are using/upgraded to Aviatrix Terraform Provider R3.1.0+, and a **spoke_external_device_conn** resource was originally created with a provider version <R3.1.0 with "private_ip" for `phase1_local_identifier`, you must paste "phase1_local_identifier = 'private_ip'" into the corresponding **spoke_external_device_conn** resource to avoid ‘terraform plan‘ from showing delta.
+
+* `phase1_local_identifier` - (Optional) Phase 1 local identifier. By default, gateway’s public IP is configured as the Local Identifier. Available as of provider version R3.1.0+.
 * `phase1_remote_identifier` - (Optional) List of phase 1 remote identifier of the IPsec tunnel. This can be configured as a list of any string, including emtpy string. Example: ["1.2.3.4"] when HA is disabled, ["1.2.3.4", "abcd"] when HA is enabled. Available as of provider version R2.19+.
 * `prepend_as_path` - (Optional) Connection AS Path Prepend customized by specifying AS PATH for a BGP connection.
 

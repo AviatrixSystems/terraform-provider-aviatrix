@@ -322,6 +322,13 @@ func resourceAviatrixSpokeExternalDeviceConn() *schema.Resource {
 				ForceNew:    true,
 				Description: "Backup Remote LAN IP.",
 			},
+			"phase1_local_identifier": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "public_ip",
+				ValidateFunc: validation.StringInSlice([]string{"public_ip", "private_ip"}, false),
+				Description:  "By default, gateway’s public IP is configured as the Local Identifier.",
+			},
 			"phase1_remote_identifier": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -761,6 +768,20 @@ func resourceAviatrixSpokeExternalDeviceConnCreate(d *schema.ResourceData, meta 
 		}
 	}
 
+	if phase1LocalIdentifier, ok := d.GetOk("phase1_local_identifier"); ok {
+		s2c := &goaviatrix.EditSite2Cloud{
+			VpcID:    d.Get("vpc_id").(string),
+			ConnName: d.Get("connection_name").(string),
+		}
+		if phase1LocalIdentifier == "private_ip" {
+			s2c.Phase1LocalIdentifier = "private_ip"
+			err = client.EditSite2CloudPhase1LocalIdentifier(s2c)
+			if err != nil {
+				return fmt.Errorf("could not set phase1 local identificer to private_ip for connection: %s: %v", s2c.ConnName, err)
+			}
+		}
+	}
+
 	return resourceAviatrixSpokeExternalDeviceConnReadIfRequired(d, meta, &flag)
 }
 
@@ -840,6 +861,7 @@ func resourceAviatrixSpokeExternalDeviceConnRead(d *schema.ResourceData, meta in
 		} else {
 			d.Set("direct_connect", false)
 		}
+		d.Set("phase1_local_identifier", conn.Phase1LocalIdentifier)
 
 		if conn.CustomAlgorithms {
 			d.Set("custom_algorithms", true)
@@ -1167,6 +1189,18 @@ func resourceAviatrixSpokeExternalDeviceConnUpdate(d *schema.ResourceData, meta 
 			if err != nil {
 				return fmt.Errorf("failed to update backup BGP MD5 authentication key: %v", err)
 			}
+		}
+	}
+
+	if d.HasChange("phase1_local_identifier") {
+		s2c := &goaviatrix.EditSite2Cloud{
+			VpcID:                 d.Get("vpc_id").(string),
+			ConnName:              d.Get("connection_name").(string),
+			Phase1LocalIdentifier: d.Get("phase1_local_identifier").(string),
+		}
+		err := client.EditSite2CloudPhase1LocalIdentifier(s2c)
+		if err != nil {
+			return fmt.Errorf("could not update phase1 local identificer for connection: %s: %v", s2c.ConnName, err)
 		}
 	}
 

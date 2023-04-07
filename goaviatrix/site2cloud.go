@@ -75,6 +75,7 @@ type Site2Cloud struct {
 	BackupLocalTunnelIp           string `form:"backup_local_tunnel_ip,omitempty"`
 	BackupRemoteTunnelIp          string `form:"backup_remote_tunnel_ip,omitempty"`
 	EnableSingleIpHA              bool
+	Phase1LocalIdentifier         string
 	Phase1RemoteIdentifier        string
 	AuthType                      string `form:"auth_type,omitempty"`
 	CaCertTagName                 string `form:"cert_name,omitempty"`
@@ -99,6 +100,7 @@ type EditSite2Cloud struct {
 	LocalSourceVirtualCIDRs       string `form:"local_src_virt_cidrs,omitempty"`
 	LocalDestinationRealCIDRs     string `form:"local_dst_real_cidrs,omitempty"`
 	LocalDestinationVirtualCIDRs  string `form:"local_dst_virt_cidrs,omitempty"`
+	Phase1LocalIdentifier         string `form:"phase1_identifier,omitempty"`
 	Phase1RemoteIdentifier        string `form:"phase1_remote_identifier,omitempty"`
 	CaCertTagName                 string `form:"s2c_cacert_tag_name,omitempty"`
 	RemoteIdentifier              string `form:"cert_based_s2c_remote_id,omitempty"`
@@ -158,7 +160,8 @@ type EditSite2CloudConnDetail struct {
 	ManualBGPCidrs                 []string      `json:"conn_bgp_manual_advertise_cidrs"`
 	EventTriggeredHA               string        `json:"event_triggered_ha"`
 	EnableSingleIpHA               string        `json:"single_ip_ha,omitempty"`
-	Phase1RemoteIdentifier         string        `json:"phase1_remote_id"`
+	Phase1LocalIdentifier          string        `json:"ph1_identifier,omitempty"`
+	Phase1RemoteIdentifier         string        `json:"phase1_remote_id,omitempty"`
 	InsaneMode                     string        `json:"insane_mode,omitempty"`
 	DirectConnect                  bool          `json:"direct_connect_primary,omitempty"`
 	BackupDirectConnect            bool          `json:"direct_connect_backup,omitempty"`
@@ -454,6 +457,7 @@ func (c *Client) GetSite2CloudConnDetail(site2cloud *Site2Cloud) (*Site2Cloud, e
 		}
 		site2cloud.EnableSingleIpHA = s2cConnDetail.EnableSingleIpHA == "enabled"
 		site2cloud.Phase1RemoteIdentifier = s2cConnDetail.Phase1RemoteIdentifier
+		site2cloud.Phase1LocalIdentifier = s2cConnDetail.Phase1LocalIdentifier
 		return site2cloud, nil
 	}
 
@@ -576,6 +580,28 @@ func (c *Client) DisableSite2CloudEventTriggeredHA(vpcID, connectionName string)
 		"connection_name": connectionName,
 	}
 	return c.PostAPI(data["action"], data, BasicCheck)
+}
+
+func (c *Client) EditSite2CloudPhase1LocalIdentifier(s2c *EditSite2Cloud) error {
+	data := map[string]string{
+		"CID":               c.CID,
+		"action":            "edit_site2cloud_conn",
+		"vpc_id":            s2c.VpcID,
+		"conn_name":         s2c.ConnName,
+		"phase1_identifier": s2c.Phase1LocalIdentifier,
+	}
+
+	checkFunc := func(act, method, reason string, ret bool) error {
+		if !ret {
+			if strings.Contains(reason, "already set to private IP address") {
+				return nil
+			}
+			return fmt.Errorf("rest API %s %s failed: %s", act, method, reason)
+		}
+		return nil
+	}
+
+	return c.PostAPI(data["action"], data, checkFunc)
 }
 
 func S2CPh1RemoteIdDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
