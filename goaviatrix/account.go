@@ -83,6 +83,7 @@ type Account struct {
 	GroupNames                            string   `form:"groups,omitempty"`
 	GroupNamesRead                        []string `json:"rbac_groups,omitempty"`
 	EdgeCSPUsername                       string   `json:"edge_csp_username"`
+	EdgeEquinixUsername                   string   `json:"equinix_username"`
 }
 
 type EdgeCSPAccount struct {
@@ -92,6 +93,14 @@ type EdgeCSPAccount struct {
 	CloudType       int    `json:"cloud_type,omitempty"`
 	EdgeCSPUsername string `json:"edge_csp_username,omitempty"`
 	EdgeCSPPassword string `json:"edge_csp_password,omitempty"`
+}
+
+type EdgeEquinixAccount struct {
+	CID                 string `json:"CID,omitempty"`
+	Action              string `json:"action,omitempty"`
+	AccountName         string `json:"account_name,omitempty"`
+	CloudType           int    `json:"cloud_type,omitempty"`
+	EdgeEquinixUsername string `json:"equinix_username,omitempty"`
 }
 
 type EdgeNEOAccount struct {
@@ -412,6 +421,18 @@ func (c *Client) UpdateEdgeCSPAccount(edgeCSPAccount *EdgeCSPAccount) error {
 	edgeCSPAccount.CID = c.CID
 	edgeCSPAccount.Action = "edit_account_profile"
 	return c.PostAPIContext2(context.Background(), nil, edgeCSPAccount.Action, edgeCSPAccount, BasicCheck)
+}
+
+func (c *Client) CreateEdgeEquinixAccount(edgeEquinixAccount *EdgeEquinixAccount) error {
+	edgeEquinixAccount.CID = c.CID
+	edgeEquinixAccount.Action = "setup_account_profile"
+	return c.PostAPIContext2(context.Background(), nil, edgeEquinixAccount.Action, edgeEquinixAccount, DuplicateBasicCheck)
+}
+
+func (c *Client) UpdateEdgeEquinixAccount(edgeEquinixAccount *EdgeEquinixAccount) error {
+	edgeEquinixAccount.CID = c.CID
+	edgeEquinixAccount.Action = "edit_account_profile"
+	return c.PostAPIContext2(context.Background(), nil, edgeEquinixAccount.Action, edgeEquinixAccount, BasicCheck)
 }
 
 func (c *Client) CreateEdgeNEOAccount(edgeNEOAccount *EdgeNEOAccount) error {

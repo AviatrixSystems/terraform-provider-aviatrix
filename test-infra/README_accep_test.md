@@ -95,6 +95,8 @@ Passing an environment value of "yes" to the skip parameter allows you to skip t
 | aviatrix_dns_profile                 | SKIP_DNS_PROFILE                   | N/A                                                                            |
 | aviatrix_edge_csp                    | SKIP_EDGE_CSP                      | EDGE_CSP_USERNAME, EDGE_CSP_PASSWORD, EDGE_CSP_PROJECT_UUID, EDGE_CSP_COMPUTE_NODE_UUID, EDGE_CSP_TEMPLATE_UUID |
 | aviatrix_edge_csp_ha                 | SKIP_EDGE_CSP_HA                   | EDGE_CSP_USERNAME, EDGE_CSP_PASSWORD, EDGE_CSP_PROJECT_UUID, EDGE_CSP_COMPUTE_NODE_UUID, EDGE_CSP_TEMPLATE_UUID, EDGE_CSP_HA_COMPUTE_NODE_UUID |
+| aviatrix_edge_equinix                | SKIP_EDGE_EQUINIX                  |                                                                                |
+| aviatrix_edge_equinix_ha             | SKIP_EDGE_EQUINIX_HA               |                                                                                |
 | aviatrix_edge_spoke                  | SKIP_EDGE_SPOKE                    | N/A                                                                            |
 | aviatrix_edge_spoke_external_device_conn | SKIP_EDGE_SPOKE_EXTERNAL_DEVICE_CONN | EDGE_SPOKE_NAME, EDGE_SPOKE_SITE_ID                                      |
 | aviatrix_edge_spoke_transit_attachment | SKIP_EDGE_SPOKE_TRANSIT_ATTACHMENT | EDGE_SPOKE_NAME                                                              |

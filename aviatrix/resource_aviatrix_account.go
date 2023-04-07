@@ -351,6 +351,11 @@ func resourceAviatrixAccount() *schema.Resource {
 				Sensitive:   true,
 				Description: "Edge CSP password.",
 			},
+			"edge_equinix_username": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Edge Equinix username.",
+			},
 			"aws_role_app": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -488,6 +493,15 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 			CloudType:       d.Get("cloud_type").(int),
 			EdgeCSPUsername: d.Get("edge_csp_username").(string),
 			EdgeCSPPassword: d.Get("edge_csp_password").(string),
+		}
+	}
+
+	var edgeEquinixAccount *goaviatrix.EdgeEquinixAccount
+	if account.CloudType == goaviatrix.EDGEEQUINIX {
+		edgeEquinixAccount = &goaviatrix.EdgeEquinixAccount{
+			AccountName:         d.Get("account_name").(string),
+			CloudType:           d.Get("cloud_type").(int),
+			EdgeEquinixUsername: d.Get("edge_equinix_username").(string),
 		}
 	}
 
@@ -769,6 +783,10 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		if edgeCSPAccount.EdgeCSPPassword == "" {
 			return diag.Errorf("edge_csp_password is required for Edge CSP")
 		}
+	} else if account.CloudType == goaviatrix.EDGEEQUINIX {
+		if edgeEquinixAccount.EdgeEquinixUsername == "" {
+			return diag.Errorf("edge_equinix_username is required for Edge Equinix")
+		}
 	} else if account.CloudType == goaviatrix.EDGENEO {
 		log.Printf("no check is needed for Edge NEO account")
 	} else {
@@ -786,6 +804,8 @@ func resourceAviatrixAccountCreate(ctx context.Context, d *schema.ResourceData, 
 		err = client.CreateAWSSAccount(account)
 	} else if account.CloudType == goaviatrix.EDGECSP {
 		err = client.CreateEdgeCSPAccount(edgeCSPAccount)
+	} else if account.CloudType == goaviatrix.EDGEEQUINIX {
+		err = client.CreateEdgeEquinixAccount(edgeEquinixAccount)
 	} else if account.CloudType == goaviatrix.EDGENEO {
 		err = client.CreateEdgeNEOAccount(edgeNEOAccount)
 	} else {
@@ -919,6 +939,8 @@ func resourceAviatrixAccountRead(ctx context.Context, d *schema.ResourceData, me
 			d.Set("aws_ca_cert_path", acc.AwsCaCertPath)
 		} else if acc.CloudType == goaviatrix.EDGECSP {
 			d.Set("edge_csp_username", acc.EdgeCSPUsername)
+		} else if acc.CloudType == goaviatrix.EDGEEQUINIX {
+			d.Set("edge_equinix_username", acc.EdgeEquinixUsername)
 		}
 
 		d.Set("rbac_groups", acc.GroupNamesRead)
@@ -1015,6 +1037,15 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 			CloudType:       d.Get("cloud_type").(int),
 			EdgeCSPUsername: d.Get("edge_csp_username").(string),
 			EdgeCSPPassword: d.Get("edge_csp_password").(string),
+		}
+	}
+
+	var edgeEquinixAccount *goaviatrix.EdgeEquinixAccount
+	if account.CloudType == goaviatrix.EDGEEQUINIX {
+		edgeEquinixAccount = &goaviatrix.EdgeEquinixAccount{
+			AccountName:         d.Get("account_name").(string),
+			CloudType:           d.Get("cloud_type").(int),
+			EdgeEquinixUsername: d.Get("edge_equinix_username").(string),
 		}
 	}
 
@@ -1204,6 +1235,13 @@ func resourceAviatrixAccountUpdate(ctx context.Context, d *schema.ResourceData, 
 			err := client.UpdateEdgeCSPAccount(edgeCSPAccount)
 			if err != nil {
 				return diag.Errorf("failed to update Edge CSP Account: %s", err)
+			}
+		}
+	} else if account.CloudType == goaviatrix.EDGEEQUINIX {
+		if d.HasChange("edge_equinix_username") {
+			err := client.UpdateEdgeEquinixAccount(edgeEquinixAccount)
+			if err != nil {
+				return diag.Errorf("failed to update Edge Equinix Account: %s", err)
 			}
 		}
 	}

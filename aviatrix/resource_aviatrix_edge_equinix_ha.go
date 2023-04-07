@@ -3,6 +3,7 @@ package aviatrix
 import (
 	"context"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -11,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceAviatrixEdgeCSPHa() *schema.Resource {
+func resourceAviatrixEdgeEquinixHa() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAviatrixEdgeCSPHaCreate,
-		ReadWithoutTimeout:   resourceAviatrixEdgeCSPHaRead,
-		UpdateWithoutTimeout: resourceAviatrixEdgeCSPHaUpdate,
-		DeleteWithoutTimeout: resourceAviatrixEdgeCSPHaDelete,
+		CreateWithoutTimeout: resourceAviatrixEdgeEquinixHaCreate,
+		ReadWithoutTimeout:   resourceAviatrixEdgeEquinixHaRead,
+		UpdateWithoutTimeout: resourceAviatrixEdgeEquinixHaUpdate,
+		DeleteWithoutTimeout: resourceAviatrixEdgeEquinixHaDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -28,11 +29,14 @@ func resourceAviatrixEdgeCSPHa() *schema.Resource {
 				ForceNew:    true,
 				Description: "Primary gateway name.",
 			},
-			"compute_node_uuid": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "Compute node UUID.",
+			"ztp_file_download_path": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return old != ""
+				},
+				Description: "The location where the ZTP file will be stored.",
 			},
 			"interfaces": {
 				Type:        schema.TypeSet,
@@ -96,23 +100,23 @@ func resourceAviatrixEdgeCSPHa() *schema.Resource {
 			"account_name": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Edge CSP account name.",
+				Description: "Edge Equinix account name.",
 			},
 		},
 	}
 }
 
-func marshalEdgeCSPHaInput(d *schema.ResourceData) *goaviatrix.EdgeCSPHa {
-	edgeCSPHa := &goaviatrix.EdgeCSPHa{
-		PrimaryGwName:   d.Get("primary_gw_name").(string),
-		ComputeNodeUuid: d.Get("compute_node_uuid").(string),
+func marshalEdgeEquinixHaInput(d *schema.ResourceData) *goaviatrix.EdgeEquinixHa {
+	edgeEquinixHa := &goaviatrix.EdgeEquinixHa{
+		PrimaryGwName:       d.Get("primary_gw_name").(string),
+		ZtpFileDownloadPath: d.Get("ztp_file_download_path").(string),
 	}
 
 	interfaces := d.Get("interfaces").(*schema.Set).List()
 	for _, if0 := range interfaces {
 		if1 := if0.(map[string]interface{})
 
-		if2 := &goaviatrix.Interface{
+		if2 := &goaviatrix.EdgeEquinixInterface{
 			IfName:       if1["name"].(string),
 			Type:         if1["type"].(string),
 			Bandwidth:    if1["bandwidth"].(int),
@@ -125,41 +129,27 @@ func marshalEdgeCSPHaInput(d *schema.ResourceData) *goaviatrix.EdgeCSPHa {
 			DnsSecondary: if1["secondary_dns_server_ip"].(string),
 		}
 
-		edgeCSPHa.InterfaceList = append(edgeCSPHa.InterfaceList, if2)
+		edgeEquinixHa.InterfaceList = append(edgeEquinixHa.InterfaceList, if2)
 	}
 
-	return edgeCSPHa
+	return edgeEquinixHa
 }
 
-func resourceAviatrixEdgeCSPHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeEquinixHaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	edgeCSPHa := marshalEdgeCSPHaInput(d)
+	edgeEquinixHa := marshalEdgeEquinixHaInput(d)
 
-	edgeCSPHaName, err := client.CreateEdgeCSPHa(ctx, edgeCSPHa)
+	edgeEquinixHaName, err := client.CreateEdgeEquinixHa(ctx, edgeEquinixHa)
 	if err != nil {
-		return diag.Errorf("failed to create Edge CSP HA: %s", err)
+		return diag.Errorf("failed to create Edge Equinix HA: %s", err)
 	}
 
-	d.SetId(edgeCSPHaName)
-
-	//gatewayForEdgeCSPFunctions := &goaviatrix.EdgeCSP{
-	//	GwName: edgeCSPHaName,
-	//}
-
-	//if len(edgeCSPHa.InterfaceList) != 0 {
-	//	gatewayForEdgeCSPFunctions.InterfaceList = edgeCSPHa.InterfaceList
-	//
-	//	err = client.UpdateEdgeCSPHa(ctx, gatewayForEdgeCSPFunctions)
-	//	if err != nil {
-	//		return diag.Errorf("could not config WAN/LAN interfaces after Edge CSP HA creation: %v", err)
-	//	}
-	//}
-
-	return resourceAviatrixEdgeCSPHaRead(ctx, d, meta)
+	d.SetId(edgeEquinixHaName)
+	return resourceAviatrixEdgeEquinixHaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeCSPHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeEquinixHaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
 	if d.Get("primary_gw_name").(string) == "" {
@@ -170,21 +160,20 @@ func resourceAviatrixEdgeCSPHaRead(ctx context.Context, d *schema.ResourceData, 
 		d.SetId(id)
 	}
 
-	edgeCSPHaResp, err := client.GetEdgeCSPHa(ctx, d.Get("primary_gw_name").(string)+"-hagw")
+	edgeEquinixHaResp, err := client.GetEdgeEquinixHa(ctx, d.Get("primary_gw_name").(string)+"-hagw")
 	if err != nil {
 		if err == goaviatrix.ErrNotFound {
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("could not read Edge CSP HA: %v", err)
+		return diag.Errorf("could not read Edge Equinix HA: %v", err)
 	}
 
-	d.Set("primary_gw_name", edgeCSPHaResp.PrimaryGwName)
-	d.Set("compute_node_uuid", edgeCSPHaResp.ComputeNodeUuid)
-	d.Set("account_name", edgeCSPHaResp.AccountName)
+	d.Set("primary_gw_name", edgeEquinixHaResp.PrimaryGwName)
+	d.Set("account_name", edgeEquinixHaResp.AccountName)
 
 	var interfaces []map[string]interface{}
-	for _, if0 := range edgeCSPHaResp.InterfaceList {
+	for _, if0 := range edgeEquinixHaResp.InterfaceList {
 		if1 := make(map[string]interface{})
 		if1["name"] = if0.IfName
 		if1["type"] = if0.Type
@@ -204,42 +193,50 @@ func resourceAviatrixEdgeCSPHaRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("failed to set interfaces: %s\n", err)
 	}
 
-	d.SetId(edgeCSPHaResp.GwName)
+	d.SetId(edgeEquinixHaResp.GwName)
 	return nil
 }
 
-func resourceAviatrixEdgeCSPHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeEquinixHaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
-	edgeCSPHa := marshalEdgeCSPHaInput(d)
+	edgeEquinixHa := marshalEdgeEquinixHaInput(d)
 
 	d.Partial(true)
 
-	gatewayForEdgeCSPFunctions := &goaviatrix.EdgeCSP{
+	gatewayForEdgeEquinixFunctions := &goaviatrix.EdgeEquinix{
 		GwName: d.Id(),
 	}
 
 	if d.HasChange("interfaces") {
-		gatewayForEdgeCSPFunctions.InterfaceList = edgeCSPHa.InterfaceList
+		gatewayForEdgeEquinixFunctions.InterfaceList = edgeEquinixHa.InterfaceList
 
-		err := client.UpdateEdgeCSPHa(ctx, gatewayForEdgeCSPFunctions)
+		err := client.UpdateEdgeEquinixHa(ctx, gatewayForEdgeEquinixFunctions)
 		if err != nil {
-			return diag.Errorf("could not update WAN/LAN interfaces during Edge CSP HA update: %v", err)
+			return diag.Errorf("could not update WAN/LAN interfaces during Edge Equinix HA update: %v", err)
 		}
 	}
 
 	d.Partial(false)
-	return resourceAviatrixEdgeCSPHaRead(ctx, d, meta)
+	return resourceAviatrixEdgeEquinixHaRead(ctx, d, meta)
 }
 
-func resourceAviatrixEdgeCSPHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAviatrixEdgeEquinixHaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*goaviatrix.Client)
 
+	edgeEquinixHa := marshalEdgeEquinixHaInput(d)
 	accountName := d.Get("account_name").(string)
 
-	err := client.DeleteEdgeCSP(ctx, accountName, d.Id())
+	err := client.DeleteEdgeEquinix(ctx, accountName, d.Id())
 	if err != nil {
-		return diag.Errorf("could not delete Edge CSP HA: %v", err)
+		return diag.Errorf("could not delete Edge Equinix HA: %v", err)
+	}
+
+	fileName := edgeEquinixHa.ZtpFileDownloadPath + "/" + edgeEquinixHa.PrimaryGwName + "-hagw-cloud-init.txt"
+
+	err = os.Remove(fileName)
+	if err != nil {
+		log.Printf("[WARN] could not remove the ztp file: %v", err)
 	}
 
 	return nil
